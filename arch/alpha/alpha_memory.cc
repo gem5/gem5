@@ -30,13 +30,13 @@
 #include <string>
 #include <vector>
 
+#include "arch/alpha/alpha_memory.hh"
+#include "arch/alpha/ev5.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "sim/builder.hh"
-#include "targetarch/alpha_memory.hh"
-#include "targetarch/ev5.hh"
 
 using namespace std;
 

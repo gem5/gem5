@@ -28,12 +28,11 @@
 
 #include <string>
 
-#include "targetarch/pmap.h"
-
+#include "arch/alpha/pmap.h"
+#include "arch/alpha/vtophys.hh"
+#include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "mem/functional_mem/physical_memory.hh"
-#include "base/trace.hh"
-#include "targetarch/vtophys.hh"
 
 using namespace std;
 

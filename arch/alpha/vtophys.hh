@@ -29,8 +29,8 @@
 #ifndef __VTOPHYS_H__
 #define __VTOPHYS_H__
 
-#include "targetarch/isa_traits.hh"
-#include "targetarch/pmap.h"
+#include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/pmap.h"
 
 inline bool entry_valid(uint64_t entry)
 { return (entry & ALPHA_PTE_VALID) != 0; }
