@@ -36,3 +36,7 @@ simobj BaseCache(BaseMem):
     two_queue = Param.Bool(False,
         "whether the lifo should have two queue replacement")
     write_buffers = Param.Int(8, "number of write buffers")
+    use_prefetcher = Param.Bool(False,
+         "wheter you are using the hardware prefetcher")
+    prefetcher_size = Param.Int(100,
+         "Number of entries in the harware prefetch queue")
