@@ -61,11 +61,6 @@ __panic(const string &format, cp::ArgList &args, const char *func,
 
     delete &args;
 
-#if TRACING_ON
-    // dump trace buffer, if there is one
-    Trace::theLog.dump(cerr);
-#endif
-
     abort();
 }
 

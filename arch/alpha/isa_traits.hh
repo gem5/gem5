@@ -153,7 +153,6 @@ class AlphaISA
 #ifdef FULL_SYSTEM
         IntReg palregs[NumIntRegs];	// PAL shadow registers
         InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
-        int intrlock;			// interrupt register lock flag
         int intrflag;			// interrupt flag
         bool pal_shadow;		// using pal_shadow registers
 #endif // FULL_SYSTEM
