@@ -1,7 +1,7 @@
 # $Id$
 
-CC= gcc
-CXX= g++
+CC?= gcc
+CXX?= g++
 
 CURDIR?= $(shell /bin/pwd)
 SRCDIR?= ..
