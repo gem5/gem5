@@ -7,6 +7,10 @@ INCLUDES        = -I$(PALCODE) -I$(INCLUDEH) -I$(M5)/dev
 SOURDIR = ./
 PALCODE  = ../palcode
 INCLUDEH = ../h
+AS=alpha-elf-as
+CC=alpha-elf-gcc
+CXX=alpha-elf-$(CXX)
+
 
 dbmentry.o: dbmentry.s 
 	$(AS)  $(INCLUDES) -nointrinsics -o $*.o $*.s
@@ -18,12 +22,12 @@ printf.o: printf.c
 	$(CC)  -g3 $(INCLUDES) -nointrinsics -o $*.o -c $*.c
 
 paljtokern.s.o: paljtokern.s
-	g++ -I ../palcode -E -P -nostdinc -nostdinc++ -x c++ paljtokern.s | \
-	gas -m 21164 -o paljtokern.s.o
+	$(CXX) -I ../palcode -E -P -nostdinc -nostdinc++ -x c++ paljtokern.s | \
+	$(AS) -m 21164 -o paljtokern.s.o
 
 paljtoslave.s.o: paljtoslave.s
-	g++ -I ../palcode -E -P -nostdinc -nostdinc++ -x c++ paljtoslave.s | \
-	gas -m 21164 -o paljtoslave.s.o
+	$(CXX) -I ../palcode -E -P -nostdinc -nostdinc++ -x c++ paljtoslave.s | \
+	$(AS) -m 21164 -o paljtoslave.s.o
 
 paljtokern.c: paljtokern.s.o
 	echo 'unsigned int palJToKern[] = {' > paljtokern.c

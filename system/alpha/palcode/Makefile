@@ -3,15 +3,15 @@
 
 #19 December 2003 - Ali Saidi
 
-GAS = as
-CC = g++
-LD = ld
+GAS = alpha-elf-as
+CC = alpha-elf-g++
+LD = alpha-elf-ld
 #CFLAGS=-I ../h -E -P -D SIMOS -nostdinc -nostdinc++ -x c++
 CFLAGS=-I . -E -P -D SIMOS -D BUILD_PALCODE -nostdinc -nostdinc++ -x c++
 GASFLAGS=-m21164
 LDFLAGS=-Ttext 0x4000
 
-SOURCES=platform_tlaser.s osfpal.s
+SOURCES=osfpal.s platform_tlaser.s
 PREPROC := $(SOURCES:.s=.i)
 OBJS := $(SOURCES:.s=.o)
     
@@ -23,7 +23,7 @@ OBJS := $(SOURCES:.s=.o)
 
 
 all: $(PREPROC) $(OBJS)
-	ld $(LDFLAGS) -o osfpal $(OBJS) 
+	$(LD) $(LDFLAGS) -o osfpal $(OBJS) 
 
 clean:
 	rm -f *.o *.i osfpal
