@@ -449,7 +449,7 @@ class MetaConfigNode(type):
 
     # Print instance info to .ini file.
     def instantiate(cls, name, parent = None):
-        instance = Node(name, cls, cls.type, parent, isParamContext(cls))
+        instance = Node(name, cls, parent, isParamContext(cls))
 
         if hasattr(cls, 'check'):
             cls.check()
@@ -584,10 +584,13 @@ class NodeParam(object):
 
 class Node(object):
     all = {}
-    def __init__(self, name, realtype, type, parent, paramcontext):
+    def __init__(self, name, realtype, parent, paramcontext):
         self.name = name
         self.realtype = realtype
-        self.type = type
+        if isSimObject(realtype):
+            self.type = realtype.type
+        else:
+            self.type = None
         self.parent = parent
         self.children = []
         self.child_names = {}
