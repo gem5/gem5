@@ -324,6 +324,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
     Param<string> boot_osflags;
     VectorParam<string> binned_fns;
 
+    Param<string> readfile;
+
 END_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
@@ -338,7 +340,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
     INIT_PARAM(pal_code, "file that contains palcode"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                                    "a"),
-    INIT_PARAM(binned_fns, "functions to be broken down and binned")
+    INIT_PARAM(binned_fns, "functions to be broken down and binned"),
+    INIT_PARAM_DFLT(readfile, "file to read startup script from", "")
 
 
 END_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
@@ -349,6 +352,7 @@ CREATE_SIM_OBJECT(LinuxSystem)
                                        physmem, kernel_code, console_code,
                                        pal_code, boot_osflags, bin, binned_fns);
 
+    sys->readfile = readfile;
     return sys;
 }
 

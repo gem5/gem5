@@ -2540,6 +2540,9 @@ decode OPCODE default Unknown::unknown() {
             0x43: m5checkpoint({{
 		AlphaPseudo::m5checkpoint(xc->xcBase());
 	    }}, IsNonSpeculative);
+            0x50: m5readfile({{
+		AlphaPseudo::readfile(xc->xcBase());
+	    }}, IsNonSpeculative);
 	}
     }
 

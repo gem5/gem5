@@ -96,6 +96,8 @@ class System : public SimObject
 
     std::vector<ExecContext *> execContexts;
 
+    std::string readfile;
+
     virtual int registerExecContext(ExecContext *xc);
     virtual void replaceExecContext(int xcIndex, ExecContext *xc);
 

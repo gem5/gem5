@@ -47,4 +47,5 @@ namespace AlphaPseudo
     void dumpstats(ExecContext *xc);
     void dumpresetstats(ExecContext *xc);
     void m5checkpoint(ExecContext *xc);
+    void readfile(ExecContext *xc);
 }

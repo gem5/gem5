@@ -26,15 +26,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <fcntl.h>
+#include <cstdio>
 #include <string>
 
 #include "arch/alpha/pseudo_inst.hh"
+#include "arch/alpha/vtophys.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace Stats;
@@ -147,6 +152,43 @@ namespace AlphaPseudo
         Tick repeat = NS2Ticks(period);
 
         Checkpoint::setup(when, repeat);
+    }
+
+    void
+    readfile(ExecContext *xc)
+    {
+        const string &file = xc->cpu->system->readfile;
+        if (file.empty()) {
+            xc->regs.intRegFile[0] = ULL(0);
+            return;
+        }
+
+        Addr vaddr = xc->regs.intRegFile[16];
+        uint64_t len = xc->regs.intRegFile[17];
+        uint64_t offset = xc->regs.intRegFile[18];
+        uint64_t result = 0;
+
+        int fd = ::open(file.c_str(), O_RDONLY, 0);
+        if (fd < 0)
+            panic("could not open file %s\n", file);
+
+        char *buf = new char[len];
+        char *p = buf;
+        while (len > 0) {
+            int bytes = ::pread(fd, p, len, offset);
+            if (bytes <= 0)
+                break;
+
+            p += bytes;
+            offset += bytes;
+            result += bytes;
+            len -= bytes;
+        }
+
+        close(fd);
+        CopyIn(xc, vaddr, buf, result);
+        delete [] buf;
+        xc->regs.intRegFile[0] = result;
     }
 
     class Context : public ParamContext
