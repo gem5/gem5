@@ -38,7 +38,6 @@
 // forward decls
 class BaseParam;
 class SimObject;
-struct stat_sdb_t;
 
 //
 // The context of a parameter definition... usually a subclass of

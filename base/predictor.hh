@@ -34,8 +34,6 @@
 #ifndef __PREDICTOR_HH__
 #define __PREDICTOR_HH__
 
-struct stat_sdb_t;
-
 class GenericPredictor {
 
   public:

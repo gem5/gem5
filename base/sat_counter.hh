@@ -36,8 +36,6 @@
 #include "base/statistics.hh"
 #include "sim/sim_stats.hh"
 
-struct stat_sdb_t;
-
 //
 //
 //  A simple saturating counter predictor
