@@ -279,13 +279,23 @@ TsunamiCChip::clearDRIR(uint64_t bitvector)
 void
 TsunamiCChip::serialize(std::ostream &os)
 {
-    // code should be written
+    SERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
+    SERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
+    SERIALIZE_ARRAY(dirInterrupting, Tsunami::Max_CPUs);
+    SERIALIZE_SCALAR(drir);
+    SERIALIZE_SCALAR(misc);
+    SERIALIZE_SCALAR(RTCInterrupting);
 }
 
 void
 TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
 {
-    //code should be written
+    UNSERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
+    UNSERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
+    UNSERIALIZE_ARRAY(dirInterrupting, Tsunami::Max_CPUs);
+    UNSERIALIZE_SCALAR(drir);
+    UNSERIALIZE_SCALAR(misc);
+    UNSERIALIZE_SCALAR(RTCInterrupting);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
