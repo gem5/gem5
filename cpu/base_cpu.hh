@@ -81,26 +81,40 @@ class BaseCPU : public SimObject
 #ifdef FULL_SYSTEM
     BaseCPU(const std::string &_name, int _number_of_threads,
             Counter max_insts_any_thread, Counter max_insts_all_threads,
+            Counter max_loads_any_thread, Counter max_loads_all_threads,
             System *_system,
             int num, Tick freq);
 #else
     BaseCPU(const std::string &_name, int _number_of_threads,
             Counter max_insts_any_thread = 0,
-            Counter max_insts_all_threads = 0);
+            Counter max_insts_all_threads = 0,
+            Counter max_loads_any_thread = 0,
+            Counter max_loads_all_threads = 0);
 #endif
 
     virtual ~BaseCPU() {}
 
     virtual void regStats();
 
-    /// Number of threads we're actually simulating (<= SMT_MAX_THREADS).
-    /// This is a constant for the duration of the simulation.
+    /**
+     *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).
+     * This is a constant for the duration of the simulation.
+     */
     int number_of_threads;
 
-    /// Vector of per-thread instruction-based event queues.  Used for
-    /// scheduling events based on number of instructions committed by
-    /// a particular thread.
+    /**
+     * Vector of per-thread instruction-based event queues.  Used for
+     * scheduling events based on number of instructions committed by
+     * a particular thread.
+     */
     EventQueue **comInsnEventQueue;
+
+    /**
+     * Vector of per-thread load-based event queues.  Used for
+     * scheduling events based on number of loads committed by
+     *a particular thread.
+     */
+    EventQueue **comLoadEventQueue;
 
 #ifdef FULL_SYSTEM
     System *system;
@@ -109,7 +123,10 @@ class BaseCPU : public SimObject
     virtual bool filterThisInstructionPrefetch(int thread_number,
         short asid, Addr prefetchTarget) const { return true; }
 
-    /// Return pointer to CPU's branch predictor (NULL if none).
+    /**
+     * Return pointer to CPU's branch predictor (NULL if none).
+     * @return Branch predictor pointer.
+     */
     virtual BranchPred *getBranchPred() { return NULL; };
 
   private:

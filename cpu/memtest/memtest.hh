@@ -49,9 +49,10 @@ class MemTest : public BaseCPU
             unsigned _memorySize,
             unsigned _percentReads,
             unsigned _percentUncacheable,
-            unsigned _maxReads,
             unsigned _progressInterval,
-            Addr _traceAddr);
+            Addr _traceAddr,
+            Counter max_loads_any_thread,
+            Counter max_loads_all_threads);
 
     // register statistics
     virtual void regStats();
@@ -82,8 +83,6 @@ class MemTest : public BaseCPU
     unsigned percentReads;	// target percentage of read accesses
     unsigned percentUncacheable;
 
-    Tick maxReads;		// max # of reads to perform (then quit)
-
     unsigned blockSize;
 
     Addr blockAddrMask;
@@ -104,9 +103,9 @@ class MemTest : public BaseCPU
 
     Tick noResponseCycles;
 
-    Statistics::Scalar<long long int> numReads;
-    Statistics::Scalar<long long int> numWrites;
-    Statistics::Scalar<long long int> numCopies;
+    Statistics::Scalar<> numReads;
+    Statistics::Scalar<> numWrites;
+    Statistics::Scalar<> numCopies;
 
     // called by MemCompleteEvent::process()
     void completeRequest(MemReqPtr req, uint8_t *data);

@@ -104,6 +104,8 @@ SimpleCPU::SimpleCPU(const string &_name,
                      System *_system,
                      Counter max_insts_any_thread,
                      Counter max_insts_all_threads,
+                     Counter max_loads_any_thread,
+                     Counter max_loads_all_threads,
                      AlphaItb *itb, AlphaDtb *dtb,
                      FunctionalMemory *mem,
                      MemInterface *icache_interface,
@@ -111,15 +113,19 @@ SimpleCPU::SimpleCPU(const string &_name,
                      int cpu_id, Tick freq)
     : BaseCPU(_name, /* number_of_threads */ 1,
               max_insts_any_thread, max_insts_all_threads,
+              max_loads_any_thread, max_loads_all_threads,
               _system, cpu_id, freq),
 #else
 SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      Counter max_insts_any_thread,
                      Counter max_insts_all_threads,
+                     Counter max_loads_any_thread,
+                     Counter max_loads_all_threads,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface)
     : BaseCPU(_name, /* number_of_threads */ 1,
-              max_insts_any_thread, max_insts_all_threads),
+              max_insts_any_thread, max_insts_all_threads,
+              max_loads_any_thread, max_loads_all_threads),
 #endif
       tickEvent(this), xc(NULL), cacheCompletionEvent(this)
 {
@@ -636,6 +642,11 @@ SimpleCPU::tick()
             numMemRefs++;
         }
 
+        if (si->isLoad()) {
+            ++numLoad;
+            comLoadEventQueue[0]->serviceEvents(numLoad);
+        }
+
         if (traceData)
             traceData->finalize();
 
@@ -679,6 +690,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
     Param<Counter> max_insts_any_thread;
     Param<Counter> max_insts_all_threads;
+    Param<Counter> max_loads_any_thread;
+    Param<Counter> max_loads_all_threads;
 
 #ifdef FULL_SYSTEM
     SimObjectParam<AlphaItb *> itb;
@@ -703,6 +716,12 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
                     0),
     INIT_PARAM_DFLT(max_insts_all_threads,
                     "terminate when all threads have reached this insn count",
+                    0),
+    INIT_PARAM_DFLT(max_loads_any_thread,
+                    "terminate when any thread reaches this load count",
+                    0),
+    INIT_PARAM_DFLT(max_loads_all_threads,
+                    "terminate when all threads have reached this load count",
                     0),
 
 #ifdef FULL_SYSTEM
@@ -730,6 +749,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
 
     return new SimpleCPU(getInstanceName(), system,
                          max_insts_any_thread, max_insts_all_threads,
+                         max_loads_any_thread, max_loads_all_threads,
                          itb, dtb, mem,
                          (icache) ? icache->getInterface() : NULL,
                          (dcache) ? dcache->getInterface() : NULL,
@@ -738,6 +758,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
 
     return new SimpleCPU(getInstanceName(), workload,
                          max_insts_any_thread, max_insts_all_threads,
+                         max_loads_any_thread, max_loads_all_threads,
                          icache->getInterface(), dcache->getInterface());
 
 #endif // FULL_SYSTEM
