@@ -225,7 +225,6 @@ main(int argc, char **argv)
     myProgName = argv[0];
 
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
-    signal(SIGPIPE, SIG_IGN);
     signal(SIGTRAP, SIG_IGN);
     signal(SIGUSR1, dumpStatsHandler);		// dump intermediate stats
     signal(SIGUSR2, dumprstStatsHandler);	// dump and reset stats

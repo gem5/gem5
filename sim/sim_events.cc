@@ -86,7 +86,7 @@ void
 CountedExitEvent::process()
 {
     if (--downCounter == 0) {
-        new SimExitEvent(cause, 1);
+        new SimExitEvent(cause, 0);
     }
 }
 
