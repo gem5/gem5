@@ -36,6 +36,7 @@
 #include "sim/host.hh"
 #include "dev/alpha_access.h"
 #include "mem/functional_mem/mmap_device.hh"
+#include "dev/tsunami_io.hh"
 
 class BaseCPU;
 class SimConsole;
@@ -87,7 +88,7 @@ class AlphaConsole : public MmapDevice
     AlphaConsole(const std::string &name, SimConsole *cons,
                  SimpleDisk *d, int size,
                  System *system, BaseCPU *cpu,
-                 TlaserClock *clock, int num_cpus,
+                 TsunamiIO *clock, int num_cpus,
                  Addr addr, Addr mask, MemoryController *mmu);
 
   public:

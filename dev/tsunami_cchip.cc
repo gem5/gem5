@@ -17,15 +17,16 @@
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
+#include "cpu/intr_control.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
-TsunamiCChip::TsunamiCChip(const string &name, /*Tsunami *t,*/
+TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t,
                        Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu)/*, tsunami(t) */
+    : MmapDevice(name, addr, mask, mmu), tsunami(t)
 {
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
         dim[i] = 0;
@@ -33,6 +34,11 @@ TsunamiCChip::TsunamiCChip(const string &name, /*Tsunami *t,*/
     }
 
     drir = 0;
+    misc = 0;
+    RTCInterrupting = false;
+
+    //Put back pointer in tsunami
+    tsunami->cchip = this;
 }
 
 Fault
@@ -56,7 +62,7 @@ TsunamiCChip::read(MemReqPtr req, uint8_t *data)
                   panic("TSDEV_CC_MTR not implemeted\n");
                    return No_Fault;
               case TSDEV_CC_MISC:
-                  panic("TSDEV_CC_MISC not implemented\n");
+                *(uint64_t*)data = misc;
                   return No_Fault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
@@ -141,7 +147,12 @@ TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
                   panic("TSDEV_CC_MTR write not implemented\n");
                    return No_Fault;
               case TSDEV_CC_MISC:
-                  panic("TSDEV_CC_MISC write not implemented\n");
+                //If it is the seventh bit, clear the RTC interrupt
+                if ((*(uint64_t*) data) & (1<<7)) {
+                    RTCInterrupting = false;
+                    tsunami->intrctrl->clear(0, TheISA::INTLEVEL_IRQ2, 0);
+                    misc &= ~(1<<7);
+                } else panic("TSDEV_CC_MISC write not implemented\n");
                   return No_Fault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
@@ -216,7 +227,7 @@ TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
- //   SimObjectParam<Tsunami *> tsunami;
+    SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
@@ -225,7 +236,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
-//    INIT_PARAM(tsunami, "Tsunami"),
+    INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask")
@@ -234,7 +245,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 CREATE_SIM_OBJECT(TsunamiCChip)
 {
-    return new TsunamiCChip(getInstanceName(), /*tsunami,*/ addr, mask, mmu);
+    return new TsunamiCChip(getInstanceName(), tsunami, addr, mask, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiCChip", TsunamiCChip)

@@ -46,12 +46,13 @@
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
+#include "dev/tsunami_io.hh"
 
 using namespace std;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons,
                            SimpleDisk *d, int size, System *system,
-                           BaseCPU *cpu, TlaserClock *clock, int num_cpus,
+                           BaseCPU *cpu, TsunamiIO *clock, int num_cpus,
                            Addr addr, Addr mask, MemoryController *mmu)
     : MmapDevice(name, addr, mask, mmu), disk(d), console(cons)
 {
@@ -250,7 +251,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
     Param<Addr> mask;
     SimObjectParam<System *> system;
     SimObjectParam<BaseCPU *> cpu;
-    SimObjectParam<TlaserClock *> clock;
+    SimObjectParam<TsunamiIO *> clock;
 
 END_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 

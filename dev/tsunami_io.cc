@@ -19,6 +19,7 @@
 #include "dev/tsunami.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
+#include "dev/tsunami_cchip.hh"
 
 using namespace std;
 
@@ -28,8 +29,8 @@ using namespace std;
 #define RTC_RATE  1024
 
 // Timer Event for Periodic interrupt of RTC
-TsunamiIO::RTCEvent::RTCEvent()
-    : Event(&mainEventQueue)
+TsunamiIO::RTCEvent::RTCEvent(Tsunami* t)
+    : Event(&mainEventQueue), tsunami(t)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
     schedule(curTick + ticksPerSecond/RTC_RATE);
@@ -41,6 +42,11 @@ TsunamiIO::RTCEvent::process()
     DPRINTF(MC146818, "Timer Interrupt\n");
     schedule(curTick + ticksPerSecond/RTC_RATE);
     //Actually interrupt the processor here
+    if (!tsunami->cchip->RTCInterrupting) {
+        tsunami->cchip->misc |= 1 << 7;
+        tsunami->cchip->RTCInterrupting = true;
+        tsunami->intrctrl->post(0, TheISA::INTLEVEL_IRQ2, 0);
+    }
 }
 
 const char *
@@ -98,9 +104,9 @@ TsunamiIO::ClockEvent::Status()
 
 
 
-TsunamiIO::TsunamiIO(const string &name, /*Tsunami *t,*/ time_t init_time,
-                       Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu)/*, tsunami(t) */
+TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
+                       Addr addr, Addr mask, uint32_t f, MemoryController *mmu)
+    : MmapDevice(name, addr, mask, mmu), tsunami(t), rtc(t), freq(f)
 {
     timerData = 0;
     set_time(init_time == 0 ? time(NULL) : init_time);
@@ -289,28 +295,31 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
- //   SimObjectParam<Tsunami *> tsunami;
+    SimObjectParam<Tsunami *> tsunami;
     Param<time_t> time;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
+    Param<uint32_t> frequency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
-//    INIT_PARAM(tsunami, "Tsunami"),
+    INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM_DFLT(time, "System time to use "
             "(0 for actual time, default is 1/1/06", ULL(1136073600)),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask")
+    INIT_PARAM(mask, "Address Mask"),
+    INIT_PARAM(frequency, "clock interrupt frequency")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
-    return new TsunamiIO(getInstanceName(), /*tsunami,*/ time,  addr, mask, mmu);
+    return new TsunamiIO(getInstanceName(), tsunami, time,  addr,
+                         mask, frequency, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

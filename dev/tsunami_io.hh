@@ -72,8 +72,10 @@ class TsunamiIO : public MmapDevice
 
     class RTCEvent : public Event
     {
+      protected:
+        Tsunami* tsunami;
       public:
-        RTCEvent();
+        RTCEvent(Tsunami* t);
 
         virtual void process();
         virtual const char *description();
@@ -85,6 +87,8 @@ class TsunamiIO : public MmapDevice
       uint8_t mask2;
       uint8_t mode1;
       uint8_t mode2;
+
+    Tsunami *tsunami;
 
       /* This timer is initilized, but after I wrote the code
          it doesn't seem to be used again, and best I can tell
@@ -103,9 +107,13 @@ class TsunamiIO : public MmapDevice
 
       uint32_t timerData;
 
+    uint32_t  freq;
+
   public:
-    TsunamiIO(const std::string &name, /*Tsunami *t,*/ time_t init_time,
-               Addr addr, Addr mask, MemoryController *mmu);
+    uint32_t  frequency() const { return freq; }
+
+    TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
+               Addr addr, Addr mask, uint32_t f, MemoryController *mmu);
 
     void set_time(time_t t);
 

@@ -46,14 +46,13 @@ class Tsunami : public SimObject
 
     static const int Max_CPUs = 4;
 
-    IntrControl *intctrl;
+    IntrControl *intrctrl;
 //    ConsoleListener *listener;
     SimConsole *cons;
 
     ScsiController *scsi;
     EtherDev *ethernet;
 
-    TlaserClock *clock;
     TsunamiCChip *cchip;
     TsunamiPChip *pchip;
 
@@ -64,7 +63,7 @@ class Tsunami : public SimObject
 
   public:
     Tsunami(const std::string &name, ScsiController *scsi,
-               EtherDev *ethernet, TlaserClock *clock, TsunamiCChip *cc, TsunamiPChip *pc,
+               EtherDev *ethernet,
                SimConsole *, IntrControl *intctrl, int intrFreq);
 
     virtual void serialize(std::ostream &os);

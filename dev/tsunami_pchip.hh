@@ -61,7 +61,7 @@ class TsunamiPChip : public MmapDevice
 
 
   public:
-    TsunamiPChip(const std::string &name, /*Tsunami *t,*/
+    TsunamiPChip(const std::string &name, Tsunami *t,
                Addr addr, Addr mask, MemoryController *mmu);
 
     virtual Fault read(MemReqPtr req, uint8_t *data);

@@ -23,9 +23,9 @@
 
 using namespace std;
 
-TsunamiPChip::TsunamiPChip(const string &name, /*Tsunami *t,*/
+TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t,
                        Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu)/*, tsunami(t) */
+    : MmapDevice(name, addr, mask, mmu), tsunami(t)
 {
     wsba0 = 0;
     wsba1 = 0;
@@ -40,6 +40,8 @@ TsunamiPChip::TsunamiPChip(const string &name, /*Tsunami *t,*/
     tba2 = 0;
     tba3 = 0;
 
+    //Set back pointer in tsunami
+    tsunami->pchip = this;
 }
 
 Fault
@@ -234,7 +236,7 @@ TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
 
-/*    SimObjectParam<Tsunami *> tsunami;*/
+    SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
@@ -243,7 +245,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
-    /*INIT_PARAM(tsunami, "Tsunami"),*/
+    INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask")
@@ -252,7 +254,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
 CREATE_SIM_OBJECT(TsunamiPChip)
 {
-    return new TsunamiPChip(getInstanceName(), /*tsunami,*/ addr, mask, mmu);
+    return new TsunamiPChip(getInstanceName(), tsunami, addr, mask, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiPChip", TsunamiPChip)

@@ -44,10 +44,9 @@
 using namespace std;
 
 Tsunami::Tsunami(const string &name, ScsiController *s, EtherDev *e,
-                       TlaserClock *c, TsunamiCChip *cc, TsunamiPChip *pc, SimConsole *con,
-               IntrControl *ic, int intr_freq)
-    : SimObject(name), intctrl(ic), cons(con), scsi(s), ethernet(e),
-      clock(c), cchip(cc), pchip(pc), interrupt_frequency(intr_freq)
+                       SimConsole *con, IntrControl *ic, int intr_freq)
+    : SimObject(name), intrctrl(ic), cons(con), scsi(s), ethernet(e),
+      interrupt_frequency(intr_freq)
 {
     for (int i = 0; i < Tsunami::Max_CPUs; i++)
         intr_sum_type[i] = 0;
@@ -69,9 +68,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
     SimObjectParam<ScsiController *> scsi;
     SimObjectParam<EtherDev *> ethernet;
-    SimObjectParam<TlaserClock *> clock;
-    SimObjectParam<TsunamiCChip *> cchip;
-    SimObjectParam<TsunamiPChip *> pchip;
     SimObjectParam<SimConsole *> cons;
     SimObjectParam<IntrControl *> intrctrl;
     Param<int> interrupt_frequency;
@@ -82,9 +78,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
     INIT_PARAM(scsi, "scsi controller"),
     INIT_PARAM(ethernet, "ethernet controller"),
-    INIT_PARAM(clock, "turbolaser clock"),
-    INIT_PARAM(cchip, "cchip"),
-    INIT_PARAM(pchip, "pchip"),
     INIT_PARAM(cons, "system console"),
     INIT_PARAM(intrctrl, "interrupt controller"),
     INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1200)
@@ -94,8 +87,8 @@ END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
 CREATE_SIM_OBJECT(Tsunami)
 {
-    return new Tsunami(getInstanceName(), scsi, ethernet, clock,
-                           cchip, pchip, cons, intrctrl, interrupt_frequency);
+    return new Tsunami(getInstanceName(), scsi, ethernet,
+                           cons, intrctrl, interrupt_frequency);
 }
 
 REGISTER_SIM_OBJECT("Tsunami", Tsunami)
