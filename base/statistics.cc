@@ -209,7 +209,6 @@ Data::python_dump(const string &name, const string &subname)
             ++i;
         }
     }
-//    py->next();
 }
 
 void
