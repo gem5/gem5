@@ -159,10 +159,10 @@ class NSGigE : public PciDev
     dp_rom rom;
 
     /** pci settings */
-    bool io_enable;
+    bool ioEnable;
 #if 0
-    bool mem_enable;
-    bool bm_enable;
+    bool memEnable;
+    bool bmEnable;
 #endif
 
     /*** BASIC STRUCTURES FOR TX/RX ***/
@@ -177,7 +177,6 @@ class NSGigE : public PciDev
     uint8_t *rxPacketBufPtr;
     uint32_t txXferLen;
     uint32_t rxXferLen;
-    uint32_t txPktXmitted;
     bool rxDmaFree;
     bool txDmaFree;
 
@@ -189,8 +188,6 @@ class NSGigE : public PciDev
     TxState txState;
     /** Current Transmit Descriptor Done */
     bool CTDD;
-    /** amt of data in the txDataFifo in bytes (logical) */
-    uint32_t txFifoCnt;
     /** current amt of free space in txDataFifo in bytes */
     uint32_t txFifoAvail;
     /** halt the tx state machine after next packet */
