@@ -44,12 +44,14 @@ Import('env')
 # Base sources used by all configurations.
 base_sources = Split('''
 	arch/alpha/decoder.cc
+        arch/alpha/alpha_full_cpu_exec.cc
 	arch/alpha/fast_cpu_exec.cc
 	arch/alpha/simple_cpu_exec.cc
 	arch/alpha/inorder_cpu_exec.cc
 	arch/alpha/full_cpu_exec.cc
 	arch/alpha/faults.cc
 	arch/alpha/isa_traits.cc
+        arch/alpha/ooo_cpu_exec.cc
 
 	base/circlebuf.cc
 	base/copyright.cc
@@ -89,10 +91,33 @@ base_sources = Split('''
 	base/stats/text.cc
 
 	cpu/base_cpu.cc
+        cpu/base_dyn_inst.cc
 	cpu/exec_context.cc
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
+        cpu/beta_cpu/2bit_local_pred.cc
+        cpu/beta_cpu/alpha_dyn_inst.cc
+        cpu/beta_cpu/alpha_full_cpu.cc
+        cpu/beta_cpu/alpha_full_cpu_builder.cc
+        cpu/beta_cpu/bpred_unit.cc
+        cpu/beta_cpu/btb.cc
+        cpu/beta_cpu/commit.cc
+        cpu/beta_cpu/decode.cc
+        cpu/beta_cpu/fetch.cc
+        cpu/beta_cpu/free_list.cc
+        cpu/beta_cpu/full_cpu.cc
+        cpu/beta_cpu/iew.cc
+        cpu/beta_cpu/inst_queue.cc
+        cpu/beta_cpu/ldstq.cc
+        cpu/beta_cpu/mem_dep_unit.cc
+        cpu/beta_cpu/ras.cc
+        cpu/beta_cpu/rename.cc
+        cpu/beta_cpu/rename_map.cc
+        cpu/beta_cpu/rob.cc
+        cpu/beta_cpu/sat_counter.cc
+        cpu/beta_cpu/store_set.cc
+        cpu/beta_cpu/tournament_pred.cc
 	cpu/fast_cpu/fast_cpu.cc
 	cpu/full_cpu/bpred.cc
 	cpu/full_cpu/commit.cc
@@ -113,30 +138,34 @@ base_sources = Split('''
 	cpu/full_cpu/ls_queue.cc
 	cpu/full_cpu/machine_queue.cc
         cpu/full_cpu/pc_sample_profile.cc
-	cpu/full_cpu/pipetrace.cc
-	cpu/full_cpu/readyq.cc
-	cpu/full_cpu/reg_info.cc
-	cpu/full_cpu/rob_station.cc
-	cpu/full_cpu/spec_memory.cc
-	cpu/full_cpu/spec_state.cc
-	cpu/full_cpu/storebuffer.cc
-	cpu/full_cpu/writeback.cc
-	cpu/full_cpu/iq/iq_station.cc
-	cpu/full_cpu/iq/iqueue.cc
-	cpu/full_cpu/iq/segmented/chain_info.cc
-	cpu/full_cpu/iq/segmented/chain_wire.cc
-	cpu/full_cpu/iq/segmented/iq_seg.cc
-	cpu/full_cpu/iq/segmented/iq_segmented.cc
-	cpu/full_cpu/iq/segmented/seg_chain.cc
-	cpu/full_cpu/iq/seznec/iq_seznec.cc
-	cpu/full_cpu/iq/standard/iq_standard.cc
-	cpu/sampling_cpu/sampling_cpu.cc
-	cpu/simple_cpu/simple_cpu.cc
-	cpu/inorder_cpu/inorder_cpu.cc
-	cpu/trace/reader/mem_trace_reader.cc
-	cpu/trace/reader/ibm_reader.cc
-	cpu/trace/reader/itx_reader.cc
-	cpu/trace/reader/m5_reader.cc
+        cpu/full_cpu/pipetrace.cc
+        cpu/full_cpu/readyq.cc
+        cpu/full_cpu/reg_info.cc
+        cpu/full_cpu/rob_station.cc
+        cpu/full_cpu/spec_memory.cc
+        cpu/full_cpu/spec_state.cc
+        cpu/full_cpu/storebuffer.cc
+        cpu/full_cpu/writeback.cc
+        cpu/full_cpu/iq/iq_station.cc
+        cpu/full_cpu/iq/iqueue.cc
+        cpu/full_cpu/iq/segmented/chain_info.cc
+        cpu/full_cpu/iq/segmented/chain_wire.cc
+        cpu/full_cpu/iq/segmented/iq_seg.cc
+        cpu/full_cpu/iq/segmented/iq_segmented.cc
+        cpu/full_cpu/iq/segmented/seg_chain.cc
+        cpu/full_cpu/iq/seznec/iq_seznec.cc
+        cpu/full_cpu/iq/standard/iq_standard.cc
+        cpu/inorder_cpu/inorder_cpu.cc
+        cpu/ooo_cpu/ea_list.cc
+        cpu/ooo_cpu/ooo_cpu.cc
+        cpu/ooo_cpu/ooo_dyn_inst.cc
+        cpu/ooo_cpu/ooo_sim_obj.cc
+        cpu/sampling_cpu/sampling_cpu.cc
+        cpu/simple_cpu/simple_cpu.cc
+        cpu/trace/reader/mem_trace_reader.cc
+        cpu/trace/reader/ibm_reader.cc
+        cpu/trace/reader/itx_reader.cc
+        cpu/trace/reader/m5_reader.cc
 
 	mem/base_hier.cc
 	mem/base_mem.cc
@@ -363,10 +392,12 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
 # several files are generated from arch/$TARGET_ISA/isa_desc.
 env.Command(Split('''arch/alpha/decoder.cc
 		     arch/alpha/decoder.hh
+                     arch/alpha/alpha_full_cpu_exec.cc
 		     arch/alpha/fast_cpu_exec.cc
                      arch/alpha/simple_cpu_exec.cc
                      arch/alpha/inorder_cpu_exec.cc
-                     arch/alpha/full_cpu_exec.cc'''),
+                     arch/alpha/full_cpu_exec.cc
+                     arch/alpha/ooo_cpu_exec.cc'''),
             Split('''arch/alpha/isa_desc
 		     arch/isa_parser.py'''),
             '$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/alpha')

@@ -148,6 +148,10 @@ static const Addr PageOffset = PageBytes - 1;
         NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs
     };
 
+    enum {
+        TotalDataRegs = NumIntRegs + NumFloatRegs
+    };
+
     typedef union {
         IntReg  intreg;
         FloatReg   fpreg;

@@ -40,6 +40,8 @@
 #include "sim/param.hh"
 #include "sim/sim_events.hh"
 
+#include "base/trace.hh"
+
 using namespace std;
 
 vector<BaseCPU *> BaseCPU::cpuList;
@@ -49,6 +51,7 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
+extern void debug_break();
 #ifdef FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
     : SimObject(p->name), frequency(p->freq), checkInterrupts(true),
@@ -58,8 +61,15 @@ BaseCPU::BaseCPU(Params *p)
     : SimObject(p->name), params(p), number_of_threads(p->numberOfThreads)
 #endif
 {
+    DPRINTF(FullCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
+
+    debug_break();
+
     // add self to global list of CPUs
     cpuList.push_back(this);
+
+    DPRINTF(FullCPU, "BaseCPU: CPU added to cpuList, mem address %#x.\n",
+            this);
 
     if (number_of_threads > maxThreadsPerCPU)
         maxThreadsPerCPU = number_of_threads;

@@ -744,9 +744,9 @@ output header {{
 	/// Memory request flags.  See mem_req_base.hh.
         unsigned memAccessFlags;
 	/// Pointer to EAComp object.
-	const StaticInstPtr<AlphaISA> eaCompPtr;
+	StaticInstPtr<AlphaISA> eaCompPtr;
 	/// Pointer to MemAcc object.
-	const StaticInstPtr<AlphaISA> memAccPtr;
+	StaticInstPtr<AlphaISA> memAccPtr;
 
 	/// Constructor
 	Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
@@ -762,8 +762,8 @@ output header {{
 
       public:
 
-	const StaticInstPtr<AlphaISA> &eaCompInst() const { return eaCompPtr; }
-	const StaticInstPtr<AlphaISA> &memAccInst() const { return memAccPtr; }
+	StaticInstPtr<AlphaISA> &eaCompInst() { return eaCompPtr; }
+	StaticInstPtr<AlphaISA> &memAccInst() { return memAccPtr; }
     };
 
     /**
@@ -2539,9 +2539,9 @@ decode OPCODE default Unknown::unknown() {
 		xc->syscall();
 	    }}, IsNonSpeculative);
 	    // Read uniq reg into ABI return value register (r0)
-	    0x9e: rduniq({{ R0 = Runiq; }});
+	    0x9e: rduniq({{ R0 = Runiq; }}, IsNonSpeculative);
 	    // Write uniq reg with value from ABI arg register (r16)
-	    0x9f: wruniq({{ Runiq = R16; }});
+	    0x9f: wruniq({{ Runiq = R16; }}, IsNonSpeculative);
 	}
     }
 #endif

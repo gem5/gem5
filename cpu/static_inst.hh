@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __STATIC_INST_HH__
-#define __STATIC_INST_HH__
+#ifndef __CPU_STATIC_INST_HH__
+#define __CPU_STATIC_INST_HH__
 
 #include <bitset>
 #include <string>
@@ -40,8 +40,17 @@
 #include "targetarch/isa_traits.hh"
 
 // forward declarations
+struct AlphaSimpleImpl;
+struct OoOImpl;
 class ExecContext;
 class DynInst;
+
+template <class Impl>
+class AlphaDynInst;
+
+template <class Impl>
+class OoODynInst;
+
 class FastCPU;
 class SimpleCPU;
 class InorderCPU;
@@ -251,7 +260,7 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the EA computation.
      */
-    virtual const
+    virtual
     StaticInstPtr<ISA> &eaCompInst() const { return nullStaticInstPtr; }
 
     /**
@@ -260,7 +269,7 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the memory access (not the EA computation).
      */
-    virtual const
+    virtual
     StaticInstPtr<ISA> &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.
@@ -308,30 +317,7 @@ class StaticInst : public StaticInstBase
             delete cachedDisassembly;
     }
 
-    /**
-     * Execute this instruction under SimpleCPU model.
-     */
-    virtual Fault execute(SimpleCPU *xc,
-                          Trace::InstRecord *traceData) const = 0;
-
-    /**
-     * Execute this instruction under InorderCPU model.
-     */
-    virtual Fault execute(InorderCPU *xc,
-                          Trace::InstRecord *traceData) const = 0;
-
-
-    /**
-     * Execute this instruction under FastCPU model.
-     */
-    virtual Fault execute(FastCPU *xc,
-                          Trace::InstRecord *traceData) const = 0;
-
-    /**
-     * Execute this instruction under detailed FullCPU model.
-     */
-    virtual Fault execute(DynInst *xc,
-                          Trace::InstRecord *traceData) const = 0;
+#include "static_inst_impl.hh"
 
     /**
      * Return the target address for a PC-relative branch.
@@ -464,4 +450,4 @@ class StaticInstPtr : public RefCountingPtr<StaticInst<ISA> >
     }
 };
 
-#endif // __STATIC_INST_HH__
+#endif // __CPU_STATIC_INST_HH__
