@@ -64,16 +64,9 @@ class LinuxSystem : public System
 
     BreakPCEvent *kernelPanicEvent;
     BreakPCEvent *consolePanicEvent;
-    LinuxBadAddrEvent *badaddrEvent;
-    LinuxSkipFuncEvent *skipPowerStateEvent;
-    LinuxSkipFuncEvent *skipScavengeBootEvent;
     LinuxSkipFuncEvent *skipCacheProbeEvent;
     LinuxSkipIdeDelay50msEvent *skipIdeDelay50msEvent;
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
-    LinuxPrintfEvent *printfEvent;
-    LinuxDebugPrintfEvent *debugPrintfEvent;
-    LinuxDebugPrintfEvent *debugPrintfrEvent;
-    LinuxDumpMbufEvent *dumpMbufEvent;
 
   private:
 
@@ -81,9 +74,7 @@ class LinuxSystem : public System
     Addr kernelEnd;
     Addr kernelEntry;
     bool bin;
-
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
+    std::vector<string> binned_fns;
 
   public:
     std::vector<RemoteGDB *>   remoteGDB;
@@ -98,8 +89,10 @@ class LinuxSystem : public System
                 const std::string &console_path,
                 const std::string &palcode,
                 const std::string &boot_osflags,
-        const std::string &bootloader_path,
-                                const bool _bin);
+                const std::string &bootloader_path,
+                const bool _bin,
+                const std::vector<std::string> &_binned_fns);
+
     ~LinuxSystem();
 
     void setDelayLoop(ExecContext *xc);
@@ -111,12 +104,6 @@ class LinuxSystem : public System
     Addr getKernelEnd() const { return kernelEnd; }
     Addr getKernelEntry() const { return kernelEntry; }
     bool breakpoint();
-
-    static void Printf(AlphaArguments args);
-    static void DumpMbuf(AlphaArguments args);
-
-    bool findCaller(std::string callee, std::string caller) const;
-    void dumpState(ExecContext *xc) const;
 };
 
 #endif // __LINUX_SYSTEM_HH__

@@ -48,9 +48,9 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
                          MemoryController *_memCtrl, PhysicalMemory *_physmem,
                          const string &kernel_path, const string &console_path,
                          const string &palcode, const string &boot_osflags,
-                         const bool _bin, const vector<string> &binned_fns)
-    : System(_name, _init_param, _memCtrl, _physmem, _bin, binned_fns),
-      bin(_bin), binned_fns(binned_fns)
+                         const bool _bin, const vector<string> &_binned_fns)
+    : System(_name, _init_param, _memCtrl, _physmem, _bin,_binned_fns),
+      bin(_bin), binned_fns(_binned_fns)
 {
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
