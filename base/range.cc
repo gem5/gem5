@@ -26,49 +26,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
-#include <string>
-
+#include "base/intmath.hh"
 #include "base/range.hh"
+#include "base/str.hh"
 
 using namespace std;
 
-int
-main()
+template <class T>
+bool
+__x_parse_range(const std::string &str, T &start, T &end)
 {
-  Range<int> r1(make_pair(9, 28));
-  Range<unsigned> r2("0x1000:+0x100");
+    std::vector<std::string> values;
+    tokenize(values, str, ':');
 
-  cout << r1 << "\n"
-       << r2 << "\n";
+    T thestart, theend;
 
-#define RANGETEST(X, C, Y) \
-  cout << X << " "#C" " << Y << " => " << ((X C Y) ? "true" : "false") << "\n"
+    if (values.size() != 2)
+        return false;
 
-#define TESTEM(X, Y) do { \
-  RANGETEST(X, < , Y); \
-  RANGETEST(X, <=, Y); \
-  RANGETEST(X, > , Y); \
-  RANGETEST(X, >=, Y); \
-  RANGETEST(X, ==, Y); \
-  RANGETEST(X, !=, Y); \
-  RANGETEST(Y, < , X); \
-  RANGETEST(Y, <=, X); \
-  RANGETEST(Y, > , X); \
-  RANGETEST(Y, >=, X); \
-  RANGETEST(Y, ==, X); \
-  RANGETEST(Y, !=, X); \
-} while (0)
+    std::string s = values[0];
+    std::string e = values[1];
 
-  TESTEM(8, r1);
-  TESTEM(9, r1);
-  TESTEM(27, r1);
-  TESTEM(28, r1);
+    if (!to_number(s, thestart))
+        return false;
 
-  TESTEM(0x0fff, r2);
-  TESTEM(0x1000, r2);
-  TESTEM(0x10ff, r2);
-  TESTEM(0x1100, r2);
+    bool increment = (e[0] == '+');
+    if (increment)
+        e = e.substr(1);
 
-  return 0;
+    if (!to_number(e, theend))
+        return false;
+
+    if (increment)
+        theend += thestart;
+
+    start = thestart;
+    end = theend;
+
+    return true;
 }
+
+#define RANGE_PARSE(type) \
+template<> bool \
+__parse_range(const std::string &s, type &start, type &end) \
+{ return __x_parse_range(s, start, end); }
+
+RANGE_PARSE(unsigned long long);
+RANGE_PARSE(signed long long);
+RANGE_PARSE(unsigned long);
+RANGE_PARSE(signed long);
+RANGE_PARSE(unsigned int);
+RANGE_PARSE(signed int);
+RANGE_PARSE(unsigned short);
+RANGE_PARSE(signed short);
+RANGE_PARSE(unsigned char);
+RANGE_PARSE(signed char);

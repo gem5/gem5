@@ -49,7 +49,7 @@ nmtest: nmtest.o object_file.o symtab.o misc.o str.o
 offtest: offtest.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
-rangetest: rangetest.o str.o
+rangetest: rangetest.o range.o str.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
 stattest: cprintf.o hostinfo.o misc.o python.o statistics.o stattest.o \
