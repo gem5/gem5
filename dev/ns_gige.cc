@@ -274,6 +274,180 @@ NSGigE::regStats()
         .prereq(rxBytes)
         ;
 
+    postedSwi
+        .name(name() + ".postedSwi")
+        .desc("number of software interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalSwi
+        .name(name() + ".totalSwi")
+        .desc("number of total Swi written to ISR")
+        .precision(0)
+        ;
+
+    coalescedSwi
+        .name(name() + ".coalescedSwi")
+        .desc("average number of Swi's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedRxIdle
+        .name(name() + ".postedRxIdle")
+        .desc("number of rxIdle interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalRxIdle
+        .name(name() + ".totalRxIdle")
+        .desc("number of total RxIdle written to ISR")
+        .precision(0)
+        ;
+
+    coalescedRxIdle
+        .name(name() + ".coalescedRxIdle")
+        .desc("average number of RxIdle's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedRxOk
+        .name(name() + ".postedRxOk")
+        .desc("number of RxOk interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalRxOk
+        .name(name() + ".totalRxOk")
+        .desc("number of total RxOk written to ISR")
+        .precision(0)
+        ;
+
+    coalescedRxOk
+        .name(name() + ".coalescedRxOk")
+        .desc("average number of RxOk's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedRxDesc
+        .name(name() + ".postedRxDesc")
+        .desc("number of RxDesc interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalRxDesc
+        .name(name() + ".totalRxDesc")
+        .desc("number of total RxDesc written to ISR")
+        .precision(0)
+        ;
+
+    coalescedRxDesc
+        .name(name() + ".coalescedRxDesc")
+        .desc("average number of RxDesc's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedTxOk
+        .name(name() + ".postedTxOk")
+        .desc("number of TxOk interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalTxOk
+        .name(name() + ".totalTxOk")
+        .desc("number of total TxOk written to ISR")
+        .precision(0)
+        ;
+
+    coalescedTxOk
+        .name(name() + ".coalescedTxOk")
+        .desc("average number of TxOk's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedTxIdle
+        .name(name() + ".postedTxIdle")
+        .desc("number of TxIdle interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalTxIdle
+        .name(name() + ".totalTxIdle")
+        .desc("number of total TxIdle written to ISR")
+        .precision(0)
+        ;
+
+    coalescedTxIdle
+        .name(name() + ".coalescedTxIdle")
+        .desc("average number of TxIdle's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedTxDesc
+        .name(name() + ".postedTxDesc")
+        .desc("number of TxDesc interrupts posted to CPU")
+        .precision(0)
+        ;
+
+    totalTxDesc
+        .name(name() + ".totalTxDesc")
+        .desc("number of total TxDesc written to ISR")
+        .precision(0)
+        ;
+
+    coalescedTxDesc
+        .name(name() + ".coalescedTxDesc")
+        .desc("average number of TxDesc's coalesced into each post")
+        .precision(0)
+        ;
+
+    postedRxOrn
+        .name(name() + ".postedRxOrn")
+        .desc("number of RxOrn posted to CPU")
+        .precision(0)
+        ;
+
+    totalRxOrn
+        .name(name() + ".totalRxOrn")
+        .desc("number of total RxOrn written to ISR")
+        .precision(0)
+        ;
+
+    coalescedRxOrn
+        .name(name() + ".coalescedRxOrn")
+        .desc("average number of RxOrn's coalesced into each post")
+        .precision(0)
+        ;
+
+    coalescedTotal
+        .name(name() + ".coalescedTotal")
+        .desc("average number of interrupts coalesced into each post")
+        .precision(0)
+        ;
+
+    postedInterrupts
+        .name(name() + ".postedInterrupts")
+        .desc("number of posts to CPU")
+        .precision(0)
+        ;
+
+    droppedPackets
+        .name(name() + ".droppedPackets")
+        .desc("number of packets dropped")
+        .precision(0)
+        ;
+
+    coalescedSwi = totalSwi / postedInterrupts;
+    coalescedRxIdle = totalRxIdle / postedInterrupts;
+    coalescedRxOk = totalRxOk / postedInterrupts;
+    coalescedRxDesc = totalRxDesc / postedInterrupts;
+    coalescedTxOk = totalTxOk / postedInterrupts;
+    coalescedTxIdle = totalTxIdle / postedInterrupts;
+    coalescedTxDesc = totalTxDesc / postedInterrupts;
+    coalescedRxOrn = totalRxOrn / postedInterrupts;
+
+    coalescedTotal = (totalSwi + totalRxIdle + totalRxOk + totalRxDesc + totalTxOk
+                      + totalTxIdle + totalTxDesc + totalRxOrn) / postedInterrupts;
+
     txBandwidth = txBytes * Stats::constant(8) / simSeconds;
     rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
     txPacketRate = txPackets / simSeconds;
@@ -931,6 +1105,33 @@ NSGigE::devIntrPost(uint32_t interrupts)
     interrupts &= ~ISR_NOIMPL;
     regs.isr |= interrupts;
 
+    if (interrupts & regs.imr) {
+        if (interrupts & ISR_SWI) {
+            totalSwi++;
+        }
+        if (interrupts & ISR_RXIDLE) {
+            totalRxIdle++;
+        }
+        if (interrupts & ISR_RXOK) {
+            totalRxOk++;
+        }
+        if (interrupts & ISR_RXDESC) {
+            totalRxDesc++;
+        }
+        if (interrupts & ISR_TXOK) {
+            totalTxOk++;
+        }
+        if (interrupts & ISR_TXIDLE) {
+            totalTxIdle++;
+        }
+        if (interrupts & ISR_TXDESC) {
+            totalTxDesc++;
+        }
+        if (interrupts & ISR_RXORN) {
+            totalRxOrn++;
+        }
+    }
+
     DPRINTF(EthernetIntr,
             "interrupt written to ISR: intr=%#x isr=%#x imr=%#x\n",
             interrupts, regs.isr, regs.imr);
@@ -943,11 +1144,45 @@ NSGigE::devIntrPost(uint32_t interrupts)
     }
 }
 
+/* writing this interrupt counting stats inside this means that this function
+   is now limited to being used to clear all interrupts upon the kernel
+   reading isr and servicing.  just telling you in case you were thinking
+   of expanding use.
+*/
 void
 NSGigE::devIntrClear(uint32_t interrupts)
 {
     if (interrupts & ISR_RESERVE)
         panic("Cannot clear a reserved interrupt");
+
+    if (regs.isr & regs.imr & ISR_SWI) {
+        postedSwi++;
+    }
+    if (regs.isr & regs.imr & ISR_RXIDLE) {
+        postedRxIdle++;
+    }
+    if (regs.isr & regs.imr & ISR_RXOK) {
+        postedRxOk++;
+    }
+    if (regs.isr & regs.imr & ISR_RXDESC) {
+            postedRxDesc++;
+    }
+    if (regs.isr & regs.imr & ISR_TXOK) {
+        postedTxOk++;
+    }
+    if (regs.isr & regs.imr & ISR_TXIDLE) {
+        postedTxIdle++;
+    }
+    if (regs.isr & regs.imr & ISR_TXDESC) {
+        postedTxDesc++;
+    }
+    if (regs.isr & regs.imr & ISR_RXORN) {
+        postedRxOrn++;
+    }
+
+    if (regs.isr & regs.imr & (ISR_SWI | ISR_RXIDLE | ISR_RXOK | ISR_RXDESC |
+                               ISR_TXOK | ISR_TXIDLE | ISR_TXDESC | ISR_RXORN) )
+        postedInterrupts++;
 
     interrupts &= ~ISR_NOIMPL;
     regs.isr &= ~interrupts;
@@ -2033,6 +2268,7 @@ NSGigE::recvPacket(PacketPtr packet)
     if (rxFifo.avail() < packet->length) {
         DPRINTF(Ethernet,
                 "packet will not fit in receive buffer...packet dropped\n");
+        droppedPackets++;
         devIntrPost(ISR_RXORN);
         return false;
     }
