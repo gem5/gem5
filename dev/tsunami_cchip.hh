@@ -71,6 +71,7 @@ class TsunamiCChip : public FunctionalMemory
      * that can occur.
      */
     uint64_t drir;
+    uint64_t ipiInterrupting[Tsunami::Max_CPUs];
 
   public:
     TsunamiCChip(const std::string &name, Tsunami *t, Addr a,
@@ -86,7 +87,7 @@ class TsunamiCChip : public FunctionalMemory
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     uint64_t misc;
-    bool RTCInterrupting;
+    bool RTCInterrupting[Tsunami::Max_CPUs];
 };
 
 #endif // __TSUNAMI_CCHIP_HH__

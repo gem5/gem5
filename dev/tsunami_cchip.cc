@@ -31,11 +31,12 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
         dim[i] = 0;
         dir[i] = 0;
         dirInterrupting[i] = false;
+        ipiInterrupting[i] = false;
+        RTCInterrupting[i] = false;
     }
 
     drir = 0;
     misc = 0;
-    RTCInterrupting = false;
 
     //Put back pointer in tsunami
     tsunami->cchip = this;
@@ -135,25 +136,67 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
 
+    bool supportedWrite = false;
+
+
     switch (req->size) {
 
       case sizeof(uint64_t):
           switch(daddr) {
-              case TSDEV_CC_CSR:
+            case TSDEV_CC_CSR:
                   panic("TSDEV_CC_CSR write\n");
                   return No_Fault;
               case TSDEV_CC_MTR:
                   panic("TSDEV_CC_MTR write not implemented\n");
                    return No_Fault;
               case TSDEV_CC_MISC:
-                //If it is the seventh bit, clear the RTC interrupt
-                if ((*(uint64_t*) data) & (1<<4)) {
-                    RTCInterrupting = false;
-                    tsunami->intrctrl->clear(0, TheISA::INTLEVEL_IRQ2, 0);
-                    DPRINTF(Tsunami, "clearing rtc interrupt\n");
-                    misc &= ~(1<<4);
-                } else panic("TSDEV_CC_MISC write not implemented\n");
-                  return No_Fault;
+                //If it is the 4-7th bit, clear the RTC interrupt
+                uint64_t itintr;
+                if ((itintr = (*(uint64_t*) data) & (0xf<<4))) {
+                    //Clear the bits in ITINTR
+                    misc &= ~(itintr);
+                    for (int i=0; i < 4; i++) {
+                        if ((itintr & (1 << (i+4))) && RTCInterrupting[i]) {
+                            tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ2, 0);
+                            RTCInterrupting[i] = false;
+                            DPRINTF(Tsunami, "clearing rtc interrupt\n");
+                        }
+                    }
+                    supportedWrite = true;
+                }
+                //If it is 12th-15th bit, IPI sent to Processor 1
+                uint64_t ipreq;
+                if ((ipreq = (*(uint64_t*) data) & (0xf << 12))) {
+                    //Set the bits in IPINTR
+                    misc |= (ipreq >> 4);
+                    for (int i=0; i < 4; i++) {
+                        if ((ipreq & (1 << (i + 12)))) {
+                            if (!ipiInterrupting[i])
+                                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ3, 0);
+                            ipiInterrupting[i]++;
+                            DPRINTF(IPI, "send cpu=%d pending=%d from=%d\n", i,
+                                    ipiInterrupting[i], req->cpu_num);
+                        }
+                    }
+                    supportedWrite = true;
+                }
+                //If it is bits 8-11, then clearing IPI's
+                uint64_t ipintr;
+                if ((ipintr = (*(uint64_t*) data) & (0xf << 8))) {
+                    //Clear the bits in IPINTR
+                    misc &= ~(ipintr);
+                    for (int i=0; i < 4; i++) {
+                        if ((ipintr & (1 << (i + 8))) && ipiInterrupting[i]) {
+                            if (!(--ipiInterrupting[i]))
+                                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ3, 0);
+                            DPRINTF(IPI, "clearing cpu=%d pending=%d from=%d\n", i,
+                                    ipiInterrupting[i] + 1, req->cpu_num);
+                        }
+                    }
+                    supportedWrite = true;
+                }
+                if(!supportedWrite) panic("TSDEV_CC_MISC write not implemented\n");
+                return No_Fault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
               case TSDEV_CC_AAR2:
@@ -287,9 +330,10 @@ TsunamiCChip::serialize(std::ostream &os)
     SERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
     SERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
     SERIALIZE_ARRAY(dirInterrupting, Tsunami::Max_CPUs);
+    SERIALIZE_ARRAY(ipiInterrupting, Tsunami::Max_CPUs);
     SERIALIZE_SCALAR(drir);
     SERIALIZE_SCALAR(misc);
-    SERIALIZE_SCALAR(RTCInterrupting);
+    SERIALIZE_ARRAY(RTCInterrupting, Tsunami::Max_CPUs);
 }
 
 void
@@ -298,9 +342,10 @@ TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
     UNSERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
     UNSERIALIZE_ARRAY(dirInterrupting, Tsunami::Max_CPUs);
+    UNSERIALIZE_ARRAY(ipiInterrupting, Tsunami::Max_CPUs);
     UNSERIALIZE_SCALAR(drir);
     UNSERIALIZE_SCALAR(misc);
-    UNSERIALIZE_SCALAR(RTCInterrupting);
+    UNSERIALIZE_ARRAY(RTCInterrupting, Tsunami::Max_CPUs);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
