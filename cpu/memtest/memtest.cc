@@ -28,10 +28,9 @@
 
 // FIX ME: make trackBlkAddr use blocksize from actual cache, not hard coded
 
-#include <iomanip>
-#include <set>
-#include <sstream>
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <vector>
 
 #include "base/misc.hh"
@@ -44,8 +43,6 @@
 #include "sim/stats.hh"
 
 using namespace std;
-
-int TESTER_ALLOCATOR=0;
 
 MemTest::MemTest(const string &name,
                  MemInterface *_cache_interface,
@@ -114,8 +111,6 @@ MemTest::MemTest(const string &name,
     noResponseCycles = 0;
     numReads = 0;
     tickEvent.schedule(0);
-
-    id = TESTER_ALLOCATOR++;
 }
 
 static void
@@ -132,11 +127,6 @@ printData(ostream &os, uint8_t *data, int nbytes)
 void
 MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
 {
-    //Remove the address from the list of outstanding
-    std::set<unsigned>::iterator removeAddr = outstandingAddrs.find(req->paddr);
-    assert(removeAddr != outstandingAddrs.end());
-    outstandingAddrs.erase(removeAddr);
-
     switch (req->cmd) {
       case Read:
         if (memcmp(req->data, data, req->size) != 0) {
@@ -168,10 +158,6 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
         break;
 
       case Copy:
-        //Also remove dest from outstanding list
-        removeAddr = outstandingAddrs.find(req->dest);
-        assert(removeAddr != outstandingAddrs.end());
-        outstandingAddrs.erase(removeAddr);
         numCopiesStat++;
         break;
 
@@ -226,7 +212,7 @@ MemTest::tick()
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick + 1);
 
-    if (++noResponseCycles >= 500000) {
+    if (++noResponseCycles >= 5000) {
         cerr << name() << ": deadlocked at cycle " << curTick << endl;
         fatal("");
     }
@@ -245,16 +231,6 @@ MemTest::tick()
     unsigned cacheable = rand() % 100;
     unsigned source_align = rand() % 100;
     unsigned dest_align = rand() % 100;
-
-    //If we aren't doing copies, use id as offset, and do a false sharing
-    //mem tester
-    if (percentCopies == 0) {
-        //We can eliminate the lower bits of the offset, and then use the id
-        //to offset within the blks
-        offset1 &= ~63; //Not the low order bits
-        offset1 += id;
-        access_size = 0;
-    }
 
     MemReqPtr req = new MemReq();
 
@@ -275,13 +251,6 @@ MemTest::tick()
 
     if (cmd < percentReads) {
         // read
-
-        //For now we only allow one outstanding request per addreess per tester
-        //This means we assume CPU does write forwarding to reads that alias something
-        //in the cpu store buffer.
-        if (outstandingAddrs.find(req->paddr) != outstandingAddrs.end()) return;
-        else outstandingAddrs.insert(req->paddr);
-
         req->cmd = Read;
         uint8_t *result = new uint8_t[8];
         checkMem->access(Read, req->paddr, result, req->size);
@@ -304,13 +273,6 @@ MemTest::tick()
         }
     } else if (cmd < (100 - percentCopies)){
         // write
-
-        //For now we only allow one outstanding request per addreess per tester
-        //This means we assume CPU does write forwarding to reads that alias something
-        //in the cpu store buffer.
-        if (outstandingAddrs.find(req->paddr) != outstandingAddrs.end()) return;
-        else outstandingAddrs.insert(req->paddr);
-
         req->cmd = Write;
         memcpy(req->data, &data, req->size);
         checkMem->access(Write, req->paddr, req->data, req->size);
@@ -336,11 +298,6 @@ MemTest::tick()
         // copy
         Addr source = ((base) ? baseAddr1 : baseAddr2) + offset1;
         Addr dest = ((base) ? baseAddr2 : baseAddr1) + offset2;
-        if (outstandingAddrs.find(source) != outstandingAddrs.end()) return;
-        else outstandingAddrs.insert(source);
-        if (outstandingAddrs.find(dest) != outstandingAddrs.end()) return;
-        else outstandingAddrs.insert(dest);
-
         if (source_align >= percentSourceUnaligned) {
             source = blockAddr(source);
         }
