@@ -26,6 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if defined(__APPLE__)
+#define _GLIBCPP_USE_C99 1
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <string>

@@ -46,6 +46,7 @@
 #include "dev/disk_image.hh"
 #include "sim/builder.hh"
 #include "sim/sim_exit.hh"
+#include "targetarch/byte_swap.hh"
 
 using namespace std;
 
@@ -227,7 +228,17 @@ SafeRead(ifstream &stream, void *data, int count)
 template<class T>
 void
 SafeRead(ifstream &stream, T &data)
-{ SafeRead(stream, &data, sizeof(data)); }
+{
+    SafeRead(stream, &data, sizeof(data));
+}
+
+template<class T>
+void
+SafeReadSwap(ifstream &stream, T &data)
+{
+    SafeRead(stream, &data, sizeof(data));
+    data = htoa(data);
+}
 
 bool
 CowDiskImage::open(const string &file)
@@ -246,21 +257,21 @@ CowDiskImage::open(const string &file)
         panic("Could not open %s: Invalid magic", file);
 
     uint32_t major, minor;
-    SafeRead(stream, major);
-    SafeRead(stream, minor);
+    SafeReadSwap(stream, major);
+    SafeReadSwap(stream, minor);
 
     if (major != VersionMajor && minor != VersionMinor)
         panic("Could not open %s: invalid version %d.%d != %d.%d",
               file, major, minor, VersionMajor, VersionMinor);
 
     uint64_t sector_count;
-    SafeRead(stream, sector_count);
+    SafeReadSwap(stream, sector_count);
     table = new SectorTable(sector_count);
 
 
     for (uint64_t i = 0; i < sector_count; i++) {
         uint64_t offset;
-        SafeRead(stream, offset);
+        SafeReadSwap(stream, offset);
 
         Sector *sector = new Sector;
         SafeRead(stream, sector, sizeof(Sector));
@@ -300,8 +311,17 @@ SafeWrite(ofstream &stream, const void *data, int count)
 template<class T>
 void
 SafeWrite(ofstream &stream, const T &data)
-{ SafeWrite(stream, &data, sizeof(data)); }
+{
+    SafeWrite(stream, &data, sizeof(data));
+}
 
+template<class T>
+void
+SafeWriteSwap(ofstream &stream, const T &data)
+{
+    T swappeddata = htoa(data);
+    SafeWrite(stream, &swappeddata, sizeof(data));
+}
 void
 CowDiskImage::save()
 {
@@ -322,9 +342,9 @@ CowDiskImage::save(const string &file)
     memcpy(&magic, "COWDISK!", sizeof(magic));
     SafeWrite(stream, magic);
 
-    SafeWrite(stream, (uint32_t)VersionMajor);
-    SafeWrite(stream, (uint32_t)VersionMinor);
-    SafeWrite(stream, (uint64_t)table->size());
+    SafeWriteSwap(stream, (uint32_t)VersionMajor);
+    SafeWriteSwap(stream, (uint32_t)VersionMinor);
+    SafeWriteSwap(stream, (uint64_t)table->size());
 
     uint64_t size = table->size();
     SectorTable::iterator iter = table->begin();
@@ -334,7 +354,7 @@ CowDiskImage::save(const string &file)
         if (iter == end)
             panic("Incorrect Table Size during save of COW disk image");
 
-        SafeWrite(stream, (uint64_t)(*iter).first);
+        SafeWriteSwap(stream, (uint64_t)(*iter).first);
         SafeWrite(stream, (*iter).second->data, sizeof(Sector));
         ++iter;
     }

@@ -51,6 +51,7 @@
 #include "sim/system.hh"
 #include "dev/tsunami_io.hh"
 #include "sim/sim_object.hh"
+#include "targetarch/byte_swap.hh"
 
 using namespace std;
 
@@ -67,9 +68,6 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
                                        &AlphaConsole::cacheAccess);
         pioInterface->addAddrRange(addr, addr + size);
     }
-
-    consoleData = new uint8_t[size];
-    memset(consoleData, 0, size);
 
     alphaAccess->last_offset = size - 1;
     alphaAccess->kernStart = system->getKernelStart();
@@ -95,35 +93,84 @@ Fault
 AlphaConsole::read(MemReqPtr &req, uint8_t *data)
 {
     memset(data, 0, req->size);
-    uint64_t val;
 
     Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
 
-    switch (daddr) {
-      case offsetof(AlphaAccess, inputChar):
-        val = console->console_in();
-        break;
-
-      default:
-        val = *(uint64_t *)(consoleData + daddr);
-        break;
+    switch (req->size)
+    {
+        case sizeof(uint32_t):
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *(uint32_t*)data);
+            switch (daddr)
+            {
+                case offsetof(AlphaAccess, last_offset):
+                    *(uint32_t*)data = alphaAccess->last_offset;
+                    break;
+                case offsetof(AlphaAccess, version):
+                    *(uint32_t*)data = alphaAccess->version;
+                    break;
+                case offsetof(AlphaAccess, numCPUs):
+                    *(uint32_t*)data = alphaAccess->numCPUs;
+                    break;
+                case offsetof(AlphaAccess, bootStrapCPU):
+                    *(uint32_t*)data = alphaAccess->bootStrapCPU;
+                    break;
+                case offsetof(AlphaAccess, intrClockFrequency):
+                    *(uint32_t*)data = alphaAccess->intrClockFrequency;
+                    break;
+                default:
+                    panic("Unknown 32bit access, %#x\n", daddr);
+            }
+            break;
+        case sizeof(uint64_t):
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *(uint64_t*)data);
+            switch (daddr)
+            {
+                case offsetof(AlphaAccess, inputChar):
+                    *(uint64_t*)data = console->console_in();
+                    break;
+                case offsetof(AlphaAccess, cpuClock):
+                    *(uint64_t*)data = alphaAccess->cpuClock;
+                    break;
+                case offsetof(AlphaAccess, mem_size):
+                    *(uint64_t*)data = alphaAccess->mem_size;
+                    break;
+                case offsetof(AlphaAccess, kernStart):
+                    *(uint64_t*)data = alphaAccess->kernStart;
+                    break;
+                case offsetof(AlphaAccess, kernEnd):
+                    *(uint64_t*)data = alphaAccess->kernEnd;
+                    break;
+                case offsetof(AlphaAccess, entryPoint):
+                    *(uint64_t*)data = alphaAccess->entryPoint;
+                    break;
+                case offsetof(AlphaAccess, diskUnit):
+                    *(uint64_t*)data = alphaAccess->diskUnit;
+                    break;
+                case offsetof(AlphaAccess, diskCount):
+                    *(uint64_t*)data = alphaAccess->diskCount;
+                    break;
+                case offsetof(AlphaAccess, diskPAddr):
+                    *(uint64_t*)data = alphaAccess->diskPAddr;
+                    break;
+                case offsetof(AlphaAccess, diskBlock):
+                    *(uint64_t*)data = alphaAccess->diskBlock;
+                    break;
+                case offsetof(AlphaAccess, diskOperation):
+                    *(uint64_t*)data = alphaAccess->diskOperation;
+                    break;
+                case offsetof(AlphaAccess, outputChar):
+                    *(uint64_t*)data = alphaAccess->outputChar;
+                    break;
+                case offsetof(AlphaAccess, bootStrapImpure):
+                    *(uint64_t*)data = alphaAccess->bootStrapImpure;
+                    break;
+                default:
+                    panic("Unknown 64bit access, %#x\n", daddr);
+            }
+            break;
+        default:
+            return Machine_Check_Fault;
     }
-
-    DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, val);
-
-    switch (req->size) {
-      case sizeof(uint32_t):
-        *(uint32_t *)data = (uint32_t)val;
-        break;
-
-      case sizeof(uint64_t):
-        *(uint64_t *)data = val;
-        break;
-
-      default:
-        return Machine_Check_Fault;
-    }
-
 
     return No_Fault;
 }
