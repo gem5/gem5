@@ -560,13 +560,19 @@ declare {{
 	{
 	    std::string mnem_str(mnemonic);
 
-	    mnem_str += ((_destRegIdx[0] >= FP_Base_DepTag)
-			 ? fpTrappingModeSuffix[trappingMode]
-			 : intTrappingModeSuffix[trappingMode]);
-	    mnem_str += roundingModeSuffix[roundingMode];
+#ifndef SS_COMPATIBLE_DISASSEMBLY
+	    std::string suffix("");
+	    suffix += ((_destRegIdx[0] >= FP_Base_DepTag)
+		       ? fpTrappingModeSuffix[trappingMode]
+		       : intTrappingModeSuffix[trappingMode]);
+	    suffix += roundingModeSuffix[roundingMode];
+
+	    if (suffix != "") {
+		mnem_str = csprintf("%s/%s", mnemonic, suffix);
+	    }
+#endif
 
 	    std::stringstream ss;
-
 	    ccprintf(ss, "%-10s ", mnem_str.c_str());
 
 	    // just print the first two source regs... if there's
@@ -1790,8 +1796,10 @@ decode OPCODE default Unknown::unknown() {
     format LoadOrPrefetch {
 	0x28: ldl({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }});
 	0x29: ldq({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, EVICT_NEXT);
+	// IsFloating flag on lds gets the prefetch to disassemble
+	// using f31 instead of r31... funcitonally it's unnecessary
 	0x22: lds({{ EA = Rb + disp; }}, {{ Fa.uq = s_to_t(Mem.ul); }},
-		  PF_EXCLUSIVE);
+		  PF_EXCLUSIVE, IsFloating);  
     }
 
     format Store {

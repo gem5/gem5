@@ -74,11 +74,11 @@ Trace::InstRecord::dump(ostream &outs)
     // There's a bug in gcc 2.x library that prevents setw()
     // from working properly on strings
     string mc(staticInst->disassemble(PC, debugSymbolTable));
-    while (mc.length() < 25)
+    while (mc.length() < 26)
         mc += " ";
     outs << mc;
 #else
-    outs << setw(25) << staticInst->disassemble(PC, debugSymbolTable);
+    outs << setw(26) << left << staticInst->disassemble(PC, debugSymbolTable);
 #endif
 
     outs << " : ";
