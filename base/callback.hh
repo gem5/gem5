@@ -31,26 +31,76 @@
 
 #include <list>
 
-class Callback {
+/**
+ * Generic callback class.  This base class provides a virutal process
+ * function that gets called when the callback queue is processed.
+ */
+class Callback
+{
   public:
+    /**
+     * virtualize the destructor to make sure that the correct one
+     * gets called.
+     */
     virtual ~Callback() {}
+
+    /**
+     * virtual process function that is invoked when the callback
+     * queue is executed.
+     */
     virtual void process() = 0;
 };
 
 class CallbackQueue
 {
   protected:
-    std::list<Callback *> callbacks;
+    /**
+     * Simple typedef for the data structure that stores all of the
+     * callbacks.
+     */
+    typedef std::list<Callback *> queue;
+
+    /**
+     * List of all callbacks.  To be called in fifo order.
+     */
+    queue callbacks;
 
   public:
-    void add(Callback *callback) { callbacks.push_back(callback); }
-    bool empty() const { return callbacks.empty(); }
-    void processOne() {
-        Callback *c = callbacks.front();
-        callbacks.pop_front();
-        c->process();
+    /**
+     * Add a callback to the end of the queue
+     * @param callback the callback to be added to the queue
+     */
+    void add(Callback *callback)
+    {
+        callbacks.push_back(callback);
     }
-    void processAll() { while (!empty()) processOne(); }
+
+    /**
+     * Find out if there are any callbacks in the queue
+     */
+    bool empty() const { return callbacks.empty(); }
+
+    /**
+     * process all callbacks
+     */
+    void process()
+    {
+        queue::iterator i = callbacks.begin();
+        queue::iterator end = callbacks.end();
+
+        while (i != end) {
+            (*i)->process();
+            ++i;
+        }
+    }
+
+    /**
+     * clear the callback queue
+     */
+    void clear()
+    {
+        callbacks.clear();
+    }
 };
 
 #endif // __CALLBACK_HH__
