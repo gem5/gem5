@@ -366,6 +366,14 @@ class NSGigE : public PciDev
     Stats::Scalar<> rxBytes;
     Stats::Scalar<> txPackets;
     Stats::Scalar<> rxPackets;
+    Stats::Scalar<> txIPChecksums;
+    Stats::Scalar<> rxIPChecksums;
+    Stats::Scalar<> txTCPChecksums;
+    Stats::Scalar<> rxTCPChecksums;
+    Stats::Scalar<> descDmaReads;
+    Stats::Scalar<> descDmaWrites;
+    Stats::Scalar<> descDmaRdBytes;
+    Stats::Scalar<> descDmaWrBytes;
     Stats::Formula txBandwidth;
     Stats::Formula rxBandwidth;
     Stats::Formula txPacketRate;

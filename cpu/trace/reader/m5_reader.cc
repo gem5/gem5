@@ -54,10 +54,12 @@ M5Reader::getNextReq(MemReqPtr &req)
     traceFile.read((char*) &ref, sizeof(ref));
     if (!traceFile.eof()) {
         //traceFile.read((char*) &ref, sizeof(ref));
+#ifndef NDEBUG
         int gcount = traceFile.gcount();
         assert(gcount != 0 || traceFile.eof());
         assert(gcount == sizeof(ref));
         assert(ref.cmd < 12);
+#endif
         tmp_req = new MemReq();
         tmp_req->paddr = ref.paddr;
         tmp_req->asid = ref.asid;
