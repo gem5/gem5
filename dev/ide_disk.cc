@@ -35,7 +35,6 @@
 #include <deque>
 #include <string>
 
-#include "arch/alpha/pmap.h"
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
@@ -51,6 +50,7 @@
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/universe.hh"
+#include "targetarch/isa_traits.hh"
 
 using namespace std;
 
@@ -188,14 +188,14 @@ IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
     uint32_t bytesInPage = 0;
 
     // First calculate how many bytes could be in the page
-    if (bytesLeft > ALPHA_PGBYTES)
-        bytesInPage = ALPHA_PGBYTES;
+    if (bytesLeft > TheISA::PageBytes)
+        bytesInPage = TheISA::PageBytes;
     else
         bytesInPage = bytesLeft;
 
     // Next, see if we have crossed a page boundary, and adjust
     Addr upperBound = curAddr + bytesInPage;
-    Addr pageBound = alpha_trunc_page(curAddr) + ALPHA_PGBYTES;
+    Addr pageBound = TheISA::TruncPage(curAddr) + TheISA::PageBytes;
 
     assert(upperBound >= curAddr && "DMA read wraps around address space!\n");
 
@@ -510,7 +510,7 @@ IdeDisk::dmaWriteDone()
 
     // setup the initial page and DMA address
     curAddr = curPrd.getBaseAddr();
-    pageAddr = alpha_trunc_page(curAddr);
+    pageAddr = TheISA::TruncPage(curAddr);
     dmaAddr = pciToDma(curAddr);
 
     // clear out the data buffer
@@ -518,14 +518,14 @@ IdeDisk::dmaWriteDone()
 
     while (bytesRead < curPrd.getByteCount()) {
         // see if we have crossed into a new page
-        if (pageAddr != alpha_trunc_page(curAddr)) {
+        if (pageAddr != TheISA::TruncPage(curAddr)) {
             // write the data to memory
             memcpy(physmem->dma_addr(dmaAddr, bytesInPage),
                    (void *)(dataBuffer + (bytesRead - bytesInPage)),
                    bytesInPage);
 
             // update the DMA address and page address
-            pageAddr = alpha_trunc_page(curAddr);
+            pageAddr = TheISA::TruncPage(curAddr);
             dmaAddr = pciToDma(curAddr);
 
             bytesInPage = 0;
