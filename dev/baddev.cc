@@ -78,7 +78,7 @@ BadDevice::write(MemReqPtr &req, const uint8_t *data)
 Tick
 BadDevice::cacheAccess(MemReqPtr &req)
 {
-    return curTick + 1000;
+    return curTick;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
@@ -103,7 +103,8 @@ END_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
 CREATE_SIM_OBJECT(BadDevice)
 {
-    return new BadDevice(getInstanceName(), addr, mmu, hier, io_bus, devicename);
+    return new BadDevice(getInstanceName(), addr, mmu, hier, io_bus,
+                         devicename);
 }
 
 REGISTER_SIM_OBJECT("BadDevice", BadDevice)

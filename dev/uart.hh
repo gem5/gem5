@@ -76,7 +76,8 @@ class Uart : public PioDevice
 
   public:
     Uart(const string &name, SimConsole *c, MemoryController *mmu,
-            Addr a, Addr s, HierParams *hier, Bus *bus, Platform *p);
+         Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
+         Platform *p);
 
     Fault read(MemReqPtr &req, uint8_t *data);
     Fault write(MemReqPtr &req, const uint8_t *data);

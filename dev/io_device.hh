@@ -40,6 +40,7 @@ class PioDevice : public FunctionalMemory
 {
   protected:
     BaseInterface *pioInterface;
+    Tick pioLatency;
 
   public:
     PioDevice(const std::string &name);

@@ -88,7 +88,7 @@ Uart::IntrEvent::scheduleIntr()
 }
 
 Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
-                         Addr s, HierParams *hier, Bus *bus, Platform *p)
+           Addr s, HierParams *hier, Bus *bus, Tick pio_latency, Platform *p)
     : PioDevice(name), addr(a), size(s), cons(c), txIntrEvent(this, TX_INT),
       rxIntrEvent(this, RX_INT), platform(p)
 {
@@ -98,7 +98,8 @@ Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &Uart::cacheAccess);
-         pioInterface->addAddrRange(addr, addr + size - 1);
+        pioInterface->addAddrRange(addr, addr + size - 1);
+        pioLatency = pio_latency * bus->clockRatio;
     }
 
     readAddr = 0;
@@ -370,7 +371,7 @@ Uart::dataAvailable()
 Tick
 Uart::cacheAccess(MemReqPtr &req)
 {
-    return curTick + 1000;
+    return curTick + pioLatency;
 }
 
 void
@@ -432,6 +433,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Uart)
     Param<Addr> addr;
     Param<Addr> size;
     SimObjectParam<Bus*> io_bus;
+    Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
 
@@ -445,6 +447,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Uart)
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(size, "Device size", 0x8),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(Uart)
@@ -452,7 +455,7 @@ END_INIT_SIM_OBJECT_PARAMS(Uart)
 CREATE_SIM_OBJECT(Uart)
 {
     return new Uart(getInstanceName(), console, mmu, addr, size, hier, io_bus,
-                    platform);
+                    pio_latency, platform);
 }
 
 REGISTER_SIM_OBJECT("Uart", Uart)

@@ -50,7 +50,7 @@ using namespace std;
 
 TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
                            MemoryController *mmu, HierParams *hier,
-                           Bus *bus)
+                           Bus *bus, Tick pio_latency)
     : PioDevice(name), addr(a), tsunami(t)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
@@ -65,6 +65,7 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &TsunamiPChip::cacheAccess);
         pioInterface->addAddrRange(addr, addr + size - 1);
+        pioLatency = pio_latency * bus->clockRatio;
     }
 
 
@@ -351,7 +352,7 @@ TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
 Tick
 TsunamiPChip::cacheAccess(MemReqPtr &req)
 {
-    return curTick + 1000;
+    return curTick + pioLatency;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
@@ -360,6 +361,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     SimObjectParam<Bus*> io_bus;
+    Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
@@ -370,13 +372,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
 CREATE_SIM_OBJECT(TsunamiPChip)
 {
-    return new TsunamiPChip(getInstanceName(), tsunami, addr, mmu, hier, io_bus);
+    return new TsunamiPChip(getInstanceName(), tsunami, addr, mmu, hier,
+                            io_bus, pio_latency);
 }
 
 REGISTER_SIM_OBJECT("TsunamiPChip", TsunamiPChip)

@@ -160,7 +160,8 @@ TsunamiIO::ClockEvent::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                     Addr a, MemoryController *mmu, HierParams *hier, Bus *bus)
+                     Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
+                     Tick pio_latency)
     : PioDevice(name), addr(a), tsunami(t), rtc(t)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
@@ -169,6 +170,7 @@ TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
         pioInterface = newPioInterface(name, hier, bus, this,
                                        &TsunamiIO::cacheAccess);
         pioInterface->addAddrRange(addr, addr + size - 1);
+        pioLatency = pio_latency * bus->clockRatio;
     }
 
     // set the back pointer from tsunami to myself
@@ -425,7 +427,7 @@ TsunamiIO::clearPIC(uint8_t bitvector)
 Tick
 TsunamiIO::cacheAccess(MemReqPtr &req)
 {
-    return curTick + 1000;
+    return curTick + pioLatency;
 }
 
 void
@@ -476,6 +478,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     SimObjectParam<Bus*> io_bus;
+    Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
@@ -488,6 +491,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
@@ -495,7 +499,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 CREATE_SIM_OBJECT(TsunamiIO)
 {
     return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu, hier,
-                         io_bus);
+                         io_bus, pio_latency);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

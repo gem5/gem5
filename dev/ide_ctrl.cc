@@ -60,7 +60,7 @@ IdeController::IdeController(const string &name, IntrControl *ic,
                              MemoryController *mmu, PciConfigAll *cf,
                              PciConfigData *cd, Tsunami *t, uint32_t bus_num,
                              uint32_t dev_num, uint32_t func_num,
-                             Bus *host_bus, HierParams *hier)
+                             Bus *host_bus, Tick pio_latency, HierParams *hier)
     : PciDev(name, mmu, cf, cd, bus_num, dev_num, func_num), tsunami(t)
 {
     // put back pointer into Tsunami
@@ -105,6 +105,7 @@ IdeController::IdeController(const string &name, IntrControl *ic,
 
         dmaInterface = new DMAInterface<Bus>(name + ".dma", host_bus,
                                              host_bus, 1);
+        pioLatency = pio_latency * host_bus->clockRatio;
     }
 
     // setup the disks attached to controller
@@ -261,7 +262,7 @@ Tick
 IdeController::cacheAccess(MemReqPtr &req)
 {
     // @todo Add more accurate timing to cache access
-    return curTick + 1000;
+    return curTick + pioLatency;
 }
 
 ////
@@ -700,6 +701,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
     SimObjectParam<Bus *> io_bus;
+    Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(IdeController)
@@ -716,6 +718,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
     INIT_PARAM_DFLT(io_bus, "Host bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(IdeController)
@@ -724,7 +727,7 @@ CREATE_SIM_OBJECT(IdeController)
 {
     return new IdeController(getInstanceName(), intr_ctrl, disks, mmu,
                              configspace, configdata, tsunami, pci_bus,
-                             pci_dev, pci_func, io_bus, hier);
+                             pci_dev, pci_func, io_bus, pio_latency, hier);
 }
 
 REGISTER_SIM_OBJECT("IdeController", IdeController)

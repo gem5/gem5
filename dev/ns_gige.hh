@@ -383,9 +383,6 @@ class NSGigE : public PciDev
     Stats::Formula txPacketRate;
     Stats::Formula rxPacketRate;
 
-  private:
-    Tick pioLatency;
-
   public:
     Tick cacheAccess(MemReqPtr &req);
 };

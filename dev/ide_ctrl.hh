@@ -167,7 +167,7 @@ class IdeController : public PciDev
                   MemoryController *mmu, PciConfigAll *cf,
                   PciConfigData *cd, Tsunami *t,
                   uint32_t bus_num, uint32_t dev_num, uint32_t func_num,
-                  Bus *host_bus, HierParams *hier);
+                  Bus *host_bus, Tick pio_latency, HierParams *hier);
 
     /**
      * Deletes the connected devices.

@@ -32,7 +32,7 @@
 #include "sim/builder.hh"
 
 PioDevice::PioDevice(const std::string &name)
-    : FunctionalMemory(name), pioInterface(NULL)
+    : FunctionalMemory(name), pioInterface(NULL), pioLatency(0)
 {}
 
 PioDevice::~PioDevice()

@@ -120,13 +120,15 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
       acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false),
       physmem(pmem), intctrl(i), intrTick(0), cpuPendingIntr(false),
-      intrEvent(0), interface(0), pioLatency(pio_latency)
+      intrEvent(0), interface(0)
 {
     tsunami->ethernet = this;
 
     if (header_bus) {
         pioInterface = newPioInterface(name, hier, header_bus, this,
                                        &NSGigE::cacheAccess);
+
+        pioLatency = pio_latency * header_bus->clockRatio;
 
         if (payload_bus)
             dmaInterface = new DMAInterface<Bus>(name + ".dma",
@@ -138,9 +140,10 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
         pioInterface = newPioInterface(name, hier, payload_bus, this,
                                        &NSGigE::cacheAccess);
 
+        pioLatency = pio_latency * payload_bus->clockRatio;
+
         dmaInterface = new DMAInterface<Bus>(name + ".dma", payload_bus,
                                          payload_bus, 1);
-
     }
 
 
@@ -2659,7 +2662,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM_DFLT(header_bus, "The IO Bus to attach to for headers", NULL),
     INIT_PARAM_DFLT(payload_bus, "The IO Bus to attach to for payload", NULL),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(dma_desc_free, "DMA of Descriptors is free", false),
     INIT_PARAM_DFLT(dma_data_free, "DMA of Data is free", false),
     INIT_PARAM_DFLT(dma_read_delay, "fixed delay for dma reads", 0),
