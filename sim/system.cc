@@ -148,7 +148,10 @@ System::serialize(std::ostream &os)
             paramOut(os, csprintf("stacksize[%d]",i), size);
             for (int j=0; j<size; ++j) {
                 top = stack->top();
-                paramOut(os, csprintf("ctx[%d].stackpos[%d]",i,j), top->name);
+                paramOut(os, csprintf("ctx[%d].stackpos[%d]",i,j),
+                         top->name);
+                delete top;
+                stack->pop();
             }
         }
     }

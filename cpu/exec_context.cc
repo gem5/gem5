@@ -118,6 +118,8 @@ ExecContext::serialize(ostream &os)
         for (int j=0; j<size; ++j) {
             top = stack->top();
             paramOut(os, csprintf("stackpos[%d]",j), top->name);
+            delete top;
+            stack->pop();
         }
     } else {
         SERIALIZE_SCALAR(ctx);
