@@ -81,6 +81,8 @@ def toBool(val):
             return True
         elif val == "false" or val == "f" or val == "no" or val == "n":
             return False
+        elif val == "":
+            return False
 
     return toInteger(val) != 0
 
