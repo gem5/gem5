@@ -27,7 +27,7 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
-from importer import AddToPath, LoadMpyFile
+from mpy_importer import AddToPath, LoadMpyFile
 
 noDot = False
 try:
@@ -1298,6 +1298,3 @@ class SimObject(ConfigNode):
     type = 'SimObject'
 
 from objects import *
-
-cpp_classes = MetaSimObject.cpp_classes
-cpp_classes.sort()

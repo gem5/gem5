@@ -51,6 +51,7 @@
 #include "base/time.hh"
 #include "cpu/base_cpu.hh"
 #include "cpu/full_cpu/smt.hh"
+#include "python/pyconfig.hh"
 #include "sim/async.hh"
 #include "sim/builder.hh"
 #include "sim/configfile.hh"
@@ -61,7 +62,6 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/universe.hh"
-#include "sim/pyconfig/pyconfig.hh"
 
 using namespace std;
 
