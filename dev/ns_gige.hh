@@ -345,7 +345,7 @@ class NSGigE : public PciDev
              bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
              Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
              PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-             uint32_t func, bool rx_filter, const int eaddr[6], Addr addr);
+             uint32_t func, bool rx_filter, const int eaddr[6]);
     ~NSGigE();
 
     virtual void WriteConfig(int offset, int size, uint32_t data);

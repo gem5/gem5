@@ -97,9 +97,9 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
              bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
              Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
              PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-             uint32_t func, bool rx_filter, const int eaddr[6], Addr addr)
+             uint32_t func, bool rx_filter, const int eaddr[6])
     : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t),
-      addr(addr), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
+      txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), txPktXmitted(0), txState(txIdle), CTDD(false),
       txFifoCnt(0), txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
@@ -115,13 +115,12 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
       physmem(pmem), intctrl(i), intrTick(0),
       cpuPendingIntr(false), intrEvent(0), interface(0), pioLatency(pio_latency)
 {
-    mmu->add_child(this, Range<Addr>(addr, addr + size));
     tsunami->ethernet = this;
 
     if (header_bus) {
         pioInterface = newPioInterface(name, hier, header_bus, this,
                                        &NSGigE::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size - 1);
+
         if (payload_bus)
             dmaInterface = new DMAInterface<Bus>(name + ".dma",
                                                  header_bus, payload_bus, 1);
@@ -131,7 +130,7 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
     } else if (payload_bus) {
         pioInterface = newPioInterface(name, hier, payload_bus, this,
                                        &NSGigE::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size - 1);
+
         dmaInterface = new DMAInterface<Bus>(name + ".dma",
                                              payload_bus, payload_bus, 1);
 
@@ -226,9 +225,8 @@ NSGigE::ReadConfig(int offset, int size, uint8_t *data)
 {
     if (offset < PCI_DEVICE_SPECIFIC)
         PciDev::ReadConfig(offset, size, data);
-    else {
-        panic("need to do this\n");
-    }
+    else
+        panic("Device specific PCI config space not implemented!\n");
 }
 
 /**
@@ -240,7 +238,21 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
     if (offset < PCI_DEVICE_SPECIFIC)
         PciDev::WriteConfig(offset, size, data);
     else
-        panic("Need to do that\n");
+        panic("Device specific PCI config space not implemented!\n");
+
+    // Need to catch writes to BARs to update the PIO interface
+    switch (offset) {
+      case PCI0_BASE_ADDR0:
+        if (BARAddrs[0] != 0) {
+            addr = BARAddrs[0];
+
+            if (pioInterface)
+                pioInterface->addAddrRange(addr, addr + size - 1);
+
+            addr &= PA_UNCACHED_MASK;
+        }
+        break;
+    }
 }
 
 /**
@@ -2002,6 +2014,9 @@ NSGigE::checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len)
 void
 NSGigE::serialize(ostream &os)
 {
+    // Serialize the PciDev base class
+    PciDev::serialize(os);
+
     /*
      * Finalize any DMA events now.
      */
@@ -2153,6 +2168,9 @@ NSGigE::serialize(ostream &os)
 void
 NSGigE::unserialize(Checkpoint *cp, const std::string &section)
 {
+    // Unserialize the PciDev base class
+    PciDev::unserialize(cp, section);
+
     UNSERIALIZE_SCALAR(regs.command);
     UNSERIALIZE_SCALAR(regs.config);
     UNSERIALIZE_SCALAR(regs.mear);
@@ -2346,7 +2364,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<Tick> intr_delay;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PhysicalMemory *> physmem;
-    Param<Addr> addr;
     Param<bool> rx_filter;
     Param<string> hardware_address;
     SimObjectParam<Bus*> header_bus;
@@ -2376,7 +2393,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
-    INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
     INIT_PARAM_DFLT(hardware_address, "Ethernet Hardware Address",
                     "00:99:00:00:00:01"),
@@ -2407,12 +2423,11 @@ CREATE_SIM_OBJECT(NSGigE)
            &eaddr[0], &eaddr[1], &eaddr[2], &eaddr[3], &eaddr[4], &eaddr[5]);
 
     return new NSGigE(getInstanceName(), intr_ctrl, intr_delay,
-                        physmem, tx_delay, rx_delay, mmu, hier, header_bus,
-                        payload_bus, pio_latency, dma_desc_free, dma_data_free,
-                        dma_read_delay, dma_write_delay, dma_read_factor,
-                        dma_write_factor, configspace, configdata,
-                        tsunami, pci_bus, pci_dev, pci_func, rx_filter, eaddr,
-                        addr);
+                      physmem, tx_delay, rx_delay, mmu, hier, header_bus,
+                      payload_bus, pio_latency, dma_desc_free, dma_data_free,
+                      dma_read_delay, dma_write_delay, dma_read_factor,
+                      dma_write_factor, configspace, configdata,
+                      tsunami, pci_bus, pci_dev, pci_func, rx_filter, eaddr);
 }
 
 REGISTER_SIM_OBJECT("NSGigE", NSGigE)
