@@ -91,7 +91,6 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
 
       case sizeof(uint8_t):
         memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
-        printf("data: %#x\n", *(uint8_t*)(config.data + offset));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
                 Device, Function, offset, *(uint8_t*)(config.data + offset));

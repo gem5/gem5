@@ -96,7 +96,7 @@ vtophys(ExecContext *xc, Addr vaddr)
 {
     Addr ptbr = xc->regs.ipr[AlphaISA::IPR_PALtemp20];
     Addr paddr = 0;
-    if (PC_PAL(vaddr)) {
+    if (PC_PAL(vaddr) || vaddr < 0x10000) {
         paddr = vaddr & ~ULL(1);
     } else if (!ptbr) {
         paddr = vaddr;
