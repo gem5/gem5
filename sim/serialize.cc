@@ -187,7 +187,7 @@ class Globals : public Serializable
 {
   public:
     string name() const;
-    void serialize(ostream& os);
+    void serialize(ostream &os);
     void unserialize(Checkpoint *cp);
 };
 
@@ -201,7 +201,7 @@ Globals::name() const
 }
 
 void
-Globals::serialize(ostream& os)
+Globals::serialize(ostream &os)
 {
     nameOut(os);
     SERIALIZE_SCALAR(curTick);
