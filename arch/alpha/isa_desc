@@ -2388,7 +2388,7 @@ decode OPCODE default Unknown::unknown() {
 	0x1e: hw_rei({{ xc->hwrei(); }});
 
 	// M5 special opcodes use the reserved 0x01 opcode space
-	0x01: decode M5FUNC {
+	0x01: decode M5FUNC{
 	    0x00: arm({{
 		Annotate::ARM(xc);
 		xc->kernelStats.arm();
@@ -2408,6 +2408,7 @@ decode OPCODE default Unknown::unknown() {
 		    m5_exit();
 	    }}, No_OpClass);
             0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
+            0x40: resetstats({{ Statistics::reset(); }});
 	}
     }
 
