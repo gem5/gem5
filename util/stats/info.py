@@ -307,7 +307,7 @@ class Scalar(Statistic,FormulaStat):
 
 class Vector(Statistic,FormulaStat):
     def getValue(self):
-        return source.data(self, self.bins);
+        return source.data(self, self.bins, self.ticks);
 
     def display(self):
         import display
