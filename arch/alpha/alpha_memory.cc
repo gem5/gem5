@@ -92,7 +92,7 @@ AlphaTlb::checkCacheability(MemReqPtr &req)
             // IPR memory space not implemented
             if (!req->xc->misspeculating()) {
                 switch (req->paddr) {
-                  case 0xFFFFF00188:
+                  case ULL(0xFFFFF00188):
                     req->data = 0;
                     break;
 
