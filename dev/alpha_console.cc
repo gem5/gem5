@@ -168,45 +168,45 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
 void
 AlphaAccess::serialize(ostream &os)
 {
-    SERIALIZE_MEMBER(last_offset);
-    SERIALIZE_MEMBER(version);
-    SERIALIZE_MEMBER(numCPUs);
-    SERIALIZE_MEMBER(mem_size);
-    SERIALIZE_MEMBER(cpuClock);
-    SERIALIZE_MEMBER(intrClockFrequency);
-    SERIALIZE_MEMBER(kernStart);
-    SERIALIZE_MEMBER(kernEnd);
-    SERIALIZE_MEMBER(entryPoint);
-    SERIALIZE_MEMBER(diskUnit);
-    SERIALIZE_MEMBER(diskCount);
-    SERIALIZE_MEMBER(diskPAddr);
-    SERIALIZE_MEMBER(diskBlock);
-    SERIALIZE_MEMBER(diskOperation);
-    SERIALIZE_MEMBER(outputChar);
-    SERIALIZE_MEMBER(bootStrapImpure);
-    SERIALIZE_MEMBER(bootStrapCPU);
+    SERIALIZE_SCALAR(last_offset);
+    SERIALIZE_SCALAR(version);
+    SERIALIZE_SCALAR(numCPUs);
+    SERIALIZE_SCALAR(mem_size);
+    SERIALIZE_SCALAR(cpuClock);
+    SERIALIZE_SCALAR(intrClockFrequency);
+    SERIALIZE_SCALAR(kernStart);
+    SERIALIZE_SCALAR(kernEnd);
+    SERIALIZE_SCALAR(entryPoint);
+    SERIALIZE_SCALAR(diskUnit);
+    SERIALIZE_SCALAR(diskCount);
+    SERIALIZE_SCALAR(diskPAddr);
+    SERIALIZE_SCALAR(diskBlock);
+    SERIALIZE_SCALAR(diskOperation);
+    SERIALIZE_SCALAR(outputChar);
+    SERIALIZE_SCALAR(bootStrapImpure);
+    SERIALIZE_SCALAR(bootStrapCPU);
 }
 
 void
 AlphaAccess::unserialize(const IniFile *db, const std::string &section)
 {
-    UNSERIALIZE_MEMBER(last_offset);
-    UNSERIALIZE_MEMBER(version);
-    UNSERIALIZE_MEMBER(numCPUs);
-    UNSERIALIZE_MEMBER(mem_size);
-    UNSERIALIZE_MEMBER(cpuClock);
-    UNSERIALIZE_MEMBER(intrClockFrequency);
-    UNSERIALIZE_MEMBER(kernStart);
-    UNSERIALIZE_MEMBER(kernEnd);
-    UNSERIALIZE_MEMBER(entryPoint);
-    UNSERIALIZE_MEMBER(diskUnit);
-    UNSERIALIZE_MEMBER(diskCount);
-    UNSERIALIZE_MEMBER(diskPAddr);
-    UNSERIALIZE_MEMBER(diskBlock);
-    UNSERIALIZE_MEMBER(diskOperation);
-    UNSERIALIZE_MEMBER(outputChar);
-    UNSERIALIZE_MEMBER(bootStrapImpure);
-    UNSERIALIZE_MEMBER(bootStrapCPU);
+    UNSERIALIZE_SCALAR(last_offset);
+    UNSERIALIZE_SCALAR(version);
+    UNSERIALIZE_SCALAR(numCPUs);
+    UNSERIALIZE_SCALAR(mem_size);
+    UNSERIALIZE_SCALAR(cpuClock);
+    UNSERIALIZE_SCALAR(intrClockFrequency);
+    UNSERIALIZE_SCALAR(kernStart);
+    UNSERIALIZE_SCALAR(kernEnd);
+    UNSERIALIZE_SCALAR(entryPoint);
+    UNSERIALIZE_SCALAR(diskUnit);
+    UNSERIALIZE_SCALAR(diskCount);
+    UNSERIALIZE_SCALAR(diskPAddr);
+    UNSERIALIZE_SCALAR(diskBlock);
+    UNSERIALIZE_SCALAR(diskOperation);
+    UNSERIALIZE_SCALAR(outputChar);
+    UNSERIALIZE_SCALAR(bootStrapImpure);
+    UNSERIALIZE_SCALAR(bootStrapCPU);
 }
 
 void

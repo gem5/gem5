@@ -62,9 +62,9 @@ void arrayParamIn(const IniFile *db, const std::string &section,
 // These macros are streamlined to use in serialize/unserialize
 // functions.  It's assumed that serialize() has a parameter 'os' for
 // the ostream, and unserialize() has parameters 'db' and 'section'.
-#define SERIALIZE_MEMBER(member)	paramOut(os, #member, member)
+#define SERIALIZE_SCALAR(scalar)	paramOut(os, #scalar, scalar)
 
-#define UNSERIALIZE_MEMBER(member)	paramIn(db, section, #member, member)
+#define UNSERIALIZE_SCALAR(scalar)	paramIn(db, section, #scalar, scalar)
 
 #define SERIALIZE_ARRAY(member, size)	\
         arrayParamOut(os, #member, member, size)

@@ -194,8 +194,8 @@ AlphaTlb::flushAddr(Addr vaddr, uint8_t asn)
 void
 AlphaTlb::serialize(ostream &os)
 {
-    SERIALIZE_MEMBER(size);
-    SERIALIZE_MEMBER(nlu);
+    SERIALIZE_SCALAR(size);
+    SERIALIZE_SCALAR(nlu);
 
     // should just add serialize/unserialize methods to AlphaPTE
 #if 0
@@ -243,8 +243,8 @@ AlphaTlb::serialize(ostream &os)
 void
 AlphaTlb::unserialize(const IniFile *db, const string &section)
 {
-    UNSERIALIZE_MEMBER(size);
-    UNSERIALIZE_MEMBER(nlu);
+    UNSERIALIZE_SCALAR(size);
+    UNSERIALIZE_SCALAR(nlu);
 
 #if 0
     string data;

@@ -150,7 +150,7 @@ EventQueue::serialize(ostream &os)
         event = event->next;
     }
     nameOut(os, "Serialized");
-    SERIALIZE_MEMBER(objects);
+    SERIALIZE_SCALAR(objects);
 #endif
 }
 
