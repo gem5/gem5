@@ -93,7 +93,7 @@ def AlphaConfig(env):
 def KernelConfig(env):
     env.Replace(TARGET_ISA = 'alpha')
     env.Replace(FULL_SYSTEM = True)
-    env.Append(CPPDEFINES = ['FULL_SYSTEM', 'SYSTEM_EV5'])
+    env.Append(CPPDEFINES = ['FULL_SYSTEM'])
 
 # Base configurations map.
 configs_map = {

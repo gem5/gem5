@@ -3,10 +3,6 @@
 #ifndef __EV5_H__
 #define __EV5_H__
 
-#ifndef SYSTEM_EV5
-#error This code is only valid for EV5 systems
-#endif
-
 #define MODE2MASK(X)			(1 << (X))
 
 // Alpha IPR register accessors
