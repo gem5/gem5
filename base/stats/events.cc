@@ -66,11 +66,12 @@ __event(const string &stat)
                      stat));
 
         MySQL::Result result = mysql.store_result();
-        if (result) {
-            assert(result.num_fields() == 1);
-            MySQL::Row row = result.fetch_row();
-            if (!row)
-                panic("could not get a run\n%s\n", mysql.error);
+        if (!result)
+            panic("could not get a run\n%s\n", mysql.error);
+
+        assert(result.num_fields() == 1);
+        MySQL::Row row = result.fetch_row();
+        if (row) {
             if (!to_number(row[0], event))
                 panic("invalid event id: %s\n", row[0]);
         } else {
@@ -85,7 +86,6 @@ __event(const string &stat)
 
             event = mysql.insert_id();
         }
-
     } else {
         event = (*i).second;
     }

@@ -134,6 +134,16 @@ MySqlRun::cleanup()
                 "FROM bins "
                 "LEFT JOIN data ON bn_id=dt_bin "
                 "WHERE dt_bin IS NULL");
+
+    mysql.query("DELETE events"
+                "FROM events"
+                "LEFT JOIN runs ON ev_run=rn_id"
+                "WHERE rn_id IS NULL");
+
+    mysql.query("DELETE event_names"
+                "FROM event_names"
+                "LEFT JOIN events ON en_id=ev_event"
+                "WHERE ev_event IS NULL");
 }
 
 void
