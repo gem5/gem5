@@ -26,40 +26,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * Generic interface for platforms
- */
+#include "dev/platform.hh"
+#include "sim/builder.hh"
+#include "sim/sim_exit.hh"
 
-#ifndef __PLATFORM_HH_
-#define __PLATFORM_HH_
+using namespace std;
 
-#include "sim/sim_object.hh"
+DEFINE_SIM_OBJECT_CLASS_NAME("Platform", Platform)
 
-class PciConfigAll;
-class IntrControl;
-class SimConsole;
-
-class Platform : public SimObject
-{
-  public:
-    /** Pointer to the interrupt controller */
-    IntrControl *intrctrl;
-    /** Pointer to the simulation console */
-    SimConsole *cons;
-    /** Pointer to the PCI configuration space */
-    PciConfigAll *pciconfig;
-
-    int interrupt_frequency;
-
-  public:
-    Platform(const std::string &name, IntrControl *intctrl,
-             PciConfigAll *pci, int intrFreq)
-        : SimObject(name), intrctrl(intctrl), pciconfig(pci),
-          interrupt_frequency(intrFreq) {}
-    virtual ~Platform() {}
-    virtual void postConsoleInt() = 0;
-    virtual void clearConsoleInt() = 0;
-};
-
-#endif // __PLATFORM_HH_

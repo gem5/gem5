@@ -92,9 +92,11 @@ class Tsunami : public Platform
       * @param intrcontrol pointer to the interrupt controller
       * @param intrFreq frequency that interrupts happen
       */
-    Tsunami(const std::string &name, System *s, SimConsole *con,
-            IntrControl *intctrl, PciConfigAll *pci,
-            int intrFreq);
+    Tsunami(const std::string &name, System *s, IntrControl *intctrl,
+            PciConfigAll *pci, int intrFreq);
+
+    virtual void postConsoleInt();
+    virtual void clearConsoleInt();
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

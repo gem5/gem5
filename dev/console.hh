@@ -103,6 +103,8 @@ class SimConsole : public SimObject
 
     // interrupt handle
     IntrControl *intr;
+    // Platform so we can post interrupts
+    Platform    *platform;
 
   public:
     /////////////////
@@ -142,6 +144,8 @@ class SimConsole : public SimObject
 
     void initInt(IntrControl *i);
     void setInt(int bits);
+
+    void setPlatform(Platform *p);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
