@@ -799,9 +799,9 @@ sys_int_20:
         or      r31,3,r16                       // a0 means it is a I/O interrupt
         
         bis     r31,0x801,r8
-        sll     r8,4,r8
+        sll     r8,16,r8
         bis     r8,0xa000,r8
-        sll     r8,4,r8
+        sll     r8,16,r8
         bis     r8,0x80,r8
         ldl_p   r9, 0(r8)                       // read the MISC register
         
