@@ -335,14 +335,12 @@ class MetaConfigNode(type):
 
         # We don't support multiple inheritence.  If you want to, you
         # must fix multidict to deal with it properly.
-        sob = [ base for base in bases \
-                if issubclass(base, ParamType) and base != ParamType ]
-
-        if len(sob) == 1:
+        cnbase = [ base for base in bases if isConfigNode(base) ]
+        if len(cnbase) == 1:
             # If your parent has a value in it that's a config node, clone
             # it.  Do this now so if we update any of the values'
             # attributes we are updating the clone and not the original.
-            for key,val in sob[0]._values.iteritems():
+            for key,val in cnbase[0]._values.iteritems():
 
                 # don't clone if (1) we're about to overwrite it with
                 # a local setting or (2) we've already cloned a copy
@@ -355,14 +353,14 @@ class MetaConfigNode(type):
                 elif isSimObjSequence(val) and len(val):
                     cls._values[key] = [ v() for v in val ]
 
-            cls._params.parent = sob[0]._params
-            cls._values.parent = sob[0]._values
+            cls._params.parent = cnbase[0]._params
+            cls._values.parent = cnbase[0]._values
 
-        elif len(sob) > 1:
+        elif len(cnbase) > 1:
             panic("""\
 The config hierarchy only supports single inheritence of SimObject
 classes. You're trying to derive from:
-%s""" % str(sob))
+%s""" % str(cnbase))
 
         # process param types from _init_dict, as these may be needed
         # by param descriptions also in _init_dict
