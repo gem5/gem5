@@ -108,10 +108,10 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
     : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), ioEnable(false),
       maxTxFifoSize(tx_fifo_size), maxRxFifoSize(rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
-      txXferLen(0), rxXferLen(0), txState(txIdle), CTDD(false),
-      txFifoAvail(tx_fifo_size), txHalt(false),
+      txXferLen(0), rxXferLen(0), txState(txIdle), txEnable(false),
+      CTDD(false), txFifoAvail(tx_fifo_size),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
-      CRDD(false), rxPktBytes(0), rxFifoCnt(0), rxHalt(false),
+      rxEnable(false), CRDD(false), rxPktBytes(0), rxFifoCnt(0),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
       rxDmaReadEvent(this), rxDmaWriteEvent(this),
       txDmaReadEvent(this), txDmaWriteEvent(this),
@@ -586,24 +586,23 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
         switch (daddr) {
           case CR:
             regs.command = reg;
-            if ((reg & (CR_TXE | CR_TXD)) == (CR_TXE | CR_TXD)) {
-                txHalt = true;
+            if (reg & CR_TXD) {
+                txEnable = false;
             } else if (reg & CR_TXE) {
-                //the kernel is enabling the transmit machine
+                txEnable = true;
+
+                // the kernel is enabling the transmit machine
                 if (txState == txIdle)
                     txKick();
-            } else if (reg & CR_TXD) {
-                txHalt = true;
             }
 
-            if ((reg & (CR_RXE | CR_RXD)) == (CR_RXE | CR_RXD)) {
-                rxHalt = true;
+            if (reg & CR_RXD) {
+                rxEnable = false;
             } else if (reg & CR_RXE) {
-                if (rxState == rxIdle) {
+                rxEnable = true;
+
+                if (rxState == rxIdle)
                     rxKick();
-                }
-            } else if (reg & CR_RXD) {
-                rxHalt = true;
             }
 
             if (reg & CR_TXR)
@@ -777,6 +776,7 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 
           case RXDP:
             regs.rxdp = reg;
+            CRDD = false;
             break;
 
           case RXDP_HI:
@@ -1076,6 +1076,15 @@ NSGigE::cpuIntrPost(Tick when)
     // schedule another.
     // HOWEVER, must be sure that the scheduled intrTick is in the
     // future (this was formerly the source of a bug)
+    /**
+     * @todo this warning should be removed and the intrTick code should
+     * be fixed.
+     */
+    if (intrTick < curTick && intrTick != 0) {
+        warn("intrTick < curTick !!!  intrTick=%d curTick=%d\n",
+             intrTick, curTick);
+        intrTick = 0;
+    }
     assert((intrTick >= curTick) || (intrTick == 0));
     if (when > intrTick && intrTick != 0)
         return;
@@ -1154,11 +1163,10 @@ NSGigE::txReset()
 
     CTDD = false;
     txFifoAvail = maxTxFifoSize;
-    txHalt = false;
+    txEnable = false;;
     txFragPtr = 0;
     assert(txDescCnt == 0);
     txFifo.clear();
-    regs.command &= ~CR_TXE;
     txState = txIdle;
     assert(txDmaState == dmaIdle);
 }
@@ -1171,12 +1179,11 @@ NSGigE::rxReset()
     CRDD = false;
     assert(rxPktBytes == 0);
     rxFifoCnt = 0;
-    rxHalt = false;
+    rxEnable = false;
     rxFragPtr = 0;
     assert(rxDescCnt == 0);
     assert(rxDmaState == dmaIdle);
     rxFifo.clear();
-    regs.command &= ~CR_RXE;
     rxState = rxIdle;
 }
 
@@ -1340,7 +1347,7 @@ NSGigE::rxKick()
     // an event and come back to this loop.
     switch (rxState) {
       case rxIdle:
-        if (!regs.command & CR_RXE) {
+        if (!rxEnable) {
             DPRINTF(EthernetSM, "Receive Disabled! Nothing to do.\n");
             goto exit;
         }
@@ -1395,7 +1402,9 @@ NSGigE::rxKick()
                 rxDescCache.extsts);
 
         if (rxDescCache.cmdsts & CMDSTS_OWN) {
+            devIntrPost(ISR_RXIDLE);
             rxState = rxIdle;
+            goto exit;
         } else {
             rxState = rxFifoBlock;
             rxFragPtr = rxDescCache.bufptr;
@@ -1566,18 +1575,20 @@ NSGigE::rxKick()
         if (rxDescCache.cmdsts & CMDSTS_INTR)
             devIntrPost(ISR_RXDESC);
 
-        if (rxHalt) {
+        if (!rxEnable) {
             DPRINTF(EthernetSM, "Halting the RX state machine\n");
             rxState = rxIdle;
-            rxHalt = false;
+            goto exit;
         } else
             rxState = rxAdvance;
         break;
 
       case rxAdvance:
         if (rxDescCache.link == 0) {
+            devIntrPost(ISR_RXIDLE);
             rxState = rxIdle;
-            return;
+            CRDD = true;
+            goto exit;
         } else {
             rxState = rxDescRead;
             regs.rxdp = rxDescCache.link;
@@ -1600,12 +1611,6 @@ NSGigE::rxKick()
 
     DPRINTF(EthernetSM, "entering next rx state = %s\n",
             NsRxStateStrings[rxState]);
-
-    if (rxState == rxIdle) {
-        regs.command &= ~CR_RXE;
-        devIntrPost(ISR_RXIDLE);
-        return;
-    }
 
     goto next;
 
@@ -1805,7 +1810,7 @@ NSGigE::txKick()
 
     switch (txState) {
       case txIdle:
-        if (!regs.command & CR_TXE) {
+        if (!txEnable) {
             DPRINTF(EthernetSM, "Transmit disabled.  Nothing to do.\n");
             goto exit;
         }
@@ -1865,7 +1870,9 @@ NSGigE::txKick()
             txFragPtr = txDescCache.bufptr;
             txDescCnt = txDescCache.cmdsts & CMDSTS_LEN_MASK;
         } else {
+            devIntrPost(ISR_TXIDLE);
             txState = txIdle;
+            goto exit;
         }
         break;
 
@@ -1948,10 +1955,10 @@ NSGigE::txKick()
                 transmit();
                 txPacket = 0;
 
-                if (txHalt) {
+                if (!txEnable) {
                     DPRINTF(EthernetSM, "halting TX state machine\n");
                     txState = txIdle;
-                    txHalt = false;
+                    goto exit;
                 } else
                     txState = txAdvance;
 
@@ -2004,16 +2011,17 @@ NSGigE::txKick()
         if (txDmaState != dmaIdle)
             goto exit;
 
-        if (txDescCache.cmdsts & CMDSTS_INTR) {
+        if (txDescCache.cmdsts & CMDSTS_INTR)
             devIntrPost(ISR_TXDESC);
-        }
 
         txState = txAdvance;
         break;
 
       case txAdvance:
         if (txDescCache.link == 0) {
+            devIntrPost(ISR_TXIDLE);
             txState = txIdle;
+            goto exit;
         } else {
             txState = txDescRead;
             regs.txdp = txDescCache.link;
@@ -2035,12 +2043,6 @@ NSGigE::txKick()
 
     DPRINTF(EthernetSM, "entering next tx state=%s\n",
             NsTxStateStrings[txState]);
-
-    if (txState == txIdle) {
-        regs.command &= ~CR_TXE;
-        devIntrPost(ISR_TXIDLE);
-        return;
-    }
 
     goto next;
 
@@ -2123,7 +2125,7 @@ NSGigE::recvPacket(PacketPtr packet)
     DPRINTF(Ethernet, "\n\nReceiving packet from wire, rxFifoAvail=%d\n",
             maxRxFifoSize - rxFifoCnt);
 
-    if (rxState == rxIdle) {
+    if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
         interface->recvDone();
         return true;
@@ -2388,9 +2390,9 @@ NSGigE::serialize(ostream &os)
      */
     int txState = this->txState;
     SERIALIZE_SCALAR(txState);
+    SERIALIZE_SCALAR(txEnable);
     SERIALIZE_SCALAR(CTDD);
     SERIALIZE_SCALAR(txFifoAvail);
-    SERIALIZE_SCALAR(txHalt);
     SERIALIZE_SCALAR(txFragPtr);
     SERIALIZE_SCALAR(txDescCnt);
     int txDmaState = this->txDmaState;
@@ -2401,10 +2403,10 @@ NSGigE::serialize(ostream &os)
      */
     int rxState = this->rxState;
     SERIALIZE_SCALAR(rxState);
+    SERIALIZE_SCALAR(rxEnable);
     SERIALIZE_SCALAR(CRDD);
     SERIALIZE_SCALAR(rxPktBytes);
     SERIALIZE_SCALAR(rxFifoCnt);
-    SERIALIZE_SCALAR(rxHalt);
     SERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState = this->rxDmaState;
     SERIALIZE_SCALAR(rxDmaState);
@@ -2550,9 +2552,9 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     int txState;
     UNSERIALIZE_SCALAR(txState);
     this->txState = (TxState) txState;
+    UNSERIALIZE_SCALAR(txEnable);
     UNSERIALIZE_SCALAR(CTDD);
     UNSERIALIZE_SCALAR(txFifoAvail);
-    UNSERIALIZE_SCALAR(txHalt);
     UNSERIALIZE_SCALAR(txFragPtr);
     UNSERIALIZE_SCALAR(txDescCnt);
     int txDmaState;
@@ -2565,10 +2567,10 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     int rxState;
     UNSERIALIZE_SCALAR(rxState);
     this->rxState = (RxState) rxState;
+    UNSERIALIZE_SCALAR(rxEnable);
     UNSERIALIZE_SCALAR(CRDD);
     UNSERIALIZE_SCALAR(rxPktBytes);
     UNSERIALIZE_SCALAR(rxFifoCnt);
-    UNSERIALIZE_SCALAR(rxHalt);
     UNSERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState;
     UNSERIALIZE_SCALAR(rxDmaState);

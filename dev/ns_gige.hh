@@ -186,6 +186,8 @@ class NSGigE : public PciDev
 
     /* tx State Machine */
     TxState txState;
+    bool txEnable;
+
     /** Current Transmit Descriptor Done */
     bool CTDD;
     /** current amt of free space in txDataFifo in bytes */
@@ -200,6 +202,8 @@ class NSGigE : public PciDev
 
     /** rx State Machine */
     RxState rxState;
+    bool rxEnable;
+
     /** Current Receive Descriptor Done */
     bool CRDD;
     /** num of bytes in the current packet being drained from rxDataFifo */
