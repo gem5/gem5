@@ -117,9 +117,12 @@ class CowDiskImage : public DiskImage
     ~CowDiskImage();
 
     void init(int hash_size);
-    bool open();
+    bool open(const std::string &file);
     void save();
+    void save(const std::string &file);
     void writeback();
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 
     virtual off_t size() const;
 

@@ -190,7 +190,7 @@ CowDiskImage::CowDiskImage(const string &name, DiskImage *kid, int hash_size,
                            const string &file, bool read_only)
     : DiskImage(name), filename(file), child(kid), table(NULL)
 {
-    if (!open()) {
+    if (!open(filename)) {
         assert(!read_only && "why have a non-existent read only file?");
         init(hash_size);
     }
@@ -230,20 +230,20 @@ SafeRead(ifstream &stream, T &data)
 { SafeRead(stream, &data, sizeof(data)); }
 
 bool
-CowDiskImage::open()
+CowDiskImage::open(const string &file)
 {
-    ifstream stream(filename.c_str());
+    ifstream stream(file.c_str());
     if (!stream.is_open())
         return false;
 
     if (stream.fail() || stream.bad())
-        panic("Error opening %s", filename);
+        panic("Error opening %s", file);
 
     uint64_t magic;
     SafeRead(stream, magic);
 
     if (memcmp(&magic, "COWDISK!", sizeof(magic)) != 0)
-        panic("Could not open %s: Invalid magic", filename);
+        panic("Could not open %s: Invalid magic", file);
 
     uint32_t major, minor;
     SafeRead(stream, major);
@@ -251,7 +251,7 @@ CowDiskImage::open()
 
     if (major != VersionMajor && minor != VersionMinor)
         panic("Could not open %s: invalid version %d.%d != %d.%d",
-              filename, major, minor, VersionMajor, VersionMinor);
+              file, major, minor, VersionMajor, VersionMinor);
 
     uint64_t sector_count;
     SafeRead(stream, sector_count);
@@ -305,12 +305,18 @@ SafeWrite(ofstream &stream, const T &data)
 void
 CowDiskImage::save()
 {
+    save(filename);
+}
+
+void
+CowDiskImage::save(const string &file)
+{
     if (!initialized)
         panic("RawDiskImage not initialized");
 
-    ofstream stream(filename.c_str());
+    ofstream stream(file.c_str());
     if (!stream.is_open() || stream.fail() || stream.bad())
-        panic("Error opening %s", filename);
+        panic("Error opening %s", file);
 
     uint64_t magic;
     memcpy(&magic, "COWDISK!", sizeof(magic));
@@ -394,6 +400,22 @@ CowDiskImage::write(const uint8_t *data, off_t offset)
     DDUMP(DiskImageWrite, data, SectorSize);
 
     return SectorSize;
+}
+
+void
+CowDiskImage::serialize(ostream &os)
+{
+    string cowFilename = serializeFilename + ".cow";
+    SERIALIZE_SCALAR(cowFilename);
+    save(cowFilename);
+}
+
+void
+CowDiskImage::unserialize(Checkpoint *cp, const string &section)
+{
+    string cowFilename;
+    UNSERIALIZE_SCALAR(cowFilename);
+    open(cowFilename);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(CowDiskImage)
