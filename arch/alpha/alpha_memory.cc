@@ -455,7 +455,7 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
     }
 
     // verify that this is a good virtual address
-    if (!validVirtualAddress(req->vaddr)) {
+    if (!(req->flags & PHYSICAL) && !validVirtualAddress(req->vaddr)) {
         fault(req->vaddr,
               ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_BAD_VA_MASK |
                MM_STAT_ACV_MASK),
