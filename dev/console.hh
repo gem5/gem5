@@ -109,9 +109,17 @@ class SimConsole : public SimObject
     // OS interface
 
     // Get a character from the console.
-    // return of -1 means there is no character pending.
+    // the return value corresponds to the console GETC return value:
+    // retval<63:61>
+    //     000: success: character received
+    //     001: success: character received, more pending
+    //     100: failure: no character ready
+    //     110: failure: character received with error
+    //     111: failure: character received with error, more pending
+    // retval<31:0>
+    //     character read from console
     // Interrupts are cleared when the buffer is empty.
-    int in();
+    uint64_t in();
 
     // Send a character to the console
     void out(char c, bool raise_int = true);

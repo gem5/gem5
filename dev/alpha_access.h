@@ -33,52 +33,44 @@
  * System Console Memory Mapped Register Definition
  */
 
-#define ALPHA_ACCESS_VERSION (1291+1) /* CH++*/
+#define ALPHA_ACCESS_VERSION (1301) /* CH++*/
 
-#ifdef CONSOLE
-typedef uint32 UINT32;
-typedef uint64 UINT64;
-#else
-typedef uint32_t UINT32;
-typedef uint64_t UINT64;
-
+#ifndef CONSOLE
 #include <ostream>
 #include <string>
 class Checkpoint;
-
 #endif
 
 // This structure hacked up from simos
 struct AlphaAccess
 {
-    UINT32	last_offset;		// 00: must be first field
-    UINT32	version;		// 04:
-    UINT32	numCPUs;		// 08:
-    UINT32	align0;			// 0C: Placeholder for alignment
-    UINT64	mem_size;		// 10:
-    UINT64	cpuClock;		// 18: MHz
-    UINT32	intrClockFrequency;	// 20: Hz
-    UINT32	align1;			// 24: Placeholder for alignment
+    uint32_t	last_offset;		// 00: must be first field
+    uint32_t	version;		// 04:
+    uint32_t	numCPUs;		// 08:
+    uint32_t	intrClockFrequency;	// 0C: Hz
+    uint64_t	cpuClock;		// 10: MHz
+    uint64_t	mem_size;		// 18:
 
     // Loaded kernel
-    UINT64	kernStart;		// 28:
-    UINT64	kernEnd;		// 30:
-    UINT64	entryPoint;		// 38:
+    uint64_t	kernStart;		// 20:
+    uint64_t	kernEnd;		// 28:
+    uint64_t	entryPoint;		// 30:
 
     // console disk stuff
-    UINT64	diskUnit;		// 40:
-    UINT64	diskCount;		// 48:
-    UINT64	diskPAddr;		// 50:
-    UINT64	diskBlock;		// 58:
-    UINT64	diskOperation;		// 60:
+    uint64_t	diskUnit;		// 38:
+    uint64_t	diskCount;		// 40:
+    uint64_t	diskPAddr;		// 48:
+    uint64_t	diskBlock;		// 50:
+    uint64_t	diskOperation;		// 58:
 
     // console simple output stuff
-    UINT64	outputChar;		// 68:
+    uint64_t	outputChar;		// 60: Placeholder for output
+    uint64_t	inputChar;		// 68: Placeholder for input
 
     // MP boot
-    UINT64	bootStrapImpure;	// 70:
-    UINT32	bootStrapCPU;		// 78:
-    UINT32	align2;			// 7C: Dummy placeholder for alignment
+    uint64_t	bootStrapImpure;	// 70:
+    uint32_t	bootStrapCPU;		// 78:
+    uint32_t	align2;			// 7C: Dummy placeholder for alignment
 
 #ifndef CONSOLE
     void serialize(std::ostream &os);

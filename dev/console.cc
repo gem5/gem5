@@ -223,21 +223,32 @@ SimConsole::configTerm()
     }
 }
 
-int
+#define MORE_PENDING (ULL(1) << 61)
+#define RECEIVE_SUCCESS (ULL(0) << 62)
+#define RECEIVE_NONE (ULL(2) << 62)
+#define RECEIVE_ERROR (ULL(3) << 62)
+
+uint64_t
 SimConsole::in()
 {
+    char c = 0;
+    uint64_t val = 0;
     if (rxbuf.empty()) {
         clearInt(ReceiveInterrupt);
-        return -1;
+        val |= RECEIVE_NONE;
+        return 0x8;
+    } else {
+        uint64_t val;
+        rxbuf.read(&c, 1);
+        val |= RECEIVE_SUCCESS | c;
+        if (!rxbuf.empty())
+            val |= MORE_PENDING;
     }
 
-    char c;
-    rxbuf.read(&c, 1);
+    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x retval: %#x\n",
+            isprint(c) ? c : ' ', c, val);
 
-    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x status: %#x\n",
-            isprint(c) ? c : ' ', c, _status);
-
-    return c;
+    return val;
 }
 
 void

@@ -76,16 +76,34 @@ Fault
 AlphaConsole::read(MemReqPtr req, uint8_t *data)
 {
     memset(data, 0, req->size);
+    uint64_t val;
 
-    if (req->size == sizeof(uint32_t)) {
-        Addr daddr = req->paddr & addr_mask;
-        *(uint32_t *)data = *(uint32_t *)(consoleData + daddr);
+    Addr daddr = req->paddr & addr_mask;
+    switch (daddr) {
+      case offsetof(AlphaAccess, inputChar):
+        val = console->in();
+        break;
 
-#if 0
-        DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n",
-                daddr, *(uint32_t *)data);
-#endif
+      default:
+        val = *(uint64_t *)(consoleData + daddr);
+        break;
     }
+
+    DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, val);
+
+    switch (req->size) {
+      case sizeof(uint32_t):
+        *(uint32_t *)data = (uint32_t)val;
+        break;
+
+      case sizeof(uint64_t):
+        *(uint64_t *)data = val;
+        break;
+
+      default:
+        return Machine_Check_Fault;
+    }
+
 
     return No_Fault;
 }
@@ -99,6 +117,7 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
       case sizeof(uint32_t):
         val = *(uint32_t *)data;
         break;
+
       case sizeof(uint64_t):
         val = *(uint64_t *)data;
         break;
@@ -106,60 +125,57 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
         return Machine_Check_Fault;
     }
 
-    Addr paddr = req->paddr & addr_mask;
+    Addr daddr = req->paddr & addr_mask;
+    ExecContext *other_xc;
 
-    if (paddr == offsetof(AlphaAccess, diskUnit)) {
+    switch (daddr) {
+      case offsetof(AlphaAccess, diskUnit):
         alphaAccess->diskUnit = val;
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, diskCount)) {
+      case offsetof(AlphaAccess, diskCount):
         alphaAccess->diskCount = val;
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, diskPAddr)) {
+      case offsetof(AlphaAccess, diskPAddr):
         alphaAccess->diskPAddr = val;
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, diskBlock)) {
+      case offsetof(AlphaAccess, diskBlock):
         alphaAccess->diskBlock = val;
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, diskOperation)) {
+      case offsetof(AlphaAccess, diskOperation):
         if (val == 0x13)
             disk->read(alphaAccess->diskPAddr, alphaAccess->diskBlock,
                        alphaAccess->diskCount);
         else
             panic("Invalid disk operation!");
 
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, outputChar)) {
+      case offsetof(AlphaAccess, outputChar):
         console->out((char)(val & 0xff), false);
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, bootStrapImpure)) {
+      case offsetof(AlphaAccess, bootStrapImpure):
         alphaAccess->bootStrapImpure = val;
-        return No_Fault;
-    }
+        break;
 
-    if (paddr == offsetof(AlphaAccess, bootStrapCPU)) {
+      case offsetof(AlphaAccess, bootStrapCPU):
         warn("%d: Trying to launch another CPU!", curTick);
-        int cpu = val;
-        assert(cpu > 0 && "Must not access primary cpu");
+        assert(val > 0 && "Must not access primary cpu");
 
-        ExecContext *other_xc = req->xc->system->execContexts[cpu];
-        other_xc->regs.intRegFile[16] = cpu;
-        other_xc->regs.ipr[TheISA::IPR_PALtemp16] = cpu;
-        other_xc->regs.intRegFile[0] = cpu;
+        other_xc = req->xc->system->execContexts[val];
+        other_xc->regs.intRegFile[16] = val;
+        other_xc->regs.ipr[TheISA::IPR_PALtemp16] = val;
+        other_xc->regs.intRegFile[0] = val;
         other_xc->regs.intRegFile[30] = alphaAccess->bootStrapImpure;
         other_xc->activate(); //Start the cpu
-        return No_Fault;
+        break;
+
+      default:
+        return Machine_Check_Fault;
     }
 
     return No_Fault;
@@ -183,6 +199,7 @@ AlphaAccess::serialize(ostream &os)
     SERIALIZE_SCALAR(diskBlock);
     SERIALIZE_SCALAR(diskOperation);
     SERIALIZE_SCALAR(outputChar);
+    SERIALIZE_SCALAR(inputChar);
     SERIALIZE_SCALAR(bootStrapImpure);
     SERIALIZE_SCALAR(bootStrapCPU);
 }
@@ -205,6 +222,7 @@ AlphaAccess::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(diskBlock);
     UNSERIALIZE_SCALAR(diskOperation);
     UNSERIALIZE_SCALAR(outputChar);
+    UNSERIALIZE_SCALAR(inputChar);
     UNSERIALIZE_SCALAR(bootStrapImpure);
     UNSERIALIZE_SCALAR(bootStrapCPU);
 }
