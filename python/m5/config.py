@@ -209,11 +209,16 @@ class_decorator = 'M5M5_SIMOBJECT_'
 expr_decorator = 'M5M5_EXPRESSION_'
 dot_decorator = '_M5M5_DOT_'
 
+# 'Global' map of legitimate types for SimObject parameters.
 param_types = {}
 
+# Dummy base class to identify types that are legitimate for SimObject
+# parameters.
 class ParamType(object):
     pass
 
+# Add types defined in given context (dict or module) that are derived
+# from ParamType to param_types map.
 def add_param_types(ctx):
     if isinstance(ctx, types.DictType):
         source_dict = ctx
@@ -1339,7 +1344,10 @@ class SimObject(ConfigNode, ParamType):
     type = 'SimObject'
 
 
-__all__ = ['env',
+# __all__ defines the list of symbols that get exported when
+# 'from config import *' is invoked.  Try to keep this reasonably
+# short to avoid polluting other namespaces.
+__all__ = ['env', 'issequence',
            'ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Super', 'Enum',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
