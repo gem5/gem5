@@ -10,10 +10,14 @@
 
 /* from simos */
 typedef unsigned long long uint64;
-#include "machine_defs.h"
-#include "new_aouthdr.h"
+typedef unsigned int uint32;
+
+#define CONSOLE
 #include "alpha_access.h"
+#include "machine_defs.h"
+
 #if 0
+#include "new_aouthdr.h"
 #include "srcmax.h"
 #endif
 
@@ -64,7 +68,7 @@ void jToPal(ul bootadr);
 void SlaveLoop(int cpu);
 
 
-AlphaAccess simosConf;
+struct AlphaAccess simosConf;
 
 /* **************************************************************
  * Console callbacks use VMS calling conventions
@@ -112,6 +116,12 @@ void InitConsole(void)
 #endif
 }
 
+char GetChar()
+{
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+   return 0;
+}
+
 void PutChar(char c)
 {
 #if 0
@@ -120,22 +130,21 @@ void PutChar(char c)
 #if 0
    *(int*) PHYS_TO_K1(SLOT_D_COM1<<5) = c;
 #endif
-   AlphaAccess *k1Conf = (AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
    k1Conf->outputChar = c;
 
 }
 
 
-int passArgs(int argc)
-{
-   ;
-}
+int
+passArgs(int argc)
+{ return 0; }
 
-
+int
 main(int argc, char **argv)
 {
    int x,i;
-   AlphaAccess *k1Conf = (AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
    ui *k1ptr,*ksegptr;
 
 
@@ -175,7 +184,8 @@ main(int argc, char **argv)
  */
 struct rpb xxm_rpb = {
    NULL,		/* 000: physical self-reference */
-   'H'|('W'<<8)|('R'<<16)|('P'<<24)|('B'<<32),	/* 008: contains string "HWRPB" */
+   ((long)'H') | (((long)'W') << 8) | (((long)'R') << 16) |
+   ((long)'P' << 24) | (((long)'B') << 32),  /* 008: contains string "HWRPB" */
    6,			/* 010: HWRPB version number */
    /* the byte count is wrong, but who needs it? - lance */
    0,			/* 018: bytes in RPB perCPU CTB CRB MEDSC */
@@ -243,7 +253,7 @@ struct rpb_percpu xxm_rpb_percpu = {
    0x4000,				/* 098: phys addr of palcode mem space */
    0x2000,				/* 0A0: phys addr of palcode scratch space */
    (2 << 16) | (5 << 8) | 1,		/* 0A8: PALcode rev required */
-   5|(2<<32),				/* 0B0: processor type */
+   5 | (2L  << 32),				/* 0B0: processor type */
    7,					/* 0B8: processor variation */
    'D'|('a'<<8)|('v'<<16)|('e'<<24),	/* 0C0: processor revision */
    {'D','a','v','e','C','o','n','r','o','y',0,0,0,0,0,0},	/* 0C8: proc serial num: 10 ascii chars */
@@ -370,6 +380,8 @@ char *unix_boot_alloc(int pages)
 ul *first = 0;
 ul *third_rpb = 0;
 ul *reservedFixup = 0;
+
+int strcpy(char *dst, char *src);
 
 struct rpb *rpb;
 
@@ -777,7 +789,11 @@ unixBoot(int go, int argc, char **argv)
  {
      ul *ptr = (ul*)((char*)rpb_dsr + sizeof(struct rpb_dsr ));
      rpb_crb->rpb_pa_disp = KSEG_TO_PHYS(ptr);
+#if 0
      rpb_crb->rpb_va_disp = 0x10000000 + ((ul)ptr&(0x2000*HWRPB_PAGES-1));
+#else
+     rpb_crb->rpb_va_disp = 0x10000000 + ((ul)ptr & 0x1fff);
+#endif
      printf("ConsoleDispatch at virt %x phys %x val %x\n",
              rpb_crb->rpb_va_disp,
             rpb_crb->rpb_pa_disp,
@@ -785,7 +801,11 @@ unixBoot(int go, int argc, char **argv)
      *ptr++ = 0;
      *ptr++ = (ul) consoleCallback;
      rpb_crb->rpb_pa_fixup = KSEG_TO_PHYS(ptr);
+#if 0
      rpb_crb->rpb_va_fixup = 0x10000000 + ((ul)ptr& (0x2000*HWRPB_PAGES-1));
+#else
+     rpb_crb->rpb_va_fixup = 0x10000000 + ((ul)ptr & 0x1fff);
+#endif
      *ptr++ = 0;
      *ptr++ = (ul) consoleFixup;
   }
@@ -807,7 +827,7 @@ unixBoot(int go, int argc, char **argv)
   {
      int i;
      for (i=1;i<simosConf.numCPUs;i++) {
-        volatile AlphaAccess *k1Conf = (volatile AlphaAccess *)
+        volatile struct AlphaAccess *k1Conf = (volatile struct AlphaAccess *)
            (__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
         SpinLock(&theLock);
         printf("Bootstraping CPU %d with sp=0x%x \n",
@@ -944,11 +964,12 @@ struct {
    char name[128];
 } deviceState[32];
 
-#define BOOTDEVICE_NAME "SCSI 1 0 0 1 100"
+#define BOOTDEVICE_NAME "SCSI 1 0 0 1 100 0"
 
-void DeviceOperation(long op,long channel, long count, long address, long block)
+void
+DeviceOperation(long op, long channel, long count, long address, long block)
 {
-   AlphaAccess *k1Conf = (AlphaAccess *)
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)
       (__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
 
    long pAddr;
@@ -993,35 +1014,137 @@ void DeviceOperation(long op,long channel, long count, long address, long block)
 #define CONSCB_GETENV 0x22
 
 /* AXP manual 2-26 */
+#define	ENV_AUTO_ACTION		0X01
+#define	ENV_BOOT_DEV		0X02
+#define	ENV_BOOTDEF_DEV		0X03
+#define	ENV_BOOTED_DEV		0X04
+#define	ENV_BOOT_FILE		0X05
+#define	ENV_BOOTED_FILE		0X06
+#define	ENV_BOOT_OSFLAGS	0X07
+#define	ENV_BOOTED_OSFLAGS	0X08
+#define	ENV_BOOT_RESET		0X09
+#define	ENV_DUMP_DEV		0X0A
+#define	ENV_ENABLE_AUDIT	0X0B
+#define	ENV_LICENSE		0X0C
+#define	ENV_CHAR_SET		0X0D
+#define	ENV_LANGUAGE		0X0E
+#define	ENV_TTY_DEV		0X0F
+#define	ENV_SCSIID		0X42
+#define	ENV_SCSIFAST		0X43
+#define	ENV_COM1_BAUD		0X44
+#define	ENV_COM1_MODEM		0X45
+#define	ENV_COM1_FLOW		0X46
+#define	ENV_COM1_MISC		0X47
+#define	ENV_COM2_BAUD		0X48
+#define	ENV_COM2_MODEM		0X49
+#define	ENV_COM2_FLOW		0X4A
+#define	ENV_COM2_MISC		0X4B
+#define	ENV_PASSWORD		0X4C
+#define	ENV_SECURE		0X4D
+#define	ENV_LOGFAIL		0X4E
+#define	ENV_SRM2DEV_ID		0X4F
 
-#define ENV_BOOTED_DEV     0x4
-#define ENV_BOOTED_OSFLAGS 0x8
+#define MAX_ENVLEN 32
 
-long CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
+char	env_booted_dev[MAX_ENVLEN]	= BOOTDEVICE_NAME;
+char	env_booted_osflags[MAX_ENVLEN]	= "";
+char	env_com1_baud[MAX_ENVLEN]	= "";
+char	env_secure[MAX_ENVLEN]		= "";
+
+#if 0
+char	env_auto_action[MAX_ENVLEN]	= "";
+char	env_boot_dev[MAX_ENVLEN]	= "";
+char	env_bootdef_dev[MAX_ENVLEN]	= "";
+char	env_boot_file[MAX_ENVLEN]	= "";
+char	env_booted_file[MAX_ENVLEN]	= "";
+char	env_boot_osflags[MAX_ENVLEN]	= "";
+char	env_boot_reset[MAX_ENVLEN]	= "";
+char	env_dump_dev[MAX_ENVLEN]	= "";
+char	env_enable_audit[MAX_ENVLEN]	= "";
+char	env_license[MAX_ENVLEN]		= "";
+char	env_char_set[MAX_ENVLEN]	= "";
+int	env_language			= 0;
+char	env_tty_dev[MAX_ENVLEN]		= "";
+char	env_scsiid[MAX_ENVLEN]		= "";
+char	env_scsifast[MAX_ENVLEN]	= "";
+char	env_com1_modem[MAX_ENVLEN]	= "";
+char	env_com1_flow[MAX_ENVLEN]	= "";
+char	env_com1_misc[MAX_ENVLEN]	= "";
+char	env_com2_baud[MAX_ENVLEN]	= "";
+char	env_com2_modem[MAX_ENVLEN]	= "";
+char	env_com2_flow[MAX_ENVLEN]	= "";
+char	env_com2_misc[MAX_ENVLEN]	= "";
+char	env_password[MAX_ENVLEN]	= "";
+char	env_logfail[MAX_ENVLEN]		= "";
+char	env_srm2dev_id[MAX_ENVLEN]	= "";
+#endif
+
+long
+CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
 {
-   int i;
+   long i;
    switch (a0) {
+   case CONSCB_GETC:
+      break;
+
    case CONSCB_PUTS:
-      for(i=0;i<a3;i++) {
+      for(i = 0; i < a3; i++) {
          PutChar(*(char *)a2+i);
       }
       return a3;
+
    case CONSCB_GETENV:
       switch (a1) {
       case ENV_BOOTED_DEV:
-         i = strcpy((char*)a2,BOOTDEVICE_NAME);
-         break;
+        i = strcpy((char*)a2, env_booted_dev);
+        break;
+
       case ENV_BOOTED_OSFLAGS:
-         /*
-          * 'c':ignores the sysconfigtab
-          *
-          * i= strcpy((char*)a2,"c");
-          */
-         i = strcpy((char*)a2,"");
-         break;
+        i = strcpy((char*)a2, env_booted_osflags);
+        break;
+
+      case ENV_COM1_BAUD:
+        i = strcpy((char*)a2, env_com1_baud);
+        break;
+
+      case ENV_SECURE:
+        i = strcpy((char *)a2, env_secure);
+        break;
+
+#if 0
+      case ENV_AUTO_ACTION:
+      case ENV_BOOT_DEV:
+      case ENV_BOOTDEF_DEV:
+      case ENV_BOOT_FILE:
+      case ENV_BOOTED_FILE:
+      case ENV_BOOT_OSFLAGS:
+      case ENV_BOOT_RESET:
+      case ENV_DUMP_DEV:
+      case ENV_ENABLE_AUDIT:
+      case ENV_LICENSE:
+      case ENV_CHAR_SET:
+      case ENV_LANGUAGE:
+      case ENV_TTY_DEV:
+      case ENV_SCSIID:
+      case ENV_SCSIFAST:
+      case ENV_COM1_MODEM:
+      case ENV_COM1_FLOW:
+      case ENV_COM1_MISC:
+      case ENV_COM2_BAUD:
+      case ENV_COM2_MODEM:
+      case ENV_COM2_FLOW:
+      case ENV_COM2_MISC:
+      case ENV_PASSWORD:
+      case ENV_LOGFAIL:
+      case ENV_SRM2DEV_ID:
+#endif
       default:
-         i = strcpy((char*)a2,"");
-         printf ("GETENV unsupported option %d\n", a1);
+         strcpy((char*)a2,"");
+         i = (long)0xc000000000000000;
+         if (a1 >= 0 && a1 < 100)
+           printf ("GETENV unsupported option %d\n", a1);
+         else
+           printf ("GETENV unsupported option %s\n", a1);
          break;
       }
       if (i > a3) {

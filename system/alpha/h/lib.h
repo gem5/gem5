@@ -196,8 +196,8 @@ extern ul _edata;
 
 #ifndef _TIME_T
 #define _TIME_T
-/* typedef int time_t; */
-typedef ui time_t;
+typedef int time_t;
+/* typedef ui time_t; */
 #endif
 
 /*::::::::::::::
@@ -318,9 +318,11 @@ void wr_bcache (ui argc, ul arg1, ul arg2, ui select);
 /*::::::::::::::
 ffcsubs.c
 ::::::::::::::*/
-extern int strlen(char * s);
-extern void bzero(char * s , int count);
-extern void bcopy(char * from , char * to , int count);
+extern size_t strlen(const char *s);
+#if 0
+extern void bzero(void *s, int count);
+extern void bcopy(void *from, void *to, int count);
+#endif
 extern int tolower(int c);
 extern int toupper(int c);
 extern int IsAlpha(char c);
@@ -414,8 +416,8 @@ extern void PutCR(void);
 /*::::::::::::::
 printf.c
 ::::::::::::::*/
-extern void PutString(char * s);
-extern void printf(char * f , ...);
+extern void PutString(const char * s);
+extern int printf(const char *f, ...);
 
 /*::::::::::::::
 search.c

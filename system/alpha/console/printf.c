@@ -79,19 +79,22 @@ static char *rcsid = "$Id: printf.c,v 1.1.1.1 1997/10/30 23:27:12 verghese Exp $
 
 
 /* The string s is terminated by a '\0' */
-void PutString(char *s)
+void
+PutString(const char *s)
 {
   while (*s) PutChar(*s++);
 }
 
 /* print c count times */
-void PutRepChar(char c, int count)
+void
+PutRepChar(char c, int count)
 {
   while (count--) PutChar(c);
 }
 
 /* put string reverse */
-void PutStringReverse(char *s, int index)
+void
+PutStringReverse(const char *s, int index)
 {
   while ((index--) > 0) PutChar(s[index]);
 }
@@ -103,7 +106,8 @@ void PutStringReverse(char *s, int index)
    if width is 0, use whatever is needed
    if fill is 0, use ' '
  */
-void PutNumber(sl value, int radix, int width, char fill)
+void
+PutNumber(sl value, int radix, int width, char fill)
 {
   char buffer[40];
   ui bufferindex = 0;
@@ -195,7 +199,8 @@ void putFloat(double a, int fieldwidth, char fill)
      PutChar((char)(b % 10) + '0');
    }
 }
-char *FormatItem(char *f, va_list *ap)
+const char *
+FormatItem(const char *f, va_list *ap)
 {
   char c;
   int fieldwidth = 0;
@@ -222,12 +227,12 @@ char *FormatItem(char *f, va_list *ap)
         return(f);
         }
       case 's': {
-        char *a = va_arg(*ap, char *);
+        const char *a = va_arg(*ap, const char *);
 
-        if (leftjust) PutString((char *) a);
-        if (fieldwidth > strlen((char *) a))
-          PutRepChar(fill, fieldwidth - strlen((char *)a));
-        if (!leftjust) PutString((char *) a);
+        if (leftjust) PutString((const char *) a);
+        if (fieldwidth > strlen((const char *) a))
+          PutRepChar(fill, fieldwidth - strlen((const char *)a));
+        if (!leftjust) PutString((const char *) a);
         return(f);
         }
       case 'd': radix = -10;
@@ -260,7 +265,8 @@ char *FormatItem(char *f, va_list *ap)
   return(f);
 }
 
-void printf(char *f, ...)
+int
+printf(const char *f, ...)
 {
   va_list ap;
 
@@ -277,9 +283,11 @@ void printf(char *f, ...)
   }
 
   va_end(ap);         /* clean up */
+  return 0;
 }
 
-void panic(char *f, ...)
+void
+panic(const char *f, ...)
 {
   va_list ap;
 
