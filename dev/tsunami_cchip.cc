@@ -173,6 +173,13 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
 
       break;
       case sizeof(uint32_t):
+          if (regnum == TSDEV_CC_DRIR) {
+              warn("accessing DRIR with 32 bit read, "
+                   "hopefully your just reading this for timing");
+              *(uint64_t*)data = drir;
+          } else
+              panic("invalid access size(?) for tsunami register!\n");
+          return No_Fault;
       case sizeof(uint16_t):
       case sizeof(uint8_t):
       default:
