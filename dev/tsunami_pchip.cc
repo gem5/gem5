@@ -1,4 +1,30 @@
-/* $Id$ */
+/*
+ * Copyright (c) 2004 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /* @file
  * Tsunami PChip (pci)
@@ -97,9 +123,11 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
               case TSDEV_PC_RES:
                     panic("PC_RES not implemented\n");
               case TSDEV_PC_PERROR:
-                    panic("PC_PERROR not implemented\n");
+                    *(uint64_t*)data = 0x00;
+                    return No_Fault;
               case TSDEV_PC_PERRMASK:
-                    panic("PC_PERRMASK not implemented\n");
+                    *(uint64_t*)data = 0x00;
+                    return No_Fault;
               case TSDEV_PC_PERRSET:
                     panic("PC_PERRSET not implemented\n");
               case TSDEV_PC_TLBIV:
@@ -178,14 +206,13 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
                     return No_Fault;
               case TSDEV_PC_PCTL:
                     // might want to change the clock??
-                    //*(uint64_t*)data; // try this
                     return No_Fault;
               case TSDEV_PC_PLAT:
                     panic("PC_PLAT not implemented\n");
               case TSDEV_PC_RES:
                     panic("PC_RES not implemented\n");
               case TSDEV_PC_PERROR:
-                    panic("PC_PERROR not implemented\n");
+                    return No_Fault;
               case TSDEV_PC_PERRMASK:
                     panic("PC_PERRMASK not implemented\n");
               case TSDEV_PC_PERRSET:
