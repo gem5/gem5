@@ -75,6 +75,7 @@ Process::Process(const string &name,
 
     // allocate initial register file
     init_regs = new RegFile;
+    memset(init_regs, 0, sizeof(RegFile));
 
     // initialize first 3 fds (stdin, stdout, stderr)
     fd_map[STDIN_FILENO] = stdin_fd;
