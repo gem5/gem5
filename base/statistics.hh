@@ -467,12 +467,17 @@ template <typename T>
 struct AvgStor
 {
   public:
-    /** The paramaters for this storage type, none for this average. */
-    struct Params { };
+    /** The paramaters for this storage type */
+    struct Params
+    {
+        /**
+         * The current count.  We stash this here because the current
+         * value is not a binned value.
+         */
+        T current;
+    };
 
   private:
-    /** The current count. */
-    T current;
     /** The total count for all cycles. */
     mutable result_t total;
     /** The cycle that current last changed. */
@@ -482,7 +487,7 @@ struct AvgStor
     /**
      * Build and initializes this stat storage.
      */
-    AvgStor(const Params &) : current(T()), total(0), last(0) { }
+    AvgStor(Params &p) : total(0), last(0) { p.current = T(); }
 
     /**
      * Set the current count to the one provided, update the total and last
@@ -490,39 +495,44 @@ struct AvgStor
      * @param val The new count.
      * @param p The parameters for this storage.
      */
-    void set(T val, const Params &p) {
-        total += current * (curTick - last);
+    void set(T val, Params &p) {
+        total += p.current * (curTick - last);
         last = curTick;
-        current = val;
+        p.current = val;
     }
+
     /**
      * Increment the current count by the provided value, calls set.
      * @param val The amount to increment.
      * @param p The parameters for this storage.
      */
-    void inc(T val, const Params &p) { set(current + val, p); }
+    void inc(T val, Params &p) { set(p.current + val, p); }
+
     /**
      * Deccrement the current count by the provided value, calls set.
      * @param val The amount to decrement.
      * @param p The parameters for this storage.
      */
-    void dec(T val, const Params &p) { set(current - val, p); }
+    void dec(T val, Params &p) { set(p.current - val, p); }
+
     /**
      * Return the current average.
      * @param p The parameters for this storage.
      * @return The current average.
      */
     result_t val(const Params &p) const {
-        total += current * (curTick - last);
+        total += p.current * (curTick - last);
         last = curTick;
-        return (result_t)(total + current) / (result_t)(curTick + 1);
+        return (result_t)(total + p.current) / (result_t)(curTick + 1);
     }
+
     /**
      * Return the current count.
      * @param p The parameters for this storage.
      * @return The current count.
      */
-    T value(const Params &p) const { return current; }
+    T value(const Params &p) const { return p.current; }
+
     /**
      * Reset stat value to default
      */
@@ -565,8 +575,11 @@ class ScalarBase : public ScalarStat
      * Retrieve a const pointer to the storage from the bin.
      * @return A const pointer to the storage object for this stat.
      */
-    const storage_t *data() const {
-        return (const_cast<bin_t *>(&bin))->data(params);
+    const storage_t *data() const
+    {
+        bin_t *_bin = const_cast<bin_t *>(&bin);
+        params_t *_params = const_cast<params_t *>(&params);
+        return _bin->data(*_params);
     }
 
   protected:
@@ -705,8 +718,11 @@ class VectorBase : public VectorStat
      * @param index The vector index to access.
      * @return A const pointer to the storage object at the given index.
      */
-    const storage_t *data(int index) const {
-        return (const_cast<bin_t *>(&bin))->data(index, params);
+    const storage_t *data(int index) const
+    {
+        bin_t *_bin = const_cast<bin_t *>(&bin);
+        params_t *_params = const_cast<params_t *>(&params);
+        return _bin->data(index, *_params);
     }
 
   protected:
@@ -825,7 +841,12 @@ class ScalarProxy : public ScalarStat
      * Retrieve a const pointer to the storage from the bin.
      * @return A const pointer to the storage for this stat.
      */
-    const storage_t *data() const { return bin->data(index, *params); }
+    const storage_t *data() const
+    {
+        bin_t *_bin = const_cast<bin_t *>(bin);
+        params_t *_params = const_cast<params_t *>(params);
+        return _bin->data(index, *_params);
+    }
 
   public:
     /**
@@ -952,8 +973,11 @@ class Vector2dBase : public Stat
 
   protected:
     storage_t *data(int index) { return bin.data(index, params); }
-    const storage_t *data(int index) const {
-        return (const_cast<bin_t *>(&bin))->data(index, params);
+    const storage_t *data(int index) const
+    {
+        bin_t *_bin = const_cast<bin_t *>(&bin);
+        params_t *_params = const_cast<params_t *>(&params);
+        return _bin->data(index, *_params);
     }
 
   protected:
@@ -1081,7 +1105,9 @@ class VectorProxy : public VectorStat
     }
 
     const storage_t *data(int index) const {
-        return (const_cast<bin_t *>(bin))->data(offset + index, *params);
+        bin_t *_bin = const_cast<bin_t *>(bin);
+        params_t *_params = const_cast<params_t *>(params);
+        return _bin->data(offset + index, *_params);
     }
 
   public:
@@ -1506,8 +1532,11 @@ class DistBase : public Stat
      * Retrieve a const pointer to the storage from the bin.
      * @return A const pointer to the storage object for this stat.
      */
-    const storage_t *data() const {
-        return (const_cast<bin_t *>(&bin))->data(params);
+    const storage_t *data() const
+    {
+        bin_t *_bin = const_cast<bin_t *>(&bin);
+        params_t *_params = const_cast<params_t *>(&params);
+        return _bin->data(*_params);
     }
 
   protected:
@@ -1585,8 +1614,11 @@ class VectorDistBase : public Stat
 
   protected:
     storage_t *data(int index) { return bin.data(index, params); }
-    const storage_t *data(int index) const {
-        return (const_cast<bin_t *>(&bin))->data(index, params);
+    const storage_t *data(int index) const
+    {
+        bin_t *_bin = const_cast<bin_t *>(&bin);
+        params_t *_params = const_cast<params_t *>(&params);
+        return _bin->data(index, *_params);
     }
 
   protected:
@@ -2252,7 +2284,7 @@ struct StatBin : public GenBin
 
         int size() const { return 1; }
 
-        Storage *data(const Params &params) {
+        Storage *data(Params &params) {
             assert(initialized());
             char *ptr = access();
             char *flags = ptr + sizeof(Storage);
@@ -2297,7 +2329,7 @@ struct StatBin : public GenBin
 
         int size() const { return _size; }
 
-        Storage *data(int index, const Params &params) {
+        Storage *data(int index, Params &params) {
             assert(initialized());
             assert(index >= 0 && index < size());
             char *ptr = access();
@@ -2351,7 +2383,7 @@ struct NoBin
             new (ptr) Storage(params);
         }
         int size() const{ return 1; }
-        Storage *data(const Params &params) {
+        Storage *data(Params &params) {
             assert(initialized());
             return reinterpret_cast<Storage *>(ptr);
         }
@@ -2399,7 +2431,7 @@ struct NoBin
 
         int size() const { return _size; }
 
-        Storage *data(int index, const Params &params) {
+        Storage *data(int index, Params &params) {
             assert(initialized());
             assert(index >= 0 && index < size());
             return reinterpret_cast<Storage *>(ptr + index * sizeof(Storage));
