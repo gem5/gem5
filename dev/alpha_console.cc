@@ -122,7 +122,9 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
                     *(uint32_t*)data = alphaAccess->intrClockFrequency;
                     break;
                 default:
-                    panic("Unknown 32bit access, %#x\n", daddr);
+                    // Old console code read in everyting as a 32bit int
+                    *(uint32_t*)data = *(uint32_t*)(consoleData + daddr);
+
             }
             break;
         case sizeof(uint64_t):

@@ -73,7 +73,10 @@ class SimpleDisk;
 class AlphaConsole : public PioDevice
 {
   protected:
+    union {
         AlphaAccess *alphaAccess;
+    uint8_t *consoleData;
+    };
 
     /** the disk must be accessed from the console */
     SimpleDisk *disk;
