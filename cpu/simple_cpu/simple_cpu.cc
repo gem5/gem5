@@ -641,13 +641,11 @@ SimpleCPU::tick()
     Fault fault = No_Fault;
 
 #ifdef FULL_SYSTEM
-    if (AlphaISA::check_interrupts &&
-        xc->cpu->check_interrupts() &&
-        !PC_PAL(xc->regs.pc) &&
+    if (checkInterrupts && check_interrupts() && !xc->inPalMode() &&
         status() != IcacheMissComplete) {
         int ipl = 0;
         int summary = 0;
-        AlphaISA::check_interrupts = 0;
+        checkInterrupts = false;
         IntReg *ipr = xc->regs.ipr;
 
         if (xc->regs.ipr[TheISA::IPR_SIRR]) {

@@ -53,8 +53,9 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
                  Counter max_loads_any_thread,
                  Counter max_loads_all_threads,
                  System *_system, Tick freq)
-    : SimObject(_name), frequency(freq), deferRegistration(_def_reg),
-      number_of_threads(_number_of_threads), system(_system)
+    : SimObject(_name), frequency(freq), checkInterrupts(true),
+      deferRegistration(_def_reg), number_of_threads(_number_of_threads),
+      system(_system)
 #else
 BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
                  Counter max_insts_any_thread,
@@ -219,7 +220,7 @@ BaseCPU::post_interrupt(int int_num, int index)
     if (index < 0 || index >= sizeof(uint64_t) * 8)
         panic("int_num out of bounds\n");
 
-    AlphaISA::check_interrupts = 1;
+    checkInterrupts = true;
     interrupts[int_num] |= 1 << index;
     intstatus |= (ULL(1) << int_num);
 }

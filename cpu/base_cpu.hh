@@ -55,6 +55,7 @@ class BaseCPU : public SimObject
     virtual void post_interrupt(int int_num, int index);
     virtual void clear_interrupt(int int_num, int index);
     virtual void clear_interrupts();
+    bool checkInterrupts;
 
     bool check_interrupt(int int_num) const {
         if (int_num > NumInterruptLevels)
