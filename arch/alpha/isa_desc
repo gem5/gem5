@@ -2119,12 +2119,69 @@ decode OPCODE default Unknown::unknown() {
 	0x1c: decode INTFUNC {
 	    0x00: decode RA { 31: sextb({{ Rc.sb = Rb_or_imm< 7:0>; }}); }
 	    0x01: decode RA { 31: sextw({{ Rc.sw = Rb_or_imm<15:0>; }}); }
+		0x32: ctlz({{
+        uint64_t count = 0;
+        uint64_t temp = Rb;
+        if (temp & ULL(0xffffffff00000000))
+           temp >>= 32;
+         else 
+            count += 32;
+        if (temp & ULL(0xffff0000)) 
+           temp >>= 16;
+        else 
+            count += 16;
+        if (temp & ULL(0xff00)) 
+           temp >>= 8;
+        else 
+            count += 8;
+        if (temp & ULL(0xf0)) 
+           temp >>= 4;
+        else 
+            count += 4;
+        if (temp & ULL(0xC)) 
+           temp >>= 2;
+        else 
+            count += 2;
+        if (temp & ULL(0x2)) 
+           temp >>= 1;
+        else 
+            count += 1;
+        if ((temp & ULL(0x1)) != 0x1)
+            count += 1;
+        Rc = count; 
+              }}, IntAluOp);
+         
+		0x33: cttz({{
+        uint64_t count = 0;
+        uint64_t temp = Rb;
+        if (!(temp & ULL(0x00000000ffffffff))) {
+            temp >>= 32;
+            count += 32;
+        }
+        if (!(temp & ULL(0x0000ffff))) {
+            temp >>= 16;
+            count += 16;
+        }
+        if (!(temp & ULL(0x00ff))) {
+            temp >>= 8;
+            count += 8;
+        }
+        if (!(temp & ULL(0x0f))) {
+            temp >>= 4;
+            count += 4;
+        }
+        if (!(temp & ULL(0x3))) {
+            temp >>= 2;
+            count += 2;
+        }
+        if (!(temp & ULL(0x1)))
+            count += 1;
+        Rc = count;
+              }}, IntAluOp);
 
 	    format FailUnimpl {
 		0x30: ctpop();
 		0x31: perr();
-		0x32: ctlz();
-		0x33: cttz();
 		0x34: unpkbw();
 		0x35: unpkbl();
 		0x36: pkwb();
