@@ -117,7 +117,6 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     kernelStart = bootloader->textBase();
     DPRINTF(Loader, "Bootloader entry at %#x\n", kernelEntry);
 
-#ifdef FS_MEASURE
     //INSTRUMENTATION CODEGEN BEGIN ONE
     if (bin == true) {
         esIntrBin = new Statistics::MainBin(name() + " es_intr");
@@ -215,7 +214,6 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     }
     //INSTRUMENTATION CODEGEN END
-#endif //FS_MEASURE
 
     kernelPanicEvent = new BreakPCEvent(&pcEventQueue, "kernel panic");
     consolePanicEvent = new BreakPCEvent(&pcEventQueue, "console panic");
@@ -238,37 +236,37 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 #ifdef FS_MEASURE
     //INSTRUMENTATION CODEGEN BEGIN TWO
     if (bin == true) {
-          esIntrEvent = new FnEvent(&pcEventQueue, "es_intr", this);
-          esRxeofEvent = new FnEvent(&pcEventQueue, "es_rxeof", this);
-          esNewbufEvent = new FnEvent(&pcEventQueue, "es_newbuf", this);
-          esDmaLoadEvent = new FnEvent(&pcEventQueue, "es_dma_load", this);
-          dmaMapLoadEvent = new FnEvent(&pcEventQueue, "dma_map_load", this);
-          etherInputEvent = new FnEvent(&pcEventQueue, "ether_input", this);
-          netisrInputEvent = new FnEvent(&pcEventQueue, "netisr_input", this);
-          schednetisrIsrEvent = new FnEvent(&pcEventQueue, "schednetisr_isr", this);
-          ipintrEvent = new FnEvent(&pcEventQueue, "ipintr", this);
-          ipDooptionsEvent = new FnEvent(&pcEventQueue, "ip_dooptions", this);
-          ipReassEvent = new FnEvent(&pcEventQueue, "ip_reass", this);
-          tcpInputEvent = new FnEvent(&pcEventQueue, "tcp_input", this);
-          sbappendEvent = new FnEvent(&pcEventQueue, "sbappend", this);
-          readEvent = new FnEvent(&pcEventQueue, "read", this);
-          sooReadEvent = new FnEvent(&pcEventQueue, "soo_read", this);
-          orecvEvent = new FnEvent(&pcEventQueue, "orecv", this);
-          recvitEvent = new FnEvent(&pcEventQueue, "recvit", this);
-          soreceiveEvent = new FnEvent(&pcEventQueue, "soreceive", this);
-          osendEvent = new FnEvent(&pcEventQueue, "osend", this);
-          writeEvent = new FnEvent(&pcEventQueue, "write", this);
-          sooWriteEvent = new FnEvent(&pcEventQueue, "soo_write", this);
-          senditEvent = new FnEvent(&pcEventQueue, "sendit", this);
-          sosendEvent = new FnEvent(&pcEventQueue, "sosend", this);
-          tcpSosendEvent = new FnEvent(&pcEventQueue, "tcp_sosend", this);
-          tcpOutputEvent = new FnEvent(&pcEventQueue, "tcp_output", this);
-          ipOutputEvent = new FnEvent(&pcEventQueue, "ip_output", this);
-          etherOutputEvent = new FnEvent(&pcEventQueue, "ether_output", this);
-          esStartEvent = new FnEvent(&pcEventQueue, "es_start", this);
-          esTransmitEvent = new FnEvent(&pcEventQueue, "es_transmit", this);
-          esTxeofEvent = new FnEvent(&pcEventQueue, "es_txeof", this);
-          idleThreadEvent = new FnEvent(&pcEventQueue, "idle_thread", this);
+          esIntrEvent = new LinuxFnEvent(&pcEventQueue, "es_intr", this);
+          esRxeofEvent = new LinuxFnEvent(&pcEventQueue, "es_rxeof", this);
+          esNewbufEvent = new LinuxFnEvent(&pcEventQueue, "es_newbuf", this);
+          esDmaLoadEvent = new LinuxFnEvent(&pcEventQueue, "es_dma_load", this);
+          dmaMapLoadEvent = new LinuxFnEvent(&pcEventQueue, "dma_map_load", this);
+          etherInputEvent = new LinuxFnEvent(&pcEventQueue, "ether_input", this);
+          netisrInputEvent = new LinuxFnEvent(&pcEventQueue, "netisr_input", this);
+          schednetisrIsrEvent = new LinuxFnEvent(&pcEventQueue, "schednetisr_isr", this);
+          ipintrEvent = new LinuxFnEvent(&pcEventQueue, "ipintr", this);
+          ipDooptionsEvent = new LinuxFnEvent(&pcEventQueue, "ip_dooptions", this);
+          ipReassEvent = new LinuxFnEvent(&pcEventQueue, "ip_reass", this);
+          tcpInputEvent = new LinuxFnEvent(&pcEventQueue, "tcp_input", this);
+          sbappendEvent = new LinuxFnEvent(&pcEventQueue, "sbappend", this);
+          readEvent = new LinuxFnEvent(&pcEventQueue, "read", this);
+          sooReadEvent = new LinuxFnEvent(&pcEventQueue, "soo_read", this);
+          orecvEvent = new LinuxFnEvent(&pcEventQueue, "orecv", this);
+          recvitEvent = new LinuxFnEvent(&pcEventQueue, "recvit", this);
+          soreceiveEvent = new LinuxFnEvent(&pcEventQueue, "soreceive", this);
+          osendEvent = new LinuxFnEvent(&pcEventQueue, "osend", this);
+          writeEvent = new LinuxFnEvent(&pcEventQueue, "write", this);
+          sooWriteEvent = new LinuxFnEvent(&pcEventQueue, "soo_write", this);
+          senditEvent = new LinuxFnEvent(&pcEventQueue, "sendit", this);
+          sosendEvent = new LinuxFnEvent(&pcEventQueue, "sosend", this);
+          tcpSosendEvent = new LinuxFnEvent(&pcEventQueue, "tcp_sosend", this);
+          tcpOutputEvent = new LinuxFnEvent(&pcEventQueue, "tcp_output", this);
+          ipOutputEvent = new LinuxFnEvent(&pcEventQueue, "ip_output", this);
+          etherOutputEvent = new LinuxFnEvent(&pcEventQueue, "ether_output", this);
+          esStartEvent = new LinuxFnEvent(&pcEventQueue, "es_start", this);
+          esTransmitEvent = new LinuxFnEvent(&pcEventQueue, "es_transmit", this);
+          esTxeofEvent = new LinuxFnEvent(&pcEventQueue, "es_txeof", this);
+          idleThreadEvent = new LinuxFnEvent(&pcEventQueue, "idle_thread", this);
     }
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
@@ -659,7 +657,6 @@ LinuxSystem::breakpoint()
     return remoteGDB[0]->trap(ALPHA_KENTRY_IF);
 }
 
-#ifdef FS_MEASURE
 void
 LinuxSystem::populateMap(std::string callee, std::string caller)
 {
@@ -701,7 +698,6 @@ LinuxSystem::dumpState(ExecContext *xc) const
         }
     }
 }
-#endif //FS_MEASURE
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 

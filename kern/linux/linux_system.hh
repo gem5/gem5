@@ -34,9 +34,7 @@
 #include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
 
-#ifdef FS_MEASURE
 #include <map>
-#endif
 
 class ExecContext;
 class ElfObject;
@@ -49,9 +47,7 @@ class LinuxSkipDelayLoopEvent;
 class LinuxPrintfEvent;
 class LinuxDebugPrintfEvent;
 class LinuxDumpMbufEvent;
-#ifdef FS_MEASURE
 class FnEvent;
-#endif
 class AlphaArguments;
 
 class LinuxSystem : public System
@@ -65,7 +61,7 @@ class LinuxSystem : public System
     SymbolTable *bootloaderSymtab;
     SymbolTable *consoleSymtab;
 
-#ifdef FS_MEASURE
+
     //INSTRUMENTATION CODEGEN BEGIN ONE
     Statistics::MainBin *esIntrBin;
     Statistics::MainBin *esRxeofBin;
@@ -99,7 +95,6 @@ class LinuxSystem : public System
     Statistics::MainBin *esTxeofBin;
     Statistics::MainBin *idleThreadBin;
     //INSTRUMENTATION CODEGEN END
-#endif //FS_MEASURE
 
     BreakPCEvent *kernelPanicEvent;
     BreakPCEvent *consolePanicEvent;
@@ -111,7 +106,7 @@ class LinuxSystem : public System
     LinuxDebugPrintfEvent *debugPrintfEvent;
     LinuxDebugPrintfEvent *debugPrintfrEvent;
     LinuxDumpMbufEvent *dumpMbufEvent;
-#ifdef FS_MEASURE
+
     //INSTRUMENTATION CODEGEN BEGIN TWO
     FnEvent *esIntrEvent;
     FnEvent *esRxeofEvent;
@@ -145,7 +140,6 @@ class LinuxSystem : public System
     FnEvent *esTxeofEvent;
     FnEvent *idleThreadEvent;
     //INSTRUMENTATION CODEGEN END
-#endif //FS_MEASURE
 
   private:
 
@@ -154,10 +148,8 @@ class LinuxSystem : public System
     Addr kernelEntry;
     bool bin;
 
-#ifdef FS_MEASURE
     std::multimap<const std::string, std::string> callerMap;
     void populateMap(std::string caller, std::string callee);
-#endif
 
   public:
     std::vector<RemoteGDB *>   remoteGDB;
@@ -189,10 +181,8 @@ class LinuxSystem : public System
     static void Printf(AlphaArguments args);
     static void DumpMbuf(AlphaArguments args);
 
-#ifdef FS_MEASURE
     bool findCaller(std::string callee, std::string caller) const;
     void dumpState(ExecContext *xc) const;
-#endif //FS_MEASURE
 };
 
 #endif // __LINUX_SYSTEM_HH__

@@ -58,7 +58,6 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
                            int num_cpus, MemoryController *mmu, Addr a,
                            HierParams *hier, Bus *bus)
     : PioDevice(name), disk(d), console(cons), addr(a)
->>>>>>>
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
 
