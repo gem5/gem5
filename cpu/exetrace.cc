@@ -69,8 +69,8 @@ Trace::InstRecord::dump(ostream &outs)
     if (debugSymbolTable
         && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
         if (PC != sym_addr)
-            sym_str += csprintf("+%d", addr - sym_addr);
-        outs << "@" << setw(17) << sym_str << " : ";
+            sym_str += csprintf("+%d", PC - sym_addr);
+        outs << "@" << sym_str << " : ";
     }
     else {
         outs << "0x" << hex << PC << " : ";
