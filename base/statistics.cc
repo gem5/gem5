@@ -748,7 +748,7 @@ VectorDisplay(std::ostream &stream,
                         _pdf = vec[i] / _total;
                         _cdf += _pdf;
                     } else {
-                        _pdf = _cdf = NAN;
+                        _pdf = _cdf = 0.0;
                     }
                     if (!(myflags & cdf)) {
                         PrintOne(stream, vec[i], subname, subdesc, myprecision,
