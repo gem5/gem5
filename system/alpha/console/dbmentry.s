@@ -18,10 +18,10 @@
 #include "osf.h"
 #endif
 
-#include "paldefs.h"
+//#include "paldefs.h"
 #include "regdefs.h"
-#include "system.h"
-#include "ledcodes.h"
+#include "eb164.h"
+//#include "ledcodes.h"
 
 	.text
 

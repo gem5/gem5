@@ -70,7 +70,7 @@ static char *rcsid = "$Id: printf.c,v 1.1.1.1 1997/10/30 23:27:12 verghese Exp $
    Sun Feb 10 20:18:22 1985
  */
 
-#include "system.h"
+//#include "system.h"
 #include "lib.h"
 #include <stdarg.h>
 
