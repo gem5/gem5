@@ -344,11 +344,12 @@ class VectorDistData : public VectorDistDataBase
 {
   protected:
     T &s;
+    typedef typename T::bin_t bin_t;
 
   public:
     VectorDistData(T &stat) : s(stat) {}
 
-    virtual bool binned() const { return T::bin_t::binned; }
+    virtual bool binned() const { return bin_t::binned; }
     virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual size_t size() const { return s.size(); }
@@ -385,11 +386,12 @@ class Vector2dData : public Vector2dDataBase
 {
   protected:
     T &s;
+    typedef typename T::bin_t bin_t;
 
   public:
     Vector2dData(T &stat) : s(stat) {}
 
-    virtual bool binned() const { return T::bin_t::binned; }
+    virtual bool binned() const { return bin_t::binned; }
     virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual bool zero() const { return s.zero(); }
@@ -414,7 +416,7 @@ class DataAccess
     void setPrint();
 };
 
-template <class Parent, class Child, template <class Child> class Data>
+template <class Parent, class Child, template <class> class Data>
 class Wrap : public Child
 {
   protected:
@@ -747,7 +749,7 @@ struct AvgStor
 template <typename T, template <typename T> class Storage, class Bin>
 class ScalarBase : public DataAccess
 {
-  protected:
+  public:
     /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
     /** Define the params of the storage class. */
@@ -886,7 +888,7 @@ class ScalarProxy;
 template <typename T, template <typename T> class Storage, class Bin>
 class VectorBase : public DataAccess
 {
-  protected:
+  public:
     /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
     /** Define the params of the storage class. */
@@ -994,7 +996,7 @@ class VectorBase : public DataAccess
 template <typename T, template <typename T> class Storage, class Bin>
 class ScalarProxy
 {
-  protected:
+  public:
     /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
     /** Define the params of the storage class. */
@@ -1140,11 +1142,9 @@ class VectorProxy;
 template <typename T, template <typename T> class Storage, class Bin>
 class Vector2dBase : public DataAccess
 {
-  protected:
+  public:
     typedef Storage<T> storage_t;
     typedef typename storage_t::Params params_t;
-
-  public:
     typedef typename Bin::VectorBin<storage_t> bin_t;
 
   protected:
@@ -1197,7 +1197,7 @@ class Vector2dBase : public DataAccess
 template <typename T, template <typename T> class Storage, class Bin>
 class VectorProxy
 {
-  protected:
+  public:
     typedef Storage<T> storage_t;
     typedef typename storage_t::Params params_t;
     typedef typename Bin::VectorBin<storage_t> bin_t;
@@ -1586,7 +1586,7 @@ struct AvgFancy
 template <typename T, template <typename T> class Storage, class Bin>
 class DistBase : public DataAccess
 {
-  protected:
+  public:
     /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
     /** Define the params of the storage class. */
@@ -1673,11 +1673,9 @@ class DistProxy;
 template <typename T, template <typename T> class Storage, class Bin>
 class VectorDistBase : public DataAccess
 {
-  protected:
+  public:
     typedef Storage<T> storage_t;
     typedef typename storage_t::Params params_t;
-
-  public:
     typedef typename Bin::VectorBin<storage_t> bin_t;
 
   protected:
@@ -1732,7 +1730,7 @@ class VectorDistBase : public DataAccess
 template <typename T, template <typename T> class Storage, class Bin>
 class DistProxy
 {
-  protected:
+  public:
     typedef Storage<T> storage_t;
     typedef typename storage_t::Params params_t;
     typedef typename Bin::Bin<storage_t> bin_t;
@@ -2471,6 +2469,9 @@ class Vector
                      VectorData>
 {
   public:
+    /** The base implementation. */
+    typedef ScalarBase<T, StatStor, Bin> Base;
+
     /**
      * Set this vector to have the given size.
      * @param size The new size.
@@ -2539,7 +2540,7 @@ class Distribution
                   DistBase<T, DistStor, Bin>,
                   DistData>
 {
-  private:
+  public:
     /** Base implementation. */
     typedef DistBase<T, DistStor, Bin> Base;
     /** The Parameter type. */
@@ -2575,7 +2576,7 @@ class StandardDeviation
                   DistBase<T, FancyStor, Bin>,
                   DistData>
 {
-  private:
+  public:
     /** The base implementation */
     typedef DistBase<T, DistStor, Bin> Base;
     /** The parameter type. */
@@ -2601,7 +2602,7 @@ class AverageDeviation
                   DistBase<T, AvgFancy, Bin>,
                   DistData>
 {
-  private:
+  public:
     /** The base implementation */
     typedef DistBase<T, DistStor, Bin> Base;
     /** The parameter type. */
@@ -2628,7 +2629,7 @@ class VectorDistribution
                      VectorDistBase<T, DistStor, Bin>,
                      VectorDistData>
 {
-  private:
+  public:
     /** The base implementation */
     typedef VectorDistBase<T, DistStor, Bin> Base;
     /** The parameter type. */
@@ -2665,7 +2666,7 @@ class VectorStandardDeviation
                      VectorDistBase<T, FancyStor, Bin>,
                      VectorDistData>
 {
-  private:
+  public:
     /** The base implementation */
     typedef VectorDistBase<T, FancyStor, Bin> Base;
     /** The parameter type. */
@@ -2695,7 +2696,7 @@ class VectorAverageDeviation
                      VectorDistBase<T, AvgFancy, Bin>,
                      VectorDistData>
 {
-  private:
+  public:
     /** The base implementation */
     typedef VectorDistBase<T, AvgFancy, Bin> Base;
     /** The parameter type. */
