@@ -74,5 +74,8 @@
 #define TSDEV_DMA2_MODE     0xD6
 #define TSDEV_DMA1_MASK     0x0A
 #define TSDEV_DMA2_MASK     0xD4
-
+#define TSDEV_TMR_CTL       0x61
+#define TSDEV_TMR2_CTL      0x43
+#define TSDEV_TMR2_DATA     0x42
+#define TSDEV_TMR0_DATA     0x40
 #endif // __TSUNAMIREG_H__

@@ -41,14 +41,40 @@
  */
 class TsunamiIO : public MmapDevice
 {
+
   public:
 
   protected:
+
+    class ClockEvent : public Event
+    {
+        protected:
+            Tick interval;
+            uint8_t mode;
+            uint8_t status;
+
+        public:
+            ClockEvent();
+
+            virtual void process();
+            virtual const char *description();
+            void Program(int count);
+            void ChangeMode(uint8_t mode);
+            uint8_t Status();
+
+    };
+
 
       uint8_t mask1;
       uint8_t mask2;
       uint8_t mode1;
       uint8_t mode2;
+
+      ClockEvent timer0;
+      ClockEvent timer1;
+      ClockEvent timer2;
+
+      uint32_t timerData;
 
   public:
     TsunamiIO(const std::string &name, /*Tsunami *t,*/
