@@ -40,8 +40,8 @@
 
 #define DMA_BACKOFF_PERIOD 200
 
-#define MAX_DMA_SIZE (131072) // 256 * SectorSize (512)
-#define MAX_MULTSECT (128)
+#define MAX_DMA_SIZE    (65536)  // 64K
+#define MAX_MULTSECT    (128)
 
 #define PRD_BASE_MASK  0xfffffffe
 #define PRD_COUNT_MASK 0xfffe
@@ -62,7 +62,7 @@ class PrdTableEntry {
         return (entry.baseAddr & PRD_BASE_MASK);
     }
 
-    uint16_t getByteCount()
+    uint32_t getByteCount()
     {
         return ((entry.byteCount == 0) ? MAX_DMA_SIZE :
                 (entry.byteCount & PRD_COUNT_MASK));

@@ -56,6 +56,9 @@ class TsunamiPChip : public FunctionalMemory
      */
     Tsunami *tsunami;
 
+    /** Pchip control register */
+    uint64_t pctl;
+
     /** Window Base addresses */
     uint64_t wsba[4];
 

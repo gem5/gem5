@@ -330,7 +330,13 @@ IdeDisk::dmaPrdReadDone()
            physmem->dma_addr(curPrdAddr, sizeof(PrdEntry_t)),
            sizeof(PrdEntry_t));
 
-    curPrdAddr += sizeof(PrdEntry_t);
+    DPRINTF(IdeDisk, "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
+            curPrd.getBaseAddr(), pciToDma(curPrd.getBaseAddr()),
+            curPrd.getByteCount(), (cmdBytesLeft/SectorSize),
+            curPrd.getEOT(), curSector);
+
+    // make sure the new curPrdAddr is properly translated from PCI to system
+    curPrdAddr = pciToDma(curPrdAddr + sizeof(PrdEntry_t));
 
     if (dmaRead)
         doDmaRead();
@@ -613,7 +619,8 @@ IdeDisk::startDma(const uint32_t &prdTableBase)
     if (devState != Transfer_Data_Dma)
         panic("Inconsistent device state for DMA start!\n");
 
-    curPrdAddr = pciToDma((Addr)prdTableBase);
+    // PRD base address is given by bits 31:2
+    curPrdAddr = pciToDma((Addr)(prdTableBase & ~ULL(0x3)));
 
     dmaState = Dma_Transfer;
 
