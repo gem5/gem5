@@ -630,6 +630,9 @@ class CpuModel:
 CpuModel('SimpleCPU', 'simple_cpu_exec.cc',
          '#include "cpu/simple_cpu/simple_cpu.hh"',
          { 'CPU_exec_context': 'SimpleCPU' })
+CpuModel('FastCPU', 'fast_cpu_exec.cc',
+         '#include "cpu/fast_cpu/fast_cpu.hh"',
+         { 'CPU_exec_context': 'FastCPU' })
 CpuModel('FullCPU', 'full_cpu_exec.cc',
          '#include "cpu/full_cpu/dyn_inst.hh"',
          { 'CPU_exec_context': 'DynInst' })

@@ -153,8 +153,10 @@ void
 AlphaISA::zeroRegisters(XC *xc)
 {
     // Insure ISA semantics
-    xc->setIntReg(ZeroReg, 0);
-    xc->setFloatRegDouble(ZeroReg, 0.0);
+    // (no longer very clean due to the change in setIntReg() in the
+    // cpu model.  Consider changing later.)
+    xc->xc->setIntReg(ZeroReg, 0);
+    xc->xc->setFloatRegDouble(ZeroReg, 0.0);
 }
 
 void
