@@ -1808,11 +1808,19 @@ decode OPCODE default Unknown::unknown() {
 	0x2e: stl_c({{ EA = Rb + disp; }}, {{ Mem.ul = Ra<31:0>; }},
 		    {{
 			uint64_t tmp = Mem_write_result;
+			// see stq_c
 			Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
 		    }}, LOCKED);
 	0x2f: stq_c({{ EA = Rb + disp; }}, {{ Mem.uq = Ra; }},
 		    {{
 			uint64_t tmp = Mem_write_result;
+			// If the write operation returns 0 or 1, then
+			// this was a conventional store conditional,
+			// and the value indicates the success/failure
+			// of the operation.  If another value is
+			// returned, then this was a Turbolaser
+			// mailbox access, and we don't update the
+			// result register at all.
 			Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
 		    }}, LOCKED);
     }

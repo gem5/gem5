@@ -218,7 +218,7 @@ class ExecContext
             cregs = &req->xc->regs.miscRegs;
 
             if (req->flags & UNCACHEABLE) {
-                // Don't update result register (see machine.def)
+                // Don't update result register (see stq_c in isa_desc)
                 req->result = 2;
                 req->xc->storeCondFailures = 0;//Needed? [RGD]
             } else {
@@ -239,12 +239,11 @@ class ExecContext
             }
         }
 
-        // Need to clear any locked flags on other proccessors for this
-        // address
-        // Only do this for succsful Store Conditionals and all other
-        // stores (WH64?)
-        // Unsuccesful Store Conditionals would have returned above,
-        // and wouldn't fall through
+        // Need to clear any locked flags on other proccessors for
+        // this address.  Only do this for succsful Store Conditionals
+        // and all other stores (WH64?).  Unsuccessful Store
+        // Conditionals would have returned above, and wouldn't fall
+        // through.
         for (int i = 0; i < system->xcvec.size(); i++){
             cregs = &system->xcvec[i]->regs.miscRegs;
             if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
