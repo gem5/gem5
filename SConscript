@@ -173,6 +173,7 @@ base_sources = Split('''
 	mem/timing_mem/base_memory.cc
 	mem/timing_mem/memory_builder.cc
 	mem/timing_mem/simple_mem_bank.cc
+        mem/trace/itx_writer.cc
 	mem/trace/mem_trace_writer.cc
 	mem/trace/m5_writer.cc
 

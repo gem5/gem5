@@ -130,6 +130,7 @@ ITXReader::getNextReq(MemReqPtr &req)
                     // Get the page offset from the virtual address.
                     tmp_req->paddr = tmp_req->vaddr & 0xfff;
                     tmp_req->paddr |= (c & 0xf0) << 8;
+                    tmp_req->paddr |= (Addr)(c & 0xf0) << 32;
                     for (int i = 2; i < 4; ++i) {
                         c = getc(trace);
                         if (c == EOF) {
@@ -160,6 +161,7 @@ ITXReader::getNextReq(MemReqPtr &req)
                     break;
                   case ITXCode:
                     tmp_req->cmd = Read;
+                    tmp_req->flags |= INST_READ;
                     break;
                   default:
                     fatal("Unknown ITX type");

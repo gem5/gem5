@@ -35,6 +35,7 @@
 #define __ITX_READER_HH__
 
 #include <stdio.h>
+#include <string>
 
 #include "cpu/trace/reader/mem_trace_reader.hh"
 #include "mem/mem_req.hh"

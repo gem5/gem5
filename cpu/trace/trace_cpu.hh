@@ -55,28 +55,17 @@ class TraceCPU : public BaseCPU
     /** Interface for data trace requests, if any. */
     MemInterface *dcacheInterface;
 
-    /** Instruction reference trace. */
-    MemTraceReader *instTrace;
     /** Data reference trace. */
     MemTraceReader *dataTrace;
-
-    /** Number of Icache read ports. */
-    int icachePorts;
-    /** Number of Dcache read/write ports. */
-    int dcachePorts;
 
     /** Number of outstanding requests. */
     int outstandingRequests;
 
-    /** Cycle of the next instruction request, 0 if not available. */
-    Tick nextInstCycle;
-    /** Cycle of the next data request, 0 if not available. */
-    Tick nextDataCycle;
+    /** Cycle of the next request, 0 if not available. */
+    Tick nextCycle;
 
-    /** Next instruction request. */
-    MemReqPtr nextInstReq;
-    /** Next data request. */
-    MemReqPtr nextDataReq;
+    /** Next request. */
+    MemReqPtr nextReq;
 
     /**
      * Event to call the TraceCPU::tick
@@ -113,10 +102,7 @@ class TraceCPU : public BaseCPU
     TraceCPU(const std::string &name,
              MemInterface *icache_interface,
              MemInterface *dcache_interface,
-             MemTraceReader *inst_trace,
-             MemTraceReader *data_trace,
-             int icache_ports,
-             int dcache_ports);
+             MemTraceReader *data_trace);
 
     /**
      * Perform all the accesses for one cycle.
