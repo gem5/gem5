@@ -45,7 +45,8 @@ class TsunamiUart : public MmapDevice
   protected:
     SimConsole *cons;
     int status_store;
-    int next_char;
+    uint8_t next_char;
+    bool valid_char;
 
   public:
     TsunamiUart(const std::string &name, SimConsole *c,

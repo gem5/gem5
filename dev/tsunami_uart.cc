@@ -34,7 +34,7 @@ using namespace std;
 TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
                        Addr addr, Addr mask, MemoryController *mmu)
     : MmapDevice(name, addr, mask, mmu),
-      cons(c), status_store(0), next_char(-1)
+      cons(c), status_store(0), valid_char(false)
 {
 }
 
@@ -63,11 +63,10 @@ TsunamiUart::read(MemReqPtr req, uint8_t *data)
       case 0xD: // Status Register
         {
             int status = cons->intStatus();
-            if (next_char < 0) {
-                next_char = cons->in();
-                if (next_char < 0) {
+            if (!valid_char) {
+                valid_char = cons->in(next_char);
+                if (!valid_char)
                     status &= ~CONS_INT_RX;
-                }
             } else {
                 status |= CONS_INT_RX;
             }
@@ -96,16 +95,16 @@ TsunamiUart::read(MemReqPtr req, uint8_t *data)
         }
 
       case 0x8: // Data register (RX)
-        if (next_char < 0)
+        if (!valid_char)
             panic("Invalid character");
 
         DPRINTF(TsunamiUart, "read data register \'%c\' %#02x\n",
                 isprint(next_char) ? next_char : ' ', next_char);
 
         *data = next_char;
-        next_char = -1;
-//    cons.next();
+        valid_char = false;
         return No_Fault;
+
       case 0x9: // Interrupt Enable Register
         *data = 0;
         return No_Fault;
@@ -170,6 +169,7 @@ TsunamiUart::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(status_store);
     SERIALIZE_SCALAR(next_char);
+    SERIALIZE_SCALAR(valid_char);
 }
 
 void
@@ -177,6 +177,7 @@ TsunamiUart::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(status_store);
     UNSERIALIZE_SCALAR(next_char);
+    UNSERIALIZE_SCALAR(valid_char);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)
