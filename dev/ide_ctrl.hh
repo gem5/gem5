@@ -164,9 +164,6 @@ class IdeController : public PciDev
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
 
-    void intrPost();
-    void intrClear();
-
     void setDmaComplete(IdeDisk *disk);
 
     /**
