@@ -32,8 +32,9 @@
 #include <assert.h>
 
 #include "sim/host.hh"
-#include "targetarch/kernel.hh"
+#include "kern/tru64/kernel.hh"
 #include "base/refcnt.hh"
+#include "targetarch/vtophys.hh"
 
 class ExecContext;
 
@@ -129,13 +130,13 @@ class AlphaArguments
     template <class T>
     operator T *() {
         T *buf = (T *)data->alloc(sizeof(T));
-        Kernel::CopyData(xc, buf, getArg(), sizeof(T));
+        CopyData(xc, buf, getArg(), sizeof(T));
         return buf;
     }
 
     operator char *() {
         char *buf = data->alloc(2048);
-        Kernel::CopyString(xc, buf, getArg(), 2048);
+        CopyString(xc, buf, getArg(), 2048);
         return buf;
     }
 };
