@@ -3,6 +3,7 @@
 # /etc/init.d/rcS
 #
 
+
 echo -n "mounting swap..."
 /sbin/swapon /dev/hdc1
 echo "done."
@@ -46,6 +47,8 @@ echo -n "starting httpd..."
 sleep 2
 cat /benchmarks/apache2/logs/error_log
 echo "done."
+
+echo "server ready" | /usr/bin/netcat -c 192.168.10 8000
 
 echo -n "starting bash shell..."
 /bin/bash
