@@ -95,10 +95,27 @@ class Tsunami : public Platform
     Tsunami(const std::string &name, System *s, IntrControl *intctrl,
             PciConfigAll *pci, int intrFreq);
 
+    /**
+     * Cause the cpu to post a serial interrupt to the CPU.
+     */
     virtual void postConsoleInt();
+
+    /**
+     * Clear a posted CPU interrupt (id=55)
+     */
     virtual void clearConsoleInt();
 
+    /**
+     * Serialize this object to the given output stream.
+     * @param os The stream to serialize to.
+     */
     virtual void serialize(std::ostream &os);
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 

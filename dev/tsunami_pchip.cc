@@ -47,8 +47,6 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
-//    ExecContext *xc = req->xc;
-//    int cpuid = xc->cpu_id;
 
     switch (req->size) {
 

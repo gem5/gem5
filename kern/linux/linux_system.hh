@@ -37,6 +37,10 @@
 
 #include <map>
 
+/**
+ * MAGIC address where the kernel arguments should go. Defined as
+ * PARAM in linux kernel alpha-asm.
+ */
 const Addr PARAM_ADDR =  ULL(0xfffffc000030a000);
 
 class ExecContext;
@@ -44,15 +48,16 @@ class ElfObject;
 class SymbolTable;
 
 class BreakPCEvent;
-class LinuxBadAddrEvent;
-class LinuxSkipFuncEvent;
 class LinuxSkipDelayLoopEvent;
-class LinuxSkipIdeDelay50msEvent;
-class LinuxPrintfEvent;
-class LinuxDebugPrintfEvent;
+class SkipFuncEvent;
 class FnEvent;
 class AlphaArguments;
 
+/**
+ * This class contains linux specific system code (Loading, Events, Binning).
+ * It points to objects that are the system binaries to load and patches them
+ * appropriately to work in simulator.
+ */
 class LinuxSystem : public System
 {
   private:
@@ -64,11 +69,9 @@ class LinuxSystem : public System
 
     BreakPCEvent *kernelPanicEvent;
     BreakPCEvent *consolePanicEvent;
-    LinuxSkipFuncEvent *skipCacheProbeEvent;
-    LinuxSkipIdeDelay50msEvent *skipIdeDelay50msEvent;
+    SkipFuncEvent *skipCacheProbeEvent;
+    SkipFuncEvent *skipIdeDelay50msEvent;
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
-
-  private:
 
     Addr kernelStart;
     Addr kernelEnd;
@@ -80,7 +83,6 @@ class LinuxSystem : public System
     std::vector<RemoteGDB *>   remoteGDB;
     std::vector<GDBListener *> gdbListen;
 
-  public:
     LinuxSystem(const std::string _name,
                 const uint64_t _init_param,
                 MemoryController *_memCtrl,

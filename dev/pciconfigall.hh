@@ -37,8 +37,8 @@
 #include "mem/functional_mem/functional_memory.hh"
 #include "dev/pcireg.h"
 
-#define MAX_PCI_DEV     32
-#define MAX_PCI_FUNC    8
+static const uint32_t MAX_PCI_DEV = 32;
+static const uint32_t MAX_PCI_FUNC = 8;
 
 class PciDev;
 
@@ -55,22 +55,72 @@ class PciConfigAll : public FunctionalMemory
     Addr addr;
     static const Addr size = 0xffffff;
 
-  public:
     /**
       * Pointers to all the devices that are registered with this
       * particular config space.
       */
     PciDev* devices[MAX_PCI_DEV][MAX_PCI_FUNC];
 
+  public:
     /**
-      * The default constructor.
-      */
+     * Constructor for PCIConfigAll
+     * @param name name of the object
+     * @param a base address of the write
+     * @param mmu the memory controller
+     */
     PciConfigAll(const std::string &name, Addr a, MemoryController *mmu);
 
+
+    /**
+     * Check if a device exists.
+     * @param pcidev PCI device to check
+     * @param pcifunc PCI function to check
+     * @return true if device exists, false otherwise
+     */
+    bool deviceExists(uint32_t pcidev, uint32_t pcifunc)
+                     { return devices[pcidev][pcifunc] != NULL ? true : false; }
+
+    /**
+     * Registers a device with the config space object.
+     * @param pcidev PCI device to register
+     * @param pcifunc PCI function to register
+     * @param device device to register
+     */
+    void registerDevice(uint8_t pcidev, uint8_t pcifunc, PciDev *device)
+                        { devices[pcidev][pcifunc] = device; }
+
+    /**
+     * Read something in PCI config space. If the device does not exist
+     * -1 is returned, if the device does exist its PciDev::ReadConfig (or the
+     * virtual function that overrides) it is called.
+     * @param req Contains the address of the field to read.
+     * @param data Return the field read.
+     * @return The fault condition of the access.
+     */
     virtual Fault read(MemReqPtr &req, uint8_t *data);
+
+    /**
+     * Write to PCI config spcae. If the device does not exit the simulator
+     * panics. If it does it is passed on the PciDev::WriteConfig (or the virtual
+     * function that overrides it).
+     * @param req Contains the address to write to.
+     * @param data The data to write.
+     * @return The fault condition of the access.
+     */
+
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
+    /**
+     * Serialize this object to the given output stream.
+     * @param os The stream to serialize to.
+     */
     virtual void serialize(std::ostream &os);
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
 };

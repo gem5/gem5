@@ -39,9 +39,17 @@
 class PciConfigAll;
 class MemoryController;
 
+
+/**
+ * This class encapulates the first 64 bytes of a singles PCI
+ * devices config space that in configured by the configuration file.
+ */
 class PciConfigData : public SimObject
 {
   public:
+    /**
+     * Constructor to initialize the devices config space to 0.
+     */
     PciConfigData(const std::string &name)
         : SimObject(name)
     {
@@ -50,8 +58,13 @@ class PciConfigData : public SimObject
         memset(BARSize, 0, sizeof(BARSize));
     }
 
+    /** The first 64 bytes */
     PCIConfig config;
+
+    /** The size of the BARs */
     uint32_t BARSize[6];
+
+    /** The addresses of the BARs */
     Addr BARAddrs[6];
 };
 
@@ -66,17 +79,50 @@ class PciDev : public DmaDevice
 {
   protected:
     MemoryController *mmu;
+    /** A pointer to the configspace all object that calls
+     * us when a read comes to this particular device/function.
+     */
     PciConfigAll *configSpace;
+
+    /**
+     * A pointer to the object that contains the first 64 bytes of
+     * config space
+     */
     PciConfigData *configData;
+
+    /** The bus number we are on */
     uint32_t busNum;
+
+    /** The device number we have */
     uint32_t deviceNum;
+
+    /** The function number */
     uint32_t functionNum;
 
+    /** The current config space. Unlike the PciConfigData this is updated
+     * during simulation while continues to refelect what was in the config file.
+     */
     PCIConfig config;
+
+    /** The size of the BARs */
     uint32_t BARSize[6];
+
+    /** The current address mapping of the BARs */
     Addr BARAddrs[6];
 
   public:
+    /**
+     * Constructor for PCI Dev. This function copies data from the config file
+     * object PCIConfigData and registers the device with a PciConfigAll object.
+     * @param name name of the object
+     * @param mmu a pointer to the memory controller
+     * @param cf a pointer to the config space object that this device need to
+     *           register with
+     * @param cd A pointer to the config space values specified in the conig file
+     * @param bus the bus this device is on
+     * @param dev the device id of this device
+     * @param func the function number of this device
+     */
     PciDev(const std::string &name, MemoryController *mmu, PciConfigAll *cf,
            PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func);
 
@@ -87,10 +133,38 @@ class PciDev : public DmaDevice
         return No_Fault;
     }
 
+    /**
+     * Write to the PCI config space data that is stored locally. This may be
+     * overridden by the device but at some point it will eventually call this
+     * for normal operations that it does not need to override.
+     * @param offset the offset into config space
+     * @param size the size of the write
+     * @param data the data to write
+     */
     virtual void WriteConfig(int offset, int size, uint32_t data);
+
+
+    /**
+     * Read from the PCI config space data that is stored locally. This may be
+     * overridden by the device but at some point it will eventually call this
+     * for normal operations that it does not need to override.
+     * @param offset the offset into config space
+     * @param size the size of the read
+     * @param data pointer to the location where the read value should be stored
+     */
     virtual void ReadConfig(int offset, int size, uint8_t *data);
 
+    /**
+     * Serialize this object to the given output stream.
+     * @param os The stream to serialize to.
+     */
     virtual void serialize(std::ostream &os);
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 

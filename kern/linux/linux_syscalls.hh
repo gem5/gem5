@@ -308,24 +308,15 @@ struct SystemCalls<Linux>
     waitpid = 270,
     write = 271,
     writev = 272,
-        StandardNumber
+        Number
     };
-
-    static const int Number = StandardNumber;
 
     static const char *name(int num);
 
     static bool validSyscallNumber(int num) {
-        return num < StandardNumber;
+            return num < Number;
     }
 
-    /* why does this exist, I don't think it is needed for linux */
-    static int convert(int syscall_num) {
-        if (!validSyscallNumber(syscall_num))
-            return -1;
-
-        return syscall_num ;
-    }
 };
 
 #endif // __LINUX_SYSCALLS_HH__

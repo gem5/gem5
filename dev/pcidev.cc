@@ -64,10 +64,10 @@ PciDev::PciDev(const string &name, MemoryController *mmu, PciConfigAll *cf,
         panic("NULL pointer to configuration data");
 
     // Setup pointer in config space to point to this entry
-    if (cf->devices[dev][func] != NULL)
+    if (cf->deviceExists(dev,func))
         panic("Two PCI devices occuping same dev: %#x func: %#x", dev, func);
     else
-        cf->devices[dev][func] = this;
+        cf->registerDevice(dev, func, this);
 }
 
 void

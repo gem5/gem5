@@ -42,7 +42,10 @@
 class TsunamiCChip : public FunctionalMemory
 {
   private:
+    /** The base address of this device */
     Addr addr;
+
+    /** The size of mappad from the above address */
     static const Addr size = 0xfff;
 
   protected:
@@ -72,23 +75,75 @@ class TsunamiCChip : public FunctionalMemory
      */
     uint64_t drir;
 
+    /**
+     * The MISC register contains the CPU we are currently on
+     * as well as bits to ack RTC and IPI interrupts.
+     */
     uint64_t misc;
 
+    /** Count of the number of pending IPIs on a CPU */
     uint64_t ipiInterrupting[Tsunami::Max_CPUs];
+
+    /** Indicator of which CPUs have had an RTC interrupt */
     bool RTCInterrupting[Tsunami::Max_CPUs];
 
   public:
+    /**
+     * Initialize the Tsunami CChip by setting all of the
+     * device register to 0.
+     * @param name name of this device.
+     * @param t pointer back to the Tsunami object that we belong to.
+     * @param a address we are mapped at.
+     * @param mmu pointer to the memory controller that sends us events.
+     */
     TsunamiCChip(const std::string &name, Tsunami *t, Addr a,
                  MemoryController *mmu);
 
+    /**
+      * Process a read to the CChip.
+      * @param req Contains the address to read from.
+      * @param data A pointer to write the read data to.
+      * @return The fault condition of the access.
+      */
     virtual Fault read(MemReqPtr &req, uint8_t *data);
+
+
+    /**
+      * Process a write to the CChip.
+      * @param req Contains the address to write to.
+      * @param data The data to write.
+      * @return The fault condition of the access.
+      */
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
+    /**
+     * post an RTC interrupt to the CPU
+     */
     void postRTC();
+
+    /**
+     * post an interrupt to the CPU.
+     * @param interrupt the interrupt number to post (0-64)
+     */
     void postDRIR(uint32_t interrupt);
+
+    /**
+     * clear an interrupt previously posted to the CPU.
+     * @param interrupt the interrupt number to post (0-64)
+     */
     void clearDRIR(uint32_t interrupt);
 
+    /**
+     * Serialize this object to the given output stream.
+     * @param os The stream to serialize to.
+     */
     virtual void serialize(std::ostream &os);
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 

@@ -26,6 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ * linux_system.cc loads the linux kernel, console, pal and patches certain functions.
+ * The symbol tables are loaded so that traces can show the executing function and we can
+ * skip functions. Various delay loops are skipped and their final values manually computed to
+ * speed up boot time.
+ */
+
 #include "base/loader/aout_object.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
@@ -36,6 +44,7 @@
 #include "cpu/base_cpu.hh"
 #include "kern/linux/linux_events.hh"
 #include "kern/linux/linux_system.hh"
+#include "kern/system_events.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
@@ -58,6 +67,9 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
 
+    /**
+     * Load the kernel, pal, and console code into memory
+     */
     // Load kernel code
     ObjectFile *kernel = createObjectFile(kernel_path);
     if (kernel == NULL)
@@ -107,16 +119,22 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     consolePanicEvent = new BreakPCEvent(&pcEventQueue, "console panic");
 #endif
 
-    skipIdeDelay50msEvent = new LinuxSkipIdeDelay50msEvent(&pcEventQueue,
-                                                     "ide_delay_50ms");
+    skipIdeDelay50msEvent = new SkipFuncEvent(&pcEventQueue,
+                                                    "ide_delay_50ms");
 
     skipDelayLoopEvent = new LinuxSkipDelayLoopEvent(&pcEventQueue,
                                                      "calibrate_delay");
 
-    skipCacheProbeEvent = new LinuxSkipFuncEvent(&pcEventQueue, "determine_cpu_caches");
+    skipCacheProbeEvent = new SkipFuncEvent(&pcEventQueue,
+                                                 "determine_cpu_caches");
 
     Addr addr = 0;
 
+    /**
+     * find the address of the est_cycle_freq variable and insert it so we don't
+     * through the lengthly process of trying to calculated it by using the PIT,
+     * RTC, etc.
+     */
     if (kernelSymtab->findAddress("est_cycle_freq", addr)) {
         Addr paddr = vtophys(physmem, addr);
         uint8_t *est_cycle_frequency =
@@ -127,6 +145,11 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     }
 
 
+    /**
+     * Copy the osflags (kernel arguments) into the consoles memory. Presently
+     * Linux does use the console service routine to get these command line
+     * arguments, but we might as well make them available just in case.
+     */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
         Addr paddr = vtophys(physmem, addr);
         char *osflags = (char *)physmem->dma_addr(paddr, sizeof(uint32_t));
@@ -135,6 +158,10 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
               strcpy(osflags, boot_osflags.c_str());
     }
 
+    /**
+     * Since we aren't using a bootloader, we have to copy the kernel arguments
+     * directly into the kernels memory.
+     */
     {
         Addr paddr = vtophys(physmem, PARAM_ADDR);
         char *commandline = (char*)physmem->dma_addr(paddr, sizeof(uint64_t));
@@ -143,13 +170,17 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     }
 
 
+    /**
+     * Set the hardware reset parameter block system type and revision information
+     * to Tsunami.
+     */
     if (consoleSymtab->findAddress("xxm_rpb", addr)) {
         Addr paddr = vtophys(physmem, addr);
         char *hwprb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (hwprb) {
             *(uint64_t*)(hwprb+0x50) = 34;      // Tsunami
-            *(uint64_t*)(hwprb+0x58) = (1<<10);
+            *(uint64_t*)(hwprb+0x58) = (1<<10); // Plain DP264
         }
         else
             panic("could not translate hwprb addr to set system type/variation\n");
@@ -167,14 +198,20 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
         consolePanicEvent->schedule(addr);
 #endif
 
+    /**
+     * Any time ide_delay_50ms, calibarte_delay or determine_cpu_caches is called
+     * just skip the function. Currently determine_cpu_caches only is used put
+     * information in proc, however if that changes in the future we will have to
+     * fill in the cache size variables appropriately.
+     */
     if (kernelSymtab->findAddress("ide_delay_50ms", addr))
-        skipIdeDelay50msEvent->schedule(addr+8);
+        skipIdeDelay50msEvent->schedule(addr+sizeof(MachInst));
 
     if (kernelSymtab->findAddress("calibrate_delay", addr))
-        skipDelayLoopEvent->schedule(addr+8);
+        skipDelayLoopEvent->schedule(addr+sizeof(MachInst));
 
     if (kernelSymtab->findAddress("determine_cpu_caches", addr))
-        skipCacheProbeEvent->schedule(addr+8);
+        skipCacheProbeEvent->schedule(addr+sizeof(MachInst));
 }
 
 LinuxSystem::~LinuxSystem()
@@ -224,7 +261,11 @@ LinuxSystem::registerExecContext(ExecContext *xc)
     RemoteGDB *rgdb = new RemoteGDB(this, xc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
     gdbl->listen();
-//    gdbl->accept();
+    /**
+     * Uncommenting this line waits for a remote debugger to connect
+     * to the simulator before continuing.
+     */
+    //gdbl->accept();
 
     if (remoteGDB.size() <= xcIndex) {
         remoteGDB.resize(xcIndex+1);

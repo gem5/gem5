@@ -42,28 +42,75 @@
 class TsunamiPChip : public FunctionalMemory
 {
   private:
+    /** The base address of this device */
     Addr addr;
+
+    /** The size of mappad from the above address */
     static const Addr size = 0xfff;
 
   protected:
+    /**
+     * pointer to the tsunami object.
+     * This is our access to all the other tsunami
+     * devices.
+     */
     Tsunami *tsunami;
 
+    /** Window Base addresses */
     uint64_t wsba[4];
+
+    /** Window masks */
     uint64_t wsm[4];
+
+    /** Translated Base Addresses */
     uint64_t tba[4];
 
   public:
+    /**
+     * Register the PChip with the mmu and init all wsba, wsm, and tba to 0
+     * @param name the name of thes device
+     * @param t a pointer to the tsunami device
+     * @param a the address which we respond to
+     * @param mmu the mmu we are to register with
+     */
     TsunamiPChip(const std::string &name, Tsunami *t, Addr a,
                  MemoryController *mmu);
 
-    // @todo This hack does a quick and dirty translation of the PCI bus address to
-    //  a valid DMA address.  This is described in 10-10 of the Tsunami book, should be fixed
+    /**
+     * Translate a PCI bus address to a memory address for DMA.
+     * @todo Andrew says this needs to be fixed. What's wrong with it?
+     * @param busAddr PCI address to translate.
+     * @return memory system address
+     */
     Addr translatePciToDma(Addr busAddr);
 
+     /**
+      * Process a read to the PChip.
+      * @param req Contains the address to read from.
+      * @param data A pointer to write the read data to.
+      * @return The fault condition of the access.
+      */
     virtual Fault read(MemReqPtr &req, uint8_t *data);
+
+    /**
+      * Process a write to the PChip.
+      * @param req Contains the address to write to.
+      * @param data The data to write.
+      * @return The fault condition of the access.
+      */
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
+    /**
+     * Serialize this object to the given output stream.
+     * @param os The stream to serialize to.
+     */
     virtual void serialize(std::ostream &os);
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 

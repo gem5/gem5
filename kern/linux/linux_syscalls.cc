@@ -30,7 +30,7 @@
 
 namespace {
     const char *
-    standard_strings[SystemCalls<Linux>::StandardNumber] = {
+    standard_strings[SystemCalls<Linux>::Number] = {
 
 
      "llseek",		 //0
@@ -367,9 +367,7 @@ namespace {
 const char *
 SystemCalls<Linux>::name(int num)
 {
-    if (num >= StandardNumber)
-        return 0;
-    else if (num >= 0)
+    if ((num >= 0) && (num < Number))
         return standard_strings[num];
     else
         return 0;

@@ -51,14 +51,35 @@ class BadDevice : public FunctionalMemory
     std::string devname;
 
   public:
-    /**
-     * The default constructor.
-     */
+     /**
+      * Constructor for the Baddev Class.
+      * @param name name of the object
+      * @param a base address of the write
+      * @param mmu the memory controller
+      * @param devicename device that is not implemented
+      */
     BadDevice(const std::string &name, Addr a, MemoryController *mmu,
               const std::string &devicename);
 
+    /**
+      * On a read event we just panic aand hopefully print a
+      * meaningful error message.
+      * @param req Contains the address to read from.
+      * @param data A pointer to write the read data to.
+      * @return The fault condition of the access.
+      */
     virtual Fault read(MemReqPtr &req, uint8_t *data);
+
+    /**
+      * On a write event we just panic aand hopefully print a
+      * meaningful error message.
+      * @param req Contains the address to write to.
+      * @param data The data to write.
+      * @return The fault condition of the access.
+      */
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
+
+    /** @todo add serialize/unserialize */
 };
 
 #endif // __BADDEV_HH__
