@@ -396,7 +396,7 @@ main(int argc, char **argv)
 
     // Echo command line and all parameter settings to stats file as well.
     echoCommandLine(argc, argv, *outputStream);
-    ParamContext::showAllContexts(builderStream());
+    ParamContext::showAllContexts(*configStream);
 
     // Now process the configuration hierarchy and create the SimObjects.
     ConfigHierarchy configHierarchy(simConfigDB);

@@ -42,11 +42,9 @@
 
 using std::string;
 
-EtherDump::EtherDump(const string &name, const string &file, int max)
-    : SimObject(name), maxlen(max)
+EtherDump::EtherDump(const string &name, std::ostream *_stream, int max)
+    : SimObject(name), stream(_stream), maxlen(max)
 {
-    if (!file.empty())
-        stream.open(file.c_str());
 }
 
 #define DLT_EN10MB		1       	// Ethernet (10Mb)
@@ -74,9 +72,6 @@ struct pcap_pkthdr {
 void
 EtherDump::init()
 {
-    if (!stream.is_open())
-        return;
-
     curtime = time(NULL);
     s_freq = ticksPerSecond;
     us_freq = ticksPerSecond / ULL(1000000);
@@ -91,7 +86,7 @@ EtherDump::init()
     hdr.sigfigs = 0;
     hdr.linktype = DLT_EN10MB;
 
-    stream.write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
+    stream->write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
 
     /*
      * output an empty packet with the current time so that we know
@@ -103,9 +98,9 @@ EtherDump::init()
     pkthdr.microseconds = 0;
     pkthdr.caplen = 0;
     pkthdr.len = 0;
-    stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
+    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
 
-    stream.flush();
+    stream->flush();
 }
 
 void
@@ -116,9 +111,9 @@ EtherDump::dumpPacket(PacketPtr &packet)
     pkthdr.microseconds = (curTick / us_freq) % ULL(1000000);
     pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;
-    stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
-    stream.write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
-    stream.flush();
+    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
+    stream->write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
+    stream->flush();
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
@@ -130,28 +125,14 @@ END_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
-    INIT_PARAM(file, "file to dump packets to"),
+    INIT_PARAM_DFLT(file, "file to dump packets to", "etherdump"),
     INIT_PARAM_DFLT(maxlen, "max portion of packet data to dump", 96)
 
 END_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
 CREATE_SIM_OBJECT(EtherDump)
 {
-    string filename;
-    if (file.isValid()) {
-        filename = file;
-
-        if (filename[0] != '/' && !outputDirectory.empty())
-            filename = outputDirectory + filename;
-    } else {
-        if (outputDirectory.empty()) {
-            filename = "etherdump";
-        } else {
-            filename = outputDirectory + "etherdump";
-        }
-    }
-
-    return new EtherDump(getInstanceName(), filename, maxlen);
+    return new EtherDump(getInstanceName(), makeOutputStream(file), maxlen);
 }
 
 REGISTER_SIM_OBJECT("EtherDump", EtherDump)

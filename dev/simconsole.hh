@@ -70,7 +70,7 @@ class SimConsole : public SimObject
     ConsoleListener *listener;
 
   public:
-    SimConsole(const std::string &name, const std::string &file, int num);
+    SimConsole(const std::string &name, std::ostream *os, int num);
     ~SimConsole();
 
   protected:

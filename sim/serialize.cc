@@ -335,10 +335,7 @@ SerializeParamContext::checkParams()
     if (serialize_dir.isValid()) {
         checkpointDirBase = serialize_dir;
     } else {
-        if (outputDirectory.empty())
-            checkpointDirBase = "m5.%012d";
-        else
-            checkpointDirBase = outputDirectory + "cpt.%012d";
+        checkpointDirBase = outputDirectory + "cpt.%012d";
     }
 
     // guarantee that directory ends with a '/'

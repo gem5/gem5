@@ -51,12 +51,10 @@ double __ticksPerPS;
 
 string outputDirectory;
 ostream *outputStream;
+ostream *configStream;
 
 class UniverseParamContext : public ParamContext
 {
-  private:
-    ofstream outputFile;
-
   public:
     UniverseParamContext(const string &is) : ParamContext(is) {}
     void checkParams();
@@ -68,9 +66,14 @@ Param<Tick> universe_freq(&universe, "frequency", "tick frequency",
                           200000000);
 
 Param<string> universe_output_dir(&universe, "output_dir",
-                                  "directory to output data to");
+                                  "directory to output data to",
+                                  ".");
 Param<string> universe_output_file(&universe, "output_file",
-                                   "file to dump simulator output to");
+                                   "file to dump simulator output to",
+                                   "cout");
+Param<string> universe_config_output_file(&universe, "config_output_file",
+                                          "file to dump simulator config to",
+                                          "m5config.out");
 
 void
 UniverseParamContext::checkParams()
@@ -97,26 +100,49 @@ UniverseParamContext::checkParams()
         }
     }
 
-    string filename;
-    if (universe_output_file.isValid()) {
-        string f = universe_output_file;
-        if (f != "stdout" && f != "cout" && f != "stderr" && f != "cerr")
-            filename = outputDirectory + f;
-        else
-            filename = f;
-    } else {
-        if (outputDirectory.empty())
-            filename = "stdout";
-        else
-            filename = outputDirectory + "output.txt";
-    }
-
-    if (filename == "stdout" || filename == "cout")
-        outputStream = &cout;
-    else if (filename == "stderr" || filename == "cerr")
-        outputStream = &cerr;
-    else {
-        outputFile.open(filename.c_str(), ios::trunc);
-        outputStream = &outputFile;
-    }
+    outputStream = makeOutputStream(universe_output_file);
+    configStream = universe_config_output_file.isValid()
+        ? makeOutputStream(universe_config_output_file)
+        : outputStream;
 }
+
+
+std::ostream *
+makeOutputStream(std::string &name)
+{
+    if (name == "cerr" || name == "stderr")
+        return &std::cerr;
+
+    if (name == "cout" || name == "stdout")
+        return &std::cout;
+
+    string path = (name[0] != '/') ? outputDirectory + name : name;
+
+    // have to dynamically allocate a stream since we're going to
+    // return it... though the caller can't easily free it since it
+    // may be cerr or cout.  need GC!
+    ofstream *s = new ofstream(path.c_str(), ios::trunc);
+
+    if (!s->is_open())
+        fatal("Cannot open file %s", path);
+
+    return s;
+}
+
+
+void
+closeOutputStream(std::ostream *os)
+{
+    // can't close cerr or cout
+    if (os == &std::cerr || os == &std::cout)
+        return;
+
+    // can only close ofstreams, not generic ostreams, so try to
+    // downcast and close only if the downcast succeeds
+    std::ofstream *ofs = dynamic_cast<std::ofstream *>(os);
+    if (ofs)
+        ofs->close();
+}
+
+
+

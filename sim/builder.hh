@@ -38,9 +38,6 @@
 
 class SimObject;
 
-std::ostream &
-builderStream();
-
 //
 // A SimObjectBuilder serves as an evaluation context for a set of
 // parameters that describe a specific instance of a SimObject.  This

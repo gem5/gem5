@@ -43,7 +43,7 @@
 class EtherDump : public SimObject
 {
   private:
-    std::ofstream stream;
+    std::ostream *stream;
     const int maxlen;
     void dumpPacket(PacketPtr &packet);
     void init();
@@ -53,9 +53,9 @@ class EtherDump : public SimObject
     Tick us_freq;
 
   public:
-    EtherDump(const std::string &name, const std::string &file, int max);
+    EtherDump(const std::string &name, std::ostream *_stream, int max);
 
-    inline void dump(PacketPtr &pkt) { if (stream.is_open()) dumpPacket(pkt); }
+    inline void dump(PacketPtr &pkt) { dumpPacket(pkt); }
 };
 
 #endif // __ETHERDUMP_H__
