@@ -895,6 +895,9 @@ class Value(object):
     def __str__(self):
         return str(self._getattr())
 
+    def __len__(self):
+        return len(self._getattr())
+
 # Regular parameter.
 class _Param(object):
     def __init__(self, ptype, *args, **kwargs):
