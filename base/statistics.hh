@@ -120,8 +120,7 @@ const StatFlags __reserved =	init | print | __substat;
 enum DisplayMode
 {
     mode_m5,
-    mode_simplescalar,
-    mode_python
+    mode_simplescalar
 };
 
 extern DisplayMode DefaultMode;
@@ -2931,7 +2930,7 @@ class Temp;
 class Formula
     : public WrapVec<Formula,
                      FormulaBase,
-                     VectorData>
+                     FormulaData>
 {
   public:
     /**
@@ -3132,8 +3131,9 @@ class Temp
  */
 
 void check();
-void dump(std::ostream &stream, const std::string &name = "",
-          DisplayMode mode = DefaultMode);
+void dump(std::ostream &stream, DisplayMode mode = DefaultMode);
+void python_start(const std::string &file);
+void python_dump(const std::string &name, const std::string &subname);
 void reset();
 void registerResetCallback(Callback *cb);
 

@@ -27,7 +27,7 @@
  */
 
 #include <iomanip>
-#include <iostream>
+#include <fstream>
 #include <list>
 #include <map>
 #include <string>
@@ -82,11 +82,19 @@ namespace Database
         list_t printStats;
         map_t statMap;
 
+        ofstream *stream;
+        Python *py;
+
       public:
-        void dump(ostream &stream, const string &name, DisplayMode mode);
+        Data();
+        ~Data();
+
+        void dump(ostream &stream, DisplayMode mode);
         void display(ostream &stream, DisplayMode mode);
-        void python(ostream &stream, const string &name);
-        void python(Python &py, const string &name, const string &bin);
+        void python_start(const string &file);
+        void python_dump(const string &name, const string &subname);
+        void python(const string &name, const string &subname,
+                    const string &bin);
 
         StatData *find(void *stat);
         void mapStat(void *stat, StatData *data);
@@ -99,16 +107,28 @@ namespace Database
         static std::string name() { return "Statistics Database"; }
     };
 
+Data::Data()
+    : stream(0), py(0)
+{
+}
+
+Data::~Data()
+{
+    if (stream) {
+        delete py;
+        ccprintf(*stream, "if __name__ == '__main__':\n");
+        ccprintf(*stream, "    program_display()\n");
+        stream->close();
+        delete stream;
+    }
+}
 
 void
-Data::dump(ostream &stream, const string &name, DisplayMode mode)
+Data::dump(ostream &stream, DisplayMode mode)
 {
     MainBin *orig = MainBin::curBin();
 
     switch (mode) {
-      case mode_python:
-        python(stream, name);
-        break;
       case mode_m5:
       case mode_simplescalar:
         display(stream, mode);
@@ -158,50 +178,61 @@ Data::display(ostream &stream, DisplayMode mode)
 }
 
 void
-Data::python(ostream &stream, const string &name)
+Data::python_start(const string &file)
 {
-    Python py(stream);
+    if (stream)
+        panic("can't start python twice!");
 
-    ccprintf(stream, "import sys\n");
-    ccprintf(stream, "sys.path.append('.')\n");
-    ccprintf(stream, "from m5stats import *\n\n");
+    stream = new ofstream(file.c_str(), ios::trunc);
+    py = new Python(*stream);
+
+    ccprintf(*stream, "import sys\n");
+    ccprintf(*stream, "sys.path.append('.')\n");
+    ccprintf(*stream, "from m5stats import *\n\n");
+}
+
+void
+Data::python_dump(const string &name, const string &subname)
+{
+    if (!py)
+        panic("Can't dump python without first opening the file");
 
     if (bins.empty()) {
-        python(py, name, "");
+        python(name, subname, "");
     } else {
         list<MainBin *>::iterator i = bins.begin();
         list<MainBin *>::iterator end = bins.end();
 
         while (i != end) {
             (*i)->activate();
-            python(py, name, (*i)->name());
+            python(name, subname, (*i)->name());
             ++i;
         }
     }
-
-    py.next();
-    ccprintf(stream, "if __name__ == '__main__':\n");
-    ccprintf(stream, "    program_display()\n");
+    py->next();
 }
 
 void
-Data::python(Python &py, const string &name, const string &bin)
+Data::python(const string &name, const string &subname, const string &bin)
 {
-    py.start("collections.append");
-    py.start("Collection");
-    py.qarg(name);
-    py.qarg(bin);
-    py.qarg(hostname());
-    py.qarg(Time::start.date());
+    py->start("collections.append");
+    py->start("Collection");
+    py->qarg(name);
+    py->qarg(subname);
+    py->qarg(bin);
+    py->qarg(hostname());
+    py->qarg(Time::start.date());
+    py->startList();
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
     while (i != end) {
         StatData *stat = *i;
-        stat->python(py);
+        stat->python(*py);
         ++i;
     }
-    py.end();
-    py.end();
+    py->endList();
+    py->end();
+    py->end();
 }
 
 StatData *
@@ -967,7 +998,7 @@ ScalarDataBase::python(Python &py) const
 {
     py.start("Scalar");
     py.qarg(name);
-    py.qarg(desc);
+    py.qqqarg(desc);
     py.kwarg("binned", binned());
     py.kwarg("precision", precision);
     py.kwarg("flags", flags);
@@ -984,7 +1015,7 @@ VectorDataBase::python(Python &py) const
 
     py.start("Vector");
     py.qarg(name);
-    py.qarg(desc);
+    py.qqqarg(desc);
     py.kwarg("binned", binned());
     py.kwarg("precision", precision);
     py.kwarg("flags", flags);
@@ -1033,7 +1064,7 @@ FormulaDataBase::python(Python &py) const
 
     py.start("Formula");
     py.qarg(name);
-    py.qarg(desc);
+    py.qqqarg(desc);
     py.kwarg("binned", binned());
     py.kwarg("precision", precision);
     py.kwarg("flags", flags);
@@ -1054,7 +1085,7 @@ DistDataBase::python(Python &py) const
 
     py.start("Dist");
     py.qarg(name);
-    py.qarg(desc);
+    py.qqqarg(desc);
     py.kwarg("binned", binned());
     py.kwarg("precision", precision);
     py.kwarg("flags", flags);
@@ -1071,7 +1102,7 @@ VectorDistDataBase::python(Python &py) const
 
     py.start("VectorDist");
     py.qarg(name);
-    py.qarg(desc);
+    py.qqqarg(desc);
     py.kwarg("binned", binned());
     py.kwarg("precision", precision);
     py.kwarg("flags", flags);
@@ -1101,7 +1132,7 @@ Vector2dDataBase::python(Python &py) const
 
     py.start("Vector2d");
     py.qarg(name);
-    py.qarg(desc);
+    py.qqqarg(desc);
     py.kwarg("binned", binned());
     py.kwarg("precision", precision);
     py.kwarg("flags", flags);
@@ -1124,13 +1155,14 @@ Vector2dDataBase::python(Python &py) const
 void
 FormulaBase::val(rvec_t &vec) const
 {
-    vec = root->val();
+    if (root)
+        vec = root->val();
 }
 
 result_t
 FormulaBase::total() const
 {
-    return root->total();
+    return root ? root->total() : 0.0;
 }
 
 size_t
@@ -1240,10 +1272,23 @@ check()
 }
 
 void
-dump(ostream &stream, const string &name, DisplayMode mode)
+dump(ostream &stream, DisplayMode mode)
 {
-    Database::StatDB().dump(stream, name, mode);
+    Database::StatDB().dump(stream, mode);
 }
+
+void
+python_start(const string &file)
+{
+    Database::StatDB().python_start(file);
+}
+
+void
+python_dump(const string &name, const string &subname)
+{
+    Database::StatDB().python_dump(name, subname);
+}
+
 
 CallbackQueue resetQueue;
 
