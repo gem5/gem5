@@ -26,19 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIM_EXIT_HH__
-#define __SIM_EXIT_HH__
+class ExecContext;
 
-#include <string>
-
-#include "sim/host.hh"
-
-class Callback;
-
-void registerExitCallback(Callback *);
-
-void exitNow(const std::string &cause, int exit_code);
-void exitNow(const char *cause, int exit_code);
-void SimExit(Tick when, const char *message);
-
-#endif // __SIM_EXIT_HH__
+namespace AlphaPseudo
+{
+    void m5exit(ExecContext *xc);
+    void m5exit_old(ExecContext *xc);
+    void resetstats(ExecContext *xc);
+    void dumpstats(ExecContext *xc);
+    void dumpresetstats(ExecContext *xc);
+    void m5checkpoint(ExecContext *xc);
+}
