@@ -289,7 +289,8 @@ Database::reset()
         ++bi;
     }
 
-    orig->activate();
+    if (orig)
+        orig->activate();
 }
 
 void
