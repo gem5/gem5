@@ -53,6 +53,7 @@ System::System(const std::string _name,
     if (bin == true) {
         Kernel = new Statistics::MainBin("non TCPIP Kernel stats");
         Kernel->activate();
+        User = new Statistics::MainBin("User stats");
     } else
         Kernel = NULL;
 }
@@ -136,7 +137,7 @@ System::serialize(std::ostream &os)
         int numCtxs = swCtxMap.size();
         SERIALIZE_SCALAR(numCtxs);
         SWContext *ctx;
-        for (int i = 0; iter != end; ++i) {
+        for (int i = 0; iter != end; ++i, ++iter) {
             paramOut(os, csprintf("Addr[%d]",i), (*iter).first);
             ctx = (*iter).second;
             paramOut(os, csprintf("calls[%d]",i), ctx->calls);
