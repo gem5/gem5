@@ -1,5 +1,7 @@
 from BaseMem import BaseMem
 
+class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
+
 simobj BaseCache(BaseMem):
     type = 'BaseCache'
     adaptive_compression = Param.Bool(False,
@@ -44,4 +46,11 @@ simobj BaseCache(BaseMem):
          "Number of entries in the harware prefetch queue")
     prefetch_past_page = Param.Bool(False,
          "Allow prefetches to cross virtual page boundaries")
-
+    prefetch_serial_squash = Param.Bool(False,
+         "Squash prefetches with a later time on a subsequent miss")
+    prefetch_degree = Param.Int(1,
+         "Degree of the prefetch depth")
+    prefetch_latency = Param.Tick(10,
+         "Latency of the prefetcher")
+    prefetch_policy = Param.Prefetch('none',
+         "Type of prefetcher to use")
