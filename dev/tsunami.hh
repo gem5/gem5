@@ -39,7 +39,7 @@
 
 class IdeController;
 class TlaserClock;
-class EtherDev;
+class NSGigE;
 class TsunamiCChip;
 class TsunamiPChip;
 class TsunamiIO;
@@ -67,7 +67,7 @@ class Tsunami : public Platform
     /** Pointer to the disk controller device */
     IdeController *disk_controller;
     /** Pointer to the ethernet controller device */
-    EtherDev *ethernet;
+    NSGigE *ethernet;
 
     /** Pointer to the Tsunami CChip.
       * The chip contains some configuration information and

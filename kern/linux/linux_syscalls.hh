@@ -311,6 +311,8 @@ struct SystemCalls<Linux>
         StandardNumber
     };
 
+    static const int Number = StandardNumber;
+
     static const char *name(int num);
 
     static bool validSyscallNumber(int num) {
