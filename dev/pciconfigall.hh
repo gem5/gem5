@@ -116,6 +116,12 @@ class PciConfigAll : public PioDevice
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     /**
+     * Start up function to check if more than one person is using an interrupt line
+     * and print a warning if such a case exists
+     */
+    virtual void startup();
+
+    /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
      */
@@ -134,6 +140,7 @@ class PciConfigAll : public PioDevice
      * @return Tick when the request is done
      */
     Tick cacheAccess(MemReqPtr &req);
+
 };
 
 #endif // __PCICONFIGALL_HH__
