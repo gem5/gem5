@@ -214,6 +214,7 @@ KSData::regStats(const string &name)
 
     _modeGood
         .init(2)
+        .name(name + ".mode_good")
         ;
 
     _modeFraction
