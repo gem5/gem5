@@ -1160,8 +1160,24 @@ class MemorySize(CheckedInt):
         return '%d' % value
     _string = classmethod(_string)
 
-class Addr(MemorySize):
-    pass
+class Addr(CheckedInt):
+    cppname = 'Addr'
+    size = 64
+    unsigned = True
+    def __new__(cls, value):
+        try:
+            value = long(toMemorySize(value))
+        except TypeError:
+            value = long(value)
+        return super(Addr, cls).__new__(cls, value)
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        return '%d' % value
+    _string = classmethod(_string)
 
 class AddrRange(Range):
     type = Addr
@@ -1169,15 +1185,18 @@ class AddrRange(Range):
 # Boolean parameter type.
 class Bool(ParamType):
     _cpp_param_decl = 'bool'
-    #def __new__(cls, value):
-    #    return super(MemorySize, cls).__new__(cls, toBool(value))
+    def __init__(self, value):
+        try:
+            self.value = toBool(value)
+        except TypeError:
+            self.value = bool(value)
 
     def _convert(cls, value):
-        return toBool(value)
+        return cls(value)
     _convert = classmethod(_convert)
 
     def _string(cls, value):
-        if value:
+        if value.value:
             return "true"
         else:
             return "false"
@@ -1344,42 +1363,109 @@ class Enum(ParamType):
     def _string(self, value):
         return str(value)
     _string = classmethod(_string)
+
+root_frequency = None
+
 #
 # "Constants"... handy aliases for various values.
 #
-
-class Frequency(int,ParamType):
+class RootFrequency(float,ParamType):
     _cpp_param_decl = 'Tick'
 
     def __new__(cls, value):
-        if isinstance(value, basestring):
-            val = int(env['FREQUENCY'] / toFrequency(value))
-        else:
-            val = toFrequency(value)
-        return super(cls, Frequency).__new__(cls, val)
+        return super(cls, RootFrequency).__new__(cls, toFrequency(value))
 
     def _convert(cls, value):
         return cls(value)
     _convert = classmethod(_convert)
 
     def _string(cls, value):
-        return '%d' % value
+        return '%d' % int(value)
     _string = classmethod(_string)
 
-class Latency(int,ParamType):
+class ClockPeriod(float,ParamType):
     _cpp_param_decl = 'Tick'
     def __new__(cls, value):
-        if isinstance(value, basestring):
-            val = int(env['FREQUENCY'] * toLatency(value))
-        else:
-            val = toLatency(value)
-        return super(cls, Latency).__new__(cls, val)
+        relative = False
+        try:
+            val = toClockPeriod(value)
+        except ValueError, e:
+            relative = True
+            if value.endswith('f'):
+                val = float(value[:-1])
+                if val:
+                    val = 1 / val
+            elif value.endswith('c'):
+                val = float(value[:-1])
+            else:
+                raise e
+
+        self = super(cls, ClockPeriod).__new__(cls, val)
+        self.relative = relative
+        return self
 
     def _convert(cls, value):
         return cls(value)
     _convert = classmethod(_convert)
 
     def _string(cls, value):
+        if not value.relative:
+            value *= root_frequency
+
+        return '%d' % int(value)
+    _string = classmethod(_string)
+
+class Frequency(float,ParamType):
+    _cpp_param_decl = 'Tick'
+
+    def __new__(cls, value):
+        relative = False
+        try:
+            val = toFrequency(value)
+        except ValueError, e:
+            if value.endswith('f'):
+                val = float(value[:-1])
+                relative = True
+            else:
+                raise e
+        self = super(cls, Frequency).__new__(cls, val)
+        self.relative = relative
+        return self
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        if not value.relative:
+            value = root_frequency / value
+
+        return '%d' % int(value)
+    _string = classmethod(_string)
+
+class Latency(float,ParamType):
+    _cpp_param_decl = 'Tick'
+    def __new__(cls, value):
+        relative = False
+        try:
+            val = toLatency(value)
+        except ValueError, e:
+            if value.endswith('c'):
+                val = float(value[:-1])
+                relative = True
+            else:
+                raise e
+        self = super(cls, Latency).__new__(cls, val)
+        self.relative = relative
+        return self
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        if not value.relative:
+            value *= root_frequency
         return '%d' % value
     _string = classmethod(_string)
 
@@ -1394,7 +1480,9 @@ AllMemory = AddrRange(0, MaxAddr)
 # The final hook to generate .ini files.  Called from configuration
 # script once config is built.
 def instantiate(root):
+    global root_frequency
     instance = root.instantiate('root')
+    root_frequency = RootFrequency._convert(root.frequency._getattr())
     instance.fixup()
     instance.display()
     if not noDot:
@@ -1427,6 +1515,7 @@ __all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
-           'MemorySize', 'Frequency', 'Latency',
+           'MemorySize', 'RootFrequency', 'Frequency', 'Latency',
+           'ClockPeriod',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory', 'NULL',
            'NextEthernetAddr', 'instantiate']

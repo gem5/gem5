@@ -16,93 +16,111 @@
 
 from convert import *
 
+class Variable(str):
+    """Intelligent proxy class for SmartDict.  Variable will use the
+    various convert functions to attempt to convert values to useable
+    types"""
+    def __int__(self):
+        return toInteger(str(self))
+    def __long__(self):
+        return toLong(str(self))
+    def __float__(self):
+        return toFloat(str(self))
+    def __nonzero__(self):
+        return toBool(str(self))
+    def convert(self, other):
+        t = type(other)
+        if t == bool:
+            return bool(self)
+        if t == int:
+            return int(self)
+        if t == long:
+            return long(self)
+        if t == float:
+            return float(self)
+        return str(self)
+    def __lt__(self, other):
+        return self.convert(other) < other
+    def __le__(self, other):
+        return self.convert(other) <= other
+    def __eq__(self, other):
+        return self.convert(other) == other
+    def __ne__(self, other):
+        return self.convert(other) != other
+    def __gt__(self, other):
+        return self.convert(other) > other
+    def __ge__(self, other):
+        return self.convert(other) >= other
+
+    def __add__(self, other):
+        return self.convert(other) + other
+    def __sub__(self, other):
+        return self.convert(other) - other
+    def __mul__(self, other):
+        return self.convert(other) * other
+    def __div__(self, other):
+        return self.convert(other) / other
+    def __truediv__(self, other):
+        return self.convert(other) / other
+
+    def __radd__(self, other):
+        return other + self.convert(other)
+    def __rsub__(self, other):
+        return other - self.convert(other)
+    def __rmul__(self, other):
+        return other * self.convert(other)
+    def __rdiv__(self, other):
+        return other / self.convert(other)
+    def __rtruediv__(self, other):
+        return other / self.convert(other)
+
+class UndefinedVariable(object):
+    """Placeholder class to represent undefined variables.  Will
+    generally cause an exception whenever it is used, but evaluates to
+    zero for boolean truth testing such as in an if statement"""
+    def __nonzero__(self):
+        return False
+
 class SmartDict(dict):
+    """Dictionary class that holds strings, but intelligently converts
+    those strings to other types depending on their usage"""
 
-    class Proxy(str):
-        def __int__(self):
-            return int(toInteger(str(self)))
-        def __long__(self):
-            return long(toInteger(str(self)))
-        def __float__(self):
-            return float(toInteger(str(self)))
-        def __nonzero__(self):
-            return toBool(str(self))
-        def convert(self, other):
-            t = type(other)
-            if t == bool:
-                return bool(self)
-            if t == int:
-                return int(self)
-            if t == long:
-                return long(self)
-            if t == float:
-                return float(self)
-            return str(self)
-        def __lt__(self, other):
-            return self.convert(other) < other
-        def __le__(self, other):
-            return self.convert(other) <= other
-        def __eq__(self, other):
-            return self.convert(other) == other
-        def __ne__(self, other):
-            return self.convert(other) != other
-        def __gt__(self, other):
-            return self.convert(other) > other
-        def __ge__(self, other):
-            return self.convert(other) >= other
-
-        def __add__(self, other):
-            return self.convert(other) + other
-        def __sub__(self, other):
-            return self.convert(other) - other
-        def __mul__(self, other):
-            return self.convert(other) * other
-        def __div__(self, other):
-            return self.convert(other) / other
-        def __truediv__(self, other):
-            return self.convert(other) / other
-
-        def __radd__(self, other):
-            return other + self.convert(other)
-        def __rsub__(self, other):
-            return other - self.convert(other)
-        def __rmul__(self, other):
-            return other * self.convert(other)
-        def __rdiv__(self, other):
-            return other / self.convert(other)
-        def __rtruediv__(self, other):
-            return other / self.convert(other)
-
-
-    # __getitem__ uses dict.get() to return 'False' if the key is not
-    # found (rather than raising KeyError).  Note that this does *not*
-    # set the key's value to 'False' in the dict, so that even after
-    # we call env['foo'] we still get a meaningful answer from "'foo'
-    # in env" (which calls dict.__contains__, which we do not
-    # override).
     def __getitem__(self, key):
-        return self.Proxy(dict.get(self, key, 'False'))
+        """returns a Variable proxy if the values exists in the database and
+        returns an UndefinedVariable otherwise"""
+
+        if key in self:
+            return Variable(dict.get(self, key))
+        else:
+            # Note that this does *not* change the contents of the dict,
+            # so that even after we call env['foo'] we still get a
+            # meaningful answer from "'foo' in env" (which
+            # calls dict.__contains__, which we do not override).
+            return UndefinedVariable()
 
     def __setitem__(self, key, item):
+        """intercept the setting of any variable so that we always
+        store strings in the dict"""
         dict.__setitem__(self, key, str(item))
 
     def values(self):
-        return [ self.Proxy(v) for v in dict.values(self) ]
+        return [ Variable(v) for v in dict.values(self) ]
 
     def itervalues(self):
         for value in dict.itervalues(self):
-            yield self.Proxy(value)
+            yield Variable(value)
 
     def items(self):
-        return [ (k, self.Proxy(v)) for k,v in dict.items(self) ]
+        return [ (k, Variable(v)) for k,v in dict.items(self) ]
 
     def iteritems(self):
         for key,value in dict.iteritems(self):
-            yield key, self.Proxy(value)
+            yield key, Variable(value)
 
     def get(self, key, default='False'):
-        return self.Proxy(dict.get(self, key, str(default)))
+        return Variable(dict.get(self, key, str(default)))
 
     def setdefault(self, key, default='False'):
-        return self.Proxy(dict.setdefault(self, key, str(default)))
+        return Variable(dict.setdefault(self, key, str(default)))
 
+__all__ = [ 'SmartDict' ]
