@@ -48,4 +48,6 @@ namespace AlphaPseudo
     void dumpresetstats(ExecContext *xc);
     void m5checkpoint(ExecContext *xc);
     void readfile(ExecContext *xc);
+    void debugbreak(ExecContext *xc);
+    void switchcpu(ExecContext *xc);
 }

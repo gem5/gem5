@@ -491,6 +491,14 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
     AlphaISA::mode_type mode =
         (AlphaISA::mode_type)DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]);
 
+
+    /* @todo this should actually be in there but for whatever reason
+     * Its not working at present.
+     */
+    if (req->vaddr & (req->size - 1)) {
+        return Alignment_Fault;
+    }
+
     if (PC_PAL(pc)) {
         mode = (req->flags & ALTMODE) ?
             (AlphaISA::mode_type)ALT_MODE_AM(ipr[AlphaISA::IPR_ALT_MODE])
