@@ -42,9 +42,7 @@
 // forward declarations
 class ExecContext;
 class DynInst;
-typedef DynInst FullCPUExecContext;
 class SimpleCPU;
-typedef SimpleCPU SimpleCPUExecContext;
 class SymbolTable;
 
 namespace Trace {
@@ -249,7 +247,8 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the EA computation.
      */
-    virtual StaticInstPtr<ISA> eaCompInst() { return nullStaticInstPtr; }
+    virtual const
+    StaticInstPtr<ISA> &eaCompInst() const { return nullStaticInstPtr; }
 
     /**
      * Memory references only: returns "fake" instruction representing
@@ -257,7 +256,8 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the memory access (not the EA computation).
      */
-    virtual StaticInstPtr<ISA> memAccInst() { return nullStaticInstPtr; }
+    virtual const
+    StaticInstPtr<ISA> &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.
     const MachInst machInst;
@@ -307,14 +307,12 @@ class StaticInst : public StaticInstBase
     /**
      * Execute this instruction under SimpleCPU model.
      */
-    virtual Fault execute(SimpleCPUExecContext *xc,
-                          Trace::InstRecord *traceData) = 0;
+    virtual Fault execute(SimpleCPU *xc, Trace::InstRecord *traceData) = 0;
 
     /**
      * Execute this instruction under detailed FullCPU model.
      */
-    virtual Fault execute(FullCPUExecContext *xc,
-                          Trace::InstRecord *traceData) = 0;
+    virtual Fault execute(DynInst *xc, Trace::InstRecord *traceData) = 0;
 
     /**
      * Return the target address for a PC-relative branch.
