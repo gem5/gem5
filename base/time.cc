@@ -47,10 +47,11 @@ convert(const timeval &tv)
     return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 }
 
-Time::Time()
+Time::Time(bool set_now)
 {
     time = new _timeval;
-    ::gettimeofday(&time->tv, NULL);
+    if (set_now)
+        set();
 }
 
 Time::Time(const timeval &val)
@@ -77,15 +78,15 @@ Time::get() const
 }
 
 void
-Time::set(const timeval &tv)
+Time::set()
 {
-    memcpy(&time->tv, &tv, sizeof(timeval));
+    ::gettimeofday(&time->tv, NULL);
 }
 
 void
-Time::reset()
+Time::set(const timeval &tv)
 {
-    ::gettimeofday(&time->tv, NULL);
+    memcpy(&time->tv, &tv, sizeof(timeval));
 }
 
 double
@@ -127,4 +128,4 @@ operator-(const Time &l, const Time &r)
     return tv;
 }
 
-const Time Time::start;
+const Time Time::start(true);

@@ -42,15 +42,15 @@ class Time
     mutable _timeval *time;
 
   public:
-    Time();
+    explicit Time(bool set_now = false);
     Time(const timeval &val);
     Time(const Time &val);
     ~Time();
 
+    void set();
     const timeval &get() const;
     void set(const timeval &val);
 
-    void reset();
     double operator()() const;
     std::string date(std::string format = "") const;
 
