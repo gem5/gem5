@@ -54,12 +54,6 @@ AlphaISA::initCPU(RegFile *regs)
     regs->npc = regs->pc + sizeof(MachInst);
 }
 
-void
-m5_exit()
-{
-    static SimExitEvent event("m5_exit instruction encountered");
-}
-
 ////////////////////////////////////////////////////////////////////////
 //
 // alpha exceptions - value equals trap address, update with MD_FAULT_TYPE

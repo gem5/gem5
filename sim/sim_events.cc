@@ -63,6 +63,11 @@ SimExitEvent::description()
     return "simulation termination";
 }
 
+void
+SimExit(const char *message)
+{
+    static SimExitEvent event(message);
+}
 
 //
 // constructor: automatically schedules at specified time

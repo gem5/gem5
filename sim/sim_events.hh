@@ -66,6 +66,8 @@ class SimExitEvent : public Event
     virtual const char *description();
 };
 
+void SimExit(const char *message);
+
 //
 // Event class to terminate simulation after 'n' related events have
 // occurred using a shared counter: used to terminate when *all*

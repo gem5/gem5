@@ -18,17 +18,17 @@ let {{
 #include <fenv.h>
 #endif
 
-#include "cpu/static_inst.hh"
 #include "base/cprintf.hh"
 #include "base/misc.hh"
-#include "cpu/full_cpu/op_class.hh"
-
 #include "cpu/exec_context.hh"
-#include "cpu/simple_cpu/simple_cpu.hh"
-#include "cpu/full_cpu/spec_state.hh"
-#include "cpu/full_cpu/full_cpu.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/full_cpu/full_cpu.hh"
+#include "cpu/full_cpu/op_class.hh"
+#include "cpu/full_cpu/spec_state.hh"
+#include "cpu/simple_cpu/simple_cpu.hh"
+#include "cpu/static_inst.hh"
 #include "sim/annotation.hh"
+#include "sim/sim_events.hh"
 
 #ifdef FULL_SYSTEM
 #include "targetarch/ev5.hh"
@@ -2356,6 +2356,10 @@ decode OPCODE default Unknown::unknown() {
 #else
     0x00: decode PALFUNC {
 	format EmulatedCallPal {
+	    0x00: halt ({{
+		if (!xc->misspeculating()) 
+		    SimExit("halt instruction encountered");
+	    }});
 	    0x83: callsys({{ xc->syscall(); }});
 	    // Read uniq reg into ABI return value register (r0)
 	    0x9e: rduniq({{ R0 = Runiq; }});
@@ -2414,7 +2418,7 @@ decode OPCODE default Unknown::unknown() {
 	    }}, No_OpClass);
 	    0x20: m5exit({{
 		if (!xc->misspeculating())
-		    m5_exit();
+		    SimExit("m5_exit instruction encountered");
 	    }}, No_OpClass);
             0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
             0x40: resetstats({{
