@@ -80,6 +80,12 @@ statElapsedTime()
     return elapsed();
 }
 
+Tick
+statElapsedTicks()
+{
+    return curTick - startTick;
+}
+
 SimTicksReset simTicksReset;
 
 void
@@ -105,7 +111,7 @@ InitSimStats()
         ;
 
     simTicks
-        .scalar(curTick)
+        .functor(statElapsedTicks)
         .name("sim_ticks")
         .desc("Number of ticks simulated")
         ;
