@@ -1,0 +1,33 @@
+#!/bin/sh
+SERVER=10.0.0.1
+CLIENT=10.0.0.2
+
+echo "setting up network..."
+ifconfig lo 127.0.0.1
+ifconfig eth0 $CLIENT
+
+echo -n "waiting for server..."
+/usr/bin/netcat -c -l -p 8000
+
+BINARY=/usr/bin/netperf
+TEST="TCP_RR"
+SHORT_ARGS="-l -1k"
+LONG_ARGS="-k10000,0 -K10000,0"
+
+
+SHORT="$BINARY -H $SERVER -t $TEST $SHORT_ARGS"
+LONG="$BINARY -H $SERVER -t $TEST $LONG_ARGS"
+
+echo "starting test..."
+echo "netperf warmup"
+echo $SHORT
+eval $SHORT
+
+echo "netperf benchmark"
+echo $LONG
+/sbin/m5 ivlb 1
+/sbin/m5 resetstats
+/sbin/m5 dumpresetstats 2000000000 2000000000
+/sbin/m5 checkpoint 2000000000 2000000000
+eval $LONG
+/sbin/m5 exit

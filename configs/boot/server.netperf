@@ -1,0 +1,17 @@
+#!/bin/sh
+SERVER=10.0.0.1
+CLIENT=10.0.0.2
+
+echo "setting up network..."
+ifconfig lo 127.0.0.1
+ifconfig eth0 $SERVER
+
+echo "running netserver..."
+/usr/bin/netserver
+
+echo -n "signal client to begin..."
+echo "server ready" | /usr/bin/netcat -c $CLIENT 8000
+echo "done."
+
+echo "starting bash..."
+exec /bin/bash
