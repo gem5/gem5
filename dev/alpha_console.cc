@@ -153,7 +153,7 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
         int cpu = val;
         assert(cpu > 0 && "Must not access primary cpu");
 
-        ExecContext *other_xc = req->xc->system->xcvec[cpu];
+        ExecContext *other_xc = req->xc->system->execContexts[cpu];
         other_xc->regs.intRegFile[16] = cpu;
         other_xc->regs.ipr[TheISA::IPR_PALtemp16] = cpu;
         other_xc->regs.intRegFile[0] = cpu;

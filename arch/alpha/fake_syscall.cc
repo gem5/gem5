@@ -511,14 +511,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
       case OSF::GSI_MAX_CPU: {
           TypedBufferArg<uint32_t> max_cpu(getArg(xc, 1));
-          *max_cpu = process->numCpus;
+          *max_cpu = process->numCpus();
           max_cpu.copyOut(xc->mem);
           return 1;
       }
 
       case OSF::GSI_CPUS_IN_BOX: {
           TypedBufferArg<uint32_t> cpus_in_box(getArg(xc, 1));
-          *cpus_in_box = process->numCpus;
+          *cpus_in_box = process->numCpus();
           cpus_in_box.copyOut(xc->mem);
           return 1;
       }
@@ -534,10 +534,10 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           TypedBufferArg<OSF::cpu_info> infop(getArg(xc, 1));
 
           infop->current_cpu = 0;
-          infop->cpus_in_box = process->numCpus;
+          infop->cpus_in_box = process->numCpus();
           infop->cpu_type = 57;
-          infop->ncpus = process->numCpus;
-          int cpumask = (1 << process->numCpus) - 1;
+          infop->ncpus = process->numCpus();
+          int cpumask = (1 << process->numCpus()) - 1;
           infop->cpus_present = infop->cpus_running = cpumask;
           infop->cpu_binding = 0;
           infop->cpu_ex_binding = 0;
@@ -743,7 +743,7 @@ tableFunc(SyscallDesc *desc, int callnum, Process *process,
           elp->si_hz = clk_hz;
           elp->si_phz = clk_hz;
           elp->si_boottime = seconds_since_epoch; // seconds since epoch?
-          elp->si_max_procs = process->numCpus;
+          elp->si_max_procs = process->numCpus();
           elp.copyOut(xc->mem);
           return 0;
       }
@@ -1141,20 +1141,20 @@ nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
     cur_addr += sizeof(OSF::nxm_config_info);
     // next comes the per-cpu state vector
     Addr slot_state_addr = cur_addr;
-    int slot_state_size = process->numCpus * sizeof(OSF::nxm_slot_state_t);
+    int slot_state_size = process->numCpus() * sizeof(OSF::nxm_slot_state_t);
     cur_addr += slot_state_size;
     // now the per-RAD state struct (we only support one RAD)
     cur_addr = 0x14000;	// bump up addr for alignment
     Addr rad_state_addr = cur_addr;
     int rad_state_size =
         (sizeof(OSF::nxm_shared)
-         + (process->numCpus-1) * sizeof(OSF::nxm_sched_state));
+         + (process->numCpus()-1) * sizeof(OSF::nxm_sched_state));
     cur_addr += rad_state_size;
 
     // now initialize a config_info struct and copy it out to user space
     TypedBufferArg<OSF::nxm_config_info> config(config_addr);
 
-    config->nxm_nslots_per_rad = process->numCpus;
+    config->nxm_nslots_per_rad = process->numCpus();
     config->nxm_nrads = 1;	// only one RAD in our system!
     config->nxm_slot_state = slot_state_addr;
     config->nxm_rad[0] = rad_state_addr;
@@ -1164,7 +1164,7 @@ nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
     // initialize the slot_state array and copy it out
     TypedBufferArg<OSF::nxm_slot_state_t> slot_state(slot_state_addr,
                                                      slot_state_size);
-    for (int i = 0; i < process->numCpus; ++i) {
+    for (int i = 0; i < process->numCpus(); ++i) {
         // CPU 0 is bound to the calling process; all others are available
         slot_state[i] = (i == 0) ? OSF::NXM_SLOT_BOUND : OSF::NXM_SLOT_AVAIL;
     }
@@ -1180,7 +1180,7 @@ nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
     rad_state->nxm_callback = attrp->nxm_callback;
     rad_state->nxm_version = attrp->nxm_version;
     rad_state->nxm_uniq_offset = attrp->nxm_uniq_offset;
-    for (int i = 0; i < process->numCpus; ++i) {
+    for (int i = 0; i < process->numCpus(); ++i) {
         OSF::nxm_sched_state *ssp = &rad_state->nxm_ss[i];
         ssp->nxm_u.sigmask = 0;
         ssp->nxm_u.sig = 0;
@@ -1250,7 +1250,7 @@ nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
         abort();
     }
 
-    if (thread_index < 0 | thread_index > process->numCpus) {
+    if (thread_index < 0 | thread_index > process->numCpus()) {
         cerr << "nxm_thread_create: bad thread index " << thread_index
              << endl;
         abort();
@@ -1262,7 +1262,7 @@ nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
     // back out again.
     int rad_state_size =
         (sizeof(OSF::nxm_shared) +
-         (process->numCpus-1) * sizeof(OSF::nxm_sched_state));
+         (process->numCpus()-1) * sizeof(OSF::nxm_sched_state));
 
     TypedBufferArg<OSF::nxm_shared> rad_state(0x14000,
                                               rad_state_size);
@@ -1294,7 +1294,7 @@ nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
         rad_state.copyOut(xc->mem);
 
         Addr slot_state_addr = 0x12000 + sizeof(OSF::nxm_config_info);
-        int slot_state_size = process->numCpus * sizeof(OSF::nxm_slot_state_t);
+        int slot_state_size = process->numCpus() * sizeof(OSF::nxm_slot_state_t);
 
         TypedBufferArg<OSF::nxm_slot_state_t> slot_state(slot_state_addr,
                                                          slot_state_size);
@@ -1312,11 +1312,8 @@ nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
         slot_state.copyOut(xc->mem);
 
         // Find a free simulator execution context.
-        list<ExecContext *> &ecList = process->execContexts;
-        list<ExecContext *>::iterator i = ecList.begin();
-        list<ExecContext *>::iterator end = ecList.end();
-        for (; i != end; ++i) {
-            ExecContext *xc = *i;
+        for (int i = 0; i < process->numCpus(); ++i) {
+            ExecContext *xc = process->execContexts[i];
 
             if (xc->status() == ExecContext::Unallocated) {
                 // inactive context... grab it

@@ -47,7 +47,6 @@ class BaseCPU : public SimObject
 {
 #ifdef FULL_SYSTEM
   protected:
-    int number;
     Tick frequency;
     uint8_t interrupts[NumInterruptLevels];
     uint64_t intstatus;
@@ -71,7 +70,7 @@ class BaseCPU : public SimObject
 #endif
 
   protected:
-    std::vector<ExecContext *> contexts;
+    std::vector<ExecContext *> execContexts;
 
   public:
     virtual void execCtxStatusChg() {}
@@ -82,8 +81,7 @@ class BaseCPU : public SimObject
     BaseCPU(const std::string &_name, int _number_of_threads,
             Counter max_insts_any_thread, Counter max_insts_all_threads,
             Counter max_loads_any_thread, Counter max_loads_all_threads,
-            System *_system,
-            int num, Tick freq);
+            System *_system, Tick freq);
 #else
     BaseCPU(const std::string &_name, int _number_of_threads,
             Counter max_insts_any_thread = 0,
@@ -95,6 +93,16 @@ class BaseCPU : public SimObject
     virtual ~BaseCPU() {}
 
     virtual void regStats();
+
+    virtual void registerExecContexts();
+
+    /// Prepare for another CPU to take over execution.  Called by
+    /// takeOverFrom() on its argument.
+    virtual void switchOut();
+
+    /// Take over execution from the given CPU.  Used for warm-up and
+    /// sampling.
+    virtual void takeOverFrom(BaseCPU *);
 
     /**
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).

@@ -103,11 +103,11 @@ SimpleCPU::SimpleCPU(const string &_name,
                      FunctionalMemory *mem,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
-                     int cpu_id, Tick freq)
+                     Tick freq)
     : BaseCPU(_name, /* number_of_threads */ 1,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
-              _system, cpu_id, freq),
+              _system, freq),
 #else
 SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      Counter max_insts_any_thread,
@@ -122,61 +122,23 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 #endif
       tickEvent(this), xc(NULL), cacheCompletionEvent(this)
 {
+    _status = Idle;
 #ifdef FULL_SYSTEM
-    xc = new ExecContext(this, 0, system, itb, dtb, mem, cpu_id);
+    xc = new ExecContext(this, 0, system, itb, dtb, mem);
 
-    _status = Running;
-    if (cpu_id != 0) {
+    TheISA::initCPU(&xc->regs);
 
-       xc->setStatus(ExecContext::Unallocated);
+    IntReg *ipr = xc->regs.ipr;
+    ipr[TheISA::IPR_MCSR] = 0x6;
 
-       //Open a GDB debug session on port (7000 + the cpu_id)
-       (new GDBListener(new RemoteGDB(system, xc), 7000 + cpu_id))->listen();
+    AlphaISA::swap_palshadow(&xc->regs, true);
 
-       AlphaISA::init(system->physmem, &xc->regs);
-
-       fault = Reset_Fault;
-
-       IntReg *ipr = xc->regs.ipr;
-       ipr[TheISA::IPR_MCSR] = 0x6;
-
-       AlphaISA::swap_palshadow(&xc->regs, true);
-
-       xc->regs.pc =
-           ipr[TheISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
-       xc->regs.npc = xc->regs.pc + sizeof(MachInst);
-
-       _status = Idle;
-    }
-    else {
-      system->init(xc);
-
-      // Reset the system
-      //
-      AlphaISA::init(system->physmem, &xc->regs);
-
-      fault = Reset_Fault;
-
-      IntReg *ipr = xc->regs.ipr;
-      ipr[TheISA::IPR_MCSR] = 0x6;
-
-      AlphaISA::swap_palshadow(&xc->regs, true);
-
-      xc->regs.pc = ipr[TheISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
-      xc->regs.npc = xc->regs.pc + sizeof(MachInst);
-
-       _status = Running;
-       tickEvent.schedule(0);
-    }
-
+    fault = Reset_Fault;
+    xc->regs.pc = ipr[TheISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
+    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
 #else
     xc = new ExecContext(this, /* thread_num */ 0, _process, /* asid */ 0);
     fault = No_Fault;
-    if (xc->status() == ExecContext::Active) {
-        _status = Running;
-       tickEvent.schedule(0);
-    } else
-        _status = Idle;
 #endif // !FULL_SYSTEM
 
     icacheInterface = icache_interface;
@@ -193,12 +155,60 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
     lastIcacheStall = 0;
     lastDcacheStall = 0;
 
-    contexts.push_back(xc);
+    execContexts.push_back(xc);
 }
 
 SimpleCPU::~SimpleCPU()
 {
 }
+
+
+void
+SimpleCPU::registerExecContexts()
+{
+    BaseCPU::registerExecContexts();
+
+    // if any of this CPU's ExecContexts are active, mark the CPU as
+    // running and schedule its tick event.
+    for (int i = 0; i < execContexts.size(); ++i) {
+        ExecContext *xc = execContexts[i];
+        if (xc->status() == ExecContext::Active && _status != Running) {
+            _status = Running;
+            // this should only happen at initialization time
+            assert(curTick == 0);
+            tickEvent.schedule(0);
+        }
+    }
+}
+
+
+void
+SimpleCPU::switchOut()
+{
+    _status = SwitchedOut;
+    if (tickEvent.scheduled())
+        tickEvent.squash();
+}
+
+
+void
+SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
+{
+    BaseCPU::takeOverFrom(oldCPU);
+
+    assert(!tickEvent.scheduled());
+
+    // if any of this CPU's ExecContexts are active, mark the CPU as
+    // running and schedule its tick event.
+    for (int i = 0; i < execContexts.size(); ++i) {
+        ExecContext *xc = execContexts[i];
+        if (xc->status() == ExecContext::Active && _status != Running) {
+            _status = Running;
+            tickEvent.schedule(curTick + 1);
+        }
+    }
+}
+
 
 void
 SimpleCPU::regStats()
@@ -488,6 +498,11 @@ SimpleCPU::processCacheCompletion()
         dcacheStallCycles += curTick - lastDcacheStall;
         setStatus(Running);
         break;
+      case SwitchedOut:
+        // If this CPU has been switched out due to sampling/warm-up,
+        // ignore any further status changes (e.g., due to cache
+        // misses outstanding at the time of the switch).
+        return;
       default:
         panic("SimpleCPU::processCacheCompletion: bad state");
         break;
@@ -693,7 +708,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     SimObjectParam<AlphaDtb *> dtb;
     SimObjectParam<FunctionalMemory *> mem;
     SimObjectParam<System *> system;
-    Param<int> cpu_id;
     Param<int> mult;
 #else
     SimObjectParam<Process *> workload;
@@ -701,6 +715,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
     SimObjectParam<BaseMem *> icache;
     SimObjectParam<BaseMem *> dcache;
+
+    Param<bool> defer_registration;
 
 END_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
@@ -724,39 +740,47 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM(dtb, "Data TLB"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
-    INIT_PARAM_DFLT(cpu_id, "CPU identification number", 0),
     INIT_PARAM_DFLT(mult, "system clock multiplier", 1),
 #else
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
 
     INIT_PARAM_DFLT(icache, "L1 instruction cache object", NULL),
-    INIT_PARAM_DFLT(dcache, "L1 data cache object", NULL)
+    INIT_PARAM_DFLT(dcache, "L1 data cache object", NULL),
+    INIT_PARAM_DFLT(defer_registration, "defer registration with system "
+                    "(for sampling)", false)
 
 END_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
 
 CREATE_SIM_OBJECT(SimpleCPU)
 {
+    SimpleCPU *cpu;
 #ifdef FULL_SYSTEM
     if (mult != 1)
         panic("processor clock multiplier must be 1\n");
 
-    return new SimpleCPU(getInstanceName(), system,
-                         max_insts_any_thread, max_insts_all_threads,
-                         max_loads_any_thread, max_loads_all_threads,
-                         itb, dtb, mem,
-                         (icache) ? icache->getInterface() : NULL,
-                         (dcache) ? dcache->getInterface() : NULL,
-                         cpu_id, ticksPerSecond * mult);
+    cpu = new SimpleCPU(getInstanceName(), system,
+                        max_insts_any_thread, max_insts_all_threads,
+                        max_loads_any_thread, max_loads_all_threads,
+                        itb, dtb, mem,
+                        (icache) ? icache->getInterface() : NULL,
+                        (dcache) ? dcache->getInterface() : NULL,
+                        ticksPerSecond * mult);
 #else
 
-    return new SimpleCPU(getInstanceName(), workload,
-                         max_insts_any_thread, max_insts_all_threads,
-                         max_loads_any_thread, max_loads_all_threads,
-                         icache->getInterface(), dcache->getInterface());
+    cpu = new SimpleCPU(getInstanceName(), workload,
+                        max_insts_any_thread, max_insts_all_threads,
+                        max_loads_any_thread, max_loads_all_threads,
+                        icache->getInterface(), dcache->getInterface());
 
 #endif // FULL_SYSTEM
+
+    if (!defer_registration) {
+        cpu->registerExecContexts();
+    }
+
+    return cpu;
 }
 
 REGISTER_SIM_OBJECT("SimpleCPU", SimpleCPU)

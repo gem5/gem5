@@ -43,41 +43,61 @@ using namespace std;
 #ifdef FULL_SYSTEM
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaItb *_itb, AlphaDtb *_dtb,
-                         FunctionalMemory *_mem, int _cpu_id)
-    : kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num), mem(_mem),
-      itb(_itb), dtb(_dtb), cpu_id(_cpu_id), system(_sys),
-      memCtrl(_sys->memCtrl), physmem(_sys->physmem)
+                         FunctionalMemory *_mem)
+    : kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
+      cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
+      memCtrl(_sys->memCtrl), physmem(_sys->physmem),
+      func_exe_insn(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
-    _status = Active;
-    func_exe_insn = 0;
-    storeCondFailures = 0;
-    system->registerExecContext(this);
+    setStatus(ExecContext::Unallocated);
 }
 #else
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid)
-    : cpu(_cpu), thread_num(_thread_num), process(_process), asid (_asid)
+    : cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
+      process(_process), asid (_asid),
+      func_exe_insn(0), storeCondFailures(0)
 {
-
-    // Register with process object. Our 'active' will be set by the
-    // process iff we're the initial context.  Others are reserved for
-    // dynamically created threads.
-    process->registerExecContext(this);
+    setStatus(ExecContext::Unallocated);
 
     mem = process->getMemory();
-
-    func_exe_insn = 0;
-    storeCondFailures = 0;
 }
 
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
                          FunctionalMemory *_mem, int _asid)
-    : cpu(_cpu), thread_num(_thread_num), process(NULL), mem(_mem),
-      asid(_asid)
+    : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
+      func_exe_insn(0), storeCondFailures(0)
 {
 }
 #endif
+
+
+void
+ExecContext::takeOverFrom(ExecContext *oldContext)
+{
+    // some things should already be set up
+    assert(mem == oldContext->mem);
+#ifdef FULL_SYSTEM
+    assert(system == oldContext->system);
+#else
+    assert(process == oldContext->process);
+#endif
+
+    // copy over functional state
+    _status = oldContext->_status;
+#ifdef FULL_SYSTEM
+    kernelStats = oldContext->kernelStats;
+#endif
+    regs = oldContext->regs;
+    cpu_id = oldContext->cpu_id;
+    func_exe_insn = oldContext->func_exe_insn;
+
+    storeCondFailures = 0;
+
+    oldContext->_status = ExecContext::Unallocated;
+}
+
 
 void
 ExecContext::setStatus(Status new_status)

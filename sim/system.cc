@@ -56,16 +56,24 @@ System::~System()
 }
 
 
-void
+int
 System::registerExecContext(ExecContext *xc)
 {
-    if (xc->cpu_id >= 12/*MAX_CPUS*/)
-        panic("Too many CPU's\n");
+    int myIndex = execContexts.size();
+    execContexts.push_back(xc);
+    return myIndex;
+}
 
-    if (xc->cpu_id >= xcvec.size())
-        xcvec.resize(xc->cpu_id + 1);
 
-    xcvec[xc->cpu_id] = xc;
+void
+System::replaceExecContext(int xcIndex, ExecContext *xc)
+{
+    if (xcIndex >= execContexts.size()) {
+        panic("replaceExecContext: bad xcIndex, %d >= %d\n",
+              xcIndex, execContexts.size());
+    }
+
+    execContexts[xcIndex] = xc;
 }
 
 

@@ -184,24 +184,44 @@ Tru64System::~Tru64System()
 
 }
 
-void
-Tru64System::init(ExecContext *xc)
+int
+Tru64System::registerExecContext(ExecContext *xc)
 {
-    xc->regs = *initRegs;
+    int xcIndex = System::registerExecContext(xc);
 
-    remoteGDB = new RemoteGDB(this, xc);
-    gdbListen = new GDBListener(remoteGDB, 7000);
-    gdbListen->listen();
+    if (xcIndex == 0) {
+        // xc->regs = *initRegs;
+        xc->initStatus(ExecContext::Active);
+    }
+    else {
+        xc->initStatus(ExecContext::Unallocated);
+    }
 
-    // Reset the system
-    //
-    TheISA::init(physmem, &xc->regs);
+    RemoteGDB *rgdb = new RemoteGDB(this, xc);
+    GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
+    gdbl->listen();
+
+    if (remoteGDB.size() <= xcIndex) {
+        remoteGDB.resize(xcIndex+1);
+    }
+
+    remoteGDB[xcIndex] = rgdb;
+
+    return xcIndex;
+}
+
+
+void
+Tru64System::replaceExecContext(ExecContext *xc, int xcIndex)
+{
+    System::replaceExecContext(xcIndex, xc);
+    remoteGDB[xcIndex]->replaceExecContext(xc);
 }
 
 bool
 Tru64System::breakpoint()
 {
-    return remoteGDB->trap(ALPHA_KENTRY_IF);
+    return remoteGDB[0]->trap(ALPHA_KENTRY_IF);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)

@@ -85,8 +85,6 @@ Process::Process(const string &name,
         fd_map[i] = -1;
     }
 
-    numCpus = 0;
-
     num_syscalls = 0;
 
     // other parameters will be initialized when the program is loaded
@@ -136,29 +134,41 @@ Process::openOutputFile(const string &filename)
 }
 
 
-void
-Process::registerExecContext(ExecContext *ec)
+int
+Process::registerExecContext(ExecContext *xc)
 {
-    if (execContexts.empty()) {
+    // add to list
+    int myIndex = execContexts.size();
+    execContexts.push_back(xc);
+
+    if (myIndex == 0) {
         // first exec context for this process... initialize & enable
 
         // copy process's initial regs struct
-        ec->regs = *init_regs;
+        xc->regs = *init_regs;
 
         // mark this context as active
-        ec->setStatus(ExecContext::Active);
+        xc->initStatus(ExecContext::Active);
     }
     else {
-        ec->setStatus(ExecContext::Unallocated);
+        xc->initStatus(ExecContext::Unallocated);
     }
 
-    // add to list
-    execContexts.push_back(ec);
-
-    // increment available CPU count
-    ++numCpus;
+    // return CPU number to caller and increment available CPU count
+    return myIndex;
 }
 
+
+void
+Process::replaceExecContext(int xcIndex, ExecContext *xc)
+{
+    if (xcIndex >= execContexts.size()) {
+        panic("replaceExecContext: bad xcIndex, %d >= %d\n",
+              xcIndex, execContexts.size());
+    }
+
+    execContexts[xcIndex] = xc;
+}
 
 // map simulator fd sim_fd to target fd tgt_fd
 void

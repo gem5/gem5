@@ -52,8 +52,8 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
                  Counter max_insts_all_threads,
                  Counter max_loads_any_thread,
                  Counter max_loads_all_threads,
-                 System *_system, int num, Tick freq)
-    : SimObject(_name), number(num), frequency(freq),
+                 System *_system, Tick freq)
+    : SimObject(_name), frequency(freq),
       number_of_threads(_number_of_threads), system(_system)
 #else
 BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
@@ -120,26 +120,72 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
                 max_loads_all_threads, *counter);
     }
 
-
 #ifdef FULL_SYSTEM
     memset(interrupts, 0, sizeof(interrupts));
     intstatus = 0;
 #endif
 }
 
+
 void
 BaseCPU::regStats()
 {
-    int size = contexts.size();
+    int size = execContexts.size();
     if (size > 1) {
         for (int i = 0; i < size; ++i) {
             stringstream namestr;
             ccprintf(namestr, "%s.ctx%d", name(), i);
-            contexts[i]->regStats(namestr.str());
+            execContexts[i]->regStats(namestr.str());
         }
     } else if (size == 1)
-        contexts[0]->regStats(name());
+        execContexts[0]->regStats(name());
 }
+
+
+void
+BaseCPU::registerExecContexts()
+{
+    for (int i = 0; i < execContexts.size(); ++i) {
+        ExecContext *xc = execContexts[i];
+        int cpu_id;
+
+#ifdef FULL_SYSTEM
+        cpu_id = system->registerExecContext(xc);
+#else
+        cpu_id = xc->process->registerExecContext(xc);
+#endif
+
+        xc->cpu_id = cpu_id;
+    }
+}
+
+
+void
+BaseCPU::switchOut()
+{
+    // default: do nothing
+}
+
+void
+BaseCPU::takeOverFrom(BaseCPU *oldCPU)
+{
+    assert(execContexts.size() == oldCPU->execContexts.size());
+
+    for (int i = 0; i < execContexts.size(); ++i) {
+        ExecContext *newXC = execContexts[i];
+        ExecContext *oldXC = oldCPU->execContexts[i];
+
+        newXC->takeOverFrom(oldXC);
+        assert(newXC->cpu_id == oldXC->cpu_id);
+#ifdef FULL_SYSTEM
+        system->replaceExecContext(newXC->cpu_id, newXC);
+#else
+        assert(newXC->process == oldXC->process);
+        newXC->process->replaceExecContext(newXC->cpu_id, newXC);
+#endif
+    }
+}
+
 
 #ifdef FULL_SYSTEM
 void
@@ -185,4 +231,10 @@ BaseCPU::clear_interrupts()
 
 #endif // FULL_SYSTEM
 
+//
+// This declaration is not needed now that SamplingCPU provides a
+// BaseCPUBuilder object.
+//
+#if 0
 DEFINE_SIM_OBJECT_CLASS_NAME("BaseCPU", BaseCPU)
+#endif

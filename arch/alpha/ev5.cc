@@ -44,9 +44,9 @@ AlphaISA::swap_palshadow(RegFile *regs, bool use_shadow)
 //  Machine dependent functions
 //
 void
-AlphaISA::init(void *mem, RegFile *regs)
+AlphaISA::initCPU(RegFile *regs)
 {
-    ipr_init(mem, regs);
+    initIPRs(regs);
 }
 
 void
@@ -91,7 +91,7 @@ const int AlphaISA::reg_redir[AlphaISA::NumIntRegs] = {
 //
 //
 void
-AlphaISA::ipr_init(void *mem, RegFile *regs)
+AlphaISA::initIPRs(RegFile *regs)
 {
     uint64_t *ipr = regs->ipr;
 

@@ -52,15 +52,15 @@ class System : public SimObject
 
     PCEventQueue pcEventQueue;
 
-    std::vector<ExecContext *> xcvec;
-    void registerExecContext(ExecContext *xc);
+    std::vector<ExecContext *> execContexts;
+
+    virtual int registerExecContext(ExecContext *xc);
+    virtual void replaceExecContext(int xcIndex, ExecContext *xc);
 
   public:
     System(const std::string _name, const int _init_param,
            MemoryController *, PhysicalMemory *);
     ~System();
-
-    virtual void init(ExecContext *xc) = 0;
 
     virtual Addr getKernelStart() const = 0;
     virtual Addr getKernelEnd() const = 0;
