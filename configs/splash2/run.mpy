@@ -5,12 +5,12 @@ if 'SYSTEM' not in env:
 
 if env['SYSTEM'] == 'Simple':
     from SimpleConfig import *
-    BaseCPU.workload = Super.workload
+    BaseCPU.workload = parent.workload
     SimpleStandAlone.cpu = [ CPU() for i in xrange(int(env['NP'])) ]
     root = SimpleStandAlone
 elif env['SYSTEM'] == 'Detailed':
     from DetailedConfig import *
-    BaseCPU.workload = Super.workload
+    BaseCPU.workload = parent.workload
     DetailedStandAlone.cpu = [ DetailedCPU() for i in xrange(int(env['NP'])) ]
     root = DetailedStandAlone
 else:

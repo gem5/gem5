@@ -89,6 +89,7 @@ Process::Process(const string &nm,
     }
 
     mmap_start = mmap_end = 0;
+    nxm_start = nxm_end = 0;
     // other parameters will be initialized when the program is loaded
 }
 

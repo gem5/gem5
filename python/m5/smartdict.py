@@ -74,6 +74,12 @@ class SmartDict(dict):
             return other / self.convert(other)
 
 
+    # __getitem__ uses dict.get() to return 'False' if the key is not
+    # found (rather than raising KeyError).  Note that this does *not*
+    # set the key's value to 'False' in the dict, so that even after
+    # we call env['foo'] we still get a meaningful answer from "'foo'
+    # in env" (which calls dict.__contains__, which we do not
+    # override).
     def __getitem__(self, key):
         return self.Proxy(dict.get(self, key, 'False'))
 

@@ -14,7 +14,7 @@ simobj FooPioDevice(FunctionalMemory):
     type = 'PioDevice'
     abstract = True
     addr = Param.Addr("Device Address")
-    mmu = Param.MemoryController(Super, "Memory Controller")
+    mmu = Param.MemoryController(parent.any, "Memory Controller")
     io_bus = Param.Bus(NULL, "The IO Bus to attach to")
     pio_latency = Param.Tick(1, "Programmed IO latency in bus cycles")
 
@@ -25,7 +25,7 @@ simobj FooDmaDevice(FooPioDevice):
 simobj PioDevice(FooPioDevice):
     type = 'PioDevice'
     abstract = True
-    platform = Param.Platform(Super, "Platform")
+    platform = Param.Platform(parent.any, "Platform")
 
 simobj DmaDevice(PioDevice):
     type = 'DmaDevice'

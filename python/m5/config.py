@@ -27,6 +27,7 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
+from m5 import panic
 from convert import *
 
 noDot = False
@@ -139,25 +140,91 @@ class Singleton(type):
 #####################################################################
 
 class Proxy(object):
-    def __init__(self, path = ()):
+    def __init__(self, path):
         self._object = None
-        self._path = path
+        if path == 'any':
+            self._path = None
+        else:
+            # path is a list of (attr,index) tuples
+            self._path = [(path,None)]
+        self._index = None
+        self._multiplier = None
 
     def __getattr__(self, attr):
-        return Proxy(self._path + (attr, ))
+        if attr == '__bases__':
+            return super(Proxy, self).__getattr__(self, attr)
+        self._path.append((attr,None))
+        return self
 
     def __setattr__(self, attr, value):
         if not attr.startswith('_'):
             raise AttributeError, 'cannot set attribute %s' % attr
         super(Proxy, self).__setattr__(attr, value)
 
-    def _convert(self):
-        obj = self._object
-        for attr in self._path:
-            obj = obj.__getattribute__(attr)
-        return obj
+    # support indexing on proxies (e.g., parent.cpu[0])
+    def __getitem__(self, key):
+        if not isinstance(key, int):
+            raise TypeError, "Proxy object requires integer index"
+        if self._path == None:
+            raise IndexError, "Index applied to 'any' proxy"
+        # replace index portion of last path element with new index
+        self._path[-1] = (self._path[-1][0], key)
+        return self
 
-Super = Proxy()
+    # support multiplying proxies by constants
+    def __mul__(self, other):
+        if not isinstance(other, int):
+            raise TypeError, "Proxy multiplier must be integer"
+        if self._multiplier == None:
+            self._multiplier = other
+        else:
+            # support chained multipliers
+            self._multiplier *= other
+        return self
+
+    def _mulcheck(self, result):
+        if self._multiplier == None:
+            return result
+        if not isinstance(result, int):
+            raise TypeError, "Proxy with multiplier resolves to " \
+                  "non-integer value"
+        return result * self._multiplier
+
+    def unproxy(self, base, ptype):
+        obj = base
+        done = False
+        while not done:
+            if obj is None:
+                raise AttributeError, \
+                      'Parent of %s type %s not found at path %s' \
+                      % (base.name, ptype, self._path)
+            result, done = obj.find(ptype, self._path)
+            obj = obj.parent
+
+        if isinstance(result, Proxy):
+            result = result.unproxy(obj, ptype)
+
+        return self._mulcheck(result)
+
+    def getindex(obj, index):
+        if index == None:
+            return obj
+        try:
+            obj = obj[index]
+        except TypeError:
+            if index != 0:
+                raise
+            # if index is 0 and item is not subscriptable, just
+            # use item itself (so cpu[0] works on uniprocessors)
+        return obj
+    getindex = staticmethod(getindex)
+
+class ProxyFactory(object):
+    def __getattr__(self, attr):
+        return Proxy(attr)
+
+# global object for handling parent.foo proxies
+parent = ProxyFactory()
 
 def isSubClass(value, cls):
     try:
@@ -643,50 +710,40 @@ class Node(object):
                 if issubclass(child.realtype, realtype):
                     if obj is not None:
                         raise AttributeError, \
-                              'Super matched more than one: %s %s' % \
+                              'parent.any matched more than one: %s %s' % \
                               (obj.path, child.path)
                     obj = child
             return obj, obj is not None
 
         try:
             obj = self
-            for node in path[:-1]:
-                obj = obj.child_names[node]
+            for (node,index) in path[:-1]:
+                if obj.child_names.has_key(node):
+                    obj = obj.child_names[node]
+                else:
+                    obj = obj.top_child_names[node]
+                obj = Proxy.getindex(obj, index)
 
-            last = path[-1]
+            (last,index) = path[-1]
             if obj.child_names.has_key(last):
                 value = obj.child_names[last]
-                if issubclass(value.realtype, realtype):
-                    return value, True
+                return Proxy.getindex(value, index), True
+            elif obj.top_child_names.has_key(last):
+                value = obj.top_child_names[last]
+                return Proxy.getindex(value, index), True
             elif obj.param_names.has_key(last):
                 value = obj.param_names[last]
                 realtype._convert(value.value)
-                return value.value, True
+                return Proxy.getindex(value.value, index), True
         except KeyError:
             pass
 
         return None, False
 
-    def unproxy(self, ptype, value):
-        if not isinstance(value, Proxy):
-            return value
-
-        if value is None:
-            raise AttributeError, 'Error while fixing up %s' % self.path
-
-        obj = self
-        done = False
-        while not done:
-            if obj is None:
-                raise AttributeError, \
-                      'Parent of %s type %s not found at path %s' \
-                      % (self.name, ptype, value._path)
-            found, done = obj.find(ptype, value._path)
-            if isinstance(found, Proxy):
-                done = False
-            obj = obj.parent
-
-        return found
+    def unproxy(self, param, ptype):
+        if not isinstance(param, Proxy):
+            return param
+        return param.unproxy(self, ptype)
 
     def fixup(self):
         self.all[self.path] = self
@@ -697,9 +754,9 @@ class Node(object):
 
             try:
                 if isinstance(pval, (list, tuple)):
-                    param.value = [ self.unproxy(ptype, pv) for pv in pval ]
+                    param.value = [ self.unproxy(pv, ptype) for pv in pval ]
                 else:
-                    param.value = self.unproxy(ptype, pval)
+                    param.value = self.unproxy(pval, ptype)
             except:
                 print 'Error while fixing up %s:%s' % (self.path, param.name)
                 raise
@@ -839,6 +896,9 @@ class Value(object):
 
     def __str__(self):
         return str(self._getattr())
+
+    def __len__(self):
+        return len(self._getattr())
 
 # Regular parameter.
 class _Param(object):
@@ -1337,7 +1397,7 @@ class SimObject(ConfigNode, ParamType):
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
 __all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
-           'Super', 'Enum',
+           'parent', 'Enum',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
