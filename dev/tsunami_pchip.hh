@@ -26,49 +26,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __TSUNAMI_HH__
-#define __TSUNAMI_HH__
+/* @file
+ * Tsunami PChip
+ */
 
-#include "sim/sim_object.hh"
+#ifndef __TSUNAMI_PCHIP_HH__
+#define __TSUNAMI_PCHIP_HH__
 
-class IntrControl;
-class ConsoleListener;
-class SimConsole;
-class ScsiController;
-class TlaserClock;
-class EtherDev;
-class TsunamiCChip;
-class TsunamiPChip;
+#include "mem/functional_mem/mmap_device.hh"
+#include "dev/tsunami.hh"
 
-class Tsunami : public SimObject
+/*
+ * Tsunami PChip
+ */
+class TsunamiPChip : public MmapDevice
 {
   public:
 
-    static const int Max_CPUs = 4;
+  protected:
+    Tsunami *tsunami;
 
-    IntrControl *intctrl;
-//    ConsoleListener *listener;
-    SimConsole *cons;
+    uint64_t wsba0;
+    uint64_t wsba1;
+    uint64_t wsba2;
+    uint64_t wsba3;
+    uint64_t wsm0;
+    uint64_t wsm1;
+    uint64_t wsm2;
+    uint64_t wsm3;
+    uint64_t tba0;
+    uint64_t tba1;
+    uint64_t tba2;
+    uint64_t tba3;
 
-    ScsiController *scsi;
-    EtherDev *ethernet;
-
-    TlaserClock *clock;
-    TsunamiCChip *cchip;
-    TsunamiPChip *pchip;
-
-    int intr_sum_type[Tsunami::Max_CPUs];
-    int ipi_pending[Tsunami::Max_CPUs];
-
-    int interrupt_frequency;
 
   public:
-    Tsunami(const std::string &name, ScsiController *scsi,
-               EtherDev *ethernet, TlaserClock *clock, TsunamiCChip *cc, TsunamiPChip *pc,
-               SimConsole *, IntrControl *intctrl, int intrFreq);
+    TsunamiPChip(const std::string &name, /*Tsunami *t,*/
+               Addr addr, Addr mask, MemoryController *mmu);
+
+    virtual Fault read(MemReqPtr req, uint8_t *data);
+    virtual Fault write(MemReqPtr req, const uint8_t *data);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __TSUNAMI_HH__
+#endif // __TSUNAMI_PCHIP_HH__

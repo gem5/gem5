@@ -26,49 +26,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __TSUNAMI_HH__
-#define __TSUNAMI_HH__
+/* @file
+ * Tsunnami Fake DMA memory map
+ */
 
-#include "sim/sim_object.hh"
+#ifndef __TSUNAMI_DMA_HH__
+#define __TSUNAMI_DMA_HH__
 
-class IntrControl;
-class ConsoleListener;
-class SimConsole;
-class ScsiController;
-class TlaserClock;
-class EtherDev;
-class TsunamiCChip;
-class TsunamiPChip;
+#include "mem/functional_mem/mmap_device.hh"
+#include "dev/tsunami.hh"
 
-class Tsunami : public SimObject
+/*
+ * Tsunami CChip
+ */
+class TsunamiDMA : public MmapDevice
 {
   public:
 
-    static const int Max_CPUs = 4;
-
-    IntrControl *intctrl;
-//    ConsoleListener *listener;
-    SimConsole *cons;
-
-    ScsiController *scsi;
-    EtherDev *ethernet;
-
-    TlaserClock *clock;
-    TsunamiCChip *cchip;
-    TsunamiPChip *pchip;
-
-    int intr_sum_type[Tsunami::Max_CPUs];
-    int ipi_pending[Tsunami::Max_CPUs];
-
-    int interrupt_frequency;
+  protected:
 
   public:
-    Tsunami(const std::string &name, ScsiController *scsi,
-               EtherDev *ethernet, TlaserClock *clock, TsunamiCChip *cc, TsunamiPChip *pc,
-               SimConsole *, IntrControl *intctrl, int intrFreq);
+    TsunamiDMA(const std::string &name, /*Tsunami *t,*/
+               Addr addr, Addr mask, MemoryController *mmu);
+
+    virtual Fault read(MemReqPtr req, uint8_t *data);
+    virtual Fault write(MemReqPtr req, const uint8_t *data);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __TSUNAMI_HH__
+#endif // __TSUNAMI_DMA_HH__

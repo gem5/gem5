@@ -23,9 +23,9 @@
 
 using namespace std;
 
-TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t,
+TsunamiCChip::TsunamiCChip(const string &name, /*Tsunami *t,*/
                        Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), tsunami(t)
+    : MmapDevice(name, addr, mask, mmu)/*, tsunami(t) */
 {
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
         dim[i] = 0;
@@ -38,7 +38,7 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t,
 Fault
 TsunamiCChip::read(MemReqPtr req, uint8_t *data)
 {
-    DPRINTF(Tsunami, "cchip read  va=%#x size=%d\n",
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr & addr_mask) >> 6;
@@ -106,6 +106,8 @@ TsunamiCChip::read(MemReqPtr req, uint8_t *data)
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx not implemented\n");
                   return No_Fault;
+              default:
+                  panic("default in cchip read reached, accessing 0x%x\n");
            } // uint64_t
 
       break;
@@ -113,7 +115,7 @@ TsunamiCChip::read(MemReqPtr req, uint8_t *data)
       case sizeof(uint16_t):
       case sizeof(uint8_t):
       default:
-        panic("invalid access size(?) for tsunami register!");
+        panic("invalid access size(?) for tsunami register!\n");
     }
     DPRINTFN("Tsunami CChip ERROR: read  daddr=%#x size=%d\n", daddr, req->size);
 
@@ -123,7 +125,7 @@ TsunamiCChip::read(MemReqPtr req, uint8_t *data)
 Fault
 TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
 {
-    DPRINTF(Tsunami, "Tsunami CChip write - va=%#x size=%d \n",
+    DPRINTF(Tsunami, "write - va=%#x size=%d \n",
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr & addr_mask) >> 6;
@@ -183,6 +185,8 @@ TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx write not implemented\n");
                   return No_Fault;
+              default:
+                  panic("default in cchip read reached, accessing 0x%x\n");
           }
 
       break;
@@ -190,7 +194,7 @@ TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
       case sizeof(uint16_t):
       case sizeof(uint8_t):
       default:
-        panic("invalid access size(?) for tsunami register!");
+        panic("invalid access size(?) for tsunami register!\n");
     }
 
     DPRINTFN("Tsunami ERROR: write daddr=%#x size=%d\n", daddr, req->size);
@@ -212,7 +216,7 @@ TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
-    SimObjectParam<Tsunami *> tsunami;
+ //   SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
@@ -221,7 +225,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
-    INIT_PARAM(tsunami, "Tsunami"),
+//    INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask")
@@ -230,7 +234,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 CREATE_SIM_OBJECT(TsunamiCChip)
 {
-    return new TsunamiCChip(getInstanceName(), tsunami, addr, mask, mmu);
+    return new TsunamiCChip(getInstanceName(), /*tsunami,*/ addr, mask, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiCChip", TsunamiCChip)

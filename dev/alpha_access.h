@@ -39,8 +39,6 @@
 #include <ostream>
 #include <string>
 class Checkpoint;
-#else
-#include <inttypes.h>
 #endif
 
 // This structure hacked up from simos
