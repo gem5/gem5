@@ -38,6 +38,7 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/str.hh"
+#include "base/trace.hh"
 #include "sim/universe.hh"
 
 #ifdef __M5_NAN
@@ -74,15 +75,14 @@ namespace Database
         typedef map<void *, StatData *> map_t;
 
         list<MainBin *> bins;
-        map<const MainBin *, string > bin_names;
-        list_t binnedStats;
 
         list_t allStats;
         list_t printStats;
         map_t statMap;
 
       public:
-        void dump(ostream &stream);
+        void dump(ostream &stream, DisplayMode mode);
+        void display(ostream &stream, DisplayMode mode);
 
         StatData *find(void *stat);
         void mapStat(void *stat, StatData *data);
@@ -91,71 +91,63 @@ namespace Database
         void reset();
         void regBin(MainBin *bin, string name);
         void regPrint(void *stat);
+
+        static std::string name() { return "Statistics Database"; }
     };
 
 
 void
-Data::dump(ostream &stream)
+Data::dump(ostream &stream, DisplayMode mode)
 {
-#ifndef FS_MEASURE
-    list_t::iterator i = printStats.begin();
-    list_t::iterator end = printStats.end();
-    while (i != end) {
-        StatData *stat = *i;
-        if (stat->binned())
-            binnedStats.push_back(stat);
-        ++i;
+    MainBin *orig = MainBin::curBin();
+
+    switch (mode) {
+      case mode_m5:
+      case mode_simplescalar:
+        display(stream, mode);
+        break;
+      default:
+        warn("invalid display mode!\n");
+        display(stream, mode_m5);
+        break;
     }
-#endif //FS_MEASURE
 
-    list<MainBin *>::iterator j = bins.begin();
-    list<MainBin *>::iterator bins_end=bins.end();
+    if (orig)
+        orig->activate();
+}
 
+void
+Data::display(ostream &stream, DisplayMode mode)
+{
     if (!bins.empty()) {
+        list<MainBin *>::iterator i = bins.begin();
+        list<MainBin *>::iterator bins_end = bins.end();
         ccprintf(stream, "PRINTING BINNED STATS\n");
-        while (j != bins_end) {
-            (*j)->activate();
-            map<const MainBin  *, string>::const_iterator iter;
-            iter = bin_names.find(*j);
-            if (iter == bin_names.end())
-                panic("a binned stat not found in names map!");
-            ccprintf(stream,"---%s Bin------------\n", (*iter).second);
+        while (i != bins_end) {
+            (*i)->activate();
+            ccprintf(stream,"---%s Bin------------\n", (*i)->name());
 
-#ifdef FS_MEASURE
-            list_t::iterator i = printStats.begin();
+            list_t::iterator j = printStats.begin();
             list_t::iterator end = printStats.end();
-#else
-            list_t::iterator i = binnedStats.begin();
-            list_t::iterator end = binnedStats.end();
-#endif
-            while (i != end) {
-                StatData *stat = *i;
+            while (j != end) {
+                StatData *stat = *j;
                 if (stat->dodisplay())
                     stat->display(stream);
-                ++i;
+                ++j;
             }
-            ++j;
+            ++i;
             ccprintf(stream, "---------------------------------\n");
         }
-#ifndef FS_MEASURE
-        ccprintf(stream, "**************ALL STATS************\n");
-#endif
+    } else {
+        list_t::iterator i = printStats.begin();
+        list_t::iterator end = printStats.end();
+        while (i != end) {
+            StatData *stat = *i;
+            if (stat->dodisplay() && !stat->binned())
+                stat->display(stream);
+            ++i;
+        }
     }
-
-/**
- * get bin totals working, then print the stat here (as total), even if
- * its' binned.  (this is only for the case you selectively bin a few stats
- */
-#ifndef FS_MEASURE
-    list_t::iterator k = printStats.begin();
-    list_t::iterator endprint = printStats.end();
-    while (k != endprint) {
-        StatData *stat = *k;
-        if (stat->dodisplay() /*&& !stat->binned()*/)
-            stat->display(stream);
-        ++k;
-    }
-#endif
 }
 
 StatData *
@@ -232,21 +224,10 @@ Data::mapStat(void *stat, StatData *data)
 }
 
 void
-Data::regBin(MainBin *bin, string name)
+Data::regBin(MainBin *bin, string _name)
 {
-    if (bin_names.find(bin) != bin_names.end())
-        panic("shouldn't register bin twice");
-
     bins.push_back(bin);
-
-#ifndef NDEBUG
-    bool success =
-#endif
-        (bin_names.insert(make_pair(bin,name))).second;
-    assert(bin_names.find(bin) != bin_names.end());
-    assert(success && "this should not fail");
-
-    cprintf("registering %s\n", name);
+    DPRINTF(Stats, "registering %s\n", _name);
 }
 
 void
@@ -254,14 +235,13 @@ Data::regPrint(void *stat)
 {
     StatData *data = find(stat);
 
-    if (!data->print) {
-        data->print = true;
+    if (data->print)
+        return;
 
-        list_t::iterator j = printStats.insert(printStats.end(), data);
-        inplace_merge(printStats.begin(), j,
-                      printStats.end(), StatData::less);
-    }
+    data->print = true;
 
+    list_t::iterator j = printStats.insert(printStats.end(), data);
+    inplace_merge(printStats.begin(), j, printStats.end(), StatData::less);
 }
 
 Data &
@@ -1020,9 +1000,9 @@ check()
 }
 
 void
-dump(ostream &stream)
+dump(ostream &stream, DisplayMode mode)
 {
-    Database::StatDB().dump(stream);
+    Database::StatDB().dump(stream, mode);
 }
 
 CallbackQueue resetQueue;

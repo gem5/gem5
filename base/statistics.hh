@@ -2956,7 +2956,7 @@ class Temp
  */
 
 void check();
-void dump(std::ostream &stream);
+void dump(std::ostream &stream, DisplayMode mode = mode_simplescalar);
 void reset();
 void registerResetCallback(Callback *cb);
 
