@@ -47,7 +47,7 @@
 
 using namespace std;
 
-PCIConfigAll::PCIConfigAll(const string &name, Tsunami *t, Addr a,
+PciConfigAll::PciConfigAll(const string &name, Tsunami *t, Addr a,
                            MemoryController *mmu)
     : FunctionalMemory(name), addr(a), tsunami(t)
 {
@@ -63,9 +63,9 @@ PCIConfigAll::PCIConfigAll(const string &name, Tsunami *t, Addr a,
 }
 
 Fault
-PCIConfigAll::read(MemReqPtr &req, uint8_t *data)
+PciConfigAll::read(MemReqPtr &req, uint8_t *data)
 {
-    DPRINTF(PCIConfigAll, "read  va=%#x size=%d\n",
+    DPRINTF(PciConfigAll, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
@@ -110,7 +110,7 @@ PCIConfigAll::read(MemReqPtr &req, uint8_t *data)
 }
 
 Fault
-PCIConfigAll::write(MemReqPtr &req, const uint8_t *data)
+PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
 
@@ -142,7 +142,7 @@ PCIConfigAll::write(MemReqPtr &req, const uint8_t *data)
             }
     }
 
-    DPRINTF(PCIConfigAll, "write - va=%#x size=%d data=%#x\n",
+    DPRINTF(PciConfigAll, "write - va=%#x size=%d data=%#x\n",
             req->vaddr, req->size, word_value);
 
     devices[device][func]->WriteConfig(reg, req->size, word_value);
@@ -151,42 +151,42 @@ PCIConfigAll::write(MemReqPtr &req, const uint8_t *data)
 }
 
 void
-PCIConfigAll::serialize(std::ostream &os)
+PciConfigAll::serialize(std::ostream &os)
 {
     // code should be written
 }
 
 void
-PCIConfigAll::unserialize(Checkpoint *cp, const std::string &section)
+PciConfigAll::unserialize(Checkpoint *cp, const std::string &section)
 {
     //code should be written
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(PCIConfigAll)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
     SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
 
-END_DECLARE_SIM_OBJECT_PARAMS(PCIConfigAll)
+END_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(PCIConfigAll)
+BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
     INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask")
 
-END_INIT_SIM_OBJECT_PARAMS(PCIConfigAll)
+END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
-CREATE_SIM_OBJECT(PCIConfigAll)
+CREATE_SIM_OBJECT(PciConfigAll)
 {
-    return new PCIConfigAll(getInstanceName(), tsunami, addr, mmu);
+    return new PciConfigAll(getInstanceName(), tsunami, addr, mmu);
 }
 
-REGISTER_SIM_OBJECT("PCIConfigAll", PCIConfigAll)
+REGISTER_SIM_OBJECT("PciConfigAll", PciConfigAll)
 
 #endif // DOXYGEN_SHOULD_SKIP_THIS

@@ -54,7 +54,7 @@ class PciDev;
  * space and passes the requests on to TsunamiPCIDev devices as
  * appropriate.
  */
-class PCIConfigAll : public FunctionalMemory
+class PciConfigAll : public FunctionalMemory
 {
   private:
     Addr addr;
@@ -79,7 +79,7 @@ class PCIConfigAll : public FunctionalMemory
     /**
       * The default constructor.
       */
-    PCIConfigAll(const std::string &name, Tsunami *t, Addr a,
+    PciConfigAll(const std::string &name, Tsunami *t, Addr a,
                  MemoryController *mmu);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);

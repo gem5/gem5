@@ -43,7 +43,7 @@ class EtherDev;
 class TsunamiCChip;
 class TsunamiPChip;
 class TsunamiIO;
-class PCIConfigAll;
+class PciConfigAll;
 class System;
 
 /**
@@ -85,7 +85,7 @@ class Tsunami : public Platform
       * The config space in Tsunami all needs to return
       * -1 if a device is not there.
       */
-    PCIConfigAll *pciconfig;
+    PciConfigAll *pciconfig;
 
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];

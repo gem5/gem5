@@ -37,7 +37,7 @@
 #include "sim/sim_object.hh"
 #include "mem/functional_mem/functional_memory.hh"
 
-class PCIConfigAll;
+class PciConfigAll;
 class MemoryController;
 
 class PciConfigData : public SimObject
@@ -67,7 +67,7 @@ class PciDev : public FunctionalMemory
 {
   protected:
     MemoryController *MMU;
-    PCIConfigAll *ConfigSpace;
+    PciConfigAll *ConfigSpace;
     PciConfigData *ConfigData;
     uint32_t Bus;
     uint32_t Device;
@@ -78,7 +78,7 @@ class PciDev : public FunctionalMemory
     Addr BARAddrs[6];
 
   public:
-    PciDev(const std::string &name, MemoryController *mmu, PCIConfigAll *cf,
+    PciDev(const std::string &name, MemoryController *mmu, PciConfigAll *cf,
            PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data) {

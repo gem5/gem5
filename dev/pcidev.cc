@@ -51,7 +51,7 @@
 
 using namespace std;
 
-PciDev::PciDev(const string &name, MemoryController *mmu, PCIConfigAll *cf,
+PciDev::PciDev(const string &name, MemoryController *mmu, PciConfigAll *cf,
                PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func)
     : FunctionalMemory(name), MMU(mmu), ConfigSpace(cf), ConfigData(cd),
       Bus(bus), Device(dev), Function(func)
