@@ -208,6 +208,13 @@ EventQueue::dump()
     cprintf("============================================================\n");
 }
 
+extern "C"
+void
+dumpMainQueue()
+{
+    mainEventQueue.dump();
+}
+
 
 const char *
 Event::description()
@@ -235,16 +242,18 @@ Event::trace(const char *action)
 void
 Event::dump()
 {
+    cprintf("Event  (%s)\n", description());
+    cprintf("Flags: %#x\n", _flags);
 #if TRACING_ON
-    cprintf("   Created: %d\n", when_created);
+    cprintf("Created: %d\n", when_created);
 #endif
     if (scheduled()) {
 #if TRACING_ON
-        cprintf("   Scheduled at  %d\n", when_scheduled);
+        cprintf("Scheduled at  %d\n", when_scheduled);
 #endif
-        cprintf("   Scheduled for %d\n", when());
+        cprintf("Scheduled for %d, priority %d\n", when(), _priority);
     }
     else {
-        cprintf("   Not Scheduled\n");
+        cprintf("Not Scheduled\n");
     }
 }
