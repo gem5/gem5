@@ -65,14 +65,14 @@ using namespace std;
 // current number of allocated processes
 int num_processes = 0;
 
-Process::Process(const string &name,
+Process::Process(const string &nm,
                  int stdin_fd, 	// initial I/O descriptors
                  int stdout_fd,
                  int stderr_fd)
-    : SimObject(name)
+    : SimObject(nm)
 {
     // allocate memory space
-    memory = new MainMemory(name + ".MainMem");
+    memory = new MainMemory(nm + ".MainMem");
 
     // allocate initial register file
     init_regs = new RegFile;
@@ -88,6 +88,7 @@ Process::Process(const string &name,
         fd_map[i] = -1;
     }
 
+    mmap_start = mmap_end = 0;
     // other parameters will be initialized when the program is loaded
 }
 
@@ -252,10 +253,10 @@ copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
     memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
 }
 
-LiveProcess::LiveProcess(const string &name, ObjectFile *objFile,
+LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
                          int stdin_fd, int stdout_fd, int stderr_fd,
                          vector<string> &argv, vector<string> &envp)
-    : Process(name, stdin_fd, stdout_fd, stderr_fd)
+    : Process(nm, stdin_fd, stdout_fd, stderr_fd)
 {
     prog_fname = argv[0];
 
@@ -339,7 +340,7 @@ LiveProcess::LiveProcess(const string &name, ObjectFile *objFile,
 
 
 LiveProcess *
-LiveProcess::create(const string &name,
+LiveProcess::create(const string &nm,
                     int stdin_fd, int stdout_fd, int stderr_fd,
                     vector<string> &argv, vector<string> &envp)
 {
@@ -353,13 +354,13 @@ LiveProcess::create(const string &name,
     if (objFile->getArch() == ObjectFile::Alpha) {
         switch (objFile->getOpSys()) {
           case ObjectFile::Tru64:
-            process = new AlphaTru64Process(name, objFile,
+            process = new AlphaTru64Process(nm, objFile,
                                             stdin_fd, stdout_fd, stderr_fd,
                                             argv, envp);
             break;
 
           case ObjectFile::Linux:
-            process = new AlphaLinuxProcess(name, objFile,
+            process = new AlphaLinuxProcess(nm, objFile,
                                             stdin_fd, stdout_fd, stderr_fd,
                                             argv, envp);
             break;
