@@ -26,15 +26,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <unistd.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
+#include "base/misc.hh"
 #include "sim/host.hh"
+
+using namespace std;
+
+string
+__get_hostname()
+{
+    char host[256];
+    if (gethostname(host, sizeof host) == -1)
+        warn("could not get host name!");
+    return host;
+}
+
+string &
+hostname()
+{
+    static string hostname = __get_hostname();
+    return hostname;
+}
 
 uint64_t
 procInfo(char *filename, char *target)
