@@ -49,7 +49,7 @@ procInfo(char *filename, char *target)
     while (fp && !feof(fp) && !done) {
         if (fgets(line, 80, fp)) {
             if (strncmp(line, target, strlen(target)) == 0) {
-                sprintf(format, "%s %%ld", target);
+                sprintf(format, "%s %%lld", target);
                 sscanf(line, format, &usage);
 
                 fclose(fp);
