@@ -44,6 +44,7 @@ Import('env')
 # Base sources used by all configurations.
 base_sources = Split('''
 	arch/alpha/decoder.cc
+        arch/alpha/alpha_full_cpu_exec.cc
 	arch/alpha/fast_cpu_exec.cc
 	arch/alpha/simple_cpu_exec.cc
 	arch/alpha/inorder_cpu_exec.cc
@@ -87,10 +88,32 @@ base_sources = Split('''
 	base/stats/text.cc
 
 	cpu/base_cpu.cc
+        cpu/base_dyn_inst.cc
 	cpu/exec_context.cc
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
+        cpu/beta_cpu/2bit_local_pred.cc
+        cpu/beta_cpu/alpha_dyn_inst.cc
+        cpu/beta_cpu/alpha_full_cpu.cc
+        cpu/beta_cpu/alpha_full_cpu_builder.cc
+        cpu/beta_cpu/bpred_unit.cc
+        cpu/beta_cpu/btb.cc
+        cpu/beta_cpu/commit.cc
+        cpu/beta_cpu/decode.cc
+        cpu/beta_cpu/fetch.cc
+        cpu/beta_cpu/free_list.cc
+        cpu/beta_cpu/full_cpu.cc
+        cpu/beta_cpu/iew.cc
+        cpu/beta_cpu/inst_queue.cc
+        cpu/beta_cpu/ldstq.cc
+        cpu/beta_cpu/mem_dep_unit.cc
+        cpu/beta_cpu/ras.cc
+        cpu/beta_cpu/rename.cc
+        cpu/beta_cpu/rename_map.cc
+        cpu/beta_cpu/rob.cc
+        cpu/beta_cpu/store_set.cc
+        cpu/beta_cpu/tournament_pred.cc
 	cpu/fast_cpu/fast_cpu.cc
 	cpu/full_cpu/bpred.cc
 	cpu/full_cpu/commit.cc
@@ -442,6 +465,7 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
 # several files are generated from arch/$TARGET_ISA/isa_desc.
 env.Command(Split('''arch/alpha/decoder.cc
 		     arch/alpha/decoder.hh
+                     arch/alpha/alpha_full_cpu_exec.cc
 		     arch/alpha/fast_cpu_exec.cc
                      arch/alpha/simple_cpu_exec.cc
                      arch/alpha/inorder_cpu_exec.cc
@@ -490,7 +514,7 @@ env.Append(CPPPATH='.')
 
 # Debug binary
 debug = env.Copy(OBJSUFFIX='.do')
-debug.Append(CCFLAGS=Split('-g -gstabs+ -O0'))
+debug.Append(CCFLAGS=Split('-g -gstabs+ -O0 -lefence'))
 debug.Append(CPPDEFINES='DEBUG')
 debug.Program(target = 'm5.debug', source = make_objs(sources, debug))
 

@@ -114,11 +114,16 @@ def MySqlOpt(env):
 def NoFastAllocOpt(env):
     env.Append(CPPDEFINES = 'NO_FAST_ALLOC')
 
+# Enable efence
+def EfenceOpt(env):
+    env.Append(LIBS=['efence'])
+
 # Configuration options map.
 options_map = {
     'MEASURE' : MeasureOpt,
     'MYSQL' : MySqlOpt,
-    'NO_FAST_ALLOC' : NoFastAllocOpt
+    'NO_FAST_ALLOC' : NoFastAllocOpt,
+    'EFENCE' : EfenceOpt
     }
 
 # The 'local_configs' file can be used to define additional base

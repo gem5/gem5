@@ -2480,9 +2480,9 @@ decode OPCODE default Unknown::unknown() {
 		xc->syscall();
 	    }}, IsNonSpeculative);
 	    // Read uniq reg into ABI return value register (r0)
-	    0x9e: rduniq({{ R0 = Runiq; }});
+	    0x9e: rduniq({{ R0 = Runiq; }}, IsNonSpeculative);
 	    // Write uniq reg with value from ABI arg register (r16)
-	    0x9f: wruniq({{ Runiq = R16; }});
+	    0x9f: wruniq({{ Runiq = R16; }}, IsNonSpeculative);
 	}
     }
 #endif

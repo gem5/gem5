@@ -40,8 +40,12 @@
 #include "targetarch/isa_traits.hh"
 
 // forward declarations
+struct AlphaSimpleImpl;
 class ExecContext;
 class DynInst;
+template <class Impl>
+class AlphaDynInst;
+
 class FastCPU;
 class SimpleCPU;
 class InorderCPU;
@@ -308,26 +312,7 @@ class StaticInst : public StaticInstBase
             delete cachedDisassembly;
     }
 
-    /**
-     * Execute this instruction under SimpleCPU model.
-     */
-    virtual Fault execute(SimpleCPU *xc, Trace::InstRecord *traceData) = 0;
-
-         /**
-     * Execute this instruction under InorderCPU model.
-     */
-    virtual Fault execute(InorderCPU *xc, Trace::InstRecord *traceData) = 0;
-
-
-    /**
-     * Execute this instruction under FastCPU model.
-     */
-    virtual Fault execute(FastCPU *xc, Trace::InstRecord *traceData) = 0;
-
-    /**
-     * Execute this instruction under detailed FullCPU model.
-     */
-    virtual Fault execute(DynInst *xc, Trace::InstRecord *traceData) = 0;
+#include "static_inst_impl.hh"
 
     /**
      * Return the target address for a PC-relative branch.
