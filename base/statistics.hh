@@ -1138,6 +1138,8 @@ class Vector2dBase : public DataAccess
   protected:
     typedef Storage<T> storage_t;
     typedef typename storage_t::Params params_t;
+
+  public:
     typedef typename Bin::VectorBin<storage_t> bin_t;
 
   protected:
@@ -1675,6 +1677,8 @@ class VectorDistBase : public DataAccess
   protected:
     typedef Storage<T> storage_t;
     typedef typename storage_t::Params params_t;
+
+  public:
     typedef typename Bin::VectorBin<storage_t> bin_t;
 
   protected:
