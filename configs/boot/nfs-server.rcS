@@ -38,7 +38,7 @@ echo "done."
 #     mknod /dev/sda1 b 8 1
 #fi
 
-/sbin/insmod /modules/scsi_debug.ko dev_size_mb=768
+/sbin/insmod /modules/scsi_debug.ko dev_size_mb=512
 
 echo -n "creating partition and formatting..."
 #echo "1,767,L" > /tmp/sfdisk.run
