@@ -104,6 +104,29 @@ ExecContext::serialize(ostream &os)
     regs.serialize(os);
     // thread_num and cpu_id are deterministic from the config
     SERIALIZE_SCALAR(func_exe_inst);
+
+    bool ctx = false;
+    if (swCtx) {
+        ctx = true;
+        SERIALIZE_SCALAR(ctx);
+        SERIALIZE_SCALAR(swCtx->calls);
+        std::stack<fnCall *> *stack = &(swCtx->callStack);
+        fnCall *top;
+        int size = stack->size();
+        SERIALIZE_SCALAR(size);
+
+        for (int j=0; j<size; ++j) {
+            top = stack->top();
+            paramOut(os, csprintf("stackpos[%d]",j), top->name);
+        }
+    } else {
+        SERIALIZE_SCALAR(ctx);
+    }
+    if (system->bin) {
+        Statistics::MainBin *cur = Statistics::MainBin::curBin();
+        string bin_name = cur->name();
+        SERIALIZE_SCALAR(bin_name);
+    }
 }
 
 
@@ -114,6 +137,31 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(func_exe_inst);
+
+    bool ctx;
+    UNSERIALIZE_SCALAR(ctx);
+    if (ctx) {
+        swCtx = new SWContext;
+        UNSERIALIZE_SCALAR(swCtx->calls);
+        int size;
+        UNSERIALIZE_SCALAR(size);
+        fnCall *call = new fnCall[size];
+        for (int i=0; i<size; ++i) {
+            paramIn(cp, section, csprintf("stackpos[%d]",i), call[i].name);
+            call[i].myBin = system->getBin(call[i].name);
+        }
+
+        for (int i=size-1; i>=0; --i) {
+            swCtx->callStack.push(&(call[i]));
+        }
+
+    }
+
+    if (system->bin) {
+        string bin_name;
+        UNSERIALIZE_SCALAR(bin_name);
+        system->getBin(bin_name)->activate();
+    }
 }
 
 

@@ -108,7 +108,7 @@ System::getBin(const std::string &name)
     std::map<const std::string, Statistics::MainBin *>::const_iterator i;
     i = fnBins.find(name);
     if (i == fnBins.end())
-        panic("trying to getBin that is not on system map!");
+        panic("trying to getBin %s that is not on system map!", name);
     return (*i).second;
 }
 
@@ -123,6 +123,65 @@ System::findContext(Addr pcb)
       return ctx;
   } else
       return NULL;
+}
+
+void
+System::serialize(std::ostream &os)
+{
+    if (bin == true) {
+        map<const Addr, SWContext *>::const_iterator iter, end;
+        iter = swCtxMap.begin();
+        end = swCtxMap.end();
+
+        int numCtxs = swCtxMap.size();
+        SERIALIZE_SCALAR(numCtxs);
+        SWContext *ctx;
+        for (int i = 0; iter != end; ++i) {
+            paramOut(os, csprintf("Addr[%d]",i), (*iter).first);
+            ctx = (*iter).second;
+            paramOut(os, csprintf("calls[%d]",i), ctx->calls);
+
+            stack<fnCall *> *stack = &(ctx->callStack);
+            fnCall *top;
+            int size = stack->size();
+            paramOut(os, csprintf("stacksize[%d]",i), size);
+            for (int j=0; j<size; ++j) {
+                top = stack->top();
+                paramOut(os, csprintf("ctx[%d].stackpos[%d]",i,j), top->name);
+            }
+        }
+    }
+}
+
+void
+System::unserialize(Checkpoint *cp, const std::string &section)
+{
+    if (bin == true) {
+        int numCtxs;
+        UNSERIALIZE_SCALAR(numCtxs);
+
+        SWContext *ctxs = new SWContext[numCtxs];
+        Addr addr;
+        int size;
+        for(int i = 0; i < numCtxs; ++i) {
+            paramIn(cp, section, csprintf("Addr[%d]",i), addr);
+            paramIn(cp, section, csprintf("calls[%d]",i), ctxs[i].calls);
+
+            paramIn(cp, section, csprintf("stacksize[%d]",i), size);
+            fnCall *call = new fnCall[size];
+            for (int j = 0; j < size; ++j) {
+                paramIn(cp, section, csprintf("ctx[%d].stackpos[%d]",i,j),
+                        call[j].name);
+                call[j].myBin = getBin(call[j].name);
+            }
+
+            for (int j=size-1; j>=0; --j) {
+                ctxs[i].callStack.push(&(call[j]));
+            }
+
+            addContext(addr, &(ctxs[i]));
+        }
+    }
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("System", System)

@@ -70,6 +70,10 @@ class System : public SimObject
 
     virtual void dumpState(ExecContext *xc) const = 0;
 
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    //
+
   public:
     const uint64_t init_param;
     MemoryController *memCtrl;
