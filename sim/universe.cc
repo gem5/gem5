@@ -26,10 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <cstring>
+#include <fstream>
 #include <list>
 #include <string>
 #include <vector>
 
+#include "base/misc.hh"
 #include "sim/universe.hh"
 #include "sim/host.hh"
 #include "sim/param.hh"
@@ -42,8 +48,14 @@ double __ticksPerMS;
 double __ticksPerUS;
 double __ticksPerNS;
 
+string outputDirectory;
+ostream *outputStream;
+
 class UniverseParamContext : public ParamContext
 {
+  private:
+    ofstream outputFile;
+
   public:
     UniverseParamContext(const string &is) : ParamContext(is) {}
     void checkParams();
@@ -54,6 +66,11 @@ UniverseParamContext universe("Universe");
 Param<Tick> universe_freq(&universe, "frequency", "tick frequency",
                           200000000);
 
+Param<string> universe_output_dir(&universe, "output_dir",
+                                  "directory to output data to");
+Param<string> universe_output_file(&universe, "output_file",
+                                   "file to dump simulator output to");
+
 void
 UniverseParamContext::checkParams()
 {
@@ -62,4 +79,42 @@ UniverseParamContext::checkParams()
     __ticksPerMS = freq / 1.0e3;
     __ticksPerUS = freq / 1.0e6;
     __ticksPerNS = freq / 1.0e9;
+
+    if (universe_output_dir.isValid()) {
+        outputDirectory = universe_output_dir;
+
+        // guarantee that directory ends with a '/'
+        if (outputDirectory[outputDirectory.size() - 1] != '/')
+            outputDirectory += "/";
+
+        if (mkdir(outputDirectory.c_str(), 0777) < 0) {
+            if (errno != EEXIST) {
+                panic("%s\ncould not make output directory: %s\n",
+                      strerror(errno), outputDirectory);
+            }
+        }
+    }
+
+    string filename;
+    if (universe_output_file.isValid()) {
+        string f = universe_output_file;
+        if (f != "stdout" && f != "cout" && f != "stderr" && f != "cerr")
+            filename = outputDirectory + f;
+        else
+            filename = f;
+    } else {
+        if (outputDirectory.empty())
+            filename = "stdout";
+        else
+            filename = outputDirectory + "output.txt";
+    }
+
+    if (filename == "stdout" || filename == "cout")
+        outputStream = &cout;
+    else if (filename == "stderr" || filename == "cerr")
+        outputStream = &cerr;
+    else {
+        outputFile.open(filename.c_str(), ios::trunc);
+        outputStream = &outputFile;
+    }
 }

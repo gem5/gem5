@@ -89,6 +89,7 @@ class ArgList
 
   public:
     ArgList() : stream(&std::cout) {}
+    ~ArgList();
 
     template<class T>
     void append(const T &data) {

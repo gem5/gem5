@@ -192,8 +192,10 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
 
+#ifdef DEBUG
     kernelPanicEvent = new BreakPCEvent(&pcEventQueue, "kernel panic");
     consolePanicEvent = new BreakPCEvent(&pcEventQueue, "console panic");
+#endif
     badaddrEvent = new BadAddrEvent(&pcEventQueue, "badaddr");
     skipPowerStateEvent = new SkipFuncEvent(&pcEventQueue,
                                             "tl_v48_capture_power_state");
@@ -262,6 +264,7 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
             strcpy(osflags, boot_osflags.c_str());
     }
 
+#ifdef DEBUG
     if (kernelSymtab->findAddress("panic", addr))
         kernelPanicEvent->schedule(addr);
     else
@@ -269,6 +272,7 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
 
     if (consoleSymtab->findAddress("panic", addr))
         consolePanicEvent->schedule(addr);
+#endif
 
     if (kernelSymtab->findAddress("badaddr", addr))
         badaddrEvent->schedule(addr);
@@ -511,8 +515,10 @@ Tru64System::~Tru64System()
     delete kernelSymtab;
     delete consoleSymtab;
 
+#ifdef DEBUG
     delete kernelPanicEvent;
     delete consolePanicEvent;
+#endif
     delete badaddrEvent;
     delete skipPowerStateEvent;
     delete skipScavengeBootEvent;

@@ -54,6 +54,7 @@
 #include "sim/sim_init.hh"
 #include "sim/sim_object.hh"
 #include "sim/sim_stats.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 
@@ -355,12 +356,12 @@ main(int argc, char **argv)
 
     // Print hello message to stats file if it's actually a file.  If
     // it's not (i.e. it's cout or cerr) then we already did it above.
-    if (statStreamIsFile)
-        sayHello(*statStream);
+    if (outputStream != &cout && outputStream != &cerr)
+        sayHello(*outputStream);
 
     // Echo command line and all parameter settings to stats file as well.
-    echoCommandLine(argc, argv, *statStream);
-    ParamContext::showAllContexts(*statStream);
+    echoCommandLine(argc, argv, *outputStream);
+    ParamContext::showAllContexts(builderStream());
 
     // Now process the configuration hierarchy and create the SimObjects.
     ConfigHierarchy configHierarchy(simConfigDB);
@@ -400,6 +401,7 @@ main(int argc, char **argv)
     }
 
     SimInit();
+    warn("Entering event queue.  Starting simulation...\n");
 
     while (!mainEventQueue.empty()) {
         assert(curTick <= mainEventQueue.nextTick() &&

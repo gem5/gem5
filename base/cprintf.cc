@@ -37,9 +37,20 @@ using namespace std;
 
 namespace cp {
 
+ArgList::~ArgList()
+{
+    while (!objects.empty()) {
+        delete objects.front();
+        objects.pop_front();
+    }
+}
+
 void
 ArgList::dump(const string &format)
 {
+    list_t::iterator iter = objects.begin();
+    list_t::iterator end = objects.end();
+
     const char *p = format.c_str();
 
     stream->fill(' ');
@@ -198,22 +209,19 @@ ArgList::dump(const string &format)
                   }
               }
 
-              if (!objects.empty())
+              if (iter != end)
               {
-                  Base *data = objects.front();
-                  objects.pop_front();
-
                   ios::fmtflags saved_flags = stream->flags();
                   char old_fill = stream->fill();
                   int old_precision = stream->precision();
 
-                  data->process(*stream, fmt);
+                  (*iter)->process(*stream, fmt);
 
                   stream->flags(saved_flags);
                   stream->fill(old_fill);
                   stream->precision(old_precision);
 
-                  delete data;
+                  ++iter;
               } else {
                   *stream << "<missing arg for format>";
               }
@@ -241,11 +249,9 @@ ArgList::dump(const string &format)
         }
     }
 
-    while (!objects.empty()) {
+    while (iter != end) {
         *stream << "<extra arg>";
-        Base *data = objects.front();
-        objects.pop_front();
-        delete data;
+        ++iter;
     }
 }
 

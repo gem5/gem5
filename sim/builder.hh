@@ -29,14 +29,17 @@
 #ifndef __BUILDER_HH__
 #define __BUILDER_HH__
 
-#include <map>
+#include <iosfwd>
 #include <list>
+#include <map>
 #include <vector>
-#include <iostream>
 
 #include "sim/param.hh"
 
 class SimObject;
+
+std::ostream &
+builderStream();
 
 //
 // A SimObjectBuilder serves as an evaluation context for a set of
@@ -69,15 +72,9 @@ class SimObjectBuilder : public ParamContext
     SimObjectBuilder(const std::string &_configClass,
                      const std::string &_instanceName,
                      ConfigNode *_configNode,
-                     const std::string &_simObjClassName)
-        : ParamContext(_configClass, true),
-          instanceName(_instanceName),
-          configNode(_configNode),
-          simObjClassName(_simObjClassName)
-    {
-    }
+                     const std::string &_simObjClassName);
 
-    virtual ~SimObjectBuilder() {}
+    virtual ~SimObjectBuilder();
 
     // call parse() on all params in this context to convert string
     // representations to parameter values

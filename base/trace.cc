@@ -49,7 +49,7 @@ FlagVec flags(NumFlags, false);
 // directly; use DebugOut() (see below) to access this stream for
 // output.
 //
-ostream *dprintf_stream = NULL;
+ostream *dprintf_stream = &cerr;
 
 int dprintf_ignore_size;
 vector<string> dprintf_ignore;
@@ -267,10 +267,7 @@ RawDataRecord::dump(ostream &os)
 std::ostream &
 DebugOut()
 {
-    if (Trace::dprintf_stream)
-        return *Trace::dprintf_stream;
-    else
-        return cerr;
+    return *Trace::dprintf_stream;
 }
 
 /////////////////////////////////////////////

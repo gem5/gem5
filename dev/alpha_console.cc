@@ -82,7 +82,7 @@ AlphaConsole::read(MemReqPtr req, uint8_t *data)
     Addr daddr = req->paddr & addr_mask;
     switch (daddr) {
       case offsetof(AlphaAccess, inputChar):
-        val = console->in();
+        val = console->console_in();
         break;
 
       default:

@@ -34,9 +34,44 @@
 #include "sim/configfile.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
-#include "sim/sim_stats.hh"
+#include "sim/universe.hh"
 
 using namespace std;
+
+
+ostream &
+builderStream()
+{
+    static ofstream file;
+    static ostream *stream = NULL;
+
+    if (!stream) {
+        if (!outputDirectory.empty()) {
+            string filename = outputDirectory + "builder.txt";
+            file.open(filename.c_str());
+            stream = &file;
+        } else {
+            stream = outputStream;
+        }
+    }
+
+    return *stream;
+}
+
+SimObjectBuilder::SimObjectBuilder(const string &_configClass,
+                                   const string &_instanceName,
+                                   ConfigNode *_configNode,
+                                   const string &_simObjClassName)
+    : ParamContext(_configClass, true),
+      instanceName(_instanceName),
+      configNode(_configNode),
+      simObjClassName(_simObjClassName)
+{
+}
+
+SimObjectBuilder::~SimObjectBuilder()
+{
+}
 
 ///////////////////////////////////////////
 //
@@ -151,10 +186,10 @@ SimObjectClass::createObject(IniFile &configDB,
 
     // echo object parameters to stats file (for documenting the
     // config used to generate the associated stats)
-    *statStream << "[" << object->name() << "]" << endl;
-    *statStream << "type=" << simObjClassName << endl;
-    objectBuilder->showParams(*statStream);
-    *statStream << endl;
+    builderStream() << "[" << object->name() << "]" << endl;
+    builderStream() << "type=" << simObjClassName << endl;
+    objectBuilder->showParams(builderStream());
+    builderStream() << endl;
 
     // done with the SimObjectBuilder now
     delete objectBuilder;

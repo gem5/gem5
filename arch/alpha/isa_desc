@@ -538,7 +538,7 @@ declare {{
 	      trappingMode((enum TrappingMode)FP_TRAPMODE)
 	{
 	    if (trappingMode != Imprecise) {
-		warn("Warning: precise FP traps unimplemented\n");
+		warn("precise FP traps unimplemented\n");
 	    }
 	}
 
@@ -1609,7 +1609,7 @@ declare {{
 		      Trace::InstRecord *traceData)
 	{
 	    if (!warned) {
-		warn("Warning: instruction '%s' unimplemented\n", mnemonic);
+		warn("instruction '%s' unimplemented\n", mnemonic);
 		warned = true;
 	    }
 
@@ -1620,7 +1620,7 @@ declare {{
 		      Trace::InstRecord *traceData)
 	{
 	    if (!xc->spec_mode && !warned) {
-		warn("Warning: instruction '%s' unimplemented\n", mnemonic);
+		warn("instruction '%s' unimplemented\n", mnemonic);
 		warned = true;
 	    }
 

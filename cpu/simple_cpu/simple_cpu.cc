@@ -349,7 +349,7 @@ SimpleCPU::read(Addr addr, T& data, unsigned flags)
         // Ugly hack to get an event scheduled *only* if the access is
         // a miss.  We really should add first-class support for this
         // at some point.
-        if (result != MA_HIT && dcacheInterface->doEvents) {
+        if (result != MA_HIT && dcacheInterface->doEvents()) {
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
             unscheduleTickEvent();
@@ -432,7 +432,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         // Ugly hack to get an event scheduled *only* if the access is
         // a miss.  We really should add first-class support for this
         // at some point.
-        if (result != MA_HIT && dcacheInterface->doEvents) {
+        if (result != MA_HIT && dcacheInterface->doEvents()) {
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
             unscheduleTickEvent();
@@ -635,7 +635,7 @@ SimpleCPU::tick()
             // Ugly hack to get an event scheduled *only* if the access is
             // a miss.  We really should add first-class support for this
             // at some point.
-            if (result != MA_HIT && icacheInterface->doEvents) {
+            if (result != MA_HIT && icacheInterface->doEvents()) {
                 memReq->completionEvent = &cacheCompletionEvent;
                 lastIcacheStall = curTick;
                 unscheduleTickEvent();

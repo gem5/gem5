@@ -510,10 +510,8 @@ main(int argc, char *argv[])
     s12.sample(100);
 
 //    dump(cout, mode_simplescalar);
-    ofstream file("/tmp/stats.py");
-    dump(file, "stattest", mode_python);
-    file.close();
-
+    python_start("/tmp/stats.py");
+    python_dump("stattest", "all");
 
     return 0;
 }

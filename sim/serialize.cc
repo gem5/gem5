@@ -305,10 +305,9 @@ class SerializeParamContext : public ParamContext
 
 SerializeParamContext serialParams("serialize");
 
-Param<string> serialize_dir(&serialParams,
-                            "dir",
+Param<string> serialize_dir(&serialParams, "dir",
                             "dir to stick checkpoint in "
-                            "(sprintf format with cycle #)", "m5.%012d");
+                            "(sprintf format with cycle #)");
 
 Param<Counter> serialize_cycle(&serialParams,
                                 "cycle",
@@ -333,11 +332,18 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    checkpointDirBase = serialize_dir;
-    // guarantee that directory ends with a '/'
-    if (checkpointDirBase[checkpointDirBase.size() - 1] != '/') {
-        checkpointDirBase += "/";
+    if (serialize_dir.isValid()) {
+        checkpointDirBase = serialize_dir;
+    } else {
+        if (outputDirectory.empty())
+            checkpointDirBase = "m5.%012d";
+        else
+            checkpointDirBase = outputDirectory + "cpt.%012d";
     }
+
+    // guarantee that directory ends with a '/'
+    if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')
+        checkpointDirBase += "/";
 
     if (serialize_cycle > 0)
         Checkpoint::setup(serialize_cycle, serialize_period);
