@@ -2367,25 +2367,26 @@ decode OPCODE default Unknown::unknown() {
 
 #ifdef FULL_SYSTEM
     0x00: CallPal::call_pal({{
-	using namespace AlphaISA;
-
 	if (!palValid ||
-	    (palPriv && xc->readIpr(IPR_ICM, fault) != mode_kernel)) {
+	    (palPriv
+	     && xc->readIpr(AlphaISA::IPR_ICM, fault) != AlphaISA::mode_kernel)) {
 	    // invalid pal function code, or attempt to do privileged
 	    // PAL call in non-kernel mode
 	    fault = Unimplemented_Opcode_Fault;
 	}
 	else {
+	    bool dopal = true;
+
 	    if (!xc->misspeculating()) {
 		// check to see if simulator wants to do something special
 		// on this PAL call (including maybe suppress it)
-		bool dopal = xc->simPalCheck(palFunc);
+		dopal = xc->simPalCheck(palFunc);
 
 		Annotate::Callpal(xc, palFunc);
 
 		if (dopal) {
-		    swap_palshadow(&xc->regs, true);
-		    xc->setIpr(IPR_EXC_ADDR, NPC);
+		    AlphaISA::swap_palshadow(&xc->regs, true);
+		    xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
 		}
 	    }
 
@@ -2393,7 +2394,7 @@ decode OPCODE default Unknown::unknown() {
 	    // unrealistic) to set NPC, as the control-flow change
 	    // won't get committed.
 	    if (dopal) {
-		NPC = xc->readIpr(IPR_PAL_BASE, fault) + palOffset;
+		NPC = xc->readIpr(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
 	    }
 	}
     }});
