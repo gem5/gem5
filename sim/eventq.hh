@@ -104,22 +104,7 @@ class Event : public Serializeable, public FastAlloc
      * @param queue that the event gets scheduled on
      */
     Event(EventQueue *q, int p = 0)
-        : Serializeable(defaultName), queue(q), next(NULL),
-          _priority(p), _flags(None),
-#if TRACING_ON
-          when_created(curTick), when_scheduled(0),
-#endif
-          annotated_value(0)
-    {
-    }
-
-    /*
-     * Event constructor
-     * @param queue that the event gets scheduled on
-     */
-    Event(EventQueue *q, std::string _name, int p = 0)
-        : Serializeable(_name), queue(q), next(NULL),
-          _priority(p), _flags(None),
+        : queue(q), next(NULL), _priority(p), _flags(None),
 #if TRACING_ON
           when_created(curTick), when_scheduled(0),
 #endif
@@ -128,6 +113,10 @@ class Event : public Serializeable, public FastAlloc
     }
 
     ~Event() {}
+
+    virtual std::string name() const {
+        return csprintf("%s_%x", defaultName, (uintptr_t)this);
+    }
 
     /// Determine if the current event is scheduled
     bool scheduled() const { return getFlags(Scheduled); }
@@ -219,11 +208,11 @@ DelayFunction(Tick when, T *object)
  */
 class EventQueue : public Serializeable
 {
+  protected:
+    std::string objName;
+
   private:
     Event *head;
-
-    // only used to hold value between nameChildren() and serialize()
-    int numAutoSerializeEvents;
 
     void insert(Event *event);
     void remove(Event *event);
@@ -232,8 +221,10 @@ class EventQueue : public Serializeable
 
     // constructor
     EventQueue(const std::string &n)
-        : Serializeable(n), head(NULL), numAutoSerializeEvents(-1)
+        : objName(n), head(NULL)
     {}
+
+    virtual std::string name() const { return objName; }
 
     // schedule the given event on this queue
     void schedule(Event *ev);
@@ -266,7 +257,6 @@ class EventQueue : public Serializeable
 
     Tick nextEventTime() { return empty() ? curTick : head->when(); }
 
-    virtual void nameChildren();
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };

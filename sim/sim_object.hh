@@ -47,6 +47,9 @@
  */
 class SimObject : public Serializeable
 {
+  protected:
+    std::string objName;
+
   private:
     friend class Serializer;
 
@@ -59,6 +62,8 @@ class SimObject : public Serializeable
     SimObject(const std::string &_name);
 
     virtual ~SimObject() {}
+
+    virtual std::string name() const { return objName; }
 
     // register statistics for this object
     virtual void regStats();

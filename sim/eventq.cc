@@ -150,54 +150,52 @@ Event::unserialize(Checkpoint *cp, const string &section)
     }
 }
 
-
-void
-EventQueue::nameChildren()
-{
-    int numEvents = 0;
-    Event *event = head;
-    while (event) {
-        if (event->getFlags(Event::AutoSerialize)) {
-            event->setName(csprintf("%s.event%d", name(), numEvents++));
-        }
-        event = event->next;
-    }
-
-    numAutoSerializeEvents = numEvents;
-}
-
 void
 EventQueue::serialize(ostream &os)
 {
-    // should have been set by a preceding call to nameChildren()
-    assert(numAutoSerializeEvents >= 0);
-
-    SERIALIZE_SCALAR(numAutoSerializeEvents);
+    std::list<Event *> eventPtrs;
 
     int numEvents = 0;
     Event *event = head;
     while (event) {
         if (event->getFlags(Event::AutoSerialize)) {
-            event->nameOut(os);
-            event->serialize(os);
+            eventPtrs.push_back(event);
             numEvents++;
         }
         event = event->next;
     }
 
-    assert(numEvents == numAutoSerializeEvents);
-}
+    SERIALIZE_SCALAR(numEvents);
 
+    int i = 0;
+    for (std::list<Event *>::iterator it=eventPtrs.begin();
+         it != eventPtrs.end(); ++it) {
+        paramOut(os, csprintf("%s.eventPtr%d", name(), i++), (uintptr_t)*it);
+    }
+
+    for (std::list<Event *>::iterator it=eventPtrs.begin();
+         it != eventPtrs.end(); ++it) {
+        (*it)->nameOut(os);
+        (*it)->serialize(os);
+    }
+}
 
 void
 EventQueue::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_SCALAR(numAutoSerializeEvents);
-    for (int eventNum = 0; eventNum < numAutoSerializeEvents; ++eventNum) {
-        Serializeable::create(cp, csprintf("%s.event%d", section, eventNum));
+    int numEvents;
+    uintptr_t ptr;
+
+    UNSERIALIZE_SCALAR(numEvents);
+
+    for (int i = 0; i < numEvents; i++) {
+        // get the pointer value associated with the event
+        paramIn(cp, section, csprintf("%s.eventPtr%d", name(), i), ptr);
+
+        // create the event based on its pointer value
+        Serializeable::create(cp, csprintf("%s_%x", Event::defaultName, ptr));
     }
 }
-
 
 void
 EventQueue::dump()

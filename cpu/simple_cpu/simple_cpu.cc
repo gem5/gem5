@@ -76,7 +76,7 @@
 using namespace std;
 
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c)
-    : Event(&mainEventQueue, "SimpleCPU::TickEvent", 100), cpu(c)
+    : Event(&mainEventQueue, 100), cpu(c)
 {
 }
 
@@ -94,7 +94,7 @@ SimpleCPU::TickEvent::description()
 
 
 SimpleCPU::CacheCompletionEvent::CacheCompletionEvent(SimpleCPU *_cpu)
-    : Event(&mainEventQueue, "SimpleCPU::CacheCompletionEvent"),
+    : Event(&mainEventQueue),
       cpu(_cpu)
 {
 }

@@ -54,7 +54,7 @@ SimObject::SimObjectList SimObject::simObjectList;
 // SimObject constructor: used to maintain static simObjectList
 //
 SimObject::SimObject(const string &_name)
-    : Serializeable(_name)
+    : objName(_name)
 {
     simObjectList.push_back(this);
 }
