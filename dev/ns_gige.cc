@@ -119,8 +119,6 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
       physmem(pmem), intctrl(i), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
-    tsunami->ethernet = this;
-
     if (header_bus) {
         pioInterface = newPioInterface(name, hier, header_bus, this,
                                        &NSGigE::cacheAccess);
