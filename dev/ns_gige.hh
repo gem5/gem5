@@ -34,21 +34,15 @@
 #ifndef __NS_GIGE_HH__
 #define __NS_GIGE_HH__
 
-//#include "base/range.hh"
+#include "base/statistics.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
-#include "sim/eventq.hh"
+#include "dev/io_device.hh"
 #include "dev/ns_gige_reg.h"
-#include "base/statistics.hh"
 #include "dev/pcidev.hh"
 #include "dev/tsunami.hh"
-#include "dev/io_device.hh"
 #include "mem/bus/bus.hh"
-
-/** defined by the NS83820 data sheet */
-//these are now params for the device
-//#define MAX_TX_FIFO_SIZE 8192
-//#define MAX_RX_FIFO_SIZE 32768
+#include "sim/eventq.hh"
 
 /** length of ethernet address in bytes */
 #define EADDR_LEN 6
@@ -92,7 +86,10 @@ struct dp_regs {
 };
 
 struct dp_rom {
-    /** for perfect match memory.  the linux driver doesn't use any other ROM */
+    /**
+     * for perfect match memory.
+     * the linux driver doesn't use any other ROM
+     */
     uint8_t perfectMatch[EADDR_LEN];
 };
 
