@@ -30,7 +30,6 @@
 #define __RES_LIST_HH__
 
 #include "cprintf.hh"
-#include "std_types.hh"
 #include <assert.h>
 
 #define DEBUG_REMOVE 0

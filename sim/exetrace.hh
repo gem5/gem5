@@ -33,7 +33,7 @@
 #include <vector>
 
 #include "host.hh"
-#include "std_types.hh"	// for InstSeqNum
+#include "inst_seq.hh"	// for InstSeqNum
 #include "trace.hh"
 #include "exec_context.hh"
 #include "static_inst.hh"
