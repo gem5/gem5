@@ -28,8 +28,8 @@
 
 /**
  * @file
- * Declaration of top level class for the Tsunami chipset. This class just retains pointers
- * to all its children so the children can communicate
+ * Declaration of top level class for the Tsunami chipset. This class just
+ * retains pointers to all its children so the children can communicate.
  */
 
 #ifndef __TSUNAMI_HH__
@@ -83,8 +83,8 @@ class Tsunami : public SimObject
       */
     TsunamiPChip *pchip;
 
-    /** Pointer to the PCI Config Space
-      * The config space in Tsunami all needs to return
+    /** Pointer to the Tsunami PCI Config Space
+      * The config space in tsunami all needs to return
       * -1 if a device is not there.
       */
     PCIConfigAll *pciconfig;
@@ -97,10 +97,15 @@ class Tsunami : public SimObject
   public:
     /**
       * Constructor for the Tsunami Class.
-      * @param
+      * @param name name of the object
+      * @param scsi pointer to scsi controller object
+      * @param con pointer to the console
+      * @param intrcontrol pointer to the interrupt controller
+      * @param intrFreq frequency that interrupts happen
       */
-    Tsunami(const std::string &name, EtherDev *ethernet, SimConsole *con,
-            IntrControl *intctrl, int intrFreq);
+    Tsunami(const std::string &name, AdaptecController *scsi,
+               EtherDev *ethernet,
+               SimConsole *con, IntrControl *intctrl, int intrFreq);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

@@ -27,7 +27,7 @@
  */
 
 /* @file
- * Turbolaser system bus node (processor, memory, or IO)
+ * Emulation of the Tsunami CChip CSRs
  */
 
 #ifndef __TSUNAMI_CCHIP_HH__
@@ -44,10 +44,30 @@ class TsunamiCChip : public MmapDevice
   public:
 
   protected:
+      /**
+       * pointer to the tsunami object.
+       * This is our access to all the other tsunami
+       * devices.
+       */
     Tsunami *tsunami;
+
+    /**
+     * The dims are device interrupt mask registers.
+     * One exists for each CPU, the DRIR X DIM = DIR
+     */
     uint64_t dim[Tsunami::Max_CPUs];
+
+    /**
+     * The dirs are device interrupt registers.
+     * One exists for each CPU, the DRIR X DIM = DIR
+     */
     uint64_t dir[Tsunami::Max_CPUs];
     bool dirInterrupting[Tsunami::Max_CPUs];
+
+    /**
+     * This register contains bits for each PCI interrupt
+     * that can occur.
+     */
     uint64_t drir;
 
   public:
