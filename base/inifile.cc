@@ -85,6 +85,17 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
     tmpf.close();
 
+    const char *cfile = file.c_str();
+    char *dir = basename(cfile);
+    char *dir_arg = NULL;
+    if (*dir != '.' && dir != cfile) {
+        string arg = "-I";
+        arg += dir;
+
+        dir_arg = new char[arg.size() + 1];
+        strcpy(dir_arg, arg.c_str());
+    }
+
 #ifdef CPP_PIPE
     if (pipe(fd) == -1)
         return false;
@@ -120,6 +131,9 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
         for (int i = 0; i < arg_count; i++)
             args[nextArg++] = cppArgs[i];
 
+        if (dir_arg)
+            args[nextArg++] = dir_arg;
+
         args[nextArg++] = filename;
         args[nextArg++] = NULL;
 
@@ -134,6 +148,8 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
     int retval;
     waitpid(pid, &retval, 0);
+
+    delete [] dir_arg;
 
     // check for normal completion of CPP
     if (!WIFEXITED(retval) || WEXITSTATUS(retval) != 0)
