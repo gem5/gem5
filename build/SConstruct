@@ -62,6 +62,9 @@ if not os.path.isdir('ext'):
           % EXT_SRCDIR
     sys.exit(1)
 
+# tell python where to find m5 python code
+sys.path.append(os.path.join(SRCDIR, 'python'))
+
 
 ###################################################
 #

@@ -30,9 +30,6 @@ import os, os.path, re, sys
 
 Import('env')
 
-# tell python where to find m5 python code
-sys.path.append(os.path.join(env['SRCDIR'], 'python'))
-
 import m5scons
 
 def WriteEmbeddedPyFile(target, source, path, name, ext, filename):
