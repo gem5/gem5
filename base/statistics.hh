@@ -2578,12 +2578,20 @@ class Formula : public Detail::VectorStat
     }
 
     /**
-     * Return the vector of values of this formula.
+     * Return the result of the Fomula in a vector.  If there were no Vector
+     * components to the Formula, then the vector is size 1.  If there were,
+     * like x/y with x being a vector of size 3, then the result returned will
+     * be x[0]/y, x[1]/y, x[2]/y, respectively.
      * @return The result vector.
      */
     const rvec_t &val() const { return root->val(); }
     /**
-     * Return the total of the result vector.
+     * Return the total Formula result.  If there is a Vector component to this
+     * Formula, then this is the result of the Formula if the formula is applied
+     * after summing all the components of the Vector.  For example, if Formula
+     * is x/y where x is size 3, then total() will return (x[1]+x[2]+x[3])/y.  If there is no
+     * Vector component, total() returns the same value as the first entry in the rvec_t
+     * val() returns.
      * @return The total of the result vector.
      */
     result_t total() const { return root->total(); }
