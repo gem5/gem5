@@ -341,7 +341,7 @@ format_string(std::ostream &out, const T &data, Format &fmt)
 { _format_string(out, data, fmt); }
 
 inline void
-format_string(std::ostream &out, const std::stringstream& data, Format &fmt)
+format_string(std::ostream &out, const std::stringstream &data, Format &fmt)
 { _format_string(out, data.str(), fmt); }
 
 #endif // __CPRINTF_FORMATS_HH__

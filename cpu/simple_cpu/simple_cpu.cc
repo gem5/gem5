@@ -364,32 +364,32 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 
 template
 Fault
-SimpleCPU::read(Addr addr, uint64_t& data, unsigned flags);
+SimpleCPU::read(Addr addr, uint64_t &data, unsigned flags);
 
 template
 Fault
-SimpleCPU::read(Addr addr, uint32_t& data, unsigned flags);
+SimpleCPU::read(Addr addr, uint32_t &data, unsigned flags);
 
 template
 Fault
-SimpleCPU::read(Addr addr, uint16_t& data, unsigned flags);
+SimpleCPU::read(Addr addr, uint16_t &data, unsigned flags);
 
 template
 Fault
-SimpleCPU::read(Addr addr, uint8_t& data, unsigned flags);
+SimpleCPU::read(Addr addr, uint8_t &data, unsigned flags);
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS
 
 template<>
 Fault
-SimpleCPU::read(Addr addr, double& data, unsigned flags)
+SimpleCPU::read(Addr addr, double &data, unsigned flags)
 {
     return read(addr, *(uint64_t*)&data, flags);
 }
 
 template<>
 Fault
-SimpleCPU::read(Addr addr, float& data, unsigned flags)
+SimpleCPU::read(Addr addr, float &data, unsigned flags)
 {
     return read(addr, *(uint32_t*)&data, flags);
 }
@@ -397,7 +397,7 @@ SimpleCPU::read(Addr addr, float& data, unsigned flags)
 
 template<>
 Fault
-SimpleCPU::read(Addr addr, int32_t& data, unsigned flags)
+SimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
 {
     return read(addr, (uint32_t&)data, flags);
 }
