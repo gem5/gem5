@@ -74,6 +74,9 @@ class SimConsole : public SimObject
     CircleBuf txbuf;
     CircleBuf rxbuf;
     std::ostream *outfile;
+#if TRACING_ON == 1
+    CircleBuf linebuf;
+#endif
 
   public:
     ///////////////////////

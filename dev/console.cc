@@ -73,6 +73,9 @@ SimConsole::Event::process(int revent)
 SimConsole::SimConsole(const string &name, const string &file, int num)
     : SimObject(name), event(NULL), number(num), in_fd(-1), out_fd(-1),
       listener(NULL), txbuf(16384), rxbuf(16384), outfile(NULL),
+#if TRACING_ON == 1
+      linebuf(16384),
+#endif
       _status(0), _enable(0), intr(NULL)
 {
     if (!file.empty())
@@ -231,7 +234,7 @@ SimConsole::in()
     char c;
     rxbuf.read(&c, 1);
 
-    DPRINTF(Console, "in: \'%c\' %#02x status: %#x\n",
+    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x status: %#x\n",
             isprint(c) ? c : ' ', c, _status);
 
     return c;
@@ -240,6 +243,28 @@ SimConsole::in()
 void
 SimConsole::out(char c, bool raise_int)
 {
+#if TRACING_ON == 1
+    if (DTRACE(Console)) {
+        static char last = '\0';
+
+        if (c != '\n' && c != '\r' ||
+            last != '\n' && last != '\r') {
+            if (c == '\n' || c == '\r') {
+                int size = linebuf.size();
+                char *buffer = new char[size + 1];
+                linebuf.read(buffer, size);
+                buffer[size] = '\0';
+                DPRINTF(Console, "%s\n", buffer);
+                delete [] buffer;
+            } else {
+                linebuf.write(c);
+            }
+        }
+
+        last = c;
+    }
+#endif
+
     txbuf.write(c);
 
     if (out_fd >= 0)
@@ -251,13 +276,13 @@ SimConsole::out(char c, bool raise_int)
     if (raise_int)
         raiseInt(TransmitInterrupt);
 
-    DPRINTF(Console, "out: \'%c\' %#02x",
+    DPRINTF(ConsoleVerbose, "out: \'%c\' %#02x",
             isprint(c) ? c : ' ', (int)c);
 
     if (raise_int)
-        DPRINTF(Console, "status: %#x\n", _status);
+        DPRINTF(ConsoleVerbose, "status: %#x\n", _status);
     else
-        DPRINTF(Console, "\n");
+        DPRINTF(ConsoleVerbose, "\n");
 }
 
 inline bool
@@ -329,6 +354,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
     SimObjectParam<ConsoleListener *> listener;
     SimObjectParam<IntrControl *> intr_control;
     Param<string> output;
+    Param<bool> append_name;
     Param<int> number;
 
 END_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
@@ -338,13 +364,17 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimConsole)
     INIT_PARAM(listener, "console listener"),
     INIT_PARAM(intr_control, "interrupt controller"),
     INIT_PARAM_DFLT(output, "file to dump output to", ""),
+    INIT_PARAM_DFLT(append_name, "append name() to filename", true),
     INIT_PARAM_DFLT(number, "console number", 0)
 
 END_INIT_SIM_OBJECT_PARAMS(SimConsole)
 
 CREATE_SIM_OBJECT(SimConsole)
 {
-    SimConsole *console = new SimConsole(getInstanceName(), output, number);
+    string filename = output;
+    if (!filename.empty() && append_name)
+        filename += "." + getInstanceName();
+    SimConsole *console = new SimConsole(getInstanceName(), filename, number);
     ((ConsoleListener *)listener)->add(console);
     ((SimConsole *)console)->initInt(intr_control);
     ((SimConsole *)console)->setInt(SimConsole::TransmitInterrupt |
@@ -383,12 +413,14 @@ void
 ConsoleListener::listen(int port)
 {
     while (!listener.listen(port, true)) {
-        DPRINTF(Console, ": can't bind address console port %d inuse PID %d\n",
+        DPRINTF(Console,
+                ": can't bind address console port %d inuse PID %d\n",
                 port, getpid());
         port++;
     }
 
-    cerr << "Listening for console connection on port " << port << endl;
+    ccprintf(cerr, "Listening for console connection on port %d\n", port);
+
     event = new Event(this, listener.getfd(), POLLIN);
     pollQueue.schedule(event);
 }
@@ -401,8 +433,7 @@ void
 ConsoleListener::accept()
 {
     if (!listener.islistening())
-        panic("%s: cannot accept a connection if we're not listening!",
-              name());
+        panic("%s: cannot accept a connection if not listening!", name());
 
     int sfd = listener.accept(true);
     if (sfd != -1) {

@@ -29,31 +29,34 @@
 #ifndef __CIRCLEBUF_HH__
 #define __CIRCLEBUF_HH__
 
+#include <iosfwd>
 
 class CircleBuf
 {
-protected:
-  char *buf;
-  bool rollover;
-  int buflen;
-  int size;
-  int start;
-  int stop;
+  protected:
+    char *_buf;
+    bool _rollover;
+    int _buflen;
+    int _size;
+    int _start;
+    int _stop;
 
-public:
-  explicit CircleBuf(int l);
-  ~CircleBuf();
+  public:
+    explicit CircleBuf(int l);
+    ~CircleBuf();
 
-  bool empty() { return size == 0; }
-  void dump();
-  void flush();
-  void read(char *b, int len);
-  void read(int fd, int len);
-  void read(int fd);
-  void readall(int fd);
-  void write(char b);
-  void write(const char *b);
-  void write(const char *b, int len);
+    bool empty() const { return _size == 0; }
+    int size() const { return _size; }
+    void dump();
+    void flush();
+    void read(char *b, int len);
+    void read(int fd, int len);
+    void read(int fd);
+    void read(std::ostream &out);
+    void readall(int fd);
+    void write(char b);
+    void write(const char *b);
+    void write(const char *b, int len);
 };
 
 #endif // __CIRCLEBUF_HH__
