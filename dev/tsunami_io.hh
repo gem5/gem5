@@ -37,9 +37,9 @@
 #include "dev/tsunami.hh"
 
 /*
- * Tsunami CChip
+ * Tsunami I/O device
  */
-class TsunamiDMA : public MmapDevice
+class TsunamiIO : public MmapDevice
 {
   public:
 
@@ -51,7 +51,7 @@ class TsunamiDMA : public MmapDevice
       uint8_t mode2;
 
   public:
-    TsunamiDMA(const std::string &name, /*Tsunami *t,*/
+    TsunamiIO(const std::string &name, /*Tsunami *t,*/
                Addr addr, Addr mask, MemoryController *mmu);
 
     virtual Fault read(MemReqPtr req, uint8_t *data);
@@ -61,4 +61,4 @@ class TsunamiDMA : public MmapDevice
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __TSUNAMI_DMA_HH__
+#endif // __TSUNAMI_IO_HH__
