@@ -987,61 +987,50 @@ NSGigE::cpuIntrPost(Tick when)
      * @todo this warning should be removed and the intrTick code should
      * be fixed.
      */
-    if (intrTick < curTick && intrTick != 0) {
-        warn("intrTick < curTick !!!  intrTick=%d curTick=%d\n",
-             intrTick, curTick);
-        intrTick = 0;
-    }
-    assert((intrTick >= curTick) || (intrTick == 0));
-    if (when > intrTick && intrTick != 0)
+    assert(when >= curTick);
+    assert(intrTick >= curTick || intrTick == 0);
+    if (when > intrTick && intrTick != 0) {
+        DPRINTF(EthernetIntr, "don't need to schedule event...intrTick=%d\n",
+                intrTick);
         return;
+    }
 
     intrTick = when;
+    if (intrTick < curTick) {
+        debug_break();
+        intrTick = curTick;
+    }
 
-    if (intrEvent) {
+    DPRINTF(EthernetIntr, "going to schedule an interrupt for intrTick=%d\n",
+            intrTick);
+
+    if (intrEvent)
         intrEvent->squash();
-        intrEvent = 0;
-    }
-
-    if (when < curTick) {
-        cpuInterrupt();
-    } else {
-        DPRINTF(EthernetIntr,
-                "going to schedule an interrupt for intrTick=%d\n",
-                intrTick);
-        intrEvent = new IntrEvent(this, true);
-        intrEvent->schedule(intrTick);
-    }
+    intrEvent = new IntrEvent(this, true);
+    intrEvent->schedule(intrTick);
 }
 
 void
 NSGigE::cpuInterrupt()
 {
-    // Don't send an interrupt if there's already one
-    if (cpuPendingIntr) {
-        DPRINTF(EthernetIntr,
-                "would send an interrupt now, but there's already pending\n");
-        intrTick = 0;
-        return;
-    }
-    // Don't send an interrupt if it's supposed to be delayed
-    if (intrTick > curTick) {
-        DPRINTF(EthernetIntr,
-                "an interrupt is scheduled for %d, wait til then\n",
-                intrTick);
-        return;
-    }
+    assert(intrTick == curTick);
 
     // Whether or not there's a pending interrupt, we don't care about
     // it anymore
     intrEvent = 0;
     intrTick = 0;
 
-    // Send interrupt
-    cpuPendingIntr = true;
+    // Don't send an interrupt if there's already one
+    if (cpuPendingIntr) {
+        DPRINTF(EthernetIntr,
+                "would send an interrupt now, but there's already pending\n");
+    } else {
+        // Send interrupt
+        cpuPendingIntr = true;
 
-    DPRINTF(EthernetIntr, "posting cchip interrupt\n");
-    tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
+        DPRINTF(EthernetIntr, "posting cchip interrupt\n");
+        tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
+    }
 }
 
 void
@@ -1049,6 +1038,13 @@ NSGigE::cpuIntrClear()
 {
     if (!cpuPendingIntr)
         return;
+
+    if (intrEvent) {
+        intrEvent->squash();
+        intrEvent = 0;
+    }
+
+    intrTick = 0;
 
     cpuPendingIntr = false;
 
