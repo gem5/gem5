@@ -89,7 +89,7 @@ class EtherLink : public SimObject
         Link(const std::string &name, double rate, EtherDump *dump);
         ~Link() {}
 
-        virtual std::string name() const { return objName; }
+        virtual const std::string name() const { return objName; }
 
         bool busy() const { return (bool)packet; }
         bool transmit(PacketPtr &packet);

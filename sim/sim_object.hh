@@ -63,7 +63,7 @@ class SimObject : public Serializable
 
     virtual ~SimObject() {}
 
-    virtual std::string name() const { return objName; }
+    virtual const std::string name() const { return objName; }
 
     // initialization pass of all objects.  Gets invoked by SimInit()
     virtual void init();

@@ -153,7 +153,7 @@ class Event : public Serializable, public FastAlloc
 
     ~Event() {}
 
-    virtual std::string name() const {
+    virtual const std::string name() const {
         return csprintf("Event_%x", (uintptr_t)this);
     }
 
@@ -257,7 +257,7 @@ class EventQueue : public Serializable
         : objName(n), head(NULL)
     {}
 
-    virtual std::string name() const { return objName; }
+    virtual const std::string name() const { return objName; }
 
     // schedule the given event on this queue
     void schedule(Event *ev);

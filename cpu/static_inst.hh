@@ -78,6 +78,12 @@ class StaticInstBase : public RefCounted
     /// - If IsControl is set, then exactly one of IsDirectControl or
     /// IsIndirect Control will be set, and exactly one of
     /// IsCondControl or IsUncondControl will be set.
+    /// - IsSerializing, IsMemBarrier, and IsWriteBarrier are
+    /// implemented as flags since in the current model there's no
+    /// other way for instructions to inject behavior into the
+    /// pipeline outside of fetch.  Once we go to an exec-in-exec CPU
+    /// model we should be able to get rid of these flags and
+    /// implement this behavior via the execute() methods.
     ///
     enum Flags {
         IsNop,		///< Is a no-op (no effect at all).
@@ -99,7 +105,12 @@ class StaticInstBase : public RefCounted
         IsCall,			///< Subroutine call.
         IsReturn,		///< Subroutine return.
 
-        IsThreadSync,		///< Thread synchronization operation.
+        IsThreadSync,	///< Thread synchronization operation.
+
+        IsSerializing,	///< Serializes pipeline: won't until all
+                        /// older instructions have committed.
+        IsMemBarrier,	///< Is a memory barrier
+        IsWriteBarrier,	///< Is a write barrier
 
         NumFlags
     };
@@ -178,6 +189,9 @@ class StaticInstBase : public RefCounted
     bool isUncondCtrl()	  const { return flags[IsUncondControl]; }
 
     bool isThreadSync()   const { return flags[IsThreadSync]; }
+    bool isSerializing()  const { return flags[IsSerializing]; }
+    bool isMemBarrier()   const { return flags[IsMemBarrier]; }
+    bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
     //@}
 
     /// Operation class.  Used to select appropriate function unit in issue.
@@ -216,11 +230,11 @@ class StaticInst : public StaticInstBase
 
     /// Return logical index (architectural reg num) of i'th destination reg.
     /// Only the entries from 0 through numDestRegs()-1 are valid.
-    RegIndex destRegIdx(int i)	{ return _destRegIdx[i]; }
+    RegIndex destRegIdx(int i) const { return _destRegIdx[i]; }
 
     /// Return logical index (architectural reg num) of i'th source reg.
     /// Only the entries from 0 through numSrcRegs()-1 are valid.
-    RegIndex srcRegIdx(int i)	{ return _srcRegIdx[i]; }
+    RegIndex srcRegIdx(int i)  const { return _srcRegIdx[i]; }
 
     /// Pointer to a statically allocated "null" instruction object.
     /// Used to give eaCompInst() and memAccInst() something to return
@@ -305,7 +319,7 @@ class StaticInst : public StaticInstBase
      * Invalid if not a PC-relative branch (i.e. isDirectCtrl()
      * should be true).
      */
-    virtual Addr branchTarget(Addr branchPC)
+    virtual Addr branchTarget(Addr branchPC) const
     {
         panic("StaticInst::branchTarget() called on instruction "
               "that is not a PC-relative branch.");
@@ -318,7 +332,7 @@ class StaticInst : public StaticInstBase
      * execute the branch in question.  Invalid if not an indirect
      * branch (i.e. isIndirectCtrl() should be true).
      */
-    virtual Addr branchTarget(ExecContext *xc)
+    virtual Addr branchTarget(ExecContext *xc) const
     {
         panic("StaticInst::branchTarget() called on instruction "
               "that is not an indirect branch.");

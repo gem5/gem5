@@ -186,7 +186,7 @@ INSTANTIATE_PARAM_TEMPLATES(string)
 class Globals : public Serializable
 {
   public:
-    string name() const;
+    const string name() const;
     void serialize(ostream& os);
     void unserialize(Checkpoint *cp);
 };
@@ -194,7 +194,7 @@ class Globals : public Serializable
 /// The one and only instance of the Globals class.
 Globals globals;
 
-string
+const string
 Globals::name() const
 {
     return "Globals";
