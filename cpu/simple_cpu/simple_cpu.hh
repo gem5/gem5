@@ -247,16 +247,9 @@ class SimpleCPU : public BaseCPU
         // need to do this...
     }
 
-    void copySrcTranslate(Addr src)
-    {
-        panic("Haven't implemented Copy Src translate yet in SimpleCPU\n");
-    }
+    Fault copySrcTranslate(Addr src);
 
-    void copy(Addr dest)
-    {
-        panic("Haven't implemented Copy yet in SimpleCPU\n");
-    }
-
+    Fault copy(Addr dest);
 };
 
 #endif // __SIMPLE_CPU_HH__

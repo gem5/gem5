@@ -327,6 +327,46 @@ change_thread_state(int thread_number, int activate, int priority)
 {
 }
 
+Fault
+SimpleCPU::copySrcTranslate(Addr src)
+{
+    memReq->reset(src, (dcacheInterface) ?
+                  dcacheInterface->getBlockSize()
+                  : 64);
+
+    // translate to physical address
+    Fault fault = xc->translateDataReadReq(memReq);
+
+    if (fault == No_Fault) {
+        xc->copySrcAddr = src;
+        xc->copySrcPhysAddr = memReq->paddr;
+    } else {
+        xc->copySrcAddr = 0;
+        xc->copySrcPhysAddr = 0;
+    }
+    return fault;
+}
+
+Fault
+SimpleCPU::copy(Addr dest)
+{
+    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    uint8_t data[blk_size];
+    assert(xc->copySrcPhysAddr);
+    memReq->reset(dest, blk_size);
+    // translate to physical address
+    Fault fault = xc->translateDataWriteReq(memReq);
+    if (fault == No_Fault) {
+        Addr dest_addr = memReq->paddr;
+        // Need to read straight from memory since we have more than 8 bytes.
+        memReq->paddr = xc->copySrcPhysAddr;
+        xc->mem->read(memReq, data);
+        memReq->paddr = dest_addr;
+        xc->mem->write(memReq, data);
+    }
+    return fault;
+}
+
 // precise architected memory state accessor macros
 template <class T>
 Fault
