@@ -1,4 +1,5 @@
 simobj BaseCPU(SimObject):
+    type = 'BaseCPU'
     abstract = True
     icache = Param.BaseMem(NULL, "L1 instruction cache object")
     dcache = Param.BaseMem(NULL, "L1 data cache object")
@@ -18,7 +19,7 @@ simobj BaseCPU(SimObject):
     max_loads_any_thread = Param.Counter(0,
         "terminate when any thread reaches this load count")
 
-    defer_registration = Param.Bool(false,
+    defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")
 
     def check(self):

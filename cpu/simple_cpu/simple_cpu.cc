@@ -74,6 +74,7 @@
 
 using namespace std;
 
+
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c)
     : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c), multiplier(1)
 {

@@ -26,24 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>	// for host open() flags
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>	// for memset()
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>	// for host open() flags
+#include <string.h>	// for memset()
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "sim/host.hh"
 #include "cpu/base_cpu.hh"
-#include "mem/functional_mem/functional_memory.hh"
-#include "sim/process.hh"
 #include "cpu/exec_context.hh"
+#include "mem/functional_mem/functional_memory.hh"
 #include "sim/fake_syscall.hh"
+#include "sim/host.hh"
+#include "sim/process.hh"
 #include "sim/sim_events.hh"
 
-#include "sim/syscall_emul.hh"
 #include "arch/alpha/alpha_common_syscall_emul.hh"
+#include "sim/syscall_emul.hh"
 #include "sim/universe.hh"	// for curTick & ticksPerSecond
 
 #include "arch/alpha/alpha_linux_process.hh"

@@ -30,6 +30,7 @@
 #define __BASE_RANGE_HH__
 
 #include <cassert>
+#include <iostream>
 #include <string>
 
 /**

@@ -790,48 +790,14 @@ output header {{
       protected:
 	/// Constructor
 	MemoryNoDisp(const char *mnem, MachInst _machInst, OpClass __opClass,
-		     StaticInstPtr<AlphaISA> _eaCompPtr,
-		     StaticInstPtr<AlphaISA> _memAccPtr)
+		     StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+		     StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
 	    : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
 	{
 	}
 
 	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
-
-
-    /**
-     * Base class for "fake" effective-address computation
-     * instructions returnded by eaCompInst().
-     */
-    class EACompBase : public AlphaStaticInst
-    {
-      public:
-	/// Constructor
-	EACompBase(MachInst machInst)
-	    : AlphaStaticInst("(eacomp)", machInst, IntAluOp)
-	{
-	}
-
-	%(BasicExecDeclare)s
-    };
-
-    /**
-     * Base class for "fake" memory-access instructions returnded by
-     * memAccInst().
-     */
-    class MemAccBase : public AlphaStaticInst
-    {
-      public:
-	/// Constructor
-	MemAccBase(MachInst machInst, OpClass __opClass)
-	    : AlphaStaticInst("(memacc)", machInst, __opClass)
-	{
-	}
-
-	%(BasicExecDeclare)s
-    };
-
 }};
 
 
@@ -849,21 +815,6 @@ output decoder {{
 	return csprintf("%-10s (r%d)", mnemonic, RB);
     }
 }};
-
-output exec {{
-    Fault
-    EACompBase::execute(%(CPU_exec_context)s *, Trace::InstRecord *)
-    {
-	panic("attempt to execute eacomp");
-    }
-
-    Fault
-    MemAccBase::execute(%(CPU_exec_context)s *, Trace::InstRecord *)
-    {
-	panic("attempt to execute memacc");
-    }
-}};
-
 
 def format LoadAddress(code) {{
     iop = InstObjParams(name, Name, 'MemoryDisp32', CodeBlock(code))
@@ -885,21 +836,25 @@ def template LoadStoreDeclare {{
 	/**
 	 * "Fake" effective address computation class for "%(mnemonic)s".
 	 */
-	class EAComp : public EACompBase
+	class EAComp : public %(base_class)s
 	{
 	  public:
 	    /// Constructor
 	    EAComp(MachInst machInst);
+
+            %(BasicExecDeclare)s
 	};
 
 	/**
 	 * "Fake" memory access instruction class for "%(mnemonic)s".
 	 */
-	class MemAcc : public MemAccBase
+	class MemAcc : public %(base_class)s
 	{
 	  public:
 	    /// Constructor
 	    MemAcc(MachInst machInst);
+
+            %(BasicExecDeclare)s
 	};
 
       public:
@@ -912,14 +867,17 @@ def template LoadStoreDeclare {{
 }};
 
 def template LoadStoreConstructor {{
+    /** TODO: change op_class to AddrGenOp or something (requires
+     * creating new member of OpClass enum in op_class.hh, updating
+     * config files, etc.). */
     inline %(class_name)s::EAComp::EAComp(MachInst machInst)
-	: EACompBase(machInst)
+	: %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
     {
 	%(ea_constructor)s;
     }
 
     inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
-	: MemAccBase(machInst, %(op_class)s)
+	: %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
     {
 	%(memacc_constructor)s;
     }
@@ -931,6 +889,64 @@ def template LoadStoreConstructor {{
 	%(constructor)s;
     }
 }};
+
+
+def template EACompExecute {{
+    Fault
+    %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
+				   Trace::InstRecord *traceData)
+    {
+	Addr EA;
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_rd)s;
+	%(code)s;
+
+	if (fault == No_Fault) {
+	    %(op_wb)s;
+	    xc->setEA(EA);
+	}
+
+	return fault;
+    }
+}};
+
+def template MemAccExecute {{
+    Fault
+    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+				   Trace::InstRecord *traceData)
+    {
+	Addr EA;
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_nonmem_rd)s;
+	EA = xc->getEA();
+	
+	if (fault == No_Fault) {
+	    %(op_mem_rd)s;
+	    %(code)s;
+	}
+
+	if (fault == No_Fault) {
+	    %(op_mem_wb)s;
+	}
+
+	if (fault == No_Fault) {
+	    %(postacc_code)s;
+	}
+
+	if (fault == No_Fault) {
+	    %(op_nonmem_wb)s;
+	}
+
+	return fault;
+    }
+}};
+
 
 def template LoadStoreExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
@@ -1022,18 +1038,33 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
 
     # Would be nice to autogenerate this list, but oh well.
     valid_mem_flags = ['LOCKED', 'NO_FAULT', 'EVICT_NEXT', 'PF_EXCLUSIVE']
-    inst_flags = []
-    mem_flags = []
-    for f in flags:
-	if f in valid_mem_flags:
-	    mem_flags.append(f)
-        else:
-            inst_flags.append(f)
+    mem_flags =  [f for f in flags if f in valid_mem_flags]
+    inst_flags = [f for f in flags if f not in valid_mem_flags]
 
+    # add hook to get effective addresses into execution trace output.
+    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
+
+    # generate code block objects
     ea_cblk = CodeBlock(ea_code)
     memacc_cblk = CodeBlock(memacc_code)
     postacc_cblk = CodeBlock(postacc_code)
 
+    # Some CPU models execute the memory operation as an atomic unit,
+    # while others want to separate them into an effective address
+    # computation and a memory access operation.  As a result, we need
+    # to generate three StaticInst objects.  Note that the latter two
+    # are nested inside the larger "atomic" one.
+
+    # generate InstObjParams for EAComp object
+    ea_iop = InstObjParams(name, Name, base_class, ea_cblk, inst_flags)
+    
+    # generate InstObjParams for MemAcc object
+    memacc_iop = InstObjParams(name, Name, base_class, memacc_cblk, inst_flags)
+    # in the split execution model, the MemAcc portion is responsible
+    # for the post-access code.
+    memacc_iop.postacc_code = postacc_cblk.code
+
+    # generate InstObjParams for unified execution
     cblk = CodeBlock(ea_code + memacc_code + postacc_code)
     iop = InstObjParams(name, Name, base_class, cblk, inst_flags)
 
@@ -1043,13 +1074,17 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
     iop.memacc_code = memacc_cblk.code
     iop.postacc_code = postacc_cblk.code
 
-    mem_flags = string.join(mem_flags, '|')
-    if mem_flags != '':
-        iop.constructor += '\n\tmemAccessFlags = ' + mem_flags + ';'
+    if mem_flags:
+        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
+        iop.constructor += s
+        memacc_iop.constructor += s
 
     # (header_output, decoder_output, decode_block, exec_output)
     return (LoadStoreDeclare.subst(iop), LoadStoreConstructor.subst(iop),
-	    decode_template.subst(iop), exec_template.subst(iop))
+	    decode_template.subst(iop),
+            EACompExecute.subst(ea_iop)
+            + MemAccExecute.subst(memacc_iop)
+            + exec_template.subst(iop))
 }};
 
 
@@ -1460,8 +1495,8 @@ output header {{
 
 	/// Constructor
 	HwLoadStore(const char *mnem, MachInst _machInst, OpClass __opClass,
-		    StaticInstPtr<AlphaISA> _eaCompPtr,
-		    StaticInstPtr<AlphaISA> _memAccPtr);
+		    StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+		    StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr);
 
 	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };

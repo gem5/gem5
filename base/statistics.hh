@@ -407,7 +407,7 @@ class Wrap : public Child
   public:
     Wrap()
     {
-        this->map(new Data<Child>(*this));
+      map(new Data<Child>(*this));
     }
 
     /**
@@ -417,10 +417,10 @@ class Wrap : public Child
      */
     Parent &name(const std::string &_name)
     {
-        Data<Child> *data = statData();
+        Data<Child> *data = this->statData();
         data->name = _name;
-        setPrint();
-        return self();
+        this->setPrint();
+        return this->self();
     }
 
     /**
@@ -431,8 +431,8 @@ class Wrap : public Child
      */
     Parent &desc(const std::string &_desc)
     {
-        statData()->desc = _desc;
-        return self();
+        this->statData()->desc = _desc;
+        return this->self();
     }
 
     /**
@@ -442,8 +442,8 @@ class Wrap : public Child
      */
     Parent &precision(int _precision)
     {
-        statData()->precision = _precision;
-        return self();
+        this->statData()->precision = _precision;
+        return this->self();
     }
 
     /**
@@ -453,8 +453,8 @@ class Wrap : public Child
      */
     Parent &flags(StatFlags _flags)
     {
-        statData()->flags |= _flags;
-        return self();
+        this->statData()->flags |= _flags;
+        return this->self();
     }
 
     /**
@@ -466,8 +466,8 @@ class Wrap : public Child
     template <class Stat>
     Parent &prereq(const Stat &prereq)
     {
-        statData()->prereq = prereq.statData();
-        return self();
+        this->statData()->prereq = prereq.statData();
+        return this->self();
     }
 };
 
@@ -487,11 +487,11 @@ class WrapVec : public Wrap<Parent, Child, Data>
      */
     Parent &subname(int index, const std::string &name)
     {
-        std::vector<std::string> &subn = statData()->subnames;
+        std::vector<std::string> &subn = this->statData()->subnames;
         if (subn.size() <= index)
             subn.resize(index + 1);
         subn[index] = name;
-        return self();
+        return this->self();
     }
 
     /**
@@ -503,12 +503,12 @@ class WrapVec : public Wrap<Parent, Child, Data>
      */
     Parent &subdesc(int index, const std::string &desc)
     {
-        std::vector<std::string> &subd = statData()->subdescs;
+        std::vector<std::string> &subd = this->statData()->subdescs;
         if (subd.size() <= index)
             subd.resize(index + 1);
         subd[index] = desc;
 
-        return self();
+        return this->self();
     }
 
 };
@@ -523,19 +523,19 @@ class WrapVec2d : public WrapVec<Parent, Child, Data>
      */
     Parent &ysubnames(const char **names)
     {
-        Data<Child> *data = statData();
-        data->y_subnames.resize(y);
-        for (int i = 0; i < y; ++i)
+        Data<Child> *data = this->statData();
+        data->y_subnames.resize(this->y);
+        for (int i = 0; i < this->y; ++i)
             data->y_subnames[i] = names[i];
-        return self();
+        return this->self();
     }
     Parent &ysubname(int index, const std::string subname)
     {
-        Data<Child> *data = statData();
-        assert(index < y);
-        data->y_subnames.resize(y);
+        Data<Child> *data = this->statData();
+        assert(index < this->y);
+        data->y_subnames.resize(this->y);
         data->y_subnames[index] = subname.c_str();
-        return self();
+        return this->self();
     }
 };
 
@@ -711,7 +711,7 @@ class ScalarBase : public DataAccess
     /** Define the params of the storage class. */
     typedef typename Storage::Params params_t;
     /** Define the bin type. */
-    typedef typename Bin::Bin<Storage> bin_t;
+    typedef typename Bin::template Bin<Storage> bin_t;
 
   protected:
     /** The bin of this stat. */
@@ -914,7 +914,7 @@ class VectorBase : public DataAccess
     /** Define the params of the storage class. */
     typedef typename Storage::Params params_t;
     /** Define the bin type. */
-    typedef typename Bin::VectorBin<Storage> bin_t;
+    typedef typename Bin::template VectorBin<Storage> bin_t;
 
   protected:
     /** The bin of this stat. */
@@ -1022,7 +1022,7 @@ class ScalarProxy
     /** Define the params of the storage class. */
     typedef typename Storage::Params params_t;
     /** Define the bin type. */
-    typedef typename Bin::VectorBin<Storage> bin_t;
+    typedef typename Bin::template VectorBin<Storage> bin_t;
 
   private:
     /** Pointer to the bin in the parent VectorBase. */
@@ -1155,7 +1155,7 @@ class ScalarProxy
     const StatData *statData() const { return getStatData(stat); }
     std::string str() const
     {
-        return csprintf("%s[%d]", statData()->name, index);
+        return csprintf("%s[%d]", this->statData()->name, index);
 
     }
 };
@@ -1176,7 +1176,7 @@ class Vector2dBase : public DataAccess
 {
   public:
     typedef typename Storage::Params params_t;
-    typedef typename Bin::VectorBin<Storage> bin_t;
+    typedef typename Bin::template VectorBin<Storage> bin_t;
 
   protected:
     size_t x;
@@ -1204,7 +1204,7 @@ class Vector2dBase : public DataAccess
             data->cvec[i] = this->data(i)->value(params);
     }
 
-    std::string ysubname(int i) const { return (*y_subnames)[i]; }
+    std::string ysubname(int i) const { return (*this->y_subnames)[i]; }
 
     friend class VectorProxy<Storage, Bin>;
     VectorProxy<Storage, Bin> operator[](int index);
@@ -1225,7 +1225,7 @@ class VectorProxy
 {
   public:
     typedef typename Storage::Params params_t;
-    typedef typename Bin::VectorBin<Storage> bin_t;
+    typedef typename Bin::template VectorBin<Storage> bin_t;
 
   private:
     bin_t *bin;
@@ -1622,7 +1622,7 @@ class DistBase : public DataAccess
     /** Define the params of the storage class. */
     typedef typename Storage::Params params_t;
     /** Define the bin type. */
-    typedef typename Bin::Bin<Storage> bin_t;
+    typedef typename Bin::template Bin<Storage> bin_t;
 
   protected:
     /** The bin of this stat. */
@@ -1698,7 +1698,7 @@ class VectorDistBase : public DataAccess
 {
   public:
     typedef typename Storage::Params params_t;
-    typedef typename Bin::VectorBin<Storage> bin_t;
+    typedef typename Bin::template VectorBin<Storage> bin_t;
 
   protected:
     bin_t bin;
@@ -1749,7 +1749,7 @@ class DistProxy
 {
   public:
     typedef typename Storage::Params params_t;
-    typedef typename Bin::Bin<Storage> bin_t;
+    typedef typename Bin::template Bin<Storage> bin_t;
     typedef VectorDistBase<Storage, Bin> base_t;
 
   private:
@@ -2206,7 +2206,7 @@ class Scalar
 
     Scalar()
     {
-        setInit();
+        this->setInit();
     }
 
     /**
@@ -2258,7 +2258,7 @@ class Average
 
     Average()
     {
-        setInit();
+        this->setInit();
     }
 
     /**
@@ -2290,8 +2290,8 @@ class Vector
      * @return A reference to this stat.
      */
     Vector &init(size_t size) {
-        bin.init(size, params);
-        setInit();
+        this->bin.init(size, this->params);
+        this->setInit();
 
         return *this;
     }
@@ -2314,8 +2314,8 @@ class AverageVector
      * @return A reference to this stat.
      */
     AverageVector &init(size_t size) {
-        bin.init(size, params);
-        setInit();
+        this->bin.init(size, this->params);
+        this->setInit();
 
         return *this;
     }
@@ -2333,10 +2333,10 @@ class Vector2d
 {
   public:
     Vector2d &init(size_t _x, size_t _y) {
-        statData()->x = x = _x;
-        statData()->y = y = _y;
-        bin.init(x * y, params);
-        setInit();
+        this->statData()->x = this->x = _x;
+        this->statData()->y = this->y = _y;
+        this->bin.init(this->x * this->y, this->params);
+        this->setInit();
 
         return *this;
     }
@@ -2367,12 +2367,12 @@ class Distribution
      * @return A reference to this distribution.
      */
     Distribution &init(Counter min, Counter max, Counter bkt) {
-        params.min = min;
-        params.max = max;
-        params.bucket_size = bkt;
-        params.size = (int)rint((max - min) / bkt + 1.0);
-        bin.init(params);
-        setInit();
+        this->params.min = min;
+        this->params.max = max;
+        this->params.bucket_size = bkt;
+        this->params.size = (int)rint((max - min) / bkt + 1.0);
+        this->bin.init(this->params);
+        this->setInit();
 
         return *this;
     }
@@ -2399,8 +2399,8 @@ class StandardDeviation
      * Construct and initialize this distribution.
      */
     StandardDeviation() {
-        bin.init(params);
-        setInit();
+        this->bin.init(this->params);
+        this->setInit();
     }
 };
 
@@ -2426,8 +2426,8 @@ class AverageDeviation
      */
     AverageDeviation()
     {
-        bin.init(params);
-        setInit();
+        this->bin.init(this->params);
+        this->setInit();
     }
 };
 
@@ -2457,12 +2457,12 @@ class VectorDistribution
      * @return A reference to this distribution.
      */
     VectorDistribution &init(int size, Counter min, Counter max, Counter bkt) {
-        params.min = min;
-        params.max = max;
-        params.bucket_size = bkt;
-        params.size = (int)rint((max - min) / bkt + 1.0);
-        bin.init(size, params);
-        setInit();
+        this->params.min = min;
+        this->params.max = max;
+        this->params.bucket_size = bkt;
+        this->params.size = (int)rint((max - min) / bkt + 1.0);
+        this->bin.init(size, this->params);
+        this->setInit();
 
         return *this;
     }
@@ -2491,8 +2491,8 @@ class VectorStandardDeviation
      * @return A reference to this distribution.
      */
     VectorStandardDeviation &init(int size) {
-        bin.init(size, params);
-        setInit();
+        this->bin.init(size, this->params);
+        this->setInit();
 
         return *this;
     }
@@ -2521,8 +2521,8 @@ class VectorAverageDeviation
      * @return A reference to this distribution.
      */
     VectorAverageDeviation &init(int size) {
-        bin.init(size, params);
-        setInit();
+        this->bin.init(size, this->params);
+        this->setInit();
 
         return *this;
     }

@@ -30,8 +30,8 @@
  * EventQueue interfaces
  */
 
-#ifndef __EVENTQ_HH__
-#define __EVENTQ_HH__
+#ifndef __SIM_EVENTQ_HH__
+#define __SIM_EVENTQ_HH__
 
 #include <assert.h>
 
@@ -43,10 +43,23 @@
 #include "sim/host.hh"	// for Tick
 
 #include "base/fast_alloc.hh"
-#include "sim/serialize.hh"
 #include "base/trace.hh"
+#include "sim/serialize.hh"
 
 class EventQueue;	// forward declaration
+
+//////////////////////
+//
+// Main Event Queue
+//
+// Events on this queue are processed at the *beginning* of each
+// cycle, before the pipeline simulation is performed.
+//
+// defined in eventq.cc
+//
+//////////////////////
+extern EventQueue mainEventQueue;
+
 
 /*
  * An item on an event queue.  The action caused by a given
@@ -228,7 +241,7 @@ DelayFunction(Tick when, T *object)
       public:
         DelayEvent(Tick when, T *o)
             : Event(&mainEventQueue), object(o)
-            { setFlags(AutoDestroy); schedule(when); }
+            { setFlags(this->AutoDestroy); schedule(when); }
         void process() { (object->*F)(); }
         const char *description() { return "delay"; }
     };
@@ -386,16 +399,5 @@ EventQueue::reschedule(Event *event)
 }
 
 
-//////////////////////
-//
-// Main Event Queue
-//
-// Events on this queue are processed at the *beginning* of each
-// cycle, before the pipeline simulation is performed.
-//
-// defined in eventq.cc
-//
-//////////////////////
-extern EventQueue mainEventQueue;
 
-#endif // __EVENTQ_HH__
+#endif // __SIM_EVENTQ_HH__

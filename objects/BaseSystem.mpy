@@ -1,4 +1,5 @@
 simobj BaseSystem(SimObject):
+    type = 'BaseSystem'
     abstract = True
     memctrl = Param.MemoryController(Super, "memory controller")
     physmem = Param.PhysicalMemory(Super, "phsyical memory")
@@ -10,5 +11,5 @@ simobj BaseSystem(SimObject):
     boot_osflags = Param.String("a", "boot flags to pass to the kernel")
     system_type = Param.UInt64("Type of system we are emulating")
     system_rev = Param.UInt64("Revision of system we are emulating")
-    bin = Param.Bool(false, "is this system binned")
+    bin = Param.Bool(False, "is this system binned")
     binned_fns = VectorParam.String([], "functions broken down and binned")

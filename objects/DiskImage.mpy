@@ -1,12 +1,14 @@
 simobj DiskImage(SimObject):
+    type = 'DiskImage'
     abstract = True
     image_file = Param.String("disk image file")
-    read_only = Param.Bool(false, "read only image")
+    read_only = Param.Bool(False, "read only image")
 
 simobj RawDiskImage(DiskImage):
-    pass
+    type = 'RawDiskImage'
 
 simobj CowDiskImage(DiskImage):
+    type = 'CowDiskImage'
     child = Param.DiskImage("child image")
     table_size = Param.Int(65536, "initial table size")
     image_file = ''

@@ -1,9 +1,12 @@
 simobj AlphaTLB(SimObject):
+    type = 'AlphaTLB'
     abstract = True
     size = Param.Int("TLB size")
 
 simobj AlphaDTB(AlphaTLB):
+    type = 'AlphaDTB'
     size = 64
 
 simobj AlphaITB(AlphaTLB):
+    type = 'AlphaITB'
     size = 48

@@ -59,7 +59,7 @@ class Base : public PciDev
     void cpuIntrClear();
 
     typedef EventWrapper<Base, &Base::cpuInterrupt> IntrEvent;
-    friend class IntrEvent;
+    friend void IntrEvent::process();
     IntrEvent *intrEvent;
     Interface *interface;
 
@@ -155,12 +155,12 @@ class Device : public Base
     void rxKick();
     Tick rxKickTick;
     typedef EventWrapper<Device, &Device::rxKick> RxKickEvent;
-    friend class RxKickEvent;
+    friend void RxKickEvent::process();
 
     void txKick();
     Tick txKickTick;
     typedef EventWrapper<Device, &Device::txKick> TxKickEvent;
-    friend class TxKickEvent;
+    friend void TxKickEvent::process();
 
     /**
      * Retransmit event
@@ -173,7 +173,7 @@ class Device : public Base
             txKick();
     }
     typedef EventWrapper<Device, &Device::txEventTransmit> TxEvent;
-    friend class TxEvent;
+    friend void TxEvent::process();
     TxEvent txEvent;
 
     void txDump() const;
@@ -262,6 +262,10 @@ class Device : public Base
 
     Stats::Scalar<> txBytes;
     Stats::Formula  txBandwidth;
+    Stats::Formula totBandwidth;
+    Stats::Formula totPackets;
+    Stats::Formula totBytes;
+    Stats::Formula totPacketRate;
     Stats::Scalar<> txPackets;
     Stats::Formula  txPacketRate;
     Stats::Scalar<> txIpPackets;

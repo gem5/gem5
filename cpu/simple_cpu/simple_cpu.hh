@@ -26,15 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIMPLE_CPU_HH__
-#define __SIMPLE_CPU_HH__
+#ifndef __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
+#define __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
 
-#include "cpu/base_cpu.hh"
-#include "sim/eventq.hh"
-#include "cpu/pc_event.hh"
 #include "base/statistics.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
+#include "sim/eventq.hh"
 
 // forward declarations
 #ifdef FULL_SYSTEM
@@ -102,12 +102,6 @@ class SimpleCPU : public BaseCPU
 
   private:
     Trace::InstRecord *traceData;
-    template<typename T>
-    void trace_data(T data) {
-      if (traceData) {
-        traceData->setData(data);
-      }
-    };
 
   public:
     //
@@ -249,6 +243,11 @@ class SimpleCPU : public BaseCPU
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
+    // These functions are only used in CPU models that split
+    // effective address computation from the actual memory access.
+    void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
+    Addr getEA() 	{ panic("SimpleCPU::getEA() not implemented\n"); }
+
     void prefetch(Addr addr, unsigned flags)
     {
         // need to do this...
@@ -346,4 +345,4 @@ class SimpleCPU : public BaseCPU
     ExecContext *xcBase() { return xc; }
 };
 
-#endif // __SIMPLE_CPU_HH__
+#endif // __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__

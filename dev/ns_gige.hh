@@ -261,12 +261,12 @@ class NSGigE : public PciDev
     void rxKick();
     Tick rxKickTick;
     typedef EventWrapper<NSGigE, &NSGigE::rxKick> RxKickEvent;
-    friend class RxKickEvent;
+    friend void RxKickEvent::process();
 
     void txKick();
     Tick txKickTick;
     typedef EventWrapper<NSGigE, &NSGigE::txKick> TxKickEvent;
-    friend class TxKickEvent;
+    friend void TxKickEvent::process();
 
     /**
      * Retransmit event
@@ -279,7 +279,7 @@ class NSGigE : public PciDev
             txKick();
     }
     typedef EventWrapper<NSGigE, &NSGigE::txEventTransmit> TxEvent;
-    friend class TxEvent;
+    friend void TxEvent::process();
     TxEvent txEvent;
 
     void txDump() const;
@@ -313,7 +313,7 @@ class NSGigE : public PciDev
     void cpuIntrClear();
 
     typedef EventWrapper<NSGigE, &NSGigE::cpuInterrupt> IntrEvent;
-    friend class IntrEvent;
+    friend void IntrEvent::process();
     IntrEvent *intrEvent;
     NSGigEInt *interface;
 
@@ -379,6 +379,10 @@ class NSGigE : public PciDev
     Stats::Scalar<> descDmaWrites;
     Stats::Scalar<> descDmaRdBytes;
     Stats::Scalar<> descDmaWrBytes;
+    Stats::Formula totBandwidth;
+    Stats::Formula totPackets;
+    Stats::Formula totBytes;
+    Stats::Formula totPacketRate;
     Stats::Formula txBandwidth;
     Stats::Formula rxBandwidth;
     Stats::Formula txPacketRate;

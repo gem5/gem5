@@ -352,7 +352,7 @@ res_list<T>::insert_after(iterator prev, T *d)
     iterator p;
 
     if (!allocate_storage)
-        panic("Can't copy data... not allocating storage");
+        this->panic("Can't copy data... not allocating storage");
 
     p = insert_after(prev);
     if (p.notnull())

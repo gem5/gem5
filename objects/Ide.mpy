@@ -3,10 +3,12 @@ from Pci import PciDevice
 IdeID = Enum('master', 'slave')
 
 simobj IdeDisk(SimObject):
+    type = 'IdeDisk'
     delay = Param.Tick(1, "Fixed disk delay in microseconds")
     driveID = Param.IdeID('master', "Drive ID")
     image = Param.DiskImage("Disk image")
     physmem = Param.PhysicalMemory(Super, "Physical memory")
 
 simobj IdeController(PciDevice):
+    type = 'IdeController'
     disks = VectorParam.IdeDisk("IDE disks attached to this controller")

@@ -493,11 +493,11 @@ EnumVectorParam<Map>::showType(ostream &os) const
     showEnumType(os, map, num_values);
 }
 
-template EnumParam<const char *>;
-template EnumVectorParam<const char *>;
+template class EnumParam<const char *>;
+template class EnumVectorParam<const char *>;
 
-template EnumParam<EnumParamMap>;
-template EnumVectorParam<EnumParamMap>;
+template class EnumParam<EnumParamMap>;
+template class EnumVectorParam<EnumParamMap>;
 
 ////////////////////////////////////////////////////////////////////////
 //

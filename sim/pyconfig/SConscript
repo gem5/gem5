@@ -28,14 +28,15 @@
 
 import os, os.path, re
 
-def WriteEmbeddedPyFile(target, source, path, name, ext):
+def WriteEmbeddedPyFile(target, source, path, name, ext, filename):
     if isinstance(source, str):
         source = file(source, 'r')
 
     if isinstance(target, str):
         target = file(target, 'w')
 
-    print >>target, "AddModule(%s, %s, %s, '''\\" % (`path`, `name`, `ext`)
+    print >>target, "AddModule(%s, %s, %s, %s, '''\\" % \
+          (`path`, `name`, `ext`, `filename`)
 
     for line in source:
         line = line
@@ -105,7 +106,7 @@ def MakeEmbeddedPyFile(target, source, env):
         name,ext = pyfile.split('.')
         if name == '__init__':
             node['.hasinit'] = True
-        node[pyfile] = (src,name,ext)
+        node[pyfile] = (src,name,ext,src)
 
     done = False
     while not done:
@@ -136,12 +137,12 @@ def MakeEmbeddedPyFile(target, source, env):
                     raise NameError, 'package directory missing __init__.py'
                 populate(entry, path + [ name ])
             else:
-                pyfile,name,ext = entry
-                files.append((pyfile, path, name, ext))
+                pyfile,name,ext,filename = entry
+                files.append((pyfile, path, name, ext, filename))
     populate(tree)
 
-    for pyfile, path, name, ext in files:
-        WriteEmbeddedPyFile(target, pyfile, path, name, ext)
+    for pyfile, path, name, ext, filename in files:
+        WriteEmbeddedPyFile(target, pyfile, path, name, ext, filename)
 
 CFileCounter = 0
 def MakePythonCFile(target, source, env):

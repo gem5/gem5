@@ -31,7 +31,7 @@ sys.path.append('..')
 sys.path.append('../configs/kernel')
 sys.path.append('../sim/pyconfig')
 
-from importer import mpy_exec, AddToPath
+from importer import mpy_exec, mpy_execfile, AddToPath
 from m5config import *
 
 try:
@@ -51,7 +51,7 @@ except getopt.GetoptError:
 
 for arg in args:
     AddToPath(os.path.dirname(arg))
-    mpy_exec(file(arg, 'r'), globals())
+    mpy_execfile(arg)
 
 if globals().has_key('root') and isinstance(root, type) \
        and issubclass(root, Root):

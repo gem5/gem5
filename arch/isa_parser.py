@@ -1213,10 +1213,12 @@ class MemOperandTraits(OperandTraits):
     def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         eff_type = 'uint%d_t' % size
-        return 'fault = xc->write((%s&)%s, EA, %s_flags,' \
-               ' &%s_write_result);\n' \
+        wb = 'fault = xc->write((%s&)%s, EA, %s_flags, &%s_write_result);\n' \
                % (eff_type, op_desc.munged_name, op_desc.base_name,
                   op_desc.base_name)
+        wb += 'if (traceData) { traceData->setData(%s); }' % \
+              op_desc.munged_name
+        return wb
 
 class NPCOperandTraits(OperandTraits):
     def makeConstructor(self, op_desc):

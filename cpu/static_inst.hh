@@ -441,7 +441,7 @@ class StaticInstPtr : public RefCountingPtr<StaticInst<ISA> >
     /// Convert to pointer to StaticInstBase class.
     operator const StaticInstBasePtr()
     {
-        return get();
+        return this->get();
     }
 };
 

@@ -2,10 +2,23 @@
 from __future__ import division
 import re, sys, math
 
+
 def usage():
     print '''\
 Usage: %s [-E] [-F] [-d <db> ] [-g <get> ] [-h <host>] [-p]
-       [-s <system>] [-r <runs> ] [-u <username>] <command> [command args]
+       [-s <system>] [-r <runs> ] [-T <samples>] [-u <username>]
+       <command> [command args]
+
+       commands    extra parameters   description
+       ----------- ------------------ ---------------------------------------
+       bins        [regex]            List bins (only matching regex)
+       formula     <formula>          Evaluated formula specified
+       formulas    [regex]            List formulas (only matching regex)
+       runs        none               List all runs in database
+       samples     none               List samples present in database
+       stability   <pairnum> <stats>  Calculated statistical info about stats
+       stat        <regex>            Show stat data (only matching regex)
+       stats       [regex]            List all stats (only matching regex)
 ''' % sys.argv[0]
     sys.exit(1)
 
@@ -250,54 +263,84 @@ def commands(options, command, args):
         return
 
     if command == 'stability':
-        stats = info.source.getStat(args[0])
-        info.source.get = "avg"
+        if len(args) < 2:
+            raise CommandException
+
+        try:
+            merge = int(args[0])
+        except ValueError:
+            usage()
+        stats = info.source.getStat(args[1])
+        info.source.get = "sum"
+
 
         #loop through all the stats selected
         for stat in stats:
 
             print "%s:" % stat.name
-            print "%-30s %12s %12s %4s %5s %5s %5s" % \
-                  ("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV", "SAMP")
-            print "%-30s %12s %12s %4s %5s %5s %5s" % \
-                  ("------------------------------", "------------",
-                   "------------", "----", "-----", "-----", "-----")
+            print "%-20s %12s %12s %4s %5s %5s %5s %10s" % \
+                  ("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV", "SAMP", "CV")
+            print "%-20s %12s %12s %4s %5s %5s %5s %10s" % \
+                  ("--------------------", "------------",
+                   "------------", "----", "-----", "-----", "-----", "----------")
             #loop through all the selected runs
             for run in runs:
                 info.display_run = run.run;
                 runTicks = info.source.retTicks([ run ])
                 #throw away the first one, it's 0
                 runTicks.pop(0)
-                stat.ticks = runTicks
-                avg = float(stat)
+                info.globalTicks = runTicks
+                avg = 0
                 stdev = 0
                 numoutsideavg  = 0
                 numoutside1std = 0
                 numoutside2std = 0
-
+                pairRunTicks = []
+                if float(stat) == 1e300*1e300:
+                    continue
+                for t in range(0, len(runTicks)-(merge-1), merge):
+                    tempPair = []
+                    for p in range(0,merge):
+                        tempPair.append(runTicks[t+p])
+                    pairRunTicks.append(tempPair)
                 #loop through all the various ticks for each run
-                for tick in runTicks:
-                    stat.ticks = str(tick)
+                for tick in pairRunTicks:
+                    info.globalTicks = tick
+                    avg += float(stat)
+                avg /= len(pairRunTicks)
+                for tick in pairRunTicks:
+                    info.globalTicks = tick
+                    val = float(stat)
+                    stdev += pow((val-avg),2)
+                stdev = math.sqrt(stdev / len(pairRunTicks))
+                for tick in pairRunTicks:
+                    info.globalTicks = tick
                     val = float(stat)
                     if (val < (avg * .9)) or (val > (avg * 1.1)):
                         numoutsideavg += 1
-                    stdev += pow((val-avg),2)
-
-                stdev = math.sqrt(stdev / len(runTicks))
-                for tick in runTicks:
-                    stat.ticks = str(tick)
-                    val = float(stat)
                     if (val < (avg - stdev)) or (val > (avg + stdev)):
                         numoutside1std += 1
                     if (val < (avg - (2*stdev))) or (val > (avg + (2*stdev))):
                         numoutside2std += 1
-
-                print "%-30s %12s %12s %4s %5s %5s %5s" % \
-                      (run.name, "%.1f" % avg, "%.1f" % stdev,
-                       "%d" % numoutsideavg, "%d" % numoutside1std,
-                       "%d" % numoutside2std, "%d" % len(runTicks))
+                if avg > 1000:
+                    print "%-20s %12s %12s %4s %5s %5s %5s %10s" % \
+                          (run.name, "%.1f" % avg, "%.1f" % stdev,
+                           "%d" % numoutsideavg, "%d" % numoutside1std,
+                           "%d" % numoutside2std, "%d" % len(pairRunTicks),
+                           "%.3f" % (stdev/avg*100))
+                elif avg > 100:
+                    print "%-20s %12s %12s %4s %5s %5s %5s %10s" % \
+                          (run.name, "%.1f" % avg, "%.1f" % stdev,
+                           "%d" % numoutsideavg, "%d" % numoutside1std,
+                           "%d" % numoutside2std, "%d" % len(pairRunTicks),
+                           "%.5f" % (stdev/avg*100))
+                else:
+                    print "%-20s %12s %12s %4s %5s %5s %5s %10s" % \
+                          (run.name, "%.5f" % avg, "%.5f" % stdev,
+                           "%d" % numoutsideavg, "%d" % numoutside1std,
+                           "%d" % numoutside2std, "%d" % len(pairRunTicks),
+                           "%.7f" % (stdev/avg*100))
         return
-
 
     if command == 'stats':
         if len(args) == 0:
@@ -320,7 +363,7 @@ def commands(options, command, args):
             else:
                 if options.ticks:
                    print 'only displaying sample %s' % options.ticks
-                   stat.ticks = options.ticks
+                   info.globalTicks = [ int(x) for x in options.ticks.split() ]
 
                 if options.binned:
                     print 'kernel ticks'

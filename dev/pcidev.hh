@@ -78,10 +78,6 @@ class PciConfigData : public SimObject
  */
 class PciDev : public DmaDevice
 {
-  protected:
-    struct Params;
-    Params *_params;
-
   public:
     struct Params
     {
@@ -110,6 +106,11 @@ class PciDev : public DmaDevice
         /** The function number */
         uint32_t functionNum;
     };
+
+  protected:
+    Params *_params;
+
+  public:
     const Params *params() const { return _params; }
 
   protected:

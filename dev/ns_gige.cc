@@ -244,7 +244,6 @@ NSGigE::regStats()
         .precision(0)
         ;
 
-
     txBandwidth
         .name(name() + ".txBandwidth")
         .desc("Transmit Bandwidth (bits/s)")
@@ -257,6 +256,34 @@ NSGigE::regStats()
         .desc("Receive Bandwidth (bits/s)")
         .precision(0)
         .prereq(rxBytes)
+        ;
+
+    totBandwidth
+        .name(name() + ".totBandwidth")
+        .desc("Total Bandwidth (bits/s)")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totPackets
+        .name(name() + ".totPackets")
+        .desc("Total Packets")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totBytes
+        .name(name() + ".totBytes")
+        .desc("Total Bytes")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totPacketRate
+        .name(name() + ".totPPS")
+        .desc("Total Tranmission Rate (packets/s)")
+        .precision(0)
+        .prereq(totBytes)
         ;
 
     txPacketRate
@@ -449,6 +476,10 @@ NSGigE::regStats()
 
     txBandwidth = txBytes * Stats::constant(8) / simSeconds;
     rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
+    totBandwidth = txBandwidth + rxBandwidth;
+    totBytes = txBytes + rxBytes;
+    totPackets = txPackets + rxPackets;
+
     txPacketRate = txPackets / simSeconds;
     rxPacketRate = rxPackets / simSeconds;
 }
@@ -2352,6 +2383,7 @@ NSGigE::serialize(ostream &os)
     bool txPacketExists = txPacket;
     SERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
+        txPacket->length = txPacketBufPtr - txPacket->data;
         txPacket->serialize("txPacket", os);
         uint32_t txPktBufPtr = (uint32_t) (txPacketBufPtr - txPacket->data);
         SERIALIZE_SCALAR(txPktBufPtr);
