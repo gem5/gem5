@@ -38,67 +38,9 @@
 
 #include "sim/host.hh"
 #include "base/refcnt.hh"
-
-#define EADDR_LEN 6
+#include "base/inet_hdrs.hh"
 
 class Checkpoint;
-
-struct pseudo_header
-{
-    uint32_t src_ip_addr;
-    uint32_t dest_ip_addr;
-    uint16_t protocol;
-    uint16_t len;
-};
-
-/** Ethernet header struct for casting purposes */
-struct eth_header
-{
-    uint8_t dest[EADDR_LEN];
-    uint8_t src[EADDR_LEN];
-    uint16_t type;
-};
-
-struct ip_header
-{
-    uint8_t vers_len;
-    uint8_t service_type;
-    uint16_t dgram_len;
-    uint16_t ID;
-    uint16_t flags_frag_offset;
-    uint8_t TTL;
-    uint8_t protocol;
-    uint16_t hdr_chksum;
-    uint32_t src_ip_addr;
-    uint32_t dest_ip_addr;
-    uint8_t *options;
-    uint8_t *transport_header;
-};
-
-struct tcp_header
-{
-    uint16_t src_port_num;
-    uint16_t dest_port_num;
-    uint32_t seq_num;
-    uint32_t ack_num;
-    uint8_t hdr_len;
-    uint8_t flags;
-    uint16_t rcv_window;
-    uint16_t chksum;
-    uint16_t urgent;
-    uint8_t *options;
-    uint8_t *data;
-};
-
-struct udp_header
-{
-    uint16_t src_port_num;
-    uint16_t dest_port_num;
-    uint16_t len;
-    uint16_t chksum;
-    uint8_t *data;
-};
-
 /*
  * Reference counted class containing ethernet packet data
  */
@@ -119,14 +61,31 @@ class EtherPacket : public RefCounted
     bool IsMulticast() { return data[0] == 0x01; }
     bool IsBroadcast() { return data[0] == 0xff; }
 
-    ip_header *getIpHdr() { return (ip_header *) (data + 14); }
-
-    void *getTransportHdr() {
+    bool isIpPkt() {
+        eth_header *eth = (eth_header *) data;
+        return (eth->type == 0x800);
+    }
+    bool isTcpPkt() {
         ip_header *ip = getIpHdr();
-        return (void *) (ip + (ip->vers_len & 0xf));
+        return (ip->protocol == 6);
+    }
+    bool isUdpPkt() {
+        ip_header *ip = getIpHdr();
+        return (ip->protocol == 17);
     }
 
+    ip_header *getIpHdr() {
+        assert(isIpPkt());
+        return (ip_header *) (data + sizeof(eth_header));
+    }
 
+    tcp_header *getTcpHdr(ip_header *ip) {
+        return (tcp_header *) (ip + (ip->vers_len & 0xf));
+    }
+
+    udp_header *getUdpHdr(ip_header *ip) {
+        return (udp_header *) (ip + (ip->vers_len & 0xf));
+    }
     typedef RefCountingPtr<EtherPacket> PacketPtr;
 
     void serialize(std::ostream &os);
