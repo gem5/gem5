@@ -32,59 +32,34 @@
 #include <sys/time.h>
 
 #include <iosfwd>
+#include <string>
 
-namespace Time {
-    struct _timeval;
-    class Start
-    {
-      private:
-        mutable _timeval *start;
+struct _timeval;
 
-      public:
-        Start();
-        ~Start();
+class Time
+{
+  protected:
+    mutable _timeval *time;
 
-        const timeval &get() const;
-        void reset();
-        double operator()() const;
-    };
+  public:
+    Time();
+    Time(const timeval &val);
+    Time(const Time &val);
+    ~Time();
 
-    class Now
-    {
-      private:
-        mutable _timeval *now;
+    const timeval &get() const;
+    void set(const timeval &val);
 
-      public:
-        Now();
-        ~Now();
+    void reset();
+    double operator()() const;
+    std::string date(std::string format = "") const;
 
-        const timeval &get() const;
-        double operator()() const;
-    };
+  public:
+    static const Time start;
+};
 
-    class Elapsed
-    {
-      private:
-        mutable _timeval *elapsed;
-        Start _start;
-        Now _now;
+Time operator-(const Time &l, const Time &r);
 
-      public:
-        Elapsed();
-        ~Elapsed();
-
-        const timeval &get() const;
-        void reset();
-        double operator()() const;
-    };
-
-    extern Start start;
-    extern Now now;
-    extern Elapsed elapsed;
-
-    std::ostream &operator<<(std::ostream &out, const Start &start);
-    std::ostream &operator<<(std::ostream &out, const Now &now);
-    std::ostream &operator<<(std::ostream &out, const Elapsed &elapsed);
-}
+std::ostream &operator<<(std::ostream &out, const Time &time);
 
 #endif // __SIM_TIME_HH__

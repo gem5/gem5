@@ -42,6 +42,7 @@
 #include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "base/statistics.hh"
+#include "base/time.hh"
 #include "cpu/base_cpu.hh"
 #include "cpu/full_cpu/smt.hh"
 #include "sim/async.hh"
@@ -52,7 +53,6 @@
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/sim_stats.hh"
-#include "sim/sim_time.hh"
 
 using namespace std;
 

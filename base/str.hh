@@ -98,7 +98,7 @@ template <class T> bool
 to_number(const std::string &value, T &retval);
 
 template <class T>
-std::string
+inline std::string
 to_string(const T& value)
 {
     std::stringstream str;
