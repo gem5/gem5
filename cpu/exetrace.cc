@@ -120,7 +120,6 @@ Trace::InstRecord::dump(ostream &outs)
     //  End of line...
     //
     outs << endl;
-    outs.flush();
 }
 
 
