@@ -43,11 +43,8 @@ using std::string;
 EtherDump::EtherDump(const string &name, const string &file)
     : SimObject(name)
 {
-    if (!file.empty()) {
+    if (!file.empty())
         stream.open(file.c_str());
-        if (stream.is_open())
-            init();
-    }
 }
 
 #define DLT_EN10MB		1       	// Ethernet (10Mb)
@@ -74,6 +71,9 @@ struct pcap_pkthdr {
 void
 EtherDump::init()
 {
+    if (!stream.is_open())
+        return;
+
     curtime = time(NULL);
     s_freq = ticksPerSecond;
     us_freq = ticksPerSecond / ULL(1000000);
