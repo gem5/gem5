@@ -26,63 +26,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OBJECT_FILE_HH__
-#define __OBJECT_FILE_HH__
+#ifndef __ELF_OBJECT_HH__
+#define __ELF_OBJECT_HH__
 
-#include "isa_traits.hh"	// for Addr
+#include "object_file.hh"
 
-class FunctionalMemory;
-class SymbolTable;
+// forward decls: avoid including exec_elf.hh here
+struct Elf64_Ehdr;
+struct Elf64_Phdr;
 
-class ObjectFile
+class ElfObject : public ObjectFile
 {
   protected:
-    const std::string filename;
-    int descriptor;
-    uint8_t *fileData;
-    size_t len;
+    Elf64_Ehdr *ehdr;
+    Elf64_Phdr *phdr;
 
-    ObjectFile(const std::string &_filename, int _fd,
-               size_t _len, uint8_t *_data);
+    int textPhdrIdx;
+    int dataPhdrIdx;
+
+    ElfObject(const std::string &_filename, int _fd,
+              size_t _len, uint8_t *_data);
 
   public:
-    virtual ~ObjectFile();
-
-    void close();
+    virtual ~ElfObject() {}
 
     virtual bool loadSections(FunctionalMemory *mem,
-                              bool loadPhys = false) = 0;
-    virtual bool loadGlobalSymbols(SymbolTable *symtab) = 0;
-    virtual bool loadLocalSymbols(SymbolTable *symtab) = 0;
+                              bool loadPhys = false);
+    virtual bool loadGlobalSymbols(SymbolTable *symtab);
+    virtual bool loadLocalSymbols(SymbolTable *symtab);
 
-  protected:
-
-    struct Section {
-        Addr baseAddr;
-        size_t size;
-    };
-
-    Addr entry;
-    Addr globalPtr;
-
-    Section text;
-    Section data;
-    Section bss;
-
-  public:
-    Addr entryPoint() const { return entry; }
-    Addr globalPointer() const { return globalPtr; }
-
-    Addr textBase() const { return text.baseAddr; }
-    Addr dataBase() const { return data.baseAddr; }
-    Addr bssBase() const { return bss.baseAddr; }
-
-    size_t textSize() const { return text.size; }
-    size_t dataSize() const { return data.size; }
-    size_t bssSize() const { return bss.size; }
+    static ObjectFile *tryFile(const std::string &fname, int fd,
+                               size_t len, uint8_t *data);
 };
 
-ObjectFile *createObjectFile(const std::string &fname);
-
-
-#endif // __OBJECT_FILE_HH__
+#endif // __ELF_OBJECT_HH__

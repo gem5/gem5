@@ -36,138 +36,80 @@
 #include <unistd.h>
 
 #include "cprintf.hh"
-#include "ecoff.hh"
 #include "object_file.hh"
 #include "symtab.hh"
 
+#include "ecoff_object.hh"
+#include "aout_object.hh"
+#include "elf_object.hh"
+
 using namespace std;
 
-ObjectFile::ObjectFile()
-    : descriptor(-1), data(NULL)
-{}
+ObjectFile::ObjectFile(const string &_filename, int _fd,
+                       size_t _len, uint8_t *_data)
+    : filename(_filename), descriptor(_fd), fileData(_data), len(_len)
+{
+}
 
-ObjectFile::ObjectFile(string file)
-    : descriptor(-1), data(NULL)
-{ open(file); }
 
 ObjectFile::~ObjectFile()
-{ close(); }
-
-bool
-ObjectFile::open(string file_name)
 {
     close();
-
-    name = file_name;
-
-    descriptor = ::open(name.c_str(), O_RDONLY);
-    if (descriptor < 0)
-        return false;
-
-    len = (size_t)::lseek(descriptor, 0, SEEK_END);
-
-    data = (uint8_t *)::mmap(NULL, len, PROT_READ, MAP_SHARED, descriptor, 0);
-    if (data == MAP_FAILED)
-        return false;
-
-    postOpen();
-
-    return true;
 }
+
 
 void
 ObjectFile::close()
 {
-    if (descriptor >= 0)
+    if (descriptor >= 0) {
         ::close(descriptor);
+        descriptor = -1;
+    }
 
-    if (data)
-        ::munmap(data, len);
+    if (fileData) {
+        ::munmap(fileData, len);
+        fileData = NULL;
+    }
 }
 
-void
-EcoffObject::postOpen()
+
+ObjectFile *
+createObjectFile(const string &fname)
 {
-    exec = &(((EcoffExecHeader *)data)->f);
-    aout = &(((EcoffExecHeader *)data)->a);
-
-    text_off = aout->text_start;
-    data_off = aout->data_start;
-    bss_off = aout->bss_start;
-
-    text_size = aout->tsize;
-    data_size = aout->dsize;
-    bss_size = aout->bsize;
-}
-
-bool
-EcoffObject::loadGlobals(SymbolTable *symtab)
-{
-    if (!symtab)
-        return false;
-
-    if (exec->f_magic != ALPHAMAGIC) {
-        cprintf("wrong magic\n");
-        return false;
+    // open the file
+    int fd = open(fname.c_str(), O_RDONLY);
+    if (fd < 0) {
+        return NULL;
     }
 
-    EcoffSymHeader *syms = (EcoffSymHeader *)(data + exec->f_symptr);
-    if (syms->magic != ECOFF_SYM_MAGIC) {
-        cprintf("bad symbol header magic\n");
-        exit(1);
+    // find the length of the file by seeking to the end
+    size_t len = (size_t)lseek(fd, 0, SEEK_END);
+
+    // mmap the whole shebang
+    uint8_t *fileData =
+        (uint8_t *)mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
+    if (fileData == MAP_FAILED) {
+        close(fd);
+        return NULL;
     }
 
-    EcoffExtSymEntry *ext_syms =
-        (EcoffExtSymEntry *)(data + syms->cbExtOffset);
+    ObjectFile *fileObj = NULL;
 
-    char *ext_strings = (char *)(data + syms->cbSsExtOffset);
-    for (int i = 0; i < syms->iextMax; i++) {
-        EcoffSymEntry *entry = &(ext_syms[i].asym);
-        if (entry->iss != -1)
-            symtab->insert(entry->value, ext_strings + entry->iss);
+    // figure out what we have here
+    if ((fileObj = EcoffObject::tryFile(fname, fd, len, fileData)) != NULL) {
+        return fileObj;
     }
 
-    return true;
-}
-
-bool
-EcoffObject::loadLocals(SymbolTable *symtab)
-{
-    if (!symtab)
-        return false;
-
-    if (exec->f_magic != ALPHAMAGIC) {
-        cprintf("wrong magic\n");
-        return false;
+    if ((fileObj = AoutObject::tryFile(fname, fd, len, fileData)) != NULL) {
+        return fileObj;
     }
 
-    EcoffSymHeader *syms = (EcoffSymHeader *)(data + exec->f_symptr);
-    if (syms->magic != ECOFF_SYM_MAGIC) {
-        cprintf("bad symbol header magic\n");
-        exit(1);
+    if ((fileObj = ElfObject::tryFile(fname, fd, len, fileData)) != NULL) {
+        return fileObj;
     }
 
-    EcoffSymEntry *local_syms = (EcoffSymEntry *)(data + syms->cbSymOffset);
-    char *local_strings = (char *)(data + syms->cbSsOffset);
-    EcoffFileDesc *fdesc = (EcoffFileDesc *)(data + syms->cbFdOffset);
-
-    for (int i = 0; i < syms->ifdMax; i++) {
-        EcoffSymEntry *entry =
-            (EcoffSymEntry *)(local_syms + fdesc[i].isymBase);
-        char *strings = (char *)(local_strings + fdesc[i].issBase);
-        for (int j = 0; j < fdesc[i].csym; j++) {
-            if (entry[j].st == 1 || entry[j].st == 6)
-                if (entry[j].iss != -1)
-                    symtab->insert(entry[j].value, strings + entry[j].iss);
-        }
-    }
-
-    for (int i = 0; i < syms->isymMax; i++) {
-        EcoffSymEntry *entry = &(local_syms[i]);
-        if (entry->st == 6)
-            if (entry->st == 1 || entry->st == 6)
-                symtab->insert(entry->value, local_strings + entry->iss);
-    }
-
-    return true;
+    // don't know what it is
+    close(fd);
+    munmap(fileData, len);
+    return NULL;
 }

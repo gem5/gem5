@@ -38,7 +38,7 @@
 #include "eio.hh"
 #include "thread.hh"
 #include "fake_syscall.hh"
-#include "loader.hh"
+#include "object_file.hh"
 #include "exec_context.hh"
 #include "smt.hh"
 
@@ -219,12 +219,93 @@ DEFINE_SIM_OBJECT_CLASS_NAME("Process object", Process)
 //
 ////////////////////////////////////////////////////////////////////////
 
+
+static void
+copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
+                FunctionalMemory *memory)
+{
+    for (int i = 0; i < strings.size(); ++i) {
+        memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
+        memory->writeString(data_ptr, strings[i].c_str());
+        array_ptr += sizeof(Addr);
+        data_ptr += strings[i].size() + 1;
+    }
+    // add NULL terminator
+    data_ptr = 0;
+    memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
+}
+
 LiveProcess::LiveProcess(const string &name,
                          int stdin_fd, int stdout_fd, int stderr_fd,
                          vector<string> &argv, vector<string> &envp)
     : Process(name, stdin_fd, stdout_fd, stderr_fd)
 {
-    smt_load_prog(argv, envp, init_regs, this);
+    prog_fname = argv[0];
+    ObjectFile *objFile = createObjectFile(prog_fname);
+    if (objFile == NULL) {
+        fatal("Can't load object file %s", prog_fname);
+    }
+
+    prog_entry = objFile->entryPoint();
+    text_base = objFile->textBase();
+    text_size = objFile->textSize();
+    data_base = objFile->dataBase();
+    data_size = objFile->dataSize() + objFile->bssSize();
+    brk_point = ROUND_UP(data_base + data_size, VMPageSize);
+
+    // load object file into target memory
+    objFile->loadSections(memory);
+
+    // Set up stack.  On Alpha, stack goes below text section.  This
+    // code should get moved to some architecture-specific spot.
+    stack_base = text_base - (409600+4096);
+
+    // Set pointer for next thread stack.  Reserve 8M for main stack.
+    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+
+    // Calculate how much space we need for arg & env arrays.
+    int argv_array_size = sizeof(Addr) * (argv.size() + 1);
+    int envp_array_size = sizeof(Addr) * (envp.size() + 1);
+    int arg_data_size = 0;
+    for (int i = 0; i < argv.size(); ++i) {
+        arg_data_size += argv[i].size() + 1;
+    }
+    int env_data_size = 0;
+    for (int i = 0; i < envp.size(); ++i) {
+        env_data_size += envp[i].size() + 1;
+    }
+
+    int space_needed =
+        argv_array_size + envp_array_size + arg_data_size + env_data_size;
+    // for SimpleScalar compatibility
+    if (space_needed < 16384)
+        space_needed = 16384;
+
+    // set bottom of stack
+    stack_min = stack_base - space_needed;
+    // align it
+    stack_min &= ~7;
+    stack_size = stack_base - stack_min;
+
+    // map out initial stack contents
+    Addr argv_array_base = stack_min + sizeof(uint64_t); // room for argc
+    Addr envp_array_base = argv_array_base + argv_array_size;
+    Addr arg_data_base = envp_array_base + envp_array_size;
+    Addr env_data_base = arg_data_base + arg_data_size;
+
+    // write contents to stack
+    uint64_t argc = argv.size();
+    memory->access(Write, stack_min, &argc, sizeof(uint64_t));
+
+    copyStringArray(argv, argv_array_base, arg_data_base, memory);
+    copyStringArray(envp, envp_array_base, env_data_base, memory);
+
+    init_regs->intRegFile[ArgumentReg0] = argc;
+    init_regs->intRegFile[ArgumentReg1] = argv_array_base;
+    init_regs->intRegFile[StackPointerReg] = stack_min;
+    init_regs->intRegFile[GlobalPointerReg] = objFile->globalPointer();
+    init_regs->pc = prog_entry;
+    init_regs->npc = prog_entry + sizeof(MachInst);
 }
 
 

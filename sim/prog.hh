@@ -86,7 +86,6 @@ class Process : public SimObject
 
     Addr brk_point;		// top of the data segment
 
-    Addr environ_base;		// environment base address
     Addr stack_base;		// stack segment base (highest address)
     unsigned stack_size;	// initial stack size
     Addr stack_min;		// lowest address accessed on the stack
