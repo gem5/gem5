@@ -12,6 +12,8 @@ simobj BaseCache(BaseMem):
     do_copy = Param.Bool(false, "perform fast copies in the cache")
     hash_delay = Param.Int(1, "time in cycles of hash access")
     in_bus = Param.Bus(NULL, "incoming bus object")
+    lifo = Param.Bool(false,
+        "whether this NIC partition should use LIFO repl. policy")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
@@ -21,10 +23,15 @@ simobj BaseCache(BaseMem):
     protocol = Param.CoherenceProtocol(NULL, "coherence protocol to use")
     repl = Param.Repl(NULL, "replacement policy")
     size = Param.Int("capacity in bytes")
+    split = Param.Bool(false, "whether or not this cache is split")
+    split_size = Param.Int(0,
+        "How many ways of the cache belong to CPU/LRU partition")
     store_compressed = Param.Bool(false,
         "Store compressed data in the cache")
     subblock_size = Param.Int(0,
         "Size of subblock in IIC used for compression")
     tgts_per_mshr = Param.Int("max number of accesses per MSHR")
     trace_addr = Param.Addr(0, "address to trace")
+    two_queue = Param.Bool(false,
+        "whether the lifo should have two queue replacement")
     write_buffers = Param.Int(8, "number of write buffers")
