@@ -22,6 +22,7 @@ let {{
 #include "base/misc.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/fast_cpu/fast_cpu.hh"
 #include "cpu/full_cpu/dyn_inst.hh"
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/static_inst.hh"
@@ -310,6 +311,9 @@ declare {{
 	}
 
 	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
+        { return No_Fault; }
+
+	Fault execute(FastCPUExecContext *, Trace::InstRecord *)
         { return No_Fault; }
 
 	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
@@ -719,6 +723,9 @@ declare {{
 	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
         { panic("attempt to execute eacomp"); }
 
+	Fault execute(FastCPUExecContext *, Trace::InstRecord *)
+        { panic("attempt to execute eacomp"); }
+
 	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
         { panic("attempt to execute eacomp"); }
     };
@@ -737,6 +744,9 @@ declare {{
 	}
 
 	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
+        { panic("attempt to execute memacc"); }
+
+	Fault execute(FastCPUExecContext *, Trace::InstRecord *)
         { panic("attempt to execute memacc"); }
 
 	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
@@ -1452,6 +1462,14 @@ declare {{
 	    return Unimplemented_Opcode_Fault;
 	}
 
+	Fault execute(FastCPUExecContext *xc,
+		      Trace::InstRecord *traceData)
+	{
+	    panic("attempt to execute unimplemented instruction '%s' "
+		  "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
+	    return Unimplemented_Opcode_Fault;
+	}
+
 	Fault execute(FullCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
@@ -1492,6 +1510,17 @@ declare {{
 	}
 
 	Fault execute(SimpleCPUExecContext *xc,
+		      Trace::InstRecord *traceData)
+	{
+	    if (!warned) {
+		warn("instruction '%s' unimplemented\n", mnemonic);
+		warned = true;
+	    }
+
+	    return No_Fault;
+	}
+
+	Fault execute(FastCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    if (!warned) {
@@ -1566,6 +1595,14 @@ declare {{
 	}
 
 	Fault execute(SimpleCPUExecContext *xc,
+		      Trace::InstRecord *traceData)
+	{
+	    panic("attempt to execute unknown instruction "
+		  "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
+	    return Unimplemented_Opcode_Fault;
+	}
+
+	Fault execute(FastCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    panic("attempt to execute unknown instruction "

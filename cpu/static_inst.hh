@@ -43,6 +43,8 @@
 class ExecContext;
 class DynInst;
 typedef DynInst FullCPUExecContext;
+class FastCPU;
+typedef FastCPU FastCPUExecContext;
 class SimpleCPU;
 typedef SimpleCPU SimpleCPUExecContext;
 class SymbolTable;
@@ -308,6 +310,12 @@ class StaticInst : public StaticInstBase
      * Execute this instruction under SimpleCPU model.
      */
     virtual Fault execute(SimpleCPUExecContext *xc,
+                          Trace::InstRecord *traceData) = 0;
+
+    /**
+     * Execute this instruction under FastCPU model.
+     */
+    virtual Fault execute(FastCPUExecContext *xc,
                           Trace::InstRecord *traceData) = 0;
 
     /**

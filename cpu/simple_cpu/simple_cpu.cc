@@ -708,8 +708,7 @@ SimpleCPU::tick()
                                          xc->regs.pc);
 
 #ifdef FULL_SYSTEM
-        xc->regs.opcode = (inst >> 26) & 0x3f;
-        xc->regs.ra = (inst >> 21) & 0x1f;
+        xc->setInst(inst);
 #endif // FULL_SYSTEM
 
         xc->func_exe_inst++;

@@ -1387,6 +1387,7 @@ class InstObjParams:
         self.base_class = base_class
         self.exec_func_declarations = '''
     Fault execute(SimpleCPUExecContext *, Trace::InstRecord *);
+    Fault execute(FastCPUExecContext *, Trace::InstRecord *);
     Fault execute(FullCPUExecContext *, Trace::InstRecord *);
 '''
         if code_block:
@@ -1433,7 +1434,8 @@ class InstObjParams:
                 error(0, 'InstObjParams::subst: undefined template "%s"' % t)
             if template.find('%(cpu_model)') != -1:
                 tmp = ''
-                for cpu_model in ('SimpleCPUExecContext', 'FullCPUExecContext'):
+                for cpu_model in ('SimpleCPUExecContext', 'FastCPUExecContext',
+                                  'FullCPUExecContext'):
                     self.cpu_model = cpu_model
                     tmp += self._subst(template)
                 result.append(tmp)
