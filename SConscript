@@ -337,6 +337,11 @@ def link_targetarch(target, source, env):
 env.Command('targetarch', None, link_targetarch)
 
 
+# libelf build is described in its own SConscript file.
+SConscript('libelf/SConscript', exports = 'env',
+           duplicate=0)
+
+
 # This function adds the specified sources to the given build
 # environment, and returns a list of all the corresponding SCons
 # Object nodes (including an extra one for date.cc).  We explicitly

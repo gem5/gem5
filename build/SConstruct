@@ -246,12 +246,6 @@ default_env.Append(CCFLAGS='-pipe')
 default_env.Append(CCFLAGS='-fno-strict-aliasing')
 default_env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
 
-# libelf build is described in its own SConscript file.  Using a
-# dictionary for exports lets us export "default_env" so the
-# SConscript will see it as "env".
-default_env.SConscript('m5/libelf/SConscript', exports={'env' : default_env})
-
-
 ###################################################
 #
 # Define build environments for selected configurations.
