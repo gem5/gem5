@@ -348,9 +348,9 @@ struct UdpHdr : public udp_hdr
     uint16_t sport() const { return ntohs(uh_sport); }
     uint16_t dport() const { return ntohs(uh_dport); }
     uint16_t len() const { return ntohs(uh_ulen); }
-    uint16_t sum() const { return ntohs(uh_sum); }
+    uint16_t sum() const { return uh_sum; }
 
-    void sum(uint16_t sum) { uh_sum = htons(sum); }
+    void sum(uint16_t sum) { uh_sum = sum; }
 
     int size() const { return sizeof(udp_hdr); }
     const uint8_t *bytes() const { return (const uint8_t *)this; }
