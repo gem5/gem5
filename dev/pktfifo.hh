@@ -46,7 +46,7 @@ class PacketFifo
     int _reserved;
 
   public:
-    explicit PacketFifo(int max) : _maxsize(max), _size(0) {}
+    explicit PacketFifo(int max) : _maxsize(max), _size(0), _reserved(0) {}
     virtual ~PacketFifo() {}
 
     int maxsize() const { return _maxsize; }
