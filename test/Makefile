@@ -52,7 +52,7 @@ offtest: offtest.o
 rangetest: rangetest.o str.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
-stattest: cprintf.o hostinfo.o misc.o sim_time.o statistics.o stattest.o str.o
+stattest: cprintf.o hostinfo.o misc.o statistics.o stattest.o str.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
 strnumtest: strnumtest.o str.o

@@ -184,7 +184,8 @@ struct StatData
      * use
      * @return true for success
      */
-    virtual bool check() const;
+    virtual bool check() const = 0;
+    bool baseCheck() const;
 
     /**
      * Checks if the first stat's name is alphabetically less than the second.
@@ -215,6 +216,7 @@ class ScalarData : public ScalarDataBase
     ScalarData(T &stat) : s(stat) {}
 
     virtual bool binned() const { return s.binned(); }
+    virtual bool check() const { return s.check(); }
     virtual result_t val() const { return s.val(); }
     virtual result_t total() const { return s.total(); }
     virtual void reset() { s.reset(); }
@@ -254,6 +256,7 @@ class VectorData : public VectorDataBase
     VectorData(T &stat) : s(stat) {}
 
     virtual bool binned() const { return s.binned(); }
+    virtual bool check() const { return s.check(); }
     virtual bool zero() const { return s.zero(); }
     virtual void reset() { s.reset(); }
 
@@ -309,6 +312,7 @@ class DistData : public DistDataBase
     DistData(T &stat) : s(stat) {}
 
     virtual bool binned() const { return s.binned(); }
+    virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual bool zero() const { return s.zero(); }
     virtual void update() { return s.update(this); }
@@ -348,6 +352,7 @@ class VectorDistData : public VectorDistDataBase
     VectorDistData(T &stat) : s(stat) {}
 
     virtual bool binned() const { return T::bin_t::binned; }
+    virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual size_t size() const { return s.size(); }
     virtual bool zero() const { return s.zero(); }
@@ -388,12 +393,13 @@ class Vector2dData : public Vector2dDataBase
     Vector2dData(T &stat) : s(stat) {}
 
     virtual bool binned() const { return T::bin_t::binned; }
+    virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual bool zero() const { return s.zero(); }
     virtual void update()
     {
         Vector2dDataBase::update();
-        return s.update(this);
+        s.update(this);
     }
 };
 
@@ -854,6 +860,8 @@ class ScalarBase : public DataAccess
      */
     bool binned() const { return bin_t::binned; }
 
+    bool check() const { return bin.initialized(); }
+
     /**
      * Reset stat value to default
      */
@@ -963,7 +971,7 @@ class VectorBase : public DataAccess
         return false;
     }
 
-    bool check() const { return true; }
+    bool check() const { return bin.initialized(); }
     void reset() { bin.reset(); }
 
   public:
@@ -1167,8 +1175,6 @@ class Vector2dBase : public DataAccess
 
     void update(Vector2dDataBase *data)
     {
-        data->x = x;
-        data->y = y;
         int size = this->size();
         data->vec.resize(size);
         for (int i = 0; i < size; ++i)
@@ -1188,7 +1194,7 @@ class Vector2dBase : public DataAccess
      */
     void reset() { bin.reset(); }
 
-    bool check() { return true; }
+    bool check() { return bin.initialized(); }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1665,7 +1671,7 @@ class DistBase : public DataAccess
         bin.reset();
     }
 
-    bool check() { return true; }
+    bool check() { return bin.initialized(); }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1718,7 +1724,7 @@ class VectorDistBase : public DataAccess
      */
     void reset() { bin.reset(); }
 
-    bool check() { return true; }
+    bool check() { return bin.initialized(); }
     void update(VectorDistDataBase *base)
     {
         int size = this->size();
@@ -2509,8 +2515,8 @@ class Vector2d : public WrapVec2d<Vector2d<T, Bin>, Vector2dBase<T, StatStor, Bi
 {
   public:
     Vector2d &init(size_t _x, size_t _y) {
-        x = _x;
-        y = _y;
+        statData()->x = x = _x;
+        statData()->y = y = _y;
         bin.init(x * y, params);
         setInit();
 
@@ -2731,6 +2737,8 @@ class FormulaBase : public DataAccess
      * @return True if Formula is binned.
      */
     bool binned() const;
+
+    bool check() const { return true; }
 
     /**
      * Formulas don't need to be reset
