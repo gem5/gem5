@@ -8,8 +8,6 @@
 #include "cpu/beta_cpu/comm.hh"
 #include "base/trace.hh"
 
-using namespace std;
-
 // Question: Do I even need the number of logical registers?
 // How to avoid freeing registers instantly?  Same with ROB entries.
 
@@ -33,10 +31,10 @@ class SimpleFreeList
 
   private:
     /** The list of free integer registers. */
-    queue<PhysRegIndex> freeIntRegs;
+    std::queue<PhysRegIndex> freeIntRegs;
 
     /** The list of free floating point registers. */
-    queue<PhysRegIndex> freeFloatRegs;
+    std::queue<PhysRegIndex> freeFloatRegs;
 
     /** Number of logical integer registers. */
     int numLogicalIntRegs;
@@ -52,6 +50,11 @@ class SimpleFreeList
 
     /** Total number of physical registers. */
     int numPhysicalRegs;
+
+    /** DEBUG stuff below. */
+    std::vector<int> freeIntRegsScoreboard;
+
+    std::vector<bool> freeFloatRegsScoreboard;
 
   public:
     SimpleFreeList(unsigned _numLogicalIntRegs,
@@ -94,6 +97,10 @@ SimpleFreeList::getIntReg()
 
     freeIntRegs.pop();
 
+    // DEBUG
+    assert(freeIntRegsScoreboard[free_reg]);
+    freeIntRegsScoreboard[free_reg] = 0;
+
     return(free_reg);
 }
 
@@ -109,6 +116,10 @@ SimpleFreeList::getFloatReg()
 
     freeFloatRegs.pop();
 
+    // DEBUG
+    assert(freeFloatRegsScoreboard[free_reg]);
+    freeFloatRegsScoreboard[free_reg] = 0;
+
     return(free_reg);
 }
 
@@ -120,8 +131,16 @@ SimpleFreeList::addReg(PhysRegIndex freed_reg)
     //already in there.  A bit vector or something similar would be useful.
     if (freed_reg < numPhysicalIntRegs) {
         freeIntRegs.push(freed_reg);
+
+        // DEBUG
+        assert(freeIntRegsScoreboard[freed_reg] == false);
+        freeIntRegsScoreboard[freed_reg] = 1;
     } else if (freed_reg < numPhysicalRegs) {
         freeFloatRegs.push(freed_reg);
+
+        // DEBUG
+        assert(freeFloatRegsScoreboard[freed_reg] == false);
+        freeFloatRegsScoreboard[freed_reg] = 1;
     }
 }
 
@@ -129,6 +148,10 @@ inline void
 SimpleFreeList::addIntReg(PhysRegIndex freed_reg)
 {
     DPRINTF(Rename, "Freelist: Freeing int register %i.\n", freed_reg);
+
+    // DEBUG
+    assert(!freeIntRegsScoreboard[freed_reg]);
+    freeIntRegsScoreboard[freed_reg] = 1;
 
     //Might want to add in a check for whether or not this register is
     //already in there.  A bit vector or something similar would be useful.
@@ -139,6 +162,10 @@ inline void
 SimpleFreeList::addFloatReg(PhysRegIndex freed_reg)
 {
     DPRINTF(Rename, "Freelist: Freeing float register %i.\n", freed_reg);
+
+    // DEBUG
+    assert(!freeFloatRegsScoreboard[freed_reg]);
+    freeFloatRegsScoreboard[freed_reg] = 1;
 
     //Might want to add in a check for whether or not this register is
     //already in there.  A bit vector or something similar would be useful.

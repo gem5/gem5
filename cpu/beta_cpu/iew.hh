@@ -1,13 +1,10 @@
-//Todo: Update with statuses.  Create constructor.  Fix up time buffer stuff.
-//Will also need a signal heading back at least one stage to rename to say
-//how many empty skid buffer entries there are.  Perhaps further back even.
+//Todo: Update with statuses.
 //Need to handle delaying writes to the writeback bus if it's full at the
-//given time.  Squash properly.  Load store queue.
+//given time.  Load store queue.
 
 #ifndef __SIMPLE_IEW_HH__
 #define __SIMPLE_IEW_HH__
 
-// To include: time buffer, structs, queue,
 #include <queue>
 
 #include "base/timebuf.hh"
@@ -22,16 +19,18 @@ class SimpleIEW
   private:
     //Typedefs from Impl
     typedef typename Impl::ISA ISA;
-    typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::CPUPol CPUPol;
+    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::Params Params;
 
-    typedef typename Impl::CPUPol::RenameMap RenameMap;
+    typedef typename CPUPol::RenameMap RenameMap;
+    typedef typename CPUPol::LDSTQ LDSTQ;
 
-    typedef typename Impl::TimeStruct TimeStruct;
-    typedef typename Impl::IEWStruct IEWStruct;
-    typedef typename Impl::RenameStruct RenameStruct;
-    typedef typename Impl::IssueStruct IssueStruct;
+    typedef typename CPUPol::TimeStruct TimeStruct;
+    typedef typename CPUPol::IEWStruct IEWStruct;
+    typedef typename CPUPol::RenameStruct RenameStruct;
+    typedef typename CPUPol::IssueStruct IssueStruct;
 
   public:
     enum Status {
@@ -51,7 +50,7 @@ class SimpleIEW
   public:
     void squash();
 
-    void squash(DynInst *inst);
+    void squash(DynInstPtr &inst);
 
     void block();
 
@@ -70,7 +69,7 @@ class SimpleIEW
 
     void setRenameMap(RenameMap *rm_ptr);
 
-    void wakeDependents(DynInst *inst);
+    void wakeDependents(DynInstPtr &inst);
 
     void tick();
 
@@ -111,10 +110,12 @@ class SimpleIEW
     //Will need internal queue to hold onto instructions coming from
     //the rename stage in case of a stall.
     /** Skid buffer between rename and IEW. */
-    queue<RenameStruct> skidBuffer;
+    std::queue<RenameStruct> skidBuffer;
 
     /** Instruction queue. */
     IQ instQueue;
+
+    LDSTQ ldstQueue;
 
     /** Pointer to rename map.  Might not want this stage to directly
      *  access this though...

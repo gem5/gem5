@@ -16,6 +16,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/beta_cpu/cpu_policy.hh"
 #include "sim/process.hh"
 
@@ -28,17 +29,32 @@ class BaseFullCPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
+    class Params
+    {
+      public:
 #ifdef FULL_SYSTEM
-    BaseFullCPU(const std::string &_name, int _number_of_threads,
-                Counter max_insts_any_thread, Counter max_insts_all_threads,
-                Counter max_loads_any_thread, Counter max_loads_all_threads,
-                System *_system, Tick freq);
+        std::string name;
+        int numberOfThreads;
+        Counter maxInstsAnyThread;
+        Counter maxInstsAllThreads;
+        Counter maxLoadsAnyThread;
+        Counter maxLoadsAllThreads;
+        System *_system;
+        Tick freq;
 #else
-    BaseFullCPU(const std::string &_name, int _number_of_threads,
-                Counter max_insts_any_thread = 0,
-                Counter max_insts_all_threads = 0,
-                Counter max_loads_any_thread = 0,
-                Counter max_loads_all_threads = 0);
+        std::string name;
+        int numberOfThreads;
+        Counter maxInstsAnyThread;
+        Counter maxInstsAllThreads;
+        Counter maxLoadsAnyThread;
+        Counter maxLoadsAllThreads;
+#endif // FULL_SYSTEM
+    };
+
+#ifdef FULL_SYSTEM
+    BaseFullCPU(Params &params);
+#else
+    BaseFullCPU(Params &params);
 #endif // FULL_SYSTEM
 };
 
@@ -49,7 +65,7 @@ class FullBetaCPU : public BaseFullCPU
     //Put typedefs from the Impl here.
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
-    typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::DynInstPtr DynInstPtr;
 
   public:
     enum Status {
@@ -162,7 +178,7 @@ class FullBetaCPU : public BaseFullCPU
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
-    void addInst(DynInst *inst);
+    void addInst(DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
     void instDone();
@@ -175,7 +191,7 @@ class FullBetaCPU : public BaseFullCPU
      *  @todo: Remove only up until that inst?  Squashed inst is most likely
      *  valid.
      */
-    void removeBackInst(DynInst *inst);
+    void removeBackInst(DynInstPtr &inst);
 
     /** Remove an instruction from the front of the list.  It is expected
      *  that there are no instructions in front of it (that is, none are older
@@ -184,7 +200,7 @@ class FullBetaCPU : public BaseFullCPU
      *  last instruction once it's verified that commit has the same ordering
      *  as the instruction list.
      */
-    void removeFrontInst(DynInst *inst);
+    void removeFrontInst(DynInstPtr &inst);
 
     /** Remove all instructions that are not currently in the ROB. */
     void removeInstsNotInROB();
@@ -198,11 +214,11 @@ class FullBetaCPU : public BaseFullCPU
      *  commit can tell the instruction queue that they have completed.
      *  Eventually this hack should be removed.
      */
-    void wakeDependents(DynInst *inst);
+    void wakeDependents(DynInstPtr &inst);
 
   public:
     /** List of all the instructions in flight. */
-    list<DynInst *> instList;
+    list<DynInstPtr> instList;
 
     //not sure these should be private.
   protected:
@@ -255,15 +271,15 @@ class FullBetaCPU : public BaseFullCPU
     /** Typedefs from the Impl to get the structs that each of the
      *  time buffers should use.
      */
-    typedef typename Impl::TimeStruct TimeStruct;
+    typedef typename CPUPolicy::TimeStruct TimeStruct;
 
-    typedef typename Impl::FetchStruct FetchStruct;
+    typedef typename CPUPolicy::FetchStruct FetchStruct;
 
-    typedef typename Impl::DecodeStruct DecodeStruct;
+    typedef typename CPUPolicy::DecodeStruct DecodeStruct;
 
-    typedef typename Impl::RenameStruct RenameStruct;
+    typedef typename CPUPolicy::RenameStruct RenameStruct;
 
-    typedef typename Impl::IEWStruct IEWStruct;
+    typedef typename CPUPolicy::IEWStruct IEWStruct;
 
     /** The main time buffer to do backwards communication. */
     TimeBuffer<TimeStruct> timeBuffer;

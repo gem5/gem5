@@ -3,23 +3,14 @@
 
 #include "arch/alpha/isa_traits.hh"
 
-#include "cpu/beta_cpu/comm.hh"
 #include "cpu/beta_cpu/cpu_policy.hh"
 #include "cpu/beta_cpu/alpha_params.hh"
 
-#include "cpu/beta_cpu/commit.hh"
-#include "cpu/beta_cpu/decode.hh"
-#include "cpu/beta_cpu/fetch.hh"
-#include "cpu/beta_cpu/free_list.hh"
-#include "cpu/beta_cpu/iew.hh"
-
-#include "cpu/beta_cpu/inst_queue.hh"
-#include "cpu/beta_cpu/regfile.hh"
-#include "cpu/beta_cpu/rename.hh"
-#include "cpu/beta_cpu/rename_map.hh"
-#include "cpu/beta_cpu/rob.hh"
-
+// Forward declarations.
+template <class Impl>
 class AlphaDynInst;
+
+template <class Impl>
 class AlphaFullCPU;
 
 /** Implementation specific struct that defines several key things to the
@@ -42,33 +33,22 @@ struct AlphaSimpleImpl
     typedef SimpleCPUPolicy<AlphaSimpleImpl> CPUPol;
 
     /** The DynInst to be used. */
-    typedef AlphaDynInst DynInst;
+    typedef AlphaDynInst<AlphaSimpleImpl> DynInst;
+
+    /** The refcounted DynInst pointer to be used.  In most cases this is
+     *  what should be used, and not DynInst *.
+     */
+    typedef RefCountingPtr<DynInst> DynInstPtr;
 
     /** The FullCPU to be used. */
-    typedef AlphaFullCPU FullCPU;
+    typedef AlphaFullCPU<AlphaSimpleImpl> FullCPU;
 
     /** The Params to be passed to each stage. */
     typedef AlphaSimpleParams Params;
 
-    /** The struct for communication between fetch and decode. */
-    typedef SimpleFetchSimpleDecode<AlphaSimpleImpl> FetchStruct;
-
-    /** The struct for communication between decode and rename. */
-    typedef SimpleDecodeSimpleRename<AlphaSimpleImpl> DecodeStruct;
-
-    /** The struct for communication between rename and IEW. */
-    typedef SimpleRenameSimpleIEW<AlphaSimpleImpl> RenameStruct;
-
-    /** The struct for communication between IEW and commit. */
-    typedef SimpleIEWSimpleCommit<AlphaSimpleImpl> IEWStruct;
-
-    /** The struct for communication within the IEW stage. */
-    typedef IssueStruct<AlphaSimpleImpl> IssueStruct;
-
-    /** The struct for all backwards communication. */
-    typedef TimeBufStruct TimeStruct;
+    enum {
+        MaxWidth = 8
+    };
 };
-
-
 
 #endif // __ALPHA_IMPL_HH__

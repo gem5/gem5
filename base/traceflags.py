@@ -132,6 +132,9 @@ baseFlags = [
     'ROB',
     'FreeList',
     'RenameMap',
+    'LDSTQ',
+    'StoreSet',
+    'MemDepUnit',
     'DynInst',
     'FullCPU'
     ]
@@ -150,7 +153,7 @@ compoundFlagMap = {
     'DiskImageAll' : [ 'DiskImage', 'DiskImageRead', 'DiskImageWrite' ],
     'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
-    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'DynInst', 'FullCPU']
+    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LDSTQ', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU']
 }
 
 #############################################################

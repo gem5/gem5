@@ -40,9 +40,12 @@
 #include "targetarch/isa_traits.hh"
 
 // forward declarations
+struct AlphaSimpleImpl;
 class ExecContext;
-class AlphaDynInst;
 class DynInst;
+template <class Impl>
+class AlphaDynInst;
+
 class FastCPU;
 class SimpleCPU;
 class SymbolTable;

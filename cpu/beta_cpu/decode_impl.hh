@@ -9,7 +9,8 @@ SimpleDecode<Impl>::SimpleDecode(Params &params)
       iewToDecodeDelay(params.iewToDecodeDelay),
       commitToDecodeDelay(params.commitToDecodeDelay),
       fetchToDecodeDelay(params.fetchToDecodeDelay),
-      decodeWidth(params.decodeWidth)
+      decodeWidth(params.decodeWidth),
+      numInst(0)
 {
     DPRINTF(Decode, "Decode: decodeWidth=%i.\n", decodeWidth);
     _status = Idle;
@@ -103,7 +104,7 @@ SimpleDecode<Impl>::unblock()
 // was predicted incorrectly.
 template<class Impl>
 void
-SimpleDecode<Impl>::squash(DynInst *inst)
+SimpleDecode<Impl>::squash(DynInstPtr &inst)
 {
     DPRINTF(Decode, "Decode: Squashing due to incorrect branch prediction "
                     "detected at decode.\n");
@@ -163,16 +164,22 @@ SimpleDecode<Impl>::tick()
         // buffer were used.  Remove those instructions and handle
         // the rest of unblocking.
         if (_status == Unblocking) {
+            if (fromFetch->size > 0) {
+                // Add the current inputs to the skid buffer so they can be
+                // reprocessed when this stage unblocks.
+                skidBuffer.push(*fromFetch);
+            }
+
             unblock();
         }
     } else if (_status == Blocked) {
-        if (fromFetch->insts[0] != NULL) {
+        if (fromFetch->size > 0) {
             block();
         }
 
         if (!fromRename->renameInfo.stall &&
-                   !fromIEW->iewInfo.stall &&
-                   !fromCommit->commitInfo.stall) {
+            !fromIEW->iewInfo.stall &&
+            !fromCommit->commitInfo.stall) {
             DPRINTF(Decode, "Decode: Stall signals cleared, going to "
                     "unblock.\n");
             _status = Unblocking;
@@ -204,9 +211,7 @@ void
 SimpleDecode<Impl>::decode()
 {
     // Check time buffer if being told to squash.
-    if (/* fromRename->renameInfo.squash || */
-        /* fromIEW->iewInfo.squash || */
-        fromCommit->commitInfo.squash) {
+    if (fromCommit->commitInfo.squash) {
         squash();
         return;
     }
@@ -223,20 +228,22 @@ SimpleDecode<Impl>::decode()
     // Check fetch queue to see if instructions are available.
     // If no available instructions, do nothing, unless this stage is
     // currently unblocking.
-    if (fromFetch->insts[0] == NULL && _status != Unblocking) {
+    if (!fromFetch->insts[0] && _status != Unblocking) {
         DPRINTF(Decode, "Decode: Nothing to do, breaking out early.\n");
         // Should I change the status to idle?
         return;
     }
 
-    DynInst *inst;
+    DynInstPtr inst;
+
     // Instead have a class member variable that records which instruction
     // was the last one that was ended on.  At the tick() stage, it can
     // check if that's equal to 0.  If not, then don't pop stuff off.
-    unsigned num_inst = 0;
-    bool insts_available = _status == Unblocking ?
-        skidBuffer.front().insts[num_inst] != NULL :
-        fromFetch->insts[num_inst] != NULL;
+    unsigned to_rename_index = 0;
+
+    int insts_available = _status == Unblocking ?
+        skidBuffer.front().size :
+        fromFetch->size;
 
     // Debug block...
 #if 0
@@ -247,7 +254,7 @@ SimpleDecode<Impl>::decode()
             DPRINTF(Decode, "Decode: No instructions available, skid buffer "
                     "empty.\n");
         } else if (_status != Unblocking &&
-                   fromFetch->insts[0] == NULL) {
+                   !fromFetch->insts[0]) {
             DPRINTF(Decode, "Decode: No instructions available, fetch queue "
                     "empty.\n");
         } else {
@@ -262,26 +269,39 @@ SimpleDecode<Impl>::decode()
     // should be computed here.  However in this simple model all
     // computation will take place at execute.  Hence doneTargCalc()
     // will always be false.
-     while (num_inst < decodeWidth &&
-            insts_available)
+     while (insts_available > 0)
      {
         DPRINTF(Decode, "Decode: Sending instruction to rename.\n");
         // Might create some sort of accessor to get an instruction
         // on a per thread basis.  Or might be faster to just get
         // a pointer to an array or list of instructions and use that
         // within this code.
-        inst = _status == Unblocking ? skidBuffer.front().insts[num_inst] :
-               fromFetch->insts[num_inst];
+        inst = _status == Unblocking ? skidBuffer.front().insts[numInst] :
+               fromFetch->insts[numInst];
+
         DPRINTF(Decode, "Decode: Processing instruction %i with PC %#x\n",
-                inst, inst->readPC());
+                inst->seqNum, inst->readPC());
+
+        if (inst->isSquashed()) {
+            DPRINTF(Decode, "Decode: Instruction %i with PC %#x is "
+                    "squashed, skipping.\n",
+                    inst->seqNum, inst->readPC());
+
+            ++numInst;
+            --insts_available;
+
+            continue;
+        }
 
         // This current instruction is valid, so add it into the decode
         // queue.  The next instruction may not be valid, so check to
         // see if branches were predicted correctly.
-        toRename->insts[num_inst] = inst;
+        toRename->insts[to_rename_index] = inst;
+
+        ++(toRename->size);
 
         // Ensure that if it was predicted as a branch, it really is a
-        // branch.  This case should never happen in this model.
+        // branch.
         if (inst->predTaken() && !inst->isControl()) {
             panic("Instruction predicted as a branch!");
 
@@ -306,20 +326,19 @@ SimpleDecode<Impl>::decode()
         // them as ready to issue at any time.  Not sure if this check
         // should exist here or at a later stage; however it doesn't matter
         // too much for function correctness.
+        // Isn't this handled by the inst queue?
         if (inst->numSrcRegs() == 0) {
             inst->setCanIssue();
         }
 
         // Increment which instruction we're looking at.
-        ++num_inst;
+        ++numInst;
+        ++to_rename_index;
 
-        // Check whether or not there are instructions available.
-        // Either need to check within the skid buffer, or the fetch
-        // queue, depending if this stage is unblocking or not.
-        insts_available = _status == Unblocking ?
-                           skidBuffer.front().insts[num_inst] == NULL :
-                           fromFetch->insts[num_inst] == NULL;
+        --insts_available;
     }
+
+     numInst = 0;
 }
 
 #endif // __SIMPLE_DECODE_CC__

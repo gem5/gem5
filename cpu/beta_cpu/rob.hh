@@ -16,24 +16,20 @@ using namespace std;
 
 /**
  * ROB class.  Uses the instruction list that exists within the CPU to
- * represent the ROB.  This class doesn't contain that structure, but instead
- * a pointer to the CPU to get access to the structure.  The ROB has a large
- * hand in squashing instructions within the CPU, and is responsible for
- * sending out the squash signal as well as what instruction is to be
- * squashed.  The ROB also controls most of the calls to the CPU to delete
- * instructions; the only other call is made in the first stage of the pipe-
- * line, which tells the CPU to delete all instructions not in the ROB.
+ * represent the ROB.  This class doesn't contain that list, but instead
+ * a pointer to the CPU to get access to the list.  The ROB, in this first
+ * implementation, is largely what drives squashing.
  */
-template<class Impl>
+template <class Impl>
 class ROB
 {
   public:
     //Typedefs from the Impl.
     typedef typename Impl::FullCPU FullCPU;
-    typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::DynInstPtr DynInstPtr;
 
-    typedef pair<RegIndex, PhysRegIndex> UnmapInfo;
-    typedef typename list<DynInst *>::iterator InstIt;
+    typedef pair<RegIndex, PhysRegIndex> UnmapInfo_t;
+    typedef typename list<DynInstPtr>::iterator InstIt_t;
 
   public:
     /** ROB constructor.
@@ -56,15 +52,15 @@ class ROB
      *  @params inst The instruction being inserted into the ROB.
      *  @todo Remove the parameter once correctness is ensured.
      */
-    void insertInst(DynInst *inst);
+    void insertInst(DynInstPtr &inst);
 
     /** Returns pointer to the head instruction within the ROB.  There is
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the head of the ROB.
      */
-    DynInst *readHeadInst() { return cpu->instList.front(); }
+    DynInstPtr readHeadInst() { return cpu->instList.front(); }
 
-    DynInst *readTailInst() { return (*tail); }
+    DynInstPtr readTailInst() { return (*tail); }
 
     void retireHead();
 
@@ -108,15 +104,28 @@ class ROB
     /** Pointer to the CPU. */
     FullCPU *cpu;
 
+    /** Number of instructions in the ROB. */
     unsigned numEntries;
 
     /** Number of instructions that can be squashed in a single cycle. */
     unsigned squashWidth;
 
-    InstIt tail;
+    /** Iterator pointing to the instruction which is the last instruction
+     *  in the ROB.  This may at times be invalid (ie when the ROB is empty),
+     *  however it should never be incorrect.
+     */
+    InstIt_t tail;
 
-    InstIt squashIt;
+    /** Iterator used for walking through the list of instructions when
+     *  squashing.  Used so that there is persistent state between cycles;
+     *  when squashing, the instructions are marked as squashed but not
+     *  immediately removed, meaning the tail iterator remains the same before
+     *  and after a squash.
+     *  This will always be set to cpu->instList.end() if it is invalid.
+     */
+    InstIt_t squashIt;
 
+    /** Number of instructions in the ROB. */
     int numInstsInROB;
 
     /** The sequence number of the squashed instruction. */

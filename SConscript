@@ -91,8 +91,12 @@ base_sources = Split('''
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
+        cpu/beta_cpu/2bit_local_pred.cc
         cpu/beta_cpu/alpha_dyn_inst.cc
         cpu/beta_cpu/alpha_full_cpu.cc
+        cpu/beta_cpu/alpha_full_cpu_builder.cc
+        cpu/beta_cpu/bpred_unit.cc
+        cpu/beta_cpu/btb.cc
         cpu/beta_cpu/commit.cc
         cpu/beta_cpu/decode.cc
         cpu/beta_cpu/fetch.cc
@@ -100,9 +104,12 @@ base_sources = Split('''
         cpu/beta_cpu/full_cpu.cc
         cpu/beta_cpu/iew.cc
         cpu/beta_cpu/inst_queue.cc
+        cpu/beta_cpu/ldstq.cc
+        cpu/beta_cpu/mem_dep_unit.cc
         cpu/beta_cpu/rename.cc
         cpu/beta_cpu/rename_map.cc
         cpu/beta_cpu/rob.cc
+        cpu/beta_cpu/store_set.cc
 	cpu/fast_cpu/fast_cpu.cc
 	cpu/full_cpu/bpred.cc
 	cpu/full_cpu/commit.cc

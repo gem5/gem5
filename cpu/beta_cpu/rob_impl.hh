@@ -3,7 +3,7 @@
 
 #include "cpu/beta_cpu/rob.hh"
 
-template<class Impl>
+template <class Impl>
 ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth)
     : numEntries(_numEntries),
       squashWidth(_squashWidth),
@@ -13,43 +13,60 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth)
     doneSquashing = true;
 }
 
-template<class Impl>
+template <class Impl>
 void
 ROB<Impl>::setCPU(FullCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
 
+    // Set the tail to the beginning of the CPU instruction list so that
+    // upon the first instruction being inserted into the ROB, the tail
+    // iterator can simply be incremented.
     tail = cpu->instList.begin();
 
+    // Set the squash iterator to the end of the instruction list.
     squashIt = cpu->instList.end();
 }
 
-template<class Impl>
+template <class Impl>
 int
 ROB<Impl>::countInsts()
 {
-/*
-    int return_val = 0;
+    // Start at 1; if the tail matches cpu->instList.begin(), then there is
+    // one inst in the ROB.
+    int return_val = 1;
+
+    // There are quite a few special cases.  Do not use this function other
+    // than for debugging purposes.
+    if (cpu->instList.begin() == cpu->instList.end()) {
+        // In this case there are no instructions in the list.  The ROB
+        // must be empty.
+        return 0;
+    } else if (tail == cpu->instList.end()) {
+        // In this case, the tail is not yet pointing to anything valid.
+        // The ROB must be empty.
+        return 0;
+    }
 
     // Iterate through the ROB from the head to the tail, counting the
     // entries.
-    for (InstIt i = cpu->instList.begin(); i != tail; i++)
+    for (InstIt_t i = cpu->instList.begin(); i != tail; ++i)
     {
         assert(i != cpu->instList.end());
-        return_val++;
+        ++return_val;
     }
 
     return return_val;
-*/
+
     // Because the head won't be tracked properly until the ROB gets the
     // first instruction, and any time that the ROB is empty and has not
     // yet gotten the instruction, this function doesn't work.
-    return numInstsInROB;
+//    return numInstsInROB;
 }
 
-template<class Impl>
+template <class Impl>
 void
-ROB<Impl>::insertInst(DynInst *inst)
+ROB<Impl>::insertInst(DynInstPtr &inst)
 {
     // Make sure we have the right number of instructions.
     assert(numInstsInROB == countInsts());
@@ -68,7 +85,7 @@ ROB<Impl>::insertInst(DynInst *inst)
     // in which case the tail will be pointing at instList.end().  If that
     // happens, then reset the tail to the beginning of the list.
     if (tail != cpu->instList.end()) {
-        tail++;
+        ++tail;
     } else {
         tail = cpu->instList.begin();
     }
@@ -83,13 +100,14 @@ ROB<Impl>::insertInst(DynInst *inst)
 
 // Whatever calls this function needs to ensure that it properly frees up
 // registers prior to this function.
-template<class Impl>
+template <class Impl>
 void
 ROB<Impl>::retireHead()
 {
     assert(numInstsInROB == countInsts());
+    assert(numInstsInROB > 0);
 
-    DynInst *head_inst;
+    DynInstPtr head_inst;
 
     // Get the head ROB instruction.
     head_inst = cpu->instList.front();
@@ -116,12 +134,12 @@ ROB<Impl>::retireHead()
     }
 }
 
-template<class Impl>
+template <class Impl>
 bool
 ROB<Impl>::isHeadReady()
 {
     if (numInstsInROB != 0) {
-        DynInst *head_inst = cpu->instList.front();
+        DynInstPtr head_inst = cpu->instList.front();
 
         return head_inst->readyToCommit();
     }
@@ -129,7 +147,7 @@ ROB<Impl>::isHeadReady()
     return false;
 }
 
-template<class Impl>
+template <class Impl>
 unsigned
 ROB<Impl>::numFreeEntries()
 {
@@ -138,7 +156,7 @@ ROB<Impl>::numFreeEntries()
     return numEntries - numInstsInROB;
 }
 
-template<class Impl>
+template <class Impl>
 void
 ROB<Impl>::doSquash()
 {
@@ -162,6 +180,12 @@ ROB<Impl>::doSquash()
 
         (*squashIt)->setCanCommit();
 
+        // Special case for when squashing due to a syscall.  It's possible
+        // that the squash happened after the head instruction was already
+        // committed, meaning that (*squashIt)->seqNum != squashedSeqNum
+        // will never be false.  Normally the squash would never be able
+        // to go past the head of the ROB; in this case it might, so it
+        // must be handled otherwise it will segfault.
 #ifndef FULL_SYSTEM
         if (squashIt == cpu->instList.begin()) {
             DPRINTF(ROB, "ROB: Reached head of instruction list while "
@@ -190,7 +214,7 @@ ROB<Impl>::doSquash()
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
 ROB<Impl>::squash(InstSeqNum squash_num)
 {
@@ -206,41 +230,41 @@ ROB<Impl>::squash(InstSeqNum squash_num)
     doSquash();
 }
 
-template<class Impl>
+template <class Impl>
 uint64_t
 ROB<Impl>::readHeadPC()
 {
     assert(numInstsInROB == countInsts());
 
-    DynInst *head_inst = cpu->instList.front();
+    DynInstPtr head_inst = cpu->instList.front();
 
     return head_inst->readPC();
 }
 
-template<class Impl>
+template <class Impl>
 uint64_t
 ROB<Impl>::readHeadNextPC()
 {
     assert(numInstsInROB == countInsts());
 
-    DynInst *head_inst = cpu->instList.front();
+    DynInstPtr head_inst = cpu->instList.front();
 
     return head_inst->readNextPC();
 }
 
-template<class Impl>
+template <class Impl>
 InstSeqNum
 ROB<Impl>::readHeadSeqNum()
 {
     // Return the last sequence number that has not been squashed.  Other
     // stages can use it to squash any instructions younger than the current
     // tail.
-    DynInst *head_inst = cpu->instList.front();
+    DynInstPtr head_inst = cpu->instList.front();
 
     return head_inst->seqNum;
 }
 
-template<class Impl>
+template <class Impl>
 uint64_t
 ROB<Impl>::readTailPC()
 {
@@ -251,7 +275,7 @@ ROB<Impl>::readTailPC()
     return (*tail)->readPC();
 }
 
-template<class Impl>
+template <class Impl>
 InstSeqNum
 ROB<Impl>::readTailSeqNum()
 {

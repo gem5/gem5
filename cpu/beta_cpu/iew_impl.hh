@@ -3,8 +3,8 @@
 // communication happens simultaneously.  Might not be that bad really...
 // it might skew stats a bit though.  Issue would otherwise try to issue
 // instructions that would never be executed if there were a delay; without
-// it issue will simply squash.  Make this stage block properly.  Make this
-// stage delay after a squash properly.  Update the statuses for each stage.
+// it issue will simply squash.  Make this stage block properly.
+// Update the statuses for each stage.
 // Actually read instructions out of the skid buffer.
 
 #include <queue>
@@ -15,8 +15,9 @@
 template<class Impl, class IQ>
 SimpleIEW<Impl, IQ>::SimpleIEW(Params &params)
     : // Just make this time buffer really big for now
-      issueToExecQueue(20, 20),
+      issueToExecQueue(5, 5),
       instQueue(params),
+      ldstQueue(params),
       commitToIEWDelay(params.commitToIEWDelay),
       renameToIEWDelay(params.renameToIEWDelay),
       issueToExecuteDelay(params.issueToExecuteDelay),
@@ -45,6 +46,7 @@ SimpleIEW<Impl, IQ>::setCPU(FullCPU *cpu_ptr)
     cpu = cpu_ptr;
 
     instQueue.setCPU(cpu_ptr);
+    ldstQueue.setCPU(cpu_ptr);
 }
 
 template<class Impl, class IQ>
@@ -96,7 +98,7 @@ SimpleIEW<Impl, IQ>::setRenameMap(RenameMap *rm_ptr)
 
 template<class Impl, class IQ>
 void
-SimpleIEW<Impl, IQ>::wakeDependents(DynInst *inst)
+SimpleIEW<Impl, IQ>::wakeDependents(DynInstPtr &inst)
 {
     instQueue.wakeDependents(inst);
 }
@@ -150,17 +152,15 @@ SimpleIEW<Impl, IQ>::squash()
     // Tell the IQ to start squashing.
     instQueue.squash();
 
-    // Tell rename to squash through the time buffer.
-    // This communication may be redundant depending upon where squash()
-    // is called.
-//    toRename->iewInfo.squash = true;
+    // Tell the LDSTQ to start squashing.
+    ldstQueue.squash(fromCommit->commitInfo.doneSeqNum);
 }
 
 template<class Impl, class IQ>
 void
-SimpleIEW<Impl, IQ>::squash(DynInst *inst)
+SimpleIEW<Impl, IQ>::squash(DynInstPtr &inst)
 {
-    DPRINTF(IEW, "IEW: Squashing from a specific instruction, PC:%#x.\n",
+    DPRINTF(IEW, "IEW: Squashing from a specific instruction, PC: %#x.\n",
             inst->PC);
     // Perhaps leave the squashing up to the ROB stage to tell it when to
     // squash?
@@ -170,8 +170,11 @@ SimpleIEW<Impl, IQ>::squash(DynInst *inst)
     toRename->iewInfo.squash = true;
     // Also send PC update information back to prior stages.
     toRename->iewInfo.squashedSeqNum = inst->seqNum;
+    toRename->iewInfo.mispredPC = inst->readPC();
     toRename->iewInfo.nextPC = inst->readCalcTarg();
-    toRename->iewInfo.predIncorrect = true;
+    toRename->iewInfo.branchMispredict = true;
+    // Prediction was incorrect, so send back inverse.
+    toRename->iewInfo.branchTaken = !(inst->predTaken());
 }
 
 template<class Impl, class IQ>
@@ -229,7 +232,7 @@ SimpleIEW<Impl, IQ>::tick()
 
         // If there's still instructions coming from rename, continue to
         // put them on the skid buffer.
-        if (fromRename->insts[0] != NULL) {
+        if (fromRename->insts[0]) {
             block();
         }
 
@@ -243,6 +246,19 @@ SimpleIEW<Impl, IQ>::tick()
     // return early.
     // Write back number of free IQ entries here.
     toRename->iewInfo.freeIQEntries = instQueue.numFreeEntries();
+
+    // Check the committed load/store signals to see if there's a load
+    // or store to commit.  Also check if it's being told to execute a
+    // nonspeculative instruction.
+    if (fromCommit->commitInfo.commitIsStore) {
+        ldstQueue.commitStores(fromCommit->commitInfo.doneSeqNum);
+    } else if (fromCommit->commitInfo.commitIsLoad) {
+        ldstQueue.commitLoads(fromCommit->commitInfo.doneSeqNum);
+    }
+
+    if (fromCommit->commitInfo.nonSpecSeqNum != 0) {
+        instQueue.scheduleNonSpec(fromCommit->commitInfo.nonSpecSeqNum);
+    }
 
     DPRINTF(IEW, "IEW: IQ has %i free entries.\n",
             instQueue.numFreeEntries());
@@ -265,7 +281,7 @@ SimpleIEW<Impl, IQ>::iew()
     }
 
     ////////////////////////////////////////
-    //ISSUE stage
+    // DISPATCH/ISSUE stage
     ////////////////////////////////////////
 
     //Put into its own function?
@@ -273,16 +289,16 @@ SimpleIEW<Impl, IQ>::iew()
 
     // Check if there are any instructions coming from rename, and we're.
     // not squashing.
-    if (fromRename->insts[0] != NULL && _status != Squashing) {
+    if (fromRename->insts[0] && _status != Squashing) {
 
         // Loop through the instructions, putting them in the instruction
         // queue.
         for (int inst_num = 0; inst_num < issueReadWidth; ++inst_num)
         {
-            DynInst *inst = fromRename->insts[inst_num];
+            DynInstPtr inst = fromRename->insts[inst_num];
 
             // Make sure there's a valid instruction there.
-            if (inst == NULL)
+            if (!inst)
                 break;
 
             DPRINTF(IEW, "IEW: Issue: Adding PC %#x to IQ.\n",
@@ -294,25 +310,38 @@ SimpleIEW<Impl, IQ>::iew()
             // Be sure to mark these instructions as ready so that the
             // commit stage can go ahead and execute them, and mark
             // them as issued so the IQ doesn't reprocess them.
-            if (inst->isMemRef()) {
+            if (inst->isSquashed()) {
+                continue;
+            } else if (inst->isLoad()) {
                 DPRINTF(IEW, "IEW: Issue: Memory instruction "
-                             "encountered, skipping.\n");
+                        "encountered, adding to LDSTQ.\n");
 
-                inst->setIssued();
-                inst->setExecuted();
+                // Reserve a spot in the load store queue for this
+                // memory access.
+                ldstQueue.insertLoad(inst);
+
+            } else if (inst->isStore()) {
+                ldstQueue.insertStore(inst);
+
+                // A bit of a hack.  Set that it can commit so that
+                // the commit stage will try committing it, and then
+                // once commit realizes it's a store it will send back
+                // a signal to this stage to issue and execute that
+                // store.
                 inst->setCanCommit();
 
-                instQueue.advanceTail(inst);
+                instQueue.insertNonSpec(inst);
                 continue;
             } else if (inst->isNonSpeculative()) {
                 DPRINTF(IEW, "IEW: Issue: Nonspeculative instruction "
                         "encountered, skipping.\n");
 
-                inst->setIssued();
-                inst->setExecuted();
+                // Same hack as with stores.
                 inst->setCanCommit();
 
-                instQueue.advanceTail(inst);
+                // Specificall insert it as nonspeculative.
+                instQueue.insertNonSpec(inst);
+
                 continue;
             } else if (inst->isNop()) {
                 DPRINTF(IEW, "IEW: Issue: Nop instruction encountered "
@@ -355,6 +384,7 @@ SimpleIEW<Impl, IQ>::iew()
     // @todo: Move to the FU pool used in the current full cpu.
 
     int fu_usage = 0;
+    bool fetch_redirect = false;
 
     // Execute/writeback any instructions that are available.
     for (int inst_num = 0;
@@ -365,18 +395,25 @@ SimpleIEW<Impl, IQ>::iew()
         DPRINTF(IEW, "IEW: Execute: Executing instructions from IQ.\n");
 
         // Get instruction from issue's queue.
-        DynInst *inst = fromIssue->insts[inst_num];
+        DynInstPtr inst = fromIssue->insts[inst_num];
 
         DPRINTF(IEW, "IEW: Execute: Processing PC %#x.\n", inst->readPC());
-
-        inst->setExecuted();
 
         // Check if the instruction is squashed; if so then skip it
         // and don't count it towards the FU usage.
         if (inst->isSquashed()) {
             DPRINTF(IEW, "IEW: Execute: Instruction was squashed.\n");
+
+            // Consider this instruction executed so that commit can go
+            // ahead and retire the instruction.
+            inst->setExecuted();
+
+            toCommit->insts[inst_num] = inst;
+
             continue;
         }
+
+        inst->setExecuted();
 
         // If an instruction is executed, then count it towards FU usage.
         ++fu_usage;
@@ -384,7 +421,22 @@ SimpleIEW<Impl, IQ>::iew()
         // Execute instruction.
         // Note that if the instruction faults, it will be handled
         // at the commit stage.
-        inst->execute();
+        if (inst->isMemRef()) {
+            DPRINTF(IEW, "IEW: Execute: Calculating address for memory "
+                    "reference.\n");
+
+            // Tell the LDSTQ to execute this instruction (if it is a load).
+            if (inst->isLoad()) {
+                ldstQueue.executeLoad(inst);
+            } else if (inst->isStore()) {
+                ldstQueue.executeStore();
+            } else {
+                panic("IEW: Unexpected memory type!\n");
+            }
+
+        } else {
+            inst->execute();
+        }
 
         // First check the time slot that this instruction will write
         // to.  If there are free write ports at the time, then go ahead
@@ -401,16 +453,34 @@ SimpleIEW<Impl, IQ>::iew()
         // Check if branch was correct.  This check happens after the
         // instruction is added to the queue because even if the branch
         // is mispredicted, the branch instruction itself is still valid.
-        if (inst->mispredicted()) {
-            DPRINTF(IEW, "IEW: Execute: Branch mispredict detected.\n");
-            DPRINTF(IEW, "IEW: Execute: Redirecting fetch to PC: %#x.\n",
-                    inst->nextPC);
+        // Only handle this if there hasn't already been something that
+        // redirects fetch in this group of instructions.
+        if (!fetch_redirect) {
+            if (inst->mispredicted()) {
+                fetch_redirect = true;
 
-            // If incorrect, then signal the ROB that it must be squashed.
-            squash(inst);
+                DPRINTF(IEW, "IEW: Execute: Branch mispredict detected.\n");
+                DPRINTF(IEW, "IEW: Execute: Redirecting fetch to PC: %#x.\n",
+                        inst->nextPC);
 
-            // Not sure it really needs to break.
-//            break;
+                // If incorrect, then signal the ROB that it must be squashed.
+                squash(inst);
+            } else if (ldstQueue.violation()) {
+                fetch_redirect = true;
+
+                DynInstPtr violator = ldstQueue.getMemDepViolator();
+
+                DPRINTF(IEW, "IEW: LDSTQ detected a violation.  Violator PC: "
+                        "%#x, inst PC: %#x.  Addr is: %#x.\n",
+                        violator->readPC(), inst->readPC(), inst->physEffAddr);
+
+                instQueue.violation(inst, violator);
+
+                squash(inst);
+                // Otherwise check if there was a memory ordering violation.
+                // If there was, then signal ROB that it must be squashed.  Also
+                // signal IQ that there was a violation.
+            }
         }
     }
 
@@ -422,18 +492,20 @@ SimpleIEW<Impl, IQ>::iew()
     // Either have IEW have direct access to rename map, or have this as
     // part of backwards communication.
     for (int inst_num = 0; inst_num < executeWidth &&
-             toCommit->insts[inst_num] != NULL; inst_num++)
+             toCommit->insts[inst_num]; inst_num++)
     {
-        DynInst *inst = toCommit->insts[inst_num];
+        DynInstPtr inst = toCommit->insts[inst_num];
 
         DPRINTF(IEW, "IEW: Sending instructions to commit, PC %#x.\n",
                 inst->readPC());
 
-        instQueue.wakeDependents(inst);
+        if(!inst->isSquashed()) {
+            instQueue.wakeDependents(inst);
 
-        for (int i = 0; i < inst->numDestRegs(); i++)
-        {
-            renameMap->markAsReady(inst->renamedDestRegIdx(i));
+            for (int i = 0; i < inst->numDestRegs(); i++)
+            {
+                renameMap->markAsReady(inst->renamedDestRegIdx(i));
+            }
         }
     }
 

@@ -53,12 +53,12 @@ namespace Trace {
     class InstRecord;
 };
 
-class BaseInst
-{
-};
+// Forward declaration.
+template <class blah>
+class StaticInstPtr;
 
 template <class Impl>
-class BaseDynInst : public FastAlloc
+class BaseDynInst : public FastAlloc, public RefCounted
 {
   public:
     // Typedef for the CPU.
@@ -74,7 +74,7 @@ class BaseDynInst : public FastAlloc
     /// Logical register index type.
     typedef typename ISA::RegIndex RegIndex;
     /// Integer register index type.
-    typedef typename ISA::IntReg IntReg;
+    typedef typename ISA::IntReg   IntReg;
 
     enum {
         MaxInstSrcRegs = ISA::MaxInstSrcRegs,	//< Max source regs
@@ -429,6 +429,9 @@ class BaseDynInst : public FastAlloc
 
     /** Sets this instruction as ready to commit. */
     void setCanCommit() { canCommit = true; }
+
+    /** Clears this instruction as being ready to commit. */
+    void clearCanCommit() { canCommit = false; }
 
     /** Returns whether or not this instruction is ready to commit. */
     bool readyToCommit() const { return canCommit; }

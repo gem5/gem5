@@ -16,29 +16,18 @@
 using namespace std;
 
 #ifdef FULL_SYSTEM
-BaseFullCPU::BaseFullCPU(const std::string &_name,
-                         int number_of_threads,
-                         Counter max_insts_any_thread,
-                         Counter max_insts_all_threads,
-                         Counter max_loads_any_thread,
-                         Counter max_loads_all_threads,
-                         System *_system, Tick freq)
-    : BaseCPU(_name, number_of_threads,
-              max_insts_any_thread, max_insts_all_threads,
-              max_loads_any_thread, max_loads_all_threads,
-              _system, freq)
+BaseFullCPU::BaseFullCPU(Params &params)
+    : BaseCPU(params.name, params.numberOfThreads,
+              params.maxInstsAnyThread, params.maxInstsAllThreads,
+              params.maxLoadsAnyThread, params.maxLoadsAllThreads,
+              params._system, params.freq)
 {
 }
 #else
-BaseFullCPU::BaseFullCPU(const std::string &_name,
-                         int number_of_threads,
-                         Counter max_insts_any_thread,
-                         Counter max_insts_all_threads,
-                         Counter max_loads_any_thread,
-                         Counter max_loads_all_threads)
-    : BaseCPU(_name, number_of_threads,
-              max_insts_any_thread, max_insts_all_threads,
-              max_loads_any_thread, max_loads_all_threads)
+BaseFullCPU::BaseFullCPU(Params &params)
+    : BaseCPU(params.name, params.numberOfThreads,
+              params.maxInstsAnyThread, params.maxInstsAllThreads,
+              params.maxLoadsAnyThread, params.maxLoadsAllThreads)
 {
 }
 #endif // FULL_SYSTEM
@@ -67,14 +56,9 @@ FullBetaCPU<Impl>::TickEvent::description()
 template <class Impl>
 FullBetaCPU<Impl>::FullBetaCPU(Params &params)
 #ifdef FULL_SYSTEM
-    : BaseFullCPU(params.name, /* number_of_threads */ 1,
-                  params.maxInstsAnyThread, params.maxInstsAllThreads,
-                  params.maxLoadsAnyThread, params.maxLoadsAllThreads,
-                  params.system, params.freq),
+    : BaseFullCPU(params),
 #else
-    : BaseFullCPU(params.name, /* number_of_threads */ 1,
-                  params.maxInstsAnyThread, params.maxInstsAllThreads,
-                  params.maxLoadsAnyThread, params.maxLoadsAllThreads),
+    : BaseFullCPU(params),
 #endif // FULL_SYSTEM
       tickEvent(this),
       fetch(params),
@@ -91,17 +75,18 @@ FullBetaCPU<Impl>::FullBetaCPU(Params &params)
       renameMap(Impl::ISA::NumIntRegs, params.numPhysIntRegs,
                 Impl::ISA::NumFloatRegs, params.numPhysFloatRegs,
                 Impl::ISA::NumMiscRegs,
-                Impl::ISA::ZeroReg, Impl::ISA::ZeroReg),
+                Impl::ISA::ZeroReg,
+                Impl::ISA::ZeroReg + Impl::ISA::NumIntRegs),
 
       rob(params.numROBEntries, params.squashWidth),
 
       // What to pass to these time buffers?
       // For now just have these time buffers be pretty big.
-      timeBuffer(20, 20),
-      fetchQueue(20, 20),
-      decodeQueue(20, 20),
-      renameQueue(20, 20),
-      iewQueue(20, 20),
+      timeBuffer(5, 5),
+      fetchQueue(5, 5),
+      decodeQueue(5, 5),
+      renameQueue(5, 5),
+      iewQueue(5, 5),
 
       xc(NULL),
 
@@ -133,9 +118,9 @@ FullBetaCPU<Impl>::FullBetaCPU(Params &params)
     // initialize CPU, including PC
     TheISA::initCPU(&xc->regs);
 #else
-    xc = new ExecContext(this, /* thread_num */ 0, process, /* asid */ 0);
     DPRINTF(FullCPU, "FullCPU: Process's starting PC is %#x, process is %#x",
             process->prog_entry, process);
+    xc = new ExecContext(this, /* thread_num */ 0, process, /* asid */ 0);
 
     assert(process->getMemory() != NULL);
     assert(mem != NULL);
@@ -393,7 +378,7 @@ FullBetaCPU<Impl>::setPC(Addr new_PC)
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::addInst(DynInst *inst)
+FullBetaCPU<Impl>::addInst(DynInstPtr &inst)
 {
     instList.push_back(inst);
 }
@@ -411,9 +396,9 @@ FullBetaCPU<Impl>::instDone()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeBackInst(DynInst *inst)
+FullBetaCPU<Impl>::removeBackInst(DynInstPtr &inst)
 {
-    DynInst *inst_to_delete;
+    DynInstPtr inst_to_delete;
 
     // Walk through the instruction list, removing any instructions
     // that were inserted after the given instruction, inst.
@@ -424,22 +409,22 @@ FullBetaCPU<Impl>::removeBackInst(DynInst *inst)
         // Obtain the pointer to the instruction.
         inst_to_delete = instList.back();
 
-        DPRINTF(FullCPU, "FullCPU: Deleting instruction %#x, PC %#x\n",
-                inst_to_delete, inst_to_delete->readPC());
+        DPRINTF(FullCPU, "FullCPU: Removing instruction %i, PC %#x\n",
+                inst_to_delete->seqNum, inst_to_delete->readPC());
 
         // Remove the instruction from the list.
         instList.pop_back();
 
-        // Delete the instruction itself.
-        delete inst_to_delete;
+        // Mark it as squashed.
+        inst_to_delete->setSquashed();
     }
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeFrontInst(DynInst *inst)
+FullBetaCPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
-    DynInst *inst_to_delete;
+    DynInstPtr inst_to_delete;
 
     // The front instruction should be the same one being asked to be deleted.
     assert(instList.front() == inst);
@@ -451,7 +436,7 @@ FullBetaCPU<Impl>::removeFrontInst(DynInst *inst)
     DPRINTF(FullCPU, "FullCPU: Deleting committed instruction %#x, PC %#x\n",
             inst_to_delete, inst_to_delete->readPC());
 
-    delete inst_to_delete;
+//    delete inst_to_delete;
 }
 
 template <class Impl>
@@ -461,7 +446,7 @@ FullBetaCPU<Impl>::removeInstsNotInROB()
     DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
             "list.\n");
 
-    DynInst *rob_tail = rob.readTailInst();
+    DynInstPtr rob_tail = rob.readTailInst();
 
     removeBackInst(rob_tail);
 }
@@ -478,13 +463,13 @@ void
 FullBetaCPU<Impl>::dumpInsts()
 {
     int num = 0;
-    typename list<DynInst *>::iterator inst_list_it = instList.begin();
+    typename list<DynInstPtr>::iterator inst_list_it = instList.begin();
 
     while (inst_list_it != instList.end())
     {
-        cprintf("Instruction:%i\nInst:%#x\nPC:%#x\nSN:%lli\n\n",
-                num, (*inst_list_it), (*inst_list_it)->readPC(),
-                (*inst_list_it)->seqNum);
+        cprintf("Instruction:%i\nPC:%#x\nSN:%lli\nIssued:%i\nSquashed:%i\n\n",
+                num, (*inst_list_it)->readPC(), (*inst_list_it)->seqNum,
+                (*inst_list_it)->isIssued(), (*inst_list_it)->isSquashed());
         inst_list_it++;
         ++num;
     }
@@ -492,7 +477,7 @@ FullBetaCPU<Impl>::dumpInsts()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::wakeDependents(DynInst *inst)
+FullBetaCPU<Impl>::wakeDependents(DynInstPtr &inst)
 {
     iew.wakeDependents(inst);
 }

@@ -34,6 +34,7 @@
 #include <sstream>
 
 #include "base/cprintf.hh"
+#include "base/trace.hh"
 
 #include "arch/alpha/faults.hh"
 #include "cpu/exetrace.hh"
@@ -67,12 +68,14 @@ my_hash_t thishash;
 
 //int break_inst = -1;
 
-template<class Impl>
+template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
                                Addr pred_PC, InstSeqNum seq_num,
                                FullCPU *cpu)
     : staticInst(machInst), traceData(NULL), cpu(cpu), xc(cpu->xcBase())
 {
+    DPRINTF(FullCPU, "DynInst: Creating new DynInst.\n");
+
     effAddr = MemReq::inval_addr;
     physEffAddr = MemReq::inval_addr;
 
@@ -123,11 +126,13 @@ BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
 
     ++instcount;
 
+//    assert(instcount < 50);
+
     DPRINTF(FullCPU, "DynInst: Instruction created.  Instcount=%i\n",
             instcount);
 }
 
-template<class Impl>
+template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr<ISA> &_staticInst)
     : staticInst(_staticInst), traceData(NULL)
 {
@@ -155,7 +160,7 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr<ISA> &_staticInst)
     }
 }
 
-template<class Impl>
+template <class Impl>
 BaseDynInst<Impl>::~BaseDynInst()
 {
 /*
@@ -169,21 +174,21 @@ BaseDynInst<Impl>::~BaseDynInst()
             instcount);
 }
 
-template<class Impl>
+template <class Impl>
 FunctionalMemory *
 BaseDynInst<Impl>::getMemory(void)
 {
     return xc->mem;
 }
 /*
-template<class Impl>
+template <class Impl>
 IntReg *
 BaseDynInst<Impl>::getIntegerRegs(void)
 {
     return (spec_mode ? xc->specIntRegFile : xc->regs.intRegFile);
 }
 */
-template<class Impl>
+template <class Impl>
 void
 BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
 {
@@ -229,7 +234,7 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
 BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
 {
@@ -261,7 +266,7 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
 /**
  * @todo Need to find a way to get the cache block size here.
  */
-template<class Impl>
+template <class Impl>
 Fault
 BaseDynInst<Impl>::copySrcTranslate(Addr src)
 {
@@ -284,7 +289,7 @@ BaseDynInst<Impl>::copySrcTranslate(Addr src)
 /**
  * @todo Need to find a way to get the cache block size here.
  */
-template<class Impl>
+template <class Impl>
 Fault
 BaseDynInst<Impl>::copy(Addr dest)
 {
@@ -308,7 +313,7 @@ BaseDynInst<Impl>::copy(Addr dest)
     return fault;
 }
 
-template<class Impl>
+template <class Impl>
 void
 BaseDynInst<Impl>::dump()
 {
@@ -317,7 +322,7 @@ BaseDynInst<Impl>::dump()
     cprintf("'\n");
 }
 
-template<class Impl>
+template <class Impl>
 void
 BaseDynInst<Impl>::dump(std::string &outstring)
 {
@@ -330,7 +335,7 @@ BaseDynInst<Impl>::dump(std::string &outstring)
 
 
 #if 0
-template<class Impl>
+template <class Impl>
 Fault
 BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
 {

@@ -1,6 +1,4 @@
-// Todo: Squash properly.  Have commit be able to send a squash signal
-// to previous stages; will be needed when trap() is implemented.
-// Maybe have a special method for handling interrupts/traps.
+// Todo: Maybe have a special method for handling interrupts/traps.
 //
 // Traps:  Have IEW send a signal to commit saying that there's a trap to
 // be handled.  Have commit send the PC back to the fetch stage, along
@@ -17,12 +15,11 @@
 #ifndef __SIMPLE_COMMIT_HH__
 #define __SIMPLE_COMMIT_HH__
 
-//Includes: ROB, time buffer, structs, memory interface
-#include "arch/alpha/isa_traits.hh"
+//#include "arch/alpha/isa_traits.hh"
 #include "base/timebuf.hh"
-#include "cpu/beta_cpu/comm.hh"
-#include "cpu/beta_cpu/rename_map.hh"
-#include "cpu/beta_cpu/rob.hh"
+//#include "cpu/beta_cpu/comm.hh"
+//#include "cpu/beta_cpu/rename_map.hh"
+//#include "cpu/beta_cpu/rob.hh"
 #include "mem/memory_interface.hh"
 
 template<class Impl>
@@ -32,14 +29,15 @@ class SimpleCommit
     // Typedefs from the Impl.
     typedef typename Impl::ISA ISA;
     typedef typename Impl::FullCPU FullCPU;
-    typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
+    typedef typename Impl::CPUPol CPUPol;
 
-    typedef typename Impl::CPUPol::ROB ROB;
+    typedef typename CPUPol::ROB ROB;
 
-    typedef typename Impl::TimeStruct TimeStruct;
-    typedef typename Impl::IEWStruct IEWStruct;
-    typedef typename Impl::RenameStruct RenameStruct;
+    typedef typename CPUPol::TimeStruct TimeStruct;
+    typedef typename CPUPol::IEWStruct IEWStruct;
+    typedef typename CPUPol::RenameStruct RenameStruct;
 
   public:
     // I don't believe commit can block, so it will only have two
@@ -83,7 +81,7 @@ class SimpleCommit
 
     void commitInsts();
 
-    bool commitHead(DynInst *head_inst, unsigned inst_num);
+    bool commitHead(DynInstPtr &head_inst, unsigned inst_num);
 
     void getInsts();
 
@@ -117,7 +115,7 @@ class SimpleCommit
     FullCPU *cpu;
 
     /** Pointer to the rename map.  DO NOT USE if possible. */
-    typename Impl::CPUPol::RenameMap *renameMap;
+//    typename Impl::CPUPol::RenameMap *renameMap;
 
     //Store buffer interface?  Will need to move committed stores to the
     //store buffer

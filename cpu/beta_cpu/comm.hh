@@ -2,6 +2,7 @@
 #define __COMM_HH__
 
 #include <stdint.h>
+#include <vector>
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 
@@ -10,34 +11,49 @@ using namespace std;
 // Find better place to put this typedef.
 typedef short int PhysRegIndex;
 
-// Might want to put constructors/destructors here.
 template<class Impl>
 struct SimpleFetchSimpleDecode {
-    // Consider having a field of how many ready instructions.
-    typename Impl::DynInst *insts[1];
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    int size;
+
+    DynInstPtr insts[Impl::MaxWidth + 1];
 };
 
 template<class Impl>
 struct SimpleDecodeSimpleRename {
-    // Consider having a field of how many ready instructions.
-    typename Impl::DynInst *insts[1];
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    int size;
+
+    DynInstPtr insts[Impl::MaxWidth + 1];
 };
 
 template<class Impl>
 struct SimpleRenameSimpleIEW {
-    // Consider having a field of how many ready instructions.
-    typename Impl::DynInst *insts[1];
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    int size;
+
+    DynInstPtr insts[Impl::MaxWidth + 1];
 };
 
 template<class Impl>
 struct SimpleIEWSimpleCommit {
-    // Consider having a field of how many ready instructions.
-    typename Impl::DynInst *insts[1];
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    int size;
+
+    DynInstPtr insts[Impl::MaxWidth + 1];
 };
 
 template<class Impl>
 struct IssueStruct {
-    typename Impl::DynInst *insts[1];
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    int size;
+
+    DynInstPtr insts[Impl::MaxWidth + 1];
 };
 
 struct TimeBufStruct {
@@ -47,11 +63,9 @@ struct TimeBufStruct {
         bool predIncorrect;
         uint64_t branchAddr;
 
-        //Question, is it worthwhile to have this Addr passed along
-        //by each stage, or just have Fetch look it up in the proper
-        //amount of cycles in the time buffer?
-        //Both might actually be needed because decode can send a different
-        //nextPC if the bpred was wrong.
+        bool branchMispredict;
+        bool branchTaken;
+        uint64_t mispredPC;
         uint64_t nextPC;
     };
 
@@ -72,14 +86,14 @@ struct TimeBufStruct {
     struct iewComm {
         bool squash;
         bool stall;
-        bool predIncorrect;
 
         // Also eventually include skid buffer space.
         unsigned freeIQEntries;
 
+        bool branchMispredict;
+        bool branchTaken;
+        uint64_t mispredPC;
         uint64_t nextPC;
-        // For now hardcode the type.
-        // Change this to sequence number eventually.
         InstSeqNum squashedSeqNum;
     };
 
@@ -90,18 +104,31 @@ struct TimeBufStruct {
         bool stall;
         unsigned freeROBEntries;
 
+        bool branchMispredict;
+        bool branchTaken;
+        uint64_t mispredPC;
         uint64_t nextPC;
 
         // Think of better names here.
         // Will need to be a variety of sizes...
         // Maybe make it a vector, that way only need one object.
-        vector<PhysRegIndex> freeRegs;
+        std::vector<PhysRegIndex> freeRegs;
 
         bool robSquashing;
+
         // Represents the instruction that has either been retired or
         // squashed.  Similar to having a single bus that broadcasts the
         // retired or squashed sequence number.
         InstSeqNum doneSeqNum;
+
+        // Extra bits of information so that the LDSTQ only updates when it
+        // needs to.
+        bool commitIsStore;
+        bool commitIsLoad;
+
+        // Communication specifically to the IQ to tell the IQ that it can
+        // schedule a non-speculative instruction.
+        InstSeqNum nonSpecSeqNum;
     };
 
     commitComm commitInfo;

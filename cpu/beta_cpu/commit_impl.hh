@@ -9,7 +9,7 @@
 #include "cpu/beta_cpu/commit.hh"
 #include "cpu/exetrace.hh"
 
-template<class Impl>
+template <class Impl>
 SimpleCommit<Impl>::SimpleCommit(Params &params)
     : dcacheInterface(params.dcacheInterface),
       iewToCommitDelay(params.iewToCommitDelay),
@@ -21,7 +21,7 @@ SimpleCommit<Impl>::SimpleCommit(Params &params)
     _status = Idle;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::setCPU(FullCPU *cpu_ptr)
 {
@@ -29,7 +29,7 @@ SimpleCommit<Impl>::setCPU(FullCPU *cpu_ptr)
     cpu = cpu_ptr;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
@@ -43,7 +43,7 @@ SimpleCommit<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
     robInfoFromIEW = timeBuffer->getWire(-iewToCommitDelay);
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
@@ -54,7 +54,7 @@ SimpleCommit<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
     fromRename = renameQueue->getWire(-renameToROBDelay);
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 {
@@ -65,7 +65,7 @@ SimpleCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
     fromIEW = iewQueue->getWire(-iewToCommitDelay);
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::setROB(ROB *rob_ptr)
 {
@@ -73,7 +73,7 @@ SimpleCommit<Impl>::setROB(ROB *rob_ptr)
     rob = rob_ptr;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::tick()
 {
@@ -106,7 +106,7 @@ SimpleCommit<Impl>::tick()
     toIEW->commitInfo.freeROBEntries = rob->numFreeEntries();
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::commit()
 {
@@ -154,17 +154,30 @@ SimpleCommit<Impl>::commit()
 
         // Send back the sequence number of the squashed instruction.
         toIEW->commitInfo.doneSeqNum = squashed_inst;
+
         // Send back the squash signal to tell stages that they should squash.
         toIEW->commitInfo.squash = true;
+
         // Send back the rob squashing signal so other stages know that the
         // ROB is in the process of squashing.
         toIEW->commitInfo.robSquashing = true;
+
+        toIEW->commitInfo.branchMispredict =
+            robInfoFromIEW->iewInfo.branchMispredict;
+
+        toIEW->commitInfo.branchTaken =
+            robInfoFromIEW->iewInfo.branchTaken;
+
         toIEW->commitInfo.nextPC = robInfoFromIEW->iewInfo.nextPC;
+
+        toIEW->commitInfo.mispredPC = robInfoFromIEW->iewInfo.mispredPC;
     }
 
     if (_status != ROBSquashing) {
+        // If we're not currently squashing, then get instructions.
         getInsts();
 
+        // Try to commit any instructions.
         commitInsts();
     }
 
@@ -183,7 +196,7 @@ SimpleCommit<Impl>::commit()
 // Loop that goes through as many instructions in the ROB as possible and
 // tries to commit them.  The actual work for committing is done by the
 // commitHead() function.
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::commitInsts()
 {
@@ -195,7 +208,7 @@ SimpleCommit<Impl>::commitInsts()
     // Can't commit and squash things at the same time...
     ////////////////////////////////////
 
-    DynInst *head_inst = rob->readHeadInst();
+    DynInstPtr head_inst = rob->readHeadInst();
 
     unsigned num_committed = 0;
 
@@ -224,12 +237,12 @@ SimpleCommit<Impl>::commitInsts()
             // inst in the ROB without affecting any other stages.
             rob->retireHead();
 
-            ++num_committed;
         } else {
             // Increment the total number of non-speculative instructions
             // executed.
             // Hack for now: it really shouldn't happen until after the
-            // commit is deemed to be successful.
+            // commit is deemed to be successful, but this count is needed
+            // for syscalls.
             cpu->funcExeInst++;
 
             // Try to commit the head instruction.
@@ -256,9 +269,9 @@ SimpleCommit<Impl>::commitInsts()
     }
 }
 
-template<class Impl>
+template <class Impl>
 bool
-SimpleCommit<Impl>::commitHead(DynInst *head_inst, unsigned inst_num)
+SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 {
     // Make sure instruction is valid
     assert(head_inst);
@@ -271,21 +284,26 @@ SimpleCommit<Impl>::commitHead(DynInst *head_inst, unsigned inst_num)
     // Also check if it's nonspeculative.  Or a nop.  Then it will be
     // executed only when it reaches the head of the ROB.  Actually
     // executing a nop is a bit overkill...
-    if (head_inst->isStore() ||
-        head_inst->isLoad() ||
-        head_inst->isNonSpeculative() ||
-        head_inst->isNop()) {
-        DPRINTF(Commit, "Commit: Executing a memory reference or "
-                "nonspeculative instruction at commit, inst PC %#x\n",
-                head_inst->PC);
-        fault = head_inst->execute();
+    if (!head_inst->isExecuted()) {
+        // Keep this number correct.  We have not yet actually executed
+        // and committed this instruction.
+        cpu->funcExeInst--;
+        if (head_inst->isStore() || head_inst->isNonSpeculative()) {
+            DPRINTF(Commit, "Commit: Encountered a store or non-speculative "
+                    "instruction at the head of the ROB, PC %#x.\n",
+                    head_inst->readPC());
 
-        // Tell CPU to tell IEW to tell IQ (nasty chain of calls) that
-        // this instruction has completed.  Could predicate this on
-        // whether or not the instruction has a destination.
-        // Slightly unrealistic, but will not really be a factor once
-        // a real load/store queue is added.
-        cpu->wakeDependents(head_inst);
+            toIEW->commitInfo.nonSpecSeqNum = head_inst->seqNum;
+
+            // Change the instruction so it won't try to commit again until
+            // it is executed.
+            head_inst->clearCanCommit();
+
+            return false;
+        } else {
+            panic("Commit: Trying to commit un-executed instruction "
+                  "of unknown type!\n");
+        }
     }
 
     // Check if memory access was successful.
@@ -320,8 +338,10 @@ SimpleCommit<Impl>::commitHead(DynInst *head_inst, unsigned inst_num)
 #ifdef FULL_SYSTEM
         cpu->trap(fault);
 #else // !FULL_SYSTEM
-        panic("fault (%d) detected @ PC %08p", head_inst->getFault(),
-              head_inst->PC);
+        if (!head_inst->isNop()) {
+            panic("fault (%d) detected @ PC %08p", head_inst->getFault(),
+                  head_inst->PC);
+        }
 #endif // FULL_SYSTEM
     }
 
@@ -333,8 +353,8 @@ SimpleCommit<Impl>::commitHead(DynInst *head_inst, unsigned inst_num)
         return false;
     }
 
-    //If it's a branch, then send back branch prediction update info
-    //to the fetch stage.
+    // If it's a branch, then send back branch prediction update info
+    // to the fetch stage.
     // This should be handled in the iew stage if a mispredict happens...
 #if 0
     if (head_inst->isControl()) {
@@ -358,6 +378,15 @@ SimpleCommit<Impl>::commitHead(DynInst *head_inst, unsigned inst_num)
     }
 #endif
 
+    // Explicit communication back to the LDSTQ that a load has been committed
+    // and can be removed from the LDSTQ.  Stores don't need this because
+    // the LDSTQ will already have been told that a store has reached the head
+    // of the ROB.  Consider including communication if it's a store as well
+    // to keep things orthagonal.
+    if (head_inst->isLoad()) {
+        toIEW->commitInfo.commitIsLoad = true;
+    }
+
     // Now that the instruction is going to be committed, finalize its
     // trace data.
     if (head_inst->traceData) {
@@ -371,7 +400,7 @@ SimpleCommit<Impl>::commitHead(DynInst *head_inst, unsigned inst_num)
     return true;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::getInsts()
 {
@@ -382,24 +411,33 @@ SimpleCommit<Impl>::getInsts()
     // Read any issued instructions and place them into the ROB.  Do this
     // prior to squashing to avoid having instructions in the ROB that
     // don't get squashed properly.
+    int insts_to_process = min((int)renameWidth, fromRename->size);
+
     for (int inst_num = 0;
-         fromRename->insts[inst_num] != NULL && inst_num < renameWidth;
+         inst_num < insts_to_process;
          ++inst_num)
     {
-        DPRINTF(Commit, "Commit: Inserting PC %#x into ROB.\n",
-                fromRename->insts[inst_num]->readPC());
-        rob->insertInst(fromRename->insts[inst_num]);
+        if (!fromRename->insts[inst_num]->isSquashed()) {
+            DPRINTF(Commit, "Commit: Inserting PC %#x into ROB.\n",
+                    fromRename->insts[inst_num]->readPC());
+            rob->insertInst(fromRename->insts[inst_num]);
+        } else {
+            DPRINTF(Commit, "Commit: Instruction %i PC %#x was "
+                    "squashed, skipping.\n",
+                    fromRename->insts[inst_num]->seqNum,
+                    fromRename->insts[inst_num]->readPC());
+        }
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleCommit<Impl>::markCompletedInsts()
 {
     // Grab completed insts out of the IEW instruction queue, and mark
     // instructions completed within the ROB.
     for (int inst_num = 0;
-         fromIEW->insts[inst_num] != NULL && inst_num < iewWidth;
+         inst_num < iewWidth && fromIEW->insts[inst_num];
          ++inst_num)
     {
         DPRINTF(Commit, "Commit: Marking PC %#x, SN %i ready within ROB.\n",
@@ -411,7 +449,7 @@ SimpleCommit<Impl>::markCompletedInsts()
     }
 }
 
-template<class Impl>
+template <class Impl>
 uint64_t
 SimpleCommit<Impl>::readCommitPC()
 {

@@ -1,3 +1,5 @@
+#include "base/trace.hh"
+
 #include "cpu/beta_cpu/free_list.hh"
 
 SimpleFreeList::SimpleFreeList(unsigned _numLogicalIntRegs,
@@ -10,6 +12,16 @@ SimpleFreeList::SimpleFreeList(unsigned _numLogicalIntRegs,
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalRegs(numPhysicalIntRegs + numPhysicalFloatRegs)
 {
+    DPRINTF(FreeList, "FreeList: Creating new free list object.\n");
+
+    // DEBUG stuff.
+    freeIntRegsScoreboard.resize(numPhysicalIntRegs);
+
+    freeFloatRegsScoreboard.resize(numPhysicalRegs);
+
+    for (PhysRegIndex i = 0; i < numLogicalIntRegs; ++i) {
+        freeIntRegsScoreboard[i] = 0;
+    }
 
     // Put all of the extra physical registers onto the free list.  This
     // means excluding all of the base logical registers.
@@ -17,6 +29,14 @@ SimpleFreeList::SimpleFreeList(unsigned _numLogicalIntRegs,
          i < numPhysicalIntRegs; ++i)
     {
         freeIntRegs.push(i);
+
+        freeIntRegsScoreboard[i] = 1;
+    }
+
+    for (PhysRegIndex i = 0; i < numPhysicalIntRegs + numLogicalFloatRegs;
+         ++i)
+    {
+        freeFloatRegsScoreboard[i] = 0;
     }
 
     // Put all of the extra physical registers onto the free list.  This
@@ -26,8 +46,9 @@ SimpleFreeList::SimpleFreeList(unsigned _numLogicalIntRegs,
     for (PhysRegIndex i = numPhysicalIntRegs + numLogicalFloatRegs;
          i < numPhysicalRegs; ++i)
     {
-        cprintf("Free List: Adding register %i to float list.\n", i);
         freeFloatRegs.push(i);
+
+        freeFloatRegsScoreboard[i] = 1;
     }
 }
 

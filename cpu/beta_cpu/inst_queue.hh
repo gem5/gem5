@@ -2,12 +2,13 @@
 #define __INST_QUEUE_HH__
 
 #include <list>
+#include <map>
 #include <queue>
 #include <stdint.h>
+#include <vector>
 
 #include "base/timebuf.hh"
-
-using namespace std;
+#include "cpu/inst_seq.hh"
 
 //Perhaps have a better separation between the data structure underlying
 //and the actual algorithm.
@@ -24,47 +25,52 @@ using namespace std;
  * and 96-191 are fp).  This remains true even for both logical and
  * physical register indices.
  */
-template<class Impl>
+template <class Impl>
 class InstructionQueue
 {
   public:
     //Typedefs from the Impl.
     typedef typename Impl::FullCPU FullCPU;
-    typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
 
-    typedef typename Impl::IssueStruct IssueStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
+    typedef typename Impl::CPUPol::MemDepUnit MemDepUnit;
+    typedef typename Impl::CPUPol::IssueStruct IssueStruct;
+    typedef typename Impl::CPUPol::TimeStruct TimeStruct;
 
     // Typedef of iterator through the list of instructions.  Might be
     // better to untie this from the FullCPU or pass its information to
     // the stages.
-    typedef typename list<DynInst *>::iterator ListIt;
+    typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     /**
-     * Class for priority queue entries.  Mainly made so that the < operator
-     * is defined.
+     * Struct for comparing entries to be added to the priority queue.  This
+     * gives reverse ordering to the instructions in terms of sequence
+     * numbers: the instructions with smaller sequence numbers (and hence
+     * are older) will be at the top of the priority queue.
      */
-    struct ReadyEntry {
-        DynInst *inst;
-
-        ReadyEntry(DynInst *_inst)
-            : inst(_inst)
-        { }
-
-        /** Compare(lhs,rhs) checks if rhs is "bigger" than lhs.  If so, rhs
-         *  goes higher on the priority queue.  The oldest instruction should
-         *  be on the top of the instruction queue, so in this case "bigger"
-         *  has the reverse meaning; the instruction with the lowest
-         *  sequence number is on the top.
-         */
-        bool operator <(const ReadyEntry &rhs) const
+    struct pqCompare
+    {
+        bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
         {
-            if (this->inst->seqNum > rhs.inst->seqNum)
-                return true;
-            return false;
+            return lhs->seqNum > rhs->seqNum;
         }
     };
+
+    /**
+     * Struct for comparing entries to be added to the set.  This gives
+     * standard ordering in terms of sequence numbers.
+     */
+    struct setCompare
+    {
+        bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
+        {
+            return lhs->seqNum < rhs->seqNum;
+        }
+    };
+
+    typedef std::priority_queue<DynInstPtr, vector<DynInstPtr>, pqCompare>
+    ReadyInstQueue;
 
     InstructionQueue(Params &params);
 
@@ -78,19 +84,31 @@ class InstructionQueue
 
     bool isFull();
 
-    void insert(DynInst *new_inst);
+    void insert(DynInstPtr &new_inst);
 
-    void advanceTail(DynInst *inst);
+    void insertNonSpec(DynInstPtr &new_inst);
+
+    void advanceTail(DynInstPtr &inst);
 
     void scheduleReadyInsts();
 
-    void wakeDependents(DynInst *completed_inst);
+    void scheduleNonSpec(const InstSeqNum &inst);
 
-    void doSquash();
+    void wakeDependents(DynInstPtr &completed_inst);
+
+    void violation(DynInstPtr &store, DynInstPtr &faulting_load);
 
     void squash();
 
+    void doSquash();
+
     void stopSquash();
+
+    /** Debugging function to dump all the list sizes, as well as print
+     *  out the list of nonspeculative instructions.  Should not be used
+     *  in any other capacity, but it has no harmful sideaffects.
+     */
+    void dumpLists();
 
   private:
     /** Debugging function to count how many entries are in the IQ.  It does
@@ -102,6 +120,11 @@ class InstructionQueue
   private:
     /** Pointer to the CPU. */
     FullCPU *cpu;
+
+    /** The memory dependence unit, which tracks/predicts memory dependences
+     *  between instructions.
+     */
+    MemDepUnit memDepUnit;
 
     /** The queue to the execute stage.  Issued instructions will be written
      *  into it.
@@ -118,26 +141,46 @@ class InstructionQueue
         Int,
         Float,
         Branch,
+        Memory,
+        Misc,
         Squashed,
         None
     };
 
     /** List of ready int instructions.  Used to keep track of the order in
-     *  which */
-    priority_queue<ReadyEntry> readyIntInsts;
+     *  which instructions should issue.
+     */
+    ReadyInstQueue readyIntInsts;
 
     /** List of ready floating point instructions. */
-    priority_queue<ReadyEntry> readyFloatInsts;
+    ReadyInstQueue readyFloatInsts;
 
     /** List of ready branch instructions. */
-    priority_queue<ReadyEntry> readyBranchInsts;
+    ReadyInstQueue readyBranchInsts;
+
+    /** List of ready memory instructions. */
+    ReadyInstQueue readyMemInsts;
+
+    /** List of ready miscellaneous instructions. */
+    ReadyInstQueue readyMiscInsts;
 
     /** List of squashed instructions (which are still valid and in IQ).
      *  Implemented using a priority queue; the entries must contain both
      *  the IQ index and sequence number of each instruction so that
      *  ordering based on sequence numbers can be used.
      */
-    priority_queue<ReadyEntry> squashedInsts;
+    ReadyInstQueue squashedInsts;
+
+    /** List of non-speculative instructions that will be scheduled
+     *  once the IQ gets a signal from commit.  While it's redundant to
+     *  have the key be a part of the value (the sequence number is stored
+     *  inside of DynInst), when these instructions are woken up only
+     *  the sequence number will be available.  Thus it is necessary to be
+     *  able to search by the sequence number alone.
+     */
+    std::map<InstSeqNum, DynInstPtr> nonSpecInsts;
+
+    typedef typename std::map<InstSeqNum, DynInstPtr>::iterator non_spec_it_t;
 
     /** Number of free IQ entries left. */
     unsigned freeEntries;
@@ -157,6 +200,9 @@ class InstructionQueue
 
     /** The number of branches that can be issued in one cycle. */
     unsigned branchWidth;
+
+    /** The number of memory instructions that can be issued in one cycle. */
+    unsigned memoryWidth;
 
     /** The total number of instructions that can be issued in one cycle. */
     unsigned totalWidth;
@@ -183,7 +229,7 @@ class InstructionQueue
     InstSeqNum squashedSeqNum;
 
     /** Iterator that points to the oldest instruction in the IQ. */
-    ListIt head;
+//    ListIt head;
 
     /** Iterator that points to the youngest instruction in the IQ. */
     ListIt tail;
@@ -200,7 +246,7 @@ class InstructionQueue
     class DependencyEntry
     {
       public:
-        DynInst *inst;
+        DynInstPtr inst;
         //Might want to include data about what arch. register the
         //dependence is waiting on.
         DependencyEntry *next;
@@ -212,9 +258,9 @@ class InstructionQueue
         //away.  So for now it will sit here, within the IQ, until
         //a better implementation is decided upon.
         // This function probably shouldn't be within the entry...
-        void insert(DynInst *new_inst);
+        void insert(DynInstPtr &new_inst);
 
-        void remove(DynInst *inst_to_remove);
+        void remove(DynInstPtr &inst_to_remove);
     };
 
     /** Array of linked lists.  Each linked list is a list of all the
@@ -233,11 +279,12 @@ class InstructionQueue
      */
     vector<bool> regScoreboard;
 
-    bool addToDependents(DynInst *new_inst);
-    void insertDependency(DynInst *new_inst);
-    void createDependency(DynInst *new_inst);
+    bool addToDependents(DynInstPtr &new_inst);
+    void insertDependency(DynInstPtr &new_inst);
+    void createDependency(DynInstPtr &new_inst);
+    void dumpDependGraph();
 
-    void addIfReady(DynInst *inst);
+    void addIfReady(DynInstPtr &inst);
 };
 
 #endif //__INST_QUEUE_HH__

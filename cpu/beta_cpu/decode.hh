@@ -10,11 +10,7 @@
 
 #include <queue>
 
-//Will want to include: time buffer, structs,
 #include "base/timebuf.hh"
-#include "cpu/beta_cpu/comm.hh"
-
-using namespace std;
 
 template<class Impl>
 class SimpleDecode
@@ -22,13 +18,15 @@ class SimpleDecode
   private:
     // Typedefs from the Impl.
     typedef typename Impl::ISA ISA;
-    typedef typename Impl::DynInst DynInst;
     typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
+    typedef typename Impl::CPUPol CPUPol;
 
-    typedef typename Impl::FetchStruct FetchStruct;
-    typedef typename Impl::DecodeStruct DecodeStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
+    // Typedefs from the CPU policy.
+    typedef typename CPUPol::FetchStruct FetchStruct;
+    typedef typename CPUPol::DecodeStruct DecodeStruct;
+    typedef typename CPUPol::TimeStruct TimeStruct;
 
     // Typedefs from the ISA.
     typedef typename ISA::Addr Addr;
@@ -71,7 +69,7 @@ class SimpleDecode
 
     inline void unblock();
 
-    void squash(DynInst *inst);
+    void squash(DynInstPtr &inst);
 
     // Interfaces to objects outside of decode.
     /** CPU interface. */
@@ -106,7 +104,7 @@ class SimpleDecode
     typename TimeBuffer<FetchStruct>::wire fromFetch;
 
     /** Skid buffer between fetch and decode. */
-    queue<FetchStruct> skidBuffer;
+    std::queue<FetchStruct> skidBuffer;
 
   private:
     //Consider making these unsigned to avoid any confusion.
@@ -124,6 +122,12 @@ class SimpleDecode
 
     /** The width of decode, in instructions. */
     unsigned decodeWidth;
+
+    /** The instruction that decode is currently on.  It needs to have
+     *  persistent state so that when a stall occurs in the middle of a
+     *  group of instructions, it can restart at the proper instruction.
+     */
+    unsigned numInst;
 };
 
 #endif // __SIMPLE_DECODE_HH__

@@ -13,16 +13,12 @@
 #include "base/timebuf.hh"
 #include "sim/eventq.hh"
 #include "cpu/pc_event.hh"
-#include "cpu/beta_cpu/comm.hh"
 #include "mem/mem_interface.hh"
-
-using namespace std;
 
 /**
  * SimpleFetch class to fetch a single instruction each cycle.  SimpleFetch
  * will stall if there's an Icache miss, but otherwise assumes a one cycle
- * Icache hit.  This will be replaced with a more fleshed out class in the
- * future.
+ * Icache hit.
  */
 
 template <class Impl>
@@ -31,12 +27,15 @@ class SimpleFetch
   public:
     /** Typedefs from Impl. */
     typedef typename Impl::ISA ISA;
+    typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::Params Params;
 
-    typedef typename Impl::FetchStruct FetchStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
+    typedef typename CPUPol::BPredUnit BPredUnit;
+    typedef typename CPUPol::FetchStruct FetchStruct;
+    typedef typename CPUPol::TimeStruct TimeStruct;
 
     /** Typedefs from ISA. */
     typedef typename ISA::MachInst MachInst;
@@ -76,6 +75,17 @@ class SimpleFetch
     // Figure out PC vs next PC and how it should be updated
     void squash(Addr newPC);
 
+  private:
+    /**
+     * Looks up in the branch predictor to see if the next PC should be
+     * either next PC+=MachInst or a branch target.
+     * @params next_PC Next PC variable passed in by reference.  It is
+     * expected to be set to the current PC; it will be updated with what
+     * the next PC will be.
+     * @return Whether or not a branch was predicted as taken.
+     */
+    bool lookupAndUpdateNextPC(Addr &next_PC);
+
   public:
     class CacheCompletionEvent : public Event
     {
@@ -110,8 +120,6 @@ class SimpleFetch
     /** Wire to get commit's information from backwards time buffer. */
     typename TimeBuffer<TimeStruct>::wire fromCommit;
 
-    // Will probably have this sit in the FullCPU and just pass a pointr in.
-    // Simplifies the constructors of all stages.
     /** Internal fetch instruction queue. */
     TimeBuffer<FetchStruct> *fetchQueue;
 
@@ -121,6 +129,9 @@ class SimpleFetch
 
     /** Icache interface. */
     MemInterface *icacheInterface;
+
+    /** BPredUnit. */
+    BPredUnit branchPred;
 
     /** Memory request used to access cache. */
     MemReqPtr memReq;

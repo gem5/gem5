@@ -1,6 +1,5 @@
 // Todo:  Create destructor.
-// Make it so that there's a proper separation between int and fp.  Also
-// have it so that there's a more meaningful name given to the variable
+// Have it so that there's a more meaningful name given to the variable
 // that marks the beginning of the FP registers.
 
 #ifndef __RENAME_MAP_HH__
@@ -10,7 +9,6 @@
 #include <vector>
 #include <utility>
 
-//Will want to include faults
 #include "cpu/beta_cpu/free_list.hh"
 
 using namespace std;
@@ -18,8 +16,6 @@ using namespace std;
 class SimpleRenameMap
 {
   public:
-//    typedef typename Impl::RegIndex RegIndex;
-
     /**
      * Pair of a logical register and a physical register.  Tells the
      * previous mapping of a logical register to a physical register.
@@ -44,6 +40,9 @@ class SimpleRenameMap
                     unsigned _numMiscRegs,
                     RegIndex _intZeroReg,
                     RegIndex _floatZeroReg);
+
+    /** Destructor. */
+    ~SimpleRenameMap();
 
     void setFreeList(SimpleFreeList *fl_ptr);
 
@@ -110,7 +109,9 @@ class SimpleRenameMap
         PhysRegIndex physical_reg;
         bool valid;
 
-        RenameEntry();
+        RenameEntry()
+            : physical_reg(0), valid(false)
+        { }
     };
 
     /** Integer rename map. */
@@ -121,6 +122,8 @@ class SimpleRenameMap
 
     /** Free list interface. */
     SimpleFreeList *freeList;
+
+    // Might want to make all these scoreboards into one large scoreboard.
 
     /** Scoreboard of physical integer registers, saying whether or not they
      *  are ready.

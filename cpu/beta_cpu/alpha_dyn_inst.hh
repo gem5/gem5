@@ -8,10 +8,37 @@
 #include "cpu/beta_cpu/alpha_impl.hh"
 #include "cpu/inst_seq.hh"
 
-using namespace std;
+/**
+ * Mostly implementation specific AlphaDynInst.  It is templated in case there
+ * are other implementations that are similar enough to be able to use this
+ * class without changes.  This is mainly useful if there are multiple similar
+ * CPU implementations of the same ISA.
+ */
 
-class AlphaDynInst : public BaseDynInst<AlphaSimpleImpl>
+template <class Impl>
+class AlphaDynInst : public BaseDynInst<Impl>
 {
+  public:
+    // Typedef for the CPU.
+    typedef typename Impl::FullCPU FullCPU;
+
+    //Typedef to get the ISA.
+    typedef typename Impl::ISA ISA;
+
+    /// Binary machine instruction type.
+    typedef typename ISA::MachInst MachInst;
+    /// Memory address type.
+    typedef typename ISA::Addr	   Addr;
+    /// Logical register index type.
+    typedef typename ISA::RegIndex RegIndex;
+    /// Integer register index type.
+    typedef typename ISA::IntReg   IntReg;
+
+    enum {
+        MaxInstSrcRegs = ISA::MaxInstSrcRegs,	//< Max source regs
+        MaxInstDestRegs = ISA::MaxInstDestRegs,	//< Max dest regs
+    };
+
   public:
     /** BaseDynInst constructor given a binary instruction. */
     AlphaDynInst(MachInst inst, Addr PC, Addr Pred_PC, InstSeqNum seq_num,
@@ -25,40 +52,6 @@ class AlphaDynInst : public BaseDynInst<AlphaSimpleImpl>
     {
         fault = staticInst->execute(this, traceData);
         return fault;
-    }
-
-    /** Location of this instruction within the ROB.  Might be somewhat
-     *  implementation specific.
-     *  Might not want this data in the inst as it may be deleted prior to
-     *  execution of the stage that needs it.
-     */
-    int robIdx;
-
-    int getROBEntry()
-    {
-        return robIdx;
-    }
-
-    void setROBEntry(int rob_idx)
-    {
-        robIdx = rob_idx;
-    }
-
-    /** Location of this instruction within the IQ.  Might be somewhat
-     *  implementation specific.
-     *  Might not want this data in the inst as it may be deleted prior to
-     *  execution of the stage that needs it.
-     */
-    int iqIdx;
-
-    int getIQEntry()
-    {
-        return iqIdx;
-    }
-
-    void setIQEntry(int iq_idx)
-    {
-        iqIdx = iq_idx;
     }
 
     uint64_t readUniq();

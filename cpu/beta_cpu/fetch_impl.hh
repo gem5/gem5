@@ -1,7 +1,5 @@
-// Todo: Rewrite this.  Add in branch prediction.  Fix up if squashing comes
-// from decode; only the correct instructions should be killed.  This will
-// probably require changing the CPU's instList functions to take a seqNum
-// instead of a dyninst.  With probe path, should be able to specify
+// Todo: Add in branch prediction.  With probe path, should
+// be able to specify
 // size of data to fetch.  Will be able to get full cache line.
 
 // Remove this later.
@@ -41,6 +39,7 @@ template<class Impl>
 SimpleFetch<Impl>::SimpleFetch(Params &params)
     : cacheCompletionEvent(this),
       icacheInterface(params.icacheInterface),
+      branchPred(params),
       decodeToFetchDelay(params.decodeToFetchDelay),
       renameToFetchDelay(params.renameToFetchDelay),
       iewToFetchDelay(params.iewToFetchDelay),
@@ -66,7 +65,7 @@ SimpleFetch<Impl>::SimpleFetch(Params &params)
     blkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
 
     // Create mask to get rid of offset bits.
-    cacheBlockMask = ~((int)log2(blkSize) - 1);
+    cacheBlockMask = (blkSize - 1);
 
     // Get the size of an instruction.
     instSize = sizeof(MachInst);
@@ -123,24 +122,59 @@ SimpleFetch<Impl>::processCacheCompletion()
         _status = IcacheMissComplete;
 }
 
-// Note that in the SimpleFetch<>, will most likely have to provide the
-// template parameters to BP and BTB.
+template<class Impl>
+bool
+SimpleFetch<Impl>::lookupAndUpdateNextPC(Addr &next_PC)
+{
+#if 1
+    // Do branch prediction check here.
+    bool predict_taken =  branchPred.BPLookup(next_PC);
+    Addr predict_target;
+
+    DPRINTF(Fetch, "Fetch: Branch predictor predicts taken? %i\n",
+            predict_taken);
+
+    if (branchPred.BTBValid(next_PC)) {
+        predict_target = branchPred.BTBLookup(next_PC);
+        DPRINTF(Fetch, "Fetch: BTB target is %#x.\n", predict_target);
+    } else {
+        predict_taken = false;
+        DPRINTF(Fetch, "Fetch: BTB does not have a valid entry.\n");
+    }
+
+    // Now update the PC to fetch the next instruction in the cache
+    // line.
+    if (!predict_taken) {
+        next_PC = next_PC + instSize;
+        return false;
+    } else {
+        next_PC = predict_target;
+        return true;
+    }
+#endif
+
+#if 0
+    next_PC = next_PC + instSize;
+    return false;
+#endif
+}
+
 template<class Impl>
 void
 SimpleFetch<Impl>::squash(Addr new_PC)
 {
     DPRINTF(Fetch, "Fetch: Squashing, setting PC to: %#x.\n", new_PC);
+
     cpu->setNextPC(new_PC + instSize);
     cpu->setPC(new_PC);
 
     _status = Squashing;
 
-    // Clear out the instructions that are no longer valid.
-    // Actually maybe slightly unrealistic to kill instructions that are
-    // in flight like that between stages.  Perhaps just have next
-    // stage ignore those instructions or something.  In the cycle where it's
-    // returning from squashing, the other stages can just ignore the inputs
-    // for that cycle.
+    // Clear the icache miss if it's outstanding.
+    if (_status == IcacheMissStall && icacheInterface) {
+        // @todo: Use an actual thread number here.
+        icacheInterface->squash(0);
+    }
 
     // Tell the CPU to remove any instructions that aren't currently
     // in the ROB (instructions in flight that were killed).
@@ -151,25 +185,27 @@ template<class Impl>
 void
 SimpleFetch<Impl>::tick()
 {
-#if 0
+#if 1
+    // Check squash signals from commit.
     if (fromCommit->commitInfo.squash) {
         DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
                 "from commit.\n");
 
         // In any case, squash.
         squash(fromCommit->commitInfo.nextPC);
+
+        // Also check if there's a mispredict that happened.
+        if (fromCommit->commitInfo.branchMispredict) {
+            branchPred.BPUpdate(fromCommit->commitInfo.mispredPC,
+                                 fromCommit->commitInfo.branchTaken);
+            branchPred.BTBUpdate(fromCommit->commitInfo.mispredPC,
+                                  fromCommit->commitInfo.nextPC);
+        }
+
         return;
     }
 
-    if (fromDecode->decodeInfo.squash) {
-        DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
-                "from decode.\n");
-
-        // Squash unless we're already squashing?
-        squash(fromDecode->decodeInfo.nextPC);
-        return;
-    }
-
+    // Check ROB squash signals from commit.
     if (fromCommit->commitInfo.robSquashing) {
         DPRINTF(Fetch, "Fetch: ROB is still squashing.\n");
 
@@ -178,11 +214,36 @@ SimpleFetch<Impl>::tick()
         return;
     }
 
+    // Check squash signals from decode.
+    if (fromDecode->decodeInfo.squash) {
+        DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
+                "from decode.\n");
+
+        // Update the branch predictor.
+        if (fromCommit->decodeInfo.branchMispredict) {
+            branchPred.BPUpdate(fromDecode->decodeInfo.mispredPC,
+                                 fromDecode->decodeInfo.branchTaken);
+            branchPred.BTBUpdate(fromDecode->decodeInfo.mispredPC,
+                                  fromDecode->decodeInfo.nextPC);
+        }
+
+        if (_status != Squashing) {
+            // Squash unless we're already squashing?
+            squash(fromDecode->decodeInfo.nextPC);
+            return;
+        }
+    }
+
+
+
+    // Check if any of the stall signals are high.
     if (fromDecode->decodeInfo.stall ||
         fromRename->renameInfo.stall ||
         fromIEW->iewInfo.stall ||
         fromCommit->commitInfo.stall)
     {
+        // Block stage, regardless of current status.
+
         DPRINTF(Fetch, "Fetch: Stalling stage.\n");
         DPRINTF(Fetch, "Fetch: Statuses: Decode: %i Rename: %i IEW: %i "
                 "Commit: %i\n",
@@ -190,10 +251,36 @@ SimpleFetch<Impl>::tick()
                 fromRename->renameInfo.stall,
                 fromIEW->iewInfo.stall,
                 fromCommit->commitInfo.stall);
-        // What to do if we're already in an icache stall?
+
+        _status = Blocked;
+        return;
+    } else if (_status == Blocked) {
+        // Unblock stage if status is currently blocked and none of the
+        // stall signals are being held high.
+        _status = Running;
+
+        return;
+    }
+
+    // If fetch has reached this point, then there are no squash signals
+    // still being held high.  Check if fetch is in the squashing state;
+    // if so, fetch can switch to running.
+    // Similarly, there are no blocked signals still being held high.
+    // Check if fetch is in the blocked state; if so, fetch can switch to
+    // running.
+    if (_status == Squashing) {
+        DPRINTF(Fetch, "Fetch: Done squashing, switching to running.\n");
+
+        // Switch status to running
+        _status = Running;
+    } else if (_status != IcacheMissStall) {
+        DPRINTF(Fetch, "Fetch: Running stage.\n");
+
+        fetch();
     }
 #endif
 
+#if 0
     if (_status != Blocked &&
         _status != Squashing &&
         _status != IcacheMissStall) {
@@ -253,7 +340,7 @@ SimpleFetch<Impl>::tick()
             DPRINTF(Fetch, "Fetch: ROB still squashing.\n");
         }
     }
-
+#endif
 }
 
 template<class Impl>
@@ -261,53 +348,8 @@ void
 SimpleFetch<Impl>::fetch()
 {
     //////////////////////////////////////////
-    // Check backwards communication
-    //////////////////////////////////////////
-
-    // If branch prediction is incorrect, squash any instructions,
-    // update PC, and do not fetch anything this cycle.
-
-    // Might want to put all the PC changing stuff in one area.
-    // Normally should also check here to see if there is branch
-    // misprediction info to update with.
-    if (fromCommit->commitInfo.squash) {
-        DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
-                "from commit.\n");
-        squash(fromCommit->commitInfo.nextPC);
-        return;
-    } else if (fromDecode->decodeInfo.squash) {
-        DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
-                "from decode.\n");
-        squash(fromDecode->decodeInfo.nextPC);
-        return;
-    } else if (fromCommit->commitInfo.robSquashing) {
-        DPRINTF(Fetch, "Fetch: ROB still squashing.\n");
-        _status = Squashing;
-        return;
-    }
-
-    // If being told to stall, do nothing.
-    if (fromDecode->decodeInfo.stall ||
-        fromRename->renameInfo.stall ||
-        fromIEW->iewInfo.stall ||
-        fromCommit->commitInfo.stall)
-    {
-        DPRINTF(Fetch, "Fetch: Stalling stage.\n");
-        DPRINTF(Fetch, "Fetch: Statuses: Decode: %i Rename: %i IEW: %i "
-                "Commit: %i\n",
-                fromDecode->decodeInfo.stall,
-                fromRename->renameInfo.stall,
-                fromIEW->iewInfo.stall,
-                fromCommit->commitInfo.stall);
-        _status = Blocked;
-        return;
-    }
-
-    //////////////////////////////////////////
     // Start actual fetch
     //////////////////////////////////////////
-
-    // If nothing else outstanding, attempt to read instructions.
 
 #ifdef FULL_SYSTEM
     // Flag to say whether or not address is physical addr.
@@ -317,13 +359,14 @@ SimpleFetch<Impl>::fetch()
 #endif // FULL_SYSTEM
 
     // The current PC.
-    Addr PC = cpu->readPC();
+    Addr fetch_PC = cpu->readPC();
 
     // Fault code for memory access.
     Fault fault = No_Fault;
 
     // If returning from the delay of a cache miss, then update the status
-    // to running, otherwise do the cache access.
+    // to running, otherwise do the cache access.  Possibly move this up
+    // to tick() function.
     if (_status == IcacheMissComplete) {
         DPRINTF(Fetch, "Fetch: Icache miss is complete.\n");
 
@@ -334,7 +377,7 @@ SimpleFetch<Impl>::fetch()
     } else {
         DPRINTF(Fetch, "Fetch: Attempting to translate and read "
                        "instruction, starting at PC %08p.\n",
-                PC);
+                fetch_PC);
 
         // Otherwise check if the instruction exists within the cache.
         // If it does, then proceed on to read the instruction and the rest
@@ -347,7 +390,7 @@ SimpleFetch<Impl>::fetch()
         // Setup the memReq to do a read of the first isntruction's address.
         // Set the appropriate read size and flags as well.
         memReq->cmd = Read;
-        memReq->reset(PC, instSize, flags);
+        memReq->reset(fetch_PC, instSize, flags);
 
         // Translate the instruction request.
         // Should this function be
@@ -401,7 +444,7 @@ SimpleFetch<Impl>::fetch()
     // Probably have a status on a per thread basis so each thread can
     // block independently and be woken up independently.
 
-    Addr next_PC = 0;
+    Addr next_PC = fetch_PC;
     InstSeqNum inst_seq;
 
     // If the read of the first instruction was successful, then grab the
@@ -409,6 +452,10 @@ SimpleFetch<Impl>::fetch()
     // queue heading to decode.
     if (fault == No_Fault) {
         DPRINTF(Fetch, "Fetch: Adding instructions to queue to decode.\n");
+
+        //////////////////////////
+        // Fetch first instruction
+        //////////////////////////
 
         // Need to keep track of whether or not a predicted branch
         // ended this fetch block.
@@ -420,12 +467,17 @@ SimpleFetch<Impl>::fetch()
         // Get a sequence number.
         inst_seq = cpu->getAndIncrementInstSeq();
 
+        // Update the next PC; it either is PC+sizeof(MachInst), or
+        // branch_target.  Check whether or not a branch was taken.
+        predicted_branch = lookupAndUpdateNextPC(next_PC);
+
         // Because the first instruction was already fetched, create the
         // DynInst and put it into the queue to decode.
-        DynInst *instruction = new DynInst(inst, PC, PC+instSize, inst_seq,
-                                           cpu);
+        DynInstPtr instruction = new DynInst(inst, fetch_PC, next_PC,
+                                             inst_seq, cpu);
+
         DPRINTF(Fetch, "Fetch: Instruction %i created, with PC %#x\n",
-                instruction, instruction->readPC());
+                inst_seq, instruction->readPC());
         DPRINTF(Fetch, "Fetch: Instruction opcode is: %03p\n",
                 OPCODE(inst));
 
@@ -440,13 +492,17 @@ SimpleFetch<Impl>::fetch()
         // that heads to decode.
         toDecode->insts[0] = instruction;
 
-        // Now update the PC to fetch the next instruction in the cache
-        // line.
-        PC = PC + instSize;
+        toDecode->size++;
+
+        fetch_PC = next_PC;
+
+        //////////////////////////
+        // Fetch other instructions
+        //////////////////////////
 
         // Obtain the index into the cache line by getting only the low
-        // order bits.
-        int line_index = PC & cacheBlockMask;
+        // order bits.  Will need to do shifting as well.
+        int line_index = fetch_PC & cacheBlockMask;
 
         // Take instructions and put them into the queue heading to decode.
         // Then read the next instruction in the cache line.  Continue
@@ -461,12 +517,14 @@ SimpleFetch<Impl>::fetch()
         // instructions, which can then be used to get all the instructions
         // needed.  Figure out if I can roll it back into one loop.
         for (int fetched = 1;
-             line_index < blkSize && fetched < fetchWidth;
+             line_index < blkSize &&
+                 fetched < fetchWidth &&
+                 !predicted_branch;
              line_index+=instSize, ++fetched)
         {
             // Reset the mem request to setup the read of the next
             // instruction.
-            memReq->reset(PC, instSize, flags);
+            memReq->reset(fetch_PC, instSize, flags);
 
             // Translate the instruction request.
             fault = cpu->translateInstReq(memReq);
@@ -485,16 +543,24 @@ SimpleFetch<Impl>::fetch()
             // Get a sequence number.
             inst_seq = cpu->getAndIncrementInstSeq();
 
+            predicted_branch = lookupAndUpdateNextPC(next_PC);
+
             // Create the actual DynInst.  Parameters are:
             // DynInst(instruction, PC, predicted PC, CPU pointer).
             // Because this simple model has no branch prediction, the
             // predicted PC will simply be PC+sizeof(MachInst).
             // Update to actually use a branch predictor to predict the
             // target in the future.
-            DynInst *instruction = new DynInst(inst, PC, PC+instSize,
-                                               inst_seq, cpu);
+            DynInstPtr instruction =
+                new DynInst(inst, fetch_PC, next_PC, inst_seq, cpu);
+
+            instruction->traceData =
+                Trace::getInstRecord(curTick, cpu->xcBase(), cpu,
+                                     instruction->staticInst,
+                                     instruction->readPC(), 0);
+
             DPRINTF(Fetch, "Fetch: Instruction %i created, with PC %#x\n",
-                    instruction, instruction->readPC());
+                    inst_seq, instruction->readPC());
             DPRINTF(Fetch, "Fetch: Instruction opcode is: %03p\n",
                     OPCODE(inst));
 
@@ -504,20 +570,15 @@ SimpleFetch<Impl>::fetch()
             // that heads to decode.
             toDecode->insts[fetched] = instruction;
 
+            toDecode->size++;
+
             // Might want to keep track of various stats.
 //             numInstsFetched++;
 
-            // Now update the PC to fetch the next instruction in the cache
-            // line.
-            PC = PC + instSize;
+            // Update the PC with the next PC.
+            fetch_PC = next_PC;
         }
 
-        // If no branches predicted taken, then increment PC with
-        // fall-through path.  This simple model always predicts not
-        // taken.
-        if (!predicted_branch) {
-            next_PC = PC;
-        }
     }
 
     // Now that fetching is completed, update the PC to signify what the next
@@ -544,10 +605,10 @@ SimpleFetch<Impl>::fetch()
 
         _status = Blocked;
 #ifdef FULL_SYSTEM
-        // Trap will probably need a pointer to the CPU to do accessing.
-        // Or an exec context. --Write ProxyExecContext eventually.
-        // Avoid using this for now as the xc really shouldn't be in here.
-        cpu->trap(fault);
+//        cpu->trap(fault);
+        // Send a signal to the ROB indicating that there's a trap from the
+        // fetch stage that needs to be handled.  Need to indicate that
+        // there's a fault, and the fault type.
 #else // !FULL_SYSTEM
         fatal("fault (%d) detected @ PC %08p", fault, cpu->readPC());
 #endif // FULL_SYSTEM

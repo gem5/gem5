@@ -1,25 +1,14 @@
 // Todo:
-// Figure out rename map for reg vs fp (probably just have one rename map).
-// In simple case, there is no renaming, so have this stage do basically
-// nothing.
-// Fix up trap and barrier handling.  Fix up squashing too, as it's too
-// dependent upon the iew stage continually telling it to squash.
-// Have commit send back information whenever a branch has committed.  This
-// way the history buffer can be cleared beyond the point where the branch
-// was.
+// Fix up trap and barrier handling.
+// May want to have different statuses to differentiate the different stall
+// conditions.
 
 #ifndef __SIMPLE_RENAME_HH__
 #define __SIMPLE_RENAME_HH__
 
-//Will want to include: time buffer, structs, free list, rename map
 #include <list>
 
 #include "base/timebuf.hh"
-#include "cpu/beta_cpu/comm.hh"
-#include "cpu/beta_cpu/rename_map.hh"
-#include "cpu/beta_cpu/free_list.hh"
-
-using namespace std;
 
 // Will need rename maps for both the int reg file and fp reg file.
 // Or change rename map class to handle both. (RegFile handles both.)
@@ -30,14 +19,14 @@ class SimpleRename
     // Typedefs from the Impl.
     typedef typename Impl::ISA ISA;
     typedef typename Impl::CPUPol CPUPol;
-    typedef typename Impl::DynInst DynInst;
+    typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::Params Params;
 
-    typedef typename Impl::FetchStruct FetchStruct;
-    typedef typename Impl::DecodeStruct DecodeStruct;
-    typedef typename Impl::RenameStruct RenameStruct;
-    typedef typename Impl::TimeStruct TimeStruct;
+    typedef typename CPUPol::FetchStruct FetchStruct;
+    typedef typename CPUPol::DecodeStruct DecodeStruct;
+    typedef typename CPUPol::RenameStruct RenameStruct;
+    typedef typename CPUPol::TimeStruct TimeStruct;
 
     // Typedefs from the CPUPol
     typedef typename CPUPol::FreeList FreeList;
@@ -94,6 +83,14 @@ class SimpleRename
 
     void removeFromHistory(InstSeqNum inst_seq_num);
 
+    inline void renameSrcRegs(DynInstPtr &inst);
+
+    inline void renameDestRegs(DynInstPtr &inst);
+
+    inline int calcFreeROBEntries();
+
+    inline int calcFreeIQEntries();
+
     /** Holds the previous information for each rename.
      *  Note that often times the inst may have been deleted, so only access
      *  the pointer for the address and do not dereference it.
@@ -123,7 +120,7 @@ class SimpleRename
         bool placeHolder;
     };
 
-    list<RenameHistory> historyBuffer;
+    std::list<RenameHistory> historyBuffer;
 
     /** CPU interface. */
     FullCPU *cpu;
@@ -155,7 +152,7 @@ class SimpleRename
     typename TimeBuffer<DecodeStruct>::wire fromDecode;
 
     /** Skid buffer between rename and decode. */
-    queue<DecodeStruct> skidBuffer;
+    std::queue<DecodeStruct> skidBuffer;
 
     /** Rename map interface. */
     SimpleRenameMap *renameMap;
@@ -179,6 +176,12 @@ class SimpleRename
      *  instructions might have freed registers in the previous cycle.
      */
     unsigned commitWidth;
+
+    /** The instruction that rename is currently on.  It needs to have
+     *  persistent state so that when a stall occurs in the middle of a
+     *  group of instructions, it can restart at the proper instruction.
+     */
+    unsigned numInst;
 };
 
 #endif // __SIMPLE_RENAME_HH__

@@ -1,6 +1,8 @@
 #ifndef __ALPHA_SIMPLE_PARAMS_HH__
 #define __ALPHA_SIMPLE_PARAMS_HH__
 
+#include "cpu/beta_cpu/full_cpu.hh"
+
 //Forward declarations
 class System;
 class AlphaITB;
@@ -15,16 +17,11 @@ class MemInterface;
  * defined that it can pass to all of the individual stages.
  */
 
-class AlphaSimpleParams
+class AlphaSimpleParams : public BaseFullCPU::Params
 {
   public:
-    std::string name;
-    int numberOfThreads;
-
 #ifdef FULL_SYSTEM
-    System *_system;
     AlphaITB *itb; AlphaDTB *dtb;
-    Tick freq;
 #else
     std::vector<Process *> workload;
     Process *process;
@@ -33,34 +30,41 @@ class AlphaSimpleParams
 
     FunctionalMemory *mem;
 
-    Counter maxInstsAnyThread;
-    Counter maxInstsAllThreads;
-    Counter maxLoadsAnyThread;
-    Counter maxLoadsAllThreads;
-
     //
     // Caches
     //
     MemInterface *icacheInterface;
     MemInterface *dcacheInterface;
 
+    //
+    // Fetch
+    //
     unsigned decodeToFetchDelay;
     unsigned renameToFetchDelay;
     unsigned iewToFetchDelay;
     unsigned commitToFetchDelay;
     unsigned fetchWidth;
 
+    //
+    // Decode
+    //
     unsigned renameToDecodeDelay;
     unsigned iewToDecodeDelay;
     unsigned commitToDecodeDelay;
     unsigned fetchToDecodeDelay;
     unsigned decodeWidth;
 
+    //
+    // Rename
+    //
     unsigned iewToRenameDelay;
     unsigned commitToRenameDelay;
     unsigned decodeToRenameDelay;
     unsigned renameWidth;
 
+    //
+    // IEW
+    //
     unsigned commitToIEWDelay;
     unsigned renameToIEWDelay;
     unsigned issueToExecuteDelay;
@@ -69,15 +73,38 @@ class AlphaSimpleParams
     unsigned executeIntWidth;
     unsigned executeFloatWidth;
 
+    //
+    // Commit
+    //
     unsigned iewToCommitDelay;
     unsigned renameToROBDelay;
     unsigned commitWidth;
     unsigned squashWidth;
 
+    //
+    // Branch predictor (BP & BTB)
+    //
+    unsigned localPredictorSize;
+    unsigned localPredictorCtrBits;
+    unsigned BTBEntries;
+    unsigned BTBTagSize;
+
+    //
+    // Load store queue
+    //
+    unsigned LQEntries;
+    unsigned SQEntries;
+
+    //
+    // Miscellaneous
+    //
     unsigned numPhysIntRegs;
     unsigned numPhysFloatRegs;
     unsigned numIQEntries;
     unsigned numROBEntries;
+
+    // Probably can get this from somewhere.
+    unsigned instShiftAmt;
 
     bool defReg;
 };

@@ -2,18 +2,19 @@
 
 #include "cpu/beta_cpu/rename.hh"
 
-template<class Impl>
+template <class Impl>
 SimpleRename<Impl>::SimpleRename(Params &params)
     : iewToRenameDelay(params.iewToRenameDelay),
       decodeToRenameDelay(params.decodeToRenameDelay),
       commitToRenameDelay(params.commitToRenameDelay),
       renameWidth(params.renameWidth),
-      commitWidth(params.commitWidth)
+      commitWidth(params.commitWidth),
+      numInst(0)
 {
     _status = Idle;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::setCPU(FullCPU *cpu_ptr)
 {
@@ -21,7 +22,7 @@ SimpleRename<Impl>::setCPU(FullCPU *cpu_ptr)
     cpu = cpu_ptr;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
@@ -38,7 +39,7 @@ SimpleRename<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
     toDecode = timeBuffer->getWire(0);
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
@@ -49,7 +50,7 @@ SimpleRename<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
     toIEW = renameQueue->getWire(0);
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 {
@@ -61,7 +62,7 @@ SimpleRename<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::setRenameMap(RenameMap *rm_ptr)
 {
@@ -69,7 +70,7 @@ SimpleRename<Impl>::setRenameMap(RenameMap *rm_ptr)
     renameMap = rm_ptr;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::setFreeList(FreeList *fl_ptr)
 {
@@ -77,7 +78,7 @@ SimpleRename<Impl>::setFreeList(FreeList *fl_ptr)
     freeList = fl_ptr;
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::dumpHistory()
 {
@@ -93,7 +94,7 @@ SimpleRename<Impl>::dumpHistory()
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::block()
 {
@@ -110,12 +111,12 @@ SimpleRename<Impl>::block()
     // the previous stages are expected to check all possible stall signals.
 }
 
-template<class Impl>
+template <class Impl>
 inline void
 SimpleRename<Impl>::unblock()
 {
-    DPRINTF(Rename, "Rename: Reading instructions out of skid "
-            "buffer.\n");
+    DPRINTF(Rename, "Rename: Read instructions out of skid buffer this "
+            "cycle.\n");
     // Remove the now processed instructions from the skid buffer.
     skidBuffer.pop();
 
@@ -130,12 +131,12 @@ SimpleRename<Impl>::unblock()
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::doSquash()
 {
     typename list<RenameHistory>::iterator hb_it = historyBuffer.begin();
-    typename list<RenameHistory>::iterator delete_it;
+//    typename list<RenameHistory>::iterator delete_it;
 
     InstSeqNum squashed_seq_num = fromCommit->commitInfo.doneSeqNum;
 
@@ -166,21 +167,25 @@ SimpleRename<Impl>::doSquash()
             freeList->addReg(hb_it->newPhysReg);
         }
 
-        delete_it = hb_it;
+//        delete_it = hb_it;
 
-        hb_it++;
+//        hb_it++;
 
-        historyBuffer.erase(delete_it);
+        historyBuffer.erase(hb_it++);
+
+        assert(hb_it != historyBuffer.end());
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
 SimpleRename<Impl>::squash()
 {
     DPRINTF(Rename, "Rename: Squashing instructions.\n");
     // Set the status to Squashing.
     _status = Squashing;
+
+    numInst = 0;
 
     // Clear the skid buffer in case it has any data in it.
     while (!skidBuffer.empty())
@@ -199,10 +204,10 @@ void
 SimpleRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num)
 {
     DPRINTF(Rename, "Rename: Removing a committed instruction from the "
-            "history buffer, sequence number %lli.\n", inst_seq_num);
+            "history buffer, until sequence number %lli.\n", inst_seq_num);
     typename list<RenameHistory>::iterator hb_it = historyBuffer.end();
 
-    hb_it--;
+    --hb_it;
 
     if (hb_it->instSeqNum > inst_seq_num) {
         DPRINTF(Rename, "Rename: Old sequence number encountered.  Ensure "
@@ -210,7 +215,7 @@ SimpleRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num)
         return;
     }
 
-    for ( ; hb_it->instSeqNum != inst_seq_num; hb_it--)
+    while ((*hb_it).instSeqNum != inst_seq_num)
     {
         // Make sure we haven't gone off the end of the list.
         assert(hb_it != historyBuffer.end());
@@ -222,16 +227,132 @@ SimpleRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num)
         // be the last instruction in the list, as it is the instruction
         // that was just committed that is being removed.
         assert(hb_it->instSeqNum < inst_seq_num);
-        DPRINTF(Rename, "Rename: Committed instruction is not the last "
-                "entry in the history buffer.\n");
+        DPRINTF(Rename, "Rename: Freeing up older rename of reg %i, sequence"
+                " number %i.\n",
+                (*hb_it).prevPhysReg, (*hb_it).instSeqNum);
+
+        if (!(*hb_it).placeHolder) {
+            freeList->addReg((*hb_it).prevPhysReg);
+        }
+
+        historyBuffer.erase(hb_it--);
     }
 
+    // Finally free up the previous register of the squashed instruction
+    // itself.
     if (!(*hb_it).placeHolder) {
         freeList->addReg(hb_it->prevPhysReg);
     }
 
     historyBuffer.erase(hb_it);
 
+}
+
+template <class Impl>
+inline void
+SimpleRename<Impl>::renameSrcRegs(DynInstPtr &inst)
+{
+    unsigned num_src_regs = inst->numSrcRegs();
+
+    // Get the architectual register numbers from the source and
+    // destination operands, and redirect them to the right register.
+    // Will need to mark dependencies though.
+    for (int src_idx = 0; src_idx < num_src_regs; src_idx++)
+    {
+        RegIndex src_reg = inst->srcRegIdx(src_idx);
+
+        // Look up the source registers to get the phys. register they've
+        // been renamed to, and set the sources to those registers.
+        RegIndex renamed_reg = renameMap->lookup(src_reg);
+
+        DPRINTF(Rename, "Rename: Looking up arch reg %i, got "
+                "physical reg %i.\n", (int)src_reg, (int)renamed_reg);
+
+        inst->renameSrcReg(src_idx, renamed_reg);
+
+        // Either incorporate it into the info passed back,
+        // or make another function call to see if that register is
+        // ready or not.
+        if (renameMap->isReady(renamed_reg)) {
+            DPRINTF(Rename, "Rename: Register is ready.\n");
+
+            inst->markSrcRegReady(src_idx);
+        }
+    }
+}
+
+template <class Impl>
+inline void
+SimpleRename<Impl>::renameDestRegs(DynInstPtr &inst)
+{
+    typename SimpleRenameMap::RenameInfo rename_result;
+
+    unsigned num_dest_regs = inst->numDestRegs();
+
+    // Rename the destination registers.
+    for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++)
+    {
+        RegIndex dest_reg = inst->destRegIdx(dest_idx);
+
+        // Get the physical register that the destination will be
+        // renamed to.
+        rename_result = renameMap->rename(dest_reg);
+
+        DPRINTF(Rename, "Rename: Renaming arch reg %i to physical "
+                "reg %i.\n", (int)dest_reg,
+                (int)rename_result.first);
+
+        // Record the rename information so that a history can be kept.
+        RenameHistory hb_entry(inst->seqNum, dest_reg,
+                               rename_result.first,
+                               rename_result.second);
+
+        historyBuffer.push_front(hb_entry);
+
+        DPRINTF(Rename, "Rename: Adding instruction to history buffer, "
+                "sequence number %lli.\n",
+                (*historyBuffer.begin()).instSeqNum);
+
+        // Tell the instruction to rename the appropriate destination
+        // register (dest_idx) to the new physical register
+        // (rename_result.first), and record the previous physical
+        // register that the same logical register was renamed to
+        // (rename_result.second).
+        inst->renameDestReg(dest_idx,
+                            rename_result.first,
+                            rename_result.second);
+    }
+
+    // If it's an instruction with no destination registers, then put
+    // a placeholder within the history buffer.  It might be better
+    // to not put it in the history buffer at all (other than branches,
+    // which always need at least a place holder), and differentiate
+    // between instructions with and without destination registers
+    // when getting from commit the instructions that committed.
+    if (num_dest_regs == 0) {
+        RenameHistory hb_entry(inst->seqNum);
+
+        historyBuffer.push_front(hb_entry);
+
+        DPRINTF(Rename, "Rename: Adding placeholder instruction to "
+                "history buffer, sequence number %lli.\n",
+                inst->seqNum);
+    }
+}
+
+template <class Impl>
+inline int
+SimpleRename<Impl>::calcFreeROBEntries()
+{
+    return fromCommit->commitInfo.freeROBEntries -
+        renameWidth * iewToRenameDelay;
+}
+
+template <class Impl>
+inline int
+SimpleRename<Impl>::calcFreeIQEntries()
+{
+    return fromIEW->iewInfo.freeIQEntries - renameWidth * iewToRenameDelay;
 }
 
 template<class Impl>
@@ -258,12 +379,18 @@ SimpleRename<Impl>::tick()
         // buffer were used.  Remove those instructions and handle
         // the rest of unblocking.
         if (_status == Unblocking) {
+            if (fromDecode->size > 0) {
+                // Add the current inputs onto the skid buffer, so they can be
+                // reprocessed when this stage unblocks.
+                skidBuffer.push(*fromDecode);
+            }
+
             unblock();
         }
     } else if (_status == Blocked) {
         // If stage is blocked and still receiving valid instructions,
         // make sure to store them in the skid buffer.
-        if (fromDecode->insts[0] != NULL) {
+        if (fromDecode->size > 0) {
 
             block();
 
@@ -273,8 +400,9 @@ SimpleRename<Impl>::tick()
 
         if (!fromIEW->iewInfo.stall &&
             !fromCommit->commitInfo.stall &&
-            fromCommit->commitInfo.freeROBEntries != 0 &&
-            fromIEW->iewInfo.freeIQEntries != 0) {
+            calcFreeROBEntries() > 0 &&
+            calcFreeIQEntries() > 0 &&
+            renameMap->numFreeEntries() > 0) {
 
             // Need to be sure to check all blocking conditions above.
             // If they have cleared, then start unblocking.
@@ -344,6 +472,7 @@ SimpleRename<Impl>::rename()
     // the rename map and the free list.
     if (fromCommit->commitInfo.squash ||
         fromCommit->commitInfo.robSquashing) {
+        DPRINTF(Rename, "Rename: Receiving signal from Commit to squash.\n");
         squash();
         return;
     }
@@ -368,37 +497,38 @@ SimpleRename<Impl>::rename()
     // Check the decode queue to see if instructions are available.
     // If there are no available instructions to rename, then do nothing.
     // Or, if the stage is currently unblocking, then go ahead and run it.
-    if (fromDecode->insts[0] == NULL && _status != Unblocking) {
+    if (fromDecode->size == 0 && _status != Unblocking) {
         DPRINTF(Rename, "Rename: Nothing to do, breaking out early.\n");
         // Should I change status to idle?
         return;
     }
 
-    DynInst *inst;
-    unsigned num_inst = 0;
+    ////////////////////////////////////
+    // Actual rename part.
+    ////////////////////////////////////
 
-    bool insts_available = _status == Unblocking ?
-        skidBuffer.front().insts[num_inst] != NULL :
-        fromDecode->insts[num_inst] != NULL;
+    DynInstPtr inst;
 
-    typename SimpleRenameMap::RenameInfo rename_result;
+    // If we're unblocking, then we may be in the middle of an instruction
+    // group.  Subtract off numInst to get the proper number of instructions
+    // left.
+    int insts_available = _status == Unblocking ?
+        skidBuffer.front().size - numInst :
+        fromDecode->size;
 
-    unsigned num_src_regs;
-    unsigned num_dest_regs;
+    bool block_this_cycle = false;
 
     // Will have to do a different calculation for the number of free
     // entries.  Number of free entries recorded on this cycle -
     // renameWidth * renameToDecodeDelay
-    // Can I avoid a multiply?
-    unsigned free_rob_entries =
-        fromCommit->commitInfo.freeROBEntries - iewToRenameDelay;
-    DPRINTF(Rename, "Rename: ROB has %d free entries.\n",
-            free_rob_entries);
-    unsigned free_iq_entries =
-        fromIEW->iewInfo.freeIQEntries - iewToRenameDelay;
+    int free_rob_entries = calcFreeROBEntries();
+    int free_iq_entries = calcFreeIQEntries();
+    int min_iq_rob = min(free_rob_entries, free_iq_entries);
+
+    unsigned to_iew_index = 0;
 
     // Check if there's any space left.
-    if (free_rob_entries == 0 || free_iq_entries == 0) {
+    if (min_iq_rob <= 0) {
         DPRINTF(Rename, "Rename: Blocking due to no free ROB or IQ "
                 "entries.\n"
                 "Rename: ROB has %d free entries.\n"
@@ -410,22 +540,40 @@ SimpleRename<Impl>::rename()
         toDecode->renameInfo.stall = true;
 
         return;
+    } else if (min_iq_rob < insts_available) {
+        DPRINTF(Rename, "Rename: Will have to block this cycle.  Only "
+                "%i insts can be renamed due to IQ/ROB limits.\n",
+                min_iq_rob);
+
+        insts_available = min_iq_rob;
+
+        block_this_cycle = true;
     }
 
-    unsigned min_iq_rob = min(free_rob_entries, free_iq_entries);
-    unsigned num_insts_to_rename = min(min_iq_rob, renameWidth);
-
-    while (insts_available &&
-           num_inst < num_insts_to_rename) {
+    while (insts_available > 0) {
         DPRINTF(Rename, "Rename: Sending instructions to iew.\n");
 
         // Get the next instruction either from the skid buffer or the
         // decode queue.
-        inst = _status == Unblocking ? skidBuffer.front().insts[num_inst] :
-               fromDecode->insts[num_inst];
+        inst = _status == Unblocking ? skidBuffer.front().insts[numInst] :
+               fromDecode->insts[numInst];
+
+        if (inst->isSquashed()) {
+            DPRINTF(Rename, "Rename: instruction %i with PC %#x is "
+                    "squashed, skipping.\n",
+                    inst->seqNum, inst->readPC());
+
+            // Go to the next instruction.
+            ++numInst;
+
+            // Decrement how many instructions are available.
+            --insts_available;
+
+            continue;
+        }
 
         DPRINTF(Rename, "Rename: Processing instruction %i with PC %#x.\n",
-                inst, inst->readPC());
+                inst->seqNum, inst->readPC());
 
         // If it's a trap instruction, then it needs to wait here within
         // rename until the ROB is empty.  Needs a way to detect that the
@@ -438,156 +586,59 @@ SimpleRename<Impl>::rename()
             panic("Rename: Serializing instruction encountered.\n");
             DPRINTF(Rename, "Rename: Serializing instruction "
                             "encountered.\n");
-            block();
 
             // Change status over to BarrierStall so that other stages know
             // what this is blocked on.
             _status = BarrierStall;
 
-            // Tell the previous stage to stall.
-            toDecode->renameInfo.stall = true;
+            block_this_cycle = true;
 
             break;
         }
-
-        // Make sure there's enough room in the ROB and the IQ.
-        // This doesn't really need to be done dynamically; consider
-        // moving outside of this function.
-        if (free_rob_entries == 0 || free_iq_entries == 0) {
-            DPRINTF(Rename, "Rename: Blocking due to lack of ROB or IQ "
-                            "entries.\n");
-            // Call some sort of function to handle all the setup of being
-            // blocked.
-            block();
-
-            // Not really sure how to schedule an event properly, but an
-            // event must be scheduled such that upon freeing a ROB entry,
-            // this stage will restart up.  Perhaps add in a ptr to an Event
-            // within the ROB that will be able to execute that Event
-            // if a free register is added to the freelist.
-
-            // Tell the previous stage to stall.
-            toDecode->renameInfo.stall = true;
-
-            break;
-        }
-
-        // Temporary variables to hold number of source and destination regs.
-        num_src_regs = inst->numSrcRegs();
-        num_dest_regs = inst->numDestRegs();
 
         // Check here to make sure there are enough destination registers
         // to rename to.  Otherwise block.
-        if (renameMap->numFreeEntries() < num_dest_regs)
+        if (renameMap->numFreeEntries() < inst->numDestRegs())
         {
             DPRINTF(Rename, "Rename: Blocking due to lack of free "
                             "physical registers to rename to.\n");
-            // Call function to handle blocking.
-            block();
-
             // Need some sort of event based on a register being freed.
 
-            // Tell the previous stage to stall.
-            toDecode->renameInfo.stall = true;
+            block_this_cycle = true;
 
-            // Break out of rename loop.
             break;
         }
 
-        // Get the architectual register numbers from the source and
-        // destination operands, and redirect them to the right register.
-        // Will need to mark dependencies though.
-        for (int src_idx = 0; src_idx < num_src_regs; src_idx++)
-        {
-            RegIndex src_reg = inst->srcRegIdx(src_idx);
+        renameSrcRegs(inst);
 
-            // Look up the source registers to get the phys. register they've
-            // been renamed to, and set the sources to those registers.
-            RegIndex renamed_reg = renameMap->lookup(src_reg);
-
-            DPRINTF(Rename, "Rename: Looking up arch reg %i, got "
-                    "physical reg %i.\n", (int)src_reg, (int)renamed_reg);
-
-            inst->renameSrcReg(src_idx, renamed_reg);
-
-            // Either incorporate it into the info passed back,
-            // or make another function call to see if that register is
-            // ready or not.
-            if (renameMap->isReady(renamed_reg)) {
-                DPRINTF(Rename, "Rename: Register is ready.\n");
-
-                inst->markSrcRegReady(src_idx);
-            }
-        }
-
-        // Rename the destination registers.
-        for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++)
-        {
-            RegIndex dest_reg = inst->destRegIdx(dest_idx);
-
-            // Get the physical register that the destination will be
-            // renamed to.
-            rename_result = renameMap->rename(dest_reg);
-
-            DPRINTF(Rename, "Rename: Renaming arch reg %i to physical "
-                    "register %i.\n", (int)dest_reg,
-                    (int)rename_result.first);
-
-            // Record the rename information so that a history can be kept.
-            RenameHistory hb_entry(inst->seqNum, dest_reg,
-                                   rename_result.first,
-                                   rename_result.second);
-
-            historyBuffer.push_front(hb_entry);
-
-            DPRINTF(Rename, "Rename: Adding instruction to history buffer, "
-                    "sequence number %lli.\n", inst->seqNum);
-
-            // Tell the instruction to rename the appropriate destination
-            // register (dest_idx) to the new physical register
-            // (rename_result.first), and record the previous physical
-            // register that the same logical register was renamed to
-            // (rename_result.second).
-            inst->renameDestReg(dest_idx,
-                                rename_result.first,
-                                rename_result.second);
-        }
-
-        // If it's an instruction with no destination registers, then put
-        // a placeholder within the history buffer.  It might be better
-        // to not put it in the history buffer at all (other than branches,
-        // which always need at least a place holder), and differentiate
-        // between instructions with and without destination registers
-        // when getting from commit the instructions that committed.
-        if (num_dest_regs == 0) {
-            RenameHistory hb_entry(inst->seqNum);
-
-            historyBuffer.push_front(hb_entry);
-
-            DPRINTF(Rename, "Rename: Adding placeholder instruction to "
-                    "history buffer, sequence number %lli.\n",
-                    inst->seqNum);
-        }
+        renameDestRegs(inst);
 
         // Put instruction in rename queue.
-        toIEW->insts[num_inst] = inst;
+        toIEW->insts[to_iew_index] = inst;
+        ++(toIEW->size);
 
         // Decrease the number of free ROB and IQ entries.
         --free_rob_entries;
         --free_iq_entries;
 
         // Increment which instruction we're on.
-        ++num_inst;
+        ++to_iew_index;
+        ++numInst;
 
-        // Check whether or not there are instructions available.
-        // Either need to check within the skid buffer, or the decode
-        // queue, depending if this stage is unblocking or not.
-        // Hmm, dangerous check.  Can touch memory not allocated.  Might
-        // be better to just do check at beginning of loop.  Or better
-        // yet actually pass the number of instructions issued.
-        insts_available = _status == Unblocking ?
-                           skidBuffer.front().insts[num_inst] != NULL :
-                           fromDecode->insts[num_inst] != NULL;
+        // Decrement how many instructions are available.
+        --insts_available;
     }
 
+    // Check if there's any instructions left that haven't yet been renamed.
+    // If so then block.
+    if (block_this_cycle) {
+        block();
+
+        toDecode->renameInfo.stall = true;
+    } else {
+        // If we had a successful rename and didn't have to exit early, then
+        // reset numInst so it will refer to the correct instruction on next
+        // run.
+        numInst = 0;
+    }
 }

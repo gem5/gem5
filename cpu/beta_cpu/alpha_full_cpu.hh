@@ -6,18 +6,19 @@
 #ifndef __ALPHA_FULL_CPU_HH__
 #define __ALPHA_FULL_CPU_HH__
 
-// To include: comm, impl, full cpu, ITB/DTB if full sys,
-#include "cpu/beta_cpu/comm.hh"
-#include "cpu/beta_cpu/alpha_impl.hh"
+// To include: comm, full cpu, ITB/DTB if full sys,
+//#include "cpu/beta_cpu/comm.hh"
+//#include "cpu/beta_cpu/alpha_impl.hh"
 #include "cpu/beta_cpu/full_cpu.hh"
 
 using namespace std;
 
-class AlphaFullCPU : public FullBetaCPU<AlphaSimpleImpl>
+template <class Impl>
+class AlphaFullCPU : public FullBetaCPU<Impl>
 {
   public:
-    typedef AlphaSimpleImpl::ISA AlphaISA;
-    typedef AlphaSimpleImpl::Params Params;
+    typedef typename Impl::ISA AlphaISA;
+    typedef typename Impl::Params Params;
 
   public:
     AlphaFullCPU(Params &params);

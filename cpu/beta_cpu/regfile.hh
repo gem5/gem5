@@ -13,11 +13,11 @@ using namespace std;
 // Things that are in the ifdef FULL_SYSTEM are pretty dependent on the ISA,
 // and should go in the AlphaFullCPU.
 
-template<class Impl>
+template <class Impl>
 class PhysRegFile
 {
     //Note that most of the definitions of the IntReg, FloatReg, etc. exist
-    //within the Impl class and not within this PhysRegFile class.
+    //within the Impl/ISA class and not within this PhysRegFile class.
 
     //Will need some way to allow stuff like swap_palshadow to access the
     //correct registers.  Might require code changes to swap_palshadow and
@@ -42,6 +42,8 @@ class PhysRegFile
 
     uint64_t readIntReg(PhysRegIndex reg_idx)
     {
+        assert(reg_idx < numPhysicalIntRegs);
+
         DPRINTF(IEW, "RegFile: Access to int register %i, has data "
                 "%i\n", int(reg_idx), intRegFile[reg_idx]);
         return intRegFile[reg_idx];
@@ -52,8 +54,10 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        DPRINTF(IEW, "RegFile: Access to float register %i, has data "
-                "%f\n", int(reg_idx), (float)floatRegFile[reg_idx].d);
+        assert(reg_idx < numPhysicalFloatRegs);
+
+        DPRINTF(IEW, "RegFile: Access to float register %i as single, has "
+                "data %8.8f\n", int(reg_idx), (float)floatRegFile[reg_idx].d);
 
         return (float)floatRegFile[reg_idx].d;
     }
@@ -63,8 +67,10 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        DPRINTF(IEW, "RegFile: Access to float register %i, has data "
-                "%f\n", int(reg_idx), floatRegFile[reg_idx].d);
+        assert(reg_idx < numPhysicalFloatRegs);
+
+        DPRINTF(IEW, "RegFile: Access to float register %i as double, has "
+                " data %8.8f\n", int(reg_idx), floatRegFile[reg_idx].d);
 
         return floatRegFile[reg_idx].d;
     }
@@ -74,14 +80,18 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        DPRINTF(IEW, "RegFile: Access to float register %i, has data "
-                "%f\n", int(reg_idx), floatRegFile[reg_idx].q);
+        assert(reg_idx < numPhysicalFloatRegs);
+
+        DPRINTF(IEW, "RegFile: Access to float register %i as int, has data "
+                "%lli\n", int(reg_idx), floatRegFile[reg_idx].q);
 
         return floatRegFile[reg_idx].q;
     }
 
     void setIntReg(PhysRegIndex reg_idx, uint64_t val)
     {
+        assert(reg_idx < numPhysicalIntRegs);
+
         DPRINTF(IEW, "RegFile: Setting int register %i to %lli\n",
                 int(reg_idx), val);
 
@@ -93,7 +103,9 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %f\n",
+        assert(reg_idx < numPhysicalFloatRegs);
+
+        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
                 int(reg_idx), val);
 
         floatRegFile[reg_idx].d = (double)val;
@@ -104,7 +116,9 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %f\n",
+        assert(reg_idx < numPhysicalFloatRegs);
+
+        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
                 int(reg_idx), val);
 
         floatRegFile[reg_idx].d = val;
@@ -114,6 +128,8 @@ class PhysRegFile
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
+
+        assert(reg_idx < numPhysicalFloatRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
                 int(reg_idx), val);
@@ -185,7 +201,7 @@ class PhysRegFile
     unsigned numPhysicalFloatRegs;
 };
 
-template<class Impl>
+template <class Impl>
 PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
                                unsigned _numPhysicalFloatRegs)
     : numPhysicalIntRegs(_numPhysicalIntRegs),
@@ -203,7 +219,7 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
 //Problem:  This code doesn't make sense at the RegFile level because it
 //needs things such as the itb and dtb.  Either put it at the CPU level or
 //the DynInst level.
-template<class Impl>
+template <class Impl>
 uint64_t
 PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
 {
@@ -319,7 +335,7 @@ PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
 int break_ipl = -1;
 #endif
 
-template<class Impl>
+template <class Impl>
 Fault
 PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 {
