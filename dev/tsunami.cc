@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2003 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <deque>
+#include <string>
+#include <vector>
+
+#include "cpu/intr_control.hh"
+#include "dev/console.hh"
+#include "dev/etherdev.hh"
+#include "dev/scsi_ctrl.hh"
+#include "dev/tlaser_clock.hh"
+#include "dev/tsunami_cchip.hh"
+#include "dev/tsunami.hh"
+#include "sim/builder.hh"
+#include "sim/system.hh"
+
+using namespace std;
+
+Tsunami::Tsunami(const string &name, ScsiController *s, EtherDev *e,
+                       TlaserClock *c, TsunamiCChip *cc, SimConsole *con,
+               IntrControl *ic, int intr_freq)
+    : SimObject(name), intctrl(ic), cons(con), scsi(s), ethernet(e),
+      clock(c), cchip(cc), interrupt_frequency(intr_freq)
+{
+    for (int i = 0; i < Tsunami::Max_CPUs; i++)
+        intr_sum_type[i] = 0;
+}
+
+void
+Tsunami::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
+}
+
+void
+Tsunami::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
+}
+
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
+
+    SimObjectParam<ScsiController *> scsi;
+    SimObjectParam<EtherDev *> ethernet;
+    SimObjectParam<TlaserClock *> clock;
+    SimObjectParam<TsunamiCChip *> cchip;
+    SimObjectParam<SimConsole *> cons;
+    SimObjectParam<IntrControl *> intrctrl;
+    Param<int> interrupt_frequency;
+
+END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
+
+BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
+
+    INIT_PARAM(scsi, "scsi controller"),
+    INIT_PARAM(ethernet, "ethernet controller"),
+    INIT_PARAM(clock, "turbolaser clock"),
+    INIT_PARAM(cchip, "cchip"),
+    INIT_PARAM(cons, "system console"),
+    INIT_PARAM(intrctrl, "interrupt controller"),
+    INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1200)
+
+END_INIT_SIM_OBJECT_PARAMS(Tsunami)
+
+
+CREATE_SIM_OBJECT(Tsunami)
+{
+    return new Tsunami(getInstanceName(), scsi, ethernet, clock,
+                           cchip, cons, intrctrl, interrupt_frequency);
+}
+
+REGISTER_SIM_OBJECT("Tsunami", Tsunami)
+
