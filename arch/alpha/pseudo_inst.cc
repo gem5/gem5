@@ -128,10 +128,10 @@ namespace AlphaPseudo
 
     Param<bool> __statistics(&context, "statistics",
                              "enable the statistics pseudo instructions",
-                             yes);
+                             true);
     Param<bool> __checkpoint(&context, "checkpoint",
                              "enable the checkpoint pseudo instructions",
-                             yes);
+                             true);
 
     void
     Context::checkParams()
