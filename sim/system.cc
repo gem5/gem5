@@ -156,8 +156,8 @@ System::System(Params *p)
         if (!hwrpb)
             panic("could not translate hwrpb addr\n");
 
-        *(uint64_t*)(hwrpb+0x50) = params->system_type;
-        *(uint64_t*)(hwrpb+0x58) = params->system_rev;
+        *(uint64_t*)(hwrpb+0x50) = htoa(params->system_type);
+        *(uint64_t*)(hwrpb+0x58) = htoa(params->system_rev);
     } else
         panic("could not find hwrpb\n");
 

@@ -103,4 +103,17 @@ class CallbackQueue
     }
 };
 
+template <class T, void (T::* F)()>
+class MakeCallback : public Callback
+{
+  private:
+    T *object;
+
+  public:
+    MakeCallback(T *o)
+    : object(o)
+    { }
+    void process() { (object->*F)(); }
+};
+
 #endif // __CALLBACK_HH__

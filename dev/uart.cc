@@ -287,7 +287,7 @@ Uart::write(MemReqPtr &req, const uint8_t *data)
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // write byte
-                cons->out(*(uint64_t *)data);
+                cons->out(*(uint8_t *)data);
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)

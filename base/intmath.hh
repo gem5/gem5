@@ -120,7 +120,7 @@ FloorLog2(int64_t x)
 }
 
 #if defined(__APPLE__)
-int
+inline int
 FloorLog2(size_t x)
 {
     assert(x > 0);

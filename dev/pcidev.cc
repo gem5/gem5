@@ -129,7 +129,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
           case PCI0_INTERRUPT_LINE:
           case PCI_CACHE_LINE_SIZE:
           case PCI_LATENCY_TIMER:
-            *(uint8_t *)&config.data[offset] = byte_value;
+            *(uint8_t *)&config.data[offset] = htoa(byte_value);
             break;
 
           default:
@@ -142,7 +142,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
           case PCI_COMMAND:
           case PCI_STATUS:
           case PCI_CACHE_LINE_SIZE:
-            *(uint16_t *)&config.data[offset] = half_value;
+            *(uint16_t *)&config.data[offset] = htoa(half_value);
             break;
 
           default:
@@ -166,21 +166,21 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
             // to size of memory it needs
             if (word_value == 0xffffffff) {
                 // This is I/O Space, bottom two bits are read only
-                if (config.data[offset] & 0x1) {
-                    *(uint32_t *)&config.data[offset] =
+                if (htoa(config.data[offset]) & 0x1) {
+                    *(uint32_t *)&config.data[offset] = htoa(
                         ~(BARSize[barnum] - 1) |
-                        (config.data[offset] & 0x3);
+                        (htoa(config.data[offset]) & 0x3));
                 } else {
                     // This is memory space, bottom four bits are read only
-                    *(uint32_t *)&config.data[offset] =
+                    *(uint32_t *)&config.data[offset] = htoa(
                         ~(BARSize[barnum] - 1) |
-                        (config.data[offset] & 0xF);
+                        (htoa(config.data[offset]) & 0xF));
                 }
             } else {
                 // This is I/O Space, bottom two bits are read only
-                if(config.data[offset] & 0x1) {
-                    *(uint32_t *)&config.data[offset] = (word_value & ~0x3) |
-                        (config.data[offset] & 0x3);
+                if(htoa(config.data[offset]) & 0x1) {
+                    *(uint32_t *)&config.data[offset] = htoa((word_value & ~0x3) |
+                        (htoa(config.data[offset]) & 0x3));
 
                     if (word_value & ~0x1) {
                         Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
@@ -205,8 +205,8 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
                 } else {
                     // This is memory space, bottom four bits are read only
-                    *(uint32_t *)&config.data[offset] = (word_value & ~0xF) |
-                        (config.data[offset] & 0xF);
+                    *(uint32_t *)&config.data[offset] = htoa((word_value & ~0xF) |
+                        (htoa(config.data[offset]) & 0xF));
 
                     if (word_value & ~0x3) {
                         Addr base_addr = (word_value & ~0x3) +
@@ -238,14 +238,14 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
             if (word_value == 0xfffffffe)
                 *(uint32_t *)&config.data[offset] = 0xffffffff;
             else
-                *(uint32_t *)&config.data[offset] = word_value;
+                *(uint32_t *)&config.data[offset] = htoa(word_value);
             break;
 
           case PCI_COMMAND:
             // This could also clear some of the error bits in the Status
             // register. However they should never get set, so lets ignore
             // it for now
-            *(uint16_t *)&config.data[offset] = half_value;
+            *(uint16_t *)&config.data[offset] = htoa(half_value);
             break;
 
           default:
