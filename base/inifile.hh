@@ -36,10 +36,11 @@
 
 #include "base/hashmap.hh"
 
-///
-/// @file
-/// Declaration of IniFile object.
-///
+/**
+ * @file
+ * Declaration of IniFile object.
+ * @todo Change comments to match documentation style.
+ */
 
 ///
 /// This class represents the contents of a ".ini" file.
@@ -192,10 +193,18 @@ class IniFile
     /// Find value corresponding to given section and entry names,
     /// following "default" links to other sections where possible.
     /// Value is returned by reference in 'value' param.
-    /// @retval True if found, false if not.
+    /// @return True if found, false if not.
     bool findDefault(const std::string &section, const std::string &entry,
                      std::string &value) const;
 
+    /**
+     * Find a value corresponding to the given section and entry names
+     * following "append" links to other sections where possible.
+     * @param section The section to start with.
+     * @param entry The entry to find.
+     * @param value The value found.
+     * @return True if the entry was found.
+     */
     bool findAppend(const std::string &section, const std::string &entry,
                     std::string &value) const;
 
