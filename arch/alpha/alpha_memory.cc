@@ -659,3 +659,4 @@ CREATE_SIM_OBJECT(AlphaDtb)
 }
 
 REGISTER_SIM_OBJECT("AlphaDTB", AlphaDtb)
+
