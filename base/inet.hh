@@ -53,15 +53,30 @@
 
 std::string eaddr_string(const uint8_t a[6]);
 
+struct EthHdr;
+struct IpHdr;
+struct TcpHdr;
+struct UdpHdr;
+
 struct EthHdr : protected eth_hdr
 {
     uint16_t type() const { return ntohs(eth_type); }
-    const uint8_t *payload() const { return (const uint8_t *)this + sizeof(*this); }
-    uint8_t *payload() { return (uint8_t *)this + sizeof(*this); }
+
+    const IpHdr *ip() const
+    { return type() == ETH_TYPE_IP ? (const IpHdr *)payload() : 0; }
+
+    IpHdr *ip()
+    { return type() == ETH_TYPE_IP ? (IpHdr *)payload() : 0; }
 
     bool unicast() { return eth_dst.data[0] == 0x00; }
     bool multicast() { return eth_dst.data[0] == 0x01; }
     bool broadcast() { return eth_dst.data[0] == 0xff; }
+
+    int size() const { return sizeof(EthHdr); }
+    const uint8_t *bytes() const { return (const uint8_t *)this; }
+    const uint8_t *payload() const { return bytes() + size(); }
+    uint8_t *bytes() { return (uint8_t *)this; }
+    uint8_t *payload() { return bytes() + size(); }
 };
 
 struct IpHdr : protected ip_hdr
@@ -83,8 +98,23 @@ struct IpHdr : protected ip_hdr
 
     uint16_t ip_cksum() const;
     uint16_t tu_cksum() const;
-    const uint8_t  *payload() const { return (const uint8_t *)this + hlen(); }
-    uint8_t  *payload() { return (uint8_t *)this + hlen(); }
+
+    const TcpHdr *tcp() const
+    { return proto() == IP_PROTO_TCP ? (const TcpHdr *)payload() : 0; }
+    const UdpHdr *udp() const
+    { return proto() == IP_PROTO_UDP ? (const UdpHdr *)payload() : 0; }
+
+    TcpHdr *tcp()
+    { return proto() == IP_PROTO_TCP ? (TcpHdr *)payload() : 0; }
+    UdpHdr *udp()
+    { return proto() == IP_PROTO_UDP ? (UdpHdr *)payload() : 0; }
+
+
+    int size() const { return hlen(); }
+    const uint8_t *bytes() const { return (const uint8_t *)this; }
+    const uint8_t *payload() const { return bytes() + size(); }
+    uint8_t *bytes() { return (uint8_t *)this; }
+    uint8_t *payload() { return bytes() + size(); }
 };
 
 struct TcpHdr : protected tcp_hdr
@@ -101,8 +131,11 @@ struct TcpHdr : protected tcp_hdr
 
     void sum(uint16_t sum) { th_sum = htons(sum); }
 
-    const uint8_t *payload() const { return (const uint8_t *)this + off(); }
-    uint8_t *payload() { return (uint8_t *)this + off(); }
+    int size() const { return off(); }
+    const uint8_t *bytes() const { return (const uint8_t *)this; }
+    const uint8_t *payload() const { return bytes() + size(); }
+    uint8_t *bytes() { return (uint8_t *)this; }
+    uint8_t *payload() { return bytes() + size(); }
 };
 
 struct UdpHdr : protected udp_hdr
@@ -114,8 +147,11 @@ struct UdpHdr : protected udp_hdr
 
     void sum(uint16_t sum) { uh_sum = htons(sum); }
 
-    const uint8_t *payload() const { return (const uint8_t *)this + sizeof(*this); }
-    uint8_t *payload() { return (uint8_t *)this + sizeof(*this); }
+    int size() const { return sizeof(UdpHdr); }
+    const uint8_t *bytes() const { return (const uint8_t *)this; }
+    const uint8_t *payload() const { return bytes() + size(); }
+    uint8_t *bytes() { return (uint8_t *)this; }
+    uint8_t *payload() { return bytes() + size(); }
 };
 
 #endif // __BASE_INET_HH__

@@ -51,30 +51,22 @@ class PacketData : public RefCounted
     uint8_t *data;
     int length;
 
-  protected:
-    uint8_t *_eth;
-    uint8_t *_ip;
-    uint8_t *_tcp;
-    uint8_t *_udp;
-
-    void doext();
-    void ext()
-    {
-        if (_eth != data)
-            doext();
-    }
-
   public:
-    PacketData() : data(NULL), length(0) { doext(); }
+    PacketData() : data(NULL), length(0) { }
     PacketData(std::auto_ptr<uint8_t> d, int l)
-        : data(d.release()), length(l) { doext(); }
+        : data(d.release()), length(l) { }
     ~PacketData() { if (data) delete [] data; }
 
   public:
-    EthHdr *eth() { ext(); return (EthHdr *)_eth; }
-    IpHdr *ip() { ext(); return (IpHdr *)_ip; }
-    TcpHdr *tcp() { ext(); return (TcpHdr *)_tcp; }
-    UdpHdr *udp() { ext(); return (UdpHdr *)_udp; }
+    const EthHdr *eth() const { return (const EthHdr *)data; }
+    const IpHdr *ip() const {const EthHdr *h = eth(); return h ? h->ip() : 0;}
+    const TcpHdr *tcp() const {const IpHdr *h = ip(); return h ? h->tcp() : 0;}
+    const UdpHdr *udp() const {const IpHdr *h = ip(); return h ? h->udp() : 0;}
+
+    EthHdr *eth() { return (EthHdr *)data; }
+    IpHdr *ip()   { EthHdr *h = eth(); return h ? h->ip() : 0; }
+    TcpHdr *tcp() { IpHdr *h = ip(); return h ? h->tcp() : 0; }
+    UdpHdr *udp() { IpHdr *h = ip(); return h ? h->udp() : 0; }
 
   public:
     void serialize(std::ostream &os);
