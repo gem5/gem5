@@ -46,16 +46,17 @@ eaddr_string(const uint8_t a[6])
 uint16_t
 IpHdr::ip_cksum() const
 {
-    uint16_t sum = ip_cksum_add(this, hlen(), 0);
-    return ip_cksum_carry(sum);
+    int sum = ip_cksum_add(this, hlen(), 0);
+    sum = ip_cksum_carry(sum);
+    return sum;
 }
 
 uint16_t
 IpHdr::tu_cksum() const
 {
-    uint16_t sum = ip_cksum_add(payload(), len() - hlen(), 0);
-    sum = ip_cksum_add(&ip_src, 4, sum);
-    sum = ip_cksum_add(&ip_dst, 4, sum);
-    sum += htons(ip_p + ip_len);
-    return ip_cksum_carry(sum);
+    int sum = ip_cksum_add(payload(), len() - hlen(), 0);
+    sum = ip_cksum_add(&ip_src, 8, sum); // source and destination
+    sum += htons(ip_p + len() - hlen());
+    sum = ip_cksum_carry(sum);
+    return sum;
 }

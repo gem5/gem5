@@ -82,7 +82,7 @@ struct EthHdr : protected eth_hdr
 struct IpHdr : protected ip_hdr
 {
     uint8_t  version() const { return ip_v; }
-    uint8_t  hlen() const { return ip_hl; }
+    uint8_t  hlen() const { return ip_hl * 4; }
     uint8_t  tos() const { return ip_tos; }
     uint16_t len() const { return ntohs(ip_len); }
     uint16_t id() const { return ntohs(ip_id); }
@@ -90,11 +90,11 @@ struct IpHdr : protected ip_hdr
     uint16_t frag_off() const { return ntohs(ip_off) & 0x1fff; }
     uint8_t  ttl() const { return ip_ttl; }
     uint8_t  proto() const { return ip_p; }
-    uint16_t sum() const { return ntohs(ip_sum); }
+    uint16_t sum() const { return ip_sum; }
     uint32_t src() const { return ntohl(ip_src); }
     uint32_t dst() const { return ntohl(ip_dst); }
 
-    void sum(uint16_t sum) { ip_sum = htons(sum); }
+    void sum(uint16_t sum) { ip_sum = sum; }
 
     uint16_t ip_cksum() const;
     uint16_t tu_cksum() const;
@@ -126,10 +126,10 @@ struct TcpHdr : protected tcp_hdr
     uint8_t  off() const { return th_off; }
     uint8_t  flags() const { return th_flags & 0x3f; }
     uint16_t win() const { return ntohs(th_win); }
-    uint16_t sum() const { return ntohs(th_sum); }
+    uint16_t sum() const { return th_sum; }
     uint16_t urp() const { return ntohs(th_urp); }
 
-    void sum(uint16_t sum) { th_sum = htons(sum); }
+    void sum(uint16_t sum) { th_sum = sum; }
 
     int size() const { return off(); }
     const uint8_t *bytes() const { return (const uint8_t *)this; }
