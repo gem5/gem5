@@ -147,14 +147,18 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
         UNSERIALIZE_SCALAR(swCtx->calls);
         int size;
         UNSERIALIZE_SCALAR(size);
-        fnCall *call = new fnCall[size];
+
+        vector<fnCall *> calls;
+        fnCall *call;
         for (int i=0; i<size; ++i) {
-            paramIn(cp, section, csprintf("stackpos[%d]",i), call[i].name);
-            call[i].myBin = system->getBin(call[i].name);
+            call = new fnCall;
+            paramIn(cp, section, csprintf("stackpos[%d]",i), call->name);
+            call->myBin = system->getBin(call->name);
+            calls.push_back(call);
         }
 
         for (int i=size-1; i>=0; --i) {
-            swCtx->callStack.push(&(call[i]));
+            swCtx->callStack.push(calls[i]);
         }
 
     }

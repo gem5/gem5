@@ -130,7 +130,9 @@ FnEvent::process(ExecContext *xc)
         if (last->name == "idle_thread")
             ctx->calls++;
 
-        if (!xc->system->findCaller(myname(), last->name)) {
+        if (!xc->system->findCaller(myname(), "" ) &&
+            !xc->system->findCaller(myname(), last->name)) {
+
             DPRINTF(TCPIP, "but can't find parent %s\n", last->name);
             return;
         }

@@ -164,26 +164,31 @@ System::unserialize(Checkpoint *cp, const std::string &section)
         int numCtxs;
         UNSERIALIZE_SCALAR(numCtxs);
 
-        SWContext *ctxs = new SWContext[numCtxs];
+        SWContext *ctx;
         Addr addr;
         int size;
         for(int i = 0; i < numCtxs; ++i) {
+            ctx = new SWContext;
             paramIn(cp, section, csprintf("Addr[%d]",i), addr);
-            paramIn(cp, section, csprintf("calls[%d]",i), ctxs[i].calls);
+            paramIn(cp, section, csprintf("calls[%d]",i), ctx->calls);
 
             paramIn(cp, section, csprintf("stacksize[%d]",i), size);
-            fnCall *call = new fnCall[size];
+
+            vector<fnCall *> calls;
+            fnCall *call;
             for (int j = 0; j < size; ++j) {
+                call = new fnCall;
                 paramIn(cp, section, csprintf("ctx[%d].stackpos[%d]",i,j),
-                        call[j].name);
-                call[j].myBin = getBin(call[j].name);
+                        call->name);
+                call->myBin = getBin(call->name);
+                calls.push_back(call);
             }
 
             for (int j=size-1; j>=0; --j) {
-                ctxs[i].callStack.push(&(call[j]));
+                ctx->callStack.push(calls[j]);
             }
 
-            addContext(addr, &(ctxs[i]));
+            addContext(addr, ctx);
         }
     }
 }
