@@ -30,12 +30,13 @@ from os.path import join as joinpath, realpath
 
 mypath = sys.path[0]
 sys.path.append(joinpath(mypath, '..'))
-sys.path.append(joinpath(mypath, '../configs/kernel'))
 sys.path.append(joinpath(mypath, '../util/pbs'))
 sys.path.append(joinpath(mypath, '../sim/pyconfig'))
 
-from importer import mpy_exec, mpy_execfile, AddToPath
+from importer import AddToPath, LoadMpyFile
 from m5config import *
+
+AddToPath('.')
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], '-E:I:')
@@ -55,8 +56,7 @@ except getopt.GetoptError:
     sys.exit('Improper Usage')
 
 for arg in args:
-    AddToPath(os.path.dirname(arg))
-    mpy_execfile(arg)
+    LoadMpyFile(arg)
 
 if globals().has_key('root') and isinstance(root, type) \
        and issubclass(root, Root):
