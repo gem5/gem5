@@ -740,8 +740,6 @@ class Node(object):
 
     # print type and parameter values to .ini file
     def outputDot(self, dot):
-
-
         label = "{%s|" % self.path
         if isSimObject(self.realtype):
             label +=  '%s|' % self.type
@@ -930,7 +928,6 @@ class ParamFactory(object):
             raise AttributeError, \
                   'Attribute %s not available in %s' % (attr, self.__class__)
         super(ParamFactory, self).__setattr__(attr, value)
-
 
 Param = ParamFactory(None)
 
@@ -1198,7 +1195,6 @@ class String(ParamType):
         return value
     _string = classmethod(_string)
 
-
 def IncEthernetAddr(addr, val = 1):
     bytes = map(lambda x: int(x, 16), addr.split(':'))
     bytes[5] += val
@@ -1294,7 +1290,6 @@ Null = NULL = NullSimObject()
 
 # Metaclass for Enum types
 class MetaEnum(type):
-
     def __init__(cls, name, bases, init_dict):
         if init_dict.has_key('map'):
             if not isinstance(cls.map, dict):
