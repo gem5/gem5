@@ -35,6 +35,19 @@ def defined(key):
 def define(key, value = True):
     env[key] = value
 
+def panic(*args, **kwargs):
+    sys.exit(*args, **kwargs)
+
+def AddToPath(path):
+    path = os.path.realpath(path)
+    if os.path.isdir(path):
+        sys.path.append(path)
+
+def Import(path):
+    AddToPath(os.path.dirname(path))
+    exec('from m5config import *')
+    mpy_exec(file(path, 'r'))
+
 def issequence(value):
     return isinstance(value, tuple) or isinstance(value, list)
 
