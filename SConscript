@@ -314,7 +314,8 @@ env.Command(Split('''arch/alpha/decoder.cc
 		     arch/alpha/fast_cpu_exec.cc
                      arch/alpha/simple_cpu_exec.cc
                      arch/alpha/full_cpu_exec.cc'''),
-            'arch/alpha/isa_desc',
+            Split('''arch/alpha/isa_desc
+		     arch/isa_parser.py'''),
             '$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/alpha')
 
 
