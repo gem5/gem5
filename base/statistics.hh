@@ -56,7 +56,8 @@
 
 #include "base/refcnt.hh"
 #include "base/str.hh"
-
+#include "base/intmath.hh"
+#include <math.h>
 #include "sim/host.hh"
 
 //
@@ -2420,10 +2421,17 @@ struct NoBin
  */
 
 /**
+ * This is an easy way to assign all your stats to be binned or not binned.  If the typedef
+ * is NoBin, nothing is binned.  If it is MainBin (or whatever *Bin), then all stats are binned
+ * under that Bin.
+ */
+typedef NoBin DefaultBin;
+
+/**
  * This is a simple scalar statistic, like a counter.
  * @sa Stat, ScalarBase, StatStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class Scalar : public Detail::ScalarBase<T, Detail::StatStor, Bin>
 {
   public:
@@ -2443,7 +2451,7 @@ class Scalar : public Detail::ScalarBase<T, Detail::StatStor, Bin>
  * A stat that calculates the per cycle average of a value.
  * @sa Stat, ScalarBase, AvgStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class Average : public Detail::ScalarBase<T, Detail::AvgStor, Bin>
 {
   public:
@@ -2463,7 +2471,7 @@ class Average : public Detail::ScalarBase<T, Detail::AvgStor, Bin>
  * A vector of scalar stats.
  * @sa Stat, VectorBase, StatStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class Vector : public Detail::VectorBase<T, Detail::StatStor, Bin>
 { };
 
@@ -2471,7 +2479,7 @@ class Vector : public Detail::VectorBase<T, Detail::StatStor, Bin>
  * A vector of Average stats.
  * @sa Stat, VectorBase, AvgStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class AverageVector : public Detail::VectorBase<T, Detail::AvgStor, Bin>
 { };
 
@@ -2479,7 +2487,7 @@ class AverageVector : public Detail::VectorBase<T, Detail::AvgStor, Bin>
  * A 2-Dimensional vecto of scalar stats.
  * @sa Stat, Vector2dBase, StatStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class Vector2d : public Detail::Vector2dBase<T, Detail::StatStor, Bin>
 { };
 
@@ -2487,7 +2495,7 @@ class Vector2d : public Detail::Vector2dBase<T, Detail::StatStor, Bin>
  * A simple distribution stat.
  * @sa Stat, DistBase, DistStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
 {
   private:
@@ -2520,7 +2528,7 @@ class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
  * Calculates the mean and variance of all the samples.
  * @sa Stat, DistBase, FancyStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
 {
   private:
@@ -2543,7 +2551,7 @@ class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
  * Calculates the per cycle mean and variance of the samples.
  * @sa Stat, DistBase, AvgFancy
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
 {
   private:
@@ -2566,7 +2574,7 @@ class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
  * A vector of distributions.
  * @sa Stat, VectorDistBase, DistStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class VectorDistribution
     : public Detail::VectorDistBase<T, Detail::DistStor, Bin>
 {
@@ -2601,7 +2609,7 @@ class VectorDistribution
  * This is a vector of StandardDeviation stats.
  * @sa Stat, VectorDistBase, FancyStor
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class VectorStandardDeviation
     : public Detail::VectorDistBase<T, Detail::FancyStor, Bin>
 {
@@ -2629,7 +2637,7 @@ class VectorStandardDeviation
  * This is a vector of AverageDeviation stats.
  * @sa Stat, VectorDistBase, AvgFancy
  */
-template <typename T = Counter, class Bin = NoBin>
+template <typename T = Counter, class Bin = DefaultBin>
 class VectorAverageDeviation
     : public Detail::VectorDistBase<T, Detail::AvgFancy, Bin>
 {

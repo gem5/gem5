@@ -33,11 +33,8 @@
 #include <string>
 #include <sstream>
 
-#include <math.h>
-
 #include "base/callback.hh"
 #include "base/cprintf.hh"
-#include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/str.hh"
