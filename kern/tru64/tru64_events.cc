@@ -32,8 +32,9 @@
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
-#include "targetarch/arguments.hh"
 #include "mem/functional_mem/memory_control.hh"
+#include "targetarch/arguments.hh"
+#include "targetarch/isa_traits.hh"
 
 //void SkipFuncEvent::process(ExecContext *xc);
 
@@ -46,8 +47,8 @@ BadAddrEvent::process(ExecContext *xc)
 
     uint64_t a0 = xc->regs.intRegFile[ArgumentReg0];
 
-    if (a0 < ALPHA_K0SEG_BASE || a0 >= ALPHA_K1SEG_BASE ||
-        xc->memctrl->badaddr(ALPHA_K0SEG_TO_PHYS(a0) & PA_IMPL_MASK)) {
+    if (!TheISA::IsK0Seg(a0) ||
+        xc->memctrl->badaddr(TheISA::K0Seg2Phys(a0) & PA_IMPL_MASK)) {
 
         DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
         xc->regs.intRegFile[ReturnValueReg] = 0x1;

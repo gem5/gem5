@@ -30,7 +30,7 @@
 #define __BASE_STATS_TYPES_HH__
 
 #include <vector>
-#include <inttypes.h>
+#include "sim/host.hh"
 
 namespace Stats {
 

@@ -26,10 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BITFIELD_HH
-#define __BITFIELD_HH
+#ifndef __BASE_BITFIELD_HH__
+#define __BASE_BITFIELD_HH__
 
-#include <inttypes.h>
+#include "sim/host.hh"
 
 /**
  * Generate a 64-bit mask of 'nbits' 1s, right justified.
@@ -66,4 +66,4 @@ sext(uint64_t val)
     return sign_bit ? (val | ~mask(N)) : val;
 }
 
-#endif
+#endif // __BASE_BITFIELD_HH__

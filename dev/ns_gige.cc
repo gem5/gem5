@@ -86,7 +86,7 @@ const char *NsDmaState[] =
 };
 
 using namespace std;
-
+using namespace Net;
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -99,7 +99,7 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
                bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
                Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
                PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-               uint32_t func, bool rx_filter, const int eaddr[6],
+               uint32_t func, bool rx_filter, EthAddr eaddr,
                uint32_t tx_fifo_size, uint32_t rx_fifo_size)
     : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), ioEnable(false),
       maxTxFifoSize(tx_fifo_size), maxRxFifoSize(rx_fifo_size),
@@ -119,8 +119,6 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
       physmem(pmem), intctrl(i), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
-    tsunami->ethernet = this;
-
     if (header_bus) {
         pioInterface = newPioInterface(name, hier, header_bus, this,
                                        &NSGigE::cacheAccess);
@@ -151,12 +149,7 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
     dmaWriteFactor = dma_write_factor;
 
     regsReset();
-    rom.perfectMatch[0] = eaddr[0];
-    rom.perfectMatch[1] = eaddr[1];
-    rom.perfectMatch[2] = eaddr[2];
-    rom.perfectMatch[3] = eaddr[3];
-    rom.perfectMatch[4] = eaddr[4];
-    rom.perfectMatch[5] = eaddr[5];
+    memcpy(&rom.perfectMatch, eaddr.bytes(), ETH_ADDR_LEN);
 }
 
 NSGigE::~NSGigE()
@@ -1339,10 +1332,10 @@ NSGigE::rxKick()
 
 #if TRACING_ON
             if (DTRACE(Ethernet)) {
-                const IpHdr *ip = rxPacket->ip();
+                IpPtr ip(rxPacket);
                 if (ip) {
                     DPRINTF(Ethernet, "ID is %d\n", ip->id());
-                    const TcpHdr *tcp = rxPacket->tcp();
+                    TcpPtr tcp(ip);
                     if (tcp) {
                         DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
                                 tcp->sport(), tcp->dport());
@@ -1401,36 +1394,38 @@ NSGigE::rxKick()
              */
             if (rxFilterEnable) {
                 rxDescCache.cmdsts &= ~CMDSTS_DEST_MASK;
-                EthHdr *eth = rxFifoFront()->eth();
-                if (eth->unicast())
+                const EthAddr &dst = rxFifoFront()->dst();
+                if (dst->unicast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_SELF;
-                if (eth->multicast())
+                if (dst->multicast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_MULTI;
-                if (eth->broadcast())
+                if (dst->broadcast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_MASK;
             }
 #endif
 
-            if (extstsEnable && rxPacket->ip()) {
+            IpPtr ip(rxPacket);
+            if (extstsEnable && ip) {
                 rxDescCache.extsts |= EXTSTS_IPPKT;
                 rxIpChecksums++;
-                IpHdr *ip = rxPacket->ip();
-                if (ip->ip_cksum() != 0) {
+                if (cksum(ip) != 0) {
                     DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
                     rxDescCache.extsts |= EXTSTS_IPERR;
                 }
-                if (rxPacket->tcp()) {
+                TcpPtr tcp(ip);
+                UdpPtr udp(ip);
+                if (tcp) {
                     rxDescCache.extsts |= EXTSTS_TCPPKT;
                     rxTcpChecksums++;
-                    if (ip->tu_cksum() != 0) {
+                    if (cksum(tcp) != 0) {
                         DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_TCPERR;
 
                     }
-                } else if (rxPacket->udp()) {
+                } else if (udp) {
                     rxDescCache.extsts |= EXTSTS_UDPPKT;
                     rxUdpChecksums++;
-                    if (ip->tu_cksum() != 0) {
+                    if (cksum(udp) != 0) {
                         DPRINTF(EthernetCksum, "Rx UDP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_UDPERR;
                     }
@@ -1548,10 +1543,10 @@ NSGigE::transmit()
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
         if (DTRACE(Ethernet)) {
-            const IpHdr *ip = txFifo.front()->ip();
+            IpPtr ip(txFifo.front());
             if (ip) {
                 DPRINTF(Ethernet, "ID is %d\n", ip->id());
-                const TcpHdr *tcp = txFifo.front()->tcp();
+                TcpPtr tcp(ip);
                 if (tcp) {
                     DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
                             tcp->sport(), tcp->dport());
@@ -1814,21 +1809,21 @@ NSGigE::txKick()
                 DPRINTF(EthernetSM, "This packet is done, let's wrap it up\n");
                 /* deal with the the packet that just finished */
                 if ((regs.vtcr & VTCR_PPCHK) && extstsEnable) {
-                    IpHdr *ip = txPacket->ip();
+                    IpPtr ip(txPacket);
                     if (txDescCache.extsts & EXTSTS_UDPPKT) {
-                        UdpHdr *udp = txPacket->udp();
+                        UdpPtr udp(ip);
                         udp->sum(0);
-                        udp->sum(ip->tu_cksum());
+                        udp->sum(cksum(udp));
                         txUdpChecksums++;
                     } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
-                        TcpHdr *tcp = txPacket->tcp();
+                        TcpPtr tcp(ip);
                         tcp->sum(0);
-                        tcp->sum(ip->tu_cksum());
+                        tcp->sum(cksum(tcp));
                         txTcpChecksums++;
                     }
                     if (txDescCache.extsts & EXTSTS_IPPKT) {
                         ip->sum(0);
-                        ip->sum(ip->ip_cksum());
+                        ip->sum(cksum(ip));
                         txIpChecksums++;
                     }
                 }
@@ -1987,31 +1982,31 @@ NSGigE::transferDone()
 }
 
 bool
-NSGigE::rxFilter(PacketPtr packet)
+NSGigE::rxFilter(PacketPtr &packet)
 {
+    EthPtr eth = packet;
     bool drop = true;
     string type;
 
-    EthHdr *eth = packet->eth();
-    if (eth->unicast()) {
+    const EthAddr &dst = eth->dst();
+    if (dst.unicast()) {
         // If we're accepting all unicast addresses
         if (acceptUnicast)
             drop = false;
 
         // If we make a perfect match
-        if (acceptPerfect &&
-            memcmp(rom.perfectMatch, packet->data, EADDR_LEN) == 0)
+        if (acceptPerfect && dst == rom.perfectMatch)
             drop = false;
 
         if (acceptArp && eth->type() == ETH_TYPE_ARP)
             drop = false;
 
-    } else if (eth->broadcast()) {
+    } else if (dst.broadcast()) {
         // if we're accepting broadcasts
         if (acceptBroadcast)
             drop = false;
 
-    } else if (eth->multicast()) {
+    } else if (dst.multicast()) {
         // if we're accepting all multicasts
         if (acceptMulticast)
             drop = false;
@@ -2027,7 +2022,7 @@ NSGigE::rxFilter(PacketPtr packet)
 }
 
 bool
-NSGigE::recvPacket(PacketPtr packet)
+NSGigE::recvPacket(PacketPtr &packet)
 {
     rxBytes += packet->length;
     rxPackets++;
@@ -2120,7 +2115,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(regs.taner);
     SERIALIZE_SCALAR(regs.tesr);
 
-    SERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
+    SERIALIZE_ARRAY(rom.perfectMatch, ETH_ADDR_LEN);
 
     SERIALIZE_SCALAR(ioEnable);
 
@@ -2277,7 +2272,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(regs.taner);
     UNSERIALIZE_SCALAR(regs.tesr);
 
-    UNSERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
+    UNSERIALIZE_ARRAY(rom.perfectMatch, ETH_ADDR_LEN);
 
     UNSERIALIZE_SCALAR(ioEnable);
 
@@ -2517,16 +2512,13 @@ END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
 CREATE_SIM_OBJECT(NSGigE)
 {
-    int eaddr[6];
-    sscanf(((string)hardware_address).c_str(), "%x:%x:%x:%x:%x:%x",
-           &eaddr[0], &eaddr[1], &eaddr[2], &eaddr[3], &eaddr[4], &eaddr[5]);
-
     return new NSGigE(getInstanceName(), intr_ctrl, intr_delay,
                       physmem, tx_delay, rx_delay, mmu, hier, header_bus,
                       payload_bus, pio_latency, dma_desc_free, dma_data_free,
                       dma_read_delay, dma_write_delay, dma_read_factor,
                       dma_write_factor, configspace, configdata,
-                      tsunami, pci_bus, pci_dev, pci_func, rx_filter, eaddr,
+                      tsunami, pci_bus, pci_dev, pci_func, rx_filter,
+                      EthAddr((string)hardware_address),
                       tx_fifo_size, rx_fifo_size);
 }
 

@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "targetarch/faults.hh"
+#include "arch/alpha/faults.hh"
 
 namespace {
     const char *

@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "targetarch/osfpal.hh"
+#include "arch/alpha/osfpal.hh"
 
 namespace {
     const char *strings[PAL::NumCodes] = {

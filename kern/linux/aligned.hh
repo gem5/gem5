@@ -1,7 +1,7 @@
-#ifndef __ALIGNED_HH__
-#define __ALIGNED_HH__
+#ifndef __KERN_LINUX_ALIGNED_HH__
+#define __KERN_LINUX_ALIGNED_HH__
 
-#include <stdint.h>
+#include "sim/host.hh"
 #include "targetarch/isa_traits.hh"
 
 /* GCC 3.3.X has a bug in which attributes+typedefs don't work. 3.2.X is fine
@@ -18,4 +18,4 @@ typedef Addr Addr_a __attribute__ ((aligned (8))) ;
 #define Addr_a Addr __attribute__ ((aligned (8)))
 #endif /* __GNUC__ __GNUC_MINOR__ */
 
-#endif /* __ALIGNED_H__ */
+#endif /* __KERN_LINUX_ALIGNED_HH__ */

@@ -63,9 +63,6 @@ IdeController::IdeController(const string &name, IntrControl *ic,
                              Bus *host_bus, Tick pio_latency, HierParams *hier)
     : PciDev(name, mmu, cf, cd, bus_num, dev_num, func_num), tsunami(t)
 {
-    // put back pointer into Tsunami
-    tsunami->disk_controller = this;
-
     // initialize the PIO interface addresses
     pri_cmd_addr = 0;
     pri_cmd_size = BARSize[0];

@@ -26,19 +26,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __VTOPHYS_H__
-#define __VTOPHYS_H__
+#ifndef __ARCH_ALPHA_VTOPHYS_H__
+#define __ARCH_ALPHA_VTOPHYS_H__
 
-#include "targetarch/isa_traits.hh"
-#include "targetarch/pmap.h"
-
-inline bool entry_valid(uint64_t entry)
-{ return (entry & ALPHA_PTE_VALID) != 0; }
+#include "arch/alpha/isa_traits.hh"
 
 class ExecContext;
 class PhysicalMemory;
 
-Addr kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, Addr vaddr);
+AlphaISA::PageTableEntry
+kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr);
+
 Addr vtophys(PhysicalMemory *xc, Addr vaddr);
 Addr vtophys(ExecContext *xc, Addr vaddr);
 uint8_t *vtomem(ExecContext *xc, Addr vaddr, size_t len);
@@ -48,5 +46,5 @@ void CopyOut(ExecContext *xc, void *dst, Addr src, size_t len);
 void CopyIn(ExecContext *xc, Addr dst, void *src, size_t len);
 void CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
 
-#endif // __VTOPHYS_H__
+#endif // __ARCH_ALPHA_VTOPHYS_H__
 
