@@ -2280,7 +2280,7 @@ struct StatBin : public GenBin
         enum { binned = true };
         Bin() { allocate(sizeof(Storage)); }
         bool initialized() const { return true; }
-        void init(const Params &params) { }
+        void init(Params &params) { }
 
         int size() const { return 1; }
 
@@ -2320,7 +2320,7 @@ struct StatBin : public GenBin
         VectorBin() : _size(0) {}
 
         bool initialized() const { return _size > 0; }
-        void init(int s, const Params &params) {
+        void init(int s, Params &params) {
             assert(!initialized());
             assert(s > 0);
             _size = s;
@@ -2379,7 +2379,7 @@ struct NoBin
         }
 
         bool initialized() const { return true; }
-        void init(const Params &params) {
+        void init(Params &params) {
             new (ptr) Storage(params);
         }
         int size() const{ return 1; }
@@ -2420,7 +2420,7 @@ struct NoBin
         }
 
         bool initialized() const { return ptr != NULL; }
-        void init(int s, const Params &params) {
+        void init(int s, Params &params) {
             assert(s > 0 && "size must be positive!");
             assert(!initialized());
             _size = s;
