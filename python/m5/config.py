@@ -28,6 +28,8 @@ from __future__ import generators
 import os, re, sys, types, inspect
 
 from mpy_importer import AddToPath, LoadMpyFile
+from smartdict import SmartDict
+from convert import *
 
 noDot = False
 try:
@@ -35,7 +37,7 @@ try:
 except:
     noDot = True
 
-env = {}
+env = SmartDict()
 env.update(os.environ)
 
 def panic(string):
@@ -976,18 +978,17 @@ VectorParam = _VectorParamProxy(None)
 # Integer parameter type.
 class _CheckedInt(object):
     def _convert(cls, value):
-        t = type(value)
-        if t == bool:
+        if isinstance(value, bool):
             return int(value)
 
-        if t != int and t != long and t != float and t != str:
-            raise TypeError, 'Integer parameter of invalid type %s' % t
+        if not isinstance(value, (int, long, float, str)):
+            raise TypeError, 'Integer param of invalid type %s' % type(value)
 
-        if t == str or t == float:
-            value = long(value)
+        if isinstance(value, (str, float)):
+            value = long(float(value))
 
         if not cls._min <= value <= cls._max:
-            raise TypeError, 'Integer parameter out of bounds %d < %d < %d' % \
+            raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
                   (cls._min, value, cls._max)
 
         return value
