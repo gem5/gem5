@@ -1399,6 +1399,7 @@ declare {{
       protected:
 	int palFunc;	///< Function code part of instruction
 	int palOffset;	///< Target PC, offset from IPR_PAL_BASE
+	bool palPriv;	///< is this call privileged?
 
 	/// Constructor.
 	CallPalBase(const char *mnem, MachInst _machInst,
@@ -1406,7 +1407,7 @@ declare {{
 	    : AlphaStaticInst(mnem, _machInst, __opClass),
 	      palFunc(PALFUNC)
 	{
-	    int palPriv = ((machInst & 0x80) != 0);
+	    palPriv = ((machInst & 0x80) != 0);
 	    int shortPalFunc = (machInst & 0x3f);
 	    palOffset = 0x2001 + (palPriv << 12) + (shortPalFunc << 6);
 	}
@@ -2352,20 +2353,26 @@ decode OPCODE default Unknown::unknown() {
 
 #ifdef FULL_SYSTEM
     0x00: CallPal::call_pal({{
-	// check to see if simulator wants to do something special
-	// on this PAL call (including maybe suppress it)
-	bool dopal = xc->simPalCheck(palFunc);
-
-	if (!xc->misspeculating()) {
-	    Annotate::Callpal(xc, palFunc);
+	if (palPriv && !PC_PAL(xc->regs.pc)) {
+	    // attempt to do privileged PAL call in non-PAL mode
+	    fault = Unimplemented_Opcode_Fault;
 	}
+	else {
+	    // check to see if simulator wants to do something special
+	    // on this PAL call (including maybe suppress it)
+	    bool dopal = xc->simPalCheck(palFunc);
 
-	if (dopal) {
 	    if (!xc->misspeculating()) {
-		AlphaISA::swap_palshadow(&xc->regs, true);
+		Annotate::Callpal(xc, palFunc);
 	    }
-	    xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
-	    NPC = xc->readIpr(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
+
+	    if (dopal) {
+		if (!xc->misspeculating()) {
+		    AlphaISA::swap_palshadow(&xc->regs, true);
+		}
+		xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
+		NPC = xc->readIpr(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
+	    }
 	}
     }});
 #else
