@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PROG_HH__
-#define __PROG_HH__
+#ifndef __PROCESS_HH__
+#define __PROCESS_HH__
 
 //
 // The purpose of this code is to fake the loader & syscall mechanism
@@ -89,9 +89,11 @@ class Process : public SimObject
     unsigned stack_size;	// initial stack size
     Addr stack_min;		// lowest address accessed on the stack
 
-
     // addr to use for next stack region (for multithreaded apps)
     Addr next_thread_stack_base;
+
+    // Base of region for mmaps (when user doesn't specify an address).
+    Addr mmap_base;
 
     std::string prog_fname;	// file name
     Addr prog_entry;		// entry point (initial PC)
@@ -165,18 +167,26 @@ class Process : public SimObject
 //
 // "Live" process with system calls redirected to host system
 //
-class MainMemory;
+class ObjectFile;
 class LiveProcess : public Process
 {
-  public:
-    LiveProcess(const std::string &name,
+  protected:
+    LiveProcess(const std::string &name, ObjectFile *objFile,
                 int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
                 std::vector<std::string> &envp);
 
-    virtual void syscall(ExecContext *xc);
+  public:
+    // this function is used to create the LiveProcess object, since
+    // we can't tell which subclass of LiveProcess to use until we
+    // open and look at the object file.
+    static LiveProcess *create(const std::string &name,
+                               int stdin_fd, int stdout_fd, int stderr_fd,
+                               std::vector<std::string> &argv,
+                               std::vector<std::string> &envp);
 };
+
 
 #endif // !FULL_SYSTEM
 
-#endif // __PROG_HH__
+#endif // __PROCESS_HH__

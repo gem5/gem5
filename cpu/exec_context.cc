@@ -34,7 +34,7 @@
 #ifdef FULL_SYSTEM
 #include "sim/system.hh"
 #else
-#include "sim/prog.hh"
+#include "sim/process.hh"
 #endif
 
 using namespace std;

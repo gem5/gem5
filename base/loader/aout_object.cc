@@ -43,7 +43,9 @@ ObjectFile *
 AoutObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 {
     if (!N_BADMAG(*(aout_exechdr *)data)) {
-        return new AoutObject(fname, fd, len, data);
+        // right now this is only used for Alpha PAL code
+        return new AoutObject(fname, fd, len, data,
+                              ObjectFile::Alpha, ObjectFile::UnknownOpSys);
     }
     else {
         return NULL;
@@ -52,8 +54,9 @@ AoutObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 
 
 AoutObject::AoutObject(const string &_filename, int _fd,
-                         size_t _len, uint8_t *_data)
-    : ObjectFile(_filename, _fd, _len, _data)
+                       size_t _len, uint8_t *_data,
+                       Arch _arch, OpSys _opSys)
+    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
 {
     execHdr = (aout_exechdr *)fileData;
 
