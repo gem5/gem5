@@ -45,14 +45,16 @@ progpath = nfspath(sys.path[0])
 progname = basename(sys.argv[0])
 usage = """\
 Usage:
-    %(progname)s [-c] [-e] [-f] [-q queue] [-v] <regexp>
+    %(progname)s [-c] [-e] [-f] [-j <jobfile>] [-q queue] [-v] <regexp>
     -c           clean directory if job can be run
     -e           only echo pbs command info, don't actually send the job
     -f           force the job to run regardless of state
     -q <queue>   submit job to the named queue
+    -j <jobfile> specify the jobfile (default is <basedir>/test.py)
     -v           be verbose
 
-    %(progname)s -l [-v] <regexp>
+    %(progname)s [-j <jobfile>] -l [-v] <regexp>
+    -j <jobfile> specify the jobfile (default is <basedir>/test.py)
     -l           list job names, don't submit
     -v           be verbose (list job parameters)
 
@@ -62,7 +64,7 @@ Usage:
 
 try:
     import getopt
-    opts, args = getopt.getopt(sys.argv[1:], '-cd:efhlq:v')
+    opts, args = getopt.getopt(sys.argv[1:], '-cd:efhj:lq:v')
 except getopt.GetoptError:
     sys.exit(usage)
 
@@ -74,6 +76,7 @@ listonly = False
 queue = ''
 verbose = False
 rootdir = nfspath(os.getcwd())
+jfile = 'test.py'
 for opt,arg in opts:
     if opt == '-c':
         clean = True
@@ -86,6 +89,8 @@ for opt,arg in opts:
     if opt == '-h':
         print usage
         sys.exit(0)
+    if opt == '-j':
+        jfile = arg
     if opt == '-l':
         listonly = True
     if opt == '-q':
@@ -115,7 +120,7 @@ if not listonly and not onlyecho and isdir(linkdir):
 
 import job, jobfile, pbs
 
-test = jobfile.JobFile(joinpath(basedir, 'test.py'))
+test = jobfile.JobFile(joinpath(basedir, jfile))
 
 joblist = []
 for jobname in test.jobs:
