@@ -50,6 +50,8 @@ class PollEvent
     void disable();
     void enable();
     virtual void process(int revent) = 0;
+
+    bool queued() { return queue != 0; }
 };
 
 class PollQueue
