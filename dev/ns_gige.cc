@@ -88,9 +88,9 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
 //
-// EtherDev PCI Device
+// NSGigE PCI Device
 //
-EtherDev::EtherDev(const std::string &name, IntrControl *i, Tick intr_delay,
+NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
              PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
              MemoryController *mmu, HierParams *hier, Bus *header_bus,
              Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
@@ -120,7 +120,7 @@ EtherDev::EtherDev(const std::string &name, IntrControl *i, Tick intr_delay,
 
     if (header_bus) {
         pioInterface = newPioInterface(name, hier, header_bus, this,
-                                       &EtherDev::cacheAccess);
+                                       &NSGigE::cacheAccess);
         pioInterface->addAddrRange(addr, addr + size - 1);
         if (payload_bus)
             dmaInterface = new DMAInterface<Bus>(name + ".dma",
@@ -130,7 +130,7 @@ EtherDev::EtherDev(const std::string &name, IntrControl *i, Tick intr_delay,
                                                  header_bus, header_bus, 1);
     } else if (payload_bus) {
         pioInterface = newPioInterface(name, hier, payload_bus, this,
-                                       &EtherDev::cacheAccess);
+                                       &NSGigE::cacheAccess);
         pioInterface->addAddrRange(addr, addr + size - 1);
         dmaInterface = new DMAInterface<Bus>(name + ".dma",
                                              payload_bus, payload_bus, 1);
@@ -154,11 +154,11 @@ EtherDev::EtherDev(const std::string &name, IntrControl *i, Tick intr_delay,
     rom.perfectMatch[5] = eaddr[5];
 }
 
-EtherDev::~EtherDev()
+NSGigE::~NSGigE()
 {}
 
 void
-EtherDev::regStats()
+NSGigE::regStats()
 {
     txBytes
         .name(name() + ".txBytes")
@@ -222,7 +222,7 @@ EtherDev::regStats()
  * This is to read the PCI general configuration registers
  */
 void
-EtherDev::ReadConfig(int offset, int size, uint8_t *data)
+NSGigE::ReadConfig(int offset, int size, uint8_t *data)
 {
     if (offset < PCI_DEVICE_SPECIFIC)
         PciDev::ReadConfig(offset, size, data);
@@ -235,7 +235,7 @@ EtherDev::ReadConfig(int offset, int size, uint8_t *data)
  * This is to write to the PCI general configuration registers
  */
 void
-EtherDev::WriteConfig(int offset, int size, uint32_t data)
+NSGigE::WriteConfig(int offset, int size, uint32_t data)
 {
     if (offset < PCI_DEVICE_SPECIFIC)
         PciDev::WriteConfig(offset, size, data);
@@ -248,7 +248,7 @@ EtherDev::WriteConfig(int offset, int size, uint32_t data)
  * spec sheet
  */
 Fault
-EtherDev::read(MemReqPtr &req, uint8_t *data)
+NSGigE::read(MemReqPtr &req, uint8_t *data)
 {
     //The mask is to give you only the offset into the device register file
     Addr daddr = req->paddr & 0xfff;
@@ -450,7 +450,7 @@ EtherDev::read(MemReqPtr &req, uint8_t *data)
 }
 
 Fault
-EtherDev::write(MemReqPtr &req, const uint8_t *data)
+NSGigE::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr daddr = req->paddr & 0xfff;
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x va=%#x size=%d\n",
@@ -791,7 +791,7 @@ EtherDev::write(MemReqPtr &req, const uint8_t *data)
 }
 
 void
-EtherDev::devIntrPost(uint32_t interrupts)
+NSGigE::devIntrPost(uint32_t interrupts)
 {
     DPRINTF(Ethernet, "interrupt posted intr=%#x isr=%#x imr=%#x\n",
             interrupts, regs.isr, regs.imr);
@@ -860,7 +860,7 @@ EtherDev::devIntrPost(uint32_t interrupts)
 }
 
 void
-EtherDev::devIntrClear(uint32_t interrupts)
+NSGigE::devIntrClear(uint32_t interrupts)
 {
     DPRINTF(Ethernet, "interrupt cleared intr=%x isr=%x imr=%x\n",
             interrupts, regs.isr, regs.imr);
@@ -919,7 +919,7 @@ EtherDev::devIntrClear(uint32_t interrupts)
 }
 
 void
-EtherDev::devIntrChangeMask()
+NSGigE::devIntrChangeMask()
 {
     DPRINTF(Ethernet, "interrupt mask changed\n");
 
@@ -930,7 +930,7 @@ EtherDev::devIntrChangeMask()
 }
 
 void
-EtherDev::cpuIntrPost(Tick when)
+NSGigE::cpuIntrPost(Tick when)
 {
     if (when > intrTick && intrTick != 0)
         return;
@@ -951,7 +951,7 @@ EtherDev::cpuIntrPost(Tick when)
 }
 
 void
-EtherDev::cpuInterrupt()
+NSGigE::cpuInterrupt()
 {
     // Don't send an interrupt if there's already one
     if (cpuPendingIntr)
@@ -974,7 +974,7 @@ EtherDev::cpuInterrupt()
 }
 
 void
-EtherDev::cpuIntrClear()
+NSGigE::cpuIntrClear()
 {
     if (cpuPendingIntr) {
         cpuPendingIntr = false;
@@ -985,11 +985,11 @@ EtherDev::cpuIntrClear()
 }
 
 bool
-EtherDev::cpuIntrPending() const
+NSGigE::cpuIntrPending() const
 { return cpuPendingIntr; }
 
 void
-EtherDev::txReset()
+NSGigE::txReset()
 {
 
     DPRINTF(Ethernet, "transmit reset\n");
@@ -1007,7 +1007,7 @@ EtherDev::txReset()
 }
 
 void
-EtherDev::rxReset()
+NSGigE::rxReset()
 {
     DPRINTF(Ethernet, "receive reset\n");
 
@@ -1024,7 +1024,7 @@ EtherDev::rxReset()
 }
 
 void
-EtherDev::rxDmaReadCopy()
+NSGigE::rxDmaReadCopy()
 {
     assert(rxDmaState == dmaReading);
 
@@ -1037,7 +1037,7 @@ EtherDev::rxDmaReadCopy()
 }
 
 bool
-EtherDev::doRxDmaRead()
+NSGigE::doRxDmaRead()
 {
     assert(rxDmaState == dmaIdle || rxDmaState == dmaReadWaiting);
     rxDmaState = dmaReading;
@@ -1063,7 +1063,7 @@ EtherDev::doRxDmaRead()
 }
 
 void
-EtherDev::rxDmaReadDone()
+NSGigE::rxDmaReadDone()
 {
     assert(rxDmaState == dmaReading);
     rxDmaReadCopy();
@@ -1076,7 +1076,7 @@ EtherDev::rxDmaReadDone()
 }
 
 void
-EtherDev::rxDmaWriteCopy()
+NSGigE::rxDmaWriteCopy()
 {
     assert(rxDmaState == dmaWriting);
 
@@ -1089,7 +1089,7 @@ EtherDev::rxDmaWriteCopy()
 }
 
 bool
-EtherDev::doRxDmaWrite()
+NSGigE::doRxDmaWrite()
 {
     assert(rxDmaState == dmaIdle || rxDmaState == dmaWriteWaiting);
     rxDmaState = dmaWriting;
@@ -1115,7 +1115,7 @@ EtherDev::doRxDmaWrite()
 }
 
 void
-EtherDev::rxDmaWriteDone()
+NSGigE::rxDmaWriteDone()
 {
     assert(rxDmaState == dmaWriting);
     rxDmaWriteCopy();
@@ -1128,7 +1128,7 @@ EtherDev::rxDmaWriteDone()
 }
 
 void
-EtherDev::rxKick()
+NSGigE::rxKick()
 {
     DPRINTF(Ethernet, "receive kick state=%s (rxBuf.size=%d)\n",
             NsRxStateStrings[rxState], rxFifo.size());
@@ -1388,7 +1388,7 @@ EtherDev::rxKick()
 }
 
 void
-EtherDev::transmit()
+NSGigE::transmit()
 {
     if (txFifo.empty()) {
         DPRINTF(Ethernet, "nothing to transmit\n");
@@ -1421,7 +1421,7 @@ EtherDev::transmit()
 }
 
 void
-EtherDev::txDmaReadCopy()
+NSGigE::txDmaReadCopy()
 {
     assert(txDmaState == dmaReading);
 
@@ -1434,7 +1434,7 @@ EtherDev::txDmaReadCopy()
 }
 
 bool
-EtherDev::doTxDmaRead()
+NSGigE::doTxDmaRead()
 {
     assert(txDmaState == dmaIdle || txDmaState == dmaReadWaiting);
     txDmaState = dmaReading;
@@ -1460,7 +1460,7 @@ EtherDev::doTxDmaRead()
 }
 
 void
-EtherDev::txDmaReadDone()
+NSGigE::txDmaReadDone()
 {
     assert(txDmaState == dmaReading);
     txDmaReadCopy();
@@ -1473,7 +1473,7 @@ EtherDev::txDmaReadDone()
 }
 
 void
-EtherDev::txDmaWriteCopy()
+NSGigE::txDmaWriteCopy()
 {
     assert(txDmaState == dmaWriting);
 
@@ -1486,7 +1486,7 @@ EtherDev::txDmaWriteCopy()
 }
 
 bool
-EtherDev::doTxDmaWrite()
+NSGigE::doTxDmaWrite()
 {
     assert(txDmaState == dmaIdle || txDmaState == dmaWriteWaiting);
     txDmaState = dmaWriting;
@@ -1512,7 +1512,7 @@ EtherDev::doTxDmaWrite()
 }
 
 void
-EtherDev::txDmaWriteDone()
+NSGigE::txDmaWriteDone()
 {
     assert(txDmaState == dmaWriting);
     txDmaWriteCopy();
@@ -1525,7 +1525,7 @@ EtherDev::txDmaWriteDone()
 }
 
 void
-EtherDev::txKick()
+NSGigE::txKick()
 {
     DPRINTF(Ethernet, "transmit kick state=%s\n", NsTxStateStrings[txState]);
 
@@ -1777,7 +1777,7 @@ EtherDev::txKick()
 }
 
 void
-EtherDev::transferDone()
+NSGigE::transferDone()
 {
     if (txFifo.empty())
         return;
@@ -1791,7 +1791,7 @@ EtherDev::transferDone()
 }
 
 bool
-EtherDev::rxFilter(PacketPtr packet)
+NSGigE::rxFilter(PacketPtr packet)
 {
     bool drop = true;
     string type;
@@ -1841,7 +1841,7 @@ EtherDev::rxFilter(PacketPtr packet)
 }
 
 bool
-EtherDev::recvPacket(PacketPtr packet)
+NSGigE::recvPacket(PacketPtr packet)
 {
     rxBytes += packet->length;
     rxPackets++;
@@ -1878,7 +1878,7 @@ EtherDev::recvPacket(PacketPtr packet)
  * else, it just checks what it calculates against the value in the header in packet
  */
 bool
-EtherDev::udpChecksum(PacketPtr packet, bool gen)
+NSGigE::udpChecksum(PacketPtr packet, bool gen)
 {
     udp_header *hdr = (udp_header *)  packet->getTransportHdr();
 
@@ -1905,7 +1905,7 @@ EtherDev::udpChecksum(PacketPtr packet, bool gen)
 }
 
 bool
-EtherDev::tcpChecksum(PacketPtr packet, bool gen)
+NSGigE::tcpChecksum(PacketPtr packet, bool gen)
 {
     tcp_header *hdr = (tcp_header *) packet->getTransportHdr();
 
@@ -1932,7 +1932,7 @@ EtherDev::tcpChecksum(PacketPtr packet, bool gen)
 }
 
 bool
-EtherDev::ipChecksum(PacketPtr packet, bool gen)
+NSGigE::ipChecksum(PacketPtr packet, bool gen)
 {
     ip_header *hdr = packet->getIpHdr();
 
@@ -1948,7 +1948,7 @@ EtherDev::ipChecksum(PacketPtr packet, bool gen)
 }
 
 uint16_t
-EtherDev::checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len)
+NSGigE::checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len)
 {
     uint32_t sum = 0;
 
@@ -1978,7 +1978,7 @@ EtherDev::checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len)
 //
 //
 void
-EtherDev::serialize(ostream &os)
+NSGigE::serialize(ostream &os)
 {
     /*
      * Finalize any DMA events now.
@@ -2129,7 +2129,7 @@ EtherDev::serialize(ostream &os)
 }
 
 void
-EtherDev::unserialize(Checkpoint *cp, const std::string &section)
+NSGigE::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(regs.command);
     UNSERIALIZE_SCALAR(regs.config);
@@ -2277,7 +2277,7 @@ EtherDev::unserialize(Checkpoint *cp, const std::string &section)
 
 
 Tick
-EtherDev::cacheAccess(MemReqPtr &req)
+NSGigE::cacheAccess(MemReqPtr &req)
 {
     DPRINTF(EthernetPIO, "timing access to paddr=%#x (daddr=%#x)\n",
             req->paddr, req->paddr - addr);
@@ -2286,23 +2286,23 @@ EtherDev::cacheAccess(MemReqPtr &req)
 //=====================================================================
 
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDevInt)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
 
     SimObjectParam<EtherInt *> peer;
-    SimObjectParam<EtherDev *> device;
+    SimObjectParam<NSGigE *> device;
 
-END_DECLARE_SIM_OBJECT_PARAMS(EtherDevInt)
+END_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDevInt)
+BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigEInt)
 
     INIT_PARAM_DFLT(peer, "peer interface", NULL),
     INIT_PARAM(device, "Ethernet device of this interface")
 
-END_INIT_SIM_OBJECT_PARAMS(EtherDevInt)
+END_INIT_SIM_OBJECT_PARAMS(NSGigEInt)
 
-CREATE_SIM_OBJECT(EtherDevInt)
+CREATE_SIM_OBJECT(NSGigEInt)
 {
-    EtherDevInt *dev_int = new EtherDevInt(getInstanceName(), device);
+    NSGigEInt *dev_int = new NSGigEInt(getInstanceName(), device);
 
     EtherInt *p = (EtherInt *)peer;
     if (p) {
@@ -2313,10 +2313,10 @@ CREATE_SIM_OBJECT(EtherDevInt)
     return dev_int;
 }
 
-REGISTER_SIM_OBJECT("EtherDevInt", EtherDevInt)
+REGISTER_SIM_OBJECT("NSGigEInt", NSGigEInt)
 
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDev)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
@@ -2344,9 +2344,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDev)
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
 
-END_DECLARE_SIM_OBJECT_PARAMS(EtherDev)
+END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDev)
+BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
     INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
@@ -2375,16 +2375,16 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDev)
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code")
 
-END_INIT_SIM_OBJECT_PARAMS(EtherDev)
+END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
 
-CREATE_SIM_OBJECT(EtherDev)
+CREATE_SIM_OBJECT(NSGigE)
 {
     int eaddr[6];
     sscanf(((string)hardware_address).c_str(), "%x:%x:%x:%x:%x:%x",
            &eaddr[0], &eaddr[1], &eaddr[2], &eaddr[3], &eaddr[4], &eaddr[5]);
 
-    return new EtherDev(getInstanceName(), intr_ctrl, intr_delay,
+    return new NSGigE(getInstanceName(), intr_ctrl, intr_delay,
                         physmem, tx_delay, rx_delay, mmu, hier, header_bus,
                         payload_bus, pio_latency, dma_desc_free, dma_data_free,
                         dma_read_delay, dma_write_delay, dma_read_factor,
@@ -2393,4 +2393,4 @@ CREATE_SIM_OBJECT(EtherDev)
                         addr);
 }
 
-REGISTER_SIM_OBJECT("EtherDev", EtherDev)
+REGISTER_SIM_OBJECT("NSGigE", NSGigE)
