@@ -223,7 +223,10 @@ Data::mapStat(void *stat, StatData *data)
 
     allStats.push_back(data);
 
-    bool success = (statMap.insert(make_pair(stat, data))).second;
+#ifndef NDEBUG
+    bool success =
+#endif
+        (statMap.insert(make_pair(stat, data))).second;
     assert(statMap.find(stat) != statMap.end());
     assert(success && "this should never fail");
 }
@@ -236,7 +239,10 @@ Data::regBin(MainBin *bin, string name)
 
     bins.push_back(bin);
 
-    bool success = (bin_names.insert(make_pair(bin,name))).second;
+#ifndef NDEBUG
+    bool success =
+#endif
+        (bin_names.insert(make_pair(bin,name))).second;
     assert(bin_names.find(bin) != bin_names.end());
     assert(success && "this should not fail");
 
