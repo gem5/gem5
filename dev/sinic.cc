@@ -191,6 +191,34 @@ Device::regStats()
         .prereq(rxBytes)
         ;
 
+    totBandwidth
+        .name(name() + ".totBandwidth")
+        .desc("Total Bandwidth (bits/s)")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totPackets
+        .name(name() + ".totPackets")
+        .desc("Total Packets")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totBytes
+        .name(name() + ".totBytes")
+        .desc("Total Bytes")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totPacketRate
+        .name(name() + ".totPPS")
+        .desc("Total Tranmission Rate (packets/s)")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
     txBytes
         .name(name() + ".txBytes")
         .desc("Bytes Transmitted")
@@ -258,6 +286,9 @@ Device::regStats()
 
     txBandwidth = txBytes * Stats::constant(8) / simSeconds;
     rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
+    totBandwidth = txBandwidth + rxBandwidth;
+    totBytes = txBytes + rxBytes;
+    totPackets = txPackets + rxPackets;
     txPacketRate = txPackets / simSeconds;
     rxPacketRate = rxPackets / simSeconds;
 }
