@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -251,7 +251,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
 
     if (fd < 0 || process->sim_fd(fd) < 0) {
         // doesn't map to any simulator fd: not a valid target fd
-        return SyscallReturn(-EBADF);
+        return -EBADF;
     }
 
     switch (req) {
@@ -263,7 +263,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
       case OS::TIOCGETC:
       case OS::TIOCGETS:
       case OS::TIOCGETA:
-        return SyscallReturn(-ENOTTY);
+        return -ENOTTY;
 
       default:
         fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ 0x%llx\n", fd, req, xc->readPC());
@@ -279,13 +279,13 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
     std::string path;
 
     if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
-        return SyscallReturn(-EFAULT);
+        return -EFAULT;
 
     if (path == "/dev/sysdev0") {
         // This is a memory-mapped high-resolution timer device on Alpha.
         // We don't support it, so just punt.
         DCOUT(SyscallWarnings) << "Ignoring open(" << path << ", ...)" << std::endl;
-        return SyscallReturn(-ENOENT);
+        return -ENOENT;
     }
 
     int tgtFlags = xc->getSyscallArg(1);
@@ -311,7 +311,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
     // open the file
     int fd = open(path.c_str(), hostFlags, mode);
 
-    return (fd == -1) ? SyscallReturn(-errno) : SyscallReturn(process->open_fd(fd));
+    return (fd == -1) ? -errno : process->open_fd(fd);
 }
 
 
@@ -324,17 +324,17 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
     std::string path;
 
     if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
-        return SyscallReturn(-EFAULT);
+        return -EFAULT;
 
     struct stat hostBuf;
     int result = stat(path.c_str(), &hostBuf);
 
     if (result < 0)
-        return SyscallReturn(errno);
+        return errno;
 
     OS::copyOutStatBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 
@@ -347,17 +347,17 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
     std::string path;
 
     if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
-        return SyscallReturn(-EFAULT);
+        return -EFAULT;
 
     struct stat hostBuf;
     int result = lstat(path.c_str(), &hostBuf);
 
     if (result < 0)
-        return SyscallReturn(-errno);
+        return -errno;
 
     OS::copyOutStatBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 /// Target fstat() handler.
@@ -371,17 +371,17 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
     // DPRINTFR(SyscallVerbose, "fstat(%d, ...)\n", fd);
 
     if (fd < 0)
-        return SyscallReturn(-EBADF);
+        return -EBADF;
 
     struct stat hostBuf;
     int result = fstat(fd, &hostBuf);
 
     if (result < 0)
-        return SyscallReturn(-errno);
+        return -errno;
 
     OS::copyOutStatBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 
@@ -419,7 +419,7 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
                 "This will break if not /dev/zero.", xc->getSyscallArg(4));
     }
 
-    return SyscallReturn(start);
+    return start;
 }
 
 /// Target getrlimit() handler.
@@ -444,7 +444,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 
     rlp.copyOut(xc->mem);
-    return SyscallReturn(0);
+    return 0;
 }
 
 /// Target gettimeofday() handler.
@@ -460,7 +460,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
 
     tp.copyOut(xc->mem);
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 
@@ -501,7 +501,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
 
     rup.copyOut(xc->mem);
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 #endif // __SIM_SYSCALL_EMUL_HH__
