@@ -87,13 +87,13 @@ EtherLink::Link::Link(const std::string &name, double rate, EtherDump *d)
 void
 EtherLink::Link::txDone()
 {
-    rxint->sendPacket(packet);
-
     if (dump)
         dump->dump(packet);
 
     DPRINTF(Ethernet, "EtherLink packet received: len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
+
+    rxint->sendPacket(packet);
 
     packet = 0;
     assert(!busy());
