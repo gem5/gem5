@@ -104,23 +104,12 @@ configs_map = {
     'KERNEL' : KernelConfig
     }
 
-# Enable detailed full-system binning.
-def MeasureOpt(env):
-    env.Replace(USE_MYSQL = True)
-    env.Append(CPPDEFINES = 'FS_MEASURE')
-
-# Enable MySql database output for stats.
-def MySqlOpt(env):
-    env.Replace(USE_MYSQL = True)
-
 # Disable FastAlloc object allocation.
 def NoFastAllocOpt(env):
     env.Append(CPPDEFINES = 'NO_FAST_ALLOC')
 
 # Configuration options map.
 options_map = {
-    'MEASURE' : MeasureOpt,
-    'MYSQL' : MySqlOpt,
     'NO_FAST_ALLOC' : NoFastAllocOpt
     }
 
