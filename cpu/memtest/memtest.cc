@@ -213,7 +213,6 @@ MemTest::tick()
     uint64_t data = random();
     unsigned access_size = random() % 4;
     unsigned cacheable = rand() % 100;
-    unsigned probe = rand() % 2;
 
     MemReqPtr req = new MemReq();
 
@@ -223,6 +222,7 @@ MemTest::tick()
     } else {
         req->paddr = ((base) ? baseAddr1 : baseAddr2) + offset1;
     }
+    bool probe = (rand() % 2 == 1) && !req->isUncacheable();
 
     req->size = 1 << access_size;
     req->data = new uint8_t[req->size];
