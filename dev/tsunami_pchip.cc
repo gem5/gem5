@@ -263,7 +263,7 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
                            physmem->dma_addr(pteAddr, sizeof(uint64_t)),
                            sizeof(uint64_t));
 
-                    dmaAddr = ((pteEntry & ~0x1) << 12) | (busAddr & 0xfff);
+                    dmaAddr = ((pteEntry & ~0x1) << 12) | (busAddr & 0x1fff);
 
                 } else {
                     baMask = (wsm[i] & (0x7ff << 20)) | 0xfffff;

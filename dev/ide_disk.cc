@@ -35,6 +35,7 @@
 #include <deque>
 #include <string>
 
+#include "arch/alpha/pmap.h"
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
@@ -60,7 +61,7 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
       dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
       dmaReadEvent(this), dmaWriteEvent(this)
 {
-    diskDelay = (delay * ticksPerSecond / 1000) / image->size();
+    diskDelay = (delay * ticksPerSecond / 100000);
 
     // initialize the data buffer and shadow registers
     dataBuffer = new uint8_t[MAX_DMA_SIZE];
@@ -151,6 +152,15 @@ IdeDisk::~IdeDisk()
 {
     // destroy the data buffer
     delete [] dataBuffer;
+}
+
+Addr
+IdeDisk::pciToDma(Addr &pciAddr)
+{
+    if (ctrl)
+        return ctrl->tsunami->pchip->translatePciToDma(pciAddr);
+    else
+        panic("Access to unset controller!\n");
 }
 
 ////
@@ -309,6 +319,51 @@ IdeDisk::doDmaRead()
 void
 IdeDisk::dmaReadDone()
 {
+
+    Addr curAddr = 0, dmaAddr = 0;
+    uint32_t bytesWritten = 0, bytesInPage = 0, bytesLeft = 0;
+
+    // set initial address
+    curAddr = curPrd.getBaseAddr();
+
+    // clear out the data buffer
+    memset(dataBuffer, 0, MAX_DMA_SIZE);
+
+    // read the data from memory via DMA into a data buffer
+    while (bytesWritten < curPrd.getByteCount()) {
+        if (cmdBytesLeft <= 0)
+            panic("DMA data is larger than # of sectors specified\n");
+
+        dmaAddr = pciToDma(curAddr);
+
+        // calculate how many bytes are in the current page
+        bytesLeft = curPrd.getByteCount() - bytesWritten;
+        bytesInPage = (bytesLeft > ALPHA_PGBYTES) ? ALPHA_PGBYTES : bytesLeft;
+        // check to make sure we don't cross a page boundary
+        if ((curAddr + bytesInPage) >
+            (alpha_trunc_page(curAddr) + ALPHA_PGBYTES))
+
+            bytesInPage = alpha_round_page(curAddr) - curAddr;
+
+        // copy the data from memory into the data buffer
+        /** @todo Use real DMA with interfaces here */
+        memcpy((void *)(dataBuffer + bytesWritten),
+               physmem->dma_addr(dmaAddr, bytesInPage),
+               bytesInPage);
+
+        curAddr += bytesInPage;
+        bytesWritten += bytesInPage;
+        cmdBytesLeft -= bytesInPage;
+    }
+
+    // write the data to the disk image
+    for (bytesWritten = 0;
+         bytesWritten < curPrd.getByteCount();
+         bytesWritten += SectorSize)
+
+        writeDisk(curSector++, (uint8_t *)(dataBuffer + bytesWritten));
+
+#if 0
     // actually copy the data from memory to data buffer
     Addr dmaAddr =
         ctrl->tsunami->pchip->translatePciToDma(curPrd.getBaseAddr());
@@ -327,6 +382,7 @@ IdeDisk::dmaReadDone()
         bytesWritten += SectorSize;
         cmdBytesLeft -= SectorSize;
     }
+#endif
 
     // check for the EOT
     if (curPrd.getEOT()){
@@ -364,27 +420,59 @@ IdeDisk::doDmaWrite()
 void
 IdeDisk::dmaWriteDone()
 {
-    uint32_t bytesRead = 0;
+    Addr curAddr = 0, pageAddr = 0, dmaAddr = 0;
+    uint32_t bytesRead = 0, bytesInPage = 0;
+
+    // setup the initial page and DMA address
+    curAddr = curPrd.getBaseAddr();
+    pageAddr = alpha_trunc_page(curAddr);
+    dmaAddr = pciToDma(curAddr);
 
     // clear out the data buffer
     memset(dataBuffer, 0, MAX_DMA_SIZE);
 
     while (bytesRead < curPrd.getByteCount()) {
+        // see if we have crossed into a new page
+        if (pageAddr != alpha_trunc_page(curAddr)) {
+            // write the data to memory
+            /** @todo Do real DMA using interfaces here */
+            memcpy(physmem->dma_addr(dmaAddr, bytesInPage),
+                   (void *)(dataBuffer + (bytesRead - bytesInPage)),
+                   bytesInPage);
+
+            // update the DMA address and page address
+            pageAddr = alpha_trunc_page(curAddr);
+            dmaAddr = pciToDma(curAddr);
+
+            bytesInPage = 0;
+        }
+
         if (cmdBytesLeft <= 0)
             panic("DMA requested data is larger than # sectors specified\n");
 
         readDisk(curSector++, (uint8_t *)(dataBuffer + bytesRead));
 
+        curAddr += SectorSize;
         bytesRead += SectorSize;
+        bytesInPage += SectorSize;
         cmdBytesLeft -= SectorSize;
     }
 
-    // copy the data to memory
+    // write the last page worth read to memory
+    /** @todo Do real DMA using interfaces here */
+    if (bytesInPage != 0) {
+        memcpy(physmem->dma_addr(dmaAddr, bytesInPage),
+               (void *)(dataBuffer + (bytesRead - bytesInPage)),
+               bytesInPage);
+    }
+
+#if 0
     Addr dmaAddr = ctrl->tsunami->pchip->
         translatePciToDma(curPrd.getBaseAddr());
 
     memcpy(physmem->dma_addr(dmaAddr, curPrd.getByteCount()),
            (void *)dataBuffer, curPrd.getByteCount());
+#endif
 
     // check for the EOT
     if (curPrd.getEOT()) {

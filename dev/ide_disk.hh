@@ -313,6 +313,8 @@ class IdeDisk : public SimObject
                        (cmdReg.cyl_low << 8) | (cmdReg.sec_num));
     }
 
+    inline Addr pciToDma(Addr &pciAddr);
+
     /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
