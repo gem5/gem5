@@ -253,7 +253,7 @@ class SimpleCPU : public BaseCPU
         // need to do this...
     }
 
-    void writeHint(Addr addr, int size)
+    void writeHint(Addr addr, int size, unsigned flags)
     {
         // need to do this...
     }

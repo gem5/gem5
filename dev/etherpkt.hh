@@ -64,11 +64,17 @@ class EtherPacket : public RefCounted
 
     bool isIpPkt() {
         eth_header *eth = (eth_header *) data;
-        return (eth->type == 0x800);
+        return (eth->type == 0x8);
+    }
+    bool isTcpPkt(ip_header *ip) {
+        return (ip->protocol == 0x6);
     }
     bool isTcpPkt() {
         ip_header *ip = getIpHdr();
-        return (ip->protocol == 6);
+        return (ip->protocol == 0x6);
+    }
+    bool isUdpPkt(ip_header *ip) {
+        return (ip->protocol == 17);
     }
     bool isUdpPkt() {
         ip_header *ip = getIpHdr();
@@ -81,11 +87,13 @@ class EtherPacket : public RefCounted
     }
 
     tcp_header *getTcpHdr(ip_header *ip) {
-        return (tcp_header *) (ip + (ip->vers_len & 0xf));
+        assert(isTcpPkt(ip));
+        return (tcp_header *) ((uint8_t *) ip + (ip->vers_len & 0xf)*4);
     }
 
     udp_header *getUdpHdr(ip_header *ip) {
-        return (udp_header *) (ip + (ip->vers_len & 0xf));
+        assert(isUdpPkt(ip));
+        return (udp_header *) ((uint8_t *) ip + (ip->vers_len & 0xf)*4);
     }
     typedef RefCountingPtr<EtherPacket> PacketPtr;
 

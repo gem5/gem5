@@ -67,6 +67,7 @@ baseFlags = [
     'AlphaConsole',
     'Flow',
     'Interrupt',
+    'Fault',
     'Cycle',
     'Loader',
     'MMU',
@@ -74,6 +75,10 @@ baseFlags = [
     'EthernetPIO',
     'EthernetDMA',
     'EthernetData',
+    'EthernetDesc',
+    'EthernetIntr',
+    'EthernetSM',
+    'EthernetCksum',
     'GDBMisc',
     'GDBAcc',
     'GDBRead',
@@ -124,7 +129,7 @@ compoundFlagMap = {
     'GDBAll' : [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend', 'GDBRecv', 'GDBExtra' ],
     'ScsiAll' : [ 'ScsiDisk', 'ScsiCtrl', 'ScsiNone' ],
     'DiskImageAll' : [ 'DiskImage', 'DiskImageRead', 'DiskImageWrite' ],
-    'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' ],
+    'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ]
 }
 

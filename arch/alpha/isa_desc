@@ -1023,7 +1023,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
     # and memory access flags (handled here).
 
     # Would be nice to autogenerate this list, but oh well.
-    valid_mem_flags = ['LOCKED', 'EVICT_NEXT', 'PF_EXCLUSIVE']
+    valid_mem_flags = ['LOCKED', 'NO_FAULT', 'EVICT_NEXT', 'PF_EXCLUSIVE']
     inst_flags = []
     mem_flags = []
     for f in flags:
@@ -1072,7 +1072,7 @@ def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     # Declare the prefetch instruction object.
 
     # convert flags from tuple to list to make them mutable
-    pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'MemReadOp']
+    pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'MemReadOp', 'NO_FAULT']
 
     (pf_header_output, pf_decoder_output, _, pf_exec_output) = \
 	LoadStoreBase(name, Name + 'Prefetch', ea_code, '',
@@ -2391,9 +2391,10 @@ decode OPCODE default Unknown::unknown() {
 	}
 
 	format MiscPrefetch {
-	    0xf800: wh64({{ EA = Rb; }},
-			 {{ xc->writeHint(EA, 64); }},
-			 IsMemRef, IsStore, MemWriteOp);
+	    0xf800: wh64({{ EA = Rb & ~ULL(63); }},
+			 {{ xc->writeHint(EA, 64, memAccessFlags); }},
+			 IsMemRef, IsDataPrefetch, IsStore, MemWriteOp,
+			 NO_FAULT);
 	}
 
 	format BasicOperate {

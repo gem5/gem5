@@ -86,6 +86,11 @@ const char *NsDmaState[] =
 
 using namespace std;
 
+//helper function declarations
+//These functions reverse Endianness so we can evaluate network data correctly
+uint16_t reverseEnd16(uint16_t);
+uint32_t reverseEnd32(uint32_t);
+
 ///////////////////////////////////////////////////////////////////////
 //
 // NSGigE PCI Device
@@ -98,10 +103,10 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
              Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
              PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
              uint32_t func, bool rx_filter, const int eaddr[6])
-    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), io_enable(false),
+    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), ioEnable(false),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
-      txXferLen(0), rxXferLen(0), txPktXmitted(0), txState(txIdle), CTDD(false),
-      txFifoCnt(0), txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
+      txXferLen(0), rxXferLen(0), txState(txIdle), CTDD(false),
+      txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
       CRDD(false), rxPktBytes(0), rxFifoCnt(0), rxHalt(false),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
@@ -112,8 +117,8 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
       txEvent(this), rxFilterEnable(rx_filter), acceptBroadcast(false),
       acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false),
-      physmem(pmem), intctrl(i), intrTick(0),
-      cpuPendingIntr(false), intrEvent(0), interface(0), pioLatency(pio_latency)
+      physmem(pmem), intctrl(i), intrTick(0), cpuPendingIntr(false),
+      intrEvent(0), interface(0), pioLatency(pio_latency)
 {
     tsunami->ethernet = this;
 
@@ -143,7 +148,6 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
     dmaReadFactor = dma_read_factor;
     dmaWriteFactor = dma_write_factor;
 
-    memset(&regs, 0, sizeof(regs));
     regsReset();
     rom.perfectMatch[0] = eaddr[0];
     rom.perfectMatch[1] = eaddr[1];
@@ -242,27 +246,31 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
 
     // Need to catch writes to BARs to update the PIO interface
     switch (offset) {
-        //seems to work fine without all these, but i ut in the IO to
-        //double check, an assertion will fail if we need to properly
-        // imlpement it
+        //seems to work fine without all these PCI settings, but i put in the IO
+        //to double check, an assertion will fail if we need to properly
+        // implement it
       case PCI_COMMAND:
         if (config.data[offset] & PCI_CMD_IOSE)
-            io_enable = true;
+            ioEnable = true;
         else
-            io_enable = false;
-#if 0
-        if (config.data[offset] & PCI_CMD_BME)
-            bm_enabled = true;
-        else
-            bm_enabled = false;
-        break;
+            ioEnable = false;
 
-        if (config.data[offset] & PCI_CMD_MSE)
-            mem_enable = true;
-        else
-            mem_enable = false;
-        break;
+#if 0
+        if (config.data[offset] & PCI_CMD_BME) {
+            bmEnabled = true;
+        }
+        else {
+            bmEnabled = false;
+        }
+
+        if (config.data[offset] & PCI_CMD_MSE) {
+            memEnable = true;
+        }
+        else {
+            memEnable = false;
+        }
 #endif
+        break;
 
       case PCI0_BASE_ADDR0:
         if (BARAddrs[0] != 0) {
@@ -294,7 +302,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
 Fault
 NSGigE::read(MemReqPtr &req, uint8_t *data)
 {
-    assert(io_enable);
+    assert(ioEnable);
 
     //The mask is to give you only the offset into the device register file
     Addr daddr = req->paddr & 0xfff;
@@ -498,7 +506,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
 Fault
 NSGigE::write(MemReqPtr &req, const uint8_t *data)
 {
-    assert(io_enable);
+    assert(ioEnable);
 
     Addr daddr = req->paddr & 0xfff;
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x va=%#x size=%d\n",
@@ -680,7 +688,11 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 
 
             /* we handle our own DMA, ignore the kernel's exhortations */
-            if (reg & TXCFG_MXDMA) ;
+            //if (reg & TXCFG_MXDMA) ;
+
+            //also, we currently don't care about fill/drain thresholds
+            //though this may change in the future with more realistic
+            //networks or a driver which changes it according to feedback
 
             break;
 
@@ -709,9 +721,12 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 #endif
 
             /* we handle our own DMA, ignore what kernel says about it */
-            if (reg & RXCFG_MXDMA) ;
+            //if (reg & RXCFG_MXDMA) ;
 
 #if 0
+            //also, we currently don't care about fill/drain thresholds
+            //though this may change in the future with more realistic
+            //networks or a driver which changes it according to feedback
             if (reg & (RXCFG_DRTH | RXCFG_DRTH0)) ;
 #endif
             break;
@@ -735,15 +750,10 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             regs.rfcr = reg;
 
             rxFilterEnable = (reg & RFCR_RFEN) ? true : false;
-
             acceptBroadcast = (reg & RFCR_AAB) ? true : false;
-
             acceptMulticast = (reg & RFCR_AAM) ? true : false;
-
             acceptUnicast = (reg & RFCR_AAU) ? true : false;
-
             acceptPerfect = (reg & RFCR_APM) ? true : false;
-
             acceptArp = (reg & RFCR_AARP) ? true : false;
 
             if (reg & RFCR_APAT) ;
@@ -905,7 +915,7 @@ NSGigE::devIntrPost(uint32_t interrupts)
         cpuIntrPost(when);
     }
 
-    DPRINTF(Ethernet, "interrupt posted intr=%#x isr=%#x imr=%#x\n",
+    DPRINTF(EthernetIntr, "**interrupt written to ISR: intr=%#x isr=%#x imr=%#x\n",
             interrupts, regs.isr, regs.imr);
 }
 
@@ -967,14 +977,14 @@ NSGigE::devIntrClear(uint32_t interrupts)
     if (!(regs.isr & regs.imr))
         cpuIntrClear();
 
-    DPRINTF(Ethernet, "interrupt cleared intr=%x isr=%x imr=%x\n",
+    DPRINTF(EthernetIntr, "**interrupt cleared from ISR: intr=%x isr=%x imr=%x\n",
             interrupts, regs.isr, regs.imr);
 }
 
 void
 NSGigE::devIntrChangeMask()
 {
-    DPRINTF(Ethernet, "interrupt mask changed\n");
+    DPRINTF(EthernetIntr, "interrupt mask changed\n");
 
     if (regs.isr & regs.imr)
         cpuIntrPost(curTick);
@@ -985,6 +995,12 @@ NSGigE::devIntrChangeMask()
 void
 NSGigE::cpuIntrPost(Tick when)
 {
+    //If the interrupt you want to post is later than an
+    //interrupt already scheduled, just let it post in the coming one and
+    //don't schedule another.
+    //HOWEVER, must be sure that the scheduled intrTick is in the future
+    //(this was formerly the source of a bug)
+    assert((intrTick >= curTick) || (intrTick == 0));
     if (when > intrTick && intrTick != 0)
         return;
 
@@ -998,6 +1014,8 @@ NSGigE::cpuIntrPost(Tick when)
     if (when < curTick) {
         cpuInterrupt();
     } else {
+        DPRINTF(EthernetIntr, "going to schedule an interrupt for intrTick=%d\n",
+                intrTick);
         intrEvent = new IntrEvent(this, true);
         intrEvent->schedule(intrTick);
     }
@@ -1007,12 +1025,18 @@ void
 NSGigE::cpuInterrupt()
 {
     // Don't send an interrupt if there's already one
-    if (cpuPendingIntr)
+    if (cpuPendingIntr) {
+        DPRINTF(EthernetIntr,
+                "would send an interrupt now, but there's already pending\n");
+        intrTick = 0;
         return;
-
+    }
     // Don't send an interrupt if it's supposed to be delayed
-    if (intrTick > curTick)
+    if (intrTick > curTick) {
+        DPRINTF(EthernetIntr, "an interrupt is scheduled for %d, wait til then\n",
+                intrTick);
         return;
+    }
 
     // Whether or not there's a pending interrupt, we don't care about
     // it anymore
@@ -1023,6 +1047,7 @@ NSGigE::cpuInterrupt()
     cpuPendingIntr = true;
     /** @todo rework the intctrl to be tsunami ok */
     //intctrl->post(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
+    DPRINTF(EthernetIntr, "Posting interrupts to cchip!\n");
     tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
 }
 
@@ -1033,6 +1058,7 @@ NSGigE::cpuIntrClear()
         cpuPendingIntr = false;
         /** @todo rework the intctrl to be tsunami ok */
         //intctrl->clear(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
+        DPRINTF(EthernetIntr, "clearing all interrupts from cchip\n");
         tsunami->cchip->clearDRIR(configData->config.hdr.pci0.interruptLine);
     }
 }
@@ -1048,7 +1074,6 @@ NSGigE::txReset()
     DPRINTF(Ethernet, "transmit reset\n");
 
     CTDD = false;
-    txFifoCnt = 0;
     txFifoAvail = MAX_TX_FIFO_SIZE;
     txHalt = false;
     txFragPtr = 0;
@@ -1088,6 +1113,13 @@ void NSGigE::regsReset()
     regs.mibc = 0x2;
     regs.vdr = 0x81;
     regs.tesr = 0xc000;
+
+    extstsEnable = false;
+    acceptBroadcast = false;
+    acceptMulticast = false;
+    acceptUnicast = false;
+    acceptPerfect = false;
+    acceptArp = false;
 }
 
 void
@@ -1197,11 +1229,11 @@ NSGigE::rxDmaWriteDone()
 void
 NSGigE::rxKick()
 {
-    DPRINTF(Ethernet, "receive kick state=%s (rxBuf.size=%d)\n",
+    DPRINTF(EthernetSM, "receive kick state=%s (rxBuf.size=%d)\n",
             NsRxStateStrings[rxState], rxFifo.size());
 
     if (rxKickTick > curTick) {
-        DPRINTF(Ethernet, "receive kick exiting, can't run till %d\n",
+        DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
                 rxKickTick);
         return;
     }
@@ -1229,7 +1261,7 @@ NSGigE::rxKick()
     switch (rxState) {
       case rxIdle:
         if (!regs.command & CR_RXE) {
-            DPRINTF(Ethernet, "Receive Disabled! Nothing to do.\n");
+            DPRINTF(EthernetSM, "Receive Disabled! Nothing to do.\n");
             goto exit;
         }
 
@@ -1267,8 +1299,8 @@ NSGigE::rxKick()
         if (rxDmaState != dmaIdle)
             goto exit;
 
-        DPRINTF(Ethernet,
-                "rxDescCache:\n\tlink=%#x\n\tbufptr=%#x\n\tcmdsts=%#x\n\textsts=%#x\n"
+        DPRINTF(EthernetDesc,
+                "rxDescCache:\n\tlink=%08x\n\tbufptr=%08x\n\tcmdsts=%08x\n\textsts=%08x\n"
                 ,rxDescCache.link, rxDescCache.bufptr, rxDescCache.cmdsts,
                 rxDescCache.extsts);
 
@@ -1291,10 +1323,25 @@ NSGigE::rxKick()
             if (rxFifo.empty())
                 goto exit;
 
+            DPRINTF(EthernetSM, "\n\n*****processing receive of new packet\n");
+
             // If we don't have a packet, grab a new one from the fifo.
             rxPacket = rxFifo.front();
             rxPktBytes = rxPacket->length;
             rxPacketBufPtr = rxPacket->data;
+
+            if (DTRACE(Ethernet)) {
+                if (rxPacket->isIpPkt()) {
+                    ip_header *ip = rxPacket->getIpHdr();
+                    DPRINTF(Ethernet, "ID is %d\n", reverseEnd16(ip->ID));
+                    if (rxPacket->isTcpPkt()) {
+                        tcp_header *tcp = rxPacket->getTcpHdr(ip);
+                        DPRINTF(Ethernet, "Src Port = %d, Dest Port = %d\n",
+                                reverseEnd16(tcp->src_port_num),
+                                reverseEnd16(tcp->dest_port_num));
+                    }
+                }
+            }
 
             // sanity check - i think the driver behaves like this
             assert(rxDescCnt >= rxPktBytes);
@@ -1303,6 +1350,7 @@ NSGigE::rxKick()
             // reference count
             rxFifo.front() = NULL;
             rxFifo.pop_front();
+            rxFifoCnt -= rxPacket->length;
         }
 
 
@@ -1325,6 +1373,7 @@ NSGigE::rxKick()
 
             //if (rxPktBytes == 0) {  /* packet is done */
             assert(rxPktBytes == 0);
+            DPRINTF(EthernetSM, "done with receiving packet\n");
 
             rxDescCache.cmdsts |= CMDSTS_OWN;
             rxDescCache.cmdsts &= ~CMDSTS_MORE;
@@ -1349,22 +1398,26 @@ NSGigE::rxKick()
             }
 #endif
 
-            if (rxPacket->isIpPkt() && extstsEnable) {			      rxDescCache.extsts |= EXTSTS_IPPKT;
-                if (!ipChecksum(rxPacket, false))
+            if (rxPacket->isIpPkt() && extstsEnable) {
+                rxDescCache.extsts |= EXTSTS_IPPKT;
+                if (!ipChecksum(rxPacket, false)) {
+                    DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
                     rxDescCache.extsts |= EXTSTS_IPERR;
-
+                }
                 if (rxPacket->isTcpPkt()) {
                     rxDescCache.extsts |= EXTSTS_TCPPKT;
-                    if (!tcpChecksum(rxPacket, false))
+                    if (!tcpChecksum(rxPacket, false)) {
+                        DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_TCPERR;
+                    }
                 } else if (rxPacket->isUdpPkt()) {
                     rxDescCache.extsts |= EXTSTS_UDPPKT;
-                    if (!udpChecksum(rxPacket, false))
+                    if (!udpChecksum(rxPacket, false)) {
+                        DPRINTF(EthernetCksum, "Rx UDP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_UDPERR;
+                    }
                 }
             }
-
-            rxFifoCnt -= rxPacket->length;
             rxPacket = 0;
 
             /* the driver seems to always receive into desc buffers
@@ -1373,7 +1426,7 @@ NSGigE::rxKick()
                i don't implement that case, hence the assert above.
             */
 
-            DPRINTF(Ethernet, "rxDesc writeback:\n\tcmdsts=%#x\n\textsts=%#x\n",
+            DPRINTF(EthernetDesc, "rxDesc writeback:\n\tcmdsts=%08x\n\textsts=%08x\n",
                     rxDescCache.cmdsts, rxDescCache.extsts);
 
             rxDmaAddr = (regs.rxdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
@@ -1410,6 +1463,7 @@ NSGigE::rxKick()
             devIntrPost(ISR_RXDESC);
 
         if (rxHalt) {
+            DPRINTF(EthernetSM, "Halting the RX state machine\n");
             rxState = rxIdle;
             rxHalt = false;
         } else
@@ -1440,7 +1494,7 @@ NSGigE::rxKick()
     }
 
 
-    DPRINTF(Ethernet, "entering next rx state = %s\n",
+    DPRINTF(EthernetSM, "entering next rx state = %s\n",
             NsRxStateStrings[rxState]);
 
     if (rxState == rxIdle) {
@@ -1455,7 +1509,7 @@ NSGigE::rxKick()
     /**
      * @todo do we want to schedule a future kick?
      */
-    DPRINTF(Ethernet, "rx state machine exited state=%s\n",
+    DPRINTF(EthernetSM, "rx state machine exited state=%s\n",
             NsRxStateStrings[rxState]);
 }
 
@@ -1467,14 +1521,29 @@ NSGigE::transmit()
         return;
     }
 
-   if (interface->sendPacket(txFifo.front())) {
-        DPRINTF(Ethernet, "transmit packet\n");
+    DPRINTF(Ethernet, "\n\nAttempt Pkt Transmit: txFifo length = %d\n",
+            MAX_TX_FIFO_SIZE - txFifoAvail);
+    if (interface->sendPacket(txFifo.front())) {
+        if (DTRACE(Ethernet)) {
+            if (txFifo.front()->isIpPkt()) {
+                ip_header *ip = txFifo.front()->getIpHdr();
+                DPRINTF(Ethernet, "ID is %d\n", reverseEnd16(ip->ID));
+                if (txFifo.front()->isTcpPkt()) {
+                    tcp_header *tcp = txFifo.front()->getTcpHdr(ip);
+                    DPRINTF(Ethernet, "Src Port = %d, Dest Port = %d\n",
+                            reverseEnd16(tcp->src_port_num),
+                            reverseEnd16(tcp->dest_port_num));
+                }
+            }
+        }
+
         DDUMP(Ethernet, txFifo.front()->data, txFifo.front()->length);
         txBytes += txFifo.front()->length;
         txPackets++;
 
-        txFifoCnt -= (txFifo.front()->length - txPktXmitted);
-        txPktXmitted = 0;
+        txFifoAvail += txFifo.front()->length;
+
+        DPRINTF(Ethernet, "Successful Xmit! now txFifoAvail is %d\n", txFifoAvail);
         txFifo.front() = NULL;
         txFifo.pop_front();
 
@@ -1484,7 +1553,8 @@ NSGigE::transmit()
            nice format.  besides, it's functionally the same.
         */
         devIntrPost(ISR_TXOK);
-   }
+    } else
+        DPRINTF(Ethernet, "May need to rethink always sending the descriptors back?\n");
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
@@ -1599,11 +1669,11 @@ NSGigE::txDmaWriteDone()
 void
 NSGigE::txKick()
 {
-    DPRINTF(Ethernet, "transmit kick state=%s\n", NsTxStateStrings[txState]);
+    DPRINTF(EthernetSM, "transmit kick state=%s\n", NsTxStateStrings[txState]);
 
-    if (rxKickTick > curTick) {
-        DPRINTF(Ethernet, "receive kick exiting, can't run till %d\n",
-                rxKickTick);
+    if (txKickTick > curTick) {
+        DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
+                txKickTick);
 
         return;
     }
@@ -1625,7 +1695,7 @@ NSGigE::txKick()
     switch (txState) {
       case txIdle:
         if (!regs.command & CR_TXE) {
-            DPRINTF(Ethernet, "Transmit disabled.  Nothing to do.\n");
+            DPRINTF(EthernetSM, "Transmit disabled.  Nothing to do.\n");
             goto exit;
         }
 
@@ -1664,8 +1734,8 @@ NSGigE::txKick()
         if (txDmaState != dmaIdle)
             goto exit;
 
-        DPRINTF(Ethernet,
-                "txDescCache data:\n\tlink=%#x\n\tbufptr=%#x\n\tcmdsts=%#x\n\textsts=%#x\n"
+        DPRINTF(EthernetDesc,
+                "txDescCache data:\n\tlink=%08x\n\tbufptr=%08x\n\tcmdsts=%08x\n\textsts=%08x\n"
                 ,txDescCache.link, txDescCache.bufptr, txDescCache.cmdsts,
                 txDescCache.extsts);
 
@@ -1680,16 +1750,16 @@ NSGigE::txKick()
 
       case txFifoBlock:
         if (!txPacket) {
-            DPRINTF(Ethernet, "starting the tx of a new packet\n");
+            DPRINTF(EthernetSM, "\n\n*****starting the tx of a new packet\n");
             txPacket = new EtherPacket;
             txPacket->data = new uint8_t[16384];
             txPacketBufPtr = txPacket->data;
         }
 
         if (txDescCnt == 0) {
-            DPRINTF(Ethernet, "the txDescCnt == 0, done with descriptor\n");
+            DPRINTF(EthernetSM, "the txDescCnt == 0, done with descriptor\n");
             if (txDescCache.cmdsts & CMDSTS_MORE) {
-                DPRINTF(Ethernet, "there are more descriptors to come\n");
+                DPRINTF(EthernetSM, "there are more descriptors to come\n");
                 txState = txDescWrite;
 
                 txDescCache.cmdsts &= ~CMDSTS_OWN;
@@ -1703,7 +1773,7 @@ NSGigE::txKick()
                     goto exit;
 
             } else { /* this packet is totally done */
-                DPRINTF(Ethernet, "This packet is done, let's wrap it up\n");
+                DPRINTF(EthernetSM, "This packet is done, let's wrap it up\n");
                 /* deal with the the packet that just finished */
                 if ((regs.vtcr & VTCR_PPCHK) && extstsEnable) {
                     if (txDescCache.extsts & EXTSTS_UDPPKT) {
@@ -1721,7 +1791,6 @@ NSGigE::txKick()
                 assert(txPacket->length <= 1514);
                 txFifo.push_back(txPacket);
 
-
                 /* this following section is not to spec, but functionally shouldn't
                    be any different.  normally, the chip will wait til the transmit has
                    occurred before writing back the descriptor because it has to wait
@@ -1730,11 +1799,12 @@ NSGigE::txKick()
                    successfully transmitted, and writing it exactly to spec would
                    complicate the code, we just do it here
                 */
+
                 txDescCache.cmdsts &= ~CMDSTS_OWN;
                 txDescCache.cmdsts |= CMDSTS_OK;
 
-                DPRINTF(Ethernet,
-                        "txDesc writeback:\n\tcmdsts=%#x\n\textsts=%#x\n",
+                DPRINTF(EthernetDesc,
+                        "txDesc writeback:\n\tcmdsts=%08x\n\textsts=%08x\n",
                         txDescCache.cmdsts, txDescCache.extsts);
 
                 txDmaAddr = (regs.txdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
@@ -1745,25 +1815,19 @@ NSGigE::txKick()
                 if (doTxDmaWrite())
                     goto exit;
 
-                txPacket = 0;
                 transmit();
 
+                txPacket = 0;
+
                 if (txHalt) {
+                    DPRINTF(EthernetSM, "halting TX state machine\n");
                     txState = txIdle;
                     txHalt = false;
                 } else
                     txState = txAdvance;
             }
         } else {
-            DPRINTF(Ethernet, "this descriptor isn't done yet\n");
-            /* the fill thresh is in units of 32 bytes, shift right by 8 to get the
-               value, shift left by 5 to get the real number of bytes */
-            if (txFifoAvail < ((regs.txcfg & TXCFG_FLTH_MASK) >> 3)) {
-                DPRINTF(Ethernet, "txFifoAvail=%d, regs.txcfg & TXCFG_FLTH_MASK = %#x\n",
-                        txFifoAvail, regs.txcfg & TXCFG_FLTH_MASK);
-                goto exit;
-            }
-
+            DPRINTF(EthernetSM, "this descriptor isn't done yet\n");
             txState = txFragRead;
 
             /* The number of bytes transferred is either whatever is left
@@ -1788,8 +1852,8 @@ NSGigE::txKick()
 
         txPacketBufPtr += txXferLen;
         txFragPtr += txXferLen;
-        txFifoCnt += txXferLen;
         txDescCnt -= txXferLen;
+        txFifoAvail -= txXferLen;
 
         txState = txFifoBlock;
         break;
@@ -1797,16 +1861,6 @@ NSGigE::txKick()
       case txDescWrite:
         if (txDmaState != dmaIdle)
             goto exit;
-
-        if (txFifoCnt >= ((regs.txcfg & TXCFG_DRTH_MASK) << 5)) {
-            if (txFifo.empty()) {
-                uint32_t xmitted = (uint32_t) (txPacketBufPtr - txPacket->data - txPktXmitted);
-                txFifoCnt -= xmitted;
-                txPktXmitted += xmitted;
-            } else {
-                transmit();
-            }
-        }
 
         if (txDescCache.cmdsts & CMDSTS_INTR) {
             devIntrPost(ISR_TXDESC);
@@ -1837,7 +1891,7 @@ NSGigE::txKick()
         panic("invalid state");
     }
 
-    DPRINTF(Ethernet, "entering next tx state=%s\n",
+    DPRINTF(EthernetSM, "entering next tx state=%s\n",
             NsTxStateStrings[txState]);
 
     if (txState == txIdle) {
@@ -1852,7 +1906,7 @@ NSGigE::txKick()
     /**
      * @todo do we want to schedule a future kick?
      */
-    DPRINTF(Ethernet, "tx state machine exited state=%s\n",
+    DPRINTF(EthernetSM, "tx state machine exited state=%s\n",
             NsTxStateStrings[txState]);
 }
 
@@ -1861,8 +1915,6 @@ NSGigE::transferDone()
 {
     if (txFifo.empty())
         return;
-
-    DPRINTF(Ethernet, "schedule transmit\n");
 
     if (txEvent.scheduled())
         txEvent.reschedule(curTick + 1);
@@ -1889,7 +1941,7 @@ NSGigE::rxFilter(PacketPtr packet)
             drop = false;
 
         eth_header *eth = (eth_header *) packet->data;
-        if ((acceptArp) && (eth->type == 0x806))
+        if ((acceptArp) && (eth->type == 0x608))
             drop = false;
 
     } else if (packet->IsBroadcast()) {
@@ -1926,6 +1978,8 @@ NSGigE::recvPacket(PacketPtr packet)
     rxBytes += packet->length;
     rxPackets++;
 
+    DPRINTF(Ethernet, "\n\nReceiving packet from wire, rxFifoAvail = %d\n", MAX_RX_FIFO_SIZE - rxFifoCnt);
+
     if (rxState == rxIdle) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
         interface->recvDone();
@@ -1938,7 +1992,7 @@ NSGigE::recvPacket(PacketPtr packet)
         return true;
     }
 
-    if (rxFifoCnt + packet->length >= MAX_RX_FIFO_SIZE) {
+    if ((rxFifoCnt + packet->length) >= MAX_RX_FIFO_SIZE) {
         DPRINTF(Ethernet,
                 "packet will not fit in receive buffer...packet dropped\n");
         devIntrPost(ISR_RXORN);
@@ -1993,11 +2047,11 @@ NSGigE::tcpChecksum(PacketPtr packet, bool gen)
 
     pseudo->src_ip_addr = ip->src_ip_addr;
     pseudo->dest_ip_addr = ip->dest_ip_addr;
-    pseudo->protocol = ip->protocol;
-    pseudo->len = ip->dgram_len - (ip->vers_len & 0xf);
+    pseudo->protocol = reverseEnd16(ip->protocol);
+    pseudo->len = reverseEnd16(reverseEnd16(ip->dgram_len) - (ip->vers_len & 0xf)*4);
 
     uint16_t cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
-                                  (uint32_t) pseudo->len);
+                                  (uint32_t) reverseEnd16(pseudo->len));
 
     delete pseudo;
     if (gen)
@@ -2014,10 +2068,12 @@ NSGigE::ipChecksum(PacketPtr packet, bool gen)
 {
     ip_header *hdr = packet->getIpHdr();
 
-    uint16_t cksum = checksumCalc(NULL, (uint16_t *) hdr, (hdr->vers_len & 0xf));
+    uint16_t cksum = checksumCalc(NULL, (uint16_t *) hdr, (hdr->vers_len & 0xf)*4);
 
-    if (gen)
+    if (gen) {
+        DPRINTF(Ethernet, "generated checksum: %#x\n", cksum);
         hdr->hdr_chksum = cksum;
+    }
     else
         if (cksum != 0)
             return false;
@@ -2111,7 +2167,7 @@ NSGigE::serialize(ostream &os)
 
     SERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
-    SERIALIZE_SCALAR(io_enable);
+    SERIALIZE_SCALAR(ioEnable);
 
     /*
      * Serialize the data Fifos
@@ -2157,7 +2213,6 @@ NSGigE::serialize(ostream &os)
 
     SERIALIZE_SCALAR(txXferLen);
     SERIALIZE_SCALAR(rxXferLen);
-    SERIALIZE_SCALAR(txPktXmitted);
 
     /*
      * Serialize DescCaches
@@ -2177,7 +2232,6 @@ NSGigE::serialize(ostream &os)
     int txState = this->txState;
     SERIALIZE_SCALAR(txState);
     SERIALIZE_SCALAR(CTDD);
-    SERIALIZE_SCALAR(txFifoCnt);
     SERIALIZE_SCALAR(txFifoAvail);
     SERIALIZE_SCALAR(txHalt);
     SERIALIZE_SCALAR(txFragPtr);
@@ -2270,7 +2324,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
 
     UNSERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
-    UNSERIALIZE_SCALAR(io_enable);
+    UNSERIALIZE_SCALAR(ioEnable);
 
     /*
      * unserialize the data fifos
@@ -2320,7 +2374,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
 
     UNSERIALIZE_SCALAR(txXferLen);
     UNSERIALIZE_SCALAR(rxXferLen);
-    UNSERIALIZE_SCALAR(txPktXmitted);
 
     /*
      * Unserialize DescCaches
@@ -2341,7 +2394,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(txState);
     this->txState = (TxState) txState;
     UNSERIALIZE_SCALAR(CTDD);
-    UNSERIALIZE_SCALAR(txFifoCnt);
     UNSERIALIZE_SCALAR(txFifoAvail);
     UNSERIALIZE_SCALAR(txHalt);
     UNSERIALIZE_SCALAR(txFragPtr);
@@ -2415,6 +2467,26 @@ NSGigE::cacheAccess(MemReqPtr &req)
 }
 //=====================================================================
 
+
+//********** helper functions******************************************
+
+uint16_t reverseEnd16(uint16_t num)
+{
+    uint16_t reverse = (num & 0xff)<<8;
+    reverse += ((num & 0xff00) >> 8);
+    return reverse;
+}
+
+uint32_t reverseEnd32(uint32_t num)
+{
+    uint32_t reverse = (reverseEnd16(num & 0xffff)) << 16;
+    reverse += reverseEnd16((uint16_t) ((num & 0xffff0000) >> 8));
+    return reverse;
+}
+
+
+
+//=====================================================================
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
 

@@ -145,6 +145,10 @@ class IdeController : public PciDev
     int getDisk(IdeDisk *diskPtr);
 
   public:
+    /** See if a disk is selected based on its pointer */
+    bool isDiskSelected(IdeDisk *diskPtr);
+
+  public:
     /**
      * Constructs and initializes this controller.
      * @param name The name of this controller.
