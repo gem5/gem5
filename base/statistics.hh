@@ -59,6 +59,8 @@
 
 #include "sim/host.hh"
 
+#include "base/cprintf.hh"
+
 //
 //  Un-comment this to enable weirdo-stat debugging
 //
@@ -2145,24 +2147,32 @@ class Temp
 class BinBase
 {
   private:
-    off_t memsize;
     char *mem;
 
   protected:
+    off_t memsize;
     off_t size() const { return memsize; }
     char *memory();
 
   public:
-    BinBase(size_t size);
+    BinBase();
     virtual ~BinBase();
-    virtual void activate() = 0;
-    void regBin(BinBase *bin, std::string name);
 };
 
 } // namespace Detail
 
+class GenBin : public Detail::BinBase
+{
+  public:
+    GenBin() : BinBase() {}
+    virtual ~GenBin() {};
+
+    virtual void activate() = 0;
+    void regBin(GenBin *bin, std::string name);
+};
+
 template <class BinType>
-struct StatBin : public Detail::BinBase
+struct StatBin : public GenBin
 {
   private:
     std::string _name;
@@ -2193,9 +2203,13 @@ struct StatBin : public Detail::BinBase
         return off;
     }
 
-    explicit StatBin(std::string name, size_t size = 1024) : Detail::BinBase(size) {  _name = name; this->regBin(this, name); }
+    explicit StatBin(std::string name) : GenBin() {  _name = name; this->regBin(this, name); }
 
     char *memory(off_t off) {
+        if (memsize == -1) {
+            memsize = CeilPow2((size_t) offset());
+            cprintf("this is memsize: %d\n",  (uint64_t) memsize);
+        }
         assert(offset() <= size());
         return Detail::BinBase::memory() + off;
     }

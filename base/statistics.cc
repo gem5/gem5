@@ -132,13 +132,13 @@ class Database
     typedef list<Stat *> list_t;
     typedef map<const Stat *, StatData *> map_t;
 
-    list<BinBase *> bins;
-    map<const BinBase *, std::string > bin_names;
+    list<GenBin *> bins;
+    map<const GenBin *, std::string > bin_names;
     list_t binnedStats;
 
     list_t allStats;
     list_t printStats;
-    map_t map;
+    map_t statMap;
 
   public:
     Database();
@@ -151,7 +151,7 @@ class Database
     void reset();
     void regStat(Stat *stat);
     StatData *print(Stat *stat);
-    void regBin(BinBase *bin, std::string name);
+    void regBin(GenBin *bin, std::string name);
 };
 
 Database::Database()
@@ -173,14 +173,14 @@ Database::dump(ostream &stream)
         ++i;
     }
 
-    list<BinBase *>::iterator j = bins.begin();
-    list<BinBase *>::iterator bins_end=bins.end();
+    list<GenBin *>::iterator j = bins.begin();
+    list<GenBin *>::iterator bins_end=bins.end();
 
     if (!bins.empty()) {
         ccprintf(stream, "PRINTING BINNED STATS\n");
         while (j != bins_end) {
             (*j)->activate();
-           ::map<const BinBase  *, std::string>::const_iterator iter;
+           map<const GenBin  *, std::string>::const_iterator iter;
             iter = bin_names.find(*j);
             if (iter == bin_names.end())
                 panic("a binned stat not found in names map!");
@@ -213,9 +213,9 @@ Database::dump(ostream &stream)
 StatData *
 Database::find(const Stat *stat)
 {
-    map_t::const_iterator i = map.find(stat);
+    map_t::const_iterator i = statMap.find(stat);
 
-    if (i == map.end())
+    if (i == statMap.end())
         return NULL;
 
     return (*i).second;
@@ -265,19 +265,19 @@ Database::reset()
 void
 Database::regStat(Stat *stat)
 {
-    if (map.find(stat) != map.end())
+    if (statMap.find(stat) != statMap.end())
         panic("shouldn't register stat twice!");
 
     allStats.push_back(stat);
 
     StatData *data = new StatData;
-    bool success = (map.insert(make_pair(stat, data))).second;
-    assert(map.find(stat) != map.end());
+    bool success = (statMap.insert(make_pair(stat, data))).second;
+    assert(statMap.find(stat) != statMap.end());
     assert(success && "this should never fail");
 }
 
 void
-Database::regBin(BinBase *bin, std::string name)
+Database::regBin(GenBin *bin, std::string name)
 {
     if (bin_names.find(bin) != bin_names.end())
         panic("shouldn't register bin twice");
@@ -877,8 +877,8 @@ FancyDisplay(ostream &stream, const string &name, const string &desc,
     PrintOne(stream, stdev, name + NAMESEP + "stdev", desc, precision, flags);
 }
 
-BinBase::BinBase(size_t size)
-    : memsize(CeilPow2(size)), mem(NULL)
+BinBase::BinBase()
+    :  mem(NULL), memsize(-1)
 {
 }
 
@@ -900,9 +900,9 @@ BinBase::memory()
 }
 
 void
-BinBase::regBin(BinBase *bin, std::string name)
+GenBin::regBin(GenBin *bin, std::string name)
 {
-    StatDB().regBin(bin, name);
+    Detail::StatDB().regBin(bin, name);
 }
 
 } // namespace Detail
