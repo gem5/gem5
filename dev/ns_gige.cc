@@ -1678,7 +1678,7 @@ NSGigE::txDmaReadCopy()
 {
     assert(txDmaState == dmaReading);
 
-    memcpy(txDmaData, physmem->dma_addr(txDmaAddr, txDmaLen), txDmaLen);
+    physmem->dma_read((uint8_t *)txDmaData, txDmaAddr, txDmaLen);
     txDmaState = dmaIdle;
 
     DPRINTF(EthernetDMA, "tx dma read  paddr=%#x len=%d\n",
@@ -1730,7 +1730,7 @@ NSGigE::txDmaWriteCopy()
 {
     assert(txDmaState == dmaWriting);
 
-    memcpy(physmem->dma_addr(txDmaAddr, txDmaLen), txDmaData, txDmaLen);
+    physmem->dma_write(txDmaAddr, (uint8_t *)txDmaData, txDmaLen);
     txDmaState = dmaIdle;
 
     DPRINTF(EthernetDMA, "tx dma write paddr=%#x len=%d\n",
