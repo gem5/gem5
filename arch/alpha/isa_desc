@@ -1610,7 +1610,8 @@ output decoder {{
 }};
 
 def format HwMoveIPR(code) {{
-    iop = InstObjParams(name, Name, 'HwMoveIPR', CodeBlock(code))
+    iop = InstObjParams(name, Name, 'HwMoveIPR', CodeBlock(code),
+			['IprAccessOp'])
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
