@@ -55,17 +55,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-
-
-
-
 /* @file
  * Ethernet device register definitions for the National
  * Semiconductor DP83820 Ethernet controller
  */
 
-#ifndef _NS_GIGE_H
-#define _NS_GIGE_H_
+#ifndef __DEV_NS_GIGE_REG_H__
+#define __DEV_NS_GIGE_REG_H__
 
 /*
  * Configuration Register Map
@@ -220,6 +216,9 @@
 #define ISR_RXDESC	0x00000002
 #define ISR_RXOK	0x00000001
 #define ISR_ALL         0x7FFFFFFF
+#define ISR_NODELAY	(ISR_ALL & ~(ISR_RXOK|ISR_RXDESC|ISR_TXOK|ISR_TXDESC))
+#define ISR_NOIMPL	(~(ISR_SWI|ISR_TXIDLE|ISR_TXDESC|ISR_TXOK|ISR_RXORN| \
+                           ISR_RXIDLE|ISR_RXDESC|ISR_RXOK))
 
 /* transmit configuration register */
 #define TXCFG_CSI	0x80000000
@@ -369,4 +368,4 @@ struct ns_desc {
 /* speed status */
 #define SPDSTS_POLARITY	(CFG_SPDSTS1 | CFG_SPDSTS0 | CFG_DUPSTS | (lnksts ? CFG_LNKSTS : 0))
 
-#endif /* _NS_GIGE_H_ */
+#endif /* __DEV_NS_GIGE_REG_H__ */

@@ -925,74 +925,25 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 void
 NSGigE::devIntrPost(uint32_t interrupts)
 {
-    bool delay = false;
-
     if (interrupts & ISR_RESERVE)
         panic("Cannot set a reserved interrupt");
 
-    if (interrupts & ISR_TXRCMP)
-        regs.isr |= ISR_TXRCMP;
+    if (interrupts & ISR_NOIMPL)
+        warn("interrupt not implemented %#x\n", interrupts);
 
-    if (interrupts & ISR_RXRCMP)
-        regs.isr |= ISR_RXRCMP;
-
-//ISR_DPERR  not implemented
-//ISR_SSERR not implemented
-//ISR_RMABT not implemented
-//ISR_RXSOVR not implemented
-//ISR_HIBINT not implemented
-//ISR_PHY not implemented
-//ISR_PME not implemented
-
-    if (interrupts & ISR_SWI)
-        regs.isr |= ISR_SWI;
-
-//ISR_MIB not implemented
-//ISR_TXURN not implemented
-
-    if (interrupts & ISR_TXIDLE)
-        regs.isr |= ISR_TXIDLE;
-
-    if (interrupts & ISR_TXERR)
-        regs.isr |= ISR_TXERR;
-
-    if (interrupts & ISR_TXDESC)
-        regs.isr |= ISR_TXDESC;
-
-    if (interrupts & ISR_TXOK) {
-        regs.isr |= ISR_TXOK;
-        delay = true;
-    }
-
-    if (interrupts & ISR_RXORN)
-        regs.isr |= ISR_RXORN;
-
-    if (interrupts & ISR_RXIDLE)
-        regs.isr |= ISR_RXIDLE;
-
-//ISR_RXEARLY not implemented
-
-    if (interrupts & ISR_RXERR)
-        regs.isr |= ISR_RXERR;
-
-    if (interrupts & ISR_RXDESC)
-        regs.isr |= ISR_RXDESC;
-
-    if (interrupts & ISR_RXOK) {
-        delay = true;
-        regs.isr |= ISR_RXOK;
-    }
-
-    if ((regs.isr & regs.imr)) {
-        Tick when = curTick;
-        if (delay)
-            when += intrDelay;
-        cpuIntrPost(when);
-    }
+    interrupts &= ~ISR_NOIMPL;
+    regs.isr |= interrupts;
 
     DPRINTF(EthernetIntr,
             "interrupt written to ISR: intr=%#x isr=%#x imr=%#x\n",
             interrupts, regs.isr, regs.imr);
+
+    if ((regs.isr & regs.imr)) {
+        Tick when = curTick;
+        if (!(regs.isr & regs.imr & ISR_NODELAY))
+            when += intrDelay;
+        cpuIntrPost(when);
+    }
 }
 
 void
@@ -1001,54 +952,8 @@ NSGigE::devIntrClear(uint32_t interrupts)
     if (interrupts & ISR_RESERVE)
         panic("Cannot clear a reserved interrupt");
 
-    if (interrupts & ISR_TXRCMP)
-        regs.isr &= ~ISR_TXRCMP;
-
-    if (interrupts & ISR_RXRCMP)
-        regs.isr &= ~ISR_RXRCMP;
-
-//ISR_DPERR  not implemented
-//ISR_SSERR not implemented
-//ISR_RMABT not implemented
-//ISR_RXSOVR not implemented
-//ISR_HIBINT not implemented
-//ISR_PHY not implemented
-//ISR_PME not implemented
-
-    if (interrupts & ISR_SWI)
-        regs.isr &= ~ISR_SWI;
-
-//ISR_MIB not implemented
-//ISR_TXURN not implemented
-
-    if (interrupts & ISR_TXIDLE)
-        regs.isr &= ~ISR_TXIDLE;
-
-    if (interrupts & ISR_TXERR)
-        regs.isr &= ~ISR_TXERR;
-
-    if (interrupts & ISR_TXDESC)
-        regs.isr &= ~ISR_TXDESC;
-
-    if (interrupts & ISR_TXOK)
-        regs.isr &= ~ISR_TXOK;
-
-    if (interrupts & ISR_RXORN)
-        regs.isr &= ~ISR_RXORN;
-
-    if (interrupts & ISR_RXIDLE)
-        regs.isr &= ~ISR_RXIDLE;
-
-//ISR_RXEARLY not implemented
-
-    if (interrupts & ISR_RXERR)
-        regs.isr &= ~ISR_RXERR;
-
-    if (interrupts & ISR_RXDESC)
-        regs.isr &= ~ISR_RXDESC;
-
-    if (interrupts & ISR_RXOK)
-        regs.isr &= ~ISR_RXOK;
+    interrupts &= ~ISR_NOIMPL;
+    regs.isr &= ~interrupts;
 
     DPRINTF(EthernetIntr,
             "interrupt cleared from ISR: intr=%x isr=%x imr=%x\n",
@@ -1134,9 +1039,8 @@ NSGigE::cpuInterrupt()
 
     // Send interrupt
     cpuPendingIntr = true;
-    /** @todo rework the intctrl to be tsunami ok */
-    //intctrl->post(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
-    DPRINTF(EthernetIntr, "Posting interrupts to cchip!\n");
+
+    DPRINTF(EthernetIntr, "posting cchip interrupt\n");
     tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
 }
 
@@ -1147,9 +1051,8 @@ NSGigE::cpuIntrClear()
         return;
 
     cpuPendingIntr = false;
-    /** @todo rework the intctrl to be tsunami ok */
-    //intctrl->clear(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
-    DPRINTF(EthernetIntr, "clearing all interrupts from cchip\n");
+
+    DPRINTF(EthernetIntr, "clearing cchip interrupt\n");
     tsunami->cchip->clearDRIR(configData->config.hdr.pci0.interruptLine);
 }
 
@@ -1193,15 +1096,15 @@ void
 NSGigE::regsReset()
 {
     memset(&regs, 0, sizeof(regs));
-    regs.config = 0x80000000;
-    regs.mear = 0x12;
-    regs.isr = 0x00608000;
-    regs.txcfg = 0x120;
-    regs.rxcfg = 0x4;
-    regs.srr = 0x0103;
-    regs.mibc = 0x2;
-    regs.vdr = 0x81;
-    regs.tesr = 0xc000;
+    regs.config = CFG_LNKSTS;
+    regs.mear = MEAR_MDDIR | MEAR_EEDO;
+    regs.txcfg = 0x120; // set drain threshold to 1024 bytes and
+                        // fill threshold to 32 bytes
+    regs.rxcfg = 0x4;   // set drain threshold to 16 bytes
+    regs.srr = 0x0103;  // set the silicon revision to rev B or 0x103
+    regs.mibc = MIBC_FRZ;
+    regs.vdr = 0x81;    // set the vlan tag type to 802.1q
+    regs.tesr = 0xc000; // TBI capable of both full and half duplex
 
     extstsEnable = false;
     acceptBroadcast = false;
