@@ -323,6 +323,7 @@ SimpleCommit<Impl>::commitInsts()
         head_inst = rob->readHeadInst();
     }
 
+    DPRINTF(CommitRate, "%i\n", num_committed);
     n_committed_dist.sample(num_committed);
 }
 

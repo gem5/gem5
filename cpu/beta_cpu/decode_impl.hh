@@ -147,7 +147,7 @@ SimpleDecode<Impl>::squash(DynInstPtr &inst)
 {
     DPRINTF(Decode, "Decode: Squashing due to incorrect branch prediction "
                     "detected at decode.\n");
-    Addr new_PC = inst->nextPC;
+    Addr new_PC = inst->readNextPC();
 
     toFetch->decodeInfo.branchMispredict = true;
     toFetch->decodeInfo.doneSeqNum = inst->seqNum;
@@ -355,10 +355,9 @@ SimpleDecode<Impl>::decode()
 
         // Go ahead and compute any PC-relative branches.
 
-        if (inst->isDirectCtrl() && inst->isUncondCtrl() &&
-            inst->numDestRegs() == 0 && inst->numSrcRegs() == 0) {
-            inst->execute();
-            inst->setExecuted();
+        if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
+
+            inst->setNextPC(inst->branchTarget());
 
             if (inst->mispredicted()) {
                 ++decodeBranchMispred;

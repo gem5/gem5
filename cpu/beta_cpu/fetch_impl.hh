@@ -195,22 +195,6 @@ SimpleFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
 
     predict_taken = branchPred.predict(inst, next_PC);
 
-#if 0
-    predict_taken = branchPred.BPLookup(next_PC)
-
-    DPRINTF(Fetch, "Fetch: Branch predictor predicts taken? %i\n",
-            predict_taken);
-
-    // Only check the BTB if the BP has predicted taken.
-    if (predict_taken && branchPred.BTBValid(next_PC)) {
-        predict_target = branchPred.BTBLookup(next_PC);
-        DPRINTF(Fetch, "Fetch: BTB target is %#x.\n", predict_target);
-    } else {
-        predict_taken = false;
-        DPRINTF(Fetch, "Fetch: BTB does not have a valid entry.\n");
-    }
-
-#endif
     if (predict_taken) {
         ++predictedBranches;
     }

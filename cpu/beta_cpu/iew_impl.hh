@@ -249,7 +249,6 @@ SimpleIEW<Impl, IQ>::squashDueToBranch(DynInstPtr &inst)
     // Prediction was incorrect, so send back inverse.
     toCommit->branchTaken = inst->readCalcTarg() !=
         (inst->readPC() + sizeof(MachInst));
-//    toCommit->globalHist = inst->readGlobalHist();
 }
 
 template<class Impl, class IQ>
@@ -363,10 +362,11 @@ SimpleIEW<Impl, IQ>::dispatchInsts()
 
                 continue;
             } else if (inst->isExecuted()) {
+                assert(0 && "Instruction shouldn't be executed.\n");
                 DPRINTF(IEW, "IEW: Issue: Executed branch encountered, "
                         "skipping.\n");
 
-                assert(inst->isDirectCtrl());
+//                assert(inst->isDirectCtrl());
 
                 inst->setIssued();
                 inst->setCanCommit();

@@ -8,6 +8,8 @@ using namespace std;
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/beta_cpu/comm.hh"
 
+#include "base/trace.hh"
+
 // This really only depends on the ISA, and not the Impl.  It might be nicer
 // to see if I can make it depend on nothing...
 // Things that are in the ifdef FULL_SYSTEM are pretty dependent on the ISA,

@@ -127,7 +127,7 @@ AlphaFullCPU<Impl>::copyToXC()
     for (int i = 0; i < AlphaISA::NumIntRegs; ++i)
     {
         renamed_reg = renameMap.lookup(i);
-        xc->regs.intRegFile[i] = regFile.intRegFile[renamed_reg];
+        xc->regs.intRegFile[i] = regFile.readIntReg(renamed_reg);
         DPRINTF(FullCPU, "FullCPU: Copying register %i, has data %lli.\n",
                 renamed_reg, regFile.intRegFile[renamed_reg]);
     }
@@ -136,8 +136,8 @@ AlphaFullCPU<Impl>::copyToXC()
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
         renamed_reg = renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        xc->regs.floatRegFile.d[i] = regFile.floatRegFile[renamed_reg].d;
-        xc->regs.floatRegFile.q[i] = regFile.floatRegFile[renamed_reg].q;
+        xc->regs.floatRegFile.d[i] = regFile.readFloatRegDouble(renamed_reg);
+        xc->regs.floatRegFile.q[i] = regFile.readFloatRegInt(renamed_reg);
     }
 
     xc->regs.miscRegs.fpcr = regFile.miscRegs.fpcr;
@@ -169,15 +169,15 @@ AlphaFullCPU<Impl>::copyFromXC()
                 renamed_reg, regFile.intRegFile[renamed_reg],
                 xc->regs.intRegFile[i]);
 
-        regFile.intRegFile[renamed_reg] = xc->regs.intRegFile[i];
+        regFile.setIntReg(renamed_reg, xc->regs.intRegFile[i]);
     }
 
     // Then loop through the floating point registers.
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
         renamed_reg = renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        regFile.floatRegFile[renamed_reg].d = xc->regs.floatRegFile.d[i];
-        regFile.floatRegFile[renamed_reg].q = xc->regs.floatRegFile.q[i] ;
+        regFile.setFloatRegDouble(renamed_reg, xc->regs.floatRegFile.d[i]);
+        regFile.setFloatRegInt(renamed_reg, xc->regs.floatRegFile.q[i]);
     }
 
     // Then loop through the misc registers.

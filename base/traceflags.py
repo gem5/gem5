@@ -136,7 +136,8 @@ baseFlags = [
     'StoreSet',
     'MemDepUnit',
     'DynInst',
-    'FullCPU'
+    'FullCPU',
+    'CommitRate'
     ]
 
 #
