@@ -209,6 +209,13 @@ def isSimObjSequence(value):
 
     return True
 
+def isParamContext(value):
+    try:
+        return issubclass(value, ParamContext)
+    except:
+        return False
+
+
 # The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
 # classes that derive from ConfigNode are instantiated, and provides
@@ -435,7 +442,7 @@ class MetaConfigNode(type):
 
     # Print instance info to .ini file.
     def instantiate(cls, name, parent = None):
-        instance = Node(name, cls, cls.type, parent)
+        instance = Node(name, cls, cls.type, parent, isParamContext(cls))
 
         if hasattr(cls, 'check'):
             cls.check()
@@ -456,7 +463,11 @@ class MetaConfigNode(type):
                 if cls._getdisable(pname):
                     continue
 
-                value = cls._getvalue(pname)
+                try:
+                    value = cls._getvalue(pname)
+                except:
+                    print 'Error getting %s' % pname
+                    raise
 
                 if isConfigNode(value):
                     value = instance.child_objects[value]
@@ -533,6 +544,9 @@ class ConfigNode(object):
     #    v = param.convert(value)
     #    object.__setattr__(self, attr, v)
 
+class ParamContext(ConfigNode):
+    pass
+
 # SimObject is a minimal extension of ConfigNode, implementing a
 # hierarchy node that corresponds to an M5 SimObject.  It prints out a
 # "type=" line to indicate its SimObject class, prints out the
@@ -569,7 +583,7 @@ class NodeParam(object):
 
 class Node(object):
     all = {}
-    def __init__(self, name, realtype, type, parent):
+    def __init__(self, name, realtype, type, parent, paramcontext):
         self.name = name
         self.realtype = realtype
         self.type = type
@@ -580,6 +594,7 @@ class Node(object):
         self.top_child_names = {}
         self.params = []
         self.param_names = {}
+        self.paramcontext = paramcontext
 
         path = [ self.name ]
         node = self.parent
@@ -678,7 +693,8 @@ class Node(object):
             # instantiate children in same order they were added for
             # backward compatibility (else we can end up with cpu1
             # before cpu0).
-            print 'children =', ' '.join([ c.name for c in self.children])
+            children = [ c.name for c in self.children if not c.paramcontext]
+            print 'children =', ' '.join(children)
 
         for param in self.params:
             try:
@@ -1202,6 +1218,7 @@ true = True
 
 # Some memory range specifications use this as a default upper bound.
 MAX_ADDR = Addr._max
+MaxTick = Tick._max
 
 # For power-of-two sizing, e.g. 64*K gives an integer value 65536.
 K = 1024

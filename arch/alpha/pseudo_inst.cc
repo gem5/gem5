@@ -206,7 +206,7 @@ namespace AlphaPseudo
         void checkParams();
     };
 
-    Context context("PseudoInsts");
+    Context context("pseudo_inst");
 
     Param<bool> __quiesce(&context, "quiesce",
                           "enable quiesce instructions",
