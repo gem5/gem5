@@ -355,6 +355,10 @@ Param<string> serialize_file(&serialParams,
                              "file",
                              "file to write to", "");
 
+// Copy filename into regular string so we can export it without
+// having to include param.hh all over the place.
+string serializeFilename;
+
 SerializeParamContext::SerializeParamContext(const string &section)
     : ParamContext(section), event(NULL)
 { }
@@ -366,9 +370,10 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    if (!((string)serialize_file).empty() && serialize_cycle > 0)
-    event = new SerializeEvent(&mainEventQueue, serialize_cycle,
-                               serialize_file);
+    serializeFilename = serialize_file;
+    if (!serializeFilename.empty() && serialize_cycle > 0)
+        event = new SerializeEvent(&mainEventQueue, serialize_cycle,
+                                   serializeFilename);
 }
 
 void

@@ -197,47 +197,10 @@ AlphaTlb::serialize(ostream &os)
     SERIALIZE_SCALAR(size);
     SERIALIZE_SCALAR(nlu);
 
-    // should just add serialize/unserialize methods to AlphaPTE
-#if 0
-    stringstream buf;
     for (int i = 0; i < size; i++) {
-        buf.str("");
-        ccprintf(buf, "pte%02d.valid", i);
-        paramOut(buf.str(), table[i].valid);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.tag", i);
-        paramOut(buf.str(), table[i].tag);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.ppn", i);
-        paramOut(buf.str(), table[i].ppn);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.xre", i);
-        paramOut(buf.str(), table[i].xre);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.xwe", i);
-        paramOut(buf.str(), table[i].xwe);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.fonr", i);
-        paramOut(buf.str(), table[i].fonr);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.fonw", i);
-        paramOut(buf.str(), table[i].fonw);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.asma", i);
-        paramOut(buf.str(), table[i].asma);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.asn", i);
-        paramOut(buf.str(), table[i].asn);
+        nameOut(os, csprintf("%s.PTE%d", name(), i));
+        table[i].serialize(os);
     }
-#endif
 }
 
 void
@@ -246,56 +209,12 @@ AlphaTlb::unserialize(const IniFile *db, const string &section)
     UNSERIALIZE_SCALAR(size);
     UNSERIALIZE_SCALAR(nlu);
 
-#if 0
-    string data;
-    stringstream buf;
     for (int i = 0; i < size; i++) {
-        buf.str("");
-        ccprintf(buf, "pte%02d.valid", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].valid);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.tag", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].tag);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.ppn", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].ppn);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.xre", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].xre);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.xwe", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].xwe);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.fonr", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].fonr);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.fonw", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].fonw);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.asma", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].asma);
-
-        buf.str("");
-        ccprintf(buf, "pte%02d.asn", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data, table[i].asn);
+        table[i].unserialize(db, csprintf("%s.PTE%d", section, i));
+        if (table[i].valid) {
+            lookupTable.insert(make_pair(table[i].tag, i));
+        }
     }
-#endif
 }
 
 

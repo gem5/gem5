@@ -118,6 +118,39 @@ EventQueue::serviceOne()
         delete event;
 }
 
+
+void
+Event::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(_when);
+    SERIALIZE_SCALAR(_priority);
+    SERIALIZE_ENUM(_flags);
+}
+
+
+void
+Event::unserialize(const IniFile *db, const string &section)
+{
+    if (scheduled())
+        deschedule();
+
+    UNSERIALIZE_SCALAR(_when);
+    UNSERIALIZE_SCALAR(_priority);
+
+    // need to see if original event was in a scheduled, unsquashed
+    // state, but don't want to restore those flags in the current
+    // object itself (since they aren't immediately true)
+    UNSERIALIZE_ENUM(_flags);
+    bool wasScheduled = (_flags & Scheduled) && !(_flags & Squashed);
+    _flags &= ~(Squashed | Scheduled);
+
+    if (wasScheduled) {
+        DPRINTF(Config, "rescheduling at %d\n", _when);
+        schedule(_when);
+    }
+}
+
+
 void
 EventQueue::nameChildren()
 {

@@ -68,10 +68,9 @@ class SimpleCPU : public BaseCPU
         SimpleCPU *cpu;
 
       public:
-        TickEvent(SimpleCPU *c)
-            : Event(&mainEventQueue, 100), cpu(c) { }
-        void process() { cpu->tick(); }
-        virtual const char *description() { return "tick event"; }
+        TickEvent(SimpleCPU *c);
+        void process();
+        const char *description();
     };
 
     TickEvent tickEvent;
