@@ -33,11 +33,13 @@
 #include "base/remote_gdb.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/base_cpu.hh"
 #include "kern/linux/linux_events.hh"
 #include "kern/linux/linux_system.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
+#include "dev/platform.hh"
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
@@ -220,6 +222,10 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     skipScavengeBootEvent = new LinuxSkipFuncEvent(&pcEventQueue,
                                               "pmap_scavenge_boot");
     printfEvent = new LinuxPrintfEvent(&pcEventQueue, "printf");
+
+    skipDelayLoopEvent = new LinuxSkipDelayLoopEvent(&pcEventQueue,
+                                                     "calibrate_delay");
+
    /* debugPrintfEvent = new DebugPrintfEvent(&pcEventQueue,
                                             "debug_printf", false);
     debugPrintfrEvent = new DebugPrintfEvent(&pcEventQueue,
@@ -300,6 +306,9 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     if (kernelSymtab->findAddress("pmap_scavenge_boot", addr))
         skipScavengeBootEvent->schedule(addr);
+
+    if (kernelSymtab->findAddress("calibrate_delay", addr))
+        skipDelayLoopEvent->schedule(addr+8);
 
 #if TRACING_ON
     if (kernelSymtab->findAddress("printk", addr))
@@ -579,6 +588,23 @@ LinuxSystem::~LinuxSystem()
     }
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
+}
+
+void
+LinuxSystem::setDelayLoop(ExecContext *xc)
+{
+    Addr addr = 0;
+    if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+
+        uint8_t *loops_per_jiffy =
+            physmem->dma_addr(paddr, sizeof(uint32_t));
+
+        Tick cpuFreq = xc->cpu->getFreq();
+        Tick intrFreq = platform->interrupt_frequency;
+        *(uint32_t *)loops_per_jiffy =
+            (uint32_t)((cpuFreq / intrFreq) * 0.9988);
+    }
 }
 
 int

@@ -56,19 +56,19 @@ class TsunamiIO : public MmapDevice
 
     class ClockEvent : public Event
     {
-        protected:
-            Tick interval;
-            uint8_t mode;
-            uint8_t status;
+      protected:
+        Tick interval;
+        uint8_t mode;
+        uint8_t status;
 
-        public:
-            ClockEvent();
+      public:
+        ClockEvent();
 
-            virtual void process();
-            virtual const char *description();
-            void Program(int count);
-            void ChangeMode(uint8_t mode);
-            uint8_t Status();
+        virtual void process();
+        virtual const char *description();
+        void Program(int count);
+        void ChangeMode(uint8_t mode);
+        uint8_t Status();
 
     };
 
@@ -83,41 +83,45 @@ class TsunamiIO : public MmapDevice
         virtual const char *description();
     };
 
-      uint8_t uip;
+    uint8_t uip;
 
-      uint8_t mask1;
-      uint8_t mask2;
-      uint8_t mode1;
-      uint8_t mode2;
+    uint8_t mask1;
+    uint8_t mask2;
+    uint8_t mode1;
+    uint8_t mode2;
 
     uint8_t picr; //Raw PIC interrput register, before masking
     bool picInterrupting;
 
     Tsunami *tsunami;
 
-      /* This timer is initilized, but after I wrote the code
-         it doesn't seem to be used again, and best I can tell
-         it too is not connected to any interrupt port */
-      ClockEvent timer0;
+    /*
+     * This timer is initilized, but after I wrote the code
+     * it doesn't seem to be used again, and best I can tell
+     * it too is not connected to any interrupt port
+     */
+    ClockEvent timer0;
 
-      /* This timer is used to control the speaker, which
-         we normally could care less about, however it is
-         also used to calculated the clockspeed and hense
-         bogomips which is kinda important to the scheduler
-         so we need to implemnt it although after boot I can't
-         imagine we would be playing with the PC speaker much */
-      ClockEvent timer2;
+    /*
+     * This timer is used to control the speaker, which
+     * we normally could care less about, however it is
+     * also used to calculated the clockspeed and hense
+     * bogomips which is kinda important to the scheduler
+     * so we need to implemnt it although after boot I can't
+     * imagine we would be playing with the PC speaker much
+     */
+    ClockEvent timer2;
 
-      RTCEvent rtc;
+    RTCEvent rtc;
 
-      uint32_t timerData;
+    uint32_t timerData;
 
 
   public:
     uint32_t  frequency() const { return RTC_RATE; }
 
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
-               Addr addr, Addr mask,  MemoryController *mmu);
+              Addr addr, Addr mask,  MemoryController *mmu);
 
     void set_time(time_t t);
 

@@ -43,11 +43,13 @@
 
 using namespace std;
 
-Tsunami::Tsunami(const string &name, EtherDev *e, SimConsole *con,
+Tsunami::Tsunami(const string &name, System *s, SimConsole *con,
                  IntrControl *ic, int intr_freq)
-    : SimObject(name), intrctrl(ic), cons(con), ethernet(e),
-      interrupt_frequency(intr_freq)
+    : Platform(name, con, ic, intr_freq), system(s)
 {
+    // set the back pointer from the system to myself
+    system->platform = this;
+
     for (int i = 0; i < Tsunami::Max_CPUs; i++)
         intr_sum_type[i] = 0;
 }
@@ -66,7 +68,7 @@ Tsunami::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
-    SimObjectParam<EtherDev *> ethernet;
+    SimObjectParam<System *> system;
     SimObjectParam<SimConsole *> cons;
     SimObjectParam<IntrControl *> intrctrl;
     Param<int> interrupt_frequency;
@@ -75,7 +77,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
-    INIT_PARAM(ethernet, "ethernet controller"),
+    INIT_PARAM(system, "system"),
     INIT_PARAM(cons, "system console"),
     INIT_PARAM(intrctrl, "interrupt controller"),
     INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1024)
@@ -84,7 +86,7 @@ END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
 CREATE_SIM_OBJECT(Tsunami)
 {
-    return new Tsunami(getInstanceName(), ethernet, cons, intrctrl,
+    return new Tsunami(getInstanceName(), system, cons, intrctrl,
                        interrupt_frequency);
 }
 

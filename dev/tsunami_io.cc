@@ -1,4 +1,30 @@
-/* $Id$ */
+/*
+ * Copyright (c) 2003 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /* @file
  * Tsunami I/O including PIC, PIT, RTC, DMA
@@ -24,7 +50,6 @@
 using namespace std;
 
 #define UNIX_YEAR_OFFSET 52
-
 
 // Timer Event for Periodic interrupt of RTC
 TsunamiIO::RTCEvent::RTCEvent(Tsunami* t)
@@ -66,7 +91,7 @@ TsunamiIO::ClockEvent::process()
 {
     DPRINTF(Tsunami, "Timer Interrupt\n");
     if (mode == 0)
-       status = 0x20; // set bit that linux is looking for
+        status = 0x20; // set bit that linux is looking for
     else
         schedule(curTick + interval);
 }
@@ -99,13 +124,13 @@ TsunamiIO::ClockEvent::Status()
     return status;
 }
 
-
-
-
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                       Addr addr, Addr mask, MemoryController *mmu)
+                     Addr addr, Addr mask, MemoryController *mmu)
     : MmapDevice(name, addr, mask, mmu), tsunami(t), rtc(t)
 {
+    // set the back pointer from tsunami to myself
+    tsunami->io = this;
+
     timerData = 0;
     set_time(init_time == 0 ? time(NULL) : init_time);
     uip = 1;
@@ -131,62 +156,63 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
 //    int cpuid = xc->cpu_id;
 
     switch(req->size) {
-        case sizeof(uint8_t):
-            switch(daddr) {
-                case TSDEV_TMR_CTL:
-                    *(uint8_t*)data = timer2.Status();
-                    return No_Fault;
-                case TSDEV_RTC_DATA:
-                    switch(RTCAddress) {
-                        case RTC_CONTROL_REGISTERA:
-                            *(uint8_t*)data = uip << 7 | 0x26;
-                            uip = !uip;
-                            return No_Fault;
-                        case RTC_CONTROL_REGISTERB:
-                            // DM and 24/12 and UIE
-                            *(uint8_t*)data = 0x46;
-                            return No_Fault;
-                        case RTC_CONTROL_REGISTERC:
-                            // If we want to support RTC user access in linux
-                            // This won't work, but for now it's fine
-                            *(uint8_t*)data = 0x00;
-                            return No_Fault;
-                        case RTC_CONTROL_REGISTERD:
-                            panic("RTC Control Register D not implemented");
-                        case RTC_SECOND:
-                            *(uint8_t *)data = tm.tm_sec;
-                            return No_Fault;
-                        case RTC_MINUTE:
-                            *(uint8_t *)data = tm.tm_min;
-                            return No_Fault;
-                        case RTC_HOUR:
-                            *(uint8_t *)data = tm.tm_hour;
-                            return No_Fault;
-                        case RTC_DAY_OF_WEEK:
-                            *(uint8_t *)data = tm.tm_wday;
-                            return No_Fault;
-                        case RTC_DAY_OF_MONTH:
-                            *(uint8_t *)data = tm.tm_mday;
-                        case RTC_MONTH:
-                            *(uint8_t *)data = tm.tm_mon + 1;
-                            return No_Fault;
-                        case RTC_YEAR:
-                            *(uint8_t *)data = tm.tm_year - UNIX_YEAR_OFFSET;
-                            return No_Fault;
-                        default:
-                            panic("Unknown RTC Address\n");
-                    }
-
-                default:
-                    panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
+      case sizeof(uint8_t):
+        switch(daddr) {
+          case TSDEV_TMR_CTL:
+            *(uint8_t*)data = timer2.Status();
+            return No_Fault;
+          case TSDEV_RTC_DATA:
+            switch(RTCAddress) {
+              case RTC_CONTROL_REGISTERA:
+                *(uint8_t*)data = uip << 7 | 0x26;
+                uip = !uip;
+                return No_Fault;
+              case RTC_CONTROL_REGISTERB:
+                // DM and 24/12 and UIE
+                *(uint8_t*)data = 0x46;
+                return No_Fault;
+              case RTC_CONTROL_REGISTERC:
+                // If we want to support RTC user access in linux
+                // This won't work, but for now it's fine
+                *(uint8_t*)data = 0x00;
+                return No_Fault;
+              case RTC_CONTROL_REGISTERD:
+                panic("RTC Control Register D not implemented");
+              case RTC_SECOND:
+                *(uint8_t *)data = tm.tm_sec;
+                return No_Fault;
+              case RTC_MINUTE:
+                *(uint8_t *)data = tm.tm_min;
+                return No_Fault;
+              case RTC_HOUR:
+                *(uint8_t *)data = tm.tm_hour;
+                return No_Fault;
+              case RTC_DAY_OF_WEEK:
+                *(uint8_t *)data = tm.tm_wday;
+                return No_Fault;
+              case RTC_DAY_OF_MONTH:
+                *(uint8_t *)data = tm.tm_mday;
+              case RTC_MONTH:
+                *(uint8_t *)data = tm.tm_mon + 1;
+                return No_Fault;
+              case RTC_YEAR:
+                *(uint8_t *)data = tm.tm_year - UNIX_YEAR_OFFSET;
+                return No_Fault;
+              default:
+                panic("Unknown RTC Address\n");
             }
-        case sizeof(uint16_t):
-        case sizeof(uint32_t):
-        case sizeof(uint64_t):
-        default:
-            panic("I/O Read - invalid size - va %#x size %d\n", req->vaddr, req->size);
+
+          default:
+            panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
+        }
+      case sizeof(uint16_t):
+      case sizeof(uint32_t):
+      case sizeof(uint64_t):
+      default:
+        panic("I/O Read - invalid size - va %#x size %d\n",
+              req->vaddr, req->size);
     }
-     panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
+    panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
 
     return No_Fault;
 }
@@ -203,87 +229,88 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     Addr daddr = (req->paddr & addr_mask);
 
     switch(req->size) {
-        case sizeof(uint8_t):
-            switch(daddr) {
-                case TSDEV_PIC1_MASK:
-                    mask1 = *(uint8_t*)data;
-                    if ((picr & mask1) && !picInterrupting) {
-                        picInterrupting = true;
-                        tsunami->cchip->postDRIR(uint64_t(1) << 55);
-                        DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
-                    }
-                    return No_Fault;
-                case TSDEV_PIC2_MASK:
-                    mask2 = *(uint8_t*)data;
-                    //PIC2 Not implemented to interrupt
-                    return No_Fault;
-                case TSDEV_DMA1_RESET:
-                    return No_Fault;
-                case TSDEV_DMA2_RESET:
-                    return No_Fault;
-                case TSDEV_DMA1_MODE:
-                    mode1 = *(uint8_t*)data;
-                    return No_Fault;
-                case TSDEV_DMA2_MODE:
-                    mode2 = *(uint8_t*)data;
-                    return No_Fault;
-                case TSDEV_DMA1_MASK:
-                case TSDEV_DMA2_MASK:
-                    return No_Fault;
-                case TSDEV_TMR_CTL:
-                    return No_Fault;
-                case TSDEV_TMR2_CTL:
-                    if ((*(uint8_t*)data & 0x30) != 0x30)
-                        panic("Only L/M write supported\n");
-
-                    switch(*(uint8_t*)data >> 6) {
-                        case 0:
-                            timer0.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
-                            break;
-                        case 2:
-                            timer2.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
-                            break;
-                        default:
-                            panic("Read Back Command not implemented\n");
-                    }
-                    return No_Fault;
-                case TSDEV_TMR2_DATA:
-                        /* two writes before we actually start the Timer
-                           so I set a flag in the timerData */
-                        if(timerData & 0x1000) {
-                            timerData &= 0x1000;
-                            timerData += *(uint8_t*)data << 8;
-                            timer2.Program(timerData);
-                        } else {
-                            timerData = *(uint8_t*)data;
-                            timerData |= 0x1000;
-                        }
-                        return No_Fault;
-                case TSDEV_TMR0_DATA:
-                        /* two writes before we actually start the Timer
-                           so I set a flag in the timerData */
-                        if(timerData & 0x1000) {
-                            timerData &= 0x1000;
-                            timerData += *(uint8_t*)data << 8;
-                            timer0.Program(timerData);
-                        } else {
-                            timerData = *(uint8_t*)data;
-                            timerData |= 0x1000;
-                        }
-                        return No_Fault;
-                case TSDEV_RTC_ADDR:
-                        RTCAddress = *(uint8_t*)data;
-                        return No_Fault;
-                case TSDEV_RTC_DATA:
-                        panic("RTC Write not implmented (rtc.o won't work)\n");
-                 default:
-                    panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);
+      case sizeof(uint8_t):
+        switch(daddr) {
+          case TSDEV_PIC1_MASK:
+            mask1 = *(uint8_t*)data;
+            if ((picr & mask1) && !picInterrupting) {
+                picInterrupting = true;
+                tsunami->cchip->postDRIR(uint64_t(1) << 55);
+                DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
             }
-        case sizeof(uint16_t):
-        case sizeof(uint32_t):
-        case sizeof(uint64_t):
-        default:
-            panic("I/O Write - invalid size - va %#x size %d\n", req->vaddr, req->size);
+            return No_Fault;
+          case TSDEV_PIC2_MASK:
+            mask2 = *(uint8_t*)data;
+            //PIC2 Not implemented to interrupt
+            return No_Fault;
+          case TSDEV_DMA1_RESET:
+            return No_Fault;
+          case TSDEV_DMA2_RESET:
+            return No_Fault;
+          case TSDEV_DMA1_MODE:
+            mode1 = *(uint8_t*)data;
+            return No_Fault;
+          case TSDEV_DMA2_MODE:
+            mode2 = *(uint8_t*)data;
+            return No_Fault;
+          case TSDEV_DMA1_MASK:
+          case TSDEV_DMA2_MASK:
+            return No_Fault;
+          case TSDEV_TMR_CTL:
+            return No_Fault;
+          case TSDEV_TMR2_CTL:
+            if ((*(uint8_t*)data & 0x30) != 0x30)
+                panic("Only L/M write supported\n");
+
+            switch(*(uint8_t*)data >> 6) {
+              case 0:
+                timer0.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
+                break;
+              case 2:
+                timer2.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
+                break;
+              default:
+                panic("Read Back Command not implemented\n");
+            }
+            return No_Fault;
+          case TSDEV_TMR2_DATA:
+            /* two writes before we actually start the Timer
+               so I set a flag in the timerData */
+            if(timerData & 0x1000) {
+                timerData &= 0x1000;
+                timerData += *(uint8_t*)data << 8;
+                timer2.Program(timerData);
+            } else {
+                timerData = *(uint8_t*)data;
+                timerData |= 0x1000;
+            }
+            return No_Fault;
+          case TSDEV_TMR0_DATA:
+            /* two writes before we actually start the Timer
+               so I set a flag in the timerData */
+            if(timerData & 0x1000) {
+                timerData &= 0x1000;
+                timerData += *(uint8_t*)data << 8;
+                timer0.Program(timerData);
+            } else {
+                timerData = *(uint8_t*)data;
+                timerData |= 0x1000;
+            }
+            return No_Fault;
+          case TSDEV_RTC_ADDR:
+            RTCAddress = *(uint8_t*)data;
+            return No_Fault;
+          case TSDEV_RTC_DATA:
+            panic("RTC Write not implmented (rtc.o won't work)\n");
+          default:
+            panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);
+        }
+      case sizeof(uint16_t):
+      case sizeof(uint32_t):
+      case sizeof(uint64_t):
+      default:
+        panic("I/O Write - invalid size - va %#x size %d\n",
+              req->vaddr, req->size);
     }
 
 

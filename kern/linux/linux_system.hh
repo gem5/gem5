@@ -45,6 +45,7 @@ class SymbolTable;
 class BreakPCEvent;
 class LinuxBadAddrEvent;
 class LinuxSkipFuncEvent;
+class LinuxSkipDelayLoopEvent;
 class LinuxPrintfEvent;
 class LinuxDebugPrintfEvent;
 class LinuxDumpMbufEvent;
@@ -105,6 +106,7 @@ class LinuxSystem : public System
     LinuxBadAddrEvent *badaddrEvent;
     LinuxSkipFuncEvent *skipPowerStateEvent;
     LinuxSkipFuncEvent *skipScavengeBootEvent;
+    LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
     LinuxPrintfEvent *printfEvent;
     LinuxDebugPrintfEvent *debugPrintfEvent;
     LinuxDebugPrintfEvent *debugPrintfrEvent;
@@ -173,6 +175,8 @@ class LinuxSystem : public System
         const std::string &bootloader_path,
                                 const bool _bin);
     ~LinuxSystem();
+
+    void setDelayLoop(ExecContext *xc);
 
     int registerExecContext(ExecContext *xc);
     void replaceExecContext(ExecContext *xc, int xcIndex);
