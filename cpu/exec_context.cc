@@ -44,24 +44,22 @@ using namespace std;
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaItb *_itb, AlphaDtb *_dtb,
                          FunctionalMemory *_mem)
-    : kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
+    : _status(ExecContext::Unallocated),
+      kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
       memCtrl(_sys->memCtrl), physmem(_sys->physmem),
       func_exe_insn(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
-    setStatus(ExecContext::Unallocated);
 }
 #else
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid)
-    : cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
-      process(_process), asid (_asid),
+    : _status(ExecContext::Unallocated),
+      cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
+      process(_process), mem(process->getMemory()), asid(_asid),
       func_exe_insn(0), storeCondFailures(0)
 {
-    setStatus(ExecContext::Unallocated);
-
-    mem = process->getMemory();
 }
 
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
@@ -114,7 +112,7 @@ ExecContext::setStatus(Status new_status)
 #endif
 
     _status = new_status;
-    cpu->execCtxStatusChg();
+    cpu->execCtxStatusChg(thread_num);
 }
 
 void

@@ -67,7 +67,6 @@ class Tru64System : public System
     DumpMbufEvent *dumpMbufEvent;
 
   private:
-    RegFile *initRegs;
 
     Addr kernelStart;
     Addr kernelEnd;

@@ -136,8 +136,6 @@ class SimpleCPU : public BaseCPU
     // execution context
     ExecContext *xc;
 
-    void registerExecContexts();
-
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
@@ -178,14 +176,7 @@ class SimpleCPU : public BaseCPU
 
     Status status() const { return _status; }
 
-    virtual void execCtxStatusChg() {
-        if (xc) {
-            if (xc->status() == ExecContext::Active)
-                setStatus(Running);
-            else
-                setStatus(Idle);
-        }
-    }
+    virtual void execCtxStatusChg(int thread_num);
 
     void setStatus(Status new_status) {
         Status old_status = status();

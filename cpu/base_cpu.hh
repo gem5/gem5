@@ -73,7 +73,7 @@ class BaseCPU : public SimObject
     std::vector<ExecContext *> execContexts;
 
   public:
-    virtual void execCtxStatusChg() {}
+    virtual void execCtxStatusChg(int thread_num) {}
 
   public:
 
@@ -94,7 +94,7 @@ class BaseCPU : public SimObject
 
     virtual void regStats();
 
-    virtual void registerExecContexts();
+    void registerExecContexts();
 
     /// Prepare for another CPU to take over execution.  Called by
     /// takeOverFrom() on its argument.

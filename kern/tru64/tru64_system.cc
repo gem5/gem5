@@ -72,10 +72,6 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         fatal("Could not load PALcode file %s", palcode);
     pal->loadSections(physmem, true);
 
-    // copy of initial reg file contents
-    initRegs = new RegFile;
-    memset(initRegs, 0, sizeof(RegFile));
-
     // Load console file
     console->loadSections(physmem, true);
 
@@ -89,10 +85,6 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
             "Kernel end   = %#x\n"
             "Kernel entry = %#x\n",
             kernelStart, kernelEnd, kernelEntry);
-
-    // Setup kernel boot parameters
-    initRegs->pc = 0x4001;
-    initRegs->npc = initRegs->pc + sizeof(MachInst);
 
     DPRINTF(Loader, "Kernel loaded...\n");
 
@@ -164,8 +156,6 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
 
 Tru64System::~Tru64System()
 {
-    delete initRegs;
-
     delete kernel;
     delete console;
 
@@ -190,11 +180,7 @@ Tru64System::registerExecContext(ExecContext *xc)
     int xcIndex = System::registerExecContext(xc);
 
     if (xcIndex == 0) {
-        // xc->regs = *initRegs;
-        xc->initStatus(ExecContext::Active);
-    }
-    else {
-        xc->initStatus(ExecContext::Unallocated);
+        xc->setStatus(ExecContext::Active);
     }
 
     RemoteGDB *rgdb = new RemoteGDB(this, xc);

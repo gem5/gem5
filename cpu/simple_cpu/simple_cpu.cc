@@ -164,25 +164,6 @@ SimpleCPU::~SimpleCPU()
 
 
 void
-SimpleCPU::registerExecContexts()
-{
-    BaseCPU::registerExecContexts();
-
-    // if any of this CPU's ExecContexts are active, mark the CPU as
-    // running and schedule its tick event.
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
-        if (xc->status() == ExecContext::Active && _status != Running) {
-            _status = Running;
-            // this should only happen at initialization time
-            assert(curTick == 0);
-            tickEvent.schedule(0);
-        }
-    }
-}
-
-
-void
 SimpleCPU::switchOut()
 {
     _status = SwitchedOut;
@@ -209,6 +190,18 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     }
 
     oldCPU->switchOut();
+}
+
+
+void
+SimpleCPU::execCtxStatusChg(int thread_num) {
+    assert(thread_num == 0);
+    assert(xc);
+
+    if (xc->status() == ExecContext::Active)
+        setStatus(Running);
+    else
+        setStatus(Idle);
 }
 
 
