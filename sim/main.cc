@@ -369,7 +369,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (python_initialized && finishPythonConfig(simConfigDB)) {
+    if (python_initialized && !finishPythonConfig(simConfigDB)) {
         cprintf("Error processing python code\n");
         exit(1);
     }
