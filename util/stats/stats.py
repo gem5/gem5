@@ -41,24 +41,22 @@ def unique(list):
 
 def graphdata(runs, tag, label, value):
     import info
-    configs = ['std', 'csa', 'ht1', 'ht4', 'htx', 'ocm', 'occ', 'ocp' ]
+    configs = ['stx', 'ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
     benchmarks = [ 'm', 's' ]
-    dmas = [ 'x', 'd', 'b' ]
-    caches = [ '1', '2', '3', '4', '5' ]
-    systems = [ 'M' ]
+    dmas = [ 'X', 'D' ]
+    caches = [ '2', '4' ]
     checkpoints = [ '1' ]
 
     names = []
     for bench in benchmarks:
         for dma in dmas:
             for cache in caches:
-                for sys in systems:
-                    for cpt in checkpoints:
-                        names.append([bench, dma, cache, sys, cpt])
+                for cpt in checkpoints:
+                    names.append([bench, dma, cache, cpt])
 
-    for bench,dma,cache,sys,cpt in names:
-        base = '%s.%s.%s.%s.%s' % (bench, dma, cache, sys, cpt)
-        fname = '/n/ziff/z/binkertn/graph/test0/data/%s.%s.dat' % (tag, base)
+    for bench,dma,cache,cpt in names:
+        base = '%s.%s.%s.%s' % (bench, dma, cache, cpt)
+        fname = '/n/ziff/z/binkertn/graph/test2/data/%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
         print >>f, '#set TITLE = %s' % base
         print >>f, '#set xlbl = Configuration'
@@ -68,8 +66,8 @@ def graphdata(runs, tag, label, value):
         for speed,freq in zip(['s', 'q'],['4GHz','10GHz']):
             print >>f, '"%s"' % freq,
             for conf in configs:
-                name = '%s.%s.%s.%s.%s.%s.%s' % (conf, bench, dma, speed,
-                                                 cache, sys, cpt)
+                name = '%s.%s.%s.%s.%s.%s' % (conf, bench, dma, speed, cache,
+                                              cpt)
                 run = info.source.allRunNames[name]
                 info.display_run = run.run;
                 val = float(value)
@@ -250,7 +248,7 @@ def commands(options, command, args):
         return
 
     if command == 'packets':
-        packets = system.tsunami.nsgige.rxPackets
+        packets = system.tsunami.etherdev.rxPackets
         if options.graph:
             graphdata(runs, 'packets', 'Packets', packets)
         else:
@@ -258,12 +256,12 @@ def commands(options, command, args):
         return
 
     if command == 'ppt' or command == 'tpp':
-        ppt = system.tsunami.nsgige.rxPackets / sim_ticks
+        ppt = system.tsunami.etherdev.rxPackets / sim_ticks
         printdata(runs, ppt, command == 'tpp')
         return
 
     if command == 'pps':
-        pps = system.tsunami.nsgige.rxPackets / sim_seconds
+        pps = system.tsunami.etherdev.rxPackets / sim_seconds
         if options.graph:
             graphdata(runs, 'pps', 'Packets/s', pps)
         else:
@@ -271,7 +269,7 @@ def commands(options, command, args):
         return
 
     if command == 'bpt' or command == 'tpb':
-        bytes = system.tsunami.nsgige.rxBytes + system.tsunami.nsgige.txBytes
+        bytes = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
         bpt = bytes / sim_ticks * 8
         if options.graph:
             graphdata(runs, 'bpt', 'bps / Hz', bpt)
@@ -280,7 +278,7 @@ def commands(options, command, args):
         return
 
     if command == 'bptb' or command == 'tpbb':
-        bytes = system.tsunami.nsgige.rxBytes + system.tsunami.nsgige.txBytes
+        bytes = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
 
         print 'kernel stats'
         bytes.bins = 'kernel'
@@ -297,7 +295,7 @@ def commands(options, command, args):
         return
 
     if command == 'bytes':
-        stat = system.tsunami.nsgige.rxBytes + system.tsunami.nsgige.txBytes
+        stat = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
 
         if options.binned:
             print '%s kernel stats' % stat.name
@@ -319,7 +317,7 @@ def commands(options, command, args):
         return
 
     if command == 'rxbps':
-        gbps = system.tsunami.nsgige.rxBandwidth / 1e9
+        gbps = system.tsunami.etherdev.rxBandwidth / 1e9
         if options.graph:
             graphdata(runs, 'rxbps', 'Bandwidth (Gbps)',  gbps)
         else:
@@ -327,7 +325,7 @@ def commands(options, command, args):
         return
 
     if command == 'txbps':
-        gbps = system.tsunami.nsgige.txBandwidth / 1e9
+        gbps = system.tsunami.etherdev.txBandwidth / 1e9
         if options.graph:
             graphdata(runs, 'txbps', 'Bandwidth (Gbps)',  gbps)
         else:
@@ -335,8 +333,8 @@ def commands(options, command, args):
         return
 
     if command == 'bps':
-        rxbps = system.tsunami.nsgige.rxBandwidth
-        txbps = system.tsunami.nsgige.txBandwidth
+        rxbps = system.tsunami.etherdev.rxBandwidth
+        txbps = system.tsunami.etherdev.txBandwidth
         gbps = (rxbps + txbps) / 1e9
         if options.graph:
             graphdata(runs, 'bps', 'Bandwidth (Gbps)',  gbps)
@@ -345,7 +343,7 @@ def commands(options, command, args):
         return
 
     if command == 'misses':
-        stat = system.L3.overall_mshr_misses
+        stat = system.L2.overall_mshr_misses
         if options.binned:
             print '%s kernel stats' % stat.name
             stat.bins = 'kernel'
@@ -369,9 +367,9 @@ def commands(options, command, args):
         return
 
     if command == 'mpkb':
-        misses = system.L3.overall_mshr_misses
-        rxbytes = system.tsunami.nsgige.rxBytes
-        txbytes = system.tsunami.nsgige.txBytes
+        misses = system.L2.overall_mshr_misses
+        rxbytes = system.tsunami.etherdev.rxBytes
+        txbytes = system.tsunami.etherdev.txBytes
 
         if options.binned:
             print 'mpkb kernel stats'
@@ -411,14 +409,45 @@ def commands(options, command, args):
         printdata(runs, system.full_cpu.FETCH__count)
         return
 
+    if command == 'bpp':
+        ed = system.tsunami.etherdev
+        bpp = (ed.rxBytes + ed.txBytes) / (ed.rxPackets + ed.txPackets)
+        if options.graph:
+            graphdata(runs, 'bpp', 'Bytes / Packet',  bpp)
+        else:
+            printdata(runs, bpp)
+        return
+
     if command == 'rxbpp':
-        bpp = system.tsunami.nsgige.rxBytes / system.tsunami.nsgige.rxPackets
-        printdata(run, 8 * bpp)
+        bpp = system.tsunami.etherdev.rxBytes / system.tsunami.etherdev.rxPackets
+        if options.graph:
+            graphdata(runs, 'rxbpp', 'Receive Bytes / Packet',  bpp)
+        else:
+            printdata(runs, bpp)
         return
 
     if command == 'txbpp':
-        bpp = system.tsunami.nsgige.txBytes / system.tsunami.nsgige.txPackets
-        printdata(run, 8 * bpp)
+        bpp = system.tsunami.etherdev.txBytes / system.tsunami.etherdev.txPackets
+        if options.graph:
+            graphdata(runs, 'txbpp', 'Transmit Bytes / Packet',  bpp)
+        else:
+            printdata(runs, bpp)
+        return
+
+    if command == 'rtp':
+        rtp = system.tsunami.etherdev.rxPackets / system.tsunami.etherdev.txPackets
+        if options.graph:
+            graphdata(runs, 'rtp', 'rxPackets / txPackets',  rtp)
+        else:
+            printdata(runs, rtp)
+        return
+
+    if command == 'rtb':
+        rtb = system.tsunami.etherdev.rxBytes / system.tsunami.etherdev.txBytes
+        if options.graph:
+            graphdata(runs, 'rtb', 'rxBytes / txBytes',  rtb)
+        else:
+            printdata(runs, rtb)
         return
 
     raise CommandException
