@@ -151,18 +151,18 @@ class IniFile
     /// @retval Pointer to section object, or NULL if not found.
     Section *findSection(const std::string &sectionName) const;
 
-    /// Load parameter settings from given istream.  This is a helper
-    /// function for load(string) and loadCPP(), which open a file
-    /// and then pass it here.
-    /// @retval True if successful, false if errors were encountered.
-    bool load(std::istream &f);
-
   public:
     /// Constructor.
     IniFile();
 
     /// Destructor.
     ~IniFile();
+
+    /// Load parameter settings from given istream.  This is a helper
+    /// function for load(string) and loadCPP(), which open a file
+    /// and then pass it here.
+    /// @retval True if successful, false if errors were encountered.
+    bool load(std::istream &f);
 
     /// Load the specified file, passing it through the C preprocessor.
     /// Parameter settings found in the file will be merged with any
