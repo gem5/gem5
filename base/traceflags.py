@@ -134,11 +134,7 @@ import sys
 # extract just the compound flag names into a list
 compoundFlags = []
 compoundFlags.extend(compoundFlagMap.keys())
-#for flags in compoundFlagMap.keys():
-#    compoundFlags.append(flags)
-print 'compound', compoundFlags
 compoundFlags.sort()
-print 'compound', compoundFlags
 
 #
 # First generate the header file.  This defines the Flag enum
@@ -288,7 +284,7 @@ print >>ccfile, '''\
  * Automatically generated from traceflags.pl.
  */
 
-#include "base/trace_flags.hh"
+#include "base/traceflags.hh"
 
 using namespace Trace;
 
