@@ -196,6 +196,9 @@ class IniFile
     bool findDefault(const std::string &section, const std::string &entry,
                      std::string &value) const;
 
+    bool findAppend(const std::string &section, const std::string &entry,
+                    std::string &value) const;
+
     /// Print unreferenced entries in object.  Iteratively calls
     /// printUnreferend() on all the constituent sections.
     bool printUnreferenced();
