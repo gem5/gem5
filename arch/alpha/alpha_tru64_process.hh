@@ -31,15 +31,18 @@
 
 #include "sim/process.hh"
 
+/// A process with emulated Alpha Tru64 syscalls.
 class AlphaTru64Process : public LiveProcess
 {
   public:
+    /// Constructor.
     AlphaTru64Process(const std::string &name,
                       ObjectFile *objFile,
                       int stdin_fd, int stdout_fd, int stderr_fd,
                       std::vector<std::string> &argv,
                       std::vector<std::string> &envp);
 
+    /// Syscall emulation function.
     virtual void syscall(ExecContext *xc);
 };
 

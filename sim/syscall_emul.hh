@@ -51,13 +51,13 @@ class SyscallDesc {
 
   public:
 
+    /// Typedef for target syscall handler functions.
     typedef int (*FuncPtr)(SyscallDesc *, int num,
                            Process *, ExecContext *);
 
     const char *name;	//!< Syscall name (e.g., "open").
     FuncPtr funcPtr;	//!< Pointer to emulation function.
     int flags;		//!< Flags (see Flags enum).
-
 
     /// Flag values for controlling syscall behavior.
     enum Flags {
@@ -155,17 +155,40 @@ class TypedBufferArg : public BaseBufferArg
 //////////////////////////////////////////////////////////////////////
 
 
+/// Handler for unimplemented syscalls that we haven't thought about.
 int unimplementedFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Handler for unimplemented syscalls that we never intend to
+/// implement (signal handling, etc.) and should not affect the correct
+/// behavior of the program.  Print a warning only if the appropriate
+/// trace flag is enabled.  Return success to the target program.
 int ignoreFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 
+/// Target exit() handler: terminate simulation.
 int exitFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target getpagesize() handler.
 int getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target obreak() handler: set brk address.
 int obreakFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target close() handler.
 int closeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target read() handler.
 int readFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target write() handler.
 int writeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target lseek() handler.
 int lseekFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target munmap() handler.
 int munmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target gethostname() handler.
 int gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 
 //////////////////////////////////////////////////////////////////////
@@ -175,6 +198,9 @@ int gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 //
 //////////////////////////////////////////////////////////////////////
 
+/// Target ioctl() handler.  For the most part, programs call ioctl()
+/// only to find out if their stdout is a tty, to determine whether to
+/// do line or block buffering.
 template <class OS>
 int
 ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -204,12 +230,15 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 }
 
+/// This struct is used to build an target-OS-dependent table that
+/// maps the target's open() flags to the host open() flags.
 struct OpenFlagTransTable {
-    int tgtFlag;
-    int hostFlag;
+    int tgtFlag;	//!< Target system flag value.
+    int hostFlag;	//!< Corresponding host system flag value.
 };
 
 
+/// Target open() handler.
 template <class OS>
 int
 openFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -254,6 +283,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
+/// Target stat() handler.
 template <class OS>
 int
 statFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -276,6 +306,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
+/// Target lstat() handler.
 template <class OS>
 int
 lstatFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -297,6 +328,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
     return 0;
 }
 
+/// Target fstat() handler.
 template <class OS>
 int
 fstatFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -321,18 +353,18 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
+/// Target mmap() handler.
+///
+/// We don't really handle mmap().  If the target is mmaping an
+/// anonymous region or /dev/zero, we can get away with doing basically
+/// nothing (since memory is initialized to zero and the simulator
+/// doesn't really check addresses anyway).  Always print a warning,
+/// since this could be seriously broken if we're not mapping
+/// /dev/zero.
 //
-// We don't really handle mmap().  If the target is mmaping an
-// anonymous region or /dev/zero, we can get away with doing basically
-// nothing (since memory is initialized to zero and the simulator
-// doesn't really check addresses anyway).  Always print a warning,
-// since this could be seriously broken if we're not mapping
-// /dev/zero.
-//
-// Someday we should explicitly check for /dev/zero in open, flag the
-// file descriptor, and fail (or implement!) a non-anonymous mmap to
-// anything else.
-//
+/// Someday we should explicitly check for /dev/zero in open, flag the
+/// file descriptor, and fail (or implement!) a non-anonymous mmap to
+/// anything else.
 template <class OS>
 int
 mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
@@ -341,7 +373,7 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     uint64_t length = xc->getSyscallArg(1);
     // int prot = xc->getSyscallArg(2);
     int flags = xc->getSyscallArg(3);
-    int fd = p->sim_fd(xc->getSyscallArg(4));
+    // int fd = p->sim_fd(xc->getSyscallArg(4));
     // int offset = xc->getSyscallArg(5);
 
     if (start == 0) {
@@ -352,13 +384,13 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
         DPRINTF(SyscallWarnings, "Warning: allowing mmap of file @ fd %d.  "
-                "This will break if not /dev/zero.", fd);
+                "This will break if not /dev/zero.", xc->getSyscallArg(4));
     }
 
     return start;
 }
 
-
+/// Target getrlimit() handler.
 template <class OS>
 int
 getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -383,16 +415,16 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
     return 0;
 }
 
-// 1M usecs in 1 sec, for readability
+/// A readable name for 1,000,000, for converting microseconds to seconds.
 const int one_million = 1000000;
 
-// seconds since the epoch (1/1/1970)... about a billion, by my reckoning
+/// Approximate seconds since the epoch (1/1/1970).  About a billion,
+/// by my reckoning.  We want to keep this a constant (not use the
+/// real-world time) to keep simulations repeatable.
 const unsigned seconds_since_epoch = 1000000000;
 
-//
-// helper function: populate struct timeval with approximation of
-// current elapsed time
-//
+/// Helper function to convert current elapsed time to seconds and
+/// microseconds.
 template <class T1, class T2>
 void
 getElapsedTime(T1 &sec, T2 &usec)
@@ -405,6 +437,7 @@ getElapsedTime(T1 &sec, T2 &usec)
 }
 
 
+/// Target gettimeofday() handler.
 template <class OS>
 int
 gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -421,6 +454,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
+/// Target getrusage() function.
 template <class OS>
 int
 getrusageFunc(SyscallDesc *desc, int callnum, Process *process,

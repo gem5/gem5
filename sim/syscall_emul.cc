@@ -57,9 +57,6 @@ SyscallDesc::doSyscall(int callnum, Process *process, ExecContext *xc)
 }
 
 
-//
-// Handler for unimplemented syscalls that we haven't thought about.
-//
 int
 unimplementedFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
@@ -73,12 +70,6 @@ unimplementedFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
-//
-// Handler for unimplemented syscalls that we never intend to
-// implement (signal handling, etc.) and should not affect the correct
-// behavior of the program.  Print a warning only if the appropriate
-// trace flag is enabled.  Return success to the target program.
-//
 int
 ignoreFunc(SyscallDesc *desc, int callnum, Process *process,
            ExecContext *xc)

@@ -52,327 +52,326 @@
 
 using namespace std;
 
+///
+/// This class encapsulates the types, structures, constants,
+/// functions, and syscall-number mappings specific to the Alpha Linux
+/// syscall interface.
+///
 class Linux {
 
-public:
+  public:
 
-//
-// basic Linux types
-//
+    //@{
+    /// Basic Linux types.
+    typedef uint64_t size_t;
+    typedef uint64_t off_t;
+    typedef int64_t time_t;
+    typedef uint32_t uid_t;
+    typedef uint32_t gid_t;
+    //@}
 
-typedef uint64_t size_t;
-typedef uint64_t off_t;
-typedef int64_t time_t;
-typedef uint32_t uid_t;
-typedef uint32_t gid_t;
+    //@{
+    /// open(2) flag values.
+    static const int TGT_O_RDONLY	= 00000000;	//!< O_RDONLY
+    static const int TGT_O_WRONLY	= 00000001;	//!< O_WRONLY
+    static const int TGT_O_RDWR	 	= 00000002;	//!< O_RDWR
+    static const int TGT_O_NONBLOCK  	= 00000004;	//!< O_NONBLOCK
+    static const int TGT_O_APPEND	= 00000010;	//!< O_APPEND
+    static const int TGT_O_CREAT	= 00001000;	//!< O_CREAT
+    static const int TGT_O_TRUNC	= 00002000;	//!< O_TRUNC
+    static const int TGT_O_EXCL	 	= 00004000;	//!< O_EXCL
+    static const int TGT_O_NOCTTY	= 00010000;	//!< O_NOCTTY
+    static const int TGT_O_SYNC	 	= 00040000;	//!< O_SYNC
+    static const int TGT_O_DRD	 	= 00100000;	//!< O_DRD
+    static const int TGT_O_DIRECTIO  	= 00200000;	//!< O_DIRECTIO
+    static const int TGT_O_CACHE	= 00400000;	//!< O_CACHE
+    static const int TGT_O_DSYNC	= 02000000;	//!< O_DSYNC
+    static const int TGT_O_RSYNC	= 04000000;	//!< O_RSYNC
+    //@}
 
-// open(2) flags
-static const int TGT_O_RDONLY	 = 00000000;
-static const int TGT_O_WRONLY	 = 00000001;
-static const int TGT_O_RDWR	 = 00000002;
-static const int TGT_O_NONBLOCK  = 00000004;
-static const int TGT_O_APPEND	 = 00000010;
-static const int TGT_O_CREAT	 = 00001000;
-static const int TGT_O_TRUNC	 = 00002000;
-static const int TGT_O_EXCL	 = 00004000;
-static const int TGT_O_NOCTTY	 = 00010000;
-static const int TGT_O_SYNC	 = 00040000;
-static const int TGT_O_DRD	 = 00100000;
-static const int TGT_O_DIRECTIO  = 00200000;
-static const int TGT_O_CACHE	 = 00400000;
-static const int TGT_O_DSYNC	 = 02000000;
-static const int TGT_O_RSYNC	 = 04000000;
+    /// This table maps the target open() flags to the corresponding
+    /// host open() flags.
+    static OpenFlagTransTable openFlagTable[];
 
-static OpenFlagTransTable openFlagTable[];
-static const int NUM_OPEN_FLAGS;
+    /// Number of entries in openFlagTable[].
+    static const int NUM_OPEN_FLAGS;
 
-//
-// Stat buffer.
-//
-
-struct tgt_stat {
-    uint32_t	st_dev;
-    uint32_t	st_ino;
-    uint32_t	st_mode;
-    uint32_t	st_nlink;
-    uint32_t	st_uid;
-    uint32_t	st_gid;
-    uint32_t	st_rdev;
-    int64_t	st_size;
-    uint64_t	st_atimeX;
-    uint64_t	st_mtimeX;
-    uint64_t	st_ctimeX;
-    uint32_t	st_blksize;
-    int32_t	st_blocks;
-    uint32_t	st_flags;
-    uint32_t	st_gen;
-};
-
-
-//
-// for uname()
-//
-
-static const int _SYS_NMLN = 65;
-
-struct utsname {
-    char sysname[_SYS_NMLN];
-    char nodename[_SYS_NMLN];
-    char release[_SYS_NMLN];
-    char version[_SYS_NMLN];
-    char machine[_SYS_NMLN];
-};
+    /// Stat buffer.  Note that we can't call it 'stat' since that
+    /// gets #defined to something else on some systems.
+    struct tgt_stat {
+        uint32_t	st_dev;		//!< device
+        uint32_t	st_ino;		//!< inode
+        uint32_t	st_mode;	//!< mode
+        uint32_t	st_nlink;	//!< link count
+        uint32_t	st_uid;		//!< owner's user ID
+        uint32_t	st_gid;		//!< owner's group ID
+        uint32_t	st_rdev;	//!< device number
+        int64_t		st_size;	//!< file size in bytes
+        uint64_t	st_atimeX;	//!< time of last access
+        uint64_t	st_mtimeX;	//!< time of last modification
+        uint64_t	st_ctimeX;	//!< time of last status change
+        uint32_t	st_blksize;	//!< optimal I/O block size
+        int32_t		st_blocks;	//!< number of blocks allocated
+        uint32_t	st_flags;	//!< flags
+        uint32_t	st_gen;		//!< unknown
+    };
 
 
-//
-// for ioctl()
-//
+    /// Length of strings in struct utsname (plus 1 for null char).
+    static const int _SYS_NMLN = 65;
 
-static const unsigned TIOCGETP   = 0x40067408;
-static const unsigned TIOCSETP   = 0x80067409;
-static const unsigned TIOCSETN   = 0x8006740a;
-static const unsigned TIOCSETC   = 0x80067411;
-static const unsigned TIOCGETC   = 0x40067412;
-static const unsigned FIONREAD   = 0x4004667f;
-static const unsigned TIOCISATTY = 0x2000745e;
-
-//
-// for getrlimit()
-//
-
-enum rlimit_resources {
-    RLIMIT_CPU = 0,
-    RLIMIT_FSIZE = 1,
-    RLIMIT_DATA = 2,
-    RLIMIT_STACK = 3,
-    RLIMIT_CORE = 4,
-    RLIMIT_RSS = 5,
-    RLIMIT_NOFILE = 6,
-    RLIMIT_AS = 7,
-    RLIMIT_VMEM = 7,
-    RLIMIT_NPROC = 8,
-    RLIMIT_MEMLOCK = 9,
-    RLIMIT_LOCKS = 10
-};
-
-struct rlimit {
-    uint64_t  rlim_cur;	// soft limit
-    uint64_t  rlim_max;	// hard limit
-};
+    /// Interface struct for uname().
+    struct utsname {
+        char sysname[_SYS_NMLN];	//!< System name.
+        char nodename[_SYS_NMLN];	//!< Node name.
+        char release[_SYS_NMLN];	//!< OS release.
+        char version[_SYS_NMLN];	//!< OS version.
+        char machine[_SYS_NMLN];	//!< Machine type.
+    };
 
 
-//
-// for mmap()
-//
+    //@{
+    /// ioctl() command codes.
+    static const unsigned TIOCGETP   = 0x40067408;
+    static const unsigned TIOCSETP   = 0x80067409;
+    static const unsigned TIOCSETN   = 0x8006740a;
+    static const unsigned TIOCSETC   = 0x80067411;
+    static const unsigned TIOCGETC   = 0x40067412;
+    static const unsigned FIONREAD   = 0x4004667f;
+    static const unsigned TIOCISATTY = 0x2000745e;
+    //@}
+
+    /// Resource enumeration for getrlimit().
+    enum rlimit_resources {
+        RLIMIT_CPU = 0,
+        RLIMIT_FSIZE = 1,
+        RLIMIT_DATA = 2,
+        RLIMIT_STACK = 3,
+        RLIMIT_CORE = 4,
+        RLIMIT_RSS = 5,
+        RLIMIT_NOFILE = 6,
+        RLIMIT_AS = 7,
+        RLIMIT_VMEM = 7,
+        RLIMIT_NPROC = 8,
+        RLIMIT_MEMLOCK = 9,
+        RLIMIT_LOCKS = 10
+    };
+
+    /// Limit struct for getrlimit/setrlimit.
+    struct rlimit {
+        uint64_t  rlim_cur;	//!< soft limit
+        uint64_t  rlim_max;	//!< hard limit
+    };
+
+
+    /// For mmap().
     static const unsigned TGT_MAP_ANONYMOUS = 0x10;
 
-//
-// for gettimeofday
-//
+    /// For gettimeofday().
+    struct timeval {
+        int64_t tv_sec;		//!< seconds
+        int64_t tv_usec;	//!< microseconds
+    };
 
-struct timeval {
-    int64_t tv_sec;
-    int64_t tv_usec;
-};
+    //@{
+    /// For getrusage().
+    static const int RUSAGE_SELF = 0;
+    static const int RUSAGE_CHILDREN = -1;
+    static const int RUSAGE_BOTH = -2;
+    //@}
 
-//
-// for getrusage
-//
+    /// For getrusage().
+    struct rusage {
+        struct timeval ru_utime;	//!< user time used
+        struct timeval ru_stime;	//!< system time used
+        int64_t ru_maxrss;		//!< max rss
+        int64_t ru_ixrss;		//!< integral shared memory size
+        int64_t ru_idrss;		//!< integral unshared data "
+        int64_t ru_isrss;		//!< integral unshared stack "
+        int64_t ru_minflt;		//!< page reclaims - total vmfaults
+        int64_t ru_majflt;		//!< page faults
+        int64_t ru_nswap;		//!< swaps
+        int64_t ru_inblock;		//!< block input operations
+        int64_t ru_oublock;		//!< block output operations
+        int64_t ru_msgsnd;		//!< messages sent
+        int64_t ru_msgrcv;		//!< messages received
+        int64_t ru_nsignals;		//!< signals received
+        int64_t ru_nvcsw;		//!< voluntary context switches
+        int64_t ru_nivcsw;		//!< involuntary "
+    };
 
+    /// Helper function to convert a host stat buffer to a target stat
+    /// buffer.  Also copies the target buffer out to the simulated
+    /// memorty space.  Used by stat(), fstat(), and lstat().
+    static void
+    copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    {
+        TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
-static const int RUSAGE_SELF = 0;
-static const int RUSAGE_CHILDREN = -1;
-static const int RUSAGE_BOTH = -2;
+        tgt->st_dev = host->st_dev;
+        tgt->st_ino = host->st_ino;
+        tgt->st_mode = host->st_mode;
+        tgt->st_nlink = host->st_nlink;
+        tgt->st_uid = host->st_uid;
+        tgt->st_gid = host->st_gid;
+        tgt->st_rdev = host->st_rdev;
+        tgt->st_size = host->st_size;
+        tgt->st_atimeX = host->st_atime;
+        tgt->st_mtimeX = host->st_mtime;
+        tgt->st_ctimeX = host->st_ctime;
+        tgt->st_blksize = host->st_blksize;
+        tgt->st_blocks = host->st_blocks;
 
-struct rusage {
-     struct timeval ru_utime;	// user time used
-     struct timeval ru_stime;	// system time used
-     int64_t ru_maxrss;
-     int64_t ru_ixrss;		// integral shared memory size
-     int64_t ru_idrss;		// integral unshared data "
-     int64_t ru_isrss;		// integral unshared stack "
-     int64_t ru_minflt;		// page reclaims - total vmfaults
-     int64_t ru_majflt;		// page faults
-     int64_t ru_nswap;		// swaps
-     int64_t ru_inblock;	// block input operations
-     int64_t ru_oublock;	// block output operations
-     int64_t ru_msgsnd;		// messages sent
-     int64_t ru_msgrcv;		// messages received
-     int64_t ru_nsignals;	// signals received
-     int64_t ru_nvcsw;		// voluntary context switches
-     int64_t ru_nivcsw;		// involuntary "
-};
-
-static
-void
-copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
-{
-    TypedBufferArg<Linux::tgt_stat> tgt(addr);
-
-    tgt->st_dev = host->st_dev;
-    tgt->st_ino = host->st_ino;
-    tgt->st_mode = host->st_mode;
-    tgt->st_nlink = host->st_nlink;
-    tgt->st_uid = host->st_uid;
-    tgt->st_gid = host->st_gid;
-    tgt->st_rdev = host->st_rdev;
-    tgt->st_size = host->st_size;
-    tgt->st_atimeX = host->st_atime;
-    tgt->st_mtimeX = host->st_mtime;
-    tgt->st_ctimeX = host->st_ctime;
-    tgt->st_blksize = host->st_blksize;
-    tgt->st_blocks = host->st_blocks;
-
-    tgt.copyOut(mem);
-}
-
-
-static const char *hostname;
-
-static
-int
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ExecContext *xc)
-{
-    TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
-
-    strcpy(name->sysname, "Linux");
-    strcpy(name->nodename, hostname);
-    strcpy(name->release, "2.4.20");
-    strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
-    strcpy(name->machine, "alpha");
-
-    name.copyOut(xc->mem);
-    return 0;
-}
-
-
-static
-int
-osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
-{
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
-
-    switch (op) {
-
-      case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
-          // I don't think this exactly matches the HW FPCR
-          *fpcr = 0;
-          fpcr.copyOut(xc->mem);
-          return 1;
-      }
-
-      default:
-        cerr << "osf_getsysinfo: unknown op " << op << endl;
-        abort();
-        break;
+        tgt.copyOut(mem);
     }
 
-    return 0;
-}
+    /// The target system's hostname.
+    static const char *hostname;
 
+    /// Target uname() handler.
+    static int
+    unameFunc(SyscallDesc *desc, int callnum, Process *process,
+              ExecContext *xc)
+    {
+        TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
 
-static
-int
-osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
-{
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
+        strcpy(name->sysname, "Linux");
+        strcpy(name->nodename, hostname);
+        strcpy(name->release, "2.4.20");
+        strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
+        strcpy(name->machine, "alpha");
 
-    switch (op) {
-
-      case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
-          // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->mem);
-          DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                   " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
-          return 1;
-      }
-
-      default:
-        cerr << "osf_getsysinfo: unknown op " << op << endl;
-        abort();
-        break;
-    }
-
-    return 0;
-}
-
-
-static
-int
-fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
-           ExecContext *xc)
-{
-    int fd = xc->getSyscallArg(0);
-
-    if (fd < 0 || process->sim_fd(fd) < 0)
-        return -EBADF;
-
-    int cmd = xc->getSyscallArg(1);
-    switch (cmd) {
-      case 0: // F_DUPFD
-        // if we really wanted to support this, we'd need to do it
-        // in the target fd space.
-        warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
-        return -EMFILE;
-
-      case 1: // F_GETFD (get close-on-exec flag)
-      case 2: // F_SETFD (set close-on-exec flag)
-        return 0;
-
-      case 3: // F_GETFL (get file flags)
-      case 4: // F_SETFL (set file flags)
-        // not sure if this is totally valid, but we'll pass it through
-        // to the underlying OS
-        warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
-        return fcntl(process->sim_fd(fd), cmd);
-        // return 0;
-
-      case 7: // F_GETLK  (get lock)
-      case 8: // F_SETLK  (set lock)
-      case 9: // F_SETLKW (set lock and wait)
-        // don't mess with file locking... just act like it's OK
-        warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
-        return 0;
-
-      default:
-        warn("Unknown fcntl command %d\n", cmd);
+        name.copyOut(xc->mem);
         return 0;
     }
-}
 
-static SyscallDesc syscallDescs[];
+    /// Target osf_getsysyinfo() handler.  Even though this call is
+    /// borrowed from Tru64, the subcases that get used appear to be
+    /// different in practice from those used by Tru64 processes.
+    static int
+    osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+                       ExecContext *xc)
+    {
+        unsigned op = xc->getSyscallArg(0);
+        // unsigned nbytes = xc->getSyscallArg(2);
 
-static const int Num_Syscall_Descs;
+        switch (op) {
 
-static const int Max_Syscall_Desc;
+          case 45: { // GSI_IEEE_FP_CONTROL
+              TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+              // I don't think this exactly matches the HW FPCR
+              *fpcr = 0;
+              fpcr.copyOut(xc->mem);
+              return 1;
+          }
 
-static
-void
-doSyscall(int callnum, Process *process, ExecContext *xc)
-{
-    if (callnum < 0 || callnum > Max_Syscall_Desc) {
-        fatal("Syscall %d out of range", callnum);
+          default:
+            cerr << "osf_getsysinfo: unknown op " << op << endl;
+            abort();
+            break;
+        }
+
+        return 0;
     }
 
-    SyscallDesc *desc = &syscallDescs[callnum];
+    /// Target osf_setsysinfo() handler.
+    static int
+    osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+                       ExecContext *xc)
+    {
+        unsigned op = xc->getSyscallArg(0);
+        // unsigned nbytes = xc->getSyscallArg(2);
 
-    desc->doSyscall(callnum, process, xc);
-}
+        switch (op) {
 
+          case 14: { // SSI_IEEE_FP_CONTROL
+              TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+              // I don't think this exactly matches the HW FPCR
+              fpcr.copyIn(xc->mem);
+              DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
+                       " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
+              return 1;
+          }
 
+          default:
+            cerr << "osf_getsysinfo: unknown op " << op << endl;
+            abort();
+            break;
+        }
+
+        return 0;
+    }
+
+    /// Target fnctl() handler.
+    static int
+    fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
+              ExecContext *xc)
+    {
+        int fd = xc->getSyscallArg(0);
+
+        if (fd < 0 || process->sim_fd(fd) < 0)
+            return -EBADF;
+
+        int cmd = xc->getSyscallArg(1);
+        switch (cmd) {
+          case 0: // F_DUPFD
+            // if we really wanted to support this, we'd need to do it
+            // in the target fd space.
+            warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
+            return -EMFILE;
+
+          case 1: // F_GETFD (get close-on-exec flag)
+          case 2: // F_SETFD (set close-on-exec flag)
+            return 0;
+
+          case 3: // F_GETFL (get file flags)
+          case 4: // F_SETFL (set file flags)
+            // not sure if this is totally valid, but we'll pass it through
+            // to the underlying OS
+            warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
+            return fcntl(process->sim_fd(fd), cmd);
+            // return 0;
+
+          case 7: // F_GETLK  (get lock)
+          case 8: // F_SETLK  (set lock)
+          case 9: // F_SETLKW (set lock and wait)
+            // don't mess with file locking... just act like it's OK
+            warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
+            return 0;
+
+          default:
+            warn("Unknown fcntl command %d\n", cmd);
+            return 0;
+        }
+    }
+
+    /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
+
+    /// Number of syscalls in syscallDescs[].
+    static const int Num_Syscall_Descs;
+
+    /// Max supported syscall number.
+    static const int Max_Syscall_Desc;
+
+    /// Do the specified syscall.  Just looks the call number up in
+    /// the table and invokes the appropriate handler.
+    static void
+    doSyscall(int callnum, Process *process, ExecContext *xc)
+    {
+        if (callnum < 0 || callnum > Max_Syscall_Desc) {
+            fatal("Syscall %d out of range", callnum);
+        }
+
+        SyscallDesc *desc = &syscallDescs[callnum];
+
+        desc->doSyscall(callnum, process, xc);
+    }
 };  // class Linux
 
 
 // open(2) flags translation table
 OpenFlagTransTable Linux::openFlagTable[] = {
-  /* target flag */	/* host flag */
 #ifdef _MSC_VER
   { Linux::TGT_O_RDONLY,	_O_RDONLY },
   { Linux::TGT_O_WRONLY,	_O_WRONLY },
@@ -406,7 +405,8 @@ OpenFlagTransTable Linux::openFlagTable[] = {
 #endif /* _MSC_VER */
 };
 
-const int Linux::NUM_OPEN_FLAGS = (sizeof(Linux::openFlagTable)/sizeof(Linux::openFlagTable[0]));
+const int Linux::NUM_OPEN_FLAGS =
+        (sizeof(Linux::openFlagTable)/sizeof(Linux::openFlagTable[0]));
 
 const char *Linux::hostname = "m5.eecs.umich.edu";
 
