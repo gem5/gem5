@@ -69,7 +69,7 @@ namespace Trace {
     class Record
     {
       protected:
-        Tick	cycle;
+        Tick cycle;
 
         Record(Tick _cycle)
             : cycle(_cycle)
@@ -101,15 +101,17 @@ namespace Trace {
         virtual void dump(std::ostream &);
     };
 
-    class RawDataRecord : public Record
+    class DataRecord : public Record
     {
       private:
+        const std::string &name;
         uint8_t *data;
         int len;
 
       public:
-        RawDataRecord(Tick cycle, const void *_data, int _len);
-        virtual ~RawDataRecord();
+        DataRecord(Tick cycle, const std::string &name,
+                   const void *_data, int _len);
+        virtual ~DataRecord();
 
         virtual void dump(std::ostream &);
     };
@@ -149,9 +151,9 @@ namespace Trace {
     }
 
     inline void
-    rawDump(const void *data, int len)
+    dataDump(Tick cycle, const std::string &name, const void *data, int len)
     {
-        theLog.append(new Trace::RawDataRecord(curTick, data, len));
+        theLog.append(new Trace::DataRecord(cycle, name, data, len));
     }
 
     extern const std::string DefaultName;
@@ -180,7 +182,7 @@ std::ostream &DebugOut();
 #define DDUMP(x, data, count) \
 do { \
     if (Trace::IsOn(Trace::x)) \
-        Trace::rawDump(data, count); \
+        Trace::dataDump(curTick, name(), data, count);	\
 } while (0)
 
 #define __dprintf(cycle, name, format, args...) \

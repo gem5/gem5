@@ -31,6 +31,7 @@
 
 #include "base/cprintf.hh"
 #include "base/trace.hh"
+#include "cpu/exec_context.hh"
 #include "kern/tru64/mbuf.hh"
 #include "sim/host.hh"
 #include "targetarch/arguments.hh"
@@ -58,7 +59,8 @@ DumpMbuf(AlphaArguments args)
                  addr, m.m_data, m.m_len);
         char *buffer = new char[m.m_len];
         CopyOut(xc, buffer, m.m_data, m.m_len);
-        Trace::rawDump((uint8_t *)buffer, m.m_len);
+        Trace::dataDump(curTick, xc->system->name(), (uint8_t *)buffer,
+                        m.m_len);
         delete [] buffer;
 
         count -= m.m_len;
