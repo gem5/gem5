@@ -35,7 +35,7 @@ except:
 env = {}
 env.update(os.environ)
 
-def panic(*args, **kwargs):
+def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
