@@ -1,0 +1,91 @@
+#! /usr/bin/env perl
+# Copyright (c) 2003 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
+
+open (FOO, "<$ARGV[0]") or die;
+
+# Suck in everything before the first include
+# (line-by-line into @before list).
+while (($_ = <FOO>) && !/^#include/) {
+    push @before, $_;
+}
+
+#print join("", @before);
+#print "##########################\n";
+
+# Suck in include lines into @includes list.
+# Skip blank lines (keep processing, but don't put in @includes).
+# End on first non-blank, non-include line.
+# Note that this means that files with comments or #ifdefs
+# interspersed among their #includes will only get the initial
+# set of #includes sorted.
+do {
+    push @includes, $_ unless /^\s*$/;
+} while (($_ = <FOO>) && /^#include|^\s*$/);
+
+# Now sort the includes.  This simple ordering function
+# puts system includes first, followed by non-system includes.
+# Within each group the sort is alphabetical.
+# We may want something a little more sophisticated.
+# Personally, I'd like to see something like:
+# <sys/*.h>	- header files from sys subdir
+# <*.h>		- other system headers
+# <*>		- STL headers
+# "base/*"	- M5 base headers
+# "sim/*"	- M5 sim headers
+# "*"		- other M5 headers
+# ...but I didn't have the energy to code that up.
+sub sortorder {
+    my $sysa = ($a =~ /<.*>/);
+    my $sysb = ($b =~ /<.*>/);
+    return -1 if ($sysa && !$sysb);
+    return  1 if ($sysb && !$sysa);
+    return $a cmp $b;
+}
+
+@includes = sort sortorder @includes;
+#print join("", @includes);
+#print "##########################\n";
+
+# Put everything after the includes in the @after list.
+do {
+    push @after, $_;
+    if (/^#include/) {
+	print "$ARGV[0]: ";
+	print $after[0];
+	exit 0;
+    }
+} while ($_ = <FOO>);
+
+#print join("", @after);
+#print "##########################\n";
+
+# Print out the file with sorted includes.
+
+print join("", @before, @includes, @after);
+
