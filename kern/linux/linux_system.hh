@@ -47,7 +47,6 @@ class LinuxSkipDelayLoopEvent;
 class LinuxSkipIdeDelay50msEvent;
 class LinuxPrintfEvent;
 class LinuxDebugPrintfEvent;
-class LinuxDumpMbufEvent;
 class FnEvent;
 class AlphaArguments;
 
