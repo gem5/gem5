@@ -46,7 +46,7 @@ DumpMbuf(AlphaArguments args)
     Addr addr = (Addr)args;
     struct mbuf m;
 
-    CopyData(xc, &m, addr, sizeof(m));
+    CopyOut(xc, &m, addr, sizeof(m));
 
     int count = m.m_pkthdr.len;
 
@@ -57,7 +57,7 @@ DumpMbuf(AlphaArguments args)
         ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
                  addr, m.m_data, m.m_len);
         char *buffer = new char[m.m_len];
-        CopyData(xc, buffer, m.m_data, m.m_len);
+        CopyOut(xc, buffer, m.m_data, m.m_len);
         Trace::rawDump((uint8_t *)buffer, m.m_len);
         delete [] buffer;
 
@@ -65,7 +65,7 @@ DumpMbuf(AlphaArguments args)
         if (!m.m_next)
             break;
 
-        CopyData(xc, &m, m.m_next, sizeof(m));
+        CopyOut(xc, &m, m.m_next, sizeof(m));
     }
 }
 

@@ -133,14 +133,14 @@ vtomem(ExecContext *xc, Addr vaddr, size_t len)
 }
 
 void
-CopyData(ExecContext *xc, void *dest, Addr vaddr, size_t cplen)
+CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
 {
     Addr paddr;
     char *dmaaddr;
     char *dst = (char *)dest;
     int len;
 
-    paddr = vtophys(xc, vaddr);
+    paddr = vtophys(xc, src);
     len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)cplen);
     dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
     assert(dmaaddr);
@@ -151,25 +151,66 @@ CopyData(ExecContext *xc, void *dest, Addr vaddr, size_t cplen)
 
     cplen -= len;
     dst += len;
-    vaddr += len;
+    src += len;
 
     while (cplen > ALPHA_PGBYTES) {
-        paddr = vtophys(xc, vaddr);
+        paddr = vtophys(xc, src);
         dmaaddr = (char *)xc->physmem->dma_addr(paddr, ALPHA_PGBYTES);
         assert(dmaaddr);
 
         memcpy(dst, dmaaddr, ALPHA_PGBYTES);
         cplen -= ALPHA_PGBYTES;
         dst += ALPHA_PGBYTES;
-        vaddr += ALPHA_PGBYTES;
+        src += ALPHA_PGBYTES;
     }
 
     if (cplen > 0) {
-        paddr = vtophys(xc, vaddr);
+        paddr = vtophys(xc, src);
         dmaaddr = (char *)xc->physmem->dma_addr(paddr, cplen);
         assert(dmaaddr);
 
         memcpy(dst, dmaaddr, cplen);
+    }
+}
+
+void
+CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
+{
+    Addr paddr;
+    char *dmaaddr;
+    char *src = (char *)source;
+    int len;
+
+    paddr = vtophys(xc, dest);
+    len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)cplen);
+    dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
+    assert(dmaaddr);
+
+    memcpy(dmaaddr, src, len);
+    if (len == cplen)
+        return;
+
+    cplen -= len;
+    src += len;
+    dest += len;
+
+    while (cplen > ALPHA_PGBYTES) {
+        paddr = vtophys(xc, dest);
+        dmaaddr = (char *)xc->physmem->dma_addr(paddr, ALPHA_PGBYTES);
+        assert(dmaaddr);
+
+        memcpy(dmaaddr, src, ALPHA_PGBYTES);
+        cplen -= ALPHA_PGBYTES;
+        src += ALPHA_PGBYTES;
+        dest += ALPHA_PGBYTES;
+    }
+
+    if (cplen > 0) {
+        paddr = vtophys(xc, dest);
+        dmaaddr = (char *)xc->physmem->dma_addr(paddr, cplen);
+        assert(dmaaddr);
+
+        memcpy(dmaaddr, src, cplen);
     }
 }
 
