@@ -67,24 +67,46 @@ namespace Statistics {
 bool PrintDescriptions = true;
 
 namespace Detail {
+/**
+ * Struct to contain a name and description of statistic subfield.
+ */
 struct SubData
 {
+    /** Subfield name. */
     string name;
+    /** Subfield desc. */
     string desc;
 };
 
+/**
+ * Struct to contain print data of a Stat.
+ */
 struct StatData
 {
+    /**
+     * Create this struct.
+     */
     StatData();
+    /**
+     * Destructor.
+     */
     ~StatData();
 
+    /** True if the stat has been initialized. */
     bool init;
+    /** True if the stat should be printed. */
     bool print;
+    /** The name of the stat. */
     string name;
+    /** Names and descriptions of subfields. */
     vector<SubData> *subdata;
+    /** The description of the stat. */
     string desc;
+    /** The display precision. */
     int precision;
+    /** The formatting flags. */
     FormatFlags flags;
+    /** A pointer to a prerequisite Stat. */
     const Stat *prereq;
 };
 
