@@ -108,14 +108,14 @@ EcoffObject::loadGlobalSymbols(SymbolTable *symtab)
         return false;
 
     if (fileHdr->f_magic != ECOFF_MAGIC_ALPHA) {
-        cprintf("wrong magic\n");
+        warn("loadGlobalSymbols: wrong magic on %s\n", filename);
         return false;
     }
 
     ecoff_symhdr *syms = (ecoff_symhdr *)(fileData + fileHdr->f_symptr);
     if (syms->magic != magicSym2) {
-        cprintf("bad symbol header magic\n");
-        exit(1);
+        warn("loadGlobalSymbols: bad symbol header magic on %s\n", filename);
+        return false;
     }
 
     ecoff_extsym *ext_syms = (ecoff_extsym *)(fileData + syms->cbExtOffset);
@@ -137,14 +137,14 @@ EcoffObject::loadLocalSymbols(SymbolTable *symtab)
         return false;
 
     if (fileHdr->f_magic != ECOFF_MAGIC_ALPHA) {
-        cprintf("wrong magic\n");
+        warn("loadGlobalSymbols: wrong magic on %s\n", filename);
         return false;
     }
 
     ecoff_symhdr *syms = (ecoff_symhdr *)(fileData + fileHdr->f_symptr);
     if (syms->magic != magicSym2) {
-        cprintf("bad symbol header magic\n");
-        exit(1);
+        warn("loadGlobalSymbols: bad symbol header magic on %s\n", filename);
+        return false;
     }
 
     ecoff_sym *local_syms = (ecoff_sym *)(fileData + syms->cbSymOffset);

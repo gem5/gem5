@@ -39,23 +39,50 @@ def unique(list):
     map(set.__setitem__, list, [])
     return set.keys()
 
-def graphdata(runs, tag, label, value):
+def graphdata(runs, options, tag, label, value):
     import info
-    configs = ['stx', 'ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
-    benchmarks = [ 'm', 's' ]
-    dmas = [ 'x', 'd', 'b' ]
+    configs = ['ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
+    #benchmarks = [ 'm', 's', 'nb1', 'nb2', 'nt1', 'nt2', 'w1', 'w2', 'w3', 'w4', 'ns', 'nm', 'nw1', 'nw2', 'nw3' ]
+    #benchmarks = [ 'm', 's', 'nb1', 'nb2', 'nt1', 'w1', 'w2', 'w3', 'ns', 'nm', 'w1s' ]
+    benchmarks = [ 'm', 's', 'nb1', 'nb2', 'w1', 'w2', 'w3', 'w4', 'ns', 'nm', 'nw1', 'snt' ]
+    #dmas = [ 'x', 'd', 'b' ]
+    dmas = [ 'x' ]
     caches = [ '2', '4' ]
-    checkpoints = [ '1' ]
 
     names = []
+
+    bench_system = {
+        'm' : 'client',
+        's' : 'client',
+        'snt' : 'client',
+        'nb1' : 'server',
+        'nb2' : 'server',
+        'nt1' : 'server',
+        'nt2' : 'server',
+        'w1' : 'server',
+        'w2' : 'server',
+        'w3' : 'server',
+        'w4' : 'server',
+        'w1s' : 'server',
+        'w2s' : 'server',
+        'w3s' : 'server',
+        'ns' : 'natbox',
+        'nm' : 'natbox',
+        'nw1' : 'natbox',
+        'nw2' : 'natbox',
+        'nw3' : 'natbox'
+        }
+
     for bench in benchmarks:
+        if bench_system[bench] != options.system:
+            continue
+
         for dma in dmas:
             for cache in caches:
-                for cpt in checkpoints:
-                    names.append([bench, dma, cache, cpt])
+                    names.append([bench, dma, cache])
 
-    for bench,dma,cache,cpt in names:
-        base = '%s.%s.%s.%s' % (bench, dma, cache, cpt)
+    for bench,dma,cache in names:
+        base = '%s.%s.%s' % (bench, dma, cache)
         fname = 'data/%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
         print >>f, '#set TITLE = %s' % base
@@ -66,8 +93,7 @@ def graphdata(runs, tag, label, value):
         for speed,freq in zip(['s', 'q'],['4GHz','10GHz']):
             print >>f, '"%s"' % freq,
             for conf in configs:
-                name = '%s.%s.%s.%s.%s.%s' % (conf, bench, dma, speed, cache,
-                                              cpt)
+                name = '%s.%s.%s.%s.%s' % (conf, bench, dma, cache, speed)
                 run = info.source.allRunNames[name]
                 info.display_run = run.run;
                 val = float(value)
@@ -174,7 +200,7 @@ def commands(options, command, args):
         stats = info.source.getStat(args[0])
         for stat in stats:
             if options.graph:
-                graphdata(runs, stat.name, stat.name, stat)
+                graphdata(runs, options, stat.name, stat.name, stat)
             else:
                 if options.binned:
                     print 'kernel ticks'
@@ -197,6 +223,39 @@ def commands(options, command, args):
 
                 stat.bins = None
                 print stat.name
+                printdata(runs, stat)
+        return
+
+    if command == 'formula':
+        if len(args) != 1:
+            raise CommandException
+
+        stats = eval(args[0])
+        for stat in stats:
+            if options.graph:
+                graphdata(runs, options, stat.name, stat.name, stat)
+            else:
+                if options.binned:
+                    print 'kernel ticks'
+                    stat.bins = 'kernel'
+                    printdata(runs, stat)
+
+                    print 'idle ticks'
+                    stat.bins = 'idle'
+                    printdata(runs, stat)
+
+                    print 'user ticks'
+                    stat.bins = 'user'
+                    printdata(runs, stat)
+
+                    print 'interrupt ticks'
+                    stat.bins = 'user'
+                    printdata(runs, stat)
+
+                    print 'total ticks'
+
+                stat.bins = None
+                print args[0]
                 printdata(runs, stat)
         return
 
@@ -241,7 +300,7 @@ def commands(options, command, args):
         user.bins = 'user'
 
         if options.graph:
-            graphdata(runs, 'usertime', 'User Fraction',
+            graphdata(runs, options, 'usertime', 'User Fraction',
                       user / system.full_cpu.numCycles)
         else:
             printdata(runs, user / system.full_cpu.numCycles)
@@ -270,7 +329,7 @@ def commands(options, command, args):
     if command == 'packets':
         packets = system.tsunami.etherdev.rxPackets
         if options.graph:
-            graphdata(runs, 'packets', 'Packets', packets)
+            graphdata(runs, options, 'packets', 'Packets', packets)
         else:
             printdata(runs, packets)
         return
@@ -283,7 +342,7 @@ def commands(options, command, args):
     if command == 'pps':
         pps = system.tsunami.etherdev.rxPackets / sim_seconds
         if options.graph:
-            graphdata(runs, 'pps', 'Packets/s', pps)
+            graphdata(runs, options, 'pps', 'Packets/s', pps)
         else:
             printdata(runs, pps)
         return
@@ -292,7 +351,7 @@ def commands(options, command, args):
         bytes = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
         bpt = bytes / sim_ticks * 8
         if options.graph:
-            graphdata(runs, 'bpt', 'bps / Hz', bpt)
+            graphdata(runs, options, 'bpt', 'bps / Hz', bpt)
         else:
             printdata(runs, bpt, command == 'tpb')
         return
@@ -339,7 +398,7 @@ def commands(options, command, args):
     if command == 'rxbps':
         gbps = system.tsunami.etherdev.rxBandwidth / 1e9
         if options.graph:
-            graphdata(runs, 'rxbps', 'Bandwidth (Gbps)',  gbps)
+            graphdata(runs, options, 'rxbps', 'Bandwidth (Gbps)',  gbps)
         else:
             printdata(runs, gbps)
         return
@@ -347,7 +406,7 @@ def commands(options, command, args):
     if command == 'txbps':
         gbps = system.tsunami.etherdev.txBandwidth / 1e9
         if options.graph:
-            graphdata(runs, 'txbps', 'Bandwidth (Gbps)',  gbps)
+            graphdata(runs, options, 'txbps', 'Bandwidth (Gbps)',  gbps)
         else:
             printdata(runs, gbps)
         return
@@ -357,7 +416,7 @@ def commands(options, command, args):
         txbps = system.tsunami.etherdev.txBandwidth
         gbps = (rxbps + txbps) / 1e9
         if options.graph:
-            graphdata(runs, 'bps', 'Bandwidth (Gbps)',  gbps)
+            graphdata(runs, options, 'bps', 'Bandwidth (Gbps)',  gbps)
         else:
             printdata(runs, gbps)
         return
@@ -381,7 +440,7 @@ def commands(options, command, args):
 
         stat.bins = None
         if options.graph:
-            graphdata(runs, 'misses', 'Overall MSHR Misses', stat)
+            graphdata(runs, options, 'misses', 'Overall MSHR Misses', stat)
         else:
             printdata(runs, stat)
         return
@@ -412,9 +471,40 @@ def commands(options, command, args):
         mpkb = misses / ((rxbytes + txbytes) / 1024)
         misses.bins = None
         if options.graph:
-            graphdata(runs, 'mpkb', 'Misses / KB',  mpkb)
+            graphdata(runs, options, 'mpkb', 'Misses / KB',  mpkb)
         else:
             printdata(runs, mpkb)
+        return
+
+    if command == 'ipkb':
+        interrupts = system.full_cpu.kern.faults[4]
+        rxbytes = system.tsunami.etherdev.rxBytes
+        txbytes = system.tsunami.etherdev.txBytes
+
+        if options.binned:
+            print 'ipkb kernel stats'
+            interrupts.bins = 'kernel'
+            ipkb = interrupts / ((rxbytes + txbytes) / 1024)
+            printdata(runs, ipkb)
+
+            print 'ipkb idle stats'
+            interrupts.bins = 'idle'
+            ipkb = interrupts / ((rxbytes + txbytes) / 1024)
+            printdata(runs, ipkb)
+
+            print 'ipkb user stats'
+            interrupts.bins = 'user'
+            ipkb = interrupts / ((rxbytes + txbytes) / 1024)
+            printdata(runs, ipkb)
+
+            print 'ipkb total stats'
+
+        ipkb = interrupts / ((rxbytes + txbytes) / 1024)
+        interrupts.bins = None
+        if options.graph:
+            graphdata(runs, options, 'ipkb', 'Interrupts / KB',  ipkb)
+        else:
+            printdata(runs, ipkb)
         return
 
     if command == 'execute':
@@ -433,7 +523,7 @@ def commands(options, command, args):
         ed = system.tsunami.etherdev
         bpp = (ed.rxBytes + ed.txBytes) / (ed.rxPackets + ed.txPackets)
         if options.graph:
-            graphdata(runs, 'bpp', 'Bytes / Packet',  bpp)
+            graphdata(runs, options, 'bpp', 'Bytes / Packet',  bpp)
         else:
             printdata(runs, bpp)
         return
@@ -441,7 +531,7 @@ def commands(options, command, args):
     if command == 'rxbpp':
         bpp = system.tsunami.etherdev.rxBytes / system.tsunami.etherdev.rxPackets
         if options.graph:
-            graphdata(runs, 'rxbpp', 'Receive Bytes / Packet',  bpp)
+            graphdata(runs, options, 'rxbpp', 'Receive Bytes / Packet',  bpp)
         else:
             printdata(runs, bpp)
         return
@@ -449,7 +539,7 @@ def commands(options, command, args):
     if command == 'txbpp':
         bpp = system.tsunami.etherdev.txBytes / system.tsunami.etherdev.txPackets
         if options.graph:
-            graphdata(runs, 'txbpp', 'Transmit Bytes / Packet',  bpp)
+            graphdata(runs, options, 'txbpp', 'Transmit Bytes / Packet',  bpp)
         else:
             printdata(runs, bpp)
         return
@@ -457,7 +547,7 @@ def commands(options, command, args):
     if command == 'rtp':
         rtp = system.tsunami.etherdev.rxPackets / system.tsunami.etherdev.txPackets
         if options.graph:
-            graphdata(runs, 'rtp', 'rxPackets / txPackets',  rtp)
+            graphdata(runs, options, 'rtp', 'rxPackets / txPackets',  rtp)
         else:
             printdata(runs, rtp)
         return
@@ -465,7 +555,7 @@ def commands(options, command, args):
     if command == 'rtb':
         rtb = system.tsunami.etherdev.rxBytes / system.tsunami.etherdev.txBytes
         if options.graph:
-            graphdata(runs, 'rtb', 'rxBytes / txBytes',  rtb)
+            graphdata(runs, options, 'rtb', 'rxBytes / txBytes',  rtb)
         else:
             printdata(runs, rtb)
         return

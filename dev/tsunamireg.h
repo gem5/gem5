@@ -60,6 +60,13 @@
 #define TSDEV_CC_IIC2   0x1C
 #define TSDEV_CC_IIC3   0x1D
 
+// BigTsunami Registers
+#define TSDEV_CC_BDIMS  0x1000000
+#define TSDEV_CC_BDIRS  0x2000000
+#define TSDEV_CC_IPIQ   0x20  //0xf01a000800
+#define TSDEV_CC_IPIR   0x21  //0xf01a000840
+#define TSDEV_CC_ITIR   0x22  //0xf01a000880
+
 
 // PChip Registers
 #define TSDEV_PC_WSBA0      0x00

@@ -55,14 +55,6 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
 {
     mmu->add_child(this, RangeSize(addr, size));
 
-    for(int i=0; i < Tsunami::Max_CPUs; i++) {
-        dim[i] = 0;
-        dir[i] = 0;
-        dirInterrupting[i] = false;
-        ipiInterrupting[i] = false;
-        RTCInterrupting[i] = false;
-    }
-
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &TsunamiCChip::cacheAccess);
@@ -71,7 +63,14 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
     }
 
     drir = 0;
-    misc = 0;
+    ipint = 0;
+    itint = 0;
+
+    for (int x = 0; x < Tsunami::Max_CPUs; x++)
+    {
+        dim[x] = 0;
+        dir[x] = 0;
+    }
 
     //Put back pointer in tsunami
     tsunami->cchip = this;
@@ -80,16 +79,29 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
 Fault
 TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
 {
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n",
-            req->vaddr, req->size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", req->vaddr, req->size);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
+    Addr regnum = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+
     ExecContext *xc = req->xc;
 
     switch (req->size) {
 
       case sizeof(uint64_t):
-          switch(daddr) {
+          if (daddr & TSDEV_CC_BDIMS)
+          {
+              *(uint64_t*)data = dim[(daddr >> 4) & 0x3F];
+              return No_Fault;
+          }
+
+          if (daddr & TSDEV_CC_BDIRS)
+          {
+              *(uint64_t*)data = dir[(daddr >> 4) & 0x3F];
+              return No_Fault;
+          }
+
+          switch(regnum) {
               case TSDEV_CC_CSR:
                   *(uint64_t*)data = 0x0;
                   return No_Fault;
@@ -97,7 +109,9 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
                   panic("TSDEV_CC_MTR not implemeted\n");
                    return No_Fault;
               case TSDEV_CC_MISC:
-                *(uint64_t*)data = misc | (xc->cpu_id & 0x3);
+                  *(uint64_t*)data = (ipint << 8) & 0xF |
+                                     (itint << 4) & 0xF |
+                                     (xc->cpu_id & 0x3);
                   return No_Fault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
@@ -147,6 +161,12 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx not implemented\n");
                   return No_Fault;
+              case TSDEV_CC_IPIR:
+                  *(uint64_t*)data = ipint;
+                  return No_Fault;
+              case TSDEV_CC_ITIR:
+                  *(uint64_t*)data = itint;
+                  return No_Fault;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
            } // uint64_t
@@ -158,7 +178,7 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
       default:
         panic("invalid access size(?) for tsunami register!\n");
     }
-    DPRINTFN("Tsunami CChip ERROR: read  daddr=%#x size=%d\n", daddr, req->size);
+    DPRINTFN("Tsunami CChip ERROR: read  regnum=%#x size=%d\n", regnum, req->size);
 
     return No_Fault;
 }
@@ -169,16 +189,58 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "write - va=%#x value=%#x size=%d \n",
             req->vaddr, *(uint64_t*)data, req->size);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    Addr regnum = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
 
     bool supportedWrite = false;
-    uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
 
     switch (req->size) {
 
       case sizeof(uint64_t):
-          switch(daddr) {
-            case TSDEV_CC_CSR:
+          if (daddr & TSDEV_CC_BDIMS)
+          {
+              int number = (daddr >> 4) & 0x3F;
+
+              uint64_t bitvector;
+              uint64_t olddim;
+              uint64_t olddir;
+
+              olddim = dim[number];
+              olddir = dir[number];
+              dim[number] = *(uint64_t*)data;
+              dir[number] = dim[number] & drir;
+              for(int x = 0; x < Tsunami::Max_CPUs; x++)
+              {
+                  bitvector = ULL(1) << x;
+                  // Figure out which bits have changed
+                  if ((dim[number] & bitvector) != (olddim & bitvector))
+                  {
+                      // The bit is now set and it wasn't before (set)
+                      if((dim[number] & bitvector) && (dir[number] & bitvector))
+                      {
+                          tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
+                          DPRINTF(Tsunami, "dim write resulting in posting dir"
+                                  " interrupt to cpu %d\n", number);
+                      }
+                      else if ((olddir & bitvector) &&
+                              !(dir[number] & bitvector))
+                      {
+                          // The bit was set and now its now clear and
+                          // we were interrupting on that bit before
+                          tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
+                          DPRINTF(Tsunami, "dim write resulting in clear"
+                                  " dir interrupt to cpu %d\n", number);
+
+                      }
+
+
+                  }
+              }
+              return No_Fault;
+          }
+
+          switch(regnum) {
+              case TSDEV_CC_CSR:
                   panic("TSDEV_CC_CSR write\n");
                   return No_Fault;
               case TSDEV_CC_MTR:
@@ -189,19 +251,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                 ipreq = (*(uint64_t*)data >> 12) & 0xF;
                 //If it is bit 12-15, this is an IPI post
                 if (ipreq) {
-                    for (int cpunum=0; cpunum < Tsunami::Max_CPUs; cpunum++) {
-                        // Check each cpu bit
-                        if (ipreq & (1 << cpunum)) {
-                            // Check if there is already an ipi (bits 8:11)
-                            if (!(misc & (0x100 << cpunum))) {
-                                misc |= (0x100 << cpunum);
-                                tsunami->intrctrl->post(cpunum,
-                                        TheISA::INTLEVEL_IRQ3, 0);
-                                DPRINTF(IPI, "send IPI cpu=%d from=%d\n",
-                                        cpunum, req->cpu_num);
-                            }
-                        }
-                    }
+                    reqIPI(ipreq);
                     supportedWrite = true;
                 }
 
@@ -209,36 +259,15 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                 uint64_t ipintr;
                 ipintr = (*(uint64_t*)data >> 8) & 0xF;
                 if (ipintr) {
-                    for (int cpunum=0; cpunum < Tsunami::Max_CPUs; cpunum++) {
-                        // Check each cpu bit
-                        if (ipintr & (1 << cpunum)) {
-                            // Check if there is a pending ipi (bits 8:11)
-                            if (misc & (0x100 << cpunum)) {
-                                misc &= ~(0x100 << cpunum);
-                                tsunami->intrctrl->clear(cpunum,
-                                        TheISA::INTLEVEL_IRQ3, 0);
-                                DPRINTF(IPI, "clear IPI IPI cpu=%d from=%d\n",
-                                        cpunum, req->cpu_num);
-                            }
-                        }
-                    }
+                    clearIPI(ipintr);
                     supportedWrite = true;
                 }
 
-
-
                 //If it is the 4-7th bit, clear the RTC interrupt
                 uint64_t itintr;
-                if ((itintr = (*(uint64_t*) data) & (0xf<<4))) {
-                    //Clear the bits in ITINTR
-                    misc &= ~(itintr);
-                    for (int i=0; i < size; i++) {
-                        if ((itintr & (1 << (i+4))) && RTCInterrupting[i]) {
-                            tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ2, 0);
-                            RTCInterrupting[i] = false;
-                            DPRINTF(Tsunami, "clearing rtc interrupt to cpu=%d\n", i);
-                        }
-                    }
+                itintr = (*(uint64_t*)data >> 4) & 0xF;
+                if (itintr) {
+                    clearITI(itintr);
                     supportedWrite = true;
                 }
 
@@ -261,11 +290,11 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
               case TSDEV_CC_DIM2:
               case TSDEV_CC_DIM3:
                   int number;
-                  if(daddr == TSDEV_CC_DIM0)
+                  if(regnum == TSDEV_CC_DIM0)
                       number = 0;
-                  else if(daddr == TSDEV_CC_DIM1)
+                  else if(regnum == TSDEV_CC_DIM1)
                       number = 1;
-                  else if(daddr == TSDEV_CC_DIM2)
+                  else if(regnum == TSDEV_CC_DIM2)
                       number = 2;
                   else
                       number = 3;
@@ -280,7 +309,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                   dir[number] = dim[number] & drir;
                   for(int x = 0; x < 64; x++)
                   {
-                      bitvector = (uint64_t)1 << x;
+                      bitvector = ULL(1) << x;
                       // Figure out which bits have changed
                       if ((dim[number] & bitvector) != (olddim & bitvector))
                       {
@@ -297,7 +326,8 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                               // we were interrupting on that bit before
                               tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
                               DPRINTF(Tsunami, "dim write resulting in clear"
-                                      "dir interrupt to cpu 0\n");
+                                      " dir interrupt to cpu %d\n",
+                                      x);
 
                           }
 
@@ -324,6 +354,15 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
               case TSDEV_CC_MPR2:
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx write not implemented\n");
+              case TSDEV_CC_IPIR:
+                  clearIPI(*(uint64_t*)data);
+                  return No_Fault;
+              case TSDEV_CC_ITIR:
+                  clearITI(*(uint64_t*)data);
+                  return No_Fault;
+              case TSDEV_CC_IPIQ:
+                  reqIPI(*(uint64_t*)data);
+                  return No_Fault;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
           }
@@ -342,14 +381,88 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 }
 
 void
+TsunamiCChip::clearIPI(uint64_t ipintr)
+{
+    int numcpus = tsunami->intrctrl->cpu->system->execContexts.size();
+    assert(numcpus <= Tsunami::Max_CPUs);
+
+    if (ipintr) {
+        for (int cpunum=0; cpunum < numcpus; cpunum++) {
+            // Check each cpu bit
+            uint64_t cpumask = ULL(1) << cpunum;
+            if (ipintr & cpumask) {
+                // Check if there is a pending ipi
+                if (ipint & cpumask) {
+                    ipint &= ~cpumask;
+                    tsunami->intrctrl->clear(cpunum, TheISA::INTLEVEL_IRQ3, 0);
+                    DPRINTF(IPI, "clear IPI IPI cpu=%d\n", cpunum);
+                }
+                else
+                    warn("clear IPI for CPU=%d, but NO IPI\n", cpunum);
+            }
+        }
+    }
+    else
+        panic("Big IPI Clear, but not processors indicated\n");
+}
+
+void
+TsunamiCChip::clearITI(uint64_t itintr)
+{
+    int numcpus = tsunami->intrctrl->cpu->system->execContexts.size();
+    assert(numcpus <= Tsunami::Max_CPUs);
+
+    if (itintr) {
+        for (int i=0; i < numcpus; i++) {
+            uint64_t cpumask = ULL(1) << i;
+            if (itintr & cpumask & itint) {
+                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ2, 0);
+                itint &= ~cpumask;
+                DPRINTF(Tsunami, "clearing rtc interrupt to cpu=%d\n", i);
+            }
+        }
+    }
+    else
+        panic("Big ITI Clear, but not processors indicated\n");
+}
+
+void
+TsunamiCChip::reqIPI(uint64_t ipreq)
+{
+    int numcpus = tsunami->intrctrl->cpu->system->execContexts.size();
+    assert(numcpus <= Tsunami::Max_CPUs);
+
+    if (ipreq) {
+        for (int cpunum=0; cpunum < numcpus; cpunum++) {
+            // Check each cpu bit
+            uint64_t cpumask = ULL(1) << cpunum;
+            if (ipreq & cpumask) {
+                // Check if there is already an ipi (bits 8:11)
+                if (!(ipint & cpumask)) {
+                    ipint  |= cpumask;
+                    tsunami->intrctrl->post(cpunum, TheISA::INTLEVEL_IRQ3, 0);
+                    DPRINTF(IPI, "send IPI cpu=%d\n", cpunum);
+                }
+                else
+                    warn("post IPI for CPU=%d, but IPI already\n", cpunum);
+            }
+        }
+    }
+    else
+        panic("Big IPI Request, but not processors indicated\n");
+}
+
+
+void
 TsunamiCChip::postRTC()
 {
     int size = tsunami->intrctrl->cpu->system->execContexts.size();
+    assert(size <= Tsunami::Max_CPUs);
 
     for (int i = 0; i < size; i++) {
-        if (!RTCInterrupting[i]) {
-            misc |= 16 << i;
-            RTCInterrupting[i] = true;
+        uint64_t cpumask = ULL(1) << i;
+        if (!(cpumask & itint)) {
+            itint |= cpumask;
             tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
             DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d", i);
         }
@@ -360,9 +473,11 @@ TsunamiCChip::postRTC()
 void
 TsunamiCChip::postDRIR(uint32_t interrupt)
 {
-    uint64_t bitvector = (uint64_t)0x1 << interrupt;
-    drir |= bitvector;
+    uint64_t bitvector = ULL(1) << interrupt;
     uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
+    assert(size <= Tsunami::Max_CPUs);
+    drir |= bitvector;
+
     for(int i=0; i < size; i++) {
         dir[i] = dim[i] & drir;
         if (dim[i] & bitvector) {
@@ -376,8 +491,10 @@ TsunamiCChip::postDRIR(uint32_t interrupt)
 void
 TsunamiCChip::clearDRIR(uint32_t interrupt)
 {
-    uint64_t bitvector = (uint64_t)0x1 << interrupt;
+    uint64_t bitvector = ULL(1) << interrupt;
     uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
+    assert(size <= Tsunami::Max_CPUs);
+
     if (drir & bitvector)
     {
         drir &= ~bitvector;
@@ -407,11 +524,9 @@ TsunamiCChip::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
     SERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
-    SERIALIZE_ARRAY(dirInterrupting, Tsunami::Max_CPUs);
-    SERIALIZE_ARRAY(ipiInterrupting, Tsunami::Max_CPUs);
+    SERIALIZE_SCALAR(ipint);
+    SERIALIZE_SCALAR(itint);
     SERIALIZE_SCALAR(drir);
-    SERIALIZE_SCALAR(misc);
-    SERIALIZE_ARRAY(RTCInterrupting, Tsunami::Max_CPUs);
 }
 
 void
@@ -419,11 +534,9 @@ TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(dim, Tsunami::Max_CPUs);
     UNSERIALIZE_ARRAY(dir, Tsunami::Max_CPUs);
-    UNSERIALIZE_ARRAY(dirInterrupting, Tsunami::Max_CPUs);
-    UNSERIALIZE_ARRAY(ipiInterrupting, Tsunami::Max_CPUs);
+    UNSERIALIZE_SCALAR(ipint);
+    UNSERIALIZE_SCALAR(itint);
     UNSERIALIZE_SCALAR(drir);
-    UNSERIALIZE_SCALAR(misc);
-    UNSERIALIZE_ARRAY(RTCInterrupting, Tsunami::Max_CPUs);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)

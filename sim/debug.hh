@@ -29,10 +29,6 @@
 #ifndef __DEBUG_HH__
 #define __DEBUG_HH__
 
-#ifdef DEBUG
 void debug_break();
-#else
-inline void debug_break() { }
-#endif
 
 #endif // __DEBUG_HH__

@@ -195,7 +195,7 @@ EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
     bool packet_exists;
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
-        packet = new PacketData;
+        packet = new PacketData(16384);
         packet->unserialize("packet", cp, section);
     }
 
@@ -244,7 +244,7 @@ void
 LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 {
     Event::unserialize(cp, section);
-    packet = new PacketData;
+    packet = new PacketData(16384);
     packet->unserialize("packet", cp, section);
 }
 
