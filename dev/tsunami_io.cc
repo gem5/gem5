@@ -141,7 +141,7 @@ TsunamiIO::ClockEvent::Status()
 void
 TsunamiIO::ClockEvent::serialize(std::ostream &os)
 {
-    Tick time = when();
+    Tick time = scheduled() ? when() : 0;
     SERIALIZE_SCALAR(time);
     SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(mode);
@@ -156,7 +156,8 @@ TsunamiIO::ClockEvent::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(status);
     UNSERIALIZE_SCALAR(mode);
     UNSERIALIZE_SCALAR(interval);
-    schedule(time);
+    if (time)
+        schedule(time);
 }
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
@@ -441,6 +442,13 @@ TsunamiIO::serialize(std::ostream &os)
     SERIALIZE_SCALAR(picInterrupting);
     SERIALIZE_SCALAR(RTCAddress);
 
+    // Serialize the timers
+    nameOut(os, csprintf("%s.timer0", name()));
+    timer0.serialize(os);
+    nameOut(os, csprintf("%s.timer2", name()));
+    timer2.serialize(os);
+    nameOut(os, csprintf("%s.rtc", name()));
+    rtc.serialize(os);
 }
 
 void
@@ -455,6 +463,11 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(picr);
     UNSERIALIZE_SCALAR(picInterrupting);
     UNSERIALIZE_SCALAR(RTCAddress);
+
+    // Unserialize the timers
+    timer0.unserialize(cp, csprintf("%s.timer0", section));
+    timer2.unserialize(cp, csprintf("%s.timer2", section));
+    rtc.unserialize(cp, csprintf("%s.rtc", section));
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
