@@ -1519,7 +1519,7 @@ class DistBase : public Stat
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
-class VectorDistProxy;
+class DistProxy;
 
 template <typename T, template <typename T> class Storage, class Bin>
 class VectorDistBase : public Stat
@@ -1548,9 +1548,9 @@ class VectorDistBase : public Stat
     VectorDistBase() : Stat(true) { }
     ~VectorDistBase() { }
 
-    friend class VectorDistProxy<T, Storage, Bin>;
-    VectorDistProxy<T, Storage, Bin> operator[](int index);
-    const VectorDistProxy<T, Storage, Bin> operator[](int index) const;
+    friend class DistProxy<T, Storage, Bin>;
+    DistProxy<T, Storage, Bin> operator[](int index);
+    const DistProxy<T, Storage, Bin> operator[](int index) const;
 
     virtual size_t size() const { return bin.size(); }
     virtual bool zero() const { return false; }
@@ -1565,7 +1565,7 @@ class VectorDistBase : public Stat
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
-class VectorDistProxy : public Stat
+class DistProxy : public Stat
 {
   protected:
     typedef Storage<T> storage_t;
@@ -1585,11 +1585,11 @@ class VectorDistProxy : public Stat
     const storage_t *data() const { return cstat->data(index); }
 
   public:
-    VectorDistProxy(const VectorDistBase<T, Storage, Bin> &s, int i)
+    DistProxy(const VectorDistBase<T, Storage, Bin> &s, int i)
         : Stat(false), cstat(&s), index(i) {}
-    VectorDistProxy(const VectorDistProxy &sp)
+    DistProxy(const DistProxy &sp)
         : Stat(false), cstat(sp.cstat), index(sp.index) {}
-    const VectorDistProxy &operator=(const VectorDistProxy &sp) {
+    const DistProxy &operator=(const DistProxy &sp) {
         cstat = sp.cstat; index = sp.index; return *this;
     }
 
@@ -1625,19 +1625,19 @@ class VectorDistProxy : public Stat
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
-inline VectorDistProxy<T, Storage, Bin>
+inline DistProxy<T, Storage, Bin>
 VectorDistBase<T, Storage, Bin>::operator[](int index)
 {
     assert (index >= 0 && index < size());
-    return VectorDistProxy<T, Storage, Bin>(*this, index);
+    return DistProxy<T, Storage, Bin>(*this, index);
 }
 
 template <typename T, template <typename T> class Storage, class Bin>
-inline const VectorDistProxy<T, Storage, Bin>
+inline const DistProxy<T, Storage, Bin>
 VectorDistBase<T, Storage, Bin>::operator[](int index) const
 {
     assert (index >= 0 && index < size());
-    return VectorDistProxy<T, Storage, Bin>(*this, index);
+    return DistProxy<T, Storage, Bin>(*this, index);
 }
 
 /**
@@ -1648,7 +1648,7 @@ void
 VectorDistBase<T, Storage, Bin>::display(std::ostream &stream) const
 {
     for (int i = 0; i < size(); ++i) {
-        VectorDistProxy<T, Storage, Bin> proxy(*this, i);
+        DistProxy<T, Storage, Bin> proxy(*this, i);
         proxy.display(stream);
     }
 }
