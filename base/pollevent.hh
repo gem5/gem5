@@ -33,6 +33,8 @@
 #include <poll.h>
 #include "sim/universe.hh"
 
+class Checkpoint;
+
 class PollEvent
 {
   private:
@@ -50,6 +52,11 @@ class PollEvent
     void disable();
     void enable();
     virtual void process(int revent) = 0;
+
+    bool queued() { return queue != 0; }
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 class PollQueue

@@ -38,6 +38,9 @@
 #include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "sim/universe.hh"
+#include "sim/serialize.hh"
+
+using namespace std;
 
 PollQueue pollQueue;
 
@@ -74,6 +77,22 @@ PollEvent::enable()
 
     if (queue)
         queue->copy();
+}
+
+void
+PollEvent::serialize(ostream &os)
+{
+    SERIALIZE_SCALAR(pfd.fd);
+    SERIALIZE_SCALAR(pfd.events);
+    SERIALIZE_SCALAR(enabled);
+}
+
+void
+PollEvent::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(pfd.fd);
+    UNSERIALIZE_SCALAR(pfd.events);
+    UNSERIALIZE_SCALAR(enabled);
 }
 
 /////////////////////////////////////////////////////

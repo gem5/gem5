@@ -163,6 +163,7 @@ EtherTap::detach()
 {
     DPRINTF(Ethernet, "EtherTap detached\n");
     delete event;
+    event = 0;
     close(socket);
     socket = -1;
 }
@@ -261,6 +262,52 @@ EtherTap::retransmit()
     if (!packetBuffer.empty() && !txEvent.scheduled())
         txEvent.schedule(curTick + 1000);
 }
+
+//=====================================================================
+
+void
+EtherTap::serialize(ostream &os)
+{
+    SERIALIZE_SCALAR(socket);
+    SERIALIZE_SCALAR(buflen);
+    SERIALIZE_ARRAY((uint8_t *)buffer,buflen);
+    SERIALIZE_SCALAR(buffer_offset);
+    SERIALIZE_SCALAR(data_len);
+
+    bool tapevent_present = false;
+    if (event) {
+        tapevent_present = true;
+        SERIALIZE_SCALAR(tapevent_present);
+        event->serialize(os);
+    }
+    else {
+        SERIALIZE_SCALAR(tapevent_present);
+    }
+}
+
+void
+EtherTap::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(socket);
+    UNSERIALIZE_SCALAR(buflen);
+    UNSERIALIZE_ARRAY((uint8_t *)buffer,buflen);
+    UNSERIALIZE_SCALAR(buffer_offset);
+    UNSERIALIZE_SCALAR(data_len);
+
+    bool tapevent_present;
+    UNSERIALIZE_SCALAR(tapevent_present);
+    if (tapevent_present) {
+        event = new TapEvent(this, socket, POLLIN|POLLERR);
+
+        event->unserialize(cp,section);
+
+        if (event->queued()) {
+            pollQueue.schedule(event);
+        }
+    }
+}
+
+//=====================================================================
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherTap)
 
