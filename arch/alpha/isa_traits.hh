@@ -121,6 +121,11 @@ class AlphaISA
         Addr		lock_addr;	// lock address for LL/SC
     } MiscRegFile;
 
+static const Addr PageShift = 13;
+static const Addr PageBytes = ULL(1) << PageShift;
+static const Addr PageMask = ~(PageBytes - 1);
+static const Addr PageOffset = PageBytes - 1;
+
 #ifdef FULL_SYSTEM
 
     typedef uint64_t InternalProcReg;

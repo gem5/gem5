@@ -345,12 +345,12 @@ SimpleCPU::copySrcTranslate(Addr src)
     int offset = src & (blk_size - 1);
 
     // Make sure block doesn't span page
-    if (no_warn && (src & (~8191)) != ((src + blk_size) & (~8191)) &&
+    if (no_warn &&
+        (src & TheISA::PageMask) != ((src + blk_size) & TheISA::PageMask) &&
         (src >> 40) != 0xfffffc) {
         warn("Copied block source spans pages %x.", src);
         no_warn = false;
     }
-
 
     memReq->reset(src & ~(blk_size - 1), blk_size);
 
@@ -381,7 +381,8 @@ SimpleCPU::copy(Addr dest)
     int offset = dest & (blk_size - 1);
 
     // Make sure block doesn't span page
-    if (no_warn && (dest & (~8191)) != ((dest + blk_size) & (~8191)) &&
+    if (no_warn &&
+        (dest & TheISA::PageMask) != ((dest + blk_size) & TheISA::PageMask) &&
         (dest >> 40) != 0xfffffc) {
         no_warn = false;
         warn("Copied block destination spans pages %x. ", dest);

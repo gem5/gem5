@@ -249,8 +249,7 @@ class SimpleCPU : public BaseCPU
     Fault read(Addr addr, T &data, unsigned flags);
 
     template <class T>
-    Fault write(T data, Addr addr, unsigned flags,
-                        uint64_t *res);
+    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     void prefetch(Addr addr, unsigned flags)
     {
