@@ -31,6 +31,7 @@
 
 #include "sim/host.hh"
 #include "mem/mem_req.hh"
+#include "sim/serialize.hh"
 
 // forward declaration: see functional_memory.hh
 class FunctionalMemory;
@@ -139,6 +140,9 @@ class ExecContext
     virtual void takeOverFrom(ExecContext *oldContext);
 
     void regStats(const std::string &name);
+
+    void serialize(std::ostream &os);
+    void unserialize(IniFile &db, const std::string &section);
 
 #ifdef FULL_SYSTEM
     bool validInstAddr(Addr addr) { return true; }

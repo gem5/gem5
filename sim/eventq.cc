@@ -134,7 +134,7 @@ EventQueue::nameChildren()
 }
 
 void
-EventQueue::serialize()
+EventQueue::serialize(ostream &os)
 {
     string objects = "";
 
@@ -142,12 +142,12 @@ EventQueue::serialize()
     while (event) {
         objects += event->name();
         objects += " ";
-        event->serialize();
+        event->serialize(os);
 
         event = event->next;
     }
-    nameOut("Serialized");
-    paramOut("objects",objects);
+    nameOut(os, "Serialized");
+    SERIALIZE_MEMBER(objects);
 }
 
 void

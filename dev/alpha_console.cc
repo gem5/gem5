@@ -166,70 +166,59 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
 }
 
 void
-AlphaConsole::serialize()
+AlphaAccess::serialize(ostream &os)
 {
-    nameOut();
-    // assumes full AlphaAccess size
-    // might have unnecessary fields here
-    paramOut("last_offset",alphaAccess->last_offset);
-    paramOut("version",alphaAccess->version);
-    paramOut("numCPUs",alphaAccess->numCPUs);
-    paramOut("mem_size",alphaAccess->mem_size);
-    paramOut("cpuClock",alphaAccess->cpuClock);
-    paramOut("intrClockFrequency",alphaAccess->intrClockFrequency);
-    paramOut("kernStart",alphaAccess->kernStart);
-    paramOut("kernEnd",alphaAccess->kernEnd);
-    paramOut("entryPoint",alphaAccess->entryPoint);
-    paramOut("diskUnit",alphaAccess->diskUnit);
-    paramOut("diskCount",alphaAccess->diskCount);
-    paramOut("diskPAddr",alphaAccess->diskPAddr);
-    paramOut("diskBlock",alphaAccess->diskBlock);
-    paramOut("diskOperation",alphaAccess->diskOperation);
-    paramOut("outputChar",alphaAccess->outputChar);
-    paramOut("bootStrapImpure",alphaAccess->bootStrapImpure);
-    paramOut("bootStrapCPU",alphaAccess->bootStrapCPU);
+    SERIALIZE_MEMBER(last_offset);
+    SERIALIZE_MEMBER(version);
+    SERIALIZE_MEMBER(numCPUs);
+    SERIALIZE_MEMBER(mem_size);
+    SERIALIZE_MEMBER(cpuClock);
+    SERIALIZE_MEMBER(intrClockFrequency);
+    SERIALIZE_MEMBER(kernStart);
+    SERIALIZE_MEMBER(kernEnd);
+    SERIALIZE_MEMBER(entryPoint);
+    SERIALIZE_MEMBER(diskUnit);
+    SERIALIZE_MEMBER(diskCount);
+    SERIALIZE_MEMBER(diskPAddr);
+    SERIALIZE_MEMBER(diskBlock);
+    SERIALIZE_MEMBER(diskOperation);
+    SERIALIZE_MEMBER(outputChar);
+    SERIALIZE_MEMBER(bootStrapImpure);
+    SERIALIZE_MEMBER(bootStrapCPU);
 }
 
 void
-AlphaConsole::unserialize(IniFile &db, const std::string &category,
-                          ConfigNode *node)
+AlphaAccess::unserialize(IniFile &db, const std::string &section)
 {
-    string data;
-    db.findDefault(category,"last_offset",data);
-    to_number(data,alphaAccess->last_offset);
-    db.findDefault(category,"version",data);
-    to_number(data,alphaAccess->version);
-    db.findDefault(category,"numCPUs",data);
-    to_number(data,alphaAccess->numCPUs);
-    db.findDefault(category,"mem_size",data);
-    to_number(data,alphaAccess->mem_size);
-    db.findDefault(category,"cpuClock",data);
-    to_number(data,alphaAccess->cpuClock);
-    db.findDefault(category,"intrClockFrequency",data);
-    to_number(data,alphaAccess->intrClockFrequency);
-    db.findDefault(category,"kernStart",data);
-    to_number(data,alphaAccess->kernStart);
-    db.findDefault(category,"kernEnd",data);
-    to_number(data,alphaAccess->kernEnd);
-    db.findDefault(category,"entryPoint",data);
-    to_number(data,alphaAccess->entryPoint);
-    db.findDefault(category,"diskUnit",data);
-    to_number(data,alphaAccess->diskUnit);
-    db.findDefault(category,"diskCount",data);
-    to_number(data,alphaAccess->diskCount);
-    db.findDefault(category,"diskPAddr",data);
-    to_number(data,alphaAccess->diskPAddr);
-    db.findDefault(category,"diskBlock",data);
-    to_number(data,alphaAccess->diskBlock);
-    db.findDefault(category,"diskOperation",data);
-    to_number(data,alphaAccess->diskOperation);
-    db.findDefault(category,"outputChar",data);
-    to_number(data,alphaAccess->outputChar);
-    db.findDefault(category,"bootStrapImpure",data);
-    to_number(data,alphaAccess->bootStrapImpure);
-    db.findDefault(category,"bootStrapCPU",data);
-    to_number(data,alphaAccess->bootStrapCPU);
+    UNSERIALIZE_MEMBER(last_offset);
+    UNSERIALIZE_MEMBER(version);
+    UNSERIALIZE_MEMBER(numCPUs);
+    UNSERIALIZE_MEMBER(mem_size);
+    UNSERIALIZE_MEMBER(cpuClock);
+    UNSERIALIZE_MEMBER(intrClockFrequency);
+    UNSERIALIZE_MEMBER(kernStart);
+    UNSERIALIZE_MEMBER(kernEnd);
+    UNSERIALIZE_MEMBER(entryPoint);
+    UNSERIALIZE_MEMBER(diskUnit);
+    UNSERIALIZE_MEMBER(diskCount);
+    UNSERIALIZE_MEMBER(diskPAddr);
+    UNSERIALIZE_MEMBER(diskBlock);
+    UNSERIALIZE_MEMBER(diskOperation);
+    UNSERIALIZE_MEMBER(outputChar);
+    UNSERIALIZE_MEMBER(bootStrapImpure);
+    UNSERIALIZE_MEMBER(bootStrapCPU);
+}
 
+void
+AlphaConsole::serialize(ostream &os)
+{
+    alphaAccess->serialize(os);
+}
+
+void
+AlphaConsole::unserialize(IniFile &db, const std::string &section)
+{
+    alphaAccess->unserialize(db, section);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)

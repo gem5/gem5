@@ -192,13 +192,13 @@ AlphaTlb::flushAddr(Addr vaddr, uint8_t asn)
 
 
 void
-AlphaTlb::serialize()
+AlphaTlb::serialize(ostream &os)
 {
-    nameOut();
+    SERIALIZE_MEMBER(size);
+    SERIALIZE_MEMBER(nlu);
 
-    paramOut("size", size);
-    paramOut("nlu", nlu);
-
+    // should just add serialize/unserialize methods to AlphaPTE
+#if 0
     stringstream buf;
     for (int i = 0; i < size; i++) {
         buf.str("");
@@ -237,19 +237,18 @@ AlphaTlb::serialize()
         ccprintf(buf, "pte%02d.asn", i);
         paramOut(buf.str(), table[i].asn);
     }
+#endif
 }
 
 void
-AlphaTlb::unserialize(IniFile &db, const string &category, ConfigNode *node)
+AlphaTlb::unserialize(IniFile &db, const string &section)
 {
+    UNSERIALIZE_MEMBER(size);
+    UNSERIALIZE_MEMBER(nlu);
+
+#if 0
     string data;
     stringstream buf;
-
-    db.findDefault(category,"size",data);
-    to_number(data,size);
-    db.findDefault(category,"nlu",data);
-    to_number(data,nlu);
-
     for (int i = 0; i < size; i++) {
         buf.str("");
         ccprintf(buf, "pte%02d.valid", i);
@@ -296,6 +295,7 @@ AlphaTlb::unserialize(IniFile &db, const string &category, ConfigNode *node)
         db.findDefault(category, buf.str(), data);
         to_number(data, table[i].asn);
     }
+#endif
 }
 
 
