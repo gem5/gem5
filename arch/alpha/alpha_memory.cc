@@ -282,19 +282,6 @@ AlphaItb::translate(MemReqPtr &req) const
 
     if (req->flags & PHYSICAL) {
         req->paddr = req->vaddr;
-    } else if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
-               VA_SPACE(req->vaddr) == 2) {
-        // Check for "superpage" mapping: when SP<1> is set, and
-        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
-
-        // only valid in kernel mode
-        if (ICM_CM(ipr[AlphaISA::IPR_ICM]) != AlphaISA::mode_kernel) {
-            fault(req->vaddr, req->xc);
-            acv++;
-            return Itb_Acv_Fault;
-        }
-
-        req->paddr = req->vaddr & PA_IMPL_MASK;
     } else {
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->vaddr)) {
@@ -303,24 +290,41 @@ AlphaItb::translate(MemReqPtr &req) const
             return Itb_Acv_Fault;
         }
 
-        // not a physical address: need to look up pte
-        AlphaISA::PTE *pte = lookup(VA_VPN(req->vaddr),
-                                    DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+        // Check for "superpage" mapping: when SP<1> is set, and
+        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
+        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+               VA_SPACE(req->vaddr) == 2) {
 
-        if (!pte) {
-            fault(req->vaddr, req->xc);
-            misses++;
-            return Itb_Fault_Fault;
-        }
+            // only valid in kernel mode
+            if (ICM_CM(ipr[AlphaISA::IPR_ICM]) != AlphaISA::mode_kernel) {
+                fault(req->vaddr, req->xc);
+                acv++;
+                return Itb_Acv_Fault;
+            }
 
-        req->paddr = PA_PFN2PA(pte->ppn) + VA_POFS(req->vaddr & ~3);
+            req->paddr = req->vaddr & PA_IMPL_MASK;
+        } else {
+            // not a physical address: need to look up pte
+            AlphaISA::PTE *pte = lookup(VA_VPN(req->vaddr),
+                                 DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
 
-        // check permissions for this access
-        if (!(pte->xre & (1 << ICM_CM(ipr[AlphaISA::IPR_ICM])))) {
-            // instruction access fault
-            fault(req->vaddr, req->xc);
-            acv++;
-            return Itb_Acv_Fault;
+            if (!pte) {
+                fault(req->vaddr, req->xc);
+                misses++;
+                return Itb_Fault_Fault;
+            }
+
+            req->paddr = PA_PFN2PA(pte->ppn) + VA_POFS(req->vaddr & ~3);
+
+            // check permissions for this access
+            if (!(pte->xre & (1 << ICM_CM(ipr[AlphaISA::IPR_ICM])))) {
+                // instruction access fault
+                fault(req->vaddr, req->xc);
+                acv++;
+                return Itb_Acv_Fault;
+            }
+
+            hits++;
         }
     }
 
@@ -330,7 +334,6 @@ AlphaItb::translate(MemReqPtr &req) const
 
     checkCacheability(req);
 
-    hits++;
     return No_Fault;
 }
 
@@ -453,27 +456,7 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
 
     if (req->flags & PHYSICAL) {
         req->paddr = req->vaddr;
-    } else if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
-        VA_SPACE(req->vaddr) == 2) {
-        // Check for "superpage" mapping: when SP<1> is set, and
-        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
-
-        // only valid in kernel mode
-        if (DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]) != AlphaISA::mode_kernel) {
-            fault(req->vaddr,
-                  ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_ACV_MASK),
-                  req->xc);
-            if (write) { write_acv++; } else { read_acv++; }
-            return Dtb_Acv_Fault;
-        }
-
-        req->paddr = req->vaddr & PA_IMPL_MASK;
     } else {
-        if (write)
-            write_accesses++;
-        else
-            read_accesses++;
-
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->vaddr)) {
             fault(req->vaddr,
@@ -485,48 +468,72 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
             return Dtb_Fault_Fault;
         }
 
-        // not a physical address: need to look up pte
-        AlphaISA::PTE *pte = lookup(VA_VPN(req->vaddr),
-                                DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+        // Check for "superpage" mapping: when SP<1> is set, and
+        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
+        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+            VA_SPACE(req->vaddr) == 2) {
 
-        if (!pte) {
-            // page fault
-            fault(req->vaddr,
-                  ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_DTB_MISS_MASK),
-                  req->xc);
-            if (write) { write_misses++; } else { read_misses++; }
-            return (req->flags & VPTE) ? Pdtb_Miss_Fault : Ndtb_Miss_Fault;
-        }
-
-        req->paddr = PA_PFN2PA(pte->ppn) | VA_POFS(req->vaddr);
-
-        if (write) {
-            if (!(pte->xwe & MODE2MASK(mode))) {
-                // declare the instruction access fault
-                fault(req->vaddr, MM_STAT_WR_MASK | MM_STAT_ACV_MASK |
-                      (pte->fonw ? MM_STAT_FONW_MASK : 0),
-                      req->xc);
-                write_acv++;
-                return Dtb_Fault_Fault;
-            }
-            if (pte->fonw) {
-                fault(req->vaddr, MM_STAT_WR_MASK | MM_STAT_FONW_MASK,
-                      req->xc);
-                write_acv++;
-                return Dtb_Fault_Fault;
-            }
-        } else {
-            if (!(pte->xre & MODE2MASK(mode))) {
+            // only valid in kernel mode
+            if (DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]) !=
+                AlphaISA::mode_kernel) {
                 fault(req->vaddr,
-                      MM_STAT_ACV_MASK | (pte->fonr ? MM_STAT_FONR_MASK : 0),
+                      ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_ACV_MASK),
                       req->xc);
-                read_acv++;
+                if (write) { write_acv++; } else { read_acv++; }
                 return Dtb_Acv_Fault;
             }
-            if (pte->fonr) {
-                fault(req->vaddr, MM_STAT_FONR_MASK, req->xc);
-                read_acv++;
-                return Dtb_Fault_Fault;
+
+            req->paddr = req->vaddr & PA_IMPL_MASK;
+        } else {
+            if (write)
+                write_accesses++;
+            else
+                read_accesses++;
+
+            // not a physical address: need to look up pte
+            AlphaISA::PTE *pte = lookup(VA_VPN(req->vaddr),
+                                 DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+
+            if (!pte) {
+                // page fault
+                fault(req->vaddr,
+                      ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_DTB_MISS_MASK),
+                      req->xc);
+                if (write) { write_misses++; } else { read_misses++; }
+                return (req->flags & VPTE) ? Pdtb_Miss_Fault : Ndtb_Miss_Fault;
+            }
+
+            req->paddr = PA_PFN2PA(pte->ppn) | VA_POFS(req->vaddr);
+
+            if (write) {
+                if (!(pte->xwe & MODE2MASK(mode))) {
+                    // declare the instruction access fault
+                    fault(req->vaddr, MM_STAT_WR_MASK | MM_STAT_ACV_MASK |
+                          (pte->fonw ? MM_STAT_FONW_MASK : 0),
+                          req->xc);
+                    write_acv++;
+                    return Dtb_Fault_Fault;
+                }
+                if (pte->fonw) {
+                    fault(req->vaddr, MM_STAT_WR_MASK | MM_STAT_FONW_MASK,
+                          req->xc);
+                    write_acv++;
+                    return Dtb_Fault_Fault;
+                }
+            } else {
+                if (!(pte->xre & MODE2MASK(mode))) {
+                    fault(req->vaddr,
+                          MM_STAT_ACV_MASK |
+                          (pte->fonr ? MM_STAT_FONR_MASK : 0),
+                          req->xc);
+                    read_acv++;
+                    return Dtb_Acv_Fault;
+                }
+                if (pte->fonr) {
+                    fault(req->vaddr, MM_STAT_FONR_MASK, req->xc);
+                    read_acv++;
+                    return Dtb_Fault_Fault;
+                }
             }
         }
 
@@ -546,10 +553,12 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
 }
 
 AlphaISA::PTE &
-AlphaTlb::index()
+AlphaTlb::index(bool advance)
 {
     AlphaISA::PTE *pte = &table[nlu];
-    nextnlu();
+
+    if (advance)
+        nextnlu();
 
     return *pte;
 }

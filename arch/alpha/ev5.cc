@@ -240,7 +240,9 @@ ExecContext::readIpr(int idx, Fault &fault)
       case AlphaISA::IPR_VA:
         // SFX: unlocks interrupt status registers
         retval = ipr[idx];
-        regs.intrlock = false;
+
+        if (!misspeculating())
+            regs.intrlock = false;
         break;
 
       case AlphaISA::IPR_VA_FORM:
@@ -253,7 +255,7 @@ ExecContext::readIpr(int idx, Fault &fault)
 
       case AlphaISA::IPR_DTB_PTE:
         {
-            AlphaISA::PTE &pte = dtb->index();
+            AlphaISA::PTE &pte = dtb->index(!misspeculating());
 
             retval |= ((u_int64_t)pte.ppn & ULL(0x7ffffff)) << 32;
             retval |= ((u_int64_t)pte.xre & ULL(0xf)) << 8;
