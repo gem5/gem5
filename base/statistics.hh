@@ -70,7 +70,7 @@ class Callback;
 extern Tick curTick;
 
 /* A namespace for all of the Statistics */
-namespace Statistics {
+namespace Stats {
 
 /* Contains the statistic implementation details */
 //////////////////////////////////////////////////////////////////////
@@ -2897,6 +2897,6 @@ sum(Temp val)
     return NodePtr(new SumNode<std::plus<Result> >(val));
 }
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif // __BASE_STATISTICS_HH__

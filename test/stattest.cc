@@ -41,7 +41,7 @@
 #include "sim/host.hh"
 
 using namespace std;
-using namespace Statistics;
+using namespace Stats;
 
 Tick curTick = 0;
 Tick ticksPerSecond = ULL(2000000000);

@@ -50,7 +50,7 @@ class FnEvent : public PCEvent
 
   private:
     std::string _name;
-    Statistics::MainBin *myBin;
+    Stats::MainBin *myBin;
 };
 
 #endif // __SYSTEM_EVENTS_HH__

@@ -369,14 +369,14 @@ class EtherDev : public PciDev
     void regStats();
 
   private:
-    Statistics::Scalar<> txBytes;
-    Statistics::Scalar<> rxBytes;
-    Statistics::Scalar<> txPackets;
-    Statistics::Scalar<> rxPackets;
-    Statistics::Formula txBandwidth;
-    Statistics::Formula rxBandwidth;
-    Statistics::Formula txPacketRate;
-    Statistics::Formula rxPacketRate;
+    Stats::Scalar<> txBytes;
+    Stats::Scalar<> rxBytes;
+    Stats::Scalar<> txPackets;
+    Stats::Scalar<> rxPackets;
+    Stats::Formula txBandwidth;
+    Stats::Formula rxBandwidth;
+    Stats::Formula txPacketRate;
+    Stats::Formula rxPacketRate;
 
   private:
     Tick pioLatency;

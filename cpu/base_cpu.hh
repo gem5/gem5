@@ -167,7 +167,7 @@ class BaseCPU : public SimObject
 
   public:
     // Number of CPU cycles simulated
-    Statistics::Scalar<> numCycles;
+    Stats::Scalar<> numCycles;
 };
 
 #endif // __BASE_CPU_HH__

@@ -254,7 +254,7 @@ SimpleCPU::haltContext(int thread_num)
 void
 SimpleCPU::regStats()
 {
-    using namespace Statistics;
+    using namespace Stats;
 
     BaseCPU::regStats();
 

@@ -186,7 +186,7 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
 void
 MemTest::regStats()
 {
-    using namespace Statistics;
+    using namespace Stats;
 
 
     numReadsStat

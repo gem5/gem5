@@ -80,10 +80,10 @@ class AlphaTLB : public SimObject
 class AlphaITB : public AlphaTLB
 {
   protected:
-    mutable Statistics::Scalar<> hits;
-    mutable Statistics::Scalar<> misses;
-    mutable Statistics::Scalar<> acv;
-    mutable Statistics::Formula accesses;
+    mutable Stats::Scalar<> hits;
+    mutable Stats::Scalar<> misses;
+    mutable Stats::Scalar<> acv;
+    mutable Stats::Formula accesses;
 
   protected:
     void fault(Addr pc, ExecContext *xc) const;
@@ -98,18 +98,18 @@ class AlphaITB : public AlphaTLB
 class AlphaDTB : public AlphaTLB
 {
   protected:
-    mutable Statistics::Scalar<> read_hits;
-    mutable Statistics::Scalar<> read_misses;
-    mutable Statistics::Scalar<> read_acv;
-    mutable Statistics::Scalar<> read_accesses;
-    mutable Statistics::Scalar<> write_hits;
-    mutable Statistics::Scalar<> write_misses;
-    mutable Statistics::Scalar<> write_acv;
-    mutable Statistics::Scalar<> write_accesses;
-    Statistics::Formula hits;
-    Statistics::Formula misses;
-    Statistics::Formula acv;
-    Statistics::Formula accesses;
+    mutable Stats::Scalar<> read_hits;
+    mutable Stats::Scalar<> read_misses;
+    mutable Stats::Scalar<> read_acv;
+    mutable Stats::Scalar<> read_accesses;
+    mutable Stats::Scalar<> write_hits;
+    mutable Stats::Scalar<> write_misses;
+    mutable Stats::Scalar<> write_acv;
+    mutable Stats::Scalar<> write_accesses;
+    Stats::Formula hits;
+    Stats::Formula misses;
+    Stats::Formula acv;
+    Stats::Formula accesses;
 
   protected:
     void fault(Addr pc, uint64_t flags, ExecContext *xc) const;

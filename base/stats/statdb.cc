@@ -34,7 +34,7 @@
 
 using namespace std;
 
-namespace Statistics {
+namespace Stats {
 namespace Database {
 
 StatData *
@@ -86,4 +86,4 @@ TheDatabase &db()
 }
 
 /* namespace Database */ }
-/* namespace Statistics */ }
+/* namespace Stats */ }

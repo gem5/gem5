@@ -34,7 +34,7 @@
 #include "base/time.hh"
 #include "sim/host.hh"
 
-namespace Statistics {
+namespace Stats {
 
 class StatData;
 class ScalarData;
@@ -58,6 +58,6 @@ struct Visit
     virtual void visit(const FormulaData &data) = 0;
 };
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif // __BASE_STATS_VISIT_HH__

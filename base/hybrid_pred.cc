@@ -63,7 +63,7 @@ HybridPredictor::HybridPredictor(const char *_p_name, const char *_z_name,
 
 void HybridPredictor::regStats()
 {
-    using namespace Statistics;
+    using namespace Stats;
 
     string p_name;
     stringstream description;
@@ -148,7 +148,7 @@ void HybridPredictor::regStats()
 
 void HybridPredictor::regFormulas()
 {
-    using namespace Statistics;
+    using namespace Stats;
 
     string p_name;
     stringstream description;

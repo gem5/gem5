@@ -98,7 +98,7 @@ class Process : public SimObject
     std::string prog_fname;	// file name
     Addr prog_entry;		// entry point (initial PC)
 
-    Statistics::Scalar<> num_syscalls;	// number of syscalls executed
+    Stats::Scalar<> num_syscalls;	// number of syscalls executed
 
 
   protected:

@@ -121,7 +121,7 @@ SimObject::regAllStats()
         (*i)->regFormulas();
     }
 
-    Statistics::registerResetCallback(&StatResetCB);
+    Stats::registerResetCallback(&StatResetCB);
 }
 
 //

@@ -212,8 +212,8 @@ EtherDev::regStats()
         .prereq(rxBytes)
         ;
 
-    txBandwidth = txBytes * Statistics::constant(8) / simSeconds;
-    rxBandwidth = rxBytes * Statistics::constant(8) / simSeconds;
+    txBandwidth = txBytes * Stats::constant(8) / simSeconds;
+    rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
     txPacketRate = txPackets / simSeconds;
     rxPacketRate = rxPackets / simSeconds;
 }
