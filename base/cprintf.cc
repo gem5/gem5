@@ -238,22 +238,6 @@ ArgList::dump(const string &format)
           }
             break;
         }
-
-        ios::iostate state = stream->rdstate();
-        if (state) {
-#if 0
-            cout << "stream->rdstate() == " << state << endl;
-            if (state & ios::badbit)
-                cout << "stream is bad!\n";
-            if (state & ios::eofbit)
-                cout << "stream at eof!\n";
-            if (state & ios::failbit)
-                cout << "stream failed!\n";
-            if (state & ios::goodbit)
-                cout << "stream is good!!\n";
-#endif
-            stream->clear();
-        }
     }
 
     while (!objects.empty()) {
