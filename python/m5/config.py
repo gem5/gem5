@@ -29,6 +29,7 @@ import os, re, sys, types, inspect
 
 from m5 import panic
 from convert import *
+from multidict import multidict
 
 noDot = False
 try:
@@ -325,17 +326,22 @@ class MetaConfigNode(type):
         super(MetaConfigNode, cls).__init__(name, bases, dict)
 
         # initialize required attributes
-        cls._params = {}
-        cls._values = {}
+        cls._params = multidict()
+        cls._values = multidict()
         cls._param_types = {}
         cls._bases = [c for c in cls.__mro__ if isConfigNode(c)]
         cls._anon_subclass_counter = 0
 
-        # If your parent has a value in it that's a config node, clone
-        # it.  Do this now so if we update any of the values'
-        # attributes we are updating the clone and not the original.
-        for base in cls._bases:
-            for key,val in base._values.iteritems():
+        # We don't support multiple inheritence.  If you want to, you
+        # must fix multidict to deal with it properly.
+        sob = [ base for base in bases \
+                if issubclass(base, ParamType) and base != ParamType ]
+
+        if len(sob) == 1:
+            # If your parent has a value in it that's a config node, clone
+            # it.  Do this now so if we update any of the values'
+            # attributes we are updating the clone and not the original.
+            for key,val in sob[0]._values.iteritems():
 
                 # don't clone if (1) we're about to overwrite it with
                 # a local setting or (2) we've already cloned a copy
@@ -345,12 +351,19 @@ class MetaConfigNode(type):
 
                 if isConfigNode(val):
                     cls._values[key] = val()
-                elif isSimObjSequence(val):
+                elif isSimObjSequence(val) and len(val):
                     cls._values[key] = [ v() for v in val ]
-                elif isNullPointer(val):
-                    cls._values[key] = val
 
-        # process param types from _init_dict first, as these may be needed
+            cls._params.parent = sob[0]._params
+            cls._values.parent = sob[0]._values
+
+        elif len(sob) > 1:
+            panic("""\
+The config hierarchy only supports single inheritence of SimObject
+classes. You're trying to derive from:
+%s""" % str(sob))
+
+        # process param types from _init_dict, as these may be needed
         # by param descriptions also in _init_dict
         for key,val in cls._init_dict.items():
             if isinstance(val, type) and issubclass(val, ParamType):
@@ -362,9 +375,7 @@ class MetaConfigNode(type):
         for key,val in cls._init_dict.items():
             # param descriptions
             if isinstance(val, _Param):
-                cls._params[key] = val
-                # try to resolve local param types in local param_types scope
-                val.maybe_resolve_type(cls._param_types)
+                cls._new_param(key, val)
 
             # init-time-only keywords
             elif cls.init_keywords.has_key(key):
@@ -387,99 +398,6 @@ class MetaConfigNode(type):
             else:
                 setattr(cls, key, val)
 
-
-    def _isvalue(cls, name):
-        for c in cls._bases:
-            if c._params.has_key(name):
-                return True
-
-        for c in cls._bases:
-            if c._values.has_key(name):
-                return True
-
-        return False
-
-    # generator that iterates across all parameters for this class and
-    # all classes it inherits from
-    def _getparams(cls):
-        params = {}
-        for c in cls._bases:
-            for p,v in c._params.iteritems():
-                if not params.has_key(p):
-                    params[p] = v
-        return params
-
-    # Lookup a parameter description by name in the given class.
-    def _getparam(cls, name, default = AttributeError):
-        for c in cls._bases:
-            if c._params.has_key(name):
-                return c._params[name]
-        if isSubClass(default, Exception):
-            raise default, \
-                  "object '%s' has no attribute '%s'" % (cls.__name__, name)
-        else:
-            return default
-
-    def _hasvalue(cls, name):
-        for c in cls._bases:
-            if c._values.has_key(name):
-                return True
-
-        return False
-
-    def _getvalues(cls):
-        values = {}
-        for i,c in enumerate(cls._bases):
-            for p,v in c._values.iteritems():
-                if not values.has_key(p):
-                    values[p] = v
-            for p,v in c._params.iteritems():
-                if not values.has_key(p) and hasattr(v, 'default'):
-                    try:
-                        v.valid(v.default)
-                    except TypeError:
-                        panic("Invalid default %s for param %s in node %s"
-                              % (v.default,p,cls.__name__))
-                    v = v.default
-                    cls._setvalue(p, v)
-                    values[p] = v
-
-        return values
-
-    def _getvalue(cls, name, default = AttributeError):
-        value = None
-        for c in cls._bases:
-            if c._values.has_key(name):
-                value = c._values[name]
-                break
-        if value is not None:
-            return value
-
-        param = cls._getparam(name, None)
-        if param is not None and hasattr(param, 'default'):
-            param.valid(param.default)
-            value = param.default
-            cls._setvalue(name, value)
-            return value
-
-        if isSubClass(default, Exception):
-            raise default, 'value for %s not found' % name
-        else:
-            return default
-
-    def _setvalue(cls, name, value):
-        cls._values[name] = value
-
-    def __getattr__(cls, attr):
-        if cls._isvalue(attr):
-            return Value(cls, attr)
-
-        if attr == '_cpp_param_decl' and hasattr(cls, 'type'):
-            return cls.type + '*'
-
-        raise AttributeError, \
-              "object '%s' has no attribute '%s'" % (cls.__name__, attr)
-
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
             raise TypeError, 'keyword %s has bad type %s (expecting %s)' % \
@@ -487,6 +405,13 @@ class MetaConfigNode(type):
         if isinstance(val, types.FunctionType):
             val = classmethod(val)
         type.__setattr__(cls, keyword, val)
+
+    def _new_param(cls, name, value):
+        cls._params[name] = value
+        if hasattr(value, 'default'):
+            cls._values[name] = value.default
+        # try to resolve local param types in local param_types scope
+        value.maybe_resolve_type(cls._param_types)
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -501,22 +426,32 @@ class MetaConfigNode(type):
             return
 
         # must be SimObject param
-        param = cls._getparam(attr, None)
+        param = cls._params.get(attr, None)
         if param:
             # It's ok: set attribute by delegating to 'object' class.
             # Note the use of param.make_value() to verify/canonicalize
             # the assigned value
             try:
                 param.valid(value)
-            except:
-                panic("Error setting param %s.%s to %s\n" % \
-                      (cls.__name__, attr, value))
-            cls._setvalue(attr, value)
+            except Exception, e:
+                panic("Exception: %s\nError setting param %s.%s to %s\n" % \
+                      (e, cls.__name__, attr, value))
+            cls._values[attr] = value
         elif isConfigNode(value) or isSimObjSequence(value):
-            cls._setvalue(attr, value)
+            cls._values[attr] = value
         else:
             raise AttributeError, \
                   "Class %s has no parameter %s" % (cls.__name__, attr)
+
+    def __getattr__(cls, attr):
+        if cls._params.has_key(attr) or cls._values.has_key(attr):
+            return Value(cls, attr)
+
+        if attr == '_cpp_param_decl' and hasattr(cls, 'type'):
+            return cls.type + '*'
+
+        raise AttributeError, \
+              "object '%s' has no attribute '%s'" % (cls.__name__, attr)
 
     def add_child(cls, instance, name, child):
         if isNullPointer(child) or instance.top_child_names.has_key(name):
@@ -547,7 +482,7 @@ class MetaConfigNode(type):
         if hasattr(cls, 'check'):
             cls.check()
 
-        for key,value in cls._getvalues().iteritems():
+        for key,value in cls._values.iteritems():
             if isConfigNode(value):
                 cls.add_child(instance, key, value)
             if isinstance(value, (list, tuple)):
@@ -555,11 +490,10 @@ class MetaConfigNode(type):
                 if len(vals):
                     cls.add_child(instance, key, vals)
 
-        for pname,param in cls._getparams().iteritems():
-            try:
-                value = cls._getvalue(pname)
-            except:
-                panic('Error getting %s' % pname)
+        for pname,param in cls._params.iteritems():
+            value = cls._values.get(pname, None)
+            if value is None:
+                panic('Error getting %s from %s' % (pname, name))
 
             try:
                 if isConfigNode(value):
@@ -618,7 +552,7 @@ class ConfigNode(object):
         cls._anon_subclass_counter += 1
         return cls.__metaclass__(name, (cls, ), kwargs)
 
-class ParamContext(ConfigNode):
+class ParamContext(ConfigNode,ParamType):
     pass
 
 class MetaSimObject(MetaConfigNode):
@@ -879,7 +813,7 @@ class Value(object):
         super(Value, self).__setattr__('obj', obj)
 
     def _getattr(self):
-        return self.obj._getvalue(self.attr)
+        return self.obj._values.get(self.attr)
 
     def __setattr__(self, attr, value):
         setattr(self._getattr(), attr, value)
