@@ -246,6 +246,10 @@ def p_specification(t):
  * The Regents of The University of Michigan
  * All Rights Reserved
  *
+ * This code is part of the M5 simulator, developed by Nathan Binkert,
+ * Erik Hallnor, Steve Raasch, and Steve Reinhardt, with contributions
+ * from Ron Dreslinski, Dave Greene, and Lisa Hsu.
+ *
  * Permission is granted to use, copy, create derivative works and
  * redistribute this software and such derivative works for any
  * purpose, so long as the copyright notice above, this grant of
