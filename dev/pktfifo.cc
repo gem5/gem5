@@ -63,7 +63,7 @@ PacketFifo::unserialize(const string &base, Checkpoint *cp,
     fifo.resize(fifosize);
 
     for (int i = 0; i < fifosize; ++i) {
-        PacketPtr p = new PacketData;
+        PacketPtr p = new PacketData(16384);
         p->unserialize(csprintf("%s.packet%d", base, i), cp, section);
         fifo.push_back(p);
     }
