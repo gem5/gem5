@@ -95,16 +95,18 @@ class BaseCPU : public SimObject
     BaseCPU(const std::string &_name, int _number_of_threads, bool _def_reg,
             Counter max_insts_any_thread, Counter max_insts_all_threads,
             Counter max_loads_any_thread, Counter max_loads_all_threads,
-            System *_system, Tick freq);
+            System *_system, Tick freq,
+            bool _function_trace = false, Tick _function_trace_start = 0);
 #else
     BaseCPU(const std::string &_name, int _number_of_threads, bool _def_reg,
             Counter max_insts_any_thread = 0,
             Counter max_insts_all_threads = 0,
             Counter max_loads_any_thread = 0,
-            Counter max_loads_all_threads = 0);
+            Counter max_loads_all_threads = 0,
+            bool _function_trace = false, Tick _function_trace_start = 0);
 #endif
 
-    virtual ~BaseCPU() {}
+    virtual ~BaseCPU();
 
     virtual void init();
     virtual void regStats();
@@ -165,6 +167,23 @@ class BaseCPU : public SimObject
     virtual BranchPred *getBranchPred() { return NULL; };
 
     virtual Counter totalInstructions() const { return 0; }
+
+    // Function tracing
+  private:
+    bool functionTracingEnabled;
+    std::ostream *functionTraceStream;
+    Addr currentFunctionStart;
+    Addr currentFunctionEnd;
+    Tick functionEntryTick;
+    void enableFunctionTrace();
+    void traceFunctionsInternal(Addr pc);
+
+  protected:
+    void traceFunctions(Addr pc)
+    {
+        if (functionTracingEnabled)
+            traceFunctionsInternal(pc);
+    }
 
   private:
     static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
