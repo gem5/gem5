@@ -47,28 +47,21 @@ def wrapop(op, lv, rv):
 
     return op(lv, rv)
 
-def same(lv, rv):
-    for lrun,rrun in zip(lv.keys(),rv.keys()):
-        if lrun != rrun:
-            print 'lrun != rrun'
-            print lrun, rrun
-            print lv.keys()
-            print rv.keys()
+def same(lrun, rrun):
+    for lx,rx in zip(lrun.keys(),rrun.keys()):
+        if lx != rx:
+            print 'lx != rx'
+            print lx, rx
+            print lrun.keys()
+            print rrun.keys()
             return False
-        for lx,rx in zip(lv[lrun].keys(),rv[rrun].keys()):
-            if lx != rx:
-                print 'lx != rx'
-                print lx, rx
-                print lv[lrun].keys()
-                print rv[rrun].keys()
+        for ly,ry in zip(lrun[lx].keys(),rrun[rx].keys()):
+            if ly != ry:
+                print 'ly != ry'
+                print ly, ry
+                print lrun[lx].keys()
+                print rrun[rx].keys()
                 return False
-            for ly,ry in zip(lv[lrun][lx].keys(),rv[rrun][rx].keys()):
-                if ly != ry:
-                    print 'ly != ry'
-                    print ly, ry
-                    print lv[lrun][lx].keys()
-                    print rv[rrun][rx].keys()
-                    return False
     return True
 
 
@@ -79,10 +72,15 @@ def binaryop(op, lf, rf):
         lv = lf.value
         rv = rf.value
 
-        if not same(lv, rv):
-            raise AttributeError, "run,x,y not identical"
+        theruns = []
+        for r in lv.keys():
+            if rv.has_key(r):
+                if same(lv[r], rv[r]):
+                    theruns.append(r)
+                else:
+                    raise AttributeError
 
-        for run in lv.keys():
+        for run in theruns:
             result[run] = {}
             for x in lv[run].keys():
                 result[run][x] = {}
