@@ -80,7 +80,11 @@ class TsunamiUart : public PioDevice
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-  public:
+    /**
+     * Return how long this access will take.
+     * @param req the memory request to calcuate
+     * @return Tick when the request is done
+     */
     Tick cacheAccess(MemReqPtr &req);
 };
 

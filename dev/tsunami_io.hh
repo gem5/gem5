@@ -33,7 +33,8 @@
 #ifndef __TSUNAMI_DMA_HH__
 #define __TSUNAMI_DMA_HH__
 
-#include "mem/functional_mem/functional_memory.hh"
+#include "dev/io_device.hh"
+#include "base/range.hh"
 #include "dev/tsunami.hh"
 
 /** How often the RTC interrupts */
@@ -43,7 +44,7 @@ static const int RTC_RATE  = 1024;
  * Tsunami I/O device is a catch all for all the south bridge stuff we care
  * to implement.
  */
-class TsunamiIO : public FunctionalMemory
+class TsunamiIO : public PioDevice
 {
   private:
     /** The base address of this device */
@@ -134,6 +135,7 @@ class TsunamiIO : public FunctionalMemory
            * @return a description
            */
           virtual const char *description();
+
     };
 
     /** uip UpdateInProgess says that the rtc is updating, but we just fake it
@@ -208,7 +210,7 @@ class TsunamiIO : public FunctionalMemory
      * @param mmu pointer to the memory controller that sends us events.
      */
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
-              Addr a, MemoryController *mmu);
+              Addr a, MemoryController *mmu, HierParams *hier, Bus *bus);
 
     /**
      * Create the tm struct from seconds since 1970
@@ -256,6 +258,9 @@ class TsunamiIO : public FunctionalMemory
      * @param section The section name of this object
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __TSUNAMI_IO_HH__

@@ -34,7 +34,8 @@
 #ifndef __BADDEV_HH__
 #define __BADDEV_HH__
 
-#include "mem/functional_mem/functional_memory.hh"
+#include "base/range.hh"
+#include "dev/io_device.hh"
 
 /**
  * BadDevice
@@ -42,7 +43,7 @@
  * the user that the kernel they are running has unsupported
  * options (i.e. frame buffer)
  */
-class BadDevice : public FunctionalMemory
+class BadDevice : public PioDevice
 {
   private:
     Addr addr;
@@ -56,10 +57,12 @@ class BadDevice : public FunctionalMemory
       * @param name name of the object
       * @param a base address of the write
       * @param mmu the memory controller
+      * @param hier object to store parameters universal the device hierarchy
+      * @param bus The bus that this device is attached to
       * @param devicename device that is not implemented
       */
     BadDevice(const std::string &name, Addr a, MemoryController *mmu,
-              const std::string &devicename);
+              HierParams *hier, Bus *bus, const std::string &devicename);
 
     /**
       * On a read event we just panic aand hopefully print a
@@ -79,7 +82,12 @@ class BadDevice : public FunctionalMemory
       */
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
-    /** @todo add serialize/unserialize */
+    /**
+     * Return how long this access will take.
+     * @param req the memory request to calcuate
+     * @return Tick when the request is done
+     */
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __BADDEV_HH__

@@ -199,12 +199,6 @@ class IdeController : public PciDev
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     /**
-     * Cache access timing specific to device
-     * @param req Memory request
-     */
-    Tick cacheAccess(MemReqPtr &req);
-
-    /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
      */
@@ -217,5 +211,11 @@ class IdeController : public PciDev
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    /**
+     * Return how long this access will take.
+     * @param req the memory request to calcuate
+     * @return Tick when the request is done
+     */
+    Tick cacheAccess(MemReqPtr &req);
 };
 #endif // __IDE_CTRL_HH_

@@ -34,8 +34,10 @@
 #ifndef __PCICONFIGALL_HH__
 #define __PCICONFIGALL_HH__
 
-#include "mem/functional_mem/functional_memory.hh"
 #include "dev/pcireg.h"
+#include "base/range.hh"
+#include "dev/io_device.hh"
+
 
 static const uint32_t MAX_PCI_DEV = 32;
 static const uint32_t MAX_PCI_FUNC = 8;
@@ -49,7 +51,7 @@ class PciDev;
  * space and passes the requests on to TsunamiPCIDev devices as
  * appropriate.
  */
-class PciConfigAll : public FunctionalMemory
+class PciConfigAll : public PioDevice
 {
   private:
     Addr addr;
@@ -67,8 +69,11 @@ class PciConfigAll : public FunctionalMemory
      * @param name name of the object
      * @param a base address of the write
      * @param mmu the memory controller
+     * @param hier object to store parameters universal the device hierarchy
+     * @param bus The bus that this device is attached to
      */
-    PciConfigAll(const std::string &name, Addr a, MemoryController *mmu);
+    PciConfigAll(const std::string &name, Addr a, MemoryController *mmu,
+                 HierParams *hier, Bus *bus);
 
 
     /**
@@ -123,6 +128,12 @@ class PciConfigAll : public FunctionalMemory
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    /**
+     * Return how long this access will take.
+     * @param req the memory request to calcuate
+     * @return Tick when the request is done
+     */
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __PCICONFIGALL_HH__

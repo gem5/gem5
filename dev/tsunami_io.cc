@@ -37,15 +37,16 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
 #include "dev/console.hh"
-#include "dev/tlaser_clock.hh"
 #include "dev/tsunami_io.hh"
-#include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
-#include "mem/functional_mem/memory_control.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "sim/builder.hh"
 #include "dev/tsunami_cchip.hh"
+#include "dev/tsunamireg.h"
+#include "mem/functional_mem/memory_control.hh"
 
 using namespace std;
 
@@ -122,10 +123,16 @@ TsunamiIO::ClockEvent::Status()
 }
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                     Addr a, MemoryController *mmu)
-    : FunctionalMemory(name), addr(a), tsunami(t), rtc(t)
+                     Addr a, MemoryController *mmu, HierParams *hier, Bus *bus)
+    : PioDevice(name), addr(a), tsunami(t), rtc(t)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
+
+    if (bus) {
+        pioInterface = newPioInterface(name, hier, bus, this,
+                                       &TsunamiIO::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size - 1);
+    }
 
     // set the back pointer from tsunami to myself
     tsunami->io = this;
@@ -375,6 +382,12 @@ TsunamiIO::clearPIC(uint8_t bitvector)
     }
 }
 
+Tick
+TsunamiIO::cacheAccess(MemReqPtr &req)
+{
+    return curTick + 1000;
+}
+
 void
 TsunamiIO::serialize(std::ostream &os)
 {
@@ -425,6 +438,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     Param<time_t> time;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
@@ -434,13 +449,16 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
     INIT_PARAM_DFLT(time, "System time to use "
             "(0 for actual time, default is 1/1/06", ULL(1136073600)),
     INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address")
+    INIT_PARAM(addr, "Device Address"),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
-    return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu);
+    return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu, hier,
+                         io_bus);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

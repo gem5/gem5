@@ -668,7 +668,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
-    SimObjectParam<Bus *> host_bus;
+    SimObjectParam<Bus *> io_bus;
     SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(IdeController)
@@ -684,7 +684,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(host_bus, "Host bus to attach to", NULL),
+    INIT_PARAM_DFLT(io_bus, "Host bus to attach to", NULL),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(IdeController)
@@ -693,7 +693,7 @@ CREATE_SIM_OBJECT(IdeController)
 {
     return new IdeController(getInstanceName(), intr_ctrl, disks, mmu,
                              configspace, configdata, tsunami, pci_bus,
-                             pci_dev, pci_func, host_bus, hier);
+                             pci_dev, pci_func, io_bus, hier);
 }
 
 REGISTER_SIM_OBJECT("IdeController", IdeController)

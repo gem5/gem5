@@ -36,10 +36,10 @@
 
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
-#include "dev/scsi_ctrl.hh"
 #include "dev/baddev.hh"
-#include "dev/tsunamireg.h"
-#include "dev/tsunami.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
@@ -47,10 +47,17 @@
 using namespace std;
 
 BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
-                     const string &devicename)
-    : FunctionalMemory(name), addr(a), devname(devicename)
+                     HierParams *hier, Bus *bus, const string &devicename)
+    : PioDevice(name), addr(a), devname(devicename)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
+
+    if (bus) {
+        pioInterface = newPioInterface(name, hier, bus, this,
+                                      &BadDevice::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size - 1);
+    }
+
 }
 
 Fault
@@ -68,11 +75,18 @@ BadDevice::write(MemReqPtr &req, const uint8_t *data)
     return No_Fault;
 }
 
+Tick
+BadDevice::cacheAccess(MemReqPtr &req)
+{
+    return curTick + 1000;
+}
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
+    SimObjectParam<HierParams *> hier;
+    SimObjectParam<Bus*> io_bus;
     Param<string> devicename;
 
 END_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
@@ -81,13 +95,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM(devicename, "Name of device to error on")
 
 END_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
 CREATE_SIM_OBJECT(BadDevice)
 {
-    return new BadDevice(getInstanceName(), addr, mmu, devicename);
+    return new BadDevice(getInstanceName(), addr, mmu, hier, io_bus, devicename);
 }
 
 REGISTER_SIM_OBJECT("BadDevice", BadDevice)

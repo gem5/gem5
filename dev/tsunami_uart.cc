@@ -82,7 +82,7 @@ TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &TsunamiUart::cacheAccess);
-         pioInterface->addAddrRange(addr, addr + size - 1);
+        pioInterface->addAddrRange(addr, addr + size - 1);
     }
 
     IER = 0;

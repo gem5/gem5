@@ -131,8 +131,8 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
         pioInterface = newPioInterface(name, hier, payload_bus, this,
                                        &NSGigE::cacheAccess);
 
-        dmaInterface = new DMAInterface<Bus>(name + ".dma",
-                                             payload_bus, payload_bus, 1);
+        dmaInterface = new DMAInterface<Bus>(name + ".dma", payload_bus,
+                                         payload_bus, 1);
 
     }
 
@@ -244,12 +244,22 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
     switch (offset) {
       case PCI0_BASE_ADDR0:
         if (BARAddrs[0] != 0) {
-            addr = BARAddrs[0];
 
             if (pioInterface)
-                pioInterface->addAddrRange(addr, addr + size - 1);
+                pioInterface->addAddrRange(BARAddrs[0], BARAddrs[0] + BARSize[0] - 1);
 
-            addr &= PA_UNCACHED_MASK;
+            BARAddrs[0] &= PA_UNCACHED_MASK;
+
+        }
+        break;
+      case PCI0_BASE_ADDR1:
+        if (BARAddrs[1] != 0) {
+
+            if (pioInterface)
+                pioInterface->addAddrRange(BARAddrs[1], BARAddrs[1] + BARSize[1] - 1);
+
+            BARAddrs[1] &= PA_UNCACHED_MASK;
+
         }
         break;
     }

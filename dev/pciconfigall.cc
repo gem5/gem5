@@ -35,21 +35,28 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
-#include "dev/scsi_ctrl.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
-PciConfigAll::PciConfigAll(const string &name, Addr a,
-                           MemoryController *mmu)
-    : FunctionalMemory(name), addr(a)
+PciConfigAll::PciConfigAll(const string &name, Addr a, MemoryController *mmu,
+                           HierParams *hier, Bus *bus)
+    : PioDevice(name), addr(a)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
+
+    if (bus) {
+        pioInterface = newPioInterface(name, hier, bus, this,
+                                      &PciConfigAll::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size - 1);
+    }
 
     // Make all the pointers to devices null
     for(int x=0; x < MAX_PCI_DEV; x++)
@@ -165,6 +172,12 @@ PciConfigAll::unserialize(Checkpoint *cp, const std::string &section)
      */
 }
 
+Tick
+PciConfigAll::cacheAccess(MemReqPtr &req)
+{
+    return curTick + 1000;
+}
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
@@ -172,6 +185,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
@@ -179,13 +194,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask")
+    INIT_PARAM(mask, "Address Mask"),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
 CREATE_SIM_OBJECT(PciConfigAll)
 {
-    return new PciConfigAll(getInstanceName(), addr, mmu);
+    return new PciConfigAll(getInstanceName(), addr, mmu, hier, io_bus);
 }
 
 REGISTER_SIM_OBJECT("PciConfigAll", PciConfigAll)

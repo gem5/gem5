@@ -35,21 +35,23 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
 #include "dev/console.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
-#include "cpu/intr_control.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
+#include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
 TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
-                           MemoryController *mmu)
-    : FunctionalMemory(name), addr(a), tsunami(t)
+                           MemoryController *mmu, HierParams *hier, Bus* bus)
+    : PioDevice(name), addr(a), tsunami(t)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
 
@@ -59,6 +61,12 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
         dirInterrupting[i] = false;
         ipiInterrupting[i] = false;
         RTCInterrupting[i] = false;
+    }
+
+    if (bus) {
+        pioInterface = newPioInterface(name, hier, bus, this,
+                                      &TsunamiCChip::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size - 1);
     }
 
     drir = 0;
@@ -373,6 +381,13 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
         DPRINTF(Tsunami, "Spurrious clear? interrupt %d\n", interrupt);
 }
 
+Tick
+TsunamiCChip::cacheAccess(MemReqPtr &req)
+{
+    return curTick + 1000;
+}
+
+
 void
 TsunamiCChip::serialize(std::ostream &os)
 {
@@ -402,6 +417,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
     SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
@@ -409,13 +426,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
     INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address")
+    INIT_PARAM(addr, "Device Address"),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 CREATE_SIM_OBJECT(TsunamiCChip)
 {
-    return new TsunamiCChip(getInstanceName(), tsunami, addr, mmu);
+    return new TsunamiCChip(getInstanceName(), tsunami, addr, mmu, hier, io_bus);
 }
 
 REGISTER_SIM_OBJECT("TsunamiCChip", TsunamiCChip)

@@ -33,13 +33,14 @@
 #ifndef __TSUNAMI_PCHIP_HH__
 #define __TSUNAMI_PCHIP_HH__
 
-#include "mem/functional_mem/functional_memory.hh"
 #include "dev/tsunami.hh"
+#include "base/range.hh"
+#include "dev/io_device.hh"
 
 /*
  * Tsunami PChip
  */
-class TsunamiPChip : public FunctionalMemory
+class TsunamiPChip : public PioDevice
 {
   private:
     /** The base address of this device */
@@ -75,9 +76,11 @@ class TsunamiPChip : public FunctionalMemory
      * @param t a pointer to the tsunami device
      * @param a the address which we respond to
      * @param mmu the mmu we are to register with
+     * @param hier object to store parameters universal the device hierarchy
+     * @param bus The bus that this device is attached to
      */
     TsunamiPChip(const std::string &name, Tsunami *t, Addr a,
-                 MemoryController *mmu);
+                 MemoryController *mmu, HierParams *hier, Bus *bus);
 
     /**
      * Translate a PCI bus address to a memory address for DMA.
@@ -115,6 +118,13 @@ class TsunamiPChip : public FunctionalMemory
      * @param section The section name of this object
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+    /**
+     * Return how long this access will take.
+     * @param req the memory request to calcuate
+     * @return Tick when the request is done
+     */
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __TSUNAMI_PCHIP_HH__
