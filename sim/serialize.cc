@@ -222,11 +222,11 @@ Globals::unserialize(Checkpoint *cp)
 void
 Serializable::serializeAll()
 {
-    string dir = CheckpointDir();
+    string dir = Checkpoint::dir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
-            warn("could mkdir %s\n", dir);
+            fatal("couldn't mkdir %s\n", dir);
 
-    string cpt_file = dir + "m5.cpt";
+    string cpt_file = dir + Checkpoint::baseFilename;
     ofstream outstream(cpt_file.c_str());
     time_t t = time(NULL);
     outstream << "// checkpoint generated: " << ctime(&t);
@@ -273,19 +273,21 @@ SerializeEvent::process()
         schedule(curTick + repeat);
 }
 
-string __CheckpointDirBase;
+const char *Checkpoint::baseFilename = "m5.cpt";
+
+static string checkpointDirBase;
 
 string
-CheckpointDir()
+Checkpoint::dir()
 {
-    if (__CheckpointDirBase.empty())
-        return __CheckpointDirBase;
-
-    return csprintf("%s/m5.%012d/", __CheckpointDirBase, curTick);
+    // use csprintf to insert curTick into directory name if it
+    // appears to have a format placeholder in it.
+    return (checkpointDirBase.find("%") != string::npos) ?
+        csprintf(checkpointDirBase, curTick) : checkpointDirBase;
 }
 
 void
-SetupCheckpoint(Tick when, Tick period)
+Checkpoint::setup(Tick when, Tick period)
 {
     new SerializeEvent(when, period);
 }
@@ -304,8 +306,9 @@ class SerializeParamContext : public ParamContext
 SerializeParamContext serialParams("serialize");
 
 Param<string> serialize_dir(&serialParams,
-                             "dir",
-                             "dir to stick checkpoint in", ".");
+                            "dir",
+                            "dir to stick checkpoint in "
+                            "(sprintf format with cycle #)", "m5.%012d");
 
 Param<Counter> serialize_cycle(&serialParams,
                                 "cycle",
@@ -330,9 +333,14 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    __CheckpointDirBase = serialize_dir;
+    checkpointDirBase = serialize_dir;
+    // guarantee that directory ends with a '/'
+    if (checkpointDirBase[checkpointDirBase.size() - 1] != '/') {
+        checkpointDirBase += "/";
+    }
+
     if (serialize_cycle > 0)
-        SetupCheckpoint(serialize_cycle, serialize_period);
+        Checkpoint::setup(serialize_cycle, serialize_period);
 }
 
 void
@@ -415,10 +423,11 @@ Serializable::create(Checkpoint *cp, const std::string &section)
 }
 
 
-Checkpoint::Checkpoint(const std::string &filename, const std::string &path,
+Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path,
                        const ConfigNode *_configNode)
     : db(new IniFile), basePath(path), configNode(_configNode)
 {
+    string filename = cpt_dir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {
         fatal("Can't load checkpoint file '%s'\n", filename);
     }
