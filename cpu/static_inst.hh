@@ -44,6 +44,7 @@ class ExecContext;
 class DynInst;
 class FastCPU;
 class SimpleCPU;
+class InorderCPU;
 class SymbolTable;
 
 namespace Trace {
@@ -311,6 +312,12 @@ class StaticInst : public StaticInstBase
      * Execute this instruction under SimpleCPU model.
      */
     virtual Fault execute(SimpleCPU *xc, Trace::InstRecord *traceData) = 0;
+
+         /**
+     * Execute this instruction under InorderCPU model.
+     */
+    virtual Fault execute(InorderCPU *xc, Trace::InstRecord *traceData) = 0;
+
 
     /**
      * Execute this instruction under FastCPU model.

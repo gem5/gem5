@@ -627,6 +627,9 @@ class CpuModel:
 # Define CPU models.  The following lines should contain the only
 # CPU-model-specific information in this file.  Note that the ISA
 # description itself should have *no* CPU-model-specific content.
+CpuModel('InorderCPU', 'inorder_cpu_exec.cc',
+         '#include "cpu/inorder_cpu/inorder_cpu.hh"',
+         { 'CPU_exec_context': 'InorderCPU' })
 CpuModel('SimpleCPU', 'simple_cpu_exec.cc',
          '#include "cpu/simple_cpu/simple_cpu.hh"',
          { 'CPU_exec_context': 'SimpleCPU' })
