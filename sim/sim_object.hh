@@ -65,6 +65,10 @@ class SimObject : public Serializable
 
     virtual std::string name() const { return objName; }
 
+    // initialization pass of all objects.  Gets invoked by SimInit()
+    virtual void init();
+    static void initAll();
+
     // register statistics for this object
     virtual void regStats();
     virtual void regFormulas();

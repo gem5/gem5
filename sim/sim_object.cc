@@ -60,6 +60,11 @@ SimObject::SimObject(const string &_name)
     simObjectList.push_back(this);
 }
 
+void
+SimObject::init()
+{
+}
+
 //
 // no default statistics, so nothing to do in base implementation
 //
@@ -124,6 +129,21 @@ SimObject::regAllStats()
     }
 
     Statistics::registerResetCallback(&StatResetCB);
+}
+
+//
+// static function: call init() on all SimObjects.
+//
+void
+SimObject::initAll()
+{
+    SimObjectList::iterator i = simObjectList.begin();
+    SimObjectList::iterator end = simObjectList.end();
+
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        obj->init();
+    }
 }
 
 //

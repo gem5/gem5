@@ -51,6 +51,7 @@
 #include "sim/host.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
+#include "sim/sim_init.hh"
 #include "sim/sim_object.hh"
 #include "sim/sim_stats.hh"
 
@@ -397,6 +398,8 @@ main(int argc, char **argv)
         cerr << "Fatal: no CPUs to simulate." << endl;
         exit(1);
     }
+
+    SimInit();
 
     while (!mainEventQueue.empty()) {
         assert(curTick <= mainEventQueue.nextTick() &&
