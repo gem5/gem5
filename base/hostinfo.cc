@@ -42,7 +42,7 @@ procInfo(char *filename, char *target)
     int  done = 0;
     char line[80];
     char format[80];
-    uint64_t usage;
+    long usage;
 
     FILE *fp = fopen(filename, "r");
 
