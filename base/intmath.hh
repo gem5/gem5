@@ -109,14 +109,14 @@ inline int
 FloorLog2(int32_t x)
 {
     assert(x > 0);
-    return FloorLog2(x);
+    return FloorLog2((uint32_t)x);
 }
 
 inline int
 FloorLog2(int64_t x)
 {
     assert(x > 0);
-    return FloorLog2(x);
+    return FloorLog2((uint64_t)x);
 }
 
 template <class T>
