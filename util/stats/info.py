@@ -3,6 +3,8 @@ import operator, re, types
 
 source = None
 display_run = 0
+global globalTicks
+globalTicks = None
 
 def issequence(t):
     return isinstance(t, types.TupleType) or isinstance(t, types.ListType)
@@ -130,6 +132,7 @@ def cmp(a, b):
         return 1
 
 class Statistic(object):
+
     def __init__(self, data):
         self.__dict__.update(data.__dict__)
         if not self.__dict__.has_key('value'):
@@ -138,9 +141,25 @@ class Statistic(object):
             self.__dict__['bins'] = None
         if not self.__dict__.has_key('ticks'):
             self.__dict__['ticks'] = None
+        if 'vc' not in self.__dict__:
+            self.vc = {}
 
     def __getattribute__(self, attr):
+        if attr == 'ticks':
+            if self.__dict__['ticks'] != globalTicks:
+                self.__dict__['value'] = None
+                self.__dict__['ticks'] = globalTicks
+            return self.__dict__['ticks']
         if attr == 'value':
+            if self.__dict__['ticks'] != globalTicks:
+                if self.__dict__['ticks'] != None and \
+                                    len(self.__dict__['ticks']) == 1:
+                    self.vc[self.__dict__['ticks'][0]] = self.__dict__['value']
+                self.__dict__['ticks'] = globalTicks
+                if len(globalTicks) == 1 and self.vc.has_key(globalTicks[0]):
+                    self.__dict__['value'] = self.vc[globalTicks[0]]
+                else:
+                    self.__dict__['value'] = None
             if self.__dict__['value'] == None:
                 self.__dict__['value'] = self.getValue()
             return self.__dict__['value']
@@ -152,11 +171,12 @@ class Statistic(object):
             if attr == 'bins':
                 if value is not None:
                     value = source.getBin(value)
-            elif attr == 'ticks' and type(value) is str:
-                value = [ int(x) for x in value.split() ]
+            #elif attr == 'ticks' and type(value) is str:
+            #    value = [ int(x) for x in value.split() ]
 
             self.__dict__[attr] = value
             self.__dict__['value'] = None
+            self.vc = {}
         else:
             super(Statistic, self).__setattr__(attr, value)
 
