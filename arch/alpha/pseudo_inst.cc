@@ -27,7 +27,9 @@
  */
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <cstdio>
+
 #include <string>
 
 #include "arch/alpha/pseudo_inst.hh"
