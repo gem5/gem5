@@ -111,12 +111,15 @@ static void
 showBriefHelp(ostream &out)
 {
     out << "Usage: " << myProgName
-         << " [-hnu] [-Dname[=def]] [-Uname] [-I[dir]] "
-         << "[--<section>:<param>=<value>] [<config file> ...]" << endl
-         << "   -h: print long help (including parameter listing)" << endl
-         << "   -n: don't load default.ini" << endl
-         << "   -u: don't quit on unreferenced parameters" << endl
-         << "   -D,-U,-I: passed to cpp for preprocessing .ini files" << endl;
+        << " [-hnu] [-Dname[=def]] [-Uname] [-I[dir]] "
+        << "<config-spec> [<config-spec> ...]\n"
+        << "[] [<config file> ...]\n"
+        << "   -h: print long help (including parameter listing)\n"
+        << "   -u: don't quit on unreferenced parameters\n"
+        << "   -D,-U,-I: passed to cpp for preprocessing .ini files\n"
+        << "   <config-spec>: config file name (.ini or .py) or\n"
+        << "                  single param (--<section>:<param>=<value>)"
+        << endl;
 }
 
 /// Show verbose help message.  Includes parameter listing from
@@ -212,27 +215,6 @@ echoCommandLine(int argc, char **argv, ostream &out)
 ///
 static IniFile simConfigDB;
 
-/// Check for a default.ini file and load it if necessary.
-static void
-handleDefaultIni(bool &loadIt, vector<char *> &cppArgs)
-{
-    struct stat sb;
-
-    if (loadIt) {
-        if (stat("default.ini", &sb) == 0) {
-            if (!simConfigDB.loadCPP("default.ini", cppArgs)) {
-                cout << "Error processing file default.ini" << endl;
-                exit(1);
-            }
-        }
-
-        // set this whether it actually was found or not, so we don't
-        // bother to check again next time
-        loadIt = false;
-    }
-}
-
-
 /// M5 entry point.
 int
 main(int argc, char **argv)
@@ -254,21 +236,13 @@ main(int argc, char **argv)
 
     vector<char *> cppArgs;
 
-    // Should we use default.ini if it exists?  By default, yes.  (Use
-    // -n to override.)
-    bool loadDefaultIni = true;
-
     // Should we quit if there are unreferenced parameters?  By
     // default, yes... it's a good way of catching typos in
     // section/parameter names (which otherwise go by silently).  Use
     // -u to override.
     bool quitOnUnreferenced = true;
 
-    // Parse command-line options.  The tricky part here is figuring
-    // out whether to look for & load default.ini, and if needed,
-    // doing so at the right time w.r.t. processing the other
-    // parameters.
-    //
+    // Parse command-line options.
     // Since most of the complex options are handled through the
     // config database, we don't mess with getopts, and just parse
     // manually.
@@ -285,17 +259,6 @@ main(int argc, char **argv)
                 // -h: show help
                 showLongHelp(cerr);
                 exit(1);
-
-              case 'n':
-                // -n: don't load default.ini
-                if (!loadDefaultIni) {
-                    cerr << "Warning: -n option needs to precede any "
-                         << "explicit configuration file name " << endl
-                         << "         or command-line configuration parameter."
-                         << endl;
-                }
-                loadDefaultIni = false;
-                break;
 
               case 'u':
                 // -u: don't quit on unreferenced parameters
@@ -317,11 +280,6 @@ main(int argc, char **argv)
               case '-':
                 // command-line configuration parameter:
                 // '--<section>:<parameter>=<value>'
-
-                // Load default.ini if necessary -- see comment in
-                // else clause below.
-                handleDefaultIni(loadDefaultIni, cppArgs);
-
                 if (!simConfigDB.add(arg_str + 2)) {
                     // parse error
                     ccprintf(cerr,
@@ -350,13 +308,6 @@ main(int argc, char **argv)
                 (ext_loc != string::npos) ? filename.substr(ext_loc) : "";
 
             if (ext == ".ini") {
-                // If we haven't loaded default.ini yet, and we want to,
-                // now is the time.  Can't do it sooner because we need to
-                // look for '-n', can't do it later since we want
-                // default.ini loaded first (so that any other settings
-                // override it).
-                handleDefaultIni(loadDefaultIni, cppArgs);
-
                 if (!simConfigDB.loadCPP(filename, cppArgs)) {
                     cprintf("Error processing file %s\n", filename);
                     exit(1);
@@ -374,10 +325,6 @@ main(int argc, char **argv)
             }
         }
     }
-
-    // Final check for default.ini, in case no config files or
-    // command-line config parameters were given.
-    handleDefaultIni(loadDefaultIni, cppArgs);
 
     // The configuration database is now complete; start processing it.
 

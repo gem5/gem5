@@ -27,10 +27,20 @@
 #
 # Authors: Steve Reinhardt
 
-# Script to simplify using rundiff on trace outputs from two invocations of m5.
+# Script to simplify using rundiff on trace outputs from two
+# invocations of m5.
+#
+# Note that you need to enable some trace flags in the args in order
+# to do anything useful!
+#
+# If you want to pass different arguments to the two instances of m5,
+# you can embed them in the simulator arguments like this:
+#
+# % tracediff "m5.opt --foo:bar=1" "m5.opt --foo:bar=2" [common args]
+#
 
 if (@ARGV < 2) {
-    die "Usage: tracediff sim1 sim2 [args...]\n";
+    die "Usage: tracediff sim1 sim2 [--trace:flags=X args...]\n";
 }
 
 # First two args are the two simulator binaries to compare
@@ -40,6 +50,10 @@ $sim2 = shift;
 # Everything else on the command line is taken to be an m5 argument to
 # be given to both invocations
 $simargs = '"' . join('" "', @ARGV) . '"';
+
+# Redirect config output to cout so that gets diffed too (in case
+# that's the source of the problem).
+$simargs += " --Universe:config_output_file=cout";
 
 $cmd1 = "$sim1 $simargs --stats:text_file=tracediff-$$-1.stats 2>&1 |";
 $cmd2 = "$sim2 $simargs --stats:text_file=tracediff-$$-2.stats 2>&1 |";
