@@ -114,6 +114,7 @@ class SimpleCPU : public BaseCPU
     SimpleCPU(const std::string &_name,
               System *_system,
               Counter max_insts_any_thread, Counter max_insts_all_threads,
+              Counter max_loads_any_thread, Counter max_loads_all_threads,
               AlphaItb *itb, AlphaDtb *dtb, FunctionalMemory *mem,
               MemInterface *icache_interface, MemInterface *dcache_interface,
               int cpu_id, Tick freq);
@@ -123,6 +124,8 @@ class SimpleCPU : public BaseCPU
     SimpleCPU(const std::string &_name, Process *_process,
               Counter max_insts_any_thread,
               Counter max_insts_all_threads,
+              Counter max_loads_any_thread,
+              Counter max_loads_all_threads,
               MemInterface *icache_interface, MemInterface *dcache_interface);
 
 #endif
@@ -238,6 +241,9 @@ class SimpleCPU : public BaseCPU
 
     // number of simulated memory references
     Statistics::Scalar<> numMemRefs;
+
+    // number of simulated loads
+    Counter numLoad;
 
     // number of idle cycles
     Statistics::Scalar<> idleCycles;

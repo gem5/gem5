@@ -49,13 +49,17 @@ int maxThreadsPerCPU = 1;
 BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
                  Counter max_insts_any_thread,
                  Counter max_insts_all_threads,
+                 Counter max_loads_any_thread,
+                 Counter max_loads_all_threads,
                  System *_system, int num, Tick freq)
     : SimObject(_name), number(num), frequency(freq),
       number_of_threads(_number_of_threads), system(_system)
 #else
 BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
                  Counter max_insts_any_thread,
-                 Counter max_insts_all_threads)
+                 Counter max_insts_all_threads,
+                 Counter max_loads_any_thread,
+                 Counter max_loads_all_threads)
     : SimObject(_name), number_of_threads(_number_of_threads)
 #endif
 {
@@ -89,6 +93,32 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
                 "all threads reached the max instruction count",
                 max_insts_all_threads, *counter);
     }
+
+    // allocate per-thread load-based event queues
+    comLoadEventQueue = new (EventQueue *)[number_of_threads];
+    for (int i = 0; i < number_of_threads; ++i)
+        comLoadEventQueue[i] = new EventQueue("load-based event queue");
+
+    //
+    // set up instruction-count-based termination events, if any
+    //
+    if (max_loads_any_thread != 0)
+        for (int i = 0; i < number_of_threads; ++i)
+            new SimExitEvent(comLoadEventQueue[i], max_loads_any_thread,
+                "a thread reached the max load count");
+
+    if (max_loads_all_threads != 0) {
+        // allocate & initialize shared downcounter: each event will
+        // decrement this when triggered; simulation will terminate
+        // when counter reaches 0
+        int *counter = new int;
+        *counter = number_of_threads;
+        for (int i = 0; i < number_of_threads; ++i)
+            new CountedExitEvent(comLoadEventQueue[i],
+                "all threads reached the max load count",
+                max_loads_all_threads, *counter);
+    }
+
 
 #ifdef FULL_SYSTEM
     memset(interrupts, 0, sizeof(interrupts));

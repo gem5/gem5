@@ -51,10 +51,11 @@ MemTest::MemTest(const string &name,
                  unsigned _memorySize,
                  unsigned _percentReads,
                  unsigned _percentUncacheable,
-                 unsigned _maxReads,
                  unsigned _progressInterval,
-                 Addr _traceAddr)
-    : BaseCPU(name, 1),
+                 Addr _traceAddr,
+                 Counter max_loads_any_thread,
+                 Counter max_loads_all_threads)
+    : BaseCPU(name, 1, 0, 0, max_loads_any_thread, max_loads_all_threads),
       tickEvent(this),
       cacheInterface(_cache_interface),
       mainMem(main_mem),
@@ -62,7 +63,6 @@ MemTest::MemTest(const string &name,
       size(_memorySize),
       percentReads(_percentReads),
       percentUncacheable(_percentUncacheable),
-      maxReads(_maxReads),
       progressInterval(_progressInterval),
       nextProgressMessage(_progressInterval)
 {
@@ -136,19 +136,13 @@ MemTest::completeRequest(MemReqPtr req, uint8_t *data)
 
         numReads++;
 
-        if (numReads.val() == nextProgressMessage) {
-            cerr << name() << ": completed " << numReads.val()
+        if (numReads.value() == nextProgressMessage) {
+            cerr << name() << ": completed " << numReads.value()
                  << " read accesses @ " << curTick << endl;
             nextProgressMessage += progressInterval;
         }
 
-        if (numReads.val() == maxReads) {
-            stringstream stream;
-            stream << name() << " reached max read count (" << maxReads
-                   << ")" << endl;
-
-            new SimExitEvent(stream.str());
-        }
+        comLoadEventQueue[0]->serviceEvents(numReads.value());
         break;
 
       case Write:
@@ -289,9 +283,10 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
     Param<unsigned> memory_size;
     Param<unsigned> percent_reads;
     Param<unsigned> percent_uncacheable;
-    Param<unsigned> max_reads;
     Param<unsigned> progress_interval;
     Param<Addr> trace_addr;
+    Param<Counter> max_loads_any_thread;
+    Param<Counter> max_loads_all_threads;
 
 END_DECLARE_SIM_OBJECT_PARAMS(MemTest)
 
@@ -304,10 +299,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
     INIT_PARAM_DFLT(memory_size, "memory size", 65536),
     INIT_PARAM_DFLT(percent_reads, "target read percentage", 65),
     INIT_PARAM_DFLT(percent_uncacheable, "target uncacheable percentage", 10),
-    INIT_PARAM_DFLT(max_reads, "number of reads to simulate", 0),
     INIT_PARAM_DFLT(progress_interval,
                     "progress report interval (in accesses)", 1000000),
-    INIT_PARAM_DFLT(trace_addr, "address to trace", 0)
+    INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
+    INIT_PARAM_DFLT(max_loads_any_thread,
+                    "terminate when any thread reaches this load count",
+                    0),
+    INIT_PARAM_DFLT(max_loads_all_threads,
+                    "terminate when all threads have reached this load count",
+                    0)
 
 END_INIT_SIM_OBJECT_PARAMS(MemTest)
 
@@ -315,10 +315,10 @@ END_INIT_SIM_OBJECT_PARAMS(MemTest)
 CREATE_SIM_OBJECT(MemTest)
 {
     return new MemTest(getInstanceName(), cache->getInterface(), main_mem,
-                       check_mem,
-                       memory_size, percent_reads,
-                       percent_uncacheable, max_reads, progress_interval,
-                       trace_addr);
+                       check_mem, memory_size, percent_reads,
+                       percent_uncacheable, progress_interval,
+                       trace_addr, max_loads_any_thread,
+                       max_loads_all_threads);
 }
 
 REGISTER_SIM_OBJECT("MemTest", MemTest)
