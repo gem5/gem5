@@ -39,7 +39,6 @@
 #include "base/statistics.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "sim/universe.hh"
 
 #ifdef __M5_NAN
 float
@@ -81,7 +80,7 @@ namespace Database
         map_t statMap;
 
       public:
-        void dump(ostream &stream, DisplayMode mode);
+        void dump(ostream &stream, const string &name, DisplayMode mode);
         void display(ostream &stream, DisplayMode mode);
 
         StatData *find(void *stat);
@@ -97,7 +96,7 @@ namespace Database
 
 
 void
-Data::dump(ostream &stream, DisplayMode mode)
+Data::dump(ostream &stream, const string &name, DisplayMode mode)
 {
     MainBin *orig = MainBin::curBin();
 
@@ -1015,9 +1014,9 @@ check()
 }
 
 void
-dump(ostream &stream, DisplayMode mode)
+dump(ostream &stream, const string &name, DisplayMode mode)
 {
-    Database::StatDB().dump(stream, mode);
+    Database::StatDB().dump(stream, name, mode);
 }
 
 CallbackQueue resetQueue;

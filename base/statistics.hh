@@ -2983,7 +2983,8 @@ class Temp
  */
 
 void check();
-void dump(std::ostream &stream, DisplayMode mode = DefaultMode);
+void dump(std::ostream &stream, const std::string &name = "",
+          DisplayMode mode = DefaultMode);
 void reset();
 void registerResetCallback(Callback *cb);
 
