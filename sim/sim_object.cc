@@ -84,14 +84,6 @@ SimObject::resetStats()
 }
 
 //
-// no default extra output
-//
-void
-SimObject::printExtraOutput(ostream &os)
-{
-}
-
-//
 // static function:
 //   call regStats() on all SimObjects and then regFormulas() on all
 //   SimObjects.
@@ -159,21 +151,6 @@ SimObject::resetAllStats()
         SimObject *obj = *i;
         obj->resetStats();
     }
-}
-
-//
-// static function: call printExtraOutput() on all SimObjects.
-//
-void
-SimObject::printAllExtraOutput(ostream &os)
-{
-    SimObjectList::iterator i = simObjectList.begin();
-    SimObjectList::iterator end = simObjectList.end();
-
-    for (; i != end; ++i) {
-        SimObject *obj = *i;
-        obj->printExtraOutput(os);
-   }
 }
 
 //
