@@ -109,7 +109,7 @@ vtophys(ExecContext *xc, Addr vaddr)
             Addr pte = kernel_pte_lookup(xc->physmem, ptbr, vaddr);
             uint64_t entry = xc->physmem->phys_read_qword(pte);
             if (pte && entry_valid(entry))
-                paddr = PMAP_PTE_PA(entry) | (vaddr & PGOFSET);
+                paddr = PMAP_PTE_PA(entry) | (vaddr & ALPHA_PGOFSET);
         }
     }
 
@@ -141,7 +141,7 @@ CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
     int len;
 
     paddr = vtophys(xc, src);
-    len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)cplen);
+    len = min((int)(ALPHA_PGBYTES - (paddr & ALPHA_PGOFSET)), (int)cplen);
     dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
     assert(dmaaddr);
 
@@ -182,7 +182,7 @@ CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
     int len;
 
     paddr = vtophys(xc, dest);
-    len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)cplen);
+    len = min((int)(ALPHA_PGBYTES - (paddr & ALPHA_PGOFSET)), (int)cplen);
     dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
     assert(dmaaddr);
 
@@ -222,7 +222,7 @@ CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
     int len;
 
     paddr = vtophys(xc, vaddr);
-    len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)maxlen);
+    len = min((int)(ALPHA_PGBYTES - (paddr & ALPHA_PGOFSET)), (int)maxlen);
     dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
     assert(dmaaddr);
 
