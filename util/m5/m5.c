@@ -26,9 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <c_asm.h>
-
-#include <libgen.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,51 +38,149 @@ char *progname;
 void
 usage()
 {
-    char *name = basename(progname);
-    printf("usage: %s ivlb <interval>\n"
-           "       %s ivle <interval>\n"
-           "       %s initparam\n"
-           "       %s sw99param\n"
-           "       %s resetstats\n"
-           "       %s exit\n", name, name, name, name, name, name);
+    printf("usage: m5 ivlb <interval>\n"
+           "       m5 ivle <interval>\n"
+           "       m5 initparam\n"
+           "       m5 sw99param\n"
+           "       m5 exit [delay]\n"
+           "       m5 resetstats [delay [period]]\n"
+           "       m5 dumpstats [delay [period]]\n"
+           "       m5 dumpresetstats [delay [period]]\n"
+           "       m5 checkpoint [delay [period]]\n"
+           "\n"
+           "All times in nanoseconds!\n");
     exit(1);
 }
+
+#define COMPARE(X) (strcmp(X, command) == 0)
 
 int
 main(int argc, char *argv[])
 {
-    int start;
-    int interval;
-    unsigned long long param;
+    char *command;
+    uint64_t param;
+    uint64_t arg1 = 0;
+    uint64_t arg2 = 0;
 
     progname = argv[0];
     if (argc < 2)
         usage();
 
-    if (strncmp(argv[1], "ivlb", 5) == 0) {
-        if (argc != 3) usage();
-        ivlb((unsigned long)atoi(argv[2]));
-    } else if (strncmp(argv[1], "ivle", 5) == 0) {
-        if (argc != 3) usage();
-        ivle((unsigned long)atoi(argv[2]));
-    } else if (strncmp(argv[1], "exit", 5) == 0) {
-        if (argc != 2) usage();
-        m5exit();
-    } else if (strncmp(argv[1], "initparam", 10) == 0) {
-        if (argc != 2) usage();
-        printf("%d", initparam());
-    } else if (strncmp(argv[1], "sw99param", 10) == 0) {
-        if (argc != 2) usage();
+    command = argv[1];
+
+    if (COMPARE("ivlb")) {
+        if (argc != 3)
+            usage();
+
+        arg1 = strtoul(argv[2], NULL, 0);
+        ivlb(arg1);
+        return 0;
+    }
+
+    if (COMPARE("ivle")) {
+        if (argc != 3)
+            usage();
+
+        arg1 = strtoul(argv[2], NULL, 0);
+        ivle(arg1);
+        return 0;
+    }
+
+    if (COMPARE("initparam")) {
+        if (argc != 2)
+            usage();
+
+        printf("%ld", initparam());
+        return 0;
+    }
+
+    if (COMPARE("sw99param")) {
+        if (argc != 2)
+            usage();
 
         param = initparam();
         // run-time, rampup-time, rampdown-time, warmup-time, connections
         printf("%d %d %d %d %d", (param >> 48) & 0xfff,
                (param >> 36) & 0xfff, (param >> 24) & 0xfff,
                (param >> 12) & 0xfff, (param >> 0) & 0xfff);
-    } else if (strncmp(argv[1], "resetstats", 11) == 0) {
-        if (argc != 2) usage();
-        resetstats();
+
+        return 0;
     }
 
-    return 0;
+    if (COMPARE("exit")) {
+        switch (argc) {
+          case 3:
+            arg1 = strtoul(argv[2], NULL, 0);
+          case 2:
+            m5exit(arg1);
+            return 0;
+
+          default:
+            usage();
+        }
+    }
+
+    if (COMPARE("resetstats")) {
+        switch (argc) {
+          case 4:
+            arg2 = strtoul(argv[3], NULL, 0);
+          case 3:
+            arg1 = strtoul(argv[2], NULL, 0);
+          case 2:
+            reset_stats(arg1, arg2);
+            return 0;
+
+          default:
+            usage();
+        }
+    }
+
+    if (COMPARE("dumpstats")) {
+        switch (argc) {
+          case 4:
+            arg2 = strtoul(argv[3], NULL, 0);
+          case 3:
+            arg1 = strtoul(argv[2], NULL, 0);
+          case 2:
+            dump_stats(arg1, arg2);
+            return 0;
+
+          default:
+            usage();
+        }
+    }
+
+    if (COMPARE("dumpresetstats")) {
+        switch (argc) {
+          case 4:
+            arg2 = strtoul(argv[3], NULL, 0);
+          case 3:
+            arg1 = strtoul(argv[2], NULL, 0);
+          case 2:
+            dumpreset_stats(arg1, arg2);
+            return 0;
+
+          default:
+            usage();
+        }
+    }
+
+    if (COMPARE("checkpoint")) {
+        switch (argc) {
+          case 4:
+            arg2 = strtoul(argv[3], NULL, 0);
+          case 3:
+            arg1 = strtoul(argv[2], NULL, 0);
+          case 2:
+            checkpoint(arg1, arg2);
+            return 0;
+
+          default:
+            usage();
+        }
+
+        return 0;
+    }
+
+    usage();
 }

@@ -30,13 +30,18 @@
 #include <regdef.h>
 		
 #define m5_op 0x01
+
 #define arm_func 0x00
 #define quiesce_func 0x01
 #define ivlb_func 0x10
 #define ivle_func 0x11
-#define m5exit_func 0x20
+#define exit_old_func 0x20 // deprectated!
+#define exit_func 0x21
 #define initparam_func 0x30
 #define resetstats_func 0x40
+#define dumpstats_func 0x41
+#define dumprststats_func 0x42
+#define ckpt_func 0x43
 	
 #define INST(op, ra, rb, func) \
 	.long (((op) << 26) | ((ra) << 21) | ((rb) << 16) | (func))
@@ -45,9 +50,12 @@
 #define QUIESCE() INST(m5_op, 0, 0, quiesce_func)
 #define IVLB(reg) INST(m5_op, reg, 0, ivlb_func)
 #define IVLE(reg) INST(m5_op, reg, 0, ivle_func)
-#define M5_EXIT() INST(m5_op, 0, 0, m5exit_func)
+#define M5EXIT(reg) INST(m5_op, reg, 0, exit_func)
 #define INITPARAM(reg) INST(m5_op, reg, 0, initparam_func)
-#define RESETSTATS() INST(m5_op, 0, 0, resetstats_func)
+#define RESET_STATS(r1, r2) INST(m5_op, r1, r2, resetstats_func)
+#define DUMP_STATS(r1, r2) INST(m5_op, r1, r2, dumpstats_func)
+#define DUMPRST_STATS(r1, r2) INST(m5_op, r1, r2, dumprststats_func)
+#define CHECKPOINT(r1, r2) INST(m5_op, r1, r2, ckpt_func)
 
 	.set noreorder
 
@@ -77,18 +85,37 @@ END(ivle)
 
 	.align 4
 LEAF(m5exit)
-	M5_EXIT()
+	M5EXIT(16)
 	RET
 END(m5exit)
 
-    .align 4
+	.align 4
 LEAF(initparam)
-    INITPARAM(0)
-    RET
+	INITPARAM(0)
+	RET
 END(initparam)
 
-    .align 4
-LEAF(resetstats)
-    RESETSTATS()
-    RET
-END(resetstats)
+	.align 4
+LEAF(reset_stats)
+	RESET_STATS(16, 17)
+	RET
+END(reset_stats)
+
+	.align 4
+LEAF(dump_stats)
+	DUMP_STATS(16, 17)
+	RET
+END(dump_stats)
+
+	.align 4
+LEAF(dumpreset_stats)
+	DUMPRST_STATS(16, 17)
+	RET
+END(dumpreset_stats)
+
+	.align 4
+LEAF(checkpoint)
+	CHECKPOINT(16, 17)
+	RET
+END(checkpoint)
+

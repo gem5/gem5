@@ -29,11 +29,17 @@
 #ifndef __M5OP_H__
 #define __M5OP_H__
 
-void arm(unsigned long address);
+#include <inttypes.h>
+
+void arm(uint64_t address);
 void quiesce();
-void ivlb(unsigned long interval);
-void ivle(unsigned long interval);
-void m5exit();
-unsigned long initparam();
+void ivlb(uint64_t interval);
+void ivle(uint64_t interval);
+void m5exit(uint64_t ns_delay);
+uint64_t initparam();
+void checkpoint(uint64_t ns_delay, uint64_t ns_period);
+void reset_stats(uint64_t ns_delay, uint64_t ns_period);
+void dump_stats(uint64_t ns_delay, uint64_t ns_period);
+void dumpreset_stats(uint64_t ns_delay, uint64_t ns_period);
 
 #endif // __M5OP_H__
