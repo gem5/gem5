@@ -47,32 +47,32 @@
 
 using namespace std;
 
-EtherLink::EtherLink(const string &name, EtherInt *i1, EtherInt *i2,
+EtherLink::EtherLink(const string &name, EtherInt *peer0, EtherInt *peer1,
                      Tick speed, Tick dly, EtherDump *dump)
     : SimObject(name)
 {
     double rate = ((double)ticksPerSecond * 8.0) / (double)speed;
     Tick delay = US2Ticks(dly);
 
-    link1 = new Link(name + ".link1", rate, delay, dump);
-    link2 = new Link(name + ".link2", rate, delay, dump);
+    link[0] = new Link(name + ".link0", this, 0, rate, delay, dump);
+    link[1] = new Link(name + ".link1", this, 1, rate, delay, dump);
 
-    int1 = new Interface(name + ".int1", link1, link2);
-    int2 = new Interface(name + ".int2", link2, link1);
+    interface[0] = new Interface(name + ".int0", link[0], link[1]);
+    interface[1] = new Interface(name + ".int1", link[1], link[0]);
 
-    int1->setPeer(i1);
-    i1->setPeer(int1);
-    int2->setPeer(i2);
-    i2->setPeer(int2);
+    interface[0]->setPeer(peer0);
+    peer0->setPeer(interface[0]);
+    interface[1]->setPeer(peer1);
+    peer1->setPeer(interface[1]);
 }
 
 EtherLink::~EtherLink()
 {
-    delete link1;
-    delete link2;
+    delete link[0];
+    delete link[1];
 
-    delete int1;
-    delete int2;
+    delete interface[0];
+    delete interface[1];
 }
 
 EtherLink::Interface::Interface(const string &name, Link *tx, Link *rx)
@@ -82,26 +82,25 @@ EtherLink::Interface::Interface(const string &name, Link *tx, Link *rx)
     rx->setRxInt(this);
 }
 
-EtherLink::Link::Link(const string &name, double rate, Tick delay,
-                      EtherDump *d)
-    : objName(name), txint(NULL), rxint(NULL), ticksPerByte(rate),
-      linkDelay(delay), dump(d), doneEvent(this)
-{}
+EtherLink::Link::Link(const string &name, EtherLink *p, int num,
+                      double rate, Tick delay, EtherDump *d)
+    : objName(name), parent(p), number(num), txint(NULL), rxint(NULL),
+      ticksPerByte(rate), linkDelay(delay), dump(d),
+      doneEvent(this)
+{ }
 
 void
 EtherLink::serialize(ostream &os)
 {
-    nameOut(os, name() + ".link1");
-    link1->serialize(os);
-    nameOut(os, name() + ".link2");
-    link2->serialize(os);
+    link[0]->serialize("link0", os);
+    link[1]->serialize("link1", os);
 }
 
 void
 EtherLink::unserialize(Checkpoint *cp, const string &section)
 {
-    link1->unserialize(cp, section + ".link1");
-    link2->unserialize(cp, section + ".link2");
+    link[0]->unserialize("link0", cp, section);
+    link[1]->unserialize("link1", cp, section);
 }
 
 void
@@ -118,10 +117,9 @@ class LinkDelayEvent : public Event
     EtherLink::Link *link;
     PacketPtr packet;
 
-    // non-scheduling version for createForUnserialize()
-    LinkDelayEvent(EtherLink::Link *link);
-
   public:
+    // non-scheduling version for createForUnserialize()
+    LinkDelayEvent();
     LinkDelayEvent(EtherLink::Link *link, PacketPtr pkt, Tick when);
 
     void process();
@@ -131,7 +129,6 @@ class LinkDelayEvent : public Event
     static Serializable *createForUnserialize(Checkpoint *cp,
                                               const string &section);
 };
-
 
 void
 EtherLink::Link::txDone()
@@ -173,43 +170,44 @@ EtherLink::Link::transmit(PacketPtr pkt)
 }
 
 void
-EtherLink::Link::serialize(ostream &os)
+EtherLink::Link::serialize(const string &base, ostream &os)
 {
     bool packet_exists = packet;
-    SERIALIZE_SCALAR(packet_exists);
+    paramOut(os, base + ".packet_exists", packet_exists);
+    if (packet_exists)
+        packet->serialize(base + ".packet", os);
 
     bool event_scheduled = doneEvent.scheduled();
-    SERIALIZE_SCALAR(event_scheduled);
+    paramOut(os, base + ".event_scheduled", event_scheduled);
     if (event_scheduled) {
         Tick event_time = doneEvent.when();
-        SERIALIZE_SCALAR(event_time);
+        paramOut(os, base + ".event_time", event_time);
     }
 
-    if (packet_exists)
-        packet->serialize("packet", os);
 }
 
 void
-EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
+EtherLink::Link::unserialize(const string &base, Checkpoint *cp,
+                             const string &section)
 {
     bool packet_exists;
-    UNSERIALIZE_SCALAR(packet_exists);
+    paramIn(cp, section, base + ".packet_exists", packet_exists);
     if (packet_exists) {
         packet = new PacketData(16384);
-        packet->unserialize("packet", cp, section);
+        packet->unserialize(base + ".packet", cp, section);
     }
 
     bool event_scheduled;
-    UNSERIALIZE_SCALAR(event_scheduled);
+    paramIn(cp, section, base + ".event_scheduled", event_scheduled);
     if (event_scheduled) {
         Tick event_time;
-        UNSERIALIZE_SCALAR(event_time);
+        paramIn(cp, section, base + ".event_time", event_time);
         doneEvent.schedule(event_time);
     }
 }
 
-LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l)
-    : Event(&mainEventQueue), link(l)
+LinkDelayEvent::LinkDelayEvent()
+    : Event(&mainEventQueue), link(NULL)
 {
     setFlags(AutoSerialize);
     setFlags(AutoDelete);
@@ -234,7 +232,11 @@ LinkDelayEvent::serialize(ostream &os)
 {
     paramOut(os, "type", string("LinkDelayEvent"));
     Event::serialize(os);
-    SERIALIZE_OBJPTR(link);
+
+    EtherLink *parent = link->parent;
+    bool number = link->number;
+    SERIALIZE_OBJPTR(parent);
+    SERIALIZE_SCALAR(number);
 
     packet->serialize("packet", os);
 }
@@ -244,6 +246,14 @@ void
 LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 {
     Event::unserialize(cp, section);
+
+    EtherLink *parent;
+    bool number;
+    UNSERIALIZE_OBJPTR(parent);
+    UNSERIALIZE_SCALAR(number);
+
+    link = parent->link[number];
+
     packet = new PacketData(16384);
     packet->unserialize("packet", cp, section);
 }
@@ -252,9 +262,7 @@ LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 Serializable *
 LinkDelayEvent::createForUnserialize(Checkpoint *cp, const string &section)
 {
-    EtherLink::Link *link;
-    UNSERIALIZE_OBJPTR(link);
-    return new LinkDelayEvent(link);
+    return new LinkDelayEvent();
 }
 
 REGISTER_SERIALIZEABLE("LinkDelayEvent", LinkDelayEvent)
