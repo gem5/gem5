@@ -96,6 +96,9 @@ class EtherTap : public EtherInt
 
     virtual bool recvPacket(PacketPtr packet);
     virtual void sendDone();
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 #endif // __ETHERTAP_HH__
