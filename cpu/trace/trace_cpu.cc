@@ -46,23 +46,13 @@ using namespace std;
 TraceCPU::TraceCPU(const string &name,
                    MemInterface *icache_interface,
                    MemInterface *dcache_interface,
-                   MemTraceReader *inst_trace,
-                   MemTraceReader *data_trace,
-                   int icache_ports,
-                   int dcache_ports)
+                   MemTraceReader *data_trace)
     : BaseCPU(name, 4), icacheInterface(icache_interface),
-      dcacheInterface(dcache_interface), instTrace(inst_trace),
-      dataTrace(data_trace), icachePorts(icache_ports),
-      dcachePorts(dcache_ports), outstandingRequests(0), tickEvent(this)
+      dcacheInterface(dcache_interface),
+      dataTrace(data_trace), outstandingRequests(0), tickEvent(this)
 {
-    if (instTrace) {
-        assert(icacheInterface);
-        nextInstCycle = instTrace->getNextReq(nextInstReq);
-    }
-    if (dataTrace) {
-        assert(dcacheInterface);
-        nextDataCycle = dataTrace->getNextReq(nextDataReq);
-    }
+    assert(dcacheInterface);
+    nextCycle = dataTrace->getNextReq(nextReq);
     tickEvent.schedule(0);
 }
 
@@ -74,41 +64,35 @@ TraceCPU::tick()
     int instReqs = 0;
     int dataReqs = 0;
 
-    // Do data first to match tracing with FullCPU dumps
+    while (nextReq && curTick >= nextCycle) {
+        assert(nextReq->thread_num < 4 && "Not enough threads");
+        if (nextReq->isInstRead() && icacheInterface) {
+            if (icacheInterface->isBlocked())
+                break;
 
-    while (nextDataReq && (dataReqs < dcachePorts) &&
-           curTick >= nextDataCycle) {
-        assert(nextDataReq->thread_num < 4 && "Not enough threads");
-        if (dcacheInterface->isBlocked())
-            break;
-
-        ++dataReqs;
-        nextDataReq->time = curTick;
-        nextDataReq->completionEvent =
-            new TraceCompleteEvent(nextDataReq, this);
-        dcacheInterface->access(nextDataReq);
-        nextDataCycle = dataTrace->getNextReq(nextDataReq);
-    }
-
-    while (nextInstReq && (instReqs < icachePorts) &&
-           curTick >= nextInstCycle) {
-        assert(nextInstReq->thread_num < 4 && "Not enough threads");
-        if (icacheInterface->isBlocked())
-            break;
-
-        nextInstReq->time = curTick;
-        if (nextInstReq->cmd == Squash) {
-            icacheInterface->squash(nextInstReq->asid);
+            nextReq->time = curTick;
+            if (nextReq->cmd == Squash) {
+                icacheInterface->squash(nextReq->asid);
+            } else {
+                ++instReqs;
+                nextReq->completionEvent =
+                    new TraceCompleteEvent(nextReq, this);
+                icacheInterface->access(nextReq);
+            }
         } else {
-            ++instReqs;
-            nextInstReq->completionEvent =
-                new TraceCompleteEvent(nextInstReq, this);
-            icacheInterface->access(nextInstReq);
+            if (dcacheInterface->isBlocked())
+                break;
+
+            ++dataReqs;
+            nextReq->time = curTick;
+            nextReq->completionEvent =
+                new TraceCompleteEvent(nextReq, this);
+            dcacheInterface->access(nextReq);
         }
-        nextInstCycle = instTrace->getNextReq(nextInstReq);
+        nextCycle = dataTrace->getNextReq(nextReq);
     }
 
-    if (!nextInstReq && !nextDataReq) {
+    if (!nextReq) {
         // No more requests to send. Finish trailing events and exit.
         if (mainEventQueue.empty()) {
             new SimExitEvent("Finshed Memory Trace");
@@ -116,8 +100,7 @@ TraceCPU::tick()
             tickEvent.schedule(mainEventQueue.nextEventTime() + 1);
         }
     } else {
-        tickEvent.schedule(max(curTick + 1,
-                               min(nextInstCycle, nextDataCycle)));
+        tickEvent.schedule(max(curTick + 1, nextCycle));
     }
 }
 
@@ -161,10 +144,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TraceCPU)
 
     SimObjectParam<BaseMem *> icache;
     SimObjectParam<BaseMem *> dcache;
-    SimObjectParam<MemTraceReader *> inst_trace;
     SimObjectParam<MemTraceReader *> data_trace;
-    Param<int> inst_ports;
-    Param<int> data_ports;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TraceCPU)
 
@@ -172,10 +152,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TraceCPU)
 
     INIT_PARAM_DFLT(icache, "instruction cache", NULL),
     INIT_PARAM_DFLT(dcache, "data cache", NULL),
-    INIT_PARAM_DFLT(inst_trace, "instruction trace", NULL),
-    INIT_PARAM_DFLT(data_trace, "data trace", NULL),
-    INIT_PARAM_DFLT(inst_ports, "instruction cache read ports", 4),
-    INIT_PARAM_DFLT(data_ports, "data cache read/write ports", 4)
+    INIT_PARAM_DFLT(data_trace, "data trace", NULL)
 
 END_INIT_SIM_OBJECT_PARAMS(TraceCPU)
 
@@ -184,7 +161,7 @@ CREATE_SIM_OBJECT(TraceCPU)
     return new TraceCPU(getInstanceName(),
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
-                        inst_trace, data_trace, inst_ports, data_ports);
+                        data_trace);
 }
 
 REGISTER_SIM_OBJECT("TraceCPU", TraceCPU)
