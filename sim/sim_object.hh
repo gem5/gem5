@@ -38,7 +38,6 @@
 #include <vector>
 #include <iostream>
 
-#include "sim/param.hh"
 #include "sim/serialize.hh"
 
 /*

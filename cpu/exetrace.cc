@@ -29,6 +29,7 @@
 #include <fstream>
 #include <iomanip>
 
+#include "sim/param.hh"
 #include "cpu/full_cpu/dyn_inst.hh"
 #include "cpu/full_cpu/spec_state.hh"
 #include "cpu/full_cpu/issue.hh"

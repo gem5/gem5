@@ -26,92 +26,117 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream.h>
-#include <fstream.h>
-#include <unistd.h>
-
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include "base/inifile.hh"
+#include "base/cprintf.hh"
+
+using namespace std;
 
 char *progname;
 
 void
 usage()
 {
-  cout << "Usage: " << progname << " <ini file>\n";
-  exit(1);
+    cout << "Usage: " << progname << " <ini file>\n";
+    exit(1);
 }
 
 #if 0
-    char *defines = getenv("CONFIG_DEFINES");
-    if (defines) {
-      char *c = defines;
-      while ((c = strchr(c, ' ')) != NULL) {
+char *defines = getenv("CONFIG_DEFINES");
+if (defines) {
+    char *c = defines;
+    while ((c = strchr(c, ' ')) != NULL) {
         *c++ = '\0';
         count++;
-      }
-      count++;
     }
+    count++;
+}
 
 #endif
 
 int
 main(int argc, char *argv[])
 {
-  IniFile config;
+    IniFile simConfigDB;
 
-  progname = argv[0];
+    progname = argv[0];
 
-  int cpp_options_count = 0;
-  char **cpp_options = new char*[argc * 2];
-  char **cur_opt = cpp_options;
+    vector<char *> cppArgs;
 
-  int ch;
-  while ((ch = getopt(argc, argv, "D:")) != -1) {
-    switch (ch) {
-    case 'D':
-      *cur_opt++ = "-D";
-      *cur_opt++ = optarg;
-      cpp_options_count += 2;
-      break;
+    vector<char *> cpp_options;
+    cpp_options.reserve(argc * 2);
 
-    default:
-      usage();
+    for (int i = 1; i < argc; ++i) {
+        char *arg_str = argv[i];
+
+        // if arg starts with '-', parse as option,
+        // else treat it as a configuration file name and load it
+        if (arg_str[0] == '-') {
+
+            // switch on second char
+            switch (arg_str[1]) {
+              case 'D':
+              case 'U':
+              case 'I':
+                // cpp options: record & pass to cpp.  Note that these
+                // cannot have spaces, i.e., '-Dname=val' is OK, but
+                // '-D name=val' is not.  I don't consider this a
+                // problem, since even though gnu cpp accepts the
+                // latter, other cpp implementations do not (Tru64,
+                // for one).
+                cppArgs.push_back(arg_str);
+                break;
+
+              case '-':
+                // command-line configuration parameter:
+                // '--<section>:<parameter>=<value>'
+
+                if (!simConfigDB.add(arg_str + 2)) {
+                    // parse error
+                    ccprintf(cerr,
+                             "Could not parse configuration argument '%s'\n"
+                             "Expecting --<section>:<parameter>=<value>\n",
+                             arg_str);
+                    exit(0);
+                }
+                break;
+
+              default:
+                usage();
+            }
+        }
+        else {
+            // no '-', treat as config file name
+
+            if (!simConfigDB.loadCPP(arg_str, cppArgs)) {
+                cprintf("Error processing file %s\n", arg_str);
+                exit(1);
+            }
+        }
     }
-  }
 
-  argc -= optind;
-  argv += optind;
+    string value;
 
-  if (argc != 1)
-    usage();
-
-  string file = argv[0];
-
-  if (!config.loadCPP(file, cpp_options, cpp_options_count)) {
-    cout << "File not found!\n";
-    exit(1);
-  }
-
-  string value;
 #define FIND(C, E) \
-  if (config.find(C, E, value)) \
+  if (simConfigDB.find(C, E, value)) \
     cout << ">" << value << "<\n"; \
   else \
     cout << "Not Found!\n"
 
-  FIND("General", "Test2");
-  FIND("Junk", "Test3");
-  FIND("Junk", "Test4");
-  FIND("General", "Test1");
-  FIND("Junk2", "test3");
-  FIND("General", "Test3");
+    FIND("General", "Test2");
+    FIND("Junk", "Test3");
+    FIND("Junk", "Test4");
+    FIND("General", "Test1");
+    FIND("Junk2", "test3");
+    FIND("General", "Test3");
 
-  cout << "\n";
+    cout << "\n";
 
-  config.dump();
+    simConfigDB.dump();
 
-  return 0;
+    return 0;
 }
