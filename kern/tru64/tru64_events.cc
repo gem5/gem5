@@ -27,8 +27,9 @@
  */
 
 #include "cpu/exec_context.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/full_cpu/bpred.hh"
-#include "cpu/full_cpu/cpu.hh"
+#include "cpu/full_cpu/full_cpu.hh"
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
 #include "kern/tru64/tru64_events.hh"
