@@ -185,9 +185,11 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 #endif
     }
 
+#ifdef FULL_SYSTEM
     for (int i = 0; i < NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
+#endif
 }
 
 
