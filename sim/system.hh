@@ -36,6 +36,11 @@
 #include "cpu/pc_event.hh"
 #include "base/loader/symtab.hh"
 
+#ifdef FS_MEASURE
+#include "base/statistics.hh"
+#include "sim/sw_context.hh"
+#endif
+
 class MemoryController;
 class PhysicalMemory;
 class RemoteGDB;
@@ -45,10 +50,17 @@ class ExecContext;
 
 class System : public SimObject
 {
+#ifdef FS_MEASURE
+  protected:
+    std::map<const std::string, Statistics::GenBin *> fnBins;
+    std::map<const Addr, SWContext *> swCtxMap;
+#endif //FS_MEASURE
+
   public:
     const uint64_t init_param;
     MemoryController *memCtrl;
     PhysicalMemory *physmem;
+    bool bin;
 
     PCEventQueue pcEventQueue;
 
@@ -57,9 +69,14 @@ class System : public SimObject
     virtual int registerExecContext(ExecContext *xc);
     virtual void replaceExecContext(int xcIndex, ExecContext *xc);
 
+#ifdef FS_MEASURE
+    Statistics::Scalar<Counter, Statistics::MainBin> fnCalls;
+    Statistics::MainBin *nonPath;
+#endif //FS_MEASURE
+
   public:
     System(const std::string _name, const uint64_t _init_param,
-           MemoryController *, PhysicalMemory *);
+           MemoryController *, PhysicalMemory *, const bool);
     ~System();
 
     virtual Addr getKernelStart() const = 0;
@@ -67,6 +84,21 @@ class System : public SimObject
     virtual Addr getKernelEntry() const = 0;
     virtual bool breakpoint() = 0;
 
+#ifdef FS_MEASURE
+    Statistics::GenBin * getBin(const std::string &name);
+    virtual bool findCaller(std::string, std::string) const = 0;
+
+    SWContext *findContext(Addr pcb);
+    bool addContext(Addr pcb, SWContext *ctx) {
+        return (swCtxMap.insert(make_pair(pcb, ctx))).second;
+    }
+    void remContext(Addr pcb) {
+        swCtxMap.erase(pcb);
+        return;
+    }
+
+    virtual void dumpState(ExecContext *xc) const = 0;
+#endif //FS_MEASURE
 
   public:
     ////////////////////////////////////////////

@@ -216,7 +216,7 @@ class SimpleCPU : public BaseCPU
             assert(old_status == Idle ||
                    old_status == DcacheMissStall ||
                    old_status == IcacheMissComplete);
-            if (old_status == Idle)
+            if (old_status == Idle && curTick != 0)
                 idleCycles += curTick - last_idle;
 
             if (tickEvent.squashed())

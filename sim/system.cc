@@ -40,14 +40,23 @@ int System::numSystemsRunning = 0;
 System::System(const std::string _name,
                const uint64_t _init_param,
                MemoryController *_memCtrl,
-               PhysicalMemory *_physmem)
+               PhysicalMemory *_physmem,
+               const bool _bin)
     : SimObject(_name),
       init_param(_init_param),
       memCtrl(_memCtrl),
-      physmem(_physmem)
+      physmem(_physmem),
+      bin(_bin)
 {
     // add self to global system list
     systemList.push_back(this);
+#ifdef FS_MEASURE
+    if (bin == true) {
+        nonPath = new Statistics::MainBin("non TCPIP path stats");
+        nonPath->activate();
+    } else
+        nonPath = NULL;
+#endif
 }
 
 
@@ -94,6 +103,31 @@ printSystems()
 {
     System::printSystems();
 }
+
+#ifdef FS_MEASURE
+Statistics::GenBin *
+System::getBin(const std::string &name)
+{
+    std::map<const std::string, Statistics::GenBin *>::const_iterator i;
+    i = fnBins.find(name);
+    if (i == fnBins.end())
+        panic("trying to getBin that is not on system map!");
+    return (*i).second;
+}
+
+SWContext *
+System::findContext(Addr pcb)
+{
+  std::map<Addr, SWContext *>::const_iterator iter;
+  iter = swCtxMap.find(pcb);
+  if (iter != swCtxMap.end()) {
+      SWContext *ctx = (*iter).second;
+      assert(ctx != NULL && "should never have a null ctx in ctxMap");
+      return ctx;
+  } else
+      return NULL;
+}
+#endif //FS_MEASURE
 
 DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 
