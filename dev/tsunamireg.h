@@ -70,6 +70,10 @@
 // I/O Ports
 #define TSDEV_PIC1_MASK     0x21
 #define TSDEV_PIC2_MASK     0xA1
+#define TSDEV_PIC1_ISR      0x20
+#define TSDEV_PIC2_ISR      0xA0
+#define TSDEV_PIC1_ACK      0x20
+#define TSDEV_PIC2_ACK      0xA0
 #define TSDEV_DMA1_RESET    0x0D
 #define TSDEV_DMA2_RESET    0xDA
 #define TSDEV_DMA1_MODE     0x0B
@@ -101,10 +105,16 @@
 #define RTC_CONTROL_REGISTERD   13	// control register D
 #define RTC_REGNUMBER_RTC_CR1   0x6A	// control register 1
 
-#define PCHIP_PCI0_MEMORY       0x10000000000ULL
-#define PCHIP_PCI0_IO           0x101FC000000ULL
+#define PCHIP_PCI0_MEMORY       ULL(0x10000000000)
+#define PCHIP_PCI0_IO           ULL(0x101FC000000)
 #define TSUNAMI_PCI0_MEMORY     ALPHA_K0SEG_BASE + PCHIP_PCI0_MEMORY
 #define TSUNAMI_PCI0_IO         ALPHA_K0SEG_BASE + PCHIP_PCI0_IO
 
+
+// UART Defines
+
+
+#define UART_IER_THRI           0x02
+#define UART_IER_RLSI           0x04
 
 #endif // __TSUNAMIREG_H__

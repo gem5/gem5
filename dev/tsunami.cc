@@ -37,6 +37,7 @@
 #include "dev/tlaser_clock.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunami_pchip.hh"
+#include "dev/tsunami_io.hh"
 #include "dev/tsunami.hh"
 #include "dev/pciconfigall.hh"
 #include "sim/builder.hh"
@@ -44,15 +45,27 @@
 
 using namespace std;
 
-Tsunami::Tsunami(const string &name, System *s, SimConsole *con,
+Tsunami::Tsunami(const string &name, System *s,
                  IntrControl *ic, PciConfigAll *pci, int intr_freq)
-    : Platform(name, con, ic, pci, intr_freq), system(s)
+    : Platform(name, ic, pci, intr_freq), system(s)
 {
     // set the back pointer from the system to myself
     system->platform = this;
 
     for (int i = 0; i < Tsunami::Max_CPUs; i++)
         intr_sum_type[i] = 0;
+}
+
+void
+Tsunami::postConsoleInt()
+{
+    io->postPIC(0x10);
+}
+
+void
+Tsunami::clearConsoleInt()
+{
+    io->clearPIC(0x10);
 }
 
 void
@@ -89,7 +102,7 @@ END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
 CREATE_SIM_OBJECT(Tsunami)
 {
-    return new Tsunami(getInstanceName(), system, cons, intrctrl, pciconfig,
+    return new Tsunami(getInstanceName(), system, intrctrl, pciconfig,
                        interrupt_frequency);
 }
 

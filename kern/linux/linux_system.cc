@@ -658,7 +658,7 @@ LinuxSystem::registerExecContext(ExecContext *xc)
     RemoteGDB *rgdb = new RemoteGDB(this, xc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
     gdbl->listen();
-    gdbl->accept();
+    //gdbl->accept();
 
     if (remoteGDB.size() <= xcIndex) {
         remoteGDB.resize(xcIndex+1);

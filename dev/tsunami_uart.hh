@@ -33,14 +33,16 @@
 #ifndef __TSUNAMI_UART_HH__
 #define __TSUNAMI_UART_HH__
 
-#include "mem/functional_mem/functional_memory.hh"
+#include "dev/tsunamireg.h"
+#include "base/range.hh"
+#include "dev/io_device.hh"
 
 class SimConsole;
 
 /*
  * Tsunami UART
  */
-class TsunamiUart : public FunctionalMemory
+class TsunamiUart : public PioDevice
 {
   private:
     Addr addr;
@@ -54,8 +56,8 @@ class TsunamiUart : public FunctionalMemory
     uint8_t IER;
 
   public:
-    TsunamiUart(const std::string &name, SimConsole *c, Addr a,
-                MemoryController *mmu);
+    TsunamiUart(const string &name, SimConsole *c, MemoryController *mmu,
+            Addr a, HierParams *hier, Bus *bus);
 
     Fault read(MemReqPtr &req, uint8_t *data);
     Fault write(MemReqPtr &req, const uint8_t *data);
@@ -63,6 +65,9 @@ class TsunamiUart : public FunctionalMemory
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+  public:
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __TSUNAMI_UART_HH__

@@ -22,6 +22,9 @@
 #include "base/trace.hh"
 #include "dev/console.hh"
 #include "dev/tsunami_uart.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "targetarch/ev5.hh"
@@ -31,12 +34,18 @@ using namespace std;
 #define CONS_INT_TX   0x01  // interrupt enable / state bits
 #define CONS_INT_RX   0x02
 
-TsunamiUart::TsunamiUart(const string &name, SimConsole *c, Addr a,
-                         MemoryController *mmu)
-    : FunctionalMemory(name), addr(a), cons(c), status_store(0),
-      valid_char(false)
+TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
+                         MemoryController *mmu, Addr a,
+                         HierParams *hier, Bus *bus)
+    : PioDevice(name), addr(a), cons(c), status_store(0), valid_char(false)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
+
+    if (bus) {
+        pioInterface = newPioInterface(name, hier, bus, this,
+                                      &TsunamiUart::cacheAccess);
+         pioInterface->addAddrRange(addr, addr + size - 1);
+    }
 
     IER = 0;
 }
@@ -62,7 +71,8 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
         break;
     }
 
-    switch (daddr) {
+
+    switch(daddr) {
       case 0x5: // Status Register
         {
             int status = cons->intStatus();
@@ -134,41 +144,51 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
     Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
 
     DPRINTF(TsunamiUart, " write register %#x value %#x\n", daddr, *(uint8_t*)data);
+
     switch (daddr) {
       case 0x3:
         status_store = *data;
         switch (*data) {
-          case 0x03: // going to read RR3
-            return No_Fault;
-
-          case 0x28: // Ack of TX
-            {
-                if ((cons->intStatus() & CONS_INT_TX) == 0)
-                    panic("Ack of transmit, though there was no interrupt");
-
-                cons->clearInt(CONS_INT_TX);
+                case 0x03: // going to read RR3
                 return No_Fault;
-            }
 
-          case 0x00:
-          case 0x01:
-          case 0x12:
-            // going to write data???
-            return No_Fault;
+                case 0x28: // Ack of TX
+                {
+                        if ((cons->intStatus() & CONS_INT_TX) == 0)
+                            panic("Ack of transmit, though there was no interrupt");
 
-          default:
+                        cons->clearInt(CONS_INT_TX);
+                        return No_Fault;
+                }
+
+        case 0x00:
+        case 0x01:
+        case 0x12:
+        // going to write data???
+        return No_Fault;
+
+        default:
             DPRINTF(TsunamiUart, "writing status register %#x \n",
                     *(uint8_t *)data);
             return No_Fault;
         }
 
       case 0x0: // Data register (TX)
-        cons->out(*(uint64_t *)data);
-        return No_Fault;
+        char ourchar;
+        ourchar = *(uint64_t *)data;
+        if ((isprint(ourchar) || iscntrl(ourchar)) && (ourchar != 0x0C))
+                cons->out(ourchar);
+        if (UART_IER_THRI & IER)
+            cons->setInt(CONS_INT_TX);
+            return No_Fault;
+        break;
       case 0x1: // DLM
         DPRINTF(TsunamiUart, "writing to DLM/IER %#x\n", *(uint8_t*)data);
         IER = *(uint8_t*)data;
+        if (UART_IER_THRI & IER)
+            cons->setInt(CONS_INT_TX);
         return No_Fault;
+        break;
       case 0x4: // MCR
         DPRINTF(TsunamiUart, "writing to MCR %#x\n", *(uint8_t*)data);
         return No_Fault;
@@ -176,6 +196,12 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
     }
 
     return No_Fault;
+}
+
+Tick
+TsunamiUart::cacheAccess(MemReqPtr &req)
+{
+    return curTick + 1000;
 }
 
 void
@@ -201,6 +227,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)
     SimObjectParam<SimConsole *> console;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<HierParams *> hier;
+
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)
 
@@ -208,13 +237,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiUart)
 
     INIT_PARAM(console, "The console"),
     INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address")
+    INIT_PARAM(addr, "Device Address"),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiUart)
 
 CREATE_SIM_OBJECT(TsunamiUart)
 {
-    return new TsunamiUart(getInstanceName(), console, addr, mmu);
+    return new TsunamiUart(getInstanceName(), console, mmu, addr, hier, io_bus);
 }
 
 REGISTER_SIM_OBJECT("TsunamiUart", TsunamiUart)

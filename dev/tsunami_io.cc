@@ -151,12 +151,21 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
             req->vaddr, req->size, req->vaddr & 0xfff);
 
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
-//    ExecContext *xc = req->xc;
-//    int cpuid = xc->cpu_id;
+
 
     switch(req->size) {
       case sizeof(uint8_t):
         switch(daddr) {
+          case TSDEV_PIC1_ISR:
+              // !!! If this is modified 64bit case needs to be too
+              // Pal code has to do a 64 bit physical read because there is
+              // no load physical byte instruction
+              *(uint8_t*)data = picr;
+              return No_Fault;
+          case TSDEV_PIC2_ISR:
+              // PIC2 not implemnted... just return 0
+              *(uint8_t*)data = 0x00;
+              return No_Fault;
           case TSDEV_TMR_CTL:
             *(uint8_t*)data = timer2.Status();
             return No_Fault;
@@ -206,7 +215,22 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
         }
       case sizeof(uint16_t):
       case sizeof(uint32_t):
+        panic("I/O Read - invalid size - va %#x size %d\n",
+              req->vaddr, req->size);
+
       case sizeof(uint64_t):
+       switch(daddr) {
+          case TSDEV_PIC1_ISR:
+              // !!! If this is modified 8bit case needs to be too
+              // Pal code has to do a 64 bit physical read because there is
+              // no load physical byte instruction
+              *(uint64_t*)data = (uint64_t)picr;
+              return No_Fault;
+          default:
+              panic("I/O Read - invalid size - va %#x size %d\n",
+                    req->vaddr, req->size);
+       }
+
       default:
         panic("I/O Read - invalid size - va %#x size %d\n",
               req->vaddr, req->size);
@@ -231,16 +255,29 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
       case sizeof(uint8_t):
         switch(daddr) {
           case TSDEV_PIC1_MASK:
-            mask1 = *(uint8_t*)data;
+            mask1 = ~(*(uint8_t*)data);
             if ((picr & mask1) && !picInterrupting) {
                 picInterrupting = true;
                 tsunami->cchip->postDRIR(55);
                 DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
             }
+            if ((!(picr & mask1)) && picInterrupting) {
+                picInterrupting = false;
+                tsunami->cchip->clearDRIR(55);
+                DPRINTF(Tsunami, "clearing pic interrupt\n");
+            }
             return No_Fault;
           case TSDEV_PIC2_MASK:
             mask2 = *(uint8_t*)data;
             //PIC2 Not implemented to interrupt
+            return No_Fault;
+          case TSDEV_PIC1_ACK:
+            // clear the interrupt on the PIC
+            picr &= ~(1 << (*(uint8_t*)data & 0xF));
+            if (!(picr & mask1))
+                tsunami->cchip->clearDRIR(55);
+            return No_Fault;
+          case TSDEV_PIC2_ACK:
             return No_Fault;
           case TSDEV_DMA1_RESET:
             return No_Fault;
@@ -321,8 +358,7 @@ TsunamiIO::postPIC(uint8_t bitvector)
 {
     //PIC2 Is not implemented, because nothing of interest there
     picr |= bitvector;
-    if ((picr & mask1) && !picInterrupting) {
-        picInterrupting = true;
+    if (picr & mask1) {
         tsunami->cchip->postDRIR(55);
         DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
     }
@@ -334,7 +370,6 @@ TsunamiIO::clearPIC(uint8_t bitvector)
     //PIC2 Is not implemented, because nothing of interest there
     picr &= ~bitvector;
     if (!(picr & mask1)) {
-        picInterrupting = false;
         tsunami->cchip->clearDRIR(55);
         DPRINTF(Tsunami, "clearing pic interrupt to cchip\n");
     }

@@ -49,6 +49,7 @@
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "targetarch/ev5.hh"
+#include "dev/platform.hh"
 
 using namespace std;
 
@@ -76,7 +77,7 @@ SimConsole::SimConsole(const string &name, const string &file, int num)
 #if TRACING_ON == 1
       linebuf(16384),
 #endif
-      _status(0), _enable(0), intr(NULL)
+      _status(0), _enable(0), intr(NULL), platform(NULL)
 {
     if (!file.empty())
         outfile = new ofstream(file.c_str());
@@ -322,8 +323,8 @@ SimConsole::clearInt(int i)
 {
     int old = _status;
     _status &= ~i;
-    if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
-        intr->clear(TheISA::INTLEVEL_IRQ0);
+    //if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
+        platform->clearConsoleInt();
 
     return old;
 }
@@ -331,10 +332,10 @@ SimConsole::clearInt(int i)
 void
 SimConsole::raiseInt(int i)
 {
-    int old = _status;
+    //int old = _status;
     _status |= i;
-    if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
-        intr->post(TheISA::INTLEVEL_IRQ0);
+    //if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
+        platform->postConsoleInt();
 }
 
 void
@@ -357,14 +358,21 @@ SimConsole::setInt(int bits)
     old = _enable;
     _enable |= bits;
 
-    if (MaskStatus(_status, old) != MaskStatus(_status, _enable) && intr) {
+    //if (MaskStatus(_status, old) != MaskStatus(_status, _enable) && intr) {
+    if (intr) {
         if (MaskStatus(_status, _enable))
-            intr->post(TheISA::INTLEVEL_IRQ0);
+            platform->postConsoleInt();
         else
-            intr->clear(TheISA::INTLEVEL_IRQ0);
+            platform->clearConsoleInt();
     }
 }
 
+void
+SimConsole::setPlatform(Platform *p)
+{
+    platform = p;
+    platform->cons = this;
+}
 
 void
 SimConsole::serialize(ostream &os)
@@ -381,6 +389,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
 
     SimObjectParam<ConsoleListener *> listener;
     SimObjectParam<IntrControl *> intr_control;
+    SimObjectParam<Platform *> platform;
     Param<string> output;
     Param<bool> append_name;
     Param<int> number;
@@ -391,6 +400,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimConsole)
 
     INIT_PARAM(listener, "console listener"),
     INIT_PARAM(intr_control, "interrupt controller"),
+    INIT_PARAM(platform, "platform"),
     INIT_PARAM_DFLT(output, "file to dump output to", ""),
     INIT_PARAM_DFLT(append_name, "append name() to filename", true),
     INIT_PARAM_DFLT(number, "console number", 0)
@@ -413,8 +423,9 @@ CREATE_SIM_OBJECT(SimConsole)
     SimConsole *console = new SimConsole(getInstanceName(), filename, number);
     ((ConsoleListener *)listener)->add(console);
     ((SimConsole *)console)->initInt(intr_control);
-//    ((SimConsole *)console)->setInt(SimConsole::TransmitInterrupt |
-//				    SimConsole::ReceiveInterrupt);
+    ((SimConsole *)console)->setPlatform(platform);
+    //((SimConsole *)console)->setInt(SimConsole::TransmitInterrupt |
+    //                                SimConsole::ReceiveInterrupt);
 
     return console;
 }
