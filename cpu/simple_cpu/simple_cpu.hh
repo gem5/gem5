@@ -158,7 +158,6 @@ class SimpleCPU : public BaseCPU
 #endif
 
     virtual ~SimpleCPU();
-    virtual void init();
 
     // execution context
     ExecContext *xc;
@@ -177,8 +176,6 @@ class SimpleCPU : public BaseCPU
 
     // L1 data cache
     MemInterface *dcacheInterface;
-
-    bool defer_registration;
 
     // current instruction
     MachInst inst;

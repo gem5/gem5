@@ -122,6 +122,8 @@ class System : public SimObject
     System(Params *p);
     ~System();
 
+    void startup();
+
   public:
     /**
      * Returns the addess the kernel starts at.

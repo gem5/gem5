@@ -124,7 +124,7 @@ SimpleCPU::SimpleCPU(const string &_name,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
                      bool _def_reg, Tick freq)
-    : BaseCPU(_name, /* number_of_threads */ 1,
+    : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
               _system, freq),
@@ -137,12 +137,11 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
                      bool _def_reg)
-    : BaseCPU(_name, /* number_of_threads */ 1,
+    : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads),
 #endif
-      tickEvent(this), xc(NULL), defer_registration(_def_reg),
-      cacheCompletionEvent(this)
+      tickEvent(this), xc(NULL), cacheCompletionEvent(this)
 {
     _status = Idle;
 #ifdef FULL_SYSTEM
@@ -174,13 +173,6 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 
 SimpleCPU::~SimpleCPU()
 {
-}
-
-void SimpleCPU::init()
-{
-    if (!defer_registration) {
-        this->registerExecContexts();
-    }
 }
 
 void

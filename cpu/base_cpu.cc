@@ -47,21 +47,22 @@ vector<BaseCPU *> BaseCPU::cpuList;
 int maxThreadsPerCPU = 1;
 
 #ifdef FULL_SYSTEM
-BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
+BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
                  Counter max_insts_any_thread,
                  Counter max_insts_all_threads,
                  Counter max_loads_any_thread,
                  Counter max_loads_all_threads,
                  System *_system, Tick freq)
-    : SimObject(_name), frequency(freq),
+    : SimObject(_name), frequency(freq), deferRegistration(_def_reg),
       number_of_threads(_number_of_threads), system(_system)
 #else
-BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
+BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
                  Counter max_insts_any_thread,
                  Counter max_insts_all_threads,
                  Counter max_loads_any_thread,
                  Counter max_loads_all_threads)
-    : SimObject(_name), number_of_threads(_number_of_threads)
+    : SimObject(_name), deferRegistration(_def_reg),
+      number_of_threads(_number_of_threads)
 #endif
 {
     // add self to global list of CPUs
@@ -126,6 +127,12 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
 #endif
 }
 
+void
+BaseCPU::init()
+{
+    if (!deferRegistration)
+        registerExecContexts();
+}
 
 void
 BaseCPU::regStats()

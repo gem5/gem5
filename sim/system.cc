@@ -194,12 +194,6 @@ System::registerExecContext(ExecContext *xc)
     int xcIndex = execContexts.size();
     execContexts.push_back(xc);
 
-    if (xcIndex == 0) {
-        // activate with zero delay so that we start ticking right
-        // away on cycle 0
-        xc->activate(0);
-    }
-
     RemoteGDB *rgdb = new RemoteGDB(this, xc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
     gdbl->listen();
@@ -216,6 +210,16 @@ System::registerExecContext(ExecContext *xc)
     remoteGDB[xcIndex] = rgdb;
 
     return xcIndex;
+}
+
+void
+System::startup()
+{
+    if (!execContexts.empty()) {
+        // activate with zero delay so that we start ticking right
+        // away on cycle 0
+        execContexts[0]->activate(0);
+    }
 }
 
 void

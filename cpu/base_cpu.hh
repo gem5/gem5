@@ -91,12 +91,12 @@ class BaseCPU : public SimObject
   public:
 
 #ifdef FULL_SYSTEM
-    BaseCPU(const std::string &_name, int _number_of_threads,
+    BaseCPU(const std::string &_name, int _number_of_threads, bool _def_reg,
             Counter max_insts_any_thread, Counter max_insts_all_threads,
             Counter max_loads_any_thread, Counter max_loads_all_threads,
             System *_system, Tick freq);
 #else
-    BaseCPU(const std::string &_name, int _number_of_threads,
+    BaseCPU(const std::string &_name, int _number_of_threads, bool _def_reg,
             Counter max_insts_any_thread = 0,
             Counter max_insts_all_threads = 0,
             Counter max_loads_any_thread = 0,
@@ -105,8 +105,10 @@ class BaseCPU : public SimObject
 
     virtual ~BaseCPU() {}
 
+    virtual void init();
     virtual void regStats();
 
+    bool deferRegistration;
     void registerExecContexts();
 
     /// Prepare for another CPU to take over execution.  Called by
@@ -139,7 +141,6 @@ class BaseCPU : public SimObject
 
 #ifdef FULL_SYSTEM
     System *system;
-
 
     /**
      * Serialize this object to the given output stream.
