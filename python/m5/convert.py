@@ -60,7 +60,7 @@ def toInteger(value):
     elif value.endswith('f'):
         result = int(value[:-1]) * femto
     else:
-        result = int(value)
+        result = int(float(value))
 
     return result
 

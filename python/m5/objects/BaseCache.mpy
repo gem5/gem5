@@ -23,7 +23,7 @@ simobj BaseCache(BaseMem):
         "always service demand misses first")
     protocol = Param.CoherenceProtocol(NULL, "coherence protocol to use")
     repl = Param.Repl(NULL, "replacement policy")
-    size = Param.Int("capacity in bytes")
+    size = Param.MemorySize("capacity in bytes")
     split = Param.Bool(False, "whether or not this cache is split")
     split_size = Param.Int(0,
         "How many ways of the cache belong to CPU/LRU partition")

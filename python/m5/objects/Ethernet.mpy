@@ -68,8 +68,8 @@ simobj NSGigE(PciDevice):
     rx_delay = Param.Tick(1000, "Receive Delay")
     tx_delay = Param.Tick(1000, "Transmit Delay")
 
-    rx_fifo_size = Param.Int(131072, "max size in bytes of rxFifo")
-    tx_fifo_size = Param.Int(131072, "max size in bytes of txFifo")
+    rx_fifo_size = Param.MemorySize('128kB', "max size in bytes of rxFifo")
+    tx_fifo_size = Param.MemorySize('128kB', "max size in bytes of txFifo")
 
     intr_delay = Param.Tick(0, "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
