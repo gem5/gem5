@@ -94,7 +94,7 @@ class PrdTableEntry {
 #define STATUS_BSY_BIT  0x80
 #define STATUS_DRDY_BIT 0x40
 #define STATUS_DRQ_BIT  0x08
-#define DRIVE_LBA_BIT  0x40
+#define DRIVE_LBA_BIT   0x40
 
 #define DEV0 (0)
 #define DEV1 (1)
@@ -119,6 +119,16 @@ typedef struct CommandReg {
         uint8_t command;
     };
 } CommandReg_t;
+
+typedef enum Events {
+    None = 0,
+    Transfer,
+    ReadWait,
+    WriteWait,
+    PrdRead,
+    DmaRead,
+    DmaWrite
+} Events_t;
 
 typedef enum DevAction {
     ACT_NONE = 0,
@@ -184,7 +194,7 @@ class IdeDisk : public SimObject
     PhysicalMemory *physmem;
 
   protected:
-    /** The disk delay in milliseconds. */
+    /** The disk delay in microseconds. */
     int diskDelay;
 
   private:
@@ -214,6 +224,8 @@ class IdeDisk : public SimObject
     uint32_t curPrdAddr;
     /** PRD entry */
     PrdTableEntry curPrd;
+    /** Number of bytes transfered by DMA interface for current transfer */
+    uint32_t dmaInterfaceBytes;
     /** Device ID (master=0/slave=1) */
     int devID;
     /** Interrupt pending */
@@ -313,7 +325,9 @@ class IdeDisk : public SimObject
                        (cmdReg.cyl_low << 8) | (cmdReg.sec_num));
     }
 
-    inline Addr pciToDma(Addr &pciAddr);
+    inline Addr pciToDma(Addr pciAddr);
+
+    uint32_t bytesInDmaPage(Addr curAddr, uint32_t bytesLeft);
 
     /**
      * Serialize this object to the given output stream.

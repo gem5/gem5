@@ -27,7 +27,8 @@
  */
 
 /** @file
- * Simple PCI IDE controller with bus mastering capability
+ * Simple PCI IDE controller with bus mastering capability and UDMA
+ * modeled after controller in the Intel PIIX4 chip
  */
 
 #ifndef __IDE_CTRL_HH__
@@ -139,65 +140,13 @@ class IdeController : public PciDev
   private:
     /** Parse the access address to pass on to device */
     void parseAddr(const Addr &addr, Addr &offset, bool &primary,
-                   RegType_t &type)
-    {
-        offset = addr;
-
-        if (addr >= pri_cmd_addr && addr < (pri_cmd_addr + pri_cmd_size)) {
-            offset -= pri_cmd_addr;
-            type = COMMAND_BLOCK;
-            primary = true;
-        } else if (addr >= pri_ctrl_addr &&
-                   addr < (pri_ctrl_addr + pri_ctrl_size)) {
-            offset -= pri_ctrl_addr;
-            type = CONTROL_BLOCK;
-            primary = true;
-        } else if (addr >= sec_cmd_addr &&
-                   addr < (sec_cmd_addr + sec_cmd_size)) {
-            offset -= sec_cmd_addr;
-            type = COMMAND_BLOCK;
-            primary = false;
-        } else if (addr >= sec_ctrl_addr &&
-                   addr < (sec_ctrl_addr + sec_ctrl_size)) {
-            offset -= sec_ctrl_addr;
-            type = CONTROL_BLOCK;
-            primary = false;
-        } else if (addr >= bmi_addr && addr < (bmi_addr + bmi_size)) {
-            offset -= bmi_addr;
-            type = BMI_BLOCK;
-            primary = (offset < BMIC1) ? true : false;
-        } else {
-            panic("IDE controller access to invalid address: %#x\n", addr);
-        }
-    };
+                   RegType_t &type);
 
     /** Select the disk based on the channel and device bit */
-    int getDisk(bool primary)
-    {
-        int disk = 0;
-        uint8_t *devBit = &dev[0];
-
-        if (!primary) {
-            disk += 2;
-            devBit = &dev[1];
-        }
-
-        disk += *devBit;
-
-        assert(*devBit == 0 || *devBit == 1);
-
-        return disk;
-    };
+    int getDisk(bool primary);
 
     /** Select the disk based on a pointer */
-    int getDisk(IdeDisk *diskPtr)
-    {
-        for (int i = 0; i < 4; i++) {
-            if ((long)diskPtr == (long)disks[i])
-                return i;
-        }
-        return -1;
-    }
+    int getDisk(IdeDisk *diskPtr);
 
   public:
     /**

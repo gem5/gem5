@@ -127,6 +127,72 @@ IdeController::~IdeController()
 }
 
 ////
+// Utility functions
+///
+
+void
+IdeController::parseAddr(const Addr &addr, Addr &offset, bool &primary,
+                         RegType_t &type)
+{
+    offset = addr;
+
+    if (addr >= pri_cmd_addr && addr < (pri_cmd_addr + pri_cmd_size)) {
+        offset -= pri_cmd_addr;
+        type = COMMAND_BLOCK;
+        primary = true;
+    } else if (addr >= pri_ctrl_addr &&
+               addr < (pri_ctrl_addr + pri_ctrl_size)) {
+        offset -= pri_ctrl_addr;
+        type = CONTROL_BLOCK;
+        primary = true;
+    } else if (addr >= sec_cmd_addr &&
+               addr < (sec_cmd_addr + sec_cmd_size)) {
+        offset -= sec_cmd_addr;
+        type = COMMAND_BLOCK;
+        primary = false;
+    } else if (addr >= sec_ctrl_addr &&
+               addr < (sec_ctrl_addr + sec_ctrl_size)) {
+        offset -= sec_ctrl_addr;
+        type = CONTROL_BLOCK;
+        primary = false;
+    } else if (addr >= bmi_addr && addr < (bmi_addr + bmi_size)) {
+        offset -= bmi_addr;
+        type = BMI_BLOCK;
+        primary = (offset < BMIC1) ? true : false;
+    } else {
+        panic("IDE controller access to invalid address: %#x\n", addr);
+    }
+}
+
+int
+IdeController::getDisk(bool primary)
+{
+    int disk = 0;
+    uint8_t *devBit = &dev[0];
+
+    if (!primary) {
+        disk += 2;
+        devBit = &dev[1];
+    }
+
+    disk += *devBit;
+
+    assert(*devBit == 0 || *devBit == 1);
+
+    return disk;
+}
+
+int
+IdeController::getDisk(IdeDisk *diskPtr)
+{
+    for (int i = 0; i < 4; i++) {
+        if ((long)diskPtr == (long)disks[i])
+            return i;
+    }
+    return -1;
+}
+
+////
 // Command completion
 ////
 
@@ -523,11 +589,53 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
 void
 IdeController::serialize(std::ostream &os)
 {
+    // Serialize register addresses and sizes
+    SERIALIZE_SCALAR(pri_cmd_addr);
+    SERIALIZE_SCALAR(pri_cmd_size);
+    SERIALIZE_SCALAR(pri_ctrl_addr);
+    SERIALIZE_SCALAR(pri_ctrl_size);
+    SERIALIZE_SCALAR(sec_cmd_addr);
+    SERIALIZE_SCALAR(sec_cmd_size);
+    SERIALIZE_SCALAR(sec_ctrl_addr);
+    SERIALIZE_SCALAR(sec_ctrl_size);
+    SERIALIZE_SCALAR(bmi_addr);
+    SERIALIZE_SCALAR(bmi_size);
+
+    // Serialize registers
+    SERIALIZE_ARRAY(bmi_regs, 16);
+    SERIALIZE_ARRAY(dev, 2);
+    SERIALIZE_ARRAY(pci_regs, 8);
+
+    // Serialize internal state
+    SERIALIZE_SCALAR(io_enabled);
+    SERIALIZE_SCALAR(bm_enabled);
+    SERIALIZE_ARRAY(cmd_in_progress, 4);
 }
 
 void
 IdeController::unserialize(Checkpoint *cp, const std::string &section)
 {
+    // Unserialize register addresses and sizes
+    UNSERIALIZE_SCALAR(pri_cmd_addr);
+    UNSERIALIZE_SCALAR(pri_cmd_size);
+    UNSERIALIZE_SCALAR(pri_ctrl_addr);
+    UNSERIALIZE_SCALAR(pri_ctrl_size);
+    UNSERIALIZE_SCALAR(sec_cmd_addr);
+    UNSERIALIZE_SCALAR(sec_cmd_size);
+    UNSERIALIZE_SCALAR(sec_ctrl_addr);
+    UNSERIALIZE_SCALAR(sec_ctrl_size);
+    UNSERIALIZE_SCALAR(bmi_addr);
+    UNSERIALIZE_SCALAR(bmi_size);
+
+    // Unserialize registers
+    UNSERIALIZE_ARRAY(bmi_regs, 16);
+    UNSERIALIZE_ARRAY(dev, 2);
+    UNSERIALIZE_ARRAY(pci_regs, 8);
+
+    // Unserialize internal state
+    UNSERIALIZE_SCALAR(io_enabled);
+    UNSERIALIZE_SCALAR(bm_enabled);
+    UNSERIALIZE_ARRAY(cmd_in_progress, 4);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
