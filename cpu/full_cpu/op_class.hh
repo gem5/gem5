@@ -40,23 +40,23 @@
  */
 enum OpClass {
     No_OpClass = 0,	/* inst does not use a functional unit */
-    IntALU,		/* integer ALU */
-    IntMULT,		/* integer multiplier */
-    IntDIV,		/* integer divider */
-    FloatADD,		/* floating point adder/subtractor */
-    FloatCMP,		/* floating point comparator */
-    FloatCVT,		/* floating point<->integer converter */
-    FloatMULT,		/* floating point multiplier */
-    FloatDIV,		/* floating point divider */
-    FloatSQRT,		/* floating point square root */
-    RdPort,		/* memory read port */
-    WrPort,		/* memory write port */
-    IPrefPort,
+    IntAluOp,		/* integer ALU */
+    IntMultOp,		/* integer multiplier */
+    IntDivOp,		/* integer divider */
+    FloatAddOp,		/* floating point adder/subtractor */
+    FloatCmpOp,		/* floating point comparator */
+    FloatCvtOp,		/* floating point<->integer converter */
+    FloatMultOp,	/* floating point multiplier */
+    FloatDivOp,		/* floating point divider */
+    FloatSqrtOp,	/* floating point square root */
+    MemReadOp,		/* memory read port */
+    MemWriteOp,		/* memory write port */
+    InstPrefetchOp,	/* instruction prefetch port (on I-cache) */
     Num_OpClasses	/* total functional unit classes */
 };
 
 /**
- * Array mapping OpClass enum values to strings.
+ * Array mapping OpClass enum values to strings.  Defined in fu_pool.cc.
  */
 extern const char *opClassStrings[];
 

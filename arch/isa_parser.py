@@ -1493,19 +1493,19 @@ class CodeBlock:
         # These are good enough for most cases, and will be overridden
         # later otherwise.
         if 'IsStore' in self.flags:
-            self.op_class = 'WrPort'
+            self.op_class = 'MemWriteOp'
         elif 'IsLoad' in self.flags or 'IsPrefetch' in self.flags:
-            self.op_class = 'RdPort'
+            self.op_class = 'MemReadOp'
         elif 'IsFloating' in self.flags:
-            self.op_class = 'FloatADD'
+            self.op_class = 'FloatAddOp'
         else:
-            self.op_class = 'IntALU'
+            self.op_class = 'IntAluOp'
 
 # Assume all instruction flags are of the form 'IsFoo'
 instFlagRE = re.compile(r'Is.*')
 
-# OpClass constants are just a little more complicated
-opClassRE = re.compile(r'Int.*|Float.*|.*Port|No_OpClass')
+# OpClass constants end in 'Op' except No_OpClass
+opClassRE = re.compile(r'.*Op|No_OpClass')
 
 class InstObjParams:
     def __init__(self, mnem, class_name, base_class = '',
