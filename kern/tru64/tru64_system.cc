@@ -185,6 +185,9 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         esTxeofBin = new Statistics::MainBin(name() + " es_txeof");
         fnBins.insert(make_pair("es_txeof", esTxeofBin));
 
+        idleThreadBin = new Statistics::MainBin(name() + " idle_thread");
+        fnBins.insert(make_pair("idle_thread", idleThreadBin));
+
     }
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
@@ -236,6 +239,7 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
           esStartEvent = new FnEvent(&pcEventQueue, "es_start", this);
           esTransmitEvent = new FnEvent(&pcEventQueue, "es_transmit", this);
           esTxeofEvent = new FnEvent(&pcEventQueue, "es_txeof", this);
+          idleThreadEvent = new FnEvent(&pcEventQueue, "idle_thread", this);
     }
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
@@ -444,6 +448,11 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         else
             panic("could not find kernel symbol \'es_txeof\'");
 
+        if (kernelSymtab->findAddress("idle_thread", addr))
+            idleThreadEvent->schedule(addr);
+        else
+            panic("could not find kernel symbol \'idle_thread\'");
+
     }
     //INSTRUMENTATION CODEGEN END
      if (bin == true) {
@@ -488,6 +497,8 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         populateMap("es_transmit", "es_start");
 
         populateMap("es_txeof", "es_intr");
+
+        populateMap("idle_thread", "");
     }
 #endif //FS_MEASURE
 }
@@ -543,6 +554,7 @@ Tru64System::~Tru64System()
         delete esStartEvent;
         delete esTransmitEvent;
         delete esTxeofEvent;
+        delete idleThreadEvent;
     }
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE

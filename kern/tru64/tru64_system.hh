@@ -94,6 +94,7 @@ class Tru64System : public System
     Statistics::MainBin *esStartBin;
     Statistics::MainBin *esTransmitBin;
     Statistics::MainBin *esTxeofBin;
+    Statistics::MainBin *idleThreadBin;
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
 
@@ -138,6 +139,7 @@ class Tru64System : public System
     FnEvent *esStartEvent;
     FnEvent *esTransmitEvent;
     FnEvent *esTxeofEvent;
+    FnEvent *idleThreadEvent;
     //INSTRUMENTATION CODEGEN END
 #endif //FS_MEASURE
 
