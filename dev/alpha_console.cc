@@ -158,7 +158,7 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
         other_xc->regs.ipr[TheISA::IPR_PALtemp16] = cpu;
         other_xc->regs.intRegFile[0] = cpu;
         other_xc->regs.intRegFile[30] = alphaAccess->bootStrapImpure;
-        other_xc->setStatus(ExecContext::Active); //Start the cpu
+        other_xc->activate(); //Start the cpu
         return No_Fault;
     }
 

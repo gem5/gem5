@@ -93,7 +93,18 @@ class ExecContext
   public:
     Status status() const { return _status; }
 
-    void setStatus(Status new_status);
+    /// Set the status to Active.  Optional delay indicates number of
+    /// cycles to wait before beginning execution.
+    void activate(int delay = 1);
+
+    /// Set the status to Suspended.
+    void suspend();
+
+    /// Set the status to Unallocated.
+    void deallocate();
+
+    /// Set the status to Halted.
+    void halt();
 
 #ifdef FULL_SYSTEM
   public:

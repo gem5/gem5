@@ -193,11 +193,7 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         ExecContext *xc = execContexts[i];
         if (xc->status() == ExecContext::Active && _status != Running) {
             _status = Running;
-            // the CpuSwitchEvent has a low priority, so it's
-            // scheduled *after* the current cycle's tick event.  Thus
-            // the first tick event for the new context should take
-            // place on the *next* cycle.
-            tickEvent.schedule(curTick+1);
+            tickEvent.schedule(curTick);
         }
     }
 
@@ -206,73 +202,46 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
 
 void
-SimpleCPU::execCtxStatusChg(int thread_num) {
+SimpleCPU::activateContext(int thread_num, int delay)
+{
     assert(thread_num == 0);
     assert(xc);
 
-    if (xc->status() == ExecContext::Active)
-        setStatus(Running);
-    else
-        setStatus(Idle);
+    assert(_status == Idle);
+    notIdleFraction++;
+    scheduleTickEvent(delay);
+    _status = Running;
 }
+
 
 void
-SimpleCPU::setStatus(Status new_status)
+SimpleCPU::suspendContext(int thread_num)
 {
-    Status old_status = status();
+    assert(thread_num == 0);
+    assert(xc);
 
-    // We should never even get here if the CPU has been switched out.
-    assert(old_status != SwitchedOut);
-
-    _status = new_status;
-
-    switch (status()) {
-      case IcacheMissStall:
-        assert(old_status == Running);
-        lastIcacheStall = curTick;
-        if (tickEvent.scheduled())
-            tickEvent.squash();
-        break;
-
-      case IcacheMissComplete:
-        assert(old_status == IcacheMissStall);
-        if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + 1);
-        else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + 1);
-        break;
-
-      case DcacheMissStall:
-        assert(old_status == Running);
-        lastDcacheStall = curTick;
-        if (tickEvent.scheduled())
-            tickEvent.squash();
-        break;
-
-      case Idle:
-        assert(old_status == Running);
-        notIdleFraction--;
-        if (tickEvent.scheduled())
-            tickEvent.squash();
-        break;
-
-      case Running:
-        assert(old_status == Idle ||
-               old_status == DcacheMissStall ||
-               old_status == IcacheMissComplete);
-        if (old_status == Idle)
-            notIdleFraction++;
-
-        if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + 1);
-        else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + 1);
-        break;
-
-      default:
-        panic("can't get here");
-    }
+    assert(_status == Running);
+    notIdleFraction--;
+    unscheduleTickEvent();
+    _status = Idle;
 }
+
+
+void
+SimpleCPU::deallocateContext(int thread_num)
+{
+    // for now, these are equivalent
+    suspendContext(thread_num);
+}
+
+
+void
+SimpleCPU::haltContext(int thread_num)
+{
+    // for now, these are equivalent
+    suspendContext(thread_num);
+}
+
 
 void
 SimpleCPU::regStats()
@@ -382,7 +351,9 @@ SimpleCPU::read(Addr addr, T& data, unsigned flags)
         // at some point.
         if (result != MA_HIT && dcacheInterface->doEvents) {
             memReq->completionEvent = &cacheCompletionEvent;
-            setStatus(DcacheMissStall);
+            lastDcacheStall = curTick;
+            unscheduleTickEvent();
+            _status = DcacheMissStall;
         }
     }
 
@@ -463,7 +434,9 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         // at some point.
         if (result != MA_HIT && dcacheInterface->doEvents) {
             memReq->completionEvent = &cacheCompletionEvent;
-            setStatus(DcacheMissStall);
+            lastDcacheStall = curTick;
+            unscheduleTickEvent();
+            _status = DcacheMissStall;
         }
     }
 
@@ -533,11 +506,13 @@ SimpleCPU::processCacheCompletion()
     switch (status()) {
       case IcacheMissStall:
         icacheStallCycles += curTick - lastIcacheStall;
-        setStatus(IcacheMissComplete);
+        _status = IcacheMissComplete;
+        scheduleTickEvent(1);
         break;
       case DcacheMissStall:
         dcacheStallCycles += curTick - lastDcacheStall;
-        setStatus(Running);
+        _status = Running;
+        scheduleTickEvent(1);
         break;
       case SwitchedOut:
         // If this CPU has been switched out due to sampling/warm-up,
@@ -558,7 +533,7 @@ SimpleCPU::post_interrupt(int int_num, int index)
 
     if (xc->status() == ExecContext::Suspended) {
                 DPRINTF(IPI,"Suspended Processor awoke\n");
-        xc->setStatus(ExecContext::Active);
+        xc->activate();
         Annotate::Resume(xc);
     }
 }
@@ -627,7 +602,9 @@ SimpleCPU::tick()
         // We've already fetched an instruction and were stalled on an
         // I-cache miss.  No need to fetch it again.
 
-        setStatus(Running);
+        // Set status to running; tick event will get rescheduled if
+        // necessary at end of tick() function.
+        _status = Running;
     }
     else {
         // Try to fetch an instruction
@@ -660,7 +637,9 @@ SimpleCPU::tick()
             // at some point.
             if (result != MA_HIT && icacheInterface->doEvents) {
                 memReq->completionEvent = &cacheCompletionEvent;
-                setStatus(IcacheMissStall);
+                lastIcacheStall = curTick;
+                unscheduleTickEvent();
+                _status = IcacheMissStall;
                 return;
             }
         }

@@ -566,7 +566,7 @@ Tru64System::registerExecContext(ExecContext *xc)
     int xcIndex = System::registerExecContext(xc);
 
     if (xcIndex == 0) {
-        xc->setStatus(ExecContext::Active);
+        xc->activate();
     }
 
     RemoteGDB *rgdb = new RemoteGDB(this, xc);

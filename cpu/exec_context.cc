@@ -121,22 +121,53 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
 
 
 void
-ExecContext::setStatus(Status new_status)
+ExecContext::activate(int delay)
 {
-#ifdef FULL_SYSTEM
-    if (status() == new_status)
+    if (status() == Active)
         return;
 
+    _status = Active;
+    cpu->activateContext(thread_num, delay);
+}
+
+void
+ExecContext::suspend()
+{
+    if (status() == Suspended)
+        return;
+
+#ifdef FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
-    if (new_status == Suspended && cpu->check_interrupts()) {
+    if (cpu->check_interrupts()) {
         assert(status() == Active);
         return;
     }
 #endif
 
-    _status = new_status;
-    cpu->execCtxStatusChg(thread_num);
+    _status = Suspended;
+    cpu->suspendContext(thread_num);
 }
+
+void
+ExecContext::deallocate()
+{
+    if (status() == Unallocated)
+        return;
+
+    _status = Unallocated;
+    cpu->deallocateContext(thread_num);
+}
+
+void
+ExecContext::halt()
+{
+    if (status() == Halted)
+        return;
+
+    _status = Halted;
+    cpu->haltContext(thread_num);
+}
+
 
 void
 ExecContext::regStats(const string &name)

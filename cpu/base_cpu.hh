@@ -73,7 +73,20 @@ class BaseCPU : public SimObject
     std::vector<ExecContext *> execContexts;
 
   public:
-    virtual void execCtxStatusChg(int thread_num) {}
+
+    /// Notify the CPU that the indicated context is now active.  The
+    /// delay parameter indicates the number of ticks to wait before
+    /// executing (typically 0 or 1).
+    virtual void activateContext(int thread_num, int delay) {}
+
+    /// Notify the CPU that the indicated context is now suspended.
+    virtual void suspendContext(int thread_num) {}
+
+    /// Notify the CPU that the indicated context is now deallocated.
+    virtual void deallocateContext(int thread_num) {}
+
+    /// Notify the CPU that the indicated context is now halted.
+    virtual void haltContext(int thread_num) {}
 
   public:
 

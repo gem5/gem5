@@ -149,7 +149,7 @@ Process::registerExecContext(ExecContext *xc)
         xc->regs = *init_regs;
 
         // mark this context as active
-        xc->setStatus(ExecContext::Active);
+        xc->activate();
     }
 
     // return CPU number to caller and increment available CPU count

@@ -552,7 +552,7 @@ ExecContext::simPalCheck(int palFunc)
     switch (palFunc) {
       case PAL::halt:
         if (!misspeculating()) {
-            setStatus(Halted);
+            halt();
             if (--System::numSystemsRunning == 0)
                 new SimExitEvent("all cpus halted");
         }

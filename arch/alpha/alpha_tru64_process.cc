@@ -892,7 +892,7 @@ class Tru64 {
         ec->regs.pc = attrp->registers.pc;
         ec->regs.npc = attrp->registers.pc + sizeof(MachInst);
 
-        ec->setStatus(ExecContext::Active);
+        ec->activate();
     }
 
     /// Create thread.
@@ -1098,7 +1098,7 @@ class Tru64 {
                 // found waiting process: make it active
                 ExecContext *newCtx = i->waitingContext;
                 assert(newCtx->status() == ExecContext::Suspended);
-                newCtx->setStatus(ExecContext::Active);
+                newCtx->activate();
 
                 // get rid of this record
                 i = process->waitList.erase(i);
@@ -1127,7 +1127,7 @@ class Tru64 {
         } else {
             // lock is busy: disable until free
             process->waitList.push_back(Process::WaitRec(uaddr, xc));
-            xc->setStatus(ExecContext::Suspended);
+            xc->suspend();
         }
     }
 
@@ -1239,7 +1239,7 @@ class Tru64 {
         m5_unlock_mutex(lock_addr, process, xc);
 
         process->waitList.push_back(Process::WaitRec(cond_addr, xc));
-        xc->setStatus(ExecContext::Suspended);
+        xc->suspend();
 
         return 0;
     }
@@ -1250,7 +1250,7 @@ class Tru64 {
                        ExecContext *xc)
     {
         assert(xc->status() == ExecContext::Active);
-        xc->setStatus(ExecContext::Unallocated);
+        xc->deallocate();
 
         return 0;
     }

@@ -52,7 +52,7 @@ namespace AlphaPseudo
             return;
 
         Annotate::QUIESCE(xc);
-        xc->setStatus(ExecContext::Suspended);
+        xc->suspend();
         xc->kernelStats.quiesce();
     }
 

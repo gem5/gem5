@@ -75,6 +75,22 @@ class SimpleCPU : public BaseCPU
 
     TickEvent tickEvent;
 
+    /// Schedule tick event, regardless of its current state.
+    void scheduleTickEvent(int delay)
+    {
+        if (tickEvent.squashed())
+            tickEvent.reschedule(curTick + delay);
+        else if (!tickEvent.scheduled())
+            tickEvent.schedule(curTick + delay);
+    }
+
+    /// Unschedule tick event, regardless of its current state.
+    void unscheduleTickEvent()
+    {
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+    }
+
   private:
     Trace::InstRecord *traceData;
     template<typename T>
@@ -172,9 +188,10 @@ class SimpleCPU : public BaseCPU
 
     Status status() const { return _status; }
 
-    virtual void execCtxStatusChg(int thread_num);
-
-    void setStatus(Status new_status);
+    virtual void activateContext(int thread_num, int delay);
+    virtual void suspendContext(int thread_num);
+    virtual void deallocateContext(int thread_num);
+    virtual void haltContext(int thread_num);
 
     // statistics
     virtual void regStats();
