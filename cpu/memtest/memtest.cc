@@ -159,10 +159,10 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
     }
 
     if (blockAddr(req->paddr) == traceBlockAddr) {
-        cerr << name() << ": completed "
+        cerr << hex << traceBlockAddr << ": " << name() << ": completed "
              << (req->cmd.isWrite() ? "write" : "read")
              << " access of "
-             << req->size << " bytes at address 0x"
+             << dec << req->size << " bytes at address 0x"
              << hex << req->paddr << ", value = 0x";
         printData(cerr, req->data, req->size);
         cerr << " @ cycle " << dec << curTick;
@@ -243,9 +243,10 @@ MemTest::tick()
         uint8_t *result = new uint8_t[8];
         checkMem->access(Read, req->paddr, result, req->size);
         if (blockAddr(req->paddr) == traceBlockAddr) {
-            cerr << name() << ": initiating read "
+            cerr <<  hex << traceBlockAddr << ": " << name()
+                 << ": initiating read "
                  << ((probe)?"probe of ":"access of ")
-                 << req->size << " bytes from addr 0x"
+                 << dec << req->size << " bytes from addr 0x"
                  << hex << req->paddr << " at cycle "
                  << dec << curTick << endl;
         }
@@ -262,9 +263,10 @@ MemTest::tick()
         memcpy(req->data, &data, req->size);
         checkMem->access(Write, req->paddr, req->data, req->size);
         if (blockAddr(req->paddr) == traceBlockAddr) {
-            cerr << name() << ": initiating write "
+            cerr <<  hex << traceBlockAddr << ": "
+                 << name() << ": initiating write "
                  << ((probe)?"probe of ":"access of ")
-                 << req->size << " bytes (value = 0x";
+                 << dec << req->size << " bytes (value = 0x";
             printData(cerr, req->data, req->size);
             cerr << ") to addr 0x"
                  << hex << req->paddr << " at cycle "
@@ -289,8 +291,9 @@ MemTest::tick()
         req->data = new uint8_t[blockSize];
         req->size = blockSize;
         if (source == traceBlockAddr || dest == traceBlockAddr) {
-            cerr << name() << ": initiating copy of "
-                 << req->size << " bytes from addr 0x"
+            cerr <<  hex << traceBlockAddr << ": " << name()
+                 << ": initiating copy of "
+                 << dec << req->size << " bytes from addr 0x"
                  << hex << source << " to addr 0x"
                  << hex << dest << " at cycle "
                  << dec << curTick << endl;
