@@ -114,6 +114,11 @@ union PCIConfig {
 #define PCI_HEADER_TYPE		0x0E	// Header Type			ro
 #define PCI_BIST		0x0F	// Built in self test		rw
 
+// some pci command reg bitfields
+#define PCI_CMD_BME     0x04 // Bus master function enable
+#define PCI_CMD_MSE     0x02 // Memory Space Access enable
+#define PCI_CMD_IOSE    0x01 // I/O space enable
+
 // Type 0 PCI offsets
 #define PCI0_BASE_ADDR0		0x10	// Base Address 0		rw
 #define PCI0_BASE_ADDR1		0x14	// Base Address 1		rw

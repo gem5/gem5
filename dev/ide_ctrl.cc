@@ -342,12 +342,12 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
     // (like updating the PIO ranges)
     switch (offset) {
       case PCI_COMMAND:
-        if (config.data[offset] & IOSE)
+        if (config.data[offset] & PCI_CMD_IOSE)
             io_enabled = true;
         else
             io_enabled = false;
 
-        if (config.data[offset] & BME)
+        if (config.data[offset] & PCI_CMD_BME)
             bm_enabled = true;
         else
             bm_enabled = false;

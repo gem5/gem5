@@ -98,7 +98,7 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
              Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
              PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
              uint32_t func, bool rx_filter, const int eaddr[6])
-    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t),
+    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), io_enable(false),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), txPktXmitted(0), txState(txIdle), CTDD(false),
       txFifoCnt(0), txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
@@ -242,6 +242,28 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
 
     // Need to catch writes to BARs to update the PIO interface
     switch (offset) {
+        //seems to work fine without all these, but i ut in the IO to
+        //double check, an assertion will fail if we need to properly
+        // imlpement it
+      case PCI_COMMAND:
+        if (config.data[offset] & PCI_CMD_IOSE)
+            io_enable = true;
+        else
+            io_enable = false;
+#if 0
+        if (config.data[offset] & PCI_CMD_BME)
+            bm_enabled = true;
+        else
+            bm_enabled = false;
+        break;
+
+        if (config.data[offset] & PCI_CMD_MSE)
+            mem_enable = true;
+        else
+            mem_enable = false;
+        break;
+#endif
+
       case PCI0_BASE_ADDR0:
         if (BARAddrs[0] != 0) {
 
@@ -272,6 +294,8 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
 Fault
 NSGigE::read(MemReqPtr &req, uint8_t *data)
 {
+    assert(io_enable);
+
     //The mask is to give you only the offset into the device register file
     Addr daddr = req->paddr & 0xfff;
     DPRINTF(EthernetPIO, "read  da=%#x pa=%#x va=%#x size=%d\n",
@@ -474,6 +498,8 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
 Fault
 NSGigE::write(MemReqPtr &req, const uint8_t *data)
 {
+    assert(io_enable);
+
     Addr daddr = req->paddr & 0xfff;
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x va=%#x size=%d\n",
             daddr, req->paddr, req->vaddr, req->size);
@@ -2085,6 +2111,8 @@ NSGigE::serialize(ostream &os)
 
     SERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
+    SERIALIZE_SCALAR(io_enable);
+
     /*
      * Serialize the data Fifos
      */
@@ -2241,6 +2269,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(regs.tesr);
 
     UNSERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
+
+    UNSERIALIZE_SCALAR(io_enable);
 
     /*
      * unserialize the data fifos

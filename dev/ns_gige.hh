@@ -158,6 +158,13 @@ class NSGigE : public PciDev
     dp_regs regs;
     dp_rom rom;
 
+    /** pci settings */
+    bool io_enable;
+#if 0
+    bool mem_enable;
+    bool bm_enable;
+#endif
+
     /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */
     pktbuf_t txFifo;

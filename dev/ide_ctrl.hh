@@ -74,10 +74,6 @@
 #define UDMACTL (5)
 #define UDMATIM (6)
 
-// PCI Command bit fields
-#define BME     0x04 // Bus master function enable
-#define IOSE    0x01 // I/O space enable
-
 typedef enum RegType {
     COMMAND_BLOCK = 0,
     CONTROL_BLOCK,
