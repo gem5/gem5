@@ -60,7 +60,7 @@
 #include "sim/host.hh"
 
 //
-//  Un-comment this to enable wierdo-stat debugging
+//  Un-comment this to enable weirdo-stat debugging
 //
 // #define STAT_DEBUG
 
@@ -232,6 +232,8 @@ class Stat
      */
     virtual bool zero() const = 0;
 
+    //need to document
+    virtual bool binned() const = 0;
 
     /**
      * Set the name and marks this stat to print at the end of simulation.
@@ -326,6 +328,9 @@ class ScalarStat : public Stat
      * @param stream The output stream.
      */
     virtual void display(std::ostream &stream) const;
+
+    //need to document
+    virtual bool binned() const = 0;
 };
 
 void
@@ -369,6 +374,9 @@ class VectorStat : public Stat
      * @param stream The output stream.
      */
     virtual void display(std::ostream &stream) const;
+
+    //need to document
+    virtual bool binned() const = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -627,6 +635,7 @@ class ScalarBase : public ScalarStat
      * @return 1.
      */
     virtual size_t size() const { return 1; }
+    virtual bool binned() const { return bin_t::binned; }
 
     /**
      * Reset stat value to default
@@ -756,6 +765,7 @@ class VectorBase : public VectorStat
      * @return The size of the vector.
      */
     virtual size_t size() const { return bin.size(); }
+    virtual bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
      */
@@ -883,6 +893,7 @@ class ScalarProxy : public ScalarStat
      * @return 1.
      */
     virtual size_t size() const { return 1; }
+    virtual bool binned() const { return false; }
     /**
      * This stat has no state.  Nothing to reset
      */
@@ -963,6 +974,7 @@ class Vector2dBase : public Stat
 
     virtual size_t size() const { return bin.size(); }
     virtual bool zero() const { return data(0)->value(params) == 0.0; }
+    virtual bool binned() const { return bin_t::binned; }
 
     virtual void
     display(std::ostream &out) const
@@ -1094,6 +1106,7 @@ class VectorProxy : public VectorStat
         assert (index >= 0 && index < size());
         return ScalarProxy<T, Storage, Bin>(*bin, *params, offset + index);
     }
+    virtual bool binned() const { return false; }
 
     /**
      * This stat has no state.  Nothing to reset.
@@ -1509,6 +1522,8 @@ class DistBase : public Stat
         data()->display(stream, myname(), mydesc(), myprecision(), myflags(),
                         params);
     }
+
+    virtual bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
      */
@@ -1555,6 +1570,7 @@ class VectorDistBase : public Stat
     virtual size_t size() const { return bin.size(); }
     virtual bool zero() const { return false; }
     virtual void display(std::ostream &stream) const;
+    virtual bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
      */
@@ -1618,6 +1634,8 @@ class DistProxy : public Stat
         data()->display(stream, name.str(), desc.str(),
                         cstat->myprecision(), cstat->myflags(), cstat->params);
     }
+
+    virtual bool binned() const { return false; }
     /**
      * Proxy has no state.  Nothing to reset.
      */
@@ -1692,6 +1710,8 @@ class Node : public RefCounted
      * @return The total of the result vector.
      */
     virtual result_t total() const = 0;
+
+    virtual bool binned() const = 0;
 };
 
 /** Reference counting pointer to a function Node. */
@@ -1709,6 +1729,8 @@ class ScalarStatNode : public Node
     virtual result_t total() const { return stat.val(); };
 
     virtual size_t size() const { return 1; }
+
+    virtual bool binned() const { return stat.binned(); }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1725,6 +1747,8 @@ class ScalarProxyNode : public Node
     virtual result_t total() const { return proxy.val(); };
 
     virtual size_t size() const { return 1; }
+
+    virtual bool binned() const { return proxy.binned(); }
 };
 
 class VectorStatNode : public Node
@@ -1738,6 +1762,8 @@ class VectorStatNode : public Node
     virtual result_t total() const { return stat.total(); };
 
     virtual size_t size() const { return stat.size(); }
+
+    virtual bool binned() const { return stat.binned(); }
 };
 
 template <typename T>
@@ -1752,6 +1778,7 @@ class ConstNode : public Node
     virtual result_t total() const { return data[0]; };
 
     virtual size_t size() const { return 1; }
+    virtual bool binned() const { return false; }
 };
 
 template <typename T>
@@ -1770,6 +1797,7 @@ class FunctorNode : public Node
     virtual result_t total() const { return (result_t)functor(); };
 
     virtual size_t size() const { return 1; }
+    virtual bool binned() const { return false; }
 };
 
 template <typename T>
@@ -1788,6 +1816,7 @@ class ScalarNode : public Node
     virtual result_t total() const { return (result_t)scalar; };
 
     virtual size_t size() const { return 1; }
+    virtual bool binned() const { return false; }
 };
 
 template <class Op>
@@ -1820,6 +1849,7 @@ class UnaryNode : public Node
     }
 
     virtual size_t size() const { return l->size(); }
+    virtual bool binned() const { return l->binned(); }
 };
 
 template <class Op>
@@ -1880,6 +1910,8 @@ class BinaryNode : public Node
             return ls;
         }
     }
+
+    virtual bool binned() const { return (l->binned() || r->binned()); }
 };
 
 template <class Op>
@@ -1921,6 +1953,7 @@ class SumNode : public Node
     }
 
     virtual size_t size() const { return 1; }
+    virtual bool binned() const { return l->binned(); }
 };
 
 /**
@@ -2047,7 +2080,9 @@ class BinBase
 
   public:
     BinBase(size_t size);
-    ~BinBase();
+    virtual ~BinBase();
+    virtual void activate() = 0;
+    void regBin(BinBase *bin, std::string name);
 };
 
 } // namespace Detail
@@ -2055,6 +2090,12 @@ class BinBase
 template <class BinType>
 struct StatBin : public Detail::BinBase
 {
+  private:
+    std::string _name;
+
+  public:
+    std::string name() const { return _name;}
+
     static StatBin *&curBin() {
         static StatBin *current = NULL;
         return current;
@@ -2078,13 +2119,14 @@ struct StatBin : public Detail::BinBase
         return off;
     }
 
-    explicit StatBin(size_t size = 1024) : Detail::BinBase(size) {}
+    explicit StatBin(std::string name, size_t size = 1024) : Detail::BinBase(size) {  _name = name; this->regBin(this, name); }
 
     char *memory(off_t off) {
         assert(offset() <= size());
         return Detail::BinBase::memory() + off;
     }
 
+    virtual void activate()  { setCurBin(this); }
     static void activate(StatBin &bin) { setCurBin(&bin); }
 
     class BinBase
@@ -2110,6 +2152,7 @@ struct StatBin : public Detail::BinBase
         typedef typename Storage::Params Params;
 
       public:
+        enum { binned = true };
         Bin() { allocate(sizeof(Storage)); }
         bool initialized() const { return true; }
         void init(const Params &params) { }
@@ -2198,6 +2241,7 @@ struct NoBin
     {
       public:
         typedef typename Storage::Params Params;
+        enum { binned = false };
 
       private:
         char ptr[sizeof(Storage)];
@@ -2229,6 +2273,7 @@ struct NoBin
     {
       public:
         typedef typename Storage::Params Params;
+        enum { binned = false };
 
       private:
         char *ptr;
@@ -2605,6 +2650,8 @@ class Formula : public Detail::VectorStat
         else
             return root->size();
     }
+
+    virtual bool binned() const { return root->binned(); }
 
     /**
      * Formulas don't need to be reset
