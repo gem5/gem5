@@ -380,6 +380,7 @@ else:
 extra_libraries = []
 if env['USE_MYSQL']:
     sources += mysql_sources
+    env.Append(CPPDEFINES = 'USE_MYSQL')
     env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
     env.Append(LIBS=['z'])
     if sys.platform.lower().startswith('linux'):
