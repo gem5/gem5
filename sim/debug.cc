@@ -125,11 +125,6 @@ extern "C" void sched_break_cycle(Tick when)
     new DebugBreakEvent(&mainEventQueue, when);
 }
 
-extern "C" void dump_stats()
-{
-    new DumpStatsEvent();
-}
-
 extern "C" void eventq_dump()
 {
     mainEventQueue.dump();

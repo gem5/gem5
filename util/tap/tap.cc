@@ -200,7 +200,7 @@ main(int argc, char *argv[])
     int bufsize = 2000;
     bool listening = false;
     char *device = NULL;
-    char *filter = "";
+    char *filter = NULL;
     char c;
     int daemon = false;
     string host;
@@ -274,16 +274,20 @@ main(int argc, char *argv[])
     if (pcap == NULL)
         panic("pcap_open_live failed: %s\n", errbuf);
 
-    bpf_program program;
-    bpf_u_int32 localnet, netmask;
-    if (pcap_lookupnet(device, &localnet, &netmask, errbuf) == -1)
-        panic("pcap_lookupnet failed: %s\n", errbuf);
+    if (filter) {
+        bpf_program program;
+        bpf_u_int32 localnet, netmask;
+        if (pcap_lookupnet(device, &localnet, &netmask, errbuf) == -1) {
+            DPRINTF("pcap_lookupnet failed: %s\n", errbuf);
+            netmask = 0xffffff00;
+        }
 
-    if (pcap_compile(pcap, &program, filter, 1, netmask) == -1)
-        panic("pcap_compile failed, invalid filter:\n%s\n", filter);
+        if (pcap_compile(pcap, &program, filter, 1, netmask) == -1)
+            panic("pcap_compile failed, invalid filter:\n%s\n", filter);
 
-    if (pcap_setfilter(pcap, &program) == -1)
-        panic("pcap_setfilter failed\n");
+        if (pcap_setfilter(pcap, &program) == -1)
+            panic("pcap_setfilter failed\n");
+    }
 
     eth_t *ethernet = eth_open(device);
     if (!ethernet)

@@ -28,10 +28,11 @@ let {{
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/static_inst.hh"
 #include "sim/annotation.hh"
-#include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 
 #ifdef FULL_SYSTEM
-#include "targetarch/ev5.hh"
+#include "arch/alpha/ev5.hh"
+#include "arch/alpha/pseudo_inst.hh"
 #endif
 
 namespace AlphaISA;
@@ -2372,7 +2373,7 @@ decode OPCODE default Unknown::unknown() {
 	format EmulatedCallPal {
 	    0x00: halt ({{
 		if (!xc->misspeculating()) 
-		    SimExit("halt instruction encountered");
+		    SimExit(curTick, "halt instruction encountered");
 	    }});
 	    0x83: callsys({{ 
 		if (!xc->misspeculating()) 
@@ -2417,11 +2418,8 @@ decode OPCODE default Unknown::unknown() {
 		}
 	    }});
 	    0x01: quiesce({{
-		if (!xc->misspeculating()) {
-		    Annotate::QUIESCE(xc);
-		    xc->setStatus(ExecContext::Suspended);
-		    xc->kernelStats.quiesce();
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::quiesce(xc);
 	    }});
 	    0x10: ivlb({{
 		if (!xc->misspeculating()) {
@@ -2433,14 +2431,30 @@ decode OPCODE default Unknown::unknown() {
 		if (!xc->misspeculating())
 		    Annotate::EndInterval(xc);
 	    }}, No_OpClass);
-	    0x20: m5exit({{
+	    0x20: m5exit_old({{
 		if (!xc->misspeculating())
-		    SimExit("m5_exit instruction encountered");
+		    AlphaPseudo::m5exit_old(xc);
+	    }}, No_OpClass);
+	    0x21: m5exit({{
+		if (!xc->misspeculating())
+		    AlphaPseudo::m5exit(xc);
 	    }}, No_OpClass);
             0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
             0x40: resetstats({{
 		if (!xc->misspeculating())
-		    Statistics::reset();
+		    AlphaPseudo::resetstats(xc);
+	    }});
+            0x41: dumpstats({{
+		if (!xc->misspeculating())
+		    AlphaPseudo::dumpstats(xc);
+	    }});
+            0x42: dumpresetstats({{
+		if (!xc->misspeculating())
+		    AlphaPseudo::dumpresetstats(xc);
+	    }});
+            0x43: m5checkpoint({{
+		if (!xc->misspeculating())
+		    AlphaPseudo::m5checkpoint(xc);
 	    }});
 	}
     }

@@ -31,11 +31,14 @@
 
 #include <string>
 
+#include "sim/host.hh"
+
 class Callback;
 
 void registerExitCallback(Callback *);
 
 void exitNow(const std::string &cause, int exit_code);
 void exitNow(const char *cause, int exit_code);
+void SimExit(Tick when, const char *message);
 
 #endif // __SIM_EXIT_HH__

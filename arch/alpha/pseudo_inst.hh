@@ -26,34 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __INTR_CONTROL_HH__
-#define __INTR_CONTROL_HH__
+class ExecContext;
 
-#include <vector>
-#include "base/misc.hh"
-#include "cpu/base_cpu.hh"
-#include "sim/sim_object.hh"
-#include "sim/system.hh"
-#include "cpu/exec_context.hh"
-
-
-class IntrControl : public SimObject
+namespace AlphaPseudo
 {
-  public:
-    BaseCPU *cpu;
-    IntrControl(const std::string &name, BaseCPU *c);
-
-    void clear(int int_num, int index = 0);
-    void post(int int_num, int index = 0);
-    void clear(int cpu_id, int int_num, int index);
-    void post(int cpu_id, int int_num, int index);
-};
-
-#endif // __INTR_CONTROL_HH__
-
-
-
-
-
-
-
+    void quiesce(ExecContext *xc);
+    void m5exit(ExecContext *xc);
+    void m5exit_old(ExecContext *xc);
+    void resetstats(ExecContext *xc);
+    void dumpstats(ExecContext *xc);
+    void dumpresetstats(ExecContext *xc);
+    void m5checkpoint(ExecContext *xc);
+}

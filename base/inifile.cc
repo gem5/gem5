@@ -402,6 +402,14 @@ IniFile::findAppend(const string &_section, const string &entry,
     return ret;
 }
 
+
+bool
+IniFile::sectionExists(const string &sectionName) const
+{
+    return findSection(sectionName) != NULL;
+}
+
+
 bool
 IniFile::Section::printUnreferenced(const string &sectionName)
 {

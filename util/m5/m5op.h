@@ -26,34 +26,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __INTR_CONTROL_HH__
-#define __INTR_CONTROL_HH__
+#ifndef __M5OP_H__
+#define __M5OP_H__
 
-#include <vector>
-#include "base/misc.hh"
-#include "cpu/base_cpu.hh"
-#include "sim/sim_object.hh"
-#include "sim/system.hh"
-#include "cpu/exec_context.hh"
+#include <inttypes.h>
 
+void arm(uint64_t address);
+void quiesce();
+void ivlb(uint64_t interval);
+void ivle(uint64_t interval);
+void m5exit(uint64_t ns_delay);
+uint64_t initparam();
+void checkpoint(uint64_t ns_delay, uint64_t ns_period);
+void reset_stats(uint64_t ns_delay, uint64_t ns_period);
+void dump_stats(uint64_t ns_delay, uint64_t ns_period);
+void dumpreset_stats(uint64_t ns_delay, uint64_t ns_period);
 
-class IntrControl : public SimObject
-{
-  public:
-    BaseCPU *cpu;
-    IntrControl(const std::string &name, BaseCPU *c);
-
-    void clear(int int_num, int index = 0);
-    void post(int int_num, int index = 0);
-    void clear(int cpu_id, int int_num, int index);
-    void post(int cpu_id, int int_num, int index);
-};
-
-#endif // __INTR_CONTROL_HH__
-
-
-
-
-
-
-
+#endif // __M5OP_H__

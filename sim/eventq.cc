@@ -112,7 +112,7 @@ EventQueue::serviceOne()
     else
         event->clearFlags(Event::Squashed);
 
-    if (event->getFlags(Event::AutoDelete))
+    if (event->getFlags(Event::AutoDelete) && !event->scheduled())
         delete event;
 }
 
