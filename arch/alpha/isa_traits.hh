@@ -264,6 +264,7 @@ const int ReturnValueReg = TheISA::ReturnValueReg;
 const int ArgumentReg0 = TheISA::ArgumentReg0;
 const int ArgumentReg1 = TheISA::ArgumentReg1;
 const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
+const int MaxAddr = (Addr)-1;
 
 #ifdef FULL_SYSTEM
 typedef TheISA::InternalProcReg InternalProcReg;
