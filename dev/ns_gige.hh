@@ -158,12 +158,14 @@ class NSGigE : public PciDev
     dp_regs regs;
     dp_rom rom;
 
-     /*** BASIC STRUCTURES FOR TX/RX ***/
+    /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */
     pktbuf_t txFifo;
     pktbuf_t rxFifo;
 
     /** various helper vars */
+    PacketPtr txPacket;
+    PacketPtr rxPacket;
     uint8_t *txPacketBufPtr;
     uint8_t *rxPacketBufPtr;
     uint32_t txXferLen;
@@ -171,8 +173,6 @@ class NSGigE : public PciDev
     uint32_t txPktXmitted;
     bool rxDmaFree;
     bool txDmaFree;
-    PacketPtr txPacket;
-    PacketPtr rxPacket;
 
     /** DescCaches */
     ns_desc txDescCache;
@@ -261,18 +261,7 @@ class NSGigE : public PciDev
 
     void txReset();
     void rxReset();
-    void regsReset() {
-        memset(&regs, 0, sizeof(regs));
-        regs.config = 0x80000000;
-        regs.mear = 0x12;
-        regs.isr = 0x00608000;
-        regs.txcfg = 0x120;
-        regs.rxcfg = 0x4;
-        regs.srr = 0x0103;
-        regs.mibc = 0x2;
-        regs.vdr = 0x81;
-        regs.tesr = 0xc000;
-    }
+    void regsReset();
 
     void rxKick();
     Tick rxKickTick;

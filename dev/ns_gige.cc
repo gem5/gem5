@@ -99,7 +99,7 @@ NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
              PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
              uint32_t func, bool rx_filter, const int eaddr[6])
     : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t),
-      txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
+      txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), txPktXmitted(0), txState(txIdle), CTDD(false),
       txFifoCnt(0), txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
@@ -1048,6 +1048,20 @@ NSGigE::rxReset()
     rxFifo.clear();
     regs.command &= ~CR_RXE;
     rxState = rxIdle;
+}
+
+void NSGigE::regsReset()
+{
+    memset(&regs, 0, sizeof(regs));
+    regs.config = 0x80000000;
+    regs.mear = 0x12;
+    regs.isr = 0x00608000;
+    regs.txcfg = 0x120;
+    regs.rxcfg = 0x4;
+    regs.srr = 0x0103;
+    regs.mibc = 0x2;
+    regs.vdr = 0x81;
+    regs.tesr = 0xc000;
 }
 
 void
@@ -2072,20 +2086,50 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
     /*
+     * Serialize the data Fifos
+     */
+    int txNumPkts = txFifo.size();
+    SERIALIZE_SCALAR(txNumPkts);
+    int i = 0;
+    pktiter_t end = txFifo.end();
+    for (pktiter_t p = txFifo.begin(); p != end; ++p) {
+        nameOut(os, csprintf("%s.txFifo%d", name(), i++));
+        (*p)->serialize(os);
+    }
+
+    int rxNumPkts = rxFifo.size();
+    SERIALIZE_SCALAR(rxNumPkts);
+    i = 0;
+    end = rxFifo.end();
+    for (pktiter_t p = rxFifo.begin(); p != end; ++p) {
+        nameOut(os, csprintf("%s.rxFifo%d", name(), i++));
+        (*p)->serialize(os);
+    }
+
+    /*
      * Serialize the various helper variables
      */
-    uint32_t txPktBufPtr = (uint32_t) txPacketBufPtr;
-    SERIALIZE_SCALAR(txPktBufPtr);
-    uint32_t rxPktBufPtr = (uint32_t) rxPktBufPtr;
-    SERIALIZE_SCALAR(rxPktBufPtr);
+    bool txPacketExists = txPacket;
+    SERIALIZE_SCALAR(txPacketExists);
+    if (txPacketExists) {
+        nameOut(os, csprintf("%s.txPacket", name()));
+        txPacket->serialize(os);
+        uint32_t txPktBufPtr = (uint32_t) (txPacketBufPtr - txPacket->data);
+        SERIALIZE_SCALAR(txPktBufPtr);
+    }
+
+    bool rxPacketExists = rxPacket;
+    SERIALIZE_SCALAR(rxPacketExists);
+    if (rxPacketExists) {
+        nameOut(os, csprintf("%s.rxPacket", name()));
+        rxPacket->serialize(os);
+        uint32_t rxPktBufPtr = (uint32_t) (rxPacketBufPtr - rxPacket->data);
+        SERIALIZE_SCALAR(rxPktBufPtr);
+    }
+
     SERIALIZE_SCALAR(txXferLen);
     SERIALIZE_SCALAR(rxXferLen);
     SERIALIZE_SCALAR(txPktXmitted);
-
-    bool txPacketExists = txPacket;
-    SERIALIZE_SCALAR(txPacketExists);
-    bool rxPacketExists = rxPacket;
-    SERIALIZE_SCALAR(rxPacketExists);
 
     /*
      * Serialize DescCaches
@@ -2102,8 +2146,6 @@ NSGigE::serialize(ostream &os)
     /*
      * Serialize tx state machine
      */
-    int txNumPkts = txFifo.size();
-    SERIALIZE_SCALAR(txNumPkts);
     int txState = this->txState;
     SERIALIZE_SCALAR(txState);
     SERIALIZE_SCALAR(CTDD);
@@ -2118,8 +2160,6 @@ NSGigE::serialize(ostream &os)
     /*
      * Serialize rx state machine
      */
-    int rxNumPkts = rxFifo.size();
-    SERIALIZE_SCALAR(rxNumPkts);
     int rxState = this->rxState;
     SERIALIZE_SCALAR(rxState);
     SERIALIZE_SCALAR(CRDD);
@@ -2132,12 +2172,22 @@ NSGigE::serialize(ostream &os)
 
     SERIALIZE_SCALAR(extstsEnable);
 
-   /*
+    /*
      * If there's a pending transmit, store the time so we can
      * reschedule it later
      */
     Tick transmitTick = txEvent.scheduled() ? txEvent.when() - curTick : 0;
     SERIALIZE_SCALAR(transmitTick);
+
+    /*
+     * receive address filter settings
+     */
+    SERIALIZE_SCALAR(rxFilterEnable);
+    SERIALIZE_SCALAR(acceptBroadcast);
+    SERIALIZE_SCALAR(acceptMulticast);
+    SERIALIZE_SCALAR(acceptUnicast);
+    SERIALIZE_SCALAR(acceptPerfect);
+    SERIALIZE_SCALAR(acceptArp);
 
     /*
      * Keep track of pending interrupt status.
@@ -2149,24 +2199,6 @@ NSGigE::serialize(ostream &os)
         intrEventTick = intrEvent->when();
     SERIALIZE_SCALAR(intrEventTick);
 
-    int i = 0;
-    for (pktiter_t p = rxFifo.begin(); p != rxFifo.end(); ++p) {
-        nameOut(os, csprintf("%s.rxFifo%d", name(), i++));
-        (*p)->serialize(os);
-    }
-    if (rxPacketExists) {
-        nameOut(os, csprintf("%s.rxPacket", name()));
-        rxPacket->serialize(os);
-    }
-    i = 0;
-    for (pktiter_t p = txFifo.begin(); p != txFifo.end(); ++p) {
-        nameOut(os, csprintf("%s.txFifo%d", name(), i++));
-        (*p)->serialize(os);
-    }
-    if (txPacketExists) {
-        nameOut(os, csprintf("%s.txPacket", name()));
-        txPacket->serialize(os);
-    }
 }
 
 void
@@ -2211,22 +2243,54 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
     /*
+     * unserialize the data fifos
+     */
+    int txNumPkts;
+    UNSERIALIZE_SCALAR(txNumPkts);
+    int i;
+    for (i = 0; i < txNumPkts; ++i) {
+        PacketPtr p = new EtherPacket;
+        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
+        txFifo.push_back(p);
+    }
+
+    int rxNumPkts;
+    UNSERIALIZE_SCALAR(rxNumPkts);
+    for (i = 0; i < rxNumPkts; ++i) {
+        PacketPtr p = new EtherPacket;
+        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
+        rxFifo.push_back(p);
+    }
+
+    /*
      * unserialize the various helper variables
      */
-    uint32_t txPktBufPtr;
-    UNSERIALIZE_SCALAR(txPktBufPtr);
-    txPacketBufPtr = (uint8_t *) txPktBufPtr;
-    uint32_t rxPktBufPtr;
-    UNSERIALIZE_SCALAR(rxPktBufPtr);
-    rxPacketBufPtr = (uint8_t *) rxPktBufPtr;
+    bool txPacketExists;
+    UNSERIALIZE_SCALAR(txPacketExists);
+    if (txPacketExists) {
+        txPacket = new EtherPacket;
+        txPacket->unserialize(cp, csprintf("%s.txPacket", section));
+        uint32_t txPktBufPtr;
+        UNSERIALIZE_SCALAR(txPktBufPtr);
+        txPacketBufPtr = (uint8_t *) txPacket->data + txPktBufPtr;
+    } else
+        txPacket = 0;
+
+    bool rxPacketExists;
+    UNSERIALIZE_SCALAR(rxPacketExists);
+    rxPacket = 0;
+    if (rxPacketExists) {
+        rxPacket = new EtherPacket;
+        rxPacket->unserialize(cp, csprintf("%s.rxPacket", section));
+        uint32_t rxPktBufPtr;
+        UNSERIALIZE_SCALAR(rxPktBufPtr);
+        rxPacketBufPtr = (uint8_t *) rxPacket->data + rxPktBufPtr;
+    } else
+        rxPacket = 0;
+
     UNSERIALIZE_SCALAR(txXferLen);
     UNSERIALIZE_SCALAR(rxXferLen);
     UNSERIALIZE_SCALAR(txPktXmitted);
-
-    bool txPacketExists;
-    UNSERIALIZE_SCALAR(txPacketExists);
-    bool rxPacketExists;
-    UNSERIALIZE_SCALAR(rxPacketExists);
 
     /*
      * Unserialize DescCaches
@@ -2243,8 +2307,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * unserialize tx state machine
      */
-    int txNumPkts;
-    UNSERIALIZE_SCALAR(txNumPkts);
     int txState;
     UNSERIALIZE_SCALAR(txState);
     this->txState = (TxState) txState;
@@ -2261,8 +2323,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * unserialize rx state machine
      */
-    int rxNumPkts;
-    UNSERIALIZE_SCALAR(rxNumPkts);
     int rxState;
     UNSERIALIZE_SCALAR(rxState);
     this->rxState = (RxState) rxState;
@@ -2278,13 +2338,22 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(extstsEnable);
 
      /*
-     * If there's a pending transmit, store the time so we can
-     * reschedule it later
+     * If there's a pending transmit, reschedule it now
      */
     Tick transmitTick;
     UNSERIALIZE_SCALAR(transmitTick);
     if (transmitTick)
         txEvent.schedule(curTick + transmitTick);
+
+    /*
+     * unserialize receive address filter settings
+     */
+    UNSERIALIZE_SCALAR(rxFilterEnable);
+    UNSERIALIZE_SCALAR(acceptBroadcast);
+    UNSERIALIZE_SCALAR(acceptMulticast);
+    UNSERIALIZE_SCALAR(acceptUnicast);
+    UNSERIALIZE_SCALAR(acceptPerfect);
+    UNSERIALIZE_SCALAR(acceptArp);
 
     /*
      * Keep track of pending interrupt status.
@@ -2298,27 +2367,14 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
         intrEvent->schedule(intrEventTick);
     }
 
-    for (int i = 0; i < rxNumPkts; ++i) {
-        PacketPtr p = new EtherPacket;
-        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
-        rxFifo.push_back(p);
-    }
-    rxPacket = NULL;
-    if (rxPacketExists) {
-        rxPacket = new EtherPacket;
-        rxPacket->unserialize(cp, csprintf("%s.rxPacket", section));
-    }
-    for (int i = 0; i < txNumPkts; ++i) {
-        PacketPtr p = new EtherPacket;
-        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
-        txFifo.push_back(p);
-    }
-    if (txPacketExists) {
-        txPacket = new EtherPacket;
-        txPacket->unserialize(cp, csprintf("%s.txPacket", section));
+    /*
+     * re-add addrRanges to bus bridges
+     */
+    if (pioInterface) {
+        pioInterface->addAddrRange(BARAddrs[0], BARAddrs[0] + BARSize[0] - 1);
+        pioInterface->addAddrRange(BARAddrs[1], BARAddrs[1] + BARSize[1] - 1);
     }
 }
-
 
 Tick
 NSGigE::cacheAccess(MemReqPtr &req)
