@@ -329,15 +329,6 @@ class NSGigE : public PciDev
     typedef EventWrapper<NSGigE, &NSGigE::cpuInterrupt> IntrEvent;
     friend class IntrEvent;
     IntrEvent *intrEvent;
-
-    /**
-     * Hardware checksum support
-     */
-    bool udpChecksum(PacketPtr packet, bool gen);
-    bool tcpChecksum(PacketPtr packet, bool gen);
-    bool ipChecksum(PacketPtr packet, bool gen);
-    uint16_t checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len);
-
     NSGigEInt *interface;
 
   public:
@@ -377,10 +368,12 @@ class NSGigE : public PciDev
     Stats::Scalar<> rxBytes;
     Stats::Scalar<> txPackets;
     Stats::Scalar<> rxPackets;
-    Stats::Scalar<> txIPChecksums;
-    Stats::Scalar<> rxIPChecksums;
-    Stats::Scalar<> txTCPChecksums;
-    Stats::Scalar<> rxTCPChecksums;
+    Stats::Scalar<> txIpChecksums;
+    Stats::Scalar<> rxIpChecksums;
+    Stats::Scalar<> txTcpChecksums;
+    Stats::Scalar<> rxTcpChecksums;
+    Stats::Scalar<> txUdpChecksums;
+    Stats::Scalar<> rxUdpChecksums;
     Stats::Scalar<> descDmaReads;
     Stats::Scalar<> descDmaWrites;
     Stats::Scalar<> descDmaRdBytes;

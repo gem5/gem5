@@ -219,7 +219,7 @@ EtherTap::process(int revent)
 
     while (data_len != 0 && buffer_offset >= data_len + sizeof(u_int32_t)) {
         PacketPtr packet;
-        packet = new EtherPacket;
+        packet = new PacketData;
         packet->data = new uint8_t[data_len];
         packet->length = data_len;
         memcpy(packet->data, data, data_len);

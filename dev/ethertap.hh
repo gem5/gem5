@@ -70,7 +70,7 @@ class EtherTap : public EtherInt
     std::queue<PacketPtr> packetBuffer;
 
     void process(int revent);
-    void enqueue(EtherPacket *packet);
+    void enqueue(PacketData *packet);
     void retransmit();
 
     /*

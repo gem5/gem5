@@ -41,8 +41,9 @@
 #include "dev/etherlink.hh"
 #include "dev/etherpkt.hh"
 #include "sim/builder.hh"
-#include "sim/universe.hh"
+#include "sim/serialize.hh"
 #include "sim/system.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 
@@ -196,7 +197,7 @@ EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
     bool packet_exists;
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
-        packet = new EtherPacket;
+        packet = new PacketData;
         packet->unserialize(cp, csprintf("%s.packet", section));
     }
 
@@ -246,7 +247,7 @@ void
 LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 {
     Event::unserialize(cp, section);
-    packet = new EtherPacket;
+    packet = new PacketData;
     packet->unserialize(cp, csprintf("%s.packet", section));
 }
 
