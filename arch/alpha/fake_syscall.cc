@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>	// for memset()
+#include <dirent.h>
 
 #include "sim/host.hh"
 #include "cpu/base_cpu.hh"
@@ -61,11 +62,17 @@ class SyscallDesc {
     FuncPtr funcPtr;
     int flags;
 
+    enum Flags {
+        SuppressReturnValue = 1
+    };
+
     SyscallDesc(const char *_name, FuncPtr _funcPtr, int _flags = 0)
         : name(_name), funcPtr(_funcPtr), flags(_flags)
-        {}
+    {
+    }
 
-    int doFunc(int num, Process *proc, ExecContext *xc) {
+    int doFunc(int num, Process *proc, ExecContext *xc)
+    {
         return (*funcPtr)(this, num, proc, xc);
     }
 };
@@ -75,7 +82,8 @@ class BaseBufferArg {
 
   public:
 
-    BaseBufferArg(Addr _addr, int _size) : addr(_addr), size(_size) {
+    BaseBufferArg(Addr _addr, int _size) : addr(_addr), size(_size)
+    {
         bufPtr = new uint8_t[size];
         // clear out buffer: in case we only partially populate this,
         // and then do a copyOut(), we want to make sure we don't
@@ -88,7 +96,8 @@ class BaseBufferArg {
     //
     // copy data into simulator space (read from target memory)
     //
-    virtual bool copyIn(FunctionalMemory *mem) {
+    virtual bool copyIn(FunctionalMemory *mem)
+    {
         mem->access(Read, addr, bufPtr, size);
         return true;	// no EFAULT detection for now
     }
@@ -96,7 +105,8 @@ class BaseBufferArg {
     //
     // copy data out of simulator space (write to target memory)
     //
-    virtual bool copyOut(FunctionalMemory *mem) {
+    virtual bool copyOut(FunctionalMemory *mem)
+    {
         mem->access(Write, addr, bufPtr, size);
         return true;	// no EFAULT detection for now
     }
@@ -154,7 +164,7 @@ setArg(ExecContext *xc, int i, IntReg val)
 
 
 static void
-set_return_value(ExecContext *xc, IntReg return_value)
+set_return_value(ExecContext *xc, int64_t return_value)
 {
     // check for error condition.  Alpha syscall convention is to
     // indicate success/failure in reg a3 (r19) and put the
@@ -194,60 +204,27 @@ int
 ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
           ExecContext *xc)
 {
-    int fd = process->sim_fd(getArg(xc, 0));
+    int fd = getArg(xc, 0);
     unsigned req = getArg(xc, 1);
 
+    DPRINTFR(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
+
+    if (fd < 0 || process->sim_fd(fd) < 0) {
+        // doesn't map to any simulator fd: not a valid target fd
+        return -EBADF;
+    }
+
     switch (req) {
-      case OSF::TIOCGETP: {
-          // get tty parameters: the main use of this call is by
-          // isatty(), which really just wants to see whether it
-          // succeeds or returns ENOTTY to determine whether this is
-          // a terminal or not.  This call is in turn used by the
-          // stdio library to determine whether to do line buffering
-          // or block buffering on a specific file descriptor.
-          TypedBufferArg<OSF::sgttyb> buf(getArg(xc, 2));
-
-          if (fd < 0) {
-              // bad file descriptor
-              return -EBADF;
-          } else if (0 <= fd < 3) {
-              // stdin/stdout/stderr: make it look like a terminal
-              // so we get line buffering & not block buffering
-              buf->sg_ispeed = 0xf;
-              buf->sg_ospeed = 0xf;
-              buf->sg_erase = 0x7f;
-              buf->sg_kill = 0x15;
-              buf->sg_flags = 0x18;
-              buf.copyOut(xc->mem);
-              return 0;
-          } else {
-              // any other file descriptor: assume it's a file or
-              // pipe and not a terminal
-              return -ENOTTY;
-          }
-          break;
-      }
-
       case OSF::TIOCISATTY:
-        if (fd < 0) {
-            // bad file descriptor
-            return -EBADF;
-        } else if (0 <= fd < 3) {
-            // stdin/stdout/stderr: make it look like a terminal
-            // so we get line buffering & not block buffering
-            return 0;
-        } else {
-            // any other file descriptor: assume it's a file or
-            // pipe and not a terminal
-            return -ENOTTY;
-        }
-        break;
+      case OSF::TIOCGETP:
+      case OSF::TIOCSETP:
+      case OSF::TIOCSETN:
+      case OSF::TIOCSETC:
+      case OSF::TIOCGETC:
+        return -ENOTTY;
 
       default:
-        cerr << "Unsupported ioctl call: ioctl("
-             << fd << ", " << req << ", ...)" << endl;
-        abort();
-        break;
+        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...)\n", fd, req);
     }
 }
 
@@ -421,6 +398,8 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     int fd = process->sim_fd(getArg(xc, 0));
 
+    DPRINTFR(SyscallVerbose, "fstat(%d, ...)\n", fd);
+
     if (fd < 0)
         return -EBADF;
 
@@ -586,16 +565,178 @@ getpidFunc(SyscallDesc *desc, int callnum, Process *process,
     // Make up a PID.  There's no interprocess communication in
     // fake_syscall mode, so there's no way for a process to know it's
     // not getting a unique value.
+
+    // This is one of the funky syscalls that has two return values,
+    // with the second one (parent PID) going in r20.
+    xc->regs.intRegFile[20] = 99;
     return 100;
 }
+
 
 int
 getuidFunc(SyscallDesc *desc, int callnum, Process *process,
            ExecContext *xc)
 {
-    // Make up a UID.
+    // Make up a UID and EUID... it shouldn't matter, and we want the
+    // simulation to be deterministic.
+
+    // EUID goes in r20.
+    xc->regs.intRegFile[20] = 100;	// EUID
+    return 100;				// UID
+}
+
+
+int
+getgidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Get current group ID.  EGID goes in r20.
+    xc->regs.intRegFile[20] = 100;
     return 100;
 }
+
+
+int
+setuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // can't fathom why a benchmark would call this.
+    warn("Ignoring call to setuid(%d)\n", getArg(xc, 0));
+    return 0;
+}
+
+
+int
+fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    int fd = getArg(xc,0);
+
+    if (fd < 0 || process->sim_fd(fd) < 0)
+        return -EBADF;
+
+    int cmd = getArg(xc,1);
+    switch (cmd) {
+      case 0: // F_DUPFD
+        // if we really wanted to support this, we'd need to do it
+        // in the target fd space.
+        warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
+        return -EMFILE;
+
+      case 1: // F_GETFD (get fd flags)
+      case 2: // F_SETFD (set fd flags)
+      case 3: // F_GETFL (get file flags)
+      case 4: // F_SETFL (set file flags)
+        // not sure if this is totally valid, but we'll pass it through
+        // to the underlying OS
+        warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
+        return fcntl(process->sim_fd(fd), cmd);
+        // return 0;
+
+      case 7: // F_GETLK  (get lock)
+      case 8: // F_SETLK  (set lock)
+      case 9: // F_SETLKW (set lock and wait)
+        // don't mess with file locking... just act like it's OK
+        warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
+        return 0;
+
+      default:
+        warn("Unknown fcntl command %d\n", cmd);
+        return 0;
+    }
+}
+
+
+///
+/// @TODO this was stolen from SimpleScalar and needs to be rewritten.
+///
+
+/* returns size of DIRENT structure */
+#define OSF_DIRENT_SZ(STR)						\
+  (sizeof(uint32_t) + 2*sizeof(uint16_t) + (((strlen(STR) + 1) + 3)/4)*4)
+  /* was: (sizeof(word_t) + 2*sizeof(half_t) + strlen(STR) + 1) */
+
+struct osf_dirent
+{
+    uint32_t d_ino;			/* file number of entry */
+    uint16_t d_reclen;		/* length of this record */
+    uint16_t d_namlen;		/* length of string in d_name */
+    char d_name[256];		/* DUMMY NAME LENGTH */
+                                /* the real maximum length is */
+                                /* returned by pathconf() */
+                                /* At this time, this MUST */
+                                /* be 256 -- the kernel */
+                                /* requires it */
+};
+
+
+int
+getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
+                  ExecContext *xc)
+{
+    int i, cnt, osf_cnt;
+    struct dirent *p;
+    int32_t fd = process->sim_fd(getArg(xc,0));
+    Addr osf_buf = getArg(xc,1);
+    char *buf;
+    int32_t osf_nbytes = getArg(xc,2);
+    Addr osf_pbase = getArg(xc,3);
+    Addr osf_base;
+    long base = 0;
+
+    /* number of entries in simulated memory */
+    if (!osf_nbytes)
+        warn("attempting to get 0 directory entries...");
+
+    /* allocate local memory, whatever fits */
+    buf = (char*)calloc(1, osf_nbytes);
+    if (!buf)
+        fatal("out of virtual memory");
+
+    /* get directory entries */
+    int64_t result = getdirentries((int)fd, buf, (size_t)osf_nbytes, &base);
+
+    /* check for an error condition */
+    if (result != (int64_t) -1) {
+
+        /* anything to copy back? */
+        if (result > 0)
+        {
+            /* copy all possible results to simulated space */
+            for (i=0, cnt=0, osf_cnt=0, p=(struct dirent *)buf;
+                 cnt < result && p->d_reclen > 0;
+                 i++, cnt += p->d_reclen, p=(struct dirent *)(buf+cnt))
+            {
+                struct osf_dirent osf_dirent;
+
+                osf_dirent.d_ino = p->d_ino;
+                osf_dirent.d_namlen = strlen(p->d_name);
+                strcpy(osf_dirent.d_name, p->d_name);
+                osf_dirent.d_reclen = OSF_DIRENT_SZ(p->d_name);
+
+                xc->mem->access(Write, osf_buf + osf_cnt,
+                                &osf_dirent, OSF_DIRENT_SZ(p->d_name));
+
+                osf_cnt += OSF_DIRENT_SZ(p->d_name);
+            }
+
+            if (osf_pbase != 0)
+            {
+                osf_base = (Addr)base;
+
+                xc->mem->access(Write, osf_pbase, &osf_base, sizeof(osf_base));
+            }
+
+            /* update V0 to indicate translated read length */
+            result = osf_cnt;
+        }
+    }
+
+    free(buf);
+
+    return result;
+}
+
 
 int
 getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -704,9 +845,11 @@ sigreturnFunc(SyscallDesc *desc, int callnum, Process *process,
 
     sc.copyIn(xc->mem);
 
-    // restore state from sigcontext structure
-    regs->pc = sc->sc_pc;
-    regs->npc = regs->pc + sizeof(MachInst);
+    // Restore state from sigcontext structure.
+    // Note that we'll advance PC <- NPC before the end of the cycle,
+    // so we need to restore the desired PC into NPC.
+    // The current regs->pc will get clobbered.
+    regs->npc = sc->sc_pc;
 
     for (int i = 0; i < 31; ++i) {
         regs->intRegFile[i] = sc->sc_regs[i];
@@ -807,7 +950,7 @@ exitFunc(SyscallDesc *desc, int callnum, Process *process,
 
 
 SyscallDesc syscallDescs[] = {
-    /* 0 */ SyscallDesc("syscall (#0)", indirectSyscallFunc),
+    /* 0 */ SyscallDesc("syscall (#0)", indirectSyscallFunc, SyscallDesc::SuppressReturnValue),
     /* 1 */ SyscallDesc("exit", exitFunc),
     /* 2 */ SyscallDesc("fork", unimplementedFunc),
     /* 3 */ SyscallDesc("read", readFunc),
@@ -830,7 +973,7 @@ SyscallDesc syscallDescs[] = {
     /* 20 */ SyscallDesc("getpid", getpidFunc),
     /* 21 */ SyscallDesc("mount", unimplementedFunc),
     /* 22 */ SyscallDesc("unmount", unimplementedFunc),
-    /* 23 */ SyscallDesc("setuid", unimplementedFunc),
+    /* 23 */ SyscallDesc("setuid", setuidFunc),
     /* 24 */ SyscallDesc("getuid", getuidFunc),
     /* 25 */ SyscallDesc("exec_with_loader", unimplementedFunc),
     /* 26 */ SyscallDesc("ptrace", unimplementedFunc),
@@ -854,7 +997,7 @@ SyscallDesc syscallDescs[] = {
     /* 44 */ SyscallDesc("profil", unimplementedFunc),
     /* 45 */ SyscallDesc("open", openFunc),
     /* 46 */ SyscallDesc("obsolete osigaction", unimplementedFunc),
-    /* 47 */ SyscallDesc("getgid", unimplementedFunc),
+    /* 47 */ SyscallDesc("getgid", getgidFunc),
     /* 48 */ SyscallDesc("sigprocmask", ignoreFunc),
     /* 49 */ SyscallDesc("getlogin", unimplementedFunc),
     /* 50 */ SyscallDesc("setlogin", unimplementedFunc),
@@ -899,7 +1042,7 @@ SyscallDesc syscallDescs[] = {
     /* 89 */ SyscallDesc("getdtablesize", unimplementedFunc),
     /* 90 */ SyscallDesc("dup2", unimplementedFunc),
     /* 91 */ SyscallDesc("pre_F64_fstat", unimplementedFunc),
-    /* 92 */ SyscallDesc("fcntl", unimplementedFunc),
+    /* 92 */ SyscallDesc("fcntl", fcntlFunc),
     /* 93 */ SyscallDesc("select", unimplementedFunc),
     /* 94 */ SyscallDesc("poll", unimplementedFunc),
     /* 95 */ SyscallDesc("fsync", unimplementedFunc),
@@ -910,7 +1053,7 @@ SyscallDesc syscallDescs[] = {
     /* 100 */ SyscallDesc("getpriority", unimplementedFunc),
     /* 101 */ SyscallDesc("old_send", unimplementedFunc),
     /* 102 */ SyscallDesc("old_recv", unimplementedFunc),
-    /* 103 */ SyscallDesc("sigreturn", sigreturnFunc),
+    /* 103 */ SyscallDesc("sigreturn", sigreturnFunc, SyscallDesc::SuppressReturnValue),
     /* 104 */ SyscallDesc("bind", unimplementedFunc),
     /* 105 */ SyscallDesc("setsockopt", unimplementedFunc),
     /* 106 */ SyscallDesc("listen", unimplementedFunc),
@@ -966,7 +1109,7 @@ SyscallDesc syscallDescs[] = {
     /* 156 */ SyscallDesc("sigaction", ignoreFunc),
     /* 157 */ SyscallDesc("sigwaitprim", unimplementedFunc),
     /* 158 */ SyscallDesc("nfssvc", unimplementedFunc),
-    /* 159 */ SyscallDesc("getdirentries", unimplementedFunc),
+    /* 159 */ SyscallDesc("getdirentries", getdirentriesFunc),
     /* 160 */ SyscallDesc("pre_F64_statfs", unimplementedFunc),
     /* 161 */ SyscallDesc("pre_F64_fstatfs", unimplementedFunc),
     /* 162 */ SyscallDesc("unknown #162", unimplementedFunc),
@@ -1688,9 +1831,8 @@ const int Min_Syscall_Desc = -Max_Mach_Syscall_Desc;
 // helper function for invoking syscalls
 //
 static
-int
-doSyscall(int callnum, Process *process,
-          ExecContext *xc)
+void
+doSyscall(int callnum, Process *process, ExecContext *xc)
 {
     if (callnum < Min_Syscall_Desc || callnum > Max_Syscall_Desc) {
         cerr << "Syscall " << callnum << " out of range" << endl;
@@ -1700,10 +1842,16 @@ doSyscall(int callnum, Process *process,
     SyscallDesc *desc =
         (callnum < 0) ? &machSyscallDescs[-callnum] : &syscallDescs[callnum];
 
-    DCOUT(SyscallVerbose) << xc->cpu->name() << ": syscall " << desc->name
-                          << " called @ " << curTick << endl;
+    DPRINTFR(SyscallVerbose, "%s: syscall %s called\n",
+             xc->cpu->name(), desc->name);
 
-    return desc->doFunc(callnum, process, xc);
+    int retval = desc->doFunc(callnum, process, xc);
+
+    DPRINTFR(SyscallVerbose, "%s: syscall %s returns %d\n",
+             xc->cpu->name(), desc->name, retval);
+
+    if (!((desc->flags & SyscallDesc::SuppressReturnValue) && retval == 0))
+        set_return_value(xc, retval);
 }
 
 //
@@ -1718,7 +1866,9 @@ indirectSyscallFunc(SyscallDesc *desc, int callnum, Process *process,
     for (int i = 0; i < 5; ++i)
         setArg(xc, i, getArg(xc, i+1));
 
-    return doSyscall(new_callnum, process, xc);
+    doSyscall(new_callnum, process, xc);
+
+    return 0;
 }
 
 
@@ -1727,7 +1877,5 @@ fake_syscall(Process *process, ExecContext *xc)
 {
     int64_t callnum = xc->regs.intRegFile[ReturnValueReg];
 
-    int retval = doSyscall(callnum, process, xc);
-
-    set_return_value(xc, retval);
+    doSyscall(callnum, process, xc);
 }
