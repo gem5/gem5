@@ -46,7 +46,7 @@ class ExecContext;
 class System : public SimObject
 {
   public:
-    const int init_param;
+    const uint64_t init_param;
     MemoryController *memCtrl;
     PhysicalMemory *physmem;
 
@@ -56,7 +56,7 @@ class System : public SimObject
     void registerExecContext(ExecContext *xc);
 
   public:
-    System(const std::string _name, const int _init_param,
+    System(const std::string _name, const uint64_t _init_param,
            MemoryController *, PhysicalMemory *);
     ~System();
 

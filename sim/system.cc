@@ -38,7 +38,7 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(const std::string _name,
-               const int _init_param,
+               const uint64_t _init_param,
                MemoryController *_memCtrl,
                PhysicalMemory *_physmem)
     : SimObject(_name),

@@ -43,7 +43,7 @@
 
 using namespace std;
 
-Tru64System::Tru64System(const string _name, const int _init_param,
+Tru64System::Tru64System(const string _name, const uint64_t _init_param,
                          MemoryController *_memCtrl, PhysicalMemory *_physmem,
                          const string &kernel_path, const string &console_path,
                          const string &palcode, const string &boot_osflags)
@@ -208,7 +208,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
 
     SimObjectParam<MemoryController *> mem_ctl;
     SimObjectParam<PhysicalMemory *> physmem;
-    Param<int> init_param;
+    Param<uint64_t> init_param;
 
     Param<string> kernel_code;
     Param<string> console_code;

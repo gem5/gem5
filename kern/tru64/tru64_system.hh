@@ -79,7 +79,7 @@ class Tru64System : public System
 
   public:
     Tru64System(const std::string _name,
-                const int _init_param,
+                const uint64_t _init_param,
                 MemoryController *_memCtrl,
                 PhysicalMemory *_physmem,
                 const std::string &kernel_path,
