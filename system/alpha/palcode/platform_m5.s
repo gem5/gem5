@@ -756,17 +756,17 @@ sys_int_23:
 	ALIGN_BRANCH
 sys_int_22:
         or      r31,1,r16                       // a0 means it is a clock interrupt
-        lda     r8,0xf01(r31)                   // build up an address for the MISC register
-        sll     r8,16,r8
-        lda     r8,0xa000(r8)                   
-        sll     r8,16,r8                       
-        lda     r8,0x080(r8)                  
+        lda     r12,0xf01(r31)                   // build up an address for the MISC register
+        sll     r12,16,r12
+        lda     r12,0xa000(r12)                   
+        sll     r12,16,r12                       
+        lda     r12,0x080(r12)                  
 
-        ldq_p   r10,0(r8)                       // read misc register
+        ldq_p   r10,0(r12)                       // read misc register
         and     r10,0x3,r10                     // isolate CPUID
-        or      r31,0x10,r9                     // load r9 with bit to clear
-        sll     r9,r10,r9                       // left shift by CPU ID
-        stq_p   r9, 0(r8)                       // clear the rtc interrupt
+        or      r31,0x10,r14                     // load r9 with bit to clear
+        sll     r14,r10,r14                       // left shift by CPU ID
+        stq_p   r14, 0(r12)                       // clear the rtc interrupt
          
         br	r31, pal_post_interrupt		// Tell the OS
 
@@ -802,56 +802,57 @@ sys_int_20:
 
 	ALIGN_BRANCH
 sys_int_21:
-    or      r31,3,r16                       // a0 means it is a I/O interrupt
         
-    lda     r8,0xf01(r31)
-    sll     r8,32,r8
-    ldah    r9,0xa0(r31)
-    sll	    r9,8,r9
-    bis	    r8,r9,r8	
-    lda     r8,0x0080(r8)
-    ldqp    r9, 0(r8)                       // read the MISC register for CPUID
+    lda     r12,0xf01(r31)
+    sll     r12,32,r12
+    ldah    r13,0xa0(r31)
+    sll	    r13,8,r13
+    bis	    r12,r13,r12	
+    lda     r12,0x0080(r12)
+    ldqp    r13, 0(r12)                       // read the MISC register for CPUID
         
-    and     r9,0x1,r10                      // grab LSB and shift left 2
-    sll     r10,2,r10
-    and     r9,0x2,r11                      // grabl LSB+1 and shift left 5
-    sll     r11,5,r11
+    and     r13,0x1,r14                      // grab LSB and shift left 2
+    sll     r14,2,r14
+    and     r13,0x2,r10                      // grabl LSB+1 and shift left 5
+    sll     r10,5,r10
     
-    mskbl   r8,0,r8                         // calculate DIRn address
-    lda     r9,0x280(r31)
-    bis	    r8,r9,r8
-    or      r8,r10,r8
-    or      r8,r11,r8
-    ldqp    r9, 0(r8)                       // read DIRn
+    mskbl   r12,0,r12                         // calculate DIRn address
+    lda     r13,0x280(r31)
+    bis	    r12,r13,r12
+    or      r12,r14,r12
+    or      r12,r10,r12
+    ldqp    r13, 0(r12)                       // read DIRn
 
-    or      r31,1,r10                       // set bit 55 (ISA Interrupt)
-    sll     r10,55,r10                      
+    or      r31,1,r14                       // set bit 55 (ISA Interrupt)
+    sll     r14,55,r14                      
     
-    and     r9, r10, r10                    // check if bit 55 is set
-    lda     r13,0x900(r31)                  // load offset for normal into r13
-    beq     r10, normal_int                 // if not compute the vector normally
+    and     r13, r14, r14                    // check if bit 55 is set
+    lda     r16,0x900(r31)                  // load offset for normal into r13
+    beq     r14, normal_int                 // if not compute the vector normally
     
-    lda     r13,0x800(r31)                  // replace with offset for pic
-    lda     r8,0xf01(r31)                   // build an addr to access PIC
-    sll     r8,32,r8                        // at f01fc000000
-    ldah    r9,0xfc(r31)
-    sll	    r9,8,r9
-    bis	    r8,r9,r8	
-    ldqp    r9,0x0020(r8)                   // read PIC1 ISR for interrupting dev
+    lda     r16,0x800(r31)                  // replace with offset for pic
+    lda     r12,0xf01(r31)                   // build an addr to access PIC
+    sll     r12,32,r12                        // at f01fc000000
+    ldah    r13,0xfc(r31)
+    sll	    r13,8,r13
+    bis	    r12,r13,r12	
+    ldqp    r13,0x0020(r12)                   // read PIC1 ISR for interrupting dev
 
 normal_int:    
-    //ctlz    r9,r10                          // count the number of leading zeros
+    //ctlz    r13,r14                          // count the number of leading zeros
     // EV5 doesn't have ctlz, but we do, so lets use it
-    .byte 0x4a
+    .byte 0x4e
     .byte 0x06
-    .byte 0xe9
+    .byte 0xed
     .byte 0x73
-    lda     r11,63(r31)
-    subq    r11,r10,r17                     // subtract from 
+    lda     r10,63(r31)
+    subq    r10,r14,r17                     // subtract from 
     
-    lda	    r9,0x10(r31)
-    mulq    r17,r9,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
-    addq    r17,r13,r17
+    lda	    r13,0x10(r31)
+    mulq    r17,r13,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
+    addq    r17,r16,r17
+    
+    or      r31,3,r16                       // a0 means it is a I/O interrupt
        
     br      r31, pal_post_interrupt
  
