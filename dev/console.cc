@@ -228,27 +228,44 @@ SimConsole::configTerm()
 #define RECEIVE_NONE (ULL(2) << 62)
 #define RECEIVE_ERROR (ULL(3) << 62)
 
-uint64_t
-SimConsole::in()
+bool
+SimConsole::in(uint8_t &c)
 {
-    char c = 0;
-    uint64_t val = 0;
-    if (rxbuf.empty()) {
-        clearInt(ReceiveInterrupt);
-        val |= RECEIVE_NONE;
-        return 0x8;
-    } else {
-        uint64_t val;
-        rxbuf.read(&c, 1);
-        val |= RECEIVE_SUCCESS | c;
-        if (!rxbuf.empty())
-            val |= MORE_PENDING;
+    bool empty, ret;
+
+    empty = rxbuf.empty();
+    ret = !empty;
+    if (!empty) {
+        rxbuf.read((char *)&c, 1);
+        empty = rxbuf.empty();
     }
 
-    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x retval: %#x\n",
-            isprint(c) ? c : ' ', c, val);
+    if (empty)
+        clearInt(ReceiveInterrupt);
 
-    return val;
+    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x more: %d, return: %d\n",
+            isprint(c) ? c : ' ', c, !empty, ret);
+
+    return ret;
+}
+
+uint64_t
+SimConsole::console_in()
+{
+    uint8_t c;
+    uint64_t value;
+
+    if (in(c)) {
+        value = RECEIVE_SUCCESS | c;
+        if (!rxbuf.empty())
+            value  |= MORE_PENDING;
+    } else {
+        value = RECEIVE_NONE;
+    }
+
+    DPRINTF(ConsoleVerbose, "console_in: return: %#x\n", value);
+
+    return value;
 }
 
 void
