@@ -40,6 +40,42 @@ IntrControl::IntrControl(const string &name, BaseCPU *c)
     : SimObject(name), cpu(c)
 {}
 
+/* @todo
+ *Fix the cpu sim object parameter to be a system pointer
+ *instead, to avoid some extra dereferencing
+ */
+void
+IntrControl::post(int int_num, int index)
+{
+    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
+    BaseCPU *temp = xcvec[0]->cpu;
+    temp->post_interrupt(int_num, index);
+}
+
+void
+IntrControl::post(int cpu_id, int int_num, int index)
+{
+    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
+    BaseCPU *temp = xcvec[cpu_id]->cpu;
+    temp->post_interrupt(int_num, index);
+}
+
+void
+IntrControl::clear(int int_num, int index)
+{
+    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
+    BaseCPU *temp = xcvec[0]->cpu;
+    temp->clear_interrupt(int_num, index);
+}
+
+void
+IntrControl::clear(int cpu_id, int int_num, int index)
+{
+    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
+    BaseCPU *temp = xcvec[cpu_id]->cpu;
+    temp->clear_interrupt(int_num, index);
+}
+
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IntrControl)
 
     SimObjectParam<BaseCPU *> cpu;
@@ -48,7 +84,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(IntrControl)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(IntrControl)
 
-    INIT_PARAM(cpu, "the processor")
+    INIT_PARAM(cpu, "the cpu")
 
 END_INIT_SIM_OBJECT_PARAMS(IntrControl)
 
