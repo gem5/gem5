@@ -400,6 +400,7 @@ main(int argc, char **argv)
     }
 
     SimInit();
+    warn("Entering event queue.  Starting simulation...\n");
 
     while (!mainEventQueue.empty()) {
         assert(curTick <= mainEventQueue.nextTick() &&

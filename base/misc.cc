@@ -42,7 +42,17 @@ void
 __panic(const string &format, cp::ArgList &args, const char *func,
         const char *file, int line)
 {
-    string fmt = "panic: " + format + " @ cycle %d\n[%s:%s, line %d]\n";
+    string fmt = "panic: " + format;
+    switch (fmt[fmt.size() - 1]) {
+      case '\n':
+      case '\r':
+        break;
+      default:
+        fmt += "\n";
+    }
+
+    fmt += " @ cycle %d\n[%s:%s, line %d]\n";
+
     args.append(curTick);
     args.append(func);
     args.append(file);
@@ -63,8 +73,18 @@ void
 __fatal(const string &format, cp::ArgList &args, const char *func,
         const char *file, int line)
 {
-    string fmt = "fatal: " + format + " @ cycle %d\n[%s:%s, line %d]\n"
-        "Memory Usage: %ld KBytes\n";
+    string fmt = "fatal: " + format;
+
+    switch (fmt[fmt.size() - 1]) {
+      case '\n':
+      case '\r':
+        break;
+      default:
+        fmt += "\n";
+    }
+
+    fmt += " @ cycle %d\n[%s:%s, line %d]\n";
+    fmt += "Memory Usage: %ld KBytes\n";
 
     args.append(curTick);
     args.append(func);
@@ -83,15 +103,23 @@ __warn(const string &format, cp::ArgList &args, const char *func,
        const char *file, int line)
 {
     string fmt = "warn: " + format;
+
+    switch (fmt[fmt.size() - 1]) {
+      case '\n':
+      case '\r':
+        break;
+      default:
+        fmt += "\n";
+    }
+
 #ifdef VERBOSE_WARN
     fmt += " @ cycle %d\n[%s:%s, line %d]\n";
     args.append(curTick);
     args.append(func);
     args.append(file);
     args.append(line);
-#else
-    fmt += "\n";
 #endif
+
     args.dump(cerr, fmt);
 
     delete &args;
