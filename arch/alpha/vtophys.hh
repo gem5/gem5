@@ -42,5 +42,8 @@ Addr vtophys(PhysicalMemory *xc, Addr vaddr);
 Addr vtophys(ExecContext *xc, Addr vaddr);
 uint8_t *vtomem(ExecContext *xc, Addr vaddr, size_t len);
 
+void CopyData(ExecContext *xc, void *dst, Addr vaddr, size_t len);
+void CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
+
 #endif // __VTOPHYS_H__
 

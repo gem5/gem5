@@ -121,3 +121,103 @@ vtomem(ExecContext *xc, Addr vaddr, size_t len)
     Addr paddr = vtophys(xc, vaddr);
     return xc->physmem->dma_addr(paddr, len);
 }
+
+void
+CopyData(ExecContext *xc, void *dest, Addr vaddr, size_t cplen)
+{
+    Addr paddr;
+    char *dmaaddr;
+    char *dst = (char *)dest;
+    int len;
+
+    paddr = vtophys(xc, vaddr);
+    len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)cplen);
+    dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
+    assert(dmaaddr);
+
+    memcpy(dst, dmaaddr, len);
+    if (len == cplen)
+        return;
+
+    cplen -= len;
+    dst += len;
+    vaddr += len;
+
+    while (cplen > ALPHA_PGBYTES) {
+        paddr = vtophys(xc, vaddr);
+        dmaaddr = (char *)xc->physmem->dma_addr(paddr, ALPHA_PGBYTES);
+        assert(dmaaddr);
+
+        memcpy(dst, dmaaddr, ALPHA_PGBYTES);
+        cplen -= ALPHA_PGBYTES;
+        dst += ALPHA_PGBYTES;
+        vaddr += ALPHA_PGBYTES;
+    }
+
+    if (cplen > 0) {
+        paddr = vtophys(xc, vaddr);
+        dmaaddr = (char *)xc->physmem->dma_addr(paddr, cplen);
+        assert(dmaaddr);
+
+        memcpy(dst, dmaaddr, cplen);
+    }
+}
+
+void
+CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
+{
+    Addr paddr;
+    char *dmaaddr;
+    int len;
+
+    paddr = vtophys(xc, vaddr);
+    len = min((int)(ALPHA_PGBYTES - (paddr & PGOFSET)), (int)maxlen);
+    dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
+    assert(dmaaddr);
+
+    char *term = (char *)memchr(dmaaddr, 0, len);
+    if (term)
+        len = term - dmaaddr + 1;
+
+    memcpy(dst, dmaaddr, len);
+
+    if (term || len == maxlen)
+        return;
+
+    maxlen -= len;
+    dst += len;
+    vaddr += len;
+
+    while (maxlen > ALPHA_PGBYTES) {
+        paddr = vtophys(xc, vaddr);
+        dmaaddr = (char *)xc->physmem->dma_addr(paddr, ALPHA_PGBYTES);
+        assert(dmaaddr);
+
+        char *term = (char *)memchr(dmaaddr, 0, ALPHA_PGBYTES);
+        len = term ? (term - dmaaddr + 1) : ALPHA_PGBYTES;
+
+        memcpy(dst, dmaaddr, len);
+        if (term)
+            return;
+
+        maxlen -= ALPHA_PGBYTES;
+        dst += ALPHA_PGBYTES;
+        vaddr += ALPHA_PGBYTES;
+    }
+
+    if (maxlen > 0) {
+        paddr = vtophys(xc, vaddr);
+        dmaaddr = (char *)xc->physmem->dma_addr(paddr, maxlen);
+        assert(dmaaddr);
+
+        char *term = (char *)memchr(dmaaddr, 0, maxlen);
+        len = term ? (term - dmaaddr + 1) : maxlen;
+
+        memcpy(dst, dmaaddr, len);
+
+        maxlen -= len;
+    }
+
+    if (maxlen == 0)
+        dst[maxlen] = '\0';
+}

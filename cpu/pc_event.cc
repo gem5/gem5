@@ -40,7 +40,7 @@
 #ifdef FULL_SYSTEM
 #include "targetarch/arguments.hh"
 #include "targetarch/pmap.h"
-#include "targetarch/kernel.hh"
+#include "kern/tru64/kernel.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "cpu/full_cpu/cpu.hh"
 #include "sim/system.hh"
