@@ -114,8 +114,8 @@ SimConsole::attach(int in, int out, ConsoleListener *l)
     pollQueue.schedule(event);
 
     stringstream stream;
-    ccprintf(stream, "==== Simplescalar slave console: Console %d ====",
-             number);
+    ccprintf(stream, "==== m5 slave console: Console %d ====", number);
+
     // we need an actual carriage return followed by a newline for the
     // terminal
     stream << "\r\n";
