@@ -47,7 +47,7 @@
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
 #include "sim/host.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 #include "targetarch/vtophys.hh"
 
 using namespace Net;

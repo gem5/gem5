@@ -50,7 +50,7 @@
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 #include "targetarch/vtophys.hh"
 
 const char *NsRxStateStrings[] =
