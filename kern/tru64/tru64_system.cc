@@ -601,7 +601,7 @@ Tru64System::replaceExecContext(ExecContext *xc, int xcIndex)
 bool
 Tru64System::breakpoint()
 {
-    return remoteGDB[0]->trap(ALPHA_KENTRY_IF);
+    return remoteGDB[0]->trap(ALPHA_KENTRY_INT);
 }
 
 #ifdef FS_MEASURE

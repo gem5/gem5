@@ -62,7 +62,7 @@ struct Format
 
 template <typename T>
 inline void
-_format_char(std::ostream &out, const T& data, Format &fmt)
+_format_char(std::ostream &out, const T &data, Format &fmt)
 {
     using namespace std;
 
@@ -71,7 +71,7 @@ _format_char(std::ostream &out, const T& data, Format &fmt)
 
 template <typename T>
 inline void
-_format_integer(std::ostream &out, const T& data, Format &fmt)
+_format_integer(std::ostream &out, const T &data, Format &fmt)
 {
     using namespace std;
 
@@ -128,7 +128,7 @@ _format_integer(std::ostream &out, const T& data, Format &fmt)
 
 template <typename T>
 inline void
-_format_float(std::ostream &out, const T& data, Format &fmt)
+_format_float(std::ostream &out, const T &data, Format &fmt)
 {
     using namespace std;
 
@@ -180,7 +180,7 @@ _format_float(std::ostream &out, const T& data, Format &fmt)
 
 template <typename T>
 inline void
-_format_string(std::ostream &out, const T& data, Format &fmt)
+_format_string(std::ostream &out, const T &data, Format &fmt)
 {
     using namespace std;
 
@@ -225,7 +225,7 @@ _format_string(std::ostream &out, const T& data, Format &fmt)
 //
 template <typename T>
 inline void
-format_char(std::ostream &out, const T& data, Format &fmt)
+format_char(std::ostream &out, const T &data, Format &fmt)
 { out << "<bad arg type for char format>"; }
 
 inline void
@@ -321,7 +321,7 @@ format_integer(std::ostream &out, unsigned long long data, Format &fmt)
 //
 template <typename T>
 inline void
-format_float(std::ostream &out, const T& data, Format &fmt)
+format_float(std::ostream &out, const T &data, Format &fmt)
 { out << "<bad arg type for float format>"; }
 
 inline void
@@ -337,7 +337,7 @@ format_float(std::ostream &out, double data, Format &fmt)
 //
 template <typename T>
 inline void
-format_string(std::ostream &out, const T& data, Format &fmt)
+format_string(std::ostream &out, const T &data, Format &fmt)
 { _format_string(out, data, fmt); }
 
 inline void

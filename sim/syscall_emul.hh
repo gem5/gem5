@@ -141,9 +141,9 @@ class TypedBufferArg : public BaseBufferArg
     operator T*() { return (T *)bufPtr; }
 
     // dereference operators
-    T& operator*()	 { return *((T *)bufPtr); }
+    T &operator*()	 { return *((T *)bufPtr); }
     T* operator->()	 { return (T *)bufPtr; }
-    T& operator[](int i) { return ((T *)bufPtr)[i]; }
+    T &operator[](int i) { return ((T *)bufPtr)[i]; }
 };
 
 //////////////////////////////////////////////////////////////////////

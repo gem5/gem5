@@ -49,7 +49,7 @@ class Range
 
     Range(const Range &r) { operator=(r); }
 
-    Range(const T& s, const T& e)
+    Range(const T &s, const T &e)
         : start(s), end(e)
     {
         valid = (start <= end);

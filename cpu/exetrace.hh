@@ -91,8 +91,9 @@ class InstRecord : public Record
     bool regs_valid;
 
   public:
-    InstRecord(Tick _cycle, BaseCPU *_cpu, StaticInstPtr<TheISA> _staticInst,
-               Addr _pc, bool spec, unsigned _thread)
+    InstRecord(Tick _cycle, BaseCPU *_cpu,
+               const StaticInstPtr<TheISA> &_staticInst,
+               Addr _pc, bool spec, int _thread)
         : Record(_cycle), cpu(_cpu), staticInst(_staticInst), PC(_pc),
           misspeculating(spec), thread(_thread)
     {

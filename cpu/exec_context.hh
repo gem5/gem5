@@ -158,7 +158,7 @@ class ExecContext
      * number of executed instructions, for matching with syscall trace
      * points in EIO files.
      */
-    Counter func_exe_insn;
+    Counter func_exe_inst;
 
     //
     // Count failed store conditionals so we can warn of apparent
@@ -241,7 +241,7 @@ class ExecContext
 #endif
 
     template <class T>
-    Fault read(MemReqPtr &req, T& data)
+    Fault read(MemReqPtr &req, T &data)
     {
 #if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
         if (req->flags & LOCKED) {
@@ -254,7 +254,7 @@ class ExecContext
     }
 
     template <class T>
-    Fault write(MemReqPtr &req, T& data)
+    Fault write(MemReqPtr &req, T &data)
     {
 #if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
 

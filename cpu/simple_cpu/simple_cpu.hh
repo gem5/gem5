@@ -227,7 +227,7 @@ class SimpleCPU : public BaseCPU
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     template <class T>
-    Fault read(Addr addr, T& data, unsigned flags);
+    Fault read(Addr addr, T &data, unsigned flags);
 
     template <class T>
     Fault write(T data, Addr addr, unsigned flags,

@@ -45,11 +45,11 @@ class Serializable;
 class Checkpoint;
 
 template <class T>
-void paramOut(std::ostream &os, const std::string &name, const T& param);
+void paramOut(std::ostream &os, const std::string &name, const T &param);
 
 template <class T>
 void paramIn(Checkpoint *cp, const std::string &section,
-             const std::string &name, T& param);
+             const std::string &name, T &param);
 
 template <class T>
 void arrayParamOut(std::ostream &os, const std::string &name,
