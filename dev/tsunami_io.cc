@@ -67,7 +67,6 @@ TsunamiIO::RTCEvent::process()
     schedule(curTick + ticksPerSecond/RTC_RATE);
     //Actually interrupt the processor here
     tsunami->cchip->postRTC();
-
 }
 
 const char *

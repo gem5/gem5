@@ -30,8 +30,8 @@
  * Tsunami Fake I/O Space mapping including RTC/timer interrupts
  */
 
-#ifndef __TSUNAMI_DMA_HH__
-#define __TSUNAMI_DMA_HH__
+#ifndef __DEV_TSUNAMI_IO_HH__
+#define __DEV_TSUNAMI_IO_HH__
 
 #include "dev/io_device.hh"
 #include "base/range.hh"
@@ -56,9 +56,11 @@ class TsunamiIO : public PioDevice
 
     struct tm tm;
 
-    /** In Tsunami RTC only has two i/o ports one for data and one for address,
-     * so you write the address and then read/write the data. This store the
-     * address you are going to be reading from on a read.
+    /**
+     * In Tsunami RTC only has two i/o ports one for data and one for
+     * address, so you write the address and then read/write the
+     * data. This store the address you are going to be reading from
+     * on a read.
      */
     uint8_t RTCAddress;
 
@@ -132,38 +134,37 @@ class TsunamiIO : public PioDevice
     class RTCEvent : public Event
     {
       protected:
-          /** A pointer back to tsunami to create interrupt the processor. */
-          Tsunami* tsunami;
+        /** A pointer back to tsunami to create interrupt the processor. */
+        Tsunami* tsunami;
       public:
-          /** RTC Event initializes the RTC event by scheduling an event
-           * RTC_RATE times pre second. */
-          RTCEvent(Tsunami* t);
+        /** RTC Event initializes the RTC event by scheduling an event
+         * RTC_RATE times pre second. */
+        RTCEvent(Tsunami* t);
 
-          /**
-           * Interrupth the processor and reschedule the event.
-           * */
-          virtual void process();
+        /**
+         * Interrupth the processor and reschedule the event.
+         */
+        virtual void process();
 
-          /**
-           * Return a description of this event.
-           * @return a description
-           */
-          virtual const char *description();
+        /**
+         * Return a description of this event.
+         * @return a description
+         */
+        virtual const char *description();
 
-          /**
-           * Serialize this object to the given output stream.
-           * @param os The stream to serialize to.
-           */
-          virtual void serialize(std::ostream &os);
+        /**
+         * Serialize this object to the given output stream.
+         * @param os The stream to serialize to.
+         */
+        virtual void serialize(std::ostream &os);
 
-
-          /**
-           * Reconstruct the state of this object from a checkpoint.
-           * @param cp The checkpoint use.
-           * @param section The section name of this object
-           */
-          virtual void unserialize(Checkpoint *cp, const std::string &section);
-     };
+        /**
+         * Reconstruct the state of this object from a checkpoint.
+         * @param cp The checkpoint use.
+         * @param section The section name of this object
+         */
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
+    };
 
     /** uip UpdateInProgess says that the rtc is updating, but we just fake it
      * by alternating it on every read of the bit since we are going to
@@ -219,14 +220,12 @@ class TsunamiIO : public PioDevice
      */
     uint32_t timerData;
 
-
   public:
     /**
      * Return the freqency of the RTC
      * @return interrupt rate of the RTC
      */
     Tick  frequency() const { return RTC_RATE; }
-
 
     /**
      * Initialize all the data for devices supported by Tsunami I/O.
@@ -279,7 +278,6 @@ class TsunamiIO : public PioDevice
      */
     virtual void serialize(std::ostream &os);
 
-
     /**
      * Reconstruct the state of this object from a checkpoint.
      * @param cp The checkpoint use.
@@ -287,8 +285,7 @@ class TsunamiIO : public PioDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-
     Tick cacheAccess(MemReqPtr &req);
 };
 
-#endif // __TSUNAMI_IO_HH__
+#endif // __DEV_TSUNAMI_IO_HH__

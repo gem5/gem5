@@ -48,7 +48,7 @@ OptCPU::OptCPU(const string &name,
                int block_size,
                int cache_size,
                int _assoc)
-    : BaseCPU(name, 1, true), tickEvent(this), trace(_trace),
+    : SimObject(name), tickEvent(this), trace(_trace),
       numBlks(cache_size/block_size), assoc(_assoc), numSets(numBlks/assoc),
       setMask(numSets - 1)
 {

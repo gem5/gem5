@@ -286,6 +286,13 @@ check()
 
     Database::stats().sort(StatData::less);
 
+#if defined(STATS_BINNING)
+    if (MainBin::curBin() == NULL) {
+        static MainBin mainBin("main bin");
+        mainBin.activate();
+    }
+#endif
+
     if (i == end)
         return;
 

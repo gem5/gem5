@@ -31,6 +31,8 @@
 ///
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <libgen.h>
 #include <stdlib.h>
 #include <signal.h>
 
@@ -107,7 +109,7 @@ abortHandler(int sigtype)
 }
 
 /// Simulator executable name
-const char *myProgName = "";
+char *myProgName = "";
 
 /// Show brief help message.
 void
@@ -399,12 +401,6 @@ main(int argc, char **argv)
 
     // Reset to put the stats in a consistent state.
     Stats::reset();
-
-    // Nothing to simulate if we don't have at least one CPU somewhere.
-    if (BaseCPU::numSimulatedCPUs() == 0) {
-        cerr << "Fatal: no CPUs to simulate." << endl;
-        exit(1);
-    }
 
     warn("Entering event queue.  Starting simulation...\n");
     SimStartup();

@@ -156,7 +156,7 @@ if not onlyecho:
             job.cleandir(jobdir)
         else:
             os.mkdir(jobdir)
-    jl.append(jobname)
+        jl.append(jobname)
     joblist = jl
 
 for jobname in joblist:

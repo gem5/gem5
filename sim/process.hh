@@ -108,6 +108,8 @@ class Process : public SimObject
             int stdout_fd,
             int stderr_fd);
 
+    // post initialization startup
+    virtual void startup();
 
   protected:
     FunctionalMemory *memory;

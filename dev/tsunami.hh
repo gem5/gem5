@@ -32,8 +32,8 @@
  * retains pointers to all its children so the children can communicate.
  */
 
-#ifndef __TSUNAMI_HH__
-#define __TSUNAMI_HH__
+#ifndef __DEV_TSUNAMI_HH__
+#define __DEV_TSUNAMI_HH__
 
 #include "dev/platform.hh"
 
@@ -56,7 +56,6 @@ class System;
 class Tsunami : public Platform
 {
   public:
-
     /** Max number of CPUs in a Tsunami */
     static const int Max_CPUs = 64;
 
@@ -67,15 +66,15 @@ class Tsunami : public Platform
     TsunamiIO *io;
 
     /** Pointer to the Tsunami CChip.
-      * The chip contains some configuration information and
-      * all the interrupt mask and status registers
-      */
+     * The chip contains some configuration information and
+     * all the interrupt mask and status registers
+     */
     TsunamiCChip *cchip;
 
     /** Pointer to the Tsunami PChip.
-      * The pchip is the interface to the PCI bus, in our case
-      * it does not have to do much.
-      */
+     * The pchip is the interface to the PCI bus, in our case
+     * it does not have to do much.
+     */
     TsunamiPChip *pchip;
 
     int intr_sum_type[Tsunami::Max_CPUs];
@@ -83,12 +82,12 @@ class Tsunami : public Platform
 
   public:
     /**
-      * Constructor for the Tsunami Class.
-      * @param name name of the object
-      * @param con pointer to the console
-      * @param intrcontrol pointer to the interrupt controller
-      * @param intrFreq frequency that interrupts happen
-      */
+     * Constructor for the Tsunami Class.
+     * @param name name of the object
+     * @param con pointer to the console
+     * @param intrcontrol pointer to the interrupt controller
+     * @param intrFreq frequency that interrupts happen
+     */
     Tsunami(const std::string &name, System *s, IntrControl *intctrl,
             PciConfigAll *pci, int intrFreq);
 
@@ -96,7 +95,7 @@ class Tsunami : public Platform
      * Return the interrupting frequency to AlphaAccess
      * @return frequency of RTC interrupts
      */
-     virtual Tick intrFrequency();
+    virtual Tick intrFrequency();
 
     /**
      * Cause the cpu to post a serial interrupt to the CPU.
@@ -120,7 +119,7 @@ class Tsunami : public Platform
 
     virtual Addr pciToDma(Addr pciAddr) const;
 
-  /**
+    /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
      */
@@ -134,4 +133,4 @@ class Tsunami : public Platform
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __TSUNAMI_HH__
+#endif // __DEV_TSUNAMI_HH__

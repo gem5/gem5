@@ -36,6 +36,7 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/memtest/memtest.hh"
 #include "mem/cache/base_cache.hh"
 #include "mem/functional_mem/main_memory.hh"
@@ -59,10 +60,8 @@ MemTest::MemTest(const string &name,
                  unsigned _percentSourceUnaligned,
                  unsigned _percentDestUnaligned,
                  Addr _traceAddr,
-                 Counter max_loads_any_thread,
-                 Counter max_loads_all_threads)
-    : BaseCPU(name, 1, true, 0, 0, max_loads_any_thread,
-              max_loads_all_threads),
+                 Counter _max_loads)
+    : SimObject(name),
       tickEvent(this),
       cacheInterface(_cache_interface),
       mainMem(main_mem),
@@ -74,12 +73,13 @@ MemTest::MemTest(const string &name,
       progressInterval(_progressInterval),
       nextProgressMessage(_progressInterval),
       percentSourceUnaligned(_percentSourceUnaligned),
-      percentDestUnaligned(percentDestUnaligned)
+      percentDestUnaligned(percentDestUnaligned),
+      maxLoads(_max_loads)
 {
     vector<string> cmd;
     cmd.push_back("/bin/ls");
     vector<string> null_vec;
-    xc = new ExecContext(this ,0,mainMem,0);
+    xc = new ExecContext(NULL, 0, mainMem, 0);
 
     blockSize = cacheInterface->getBlockSize();
     blockAddrMask = blockSize - 1;
@@ -160,7 +160,8 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
             nextProgressMessage += progressInterval;
         }
 
-        comLoadEventQueue[0]->serviceEvents(numReads);
+        if (numReads >= maxLoads)
+            SimExit(curTick, "Maximum number of loads reached!");
         break;
 
       case Write:
@@ -402,8 +403,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
     Param<unsigned> percent_source_unaligned;
     Param<unsigned> percent_dest_unaligned;
     Param<Addr> trace_addr;
-    Param<Counter> max_loads_any_thread;
-    Param<Counter> max_loads_all_threads;
+    Param<Counter> max_loads;
 
 END_DECLARE_SIM_OBJECT_PARAMS(MemTest)
 
@@ -413,23 +413,17 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
     INIT_PARAM(cache, "L1 cache"),
     INIT_PARAM(main_mem, "hierarchical memory"),
     INIT_PARAM(check_mem, "check memory"),
-    INIT_PARAM_DFLT(memory_size, "memory size", 65536),
-    INIT_PARAM_DFLT(percent_reads, "target read percentage", 65),
-    INIT_PARAM_DFLT(percent_copies, "target copy percentage", 0),
-    INIT_PARAM_DFLT(percent_uncacheable, "target uncacheable percentage", 10),
-    INIT_PARAM_DFLT(progress_interval,
-                    "progress report interval (in accesses)", 1000000),
-    INIT_PARAM_DFLT(percent_source_unaligned, "percent of copy source address "
-                    "that are unaligned", 50),
-    INIT_PARAM_DFLT(percent_dest_unaligned, "percent of copy dest address "
-                    "that are unaligned", 50),
-    INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
-    INIT_PARAM_DFLT(max_loads_any_thread,
-                    "terminate when any thread reaches this load count",
-                    0),
-    INIT_PARAM_DFLT(max_loads_all_threads,
-                    "terminate when all threads have reached this load count",
-                    0)
+    INIT_PARAM(memory_size, "memory size"),
+    INIT_PARAM(percent_reads, "target read percentage"),
+    INIT_PARAM(percent_copies, "target copy percentage"),
+    INIT_PARAM(percent_uncacheable, "target uncacheable percentage"),
+    INIT_PARAM(progress_interval, "progress report interval (in accesses)"),
+    INIT_PARAM(percent_source_unaligned,
+               "percent of copy source address that are unaligned"),
+    INIT_PARAM(percent_dest_unaligned,
+               "percent of copy dest address that are unaligned"),
+    INIT_PARAM(trace_addr, "address to trace"),
+    INIT_PARAM(max_loads, "terminate when we have reached this load count")
 
 END_INIT_SIM_OBJECT_PARAMS(MemTest)
 
@@ -440,8 +434,7 @@ CREATE_SIM_OBJECT(MemTest)
                        check_mem, memory_size, percent_reads, percent_copies,
                        percent_uncacheable, progress_interval,
                        percent_source_unaligned, percent_dest_unaligned,
-                       trace_addr, max_loads_any_thread,
-                       max_loads_all_threads);
+                       trace_addr, max_loads);
 }
 
 REGISTER_SIM_OBJECT("MemTest", MemTest)
