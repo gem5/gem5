@@ -237,10 +237,4 @@ BaseCPU::clear_interrupts()
 
 #endif // FULL_SYSTEM
 
-//
-// This declaration is not needed now that SamplingCPU provides a
-// BaseCPUBuilder object.
-//
-#if 0
 DEFINE_SIM_OBJECT_CLASS_NAME("BaseCPU", BaseCPU)
-#endif

@@ -116,7 +116,7 @@ SimpleCPU::SimpleCPU(const string &_name,
                      Counter max_insts_all_threads,
                      Counter max_loads_any_thread,
                      Counter max_loads_all_threads,
-                     AlphaItb *itb, AlphaDtb *dtb,
+                     AlphaITB *itb, AlphaDTB *dtb,
                      FunctionalMemory *mem,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
@@ -778,8 +778,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     Param<Counter> max_loads_all_threads;
 
 #ifdef FULL_SYSTEM
-    SimObjectParam<AlphaItb *> itb;
-    SimObjectParam<AlphaDtb *> dtb;
+    SimObjectParam<AlphaITB *> itb;
+    SimObjectParam<AlphaDTB *> dtb;
     SimObjectParam<FunctionalMemory *> mem;
     SimObjectParam<System *> system;
     Param<int> mult;
@@ -852,11 +852,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         defer_registration);
 
 #endif // FULL_SYSTEM
-#if 0
-    if (!defer_registration) {
-        cpu->registerExecContexts();
-    }
-#endif
+
     return cpu;
 }
 
