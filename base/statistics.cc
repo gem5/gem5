@@ -64,7 +64,7 @@ using namespace std;
 // This is a hack to get this parameter from the old stats package.
 namespace Statistics {
 bool PrintDescriptions = true;
-DisplayMode default_mode = mode_simplescalar;
+DisplayMode DefaultMode = mode_simplescalar;
 
 namespace Database
 {
@@ -132,7 +132,7 @@ Data::display(ostream &stream, DisplayMode mode)
             while (j != end) {
                 StatData *stat = *j;
                 if (stat->dodisplay())
-                    stat->display(stream);
+                    stat->display(stream, mode);
                 ++j;
             }
             ++i;
@@ -144,7 +144,7 @@ Data::display(ostream &stream, DisplayMode mode)
         while (i != end) {
             StatData *stat = *i;
             if (stat->dodisplay() && !stat->binned())
-                stat->display(stream);
+                stat->display(stream, mode);
             ++i;
         }
     }
@@ -235,10 +235,10 @@ Data::regPrint(void *stat)
 {
     StatData *data = find(stat);
 
-    if (data->print)
+    if (data->flags & print)
         return;
 
-    data->print = true;
+    data->flags |= print;
 
     list_t::iterator j = printStats.insert(printStats.end(), data);
     inplace_merge(printStats.begin(), j, printStats.end(), StatData::less);
@@ -284,7 +284,7 @@ DataAccess::statData() const
 void
 DataAccess::setInit()
 {
-    statData()->init = true;
+    statData()->flags |= init;
 }
 
 void
@@ -326,7 +326,7 @@ StatData::less(StatData *stat1, StatData *stat2)
 bool
 StatData::baseCheck() const
 {
-    if (!init) {
+    if (!(flags & init)) {
 #ifdef STAT_DEBUG
         cprintf("this is stat number %d\n",(*i)->number);
 #endif
@@ -334,7 +334,7 @@ StatData::baseCheck() const
         return false;
     }
 
-    if (print && name.empty()) {
+    if ((flags & print) && name.empty()) {
         panic("all printable stats must be named");
         return false;
     }
@@ -368,14 +368,14 @@ struct ScalarPrint
     result_t value;
     string name;
     string desc;
-    int precision;
+    StatFlags flags;
     DisplayMode mode;
-    FormatFlags flags;
+    int precision;
     result_t pdf;
     result_t cdf;
 
     ScalarPrint()
-        : value(0.0), precision(0), mode(default_mode), flags(0),
+        : value(0.0), flags(0), mode(DefaultMode), precision(0),
           pdf(NAN), cdf(NAN)
     {}
 
@@ -399,8 +399,7 @@ ScalarPrint::operator()(ostream &stream) const
 
     if (mode == mode_simplescalar && flags & __substat) {
         ccprintf(stream, "%32s %12s %10s %10s", name,
-                 ValueToString(value, mode, precision),
-                 pdfstr, cdfstr);
+                 ValueToString(value, mode, precision), pdfstr, cdfstr);
     } else {
         ccprintf(stream, "%-40s %12s %10s %10s", name,
                  ValueToString(value, mode, precision), pdfstr, cdfstr);
@@ -419,15 +418,15 @@ struct VectorPrint
     string desc;
     vector<string> subnames;
     vector<string> subdescs;
-    int precision;
+    StatFlags flags;
     DisplayMode mode;
-    FormatFlags flags;
+    int precision;
     rvec_t vec;
     result_t total;
 
     VectorPrint()
-        : subnames(0), subdescs(0), precision(-1), mode(default_mode),
-          flags(0), total(NAN)
+        : subnames(0), subdescs(0), flags(0), mode(DefaultMode),
+          precision(-1), total(NAN)
     {}
 
     void operator()(ostream &stream) const;
@@ -542,9 +541,9 @@ struct DistPrint
 {
     string name;
     string desc;
-    int precision;
+    StatFlags flags;
     DisplayMode mode;
-    FormatFlags flags;
+    int precision;
 
     result_t min_val;
     result_t max_val;
@@ -573,6 +572,7 @@ DistPrint::operator()(ostream &stream) const
 
         print.precision = precision;
         print.flags = flags;
+        print.mode = mode;
         print.desc = desc;
 
         print.name = base + "mean";
@@ -603,9 +603,9 @@ DistPrint::operator()(ostream &stream) const
 
     ScalarPrint print;
     print.desc = (mode == mode_m5) ? desc : "";
-    print.precision = precision;
-    print.mode = mode;
     print.flags = flags;
+    print.mode = mode;
+    print.precision = precision;
 
     if (mode == mode_simplescalar) {
         ccprintf(stream, "%-42s", base + "start_dist");
@@ -687,7 +687,7 @@ DistPrint::operator()(ostream &stream) const
     if (mode == mode_m5 || overflow > 0.0) {
         print.name = base + "overflows";
         print.value = overflow;
-        if (mode == mode_m5 && total) {
+        if (total) {
             print.pdf = overflow / total;
             print.cdf += print.pdf;
         }
@@ -723,20 +723,21 @@ DistPrint::operator()(ostream &stream) const
 }
 
 void
-ScalarDataBase::display(ostream &stream) const
+ScalarDataBase::display(ostream &stream, DisplayMode mode) const
 {
     ScalarPrint print;
     print.value = val();
     print.name = name;
     print.desc = desc;
-    print.precision = precision;
     print.flags = flags;
+    print.mode = mode;
+    print.precision = precision;
 
     print(stream);
 }
 
 void
-VectorDataBase::display(ostream &stream) const
+VectorDataBase::display(ostream &stream, DisplayMode mode) const
 {
     int size = this->size();
     const_cast<VectorDataBase *>(this)->update();
@@ -745,8 +746,8 @@ VectorDataBase::display(ostream &stream) const
 
     print.name = name;
     print.desc = desc;
-    print.mode = mode;
     print.flags = flags;
+    print.mode = mode;
     print.precision = precision;
     print.vec = val();
     print.total = total();
@@ -771,7 +772,7 @@ VectorDataBase::display(ostream &stream) const
 }
 
 void
-Vector2dDataBase::display(ostream &stream) const
+Vector2dDataBase::display(ostream &stream, DisplayMode mode) const
 {
     const_cast<Vector2dDataBase *>(this)->update();
 
@@ -779,8 +780,8 @@ Vector2dDataBase::display(ostream &stream) const
     VectorPrint print;
 
     print.subnames = y_subnames;
-    print.mode = mode;
     print.flags = flags;
+    print.mode = mode;
     print.precision = precision;
 
     if (!subnames.empty()) {
@@ -823,7 +824,7 @@ Vector2dDataBase::display(ostream &stream) const
 }
 
 void
-DistDataBase::display(ostream &stream) const
+DistDataBase::display(ostream &stream, DisplayMode mode) const
 {
     const_cast<DistDataBase *>(this)->update();
 
@@ -831,9 +832,9 @@ DistDataBase::display(ostream &stream) const
 
     print.name = name;
     print.desc = desc;
-    print.precision = precision;
-    print.mode = mode;
     print.flags = flags;
+    print.mode = mode;
+    print.precision = precision;
 
     print.min_val = data.min_val;
     print.max_val = data.max_val;
@@ -854,7 +855,7 @@ DistDataBase::display(ostream &stream) const
 }
 
 void
-VectorDistDataBase::display(ostream &stream) const
+VectorDistDataBase::display(ostream &stream, DisplayMode mode) const
 {
     const_cast<VectorDistDataBase *>(this)->update();
 
@@ -864,9 +865,9 @@ VectorDistDataBase::display(ostream &stream) const
         print.name = name +
             (subnames[i].empty() ? ("_" + to_string(i)) : subnames[i]);
         print.desc = subdescs[i].empty() ? desc : subdescs[i];
-        print.precision = precision;
-        print.mode = mode;
         print.flags = flags;
+        print.mode = mode;
+        print.precision = precision;
 
         print.min_val = data[i].min_val;
         print.max_val = data[i].max_val;

@@ -93,25 +93,31 @@ typedef std::vector<result_t> rvec_t;
  * Define the storage for format flags.
  * @todo Can probably shrink this.
  */
-typedef u_int32_t FormatFlags;
+typedef u_int32_t StatFlags;
+
 /** Nothing extra to print. */
-const FormatFlags none =	0x0000;
+const StatFlags none =		0x00000000;
+/** This Stat is Initialized */
+const StatFlags init =		0x00000001;
+/** Print this stat. */
+const StatFlags print =		0x00000002;
 /** Print the total. */
-const FormatFlags total =	0x0001;
+const StatFlags total =		0x00000010;
 /** Print the percent of the total that this entry represents. */
-const FormatFlags pdf =		0x0002;
+const StatFlags pdf =		0x00000020;
 /** Print the cumulative percentage of total upto this entry. */
-const FormatFlags cdf =		0x0004;
-/** Don't print if this is zero. */
-const FormatFlags nozero =	0x0010;
-/** Don't print if this is NAN */
-const FormatFlags nonan =	0x0020;
+const StatFlags cdf =		0x00000040;
 /** Print the distribution. */
-const FormatFlags dist = 	0x0100;
+const StatFlags dist = 		0x00000080;
+/** Don't print if this is zero. */
+const StatFlags nozero =	0x00000100;
+/** Don't print if this is NAN */
+const StatFlags nonan =		0x00000200;
 /** Used for SS compatability. */
-const FormatFlags __substat = 	0x8000;
+const StatFlags __substat = 	0x80000000;
+
 /** Mask of flags that can't be set directly */
-const FormatFlags __reserved =  __substat;
+const StatFlags __reserved =	init | print | __substat;
 
 enum DisplayMode
 {
@@ -120,7 +126,7 @@ enum DisplayMode
     mode_python
 };
 
-extern DisplayMode default_mode;
+extern DisplayMode DefaultMode;
 
 /* Contains the statistic implementation details */
 //////////////////////////////////////////////////////////////////////
@@ -130,28 +136,21 @@ extern DisplayMode default_mode;
 //////////////////////////////////////////////////////////////////////
 struct StatData
 {
-    /** True if the stat has been initialized. */
-    bool init;
-    /** True if the stat should be printed. */
-    bool print;
     /** The name of the stat. */
     std::string name;
     /** The description of the stat. */
     std::string desc;
+    /** The formatting flags. */
+    StatFlags flags;
     /** The display precision. */
     int precision;
-    /** Display Mode */
-    DisplayMode mode;
-    /** The formatting flags. */
-    FormatFlags flags;
 
 
     /** A pointer to a prerequisite Stat. */
     const StatData *prereq;
 
     StatData()
-        : init(false), print(false), precision(-1), mode(default_mode),
-          flags(0), prereq(0)
+        : flags(none), precision(-1), prereq(0)
     {}
 
     virtual ~StatData();
@@ -165,7 +164,7 @@ struct StatData
      * Print this stat to the given ostream.
      * @param stream The stream to print to.
      */
-    virtual void display(std::ostream &stream) const = 0;
+    virtual void display(std::ostream &stream, DisplayMode mode) const = 0;
     bool dodisplay() const { return !prereq || !prereq->zero(); }
 
     /**
@@ -203,7 +202,7 @@ struct ScalarDataBase : public StatData
     virtual result_t val() const = 0;
     virtual result_t total() const = 0;
 
-    virtual void display(std::ostream &stream) const;
+    virtual void display(std::ostream &stream, DisplayMode mode) const;
 };
 
 template <class T>
@@ -229,7 +228,7 @@ struct VectorDataBase : public StatData
     mutable std::vector<std::string> subnames;
     mutable std::vector<std::string> subdescs;
 
-    virtual void display(std::ostream &stream) const;
+    virtual void display(std::ostream &stream, DisplayMode mode) const;
 
     virtual size_t size() const  = 0;
     virtual const rvec_t &val() const  = 0;
@@ -298,7 +297,7 @@ struct DistDataBase : public StatData
     /** Local storage for the entry values, used for printing. */
     DistDataData data;
 
-    virtual void display(std::ostream &stream) const;
+    virtual void display(std::ostream &stream, DisplayMode mode) const;
     virtual void update() = 0;
 };
 
@@ -330,7 +329,7 @@ struct VectorDistDataBase : public StatData
     mutable rvec_t vec;
 
     virtual size_t size() const = 0;
-    virtual void display(std::ostream &stream) const;
+    virtual void display(std::ostream &stream, DisplayMode mode) const;
     virtual void update()
     {
         int s = size();
@@ -375,7 +374,7 @@ struct Vector2dDataBase : public StatData
     mutable int x;
     mutable int y;
 
-    virtual void display(std::ostream &stream) const;
+    virtual void display(std::ostream &stream, DisplayMode mode) const;
     virtual void update()
     {
         if (subnames.size() < x)
@@ -488,7 +487,7 @@ class Wrap : public Child
      * @param f The new flags.
      * @return A reference to this stat.
      */
-    Parent &flags(FormatFlags _flags)
+    Parent &flags(StatFlags _flags)
     {
         statData()->flags |= _flags;
         return self();
@@ -1403,18 +1402,14 @@ struct DistStor
         return samples == 0;
     }
 
-    void update(DistDataData *data, DisplayMode mode, const Params &params)
+    void update(DistDataData *data, const Params &params)
     {
         data->min = params.min;
         data->max = params.max;
         data->bucket_size = params.bucket_size;
         data->size = params.size;
 
-        if (mode == mode_m5)
-            data->min_val = (min_val == INT_MAX) ? params.min : min_val;
-        else
-            data->min_val = params.min;
-
+        data->min_val = (min_val == INT_MAX) ? 0 : min_val;
         data->max_val = (max_val == INT_MIN) ? 0 : max_val;
         data->underflow = underflow;
         data->overflow = overflow;
@@ -1491,7 +1486,7 @@ struct FancyStor
         samples += number;
     }
 
-    void update(DistDataData *data, DisplayMode mode, const Params &params)
+    void update(DistDataData *data, const Params &params)
     {
         data->sum = sum;
         data->squares = squares;
@@ -1559,7 +1554,7 @@ struct AvgFancy
         squares += value * value;
     }
 
-    void update(DistDataData *data, DisplayMode mode, const Params &params)
+    void update(DistDataData *data, const Params &params)
     {
         data->sum = sum;
         data->squares = squares;
@@ -1657,7 +1652,7 @@ class DistBase : public DataAccess
     void update(DistDataBase *base)
     {
         base->data.fancy = storage_t::fancy;
-        data()->update(&(base->data), base->mode, params);
+        data()->update(&(base->data), params);
     }
     /**
      * @return True is stat is binned.
@@ -1731,7 +1726,7 @@ class VectorDistBase : public DataAccess
         base->data.resize(size);
         for (int i = 0; i < size; ++i) {
             base->data[i].fancy = storage_t::fancy;
-            data(i)->update(&(base->data[i]), base->mode, params);
+            data(i)->update(&(base->data[i]), params);
         }
     }
 };
@@ -2956,7 +2951,7 @@ class Temp
  */
 
 void check();
-void dump(std::ostream &stream, DisplayMode mode = mode_simplescalar);
+void dump(std::ostream &stream, DisplayMode mode = DefaultMode);
 void reset();
 void registerResetCallback(Callback *cb);
 
