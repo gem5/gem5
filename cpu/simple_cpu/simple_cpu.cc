@@ -216,6 +216,63 @@ SimpleCPU::execCtxStatusChg(int thread_num) {
         setStatus(Idle);
 }
 
+void
+SimpleCPU::setStatus(Status new_status)
+{
+    Status old_status = status();
+
+    // We should never even get here if the CPU has been switched out.
+    assert(old_status != SwitchedOut);
+
+    _status = new_status;
+
+    switch (status()) {
+      case IcacheMissStall:
+        assert(old_status == Running);
+        lastIcacheStall = curTick;
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+        break;
+
+      case IcacheMissComplete:
+        assert(old_status == IcacheMissStall);
+        if (tickEvent.squashed())
+            tickEvent.reschedule(curTick + 1);
+        else if (!tickEvent.scheduled())
+            tickEvent.schedule(curTick + 1);
+        break;
+
+      case DcacheMissStall:
+        assert(old_status == Running);
+        lastDcacheStall = curTick;
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+        break;
+
+      case Idle:
+        assert(old_status == Running);
+        notIdleFraction--;
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+        break;
+
+      case Running:
+        assert(old_status == Idle ||
+               old_status == DcacheMissStall ||
+               old_status == IcacheMissComplete);
+        if (old_status == Idle)
+            notIdleFraction++;
+
+        if (tickEvent.squashed())
+            tickEvent.reschedule(curTick + 1);
+        else if (!tickEvent.scheduled())
+            tickEvent.schedule(curTick + 1);
+        break;
+
+      default:
+        panic("can't get here");
+    }
+}
 
 void
 SimpleCPU::regStats()
@@ -251,6 +308,7 @@ SimpleCPU::regStats()
         .prereq(dcacheStallCycles)
         ;
 
+    idleFraction = constant(1.0) - notIdleFraction;
     numInsts = Statistics::scalar(numInst) - Statistics::scalar(startNumInst);
     simInsts += numInsts;
 }
@@ -259,6 +317,7 @@ void
 SimpleCPU::resetStats()
 {
     startNumInst = numInst;
+    notIdleFraction = (_status != Idle);
 }
 
 void

@@ -35,7 +35,6 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "sim/host.hh"
-#include "sim/sim_stats.hh"
 
 using namespace std;
 using namespace Statistics;
@@ -67,8 +66,8 @@ Formula f4;
 Formula f5;
 Formula f6;
 
-MainBin bin1;
-MainBin bin2;
+MainBin bin1("bin1");
+MainBin bin2("bin2");
 
 double
 testfunc()
@@ -256,7 +255,7 @@ main(int argc, char *argv[])
 
     check();
 
-    MainBin::activate(bin1);
+    bin1.activate();
 
     f1 = s1 + s2;
     f2 = (-s1) / (-s2) * -s3 + ULL(100) + s4;
@@ -452,7 +451,7 @@ main(int argc, char *argv[])
     s6.sample(8);
     s6.sample(9);
 
-    MainBin::activate(bin2);
+    bin2.activate();
     s6.sample(10);
     s6.sample(10);
     s6.sample(10);
@@ -493,12 +492,12 @@ main(int argc, char *argv[])
 
     s12.sample(100);
 
-    MainBin::activate(bin1);
+    bin1.activate();
     cout << "dump 1" << endl;
     dump(cout);
     cout << endl << endl;
 
-    MainBin::activate(bin2);
+    bin2.activate();
     cout << "dump 2" << endl;
     dump(cout);
     cout << endl << endl;

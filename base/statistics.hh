@@ -77,9 +77,6 @@ float __nan();
 #define __M5_NAN
 #endif
 
-/** Print stats out in SS format. */
-#define STAT_DISPLAY_COMPAT
-
 class Callback;
 
 /** The current simulated cycle. */
@@ -103,195 +100,92 @@ const FormatFlags none =	0x0000;
 const FormatFlags total =	0x0001;
 /** Print the percent of the total that this entry represents. */
 const FormatFlags pdf =		0x0002;
-/** Don't print if this is zero. */
-const FormatFlags nozero =	0x0004;
-/** Don't print if this is NAN */
-const FormatFlags nonan =	0x0008;
 /** Print the cumulative percentage of total upto this entry. */
-const FormatFlags cdf =		0x0010;
+const FormatFlags cdf =		0x0004;
+/** Don't print if this is zero. */
+const FormatFlags nozero =	0x0010;
+/** Don't print if this is NAN */
+const FormatFlags nonan =	0x0020;
 /** Print the distribution. */
-const FormatFlags dist = 	0x0020;
+const FormatFlags dist = 	0x0100;
 /** Used for SS compatability. */
 const FormatFlags __substat = 	0x8000;
 /** Mask of flags that can't be set directly */
 const FormatFlags __reserved =  __substat;
 
+enum DisplayMode
+{
+    mode_m5,
+    mode_simplescalar,
+    mode_python
+};
+
+extern DisplayMode default_mode;
+
 /* Contains the statistic implementation details */
-namespace Detail {
 //////////////////////////////////////////////////////////////////////
 //
 // Statistics Framework Base classes
 //
 //////////////////////////////////////////////////////////////////////
-struct StatData;
-struct SubData;
-
-/**
- * Common base class for all statistics, used to maintain a list and print.
- * This class holds no data itself but is used to find the associated
- * StatData in the stat database @sa Statistics::Database.
- */
-class Stat
+struct StatData
 {
-  protected:
-    /** Mark this statistics as initialized. */
-    void setInit();
-    /**
-     * Finds and returns the associated StatData from the database.
-     * @return The formatting and output data of this statistic.
-     */
-    StatData *mydata();
-    /**
-     * Finds and returns a const pointer to the associated StatData.
-     * @return The formatting and output data of this statistic.
-     */
-    const StatData *mydata() const;
-    /**
-     * Mark this stat for output at the end of simulation.
-     * @return The formatting and output data of this statistic.
-     */
-    StatData *print();
-    /**
-     * Finds and returns the SubData at the given index.
-     * @param index The index of the SubData to find.
-     * @return The name and description of the given index.
-     */
-    const SubData *mysubdata(int index) const;
-    /**
-     * Create and return a new SubData field for the given index.
-     * @param index The index to create a SubData for.
-     * @return A pointer to the created SubData.
-     */
-    SubData *mysubdata_create(int index);
+    /** True if the stat has been initialized. */
+    bool init;
+    /** True if the stat should be printed. */
+    bool print;
+    /** The name of the stat. */
+    std::string name;
+    /** The description of the stat. */
+    std::string desc;
+    /** The display precision. */
+    int precision;
+    /** Display Mode */
+    DisplayMode mode;
+    /** The formatting flags. */
+    FormatFlags flags;
 
-  public:
-    /**
-     * Return the name of this stat.
-     * @return the name of the stat.
-     */
-    virtual std::string myname() const;
-    /**
-     * Return the name of the sub field at the given index.
-     * @param index the subfield index.
-     * @return the name of the subfield.
-     */
-    virtual std::string mysubname(int index) const;
-    /**
-     * Return the description of this stat.
-     * @return the description of this stat.
-     */
-    virtual std::string mydesc() const;
-    /**
-     * Return the description of the subfield at the given index.
-     * @param index The subfield index.
-     * @return the description of the subfield.
-     */
-    virtual std::string mysubdesc(int index) const;
-    /**
-     * Return the format flags of this stat.
-     * @return the format flags.
-     */
-    virtual FormatFlags myflags() const;
-    /**
-     * Return true if this stat's prereqs have been satisfied (they are non
-     * zero).
-     * @return true if the prerequisite stats aren't zero.
-     */
-    virtual bool dodisplay() const;
-    /**
-     * Return the display percision.
-     * @return The display precision.
-     */
-    virtual int myprecision() const;
 
-  public:
+    /** A pointer to a prerequisite Stat. */
+    const StatData *prereq;
+
+    StatData()
+        : init(false), print(false), precision(-1), mode(default_mode),
+          flags(0), prereq(0)
+    {}
+
+    virtual ~StatData();
+
     /**
-     * Create this stat and perhaps register it with the stat database. To be
-     * printed a stat must be registered with the database.
-     * @param reg If true, register this stat in the database.
+     * @return true if the stat is binned.
      */
-    Stat(bool reg);
-    /**
-     * Destructor
-     */
-    virtual ~Stat() {}
+    virtual bool binned() const = 0;
 
     /**
      * Print this stat to the given ostream.
      * @param stream The stream to print to.
      */
     virtual void display(std::ostream &stream) const = 0;
+    bool dodisplay() const { return !prereq || !prereq->zero(); }
+
     /**
-     * Reset this stat to the default state.
+     * Reset the corresponding stat to the default state.
      */
     virtual void reset() = 0;
+
     /**
-     * Return the number of entries in this stat.
-     * @return The number of entries.
-     */
-    virtual size_t size() const = 0;
-    /**
-     * Return true if the stat has value zero.
-     * @return True if the stat is zero.
+     * @return true if this stat has a value and satisfies its
+     * requirement as a prereq
      */
     virtual bool zero() const = 0;
 
     /**
-     * Return true if stat is binned.
-     *@return True is stat is binned.
+     * Check that this stat has been set up properly and is ready for
+     * use
+     * @return true for success
      */
-    virtual bool binned() const = 0;
+    virtual bool check() const;
 
-    /**
-     * Set the name and marks this stat to print at the end of simulation.
-     * @param name The new name.
-     * @return A reference to this stat.
-     */
-    Stat &name(const std::string &name);
-    /**
-     * Set the description and marks this stat to print at the end of
-     * simulation.
-     * @param desc The new description.
-     * @return A reference to this stat.
-     */
-    Stat &desc(const std::string &desc);
-    /**
-     * Set the precision and marks this stat to print at the end of simulation.
-     * @param p The new precision
-     * @return A reference to this stat.
-     */
-    Stat &precision(int p);
-    /**
-     * Set the flags and marks this stat to print at the end of simulation.
-     * @param f The new flags.
-     * @return A reference to this stat.
-     */
-    Stat &flags(FormatFlags f);
-    /**
-     * Set the prerequisite stat and marks this stat to print at the end of
-     * simulation.
-     * @param prereq The prerequisite stat.
-     * @return A reference to this stat.
-     */
-    Stat &prereq(const Stat &prereq);
-    /**
-     * Set the subfield name for the given index, and marks this stat to print
-     * at the end of simulation.
-     * @param index The subfield index.
-     * @param name The new name of the subfield.
-     * @return A reference to this stat.
-     */
-    Stat &subname(int index, const std::string &name);
-    /**
-     * Set the subfield description for the given index and marks this stat to
-     * print at the end of simulation.
-     * @param index The subfield index.
-     * @param desc The new description of the subfield
-     * @return A reference to this stat.
-     */
-    Stat &subdesc(int index, const std::string &desc);
-
-  public:
     /**
      * Checks if the first stat's name is alphabetically less than the second.
      * This function breaks names up at periods and considers each subname
@@ -300,96 +194,380 @@ class Stat
      * @param stat2 The second stat.
      * @return stat1's name is alphabetically before stat2's
      */
-    static bool less(Stat *stat1, Stat *stat2);
-
-#ifdef STAT_DEBUG
-    /** A unique ID used for debugging. */
-    int number;
-#endif
+    static bool less(StatData *stat1, StatData *stat2);
 };
 
-/**
- * Base class for all scalar stats. The class provides an interface to access
- * the current value of the stat. This class can be used in formulas.
- */
-class ScalarStat : public Stat
+struct ScalarDataBase : public StatData
 {
-  public:
-    /**
-     * Create and perhaps register this stat with the database.
-     * @param reg If true, register this stat with the database.
-     */
-    ScalarStat(bool reg) : Stat(reg) {}
-    /**
-     * Return the current value of this statistic as a result type.
-     * @return The current value of this statistic.
-     */
     virtual result_t val() const = 0;
-    /**
-     * Return true if this stat has value zero.
-     * @return True if this stat is zero.
-     */
-    virtual bool zero() const;
-    /**
-     * Print this stat to the provided ostream.
-     * @param stream The output stream.
-     */
-    virtual void display(std::ostream &stream) const;
+    virtual result_t total() const = 0;
 
-    /**
-     * Return true if stat is binned.
-     *@return True is stat is binned.
-     */
-    virtual bool binned() const = 0;
+    virtual void display(std::ostream &stream) const;
 };
 
-void
-VectorDisplay(std::ostream &stream, const std::string &myname,
-              const std::vector<std::string> *mysubnames,
-              const std::string &mydesc,
-              const std::vector<std::string> *mysubdescs,
-              int myprecision, FormatFlags myflags, const rvec_t &vec,
-              result_t mytotal);
+template <class T>
+class ScalarData : public ScalarDataBase
+{
+  protected:
+    T &s;
 
-/**
- * Base class for all vector stats. This class provides interfaces to access
- * the current values of the stats as well as the totals. This class can be
- * used in formulas.
- */
-class VectorStat : public Stat
+  public:
+    ScalarData(T &stat) : s(stat) {}
+
+    virtual bool binned() const { return s.binned(); }
+    virtual result_t val() const { return s.val(); }
+    virtual result_t total() const { return s.total(); }
+    virtual void reset() { s.reset(); }
+    virtual bool zero() const { return s.zero(); }
+};
+
+struct VectorDataBase : public StatData
+{
+    /** Names and descriptions of subfields. */
+    mutable std::vector<std::string> subnames;
+    mutable std::vector<std::string> subdescs;
+
+    virtual void display(std::ostream &stream) const;
+
+    virtual size_t size() const  = 0;
+    virtual const rvec_t &val() const  = 0;
+    virtual result_t total() const  = 0;
+    virtual void update()
+    {
+        int s = size();
+        if (subnames.size() < s)
+            subnames.resize(s);
+
+        if (subdescs.size() < s)
+            subdescs.resize(s);
+    }
+};
+
+template <class T>
+class VectorData : public VectorDataBase
+{
+  protected:
+    T &s;
+    mutable rvec_t vec;
+
+  public:
+    VectorData(T &stat) : s(stat) {}
+
+    virtual bool binned() const { return s.binned(); }
+    virtual bool zero() const { return s.zero(); }
+    virtual void reset() { s.reset(); }
+
+    virtual size_t size() const { return s.size(); }
+    virtual const rvec_t &val() const
+    {
+        s.val(vec);
+        return vec;
+    }
+    virtual result_t total() const { return s.total(); }
+    virtual void update()
+    {
+        VectorDataBase::update();
+        s.update(this);
+    }
+};
+
+
+struct DistDataData
+{
+    result_t min_val;
+    result_t max_val;
+    result_t underflow;
+    result_t overflow;
+    rvec_t vec;
+    result_t sum;
+    result_t squares;
+    result_t samples;
+
+    int min;
+    int max;
+    int bucket_size;
+    int size;
+    bool fancy;
+};
+
+struct DistDataBase : public StatData
+{
+    /** Local storage for the entry values, used for printing. */
+    DistDataData data;
+
+    virtual void display(std::ostream &stream) const;
+    virtual void update() = 0;
+};
+
+template <class T>
+class DistData : public DistDataBase
+{
+  protected:
+    T &s;
+
+  public:
+    DistData(T &stat) : s(stat) {}
+
+    virtual bool binned() const { return s.binned(); }
+    virtual void reset() { s.reset(); }
+    virtual bool zero() const { return s.zero(); }
+    virtual void update() { return s.update(this); }
+};
+
+struct VectorDistDataBase : public StatData
+{
+    std::vector<DistDataData> data;
+
+   /** Names and descriptions of subfields. */
+    mutable std::vector<std::string> subnames;
+    mutable std::vector<std::string> subdescs;
+
+    /** Local storage for the entry values, used for printing. */
+    mutable rvec_t vec;
+
+    virtual size_t size() const = 0;
+    virtual void display(std::ostream &stream) const;
+    virtual void update()
+    {
+        int s = size();
+        if (subnames.size() < s)
+            subnames.resize(s);
+
+        if (subdescs.size() < s)
+            subdescs.resize(s);
+    }
+};
+
+template <class T>
+class VectorDistData : public VectorDistDataBase
+{
+  protected:
+    T &s;
+
+  public:
+    VectorDistData(T &stat) : s(stat) {}
+
+    virtual bool binned() const { return T::bin_t::binned; }
+    virtual void reset() { s.reset(); }
+    virtual size_t size() const { return s.size(); }
+    virtual bool zero() const { return s.zero(); }
+    virtual void update()
+    {
+        VectorDistDataBase::update();
+        return s.update(this);
+    }
+};
+
+struct Vector2dDataBase : public StatData
+{
+    /** Names and descriptions of subfields. */
+    std::vector<std::string> subnames;
+    std::vector<std::string> subdescs;
+    std::vector<std::string> y_subnames;
+
+    /** Local storage for the entry values, used for printing. */
+    mutable rvec_t vec;
+    mutable int x;
+    mutable int y;
+
+    virtual void display(std::ostream &stream) const;
+    virtual void update()
+    {
+        if (subnames.size() < x)
+            subnames.resize(x);
+    }
+};
+
+template <class T>
+class Vector2dData : public Vector2dDataBase
+{
+  protected:
+    T &s;
+
+  public:
+    Vector2dData(T &stat) : s(stat) {}
+
+    virtual bool binned() const { return T::bin_t::binned; }
+    virtual void reset() { s.reset(); }
+    virtual bool zero() const { return s.zero(); }
+    virtual void update()
+    {
+        Vector2dDataBase::update();
+        return s.update(this);
+    }
+};
+
+
+class DataAccess
+{
+  protected:
+    StatData *find() const;
+    void map(StatData *data);
+
+    StatData *statData();
+    const StatData *statData() const;
+
+    void setInit();
+    void setPrint();
+};
+
+template <class Parent, class Child, template <class Child> class Data>
+class Wrap : public Child
+{
+  protected:
+    Parent &self() { return *reinterpret_cast<Parent *>(this); }
+
+  protected:
+    Data<Child> *statData()
+    {
+        StatData *__data = DataAccess::statData();
+        Data<Child> *ptr = dynamic_cast<Data<Child> *>(__data);
+        assert(ptr);
+        return ptr;
+    }
+
+  public:
+    const Data<Child> *statData() const
+    {
+        const StatData *__data = DataAccess::statData();
+        const Data<Child> *ptr = dynamic_cast<const Data<Child> *>(__data);
+        assert(ptr);
+        return ptr;
+    }
+
+  public:
+    Wrap()
+    {
+        map(new Data<Child>(*this));
+    }
+
+    /**
+     * Set the name and marks this stat to print at the end of simulation.
+     * @param name The new name.
+     * @return A reference to this stat.
+     */
+    Parent &name(const std::string &_name)
+    {
+        Data<Child> *data = statData();
+        data->name = _name;
+        setPrint();
+        return self();
+    }
+
+    /**
+     * Set the description and marks this stat to print at the end of
+     * simulation.
+     * @param desc The new description.
+     * @return A reference to this stat.
+     */
+    Parent &desc(const std::string &_desc)
+    {
+        statData()->desc = _desc;
+        return self();
+    }
+
+    /**
+     * Set the precision and marks this stat to print at the end of simulation.
+     * @param p The new precision
+     * @return A reference to this stat.
+     */
+    Parent &precision(int _precision)
+    {
+        statData()->precision = _precision;
+        return self();
+    }
+
+    /**
+     * Set the flags and marks this stat to print at the end of simulation.
+     * @param f The new flags.
+     * @return A reference to this stat.
+     */
+    Parent &flags(FormatFlags _flags)
+    {
+        statData()->flags |= _flags;
+        return self();
+    }
+
+    /**
+     * Set the prerequisite stat and marks this stat to print at the end of
+     * simulation.
+     * @param prereq The prerequisite stat.
+     * @return A reference to this stat.
+     */
+    template <class T>
+    Parent &prereq(const T &prereq)
+    {
+        statData()->prereq = prereq.statData();
+        return self();
+    }
+};
+
+template <class Parent, class Child, template <class Child> class Data>
+class WrapVec : public Wrap<Parent, Child, Data>
+{
+  public:
+    // The following functions are specific to vectors.  If you use them
+    // in a non vector context, you will get a nice compiler error!
+
+    /**
+     * Set the subfield name for the given index, and marks this stat to print
+     * at the end of simulation.
+     * @param index The subfield index.
+     * @param name The new name of the subfield.
+     * @return A reference to this stat.
+     */
+    Parent &subname(int index, const std::string &name)
+    {
+        std::vector<std::string> &subn = statData()->subnames;
+        if (subn.size() <= index)
+            subn.resize(index + 1);
+        subn[index] = name;
+        return self();
+    }
+
+    /**
+     * Set the subfield description for the given index and marks this stat to
+     * print at the end of simulation.
+     * @param index The subfield index.
+     * @param desc The new description of the subfield
+     * @return A reference to this stat.
+     */
+    Parent &subdesc(int index, const std::string &desc)
+    {
+        std::vector<std::string> &subd = statData()->subdescs;
+        if (subd.size() <= index)
+            subd.resize(index + 1);
+        subd[index] = desc;
+
+        return self();
+    }
+
+};
+
+template <class Parent, class Child, template <class Child> class Data>
+class WrapVec2d : public WrapVec<Parent, Child, Data>
 {
   public:
     /**
-     * Create and perhaps register this stat with the database.
-     * @param reg If true, register this stat with the database.
+     * @warning This makes the assumption that if you're gonna subnames a 2d
+     * vector, you're subnaming across all y
      */
-    VectorStat(bool reg) : Stat(reg) {}
-    /**
-     * Return a vector of result typesd of all the values in the vector.
-     * @return The values of the vector.
-     */
-    virtual const rvec_t &val() const = 0;
-    /**
-     * Return the total of all the entries in the vector.
-     * @return The total of the vector.
-     */
-    virtual result_t total() const = 0;
-    /**
-     * Return true if this stat has value zero.
-     * @return True if this stat is zero.
-     */
-    virtual bool zero() const;
-    /**
-     * Print this stat to the provided ostream.
-     * @param stream The output stream.
-     */
-    virtual void display(std::ostream &stream) const;
-
-    /**
-     * Return true if stat is binned.
-     *@return True is stat is binned.
-     */
-    virtual bool binned() const = 0;
+    Parent &ysubnames(const char **names)
+    {
+        Data<Child> *data = statData();
+        data->y_subnames.resize(y);
+        for (int i = 0; i < y; ++i)
+            data->y_subnames[i] = names[i];
+        return self();
+    }
+    Parent &ysubname(int index, const std::string subname)
+    {
+        Data<Child> *data = statData();
+        assert(i < y);
+        data->y_subnames.resize(y);
+        data->y_subnames[i] = subname.c_str();
+        return self();
+    }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -411,13 +589,18 @@ struct StatStor
   private:
     /** The statistic value. */
     T data;
+    static T &Null()
+    {
+        static T __T = T();
+        return __T;
+    }
 
   public:
     /**
      * Builds this storage element and calls the base constructor of the
      * datatype.
      */
-    StatStor(const Params &) : data(T()) {}
+    StatStor(const Params &) : data(Null()) {}
 
     /**
      * The the stat to the given value.
@@ -452,7 +635,12 @@ struct StatStor
     /**
      * Reset stat value to default
      */
-    void reset() { data = T(); }
+    void reset() { data = Null(); }
+
+    /**
+     * @return true if zero value
+     */
+    bool zero() const { return data == Null(); }
 };
 
 /**
@@ -541,6 +729,11 @@ struct AvgStor
         total = 0;
         last = curTick;
     }
+
+    /**
+     * @return true if zero value
+     */
+    bool zero() const { return total == 0.0; }
 };
 
 /**
@@ -549,7 +742,7 @@ struct AvgStor
  * This allows for breaking down statistics across multiple bins easily.
  */
 template <typename T, template <typename T> class Storage, class Bin>
-class ScalarBase : public ScalarStat
+class ScalarBase : public DataAccess
 {
   protected:
     /** Define the type of the storage class. */
@@ -594,11 +787,6 @@ class ScalarBase : public ScalarStat
 
   public:
     /**
-     * Return the current value of this stat as a result type.
-     * @return The current value.
-     */
-    result_t val() const { return data()->val(params); }
-    /**
      * Return the current value of this stat as its base type.
      * @return The current value.
      */
@@ -608,9 +796,9 @@ class ScalarBase : public ScalarStat
     /**
      * Create and initialize this stat, register it with the database.
      */
-    ScalarBase() : ScalarStat(true) {
+    ScalarBase()
+    {
         bin.init(params);
-        setInit();
     }
 
   public:
@@ -659,17 +847,23 @@ class ScalarBase : public ScalarStat
      * Return the number of elements, always 1 for a scalar.
      * @return 1.
      */
-    virtual size_t size() const { return 1; }
+    size_t size() const { return 1; }
     /**
      * Return true if stat is binned.
      *@return True is stat is binned.
      */
-    virtual bool binned() const { return bin_t::binned; }
+    bool binned() const { return bin_t::binned; }
 
     /**
      * Reset stat value to default
      */
     void reset() { bin.reset(); }
+
+    result_t val() { return data()->val(params); }
+
+    result_t total() { return val(); }
+
+    bool zero() { return val() == 0.0; }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -685,7 +879,7 @@ class ScalarProxy;
  * Storage class. @sa ScalarBase
  */
 template <typename T, template <typename T> class Storage, class Bin>
-class VectorBase : public VectorStat
+class VectorBase : public DataAccess
 {
   protected:
     /** Define the type of the storage class. */
@@ -694,10 +888,6 @@ class VectorBase : public VectorStat
     typedef typename storage_t::Params params_t;
     /** Define the bin type. */
     typedef typename Bin::VectorBin<storage_t> bin_t;
-
-  private:
-    /** Local storage for the entry values, used for printing. */
-    mutable rvec_t *vec;
 
   protected:
     /** The bin of this stat. */
@@ -737,17 +927,17 @@ class VectorBase : public VectorStat
      * Copy the values to a local vector and return a reference to it.
      * @return A reference to a vector of the stat values.
      */
-    const rvec_t &val() const {
-        if (vec)
-            vec->resize(size());
-        else
-            vec = new rvec_t(size());
-
+    void val(rvec_t &vec) const
+    {
+        vec.resize(size());
         for (int i = 0; i < size(); ++i)
-            (*vec)[i] = data(i)->val(params);
-
-        return *vec;
+            vec[i] = data(i)->val(params);
     }
+
+    /**
+     * @return True is stat is binned.
+     */
+    bool binned() const { return bin_t::binned; }
 
     /**
      * Return a total of all entries in this vector.
@@ -760,27 +950,24 @@ class VectorBase : public VectorStat
         return total;
     }
 
-  public:
     /**
-     * Create this vector and register it with the database.
+     * @return the number of elements in this vector.
      */
-    VectorBase() : VectorStat(true), vec(NULL) {}
-    /**
-     * Destructor.
-     */
-    ~VectorBase() { if (vec) delete vec; }
+    size_t size() const { return bin.size(); }
 
-    /**
-     * Set this vector to have the given size.
-     * @param size The new size.
-     * @return A reference to this stat.
-     */
-    VectorBase &init(size_t size) {
-        bin.init(size, params);
-        setInit();
-
-        return *this;
+    bool zero() const
+    {
+        for (int i = 0; i < size(); ++i)
+            if (data(i)->zero())
+                return true;
+        return false;
     }
+
+    bool check() const { return true; }
+    void reset() { bin.reset(); }
+
+  public:
+    VectorBase() {}
 
     /** Friend this class with the associated scalar proxy. */
     friend class ScalarProxy<T, Storage, Bin>;
@@ -792,20 +979,7 @@ class VectorBase : public VectorStat
      */
     ScalarProxy<T, Storage, Bin> operator[](int index);
 
-    /**
-     * Return the number of elements in this vector.
-     * @return The size of the vector.
-     */
-    virtual size_t size() const { return bin.size(); }
-    /**
-     * Return true if stat is binned.
-     *@return True is stat is binned.
-     */
-    virtual bool binned() const { return bin_t::binned; }
-    /**
-     * Reset stat value to default
-     */
-    virtual void reset() { bin.reset(); }
+    void update(StatData *data) {}
 };
 
 /**
@@ -813,7 +987,7 @@ class VectorBase : public VectorStat
  * Behaves like a ScalarBase.
  */
 template <typename T, template <typename T> class Storage, class Bin>
-class ScalarProxy : public ScalarStat
+class ScalarProxy
 {
   protected:
     /** Define the type of the storage class. */
@@ -868,13 +1042,13 @@ class ScalarProxy : public ScalarStat
      * @param i The index to access.
      */
     ScalarProxy(bin_t &b, params_t &p, int i)
-        : ScalarStat(false), bin(&b), params(&p), index(i)  {}
+        : bin(&b), params(&p), index(i)  {}
     /**
      * Create a copy of the provided ScalarProxy.
      * @param sp The proxy to copy.
      */
     ScalarProxy(const ScalarProxy &sp)
-        : ScalarStat(false), bin(sp.bin), params(sp.params), index(sp.index) {}
+        : bin(sp.bin), params(sp.params), index(sp.index) {}
     /**
      * Set this proxy equal to the provided one.
      * @param sp The proxy to copy.
@@ -933,16 +1107,18 @@ class ScalarProxy : public ScalarStat
      * Return the number of elements, always 1 for a scalar.
      * @return 1.
      */
-    virtual size_t size() const { return 1; }
+    size_t size() const { return 1; }
+
     /**
      * Return true if stat is binned.
      *@return false since Proxies aren't printed/binned
      */
-    virtual bool binned() const { return false; }
+    bool binned() const { return false; }
+
     /**
      * This stat has no state.  Nothing to reset
      */
-    virtual void reset() {  }
+    void reset() {  }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -957,7 +1133,7 @@ template <typename T, template <typename T> class Storage, class Bin>
 class VectorProxy;
 
 template <typename T, template <typename T> class Storage, class Bin>
-class Vector2dBase : public Stat
+class Vector2dBase : public DataAccess
 {
   protected:
     typedef Storage<T> storage_t;
@@ -969,7 +1145,6 @@ class Vector2dBase : public Stat
     size_t y;
     bin_t bin;
     params_t params;
-    std::vector<std::string> *y_subnames;
 
   protected:
     storage_t *data(int index) { return bin.data(index, params); }
@@ -986,104 +1161,36 @@ class Vector2dBase : public Stat
     const Vector2dBase &operator=(const Vector2dBase &);
 
   public:
-    Vector2dBase() : Stat(true) {}
-    ~Vector2dBase() { }
+    Vector2dBase() {}
 
-    Vector2dBase &init(size_t _x, size_t _y) {
-        x = _x;
-        y = _y;
-        bin.init(x * y, params);
-        setInit();
-        y_subnames = new std::vector<std::string>(y);
-
-        return *this;
-    }
-
-    /**
-     * @warning This makes the assumption that if you're gonna subnames a 2d
-     * vector, you're subnaming across all y
-     */
-    Vector2dBase &ysubnames(const char **names)
+    void update(Vector2dDataBase *data)
     {
-        for (int i=0; i < y; ++i) {
-            (*y_subnames)[i] = names[i];
-        }
-        return *this;
+        data->x = x;
+        data->y = y;
+        int size = this->size();
+        data->vec.resize(size);
+        for (int i = 0; i < size; ++i)
+            data->vec[i] = this->data(i)->val(params);
     }
-    Vector2dBase &ysubname(int index, const std::string subname)
-    {
-        (*y_subnames)[i] = subname.c_str();
-        return *this;
-    }
+
     std::string ysubname(int i) const { return (*y_subnames)[i]; }
 
     friend class VectorProxy<T, Storage, Bin>;
     VectorProxy<T, Storage, Bin> operator[](int index);
 
-    virtual size_t size() const { return bin.size(); }
-    virtual bool zero() const { return data(0)->value(params) == 0.0; }
-    /**
-     * Return true if stat is binned.
-     *@return True is stat is binned.
-     */
-    virtual bool binned() const { return bin_t::binned; }
+    size_t size() const { return bin.size(); }
+    bool zero() const { return data(0)->value(params) == 0.0; }
 
-    virtual void
-    display(std::ostream &out) const
-    {
-        bool have_subname = false;
-        for (int i = 0; i < x; ++i) {
-            if (!mysubname(i).empty())
-                have_subname = true;
-        }
-
-        rvec_t tot_vec(y);
-        result_t super_total = 0.0;
-        for (int i = 0; i < x; ++i) {
-            std::string subname;
-            if (have_subname) {
-                subname = mysubname(i);
-                if (subname.empty())
-                    continue;
-            } else
-                subname = to_string(i);
-
-            int iy = i * y;
-            rvec_t vec(y);
-
-            result_t total = 0.0;
-            for (int j = 0; j < y; ++j) {
-                vec[j] = data(iy + j)->val(params);
-                tot_vec[j] += vec[j];
-                total += vec[j];
-                super_total += vec[j];
-            }
-
-            std::string desc;
-            if (mysubdesc(i).empty()) {
-                desc = mydesc();
-            } else {
-                desc = mysubdesc(i);
-            }
-
-            VectorDisplay(out, myname() + "_" + subname, y_subnames, desc, 0,
-                          myprecision(), myflags(), vec, total);
-
-        }
-        if ((myflags() & ::Statistics::total) && (x > 1)) {
-            VectorDisplay(out, myname(), y_subnames, mydesc(), 0,
-                          myprecision(), myflags(), tot_vec, super_total);
-
-        }
-    }
     /**
      * Reset stat value to default
      */
-    virtual void reset() { bin.reset(); }
+    void reset() { bin.reset(); }
+
+    bool check() { return true; }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
-class VectorProxy : public VectorStat
+class VectorProxy
 {
   protected:
     typedef Storage<T> storage_t;
@@ -1132,18 +1239,19 @@ class VectorProxy : public VectorStat
 
   public:
     VectorProxy(bin_t &b, params_t &p, int o, int l)
-        : VectorStat(false), bin(&b), params(&p), offset(o), len(l), vec(NULL)
+        : bin(&b), params(&p), offset(o), len(l), vec(NULL)
         { }
     VectorProxy(const VectorProxy &sp)
-        : VectorStat(false), bin(sp.bin), params(sp.params), offset(sp.offset),
-          len(sp.len), vec(NULL)
+        : bin(sp.bin), params(sp.params), offset(sp.offset), len(sp.len),
+          vec(NULL)
         { }
     ~VectorProxy() {
         if (vec)
             delete vec;
     }
 
-    const VectorProxy &operator=(const VectorProxy &sp) {
+    const VectorProxy &operator=(const VectorProxy &sp)
+    {
         bin = sp.bin;
         params = sp.params;
         offset = sp.offset;
@@ -1154,22 +1262,24 @@ class VectorProxy : public VectorStat
         return *this;
     }
 
-    virtual size_t size() const { return len; }
-
-    ScalarProxy<T, Storage, Bin> operator[](int index) {
+    ScalarProxy<T, Storage, Bin> operator[](int index)
+    {
         assert (index >= 0 && index < size());
         return ScalarProxy<T, Storage, Bin>(*bin, *params, offset + index);
     }
+
+    size_t size() const { return len; }
+
     /**
      * Return true if stat is binned.
      *@return false since Proxies aren't printed/binned
      */
-    virtual bool binned() const { return false; }
+    bool binned() const { return false; }
 
     /**
      * This stat has no state.  Nothing to reset.
      */
-    virtual void reset() { }
+    void reset() { }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1187,12 +1297,6 @@ Vector2dBase<T, Storage, Bin>::operator[](int index)
 //
 //////////////////////////////////////////////////////////////////////
 
-void DistDisplay(std::ostream &stream, const std::string &name,
-                 const std::string &desc, int precision, FormatFlags flags,
-                 result_t min_val, result_t max_val,
-                 result_t underflow, result_t overflow,
-                 const rvec_t &vec, int min, int max, int bucket_size,
-                 int size);
 /**
  * Templatized storage and interface for a distrbution stat.
  */
@@ -1212,6 +1316,7 @@ struct DistStor
         /** The number of buckets. Equal to (max-min)/bucket_size. */
         int size;
     };
+    enum { fancy = false };
 
   private:
     /** The smallest value sampled. */
@@ -1222,6 +1327,12 @@ struct DistStor
     T underflow;
     /** The number of values sampled more than max. */
     T overflow;
+    /** The current sum. */
+    T sum;
+    /** The sum of squares. */
+    T squares;
+    /** The number of samples. */
+    int samples;
     /** Counter for each bucket. */
     std::vector<T> vec;
 
@@ -1232,7 +1343,7 @@ struct DistStor
      */
     DistStor(const Params &params)
         : min_val(INT_MAX), max_val(INT_MIN), underflow(0), overflow(0),
-          vec(params.size)
+          sum(T()), squares(T()), samples(0), vec(params.size)
     {
         reset();
     }
@@ -1243,7 +1354,8 @@ struct DistStor
      * @param number The number of times to add the value.
      * @param params The paramters of the distribution.
      */
-    void sample(T val, int number, const Params &params) {
+    void sample(T val, int number, const Params &params)
+    {
         if (val < params.min)
             underflow += number;
         else if (val > params.max)
@@ -1259,6 +1371,11 @@ struct DistStor
 
         if (val > max_val)
             max_val = val;
+
+        T sample = val * number;
+        sum += sample;
+        squares += sample * sample;
+        samples += number;
     }
 
     /**
@@ -1273,48 +1390,35 @@ struct DistStor
      * @param params The paramters of the distribution.
      * @return True if any values have been sampled.
      */
-    bool zero(const Params &params) const {
-        if (underflow != 0 || overflow != 0)
-            return false;
-
-        int s = size(params);
-        for (int i = 0; i < s; i++)
-            if (vec[i] != 0)
-                return false;
-
-        return true;
+    bool zero(const Params &params) const
+    {
+        return samples == 0;
     }
 
-    /**
-     * Print this distribution and the given print data to the given ostream.
-     * @param stream The output stream.
-     * @param name The name of this stat (from StatData).
-     * @param desc The description of this stat (from StatData).
-     * @param precision The print precision (from StatData).
-     * @param flags The format flags (from StatData).
-     * @param params The paramters of this distribution.
-     */
-    void display(std::ostream &stream, const std::string &name,
-                 const std::string &desc, int precision, FormatFlags flags,
-                 const Params &params) const {
+    void update(DistDataData *data, DisplayMode mode, const Params &params)
+    {
+        data->min = params.min;
+        data->max = params.max;
+        data->bucket_size = params.bucket_size;
+        data->size = params.size;
 
-#ifdef STAT_DISPLAY_COMPAT
-        result_t min = params.min;
-#else
-        result_t min = (min_val == INT_MAX) ? params.min : min_val;
-#endif
-        result_t max = (max_val == INT_MIN) ? 0 : max_val;
+        if (mode == mode_m5)
+            data->min_val = (min_val == INT_MAX) ? params.min : min_val;
+        else
+            data->min_val = params.min;
 
-        rvec_t rvec(params.size);
+        data->max_val = (max_val == INT_MIN) ? 0 : max_val;
+        data->underflow = underflow;
+        data->overflow = overflow;
+        data->vec.resize(params.size);
         for (int i = 0; i < params.size; ++i)
-            rvec[i] = vec[i];
+            data->vec[i] = vec[i];
 
-        DistDisplay(stream, name, desc, precision, flags,
-                    (result_t)min, (result_t)max,
-                    (result_t)underflow, (result_t)overflow,
-                    rvec, params.min, params.max, params.bucket_size,
-                    params.size);
+        data->sum = sum;
+        data->squares = squares;
+        data->samples = samples;
     }
+
     /**
      * Reset stat value to default
      */
@@ -1328,13 +1432,12 @@ struct DistStor
         int size = vec.size();
         for (int i = 0; i < size; ++i)
             vec[i] = T();
+
+        sum = T();
+        squares = T();
+        samples = T();
     }
-
 };
-
-void FancyDisplay(std::ostream &stream, const std::string &name,
-                  const std::string &desc, int precision, FormatFlags flags,
-                  result_t mean, result_t variance, result_t total);
 
 /**
  * Templatized storage and interface for a distribution that calculates mean
@@ -1348,20 +1451,21 @@ struct FancyStor
      * No paramters for this storage.
      */
     struct Params {};
+    enum { fancy = true };
 
   private:
     /** The current sum. */
     T sum;
     /** The sum of squares. */
     T squares;
-    /** The total number of samples. */
-    int total;
+    /** The number of samples. */
+    int samples;
 
   public:
     /**
      * Create and initialize this storage.
      */
-    FancyStor(const Params &) : sum(T()), squares(T()), total(0) {}
+    FancyStor(const Params &) : sum(T()), squares(T()), samples(0) {}
 
     /**
      * Add a value the given number of times to this running average.
@@ -1371,40 +1475,19 @@ struct FancyStor
      * @param number The number of times to add the value.
      * @param p The parameters of this stat.
      */
-    void sample(T val, int number, const Params &p) {
+    void sample(T val, int number, const Params &p)
+    {
         T value = val * number;
         sum += value;
         squares += value * value;
-        total += number;
+        samples += number;
     }
 
-    /**
-     * Print this distribution and the given print data to the given ostream.
-     * @param stream The output stream.
-     * @param name The name of this stat (from StatData).
-     * @param desc The description of this stat (from StatData).
-     * @param precision The print precision (from StatData).
-     * @param flags The format flags (from StatData).
-     * @param params The paramters of this distribution.
-     */
-    void display(std::ostream &stream, const std::string &name,
-                 const std::string &desc, int precision, FormatFlags flags,
-                 const Params &params) const {
-
-        result_t mean = NAN;
-        result_t variance = NAN;
-
-                result_t ftot = total;
-        if (total != 0) {
-            result_t fsum = sum;
-            result_t fsq = squares;
-
-            mean = fsum / ftot;
-            variance = (ftot * fsq - (fsum * fsum)) / (ftot * (ftot - 1.0));
-        }
-
-        FancyDisplay(stream, name, desc, precision, flags, mean,
-                     variance, ftot);
+    void update(DistDataData *data, DisplayMode mode, const Params &params)
+    {
+        data->sum = sum;
+        data->squares = squares;
+        data->samples = samples;
     }
 
     /**
@@ -1412,19 +1495,21 @@ struct FancyStor
      * @return 1.
      */
     size_t size(const Params &) const { return 1; }
+
     /**
      * Return true if no samples have been added.
      * @return True if no samples have been added.
      */
-    bool zero(const Params &) const { return total == 0; }
+    bool zero(const Params &) const { return samples == 0; }
+
     /**
      * Reset stat value to default
      */
-    virtual void reset()
+    void reset()
     {
         sum = T();
         squares = T();
-        total = 0;
+        samples = 0;
     }
 };
 
@@ -1438,6 +1523,7 @@ struct AvgFancy
   public:
     /** No parameters for this storage. */
     struct Params {};
+    enum { fancy = true };
 
   private:
     /** Current total. */
@@ -1458,28 +1544,18 @@ struct AvgFancy
      * @param number The number of times to add the value.
      * @param p The paramters of the distribution.
      */
-    void sample(T val, int number, const Params& p) {
+    void sample(T val, int number, const Params& p)
+    {
         T value = val * number;
         sum += value;
         squares += value * value;
     }
 
-    /**
-     * Print this distribution and the given print data to the given ostream.
-     * @param stream The output stream.
-     * @param name The name of this stat (from StatData).
-     * @param desc The description of this stat (from StatData).
-     * @param precision The print precision (from StatData).
-     * @param flags The format flags (from StatData).
-     * @param params The paramters of this distribution.
-     */
-    void display(std::ostream &stream, const std::string &name,
-                 const std::string &desc, int precision, FormatFlags flags,
-                 const Params &params) const {
-        result_t mean = sum / curTick;
-        result_t variance = (squares - sum * sum) / curTick;
-
-        FancyDisplay(stream, name, desc, precision, flags, mean, variance);
+    void update(DistDataData *data, DisplayMode mode, const Params &params)
+    {
+        data->sum = sum;
+        data->squares = squares;
+        data->samples = curTick;
     }
 
     /**
@@ -1495,7 +1571,7 @@ struct AvgFancy
     /**
      * Reset stat value to default
      */
-    virtual void reset()
+    void reset()
     {
         sum = T();
         squares = T();
@@ -1507,7 +1583,7 @@ struct AvgFancy
  * determined by the Storage template. @sa ScalarBase
  */
 template <typename T, template <typename T> class Storage, class Bin>
-class DistBase : public Stat
+class DistBase : public DataAccess
 {
   protected:
     /** Define the type of the storage class. */
@@ -1548,14 +1624,7 @@ class DistBase : public Stat
     const DistBase &operator=(const DistBase &);
 
   public:
-    /**
-     * Create this distrubition and register it with the database.
-     */
-    DistBase() : Stat(true) { }
-    /**
-     * Destructor.
-     */
-    ~DistBase() { }
+    DistBase() { }
 
     /**
      * Add a value to the distribtion n times. Calls sample on the storage
@@ -1570,39 +1639,38 @@ class DistBase : public Stat
      * Return the number of entries in this stat.
      * @return The number of entries.
      */
-    virtual size_t size() const { return data()->size(params); }
+    size_t size() const { return data()->size(params); }
     /**
      * Return true if no samples have been added.
      * @return True if there haven't been any samples.
      */
-    virtual bool zero() const { return data()->zero(params); }
-    /**
-     * Print this distribution to the given ostream.
-     * @param stream The output stream.
-     */
-    virtual void display(std::ostream &stream) const {
-        data()->display(stream, myname(), mydesc(), myprecision(), myflags(),
-                        params);
+    bool zero() const { return data()->zero(params); }
+
+    void update(DistDataBase *base)
+    {
+        base->data.fancy = storage_t::fancy;
+        data()->update(&(base->data), base->mode, params);
     }
     /**
-     * Return true if stat is binned.
-     *@return True is stat is binned.
+     * @return True is stat is binned.
      */
-    virtual bool binned() const { return bin_t::binned; }
+    bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
      */
-    virtual void reset()
+    void reset()
     {
         bin.reset();
     }
+
+    bool check() { return true; }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
 class DistProxy;
 
 template <typename T, template <typename T> class Storage, class Bin>
-class VectorDistBase : public Stat
+class VectorDistBase : public DataAccess
 {
   protected:
     typedef Storage<T> storage_t;
@@ -1628,32 +1696,38 @@ class VectorDistBase : public Stat
     const VectorDistBase &operator=(const VectorDistBase &);
 
   public:
-    VectorDistBase() : Stat(true) { }
-    ~VectorDistBase() { }
+    VectorDistBase() {}
 
     friend class DistProxy<T, Storage, Bin>;
     DistProxy<T, Storage, Bin> operator[](int index);
     const DistProxy<T, Storage, Bin> operator[](int index) const;
 
-    virtual size_t size() const { return bin.size(); }
-    virtual bool zero() const { return false; }
-    virtual void display(std::ostream &stream) const;
+    size_t size() const { return bin.size(); }
+    bool zero() const { return false; }
     /**
      * Return true if stat is binned.
      *@return True is stat is binned.
      */
-    virtual bool binned() const { return bin_t::binned; }
+    bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
      */
-    virtual void reset()
+    void reset() { bin.reset(); }
+
+    bool check() { return true; }
+    void update(VectorDistDataBase *base)
     {
-        bin.reset();
+        int size = this->size();
+        base->data.resize(size);
+        for (int i = 0; i < size; ++i) {
+            base->data[i].fancy = storage_t::fancy;
+            data(i)->update(&(base->data[i]), base->mode, params);
+        }
     }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
-class DistProxy : public Stat
+class DistProxy
 {
   protected:
     typedef Storage<T> storage_t;
@@ -1674,9 +1748,9 @@ class DistProxy : public Stat
 
   public:
     DistProxy(const VectorDistBase<T, Storage, Bin> &s, int i)
-        : Stat(false), cstat(&s), index(i) {}
+        : cstat(&s), index(i) {}
     DistProxy(const DistProxy &sp)
-        : Stat(false), cstat(sp.cstat), index(sp.index) {}
+        : cstat(sp.cstat), index(sp.index) {}
     const DistProxy &operator=(const DistProxy &sp) {
         cstat = sp.cstat; index = sp.index; return *this;
     }
@@ -1685,36 +1759,17 @@ class DistProxy : public Stat
     template <typename U>
     void sample(const U& v, int n = 1) { data()->sample(v, n, cstat->params); }
 
-    virtual size_t size() const { return 1; }
-    virtual bool zero() const {
-        return data()->zero(cstat->params);
-    }
-    virtual void display(std::ostream &stream) const {
-        std::stringstream name, desc;
-
-        if (!(cstat->mysubname(index).empty())) {
-            name << cstat->myname() << cstat->mysubname(index);
-        } else {
-            name << cstat->myname() << "_" << index;
-        }
-        if (!(cstat->mysubdesc(index).empty())) {
-            desc << cstat->mysubdesc(index);
-        } else {
-            desc << cstat->mydesc();
-        }
-
-        data()->display(stream, name.str(), desc.str(),
-                        cstat->myprecision(), cstat->myflags(), cstat->params);
-    }
+    size_t size() const { return 1; }
+    bool zero() const { return data()->zero(cstat->params); }
     /**
      * Return true if stat is binned.
      *@return false since Proxies are not binned/printed.
      */
-    virtual bool binned() const { return false; }
+    bool binned() const { return false; }
     /**
      * Proxy has no state.  Nothing to reset.
      */
-    virtual void reset() { }
+    void reset() { }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1733,20 +1788,8 @@ VectorDistBase<T, Storage, Bin>::operator[](int index) const
     return DistProxy<T, Storage, Bin>(*this, index);
 }
 
-/**
- * @todo Need a way to print Distribution totals across the Vector
- */
-template <typename T, template <typename T> class Storage, class Bin>
-void
-VectorDistBase<T, Storage, Bin>::display(std::ostream &stream) const
-{
-    for (int i = 0; i < size(); ++i) {
-        DistProxy<T, Storage, Bin> proxy(*this, i);
-        proxy.display(stream);
-    }
-}
-
 #if 0
+template <typename T, template <typename T> class Storage, class Bin>
 result_t
 VectorDistBase<T, Storage, Bin>::total(int index) const
 {
@@ -1798,20 +1841,24 @@ typedef RefCountingPtr<Node> NodePtr;
 class ScalarStatNode : public Node
 {
   private:
-    const ScalarStat &stat;
+    const ScalarDataBase *data;
     mutable rvec_t result;
 
   public:
-    ScalarStatNode(const ScalarStat &s) : stat(s), result(1) {}
-    const rvec_t &val() const { result[0] = stat.val(); return result; }
-    virtual result_t total() const { return stat.val(); };
+    ScalarStatNode(const ScalarDataBase *d) : data(d), result(1) {}
+    virtual const rvec_t &val() const
+    {
+        result[0] = data->val();
+        return result;
+    }
+    virtual result_t total() const { return data->val(); };
 
     virtual size_t size() const { return 1; }
     /**
      * Return true if stat is binned.
      *@return True is stat is binned.
      */
-    virtual bool binned() const { return stat.binned(); }
+    virtual bool binned() const { return data->binned(); }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1824,7 +1871,11 @@ class ScalarProxyNode : public Node
   public:
     ScalarProxyNode(const ScalarProxy<T, Storage, Bin> &p)
         : proxy(p), result(1) { }
-    const rvec_t &val() const { result[0] = proxy.val(); return result; }
+    virtual const rvec_t &val() const
+    {
+        result[0] = proxy.val();
+        return result;
+    }
     virtual result_t total() const { return proxy.val(); };
 
     virtual size_t size() const { return 1; }
@@ -1838,19 +1889,19 @@ class ScalarProxyNode : public Node
 class VectorStatNode : public Node
 {
   private:
-    const VectorStat &stat;
+    const VectorDataBase *data;
 
   public:
-    VectorStatNode(const VectorStat &s) : stat(s) {}
-    const rvec_t &val() const { return stat.val(); }
-    virtual result_t total() const { return stat.total(); };
+    VectorStatNode(const VectorDataBase *d) : data(d) { }
+    virtual const rvec_t &val() const { return data->val(); }
+    virtual result_t total() const { return data->total(); };
 
-    virtual size_t size() const { return stat.size(); }
+    virtual size_t size() const { return data->size(); }
     /**
      * Return true if stat is binned.
      *@return True is stat is binned.
      */
-    virtual bool binned() const { return stat.binned(); }
+    virtual bool binned() const { return data->binned(); }
 };
 
 template <typename T>
@@ -2065,114 +2116,6 @@ class SumNode : public Node
      */
     virtual bool binned() const { return l->binned(); }
 };
-
-/**
- * Helper class to construct formula node trees.
- */
-class Temp
-{
-  private:
-    /**
-     * Pointer to a Node object.
-     */
-    NodePtr node;
-
-  public:
-    /**
-     * Copy the given pointer to this class.
-     * @param n A pointer to a Node object to copy.
-     */
-    Temp(NodePtr n) : node(n) {}
-    /**
-     * Create a new ScalarStatNode.
-     * @param s The ScalarStat to place in a node.
-     */
-    Temp(const ScalarStat &s) : node(new ScalarStatNode(s)) {}
-    /**
-     * Create a new ScalarProxyNode.
-     * @param p The ScalarProxy to place in a node.
-     */
-    template <typename T, template <typename T> class Storage, class Bin>
-    Temp(const ScalarProxy<T, Storage, Bin> &p)
-        : node(new ScalarProxyNode<T, Storage, Bin>(p)) {}
-    /**
-     * Create a new VectorStatNode.
-     * @param s The VectorStat to place in a node.
-     */
-    Temp(const VectorStat &s) : node(new VectorStatNode(s)) {}
-
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(signed char value) : node(new ConstNode<signed char>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(unsigned char value) : node(new ConstNode<unsigned char>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(signed short value) : node(new ConstNode<signed short>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(unsigned short value) : node(new ConstNode<unsigned short>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(signed int value) : node(new ConstNode<signed int>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(unsigned int value) : node(new ConstNode<unsigned int>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(signed long value) : node(new ConstNode<signed long>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(unsigned long value) : node(new ConstNode<unsigned long>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(signed long long value)
-        : node(new ConstNode<signed long long>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(unsigned long long value)
-        : node(new ConstNode<unsigned long long>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(float value) : node(new ConstNode<float>(value)) {}
-    /**
-     * Create a ConstNode
-     * @param value The value of the const node.
-     */
-    Temp(double value) : node(new ConstNode<double>(value)) {}
-
-    /**
-     * Return the node pointer.
-     * @return the node pointer.
-     */
-    operator NodePtr() { return node;}
-};
-
-} // namespace Detail
-
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -2466,11 +2409,16 @@ typedef NoBin DefaultBin;
  * @sa Stat, ScalarBase, StatStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Scalar : public Detail::ScalarBase<T, Detail::StatStor, Bin>
+class Scalar : public Wrap<Scalar<T, Bin>, ScalarBase<T, StatStor, Bin>, ScalarData>
 {
   public:
     /** The base implementation. */
-    typedef Detail::ScalarBase<T, Detail::StatStor, Bin> Base;
+    typedef ScalarBase<T, StatStor, Bin> Base;
+
+    Scalar()
+    {
+        setInit();
+    }
 
     /**
      * Sets the stat equal to the given value. Calls the base implementation
@@ -2486,11 +2434,16 @@ class Scalar : public Detail::ScalarBase<T, Detail::StatStor, Bin>
  * @sa Stat, ScalarBase, AvgStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Average : public Detail::ScalarBase<T, Detail::AvgStor, Bin>
+class Average : public Wrap<Average<T, Bin>, ScalarBase<T, AvgStor, Bin>, ScalarData>
 {
   public:
     /** The base implementation. */
-    typedef Detail::ScalarBase<T, Detail::AvgStor, Bin> Base;
+    typedef ScalarBase<T, AvgStor, Bin> Base;
+
+    Average()
+    {
+        setInit();
+    }
 
     /**
      * Sets the stat equal to the given value. Calls the base implementation
@@ -2506,37 +2459,73 @@ class Average : public Detail::ScalarBase<T, Detail::AvgStor, Bin>
  * @sa Stat, VectorBase, StatStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Vector : public Detail::VectorBase<T, Detail::StatStor, Bin>
-{ };
+class Vector : public WrapVec<Vector<T, Bin>, VectorBase<T, StatStor, Bin>, VectorData>
+{
+  public:
+    /**
+     * Set this vector to have the given size.
+     * @param size The new size.
+     * @return A reference to this stat.
+     */
+    Vector &init(size_t size) {
+        bin.init(size, params);
+        setInit();
+
+        return *this;
+    }
+};
 
 /**
  * A vector of Average stats.
  * @sa Stat, VectorBase, AvgStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class AverageVector : public Detail::VectorBase<T, Detail::AvgStor, Bin>
-{ };
+class AverageVector : public WrapVec<AverageVector<T, Bin>, VectorBase<T, AvgStor, Bin>, VectorData>
+{
+  public:
+    /**
+     * Set this vector to have the given size.
+     * @param size The new size.
+     * @return A reference to this stat.
+     */
+    AverageVector &init(size_t size) {
+        bin.init(size, params);
+        setInit();
+
+        return *this;
+    }
+};
 
 /**
  * A 2-Dimensional vecto of scalar stats.
  * @sa Stat, Vector2dBase, StatStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Vector2d : public Detail::Vector2dBase<T, Detail::StatStor, Bin>
-{ };
+class Vector2d : public WrapVec2d<Vector2d<T, Bin>, Vector2dBase<T, StatStor, Bin>, Vector2dData>
+{
+  public:
+    Vector2d &init(size_t _x, size_t _y) {
+        x = _x;
+        y = _y;
+        bin.init(x * y, params);
+        setInit();
+
+        return *this;
+    }
+};
 
 /**
  * A simple distribution stat.
  * @sa Stat, DistBase, DistStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
+class Distribution : public Wrap<Distribution<T, Bin>, DistBase<T, DistStor, Bin>, DistData>
 {
   private:
     /** Base implementation. */
-    typedef Detail::DistBase<T, Detail::DistStor, Bin> Base;
+    typedef DistBase<T, DistStor, Bin> Base;
     /** The Parameter type. */
-    typedef typename Detail::DistStor<T>::Params Params;
+    typedef typename DistStor<T>::Params Params;
 
   public:
     /**
@@ -2563,13 +2552,13 @@ class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
  * @sa Stat, DistBase, FancyStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
+class StandardDeviation : public Wrap<StandardDeviation<T, Bin>, DistBase<T, FancyStor, Bin>, DistData>
 {
   private:
     /** The base implementation */
-    typedef Detail::DistBase<T, Detail::DistStor, Bin> Base;
+    typedef DistBase<T, DistStor, Bin> Base;
     /** The parameter type. */
-    typedef typename Detail::DistStor<T>::Params Params;
+    typedef typename DistStor<T>::Params Params;
 
   public:
     /**
@@ -2586,19 +2575,20 @@ class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
  * @sa Stat, DistBase, AvgFancy
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
+class AverageDeviation : public Wrap<AverageDeviation<T, Bin>, DistBase<T, AvgFancy, Bin>, DistData>
 {
   private:
     /** The base implementation */
-    typedef Detail::DistBase<T, Detail::DistStor, Bin> Base;
+    typedef DistBase<T, DistStor, Bin> Base;
     /** The parameter type. */
-    typedef typename Detail::DistStor<T>::Params Params;
+    typedef typename DistStor<T>::Params Params;
 
   public:
     /**
      * Construct and initialize this distribution.
      */
-    AverageDeviation() {
+    AverageDeviation()
+    {
         bin.init(params);
         setInit();
     }
@@ -2609,14 +2599,13 @@ class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
  * @sa Stat, VectorDistBase, DistStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class VectorDistribution
-    : public Detail::VectorDistBase<T, Detail::DistStor, Bin>
+class VectorDistribution : public WrapVec<VectorDistribution<T, Bin>, VectorDistBase<T, DistStor, Bin>, VectorDistData>
 {
   private:
     /** The base implementation */
-    typedef Detail::VectorDistBase<T, Detail::DistStor, Bin> Base;
+    typedef VectorDistBase<T, DistStor, Bin> Base;
     /** The parameter type. */
-    typedef typename Detail::DistStor<T>::Params Params;
+    typedef typename DistStor<T>::Params Params;
 
   public:
     /**
@@ -2644,14 +2633,13 @@ class VectorDistribution
  * @sa Stat, VectorDistBase, FancyStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class VectorStandardDeviation
-    : public Detail::VectorDistBase<T, Detail::FancyStor, Bin>
+class VectorStandardDeviation : public WrapVec<VectorStandardDeviation<T, Bin>, VectorDistBase<T, FancyStor, Bin>, VectorDistData>
 {
   private:
     /** The base implementation */
-    typedef Detail::VectorDistBase<T, Detail::FancyStor, Bin> Base;
+    typedef VectorDistBase<T, FancyStor, Bin> Base;
     /** The parameter type. */
-    typedef typename Detail::DistStor<T>::Params Params;
+    typedef typename DistStor<T>::Params Params;
 
   public:
     /**
@@ -2672,14 +2660,13 @@ class VectorStandardDeviation
  * @sa Stat, VectorDistBase, AvgFancy
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class VectorAverageDeviation
-    : public Detail::VectorDistBase<T, Detail::AvgFancy, Bin>
+class VectorAverageDeviation : public WrapVec<VectorAverageDeviation<T, Bin>, VectorDistBase<T, AvgFancy, Bin>, VectorDistData>
 {
   private:
     /** The base implementation */
-    typedef Detail::VectorDistBase<T, Detail::AvgFancy, Bin> Base;
+    typedef VectorDistBase<T, AvgFancy, Bin> Base;
     /** The parameter type. */
-    typedef typename Detail::DistStor<T>::Params Params;
+    typedef typename DistStor<T>::Params Params;
 
   public:
     /**
@@ -2698,57 +2685,16 @@ class VectorAverageDeviation
 /**
  * A formula for statistics that is calculated when printed. A formula is
  * stored as a tree of Nodes that represent the equation to calculate.
- * @sa Stat, ScalarStat, VectorStat, Node, Detail::Temp
+ * @sa Stat, ScalarStat, VectorStat, Node, Temp
  */
-class Formula : public Detail::VectorStat
+class FormulaBase : public DataAccess
 {
-  private:
+  protected:
     /** The root of the tree which represents the Formula */
-    Detail::NodePtr root;
-    friend class Statistics::Detail::Temp;
+    NodePtr root;
+    friend class Temp;
 
   public:
-    /**
-     * Create and initialize thie formula, and register it with the database.
-     */
-    Formula() : VectorStat(true) { setInit(); }
-    /**
-     * Create a formula with the given root node, register it with the
-     * database.
-     * @param r The root of the expression tree.
-     */
-    Formula(Detail::Temp r) : VectorStat(true) {
-        root = r;
-        assert(size());
-    }
-
-    /**
-     * Set an unitialized Formula to the given root.
-     * @param r The root of the expression tree.
-     * @return a reference to this formula.
-     */
-    const Formula &operator=(Detail::Temp r) {
-        assert(!root && "Can't change formulas");
-        root = r;
-        assert(size());
-        return *this;
-    }
-
-    /**
-     * Add the given tree to the existing one.
-     * @param r The root of the expression tree.
-     * @return a reference to this formula.
-     */
-    const Formula &operator+=(Detail::Temp r) {
-        using namespace Detail;
-        if (root)
-            root = NodePtr(new BinaryNode<std::plus<result_t> >(root, r));
-        else
-            root = r;
-        assert(size());
-        return *this;
-    }
-
     /**
      * Return the result of the Fomula in a vector.  If there were no Vector
      * components to the Formula, then the vector is size 1.  If there were,
@@ -2756,7 +2702,8 @@ class Formula : public Detail::VectorStat
      * be x[0]/y, x[1]/y, x[2]/y, respectively.
      * @return The result vector.
      */
-    const rvec_t &val() const { return root->val(); }
+    void val(rvec_t &vec) const;
+
     /**
      * Return the total Formula result.  If there is a Vector
      * component to this Formula, then this is the result of the
@@ -2767,29 +2714,230 @@ class Formula : public Detail::VectorStat
      * the first entry in the rvec_t val() returns.
      * @return The total of the result vector.
      */
-    result_t total() const { return root->total(); }
+    result_t total() const;
 
     /**
      * Return the number of elements in the tree.
      */
-    size_t size() const {
-        if (!root)
-            return 0;
-        else
-            return root->size();
-    }
+    size_t size() const;
+
     /**
      * Return true if Formula is binned. i.e. any of its children
      * nodes are binned
      * @return True if Formula is binned.
      */
-    virtual bool binned() const { return root->binned(); }
+    bool binned() const;
 
     /**
      * Formulas don't need to be reset
      */
-    virtual void reset() {}
+    void reset();
+
+    /**
+     *
+     */
+    bool zero() const;
+
+    /**
+     *
+     */
+    void update(StatData *);
 };
+
+class Temp;
+class Formula : public WrapVec<Formula, FormulaBase, VectorData>
+{
+  public:
+    /**
+     * Create and initialize thie formula, and register it with the database.
+     */
+    Formula();
+
+    /**
+     * Create a formula with the given root node, register it with the
+     * database.
+     * @param r The root of the expression tree.
+     */
+    Formula(Temp r);
+
+    /**
+     * Set an unitialized Formula to the given root.
+     * @param r The root of the expression tree.
+     * @return a reference to this formula.
+     */
+    const Formula &operator=(Temp r);
+
+    /**
+     * Add the given tree to the existing one.
+     * @param r The root of the expression tree.
+     * @return a reference to this formula.
+     */
+    const Formula &operator+=(Temp r);
+};
+
+class FormulaNode : public Node
+{
+  private:
+    const Formula &formula;
+    mutable rvec_t vec;
+
+  public:
+    FormulaNode(const Formula &f) : formula(f) {}
+
+    virtual size_t size() const { return formula.size(); }
+    virtual const rvec_t &val() const { formula.val(vec); return vec; }
+    virtual result_t total() const { return formula.total(); }
+    virtual bool binned() const { return formula.binned(); }
+};
+
+/**
+ * Helper class to construct formula node trees.
+ */
+class Temp
+{
+  protected:
+    /**
+     * Pointer to a Node object.
+     */
+    NodePtr node;
+
+  public:
+    /**
+     * Copy the given pointer to this class.
+     * @param n A pointer to a Node object to copy.
+     */
+    Temp(NodePtr n) : node(n) { }
+
+    /**
+     * Return the node pointer.
+     * @return the node pointer.
+     */
+    operator NodePtr() { return node;}
+
+  public:
+    /**
+     * Create a new ScalarStatNode.
+     * @param s The ScalarStat to place in a node.
+     */
+    template <typename T, class Bin>
+    Temp(const Scalar<T, Bin> &s)
+        : node(new ScalarStatNode(s.statData())) { }
+
+    /**
+     * Create a new ScalarStatNode.
+     * @param s The ScalarStat to place in a node.
+     */
+    template <typename T, class Bin>
+    Temp(const Average<T, Bin> &s)
+        : node(new ScalarStatNode(s.statData())) { }
+
+    /**
+     * Create a new VectorStatNode.
+     * @param s The VectorStat to place in a node.
+     */
+    template <typename T, class Bin>
+    Temp(const Vector<T, Bin> &s)
+        : node(new VectorStatNode(s.statData())) { }
+
+    /**
+     *
+     */
+    Temp(const Formula &f)
+        : node(new FormulaNode(f)) { }
+
+    /**
+     * Create a new ScalarProxyNode.
+     * @param p The ScalarProxy to place in a node.
+     */
+    template <typename T, template <typename T> class Storage, class Bin>
+    Temp(const ScalarProxy<T, Storage, Bin> &p)
+        : node(new ScalarProxyNode<T, Storage, Bin>(p)) { }
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed char value)
+        : node(new ConstNode<signed char>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned char value)
+        : node(new ConstNode<unsigned char>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed short value)
+        : node(new ConstNode<signed short>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned short value)
+        : node(new ConstNode<unsigned short>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed int value)
+        : node(new ConstNode<signed int>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned int value)
+        : node(new ConstNode<unsigned int>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed long value)
+        : node(new ConstNode<signed long>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned long value)
+        : node(new ConstNode<unsigned long>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed long long value)
+        : node(new ConstNode<signed long long>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned long long value)
+        : node(new ConstNode<unsigned long long>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(float value)
+        : node(new ConstNode<float>(value)) {}
+
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(double value)
+        : node(new ConstNode<double>(value)) {}
+};
+
 
 /**
  * @}
@@ -2800,79 +2948,68 @@ void dump(std::ostream &stream);
 void reset();
 void RegResetCallback(Callback *cb);
 
-inline Detail::Temp
-operator+(Detail::Temp l, Detail::Temp r)
+inline Temp
+operator+(Temp l, Temp r)
 {
-    using namespace Detail;
     return NodePtr(new BinaryNode<std::plus<result_t> >(l, r));
 }
 
-inline Detail::Temp
-operator-(Detail::Temp l, Detail::Temp r)
+inline Temp
+operator-(Temp l, Temp r)
 {
-    using namespace Detail;
     return NodePtr(new BinaryNode<std::minus<result_t> >(l, r));
 }
 
-inline Detail::Temp
-operator*(Detail::Temp l, Detail::Temp r)
+inline Temp
+operator*(Temp l, Temp r)
 {
-    using namespace Detail;
     return NodePtr(new BinaryNode<std::multiplies<result_t> >(l, r));
 }
 
-inline Detail::Temp
-operator/(Detail::Temp l, Detail::Temp r)
+inline Temp
+operator/(Temp l, Temp r)
 {
-    using namespace Detail;
     return NodePtr(new BinaryNode<std::divides<result_t> >(l, r));
 }
 
-inline Detail::Temp
-operator%(Detail::Temp l, Detail::Temp r)
+inline Temp
+operator%(Temp l, Temp r)
 {
-    using namespace Detail;
     return NodePtr(new BinaryNode<std::modulus<result_t> >(l, r));
 }
 
-inline Detail::Temp
-operator-(Detail::Temp l)
+inline Temp
+operator-(Temp l)
 {
-    using namespace Detail;
     return NodePtr(new UnaryNode<std::negate<result_t> >(l));
 }
 
 template <typename T>
-inline Detail::Temp
+inline Temp
 constant(T val)
 {
-    using namespace Detail;
     return NodePtr(new ConstNode<T>(val));
 }
 
 template <typename T>
-inline Detail::Temp
+inline Temp
 functor(T &val)
 {
-    using namespace Detail;
     return NodePtr(new FunctorNode<T>(val));
 }
 
 template <typename T>
-inline Detail::Temp
+inline Temp
 scalar(T &val)
 {
-    using namespace Detail;
     return NodePtr(new ScalarNode<T>(val));
 }
 
-inline Detail::Temp
-sum(Detail::Temp val)
+inline Temp
+sum(Temp val)
 {
-    using namespace Detail;
     return NodePtr(new SumNode<std::plus<result_t> >(val));
 }
-
 extern bool PrintDescriptions;
 
 } // namespace statistics
