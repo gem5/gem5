@@ -39,7 +39,6 @@
 #include "host.hh"
 #include "cprintf.hh"
 #include "misc.hh"
-#include "stats.hh"
 #include "smt.hh"
 
 #include "annotation.hh"

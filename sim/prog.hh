@@ -38,11 +38,10 @@
 
 #include <list>
 
-#include "stats.hh"
+#include "isa_traits.hh"
 #include "sim_object.hh"
-
-#include "statistics.hh"
 #include "sim_stats.hh"
+#include "statistics.hh"
 
 class ExecContext;
 class FunctionalMemory;

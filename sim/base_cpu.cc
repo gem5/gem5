@@ -32,7 +32,6 @@
 
 #include "base_cpu.hh"
 #include "cprintf.hh"
-#include "stats.hh"
 #include "exec_context.hh"
 #include "misc.hh"
 #include "sim_events.hh"

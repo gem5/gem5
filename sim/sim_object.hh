@@ -62,7 +62,6 @@ class SimObject : public Serializeable
     virtual ~SimObject() {}
 
     // register statistics for this object
-    virtual void reg_stats(struct stat_sdb_t *sdb);
     virtual void regStats();
     virtual void regFormulas();
 

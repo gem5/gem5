@@ -29,9 +29,7 @@
 #include <string>
 #include <sstream>
 
-#include "stats.hh"
 #include "hybrid_pred.hh"
-
 #include "statistics.hh"
 #include "sim_stats.hh"
 

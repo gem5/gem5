@@ -35,7 +35,6 @@
 #include "misc.hh"
 #include "trace.hh"
 #include "sim_stats.hh"
-#include "stats.hh"
 
 using namespace std;
 
@@ -64,11 +63,6 @@ SimObject::SimObject(const string &_name)
 // no default statistics, so nothing to do in base implementation
 //
 void
-SimObject::reg_stats(struct stat_sdb_t *sdb)
-{
-}
-
-void
 SimObject::regStats()
 {
 }
@@ -87,7 +81,9 @@ SimObject::printExtraOutput(ostream &os)
 }
 
 //
-// static function: call reg_stats() on all SimObjects.
+// static function:
+//   call regStats() on all SimObjects and then regFormulas() on all
+//   SimObjects.
 //
 void
 SimObject::regAllStats()
@@ -102,7 +98,6 @@ SimObject::regAllStats()
 #ifdef STAT_DEBUG
         cprintf("registering stats for %s\n", (*i)->name());
 #endif
-        (*i)->reg_stats(sim_sdb);
         (*i)->regStats();
     }
 

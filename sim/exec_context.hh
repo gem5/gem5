@@ -30,7 +30,6 @@
 #define __EXEC_CONTEXT_HH__
 
 #include "host.hh"
-#include "stats.hh"
 #include "mem_req.hh"
 
 // forward declaration: see functional_memory.hh

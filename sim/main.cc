@@ -39,7 +39,6 @@
 
 #include "host.hh"
 #include "misc.hh"
-#include "stats.hh"
 
 #include "copyright.hh"
 #include "inifile.hh"
@@ -227,7 +226,6 @@ main(int argc, char **argv)
     sayHello(cerr);
 
     // Initialize statistics database
-    init_old_stats();
     initBaseStats();
 
     vector<char *> cppArgs;

@@ -28,7 +28,6 @@
 
 #include <sstream>
 
-#include "stats.hh"
 #include "sat_counter.hh"
 
 #include "statistics.hh"
