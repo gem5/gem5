@@ -344,8 +344,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
       case PCI0_BASE_ADDR0:
         if (BARAddrs[0] != 0) {
             if (pioInterface)
-                pioInterface->addAddrRange(BARAddrs[0],
-                                           BARAddrs[0] + BARSize[0] - 1);
+                pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
 
             BARAddrs[0] &= PA_UNCACHED_MASK;
         }
@@ -353,8 +352,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
       case PCI0_BASE_ADDR1:
         if (BARAddrs[1] != 0) {
             if (pioInterface)
-                pioInterface->addAddrRange(BARAddrs[1],
-                                           BARAddrs[1] + BARSize[1] - 1);
+                pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
 
             BARAddrs[1] &= PA_UNCACHED_MASK;
         }
@@ -2410,8 +2408,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
      * re-add addrRanges to bus bridges
      */
     if (pioInterface) {
-        pioInterface->addAddrRange(BARAddrs[0], BARAddrs[0] + BARSize[0] - 1);
-        pioInterface->addAddrRange(BARAddrs[1], BARAddrs[1] + BARSize[1] - 1);
+        pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
+        pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
     }
 }
 

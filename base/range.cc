@@ -34,12 +34,12 @@ using namespace std;
 
 template <class T>
 bool
-__x_parse_range(const std::string &str, T &start, T &end)
+__x_parse_range(const std::string &str, T &first, T &last)
 {
     std::vector<std::string> values;
     tokenize(values, str, ':');
 
-    T thestart, theend;
+    T thefirst, thelast;
 
     if (values.size() != 2)
         return false;
@@ -47,29 +47,29 @@ __x_parse_range(const std::string &str, T &start, T &end)
     std::string s = values[0];
     std::string e = values[1];
 
-    if (!to_number(s, thestart))
+    if (!to_number(s, thefirst))
         return false;
 
     bool increment = (e[0] == '+');
     if (increment)
         e = e.substr(1);
 
-    if (!to_number(e, theend))
+    if (!to_number(e, thelast))
         return false;
 
     if (increment)
-        theend += thestart;
+        thelast += thefirst - 1;
 
-    start = thestart;
-    end = theend;
+    first = thefirst;
+    last = thelast;
 
     return true;
 }
 
 #define RANGE_PARSE(type) \
 template<> bool \
-__parse_range(const std::string &s, type &start, type &end) \
-{ return __x_parse_range(s, start, end); }
+__parse_range(const std::string &s, type &first, type &last) \
+{ return __x_parse_range(s, first, last); }
 
 RANGE_PARSE(unsigned long long);
 RANGE_PARSE(signed long long);

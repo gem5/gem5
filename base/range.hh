@@ -26,44 +26,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RANGE_HH__
-#define __RANGE_HH__
+#ifndef __BASE_RANGE_HH__
+#define __BASE_RANGE_HH__
 
 #include <cassert>
 #include <string>
 
+/**
+ * @param s range string
+ * EndExclusive Ranges are in the following format:
+ *    <range> := {<start_val>}:{<end>}
+ *    <start>   := <end_val> | +<delta>
+ */
 template <class T>
 bool __parse_range(const std::string &s, T &start, T &end);
 
 template <class T>
 struct Range
 {
-  private:
-    /**
-     * @param s range string
-     * Ranges are in the following format:
-     *    <range> := {<start_val>}:{<end>}
-     *    <end>   := <end_val> | +<delta>
-     */
-    void
-    parse(const std::string &s)
-    {
-        if (!__parse_range(s, start, end))
-            invalidate();
-    }
-
-  public:
     T start;
     T end;
 
-  public:
-    Range()
-    {
-        invalidate();
-    }
+    Range() { invalidate(); }
 
-    Range(T first, T second)
-        : start(first), end(second)
+    template <class U>
+    Range(const std::pair<U, U> &r)
+        : start(r.first), end(r.second)
     {}
 
     template <class U>
@@ -71,14 +59,10 @@ struct Range
         : start(r.start), end(r.end)
     {}
 
-    template <class U>
-    Range(const std::pair<U, U> &r)
-        : start(r.first), end(r.second)
-    {}
-
     Range(const std::string &s)
     {
-        parse(s);
+        if (!__parse_range(s, start, end))
+            invalidate();
     }
 
     template <class U>
@@ -99,31 +83,38 @@ struct Range
 
     const Range &operator=(const std::string &s)
     {
-        parse(s);
+        if (!__parse_range(s, start, end))
+            invalidate();
         return *this;
     }
 
-    void invalidate() { start = 0; end = 0; }
-    T size() const { return end - start; }
+    void invalidate() { start = 1; end = 0; }
+    T size() const { return end - start + 1; }
     bool valid() const { return start < end; }
 };
-
-template <class T>
-inline Range<T>
-make_range(T start, T end)
-{
-    return Range<T>(start, end);
-}
 
 template <class T>
 inline std::ostream &
 operator<<(std::ostream &o, const Range<T> &r)
 {
-    // don't currently support output of invalid ranges
-    assert(r.valid());
-    o << r.start << ":" << r.end;
+    o << '[' << r.start << "," << r.end << ']';
     return o;
 }
+
+template <class T>
+inline Range<T>
+RangeEx(T start, T end)
+{ return std::make_pair(start, end - 1); }
+
+template <class T>
+inline Range<T>
+RangeIn(T start, T end)
+{ return std::make_pair(start, end); }
+
+template <class T, class U>
+inline Range<T>
+RangeSize(T start, U size)
+{ return std::make_pair(start, start + size - 1); }
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -139,7 +130,6 @@ template <class T, class U>
 inline bool
 operator==(const Range<T> &range1, const Range<U> &range2)
 {
-    assert(range1.valid() && range2.valid());
     return range1.start == range2.start && range1.end == range2.end;
 }
 
@@ -152,7 +142,6 @@ template <class T, class U>
 inline bool
 operator!=(const Range<T> &range1, const Range<U> &range2)
 {
-    assert(range1.valid() && range2.valid());
     return range1.start != range2.start || range1.end != range2.end;
 }
 
@@ -165,8 +154,7 @@ template <class T, class U>
 inline bool
 operator<(const Range<T> &range1, const Range<U> &range2)
 {
-    assert(range1.valid() && range2.valid());
-    return range1.end <= range2.start;
+    return range1.start < range2.start;
 }
 
 /**
@@ -179,8 +167,7 @@ template <class T, class U>
 inline bool
 operator<=(const Range<T> &range1, const Range<U> &range2)
 {
-    assert(range1.valid() && range2.valid());
-    return range1.start <= range2.start && range1.end <= range2.end;
+    return range1.start <= range2.start;
 }
 
 /**
@@ -192,8 +179,7 @@ template <class T, class U>
 inline bool
 operator>(const Range<T> &range1, const Range<U> &range2)
 {
-    assert(range1.valid() && range2.valid());
-    return range1.start >= range2.end;
+    return range1.start > range2.start;
 }
 
 /**
@@ -206,8 +192,7 @@ template <class T, class U>
 inline bool
 operator>=(const Range<T> &range1, const Range<U> &range2)
 {
-    assert(range1.valid() && range2.valid());
-    return range1.start >= range2.start && range1.end >= range2.end;
+    return range1.start >= range2.start;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -224,7 +209,6 @@ template <class T, class U>
 inline bool
 operator==(const T &pos, const Range<U> &range)
 {
-    assert(range.valid());
     return pos >= range.start && pos <= range.end;
 }
 
@@ -237,8 +221,7 @@ template <class T, class U>
 inline bool
 operator!=(const T &pos, const Range<U> &range)
 {
-    assert(range.valid());
-    return pos < range.start || pos >= range.end;
+    return pos < range.start || pos > range.end;
 }
 
 /**
@@ -250,7 +233,6 @@ template <class T, class U>
 inline bool
 operator<(const T &pos, const Range<U> &range)
 {
-    assert(range.valid());
     return pos < range.start;
 }
 
@@ -263,8 +245,7 @@ template <class T, class U>
 inline bool
 operator<=(const T &pos, const Range<U> &range)
 {
-    assert(range.valid());
-    return pos < range.end;
+    return pos <= range.end;
 }
 
 /**
@@ -276,8 +257,7 @@ template <class T, class U>
 inline bool
 operator>(const T &pos, const Range<U> &range)
 {
-    assert(range.valid());
-    return pos >= range.end;
+    return pos > range.end;
 }
 
 /**
@@ -289,7 +269,6 @@ template <class T, class U>
 inline bool
 operator>=(const T &pos, const Range<U> &range)
 {
-    assert(range.valid());
     return pos >= range.start;
 }
 
@@ -307,8 +286,7 @@ template <class T, class U>
 inline bool
 operator==(const Range<T> &range, const U &pos)
 {
-    assert(range.valid());
-    return pos >= range.start && pos < range.end;
+    return pos >= range.start && pos <= range.end;
 }
 
 /**
@@ -320,8 +298,7 @@ template <class T, class U>
 inline bool
 operator!=(const Range<T> &range, const U &pos)
 {
-    assert(range.valid());
-    return pos < range.start || pos >= range.end;
+    return pos < range.start || pos > range.end;
 }
 
 /**
@@ -333,8 +310,7 @@ template <class T, class U>
 inline bool
 operator<(const Range<T> &range, const U &pos)
 {
-    assert(range.valid());
-    return range.end <= pos;
+    return range.end < pos;
 }
 
 /**
@@ -346,7 +322,6 @@ template <class T, class U>
 inline bool
 operator<=(const Range<T> &range, const U &pos)
 {
-    assert(range.valid());
     return range.start <= pos;
 }
 
@@ -359,7 +334,6 @@ template <class T, class U>
 inline bool
 operator>(const Range<T> &range, const U &pos)
 {
-    assert(range.valid());
     return range.start > pos;
 }
 
@@ -372,8 +346,7 @@ template <class T, class U>
 inline bool
 operator>=(const Range<T> &range, const U &pos)
 {
-    assert(range.valid());
-    return range.end > pos;
+    return range.end >= pos;
 }
 
-#endif // __RANGE_HH__
+#endif // __BASE_RANGE_HH__

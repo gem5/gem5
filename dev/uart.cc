@@ -92,13 +92,13 @@ Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
     : PioDevice(name), addr(a), size(s), cons(c), txIntrEvent(this, TX_INT),
       rxIntrEvent(this, RX_INT), platform(p)
 {
-    mmu->add_child(this, Range<Addr>(addr, addr + size));
+    mmu->add_child(this, RangeSize(addr, size));
 
 
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &Uart::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size - 1);
+        pioInterface->addAddrRange(RangeSize(addr, size));
         pioLatency = pio_latency * bus->clockRatio;
     }
 

@@ -50,12 +50,12 @@ BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
                      HierParams *hier, Bus *bus, const string &devicename)
     : PioDevice(name), addr(a), devname(devicename)
 {
-    mmu->add_child(this, Range<Addr>(addr, addr + size));
+    mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &BadDevice::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size - 1);
+        pioInterface->addAddrRange(RangeSize(addr, size));
     }
 
 }

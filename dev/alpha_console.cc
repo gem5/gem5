@@ -61,12 +61,12 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
                            HierParams *hier, Bus *bus)
     : PioDevice(name), disk(d), console(cons), addr(a)
 {
-    mmu->add_child(this, Range<Addr>(addr, addr + size));
+    mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                        &AlphaConsole::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size);
+        pioInterface->addAddrRange(RangeSize(addr, size));
     }
 
     alphaAccess = new AlphaAccess;

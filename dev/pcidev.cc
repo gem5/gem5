@@ -184,21 +184,17 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
                     if (word_value & ~0x1) {
                         Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
-                        Addr base_size = BARSize[barnum]-1;
+                        Addr base_size = BARSize[barnum];
 
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
                             mmu->add_child((FunctionalMemory *)this,
-                                           Range<Addr>(base_addr,
-                                                       base_addr + base_size));
+                                           RangeSize(base_addr, base_size));
                         else
                             mmu->update_child((FunctionalMemory *)this,
-                                              Range<Addr>(BARAddrs[barnum],
-                                                          BARAddrs[barnum] +
-                                                          base_size),
-                                              Range<Addr>(base_addr,
-                                                          base_addr +
-                                                          base_size));
+                                              RangeSize(BARAddrs[barnum],
+                                                        base_size),
+                                              RangeSize(base_addr, base_size));
 
                         BARAddrs[barnum] = base_addr;
                     }
@@ -212,21 +208,17 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                         Addr base_addr = (word_value & ~0x3) +
                             TSUNAMI_PCI0_MEMORY;
 
-                        Addr base_size = BARSize[barnum]-1;
+                        Addr base_size = BARSize[barnum];
 
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
                             mmu->add_child((FunctionalMemory *)this,
-                                           Range<Addr>(base_addr,
-                                                       base_addr + base_size));
+                                           RangeSize(base_addr, base_size));
                         else
                             mmu->update_child((FunctionalMemory *)this,
-                                              Range<Addr>(BARAddrs[barnum],
-                                                          BARAddrs[barnum] +
-                                                          base_size),
-                                              Range<Addr>(base_addr,
-                                                          base_addr +
-                                                          base_size));
+                                              RangeSize(BARAddrs[barnum],
+                                                        base_size),
+                                              RangeSize(base_addr, base_size));
 
                         BARAddrs[barnum] = base_addr;
                     }
@@ -273,10 +265,7 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
     // Add the MMU mappings for the BARs
     for (int i=0; i < 6; i++) {
         if (BARAddrs[i] != 0)
-            mmu->add_child((FunctionalMemory *)this,
-                           Range<Addr>(BARAddrs[i],
-                                       BARAddrs[i] +
-                                       BARSize[i] - 1));
+            mmu->add_child(this, RangeSize(BARAddrs[i], BARSize[i]));
     }
 }
 

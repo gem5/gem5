@@ -53,7 +53,7 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
                            Tick pio_latency)
     : PioDevice(name), addr(a), tsunami(t)
 {
-    mmu->add_child(this, Range<Addr>(addr, addr + size));
+    mmu->add_child(this, RangeSize(addr, size));
 
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
         dim[i] = 0;
@@ -66,7 +66,7 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &TsunamiCChip::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size - 1);
+        pioInterface->addAddrRange(RangeSize(addr, size));
         pioLatency = pio_latency * bus->clockRatio;
     }
 

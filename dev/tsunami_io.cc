@@ -164,12 +164,12 @@ TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
                      Tick pio_latency)
     : PioDevice(name), addr(a), tsunami(t), rtc(t)
 {
-    mmu->add_child(this, Range<Addr>(addr, addr + size));
+    mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                        &TsunamiIO::cacheAccess);
-        pioInterface->addAddrRange(addr, addr + size - 1);
+        pioInterface->addAddrRange(RangeSize(addr, size));
         pioLatency = pio_latency * bus->clockRatio;
     }
 
