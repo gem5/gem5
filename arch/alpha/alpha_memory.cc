@@ -280,17 +280,13 @@ AlphaItb::translate(MemReqPtr &req) const
         return No_Fault;
     }
 
-    // verify that this is a good virtual address
-    if (!validVirtualAddress(req->vaddr)) {
-        fault(req->vaddr, req->xc);
-        acv++;
-        return Itb_Acv_Fault;
-    }
+    if (req->flags & PHYSICAL) {
+        req->paddr = req->vaddr;
+    } else if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+               VA_SPACE(req->vaddr) == 2) {
+        // Check for "superpage" mapping: when SP<1> is set, and
+        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
 
-    // Check for "superpage" mapping: when SP<1> is set, and
-    // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
-    if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
-        VA_SPACE(req->vaddr) == 2) {
         // only valid in kernel mode
         if (ICM_CM(ipr[AlphaISA::IPR_ICM]) != AlphaISA::mode_kernel) {
             fault(req->vaddr, req->xc);
@@ -298,16 +294,18 @@ AlphaItb::translate(MemReqPtr &req) const
             return Itb_Acv_Fault;
         }
 
-        req->flags |= PHYSICAL;
-    }
-
-    if (req->flags & PHYSICAL) {
         req->paddr = req->vaddr & PA_IMPL_MASK;
     } else {
-        // not a physical address: need to look up pte
+        // verify that this is a good virtual address
+        if (!validVirtualAddress(req->vaddr)) {
+            fault(req->vaddr, req->xc);
+            acv++;
+            return Itb_Acv_Fault;
+        }
 
+        // not a physical address: need to look up pte
         AlphaISA::PTE *pte = lookup(VA_VPN(req->vaddr),
-                                DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+                                    DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
 
         if (!pte) {
             fault(req->vaddr, req->xc);
@@ -325,6 +323,10 @@ AlphaItb::translate(MemReqPtr &req) const
             return Itb_Acv_Fault;
         }
     }
+
+    // check that the physical address is ok (catch bad physical addresses)
+    if (req->paddr & ~PA_IMPL_MASK)
+        return Machine_Check_Fault;
 
     checkCacheability(req);
 
@@ -440,11 +442,6 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
     Addr pc = regs->pc;
     InternalProcReg *ipr = regs->ipr;
 
-    if (write)
-        write_accesses++;
-    else
-        read_accesses++;
-
     AlphaISA::mode_type mode =
         (AlphaISA::mode_type)DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]);
 
@@ -454,20 +451,13 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
             : AlphaISA::mode_kernel;
     }
 
-    // verify that this is a good virtual address
-    if (!validVirtualAddress(req->vaddr)) {
-        fault(req->vaddr,
-              ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_BAD_VA_MASK |
-               MM_STAT_ACV_MASK),
-              req->xc);
+    if (req->flags & PHYSICAL) {
+        req->paddr = req->vaddr;
+    } else if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+        VA_SPACE(req->vaddr) == 2) {
+        // Check for "superpage" mapping: when SP<1> is set, and
+        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
 
-        if (write) { write_acv++; } else { read_acv++; }
-        return Dtb_Fault_Fault;
-    }
-
-    // Check for "superpage" mapping: when SP<1> is set, and
-    // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
-    if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) && VA_SPACE(req->vaddr) == 2) {
         // only valid in kernel mode
         if (DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]) != AlphaISA::mode_kernel) {
             fault(req->vaddr,
@@ -477,14 +467,25 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
             return Dtb_Acv_Fault;
         }
 
-        req->flags |= PHYSICAL;
-    }
-
-    if (req->flags & PHYSICAL) {
         req->paddr = req->vaddr & PA_IMPL_MASK;
     } else {
-        // not a physical address: need to look up pte
+        if (write)
+            write_accesses++;
+        else
+            read_accesses++;
 
+        // verify that this is a good virtual address
+        if (!validVirtualAddress(req->vaddr)) {
+            fault(req->vaddr,
+                  ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_BAD_VA_MASK |
+                   MM_STAT_ACV_MASK),
+                  req->xc);
+
+            if (write) { write_acv++; } else { read_acv++; }
+            return Dtb_Fault_Fault;
+        }
+
+        // not a physical address: need to look up pte
         AlphaISA::PTE *pte = lookup(VA_VPN(req->vaddr),
                                 DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
 
@@ -528,14 +529,18 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
                 return Dtb_Fault_Fault;
             }
         }
+
+        if (write)
+            write_hits++;
+        else
+            read_hits++;
     }
 
-    checkCacheability(req);
+    // check that the physical address is ok (catch bad physical addresses)
+    if (req->paddr & ~PA_IMPL_MASK)
+        return Machine_Check_Fault;
 
-    if (write)
-        write_hits++;
-    else
-        read_hits++;
+    checkCacheability(req);
 
     return No_Fault;
 }
