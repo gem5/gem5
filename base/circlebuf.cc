@@ -33,9 +33,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "cprintf.hh"
 #include "circlebuf.hh"
-#include "intmath.h"
+#include "cprintf.hh"
+#include "intmath.hh"
 
 using namespace std;
 

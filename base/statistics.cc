@@ -36,7 +36,7 @@
 #include <math.h>
 
 #include "cprintf.hh"
-#include "intmath.h"
+#include "intmath.hh"
 #include "misc.hh"
 #include "statistics.hh"
 #include "str.hh"

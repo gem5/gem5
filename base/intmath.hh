@@ -26,84 +26,106 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __INTMATH_H__
-#define __INTMATH_H__
+#ifndef __INTMATH_HH__
+#define __INTMATH_HH__
 
 // Returns the prime number one less than n.
 int PrevPrime(int n);
 
 // Determine if a number is prime
+template <class T>
 inline bool
-IsPrime(int n)
+IsPrime(T n)
 {
-  int i;
+    T i;
 
-  if (n == 2 || n == 3)
-    return true;
+    if (n == 2 || n == 3)
+        return true;
 
-  // Don't try every odd number to prove if it is a prime.
-  // Toggle between every 2nd and 4th number.
-  // (This is because every 6th odd number is divisible by 3.)
-  for (i = 5; i*i <= n; i += 6) {
-    if (((n % i) == 0 ) || ((n % (i + 2)) == 0) ) {
-      return false;
+    // Don't try every odd number to prove if it is a prime.
+    // Toggle between every 2nd and 4th number.
+    // (This is because every 6th odd number is divisible by 3.)
+    for (i = 5; i*i <= n; i += 6) {
+        if (((n % i) == 0 ) || ((n % (i + 2)) == 0) ) {
+            return false;
+        }
     }
-  }
 
-  return true;
+    return true;
 }
 
-inline unsigned
-LeastSigBit(unsigned n)
-{ return n & ~(n - 1); }
-
-inline bool
-IsPowerOf2(unsigned n)
-{ return n != 0 && LeastSigBit(n) == n; }
-
-inline int
-FloorLog2(unsigned x)
+template <class T>
+inline T
+LeastSigBit(T n)
 {
-  if (x == 0)
-    return -1;
-
-  int y = 0;
-
-  if (x & 0xffff0000) { y += 16; x >>= 16; }
-  if (x & 0x0000ff00) { y +=  8; x >>=  8; }
-  if (x & 0x000000f0) { y +=  4; x >>=  4; }
-  if (x & 0x0000000c) { y +=  2; x >>=  2; }
-  if (x & 0x00000002) { y +=  1; }
-
-  return y;
+    return n & ~(n - 1);
 }
 
+template <class T>
+inline bool
+IsPowerOf2(T n)
+{
+    return n != 0 && LeastSigBit(n) == n;
+}
+
+template <class T>
 inline int
-CeilLog2(unsigned n)
-{ return FloorLog2(n-1)+1; }
+FloorLog2(T x)
+{
+    if (x == 0)
+        return -1;
 
-inline unsigned
-FloorPow2(unsigned n)
-{ return 1 << FloorLog2(n); }
+    int y = 0;
 
-inline unsigned
-CeilPow2(unsigned n)
-{ return 1 << CeilLog2(n); }
+    if (x & 0xffff0000) { y += 16; x >>= 16; }
+    if (x & 0x0000ff00) { y +=  8; x >>=  8; }
+    if (x & 0x000000f0) { y +=  4; x >>=  4; }
+    if (x & 0x0000000c) { y +=  2; x >>=  2; }
+    if (x & 0x00000002) { y +=  1; }
+
+    return y;
+}
+
+template <class T>
+inline int
+CeilLog2(T n)
+{
+    return FloorLog2(n - 1) + 1;
+}
+
+template <class T>
+inline T
+FloorPow2(T n)
+{
+    return (T)1 << FloorLog2(n);
+}
+
+template <class T>
+inline T
+CeilPow2(T n)
+{
+    return (T)1 << CeilLog2(n);
+}
 
 inline bool
 IsHex(char c)
-{ return (c >= '0' && c <= '9' ||
-          c >= 'A' && c <= 'F' ||
-          c >= 'a' && c <= 'f');
+{
+    return c >= '0' && c <= '9' ||
+        c >= 'A' && c <= 'F' ||
+        c >= 'a' && c <= 'f';
 }
 
 inline bool
 IsOct(char c)
-{ return (c >= '0' && c <= '7'); }
+{
+    return c >= '0' && c <= '7';
+}
 
 inline bool
 IsDec(char c)
-{ return (c >= '0' && c <= '9'); }
+{
+    return c >= '0' && c <= '9';
+}
 
 inline int
 Hex2Int(char c)
@@ -120,4 +142,4 @@ Hex2Int(char c)
   return 0;
 }
 
-#endif // __INTMATH_H__
+#endif // __INTMATH_HH__

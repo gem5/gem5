@@ -94,7 +94,7 @@
 #include <string>
 
 #include "exec_context.hh"
-#include "intmath.h"
+#include "intmath.hh"
 #include "kgdb.h"
 
 #include "physical_memory.hh"
