@@ -176,16 +176,16 @@ ExecContext::ev5_trap(Fault fault)
     AlphaISA::InternalProcReg *ipr = regs.ipr;
 
     // exception restart address
-    if (fault != Interrupt_Fault || !PC_PAL(regs.pc))
+    if (fault != Interrupt_Fault || !inPalMode())
         ipr[AlphaISA::IPR_EXC_ADDR] = regs.pc;
 
     if (fault == Pal_Fault || fault == Arithmetic_Fault /* ||
-        fault == Interrupt_Fault && !PC_PAL(regs.pc) */) {
+        fault == Interrupt_Fault && !inPalMode() */) {
         // traps...  skip faulting instruction
         ipr[AlphaISA::IPR_EXC_ADDR] += 4;
     }
 
-    if (!PC_PAL(regs.pc))
+    if (!inPalMode())
         AlphaISA::swap_palshadow(&regs, true);
 
     regs.pc = ipr[AlphaISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
@@ -225,7 +225,7 @@ ExecContext::hwrei()
 {
     uint64_t *ipr = regs.ipr;
 
-    if (!PC_PAL(regs.pc))
+    if (!inPalMode())
         return Unimplemented_Opcode_Fault;
 
     setNextPC(ipr[AlphaISA::IPR_EXC_ADDR]);
