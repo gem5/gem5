@@ -52,9 +52,10 @@ using namespace std;
 
 PciDev::PciDev(const string &name, PCIConfigAll *cf, uint32_t bus,
                uint32_t dev, uint32_t func)
-    : MMapDevice(name), ConfigSpace(cf), Bus(bus), Device(dev), Function(func)
+    : MMapDevice(name), ConfigSpace(cf), Bus(bus), Device(dev), Function(func), MMU(mmu)
 {
     memset(config.data, 0, sizeof(config.data));
+    memset(BARAddrs, 0, sizeof(Addr) * 6);
 
     // Setup pointer in config space to point to this entry
     if(cf->devices[dev][func] != NULL)
@@ -93,6 +94,8 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
 void
 PciDev::WriteConfig(int offset, int size, uint32_t data)
 {
+    uint32_t barnum;
+
     union {
         uint8_t byte_value;
         uint16_t half_value;
@@ -102,6 +105,8 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     DPRINTF(PCIDEV, "write device: %#x function: %#x register: %#x size: %#x data: %#x\n",
                 Device, Function, offset, size, word_value);
+
+    barnum = (offset - PCI0_BASE_ADDR0) >> 2;
 
     switch (size) {
       case sizeof(uint8_t): // 1-byte access
@@ -146,11 +151,13 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                  // This is I/O Space, bottom two bits are read only
                   if(config.data[offset] & 0x1) {
                     *(uint32_t *)&config.data[offset] =
-                        ~(BARSize[offset-PCI0_BASE_ADDR0] - 1) | (config.data[offset] & 0x3);
+                        ~(BARSize[barnum] - 1) |
+                        (config.data[offset] & 0x3);
                   } else {
                   // This is memory space, bottom four bits are read only
                     *(uint32_t *)&config.data[offset] =
-                        ~(BARSize[(offset-PCI0_BASE_ADDR0)>>2] - 1) | (config.data[offset] & 0xF);
+                        ~(BARSize[barnum] - 1) |
+                        (config.data[offset] & 0xF);
                   }
 
 
@@ -159,6 +166,16 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                   if(config.data[offset] & 0x1) {
                     *(uint32_t *)&config.data[offset] = (word_value & ~0x3) |
                                                         (config.data[offset] & 0x3);
+                    if (word_value) {
+                        // It's never been set
+                        if (BARAddr[barnum] == 0)
+                            AddMapping(word_value, BARSize[barnum]-1, MMU);
+                        else
+                            UpdateMapping(BARAddr[barnum], BARSize[barnum]-1,
+                                          word_value, BARSize[barnum]-1, MMU);
+                        BARAddr[barnum] = word_value;
+                    }
+
                   } else {
                   // This is memory space, bottom four bits are read only
                     *(uint32_t *)&config.data[offset] = (word_value & ~0xF) |

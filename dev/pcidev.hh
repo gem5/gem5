@@ -35,16 +35,17 @@
 
 #include "mem/functional_mem/mmap_device.hh"
 #include "dev/pcireg.h"
+
 class PCIConfigAll;
 
-/*
- * PCI device configuration device.
+/**
+ * PCI device, base implemnation is only config space.
  * Each device is connected to a PCIConfigSpace device
  * which returns -1 for everything but the pcidevs that
  * register with it. This object registers with the PCIConfig space
  * object.
  */
-class PciDev : public MMapDevice
+class PciDev : public MmapDevice
 {
   private:
     uint32_t Bus;
@@ -57,6 +58,7 @@ class PciDev : public MMapDevice
     PCIConfigAll *ConfigSpace;
     PCIConfig config;
     uint32_t BARSize[6];
+    Addr BARAddrs[6];
 
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
