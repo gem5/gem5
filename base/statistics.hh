@@ -26,19 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * @todo
- *
- * Generalized N-dimensinal vector
- * documentation
- * fix AvgStor
- * key stats
- * interval stats
- *   -- these both can use the same function that prints out a
- *   specific set of stats
- * VectorStandardDeviation totals
- *
- */
+/** @file  */
+
+/**
+* @todo
+*
+* Generalized N-dimensinal vector
+* documentation
+* fix AvgStor
+* key stats
+* interval stats
+*   -- these both can use the same function that prints out a
+*   specific set of stats
+* VectorStandardDeviation totals
+*
+*/
 #ifndef __STATISTICS_HH__
 #define __STATISTICS_HH__
 
@@ -51,9 +53,9 @@
 
 #include <assert.h>
 
-#include "sim/host.hh"
-#include "base/refcnt.hh"
-#include "base/str.hh"
+#include "host.hh"
+#include "refcnt.hh"
+#include "str.hh"
 
 #ifndef NAN
 float __nan();
@@ -89,6 +91,10 @@ namespace Detail {
 struct StatData;
 struct SubData;
 
+/**
+ *The base class of all Stats.  This does NOT actually hold all the data, but
+ *it does provide the means for accessing all the Stats data.
+ */
 class Stat
 {
   protected:
@@ -1423,38 +1429,74 @@ struct NoBin
 // Visible Statistics Types
 //
 //////////////////////////////////////////////////////////////////////
+/**@defgroup VStats  VisibleStatTypes
+ */
+
+/** @ingroup VStats
+ *This is the simplest counting stat. Default type is Counter, but can be
+ *anything (like double, int, etc).  To bin, just designate the name of the bin
+ * when declaring.  It can be used like a regular Counter.
+ *Example:  Stat<> foo;
+ *foo += num_foos;
+ */
 template <typename T = Counter, class Bin = NoBin>
 class Scalar : public Detail::ScalarBase<T, Detail::StatStor, Bin>
 {
   public:
     typedef Detail::ScalarBase<T, Detail::StatStor, Bin> Base;
 
+/** sets Stat equal to value of type U */
     template <typename U>
     void operator=(const U& v) { Base::operator=(v); }
 };
 
+/** @ingroup VStats
+ *This calculates averages over number of cycles.  Additionally, the update per
+ *cycle is implicit if there is no change.  In other words, if you want to know
+ *the average number of instructions in the IQ per cycle, then you can use this
+ * stat and not have to update it on cycles where there is no change.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class Average : public Detail::ScalarBase<T, Detail::AvgStor, Bin>
 {
   public:
     typedef Detail::ScalarBase<T, Detail::AvgStor, Bin> Base;
 
+/** sets Average equalt to value of type U*/
     template <typename U>
     void operator=(const U& v) { Base::operator=(v); }
 };
 
+/** @ingroup VStats
+ *This is a vector of type T, ideally suited to track stats across something like
+ * SMT threads.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class Vector : public Detail::VectorBase<T, Detail::StatStor, Bin>
 { };
 
+/** @ingroup VStats
+ *This is a vector of Averages of type T
+ */
 template <typename T = Counter, class Bin = NoBin>
 class AverageVector : public Detail::VectorBase<T, Detail::AvgStor, Bin>
 { };
 
+/** @ingroup VStats
+ *This is a 2-dimensional vector.  Intended  usage is for something like tracking  a
+ * Vector stat across another Vector like  SMT threads.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class Vector2d : public Detail::Vector2dBase<T, Detail::StatStor, Bin>
 { };
 
+/** @ingroup VStats
+ * This is essentially a Vector, but with minor differences.  Where a
+ * Vector's index maps directly to what it's tracking, a Distribution's index can
+ * map to an arbitrary bucket type.  For example, you could map 1-8 to bucket 0
+ * of a Distribution, and if ever there are 1-8 instructions within an IQ, increment
+ * bucket 0.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
 {
@@ -1463,6 +1505,16 @@ class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
+    /**
+     *This must be called to set some data members of the distribution
+     *as well as to allocate the appropriate storage size.
+     *@param min The minimum value of the Distribution
+     *@param max The maximum value of the Distribution (NOT the size!)
+     *@param bkt The size of the buckets to indicate mapping.  I.e. if you have
+     *min=0, max=15, bkt=8, you will have two buckets, and anything from 0-7
+     *will go into bucket 0, and anything from 8-15 be in bucket 1.
+     *@return the Distribution itself.
+     */
     Distribution &init(T min, T max, int bkt) {
         params.min = min;
         params.max = max;
@@ -1475,6 +1527,10 @@ class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
     }
 };
 
+/** @ingroup VStats
+ *This has the functionality of a standard deviation built into it.  Update it
+ *every cycle, and at the end you will have the standard deviation.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
 {
@@ -1489,6 +1545,10 @@ class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
     }
 };
 
+/** @ingroup VStats
+ *This also calculates standard deviations, but there is no need to
+ *update every cycle if there is no change, the stat will update for you.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
 {
@@ -1503,6 +1563,10 @@ class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
     }
 };
 
+/** @ingroup VStats
+ *This is a vector of Distributions. (The complexity increases!). Intended usage
+ * is for something like tracking a distribution across a vector like SMT threads.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class VectorDistribution
     : public Detail::VectorDistBase<T, Detail::DistStor, Bin>
@@ -1512,6 +1576,15 @@ class VectorDistribution
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
+    /**
+     *This must be called to set some data members and allocate storage space.
+     *@param size The size of the Vector
+     *@param min The minumum value of the Distribution
+     *@param max The maximum value of the Distribution (NOT the size)
+     *@param bkt The range of the bucket.  I.e if min=0, max=15, and bkt=8,
+     *then 0-7 will be bucket 0, and 8-15 will be bucket 1.
+     *@return return the VectorDistribution itself.
+     */
     VectorDistribution &init(int size, T min, T max, int bkt) {
         params.min = min;
         params.max = max;
@@ -1524,6 +1597,10 @@ class VectorDistribution
     }
 };
 
+/** @ingroup VStats
+ *This is a vector of Standard Deviations.  Intended usage is for tracking
+ *Standard Deviations across a vector like SMT threads.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class VectorStandardDeviation
     : public Detail::VectorDistBase<T, Detail::FancyStor, Bin>
@@ -1533,6 +1610,11 @@ class VectorStandardDeviation
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
+    /** This must be called to initialize some data members and allocate
+     * approprate storage space for the stat.
+     *@param size The size of the Vector
+     * @return the VectorStandardDeviation itself.
+     */
     VectorStandardDeviation &init(int size) {
         bin.init(size, params);
         setInit();
@@ -1541,6 +1623,10 @@ class VectorStandardDeviation
     }
 };
 
+/** @ingroup VStats
+ * This is a vector of Average Deviations.  Intended usage is for tracking
+ *Average Deviations across a vector like SMT threads.
+ */
 template <typename T = Counter, class Bin = NoBin>
 class VectorAverageDeviation
     : public Detail::VectorDistBase<T, Detail::AvgFancy, Bin>
@@ -1550,6 +1636,11 @@ class VectorAverageDeviation
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
+/** This must be called to initialize some data members and allocate
+ * approprate storage space for the stat.
+ *@param size The size of the Vector
+ * @return The VectorAverageDeviation itself.
+ */
     VectorAverageDeviation &init(int size) {
         bin.init(size, params);
         setInit();
@@ -1558,9 +1649,16 @@ class VectorAverageDeviation
     }
 };
 
+/** @ingroup VStats
+ *This is a formula type.  When defining it, you can just say:
+ *Formula foo = manchu + 3 / bar;
+ *The calculations for Formulas are all done at the end of the simulation, this
+ *really is just a definition of how to calculate at the end.
+ */
 class Formula : public Detail::VectorStat
 {
   private:
+    /** The root of the tree which represents the Formula */
     Detail::NodePtr root;
     friend class Detail::Temp;
 
