@@ -65,6 +65,13 @@ typedef unsigned int uint32;
 
 #define NUM_KERNEL_THIRD (4)
 
+#define printf_lock(args...)  \
+    do { \
+    SpinLock(&theLock); \
+    printf(args); \
+    SpinUnlock(&theLock); \
+    } while (0)
+
 
 static unixBoot(int go, int argc, char **argv);
 void jToPal(ul bootadr);
@@ -152,12 +159,12 @@ main(int argc, char **argv)
 
 
    InitConsole();
-   printf("M5 console\n");
+   printf_lock("M5 console\n");
    /*
     * get configuration from backdoor
     */
    simosConf.last_offset = k1Conf->last_offset;
-   printf("Got Configuration %d \n",simosConf.last_offset);
+   printf_lock("Got Configuration %d \n",simosConf.last_offset);
 
     simosConf.last_offset = k1Conf->last_offset;
     simosConf.version = k1Conf->version;
@@ -420,7 +427,7 @@ unixBoot(int go, int argc, char **argv)
    char *rpb_name;
    ul nextPtr;
 
-   printf( "memsize %x pages %x \n",mem_size,mem_pages);
+   printf_lock( "memsize %x pages %x \n",mem_size,mem_pages);
 
 
 
@@ -447,7 +454,7 @@ unixBoot(int go, int argc, char **argv)
 
    unix_boot_mem = ROUNDUP8K(&_end);
 
-   printf("First free page after ROM 0x%x\n", unix_boot_mem);
+   printf_lock("First free page after ROM 0x%x\n", unix_boot_mem);
 
    rpb = (struct rpb *) unix_boot_alloc( HWRPB_PAGES);
 
@@ -541,10 +548,10 @@ unixBoot(int go, int argc, char **argv)
    bootadr = simosConf.entryPoint;
 
 
-   printf("HWRPB 0x%x l1pt 0x%x l2pt 0x%x l3pt_rpb 0x%x l3pt_kernel 0x%x l2reserv 0x%x\n",
+   printf_lock("HWRPB 0x%x l1pt 0x%x l2pt 0x%x l3pt_rpb 0x%x l3pt_kernel 0x%x l2reserv 0x%x\n",
           rpb, first, second, third_rpb, third_kernel,reservedFixup);
    if (kernel_end - simosConf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-      printf("Kernel is more than 8MB 0x%x - 0x%x = 0x%x\n",
+      printf_lock("Kernel is more than 8MB 0x%x - 0x%x = 0x%x\n",
              kernel_end, simosConf.kernStart,
              kernel_end -simosConf.kernStart );
       panic("kernel too big\n");
@@ -559,7 +566,7 @@ unixBoot(int go, int argc, char **argv)
    /* blow 2 pages of phys mem for guards since it maintains 1-to-1 mapping */
    ksp = ksp_top + (3 * 8192);
    if (ksp - simosConf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-      printf("Kernel stack pushd us over 8MB\n");
+      printf_lock("Kernel stack pushd us over 8MB\n");
       panic("ksp too big\n");
    }
    if (THIRD_XXX((ul)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
@@ -607,7 +614,7 @@ unixBoot(int go, int argc, char **argv)
     * XXX must be patched after a checkpoint restore (I guess)
     */
 
-   printf("CPU Clock at %d MHz IntrClockFrequency=%d \n", simosConf.cpuClock,simosConf.intrClockFrequency);
+   printf_lock("CPU Clock at %d MHz IntrClockFrequency=%d \n", simosConf.cpuClock,simosConf.intrClockFrequency);
    rpb->rpb_counter = simosConf.cpuClock * 1000 * 1000;
 
    /*
@@ -624,7 +631,7 @@ unixBoot(int go, int argc, char **argv)
       int i;
       int size = ROUNDUP128(sizeof(struct rpb_percpu));
 
-      printf("Booting with %d processor(s) \n",simosConf.numCPUs);
+      printf_lock("Booting with %d processor(s) \n",simosConf.numCPUs);
 
       rpb->rpb_numprocs = simosConf.numCPUs;
       rpb->rpb_slotsize = size;
@@ -650,7 +657,7 @@ unixBoot(int go, int argc, char **argv)
 
 /*  thisCPU->rpb_pcb.rpb_ptbr = PFN(second);*/
 
-         printf("KSP: 0x%x PTBR 0x%x\n", thisCPU->rpb_pcb.rpb_ksp, thisCPU->rpb_pcb.rpb_ptbr);
+         printf_lock("KSP: 0x%x PTBR 0x%x\n", thisCPU->rpb_pcb.rpb_ksp, thisCPU->rpb_pcb.rpb_ptbr);
 
          if (i) {
             bootStrapImpure[i] = (ul)unix_boot_alloc(1);
@@ -713,7 +720,7 @@ unixBoot(int go, int argc, char **argv)
   rpb_crb->rpb_map[0].rpb_pgcount = HWRPB_PAGES;
 
 
-  printf("Console Callback at 0x%x, fixup at 0x%x \n",
+  printf_lock("Console Callback at 0x%x, fixup at 0x%x \n",
           rpb_crb->rpb_va_disp,
           rpb_crb->rpb_va_fixup );
 
@@ -754,7 +761,7 @@ unixBoot(int go, int argc, char **argv)
   rpb_mdt->rpb_numcl = cl;
 
   for (i = 0; i < cl; i++)
-    printf("Memory cluster %d [%d - %d]\n", i, rpb_mdt->rpb_cluster[i].rpb_pfn, rpb_mdt->rpb_cluster[i].rpb_pfncount);
+    printf_lock("Memory cluster %d [%d - %d]\n", i, rpb_mdt->rpb_cluster[i].rpb_pfn, rpb_mdt->rpb_cluster[i].rpb_pfncount);
 
 
 
@@ -770,7 +777,7 @@ unixBoot(int go, int argc, char **argv)
   bzero((char *)mdt_bitmap, MDT_BITMAP_PAGES * 8192);
   for (i = 0; i < mem_pages/8; i++) ((unsigned char *)mdt_bitmap)[i] = 0xff;
 
-  printf("Initalizing mdt_bitmap addr 0x%x mem_pages %x \n",
+  printf_lock("Initalizing mdt_bitmap addr 0x%x mem_pages %x \n",
          (long)mdt_bitmap,(long)mem_pages);
 
   xxm_rpb.rpb_config_off = 0;
@@ -809,7 +816,7 @@ unixBoot(int go, int argc, char **argv)
 #else
      rpb_crb->rpb_va_disp = 0x10000000 + ((ul)ptr & 0x1fff);
 #endif
-     printf("ConsoleDispatch at virt %x phys %x val %x\n",
+     printf_lock("ConsoleDispatch at virt %x phys %x val %x\n",
              rpb_crb->rpb_va_disp,
             rpb_crb->rpb_pa_disp,
             consoleCallback);
@@ -844,10 +851,8 @@ unixBoot(int go, int argc, char **argv)
      for (i=1;i<simosConf.numCPUs;i++) {
         volatile struct AlphaAccess *k1Conf = (volatile struct AlphaAccess *)
            (ALPHA_ACCESS_BASE);
-        SpinLock(&theLock);
-        printf("Bootstraping CPU %d with sp=0x%x \n",
+        printf_lock("Bootstraping CPU %d with sp=0x%x \n",
                i,bootStrapImpure[i]);
-        SpinUnlock(&theLock);
         k1Conf->bootStrapImpure = bootStrapImpure[i];
         k1Conf->bootStrapCPU = i;
      }
@@ -859,9 +864,7 @@ unixBoot(int go, int argc, char **argv)
   if ((ul)unix_boot_mem >= (ul)simosConf.kernStart) {
      panic("CONSOLE: too much memory. Smashing kernel  \n");
   } else {
-     SpinLock(&theLock);
-     printf("unix_boot_mem ends at %x \n",unix_boot_mem);
-     SpinUnlock(&theLock);
+     printf_lock("unix_boot_mem ends at %x \n",unix_boot_mem);
   }
 
 
@@ -925,11 +928,11 @@ char **envp;
   struct _kernel_params *kernel_params = (struct _kernel_params *) KSEG;
   int i;
 
-  printf("k_argc = %d ", k_argc);
+  printf_lock("k_argc = %d ", k_argc);
   for (i = 0; i < k_argc; i++) {
-    printf("'%s' ", k_argv[i]);
+    printf_lock("'%s' ", k_argv[i]);
   }
-  printf("\n");
+  printf_lock("\n");
 
 /*  rpb_percpu |= 0xfffffc0000000000;*/
   kernel_params->bootadr = bootadr;
@@ -938,9 +941,9 @@ char **envp;
   kernel_params->argc = k_argc;
   kernel_params->argv = (ul)k_argv;
   kernel_params->envp = (ul)envp;
-  printf("jumping to kernel at 0x%x, (PCBB 0x%x pfn %d)\n", bootadr, rpb_percpu, free_pfn);
+  printf_lock("jumping to kernel at 0x%x, (PCBB 0x%x pfn %d)\n", bootadr, rpb_percpu, free_pfn);
   jToPal(KSEG_TO_PHYS((ul)palJToKern));
-  printf("returned from jToPal. Looping\n");
+  printf_lock("returned from jToPal. Looping\n");
   while(1) continue;
 }
 
@@ -1158,9 +1161,9 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
          strcpy((char*)a2, "");
          i = (long)0xc000000000000000;
          if (a1 >= 0 && a1 < MAX_ENV_INDEX)
-             printf ("GETENV unsupported option %d (0x%x)\n", a1, a1);
+             printf_lock("GETENV unsupported option %d (0x%x)\n", a1, a1);
          else
-             printf ("GETENV unsupported option %s\n", a1);
+             printf_lock("GETENV unsupported option %s\n", a1);
      }
 
      if (i > a3)
@@ -1170,7 +1173,7 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
    case CONSCB_OPEN:
       bcopy((char*)a1,deviceState[numOpenDevices].name,a2);
       deviceState[numOpenDevices].name[a2] = '\0';
-      printf("CONSOLE OPEN : %s --> success \n",
+      printf_lock("CONSOLE OPEN : %s --> success \n",
              deviceState[numOpenDevices].name);
       return numOpenDevices++;
 
@@ -1181,11 +1184,11 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
    case CONSCB_CLOSE:
       break;
    case CONSCB_OPEN_CONSOLE:
-      printf("CONSOLE OPEN\n");
+      printf_lock("CONSOLE OPEN\n");
       return 0; /* success */
       break; /* not rearched */
    case CONSCB_CLOSE_CONSOLE:
-      printf("CONSOLE CLOSE\n");
+      printf_lock("CONSOLE CLOSE\n");
       return 0; /* success */
       break; /* not reached */
 
@@ -1211,7 +1214,7 @@ long CallBackFixup(int a0, int a1, int a2)
    asm("bis $8, $31, %0" : "=r" (temp));
 
    /* call original code */
-   printf("CallbackFixup %x %x, t7=%x\n",a0,a1,temp);
+   printf_lock("CallbackFixup %x %x, t7=%x\n",a0,a1,temp);
 
    /* restore the current pointer */
    asm("bis %0, $31, $8" : : "r" (temp) : "$8");
@@ -1239,20 +1242,16 @@ void SlaveCmd(int cpu, struct rpb_percpu *my_rpb)
 /*   extern void palJToSlave[]; */
    extern unsigned int palJToSlave[];
 
-   SpinLock(&theLock);
-   printf("Slave CPU %d console command %s", cpu,my_rpb->rpb_iccb.iccb_rxbuf);
-   SpinUnlock(&theLock);
+   printf_lock("Slave CPU %d console command %s", cpu,my_rpb->rpb_iccb.iccb_rxbuf);
 
    my_rpb->rpb_state |= STATE_BIP;
    my_rpb->rpb_state &= ~STATE_RC;
 
-   SpinLock(&theLock);
-   printf("SlaveCmd: restart %x %x vptb %x my_rpb %x my_rpb_phys %x\n",
+   printf_lock("SlaveCmd: restart %x %x vptb %x my_rpb %x my_rpb_phys %x\n",
           rpb->rpb_restart,
           rpb->rpb_restart_pv,
           rpb->rpb_vptb, my_rpb,
           KSEG_TO_PHYS(my_rpb));
-   SpinUnlock(&theLock);
 
    cServe(KSEG_TO_PHYS((ul)palJToSlave),
           (ul)rpb->rpb_restart,
@@ -1270,13 +1269,11 @@ void SlaveLoop( int cpu)
    struct rpb_percpu *my_rpb = (struct rpb_percpu*)
       ((ul)rpb_percpu + size*cpu);
 
-   SpinLock(&theLock);
    if (cpu==0) {
       panic("CPU 0 entering slaveLoop. Reenetering the console. HOSED \n");
    } else {
-      printf("Entering slaveloop for cpu %d my_rpb=%x \n",cpu,my_rpb);
+      printf_lock("Entering slaveloop for cpu %d my_rpb=%x \n",cpu,my_rpb);
    }
-   SpinUnlock(&theLock);
 
    // swap the processors context to the one in the
    // rpb_percpu struct very carefully (i.e. no stack usage)
