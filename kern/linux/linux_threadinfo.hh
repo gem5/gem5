@@ -68,7 +68,7 @@ class ThreadInfo
             return VPtr<task_struct>(xc, task);
         }
 
-        string
+        std::string
         curTaskName()
         {
             return curTaskInfo()->comm;
