@@ -33,9 +33,10 @@
 #ifndef __ALPHA_CONSOLE_HH__
 #define __ALPHA_CONSOLE_HH__
 
-#include "sim/host.hh"
+#include "base/range.hh"
 #include "dev/alpha_access.h"
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "sim/host.hh"
 
 class BaseCPU;
 class SimConsole;
@@ -68,7 +69,7 @@ class SimpleDisk;
  * primarily used doing boot before the kernel has loaded its device
  * drivers.
  */
-class AlphaConsole : public MmapDevice
+class AlphaConsole : public FunctionalMemory
 {
   protected:
     union {
@@ -82,15 +83,15 @@ class AlphaConsole : public MmapDevice
     /** the system console (the terminal) is accessable from the console */
     SimConsole *console;
 
-  public:
-    /** Standard Constructor */
-    AlphaConsole(const std::string &name, SimConsole *cons,
-                 SimpleDisk *d, int size,
-                 System *system, BaseCPU *cpu,
-                 TlaserClock *clock, int num_cpus,
-                 Addr addr, Addr mask, MemoryController *mmu);
+    Addr addr;
+    static const Addr size = 0x80; // equal to sizeof(alpha_access);
 
   public:
+    /** Standard Constructor */
+    AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
+                 System *system, BaseCPU *cpu, TlaserClock *clock,
+                 int num_cpus, MemoryController *mmu, Addr addr);
+
     /**
      * memory mapped reads and writes
      */

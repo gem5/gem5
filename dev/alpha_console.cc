@@ -49,12 +49,13 @@
 
 using namespace std;
 
-AlphaConsole::AlphaConsole(const string &name, SimConsole *cons,
-                           SimpleDisk *d, int size, System *system,
-                           BaseCPU *cpu, TlaserClock *clock, int num_cpus,
-                           Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), disk(d), console(cons)
+AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
+                           System *system, BaseCPU *cpu, TlaserClock *clock,
+                           int num_cpus, MemoryController *mmu, Addr a)
+    : FunctionalMemory(name), disk(d), console(cons), addr(a)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
+
     consoleData = new uint8_t[size];
     memset(consoleData, 0, size);
 
@@ -65,7 +66,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons,
 
     alphaAccess->version = ALPHA_ACCESS_VERSION;
     alphaAccess->numCPUs = num_cpus;
-    alphaAccess->mem_size = system->physmem->getSize();
+    alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->getFreq() / 1000000;
     alphaAccess->intrClockFrequency = clock->frequency();
 
@@ -78,7 +79,8 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
     memset(data, 0, req->size);
     uint64_t val;
 
-    Addr daddr = req->paddr & addr_mask;
+    Addr daddr = req->paddr - addr;
+
     switch (daddr) {
       case offsetof(AlphaAccess, inputChar):
         val = console->console_in();
@@ -125,7 +127,7 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         return Machine_Check_Fault;
     }
 
-    Addr daddr = req->paddr & addr_mask;
+    Addr daddr = req->paddr - addr;
     ExecContext *other_xc;
 
     switch (daddr) {
@@ -243,11 +245,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 
     SimObjectParam<SimConsole *> sim_console;
     SimObjectParam<SimpleDisk *> disk;
-    Param<int> size;
     Param<int> num_cpus;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    Param<Addr> mask;
     SimObjectParam<System *> system;
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<TlaserClock *> clock;
@@ -258,11 +258,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
     INIT_PARAM(sim_console, "The Simulator Console"),
     INIT_PARAM(disk, "Simple Disk"),
-    INIT_PARAM_DFLT(size, "AlphaConsole size", sizeof(AlphaAccess)),
     INIT_PARAM_DFLT(num_cpus, "Number of CPU's", 1),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu, "Processor"),
     INIT_PARAM(clock, "Turbolaser Clock")
@@ -271,10 +269,8 @@ END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
 CREATE_SIM_OBJECT(AlphaConsole)
 {
-    return  new AlphaConsole(getInstanceName(), sim_console,
-                             disk, size, system,
-                             cpu, clock, num_cpus,
-                             addr, mask, mmu);
+    return  new AlphaConsole(getInstanceName(), sim_console, disk,
+                             system, cpu, clock, num_cpus, mmu, addr);
 }
 
 REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

@@ -36,7 +36,7 @@
 #define ALPHA_ACCESS_VERSION (1301) /* CH++*/
 
 #ifndef CONSOLE
-#include <ostream>
+#include <iosfwd>
 #include <string>
 class Checkpoint;
 #endif
