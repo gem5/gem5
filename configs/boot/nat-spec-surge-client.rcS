@@ -6,7 +6,7 @@ CLIENT=10.0.0.2
 SERVER=192.168.0.1
 
 echo -n "mounting swap..."
-/sbin/swapon /dev/hdc1
+/sbin/swapon /dev/hdc
 echo "done."
 
 echo -n "setting up network..."
