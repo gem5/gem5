@@ -1,40 +1,36 @@
 #Makefile for palcode
 #Works on alpha-linux and builds elf executable
 
-#19 December 2003 - Ali Saidi
-
 GAS = alpha-elf-as
 CC = alpha-elf-g++
 LD = alpha-elf-ld
-#CFLAGS=-I ../h -E -P -D SIMOS -nostdinc -nostdinc++ -x c++
-CFLAGS=-I . -I ../h -E -P -D SIMOS -D BUILD_PALCODE -nostdinc -nostdinc++ -x c++
-GASFLAGS=-m21164
+CFLAGS=-I . -I ../h -D SIMOS -D BUILD_PALCODE -nostdinc -nostdinc++ -Wa,-m21164
 LDFLAGS=-Ttext 0x4000
 
-SOURCES=osfpal.s osfpal_cache_copy.s osfpal_cache_copy_unaligned.s platform_tlaser.s \
-	 platform_m5.s
-PREPROC := $(SOURCES:.s=.i)
-TLOBJS = osfpal.o osfpal_cache_copy.o osfpal_cache_copy_unaligned.o platform_tlaser.o
-TSOBJS = osfpal.o osfpal_cache_copy.o osfpal_cache_copy_unaligned.o platform_m5.o
+TLOBJS = osfpal.o  platform_tlaser.o
+TLOBJS_COPY = osfpal_cache_copy.o osfpal_cache_copy_unaligned.o
+TSOBJS = osfpal.o platform_m5.o
+TSOBJS_COPY = osfpal_cache_copy.o osfpal_cache_copy_unaligned.o
 
-%.i: %.s
-	$(CC) $(CFLAGS) $< > $@
-
-%.o: %.i
-	$(GAS) $(GASFLAGS) -o $@ $< 
+%.o: %.S
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 all: tlaser tsunami
 
-tlaser: $(PREPROC) $(TLOBJS)
+tlaser:  $(TLOBJS)
 	$(LD) $(LDFLAGS) -o tl_osfpal osfpal.o platform_tlaser.o
+
+tlaser_copy: $(TLOBJS_COPY) $(TLOBJS)
 	$(LD) $(LDFLAGS) -o tl_osfpal_cache osfpal_cache_copy.o platform_tlaser.o
 	$(LD) $(LDFLAGS) -o tl_osfpal_unalign osfpal_cache_copy_unaligned.o platform_tlaser.o
 
-tsunami: $(PREPROC) $(TSOBJS)
+tsunami: $(TSOBJS)
 	$(LD) $(LDFLAGS) -o ts_osfpal osfpal.o platform_m5.o
+
+tsunami_copy: $(TSOBJS) $(TSOBJS_COPY)
 	$(LD) $(LDFLAGS) -o ts_osfpal_cache  osfpal_cache_copy.o platform_m5.o
 	$(LD) $(LDFLAGS) -o ts_osfpal_unalign osfpal_cache_copy_unaligned.o platform_m5.o
 
 clean:
-	rm -f *.o *.i tl_osfpal tl_osfpal_cache tl_osfpal_unalign ts_osfpal \
+	rm -f *.o tl_osfpal tl_osfpal_cache tl_osfpal_unalign ts_osfpal \
 	ts_osfpal_cache ts_osfpal_unalign
