@@ -54,18 +54,16 @@ static inline uint32_t cycleCounter(uint32_t dep);
 static int __init devtime_start(void)
 {
     uint64_t addr;
-        uint32_t t1, t2;
+    uint32_t t1, t2;
     uint32_t trash;
     int x;
     uint32_t *times;
     uint32_t num = 0;
     struct net_device *dev;
 
-
     printk("Devtime Driver Version %s Loaded...\n", DRIVER_VER);
 
-    if ((dataAddr != 0) && (count != 0))
-    {
+    if (dataAddr != 0 && count != 0) {
         addr = simple_strtoull(dataAddr, NULL, 0);
 
         addr = ioremap(addr, PAGE_SIZE);
@@ -75,19 +73,16 @@ static int __init devtime_start(void)
          * if physical memory is mapped to this address.
          */
         times = kmalloc(sizeof(uint32_t) * count, GFP_USER);
-        if (!times)
-        {
+        if (!times) {
             printk("Could not allocate memory... Try again later.\n");
             return -1;
         }
 
-        if (addr)
-        {
+        if (addr) {
             printk("Preparing to read %#llx %d times.\n", addr, count);
 
             t1 = cycleCounter(trash);
-            for (x=0; x < count; x++)
-            {
+            for (x = 0; x < count; x++) {
                 trash = readl(addr);
                 t2 = cycleCounter(trash);
                 times[num++] = t2 - t1;
@@ -100,35 +95,29 @@ static int __init devtime_start(void)
             iounmap(addr);
 
             printk("Measurements:\n");
-            for (x = 0; x < count; x++)
-            {
+            for (x = 0; x < count; x++) {
                 printk("%d ", times[x]);
-                if (((x+1) % 10) == 0)
+                if (((x + 1) % 10) == 0)
                     printk("\n");
             }
             printk("\nDone.\n");
-
-
-        }
-        else
+        } else {
             printk("Unable to remap address. Please try again later.\n");
+        }
     } else {
         dev = dev_get_by_name("eth0");
-        if (dev)
-        {
-            printk("Eth0: MemStart: %#lx MemEnd: %#lx I/O Addr: %#lx\n", dev->mem_start,
-                    dev->mem_end, dev->base_addr);
+        if (dev) {
+            printk("Eth0: MemStart: %#lx MemEnd: %#lx I/O Addr: %#lx\n",
+                   dev->mem_start, dev->mem_end, dev->base_addr);
             dev_put(dev);
         }
         dev = 0;
         dev = dev_get_by_name("eth1");
-        if (dev)
-        {
-            printk("Eth1: MemStart: %#lx MemEnd: %#lx I/O Addr: %#lx\n", dev->mem_start,
-                    dev->mem_end, dev->base_addr);
+        if (dev) {
+            printk("Eth1: MemStart: %#lx MemEnd: %#lx I/O Addr: %#lx\n",
+                   dev->mem_start, dev->mem_end, dev->base_addr);
             dev_put(dev);
         }
-
 
         printk("Required information not supplied.\n");
     }
@@ -159,7 +148,8 @@ inline uint32_t cycleCounter(uint32_t dep)
 #error Architecture NOT SUPPORTE
 #endif
 
-static void __exit devtime_end(void) {
+static void __exit devtime_end(void)
+{
     printk("Devtime Driver Version %s Unloaded...\n", DRIVER_VER);
 }
 
