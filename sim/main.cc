@@ -111,7 +111,7 @@ static void
 showBriefHelp(ostream &out)
 {
     out << "Usage: " << myProgName
-         << " [-hn] [-Dname[=def]] [-Uname] [-I[dir]] "
+         << " [-hnu] [-Dname[=def]] [-Uname] [-I[dir]] "
          << "[--<section>:<param>=<value>] [<config file> ...]" << endl
          << "   -h: print long help (including parameter listing)" << endl
          << "   -n: don't load default.ini" << endl
