@@ -103,8 +103,8 @@ objParamIn(Checkpoint *cp, const std::string &section,
 class Serializable
 {
   protected:
-    void nameOut(std::ostream& os);
-    void nameOut(std::ostream& os, const std::string &_name);
+    void nameOut(std::ostream &os);
+    void nameOut(std::ostream &os, const std::string &_name);
 
   public:
     Serializable() {}
@@ -113,7 +113,7 @@ class Serializable
     // manditory virtual function, so objects must provide names
     virtual std::string name() const = 0;
 
-    virtual void serialize(std::ostream& os) {}
+    virtual void serialize(std::ostream &os) {}
     virtual void unserialize(Checkpoint *cp, const std::string &section) {}
 
     static Serializable *create(Checkpoint *cp,
