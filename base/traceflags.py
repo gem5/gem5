@@ -66,6 +66,7 @@ baseFlags = [
     'AlphaConsole',
     'Flow',
     'Interrupt',
+    'Fault',
     'Cycle',
     'Loader',
     'MMU',

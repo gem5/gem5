@@ -162,6 +162,7 @@ AlphaISA::zeroRegisters(XC *xc)
 void
 ExecContext::ev5_trap(Fault fault)
 {
+    DPRINTF(Fault, "Fault %s\n", FaultName(fault));
     Stats::recordEvent(csprintf("Fault %s", FaultName(fault)));
 
     assert(!misspeculating());
@@ -302,11 +303,7 @@ ExecContext::readIpr(int idx, Fault &fault)
         break;
 
       case AlphaISA::IPR_VA:
-        // SFX: unlocks interrupt status registers
         retval = ipr[idx];
-
-        if (!misspeculating())
-            regs.intrlock = false;
         break;
 
       case AlphaISA::IPR_VA_FORM:
