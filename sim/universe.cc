@@ -38,9 +38,9 @@ using namespace std;
 
 Tick curTick = 0;
 Tick ticksPerSecond;
-Tick ticksPerMS;
-Tick ticksPerUS;
-Tick ticksPerNS;
+double __ticksPerMS;
+double __ticksPerUS;
+double __ticksPerNS;
 
 class UniverseParamContext : public ParamContext
 {
@@ -58,7 +58,8 @@ void
 UniverseParamContext::checkParams()
 {
     ticksPerSecond = universe_freq;
-    ticksPerMS = universe_freq / 1000;
-    ticksPerUS = universe_freq / (1000 * 1000);
-    ticksPerNS = universe_freq / (1000 * 1000 * 1000);
+    double freq = double(ticksPerSecond);
+    __ticksPerMS = freq / 1.0e3;
+    __ticksPerUS = freq / 1.0e6;
+    __ticksPerNS = freq / 1.0e9;
 }

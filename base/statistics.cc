@@ -919,7 +919,7 @@ dump(ostream &stream)
 CallbackQueue resetQueue;
 
 void
-regReset(Callback *cb)
+RegResetCallback(Callback *cb)
 {
     resetQueue.add(cb);
 }

@@ -245,14 +245,14 @@ Serializer::add_objects()
 }
 
 void
-Serializer::serialize(const string &f)
+Serializer::serialize()
 {
     if (Serializeable::serializer != NULL)
         panic("in process of serializing!");
 
     Serializeable::serializer = this;
 
-    file = f;
+    file = CheckpointFile();
     string cpt_file = file + ".cpt";
     output = new ofstream(cpt_file.c_str());
     time_t t = time(NULL);
@@ -286,38 +286,49 @@ class SerializeEvent : public Event
 {
   protected:
     string file;
+    Tick repeat;
 
   public:
-    SerializeEvent(EventQueue *q, Tick when, const string &file);
-    ~SerializeEvent();
-
+    SerializeEvent(Tick _when, Tick _repeat);
     virtual void process();
-    virtual void serialize(std::ostream &os);
+    virtual void serialize(std::ostream &os)
+    {
+        panic("Cannot serialize the SerializeEvent");
+    }
+
 };
 
-SerializeEvent::SerializeEvent(EventQueue *q, Tick when, const string &f)
-    : Event(q), file(f)
+SerializeEvent::SerializeEvent(Tick _when, Tick _repeat)
+    : Event(&mainEventQueue, 990), repeat(_repeat)
 {
     setFlags(AutoDelete);
-    schedule(when);
-}
-
-SerializeEvent::~SerializeEvent()
-{
+    schedule(_when);
 }
 
 void
 SerializeEvent::process()
 {
     Serializer serial;
-    serial.serialize(file);
-    new SimExitEvent("Serialization caused exit");
+    serial.serialize();
+    if (repeat)
+        schedule(curTick + repeat);
+}
+
+string __CheckpointFileBase;
+
+string
+CheckpointFile()
+{
+    if (__CheckpointFileBase.empty())
+        return __CheckpointFileBase;
+
+    return csprintf("%s.%d", __CheckpointFileBase, curTick);
 }
 
 void
-SerializeEvent::serialize(ostream &os)
+SetupCheckpoint(Tick when, Tick period)
 {
-    panic("Cannot serialize the SerializeEvent");
+    new SerializeEvent(when, period);
 }
 
 class SerializeParamContext : public ParamContext
@@ -333,18 +344,21 @@ class SerializeParamContext : public ParamContext
 
 SerializeParamContext serialParams("serialize");
 
+Param<string> serialize_file(&serialParams,
+                             "file",
+                             "file to write to", "m5");
+
 Param<Counter> serialize_cycle(&serialParams,
                                 "cycle",
                                 "cycle to serialize",
                                 0);
 
-Param<string> serialize_file(&serialParams,
-                             "file",
-                             "file to write to", "");
+Param<Counter> serialize_period(&serialParams,
+                                "period",
+                                "period to repeat serializations",
+                                0);
 
-// Copy filename into regular string so we can export it without
-// having to include param.hh all over the place.
-string serializeFilename;
+
 
 SerializeParamContext::SerializeParamContext(const string &section)
     : ParamContext(section), event(NULL)
@@ -357,22 +371,23 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    serializeFilename = serialize_file;
-    if (!serializeFilename.empty() && serialize_cycle > 0)
-        event = new SerializeEvent(&mainEventQueue, serialize_cycle,
-                                   serializeFilename);
+    __CheckpointFileBase = serialize_file;
+    if (serialize_cycle > 0)
+        SetupCheckpoint(serialize_cycle, serialize_period);
 }
 
 void
-debug_serialize(const char *file)
+debug_serialize()
 {
     Serializer serial;
-    serial.serialize(file);
-    new SimExitEvent("Serialization caused exit");
+    serial.serialize();
 }
 
-
-
+void
+debug_serialize(Tick when)
+{
+    new SerializeEvent(when, 0);
+}
 
 ////////////////////////////////////////////////////////////////////////
 //

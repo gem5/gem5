@@ -103,20 +103,6 @@ CountedExitEvent::description()
     return "counted exit";
 }
 
-
-void
-DumpStatsEvent::process()
-{
-    dumpStats();
-}
-
-const char *
-DumpStatsEvent::description()
-{
-    return "stats dump";
-}
-
-
 #ifdef CHECK_SWAP_CYCLES
 new CheckSwapEvent(&mainEventQueue, CHECK_SWAP_CYCLES);
 #endif
@@ -147,33 +133,6 @@ CheckSwapEvent::description()
     return "check swap";
 }
 
-
-class DumpStatsContext : public ParamContext
-{
-  public:
-    DumpStatsContext(const string &_iniSection)
-        : ParamContext(_iniSection) {}
-    void checkParams();
-};
-
-DumpStatsContext dumpStatsParams("stats");
-
-VectorParam<Tick> dump_cycle(&dumpStatsParams, "dump_cycles",
-                               "cycles on which to dump stats");
-
-void
-DumpStatsContext::checkParams()
-{
-    if (dump_cycle.isValid()) {
-        vector<Tick> &cycles = dump_cycle;
-
-        vector<Tick>::iterator i = cycles.begin();
-        vector<Tick>::iterator end = cycles.end();
-
-        for (; i < end; ++i)
-            new DumpStatsEvent(*i);
-    }
-}
 
 ///////////////////////////////////////////////////
 //

@@ -400,7 +400,9 @@ main(int argc, char **argv)
             async_event = false;
             if (async_dump) {
                 async_dump = false;
-                new DumpStatsEvent();
+
+                using namespace Statistics;
+                SetupEvent(Dump, curTick);
             }
 
             if (async_exit) {

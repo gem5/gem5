@@ -148,7 +148,7 @@ class Serializer
     void add_objects();
 
   public:
-    void serialize(const std::string &file);
+    void serialize();
     const std::string &filename() const { return file; }
 };
 
@@ -251,6 +251,7 @@ class Checkpoint
 // Export checkpoint filename param so other objects can derive
 // filenames from it (e.g., memory).
 //
-extern std::string serializeFilename;
+std::string CheckpointFile();
+void SetupCheckpoint(Tick when, Tick period = 0);
 
 #endif // __SERIALIZE_HH__

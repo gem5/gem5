@@ -2763,7 +2763,7 @@ class Formula : public Detail::VectorStat
 void check();
 void dump(std::ostream &stream);
 void reset();
-void regReset(Callback *cb);
+void RegResetCallback(Callback *cb);
 
 inline Detail::Temp
 operator+(Detail::Temp l, Detail::Temp r)
