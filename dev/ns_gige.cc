@@ -363,7 +363,6 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 break;
 
               case RFDR:
-                DPRINTF(Ethernet, "reading from RFDR\n");
                 switch (regs.rfcr & RFCR_RFADDR) {
                   case 0x000:
                     reg = rom.perfectMatch[1];
@@ -437,7 +436,8 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 panic("reading unimplemented register: addr = %#x", daddr);
             }
 
-            DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n", daddr, reg, reg);
+            DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n",
+                    daddr, reg, reg);
         }
         break;
 
@@ -685,7 +685,6 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 
           case RFCR:
             regs.rfcr = reg;
-            DPRINTF(Ethernet, "Writing to RFCR, RFADDR is %#x\n", reg & RFCR_RFADDR);
 
             rxFilterEnable = (reg & RFCR_RFEN) ? true : false;
 
@@ -793,9 +792,6 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 void
 NSGigE::devIntrPost(uint32_t interrupts)
 {
-    DPRINTF(Ethernet, "interrupt posted intr=%#x isr=%#x imr=%#x\n",
-            interrupts, regs.isr, regs.imr);
-
     bool delay = false;
 
     if (interrupts & ISR_RESERVE)
@@ -846,6 +842,9 @@ NSGigE::devIntrPost(uint32_t interrupts)
     if (interrupts & ISR_RXERR)
         regs.isr |= ISR_RXERR;
 
+    if (interrupts & ISR_RXDESC)
+        regs.isr |= ISR_RXDESC;
+
     if (interrupts & ISR_RXOK) {
         delay = true;
         regs.isr |= ISR_RXOK;
@@ -857,14 +856,14 @@ NSGigE::devIntrPost(uint32_t interrupts)
             when += intrDelay;
         cpuIntrPost(when);
     }
+
+    DPRINTF(Ethernet, "interrupt posted intr=%#x isr=%#x imr=%#x\n",
+            interrupts, regs.isr, regs.imr);
 }
 
 void
 NSGigE::devIntrClear(uint32_t interrupts)
 {
-    DPRINTF(Ethernet, "interrupt cleared intr=%x isr=%x imr=%x\n",
-            interrupts, regs.isr, regs.imr);
-
     if (interrupts & ISR_RESERVE)
         panic("Cannot clear a reserved interrupt");
 
@@ -911,11 +910,17 @@ NSGigE::devIntrClear(uint32_t interrupts)
     if (interrupts & ISR_RXERR)
         regs.isr &= ~ISR_RXERR;
 
+    if (interrupts & ISR_RXDESC)
+        regs.isr &= ~ISR_RXDESC;
+
     if (interrupts & ISR_RXOK)
         regs.isr &= ~ISR_RXOK;
 
     if (!(regs.isr & regs.imr))
         cpuIntrClear();
+
+    DPRINTF(Ethernet, "interrupt cleared intr=%x isr=%x imr=%x\n",
+            interrupts, regs.isr, regs.imr);
 }
 
 void
@@ -1200,6 +1205,11 @@ NSGigE::rxKick()
         if (rxDmaState != dmaIdle)
             goto exit;
 
+        DPRINTF(Ethernet,
+                "rxDescCache:\n\tlink=%#x\n\tbufptr=%#x\n\tcmdsts=%#x\n\textsts=%#x\n"
+                ,rxDescCache.link, rxDescCache.bufptr, rxDescCache.cmdsts,
+                rxDescCache.extsts);
+
         if (rxDescCache.cmdsts & CMDSTS_OWN) {
             rxState = rxIdle;
         } else {
@@ -1254,12 +1264,10 @@ NSGigE::rxKick()
             //if (rxPktBytes == 0) {  /* packet is done */
             assert(rxPktBytes == 0);
 
-            rxFifoCnt -= rxPacket->length;
-            rxPacket = 0;
-
             rxDescCache.cmdsts |= CMDSTS_OWN;
             rxDescCache.cmdsts &= ~CMDSTS_MORE;
             rxDescCache.cmdsts |= CMDSTS_OK;
+            rxDescCache.cmdsts &= 0xffff0000;
             rxDescCache.cmdsts += rxPacket->length;   //i.e. set CMDSTS_SIZE
 
 #if 0
@@ -1298,11 +1306,17 @@ NSGigE::rxKick()
                 }
             }
 
+            rxFifoCnt -= rxPacket->length;
+            rxPacket = 0;
+
             /* the driver seems to always receive into desc buffers
                of size 1514, so you never have a pkt that is split
                into multiple descriptors on the receive side, so
                i don't implement that case, hence the assert above.
             */
+
+            DPRINTF(Ethernet, "rxDesc writeback:\n\tcmdsts=%#x\n\textsts=%#x\n",
+                    rxDescCache.cmdsts, rxDescCache.extsts);
 
             rxDmaAddr = (regs.rxdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
             rxDmaData = &(rxDescCache.cmdsts);
@@ -1560,8 +1574,8 @@ NSGigE::txKick()
         if (CTDD) {
             txState = txDescRefr;
 
-            txDmaAddr = txDescCache.link & 0x3fffffff;
-            txDmaData = &txDescCache;
+            txDmaAddr = regs.txdp & 0x3fffffff;
+            txDmaData = &txDescCache + offsetof(ns_desc, link);
             txDmaLen = sizeof(txDescCache.link);
             txDmaFree = dmaDescFree;
 
@@ -1572,7 +1586,7 @@ NSGigE::txKick()
             txState = txDescRead;
 
             txDmaAddr = regs.txdp & 0x3fffffff;
-            txDmaData = &txDescCache + offsetof(ns_desc, link);
+            txDmaData = &txDescCache;
             txDmaLen = sizeof(ns_desc);
             txDmaFree = dmaDescFree;
 
@@ -1591,6 +1605,11 @@ NSGigE::txKick()
       case txDescRead:
         if (txDmaState != dmaIdle)
             goto exit;
+
+        DPRINTF(Ethernet,
+                "txDescCache data:\n\tlink=%#x\n\tbufptr=%#x\n\tcmdsts=%#x\n\textsts=%#x\n"
+                ,txDescCache.link, txDescCache.bufptr, txDescCache.cmdsts,
+                txDescCache.extsts);
 
         if (txDescCache.cmdsts & CMDSTS_OWN) {
             txState = txFifoBlock;
@@ -1656,11 +1675,14 @@ NSGigE::txKick()
                 txDescCache.cmdsts &= ~CMDSTS_OWN;
                 txDescCache.cmdsts |= CMDSTS_OK;
 
-                txDmaAddr = regs.txdp & 0x3fffffff;
-                txDmaData = &txDescCache + offsetof(ns_desc, cmdsts);
+                DPRINTF(Ethernet,
+                        "txDesc writeback:\n\tcmdsts=%#x\n\textsts=%#x\n",
+                        txDescCache.cmdsts, txDescCache.extsts);
+
+                txDmaAddr = (regs.txdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
+                txDmaData = &(txDescCache.cmdsts);
                 txDmaLen = sizeof(txDescCache.cmdsts) + sizeof(txDescCache.extsts);
                 txDmaFree = dmaDescFree;
-
 
                 if (doTxDmaWrite())
                     goto exit;
