@@ -2946,7 +2946,7 @@ class Temp
 void check();
 void dump(std::ostream &stream);
 void reset();
-void RegResetCallback(Callback *cb);
+void registerResetCallback(Callback *cb);
 
 inline Temp
 operator+(Temp l, Temp r)

@@ -1022,7 +1022,7 @@ dump(ostream &stream)
 CallbackQueue resetQueue;
 
 void
-RegResetCallback(Callback *cb)
+registerResetCallback(Callback *cb)
 {
     resetQueue.add(cb);
 }
