@@ -5,7 +5,7 @@
 
 let {{
     global rcs_id
-    rcs_id = "$Id$"
+    rcs_id = "$Id: s.isa_desc 1.43 04/02/29 22:41:10-05:00 ehallnor@zazzer.eecs.umich.edu $"
 }};
 
 
@@ -1854,6 +1854,7 @@ decode OPCODE default Unknown::unknown() {
 	0x23: ldt({{ EA = Rb + disp; }}, {{ Fa = Mem.df; }});
 	0x2a: ldl_l({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }}, LOCKED);
 	0x2b: ldq_l({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, LOCKED);
+	                {{fault = memAccessObj->copySrcTranslate(EA);}},
 	//0x20: copy_load({{EA = Ra;}}, 
 	//                {{memAccessObj->copySrcTranslate(EA);}},
 	//		IsMemRef, IsLoad, IsCopy);
@@ -1876,6 +1877,7 @@ decode OPCODE default Unknown::unknown() {
 	0x0f: stq_u({{ EA = (Rb + disp) & ~7; }}, {{ Mem.uq = Ra.uq; }});
 	0x26: sts({{ EA = Rb + disp; }}, {{ Mem.ul = t_to_s(Fa.uq); }});
 	0x27: stt({{ EA = Rb + disp; }}, {{ Mem.df = Fa; }});
+	                 {{fault =memAccessObj->copy(EA);}},
 	//0x24: copy_store({{EA = Rb;}},
 	//                 {{memAccessObj->copy(EA);}},
 	//		 IsMemRef, IsStore, IsCopy);
