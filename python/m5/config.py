@@ -1140,8 +1140,10 @@ class UInt32(CheckedInt):   cppname = 'uint32_t'; size = 32; unsigned = True
 class Int64(CheckedInt):    cppname =  'int64_t'; size = 64; unsigned = False
 class UInt64(CheckedInt):   cppname = 'uint64_t'; size = 64; unsigned = True
 
-class Counter(CheckedInt): cppname = 'Counter'; size = 64; unsigned = True
-class Tick(CheckedInt):    cppname = 'Tick';    size = 64; unsigned = True
+class Counter(CheckedInt):  cppname = 'Counter';  size = 64; unsigned = True
+class Tick(CheckedInt):     cppname = 'Tick';     size = 64; unsigned = True
+class TcpPort(CheckedInt):  cppname = 'uint16_t'; size = 16; unsigned = True
+class UdpPort(CheckedInt):  cppname = 'uint16_t'; size = 16; unsigned = True
 
 class Percent(CheckedInt): cppname = 'int'; min = 0; max = 100
 

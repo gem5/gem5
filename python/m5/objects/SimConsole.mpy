@@ -1,6 +1,6 @@
 simobj ConsoleListener(SimObject):
     type = 'ConsoleListener'
-    port = Param.UInt16(3456, "listen port")
+    port = Param.TcpPort(3456, "listen port")
 
 simobj SimConsole(SimObject):
     type = 'SimConsole'
