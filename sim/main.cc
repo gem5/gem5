@@ -90,6 +90,18 @@ exitNowHandler(int sigtype)
     async_exit = true;
 }
 
+/// Abort signal handler.
+void
+abortHandler(int sigtype)
+{
+    cerr << "Program aborted at cycle " << curTick << endl;
+
+#if TRACING_ON
+    // dump trace buffer, if there is one
+    Trace::theLog.dump(cerr);
+#endif
+}
+
 /// Simulator executable name
 const char *myProgName = "";
 
@@ -232,6 +244,7 @@ main(int argc, char **argv)
     signal(SIGUSR1, dumpStatsHandler);		// dump intermediate stats
     signal(SIGUSR2, dumprstStatsHandler);	// dump and reset stats
     signal(SIGINT, exitNowHandler);		// dump final stats and exit
+    signal(SIGABRT, abortHandler);
 
     sayHello(cerr);
 

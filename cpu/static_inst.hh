@@ -72,8 +72,7 @@ class StaticInstBase : public RefCounted
     /// unconditional branches, memory barriers) or both (e.g., an
     /// FP/int conversion).
     /// - If IsMemRef is set, then exactly one of IsLoad or IsStore
-    /// will be set.  Prefetches are marked as IsLoad, even if they
-    /// prefetch exclusive copies.
+    /// will be set.
     /// - If IsControl is set, then exactly one of IsDirectControl or
     /// IsIndirect Control will be set, and exactly one of
     /// IsCondControl or IsUncondControl will be set.

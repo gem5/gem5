@@ -157,6 +157,21 @@ class MetaConfigNode(type):
                 print "Error setting '%s' default on class '%s'\n" \
                       % (pname, cls.__name__), exc
 
+    # Set the class's parameter dictionary given a code string of
+    # parameter initializers (as from an object description file).
+    # Note that the caller must pass in the namespace in which to
+    # execute the code (usually the caller's globals()), since if we
+    # call globals() from inside this function all we get is this
+    # module's internal scope.
+    def init_params(cls, init_code, ctx):
+        dict = {}
+        try:
+            exec fixPythonIndentation(init_code) in ctx, dict
+        except Exception, exc:
+            print "Error in %s.init_params:" % cls.__name__, exc
+            raise
+        cls.set_param_dict(dict)
+
     # Lookup a parameter description by name in the given class.  Use
     # the _param_bases list defined in __init__ to go up the
     # inheritance hierarchy if necessary.
@@ -220,14 +235,13 @@ class ConfigNode(object):
                   % (self.__class__.__name__, _name, type(_name))
         self._name = _name
         self._parent = _parent
-        self._children = {}
         if (_parent):
-            _parent.__addChild(self)
-        # Set up absolute path from root.
-        if (_parent and _parent._path != 'Universe'):
-            self._path = _parent._path + '.' + self._name
-        else:
-            self._path = self._name
+            _parent._add_child(self)
+        self._children = {}
+        # keep a list of children in addition to the dictionary keys
+        # so we can remember the order they were added and print them
+        # out in that order.
+        self._child_list = []
 
     # When printing (e.g. to .ini file), just give the name.
     def __str__(self):
@@ -248,7 +262,7 @@ class ConfigNode(object):
     # Set attribute.  All attribute assignments go through here.  Must
     # be private attribute (starts with '_') or valid parameter entry.
     # Basically identical to MetaConfigClass.__setattr__(), except
-    # this handles instances rather than class attributes.
+    # this sets attributes on specific instances rather than on classes.
     def __setattr__(self, attr_name, value):
         if attr_name.startswith('_'):
             object.__setattr__(self, attr_name, value)
@@ -261,11 +275,30 @@ class ConfigNode(object):
                   % (self.__class__.__name__, attr_name)
         # It's ok: set attribute by delegating to 'object' class.
         # Note the use of param.make_value() to verify/canonicalize
-        # the assigned value
-        object.__setattr__(self, attr_name, param.make_value(value))
+        # the assigned value.
+        v = param.make_value(value)
+        object.__setattr__(self, attr_name, v)
+
+        # A little convenient magic: if the parameter is a ConfigNode
+        # (or vector of ConfigNodes, or anything else with a
+        # '_set_parent_if_none' function attribute) that does not have
+        # a parent (and so is not part of the configuration
+        # hierarchy), then make this node its parent.
+        if hasattr(v, '_set_parent_if_none'):
+            v._set_parent_if_none(self)
+
+    def _path(self):
+        # Return absolute path from root.
+        if not self._parent and self._name != 'Universe':
+            print >> sys.stderr, "Warning:", self._name, "has no parent"
+        parent_path = self._parent and self._parent._path()
+        if parent_path and parent_path != 'Universe':
+            return parent_path + '.' + self._name
+        else:
+            return self._name
 
     # Add a child to this node.
-    def __addChild(self, new_child):
+    def _add_child(self, new_child):
         # set child's parent before calling this function
         assert new_child._parent == self
         if not isinstance(new_child, ConfigNode):
@@ -276,6 +309,7 @@ class ConfigNode(object):
                   "Node '%s' already has a child '%s'" \
                   % (self._name, new_child._name)
         self._children[new_child._name] = new_child
+        self._child_list += [new_child]
 
     # operator overload for '+='.  You can say "node += child" to add
     # a child that was created with parent=None.  An early attempt
@@ -285,27 +319,28 @@ class ConfigNode(object):
             raise AttributeError, \
                   "Node '%s' already has a parent" % new_child._name
         new_child._parent = self
-        self.__addChild(new_child)
+        self._add_child(new_child)
         return self
+
+    # Set this instance's parent to 'parent' if it doesn't already
+    # have one.  See ConfigNode.__setattr__().
+    def _set_parent_if_none(self, parent):
+        if self._parent == None:
+            parent += self
 
     # Print instance info to .ini file.
     def _instantiate(self):
-        print '[' + self._path + ']'	# .ini section header
-        if self._children:
-            # instantiate children in sorted order for backward
-            # compatibility (else we can end up with cpu1 before cpu0).
-            child_names = self._children.keys()
-            child_names.sort()
-            print 'children =',
-            for child_name in child_names:
-                print child_name,
-            print
+        print '[' + self._path() + ']'	# .ini section header
+        if self._child_list:
+            # instantiate children in same order they were added for
+            # backward compatibility (else we can end up with cpu1
+            # before cpu0).
+            print 'children =', ' '.join([c._name for c in self._child_list])
         self._instantiateParams()
         print
         # recursively dump out children
-        if self._children:
-            for child_name in child_names:
-                self._children[child_name]._instantiate()
+        for c in self._child_list:
+            c._instantiate()
 
     # ConfigNodes have no parameters.  Overridden by SimObject.
     def _instantiateParams(self):
@@ -373,9 +408,6 @@ class SimObject(ConfigNode):
 def isNullPointer(value):
     return isinstance(value, NullSimObject)
 
-def isSimObjectType(ptype):
-    return issubclass(ptype, SimObject)
-
 # Regular parameter.
 class Param(object):
     # Constructor.  E.g., Param(Int, "number of widgets", 5)
@@ -391,7 +423,7 @@ class Param(object):
         # nothing to do if None or already correct type.  Also allow NULL
         # pointer to be assigned where a SimObject is expected.
         if value == None or isinstance(value, self.ptype) or \
-               isNullPointer(value) and isSimObjectType(self.ptype):
+               isNullPointer(value) and issubclass(self.ptype, ConfigNode):
             return value
         # this type conversion will raise an exception if it's illegal
         return self.ptype(value)
@@ -414,11 +446,20 @@ class Param(object):
 # storing these instead of a raw Python list is that we can override
 # the __str__() method to not print out '[' and ']' in the .ini file.
 class _VectorParamValue(object):
-    def __init__(self, list):
-        self.value = list
+    def __init__(self, value):
+        assert isinstance(value, list) or value == None
+        self.value = value
 
     def __str__(self):
         return ' '.join(map(str, self.value))
+
+    # Set member instance's parents to 'parent' if they don't already
+    # have one.  Extends "magic" parenting of ConfigNodes to vectors
+    # of ConfigNodes as well.  See ConfigNode.__setattr__().
+    def _set_parent_if_none(self, parent):
+        if self.value and hasattr(self.value[0], '_set_parent_if_none'):
+            for v in self.value:
+                v._set_parent_if_none(parent)
 
 # Vector-valued parameter description.  Just like Param, except that
 # the value is a vector (list) of the specified type instead of a
@@ -623,7 +664,7 @@ false = False
 true = True
 
 # Some memory range specifications use this as a default upper bound.
-MAX_ADDR = 2 ** 63
+MAX_ADDR = 2**64 - 1
 
 # For power-of-two sizing, e.g. 64*K gives an integer value 65536.
 K = 1024
@@ -631,109 +672,6 @@ M = K*K
 G = K*M
 
 #####################################################################
-#
-# Object description loading.
-#
-# The final step is to define the classes corresponding to M5 objects
-# and their parameters.  These classes are described in .odesc files
-# in the source tree.  This code walks the tree to find those files
-# and loads up the descriptions (by evaluating them in pieces as
-# Python code).
-#
-#
-# Because SimObject classes inherit from other SimObject classes, and
-# can use arbitrary other SimObject classes as parameter types, we
-# have to do this in three steps:
-#
-# 1. Walk the tree to find all the .odesc files.  Note that the base
-# of the filename *must* match the class name.  This step builds a
-# mapping from class names to file paths.
-#
-# 2. Start generating empty class definitions (via def_class()) using
-# the OBJECT field of the .odesc files to determine inheritance.
-# def_class() recurses on demand to define needed base classes before
-# derived classes.
-#
-# 3. Now that all of the classes are defined, go through the .odesc
-# files one more time loading the parameter descriptions.
-#
-#####################################################################
-
-# dictionary: maps object names to file paths
-odesc_file = {}
-
-# dictionary: maps object names to boolean flag indicating whether
-# class definition was loaded yet.  Since SimObject is defined in
-# m5.config.py, count it as loaded.
-odesc_loaded = { 'SimObject': True }
-
-# Find odesc files in namelist and initialize odesc_file and
-# odesc_loaded dictionaries.  Called via os.path.walk() (see below).
-def find_odescs(process, dirpath, namelist):
-    # Prune out SCCS directories so we don't process s.*.odesc files.
-    i = 0
-    while i < len(namelist):
-        if namelist[i] == "SCCS":
-            del namelist[i]
-        else:
-            i = i + 1
-    # Find .odesc files and record them.
-    for name in namelist:
-        if name.endswith('.odesc'):
-            objname = name[:name.rindex('.odesc')]
-            path = os.path.join(dirpath, name)
-            if odesc_file.has_key(objname):
-                print "Warning: duplicate object names:", \
-                      odesc_file[objname], path
-            odesc_file[objname] = path
-            odesc_loaded[objname] = False
-
-
-# Regular expression string for parsing .odesc files.
-file_re_string = r'''
-^OBJECT: \s* (\w+) \s* \( \s* (\w+) \s* \)
-\s*
-^PARAMS: \s*\n ( (\s+.*\n)* )
-'''
-
-# Compiled regular expression object.
-file_re = re.compile(file_re_string, re.MULTILINE | re.VERBOSE)
-
-# .odesc file parsing function.  Takes a filename and returns tuple of
-# object name, object base, and parameter description section.
-def parse_file(path):
-    f = open(path, 'r').read()
-    m = file_re.search(f)
-    if not m:
-        print "Can't parse", path
-        sys.exit(1)
-    return (m.group(1), m.group(2), m.group(3))
-
-# Define SimObject class based on description in specified filename.
-# Class itself is empty except for _name attribute; parameter
-# descriptions will be loaded later.  Will recurse to define base
-# classes as needed before defining specified class.
-def def_class(path):
-    # load & parse file
-    (obj, parent, params) = parse_file(path)
-    # check to see if base class is defined yet; define it if not
-    if not odesc_loaded.has_key(parent):
-        print "No .odesc file found for", parent
-        sys.exit(1)
-    if not odesc_loaded[parent]:
-        def_class(odesc_file[parent])
-    # define the class.  The _name attribute of the class lets us
-    # track the actual SimObject class name even when we derive new
-    # subclasses in scripts (to provide new parameter value settings).
-    s = "class %s(%s): _name = '%s'" % (obj, parent, obj)
-    try:
-        # execute in global namespace, so new class will be globally
-        # visible
-        exec s in globals()
-    except Exception, exc:
-        print "Object error in %s:" % path, exc
-    # mark this file as loaded
-    odesc_loaded[obj] = True
 
 # Munge an arbitrary Python code string to get it to execute (mostly
 # dealing with indentation).  Stolen from isa_parser.py... see
@@ -744,51 +682,6 @@ def fixPythonIndentation(s):
     if (s != '' and re.match(r'[ \t]', s[0])):
         s = 'if 1:\n' + s
     return s
-
-# Load parameter descriptions from .odesc file.  Object class must
-# already be defined.
-def def_params(path):
-    # load & parse file
-    (obj_name, parent_name, param_code) = parse_file(path)
-    # initialize param dict
-    param_dict = {}
-    # execute parameter descriptions.
-    try:
-        # "in globals(), param_dict" makes exec use the current
-        # globals as the global namespace (so all of the Param
-        # etc. objects are visible) and param_dict as the local
-        # namespace (so the newly defined parameter variables will be
-        # entered into param_dict).
-        exec fixPythonIndentation(param_code) in globals(), param_dict
-    except Exception, exc:
-        print "Param error in %s:" % path, exc
-        return
-    # Convert object name string to Python class object
-    obj = eval(obj_name)
-    # Set the object's parameter description dictionary (see MetaConfigNode).
-    obj.set_param_dict(param_dict)
-
-
-# Walk directory tree to find .odesc files.
-# Someday we'll have to make the root path an argument instead of
-# hard-coding it.  For now the assumption is you're running this in
-# util/config.
-root = '../..'
-os.path.walk(root, find_odescs, None)
-
-# Iterate through file dictionary and define classes.
-for objname, path in odesc_file.iteritems():
-    if not odesc_loaded[objname]:
-        def_class(path)
-
-sim_object_list = odesc_loaded.keys()
-sim_object_list.sort()
-
-# Iterate through files again and load parameters.
-for path in odesc_file.itervalues():
-    def_params(path)
-
-#####################################################################
 
 # Hook to generate C++ parameter code.
 def gen_sim_code(file):
