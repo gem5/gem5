@@ -486,7 +486,7 @@ MySql::configure()
 }
 
 
-void
+bool
 MySql::configure(const StatData &data, string type)
 {
     stat.init();
@@ -500,19 +500,25 @@ MySql::configure(const StatData &data, string type)
     stat.total = data.flags & total;
     stat.pdf = data.flags & pdf;
     stat.cdf = data.flags & cdf;
+
+    return stat.print;
 }
 
 void
 MySql::configure(const ScalarData &data)
 {
-    configure(data, "SCALAR");
+    if (!configure(data, "SCALAR"))
+        return;
+
     insert(data.id, stat.setup());
 }
 
 void
 MySql::configure(const VectorData &data)
 {
-    configure(data, "VECTOR");
+    if (!configure(data, "VECTOR"))
+        return;
+
     uint16_t statid = stat.setup();
 
     if (!data.subnames.empty()) {
@@ -535,7 +541,9 @@ MySql::configure(const VectorData &data)
 void
 MySql::configure(const DistData &data)
 {
-    configure(data, "DIST");
+    if (!configure(data, "DIST"))
+        return;
+
     if (!data.data.fancy) {
         stat.size = data.data.size;
         stat.min = data.data.min;
@@ -548,7 +556,8 @@ MySql::configure(const DistData &data)
 void
 MySql::configure(const VectorDistData &data)
 {
-    configure(data, "VECTORDIST");
+    if (!configure(data, "VECTORDIST"))
+        return;
 
     if (!data.data[0].fancy) {
         stat.size = data.data[0].size;
@@ -578,7 +587,9 @@ MySql::configure(const VectorDistData &data)
 void
 MySql::configure(const Vector2dData &data)
 {
-    configure(data, "VECTOR2D");
+    if (!configure(data, "VECTOR2D"))
+        return;
+
     uint16_t statid = stat.setup();
 
     if (!data.subnames.empty()) {
@@ -619,14 +630,21 @@ MySql::configure(const FormulaData &data)
 }
 
 void
-MySql::output(const string &bin)
+MySql::output(MainBin *bin)
 {
-    // set up new bin in database if there is a bin name
-    newdata.bin = bin.empty() ? 0 : SetupBin(bin);
+    if (bin) {
+        bin->activate();
+        newdata.bin = SetupBin(bin->name());
+    } else {
+        newdata.bin = 0;
+    }
 
     Database::stat_list_t::const_iterator i, end = Database::stats().end();
-    for (i = Database::stats().begin(); i != end; ++i)
-        (*i)->visit(*this);
+    for (i = Database::stats().begin(); i != end; ++i) {
+        StatData *stat = *i;
+        if (bin && stat->binned() || !bin && !stat->binned())
+            stat->visit(*this);
+    }
 }
 
 bool
@@ -647,15 +665,11 @@ MySql::output()
     // store sample #
     newdata.tick = curTick;
 
-    if (bins().empty()) {
-        output(string(""));
-    } else {
+    output(NULL);
+    if (!bins().empty()) {
         bin_list_t::iterator i, end = bins().end();
-        for (i = bins().begin(); i != end; ++i) {
-            MainBin *bin = *i;
-            bin->activate();
-            output(bin->name());
-        }
+        for (i = bins().begin(); i != end; ++i)
+            output(*i);
     }
 
     newdata.flush();
@@ -664,6 +678,9 @@ MySql::output()
 void
 MySql::output(const ScalarData &data)
 {
+    if (!(data.flags & print))
+        return;
+
     newdata.stat = find(data.id);
     newdata.x = 0;
     newdata.y = 0;
@@ -675,6 +692,9 @@ MySql::output(const ScalarData &data)
 void
 MySql::output(const VectorData &data)
 {
+    if (!(data.flags & print))
+        return;
+
     newdata.stat = find(data.id);
     newdata.y = 0;
 
@@ -740,6 +760,9 @@ MySql::output(const DistDataData &data)
 void
 MySql::output(const DistData &data)
 {
+    if (!(data.flags & print))
+        return;
+
     newdata.stat = find(data.id);
     newdata.y = 0;
     output(data.data);
@@ -748,6 +771,9 @@ MySql::output(const DistData &data)
 void
 MySql::output(const VectorDistData &data)
 {
+    if (!(data.flags & print))
+        return;
+
     newdata.stat = find(data.id);
 
     int size = data.data.size();
@@ -760,6 +786,9 @@ MySql::output(const VectorDistData &data)
 void
 MySql::output(const Vector2dData &data)
 {
+    if (!(data.flags & print))
+        return;
+
     newdata.stat = find(data.id);
 
     int index = 0;
