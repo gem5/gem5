@@ -2400,7 +2400,11 @@ decode OPCODE default Unknown::unknown() {
 	format BasicOperate {
 	    0xc000: rpcc({{
 #ifdef FULL_SYSTEM
-		Ra = xc->readIpr(AlphaISA::IPR_CC, fault);
+        /* Rb is a fake dependency so here is a fun way to get
+         * the parser to understand that.
+         */
+		Ra = xc->readIpr(AlphaISA::IPR_CC, fault) + (Rb & 0);
+        
 #else
 		Ra = curTick;
 #endif
@@ -2543,6 +2547,13 @@ decode OPCODE default Unknown::unknown() {
             0x50: m5readfile({{
 		AlphaPseudo::readfile(xc->xcBase());
 	    }}, IsNonSpeculative);
+            0x51: m5break({{
+        AlphaPseudo::debugbreak(xc->xcBase());
+        }}, IsNonSpeculative);
+            0x52: m5switchcpu({{
+        AlphaPseudo::switchcpu(xc->xcBase());
+        }}, IsNonSpeculative);
+
 	}
     }
 

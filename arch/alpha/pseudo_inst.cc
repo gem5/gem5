@@ -35,6 +35,7 @@
 #include "arch/alpha/pseudo_inst.hh"
 #include "arch/alpha/vtophys.hh"
 #include "cpu/base_cpu.hh"
+#include "cpu/sampling_cpu/sampling_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
@@ -42,8 +43,12 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
+#include "sim/debug.hh"
 
 using namespace std;
+
+extern SamplingCPU *SampCPU;
+
 using namespace Stats;
 
 namespace AlphaPseudo
@@ -218,5 +223,16 @@ namespace AlphaPseudo
         doQuiesce = __quiesce;
         doStatisticsInsts = __statistics;
         doCheckpointInsts = __checkpoint;
+    }
+
+    void debugbreak(ExecContext *xc)
+    {
+        debug_break();
+    }
+
+    void switchcpu(ExecContext *xc)
+    {
+        if (SampCPU)
+            SampCPU->switchCPUs();
     }
 }
