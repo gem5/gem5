@@ -223,6 +223,7 @@ MemTest::tick()
         req->paddr = ((base) ? baseAddr1 : baseAddr2) + offset1;
     }
     bool probe = (rand() % 2 == 1) && !req->isUncacheable();
+    probe = false;
 
     req->size = 1 << access_size;
     req->data = new uint8_t[req->size];
