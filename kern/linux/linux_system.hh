@@ -98,6 +98,8 @@ class LinuxSystem : public System
      * Event to bin Interrupts seperately from kernel code
      */
     InterruptEndEvent *intEndEvent;
+    InterruptEndEvent *intEndEvent2;
+    InterruptEndEvent *intEndEvent3;
 
     /** Grab the PCBB of the idle process when it starts */
     IdleStartEvent *idleStartEvent;
