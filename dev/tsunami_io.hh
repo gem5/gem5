@@ -121,8 +121,8 @@ class TsunamiIO : public MmapDevice
 
     void set_time(time_t t);
 
-    virtual Fault read(MemReqPtr req, uint8_t *data);
-    virtual Fault write(MemReqPtr req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     void postPIC(uint8_t bitvector);
     void clearPIC(uint8_t bitvector);

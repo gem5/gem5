@@ -64,8 +64,8 @@ class TsunamiPChip : public MmapDevice
     TsunamiPChip(const std::string &name, Tsunami *t,
                Addr addr, Addr mask, MemoryController *mmu);
 
-    virtual Fault read(MemReqPtr req, uint8_t *data);
-    virtual Fault write(MemReqPtr req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

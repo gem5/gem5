@@ -45,7 +45,7 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t,
 }
 
 Fault
-TsunamiPChip::read(MemReqPtr req, uint8_t *data)
+TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
@@ -135,7 +135,7 @@ TsunamiPChip::read(MemReqPtr req, uint8_t *data)
 }
 
 Fault
-TsunamiPChip::write(MemReqPtr req, const uint8_t *data)
+TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
 {
     DPRINTF(Tsunami, "write - va=%#x size=%d \n",
             req->vaddr, req->size);

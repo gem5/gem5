@@ -54,8 +54,8 @@ class TsunamiCChip : public MmapDevice
     TsunamiCChip(const std::string &name, Tsunami *t,
                Addr addr, Addr mask, MemoryController *mmu);
 
-    virtual Fault read(MemReqPtr req, uint8_t *data);
-    virtual Fault write(MemReqPtr req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     void postDRIR(uint64_t bitvector);
     void clearDRIR(uint64_t bitvector);

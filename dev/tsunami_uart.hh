@@ -52,8 +52,8 @@ class TsunamiUart : public MmapDevice
     TsunamiUart(const std::string &name, SimConsole *c,
                Addr addr, Addr mask, MemoryController *mmu);
 
-    Fault read(MemReqPtr req, uint8_t *data);
-    Fault write(MemReqPtr req, const uint8_t *data);
+    Fault read(MemReqPtr &req, uint8_t *data);
+    Fault write(MemReqPtr &req, const uint8_t *data);
 
 
     virtual void serialize(std::ostream &os);

@@ -121,7 +121,7 @@ TsunamiIO::set_time(time_t t)
 }
 
 Fault
-TsunamiIO::read(MemReqPtr req, uint8_t *data)
+TsunamiIO::read(MemReqPtr &req, uint8_t *data)
 {
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
@@ -192,7 +192,7 @@ TsunamiIO::read(MemReqPtr req, uint8_t *data)
 }
 
 Fault
-TsunamiIO::write(MemReqPtr req, const uint8_t *data)
+TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
 {
     uint8_t dt = *(uint8_t*)data;
     uint64_t dt64 = dt;

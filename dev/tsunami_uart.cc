@@ -39,7 +39,7 @@ TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
 }
 
 Fault
-TsunamiUart::read(MemReqPtr req, uint8_t *data)
+TsunamiUart::read(MemReqPtr &req, uint8_t *data)
 {
     Addr daddr = req->paddr & addr_mask;
     DPRINTF(TsunamiUart, " read register %#x\n", daddr);
@@ -116,7 +116,7 @@ TsunamiUart::read(MemReqPtr req, uint8_t *data)
 }
 
 Fault
-TsunamiUart::write(MemReqPtr req, const uint8_t *data)
+TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr daddr = req->paddr & addr_mask;
 
