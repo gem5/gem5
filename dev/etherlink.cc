@@ -88,15 +88,17 @@ EtherLink::Link::Link(const std::string &name, double rate, EtherDump *d)
 void
 EtherLink::serialize(ostream &os)
 {
+    nameOut(os, name() + ".link1");
     link1->serialize(os);
+    nameOut(os, name() + ".link2");
     link2->serialize(os);
 }
 
 void
 EtherLink::unserialize(Checkpoint *cp, const string &section)
 {
-    link1->unserialize(cp, section);
-    link2->unserialize(cp, section);
+    link1->unserialize(cp, section + ".link1");
+    link2->unserialize(cp, section + ".link2");
 }
 
 void
@@ -139,36 +141,38 @@ EtherLink::Link::transmit(PacketPtr &pkt)
 void
 EtherLink::Link::serialize(ostream &os)
 {
-    bool packetExists = false;
-    if (packet) packetExists = true;
-    SERIALIZE_SCALAR(packetExists);
-    if (packetExists) {
-        nameOut(os, csprintf("%s.linkPacket", name()));
-        packet->serialize(os);
-    }
+    bool packet_exists = packet;
+    SERIALIZE_SCALAR(packet_exists);
 
     bool event_scheduled = event.scheduled();
     SERIALIZE_SCALAR(event_scheduled);
     if (event_scheduled) {
-        SERIALIZE_SCALAR(event.when());
+        Tick event_time = event.when();
+        SERIALIZE_SCALAR(event_time);
+    }
+
+    if (packet_exists) {
+        nameOut(os, csprintf("%s.packet", name()));
+        packet->serialize(os);
     }
 }
 
 void
 EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
 {
-    bool event_scheduled, packetExists;
-    Tick eventTime;
-    UNSERIALIZE_SCALAR(packetExists);
-    if (packetExists) {
+    bool packet_exists;
+    UNSERIALIZE_SCALAR(packet_exists);
+    if (packet_exists) {
         packet = new EtherPacket;
-        packet->unserialize(cp, csprintf("%s.linkPacket", section));
+        packet->unserialize(cp, csprintf("%s.packet", section));
     }
 
+    bool event_scheduled;
     UNSERIALIZE_SCALAR(event_scheduled);
     if (event_scheduled) {
-        UNSERIALIZE_SCALAR(eventTime);
-        event.schedule(eventTime);
+        Tick event_time;
+        UNSERIALIZE_SCALAR(event_time);
+        event.schedule(event_time);
     }
 }
 
