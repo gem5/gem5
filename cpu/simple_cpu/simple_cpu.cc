@@ -192,8 +192,10 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
     memReq = new MemReq();
     memReq->xc = xc;
     memReq->asid = 0;
+    memReq->data = new uint8_t[64];
 
     numInst = 0;
+    numLoad = 0;
     last_idle = 0;
     lastIcacheStall = 0;
     lastDcacheStall = 0;
@@ -406,7 +408,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     if (fault == No_Fault && dcacheInterface) {
         memReq->cmd = Write;
-        memReq->data = (uint8_t *)&data;
+        memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
         memReq->time = curTick;
         memReq->flags &= ~UNCACHEABLE;
