@@ -709,7 +709,7 @@ unixBoot(int go, int argc, char **argv)
   rpb_crb->rpb_num = 1;
   rpb_crb->rpb_mapped_pages = HWRPB_PAGES;
   rpb_crb->rpb_map[0].rpb_virt = 0x10000000;
-  rpb_crb->rpb_map[0].rpb_phys = ((ul)rpb) & ~0x1fff;
+  rpb_crb->rpb_map[0].rpb_phys = KSEG_TO_PHYS(((ul)rpb) & ~0x1fff);
   rpb_crb->rpb_map[0].rpb_pgcount = HWRPB_PAGES;
 
 
