@@ -33,7 +33,7 @@
 #include "targetarch/faults.hh"
 #include "base/misc.hh"
 
-class CPU;
+class FullCPU;
 class IniFile;
 
 #define TARGET_ALPHA

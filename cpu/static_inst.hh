@@ -43,7 +43,7 @@
 class ExecContext;
 class SpecExecContext;
 class SimpleCPU;
-class CPU;
+class FullCPU;
 class DynInst;
 class SymbolTable;
 
@@ -295,9 +295,9 @@ class StaticInst : public StaticInstBase
                           Trace::InstRecord *traceData) = 0;
 
     /**
-     * Execute this instruction under detailed CPU model.
+     * Execute this instruction under detailed FullCPU model.
      */
-    virtual Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+    virtual Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
                           Trace::InstRecord *traceData) = 0;
 
     /**

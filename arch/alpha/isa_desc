@@ -256,7 +256,7 @@ def template BasicDeclare {{
 	    return fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    DynInst *memAccessObj __attribute__((unused)) = dynInst;
@@ -320,7 +320,7 @@ declare {{
 	    return No_Fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    return No_Fault;
@@ -643,7 +643,7 @@ def template FloatingPointDeclare {{
 	    return fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    Fault fault = No_Fault;
@@ -701,7 +701,7 @@ def template FloatingPointDeclare {{
 	    return fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    Fault fault = No_Fault;
@@ -830,7 +830,7 @@ declare {{
 		      Trace::InstRecord *traceData)
 	{ panic("attempt to execute eacomp"); }
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{ panic("attempt to execute eacomp"); }
     };
@@ -852,7 +852,7 @@ declare {{
 		      Trace::InstRecord *traceData)
 	{ panic("attempt to execute memacc"); }
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{ panic("attempt to execute memacc"); }
     };
@@ -952,7 +952,7 @@ def template LoadStoreDeclare {{
 	    return fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    DynInst *memAccessObj = dynInst;
@@ -1019,7 +1019,7 @@ def template PrefetchDeclare {{
 	    return No_Fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    Addr EA;
@@ -1544,7 +1544,7 @@ declare {{
 	    return Unimplemented_Opcode_Fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    // don't panic if this is a misspeculated instruction
@@ -1594,7 +1594,7 @@ declare {{
 	    return No_Fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    if (!xc->spec_mode && !warned) {
@@ -1665,7 +1665,7 @@ declare {{
 	    return Unimplemented_Opcode_Fault;
 	}
 
-	Fault execute(CPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
 		      Trace::InstRecord *traceData)
 	{
 	    // don't panic if this is a misspeculated instruction
