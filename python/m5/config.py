@@ -1285,7 +1285,7 @@ class NullSimObject(object):
         pass
 
     def _convert(cls, value):
-        if value == Nxone:
+        if value == None:
             return
 
         if isinstance(value, cls):
