@@ -170,7 +170,7 @@ EmbedMap %(name)s("%(fname)s",
 /* namespace */ }
 '''
 
-embedded_py_files = ['m5config.py']
+embedded_py_files = ['m5config.py', '../../util/pbs/jobfile.py']
 objpath = os.path.join(env['SRCDIR'], 'objects')
 for root, dirs, files in os.walk(objpath, topdown=True):
     for i,dir in enumerate(dirs):
