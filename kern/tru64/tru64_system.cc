@@ -43,11 +43,11 @@
 
 using namespace std;
 
-Tru64System::Tru64System(const string _name, MemoryController *_memCtrl,
-                         PhysicalMemory *_physmem, const string &kernel_path,
-                         const string &console_path, const string &palcode,
-                         const string &boot_osflags)
-     : System(_name, _memCtrl, _physmem)
+Tru64System::Tru64System(const string _name, const int _init_param,
+                         MemoryController *_memCtrl, PhysicalMemory *_physmem,
+                         const string &kernel_path, const string &console_path,
+                         const string &palcode, const string &boot_osflags)
+     : System(_name, _init_param, _memCtrl, _physmem)
 {
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
@@ -208,6 +208,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
 
     SimObjectParam<MemoryController *> mem_ctl;
     SimObjectParam<PhysicalMemory *> physmem;
+    Param<int> init_param;
 
     Param<string> kernel_code;
     Param<string> console_code;
@@ -220,6 +221,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64System)
 
     INIT_PARAM(mem_ctl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
+    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
     INIT_PARAM(kernel_code, "file that contains the kernel code"),
     INIT_PARAM(console_code, "file that contains the console code"),
     INIT_PARAM(pal_code, "file that contains palcode"),
@@ -230,9 +232,9 @@ END_INIT_SIM_OBJECT_PARAMS(Tru64System)
 
 CREATE_SIM_OBJECT(Tru64System)
 {
-    Tru64System *sys = new Tru64System(getInstanceName(), mem_ctl, physmem,
-                                       kernel_code, console_code, pal_code,
-                                       boot_osflags);
+    Tru64System *sys = new Tru64System(getInstanceName(), init_param, mem_ctl,
+                                       physmem, kernel_code, console_code,
+                                       pal_code, boot_osflags);
 
     return sys;
 }

@@ -2407,6 +2407,7 @@ decode OPCODE default Unknown::unknown() {
 		if (!xc->misspeculating())
 		    m5_exit();
 	    }}, No_OpClass);
+            0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
 	}
     }
 
