@@ -48,8 +48,8 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
                          const string &kernel_path, const string &console_path,
                          const string &palcode, const string &boot_osflags,
                          const bool _bin, const vector<string> &binned_fns)
-    : System(_name, _init_param, _memCtrl, _physmem, _bin), bin(_bin),
-      binned_fns(binned_fns)
+    : System(_name, _init_param, _memCtrl, _physmem, _bin),
+      bin(_bin), binned_fns(binned_fns)
 {
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
@@ -170,8 +170,7 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         fnEvents.resize(end>>1);
 
         for (int i = 0; i < end; i +=2) {
-            cout << "creating Bin for " << binned_fns[i] << endl;
-            Bin = new Statistics::MainBin(name() + " " + binned_fns[i]);
+            Bin = new Statistics::MainBin(binned_fns[i]);
             fnBins.insert(make_pair(binned_fns[i], Bin));
 
             fnEvents[(i>>1)] = new FnEvent(&pcEventQueue, binned_fns[i], this);
@@ -290,7 +289,7 @@ Tru64System::dumpState(ExecContext *xc) const
         stack<fnCall *> copy(xc->swCtx->callStack);
         if (copy.empty())
             return;
-        DPRINTF(TCPIP, "xc->swCtx:\n");
+        DPRINTF(TCPIP, "xc->swCtx, size: %d:\n", copy.size());
         fnCall *top;
         DPRINTF(TCPIP, "||     call : %d\n",xc->swCtx->calls);
         for (top = copy.top(); !copy.empty(); copy.pop() ) {
