@@ -319,3 +319,66 @@ echoTrace(bool on)
         }
     }
 }
+
+extern "C"
+void
+printTraceFlags()
+{
+    using namespace Trace;
+    for (int i = 0; i < numFlagStrings; ++i)
+        if (flags[i])
+            cprintf("%s\n", flagStrings[i]);
+}
+
+void
+tweakTraceFlag(const char *string, bool value)
+{
+    using namespace Trace;
+    std::string str(string);
+
+    for (int i = 0; i < numFlagStrings; ++i) {
+        if (str != flagStrings[i])
+            continue;
+
+        int idx = i;
+
+        if (idx < NumFlags) {
+            flags[idx] = value;
+        } else {
+            idx -= NumFlags;
+            if (idx >= NumCompoundFlags) {
+                ccprintf(cerr, "Invalid compound flag");
+                return;
+            }
+
+            const Flags *flagVec = compoundFlags[idx];
+
+            for (int j = 0; flagVec[j] != -1; ++j) {
+                if (flagVec[j] >= NumFlags) {
+                    ccprintf(cerr, "Invalid compound flag");
+                    return;
+                }
+                flags[flagVec[j]] = value;
+            }
+        }
+
+        cprintf("flag %s was %s\n", string, value ? "set" : "cleared");
+        return;
+    }
+
+    cprintf("could not find flag %s\n", string);
+}
+
+extern "C"
+void
+setTraceFlag(const char *string)
+{
+    tweakTraceFlag(string, true);
+}
+
+extern "C"
+void
+clearTraceFlag(const char *string)
+{
+    tweakTraceFlag(string, false);
+}
