@@ -28,7 +28,6 @@
 
 import os
 import sys
-from os.path import isdir
 
 # This file defines how to build a particular configuration of M5
 # based on variable settings in the 'env' build environment.
@@ -337,15 +336,17 @@ else:
 
 extra_libraries = []
 env.Append(LIBS=['z'])
-if isdir('/usr/lib64/mysql') or isdir('/usr/lib/mysql') or \
-   isdir('/usr/local/lib/mysql'):
-    env.Append(LIBPATH=['/usr/lib64/mysql', '/usr/local/lib/mysql/',
-                        '/usr/lib/mysql'])
-    env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
+if env['USE_MYSQL']:
     sources += mysql_sources
     env.Append(CPPDEFINES = 'USE_MYSQL')
     env.Append(CPPDEFINES = 'STATS_BINNING')
+    env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
+    if os.path.isdir('/usr/lib64'):
+        env.Append(LIBPATH=['/usr/lib64/mysql'])
+    else:
+        env.Append(LIBPATH=['/usr/lib/mysql/'])
     env.Append(LIBS=['mysqlclient'])
+
 
 ###################################################
 #
