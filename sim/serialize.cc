@@ -27,23 +27,24 @@
  */
 
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <fstream>
 #include <list>
 #include <string>
 #include <vector>
 
+#include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
-
+#include "base/trace.hh"
+#include "sim/config_node.hh"
 #include "sim/eventq.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
-#include "base/inifile.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
-#include "base/trace.hh"
-#include "sim/config_node.hh"
 
 using namespace std;
 
@@ -252,8 +253,11 @@ Serializer::serialize()
 
     Serializeable::serializer = this;
 
-    file = CheckpointFile();
-    string cpt_file = file + ".cpt";
+    string dir = CheckpointDir();
+    if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
+            warn("could mkdir %s\n", dir);
+
+    string cpt_file = dir + "m5.cpt";
     output = new ofstream(cpt_file.c_str());
     time_t t = time(NULL);
     *output << "// checkpoint generated: " << ctime(&t);
@@ -279,13 +283,11 @@ Serializer::serialize()
 
     delete output;
     output = NULL;
-    file = "";
 }
 
 class SerializeEvent : public Event
 {
   protected:
-    string file;
     Tick repeat;
 
   public:
@@ -314,15 +316,15 @@ SerializeEvent::process()
         schedule(curTick + repeat);
 }
 
-string __CheckpointFileBase;
+string __CheckpointDirBase;
 
 string
-CheckpointFile()
+CheckpointDir()
 {
-    if (__CheckpointFileBase.empty())
-        return __CheckpointFileBase;
+    if (__CheckpointDirBase.empty())
+        return __CheckpointDirBase;
 
-    return csprintf("%s.%d", __CheckpointFileBase, curTick);
+    return csprintf("%s/m5.%012d/", __CheckpointDirBase, curTick);
 }
 
 void
@@ -344,9 +346,9 @@ class SerializeParamContext : public ParamContext
 
 SerializeParamContext serialParams("serialize");
 
-Param<string> serialize_file(&serialParams,
-                             "file",
-                             "file to write to", "m5");
+Param<string> serialize_dir(&serialParams,
+                             "dir",
+                             "dir to stick checkpoint in", ".");
 
 Param<Counter> serialize_cycle(&serialParams,
                                 "cycle",
@@ -371,7 +373,7 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    __CheckpointFileBase = serialize_file;
+    __CheckpointDirBase = serialize_dir;
     if (serialize_cycle > 0)
         SetupCheckpoint(serialize_cycle, serialize_period);
 }
