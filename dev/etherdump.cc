@@ -126,13 +126,27 @@ END_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
-    INIT_PARAM_DFLT(file, "file to dump packets to", "")
+    INIT_PARAM(file, "file to dump packets to")
 
 END_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
 CREATE_SIM_OBJECT(EtherDump)
 {
-    return new EtherDump(getInstanceName(), file);
+    string filename;
+    if (file.isValid()) {
+        filename = file;
+
+        if (filename[0] != '/' && !outputDirectory.empty())
+            filename = outputDirectory + filename;
+    } else {
+        if (outputDirectory.empty()) {
+            filename = "etherdump";
+        } else {
+            filename = outputDirectory + "etherdump";
+        }
+    }
+
+    return new EtherDump(getInstanceName(), filename);
 }
 
 REGISTER_SIM_OBJECT("EtherDump", EtherDump)

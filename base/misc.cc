@@ -121,6 +121,8 @@ __warn(const string &format, cp::ArgList &args, const char *func,
 #endif
 
     args.dump(cerr, fmt);
+    if (outputStream != &cerr && outputStream != &cout)
+        args.dump(*outputStream, fmt);
 
     delete &args;
 }

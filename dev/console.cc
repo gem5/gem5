@@ -383,8 +383,16 @@ END_INIT_SIM_OBJECT_PARAMS(SimConsole)
 CREATE_SIM_OBJECT(SimConsole)
 {
     string filename = output;
-    if (!filename.empty() && append_name)
-        filename += "." + getInstanceName();
+    if (filename.empty()) {
+        if (!outputDirectory.empty())
+            filename = outputDirectory + getInstanceName();
+    } else {
+        if (append_name)
+            filename += "." + getInstanceName();
+        if (!outputDirectory.empty())
+            filename = outputDirectory + filename;
+    }
+
     SimConsole *console = new SimConsole(getInstanceName(), filename, number);
     ((ConsoleListener *)listener)->add(console);
     ((SimConsole *)console)->initInt(intr_control);
