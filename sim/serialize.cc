@@ -431,7 +431,7 @@ Serializable::create(Checkpoint *cp, const std::string &section)
 
 Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path,
                        const ConfigNode *_configNode)
-    : db(new IniFile), basePath(path), configNode(_configNode)
+    : db(new IniFile), basePath(path), configNode(_configNode), cptDir(cpt_dir)
 {
     string filename = cpt_dir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {

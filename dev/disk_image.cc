@@ -425,7 +425,7 @@ CowDiskImage::write(const uint8_t *data, off_t offset)
 void
 CowDiskImage::serialize(ostream &os)
 {
-    string cowFilename = Checkpoint::dir() + name() + ".cow";
+    string cowFilename = name() + ".cow";
     SERIALIZE_SCALAR(cowFilename);
     save(cowFilename);
 }
@@ -435,6 +435,7 @@ CowDiskImage::unserialize(Checkpoint *cp, const string &section)
 {
     string cowFilename;
     UNSERIALIZE_SCALAR(cowFilename);
+    cowFilename = cp->cptDir + "/" + cowFilename;
     open(cowFilename);
 }
 
