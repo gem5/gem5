@@ -26,13 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <iostream>
 #include <string>
 #include <sstream>
-#include <iostream>
 
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "sim/param.hh"
@@ -132,8 +133,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
 
     functionTracingEnabled = false;
     if (_function_trace) {
-        std::string filename = csprintf("ftrace.%s", name());
-        functionTraceStream = makeOutputStream(filename);
+        functionTraceStream = simout.find(csprintf("ftrace.%s", name()));
         currentFunctionStart = currentFunctionEnd = 0;
         functionEntryTick = _function_trace_start;
 
@@ -157,10 +157,7 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
-    if (functionTracingEnabled)
-        closeOutputStream(functionTraceStream);
 }
-
 
 void
 BaseCPU::init()

@@ -38,6 +38,7 @@
 
 #include "base/inifile.hh"
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "sim/config_node.hh"
@@ -333,7 +334,7 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    checkpointDirBase = outputDirectory + (string)serialize_dir;
+    checkpointDirBase = simout.resolve(serialize_dir);
 
     // guarantee that directory ends with a '/'
     if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')

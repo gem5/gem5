@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2004 The Regents of The University of Michigan
+ * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Simple object for creating a simple pcap style packet trace
- */
+#ifndef __BASE_OUTPUT_HH__
+#define __BASE_OUTPUT_HH__
 
-#ifndef __ETHERDUMP_H__
-#define __ETHERDUMP_H__
+#include <iosfwd>
+#include <map>
+#include <string>
 
-#include <fstream>
-#include "dev/etherpkt.hh"
-#include "sim/sim_object.hh"
-
-/*
- * Simple object for creating a simple pcap style packet trace
- */
-class EtherDump : public SimObject
+class OutputDirectory
 {
   private:
-    std::ofstream stream;
-    const int maxlen;
-    void dumpPacket(PacketPtr &packet);
-    void init();
+    typedef std::map<std::string, std::ostream *> map_t;
 
-    Tick curtime;
-    Tick s_freq;
-    Tick us_freq;
+    map_t files;
+    std::string dir;
 
   public:
-    EtherDump(const std::string &name, const std::string &file, int max);
+    OutputDirectory();
+    ~OutputDirectory();
 
-    inline void dump(PacketPtr &pkt) { dumpPacket(pkt); }
+    void setDirectory(const std::string &dir);
+    const std::string &directory();
+
+    std::string resolve(const std::string &name);
+    std::ostream *create(const std::string &name);
+    std::ostream *find(const std::string &name);
+
+    static bool isFile(const std::ostream *os);
+    static inline bool isFile(const std::ostream &os) { return isFile(&os); }
 };
 
-#endif // __ETHERDUMP_H__
+extern OutputDirectory simout;
+
+#endif // __BASE_OUTPUT_HH__
