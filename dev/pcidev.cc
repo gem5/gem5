@@ -72,6 +72,9 @@ PciDev::PciDev(Params *p)
 void
 PciDev::ReadConfig(int offset, int size, uint8_t *data)
 {
+    if (offset >= PCI_DEVICE_SPECIFIC)
+        panic("Device specific PCI config space not implemented!\n");
+
     switch(size) {
       case sizeof(uint32_t):
         memcpy((uint8_t*)data, config.data + offset, sizeof(uint32_t));
@@ -107,6 +110,9 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
 void
 PciDev::WriteConfig(int offset, int size, uint32_t data)
 {
+    if (offset >= PCI_DEVICE_SPECIFIC)
+        panic("Device specific PCI config space not implemented!\n");
+
     uint32_t barnum;
 
     union {
@@ -181,7 +187,8 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
                 // This is I/O Space, bottom two bits are read only
                 if(htoa(config.data[offset]) & 0x1) {
-                    *(uint32_t *)&config.data[offset] = htoa((word_value & ~0x3) |
+                    *(uint32_t *)&config.data[offset] =
+                        htoa((word_value & ~0x3) |
                         (htoa(config.data[offset]) & 0x3));
 
                     if (word_value & ~0x1) {
@@ -203,7 +210,8 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
                 } else {
                     // This is memory space, bottom four bits are read only
-                    *(uint32_t *)&config.data[offset] = htoa((word_value & ~0xF) |
+                    *(uint32_t *)&config.data[offset] =
+                        htoa((word_value & ~0xF) |
                         (htoa(config.data[offset]) & 0xF));
 
                     if (word_value & ~0x3) {
