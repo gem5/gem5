@@ -134,6 +134,12 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         sbappendBin = new Statistics::MainBin(name() + " sbappend");
         fnBins.insert(make_pair("sbappend", sbappendBin));
 
+        readBin = new Statistics::MainBin(name() + " read");
+        fnBins.insert(make_pair("read", readBin));
+
+        sooReadBin = new Statistics::MainBin(name() + " soo_read");
+        fnBins.insert(make_pair("soo_read", sooReadBin));
+
         orecvBin = new Statistics::MainBin(name() + " orecv");
         fnBins.insert(make_pair("orecv", orecvBin));
 
@@ -145,6 +151,12 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
 
         osendBin = new Statistics::MainBin(name() + " osend");
         fnBins.insert(make_pair("osend", osendBin));
+
+        writeBin = new Statistics::MainBin(name() + " write");
+        fnBins.insert(make_pair("write", writeBin));
+
+        sooWriteBin = new Statistics::MainBin(name() + " soo_write");
+        fnBins.insert(make_pair("soo_write", sooWriteBin));
 
         senditBin = new Statistics::MainBin(name() + " sendit");
         fnBins.insert(make_pair("sendit", senditBin));
@@ -204,10 +216,14 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
           ipReassEvent = new FnEvent(&pcEventQueue, "ip_reass", this);
           tcpInputEvent = new FnEvent(&pcEventQueue, "tcp_input", this);
           sbappendEvent = new FnEvent(&pcEventQueue, "sbappend", this);
+          readEvent = new FnEvent(&pcEventQueue, "read", this);
+          sooReadEvent = new FnEvent(&pcEventQueue, "soo_read", this);
           orecvEvent = new FnEvent(&pcEventQueue, "orecv", this);
           recvitEvent = new FnEvent(&pcEventQueue, "recvit", this);
           soreceiveEvent = new FnEvent(&pcEventQueue, "soreceive", this);
           osendEvent = new FnEvent(&pcEventQueue, "osend", this);
+          writeEvent = new FnEvent(&pcEventQueue, "write", this);
+          sooWriteEvent = new FnEvent(&pcEventQueue, "soo_write", this);
           senditEvent = new FnEvent(&pcEventQueue, "sendit", this);
           sosendEvent = new FnEvent(&pcEventQueue, "sosend", this);
           tcpOutputEvent = new FnEvent(&pcEventQueue, "tcp_output", this);
@@ -339,6 +355,16 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         else
             panic("could not find kernel symbol \'sbappend\'");
 
+        if (kernelSymtab->findAddress("read", addr))
+            readEvent->schedule(addr);
+        else
+            panic("could not find kernel symbol \'read\'");
+
+        if (kernelSymtab->findAddress("soo_read", addr))
+            sooReadEvent->schedule(addr);
+        else
+            panic("could not find kernel symbol \'soo_read\'");
+
         if (kernelSymtab->findAddress("orecv", addr))
             orecvEvent->schedule(addr);
         else
@@ -358,6 +384,16 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
             osendEvent->schedule(addr);
         else
             panic("could not find kernel symbol \'osend\'");
+
+        if (kernelSymtab->findAddress("write", addr))
+            writeEvent->schedule(addr);
+        else
+            panic("could not find kernel symbol \'write\'");
+
+        if (kernelSymtab->findAddress("soo_write", addr))
+            sooWriteEvent->schedule(addr);
+        else
+            panic("could not find kernel symbol \'soo_write\'");
 
         if (kernelSymtab->findAddress("sendit", addr))
             senditEvent->schedule(addr);
@@ -424,9 +460,10 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
 
         populateMap("read", "");
         populateMap("orecv", "");
-        populateMap("recvit", "read");
+        populateMap("soo_read", "read");
         populateMap("recvit", "orecv");
         populateMap("soreceive", "recvit");
+        populateMap("soreceive", "soo_read");
 
         populateMap("write", "");
         populateMap("sendit", "write");
@@ -477,10 +514,14 @@ Tru64System::~Tru64System()
         delete ipReassEvent;
         delete tcpInputEvent;
         delete sbappendEvent;
+        delete readEvent;
+        delete sooReadEvent;
         delete orecvEvent;
         delete recvitEvent;
         delete soreceiveEvent;
         delete osendEvent;
+        delete writeEvent;
+        delete sooWriteEvent;
         delete senditEvent;
         delete sosendEvent;
         delete tcpOutputEvent;
