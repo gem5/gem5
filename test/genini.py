@@ -25,13 +25,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import getopt, os, sys
+import getopt, os, os.path, sys
 
 sys.path.append('..')
 sys.path.append('../configs/kernel')
 sys.path.append('../sim/pyconfig')
 
-from importer import mpy_exec
+from importer import mpy_exec, AddToPath
 from m5config import *
 
 try:
@@ -50,6 +50,7 @@ except getopt.GetoptError:
     sys.exit('Improper Usage')
 
 for arg in args:
+    AddToPath(os.path.dirname(arg))
     mpy_exec(file(arg, 'r'), globals())
 
 if globals().has_key('root') and isinstance(root, type) \
