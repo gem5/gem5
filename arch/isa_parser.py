@@ -279,7 +279,7 @@ def p_specification(t):
  *    RCS %(local_rcs_id)s
  */
 
-#include "bitfield.hh"	// required for bitfield support
+#include "base/bitfield.hh"	// required for bitfield support
 
 
 /////////////////////////////////////
