@@ -191,6 +191,12 @@ int munmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 /// Target gethostname() handler.
 int gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 
+/// Target unlink() handler.
+int unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
+/// Target rename() handler.
+int renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+
 //////////////////////////////////////////////////////////////////////
 //
 // The following emulation functions are generic, but need to be
@@ -223,10 +229,12 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
       case OS::TIOCSETN:
       case OS::TIOCSETC:
       case OS::TIOCGETC:
+      case OS::TIOCGETS:
+      case OS::TIOCGETA:
         return -ENOTTY;
 
       default:
-        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...)\n", fd, req);
+        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ 0x%llx\n", fd, req, xc->readPC());
     }
 }
 
