@@ -232,7 +232,10 @@ class Stat
      */
     virtual bool zero() const = 0;
 
-    //need to document
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const = 0;
 
     /**
@@ -329,7 +332,10 @@ class ScalarStat : public Stat
      */
     virtual void display(std::ostream &stream) const;
 
-    //need to document
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const = 0;
 };
 
@@ -375,7 +381,10 @@ class VectorStat : public Stat
      */
     virtual void display(std::ostream &stream) const;
 
-    //need to document
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const = 0;
 };
 
@@ -635,6 +644,10 @@ class ScalarBase : public ScalarStat
      * @return 1.
      */
     virtual size_t size() const { return 1; }
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return bin_t::binned; }
 
     /**
@@ -765,6 +778,10 @@ class VectorBase : public VectorStat
      * @return The size of the vector.
      */
     virtual size_t size() const { return bin.size(); }
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
@@ -893,6 +910,10 @@ class ScalarProxy : public ScalarStat
      * @return 1.
      */
     virtual size_t size() const { return 1; }
+    /**
+     * Return true if stat is binned.
+     *@return false since Proxies aren't printed/binned
+     */
     virtual bool binned() const { return false; }
     /**
      * This stat has no state.  Nothing to reset
@@ -974,6 +995,10 @@ class Vector2dBase : public Stat
 
     virtual size_t size() const { return bin.size(); }
     virtual bool zero() const { return data(0)->value(params) == 0.0; }
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return bin_t::binned; }
 
     virtual void
@@ -1106,6 +1131,10 @@ class VectorProxy : public VectorStat
         assert (index >= 0 && index < size());
         return ScalarProxy<T, Storage, Bin>(*bin, *params, offset + index);
     }
+    /**
+     * Return true if stat is binned.
+     *@return false since Proxies aren't printed/binned
+     */
     virtual bool binned() const { return false; }
 
     /**
@@ -1522,7 +1551,10 @@ class DistBase : public Stat
         data()->display(stream, myname(), mydesc(), myprecision(), myflags(),
                         params);
     }
-
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
@@ -1570,6 +1602,10 @@ class VectorDistBase : public Stat
     virtual size_t size() const { return bin.size(); }
     virtual bool zero() const { return false; }
     virtual void display(std::ostream &stream) const;
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return bin_t::binned; }
     /**
      * Reset stat value to default
@@ -1634,7 +1670,10 @@ class DistProxy : public Stat
         data()->display(stream, name.str(), desc.str(),
                         cstat->myprecision(), cstat->myflags(), cstat->params);
     }
-
+    /**
+     * Return true if stat is binned.
+     *@return false since Proxies are not binned/printed.
+     */
     virtual bool binned() const { return false; }
     /**
      * Proxy has no state.  Nothing to reset.
@@ -1710,7 +1749,10 @@ class Node : public RefCounted
      * @return The total of the result vector.
      */
     virtual result_t total() const = 0;
-
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const = 0;
 };
 
@@ -1729,7 +1771,10 @@ class ScalarStatNode : public Node
     virtual result_t total() const { return stat.val(); };
 
     virtual size_t size() const { return 1; }
-
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return stat.binned(); }
 };
 
@@ -1747,7 +1792,10 @@ class ScalarProxyNode : public Node
     virtual result_t total() const { return proxy.val(); };
 
     virtual size_t size() const { return 1; }
-
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return proxy.binned(); }
 };
 
@@ -1762,7 +1810,10 @@ class VectorStatNode : public Node
     virtual result_t total() const { return stat.total(); };
 
     virtual size_t size() const { return stat.size(); }
-
+    /**
+     * Return true if stat is binned.
+     *@return True is stat is binned.
+     */
     virtual bool binned() const { return stat.binned(); }
 };
 
@@ -1778,6 +1829,10 @@ class ConstNode : public Node
     virtual result_t total() const { return data[0]; };
 
     virtual size_t size() const { return 1; }
+    /**
+     * Return true if stat is binned.
+     *@return False since constants aren't binned.
+     */
     virtual bool binned() const { return false; }
 };
 
@@ -1797,6 +1852,10 @@ class FunctorNode : public Node
     virtual result_t total() const { return (result_t)functor(); };
 
     virtual size_t size() const { return 1; }
+    /**
+     * Return true if stat is binned.
+     *@return False since Functors aren't binned
+     */
     virtual bool binned() const { return false; }
 };
 
@@ -1816,6 +1875,10 @@ class ScalarNode : public Node
     virtual result_t total() const { return (result_t)scalar; };
 
     virtual size_t size() const { return 1; }
+    /**
+     * Return true if stat is binned.
+     *@return False since Scalar's aren't binned
+     */
     virtual bool binned() const { return false; }
 };
 
@@ -1849,6 +1912,10 @@ class UnaryNode : public Node
     }
 
     virtual size_t size() const { return l->size(); }
+    /**
+     * Return true if child of node is binned.
+     *@return True if child of node is binned.
+     */
     virtual bool binned() const { return l->binned(); }
 };
 
@@ -1910,7 +1977,10 @@ class BinaryNode : public Node
             return ls;
         }
     }
-
+    /**
+     * Return true if any children of node are binned
+     *@return True if either child of node is binned.
+     */
     virtual bool binned() const { return (l->binned() || r->binned()); }
 };
 
@@ -1953,6 +2023,10 @@ class SumNode : public Node
     }
 
     virtual size_t size() const { return 1; }
+    /**
+     * Return true if child of node is binned.
+     *@return True if child of node is binned.
+     */
     virtual bool binned() const { return l->binned(); }
 };
 
@@ -2650,7 +2724,10 @@ class Formula : public Detail::VectorStat
         else
             return root->size();
     }
-
+    /**
+     * Return true if Formula is binned. i.e. any of its children nodes are binned
+     *@return True if Formula is binned.
+     */
     virtual bool binned() const { return root->binned(); }
 
     /**
