@@ -100,8 +100,9 @@ Serializeable::childOut(const string &name, Serializeable *child)
 void
 Serializeable::setName(const string &name)
 {
-    if (objName != "")
-        panic("Cannot change object name");
+    if (objName != "") {
+        cprintf("Renaming object '%s' to '%s'.\n", objName, name);
+    }
 
     objName = name;
 }
@@ -160,7 +161,7 @@ Serializer::serialize(const string &f)
     add_objects();
     while (!objects.empty()) {
         Serializeable *serial = objects.front();
-        DPRINTF(Serialize, "Name Children of %s\n", serial->name());
+        DPRINTF(Serialize, "Naming children of %s\n", serial->name());
         serial->nameChildren();
         objects.pop_front();
         list.push_back(serial);
@@ -174,7 +175,7 @@ Serializer::serialize(const string &f)
     add_objects();
     while (!objects.empty()) {
         Serializeable *serial = objects.front();
-        DPRINTF(Serialize, "Name Children of %s\n", serial->name());
+        DPRINTF(Serialize, "Serializing %s\n", serial->name());
         serial->serialize();
         objects.pop_front();
         list.push_back(serial);
