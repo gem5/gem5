@@ -32,9 +32,7 @@
 #include "fromHudsonOsf.h"
 #include "dc21164FromGasSources.h"
 #include "cserve.h"
-#include "tlaserreg.h"
-//#include "simos.h"
-
+#include "tlaser.h"
 
 #define ldlp ldl_p
 #define ldqp ldq_p

@@ -32,9 +32,7 @@
 #include "fromHudsonOsf.h"
 #include "dc21164FromGasSources.h"
 #include "cserve.h"
-#include "tlaserreg.h"
-//#include "simos.h"
-
+#include "tlaser.h"
 
 #define ldlp ldl_p
 #define ldqp ldq_p
@@ -829,7 +827,7 @@ sys_int_20:
         beq	r14, tlep_ecc			// Branch if not IPL14
         Get_TLSB_Node_Address(r14,r10)
 
-        lda	r10, tlsb_tlilid0_offset(r10)	// Get base TLILID address
+        lda	r10, 0xa00(r10)	                // Get base TLILID0 address
         ldlp	r13, 0(r10)			// Read the TLILID register
 
 #if turbo_pcia_intr_fix == 0
@@ -853,7 +851,7 @@ tlep_intim:
         lda	r13, 0xffb(r31)			// get upper GBUS address bits
         sll	r13, 28, r13			// shift up to top
 
-        lda	r13, (tlep_watch_csrc_offset)(r13)	// full CSRC address
+        lda	r13, (0x300)(r13)  // full CSRC address (tlep watch csrc offset)
         ldqp	r13, 0(r13)			// read CSRC
 
         lda	r13, 0x40(r31)			// load Intim bit
