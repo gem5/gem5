@@ -196,7 +196,7 @@ BaseCPU::post_interrupt(int int_num, int index)
     if (int_num < 0 || int_num >= NumInterruptLevels)
         panic("int_num out of bounds\n");
 
-    if (index < 0 || index >= sizeof(uint8_t) * 8)
+    if (index < 0 || index >= sizeof(uint64_t) * 8)
         panic("int_num out of bounds\n");
 
     AlphaISA::check_interrupts = 1;
@@ -212,7 +212,7 @@ BaseCPU::clear_interrupt(int int_num, int index)
     if (int_num < 0 || int_num >= NumInterruptLevels)
         panic("int_num out of bounds\n");
 
-    if (index < 0 || index >= sizeof(uint8_t) * 8)
+    if (index < 0 || index >= sizeof(uint64_t) * 8)
         panic("int_num out of bounds\n");
 
     interrupts[int_num] &= ~(1 << index);

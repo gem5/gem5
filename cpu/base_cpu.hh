@@ -48,7 +48,7 @@ class BaseCPU : public SimObject
 #ifdef FULL_SYSTEM
   protected:
     Tick frequency;
-    uint8_t interrupts[NumInterruptLevels];
+    uint64_t interrupts[NumInterruptLevels];
     uint64_t intstatus;
 
   public:
