@@ -26,7 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @file  */
+/** @file
+ * Declaration of Statistics objects.
+ */
 
 /**
 * @todo
@@ -39,7 +41,7 @@
 *   -- these both can use the same function that prints out a
 *   specific set of stats
 * VectorStandardDeviation totals
-*
+* Document Namespaces
 */
 #ifndef __STATISTICS_HH__
 #define __STATISTICS_HH__
@@ -60,29 +62,50 @@
 
 #ifndef NAN
 float __nan();
+/** Define Not a number. */
 #define NAN (__nan())
+/** Need to define __nan() */
 #define __M5_NAN
 #endif
 
+/** Print stats out in SS format. */
 #define STAT_DISPLAY_COMPAT
 
+/** The current simulated cycle. */
 extern Tick curTick;
 
+/* A namespace for all of the Statistics */
 namespace Statistics {
+/** All results are doubles. */
 typedef double result_t;
+/** A vector to hold results. */
 typedef std::vector<result_t> rvec_t;
 
+/**
+ * Define the storage for format flags.
+ * @todo Can probably shrink this.
+ */
 typedef u_int32_t FormatFlags;
+/** Nothing extra to print. */
 const FormatFlags none =	0x0000;
+/** Print the total. */
 const FormatFlags total =	0x0001;
+/** Print the percent of the total that this entry represents. */
 const FormatFlags pdf =		0x0002;
+/** Don't print if this is zero. */
 const FormatFlags nozero =	0x0004;
+/** Don't print if this is NAN */
 const FormatFlags nonan =	0x0008;
+/** Print the cumulative percentage of total upto this entry. */
 const FormatFlags cdf =		0x0010;
+/** Print the distribution. */
 const FormatFlags dist = 	0x0020;
+/** Used for SS compatability. */
 const FormatFlags __substat = 	0x8000;
+/** Mask of flags that can't be set directly */
 const FormatFlags __reserved =  __substat;
 
+/* Contains the statistic implementation details */
 namespace Detail {
 //////////////////////////////////////////////////////////////////////
 //
@@ -93,48 +116,173 @@ struct StatData;
 struct SubData;
 
 /**
- *The base class of all Stats.  This does NOT actually hold all the data, but
- *it does provide the means for accessing all the Stats data.
+ * Common base class for all statistics, used to maintain a list and print.
+ * This class holds no data itself but is used to find the associated
+ * StatData in the stat database @sa Statistics::Database.
  */
 class Stat
 {
   protected:
+    /** Mark this statistics as initialized. */
     void setInit();
+    /**
+     * Finds and returns the associated StatData from the database.
+     * @return The formatting and output data of this statistic.
+     */
     StatData *mydata();
+    /**
+     * Finds and returns a const pointer to the associated StatData.
+     * @return The formatting and output data of this statistic.
+     */
     const StatData *mydata() const;
+    /**
+     * Mark this stat for output at the end of simulation.
+     * @return The formatting and output data of this statistic.
+     */
     StatData *print();
+    /**
+     * Finds and returns the SubData at the given index.
+     * @param index The index of the SubData to find.
+     * @return The name and description of the given index.
+     */
     const SubData *mysubdata(int index) const;
+    /**
+     * Create and return a new SubData field for the given index.
+     * @param index The index to create a SubData for.
+     * @return A pointer to the created SubData.
+     */
     SubData *mysubdata_create(int index);
 
   public:
+    /**
+     * Return the name of this stat.
+     * @return the name of the stat.
+     */
     virtual std::string myname() const;
+    /**
+     * Return the name of the sub field at the given index.
+     * @param index the subfield index.
+     * @return the name of the subfield.
+     */
     virtual std::string mysubname(int index) const;
+    /**
+     * Return the description of this stat.
+     * @return the description of this stat.
+     */
     virtual std::string mydesc() const;
+    /**
+     * Return the description of the subfield at the given index.
+     * @param index The subfield index.
+     * @return the description of the subfield.
+     */
     virtual std::string mysubdesc(int index) const;
+    /**
+     * Return the format flags of this stat.
+     * @return the format flags.
+     */
     virtual FormatFlags myflags() const;
+    /**
+     * Return true if this stat's prereqs have been satisfied (they are non
+     * zero).
+     * @return true if the prerequisite stats aren't zero.
+     */
     virtual bool dodisplay() const;
+    /**
+     * Return the display percision.
+     * @return The display precision.
+     */
     virtual int myprecision() const;
 
   public:
+    /**
+     * Create this stat and register it if reg is true.
+     * @param reg Register this stat in the database?
+     */
     Stat(bool reg);
+    /**
+     * Destructor
+     */
     virtual ~Stat() {}
 
+    /**
+     * Print this stat to the given ostream.
+     * @param stream The stream to print to.
+     */
     virtual void display(std::ostream &stream) const = 0;
+    /**
+     * Return the number of entries in this stat.
+     * @return The number of entries.
+     */
     virtual size_t size() const = 0;
+    /**
+     * Return true if the stat has value zero.
+     * @return True if the stat is zero.
+     */
     virtual bool zero() const = 0;
 
+
+    /**
+     * Set the name and marks this stat to print at the end of simulation.
+     * @param name The new name.
+     * @return A reference to this stat.
+     */
     Stat &name(const std::string &name);
+    /**
+     * Set the description and marks this stat to print at the end of
+     * simulation.
+     * @param desc The new description.
+     * @return A reference to this stat.
+     */
     Stat &desc(const std::string &desc);
+    /**
+     * Set the precision and marks this stat to print at the end of simulation.
+     * @param p The new precision
+     * @return A reference to this stat.
+     */
     Stat &precision(int p);
+    /**
+     * Set the flags and marks this stat to print at the end of simulation.
+     * @param f The new flags.
+     * @return A reference to this stat.
+     */
     Stat &flags(FormatFlags f);
+    /**
+     * Set the prerequisite stat and marks this stat to print at the end of
+     * simulation.
+     * @param prereq The prerequisite stat.
+     * @return A reference to this stat.
+     */
     Stat &prereq(const Stat &prereq);
+    /**
+     * Set the subfield name for the given index, and marks this stat to print
+     * at the end of simulation.
+     * @param index The subfield index.
+     * @param name The new name of the subfield.
+     * @return A reference to this stat.
+     */
     Stat &subname(int index, const std::string &name);
-    Stat &subdesc(int index, const std::string &name);
+    /**
+     * Set the subfield description for the given index and marks this stat to
+     * print at the end of simulation.
+     * @param index The subfield index.
+     * @param desc The new description of the subfield
+     * @return A reference to this stat.
+     */
+    Stat &subdesc(int index, const std::string &desc);
 
   public:
+    /**
+     * Checks if the first stat's name is alphabetically less than the second.
+     * This function breaks names up at periods and considers each subname
+     * separately.
+     * @param stat1 The first stat.
+     * @param stat2 The second stat.
+     * @return stat1's name is alphabetically before stat2's
+     */
     static bool less(Stat *stat1, Stat *stat2);
 
 #ifdef STAT_DEBUG
+    /** A unique ID used for debugging. */
     int number;
 #endif
 };
