@@ -116,9 +116,12 @@ class RemoteGDB
         RemoteGDB *gdb;
 
       public:
-        HardBreakpoint(RemoteGDB *_gdb, Addr addr);
-
         int refcount;
+
+      public:
+        HardBreakpoint(RemoteGDB *_gdb, Addr addr);
+        std::string name() { return gdb->name() + ".hwbkpt"; }
+
         virtual void process(ExecContext *xc);
     };
     friend class HardBreakpoint;
@@ -145,6 +148,9 @@ class RemoteGDB
 
     void clearTempBreakpoint(TempBreakpoint &bkpt);
     void setTempBreakpoint(TempBreakpoint &bkpt, Addr addr);
+
+  public:
+    std::string name();
 };
 
 template <class T>
@@ -188,6 +194,7 @@ class GDBListener
 
     void accept();
     void listen();
+    std::string name();
 };
 
 #endif /* __REMOTE_GDB_H__ */
