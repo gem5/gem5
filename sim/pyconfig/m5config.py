@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import generators
-import os, re, sys, types
+import os, re, sys, types, inspect
 noDot = False
 try:
     import pydot
@@ -172,9 +172,6 @@ def isSubClass(value, cls):
     except:
         return False
 
-def isParam(self):
-    return isinstance(self, _Param)
-
 def isConfigNode(value):
     try:
         return issubclass(value, ConfigNode)
@@ -204,8 +201,8 @@ def isParamContext(value):
         return False
 
 
-class_decorator = '_M5M5_SIMOBJECT_'
-expr_decorator = '_M5M5_EXPRESSION_'
+class_decorator = 'M5M5_SIMOBJECT_'
+expr_decorator = 'M5M5_EXPRESSION_'
 dot_decorator = '_M5M5_DOT_'
 
 # The metaclass for ConfigNode (and thus for everything that derives
@@ -215,9 +212,11 @@ dot_decorator = '_M5M5_DOT_'
 # of that class are instantiated, and provides inherited instance
 # behavior).
 class MetaConfigNode(type):
-    keywords = { 'abstract' : types.BooleanType,
-                 'check' : types.FunctionType,
-                 'type' : (types.NoneType, types.StringType) }
+    # Attributes that can be set only at initialization time
+    init_keywords = {}
+    # Attributes that can be set any time
+    keywords = { 'check' : types.FunctionType,
+                 'children' : types.ListType }
 
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
@@ -225,77 +224,78 @@ class MetaConfigNode(type):
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
-        priv = { 'abstract' : False,
-                 # initialize _params and _values dicts to empty
-                 '_params' : {},
-                 '_values' : {},
-                 '_disable' : {} }
-
+        # Copy "private" attributes (including special methods such as __new__)
+        # to the official dict.  Everything else goes in _init_dict to be
+        # filtered in __init__.
+        cls_dict = {}
         for key,val in dict.items():
-            del dict[key]
-
-            # See description of decorators in the importer.py file
-            # We just strip off the expr_decorator now since we don't
-            # need from this point on.
-            if key.startswith(expr_decorator):
-                key = key[len(expr_decorator):]
-
-            if mcls.keywords.has_key(key):
-                if not isinstance(val, mcls.keywords[key]):
-                    raise TypeError, \
-                          'keyword %s has the wrong type %s should be %s' % \
-                          (key, type(val), mcls.keywords[key])
-
-                if isinstance(val, types.FunctionType):
-                    val = classmethod(val)
-                priv[key] = val
-
-            elif key.startswith('_'):
-                priv[key] = val
-
-            elif not isNullPointer(val) and isConfigNode(val):
-                dict[key] = val()
-
-            elif isSimObjSequence(val):
-                dict[key] = [ v() for v in val ]
-
-            else:
-                dict[key] = val
-
-        # If your parent has a value in it that's a config node, clone it.
-        for base in bases:
-            if not isConfigNode(base):
-                continue
-
-            for key,value in base._values.iteritems():
-                if dict.has_key(key):
-                    continue
-
-                if isConfigNode(value):
-                    priv['_values'][key] = value()
-                elif isSimObjSequence(value):
-                    priv['_values'][key] = [ val() for val in value ]
-
-        # entries left in dict will get passed to __init__, where we'll
-        # deal with them as params.
-        return super(MetaConfigNode, mcls).__new__(mcls, name, bases, priv)
+            if key.startswith('_'):
+                cls_dict[key] = val
+                del dict[key]
+        cls_dict['_init_dict'] = dict
+        return super(MetaConfigNode, mcls).__new__(mcls, name, bases, cls_dict)
 
     # initialization
     def __init__(cls, name, bases, dict):
-        super(MetaConfigNode, cls).__init__(cls, name, bases, {})
+        super(MetaConfigNode, cls).__init__(name, bases, dict)
 
+        # initialize required attributes
+        cls._params = {}
+        cls._values = {}
+        cls._enums = {}
+        cls._disable = {}
         cls._bases = [c for c in cls.__mro__ if isConfigNode(c)]
+        cls._anon_subclass_counter = 0
 
-        # initialize attributes with values from class definition
-        for key,value in dict.iteritems():
-            # turn an expression that was munged in the importer
-            # because it had dots into a list so that we can find the
-            # proper variable to modify.
-            key = key.split(dot_decorator)
-            c = cls
-            for item in key[:-1]:
-                c = getattr(c, item)
-            setattr(c, key[-1], value)
+        # If your parent has a value in it that's a config node, clone
+        # it.  Do this now so if we update any of the values'
+        # attributes we are updating the clone and not the original.
+        for base in cls._bases:
+            for key,val in base._values.iteritems():
+
+                # don't clone if (1) we're about to overwrite it with
+                # a local setting or (2) we've already cloned a copy
+                # from an earlier (more derived) base
+                if cls._init_dict.has_key(key) or cls._values.has_key(key):
+                    continue
+
+                if isConfigNode(val):
+                    cls._values[key] = val()
+                elif isSimObjSequence(val):
+                    cls._values[key] = [ v() for v in val ]
+                elif isNullPointer(val):
+                    cls._values[key] = val
+
+        # now process _init_dict items
+        for key,val in cls._init_dict.items():
+            if isinstance(val, _Param):
+                cls._params[key] = val
+
+            # init-time-only keywords
+            elif cls.init_keywords.has_key(key):
+                cls._set_keyword(key, val, cls.init_keywords[key])
+
+            # enums
+            elif isinstance(val, type) and issubclass(val, Enum):
+                cls._enums[key] = val
+
+            # See description of decorators in the importer.py file.
+            # We just strip off the expr_decorator now since we don't
+            # need from this point on.
+            elif key.startswith(expr_decorator):
+                key = key[len(expr_decorator):]
+                # because it had dots into a list so that we can find the
+                # proper variable to modify.
+                key = key.split(dot_decorator)
+                c = cls
+                for item in key[:-1]:
+                    c = getattr(c, item)
+                setattr(c, key[-1], val)
+
+            # default: use normal path (ends up in __setattr__)
+            else:
+                setattr(cls, key, val)
+
 
     def _isvalue(cls, name):
         for c in cls._bases:
@@ -329,9 +329,6 @@ class MetaConfigNode(type):
         else:
             return default
 
-    def _setparam(cls, name, value):
-        cls._params[name] = value
-
     def _hasvalue(cls, name):
         for c in cls._bases:
             if c._values.has_key(name):
@@ -347,7 +344,11 @@ class MetaConfigNode(type):
                     values[p] = v
             for p,v in c._params.iteritems():
                 if not values.has_key(p) and hasattr(v, 'default'):
-                    v.valid(v.default)
+                    try:
+                        v.valid(v.default)
+                    except TypeError:
+                        panic("Invalid default %s for param %s in node %s"
+                              % (v.default,p,cls.__name__))
                     v = v.default
                     cls._setvalue(p, v)
                     values[p] = v
@@ -391,11 +392,19 @@ class MetaConfigNode(type):
         if cls._isvalue(attr):
             return Value(cls, attr)
 
-        if attr == '_cppname' and hasattr(cls, 'type'):
+        if attr == '_cpp_param_decl' and hasattr(cls, 'type'):
             return cls.type + '*'
 
         raise AttributeError, \
               "object '%s' has no attribute '%s'" % (cls.__name__, attr)
+
+    def _set_keyword(cls, keyword, val, kwtype):
+        if not isinstance(val, kwtype):
+            raise TypeError, 'keyword %s has bad type %s (expecting %s)' % \
+                  (keyword, type(val), kwtype)
+        if isinstance(val, types.FunctionType):
+            val = classmethod(val)
+        type.__setattr__(cls, keyword, val)
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -406,11 +415,7 @@ class MetaConfigNode(type):
             return
 
         if cls.keywords.has_key(attr):
-            raise TypeError, \
-                  "keyword '%s' can only be set in a simobj definition" % attr
-
-        if isParam(value):
-            cls._setparam(attr, value)
+            cls._set_keyword(attr, value, cls.keywords[attr])
             return
 
         # must be SimObject param
@@ -424,8 +429,6 @@ class MetaConfigNode(type):
         elif isConfigNode(value) or isSimObjSequence(value):
             cls._setvalue(attr, value)
         else:
-            for p,v in cls._getparams().iteritems():
-                print p,v
             raise AttributeError, \
                   "Class %s has no parameter %s" % (cls.__name__, attr)
 
@@ -530,53 +533,59 @@ class ConfigNode(object):
     # Specify metaclass.  Any class inheriting from ConfigNode will
     # get this metaclass.
     __metaclass__ = MetaConfigNode
-    type = None
 
     def __new__(cls, **kwargs):
-        return MetaConfigNode(cls.__name__, (cls, ), kwargs)
-
-    # Set attribute.  All attribute assignments go through here.  Must
-    # be private attribute (starts with '_') or valid parameter entry.
-    # Basically identical to MetaConfigClass.__setattr__(), except
-    # this sets attributes on specific instances rather than on classes.
-    #def __setattr__(self, attr, value):
-    #    if attr.startswith('_'):
-    #        object.__setattr__(self, attr, value)
-    #        return
-        # not private; look up as param
-    #    param = self.__class__.lookup_param(attr)
-    #    if not param:
-    #        raise AttributeError, \
-    #              "Class %s has no parameter %s" \
-    #              % (self.__class__.__name__, attr)
-        # It's ok: set attribute by delegating to 'object' class.
-        # Note the use of param.make_value() to verify/canonicalize
-        # the assigned value.
-    #    v = param.convert(value)
-    #    object.__setattr__(self, attr, v)
+        name = cls.__name__ + ("_%d" % cls._anon_subclass_counter)
+        cls._anon_subclass_counter += 1
+        return cls.__metaclass__(name, (cls, ), kwargs)
 
 class ParamContext(ConfigNode):
     pass
 
-# SimObject is a minimal extension of ConfigNode, implementing a
-# hierarchy node that corresponds to an M5 SimObject.  It prints out a
-# "type=" line to indicate its SimObject class, prints out the
-# assigned parameters corresponding to its class, and allows
-# parameters to be set by keyword in the constructor.  Note that most
-# of the heavy lifting for the SimObject param handling is done in the
-# MetaConfigNode metaclass.
-class SimObject(ConfigNode):
-    def _sim_code(cls):
+class MetaSimObject(MetaConfigNode):
+    # init_keywords and keywords are inherited from MetaConfigNode,
+    # with overrides/additions
+    init_keywords = MetaConfigNode.init_keywords
+    init_keywords.update({ 'abstract' : types.BooleanType,
+                           'type' : types.StringType })
+
+    keywords = MetaConfigNode.keywords
+    # no additional keywords
+
+    cpp_classes = []
+
+    # initialization
+    def __init__(cls, name, bases, dict):
+        super(MetaSimObject, cls).__init__(name, bases, dict)
+
+        if hasattr(cls, 'type'):
+            if name == 'SimObject':
+                cls._cpp_base = None
+            elif hasattr(cls._bases[1], 'type'):
+                cls._cpp_base = cls._bases[1].type
+            else:
+                panic("SimObject %s derives from a non-C++ SimObject %s "\
+                      "(no 'type')" % (cls, cls_bases[1].__name__))
+
+            # This class corresponds to a C++ class: put it on the global
+            # list of C++ objects to generate param structs, etc.
+            MetaSimObject.cpp_classes.append(cls)
+
+    def _cpp_decl(cls):
         name = cls.__name__
+        code = ""
+        code += "\n".join([e.cpp_declare() for e in cls._enums.values()])
+        code += "\n"
         param_names = cls._params.keys()
         param_names.sort()
-        code = "BEGIN_DECLARE_SIM_OBJECT_PARAMS(%s)\n" % name
-        decls = ["  " + cls._params[pname].sim_decl(pname) \
-                 for pname in param_names]
-        code += "\n".join(decls) + "\n"
-        code += "END_DECLARE_SIM_OBJECT_PARAMS(%s)\n\n" % name
+        code += "struct Params"
+        if cls._cpp_base:
+            code += " : public %s::Params" % cls._cpp_base
+        code += " {\n    "
+        code += "\n    ".join([cls._params[pname].cpp_decl(pname) \
+                               for pname in param_names])
+        code += "\n};\n"
         return code
-    _sim_code = classmethod(_sim_code)
 
 class NodeParam(object):
     def __init__(self, name, param, value):
@@ -823,10 +832,13 @@ class Value(object):
 
 # Regular parameter.
 class _Param(object):
-    def __init__(self, ptype_string, *args, **kwargs):
-        self.ptype_string = ptype_string
-        # can't eval ptype_string here to get ptype, since the type might
-        # not have been defined yet.  Do it lazily in __getattr__.
+    def __init__(self, ptype, *args, **kwargs):
+        if isinstance(ptype, types.StringType):
+            self.ptype_string = ptype
+        elif isinstance(ptype, type):
+            self.ptype = ptype
+        else:
+            raise TypeError, "Param type is not a type (%s)" % ptype
 
         if args:
             if len(args) == 1:
@@ -877,8 +889,8 @@ class _Param(object):
     def set(self, name, instance, value):
         instance.__dict__[name] = value
 
-    def sim_decl(self, name):
-        return '%s %s;' % (self.ptype._cppname, name)
+    def cpp_decl(self, name):
+        return '%s %s;' % (self.ptype._cpp_param_decl, name)
 
 class _ParamProxy(object):
     def __init__(self, type):
@@ -886,7 +898,18 @@ class _ParamProxy(object):
 
     # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        return _Param(self.ptype, *args, **kwargs)
+        # Param type could be defined only in context of caller (e.g.,
+        # for locally defined Enum subclass).  Need to go look up the
+        # type in that enclosing scope.
+        caller_frame = inspect.stack()[1][0]
+        ptype = caller_frame.f_locals.get(self.ptype, None)
+        if not ptype: ptype = caller_frame.f_globals.get(self.ptype, None)
+        if not ptype: ptype = globals().get(self.ptype, None)
+        # ptype could still be None due to circular references... we'll
+        # try one more time to evaluate lazily when ptype is first needed.
+        # In the meantime we'll save the type name as a string.
+        if not ptype: ptype = self.ptype
+        return _Param(ptype, *args, **kwargs)
 
     def __getattr__(self, attr):
         if attr == '__bases__':
@@ -940,8 +963,8 @@ class _VectorParam(_Param):
         else:
             return self.ptype._string(value)
 
-    def sim_decl(self, name):
-        return 'std::vector<%s> %s;' % (self.ptype._cppname, name)
+    def cpp_decl(self, name):
+        return 'std::vector<%s> %s;' % (self.ptype._cpp_param_decl, name)
 
 class _VectorParamProxy(_ParamProxy):
     # E.g., VectorParam.Int(5, "number of widgets")
@@ -991,7 +1014,7 @@ class CheckedInt(type):
     def __new__(cls, cppname, min, max):
         # New class derives from _CheckedInt base with proper bounding
         # parameters
-        dict = { '_cppname' : cppname, '_min' : min, '_max' : max }
+        dict = { '_cpp_param_decl' : cppname, '_min' : min, '_max' : max }
         return type.__new__(cls, cppname, (_CheckedInt, ), dict)
 
 class CheckedIntType(CheckedInt):
@@ -1047,7 +1070,8 @@ def RangeSize(start, size):
 
 class Range(type):
     def __new__(cls, type):
-        dict = { '_cppname' : 'Range<%s>' % type._cppname, '_type' : type }
+        dict = { '_cpp_param_decl' : 'Range<%s>' % type._cpp_param_decl,
+                 '_type' : type }
         clsname = 'Range_' + type.__name__
         return super(cls, Range).__new__(cls, clsname, (_Range, ), dict)
 
@@ -1055,7 +1079,7 @@ AddrRange = Range(Addr)
 
 # Boolean parameter type.
 class Bool(object):
-    _cppname = 'bool'
+    _cpp_param_decl = 'bool'
     def _convert(value):
         t = type(value)
         if t == bool:
@@ -1083,7 +1107,7 @@ class Bool(object):
 
 # String-valued parameter.
 class String(object):
-    _cppname = 'string'
+    _cpp_param_decl = 'string'
 
     # Constructor.  Value must be Python string.
     def _convert(cls,value):
@@ -1123,7 +1147,7 @@ class NextEthernetAddr(object):
         self.addr = IncEthernetAddr(self.addr, inc)
 
 class EthernetAddr(object):
-    _cppname = 'EthAddr'
+    _cpp_param_decl = 'EthAddr'
 
     def _convert(cls, value):
         if value == NextEthernetAddr:
@@ -1155,14 +1179,9 @@ class EthernetAddr(object):
 # only one copy of a particular node
 class NullSimObject(object):
     __metaclass__ = Singleton
-    _cppname = 'NULL'
 
     def __call__(cls):
         return cls
-
-    def _sim_code(cls):
-        pass
-    _sim_code = classmethod(_sim_code)
 
     def _instantiate(self, parent = None, path = ''):
         pass
@@ -1200,12 +1219,48 @@ Null = NULL = NullSimObject()
 # derive the new type from the appropriate base class on the fly.
 
 
-# Base class for Enum types.
-class _Enum(object):
+# Metaclass for Enum types
+class MetaEnum(type):
+
+    def __init__(cls, name, bases, init_dict):
+        if init_dict.has_key('map'):
+            if not isinstance(cls.map, dict):
+                raise TypeError, "Enum-derived class attribute 'map' " \
+                      "must be of type dict"
+            # build list of value strings from map
+            cls.vals = cls.map.keys()
+            cls.vals.sort()
+        elif init_dict.has_key('vals'):
+            if not isinstance(cls.vals, list):
+                raise TypeError, "Enum-derived class attribute 'vals' " \
+                      "must be of type list"
+            # build string->value map from vals sequence
+            cls.map = {}
+            for idx,val in enumerate(cls.vals):
+                cls.map[val] = idx
+        else:
+            raise TypeError, "Enum-derived class must define "\
+                  "attribute 'map' or 'vals'"
+
+        cls._cpp_param_decl = name
+
+        super(MetaEnum, cls).__init__(name, bases, init_dict)
+
+    def cpp_declare(cls):
+        s = 'enum %s {\n    ' % cls.__name__
+        s += ',\n    '.join(['%s = %d' % (v,cls.map[v]) for v in cls.vals])
+        s += '\n};\n'
+        return s
+
+# Base class for enum types.
+class Enum(object):
+    __metaclass__ = MetaEnum
+    vals = []
+
     def _convert(self, value):
         if value not in self.map:
             raise TypeError, "Enum param got bad value '%s' (not in %s)" \
-                  % (value, self.map)
+                  % (value, self.vals)
         return value
     _convert = classmethod(_convert)
 
@@ -1213,36 +1268,6 @@ class _Enum(object):
     def _string(self, value):
         return str(value)
     _string = classmethod(_string)
-
-# Enum metaclass... calling Enum(foo) generates a new type (class)
-# that derives from _ListEnum or _DictEnum as appropriate.
-class Enum(type):
-    # counter to generate unique names for generated classes
-    counter = 1
-
-    def __new__(cls, *args):
-        if len(args) > 1:
-            enum_map = args
-        else:
-            enum_map = args[0]
-
-        if isinstance(enum_map, dict):
-            map = enum_map
-        elif issequence(enum_map):
-            map = {}
-            for idx,val in enumerate(enum_map):
-                map[val] = idx
-        else:
-            raise TypeError, "Enum map must be list or dict (got %s)" % map
-
-        classname = "Enum%04d" % Enum.counter
-        Enum.counter += 1
-
-        # New class derives from _Enum base, and gets a 'map'
-        # attribute containing the specified list or dict.
-        return type.__new__(cls, classname, (_Enum, ), { 'map': map })
-
-
 #
 # "Constants"... handy aliases for various values.
 #
@@ -1277,5 +1302,18 @@ def instantiate(root):
        dot.write("config.dot")
        dot.write_ps("config.ps")
 
+# SimObject is a minimal extension of ConfigNode, implementing a
+# hierarchy node that corresponds to an M5 SimObject.  It prints out a
+# "type=" line to indicate its SimObject class, prints out the
+# assigned parameters corresponding to its class, and allows
+# parameters to be set by keyword in the constructor.  Note that most
+# of the heavy lifting for the SimObject param handling is done in the
+# MetaConfigNode metaclass.
+class SimObject(ConfigNode):
+    __metaclass__ = MetaSimObject
+    type = 'SimObject'
+
 from objects import *
 
+cpp_classes = MetaSimObject.cpp_classes
+cpp_classes.sort()
