@@ -1225,7 +1225,7 @@ declare {{
 	{
 	}
 
-	Addr branchTarget(Addr branchPC)
+	Addr branchTarget(Addr branchPC) const
 	{
 	    return branchPC + 4 + disp;
 	}
@@ -1287,7 +1287,7 @@ declare {{
 	{
 	}
 
-	Addr branchTarget(ExecContext *xc)
+	Addr branchTarget(ExecContext *xc) const
 	{
 	    Addr NPC = xc->readPC() + 4;
 	    uint64_t Rb = xc->readIntReg(_srcRegIdx[0]);
@@ -2330,10 +2330,6 @@ decode OPCODE default Unknown::unknown() {
     // miscellaneous mem-format ops
     0x18: decode MEMFUNC {
 	format WarnUnimpl {
-	    0x0000: trapb();
-	    0x0400: excb();
-	    0x4000: mb();
-	    0x4400: wmb();
 	    0x8000: fetch();
 	    0xa000: fetch_m();
 	    0xe800: ecb();
@@ -2347,6 +2343,27 @@ decode OPCODE default Unknown::unknown() {
 
 	format BasicOperate {
 	    0xc000: rpcc({{ Ra = curTick; }});
+
+	    // All of the barrier instructions below do nothing in
+	    // their execute() methods (hence the empty code blocks).
+	    // All of their functionality is hard-coded in the
+	    // pipeline based on the flags IsSerializing,
+	    // IsMemBarrier, and IsWriteBarrier.  In the current
+	    // detailed CPU model, the execute() function only gets
+	    // called at fetch, so there's no way to generate pipeline
+	    // behavior at any other stage.  Once we go to an
+	    // exec-in-exec CPU model we should be able to get rid of
+	    // these flags and implement this behavior via the
+	    // execute() methods.
+
+	    // trapb is just a barrier on integer traps, where excb is
+	    // a barrier on integer and FP traps.  "EXCB is thus a
+	    // superset of TRAPB." (Alpha ARM, Sec 4.11.4) We treat
+	    // them the same though.
+	    0x0000: trapb({{ }}, IsSerializing, No_OpClass);
+	    0x0400: excb({{ }}, IsSerializing, No_OpClass);
+	    0x4000: mb({{ }}, IsMemBarrier, RdPort);
+	    0x4400: wmb({{ }}, IsWriteBarrier, WrPort);
 	}
 
 #ifdef FULL_SYSTEM
@@ -2356,13 +2373,13 @@ decode OPCODE default Unknown::unknown() {
 		if (!xc->misspeculating()) {
 		    xc->regs.intrflag = 0;
 		}
-	    }}, No_OpClass);
+	    }});
 	    0xf000: rs({{
 		Ra = xc->regs.intrflag;
 		if (!xc->misspeculating()) {
 		    xc->regs.intrflag = 1;
 		}
-	    }}, No_OpClass);
+	    }});
 	}
 #else
 	format FailUnimpl {
@@ -2476,7 +2493,7 @@ decode OPCODE default Unknown::unknown() {
 		if (!xc->misspeculating())
 		    AlphaPseudo::m5exit(xc);
 	    }}, No_OpClass);
-            0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
+            0x30: initparam({{ Ra = cpu->system->init_param; }});
             0x40: resetstats({{
 		if (!xc->misspeculating())
 		    AlphaPseudo::resetstats(xc);

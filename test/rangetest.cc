@@ -31,11 +31,12 @@
 
 #include "base/range.hh"
 
+using namespace std;
 
 int
 main()
 {
-  Range<int> r1(9, 28);
+  Range<int> r1(make_pair(9, 28));
   Range<unsigned> r2("0x1000:+0x100");
 
   cout << r1 << "\n"
@@ -44,61 +45,30 @@ main()
 #define RANGETEST(X, C, Y) \
   cout << X << " "#C" " << Y << " => " << ((X C Y) ? "true" : "false") << "\n"
 
-  int i1 = 10;
-  int i2 = 0x1001;
-  RANGETEST(i1, < , r1);
-  RANGETEST(i1, <=, r1);
-  RANGETEST(i1, > , r1);
-  RANGETEST(i1, >=, r1);
-  RANGETEST(i1, ==, r1);
-  RANGETEST(i1, !=, r1);
-  RANGETEST(r1, < , i1);
-  RANGETEST(r1, <=, i1);
-  RANGETEST(r1, > , i1);
-  RANGETEST(r1, >=, i1);
-  RANGETEST(r1, ==, i1);
-  RANGETEST(r1, !=, i1);
+#define TESTEM(X, Y) do { \
+  RANGETEST(X, < , Y); \
+  RANGETEST(X, <=, Y); \
+  RANGETEST(X, > , Y); \
+  RANGETEST(X, >=, Y); \
+  RANGETEST(X, ==, Y); \
+  RANGETEST(X, !=, Y); \
+  RANGETEST(Y, < , X); \
+  RANGETEST(Y, <=, X); \
+  RANGETEST(Y, > , X); \
+  RANGETEST(Y, >=, X); \
+  RANGETEST(Y, ==, X); \
+  RANGETEST(Y, !=, X); \
+} while (0)
 
-  RANGETEST(i2, < , r1);
-  RANGETEST(i2, <=, r1);
-  RANGETEST(i2, > , r1);
-  RANGETEST(i2, >=, r1);
-  RANGETEST(i2, ==, r1);
-  RANGETEST(i2, !=, r1);
-  RANGETEST(r1, < , i2);
-  RANGETEST(r1, <=, i2);
-  RANGETEST(r1, > , i2);
-  RANGETEST(r1, >=, i2);
-  RANGETEST(r1, ==, i2);
-  RANGETEST(r1, !=, i2);
+  TESTEM(8, r1);
+  TESTEM(9, r1);
+  TESTEM(27, r1);
+  TESTEM(28, r1);
 
-  unsigned u1 = 10;
-  unsigned u2 = 0x1001;
-  RANGETEST(u1, < , r2);
-  RANGETEST(u1, <=, r2);
-  RANGETEST(u1, > , r2);
-  RANGETEST(u1, >=, r2);
-  RANGETEST(u1, ==, r2);
-  RANGETEST(u1, !=, r2);
-  RANGETEST(r2, < , u1);
-  RANGETEST(r2, <=, u1);
-  RANGETEST(r2, > , u1);
-  RANGETEST(r2, >=, u1);
-  RANGETEST(r2, ==, u1);
-  RANGETEST(r2, !=, u1);
-
-  RANGETEST(u2, < , r2);
-  RANGETEST(u2, <=, r2);
-  RANGETEST(u2, > , r2);
-  RANGETEST(u2, >=, r2);
-  RANGETEST(u2, ==, r2);
-  RANGETEST(u2, !=, r2);
-  RANGETEST(r2, < , u2);
-  RANGETEST(r2, <=, u2);
-  RANGETEST(r2, > , u2);
-  RANGETEST(r2, >=, u2);
-  RANGETEST(r2, ==, u2);
-  RANGETEST(r2, !=, u2);
+  TESTEM(0x0fff, r2);
+  TESTEM(0x1000, r2);
+  TESTEM(0x10ff, r2);
+  TESTEM(0x1100, r2);
 
   return 0;
 }

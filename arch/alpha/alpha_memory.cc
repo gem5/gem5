@@ -97,7 +97,8 @@ AlphaTlb::checkCacheability(MemReqPtr &req)
                     break;
 
                   default:
-                    panic("IPR memory space not implemented! PA=%x\n", req->paddr);
+                    panic("IPR memory space not implemented! PA=%x\n",
+                          req->paddr);
                 }
             }
         } else {

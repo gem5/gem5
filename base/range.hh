@@ -29,232 +29,351 @@
 #ifndef __RANGE_HH__
 #define __RANGE_HH__
 
-#include <assert.h>
+#include <cassert>
+#include <string>
 
-#include "base/intmath.hh"
-#include "base/str.hh"
+template <class T>
+bool __parse_range(const std::string &s, T &start, T &end);
 
-template<class T>
-class Range
+template <class T>
+struct Range
 {
   private:
-    bool valid;
+    /**
+     * @param s range string
+     * Ranges are in the following format:
+     *    <range> := {<start_val>}:{<end>}
+     *    <end>   := <end_val> | +<delta>
+     */
+    void
+    parse(const std::string &s)
+    {
+        if (!__parse_range(s, start, end))
+            invalidate();
+    }
 
   public:
     T start;
     T end;
 
   public:
-    Range() {}
-
-    Range(const Range &r) { operator=(r); }
-
-    Range(const T &s, const T &e)
-        : start(s), end(e)
+    Range()
     {
-        valid = (start <= end);
+        invalidate();
     }
 
-    Range(const std::string &s) { valid = parse(s); }
+    Range(T first, T second)
+        : start(first), end(second)
+    {}
 
-    ~Range() {}
+    template <class U>
+    Range(const Range<U> &r)
+        : start(r.start), end(r.end)
+    {}
 
-    int compare(const T &p);
-    bool parse(const std::string &s);
-    const Range &operator=(const Range &r);
+    template <class U>
+    Range(const std::pair<U, U> &r)
+        : start(r.first), end(r.second)
+    {}
 
-    bool isValid() const { return valid; }
-};
+    Range(const std::string &s)
+    {
+        parse(s);
+    }
 
-
-template<class T>
-inline int
-Range<T>::compare(const T &p)
-{
-    assert(isValid());
-
-    if (p < start)
-        return -1;
-    else if (p > end)
-        return 1;
-    else
-        return 0;
-}
-
-// Parse a range string
-//
-// Ranges are in the following format:
-//    <range> := {<start_val>}:{<end>}
-//    <end>   := <end_val> | +<delta>
-template<class T>
-inline bool
-Range<T>::parse(const std::string &str)
-{
-    std::vector<std::string> values;
-    tokenize(values, str, ':');
-
-    T thestart, theend;
-
-    if (values.size() != 2)
-        return false;
-
-    std::string s = values[0];
-    std::string e = values[1];
-
-    if (!to_number(s, thestart))
-        return false;
-
-    bool increment = (e[0] == '+');
-    if (increment)
-        e = e.substr(1);
-
-    if (!to_number(e, theend))
-        return false;
-
-    if (increment)
-        theend += thestart;
-
-    start = thestart;
-    end = theend;
-
-    if (start > end)
-        return false;
-
-    return true;
-}
-
-
-template<class T>
-inline const Range<T> &
-Range<T>::operator=(const Range<T> &r)
-{
-    if (this != &r) {
+    template <class U>
+    const Range<T> &operator=(const Range<U> &r)
+    {
         start = r.start;
         end = r.end;
-
-        valid = r.valid;
-    }
-    else {
-        valid = false;
+        return *this;
     }
 
-    return *this;
+    template <class U>
+    const Range<T> &operator=(const std::pair<U, U> &r)
+    {
+        start = r.first;
+        end = r.second;
+        return *this;
+    }
+
+    const Range &operator=(const std::string &s)
+    {
+        parse(s);
+        return *this;
+    }
+
+    void invalidate() { start = 0; end = 0; }
+    T size() const { return end - start; }
+    bool valid() const { return start < end; }
+};
+
+template <class T>
+inline Range<T>
+make_range(T start, T end)
+{
+    return Range<T>(start, end);
 }
 
-template<class T>
+template <class T>
 inline std::ostream &
 operator<<(std::ostream &o, const Range<T> &r)
 {
     // don't currently support output of invalid ranges
-    assert(r.isValid());
+    assert(r.valid());
     o << r.start << ":" << r.end;
     return o;
 }
 
-//////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 //
-// Compare two ranges
+// Range to Range Comparisons
 //
-template<class T>
+
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 and range2 are identical.
+ */
+template <class T, class U>
 inline bool
-operator==(const Range<T> &l, const Range<T> &r)
+operator==(const Range<T> &range1, const Range<U> &range2)
 {
-    // ranges must both be valid to be equal
-    return (l.isValid() && r.isValid() &&
-            (l.start == r.start) && (l.end == r.end));
+    assert(range1.valid() && range2.valid());
+    return range1.start == range2.start && range1.end == range2.end;
 }
 
-template<class T>
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 and range2 are not identical.
+ */
+template <class T, class U>
 inline bool
-operator!=(const Range<T> &l, const Range<T> &r)
+operator!=(const Range<T> &range1, const Range<U> &range2)
 {
-    // for symmetry with ==, an invalid range is not equal to any other
-    return (!l.isValid() || !r.isValid() ||
-            (l.start != r.start) || (l.end != r.end));
+    assert(range1.valid() && range2.valid());
+    return range1.start != range2.start || range1.end != range2.end;
 }
 
-//////////////////////////////////////////
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 is less than range2 and does not overlap range1.
+ */
+template <class T, class U>
+inline bool
+operator<(const Range<T> &range1, const Range<U> &range2)
+{
+    assert(range1.valid() && range2.valid());
+    return range1.end <= range2.start;
+}
+
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 is less than range2.  range1 may overlap range2,
+ * but not extend beyond the end of range2.
+ */
+template <class T, class U>
+inline bool
+operator<=(const Range<T> &range1, const Range<U> &range2)
+{
+    assert(range1.valid() && range2.valid());
+    return range1.start <= range2.start && range1.end <= range2.end;
+}
+
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 is greater than range2 and does not overlap range2.
+ */
+template <class T, class U>
+inline bool
+operator>(const Range<T> &range1, const Range<U> &range2)
+{
+    assert(range1.valid() && range2.valid());
+    return range1.start >= range2.end;
+}
+
+/**
+ * @param range1 is a range.
+ * @param range2 is a range.
+ * @return if range1 is greater than range2.  range1 may overlap range2,
+ * but not extend beyond the beginning of range2.
+ */
+template <class T, class U>
+inline bool
+operator>=(const Range<T> &range1, const Range<U> &range2)
+{
+    assert(range1.valid() && range2.valid());
+    return range1.start >= range2.start && range1.end >= range2.end;
+}
+
+////////////////////////////////////////////////////////////////////////
 //
-// Compare position to a range
-//
-// - 'pos == range' indicates that position pos is within the given range.
-//   This test always returns false if the range is invalid.
-//
-// - 'pos < range' and 'pos > range' indicate that the position is
-//   before the start of or after the end of the range, respectively.
-//   The range must be valid for these comparisons to be made.
-//
-// All other comparisons do the obvious thing based on these definitions.
-//
+// Position to Range Comparisons
 //
 
+/**
+ * @param pos position compared to the range.
+ * @param range range compared against.
+ * @return indicates that position pos is within the range.
+ */
+template <class T, class U>
+inline bool
+operator==(const T &pos, const Range<U> &range)
+{
+    assert(range.valid());
+    return pos >= range.start && pos < range.end;
+}
+
+/**
+ * @param pos position compared to the range.
+ * @param range range compared against.
+ * @return indicates that position pos is not within the range.
+ */
+template <class T, class U>
+inline bool
+operator!=(const T &pos, const Range<U> &range)
+{
+    assert(range.valid());
+    return pos < range.start || pos >= range.end;
+}
+
+/**
+ * @param pos position compared to the range.
+ * @param range range compared against.
+ * @return indicates that position pos is below the range.
+ */
+template <class T, class U>
+inline bool
+operator<(const T &pos, const Range<U> &range)
+{
+    assert(range.valid());
+    return pos < range.start;
+}
+
+/**
+ * @param pos position compared to the range.
+ * @param range range compared against.
+ * @return indicates that position pos is below or in the range.
+ */
+template <class T, class U>
+inline bool
+operator<=(const T &pos, const Range<U> &range)
+{
+    assert(range.valid());
+    return pos < range.end;
+}
+
+/**
+ * @param pos position compared to the range.
+ * @param range range compared against.
+ * @return indicates that position pos is above the range.
+ */
+template <class T, class U>
+inline bool
+operator>(const T &pos, const Range<U> &range)
+{
+    assert(range.valid());
+    return pos >= range.end;
+}
+
+/**
+ * @param pos position compared to the range.
+ * @param range range compared against.
+ * @return indicates that position pos is above or in the range.
+ */
+template <class T, class U>
+inline bool
+operator>=(const T &pos, const Range<U> &range)
+{
+    assert(range.valid());
+    return pos >= range.start;
+}
+
+////////////////////////////////////////////////////////////////////////
 //
-// Basic comparisons
+// Range to Position Comparisons (for symmetry)
 //
-template<class T>
-inline bool
-operator==(const T &pos, const Range<T> &range)
-{  return range.isValid() && pos >= range.start && pos <= range.end; }
 
-template<class T>
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * @return indicates that position pos is within the range.
+ */
+template <class T, class U>
 inline bool
-operator<(const T &pos, const Range<T> &range)
-{  assert(range.isValid()); return pos < range.start; }
+operator==(const Range<T> &range, const U &pos)
+{
+    assert(range.valid());
+    return pos >= range.start && pos < range.end;
+}
 
-template<class T>
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * @return indicates that position pos is not within the range.
+ */
+template <class T, class U>
 inline bool
-operator>(const T &pos, const Range<T> &range)
-{  assert(range.isValid()); return pos > range.end; }
+operator!=(const Range<T> &range, const U &pos)
+{
+    assert(range.valid());
+    return pos < range.start || pos >= range.end;
+}
 
-//
-// Derived comparisons
-//
-template<class T>
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * @return indicates that position pos is above the range.
+ */
+template <class T, class U>
 inline bool
-operator<=(const T &pos, const Range<T> &range)
-{  assert(range.isValid()); return pos <= range.end; }
+operator<(const Range<T> &range, const U &pos)
+{
+    assert(range.valid());
+    return range.end <= pos;
+}
 
-template<class T>
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * @return indicates that position pos is above or in the range.
+ */
+template <class T, class U>
 inline bool
-operator>=(const T &pos, const Range<T> &range)
-{  assert(range.isValid()); return pos >= range.start; }
+operator<=(const Range<T> &range, const U &pos)
+{
+    assert(range.valid());
+    return range.start <= pos;
+}
 
-template<class T>
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * 'range > pos' indicates that position pos is below the range.
+ */
+template <class T, class U>
 inline bool
-operator!=(const T &pos, const Range<T> &range)
-{  return !(pos == range); }
+operator>(const Range<T> &range, const U &pos)
+{
+    assert(range.valid());
+    return range.start > pos;
+}
 
-//
-// Define symmetric comparisons based on above
-//
-template<class T>
+/**
+ * @param range range compared against.
+ * @param pos position compared to the range.
+ * 'range >= pos' indicates that position pos is below or in the range.
+ */
+template <class T, class U>
 inline bool
-operator>(const Range<T> &range, const T &pos)
-{  return pos < range; }
-
-template<class T>
-inline bool
-operator<(const Range<T> &range, const T &pos)
-{  return pos > range; }
-
-template<class T>
-inline bool
-operator<=(const Range<T> &range, const T &pos)
-{  return pos >= range; }
-
-template<class T>
-inline bool
-operator>=(const Range<T> &range, const T &pos)
-{  return pos <= range; }
-
-template<class T>
-inline bool
-operator==(const Range<T> &range, const T &pos)
-{  return (pos == range); }
-
-template<class T>
-inline bool
-operator!=(const Range<T> &range, const T &pos)
-{  return (pos != range); }
+operator>=(const Range<T> &range, const U &pos)
+{
+    assert(range.valid());
+    return range.end > pos;
+}
 
 #endif // __RANGE_HH__
