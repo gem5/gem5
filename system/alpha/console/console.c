@@ -1007,6 +1007,8 @@ DeviceOperation(long op, long channel, long count, long address, long block)
 #define CONSCB_SET_TERM_INT 0x4
 #define CONSCB_SET_TERM_CTL 0x5
 #define CONSCB_PROCESS_KEY 0x6
+#define CONSCB_OPEN_CONSOLE 0x7
+#define CONSCB_CLOSE_CONSOLE 0x8
 
 #define CONSCB_OPEN 0x10
 #define CONSCB_CLOSE 0x11
@@ -1132,7 +1134,7 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
 
    case CONSCB_PUTS:
       for(i = 0; i < a3; i++)
-         PutChar(*(char *)a2+i);
+         PutChar(*((char *)a2+i));
       return a3;
 
    case CONSCB_GETENV:
@@ -1164,6 +1166,14 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
 
    case CONSCB_CLOSE:
       break;
+   case CONSCB_OPEN_CONSOLE:
+      printf("CONSOLE OPEN\n");
+      return 0; /* success */
+      break; /* not rearched */
+   case CONSCB_CLOSE_CONSOLE:
+      printf("CONSOLE CLOSE\n");
+      return 0; /* success */
+      break; /* not reached */
 
    default:
       panic("cher (%x,%x,%x,%x)\n", a0, a1, a2, a3);
