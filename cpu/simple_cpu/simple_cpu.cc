@@ -50,7 +50,6 @@
 #include "cpu/static_inst.hh"
 #include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
-#include "sim/annotation.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
@@ -579,7 +578,6 @@ SimpleCPU::post_interrupt(int int_num, int index)
     if (xc->status() == ExecContext::Suspended) {
                 DPRINTF(IPI,"Suspended Processor awoke\n");
         xc->activate();
-        Annotate::Resume(xc);
     }
 }
 #endif // FULL_SYSTEM

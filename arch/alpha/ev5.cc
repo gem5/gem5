@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #include "targetarch/alpha_memory.hh"
-#include "sim/annotation.hh"
 #ifdef DEBUG
 #include "sim/debug.hh"
 #endif
@@ -126,8 +125,6 @@ ExecContext::ev5_trap(Fault fault)
 
     regs.pc = ipr[AlphaISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
     regs.npc = regs.pc + sizeof(MachInst);
-
-    Annotate::Ev5Trap(this, fault);
 }
 
 
@@ -359,7 +356,6 @@ ExecContext::setIpr(int idx, uint64_t val)
         old = ipr[idx];
         ipr[idx] = val;
         kernelStats.context(old, val);
-        Annotate::Context(this);
         break;
 
       case AlphaISA::IPR_DTB_PTE:
@@ -387,11 +383,9 @@ ExecContext::setIpr(int idx, uint64_t val)
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
         kernelStats.swpipl(ipr[idx]);
-        Annotate::IPL(this, val & 0x1f);
         break;
 
       case AlphaISA::IPR_DTB_CM:
-        Annotate::ChangeMode(this, (val & 0x18) != 0);
         kernelStats.mode((val & 0x18) != 0);
 
       case AlphaISA::IPR_ICM:

@@ -30,7 +30,6 @@
 
 #include "arch/alpha/pseudo_inst.hh"
 #include "cpu/exec_context.hh"
-#include "sim/annotation.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -47,14 +46,30 @@ namespace AlphaPseudo
     bool doQuiesce;
 
     void
+    arm(ExecContext *xc)
+    {
+        xc->kernelStats.arm();
+    }
+
+    void
     quiesce(ExecContext *xc)
     {
         if (!doQuiesce)
             return;
 
-        Annotate::QUIESCE(xc);
         xc->suspend();
         xc->kernelStats.quiesce();
+    }
+
+    void
+    ivlb(ExecContext *xc)
+    {
+        xc->kernelStats.ivlb();
+    }
+
+    void
+    ivle(ExecContext *xc)
+    {
     }
 
     void

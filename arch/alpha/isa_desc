@@ -25,7 +25,6 @@ let {{
 #include "cpu/full_cpu/dyn_inst.hh"
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/static_inst.hh"
-#include "sim/annotation.hh"
 #include "sim/sim_exit.hh"
 
 #ifdef FULL_SYSTEM
@@ -2297,8 +2296,6 @@ decode OPCODE default Unknown::unknown() {
 		// on this PAL call (including maybe suppress it)
 		dopal = xc->simPalCheck(palFunc);
 
-		Annotate::Callpal(xc->xcBase(), palFunc);
-
 		if (dopal) {
 		    AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
 		    xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
@@ -2357,24 +2354,20 @@ decode OPCODE default Unknown::unknown() {
 	// M5 special opcodes use the reserved 0x01 opcode space
 	0x01: decode M5FUNC {
 	    0x00: arm({{
-		if (!xc->misspeculating()) {
-		    Annotate::ARM(xc->xcBase());
-		    xc->xcBase()->kernelStats.arm();
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::arm(xc->xcBase());
 	    }});
 	    0x01: quiesce({{
 		if (!xc->misspeculating())
 		    AlphaPseudo::quiesce(xc->xcBase());
 	    }});
 	    0x10: ivlb({{
-		if (!xc->misspeculating()) {
-		    Annotate::BeginInterval(xc->xcBase());
-		    xc->xcBase()->kernelStats.ivlb();
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::ivlb(xc->xcBase());
 	    }}, No_OpClass);
 	    0x11: ivle({{
 		if (!xc->misspeculating())
-		    Annotate::EndInterval(xc->xcBase());
+		    AlphaPseudo::ivle(xc->xcBase());
 	    }}, No_OpClass);
 	    0x20: m5exit_old({{
 		if (!xc->misspeculating())

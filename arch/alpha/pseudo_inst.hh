@@ -37,7 +37,10 @@ namespace AlphaPseudo
     extern bool doCheckpointInsts;
     extern bool doQuiesce;
 
+    void arm(ExecContext *xc);
     void quiesce(ExecContext *xc);
+    void ivlb(ExecContext *xc);
+    void ivle(ExecContext *xc);
     void m5exit(ExecContext *xc);
     void m5exit_old(ExecContext *xc);
     void resetstats(ExecContext *xc);
