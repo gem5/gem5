@@ -1309,7 +1309,7 @@ struct DistStor
 
 void FancyDisplay(std::ostream &stream, const std::string &name,
                   const std::string &desc, int precision, FormatFlags flags,
-                  result_t mean, result_t variance);
+                  result_t mean, result_t variance, result_t total);
 
 /**
  * Templatized storage and interface for a distribution that calculates mean
@@ -1369,16 +1369,16 @@ struct FancyStor
         result_t mean = NAN;
         result_t variance = NAN;
 
+                result_t ftot = total;
         if (total != 0) {
             result_t fsum = sum;
             result_t fsq = squares;
-            result_t ftot = total;
 
             mean = fsum / ftot;
             variance = (ftot * fsq - (fsum * fsum)) / (ftot * (ftot - 1.0));
         }
 
-        FancyDisplay(stream, name, desc, precision, flags, mean, variance);
+        FancyDisplay(stream, name, desc, precision, flags, mean, variance, ftot);
     }
 
     /**

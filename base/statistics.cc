@@ -886,14 +886,18 @@ DistDisplay(ostream &stream, const string &name, const string &desc,
 }
 #endif
 
+/**
+ * @todo  get rid of the ugly hack **Ignore for total
+ */
 void
 FancyDisplay(ostream &stream, const string &name, const string &desc,
              int precision, FormatFlags flags, result_t mean,
-             result_t variance)
+             result_t variance, result_t total)
 {
     result_t stdev = isnan(variance) ? NAN : sqrt(variance);
     PrintOne(stream, mean, name + NAMESEP + "mean", desc, precision, flags);
     PrintOne(stream, stdev, name + NAMESEP + "stdev", desc, precision, flags);
+    PrintOne(stream, total, "**Ignore: " + name + NAMESEP + "TOT", desc, precision, flags);
 }
 
 BinBase::BinBase()
