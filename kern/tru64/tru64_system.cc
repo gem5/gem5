@@ -42,18 +42,22 @@
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
+extern SymbolTable *debugSymbolTable;
+
 using namespace std;
 
 Tru64System::Tru64System(const string _name, const uint64_t _init_param,
                          MemoryController *_memCtrl, PhysicalMemory *_physmem,
                          const string &kernel_path, const string &console_path,
                          const string &palcode, const string &boot_osflags,
-                         const bool _bin, const vector<string> &_binned_fns)
+                         const bool _bin, const vector<string> &_binned_fns,
+                         const uint64_t system_type, const uint64_t system_rev)
     : System(_name, _init_param, _memCtrl, _physmem, _bin,_binned_fns),
       bin(_bin), binned_fns(_binned_fns)
 {
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
+    debugSymbolTable = kernelSymtab;
 
     ObjectFile *kernel = createObjectFile(kernel_path);
     if (kernel == NULL)
@@ -130,8 +134,8 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         char *hwprb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (hwprb) {
-            *(uint64_t*)(hwprb+0x50) = 12;      // Tlaser
-            *(uint64_t*)(hwprb+0x58) = (2<<1);
+            *(uint64_t*)(hwprb+0x50) = system_type;
+            *(uint64_t*)(hwprb+0x58) = system_rev;
         }
         else
             panic("could not translate hwprb addr to set system type/variation\n");
@@ -260,6 +264,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
     Param<string> pal_code;
     Param<string> boot_osflags;
     VectorParam<string> binned_fns;
+    Param<uint64_t> system_type;
+    Param<uint64_t> system_rev;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
 
@@ -274,7 +280,10 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64System)
     INIT_PARAM(pal_code, "file that contains palcode"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                     "a"),
-    INIT_PARAM(binned_fns, "functions to be broken down and binned")
+    INIT_PARAM(binned_fns, "functions to be broken down and binned"),
+    INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 12),
+    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 2<<1)
+
 
 END_INIT_SIM_OBJECT_PARAMS(Tru64System)
 
@@ -283,7 +292,7 @@ CREATE_SIM_OBJECT(Tru64System)
     Tru64System *sys = new Tru64System(getInstanceName(), init_param, mem_ctl,
                                        physmem, kernel_code, console_code,
                                        pal_code, boot_osflags, bin,
-                                       binned_fns);
+                                       binned_fns, system_type, system_rev);
 
     return sys;
 }

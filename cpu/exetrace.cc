@@ -67,7 +67,7 @@ Trace::InstRecord::dump(ostream &outs)
 
 
     std::string str;
-    if (debugSymbolTable->findNearestSymbol(PC, str))
+    if ((debugSymbolTable) && (debugSymbolTable->findNearestSymbol(PC, str)))
         outs << "@" << setw(17) << str << " : ";
     else
         outs << "0x" << hex << PC << " : ";
