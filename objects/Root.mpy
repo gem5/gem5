@@ -7,5 +7,5 @@ simobj Root(SimObject):
     config_output_file = Param.String('m5config.out',
                                       "file to dump simulator config to")
     full_system = Param.Bool("Full system simulation?")
-    hier = HierParams(do_data = false, do_events = true)
+    hier = HierParams(do_data = False, do_events = True)
     checkpoint = Param.String('', "Checkpoint file")

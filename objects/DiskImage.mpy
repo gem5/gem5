@@ -2,7 +2,7 @@ simobj DiskImage(SimObject):
     type = 'DiskImage'
     abstract = True
     image_file = Param.String("disk image file")
-    read_only = Param.Bool(false, "read only image")
+    read_only = Param.Bool(False, "read only image")
 
 simobj RawDiskImage(DiskImage):
     type = 'RawDiskImage'

@@ -16,7 +16,7 @@ simobj EtherLink(SimObject):
 
 simobj EtherBus(SimObject):
     type = 'EtherBus'
-    loopback = Param.Bool(true,
+    loopback = Param.Bool(True,
         "send packet back to the interface from which it came")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.UInt64(100000000, "bus speed in bits per second")
@@ -36,14 +36,14 @@ simobj EtherDev(DmaDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
-    dma_data_free = Param.Bool(false, "DMA of Data is free")
-    dma_desc_free = Param.Bool(false, "DMA of Descriptors is free")
+    dma_data_free = Param.Bool(False, "DMA of Data is free")
+    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
     dma_read_delay = Param.Tick(0, "fixed delay for dma reads")
     dma_read_factor = Param.Tick(0, "multiplier for dma reads")
     dma_write_delay = Param.Tick(0, "fixed delay for dma writes")
     dma_write_factor = Param.Tick(0, "multiplier for dma writes")
 
-    rx_filter = Param.Bool(true, "Enable Receive Filter")
+    rx_filter = Param.Bool(True, "Enable Receive Filter")
     rx_delay = Param.Tick(1000, "Receive Delay")
     tx_delay = Param.Tick(1000, "Transmit Delay")
 
@@ -57,14 +57,14 @@ simobj NSGigE(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
-    dma_data_free = Param.Bool(false, "DMA of Data is free")
-    dma_desc_free = Param.Bool(false, "DMA of Descriptors is free")
+    dma_data_free = Param.Bool(False, "DMA of Data is free")
+    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
     dma_read_delay = Param.Tick(0, "fixed delay for dma reads")
     dma_read_factor = Param.Tick(0, "multiplier for dma reads")
     dma_write_delay = Param.Tick(0, "fixed delay for dma writes")
     dma_write_factor = Param.Tick(0, "multiplier for dma writes")
 
-    rx_filter = Param.Bool(true, "Enable Receive Filter")
+    rx_filter = Param.Bool(True, "Enable Receive Filter")
     rx_delay = Param.Tick(1000, "Receive Delay")
     tx_delay = Param.Tick(1000, "Transmit Delay")
 

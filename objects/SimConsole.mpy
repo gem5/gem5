@@ -4,7 +4,7 @@ simobj ConsoleListener(SimObject):
 
 simobj SimConsole(SimObject):
     type = 'SimConsole'
-    append_name = Param.Bool(true, "append name() to filename")
+    append_name = Param.Bool(True, "append name() to filename")
     intr_control = Param.IntrControl(Super, "interrupt controller")
     listener = Param.ConsoleListener("console listener")
     number = Param.Int(0, "console number")

@@ -19,7 +19,7 @@ simobj BaseCPU(SimObject):
     max_loads_any_thread = Param.Counter(0,
         "terminate when any thread reaches this load count")
 
-    defer_registration = Param.Bool(false,
+    defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")
 
     def check(self):

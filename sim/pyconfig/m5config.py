@@ -34,11 +34,6 @@ except:
 
 env = {}
 env.update(os.environ)
-def defined(key):
-    return env.has_key(key)
-
-def define(key, value = True):
-    env[key] = value
 
 def panic(*args, **kwargs):
     sys.exit(*args, **kwargs)
@@ -63,9 +58,6 @@ class Singleton(type):
 
         cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instance
-
-if os.environ.has_key('FULL_SYSTEM'):
-    FULL_SYSTEM = True
 
 #####################################################################
 #
@@ -670,7 +662,7 @@ class Node(object):
                       % (self.name, ptype, value._path)
             found, done = obj.find(ptype, value._path)
             if isinstance(found, Proxy):
-                done = false
+                done = False
             obj = obj.parent
 
         return found
@@ -1266,10 +1258,6 @@ class Enum(type):
 #
 # "Constants"... handy aliases for various values.
 #
-
-# For compatibility with C++ bool constants.
-false = False
-true = True
 
 # Some memory range specifications use this as a default upper bound.
 MAX_ADDR = Addr._max

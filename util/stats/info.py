@@ -324,7 +324,7 @@ class Vector(Statistic,FormulaStat):
 
     def __eq__(self, other):
         if issequence(self.value) != issequence(other.value):
-            return false
+            return False
 
         if issequence(self.value):
             if len(self.value) != len(other.value):
