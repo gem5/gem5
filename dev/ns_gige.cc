@@ -1199,7 +1199,7 @@ NSGigE::doRxDmaRead()
             rxDmaState = dmaReadWaiting;
         else
             dmaInterface->doDMA(Read, rxDmaAddr, rxDmaLen, curTick,
-                                &rxDmaReadEvent, true);
+                                &rxDmaReadEvent);
         return true;
     }
 
@@ -1251,7 +1251,7 @@ NSGigE::doRxDmaWrite()
             rxDmaState = dmaWriteWaiting;
         else
             dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen, curTick,
-                                &rxDmaWriteEvent, true);
+                                &rxDmaWriteEvent);
         return true;
     }
 
@@ -1651,7 +1651,7 @@ NSGigE::doTxDmaRead()
             txDmaState = dmaReadWaiting;
         else
             dmaInterface->doDMA(Read, txDmaAddr, txDmaLen, curTick,
-                                &txDmaReadEvent, true);
+                                &txDmaReadEvent);
         return true;
     }
 
@@ -1703,7 +1703,7 @@ NSGigE::doTxDmaWrite()
             txDmaState = dmaWriteWaiting;
         else
             dmaInterface->doDMA(WriteInvalidate, txDmaAddr, txDmaLen, curTick,
-                                &txDmaWriteEvent, true);
+                                &txDmaWriteEvent);
         return true;
     }
 
