@@ -76,9 +76,6 @@ Serializeable::nameOut(ostream &os, const string &_name)
     os << "\n[" << _name << "]\n";
 }
 
-template <class T> bool parseParam(const std::string &str, T &data);
-template <class T> void showParam(const std::ostream &os, T &data);
-
 template <class T>
 void
 paramOut(ostream &os, const std::string &name, const T& param)
@@ -184,6 +181,7 @@ INSTANTIATE_PARAM_TEMPLATES(int32_t)
 INSTANTIATE_PARAM_TEMPLATES(uint32_t)
 INSTANTIATE_PARAM_TEMPLATES(int64_t)
 INSTANTIATE_PARAM_TEMPLATES(uint64_t)
+INSTANTIATE_PARAM_TEMPLATES(bool)
 INSTANTIATE_PARAM_TEMPLATES(string)
 
 

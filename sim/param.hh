@@ -754,4 +754,13 @@ SimObjectVectorParam<OBJ_CLASS *>::showType(std::ostream &os) const	\
     os << "vector of " << CLASS_NAME;					\
 }
 
+
+//
+// Declarations for low-level parsing & displaying functions.  These
+// are used internally, but should not be used directly by clients of
+// the parameter mechanism, but are declared here so they can be
+// shared with the serialization code (see sim/serialize.cc).
+template <class T> bool parseParam(const std::string &str, T &data);
+template <class T> void showParam(std::ostream &os, const T &data);
+
 #endif // _PARAM_HH

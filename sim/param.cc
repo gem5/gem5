@@ -88,53 +88,41 @@ BaseParam::die(const string &err) const
 // Integer types all use to_number for parsing and '<<' for
 // displaying
 //
-#define INT_PARAM(type)				\
-bool						\
-parseParam(const string &s, type &value)	\
-{						\
-    return to_number(s, value);			\
-}						\
-                                                \
-void						\
-showParam(ostream &os, type value)		\
-{						\
-    os << value;				\
+template <class T>
+bool
+parseParam(const string &s, T &value)
+{
+    return to_number(s, value);
 }
 
-INT_PARAM(unsigned long long)
-INT_PARAM(signed long long)
-INT_PARAM(unsigned long)
-INT_PARAM(signed long)
-INT_PARAM(unsigned int)
-INT_PARAM(signed int)
-INT_PARAM(unsigned short)
-INT_PARAM(signed short)
-INT_PARAM(unsigned char)
-INT_PARAM(signed char)
-
-#undef INT_PARAM
+template <class T>
+void
+showParam(ostream &os, const T &value)
+{
+    os << value;
+}
 
 //
 // Floating-point types
 //
+template <>
 bool
 parseParam(const string &s, float &value)
 {
     return (sscanf(s.c_str(), "%f", &value) == 1);
 }
 
+template <>
 bool
 parseParam(const string &s, double &value)
 {
     return (sscanf(s.c_str(), "%lf", &value) == 1);
 }
 
-void showParam(ostream &os, float value)  { os << value; }
-void showParam(ostream &os, double value) { os << value; }
-
 //
 // bool
 //
+template <>
 bool
 parseParam(const string &s, bool &value)
 {
@@ -154,8 +142,9 @@ parseParam(const string &s, bool &value)
 }
 
 
+template <>
 void
-showParam(ostream &os, bool value)
+showParam(ostream &os, const bool &value)
 {
     os << (value ? "true" : "false");
 }
@@ -164,18 +153,12 @@ showParam(ostream &os, bool value)
 //
 // string
 //
+template <>
 bool
 parseParam(const string &s, string &value)
 {
     value = s;
     return true;
-}
-
-
-void
-showParam(ostream &os, const string &value)
-{
-    os << value;
 }
 
 //
@@ -274,6 +257,8 @@ template VectorParam<type>;
 // instantiate all four methods (parse/show, scalar/vector) for basic
 // types that can use the above templates
 #define INSTANTIATE_PARAM_TEMPLATES(type, typestr)			\
+template bool parseParam<type>(const string &s, type &value);		\
+template void showParam<type>(ostream &os, const type &value);		\
 template void Param<type>::parse(const string &);			\
 template void VectorParam<type>::parse(const string &);			\
 template void Param<type>::showValue(ostream &) const;			\
