@@ -130,8 +130,6 @@ FnEvent::process(ExecContext *xc)
     if (ctx && !ctx->callStack.empty()) {
         fnCall *last = ctx->callStack.top();
         if (!xc->system->findCaller(myname(), last->name)) {
-            // assert(!xc->system->findCaller(myname(), "")  &&
-            //     "should not have head of path in middle of stack!");
             return;
         }
         ctx->calls--;
