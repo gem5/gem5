@@ -30,7 +30,7 @@ import os, popen2, re, sys
 
 class MyPOpen(object):
     def __init__(self, cmd, input = None, output = None, bufsize = -1):
-        self.sts = -1
+        self.status = -1
 
         if input is None:
             p2c_read, p2c_write = os.pipe()
@@ -64,17 +64,9 @@ class MyPOpen(object):
 
         self.pid = os.fork()
         if self.pid == 0:
-            os.dup2(p2c_read, 0)
-            os.dup2(c2p_write, 1)
-            os.dup2(c2p_write, 2)
-            if isinstance(cmd, basestring):
-                cmd = ['/bin/sh', '-c', cmd]
-            if False:
-                for i in range(3, MAXFD):
-                    try:
-                        os.close(i)
-                    except OSError:
-                        pass
+            os.dup2(p2c_read, sys.stdin.fileno())
+            os.dup2(c2p_write, sys.stdout.fileno())
+            os.dup2(c2p_write, sys.stderr.fileno())
             try:
                 os.execvp(cmd[0], cmd)
             finally:
@@ -84,18 +76,18 @@ class MyPOpen(object):
         os.close(c2p_write)
 
     def poll(self):
-        if self.sts < 0:
-            pid, sts = os.waitpid(self.pid, os.WNOHANG)
+        if self.status < 0:
+            pid, status = os.waitpid(self.pid, os.WNOHANG)
             if pid == self.pid:
-                self.sts = sts
-        return self.sts
+                self.status = status
+        return self.status
 
     def wait(self):
-        if self.sts < 0:
-            pid, sts = os.waitpid(self.pid, 0)
+        if self.status < 0:
+            pid, status = os.waitpid(self.pid, 0)
             if pid == self.pid:
-                self.sts = sts
-        return self.sts
+                self.status = status
+        return self.status
 
 class qsub:
     def __init__(self):
