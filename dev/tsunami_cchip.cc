@@ -49,8 +49,7 @@ TsunamiCChip::read(MemReqPtr req, uint8_t *data)
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr & addr_mask) >> 6;
-//    ExecContext *xc = req->xc;
-//    int cpuid = xc->cpu_id;
+    ExecContext *xc = req->xc;
 
     switch (req->size) {
 
@@ -63,7 +62,7 @@ TsunamiCChip::read(MemReqPtr req, uint8_t *data)
                   panic("TSDEV_CC_MTR not implemeted\n");
                    return No_Fault;
               case TSDEV_CC_MISC:
-                *(uint64_t*)data = misc;
+                *(uint64_t*)data = misc | (xc->cpu_id & 0x3);
                   return No_Fault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
