@@ -30,10 +30,11 @@
 #include <sstream>
 #include <iostream>
 
-#include "cpu/base_cpu.hh"
 #include "base/cprintf.hh"
-#include "cpu/exec_context.hh"
+#include "base/loader/symtab.hh"
 #include "base/misc.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
 #include "sim/param.hh"
 #include "sim/sim_events.hh"
 
@@ -52,7 +53,8 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
                  Counter max_insts_all_threads,
                  Counter max_loads_any_thread,
                  Counter max_loads_all_threads,
-                 System *_system, Tick freq)
+                 System *_system, Tick freq,
+                 bool _function_trace, Tick _function_trace_start)
     : SimObject(_name), frequency(freq), checkInterrupts(true),
       deferRegistration(_def_reg), number_of_threads(_number_of_threads),
       system(_system)
@@ -61,7 +63,8 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
                  Counter max_insts_any_thread,
                  Counter max_insts_all_threads,
                  Counter max_loads_any_thread,
-                 Counter max_loads_all_threads)
+                 Counter max_loads_all_threads,
+                 bool _function_trace, Tick _function_trace_start)
     : SimObject(_name), deferRegistration(_def_reg),
       number_of_threads(_number_of_threads)
 #endif
@@ -126,7 +129,38 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
     memset(interrupts, 0, sizeof(interrupts));
     intstatus = 0;
 #endif
+
+    functionTracingEnabled = false;
+    if (_function_trace) {
+        std::string filename = csprintf("ftrace.%s", name());
+        functionTraceStream = makeOutputStream(filename);
+        currentFunctionStart = currentFunctionEnd = 0;
+        functionEntryTick = _function_trace_start;
+
+        if (_function_trace_start == 0) {
+            functionTracingEnabled = true;
+        } else {
+            Event *e =
+                new EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace>(this,
+                                                                         true);
+            e->schedule(_function_trace_start);
+        }
+    }
 }
+
+
+void
+BaseCPU::enableFunctionTrace()
+{
+    functionTracingEnabled = true;
+}
+
+BaseCPU::~BaseCPU()
+{
+    if (functionTracingEnabled)
+        closeOutputStream(functionTraceStream);
+}
+
 
 void
 BaseCPU::init()
@@ -266,5 +300,33 @@ BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 #endif // FULL_SYSTEM
+
+void
+BaseCPU::traceFunctionsInternal(Addr pc)
+{
+    if (!debugSymbolTable)
+        return;
+
+    // if pc enters different function, print new function symbol and
+    // update saved range.  Otherwise do nothing.
+    if (pc < currentFunctionStart || pc >= currentFunctionEnd) {
+        string sym_str;
+        bool found = debugSymbolTable->findNearestSymbol(pc, sym_str,
+                                                         currentFunctionStart,
+                                                         currentFunctionEnd);
+
+        if (!found) {
+            // no symbol found: use addr as label
+            sym_str = csprintf("0x%x", pc);
+            currentFunctionStart = pc;
+            currentFunctionEnd = pc + 1;
+        }
+
+        ccprintf(*functionTraceStream, " (%d)\n%d: %s",
+                 curTick - functionEntryTick, curTick, sym_str);
+        functionEntryTick = curTick;
+    }
+}
+
 
 DEFINE_SIM_OBJECT_CLASS_NAME("BaseCPU", BaseCPU)
