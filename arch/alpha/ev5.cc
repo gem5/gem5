@@ -447,7 +447,10 @@ ExecContext::setIpr(int idx, uint64_t val)
         break;
 
       case AlphaISA::IPR_DTB_CM:
-        kernelStats->mode((val & 0x18) != 0);
+        if (val & 0x18)
+            kernelStats->mode(Kernel::user);
+        else
+            kernelStats->mode(Kernel::kernel);
 
       case AlphaISA::IPR_ICM:
         // only write two mode bits - processor mode

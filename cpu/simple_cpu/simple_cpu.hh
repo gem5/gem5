@@ -40,7 +40,6 @@
 // forward declarations
 #ifdef FULL_SYSTEM
 class Processor;
-class Kernel;
 class AlphaITB;
 class AlphaDTB;
 class PhysicalMemory;

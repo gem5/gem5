@@ -143,6 +143,16 @@ LinuxSystem::LinuxSystem(Params *p)
     printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo");
     if (kernelSymtab->findAddress("alpha_switch_to", addr) && DTRACE(Thread))
         printThreadEvent->schedule(addr + sizeof(MachInst) * 6);
+
+    intStartEvent = new InterruptStartEvent(&pcEventQueue, "intStartEvent");
+    if (kernelSymtab->findAddress("do_entInt", addr))
+        intStartEvent->schedule(addr + sizeof(MachInst) * 2);
+
+    intEndEvent = new InterruptEndEvent(&pcEventQueue, "intStartEvent");
+    if (palSymtab->findAddress("Call_Pal_Rti", addr))
+        intEndEvent->schedule(addr + sizeof(MachInst));
+    else
+        panic("could not find symbol\n");
 }
 
 LinuxSystem::~LinuxSystem()
@@ -155,6 +165,8 @@ LinuxSystem::~LinuxSystem()
     delete skipCacheProbeEvent;
     delete debugPrintkEvent;
     delete idleStartEvent;
+    delete printThreadEvent;
+    delete intStartEvent;
 }
 
 
@@ -193,6 +205,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
     Param<bool> bin;
     VectorParam<string> binned_fns;
+    Param<bool> bin_int;
 
 END_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
@@ -210,7 +223,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
     INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
     INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10),
     INIT_PARAM_DFLT(bin, "is this system to be binned", false),
-    INIT_PARAM(binned_fns, "functions to be broken down and binned")
+    INIT_PARAM(binned_fns, "functions to be broken down and binned"),
+    INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", false)
 
 END_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
 
@@ -230,7 +244,7 @@ CREATE_SIM_OBJECT(LinuxSystem)
     p->system_rev = system_rev;
     p->bin = bin;
     p->binned_fns = binned_fns;
-
+    p->bin_int = bin_int;
     return new LinuxSystem(p);
 }
 

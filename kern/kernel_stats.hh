@@ -45,7 +45,7 @@ enum Fault;
 
 namespace Kernel {
 
-enum cpu_mode { kernel, user, idle, cpu_mode_num };
+enum cpu_mode { kernel, user, idle, interrupt, cpu_mode_num };
 extern const char *modestr[];
 
 class Binning
@@ -98,7 +98,7 @@ class Binning
     std::vector<std::string> binned_fns;
 
   private:
-    Stats::MainBin *modeBin[3];
+    Stats::MainBin *modeBin[cpu_mode_num];
 
   public:
     const bool bin;
@@ -133,6 +133,7 @@ class Statistics : public Serializable
     Addr idleProcess;
     cpu_mode themode;
     Tick lastModeTick;
+    bool bin_int;
 
     void changeMode(cpu_mode newmode);
 
@@ -177,7 +178,7 @@ class Statistics : public Serializable
     void hwrei() { _hwrei++; }
     void fault(Fault fault) { _faults[fault]++; }
     void swpipl(int ipl);
-    void mode(bool usermode);
+    void mode(cpu_mode newmode);
     void context(Addr oldpcbb, Addr newpcbb);
     void callpal(int code);
 

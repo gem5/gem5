@@ -71,3 +71,17 @@ IdleStartEvent::process(ExecContext *xc)
 {
     xc->kernelStats->setIdleProcess(xc->regs.ipr[AlphaISA::IPR_PALtemp23]);
 }
+
+void
+InterruptStartEvent::process(ExecContext *xc)
+{
+    xc->kernelStats->mode(Kernel::interrupt);
+}
+
+void
+InterruptEndEvent::process(ExecContext *xc)
+{
+    // We go back to kernel, if we are user, inside the rti
+    // pal code we will get switched to user because of the ICM write
+    xc->kernelStats->mode(Kernel::kernel);
+}

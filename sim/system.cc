@@ -55,6 +55,7 @@ System::System(Params *p)
 
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
+    palSymtab = new SymbolTable;
     debugSymbolTable = new SymbolTable;
 
     /**
@@ -96,7 +97,10 @@ System::System(Params *p)
     if (!console->loadGlobalSymbols(consoleSymtab))
         panic("could not load console symbols\n");
 
-     if (!kernel->loadGlobalSymbols(debugSymbolTable))
+    if (!pal->loadGlobalSymbols(palSymtab))
+        panic("could not load pal symbols\n");
+
+    if (!kernel->loadGlobalSymbols(debugSymbolTable))
         panic("could not load kernel symbols\n");
 
     if (!kernel->loadLocalSymbols(debugSymbolTable))

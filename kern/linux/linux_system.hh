@@ -83,7 +83,21 @@ class LinuxSystem : public System
      */
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
 
+    /**
+     * Event to print information about thread switches if the trace flag
+     * Thread is set
+     */
     PrintThreadInfo *printThreadEvent;
+
+    /**
+     * Event to bin Interrupts seperately from kernel code
+     */
+    InterruptStartEvent *intStartEvent;
+
+    /**
+     * Event to bin Interrupts seperately from kernel code
+     */
+    InterruptEndEvent *intEndEvent;
 
     /** Grab the PCBB of the idle process when it starts */
     IdleStartEvent *idleStartEvent;

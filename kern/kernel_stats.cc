@@ -45,12 +45,13 @@ using namespace Stats;
 
 namespace Kernel {
 
-const char *modestr[] = { "kernel", "user", "idle" };
+const char *modestr[] = { "kernel", "user", "idle", "interrupt" };
 
 Statistics::Statistics(ExecContext *context)
     : xc(context), idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
       iplLast(0), iplLastTick(0)
 {
+    bin_int = xc->system->params->bin_int;
 }
 
 void
@@ -153,20 +154,20 @@ Statistics::regStats(const string &_name)
     }
 
     _mode
-        .init(3)
+        .init(cpu_mode_num)
         .name(name() + ".mode_switch")
         .desc("number of protection mode switches")
         ;
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < cpu_mode_num; ++i)
         _mode.subname(i, modestr[i]);
 
     _modeGood
-        .init(3)
+        .init(cpu_mode_num)
         .name(name() + ".mode_good")
         ;
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < cpu_mode_num; ++i)
         _modeGood.subname(i, modestr[i]);
 
     _modeFraction
@@ -175,18 +176,18 @@ Statistics::regStats(const string &_name)
         .flags(total)
         ;
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < cpu_mode_num; ++i)
         _modeFraction.subname(i, modestr[i]);
 
     _modeFraction = _modeGood / _mode;
 
     _modeTicks
-        .init(3)
+        .init(cpu_mode_num)
         .name(name() + ".mode_ticks")
         .desc("number of ticks spent at the given mode")
         .flags(pdf)
         ;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < cpu_mode_num; ++i)
         _modeTicks.subname(i, modestr[i]);
 
     _swap_context
@@ -198,7 +199,7 @@ Statistics::regStats(const string &_name)
 void
 Statistics::setIdleProcess(Addr idlepcbb)
 {
-    assert(themode == kernel);
+    assert(themode == kernel || themode == interrupt);
     idleProcess = idlepcbb;
     themode = idle;
     changeMode(themode);
@@ -241,13 +242,16 @@ Statistics::swpipl(int ipl)
 }
 
 void
-Statistics::mode(bool usermode)
+Statistics::mode(cpu_mode newmode)
 {
     Addr pcbb = xc->regs.ipr[AlphaISA::IPR_PALtemp23];
 
-    cpu_mode newmode = usermode ? user : kernel;
-    if (newmode == kernel && pcbb == idleProcess)
+    if ((newmode == kernel || newmode == interrupt) &&
+            pcbb == idleProcess)
         newmode = idle;
+
+    if (bin_int == false && newmode == interrupt)
+        newmode = kernel;
 
     changeMode(newmode);
 }

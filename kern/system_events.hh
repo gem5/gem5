@@ -64,4 +64,24 @@ class IdleStartEvent : public PCEvent
     {}
     virtual void process(ExecContext *xc);
 };
+
+class InterruptStartEvent : public PCEvent
+{
+  public:
+    InterruptStartEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc)
+    {}
+    virtual void process(ExecContext *xc);
+};
+
+class InterruptEndEvent : public PCEvent
+{
+  public:
+    InterruptEndEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc)
+    {}
+    virtual void process(ExecContext *xc);
+};
+
+
 #endif // __SYSTEM_EVENTS_HH__

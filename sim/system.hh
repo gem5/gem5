@@ -64,6 +64,9 @@ class System : public SimObject
     /** console symbol table */
     SymbolTable *consoleSymtab;
 
+    /** pal symbol table */
+    SymbolTable *palSymtab;
+
     /** Object pointer for the kernel code */
     ObjectFile *kernel;
 
@@ -103,6 +106,7 @@ class System : public SimObject
         uint64_t init_param;
         bool bin;
         std::vector<std::string> binned_fns;
+        bool bin_int;
 
         std::string kernel_path;
         std::string console_path;
