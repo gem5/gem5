@@ -352,7 +352,7 @@ SimpleCPU::copy(Addr dest)
 {
     int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
     uint8_t data[blk_size];
-    assert(xc->copySrcPhysAddr);
+    assert(xc->copySrcAddr);
     memReq->reset(dest, blk_size);
     // translate to physical address
     Fault fault = xc->translateDataWriteReq(memReq);
