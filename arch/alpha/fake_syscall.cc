@@ -647,94 +647,58 @@ fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
-///
-/// @TODO this was stolen from SimpleScalar and needs to be rewritten.
-///
-
-/* returns size of DIRENT structure */
-#define OSF_DIRENT_SZ(STR)						\
-  (sizeof(uint32_t) + 2*sizeof(uint16_t) + (((strlen(STR) + 1) + 3)/4)*4)
-  /* was: (sizeof(word_t) + 2*sizeof(half_t) + strlen(STR) + 1) */
-
-struct osf_dirent
-{
-    uint32_t d_ino;			/* file number of entry */
-    uint16_t d_reclen;		/* length of this record */
-    uint16_t d_namlen;		/* length of string in d_name */
-    char d_name[256];		/* DUMMY NAME LENGTH */
-                                /* the real maximum length is */
-                                /* returned by pathconf() */
-                                /* At this time, this MUST */
-                                /* be 256 -- the kernel */
-                                /* requires it */
-};
-
-
 int
 getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
 {
-    int i, cnt, osf_cnt;
-    struct dirent *p;
-    int32_t fd = process->sim_fd(getArg(xc,0));
-    Addr osf_buf = getArg(xc,1);
-    char *buf;
-    int32_t osf_nbytes = getArg(xc,2);
-    Addr osf_pbase = getArg(xc,3);
-    Addr osf_base;
-    long base = 0;
+    int fd = process->sim_fd(getArg(xc, 0));
+    Addr tgt_buf = getArg(xc, 1);
+    int tgt_nbytes = getArg(xc, 2);
+    Addr tgt_basep = getArg(xc, 3);
 
-    /* number of entries in simulated memory */
-    if (!osf_nbytes)
-        warn("attempting to get 0 directory entries...");
+    char * const host_buf = new char[tgt_nbytes];
 
-    /* allocate local memory, whatever fits */
-    buf = (char*)calloc(1, osf_nbytes);
-    if (!buf)
-        fatal("out of virtual memory");
+    // just pass basep through uninterpreted.
+    TypedBufferArg<int64_t> basep(tgt_basep);
+    basep.copyIn(xc->mem);
+    off_t host_basep = (off_t)*basep;
+    int host_result = getdirentries(fd, host_buf, tgt_nbytes, &host_basep);
 
-    /* get directory entries */
-    int64_t result = getdirentries((int)fd, buf, (size_t)osf_nbytes, &base);
-
-    /* check for an error condition */
-    if (result != (int64_t) -1) {
-
-        /* anything to copy back? */
-        if (result > 0)
-        {
-            /* copy all possible results to simulated space */
-            for (i=0, cnt=0, osf_cnt=0, p=(struct dirent *)buf;
-                 cnt < result && p->d_reclen > 0;
-                 i++, cnt += p->d_reclen, p=(struct dirent *)(buf+cnt))
-            {
-                struct osf_dirent osf_dirent;
-
-                osf_dirent.d_ino = p->d_ino;
-                osf_dirent.d_namlen = strlen(p->d_name);
-                strcpy(osf_dirent.d_name, p->d_name);
-                osf_dirent.d_reclen = OSF_DIRENT_SZ(p->d_name);
-
-                xc->mem->access(Write, osf_buf + osf_cnt,
-                                &osf_dirent, OSF_DIRENT_SZ(p->d_name));
-
-                osf_cnt += OSF_DIRENT_SZ(p->d_name);
-            }
-
-            if (osf_pbase != 0)
-            {
-                osf_base = (Addr)base;
-
-                xc->mem->access(Write, osf_pbase, &osf_base, sizeof(osf_base));
-            }
-
-            /* update V0 to indicate translated read length */
-            result = osf_cnt;
-        }
+    // check for error
+    if (host_result < 0) {
+        delete [] host_buf;
+        return -errno;
     }
 
-    free(buf);
+    // no error: copy results back to target space
+    Addr tgt_buf_ptr = tgt_buf;
+    char *host_buf_ptr = host_buf;
+    char *host_buf_end = host_buf + host_result;
+    while (host_buf_ptr < host_buf_end) {
+        struct dirent *host_dp = (struct dirent *)host_buf_ptr;
+        int namelen = strlen(host_dp->d_name);
 
-    return result;
+        // Actual size includes padded string rounded up for alignment.
+        // Subtract 256 for dummy char array in OSF::dirent definition.
+        // Add 1 to namelen for terminating null char.
+        int tgt_bufsize = sizeof(OSF::dirent) - 256 + RoundUp(namelen+1, 8);
+        TypedBufferArg<OSF::dirent> tgt_dp(tgt_buf_ptr, tgt_bufsize);
+        tgt_dp->d_ino = host_dp->d_ino;
+        tgt_dp->d_reclen = tgt_bufsize;
+        tgt_dp->d_namlen = namelen;
+        strcpy(tgt_dp->d_name, host_dp->d_name);
+        tgt_dp.copyOut(xc->mem);
+
+        tgt_buf_ptr += tgt_bufsize;
+        host_buf_ptr += host_dp->d_reclen;
+    }
+
+    delete [] host_buf;
+
+    *basep = host_basep;
+    basep.copyOut(xc->mem);
+
+    return (tgt_buf_ptr - tgt_buf);
 }
 
 
