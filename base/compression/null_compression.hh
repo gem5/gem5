@@ -34,6 +34,10 @@
  * This file defines a doNothing compression algorithm.
  */
 
+#include <inttypes.h> // for uint8_t
+#include "base/misc.hh" // for fatal()
+
+
 /**
  * A dummy compression class to use when no data compression is desired.
  */
