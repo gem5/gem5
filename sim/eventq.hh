@@ -236,6 +236,20 @@ DelayFunction(Tick when, T *object)
     new DelayEvent(when, object);
 }
 
+template <class T, void (T::* F)()>
+class EventWrapper : public Event
+{
+  private:
+    T *object;
+
+  public:
+    EventWrapper(T *obj, EventQueue *q = &mainEventQueue,
+                 Priority p = Default_Pri)
+        : Event(q, p), object(obj)
+    {}
+    void process() { (object->*F)(); }
+};
+
 /*
  * Queue of events sorted in time order
  */
