@@ -241,7 +241,7 @@ AlphaTlb::serialize(ostream &os)
 }
 
 void
-AlphaTlb::unserialize(IniFile &db, const string &section)
+AlphaTlb::unserialize(const IniFile *db, const string &section)
 {
     UNSERIALIZE_MEMBER(size);
     UNSERIALIZE_MEMBER(nlu);

@@ -101,7 +101,7 @@ class AlphaConsole : public MmapDevice
      * standard serialization routines for checkpointing
      */
     virtual void serialize(std::ostream &os);
-    virtual void unserialize(IniFile &db, const std::string &section);
+    virtual void unserialize(const IniFile *db, const std::string &section);
 };
 
 #endif // __ALPHA_CONSOLE_HH__

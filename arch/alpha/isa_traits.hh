@@ -225,7 +225,7 @@ class AlphaISA
     static void serializeSpecialRegs(const Serializeable::Proxy &proxy,
                                      const RegFile &regs);
 
-    static void unserializeSpecialRegs(IniFile &db,
+    static void unserializeSpecialRegs(const IniFile *db,
                                        const std::string &category,
                                        ConfigNode *node,
                                        RegFile &regs);

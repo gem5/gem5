@@ -74,7 +74,7 @@ class AlphaTlb : public SimObject
 
     // Checkpointing
     virtual void serialize(std::ostream &os);
-    virtual void unserialize(IniFile &db, const std::string &section);
+    virtual void unserialize(const IniFile *db, const std::string &section);
 
 };
 

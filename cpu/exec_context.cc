@@ -106,7 +106,7 @@ ExecContext::serialize(ostream &os)
 
 
 void
-ExecContext::unserialize(IniFile &db, const std::string &section)
+ExecContext::unserialize(const IniFile *db, const std::string &section)
 {
     UNSERIALIZE_ARRAY(regs.intRegFile, NumIntRegs);
     UNSERIALIZE_ARRAY(regs.floatRegFile.q, NumFloatRegs);

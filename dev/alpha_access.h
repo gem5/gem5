@@ -82,7 +82,7 @@ struct AlphaAccess
 
 #ifndef CONSOLE
     void serialize(std::ostream &os);
-    void unserialize(IniFile &db, const std::string &section);
+    void unserialize(const IniFile *db, const std::string &section);
 #endif
 };
 

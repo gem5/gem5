@@ -188,7 +188,7 @@ AlphaAccess::serialize(ostream &os)
 }
 
 void
-AlphaAccess::unserialize(IniFile &db, const std::string &section)
+AlphaAccess::unserialize(const IniFile *db, const std::string &section)
 {
     UNSERIALIZE_MEMBER(last_offset);
     UNSERIALIZE_MEMBER(version);
@@ -216,7 +216,7 @@ AlphaConsole::serialize(ostream &os)
 }
 
 void
-AlphaConsole::unserialize(IniFile &db, const std::string &section)
+AlphaConsole::unserialize(const IniFile *db, const std::string &section)
 {
     alphaAccess->unserialize(db, section);
 }

@@ -246,22 +246,9 @@ SimpleCPU::serialize(ostream &os)
 }
 
 void
-SimpleCPU::unserialize(IniFile &db, const string &category)
+SimpleCPU::unserialize(const IniFile *db, const string &category)
 {
-    string data;
-
-    for (int i = 0; i < NumIntRegs; i++) {
-        stringstream buf;
-        ccprintf(buf, "R%02d", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data,xc->regs.intRegFile[i]);
-    }
-    for (int i = 0; i < NumFloatRegs; i++) {
-        stringstream buf;
-        ccprintf(buf, "F%02d", i);
-        db.findDefault(category, buf.str(), data);
-        to_number(data.c_str(), xc->regs.floatRegFile.q[i]);
-    }
+    xc->unserialize(db, category);
 
     // Read in Special registers
 

@@ -316,13 +316,11 @@ SimConsole::setInt(int bits)
 void
 SimConsole::serialize(ostream &os)
 {
-    panic("Unimplemented");
 }
 
 void
-SimConsole::unserialize(IniFile &db, const std::string &section)
+SimConsole::unserialize(const IniFile *db, const std::string &section)
 {
-    panic("Unimplemented");
 }
 
 

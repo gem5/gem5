@@ -47,7 +47,7 @@ template <class T>
 void paramOut(std::ostream &os, const std::string &name, const T& param);
 
 template <class T>
-void paramIn(IniFile &db, const std::string &section,
+void paramIn(const IniFile *db, const std::string &section,
              const std::string &name, T& param);
 
 template <class T>
@@ -55,7 +55,7 @@ void arrayParamOut(std::ostream &os, const std::string &name,
                    const T *param, int size);
 
 template <class T>
-void arrayParamIn(IniFile &db, const std::string &section,
+void arrayParamIn(const IniFile *db, const std::string &section,
                   const std::string &name, T *param, int size);
 
 //
@@ -103,7 +103,7 @@ class Serializeable
 
     virtual void nameChildren() {}
     virtual void serialize(std::ostream& os) {}
-    virtual void unserialize(IniFile &db, const std::string &section) {}
+    virtual void unserialize(const IniFile *db, const std::string &section) {}
 };
 
 class Serializer

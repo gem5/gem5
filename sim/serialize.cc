@@ -88,11 +88,11 @@ paramOut(ostream &os, const std::string &name, const T& param)
 
 template <class T>
 void
-paramIn(IniFile &db, const std::string &section,
+paramIn(const IniFile *db, const std::string &section,
         const std::string &name, T& param)
 {
     std::string str;
-    if (!db.find(section, name, str) || !parseParam(str, param)) {
+    if (!db->find(section, name, str) || !parseParam(str, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
 }
@@ -116,11 +116,11 @@ arrayParamOut(ostream &os, const std::string &name,
 
 template <class T>
 void
-arrayParamIn(IniFile &db, const std::string &section,
+arrayParamIn(const IniFile *db, const std::string &section,
              const std::string &name, T *param, int size)
 {
     std::string str;
-    if (!db.find(section, name, str)) {
+    if (!db->find(section, name, str)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
 
@@ -159,17 +159,17 @@ arrayParamIn(IniFile &db, const std::string &section,
 }
 
 
-#define INSTANTIATE_PARAM_TEMPLATES(type)			\
-template void						\
+#define INSTANTIATE_PARAM_TEMPLATES(type)				\
+template void								\
 paramOut(ostream &os, const std::string &name, const type &param);	\
-template void						\
-paramIn(IniFile &db, const std::string &section,		\
-        const std::string &name, type & param);			\
-template void						\
-arrayParamOut(ostream &os, const std::string &name,		\
-              const type *param, int size);			\
-template void						\
-arrayParamIn(IniFile &db, const std::string &section,		\
+template void								\
+paramIn(const IniFile *db, const std::string &section,			\
+        const std::string &name, type & param);				\
+template void								\
+arrayParamOut(ostream &os, const std::string &name,			\
+              const type *param, int size);				\
+template void								\
+arrayParamIn(const IniFile *db, const std::string &section,		\
              const std::string &name, type *param, int size);
 
 

@@ -50,7 +50,7 @@ const string Event::defaultName("event");
 // Events on this queue are processed at the *beginning* of each
 // cycle, before the pipeline simulation is performed.
 //
-EventQueue mainEventQueue("Main Event Queue");
+EventQueue mainEventQueue("MainEventQueue");
 
 void
 EventQueue::insert(Event *event)
@@ -121,6 +121,7 @@ EventQueue::serviceOne()
 void
 EventQueue::nameChildren()
 {
+#if 0
     int j = 0;
 
     Event *event = head;
@@ -131,11 +132,13 @@ EventQueue::nameChildren()
 
         event = event->next;
     }
+#endif
 }
 
 void
 EventQueue::serialize(ostream &os)
 {
+#if 0
     string objects = "";
 
     Event *event = head;
@@ -148,6 +151,7 @@ EventQueue::serialize(ostream &os)
     }
     nameOut(os, "Serialized");
     SERIALIZE_MEMBER(objects);
+#endif
 }
 
 void
