@@ -120,7 +120,8 @@ baseFlags = [
     'IdeCtrl',
     'IdeDisk',
     'Tsunami',
-    'Uart'
+    'Uart',
+    'Split'
     ]
 
 #
