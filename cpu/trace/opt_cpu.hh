@@ -90,8 +90,8 @@ class OptCPU : public BaseCPU
         Addr addr;
     };
 
-    /** Reference Information. */
-    std::vector<RefInfo> refInfo;
+    /** Reference Information, per set. */
+    std::vector<std::vector<RefInfo> > refInfo;
 
     /** Lookup table to track blocks in the cache heap */
     L1Table lookupTable;
@@ -125,62 +125,64 @@ class OptCPU : public BaseCPU
      */
     void initTable(Addr addr, RefIndex index);
 
-    void heapSwap(int a, int b) {
+    void heapSwap(int set, int a, int b) {
         RefIndex tmp = cacheHeap[a];
         cacheHeap[a] = cacheHeap[b];
         cacheHeap[b] = tmp;
 
-        setValue(refInfo[cacheHeap[a]].addr, a);
-        setValue(refInfo[cacheHeap[b]].addr, b);
+        setValue(refInfo[set][cacheHeap[a]].addr, a);
+        setValue(refInfo[set][cacheHeap[b]].addr, b);
     }
 
     int heapLeft(int index) { return index + index + 1; }
     int heapRight(int index) { return index + index + 2; }
     int heapParent(int index) { return (index - 1) >> 1; }
 
-    RefIndex heapRank(int index) {
-        return refInfo[cacheHeap[index]].nextRefTime;
+    RefIndex heapRank(int set, int index) {
+        return refInfo[set][cacheHeap[index]].nextRefTime;
     }
 
-    void heapify(int start){
+    void heapify(int set, int start){
         int left = heapLeft(start);
         int right = heapRight(start);
         int max = start;
-        if (left < numBlks && heapRank(left) > heapRank(start)) {
+        if (left < assoc && heapRank(set, left) > heapRank(set, start)) {
             max = left;
         }
-        if (right < numBlks && heapRank(right) >  heapRank(max)) {
+        if (right < assoc && heapRank(set, right) >  heapRank(set, max)) {
             max = right;
         }
 
         if (max != start) {
-            heapSwap(start, max);
-            heapify(max);
+            heapSwap(set, start, max);
+            heapify(set, max);
         }
     }
 
-    void verifyHeap(int start) {
+    void verifyHeap(int set, int start) {
         int left = heapLeft(start);
         int right = heapRight(start);
 
-        if (left < numBlks) {
-            assert(heapRank(start) >= heapRank(left));
-            verifyHeap(left);
+        if (left < assoc) {
+            assert(heapRank(set, start) >= heapRank(set, left));
+            verifyHeap(set, left);
         }
-        if (right < numBlks) {
-            assert(heapRank(start) >= heapRank(right));
-            verifyHeap(right);
+        if (right < assoc) {
+            assert(heapRank(set, start) >= heapRank(set, right));
+            verifyHeap(set, right);
         }
     }
 
-    void processRankIncrease(int start) {
+    void processRankIncrease(int set, int start) {
         int parent = heapParent(start);
-        while (start > 0 && heapRank(parent) < heapRank(start)) {
-            heapSwap(parent, start);
+        while (start > 0 && heapRank(set,parent) < heapRank(set,start)) {
+            heapSwap(set, parent, start);
             start = parent;
             parent = heapParent(start);
         }
     }
+
+    void processSet(int set);
 
     static const RefIndex InfiniteRef = 0x7fffffff;
 
@@ -193,6 +195,10 @@ class OptCPU : public BaseCPU
     /** The number of blocks in the cache. */
     const int numBlks;
 
+    const int assoc;
+    const int numSets;
+    const int setMask;
+
 
     int misses;
     int hits;
@@ -203,8 +209,9 @@ class OptCPU : public BaseCPU
      */
     OptCPU(const std::string &name,
            MemTraceReader *_trace,
-           int log_block_size,
-           int cache_size);
+           int block_size,
+           int cache_size,
+           int assoc);
 
     /**
      * Perform the optimal replacement simulation.

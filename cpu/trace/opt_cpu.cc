@@ -44,34 +44,37 @@
 using namespace std;
 
 OptCPU::OptCPU(const string &name,
-              MemTraceReader *_trace,
-              int log_block_size,
-              int cache_size)
+               MemTraceReader *_trace,
+               int block_size,
+               int cache_size,
+               int _assoc)
     : BaseCPU(name,1), tickEvent(this), trace(_trace),
-      numBlks(cache_size/(1<<log_block_size))
+      numBlks(cache_size/block_size), assoc(_assoc), numSets(numBlks/assoc),
+      setMask(numSets - 1)
 {
+    int log_block_size = (int)(log((double) block_size)/log(2.0));
     MemReqPtr req;
     trace->getNextReq(req);
-    assert(log_block_size >= 4);
-    assert(refInfo.size() == 0);
-    while (req && (refInfo.size() < 60000000)) {
+    refInfo.resize(numSets);
+    while (req) {
         RefInfo temp;
         temp.addr = req->paddr >> log_block_size;
-        refInfo.push_back(temp);
+        int set = temp.addr & setMask;
+        refInfo[set].push_back(temp);
         trace->getNextReq(req);
     }
-    // Can't handle more references than "infinity"
-    assert(refInfo.size() < InfiniteRef);
 
     // Initialize top level of lookup table.
     lookupTable.resize(16);
 
     // Annotate references with next ref time.
-    for (RefIndex i = refInfo.size() - 1; i >= 0; --i) {
-        Addr addr = refInfo[i].addr;
-        initTable(addr, InfiniteRef);
-        refInfo[i].nextRefTime = lookupValue(addr);
-        setValue(addr, i);
+    for (int k = 0; k < numSets; ++k) {
+        for (RefIndex i = refInfo[k].size() - 1; i >= 0; --i) {
+            Addr addr = refInfo[k][i].addr;
+            initTable(addr, InfiniteRef);
+            refInfo[k][i].nextRefTime = lookupValue(addr);
+            setValue(addr, i);
+        }
     }
 
     // Reset the lookup table
@@ -87,9 +90,6 @@ OptCPU::OptCPU(const string &name,
         }
     }
 
-
-    cacheHeap.resize(numBlks);
-
     tickEvent.schedule(0);
 
     hits = 0;
@@ -97,57 +97,72 @@ OptCPU::OptCPU(const string &name,
 }
 
 void
-OptCPU::tick()
+OptCPU::processSet(int set)
 {
-    // Do opt simulation
-
     // Initialize cache
     int blks_in_cache = 0;
     RefIndex i = 0;
+    cacheHeap.clear();
+    cacheHeap.resize(assoc);
 
-    while (blks_in_cache < numBlks) {
-        RefIndex cache_index = lookupValue(refInfo[i].addr);
+    while (blks_in_cache < assoc) {
+        RefIndex cache_index = lookupValue(refInfo[set][i].addr);
         if (cache_index == -1) {
             // First reference to this block
             misses++;
             cache_index = blks_in_cache++;
-            setValue(refInfo[i].addr, cache_index);
+            setValue(refInfo[set][i].addr, cache_index);
         } else {
             hits++;
         }
         // update cache heap to most recent reference
         cacheHeap[cache_index] = i;
-        if (++i >= refInfo.size()) {
-            // exit
+        if (++i >= refInfo[set].size()) {
+            return;
         }
     }
-    for (int start = numBlks/2; start >= 0; --start) {
-        heapify(start);
+    for (int start = assoc/2; start >= 0; --start) {
+        heapify(set,start);
     }
-    //verifyHeap(0);
+    verifyHeap(set,0);
 
-    for (; i < refInfo.size(); ++i) {
-        RefIndex cache_index = lookupValue(refInfo[i].addr);
+    for (; i < refInfo[set].size(); ++i) {
+        RefIndex cache_index = lookupValue(refInfo[set][i].addr);
         if (cache_index == -1) {
             // miss
             misses++;
             // replace from cacheHeap[0]
             // mark replaced block as absent
-            setValue(refInfo[cacheHeap[0]].addr, -1);
+            setValue(refInfo[set][cacheHeap[0]].addr, -1);
             cacheHeap[0] = i;
-            heapify(0);
+            heapify(set, 0);
         } else {
             // hit
             hits++;
-            assert(refInfo[cacheHeap[cache_index]].addr == refInfo[i].addr);
-            assert(refInfo[cacheHeap[cache_index]].nextRefTime == i);
-            assert(heapLeft(cache_index) >= numBlks);
+            assert(refInfo[set][cacheHeap[cache_index]].addr ==
+                   refInfo[set][i].addr);
+            assert(refInfo[set][cacheHeap[cache_index]].nextRefTime == i);
+            assert(heapLeft(cache_index) >= assoc);
         }
         cacheHeap[cache_index] = i;
-        processRankIncrease(cache_index);
+        processRankIncrease(set, cache_index);
+    }
+}
+void
+OptCPU::tick()
+{
+    // Do opt simulation
+
+    int references = 0;
+    for (int set = 0; set < numSets; ++set) {
+        if (!refInfo[set].empty()) {
+            processSet(set);
+        }
+        references += refInfo[set].size();
     }
     // exit;
-    fprintf(stderr, "%d, %d, %d\n", misses, hits, refInfo.size());
+    fprintf(stderr, "OPT Misses: %d\nOPT Hits: %d\nOPT Accesses: %d\n",
+            misses, hits, references);
     new SimExitEvent("Finshed Memory Trace");
 }
 
@@ -185,26 +200,29 @@ OptCPU::TickEvent::description()
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(OptCPU)
 
-    SimObjectParam<MemTraceReader *> trace;
+    SimObjectParam<MemTraceReader *> data_trace;
     Param<int> size;
-    Param<int> log_block_size;
+    Param<int> block_size;
+Param<int> assoc;
 
 END_DECLARE_SIM_OBJECT_PARAMS(OptCPU)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(OptCPU)
 
-    INIT_PARAM_DFLT(trace, "instruction cache", NULL),
+    INIT_PARAM_DFLT(data_trace, "memory trace", NULL),
     INIT_PARAM(size, "cache size"),
-    INIT_PARAM(log_block_size, "log base 2 of block size")
+    INIT_PARAM(block_size, "block size"),
+    INIT_PARAM(assoc,"associativity")
 
 END_INIT_SIM_OBJECT_PARAMS(OptCPU)
 
 CREATE_SIM_OBJECT(OptCPU)
 {
     return new OptCPU(getInstanceName(),
-                      trace,
-                      log_block_size,
-                      size);
+                      data_trace,
+                      block_size,
+                      size,
+                      assoc);
 }
 
 REGISTER_SIM_OBJECT("OptCPU", OptCPU)

@@ -161,6 +161,9 @@ ITXReader::getNextReq(MemReqPtr &req)
                   case ITXWrite:
                     tmp_req->cmd = Write;
                     break;
+                  case ITXWriteback:
+                    tmp_req->cmd = Writeback;
+                    break;
                   case ITXCode:
                     tmp_req->cmd = Read;
                     tmp_req->flags |= INST_READ;
