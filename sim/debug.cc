@@ -40,13 +40,15 @@
 
 using namespace std;
 
-#ifdef DEBUG
 void
 debug_break()
 {
+#ifndef NDEBUG
     kill(getpid(), SIGTRAP);
-}
+#else
+    cprintf("debug_break suppressed, compiled with NDEBUG\n");
 #endif
+}
 
 //
 // Debug event: place a breakpoint on the process function and
