@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "kernel_loader.hh"
 #include "exec_context.hh"
 #include "object_file.hh"
 #include "memory_control.hh"
@@ -68,28 +67,47 @@ System::System(const std::string _name,
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
 
-    EcoffObject kernel(kernel_path);
-    EcoffObject console(console_path);
+    ObjectFile *kernel = createObjectFile(kernel_path);
+    if (kernel == NULL)
+        fatal("Could not load kernel file %s", kernel_path);
 
-    if (!kernel.loadGlobals(kernelSymtab))
+    ObjectFile *console = createObjectFile(console_path);
+    if (console == NULL)
+        fatal("Could not load console file %s", console_path);
+
+    if (!kernel->loadGlobalSymbols(kernelSymtab))
         panic("could not load kernel symbols\n");
 
-    if (!console.loadGlobals(consoleSymtab))
+    if (!console->loadGlobalSymbols(consoleSymtab))
         panic("could not load console symbols\n");
 
     // Load pal file
-    loadPal(palcode, physmem, PAL_BASE);
+    ObjectFile *pal = createObjectFile(palcode);
+    if (pal == NULL)
+        fatal("Could not load PALcode file %s", palcode);
+    pal->loadSections(physmem, true);
 
     // copy of initial reg file contents
     initRegs = new RegFile;
     memset(initRegs, 0, sizeof(RegFile));
 
     // Load console file
-    loadKernel(console_path, physmem);
+    console->loadSections(physmem, true);
 
     // Load kernel file
-    loadKernel(kernel_path, physmem, initRegs,
-               &kernelStart, &kernelEnd, &kernelEntry);
+    kernel->loadSections(physmem, true);
+    kernelStart = kernel->textBase();
+    kernelEnd = kernel->bssBase() + kernel->bssSize();
+    kernelEntry = kernel->entryPoint();
+
+    DPRINTF(Loader, "Kernel start = %#x\n"
+            "Kernel end   = %#x\n"
+            "Kernel entry = %#x\n",
+            kernelStart, kernelEnd, kernelEntry);
+
+    // Setup kernel boot parameters
+    initRegs->pc = 0x4001;
+    initRegs->npc = initRegs->pc + sizeof(MachInst);
 
     DPRINTF(Loader, "Kernel loaded...\n");
 
