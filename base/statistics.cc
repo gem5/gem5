@@ -197,11 +197,11 @@ Database::dump(ostream &stream)
            ++j;
            ccprintf(stream, "---------------------------------\n");
         }
+        ccprintf(stream, "**************ALL STATS************\n");
     }
 
     list_t::iterator k = printStats.begin();
     list_t::iterator endprint = printStats.end();
-    ccprintf(stream, "*****ALL STATS*****\n");
     while (k != endprint) {
         Stat *stat = *k;
         if (stat->dodisplay() && !stat->binned())
