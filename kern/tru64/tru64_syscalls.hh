@@ -29,11 +29,14 @@
 #ifndef __TRU64_SYSCALLS_HH__
 #define __TRU64_SYSCALLS_HH__
 
-#include "targetarch/syscalls.hh"
 #include "kern/tru64/tru64.hh"
 
-struct SystemCalls<Tru64>
+template <class OS>
+class SystemCalls;
+
+class SystemCalls<Tru64>
 {
+  public:
     enum {
         syscall = 0,
         exit = 1,

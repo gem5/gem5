@@ -29,11 +29,14 @@
 #ifndef __LINUX_SYSCALLS_HH__
 #define __LINUX_SYSCALLS_HH__
 
-#include "targetarch/syscalls.hh"
 #include "kern/linux/linux.hh"
 
-struct SystemCalls<Linux>
+template <class OS>
+class SystemCalls;
+
+class SystemCalls<Linux>
 {
+  public:
     enum {
         syscall = 0,
     llseek = 1,
