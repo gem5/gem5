@@ -40,8 +40,8 @@
 
 #define DMA_BACKOFF_PERIOD 200
 
-#define MAX_DMA_SIZE (131072) // 256 * SectorSize (512)
-#define MAX_MULTSECT (128)
+#define MAX_DMA_SIZE    (65536)  // 64K
+#define MAX_MULTSECT    (128)
 
 #define PRD_BASE_MASK  0xfffffffe
 #define PRD_COUNT_MASK 0xfffe
@@ -62,7 +62,7 @@ class PrdTableEntry {
         return (entry.baseAddr & PRD_BASE_MASK);
     }
 
-    uint16_t getByteCount()
+    uint32_t getByteCount()
     {
         return ((entry.byteCount == 0) ? MAX_DMA_SIZE :
                 (entry.byteCount & PRD_COUNT_MASK));
@@ -94,6 +94,8 @@ class PrdTableEntry {
 #define STATUS_BSY_BIT  0x80
 #define STATUS_DRDY_BIT 0x40
 #define STATUS_DRQ_BIT  0x08
+#define STATUS_SEEK_BIT 0x10
+#define STATUS_DF_BIT   0x20
 #define DRIVE_LBA_BIT   0x40
 
 #define DEV0 (0)
@@ -114,10 +116,7 @@ typedef struct CommandReg {
         uint8_t drive;
         uint8_t head;
     };
-    union {
-        uint8_t status;
-        uint8_t command;
-    };
+    uint8_t command;
 } CommandReg_t;
 
 typedef enum Events {
@@ -135,6 +134,7 @@ typedef enum DevAction {
     ACT_CMD_WRITE,
     ACT_CMD_COMPLETE,
     ACT_CMD_ERROR,
+    ACT_SELECT_WRITE,
     ACT_STAT_READ,
     ACT_DATA_READY,
     ACT_DATA_READ_BYTE,
@@ -142,7 +142,9 @@ typedef enum DevAction {
     ACT_DATA_WRITE_BYTE,
     ACT_DATA_WRITE_SHORT,
     ACT_DMA_READY,
-    ACT_DMA_DONE
+    ACT_DMA_DONE,
+    ACT_SRST_SET,
+    ACT_SRST_CLEAR
 } DevAction_t;
 
 typedef enum DevState {
@@ -150,6 +152,9 @@ typedef enum DevState {
     Device_Idle_S = 0,
     Device_Idle_SI,
     Device_Idle_NS,
+
+    // Software reset
+    Device_Srst,
 
     // Non-data commands
     Command_Execution,
@@ -202,6 +207,8 @@ class IdeDisk : public SimObject
     struct hd_driveid driveID;
     /** Data buffer for transfers */
     uint8_t *dataBuffer;
+    /** Number of bytes in command data transfer */
+    uint32_t cmdBytes;
     /** Number of bytes left in command data transfer */
     uint32_t cmdBytesLeft;
     /** Number of bytes left in DRQ block */
@@ -210,8 +217,8 @@ class IdeDisk : public SimObject
     uint32_t curSector;
     /** Command block registers */
     CommandReg_t cmdReg;
-    /** Shadow of the current command code */
-    uint8_t curCommand;
+    /** Status register */
+    uint8_t status;
     /** Interrupt enable bit */
     bool nIENBit;
     /** Device state */
@@ -247,6 +254,11 @@ class IdeDisk : public SimObject
      * Delete the data buffer.
      */
     ~IdeDisk();
+
+    /**
+     * Reset the device state
+     */
+    void reset(int id);
 
     /**
      * Set the controller for this device
@@ -306,17 +318,18 @@ class IdeDisk : public SimObject
     void updateState(DevAction_t action);
 
     // Utility functions
-    bool isBSYSet() { return (cmdReg.status & STATUS_BSY_BIT); }
+    bool isBSYSet() { return (status & STATUS_BSY_BIT); }
     bool isIENSet() { return nIENBit; }
     bool isDEVSelect() { return ((cmdReg.drive & SELECT_DEV_BIT) == devID); }
 
     void setComplete()
     {
         // clear out the status byte
-        cmdReg.status = 0;
-
+        status = 0;
         // set the DRDY bit
-        cmdReg.status |= STATUS_DRDY_BIT;
+        status |= STATUS_DRDY_BIT;
+        // set the SEEK bit
+        status |= STATUS_SEEK_BIT;
     }
 
     uint32_t getLBABase()

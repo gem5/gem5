@@ -62,6 +62,9 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
         tba[i] = 0;
     }
 
+    // initialize pchip control register
+    pctl = (ULL(0x1) << 20) | (ULL(0x1) << 32) | (ULL(0x2) << 36);
+
     //Set back pointer in tsunami
     tsunami->pchip = this;
 }
@@ -115,8 +118,7 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
                     *(uint64_t*)data = tba[3];
                     return No_Fault;
               case TSDEV_PC_PCTL:
-                    // might want to change the clock??
-                    *(uint64_t*)data = 0x00; // try this
+                    *(uint64_t*)data = pctl;
                     return No_Fault;
               case TSDEV_PC_PLAT:
                     panic("PC_PLAT not implemented\n");
@@ -205,7 +207,7 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
                     tba[3] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_PCTL:
-                    // might want to change the clock??
+                    pctl = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_PLAT:
                     panic("PC_PLAT not implemented\n");
@@ -260,12 +262,29 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
     Addr pteAddr;
     Addr dmaAddr;
 
+#if 0
+    DPRINTF(IdeDisk, "Translation for bus address: %#x\n", busAddr);
     for (int i = 0; i < 4; i++) {
+        DPRINTF(IdeDisk, "(%d) base:%#x mask:%#x\n",
+                i, wsba[i], wsm[i]);
+
         windowBase = wsba[i];
-        windowMask = ~wsm[i] & (0x7ff << 20);
+        windowMask = ~wsm[i] & (ULL(0xfff) << 20);
 
         if ((busAddr & windowMask) == (windowBase & windowMask)) {
+            DPRINTF(IdeDisk, "Would have matched %d (wb:%#x wm:%#x --> ba&wm:%#x wb&wm:%#x)\n",
+                    i, windowBase, windowMask, (busAddr & windowMask),
+                    (windowBase & windowMask));
+        }
+    }
+#endif
 
+    for (int i = 0; i < 4; i++) {
+
+        windowBase = wsba[i];
+        windowMask = ~wsm[i] & (ULL(0xfff) << 20);
+
+        if ((busAddr & windowMask) == (windowBase & windowMask)) {
 
             if (wsba[i] & 0x1) {   // see if enabled
                 if (wsba[i] & 0x2) { // see if SG bit is set
@@ -279,8 +298,8 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
                         to create an address for the SG page
                     */
 
-                    tbaMask = ~(((wsm[i] & (0x7ff << 20)) >> 10) | 0x3ff);
-                    baMask = (wsm[i] & (0x7ff << 20)) | (0x7f << 13);
+                    tbaMask = ~(((wsm[i] & (ULL(0xfff) << 20)) >> 10) | ULL(0x3ff));
+                    baMask = (wsm[i] & (ULL(0xfff) << 20)) | (ULL(0x7f) << 13);
                     pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
 
                     memcpy((void *)&pteEntry,
@@ -288,10 +307,10 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
                            physmem->dma_addr(pteAddr, sizeof(uint64_t)),
                            sizeof(uint64_t));
 
-                    dmaAddr = ((pteEntry & ~0x1) << 12) | (busAddr & 0x1fff);
+                    dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) | (busAddr & ULL(0x1fff));
 
                 } else {
-                    baMask = (wsm[i] & (0x7ff << 20)) | 0xfffff;
+                    baMask = (wsm[i] & (ULL(0xfff) << 20)) | ULL(0xfffff);
                     tbaMask = ~baMask;
                     dmaAddr = (tba[i] & tbaMask) | (busAddr & baMask);
                 }
@@ -301,12 +320,14 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
         }
     }
 
-    return 0;
+    // if no match was found, then return the original address
+    return busAddr;
 }
 
 void
 TsunamiPChip::serialize(std::ostream &os)
 {
+    SERIALIZE_SCALAR(pctl);
     SERIALIZE_ARRAY(wsba, 4);
     SERIALIZE_ARRAY(wsm, 4);
     SERIALIZE_ARRAY(tba, 4);
@@ -315,6 +336,7 @@ TsunamiPChip::serialize(std::ostream &os)
 void
 TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
 {
+    UNSERIALIZE_SCALAR(pctl);
     UNSERIALIZE_ARRAY(wsba, 4);
     UNSERIALIZE_ARRAY(wsm, 4);
     UNSERIALIZE_ARRAY(tba, 4);
