@@ -68,14 +68,14 @@ SimExitEvent::description()
 //
 CountedExitEvent::CountedExitEvent(EventQueue *q, const std::string &_cause,
                                    Tick _when, int &_downCounter)
-    : Event(q),
+    : Event(q, Sim_Exit_Pri),
       cause(_cause),
       downCounter(_downCounter)
 {
     // catch stupid mistakes
     assert(downCounter > 0);
 
-    schedule(_when, 1000);
+    schedule(_when);
 }
 
 

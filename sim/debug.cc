@@ -64,10 +64,10 @@ class DebugBreakEvent : public Event
 // constructor: schedule at specified time
 //
 DebugBreakEvent::DebugBreakEvent(EventQueue *q, Tick _when)
-    : Event(q)
+    : Event(q, Debug_Break_Pri)
 {
     setFlags(AutoDelete);
-    schedule(_when, -20000);
+    schedule(_when);
 }
 
 //

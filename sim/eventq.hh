@@ -97,11 +97,52 @@ class Event : public Serializable, public FastAlloc
 
   public:
 
+    /// Event priorities, to provide tie-breakers for events scheduled
+    /// at the same cycle.  Most events are scheduled at the default
+    /// priority; these values are used to control events that need to
+    /// be ordered within a cycle.
+    enum Priority {
+        /// Breakpoints should happen before anything else, so we
+        /// don't miss any action when debugging.
+        Debug_Break_Pri		= -100,
+
+        /// For some reason "delayed" inter-cluster writebacks are
+        /// scheduled before regular writebacks (which have default
+        /// priority).  Steve?
+        Delayed_Writeback_Pri	=   -1,
+
+        /// Default is zero for historical reasons.
+        Default_Pri		=    0,
+
+        /// CPU switches schedule the new CPU's tick event for the
+        /// same cycle (after unscheduling the old CPU's tick event).
+        /// The switch needs to come before any tick events to make
+        /// sure we don't tick both CPUs in the same cycle.
+        CPU_Switch_Pri		=   31,
+
+        /// Serailization needs to occur before tick events also, so
+        /// that a serialize/unserialize is identical to an on-line
+        /// CPU switch.
+        Serialize_Pri		=   32,
+
+        /// CPU ticks must come after other associated CPU events
+        /// (such as writebacks).
+        CPU_Tick_Pri		=   50,
+
+        /// Statistics events (dump, reset, etc.) come after
+        /// everything else, but before exit.
+        Stat_Event_Pri		=   90,
+
+        /// If we want to exit on this cycle, it's the very last thing
+        /// we do.
+        Sim_Exit_Pri		=  100
+    };
+
     /*
      * Event constructor
      * @param queue that the event gets scheduled on
      */
-    Event(EventQueue *q, int p = 0)
+    Event(EventQueue *q, Priority p = Default_Pri)
         : queue(q), next(NULL), _priority(p), _flags(None),
 #if TRACING_ON
           when_created(curTick), when_scheduled(0),
@@ -122,14 +163,8 @@ class Event : public Serializable, public FastAlloc
     /// Schedule the event with the current priority or default priority
     void schedule(Tick t);
 
-    /// Schedule the event with a specific priority
-    void schedule(Tick t, int priority);
-
     /// Reschedule the event with the current priority
     void reschedule(Tick t);
-
-    /// Reschedule the event with a specific priority
-    void reschedule(Tick t, int priority);
 
     /// Remove the event from the current schedule
     void deschedule();
@@ -284,13 +319,6 @@ Event::schedule(Tick t)
 }
 
 inline void
-Event::schedule(Tick t, int p)
-{
-    _priority = p;
-    schedule(t);
-}
-
-inline void
 Event::deschedule()
 {
     assert(scheduled());
@@ -311,13 +339,6 @@ Event::reschedule(Tick t)
 #endif
     _when = t;
     queue->reschedule(this);
-}
-
-inline void
-Event::reschedule(Tick t, int p)
-{
-    _priority = p;
-    reschedule(t);
 }
 
 inline void

@@ -43,23 +43,23 @@ class SimExitEvent : public Event
 
   public:
     SimExitEvent(const std::string &_cause, int c = 0)
-        : Event(&mainEventQueue), cause(_cause),
+        : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
           code(c)
-        { schedule(curTick, 1000); }
+        { schedule(curTick); }
 
     SimExitEvent(Tick _when, const std::string &_cause, int c = 0)
-        : Event(&mainEventQueue), cause(_cause),
+        : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
           code(c)
-        { schedule(_when, 1000); }
+        { schedule(_when); }
 
     SimExitEvent(EventQueue *q, const std::string &_cause, int c = 0)
-        : Event(q), cause(_cause), code(c)
-        { schedule(curTick, 1000); }
+        : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
+        { schedule(curTick); }
 
     SimExitEvent(EventQueue *q, Tick _when, const std::string &_cause,
                  int c = 0)
-        : Event(q), cause(_cause), code(c)
-        { schedule(_when, 1000); }
+        : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
+        { schedule(_when); }
 
     void process();	// process event
 

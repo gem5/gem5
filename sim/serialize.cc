@@ -259,7 +259,7 @@ class SerializeEvent : public Event
 };
 
 SerializeEvent::SerializeEvent(Tick _when, Tick _repeat)
-    : Event(&mainEventQueue, 990), repeat(_repeat)
+    : Event(&mainEventQueue, Serialize_Pri), repeat(_repeat)
 {
     setFlags(AutoDelete);
     schedule(_when);
