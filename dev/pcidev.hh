@@ -141,6 +141,10 @@ class PciDev : public DmaDevice
     intrClear()
     { plat->clearPciInt(configData->config.hdr.pci0.interruptLine); }
 
+    uint8_t
+    interruptLine()
+    { return configData->config.hdr.pci0.interruptLine; }
+
   public:
     /**
      * Constructor for PCI Dev. This function copies data from the
