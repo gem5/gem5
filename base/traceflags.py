@@ -123,7 +123,8 @@ baseFlags = [
     'Uart',
     'Split',
     'SQL',
-    'Thread'
+    'Thread',
+    'HWPrefetch'
     ]
 
 #
