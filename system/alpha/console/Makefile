@@ -8,7 +8,7 @@ SOURDIR = ./
 PALCODE  = ../palcode
 INCLUDEH = ../h
 CC=gcc
-AS=gas
+#AS=gas
 
 dbmentry.o: dbmentry.s 
 	$(AS)  $(INCLUDES) -nointrinsics -o $*.o $*.s

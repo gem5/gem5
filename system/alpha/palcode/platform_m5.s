@@ -802,47 +802,75 @@ sys_int_20:
 
 	ALIGN_BRANCH
 sys_int_21:
-        or      r31,3,r16                       // a0 means it is a I/O interrupt
+    or      r31,3,r16                       // a0 means it is a I/O interrupt
         
-	lda     r8,0xf01(r31)
-	sll     r8,32,r8
-	ldah    r9,0xa0(r31)
-	sll	r9,8,r9
-	bis	r8,r9,r8	
-	lda     r8,0x0080(r8)
-        ldqp    r9, 0(r8)                       // read the MISC register
+    lda     r8,0xf01(r31)
+    sll     r8,32,r8
+    ldah    r9,0xa0(r31)
+    sll	    r9,8,r9
+    bis	    r8,r9,r8	
+    lda     r8,0x0080(r8)
+    ldqp    r9, 0(r8)                       // read the MISC register for CPUID
         
-        and     r9,0x1,r10                      // grab LSB and shift left 2
-        sll     r10,2,r10
-        and     r9,0x2,r11                      // grabl LSB+1 and shift left 5
-        sll     r11,5,r11
-        
-        mskbl   r8,0,r8                         // calculate DIRn address
-        lda     r9,0x280(r31)
-	bis	r8,r9,r8
-        or      r8,r10,r8
-        or      r8,r11,r8
-        ldqp    r9, 0(r8)                       // read DIRn
+    and     r9,0x1,r10                      // grab LSB and shift left 2
+    sll     r10,2,r10
+    and     r9,0x2,r11                      // grabl LSB+1 and shift left 5
+    sll     r11,5,r11
+    
+    mskbl   r8,0,r8                         // calculate DIRn address
+    lda     r9,0x280(r31)
+    bis	    r8,r9,r8
+    or      r8,r10,r8
+    or      r8,r11,r8
+    ldqp    r9, 0(r8)                       // read DIRn
 
-        or      r31,63,r17                      // load  63 into the counter
-	or	r31,1,r11
-	sll	r11,63,r11			// load a 1 into the msb
+    or      r31,1,r10                       // set bit 55 (ISA Interrupt)
+    sll     r10,55,r10                      
+    
+    and     r9, r10, r10                    // check if bit 55 is set
+    lda     r13,0x900(r31)                  // load offset for normal into r13
+    beq     r10, normal_int                 // if not compute the vector normally
+    
+    lda     r13,0x800(r31)                  // replace with offset for pic
+    lda     r8,0xf01(r31)                   // build an addr to access PIC
+    sll     r8,32,r8                        // at f01fc000000
+    ldah    r9,0xfc(r31)
+    sll	    r9,8,r9
+    bis	    r8,r9,r8	
+    ldqp    r9,0x0020(r8)                   // read PIC1 ISR for interrupting dev
+
+#if 0 // we have a 21164 so this won't work because of the ctlz, if we ever change that...
+normal_int:    
+    ctlz    r9,r10                          // count the number of leading zeros
+    lda     r11,63(r31)
+    subq    r11,r10,r17                     // subtract from 
+    
+    lda	    r9,0x10(r31)
+    mulq    r17,r9,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
+    lda     r9,0x900(r31)
+    addq    r17,r9,r17
+       
+    br      r31, pal_post_interrupt
+#endif 
+
+normal_int:    
+    or      r31,63,r17                      // load  63 into the counter
+    or	r31,1,r11
+    sll	r11,63,r11			// load a 1 into the msb
 
 find_msb:	
-	and	r9,r11,r10
-	bne	r10, found_msb
+    and	r9,r11,r10
+    bne	r10, found_msb
 	srl	r11,1,r11
-	subl    r17,1,r17 
-	br	r31, find_msb
+    subl    r17,1,r17 
+    br	r31, find_msb
 	
 found_msb:
-	lda	r9,0x10(r31)
-        mulq    r17,r9,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
-	lda     r9,0x900(r31)
-        addq    r17,r9,r17
-        
-        br      r31, pal_post_interrupt
-
+    lda	r9,0x10(r31)
+    mulq    r17,r9,r17                    // compute offset + (0x10 * Highest DIRn-bit)
+    addq    r17,r13,r17
+       
+    br      r31, pal_post_interrupt
         
 	ALIGN_BRANCH
 pal_post_dev_interrupt:
