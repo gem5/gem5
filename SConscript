@@ -65,6 +65,7 @@ base_sources = Split('''
 	base/pollevent.cc
 	base/python.cc
 	base/range.cc
+	base/random.cc
 	base/sat_counter.cc
 	base/socket.cc
 	base/statistics.cc

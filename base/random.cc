@@ -39,7 +39,7 @@ class RandomContext : public ParamContext
   public:
     RandomContext(const string &_iniSection)
         : ::ParamContext(_iniSection) {}
-    ~RandomContext();
+    ~RandomContext() {}
 
     void checkParams();
 };

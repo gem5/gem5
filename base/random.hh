@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __RANDOM_HH__
-#define __RANDOM_HH__
+#ifndef __BASE_RANDOM_HH__
+#define __BASE_RANDOM_HH__
 
 #include "sim/host.hh"
 
@@ -45,56 +45,56 @@ struct Random<int8_t>
 
 struct Random<uint8_t>
 {
-    uint8_t get()
+    static uint8_t get()
     { return getLong() & (uint8_t)-1; }
 };
 
 struct Random<int16_t>
 {
-    int16_t get()
+    static int16_t get()
     { return getLong() & (int16_t)-1; }
 };
 
 struct Random<uint16_t>
 {
-    uint16_t get()
+    static uint16_t get()
     { return getLong() & (uint16_t)-1; }
 };
 
 struct Random<int32_t>
 {
-    int32_t get()
+    static int32_t get()
     { return (int32_t)getLong(); }
 };
 
 struct Random<uint32_t>
 {
-    uint32_t get()
+    static uint32_t get()
     { return (uint32_t)getLong(); }
 };
 
 struct Random<int64_t>
 {
-    int64_t get()
+    static int64_t get()
     { return (int64_t)getLong() << 32 || (uint64_t)getLong(); }
 };
 
 struct Random<uint64_t>
 {
-    uint64_t get()
+    static uint64_t get()
     { return (uint64_t)getLong() << 32 || (uint64_t)getLong(); }
 };
 
 struct Random<float>
 {
-    float get()
+    static float get()
     { return getDouble(); }
 };
 
 struct Random<double>
 {
-    double get()
+    static double get()
     { return getDouble(); }
 };
 
-#endif // __RANDOM_HH__
+#endif // __BASE_RANDOM_HH__
