@@ -35,6 +35,7 @@
  * up boot time.
  */
 
+#include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base_cpu.hh"
@@ -48,8 +49,6 @@
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 #include "sim/debug.hh"
-
-extern SymbolTable *debugSymbolTable;
 
 using namespace std;
 

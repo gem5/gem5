@@ -152,9 +152,8 @@ class Statistic(object):
     def __setattr__(self, attr, value):
         if attr == 'bins' or attr == 'ticks':
             if attr == 'bins':
-                global db
                 if value is not None:
-                    value = db.getBin(value)
+                    value = source.getBin(value)
             elif attr == 'samples' and type(value) is str:
                 value = [ int(x) for x in value.split() ]
 

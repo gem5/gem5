@@ -31,7 +31,6 @@
 
 #include "cpu/base_cpu.hh"
 #include "sim/eventq.hh"
-#include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "base/statistics.hh"
 #include "cpu/exec_context.hh"
@@ -143,7 +142,8 @@ class SimpleCPU : public BaseCPU
               Counter max_loads_any_thread, Counter max_loads_all_threads,
               AlphaITB *itb, AlphaDTB *dtb, FunctionalMemory *mem,
               MemInterface *icache_interface, MemInterface *dcache_interface,
-              bool _def_reg, Tick freq);
+              bool _def_reg, Tick freq,
+              bool _function_trace, Tick _function_trace_start);
 
 #else
 
@@ -153,7 +153,8 @@ class SimpleCPU : public BaseCPU
               Counter max_loads_any_thread,
               Counter max_loads_all_threads,
               MemInterface *icache_interface, MemInterface *dcache_interface,
-              bool _def_reg);
+              bool _def_reg,
+              bool _function_trace, Tick _function_trace_start);
 
 #endif
 

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64_events.hh"

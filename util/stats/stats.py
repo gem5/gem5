@@ -43,7 +43,7 @@ def graphdata(runs, tag, label, value):
     import info
     configs = ['stx', 'ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
     benchmarks = [ 'm', 's' ]
-    dmas = [ 'X', 'D' ]
+    dmas = [ 'x', 'd', 'b' ]
     caches = [ '2', '4' ]
     checkpoints = [ '1' ]
 
@@ -56,7 +56,7 @@ def graphdata(runs, tag, label, value):
 
     for bench,dma,cache,cpt in names:
         base = '%s.%s.%s.%s' % (bench, dma, cache, cpt)
-        fname = '/n/ziff/z/binkertn/graph/test2/data/%s.%s.dat' % (tag, base)
+        fname = 'data/%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
         print >>f, '#set TITLE = %s' % base
         print >>f, '#set xlbl = Configuration'
@@ -132,8 +132,6 @@ def commands(options, command, args):
     info.source.connect()
     info.source.update_dict(globals())
 
-    system = info.source.__dict__[options.system]
-
     if type(options.get) is str:
         info.source.get = options.get
 
@@ -178,6 +176,26 @@ def commands(options, command, args):
             if options.graph:
                 graphdata(runs, stat.name, stat.name, stat)
             else:
+                if options.binned:
+                    print 'kernel ticks'
+                    stat.bins = 'kernel'
+                    printdata(runs, stat)
+
+                    print 'idle ticks'
+                    stat.bins = 'idle'
+                    printdata(runs, stat)
+
+                    print 'user ticks'
+                    stat.bins = 'user'
+                    printdata(runs, stat)
+
+                    print 'interrupt ticks'
+                    stat.bins = 'user'
+                    printdata(runs, stat)
+
+                    print 'total ticks'
+
+                stat.bins = None
                 print stat.name
                 printdata(runs, stat)
         return
@@ -211,6 +229,8 @@ def commands(options, command, args):
 
     if len(args):
         raise CommandException
+
+    system = info.source.__dict__[options.system]
 
     if command == 'usertime':
         import copy

@@ -48,8 +48,6 @@ using namespace std;
 //
 
 
-SymbolTable *debugSymbolTable = NULL;
-
 void
 Trace::InstRecord::dump(ostream &outs)
 {
@@ -66,11 +64,17 @@ Trace::InstRecord::dump(ostream &outs)
         outs << "T" << thread << " : ";
 
 
-    std::string str;
-    if ((debugSymbolTable) && (debugSymbolTable->findNearestSymbol(PC, str)))
-        outs << "@" << setw(17) << str << " : ";
-    else
+    std::string sym_str;
+    Addr sym_addr;
+    if (debugSymbolTable
+        && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
+        if (PC != sym_addr)
+            sym_str += csprintf("+%d", PC - sym_addr);
+        outs << "@" << sym_str << " : ";
+    }
+    else {
         outs << "0x" << hex << PC << " : ";
+    }
 
     //
     //  Print decoded instruction

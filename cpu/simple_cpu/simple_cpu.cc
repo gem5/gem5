@@ -123,11 +123,12 @@ SimpleCPU::SimpleCPU(const string &_name,
                      FunctionalMemory *mem,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
-                     bool _def_reg, Tick freq)
+                     bool _def_reg, Tick freq,
+                     bool _function_trace, Tick _function_trace_start)
     : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
-              _system, freq),
+              _system, freq, _function_trace, _function_trace_start),
 #else
 SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      Counter max_insts_any_thread,
@@ -136,10 +137,12 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      Counter max_loads_all_threads,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
-                     bool _def_reg)
+                     bool _def_reg,
+                     bool _function_trace, Tick _function_trace_start)
     : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
               max_insts_any_thread, max_insts_all_threads,
-              max_loads_any_thread, max_loads_all_threads),
+              max_loads_any_thread, max_loads_all_threads,
+              _function_trace, _function_trace_start),
 #endif
       tickEvent(this), xc(NULL), cacheCompletionEvent(this)
 {
@@ -778,6 +781,8 @@ SimpleCPU::tick()
         if (traceData)
             traceData->finalize();
 
+        traceFunctions(xc->regs.pc);
+
     }	// if (fault == No_Fault)
 
     if (fault != No_Fault) {
@@ -836,6 +841,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
     Param<bool> defer_registration;
     Param<int> multiplier;
+    Param<bool> function_trace;
+    Param<Tick> function_trace_start;
 
 END_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
@@ -869,7 +876,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM_DFLT(defer_registration, "defer registration with system "
                     "(for sampling)", false),
 
-    INIT_PARAM_DFLT(multiplier, "clock multiplier", 1)
+    INIT_PARAM_DFLT(multiplier, "clock multiplier", 1),
+    INIT_PARAM_DFLT(function_trace, "Enable function trace", false),
+    INIT_PARAM_DFLT(function_trace_start, "Cycle to start function trace", 0)
 
 END_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
@@ -888,7 +897,8 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
                         defer_registration,
-                        ticksPerSecond * mult);
+                        ticksPerSecond * mult,
+                        function_trace, function_trace_start);
 #else
 
     cpu = new SimpleCPU(getInstanceName(), workload,
@@ -896,7 +906,8 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         max_loads_any_thread, max_loads_all_threads,
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
-                        defer_registration);
+                        defer_registration,
+                        function_trace, function_trace_start);
 
 #endif // FULL_SYSTEM
 

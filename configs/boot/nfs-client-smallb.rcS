@@ -8,7 +8,7 @@ echo -n "mounting swap..."
 echo "done."
 
 echo -n "setting up network..."
-/sbin/ifconfig eth0 10.0.0.1 txqueuelen 1000
+/sbin/ifconfig eth0 10.0.0.2 txqueuelen 1000
 /sbin/ifconfig lo 127.0.0.1
 
 echo "1" > /proc/sys/net/ipv4/tcp_tw_recycle
@@ -32,39 +32,19 @@ echo "300000" > /proc/sys/net/core/netdev_max_backlog
 echo "131072" > /proc/sys/fs/file-max
 echo "done."
 
-#if [ ! -x /dev/sda ] 
-#then
-#     mknod /dev/sda b 8 0
-#     mknod /dev/sda1 b 8 1
-#fi
+echo -n "starting nfs client..."
+/sbin/portmap &
+/sbin/lockd &
+echo "done."
 
-/sbin/insmod /modules/scsi_debug.ko dev_size_mb=768
+echo -n "waiting for server..."
+/usr/bin/netcat -c -l -p 8000
 
-echo -n "creating partition and formatting..."
-#echo "1,767,L" > /tmp/sfdisk.run
-#/usr/sbin/sfdisk -uM --force /dev/sda < /tmp/sfdisk.run
-/sbin/mke2fs -F /dev/sda 
+echo -n "mounting remote share..."
 mkdir /nfs
-/bin/mount  /dev/sda /nfs 
-chmod a+rwx /nfs
-#/usr/sbin/sfdisk -uM -l /dev/sda
+mount -o rsize=1460,wsize=1460 10.0.0.1:/nfs /nfs
 echo "done."
 
-echo "/nfs 10.0.0.0/255.0.0.0(rw,sync,no_root_squash)" > /etc/exports
-echo -n "starting nfs kernel server..."
-/sbin/portmap
-/sbin/lockd
-/sbin/statd
-/sbin/nfsd 8
-/sbin/mountd
-echo "done."
+/bin/bonnie++ -u 99 -s 700 -r 0 -n 0 -f -F -d /nfs
 
-echo "Exporting shares..."
-/sbin/exportfs -r -v
-
-echo -n "signal client to mount..."
-echo "server ready" | /usr/bin/netcat -c 10.0.0.2 8000
-echo "done."
-
-echo -n "starting bash shell..."
-/bin/bash
+/sbin/m5 exit

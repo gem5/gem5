@@ -2,13 +2,18 @@
 #
 # /etc/init.d/rcS
 #
+NATBOX=192.168.0.7
 
 echo -n "mounting swap..."
-/sbin/swapon /dev/hdc
+/sbin/swapon /dev/hdc1
 echo "done."
 
 echo -n "setting up network..."
-/sbin/ifconfig eth0 10.0.0.1 txqueuelen 1000
+/sbin/ifconfig eth0 192.168.0.1 txqueuelen 1000
+/sbin/ifconfig eth0:1 192.168.0.2 txqueuelen 1000
+/sbin/ifconfig eth0:2 192.168.0.3 txqueuelen 1000
+/sbin/ifconfig eth0:3 192.168.0.4 txqueuelen 1000
+/sbin/ifconfig eth0:4 192.168.0.5 txqueuelen 1000
 /sbin/ifconfig lo 127.0.0.1
 
 echo "1" > /proc/sys/net/ipv4/tcp_tw_recycle
@@ -32,39 +37,20 @@ echo "300000" > /proc/sys/net/core/netdev_max_backlog
 echo "131072" > /proc/sys/fs/file-max
 echo "done."
 
-#if [ ! -x /dev/sda ] 
-#then
-#     mknod /dev/sda b 8 0
-#     mknod /dev/sda1 b 8 1
-#fi
-
-/sbin/insmod /modules/scsi_debug.ko dev_size_mb=768
-
-echo -n "creating partition and formatting..."
-#echo "1,767,L" > /tmp/sfdisk.run
-#/usr/sbin/sfdisk -uM --force /dev/sda < /tmp/sfdisk.run
-/sbin/mke2fs -F /dev/sda 
-mkdir /nfs
-/bin/mount  /dev/sda /nfs 
-chmod a+rwx /nfs
-#/usr/sbin/sfdisk -uM -l /dev/sda
+echo -n "mounting file set..."
+mkdir -p /z/htdocs
+mount /dev/hdb1 /z/htdocs
 echo "done."
 
-echo "/nfs 10.0.0.0/255.0.0.0(rw,sync,no_root_squash)" > /etc/exports
-echo -n "starting nfs kernel server..."
-/sbin/portmap
-/sbin/lockd
-/sbin/statd
-/sbin/nfsd 8
-/sbin/mountd
+echo -n "starting httpd..."
+/benchmarks/apache2/bin/apachectl start
+sleep 2
+cat /benchmarks/apache2/logs/error_log
 echo "done."
 
-echo "Exporting shares..."
-/sbin/exportfs -r -v
-
-echo -n "signal client to mount..."
-echo "server ready" | /usr/bin/netcat -c 10.0.0.2 8000
-echo "done."
+echo "notifying natbox..."
+echo "server ready" | /usr/bin/netcat -c $NATBOX 8000
+echo "done"
 
 echo -n "starting bash shell..."
 /bin/bash
