@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /* @file
- * Tsunami CChip (processor, memory, or IO)
+ * Emulation of the Tsunami CChip CSRs
  */
 
 #include <deque>

@@ -80,7 +80,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
     INIT_PARAM(ethernet, "ethernet controller"),
     INIT_PARAM(cons, "system console"),
     INIT_PARAM(intrctrl, "interrupt controller"),
-    INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1200)
+    INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1024)
 
 END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
