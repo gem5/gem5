@@ -1,6 +1,6 @@
 from Pci import PciDevice
 
-IdeID = Enum('master', 'slave')
+class IdeID(Enum): vals = ['master', 'slave']
 
 simobj IdeDisk(SimObject):
     type = 'IdeDisk'
