@@ -344,7 +344,7 @@ StatData::less(StatData *stat1, StatData *stat2)
 }
 
 bool
-StatData::check() const
+StatData::baseCheck() const
 {
     if (!init) {
 #ifdef STAT_DEBUG
