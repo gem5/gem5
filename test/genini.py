@@ -34,7 +34,6 @@ sys.path.append(joinpath(mypath, '../util/pbs'))
 sys.path.append(joinpath(mypath, '../sim/pyconfig'))
 
 from importer import AddToPath, LoadMpyFile
-from m5config import *
 
 AddToPath('.')
 
@@ -49,11 +48,13 @@ try:
             else:
                 name = arg[:offset]
                 value = arg[offset+1:]
-            env[name] = value
+            os.environ[name] = value
         if opt == '-I':
             AddToPath(arg)
 except getopt.GetoptError:
     sys.exit('Improper Usage')
+
+from m5config import *
 
 for arg in args:
     LoadMpyFile(arg)

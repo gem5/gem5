@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,7 +79,7 @@ ignoreFunc(SyscallDesc *desc, int callnum, Process *process,
                            << ", " << xc->getSyscallArg(1)
                            << ", ...)" << endl;
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 
@@ -89,14 +89,14 @@ exitFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     new SimExitEvent("syscall caused exit", xc->getSyscallArg(0) & 0xff);
 
-    return SyscallReturn(1);
+    return 1;
 }
 
 
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    return SyscallReturn(VMPageSize);
+    return VMPageSize;
 }
 
 
@@ -109,7 +109,8 @@ obreakFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     {
         p->brk_point = xc->getSyscallArg(0);
     }
-    return SyscallReturn(p->brk_point);
+    DPRINTF(SyscallVerbose, "Break Point changed to: %#X\n", p->brk_point);
+    return p->brk_point;
 }
 
 
@@ -117,7 +118,7 @@ SyscallReturn
 closeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     int fd = p->sim_fd(xc->getSyscallArg(0));
-    return SyscallReturn(close(fd));
+    return close(fd);
 }
 
 
@@ -133,7 +134,7 @@ readFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     if (bytes_read != -1)
         bufArg.copyOut(xc->mem);
 
-    return SyscallReturn(bytes_read);
+    return bytes_read;
 }
 
 SyscallReturn
@@ -149,7 +150,7 @@ writeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 
     fsync(fd);
 
-    return SyscallReturn(bytes_written);
+    return bytes_written;
 }
 
 
@@ -162,8 +163,7 @@ lseekFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 
     off_t result = lseek(fd, offs, whence);
 
-    return (result == (off_t)-1) ? SyscallReturn(-errno) :
-                                   SyscallReturn(result);
+    return (result == (off_t)-1) ? -errno : result;
 }
 
 
@@ -171,7 +171,7 @@ SyscallReturn
 munmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     // given that we don't really implement mmap, munmap is really easy
-    return SyscallReturn(0);
+    return 0;
 }
 
 
@@ -187,7 +187,7 @@ gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 
     name.copyOut(xc->mem);
 
-    return SyscallReturn(0);
+    return 0;
 }
 
 SyscallReturn
@@ -199,7 +199,7 @@ unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
         return (TheISA::IntReg)-EFAULT;
 
     int result = unlink(path.c_str());
-    return (result == -1) ? SyscallReturn(-errno) : SyscallReturn(result);
+    return (result == -1) ? -errno : result;
 }
 
 SyscallReturn
@@ -208,14 +208,14 @@ renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     std::string old_name;
 
     if (xc->mem->readString(old_name, xc->getSyscallArg(0)) != No_Fault)
-        return SyscallReturn(-EFAULT);
+        return -EFAULT;
 
     std::string new_name;
 
     if (xc->mem->readString(new_name, xc->getSyscallArg(1)) != No_Fault)
-        return SyscallReturn(-EFAULT);
+        return -EFAULT;
 
     int64_t result = rename(old_name.c_str(),new_name.c_str());
-    return (result == -1) ? SyscallReturn(-errno) : SyscallReturn(result);
+    return (result == -1) ? -errno : result;
 }
 

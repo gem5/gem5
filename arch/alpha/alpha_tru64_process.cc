@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -489,7 +489,7 @@ class Tru64 {
         strcpy(name->machine, "alpha");
 
         name.copyOut(xc->mem);
-        return SyscallReturn(0);
+        return 0;
     }
 
 
@@ -507,21 +507,21 @@ class Tru64 {
               TypedBufferArg<uint32_t> max_cpu(xc->getSyscallArg(1));
               *max_cpu = process->numCpus();
               max_cpu.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           case Tru64::GSI_CPUS_IN_BOX: {
               TypedBufferArg<uint32_t> cpus_in_box(xc->getSyscallArg(1));
               *cpus_in_box = process->numCpus();
               cpus_in_box.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           case Tru64::GSI_PHYSMEM: {
               TypedBufferArg<uint64_t> physmem(xc->getSyscallArg(1));
               *physmem = 1024 * 1024;	// physical memory in KB
               physmem.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           case Tru64::GSI_CPU_INFO: {
@@ -538,14 +538,14 @@ class Tru64 {
               infop->mhz = 667;
 
               infop.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           case Tru64::GSI_PROC_TYPE: {
               TypedBufferArg<uint64_t> proc_type(xc->getSyscallArg(1));
               *proc_type = 11;
               proc_type.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           case Tru64::GSI_PLATFORM_NAME: {
@@ -554,14 +554,14 @@ class Tru64 {
                       "COMPAQ Professional Workstation XP1000",
                       nbytes);
               bufArg.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           case Tru64::GSI_CLK_TCK: {
               TypedBufferArg<uint64_t> clk_hz(xc->getSyscallArg(1));
               *clk_hz = 1024;
               clk_hz.copyOut(xc->mem);
-              return SyscallReturn(1);
+              return 1;
           }
 
           default:
@@ -570,7 +570,7 @@ class Tru64 {
             break;
         }
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Target fnctl() handler.
@@ -581,7 +581,7 @@ class Tru64 {
         int fd = xc->getSyscallArg(0);
 
         if (fd < 0 || process->sim_fd(fd) < 0)
-            return SyscallReturn(-EBADF);
+            return -EBADF;
 
         int cmd = xc->getSyscallArg(1);
         switch (cmd) {
@@ -589,18 +589,18 @@ class Tru64 {
             // if we really wanted to support this, we'd need to do it
             // in the target fd space.
             warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
-            return SyscallReturn(-EMFILE);
+            return -EMFILE;
 
           case 1: // F_GETFD (get close-on-exec flag)
           case 2: // F_SETFD (set close-on-exec flag)
-            return SyscallReturn(0);
+            return 0;
 
           case 3: // F_GETFL (get file flags)
           case 4: // F_SETFL (set file flags)
             // not sure if this is totally valid, but we'll pass it through
             // to the underlying OS
             warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
-            return SyscallReturn(fcntl(process->sim_fd(fd), cmd));
+            return fcntl(process->sim_fd(fd), cmd);
             // return 0;
 
           case 7: // F_GETLK  (get lock)
@@ -608,11 +608,11 @@ class Tru64 {
           case 9: // F_SETLKW (set lock and wait)
             // don't mess with file locking... just act like it's OK
             warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
-            return SyscallReturn(0);
+            return 0;
 
           default:
             warn("Unknown fcntl command %d\n", cmd);
-            return SyscallReturn(0);
+            return 0;
         }
     }
 
@@ -638,7 +638,7 @@ class Tru64 {
         // check for error
         if (host_result < 0) {
             delete [] host_buf;
-            return SyscallReturn(-errno);
+            return -errno;
         }
 
         // no error: copy results back to target space
@@ -669,7 +669,7 @@ class Tru64 {
         *basep = host_basep;
         basep.copyOut(xc->mem);
 
-        return SyscallReturn(tgt_buf_ptr - tgt_buf);
+        return tgt_buf_ptr - tgt_buf;
     }
 
     /// Target sigreturn() handler.
@@ -695,7 +695,7 @@ class Tru64 {
 
         regs->miscRegs.fpcr = sc->sc_fpcr;
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Target table() handler.
@@ -712,7 +712,7 @@ class Tru64 {
         switch (id) {
           case Tru64::TBL_SYSINFO: {
               if (index != 0 || nel != 1 || lel != sizeof(Tru64::tbl_sysinfo))
-                  return SyscallReturn(-EINVAL);
+                  return -EINVAL;
               TypedBufferArg<Tru64::tbl_sysinfo> elp(xc->getSyscallArg(2));
 
               const int clk_hz = one_million;
@@ -726,12 +726,12 @@ class Tru64 {
               elp->si_boottime = seconds_since_epoch; // seconds since epoch?
               elp->si_max_procs = process->numCpus();
               elp.copyOut(xc->mem);
-              return SyscallReturn(0);
+              return 0;
           }
 
           default:
             cerr << "table(): id " << id << " unknown." << endl;
-            return SyscallReturn(-EINVAL);
+            return -EINVAL;
         }
     }
 
@@ -766,7 +766,7 @@ class Tru64 {
             argp.copyOut(xc->mem);
         }
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// NXM library version stamp.
@@ -877,7 +877,7 @@ class Tru64 {
         *configptr_ptr = config_addr;
         configptr_ptr.copyOut(xc->mem);
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Initialize execution context.
@@ -946,7 +946,7 @@ class Tru64 {
             *kidp = 99;
             kidp.copyOut(xc->mem);
 
-            return SyscallReturn(0);
+            return 0;
         } else if (attrp->type == Tru64::NXM_TYPE_VP) {
             // A real "virtual processor" kernel thread.  Need to fork
             // this thread on another CPU.
@@ -994,7 +994,7 @@ class Tru64 {
                     *kidp = thread_index;
                     kidp.copyOut(xc->mem);
 
-                    return SyscallReturn(0);
+                    return 0;
                 }
             }
 
@@ -1007,7 +1007,7 @@ class Tru64 {
             abort();
         }
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Thread idle call (like yield()).
@@ -1015,7 +1015,7 @@ class Tru64 {
     nxm_idleFunc(SyscallDesc *desc, int callnum, Process *process,
                  ExecContext *xc)
     {
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Block thread.
@@ -1032,7 +1032,7 @@ class Tru64 {
         cout << xc->cpu->name() << ": nxm_thread_block " << tid << " " << secs
              << " " << flags << " " << action << " " << usecs << endl;
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// block.
@@ -1053,7 +1053,7 @@ class Tru64 {
              << " " << secs << " " << usecs
              << " " << flags << endl;
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Unblock thread.
@@ -1066,7 +1066,7 @@ class Tru64 {
         cout << xc->cpu->name() << ": nxm_unblock "
              << hex << uaddr << dec << endl;
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Switch thread priority.
@@ -1081,7 +1081,7 @@ class Tru64 {
         //
         // Since we assume at most one "kernel" thread per CPU, it's
         // always safe to return false here.
-        return SyscallReturn(0); //false;
+        return 0; //false;
     }
 
 
@@ -1165,7 +1165,7 @@ class Tru64 {
         // Return 0 since we will always return to the user with the lock
         // acquired.  We will just keep the context inactive until that is
         // true.
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Try lock (non-blocking).
@@ -1182,9 +1182,9 @@ class Tru64 {
             // lock is free: grab it
             *lockp = 1;
             lockp.copyOut(xc->mem);
-            return SyscallReturn(0);
+            return 0;
         } else {
-            return SyscallReturn(1);
+            return 1;
         }
     }
 
@@ -1197,7 +1197,7 @@ class Tru64 {
 
         m5_unlock_mutex(uaddr, process, xc);
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Signal ocndition.
@@ -1210,7 +1210,7 @@ class Tru64 {
         // Wake up one process waiting on the condition variable.
         activate_waiting_context(cond_addr, process);
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Wake up all processes waiting on the condition variable.
@@ -1222,7 +1222,7 @@ class Tru64 {
 
         activate_waiting_context(cond_addr, process, true);
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Wait on a condition.
@@ -1244,7 +1244,7 @@ class Tru64 {
         process->waitList.push_back(Process::WaitRec(cond_addr, xc));
         xc->suspend();
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Thread exit.
@@ -1255,7 +1255,7 @@ class Tru64 {
         assert(xc->status() == ExecContext::Active);
         xc->deallocate();
 
-        return SyscallReturn(0);
+        return 0;
     }
 
     /// Array of syscall descriptors for Mach syscalls, indexed by
@@ -1302,7 +1302,7 @@ class Tru64 {
 
         doSyscall(new_callnum, process, xc);
 
-        return SyscallReturn(0);
+        return 0;
     }
 
 };  // class Tru64
