@@ -142,7 +142,7 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
         close(STDOUT_FILENO);
         if (dup2(fd[1], STDOUT_FILENO) == -1)
-            return 1;
+            exit(1);
 
         execvp("g++", args);
 

@@ -34,10 +34,48 @@ using namespace std;
 #define CONS_INT_TX   0x01  // interrupt enable / state bits
 #define CONS_INT_RX   0x02
 
+
+TsunamiUart::IntrEvent::IntrEvent(TsunamiUart *u)
+    : Event(&mainEventQueue), uart(u)
+{
+    DPRINTF(TsunamiUart, "UART Interrupt Event Initilizing\n");
+}
+
+const char *
+TsunamiUart::IntrEvent::description()
+{
+    return "tsunami uart interrupt delay event";
+}
+
+void
+TsunamiUart::IntrEvent::process()
+{
+    if (UART_IER_THRI & uart->IER) {
+       DPRINTF(TsunamiUart, "UART InterEvent, interrupting\n");
+       uart->cons->raiseInt(CONS_INT_TX);
+    }
+    else
+       DPRINTF(TsunamiUart, "UART InterEvent, not interrupting\n");
+
+}
+
+void
+TsunamiUart::IntrEvent::scheduleIntr()
+{
+    DPRINTF(TsunamiUart, "Scheduling IER interrupt\n");
+    if (!scheduled())
+        schedule(curTick + 300);
+    else
+        reschedule(curTick + 300);
+}
+
+
+
 TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
                          MemoryController *mmu, Addr a,
                          HierParams *hier, Bus *bus)
-    : PioDevice(name), addr(a), cons(c), status_store(0), valid_char(false)
+    : PioDevice(name), addr(a), cons(c), status_store(0), valid_char(false),
+      intrEvent(this)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
 
@@ -74,14 +112,14 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
 
     switch(daddr) {
       case 0x5: // Status Register
-        {
+      {
             int status = cons->intStatus();
             if (!valid_char) {
-                valid_char = cons->in(next_char);
+            valid_char = cons->in(next_char);
                 if (!valid_char)
                     status &= ~CONS_INT_RX;
             } else {
-                status |= CONS_INT_RX;
+            status |= CONS_INT_RX;
             }
 
             if (status_store == 3) {
@@ -101,18 +139,15 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
                 int reg = (1 << 2) | (1 << 5) | (1 << 6);
                 if (status & CONS_INT_RX)
                     reg |= (1 << 0);
-                *data = reg;
-                return No_Fault;
+            *data = reg;
+            return No_Fault;
             }
             break;
-        }
+      }
 
       case 0x0: // Data register (RX)
-//	if (!valid_char)
-//	    panic("Invalid character");
-
         DPRINTF(TsunamiUart, "read data register \'%c\' %#02x\n",
-                isprint(next_char) ? next_char : ' ', next_char);
+                        isprint(next_char) ? next_char : ' ', next_char);
 
         *data = next_char;
         valid_char = false;
@@ -129,7 +164,11 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
             *data = 0;
         return No_Fault;
       case 0x2:
-        *data = 0; // This means a 8250 serial port, do we want a 16550?
+        // High two bits need to be clear for an 8250 (simple) serial port
+        // Low bit of IIR is 0 for a pending interrupt, 1 otherwise.
+        int status = cons->intStatus();
+        status = (status & 0x1) | (status >> 1);
+        *data = (~status) & 0x1 ;
         return No_Fault;
     }
     *data = 0;
@@ -178,15 +217,20 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
         ourchar = *(uint64_t *)data;
         if ((isprint(ourchar) || iscntrl(ourchar)) && (ourchar != 0x0C))
                 cons->out(ourchar);
-        if (UART_IER_THRI & IER)
-            cons->setInt(CONS_INT_TX);
+        cons->clearInt(CONS_INT_TX);
+        intrEvent.scheduleIntr();
             return No_Fault;
         break;
-      case 0x1: // DLM
-        DPRINTF(TsunamiUart, "writing to DLM/IER %#x\n", *(uint8_t*)data);
+      case 0x1: // IER
         IER = *(uint8_t*)data;
+        DPRINTF(TsunamiUart, "writing to IER [%#x]\n", IER);
         if (UART_IER_THRI & IER)
-            cons->setInt(CONS_INT_TX);
+            cons->raiseInt(CONS_INT_TX);
+        else {
+            cons->clearInt(CONS_INT_TX);
+            if (intrEvent.scheduled())
+                intrEvent.deschedule();
+        }
         return No_Fault;
         break;
       case 0x4: // MCR

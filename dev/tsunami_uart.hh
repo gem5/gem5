@@ -48,12 +48,26 @@ class TsunamiUart : public PioDevice
     Addr addr;
     static const Addr size = 0x8;
 
+
   protected:
     SimConsole *cons;
     int status_store;
     uint8_t next_char;
     bool valid_char;
     uint8_t IER;
+
+    class IntrEvent : public Event
+    {
+        protected:
+            TsunamiUart *uart;
+        public:
+            IntrEvent(TsunamiUart *u);
+            virtual void process();
+            virtual const char *description();
+            void scheduleIntr();
+    };
+
+    IntrEvent intrEvent;
 
   public:
     TsunamiUart(const string &name, SimConsole *c, MemoryController *mmu,
