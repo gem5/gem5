@@ -41,21 +41,42 @@
 
 use strict;
 
+use Getopt::Std;
+
+#
+# Options:
+#  -c <n> : print n lines of context before & after changes
+#  -l <n> : use n lines of lookahead
+#  -x     : use "complex" diff from Algorithm::Diff (see below)
+#
+our ($opt_c, $opt_l, $opt_x);
+getopts('c:l:x');
+
 #
 # For the highest-quality (minimal) diffs, we can use the
-# Algorithm::Diff package.  If you don't have this installed, or want
-# the script to run faster (like 3-4x faster, based on informal
-# observation), set $use_complexdiff to 0; then a built-in, simple,
-# and generally quite adequate algorithm will be used instead.
-my $use_complexdiff = 0;
+# Algorithm::Diff package.  By default, a built-in, simple, and
+# generally quite adequate algorithm will be used.  If you have
+# Algorithm::Diff installed on your system, and don't mind having the
+# script go slower (like 3-4x slower, based on informal observation),
+# then specify '-x' on the command line to use it.
+my $use_complexdiff = defined($opt_x);
 
-#if ($use_complexdiff) {
-#    use Algorithm::Diff qw(traverse_sequences);
-#};
+if ($use_complexdiff) {
+    # Don't use 'use', as that's a compile-time option and will fail
+    # on systems that don't have Algorithm::Diff installed even if
+    # $use_complexdiff is false.  'require' is evaluated at runtime,
+    # so it's OK.
+    require Algorithm::Diff;
+    import Algorithm::Diff qw(traverse_sequences);
+};
 
-my $lookahead_lines = 200;
-my $precontext_lines = 3;
-my $postcontext_lines = 3;
+my $lookahead_lines = $opt_l || 200;
+
+# in theory you could have different amounts of context before and
+# after a diff, but until someone needs that there's only one arg to
+# set both.
+my $precontext_lines = $opt_c || 3;
+my $postcontext_lines = $precontext_lines;
 
 my $file1 = $ARGV[0];
 my $file2 = $ARGV[1];
