@@ -402,12 +402,6 @@ main(int argc, char **argv)
     // Reset to put the stats in a consistent state.
     Stats::reset();
 
-    // Nothing to simulate if we don't have at least one CPU somewhere.
-    if (BaseCPU::numSimulatedCPUs() == 0) {
-        cerr << "Fatal: no CPUs to simulate." << endl;
-        exit(1);
-    }
-
     warn("Entering event queue.  Starting simulation...\n");
     SimStartup();
     while (!mainEventQueue.empty()) {

@@ -26,20 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEMTEST_HH__
-#define __MEMTEST_HH__
+#ifndef __CPU_MEMTEST_MEMTEST_HH__
+#define __CPU_MEMTEST_MEMTEST_HH__
 
 #include <set>
 
 #include "base/statistics.hh"
-#include "cpu/base_cpu.hh"
-#include "cpu/exec_context.hh"
 #include "mem/functional_mem/functional_memory.hh"
 #include "mem/mem_interface.hh"
+#include "sim/eventq.hh"
+#include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-class MemTest : public BaseCPU
+class ExecContext;
+class MemTest : public SimObject
 {
   public:
 
@@ -55,8 +56,7 @@ class MemTest : public BaseCPU
             unsigned _percentSourceUnaligned,
             unsigned _percentDestUnaligned,
             Addr _traceAddr,
-            Counter max_loads_any_thread,
-            Counter max_loads_all_threads);
+            Counter _max_loads);
 
     // register statistics
     virtual void regStats();
@@ -116,6 +116,7 @@ class MemTest : public BaseCPU
     Tick noResponseCycles;
 
     uint64_t numReads;
+    uint64_t maxLoads;
     Stats::Scalar<> numReadsStat;
     Stats::Scalar<> numWritesStat;
     Stats::Scalar<> numCopiesStat;
@@ -146,7 +147,7 @@ class MemCompleteEvent : public Event
     virtual const char *description();
 };
 
-#endif // __MEMTEST_HH__
+#endif // __CPU_MEMTEST_MEMTEST_HH__
 
 
 

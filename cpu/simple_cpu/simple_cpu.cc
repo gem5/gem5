@@ -112,54 +112,22 @@ SimpleCPU::CacheCompletionEvent::description()
     return "SimpleCPU cache completion event";
 }
 
-#ifdef FULL_SYSTEM
-SimpleCPU::SimpleCPU(const string &_name,
-                     System *_system,
-                     Counter max_insts_any_thread,
-                     Counter max_insts_all_threads,
-                     Counter max_loads_any_thread,
-                     Counter max_loads_all_threads,
-                     AlphaITB *itb, AlphaDTB *dtb,
-                     FunctionalMemory *mem,
-                     MemInterface *icache_interface,
-                     MemInterface *dcache_interface,
-                     bool _def_reg, Tick freq,
-                     bool _function_trace, Tick _function_trace_start,
-                     int width)
-    : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
-              max_insts_any_thread, max_insts_all_threads,
-              max_loads_any_thread, max_loads_all_threads,
-              _system, freq, _function_trace, _function_trace_start),
-#else
-SimpleCPU::SimpleCPU(const string &_name, Process *_process,
-                     Counter max_insts_any_thread,
-                     Counter max_insts_all_threads,
-                     Counter max_loads_any_thread,
-                     Counter max_loads_all_threads,
-                     MemInterface *icache_interface,
-                     MemInterface *dcache_interface,
-                     bool _def_reg,
-                     bool _function_trace, Tick _function_trace_start,
-                     int width)
-    : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
-              max_insts_any_thread, max_insts_all_threads,
-              max_loads_any_thread, max_loads_all_threads,
-              _function_trace, _function_trace_start),
-#endif
-      tickEvent(this, width), xc(NULL), cacheCompletionEvent(this)
+SimpleCPU::SimpleCPU(Params *p)
+    : BaseCPU(p), tickEvent(this, p->width), xc(NULL),
+      cacheCompletionEvent(this)
 {
     _status = Idle;
 #ifdef FULL_SYSTEM
-    xc = new ExecContext(this, 0, system, itb, dtb, mem);
+    xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
 
     // initialize CPU, including PC
     TheISA::initCPU(&xc->regs);
 #else
-    xc = new ExecContext(this, /* thread_num */ 0, _process, /* asid */ 0);
+    xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
 #endif // !FULL_SYSTEM
 
-    icacheInterface = icache_interface;
-    dcacheInterface = dcache_interface;
+    icacheInterface = p->icache_interface;
+    dcacheInterface = p->dcache_interface;
 
     memReq = new MemReq();
     memReq->xc = xc;
@@ -850,71 +818,67 @@ END_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
-    INIT_PARAM_DFLT(max_insts_any_thread,
-                    "terminate when any thread reaches this inst count",
-                    0),
-    INIT_PARAM_DFLT(max_insts_all_threads,
-                    "terminate when all threads have reached this inst count",
-                    0),
-    INIT_PARAM_DFLT(max_loads_any_thread,
-                    "terminate when any thread reaches this load count",
-                    0),
-    INIT_PARAM_DFLT(max_loads_all_threads,
-                    "terminate when all threads have reached this load count",
-                    0),
+    INIT_PARAM(max_insts_any_thread,
+               "terminate when any thread reaches this inst count"),
+    INIT_PARAM(max_insts_all_threads,
+               "terminate when all threads have reached this inst count"),
+    INIT_PARAM(max_loads_any_thread,
+               "terminate when any thread reaches this load count"),
+    INIT_PARAM(max_loads_all_threads,
+               "terminate when all threads have reached this load count"),
 
 #ifdef FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
-    INIT_PARAM_DFLT(mult, "system clock multiplier", 1),
+    INIT_PARAM(mult, "system clock multiplier"),
 #else
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
 
-    INIT_PARAM_DFLT(icache, "L1 instruction cache object", NULL),
-    INIT_PARAM_DFLT(dcache, "L1 data cache object", NULL),
-    INIT_PARAM_DFLT(defer_registration, "defer registration with system "
-                    "(for sampling)", false),
-
-    INIT_PARAM_DFLT(width, "cpu width", 1),
-    INIT_PARAM_DFLT(function_trace, "Enable function trace", false),
-    INIT_PARAM_DFLT(function_trace_start, "Cycle to start function trace", 0)
+    INIT_PARAM(icache, "L1 instruction cache object"),
+    INIT_PARAM(dcache, "L1 data cache object"),
+    INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
+    INIT_PARAM(width, "cpu width"),
+    INIT_PARAM(function_trace, "Enable function trace"),
+    INIT_PARAM(function_trace_start, "Cycle to start function trace")
 
 END_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
 
 CREATE_SIM_OBJECT(SimpleCPU)
 {
-    SimpleCPU *cpu;
 #ifdef FULL_SYSTEM
     if (mult != 1)
         panic("processor clock multiplier must be 1\n");
+#endif
 
-    cpu = new SimpleCPU(getInstanceName(), system,
-                        max_insts_any_thread, max_insts_all_threads,
-                        max_loads_any_thread, max_loads_all_threads,
-                        itb, dtb, mem,
-                        (icache) ? icache->getInterface() : NULL,
-                        (dcache) ? dcache->getInterface() : NULL,
-                        defer_registration,
-                        ticksPerSecond * mult,
-                        function_trace, function_trace_start,
-                        width);
+    SimpleCPU::Params *params = new SimpleCPU::Params();
+    params->name = getInstanceName();
+    params->numberOfThreads = 1;
+    params->max_insts_any_thread = max_insts_any_thread;
+    params->max_insts_all_threads = max_insts_all_threads;
+    params->max_loads_any_thread = max_loads_any_thread;
+    params->max_loads_all_threads = max_loads_all_threads;
+    params->deferRegistration = defer_registration;
+    params->freq = ticksPerSecond;
+    params->functionTrace = function_trace;
+    params->functionTraceStart = function_trace_start;
+    params->icache_interface = (icache) ? icache->getInterface() : NULL;
+    params->dcache_interface = (dcache) ? dcache->getInterface() : NULL;
+    params->width = width;
+
+#ifdef FULL_SYSTEM
+    params->itb = itb;
+    params->dtb = dtb;
+    params->mem = mem;
+    params->system = system;
 #else
+    params->process = workload;
+#endif
 
-    cpu = new SimpleCPU(getInstanceName(), workload,
-                        max_insts_any_thread, max_insts_all_threads,
-                        max_loads_any_thread, max_loads_all_threads,
-                        (icache) ? icache->getInterface() : NULL,
-                        (dcache) ? dcache->getInterface() : NULL,
-                        defer_registration,
-                        function_trace, function_trace_start,
-                        width);
-
-#endif // FULL_SYSTEM
-
+    SimpleCPU *cpu = new SimpleCPU(params);
     return cpu;
 }
 

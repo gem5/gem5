@@ -122,32 +122,24 @@ class SimpleCPU : public BaseCPU
       }
     };
 
+  public:
+    struct Params : public BaseCPU::Params
+    {
+        MemInterface *icache_interface;
+        MemInterface *dcache_interface;
+        int width;
 #ifdef FULL_SYSTEM
-
-    SimpleCPU(const std::string &_name,
-              System *_system,
-              Counter max_insts_any_thread, Counter max_insts_all_threads,
-              Counter max_loads_any_thread, Counter max_loads_all_threads,
-              AlphaITB *itb, AlphaDTB *dtb, FunctionalMemory *mem,
-              MemInterface *icache_interface, MemInterface *dcache_interface,
-              bool _def_reg, Tick freq,
-              bool _function_trace, Tick _function_trace_start, int width);
-
+        AlphaITB *itb;
+        AlphaDTB *dtb;
+        FunctionalMemory *mem;
 #else
-
-    SimpleCPU(const std::string &_name, Process *_process,
-              Counter max_insts_any_thread,
-              Counter max_insts_all_threads,
-              Counter max_loads_any_thread,
-              Counter max_loads_all_threads,
-              MemInterface *icache_interface, MemInterface *dcache_interface,
-              bool _def_reg,
-              bool _function_trace, Tick _function_trace_start, int width);
-
+        Process *process;
 #endif
-
+    };
+    SimpleCPU(Params *params);
     virtual ~SimpleCPU();
 
+  public:
     // execution context
     ExecContext *xc;
 

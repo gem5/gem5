@@ -90,28 +90,31 @@ class BaseCPU : public SimObject
     virtual void haltContext(int thread_num) {}
 
   public:
-
+    struct Params
+    {
+        std::string name;
+        int numberOfThreads;
+        bool deferRegistration;
+        Counter max_insts_any_thread;
+        Counter max_insts_all_threads;
+        Counter max_loads_any_thread;
+        Counter max_loads_all_threads;
+        Tick freq;
+        bool functionTrace;
+        Tick functionTraceStart;
 #ifdef FULL_SYSTEM
-    BaseCPU(const std::string &_name, int _number_of_threads, bool _def_reg,
-            Counter max_insts_any_thread, Counter max_insts_all_threads,
-            Counter max_loads_any_thread, Counter max_loads_all_threads,
-            System *_system, Tick freq,
-            bool _function_trace = false, Tick _function_trace_start = 0);
-#else
-    BaseCPU(const std::string &_name, int _number_of_threads, bool _def_reg,
-            Counter max_insts_any_thread = 0,
-            Counter max_insts_all_threads = 0,
-            Counter max_loads_any_thread = 0,
-            Counter max_loads_all_threads = 0,
-            bool _function_trace = false, Tick _function_trace_start = 0);
+        System *system;
 #endif
+    };
 
+    const Params *params;
+
+    BaseCPU(Params *params);
     virtual ~BaseCPU();
 
     virtual void init();
     virtual void regStats();
 
-    bool deferRegistration;
     void registerExecContexts();
 
     /// Prepare for another CPU to take over execution.  Called by
