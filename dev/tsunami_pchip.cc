@@ -227,13 +227,37 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
 void
 TsunamiPChip::serialize(std::ostream &os)
 {
-    // code should be written
+    SERIALIZE_SCALAR(wsba0);
+    SERIALIZE_SCALAR(wsba1);
+    SERIALIZE_SCALAR(wsba2);
+    SERIALIZE_SCALAR(wsba3);
+    SERIALIZE_SCALAR(wsm0);
+    SERIALIZE_SCALAR(wsm1);
+    SERIALIZE_SCALAR(wsm2);
+    SERIALIZE_SCALAR(wsm3);
+    SERIALIZE_SCALAR(tba0);
+    SERIALIZE_SCALAR(tba1);
+    SERIALIZE_SCALAR(tba2);
+    SERIALIZE_SCALAR(tba3);
+
 }
 
 void
 TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
 {
-    //code should be written
+    UNSERIALIZE_SCALAR(wsba0);
+    UNSERIALIZE_SCALAR(wsba1);
+    UNSERIALIZE_SCALAR(wsba2);
+    UNSERIALIZE_SCALAR(wsba3);
+    UNSERIALIZE_SCALAR(wsm0);
+    UNSERIALIZE_SCALAR(wsm1);
+    UNSERIALIZE_SCALAR(wsm2);
+    UNSERIALIZE_SCALAR(wsm3);
+    UNSERIALIZE_SCALAR(tba0);
+    UNSERIALIZE_SCALAR(tba1);
+    UNSERIALIZE_SCALAR(tba2);
+    UNSERIALIZE_SCALAR(tba3);
+
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)

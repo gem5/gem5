@@ -346,13 +346,35 @@ TsunamiIO::clearPIC(uint8_t bitvector)
 void
 TsunamiIO::serialize(std::ostream &os)
 {
-    // code should be written
+    SERIALIZE_SCALAR(timerData);
+    SERIALIZE_SCALAR(uip);
+    SERIALIZE_SCALAR(picr);
+    SERIALIZE_SCALAR(picInterrupting);
+    Tick time0when = timer0.when();
+    Tick time2when = timer2.when();
+    Tick rtcwhen = rtc.when();
+    SERIALIZE_SCALAR(time0when);
+    SERIALIZE_SCALAR(time2when);
+    SERIALIZE_SCALAR(rtcwhen);
+
 }
 
 void
 TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
 {
-    //code should be written
+    UNSERIALIZE_SCALAR(timerData);
+    UNSERIALIZE_SCALAR(uip);
+    UNSERIALIZE_SCALAR(picr);
+    UNSERIALIZE_SCALAR(picInterrupting);
+    Tick time0when;
+    Tick time2when;
+    Tick rtcwhen;
+    UNSERIALIZE_SCALAR(time0when);
+    UNSERIALIZE_SCALAR(time2when);
+    UNSERIALIZE_SCALAR(rtcwhen);
+    timer0.reschedule(time0when);
+    timer2.reschedule(time2when);
+    rtc.reschedule(rtcwhen);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)

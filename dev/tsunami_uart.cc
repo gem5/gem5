@@ -117,7 +117,6 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
             *data = 0;
         return No_Fault;
       case 0xA:
-        //*data = 2<<6; // This means a 8250 serial port, do we want a 16550?
         *data = 0; // This means a 8250 serial port, do we want a 16550?
         return No_Fault;
     }
@@ -183,6 +182,7 @@ TsunamiUart::serialize(ostream &os)
     SERIALIZE_SCALAR(status_store);
     SERIALIZE_SCALAR(next_char);
     SERIALIZE_SCALAR(valid_char);
+    SERIALIZE_SCALAR(IER);
 }
 
 void
@@ -191,6 +191,7 @@ TsunamiUart::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(status_store);
     UNSERIALIZE_SCALAR(next_char);
     UNSERIALIZE_SCALAR(valid_char);
+    UNSERIALIZE_SCALAR(IER);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)
