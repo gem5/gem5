@@ -237,6 +237,11 @@ ExecContext::readIpr(int idx, Fault &fault)
         retval = ipr[idx];
         break;
 
+      case AlphaISA::IPR_CC:
+        retval |= ipr[idx] & ULL(0xffffffff00000000);
+        retval |= curTick  & ULL(0x00000000ffffffff);
+        break;
+
       case AlphaISA::IPR_VA:
         // SFX: unlocks interrupt status registers
         retval = ipr[idx];

@@ -2390,8 +2390,7 @@ decode OPCODE default Unknown::unknown() {
 	format BasicOperate {
 	    0xc000: rpcc({{
 #ifdef FULL_SYSTEM
-		uint64_t cc = xc->readIpr(AlphaISA::IPR_CC, fault);
-		Ra = (cc<63:32> | curTick<31:0>);
+		Ra = xc->readIpr(AlphaISA::IPR_CC, fault);
 #else
 		Ra = curTick;
 #endif
