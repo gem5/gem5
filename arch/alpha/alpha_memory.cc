@@ -66,7 +66,7 @@ AlphaTLB::~AlphaTLB()
 AlphaISA::PTE *
 AlphaTLB::lookup(Addr vpn, uint8_t asn) const
 {
-    DPRINTF(TLB, "lookup %#x\n", vpn);
+    DPRINTF(TLB, "lookup %#x, asn %#x\n", vpn, (int)asn);
 
     PageTable::const_iterator i = lookupTable.find(vpn);
     if (i == lookupTable.end())
