@@ -303,6 +303,7 @@ Fault
 ExecContext::setIpr(int idx, uint64_t val)
 {
     uint64_t *ipr = regs.ipr;
+    uint64_t old;
 
     if (misspeculating())
         return No_Fault;
@@ -355,8 +356,9 @@ ExecContext::setIpr(int idx, uint64_t val)
 
       case AlphaISA::IPR_PALtemp23:
         // write entire quad w/ no side-effect
+        old = ipr[idx];
         ipr[idx] = val;
-        kernelStats.context(ipr[idx]);
+        kernelStats.context(old, val);
         Annotate::Context(this);
         break;
 
