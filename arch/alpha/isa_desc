@@ -2388,27 +2388,39 @@ decode OPCODE default Unknown::unknown() {
 	0x1e: hw_rei({{ xc->hwrei(); }});
 
 	// M5 special opcodes use the reserved 0x01 opcode space
-	0x01: decode M5FUNC{
+	0x01: decode M5FUNC {
 	    0x00: arm({{
-		Annotate::ARM(xc);
-		xc->kernelStats.arm();
+		if (!xc->misspeculating()) {
+		    Annotate::ARM(xc);
+		    xc->kernelStats.arm();
+		}
 	    }});
 	    0x01: quiesce({{
-		Annotate::QUIESCE(xc);
-		xc->setStatus(ExecContext::Suspended);
-		xc->kernelStats.quiesce();
+		if (!xc->misspeculating()) {
+		    Annotate::QUIESCE(xc);
+		    xc->setStatus(ExecContext::Suspended);
+		    xc->kernelStats.quiesce();
+		}
 	    }});
 	    0x10: ivlb({{
-		Annotate::BeginInterval(xc);
-		xc->kernelStats.ivlb();
+		if (!xc->misspeculating()) {
+		    Annotate::BeginInterval(xc);
+		    xc->kernelStats.ivlb();
+		}
 	    }}, No_OpClass);
-	    0x11: ivle({{ Annotate::EndInterval(xc); }}, No_OpClass);
+	    0x11: ivle({{
+		if (!xc->misspeculating())
+		    Annotate::EndInterval(xc);
+	    }}, No_OpClass);
 	    0x20: m5exit({{
 		if (!xc->misspeculating())
 		    m5_exit();
 	    }}, No_OpClass);
             0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
-            0x40: resetstats({{ Statistics::reset(); }});
+            0x40: resetstats({{
+		if (!xc->misspeculating())
+		    Statistics::reset();
+	    }});
 	}
     }
 
