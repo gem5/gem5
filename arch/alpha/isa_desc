@@ -26,7 +26,7 @@ let {{
 #include "cpu/exec_context.hh"
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/full_cpu/spec_state.hh"
-#include "cpu/full_cpu/cpu.hh"
+#include "cpu/full_cpu/full_cpu.hh"
 #include "cpu/exetrace.hh"
 #include "sim/annotation.hh"
 

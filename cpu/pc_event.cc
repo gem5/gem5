@@ -42,8 +42,8 @@
 #include "targetarch/pmap.h"
 #include "kern/tru64/kernel.hh"
 #include "mem/functional_mem/memory_control.hh"
-#include "cpu/full_cpu/cpu.hh"
 #include "sim/system.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/full_cpu/bpred.hh"
 #endif
 

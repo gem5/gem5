@@ -28,7 +28,7 @@
 
 #include <string>
 
-#include "cpu/full_cpu/cpu.hh"
+#include "sim/param.hh"
 #include "sim/eventq.hh"
 #include "base/hostinfo.hh"
 #include "sim/sim_events.hh"
