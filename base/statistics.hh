@@ -2277,6 +2277,7 @@ struct StatBin : public GenBin
         int _size;
 
       public:
+        enum { binned = true };
         VectorBin() : _size(0) {}
 
         bool initialized() const { return _size > 0; }
