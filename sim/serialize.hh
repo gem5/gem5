@@ -235,5 +235,10 @@ SerializeableClass the##OBJ_CLASS##Class(CLASS_NAME,		\
                                      new##OBJ_CLASS##Builder);
 
 
+//
+// Export checkpoint filename param so other objects can derive
+// filenames from it (e.g., memory).
+//
+extern std::string serializeFilename;
 
 #endif // __SERIALIZE_HH__

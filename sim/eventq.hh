@@ -112,6 +112,20 @@ class Event : public Serializeable, public FastAlloc
     {
     }
 
+    /*
+     * Event constructor
+     * @param queue that the event gets scheduled on
+     */
+    Event(EventQueue *q, std::string _name, int p = 0)
+        : Serializeable(_name), queue(q), next(NULL),
+          _priority(p), _flags(None),
+#if TRACING_ON
+          when_created(curTick), when_scheduled(0),
+#endif
+          annotated_value(0)
+    {
+    }
+
     ~Event() {}
 
     /// Determine if the current event is scheduled
@@ -174,6 +188,9 @@ class Event : public Serializeable, public FastAlloc
             return l->when() >= r->when() || l->priority() >= r->priority();
         }
     };
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(const IniFile *db, const std::string &section);
 };
 
 template <class T, void (T::* F)()>

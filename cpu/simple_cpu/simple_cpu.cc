@@ -75,8 +75,26 @@
 
 using namespace std;
 
+SimpleCPU::TickEvent::TickEvent(SimpleCPU *c)
+    : Event(&mainEventQueue, "SimpleCPU::TickEvent", 100), cpu(c)
+{
+}
+
+void
+SimpleCPU::TickEvent::process()
+{
+    cpu->tick();
+}
+
+const char *
+SimpleCPU::TickEvent::description()
+{
+    return "SimpleCPU tick event";
+}
+
+
 SimpleCPU::CacheCompletionEvent::CacheCompletionEvent(SimpleCPU *_cpu)
-    : Event(&mainEventQueue),
+    : Event(&mainEventQueue, "SimpleCPU::CacheCompletionEvent"),
       cpu(_cpu)
 {
 }
@@ -89,7 +107,7 @@ void SimpleCPU::CacheCompletionEvent::process()
 const char *
 SimpleCPU::CacheCompletionEvent::description()
 {
-    return "cache completion event";
+    return "SimpleCPU cache completion event";
 }
 
 #ifdef FULL_SYSTEM
@@ -242,17 +260,24 @@ SimpleCPU::regStats()
 void
 SimpleCPU::serialize(ostream &os)
 {
+    SERIALIZE_ENUM(_status);
+    SERIALIZE_SCALAR(inst);
     xc->serialize(os);
+    nameOut(os, csprintf("%s.tickEvent", name()));
+    tickEvent.serialize(os);
+    nameOut(os, csprintf("%s.cacheCompletionEvent", name()));
+    cacheCompletionEvent.serialize(os);
 }
 
 void
-SimpleCPU::unserialize(const IniFile *db, const string &category)
+SimpleCPU::unserialize(const IniFile *db, const string &section)
 {
-    xc->unserialize(db, category);
-
-    // Read in Special registers
-
-    // CPUTraitsType::unserializeSpecialRegs(db,category,node,xc->regs);
+    UNSERIALIZE_ENUM(_status);
+    UNSERIALIZE_SCALAR(inst);
+    xc->unserialize(db, section);
+    tickEvent.unserialize(db, csprintf("%s.tickEvent", name()));
+    cacheCompletionEvent
+        .unserialize(db, csprintf("%s.cacheCompletionEvent", name()));
 }
 
 void
