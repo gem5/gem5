@@ -161,6 +161,7 @@ void
 Database::dump(ostream &stream)
 {
 
+#ifndef FS_MEASURE
     list_t::iterator i = printStats.begin();
     list_t::iterator end = printStats.end();
     while (i != end) {
@@ -169,6 +170,7 @@ Database::dump(ostream &stream)
             binnedStats.push_back(stat);
         ++i;
     }
+#endif //FS_MEASURE
 
     list<GenBin *>::iterator j = bins.begin();
     list<GenBin *>::iterator bins_end=bins.end();
@@ -183,8 +185,13 @@ Database::dump(ostream &stream)
                 panic("a binned stat not found in names map!");
             ccprintf(stream,"---%s Bin------------\n", (*iter).second);
 
+#ifdef FS_MEASURE
+            list_t::iterator i = printStats.begin();
+                    list_t::iterator end = printStats.end();
+#else
            list_t::iterator i = binnedStats.begin();
            list_t::iterator end = binnedStats.end();
+#endif
            while (i != end) {
                Stat *stat = *i;
                if (stat->dodisplay())
@@ -194,9 +201,16 @@ Database::dump(ostream &stream)
            ++j;
            ccprintf(stream, "---------------------------------\n");
         }
+#ifndef FS_MEASURE
         ccprintf(stream, "**************ALL STATS************\n");
+#endif
     }
 
+/**
+ * get bin totals working, then print the stat here (as total), even if
+ * its' binned.  (this is only for the case you selectively bin a few stats
+ */
+#ifndef FS_MEASURE
     list_t::iterator k = printStats.begin();
     list_t::iterator endprint = printStats.end();
     while (k != endprint) {
@@ -205,6 +219,7 @@ Database::dump(ostream &stream)
             stat->display(stream);
         ++k;
     }
+#endif
 }
 
 StatData *

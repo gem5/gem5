@@ -60,6 +60,9 @@
 #include <math.h>
 #include "sim/host.hh"
 
+#ifdef FS_MEASURE
+#include "base/trace.hh"
+#endif
 //
 //  Un-comment this to enable weirdo-stat debugging
 //
@@ -2167,6 +2170,7 @@ class GenBin : public Detail::BinBase
     virtual ~GenBin() {};
 
     virtual void activate() = 0;
+    virtual std::string name() const = 0;
     void regBin(GenBin *bin, std::string name);
 };
 
@@ -2198,7 +2202,6 @@ struct StatBin : public GenBin
 
         // That one is for the last trailing flags byte.
         offset() += (size + 1 + mask) & ~mask;
-
         return off;
     }
 
@@ -2212,7 +2215,12 @@ struct StatBin : public GenBin
         return Detail::BinBase::memory() + off;
     }
 
-    virtual void activate()  { setCurBin(this); }
+    virtual void activate()  {
+        setCurBin(this);
+#ifdef FS_MEASURE
+        DPRINTF(TCPIP, "activating %s Bin\n", name());
+#endif
+    }
     static void activate(StatBin &bin) { setCurBin(&bin); }
 
     class BinBase
@@ -2426,7 +2434,11 @@ struct NoBin
  * is NoBin, nothing is binned.  If it is MainBin (or whatever *Bin), then all stats are binned
  * under that Bin.
  */
+#ifdef FS_MEASURE
+typedef MainBin DefaultBin;
+#else
 typedef NoBin DefaultBin;
+#endif
 
 /**
  * This is a simple scalar statistic, like a counter.

@@ -36,6 +36,11 @@
 #include "mem/functional_mem/memory_control.hh"
 #include "targetarch/arguments.hh"
 
+#ifdef FS_MEASURE
+#include "sim/system.hh"
+#include "sim/sw_context.hh"
+#endif
+
 void
 SkipFuncEvent::process(ExecContext *xc)
 {
@@ -105,3 +110,48 @@ DumpMbufEvent::process(ExecContext *xc)
     }
 }
 
+#ifdef FS_MEASURE
+FnEvent::FnEvent(PCEventQueue *q, const std::string & desc, System *system)
+    : PCEvent(q, desc), _name(desc)
+{
+    myBin = system->getBin(desc);
+    assert(myBin);
+}
+
+void
+FnEvent::process(ExecContext *xc)
+{
+    if (xc->misspeculating())
+        return;
+    assert(xc->system->bin && "FnEvent must be in a binned system");
+    SWContext *ctx = xc->swCtx;
+    DPRINTF(TCPIP, "%s: %s Event!!!\n", xc->system->name(), description);
+
+    if (ctx && !ctx->callStack.empty()) {
+        fnCall *last = ctx->callStack.top();
+        if (!xc->system->findCaller(myname(), last->name)) {
+            // assert(!xc->system->findCaller(myname(), "")  &&
+            //     "should not have head of path in middle of stack!");
+            return;
+        }
+        ctx->calls--;
+    } else {
+        if (!xc->system->findCaller(myname(), "")) {
+            return;
+        }
+        if (!ctx)  {
+            DPRINTF(TCPIP, "creating new context for %s\n", myname());
+            ctx = new SWContext;
+            xc->swCtx = ctx;
+        }
+    }
+    DPRINTF(TCPIP, "adding fn %s to context\n", myname());
+    fnCall *call = new fnCall;
+    call->myBin = myBin;
+    call->name = myname();
+    ctx->callStack.push(call);
+    myBin->activate();
+    xc->system->fnCalls++;
+    xc->system->dumpState(xc);
+}
+#endif //FS_MEASURE
