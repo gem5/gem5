@@ -34,6 +34,7 @@
 
 #include <string>
 
+#include "base/misc.hh"
 #include "dev/etherdump.hh"
 #include "sim/builder.hh"
 #include "sim/universe.hh"
@@ -63,7 +64,8 @@ struct pcap_file_header {
 };
 
 struct pcap_pkthdr {
-    struct timeval ts;		// time stamp
+    uint32_t seconds;
+    uint32_t microseconds;
     uint32_t caplen;		// length of portion present
     uint32_t len;		// length this packet (off wire)
 };
@@ -96,8 +98,8 @@ EtherDump::init()
      * to sim_cycles.
      */
     pcap_pkthdr pkthdr;
-    pkthdr.ts.tv_sec = curtime;
-    pkthdr.ts.tv_usec = 0;
+    pkthdr.seconds = curtime;
+    pkthdr.microseconds = 0;
     pkthdr.caplen = 0;
     pkthdr.len = 0;
     stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
@@ -109,8 +111,8 @@ void
 EtherDump::dumpPacket(PacketPtr &packet)
 {
     pcap_pkthdr pkthdr;
-    pkthdr.ts.tv_sec = curtime + (curTick / s_freq);
-    pkthdr.ts.tv_usec = (curTick / us_freq) % ULL(1000000);
+    pkthdr.seconds = curtime + (curTick / s_freq);
+    pkthdr.microseconds = (curTick / us_freq) % ULL(1000000);
     pkthdr.caplen = packet->length;
     pkthdr.len = packet->length;
     stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
