@@ -678,18 +678,17 @@ DistPrint::operator()(ostream &stream) const
         }
 
         print.flags = flags;
-        if (flags & (pdf || cdf)) {
-            print.pdf = NAN;
-            print.cdf = NAN;
-        }
     }
 
     if (mode == mode_m5 || overflow > 0.0) {
         print.name = base + "overflows";
         print.value = overflow;
-        if (total) {
+        if (mode == mode_m5 && total) {
             print.pdf = overflow / total;
             print.cdf += print.pdf;
+        } else {
+            print.pdf = NAN;
+            print.cdf = NAN;
         }
         print(stream);
     }
