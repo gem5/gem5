@@ -32,14 +32,14 @@
  * trace to access a fully associative cache with optimal replacement.
  */
 
-#ifndef __OPT_CPU_HH__
-#define __OPT_CPU_HH__
+#ifndef __CPU_TRACE_OPT_CPU_HH__
+#define __CPU_TRACE_OPT_CPU_HH__
 
 #include <vector>
 
-#include "cpu/base_cpu.hh"
 #include "mem/mem_req.hh" // for MemReqPtr
 #include "sim/eventq.hh" // for Event
+#include "sim/sim_object.hh"
 
 // Forward Declaration
 class MemTraceReader;
@@ -47,8 +47,9 @@ class MemTraceReader;
 /**
  * A CPU object to simulate a fully-associative cache with optimal replacement.
  */
-class OptCPU : public BaseCPU
+class OptCPU : public SimObject
 {
+  private:
     typedef int RefIndex;
 
     typedef std::vector<RefIndex> L3Table;
@@ -219,4 +220,4 @@ class OptCPU : public BaseCPU
     void tick();
 };
 
-#endif
+#endif // __CPU_TRACE_OPT_CPU_HH__

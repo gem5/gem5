@@ -50,25 +50,12 @@ vector<BaseCPU *> BaseCPU::cpuList;
 int maxThreadsPerCPU = 1;
 
 #ifdef FULL_SYSTEM
-BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
-                 Counter max_insts_any_thread,
-                 Counter max_insts_all_threads,
-                 Counter max_loads_any_thread,
-                 Counter max_loads_all_threads,
-                 System *_system, Tick freq,
-                 bool _function_trace, Tick _function_trace_start)
-    : SimObject(_name), frequency(freq), checkInterrupts(true),
-      deferRegistration(_def_reg), number_of_threads(_number_of_threads),
-      system(_system)
+BaseCPU::BaseCPU(Params *p)
+    : SimObject(p->name), frequency(p->freq), checkInterrupts(true),
+      params(p), number_of_threads(p->numberOfThreads), system(p->system)
 #else
-BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
-                 Counter max_insts_any_thread,
-                 Counter max_insts_all_threads,
-                 Counter max_loads_any_thread,
-                 Counter max_loads_all_threads,
-                 bool _function_trace, Tick _function_trace_start)
-    : SimObject(_name), deferRegistration(_def_reg),
-      number_of_threads(_number_of_threads)
+BaseCPU::BaseCPU(Params *p)
+    : SimObject(p->name), params(p), number_of_threads(p->numberOfThreads)
 #endif
 {
     // add self to global list of CPUs
@@ -85,12 +72,12 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
     //
     // set up instruction-count-based termination events, if any
     //
-    if (max_insts_any_thread != 0)
+    if (p->max_insts_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comInstEventQueue[i], max_insts_any_thread,
+            new SimExitEvent(comInstEventQueue[i], p->max_insts_any_thread,
                 "a thread reached the max instruction count");
 
-    if (max_insts_all_threads != 0) {
+    if (p->max_insts_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
@@ -99,7 +86,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
         for (int i = 0; i < number_of_threads; ++i)
             new CountedExitEvent(comInstEventQueue[i],
                 "all threads reached the max instruction count",
-                max_insts_all_threads, *counter);
+                p->max_insts_all_threads, *counter);
     }
 
     // allocate per-thread load-based event queues
@@ -110,12 +97,12 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
     //
     // set up instruction-count-based termination events, if any
     //
-    if (max_loads_any_thread != 0)
+    if (p->max_loads_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comLoadEventQueue[i], max_loads_any_thread,
+            new SimExitEvent(comLoadEventQueue[i], p->max_loads_any_thread,
                 "a thread reached the max load count");
 
-    if (max_loads_all_threads != 0) {
+    if (p->max_loads_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
@@ -124,7 +111,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
         for (int i = 0; i < number_of_threads; ++i)
             new CountedExitEvent(comLoadEventQueue[i],
                 "all threads reached the max load count",
-                max_loads_all_threads, *counter);
+                p->max_loads_all_threads, *counter);
     }
 
 #ifdef FULL_SYSTEM
@@ -133,18 +120,18 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
 #endif
 
     functionTracingEnabled = false;
-    if (_function_trace) {
+    if (p->functionTrace) {
         functionTraceStream = simout.find(csprintf("ftrace.%s", name()));
         currentFunctionStart = currentFunctionEnd = 0;
-        functionEntryTick = _function_trace_start;
+        functionEntryTick = p->functionTraceStart;
 
-        if (_function_trace_start == 0) {
+        if (p->functionTraceStart == 0) {
             functionTracingEnabled = true;
         } else {
             Event *e =
                 new EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace>(this,
                                                                          true);
-            e->schedule(_function_trace_start);
+            e->schedule(p->functionTraceStart);
         }
     }
 }
@@ -163,7 +150,7 @@ BaseCPU::~BaseCPU()
 void
 BaseCPU::init()
 {
-    if (!deferRegistration)
+    if (!params->deferRegistration)
         registerExecContexts();
 }
 

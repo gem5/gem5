@@ -32,14 +32,14 @@
  * provided memory hierarchy.
  */
 
-#ifndef __TRACE_CPU_HH__
-#define __TRACE_CPU_HH__
+#ifndef __CPU_TRACE_TRACE_CPU_HH__
+#define __CPU_TRACE_TRACE_CPU_HH__
 
 #include <string>
 
-#include "cpu/base_cpu.hh"
 #include "mem/mem_req.hh" // for MemReqPtr
 #include "sim/eventq.hh" // for Event
+#include "sim/sim_object.hh"
 
 // Forward declaration.
 class MemInterface;
@@ -48,8 +48,9 @@ class MemTraceReader;
 /**
  * A cpu object for running memory traces through a memory hierarchy.
  */
-class TraceCPU : public BaseCPU
+class TraceCPU : public SimObject
 {
+  private:
     /** Interface for instruction trace requests, if any. */
     MemInterface *icacheInterface;
     /** Interface for data trace requests, if any. */
@@ -133,5 +134,5 @@ class TraceCompleteEvent : public Event
     virtual const char *description();
 };
 
-#endif //__TRACE_CPU_HH__
+#endif // __CPU_TRACE_TRACE_CPU_HH__
 
