@@ -222,9 +222,6 @@ RemoteGDB::RemoteGDB(System *_system, ExecContext *c)
     : event(NULL), fd(-1), active(false), attached(false),
       system(_system), pmem(_system->physmem), context(c)
 {
-#ifdef DEBUG
-    theDebugger = this;
-#endif
     memset(gdbregs, 0, sizeof(gdbregs));
 }
 
@@ -248,6 +245,9 @@ RemoteGDB::attach(int f)
 
     attached = true;
     DPRINTFN("remote gdb attached\n");
+#ifdef DEBUG
+    theDebugger = this;
+#endif
 }
 
 void
