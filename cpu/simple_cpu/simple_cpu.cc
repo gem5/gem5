@@ -343,7 +343,6 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
         memReq->time = curTick;
-        memReq->flags &= ~UNCACHEABLE;
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -426,7 +425,6 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
         memReq->time = curTick;
-        memReq->flags &= ~UNCACHEABLE;
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -629,7 +627,6 @@ SimpleCPU::tick()
             memReq->completionEvent = NULL;
 
             memReq->time = curTick;
-            memReq->flags &= ~UNCACHEABLE;
             MemAccessResult result = icacheInterface->access(memReq);
 
             // Ugly hack to get an event scheduled *only* if the access is
