@@ -56,6 +56,7 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/universe.hh"
+#include "sim/pyconfig/pyconfig.hh"
 
 using namespace std;
 
@@ -340,15 +341,35 @@ main(int argc, char **argv)
         else {
             // no '-', treat as config file name
 
-            // If we haven't loaded default.ini yet, and we want to,
-            // now is the time.  Can't do it sooner because we need to
-            // look for '-n', can't do it later since we want
-            // default.ini loaded first (so that any other settings
-            // override it).
-            handleDefaultIni(loadDefaultIni, cppArgs);
+            // make STL string out of file name
+            string filename(arg_str);
 
-            if (!simConfigDB.loadCPP(arg_str, cppArgs)) {
-                cprintf("Error processing file %s\n", arg_str);
+            int ext_loc = filename.rfind(".");
+
+            string ext =
+                (ext_loc != string::npos) ? filename.substr(ext_loc) : "";
+
+            if (ext == ".ini") {
+                // If we haven't loaded default.ini yet, and we want to,
+                // now is the time.  Can't do it sooner because we need to
+                // look for '-n', can't do it later since we want
+                // default.ini loaded first (so that any other settings
+                // override it).
+                handleDefaultIni(loadDefaultIni, cppArgs);
+
+                if (!simConfigDB.loadCPP(filename, cppArgs)) {
+                    cprintf("Error processing file %s\n", filename);
+                    exit(1);
+                }
+            } else if (ext == ".py") {
+                if (!loadPythonConfig(filename, &simConfigDB)) {
+                    cprintf("Error processing file %s\n", filename);
+                    exit(1);
+                }
+            }
+            else {
+                cprintf("Config file name '%s' must end in '.py' or '.ini'.\n",
+                        filename);
                 exit(1);
             }
         }

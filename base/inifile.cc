@@ -27,8 +27,6 @@
  */
 
 #define USE_CPP
-// #define CPP_PIPE
-
 
 #ifdef USE_CPP
 #include <sys/signal.h>
@@ -43,9 +41,6 @@
 
 #include <fstream>
 #include <iostream>
-#if __GNUC__ >= 3
-#include <ext/stdio_filebuf.h>
-#endif
 
 #include <vector>
 #include <string>
@@ -74,8 +69,6 @@ IniFile::~IniFile()
 bool
 IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 {
-    int fd[2];
-
     // Open the file just to verify that we can.  Otherwise if the
     // file doesn't exist or has bad permissions the user will get
     // confusing errors from cpp/g++.
@@ -99,18 +92,13 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
     delete [] cfile;
 
-#ifdef CPP_PIPE
-    if (pipe(fd) == -1)
-        return false;
-#else
     char tempfile[] = "/tmp/configXXXXXX";
-    fd[0] = fd[1] = mkstemp(tempfile);
-#endif
+    int tmp_fd = mkstemp(tempfile);
 
     int pid = fork();
 
     if (pid == -1)
-        return 1;
+        return false;
 
     if (pid == 0) {
         char filename[FILENAME_MAX];
@@ -141,7 +129,7 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
         args[nextArg++] = NULL;
 
         close(STDOUT_FILENO);
-        if (dup2(fd[1], STDOUT_FILENO) == -1)
+        if (dup2(tmp_fd, STDOUT_FILENO) == -1)
             exit(1);
 
         execvp("g++", args);
@@ -158,33 +146,13 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
     if (!WIFEXITED(retval) || WEXITSTATUS(retval) != 0)
         return false;
 
-#ifdef CPP_PIPE
-    close(fd[1]);
-#else
-    lseek(fd[0], 0, SEEK_SET);
-#endif
+    close(tmp_fd);
 
     bool status = false;
 
-#if __GNUC__ >= 3
-    using namespace __gnu_cxx;
-    stdio_filebuf<char> fbuf(fd[0], ios_base::in, true,
-        static_cast<stdio_filebuf<char>::int_type>(BUFSIZ));
+    status = load(tempfile);
 
-    if (fbuf.is_open()) {
-        istream f(&fbuf);
-        status = load(f);
-    }
-
-#else
-    ifstream f(fd[0]);
-    if (f.is_open())
-        status = load(f);
-#endif
-
-#ifndef CPP_PIPE
     unlink(tempfile);
-#endif
 
     return status;
 }
