@@ -294,6 +294,7 @@ Statistics::serialize(ostream &os)
 {
     int exemode = themode;
     SERIALIZE_SCALAR(exemode);
+    SERIALIZE_SCALAR(idleProcess);
 }
 
 void
@@ -301,6 +302,7 @@ Statistics::unserialize(Checkpoint *cp, const string &section)
 {
     int exemode;
     UNSERIALIZE_SCALAR(exemode);
+    UNSERIALIZE_SCALAR(idleProcess);
     themode = (cpu_mode)exemode;
 }
 
