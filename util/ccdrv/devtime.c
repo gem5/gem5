@@ -46,7 +46,6 @@
 #define DRIVER_DESC   "Interface to time uncacachable read and writes to device registers"
 #define DRIVER_VER    "0.1"
 
-static unsigned long devCnt, devSum, devSsq;
 static char *dataAddr = NULL;
 static int count = 0;
 
@@ -58,7 +57,8 @@ static int __init devtime_start(void)
         uint32_t t1, t2;
     uint32_t trash;
     int x;
-
+    uint32_t *times;
+    uint32_t num = 0;
     struct net_device *dev;
 
 
@@ -68,15 +68,19 @@ static int __init devtime_start(void)
     {
         addr = simple_strtoull(dataAddr, NULL, 0);
 
-        devSum = 0;
-        devCnt = count;
-
         addr = ioremap(addr, PAGE_SIZE);
         /**
          * Make sure that the remapping actually worked. On alpha we have
          * linear addressing, so its not a problem. But it can fail in x86
          * if physical memory is mapped to this address.
          */
+        times = kmalloc(sizeof(uint32_t) * count, GFP_USER);
+        if (!times)
+        {
+            printk("Could not allocate memory... Try again later.\n");
+            return -1;
+        }
+
         if (addr)
         {
             printk("Preparing to read %#llx %d times.\n", addr, count);
@@ -86,7 +90,7 @@ static int __init devtime_start(void)
             {
                 trash = readl(addr);
                 t2 = cycleCounter(trash);
-                devSum += t2 - t1;
+                times[num++] = t2 - t1;
                 t1 = t2;
             }
 
@@ -95,7 +99,16 @@ static int __init devtime_start(void)
              */
             iounmap(addr);
 
-            printk("Read Address %#llx %ld times. Average latency %ld.\n", addr, devCnt, devSum/devCnt);
+            printk("Measurements:\n");
+            for (x = 0; x < count; x++)
+            {
+                printk("%d ", times[x]);
+                if (((x+1) % 10) == 0)
+                    printk("\n");
+            }
+            printk("\nDone.\n");
+
+
         }
         else
             printk("Unable to remap address. Please try again later.\n");
@@ -154,7 +167,7 @@ static void __exit devtime_end(void) {
 module_init(devtime_start);
 module_exit(devtime_end);
 
-MODULE_LICENSE("BSD");
+MODULE_LICENSE("Dual BSD/GPL");
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
 module_param(dataAddr, charp, 0);
