@@ -2780,7 +2780,10 @@ class FormulaBase : public DataAccess
 };
 
 class Temp;
-class Formula : public WrapVec<Formula, FormulaBase, VectorData>
+class Formula
+    : public WrapVec<Formula,
+                     FormulaBase,
+                     VectorData>
 {
   public:
     /**
