@@ -413,8 +413,8 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(time0when);
     UNSERIALIZE_SCALAR(time2when);
     UNSERIALIZE_SCALAR(rtcwhen);
-    timer0.reschedule(time0when);
-    timer2.reschedule(time2when);
+    timer0.schedule(time0when);
+    timer2.schedule(time2when);
     rtc.reschedule(rtcwhen);
     UNSERIALIZE_SCALAR(RTCAddress);
 }
