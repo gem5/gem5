@@ -119,6 +119,20 @@ FloorLog2(int64_t x)
     return FloorLog2((uint64_t)x);
 }
 
+inline int
+FloorLog2(size_t x)
+{
+    assert(x > 0);
+    assert(sizeof(size_t) == 4 || sizeof(size_t) == 8);
+
+    // It's my hope that this is optimized away?
+    if (sizeof(size_t) == 4)
+        return FloorLog2((uint32_t)x);
+     else if (sizeof(size_t) == 8)
+        return FloorLog2((uint64_t)x);
+
+}
+
 template <class T>
 inline int
 CeilLog2(T n)

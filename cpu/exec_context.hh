@@ -33,6 +33,7 @@
 #include "mem/mem_req.hh"
 #include "mem/functional_mem/functional_memory.hh"
 #include "sim/serialize.hh"
+#include "targetarch/byte_swap.hh"
 
 // forward declaration: see functional_memory.hh
 class FunctionalMemory;
@@ -260,7 +261,11 @@ class ExecContext
             cregs->lock_flag = true;
         }
 #endif
-        return mem->read(req, data);
+
+        Fault error;
+        error = mem->read(req, data);
+        data = htoa(data);
+        return error;
     }
 
     template <class T>
@@ -309,7 +314,7 @@ class ExecContext
         }
 
 #endif
-        return mem->write(req, data);
+        return mem->write(req, (T)htoa(data));
     }
 
     virtual bool misspeculating();

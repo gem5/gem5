@@ -30,7 +30,7 @@
  * Interface to connect a simulated ethernet device to the real world
  */
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__APPLE__)
 #include <sys/param.h>
 #endif
 #include <netinet/in.h>

@@ -74,8 +74,9 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
     else {
         if (ehdr.e_ident[EI_CLASS] == ELFCLASS32)
             panic("32 bit ELF Binary, Not Supported");
-        if (ehdr.e_machine != EM_ALPHA)
-            panic("Non Alpha Binary, Not Supported");
+        printf("emachine = %x\n", ehdr.e_machine);
+//        if (ehdr.e_machine != EM_ALPHA)
+//            panic("Non Alpha Binary, Not Supported");
 
         elf_end(elf);
 

@@ -35,7 +35,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__APPLE__)
 #include <libgen.h>
 #endif
 #include <stdio.h>
@@ -146,7 +146,7 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
         execvp("g++", args);
 
-        exit(1);
+        exit(0);
     }
 
     int retval;
