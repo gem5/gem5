@@ -63,7 +63,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     if (bus) {
         pioInterface = newPioInterface(name, hier, bus, this,
                                        &AlphaConsole::cacheAccess);
-        pioInterface->setAddrRange(addr, addr + size);
+        pioInterface->addAddrRange(addr, addr + size);
     }
 
     consoleData = new uint8_t[size];
