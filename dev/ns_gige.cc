@@ -1394,6 +1394,7 @@ NSGigE::rxKick()
             rxPktBytes = rxPacket->length;
             rxPacketBufPtr = rxPacket->data;
 
+#if TRACING_ON
             if (DTRACE(Ethernet)) {
                 if (rxPacket->isIpPkt()) {
                     ip_header *ip = rxPacket->getIpHdr();
@@ -1406,6 +1407,7 @@ NSGigE::rxKick()
                     }
                 }
             }
+#endif
 
             // sanity check - i think the driver behaves like this
             assert(rxDescCnt >= rxPktBytes);
@@ -1594,6 +1596,7 @@ NSGigE::transmit()
     DPRINTF(Ethernet, "\n\nAttempt Pkt Transmit: txFifo length = %d\n",
             maxTxFifoSize - txFifoAvail);
     if (interface->sendPacket(txFifo.front())) {
+#if TRACING_ON
         if (DTRACE(Ethernet)) {
             if (txFifo.front()->isIpPkt()) {
                 ip_header *ip = txFifo.front()->getIpHdr();
@@ -1606,6 +1609,7 @@ NSGigE::transmit()
                 }
             }
         }
+#endif
 
         DDUMP(Ethernet, txFifo.front()->data, txFifo.front()->length);
         txBytes += txFifo.front()->length;
