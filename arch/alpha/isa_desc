@@ -2362,8 +2362,8 @@ decode OPCODE default Unknown::unknown() {
 	    // them the same though.
 	    0x0000: trapb({{ }}, IsSerializing, No_OpClass);
 	    0x0400: excb({{ }}, IsSerializing, No_OpClass);
-	    0x4000: mb({{ }}, IsMemBarrier);
-	    0x4400: wmb({{ }}, IsWriteBarrier);
+	    0x4000: mb({{ }}, IsMemBarrier, RdPort);
+	    0x4400: wmb({{ }}, IsWriteBarrier, WrPort);
 	}
 
 #ifdef FULL_SYSTEM
