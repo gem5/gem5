@@ -58,7 +58,7 @@ class Tsunami : public Platform
   public:
 
     /** Max number of CPUs in a Tsunami */
-    static const int Max_CPUs = 4;
+    static const int Max_CPUs = 64;
 
     /** Pointer to the system */
     System *system;
