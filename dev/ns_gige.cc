@@ -299,7 +299,7 @@ EtherDev::read(MemReqPtr &req, uint8_t *data)
 
               case ISR:
                 reg = regs.isr;
-                regs.isr = 0;
+                devIntrClear(ISR_ALL);
                 break;
 
               case IMR:

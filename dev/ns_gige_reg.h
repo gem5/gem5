@@ -219,6 +219,7 @@
 #define ISR_RXERR	0x00000004
 #define ISR_RXDESC	0x00000002
 #define ISR_RXOK	0x00000001
+#define ISR_ALL         0x7FFFFFFF
 
 /* transmit configuration register */
 #define TXCFG_CSI	0x80000000
