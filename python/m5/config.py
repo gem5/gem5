@@ -27,6 +27,7 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
+from m5 import panic
 from convert import *
 
 noDot = False
