@@ -28,6 +28,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <unistd.h>
 
@@ -48,7 +49,7 @@ Average<> s3;
 Scalar<Counter, MainBin> s4;
 Vector<Counter, MainBin> s5;
 Distribution<Counter, MainBin> s6;
-Vector<> s7;
+Vector<Counter, MainBin> s7;
 AverageVector<> s8;
 StandardDeviation<> s9;
 AverageDeviation<> s10;
@@ -65,6 +66,7 @@ Formula f3;
 Formula f4;
 Formula f5;
 Formula f6;
+Formula f7;
 
 MainBin bin1("bin1");
 MainBin bin2("bin2");
@@ -131,7 +133,7 @@ main(int argc, char *argv[])
     s3
         .name("Stat03")
         .desc("this is statistic 3")
-        .prereq(s11)
+        .prereq(f7)
         ;
 
     s4
@@ -253,18 +255,20 @@ main(int argc, char *argv[])
         .desc("this is formula 6")
         ;
 
-    check();
-
-    bin1.activate();
-
     f1 = s1 + s2;
-    f2 = (-s1) / (-s2) * -s3 + ULL(100) + s4;
+    f2 = (-s1) / (-s2) * (-s3 + ULL(100) + s4);
     f3 = sum(s5) * s7;
     f4 = functor(testfunc);
     TestClass testclass;
     f5 = functor(testclass);
     f6 += constant(10.0);
     f6 += s5[3];
+    f7 = constant(1);
+
+    check();
+    reset();
+
+    bin1.activate();
 
     s16[1][0] = 1;
     s16[0][1] = 3;
@@ -477,6 +481,14 @@ main(int argc, char *argv[])
     s6.sample(99);
     s6.sample(99);
 
+    s7[0] = 700;
+    s7[1] = 600;
+    s7[2] = 500;
+    s7[3] = 400;
+    s7[4] = 300;
+    s7[5] = 200;
+    s7[6] = 100;
+
     s9.sample(100);
     s9.sample(100);
     s9.sample(100);
@@ -497,20 +509,11 @@ main(int argc, char *argv[])
 
     s12.sample(100);
 
-    bin1.activate();
-    cout << "dump 1" << endl;
-    dump(cout);
-    cout << endl << endl;
+//    dump(cout, mode_simplescalar);
+    ofstream file("/tmp/stats.py");
+    dump(file, "stattest", mode_python);
+    file.close();
 
-    bin2.activate();
-    cout << "dump 2" << endl;
-    dump(cout);
-    cout << endl << endl;
-
-    cout << "dump 3" << endl;
-    reset();
-    dump(cout);
-    cout << endl << endl;
 
     return 0;
 }

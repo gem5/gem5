@@ -35,9 +35,12 @@
 
 #include "base/callback.hh"
 #include "base/cprintf.hh"
+#include "base/hostinfo.hh"
 #include "base/misc.hh"
+#include "base/python.hh"
 #include "base/statistics.hh"
 #include "base/str.hh"
+#include "base/time.hh"
 #include "base/trace.hh"
 
 #ifdef __M5_NAN
@@ -82,6 +85,8 @@ namespace Database
       public:
         void dump(ostream &stream, const string &name, DisplayMode mode);
         void display(ostream &stream, DisplayMode mode);
+        void python(ostream &stream, const string &name);
+        void python(Python &py, const string &name, const string &bin);
 
         StatData *find(void *stat);
         void mapStat(void *stat, StatData *data);
@@ -101,6 +106,9 @@ Data::dump(ostream &stream, const string &name, DisplayMode mode)
     MainBin *orig = MainBin::curBin();
 
     switch (mode) {
+      case mode_python:
+        python(stream, name);
+        break;
       case mode_m5:
       case mode_simplescalar:
         display(stream, mode);
@@ -147,6 +155,53 @@ Data::display(ostream &stream, DisplayMode mode)
             ++i;
         }
     }
+}
+
+void
+Data::python(ostream &stream, const string &name)
+{
+    Python py(stream);
+
+    ccprintf(stream, "import sys\n");
+    ccprintf(stream, "sys.path.append('.')\n");
+    ccprintf(stream, "from m5stats import *\n\n");
+
+    if (bins.empty()) {
+        python(py, name, "");
+    } else {
+        list<MainBin *>::iterator i = bins.begin();
+        list<MainBin *>::iterator end = bins.end();
+
+        while (i != end) {
+            (*i)->activate();
+            python(py, name, (*i)->name());
+            ++i;
+        }
+    }
+
+    py.next();
+    ccprintf(stream, "if __name__ == '__main__':\n");
+    ccprintf(stream, "    program_display()\n");
+}
+
+void
+Data::python(Python &py, const string &name, const string &bin)
+{
+    py.start("collections.append");
+    py.start("Collection");
+    py.qarg(name);
+    py.qarg(bin);
+    py.qarg(hostname());
+    py.qarg(Time::start.date());
+    list_t::iterator i = allStats.begin();
+    list_t::iterator end = allStats.end();
+    while (i != end) {
+        StatData *stat = *i;
+        stat->python(py);
+        ++i;
+    }
+    py.end();
+    py.end();
 }
 
 StatData *
@@ -270,6 +325,12 @@ StatData *
 DataAccess::find() const
 {
     return Database::StatDB().find(const_cast<void *>((const void *)this));
+}
+
+const StatData *
+getStatData(const void *stat)
+{
+    return Database::StatDB().find(const_cast<void *>(stat));
 }
 
 void
@@ -902,6 +963,165 @@ VectorDistDataBase::display(ostream &stream, DisplayMode mode) const
 }
 
 void
+ScalarDataBase::python(Python &py) const
+{
+    py.start("Scalar");
+    py.qarg(name);
+    py.qarg(desc);
+    py.kwarg("binned", binned());
+    py.kwarg("precision", precision);
+    py.kwarg("flags", flags);
+    if (prereq)
+        py.qkwarg("prereq", prereq->name);
+    py.kwarg("value", val());
+    py.end();
+}
+
+void
+VectorDataBase::python(Python &py) const
+{
+    const_cast<VectorDataBase *>(this)->update();
+
+    py.start("Vector");
+    py.qarg(name);
+    py.qarg(desc);
+    py.kwarg("binned", binned());
+    py.kwarg("precision", precision);
+    py.kwarg("flags", flags);
+    if (prereq)
+        py.qkwarg("prereq", prereq->name);
+    py.kwarg("value", val());
+    if (!subnames.empty())
+        py.qkwarg("subnames", subnames);
+    if (!subdescs.empty())
+        py.qkwarg("subdescs", subdescs);
+    py.end();
+}
+
+void
+DistDataData::python(Python &py, const string &name) const
+{
+    string s = name.empty() ? "" : name + "=";
+
+    if (samples == 0 || fancy)
+        s += "SimpleDist";
+    else
+        s += "FullDist";
+
+    py.start(s);
+    py.arg(sum);
+    py.arg(squares);
+    py.arg(samples);
+    if (samples && !fancy) {
+        py.arg(min_val);
+        py.arg(min_val);
+        py.arg(underflow);
+        py.arg(vec);
+        py.arg(overflow);
+        py.arg(min);
+        py.arg(max);
+        py.arg(bucket_size);
+        py.arg(size);
+    }
+    py.end();
+}
+
+void
+FormulaDataBase::python(Python &py) const
+{
+    const_cast<FormulaDataBase *>(this)->update();
+
+    py.start("Formula");
+    py.qarg(name);
+    py.qarg(desc);
+    py.kwarg("binned", binned());
+    py.kwarg("precision", precision);
+    py.kwarg("flags", flags);
+    if (prereq)
+        py.qkwarg("prereq", prereq->name);
+    py.qkwarg("formula", str());
+    if (!subnames.empty())
+        py.qkwarg("subnames", subnames);
+    if (!subdescs.empty())
+        py.qkwarg("subdescs", subdescs);
+    py.end();
+}
+
+void
+DistDataBase::python(Python &py) const
+{
+    const_cast<DistDataBase *>(this)->update();
+
+    py.start("Dist");
+    py.qarg(name);
+    py.qarg(desc);
+    py.kwarg("binned", binned());
+    py.kwarg("precision", precision);
+    py.kwarg("flags", flags);
+    if (prereq)
+        py.qkwarg("prereq", prereq->name);
+    data.python(py, "dist");
+    py.end();
+}
+
+void
+VectorDistDataBase::python(Python &py) const
+{
+    const_cast<VectorDistDataBase *>(this)->update();
+
+    py.start("VectorDist");
+    py.qarg(name);
+    py.qarg(desc);
+    py.kwarg("binned", binned());
+    py.kwarg("precision", precision);
+    py.kwarg("flags", flags);
+    if (prereq)
+        py.qkwarg("prereq", prereq->name);
+    if (!subnames.empty())
+        py.qkwarg("subnames", subnames);
+    if (!subdescs.empty())
+        py.qkwarg("subdescs", subdescs);
+
+    py.tuple("dist");
+    typedef std::vector<DistDataData>::const_iterator iter;
+    iter i = data.begin();
+    iter end = data.end();
+    while (i != end) {
+        i->python(py, "");
+        ++i;
+    }
+    py.endTuple();
+    py.end();
+}
+
+void
+Vector2dDataBase::python(Python &py) const
+{
+    const_cast<Vector2dDataBase *>(this)->update();
+
+    py.start("Vector2d");
+    py.qarg(name);
+    py.qarg(desc);
+    py.kwarg("binned", binned());
+    py.kwarg("precision", precision);
+    py.kwarg("flags", flags);
+    if (prereq)
+        py.qkwarg("prereq", prereq->name);
+
+    py.kwarg("value", vec);
+    if (!subnames.empty())
+        py.qkwarg("subnames", subnames);
+    if (!subdescs.empty())
+        py.qkwarg("subdescs", subdescs);
+    if (!y_subnames.empty())
+        py.qkwarg("ysubnames", y_subnames);
+
+    py.kwarg("x", x);
+    py.kwarg("y", y);
+    py.end();
+}
+
+void
 FormulaBase::val(rvec_t &vec) const
 {
     vec = root->val();
@@ -947,6 +1167,12 @@ FormulaBase::zero() const
 void
 FormulaBase::update(StatData *)
 {
+}
+
+string
+FormulaBase::str() const
+{
+    return root ? root->str() : "";
 }
 
 Formula::Formula()

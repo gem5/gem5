@@ -75,6 +75,7 @@ float __nan();
 #endif
 
 class Callback;
+class Python;
 
 /** The current simulated cycle. */
 extern Tick curTick;
@@ -162,6 +163,7 @@ struct StatData
      * @param stream The stream to print to.
      */
     virtual void display(std::ostream &stream, DisplayMode mode) const = 0;
+    virtual void python(Python &py) const = 0;
     bool dodisplay() const { return !prereq || !prereq->zero(); }
 
     /**
@@ -200,6 +202,7 @@ struct ScalarDataBase : public StatData
     virtual result_t total() const = 0;
 
     virtual void display(std::ostream &stream, DisplayMode mode) const;
+    virtual void python(Python &py) const;
 };
 
 template <class T>
@@ -226,6 +229,7 @@ struct VectorDataBase : public StatData
     mutable std::vector<std::string> subdescs;
 
     virtual void display(std::ostream &stream, DisplayMode mode) const;
+    virtual void python(Python &py) const;
 
     virtual size_t size() const  = 0;
     virtual const rvec_t &val() const  = 0;
@@ -288,6 +292,8 @@ struct DistDataData
     int bucket_size;
     int size;
     bool fancy;
+
+    void python(Python &py, const std::string &name) const;
 };
 
 struct DistDataBase : public StatData
@@ -296,6 +302,7 @@ struct DistDataBase : public StatData
     DistDataData data;
 
     virtual void display(std::ostream &stream, DisplayMode mode) const;
+    virtual void python(Python &py) const;
     virtual void update() = 0;
 };
 
@@ -328,6 +335,7 @@ struct VectorDistDataBase : public StatData
 
     virtual size_t size() const = 0;
     virtual void display(std::ostream &stream, DisplayMode mode) const;
+    virtual void python(Python &py) const;
     virtual void update()
     {
         int s = size();
@@ -374,6 +382,7 @@ struct Vector2dDataBase : public StatData
     mutable int y;
 
     virtual void display(std::ostream &stream, DisplayMode mode) const;
+    virtual void python(Python &py) const;
     virtual void update()
     {
         if (subnames.size() < x)
@@ -989,6 +998,8 @@ class VectorBase : public DataAccess
     void update(StatData *data) {}
 };
 
+const StatData * getStatData(const void *stat);
+
 /**
  * A proxy class to access the stat at a given index in a VectorBase stat.
  * Behaves like a ScalarBase.
@@ -1011,6 +1022,8 @@ class ScalarProxy
     params_t *params;
     /** The index to access in the parent VectorBase. */
     int index;
+    /** Keep a pointer to the original stat so was can get data */
+    void *stat;
 
   protected:
     /**
@@ -1048,14 +1061,14 @@ class ScalarProxy
      * @param p The params to use.
      * @param i The index to access.
      */
-    ScalarProxy(bin_t &b, params_t &p, int i)
-        : bin(&b), params(&p), index(i)  {}
+    ScalarProxy(bin_t &b, params_t &p, int i, void *s)
+        : bin(&b), params(&p), index(i), stat(s)  {}
     /**
      * Create a copy of the provided ScalarProxy.
      * @param sp The proxy to copy.
      */
     ScalarProxy(const ScalarProxy &sp)
-        : bin(sp.bin), params(sp.params), index(sp.index) {}
+        : bin(sp.bin), params(sp.params), index(sp.index), stat(sp.stat) {}
     /**
      * Set this proxy equal to the provided one.
      * @param sp The proxy to copy.
@@ -1065,6 +1078,7 @@ class ScalarProxy
         bin = sp.bin;
         params = sp.params;
         index = sp.index;
+        stat = sp.stat;
         return *this;
     }
 
@@ -1126,6 +1140,14 @@ class ScalarProxy
      * This stat has no state.  Nothing to reset
      */
     void reset() {  }
+
+  public:
+    const StatData *statData() const { return getStatData(stat); }
+    std::string str() const
+    {
+        return csprintf("%s[%d]", statData()->name, index);
+
+    }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1133,7 +1155,7 @@ inline ScalarProxy<T, Storage, Bin>
 VectorBase<T, Storage, Bin>::operator[](int index)
 {
     assert (index >= 0 && index < size());
-    return ScalarProxy<T, Storage, Bin>(bin, params, index);
+    return ScalarProxy<T, Storage, Bin>(bin, params, index, this);
 }
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1207,6 +1229,7 @@ class VectorProxy
     params_t *params;
     int offset;
     int len;
+    void *stat;
 
   private:
     mutable rvec_t *vec;
@@ -1243,14 +1266,19 @@ class VectorProxy
     }
 
   public:
-    VectorProxy(bin_t &b, params_t &p, int o, int l)
-        : bin(&b), params(&p), offset(o), len(l), vec(NULL)
-        { }
+    VectorProxy(bin_t &b, params_t &p, int o, int l, void *s)
+        : bin(&b), params(&p), offset(o), len(l), stat(s), vec(NULL)
+    {
+    }
+
     VectorProxy(const VectorProxy &sp)
         : bin(sp.bin), params(sp.params), offset(sp.offset), len(sp.len),
-          vec(NULL)
-        { }
-    ~VectorProxy() {
+          stat(sp.stat), vec(NULL)
+    {
+    }
+
+    ~VectorProxy()
+    {
         if (vec)
             delete vec;
     }
@@ -1261,6 +1289,7 @@ class VectorProxy
         params = sp.params;
         offset = sp.offset;
         len = sp.len;
+        stat = sp.stat;
         if (vec)
             delete vec;
         vec = NULL;
@@ -1270,7 +1299,8 @@ class VectorProxy
     ScalarProxy<T, Storage, Bin> operator[](int index)
     {
         assert (index >= 0 && index < size());
-        return ScalarProxy<T, Storage, Bin>(*bin, *params, offset + index);
+        return ScalarProxy<T, Storage, Bin>(*bin, *params, offset + index,
+                                            stat);
     }
 
     size_t size() const { return len; }
@@ -1293,7 +1323,7 @@ Vector2dBase<T, Storage, Bin>::operator[](int index)
 {
     int offset = index * y;
     assert (index >= 0 && offset < size());
-    return VectorProxy<T, Storage, Bin>(bin, params, offset, y);
+    return VectorProxy<T, Storage, Bin>(bin, params, offset, y, this);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1834,6 +1864,11 @@ class Node : public RefCounted
      *@return True is stat is binned.
      */
     virtual bool binned() const = 0;
+
+    /**
+     *
+     */
+    virtual std::string str() const = 0;
 };
 
 /** Reference counting pointer to a function Node. */
@@ -1860,6 +1895,11 @@ class ScalarStatNode : public Node
      *@return True is stat is binned.
      */
     virtual bool binned() const { return data->binned(); }
+
+    /**
+     *
+     */
+    virtual std::string str() const { return data->name; }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1885,6 +1925,11 @@ class ScalarProxyNode : public Node
      *@return True is stat is binned.
      */
     virtual bool binned() const { return proxy.binned(); }
+
+    /**
+     *
+     */
+    virtual std::string str() const { return proxy.str(); }
 };
 
 class VectorStatNode : public Node
@@ -1903,6 +1948,8 @@ class VectorStatNode : public Node
      *@return True is stat is binned.
      */
     virtual bool binned() const { return data->binned(); }
+
+    virtual std::string str() const { return data->name; }
 };
 
 template <typename T>
@@ -1922,6 +1969,8 @@ class ConstNode : public Node
      *@return False since constants aren't binned.
      */
     virtual bool binned() const { return false; }
+
+    virtual std::string str() const { return to_string(data[0]); }
 };
 
 template <typename T>
@@ -1945,6 +1994,7 @@ class FunctorNode : public Node
      *@return False since Functors aren't binned
      */
     virtual bool binned() const { return false; }
+    virtual std::string str() const { return to_string(functor()); }
 };
 
 template <typename T>
@@ -1968,6 +2018,46 @@ class ScalarNode : public Node
      *@return False since Scalar's aren't binned
      */
     virtual bool binned() const { return false; }
+    virtual std::string str() const { return to_string(scalar); }
+};
+
+template <class Op>
+struct OpString;
+
+template<>
+struct OpString<std::plus<result_t> >
+{
+    static std::string str() { return "+"; }
+};
+
+template<>
+struct OpString<std::minus<result_t> >
+{
+    static std::string str() { return "-"; }
+};
+
+template<>
+struct OpString<std::multiplies<result_t> >
+{
+    static std::string str() { return "*"; }
+};
+
+template<>
+struct OpString<std::divides<result_t> >
+{
+    static std::string str() { return "/"; }
+};
+
+template<>
+struct OpString<std::modulus<result_t> >
+{
+    static std::string str() { return "%"; }
+};
+
+template<>
+struct OpString<std::negate<result_t> >
+{
+    static std::string str() { return "-"; }
 };
 
 template <class Op>
@@ -2005,6 +2095,11 @@ class UnaryNode : public Node
      *@return True if child of node is binned.
      */
     virtual bool binned() const { return l->binned(); }
+
+    virtual std::string str() const
+    {
+        return OpString<Op>::str() + l->str();
+    }
 };
 
 template <class Op>
@@ -2070,6 +2165,11 @@ class BinaryNode : public Node
      *@return True if either child of node is binned.
      */
     virtual bool binned() const { return (l->binned() || r->binned()); }
+
+    virtual std::string str() const
+    {
+        return csprintf("(%s %s %s)", l->str(), OpString<Op>::str(), r->str());
+    }
 };
 
 template <class Op>
@@ -2116,6 +2216,11 @@ class SumNode : public Node
      *@return True if child of node is binned.
      */
     virtual bool binned() const { return l->binned(); }
+
+    virtual std::string str() const
+    {
+        return csprintf("total(%s)", l->str());
+    }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -2125,6 +2230,9 @@ class SumNode : public Node
 //////////////////////////////////////////////////////////////////////
 struct MainBin
 {
+    class BinBase;
+    friend class MainBin::BinBase;
+
   private:
     std::string _name;
     char *mem;
@@ -2778,6 +2886,45 @@ class FormulaBase : public DataAccess
      *
      */
     void update(StatData *);
+
+    std::string str() const;
+};
+
+class FormulaDataBase : public VectorDataBase
+{
+  public:
+    virtual std::string str() const = 0;
+    virtual bool check() const { return true; }
+    virtual void python(Python &py) const;
+};
+
+template <class T>
+class FormulaData : public FormulaDataBase
+{
+  protected:
+    T &s;
+    mutable rvec_t vec;
+
+  public:
+    FormulaData(T &stat) : s(stat) {}
+
+    virtual bool binned() const { return s.binned(); }
+    virtual bool zero() const { return s.zero(); }
+    virtual void reset() { s.reset(); }
+
+    virtual size_t size() const { return s.size(); }
+    virtual const rvec_t &val() const
+    {
+        s.val(vec);
+        return vec;
+    }
+    virtual result_t total() const { return s.total(); }
+    virtual void update()
+    {
+        VectorDataBase::update();
+        s.update(this);
+    }
+    virtual std::string str() const { return s.str(); }
 };
 
 class Temp;
@@ -2827,6 +2974,8 @@ class FormulaNode : public Node
     virtual const rvec_t &val() const { formula.val(vec); return vec; }
     virtual result_t total() const { return formula.total(); }
     virtual bool binned() const { return formula.binned(); }
+
+    virtual std::string str() const { return formula.str(); }
 };
 
 /**
