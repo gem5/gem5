@@ -120,7 +120,7 @@ SimpleCPU::SimpleCPU(const string &_name,
                      FunctionalMemory *mem,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
-                     Tick freq)
+                     bool _def_reg, Tick freq)
     : BaseCPU(_name, /* number_of_threads */ 1,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
@@ -132,12 +132,14 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      Counter max_loads_any_thread,
                      Counter max_loads_all_threads,
                      MemInterface *icache_interface,
-                     MemInterface *dcache_interface)
+                     MemInterface *dcache_interface,
+                     bool _def_reg)
     : BaseCPU(_name, /* number_of_threads */ 1,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads),
 #endif
-      tickEvent(this), xc(NULL), cacheCompletionEvent(this)
+      tickEvent(this), xc(NULL), defer_registration(_def_reg),
+      cacheCompletionEvent(this)
 {
     _status = Idle;
 #ifdef FULL_SYSTEM
@@ -169,6 +171,13 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 
 SimpleCPU::~SimpleCPU()
 {
+}
+
+void SimpleCPU::init()
+{
+    if (!defer_registration) {
+        this->registerExecContexts();
+    }
 }
 
 void
@@ -810,6 +819,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         itb, dtb, mem,
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
+                        defer_registration,
                         ticksPerSecond * mult);
 #else
 
@@ -817,14 +827,15 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         max_insts_any_thread, max_insts_all_threads,
                         max_loads_any_thread, max_loads_all_threads,
                         (icache) ? icache->getInterface() : NULL,
-                        (dcache) ? dcache->getInterface() : NULL);
+                        (dcache) ? dcache->getInterface() : NULL,
+                        defer_registration);
 
 #endif // FULL_SYSTEM
-
+#if 0
     if (!defer_registration) {
         cpu->registerExecContexts();
     }
-
+#endif
     return cpu;
 }
 
