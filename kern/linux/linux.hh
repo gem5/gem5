@@ -26,58 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ALPHA_ACCESS_H__
-#define __ALPHA_ACCESS_H__
+#ifndef __LINUX_HH__
+#define __LINUX_HH__
 
-/* @file
- * System Console Memory Mapped Register Definition
- */
+class Linux {};
 
-#define ALPHA_ACCESS_VERSION (1301) /* CH++*/
-
-#ifndef CONSOLE
-#include <ostream>
-#include <string>
-class Checkpoint;
-#else
-#include <inttypes.h>
-#endif
-
-// This structure hacked up from simos
-struct AlphaAccess
-{
-    uint32_t	last_offset;		// 00: must be first field
-    uint32_t	version;		// 04:
-    uint32_t	numCPUs;		// 08:
-    uint32_t	intrClockFrequency;	// 0C: Hz
-    uint64_t	cpuClock;		// 10: MHz
-    uint64_t	mem_size;		// 18:
-
-    // Loaded kernel
-    uint64_t	kernStart;		// 20:
-    uint64_t	kernEnd;		// 28:
-    uint64_t	entryPoint;		// 30:
-
-    // console disk stuff
-    uint64_t	diskUnit;		// 38:
-    uint64_t	diskCount;		// 40:
-    uint64_t	diskPAddr;		// 48:
-    uint64_t	diskBlock;		// 50:
-    uint64_t	diskOperation;		// 58:
-
-    // console simple output stuff
-    uint64_t	outputChar;		// 60: Placeholder for output
-    uint64_t	inputChar;		// 68: Placeholder for input
-
-    // MP boot
-    uint64_t	bootStrapImpure;	// 70:
-    uint32_t	bootStrapCPU;		// 78:
-    uint32_t	align2;			// 7C: Dummy placeholder for alignment
-
-#ifndef CONSOLE
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-#endif
-};
-
-#endif // __ALPHA_ACCESS_H__
+#endif // __LINUX_HH__

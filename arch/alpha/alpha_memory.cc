@@ -90,8 +90,16 @@ AlphaTlb::checkCacheability(MemReqPtr req)
     if (req->paddr & PA_UNCACHED_BIT) {
         if (PA_IPR_SPACE(req->paddr)) {
             // IPR memory space not implemented
-            if (!req->xc->misspeculating())
-                panic("IPR memory space not implemented! PA=%x\n", req->paddr);
+            if (!req->xc->misspeculating()) {
+                switch (req->paddr) {
+                  case 0xFFFFF00188:
+                    req->data = 0;
+                    break;
+
+                  default:
+                    panic("IPR memory space not implemented! PA=%x\n", req->paddr);
+                }
+            }
         } else {
             // mark request as uncacheable
             req->flags |= UNCACHEABLE;
