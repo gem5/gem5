@@ -78,9 +78,11 @@ Uart::IntrEvent::scheduleIntr()
 {
     DPRINTF(Uart, "Scheduling IER interrupt\n");
     if (!scheduled())
-        schedule(curTick + 300);
+        /* @todo Make this cleaner, will be much easier with
+         *       nanosecond time everywhere. Hint hint  Nate. */
+        schedule(curTick + (ticksPerSecond/2000) * 350);
     else
-        reschedule(curTick + 300);
+        reschedule(curTick + (ticksPerSecond/2000) * 350);
 }
 
 Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
