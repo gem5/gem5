@@ -30,6 +30,7 @@
 
 #include "arch/alpha/pseudo_inst.hh"
 #include "cpu/exec_context.hh"
+#include "sim/annotation.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -42,6 +43,18 @@ namespace AlphaPseudo
 {
     bool doStatisticsInsts;
     bool doCheckpointInsts;
+    bool doQuiesce;
+
+    void
+    quiesce(ExecContext *xc)
+    {
+        if (!doQuiesce)
+            return;
+
+        Annotate::QUIESCE(xc);
+        xc->setStatus(ExecContext::Suspended);
+        xc->kernelStats.quiesce();
+    }
 
     void
     m5exit_old(ExecContext *xc)
@@ -126,16 +139,20 @@ namespace AlphaPseudo
 
     Context context("PseudoInsts");
 
+    Param<bool> __quiesce(&context, "quiesce",
+                          "enable quiesce instructions",
+                          true);
     Param<bool> __statistics(&context, "statistics",
-                             "enable the statistics pseudo instructions",
+                             "enable statistics pseudo instructions",
                              true);
     Param<bool> __checkpoint(&context, "checkpoint",
-                             "enable the checkpoint pseudo instructions",
+                             "enable checkpoint pseudo instructions",
                              true);
 
     void
     Context::checkParams()
     {
+        doQuiesce = __quiesce;
         doStatisticsInsts = __statistics;
         doCheckpointInsts = __checkpoint;
     }

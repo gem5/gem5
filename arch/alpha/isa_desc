@@ -2410,11 +2410,8 @@ decode OPCODE default Unknown::unknown() {
 		}
 	    }});
 	    0x01: quiesce({{
-		if (!xc->misspeculating()) {
-		    Annotate::QUIESCE(xc);
-		    xc->setStatus(ExecContext::Suspended);
-		    xc->kernelStats.quiesce();
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::quiesce(xc);
 	    }});
 	    0x10: ivlb({{
 		if (!xc->misspeculating()) {

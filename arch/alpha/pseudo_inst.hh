@@ -30,6 +30,7 @@ class ExecContext;
 
 namespace AlphaPseudo
 {
+    void quiesce(ExecContext *xc);
     void m5exit(ExecContext *xc);
     void m5exit_old(ExecContext *xc);
     void resetstats(ExecContext *xc);
