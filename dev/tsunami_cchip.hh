@@ -47,6 +47,7 @@ class TsunamiCChip : public MmapDevice
     Tsunami *tsunami;
     uint64_t dim[Tsunami::Max_CPUs];
     uint64_t dir[Tsunami::Max_CPUs];
+    bool dirInterrupting[Tsunami::Max_CPUs];
     uint64_t drir;
 
   public:
@@ -55,6 +56,9 @@ class TsunamiCChip : public MmapDevice
 
     virtual Fault read(MemReqPtr req, uint8_t *data);
     virtual Fault write(MemReqPtr req, const uint8_t *data);
+
+    void postDRIR(uint64_t bitvector);
+    void clearDRIR(uint64_t bitvector);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

@@ -109,6 +109,8 @@ TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
     timerData = 0;
     set_time(init_time == 0 ? time(NULL) : init_time);
     uip = 1;
+    picr = 0;
+    picInterrupting = false;
 }
 
 void
@@ -202,9 +204,15 @@ TsunamiIO::write(MemReqPtr req, const uint8_t *data)
             switch(daddr) {
                 case TSDEV_PIC1_MASK:
                     mask1 = *(uint8_t*)data;
+                    if ((picr & mask1) && !picInterrupting) {
+                        picInterrupting = true;
+                        tsunami->cchip->postDRIR(uint64_t(1) << 55);
+                        DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
+                    }
                     return No_Fault;
                 case TSDEV_PIC2_MASK:
                     mask2 = *(uint8_t*)data;
+                    //PIC2 Not implemented to interrupt
                     return No_Fault;
                 case TSDEV_DMA1_RESET:
                     return No_Fault;
@@ -277,6 +285,30 @@ TsunamiIO::write(MemReqPtr req, const uint8_t *data)
 
 
     return No_Fault;
+}
+
+void
+TsunamiIO::postPIC(uint8_t bitvector)
+{
+    //PIC2 Is not implemented, because nothing of interest there
+    picr |= bitvector;
+    if ((picr & mask1) && !picInterrupting) {
+        picInterrupting = true;
+        tsunami->cchip->postDRIR(uint64_t(1) << 55);
+        DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
+    }
+}
+
+void
+TsunamiIO::clearPIC(uint8_t bitvector)
+{
+    //PIC2 Is not implemented, because nothing of interest there
+    picr &= ~bitvector;
+    if (!(picr & mask1)) {
+        picInterrupting = false;
+        tsunami->cchip->clearDRIR(uint64_t(1) << 55);
+        DPRINTF(Tsunami, "clearing pic interrupt to cchip\n");
+    }
 }
 
 void

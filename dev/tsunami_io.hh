@@ -90,6 +90,9 @@ class TsunamiIO : public MmapDevice
       uint8_t mode1;
       uint8_t mode2;
 
+    uint8_t picr; //Raw PIC interrput register, before masking
+    bool picInterrupting;
+
     Tsunami *tsunami;
 
       /* This timer is initilized, but after I wrote the code
@@ -120,6 +123,9 @@ class TsunamiIO : public MmapDevice
 
     virtual Fault read(MemReqPtr req, uint8_t *data);
     virtual Fault write(MemReqPtr req, const uint8_t *data);
+
+    void postPIC(uint8_t bitvector);
+    void clearPIC(uint8_t bitvector);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

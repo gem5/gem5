@@ -31,6 +31,7 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t,
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
         dim[i] = 0;
         dir[i] = 0;
+        dirInterrupting[i] = false;
     }
 
     drir = 0;
@@ -163,15 +164,47 @@ TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
                   return No_Fault;
               case TSDEV_CC_DIM0:
                    dim[0] = *(uint64_t*)data;
+                   if (dim[0] & drir) {
+                       dir[0] = dim[0] & drir;
+                       if (!dirInterrupting[0]) {
+                           dirInterrupting[0] = true;
+                           tsunami->intrctrl->post(0, TheISA::INTLEVEL_IRQ1, 0);
+                           DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
+                       }
+                   }
                   return No_Fault;
               case TSDEV_CC_DIM1:
                   dim[1] = *(uint64_t*)data;
+                  if (dim[1] & drir) {
+                       dir[1] = dim[1] & drir;
+                       if (!dirInterrupting[1]) {
+                           dirInterrupting[1] = true;
+                           tsunami->intrctrl->post(1, TheISA::INTLEVEL_IRQ1, 0);
+                           DPRINTF(Tsunami, "posting dir interrupt to cpu 1\n");
+                       }
+                  }
                   return No_Fault;
               case TSDEV_CC_DIM2:
                   dim[2] = *(uint64_t*)data;
+                  if (dim[2] & drir) {
+                       dir[2] = dim[2] & drir;
+                       if (!dirInterrupting[2]) {
+                           dirInterrupting[2] = true;
+                           tsunami->intrctrl->post(2, TheISA::INTLEVEL_IRQ1, 0);
+                           DPRINTF(Tsunami, "posting dir interrupt to cpu 2\n");
+                       }
+                  }
                   return No_Fault;
               case TSDEV_CC_DIM3:
                   dim[3] = *(uint64_t*)data;
+                  if ((dim[3] & drir) /*And Not Already Int*/) {
+                       dir[3] = dim[3] & drir;
+                       if (!dirInterrupting[3]) {
+                           dirInterrupting[3] = true;
+                           tsunami->intrctrl->post(3, TheISA::INTLEVEL_IRQ1, 0);
+                           DPRINTF(Tsunami, "posting dir interrupt to cpu 3\n");
+                       }
+                  }
                   return No_Fault;
               case TSDEV_CC_DIR0:
               case TSDEV_CC_DIR1:
@@ -212,6 +245,37 @@ TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
     DPRINTFN("Tsunami ERROR: write daddr=%#x size=%d\n", daddr, req->size);
 
     return No_Fault;
+}
+
+void
+TsunamiCChip::postDRIR(uint64_t bitvector)
+{
+    drir |= bitvector;
+    for(int i=0; i < Tsunami::Max_CPUs; i++) {
+        if (bitvector & dim[i]) {
+            dir[i] |= bitvector;
+            if (!dirInterrupting[i]) {
+                dirInterrupting[i] = true;
+                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, 0);
+                DPRINTF(Tsunami, "posting dir interrupt to cpu %d\n",i);
+            }
+        }
+    }
+}
+
+void
+TsunamiCChip::clearDRIR(uint64_t bitvector)
+{
+    drir &= ~bitvector;
+    for(int i=0; i < Tsunami::Max_CPUs; i++) {
+        dir[i] &= ~bitvector;
+        if (!dir[i]) {
+            dirInterrupting[i] = false;
+            tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, 0);
+            DPRINTF(Tsunami, "clearing dir interrupt to cpu %d\n", i);
+
+        }
+    }
 }
 
 void
