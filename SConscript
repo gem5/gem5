@@ -420,7 +420,9 @@ env.Command('targetarch', None, link_targetarch)
 
 
 # libelf build is described in its own SConscript file.
-SConscript('libelf/SConscript', exports = 'env', duplicate=0)
+# SConscript-local is the per-config build, which just copies some
+# header files into a place where they can be found.
+SConscript('libelf/SConscript-local', exports = 'env', duplicate=0)
 
 SConscript('sim/pyconfig/SConscript', exports = ['env', 'obj_desc_files'],
            duplicate=0)
