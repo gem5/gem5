@@ -1,511 +1,277 @@
-#!/usr/bin/perl
+#! /usr/bin/env perl
 
-# Copyright (c) 2001 Nathan L. Binkert
+# Copyright (c) 2003 The Regents of The University of Michigan
 # All rights reserved.
 #
-# Permission to redistribute, use, copy, and modify this software
-# without fee is hereby granted, provided that the following
-# conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
 #
-# 1. This entire notice is included in all source code copies of any
-#    software which is or includes a copy or modification of this
-#    software.
-# 2. The name of the author may not be used to endorse or promote
-#    products derived from this software without specific prior
-#    written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Diff two streams.
 #
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-# GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Unlike regular diff, this script does not read in the entire input
+# before doing a diff, so it can be used on lengthy outputs piped from
+# other programs (e.g., M5 traces).  The best way to do this is to
+# take advantage of the power of Perl's open function, which will
+# automatically fork a subprocess if the last character in the
+# "filename" is a pipe (|).  Thus to compare the instruction traces
+# from two versions of m5 (m5a and m5b), you can do this:
+#
+# rundiff 'm5a --trace:flags=InstExec |' 'm5b --trace:flags=InstExec |'
 #
 
-use Algorithm::Diff qw(diff);
-use vars qw ($opt_C $opt_c $opt_u $opt_U);
+use strict;
 
-$opt_u = "";
-$opt_c = undef;
+#
+# For the highest-quality (minimal) diffs, we can use the
+# Algorithm::Diff package.  If you don't have this installed, or want
+# the script to run faster (like 3-4x faster, based on informal
+# observation), set $use_complexdiff to 0; then a built-in, simple,
+# and generally quite adequate algorithm will be used instead.
+my $use_complexdiff = 0;
 
-$diffsize = 2000;
-# After we've read up to a certain point in each file, the number of items
-# we've read from each file will differ by $FLD (could be 0)
-my $File_Length_Difference = 0;
-my $Context_Lines = 9;
+if ($use_complexdiff) {
+    use Algorithm::Diff qw(traverse_sequences);
+};
 
-$progname = $0;
-if (scalar(@ARGV) != 2) {
-  usage();
-}
+my $lookahead_lines = 200;
+my $precontext_lines = 3;
+my $postcontext_lines = 3;
 
-my ($filename1, $filename2);
-($filename1, $start1) = parse_filearg($ARGV[0]);
-($filename2, $start2) = parse_filearg($ARGV[1]);
+my $file1 = $ARGV[0];
+my $file2 = $ARGV[1];
 
-if ($filename1 eq "-" && $filename2 eq "-") {
-  die "Only one of the inputs may be standard in\n";
-}
+die "Need two args." if (!(defined($file1) && defined($file2)));
 
-my ($file1, $file2);
-if ($filename1 eq "-") {
-  $file1 = STDIN;
-} else {
-  open(FILE1, $filename1) || die "can't open $file1: $!\n";
-  $file1 = FILE1;
-}
+my ($fh1, $fh2);
+open($fh1, $file1) or die "Can't open $file1";
+open($fh2, $file2) or die "Can't open $file2";
 
-if ($filename2 eq "-") {
-  $file2 = STDIN;
-} else {
-  open(FILE2, $filename2) || die "can't open $file2: $!\n";
-  $file2 = FILE2;
-}
+# buffer of matching lines for pre-diff context
+my @precontext = ();
+# number of post-diff matching lines remaining to print
+my $postcontext = 0;
 
-my $file_offset1 = ffw($file1, $start1);
-my $file_offset2 = ffw($file2, $start2);
+# lookahead buffers for $file1 and $file2 respectively
+my @lines1 = ();
+my @lines2 = ();
 
-$skip_first = 0;
-my (@buf1, @buf2, @printbuf1, @printbuf2);
+# Next line number available to print from each file.  Generally this
+# corresponds to the oldest line in @precontext, or the oldest line in
+# @lines1 and @lines2 if @precontext is empty.
+my $lineno1 = 1;
+my $lineno2 = 1;
 
-$Compare_Ahead = 0;
-
-while (!eof($file1) && !eof($file2)) {
-  my $line1 = <$file1>; chomp $line1;
-  my $line2 = <$file2>; chomp $line2;
-  my $printline1 = $line1;
-  my $printline2 = $line2;
-
-  push @buf1, $line1;
-  push @buf2, $line2;
-  push @printbuf1, $printline1;
-  push @printbuf2, $printline2;
-
-#  while ($Compare_Ahead < $Context_Lines) {
-#    $line1 = @buf1[$Compare_Ahead];
-#    $line2 = @buf2[$Compare_Ahead];
-#    $line2 =~ s/ *--.*$//;
-#    if ($line1 ne $line2) { last; }
-#    ++$Compare_Ahead;
-#  }
-
-  $line1 = @buf1[$Compare_Ahead];
-  $line2 = @buf2[$Compare_Ahead];
-  $line2 =~ s/ *--.*$//;
-
-  if ($line1 ne $line2) {
-    while (!eof($file1) && scalar(@buf1) < $diffsize) {
-      $line = <$file1>; chomp $line;
-      my $printline = $line;
-
-      push @printbuf1, $printline;
-      push @buf1, $line;
-    }
-    
-    while (!eof($file2) && scalar(@buf2) < $diffsize) {
-      $line = <$file2>; chomp $line;
-      my $printline = $line;
-#      $line =~ s/ *--.*$//;
-
-      push @printbuf2, $printline;
-      push @buf2, $line;
-    }
-
-    my $diffs = diff(\@buf1, \@buf2);
-
-    next unless @$diffs;
-
-    my @hunklist;
-    my ($hunk,$oldhunk);
-    # Loop over hunks. If a hunk overlaps with the last hunk, join them.
-    # Otherwise, print out the old one.
-    foreach my $piece (@$diffs) {
-      $hunk = new Hunk ($piece, $Context_Lines, scalar(@buf1));
-      next unless $oldhunk;
-
-      if ($hunk->does_overlap($oldhunk)) {
-	$hunk->prepend_hunk($oldhunk);
-      } else {
-	push @hunklist, $oldhunk;
-      }
-    } continue {
-      $oldhunk = $hunk;
-    }
-      
-    my $change = 0;
-    while (scalar(@hunklist) && !$change) {
-      $hunk = pop @hunklist;
-      $change = $hunk->{"change"};
-    }
-    push @hunklist, $hunk;
-    $last_start1 = $hunk->{"start1"};
-    $last_start2 = $hunk->{"start2"};
-    $last_end1 = $hunk->{"end1"};
-    $last_end2 = $hunk->{"end2"};
-
-    while (scalar(@hunklist)) {
-      $hunk = shift @hunklist;
-#      $hunk->output_diff(\@buf1, \@buf2);
-      $hunk->output_diff(\@printbuf1, \@printbuf2);
-    }
-
-    $last_end1 -=  $Context_Lines - 1;
-    $last_end2 -=  $Context_Lines - 1;
-    $file_offset1 += $last_end1;
-    $file_offset2 += $last_end2;
-    @printbuf1 = @printbuf1[$last_end1..$#printbuf1];
-    @printbuf2 = @printbuf2[$last_end2..$#printbuf2];
-    @buf1 = @buf1[$last_end1..$#buf1];
-    @buf2 = @buf2[$last_end2..$#buf2];
-    while (scalar(@buf1) > $Context_Lines &&
-	   scalar(@buf2) > $Context_Lines) {
-      $foo1 = @buf1[$Context_Lines];
-      $foo2 = @buf2[$Context_Lines];
-      if (scalar($foo1) != scalar($foo2) || $foo1 ne $foo2) { last; }
-      $foo1 = shift @printbuf1;
-      $foo2 = shift @printbuf2;
-      $foo1 = shift @buf1;
-      $foo2 = shift @buf2;
-      ++$file_offset1;
-      ++$file_offset2;
-    }
-  } else {
-    ++$file_offset1;
-    ++$file_offset2;
-    $foo1 = shift @printbuf1;
-    $foo2 = shift @printbuf2;
-    $foo1 = shift @buf1;
-    $foo2 = shift @buf2;
-  }
-}
-
-close $file1;
-close $file2;
-
-sub ffw() {
-  if (scalar(@_) != 2) { die "improper usage of ffw\n"; }
-
-  my $FILE = $_[0];
-  my $start = $_[1];
-  my $count = 0;
-
-  while ($start-- > 0 && !eof($FILE)) {
-    <$FILE>;
-    $count++;
-  }
-
-  if ($start > 0) {die "File too short for ffw amount\n"; }
-  return $count;
-}
-
-sub parse_filearg() {
-  $start = 0;
-  split /:/, @_[0];
-  if (scalar(@_) > 2) { usage(); }
-
-  $file = $_[0];
-  if (scalar(@_) > 1) { $start = $_[1]; }
-
-  return ($file, $start);
-}
-
-sub usage() {
-  printf "usage: $progname <file1>[:start] <file2>[:start]\n";
-  exit 1;
-}
-
-
-# Package Hunk. A Hunk is a group of Blocks which overlap because of the
-# context surrounding each block. (So if we're not using context, every
-# hunk will contain one block.)
+# Fill a lookahead buffer to $lookahead_lines lines (or until EOF).
+sub fill
 {
-package Hunk;
+    my ($fh, $array) = @_;
 
-sub new {
-# Arg1 is output from &LCS::diff (which corresponds to one Block)
-# Arg2 is the number of items (lines, e.g.,) of context around each block
-#
-# This subroutine changes $File_Length_Difference
-#
-# Fields in a Hunk:
-# blocks      - a list of Block objects
-# start       - index in file 1 where first block of the hunk starts
-# end         - index in file 1 where last block of the hunk ends
-#
-# Variables:
-# before_diff - how much longer file 2 is than file 1 due to all hunks
-#               until but NOT including this one
-# after_diff  - difference due to all hunks including this one
-    my ($class, $piece, $context_items, $maxlen) = @_;
-
-    my $block = new Block ($piece); # this modifies $FLD!
-
-    my $before_diff = $File_Length_Difference; # BEFORE this hunk
-    my $after_diff = $before_diff + $block->{"length_diff"};
-    $File_Length_Difference += $block->{"length_diff"};
-
-    # @remove_array and @insert_array hold the items to insert and remove
-    # Save the start & beginning of each array. If the array doesn't exist
-    # though (e.g., we're only adding items in this block), then figure
-    # out the line number based on the line number of the other file and
-    # the current difference in file lenghts
-    my @remove_array = $block->remove;
-    my @insert_array = $block->insert;
-    my ($a1, $a2, $b1, $b2, $start1, $start2, $end1, $end2, $change);
-    $a1 = @remove_array ? $remove_array[0 ]->{"item_no"} : -1;
-    $a2 = @remove_array ? $remove_array[-1]->{"item_no"} : -1;
-    $b1 = @insert_array ? $insert_array[0 ]->{"item_no"} : -1;
-    $b2 = @insert_array ? $insert_array[-1]->{"item_no"} : -1;
-
-    $start1 = $a1 == -1 ? $b1 - $before_diff : $a1;
-    $end1   = $a2 == -1 ? $b2 - $after_diff  : $a2;
-    $start2 = $b1 == -1 ? $a1 + $before_diff : $b1;
-    $end2   = $b2 == -1 ? $a2 + $after_diff  : $b2;
-    $change = scalar(@remove_array) && scalar(@insert_array);
-
-    # At first, a hunk will have just one Block in it
-    my $hunk = {
-		"start1" => $start1,
-		"start2" => $start2,
-		"end1" => $end1,
-		"end2" => $end2,
-		"maxlen" => $maxlen,
-		"change" => $change,
-		"blocks" => [$block],
-              };
-    bless $hunk, $class;
-
-    $hunk->flag_context($context_items);
-
-    return $hunk;
+    while (@$array < $lookahead_lines) {
+	my $line = <$fh>;
+	last if (!defined($line));
+	push @$array, $line;
+    }
 }
 
-# Change the "start" and "end" fields to note that context should be added
-# to this hunk
-sub flag_context {
-    my ($hunk, $context_items) = @_;
-    return unless $context_items; # no context
+# Print and delete n lines from front of given array with given prefix.
+sub printlines
+{
+    my ($array, $n, $prefix) = @_;
 
-    # add context before
-    my $start1 = $hunk->{"start1"};
-    my $num_added = $context_items > $start1 ? $start1 : $context_items;
-    $hunk->{"start1"} -= $num_added;
-    $hunk->{"start2"} -= $num_added;
-
-    # context after
-    my $end1 = $hunk->{"end1"};
-    $num_added = ($end1+$context_items > $hunk->{"maxlen"}) ?
-                  $hunk->{"maxlen"} - $end1 :
-                  $context_items;
-    $hunk->{"end1"} += $num_added;
-    $hunk->{"end2"} += $num_added;
+    while ($n--) {
+	my $line = shift @$array;
+	last if (!defined($line));
+	print $prefix, $line;
+    }
 }
 
-# Is there an overlap between hunk arg0 and old hunk arg1?
-# Note: if end of old hunk is one less than beginning of second, they overlap
-sub does_overlap {
-    my ($hunk, $oldhunk) = @_;
-    return "" unless $oldhunk; # first time through, $oldhunk is empty
+# Print a difference region where n1 lines of file1 were replaced by
+# n2 lines of file2 (where either n1 or n2 could be zero).
+sub printdiff
+{
+    my ($n1, $n2)= @_;
 
-    # Do I actually need to test both?
-    return ($hunk->{"start1"} - $oldhunk->{"end1"} <= 1 ||
-            $hunk->{"start2"} - $oldhunk->{"end2"} <= 1);
-}
-
-# Prepend hunk arg1 to hunk arg0
-# Note that arg1 isn't updated! Only arg0 is.
-sub prepend_hunk {
-    my ($hunk, $oldhunk) = @_;
-
-    $hunk->{"start1"} = $oldhunk->{"start1"};
-    $hunk->{"start2"} = $oldhunk->{"start2"};
-
-    unshift (@{$hunk->{"blocks"}}, @{$oldhunk->{"blocks"}});
-}
-
-
-# DIFF OUTPUT ROUTINES. THESE ROUTINES CONTAIN DIFF FORMATTING INFO...
-sub output_diff {
-    if    (defined $main::opt_u) {&output_unified_diff(@_)}
-    elsif (defined $main::opt_c) {&output_context_diff(@_)}
-    else {die "unknown diff"}
-}
-
-sub output_unified_diff {
-    my ($hunk, $fileref1, $fileref2) = @_;
-    my @blocklist;
-
-    # Calculate item number range.
-    my $range1 = $hunk->unified_range(1, $file_offset1);
-    my $range2 = $hunk->unified_range(2, $file_offset2);
-    print "@@ -$range1 +$range2 @@\n";
-
-    # Outlist starts containing the hunk of file 1.
-    # Removing an item just means putting a '-' in front of it.
-    # Inserting an item requires getting it from file2 and splicing it in.
-    #    We splice in $num_added items. Remove blocks use $num_added because
-    # splicing changed the length of outlist.
-    #    We remove $num_removed items. Insert blocks use $num_removed because
-    # their item numbers---corresponding to positions in file *2*--- don't take
-    # removed items into account.
-    my $low = $hunk->{"start1"};
-    my $hi = $hunk->{"end1"};
-    my ($num_added, $num_removed) = (0,0);
-    my @outlist = @$fileref1[$low..$hi];
-    map {s/^/ /} @outlist; # assume it's just context
-
-    foreach my $block (@{$hunk->{"blocks"}}) {
-	foreach my $item ($block->remove) {
-	    my $op = $item->{"sign"}; # -
-	    my $offset = $item->{"item_no"} - $low + $num_added;
-	    $outlist[$offset] =~ s/^ /$op/;
-	    $num_removed++;
-	}
-	foreach my $item ($block->insert) {
-	    my $op = $item->{"sign"}; # +
-	    my $i = $item->{"item_no"};
-	    my $offset = $i - $hunk->{"start2"} + $num_removed;
-	    splice(@outlist,$offset,0,"$op$$fileref2[$i]");
-	    $num_added++;
-	}
+    # If the precontext buffer is full or we're at the beginning of a
+    # file, then this is a new diff region, so we should print a
+    # header indicating the current line numbers.  If we're past the
+    # beginning and the precontext buffer isn't full, then whatever
+    # we're about to print is contiguous with the end of the last
+    # region we printed, so we just concatenate them on the output.
+    if (@precontext == $precontext_lines || ($lineno1 == 0 && $lineno2 == 0)) {
+	print "@@ -$lineno1 +$lineno2 @@\n";
     }
 
-    map {s/$/\n/} @outlist; # add \n's
-    print @outlist;
+    # Print and clear the precontext buffer.
+    if (@precontext) {
+	print ' ', join(' ', @precontext);
+	$lineno1 += scalar(@precontext);
+	$lineno2 += scalar(@precontext);
+	@precontext = ();
+    }
 
+    # Print the differing lines.
+    printlines(\@lines1, $n1, '-');
+    printlines(\@lines2, $n2, '+');
+    $lineno1 += $n1;
+    $lineno2 += $n2;
+
+    # Set $postcontext to print the next $postcontext_lines matching lines.
+    $postcontext = $postcontext_lines;
 }
 
-sub output_context_diff {
-    my ($hunk, $fileref1, $fileref2) = @_;
-    my @blocklist;
 
-    print "***************\n";
-    # Calculate item number range.
-    my $range1 = $hunk->context_range(1, $file_offset1);
-    my $range2 = $hunk->context_range(2, $file_offset2);
+########################
+#
+# Complex diff algorithm
+#
+########################
 
-    # Print out file 1 part for each block in context diff format if there are
-    # any blocks that remove items
-    print "*** $range1 ****\n";
-    my $low = $hunk->{"start1"};
-    my $hi  = $hunk->{"end1"};
-    if (@blocklist = grep {$_->remove} @{$hunk->{"blocks"}}) {
-	my @outlist = @$fileref1[$low..$hi];
-	map {s/^/  /} @outlist; # assume it's just context
-	foreach my $block (@blocklist) {
-	    my $op = $block->op; # - or !
-	    foreach my $item ($block->remove) {
-		$outlist[$item->{"item_no"} - $low] =~ s/^ /$op/;
+{
+    my $match_found;
+    my $discard_lines1;
+    my $discard_lines2;
+
+    sub match { $match_found = 1; }
+    sub discard1 { $discard_lines1++ unless $match_found; }
+    sub discard2 { $discard_lines2++ unless $match_found; }
+
+    sub complex_diff
+    {
+	$match_found = 0;
+	$discard_lines1 = 0;
+	$discard_lines2 = 0;
+
+	# See Diff.pm.  Note that even though this call generates a
+	# complete diff of both lookahead buffers, all we use it for
+	# is to figure out how many lines to discard off the front of
+	# each buffer to resync the streams.
+	traverse_sequences( \@lines1, \@lines2,
+			    { MATCH => \&match,
+			      DISCARD_A => \&discard1,
+			      DISCARD_B => \&discard2 });
+
+	die "Lost sync!" if (!$match_found);
+
+	# Since we shouldn't get here unless the first lines of the
+	# buffers are different, then we must discard some lines off
+	# at least one of the buffers.
+	die if ($discard_lines1 == 0 && $discard_lines2 == 0);
+
+	printdiff($discard_lines1, $discard_lines2);
+    }
+}
+
+#######################
+#
+# Simple diff algorithm
+#
+#######################
+
+# Check for a pair of matching lines; if found, generate appropriate
+# diff output.
+sub checkmatch
+{
+    my ($n1, $n2) = @_;
+
+    # Check if two adjacent lines match, to reduce false resyncs
+    # (particularly on unrelated blank lines).  This generates
+    # larger-than-necessary diffs when a single line really should be
+    # treated as common; if that bugs you, use Algorithm::Diff.
+    if ($lines1[$n1] eq $lines2[$n2] && $lines1[$n1+1] eq $lines2[$n2+1]) {
+	printdiff($n1, $n2);
+    }
+}
+
+sub simple_diff
+{
+    # Look for differences of $cnt lines to resync,
+    # increasing $cnt from 1 to $lookahead_lines until we find
+    # something.
+    for (my $cnt = 1; $cnt < $lookahead_lines-1; ++$cnt) {
+	# Check for n lines in one file being replaced by
+	# n lines in the other.
+	return if checkmatch($cnt, $cnt);
+	# Find differences where n lines in one file were
+	# replaced by m lines in the other.  We let m = $cnt
+	# and iterate for n = 0 to $cnt-1.
+	for (my $n = 0; $n < $cnt; ++$n) {
+	    return if checkmatch($n, $cnt);
+	    return if checkmatch($cnt, $n);
+	}
+    }
+    die "Lost sync!";
+}
+
+# Set the pointer to the appropriate diff function.
+#
+# Note that in either case the function determines how many lines to
+# discard from the front of each lookahead buffer to resync the
+# streams, then prints the appropriate diff output and discards them.
+# After the function returns, it should always be the case that
+# $lines1[0] eq $lines2[0].
+my $find_diff = $use_complexdiff ? \&complex_diff : \&simple_diff;
+
+# The main loop.
+while (1) {
+    # keep lookahead buffers topped up
+    fill($fh1, \@lines1);
+    fill($fh2, \@lines2);
+
+    # peek at first line in each buffer
+    my $l1 = $lines1[0];
+    my $l2 = $lines2[0];
+
+    if (!defined($l1) && !defined($l2)) {
+	# reached EOF on both streams: exit
+	exit(1);
+    }
+
+    if ($l1 eq $l2) {
+	# matching lines: delete from lookahead buffer
+	shift @lines1;
+	shift @lines2;
+	# figure out what to do with this line
+	if ($postcontext > 0) {
+	    # we're in the post-context of a diff: print it
+	    $postcontext--;
+	    print ' ', $l1;
+	    $lineno1++;
+	    $lineno2++;
+	}
+	else {
+	    # we're in the middle of a matching region... save this
+	    # line for precontext in case we run into a difference.
+	    push @precontext, $l1;
+	    # don't let precontext buffer get bigger than needed
+	    while (@precontext > $precontext_lines) {
+		shift @precontext;
+		$lineno1++;
+		$lineno2++;
 	    }
 	}
-	map {s/$/\n/} @outlist; # add \n's
-	print @outlist;
     }
-
-    print "--- $range2 ----\n";
-    $low = $hunk->{"start2"};
-    $hi  = $hunk->{"end2"};
-    if (@blocklist = grep {$_->insert} @{$hunk->{"blocks"}}) {
-	my @outlist = @$fileref2[$low..$hi];
-	map {s/^/  /} @outlist; # assume it's just context
-	foreach my $block (@blocklist) {
-	    my $op = $block->op; # + or !
-	    foreach my $item ($block->insert) {
-		$outlist[$item->{"item_no"} - $low] =~ s/^ /$op/;
-	    }
-	}
-	map {s/$/\n/} @outlist; # add \n's
-	print @outlist;
+    else {
+	# Mismatch.  Deal with it.
+	&$find_diff();
     }
 }
-
-sub context_range {
-# Generate a range of item numbers to print. Only print 1 number if the range
-# has only one item in it. Otherwise, it's 'start,end'
-    my ($hunk, $flag, $offset) = @_;
-    my ($start, $end) = ($hunk->{"start$flag"},$hunk->{"end$flag"});
-
-    # index from 1, not zero
-    $start += $offset + 1;
-    $end += $offset + 1;
-    my $range = ($start < $end) ? "$start,$end" : $end;
-    return $range;
-}
-
-sub unified_range {
-# Generate a range of item numbers to print for unified diff
-# Print number where block starts, followed by number of lines in the block
-# (don't print number of lines if it's 1)
-    my ($hunk, $flag, $offset) = @_;
-    my ($start, $end) = ($hunk->{"start$flag"},$hunk->{"end$flag"});
-
-    # index from 1, not zero
-    $start += $offset + 1;
-    $end += $offset + 1;
-    my $length = $end - $start + 1;
-    my $first = $length < 2 ? $end : $start; # strange, but correct...
-    my $range = $length== 1 ? $first : "$first,$length";
-    return $range;
-}
-} # end Package Hunk
-
-# Package Block. A block is an operation removing, adding, or changing
-# a group of items. Basically, this is just a list of changes, where each
-# change adds or deletes a single item.
-# (Change could be a separate class, but it didn't seem worth it)
-{
-package Block;
-sub new {
-# Input is a chunk from &Algorithm::LCS::diff
-# Fields in a block:
-# length_diff - how much longer file 2 is than file 1 due to this block
-# Each change has:
-# sign        - '+' for insert, '-' for remove
-# item_no     - number of the item in the file (e.g., line number)
-# We don't bother storing the text of the item
-#
-    my ($class,$chunk) = @_;
-    my @changes = ();
-
-# This just turns each change into a hash.
-    foreach my $item (@$chunk) {
-	my ($sign, $item_no, $text) = @$item;
-	my $hashref = {"sign" => $sign, "item_no" => $item_no};
-	push @changes, $hashref;
-    }
-
-    my $block = { "changes" => \@changes };
-    bless $block, $class;
-
-    $block->{"length_diff"} = $block->insert - $block->remove;
-    return $block;
-}
-
-
-# LOW LEVEL FUNCTIONS
-sub op {
-# what kind of block is this?
-    my $block = shift;
-    my $insert = $block->insert;
-    my $remove = $block->remove;
-
-    $remove && $insert and return '!';
-    $remove and return '-';
-    $insert and return '+';
-    warn "unknown block type";
-    return '^'; # context block
-}
-
-# Returns a list of the changes in this block that remove items
-# (or the number of removals if called in scalar context)
-sub remove { return grep {$_->{"sign"} eq '-'} @{shift->{"changes"}}; }
-
-# Returns a list of the changes in this block that insert items
-sub insert { return grep {$_->{"sign"} eq '+'} @{shift->{"changes"}}; }
-
-} # end of package Block
