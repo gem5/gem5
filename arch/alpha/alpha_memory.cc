@@ -101,18 +101,34 @@ AlphaTLB::checkCacheability(MemReqPtr &req)
      * to catch a weird case where both are used, which shouldn't happen.
      */
 
+
+#ifdef ALPHA_TLASER
+    if (req->paddr & PA_UNCACHED_BIT_39) {
+#else
     if (req->paddr & PA_UNCACHED_BIT_43) {
+#endif
         // IPR memory space not implemented
-        if (PA_IPR_SPACE(req->paddr))
-            if (!req->xc->misspeculating())
-                panic("IPR memory space not implemented! PA=%x\n",
-                      req->paddr);
+        if (PA_IPR_SPACE(req->paddr)) {
+            if (!req->xc->misspeculating()) {
+                switch (req->paddr) {
+                  case ULL(0xFFFFF00188):
+                    req->data = 0;
+                    break;
 
-        // mark request as uncacheable
-        req->flags |= UNCACHEABLE;
+                  default:
+                    panic("IPR memory space not implemented! PA=%x\n",
+                          req->paddr);
+                }
+            }
+        } else {
+            // mark request as uncacheable
+            req->flags |= UNCACHEABLE;
 
-        // Clear bits 42:35 of the physical address (10-2 in Tsunami manual)
-        req->paddr &= PA_UNCACHED_MASK;
+#ifndef ALPHA_TLASER
+            // Clear bits 42:35 of the physical address (10-2 in Tsunami manual)
+            req->paddr &= PA_UNCACHED_MASK;
+#endif
+        }
     }
 }
 
@@ -301,7 +317,13 @@ AlphaITB::translate(MemReqPtr &req) const
 
         // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13> for EV5
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
+#ifdef ALPHA_TLASER
+        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+               VA_SPACE_EV5(req->vaddr) == 2) {
+#else
         if (VA_SPACE_EV6(req->vaddr) == 0x7e) {
+#endif
+
 
             // only valid in kernel mode
             if (ICM_CM(ipr[AlphaISA::IPR_ICM]) != AlphaISA::mode_kernel) {
@@ -312,11 +334,13 @@ AlphaITB::translate(MemReqPtr &req) const
 
             req->paddr = req->vaddr & PA_IMPL_MASK;
 
+#ifndef ALPHA_TLASER
             // sign extend the physical address properly
             if (req->paddr & PA_UNCACHED_BIT_40)
                 req->paddr |= ULL(0xf0000000000);
             else
                 req->paddr &= ULL(0xffffffffff);
+#endif
 
         } else {
             // not a physical address: need to look up pte
@@ -486,7 +510,12 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
         }
 
         // Check for "superpage" mapping
+#ifdef ALPHA_TLASER
+        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+               VA_SPACE_EV5(req->vaddr) == 2) {
+#else
         if (VA_SPACE_EV6(req->vaddr) == 0x7e) {
+#endif
 
             // only valid in kernel mode
             if (DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]) !=
@@ -498,11 +527,13 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
             req->paddr = req->vaddr & PA_IMPL_MASK;
 
+#ifndef ALPHA_TLASER
             // sign extend the physical address properly
             if (req->paddr & PA_UNCACHED_BIT_40)
                 req->paddr |= ULL(0xf0000000000);
             else
                 req->paddr &= ULL(0xffffffffff);
+#endif
 
         } else {
             if (write)
