@@ -102,6 +102,7 @@ class LinuxSystem : public System
     LinuxBadAddrEvent *badaddrEvent;
     LinuxSkipFuncEvent *skipPowerStateEvent;
     LinuxSkipFuncEvent *skipScavengeBootEvent;
+    LinuxSkipFuncEvent *skipCacheProbeEvent;
     LinuxSkipIdeDelay50msEvent *skipIdeDelay50msEvent;
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
     LinuxPrintfEvent *printfEvent;

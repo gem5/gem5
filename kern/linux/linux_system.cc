@@ -230,6 +230,8 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     skipDelayLoopEvent = new LinuxSkipDelayLoopEvent(&pcEventQueue,
                                                      "calibrate_delay");
 
+    skipCacheProbeEvent = new LinuxSkipFuncEvent(&pcEventQueue, "determine_cpu_caches");
+
    /* debugPrintfEvent = new DebugPrintfEvent(&pcEventQueue,
                                             "debug_printf", false);
     debugPrintfrEvent = new DebugPrintfEvent(&pcEventQueue,
@@ -341,6 +343,9 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     if (kernelSymtab->findAddress("calibrate_delay", addr))
         skipDelayLoopEvent->schedule(addr+8);
+
+    if (kernelSymtab->findAddress("determine_cpu_caches", addr))
+        skipCacheProbeEvent->schedule(addr+8);
 
 #if TRACING_ON
     if (kernelSymtab->findAddress("printk", addr))

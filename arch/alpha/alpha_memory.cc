@@ -331,9 +331,9 @@ AlphaItb::translate(MemReqPtr &req) const
             // sign extend the physical address properly
             if (req->paddr & PA_UNCACHED_BIT_39 ||
                 req->paddr & PA_UNCACHED_BIT_40)
-                req->paddr |= 0xf0000000000;
+                req->paddr |= 0xf0000000000ULL;
             else
-                req->paddr &= 0xffffffffff;
+                req->paddr &= 0xffffffffffULL;
 
         } else {
             // not a physical address: need to look up pte
@@ -520,9 +520,9 @@ AlphaDtb::translate(MemReqPtr &req, bool write) const
             // sign extend the physical address properly
             if (req->paddr & PA_UNCACHED_BIT_39 ||
                 req->paddr & PA_UNCACHED_BIT_40)
-                req->paddr |= 0xf0000000000;
+                req->paddr |= 0xf0000000000ULL;
             else
-                req->paddr &= 0xffffffffff;
+                req->paddr &= 0xffffffffffULL;
 
         } else {
             if (write)

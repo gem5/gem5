@@ -291,7 +291,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(pri_cmd_addr,
                                            pri_cmd_addr + pri_cmd_size - 1);
 
-            pri_cmd_addr = ((pri_cmd_addr | 0xf0000000000) & PA_IMPL_MASK);
+            pri_cmd_addr = ((pri_cmd_addr | 0xf0000000000ULL) & PA_IMPL_MASK);
             break;
 
           case PCI0_BASE_ADDR1:
@@ -300,7 +300,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(pri_ctrl_addr,
                                            pri_ctrl_addr + pri_ctrl_size - 1);
 
-            pri_ctrl_addr = ((pri_ctrl_addr | 0xf0000000000) & PA_IMPL_MASK);
+            pri_ctrl_addr = ((pri_ctrl_addr | 0xf0000000000ULL) & PA_IMPL_MASK);
             break;
 
           case PCI0_BASE_ADDR2:
@@ -309,7 +309,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(sec_cmd_addr,
                                            sec_cmd_addr + sec_cmd_size - 1);
 
-            sec_cmd_addr = ((sec_cmd_addr | 0xf0000000000) & PA_IMPL_MASK);
+            sec_cmd_addr = ((sec_cmd_addr | 0xf0000000000ULL) & PA_IMPL_MASK);
             break;
 
           case PCI0_BASE_ADDR3:
@@ -318,7 +318,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(sec_ctrl_addr,
                                            sec_ctrl_addr + sec_ctrl_size - 1);
 
-            sec_ctrl_addr = ((sec_ctrl_addr | 0xf0000000000) & PA_IMPL_MASK);
+            sec_ctrl_addr = ((sec_ctrl_addr | 0xf0000000000ULL) & PA_IMPL_MASK);
             break;
 
           case PCI0_BASE_ADDR4:
@@ -326,7 +326,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(bmi_addr, bmi_addr + bmi_size - 1);
 
-            bmi_addr = ((bmi_addr | 0xf0000000000) & PA_IMPL_MASK);
+            bmi_addr = ((bmi_addr | 0xf0000000000ULL) & PA_IMPL_MASK);
             break;
         }
     }
