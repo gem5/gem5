@@ -433,8 +433,10 @@ classes. You're trying to derive from:
             try:
                 param.valid(value)
             except Exception, e:
-                raise e.__class__,  "%s\nError setting param %s.%s to %s\n" % \
+                msg = "%s\nError setting param %s.%s to %s\n" % \
                       (e, cls.__name__, attr, value)
+                e.args = (msg, )
+                raise
             cls._values[attr] = value
         elif isConfigNode(value) or isSimObjSequence(value):
             cls._values[attr] = value
@@ -510,8 +512,10 @@ classes. You're trying to derive from:
                 instance.params.append(p)
                 instance.param_names[pname] = p
             except Exception, e:
-                raise e.__class__, 'Exception while evaluating %s.%s\n%s' % \
+                msg = 'Exception while evaluating %s.%s\n%s' % \
                       (instance.path, pname, e)
+                e.args = (msg, )
+                raise
 
         return instance
 
@@ -693,8 +697,10 @@ class Node(object):
                 else:
                     param.value = self.unproxy(pval, ptype)
             except Exception, e:
-                raise e.__class__, 'Error while fixing up %s:%s\n%s' % \
+                msg = 'Error while fixing up %s:%s\n%s' % \
                       (self.path, param.name, e)
+                e.args = (msg, )
+                raise
 
         for child in self.children:
             assert(child != self)
@@ -727,8 +733,9 @@ class Node(object):
                 value = param.convert(param.value)
                 string = param.string(value)
             except Exception, e:
-                raise e.__class__, 'exception in %s:%s\n%s' % \
-                      (self.path, param.name, e)
+                msg = 'exception in %s:%s\n%s' % (self.path, param.name, e)
+                e.args = (msg, )
+                raise
 
             print '%s = %s' % (param.name, string)
 
@@ -760,9 +767,10 @@ class Node(object):
                 value = param.convert(param.value)
                 string = param.string(value)
             except Exception, e:
-                raise e.__class__, 'exception in %s:%s\n%s' % \
-                      (self.name, param.name, e)
+                msg = 'exception in %s:%s\n%s' % (self.name, param.name, e)
+                e.args = (msg, )
                 raise
+
             if isConfigNode(param.ptype) and string != "Null":
                 simobjs.append(string)
             else:
