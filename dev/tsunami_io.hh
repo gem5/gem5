@@ -192,8 +192,11 @@ class TsunamiIO : public FunctionalMemory
 
 
   public:
-    /** Return the freqency of the RTC */
-    uint32_t  frequency() const { return RTC_RATE; }
+    /**
+     * Return the freqency of the RTC
+     * @return interrupt rate of the RTC
+     */
+    Tick  frequency() const { return RTC_RATE; }
 
 
     /**

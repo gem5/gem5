@@ -60,6 +60,7 @@ class Platform : public SimObject
     virtual ~Platform() {}
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
+    virtual Tick intrFrequency() = 0;
 };
 
 #endif // __PLATFORM_HH_

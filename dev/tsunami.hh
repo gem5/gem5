@@ -96,6 +96,12 @@ class Tsunami : public Platform
             PciConfigAll *pci, int intrFreq);
 
     /**
+     * Return the interrupting frequency to AlphaAccess
+     * @return frequency of RTC interrupts
+     */
+     virtual Tick intrFrequency();
+
+    /**
      * Cause the cpu to post a serial interrupt to the CPU.
      */
     virtual void postConsoleInt();

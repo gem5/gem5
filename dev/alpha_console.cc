@@ -55,7 +55,7 @@
 using namespace std;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
-                           System *system, BaseCPU *cpu, SimObject *clock,
+                           System *system, BaseCPU *cpu, Platform *platform,
                            int num_cpus, MemoryController *mmu, Addr a,
                            HierParams *hier, Bus *bus)
     : PioDevice(name), disk(d), console(cons), addr(a)
@@ -80,14 +80,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->numCPUs = num_cpus;
     alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->getFreq() / 1000000;
-    TsunamiIO *clock_linux = dynamic_cast<TsunamiIO *>(clock);
-    TlaserClock *clock_tru64 = dynamic_cast<TlaserClock *>(clock);
-    if (clock_linux)
-        alphaAccess->intrClockFrequency = clock_linux->frequency();
-    else if (clock_tru64)
-        alphaAccess->intrClockFrequency = clock_tru64->frequency();
-    else
-        panic("clock must be of type TlaserClock or TsunamiIO\n");
+        alphaAccess->intrClockFrequency = platform->intrFrequency();
     alphaAccess->diskUnit = 1;
 }
 
@@ -274,7 +267,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
     Param<Addr> addr;
     SimObjectParam<System *> system;
     SimObjectParam<BaseCPU *> cpu;
-    SimObjectParam<SimObject *> clock;
+    SimObjectParam<Platform *> platform;
     SimObjectParam<Bus*> io_bus;
     SimObjectParam<HierParams *> hier;
 
@@ -289,7 +282,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu, "Processor"),
-    INIT_PARAM(clock, "Clock"),
+    INIT_PARAM(platform, "platform"),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
@@ -298,7 +291,7 @@ END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 CREATE_SIM_OBJECT(AlphaConsole)
 {
     return new AlphaConsole(getInstanceName(), sim_console, disk,
-                            system, cpu, clock, num_cpus, mmu,
+                            system, cpu, platform, num_cpus, mmu,
                             addr, hier, io_bus);
 }
 

@@ -56,6 +56,12 @@ Tsunami::Tsunami(const string &name, System *s,
         intr_sum_type[i] = 0;
 }
 
+Tick
+Tsunami::intrFrequency()
+{
+    return io->frequency();
+}
+
 void
 Tsunami::postConsoleInt()
 {
