@@ -27,7 +27,7 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
-from m5 import panic
+from m5 import panic, env
 from convert import *
 from multidict import multidict
 
@@ -1340,6 +1340,42 @@ class Enum(ParamType):
 # "Constants"... handy aliases for various values.
 #
 
+class Frequency(int,ParamType):
+    _cpp_param_decl = 'Tick'
+
+    def __new__(cls, value):
+        if isinstance(value, basestring):
+            val = int(env['FREQUENCY'] / toFrequency(value))
+        else:
+            val = toFrequency(value)
+        return super(cls, Frequency).__new__(cls, val)
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        return '%d' % value
+    _string = classmethod(_string)
+
+class Latency(int,ParamType):
+    _cpp_param_decl = 'Tick'
+    def __new__(cls, value):
+        if isinstance(value, basestring):
+            val = int(env['FREQUENCY'] * toLatency(value))
+        else:
+            val = toLatency(value)
+        return super(cls, Latency).__new__(cls, val)
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        return '%d' % value
+    _string = classmethod(_string)
+
+
 # Some memory range specifications use this as a default upper bound.
 MaxAddr = Addr.max
 MaxTick = Tick.max
@@ -1383,6 +1419,6 @@ __all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
-           'MemorySize',
+           'MemorySize', 'Frequency', 'Latency',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory', 'NULL',
            'NextEthernetAddr', 'instantiate']
