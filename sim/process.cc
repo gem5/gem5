@@ -42,8 +42,13 @@
 #include "mem/functional_mem/main_memory.hh"
 #include "sim/builder.hh"
 #include "sim/fake_syscall.hh"
-#include "sim/prog.hh"
+#include "sim/process.hh"
 #include "sim/sim_stats.hh"
+
+#ifdef TARGET_ALPHA
+#include "arch/alpha/alpha_tru64_process.hh"
+#include "arch/alpha/alpha_linux_process.hh"
+#endif
 
 using namespace std;
 
@@ -53,12 +58,8 @@ using namespace std;
 // mode when we do have an OS
 //
 #ifdef FULL_SYSTEM
-#error "prog.cc not compatible with FULL_SYSTEM"
+#error "process.cc not compatible with FULL_SYSTEM"
 #endif
-
-// max allowable number of processes: should be no real cost to
-// cranking this up if necessary
-const int MAX_PROCESSES = 8;
 
 // current number of allocated processes
 int num_processes = 0;
@@ -242,16 +243,12 @@ copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
     memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
 }
 
-LiveProcess::LiveProcess(const string &name,
+LiveProcess::LiveProcess(const string &name, ObjectFile *objFile,
                          int stdin_fd, int stdout_fd, int stderr_fd,
                          vector<string> &argv, vector<string> &envp)
     : Process(name, stdin_fd, stdout_fd, stderr_fd)
 {
     prog_fname = argv[0];
-    ObjectFile *objFile = createObjectFile(prog_fname);
-    if (objFile == NULL) {
-        fatal("Can't load object file %s", prog_fname);
-    }
 
     prog_entry = objFile->entryPoint();
     text_base = objFile->textBase();
@@ -266,6 +263,10 @@ LiveProcess::LiveProcess(const string &name,
     // Set up stack.  On Alpha, stack goes below text section.  This
     // code should get moved to some architecture-specific spot.
     stack_base = text_base - (409600+4096);
+
+    // Set up region for mmaps.  Tru64 seems to start just above 0 and
+    // grow up from there.
+    mmap_base = 0x10000;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
@@ -316,12 +317,45 @@ LiveProcess::LiveProcess(const string &name,
 }
 
 
-void
-LiveProcess::syscall(ExecContext *xc)
+LiveProcess *
+LiveProcess::create(const string &name,
+                    int stdin_fd, int stdout_fd, int stderr_fd,
+                    vector<string> &argv, vector<string> &envp)
 {
-    num_syscalls++;
+    LiveProcess *process = NULL;
+    ObjectFile *objFile = createObjectFile(argv[0]);
+    if (objFile == NULL) {
+        fatal("Can't load object file %s", argv[0]);
+    }
 
-    fake_syscall(this, xc);
+    // check object type & set up syscall emulation pointer
+    if (objFile->getArch() == ObjectFile::Alpha) {
+        switch (objFile->getOpSys()) {
+          case ObjectFile::Tru64:
+            process = new AlphaTru64Process(name, objFile,
+                                            stdin_fd, stdout_fd, stderr_fd,
+                                            argv, envp);
+            break;
+
+          case ObjectFile::Linux:
+            process = new AlphaLinuxProcess(name, objFile,
+                                            stdin_fd, stdout_fd, stderr_fd,
+                                            argv, envp);
+            break;
+
+          default:
+            fatal("Unknown/unsupported operating system.");
+        }
+    } else {
+        fatal("Unknown object file architecture.");
+    }
+
+    delete objFile;
+
+    if (process == NULL)
+        fatal("Unknown error creating process object.");
+
+    return process;
 }
 
 
@@ -357,10 +391,10 @@ CREATE_SIM_OBJECT(LiveProcess)
 
     //  We do this with "temp" because of the bogus compiler warning
     //  you get with g++ 2.95 -O if you just "return new LiveProcess(..."
-    LiveProcess *temp = new LiveProcess(getInstanceName(),
-                                        stdin_fd, stdout_fd, stderr_fd,
-                                        cmd,
-                                        env.isValid() ? env : null_vec);
+    LiveProcess *temp = LiveProcess::create(getInstanceName(),
+                                            stdin_fd, stdout_fd, stderr_fd,
+                                            cmd,
+                                            env.isValid() ? env : null_vec);
 
     return temp;
 }

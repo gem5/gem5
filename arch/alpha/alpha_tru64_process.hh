@@ -26,37 +26,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ECOFF_OBJECT_HH__
-#define __ECOFF_OBJECT_HH__
+#ifndef __ALPHA_TRU64_PROCESS_HH__
+#define __ALPHA_TRU64_PROCESS_HH__
 
-#include "base/loader/object_file.hh"
+#include "sim/process.hh"
 
-// forward decls: avoid including exec_ecoff.h here
-struct ecoff_exechdr;
-struct ecoff_filehdr;
-struct ecoff_aouthdr;
-
-class EcoffObject : public ObjectFile
+class AlphaTru64Process : public LiveProcess
 {
-  protected:
-    ecoff_exechdr *execHdr;
-    ecoff_filehdr *fileHdr;
-    ecoff_aouthdr *aoutHdr;
-
-    EcoffObject(const std::string &_filename, int _fd,
-                size_t _len, uint8_t *_data,
-                Arch _arch, OpSys _opSys);
-
   public:
-    virtual ~EcoffObject() {}
+    AlphaTru64Process(const std::string &name,
+                      ObjectFile *objFile,
+                      int stdin_fd, int stdout_fd, int stderr_fd,
+                      std::vector<std::string> &argv,
+                      std::vector<std::string> &envp);
 
-    virtual bool loadSections(FunctionalMemory *mem,
-                              bool loadPhys = false);
-    virtual bool loadGlobalSymbols(SymbolTable *symtab);
-    virtual bool loadLocalSymbols(SymbolTable *symtab);
-
-    static ObjectFile *tryFile(const std::string &fname, int fd,
-                               size_t len, uint8_t *data);
+    virtual void syscall(ExecContext *xc);
 };
 
-#endif // __ECOFF_OBJECT_HH__
+
+#endif // __ALPHA_TRU64_PROCESS_HH__

@@ -43,8 +43,9 @@ ObjectFile *
 ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 {
     if (memcmp(((Elf64_Ehdr *)data)->e_ident, ELFMAG, SELFMAG) == 0) {
-        // for now we'll assume it's a 64-bit Alpha binary
-        return new ElfObject(fname, fd, len, data);
+        // for now we'll assume it's a 64-bit Alpha Linux binary
+        return new ElfObject(fname, fd, len, data,
+                             ObjectFile::Alpha, ObjectFile::Linux);
     }
     else {
         return NULL;
@@ -53,8 +54,9 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 
 
 ElfObject::ElfObject(const string &_filename, int _fd,
-                         size_t _len, uint8_t *_data)
-    : ObjectFile(_filename, _fd, _len, _data)
+                     size_t _len, uint8_t *_data,
+                     Arch _arch, OpSys _opSys)
+    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
 {
     ehdr = (Elf64_Ehdr *)fileData;
 

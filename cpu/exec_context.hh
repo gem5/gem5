@@ -52,7 +52,7 @@ class MemoryController;
 
 #else // !FULL_SYSTEM
 
-#include "sim/prog.hh"
+#include "sim/process.hh"
 
 #endif // FULL_SYSTEM
 
@@ -376,6 +376,34 @@ class ExecContext
 #endif
 
 #ifndef FULL_SYSTEM
+    IntReg getSyscallArg(int i)
+    {
+        return regs.intRegFile[ArgumentReg0 + i];
+    }
+
+    // used to shift args for indirect syscall
+    void setSyscallArg(int i, IntReg val)
+    {
+        regs.intRegFile[ArgumentReg0 + i] = val;
+    }
+
+    void setSyscallReturn(int64_t return_value)
+    {
+        // check for error condition.  Alpha syscall convention is to
+        // indicate success/failure in reg a3 (r19) and put the
+        // return value itself in the standard return value reg (v0).
+        const int RegA3 = 19;	// only place this is used
+        if (return_value >= 0) {
+            // no error
+            regs.intRegFile[RegA3] = 0;
+            regs.intRegFile[ReturnValueReg] = return_value;
+        } else {
+            // got an error, return details
+            regs.intRegFile[RegA3] = (IntReg) -1;
+            regs.intRegFile[ReturnValueReg] = -return_value;
+        }
+    }
+
     void syscall()
     {
         process->syscall(this);

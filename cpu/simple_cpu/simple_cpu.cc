@@ -70,7 +70,6 @@
 #else // !FULL_SYSTEM
 #include "eio/eio.hh"
 #include "mem/functional_mem/functional_memory.hh"
-#include "sim/prog.hh"
 #endif // FULL_SYSTEM
 
 using namespace std;

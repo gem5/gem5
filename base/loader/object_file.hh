@@ -36,14 +36,31 @@ class SymbolTable;
 
 class ObjectFile
 {
+  public:
+
+    enum Arch {
+        UnknownArch,
+        Alpha
+    };
+
+    enum OpSys {
+        UnknownOpSys,
+        Tru64,
+        Linux
+    };
+
   protected:
     const std::string filename;
     int descriptor;
     uint8_t *fileData;
     size_t len;
 
+    Arch  arch;
+    OpSys opSys;
+
     ObjectFile(const std::string &_filename, int _fd,
-               size_t _len, uint8_t *_data);
+               size_t _len, uint8_t *_data,
+               Arch _arch, OpSys _opSys);
 
   public:
     virtual ~ObjectFile();
@@ -54,6 +71,9 @@ class ObjectFile
                               bool loadPhys = false) = 0;
     virtual bool loadGlobalSymbols(SymbolTable *symtab) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab) = 0;
+
+    Arch  getArch()  const { return arch; }
+    OpSys getOpSys() const { return opSys; }
 
   protected:
 

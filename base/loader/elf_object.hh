@@ -45,7 +45,8 @@ class ElfObject : public ObjectFile
     int dataPhdrIdx;
 
     ElfObject(const std::string &_filename, int _fd,
-              size_t _len, uint8_t *_data);
+              size_t _len, uint8_t *_data,
+              Arch _arch, OpSys _opSys);
 
   public:
     virtual ~ElfObject() {}

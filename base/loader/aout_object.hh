@@ -40,7 +40,8 @@ class AoutObject : public ObjectFile
     aout_exechdr *execHdr;
 
     AoutObject(const std::string &_filename, int _fd,
-                size_t _len, uint8_t *_data);
+               size_t _len, uint8_t *_data,
+               Arch _arch, OpSys _opSys);
 
   public:
     virtual ~AoutObject() {}
