@@ -96,6 +96,9 @@ class EtherLink : public SimObject
 
         void setTxInt(Interface *i) { assert(!txint); txint = i; }
         void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
     };
 
     /*
@@ -122,6 +125,10 @@ class EtherLink : public SimObject
     EtherLink(const std::string &name, EtherInt *i1, EtherInt *i2,
               Tick speed, EtherDump *dump);
     virtual ~EtherLink();
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
 };
 
 #endif // __ETHERLINK_HH__

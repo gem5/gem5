@@ -42,6 +42,7 @@
 #include "dev/etherpkt.hh"
 #include "sim/builder.hh"
 #include "sim/universe.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -85,6 +86,20 @@ EtherLink::Link::Link(const std::string &name, double rate, EtherDump *d)
 {}
 
 void
+EtherLink::serialize(ostream &os)
+{
+    link1->serialize(os);
+    link2->serialize(os);
+}
+
+void
+EtherLink::unserialize(Checkpoint *cp, const string &section)
+{
+    link1->unserialize(cp, section);
+    link2->unserialize(cp, section);
+}
+
+void
 EtherLink::Link::txDone()
 {
     if (dump)
@@ -119,6 +134,42 @@ EtherLink::Link::transmit(PacketPtr &pkt)
     event.schedule(curTick + delay);
 
     return true;
+}
+
+void
+EtherLink::Link::serialize(ostream &os)
+{
+    bool packetExists = false;
+    if (packet) packetExists = true;
+    SERIALIZE_SCALAR(packetExists);
+    if (packetExists) {
+        nameOut(os, csprintf("%s.linkPacket", name()));
+        packet->serialize(os);
+    }
+
+    bool event_scheduled = event.scheduled();
+    SERIALIZE_SCALAR(event_scheduled);
+    if (event_scheduled) {
+        SERIALIZE_SCALAR(event.when());
+    }
+}
+
+void
+EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
+{
+    bool event_scheduled, packetExists;
+    Tick eventTime;
+    UNSERIALIZE_SCALAR(packetExists);
+    if (packetExists) {
+        packet = new EtherPacket;
+        packet->unserialize(cp, csprintf("%s.linkPacket", section));
+    }
+
+    UNSERIALIZE_SCALAR(event_scheduled);
+    if (event_scheduled) {
+        UNSERIALIZE_SCALAR(eventTime);
+        event.schedule(eventTime);
+    }
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
