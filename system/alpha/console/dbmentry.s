@@ -15,7 +15,7 @@
 #ifndef MAKEDEPEND
 #include "ev5_impure.h"
 #include "cserve.h"
-#include "osf.h"
+#include "fromHudsonOsf.h"
 #endif
 
 //#include "paldefs.h"

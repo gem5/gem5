@@ -33,11 +33,11 @@ printf.o: printf.c
 	$(CC)  -g3 $(INCLUDES) -nostdinc++ -o $*.o -c $*.c
 
 paljtokern.s.o: paljtokern.s
-	g++ -I ../palcode -E -P -nostdinc -nostdinc++ -x c++ paljtokern.s | \
+	g++ -I ../h -E -P -nostdinc -nostdinc++ -x c++ paljtokern.s | \
 	$(AS) -m 21164 -o paljtokern.s.o
 
 paljtoslave.s.o: paljtoslave.s
-	g++ -I ../palcode -E -P -nostdinc -nostdinc++ -x c++ paljtoslave.s | \
+	g++ -I ../h -E -P -nostdinc -nostdinc++ -x c++ paljtoslave.s | \
 	$(AS) -m 21164 -o paljtoslave.s.o
 
 console: console.o dbmentry.o printf.o paljtokern.s.o paljtoslave.s.o 

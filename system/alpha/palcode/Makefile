@@ -7,7 +7,7 @@ GAS = alpha-elf-as
 CC = alpha-elf-g++
 LD = alpha-elf-ld
 #CFLAGS=-I ../h -E -P -D SIMOS -nostdinc -nostdinc++ -x c++
-CFLAGS=-I . -E -P -D SIMOS -D BUILD_PALCODE -nostdinc -nostdinc++ -x c++
+CFLAGS=-I . -I ../h -E -P -D SIMOS -D BUILD_PALCODE -nostdinc -nostdinc++ -x c++
 GASFLAGS=-m21164
 LDFLAGS=-Ttext 0x4000
 
@@ -31,5 +31,5 @@ tsunami: $(PREPROC) $(TSOBJS)
 	$(LD) $(LDFLAGS) -o ts_osfpal $(TSOBJS) 
 
 clean:
-	rm -f *.o *.i osfpal
+	rm -f *.o *.i osfpal ts_osfpal tl_osfpal
  

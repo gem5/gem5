@@ -1,6 +1,7 @@
-#include	"dc21164.h"	// DECchip 21164 specific definitions
-#include	"osf.h"		// OSF/1 specific definitions
-#include	"macros.h"	// Global macro definitions
+#include	"dc21164FromGasSources.h"	// DECchip 21164 specific definitions
+#include    "ev5_defs.h"
+#include	"fromHudsonOsf.h"		// OSF/1 specific definitions
+#include	"fromHudsonMacros.h"	// Global macro definitions
 #include	"ev5_impure.h"	// Scratch & logout area data structures
 #include	"platform.h"	// Platform specific definitions
 
