@@ -207,7 +207,7 @@ main(int argc, char *argv[])
 
     program = basename(argv[0]);
 
-    while((c = getopt(argc, argv, "b:df:lp:v")) != -1) {
+    while ((c = getopt(argc, argv, "b:df:lp:v")) != -1) {
         switch (c) {
           case 'b':
             bufsize = atoi(optarg);
@@ -405,7 +405,7 @@ main(int argc, char *argv[])
     delete [] buffer;
     pcap_close(pcap);
     eth_close(ethernet);
-    if(listen_pfd)
+    if (listen_pfd)
         close(listen_pfd->fd);
 
     if (client_pfd)

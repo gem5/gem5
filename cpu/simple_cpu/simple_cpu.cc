@@ -535,7 +535,7 @@ SimpleCPU::tick()
         }
 
         uint64_t interrupts = xc->cpu->intr_status();
-        for(int i = TheISA::INTLEVEL_EXTERNAL_MIN;
+        for (int i = TheISA::INTLEVEL_EXTERNAL_MIN;
             i < TheISA::INTLEVEL_EXTERNAL_MAX; i++) {
             if (interrupts & (ULL(1) << i)) {
                 // See table 4-19 of 21164 hardware reference

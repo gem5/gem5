@@ -208,10 +208,10 @@ do { \
 
 #define DTRACE(x) (false)
 #define DCOUT(x) if (0) DebugOut()
-#define DPRINTF(x, args...) do {} while(0)
-#define DPRINTFR(args...) do {} while(0)
-#define DPRINTFN(args...) do {} while(0)
-#define DDUMP(x, data, count) do {} while(0)
+#define DPRINTF(x, args...) do {} while (0)
+#define DPRINTFR(args...) do {} while (0)
+#define DPRINTFN(args...) do {} while (0)
+#define DDUMP(x, data, count) do {} while (0)
 
 #endif	// TRACING_ON
 

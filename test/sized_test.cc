@@ -38,7 +38,7 @@ void print(C &cont)
 {
   std::cout << std::endl;
   std::cout << "Printing " << typeid(cont).name() << std::endl;
-  while(!cont.empty()) {
+  while (!cont.empty()) {
     std::cout << cont.front() << " ";
     cont.pop();
   }
@@ -52,11 +52,11 @@ int main(void)
   sized<std::queue<int>, sized_drop_policy<std::queue<int> > >
     drop_queue(5);
 
-  for(int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 10; ++i) {
     error_queue.push(i);
   }
 
-  for(int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 3; ++i) {
     drop_queue.push(i);
   }
 

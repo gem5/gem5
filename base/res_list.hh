@@ -685,7 +685,7 @@ res_list<T>::free_extras(void)
         }
 
         p = unused_elements.res_el_ptr();
-        for(int i=0; i<to_free; ++i) {
+        for (int i=0; i<to_free; ++i) {
             res_element *q = p->next;
 
             delete p;

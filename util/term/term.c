@@ -202,7 +202,7 @@ readwrite(int nfd)
                                                 continue;
                                 }
 
-                                if((ret = atomicio(write, nfd, buf, n)) != n)
+                                if ((ret = atomicio(write, nfd, buf, n)) != n)
                                         return;
                         }
                 }

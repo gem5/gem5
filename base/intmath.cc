@@ -47,7 +47,7 @@ PrevPrime(int n)
   else if (decr == 1)
     decr = 4;
 
-  for(;;) {
+  for (;;) {
     if (IsPrime(n))
       return n;
     n -= decr;
