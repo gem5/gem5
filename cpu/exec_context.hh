@@ -68,10 +68,6 @@ class ExecContext
   public:
     Status status() const { return _status; }
 
-    // Unlike setStatus(), initStatus() has no side effects other than
-    // setting the _status variable.
-    void initStatus(Status init_status) { _status = init_status; }
-
     void setStatus(Status new_status);
 
 #ifdef FULL_SYSTEM

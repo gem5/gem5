@@ -126,19 +126,10 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 #ifdef FULL_SYSTEM
     xc = new ExecContext(this, 0, system, itb, dtb, mem);
 
+    // initialize CPU, including PC
     TheISA::initCPU(&xc->regs);
-
-    IntReg *ipr = xc->regs.ipr;
-    ipr[TheISA::IPR_MCSR] = 0x6;
-
-    AlphaISA::swap_palshadow(&xc->regs, true);
-
-    fault = Reset_Fault;
-    xc->regs.pc = ipr[TheISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
 #else
     xc = new ExecContext(this, /* thread_num */ 0, _process, /* asid */ 0);
-    fault = No_Fault;
 #endif // !FULL_SYSTEM
 
     icacheInterface = icache_interface;
@@ -160,25 +151,6 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 
 SimpleCPU::~SimpleCPU()
 {
-}
-
-
-void
-SimpleCPU::registerExecContexts()
-{
-    BaseCPU::registerExecContexts();
-
-    // if any of this CPU's ExecContexts are active, mark the CPU as
-    // running and schedule its tick event.
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
-        if (xc->status() == ExecContext::Active && _status != Running) {
-            _status = Running;
-            // this should only happen at initialization time
-            assert(curTick == 0);
-            tickEvent.schedule(0);
-        }
-    }
 }
 
 
@@ -209,6 +181,18 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     }
 
     oldCPU->switchOut();
+}
+
+
+void
+SimpleCPU::execCtxStatusChg(int thread_num) {
+    assert(thread_num == 0);
+    assert(xc);
+
+    if (xc->status() == ExecContext::Active)
+        setStatus(Running);
+    else
+        setStatus(Idle);
 }
 
 
@@ -531,8 +515,10 @@ SimpleCPU::tick()
 {
     traceData = NULL;
 
+    Fault fault = No_Fault;
+
 #ifdef FULL_SYSTEM
-    if (fault == No_Fault && AlphaISA::check_interrupts &&
+    if (AlphaISA::check_interrupts &&
         xc->cpu->check_interrupts() &&
         !PC_PAL(xc->regs.pc) &&
         status() != IcacheMissComplete) {
