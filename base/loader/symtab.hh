@@ -72,9 +72,6 @@ class SymbolTable
 
     bool findSymbol(Addr address, std::string &symbol) const;
     bool findAddress(const std::string &symbol, Addr &address) const;
-
-    std::string find(Addr addr) const;
-    Addr find(const std::string &symbol) const;
 };
 
 /// Global unified debugging symbol table (for target).  Conceptually

@@ -32,7 +32,6 @@
 #include <string>
 #include <vector>
 
-#include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
@@ -43,6 +42,7 @@ class PhysicalMemory;
 class Platform;
 class RemoteGDB;
 class GDBListener;
+class SymbolTable;
 class ObjectFile;
 class ExecContext;
 namespace Kernel { class Binning; }

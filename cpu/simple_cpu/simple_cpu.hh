@@ -31,7 +31,6 @@
 
 #include "cpu/base_cpu.hh"
 #include "sim/eventq.hh"
-#include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "base/statistics.hh"
 #include "cpu/exec_context.hh"

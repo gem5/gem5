@@ -136,19 +136,3 @@ SymbolTable::findAddress(const string &symbol, Addr &address) const
     address = (*i).second;
     return true;
 }
-
-string
-SymbolTable::find(Addr addr) const
-{
-    string s;
-    findSymbol(addr, s);
-    return s;
-}
-
-Addr
-SymbolTable::find(const string &symbol) const
-{
-    Addr a = 0;
-    findAddress(symbol, a);
-    return a;
-}
