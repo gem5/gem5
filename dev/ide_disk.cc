@@ -61,24 +61,11 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
       dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
       dmaReadEvent(this), dmaWriteEvent(this)
 {
+    // Reset the device state
+    reset(id);
+
     // calculate disk delay in microseconds
     diskDelay = (delay * ticksPerSecond / 100000);
-
-    // initialize the data buffer and shadow registers
-    dataBuffer = new uint8_t[MAX_DMA_SIZE];
-
-    memset(dataBuffer, 0, MAX_DMA_SIZE);
-    memset(&cmdReg, 0, sizeof(CommandReg_t));
-    memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
-
-    dmaInterfaceBytes = 0;
-    curPrdAddr = 0;
-    curSector = 0;
-    curCommand = 0;
-    cmdBytesLeft = 0;
-    drqBytesLeft = 0;
-    dmaRead = false;
-    intrPending = false;
 
     // fill out the drive ID structure
     memset(&driveID, 0, sizeof(struct hd_driveid));
@@ -132,6 +119,32 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     driveID.dma_ultra = 0x10;
     // Statically set hardware config word
     driveID.hw_config = 0x4001;
+}
+
+IdeDisk::~IdeDisk()
+{
+    // destroy the data buffer
+    delete [] dataBuffer;
+}
+
+void
+IdeDisk::reset(int id)
+{
+    // initialize the data buffer and shadow registers
+    dataBuffer = new uint8_t[MAX_DMA_SIZE];
+
+    memset(dataBuffer, 0, MAX_DMA_SIZE);
+    memset(&cmdReg, 0, sizeof(CommandReg_t));
+    memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
+
+    dmaInterfaceBytes = 0;
+    curPrdAddr = 0;
+    curSector = 0;
+    cmdBytes = 0;
+    cmdBytesLeft = 0;
+    drqBytesLeft = 0;
+    dmaRead = false;
+    intrPending = false;
 
     // set the device state to idle
     dmaState = Dma_Idle;
@@ -147,13 +160,7 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     }
 
     // set the device ready bit
-    cmdReg.status |= STATUS_DRDY_BIT;
-}
-
-IdeDisk::~IdeDisk()
-{
-    // destroy the data buffer
-    delete [] dataBuffer;
+    status = STATUS_DRDY_BIT;
 }
 
 ////
@@ -216,6 +223,7 @@ IdeDisk::read(const Addr &offset, bool byte, bool cmdBlk, uint8_t *data)
         // determine if an action needs to be taken on the state machine
         if (offset == STATUS_OFFSET) {
             action = ACT_STAT_READ;
+            *data = status; // status is in a shadow, explicity copy
         } else if (offset == DATA_OFFSET) {
             if (byte)
                 action = ACT_DATA_READ_BYTE;
@@ -230,7 +238,7 @@ IdeDisk::read(const Addr &offset, bool byte, bool cmdBlk, uint8_t *data)
         if (!byte)
             panic("Invalid 16-bit read from control block\n");
 
-        *data = ((uint8_t *)&cmdReg)[STATUS_OFFSET];
+        *data = status;
     }
 
     if (action != ACT_NONE)
@@ -262,6 +270,8 @@ IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
                 action = ACT_DATA_WRITE_BYTE;
             else
                 action = ACT_DATA_WRITE_SHORT;
+        } else if (offset == SELECT_OFFSET) {
+            action = ACT_SELECT_WRITE;
         }
 
     } else {
@@ -271,8 +281,13 @@ IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
         if (!byte)
             panic("Invalid 16-bit write to control block\n");
 
-        if (*data & CONTROL_RST_BIT)
-            panic("Software reset not supported!\n");
+        if (*data & CONTROL_RST_BIT) {
+            // force the device into the reset state
+            devState = Device_Srst;
+            action = ACT_SRST_SET;
+        } else if (devState == Device_Srst && !(*data & CONTROL_RST_BIT)) {
+            action = ACT_SRST_CLEAR;
+        }
 
         nIENBit = (*data & CONTROL_IEN_BIT) ? true : false;
     }
@@ -625,9 +640,6 @@ IdeDisk::startCommand()
     uint32_t size = 0;
     dmaRead = false;
 
-    // copy the command to the shadow
-    curCommand = cmdReg.command;
-
     // Decode commands
     switch (cmdReg.command) {
         // Supported non-data commands
@@ -656,7 +668,7 @@ IdeDisk::startCommand()
 
         // Supported PIO data-in commands
       case WIN_IDENTIFY:
-        cmdBytesLeft = sizeof(struct hd_driveid);
+        cmdBytes = cmdBytesLeft = sizeof(struct hd_driveid);
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
         break;
@@ -667,9 +679,9 @@ IdeDisk::startCommand()
             panic("Attempt to perform CHS access, only supports LBA\n");
 
         if (cmdReg.sec_count == 0)
-            cmdBytesLeft = (256 * SectorSize);
+            cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
-            cmdBytesLeft = (cmdReg.sec_count * SectorSize);
+            cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
 
         curSector = getLBABase();
 
@@ -685,9 +697,9 @@ IdeDisk::startCommand()
             panic("Attempt to perform CHS access, only supports LBA\n");
 
         if (cmdReg.sec_count == 0)
-            cmdBytesLeft = (256 * SectorSize);
+            cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
-            cmdBytesLeft = (cmdReg.sec_count * SectorSize);
+            cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
 
         curSector = getLBABase();
 
@@ -703,9 +715,9 @@ IdeDisk::startCommand()
             panic("Attempt to perform CHS access, only supports LBA\n");
 
         if (cmdReg.sec_count == 0)
-            cmdBytesLeft = (256 * SectorSize);
+            cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
-            cmdBytesLeft = (cmdReg.sec_count * SectorSize);
+            cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
 
         curSector = getLBABase();
 
@@ -719,9 +731,11 @@ IdeDisk::startCommand()
 
     if (action != ACT_NONE) {
         // set the BSY bit
-        cmdReg.status |= STATUS_BSY_BIT;
+        status |= STATUS_BSY_BIT;
         // clear the DRQ bit
-        cmdReg.status &= ~STATUS_DRQ_BIT;
+        status &= ~STATUS_DRQ_BIT;
+        // clear the DF bit
+        status &= ~STATUS_DF_BIT;
 
         updateState(action);
     }
@@ -765,16 +779,30 @@ void
 IdeDisk::updateState(DevAction_t action)
 {
     switch (devState) {
+      case Device_Srst:
+        if (action == ACT_SRST_SET) {
+            // set the BSY bit
+            status |= STATUS_BSY_BIT;
+        } else if (action == ACT_SRST_CLEAR) {
+            // clear the BSY bit
+            status &= ~STATUS_BSY_BIT;
+
+            // reset the device state
+            reset(devID);
+        }
+        break;
+
       case Device_Idle_S:
-        if (!isDEVSelect())
+        if (action == ACT_SELECT_WRITE && !isDEVSelect()) {
             devState = Device_Idle_NS;
-        else if (action == ACT_CMD_WRITE)
+        } else if (action == ACT_CMD_WRITE) {
             startCommand();
+        }
 
         break;
 
       case Device_Idle_SI:
-        if (!isDEVSelect()) {
+        if (action == ACT_SELECT_WRITE && !isDEVSelect()) {
             devState = Device_Idle_NS;
             intrClear();
         } else if (action == ACT_STAT_READ || isIENSet()) {
@@ -788,7 +816,7 @@ IdeDisk::updateState(DevAction_t action)
         break;
 
       case Device_Idle_NS:
-        if (isDEVSelect()) {
+        if (action == ACT_SELECT_WRITE && isDEVSelect()) {
             if (!isIENSet() && intrPending) {
                 devState = Device_Idle_SI;
                 intrPost();
@@ -826,12 +854,12 @@ IdeDisk::updateState(DevAction_t action)
             }
         } else if (action == ACT_DATA_READY) {
             // clear the BSY bit
-            cmdReg.status &= ~STATUS_BSY_BIT;
+            status &= ~STATUS_BSY_BIT;
             // set the DRQ bit
-            cmdReg.status |= STATUS_DRQ_BIT;
+            status |= STATUS_DRQ_BIT;
 
             // copy the data into the data buffer
-            if (curCommand == WIN_IDENTIFY) {
+            if (cmdReg.command == WIN_IDENTIFY) {
                 // Reset the drqBytes for this block
                 drqBytesLeft = sizeof(struct hd_driveid);
 
@@ -887,9 +915,9 @@ IdeDisk::updateState(DevAction_t action)
                 } else {
                     devState = Prepare_Data_In;
                     // set the BSY_BIT
-                    cmdReg.status |= STATUS_BSY_BIT;
+                    status |= STATUS_BSY_BIT;
                     // clear the DRQ_BIT
-                    cmdReg.status &= ~STATUS_DRQ_BIT;
+                    status &= ~STATUS_DRQ_BIT;
 
                     /** @todo change this to a scheduled event to simulate
                         disk delay */
@@ -910,20 +938,23 @@ IdeDisk::updateState(DevAction_t action)
             } else {
                 devState = Device_Idle_S;
             }
-        } else if (cmdBytesLeft != 0) {
+        } else if (action == ACT_DATA_READY && cmdBytesLeft != 0) {
             // clear the BSY bit
-            cmdReg.status &= ~STATUS_BSY_BIT;
+            status &= ~STATUS_BSY_BIT;
             // set the DRQ bit
-            cmdReg.status |= STATUS_DRQ_BIT;
+            status |= STATUS_DRQ_BIT;
 
             // clear the data buffer to get it ready for writes
             memset(dataBuffer, 0, MAX_DMA_SIZE);
 
-            if (!isIENSet()) {
+            // reset the drqBytes for this block
+            drqBytesLeft = SectorSize;
+
+            if (cmdBytesLeft == cmdBytes || isIENSet()) {
+                devState = Transfer_Data_Out;
+            } else {
                 devState = Data_Ready_INTRQ_Out;
                 intrPost();
-            } else {
-                devState = Transfer_Data_Out;
             }
         }
         break;
@@ -956,9 +987,11 @@ IdeDisk::updateState(DevAction_t action)
                 writeDisk(curSector++, dataBuffer);
 
                 // set the BSY bit
-                cmdReg.status |= STATUS_BSY_BIT;
+                status |= STATUS_BSY_BIT;
+                // set the seek bit
+                status |= STATUS_SEEK_BIT;
                 // clear the DRQ bit
-                cmdReg.status &= ~STATUS_DRQ_BIT;
+                status &= ~STATUS_DRQ_BIT;
 
                 devState = Prepare_Data_Out;
 
@@ -982,9 +1015,9 @@ IdeDisk::updateState(DevAction_t action)
             }
         } else if (action == ACT_DMA_READY) {
             // clear the BSY bit
-            cmdReg.status &= ~STATUS_BSY_BIT;
+            status &= ~STATUS_BSY_BIT;
             // set the DRQ bit
-            cmdReg.status |= STATUS_DRQ_BIT;
+            status |= STATUS_DRQ_BIT;
 
             devState = Transfer_Data_Dma;
 
@@ -1001,7 +1034,7 @@ IdeDisk::updateState(DevAction_t action)
             // clear the BSY bit
             setComplete();
             // set the seek bit
-            cmdReg.status |= 0x10;
+            status |= STATUS_SEEK_BIT;
             // clear the controller state for DMA transfer
             ctrl->setDmaComplete(this);
 
@@ -1058,7 +1091,7 @@ IdeDisk::serialize(ostream &os)
     SERIALIZE_SCALAR(cmdReg.cyl_low);
     SERIALIZE_SCALAR(cmdReg.cyl_high);
     SERIALIZE_SCALAR(cmdReg.drive);
-    SERIALIZE_SCALAR(cmdReg.status);
+    SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(nIENBit);
     SERIALIZE_SCALAR(devID);
 
@@ -1070,9 +1103,9 @@ IdeDisk::serialize(ostream &os)
 
     // Serialize current transfer related information
     SERIALIZE_SCALAR(cmdBytesLeft);
+    SERIALIZE_SCALAR(cmdBytes);
     SERIALIZE_SCALAR(drqBytesLeft);
     SERIALIZE_SCALAR(curSector);
-    SERIALIZE_SCALAR(curCommand);
     SERIALIZE_SCALAR(dmaRead);
     SERIALIZE_SCALAR(dmaInterfaceBytes);
     SERIALIZE_SCALAR(intrPending);
@@ -1110,7 +1143,7 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(cmdReg.cyl_low);
     UNSERIALIZE_SCALAR(cmdReg.cyl_high);
     UNSERIALIZE_SCALAR(cmdReg.drive);
-    UNSERIALIZE_SCALAR(cmdReg.status);
+    UNSERIALIZE_SCALAR(status);
     UNSERIALIZE_SCALAR(nIENBit);
     UNSERIALIZE_SCALAR(devID);
 
@@ -1121,10 +1154,10 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(curPrdAddr);
 
     // Unserialize current transfer related information
+    UNSERIALIZE_SCALAR(cmdBytes);
     UNSERIALIZE_SCALAR(cmdBytesLeft);
     UNSERIALIZE_SCALAR(drqBytesLeft);
     UNSERIALIZE_SCALAR(curSector);
-    UNSERIALIZE_SCALAR(curCommand);
     UNSERIALIZE_SCALAR(dmaRead);
     UNSERIALIZE_SCALAR(dmaInterfaceBytes);
     UNSERIALIZE_SCALAR(intrPending);
