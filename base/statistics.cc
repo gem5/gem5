@@ -57,7 +57,7 @@ __nan()
 }
 #endif
 
-#ifdef STAT_DEBUG
+#ifdef DEBUG
 static int total_stats = 0;
 #endif
 
@@ -409,6 +409,14 @@ DataAccess::setPrint()
     Database::StatDB().regPrint(this);
 }
 
+StatData::StatData()
+    : flags(none), precision(-1), prereq(0)
+{
+#ifdef DEBUG
+    number = total_stats++;
+#endif
+}
+
 StatData::~StatData()
 {
 }
@@ -443,8 +451,8 @@ bool
 StatData::baseCheck() const
 {
     if (!(flags & init)) {
-#ifdef STAT_DEBUG
-        cprintf("this is stat number %d\n",(*i)->number);
+#ifdef DEBUG
+        cprintf("this is stat number %d\n", number);
 #endif
         panic("Not all stats have been initialized");
         return false;
