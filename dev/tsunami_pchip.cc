@@ -29,18 +29,11 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
 
-    wsba0 = 0;
-    wsba1 = 0;
-    wsba2 = 0;
-    wsba3 = 0;
-    wsm0 = 0;
-    wsm1 = 0;
-    wsm2 = 0;
-    wsm3 = 0;
-    tba0 = 0;
-    tba1 = 0;
-    tba2 = 0;
-    tba3 = 0;
+    for (int i = 0; i < 4; i++) {
+        wsba[i] = 0;
+        wsm[i] = 0;
+        tba[i] = 0;
+    }
 
     //Set back pointer in tsunami
     tsunami->pchip = this;
@@ -61,40 +54,40 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
       case sizeof(uint64_t):
           switch(daddr) {
               case TSDEV_PC_WSBA0:
-                    *(uint64_t*)data = wsba0;
+                    *(uint64_t*)data = wsba[0];
                     return No_Fault;
               case TSDEV_PC_WSBA1:
-                    *(uint64_t*)data = wsba1;
+                    *(uint64_t*)data = wsba[1];
                     return No_Fault;
               case TSDEV_PC_WSBA2:
-                    *(uint64_t*)data = wsba2;
+                    *(uint64_t*)data = wsba[2];
                     return No_Fault;
               case TSDEV_PC_WSBA3:
-                    *(uint64_t*)data = wsba3;
+                    *(uint64_t*)data = wsba[3];
                     return No_Fault;
               case TSDEV_PC_WSM0:
-                    *(uint64_t*)data = wsm0;
+                    *(uint64_t*)data = wsm[0];
                     return No_Fault;
               case TSDEV_PC_WSM1:
-                    *(uint64_t*)data = wsm1;
+                    *(uint64_t*)data = wsm[1];
                     return No_Fault;
               case TSDEV_PC_WSM2:
-                    *(uint64_t*)data = wsm2;
+                    *(uint64_t*)data = wsm[2];
                     return No_Fault;
               case TSDEV_PC_WSM3:
-                    *(uint64_t*)data = wsm3;
+                    *(uint64_t*)data = wsm[3];
                     return No_Fault;
               case TSDEV_PC_TBA0:
-                    *(uint64_t*)data = tba0;
+                    *(uint64_t*)data = tba[0];
                     return No_Fault;
               case TSDEV_PC_TBA1:
-                    *(uint64_t*)data = tba1;
+                    *(uint64_t*)data = tba[1];
                     return No_Fault;
               case TSDEV_PC_TBA2:
-                    *(uint64_t*)data = tba2;
+                    *(uint64_t*)data = tba[2];
                     return No_Fault;
               case TSDEV_PC_TBA3:
-                    *(uint64_t*)data = tba3;
+                    *(uint64_t*)data = tba[3];
                     return No_Fault;
               case TSDEV_PC_PCTL:
                     // might want to change the clock??
@@ -149,40 +142,40 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
       case sizeof(uint64_t):
           switch(daddr) {
               case TSDEV_PC_WSBA0:
-                    wsba0 = *(uint64_t*)data;
+                    wsba[0] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSBA1:
-                    wsba1 = *(uint64_t*)data;
+                    wsba[1] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSBA2:
-                    wsba2 = *(uint64_t*)data;
+                    wsba[2] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSBA3:
-                    wsba3 = *(uint64_t*)data;
+                    wsba[3] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSM0:
-                    wsm0 = *(uint64_t*)data;
+                    wsm[0] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSM1:
-                    wsm1 = *(uint64_t*)data;
+                    wsm[1] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSM2:
-                    wsm2 = *(uint64_t*)data;
+                    wsm[2] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_WSM3:
-                    wsm3 = *(uint64_t*)data;
+                    wsm[3] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_TBA0:
-                    tba0 = *(uint64_t*)data;
+                    tba[0] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_TBA1:
-                    tba1 = *(uint64_t*)data;
+                    tba[1] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_TBA2:
-                    tba2 = *(uint64_t*)data;
+                    tba[2] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_TBA3:
-                    tba3 = *(uint64_t*)data;
+                    tba[3] = *(uint64_t*)data;
                     return No_Fault;
               case TSDEV_PC_PCTL:
                     // might want to change the clock??
@@ -224,40 +217,49 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
     return No_Fault;
 }
 
+Addr
+TsunamiPChip::translatePciToDma(Addr busAddr)
+{
+    // compare the address to the window base registers
+    uint64_t windowMask = 0;
+    uint64_t windowBase = 0;
+    Addr dmaAddr;
+
+    for (int i = 0; i < 4; i++) {
+        windowBase = wsba[i];
+        windowMask = ~wsm[i] & (0x7ff << 20);
+
+        if ((busAddr & windowMask) == (windowBase & windowMask)) {
+            windowMask = (wsm[i] & (0x7ff << 20)) | 0xfffff;
+
+            if (wsba[i] & 0x1) {   // see if enabled
+                if (wsba[i] & 0x2) // see if SG bit is set
+                    panic("PCI to system SG mapping not currently implemented!\n");
+                else
+                    dmaAddr = (tba[i] & ~windowMask) | (busAddr & windowMask);
+
+                return dmaAddr;
+            }
+        }
+    }
+
+    return 0;
+}
+
 void
 TsunamiPChip::serialize(std::ostream &os)
 {
-    SERIALIZE_SCALAR(wsba0);
-    SERIALIZE_SCALAR(wsba1);
-    SERIALIZE_SCALAR(wsba2);
-    SERIALIZE_SCALAR(wsba3);
-    SERIALIZE_SCALAR(wsm0);
-    SERIALIZE_SCALAR(wsm1);
-    SERIALIZE_SCALAR(wsm2);
-    SERIALIZE_SCALAR(wsm3);
-    SERIALIZE_SCALAR(tba0);
-    SERIALIZE_SCALAR(tba1);
-    SERIALIZE_SCALAR(tba2);
-    SERIALIZE_SCALAR(tba3);
-
+    SERIALIZE_ARRAY(wsba, 4);
+    SERIALIZE_ARRAY(wsm, 4);
+    SERIALIZE_ARRAY(tba, 4);
 }
 
 void
 TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_SCALAR(wsba0);
-    UNSERIALIZE_SCALAR(wsba1);
-    UNSERIALIZE_SCALAR(wsba2);
-    UNSERIALIZE_SCALAR(wsba3);
-    UNSERIALIZE_SCALAR(wsm0);
-    UNSERIALIZE_SCALAR(wsm1);
-    UNSERIALIZE_SCALAR(wsm2);
-    UNSERIALIZE_SCALAR(wsm3);
-    UNSERIALIZE_SCALAR(tba0);
-    UNSERIALIZE_SCALAR(tba1);
-    UNSERIALIZE_SCALAR(tba2);
-    UNSERIALIZE_SCALAR(tba3);
-
+    UNSERIALIZE_ARRAY(wsba, 4);
+    UNSERIALIZE_ARRAY(wsm, 4);
+    UNSERIALIZE_ARRAY(tba, 4);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)

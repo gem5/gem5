@@ -48,23 +48,17 @@ class TsunamiPChip : public FunctionalMemory
   protected:
     Tsunami *tsunami;
 
-    uint64_t wsba0;
-    uint64_t wsba1;
-    uint64_t wsba2;
-    uint64_t wsba3;
-    uint64_t wsm0;
-    uint64_t wsm1;
-    uint64_t wsm2;
-    uint64_t wsm3;
-    uint64_t tba0;
-    uint64_t tba1;
-    uint64_t tba2;
-    uint64_t tba3;
-
+    uint64_t wsba[4];
+    uint64_t wsm[4];
+    uint64_t tba[4];
 
   public:
     TsunamiPChip(const std::string &name, Tsunami *t, Addr a,
                  MemoryController *mmu);
+
+    // @todo This hack does a quick and dirty translation of the PCI bus address to
+    //  a valid DMA address.  This is described in 10-10 of the Tsunami book, should be fixed
+    Addr translatePciToDma(Addr busAddr);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
