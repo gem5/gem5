@@ -125,7 +125,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
 
     SimObjectParam<EtherInt *> interface1;
     SimObjectParam<EtherInt *> interface2;
-    Param<int> link_speed;
+    Param<Tick> link_speed;
     SimObjectParam<EtherDump *> packet_dump;
 
 END_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
