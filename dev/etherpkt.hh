@@ -52,13 +52,15 @@ class PacketData : public RefCounted
 
   public:
     PacketData() : data(NULL), length(0) { }
+    explicit PacketData(size_t size) : data(new uint8_t[size]), length(0) { }
     PacketData(std::auto_ptr<uint8_t> d, int l)
         : data(d.release()), length(l) { }
     ~PacketData() { if (data) delete [] data; }
 
   public:
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+                     const std::string &section);
 };
 
 typedef RefCountingPtr<PacketData> PacketPtr;

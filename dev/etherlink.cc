@@ -185,10 +185,8 @@ EtherLink::Link::serialize(ostream &os)
         SERIALIZE_SCALAR(event_time);
     }
 
-    if (packet_exists) {
-        nameOut(os, csprintf("%s.packet", name()));
-        packet->serialize(os);
-    }
+    if (packet_exists)
+        packet->serialize("packet", os);
 }
 
 void
@@ -198,7 +196,7 @@ EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
         packet = new PacketData;
-        packet->unserialize(cp, csprintf("%s.packet", section));
+        packet->unserialize("packet", cp, section);
     }
 
     bool event_scheduled;
@@ -238,8 +236,7 @@ LinkDelayEvent::serialize(ostream &os)
     Event::serialize(os);
     SERIALIZE_OBJPTR(link);
 
-    nameOut(os, csprintf("%s.packet", name()));
-    packet->serialize(os);
+    packet->serialize("packet", os);
 }
 
 
@@ -248,7 +245,7 @@ LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 {
     Event::unserialize(cp, section);
     packet = new PacketData;
-    packet->unserialize(cp, csprintf("%s.packet", section));
+    packet->unserialize("packet", cp, section);
 }
 
 
