@@ -953,7 +953,7 @@ class Tru64 {
             Tru64::nxm_sched_state *ssp = &rad_state->nxm_ss[thread_index];
 
             if (ssp->nxm_u.nxm_active != 0)
-                return Tru64::KERN_NOT_RECEIVER;
+                return (int) Tru64::KERN_NOT_RECEIVER;
 
             ssp->nxm_u.pth_id = attrp->pthid;
             ssp->nxm_u.nxm_active = uniq_val | 1;
