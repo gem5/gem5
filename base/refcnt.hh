@@ -51,15 +51,26 @@ class RefCountingPtr
   protected:
     T *data;
 
-    void copy(T *d) {
+    void copy(T *d)
+    {
         data = d;
         if (data)
             data->incref();
     }
-    void del() {
+    void del()
+    {
         if (data)
             data->decref();
     }
+    void set(T *d)
+    {
+        if (data == d)
+            return;
+
+        del();
+        copy(d);
+    }
+
 
   public:
     RefCountingPtr() : data(NULL) {}
@@ -75,21 +86,9 @@ class RefCountingPtr
     const T &operator*() const { return *data; }
     const T *get() const { return data; }
 
-    RefCountingPtr &operator=(T *p) {
-        if (data != p) {
-            del();
-            copy(p);
-        }
-        return *this;
-    }
-
-    RefCountingPtr &operator=(const RefCountingPtr &r) {
-        if (data != r.data) {
-            del();
-            copy(r.data);
-        }
-        return *this;
-    }
+    RefCountingPtr &operator=(T *p) { set(p); return *this; }
+    RefCountingPtr &operator=(const RefCountingPtr &r)
+    { return operator=(r.data); }
 
     bool operator!() const { return data == 0; }
     operator bool() const { return data != 0; }

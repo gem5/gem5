@@ -31,9 +31,10 @@
  * DP83820 ethernet controller
  */
 
-#ifndef __NS_GIGE_HH__
-#define __NS_GIGE_HH__
+#ifndef __DEV_NS_GIGE_HH__
+#define __DEV_NS_GIGE_HH__
 
+#include "base/inet.hh"
 #include "base/statistics.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
@@ -43,9 +44,6 @@
 #include "dev/tsunami.hh"
 #include "mem/bus/bus.hh"
 #include "sim/eventq.hh"
-
-/** length of ethernet address in bytes */
-#define EADDR_LEN 6
 
 /**
  * Ethernet device registers
@@ -90,7 +88,7 @@ struct dp_rom {
      * for perfect match memory.
      * the linux driver doesn't use any other ROM
      */
-    uint8_t perfectMatch[EADDR_LEN];
+    uint8_t perfectMatch[ETH_ADDR_LEN];
 };
 
 class IntrControl;
@@ -302,7 +300,7 @@ class NSGigE : public PciDev
      * receive address filter
      */
     bool rxFilterEnable;
-    bool rxFilter(PacketPtr packet);
+    bool rxFilter(PacketPtr &packet);
     bool acceptBroadcast;
     bool acceptMulticast;
     bool acceptUnicast;
@@ -339,7 +337,7 @@ class NSGigE : public PciDev
            bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
            Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
            PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-           uint32_t func, bool rx_filter, const int eaddr[6],
+           uint32_t func, bool rx_filter, Net::EthAddr eaddr,
            uint32_t tx_fifo_size, uint32_t rx_fifo_size);
     ~NSGigE();
 
@@ -352,7 +350,7 @@ class NSGigE : public PciDev
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }
 
-    bool recvPacket(PacketPtr packet);
+    bool recvPacket(PacketPtr &packet);
     void transferDone();
 
     void setInterface(NSGigEInt *i) { assert(!interface); interface = i; }
@@ -403,4 +401,4 @@ class NSGigEInt : public EtherInt
     virtual void sendDone() { dev->transferDone(); }
 };
 
-#endif // __NS_GIGE_HH__
+#endif // __DEV_NS_GIGE_HH__
