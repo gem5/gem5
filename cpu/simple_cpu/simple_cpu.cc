@@ -193,7 +193,11 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         ExecContext *xc = execContexts[i];
         if (xc->status() == ExecContext::Active && _status != Running) {
             _status = Running;
-            tickEvent.schedule(curTick);
+            // the CpuSwitchEvent has a low priority, so it's
+            // scheduled *after* the current cycle's tick event.  Thus
+            // the first tick event for the new context should take
+            // place on the *next* cycle.
+            tickEvent.schedule(curTick+1);
         }
     }
 
@@ -790,3 +794,4 @@ CREATE_SIM_OBJECT(SimpleCPU)
 }
 
 REGISTER_SIM_OBJECT("SimpleCPU", SimpleCPU)
+
