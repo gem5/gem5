@@ -441,6 +441,11 @@ EnumVectorParam<Map>::parse(const string &s)
 {
     vector<string> tokens;
 
+    if (s.empty()) {
+        wasSet = true;
+        return;
+    }
+
     tokenize(tokens, s, ' ');
 
     value.resize(tokens.size());

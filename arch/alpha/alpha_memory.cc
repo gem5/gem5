@@ -501,6 +501,8 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
      */
     if (req->vaddr & (req->size - 1)) {
         fault(req, write ? MM_STAT_WR_MASK : 0);
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->vaddr,
+                req->size);
         return Alignment_Fault;
     }
 

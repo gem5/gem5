@@ -31,23 +31,26 @@ from os.path import join as joinpath, realpath
 mypath = sys.path[0]
 sys.path.append(joinpath(mypath, '..'))
 sys.path.append(joinpath(mypath, '../configs/kernel'))
+sys.path.append(joinpath(mypath, '../util/pbs'))
 sys.path.append(joinpath(mypath, '../sim/pyconfig'))
 
 from importer import mpy_exec, mpy_execfile, AddToPath
 from m5config import *
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], '-E:')
-    for o,a in opts:
-        if o == '-E':
-            offset = a.find('=')
+    opts, args = getopt.getopt(sys.argv[1:], '-E:I:')
+    for opt,arg in opts:
+        if opt == '-E':
+            offset = arg.find('=')
             if offset == -1:
-                name = a
+                name = arg
                 value = True
             else:
-                name = a[:offset]
-                value = a[offset+1:]
+                name = arg[:offset]
+                value = arg[offset+1:]
             env[name] = value
+        if opt == '-I':
+            AddToPath(arg)
 except getopt.GetoptError:
     sys.exit('Improper Usage')
 

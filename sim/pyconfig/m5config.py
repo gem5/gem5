@@ -350,6 +350,13 @@ class MetaConfigNode(type):
             for p,v in c._values.iteritems():
                 if not values.has_key(p):
                     values[p] = v
+            for p,v in c._params.iteritems():
+                if not values.has_key(p) and hasattr(v, 'default'):
+                    v.valid(v.default)
+                    v = v.default
+                    cls._setvalue(p, v)
+                    values[p] = v
+
         return values
 
     def _getvalue(cls, name, default = AttributeError):

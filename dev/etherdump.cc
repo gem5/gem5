@@ -36,14 +36,15 @@
 #include <string>
 
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "dev/etherdump.hh"
 #include "sim/builder.hh"
 #include "sim/universe.hh"
 
 using std::string;
 
-EtherDump::EtherDump(const string &name, std::ostream *_stream, int max)
-    : SimObject(name), stream(_stream), maxlen(max)
+EtherDump::EtherDump(const string &name, const string &file, int max)
+    : SimObject(name), stream(file.c_str()), maxlen(max)
 {
 }
 
@@ -86,7 +87,7 @@ EtherDump::init()
     hdr.sigfigs = 0;
     hdr.linktype = DLT_EN10MB;
 
-    stream->write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
+    stream.write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
 
     /*
      * output an empty packet with the current time so that we know
@@ -98,9 +99,9 @@ EtherDump::init()
     pkthdr.microseconds = 0;
     pkthdr.caplen = 0;
     pkthdr.len = 0;
-    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
+    stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
 
-    stream->flush();
+    stream.flush();
 }
 
 void
@@ -111,9 +112,9 @@ EtherDump::dumpPacket(PacketPtr &packet)
     pkthdr.microseconds = (curTick / us_freq) % ULL(1000000);
     pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;
-    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
-    stream->write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
-    stream->flush();
+    stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
+    stream.write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
+    stream.flush();
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
@@ -132,7 +133,7 @@ END_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
 CREATE_SIM_OBJECT(EtherDump)
 {
-    return new EtherDump(getInstanceName(), makeOutputStream(file), maxlen);
+    return new EtherDump(getInstanceName(), simout.resolve(file), maxlen);
 }
 
 REGISTER_SIM_OBJECT("EtherDump", EtherDump)

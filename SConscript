@@ -63,6 +63,7 @@ base_sources = Split('''
 	base/intmath.cc
 	base/match.cc
 	base/misc.cc
+	base/output.cc
 	base/pollevent.cc
 	base/python.cc
 	base/range.cc

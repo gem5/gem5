@@ -28,12 +28,20 @@
 # Authors: Ali Saidi
 #          Nathan Binkert
 
-import os, os.path, re, sys
+import os, os.path, re, socket, sys
 from os import environ as env, listdir
 from os.path import basename, isdir, isfile, islink, join as joinpath
 from filecmp import cmp as filecmp
 from shutil import copyfile
 
+def nfspath(dir):
+    if dir.startswith('/.automount/'):
+        dir = '/n/%s' % dir[12:]
+    elif not dir.startswith('/n/'):
+        dir = '/n/%s%s' % (socket.gethostname().split('.')[0], dir)
+    return dir
+
+progpath = nfspath(sys.path[0])
 progname = basename(sys.argv[0])
 usage = """\
 Usage:
@@ -65,7 +73,7 @@ force = False
 listonly = False
 queue = ''
 verbose = False
-rootdir = re.sub(r'^/\.automount/', r'/n/', os.getcwd())
+rootdir = nfspath(os.getcwd())
 for opt,arg in opts:
     if opt == '-c':
         clean = True
@@ -92,7 +100,8 @@ for arg in args:
     exprs.append(re.compile(arg))
 
 if not listonly and not onlyecho and isdir(linkdir):
-    print 'Checking for outdated files in Link directory'
+    if verbose:
+        print 'Checking for outdated files in Link directory'
     entries = listdir(linkdir)
     for entry in entries:
         link = joinpath(linkdir, entry)
@@ -131,22 +140,23 @@ if listonly:
 if not onlyecho:
     jl = []
     for jobname in joblist:
+        jobdir = joinpath(rootdir, jobname)
         if os.path.exists(jobname):
             if not force:
-                if os.path.isfile(joinpath(jobname, '.success')):
+                if os.path.isfile(joinpath(jobdir, '.success')):
                     continue
 
-                if os.path.isfile(joinpath(jobname, '.start')) and \
-                       not os.path.isfile(joinpath(jobname, '.stop')):
+                if os.path.isfile(joinpath(jobdir, '.start')) and \
+                       not os.path.isfile(joinpath(jobdir, '.stop')):
                     continue
 
             if not clean:
                 sys.exit('job directory not clean!')
 
-            job.cleandir(jobname)
+            job.cleandir(jobdir)
         else:
-            os.mkdir(jobname)
-    jl.append(jobname)
+            os.mkdir(jobdir)
+        jl.append(jobname)
     joblist = jl
 
 for jobname in joblist:
@@ -155,8 +165,8 @@ for jobname in joblist:
     if not onlyecho and not os.path.isdir(jobdir):
         sys.exit('%s is not a directory.  Cannot build job' % jobdir)
 
-    print >>sys.stderr, 'Job name:       %s' % jobname
-    print >>sys.stderr, 'Job directory:  %s' % jobdir
+    print 'Job name:       %s' % jobname
+    print 'Job directory:  %s' % jobdir
 
     qsub = pbs.qsub()
     qsub.pbshost = 'simpool.eecs.umich.edu'
@@ -164,11 +174,17 @@ for jobname in joblist:
     qsub.name = jobname
     qsub.join = True
     qsub.node_type = 'FAST'
-    qsub.onlyecho = onlyecho
     qsub.env['ROOTDIR'] = rootdir
-    qsub.verbose = verbose
     if len(queue):
         qsub.queue = queue
+    qsub.build(joinpath(progpath, 'job.py'))
 
-    qsub.do(joinpath(basedir, 'job.py'))
-    print >>sys.stderr, ''
+    if verbose:
+        print 'PBS Command:    %s' % qsub.command
+
+    if not onlyecho:
+        ec = qsub.do()
+        if ec == 0:
+            print 'PBS Jobid:      %s' % qsub.result
+        else:
+            print 'PBS Failed'
