@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "cpu/intr_control.hh"
-#include "dev/console.hh"
+#include "dev/simconsole.hh"
 #include "dev/etherdev.hh"
 #include "dev/ide_ctrl.hh"
 #include "dev/tlaser_clock.hh"

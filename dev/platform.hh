@@ -39,6 +39,7 @@
 class PciConfigAll;
 class IntrControl;
 class SimConsole;
+class Uart;
 
 class Platform : public SimObject
 {
@@ -49,6 +50,9 @@ class Platform : public SimObject
     SimConsole *cons;
     /** Pointer to the PCI configuration space */
     PciConfigAll *pciconfig;
+
+    /** Pointer to the UART, set by the uart */
+    Uart *uart;
 
     int interrupt_frequency;
 

@@ -36,6 +36,7 @@
 #include "dev/io_device.hh"
 #include "base/range.hh"
 #include "dev/tsunami.hh"
+#include "sim/eventq.hh"
 
 /** How often the RTC interrupts */
 static const int RTC_RATE  = 1024;

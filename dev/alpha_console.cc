@@ -40,7 +40,7 @@
 #include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "dev/alpha_console.hh"
-#include "dev/console.hh"
+#include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
 #include "dev/tlaser_clock.hh"
 #include "mem/bus/bus.hh"
@@ -226,7 +226,7 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         break;
 
       case offsetof(AlphaAccess, outputChar):
-        console->out((char)(val & 0xff), false);
+        console->out((char)(val & 0xff));
         break;
 
       case offsetof(AlphaAccess, bootStrapImpure):

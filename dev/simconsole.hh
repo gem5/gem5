@@ -1,4 +1,30 @@
-/* $Id$ */
+/*
+ * Copyright (c) 2004 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /* @file
  * User Console Interface
@@ -16,8 +42,13 @@
 #include "sim/sim_object.hh"
 
 class ConsoleListener;
+class Uart;
+
 class SimConsole : public SimObject
 {
+  public:
+    Uart *uart;
+
   protected:
     class Event : public PollEvent
     {
@@ -36,8 +67,6 @@ class SimConsole : public SimObject
     int number;
     int in_fd;
     int out_fd;
-
-  protected:
     ConsoleListener *listener;
 
   public:
@@ -68,18 +97,6 @@ class SimConsole : public SimObject
     void write(uint8_t c) { write(&c, 1); }
     size_t write(const uint8_t *buf, size_t len);
 
-    void configTerm();
-
-  protected:
-    // interrupt status/enable
-    int _status;
-    int _enable;
-
-    // interrupt handle
-    IntrControl *intr;
-    // Platform so we can post interrupts
-    Platform    *platform;
-
   public:
     /////////////////
     // OS interface
@@ -102,24 +119,10 @@ class SimConsole : public SimObject
     uint64_t console_in();
 
     // Send a character to the console
-    void out(char c, bool raise_int = true);
+    void out(char c);
 
-    enum {
-        TransmitInterrupt = 1,
-        ReceiveInterrupt = 2
-    };
-
-    // Read the current interrupt status of this console.
-    int intStatus() { return _status; }
-
-    // Set the interrupt enable bits.
-    int clearInt(int i);
-    void raiseInt(int i);
-
-    void initInt(IntrControl *i);
-    void setInt(int bits);
-
-    void setPlatform(Platform *p);
+    //Ask the console if data is available
+    bool dataAvailable() { return !rxbuf.empty(); }
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

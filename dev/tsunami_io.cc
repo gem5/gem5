@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "dev/console.hh"
 #include "dev/tsunami_io.hh"
 #include "dev/tsunami.hh"
 #include "mem/bus/bus.hh"

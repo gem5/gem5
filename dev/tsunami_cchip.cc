@@ -35,7 +35,6 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "dev/console.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"

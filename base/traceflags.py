@@ -63,7 +63,6 @@ baseFlags = [
     'Console',
     'ConsolePoll',
     'ConsoleVerbose',
-    'TlaserUart',
     'AlphaConsole',
     'Flow',
     'Interrupt',
@@ -114,7 +113,7 @@ baseFlags = [
     'IdeCtrl',
     'IdeDisk',
     'Tsunami',
-    'TsunamiUart'
+    'Uart'
     ]
 
 #

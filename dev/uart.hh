@@ -27,7 +27,7 @@
  */
 
 /* @file
- * Tsunami UART
+ * Defines a 8250 UART
  */
 
 #ifndef __TSUNAMI_UART_HH__
@@ -38,44 +38,59 @@
 #include "dev/io_device.hh"
 
 class SimConsole;
+class Platform;
 
-/*
- * Tsunami UART
- */
-class TsunamiUart : public PioDevice
+const int RX_INT = 0x1;
+const int TX_INT = 0x2;
+
+
+class Uart : public PioDevice
 {
+
   private:
     Addr addr;
-    static const Addr size = 0x8;
+    Addr size;
+    SimConsole *cons;
 
 
   protected:
-    SimConsole *cons;
-    int status_store;
-    uint8_t next_char;
-    bool valid_char;
-    uint8_t IER;
+    int readAddr; // tlaser only
+    uint8_t IER, DLAB, LCR, MCR;
+    int status;
 
     class IntrEvent : public Event
     {
         protected:
-            TsunamiUart *uart;
+            Uart *uart;
         public:
-            IntrEvent(TsunamiUart *u);
+            IntrEvent(Uart *u);
             virtual void process();
             virtual const char *description();
             void scheduleIntr();
     };
 
     IntrEvent intrEvent;
+    Platform *platform;
 
   public:
-    TsunamiUart(const string &name, SimConsole *c, MemoryController *mmu,
-            Addr a, HierParams *hier, Bus *bus);
+    Uart(const string &name, SimConsole *c, MemoryController *mmu,
+            Addr a, Addr s, HierParams *hier, Bus *bus, Platform *p);
 
     Fault read(MemReqPtr &req, uint8_t *data);
     Fault write(MemReqPtr &req, const uint8_t *data);
 
+
+    /**
+     * Inform the uart that there is data available.
+     */
+    void dataAvailable();
+
+
+    /**
+     * Return if we have an interrupt pending
+     * @return interrupt status
+     */
+    bool intStatus() { return status ? true : false; }
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

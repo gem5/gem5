@@ -140,7 +140,15 @@
 
 
 // UART Defines
+#define UART_IER_RDI            0x01
 #define UART_IER_THRI           0x02
 #define UART_IER_RLSI           0x04
+
+
+#define UART_LSR_TEMT   0x40
+#define UART_LSR_THRE   0x20
+#define UART_LSR_DR     0x01
+
+#define UART_MCR_LOOP   0x10
 
 #endif // __TSUNAMIREG_H__

@@ -1,8 +1,33 @@
-/* $Id$ */
-
+/*
+ * Copyright (c) 2004 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /* @file
- * User Console Definitions
+ * Implements the user interface to a serial console
  */
 
 #include <sys/ioctl.h>
@@ -20,10 +45,11 @@
 #include "base/misc.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "dev/console.hh"
+#include "dev/simconsole.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "targetarch/ev5.hh"
+#include "dev/uart.hh"
 #include "dev/platform.hh"
 
 using namespace std;
@@ -48,17 +74,17 @@ SimConsole::Event::process(int revent)
 
 SimConsole::SimConsole(const string &name, const string &file, int num)
     : SimObject(name), event(NULL), number(num), in_fd(-1), out_fd(-1),
-      listener(NULL), txbuf(16384), rxbuf(16384), outfile(NULL),
+      listener(NULL), txbuf(16384), rxbuf(16384), outfile(NULL)
 #if TRACING_ON == 1
-      linebuf(16384),
+      , linebuf(16384)
 #endif
-      _status(0), _enable(0), intr(NULL), platform(NULL)
 {
     if (!file.empty())
         outfile = new ofstream(file.c_str());
 
     if (outfile)
         outfile->setf(ios::unitbuf);
+
 }
 
 SimConsole::~SimConsole()
@@ -130,7 +156,8 @@ SimConsole::data()
     len = read(buf, sizeof(buf));
     if (len) {
         rxbuf.write((char *)buf, len);
-        raiseInt(ReceiveInterrupt);
+        // Inform the UART there is data available
+        uart->dataAvailable();
     }
 }
 
@@ -138,7 +165,7 @@ size_t
 SimConsole::read(uint8_t *buf, size_t len)
 {
     if (in_fd < 0)
-        panic("SimConsole(read): Console not properly attached.\n");
+        panic("Console not properly attached.\n");
 
     size_t ret;
     do {
@@ -147,7 +174,7 @@ SimConsole::read(uint8_t *buf, size_t len)
 
 
     if (ret < 0)
-        DPRINTFN("SimConsole(read): Read failed.\n");
+        DPRINTFN("Read failed.\n");
 
     if (ret <= 0) {
         detach();
@@ -162,7 +189,7 @@ size_t
 SimConsole::write(const uint8_t *buf, size_t len)
 {
     if (out_fd < 0)
-        panic("SimConsole(write): Console not properly attached.\n");
+        panic("Console not properly attached.\n");
 
     size_t ret;
     for (;;) {
@@ -172,31 +199,10 @@ SimConsole::write(const uint8_t *buf, size_t len)
         break;
 
       if (errno != EINTR)
-          detach();
+      detach();
     }
 
     return ret;
-}
-
-void
-SimConsole::configTerm()
-{
-    struct termios ios;
-
-    if (isatty(out_fd)) {
-        if (tcgetattr(out_fd, &ios) < 0) {
-            panic( "tcgetattr\n");
-        }
-        ios.c_iflag &= ~(ISTRIP|ICRNL|IGNCR|ICRNL|IXOFF|IXON);
-        ios.c_oflag &= ~(OPOST);
-        ios.c_oflag &= (ONLCR);
-        ios.c_lflag &= ~(ISIG|ICANON|ECHO);
-        ios.c_cc[VMIN] = 1;
-        ios.c_cc[VTIME] = 0;
-        if (tcsetattr(out_fd, TCSANOW, &ios) < 0) {
-            panic( "tcsetattr\n");
-        }
-    }
 }
 
 #define MORE_PENDING (ULL(1) << 61)
@@ -215,9 +221,6 @@ SimConsole::in(uint8_t &c)
         rxbuf.read((char *)&c, 1);
         empty = rxbuf.empty();
     }
-
-    if (empty)
-        clearInt(ReceiveInterrupt);
 
     DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x more: %d, return: %d\n",
             isprint(c) ? c : ' ', c, !empty, ret);
@@ -245,7 +248,7 @@ SimConsole::console_in()
 }
 
 void
-SimConsole::out(char c, bool raise_int)
+SimConsole::out(char c)
 {
 #if TRACING_ON == 1
     if (DTRACE(Console)) {
@@ -277,90 +280,20 @@ SimConsole::out(char c, bool raise_int)
     if (outfile)
         outfile->write(&c, 1);
 
-    if (raise_int)
-        raiseInt(TransmitInterrupt);
-
-    DPRINTF(ConsoleVerbose, "out: \'%c\' %#02x",
+    DPRINTF(ConsoleVerbose, "out: \'%c\' %#02x\n",
             isprint(c) ? c : ' ', (int)c);
 
-    if (raise_int)
-        DPRINTF(ConsoleVerbose, "status: %#x\n", _status);
-    else
-        DPRINTF(ConsoleVerbose, "\n");
 }
 
-inline bool
-MaskStatus(int status, int mask)
-{ return (status & mask) != 0; }
-
-int
-SimConsole::clearInt(int i)
-{
-    int old = _status;
-    _status &= ~i;
-    //if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
-        platform->clearConsoleInt();
-
-    return old;
-}
-
-void
-SimConsole::raiseInt(int i)
-{
-    //int old = _status;
-    _status |= i;
-    //if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
-        platform->postConsoleInt();
-}
-
-void
-SimConsole::initInt(IntrControl *i)
-{
-    if (intr)
-        panic("Console has already been initialized.");
-
-    intr = i;
-}
-
-void
-SimConsole::setInt(int bits)
-{
-    int old;
-
-    if (bits & ~(TransmitInterrupt | ReceiveInterrupt))
-        panic("An interrupt was not set!");
-
-    old = _enable;
-    _enable |= bits;
-
-    //if (MaskStatus(_status, old) != MaskStatus(_status, _enable) && intr) {
-    if (intr) {
-        if (MaskStatus(_status, _enable))
-            platform->postConsoleInt();
-        else
-            platform->clearConsoleInt();
-    }
-}
-
-void
-SimConsole::setPlatform(Platform *p)
-{
-    platform = p;
-    platform->cons = this;
-}
 
 void
 SimConsole::serialize(ostream &os)
 {
-    SERIALIZE_SCALAR(_status);
-    SERIALIZE_SCALAR(_enable);
 }
 
 void
 SimConsole::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_SCALAR(_status);
-    UNSERIALIZE_SCALAR(_enable);
 }
 
 
@@ -368,7 +301,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
 
     SimObjectParam<ConsoleListener *> listener;
     SimObjectParam<IntrControl *> intr_control;
-    SimObjectParam<Platform *> platform;
     Param<string> output;
     Param<bool> append_name;
     Param<int> number;
@@ -379,7 +311,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimConsole)
 
     INIT_PARAM(listener, "console listener"),
     INIT_PARAM(intr_control, "interrupt controller"),
-    INIT_PARAM(platform, "platform"),
     INIT_PARAM_DFLT(output, "file to dump output to", ""),
     INIT_PARAM_DFLT(append_name, "append name() to filename", true),
     INIT_PARAM_DFLT(number, "console number", 0)
@@ -401,10 +332,6 @@ CREATE_SIM_OBJECT(SimConsole)
 
     SimConsole *console = new SimConsole(getInstanceName(), filename, number);
     ((ConsoleListener *)listener)->add(console);
-    ((SimConsole *)console)->initInt(intr_control);
-    ((SimConsole *)console)->setPlatform(platform);
-    //((SimConsole *)console)->setInt(SimConsole::TransmitInterrupt |
-    //                                SimConsole::ReceiveInterrupt);
 
     return console;
 }
