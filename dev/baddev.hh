@@ -27,38 +27,39 @@
  */
 
 /* @file
- * Tsunami UART
+ * This devices just panics when touched. For example if you have a
+ * kernel that touches the frame buffer which isn't allowed.
  */
 
-#ifndef __TSUNAMI_UART_HH__
-#define __TSUNAMI_UART_HH__
+#ifndef __BADDEV_HH__
+#define __BADDEV_HH__
 
 #include "mem/functional_mem/mmap_device.hh"
 
-class SimConsole;
-
-/*
- * Tsunami UART
+/**
+ * BadDevice
+ * This device just panics when accessed. It is supposed to warn
+ * the user that the kernel they are running has unsupported
+ * options (i.e. frame buffer)
  */
-class TsunamiUart : public MmapDevice
+class BadDevice : public MmapDevice
 {
+  private:
+
+      std::string devname;
   protected:
-    SimConsole *cons;
-    int status_store;
-    uint8_t next_char;
-    bool valid_char;
-    uint8_t IER;
 
   public:
-    TsunamiUart(const std::string &name, SimConsole *c,
-               Addr addr, Addr mask, MemoryController *mmu);
+    /**
+      * The default constructor.
+      */
+    BadDevice(const std::string &name, Addr addr, Addr mask,
+              MemoryController *mmu, const std::string &devicename);
 
-    Fault read(MemReqPtr &req, uint8_t *data);
-    Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __TSUNAMI_UART_HH__
+#endif // __BADDEV_HH__
