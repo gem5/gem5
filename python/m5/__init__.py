@@ -1,7 +1,11 @@
-from mpy_importer import *
-from config import *
-from objects import *
+from mpy_importer import AddToPath, LoadMpyFile
 
-cpp_classes = MetaSimObject.cpp_classes
+from config import *
+config.add_param_types(config.__dict__)
+
+from objects import *
+config.add_param_types(objects.__dict__)
+
+cpp_classes = config.MetaSimObject.cpp_classes
 cpp_classes.sort()
 
