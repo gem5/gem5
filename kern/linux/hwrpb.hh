@@ -1,5 +1,5 @@
-#ifndef __ALPHA_HWRPB_H__
-#define __ALPHA_HWRPB_H__
+#ifndef __KERN_LINUX_HWRPB_HH__
+#define __KERN_LINUX_HWRPB_HH__
 
 #include "kern/linux/aligned.hh"
 
@@ -15,4 +15,4 @@ namespace Linux {
         uint64_ta res1, res2;
     };
 }
-#endif /* __ALPHA_HWRPB_H */
+#endif // __KERN_LINUX_HWRPB_HH__
