@@ -204,7 +204,12 @@ class SimpleCPU : public BaseCPU
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;
-    Statistics::Formula numInsts;
+    Statistics::Scalar<> numInsts;
+
+    virtual Counter totalInstructions() const
+    {
+        return numInst - startNumInst;
+    }
 
     // number of simulated memory references
     Statistics::Scalar<> numMemRefs;

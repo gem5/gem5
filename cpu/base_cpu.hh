@@ -31,10 +31,10 @@
 
 #include <vector>
 
+#include "base/statistics.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-
-#include "targetarch/isa_traits.hh"	// for Addr
+#include "targetarch/isa_traits.hh"
 
 #ifdef FULL_SYSTEM
 class System;
@@ -147,11 +147,27 @@ class BaseCPU : public SimObject
      */
     virtual BranchPred *getBranchPred() { return NULL; };
 
+    virtual Counter totalInstructions() const { return 0; }
+
   private:
     static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
 
   public:
     static int numSimulatedCPUs() { return cpuList.size(); }
+    static Counter numSimulatedInstructions()
+    {
+        Counter total = 0;
+
+        int size = cpuList.size();
+        for (int i = 0; i < size; ++i)
+            total += cpuList[i]->totalInstructions();
+
+        return total;
+    }
+
+  public:
+    // Number of CPU cycles simulated
+    Statistics::Scalar<> numCycles;
 };
 
 #endif // __BASE_CPU_HH__

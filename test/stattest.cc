@@ -66,8 +66,8 @@ Vector2d<> s16;
 Formula f1;
 Formula f2;
 Formula f3;
-Formula f4;
-Formula f5;
+Value f4;
+Value f5;
 Formula f6;
 Formula f7;
 
@@ -279,11 +279,14 @@ main(int argc, char *argv[])
         ;
 
     f4
+        .functor(testfunc)
         .name("Formula4")
         .desc("this is formula 4")
         ;
 
+    TestClass testclass;
     f5
+        .functor(testclass)
         .name("Formula5")
         .desc("this is formula 5")
         ;
@@ -296,9 +299,6 @@ main(int argc, char *argv[])
     f1 = s1 + s2;
     f2 = (-s1) / (-s2) * (-s3 + ULL(100) + s4);
     f3 = sum(s5) * s7;
-    f4 = functor(testfunc);
-    TestClass testclass;
-    f5 = functor(testclass);
     f6 += constant(10.0);
     f6 += s5[3];
     f7 = constant(1);

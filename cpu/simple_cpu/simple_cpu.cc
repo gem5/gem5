@@ -287,8 +287,6 @@ SimpleCPU::regStats()
         ;
 
     idleFraction = constant(1.0) - notIdleFraction;
-    numInsts = Statistics::scalar(numInst) - Statistics::scalar(startNumInst);
-    simInsts += numInsts;
 }
 
 void
@@ -590,6 +588,8 @@ SimpleCPU::post_interrupt(int int_num, int index)
 void
 SimpleCPU::tick()
 {
+    numCycles++;
+
     traceData = NULL;
 
     Fault fault = No_Fault;
@@ -697,6 +697,7 @@ SimpleCPU::tick()
 
         // keep an instruction count
         numInst++;
+        numInsts++;
 
         // check for instruction-count-based events
         comInstEventQueue[0]->serviceEvents(numInst);

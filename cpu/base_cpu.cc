@@ -130,6 +130,13 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
 void
 BaseCPU::regStats()
 {
+    using namespace Statistics;
+
+    numCycles
+        .name(name() + ".numCycles")
+        .desc("number of cpu cycles simulated")
+        ;
+
     int size = execContexts.size();
     if (size > 1) {
         for (int i = 0; i < size; ++i) {

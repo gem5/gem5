@@ -139,11 +139,13 @@ struct StatData
     static bool less(StatData *stat1, StatData *stat2);
 };
 
-struct ScalarData : public StatData
+class ScalarData : public StatData
 {
+  public:
     virtual Counter value() const = 0;
     virtual Result result() const = 0;
     virtual Result total() const = 0;
+    virtual void visit(Visit &visitor) { visitor.visit(*this); }
 };
 
 template <class Stat>
@@ -162,8 +164,6 @@ class ScalarStatData : public ScalarData
     virtual Result total() const { return s.total(); }
     virtual void reset() { s.reset(); }
     virtual bool zero() const { return s.zero(); }
-
-    virtual void visit(Visit &visitor) { visitor.visit(*this); }
 };
 
 struct VectorData : public StatData
@@ -393,6 +393,16 @@ class Wrap : public Child
         assert(ptr);
         return ptr;
     }
+
+  protected:
+    /**
+     * Copy constructor, copies are not allowed.
+     */
+    Wrap(const Wrap &stat);
+    /**
+     * Can't copy stats.
+     */
+    void operator=(const Wrap &);
 
   public:
     Wrap()
@@ -726,16 +736,6 @@ class ScalarBase : public DataAccess
         return _bin->data(*_params);
     }
 
-  protected:
-    /**
-     * Copy constructor, copies are not allowed.
-     */
-    ScalarBase(const ScalarBase &stat);
-    /**
-     * Can't copy stats.
-     */
-    const ScalarBase &operator=(const ScalarBase &);
-
   public:
     /**
      * Return the current value of this stat as its base type.
@@ -822,6 +822,79 @@ class ScalarBase : public DataAccess
 
 };
 
+class ProxyData : public ScalarData
+{
+  public:
+    virtual void visit(Visit &visitor) { visitor.visit(*this); }
+    virtual bool binned() const { return false; }
+    virtual std::string str() const { return to_string(value()); }
+    virtual size_t size() const { return 1; }
+    virtual bool zero() const { return value() == 0; }
+    virtual bool check() const { return true; }
+    virtual void reset() { }
+};
+
+template <class T>
+class ValueProxy : public ProxyData
+{
+  private:
+    T *scalar;
+
+  public:
+    ValueProxy(T &val) : scalar(&val) {}
+    virtual Counter value() const { return *scalar; }
+    virtual Result result() const { return *scalar; }
+    virtual Result total() const { return *scalar; }
+};
+
+template <class T>
+class FunctorProxy : public ProxyData
+{
+  private:
+    T *functor;
+
+  public:
+    FunctorProxy(T &func) : functor(&func) {}
+    virtual Counter value() const { return (*functor)(); }
+    virtual Result result() const { return (*functor)(); }
+    virtual Result total() const { return (*functor)(); }
+};
+
+class ValueBase : public DataAccess
+{
+  private:
+    ProxyData *proxy;
+
+  public:
+    ValueBase() : proxy(NULL) { }
+    ~ValueBase() { if (proxy) delete proxy; }
+
+    template <class T>
+    void scalar(T &value)
+    {
+        proxy = new ValueProxy<T>(value);
+        setInit();
+    }
+
+    template <class T>
+    void functor(T &func)
+    {
+        proxy = new FunctorProxy<T>(func);
+        setInit();
+    }
+
+    Counter value() { return proxy->value(); }
+    Result result() const { return proxy->result(); }
+    Result total() const { return proxy->total(); };
+    size_t size() const { return proxy->size(); }
+
+    bool binned() const { return proxy->binned(); }
+    std::string str() const { return proxy->str(); }
+    bool zero() const { return proxy->zero(); }
+    bool check() const { return proxy != NULL; }
+    void reset() { }
+};
+
 //////////////////////////////////////////////////////////////////////
 //
 // Vector Statistics
@@ -868,13 +941,6 @@ class VectorBase : public DataAccess
         params_t *_params = const_cast<params_t *>(&params);
         return _bin->data(index, *_params);
     }
-
-  protected:
-    // Copying stats is not allowed
-    /** Copying stats isn't allowed. */
-    VectorBase(const VectorBase &stat);
-    /** Copying stats isn't allowed. */
-    const VectorBase &operator=(const VectorBase &);
 
   public:
     void value(VCounter &vec) const
@@ -1126,11 +1192,6 @@ class Vector2dBase : public DataAccess
         params_t *_params = const_cast<params_t *>(&params);
         return _bin->data(index, *_params);
     }
-
-  protected:
-    // Copying stats is not allowed
-    Vector2dBase(const Vector2dBase &stat);
-    const Vector2dBase &operator=(const Vector2dBase &);
 
   public:
     Vector2dBase() {}
@@ -1586,13 +1647,6 @@ class DistBase : public DataAccess
         return _bin->data(*_params);
     }
 
-  protected:
-    // Copying stats is not allowed
-    /** Copies are not allowed. */
-    DistBase(const DistBase &stat);
-    /** Copies are not allowed. */
-    const DistBase &operator=(const DistBase &);
-
   public:
     DistBase() { }
 
@@ -1658,11 +1712,6 @@ class VectorDistBase : public DataAccess
         params_t *_params = const_cast<params_t *>(&params);
         return _bin->data(index, *_params);
     }
-
-  protected:
-    // Copying stats is not allowed
-    VectorDistBase(const VectorDistBase &stat);
-    const VectorDistBase &operator=(const VectorDistBase &);
 
   public:
     VectorDistBase() {}
@@ -1908,56 +1957,6 @@ class ConstNode : public Node
     virtual bool binned() const { return false; }
 
     virtual std::string str() const { return to_string(vresult[0]); }
-};
-
-template <class T>
-class FunctorNode : public Node
-{
-  private:
-    T &functor;
-    mutable VResult vresult;
-
-  public:
-    FunctorNode(T &f) : functor(f) { vresult.resize(1); }
-    const VResult &result() const
-    {
-        vresult[0] = (Result)functor();
-        return vresult;
-    }
-    virtual Result total() const { return (Result)functor(); };
-
-    virtual size_t size() const { return 1; }
-    /**
-     * Return true if stat is binned.
-     *@return False since Functors aren't binned
-     */
-    virtual bool binned() const { return false; }
-    virtual std::string str() const { return to_string(functor()); }
-};
-
-template <class T>
-class ScalarNode : public Node
-{
-  private:
-    T &scalar;
-    mutable VResult vresult;
-
-  public:
-    ScalarNode(T &s) : scalar(s) { vresult.resize(1); }
-    const VResult &result() const
-    {
-        vresult[0] = (Result)scalar;
-        return vresult;
-    }
-    virtual Result total() const { return (Result)scalar; };
-
-    virtual size_t size() const { return 1; }
-    /**
-     * Return true if stat is binned.
-     *@return False since Scalar's aren't binned
-     */
-    virtual bool binned() const { return false; }
-    virtual std::string str() const { return to_string(scalar); }
 };
 
 template <class Op>
@@ -2217,6 +2216,30 @@ class Scalar
      */
     template <typename U>
     void operator=(const U &v) { Base::operator=(v); }
+};
+
+class Value
+    : public Wrap<Value,
+                  ValueBase,
+                  ScalarStatData>
+{
+  public:
+    /** The base implementation. */
+    typedef ValueBase Base;
+
+    template <class T>
+    Value &scalar(T &value)
+    {
+        Base::scalar(value);
+        return *this;
+    }
+
+    template <class T>
+    Value &functor(T &func)
+    {
+        Base::functor(func);
+        return *this;
+    }
 };
 
 /**
@@ -2698,6 +2721,13 @@ class Temp
      * Create a new ScalarStatNode.
      * @param s The ScalarStat to place in a node.
      */
+    Temp(const Value &s)
+        : node(new ScalarStatNode(s.statData())) { }
+
+    /**
+     * Create a new ScalarStatNode.
+     * @param s The ScalarStat to place in a node.
+     */
     template <class Bin>
     Temp(const Average<Bin> &s)
         : node(new ScalarStatNode(s.statData())) { }
@@ -2859,20 +2889,6 @@ inline Temp
 constant(T val)
 {
     return NodePtr(new ConstNode<T>(val));
-}
-
-template <typename T>
-inline Temp
-functor(T &val)
-{
-    return NodePtr(new FunctorNode<T>(val));
-}
-
-template <typename T>
-inline Temp
-scalar(T &val)
-{
-    return NodePtr(new ScalarNode<T>(val));
 }
 
 inline Temp

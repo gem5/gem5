@@ -2,17 +2,23 @@
 
 CC?= gcc
 CXX?= g++
+PYTHON?=/usr/bin/env python
 
 CURDIR?= $(shell /bin/pwd)
-SRCDIR?= ..
+SRCDIR?= $(CURDIR)/..
 
 CCFLAGS= -g -O0 -MMD -I. -I$(SRCDIR) -I- -DTRACING_ON=0
 MYSQL= -I/usr/include/mysql -L/usr/lib/mysql -lmysqlclient
 
-VPATH=$(SRCDIR)
+VPATH=$(SRCDIR):$(CURDIR)
 
 default:
 	@echo "You must specify a target"
+
+base/traceflags.cc base/traceflags.hh: $(SRCDIR)/base/traceflags.py
+	mkdir -p base; \
+	cd base; \
+	$(PYTHON) $<
 
 bitvectest: test/bitvectest.cc
 	$(CXX) $(CCFLAGS) -o $@ $^
@@ -61,5 +67,5 @@ tracetest: $(TRACE)
 	$(CXX) $(CCFLAGS) -o $@ $^
 
 clean:
-	@rm -f *test *~ .#* *.core core
+	@rm -rf *test *~ .#* *.core core base
 .PHONY: clean
