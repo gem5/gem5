@@ -209,5 +209,34 @@ SpinLock:
 2:
 	br	zero,1b
 	.end	SpinLock
+
+        .globl	loadContext
+	.ent	loadContext 2
+loadContext:
+	.option	O1
+	.frame	sp, 0, ra
+	call_pal PAL_SWPCTX_ENTRY
+	ret	zero, (ra)
+	.end	loadContext
+
 	
-	
+	.globl	SlaveSpin          # Very carefully spin wait 
+	.ent	SlaveSpin 2        # and swap context without
+SlaveSpin:                         # using any stack space
+	.option	O1
+	.frame	sp, 0, ra
+        mov a0, t0                 # cpu number 
+        mov a1, t1                 # cpu rpb pointer (virtual)
+        mov a2, t2                 # what to spin on
+       
+test:   ldl  t3, 0(t2)
+        beq  t3, test
+        zapnot t1,0x1f,a0          # make rpb physical 
+	call_pal PAL_SWPCTX_ENTRY  # switch to pcb
+        mov t0, a0                 # setup args for SlaveCmd
+        mov t1, a1
+        jsr SlaveCmd               # call SlaveCmd
+	ret	zero, (ra)         # Should never be reached
+	.end	SlaveSpin
+
+

@@ -152,19 +152,12 @@ main(int argc, char **argv)
 
 
    InitConsole();
-   printf("SimOS console \n");
+   printf("M5 console\n");
    /*
     * get configuration from backdoor
     */
    simosConf.last_offset = k1Conf->last_offset;
-   printf(" Got simosConfiguration %d \n",simosConf.last_offset);
-
-/*   for (i=1;i<=simosConf.last_offset/4;i++) {
-      ui *k1ptr = (ui*)k1Conf + i;
-      ui *ksegptr = (ui*)(&simosConf.last_offset)+i;
-      *ksegptr = *k1ptr;
-
-   }*/
+   printf("Got Configuration %d \n",simosConf.last_offset);
 
     simosConf.last_offset = k1Conf->last_offset;
     simosConf.version = k1Conf->version;
@@ -186,7 +179,7 @@ main(int argc, char **argv)
     simosConf.bootStrapCPU = k1Conf->bootStrapCPU;
 
    if (simosConf.version != ALPHA_ACCESS_VERSION)  {
-      panic("Console version mismatch. Console expects %d. SimOS has %d \n",
+      panic("Console version mismatch. Console expects %d. has %d \n",
             ALPHA_ACCESS_VERSION,simosConf.version);
    }
 
@@ -227,8 +220,8 @@ struct rpb xxm_rpb = {
 #if 0
    0x12,		/* 050: system type - masquarade as some random 21064 */
 #endif
-   0, /* masquerade a Tsunami RGD */
-   (1<<10),		/* 058: system variation */
+   0, /* OVERRIDDEN */
+   (1<<10),		/* 058: system variation OVERRIDDEN */
    'c'|('o'<<8)|('o'<<16)|('l'<< 24),		/* 060: system revision */
    1024*4096,		/* 068: scaled interval clock intr freq  OVERRIDEN*/
    0,			/* 070: cycle counter frequency */
@@ -268,17 +261,17 @@ ul xxm_tbb[] = { 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1
                  0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e};
 
 struct rpb_percpu xxm_rpb_percpu = {
-   {0,0,0,0,0,0,0,{0,0},{0,0,0,0,0,0,0,0}},				/* 000: boot/restart HWPCB */
+   {0,0,0,0,0,0,1,{0,0},{0,0,0,0,0,0,0,0}},				/* 000: boot/restart HWPCB */
    (STATE_PA | STATE_PP | STATE_CV | STATE_PV | STATE_PMV | STATE_PL), 	/* 080: per-cpu state bits */
    0xc000,				/* 088: palcode memory length */
    0x2000,				/* 090: palcode scratch length */
    0x4000,				/* 098: phys addr of palcode mem space */
    0x2000,				/* 0A0: phys addr of palcode scratch space */
    (2 << 16) | (5 << 8) | 1,		/* 0A8: PALcode rev required */
-   5 | (2L  << 32),				/* 0B0: processor type */
+   11 | (2L  << 32),				/* 0B0: processor type */
    7,					/* 0B8: processor variation */
-   'D'|('a'<<8)|('v'<<16)|('e'<<24),	/* 0C0: processor revision */
-   {'D','a','v','e','C','o','n','r','o','y',0,0,0,0,0,0},	/* 0C8: proc serial num: 10 ascii chars */
+   'M'|('5'<<8)|('A'<<16)|('0'<<24),	/* 0C0: processor revision */
+   {'M','5','/','A','l','p','h','a','0','0','0','0','0','0','0','0'},	/* 0C8: proc serial num: 10 ascii chars */
    0,					/* 0D8: phys addr of logout area */
    0,					/* 0E0: length in bytes of logout area */
    0,					/* 0E8: halt pcb base */
@@ -795,7 +788,7 @@ unixBoot(int go, int argc, char **argv)
 
   rpb_name = (char *) ROUNDUP8(((ul)rpb_lurt) + sizeof(xxm_lurt));
   rpb_dsr->rpb_sysname_off = ((ul) rpb_name) - (ul) rpb_dsr;
-#define THENAME "             SimOS ALPHA/EV5"
+#define THENAME "             M5/Alpha       "
   sum = sizeof(THENAME);
   bcopy(THENAME, rpb_name, sum);
   *(ul *)rpb_name = sizeof(THENAME); /* put in length field */
@@ -1246,6 +1239,9 @@ void SlaveCmd(int cpu, struct rpb_percpu *my_rpb)
 /*   extern void palJToSlave[]; */
    extern unsigned int palJToSlave[];
 
+   SpinLock(&theLock);
+   printf("Slave CPU %d console command %s", cpu,my_rpb->rpb_iccb.iccb_rxbuf);
+   SpinUnlock(&theLock);
 
    my_rpb->rpb_state |= STATE_BIP;
    my_rpb->rpb_state &= ~STATE_RC;
@@ -1264,6 +1260,8 @@ void SlaveCmd(int cpu, struct rpb_percpu *my_rpb)
           rpb->rpb_restart_pv,
           rpb->rpb_vptb,
           KSEG_TO_PHYS(my_rpb));
+
+   panic("SlaveCmd returned \n");
 }
 
 void SlaveLoop( int cpu)
@@ -1272,7 +1270,6 @@ void SlaveLoop( int cpu)
    struct rpb_percpu *my_rpb = (struct rpb_percpu*)
       ((ul)rpb_percpu + size*cpu);
 
-
    SpinLock(&theLock);
    if (cpu==0) {
       panic("CPU 0 entering slaveLoop. Reenetering the console. HOSED \n");
@@ -1280,19 +1277,10 @@ void SlaveLoop( int cpu)
       printf("Entering slaveloop for cpu %d my_rpb=%x \n",cpu,my_rpb);
    }
    SpinUnlock(&theLock);
-   while(1) {
-      int i;
-      for (i=0; i < 1000000 ; i++) {
-         if (my_rpb->rpb_iccb.iccb_rxlen) {
-            SpinLock(&theLock);
-            printf("Slave CPU %d console command %s",
-                   cpu,my_rpb->rpb_iccb.iccb_rxbuf);
-            SpinUnlock(&theLock);
-            SlaveCmd(cpu,my_rpb);
-            panic("SlaveCmd returned \n");
-         }
-      }
-      printf("*");
-   }
-}
 
+   // swap the processors context to the one in the
+   // rpb_percpu struct very carefully (i.e. no stack usage)
+   // so that linux knows which processor ends up in __smp_callin
+   // and we don't trash any data is the process
+   SlaveSpin(cpu,my_rpb,&my_rpb->rpb_iccb.iccb_rxlen);
+}

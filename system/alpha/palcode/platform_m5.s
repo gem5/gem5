@@ -432,20 +432,26 @@ EXPORT(sys_wripir)
 // Convert the processor number to a CPU mask
 //--
 
-	and	r16,0xf, r14		// mask the top stuff (16 CPUs supported)
+	and	r16,0x3, r14		// mask the top stuff (4 CPUs supported)
 	bis	r31,0x1,r16		// get a one
 	sll	r16,r14,r14		// shift the bit to the right place
+        sll     r14,12,r14
+        
 
 //++
 // Build the Broadcast Space base address
 //--
-	lda	r13,0xff8e(r31)		// Load the upper address bits
-	sll	r13,24,r13		// shift them to the top
+        lda     r16,0xf01(r31)
+        sll     r16,32,r16
+        ldah    r13,0xa0(r31)
+        sll	r13,8,r13
+        bis	r16,r13,r16	
+        lda     r16,0x0080(r16)
   
 //++
 // Send out the IP Intr
 //--
-	stqp	r14, 0x40(r13)	// Write to TLIPINTR reg WAS  TLSB_TLIPINTR_OFFSET  
+	stqp	r14, 0(r16)	// Tsunami MISC Register
 	wmb				// Push out the store
 
 	hw_rei
@@ -737,20 +743,21 @@ EXPORT(sys_interrupt)
 //-
 	ALIGN_BRANCH
 sys_int_23:
-	Read_TLINTRSUMx(r13,r10,r14)		// read the right TLINTRSUMx
-	srl	r13, 22, r13			// shift down to examine IPL17
+        or      r31,0,r16                       // IPI interrupt A0 = 0
+        lda     r12,0xf01(r31)                   // build up an address for the MISC register
+        sll     r12,16,r12
+        lda     r12,0xa000(r12)                   
+        sll     r12,16,r12                       
+        lda     r12,0x080(r12)                  
 
-	Intr_Find_TIOP(r13,r14)
-	beq	r14, 1f
+        ldq_p   r10,0(r12)                       // read misc register
+        and     r10,0x3,r10                     // isolate CPUID
+        or      r31,0x1,r14                     // load r14 with bit to clear
+        sll     r14,r10,r14                       // left shift by CPU ID
+        sll     r14,8,r14
+        stq_p   r14, 0(r12)                       // clear the rtc interrupt
 
-	Get_TLSB_Node_Address(r14,r10)
-	lda	r10, 0xac0(r10)	// Get base TLILID address
-
-	ldlp	r13, 0(r10)			// Read the TLILID register
-	bne	r13, pal_post_dev_interrupt
-
-1:	lda	r16, osfint_c_passrel(r31)	// passive release
-	br	r31, pal_post_interrupt		// 
+ 	br	r31, pal_post_interrupt		// Notify the OS 
 
 
 	ALIGN_BRANCH
@@ -764,7 +771,7 @@ sys_int_22:
 
         ldq_p   r10,0(r12)                       // read misc register
         and     r10,0x3,r10                     // isolate CPUID
-        or      r31,0x10,r14                     // load r9 with bit to clear
+        or      r31,0x10,r14                     // load r14 with bit to clear
         sll     r14,r10,r14                       // left shift by CPU ID
         stq_p   r14, 0(r12)                       // clear the rtc interrupt
          
@@ -811,10 +818,10 @@ sys_int_21:
     lda     r12,0x0080(r12)
     ldqp    r13, 0(r12)                       // read the MISC register for CPUID
         
-    and     r13,0x1,r14                      // grab LSB and shift left 2
-    sll     r14,2,r14
-    and     r13,0x2,r10                      // grabl LSB+1 and shift left 5
-    sll     r10,5,r10
+    and     r13,0x1,r14                      // grab LSB and shift left 6
+    sll     r14,6,r14
+    and     r13,0x2,r10                      // grabl LSB+1 and shift left 9
+    sll     r10,9,r10
     
     mskbl   r12,0,r12                         // calculate DIRn address
     lda     r13,0x280(r31)
@@ -1479,8 +1486,20 @@ sys_reset:
 	mtpr	r1, pt_scbb		// load scbb
 	mtpr	r31, pt_prbr		// clear out prbr
 #ifdef SIMOS
+        // yes, this is ugly, but you figure out a better
+        // way to get the address of the kludge_initial_pcbb 
+        // in r1 with an uncooperative assembler --ali
+        br     r1, kludge_getpcb_addr
+        br     r31, kludge_initial_pcbb     
+kludge_getpcb_addr:
+        ldqp   r19, 0(r1)
+        sll    r19, 44, r19
+        srl    r19, 44, r19
+        mulq   r19,4,r19
+        addq   r19, r1, r1 
+        addq   r1,4,r1
 //        or      zero,kludge_initial_pcbb,r1
-        GET_ADDR(r1, (kludge_initial_pcbb-pal_base), r1)
+//        GET_ADDR(r1, (kludge_initial_pcbb-pal_base), r1)
 #else
 	mfpr	r1, pal_base
 //orig	sget_addr r1, (kludge_initial_pcbb-pal$base), r1, verify=0// get address for temp pcbb
@@ -2598,7 +2617,7 @@ check_done:				// do these now and return
 // .sbttl KLUDGE_INITIAL_PCBB - PCB for Boot use only
 
         ALIGN_128
-
+.globl kludge_initial_pcbb
 kludge_initial_pcbb:			// PCB is 128 bytes long
 //	.repeat 16
 //	.quad   0
