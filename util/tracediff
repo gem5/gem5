@@ -51,12 +51,15 @@ $sim2 = shift;
 # be given to both invocations
 $simargs = '"' . join('" "', @ARGV) . '"';
 
-# Redirect config output to cout so that gets diffed too (in case
-# that's the source of the problem).
-$simargs .= " --root:config_output_file=cout";
+# Run individual invocations in separate dirs so output and intermediate
+# files (particularly config.py and config.ini) don't conflict.
+$dir1 = "tracediff-$$-1";
+$dir2 = "tracediff-$$-2";
+mkdir($dir1) or die "Can't create dir $dir1\n";
+mkdir($dir2) or die "Can't create dir $dir2\n";
 
-$cmd1 = "$sim1 $simargs --stats:text_file=tracediff-$$-1.stats 2>&1 |";
-$cmd2 = "$sim2 $simargs --stats:text_file=tracediff-$$-2.stats 2>&1 |";
+$cmd1 = "$sim1 $simargs -d $dir1 2>&1 |";
+$cmd2 = "$sim2 $simargs -d $dir2 2>&1 |";
 
 # This only works if you have rundiff in your path.  I just edit it
 # with an explicit path if necessary.
