@@ -119,7 +119,8 @@ FloorLog2(int64_t x)
     return FloorLog2((uint64_t)x);
 }
 
-inline int
+#if defined(__APPLE__)
+int
 FloorLog2(size_t x)
 {
     assert(x > 0);
@@ -132,6 +133,7 @@ FloorLog2(size_t x)
         return FloorLog2((uint64_t)x);
 
 }
+#endif
 
 template <class T>
 inline int

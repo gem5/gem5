@@ -69,6 +69,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
         pioInterface->addAddrRange(addr, addr + size);
     }
 
+    alphaAccess = new AlphaAccess;
     alphaAccess->last_offset = size - 1;
     alphaAccess->kernStart = system->getKernelStart();
     alphaAccess->kernEnd = system->getKernelEnd();
