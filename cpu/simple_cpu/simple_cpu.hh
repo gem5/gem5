@@ -184,6 +184,8 @@ class SimpleCPU : public BaseCPU
     // Refcounted pointer to the one memory request.
     MemReqPtr memReq;
 
+    StaticInstPtr<TheISA> globalsi;
+
     class CacheCompletionEvent : public Event
     {
       private:
@@ -191,6 +193,8 @@ class SimpleCPU : public BaseCPU
 
       public:
         CacheCompletionEvent(SimpleCPU *_cpu);
+
+        bool read;
 
         virtual void process();
         virtual const char *description();
@@ -238,7 +242,7 @@ class SimpleCPU : public BaseCPU
     Stats::Scalar<> dcacheStallCycles;
     Counter lastDcacheStall;
 
-    void processCacheCompletion();
+    void processCacheCompletion(bool read);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
