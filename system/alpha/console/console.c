@@ -154,12 +154,31 @@ main(int argc, char **argv)
    simosConf.last_offset = k1Conf->last_offset;
    printf(" Got simosConfiguration %d \n",simosConf.last_offset);
 
-   for (i=1;i<=simosConf.last_offset/4;i++) {
+/*   for (i=1;i<=simosConf.last_offset/4;i++) {
       ui *k1ptr = (ui*)k1Conf + i;
       ui *ksegptr = (ui*)(&simosConf.last_offset)+i;
       *ksegptr = *k1ptr;
 
-   }
+   }*/
+
+    simosConf.last_offset = k1Conf->last_offset;
+    simosConf.version = k1Conf->version;
+    simosConf.numCPUs = k1Conf->numCPUs;
+    simosConf.intrClockFrequency = k1Conf->intrClockFrequency;
+    simosConf.cpuClock = k1Conf->cpuClock;
+    simosConf.mem_size = k1Conf->mem_size;
+    simosConf.kernStart = k1Conf->kernStart;
+    simosConf.kernEnd = k1Conf->kernEnd;
+    simosConf.entryPoint = k1Conf->entryPoint;
+    simosConf.diskUnit = k1Conf->diskUnit;
+    simosConf.diskCount = k1Conf->diskCount;
+    simosConf.diskPAddr = k1Conf->diskPAddr;
+    simosConf.diskBlock = k1Conf->diskBlock;
+    simosConf.diskOperation = k1Conf->diskOperation;
+    simosConf.outputChar = k1Conf->outputChar;
+    simosConf.inputChar = k1Conf->inputChar;
+    simosConf.bootStrapImpure = k1Conf->bootStrapImpure;
+    simosConf.bootStrapCPU = k1Conf->bootStrapCPU;
 
    if (simosConf.version != ALPHA_ACCESS_VERSION)  {
       panic("Console version mismatch. Console expects %d. SimOS has %d \n",
