@@ -1,4 +1,8 @@
 from HierParams import HierParams
+from Serialize import Serialize
+from Statistics import Statistics
+from Trace import Trace
+
 simobj Root(SimObject):
     type = 'Root'
     frequency = Param.Tick(200000000, "tick frequency")
@@ -9,3 +13,6 @@ simobj Root(SimObject):
     full_system = Param.Bool("Full system simulation?")
     hier = HierParams(do_data = False, do_events = True)
     checkpoint = Param.String('', "Checkpoint file")
+    stats = Statistics()
+    trace = Trace()
+    serialize = Serialize()

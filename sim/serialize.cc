@@ -333,11 +333,7 @@ SerializeParamContext::~SerializeParamContext()
 void
 SerializeParamContext::checkParams()
 {
-    if (serialize_dir.isValid()) {
-        checkpointDirBase = serialize_dir;
-    } else {
-        checkpointDirBase = outputDirectory + "cpt.%012d";
-    }
+    checkpointDirBase = outputDirectory + (string)serialize_dir;
 
     // guarantee that directory ends with a '/'
     if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')
