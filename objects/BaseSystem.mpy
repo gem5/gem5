@@ -1,4 +1,5 @@
 simobj BaseSystem(SimObject):
+    type = 'BaseSystem'
     abstract = True
     memctrl = Param.MemoryController(Super, "memory controller")
     physmem = Param.PhysicalMemory(Super, "phsyical memory")

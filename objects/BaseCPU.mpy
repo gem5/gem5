@@ -1,4 +1,5 @@
 simobj BaseCPU(SimObject):
+    type = 'BaseCPU'
     abstract = True
     icache = Param.BaseMem(NULL, "L1 instruction cache object")
     dcache = Param.BaseMem(NULL, "L1 data cache object")

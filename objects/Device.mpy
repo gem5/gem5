@@ -11,21 +11,23 @@ from FunctionalMemory import FunctionalMemory
 # initialization phase at which point all SimObject pointers will be
 # valid.
 simobj FooPioDevice(FunctionalMemory):
-    abstract = True
     type = 'PioDevice'
+    abstract = True
     addr = Param.Addr("Device Address")
     mmu = Param.MemoryController(Super, "Memory Controller")
     io_bus = Param.Bus(NULL, "The IO Bus to attach to")
     pio_latency = Param.Tick(1, "Programmed IO latency in bus cycles")
 
 simobj FooDmaDevice(FooPioDevice):
-    abstract = True
     type = 'DmaDevice'
+    abstract = True
 
 simobj PioDevice(FooPioDevice):
+    type = 'PioDevice'
     abstract = True
     platform = Param.Platform(Super, "Platform")
 
 simobj DmaDevice(PioDevice):
+    type = 'DmaDevice'
     abstract = True
 

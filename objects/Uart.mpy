@@ -1,5 +1,6 @@
 from Device import PioDevice
 
 simobj Uart(PioDevice):
+    type = 'Uart'
     console = Param.SimConsole(Super, "The console")
     size = Param.Addr(0x8, "Device size")

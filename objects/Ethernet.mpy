@@ -2,10 +2,12 @@ from Device import DmaDevice
 from Pci import PciDevice
 
 simobj EtherInt(SimObject):
+    type = 'EtherInt'
     abstract = True
     peer = Param.EtherInt(NULL, "peer interface")
 
 simobj EtherLink(SimObject):
+    type = 'EtherLink'
     int1 = Param.EtherInt("interface 1")
     int2 = Param.EtherInt("interface 2")
     delay = Param.Tick(0, "transmit delay of packets in us")
@@ -13,20 +15,24 @@ simobj EtherLink(SimObject):
     dump = Param.EtherDump(NULL, "dump object")
 
 simobj EtherBus(SimObject):
+    type = 'EtherBus'
     loopback = Param.Bool(true,
         "send packet back to the interface from which it came")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.UInt64(100000000, "bus speed in bits per second")
 
 simobj EtherTap(EtherInt):
+    type = 'EtherTap'
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     port = Param.UInt16(3500, "tap port")
 
 simobj EtherDump(SimObject):
+    type = 'EtherDump'
     file = Param.String("dump file")
 
 simobj EtherDev(DmaDevice):
+    type = 'EtherDev'
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
@@ -47,6 +53,7 @@ simobj EtherDev(DmaDevice):
     tlaser = Param.Turbolaser(Super, "Turbolaser")
 
 simobj NSGigE(PciDevice):
+    type = 'NSGigE'
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
@@ -69,9 +76,11 @@ simobj NSGigE(PciDevice):
     physmem = Param.PhysicalMemory(Super, "Physical Memory")
 
 simobj EtherDevInt(EtherInt):
+    type = 'EtherDevInt'
     device = Param.EtherDev("Ethernet device of this interface")
 
 simobj NSGigEInt(EtherInt):
+    type = 'NSGigEInt'
     device = Param.NSGigE("Ethernet device of this interface")
 
 

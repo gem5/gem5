@@ -1,5 +1,6 @@
 from HierParams import HierParams
 simobj Root(SimObject):
+    type = 'Root'
     frequency = Param.Tick(200000000, "tick frequency")
     output_dir = Param.String('.', "directory to output data to")
     output_file = Param.String('cout', "file to dump simulator output to")

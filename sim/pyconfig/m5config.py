@@ -221,6 +221,10 @@ def isParamContext(value):
         return False
 
 
+class_decorator = '_M5M5_SIMOBJECT_'
+expr_decorator = '_M5M5_EXPRESSION_'
+dot_decorator = '_M5M5_DOT_'
+
 # The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
 # classes that derive from ConfigNode are instantiated, and provides
@@ -230,7 +234,6 @@ def isParamContext(value):
 class MetaConfigNode(type):
     keywords = { 'abstract' : types.BooleanType,
                  'check' : types.FunctionType,
-                 '_init' : types.FunctionType,
                  'type' : (types.NoneType, types.StringType) }
 
     # __new__ is called before __init__, and is where the statements
@@ -246,6 +249,11 @@ class MetaConfigNode(type):
                  '_disable' : {} }
 
         for key,val in dict.items():
+            del dict[key]
+
+            if key.startswith(expr_decorator):
+                key = key[len(expr_decorator):]
+
             if mcls.keywords.has_key(key):
                 if not isinstance(val, mcls.keywords[key]):
                     raise TypeError, \
@@ -255,11 +263,9 @@ class MetaConfigNode(type):
                 if isinstance(val, types.FunctionType):
                     val = classmethod(val)
                 priv[key] = val
-                del dict[key]
 
             elif key.startswith('_'):
                 priv[key] = val
-                del dict[key]
 
             elif not isNullPointer(val) and isConfigNode(val):
                 dict[key] = val()
@@ -267,19 +273,22 @@ class MetaConfigNode(type):
             elif isSimObjSequence(val):
                 dict[key] = [ v() for v in val ]
 
+            else:
+                dict[key] = val
+
         # If your parent has a value in it that's a config node, clone it.
         for base in bases:
             if not isConfigNode(base):
                 continue
 
-            for name,value in base._values.iteritems():
-                if dict.has_key(name):
+            for key,value in base._values.iteritems():
+                if dict.has_key(key):
                     continue
 
                 if isConfigNode(value):
-                    priv['_values'][name] = value()
+                    priv['_values'][key] = value()
                 elif isSimObjSequence(value):
-                    priv['_values'][name] = [ val() for val in value ]
+                    priv['_values'][key] = [ val() for val in value ]
 
         # entries left in dict will get passed to __init__, where we'll
         # deal with them as params.
@@ -293,12 +302,12 @@ class MetaConfigNode(type):
         cls._bases = [c for c in cls.__mro__ if isConfigNode(c)]
 
         # initialize attributes with values from class definition
-        for pname,value in dict.iteritems():
-            setattr(cls, pname, value)
-
-        if hasattr(cls, '_init'):
-            cls._init()
-            del cls._init
+        for key,value in dict.iteritems():
+            key = key.split(dot_decorator)
+            c = cls
+            for item in key[:-1]:
+                c = getattr(c, item)
+            setattr(c, key[-1], value)
 
     def _isvalue(cls, name):
         for c in cls._bases:
@@ -389,7 +398,6 @@ class MetaConfigNode(type):
 
         raise AttributeError, \
               "object '%s' has no attribute '%s'" % (cls.__name__, cls)
-
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).

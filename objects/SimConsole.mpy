@@ -1,9 +1,11 @@
 simobj ConsoleListener(SimObject):
+    type = 'ConsoleListener'
     port = Param.UInt16(3456, "listen port")
 
 simobj SimConsole(SimObject):
+    type = 'SimConsole'
     append_name = Param.Bool(true, "append name() to filename")
     intr_control = Param.IntrControl(Super, "interrupt controller")
     listener = Param.ConsoleListener("console listener")
     number = Param.Int(0, "console number")
-    output = Param.String("", "file to dump output to")
+    output = Param.String('', "file to dump output to")

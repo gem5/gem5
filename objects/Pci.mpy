@@ -1,6 +1,7 @@
 from Device import FooPioDevice, DmaDevice
 
 simobj PciConfigData(FooPioDevice):
+    type = 'PciConfigData'
     addr = 0xffffffffffffffffL
     VendorID = Param.UInt16("Vendor ID")
     DeviceID = Param.UInt16("Device ID")
@@ -38,9 +39,10 @@ simobj PciConfigData(FooPioDevice):
     MinimumGrant = Param.UInt8(0x00, "Minimum Grant")
 
 simobj PciConfigAll(FooPioDevice):
-    pass
+    type = 'PciConfigAll'
 
 simobj PciDevice(DmaDevice):
+    type = 'PciDevice'
     abstract = True
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")

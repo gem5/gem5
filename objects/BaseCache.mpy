@@ -1,6 +1,7 @@
 from BaseMem import BaseMem
 
 simobj BaseCache(BaseMem):
+    type = 'BaseCache'
     adaptive_compression = Param.Bool(false,
         "Use an adaptive compression scheme")
     assoc = Param.Int("associativity")
