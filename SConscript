@@ -109,6 +109,7 @@ base_sources = Split('''
 	cpu/full_cpu/issue.cc
 	cpu/full_cpu/ls_queue.cc
 	cpu/full_cpu/machine_queue.cc
+        cpu/full_cpu/pc_sample_profile.cc
 	cpu/full_cpu/pipetrace.cc
 	cpu/full_cpu/readyq.cc
 	cpu/full_cpu/reg_info.cc

@@ -49,8 +49,6 @@
 #include "targetarch/vtophys.hh"
 #include "sim/debug.hh"
 
-extern SymbolTable *debugSymbolTable;
-
 using namespace std;
 
 LinuxSystem::LinuxSystem(Params *p)
