@@ -2184,7 +2184,7 @@ class SumNode : public Node
  * binned.  If the typedef is NoBin, nothing is binned.  If it is
  * MainBin, then all stats are binned under that Bin.
  */
-#if defined(FS_MEASURE)
+#if defined(FS_MEASURE) || defined(STATS_BINNING)
 typedef MainBin DefaultBin;
 #else
 typedef NoBin DefaultBin;
