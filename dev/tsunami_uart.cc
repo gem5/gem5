@@ -255,6 +255,14 @@ TsunamiUart::serialize(ostream &os)
     SERIALIZE_SCALAR(next_char);
     SERIALIZE_SCALAR(valid_char);
     SERIALIZE_SCALAR(IER);
+    Tick intrwhen;
+    if (intrEvent.scheduled())
+        intrwhen = intrEvent.when();
+    else
+        intrwhen = 0;
+    SERIALIZE_SCALAR(intrwhen);
+
+
 }
 
 void
@@ -264,6 +272,11 @@ TsunamiUart::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(next_char);
     UNSERIALIZE_SCALAR(valid_char);
     UNSERIALIZE_SCALAR(IER);
+    Tick intrwhen;
+    UNSERIALIZE_SCALAR(intrwhen);
+    if (intrwhen != 0)
+        intrEvent.schedule(intrwhen);
+
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)

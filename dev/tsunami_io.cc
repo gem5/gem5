@@ -380,6 +380,10 @@ TsunamiIO::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(timerData);
     SERIALIZE_SCALAR(uip);
+    SERIALIZE_SCALAR(mask1);
+    SERIALIZE_SCALAR(mask2);
+    SERIALIZE_SCALAR(mode1);
+    SERIALIZE_SCALAR(mode2);
     SERIALIZE_SCALAR(picr);
     SERIALIZE_SCALAR(picInterrupting);
     Tick time0when = timer0.when();
@@ -388,6 +392,7 @@ TsunamiIO::serialize(std::ostream &os)
     SERIALIZE_SCALAR(time0when);
     SERIALIZE_SCALAR(time2when);
     SERIALIZE_SCALAR(rtcwhen);
+    SERIALIZE_SCALAR(RTCAddress);
 
 }
 
@@ -396,6 +401,10 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(timerData);
     UNSERIALIZE_SCALAR(uip);
+    UNSERIALIZE_SCALAR(mask1);
+    UNSERIALIZE_SCALAR(mask2);
+    UNSERIALIZE_SCALAR(mode1);
+    UNSERIALIZE_SCALAR(mode2);
     UNSERIALIZE_SCALAR(picr);
     UNSERIALIZE_SCALAR(picInterrupting);
     Tick time0when;
@@ -407,6 +416,7 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
     timer0.reschedule(time0when);
     timer2.reschedule(time2when);
     rtc.reschedule(rtcwhen);
+    UNSERIALIZE_SCALAR(RTCAddress);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)

@@ -377,11 +377,15 @@ SimConsole::setPlatform(Platform *p)
 void
 SimConsole::serialize(ostream &os)
 {
+    SERIALIZE_SCALAR(_status);
+    SERIALIZE_SCALAR(_enable);
 }
 
 void
 SimConsole::unserialize(Checkpoint *cp, const std::string &section)
 {
+    UNSERIALIZE_SCALAR(_status);
+    UNSERIALIZE_SCALAR(_enable);
 }
 
 
