@@ -4,15 +4,15 @@ CC= gcc
 CXX= g++
 
 CURDIR?= $(shell /bin/pwd)
-SRCDIR?= .
+SRCDIR?= ..
 TARGET?= alpha
 
-TEST_SRCDIR?= $(SRCDIR)
-ARCH_SRCDIR?= $(SRCDIR)/../arch/$(TARGET)
-BASE_SRCDIR?= $(SRCDIR)/../base
-SIM_SRCDIR?= $(SRCDIR)/../sim
-CACHE_SRCDIR?= $(SRCDIR)/../sim/cache
-OLD_SRCDIR= $(SRCDIR)/../old
+TEST_SRCDIR?= $(SRCDIR)/test
+ARCH_SRCDIR?= $(SRCDIR)/arch/$(TARGET)
+BASE_SRCDIR?= $(SRCDIR)/base
+SIM_SRCDIR?= $(SRCDIR)/sim
+CACHE_SRCDIR?= $(SRCDIR)/sim/cache
+OLD_SRCDIR= $(SRCDIR)/old
 
 vpath % $(TEST_SRCDIR)
 vpath % $(BASE_SRCDIR)
@@ -20,12 +20,13 @@ vpath % $(SIM_SRCDIR)
 vpath % $(CACHE_SRCDIR)
 vpath % $(OLD_SRCDIR)
 
-INCLDIRS= -I$(ARCH_SRCDIR) -I$(BASE_SRCDIR) -I$(SIM_SRCDIR) \
-	-I$(CACHE_SRCDIR) -I$(OLD_SRCDIR)
-CCFLAGS= -g -O0 -MMD -I. $(INCLDIRS) -I- -DTRACING_ON=0
+CCFLAGS= -g -O0 -MMD -I. -I$(SRCDIR) -I- -DTRACING_ON=0
 
 default:
 	@echo "You must specify a target"
+
+targetarch:
+	ln -s ../arch/$(TARGET) targetarch
 
 bitvectest: bitvectest.o
 	$(CXX) $(LFLAGS) -o $@ $^
@@ -51,7 +52,8 @@ offtest: offtest.o
 rangetest: rangetest.o str.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
-stattest: statistics.o stattest.o cprintf.o misc.o omisc.o str.o
+stattest: cprintf.o hostinfo.o misc.o sim_stats.o sim_time.o \
+          statistics.o stattest.o str.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
 strnumtest: strnumtest.o str.o
@@ -63,7 +65,7 @@ symtest: misc.o symtest.o symtab.o str.o
 tokentest: tokentest.o str.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
-tracetest: tracetest.o trace.o trace_flags.o cprintf.o str.o misc.o omisc.o
+tracetest: tracetest.o trace.o trace_flags.o cprintf.o str.o misc.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
 clean:

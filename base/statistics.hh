@@ -76,6 +76,8 @@ float __nan();
 /** Print stats out in SS format. */
 #define STAT_DISPLAY_COMPAT
 
+class Callback;
+
 /** The current simulated cycle. */
 extern Tick curTick;
 
@@ -215,6 +217,10 @@ class Stat
      * @param stream The stream to print to.
      */
     virtual void display(std::ostream &stream) const = 0;
+    /**
+     * Reset this stat to the default state.
+     */
+    virtual void reset() = 0;
     /**
      * Return the number of entries in this stat.
      * @return The number of entries.
@@ -422,6 +428,10 @@ struct StatStor
      * @return The value of this stat.
      */
     T value(const Params &p) const { return data; }
+    /**
+     * Reset stat value to default
+     */
+    void reset() { data = T(); }
 };
 
 /**
@@ -492,6 +502,15 @@ struct AvgStor
      * @return The current count.
      */
     T value(const Params &p) const { return current; }
+    /**
+     * Reset stat value to default
+     */
+    void reset()
+    {
+        current = T();
+        total = 0;
+        last = curTick;
+    }
 };
 
 /**
@@ -608,6 +627,11 @@ class ScalarBase : public ScalarStat
      * @return 1.
      */
     virtual size_t size() const { return 1; }
+
+    /**
+     * Reset stat value to default
+     */
+    void reset() { bin.reset(); }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -732,6 +756,10 @@ class VectorBase : public VectorStat
      * @return The size of the vector.
      */
     virtual size_t size() const { return bin.size(); }
+    /**
+     * Reset stat value to default
+     */
+    virtual void reset() { bin.reset(); }
 };
 
 /**
@@ -855,6 +883,10 @@ class ScalarProxy : public ScalarStat
      * @return 1.
      */
     virtual size_t size() const { return 1; }
+    /**
+     * This stat has no state.  Nothing to reset
+     */
+    virtual void reset() {  }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -980,6 +1012,10 @@ class Vector2dBase : public Stat
 
         }
     }
+    /**
+     * Reset stat value to default
+     */
+    virtual void reset() { bin.reset(); }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1058,6 +1094,11 @@ class VectorProxy : public VectorStat
         assert (index >= 0 && index < size());
         return ScalarProxy<T, Storage, Bin>(*bin, *params, offset + index);
     }
+
+    /**
+     * This stat has no state.  Nothing to reset.
+     */
+    virtual void reset() { }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1120,8 +1161,11 @@ struct DistStor
      */
     DistStor(const Params &params)
         : min_val(INT_MAX), max_val(INT_MIN), underflow(0), overflow(0),
-          vec(params.size) {
+          vec(params.size)
+    {
+        reset();
     }
+
     /**
      * Add a value to the distribution for the given number of times.
      * @param val The value to add.
@@ -1200,6 +1244,21 @@ struct DistStor
                     rvec, params.min, params.max, params.bucket_size,
                     params.size);
     }
+    /**
+     * Reset stat value to default
+     */
+    void reset()
+    {
+        min_val = INT_MAX;
+        max_val = INT_MIN;
+        underflow = 0;
+        overflow = 0;
+
+        int size = vec.size();
+        for (int i = 0; i < size; ++i)
+            vec[i] = T();
+    }
+
 };
 
 void FancyDisplay(std::ostream &stream, const std::string &name,
@@ -1231,7 +1290,7 @@ struct FancyStor
     /**
      * Create and initialize this storage.
      */
-    FancyStor(const Params &) : sum(0), squares(0), total(0) {}
+    FancyStor(const Params &) : sum(T()), squares(T()), total(0) {}
 
     /**
      * Add a value the given number of times to this running average.
@@ -1286,6 +1345,15 @@ struct FancyStor
      * @return True if no samples have been added.
      */
     bool zero(const Params &) const { return total == 0; }
+    /**
+     * Reset stat value to default
+     */
+    virtual void reset()
+    {
+        sum = T();
+        squares = T();
+        total = 0;
+    }
 };
 
 /**
@@ -1309,7 +1377,7 @@ struct AvgFancy
     /**
      * Create and initialize this storage.
      */
-    AvgFancy(const Params &) : sum(0), squares(0) {}
+    AvgFancy(const Params &) : sum(T()), squares(T()) {}
 
     /**
      * Add a value to the distribution for the given number of times.
@@ -1352,6 +1420,14 @@ struct AvgFancy
      * @return True if the sum is zero.
      */
     bool zero(const Params &params) const { return sum == 0; }
+    /**
+     * Reset stat value to default
+     */
+    virtual void reset()
+    {
+        sum = T();
+        squares = T();
+    }
 };
 
 /**
@@ -1433,6 +1509,13 @@ class DistBase : public Stat
         data()->display(stream, myname(), mydesc(), myprecision(), myflags(),
                         params);
     }
+    /**
+     * Reset stat value to default
+     */
+    virtual void reset()
+    {
+        bin.reset();
+    }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1472,6 +1555,13 @@ class VectorDistBase : public Stat
     virtual size_t size() const { return bin.size(); }
     virtual bool zero() const { return false; }
     virtual void display(std::ostream &stream) const;
+    /**
+     * Reset stat value to default
+     */
+    virtual void reset()
+    {
+        bin.reset();
+    }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -1528,6 +1618,10 @@ class VectorDistProxy : public Stat
         data()->display(stream, name.str(), desc.str(),
                         cstat->myprecision(), cstat->myflags(), cstat->params);
     }
+    /**
+     * Proxy has no state.  Nothing to reset.
+     */
+    virtual void reset() { }
 };
 
 template <typename T, template <typename T> class Storage, class Bin>
@@ -2032,6 +2126,16 @@ struct StatBin : public Detail::BinBase
             }
             return reinterpret_cast<Storage *>(ptr);
         }
+        void reset()
+        {
+            char *ptr = access();
+            char *flags = ptr + size() * sizeof(Storage);
+            if (!(*flags & 0x1))
+                return;
+
+            Storage *s = reinterpret_cast<Storage *>(ptr);
+            s->reset();
+        }
     };
 
     template <class Storage>
@@ -2068,6 +2172,19 @@ struct StatBin : public Detail::BinBase
             }
             return reinterpret_cast<Storage *>(ptr + index * sizeof(Storage));
         }
+        void reset()
+        {
+            char *ptr = access();
+            char *flags = ptr + size() * sizeof(Storage);
+            if (!(*flags & 0x1))
+                return;
+
+            for (int i = 0; i < _size; ++i) {
+                char *p = ptr + i * sizeof(Storage);
+                Storage *s = reinterpret_cast<Storage *>(p);
+                s->reset();
+            }
+        }
     };
 };
 
@@ -2086,6 +2203,11 @@ struct NoBin
         char ptr[sizeof(Storage)];
 
       public:
+        ~Bin()
+        {
+            reinterpret_cast<Storage *>(ptr)->~Storage();
+        }
+
         bool initialized() const { return true; }
         void init(const Params &params) {
             new (ptr) Storage(params);
@@ -2094,6 +2216,11 @@ struct NoBin
         Storage *data(const Params &params) {
             assert(initialized());
             return reinterpret_cast<Storage *>(ptr);
+        }
+        void reset()
+        {
+            Storage *s = reinterpret_cast<Storage *>(ptr);
+            s->reset();
         }
     };
 
@@ -2109,10 +2236,18 @@ struct NoBin
 
       public:
         VectorBin() : ptr(NULL) { }
-        ~VectorBin() {
-            if (initialized())
-                delete [] ptr;
+        ~VectorBin()
+        {
+            if (!initialized())
+                return;
+
+            for (int i = 0; i < _size; ++i) {
+                char *p = ptr + i * sizeof(Storage);
+                reinterpret_cast<Storage *>(p)->~Storage();
+            }
+            delete [] ptr;
         }
+
         bool initialized() const { return ptr != NULL; }
         void init(int s, const Params &params) {
             assert(s > 0 && "size must be positive!");
@@ -2129,6 +2264,14 @@ struct NoBin
             assert(initialized());
             assert(index >= 0 && index < size());
             return reinterpret_cast<Storage *>(ptr + index * sizeof(Storage));
+        }
+        void reset()
+        {
+            for (int i = 0; i < _size; ++i) {
+                char *p = ptr + i * sizeof(Storage);
+                Storage *s = reinterpret_cast<Storage *>(p);
+                s->reset();
+            }
         }
     };
 };
@@ -2454,6 +2597,11 @@ class Formula : public Detail::VectorStat
         else
             return root->size();
     }
+
+    /**
+     * Formulas don't need to be reset
+     */
+    virtual void reset() {}
 };
 
 /**
@@ -2462,6 +2610,8 @@ class Formula : public Detail::VectorStat
 
 void check();
 void dump(std::ostream &stream);
+void reset();
+void regReset(Callback *cb);
 
 inline Detail::Temp
 operator+(Detail::Temp l, Detail::Temp r)

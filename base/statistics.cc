@@ -35,6 +35,7 @@
 
 #include <math.h>
 
+#include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
 #include "base/misc.hh"
@@ -143,6 +144,7 @@ class Database
 
     StatData *find(const Stat *stat);
     void check();
+    void reset();
     void regStat(Stat *stat);
     StatData *print(Stat *stat);
 };
@@ -203,6 +205,18 @@ Database::check()
                           printStats.end(), Stat::less);
         }
 
+        ++i;
+    }
+}
+
+void
+Database::reset()
+{
+    list_t::iterator i = allStats.begin();
+    list_t::iterator end = allStats.end();
+
+    while (i != end) {
+        (*i)->reset();
         ++i;
     }
 }
@@ -840,6 +854,21 @@ void
 dump(ostream &stream)
 {
     Detail::StatDB().dump(stream);
+}
+
+CallbackQueue resetQueue;
+
+void
+regReset(Callback *cb)
+{
+    resetQueue.add(cb);
+}
+
+void
+reset()
+{
+    Detail::StatDB().reset();
+    resetQueue.process();
 }
 
 } // namespace Statistics

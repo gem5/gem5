@@ -32,15 +32,16 @@
 #include <unistd.h>
 
 #include "base/cprintf.hh"
-#include "sim/host.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
+#include "sim/host.hh"
+#include "sim/sim_stats.hh"
 
 using namespace std;
 using namespace Statistics;
 
 Tick curTick = 0;
-//Tick ticksPerSecond = ULL(2000000000);
+Tick ticksPerSecond = ULL(2000000000);
 
 Scalar<> s1;
 Scalar<> s2;
@@ -493,10 +494,17 @@ main(int argc, char *argv[])
     s12.sample(100);
 
     MainBin::activate(bin1);
+    cout << "dump 1" << endl;
     dump(cout);
     cout << endl << endl;
 
     MainBin::activate(bin2);
+    cout << "dump 2" << endl;
+    dump(cout);
+    cout << endl << endl;
+
+    cout << "dump 3" << endl;
+    reset();
     dump(cout);
     cout << endl << endl;
 
