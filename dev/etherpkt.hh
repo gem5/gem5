@@ -39,7 +39,7 @@
 
 #include "base/refcnt.hh"
 
-class IniFile;
+class Checkpoint;
 
 /*
  * Reference counted class containing ethernet packet data
@@ -61,8 +61,8 @@ class EtherPacket : public RefCounted
     bool IsMulticast() { return data[0] == 0x01; }
     bool IsBroadcast() { return data[0] == 0xff; }
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(const IniFile *db, const std::string &section);
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 typedef RefCountingPtr<EtherPacket> PacketPtr;
