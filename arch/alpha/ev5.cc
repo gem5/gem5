@@ -15,10 +15,6 @@
 
 #ifdef FULL_SYSTEM
 
-#ifndef SYSTEM_EV5
-#error This code is only valid for EV5 systems
-#endif
-
 ////////////////////////////////////////////////////////////////////////
 //
 //
