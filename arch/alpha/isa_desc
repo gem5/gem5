@@ -2566,7 +2566,7 @@ decode OPCODE default Unknown::unknown() {
     }
 
     format BasicOperate {
-	0x1e: hw_rei({{ xc->hwrei(); }});
+	0x1e: hw_rei({{ xc->hwrei(); }}, IsSerializing);
 
 	// M5 special opcodes use the reserved 0x01 opcode space
 	0x01: decode M5FUNC {
