@@ -33,6 +33,8 @@
 
 #include "base/str.hh"
 
+using namespace std;
+
 int
 main(int argc, char *argv[])
 {

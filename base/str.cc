@@ -74,25 +74,31 @@ tokenize(vector<string>& v, const string &s, char token, bool ignore)
     v.push_back(s.substr(first));
 }
 
+/**
+ * @todo This function will not handle the smallest negative decimal
+ * value for a signed type
+ */
+
 template <class T>
 inline bool
 __to_number(string value, T &retval)
 {
     static const T maxnum = ((T)-1);
     static const bool sign = maxnum < 0;
-    static const T hexmax = maxnum & (((T)1 << (sizeof(T) * 8 - 4)) - 1);
-    static const T octmax = maxnum & (((T)1 << (sizeof(T) * 8 - 3)) - 1);
+    static const int bits = sizeof(T) * 8;
+    static const T hexmax = maxnum & (((T)1 << (bits - 4 - sign)) - 1);
+    static const T octmax = maxnum & (((T)1 << (bits - 3 - sign)) - 1);
     static const T signmax =
-        (sign) ? maxnum & (((T)1 << (sizeof(T) * 8 - 1)) - 1) : maxnum;
-    static const T decmax = signmax / 10 - 1;
+        (sign) ? maxnum & (((T)1 << (bits - 1)) - 1) : maxnum;
+    static const T decmax = signmax / 10;
 
 #if 0
-    cout << "maxnum =  0x" << hex << maxnum << "\n"
-         << "sign =    0x" << hex << sign << "\n"
-         << "hexmax =  0x" << hex << hexmax << "\n"
-         << "octmax =  0x" << hex << octmax << "\n"
-         << "signmax = 0x" << hex << signmax << "\n"
-         << "decmax =  0x" << hex << decmax << "\n";
+    cout << "maxnum =  0x" << hex << (unsigned long long)maxnum << "\n"
+         << "sign =    0x" << hex << (unsigned long long)sign << "\n"
+         << "hexmax =  0x" << hex << (unsigned long long)hexmax << "\n"
+         << "octmax =  0x" << hex << (unsigned long long)octmax << "\n"
+         << "signmax = 0x" << hex << (unsigned long long)signmax << "\n"
+         << "decmax =  0x" << hex << (unsigned long long)decmax << "\n";
 #endif
 
     eat_white(value);
@@ -180,8 +186,10 @@ __to_number(string value, T &retval)
             goto multiply;
 
         if (retval > decmax) return false;
+        bool atmax = retval == decmax;
         retval *= 10;
         retval += c - '0';
+        if (atmax && retval < decmax) return false;
         if (sign && (retval & ((T)1 << (sizeof(T) * 8 - 1))))
             return false;
     }
@@ -190,8 +198,10 @@ __to_number(string value, T &retval)
     if (IsDec(c)) {
 
         if (retval > decmax) return false;
+        bool atmax = retval == decmax;
         retval *= 10;
         retval += c - '0';
+        if (atmax && retval < decmax) return false;
         if (sign && negative) {
             if ((retval & ((T)1 << (sizeof(T) * 8 - 1))) &&
                 retval >= (T)-signmax)
