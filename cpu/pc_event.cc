@@ -84,7 +84,7 @@ PCEventQueue::schedule(PCEvent *event)
 }
 
 bool
-PCEventQueue::service(ExecContext *xc)
+PCEventQueue::doService(ExecContext *xc)
 {
     Addr pc = xc->regs.pc;
     int serviced = 0;

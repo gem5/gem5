@@ -98,13 +98,21 @@ class PCEventQueue
   protected:
     map_t pc_map;
 
+    bool doService(ExecContext *xc);
+
   public:
     PCEventQueue();
     ~PCEventQueue();
 
     bool remove(PCEvent *event);
     bool schedule(PCEvent *event);
-    bool service(ExecContext *xc);
+    bool service(ExecContext *xc)
+    {
+        if (pc_map.empty())
+            return false;
+
+        return doService(xc);
+    }
 
     range_t equal_range(Addr pc);
     range_t equal_range(PCEvent *event) { return equal_range(event->pc()); }
