@@ -46,30 +46,6 @@ class Singleton(type):
         cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instance
 
-#class MetaTempObject(type):
-#    classes = {}
-#    def __new__(mcls, name, bases, dict):
-#        _bases = []
-#        for base in bases:
-#            if base.__name__ is 'TempObject':
-#                _bases.append('SimObject')
-#            else:
-#                _bases.append(base.__name__)
-#        newdict = { '_bases' : _bases, '_name' : name, '_params' : dict }
-#        cls = type.__new__(mcls, name, bases, newdict)
-#        mcls.classes[name] = cls
-#        return cls
-#
-#class TempObject(object):
-#    __metaclass__ = MetaTempObject
-
-def defined(s):
-    try:
-        eval(s)
-        return True
-    except NameError:
-        return False
-
 if os.environ.has_key('FULL_SYSTEM'):
     FULL_SYSTEM = True
 
