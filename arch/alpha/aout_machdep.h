@@ -33,20 +33,20 @@
 /// Funky Alpha 64-bit a.out header used for PAL code.
 ///
 struct aout_exechdr {
-    uint16_t	magic;
-    uint16_t	vstamp;
-    uint16_t	bldrev;
-    uint16_t	padcell;
-    uint64_t	tsize;		// text segment size
-    uint64_t	dsize;		// data segment size
-    uint64_t	bsize;		// bss segment size
-    uint64_t	entry;		// entry point
-    uint64_t	text_start;	// text base address
-    uint64_t	data_start;	// data base address
-    uint64_t	bss_start;	// bss base address
-    uint32_t	gprmask;
-    uint32_t	fprmask;
-    uint64_t	gp_value;
+    uint16_t	magic;		///< magic number
+    uint16_t	vstamp;		///< version stamp?
+    uint16_t	bldrev;		///< ???
+    uint16_t	padcell;	///< padding
+    uint64_t	tsize;		///< text segment size
+    uint64_t	dsize;		///< data segment size
+    uint64_t	bsize;		///< bss segment size
+    uint64_t	entry;		///< entry point
+    uint64_t	text_start;	///< text base address
+    uint64_t	data_start;	///< data base address
+    uint64_t	bss_start;	///< bss base address
+    uint32_t	gprmask;	///< GPR mask (unused, AFAIK)
+    uint32_t	fprmask;	///< FPR mask (unused, AFAIK)
+    uint64_t	gp_value;	///< global pointer reg value
 };
 
 #define AOUT_LDPGSZ	8192
