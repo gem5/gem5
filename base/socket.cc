@@ -64,7 +64,7 @@ ListenSocket::listen(int port, bool reuse)
 
     fd = ::socket(PF_INET, SOCK_STREAM, 0);
     if (fd < 0)
-        panic("Can't create socket!");
+        panic("Can't create socket:%s !", strerror(errno));
 
     if (reuse) {
         int i = 1;

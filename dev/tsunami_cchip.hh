@@ -47,7 +47,7 @@ class TsunamiCChip : public PioDevice
     Addr addr;
 
     /** The size of mappad from the above address */
-    static const Addr size = 0xfff;
+    static const Addr size = 0xfffffff;
 
   protected:
     /**
@@ -68,7 +68,6 @@ class TsunamiCChip : public PioDevice
      * One exists for each CPU, the DRIR X DIM = DIR
      */
     uint64_t dir[Tsunami::Max_CPUs];
-    bool dirInterrupting[Tsunami::Max_CPUs];
 
     /**
      * This register contains bits for each PCI interrupt
@@ -76,17 +75,11 @@ class TsunamiCChip : public PioDevice
      */
     uint64_t drir;
 
-    /**
-     * The MISC register contains the CPU we are currently on
-     * as well as bits to ack RTC and IPI interrupts.
-     */
-    uint64_t misc;
+    /** Indicator of which CPUs have an IPI interrupt */
+    uint64_t ipint;
 
-    /** Count of the number of pending IPIs on a CPU */
-    uint64_t ipiInterrupting[Tsunami::Max_CPUs];
-
-    /** Indicator of which CPUs have had an RTC interrupt */
-    bool RTCInterrupting[Tsunami::Max_CPUs];
+    /** Indicator of which CPUs have an RTC interrupt */
+    uint64_t itint;
 
   public:
     /**
@@ -136,6 +129,25 @@ class TsunamiCChip : public PioDevice
      * @param interrupt the interrupt number to post (0-64)
      */
     void clearDRIR(uint32_t interrupt);
+
+    /**
+     * post an ipi interrupt  to the CPU.
+     * @param ipintr the cpu number to clear(bitvector)
+     */
+    void clearIPI(uint64_t ipintr);
+
+    /**
+     * clear a timer interrupt previously posted to the CPU.
+     * @param interrupt the cpu number to clear(bitvector)
+     */
+    void clearITI(uint64_t itintr);
+
+    /**
+     * request an interrupt be posted to the CPU.
+     * @param ipreq the cpu number to interrupt(bitvector)
+     */
+    void reqIPI(uint64_t ipreq);
+
 
     /**
      * Serialize this object to the given output stream.
