@@ -1929,7 +1929,7 @@ NSGigE::txKick()
                 txState = txFifoBlock;
                 transmit();
 
-                break;
+                goto exit;
             }
 
         }
