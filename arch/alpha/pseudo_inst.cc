@@ -127,7 +127,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
-        SetupCheckpoint(when, repeat);
+        Checkpoint::setup(when, repeat);
     }
 
     class Context : public ParamContext

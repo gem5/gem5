@@ -45,8 +45,6 @@ ArgList::dump(const string &format)
     stream->fill(' ');
     stream->flags((ios::fmtflags)0);
 
-    Format fmt;
-
     while (*p) {
         switch (*p) {
           case '%': {
@@ -56,12 +54,7 @@ ArgList::dump(const string &format)
                   continue;
               }
 
-              if (objects.empty())
-                  format_invalid(*stream);
-
-              Base *data = objects.front();
-
-              fmt.clear();
+              Format fmt;
               bool done = false;
               bool end_number = false;
               bool have_precision = false;
@@ -205,18 +198,26 @@ ArgList::dump(const string &format)
                   }
               }
 
-              ios::fmtflags saved_flags = stream->flags();
-              char old_fill = stream->fill();
-              int old_precision = stream->precision();
+              if (!objects.empty())
+              {
+                  Base *data = objects.front();
+                  objects.pop_front();
 
-              data->process(*stream, fmt);
+                  ios::fmtflags saved_flags = stream->flags();
+                  char old_fill = stream->fill();
+                  int old_precision = stream->precision();
 
-              stream->flags(saved_flags);
-              stream->fill(old_fill);
-              stream->precision(old_precision);
+                  data->process(*stream, fmt);
 
-              delete data;
-              objects.pop_front();
+                  stream->flags(saved_flags);
+                  stream->fill(old_fill);
+                  stream->precision(old_precision);
+
+                  delete data;
+              } else {
+                  *stream << "<missing arg for format>";
+              }
+
               ++p;
           }
             break;
@@ -241,10 +242,10 @@ ArgList::dump(const string &format)
     }
 
     while (!objects.empty()) {
+        *stream << "<extra arg>";
         Base *data = objects.front();
-        data->process(*stream, fmt);
-        delete data;
         objects.pop_front();
+        delete data;
     }
 }
 

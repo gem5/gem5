@@ -207,7 +207,7 @@ class Checkpoint
     std::map<std::string, Serializable*> objMap;
 
   public:
-    Checkpoint(const std::string &filename, const std::string &path,
+    Checkpoint(const std::string &cpt_dir, const std::string &path,
                const ConfigNode *_configNode);
 
     bool find(const std::string &section, const std::string &entry,
@@ -217,14 +217,22 @@ class Checkpoint
                  Serializable *&value);
 
     bool sectionExists(const std::string &section);
+
+    // The following static functions have to do with checkpoint
+    // creation rather than restoration.  This class makes a handy
+    // namespace for them though.
+
+    // Export current checkpoint directory name so other objects can
+    // derive filenames from it (e.g., memory).  The return value is
+    // guaranteed to end in '/' so filenames can be directly appended.
+    // This function is only valid while a checkpoint is being created.
+    static std::string dir();
+
+    // Filename for base checkpoint file within directory.
+    static const char *baseFilename;
+
+    // Set up a checkpoint creation event or series of events.
+    static void setup(Tick when, Tick period = 0);
 };
-
-
-//
-// Export checkpoint filename param so other objects can derive
-// filenames from it (e.g., memory).
-//
-std::string CheckpointDir();
-void SetupCheckpoint(Tick when, Tick period = 0);
 
 #endif // __SERIALIZE_HH__
