@@ -57,8 +57,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(ParamTest)
     VectorParam<string> vecstring;
     Param<bool> boolparam;
     VectorParam<bool> vecbool;
-    SimObjectParam<mem_hierarchy_obj *> memobj;
-    SimObjectVectorParam<mem_hierarchy_obj *> vecmemobj;
+    SimObjectParam<BaseMemory *> memobj;
+    SimObjectVectorParam<BaseMemory *> vecmemobj;
     SimpleEnumParam<Enum1Type> enum1;
     MappedEnumParam<Enum2Type> enum2;
     SimpleEnumVectorParam<Enum1Type> vecenum1;

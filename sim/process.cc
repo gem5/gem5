@@ -221,7 +221,7 @@ Process::sim_fd(int tgt_fd)
 // that can be constructed (i.e., no REGISTER_SIM_OBJECT() macro call,
 // which is where these get declared for concrete types).
 //
-DEFINE_SIM_OBJECT_CLASS_NAME("Process object", Process)
+DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 
 
 ////////////////////////////////////////////////////////////////////////
