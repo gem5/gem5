@@ -5,7 +5,7 @@
 
 
 echo -n "mounting swap..."
-/sbin/swapon /dev/hdc1
+/sbin/swapon /dev/hdc
 echo "done."
 
 echo -n "setting up network..."
