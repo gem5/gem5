@@ -26,24 +26,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IO_DEVICE_HH__
-#define __IO_DEVICE_HH__
+#ifndef __DEV_IO_DEVICE_HH__
+#define __DEV_IO_DEVICE_HH__
 
 #include "mem/functional_mem/functional_memory.hh"
 
 class BaseInterface;
 class Bus;
 class HierParams;
+class Platform;
 template <class BusType> class DMAInterface;
 
 class PioDevice : public FunctionalMemory
 {
   protected:
+    Platform *platform;
     BaseInterface *pioInterface;
     Tick pioLatency;
 
   public:
-    PioDevice(const std::string &name);
+    PioDevice(const std::string &name, Platform *p);
     virtual ~PioDevice();
 };
 
@@ -53,8 +55,8 @@ class DmaDevice : public PioDevice
     DMAInterface<Bus> *dmaInterface;
 
   public:
-    DmaDevice(const std::string &name);
+    DmaDevice(const std::string &name, Platform *p);
     virtual ~DmaDevice();
 };
 
-#endif // __IO_DEVICE_HH__
+#endif // __DEV_IO_DEVICE_HH__

@@ -56,10 +56,10 @@
 using namespace std;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
-                           System *system, BaseCPU *cpu, Platform *platform,
+                           System *system, BaseCPU *cpu, Platform *p,
                            int num_cpus, MemoryController *mmu, Addr a,
                            HierParams *hier, Bus *bus)
-    : PioDevice(name), disk(d), console(cons), addr(a)
+    : PioDevice(name, p), disk(d), console(cons), addr(a)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
@@ -79,7 +79,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->numCPUs = num_cpus;
     alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->getFreq() / 1000000;
-        alphaAccess->intrClockFrequency = platform->intrFrequency();
+    alphaAccess->intrClockFrequency = platform->intrFrequency();
     alphaAccess->diskUnit = 1;
 
     alphaAccess->diskCount = 0;
@@ -329,6 +329,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<Platform *> platform;
     SimObjectParam<Bus*> io_bus;
+    Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
@@ -344,6 +345,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
     INIT_PARAM(cpu, "Processor"),
     INIT_PARAM(platform, "platform"),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)

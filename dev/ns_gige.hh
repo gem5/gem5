@@ -91,7 +91,6 @@ struct dp_rom {
     uint8_t perfectMatch[ETH_ADDR_LEN];
 };
 
-class IntrControl;
 class NSGigEInt;
 class PhysicalMemory;
 class BaseInterface;
@@ -302,7 +301,6 @@ class NSGigE : public PciDev
     /**
      * Interrupt management
      */
-    IntrControl *intctrl;
     void devIntrPost(uint32_t interrupts);
     void devIntrClear(uint32_t interrupts);
     void devIntrChangeMask();

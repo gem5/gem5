@@ -1171,12 +1171,14 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+enum DriveID { master, slave };
+static const char *DriveID_strings[] = { "master", "slave" };
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
 
     SimObjectParam<DiskImage *> image;
     SimObjectParam<PhysicalMemory *> physmem;
-    Param<int> driveID;
-    Param<int> disk_delay;
+    SimpleEnumParam<DriveID> driveID;
+    Param<int> delay;
 
 END_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
 
@@ -1184,16 +1186,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IdeDisk)
 
     INIT_PARAM(image, "Disk image"),
     INIT_PARAM(physmem, "Physical memory"),
-    INIT_PARAM(driveID, "Drive ID (0=master 1=slave)"),
-    INIT_PARAM_DFLT(disk_delay, "Fixed disk delay in microseconds", 1)
+    INIT_ENUM_PARAM(driveID, "Drive ID (0=master 1=slave)", DriveID_strings),
+    INIT_PARAM_DFLT(delay, "Fixed disk delay in microseconds", 1)
 
 END_INIT_SIM_OBJECT_PARAMS(IdeDisk)
 
 
 CREATE_SIM_OBJECT(IdeDisk)
 {
-    return new IdeDisk(getInstanceName(), image, physmem, driveID,
-                       disk_delay);
+    return new IdeDisk(getInstanceName(), image, physmem, driveID, delay);
 }
 
 REGISTER_SIM_OBJECT("IdeDisk", IdeDisk)

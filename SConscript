@@ -55,6 +55,7 @@ base_sources = Split('''
 	base/circlebuf.cc
 	base/copyright.cc
 	base/cprintf.cc
+        base/embedfile.cc
 	base/fast_alloc.cc
 	base/fifo_buffer.cc
 	base/hostinfo.cc
@@ -221,41 +222,8 @@ base_sources = Split('''
 	sim/trace_context.cc
 	sim/universe.cc
         sim/pyconfig/pyconfig.cc
-        sim/pyconfig/code.cc
+        sim/pyconfig/embedded_py.cc
         ''')
-
-base_obj_desc_files = Split('''
-        cpu/full_cpu/iq/segmented/SegmentedIQ.od
-        cpu/full_cpu/iq/seznec/SeznecIQ.od
-        cpu/full_cpu/iq/standard/StandardIQ.od
-        cpu/full_cpu/iq/BaseIQ.od
-        cpu/full_cpu/BranchPred.od
-        cpu/full_cpu/FUDesc.od
-        cpu/full_cpu/FullCPU.od
-        cpu/full_cpu/FuncUnitPool.od
-        cpu/full_cpu/OpDesc.od
-        cpu/full_cpu/PipeTrace.od
-        cpu/sampling_cpu/SamplingCPU.od
-        cpu/simple_cpu/SimpleCPU.od
-        cpu/inorder_cpu/InorderCPU.od
-        cpu/BaseCPU.od
-        cpu/IntrControl.od
-        mem/bus/Bus.od
-        mem/bus/BusBridge.od
-        mem/cache/coherence/CoherenceProtocol.od
-        mem/cache/tags/repl/GenRepl.od
-        mem/cache/tags/repl/Repl.od
-        mem/cache/BaseCache.od
-        mem/functional_mem/FunctionalMemory.od
-        mem/functional_mem/MainMemory.od
-        mem/functional_mem/MemoryController.od
-        mem/functional_mem/PhysicalMemory.od
-        mem/timing_mem/BaseMemory.od
-        mem/BaseHier.od
-        mem/BaseMem.od
-        mem/HierParams.od
-        ''')
-
 
 # MySql sources
 mysql_sources = Split('''
@@ -339,44 +307,6 @@ full_system_sources = Split('''
 	sim/system.cc
         ''')
 
-full_system_obj_desc_files = Split('''
-        arch/alpha/AlphaDTB.od
-        arch/alpha/AlphaITB.od
-        arch/alpha/AlphaTLB.od
-        dev/AlphaConsole.od
-        dev/ConsoleListener.od
-        dev/CowDiskImage.od
-        dev/DiskImage.od
-        dev/DmaDevice.od
-        dev/DmaEngine.od
-        dev/EtherBus.od
-        dev/EtherDev.od
-        dev/EtherDevInt.od
-        dev/EtherDump.od
-        dev/EtherInt.od
-        dev/EtherLink.od
-        dev/EtherTap.od
-        dev/PioDevice.od
-        dev/RawDiskImage.od
-        dev/ScsiController.od
-        dev/ScsiDevice.od
-        dev/ScsiDisk.od
-        dev/SimConsole.od
-        dev/SimpleDisk.od
-        dev/TlaserClock.od
-        dev/TlaserIpi.od
-        dev/TlaserMBox.od
-        dev/TlaserMC146818.od
-        dev/TlaserNode.od
-        dev/TlaserPciDev.od
-        dev/TlaserPcia.od
-        dev/TlaserSerial.od
-        dev/TlaserUart.od
-        dev/Turbolaser.od
-        kern/tru64/Tru64System.od
-        sim/System.od
-	''')
-
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
 	arch/alpha/alpha_common_syscall_emul.cc
@@ -391,13 +321,6 @@ syscall_emulation_sources = Split('''
 	sim/process.cc
 	sim/syscall_emul.cc
         ''')
-
-syscall_emulation_obj_desc_files = Split('''
-        cpu/memtest/MemTest.od
-        eio/EioProcess.od
-        sim/LiveProcess.od
-        sim/Process.od
-	''')
 
 targetarch_files = Split('''
         alpha_common_syscall_emul.hh
@@ -427,14 +350,11 @@ for f in targetarch_files:
 
 # Set up complete list of sources based on configuration.
 sources = base_sources
-obj_desc_files = base_obj_desc_files
 
 if env['FULL_SYSTEM']:
     sources += full_system_sources
-    obj_desc_files += full_system_obj_desc_files
 else:
     sources += syscall_emulation_sources
-    obj_desc_files += syscall_emulation_obj_desc_files
 
 extra_libraries = []
 env.Append(LIBS=['z'])
@@ -479,9 +399,7 @@ env.Command(Split('''arch/alpha/decoder.cc
 # SConscript-local is the per-config build, which just copies some
 # header files into a place where they can be found.
 SConscript('libelf/SConscript-local', exports = 'env', duplicate=0)
-
-SConscript('sim/pyconfig/SConscript', exports = ['env', 'obj_desc_files'],
-           duplicate=0)
+SConscript('sim/pyconfig/SConscript', exports = ['env'], duplicate=0)
 
 
 # This function adds the specified sources to the given build

@@ -1,0 +1,2 @@
+simobj IntrControl(SimObject):
+    cpu = Param.BaseCPU(Super, "the cpu")

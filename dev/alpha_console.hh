@@ -42,7 +42,6 @@
 class BaseCPU;
 class SimConsole;
 class System;
-class Platform;
 class SimpleDisk;
 
 /*
@@ -75,7 +74,7 @@ class AlphaConsole : public PioDevice
   protected:
     union {
         AlphaAccess *alphaAccess;
-    uint8_t *consoleData;
+        uint8_t *consoleData;
     };
 
     /** the disk must be accessed from the console */

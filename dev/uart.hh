@@ -72,7 +72,6 @@ class Uart : public PioDevice
 
     IntrEvent txIntrEvent;
     IntrEvent rxIntrEvent;
-    Platform *platform;
 
   public:
     Uart(const std::string &name, SimConsole *c, MemoryController *mmu,

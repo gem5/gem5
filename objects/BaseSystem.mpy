@@ -1,0 +1,14 @@
+simobj BaseSystem(SimObject):
+    abstract = True
+    memctrl = Param.MemoryController(Super, "memory controller")
+    physmem = Param.PhysicalMemory(Super, "phsyical memory")
+    kernel = Param.String("file that contains the kernel code")
+    console = Param.String("file that contains the console code")
+    pal = Param.String("file that contains palcode")
+    readfile = Param.String("", "file to read startup script from")
+    init_param = Param.UInt64(0, "numerical value to pass into simulator")
+    boot_osflags = Param.String("a", "boot flags to pass to the kernel")
+    system_type = Param.UInt64("Type of system we are emulating")
+    system_rev = Param.UInt64("Revision of system we are emulating")
+    bin = Param.Bool(false, "is this system binned")
+    binned_fns = VectorParam.String([], "functions broken down and binned")

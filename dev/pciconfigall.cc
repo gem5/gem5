@@ -48,9 +48,10 @@
 
 using namespace std;
 
-PciConfigAll::PciConfigAll(const string &name, Addr a, MemoryController *mmu,
+PciConfigAll::PciConfigAll(const string &name,
+                           Addr a, MemoryController *mmu,
                            HierParams *hier, Bus *bus, Tick pio_latency)
-    : PioDevice(name), addr(a)
+    : PioDevice(name, NULL), addr(a)
 {
     mmu->add_child(this, RangeSize(addr, size));
 

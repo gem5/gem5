@@ -31,8 +31,8 @@
 #include "mem/bus/dma_interface.hh"
 #include "sim/builder.hh"
 
-PioDevice::PioDevice(const std::string &name)
-    : FunctionalMemory(name), pioInterface(NULL), pioLatency(0)
+PioDevice::PioDevice(const std::string &name, Platform *p)
+    : FunctionalMemory(name), platform(p), pioInterface(NULL), pioLatency(0)
 {}
 
 PioDevice::~PioDevice()
@@ -43,8 +43,8 @@ PioDevice::~PioDevice()
 
 DEFINE_SIM_OBJECT_CLASS_NAME("PioDevice", PioDevice)
 
-DmaDevice::DmaDevice(const std::string &name)
-    : PioDevice(name), dmaInterface(NULL)
+DmaDevice::DmaDevice(const std::string &name, Platform *p)
+    : PioDevice(name, p), dmaInterface(NULL)
 {}
 
 DmaDevice::~DmaDevice()
