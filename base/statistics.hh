@@ -59,8 +59,6 @@
 
 #include "sim/host.hh"
 
-#include "base/cprintf.hh"
-
 //
 //  Un-comment this to enable weirdo-stat debugging
 //
@@ -2208,7 +2206,6 @@ struct StatBin : public GenBin
     char *memory(off_t off) {
         if (memsize == -1) {
             memsize = CeilPow2((size_t) offset());
-            cprintf("this is memsize: %d\n",  (uint64_t) memsize);
         }
         assert(offset() <= size());
         return Detail::BinBase::memory() + off;
