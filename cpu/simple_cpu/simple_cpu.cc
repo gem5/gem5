@@ -150,7 +150,7 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
        _status = Idle;
     }
     else {
-      system->initBootContext(xc);
+      system->init(xc);
 
       // Reset the system
       //

@@ -31,9 +31,8 @@
 
 #include <assert.h>
 
-#include "sim/host.hh"
-#include "kern/tru64/kernel.hh"
 #include "base/refcnt.hh"
+#include "sim/host.hh"
 #include "targetarch/vtophys.hh"
 
 class ExecContext;

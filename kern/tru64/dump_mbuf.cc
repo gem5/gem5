@@ -26,39 +26,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/exec_context.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include <sys/types.h>
+#include <algorithm>
+
+#include "base/cprintf.hh"
+#include "base/trace.hh"
+#include "kern/tru64/mbuf.hh"
+#include "sim/host.hh"
 #include "targetarch/arguments.hh"
+#include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
-AlphaArguments::Data::~Data()
+namespace Tru64 {
+
+void
+DumpMbuf(AlphaArguments args)
 {
-    while (!data.empty()) {
-        delete [] data.front();
-        data.pop_front();
+    ExecContext *xc = args.getExecContext();
+    Addr addr = (Addr)args;
+    struct mbuf m;
+
+    CopyData(xc, &m, addr, sizeof(m));
+
+    int count = m.m_pkthdr.len;
+
+    ccprintf(DebugOut(), "m=%#lx, m->m_pkthdr.len=%#d\n", addr,
+             m.m_pkthdr.len);
+
+    while (count > 0) {
+        ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
+                 addr, m.m_data, m.m_len);
+        char *buffer = new char[m.m_len];
+        CopyData(xc, buffer, m.m_data, m.m_len);
+        Trace::rawDump((uint8_t *)buffer, m.m_len);
+        delete [] buffer;
+
+        count -= m.m_len;
+        if (!m.m_next)
+            break;
+
+        CopyData(xc, &m, m.m_next, sizeof(m));
     }
 }
 
-char *
-AlphaArguments::Data::alloc(size_t size)
-{
-    char *buf = new char[size];
-    data.push_back(buf);
-    return buf;
-}
-
-uint64_t
-AlphaArguments::getArg(bool fp)
-{
-    if (number < 6) {
-        if (fp)
-            return xc->regs.floatRegFile.q[16 + number];
-        else
-            return xc->regs.intRegFile[16 + number];
-    } else {
-        Addr sp = xc->regs.intRegFile[30];
-        Addr paddr = vtophys(xc, sp + (number-6) * sizeof(uint64_t));
-        return xc->physmem->phys_read_qword(paddr);
-    }
-}
-
+} // namespace Tru64

@@ -26,39 +26,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/exec_context.hh"
-#include "mem/functional_mem/physical_memory.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/vtophys.hh"
+#ifndef __TRU64_EVENTS_HH__
+#define __TRU64_EVENTS_HH__
 
-AlphaArguments::Data::~Data()
+#include <string>
+
+#include "cpu/pc_event.hh"
+
+class ExecContext;
+
+class SkipFuncEvent : public PCEvent
 {
-    while (!data.empty()) {
-        delete [] data.front();
-        data.pop_front();
-    }
-}
+  public:
+    SkipFuncEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-char *
-AlphaArguments::Data::alloc(size_t size)
+class BadAddrEvent : public SkipFuncEvent
 {
-    char *buf = new char[size];
-    data.push_back(buf);
-    return buf;
-}
+  public:
+    BadAddrEvent(PCEventQueue *q, const std::string &desc)
+        : SkipFuncEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-uint64_t
-AlphaArguments::getArg(bool fp)
+class PrintfEvent : public PCEvent
 {
-    if (number < 6) {
-        if (fp)
-            return xc->regs.floatRegFile.q[16 + number];
-        else
-            return xc->regs.intRegFile[16 + number];
-    } else {
-        Addr sp = xc->regs.intRegFile[30];
-        Addr paddr = vtophys(xc, sp + (number-6) * sizeof(uint64_t));
-        return xc->physmem->phys_read_qword(paddr);
-    }
-}
+  public:
+    PrintfEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
+class DebugPrintfEvent : public PCEvent
+{
+  private:
+    bool raw;
+
+  public:
+    DebugPrintfEvent(PCEventQueue *q, const std::string &desc, bool r = false)
+        : PCEvent(q, desc), raw(r) {}
+    virtual void process(ExecContext *xc);
+};
+
+class DumpMbufEvent : public PCEvent
+{
+  public:
+    DumpMbufEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
+
+#endif // __TRU64_EVENTS_HH__

@@ -29,6 +29,7 @@
 #ifndef __VTOPHYS_H__
 #define __VTOPHYS_H__
 
+#include "targetarch/isa_traits.hh"
 #include "targetarch/pmap.h"
 
 inline bool entry_valid(uint64_t entry)

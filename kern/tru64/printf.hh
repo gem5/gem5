@@ -26,39 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/exec_context.hh"
-#include "mem/functional_mem/physical_memory.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/vtophys.hh"
+#ifndef __PRINTF_HH__
+#define __PRINTF_HH__
 
-AlphaArguments::Data::~Data()
-{
-    while (!data.empty()) {
-        delete [] data.front();
-        data.pop_front();
-    }
+class AlphaArguments;
+
+namespace Tru64 {
+    void Printf(AlphaArguments args);
 }
 
-char *
-AlphaArguments::Data::alloc(size_t size)
-{
-    char *buf = new char[size];
-    data.push_back(buf);
-    return buf;
-}
-
-uint64_t
-AlphaArguments::getArg(bool fp)
-{
-    if (number < 6) {
-        if (fp)
-            return xc->regs.floatRegFile.q[16 + number];
-        else
-            return xc->regs.intRegFile[16 + number];
-    } else {
-        Addr sp = xc->regs.intRegFile[30];
-        Addr paddr = vtophys(xc, sp + (number-6) * sizeof(uint64_t));
-        return xc->physmem->phys_read_qword(paddr);
-    }
-}
-
+#endif // __PRINTF_HH__
