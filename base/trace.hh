@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __TRACE_HH__
-#define __TRACE_HH__
+#ifndef __BASE_TRACE_HH__
+#define __BASE_TRACE_HH__
 
 #include <vector>
 
@@ -228,4 +228,4 @@ do { \
 
 #endif	// TRACING_ON
 
-#endif // __TRACE_HH__
+#endif // __BASE_TRACE_HH__

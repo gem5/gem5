@@ -26,9 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PARAM_HH__
-#define __PARAM_HH__
+#ifndef __SIM_PARAM_HH__
+#define __SIM_PARAM_HH__
 
+#include <iostream>
 #include <list>
 #include <string>
 #include <vector>
@@ -524,7 +525,7 @@ class MappedEnumParam : public EnumParam<EnumParamMap>
     {
         if (!isValid())
             die("not found");
-        return (ENUM)value[n];
+        return (ENUM)value[this->n];
     }
 };
 
@@ -782,4 +783,4 @@ SimObjectVectorParam<OBJ_CLASS *>::showType(std::ostream &os) const	\
 template <class T> bool parseParam(const std::string &str, T &data);
 template <class T> void showParam(std::ostream &os, const T &data);
 
-#endif // _PARAM_HH
+#endif // _SIM_PARAM_HH_
