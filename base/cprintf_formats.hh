@@ -279,8 +279,6 @@ template <typename T>
 inline void
 format_integer(std::ostream &out, const T &data, Format &fmt)
 { _format_integer(out, data, fmt); }
-
-#if 0
 inline void
 format_integer(std::ostream &out, char data, Format &fmt)
 { _format_integer(out, data, fmt); }
@@ -290,6 +288,7 @@ format_integer(std::ostream &out, unsigned char data, Format &fmt)
 inline void
 format_integer(std::ostream &out, signed char data, Format &fmt)
 { _format_integer(out, data, fmt); }
+#if 0
 inline void
 format_integer(std::ostream &out, short data, Format &fmt)
 { _format_integer(out, data, fmt); }
