@@ -20,13 +20,13 @@ class SmartDict(dict):
 
     class Proxy(str):
         def __int__(self):
-            return int(to_integer(str(self)))
+            return int(toInteger(str(self)))
         def __long__(self):
-            return long(to_integer(str(self)))
+            return long(toInteger(str(self)))
         def __float__(self):
-            return float(to_integer(str(self)))
+            return float(toInteger(str(self)))
         def __nonzero__(self):
-            return to_bool(str(self))
+            return toBool(str(self))
         def convert(self, other):
             t = type(other)
             if t == bool:
