@@ -207,7 +207,7 @@ class SimpleCPU : public BaseCPU
 
           case Idle:
             assert(old_status == Running);
-            last_idle = curTick;
+            idleFraction++;
             if (tickEvent.scheduled())
                 tickEvent.squash();
             break;
@@ -217,7 +217,7 @@ class SimpleCPU : public BaseCPU
                    old_status == DcacheMissStall ||
                    old_status == IcacheMissComplete);
             if (old_status == Idle && curTick != 0)
-                idleCycles += curTick - last_idle;
+                idleFraction--;
 
             if (tickEvent.squashed())
                 tickEvent.reschedule(curTick + 1);
@@ -244,9 +244,7 @@ class SimpleCPU : public BaseCPU
     Counter numLoad;
 
     // number of idle cycles
-    Statistics::Scalar<> idleCycles;
-    Statistics::Formula idleFraction;
-    Counter last_idle;
+    Statistics::Average<> idleFraction;
 
     // number of cycles stalled for I-cache misses
     Statistics::Scalar<> icacheStallCycles;

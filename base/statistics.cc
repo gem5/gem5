@@ -265,19 +265,27 @@ Database::check()
 void
 Database::reset()
 {
-    list<GenBin *>::iterator bi = bins.begin();
-    list<GenBin *>::iterator be = bins.end();
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
-
-   while (bi != be) {
-       (*bi)->activate();
-
-       while (i != end) {
-        (*i)->reset();
+    while (i != end) {
+        Stat *stat = *i;
+        stat->reset();
         ++i;
-       }
-       ++bi;
+    }
+
+    list<GenBin *>::iterator bi = bins.begin();
+    list<GenBin *>::iterator be = bins.end();
+    while (bi != be) {
+        GenBin *bin = *bi;
+        bin->activate();
+
+        i = allStats.begin();
+        while (i != end) {
+            Stat *stat = *i;
+            stat->reset();
+            ++i;
+        }
+        ++bi;
     }
 }
 
@@ -736,7 +744,7 @@ VectorDisplay(std::ostream &stream,
                         _pdf = vec[i] / _total;
                         _cdf += _pdf;
                     } else {
-                        _pdf = _cdf = 0.0;
+                        _pdf = _cdf = NAN;
                     }
                     if (!(myflags & cdf)) {
                         PrintOne(stream, vec[i], subname, subdesc, myprecision,
@@ -768,10 +776,8 @@ VectorDisplay(std::ostream &stream,
                         _pdf = vec[i] / _total;
                         _cdf += _pdf;
                     } else {
-                        _pdf = _cdf = 0.0;
+                        _pdf = _cdf = NAN;
                     }
-                    _pdf = vec[i] / _total;
-                    _cdf += _pdf;
                     PrintOne(stream, vec[i], name, mydesc, myprecision,
                              myflags, _pdf, _cdf);
                 }

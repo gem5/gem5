@@ -45,6 +45,7 @@ namespace Time {
         ~Start();
 
         const timeval &get() const;
+        void reset();
         double operator()() const;
     };
 
@@ -65,12 +66,15 @@ namespace Time {
     {
       private:
         mutable _timeval *elapsed;
+        Start _start;
+        Now _now;
 
       public:
         Elapsed();
         ~Elapsed();
 
         const timeval &get() const;
+        void reset();
         double operator()() const;
     };
 

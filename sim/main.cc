@@ -59,6 +59,7 @@ using namespace std;
 // See async.h.
 volatile bool async_event = false;
 volatile bool async_dump = false;
+volatile bool async_dumpreset = false;
 volatile bool async_exit = false;
 volatile bool async_io = false;
 volatile bool async_alarm = false;
@@ -69,6 +70,13 @@ dumpStatsHandler(int sigtype)
 {
     async_event = true;
     async_dump = true;
+}
+
+void
+dumprstStatsHandler(int sigtype)
+{
+    async_event = true;
+    async_dumpreset = true;
 }
 
 /// Exit signal handler.
@@ -219,8 +227,9 @@ main(int argc, char **argv)
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
     signal(SIGPIPE, SIG_IGN);
     signal(SIGTRAP, SIG_IGN);
-    signal(SIGUSR1, dumpStatsHandler);	// dump intermediate stats
-    signal(SIGINT, exitNowHandler);	// dump final stats and exit
+    signal(SIGUSR1, dumpStatsHandler);		// dump intermediate stats
+    signal(SIGUSR2, dumprstStatsHandler);	// dump and reset stats
+    signal(SIGINT, exitNowHandler);		// dump final stats and exit
 
     sayHello(cerr);
 
@@ -403,6 +412,13 @@ main(int argc, char **argv)
 
                 using namespace Statistics;
                 SetupEvent(Dump, curTick);
+            }
+
+            if (async_dumpreset) {
+                async_dumpreset = false;
+
+                using namespace Statistics;
+                SetupEvent(Dump | Reset, curTick);
             }
 
             if (async_exit) {

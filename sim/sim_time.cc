@@ -65,6 +65,12 @@ namespace Time
         return start->tv;
     }
 
+    void
+    Start::reset()
+    {
+        ::gettimeofday(&start->tv, NULL);
+    }
+
     double
     Start::operator()() const
     {
@@ -115,8 +121,14 @@ namespace Time
         if (!elapsed)
             elapsed = new _timeval;
 
-        timersub(&now.get(), &start.get(), &elapsed->tv);
+        timersub(&_now.get(), &_start.get(), &elapsed->tv);
         return elapsed->tv;
+    }
+
+    void
+    Elapsed::reset()
+    {
+        _start.reset();
     }
 
     double

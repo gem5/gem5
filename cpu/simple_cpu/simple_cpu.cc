@@ -160,7 +160,6 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 
     numInst = 0;
     numLoad = 0;
-    last_idle = 0;
     lastIcacheStall = 0;
     lastDcacheStall = 0;
 
@@ -170,7 +169,6 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 SimpleCPU::~SimpleCPU()
 {
 }
-
 
 void
 SimpleCPU::switchOut()
@@ -229,11 +227,6 @@ SimpleCPU::regStats()
         .desc("Number of memory references")
         ;
 
-    idleCycles
-        .name(name() + ".idle_cycles")
-        .desc("Number of idle cycles")
-        ;
-
     idleFraction
         .name(name() + ".idle_fraction")
         .desc("Percentage of idle cycles")
@@ -250,8 +243,6 @@ SimpleCPU::regStats()
         .desc("DCache total stall cycles")
         .prereq(dcacheStallCycles)
         ;
-
-    idleFraction = idleCycles / simTicks;
 
     numInsts = Statistics::scalar(numInst);
     simInsts += numInsts;
