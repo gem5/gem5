@@ -109,6 +109,16 @@ class Tsunami : public Platform
     virtual void clearConsoleInt();
 
     /**
+     * Cause the chipset to post a cpi interrupt to the CPU.
+     */
+    virtual void postPciInt(int line);
+
+    /**
+     * Clear a posted PCI->CPU interrupt
+     */
+    virtual void clearPciInt(int line);
+
+  /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
      */
