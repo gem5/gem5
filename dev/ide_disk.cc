@@ -341,8 +341,8 @@ IdeDisk::dmaPrdReadDone()
             curPrd.getByteCount(), (cmdBytesLeft/SectorSize),
             curPrd.getEOT(), curSector);
 
-    // make sure the new curPrdAddr is properly translated from PCI to system
-    curPrdAddr = pciToDma(curPrdAddr + sizeof(PrdEntry_t));
+    // the prd pointer has already been translated, so just do an increment
+    curPrdAddr = curPrdAddr + sizeof(PrdEntry_t);
 
     if (dmaRead)
         doDmaRead();
