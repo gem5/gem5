@@ -85,8 +85,8 @@ BaseParam::die(const string &err) const
 ////////////////////////////////////////////////////////////////////////
 
 //
-// Integer types all use to_number for parsing and '<<' for
-// displaying
+// The base implementations use to_number for parsing and '<<' for
+// displaying, suitable for integer types.
 //
 template <class T>
 bool
@@ -103,8 +103,31 @@ showParam(ostream &os, const T &value)
 }
 
 //
-// Floating-point types
+// Template specializations:
+// - char (8-bit integer)
+// - floating-point types
+// - bool
+// - string
 //
+
+// Treat 8-bit ints (chars) as ints on output, not as chars
+template <>
+void
+showParam(ostream &os, const char &value)
+{
+    os << (int)value;
+}
+
+
+template <>
+void
+showParam(ostream &os, const unsigned char &value)
+{
+    os << (unsigned int)value;
+}
+
+
+// Use sscanf() for FP types as to_number() only handles integers
 template <>
 bool
 parseParam(const string &s, float &value)
@@ -119,9 +142,7 @@ parseParam(const string &s, double &value)
     return (sscanf(s.c_str(), "%lf", &value) == 1);
 }
 
-//
-// bool
-//
+// Be flexible about what we take for bool
 template <>
 bool
 parseParam(const string &s, bool &value)
@@ -141,7 +162,7 @@ parseParam(const string &s, bool &value)
     return false;
 }
 
-
+// Display bools as strings
 template <>
 void
 showParam(ostream &os, const bool &value)
@@ -150,9 +171,7 @@ showParam(ostream &os, const bool &value)
 }
 
 
-//
-// string
-//
+// String requires no processing to speak of
 template <>
 bool
 parseParam(const string &s, string &value)
