@@ -33,7 +33,7 @@
 #include "cpu/intr_control.hh"
 #include "dev/console.hh"
 #include "dev/etherdev.hh"
-#include "dev/scsi_ctrl.hh"
+#include "dev/adaptec_ctrl.hh"
 #include "dev/tlaser_clock.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunami_pchip.hh"
@@ -43,7 +43,7 @@
 
 using namespace std;
 
-Tsunami::Tsunami(const string &name, ScsiController *s, EtherDev *e,
+Tsunami::Tsunami(const string &name, AdaptecController *s, EtherDev *e,
                        SimConsole *con, IntrControl *ic, int intr_freq)
     : SimObject(name), intrctrl(ic), cons(con), scsi(s), ethernet(e),
       interrupt_frequency(intr_freq)
@@ -66,7 +66,7 @@ Tsunami::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
-    SimObjectParam<ScsiController *> scsi;
+    SimObjectParam<AdaptecController *> scsi;
     SimObjectParam<EtherDev *> ethernet;
     SimObjectParam<SimConsole *> cons;
     SimObjectParam<IntrControl *> intrctrl;

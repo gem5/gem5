@@ -40,7 +40,7 @@
 class IntrControl;
 class ConsoleListener;
 class SimConsole;
-class ScsiController;
+class AdaptecController;
 class TlaserClock;
 class EtherDev;
 class TsunamiCChip;
@@ -67,7 +67,7 @@ class Tsunami : public SimObject
     SimConsole *cons;
 
     /** Pointer to the SCSI controller device */
-    ScsiController *scsi;
+    AdaptecController *scsi;
     /** Pointer to the ethernet controller device */
     EtherDev *ethernet;
 
@@ -99,7 +99,7 @@ class Tsunami : public SimObject
       * Constructor for the Tsunami Class.
       * @param
       */
-    Tsunami(const std::string &name, ScsiController *scsi,
+    Tsunami(const std::string &name, AdaptecController *scsi,
                EtherDev *ethernet,
                SimConsole *, IntrControl *intctrl, int intrFreq);
 
