@@ -166,6 +166,7 @@ base_sources = Split('''
 	mem/cache/miss/mshr.cc
 	mem/cache/miss/mshr_queue.cc
         mem/cache/prefetch/base_prefetcher.cc
+        mem/cache/prefetch/ghb_prefetcher.cc
         mem/cache/prefetch/prefetcher.cc
         mem/cache/prefetch/stride_prefetcher.cc
         mem/cache/prefetch/tagged_prefetcher.cc
