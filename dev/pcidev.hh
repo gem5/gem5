@@ -67,11 +67,11 @@ class PciDev : public FunctionalMemory
 {
   protected:
     MemoryController *MMU;
-    PciConfigAll *ConfigSpace;
-    PciConfigData *ConfigData;
-    uint32_t Bus;
-    uint32_t Device;
-    uint32_t Function;
+    PciConfigAll *configSpace;
+    PciConfigData *configData;
+    uint32_t bus;
+    uint32_t device;
+    uint32_t function;
 
     PCIConfig config;
     uint32_t BARSize[6];
