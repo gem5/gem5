@@ -26,6 +26,11 @@
 
 from __future__ import generators
 import os, re, sys, types
+noDot = False
+try:
+   import pydot
+except:
+   noDot = True
 
 env = {}
 env.update(os.environ)
@@ -699,6 +704,48 @@ class Node(object):
         for c in self.children:
             c.display()
 
+    # print type and parameter values to .ini file
+    def outputDot(self, dot):
+
+
+        label = "{%s|" % self.path
+        if isSimObject(self.realtype):
+            label +=  '%s|' % self.type
+
+        if self.children:
+            # instantiate children in same order they were added for
+            # backward compatibility (else we can end up with cpu1
+            # before cpu0).
+            for c in self.children:
+                dot.add_edge(pydot.Edge(self.path,c.path, style="bold"))
+
+        simobjs = []
+        for param in self.params:
+            try:
+                if param.value is None:
+                    raise AttributeError, 'Parameter with no value'
+
+                value = param.convert(param.value)
+                string = param.string(value)
+            except:
+                print 'exception in %s:%s' % (self.name, param.name)
+                raise
+            ptype = eval(param.ptype)
+            if isConfigNode(ptype) and string != "Null":
+                simobjs.append(string)
+            else:
+                label += '%s = %s\\n' % (param.name, string)
+
+        for so in simobjs:
+            label += "|<%s> %s" % (so, so)
+            dot.add_edge(pydot.Edge("%s:%s" % (self.path, so), so, tailport="w"))
+        label += '}'
+        dot.add_node(pydot.Node(self.path,shape="Mrecord",label=label))
+
+        # recursively dump out children
+        for c in self.children:
+            c.outputDot(dot)
+
     def _string(cls, value):
         if not isinstance(value, Node):
             raise AttributeError, 'expecting %s got %s' % (Node, value)
@@ -1234,6 +1281,15 @@ def instantiate(root):
     instance = root.instantiate('root')
     instance.fixup()
     instance.display()
+    if not noDot:
+       dot = pydot.Dot()
+       instance.outputDot(dot)
+       dot.orientation = "portrait"
+       dot.size = "8.5,11"
+       dot.ranksep="equally"
+       dot.rank="samerank"
+       dot.write("config.dot")
+       dot.write_ps("config.ps")
 
 from objects import *
 
