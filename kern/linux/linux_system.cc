@@ -244,7 +244,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
     INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10),
     INIT_PARAM_DFLT(bin, "is this system to be binned", false),
     INIT_PARAM(binned_fns, "functions to be broken down and binned"),
-    INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", false)
+    INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
 
 END_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
 
