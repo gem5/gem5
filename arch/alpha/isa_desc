@@ -5,7 +5,7 @@
 
 let {{
     global rcs_id
-    rcs_id = "$Id$"
+    rcs_id = "$Id: s.isa_desc 1.43 04/02/29 22:41:10-05:00 ehallnor@zazzer.eecs.umich.edu $"
 }};
 
 
@@ -1000,10 +1000,50 @@ def template PrefetchDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
+      protected:
+
+	/**
+	 * "Fake" effective address computation class for "%(mnemonic)s".
+	 */
+	class EAComp : public EACompBase
+	{
+	  public:
+	    /// Constructor
+	    EAComp(MachInst machInst)
+		: EACompBase(machInst)
+	    {
+		%(ea_constructor)s;
+	    }
+	};
+
+	/**
+	 * "Fake" memory access instruction class for "%(mnemonic)s".
+	 */
+	class MemAcc : public MemAccBase
+	{
+	  public:
+	    /// Constructor
+	    MemAcc(MachInst machInst)
+		: MemAccBase(machInst, %(op_class)s)
+	    {
+		%(memacc_constructor)s;
+	    }
+	};
+
+	/// Pointer to EAComp object.
+	StaticInstPtr<AlphaISA> eaCompPtr;
+	/// Pointer to MemAcc object.
+	StaticInstPtr<AlphaISA> memAccPtr;
+
       public:
+
+	StaticInstPtr<AlphaISA> eaCompInst() { return eaCompPtr; }
+	StaticInstPtr<AlphaISA> memAccInst() { return memAccPtr; }
+
 	/// Constructor
 	%(class_name)s(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
+	       eaCompPtr(new EAComp(machInst)), memAccPtr(new MemAcc(machInst))
 	{
 	    %(constructor)s;
 	}
@@ -1814,6 +1854,9 @@ decode OPCODE default Unknown::unknown() {
 	0x23: ldt({{ EA = Rb + disp; }}, {{ Fa = Mem.df; }});
 	0x2a: ldl_l({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }}, LOCKED);
 	0x2b: ldq_l({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, LOCKED);
+	0x20: copy_load({{EA = Ra;}}, 
+	                {{ fault = memAccessObj->copySrcTranslate(EA);}},
+			IsMemRef, IsLoad, IsCopy);
     }
 
     format LoadOrPrefetch {
@@ -1833,6 +1876,9 @@ decode OPCODE default Unknown::unknown() {
 	0x0f: stq_u({{ EA = (Rb + disp) & ~7; }}, {{ Mem.uq = Ra.uq; }});
 	0x26: sts({{ EA = Rb + disp; }}, {{ Mem.ul = t_to_s(Fa.uq); }});
 	0x27: stt({{ EA = Rb + disp; }}, {{ Mem.df = Fa; }});
+	0x24: copy_store({{EA = Rb;}},
+	                 {{ fault = memAccessObj->copy(EA);}},
+			 IsMemRef, IsStore, IsCopy);
     }
 
     format StoreCond {
@@ -2342,7 +2388,13 @@ decode OPCODE default Unknown::unknown() {
 	}
 
 	format BasicOperate {
-	    0xc000: rpcc({{ Ra = curTick; }});
+	    0xc000: rpcc({{
+#ifdef FULL_SYSTEM
+		Ra = xc->readIpr(AlphaISA::IPR_CC, fault);
+#else
+		Ra = curTick;
+#endif
+	    }});
 
 	    // All of the barrier instructions below do nothing in
 	    // their execute() methods (hence the empty code blocks).

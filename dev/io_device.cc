@@ -26,45 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Reference counted class containing ethernet packet data
- */
+#include "dev/io_device.hh"
+#include "mem/bus/base_interface.hh"
+#include "mem/bus/dma_interface.hh"
 
-#ifndef __ETHERPKT_HH__
-#define __ETHERPKT_HH__
+PioDevice::PioDevice(const std::string &name)
+    : FunctionalMemory(name), pioInterface(NULL)
+{}
 
-#include <iosfwd>
-#include <memory>
-
-#include "sim/host.hh"
-#include "base/refcnt.hh"
-
-class Checkpoint;
-
-/*
- * Reference counted class containing ethernet packet data
- */
-class EtherPacket : public RefCounted
+PioDevice::~PioDevice()
 {
-  public:
-    uint8_t *data;
-    int length;
+    if (pioInterface)
+        delete pioInterface;
+}
 
-  public:
-    EtherPacket() : data(NULL), length(0) {}
-    EtherPacket(std::auto_ptr<uint8_t> d, int l)
-        : data(d.release()), length(l) {}
-    ~EtherPacket() { if (data) delete [] data; }
+DmaDevice::DmaDevice(const std::string &name)
+    : PioDevice(name), dmaInterface(NULL)
+{}
 
-  public:
-    bool IsUnicast() { return data[0] == 0x00; }
-    bool IsMulticast() { return data[0] == 0x01; }
-    bool IsBroadcast() { return data[0] == 0xff; }
+DmaDevice::~DmaDevice()
+{
+    if (dmaInterface)
+        delete dmaInterface;
+}
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-};
-
-typedef RefCountingPtr<EtherPacket> PacketPtr;
-
-#endif // __ETHERPKT_HH__

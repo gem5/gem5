@@ -236,6 +236,23 @@ DelayFunction(Tick when, T *object)
     new DelayEvent(when, object);
 }
 
+template <class T, void (T::* F)()>
+class EventWrapper : public Event
+{
+  private:
+    T *object;
+
+  public:
+    EventWrapper(T *obj, bool del = false, EventQueue *q = &mainEventQueue,
+                 Priority p = Default_Pri)
+        : Event(q, p), object(obj)
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
+    void process() { (object->*F)(); }
+};
+
 /*
  * Queue of events sorted in time order
  */
@@ -310,6 +327,8 @@ inline void
 Event::schedule(Tick t)
 {
     assert(!scheduled());
+    assert(t >= curTick);
+
     setFlags(Scheduled);
 #if TRACING_ON
     when_scheduled = curTick;

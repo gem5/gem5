@@ -45,10 +45,7 @@ class MemoryController;
 
 #include "kern/tru64/kernel_stats.hh"
 #include "sim/system.hh"
-
-#ifdef FS_MEASURE
 #include "sim/sw_context.hh"
-#endif
 
 #else // !FULL_SYSTEM
 
@@ -137,10 +134,7 @@ class ExecContext
     MemoryController *memCtrl;
     PhysicalMemory *physmem;
 
-#ifdef FS_MEASURE
     SWContext *swCtx;
-#endif
-
 #else
     Process *process;
 
@@ -152,6 +146,18 @@ class ExecContext
     short asid;
 
 #endif
+
+    /**
+     * Temporary storage to pass the source address from copy_load to
+     * copy_store.
+     * @todo Remove this temporary when we have a better way to do it.
+     */
+    Addr copySrcAddr;
+    /**
+     * Temp storage for the physical source address of a copy.
+     * @todo Remove this temporary when we have a better way to do it.
+     */
+    Addr copySrcPhysAddr;
 
 
     /*

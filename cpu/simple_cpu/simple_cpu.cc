@@ -120,7 +120,7 @@ SimpleCPU::SimpleCPU(const string &_name,
                      FunctionalMemory *mem,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
-                     Tick freq)
+                     bool _def_reg, Tick freq)
     : BaseCPU(_name, /* number_of_threads */ 1,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
@@ -132,12 +132,14 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      Counter max_loads_any_thread,
                      Counter max_loads_all_threads,
                      MemInterface *icache_interface,
-                     MemInterface *dcache_interface)
+                     MemInterface *dcache_interface,
+                     bool _def_reg)
     : BaseCPU(_name, /* number_of_threads */ 1,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads),
 #endif
-      tickEvent(this), xc(NULL), cacheCompletionEvent(this)
+      tickEvent(this), xc(NULL), defer_registration(_def_reg),
+      cacheCompletionEvent(this)
 {
     _status = Idle;
 #ifdef FULL_SYSTEM
@@ -169,6 +171,13 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 
 SimpleCPU::~SimpleCPU()
 {
+}
+
+void SimpleCPU::init()
+{
+    if (!defer_registration) {
+        this->registerExecContexts();
+    }
 }
 
 void
@@ -318,6 +327,46 @@ change_thread_state(int thread_number, int activate, int priority)
 {
 }
 
+Fault
+SimpleCPU::copySrcTranslate(Addr src)
+{
+    memReq->reset(src, (dcacheInterface) ?
+                  dcacheInterface->getBlockSize()
+                  : 64);
+
+    // translate to physical address
+    Fault fault = xc->translateDataReadReq(memReq);
+
+    if (fault == No_Fault) {
+        xc->copySrcAddr = src;
+        xc->copySrcPhysAddr = memReq->paddr;
+    } else {
+        xc->copySrcAddr = 0;
+        xc->copySrcPhysAddr = 0;
+    }
+    return fault;
+}
+
+Fault
+SimpleCPU::copy(Addr dest)
+{
+    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    uint8_t data[blk_size];
+    assert(xc->copySrcPhysAddr);
+    memReq->reset(dest, blk_size);
+    // translate to physical address
+    Fault fault = xc->translateDataWriteReq(memReq);
+    if (fault == No_Fault) {
+        Addr dest_addr = memReq->paddr;
+        // Need to read straight from memory since we have more than 8 bytes.
+        memReq->paddr = xc->copySrcPhysAddr;
+        xc->mem->read(memReq, data);
+        memReq->paddr = dest_addr;
+        xc->mem->write(memReq, data);
+    }
+    return fault;
+}
+
 // precise architected memory state accessor macros
 template <class T>
 Fault
@@ -343,7 +392,6 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
         memReq->time = curTick;
-        memReq->flags &= ~UNCACHEABLE;
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -426,7 +474,6 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
         memReq->time = curTick;
-        memReq->flags &= ~UNCACHEABLE;
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -629,7 +676,6 @@ SimpleCPU::tick()
             memReq->completionEvent = NULL;
 
             memReq->time = curTick;
-            memReq->flags &= ~UNCACHEABLE;
             MemAccessResult result = icacheInterface->access(memReq);
 
             // Ugly hack to get an event scheduled *only* if the access is
@@ -669,32 +715,13 @@ SimpleCPU::tick()
         xc->func_exe_inst++;
 
         fault = si->execute(this, xc, traceData);
-#ifdef FS_MEASURE
-        if (!(xc->misspeculating()) && (xc->system->bin)) {
-            SWContext *ctx = xc->swCtx;
-            if (ctx && !ctx->callStack.empty()) {
-                if (si->isCall()) {
-                    ctx->calls++;
-                }
-                if (si->isReturn()) {
-                     if (ctx->calls == 0) {
-                        fnCall *top = ctx->callStack.top();
-                        DPRINTF(TCPIP, "Removing %s from callstack.\n", top->name);
-                        delete top;
-                        ctx->callStack.pop();
-                        if (ctx->callStack.empty())
-                            xc->system->nonPath->activate();
-                        else
-                            ctx->callStack.top()->myBin->activate();
 
-                        xc->system->dumpState(xc);
-                    } else {
-                        ctx->calls--;
-                    }
-                }
-            }
-        }
+#ifdef FULL_SYSTEM
+        SWContext *ctx = xc->swCtx;
+        if (ctx)
+            ctx->process(xc, si.get());
 #endif
+
         if (si->isMemRef()) {
             numMemRefs++;
         }
@@ -813,6 +840,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         itb, dtb, mem,
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
+                        defer_registration,
                         ticksPerSecond * mult);
 #else
 
@@ -820,14 +848,15 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         max_insts_any_thread, max_insts_all_threads,
                         max_loads_any_thread, max_loads_all_threads,
                         (icache) ? icache->getInterface() : NULL,
-                        (dcache) ? dcache->getInterface() : NULL);
+                        (dcache) ? dcache->getInterface() : NULL,
+                        defer_registration);
 
 #endif // FULL_SYSTEM
-
+#if 0
     if (!defer_registration) {
         cpu->registerExecContexts();
     }
-
+#endif
     return cpu;
 }
 

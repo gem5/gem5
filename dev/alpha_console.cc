@@ -43,6 +43,9 @@
 #include "dev/console.hh"
 #include "dev/simple_disk.hh"
 #include "dev/tlaser_clock.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
@@ -50,13 +53,20 @@
 
 using namespace std;
 
-AlphaConsole::AlphaConsole(const string &name, SimConsole *cons,
-                           SimpleDisk *d, System *system,
-                           BaseCPU *cpu, TsunamiIO *clock, int num_cpus,
-                           Addr a, MemoryController *mmu)
-    : FunctionalMemory(name), disk(d), console(cons), addr(a)
+AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
+                           System *system, BaseCPU *cpu, TsunamiIO *clock,
+                           int num_cpus, MemoryController *mmu, Addr a,
+                           HierParams *hier, Bus *bus)
+    : PioDevice(name), disk(d), console(cons), addr(a)
+>>>>>>>
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
+
+    if (bus) {
+        pioInterface = newPioInterface(name, hier, bus, this,
+                                       &AlphaConsole::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size);
+    }
 
     consoleData = new uint8_t[size];
     memset(consoleData, 0, size);
@@ -185,6 +195,12 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
     return No_Fault;
 }
 
+Tick
+AlphaConsole::cacheAccess(MemReqPtr &req)
+{
+    return curTick + 1000;
+}
+
 void
 AlphaAccess::serialize(ostream &os)
 {
@@ -253,6 +269,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
     SimObjectParam<System *> system;
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<TsunamiIO *> clock;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 
@@ -265,14 +283,17 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu, "Processor"),
-    INIT_PARAM(clock, "Turbolaser Clock")
+    INIT_PARAM(clock, "Turbolaser Clock"),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
 END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
 CREATE_SIM_OBJECT(AlphaConsole)
 {
-    return  new AlphaConsole(getInstanceName(), sim_console, disk,
-                             system, cpu, clock, num_cpus, addr, mmu);
+    return new AlphaConsole(getInstanceName(), sim_console, disk,
+                            system, cpu, clock, num_cpus, mmu,
+                            addr, hier, io_bus);
 }
 
 REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

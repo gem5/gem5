@@ -133,7 +133,7 @@ class SimpleCPU : public BaseCPU
               Counter max_loads_any_thread, Counter max_loads_all_threads,
               AlphaItb *itb, AlphaDtb *dtb, FunctionalMemory *mem,
               MemInterface *icache_interface, MemInterface *dcache_interface,
-              Tick freq);
+              bool _def_reg, Tick freq);
 
 #else
 
@@ -142,11 +142,13 @@ class SimpleCPU : public BaseCPU
               Counter max_insts_all_threads,
               Counter max_loads_any_thread,
               Counter max_loads_all_threads,
-              MemInterface *icache_interface, MemInterface *dcache_interface);
+              MemInterface *icache_interface, MemInterface *dcache_interface,
+              bool _def_reg);
 
 #endif
 
     virtual ~SimpleCPU();
+    virtual void init();
 
     // execution context
     ExecContext *xc;
@@ -165,6 +167,8 @@ class SimpleCPU : public BaseCPU
 
     // L1 data cache
     MemInterface *dcacheInterface;
+
+    bool defer_registration;
 
     // current instruction
     MachInst inst;
@@ -233,16 +237,19 @@ class SimpleCPU : public BaseCPU
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
-    Fault prefetch(Addr addr, unsigned flags)
+    void prefetch(Addr addr, unsigned flags)
     {
         // need to do this...
-        return No_Fault;
     }
 
     void writeHint(Addr addr, int size)
     {
         // need to do this...
     }
+
+    Fault copySrcTranslate(Addr src);
+
+    Fault copy(Addr dest);
 };
 
 #endif // __SIMPLE_CPU_HH__

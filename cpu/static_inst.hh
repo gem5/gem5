@@ -96,6 +96,7 @@ class StaticInstBase : public RefCounted
         IsStore,	///< Writes to memory.
         IsInstPrefetch,	///< Instruction-cache prefetch.
         IsDataPrefetch,	///< Data-cache prefetch.
+        IsCopy,         ///< Fast Cache block copy
 
         IsControl,		///< Control transfer instruction.
         IsDirectControl,	///< PC relative control transfer.
@@ -176,6 +177,7 @@ class StaticInstBase : public RefCounted
     bool isStore()	  const { return flags[IsStore]; }
     bool isInstPrefetch() const { return flags[IsInstPrefetch]; }
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
+    bool isCopy()         const { return flags[IsCopy];}
 
     bool isInteger()	  const { return flags[IsInteger]; }
     bool isFloating()	  const { return flags[IsFloating]; }

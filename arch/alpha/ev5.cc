@@ -237,10 +237,17 @@ ExecContext::readIpr(int idx, Fault &fault)
         retval = ipr[idx];
         break;
 
+      case AlphaISA::IPR_CC:
+        retval |= ipr[idx] & ULL(0xffffffff00000000);
+        retval |= curTick  & ULL(0x00000000ffffffff);
+        break;
+
       case AlphaISA::IPR_VA:
         // SFX: unlocks interrupt status registers
         retval = ipr[idx];
-        regs.intrlock = false;
+
+        if (!misspeculating())
+            regs.intrlock = false;
         break;
 
       case AlphaISA::IPR_VA_FORM:
@@ -253,7 +260,7 @@ ExecContext::readIpr(int idx, Fault &fault)
 
       case AlphaISA::IPR_DTB_PTE:
         {
-            AlphaISA::PTE &pte = dtb->index();
+            AlphaISA::PTE &pte = dtb->index(!misspeculating());
 
             retval |= ((u_int64_t)pte.ppn & ULL(0x7ffffff)) << 32;
             retval |= ((u_int64_t)pte.xre & ULL(0xf)) << 8;
@@ -327,10 +334,22 @@ ExecContext::setIpr(int idx, uint64_t val)
       case AlphaISA::IPR_PAL_BASE:
       case AlphaISA::IPR_IC_PERR_STAT:
       case AlphaISA::IPR_DC_PERR_STAT:
-      case AlphaISA::IPR_CC_CTL:
-      case AlphaISA::IPR_CC:
       case AlphaISA::IPR_PMCTR:
         // write entire quad w/ no side-effect
+        ipr[idx] = val;
+        break;
+
+      case AlphaISA::IPR_CC_CTL:
+        // This IPR resets the cycle counter.  We assume this only
+        // happens once... let's verify that.
+        assert(ipr[idx] == 0);
+        ipr[idx] = 1;
+        break;
+
+      case AlphaISA::IPR_CC:
+        // This IPR only writes the upper 64 bits.  It's ok to write
+        // all 64 here since we mask out the lower 32 in rpcc (see
+        // isa_desc).
         ipr[idx] = val;
         break;
 

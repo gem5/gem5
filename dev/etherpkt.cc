@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 The Regents of The University of Michigan
+ * Copyright (c) 2004 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Reference counted class containing ethernet packet data
- */
+#include <iostream>
 
-#ifndef __ETHERPKT_HH__
-#define __ETHERPKT_HH__
+#include "dev/etherpkt.hh"
+#include "sim/serialize.hh"
 
-#include <iosfwd>
-#include <memory>
+using namespace std;
 
-#include "sim/host.hh"
-#include "base/refcnt.hh"
-
-class Checkpoint;
-
-/*
- * Reference counted class containing ethernet packet data
- */
-class EtherPacket : public RefCounted
+void
+EtherPacket::serialize(ostream &os)
 {
-  public:
-    uint8_t *data;
-    int length;
+    SERIALIZE_SCALAR(length);
+    SERIALIZE_ARRAY(data, length);
+}
 
-  public:
-    EtherPacket() : data(NULL), length(0) {}
-    EtherPacket(std::auto_ptr<uint8_t> d, int l)
-        : data(d.release()), length(l) {}
-    ~EtherPacket() { if (data) delete [] data; }
+void
+EtherPacket::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(length);
+    data = new uint8_t[length];
+    UNSERIALIZE_ARRAY(data, length);
+}
 
-  public:
-    bool IsUnicast() { return data[0] == 0x00; }
-    bool IsMulticast() { return data[0] == 0x01; }
-    bool IsBroadcast() { return data[0] == 0xff; }
-
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-};
-
-typedef RefCountingPtr<EtherPacket> PacketPtr;
-
-#endif // __ETHERPKT_HH__

@@ -48,10 +48,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
       kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
       memCtrl(_sys->memCtrl), physmem(_sys->physmem),
-#ifdef FS_MEASURE
-      swCtx(NULL),
-#endif
-      func_exe_inst(0), storeCondFailures(0)
+      swCtx(NULL), func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
 }
@@ -107,6 +104,33 @@ ExecContext::serialize(ostream &os)
     regs.serialize(os);
     // thread_num and cpu_id are deterministic from the config
     SERIALIZE_SCALAR(func_exe_inst);
+
+#ifdef FULL_SYSTEM
+    bool ctx = false;
+    if (swCtx) {
+        ctx = true;
+        SERIALIZE_SCALAR(ctx);
+        SERIALIZE_SCALAR(swCtx->calls);
+        std::stack<fnCall *> *stack = &(swCtx->callStack);
+        fnCall *top;
+        int size = stack->size();
+        SERIALIZE_SCALAR(size);
+
+        for (int j=0; j<size; ++j) {
+            top = stack->top();
+            paramOut(os, csprintf("stackpos[%d]",j), top->name);
+            delete top;
+            stack->pop();
+        }
+    } else {
+        SERIALIZE_SCALAR(ctx);
+    }
+    if (system->bin) {
+        Statistics::MainBin *cur = Statistics::MainBin::curBin();
+        string bin_name = cur->name();
+        SERIALIZE_SCALAR(bin_name);
+    }
+#endif //FULL_SYSTEM
 }
 
 
@@ -117,6 +141,37 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(func_exe_inst);
+
+#ifdef FULL_SYSTEM
+    bool ctx;
+    UNSERIALIZE_SCALAR(ctx);
+    if (ctx) {
+        swCtx = new SWContext;
+        UNSERIALIZE_SCALAR(swCtx->calls);
+        int size;
+        UNSERIALIZE_SCALAR(size);
+
+        vector<fnCall *> calls;
+        fnCall *call;
+        for (int i=0; i<size; ++i) {
+            call = new fnCall;
+            paramIn(cp, section, csprintf("stackpos[%d]",i), call->name);
+            call->myBin = system->getBin(call->name);
+            calls.push_back(call);
+        }
+
+        for (int i=size-1; i>=0; --i) {
+            swCtx->callStack.push(calls[i]);
+        }
+
+    }
+
+    if (system->bin) {
+        string bin_name;
+        UNSERIALIZE_SCALAR(bin_name);
+        system->getBin(bin_name)->activate();
+    }
+#endif //FULL_SYSTEM
 }
 
 

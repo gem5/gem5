@@ -32,14 +32,11 @@
 #include <string>
 #include <vector>
 
-#include "sim/sim_object.hh"
-#include "cpu/pc_event.hh"
 #include "base/loader/symtab.hh"
-
-#ifdef FS_MEASURE
 #include "base/statistics.hh"
+#include "cpu/pc_event.hh"
+#include "sim/sim_object.hh"
 #include "sim/sw_context.hh"
-#endif
 
 class MemoryController;
 class PhysicalMemory;
@@ -51,11 +48,33 @@ class ExecContext;
 
 class System : public SimObject
 {
-#ifdef FS_MEASURE
+    // lisa's binning stuff
   protected:
     std::map<const std::string, Statistics::MainBin *> fnBins;
     std::map<const Addr, SWContext *> swCtxMap;
-#endif //FS_MEASURE
+
+  public:
+    Statistics::Scalar<Counter> fnCalls;
+    Statistics::MainBin *Kernel;
+    Statistics::MainBin *User;
+
+    Statistics::MainBin * getBin(const std::string &name);
+    virtual bool findCaller(std::string, std::string) const = 0;
+
+    SWContext *findContext(Addr pcb);
+    bool addContext(Addr pcb, SWContext *ctx) {
+        return (swCtxMap.insert(make_pair(pcb, ctx))).second;
+    }
+    void remContext(Addr pcb) {
+        swCtxMap.erase(pcb);
+        return;
+    }
+
+    virtual void dumpState(ExecContext *xc) const = 0;
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    //
 
   public:
     const uint64_t init_param;
@@ -71,11 +90,6 @@ class System : public SimObject
     virtual int registerExecContext(ExecContext *xc);
     virtual void replaceExecContext(int xcIndex, ExecContext *xc);
 
-#ifdef FS_MEASURE
-    Statistics::Scalar<Counter, Statistics::MainBin> fnCalls;
-    Statistics::MainBin *nonPath;
-#endif //FS_MEASURE
-
   public:
     System(const std::string _name, const uint64_t _init_param,
            MemoryController *, PhysicalMemory *, const bool);
@@ -85,22 +99,6 @@ class System : public SimObject
     virtual Addr getKernelEnd() const = 0;
     virtual Addr getKernelEntry() const = 0;
     virtual bool breakpoint() = 0;
-
-#ifdef FS_MEASURE
-    Statistics::MainBin * getBin(const std::string &name);
-    virtual bool findCaller(std::string, std::string) const = 0;
-
-    SWContext *findContext(Addr pcb);
-    bool addContext(Addr pcb, SWContext *ctx) {
-        return (swCtxMap.insert(make_pair(pcb, ctx))).second;
-    }
-    void remContext(Addr pcb) {
-        swCtxMap.erase(pcb);
-        return;
-    }
-
-    virtual void dumpState(ExecContext *xc) const = 0;
-#endif //FS_MEASURE
 
   public:
     ////////////////////////////////////////////

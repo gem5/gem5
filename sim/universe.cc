@@ -47,6 +47,7 @@ Tick ticksPerSecond;
 double __ticksPerMS;
 double __ticksPerUS;
 double __ticksPerNS;
+double __ticksPerPS;
 
 string outputDirectory;
 ostream *outputStream;
@@ -79,6 +80,7 @@ UniverseParamContext::checkParams()
     __ticksPerMS = freq / 1.0e3;
     __ticksPerUS = freq / 1.0e6;
     __ticksPerNS = freq / 1.0e9;
+    __ticksPerPS = freq / 1.0e12;
 
     if (universe_output_dir.isValid()) {
         outputDirectory = universe_output_dir;

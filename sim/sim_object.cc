@@ -182,11 +182,11 @@ SimObject::printAllExtraOutput(ostream &os)
 void
 SimObject::serializeAll(ostream &os)
 {
-    SimObjectList::iterator i = simObjectList.begin();
-    SimObjectList::iterator end = simObjectList.end();
+    SimObjectList::reverse_iterator ri = simObjectList.rbegin();
+    SimObjectList::reverse_iterator rend = simObjectList.rend();
 
-    for (; i != end; ++i) {
-        SimObject *obj = *i;
+    for (; ri != rend; ++ri) {
+        SimObject *obj = *ri;
         obj->nameOut(os);
         obj->serialize(os);
    }

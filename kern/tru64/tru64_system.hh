@@ -29,14 +29,11 @@
 #ifndef __TRU64_SYSTEM_HH__
 #define __TRU64_SYSTEM_HH__
 
+#include <map>
 #include <vector>
 
 #include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
-
-#ifdef FS_MEASURE
-#include <map>
-#endif
 
 class ExecContext;
 class EcoffObject;
@@ -48,9 +45,7 @@ class SkipFuncEvent;
 class PrintfEvent;
 class DebugPrintfEvent;
 class DumpMbufEvent;
-#ifdef FS_MEASURE
 class FnEvent;
-#endif
 class AlphaArguments;
 
 class Tru64System : public System
@@ -62,42 +57,6 @@ class Tru64System : public System
     SymbolTable *kernelSymtab;
     SymbolTable *consoleSymtab;
 
-#ifdef FS_MEASURE
-    //INSTRUMENTATION CODEGEN BEGIN ONE
-    Statistics::MainBin *esIntrBin;
-    Statistics::MainBin *esRxeofBin;
-    Statistics::MainBin *esNewbufBin;
-    Statistics::MainBin *esDmaLoadBin;
-    Statistics::MainBin *dmaMapLoadBin;
-    Statistics::MainBin *etherInputBin;
-    Statistics::MainBin *netisrInputBin;
-    Statistics::MainBin *schednetisrIsrBin;
-    Statistics::MainBin *ipintrBin;
-    Statistics::MainBin *ipDooptionsBin;
-    Statistics::MainBin *ipReassBin;
-    Statistics::MainBin *tcpInputBin;
-    Statistics::MainBin *sbappendBin;
-    Statistics::MainBin *readBin;
-    Statistics::MainBin *sooReadBin;
-    Statistics::MainBin *orecvBin;
-    Statistics::MainBin *recvitBin;
-    Statistics::MainBin *soreceiveBin;
-    Statistics::MainBin *osendBin;
-    Statistics::MainBin *writeBin;
-    Statistics::MainBin *sooWriteBin;
-    Statistics::MainBin *senditBin;
-    Statistics::MainBin *sosendBin;
-    Statistics::MainBin *tcpSosendBin;
-    Statistics::MainBin *tcpOutputBin;
-    Statistics::MainBin *ipOutputBin;
-    Statistics::MainBin *etherOutputBin;
-    Statistics::MainBin *esStartBin;
-    Statistics::MainBin *esTransmitBin;
-    Statistics::MainBin *esTxeofBin;
-    Statistics::MainBin *idleThreadBin;
-    //INSTRUMENTATION CODEGEN END
-#endif //FS_MEASURE
-
     BreakPCEvent *kernelPanicEvent;
     BreakPCEvent *consolePanicEvent;
     BadAddrEvent *badaddrEvent;
@@ -107,41 +66,8 @@ class Tru64System : public System
     DebugPrintfEvent *debugPrintfEvent;
     DebugPrintfEvent *debugPrintfrEvent;
     DumpMbufEvent *dumpMbufEvent;
-#ifdef FS_MEASURE
-    //INSTRUMENTATION CODEGEN BEGIN TWO
-    FnEvent *esIntrEvent;
-    FnEvent *esRxeofEvent;
-    FnEvent *esNewbufEvent;
-    FnEvent *esDmaLoadEvent;
-    FnEvent *dmaMapLoadEvent;
-    FnEvent *etherInputEvent;
-    FnEvent *netisrInputEvent;
-    FnEvent *schednetisrIsrEvent;
-    FnEvent *ipintrEvent;
-    FnEvent *ipDooptionsEvent;
-    FnEvent *ipReassEvent;
-    FnEvent *tcpInputEvent;
-    FnEvent *sbappendEvent;
-    FnEvent *readEvent;
-    FnEvent *sooReadEvent;
-    FnEvent *orecvEvent;
-    FnEvent *recvitEvent;
-    FnEvent *soreceiveEvent;
-    FnEvent *osendEvent;
-    FnEvent *writeEvent;
-    FnEvent *sooWriteEvent;
-    FnEvent *senditEvent;
-    FnEvent *sosendEvent;
-    FnEvent *tcpSosendEvent;
-    FnEvent *tcpOutputEvent;
-    FnEvent *ipOutputEvent;
-    FnEvent *etherOutputEvent;
-    FnEvent *esStartEvent;
-    FnEvent *esTransmitEvent;
-    FnEvent *esTxeofEvent;
-    FnEvent *idleThreadEvent;
-    //INSTRUMENTATION CODEGEN END
-#endif //FS_MEASURE
+
+    std::vector<FnEvent *> fnEvents;
 
   private:
 
@@ -149,11 +75,7 @@ class Tru64System : public System
     Addr kernelEnd;
     Addr kernelEntry;
     bool bin;
-
-#ifdef FS_MEASURE
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
-#endif
+    std::vector<string> binned_fns;
 
   public:
     std::vector<RemoteGDB *>   remoteGDB;
@@ -168,7 +90,8 @@ class Tru64System : public System
                 const std::string &console_path,
                 const std::string &palcode,
                 const std::string &boot_osflags,
-                                const bool _bin);
+                const bool _bin,
+                const std::vector<string> &binned_fns);
     ~Tru64System();
 
     int registerExecContext(ExecContext *xc);
@@ -182,10 +105,16 @@ class Tru64System : public System
     static void Printf(AlphaArguments args);
     static void DumpMbuf(AlphaArguments args);
 
-#ifdef FS_MEASURE
+
+    // Lisa's binning stuff
+  private:
+    std::multimap<const std::string, std::string> callerMap;
+    void populateMap(std::string caller, std::string callee);
+
+  public:
     bool findCaller(std::string callee, std::string caller) const;
     void dumpState(ExecContext *xc) const;
-#endif //FS_MEASURE
+    //
 };
 
 #endif // __TRU64_SYSTEM_HH__

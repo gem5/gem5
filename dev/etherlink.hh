@@ -49,6 +49,7 @@ class EtherLink : public SimObject
   protected:
     class Interface;
 
+    friend class LinkDelayEvent;
      /*
       * Model for a single uni-directional link
       */
@@ -59,34 +60,26 @@ class EtherLink : public SimObject
         Interface *txint;
         Interface *rxint;
 
-        double ticks_per_byte;
+        double ticksPerByte;
+        Tick linkDelay;
         EtherDump *dump;
 
       protected:
         /*
          * Transfer is complete
          */
-        class DoneEvent : public Event
-        {
-          protected:
-            Link *link;
-
-          public:
-            DoneEvent(EventQueue *q, Link *l)
-                : Event(q), link(l) {}
-            virtual void process() { link->txDone(); }
-            virtual const char *description()
-                { return "ethernet link completion"; }
-        };
-
-        friend class DoneEvent;
-        DoneEvent event;
         PacketPtr packet;
-
         void txDone();
+        typedef EventWrapper<Link, &Link::txDone> DoneEvent;
+        friend class DoneEvent;
+        DoneEvent doneEvent;
+
+        friend class LinkDelayEvent;
+        void txComplete(PacketPtr &packet);
 
       public:
-        Link(const std::string &name, double rate, EtherDump *dump);
+        Link(const std::string &name, double rate, Tick delay,
+             EtherDump *dump);
         ~Link() {}
 
         virtual const std::string name() const { return objName; }
@@ -96,6 +89,9 @@ class EtherLink : public SimObject
 
         void setTxInt(Interface *i) { assert(!txint); txint = i; }
         void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
     };
 
     /*
@@ -120,8 +116,12 @@ class EtherLink : public SimObject
 
   public:
     EtherLink(const std::string &name, EtherInt *i1, EtherInt *i2,
-              Tick speed, EtherDump *dump);
+              Tick speed, Tick delay, EtherDump *dump);
     virtual ~EtherLink();
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
 };
 
 #endif // __ETHERLINK_HH__

@@ -35,7 +35,7 @@
 
 #include "base/range.hh"
 #include "dev/alpha_access.h"
-#include "mem/functional_mem/functional_memory.hh"
+#include "dev/io_device.hh"
 #include "sim/host.hh"
 #include "dev/tsunami_io.hh"
 
@@ -70,7 +70,7 @@ class SimpleDisk;
  * primarily used doing boot before the kernel has loaded its device
  * drivers.
  */
-class AlphaConsole : public FunctionalMemory
+class AlphaConsole : public PioDevice
 {
   protected:
     union {
@@ -89,10 +89,10 @@ class AlphaConsole : public FunctionalMemory
 
   public:
     /** Standard Constructor */
-    AlphaConsole(const std::string &name, SimConsole *cons,
-                 SimpleDisk *d, System *system, BaseCPU *cpu,
-                 TsunamiIO *clock, int num_cpus,
-                 Addr a, MemoryController *mmu);
+    AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
+                 System *system, BaseCPU *cpu, TsunamiIO *clock,
+                 int num_cpus, MemoryController *mmu, Addr addr,
+                 HierParams *hier, Bus *bus);
 
     /**
      * memory mapped reads and writes
@@ -105,6 +105,9 @@ class AlphaConsole : public FunctionalMemory
      */
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+  public:
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __ALPHA_CONSOLE_HH__

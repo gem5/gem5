@@ -70,6 +70,7 @@ struct PAL
         gentrap = 0xaa,
         clrfen = 0xae,
         nphalt = 0xbe,
+        copypal = 0xbf,
         NumCodes
     };
 

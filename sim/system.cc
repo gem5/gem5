@@ -50,13 +50,12 @@ System::System(const std::string _name,
 {
     // add self to global system list
     systemList.push_back(this);
-#ifdef FS_MEASURE
     if (bin == true) {
-        nonPath = new Statistics::MainBin("non TCPIP path stats");
-        nonPath->activate();
+        Kernel = new Statistics::MainBin("non TCPIP Kernel stats");
+        Kernel->activate();
+        User = new Statistics::MainBin("User stats");
     } else
-        nonPath = NULL;
-#endif
+        Kernel = NULL;
 }
 
 
@@ -104,14 +103,13 @@ printSystems()
     System::printSystems();
 }
 
-#ifdef FS_MEASURE
 Statistics::MainBin *
 System::getBin(const std::string &name)
 {
     std::map<const std::string, Statistics::MainBin *>::const_iterator i;
     i = fnBins.find(name);
     if (i == fnBins.end())
-        panic("trying to getBin that is not on system map!");
+        panic("trying to getBin %s that is not on system map!", name);
     return (*i).second;
 }
 
@@ -127,7 +125,73 @@ System::findContext(Addr pcb)
   } else
       return NULL;
 }
-#endif //FS_MEASURE
+
+void
+System::serialize(std::ostream &os)
+{
+    if (bin == true) {
+        map<const Addr, SWContext *>::const_iterator iter, end;
+        iter = swCtxMap.begin();
+        end = swCtxMap.end();
+
+        int numCtxs = swCtxMap.size();
+        SERIALIZE_SCALAR(numCtxs);
+        SWContext *ctx;
+        for (int i = 0; iter != end; ++i, ++iter) {
+            paramOut(os, csprintf("Addr[%d]",i), (*iter).first);
+            ctx = (*iter).second;
+            paramOut(os, csprintf("calls[%d]",i), ctx->calls);
+
+            stack<fnCall *> *stack = &(ctx->callStack);
+            fnCall *top;
+            int size = stack->size();
+            paramOut(os, csprintf("stacksize[%d]",i), size);
+            for (int j=0; j<size; ++j) {
+                top = stack->top();
+                paramOut(os, csprintf("ctx[%d].stackpos[%d]",i,j),
+                         top->name);
+                delete top;
+                stack->pop();
+            }
+        }
+    }
+}
+
+void
+System::unserialize(Checkpoint *cp, const std::string &section)
+{
+    if (bin == true) {
+        int numCtxs;
+        UNSERIALIZE_SCALAR(numCtxs);
+
+        SWContext *ctx;
+        Addr addr;
+        int size;
+        for(int i = 0; i < numCtxs; ++i) {
+            ctx = new SWContext;
+            paramIn(cp, section, csprintf("Addr[%d]",i), addr);
+            paramIn(cp, section, csprintf("calls[%d]",i), ctx->calls);
+
+            paramIn(cp, section, csprintf("stacksize[%d]",i), size);
+
+            vector<fnCall *> calls;
+            fnCall *call;
+            for (int j = 0; j < size; ++j) {
+                call = new fnCall;
+                paramIn(cp, section, csprintf("ctx[%d].stackpos[%d]",i,j),
+                        call->name);
+                call->myBin = getBin(call->name);
+                calls.push_back(call);
+            }
+
+            for (int j=size-1; j>=0; --j) {
+                ctx->callStack.push(calls[j]);
+            }
+
+            addContext(addr, ctx);
+        }
+    }
+}
 
 DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 

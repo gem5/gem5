@@ -60,12 +60,6 @@
 #include "base/str.hh"
 #include "sim/host.hh"
 
-//
-//  Un-comment this to enable weirdo-stat debugging
-//
-// #define STAT_DEBUG
-
-
 #ifndef NAN
 float __nan();
 /** Define Not a number. */
@@ -146,10 +140,7 @@ struct StatData
     /** A pointer to a prerequisite Stat. */
     const StatData *prereq;
 
-    StatData()
-        : flags(none), precision(-1), prereq(0)
-    {}
-
+    StatData();
     virtual ~StatData();
 
     /**
@@ -193,6 +184,10 @@ struct StatData
      * @return stat1's name is alphabetically before stat2's
      */
     static bool less(StatData *stat1, StatData *stat2);
+
+#ifdef DEBUG
+    int number;
+#endif
 };
 
 struct ScalarDataBase : public StatData
@@ -2503,7 +2498,7 @@ struct NoBin
  * binned.  If the typedef is NoBin, nothing is binned.  If it is
  * MainBin, then all stats are binned under that Bin.
  */
-#ifdef FS_MEASURE
+#if defined(FS_MEASURE)
 typedef MainBin DefaultBin;
 #else
 typedef NoBin DefaultBin;
