@@ -2166,6 +2166,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxEnable);
     SERIALIZE_SCALAR(CRDD);
     SERIALIZE_SCALAR(rxPktBytes);
+    SERIALIZE_SCALAR(rxFragPtr);
     SERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState = this->rxDmaState;
     SERIALIZE_SCALAR(rxDmaState);
@@ -2314,6 +2315,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxEnable);
     UNSERIALIZE_SCALAR(CRDD);
     UNSERIALIZE_SCALAR(rxPktBytes);
+    UNSERIALIZE_SCALAR(rxFragPtr);
     UNSERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState;
     UNSERIALIZE_SCALAR(rxDmaState);
