@@ -36,6 +36,7 @@
 
 #include "sim/sim_object.hh"
 
+class PciConfigAll;
 class IntrControl;
 class SimConsole;
 
@@ -46,13 +47,15 @@ class Platform : public SimObject
     IntrControl *intrctrl;
     /** Pointer to the simulation console */
     SimConsole *cons;
+    /** Pointer to the PCI configuration space */
+    PciConfigAll *pciconfig;
 
     int interrupt_frequency;
 
   public:
     Platform(const std::string &name, SimConsole *con, IntrControl *intctrl,
-             int intrFreq)
-        : SimObject(name), intrctrl(intctrl), cons(con),
+             PciConfigAll *pci, int intrFreq)
+        : SimObject(name), intrctrl(intctrl), cons(con), pciconfig(pci),
           interrupt_frequency(intrFreq) {}
 };
 

@@ -39,22 +39,17 @@
 #include "dev/scsi_ctrl.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
-#include "dev/tsunamireg.h"
-#include "dev/tsunami.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
-PciConfigAll::PciConfigAll(const string &name, Tsunami *t, Addr a,
+PciConfigAll::PciConfigAll(const string &name, Addr a,
                            MemoryController *mmu)
-    : FunctionalMemory(name), addr(a), tsunami(t)
+    : FunctionalMemory(name), addr(a)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
-
-    // Put back pointer in tsunami
-    tsunami->pciconfig = this;
 
     // Make all the pointers to devices null
     for(int x=0; x < MAX_PCI_DEV; x++)
@@ -103,7 +98,7 @@ PciConfigAll::read(MemReqPtr &req, uint8_t *data)
         }
     }
 
-    DPRINTFN("Tsunami PCI Configspace  ERROR: read  daddr=%#x size=%d\n",
+    DPRINTFN("PCI Configspace  ERROR: read  daddr=%#x size=%d\n",
              daddr, req->size);
 
     return No_Fault;
@@ -166,7 +161,6 @@ PciConfigAll::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
-    SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
@@ -175,7 +169,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
-    INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask")
@@ -184,7 +177,7 @@ END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
 CREATE_SIM_OBJECT(PciConfigAll)
 {
-    return new PciConfigAll(getInstanceName(), tsunami, addr, mmu);
+    return new PciConfigAll(getInstanceName(), addr, mmu);
 }
 
 REGISTER_SIM_OBJECT("PciConfigAll", PciConfigAll)

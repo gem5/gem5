@@ -81,12 +81,6 @@ class Tsunami : public Platform
       */
     TsunamiPChip *pchip;
 
-    /** Pointer to the PCI Config Space
-      * The config space in Tsunami all needs to return
-      * -1 if a device is not there.
-      */
-    PciConfigAll *pciconfig;
-
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];
 
@@ -99,7 +93,8 @@ class Tsunami : public Platform
       * @param intrFreq frequency that interrupts happen
       */
     Tsunami(const std::string &name, System *s, SimConsole *con,
-            IntrControl *intctrl, int intrFreq);
+            IntrControl *intctrl, PciConfigAll *pci,
+            int intrFreq);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

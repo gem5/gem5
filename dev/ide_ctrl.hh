@@ -37,12 +37,6 @@
 #include "dev/pcireg.h"
 #include "dev/io_device.hh"
 
-#define CMD0  0x00 // Channel 0 command block offset
-#define CTRL0 0x08 // Channel 0 control block offset
-#define CMD1  0x0c // Channel 1 command block offset
-#define CTRL1 0x14 // Channel 1 control block offset
-#define BMI   0x18 // Bus master IDE offset
-
 #define BMIC0    0x0  // Bus master IDE command register
 #define BMIS0    0x2  // Bus master IDE status register
 #define BMIDTP0  0x4  // Bus master IDE descriptor table pointer register
@@ -62,17 +56,8 @@
 #define BMIDEA  0x01 // Bus master IDE active
 
 // IDE Command byte fields
-// Taken from include/linux/ide.h
-#define IDE_DATA_OFFSET         (0)
-#define IDE_ERROR_OFFSET        (1)
-#define IDE_NSECTOR_OFFSET      (2)
-#define IDE_SECTOR_OFFSET       (3)
-#define IDE_LCYL_OFFSET         (4)
-#define IDE_HCYL_OFFSET         (5)
 #define IDE_SELECT_OFFSET       (6)
-#define IDE_STATUS_OFFSET       (7)
-#define IDE_CONTROL_OFFSET      (8)
-#define IDE_IRQ_OFFSET          (9)
+#define IDE_SELECT_DEV_BIT      0x10
 
 #define IDE_FEATURE_OFFSET      IDE_ERROR_OFFSET
 #define IDE_COMMAND_OFFSET      IDE_STATUS_OFFSET
@@ -92,8 +77,14 @@
 #define BME     0x04 // Bus master function enable
 #define IOSE    0x01 // I/O space enable
 
-class IntrControl;
+typedef enum RegType {
+    COMMAND_BLOCK = 0,
+    CONTROL_BLOCK,
+    BMI_BLOCK
+} RegType_t;
+
 class IdeDisk;
+class IntrControl;
 class PciConfigAll;
 class Tsunami;
 class PhysicalMemory;
@@ -125,8 +116,10 @@ class IdeController : public PciDev
     Addr bmi_size;
 
   private:
-    /** Registers used for programmed I/O and bus master interface */
-    uint8_t regs[40];
+    /** Registers used for bus master interface */
+    uint8_t bmi_regs[16];
+    /** Shadows of the device select bit */
+    uint8_t dev[2];
     /** Registers used in PCI configuration */
     uint8_t pci_regs[8];
 
@@ -135,59 +128,76 @@ class IdeController : public PciDev
     bool bm_enabled;
     bool cmd_in_progress[4];
 
-  private:
+  public:
     /** Pointer to the chipset */
     Tsunami *tsunami;
+
+  private:
     /** IDE disks connected to controller */
     IdeDisk *disks[4];
 
   private:
-    /** Get offset into register file from access address */
-    Addr getOffset(const Addr &addr) {
-        Addr offset = addr;
+    /** Parse the access address to pass on to device */
+    void parseAddr(const Addr &addr, Addr &offset, bool &primary,
+                   RegType_t &type)
+    {
+        offset = addr;
 
         if (addr >= pri_cmd_addr && addr < (pri_cmd_addr + pri_cmd_size)) {
             offset -= pri_cmd_addr;
-            offset += CMD0;
+            type = COMMAND_BLOCK;
+            primary = true;
         } else if (addr >= pri_ctrl_addr &&
                    addr < (pri_ctrl_addr + pri_ctrl_size)) {
             offset -= pri_ctrl_addr;
-            offset += CTRL0;
+            type = CONTROL_BLOCK;
+            primary = true;
         } else if (addr >= sec_cmd_addr &&
                    addr < (sec_cmd_addr + sec_cmd_size)) {
             offset -= sec_cmd_addr;
-            offset += CMD1;
+            type = COMMAND_BLOCK;
+            primary = false;
         } else if (addr >= sec_ctrl_addr &&
                    addr < (sec_ctrl_addr + sec_ctrl_size)) {
             offset -= sec_ctrl_addr;
-            offset += CTRL1;
+            type = CONTROL_BLOCK;
+            primary = false;
         } else if (addr >= bmi_addr && addr < (bmi_addr + bmi_size)) {
             offset -= bmi_addr;
-            offset += BMI;
+            type = BMI_BLOCK;
+            primary = (offset < BMIC1) ? true : false;
         } else {
             panic("IDE controller access to invalid address: %#x\n", addr);
         }
-
-        return offset;
     };
-    /** Select the disk based on the register offset */
-    int getDisk(const Addr &offset) {
+
+    /** Select the disk based on the channel and device bit */
+    int getDisk(bool primary)
+    {
         int disk = 0;
+        uint8_t *devBit = &dev[0];
 
-        // If the offset is in the channel 1 range, disks are 2 or 3
-        if (offset >= CMD1 && offset < BMI && offset >= (BMI + BMIC1))
+        if (!primary) {
             disk += 2;
-
-        if (disk < 2) {
-            if (regs[CMD0 + IDE_STATUS_OFFSET] & 0x10)
-                disk += 1;
-        } else {
-            if (regs[CMD1 + IDE_STATUS_OFFSET] & 0x10)
-                disk += 1;
+            devBit = &dev[1];
         }
+
+        disk += *devBit;
+
+        assert(*devBit == 0 || *devBit == 1);
 
         return disk;
     };
+
+    /** Select the disk based on a pointer */
+    int getDisk(IdeDisk *diskPtr)
+    {
+        for (int i = 0; i < 4; i++) {
+            if ((long)diskPtr == (long)disks[i])
+                return i;
+        }
+        return -1;
+    }
 
   public:
     /**
@@ -204,7 +214,7 @@ class IdeController : public PciDev
      * @param hier The hierarchy parameters
      */
     IdeController(const std::string &name, IntrControl *ic,
-                  const vector<IdeDisk *> &new_disks,
+                  const std::vector<IdeDisk *> &new_disks,
                   MemoryController *mmu, PciConfigAll *cf,
                   PciConfigData *cd, Tsunami *t,
                   uint32_t bus_num, uint32_t dev_num, uint32_t func_num,
@@ -217,6 +227,11 @@ class IdeController : public PciDev
 
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
+
+    void intrPost();
+    void intrClear();
+
+    void setDmaComplete(IdeDisk *disk);
 
     /**
      * Read a done field for a given target.

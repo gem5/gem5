@@ -27,10 +27,6 @@
  */
 
 /*
- * @todo
- * Should derive Tsunami from common platform class so PCI will work with
- * multiple platforms
- *
  * @file
  * PCI Config space implementation.
  */
@@ -39,7 +35,6 @@
 #define __PCICONFIGALL_HH__
 
 #include "mem/functional_mem/functional_memory.hh"
-#include "dev/tsunami.hh"
 #include "dev/pcireg.h"
 
 #define MAX_PCI_DEV     32
@@ -60,15 +55,6 @@ class PciConfigAll : public FunctionalMemory
     Addr addr;
     static const Addr size = 0xffffff;
 
-  protected:
-
-    /**
-      * Pointer to the Tsunmi Object so we can communicate
-      * to other Tsunami devices in need be.
-      * @todo Make this more generic for multiple platforms
-      */
-    Tsunami *tsunami;
-
   public:
     /**
       * Pointers to all the devices that are registered with this
@@ -79,8 +65,7 @@ class PciConfigAll : public FunctionalMemory
     /**
       * The default constructor.
       */
-    PciConfigAll(const std::string &name, Tsunami *t, Addr a,
-                 MemoryController *mmu);
+    PciConfigAll(const std::string &name, Addr a, MemoryController *mmu);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
