@@ -33,8 +33,13 @@ typedef unsigned int uint32;
 #define K1BASE 0xfffffc8000000000
 #define KSEG_TO_PHYS(x)(((ul)x) & ~KSEG)
 
+#ifdef TSUNAMI
+#define ALPHA_ACCESS_BASE 0xfffffd0200000000
+#elif TLASER
 #define ALPHA_ACCESS_BASE 0xfffffc8000a00000
-
+#else
+#error TSUNAMI/TLASER not defined.
+#endif
 
 #define PHYS_TO_K1(_x) (K1BASE|(_x))
 
