@@ -656,6 +656,7 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(io_enabled);
     UNSERIALIZE_SCALAR(bm_enabled);
     UNSERIALIZE_ARRAY(cmd_in_progress, 4);
+
     if (pioInterface) {
         pioInterface->addAddrRange(pri_cmd_addr, pri_cmd_addr +
                                    pri_cmd_size - 1);

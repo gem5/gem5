@@ -435,29 +435,8 @@ IdeDisk::dmaReadDone()
         writeDisk(curSector++, (uint8_t *)(dataBuffer + bytesWritten));
     }
 
-#if 0
-    // actually copy the data from memory to data buffer
-    Addr dmaAddr =
-        ctrl->tsunami->pchip->translatePciToDma(curPrd.getBaseAddr());
-    memcpy((void *)dataBuffer,
-           physmem->dma_addr(dmaAddr, curPrd.getByteCount()),
-           curPrd.getByteCount());
-
-    uint32_t bytesWritten = 0;
-
-    while (bytesWritten < curPrd.getByteCount()) {
-        if (cmdBytesLeft <= 0)
-            panic("DMA data is larger than # sectors specified\n");
-
-        writeDisk(curSector++, (uint8_t *)(dataBuffer + bytesWritten));
-
-        bytesWritten += SectorSize;
-        cmdBytesLeft -= SectorSize;
-    }
-#endif
-
     // check for the EOT
-    if (curPrd.getEOT()){
+    if (curPrd.getEOT()) {
         assert(cmdBytesLeft == 0);
         dmaState = Dma_Idle;
         updateState(ACT_DMA_DONE);
@@ -563,14 +542,6 @@ IdeDisk::dmaWriteDone()
                (void *)(dataBuffer + (bytesRead - bytesInPage)),
                bytesInPage);
     }
-
-#if 0
-    Addr dmaAddr = ctrl->tsunami->pchip->
-        translatePciToDma(curPrd.getBaseAddr());
-
-    memcpy(physmem->dma_addr(dmaAddr, curPrd.getByteCount()),
-           (void *)dataBuffer, curPrd.getByteCount());
-#endif
 
     // check for the EOT
     if (curPrd.getEOT()) {
@@ -1067,25 +1038,40 @@ IdeDisk::serialize(ostream &os)
     Tick reschedule = 0;
     Events_t event = None;
 
+    int eventCount = 0;
+
     if (dmaTransferEvent.scheduled()) {
         reschedule = dmaTransferEvent.when();
         event = Transfer;
-    } else if (dmaReadWaitEvent.scheduled()) {
+        eventCount++;
+    }
+    if (dmaReadWaitEvent.scheduled()) {
         reschedule = dmaReadWaitEvent.when();
         event = ReadWait;
-    } else if (dmaWriteWaitEvent.scheduled()) {
+        eventCount++;
+    }
+    if (dmaWriteWaitEvent.scheduled()) {
         reschedule = dmaWriteWaitEvent.when();
         event = WriteWait;
-    } else if (dmaPrdReadEvent.scheduled()) {
+        eventCount++;
+    }
+    if (dmaPrdReadEvent.scheduled()) {
         reschedule = dmaPrdReadEvent.when();
         event = PrdRead;
-    } else if (dmaReadEvent.scheduled()) {
+        eventCount++;
+    }
+    if (dmaReadEvent.scheduled()) {
         reschedule = dmaReadEvent.when();
         event = DmaRead;
-    } else if (dmaWriteEvent.scheduled()) {
+        eventCount++;
+    }
+    if (dmaWriteEvent.scheduled()) {
         reschedule = dmaWriteEvent.when();
         event = DmaWrite;
+        eventCount++;
     }
+
+    assert(eventCount <= 1);
 
     SERIALIZE_SCALAR(reschedule);
     SERIALIZE_ENUM(event);
@@ -1098,6 +1084,7 @@ IdeDisk::serialize(ostream &os)
     SERIALIZE_SCALAR(cmdReg.cyl_low);
     SERIALIZE_SCALAR(cmdReg.cyl_high);
     SERIALIZE_SCALAR(cmdReg.drive);
+    SERIALIZE_SCALAR(cmdReg.command);
     SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(nIENBit);
     SERIALIZE_SCALAR(devID);
@@ -1150,6 +1137,7 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(cmdReg.cyl_low);
     UNSERIALIZE_SCALAR(cmdReg.cyl_high);
     UNSERIALIZE_SCALAR(cmdReg.drive);
+    UNSERIALIZE_SCALAR(cmdReg.command);
     UNSERIALIZE_SCALAR(status);
     UNSERIALIZE_SCALAR(nIENBit);
     UNSERIALIZE_SCALAR(devID);
