@@ -106,10 +106,12 @@ class StaticInstBase : public RefCounted
 
         IsThreadSync,	///< Thread synchronization operation.
 
-        IsSerializing,	///< Serializes pipeline: won't until all
+        IsSerializing,	///< Serializes pipeline: won't execute until all
                         /// older instructions have committed.
         IsMemBarrier,	///< Is a memory barrier
         IsWriteBarrier,	///< Is a write barrier
+
+        IsNonSpeculative, ///< Should not be executed speculatively
 
         NumFlags
     };
@@ -192,6 +194,7 @@ class StaticInstBase : public RefCounted
     bool isSerializing()  const { return flags[IsSerializing]; }
     bool isMemBarrier()   const { return flags[IsMemBarrier]; }
     bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
+    bool isNonSpeculative() const { return flags[IsNonSpeculative]; }
     //@}
 
     /// Operation class.  Used to select appropriate function unit in issue.
