@@ -797,13 +797,37 @@ sys_int_21:
 	ALIGN_BRANCH
 sys_int_20:
         or      r31,3,r16                       // a0 means it is a I/O interrupt
+        
         bis     r31,0x801,r8
         sll     r8,4,r8
         bis     r8,0xa000,r8
         sll     r8,4,r8
-        bis     r8,0x300,r8
-        ldl_p   r17, 0(r8)                      // read the drir, which is actually
-                                                // the srm vector
+        bis     r8,0x80,r8
+        ldl_p   r9, 0(r8)                       // read the MISC register
+        
+        and     r9,0x1,r10                      // grab LSB and shift left 2
+        sll     r10,2,r10
+        and     r9,0x2,r11                      // grabl LSB+1 and shift left 5
+        sll     r11,5,r11
+        
+        mskbl   r8,0,r8                         // calculate DIRn address
+        bis     r8,0x280,r8
+        or      r8,r10,r8
+        or      r8,r11,r8
+        ldl_p   r9, 0(r8)                       // read DIRn
+
+	or	r31,1,r17
+	sll	r17,63,r17			// load a 1 into the msb
+
+find_msb:	
+	and	r9,r17,r10
+	bne	r10, found_msb
+	srl	r17,1,r17
+	br	r31, find_msb
+	
+found_msb:
+        mulq    r17,0x10,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
+        addq    r17,0x900,r17
         
         br      r31, pal_post_interrupt
 
