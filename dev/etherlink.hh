@@ -105,7 +105,7 @@ class EtherLink : public SimObject
       public:
         Interface(const std::string &name, Link *txlink, Link *rxlink);
         bool recvPacket(PacketPtr &packet) { return txlink->transmit(packet); }
-        void sendDone() { }
+        void sendDone() { peer->sendDone(); }
     };
 
     Link *link1;
