@@ -47,6 +47,7 @@
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/full_cpu/smt.hh"
+#include "cpu/sampling_cpu/sampling_cpu.hh"
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/static_inst.hh"
 #include "mem/base_mem.hh"
@@ -179,11 +180,21 @@ SimpleCPU::~SimpleCPU()
 }
 
 void
-SimpleCPU::switchOut()
+SimpleCPU::switchOut(SamplingCPU *s)
 {
-    _status = SwitchedOut;
-    if (tickEvent.scheduled())
-        tickEvent.squash();
+    sampler = s;
+    if (status() == DcacheMissStall) {
+        DPRINTF(Sampler,"Outstanding dcache access, waiting for completion\n");
+        _status = DcacheMissSwitch;
+    }
+    else {
+        _status = SwitchedOut;
+
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+
+        sampler->signalSwitched();
+    }
 }
 
 
@@ -203,8 +214,6 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
             tickEvent.schedule(curTick);
         }
     }
-
-    oldCPU->switchOut();
 }
 
 
@@ -631,6 +640,12 @@ SimpleCPU::processCacheCompletion()
         _status = Running;
         scheduleTickEvent(1);
         break;
+      case DcacheMissSwitch:
+        if (memReq->cmd.isRead()) {
+            curStaticInst->execute(this,traceData);
+        }
+        _status = SwitchedOut;
+        sampler->signalSwitched();
       case SwitchedOut:
         // If this CPU has been switched out due to sampling/warm-up,
         // ignore any further status changes (e.g., due to cache

@@ -102,12 +102,19 @@ LinuxSystem::LinuxSystem(Params *p)
     } else
         panic("could not find dp264_mv\n");
 
-#ifdef DEBUG
+#ifndef NDEBUG
     kernelPanicEvent = new BreakPCEvent(&pcEventQueue, "kernel panic");
     if (kernelSymtab->findAddress("panic", addr))
         kernelPanicEvent->schedule(addr);
     else
         panic("could not find kernel symbol \'panic\'");
+
+    kernelDieEvent = new BreakPCEvent(&pcEventQueue, "die if kernel");
+    if (kernelSymtab->findAddress("die_if_kernel", addr))
+        kernelDieEvent->schedule(addr);
+    else
+        panic("could not find kernel symbol \'die_if_kernel\'");
+
 #endif
 
     /**
@@ -174,7 +181,7 @@ LinuxSystem::LinuxSystem(Params *p)
 
 LinuxSystem::~LinuxSystem()
 {
-#ifdef DEBUG
+#ifndef NDEBUG
     delete kernelPanicEvent;
 #endif
     delete skipIdeDelay50msEvent;

@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "cpu/sampling_cpu/sampling_cpu.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "targetarch/isa_traits.hh"
@@ -114,9 +115,9 @@ class BaseCPU : public SimObject
     bool deferRegistration;
     void registerExecContexts();
 
-    /// Prepare for another CPU to take over execution.  Called by
-    /// takeOverFrom() on its argument.
-    virtual void switchOut();
+    /// Prepare for another CPU to take over execution.  When it is
+    /// is ready (drained pipe) it signals the sampler.
+    virtual void switchOut(SamplingCPU *);
 
     /// Take over execution from the given CPU.  Used for warm-up and
     /// sampling.

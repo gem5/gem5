@@ -31,10 +31,11 @@
 #include <string>
 #include <utility>
 
-#include "sim/debug.hh"
+#include "base/trace.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/pc_event.hh"
-#include "base/trace.hh"
+#include "sim/debug.hh"
 #include "sim/universe.hh"
 
 using namespace std;
@@ -123,6 +124,8 @@ BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, bool del)
 void
 BreakPCEvent::process(ExecContext *xc)
 {
+    StringWrap name(xc->cpu->name() + ".break_event");
+    DPRINTFN("break event %s triggered", descr());
     debug_break();
     if (remove)
         delete this;

@@ -57,9 +57,12 @@ class PrintThreadInfo;
 class LinuxSystem : public System
 {
   private:
-#ifdef DEBUG
+#ifndef NDEBUG
     /** Event to halt the simulator if the kernel calls panic()  */
     BreakPCEvent *kernelPanicEvent;
+
+    /** Event to halt the simulator if the kernel calls die_if_kernel  */
+    BreakPCEvent *kernelDieEvent;
 #endif
 
     /**
