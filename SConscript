@@ -353,6 +353,7 @@ syscall_emulation_sources = Split('''
 	arch/alpha/alpha_linux_process.cc
 	arch/alpha/alpha_tru64_process.cc
 	cpu/memtest/memtest.cc
+        cpu/trace/opt_cpu.cc
 	cpu/trace/trace_cpu.cc
 	eio/eio.cc
 	eio/exolex.cc
