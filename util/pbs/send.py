@@ -131,21 +131,22 @@ if listonly:
 if not onlyecho:
     jl = []
     for jobname in joblist:
+        jobdir = joinpath(rootdir, jobname)
         if os.path.exists(jobname):
             if not force:
-                if os.path.isfile(joinpath(jobname, '.success')):
+                if os.path.isfile(joinpath(jobdir, '.success')):
                     continue
 
-                if os.path.isfile(joinpath(jobname, '.start')) and \
-                       not os.path.isfile(joinpath(jobname, '.stop')):
+                if os.path.isfile(joinpath(jobdir, '.start')) and \
+                       not os.path.isfile(joinpath(jobdir, '.stop')):
                     continue
 
             if not clean:
                 sys.exit('job directory not clean!')
 
-            job.cleandir(jobname)
+            job.cleandir(jobdir)
         else:
-            os.mkdir(jobname)
+            os.mkdir(jobdir)
     jl.append(jobname)
     joblist = jl
 
