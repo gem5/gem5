@@ -4,7 +4,7 @@ simobj BaseCPU(SimObject):
     icache = Param.BaseMem(NULL, "L1 instruction cache object")
     dcache = Param.BaseMem(NULL, "L1 data cache object")
 
-    if Bool._convert(env.get('FULL_SYSTEM', 'False')):
+    if build_env['FULL_SYSTEM']:
         dtb = Param.AlphaDTB("Data TLB")
         itb = Param.AlphaITB("Instruction TLB")
         mem = Param.FunctionalMemory("memory")

@@ -212,6 +212,9 @@ base_sources = Split('''
 	mem/trace/mem_trace_writer.cc
 	mem/trace/m5_writer.cc
 
+        python/pyconfig.cc
+        python/embedded_py.cc
+
 	sim/builder.cc
 	sim/configfile.cc
 	sim/debug.cc
@@ -228,8 +231,6 @@ base_sources = Split('''
 	sim/stat_control.cc
 	sim/trace_context.cc
 	sim/universe.cc
-        sim/pyconfig/pyconfig.cc
-        sim/pyconfig/embedded_py.cc
         ''')
 
 # MySql sources
@@ -407,8 +408,8 @@ env.Command(Split('''arch/alpha/decoder.cc
 # SConscript-local is the per-config build, which just copies some
 # header files into a place where they can be found.
 SConscript('libelf/SConscript-local', exports = 'env', duplicate=0)
-SConscript('sim/pyconfig/SConscript', exports = ['env'], duplicate=0)
-
+SConscript('python/SConscript', exports = ['env'], duplicate=0)
+SConscript('simobj/SConscript', exports = 'env', duplicate=0)
 
 # This function adds the specified sources to the given build
 # environment, and returns a list of all the corresponding SCons

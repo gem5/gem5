@@ -27,20 +27,13 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
-from importer import AddToPath, LoadMpyFile
+from convert import *
 
 noDot = False
 try:
     import pydot
 except:
     noDot = True
-
-env = {}
-env.update(os.environ)
-
-def panic(string):
-    print >>sys.stderr, 'panic:', string
-    sys.exit(1)
 
 def issequence(value):
     return isinstance(value, tuple) or isinstance(value, list)
@@ -208,6 +201,28 @@ class_decorator = 'M5M5_SIMOBJECT_'
 expr_decorator = 'M5M5_EXPRESSION_'
 dot_decorator = '_M5M5_DOT_'
 
+# 'Global' map of legitimate types for SimObject parameters.
+param_types = {}
+
+# Dummy base class to identify types that are legitimate for SimObject
+# parameters.
+class ParamType(object):
+    pass
+
+# Add types defined in given context (dict or module) that are derived
+# from ParamType to param_types map.
+def add_param_types(ctx):
+    if isinstance(ctx, types.DictType):
+        source_dict = ctx
+    elif isinstance(ctx, types.ModuleType):
+        source_dict = ctx.__dict__
+    else:
+        raise TypeError, \
+              "m5.config.add_param_types requires dict or module as arg"
+    for key,val in source_dict.iteritems():
+        if isinstance(val, type) and issubclass(val, ParamType):
+            param_types[key] = val
+
 # The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
 # classes that derive from ConfigNode are instantiated, and provides
@@ -245,7 +260,7 @@ class MetaConfigNode(type):
         # initialize required attributes
         cls._params = {}
         cls._values = {}
-        cls._enums = {}
+        cls._param_types = {}
         cls._bases = [c for c in cls.__mro__ if isConfigNode(c)]
         cls._anon_subclass_counter = 0
 
@@ -268,18 +283,25 @@ class MetaConfigNode(type):
                 elif isNullPointer(val):
                     cls._values[key] = val
 
-        # now process _init_dict items
+        # process param types from _init_dict, as these may be needed
+        # by param descriptions also in _init_dict
         for key,val in cls._init_dict.items():
+            if isinstance(val, type) and issubclass(val, ParamType):
+                cls._param_types[key] = val
+                if not issubclass(val, ConfigNode):
+                    del cls._init_dict[key]
+
+        # now process remaining _init_dict items
+        for key,val in cls._init_dict.items():
+            # param descriptions
             if isinstance(val, _Param):
                 cls._params[key] = val
+                # try to resolve local param types in local param_types scope
+                val.maybe_resolve_type(cls._param_types)
 
             # init-time-only keywords
             elif cls.init_keywords.has_key(key):
                 cls._set_keyword(key, val, cls.init_keywords[key])
-
-            # enums
-            elif isinstance(val, type) and issubclass(val, Enum):
-                cls._enums[key] = val
 
             # See description of decorators in the importer.py file.
             # We just strip off the expr_decorator now since we don't
@@ -417,7 +439,11 @@ class MetaConfigNode(type):
             # It's ok: set attribute by delegating to 'object' class.
             # Note the use of param.make_value() to verify/canonicalize
             # the assigned value
-            param.valid(value)
+            try:
+                param.valid(value)
+            except:
+                panic("Error setting param %s.%s to %s\n" % \
+                      (cls.__name__, attr, value))
             cls._setvalue(attr, value)
         elif isConfigNode(value) or isSimObjSequence(value):
             cls._setvalue(attr, value)
@@ -449,7 +475,7 @@ class MetaConfigNode(type):
 
     # Print instance info to .ini file.
     def instantiate(cls, name, parent = None):
-        instance = Node(name, cls, cls.type, parent, isParamContext(cls))
+        instance = Node(name, cls, parent, isParamContext(cls))
 
         if hasattr(cls, 'check'):
             cls.check()
@@ -560,7 +586,7 @@ class MetaSimObject(MetaConfigNode):
     def _cpp_decl(cls):
         name = cls.__name__
         code = ""
-        code += "\n".join([e.cpp_declare() for e in cls._enums.values()])
+        code += "\n".join([e.cpp_declare() for e in cls._param_types.values()])
         code += "\n"
         param_names = cls._params.keys()
         param_names.sort()
@@ -584,10 +610,13 @@ class NodeParam(object):
 
 class Node(object):
     all = {}
-    def __init__(self, name, realtype, type, parent, paramcontext):
+    def __init__(self, name, realtype, parent, paramcontext):
         self.name = name
         self.realtype = realtype
-        self.type = type
+        if isSimObject(realtype):
+            self.type = realtype.type
+        else:
+            self.type = None
         self.parent = parent
         self.children = []
         self.child_names = {}
@@ -849,13 +878,24 @@ class _Param(object):
         if not hasattr(self, 'desc'):
             raise TypeError, 'desc attribute missing'
 
+    def maybe_resolve_type(self, context):
+        # check if already resolved... don't use hasattr(),
+        # as that calls __getattr__()
+        if self.__dict__.has_key('ptype'):
+            return
+        try:
+            self.ptype = context[self.ptype_string]
+        except KeyError:
+            # no harm in trying... we'll try again later using global scope
+            pass
+
     def __getattr__(self, attr):
         if attr == 'ptype':
             try:
-                self.ptype = eval(self.ptype_string)
+                self.ptype = param_types[self.ptype_string]
                 return self.ptype
             except:
-                raise TypeError, 'Param.%s: undefined type' % self.ptype_string
+                panic("undefined Param type %s" % self.ptype_string)
         else:
             raise AttributeError, "'%s' object has no attribute '%s'" % \
                   (type(self).__name__, attr)
@@ -882,19 +922,10 @@ class _ParamProxy(object):
 
     # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        # Param type could be defined only in context of caller (e.g.,
-        # for locally defined Enum subclass).  Need to go look up the
-        # type in that enclosing scope.
-        caller_frame = inspect.stack()[1][0]
-        ptype = caller_frame.f_locals.get(self.ptype, None)
-        if not ptype: ptype = caller_frame.f_globals.get(self.ptype, None)
-        if not ptype: ptype = globals().get(self.ptype, None)
-        # ptype could still be None due to circular references... we'll
-        # try one more time to evaluate lazily when ptype is first needed.
-        # In the meantime we'll save the type name as a string.
-        if not ptype: ptype = self.ptype
-        return _Param(ptype, *args, **kwargs)
+        return _Param(self.ptype, *args, **kwargs)
 
+    # Strange magic to theoretically allow dotted names as Param classes,
+    # e.g., Param.Foo.Bar(...) to have a param of type Foo.Bar
     def __getattr__(self, attr):
         if attr == '__bases__':
             raise AttributeError, ''
@@ -970,99 +1001,109 @@ VectorParam = _VectorParamProxy(None)
 # to correspond to distinct C++ types as well.
 #
 #####################################################################
-# Integer parameter type.
-class _CheckedInt(object):
+
+
+# Metaclass for bounds-checked integer parameters.  See CheckedInt.
+class CheckedIntType(type):
+    def __init__(cls, name, bases, dict):
+        super(CheckedIntType, cls).__init__(name, bases, dict)
+
+        # CheckedInt is an abstract base class, so we actually don't
+        # want to do any processing on it... the rest of this code is
+        # just for classes that derive from CheckedInt.
+        if name == 'CheckedInt':
+            return
+
+        if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
+            if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
+                panic("CheckedInt subclass %s must define either\n" \
+                      "    'min' and 'max' or 'size' and 'unsigned'\n" \
+                      % name);
+            if cls.unsigned:
+                cls.min = 0
+                cls.max = 2 ** cls.size - 1
+            else:
+                cls.min = -(2 ** (cls.size - 1))
+                cls.max = (2 ** (cls.size - 1)) - 1
+
+        cls._cpp_param_decl = cls.cppname
+
     def _convert(cls, value):
-        t = type(value)
-        if t == bool:
+        if isinstance(value, bool):
             return int(value)
 
-        if t != int and t != long and t != float and t != str:
-            raise TypeError, 'Integer parameter of invalid type %s' % t
+        if not isinstance(value, (int, long, float, str)):
+            raise TypeError, 'Integer param of invalid type %s' % type(value)
 
-        if t == str or t == float:
-            value = long(value)
+        if isinstance(value, (str, float)):
+            value = long(float(value))
 
-        if not cls._min <= value <= cls._max:
-            raise TypeError, 'Integer parameter out of bounds %d < %d < %d' % \
-                  (cls._min, value, cls._max)
+        if not cls.min <= value <= cls.max:
+            raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
+                  (cls.min, value, cls.max)
 
         return value
-    _convert = classmethod(_convert)
 
     def _string(cls, value):
         return str(value)
-    _string = classmethod(_string)
 
-class CheckedInt(type):
-    def __new__(cls, cppname, min, max):
-        # New class derives from _CheckedInt base with proper bounding
-        # parameters
-        dict = { '_cpp_param_decl' : cppname, '_min' : min, '_max' : max }
-        return type.__new__(cls, cppname, (_CheckedInt, ), dict)
+# Abstract superclass for bounds-checked integer parameters.  This
+# class is subclassed to generate parameter classes with specific
+# bounds.  Initialization of the min and max bounds is done in the
+# metaclass CheckedIntType.__init__.
+class CheckedInt(ParamType):
+    __metaclass__ = CheckedIntType
 
-class CheckedIntType(CheckedInt):
-    def __new__(cls, cppname, size, unsigned):
-        dict = {}
-        if unsigned:
-            min = 0
-            max = 2 ** size - 1
-        else:
-            min = -(2 ** (size - 1))
-            max = (2 ** (size - 1)) - 1
+class Int(CheckedInt):      cppname = 'int';      size = 32; unsigned = False
+class Unsigned(CheckedInt): cppname = 'unsigned'; size = 32; unsigned = True
 
-        return super(cls, CheckedIntType).__new__(cls, cppname, min, max)
+class Int8(CheckedInt):     cppname =  'int8_t';  size =  8; unsigned = False
+class UInt8(CheckedInt):    cppname = 'uint8_t';  size =  8; unsigned = True
+class Int16(CheckedInt):    cppname =  'int16_t'; size = 16; unsigned = False
+class UInt16(CheckedInt):   cppname = 'uint16_t'; size = 16; unsigned = True
+class Int32(CheckedInt):    cppname =  'int32_t'; size = 32; unsigned = False
+class UInt32(CheckedInt):   cppname = 'uint32_t'; size = 32; unsigned = True
+class Int64(CheckedInt):    cppname =  'int64_t'; size = 64; unsigned = False
+class UInt64(CheckedInt):   cppname = 'uint64_t'; size = 64; unsigned = True
 
-Int      = CheckedIntType('int',      32, False)
-Unsigned = CheckedIntType('unsigned', 32, True)
+class Counter(CheckedInt): cppname = 'Counter'; size = 64; unsigned = True
+class Addr(CheckedInt):    cppname = 'Addr';    size = 64; unsigned = True
+class Tick(CheckedInt):    cppname = 'Tick';    size = 64; unsigned = True
 
-Int8     = CheckedIntType('int8_t',    8, False)
-UInt8    = CheckedIntType('uint8_t',   8, True)
-Int16    = CheckedIntType('int16_t',  16, False)
-UInt16   = CheckedIntType('uint16_t', 16, True)
-Int32    = CheckedIntType('int32_t',  32, False)
-UInt32   = CheckedIntType('uint32_t', 32, True)
-Int64    = CheckedIntType('int64_t',  64, False)
-UInt64   = CheckedIntType('uint64_t', 64, True)
-
-Counter  = CheckedIntType('Counter', 64, True)
-Addr     = CheckedIntType('Addr',    64, True)
-Tick     = CheckedIntType('Tick',    64, True)
-
-Percent  = CheckedInt('int', 0, 100)
+class Percent(CheckedInt): cppname = 'int'; min = 0; max = 100
 
 class Pair(object):
     def __init__(self, first, second):
         self.first = first
         self.second = second
 
-class _Range(object):
+class MetaRange(type):
+    def __init__(cls, name, bases, dict):
+        super(MetaRange, cls).__init__(name, bases, dict)
+        if name == 'Range':
+            return
+        cls._cpp_param_decl = 'Range<%s>' % cls.type._cpp_param_decl
+
     def _convert(cls, value):
         if not isinstance(value, Pair):
             raise TypeError, 'value %s is not a Pair' % value
-        return Pair(cls._type._convert(value.first),
-                    cls._type._convert(value.second))
-    _convert = classmethod(_convert)
+        return Pair(cls.type._convert(value.first),
+                    cls.type._convert(value.second))
 
     def _string(cls, value):
-        return '%s:%s' % (cls._type._string(value.first),
-                          cls._type._string(value.second))
-    _string = classmethod(_string)
+        return '%s:%s' % (cls.type._string(value.first),
+                          cls.type._string(value.second))
+
+class Range(ParamType):
+    __metaclass__ = MetaRange
 
 def RangeSize(start, size):
     return Pair(start, start + size - 1)
 
-class Range(type):
-    def __new__(cls, type):
-        dict = { '_cpp_param_decl' : 'Range<%s>' % type._cpp_param_decl,
-                 '_type' : type }
-        clsname = 'Range_' + type.__name__
-        return super(cls, Range).__new__(cls, clsname, (_Range, ), dict)
-
-AddrRange = Range(Addr)
+class AddrRange(Range): type = Addr
 
 # Boolean parameter type.
-class Bool(object):
+class Bool(ParamType):
     _cpp_param_decl = 'bool'
     def _convert(value):
         t = type(value)
@@ -1090,7 +1131,7 @@ class Bool(object):
     _string = staticmethod(_string)
 
 # String-valued parameter.
-class String(object):
+class String(ParamType):
     _cpp_param_decl = 'string'
 
     # Constructor.  Value must be Python string.
@@ -1130,7 +1171,7 @@ class NextEthernetAddr(object):
         self.value = self.addr
         self.addr = IncEthernetAddr(self.addr, inc)
 
-class EthernetAddr(object):
+class EthernetAddr(ParamType):
     _cpp_param_decl = 'EthAddr'
 
     def _convert(cls, value):
@@ -1237,7 +1278,7 @@ class MetaEnum(type):
         return s
 
 # Base class for enum types.
-class Enum(object):
+class Enum(ParamType):
     __metaclass__ = MetaEnum
     vals = []
 
@@ -1257,8 +1298,8 @@ class Enum(object):
 #
 
 # Some memory range specifications use this as a default upper bound.
-MAX_ADDR = Addr._max
-MaxTick = Tick._max
+MAX_ADDR = Addr.max
+MaxTick = Tick.max
 
 # For power-of-two sizing, e.g. 64*K gives an integer value 65536.
 K = 1024
@@ -1270,9 +1311,6 @@ G = K*M
 # The final hook to generate .ini files.  Called from configuration
 # script once config is built.
 def instantiate(root):
-    if not issubclass(root, Root):
-        raise AttributeError, 'Can only instantiate the Root of the tree'
-
     instance = root.instantiate('root')
     instance.fixup()
     instance.display()
@@ -1293,11 +1331,20 @@ def instantiate(root):
 # parameters to be set by keyword in the constructor.  Note that most
 # of the heavy lifting for the SimObject param handling is done in the
 # MetaConfigNode metaclass.
-class SimObject(ConfigNode):
+class SimObject(ConfigNode, ParamType):
     __metaclass__ = MetaSimObject
     type = 'SimObject'
 
-from objects import *
 
-cpp_classes = MetaSimObject.cpp_classes
-cpp_classes.sort()
+# __all__ defines the list of symbols that get exported when
+# 'from config import *' is invoked.  Try to keep this reasonably
+# short to avoid polluting other namespaces.
+__all__ = ['issequence',
+           'ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
+           'Super', 'Enum',
+           'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
+           'Int32', 'UInt32', 'Int64', 'UInt64',
+           'Counter', 'Addr', 'Tick', 'Percent',
+           'Pair', 'RangeSize', 'AddrRange', 'MAX_ADDR', 'NULL', 'K', 'M',
+           'NextEthernetAddr',
+           'instantiate']

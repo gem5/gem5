@@ -62,6 +62,9 @@ if not os.path.isdir('ext'):
           % EXT_SRCDIR
     sys.exit(1)
 
+# tell python where to find m5 python code
+sys.path.append(os.path.join(SRCDIR, 'python'))
+
 
 ###################################################
 #
@@ -294,7 +297,7 @@ for build_dir in build_dirs:
 ###################################################
 #
 # Let SCons do its thing.  At this point SCons will use the defined
-# build enviornments to build the requested targets.
+# build environments to build the requested targets.
 #
 ###################################################
 
