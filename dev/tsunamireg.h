@@ -2,6 +2,8 @@
 #ifndef __TSUNAMIREG_H__
 #define __TSUNAMIREG_H__
 
+#define ALPHA_K0SEG_BASE  0xfffffc0000000000
+
 // CChip Registers
 #define TSDEV_CC_CSR    0x00
 #define TSDEV_CC_MTR    0x01
@@ -98,6 +100,11 @@
 #define RTC_CONTROL_REGISTERC   12	// control register C
 #define RTC_CONTROL_REGISTERD   13	// control register D
 #define RTC_REGNUMBER_RTC_CR1   0x6A	// control register 1
+
+#define PCHIP_PCI0_MEMORY       0x10000000000
+#define PCHIP_PCI0_IO           0x101FC000000
+#define TSUNAMI_PCI0_MEMORY     ALPHA_K0SEG_BASE + PCHIP_PCI0_MEMORY
+#define TSUNAMI_PCI0_IO         ALPHA_K0SEG_BASE + PCHIP_PCI0_IO
 
 
 #endif // __TSUNAMIREG_H__

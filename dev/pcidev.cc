@@ -47,6 +47,7 @@
 #include "sim/builder.hh"
 #include "sim/param.hh"
 #include "sim/universe.hh"
+#include "dev/tsunamireg.h"
 
 using namespace std;
 
@@ -176,21 +177,38 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                 if(config.data[offset] & 0x1) {
                     *(uint32_t *)&config.data[offset] = (word_value & ~0x3) |
                         (config.data[offset] & 0x3);
-                    if (word_value) {
+
+                    if (word_value & ~0x1) {
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
-                            AddMapping(word_value, BARSize[barnum]-1, MMU);
+                            AddMapping((word_value & ~0x1) + TSUNAMI_PCI0_IO,
+                                       BARSize[barnum]-1, MMU);
                         else
                             ChangeMapping(BARAddrs[barnum], BARSize[barnum]-1,
-                                          word_value, BARSize[barnum]-1, MMU);
-                        BARAddrs[barnum] = word_value;
+                                          (word_value & ~0x1) + TSUNAMI_PCI0_IO,
+                                          BARSize[barnum]-1, MMU);
+                        BARAddrs[barnum] = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
                     }
 
                 } else {
                     // This is memory space, bottom four bits are read only
                     *(uint32_t *)&config.data[offset] = (word_value & ~0xF) |
                         (config.data[offset] & 0xF);
-                }
+
+                    if (word_value & ~0x3) {
+                        // It's never been set
+                        if (BARAddrs[barnum] == 0)
+                            AddMapping((word_value & ~0x3) + TSUNAMI_PCI0_MEMORY,
+                                       BARSize[barnum]-1, MMU);
+                        else
+                            ChangeMapping(BARAddrs[barnum], BARSize[barnum]-1,
+                                          (word_value & ~0x3) +
+                                          TSUNAMI_PCI0_MEMORY,
+                                          BARSize[barnum]-1, MMU);
+                        BARAddrs[barnum] = (word_value & ~0x3) +
+                                           TSUNAMI_PCI0_MEMORY;
+                    }
+                 }
             }
             break;
 
