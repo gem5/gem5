@@ -36,21 +36,32 @@
 
 #include "base/misc.hh" //for fatal
 
-int
-LZSSCompression::findSubString(uint8_t *src, int front, int back, int size)
+void
+LZSSCompression::findSubString(uint8_t *src, int back, int size, uint16_t &L,
+                               uint16_t &P)
 {
-    int subSize = 0;
-    int max_length = 2048;
-    if (size - back < max_length) {
-        max_length = size - back;
-    }
-    for (int i = 0; i < max_length; ++i) {
-        if (src[front+i] != src[back+i]) {
-            return subSize;
+    int front = 0;
+    int max_length = size - back;
+    L = 0;
+    P = back - 1;
+    while (front < back) {
+        while (src[front] != src[back] && front < back) ++front;
+        if (front >= back) {
+            return;
         }
-        ++subSize;
+        int i = 1;
+        while (src[front+i] == src[back+i] && i < max_length) ++i;
+        if (i >= L) {
+            L = i;
+            P = front;
+        }
+        if (src[front+i] != src[back+i-1]) {
+            // can't find a longer substring until past this point.
+            front += i;
+        } else {
+            ++front;
+        }
     }
-    return subSize;
 }
 
 int
@@ -106,13 +117,7 @@ LZSSCompression::compress(uint8_t *dest, uint8_t *src, int size)
             ++i;
             continue;
         }
-        for (int j = 0; j < i; ++j) {
-            int sub_size = findSubString(src, j, i, size);
-            if (sub_size >= L) {
-                L = sub_size;
-                P = j;
-            }
-        }
+        findSubString(src, i, size, L, P);
         if (L > 1) {
             // Output the string reference
             emitString(&dest[dest_index], P, L);

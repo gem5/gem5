@@ -41,14 +41,15 @@
 class LZSSCompression
 {
     /**
-     * Finds the longest substrings that start at the given offsets.
+     * Finds the longest substring for the given offset.
      * @param src The source block that we search for substrings.
-     * @param front The smaller offset.
      * @param back The larger offset.
      * @param size The size of the source block.
-     * @return The size of the longest substring.
+     * @param L The length of the largest substring.
+     * @param P The starting offset of the largest substring.
      */
-    int findSubString(uint8_t *src, int front, int back, int size);
+    void findSubString(uint8_t *src, int back, int size, uint16_t &L,
+                       uint16_t &P);
 
     /**
      * Emit an encoded byte to the compressed data array. If the 2 high
