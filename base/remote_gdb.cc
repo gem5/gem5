@@ -350,7 +350,7 @@ RemoteGDB::acc(Addr va, size_t len)
      * but there is no easy way to do it.
      */
 
-        if (PC_PAL(va) || va < 0x10000)
+        if (AlphaISA::PcPAL(va) || va < 0x10000)
             return true;
 
         Addr ptbr = context->regs.ipr[AlphaISA::IPR_PALtemp20];

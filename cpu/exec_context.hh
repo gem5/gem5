@@ -196,8 +196,8 @@ class ExecContext
 #ifdef FULL_SYSTEM
     bool validInstAddr(Addr addr) { return true; }
     bool validDataAddr(Addr addr) { return true; }
-    int getInstAsid() { return ITB_ASN_ASN(regs.ipr[TheISA::IPR_ITB_ASN]); }
-    int getDataAsid() { return DTB_ASN_ASN(regs.ipr[TheISA::IPR_DTB_ASN]); }
+    int getInstAsid() { return regs.instAsid(); }
+    int getDataAsid() { return regs.dataAsid(); }
 
     Fault translateInstReq(MemReqPtr &req)
     {
@@ -410,7 +410,7 @@ class ExecContext
     int readIntrFlag() { return regs.intrflag; }
     void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();
-    bool inPalMode() { return PC_PAL(regs.pc); }
+    bool inPalMode() { return AlphaISA::PcPAL(regs.pc); }
     void ev5_trap(Fault fault);
     bool simPalCheck(int palFunc);
 #endif

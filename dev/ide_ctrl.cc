@@ -34,16 +34,16 @@
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "dev/dma.hh"
-#include "dev/pcireg.h"
-#include "dev/pciconfigall.hh"
-#include "dev/ide_disk.hh"
 #include "dev/ide_ctrl.hh"
+#include "dev/ide_disk.hh"
+#include "dev/pciconfigall.hh"
+#include "dev/pcireg.h"
+#include "dev/platform.hh"
 #include "dev/tsunami_cchip.hh"
 #include "mem/bus/bus.hh"
+#include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
-#include "mem/bus/dma_interface.hh"
-#include "dev/tsunami.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
@@ -377,7 +377,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(pri_cmd_addr,
                                                      pri_cmd_size));
 
-            pri_cmd_addr &= PA_UNCACHED_MASK;
+            pri_cmd_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -388,7 +388,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(pri_ctrl_addr,
                                                      pri_ctrl_size));
 
-            pri_ctrl_addr &= PA_UNCACHED_MASK;
+            pri_ctrl_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -399,7 +399,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(sec_cmd_addr,
                                                      sec_cmd_size));
 
-            sec_cmd_addr &= PA_UNCACHED_MASK;
+            sec_cmd_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -410,7 +410,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(sec_ctrl_addr,
                                                      sec_ctrl_size));
 
-            sec_ctrl_addr &= PA_UNCACHED_MASK;
+            sec_ctrl_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -420,7 +420,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(RangeSize(bmi_addr, bmi_size));
 
-            bmi_addr &= PA_UNCACHED_MASK;
+            bmi_addr &= EV5::PAddrUncachedMask;
         }
         break;
     }

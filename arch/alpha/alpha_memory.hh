@@ -31,9 +31,10 @@
 
 #include <map>
 
+#include "arch/alpha/isa_traits.hh"
+#include "base/statistics.hh"
 #include "mem/mem_req.hh"
 #include "sim/sim_object.hh"
-#include "base/statistics.hh"
 
 class ExecContext;
 
@@ -66,8 +67,8 @@ class AlphaTLB : public SimObject
     // static helper functions... really EV5 VM traits
     static bool validVirtualAddress(Addr vaddr) {
         // unimplemented bits must be all 0 or all 1
-        Addr unimplBits = vaddr & VA_UNIMPL_MASK;
-        return (unimplBits == 0) || (unimplBits == VA_UNIMPL_MASK);
+        Addr unimplBits = vaddr & EV5::VAddrUnImplMask;
+        return (unimplBits == 0) || (unimplBits == EV5::VAddrUnImplMask);
     }
 
     static void checkCacheability(MemReqPtr &req);

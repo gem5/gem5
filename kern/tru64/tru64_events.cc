@@ -48,7 +48,7 @@ BadAddrEvent::process(ExecContext *xc)
     uint64_t a0 = xc->regs.intRegFile[ArgumentReg0];
 
     if (!TheISA::IsK0Seg(a0) ||
-        xc->memctrl->badaddr(TheISA::K0Seg2Phys(a0) & PA_IMPL_MASK)) {
+        xc->memctrl->badaddr(TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask)) {
 
         DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
         xc->regs.intRegFile[ReturnValueReg] = 0x1;

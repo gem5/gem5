@@ -339,7 +339,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
 
-            BARAddrs[0] &= PA_UNCACHED_MASK;
+            BARAddrs[0] &= EV5::PAddrUncachedMask;
         }
         break;
       case PCI0_BASE_ADDR1:
@@ -347,7 +347,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
 
-            BARAddrs[1] &= PA_UNCACHED_MASK;
+            BARAddrs[1] &= EV5::PAddrUncachedMask;
         }
         break;
     }

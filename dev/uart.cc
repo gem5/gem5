@@ -44,7 +44,6 @@
 #include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
-#include "targetarch/ev5.hh"
 
 using namespace std;
 
@@ -118,7 +117,7 @@ Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
 Fault
 Uart::read(MemReqPtr &req, uint8_t *data)
 {
-    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
+    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
     DPRINTF(Uart, " read register %#x\n", daddr);
 
 
@@ -246,7 +245,7 @@ Uart::read(MemReqPtr &req, uint8_t *data)
 Fault
 Uart::write(MemReqPtr &req, const uint8_t *data)
 {
-    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
+    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
 
     DPRINTF(Uart, " write register %#x value %#x\n", daddr, *(uint8_t*)data);
 

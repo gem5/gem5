@@ -15,6 +15,8 @@
 
 #ifdef FULL_SYSTEM
 
+using namespace EV5;
+
 ////////////////////////////////////////////////////////////////////////
 //
 //
@@ -92,7 +94,7 @@ AlphaISA::initIPRs(RegFile *regs)
     uint64_t *ipr = regs->ipr;
 
     bzero((char *)ipr, NumInternalProcRegs * sizeof(InternalProcReg));
-    ipr[IPR_PAL_BASE] = PAL_BASE;
+    ipr[IPR_PAL_BASE] = PalBase;
     ipr[IPR_MCSR] = 0x6;
 }
 
