@@ -191,7 +191,10 @@ sub printdiff
 			      DISCARD_A => \&discard1,
 			      DISCARD_B => \&discard2 });
 
-	die "Lost sync!" if (!$match_found);
+	if (!$match_found) {
+	    printdiff(scalar(@lines1), scalar(@lines2));
+	    die "Lost sync!";
+	}
 
 	# Since we shouldn't get here unless the first lines of the
 	# buffers are different, then we must discard some lines off
@@ -220,7 +223,10 @@ sub checkmatch
     # treated as common; if that bugs you, use Algorithm::Diff.
     if ($lines1[$n1] eq $lines2[$n2] && $lines1[$n1+1] eq $lines2[$n2+1]) {
 	printdiff($n1, $n2);
+	return 1;
     }
+
+    return 0;
 }
 
 sub simple_diff
@@ -240,6 +246,8 @@ sub simple_diff
 	    return if checkmatch($cnt, $n);
 	}
     }
+
+    printdiff(scalar(@lines1), scalar(@lines2));
     die "Lost sync!";
 }
 
