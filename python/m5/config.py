@@ -151,8 +151,11 @@ class Proxy(object):
         self._multiplier = None
 
     def __getattr__(self, attr):
+        # python uses __bases__ internally for inheritance
         if attr == '__bases__':
             return super(Proxy, self).__getattr__(self, attr)
+        if (self._path == None):
+            panic("Can't add attributes to 'any' proxy")
         self._path.append((attr,None))
         return self
 
@@ -347,7 +350,7 @@ class MetaConfigNode(type):
                 elif isNullPointer(val):
                     cls._values[key] = val
 
-        # process param types from _init_dict, as these may be needed
+        # process param types from _init_dict first, as these may be needed
         # by param descriptions also in _init_dict
         for key,val in cls._init_dict.items():
             if isinstance(val, type) and issubclass(val, ParamType):
