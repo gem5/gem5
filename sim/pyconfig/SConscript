@@ -147,6 +147,7 @@ def MakeEmbeddedPyFile(target, source, env):
 def MakeDefinesPyFile(target, source, env):
     target = file(str(target[0]), 'w')
 
+    print >>target, "import os"
     defines = env['CPPDEFINES']
     if isinstance(defines, list):
         for var in defines:
@@ -158,11 +159,11 @@ def MakeDefinesPyFile(target, source, env):
             if not isinstance(key, basestring):
                 panic("invalid type for define: %s" % type(key))
                 
-            print >>target, "env['%s'] = '%s'" % (key, val)
+            print >>target, "os.environ['%s'] = '%s'" % (key, val)
 
     elif isinstance(defines, dict):
         for key,val in defines.iteritems():
-            print >>target, "env['%s'] = '%s'" % (key, val)
+            print >>target, "os.environ['%s'] = '%s'" % (key, val)
     else:
         panic("invalid type for defines: %s" % type(defines))
 

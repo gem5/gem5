@@ -232,7 +232,7 @@ class Linux {
     static const char *hostname;
 
     /// Target uname() handler.
-    static int
+    static SyscallReturn
     unameFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
@@ -245,13 +245,13 @@ class Linux {
         strcpy(name->machine, "alpha");
 
         name.copyOut(xc->mem);
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Target osf_getsysyinfo() handler.  Even though this call is
     /// borrowed from Tru64, the subcases that get used appear to be
     /// different in practice from those used by Tru64 processes.
-    static int
+    static SyscallReturn
     osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                        ExecContext *xc)
     {
@@ -265,7 +265,7 @@ class Linux {
               // I don't think this exactly matches the HW FPCR
               *fpcr = 0;
               fpcr.copyOut(xc->mem);
-              return 0;
+              return SyscallReturn(0);
           }
 
           default:
@@ -274,11 +274,11 @@ class Linux {
             break;
         }
 
-        return 1;
+        return SyscallReturn(1);
     }
 
     /// Target osf_setsysinfo() handler.
-    static int
+    static SyscallReturn
     osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                        ExecContext *xc)
     {
@@ -293,7 +293,7 @@ class Linux {
               fpcr.copyIn(xc->mem);
               DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                        " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
-              return 0;
+              return SyscallReturn(0);
           }
 
           default:
@@ -302,18 +302,18 @@ class Linux {
             break;
         }
 
-        return 1;
+        return SyscallReturn(1);
     }
 
     /// Target fnctl() handler.
-    static int
+    static SyscallReturn
     fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
         int fd = xc->getSyscallArg(0);
 
         if (fd < 0 || process->sim_fd(fd) < 0)
-            return -EBADF;
+            return SyscallReturn(-EBADF);
 
         int cmd = xc->getSyscallArg(1);
         switch (cmd) {
@@ -321,18 +321,18 @@ class Linux {
             // if we really wanted to support this, we'd need to do it
             // in the target fd space.
             warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
-            return -EMFILE;
+            return SyscallReturn(-EMFILE);
 
           case 1: // F_GETFD (get close-on-exec flag)
           case 2: // F_SETFD (set close-on-exec flag)
-            return 0;
+            return SyscallReturn(0);
 
           case 3: // F_GETFL (get file flags)
           case 4: // F_SETFL (set file flags)
             // not sure if this is totally valid, but we'll pass it through
             // to the underlying OS
             warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
-            return fcntl(process->sim_fd(fd), cmd);
+            return SyscallReturn(fcntl(process->sim_fd(fd), cmd));
             // return 0;
 
           case 7: // F_GETLK  (get lock)
@@ -340,11 +340,11 @@ class Linux {
           case 9: // F_SETLKW (set lock and wait)
             // don't mess with file locking... just act like it's OK
             warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
-            return 0;
+            return SyscallReturn(0);
 
           default:
             warn("Unknown fcntl command %d\n", cmd);
-            return 0;
+            return SyscallReturn(0);
         }
     }
 

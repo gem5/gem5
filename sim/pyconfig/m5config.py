@@ -246,7 +246,6 @@ class MetaConfigNode(type):
         cls._params = {}
         cls._values = {}
         cls._enums = {}
-        cls._disable = {}
         cls._bases = [c for c in cls.__mro__ if isConfigNode(c)]
         cls._anon_subclass_counter = 0
 
@@ -382,15 +381,6 @@ class MetaConfigNode(type):
     def _setvalue(cls, name, value):
         cls._values[name] = value
 
-    def _getdisable(cls, name):
-        for c in cls._bases:
-            if c._disable.has_key(name):
-                return c._disable[name]
-        return False
-
-    def _setdisable(cls, name, value):
-        cls._disable[name] = value
-
     def __getattr__(cls, attr):
         if cls._isvalue(attr):
             return Value(cls, attr)
@@ -465,9 +455,6 @@ class MetaConfigNode(type):
             cls.check()
 
         for key,value in cls._getvalues().iteritems():
-            if cls._getdisable(key):
-                continue
-
             if isConfigNode(value):
                 cls.add_child(instance, key, value)
             if issequence(value):
@@ -477,15 +464,11 @@ class MetaConfigNode(type):
 
         for pname,param in cls._getparams().iteritems():
             try:
-                if cls._getdisable(pname):
-                    continue
+                value = cls._getvalue(pname)
+            except:
+                panic('Error getting %s' % pname)
 
-                try:
-                    value = cls._getvalue(pname)
-                except:
-                    print 'Error getting %s' % pname
-                    raise
-
+            try:
                 if isConfigNode(value):
                     value = instance.child_objects[value]
                 elif issequence(value):
@@ -814,16 +797,10 @@ class Value(object):
         return self.obj._getvalue(self.attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'disable':
-            self.obj._setdisable(self.attr, value)
-        else:
-            setattr(self._getattr(), attr, value)
+        setattr(self._getattr(), attr, value)
 
     def __getattr__(self, attr):
-        if attr == 'disable':
-            return self.obj._getdisable(self.attr)
-        else:
-            return getattr(self._getattr(), attr)
+        return getattr(self._getattr(), attr)
 
     def __getitem__(self, index):
         return self._getattr().__getitem__(index)

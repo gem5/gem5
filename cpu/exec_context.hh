@@ -435,20 +435,20 @@ class ExecContext
         regs.intRegFile[ArgumentReg0 + i] = val;
     }
 
-    void setSyscallReturn(int64_t return_value)
+    void setSyscallReturn(SyscallReturn return_value)
     {
         // check for error condition.  Alpha syscall convention is to
         // indicate success/failure in reg a3 (r19) and put the
         // return value itself in the standard return value reg (v0).
         const int RegA3 = 19;	// only place this is used
-        if (return_value >= 0) {
+        if (return_value.successful()) {
             // no error
             regs.intRegFile[RegA3] = 0;
-            regs.intRegFile[ReturnValueReg] = return_value;
+            regs.intRegFile[ReturnValueReg] = return_value.value();
         } else {
             // got an error, return details
             regs.intRegFile[RegA3] = (IntReg) -1;
-            regs.intRegFile[ReturnValueReg] = -return_value;
+            regs.intRegFile[ReturnValueReg] = -return_value.value();
         }
     }
 

@@ -476,7 +476,7 @@ class Tru64 {
     static const char *hostname;
 
     /// Target uname() handler.
-    static int
+    static SyscallReturn
     unameFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
@@ -489,12 +489,12 @@ class Tru64 {
         strcpy(name->machine, "alpha");
 
         name.copyOut(xc->mem);
-        return 0;
+        return SyscallReturn(0);
     }
 
 
     /// Target getsysyinfo() handler.
-    static int
+    static SyscallReturn
     getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
                    ExecContext *xc)
     {
@@ -507,21 +507,21 @@ class Tru64 {
               TypedBufferArg<uint32_t> max_cpu(xc->getSyscallArg(1));
               *max_cpu = process->numCpus();
               max_cpu.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           case Tru64::GSI_CPUS_IN_BOX: {
               TypedBufferArg<uint32_t> cpus_in_box(xc->getSyscallArg(1));
               *cpus_in_box = process->numCpus();
               cpus_in_box.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           case Tru64::GSI_PHYSMEM: {
               TypedBufferArg<uint64_t> physmem(xc->getSyscallArg(1));
               *physmem = 1024 * 1024;	// physical memory in KB
               physmem.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           case Tru64::GSI_CPU_INFO: {
@@ -538,14 +538,14 @@ class Tru64 {
               infop->mhz = 667;
 
               infop.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           case Tru64::GSI_PROC_TYPE: {
               TypedBufferArg<uint64_t> proc_type(xc->getSyscallArg(1));
               *proc_type = 11;
               proc_type.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           case Tru64::GSI_PLATFORM_NAME: {
@@ -554,14 +554,14 @@ class Tru64 {
                       "COMPAQ Professional Workstation XP1000",
                       nbytes);
               bufArg.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           case Tru64::GSI_CLK_TCK: {
               TypedBufferArg<uint64_t> clk_hz(xc->getSyscallArg(1));
               *clk_hz = 1024;
               clk_hz.copyOut(xc->mem);
-              return 1;
+              return SyscallReturn(1);
           }
 
           default:
@@ -570,18 +570,18 @@ class Tru64 {
             break;
         }
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Target fnctl() handler.
-    static int
+    static SyscallReturn
     fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
         int fd = xc->getSyscallArg(0);
 
         if (fd < 0 || process->sim_fd(fd) < 0)
-            return -EBADF;
+            return SyscallReturn(-EBADF);
 
         int cmd = xc->getSyscallArg(1);
         switch (cmd) {
@@ -589,18 +589,18 @@ class Tru64 {
             // if we really wanted to support this, we'd need to do it
             // in the target fd space.
             warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
-            return -EMFILE;
+            return SyscallReturn(-EMFILE);
 
           case 1: // F_GETFD (get close-on-exec flag)
           case 2: // F_SETFD (set close-on-exec flag)
-            return 0;
+            return SyscallReturn(0);
 
           case 3: // F_GETFL (get file flags)
           case 4: // F_SETFL (set file flags)
             // not sure if this is totally valid, but we'll pass it through
             // to the underlying OS
             warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
-            return fcntl(process->sim_fd(fd), cmd);
+            return SyscallReturn(fcntl(process->sim_fd(fd), cmd));
             // return 0;
 
           case 7: // F_GETLK  (get lock)
@@ -608,17 +608,17 @@ class Tru64 {
           case 9: // F_SETLKW (set lock and wait)
             // don't mess with file locking... just act like it's OK
             warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
-            return 0;
+            return SyscallReturn(0);
 
           default:
             warn("Unknown fcntl command %d\n", cmd);
-            return 0;
+            return SyscallReturn(0);
         }
     }
 
 
     /// Target getdirentries() handler.
-    static int
+    static SyscallReturn
     getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
@@ -638,7 +638,7 @@ class Tru64 {
         // check for error
         if (host_result < 0) {
             delete [] host_buf;
-            return -errno;
+            return SyscallReturn(-errno);
         }
 
         // no error: copy results back to target space
@@ -669,11 +669,11 @@ class Tru64 {
         *basep = host_basep;
         basep.copyOut(xc->mem);
 
-        return (tgt_buf_ptr - tgt_buf);
+        return SyscallReturn(tgt_buf_ptr - tgt_buf);
     }
 
     /// Target sigreturn() handler.
-    static int
+    static SyscallReturn
     sigreturnFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
@@ -695,11 +695,11 @@ class Tru64 {
 
         regs->miscRegs.fpcr = sc->sc_fpcr;
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Target table() handler.
-    static int
+    static SyscallReturn
     tableFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
@@ -712,7 +712,7 @@ class Tru64 {
         switch (id) {
           case Tru64::TBL_SYSINFO: {
               if (index != 0 || nel != 1 || lel != sizeof(Tru64::tbl_sysinfo))
-                  return -EINVAL;
+                  return SyscallReturn(-EINVAL);
               TypedBufferArg<Tru64::tbl_sysinfo> elp(xc->getSyscallArg(2));
 
               const int clk_hz = one_million;
@@ -726,12 +726,12 @@ class Tru64 {
               elp->si_boottime = seconds_since_epoch; // seconds since epoch?
               elp->si_max_procs = process->numCpus();
               elp.copyOut(xc->mem);
-              return 0;
+              return SyscallReturn(0);
           }
 
           default:
             cerr << "table(): id " << id << " unknown." << endl;
-            return -EINVAL;
+            return SyscallReturn(-EINVAL);
         }
     }
 
@@ -749,7 +749,7 @@ class Tru64 {
     //
 
     /// Create a stack region for a thread.
-    static int
+    static SyscallReturn
     stack_createFunc(SyscallDesc *desc, int callnum, Process *process,
                      ExecContext *xc)
     {
@@ -766,7 +766,7 @@ class Tru64 {
             argp.copyOut(xc->mem);
         }
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// NXM library version stamp.
@@ -776,7 +776,7 @@ class Tru64 {
     /// This call sets up the interface between the user and kernel
     /// schedulers by creating a shared-memory region.  The shared memory
     /// region has several structs, some global, some per-RAD, some per-VP.
-    static int
+    static SyscallReturn
     nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
@@ -877,7 +877,7 @@ class Tru64 {
         *configptr_ptr = config_addr;
         configptr_ptr.copyOut(xc->mem);
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Initialize execution context.
@@ -899,7 +899,7 @@ class Tru64 {
     }
 
     /// Create thread.
-    static int
+    static SyscallReturn
     nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
                           ExecContext *xc)
     {
@@ -946,7 +946,7 @@ class Tru64 {
             *kidp = 99;
             kidp.copyOut(xc->mem);
 
-            return 0;
+            return SyscallReturn(0);
         } else if (attrp->type == Tru64::NXM_TYPE_VP) {
             // A real "virtual processor" kernel thread.  Need to fork
             // this thread on another CPU.
@@ -994,7 +994,7 @@ class Tru64 {
                     *kidp = thread_index;
                     kidp.copyOut(xc->mem);
 
-                    return 0;
+                    return SyscallReturn(0);
                 }
             }
 
@@ -1007,19 +1007,19 @@ class Tru64 {
             abort();
         }
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Thread idle call (like yield()).
-    static int
+    static SyscallReturn
     nxm_idleFunc(SyscallDesc *desc, int callnum, Process *process,
                  ExecContext *xc)
     {
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Block thread.
-    static int
+    static SyscallReturn
     nxm_thread_blockFunc(SyscallDesc *desc, int callnum, Process *process,
                          ExecContext *xc)
     {
@@ -1032,11 +1032,11 @@ class Tru64 {
         cout << xc->cpu->name() << ": nxm_thread_block " << tid << " " << secs
              << " " << flags << " " << action << " " << usecs << endl;
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// block.
-    static int
+    static SyscallReturn
     nxm_blockFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
@@ -1053,11 +1053,11 @@ class Tru64 {
              << " " << secs << " " << usecs
              << " " << flags << endl;
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Unblock thread.
-    static int
+    static SyscallReturn
     nxm_unblockFunc(SyscallDesc *desc, int callnum, Process *process,
                     ExecContext *xc)
     {
@@ -1066,11 +1066,11 @@ class Tru64 {
         cout << xc->cpu->name() << ": nxm_unblock "
              << hex << uaddr << dec << endl;
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Switch thread priority.
-    static int
+    static SyscallReturn
     swtch_priFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
@@ -1081,7 +1081,7 @@ class Tru64 {
         //
         // Since we assume at most one "kernel" thread per CPU, it's
         // always safe to return false here.
-        return false;
+        return SyscallReturn(0); //false;
     }
 
 
@@ -1154,7 +1154,7 @@ class Tru64 {
     }
 
     /// Lock acquire syscall handler.
-    static int
+    static SyscallReturn
     m5_mutex_lockFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
@@ -1165,11 +1165,11 @@ class Tru64 {
         // Return 0 since we will always return to the user with the lock
         // acquired.  We will just keep the context inactive until that is
         // true.
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Try lock (non-blocking).
-    static int
+    static SyscallReturn
     m5_mutex_trylockFunc(SyscallDesc *desc, int callnum, Process *process,
                          ExecContext *xc)
     {
@@ -1182,14 +1182,14 @@ class Tru64 {
             // lock is free: grab it
             *lockp = 1;
             lockp.copyOut(xc->mem);
-            return 0;
+            return SyscallReturn(0);
         } else {
-            return 1;
+            return SyscallReturn(1);
         }
     }
 
     /// Unlock syscall handler.
-    static int
+    static SyscallReturn
     m5_mutex_unlockFunc(SyscallDesc *desc, int callnum, Process *process,
                         ExecContext *xc)
     {
@@ -1197,11 +1197,11 @@ class Tru64 {
 
         m5_unlock_mutex(uaddr, process, xc);
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Signal ocndition.
-    static int
+    static SyscallReturn
     m5_cond_signalFunc(SyscallDesc *desc, int callnum, Process *process,
                        ExecContext *xc)
     {
@@ -1210,11 +1210,11 @@ class Tru64 {
         // Wake up one process waiting on the condition variable.
         activate_waiting_context(cond_addr, process);
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Wake up all processes waiting on the condition variable.
-    static int
+    static SyscallReturn
     m5_cond_broadcastFunc(SyscallDesc *desc, int callnum, Process *process,
                           ExecContext *xc)
     {
@@ -1222,11 +1222,11 @@ class Tru64 {
 
         activate_waiting_context(cond_addr, process, true);
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Wait on a condition.
-    static int
+    static SyscallReturn
     m5_cond_waitFunc(SyscallDesc *desc, int callnum, Process *process,
                      ExecContext *xc)
     {
@@ -1244,18 +1244,18 @@ class Tru64 {
         process->waitList.push_back(Process::WaitRec(cond_addr, xc));
         xc->suspend();
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Thread exit.
-    static int
+    static SyscallReturn
     m5_thread_exitFunc(SyscallDesc *desc, int callnum, Process *process,
                        ExecContext *xc)
     {
         assert(xc->status() == ExecContext::Active);
         xc->deallocate();
 
-        return 0;
+        return SyscallReturn(0);
     }
 
     /// Array of syscall descriptors for Mach syscalls, indexed by
@@ -1291,7 +1291,7 @@ class Tru64 {
     }
 
     /// Indirect syscall invocation (call #0).
-    static int
+    static SyscallReturn
     indirectSyscallFunc(SyscallDesc *desc, int callnum, Process *process,
                         ExecContext *xc)
     {
@@ -1302,7 +1302,7 @@ class Tru64 {
 
         doSyscall(new_callnum, process, xc);
 
-        return 0;
+        return SyscallReturn(0);
     }
 
 };  // class Tru64

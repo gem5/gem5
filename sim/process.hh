@@ -42,6 +42,7 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 #include "base/statistics.hh"
+#include "base/trace.hh"
 
 class ExecContext;
 class FunctionalMemory;
@@ -104,7 +105,7 @@ class Process : public SimObject
 
   protected:
     // constructor
-    Process(const std::string &name,
+    Process(const std::string &nm,
             int stdin_fd, 	// initial I/O descriptors
             int stdout_fd,
             int stderr_fd);
@@ -175,7 +176,7 @@ class ObjectFile;
 class LiveProcess : public Process
 {
   protected:
-    LiveProcess(const std::string &name, ObjectFile *objFile,
+    LiveProcess(const std::string &nm, ObjectFile *objFile,
                 int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
                 std::vector<std::string> &envp);
@@ -184,7 +185,7 @@ class LiveProcess : public Process
     // this function is used to create the LiveProcess object, since
     // we can't tell which subclass of LiveProcess to use until we
     // open and look at the object file.
-    static LiveProcess *create(const std::string &name,
+    static LiveProcess *create(const std::string &nm,
                                int stdin_fd, int stdout_fd, int stderr_fd,
                                std::vector<std::string> &argv,
                                std::vector<std::string> &envp);
