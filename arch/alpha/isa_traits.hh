@@ -311,8 +311,8 @@ class SyscallReturn {
                return *this;
            }
 
-           uint64_t successful() { return success; }
-           bool value() { return retval; }
+           bool successful() { return success; }
+           uint64_t value() { return retval; }
 
 
        private:
