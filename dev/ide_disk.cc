@@ -336,7 +336,8 @@ IdeDisk::dmaPrdReadDone()
            physmem->dma_addr(curPrdAddr, sizeof(PrdEntry_t)),
            sizeof(PrdEntry_t));
 
-    DPRINTF(IdeDisk, "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
+    DPRINTF(IdeDisk,
+            "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
             curPrd.getBaseAddr(), pciToDma(curPrd.getBaseAddr()),
             curPrd.getByteCount(), (cmdBytesLeft/SectorSize),
             curPrd.getEOT(), curSector);
@@ -609,10 +610,10 @@ void
 IdeDisk::abortDma()
 {
     if (dmaState == Dma_Idle)
-        panic("Inconsistent DMA state, should be in Dma_Start or Dma_Transfer!\n");
+        panic("Inconsistent DMA state, should be Start or Transfer!");
 
     if (devState != Transfer_Data_Dma && devState != Prepare_Data_Dma)
-        panic("Inconsistent device state, should be in Transfer or Prepare!\n");
+        panic("Inconsistent device state, should be Transfer or Prepare!\n");
 
     updateState(ACT_CMD_ERROR);
 }
@@ -732,7 +733,7 @@ IdeDisk::startCommand()
 void
 IdeDisk::intrPost()
 {
-    DPRINTF(IdeDisk, "IDE Disk Posting Interrupt\n");
+    DPRINTF(IdeDisk, "Posting Interrupt\n");
     if (intrPending)
         panic("Attempt to post an interrupt with one pending\n");
 
@@ -746,7 +747,7 @@ IdeDisk::intrPost()
 void
 IdeDisk::intrClear()
 {
-    DPRINTF(IdeDisk, "IDE Disk Clearing Interrupt\n");
+    DPRINTF(IdeDisk, "Clearing Interrupt\n");
     if (!intrPending)
         panic("Attempt to clear a non-pending interrupt\n");
 
