@@ -110,8 +110,8 @@ TsunamiUart::read(MemReqPtr req, uint8_t *data)
         *data = 0;
         return No_Fault;
     }
-
-    panic("%s: read daddr=%#x type=read *data=%#x\n", name(), daddr, *data);
+    *data = 0;
+   // panic("%s: read daddr=%#x type=read *data=%#x\n", name(), daddr, *data);
 
     return No_Fault;
 }

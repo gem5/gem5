@@ -26,6 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ * Declaration of top level class for the Tsunami chipset. This class just retains pointers
+ * to all its children so the children can communicate
+ */
+
 #ifndef __TSUNAMI_HH__
 #define __TSUNAMI_HH__
 
@@ -39,22 +45,49 @@ class TlaserClock;
 class EtherDev;
 class TsunamiCChip;
 class TsunamiPChip;
+class TsunamiPCIConfig;
+
+/**
+  * Top level class for Tsunami Chipset emulation.
+  * This structure just contains pointers to all the
+  * children so the children can commnicate to do the
+  * read work
+  */
 
 class Tsunami : public SimObject
 {
   public:
 
+    /** Max number of CPUs in a Tsunami */
     static const int Max_CPUs = 4;
 
+    /** Pointer to the interrupt controller (used to post and ack interrupts on the CPU) */
     IntrControl *intrctrl;
-//    ConsoleListener *listener;
+    /** Pointer to the UART emulation code */
     SimConsole *cons;
 
+    /** Pointer to the SCSI controller device */
     ScsiController *scsi;
+    /** Pointer to the ethernet controller device */
     EtherDev *ethernet;
 
+    /** Pointer to the Tsunami CChip.
+      * The chip contains some configuration information and
+      * all the interrupt mask and status registers
+      */
     TsunamiCChip *cchip;
+
+    /** Pointer to the Tsunami PChip.
+      * The pchip is the interface to the PCI bus, in our case
+      * it does not have to do much.
+      */
     TsunamiPChip *pchip;
+
+    /** Pointer to the Tsunami PCI Config Space
+      * The config space in tsunami all needs to return
+      * -1 if a device is not there.
+      */
+    TsunamiPCIConfig *pciconfig;
 
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];
@@ -62,6 +95,10 @@ class Tsunami : public SimObject
     int interrupt_frequency;
 
   public:
+    /**
+      * Constructor for the Tsunami Class.
+      * @param
+      */
     Tsunami(const std::string &name, ScsiController *scsi,
                EtherDev *ethernet,
                SimConsole *, IntrControl *intctrl, int intrFreq);
