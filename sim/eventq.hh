@@ -243,10 +243,13 @@ class EventWrapper : public Event
     T *object;
 
   public:
-    EventWrapper(T *obj, EventQueue *q = &mainEventQueue,
+    EventWrapper(T *obj, bool del = false, EventQueue *q = &mainEventQueue,
                  Priority p = Default_Pri)
         : Event(q, p), object(obj)
-    {}
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
     void process() { (object->*F)(); }
 };
 
@@ -324,6 +327,8 @@ inline void
 Event::schedule(Tick t)
 {
     assert(!scheduled());
+    assert(t >= curTick);
+
     setFlags(Scheduled);
 #if TRACING_ON
     when_scheduled = curTick;
