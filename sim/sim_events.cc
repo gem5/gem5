@@ -64,9 +64,9 @@ SimExitEvent::description()
 }
 
 void
-SimExit(const char *message)
+SimExit(Tick when, const char *message)
 {
-    static SimExitEvent event(message);
+    static SimExitEvent event(when, message);
 }
 
 //

@@ -66,7 +66,7 @@ class SimExitEvent : public Event
     virtual const char *description();
 };
 
-void SimExit(const char *message);
+void SimExit(Tick when, const char *message);
 
 //
 // Event class to terminate simulation after 'n' related events have

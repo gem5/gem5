@@ -2425,9 +2425,21 @@ decode OPCODE default Unknown::unknown() {
 		if (!xc->misspeculating())
 		    Annotate::EndInterval(xc);
 	    }}, No_OpClass);
-	    0x20: m5exit({{
+	    0x20: m5exit_old({{
 		if (!xc->misspeculating())
-		    SimExit("m5_exit instruction encountered");
+		    SimExit(curTick, "m5_exit_old instruction encountered");
+	    }}, No_OpClass);
+	    0x21: m5exit({{
+		if (!xc->misspeculating()) {
+		    Tick when = curTick;
+		    Tick delay = xc->regs.intRegFile[16];
+		    if (delay != 0) {
+			delay *= ticksPerUS;
+			delay /= 1000;
+			when += delay;
+		    }
+		    SimExit(when, "m5_exit instruction encountered");
+		}
 	    }}, No_OpClass);
             0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
             0x40: resetstats({{
