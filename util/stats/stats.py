@@ -55,14 +55,10 @@ def unique(list):
     map(set.__setitem__, list, [])
     return set.keys()
 
-def graphdata68(runs, options, tag, label, value):
-    import info
-    configs = ['ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
-    benchmarks = [ 'm', 's', 'snt', 'nb1', 'w1', 'w2', 'w3', 'w4', 'nm', 'ns', 'nw1', 'nw2', 'nw3' ]
-    dmas = [ 'x' ]
-    caches = [ '2', '4' ]
+#benchmarks = [ 'm', 's', 'snt', 'nb1', 'w1', 'w2', 'w3', 'w4', 'nm', 'ns', 'nw1', 'nw2', 'nw3' ]
 
-    names = []
+def graphdata(runs, options, tag, label, value):
+    import info
 
     bench_system = {
         'm' : 'client',
@@ -86,27 +82,42 @@ def graphdata68(runs, options, tag, label, value):
         'nw3' : 'natbox'
         }
 
+    system_configs = {
+        's1' : 'Uni 4GHz',
+        'm1' : 'Uni 6GHz',
+        'f1' : 'Uni 8GHz',
+        'q1' : 'Uni 10GHz',
+        's2' : 'Dual 4GHz',
+        'm2' : 'Dual 6GHz',
+        's4' : 'Quad 4GHz',
+        'm4' : 'Quad 6GHz' }
+
+    configs = ['ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
+    benchmarks = [ 'm', 'snt', 'w2', 'nm', 'nw2' ]
+    caches = [ '0', '2', '4' ]
+
+    names = []
     for bench in benchmarks:
         if bench_system[bench] != options.system:
             continue
 
-        for dma in dmas:
-            for cache in caches:
-                    names.append([bench, dma, cache])
+        for cache in caches:
+            names.append([bench, cache])
 
-    for bench,dma,cache in names:
-        base = '%s.%s.%s' % (bench, dma, cache)
-        fname = 'data/%s.%s.68.dat' % (tag, base)
+    for bench,cache in names:
+        base = '%s.%s' % (bench, cache)
+        fname = 'data/uni.%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
         print >>f, '#set TITLE = '
         print >>f, '#set ylbl = %s' % label
         #print >>f, '#set sublabels = %s' % ' '.join(configs)
         print >>f, '#set sublabels = ste hte htd ocm occ ocs'
 
-        for speed,freq in zip(['s', 'm', 'f', 'q'],['4GHz', '6GHz','8GHz', '10GHz']):
-            print >>f, '"%s"' % freq,
+        for speed in ('s1', 'm1', 'f1', 'q1'):
+            label = system_configs[speed]
+            print >>f, '"%s"' % label,
             for conf in configs:
-                name = '%s.%s.%s.%s.%s' % (conf, bench, dma, cache, speed)
+                name = '%s.%s.%s.%s' % (conf, bench, cache, speed)
                 run = info.source.allRunNames[name]
                 info.display_run = run.run;
                 val = float(value)
@@ -117,65 +128,32 @@ def graphdata68(runs, options, tag, label, value):
             print >>f
         f.close()
 
-def graphdata(runs, options, tag, label, value):
-    if options.graph68:
-        graphdata68(runs, options, tag, label, value)
-        return
-
-    import info
     configs = ['ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
-    #benchmarks = [ 'm', 's', 'nb1', 'nb2', 'nt1', 'nt2', 'w1', 'w2', 'w3', 'w4', 'ns', 'nm', 'nw1', 'nw2', 'nw3' ]
-    #benchmarks = [ 'm', 's', 'nb1', 'nb2', 'nt1', 'w1', 'w2', 'w3', 'ns', 'nm', 'w1s' ]
-    benchmarks = [ 'm', 's', 'nb1', 'nb2', 'w1', 'w2', 'w3', 'w4', 'ns', 'nm', 'nw1', 'snt' ]
-    #dmas = [ 'x', 'd', 'b' ]
-    dmas = [ 'x' ]
-    caches = [ '2', '4' ]
+    benchmarks = [ 'w2']
+    caches = [ '0', '2', '4' ]
 
     names = []
-
-    bench_system = {
-        'm' : 'client',
-        's' : 'client',
-        'snt' : 'client',
-        'nb1' : 'server',
-        'nb2' : 'server',
-        'nt1' : 'server',
-        'nt2' : 'server',
-        'w1' : 'server',
-        'w2' : 'server',
-        'w3' : 'server',
-        'w4' : 'server',
-        'w1s' : 'server',
-        'w2s' : 'server',
-        'w3s' : 'server',
-        'ns' : 'natbox',
-        'nm' : 'natbox',
-        'nw1' : 'natbox',
-        'nw2' : 'natbox',
-        'nw3' : 'natbox'
-        }
-
     for bench in benchmarks:
         if bench_system[bench] != options.system:
             continue
 
-        for dma in dmas:
-            for cache in caches:
-                    names.append([bench, dma, cache])
+        for cache in caches:
+            names.append([bench, cache])
 
-    for bench,dma,cache in names:
-        base = '%s.%s.%s' % (bench, dma, cache)
-        fname = 'data/%s.%s.dat' % (tag, base)
+    for bench,cache in names:
+        base = '%s.%s' % (bench, cache)
+        fname = 'data/mp.%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
         print >>f, '#set TITLE = '
         print >>f, '#set ylbl = %s' % label
         #print >>f, '#set sublabels = %s' % ' '.join(configs)
         print >>f, '#set sublabels = ste hte htd ocm occ ocs'
 
-        for speed,freq in zip(['s', 'q'],['4GHz','10GHz']):
-            print >>f, '"%s"' % freq,
+        for speed in ('s2', 'm2', 's4', 'm4'):
+            label = system_configs[speed]
+            print >>f, '"%s"' % label,
             for conf in configs:
-                name = '%s.%s.%s.%s.%s' % (conf, bench, dma, cache, speed)
+                name = '%s.%s.%s.%s' % (conf, bench, cache, speed)
                 run = info.source.allRunNames[name]
                 info.display_run = run.run;
                 val = float(value)
@@ -744,13 +722,10 @@ if __name__ == '__main__':
     options.get = None
     options.binned = False
     options.graph = False
-    options.graph68 = False
     options.ticks = False
 
     opts, args = getopts(sys.argv[1:], '-6BEFGd:g:h:pr:s:u:T:')
     for o,a in opts:
-        if o == '-6':
-            options.graph68 = True
         if o == '-B':
             options.binned = True
         if o == '-E':

@@ -42,7 +42,6 @@
 using namespace std;
 
 Tick curTick = 0;
-bool fullSystem;
 ostream *outputStream;
 ostream *configStream;
 
@@ -86,7 +85,6 @@ class Root : public SimObject
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
 
-    Param<bool> full_system;
     Param<Tick> frequency;
     Param<string> output_file;
 
@@ -94,7 +92,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(Root)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
 
-    INIT_PARAM(full_system, "full system simulation"),
     INIT_PARAM(frequency, "tick frequency"),
     INIT_PARAM(output_file, "file to dump simulator output to")
 
@@ -107,15 +104,6 @@ CREATE_SIM_OBJECT(Root)
         panic("only one root object allowed!");
 
     created = true;
-    fullSystem = full_system;
-
-#ifdef FULL_SYSTEM
-    if (!fullSystem)
-        panic("FULL_SYSTEM compiled and configuration not full_system");
-#else
-    if (fullSystem)
-        panic("FULL_SYSTEM not compiled but configuration is full_system");
-#endif
 
     outputStream = simout.find(output_file);
     Root *root = new Root(getInstanceName());
