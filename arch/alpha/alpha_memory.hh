@@ -112,7 +112,7 @@ class AlphaDTB : public AlphaTLB
     Stats::Formula accesses;
 
   protected:
-    void fault(Addr pc, uint64_t flags, ExecContext *xc) const;
+    void fault(MemReqPtr &req, uint64_t flags) const;
 
   public:
     AlphaDTB(const std::string &name, int size);
