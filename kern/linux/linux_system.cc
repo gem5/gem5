@@ -51,39 +51,22 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
                          MemoryController *_memCtrl, PhysicalMemory *_physmem,
                          const string &kernel_path, const string &console_path,
                          const string &palcode, const string &boot_osflags,
-                         const string &bootloader_path, const bool _bin,
-                         const vector<string> &_binned_fns)
+                         const bool _bin, const vector<string> &_binned_fns)
      : System(_name, _init_param, _memCtrl, _physmem, _bin, _binned_fns),
        bin(_bin), binned_fns(_binned_fns)
 {
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
-    bootloaderSymtab = new SymbolTable;
 
+    // Load kernel code
     ObjectFile *kernel = createObjectFile(kernel_path);
     if (kernel == NULL)
         fatal("Could not load kernel file %s", kernel_path);
 
+    // Load Console Code
     ObjectFile *console = createObjectFile(console_path);
     if (console == NULL)
         fatal("Could not load console file %s", console_path);
-
-    ObjectFile *bootloader = createObjectFile(bootloader_path);
-    if (bootloader == NULL)
-        fatal("Could not load bootloader file %s", bootloader_path);
-
-    if (!kernel->loadGlobalSymbols(kernelSymtab))
-        panic("could not load kernel symbols\n");
-    debugSymbolTable = kernelSymtab;
-
-    if (!kernel->loadLocalSymbols(kernelSymtab))
-        panic("could not load kernel local symbols\n");
-
-    if (!console->loadGlobalSymbols(consoleSymtab))
-        panic("could not load console symbols\n");
-
-    if (!bootloader->loadGlobalSymbols(bootloaderSymtab))
-        panic("could not load bootloader symbols\n");
 
     // Load pal file
     ObjectFile *pal = createObjectFile(palcode);
@@ -98,10 +81,18 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
     kernel->loadSections(physmem, true);
     kernelStart = kernel->textBase();
     kernelEnd = kernel->bssBase() + kernel->bssSize();
-    /* FIXME: entrypoint not in kernel, but in bootloader,
-       variable should be re-named appropriately */
     kernelEntry = kernel->entryPoint();
 
+    // load symbols
+    if (!kernel->loadGlobalSymbols(kernelSymtab))
+        panic("could not load kernel symbols\n");
+        debugSymbolTable = kernelSymtab;
+
+    if (!kernel->loadLocalSymbols(kernelSymtab))
+        panic("could not load kernel local symbols\n");
+
+    if (!console->loadGlobalSymbols(consoleSymtab))
+        panic("could not load console symbols\n");
 
     DPRINTF(Loader, "Kernel start = %#x\n"
             "Kernel end   = %#x\n"
@@ -110,11 +101,6 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     DPRINTF(Loader, "Kernel loaded...\n");
 
-    // Load bootloader file
-    bootloader->loadSections(physmem, true);
-    kernelEntry = bootloader->entryPoint();
-    kernelStart = bootloader->textBase();
-    DPRINTF(Loader, "Bootloader entry at %#x\n", kernelEntry);
 
 #ifdef DEBUG
     kernelPanicEvent = new BreakPCEvent(&pcEventQueue, "kernel panic");
@@ -140,23 +126,22 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
             *(uint64_t *)est_cycle_frequency = ticksPerSecond;
     }
 
-    if (kernelSymtab->findAddress("aic7xxx_no_reset", addr)) {
-        Addr paddr = vtophys(physmem, addr);
-        uint8_t *aic7xxx_no_reset =
-            physmem->dma_addr(paddr, sizeof(uint32_t));
-
-        if (aic7xxx_no_reset) {
-            *(uint32_t *)aic7xxx_no_reset = 1;
-        }
-    }
 
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
         Addr paddr = vtophys(physmem, addr);
         char *osflags = (char *)physmem->dma_addr(paddr, sizeof(uint32_t));
 
         if (osflags)
-            strcpy(osflags, boot_osflags.c_str());
+              strcpy(osflags, boot_osflags.c_str());
     }
+
+    {
+        Addr paddr = vtophys(physmem, PARAM_ADDR);
+        char *commandline = (char*)physmem->dma_addr(paddr, sizeof(uint64_t));
+        if (commandline)
+            strcpy(commandline, boot_osflags.c_str());
+    }
+
 
     if (consoleSymtab->findAddress("xxm_rpb", addr)) {
         Addr paddr = vtophys(physmem, addr);
@@ -199,7 +184,6 @@ LinuxSystem::~LinuxSystem()
 
     delete kernelSymtab;
     delete consoleSymtab;
-    delete bootloaderSymtab;
 
     delete kernelPanicEvent;
     delete consolePanicEvent;
@@ -207,6 +191,7 @@ LinuxSystem::~LinuxSystem()
     delete skipDelayLoopEvent;
     delete skipCacheProbeEvent;
 }
+
 
 void
 LinuxSystem::setDelayLoop(ExecContext *xc)
@@ -275,7 +260,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
     Param<string> console_code;
     Param<string> pal_code;
     Param<string> boot_osflags;
-    Param<string> bootloader_code;
     VectorParam<string> binned_fns;
 
 END_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
@@ -292,7 +276,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
     INIT_PARAM(pal_code, "file that contains palcode"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                                    "a"),
-    INIT_PARAM(bootloader_code, "file that contains the bootloader"),
     INIT_PARAM(binned_fns, "functions to be broken down and binned")
 
 
@@ -302,8 +285,7 @@ CREATE_SIM_OBJECT(LinuxSystem)
 {
     LinuxSystem *sys = new LinuxSystem(getInstanceName(), init_param, mem_ctl,
                                        physmem, kernel_code, console_code,
-                                       pal_code, boot_osflags, bootloader_code,
-                                       bin, binned_fns);
+                                       pal_code, boot_osflags, bin, binned_fns);
 
     return sys;
 }

@@ -32,9 +32,12 @@
 #include <vector>
 
 #include "sim/system.hh"
+#include "sim/host.hh"
 #include "targetarch/isa_traits.hh"
 
 #include <map>
+
+const Addr PARAM_ADDR =  ULL(0xfffffc000030a000);
 
 class ExecContext;
 class ElfObject;
@@ -55,10 +58,8 @@ class LinuxSystem : public System
   private:
     ElfObject *kernel;
     ElfObject *console;
-    ElfObject *bootloader;
 
     SymbolTable *kernelSymtab;
-    SymbolTable *bootloaderSymtab;
     SymbolTable *consoleSymtab;
 
     BreakPCEvent *kernelPanicEvent;
@@ -88,7 +89,6 @@ class LinuxSystem : public System
                 const std::string &console_path,
                 const std::string &palcode,
                 const std::string &boot_osflags,
-                const std::string &bootloader_path,
                 const bool _bin,
                 const std::vector<std::string> &_binned_fns);
 
