@@ -49,11 +49,11 @@ class TsunamiCChip : public FunctionalMemory
     static const Addr size = 0xfff;
 
   protected:
-      /**
-       * pointer to the tsunami object.
-       * This is our access to all the other tsunami
-       * devices.
-       */
+    /**
+     * pointer to the tsunami object.
+     * This is our access to all the other tsunami
+     * devices.
+     */
     Tsunami *tsunami;
 
     /**

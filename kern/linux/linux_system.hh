@@ -61,21 +61,46 @@ class AlphaArguments;
 class LinuxSystem : public System
 {
   private:
+    /** Object pointer for the kernel code */
     ElfObject *kernel;
+
+    /** Object pointer for the console code */
     ElfObject *console;
 
+    /** kernel Symbol table */
     SymbolTable *kernelSymtab;
+
+    /** console symbol table */
     SymbolTable *consoleSymtab;
 
+    /** Event to halt the simulator if the kernel calls panic()  */
     BreakPCEvent *kernelPanicEvent;
+
+    /** Event to halt the simulator if the console calls panic() */
     BreakPCEvent *consolePanicEvent;
+
+    /** Event to skip determine_cpu_caches() because we don't support the
+     * IPRs that the code can access to figure out cache sizes
+     */
     SkipFuncEvent *skipCacheProbeEvent;
+
+    /** PC based event to skip the ide_delay_50ms() call */
     SkipFuncEvent *skipIdeDelay50msEvent;
+
+    /** Skip calculate_delay_loop() rather than waiting for this to be
+     * calculated
+     */
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
 
+    /** Begining of kernel code */
     Addr kernelStart;
+
+    /** End of kernel code */
     Addr kernelEnd;
+
+    /** Entry point in the kernel to start at */
     Addr kernelEntry;
+
     bool bin;
     std::vector<string> binned_fns;
 
@@ -101,9 +126,25 @@ class LinuxSystem : public System
     int registerExecContext(ExecContext *xc);
     void replaceExecContext(ExecContext *xc, int xcIndex);
 
+    /**
+     * Returns the addess the kernel starts at.
+     * @return address the kernel starts at
+     */
     Addr getKernelStart() const { return kernelStart; }
+
+    /**
+     * Returns the addess the kernel ends at.
+     * @return address the kernel ends at
+     */
     Addr getKernelEnd() const { return kernelEnd; }
+
+    /**
+     * Returns the addess the entry point to the kernel code.
+     * @return entry point of the kernel code
+     */
     Addr getKernelEntry() const { return kernelEntry; }
+
+
     bool breakpoint();
 };
 
