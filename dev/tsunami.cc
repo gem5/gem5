@@ -77,13 +77,13 @@ Tsunami::clearConsoleInt()
 void
 Tsunami::postPciInt(int line)
 {
-   cchip->postDRIR(line);
+    cchip->postDRIR(line);
 }
 
 void
 Tsunami::clearPciInt(int line)
 {
-   cchip->clearDRIR(line);
+    cchip->clearDRIR(line);
 }
 
 Addr

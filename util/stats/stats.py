@@ -19,6 +19,9 @@ Usage: %s [-E] [-F] [-d <db> ] [-g <get> ] [-h <host>] [-p]
        stability   <pairnum> <stats>  Calculated statistical info about stats
        stat        <regex>            Show stat data (only matching regex)
        stats       [regex]            List all stats (only matching regex)
+
+       database    <command>          Where command is drop, init, or clean
+
 ''' % sys.argv[0]
     sys.exit(1)
 
@@ -100,7 +103,7 @@ def graphdata68(runs, options, tag, label, value):
         #print >>f, '#set sublabels = %s' % ' '.join(configs)
         print >>f, '#set sublabels = ste hte htd ocm occ ocs'
 
-        for speed,freq in zip(['s', '6', '8', 'q'],['4GHz', '6GHz','8GHz', '10GHz']):
+        for speed,freq in zip(['s', 'm', 'f', 'q'],['4GHz', '6GHz','8GHz', '10GHz']):
             print >>f, '"%s"' % freq,
             for conf in configs:
                 name = '%s.%s.%s.%s.%s' % (conf, bench, dma, cache, speed)
@@ -456,41 +459,41 @@ def commands(options, command, args):
 
     if command == 'usertime':
         import copy
-        kernel = copy.copy(system.full_cpu.numCycles)
+        kernel = copy.copy(system.full0.numCycles)
         kernel.bins = 'kernel'
 
-        user = copy.copy(system.full_cpu.numCycles)
+        user = copy.copy(system.full0.numCycles)
         user.bins = 'user'
 
         if options.graph:
             graphdata(runs, options, 'usertime', 'User Fraction',
-                      user / system.full_cpu.numCycles)
+                      user / system.full0.numCycles)
         else:
-            printdata(runs, user / system.full_cpu.numCycles)
+            printdata(runs, user / system.full0.numCycles)
         return
 
     if command == 'ticks':
         if options.binned:
             print 'kernel ticks'
-            system.full_cpu.numCycles.bins = 'kernel'
-            printdata(runs, system.full_cpu.numCycles)
+            system.full0.numCycles.bins = 'kernel'
+            printdata(runs, system.full0.numCycles)
 
             print 'idle ticks'
-            system.full_cpu.numCycles.bins = 'idle'
-            printdata(runs, system.full_cpu.numCycles)
+            system.full0.numCycles.bins = 'idle'
+            printdata(runs, system.full0.numCycles)
 
             print 'user ticks'
-            system.full_cpu.numCycles.bins = 'user'
-            printdata(runs, system.full_cpu.numCycles)
+            system.full0.numCycles.bins = 'user'
+            printdata(runs, system.full0.numCycles)
 
             print 'total ticks'
 
-        system.full_cpu.numCycles.bins = None
-        printdata(runs, system.full_cpu.numCycles)
+        system.full0.numCycles.bins = None
+        printdata(runs, system.full0.numCycles)
         return
 
     if command == 'packets':
-        packets = system.tsunami.etherdev.rxPackets
+        packets = system.tsunami.etherdev0.rxPackets
         if options.graph:
             graphdata(runs, options, 'packets', 'Packets', packets)
         else:
@@ -498,12 +501,12 @@ def commands(options, command, args):
         return
 
     if command == 'ppt' or command == 'tpp':
-        ppt = system.tsunami.etherdev.rxPackets / sim_ticks
+        ppt = system.tsunami.etherdev0.rxPackets / sim_ticks
         printdata(runs, ppt, command == 'tpp')
         return
 
     if command == 'pps':
-        pps = system.tsunami.etherdev.rxPackets / sim_seconds
+        pps = system.tsunami.etherdev0.rxPackets / sim_seconds
         if options.graph:
             graphdata(runs, options, 'pps', 'Packets/s', pps)
         else:
@@ -511,7 +514,7 @@ def commands(options, command, args):
         return
 
     if command == 'bpt' or command == 'tpb':
-        bytes = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
+        bytes = system.tsunami.etherdev0.rxBytes + system.tsunami.etherdev0.txBytes
         bpt = bytes / sim_ticks * 8
         if options.graph:
             graphdata(runs, options, 'bpt', 'bps / Hz', bpt)
@@ -520,7 +523,7 @@ def commands(options, command, args):
         return
 
     if command == 'bptb' or command == 'tpbb':
-        bytes = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
+        bytes = system.tsunami.etherdev0.rxBytes + system.tsunami.etherdev0.txBytes
 
         print 'kernel stats'
         bytes.bins = 'kernel'
@@ -537,7 +540,7 @@ def commands(options, command, args):
         return
 
     if command == 'bytes':
-        stat = system.tsunami.etherdev.rxBytes + system.tsunami.etherdev.txBytes
+        stat = system.tsunami.etherdev0.rxBytes + system.tsunami.etherdev0.txBytes
 
         if options.binned:
             print '%s kernel stats' % stat.name
@@ -559,7 +562,7 @@ def commands(options, command, args):
         return
 
     if command == 'rxbps':
-        gbps = system.tsunami.etherdev.rxBandwidth / 1e9
+        gbps = system.tsunami.etherdev0.rxBandwidth / 1e9
         if options.graph:
             graphdata(runs, options, 'rxbps', 'Bandwidth (Gbps)',  gbps)
         else:
@@ -567,7 +570,7 @@ def commands(options, command, args):
         return
 
     if command == 'txbps':
-        gbps = system.tsunami.etherdev.txBandwidth / 1e9
+        gbps = system.tsunami.etherdev0.txBandwidth / 1e9
         if options.graph:
             graphdata(runs, options, 'txbps', 'Bandwidth (Gbps)',  gbps)
         else:
@@ -575,8 +578,8 @@ def commands(options, command, args):
         return
 
     if command == 'bps':
-        rxbps = system.tsunami.etherdev.rxBandwidth
-        txbps = system.tsunami.etherdev.txBandwidth
+        rxbps = system.tsunami.etherdev0.rxBandwidth
+        txbps = system.tsunami.etherdev0.txBandwidth
         gbps = (rxbps + txbps) / 1e9
         if options.graph:
             graphdata(runs, options, 'bps', 'Bandwidth (Gbps)',  gbps)
@@ -585,7 +588,7 @@ def commands(options, command, args):
         return
 
     if command == 'misses':
-        stat = system.L2.overall_mshr_misses
+        stat = system.l2.overall_mshr_misses
         if options.binned:
             print '%s kernel stats' % stat.name
             stat.bins = 'kernel'
@@ -609,9 +612,9 @@ def commands(options, command, args):
         return
 
     if command == 'mpkb':
-        misses = system.L2.overall_mshr_misses
-        rxbytes = system.tsunami.etherdev.rxBytes
-        txbytes = system.tsunami.etherdev.txBytes
+        misses = system.l2.overall_mshr_misses
+        rxbytes = system.tsunami.etherdev0.rxBytes
+        txbytes = system.tsunami.etherdev0.txBytes
 
         if options.binned:
             print 'mpkb kernel stats'
@@ -640,9 +643,9 @@ def commands(options, command, args):
         return
 
     if command == 'ipkb':
-        interrupts = system.full_cpu.kern.faults[4]
-        rxbytes = system.tsunami.etherdev.rxBytes
-        txbytes = system.tsunami.etherdev.txBytes
+        interrupts = system.full0.kern.faults[4]
+        rxbytes = system.tsunami.etherdev0.rxBytes
+        txbytes = system.tsunami.etherdev0.txBytes
 
         if options.binned:
             print 'ipkb kernel stats'
@@ -671,19 +674,19 @@ def commands(options, command, args):
         return
 
     if command == 'execute':
-        printdata(runs, system.full_cpu.ISSUE__count)
+        printdata(runs, system.full0.ISSUE__count)
         return
 
     if command == 'commit':
-        printdata(runs, system.full_cpu.COM__count)
+        printdata(runs, system.full0.COM__count)
         return
 
     if command == 'fetch':
-        printdata(runs, system.full_cpu.FETCH__count)
+        printdata(runs, system.full0.FETCH__count)
         return
 
     if command == 'bpp':
-        ed = system.tsunami.etherdev
+        ed = system.tsunami.etherdev0
         bpp = (ed.rxBytes + ed.txBytes) / (ed.rxPackets + ed.txPackets)
         if options.graph:
             graphdata(runs, options, 'bpp', 'Bytes / Packet',  bpp)
@@ -692,7 +695,7 @@ def commands(options, command, args):
         return
 
     if command == 'rxbpp':
-        bpp = system.tsunami.etherdev.rxBytes / system.tsunami.etherdev.rxPackets
+        bpp = system.tsunami.etherdev0.rxBytes / system.tsunami.etherdev0.rxPackets
         if options.graph:
             graphdata(runs, options, 'rxbpp', 'Receive Bytes / Packet',  bpp)
         else:
@@ -700,7 +703,7 @@ def commands(options, command, args):
         return
 
     if command == 'txbpp':
-        bpp = system.tsunami.etherdev.txBytes / system.tsunami.etherdev.txPackets
+        bpp = system.tsunami.etherdev0.txBytes / system.tsunami.etherdev0.txPackets
         if options.graph:
             graphdata(runs, options, 'txbpp', 'Transmit Bytes / Packet',  bpp)
         else:
@@ -708,7 +711,7 @@ def commands(options, command, args):
         return
 
     if command == 'rtp':
-        rtp = system.tsunami.etherdev.rxPackets / system.tsunami.etherdev.txPackets
+        rtp = system.tsunami.etherdev0.rxPackets / system.tsunami.etherdev0.txPackets
         if options.graph:
             graphdata(runs, options, 'rtp', 'rxPackets / txPackets',  rtp)
         else:
@@ -716,7 +719,7 @@ def commands(options, command, args):
         return
 
     if command == 'rtb':
-        rtb = system.tsunami.etherdev.rxBytes / system.tsunami.etherdev.txBytes
+        rtb = system.tsunami.etherdev0.rxBytes / system.tsunami.etherdev0.txBytes
         if options.graph:
             graphdata(runs, options, 'rtb', 'rxBytes / txBytes',  rtb)
         else:

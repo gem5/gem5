@@ -27,7 +27,7 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
-from m5 import panic
+from m5 import panic, env
 from convert import *
 from multidict import multidict
 
@@ -65,7 +65,7 @@ class Singleton(type):
 # object, either using keyword assignment in the constructor or in
 # separate assignment statements.  For example:
 #
-# cache = BaseCache('my_cache', root, size=64*K)
+# cache = BaseCache('my_cache', root, size='64KB')
 # cache.hit_latency = 3
 # cache.assoc = 8
 #
@@ -373,7 +373,7 @@ classes. You're trying to derive from:
         # now process remaining _init_dict items
         for key,val in cls._init_dict.items():
             # param descriptions
-            if isinstance(val, _Param):
+            if isinstance(val, ParamBase):
                 cls._new_param(key, val)
 
             # init-time-only keywords
@@ -433,8 +433,10 @@ classes. You're trying to derive from:
             try:
                 param.valid(value)
             except Exception, e:
-                panic("Exception: %s\nError setting param %s.%s to %s\n" % \
-                      (e, cls.__name__, attr, value))
+                msg = "%s\nError setting param %s.%s to %s\n" % \
+                      (e, cls.__name__, attr, value)
+                e.args = (msg, )
+                raise
             cls._values[attr] = value
         elif isConfigNode(value) or isSimObjSequence(value):
             cls._values[attr] = value
@@ -510,8 +512,10 @@ classes. You're trying to derive from:
                 instance.params.append(p)
                 instance.param_names[pname] = p
             except Exception, e:
-                raise e.__class__, 'Exception while evaluating %s.%s\n%s' % \
+                msg = 'Exception while evaluating %s.%s\n%s' % \
                       (instance.path, pname, e)
+                e.args = (msg, )
+                raise
 
         return instance
 
@@ -693,8 +697,10 @@ class Node(object):
                 else:
                     param.value = self.unproxy(pval, ptype)
             except Exception, e:
-                raise e.__class__, 'Error while fixing up %s:%s\n%s' % \
+                msg = 'Error while fixing up %s:%s\n%s' % \
                       (self.path, param.name, e)
+                e.args = (msg, )
+                raise
 
         for child in self.children:
             assert(child != self)
@@ -727,8 +733,9 @@ class Node(object):
                 value = param.convert(param.value)
                 string = param.string(value)
             except Exception, e:
-                raise e.__class__, 'exception in %s:%s\n%s' % \
-                      (self.path, param.name, e)
+                msg = 'exception in %s:%s\n%s' % (self.path, param.name, e)
+                e.args = (msg, )
+                raise
 
             print '%s = %s' % (param.name, string)
 
@@ -740,8 +747,6 @@ class Node(object):
 
     # print type and parameter values to .ini file
     def outputDot(self, dot):
-
-
         label = "{%s|" % self.path
         if isSimObject(self.realtype):
             label +=  '%s|' % self.type
@@ -762,9 +767,10 @@ class Node(object):
                 value = param.convert(param.value)
                 string = param.string(value)
             except Exception, e:
-                raise e.__class__, 'exception in %s:%s\n%s' % \
-                      (self.name, param.name, e)
+                msg = 'exception in %s:%s\n%s' % (self.name, param.name, e)
+                e.args = (msg, )
                 raise
+
             if isConfigNode(param.ptype) and string != "Null":
                 simobjs.append(string)
             else:
@@ -837,7 +843,7 @@ class Value(object):
         return len(self._getattr())
 
 # Regular parameter.
-class _Param(object):
+class ParamBase(object):
     def __init__(self, ptype, *args, **kwargs):
         if isinstance(ptype, types.StringType):
             self.ptype_string = ptype
@@ -909,13 +915,13 @@ class _Param(object):
     def cpp_decl(self, name):
         return '%s %s;' % (self.ptype._cpp_param_decl, name)
 
-class _ParamProxy(object):
+class ParamFactory(object):
     def __init__(self, type):
         self.ptype = type
 
     # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        return _Param(self.ptype, *args, **kwargs)
+        return ParamBase(self.ptype, *args, **kwargs)
 
     # Strange magic to theoretically allow dotted names as Param classes,
     # e.g., Param.Foo.Bar(...) to have a param of type Foo.Bar
@@ -929,17 +935,16 @@ class _ParamProxy(object):
         if attr != 'ptype':
             raise AttributeError, \
                   'Attribute %s not available in %s' % (attr, self.__class__)
-        super(_ParamProxy, self).__setattr__(attr, value)
+        super(ParamFactory, self).__setattr__(attr, value)
 
-
-Param = _ParamProxy(None)
+Param = ParamFactory(None)
 
 # Vector-valued parameter description.  Just like Param, except that
 # the value is a vector (list) of the specified type instead of a
 # single value.
-class _VectorParam(_Param):
+class VectorParamBase(ParamBase):
     def __init__(self, type, *args, **kwargs):
-        _Param.__init__(self, type, *args, **kwargs)
+        ParamBase.__init__(self, type, *args, **kwargs)
 
     def valid(self, value):
         if value == None:
@@ -974,12 +979,12 @@ class _VectorParam(_Param):
     def cpp_decl(self, name):
         return 'std::vector<%s> %s;' % (self.ptype._cpp_param_decl, name)
 
-class _VectorParamProxy(_ParamProxy):
+class VectorParamFactory(ParamFactory):
     # E.g., VectorParam.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        return _VectorParam(self.ptype, *args, **kwargs)
+        return VectorParamBase(self.ptype, *args, **kwargs)
 
-VectorParam = _VectorParamProxy(None)
+VectorParam = VectorParamFactory(None)
 
 #####################################################################
 #
@@ -995,6 +1000,80 @@ VectorParam = _VectorParamProxy(None)
 #
 #####################################################################
 
+class MetaRange(type):
+    def __init__(cls, name, bases, dict):
+        super(MetaRange, cls).__init__(name, bases, dict)
+        if name == 'Range':
+            return
+        cls._cpp_param_decl = 'Range<%s>' % cls.type._cpp_param_decl
+
+    def _convert(cls, value):
+        if not isinstance(value, Range):
+            raise TypeError, 'value %s is not a Pair' % value
+        value = cls(value)
+        value.first = cls.type._convert(value.first)
+        value.second = cls.type._convert(value.second)
+        return value
+
+    def _string(cls, value):
+        first = int(value.first)
+        second = int(value.second)
+        if value.extend:
+            second += first
+        if not value.inclusive:
+            second -= 1
+        return '%s:%s' % (cls.type._string(first), cls.type._string(second))
+
+class Range(ParamType):
+    __metaclass__ = MetaRange
+    def __init__(self, *args, **kwargs):
+        if len(args) == 0:
+            self.first = kwargs.pop('start')
+
+            if 'end' in kwargs:
+                self.second = kwargs.pop('end')
+                self.inclusive = True
+                self.extend = False
+            elif 'size' in kwargs:
+                self.second = kwargs.pop('size')
+                self.inclusive = False
+                self.extend = True
+            else:
+                raise TypeError, "Either end or size must be specified"
+
+        elif len(args) == 1:
+            if kwargs:
+                self.first = args[0]
+                if 'end' in kwargs:
+                    self.second = kwargs.pop('end')
+                    self.inclusive = True
+                    self.extend = False
+                elif 'size' in kwargs:
+                    self.second = kwargs.pop('size')
+                    self.inclusive = False
+                    self.extend = True
+                else:
+                    raise TypeError, "Either end or size must be specified"
+            elif isinstance(args[0], Range):
+                self.first = args[0].first
+                self.second = args[0].second
+                self.inclusive = args[0].inclusive
+                self.extend = args[0].extend
+            else:
+                self.first = 0
+                self.second = args[0]
+                self.inclusive = False
+                self.extend = True
+
+        elif len(args) == 2:
+            self.first, self.second = args
+            self.inclusive = True
+            self.extend = False
+        else:
+            raise TypeError, "Too many arguments specified"
+
+        if kwargs:
+            raise TypeError, "too many keywords: %s" % kwargs.keys()
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(type):
@@ -1028,8 +1107,10 @@ class CheckedIntType(type):
         if not isinstance(value, (int, long, float, str)):
             raise TypeError, 'Integer param of invalid type %s' % type(value)
 
-        if isinstance(value, (str, float)):
-            value = long(float(value))
+        if isinstance(value, float):
+            value = long(value)
+        elif isinstance(value, str):
+            value = toInteger(value)
 
         if not cls.min <= value <= cls.max:
             raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
@@ -1044,7 +1125,7 @@ class CheckedIntType(type):
 # class is subclassed to generate parameter classes with specific
 # bounds.  Initialization of the min and max bounds is done in the
 # metaclass CheckedIntType.__init__.
-class CheckedInt(ParamType):
+class CheckedInt(long,ParamType):
     __metaclass__ = CheckedIntType
 
 class Int(CheckedInt):      cppname = 'int';      size = 32; unsigned = False
@@ -1060,68 +1141,66 @@ class Int64(CheckedInt):    cppname =  'int64_t'; size = 64; unsigned = False
 class UInt64(CheckedInt):   cppname = 'uint64_t'; size = 64; unsigned = True
 
 class Counter(CheckedInt): cppname = 'Counter'; size = 64; unsigned = True
-class Addr(CheckedInt):    cppname = 'Addr';    size = 64; unsigned = True
 class Tick(CheckedInt):    cppname = 'Tick';    size = 64; unsigned = True
 
 class Percent(CheckedInt): cppname = 'int'; min = 0; max = 100
 
-class Pair(object):
-    def __init__(self, first, second):
-        self.first = first
-        self.second = second
-
-class MetaRange(type):
-    def __init__(cls, name, bases, dict):
-        super(MetaRange, cls).__init__(name, bases, dict)
-        if name == 'Range':
-            return
-        cls._cpp_param_decl = 'Range<%s>' % cls.type._cpp_param_decl
+class MemorySize(CheckedInt):
+    cppname = 'uint64_t'
+    size = 64
+    unsigned = True
+    def __new__(cls, value):
+        return super(MemorySize, cls).__new__(cls, toMemorySize(value))
 
     def _convert(cls, value):
-        if not isinstance(value, Pair):
-            raise TypeError, 'value %s is not a Pair' % value
-        return Pair(cls.type._convert(value.first),
-                    cls.type._convert(value.second))
+        return cls(value)
+    _convert = classmethod(_convert)
 
     def _string(cls, value):
-        return '%s:%s' % (cls.type._string(value.first),
-                          cls.type._string(value.second))
+        return '%d' % value
+    _string = classmethod(_string)
 
-class Range(ParamType):
-    __metaclass__ = MetaRange
+class Addr(CheckedInt):
+    cppname = 'Addr'
+    size = 64
+    unsigned = True
+    def __new__(cls, value):
+        try:
+            value = long(toMemorySize(value))
+        except TypeError:
+            value = long(value)
+        return super(Addr, cls).__new__(cls, value)
 
-def RangeSize(start, size):
-    return Pair(start, start + size - 1)
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
 
-class AddrRange(Range): type = Addr
+    def _string(cls, value):
+        return '%d' % value
+    _string = classmethod(_string)
+
+class AddrRange(Range):
+    type = Addr
 
 # Boolean parameter type.
 class Bool(ParamType):
     _cpp_param_decl = 'bool'
-    def _convert(value):
-        t = type(value)
-        if t == bool:
-            return value
+    def __init__(self, value):
+        try:
+            self.value = toBool(value)
+        except TypeError:
+            self.value = bool(value)
 
-        if t == int or t == long:
-            return bool(value)
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
 
-        if t == str:
-            v = value.lower()
-            if v == "true" or v == "t" or v == "yes" or v == "y":
-                return True
-            elif v == "false" or v == "f" or v == "no" or v == "n":
-                return False
-
-        raise TypeError, 'Bool parameter (%s) of invalid type %s' % (v, t)
-    _convert = staticmethod(_convert)
-
-    def _string(value):
-        if value:
+    def _string(cls, value):
+        if value.value:
             return "true"
         else:
             return "false"
-    _string = staticmethod(_string)
+    _string = classmethod(_string)
 
 # String-valued parameter.
 class String(ParamType):
@@ -1142,7 +1221,6 @@ class String(ParamType):
     def _string(cls, value):
         return value
     _string = classmethod(_string)
-
 
 def IncEthernetAddr(addr, val = 1):
     bytes = map(lambda x: int(x, 16), addr.split(':'))
@@ -1239,7 +1317,6 @@ Null = NULL = NullSimObject()
 
 # Metaclass for Enum types
 class MetaEnum(type):
-
     def __init__(cls, name, bases, init_dict):
         if init_dict.has_key('map'):
             if not isinstance(cls.map, dict):
@@ -1286,25 +1363,126 @@ class Enum(ParamType):
     def _string(self, value):
         return str(value)
     _string = classmethod(_string)
+
+root_frequency = None
+
 #
 # "Constants"... handy aliases for various values.
 #
+class RootFrequency(float,ParamType):
+    _cpp_param_decl = 'Tick'
+
+    def __new__(cls, value):
+        return super(cls, RootFrequency).__new__(cls, toFrequency(value))
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        return '%d' % int(value)
+    _string = classmethod(_string)
+
+class ClockPeriod(float,ParamType):
+    _cpp_param_decl = 'Tick'
+    def __new__(cls, value):
+        relative = False
+        try:
+            val = toClockPeriod(value)
+        except ValueError, e:
+            relative = True
+            if value.endswith('f'):
+                val = float(value[:-1])
+                if val:
+                    val = 1 / val
+            elif value.endswith('c'):
+                val = float(value[:-1])
+            else:
+                raise e
+
+        self = super(cls, ClockPeriod).__new__(cls, val)
+        self.relative = relative
+        return self
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        if not value.relative:
+            value *= root_frequency
+
+        return '%d' % int(value)
+    _string = classmethod(_string)
+
+class Frequency(float,ParamType):
+    _cpp_param_decl = 'Tick'
+
+    def __new__(cls, value):
+        relative = False
+        try:
+            val = toFrequency(value)
+        except ValueError, e:
+            if value.endswith('f'):
+                val = float(value[:-1])
+                relative = True
+            else:
+                raise e
+        self = super(cls, Frequency).__new__(cls, val)
+        self.relative = relative
+        return self
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        if not value.relative:
+            value = root_frequency / value
+
+        return '%d' % int(value)
+    _string = classmethod(_string)
+
+class Latency(float,ParamType):
+    _cpp_param_decl = 'Tick'
+    def __new__(cls, value):
+        relative = False
+        try:
+            val = toLatency(value)
+        except ValueError, e:
+            if value.endswith('c'):
+                val = float(value[:-1])
+                relative = True
+            else:
+                raise e
+        self = super(cls, Latency).__new__(cls, val)
+        self.relative = relative
+        return self
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        if not value.relative:
+            value *= root_frequency
+        return '%d' % value
+    _string = classmethod(_string)
+
 
 # Some memory range specifications use this as a default upper bound.
-MAX_ADDR = Addr.max
+MaxAddr = Addr.max
 MaxTick = Tick.max
-
-# For power-of-two sizing, e.g. 64*K gives an integer value 65536.
-K = 1024
-M = K*K
-G = K*M
+AllMemory = AddrRange(0, MaxAddr)
 
 #####################################################################
 
 # The final hook to generate .ini files.  Called from configuration
 # script once config is built.
 def instantiate(root):
+    global root_frequency
     instance = root.instantiate('root')
+    root_frequency = RootFrequency._convert(root.frequency._getattr())
     instance.fixup()
     instance.display()
     if not noDot:
@@ -1337,6 +1515,7 @@ __all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
-           'Pair', 'RangeSize', 'AddrRange', 'MAX_ADDR', 'NULL', 'K', 'M',
-           'NextEthernetAddr',
-           'instantiate']
+           'MemorySize', 'RootFrequency', 'Frequency', 'Latency',
+           'ClockPeriod',
+           'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory', 'NULL',
+           'NextEthernetAddr', 'instantiate']
