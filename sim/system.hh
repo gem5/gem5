@@ -35,6 +35,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "cpu/pc_event.hh"
+#include "kern/system_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/sw_context.hh"
 
@@ -48,9 +49,12 @@ class ExecContext;
 class System : public SimObject
 {
     // lisa's binning stuff
-  protected:
+  private:
     std::map<const std::string, Statistics::MainBin *> fnBins;
     std::map<const Addr, SWContext *> swCtxMap;
+
+  protected:
+    std::vector<FnEvent *> fnEvents;
 
   public:
     Statistics::Scalar<> fnCalls;
@@ -58,7 +62,7 @@ class System : public SimObject
     Statistics::MainBin *User;
 
     Statistics::MainBin * getBin(const std::string &name);
-    virtual bool findCaller(std::string, std::string) const = 0;
+    bool findCaller(std::string, std::string) const;
 
     SWContext *findContext(Addr pcb);
     bool addContext(Addr pcb, SWContext *ctx) {
@@ -68,18 +72,23 @@ class System : public SimObject
         swCtxMap.erase(pcb);
         return;
     }
-
-    virtual void dumpState(ExecContext *xc) const = 0;
+    void dumpState(ExecContext *xc) const;
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-    //
+
+
+  private:
+    std::multimap<const std::string, std::string> callerMap;
+    void populateMap(std::string caller, std::string callee);
+//
 
   public:
     const uint64_t init_param;
     MemoryController *memCtrl;
     PhysicalMemory *physmem;
     bool bin;
+    std::vector<string> binned_fns;
 
     PCEventQueue pcEventQueue;
 
@@ -90,7 +99,8 @@ class System : public SimObject
 
   public:
     System(const std::string _name, const uint64_t _init_param,
-           MemoryController *, PhysicalMemory *, const bool);
+           MemoryController *, PhysicalMemory *, const bool,
+           const std::vector<string> &binned_fns);
     ~System();
 
     virtual Addr getKernelStart() const = 0;
