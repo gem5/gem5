@@ -1403,7 +1403,8 @@ struct FancyStor
             variance = (ftot * fsq - (fsum * fsum)) / (ftot * (ftot - 1.0));
         }
 
-        FancyDisplay(stream, name, desc, precision, flags, mean, variance, ftot);
+        FancyDisplay(stream, name, desc, precision, flags, mean,
+                     variance, ftot);
     }
 
     /**
@@ -2450,9 +2451,9 @@ struct NoBin
  */
 
 /**
- * This is an easy way to assign all your stats to be binned or not binned.  If the typedef
- * is NoBin, nothing is binned.  If it is MainBin (or whatever *Bin), then all stats are binned
- * under that Bin.
+ * This is an easy way to assign all your stats to be binned or not
+ * binned.  If the typedef is NoBin, nothing is binned.  If it is
+ * MainBin, then all stats are binned under that Bin.
  */
 #ifdef FS_MEASURE
 typedef MainBin DefaultBin;
@@ -2757,12 +2758,13 @@ class Formula : public Detail::VectorStat
      */
     const rvec_t &val() const { return root->val(); }
     /**
-     * Return the total Formula result.  If there is a Vector component to this
-     * Formula, then this is the result of the Formula if the formula is applied
-     * after summing all the components of the Vector.  For example, if Formula
-     * is x/y where x is size 3, then total() will return (x[1]+x[2]+x[3])/y.  If there is no
-     * Vector component, total() returns the same value as the first entry in the rvec_t
-     * val() returns.
+     * Return the total Formula result.  If there is a Vector
+     * component to this Formula, then this is the result of the
+     * Formula if the formula is applied after summing all the
+     * components of the Vector.  For example, if Formula is x/y where
+     * x is size 3, then total() will return (x[1]+x[2]+x[3])/y.  If
+     * there is no Vector component, total() returns the same value as
+     * the first entry in the rvec_t val() returns.
      * @return The total of the result vector.
      */
     result_t total() const { return root->total(); }
@@ -2777,8 +2779,9 @@ class Formula : public Detail::VectorStat
             return root->size();
     }
     /**
-     * Return true if Formula is binned. i.e. any of its children nodes are binned
-     *@return True if Formula is binned.
+     * Return true if Formula is binned. i.e. any of its children
+     * nodes are binned
+     * @return True if Formula is binned.
      */
     virtual bool binned() const { return root->binned(); }
 
