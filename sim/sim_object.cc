@@ -32,6 +32,7 @@
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "base/stats/events.hh"
 #include "sim/configfile.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
@@ -58,6 +59,7 @@ SimObject::SimObjectList SimObject::simObjectList;
 SimObject::SimObject(const string &_name)
     : objName(_name)
 {
+    doRecordEvent = !Stats::ignoreEvent(_name);
     simObjectList.push_back(this);
 }
 
@@ -168,6 +170,13 @@ SimObject::serializeAll(ostream &os)
         obj->nameOut(os);
         obj->serialize(os);
    }
+}
+
+void
+SimObject::recordEvent(const std::string &stat)
+{
+    if (doRecordEvent)
+        Stats::recordEvent(stat);
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("SimObject", SimObject)

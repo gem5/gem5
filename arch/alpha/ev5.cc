@@ -6,6 +6,7 @@
 #include "base/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/fast_cpu/fast_cpu.hh"
 #include "sim/debug.hh"
@@ -163,7 +164,7 @@ void
 ExecContext::ev5_trap(Fault fault)
 {
     DPRINTF(Fault, "Fault %s\n", FaultName(fault));
-    Stats::recordEvent(csprintf("Fault %s", FaultName(fault)));
+    cpu->recordEvent(csprintf("Fault %s", FaultName(fault)));
 
     assert(!misspeculating());
     kernelStats.fault(fault);

@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <vector>
+
 #ifdef USE_MYSQL
 #include "base/cprintf.hh"
 #include "base/misc.hh"
@@ -33,9 +35,9 @@
 #include "base/stats/events.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/mysql_run.hh"
-#include "base/str.hh"
 #endif
 
+#include "base/str.hh"
 #include "sim/host.hh"
 #include "sim/universe.hh"
 
@@ -45,20 +47,80 @@ namespace Stats {
 
 Tick EventStart = ULL(0xffffffffffffffff);
 
+vector<string> event_ignore;
+vector<vector<string> > ignore_tokens;
+vector<int> ignore_size;
+int event_ignore_size;
+
+bool
+ignoreEvent(const string &name)
+{
+    vector<string> name_tokens;
+    tokenize(name_tokens, name, '.');
+    int ntsize = name_tokens.size();
+
+    for (int i = 0; i < event_ignore_size; ++i) {
+        bool match = true;
+        int jstop = ignore_size[i];
+        for (int j = 0; j < jstop; ++j) {
+            if (j >= ntsize)
+                break;
+
+            const string &ignore = ignore_tokens[i][j];
+            if (ignore != "*" && ignore != name_tokens[j]) {
+                match = false;
+                break;
+            }
+        }
+
+        if (match == true)
+            return true;
+    }
+
+    return false;
+}
+
 #ifdef USE_MYSQL
-typedef map<string, uint32_t> event_map_t;
-event_map_t event_map;
+class InsertEvent
+{
+  private:
+    char *query;
+    int size;
+    bool first;
+    static const int maxsize = 1024*1024;
+
+    typedef map<string, uint32_t> event_map_t;
+    event_map_t events;
+
+    MySQL::Connection &mysql;
+    uint16_t run;
+
+  public:
+    InsertEvent()
+        : mysql(MySqlDB.conn()), run(MySqlDB.run())
+    {
+        query = new char[maxsize + 1];
+        size = 0;
+        first = true;
+        flush();
+    }
+    ~InsertEvent()
+    {
+        flush();
+    }
+
+    void flush();
+    void insert(const string &stat);
+};
 
 void
-__event(const string &stat)
+InsertEvent::insert(const string &stat)
 {
-    MySQL::Connection &mysql = MySqlDB.conn();
-    uint16_t run = MySqlDB.run();
     assert(mysql.connected());
 
-    event_map_t::iterator i = event_map.find(stat);
+    event_map_t::iterator i = events.find(stat);
     uint32_t event;
-    if (i == event_map.end()) {
+    if (i == events.end()) {
         mysql.query(
             csprintf("SELECT en_id "
                      "from event_names "
@@ -90,16 +152,45 @@ __event(const string &stat)
         event = (*i).second;
     }
 
-    mysql.query(
-        csprintf("INSERT INTO "
-                 "events(ev_event, ev_run, ev_tick)"
-                 "values(%d, %d, %d)",
-                 event, run, curTick));
+    if (size + 1024 > maxsize)
+        flush();
 
-    if (mysql.error)
-        panic("could not get a run\n%s\n", mysql.error);
+    if (!first) {
+        query[size++] = ',';
+        query[size] = '\0';
+    }
 
+    first = false;
+
+    size += sprintf(query + size, "(%u,%u,%llu)",
+                    event, run, curTick);
 }
+
+void
+InsertEvent::flush()
+{
+    if (size) {
+        MySQL::Connection &mysql = MySqlDB.conn();
+        assert(mysql.connected());
+        mysql.query(query);
+    }
+
+    query[0] = '\0';
+    size = 0;
+    first = true;
+    strcpy(query, "INSERT INTO "
+           "events(ev_event, ev_run, ev_tick)"
+           "values");
+    size = strlen(query);
+}
+
+void
+__event(const string &stat)
+{
+    static InsertEvent event;
+    event.insert(stat);
+}
+
 #endif
 
 /* namespace Stats */ }

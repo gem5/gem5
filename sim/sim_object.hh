@@ -82,6 +82,10 @@ class SimObject : public Serializable
 
     // static: call nameOut() & serialize() on all SimObjects
     static void serializeAll(std::ostream &);
+
+  public:
+    bool doRecordEvent;
+    void recordEvent(const std::string &stat);
 };
 
 #endif // __SIM_OBJECT_HH__

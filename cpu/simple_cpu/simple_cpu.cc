@@ -406,7 +406,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     }
 
     if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
-        Stats::recordEvent("Uncached Read");
+        recordEvent("Uncached Read");
 
     return fault;
 }
@@ -494,7 +494,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         *res = memReq->result;
 
     if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
-        Stats::recordEvent("Uncached Write");
+        recordEvent("Uncached Write");
 
     return fault;
 }
