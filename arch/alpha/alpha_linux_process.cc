@@ -139,6 +139,8 @@ class Linux {
     static const unsigned TIOCGETC   = 0x40067412;
     static const unsigned FIONREAD   = 0x4004667f;
     static const unsigned TIOCISATTY = 0x2000745e;
+    static const unsigned TIOCGETS   = 0x402c7413;
+    static const unsigned TIOCGETA   = 0x40127417;
     //@}
 
     /// Resource enumeration for getrlimit().
@@ -421,7 +423,7 @@ SyscallDesc Linux::syscallDescs[] = {
     /*  7 */ SyscallDesc("osf_wait4", unimplementedFunc),
     /*  8 */ SyscallDesc("osf_old_creat", unimplementedFunc),
     /*  9 */ SyscallDesc("link", unimplementedFunc),
-    /* 10 */ SyscallDesc("unlink", unimplementedFunc),
+    /* 10 */ SyscallDesc("unlink", unlinkFunc),
     /* 11 */ SyscallDesc("osf_execve", unimplementedFunc),
     /* 12 */ SyscallDesc("chdir", unimplementedFunc),
     /* 13 */ SyscallDesc("fchdir", unimplementedFunc),
@@ -539,7 +541,7 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 125 */ SyscallDesc("recvfrom", unimplementedFunc),
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 127 */ SyscallDesc("setregid", unimplementedFunc),
-    /* 128 */ SyscallDesc("rename", unimplementedFunc),
+    /* 128 */ SyscallDesc("rename", renameFunc),
     /* 129 */ SyscallDesc("truncate", unimplementedFunc),
     /* 130 */ SyscallDesc("ftruncate", unimplementedFunc),
     /* 131 */ SyscallDesc("flock", unimplementedFunc),
@@ -556,7 +558,7 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 142 */ SyscallDesc("osf_gethostid", unimplementedFunc),
     /* 143 */ SyscallDesc("osf_sethostid", unimplementedFunc),
     /* 144 */ SyscallDesc("getrlimit", getrlimitFunc<Linux>),
-    /* 145 */ SyscallDesc("setrlimit", unimplementedFunc),
+    /* 145 */ SyscallDesc("setrlimit", ignoreFunc),
     /* 146 */ SyscallDesc("osf_old_killpg", unimplementedFunc),
     /* 147 */ SyscallDesc("setsid", unimplementedFunc),
     /* 148 */ SyscallDesc("quotactl", unimplementedFunc),
@@ -737,7 +739,7 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 320 */ SyscallDesc("was sys_idle", unimplementedFunc),
     /* 321 */ SyscallDesc("oldumount", unimplementedFunc),
     /* 322 */ SyscallDesc("swapon", unimplementedFunc),
-    /* 323 */ SyscallDesc("times", unimplementedFunc),
+    /* 323 */ SyscallDesc("times", ignoreFunc),
     /* 324 */ SyscallDesc("personality", unimplementedFunc),
     /* 325 */ SyscallDesc("setfsuid", unimplementedFunc),
     /* 326 */ SyscallDesc("setfsgid", unimplementedFunc),
@@ -766,7 +768,7 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 349 */ SyscallDesc("pread", unimplementedFunc),
     /* 350 */ SyscallDesc("pwrite", unimplementedFunc),
     /* 351 */ SyscallDesc("rt_sigreturn", unimplementedFunc),
-    /* 352 */ SyscallDesc("rt_sigaction", unimplementedFunc),
+    /* 352 */ SyscallDesc("rt_sigaction", ignoreFunc),
     /* 353 */ SyscallDesc("rt_sigprocmask", unimplementedFunc),
     /* 354 */ SyscallDesc("rt_sigpending", unimplementedFunc),
     /* 355 */ SyscallDesc("rt_sigtimedwait", unimplementedFunc),

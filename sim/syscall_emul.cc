@@ -185,4 +185,32 @@ gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     return 0;
 }
 
+int
+unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
+{
+    std::string path;
+
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+        return -EFAULT;
+
+    int result = unlink(path.c_str());
+    return (result == -1) ? -errno : result;
+}
+
+int
+renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
+{
+    std::string old_name;
+
+    if (xc->mem->readString(old_name, xc->getSyscallArg(0)) != No_Fault)
+        return -EFAULT;
+
+    std::string new_name;
+
+    if (xc->mem->readString(new_name, xc->getSyscallArg(1)) != No_Fault)
+        return -EFAULT;
+
+    int result = rename(old_name.c_str(),new_name.c_str());
+    return (result == -1) ? -errno : result;
+}
 
