@@ -43,6 +43,7 @@
 #include <string>
 
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "dev/platform.hh"
@@ -71,7 +72,7 @@ SimConsole::Event::process(int revent)
         cons->detach();
 }
 
-SimConsole::SimConsole(const string &name, std::ostream *os, int num)
+SimConsole::SimConsole(const string &name, ostream *os, int num)
     : SimObject(name), event(NULL), number(num), in_fd(-1), out_fd(-1),
       listener(NULL), txbuf(16384), rxbuf(16384), outfile(os)
 #if TRACING_ON == 1
@@ -85,8 +86,6 @@ SimConsole::SimConsole(const string &name, std::ostream *os, int num)
 SimConsole::~SimConsole()
 {
     close();
-    if (outfile)
-        closeOutputStream(outfile);
 }
 
 void
@@ -313,18 +312,16 @@ END_INIT_SIM_OBJECT_PARAMS(SimConsole)
 
 CREATE_SIM_OBJECT(SimConsole)
 {
-    string filename;
+    string filename = output;
+    ostream *stream = NULL;
 
-    if (filename.empty()) {
-        filename = getInstanceName();
-    } else if (append_name) {
-        filename = (string)output + "." + getInstanceName();
-    } else {
-        filename = output;
+    if (!filename.empty()) {
+        if (append_name)
+            filename += "." + getInstanceName();
+        stream = simout.find(filename);
     }
 
-    SimConsole *console = new SimConsole(getInstanceName(),
-                                         makeOutputStream(filename), number);
+    SimConsole *console = new SimConsole(getInstanceName(), stream, number);
     ((ConsoleListener *)listener)->add(console);
 
     return console;
