@@ -14,17 +14,17 @@
 
 template <class Impl>
 AlphaFullCPU<Impl>::AlphaFullCPU(Params &params)
-    : FullBetaCPU<AlphaSimpleImpl>(params)
+    : FullBetaCPU<Impl>(params)
 {
     DPRINTF(FullCPU, "AlphaFullCPU: Creating AlphaFullCPU object.\n");
 
-    fetch.setCPU(this);
-    decode.setCPU(this);
-    rename.setCPU(this);
-    iew.setCPU(this);
-    commit.setCPU(this);
+    this->fetch.setCPU(this);
+    this->decode.setCPU(this);
+    this->rename.setCPU(this);
+    this->iew.setCPU(this);
+    this->commit.setCPU(this);
 
-    rob.setCPU(this);
+    this->rob.setCPU(this);
 }
 
 template <class Impl>
@@ -32,12 +32,12 @@ void
 AlphaFullCPU<Impl>::regStats()
 {
     // Register stats for everything that has stats.
-    fullCPURegStats();
-    fetch.regStats();
-    decode.regStats();
-    rename.regStats();
-    iew.regStats();
-    commit.regStats();
+    this->fullCPURegStats();
+    this->fetch.regStats();
+    this->decode.regStats();
+    this->rename.regStats();
+    this->iew.regStats();
+    this->commit.regStats();
 }
 
 #ifndef FULL_SYSTEM
@@ -49,25 +49,25 @@ AlphaFullCPU<Impl>::syscall()
     DPRINTF(FullCPU, "AlphaFullCPU: Syscall() called.\n\n");
 
     // Commit stage needs to run as well.
-    commit.tick();
+    this->commit.tick();
 
     squashStages();
 
     // Temporarily increase this by one to account for the syscall
     // instruction.
-    ++funcExeInst;
+    ++(this->funcExeInst);
 
     // Copy over all important state to xc once all the unrolling is done.
     copyToXC();
 
-    process->syscall(xc);
+    this->process->syscall(this->xc);
 
     // Copy over all important state back to CPU.
     copyFromXC();
 
     // Decrease funcExeInst by one as the normal commit will handle
     // incrememnting it.
-    --funcExeInst;
+    --(this->funcExeInst);
 }
 
 // This is not a pretty function, and should only be used if it is necessary
@@ -77,40 +77,40 @@ template <class Impl>
 void
 AlphaFullCPU<Impl>::squashStages()
 {
-    InstSeqNum rob_head = rob.readHeadSeqNum();
+    InstSeqNum rob_head = this->rob.readHeadSeqNum();
 
     // Now hack the time buffer to put this sequence number in the places
     // where the stages might read it.
     for (int i = 0; i < 5; ++i)
     {
-        timeBuffer.access(-i)->commitInfo.doneSeqNum = rob_head;
+        this->timeBuffer.access(-i)->commitInfo.doneSeqNum = rob_head;
     }
 
-    fetch.squash(rob.readHeadNextPC());
-    fetchQueue.advance();
+    this->fetch.squash(this->rob.readHeadNextPC());
+    this->fetchQueue.advance();
 
-    decode.squash();
-    decodeQueue.advance();
+    this->decode.squash();
+    this->decodeQueue.advance();
 
-    rename.squash();
-    renameQueue.advance();
-    renameQueue.advance();
+    this->rename.squash();
+    this->renameQueue.advance();
+    this->renameQueue.advance();
 
     // Be sure to advance the IEW queues so that the commit stage doesn't
     // try to set an instruction as completed at the same time that it
     // might be deleting it.
-    iew.squash();
-    iewQueue.advance();
-    iewQueue.advance();
+    this->iew.squash();
+    this->iewQueue.advance();
+    this->iewQueue.advance();
 
-    rob.squash(rob_head);
-    commit.setSquashing();
+    this->rob.squash(rob_head);
+    this->commit.setSquashing();
 
     // Now hack the time buffer to clear the sequence numbers in the places
     // where the stages might read it.?
     for (int i = 0; i < 5; ++i)
     {
-        timeBuffer.access(-i)->commitInfo.doneSeqNum = 0;
+        this->timeBuffer.access(-i)->commitInfo.doneSeqNum = 0;
     }
 
 }
@@ -126,29 +126,31 @@ AlphaFullCPU<Impl>::copyToXC()
     // First loop through the integer registers.
     for (int i = 0; i < AlphaISA::NumIntRegs; ++i)
     {
-        renamed_reg = renameMap.lookup(i);
-        xc->regs.intRegFile[i] = regFile.readIntReg(renamed_reg);
+        renamed_reg = this->renameMap.lookup(i);
+        this->xc->regs.intRegFile[i] = this->regFile.readIntReg(renamed_reg);
         DPRINTF(FullCPU, "FullCPU: Copying register %i, has data %lli.\n",
-                renamed_reg, regFile.intRegFile[renamed_reg]);
+                renamed_reg, this->regFile.intRegFile[renamed_reg]);
     }
 
     // Then loop through the floating point registers.
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
-        renamed_reg = renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        xc->regs.floatRegFile.d[i] = regFile.readFloatRegDouble(renamed_reg);
-        xc->regs.floatRegFile.q[i] = regFile.readFloatRegInt(renamed_reg);
+        renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
+        this->xc->regs.floatRegFile.d[i] =
+            this->regFile.readFloatRegDouble(renamed_reg);
+        this->xc->regs.floatRegFile.q[i] =
+            this->regFile.readFloatRegInt(renamed_reg);
     }
 
-    xc->regs.miscRegs.fpcr = regFile.miscRegs.fpcr;
-    xc->regs.miscRegs.uniq = regFile.miscRegs.uniq;
-    xc->regs.miscRegs.lock_flag = regFile.miscRegs.lock_flag;
-    xc->regs.miscRegs.lock_addr = regFile.miscRegs.lock_addr;
+    this->xc->regs.miscRegs.fpcr = this->regFile.miscRegs.fpcr;
+    this->xc->regs.miscRegs.uniq = this->regFile.miscRegs.uniq;
+    this->xc->regs.miscRegs.lock_flag = this->regFile.miscRegs.lock_flag;
+    this->xc->regs.miscRegs.lock_addr = this->regFile.miscRegs.lock_addr;
 
-    xc->regs.pc = rob.readHeadPC();
-    xc->regs.npc = xc->regs.pc+4;
+    this->xc->regs.pc = this->rob.readHeadPC();
+    this->xc->regs.npc = this->xc->regs.pc+4;
 
-    xc->func_exe_inst = funcExeInst;
+    this->xc->func_exe_inst = this->funcExeInst;
 }
 
 // This function will probably mess things up unless the ROB is empty and
@@ -162,35 +164,37 @@ AlphaFullCPU<Impl>::copyFromXC()
     // First loop through the integer registers.
     for (int i = 0; i < AlphaISA::NumIntRegs; ++i)
     {
-        renamed_reg = renameMap.lookup(i);
+        renamed_reg = this->renameMap.lookup(i);
 
         DPRINTF(FullCPU, "FullCPU: Copying over register %i, had data %lli, "
                 "now has data %lli.\n",
-                renamed_reg, regFile.intRegFile[renamed_reg],
-                xc->regs.intRegFile[i]);
+                renamed_reg, this->regFile.intRegFile[renamed_reg],
+                this->xc->regs.intRegFile[i]);
 
-        regFile.setIntReg(renamed_reg, xc->regs.intRegFile[i]);
+        this->regFile.setIntReg(renamed_reg, this->xc->regs.intRegFile[i]);
     }
 
     // Then loop through the floating point registers.
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
-        renamed_reg = renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        regFile.setFloatRegDouble(renamed_reg, xc->regs.floatRegFile.d[i]);
-        regFile.setFloatRegInt(renamed_reg, xc->regs.floatRegFile.q[i]);
+        renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
+        this->regFile.setFloatRegDouble(renamed_reg,
+                                        this->xc->regs.floatRegFile.d[i]);
+        this->regFile.setFloatRegInt(renamed_reg,
+                                     this->xc->regs.floatRegFile.q[i]);
     }
 
     // Then loop through the misc registers.
-    regFile.miscRegs.fpcr = xc->regs.miscRegs.fpcr;
-    regFile.miscRegs.uniq = xc->regs.miscRegs.uniq;
-    regFile.miscRegs.lock_flag = xc->regs.miscRegs.lock_flag;
-    regFile.miscRegs.lock_addr = xc->regs.miscRegs.lock_addr;
+    this->regFile.miscRegs.fpcr = this->xc->regs.miscRegs.fpcr;
+    this->regFile.miscRegs.uniq = this->xc->regs.miscRegs.uniq;
+    this->regFile.miscRegs.lock_flag = this->xc->regs.miscRegs.lock_flag;
+    this->regFile.miscRegs.lock_addr = this->xc->regs.miscRegs.lock_addr;
 
     // Then finally set the PC and the next PC.
 //    regFile.pc = xc->regs.pc;
 //    regFile.npc = xc->regs.npc;
 
-    funcExeInst = xc->func_exe_inst;
+    this->funcExeInst = this->xc->func_exe_inst;
 }
 
 #ifdef FULL_SYSTEM

@@ -26,35 +26,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_DYN_INST_HH__
-#define __BASE_DYN_INST_HH__
+#ifndef __CPU_BASE_DYN_INST_HH__
+#define __CPU_BASE_DYN_INST_HH__
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 
-#include "cpu/static_inst.hh"
 #include "cpu/beta_cpu/comm.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/full_cpu/bpred_update.hh"
-#include "mem/functional_mem/main_memory.hh"
-#include "cpu/full_cpu/spec_memory.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/full_cpu/op_class.hh"
+#include "cpu/full_cpu/spec_memory.hh"
 #include "cpu/full_cpu/spec_state.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/static_inst.hh"
+#include "mem/functional_mem/main_memory.hh"
 
 /**
  * @file
  * Defines a dynamic instruction context.
  */
 
-namespace Trace {
-    class InstRecord;
-};
-
 // Forward declaration.
-template <class blah>
+template <class ISA>
 class StaticInstPtr;
 
 template <class Impl>
@@ -90,8 +87,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     ////////////////////////////////////////////
     Trace::InstRecord *traceData;
 
-//    void setCPSeq(InstSeqNum seq);
-
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
@@ -99,15 +94,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
-
-    IntReg *getIntegerRegs(void);
-    FunctionalMemory *getMemory(void);
-
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
     Fault copySrcTranslate(Addr src);
     Fault copy(Addr dest);
 
+    // Probably should be private...
   public:
     /** Is this instruction valid. */
     bool valid;
@@ -117,6 +109,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** How many source registers are ready. */
     unsigned readyRegs;
+
+    /** Is the instruction completed. */
+    bool completed;
 
     /** Can this instruction issue. */
     bool canIssue;
@@ -145,17 +140,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Is this a thread syncrhonization instruction. */
     bool threadsyncWait;
 
-    /** If the BTB missed. */
-//    bool btbMissed;
-
-    /** The global history of this instruction (branch). */
-//    unsigned globalHistory;
-
     /** The thread this instruction is from. */
     short threadNumber;
-
-    /** If instruction is speculative. */
-    short specMode;
 
     /** data address space ID, for loads & stores. */
     short asid;
@@ -190,14 +176,16 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** The data to be stored. */
     IntReg storeData;
 
-    /** Result of this instruction, if an integer. */
-    uint64_t intResult;
+    union Result {
+        uint64_t integer;
+        float fp;
+        double dbl;
+    };
 
-    /** Result of this instruction, if a float. */
-    float floatResult;
-
-    /** Result of this instruction, if a double. */
-    double doubleResult;
+    /** The result of the instruction; assumes for now that there's only one
+     *  destination register.
+     */
+    Result instResult;
 
     /** PC of this instruction. */
     Addr PC;
@@ -214,27 +202,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
-    /** Did this instruction do a spec write? */
-//    bool specMemWrite;
-
-  private:
-    /** Physical register index of the destination registers of this
-     *  instruction.
+    /** Whether or not the source register is ready.  Not sure this should be
+     *  here vs. the derived class.
      */
-    PhysRegIndex _destRegIdx[MaxInstDestRegs];
-
-    /** Physical register index of the source registers of this
-     *  instruction.
-     */
-    PhysRegIndex _srcRegIdx[MaxInstSrcRegs];
-
-    /** Whether or not the source register is ready. */
     bool _readySrcRegIdx[MaxInstSrcRegs];
-
-    /** Physical register index of the previous producers of the
-     *  architected destinations.
-     */
-    PhysRegIndex _prevDestRegIdx[MaxInstDestRegs];
 
   public:
     /** BaseDynInst constructor given a binary instruction. */
@@ -247,14 +218,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** BaseDynInst destructor. */
     ~BaseDynInst();
 
-#if 0
-    Fault
-    mem_access(MemCmd cmd,	// Read or Write access cmd
-               Addr addr,	// virtual address of access
-               void *p,		// input/output buffer
-               int nbytes);	// access size
-#endif
+  private:
+    void initVars();
 
+  public:
     void
     trace_mem(Fault fault,      // last fault
               MemCmd cmd,       // last command
@@ -278,7 +245,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool doneTargCalc() { return false; }
 
     /** Returns the calculated target of the branch. */
-    Addr readCalcTarg() { return nextPC; }
+//    Addr readCalcTarg() { return nextPC; }
 
     Addr readNextPC() { return nextPC; }
 
@@ -295,16 +262,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Returns whether the instruction mispredicted. */
     bool mispredicted() { return (predPC != nextPC); }
-
-/*
-    unsigned readGlobalHist() {
-        return globalHistory;
-    }
-
-    void setGlobalHist(unsigned history) {
-        globalHistory = history;
-    }
-*/
 
     //
     //  Instruction types.  Forward checks to StaticInst object.
@@ -331,6 +288,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }
 
+    /** Returns the opclass of this instruction. */
+    OpClass opClass() const { return staticInst->opClass(); }
+
+    /** Returns the branch target address. */
+    Addr branchTarget() const { return staticInst->branchTarget(PC); }
+
     int8_t numSrcRegs()	 const { return staticInst->numSrcRegs(); }
     int8_t numDestRegs() const { return staticInst->numDestRegs(); }
 
@@ -351,52 +314,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
         return staticInst->srcRegIdx(i);
     }
 
-    /** Returns the physical register index of the i'th destination
-     *  register.
-     */
-    PhysRegIndex renamedDestRegIdx(int idx) const
-    {
-        return _destRegIdx[idx];
-    }
-
-    /** Returns the physical register index of the i'th source register. */
-    PhysRegIndex renamedSrcRegIdx(int idx) const
-    {
-        return _srcRegIdx[idx];
-    }
-
-    bool isReadySrcRegIdx(int idx) const
-    {
-        return _readySrcRegIdx[idx];
-    }
-
-    /** Returns the physical register index of the previous physical register
-     *  that remapped to the same logical register index.
-     */
-    PhysRegIndex prevDestRegIdx(int idx) const
-    {
-        return _prevDestRegIdx[idx];
-    }
-
-    /** Renames a destination register to a physical register.  Also records
-     *  the previous physical register that the logical register mapped to.
-     */
-    void renameDestReg(int idx,
-                       PhysRegIndex renamed_dest,
-                       PhysRegIndex previous_rename)
-    {
-        _destRegIdx[idx] = renamed_dest;
-        _prevDestRegIdx[idx] = previous_rename;
-    }
-
-    /** Renames a source logical register to the physical register which
-     *  has/will produce that logical register's result.
-     *  @todo: add in whether or not the source register is ready.
-     */
-    void renameSrcReg(int idx, PhysRegIndex renamed_src)
-    {
-        _srcRegIdx[idx] = renamed_src;
-    }
+    uint64_t readIntResult() { return instResult.integer; }
+    float readFloatResult() { return instResult.fp; }
+    double readDoubleResult() { return instResult.dbl; }
 
     //Push to .cc file.
     /** Records that one of the source registers is ready. */
@@ -419,6 +339,15 @@ class BaseDynInst : public FastAlloc, public RefCounted
         }
     }
 
+    bool isReadySrcRegIdx(int idx) const
+    {
+        return this->_readySrcRegIdx[idx];
+    }
+
+    void setCompleted() { completed = true; }
+
+    bool isCompleted() const { return completed; }
+
     /** Sets this instruction as ready to issue. */
     void setCanIssue() { canIssue = true; }
 
@@ -429,13 +358,13 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setIssued() { issued = true; }
 
     /** Returns whether or not this instruction has issued. */
-    bool isIssued() { return issued; }
+    bool isIssued() const { return issued; }
 
     /** Sets this instruction as executed. */
     void setExecuted() { executed = true; }
 
     /** Returns whether or not this instruction has executed. */
-    bool isExecuted() { return executed; }
+    bool isExecuted() const { return executed; }
 
     /** Sets this instruction as ready to commit. */
     void setCanCommit() { canCommit = true; }
@@ -456,82 +385,25 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setSquashedInIQ() { squashedInIQ = true; }
 
     /** Returns whether or not this instruction is squashed in the IQ. */
-    bool isSquashedInIQ() { return squashedInIQ; }
-
-    /** Returns the opclass of this instruction. */
-    OpClass opClass() const { return staticInst->opClass(); }
-
-    /** Returns whether or not the BTB missed. */
-//    bool btbMiss() const { return btbMissed; }
-
-    /** Returns the branch target address. */
-    Addr branchTarget() const { return staticInst->branchTarget(PC); }
-
-    // The register accessor methods provide the index of the
-    // instruction's operand (e.g., 0 or 1), not the architectural
-    // register index, to simplify the implementation of register
-    // renaming.  We find the architectural register index by indexing
-    // into the instruction's own operand index table.  Note that a
-    // raw pointer to the StaticInst is provided instead of a
-    // ref-counted StaticInstPtr to redice overhead.  This is fine as
-    // long as these methods don't copy the pointer into any long-term
-    // storage (which is pretty hard to imagine they would have reason
-    // to do).
-
-    uint64_t readIntReg(StaticInst<ISA> *si, int idx)
-    {
-        return cpu->readIntReg(_srcRegIdx[idx]);
-    }
-
-    float readFloatRegSingle(StaticInst<ISA> *si, int idx)
-    {
-        return cpu->readFloatRegSingle(_srcRegIdx[idx]);
-    }
-
-    double readFloatRegDouble(StaticInst<ISA> *si, int idx)
-    {
-        return cpu->readFloatRegDouble(_srcRegIdx[idx]);
-    }
-
-    uint64_t readFloatRegInt(StaticInst<ISA> *si, int idx)
-    {
-        return cpu->readFloatRegInt(_srcRegIdx[idx]);
-    }
-    /** @todo: Make results into arrays so they can handle multiple dest
-     *  registers.
-     */
-    void setIntReg(StaticInst<ISA> *si, int idx, uint64_t val)
-    {
-        cpu->setIntReg(_destRegIdx[idx], val);
-        intResult = val;
-    }
-
-    void setFloatRegSingle(StaticInst<ISA> *si, int idx, float val)
-    {
-        cpu->setFloatRegSingle(_destRegIdx[idx], val);
-        floatResult = val;
-    }
-
-    void setFloatRegDouble(StaticInst<ISA> *si, int idx, double val)
-    {
-        cpu->setFloatRegDouble(_destRegIdx[idx], val);
-        doubleResult = val;
-    }
-
-    void setFloatRegInt(StaticInst<ISA> *si, int idx, uint64_t val)
-    {
-        cpu->setFloatRegInt(_destRegIdx[idx], val);
-        intResult = val;
-    }
+    bool isSquashedInIQ() const { return squashedInIQ; }
 
     /** Read the PC of this instruction. */
-    Addr readPC() { return PC; }
+    const Addr readPC() const { return PC; }
 
     /** Set the next PC of this instruction (its actual target). */
     void setNextPC(uint64_t val) { nextPC = val; }
 
-//    bool misspeculating() { return cpu->misspeculating(); }
     ExecContext *xcBase() { return xc; }
+
+  private:
+    Addr instEffAddr;
+    bool eaCalcDone;
+
+  public:
+    void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
+    const Addr &getEA() const { return instEffAddr; }
+    bool doneEACalc() { return eaCalcDone; }
+    bool eaSrcsReady();
 };
 
 template<class Impl>
@@ -589,8 +461,6 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     storeSize = sizeof(T);
     storeData = data;
-//    if (specMode)
-//	specMemWrite = true;
 
     MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
 
@@ -627,4 +497,4 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     return fault;
 }
 
-#endif // __DYN_INST_HH__
+#endif // __CPU_BASE_DYN_INST_HH__

@@ -64,8 +64,8 @@ class SimpleRenameMap
 
     void setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg);
 
-    void squash(vector<RegIndex> freed_regs,
-                vector<UnmapInfo> unmaps);
+    void squash(std::vector<RegIndex> freed_regs,
+                std::vector<UnmapInfo> unmaps);
 
     int numFreeEntries();
 

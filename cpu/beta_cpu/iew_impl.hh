@@ -244,10 +244,10 @@ SimpleIEW<Impl, IQ>::squashDueToBranch(DynInstPtr &inst)
     // Also send PC update information back to prior stages.
     toCommit->squashedSeqNum = inst->seqNum;
     toCommit->mispredPC = inst->readPC();
-    toCommit->nextPC = inst->readCalcTarg();
+    toCommit->nextPC = inst->readNextPC();
     toCommit->branchMispredict = true;
     // Prediction was incorrect, so send back inverse.
-    toCommit->branchTaken = inst->readCalcTarg() !=
+    toCommit->branchTaken = inst->readNextPC() !=
         (inst->readPC() + sizeof(MachInst));
 }
 
@@ -265,7 +265,7 @@ SimpleIEW<Impl, IQ>::squashDueToMem(DynInstPtr &inst)
     toCommit->squash = true;
     // Also send PC update information back to prior stages.
     toCommit->squashedSeqNum = inst->seqNum;
-    toCommit->nextPC = inst->readCalcTarg();
+    toCommit->nextPC = inst->readNextPC();
 }
 
 template <class Impl, class IQ>

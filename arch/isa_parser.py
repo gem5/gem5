@@ -642,6 +642,9 @@ CpuModel('FullCPU', 'full_cpu_exec.cc',
 CpuModel('AlphaFullCPU', 'alpha_full_cpu_exec.cc',
          '#include "cpu/beta_cpu/alpha_dyn_inst.hh"',
          { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
+CpuModel('OoOCPU', 'ooo_cpu_exec.cc',
+         '#include "cpu/ooo_cpu/ooo_dyn_inst.hh"',
+         { 'CPU_exec_context': 'OoODynInst<OoOImpl>' })
 
 # Expand template with CPU-specific references into a dictionary with
 # an entry for each CPU model name.  The entry key is the model name

@@ -138,7 +138,8 @@ baseFlags = [
     'MemDepUnit',
     'DynInst',
     'FullCPU',
-    'CommitRate'
+    'CommitRate',
+    'OoOCPU'
     ]
 
 #

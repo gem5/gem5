@@ -4,7 +4,10 @@ ReturnAddrStack::ReturnAddrStack(unsigned _numEntries)
     : numEntries(_numEntries), usedEntries(0),
       tos(0)
 {
-    addrStack = new Addr[numEntries](0);
+    addrStack = new Addr[numEntries];
+
+    for (int i = 0; i < numEntries; ++i)
+        addrStack[i] = 0;
 }
 
 void

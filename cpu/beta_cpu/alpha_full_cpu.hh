@@ -87,22 +87,22 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
     // trying to rename source/destination registers...
     uint64_t readUniq()
     {
-        return regFile.readUniq();
+        return this->regFile.readUniq();
     }
 
     void setUniq(uint64_t val)
     {
-        regFile.setUniq(val);
+        this->regFile.setUniq(val);
     }
 
     uint64_t readFpcr()
     {
-        return regFile.readFpcr();
+        return this->regFile.readFpcr();
     }
 
     void setFpcr(uint64_t val)
     {
-        regFile.setFpcr(val);
+        this->regFile.setFpcr(val);
     }
 
 #ifdef FULL_SYSTEM
@@ -127,13 +127,13 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
     // set the register.
     IntReg getSyscallArg(int i)
     {
-        return xc->regs.intRegFile[AlphaISA::ArgumentReg0 + i];
+        return this->xc->regs.intRegFile[AlphaISA::ArgumentReg0 + i];
     }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, IntReg val)
     {
-        xc->regs.intRegFile[AlphaISA::ArgumentReg0 + i] = val;
+        this->xc->regs.intRegFile[AlphaISA::ArgumentReg0 + i] = val;
     }
 
     void setSyscallReturn(int64_t return_value)
@@ -144,12 +144,12 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
         const int RegA3 = 19;	// only place this is used
         if (return_value >= 0) {
             // no error
-            xc->regs.intRegFile[RegA3] = 0;
-            xc->regs.intRegFile[AlphaISA::ReturnValueReg] = return_value;
+            this->xc->regs.intRegFile[RegA3] = 0;
+            this->xc->regs.intRegFile[AlphaISA::ReturnValueReg] = return_value;
         } else {
             // got an error, return details
-            xc->regs.intRegFile[RegA3] = (IntReg) -1;
-            xc->regs.intRegFile[AlphaISA::ReturnValueReg] = -return_value;
+            this->xc->regs.intRegFile[RegA3] = (IntReg) -1;
+            this->xc->regs.intRegFile[AlphaISA::ReturnValueReg] = -return_value;
         }
     }
 
@@ -188,7 +188,7 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 #endif
 
         Fault error;
-        error = mem->read(req, data);
+        error = this->mem->read(req, data);
         data = htoa(data);
         return error;
     }
@@ -203,7 +203,7 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 
         // If this is a store conditional, act appropriately
         if (req->flags & LOCKED) {
-            cregs = &xc->regs.miscRegs;
+            cregs = &this->xc->regs.miscRegs;
 
             if (req->flags & UNCACHEABLE) {
                 // Don't update result register (see stq_c in isa_desc)
@@ -241,7 +241,7 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 
 #endif
 
-        return mem->write(req, (T)htoa(data));
+        return this->mem->write(req, (T)htoa(data));
     }
 
 };

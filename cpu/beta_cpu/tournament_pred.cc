@@ -1,35 +1,5 @@
 #include "cpu/beta_cpu/tournament_pred.hh"
 
-TournamentBP::SatCounter::SatCounter(unsigned bits)
-    : maxVal((1 << bits) - 1), counter(0)
-{
-}
-
-TournamentBP::SatCounter::SatCounter(unsigned bits, unsigned initial_val)
-    : maxVal((1 << bits) - 1), counter(initial_val)
-{
-    // Check to make sure initial value doesn't exceed the max counter value.
-    if (initial_val > maxVal) {
-        panic("BP: Initial counter value exceeds max size.");
-    }
-}
-
-void
-TournamentBP::SatCounter::increment()
-{
-    if (counter < maxVal) {
-        ++counter;
-    }
-}
-
-void
-TournamentBP::SatCounter::decrement()
-{
-    if (counter > 0) {
-        --counter;
-    }
-}
-
 TournamentBP::TournamentBP(unsigned _local_predictor_size,
                            unsigned _local_ctr_bits,
                            unsigned _local_history_table_size,
@@ -54,21 +24,36 @@ TournamentBP::TournamentBP(unsigned _local_predictor_size,
     //Should do checks here to make sure sizes are correct (powers of 2)
 
     //Setup the array of counters for the local predictor
-    local_ctrs = new SatCounter[local_predictor_size](local_ctr_bits);
+    local_ctrs = new SatCounter[local_predictor_size];
+
+    for (int i = 0; i < local_predictor_size; ++i)
+        local_ctrs[i].setBits(local_ctr_bits);
+
     //Setup the history table for the local table
-    local_history_table = new unsigned[local_history_table_size](0);
+    local_history_table = new unsigned[local_history_table_size];
+
+    for (int i = 0; i < local_history_table_size; ++i)
+        local_history_table[i] = 0;
+
     // Setup the local history mask
     localHistoryMask = (1 << local_history_bits) - 1;
 
     //Setup the array of counters for the global predictor
-    global_ctrs = new SatCounter[global_predictor_size](global_ctr_bits);
+    global_ctrs = new SatCounter[global_predictor_size];
+
+    for (int i = 0; i < global_predictor_size; ++i)
+        global_ctrs[i].setBits(global_ctr_bits);
+
     //Clear the global history
     global_history = 0;
     // Setup the global history mask
     globalHistoryMask = (1 << global_history_bits) - 1;
 
     //Setup the array of counters for the choice predictor
-    choice_ctrs = new SatCounter[choice_predictor_size](choice_ctr_bits);
+    choice_ctrs = new SatCounter[choice_predictor_size];
+
+    for (int i = 0; i < choice_predictor_size; ++i)
+        choice_ctrs[i].setBits(choice_ctr_bits);
 
     threshold = (1 << (local_ctr_bits - 1)) - 1;
     threshold = threshold / 2;

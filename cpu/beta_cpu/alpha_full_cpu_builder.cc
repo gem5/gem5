@@ -283,10 +283,10 @@ CREATE_SIM_OBJECT(BaseFullCPU)
 
     params.mem = mem;
 
-    params.maxInstsAnyThread = max_insts_any_thread;
-    params.maxInstsAllThreads = max_insts_all_threads;
-    params.maxLoadsAnyThread = max_loads_any_thread;
-    params.maxLoadsAllThreads = max_loads_all_threads;
+    params.max_insts_any_thread = max_insts_any_thread;
+    params.max_insts_all_threads = max_insts_all_threads;
+    params.max_loads_any_thread = max_loads_any_thread;
+    params.max_loads_all_threads = max_loads_all_threads;
 
     //
     // Caches

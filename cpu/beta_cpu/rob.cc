@@ -4,4 +4,4 @@
 #include "cpu/beta_cpu/rob_impl.hh"
 
 // Force instantiation of InstructionQueue.
-template ROB<AlphaSimpleImpl>;
+template class ROB<AlphaSimpleImpl>;

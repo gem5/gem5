@@ -1,5 +1,9 @@
 
+#include <vector>
+
 #include "cpu/beta_cpu/rename_map.hh"
+
+using namespace std;
 
 // Todo: Consider making functions inline.  Avoid having things that are
 // using the zero register or misc registers from adding on the registers

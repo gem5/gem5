@@ -6,4 +6,4 @@
 // Force instantiation of AlphaFullCPU for all the implemntations that are
 // needed.  Consider merging this and alpha_dyn_inst.cc, and maybe all
 // classes that depend on a certain impl, into one file (alpha_impl.cc?).
-template AlphaFullCPU<AlphaSimpleImpl>;
+template class AlphaFullCPU<AlphaSimpleImpl>;

@@ -1,36 +1,6 @@
 #include "base/trace.hh"
 #include "cpu/beta_cpu/2bit_local_pred.hh"
 
-DefaultBP::SatCounter::SatCounter(unsigned bits)
-    : maxVal((1 << bits) - 1), counter(0)
-{
-}
-
-DefaultBP::SatCounter::SatCounter(unsigned bits, unsigned initial_val)
-    : maxVal((1 << bits) - 1), counter(initial_val)
-{
-    // Check to make sure initial value doesn't exceed the max counter value.
-    if (initial_val > maxVal) {
-        panic("BP: Initial counter value exceeds max size.");
-    }
-}
-
-void
-DefaultBP::SatCounter::increment()
-{
-    if(counter < maxVal) {
-        ++counter;
-    }
-}
-
-void
-DefaultBP::SatCounter::decrement()
-{
-    if(counter > 0) {
-        --counter;
-    }
-}
-
 DefaultBP::DefaultBP(unsigned _localPredictorSize,
                      unsigned _localCtrBits,
                      unsigned _instShiftAmt)
@@ -46,7 +16,10 @@ DefaultBP::DefaultBP(unsigned _localPredictorSize,
     DPRINTF(Fetch, "Branch predictor: index mask: %#x\n", indexMask);
 
     // Setup the array of counters for the local predictor.
-    localCtrs = new SatCounter[localPredictorSize](localCtrBits);
+    localCtrs = new SatCounter[localPredictorSize];
+
+    for (int i = 0; i < localPredictorSize; ++i)
+        localCtrs[i].setBits(_localCtrBits);
 
     DPRINTF(Fetch, "Branch predictor: local predictor size: %i\n",
             localPredictorSize);

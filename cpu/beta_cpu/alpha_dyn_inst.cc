@@ -4,4 +4,4 @@
 
 // Force instantiation of AlphaDynInst for all the implementations that
 // are needed.
-template AlphaDynInst<AlphaSimpleImpl>;
+template class AlphaDynInst<AlphaSimpleImpl>;

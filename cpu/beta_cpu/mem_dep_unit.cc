@@ -6,4 +6,4 @@
 
 // Force instantation of memory dependency unit using store sets and
 // AlphaSimpleImpl.
-template MemDepUnit<StoreSet, AlphaSimpleImpl>;
+template class MemDepUnit<StoreSet, AlphaSimpleImpl>;

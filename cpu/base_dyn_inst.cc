@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_DYN_INST_CC__
-#define __BASE_DYN_INST_CC__
+#ifndef __CPU_BASE_DYN_INST_CC__
+#define __CPU_BASE_DYN_INST_CC__
 
 #include <iostream>
 #include <string>
@@ -43,6 +43,8 @@
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/beta_cpu/alpha_impl.hh"
 #include "cpu/beta_cpu/alpha_full_cpu.hh"
+#include "cpu/ooo_cpu/ooo_impl.hh"
+#include "cpu/ooo_cpu/ooo_cpu.hh"
 
 using namespace std;
 
@@ -74,90 +76,56 @@ BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
                                FullCPU *cpu)
     : staticInst(machInst), traceData(NULL), cpu(cpu), xc(cpu->xcBase())
 {
-    DPRINTF(FullCPU, "DynInst: Creating new DynInst.\n");
-
-    effAddr = MemReq::inval_addr;
-    physEffAddr = MemReq::inval_addr;
-
-    readyRegs = 0;
-
     seqNum = seq_num;
-
-//    specMemWrite = false;
-
-    canIssue = false;
-    issued = false;
-    executed = false;
-    canCommit = false;
-    squashed = false;
-    squashedInIQ = false;
-
-    blockingInst = false;
-    recoverInst = false;
-    specMode = false;
-//    btbMissed = false;
-    // Eventually make this a parameter.
-    threadNumber = 0;
-    // Also make this a parameter.
-    specMode = true;
-    // Also make this a parameter, or perhaps get it from xc or cpu.
-    asid = 0;
-
-    // Initialize the fault to be unimplemented opcode.
-    fault = Unimplemented_Opcode_Fault;
 
     PC = inst_PC;
     nextPC = PC + sizeof(MachInst);
     predPC = pred_PC;
 
-    // Make sure to have the renamed register entries set to the same
-    // as the normal register entries.  It will allow the IQ to work
-    // without any modifications.
-    for (int i = 0; i < staticInst->numDestRegs(); i++)
-    {
-        _destRegIdx[i] = staticInst->destRegIdx(i);
-    }
-
-    for (int i = 0; i < staticInst->numSrcRegs(); i++)
-    {
-        _srcRegIdx[i] = staticInst->srcRegIdx(i);
-        _readySrcRegIdx[i] = 0;
-    }
-
-    ++instcount;
-
-//    assert(instcount < 50);
-
-    DPRINTF(FullCPU, "DynInst: Instruction created.  Instcount=%i\n",
-            instcount);
+    initVars();
 }
 
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr<ISA> &_staticInst)
     : staticInst(_staticInst), traceData(NULL)
 {
+    initVars();
+}
+
+template <class Impl>
+void
+BaseDynInst<Impl>::initVars()
+{
     effAddr = MemReq::inval_addr;
     physEffAddr = MemReq::inval_addr;
 
-//    specMemWrite = false;
+    readyRegs = 0;
+
+    completed = false;
+    canIssue = false;
+    issued = false;
+    executed = false;
+    canCommit = false;
+    squashed = false;
+    squashedInIQ = false;
+    eaCalcDone = false;
 
     blockingInst = false;
     recoverInst = false;
-    specMode = false;
-//    btbMissed = false;
 
-    // Make sure to have the renamed register entries set to the same
-    // as the normal register entries.  It will allow the IQ to work
-    // without any modifications.
-    for (int i = 0; i < staticInst->numDestRegs(); i++)
-    {
-        _destRegIdx[i] = staticInst->destRegIdx(i);
-    }
+    // Eventually make this a parameter.
+    threadNumber = 0;
 
-    for (int i = 0; i < staticInst->numSrcRegs(); i++)
-    {
-        _srcRegIdx[i] = staticInst->srcRegIdx(i);
-    }
+    // Also make this a parameter, or perhaps get it from xc or cpu.
+    asid = 0;
+
+    // Initialize the fault to be unimplemented opcode.
+    fault = Unimplemented_Opcode_Fault;
+
+    ++instcount;
+
+    DPRINTF(FullCPU, "DynInst: Instruction created.  Instcount=%i\n",
+            instcount);
 }
 
 template <class Impl>
@@ -173,14 +141,14 @@ BaseDynInst<Impl>::~BaseDynInst()
     DPRINTF(FullCPU, "DynInst: Instruction destroyed.  Instcount=%i\n",
             instcount);
 }
-
+/*
 template <class Impl>
 FunctionalMemory *
 BaseDynInst<Impl>::getMemory(void)
 {
     return xc->mem;
 }
-/*
+
 template <class Impl>
 IntReg *
 BaseDynInst<Impl>::getIntegerRegs(void)
@@ -395,10 +363,35 @@ BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
 
 #endif
 
+template <class Impl>
+bool
+BaseDynInst<Impl>::eaSrcsReady()
+{
+    // For now I am assuming that src registers 1..n-1 are the ones that the
+    // EA calc depends on.  (i.e. src reg 0 is the source of the data to be
+    // stored)
+
+//    StaticInstPtr<ISA> eaInst = staticInst->eaCompInst();
+
+    for (int i = 1; i < numSrcRegs(); ++i)
+    {
+        if (!_readySrcRegIdx[i])
+            return false;
+    }
+
+    return true;
+}
+
+// Forward declaration...
+template class BaseDynInst<AlphaSimpleImpl>;
+template class BaseDynInst<OoOImpl>;
+
+template <>
 int
 BaseDynInst<AlphaSimpleImpl>::instcount = 0;
 
-// Forward declaration...
-template BaseDynInst<AlphaSimpleImpl>;
+template <>
+int
+BaseDynInst<OoOImpl>::instcount = 0;
 
-#endif // __BASE_DYN_INST_CC__
+#endif // __CPU_BASE_DYN_INST_CC__

@@ -738,9 +738,9 @@ output header {{
 	/// Memory request flags.  See mem_req_base.hh.
         unsigned memAccessFlags;
 	/// Pointer to EAComp object.
-	const StaticInstPtr<AlphaISA> eaCompPtr;
+	StaticInstPtr<AlphaISA> eaCompPtr;
 	/// Pointer to MemAcc object.
-	const StaticInstPtr<AlphaISA> memAccPtr;
+	StaticInstPtr<AlphaISA> memAccPtr;
 
 	/// Constructor
 	Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
@@ -755,8 +755,8 @@ output header {{
 
       public:
 
-	const StaticInstPtr<AlphaISA> &eaCompInst() const { return eaCompPtr; }
-	const StaticInstPtr<AlphaISA> &memAccInst() const { return memAccPtr; }
+	StaticInstPtr<AlphaISA> &eaCompInst() { return eaCompPtr; }
+	StaticInstPtr<AlphaISA> &memAccInst() { return memAccPtr; }
     };
 
     /**

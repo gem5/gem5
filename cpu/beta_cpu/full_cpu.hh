@@ -27,27 +27,7 @@ class BaseFullCPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
-    class Params
-    {
-      public:
-#ifdef FULL_SYSTEM
-        std::string name;
-        int numberOfThreads;
-        Counter maxInstsAnyThread;
-        Counter maxInstsAllThreads;
-        Counter maxLoadsAnyThread;
-        Counter maxLoadsAllThreads;
-        System *_system;
-        Tick freq;
-#else
-        std::string name;
-        int numberOfThreads;
-        Counter maxInstsAnyThread;
-        Counter maxInstsAllThreads;
-        Counter maxLoadsAnyThread;
-        Counter maxLoadsAllThreads;
-#endif // FULL_SYSTEM
-    };
+    typedef BaseCPU::Params Params;
 
 #ifdef FULL_SYSTEM
     BaseFullCPU(Params &params);

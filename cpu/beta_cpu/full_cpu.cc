@@ -15,22 +15,10 @@
 
 using namespace std;
 
-#ifdef FULL_SYSTEM
 BaseFullCPU::BaseFullCPU(Params &params)
-    : BaseCPU(params.name, params.numberOfThreads,
-              params.maxInstsAnyThread, params.maxInstsAllThreads,
-              params.maxLoadsAnyThread, params.maxLoadsAllThreads,
-              params._system, params.freq)
+    : BaseCPU(&params)
 {
 }
-#else
-BaseFullCPU::BaseFullCPU(Params &params)
-    : BaseCPU(params.name, params.numberOfThreads,
-              params.maxInstsAnyThread, params.maxInstsAllThreads,
-              params.maxLoadsAnyThread, params.maxLoadsAllThreads)
-{
-}
-#endif // FULL_SYSTEM
 
 template <class Impl>
 FullBetaCPU<Impl>::TickEvent::TickEvent(FullBetaCPU<Impl> *c)
@@ -515,6 +503,6 @@ FullBetaCPU<Impl>::wakeDependents(DynInstPtr &inst)
 }
 
 // Forward declaration of FullBetaCPU.
-template FullBetaCPU<AlphaSimpleImpl>;
+template class FullBetaCPU<AlphaSimpleImpl>;
 
 #endif // __SIMPLE_FULL_CPU_HH__

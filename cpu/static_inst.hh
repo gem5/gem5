@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __STATIC_INST_HH__
-#define __STATIC_INST_HH__
+#ifndef __CPU_STATIC_INST_HH__
+#define __CPU_STATIC_INST_HH__
 
 #include <bitset>
 #include <string>
@@ -41,10 +41,15 @@
 
 // forward declarations
 struct AlphaSimpleImpl;
+struct OoOImpl;
 class ExecContext;
 class DynInst;
+
 template <class Impl>
 class AlphaDynInst;
+
+template <class Impl>
+class OoODynInst;
 
 class FastCPU;
 class SimpleCPU;
@@ -255,7 +260,7 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the EA computation.
      */
-    virtual const
+    virtual
     StaticInstPtr<ISA> &eaCompInst() const { return nullStaticInstPtr; }
 
     /**
@@ -264,7 +269,7 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the memory access (not the EA computation).
      */
-    virtual const
+    virtual
     StaticInstPtr<ISA> &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.
@@ -445,4 +450,4 @@ class StaticInstPtr : public RefCountingPtr<StaticInst<ISA> >
     }
 };
 
-#endif // __STATIC_INST_HH__
+#endif // __CPU_STATIC_INST_HH__
