@@ -273,7 +273,8 @@ check()
     for (i = Database::stats().begin(); i != end; ++i) {
         StatData *data = *i;
         assert(data);
-        data->check();
+        if (!data->check() || !data->baseCheck())
+            panic("stat check failed for %s\n", data->name);
     }
 
     int j = 0;

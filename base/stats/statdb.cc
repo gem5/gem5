@@ -51,6 +51,10 @@ find(void *stat)
 void
 regBin(MainBin *bin, const std::string &_name)
 {
+    bin_list_t::iterator i, end = bins().end();
+    for (i = bins().begin(); i != end; ++i)
+        if ((*i)->name() == _name)
+            panic("re-registering bin %s", _name);
     bins().push_back(bin);
     DPRINTF(Stats, "registering %s\n", _name);
 }
