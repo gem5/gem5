@@ -131,7 +131,8 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
       case Read:
         if (memcmp(req->data, data, req->size) != 0) {
             cerr << name() << ": on read of 0x" << hex << req->paddr
-                 << " @ cycle " << dec << curTick
+                 << " (0x" << hex << blockAddr(req->paddr) << ")"
+                 << "@ cycle " << dec << curTick
                  << ", cache returns 0x";
             printData(cerr, req->data, req->size);
             cerr << ", expected 0x";
@@ -163,11 +164,13 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
     }
 
     if (blockAddr(req->paddr) == traceBlockAddr) {
-        cerr << hex << traceBlockAddr << ": " << name() << ": completed "
+        cerr << name() << ": completed "
              << (req->cmd.isWrite() ? "write" : "read")
              << " access of "
              << dec << req->size << " bytes at address 0x"
-             << hex << req->paddr << ", value = 0x";
+             << hex << req->paddr
+             << " (0x" << hex << blockAddr(req->paddr) << ")"
+             << ", value = 0x";
         printData(cerr, req->data, req->size);
         cerr << " @ cycle " << dec << curTick;
 
@@ -249,11 +252,13 @@ MemTest::tick()
         uint8_t *result = new uint8_t[8];
         checkMem->access(Read, req->paddr, result, req->size);
         if (blockAddr(req->paddr) == traceBlockAddr) {
-            cerr <<  hex << traceBlockAddr << ": " << name()
+            cerr << name()
                  << ": initiating read "
                  << ((probe)?"probe of ":"access of ")
                  << dec << req->size << " bytes from addr 0x"
-                 << hex << req->paddr << " at cycle "
+                 << hex << req->paddr
+                 << " (0x" << hex << blockAddr(req->paddr) << ")"
+                 << " at cycle "
                  << dec << curTick << endl;
         }
         if (probe) {
@@ -269,13 +274,14 @@ MemTest::tick()
         memcpy(req->data, &data, req->size);
         checkMem->access(Write, req->paddr, req->data, req->size);
         if (blockAddr(req->paddr) == traceBlockAddr) {
-            cerr <<  hex << traceBlockAddr << ": "
-                 << name() << ": initiating write "
+            cerr << name() << ": initiating write "
                  << ((probe)?"probe of ":"access of ")
                  << dec << req->size << " bytes (value = 0x";
             printData(cerr, req->data, req->size);
             cerr << ") to addr 0x"
-                 << hex << req->paddr << " at cycle "
+                 << hex << req->paddr
+                 << " (0x" << hex << blockAddr(req->paddr) << ")"
+                 << " at cycle "
                  << dec << curTick << endl;
         }
         if (probe) {
@@ -303,11 +309,15 @@ MemTest::tick()
         req->data = new uint8_t[blockSize];
         req->size = blockSize;
         if (source == traceBlockAddr || dest == traceBlockAddr) {
-            cerr <<  hex << traceBlockAddr << ": " << name()
+            cerr << name()
                  << ": initiating copy of "
                  << dec << req->size << " bytes from addr 0x"
-                 << hex << source << " to addr 0x"
-                 << hex << dest << " at cycle "
+                 << hex << source
+                 << " (0x" << hex << blockAddr(source) << ")"
+                 << " to addr 0x"
+                 << hex << dest
+                 << " (0x" << hex << blockAddr(dest) << ")"
+                 << " at cycle "
                  << dec << curTick << endl;
         }
         cacheInterface->access(req);
