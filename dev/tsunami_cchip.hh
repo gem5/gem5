@@ -79,8 +79,8 @@ class TsunamiCChip : public FunctionalMemory
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
-    void postDRIR(uint64_t bitvector);
-    void clearDRIR(uint64_t bitvector);
+    void postDRIR(uint32_t interrupt);
+    void clearDRIR(uint32_t interrupt);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

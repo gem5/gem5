@@ -237,7 +237,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
             mask1 = *(uint8_t*)data;
             if ((picr & mask1) && !picInterrupting) {
                 picInterrupting = true;
-                tsunami->cchip->postDRIR(uint64_t(1) << 55);
+                tsunami->cchip->postDRIR(55);
                 DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
             }
             return No_Fault;
@@ -326,7 +326,7 @@ TsunamiIO::postPIC(uint8_t bitvector)
     picr |= bitvector;
     if ((picr & mask1) && !picInterrupting) {
         picInterrupting = true;
-        tsunami->cchip->postDRIR(uint64_t(1) << 55);
+        tsunami->cchip->postDRIR(55);
         DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
     }
 }
@@ -338,7 +338,7 @@ TsunamiIO::clearPIC(uint8_t bitvector)
     picr &= ~bitvector;
     if (!(picr & mask1)) {
         picInterrupting = false;
-        tsunami->cchip->clearDRIR(uint64_t(1) << 55);
+        tsunami->cchip->clearDRIR(55);
         DPRINTF(Tsunami, "clearing pic interrupt to cchip\n");
     }
 }
