@@ -377,8 +377,16 @@ else:
     sources += syscall_emulation_sources
     obj_desc_files += syscall_emulation_obj_desc_files
 
+extra_libraries = []
 if env['USE_MYSQL']:
     sources += mysql_sources
+    env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
+    env.Append(LIBS=['z'])
+    if sys.platform.lower().startswith('linux'):
+        extra_libraries.append('/usr/lib/mysql/libmysqlclient.a')
+    else:
+        env.Append(LIBS=['mysql'])
+        env.Append(LIBPATH=['/usr/local/lib/mysql/'])
 
 ###################################################
 #
@@ -442,6 +450,7 @@ def make_objs(sources, env):
     date_obj = env.Object('base/date.cc')
     env.Depends(date_obj, objs)
     objs.append(date_obj)
+    objs.extend(extra_libraries)
     return objs
 
 ###################################################
