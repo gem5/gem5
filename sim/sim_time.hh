@@ -29,6 +29,8 @@
 #ifndef __SIM_TIME_HH__
 #define __SIM_TIME_HH__
 
+#include <sys/time.h>
+
 #include <iosfwd>
 
 namespace Time {

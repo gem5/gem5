@@ -132,21 +132,21 @@ namespace Time
     ostream &
     operator<<(ostream &out, const Start &start)
     {
-        out << ::ctime(&start.get().tv_sec);
+        out << ::ctime((const time_t *)&start.get().tv_sec);
         return out;
     }
 
     ostream &
     operator<<(ostream &out, const Now &now)
     {
-        out << ::ctime(&now.get().tv_sec);
+        out << ::ctime((const time_t *)&now.get().tv_sec);
         return out;
     }
 
     ostream &
     operator<<(ostream &out, const Elapsed &elapsed)
     {
-        out << ::ctime(&elapsed.get().tv_sec);
+        out << ::ctime((const time_t *)&elapsed.get().tv_sec);
         return out;
     }
 }

@@ -91,6 +91,7 @@
 
 #include <unistd.h>
 
+#include <cstdio>
 #include <string>
 
 #include "cpu/exec_context.hh"
