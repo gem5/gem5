@@ -234,6 +234,9 @@ class MetaConfigNode(type):
         for key,val in dict.items():
             del dict[key]
 
+            # See description of decorators in the importer.py file
+            # We just strip off the expr_decorator now since we don't
+            # need from this point on.
             if key.startswith(expr_decorator):
                 key = key[len(expr_decorator):]
 
@@ -285,6 +288,9 @@ class MetaConfigNode(type):
 
         # initialize attributes with values from class definition
         for key,value in dict.iteritems():
+            # turn an expression that was munged in the importer
+            # because it had dots into a list so that we can find the
+            # proper variable to modify.
             key = key.split(dot_decorator)
             c = cls
             for item in key[:-1]:
@@ -692,9 +698,11 @@ class Node(object):
             # instantiate children in same order they were added for
             # backward compatibility (else we can end up with cpu1
             # before cpu0).
+            self.children.sort(lambda x,y: cmp(x.name, y.name))
             children = [ c.name for c in self.children if not c.paramcontext]
             print 'children =', ' '.join(children)
 
+        self.params.sort(lambda x,y: cmp(x.name, y.name))
         for param in self.params:
             try:
                 if param.value is None:

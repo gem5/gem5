@@ -2873,12 +2873,6 @@ operator/(Temp l, Temp r)
 }
 
 inline Temp
-operator%(Temp l, Temp r)
-{
-    return NodePtr(new BinaryNode<std::modulus<Result> >(l, r));
-}
-
-inline Temp
 operator-(Temp l)
 {
     return NodePtr(new UnaryNode<std::negate<Result> >(l));
