@@ -26,14 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __TRU64_SYSCALLS_HH__
-#define __TRU64_SYSCALLS_HH__
+#ifndef __KERN_TRU64_TRU64_SYSCALLS_HH__
+#define __KERN_TRU64_TRU64_SYSCALLS_HH__
 
 #include "kern/tru64/tru64.hh"
 
 template <class OS>
 class SystemCalls;
 
+template <>
 class SystemCalls<Tru64>
 {
   public:
@@ -355,4 +356,4 @@ class SystemCalls<Tru64>
     }
 };
 
-#endif // __TRU64_SYSCALLS_HH__
+#endif // __KERN_TRU64_TRU64_SYSCALLS_HH__

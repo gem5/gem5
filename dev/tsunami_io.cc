@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 #include "sim/builder.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
+#include "dev/rtcreg.h"
 #include "mem/functional_mem/memory_control.hh"
 
 using namespace std;
@@ -217,36 +218,36 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
             return No_Fault;
           case TSDEV_RTC_DATA:
             switch(RTCAddress) {
-              case RTC_CONTROL_REGISTERA:
+              case RTC_CNTRL_REGA:
                 *(uint8_t*)data = uip << 7 | 0x26;
                 uip = !uip;
                 return No_Fault;
-              case RTC_CONTROL_REGISTERB:
+              case RTC_CNTRL_REGB:
                 // DM and 24/12 and UIE
                 *(uint8_t*)data = 0x46;
                 return No_Fault;
-              case RTC_CONTROL_REGISTERC:
+              case RTC_CNTRL_REGC:
                 // If we want to support RTC user access in linux
                 // This won't work, but for now it's fine
                 *(uint8_t*)data = 0x00;
                 return No_Fault;
-              case RTC_CONTROL_REGISTERD:
+              case RTC_CNTRL_REGD:
                 panic("RTC Control Register D not implemented");
-              case RTC_SECOND:
+              case RTC_SEC:
                 *(uint8_t *)data = tm.tm_sec;
                 return No_Fault;
-              case RTC_MINUTE:
+              case RTC_MIN:
                 *(uint8_t *)data = tm.tm_min;
                 return No_Fault;
-              case RTC_HOUR:
+              case RTC_HR:
                 *(uint8_t *)data = tm.tm_hour;
                 return No_Fault;
-              case RTC_DAY_OF_WEEK:
+              case RTC_DOW:
                 *(uint8_t *)data = tm.tm_wday;
                 return No_Fault;
-              case RTC_DAY_OF_MONTH:
+              case RTC_DOM:
                 *(uint8_t *)data = tm.tm_mday;
-              case RTC_MONTH:
+              case RTC_MON:
                 *(uint8_t *)data = tm.tm_mon + 1;
                 return No_Fault;
               case RTC_YEAR:

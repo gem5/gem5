@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __VPTR_HH__
-#define __VPTR_HH__
+#ifndef __ARCH_ALPHA_VPTR_HH__
+#define __ARCH_ALPHA_VPTR_HH__
 
 #include "arch/alpha/vtophys.hh"
 
@@ -69,14 +69,15 @@ class VPtr
     const VPtr<T> &operator+=(int offset)
     {
         ptr += offset;
-        assert((ptr & (ALPHA_PGBYTES - 1)) + sizeof(T) < ALPHA_PGBYTES);
+        assert((ptr & (AlphaISA::PageBytes - 1)) + sizeof(T)
+               < AlphaISA::PageBytes);
 
         return *this;
     }
 
     const VPtr<T> &operator=(Addr p)
     {
-        assert((p & (ALPHA_PGBYTES - 1)) + sizeof(T) < ALPHA_PGBYTES);
+        assert((p & (AlphaISA::PageBytes)) + sizeof(T) < AlphaISA::PageBytes);
         ptr = p;
 
         return *this;
@@ -110,4 +111,4 @@ class VPtr
     }
 };
 
-#endif // __VPTR_HH__
+#endif // __ARCH_ALPHA_VPTR_HH__

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SYSCALL_EMUL_HH__
-#define __SYSCALL_EMUL_HH__
+#ifndef __SIM_SYSCALL_EMUL_HH__
+#define __SIM_SYSCALL_EMUL_HH__
 
 ///
 /// @file syscall_emul.hh
@@ -35,14 +35,16 @@
 /// This file defines objects used to emulate syscalls from the target
 /// application on the host machine.
 
+#include <errno.h>
 #include <string>
 
 #include "base/intmath.hh"	// for RoundUp
-#include "targetarch/isa_traits.hh"	// for Addr
 #include "mem/functional_mem/functional_memory.hh"
+#include "targetarch/isa_traits.hh"	// for Addr
 
-class Process;
-class ExecContext;
+#include "base/trace.hh"
+#include "cpu/exec_context.hh"
+#include "sim/process.hh"
 
 ///
 /// System call descriptor.
@@ -197,6 +199,36 @@ int unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 /// Target rename() handler.
 int renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
 
+/// This struct is used to build an target-OS-dependent table that
+/// maps the target's open() flags to the host open() flags.
+struct OpenFlagTransTable {
+    int tgtFlag;	//!< Target system flag value.
+    int hostFlag;	//!< Corresponding host system flag value.
+};
+
+
+
+/// A readable name for 1,000,000, for converting microseconds to seconds.
+const int one_million = 1000000;
+
+/// Approximate seconds since the epoch (1/1/1970).  About a billion,
+/// by my reckoning.  We want to keep this a constant (not use the
+/// real-world time) to keep simulations repeatable.
+const unsigned seconds_since_epoch = 1000000000;
+
+/// Helper function to convert current elapsed time to seconds and
+/// microseconds.
+template <class T1, class T2>
+void
+getElapsedTime(T1 &sec, T2 &usec)
+{
+    int cycles_per_usec = ticksPerSecond / one_million;
+
+    int elapsed_usecs = curTick / cycles_per_usec;
+    sec = elapsed_usecs / one_million;
+    usec = elapsed_usecs % one_million;
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 // The following emulation functions are generic, but need to be
@@ -238,14 +270,6 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 }
 
-/// This struct is used to build an target-OS-dependent table that
-/// maps the target's open() flags to the host open() flags.
-struct OpenFlagTransTable {
-    int tgtFlag;	//!< Target system flag value.
-    int hostFlag;	//!< Corresponding host system flag value.
-};
-
-
 /// Target open() handler.
 template <class OS>
 int
@@ -260,7 +284,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
     if (path == "/dev/sysdev0") {
         // This is a memory-mapped high-resolution timer device on Alpha.
         // We don't support it, so just punt.
-        DCOUT(SyscallWarnings) << "Ignoring open(" << path << ", ...)" << endl;
+        DCOUT(SyscallWarnings) << "Ignoring open(" << path << ", ...)" << std::endl;
         return -ENOENT;
     }
 
@@ -278,7 +302,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 
     // any target flags left?
     if (tgtFlags != 0)
-        cerr << "Syscall: open: cannot decode flags: " <<  tgtFlags << endl;
+        std::cerr << "Syscall: open: cannot decode flags: " <<  tgtFlags << std::endl;
 
 #ifdef __CYGWIN32__
     hostFlags |= O_BINARY;
@@ -414,7 +438,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
         break;
 
       default:
-        cerr << "getrlimitFunc: unimplemented resource " << resource << endl;
+        std::cerr << "getrlimitFunc: unimplemented resource " << resource << std::endl;
         abort();
         break;
     }
@@ -422,28 +446,6 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
     rlp.copyOut(xc->mem);
     return 0;
 }
-
-/// A readable name for 1,000,000, for converting microseconds to seconds.
-const int one_million = 1000000;
-
-/// Approximate seconds since the epoch (1/1/1970).  About a billion,
-/// by my reckoning.  We want to keep this a constant (not use the
-/// real-world time) to keep simulations repeatable.
-const unsigned seconds_since_epoch = 1000000000;
-
-/// Helper function to convert current elapsed time to seconds and
-/// microseconds.
-template <class T1, class T2>
-void
-getElapsedTime(T1 &sec, T2 &usec)
-{
-    int cycles_per_usec = ticksPerSecond / one_million;
-
-    int elapsed_usecs = curTick / cycles_per_usec;
-    sec = elapsed_usecs / one_million;
-    usec = elapsed_usecs % one_million;
-}
-
 
 /// Target gettimeofday() handler.
 template <class OS>
@@ -476,7 +478,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
         // plow ahead
         DCOUT(SyscallWarnings)
             << "Warning: getrusage() only supports RUSAGE_SELF."
-            << "  Parameter " << who << " ignored." << endl;
+            << "  Parameter " << who << " ignored." << std::endl;
     }
 
     getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
@@ -502,6 +504,4 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
     return 0;
 }
 
-
-
-#endif // __SYSCALL_EMUL_HH__
+#endif // __SIM_SYSCALL_EMUL_HH__

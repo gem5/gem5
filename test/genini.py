@@ -26,12 +26,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import getopt, os, os.path, sys
+from os.path import join as joinpath, realpath
 
-sys.path.append('..')
-sys.path.append('../configs/kernel')
-sys.path.append('../sim/pyconfig')
+mypath = sys.path[0]
+sys.path.append(joinpath(mypath, '..'))
+sys.path.append(joinpath(mypath, '../configs/kernel'))
+sys.path.append(joinpath(mypath, '../sim/pyconfig'))
 
-from importer import mpy_exec, AddToPath
+from importer import mpy_exec, mpy_execfile, AddToPath
 from m5config import *
 
 try:
@@ -51,7 +53,7 @@ except getopt.GetoptError:
 
 for arg in args:
     AddToPath(os.path.dirname(arg))
-    mpy_exec(file(arg, 'r'), globals())
+    mpy_execfile(arg)
 
 if globals().has_key('root') and isinstance(root, type) \
        and issubclass(root, Root):

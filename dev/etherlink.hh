@@ -30,13 +30,13 @@
  * Device module for modelling a fixed bandwidth full duplex ethernet link
  */
 
-#ifndef __ETHERLINK_HH__
-#define __ETHERLINK_HH__
+#ifndef __DEV_ETHERLINK_HH__
+#define __DEV_ETHERLINK_HH__
 
-#include "sim/host.hh"
-#include "sim/eventq.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
+#include "sim/eventq.hh"
+#include "sim/host.hh"
 #include "sim/sim_object.hh"
 
 class EtherDump;
@@ -71,7 +71,7 @@ class EtherLink : public SimObject
         PacketPtr packet;
         void txDone();
         typedef EventWrapper<Link, &Link::txDone> DoneEvent;
-        friend class DoneEvent;
+        friend void DoneEvent::process();
         DoneEvent doneEvent;
 
         friend class LinkDelayEvent;

@@ -1,5 +1,6 @@
+
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
+ * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,38 +27,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <list>
+#define RTC_SEC                 0x00
+#define RTC_SEC_ALRM            0x01
+#define RTC_MIN                 0x02
+#define RTC_MIN_ALRM            0x03
+#define RTC_HR                  0x04
+#define RTC_HR_ALRM             0x05
+#define RTC_DOW                 0x06
+#define RTC_DOM                 0x07
+#define RTC_MON                 0x08
+#define RTC_YEAR                0x09
+#define RTC_CNTRL_REGA          0x0A
+#define RTC_CNTRL_REGB          0x0B
+#define RTC_CNTRL_REGC          0x0C
+#define RTC_CNTRL_REGD          0x0D
 
-#include "base/misc.hh"
-#include "sim/debug.hh"
-#include "sim/startup.hh"
-
-typedef std::list<StartupCallback *> startupq_t;
-
-startupq_t *startupq = NULL;
-
-StartupCallback::StartupCallback()
-{
-    if (startupq == NULL)
-        startupq = new startupq_t;
-    startupq->push_back(this);
-}
-
-StartupCallback::~StartupCallback()
-{
-    startupq->remove(this);
-}
-
-void StartupCallback::startup() { }
-
-void
-SimStartup()
-{
-    startupq_t::iterator i = startupq->begin();
-    startupq_t::iterator end = startupq->end();
-
-    while (i != end) {
-        (*i)->startup();
-        ++i;
-    }
-}

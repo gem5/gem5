@@ -71,7 +71,7 @@ Log::init(int _size)
 
     size = _size;
 
-    buffer = new (Record *)[size];
+    buffer = new Record *[size];
 
     for (int i = 0; i < size; ++i) {
         buffer[i] = NULL;
