@@ -48,6 +48,9 @@
 
 static char *dataAddr = NULL;
 static int count = 0;
+#ifdef __alpha__
+static int memTest = 0;
+#endif
 
 static inline uint32_t cycleCounter(uint32_t dep);
 
@@ -63,6 +66,31 @@ static int __init devtime_start(void)
 
     printk("Devtime Driver Version %s Loaded...\n", DRIVER_VER);
 
+#ifdef __alpha__
+    if (memTest) {
+           addr = 0xfffffc0000000000;
+//         addr += 16*1024*1024;
+
+            printk("Preparing memory test.\n");
+
+            t1 = cycleCounter(trash);
+            for (x = 0; x < count; x++) {
+                trash = readl(addr);
+                t2 = cycleCounter(trash);
+                times[num++] = t2 - t1;
+                t1 = t2;
+               addr += 4096;
+            }
+
+            printk("Measurements:\n");
+            for (x = 0; x < count; x++) {
+                printk("%d ", times[x]);
+                if (((x + 1) % 10) == 0)
+                    printk("\n");
+            }
+            printk("\nDone.\n");
+    } else
+#endif
     if (dataAddr != 0 && count != 0) {
         addr = simple_strtoull(dataAddr, NULL, 0);
 
@@ -145,7 +173,7 @@ inline uint32_t cycleCounter(uint32_t dep)
     return res;
 }
 #else
-#error Architecture NOT SUPPORTE
+#error Architecture NOT SUPPORTED
 #endif
 
 static void __exit devtime_end(void)
@@ -162,3 +190,6 @@ MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
 module_param(dataAddr, charp, 0);
 module_param(count, int, 0);
+#ifdef __alpha__
+module_param(memTest, int, 0);
+#endif
