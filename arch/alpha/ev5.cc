@@ -1,15 +1,14 @@
 /* $Id$ */
 
-#include "targetarch/alpha_memory.hh"
-#ifdef DEBUG
-#include "sim/debug.hh"
-#endif
-#include "cpu/exec_context.hh"
-#include "sim/sim_events.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/alpha/alpha_memory.hh"
+#include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/osfpal.hh"
+#include "base/kgdb.h"
 #include "base/remote_gdb.hh"
-#include "base/kgdb.h"	// for ALPHA_KENTRY_IF
-#include "targetarch/osfpal.hh"
+#include "base/stats/events.hh"
+#include "cpu/exec_context.hh"
+#include "sim/debug.hh"
+#include "sim/sim_events.hh"
 
 #ifdef FULL_SYSTEM
 
@@ -102,6 +101,8 @@ AlphaISA::initIPRs(RegFile *regs)
 void
 ExecContext::ev5_trap(Fault fault)
 {
+    Stats::recordEvent(csprintf("Fault %s", FaultName(fault)));
+
     assert(!misspeculating());
     kernelStats.fault(fault);
 
