@@ -35,7 +35,7 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_init.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 using namespace std;
 

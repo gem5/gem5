@@ -43,7 +43,7 @@
 #include "sim/builder.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 #ifdef TARGET_ALPHA
 #include "arch/alpha/alpha_tru64_process.hh"

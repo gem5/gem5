@@ -5,81 +5,61 @@ CXX?= g++
 
 CURDIR?= $(shell /bin/pwd)
 SRCDIR?= ..
-TARGET?= alpha
-
-TEST_SRCDIR?= $(SRCDIR)/test
-ARCH_SRCDIR?= $(SRCDIR)/arch/$(TARGET)
-BASE_SRCDIR?= $(SRCDIR)/base
-SIM_SRCDIR?= $(SRCDIR)/sim
-CACHE_SRCDIR?= $(SRCDIR)/sim/cache
-OLD_SRCDIR= $(SRCDIR)/old
-
-vpath % $(TEST_SRCDIR)
-vpath % $(BASE_SRCDIR)
-vpath % $(SIM_SRCDIR)
-vpath % $(CACHE_SRCDIR)
-vpath % $(OLD_SRCDIR)
 
 CCFLAGS= -g -O0 -MMD -I. -I$(SRCDIR) -I- -DTRACING_ON=0
+MYSQL= -I/usr/include/mysql -L/usr/lib/mysql -lmysqlclient
+
+VPATH=$(SRCDIR)
 
 default:
 	@echo "You must specify a target"
 
-targetarch:
-	ln -s ../arch/$(TARGET) targetarch
+bitvectest: test/bitvectest.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-bitvectest: bitvectest.o
-	$(CXX) $(LFLAGS) -o $@ $^
+circletest: test/circletest.cc base/circlebuf.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-circletest: circletest.o circlebuf.o
-	$(CXX) $(LFLAGS) -o $@ $^
+cprintftest: test/cprintftest.cc base/cprintf.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-cprintftest: cprintftest.o cprintf.o
-	$(CXX) $(LFLAGS) -o $@ $^
+initest: test/initest.cc base/str.cc base/inifile.cc base/cprintf.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-initest: initest.o str.o inifile.o cprintf.o
-	$(CXX) $(LFLAGS) -o $@ $^
+lrutest: test/lru_test.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-lrutest: lru_test.o
-	$(CXX) $(LFLAGS) -o $@ $^
+nmtest: test/nmtest.cc base/object_file.cc base/symtab.cc base/misc.cc base/str.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-nmtest: nmtest.o object_file.o symtab.o misc.o str.o
-	$(CXX) $(LFLAGS) -o $@ $^
+offtest: test/offtest.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-offtest: offtest.o
-	$(CXX) $(LFLAGS) -o $@ $^
+rangetest: test/rangetest.cc base/range.cc base/str.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-rangetest: rangetest.o range.o str.o
-	$(CXX) $(LFLAGS) -o $@ $^
+STATTEST+= base/cprintf.cc base/hostinfo.cc base/misc.cc base/mysql.cc
+STATTEST+= base/python.cc base/str.cc base/time.cc 
+STATTEST+= base/statistics.cc base/stats/mysql.cc base/stats/python.cc
+STATTEST+= base/stats/statdb.cc base/stats/text.cc base/stats/visit.cc
+STATTEST+= test/stattest.cc 
+stattest: $(STATTEST)
+	$(CXX) $(CCFLAGS) $(MYSQL) -o $@ $^ 
 
-stattest: cprintf.o hostinfo.o misc.o python.o statistics.o stattest.o \
-	str.o time.o
-	$(CXX) $(LFLAGS) -o $@ $^
+strnumtest: test/strnumtest.cc base/str.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-strnumtest: strnumtest.o str.o
-	$(CXX) $(LFLAGS) -o $@ $^
+symtest: test/symtest.cc base/misc.cc base/symtab.cc base/str.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-symtest: misc.o symtest.o symtab.o str.o
-	$(CXX) $(LFLAGS) -o $@ $^
+tokentest: test/tokentest.cc base/str.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
 
-tokentest: tokentest.o str.o
-	$(CXX) $(LFLAGS) -o $@ $^
-
-tracetest: tracetest.o trace.o trace_flags.o cprintf.o str.o misc.o
-	$(CXX) $(LFLAGS) -o $@ $^
+TRACE+=test/tracetest.cc base/trace.cc base/trace_flags.cc base/cprintf.cc
+TRACE+=base/str.cc base/misc.cc
+tracetest: $(TRACE)
+	$(CXX) $(CCFLAGS) -o $@ $^
 
 clean:
-	@rm -f *.o *.d *test *~ .#* *.core core
+	@rm -f *test *~ .#* *.core core
 .PHONY: clean
-
-# C++ Compilation
-%.o: %.cc
-	@echo '$(CXX) $(CCFLAGS) -c $(notdir $<) -o $@'
-	@$(CXX) $(CCFLAGS) -c $< -o $@
-
-# C Compilation
-%.o: %.c
-	@echo '$(CC) $(CCFLAGS) -c $(notdir $<) -o $@'
-	@$(CC) $(CCFLAGS) -c $< -o $@
-
--include *.d

@@ -56,7 +56,7 @@
 #include "sim/host.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 #ifdef FULL_SYSTEM
 #include "base/remote_gdb.hh"

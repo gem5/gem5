@@ -159,6 +159,6 @@ FnEvent::process(ExecContext *xc)
     myBin->activate();
     xc->system->fnCalls++;
     DPRINTF(TCPIP, "fnCalls for %s is %d\n", description,
-            xc->system->fnCalls.val());
+            xc->system->fnCalls.value());
     xc->system->dumpState(xc);
 }
