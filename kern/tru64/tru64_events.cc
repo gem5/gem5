@@ -28,32 +28,14 @@
 
 #include "cpu/exec_context.hh"
 #include "cpu/base_cpu.hh"
-#include "cpu/full_cpu/bpred.hh"
-#include "cpu/full_cpu/full_cpu.hh"
+#include "kern/system_events.hh"
+#include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
-#include "kern/tru64/tru64_events.hh"
-#include "mem/functional_mem/memory_control.hh"
 #include "targetarch/arguments.hh"
-#include "sim/system.hh"
-#include "sim/sw_context.hh"
+#include "mem/functional_mem/memory_control.hh"
 
-void
-SkipFuncEvent::process(ExecContext *xc)
-{
-    Addr newpc = xc->regs.intRegFile[ReturnAddressReg];
-
-    DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            xc->regs.pc, newpc);
-
-    xc->regs.pc = newpc;
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
-
-    BranchPred *bp = xc->cpu->getBranchPred();
-    if (bp != NULL) {
-        bp->popRAS(xc->thread_num);
-    }
-}
+//void SkipFuncEvent::process(ExecContext *xc);
 
 void
 BadAddrEvent::process(ExecContext *xc)
@@ -105,60 +87,4 @@ DumpMbufEvent::process(ExecContext *xc)
         AlphaArguments args(xc);
         tru64::DumpMbuf(args);
     }
-}
-
-FnEvent::FnEvent(PCEventQueue *q, const std::string & desc, System *system)
-    : PCEvent(q, desc), _name(desc)
-{
-    myBin = system->getBin(desc);
-    assert(myBin);
-}
-
-void
-FnEvent::process(ExecContext *xc)
-{
-    if (xc->misspeculating())
-        return;
-    assert(xc->system->bin && "FnEvent must be in a binned system");
-    SWContext *ctx = xc->swCtx;
-    DPRINTF(TCPIP, "%s: %s Event!!!\n", xc->system->name(), description);
-
-    if (ctx && !ctx->callStack.empty()) {
-        DPRINTF(TCPIP, "already a callstack!\n");
-        fnCall *last = ctx->callStack.top();
-
-        if (last->name == "idle_thread")
-            ctx->calls++;
-
-        if (!xc->system->findCaller(myname(), "" ) &&
-            !xc->system->findCaller(myname(), last->name)) {
-
-            DPRINTF(TCPIP, "but can't find parent %s\n", last->name);
-            return;
-        }
-        ctx->calls--;
-
-        //assert(!ctx->calls && "on a binned fn, calls should == 0 (but can happen in boot)");
-    } else {
-        DPRINTF(TCPIP, "no callstack yet\n");
-        if (!xc->system->findCaller(myname(), "")) {
-            DPRINTF(TCPIP, "not the right function, returning\n");
-            return;
-        }
-        if (!ctx)  {
-            DPRINTF(TCPIP, "creating new context for %s\n", myname());
-            ctx = new SWContext;
-            xc->swCtx = ctx;
-        }
-    }
-    DPRINTF(TCPIP, "adding fn %s to context\n", myname());
-    fnCall *call = new fnCall;
-    call->myBin = myBin;
-    call->name = myname();
-    ctx->callStack.push(call);
-    myBin->activate();
-    xc->system->fnCalls++;
-    DPRINTF(TCPIP, "fnCalls for %s is %d\n", description,
-            xc->system->fnCalls.value());
-    xc->system->dumpState(xc);
 }

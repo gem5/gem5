@@ -35,6 +35,7 @@
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/tru64_system.hh"
+#include "kern/system_events.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
