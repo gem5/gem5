@@ -76,15 +76,15 @@
 using namespace std;
 
 
-SimpleCPU::TickEvent::TickEvent(SimpleCPU *c)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c), multiplier(1)
+SimpleCPU::TickEvent::TickEvent(SimpleCPU *c, int w)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c), width(w)
 {
 }
 
 void
 SimpleCPU::TickEvent::process()
 {
-    int count = multiplier;
+    int count = width;
     do {
         cpu->tick();
     } while (--count > 0 && cpu->status() == Running);
@@ -98,8 +98,7 @@ SimpleCPU::TickEvent::description()
 
 
 SimpleCPU::CacheCompletionEvent::CacheCompletionEvent(SimpleCPU *_cpu)
-    : Event(&mainEventQueue),
-      cpu(_cpu)
+    : Event(&mainEventQueue), cpu(_cpu)
 {
 }
 
@@ -126,7 +125,8 @@ SimpleCPU::SimpleCPU(const string &_name,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
                      bool _def_reg, Tick freq,
-                     bool _function_trace, Tick _function_trace_start)
+                     bool _function_trace, Tick _function_trace_start,
+                     int width)
     : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
@@ -140,13 +140,14 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
                      MemInterface *icache_interface,
                      MemInterface *dcache_interface,
                      bool _def_reg,
-                     bool _function_trace, Tick _function_trace_start)
+                     bool _function_trace, Tick _function_trace_start,
+                     int width)
     : BaseCPU(_name, /* number_of_threads */ 1, _def_reg,
               max_insts_any_thread, max_insts_all_threads,
               max_loads_any_thread, max_loads_all_threads,
               _function_trace, _function_trace_start),
 #endif
-      tickEvent(this), xc(NULL), cacheCompletionEvent(this)
+      tickEvent(this, width), xc(NULL), cacheCompletionEvent(this)
 {
     _status = Idle;
 #ifdef FULL_SYSTEM
@@ -878,7 +879,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     SimObjectParam<BaseMem *> dcache;
 
     Param<bool> defer_registration;
-    Param<int> multiplier;
+    Param<int> width;
     Param<bool> function_trace;
     Param<Tick> function_trace_start;
 
@@ -914,7 +915,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM_DFLT(defer_registration, "defer registration with system "
                     "(for sampling)", false),
 
-    INIT_PARAM_DFLT(multiplier, "clock multiplier", 1),
+    INIT_PARAM_DFLT(width, "cpu width", 1),
     INIT_PARAM_DFLT(function_trace, "Enable function trace", false),
     INIT_PARAM_DFLT(function_trace_start, "Cycle to start function trace", 0)
 
@@ -936,7 +937,8 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         (dcache) ? dcache->getInterface() : NULL,
                         defer_registration,
                         ticksPerSecond * mult,
-                        function_trace, function_trace_start);
+                        function_trace, function_trace_start,
+                        width);
 #else
 
     cpu = new SimpleCPU(getInstanceName(), workload,
@@ -945,11 +947,10 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
                         defer_registration,
-                        function_trace, function_trace_start);
+                        function_trace, function_trace_start,
+                        width);
 
 #endif // FULL_SYSTEM
-
-    cpu->setTickMultiplier(multiplier);
 
     return cpu;
 }

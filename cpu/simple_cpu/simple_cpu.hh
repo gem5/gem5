@@ -70,9 +70,9 @@ class SimpleCPU : public BaseCPU
     struct TickEvent : public Event
     {
         SimpleCPU *cpu;
-        int multiplier;
+        int width;
 
-        TickEvent(SimpleCPU *c);
+        TickEvent(SimpleCPU *c, int w);
         void process();
         const char *description();
     };
@@ -93,12 +93,6 @@ class SimpleCPU : public BaseCPU
     {
         if (tickEvent.scheduled())
             tickEvent.squash();
-    }
-
-  public:
-    void setTickMultiplier(int multiplier)
-    {
-        tickEvent.multiplier = multiplier;
     }
 
   private:
@@ -139,7 +133,7 @@ class SimpleCPU : public BaseCPU
               AlphaITB *itb, AlphaDTB *dtb, FunctionalMemory *mem,
               MemInterface *icache_interface, MemInterface *dcache_interface,
               bool _def_reg, Tick freq,
-              bool _function_trace, Tick _function_trace_start);
+              bool _function_trace, Tick _function_trace_start, int width);
 
 #else
 
@@ -150,7 +144,7 @@ class SimpleCPU : public BaseCPU
               Counter max_loads_all_threads,
               MemInterface *icache_interface, MemInterface *dcache_interface,
               bool _def_reg,
-              bool _function_trace, Tick _function_trace_start);
+              bool _function_trace, Tick _function_trace_start, int width);
 
 #endif
 
