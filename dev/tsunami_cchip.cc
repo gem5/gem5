@@ -188,14 +188,14 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                           // The bit is now set and it wasn't before (set)
                           if((dim[number] & bitvector) && (dir[number] & bitvector))
                           {
-                              tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
+                              tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ0, x);
                               DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
                           }
                           else if (!(dir[number] & bitvector))
                           {
                               // The bit was set and now its now clear and
                               // we were interrupting on that bit before
-                              tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
+                              tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ0, x);
                               DPRINTF(Tsunami, "dim write resulting in clear"
                                       "dir interrupt to cpu 0\n");
 
@@ -249,7 +249,7 @@ TsunamiCChip::postDRIR(uint32_t interrupt)
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
         dir[i] = dim[i] & drir;
         if (dim[i] & bitvector) {
-                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
+                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ0, interrupt);
                 DPRINTF(Tsunami, "posting dir interrupt to cpu %d,"
                         "interrupt %d\n",i, interrupt);
         }
@@ -265,7 +265,7 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
         drir &= ~bitvector;
         for(int i=0; i < Tsunami::Max_CPUs; i++) {
             if (dir[i] & bitvector) {
-                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
+                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ0, interrupt);
                 DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"
                     "interrupt %d\n",i, interrupt);
 
