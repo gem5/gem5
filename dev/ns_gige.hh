@@ -385,6 +385,33 @@ class NSGigE : public PciDev
     Stats::Formula rxBandwidth;
     Stats::Formula txPacketRate;
     Stats::Formula rxPacketRate;
+    Stats::Scalar<> postedSwi;
+    Stats::Formula coalescedSwi;
+    Stats::Scalar<> totalSwi;
+    Stats::Scalar<> postedRxIdle;
+    Stats::Formula coalescedRxIdle;
+    Stats::Scalar<> totalRxIdle;
+    Stats::Scalar<> postedRxOk;
+    Stats::Formula coalescedRxOk;
+    Stats::Scalar<> totalRxOk;
+    Stats::Scalar<> postedRxDesc;
+    Stats::Formula coalescedRxDesc;
+    Stats::Scalar<> totalRxDesc;
+    Stats::Scalar<> postedTxOk;
+    Stats::Formula coalescedTxOk;
+    Stats::Scalar<> totalTxOk;
+    Stats::Scalar<> postedTxIdle;
+    Stats::Formula coalescedTxIdle;
+    Stats::Scalar<> totalTxIdle;
+    Stats::Scalar<> postedTxDesc;
+    Stats::Formula coalescedTxDesc;
+    Stats::Scalar<> totalTxDesc;
+    Stats::Scalar<> postedRxOrn;
+    Stats::Formula coalescedRxOrn;
+    Stats::Scalar<> totalRxOrn;
+    Stats::Formula coalescedTotal;
+    Stats::Scalar<> postedInterrupts;
+    Stats::Scalar<> droppedPackets;
 
   public:
     Tick cacheAccess(MemReqPtr &req);
