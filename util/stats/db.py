@@ -171,7 +171,7 @@ class Database(object):
 
         self.query('select * from formulas')
         for id,formula in self.cursor.fetchall():
-            self.allFormulas[int(id)] = formula
+            self.allFormulas[int(id)] = formula.tostring()
 
         StatData.db = self
         self.query('select * from stats')

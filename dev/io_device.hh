@@ -34,7 +34,7 @@
 class BaseInterface;
 class Bus;
 class HierParams;
-template <class Bus> class DMAInterface;
+template <class BusType> class DMAInterface;
 
 class PioDevice : public FunctionalMemory
 {

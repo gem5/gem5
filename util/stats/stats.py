@@ -39,7 +39,73 @@ def unique(list):
     map(set.__setitem__, list, [])
     return set.keys()
 
+def graphdata68(runs, options, tag, label, value):
+    import info
+    configs = ['ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
+    benchmarks = [ 'm', 's', 'snt', 'nb1', 'w1', 'w2', 'w3', 'w4', 'nm', 'ns', 'nw1', 'nw2', 'nw3' ]
+    dmas = [ 'x' ]
+    caches = [ '2', '4' ]
+
+    names = []
+
+    bench_system = {
+        'm' : 'client',
+        's' : 'client',
+        'snt' : 'client',
+        'nb1' : 'server',
+        'nb2' : 'server',
+        'nt1' : 'server',
+        'nt2' : 'server',
+        'w1' : 'server',
+        'w2' : 'server',
+        'w3' : 'server',
+        'w4' : 'server',
+        'w1s' : 'server',
+        'w2s' : 'server',
+        'w3s' : 'server',
+        'ns' : 'natbox',
+        'nm' : 'natbox',
+        'nw1' : 'natbox',
+        'nw2' : 'natbox',
+        'nw3' : 'natbox'
+        }
+
+    for bench in benchmarks:
+        if bench_system[bench] != options.system:
+            continue
+
+        for dma in dmas:
+            for cache in caches:
+                    names.append([bench, dma, cache])
+
+    for bench,dma,cache in names:
+        base = '%s.%s.%s' % (bench, dma, cache)
+        fname = 'data/%s.%s.68.dat' % (tag, base)
+        f = open(fname, 'w')
+        print >>f, '#set TITLE = '
+        print >>f, '#set ylbl = %s' % label
+        #print >>f, '#set sublabels = %s' % ' '.join(configs)
+        print >>f, '#set sublabels = ste hte htd ocm occ ocs'
+
+        for speed,freq in zip(['s', '6', '8', 'q'],['4GHz', '6GHz','8GHz', '10GHz']):
+            print >>f, '"%s"' % freq,
+            for conf in configs:
+                name = '%s.%s.%s.%s.%s' % (conf, bench, dma, cache, speed)
+                run = info.source.allRunNames[name]
+                info.display_run = run.run;
+                val = float(value)
+                if val == 1e300*1e300:
+                    print >>f, 0.0,
+                else:
+                    print >>f, "%f" % val,
+            print >>f
+        f.close()
+
 def graphdata(runs, options, tag, label, value):
+    if options.graph68:
+        graphdata68(runs, options, tag, label, value)
+        return
+
     import info
     configs = ['ste', 'hte', 'htd', 'ocm', 'occ', 'ocp' ]
     #benchmarks = [ 'm', 's', 'nb1', 'nb2', 'nt1', 'nt2', 'w1', 'w2', 'w3', 'w4', 'ns', 'nm', 'nw1', 'nw2', 'nw3' ]
@@ -85,10 +151,10 @@ def graphdata(runs, options, tag, label, value):
         base = '%s.%s.%s' % (bench, dma, cache)
         fname = 'data/%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
-        print >>f, '#set TITLE = %s' % base
-        print >>f, '#set xlbl = Configuration'
+        print >>f, '#set TITLE = '
         print >>f, '#set ylbl = %s' % label
-        print >>f, '#set sublabels = %s' % ' '.join(configs)
+        #print >>f, '#set sublabels = %s' % ' '.join(configs)
+        print >>f, '#set sublabels = ste hte htd ocm occ ocs'
 
         for speed,freq in zip(['s', 'q'],['4GHz','10GHz']):
             print >>f, '"%s"' % freq,
@@ -578,9 +644,12 @@ if __name__ == '__main__':
     options.get = None
     options.binned = False
     options.graph = False
+    options.graph68 = False
 
-    opts, args = getopts(sys.argv[1:], '-BEFGd:g:h:pr:s:u:')
+    opts, args = getopts(sys.argv[1:], '-6BEFGd:g:h:pr:s:u:')
     for o,a in opts:
+        if o == '-6':
+            options.graph68 = True
         if o == '-B':
             options.binned = True
         if o == '-E':
