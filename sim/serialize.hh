@@ -111,7 +111,7 @@ class Serializable
     virtual ~Serializable() {}
 
     // manditory virtual function, so objects must provide names
-    virtual std::string name() const = 0;
+    virtual const std::string name() const = 0;
 
     virtual void serialize(std::ostream &os) {}
     virtual void unserialize(Checkpoint *cp, const std::string &section) {}
