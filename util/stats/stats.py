@@ -132,8 +132,6 @@ def commands(options, command, args):
     info.source.connect()
     info.source.update_dict(globals())
 
-    system = info.source.__dict__[options.system]
-
     if type(options.get) is str:
         info.source.get = options.get
 
@@ -231,6 +229,8 @@ def commands(options, command, args):
 
     if len(args):
         raise CommandException
+
+    system = info.source.__dict__[options.system]
 
     if command == 'usertime':
         import copy

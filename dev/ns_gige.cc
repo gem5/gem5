@@ -1341,9 +1341,6 @@ NSGigE::rxKick()
 
             // sanity check - i think the driver behaves like this
             assert(rxDescCnt >= rxPktBytes);
-
-            // Must clear the value before popping to decrement the
-            // reference count
             rxFifo.pop();
         }
 
@@ -1564,9 +1561,6 @@ NSGigE::transmit()
          * besides, it's functionally the same.
          */
         devIntrPost(ISR_TXOK);
-    } else {
-        DPRINTF(Ethernet,
-                "May need to rethink always sending the descriptors back?\n");
     }
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
@@ -1822,7 +1816,11 @@ NSGigE::txKick()
                 // this is just because the receive can't handle a
                 // packet bigger want to make sure
                 assert(txPacket->length <= 1514);
-                txFifo.push(txPacket);
+#ifndef NDEBUG
+                bool success =
+#endif
+                    txFifo.push(txPacket);
+                assert(success);
 
                 /*
                  * this following section is not tqo spec, but
@@ -1903,6 +1901,7 @@ NSGigE::txKick()
         txPacketBufPtr += txXferLen;
         txFragPtr += txXferLen;
         txDescCnt -= txXferLen;
+        txFifo.reserve(txXferLen);
 
         txState = txFifoBlock;
         break;
