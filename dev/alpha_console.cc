@@ -30,22 +30,22 @@
  * System Console Definition
  */
 
-#include <stddef.h>
-#include <stdio.h>
-
+#include <cstddef>
+#include <cstdio>
 #include <string>
 
-#include "dev/alpha_console.hh"
-#include "cpu/base_cpu.hh"
-#include "dev/console.hh"
-#include "cpu/exec_context.hh"
-#include "mem/functional_mem/memory_control.hh"
-#include "dev/simple_disk.hh"
-#include "dev/tlaser_clock.hh"
-#include "sim/system.hh"
-#include "base/trace.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"	// for to_number()
+#include "base/trace.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
+#include "dev/alpha_console.hh"
+#include "dev/console.hh"
+#include "dev/simple_disk.hh"
+#include "dev/tlaser_clock.hh"
+#include "mem/functional_mem/memory_control.hh"
+#include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 

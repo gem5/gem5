@@ -30,17 +30,17 @@
  * Device module for modelling a fixed bandwidth full duplex ethernet link
  */
 
+#include <cmath>
 #include <deque>
 #include <string>
 #include <vector>
 
-#include <math.h>
-
-#include "dev/etherlink.hh"
+#include "base/trace.hh"
 #include "dev/etherdump.hh"
 #include "dev/etherint.hh"
+#include "dev/etherlink.hh"
 #include "dev/etherpkt.hh"
-#include "base/trace.hh"
+#include "sim/builder.hh"
 #include "sim/universe.hh"
 
 using namespace std;

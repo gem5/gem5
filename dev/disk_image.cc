@@ -33,18 +33,19 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <errno.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <string>
 
-#include "dev/disk_image.hh"
+#include "base/callback.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "dev/disk_image.hh"
+#include "sim/builder.hh"
 #include "sim/sim_exit.hh"
-#include "base/callback.hh"
 
 using namespace std;
 

@@ -43,12 +43,12 @@
 #include <string>
 
 #include "base/misc.hh"
-#include "targetarch/ev5.hh"
-
-#include "dev/console.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "dev/console.hh"
 #include "mem/functional_mem/memory_control.hh"
+#include "sim/builder.hh"
+#include "targetarch/ev5.hh"
 
 using namespace std;
 

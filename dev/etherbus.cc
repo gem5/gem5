@@ -30,17 +30,17 @@
  * Device module for modelling an ethernet hub
  */
 
+#include <cmath>
 #include <deque>
 #include <string>
 #include <vector>
 
-#include <math.h>
-
+#include "base/trace.hh"
 #include "dev/etherbus.hh"
 #include "dev/etherdump.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
-#include "base/trace.hh"
+#include "sim/builder.hh"
 #include "sim/universe.hh"
 
 using namespace std;

@@ -28,22 +28,21 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
 
+#include <cstdio>
 #include <string>
 
-#include "mem/functional_mem/main_memory.hh"
-#include "sim/prog.hh"
-
-#include "eio/eio.hh"
 #include "base/intmath.hh"
-#include "cpu/full_cpu/thread.hh"
-#include "sim/fake_syscall.hh"
 #include "base/loader/object_file.hh"
+#include "base/statistics.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/full_cpu/smt.hh"
-
-#include "base/statistics.hh"
+#include "cpu/full_cpu/thread.hh"
+#include "eio/eio.hh"
+#include "mem/functional_mem/main_memory.hh"
+#include "sim/builder.hh"
+#include "sim/fake_syscall.hh"
+#include "sim/prog.hh"
 #include "sim/sim_stats.hh"
 
 using namespace std;

@@ -30,19 +30,20 @@
  * Simple disk interface for the system console
  */
 
-#include <string>
-
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <fcntl.h>
-#include <string.h>
 #include <unistd.h>
 
-#include "dev/disk_image.hh"
+#include <cstring>
+#include <string>
+
 #include "base/misc.hh"
-#include "mem/functional_mem/physical_memory.hh"
-#include "dev/simple_disk.hh"
 #include "base/trace.hh"
+#include "dev/disk_image.hh"
+#include "dev/simple_disk.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "sim/builder.hh"
 
 using namespace std;
 

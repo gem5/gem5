@@ -26,59 +26,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <list>
 #include <sstream>
 #include <string>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include "sim/host.hh"
 #include "base/cprintf.hh"
-#include "base/misc.hh"
-#include "cpu/full_cpu/smt.hh"
-
-#include "sim/annotation.hh"
-#include "cpu/exec_context.hh"
-#include "cpu/base_cpu.hh"
-#include "sim/debug.hh"
-#include "cpu/simple_cpu/simple_cpu.hh"
 #include "base/inifile.hh"
-#include "mem/mem_interface.hh"
-#include "mem/base_mem.hh"
-#include "cpu/static_inst.hh"
-
-#ifdef FULL_SYSTEM
-#include "mem/functional_mem/memory_control.hh"
-#include "mem/functional_mem/physical_memory.hh"
-#include "targetarch/alpha_memory.hh"
-#include "sim/system.hh"
-#else // !FULL_SYSTEM
-#include "mem/functional_mem/functional_memory.hh"
-#include "sim/prog.hh"
-#include "eio/eio.hh"
-#endif // FULL_SYSTEM
-
-#include "cpu/exetrace.hh"
-#include "base/trace.hh"
-#include "sim/sim_events.hh"
+#include "base/loader/symtab.hh"
+#include "base/misc.hh"
 #include "base/pollevent.hh"
+#include "base/range.hh"
+#include "base/trace.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/full_cpu/smt.hh"
+#include "cpu/simple_cpu/simple_cpu.hh"
+#include "cpu/static_inst.hh"
+#include "mem/base_mem.hh"
+#include "mem/mem_interface.hh"
+#include "sim/annotation.hh"
+#include "sim/builder.hh"
+#include "sim/debug.hh"
+#include "sim/host.hh"
+#include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/sim_stats.hh"
 
-#include "base/range.hh"
-#include "base/loader/symtab.hh"
-
 #ifdef FULL_SYSTEM
-#include "targetarch/vtophys.hh"
-#include "dev/pciareg.h"
 #include "base/remote_gdb.hh"
 #include "dev/alpha_access.h"
-#endif
-
+#include "dev/pciareg.h"
+#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "sim/system.hh"
+#include "targetarch/alpha_memory.hh"
+#include "targetarch/vtophys.hh"
+#else // !FULL_SYSTEM
+#include "eio/eio.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "sim/prog.hh"
+#endif // FULL_SYSTEM
 
 using namespace std;
 

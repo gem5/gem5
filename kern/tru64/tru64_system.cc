@@ -26,17 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/remote_gdb.hh"
-#include "base/trace.hh"
 #include "base/loader/aout_object.hh"
 #include "base/loader/ecoff_object.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/remote_gdb.hh"
+#include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/tru64_system.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
+#include "sim/builder.hh"
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 

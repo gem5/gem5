@@ -34,8 +34,8 @@
 
 #include <string>
 
-#include "sim/universe.hh"
 #include "dev/etherdump.hh"
+#include "sim/builder.hh"
 #include "sim/universe.hh"
 
 using std::string;
