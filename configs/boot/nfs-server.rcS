@@ -47,14 +47,13 @@ echo "/nfs 10.0.0.0/255.0.0.0(rw,sync,no_root_squash)" > /etc/exports
 /sbin/insmod /modules/scsi_debug.ko dev_size_mb=128
 
 echo -n "creating partition and formatting..."
-echo "1,126,L" > /tmp/sfdisk.run
-echo ";" >> /tmp/sfdisk.run
-echo ";" >> /tmp/sfdisk.run
-/usr/sbin/sfdisk --force /dev/sda < /tmp/sfdisk.run
+echo "1,120,L" > /tmp/sfdisk.run
+/usr/sbin/sfdisk -uM --force /dev/sda < /tmp/sfdisk.run
 /sbin/mke2fs /dev/sda1
 mkdir /nfs
 /bin/mount /dev/sda1 /nfs 
 chmod a+rwx /nfs
+/usr/sbin/sfdisk -uM -l /dev/sda
 echo "done."
 
 echo -n "starting nfs kernel server..."
