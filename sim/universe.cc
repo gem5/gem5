@@ -35,7 +35,6 @@
 #include <string>
 #include <vector>
 
-#include "base/files.hh"
 #include "base/misc.hh"
 #include "sim/universe.hh"
 #include "sim/host.hh"
