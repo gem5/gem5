@@ -1,0 +1,282 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2004 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+###################################################
+#
+# SCons top-level build description (SConstruct) file.
+#
+# To build M5, you need a directory with three things:
+# 1. A copy of this file (named SConstruct).
+# 2. A link named 'm5' to the top of the M5 simulator source tree.
+# 3. A link named 'ext' to the top of the M5 external source tree.
+#
+# Then type 'scons' to build the default configuration (see below), or
+# 'scons <CONFIG>/<binary>' to build some other configuration (e.g.,
+# 'KERNEL/m5.opt' for the optimized full-system version).
+#
+###################################################
+
+# Python library imports
+import sys
+import os
+
+# The absolute path to the current directory (where this file lives).
+ROOT = Dir('.').abspath
+
+# Paths to the M5 and external source trees (local symlinks).
+SRCDIR = os.path.join(ROOT, 'm5')
+EXT_SRCDIR = os.path.join(ROOT, 'ext')
+
+# Check for 'm5' and 'ext' links, die if they don't exist.
+if not os.path.isdir(SRCDIR):
+    print "Error: '%s' must be a link to the M5 source tree." % SRCDIR
+    sys.exit(1)
+
+if not os.path.isdir('ext'):
+    print "Error: '%s' must be a link to the M5 external source tree." \
+          % EXT_SRCDIR
+    sys.exit(1)
+
+
+###################################################
+#
+# Define Configurations
+#
+# The build system infers the build options from the subdirectory name
+# that the simulator is built under.  The subdirectory name must be of
+# the form <CONFIG>[.<OPT>]*, where <CONFIG> is a base configuration
+# (e.g., ALPHA or KERNEL) and OPT is an option (e.g., MYSQL).  The
+# following code defines the standard configurations and options.
+# Additional local configurations and options are read from the file
+# 'local_configs' if it exists.
+#
+# Each base configuration or option is defined in two steps: a
+# function that takes an SCons build environment and modifies it
+# appropriately for that config or option, and an entry in the
+# 'configs_map' or 'options_map' dictionary that maps the directory
+# name string to the function.  (The directory names are all upper
+# case, by convention.)
+#
+###################################################
+
+# Base non-full-system Alpha ISA configuration.
+def AlphaConfig(env):
+    env.Replace(TARGET_ISA = 'alpha')
+    env.Append(CPPDEFINES = 'SS_COMPATIBLE_FP')
+
+# Base full-system configuration.
+def KernelConfig(env):
+    env.Replace(TARGET_ISA = 'alpha')
+    env.Replace(FULL_SYSTEM = True)
+    env.Append(CPPDEFINES = ['FULL_SYSTEM', 'SYSTEM_EV5'])
+
+# Base configurations map.
+configs_map = {
+    'ALPHA' : AlphaConfig,
+    'KERNEL' : KernelConfig
+    }
+
+# Enable detailed full-system binning.
+def MeasureOpt(env):
+    env.Replace(USE_MYSQL = True)
+    env.Append(CPPDEFINES = 'FS_MEASURE')
+
+# Enable MySql database output for stats.
+def MySqlOpt(env):
+    env.Replace(USE_MYSQL = True)
+
+# Disable FastAlloc object allocation.
+def NoFastAllocOpt(env):
+    env.Append(CPPDEFINES = 'NO_FAST_ALLOC')
+
+# Configuration options map.
+options_map = {
+    'MEASURE' : MeasureOpt,
+    'MYSQL' : MySqlOpt,
+    'NO_FAST_ALLOC' : NoFastAllocOpt
+    }
+
+# The 'local_configs' file can be used to define additional base
+# configurations and/or options without changing this file.
+if os.path.isfile('local_configs'):
+    SConscript('local_configs', exports = ['configs_map', 'options_map'])
+
+# This function parses a directory name of the form <CONFIG>[.<OPT>]*
+# and sets up the build environment appropriately.  Returns True if
+# successful, False if the base config or any of the options were not
+# defined.
+def set_dir_options(dir, env):
+    parts = dir.split('.')
+    config = parts[0]
+    opts = parts[1:]
+    try:
+        configs_map[config](env)
+        map(lambda opt: options_map[opt](env), opts)
+        return True
+    except KeyError, key:
+        print "Config/option '%s' not found." % key
+        return False
+
+# Set the default configuration and binary.  The default target (if
+# scons is invoked at the top level with no command-line targets) is
+# 'ALPHA/m5.debug'.  If scons is invoked in a subdirectory with no
+# command-line targets, the configuration
+
+###################################################
+#
+# Figure out which configurations to set up.
+#
+#
+# It's prohibitive to do all the combinations of base configurations
+# and options, so we have to infer which ones the user wants.
+#
+# 1. If there are command-line targets, the configuration(s) are inferred
+#    from the directories of those targets.  If scons was invoked from a
+#    subdirectory (using 'scons -u'), those targets have to be
+#    interpreted relative to that subdirectory.
+#
+# 2. If there are no command-line targets, and scons was invoked from a
+#    subdirectory (using 'scons -u'), the configuration is inferred from
+#    the name of the subdirectory.
+#
+# 3. If there are no command-line targets and scons was invoked from
+#    the root build directory, a default configuration is used.  The
+#    built-in default is ALPHA, but this can be overridden by setting the
+#    M5_DEFAULT_CONFIG shell environment veriable.
+#
+# In cases 2 & 3, the specific file target defaults to 'm5.debug', but
+# this can be overridden by setting the M5_DEFAULT_BINARY shell
+# environment veriable.
+#
+###################################################
+
+# Find default configuration & binary.
+default_config = os.environ.get('M5_DEFAULT_CONFIG', 'ALPHA')
+default_binary = os.environ.get('M5_DEFAULT_BINARY', 'm5.debug')
+
+# Ask SCons which directory it was invoked from.  If you invoke SCons
+# from a subdirectory you must use the '-u' flag.
+launch_dir = GetLaunchDir()
+
+# Build a list 'my_targets' of all the targets relative to ROOT.
+if launch_dir == ROOT:
+    # invoked from root build dir
+    if len(COMMAND_LINE_TARGETS) != 0:
+        # easy: use specified targets as is
+        my_targets = COMMAND_LINE_TARGETS
+    else:
+        # default target (ALPHA/m5.debug, unless overridden)
+        target = os.path.join(default_config, default_binary)
+        my_targets = [target]
+        Default(target)
+else:
+    # invoked from subdirectory
+    if not launch_dir.startswith(ROOT):
+        print "Error: launch dir (%s) not a subdirectory of ROOT (%s)!" \
+              (launch_dir, ROOT)
+        sys.exit(1)
+    # make launch_dir relative to ROOT (strip ROOT plus slash off front)
+    launch_dir = launch_dir[len(ROOT)+1:]
+    if len(COMMAND_LINE_TARGETS) != 0:
+        # make specified targets relative to ROOT
+        my_targets = map(lambda x: os.path.join(launch_dir, x),
+                         COMMAND_LINE_TARGETS)
+    else:
+        # build default binary (m5.debug, unless overridden) using the
+        # config inferred by the invocation directory (the first
+        # subdirectory after ROOT)
+        target = os.path.join(launch_dir.split('/')[0], default_binary)
+        my_targets = [target]
+        Default(target)
+
+# Normalize target paths (gets rid of '..' in the middle, etc.)
+my_targets = map(os.path.normpath, my_targets)
+
+# Generate a list of the unique configs that the collected targets reference.
+build_dirs = []
+for t in my_targets:
+    dir = t.split('/')[0]
+    if dir not in build_dirs:
+        build_dirs.append(dir)
+
+###################################################
+#
+# Set up the default build environment.  This environment is copied
+# and modified according to each selected configuration.
+#
+###################################################
+
+default_env = Environment(ENV = os.environ,  # inherit user's enviroment vars
+                          ROOT = ROOT,
+                          SRCDIR = SRCDIR,
+                          EXT_SRCDIR = EXT_SRCDIR,
+                          CPPDEFINES = [],
+                          FULL_SYSTEM = False,
+                          USE_MYSQL = False)
+
+# M5_EXT is used by isa_parser.py to find the PLY package.
+default_env.Append(ENV = { 'M5_EXT' : EXT_SRCDIR })
+
+default_env.Append(CCFLAGS='-pipe')
+default_env.Append(CCFLAGS='-fno-strict-aliasing')
+default_env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+
+# libelf build is described in its own SConscript file.  Using a
+# dictionary for exports lets us export "default_env" so the
+# SConscript will see it as "env".
+default_env.SConscript('m5/libelf/SConscript', exports={'env' : default_env})
+
+
+###################################################
+#
+# Define build environments for selected configurations.
+#
+###################################################
+
+for build_dir in build_dirs:
+    # Make a copy of the default environment to use for this config.
+    env = default_env.Copy()
+    # Modify 'env' according to the build directory config.
+    print "Configuring options for directory '%s'." % build_dir
+    if not set_dir_options(build_dir, env):
+        print "Skipping directory '%s'." % build_dir
+        continue
+
+    # The m5/SConscript file sets up the build rules in 'env' according
+    # to the configured options.
+    SConscript('m5/SConscript', build_dir = build_dir, exports = 'env',
+               duplicate=0)
+
+
+###################################################
+#
+# Let SCons do its thing.  At this point SCons will use the defined
+# build enviornments to build the requested targets.
+#
+###################################################
+
