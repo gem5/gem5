@@ -49,8 +49,8 @@ simobj EtherDev(DmaDevice):
 
     intr_delay = Param.Tick(0, "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(Super, "Physical Memory")
-    tlaser = Param.Turbolaser(Super, "Turbolaser")
+    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
+    tlaser = Param.Turbolaser(parent.any, "Turbolaser")
 
 simobj NSGigE(PciDevice):
     type = 'NSGigE'
@@ -73,7 +73,7 @@ simobj NSGigE(PciDevice):
 
     intr_delay = Param.Tick(0, "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(Super, "Physical Memory")
+    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
 
 simobj EtherDevInt(EtherInt):
     type = 'EtherDevInt'
