@@ -261,7 +261,7 @@ SimpleCPU::serialize()
     for (int i = 0; i < NumFloatRegs; i++) {
         stringstream buf;
         ccprintf(buf, "F%02d", i);
-        paramOut(buf.str(), xc->regs.floatRegFile.d[i]);
+        paramOut(buf.str(), xc->regs.floatRegFile.q[i]);
     }
     // CPUTraitsType::serializeSpecialRegs(getProxy(), xc->regs);
 }
@@ -281,7 +281,7 @@ SimpleCPU::unserialize(IniFile &db, const string &category, ConfigNode *node)
         stringstream buf;
         ccprintf(buf, "F%02d", i);
         db.findDefault(category, buf.str(), data);
-        xc->regs.floatRegFile.d[i] = strtod(data.c_str(),NULL);
+        to_number(data.c_str(), xc->regs.floatRegFile.q[i]);
     }
 
     // Read in Special registers
