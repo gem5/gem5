@@ -22,6 +22,7 @@ echo "running netserver..."
 /benchmarks/netperf/netserver
 
 echo -n "signal client to begin..."
+sleep 1
 echo "server ready" | /usr/bin/netcat -c $CLIENT 8000
 echo "done."
 
