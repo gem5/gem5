@@ -35,9 +35,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#if defined(__OpenBSD__) || defined(__APPLE__)
 #include <libgen.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -88,16 +86,18 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
     tmpf.close();
 
-    const char *cfile = file.c_str();
-    char *dir = basename(cfile);
+    char *cfile = strcpy(new char[file.size() + 1], file.c_str());
+    char *dir = dirname(cfile);
     char *dir_arg = NULL;
-    if (*dir != '.' && dir != cfile) {
+    if (*dir != '.') {
         string arg = "-I";
         arg += dir;
 
         dir_arg = new char[arg.size() + 1];
         strcpy(dir_arg, arg.c_str());
     }
+
+    delete [] cfile;
 
 #ifdef CPP_PIPE
     if (pipe(fd) == -1)
