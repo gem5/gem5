@@ -185,6 +185,48 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                   panic("TSDEV_CC_MTR write not implemented\n");
                    return No_Fault;
               case TSDEV_CC_MISC:
+                uint64_t ipreq;
+                ipreq = (*(uint64_t*)data >> 12) & 0xF;
+                //If it is bit 12-15, this is an IPI post
+                if (ipreq) {
+                    for (int cpunum=0; cpunum < Tsunami::Max_CPUs; cpunum++) {
+                        // Check each cpu bit
+                        if (ipreq & (1 << cpunum)) {
+                            // Check if there is already an ipi (bits 8:11)
+                            if (!(misc & (0x100 << cpunum))) {
+                                misc |= (0x100 << cpunum);
+                                tsunami->intrctrl->post(cpunum,
+                                        TheISA::INTLEVEL_IRQ3, 0);
+                                DPRINTF(IPI, "send IPI cpu=%d from=%d\n",
+                                        cpunum, req->cpu_num);
+                            }
+                        }
+                    }
+                    supportedWrite = true;
+                }
+
+                //If it is bit 8-11, this is an IPI clear
+                uint64_t ipintr;
+                ipintr = (*(uint64_t*)data >> 8) & 0xF;
+                if (ipintr) {
+                    for (int cpunum=0; cpunum < Tsunami::Max_CPUs; cpunum++) {
+                        // Check each cpu bit
+                        if (ipintr & (1 << cpunum)) {
+                            // Check if there is a pending ipi (bits 8:11)
+                            if (misc & (0x100 << cpunum)) {
+                                misc &= ~(0x100 << cpunum);
+                                tsunami->intrctrl->clear(cpunum,
+                                        TheISA::INTLEVEL_IRQ3, 0);
+                                DPRINTF(IPI, "clear IPI IPI cpu=%d from=%d\n",
+                                        cpunum, req->cpu_num);
+                            }
+                        }
+                    }
+                    supportedWrite = true;
+                }
+
+
+
                 //If it is the 4-7th bit, clear the RTC interrupt
                 uint64_t itintr;
                 if ((itintr = (*(uint64_t*) data) & (0xf<<4))) {
@@ -199,43 +241,14 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                     }
                     supportedWrite = true;
                 }
-                //If it is 12th-15th bit, IPI sent to Processor 1
-                uint64_t ipreq;
-                if ((ipreq = (*(uint64_t*) data) & (0xf << 12))) {
-                    //Set the bits in IPINTR
-                    misc |= (ipreq >> 4);
-                    for (int i=0; i < size; i++) {
-                        if ((ipreq & (1 << (i + 12)))) {
-                            if (!ipiInterrupting[i])
-                                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ3, 0);
-                            ipiInterrupting[i]++;
-                            DPRINTF(IPI, "send cpu=%d pending=%d from=%d\n", i,
-                                    ipiInterrupting[i], req->cpu_num);
-                        }
-                    }
-                    supportedWrite = true;
-                }
-                //If it is bits 8-11, then clearing IPI's
-                uint64_t ipintr;
-                if ((ipintr = (*(uint64_t*) data) & (0xf << 8))) {
-                    //Clear the bits in IPINTR
-                    misc &= ~(ipintr);
-                    for (int i=0; i < size; i++) {
-                        if ((ipintr & (1 << (i + 8))) && ipiInterrupting[i]) {
-                            if (!(--ipiInterrupting[i]))
-                                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ3, 0);
-                            DPRINTF(IPI, "clearing cpu=%d pending=%d from=%d\n", i,
-                                    ipiInterrupting[i] + 1, req->cpu_num);
-                        }
-                    }
-                    supportedWrite = true;
-                }
 
-        // ignore NXMs
-        if (*(uint64_t*)data & 0x10000000)
-            supportedWrite = true;
+                // ignore NXMs
+                if (*(uint64_t*)data & 0x10000000)
+                    supportedWrite = true;
 
-                if(!supportedWrite) panic("TSDEV_CC_MISC write not implemented\n");
+                if(!supportedWrite)
+                    panic("TSDEV_CC_MISC write not implemented\n");
+
                 return No_Fault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:

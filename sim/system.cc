@@ -55,7 +55,7 @@ System::System(Params *p)
 
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
-    debugSymbolTable = kernelSymtab;
+    debugSymbolTable = new SymbolTable;
 
     /**
      * Load the kernel, pal, and console code into memory
@@ -89,13 +89,28 @@ System::System(Params *p)
     // load symbols
     if (!kernel->loadGlobalSymbols(kernelSymtab))
         panic("could not load kernel symbols\n");
-        debugSymbolTable = kernelSymtab;
 
     if (!kernel->loadLocalSymbols(kernelSymtab))
         panic("could not load kernel local symbols\n");
 
     if (!console->loadGlobalSymbols(consoleSymtab))
         panic("could not load console symbols\n");
+
+     if (!kernel->loadGlobalSymbols(debugSymbolTable))
+        panic("could not load kernel symbols\n");
+
+    if (!kernel->loadLocalSymbols(debugSymbolTable))
+        panic("could not load kernel local symbols\n");
+
+    if (!console->loadGlobalSymbols(debugSymbolTable))
+        panic("could not load console symbols\n");
+
+    if (!pal->loadGlobalSymbols(debugSymbolTable))
+        panic("could not load pal symbols\n");
+
+    if (!pal->loadLocalSymbols(debugSymbolTable))
+        panic("could not load pal symbols\n");
+
 
     DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
     DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
