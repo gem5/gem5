@@ -265,12 +265,19 @@ Database::check()
 void
 Database::reset()
 {
+    list<GenBin *>::iterator bi = bins.begin();
+    list<GenBin *>::iterator be = bins.end();
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
 
-    while (i != end) {
+   while (bi != be) {
+       (*bi)->activate();
+
+       while (i != end) {
         (*i)->reset();
         ++i;
+       }
+       ++bi;
     }
 }
 
