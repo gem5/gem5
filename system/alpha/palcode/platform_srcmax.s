@@ -1258,14 +1258,33 @@ sys_mchk_write_logout_frame:
 	mfpr	r25, regName ; \
 	stqp	r25, CNS_Q_/**/regOff(r14)
 
-	mchk_logout(mm_stat, MM_STAT)
-	mchk_logout(va, VA)			// Unlocks VA and MM_STAT
-	mchk_logout(isr, ISR)
-	mchk_logout(icsr, ICSR)
-	mchk_logout(pal_base, PAL_BASE)
-	mchk_logout(exc_mask, EXC_MASK)
-	mchk_logout(exc_sum, EXC_SUM)
+//	mchk_logout(mm_stat, MM_STAT)
+//	mchk_logout(va, VA)			// Unlocks VA and MM_STAT
+//	mchk_logout(isr, ISR)
+//	mchk_logout(icsr, ICSR)
+//	mchk_logout(pal_base, PAL_BASE)
+//	mchk_logout(exc_mask, EXC_MASK)
+//	mchk_logout(exc_sum, EXC_SUM)
 
+    mfpr	r25, mm_stat 
+	stqp	r25, CNS_Q_MM_STAT(r14)
+    mfpr	r25, va 
+	stqp	r25, CNS_Q_VA(r14)
+    mfpr	r25, isr 
+	stqp	r25, CNS_Q_ISR(r14)
+    mfpr	r25, icsr 
+	stqp	r25, CNS_Q_ICSR(r14)
+    mfpr	r25, pal_base 
+	stqp	r25, CNS_Q_PAL_BASE(r14)
+    mfpr	r25, exc_mask 
+	stqp	r25, CNS_Q_EXC_MASK(r14)
+    mfpr	r25, exc_sum 
+	stqp	r25, CNS_Q_EXC_SUM(r14)
+
+
+
+    
+    
 	ldah	r13, 0xfff0(r31)
 	zap	r13, 0xE0, r13			// Get Cbox IPR base
 	ldqp	r13, ld_lock(r13)		// Get ld_lock IPR
@@ -1278,31 +1297,81 @@ sys_mchk_write_logout_frame:
 	mfpr	r25, pt/**/n ;\
 	stqp	r25, CNS_Q_PT+(8*n)(r14)
 	
-	svpt(0)
-	svpt(1)
-	svpt(2)
-	svpt(3)
-	svpt(4)
-	svpt(5)
-	svpt(6)
-	svpt(7)
-	svpt(8)
-	svpt(9)
-	svpt(10)
-	svpt(11)
-	svpt(12)
-	svpt(13)
-	svpt(14)
-	svpt(15)
-	svpt(16)
-	svpt(17)
-	svpt(18)
-	svpt(19)
-	svpt(20)
-	svpt(21)
-	svpt(22)
-	svpt(23)
-	
+	mfpr	r25, pt0 
+	stqp	r25, CNS_Q_PT+(8*0)(r14)
+	mfpr	r25, pt1 
+	stqp	r25, CNS_Q_PT+(8*1)(r14)
+	mfpr	r25, pt2 
+	stqp	r25, CNS_Q_PT+(8*2)(r14)
+	mfpr	r25, pt3 
+	stqp	r25, CNS_Q_PT+(8*3)(r14)
+	mfpr	r25, pt4 
+	stqp	r25, CNS_Q_PT+(8*4)(r14)
+	mfpr	r25, pt5 
+	stqp	r25, CNS_Q_PT+(8*5)(r14)
+	mfpr	r25, pt6 
+	stqp	r25, CNS_Q_PT+(8*6)(r14)
+	mfpr	r25, pt7 
+	stqp	r25, CNS_Q_PT+(8*7)(r14)
+	mfpr	r25, pt8 
+	stqp	r25, CNS_Q_PT+(8*8)(r14)
+	mfpr	r25, pt9 
+	stqp	r25, CNS_Q_PT+(8*9)(r14)
+	mfpr	r25, pt10
+	stqp	r25, CNS_Q_PT+(8*10)(r14)
+	mfpr	r25, pt11
+	stqp	r25, CNS_Q_PT+(8*11)(r14)
+	mfpr	r25, pt12
+	stqp	r25, CNS_Q_PT+(8*12)(r14)
+	mfpr	r25, pt13
+	stqp	r25, CNS_Q_PT+(8*13)(r14)
+	mfpr	r25, pt14
+	stqp	r25, CNS_Q_PT+(8*14)(r14)
+	mfpr	r25, pt15
+	stqp	r25, CNS_Q_PT+(8*15)(r14)
+	mfpr	r25, pt16
+	stqp	r25, CNS_Q_PT+(8*16)(r14)
+	mfpr	r25, pt17
+	stqp	r25, CNS_Q_PT+(8*17)(r14)
+	mfpr	r25, pt18
+	stqp	r25, CNS_Q_PT+(8*18)(r14)
+	mfpr	r25, pt19
+	stqp	r25, CNS_Q_PT+(8*19)(r14)
+	mfpr	r25, pt20
+	stqp	r25, CNS_Q_PT+(8*20)(r14)
+	mfpr	r25, pt21
+	stqp	r25, CNS_Q_PT+(8*21)(r14)
+	mfpr	r25, pt22
+	stqp	r25, CNS_Q_PT+(8*22)(r14)
+	mfpr	r25, pt23
+	stqp	r25, CNS_Q_PT+(8*23)(r14)
+
+    
+//    svpt(0)
+//	svpt(1)
+//	svpt(2)
+//	svpt(3)
+//	svpt(4)
+//	svpt(5)
+//	svpt(6)
+//	svpt(7)
+//	svpt(8)
+//	svpt(9)
+//	svpt(10)
+//	svpt(11)
+//	svpt(12)
+//	svpt(13)
+//	svpt(14)
+//	svpt(15)
+//	svpt(16)
+//	svpt(17)
+//	svpt(18)
+//	svpt(19)
+//	svpt(20)
+//	svpt(21)
+//	svpt(22)
+//	svpt(23)
+//	
 	//+
 	// Log system specific info here
 	//-

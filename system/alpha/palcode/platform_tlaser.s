@@ -1,6 +1,8 @@
 // build_fixed_image: not sure what means
 // real_mm to be replaced during rewrite
 // remove_save_state  remove_restore_state can be remooved to save space ??
+
+
 #define egore 0
 #define acore 0
 #define beh_model 0
@@ -30,7 +32,8 @@
 #include "fromHudsonOsf.h"
 #include "dc21164FromGasSources.h"
 #include "cserve.h"
-#include "simos.h"
+#include "tlaserreg.h"
+//#include "simos.h"
 
         
 #define ldlp ldl_p
@@ -158,10 +161,10 @@ _x:
 	sll	_rsum,22,_rsum;		\
 	addq	_raddr,_rsum,_raddr;	\
 	blbs	_scratch,1f;		\
-	lda	_raddr,tlep_lintrsum0_offset(_raddr); \
+	lda	_raddr,0x1180(_raddr); \
 	br	r31,2f;			\
 1: 					\
-	lda	_raddr,tlep_lintrsum1_offset(_raddr); \
+	lda	_raddr,0x11c0(_raddr); \
 2:      ldlp    _rsum,0(_raddr)
 	
 
@@ -211,9 +214,9 @@ _x:
 	lda	_raddr,0xff88(zero);	\
 	sll	_raddr,24,_raddr;	\
 	blbs	_whami,1f;		\
-	lda	_raddr,tlep_tlintrsum0_offset(_raddr);\
+	lda	_raddr,0x1180(_raddr);\
 	br	zero,2f;		\
-1:	lda	_raddr,tlep_tlintrsum1_offset(_raddr);\
+1:	lda	_raddr,0x11c0(_raddr);\
 2:	srl	_whami,1,_whami;	\
 	addq	_raddr,_whami,_raddr;	\
 	mb;				\
@@ -442,7 +445,7 @@ EXPORT(sys_wripir)
 //++
 // Send out the IP Intr
 //--
-	stqp	r14, TLSB_TLIPINTR_OFFSET(r13)	// Write to TLIPINTR reg
+	stqp	r14, 0x40(r13)	// Write to TLIPINTR reg WAS  TLSB_TLIPINTR_OFFSET  
 	wmb				// Push out the store
 
 	hw_rei
@@ -739,7 +742,7 @@ sys_int_23:
 	beq	r14, 1f
 
 	Get_TLSB_Node_Address(r14,r10)
-	lda	r10, tlsb_tlilid3_offset(r10)	// Get base TLILID address
+	lda	r10, 0xac0(r10)	// Get base TLILID address
 
 	ldlp	r13, 0(r10)			// Read the TLILID register
 	bne	r13, pal_post_dev_interrupt
@@ -763,7 +766,7 @@ sys_int_22:
 	beq	r14, 1f
 
 	Get_TLSB_Node_Address(r14,r10)
-	lda	r10, tlsb_tlilid2_offset(r10)	// Get base TLILID address
+	lda	r10, 0xa80(r10)	// Get base TLILID address
 
 	ldlp	r13, 0(r10)			// Read the TLILID register
 #if turbo_pcia_intr_fix == 0        
@@ -792,7 +795,7 @@ sys_int_21:
 	beq	r14, 1f
 
 	Get_TLSB_Node_Address(r14,r10)
-	lda	r10, tlsb_tlilid1_offset(r10)	// Get base TLILID address
+	lda	r10, 0xa40(r10)	// Get base TLILID address
 
 	ldlp	r13, 0(r10)			// Read the TLILID register
 #if turbo_pcia_intr_fix == 0        
@@ -954,7 +957,7 @@ tlep_ecc:
 	srl	r14, 1, r14			// shift off cpu number
 	Get_TLSB_Node_Address(r14,r10)		// compute our nodespace address
 
-	ldlp	r13, tlsb_tlber_offset(r10)	// read our TLBER
+	ldlp	r13, 0x40(r10)	// read our TLBER WAS tlsb_tlber_offset
 	srl	r13, 17, r13			// shift down the CWDE/CRDE bits
 
 	and	r13, 3, r13			// mask the CWDE/CRDE bits
@@ -1515,7 +1518,7 @@ sys_reset:
 	lda	r11, 0x7(r31)		// Set shadow copy of PS - kern mode, IPL=7
 	lda	r1, 0x1F(r31)		
 	mtpr	r1, ipl			// set internal <ipl>=1F
-	mtpr	r31, ps			// set new ps<cm>=0, Ibox copy
+	mtpr	r31, ev5__ps			// set new ps<cm>=0, Ibox copy
 	mtpr	r31, dtb_cm		// set new ps<cm>=0, Mbox copy
 
 	// Create the PALtemp pt_intmask -
@@ -1591,7 +1594,8 @@ sys_reset:
 	mtpr	r1, pt_scbb		// load scbb
 	mtpr	r31, pt_prbr		// clear out prbr
 #ifdef SIMOS
-        or      zero,kludge_initial_pcbb,r1
+//        or      zero,kludge_initial_pcbb,r1
+        GET_ADDR(r1, (kludge_initial_pcbb-pal_base), r1)
 #else
 	mfpr	r1, pal_base
 //orig	sget_addr r1, (kludge_initial_pcbb-pal$base), r1, verify=0// get address for temp pcbb
@@ -1849,7 +1853,8 @@ EXPORT(sys_machine_check)
 	lda	r0, scb_v_procmchk(r31)		// SCB vector
 	mfpr	r13, pt_mces			// Get MCES
 	sll	r0, 16, r0			// Move SCBv to correct position
-	bis	r13, #<1@mces$v_mchk>, r14	// Set MCES<MCHK> bit
+//	bis	r13, #<1@mces$v_mchk>, r14	// Set MCES<MCHK> bit
+	bis	r13, BIT(mces_v_mchk), r14	// Set MCES<MCHK> bit
 
 
 	zap	r14, 0x3C, r14			// Clear mchk_code word and SCBv word 
@@ -1979,9 +1984,11 @@ EXPORT(sys_mchk_collect_iprs)
 	and	r25, r4, r4
 	bne	r4, sys_cpu_mchk_not_retryable
 	
-	bis	r31, #<1@<ei_stat$v_unc_ecc_err-ei_stat$v_bc_tperr>>, r4
+//	bis	r31, #<1@<ei_stat$v_unc_ecc_err-ei_stat$v_bc_tperr>>, r4
+	bis	r31, BIT((ei_stat_v_unc_ecc_err-ei_stat_v_bc_tperr)), r4
 	and	r25, r4, r4				// Isolate the Uncorrectable Error Bit
-	bis	r31, #<1@<ei_stat$v_fil_ird-ei_stat$v_bc_tperr>>, r6
+//	bis	r31, #<1@<ei_stat$v_fil_ird-ei_stat$v_bc_tperr>>, r6
+	bis	r31, BIT((ei_stat_v_fil_ird-ei_stat_v_bc_tperr)), r6 // Isolate the Iread bit
 	cmovne	r6, 0, r4				// r4 = 0 if IRD or if No Uncorrectable Error
         bne     r4, sys_cpu_mchk_not_retryable		
 
@@ -2360,7 +2367,7 @@ sys_post_mchk_trap:
 	bge	r25, 3f	
 
 	mtpr	r31, dtb_cm
-	mtpr	r31, ps
+	mtpr	r31, ev5__ps
 
 	mtpr	r30, pt_usp		// save user stack
 	mfpr	r30, pt_ksp

@@ -51,7 +51,7 @@
 ** macros will auto-magically adjust the offsets accordingly.
 **
 */
-
+#if 0
 #define SAVE_GPR(reg,offset,base) \
         stq_p	reg, ((offset-0x200)&0x3FF)(base)
 
@@ -78,7 +78,38 @@
 
 #define	RESTORE_SHADOW(reg,offset,base)\
         ldq_p	reg, ((offset-CNS_Q_IPR)&0x3FF)(base)
+#else
+//#define SEXT10(X) (((X) & 0x200) ? ((X) | 0xfffffffffffffc00) : (X))
+#define SEXT10(X) ((X) & 0x3ff)
+//#define SEXT10(X) (((X) << 55) >> 55)
 
+#define SAVE_GPR(reg,offset,base) \
+        stq_p	reg, (SEXT10(offset-0x200))(base)
+
+#define RESTORE_GPR(reg,offset,base) \
+        ldq_p	reg, (SEXT10(offset-0x200))(base)
+
+
+#define SAVE_FPR(reg,offset,base) \
+        stt	reg, (SEXT10(offset-0x200))(base)
+
+#define RESTORE_FPR(reg,offset,base) \
+        ldt	reg, (SEXT10(offset-0x200))(base)
+
+#define SAVE_IPR(reg,offset,base) \
+        mfpr	v0, reg;	  \
+        stq_p	v0, (SEXT10(offset-CNS_Q_IPR))(base)
+
+#define RESTORE_IPR(reg,offset,base) \
+        ldq_p	v0, (SEXT10(offset-CNS_Q_IPR))(base); \
+        mtpr	v0, reg
+
+#define SAVE_SHADOW(reg,offset,base) \
+        stq_p	reg, (SEXT10(offset-CNS_Q_IPR))(base)
+
+#define	RESTORE_SHADOW(reg,offset,base)\
+        ldq_p	reg, (SEXT10(offset-CNS_Q_IPR))(base)
+#endif
 /* orig  Structure of the processor-specific impure area */
 
 /* orig aggregate impure struct prefix "" tag "";

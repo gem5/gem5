@@ -314,7 +314,7 @@
 #define mces_m_pce               (1<<mces_v_pce)
 #define mces_m_dpc               (1<<mces_v_dpc)
 #define mces_m_dsc               (1<<mces_v_dsc)
-#define mces_m_all		 ((1<<mces_v_mchk) | (1<<mces_v_sce) | (1<<mces_v_pce) | (1<<mces_v_dpc) ! (1<<mces_v_dsc))
+#define mces_m_all		 ((1<<mces_v_mchk) | (1<<mces_v_sce) | (1<<mces_v_pce) | (1<<mces_v_dpc) | (1<<mces_v_dsc))
 //	_defend	mces,_gbl,def
 //	.endm
 
