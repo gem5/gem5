@@ -202,6 +202,7 @@ class Proxy(object):
                 raise AttributeError, \
                       'Parent of %s type %s not found at path %s' \
                       % (base.name, ptype, self._path)
+
             result, done = obj.find(ptype, self._path)
             obj = obj.parent
 
@@ -510,10 +511,9 @@ classes. You're trying to derive from:
                 p = NodeParam(pname, param, value)
                 instance.params.append(p)
                 instance.param_names[pname] = p
-            except:
-                print 'Exception while evaluating %s.%s' % \
-                      (instance.path, pname)
-                raise
+            except Exception, e:
+                raise e.__class__, 'Exception while evaluating %s.%s\n%s' % \
+                      (instance.path, pname, e)
 
         return instance
 
@@ -694,9 +694,9 @@ class Node(object):
                     param.value = [ self.unproxy(pv, ptype) for pv in pval ]
                 else:
                     param.value = self.unproxy(pval, ptype)
-            except:
-                print 'Error while fixing up %s:%s' % (self.path, param.name)
-                raise
+            except Exception, e:
+                raise e.__class__, 'Error while fixing up %s:%s\n%s' % \
+                      (self.path, param.name, e)
 
         for child in self.children:
             assert(child != self)
@@ -728,9 +728,9 @@ class Node(object):
 
                 value = param.convert(param.value)
                 string = param.string(value)
-            except:
-                print 'exception in %s:%s' % (self.path, param.name)
-                raise
+            except Exception, e:
+                raise e.__class__, 'exception in %s:%s\n%s' % \
+                      (self.path, param.name, e)
 
             print '%s = %s' % (param.name, string)
 
@@ -763,8 +763,9 @@ class Node(object):
 
                 value = param.convert(param.value)
                 string = param.string(value)
-            except:
-                print 'exception in %s:%s' % (self.name, param.name)
+            except Exception, e:
+                raise e.__class__, 'exception in %s:%s\n%s' % \
+                      (self.name, param.name, e)
                 raise
             if isConfigNode(param.ptype) and string != "Null":
                 simobjs.append(string)
@@ -773,7 +774,8 @@ class Node(object):
 
         for so in simobjs:
             label += "|<%s> %s" % (so, so)
-            dot.add_edge(pydot.Edge("%s:%s" % (self.path, so), so, tailport="w"))
+            dot.add_edge(pydot.Edge("%s:%s" % (self.path, so), so,
+                                    tailport="w"))
         label += '}'
         dot.add_node(pydot.Node(self.path,shape="Mrecord",label=label))
 
