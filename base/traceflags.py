@@ -101,6 +101,7 @@ baseFlags = [
     'Chains',
     'Dispatch',
     'Stats',
+    'StatEvents',
     'Context',
     'Config',
     'Sampler',

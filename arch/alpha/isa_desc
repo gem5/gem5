@@ -1374,8 +1374,8 @@ output decoder {{
     }
 }};
 
-def format EmulatedCallPal(code) {{
-    iop = InstObjParams(name, Name, 'EmulatedCallPal', CodeBlock(code))
+def format EmulatedCallPal(code, *flags) {{
+    iop = InstObjParams(name, Name, 'EmulatedCallPal', CodeBlock(code), flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -1436,8 +1436,8 @@ output decoder {{
     }
 }};
 
-def format CallPal(code) {{
-    iop = InstObjParams(name, Name, 'CallPalBase', CodeBlock(code))
+def format CallPal(code, *flags) {{
+    iop = InstObjParams(name, Name, 'CallPalBase', CodeBlock(code), flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -1588,6 +1588,9 @@ output header {{
 	FailUnimplemented(const char *_mnemonic, MachInst _machInst)
 	    : AlphaStaticInst(_mnemonic, _machInst, No_OpClass)
 	{
+	    // don't call execute() (which panics) if we're on a
+	    // speculative path
+	    flags[IsNonSpeculative] = true;
 	}
 
 	%(BasicExecDeclare)s
@@ -1615,6 +1618,9 @@ output header {{
 	WarnUnimplemented(const char *_mnemonic, MachInst _machInst)
 	    : AlphaStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
 	{
+	    // don't call execute() (which panics) if we're on a
+	    // speculative path
+	    flags[IsNonSpeculative] = true;
 	}
 
 	%(BasicExecDeclare)s
@@ -1646,9 +1652,8 @@ output exec {{
     FailUnimplemented::execute(%(CPU_exec_context)s *xc,
 			       Trace::InstRecord *traceData)
     {
-	if (!xc->misspeculating())
-	    panic("attempt to execute unimplemented instruction '%s' "
-		  "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
+	panic("attempt to execute unimplemented instruction '%s' "
+	      "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
 	return Unimplemented_Opcode_Fault;
     }
 
@@ -1656,30 +1661,13 @@ output exec {{
     WarnUnimplemented::execute(%(CPU_exec_context)s *xc,
 			       Trace::InstRecord *traceData)
     {
-	if (!xc->misspeculating())
-	    if (!warned) {
-		warn("instruction '%s' unimplemented\n", mnemonic);
-		warned = true;
-	    }
+	if (!warned) {
+	    warn("instruction '%s' unimplemented\n", mnemonic);
+	    warned = true;
+	}
 
 	return No_Fault;
     }
-}};
-
-
-def template WarnUnimplDeclare {{
-    /**
-     * Static instruction class for "%(mnemonic)s".
-     */
-    class %(class_name)s : public %(base_class)s
-    {
-      public:
-	/// Constructor
-	%(class_name)s(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst)
-	{
-	}
-    };
 }};
 
 
@@ -1689,9 +1677,8 @@ def format FailUnimpl() {{
 }};
 
 def format WarnUnimpl() {{
-    iop = InstObjParams(name, Name, 'WarnUnimplemented')
-    header_output = WarnUnimplDeclare.subst(iop)
-    decode_block = BasicDecode.subst(iop)
+    iop = InstObjParams(name, 'WarnUnimplemented')
+    decode_block = BasicDecodeWithMnemonic.subst(iop)
 }};
 
 output header {{
@@ -1707,6 +1694,9 @@ output header {{
 	Unknown(MachInst _machInst)
 	    : AlphaStaticInst("unknown", _machInst, No_OpClass)
 	{
+	    // don't call execute() (which panics) if we're on a
+	    // speculative path
+	    flags[IsNonSpeculative] = true;
 	}
 
 	%(BasicExecDeclare)s
@@ -1733,9 +1723,8 @@ output exec {{
     Fault
     Unknown::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData)
     {
-	if (!xc->misspeculating())
-	    panic("attempt to execute unknown instruction "
-		  "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
+	panic("attempt to execute unknown instruction "
+	      "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
 	return Unimplemented_Opcode_Fault;
     }
 }};
@@ -2420,16 +2409,12 @@ decode OPCODE default Unknown::unknown() {
 	format BasicOperate {
 	    0xe000: rc({{
 		Ra = xc->readIntrFlag();
-		if (!xc->misspeculating()) {
-		    xc->setIntrFlag(0);
-		}
-	    }});
+		xc->setIntrFlag(0);
+	    }}, IsNonSpeculative);
 	    0xf000: rs({{
 		Ra = xc->readIntrFlag();
-		if (!xc->misspeculating()) {
-		    xc->setIntrFlag(1);
-		}
-	    }});
+		xc->setIntrFlag(1);
+	    }}, IsNonSpeculative);
 	}
 #else
 	format FailUnimpl {
@@ -2449,38 +2434,26 @@ decode OPCODE default Unknown::unknown() {
 	    fault = Unimplemented_Opcode_Fault;
 	}
 	else {
-	    bool dopal = true;
+	    // check to see if simulator wants to do something special
+	    // on this PAL call (including maybe suppress it)
+	    bool dopal = xc->simPalCheck(palFunc);
 
-	    if (!xc->misspeculating()) {
-		// check to see if simulator wants to do something special
-		// on this PAL call (including maybe suppress it)
-		dopal = xc->simPalCheck(palFunc);
-
-		if (dopal) {
-		    AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
-		    xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
-		}
-	    }
-
-	    // if we're misspeculating, it's still safe (if
-	    // unrealistic) to set NPC, as the control-flow change
-	    // won't get committed.
 	    if (dopal) {
+		AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
+		xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
 		NPC = xc->readIpr(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
 	    }
 	}
-    }});
+    }}, IsNonSpeculative);
 #else
     0x00: decode PALFUNC {
 	format EmulatedCallPal {
 	    0x00: halt ({{
-		if (!xc->misspeculating()) 
-		    SimExit(curTick, "halt instruction encountered");
-	    }});
+		SimExit(curTick, "halt instruction encountered");
+	    }}, IsNonSpeculative);
 	    0x83: callsys({{ 
-		if (!xc->misspeculating()) 
-		    xc->syscall();
-	    }});
+		xc->syscall();
+	    }}, IsNonSpeculative);
 	    // Read uniq reg into ABI return value register (r0)
 	    0x9e: rduniq({{ R0 = Runiq; }});
 	    // Write uniq reg with value from ABI arg register (r16)
@@ -2514,46 +2487,36 @@ decode OPCODE default Unknown::unknown() {
 	// M5 special opcodes use the reserved 0x01 opcode space
 	0x01: decode M5FUNC {
 	    0x00: arm({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::arm(xc->xcBase());
-	    }});
+		AlphaPseudo::arm(xc->xcBase());
+	    }}, IsNonSpeculative);
 	    0x01: quiesce({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::quiesce(xc->xcBase());
-	    }});
+		AlphaPseudo::quiesce(xc->xcBase());
+	    }}, IsNonSpeculative);
 	    0x10: ivlb({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::ivlb(xc->xcBase());
-	    }}, No_OpClass);
+		AlphaPseudo::ivlb(xc->xcBase());
+	    }}, No_OpClass, IsNonSpeculative);
 	    0x11: ivle({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::ivle(xc->xcBase());
-	    }}, No_OpClass);
+		AlphaPseudo::ivle(xc->xcBase());
+	    }}, No_OpClass, IsNonSpeculative);
 	    0x20: m5exit_old({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::m5exit_old(xc->xcBase());
-	    }}, No_OpClass);
+		AlphaPseudo::m5exit_old(xc->xcBase());
+	    }}, No_OpClass, IsNonSpeculative);
 	    0x21: m5exit({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::m5exit(xc->xcBase());
-	    }}, No_OpClass);
+		AlphaPseudo::m5exit(xc->xcBase());
+	    }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{ Ra = xc->xcBase()->cpu->system->init_param; }});
             0x40: resetstats({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::resetstats(xc->xcBase());
-	    }});
+		AlphaPseudo::resetstats(xc->xcBase());
+	    }}, IsNonSpeculative);
             0x41: dumpstats({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::dumpstats(xc->xcBase());
-	    }});
+		AlphaPseudo::dumpstats(xc->xcBase());
+	    }}, IsNonSpeculative);
             0x42: dumpresetstats({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::dumpresetstats(xc->xcBase());
-	    }});
+		AlphaPseudo::dumpresetstats(xc->xcBase());
+	    }}, IsNonSpeculative);
             0x43: m5checkpoint({{
-		if (!xc->misspeculating())
-		    AlphaPseudo::m5checkpoint(xc->xcBase());
-	    }});
+		AlphaPseudo::m5checkpoint(xc->xcBase());
+	    }}, IsNonSpeculative);
 	}
     }
 

@@ -440,8 +440,8 @@ AlphaDTB::fault(Addr vaddr, uint64_t flags, ExecContext *xc) const
         ipr[AlphaISA::IPR_VA] = vaddr;
 
         // set MM_STAT register flags
-        ipr[AlphaISA::IPR_MM_STAT] = (((xc->regs.opcode & 0x3f) << 11)
-                               | ((xc->regs.ra & 0x1f) << 6)
+        ipr[AlphaISA::IPR_MM_STAT] = (((OPCODE(xc->getInst()) & 0x3f) << 11)
+                               | ((RA(xc->getInst()) & 0x1f) << 6)
                                | (flags & 0x3f));
 
         // set VA_FORM register with faulting formatted address

@@ -1,15 +1,15 @@
 /* $Id$ */
 
-#include "targetarch/alpha_memory.hh"
-#ifdef DEBUG
-#include "sim/debug.hh"
-#endif
-#include "cpu/exec_context.hh"
-#include "sim/sim_events.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/alpha/alpha_memory.hh"
+#include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/osfpal.hh"
+#include "base/kgdb.h"
 #include "base/remote_gdb.hh"
-#include "base/kgdb.h"	// for ALPHA_KENTRY_IF
-#include "targetarch/osfpal.hh"
+#include "base/stats/events.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/fast_cpu/fast_cpu.hh"
+#include "sim/debug.hh"
+#include "sim/sim_events.hh"
 
 #ifdef FULL_SYSTEM
 
@@ -99,9 +99,71 @@ AlphaISA::initIPRs(RegFile *regs)
 }
 
 
+template <class XC>
+void
+AlphaISA::processInterrupts(XC *xc)
+{
+    //Check if there are any outstanding interrupts
+    //Handle the interrupts
+    int ipl = 0;
+    int summary = 0;
+    IntReg *ipr = xc->getIprPtr();
+
+    check_interrupts = 0;
+
+    if (ipr[IPR_ASTRR])
+        panic("asynchronous traps not implemented\n");
+
+    if (ipr[IPR_SIRR]) {
+        for (int i = INTLEVEL_SOFTWARE_MIN;
+             i < INTLEVEL_SOFTWARE_MAX; i++) {
+            if (ipr[IPR_SIRR] & (ULL(1) << i)) {
+                // See table 4-19 of the 21164 hardware reference
+                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
+                summary |= (ULL(1) << i);
+            }
+        }
+    }
+
+    uint64_t interrupts = xc->intr_status();
+
+    if (interrupts) {
+        for (int i = INTLEVEL_EXTERNAL_MIN;
+             i < INTLEVEL_EXTERNAL_MAX; i++) {
+            if (interrupts & (ULL(1) << i)) {
+                // See table 4-19 of the 21164 hardware reference
+                ipl = i;
+                summary |= (ULL(1) << i);
+            }
+        }
+    }
+
+    if (ipl && ipl > ipr[IPR_IPLR]) {
+        ipr[IPR_ISR] = summary;
+        ipr[IPR_INTID] = ipl;
+        xc->trap(Interrupt_Fault);
+        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
+                ipr[IPR_IPLR], ipl, summary);
+    }
+
+}
+
+template <class XC>
+void
+AlphaISA::zeroRegisters(XC *xc)
+{
+    // Insure ISA semantics
+    // (no longer very clean due to the change in setIntReg() in the
+    // cpu model.  Consider changing later.)
+    xc->xc->setIntReg(ZeroReg, 0);
+    xc->xc->setFloatRegDouble(ZeroReg, 0.0);
+}
+
 void
 ExecContext::ev5_trap(Fault fault)
 {
+    Stats::recordEvent(csprintf("Fault %s", FaultName(fault)));
+
     assert(!misspeculating());
     kernelStats.fault(fault);
 
@@ -580,5 +642,13 @@ ExecContext::simPalCheck(int palFunc)
 
     return true;
 }
+
+//Forward instantiation for FastCPU object
+template
+void AlphaISA::processInterrupts(FastCPU *xc);
+
+//Forward instantiation for FastCPU object
+template
+void AlphaISA::zeroRegisters(FastCPU *xc);
 
 #endif // FULL_SYSTEM

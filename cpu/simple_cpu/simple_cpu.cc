@@ -42,6 +42,7 @@
 #include "base/pollevent.hh"
 #include "base/range.hh"
 #include "base/trace.hh"
+#include "base/stats/events.hh"
 #include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
@@ -402,6 +403,9 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         }
     }
 
+    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+        Stats::recordEvent("Uncached Read");
+
     return fault;
 }
 
@@ -486,6 +490,9 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     if (res && (fault == No_Fault))
         *res = memReq->result;
+
+    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+        Stats::recordEvent("Uncached Write");
 
     return fault;
 }
@@ -707,8 +714,7 @@ SimpleCPU::tick()
                                          xc->regs.pc);
 
 #ifdef FULL_SYSTEM
-        xc->regs.opcode = (inst >> 26) & 0x3f;
-        xc->regs.ra = (inst >> 21) & 0x1f;
+        xc->setInst(inst);
 #endif // FULL_SYSTEM
 
         xc->func_exe_inst++;

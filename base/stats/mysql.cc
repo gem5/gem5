@@ -37,6 +37,7 @@
 #include "base/statistics.hh"
 #include "base/stats/flags.hh"
 #include "base/stats/mysql.hh"
+#include "base/stats/mysql_run.hh"
 #include "base/stats/statdb.hh"
 #include "base/stats/types.hh"
 #include "base/str.hh"
@@ -46,17 +47,33 @@ using namespace std;
 
 namespace Stats {
 
-struct MySqlData
-{
-    map<int, int> idmap;
-    MySQL::Connection conn;
-};
+MySqlRun MySqlDB;
 
-int
-SetupRun(MySqlData *data, const string &name, const string &user,
-         const string &project)
+bool
+MySqlConnected()
 {
-    MySQL::Connection &mysql = data->conn;
+    return MySqlDB.connected();
+}
+
+void
+MySqlRun::connect(const string &host, const string &user, const string &passwd,
+                  const string &db, const string &name, const string &project)
+{
+    if (connected())
+        panic("can only get one database connection at this time!");
+
+    mysql.connect(host, user, passwd, db);
+    if (mysql.error)
+        panic("could not connect to database server\n%s\n", mysql.error);
+
+    remove(name);
+    cleanup();
+    setup(name, user, project);
+}
+
+void
+MySqlRun::setup(const string &name, const string &user, const string &project)
+{
     assert(mysql.connected());
 
     stringstream insert;
@@ -71,13 +88,12 @@ SetupRun(MySqlData *data, const string &name, const string &user,
     if (mysql.error)
         panic("could not get a run\n%s\n", mysql.error);
 
-    return mysql.insert_id();
+    run_id = mysql.insert_id();
 }
 
 void
-DeleteRun(MySqlData *data, const string &name)
+MySqlRun::remove(const string &name)
 {
-    MySQL::Connection &mysql = data->conn;
     assert(mysql.connected());
     stringstream sql;
     ccprintf(sql, "DELETE FROM runs WHERE rn_name=\"%s\"", name);
@@ -85,9 +101,8 @@ DeleteRun(MySqlData *data, const string &name)
 }
 
 void
-Cleanup(MySqlData *data)
+MySqlRun::cleanup()
 {
-    MySQL::Connection &mysql = data->conn;
     assert(mysql.connected());
 
     mysql.query("DELETE data "
@@ -119,6 +134,16 @@ Cleanup(MySqlData *data)
                 "FROM bins "
                 "LEFT JOIN data ON bn_id=dt_bin "
                 "WHERE dt_bin IS NULL");
+
+    mysql.query("DELETE events"
+                "FROM events"
+                "LEFT JOIN runs ON ev_run=rn_id"
+                "WHERE rn_id IS NULL");
+
+    mysql.query("DELETE event_names"
+                "FROM event_names"
+                "LEFT JOIN events ON en_id=ev_event"
+                "WHERE ev_event IS NULL");
 }
 
 void
@@ -142,9 +167,9 @@ SetupStat::init()
 }
 
 unsigned
-SetupStat::operator()(MySqlData *data)
+SetupStat::setup()
 {
-    MySQL::Connection &mysql = data->conn;
+    MySQL::Connection &mysql = MySqlDB.conn();
 
     stringstream insert;
     ccprintf(insert,
@@ -245,9 +270,9 @@ SetupStat::operator()(MySqlData *data)
 }
 
 unsigned
-SetupBin(MySqlData *data, const string &bin)
+SetupBin(const string &bin)
 {
-    MySQL::Connection &mysql = data->conn;
+    MySQL::Connection &mysql = MySqlDB.conn();
     assert(mysql.connected());
 
     using namespace MySQL;
@@ -292,8 +317,9 @@ void
 InsertData::flush()
 {
     if (size) {
-        assert(mysql && mysql->connected());
-        mysql->query(query);
+        MySQL::Connection &mysql = MySqlDB.conn();
+        assert(mysql.connected());
+        mysql.query(query);
     }
 
     query[0] = '\0';
@@ -319,7 +345,8 @@ InsertData::insert()
     first = false;
 
     size += sprintf(query + size, "(%u,%d,%d,%u,%llu,%u,\"%f\")",
-                    stat, x, y, run, (unsigned long long)sample, bin, data);
+                    stat, x, y, MySqlDB.run(), (unsigned long long)sample,
+                    bin, data);
 }
 
 struct InsertSubData
@@ -330,13 +357,13 @@ struct InsertSubData
     string name;
     string descr;
 
-    void operator()(MySqlData *data);
+    void setup();
 };
 
 void
-InsertSubData::operator()(MySqlData *data)
+InsertSubData::setup()
 {
-    MySQL::Connection &mysql = data->conn;
+    MySQL::Connection &mysql = MySqlDB.conn();
     assert(mysql.connected());
     stringstream insert;
     ccprintf(insert,
@@ -348,10 +375,9 @@ InsertSubData::operator()(MySqlData *data)
 }
 
 void
-InsertFormula(MySqlData *data, uint16_t stat, uint16_t run,
-              const string &formula)
+InsertFormula(uint16_t stat, const string &formula)
 {
-    MySQL::Connection &mysql = data->conn;
+    MySQL::Connection &mysql = MySqlDB.conn();
     assert(mysql.connected());
     stringstream insert_formula;
     ccprintf(insert_formula,
@@ -363,112 +389,20 @@ InsertFormula(MySqlData *data, uint16_t stat, uint16_t run,
     stringstream insert_ref;
     ccprintf(insert_ref,
              "INSERT INTO formula_ref(fr_stat,fr_run) values(%d, %d)",
-             stat, run);
+             stat, MySqlDB.run());
 
         mysql.query(insert_ref);
 }
 
 void
-UpdatePrereq(MySqlData *data, uint16_t stat, uint16_t prereq)
+UpdatePrereq(uint16_t stat, uint16_t prereq)
 {
-    MySQL::Connection &mysql = data->conn;
+    MySQL::Connection &mysql = MySqlDB.conn();
     assert(mysql.connected());
     stringstream update;
     ccprintf(update, "UPDATE stats SET st_prereq=%d WHERE st_id=%d",
              prereq, stat);
     mysql.query(update);
-}
-
-#if 0
-class InsertData
-{
-  private:
-    MySQL::Connection &mysql;
-    MySQL::Statement stmt;
-
-  public:
-    InsertData(MySqlData *data)
-        : mysql(data->conn)
-    {
-        stmt.prepare("INSERT INTO "
-                     "data(dt_stat,dt_x,dt_y,dt_run,dt_sample,dt_bin,dt_data) "
-                     "values(?,?,?,?,?,?,?)");
-        assert(stmt.count() == 7 && "param count invalid");
-
-        stmt[0].buffer = stat;
-        stmt[1].buffer = x;
-        stmt[2].buffer = y;
-        stmt[3].buffer = run;
-        stmt[4].buffer = sample;
-        stmt[5].buffer = bin;
-        stmt[6].buffer = data;
-
-        stmt.bind(bind);
-        if (stmt.error)
-            panic("bind param failed\n%s\n", stmt.error);
-    }
-
-  public:
-    uint64_t sample;
-    uint64_t data;
-    uint16_t stat;
-    uint16_t bin;
-    int16_t x;
-    int16_t y;
-
-    void operator()(MySQL::Connection &mysql)
-    {
-        assert(mysql.connected())
-        stmt();
-    }
-};
-#endif
-
-
-MySql::MySql()
-    : mysql(NULL), configured(false)
-{
-}
-
-MySql::~MySql()
-{
-    if (mysql)
-        delete mysql;
-}
-
-void
-MySql::insert(int sim_id, int db_id)
-{
-    mysql->idmap.insert(make_pair(sim_id, db_id));
-}
-
-int
-MySql::find(int sim_id)
-{
-    map<int,int>::const_iterator i = mysql->idmap.find(sim_id);
-    assert(i != mysql->idmap.end());
-    return (*i).second;
-}
-
-bool
-MySql::valid() const
-{
-    return mysql && mysql->conn.connected();
-}
-
-void
-MySql::connect(const string &host, const string &user, const string &passwd,
-               const string &db, const string &name, const string &project)
-{
-    mysql = new MySqlData;
-    newdata.mysql = &mysql->conn;
-    mysql->conn.connect(host, user, passwd, db);
-    if (mysql->conn.error)
-        panic("could not connect to database server\n%s\n", mysql->conn.error);
-
-    DeleteRun(mysql, name);
-    Cleanup(mysql);
-    run_id = SetupRun(mysql, name, user, project);
 }
 
 void
@@ -489,7 +423,7 @@ MySql::configure()
             uint16_t prereq_id = find(data->prereq->id);
             assert(stat_id && prereq_id);
 
-            UpdatePrereq(mysql, stat_id, prereq_id);
+            UpdatePrereq(stat_id, prereq_id);
         }
     }
 
@@ -517,14 +451,14 @@ void
 MySql::configure(const ScalarData &data)
 {
     configure(data, "SCALAR");
-    insert(data.id, stat(mysql));
+    insert(data.id, stat.setup());
 }
 
 void
 MySql::configure(const VectorData &data)
 {
     configure(data, "VECTOR");
-    uint16_t statid = stat(mysql);
+    uint16_t statid = stat.setup();
 
     if (!data.subnames.empty()) {
         InsertSubData subdata;
@@ -536,7 +470,7 @@ MySql::configure(const VectorData &data)
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
 
             if (!subdata.name.empty() || !subdata.descr.empty())
-                subdata(mysql);
+                subdata.setup();
         }
     }
 
@@ -553,7 +487,7 @@ MySql::configure(const DistData &data)
         stat.max = data.data.max;
         stat.bktsize = data.data.bucket_size;
     }
-    insert(data.id, stat(mysql));
+    insert(data.id, stat.setup());
 }
 
 void
@@ -568,7 +502,7 @@ MySql::configure(const VectorDistData &data)
         stat.bktsize = data.data[0].bucket_size;
     }
 
-    uint16_t statid = stat(mysql);
+    uint16_t statid = stat.setup();
 
     if (!data.subnames.empty()) {
         InsertSubData subdata;
@@ -579,7 +513,7 @@ MySql::configure(const VectorDistData &data)
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
             if (!subdata.name.empty() || !subdata.descr.empty())
-                subdata(mysql);
+                subdata.setup();
         }
     }
 
@@ -590,7 +524,7 @@ void
 MySql::configure(const Vector2dData &data)
 {
     configure(data, "VECTOR2D");
-    uint16_t statid = stat(mysql);
+    uint16_t statid = stat.setup();
 
     if (!data.subnames.empty()) {
         InsertSubData subdata;
@@ -601,7 +535,7 @@ MySql::configure(const Vector2dData &data)
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
             if (!subdata.name.empty() || !subdata.descr.empty())
-                subdata(mysql);
+                subdata.setup();
         }
     }
 
@@ -614,7 +548,7 @@ MySql::configure(const Vector2dData &data)
             subdata.y = i;
             subdata.name = data.y_subnames[i];
             if (!subdata.name.empty())
-                subdata(mysql);
+                subdata.setup();
         }
     }
 
@@ -625,18 +559,24 @@ void
 MySql::configure(const FormulaData &data)
 {
     configure(data, "FORMULA");
-    insert(data.id, stat(mysql));
+    insert(data.id, stat.setup());
 }
 
 void
 MySql::output(const string &bin)
 {
     // set up new bin in database if there is a bin name
-    newdata.bin = bin.empty() ? 0 : SetupBin(mysql, bin);
+    newdata.bin = bin.empty() ? 0 : SetupBin(bin);
 
     Database::stat_list_t::const_iterator i, end = Database::stats().end();
     for (i = Database::stats().begin(); i != end; ++i)
         (*i)->visit(*this);
+}
+
+bool
+MySql::valid() const
+{
+    return MySqlDB.connected();
 }
 
 void
@@ -649,7 +589,6 @@ MySql::output()
         configure();
 
     // store sample #
-    newdata.run = run_id;
     newdata.sample = curTick;
 
     if (bins().empty()) {
@@ -781,7 +720,7 @@ MySql::output(const Vector2dData &data)
 void
 MySql::output(const FormulaData &data)
 {
-    InsertFormula(mysql, find(data.id), run_id, data.str());
+    InsertFormula(find(data.id), data.str());
 }
 
 /*

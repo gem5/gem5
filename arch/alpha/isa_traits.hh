@@ -33,6 +33,7 @@
 #include "targetarch/faults.hh"
 #include "base/misc.hh"
 
+class FastCPU;
 class FullCPU;
 class Checkpoint;
 
@@ -156,8 +157,6 @@ class AlphaISA
         int intrflag;			// interrupt flag
         bool pal_shadow;		// using pal_shadow registers
 #endif // FULL_SYSTEM
-        // Are these architectural, or just for convenience?
-        uint8_t opcode, ra;		// current instruction details (for intr's)
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
@@ -233,6 +232,13 @@ class AlphaISA
                                        ConfigNode *node,
                                        RegFile &regs);
 #endif
+
+    /**
+     * Function to insure ISA semantics about 0 registers.
+     * @param xc The execution context.
+     */
+    template <class XC>
+    static void zeroRegisters(XC *xc);
 };
 
 
