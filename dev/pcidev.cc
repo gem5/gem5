@@ -93,7 +93,7 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
         memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                Device, Function, offset, *(uint8_t*)(config.data + offset));
+                Device, Function, offset, (uint16_t)(*(uint8_t*)(config.data + offset)));
         break;
 
       default:
