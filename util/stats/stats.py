@@ -202,6 +202,10 @@ def commands(options, command, args):
             if options.graph:
                 graphdata(runs, options, stat.name, stat.name, stat)
             else:
+                if options.ticks:
+                   print 'only displaying sample %s' % options.ticks
+                   stat.ticks = options.ticks
+
                 if options.binned:
                     print 'kernel ticks'
                     stat.bins = 'kernel'
@@ -216,7 +220,7 @@ def commands(options, command, args):
                     printdata(runs, stat)
 
                     print 'interrupt ticks'
-                    stat.bins = 'user'
+                    stat.bins = 'interrupt'
                     printdata(runs, stat)
 
                     print 'total ticks'
@@ -249,7 +253,7 @@ def commands(options, command, args):
                     printdata(runs, stat)
 
                     print 'interrupt ticks'
-                    stat.bins = 'user'
+                    stat.bins = 'interrupt'
                     printdata(runs, stat)
 
                     print 'total ticks'
@@ -578,8 +582,9 @@ if __name__ == '__main__':
     options.get = None
     options.binned = False
     options.graph = False
+    options.ticks = False
 
-    opts, args = getopts(sys.argv[1:], '-BEFGd:g:h:pr:s:u:')
+    opts, args = getopts(sys.argv[1:], '-BEFGd:g:h:pr:s:u:T:')
     for o,a in opts:
         if o == '-B':
             options.binned = True
@@ -603,6 +608,8 @@ if __name__ == '__main__':
             options.user = a
         if o == '-s':
             options.system = a
+        if o == '-T':
+            options.ticks = a
 
     if len(args) == 0:
         usage()
