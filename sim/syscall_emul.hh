@@ -412,6 +412,10 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
         // user didn't give an address... pick one from our "mmap region"
         start = p->mmap_end;
         p->mmap_end += RoundUp<Addr>(length, VMPageSize);
+        if (p->nxm_start != 0) {
+            //If we have an nxm space, make sure we haven't colided
+            assert(p->mmap_end < p->nxm_start);
+        }
     }
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
