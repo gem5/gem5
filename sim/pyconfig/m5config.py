@@ -39,16 +39,6 @@ def panic(*args, **kwargs):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
-def AddToPath(path):
-    path = os.path.realpath(path)
-    if os.path.isdir(path) and path not in sys.path:
-        sys.path.append(path)
-
-def Import(path):
-    AddToPath(os.path.dirname(path))
-    exec('from m5config import *')
-    mpy_exec(file(path, 'r'))
-
 def issequence(value):
     return isinstance(value, tuple) or isinstance(value, list)
 
@@ -287,8 +277,7 @@ class MetaConfigNode(type):
         # deal with them as params.
         return super(MetaConfigNode, mcls).__new__(mcls, name, bases, priv)
 
-    # initialization: start out with an empty _params dict (makes life
-    # simpler if we can assume _params is always valid).
+    # initialization
     def __init__(cls, name, bases, dict):
         super(MetaConfigNode, cls).__init__(cls, name, bases, {})
 
@@ -396,8 +385,11 @@ class MetaConfigNode(type):
         if cls._isvalue(attr):
             return Value(cls, attr)
 
+        if attr == '_cppname' and hasattr(cls, 'type'):
+            return cls.type + '*'
+
         raise AttributeError, \
-              "object '%s' has no attribute '%s'" % (cls.__name__, cls)
+              "object '%s' has no attribute '%s'" % (cls.__name__, attr)
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -577,11 +569,6 @@ class SimObject(ConfigNode):
                  for pname in param_names]
         code += "\n".join(decls) + "\n"
         code += "END_DECLARE_SIM_OBJECT_PARAMS(%s)\n\n" % name
-        code += "BEGIN_INIT_SIM_OBJECT_PARAMS(%s)\n" % name
-        inits = ["  " + cls._params[pname].sim_init(pname) \
-                 for pname in param_names]
-        code += ",\n".join(inits) + "\n"
-        code += "END_INIT_SIM_OBJECT_PARAMS(%s)\n\n" % name
         return code
     _sim_code = classmethod(_sim_code)
 
@@ -620,14 +607,13 @@ class Node(object):
         self.path = '.'.join(path)
 
     def find(self, realtype, path):
-        rtype = eval(realtype)
         if not path:
-            if issubclass(self.realtype, rtype):
+            if issubclass(self.realtype, realtype):
                 return self, True
 
             obj = None
             for child in self.children:
-                if issubclass(child.realtype, rtype):
+                if issubclass(child.realtype, realtype):
                     if obj is not None:
                         raise AttributeError, \
                               'Super matched more than one: %s %s' % \
@@ -643,11 +629,11 @@ class Node(object):
             last = path[-1]
             if obj.child_names.has_key(last):
                 value = obj.child_names[last]
-                if issubclass(value.realtype, rtype):
+                if issubclass(value.realtype, realtype):
                     return value, True
             elif obj.param_names.has_key(last):
                 value = obj.param_names[last]
-                rtype._convert(value.value)
+                realtype._convert(value.value)
                 return value.value, True
         except KeyError:
             pass
@@ -754,8 +740,7 @@ class Node(object):
             except:
                 print 'exception in %s:%s' % (self.name, param.name)
                 raise
-            ptype = eval(param.ptype)
-            if isConfigNode(ptype) and string != "Null":
+            if isConfigNode(param.ptype) and string != "Null":
                 simobjs.append(string)
             else:
                 label += '%s = %s\\n' % (param.name, string)
@@ -830,8 +815,10 @@ class Value(object):
 
 # Regular parameter.
 class _Param(object):
-    def __init__(self, ptype, *args, **kwargs):
-        self.ptype = ptype
+    def __init__(self, ptype_string, *args, **kwargs):
+        self.ptype_string = ptype_string
+        # can't eval ptype_string here to get ptype, since the type might
+        # not have been defined yet.  Do it lazily in __getattr__.
 
         if args:
             if len(args) == 1:
@@ -858,44 +845,32 @@ class _Param(object):
         if not hasattr(self, 'desc'):
             raise TypeError, 'desc attribute missing'
 
+    def __getattr__(self, attr):
+        if attr == 'ptype':
+            try:
+                self.ptype = eval(self.ptype_string)
+                return self.ptype
+            except:
+                raise TypeError, 'Param.%s: undefined type' % self.ptype_string
+        else:
+            raise AttributeError, "'%s' object has no attribute '%s'" % \
+                  (type(self).__name__, attr)
+
     def valid(self, value):
         if not isinstance(value, Proxy):
-            ptype = eval(self.ptype)
-            ptype._convert(value)
+            self.ptype._convert(value)
 
     def convert(self, value):
-        ptype = eval(self.ptype)
-        return ptype._convert(value)
+        return self.ptype._convert(value)
 
     def string(self, value):
-        ptype = eval(self.ptype)
-        return ptype._string(value)
-
-    def get(self, name, instance, owner):
-        # nothing to do if None or already correct type.  Also allow NULL
-        # pointer to be assigned where a SimObject is expected.
-        try:
-            if value == None or isinstance(value, self.ptype) or \
-                   isConfigNode(self.ptype) and \
-                   (isNullPointer(value) or issubclass(value, self.ptype)):
-                return value
-
-        except TypeError:
-            # this type conversion will raise an exception if it's illegal
-            return self.ptype(value)
+        return self.ptype._string(value)
 
     def set(self, name, instance, value):
         instance.__dict__[name] = value
 
     def sim_decl(self, name):
-        return 'Param<%s> %s;' % (self.ptype.__name__, name)
-
-    def sim_init(self, name):
-        if self.default == None:
-            return 'INIT_PARAM(%s, "%s")' % (name, self.desc)
-        else:
-            return 'INIT_PARAM_DFLT(%s, "%s", %s)' % \
-                   (name, self.desc, str(self.default))
+        return '%s %s;' % (self.ptype._cppname, name)
 
 class _ParamProxy(object):
     def __init__(self, type):
@@ -931,13 +906,12 @@ class _VectorParam(_Param):
         if value == None:
             return True
 
-        ptype = eval(self.ptype)
         if issequence(value):
             for val in value:
                 if not isinstance(val, Proxy):
-                    ptype._convert(val)
+                    self.ptype._convert(val)
         elif not isinstance(value, Proxy):
-            ptype._convert(value)
+            self.ptype._convert(value)
 
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
@@ -945,23 +919,21 @@ class _VectorParam(_Param):
         if value == None:
             return []
 
-        ptype = eval(self.ptype)
         if issequence(value):
             # list: coerce each element into new list
-            return [ ptype._convert(v) for v in value ]
+            return [ self.ptype._convert(v) for v in value ]
         else:
             # singleton: coerce & wrap in a list
-            return ptype._convert(value)
+            return self.ptype._convert(value)
 
     def string(self, value):
-        ptype = eval(self.ptype)
         if issequence(value):
-            return ' '.join([ ptype._string(v) for v in value])
+            return ' '.join([ self.ptype._string(v) for v in value])
         else:
-            return ptype._string(value)
+            return self.ptype._string(value)
 
     def sim_decl(self, name):
-        return 'VectorParam<%s> %s;' % (self.ptype.__name__, name)
+        return 'std::vector<%s> %s;' % (self.ptype._cppname, name)
 
 class _VectorParamProxy(_ParamProxy):
     # E.g., VectorParam.Int(5, "number of widgets")
@@ -1008,14 +980,14 @@ class _CheckedInt(object):
     _string = classmethod(_string)
 
 class CheckedInt(type):
-    def __new__(cls, name, min, max):
+    def __new__(cls, cppname, min, max):
         # New class derives from _CheckedInt base with proper bounding
         # parameters
-        dict = { '_name' : name, '_min' : min, '_max' : max }
-        return type.__new__(cls, name, (_CheckedInt, ), dict)
+        dict = { '_cppname' : cppname, '_min' : min, '_max' : max }
+        return type.__new__(cls, cppname, (_CheckedInt, ), dict)
 
 class CheckedIntType(CheckedInt):
-    def __new__(cls, name, size, unsigned):
+    def __new__(cls, cppname, size, unsigned):
         dict = {}
         if unsigned:
             min = 0
@@ -1024,7 +996,7 @@ class CheckedIntType(CheckedInt):
             min = -(2 ** (size - 1))
             max = (2 ** (size - 1)) - 1
 
-        return super(cls, CheckedIntType).__new__(cls, name, min, max)
+        return super(cls, CheckedIntType).__new__(cls, cppname, min, max)
 
 Int      = CheckedIntType('int',      32, False)
 Unsigned = CheckedIntType('unsigned', 32, True)
@@ -1067,15 +1039,15 @@ def RangeSize(start, size):
 
 class Range(type):
     def __new__(cls, type):
-        dict = { '_name' : 'Range<%s>' + type._name, '_type' : type }
-        cname = 'Range_' + type.__name__
-        return super(cls, Range).__new__(cls, cname, (_Range, ), dict)
+        dict = { '_cppname' : 'Range<%s>' % type._cppname, '_type' : type }
+        clsname = 'Range_' + type.__name__
+        return super(cls, Range).__new__(cls, clsname, (_Range, ), dict)
 
 AddrRange = Range(Addr)
 
 # Boolean parameter type.
 class Bool(object):
-    _name = 'bool'
+    _cppname = 'bool'
     def _convert(value):
         t = type(value)
         if t == bool:
@@ -1103,7 +1075,7 @@ class Bool(object):
 
 # String-valued parameter.
 class String(object):
-    _name = 'string'
+    _cppname = 'string'
 
     # Constructor.  Value must be Python string.
     def _convert(cls,value):
@@ -1143,7 +1115,7 @@ class NextEthernetAddr(object):
         self.addr = IncEthernetAddr(self.addr, inc)
 
 class EthernetAddr(object):
-    _name = 'EthAddr'
+    _cppname = 'EthAddr'
 
     def _convert(cls, value):
         if value == NextEthernetAddr:
@@ -1175,7 +1147,7 @@ class EthernetAddr(object):
 # only one copy of a particular node
 class NullSimObject(object):
     __metaclass__ = Singleton
-    _name = 'NULL'
+    _cppname = 'NULL'
 
     def __call__(cls):
         return cls
@@ -1277,21 +1249,6 @@ M = K*K
 G = K*M
 
 #####################################################################
-
-# Munge an arbitrary Python code string to get it to execute (mostly
-# dealing with indentation).  Stolen from isa_parser.py... see
-# comments there for a more detailed description.
-#def fixPythonIndentation(s):
-#    # get rid of blank lines first
-#    s = re.sub(r'(?m)^\s*\n', '', s);
-#    if (s != '' and re.match(r'[ \t]', s[0])):
-#        s = 'if 1:\n' + s
-#    return s
-
-# Hook to generate C++ parameter code.
-def gen_sim_code(file):
-    for objname in sim_object_list:
-        print >> file, eval("%s._sim_code()" % objname)
 
 # The final hook to generate .ini files.  Called from configuration
 # script once config is built.
