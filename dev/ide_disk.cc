@@ -26,68 +26,67 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** @file
+ * Device model implementation for an IDE disk
+ */
+
+#include <cerrno>
+#include <cstring>
 #include <deque>
 #include <string>
-#include <vector>
 
-#include "cpu/intr_control.hh"
-#include "dev/console.hh"
-#include "dev/etherdev.hh"
-#include "dev/ide_ctrl.hh"
-#include "dev/tlaser_clock.hh"
-#include "dev/tsunami_cchip.hh"
-#include "dev/tsunami_pchip.hh"
-#include "dev/tsunami.hh"
+#include "base/cprintf.hh" // csprintf
+#include "base/trace.hh"
+#include "dev/disk_image.hh"
+#include "dev/ide_disk.hh"
 #include "sim/builder.hh"
-#include "sim/system.hh"
+#include "sim/sim_object.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 
-Tsunami::Tsunami(const string &name, System *s, SimConsole *con,
-                 IntrControl *ic, int intr_freq)
-    : Platform(name, con, ic, intr_freq), system(s)
+IdeDisk::IdeDisk(const string &name, DiskImage *img, int delay)
+    : SimObject(name), ctrl(NULL), image(img)
 {
-    // set the back pointer from the system to myself
-    system->platform = this;
+    diskDelay = delay * ticksPerSecond / 1000;
+}
 
-    for (int i = 0; i < Tsunami::Max_CPUs; i++)
-        intr_sum_type[i] = 0;
+IdeDisk::~IdeDisk()
+{
 }
 
 void
-Tsunami::serialize(std::ostream &os)
+IdeDisk::serialize(ostream &os)
 {
-    SERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
 }
 
 void
-Tsunami::unserialize(Checkpoint *cp, const std::string &section)
+IdeDisk::unserialize(Checkpoint *cp, const string &section)
 {
-    UNSERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-    SimObjectParam<System *> system;
-    SimObjectParam<SimConsole *> cons;
-    SimObjectParam<IntrControl *> intrctrl;
-    Param<int> interrupt_frequency;
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
 
-END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
+    SimObjectParam<DiskImage *> image;
+    Param<int> disk_delay;
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
+END_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
 
-    INIT_PARAM(system, "system"),
-    INIT_PARAM(cons, "system console"),
-    INIT_PARAM(intrctrl, "interrupt controller"),
-    INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1024)
+BEGIN_INIT_SIM_OBJECT_PARAMS(IdeDisk)
 
-END_INIT_SIM_OBJECT_PARAMS(Tsunami)
+    INIT_PARAM(image, "Disk image"),
+    INIT_PARAM_DFLT(disk_delay, "Fixed disk delay in milliseconds", 0)
 
-CREATE_SIM_OBJECT(Tsunami)
+END_INIT_SIM_OBJECT_PARAMS(IdeDisk)
+
+
+CREATE_SIM_OBJECT(IdeDisk)
 {
-    return new Tsunami(getInstanceName(), system, cons, intrctrl,
-                       interrupt_frequency);
+    return new IdeDisk(getInstanceName(), image, disk_delay);
 }
 
-REGISTER_SIM_OBJECT("Tsunami", Tsunami)
+REGISTER_SIM_OBJECT("IdeDisk", IdeDisk)
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS

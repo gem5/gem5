@@ -44,6 +44,7 @@ class BreakPCEvent;
 class LinuxBadAddrEvent;
 class LinuxSkipFuncEvent;
 class LinuxSkipDelayLoopEvent;
+class LinuxSkipIdeDelay50msEvent;
 class LinuxPrintfEvent;
 class LinuxDebugPrintfEvent;
 class LinuxDumpMbufEvent;
@@ -101,6 +102,7 @@ class LinuxSystem : public System
     LinuxBadAddrEvent *badaddrEvent;
     LinuxSkipFuncEvent *skipPowerStateEvent;
     LinuxSkipFuncEvent *skipScavengeBootEvent;
+    LinuxSkipIdeDelay50msEvent *skipIdeDelay50msEvent;
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
     LinuxPrintfEvent *printfEvent;
     LinuxDebugPrintfEvent *debugPrintfEvent;

@@ -37,7 +37,7 @@
 
 #include "dev/platform.hh"
 
-class AdaptecController;
+class IdeController;
 class TlaserClock;
 class EtherDev;
 class TsunamiCChip;
@@ -64,8 +64,8 @@ class Tsunami : public Platform
     System *system;
     /** Pointer to the TsunamiIO device which has the RTC */
     TsunamiIO *io;
-    /** Pointer to the SCSI controller device */
-    AdaptecController *scsi;
+    /** Pointer to the disk controller device */
+    IdeController *disk_controller;
     /** Pointer to the ethernet controller device */
     EtherDev *ethernet;
 
