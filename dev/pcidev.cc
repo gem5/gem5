@@ -247,7 +247,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
             break;
 
           default:
-            panic("writing to a read only register");
+            DPRINTF(PCIDEV, "Writing to a read only register");
         }
         break;
     }

@@ -52,6 +52,9 @@ System::System(const std::string _name,
       bin(_bin),
       binned_fns(binned_fns)
 {
+    // increment the number of running systems
+    numSystemsRunning++;
+
     // add self to global system list
     systemList.push_back(this);
     if (bin == true) {

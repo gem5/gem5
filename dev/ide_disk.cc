@@ -644,6 +644,7 @@ IdeDisk::startCommand()
 
       case WIN_RECAL:
       case WIN_SPECIFY:
+      case WIN_STANDBYNOW1:
       case WIN_FLUSH_CACHE:
       case WIN_VERIFY:
       case WIN_SEEK:
@@ -960,6 +961,10 @@ IdeDisk::updateState(DevAction_t action)
                 cmdReg.status &= ~STATUS_DRQ_BIT;
 
                 devState = Prepare_Data_Out;
+
+                /** @todo change this to a scheduled event to simulate
+                    disk delay */
+                updateState(ACT_DATA_READY);
             }
         }
         break;
