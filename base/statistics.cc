@@ -116,7 +116,7 @@ Data::~Data()
 {
     if (stream) {
         delete py;
-        ccprintf(*stream, "if __name__ == '__main__':\n");
+        ccprintf(*stream, "\n\nif __name__ == '__main__':\n");
         ccprintf(*stream, "    program_display()\n");
         stream->close();
         delete stream;
@@ -209,30 +209,42 @@ Data::python_dump(const string &name, const string &subname)
             ++i;
         }
     }
-    py->next();
+//    py->next();
 }
 
 void
 Data::python(const string &name, const string &subname, const string &bin)
 {
-    py->start("collections.append");
-    py->start("Collection");
+    py->name("collections.append");
+    py->newline();
+    py->name("Collection");
+    py->newline();
     py->qarg(name);
+    py->newline();
     py->qarg(subname);
+    py->newline();
     py->qarg(bin);
+    py->newline();
     py->qarg(hostname());
+    py->newline();
     py->qarg(Time::start.date());
-    py->startList();
+    py->newline();
+    py->list();
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
     while (i != end) {
         StatData *stat = *i;
+        py->newline();
         stat->python(*py);
         ++i;
     }
-    py->endList();
-    py->end();
-    py->end();
+    py->newline();
+    py->listEnd();
+    py->newline();
+    py->nameEnd();
+    py->newline();
+    py->nameEnd();
+    py->newline();
 }
 
 StatData *
@@ -996,7 +1008,7 @@ VectorDistDataBase::display(ostream &stream, DisplayMode mode) const
 void
 ScalarDataBase::python(Python &py) const
 {
-    py.start("Scalar");
+    py.name("Scalar");
     py.qarg(name);
     py.qqqarg(desc);
     py.kwarg("binned", binned());
@@ -1005,7 +1017,7 @@ ScalarDataBase::python(Python &py) const
     if (prereq)
         py.qkwarg("prereq", prereq->name);
     py.kwarg("value", val());
-    py.end();
+    py.nameEnd();
 }
 
 void
@@ -1013,7 +1025,7 @@ VectorDataBase::python(Python &py) const
 {
     const_cast<VectorDataBase *>(this)->update();
 
-    py.start("Vector");
+    py.name("Vector");
     py.qarg(name);
     py.qqqarg(desc);
     py.kwarg("binned", binned());
@@ -1026,7 +1038,7 @@ VectorDataBase::python(Python &py) const
         py.qkwarg("subnames", subnames);
     if (!subdescs.empty())
         py.qkwarg("subdescs", subdescs);
-    py.end();
+    py.nameEnd();
 }
 
 void
@@ -1039,7 +1051,7 @@ DistDataData::python(Python &py, const string &name) const
     else
         s += "FullDist";
 
-    py.start(s);
+    py.name(s);
     py.arg(sum);
     py.arg(squares);
     py.arg(samples);
@@ -1054,7 +1066,7 @@ DistDataData::python(Python &py, const string &name) const
         py.arg(bucket_size);
         py.arg(size);
     }
-    py.end();
+    py.nameEnd();
 }
 
 void
@@ -1062,7 +1074,7 @@ FormulaDataBase::python(Python &py) const
 {
     const_cast<FormulaDataBase *>(this)->update();
 
-    py.start("Formula");
+    py.name("Formula");
     py.qarg(name);
     py.qqqarg(desc);
     py.kwarg("binned", binned());
@@ -1075,7 +1087,7 @@ FormulaDataBase::python(Python &py) const
         py.qkwarg("subnames", subnames);
     if (!subdescs.empty())
         py.qkwarg("subdescs", subdescs);
-    py.end();
+    py.nameEnd();
 }
 
 void
@@ -1083,7 +1095,7 @@ DistDataBase::python(Python &py) const
 {
     const_cast<DistDataBase *>(this)->update();
 
-    py.start("Dist");
+    py.name("Dist");
     py.qarg(name);
     py.qqqarg(desc);
     py.kwarg("binned", binned());
@@ -1092,7 +1104,7 @@ DistDataBase::python(Python &py) const
     if (prereq)
         py.qkwarg("prereq", prereq->name);
     data.python(py, "dist");
-    py.end();
+    py.nameEnd();
 }
 
 void
@@ -1100,7 +1112,7 @@ VectorDistDataBase::python(Python &py) const
 {
     const_cast<VectorDistDataBase *>(this)->update();
 
-    py.start("VectorDist");
+    py.name("VectorDist");
     py.qarg(name);
     py.qqqarg(desc);
     py.kwarg("binned", binned());
@@ -1121,8 +1133,8 @@ VectorDistDataBase::python(Python &py) const
         i->python(py, "");
         ++i;
     }
-    py.endTuple();
-    py.end();
+    py.tupleEnd();
+    py.nameEnd();
 }
 
 void
@@ -1130,7 +1142,7 @@ Vector2dDataBase::python(Python &py) const
 {
     const_cast<Vector2dDataBase *>(this)->update();
 
-    py.start("Vector2d");
+    py.name("Vector2d");
     py.qarg(name);
     py.qqqarg(desc);
     py.kwarg("binned", binned());
@@ -1149,7 +1161,7 @@ Vector2dDataBase::python(Python &py) const
 
     py.kwarg("x", x);
     py.kwarg("y", y);
-    py.end();
+    py.nameEnd();
 }
 
 void
