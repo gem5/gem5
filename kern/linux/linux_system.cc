@@ -224,6 +224,9 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
                                               "pmap_scavenge_boot");
     printfEvent = new LinuxPrintfEvent(&pcEventQueue, "printf");
 
+    skipIdeDelay50msEvent = new LinuxSkipIdeDelay50msEvent(&pcEventQueue,
+                                                     "ide_delay_50ms");
+
     skipDelayLoopEvent = new LinuxSkipDelayLoopEvent(&pcEventQueue,
                                                      "calibrate_delay");
 
@@ -332,6 +335,9 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     if (kernelSymtab->findAddress("pmap_scavenge_boot", addr))
         skipScavengeBootEvent->schedule(addr);
+
+    if (kernelSymtab->findAddress("ide_delay_50ms", addr))
+        skipIdeDelay50msEvent->schedule(addr+8);
 
     if (kernelSymtab->findAddress("calibrate_delay", addr))
         skipDelayLoopEvent->schedule(addr+8);
