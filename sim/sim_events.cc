@@ -28,11 +28,13 @@
 
 #include <string>
 
-#include "sim/param.hh"
-#include "sim/eventq.hh"
+#include "base/callback.hh"
 #include "base/hostinfo.hh"
+#include "sim/eventq.hh"
+#include "sim/param.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
+#include "sim/sim_init.hh"
 #include "sim/sim_stats.hh"
 
 using namespace std;
@@ -178,7 +180,7 @@ class ProgressEvent : public Event
 ProgressEvent::ProgressEvent(EventQueue *q, Tick _interval)
     : Event(q), interval(_interval)
 {
-    schedule(interval);
+    schedule(curTick + interval);
 }
 
 //
@@ -221,10 +223,24 @@ ProgressParamContext progessMessageParams("progress");
 Param<Tick> progress_interval(&progessMessageParams, "cycle",
                                 "cycle interval for progress messages");
 
+namespace {
+    struct SetupProgress : public Callback
+    {
+        Tick interval;
+        SetupProgress(Tick tick) : interval(tick) {}
+
+        virtual void process()
+        {
+            new ProgressEvent(&mainEventQueue, interval);
+            delete this;
+        }
+    };
+}
+
 /* check execute options */
 void
 ProgressParamContext::checkParams()
 {
     if (progress_interval.isValid())
-        new ProgressEvent(&mainEventQueue, progress_interval);
+        registerInitCallback(new SetupProgress(progress_interval));
 }
