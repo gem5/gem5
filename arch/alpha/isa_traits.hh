@@ -168,13 +168,6 @@ class AlphaISA
         ITOUCH_ANNOTE = 0xffffffff,
     };
 
-#if 0
-    static inline Addr
-    extractInstructionPrefetchTarget(const MachInst &IR, Addr PC) {
-        return(0);
-    }
-#endif
-
     static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
         return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);

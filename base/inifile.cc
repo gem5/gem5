@@ -400,16 +400,9 @@ IniFile::printUnreferenced()
             }
         }
         else {
-#if 0
-            if (section->findEntry("unref_entries_ok") == NULL) {
-                bool unrefEntries = section->printUnreferenced(sectionName);
-                unref = unref || unrefEntries;
-            }
-#else
             if (section->printUnreferenced(sectionName)) {
                 unref = true;
             }
-#endif
         }
     }
 

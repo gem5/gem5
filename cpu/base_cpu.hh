@@ -120,9 +120,6 @@ class BaseCPU : public SimObject
     System *system;
 #endif
 
-    virtual bool filterThisInstructionPrefetch(int thread_number,
-        short asid, Addr prefetchTarget) const { return true; }
-
     /**
      * Return pointer to CPU's branch predictor (NULL if none).
      * @return Branch predictor pointer.

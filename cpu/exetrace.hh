@@ -43,19 +43,6 @@ class BaseCPU;
 
 namespace Trace {
 
-#if 0
-    static const FlagVec ALL =			ULL(0x1);
-    static const FlagVec FULL =			ULL(0x2);
-    static const FlagVec SYMBOLS = 		ULL(0x4);
-    static const FlagVec EXTENDED =		ULL(0x8);
-    static const FlagVec BRANCH_TAKEN = 	ULL(0x10);
-    static const FlagVec BRANCH_NOTTAKEN = 	ULL(0x20);
-    static const FlagVec CALLPAL =		ULL(0x40);
-    static const FlagVec SPECULATIVE =		ULL(0x100);
-    static const FlagVec OMIT_COUNT =		ULL(0x200);
-    static const FlagVec INCLUDE_THREAD_NUM =	ULL(0x400);
-#endif
-
 class InstRecord : public Record
 {
   protected:
