@@ -675,32 +675,13 @@ SimpleCPU::tick()
         xc->func_exe_inst++;
 
         fault = si->execute(this, xc, traceData);
-#ifdef FS_MEASURE
-        if (!(xc->misspeculating()) && (xc->system->bin)) {
-            SWContext *ctx = xc->swCtx;
-            if (ctx && !ctx->callStack.empty()) {
-                if (si->isCall()) {
-                    ctx->calls++;
-                }
-                if (si->isReturn()) {
-                     if (ctx->calls == 0) {
-                        fnCall *top = ctx->callStack.top();
-                        DPRINTF(TCPIP, "Removing %s from callstack.\n", top->name);
-                        delete top;
-                        ctx->callStack.pop();
-                        if (ctx->callStack.empty())
-                            xc->system->nonPath->activate();
-                        else
-                            ctx->callStack.top()->myBin->activate();
 
-                        xc->system->dumpState(xc);
-                    } else {
-                        ctx->calls--;
-                    }
-                }
-            }
-        }
+#ifdef FULL_SYSTEM
+        SWContext *ctx = xc->swCtx;
+        if (ctx)
+            ctx->process(xc, si.get());
 #endif
+
         if (si->isMemRef()) {
             numMemRefs++;
         }

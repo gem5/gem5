@@ -29,14 +29,11 @@
 #ifndef __TRU64_SYSTEM_HH__
 #define __TRU64_SYSTEM_HH__
 
+#include <map>
 #include <vector>
 
 #include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
-
-#ifdef FS_MEASURE
-#include <map>
-#endif
 
 class ExecContext;
 class EcoffObject;
@@ -48,9 +45,7 @@ class SkipFuncEvent;
 class PrintfEvent;
 class DebugPrintfEvent;
 class DumpMbufEvent;
-#ifdef FS_MEASURE
 class FnEvent;
-#endif
 class AlphaArguments;
 
 class Tru64System : public System
@@ -150,11 +145,6 @@ class Tru64System : public System
     Addr kernelEntry;
     bool bin;
 
-#ifdef FS_MEASURE
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
-#endif
-
   public:
     std::vector<RemoteGDB *>   remoteGDB;
     std::vector<GDBListener *> gdbListen;
@@ -168,7 +158,7 @@ class Tru64System : public System
                 const std::string &console_path,
                 const std::string &palcode,
                 const std::string &boot_osflags,
-                                const bool _bin);
+                const bool _bin);
     ~Tru64System();
 
     int registerExecContext(ExecContext *xc);
@@ -182,10 +172,15 @@ class Tru64System : public System
     static void Printf(AlphaArguments args);
     static void DumpMbuf(AlphaArguments args);
 
-#ifdef FS_MEASURE
+
+    // Lisa's fs measure stuff
+  private:
+    std::multimap<const std::string, std::string> callerMap;
+    void populateMap(std::string caller, std::string callee);
+
+  public:
     bool findCaller(std::string callee, std::string caller) const;
     void dumpState(ExecContext *xc) const;
-#endif //FS_MEASURE
 };
 
 #endif // __TRU64_SYSTEM_HH__

@@ -48,10 +48,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
       kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
       memCtrl(_sys->memCtrl), physmem(_sys->physmem),
-#ifdef FS_MEASURE
-      swCtx(NULL),
-#endif
-      func_exe_inst(0), storeCondFailures(0)
+      swCtx(NULL), func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
 }

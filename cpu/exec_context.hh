@@ -45,10 +45,7 @@ class MemoryController;
 
 #include "kern/tru64/kernel_stats.hh"
 #include "sim/system.hh"
-
-#ifdef FS_MEASURE
 #include "sim/sw_context.hh"
-#endif
 
 #else // !FULL_SYSTEM
 
@@ -137,10 +134,7 @@ class ExecContext
     MemoryController *memCtrl;
     PhysicalMemory *physmem;
 
-#ifdef FS_MEASURE
     SWContext *swCtx;
-#endif
-
 #else
     Process *process;
 
