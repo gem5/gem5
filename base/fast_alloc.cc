@@ -32,6 +32,8 @@
  * by permission.
  */
 
+#ifndef NO_FAST_ALLOC
+
 #ifdef __GNUC__
 #pragma implementation
 #endif
@@ -189,3 +191,5 @@ fast_alloc_oldest(int n)
 }
 
 #endif
+
+#endif // NO_FAST_ALLOC
