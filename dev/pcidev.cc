@@ -77,24 +77,24 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
       case sizeof(uint32_t):
         memcpy((uint32_t*)data, config.data + offset, sizeof(uint32_t));
         DPRINTF(PCIDEV,
-                "read device: %#x function: %#x register: %#x data: %#x\n",
-                deviceNum, functionNum, offset,
+                "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
+                deviceNum, functionNum, offset, size,
                 *(uint32_t*)(config.data + offset));
         break;
 
       case sizeof(uint16_t):
         memcpy((uint16_t*)data, config.data + offset, sizeof(uint16_t));
         DPRINTF(PCIDEV,
-                "read device: %#x function: %#x register: %#x data: %#x\n",
-                deviceNum, functionNum, offset,
+                "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
+                deviceNum, functionNum, offset, size,
                 *(uint16_t*)(config.data + offset));
         break;
 
       case sizeof(uint8_t):
         memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
         DPRINTF(PCIDEV,
-                "read device: %#x function: %#x register: %#x data: %#x\n",
-                deviceNum, functionNum, offset,
+                "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
+                deviceNum, functionNum, offset, size,
                 (uint16_t)(*(uint8_t*)(config.data + offset)));
         break;
 
@@ -116,7 +116,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
     word_value = data;
 
     DPRINTF(PCIDEV,
-            "write device: %#x function: %#x reg: %#x size: %#x data: %#x\n",
+            "write device: %#x function: %#x reg: %#x size: %d data: %#x\n",
             deviceNum, functionNum, offset, size, word_value);
 
     barnum = (offset - PCI0_BASE_ADDR0) >> 2;

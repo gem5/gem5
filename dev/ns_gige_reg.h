@@ -109,6 +109,8 @@
 #define BRDR            0x54
 #define SRR		0x58
 #define MIBC            0x5c
+#define MIB_START       0x60
+#define MIB_END         0x88
 #define VRCR		0xbc
 #define VTCR		0xc0
 #define VDR		0xc4
@@ -182,6 +184,7 @@
 #define PTSCR_RBIST_DONE        0x00000200
 #define PTSCR_RBIST_EN          0x00000400
 #define PTSCR_RBIST_RST         0x00002000
+#define PTSCR_RBIST_RDONLY      0x000003f9
 
 /* interrupt status register */
 #define ISR_RESERVE     0x80000000
@@ -232,6 +235,7 @@
 #define TXCFG_MXDMA32	0x00300000
 #define TXCFG_MXDMA16	0x00200000
 #define TXCFG_MXDMA8	0x00100000
+#define TXCFG_MXDMA     0x00700000
 
 #define TXCFG_FLTH_MASK 0x0000ff00
 #define TXCFG_DRTH_MASK 0x000000ff
@@ -253,6 +257,7 @@
 #define RXCFG_ALP	0x08000000
 #define RXCFG_AIRL	0x04000000
 #define RXCFG_MXDMA512	0x00700000
+#define RXCFG_MXDMA     0x00700000
 #define RXCFG_DRTH	0x0000003e
 #define RXCFG_DRTH0	0x00000002
 
@@ -338,12 +343,6 @@ struct ns_desc {
   uint32_t cmdsts;  /* command/status field */
   uint32_t extsts;  /* extended status field for VLAN and IP info */
 };
-
-/* ASSUME32 in bytes, how big the desc fields are */
-#define LINK_LEN 4
-#define BUFPTR_LEN 4
-#define CMDSTS_LEN 4
-#define EXTSTS_LEN 4
 
 /* cmdsts flags for descriptors */
 #define CMDSTS_OWN	0x80000000

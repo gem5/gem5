@@ -225,7 +225,7 @@ inline bool
 operator==(const T &pos, const Range<U> &range)
 {
     assert(range.valid());
-    return pos >= range.start && pos < range.end;
+    return pos >= range.start && pos <= range.end;
 }
 
 /**

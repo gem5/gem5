@@ -41,7 +41,7 @@ EtherPacket::serialize(ostream &os)
 }
 
 void
-EtherPacket::unserialize(Checkpoint *cp, const std::string &section)
+EtherPacket::unserialize(Checkpoint *cp, const string &section)
 {
     UNSERIALIZE_SCALAR(length);
     data = new uint8_t[length];

@@ -40,12 +40,49 @@
 #include "dev/dma.hh"
 #include "dev/ns_gige.hh"
 #include "dev/etherlink.hh"
+#include "mem/bus/bus.hh"
+#include "mem/bus/dma_interface.hh"
+#include "mem/bus/pio_interface.hh"
+#include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
 #include "sim/host.hh"
 #include "sim/sim_stats.hh"
 #include "targetarch/vtophys.hh"
+#include "dev/pciconfigall.hh"
+#include "dev/tsunami_cchip.hh"
+
+const char *NsRxStateStrings[] =
+{
+    "rxIdle",
+    "rxDescRefr",
+    "rxDescRead",
+    "rxFifoBlock",
+    "rxFragWrite",
+    "rxDescWrite",
+    "rxAdvance"
+};
+
+const char *NsTxStateStrings[] =
+{
+    "txIdle",
+    "txDescRefr",
+    "txDescRead",
+    "txFifoBlock",
+    "txFragRead",
+    "txDescWrite",
+    "txAdvance"
+};
+
+const char *NsDmaState[] =
+{
+    "dmaIdle",
+    "dmaReading",
+    "dmaWriting",
+    "dmaReadWaiting",
+    "dmaWriteWaiting"
+};
 
 using namespace std;
 
@@ -53,40 +90,68 @@ using namespace std;
 //
 // EtherDev PCI Device
 //
-EtherDev::EtherDev(const string &_name, DmaEngine *de, bool use_interface,
-                   IntrControl *i, MemoryController *mmu, PhysicalMemory *pmem,
-                   PCIConfigAll *cf, PciConfigData *cd, Tsunami *t, uint32_t bus,
-                   uint32_t dev, uint32_t func, bool rx_filter,
-                   const int eaddr[6], Tick tx_delay, Tick rx_delay, Addr addr,
-                   Addr mask)
-    : PciDev(_name, mmu, cf, cd, bus, dev, func), tsunami(t),
-      addr(addr), mask(mask), txPacketLen(0),
-      txPacketBufPtr(NULL), rxPacketBufPtr(NULL), rxDescBufPtr(NULL),
-      fragLen(0), rxCopied(0), txState(txIdle), CTDD(false), txFifoCnt(0),
-      txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false), txPacketFlag(false),
-      txFragPtr(0), txDescCnt(0), rxState(rxIdle), CRDD(false),
-      rxPktBytes(0), rxFifoCnt(0), rxHalt(false), rxPacketFlag(false),
-      rxFragPtr(0), rxDescCnt(0), extstsEnable(false), maxTxBurst(0),
-      maxRxBurst(0), physmem(pmem),
-      rxDescDoneCB(this), rxDoneCB(this), txDescDoneCB(this), txDoneCB(this),
-      dma(de), readRequest(use_interface), writeRequest(use_interface),
-      readDescRequest(use_interface), writeDescRequest(use_interface),
-      interface(NULL), intctrl(i), txDelay(tx_delay), rxDelay(rx_delay),
-      txEvent(this), cpuPendingIntr(false), rxFilterEnable(rx_filter),
-      acceptBroadcast(false), acceptMulticast(false), acceptUnicast(false),
-      acceptPerfect(false), acceptArp(false)
+EtherDev::EtherDev(const std::string &name, IntrControl *i, Tick intr_delay,
+             PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
+             MemoryController *mmu, HierParams *hier, Bus *header_bus,
+             Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
+             bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
+             Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
+             PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
+             uint32_t func, bool rx_filter, const int eaddr[6], Addr addr)
+    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t),
+      addr(addr), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
+      txXferLen(0), rxXferLen(0), txPktXmitted(0), txState(txIdle), CTDD(false),
+      txFifoCnt(0), txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
+      txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
+      CRDD(false), rxPktBytes(0), rxFifoCnt(0), rxHalt(false),
+      rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
+      rxDmaReadEvent(this), rxDmaWriteEvent(this),
+      txDmaReadEvent(this), txDmaWriteEvent(this),
+      dmaDescFree(dma_desc_free), dmaDataFree(dma_data_free),
+      txDelay(tx_delay), rxDelay(rx_delay), rxKickTick(0), txKickTick(0),
+      txEvent(this), rxFilterEnable(rx_filter), acceptBroadcast(false),
+      acceptMulticast(false), acceptUnicast(false),
+      acceptPerfect(false), acceptArp(false),
+      physmem(pmem), intctrl(i), intrTick(0),
+      cpuPendingIntr(false), intrEvent(0), interface(0), pioLatency(pio_latency)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
     tsunami->ethernet = this;
+
+    if (header_bus) {
+        pioInterface = newPioInterface(name, hier, header_bus, this,
+                                       &EtherDev::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size - 1);
+        if (payload_bus)
+            dmaInterface = new DMAInterface<Bus>(name + ".dma",
+                                                 header_bus, payload_bus, 1);
+        else
+            dmaInterface = new DMAInterface<Bus>(name + ".dma",
+                                                 header_bus, header_bus, 1);
+    } else if (payload_bus) {
+        pioInterface = newPioInterface(name, hier, payload_bus, this,
+                                       &EtherDev::cacheAccess);
+        pioInterface->addAddrRange(addr, addr + size - 1);
+        dmaInterface = new DMAInterface<Bus>(name + ".dma",
+                                             payload_bus, payload_bus, 1);
+
+    }
+
+
+    intrDelay = US2Ticks(intr_delay);
+    dmaReadDelay = dma_read_delay;
+    dmaWriteDelay = dma_write_delay;
+    dmaReadFactor = dma_read_factor;
+    dmaWriteFactor = dma_write_factor;
 
     memset(&regs, 0, sizeof(regs));
     regsReset();
-    regs.perfectMatch[0] = eaddr[0];
-    regs.perfectMatch[1] = eaddr[1];
-    regs.perfectMatch[2] = eaddr[2];
-    regs.perfectMatch[3] = eaddr[3];
-    regs.perfectMatch[4] = eaddr[4];
-    regs.perfectMatch[5] = eaddr[5];
-
+    rom.perfectMatch[0] = eaddr[0];
+    rom.perfectMatch[1] = eaddr[1];
+    rom.perfectMatch[2] = eaddr[2];
+    rom.perfectMatch[3] = eaddr[3];
+    rom.perfectMatch[4] = eaddr[4];
+    rom.perfectMatch[5] = eaddr[5];
 }
 
 EtherDev::~EtherDev()
@@ -173,14 +238,25 @@ EtherDev::WriteConfig(int offset, int size, uint32_t data)
 }
 
 Fault
-EtherDev::read(MemReqPtr req, uint8_t *data)
+EtherDev::read(MemReqPtr &req, uint8_t *data)
 {
-    DPRINTF(Ethernet, "read  va=%#x size=%d\n", req->vaddr, req->size);
+    Addr daddr = req->paddr & 0xfff;
+    DPRINTF(EthernetPIO, "read  da=%#x pa=%#x va=%#x size=%d\n",
+            daddr, req->paddr, req->vaddr, req->size);
 
-    Addr daddr = req->paddr - addr;
-
-    if (daddr > LAST)
+    if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
+    } else if (daddr > RESERVED && daddr <= 0x3FC) {
+        ReadConfig(daddr & 0xff, req->size, data);
+        return No_Fault;
+    } else if (daddr >= MIB_START && daddr <= MIB_END) {
+        // don't implement all the MIB's.  hopefully the kernel
+        // doesn't actually DEPEND upon their values
+        uint32_t &reg = *(uint32_t *) data;
+        reg = 0;
+        return No_Fault;
+    } else if (daddr > 0x3FC)
+        panic("Something is messed up!\n");
 
     switch (req->size) {
       case sizeof(uint32_t):
@@ -267,19 +343,20 @@ EtherDev::read(MemReqPtr req, uint8_t *data)
                 break;
 
               case RFDR:
-
+                DPRINTF(Ethernet, "reading from RFDR\n");
                 switch (regs.rfcr & RFCR_RFADDR) {
                   case 0x000:
-                    reg = regs.perfectMatch[1] << 8;
-                    reg += regs.perfectMatch[0];
+                    reg = rom.perfectMatch[1];
+                    reg = reg << 8;
+                    reg += rom.perfectMatch[0];
                     break;
                   case 0x002:
-                    reg = regs.perfectMatch[3] << 8;
-                    reg += regs.perfectMatch[2];
+                    reg = rom.perfectMatch[3] << 8;
+                    reg += rom.perfectMatch[2];
                     break;
                   case 0x004:
-                    reg = regs.perfectMatch[5] << 8;
-                    reg += regs.perfectMatch[4];
+                    reg = rom.perfectMatch[5] << 8;
+                    reg += rom.perfectMatch[4];
                     break;
                   default:
                     panic("reading from RFDR for something for other than PMATCH!\n");
@@ -340,7 +417,7 @@ EtherDev::read(MemReqPtr req, uint8_t *data)
                 panic("reading unimplemented register: addr = %#x", daddr);
             }
 
-            DPRINTF(Ethernet, "read from %#x: data=%d data=%#x\n", daddr, reg, reg);
+            DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n", daddr, reg, reg);
         }
         break;
 
@@ -353,21 +430,23 @@ EtherDev::read(MemReqPtr req, uint8_t *data)
 }
 
 Fault
-EtherDev::write(MemReqPtr req, const uint8_t *data)
+EtherDev::write(MemReqPtr &req, const uint8_t *data)
 {
-    DPRINTF(Ethernet, "write va=%#x size=%d\n", req->vaddr, req->size);
+    Addr daddr = req->paddr & 0xfff;
+    DPRINTF(EthernetPIO, "write da=%#x pa=%#x va=%#x size=%d\n",
+            daddr, req->paddr, req->vaddr, req->size);
 
-    Addr daddr = req->paddr - addr;
-
-    if (daddr > LAST && daddr <= RESERVED)
+    if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
-
-    if (daddr > RESERVED)
-        panic("higher memory accesses not implemented!\n");
+    } else if (daddr > RESERVED && daddr <= 0x3FC) {
+        WriteConfig(daddr & 0xff, req->size, *(uint32_t *)data);
+        return No_Fault;
+    } else if (daddr > 0x3FC)
+        panic("Something is messed up!\n");
 
     if (req->size == sizeof(uint32_t)) {
         uint32_t reg = *(uint32_t *)data;
-        DPRINTF(Ethernet, "write data=%d data=%#x\n", reg, reg);
+        DPRINTF(EthernetPIO, "write data=%d data=%#x\n", reg, reg);
 
         switch (daddr) {
           case CR:
@@ -403,16 +482,19 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
             if (reg & CR_RST) {
                 txReset();
                 rxReset();
+
                 regsReset();
             }
             break;
 
           case CFG:
-            regs.config = reg;
             if (reg & CFG_LNKSTS || reg & CFG_SPDSTS || reg & CFG_DUPSTS
                 || reg & CFG_RESERVED || reg & CFG_T64ADDR
                 || reg & CFG_PCI64_DET)
                 panic("writing to read-only or reserved CFG bits!\n");
+
+            regs.config |= reg & ~(CFG_LNKSTS | CFG_SPDSTS | CFG_DUPSTS | CFG_RESERVED |
+                                  CFG_T64ADDR | CFG_PCI64_DET);
 
 #if 0
               if (reg & CFG_TBI_EN) ;
@@ -427,7 +509,6 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
             if (reg & CFG_TMRTEST) ;
             if (reg & CFG_MRM_DIS) ;
             if (reg & CFG_MWI_DIS) ;
-#endif
 
             if (reg & CFG_T64ADDR)
                 panic("CFG_T64ADDR is read only register!\n");
@@ -435,11 +516,10 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
             if (reg & CFG_PCI64_DET)
                 panic("CFG_PCI64_DET is read only register!\n");
 
-#if 0
-              if (reg & CFG_DATA64_EN) ;
-              if (reg & CFG_M64ADDR) ;
-              if (reg & CFG_PHY_RST) ;
-              if (reg & CFG_PHY_DIS) ;
+            if (reg & CFG_DATA64_EN) ;
+            if (reg & CFG_M64ADDR) ;
+            if (reg & CFG_PHY_RST) ;
+            if (reg & CFG_PHY_DIS) ;
 #endif
 
             if (reg & CFG_EXTSTS_EN)
@@ -475,8 +555,15 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
             break;
 
           case PTSCR:
-            regs.ptscr = reg;
-            /* these control BISTs for various parts of chip - we don't care or do */
+            regs.ptscr = reg & ~(PTSCR_RBIST_RDONLY);
+            /* these control BISTs for various parts of chip - we don't care or do
+               just fake that the BIST is done */
+            if (reg & PTSCR_RBIST_EN)
+                regs.ptscr |= PTSCR_RBIST_DONE;
+            if (reg & PTSCR_EEBIST_EN)
+                regs.ptscr &= ~PTSCR_EEBIST_EN;
+            if (reg & PTSCR_EELOAD_EN)
+                regs.ptscr &= ~PTSCR_EELOAD_EN;
             break;
 
           case ISR: /* writing to the ISR has no effect */
@@ -520,37 +607,23 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
             if (reg & TXCFG_BRST_DIS) ;
 #endif
 
-#if 0 /* current 2.6 driver doesn't use these.  if we upgrade, may need these */
-            if (reg & TXCFG_MXDMA1024)
-                maxTxBurst = 1024;
 
-            if (reg & TXCFG_MXDMA8)
-                maxTxBurst = 8;
-
-            if (reg & TXCFG_MXDMA16)
-                maxTxBurst = 16;
-
-            if (reg & TXCFG_MXDMA32)
-                maxTxBurst = 32;
-
-            if (reg & TXCFG_MXDMA64)
-                maxTxBurst = 64;
-
-            if (reg & TXCFG_MXDMA128)
-                maxTxBurst = 128;
-
-            if (reg & TXCFG_MXDMA256)
-                maxTxBurst = 256;
-#endif
-
-            if (reg & TXCFG_MXDMA512)
-                maxTxBurst = 512;
+            /* we handle our own DMA, ignore the kernel's exhortations */
+            if (reg & TXCFG_MXDMA) ;
 
             break;
 
           case GPIOR:
             regs.gpior = reg;
             /* these just control general purpose i/o pins, don't matter */
+            break;
+
+          case RXDP:
+            regs.rxdp = reg;
+            break;
+
+          case RXDP_HI:
+            regs.rxdp_hi = reg;
             break;
 
           case RXCFG:
@@ -564,8 +637,8 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
             if (reg & RXCFG_AIRL) ;
 #endif
 
-            if (reg & RXCFG_MXDMA512)
-                maxRxBurst = 512;
+            /* we handle our own DMA, ignore what kernel says about it */
+            if (reg & RXCFG_MXDMA) ;
 
 #if 0
             if (reg & (RXCFG_DRTH | RXCFG_DRTH0)) ;
@@ -589,6 +662,8 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
 
           case RFCR:
             regs.rfcr = reg;
+            DPRINTF(Ethernet, "Writing to RFCR, RFADDR is %#x\n", reg & RFCR_RFADDR);
+
             rxFilterEnable = (reg & RFCR_RFEN) ? true : false;
 
             acceptBroadcast = (reg & RFCR_AAB) ? true : false;
@@ -601,8 +676,8 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
 
             acceptArp = (reg & RFCR_AARP) ? true : false;
 
-            if (reg & RFCR_APAT)
-                panic("RFCR_APAT not implemented!\n");
+            if (reg & RFCR_APAT) ;
+//                panic("RFCR_APAT not implemented!\n");
 
             if (reg & RFCR_MHEN || reg & RFCR_UHEN)
                 panic("hash filtering not implemented!\n");
@@ -695,17 +770,19 @@ EtherDev::write(MemReqPtr req, const uint8_t *data)
 void
 EtherDev::devIntrPost(uint32_t interrupts)
 {
-DPRINTF(Ethernet, "interrupt posted intr=%x isr=%x imr=%x\n",
-    interrupts, regs.isr, regs.imr);
+    DPRINTF(Ethernet, "interrupt posted intr=%#x isr=%#x imr=%#x\n",
+            interrupts, regs.isr, regs.imr);
 
-if (interrupts & ISR_RESERVE)
-    panic("Cannot set a reserved interrupt");
+    bool delay = false;
 
-if (interrupts & ISR_TXRCMP)
-    regs.isr |= ISR_TXRCMP;
+    if (interrupts & ISR_RESERVE)
+        panic("Cannot set a reserved interrupt");
 
-if (interrupts & ISR_RXRCMP)
-    regs.isr |= ISR_RXRCMP;
+    if (interrupts & ISR_TXRCMP)
+        regs.isr |= ISR_TXRCMP;
+
+    if (interrupts & ISR_RXRCMP)
+        regs.isr |= ISR_RXRCMP;
 
 //ISR_DPERR  not implemented
 //ISR_SSERR not implemented
@@ -715,40 +792,48 @@ if (interrupts & ISR_RXRCMP)
 //ISR_PHY not implemented
 //ISR_PME not implemented
 
-if (interrupts & ISR_SWI)
-    regs.isr |= ISR_SWI;
+    if (interrupts & ISR_SWI)
+        regs.isr |= ISR_SWI;
 
 //ISR_MIB not implemented
 //ISR_TXURN not implemented
 
- if (interrupts & ISR_TXIDLE)
-     regs.isr |= ISR_TXIDLE;
+    if (interrupts & ISR_TXIDLE)
+        regs.isr |= ISR_TXIDLE;
 
- if (interrupts & ISR_TXERR)
-     regs.isr |= ISR_TXERR;
+    if (interrupts & ISR_TXERR)
+        regs.isr |= ISR_TXERR;
 
- if (interrupts & ISR_TXDESC)
-     regs.isr |= ISR_TXDESC;
+    if (interrupts & ISR_TXDESC)
+        regs.isr |= ISR_TXDESC;
 
- if (interrupts & ISR_TXOK)
-     regs.isr |= ISR_TXOK;
+    if (interrupts & ISR_TXOK) {
+        regs.isr |= ISR_TXOK;
+        delay = true;
+    }
 
- if (interrupts & ISR_RXORN)
-     regs.isr |= ISR_RXORN;
+    if (interrupts & ISR_RXORN)
+        regs.isr |= ISR_RXORN;
 
- if (interrupts & ISR_RXIDLE)
-     regs.isr |= ISR_RXIDLE;
+    if (interrupts & ISR_RXIDLE)
+        regs.isr |= ISR_RXIDLE;
 
 //ISR_RXEARLY not implemented
 
- if (interrupts & ISR_RXERR)
-     regs.isr |= ISR_RXERR;
+    if (interrupts & ISR_RXERR)
+        regs.isr |= ISR_RXERR;
 
- if (interrupts & ISR_RXOK)
-     regs.isr |= ISR_RXOK;
+    if (interrupts & ISR_RXOK) {
+        delay = true;
+        regs.isr |= ISR_RXOK;
+    }
 
- if ((regs.isr & regs.imr))
-        cpuIntrPost();
+    if ((regs.isr & regs.imr)) {
+        Tick when = curTick;
+        if (delay)
+            when += intrDelay;
+        cpuIntrPost(when);
+    }
 }
 
 void
@@ -806,9 +891,6 @@ EtherDev::devIntrClear(uint32_t interrupts)
     if (interrupts & ISR_RXOK)
         regs.isr &= ~ISR_RXOK;
 
-    if ((regs.isr & regs.imr))
-        cpuIntrPost();
-
     if (!(regs.isr & regs.imr))
         cpuIntrClear();
 }
@@ -816,23 +898,56 @@ EtherDev::devIntrClear(uint32_t interrupts)
 void
 EtherDev::devIntrChangeMask()
 {
-    DPRINTF(Ethernet, "iterrupt mask changed\n");
+    DPRINTF(Ethernet, "interrupt mask changed\n");
 
     if (regs.isr & regs.imr)
-        cpuIntrPost();
+        cpuIntrPost(curTick);
     else
         cpuIntrClear();
 }
 
 void
-EtherDev::cpuIntrPost()
+EtherDev::cpuIntrPost(Tick when)
 {
-    if (!cpuPendingIntr) {
-        if (regs.ier) {
-            cpuPendingIntr = true;
-            intctrl->post(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
-        }
+    if (when > intrTick && intrTick != 0)
+        return;
+
+    intrTick = when;
+
+    if (intrEvent) {
+        intrEvent->squash();
+        intrEvent = 0;
     }
+
+    if (when < curTick) {
+        cpuInterrupt();
+    } else {
+        intrEvent = new IntrEvent(this, true);
+        intrEvent->schedule(intrTick);
+    }
+}
+
+void
+EtherDev::cpuInterrupt()
+{
+    // Don't send an interrupt if there's already one
+    if (cpuPendingIntr)
+        return;
+
+    // Don't send an interrupt if it's supposed to be delayed
+    if (intrTick > curTick)
+        return;
+
+    // Whether or not there's a pending interrupt, we don't care about
+    // it anymore
+    intrEvent = 0;
+    intrTick = 0;
+
+    // Send interrupt
+    cpuPendingIntr = true;
+    /** @todo rework the intctrl to be tsunami ok */
+    //intctrl->post(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
+    tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
 }
 
 void
@@ -840,7 +955,9 @@ EtherDev::cpuIntrClear()
 {
     if (cpuPendingIntr) {
         cpuPendingIntr = false;
-        intctrl->clear(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
+        /** @todo rework the intctrl to be tsunami ok */
+        //intctrl->clear(TheISA::INTLEVEL_IRQ1, TheISA::INTINDEX_ETHERNET);
+        tsunami->cchip->clearDRIR(configData->config.hdr.pci0.interruptLine);
     }
 }
 
@@ -854,15 +971,16 @@ EtherDev::txReset()
 
     DPRINTF(Ethernet, "transmit reset\n");
 
-    txPacketFlag = false;
     CTDD = false;
     txFifoCnt = 0;
-    txFifoAvail = 0;
+    txFifoAvail = MAX_TX_FIFO_SIZE;
     txHalt = false;
+    txFragPtr = 0;
+    assert(txDescCnt == 0);
     txFifo.clear();
-    descAddrFifo.clear();
     regs.command &= ~CR_TXE;
     txState = txIdle;
+    assert(txDmaState == dmaIdle);
 }
 
 void
@@ -870,171 +988,257 @@ EtherDev::rxReset()
 {
     DPRINTF(Ethernet, "receive reset\n");
 
-    rxPacketFlag = false;
     CRDD = false;
-    fragLen = 0;
+    assert(rxPktBytes == 0);
     rxFifoCnt = 0;
     rxHalt = false;
+    rxFragPtr = 0;
+    assert(rxDescCnt == 0);
+    assert(rxDmaState == dmaIdle);
     rxFifo.clear();
     regs.command &= ~CR_RXE;
     rxState = rxIdle;
 }
 
-/**
- * This sets up a DMA transfer to read one data segment from the rxFifo into
- * the buffer indicated by rxDescCache.bufptr. Assumes the value of rxFragPtr
- * is already correctly set.
- */
 void
-EtherDev::writeOneFrag()
+EtherDev::rxDmaReadCopy()
 {
-    /* i think there is no need for an "in use" warning here like in old */
-    fragLen = rxFifo.front()->length; //length of whole packet
-    fragLen = (fragLen < rxDescCnt) ? fragLen : rxDescCnt;
+    assert(rxDmaState == dmaReading);
 
-    writePhys.addr = rxFragPtr;
-    writePhys.length = fragLen;
+    memcpy(rxDmaData, physmem->dma_addr(rxDmaAddr, rxDmaLen), rxDmaLen);
+    rxDmaState = dmaIdle;
 
-    // Set up DMA request area
-    writeRequest.init(&rxDoneCB, 0, false, &writePhys, 1, fragLen,
-                     rxDescBufPtr, fragLen, curTick);
+    DPRINTF(EthernetDMA, "rx dma read  paddr=%#x len=%d\n",
+            rxDmaAddr, rxDmaLen);
+    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
+}
 
-    dma->doTransfer(&readRequest);
+bool
+EtherDev::doRxDmaRead()
+{
+    assert(rxDmaState == dmaIdle || rxDmaState == dmaReadWaiting);
+    rxDmaState = dmaReading;
+
+    if (dmaInterface && !rxDmaFree) {
+        if (dmaInterface->busy())
+            rxDmaState = dmaReadWaiting;
+        else
+            dmaInterface->doDMA(Read, rxDmaAddr, rxDmaLen, curTick,
+                                &rxDmaReadEvent);
+        return true;
+    }
+
+    if (dmaReadDelay == 0 && dmaReadFactor == 0) {
+        rxDmaReadCopy();
+        return false;
+    }
+
+    Tick factor = ((rxDmaLen + ULL(63)) >> ULL(6)) * dmaReadFactor;
+    Tick start = curTick + dmaReadDelay + factor;
+    rxDmaReadEvent.schedule(start);
+    return true;
+}
+
+void
+EtherDev::rxDmaReadDone()
+{
+    assert(rxDmaState == dmaReading);
+    rxDmaReadCopy();
+
+    // If the transmit state machine has a pending DMA, let it go first
+    if (txDmaState == dmaReadWaiting || txDmaState == dmaWriteWaiting)
+        txKick();
+
+    rxKick();
+}
+
+void
+EtherDev::rxDmaWriteCopy()
+{
+    assert(rxDmaState == dmaWriting);
+
+    memcpy(physmem->dma_addr(rxDmaAddr, rxDmaLen), rxDmaData, rxDmaLen);
+    rxDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n",
+            rxDmaAddr, rxDmaLen);
+    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
+}
+
+bool
+EtherDev::doRxDmaWrite()
+{
+    assert(rxDmaState == dmaIdle || rxDmaState == dmaWriteWaiting);
+    rxDmaState = dmaWriting;
+
+    if (dmaInterface && !rxDmaFree) {
+        if (dmaInterface->busy())
+            rxDmaState = dmaWriteWaiting;
+        else
+            dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen, curTick,
+                                &rxDmaWriteEvent);
+        return true;
+    }
+
+    if (dmaWriteDelay == 0 && dmaWriteFactor == 0) {
+        rxDmaWriteCopy();
+        return false;
+    }
+
+    Tick factor = ((rxDmaLen + ULL(63)) >> ULL(6)) * dmaWriteFactor;
+    Tick start = curTick + dmaWriteDelay + factor;
+    rxDmaWriteEvent.schedule(start);
+    return true;
+}
+
+void
+EtherDev::rxDmaWriteDone()
+{
+    assert(rxDmaState == dmaWriting);
+    rxDmaWriteCopy();
+
+    // If the transmit state machine has a pending DMA, let it go first
+    if (txDmaState == dmaReadWaiting || txDmaState == dmaWriteWaiting)
+        txKick();
+
+    rxKick();
 }
 
 void
 EtherDev::rxKick()
 {
-    DPRINTF(Ethernet, "receive state machine activated!\n");
+    DPRINTF(Ethernet, "receive kick state=%s (rxBuf.size=%d)\n",
+            NsRxStateStrings[rxState], rxFifo.size());
 
-    if (CRDD) {
-        rxState = rxDescRefr;
-        readOneDesc(rx, LINK_LEN);
-    } else {
-        rxState = rxDescRead;
-        readOneDesc(rx);
+    if (rxKickTick > curTick) {
+        DPRINTF(Ethernet, "receive kick exiting, can't run till %d\n",
+                rxKickTick);
+        return;
     }
-}
 
-EtherDev::RxDescDone::RxDescDone(EtherDev *e)
-    : ethernet(e)
-{
-}
+  next:
+    switch(rxDmaState) {
+      case dmaReadWaiting:
+        if (doRxDmaRead())
+            goto exit;
+        break;
+      case dmaWriteWaiting:
+        if (doRxDmaWrite())
+            goto exit;
+        break;
+      default:
+        break;
+    }
 
-std::string
-EtherDev::RxDescDone::name() const
-{
-    return ethernet->name() + ".rxDescDoneCB";
-}
+    switch (rxState) {
+      case rxIdle:
+        if (!regs.command & CR_RXE) {
+            DPRINTF(Ethernet, "Receive Disabled! Nothing to do.\n");
+            goto exit;
+        }
 
-void
-EtherDev::RxDescDone::process()
-{
-    DPRINTF(Ethernet, "receive descriptor done callback\n");
-    ethernet->rxDescDone();
-}
+        if (CRDD) {
+            rxState = rxDescRefr;
 
-void
-EtherDev::rxDescDone()
-{
-    if (rxState == rxDescRefr) {
-        if (rxDescCache.link == 0) {
-            rxState = rxIdle;
-            regs.command &= ~CR_RXE;
-            devIntrPost(ISR_RXIDLE);
-            return;
+            rxDmaAddr = regs.rxdp & 0x3fffffff;
+            rxDmaData = &rxDescCache + offsetof(ns_desc, link);
+            rxDmaLen = sizeof(rxDescCache.link);
+            rxDmaFree = dmaDescFree;
+
+            if (doRxDmaRead())
+                goto exit;
         } else {
             rxState = rxDescRead;
-            regs.rxdp = rxDescCache.link;
-            CRDD = false;
-            readOneDesc(rx);
+
+            rxDmaAddr = regs.rxdp & 0x3fffffff;
+            rxDmaData = &rxDescCache;
+            rxDmaLen = sizeof(ns_desc);
+            rxDmaFree = dmaDescFree;
+
+            if (doRxDmaRead())
+                goto exit;
         }
-    } else if (rxState == rxDescRead) {
+        break;
+
+      case rxDescRefr:
+        if (rxDmaState != dmaIdle)
+            goto exit;
+
+        rxState = rxAdvance;
+        break;
+
+     case rxDescRead:
+        if (rxDmaState != dmaIdle)
+            goto exit;
+
         if (rxDescCache.cmdsts & CMDSTS_OWN) {
             rxState = rxIdle;
-            regs.command &= ~CR_RXE;
-            devIntrPost(ISR_RXIDLE);
         } else {
             rxState = rxFifoBlock;
             rxFragPtr = rxDescCache.bufptr;
             rxDescCnt = rxDescCache.cmdsts & CMDSTS_LEN_MASK;
-
-            if (!rxFifo.empty()) {
-                rxState = rxFragWrite;
-                if (!rxPacketFlag) { // reading a new packet
-                    rxPacketBufPtr = rxFifo.front()->data;
-                    rxPacketBufPtr -= rxDescCnt;
-                    rxDescBufPtr = rxPacketBufPtr;
-                    rxCopied = 0;
-                } else {
-                    rxDescBufPtr = rxPacketBufPtr - rxDescCnt;
-                }
-                writeOneFrag();
-            }
         }
-    } else if (rxState == rxDescWrite) {
-        devIntrPost(ISR_RXOK);
+        break;
 
-        if (rxDescCache.cmdsts & CMDSTS_INTR)
-            devIntrPost(ISR_RXDESC);
+      case rxFifoBlock:
+        if (!rxPacket) {
+            /**
+             * @todo in reality, we should be able to start processing
+             * the packet as it arrives, and not have to wait for the
+             * full packet ot be in the receive fifo.
+             */
+            if (rxFifo.empty())
+                goto exit;
 
-        if (rxDescCache.link == 0 || ((rxPktBytes != 0) && rxHalt)) {
-            rxState = rxIdle;
-            regs.command &= ~CR_RXE;
-            devIntrPost(ISR_RXIDLE);
-            rxHalt = false;
+            // If we don't have a packet, grab a new one from the fifo.
+            rxPacket = rxFifo.front();
+            rxPktBytes = rxPacket->length;
+            rxPacketBufPtr = rxPacket->data;
+
+            // sanity check - i think the driver behaves like this
+            assert(rxDescCnt >= rxPktBytes);
+
+            // Must clear the value before popping to decrement the
+            // reference count
+            rxFifo.front() = NULL;
+            rxFifo.pop_front();
+        }
+
+
+        // dont' need the && rxDescCnt > 0 if driver sanity check above holds
+        if (rxPktBytes > 0) {
+            rxState = rxFragWrite;
+            // don't need min<>(rxPktBytes,rxDescCnt) if above sanity check holds
+            rxXferLen = rxPktBytes;
+
+            rxDmaAddr = rxFragPtr & 0x3fffffff;
+            rxDmaData = rxPacketBufPtr;
+            rxDmaLen = rxXferLen;
+            rxDmaFree = dmaDataFree;
+
+            if (doRxDmaWrite())
+                goto exit;
+
         } else {
-            rxState = rxDescRead;
-            regs.rxdp = rxDescCache.link;
-            CRDD = false;
-            readOneDesc(rx);
-        }
-    }
-}
+            rxState = rxDescWrite;
 
-EtherDev::RxDone::RxDone(EtherDev *e)
-    : ethernet(e)
-{
-}
+            //if (rxPktBytes == 0) {  /* packet is done */
+            assert(rxPktBytes == 0);
 
-std::string
-EtherDev::RxDone::name() const
-{
-    return ethernet->name() + ".rxDoneCB";
-}
+            rxFifoCnt -= rxPacket->length;
+            rxPacket = 0;
 
-void
-EtherDev::RxDone::process()
-{
-    DPRINTF(Ethernet, "receive done callback\n");
-    ethernet->rxDone();
-}
-
-void
-EtherDev::rxDone()
-{
-    DPRINTF(Ethernet, "packet received to host memory\n");
-
-    if (!rxDescCache.cmdsts & CMDSTS_OWN)
-        panic("This descriptor is already owned by the driver!\n");
-
-    rxState = rxFifoBlock;
-    rxCopied += fragLen;
-    rxFifoCnt -= fragLen;
-
-    if (rxDescCnt) { /* there is still data left in the descriptor */
-        rxState = rxFragWrite;
-        rxDescBufPtr += fragLen;
-        writeOneFrag();
-    } else {
-        rxState = rxDescWrite;
-        if (rxPktBytes == 0) {  /* packet is done */
             rxDescCache.cmdsts |= CMDSTS_OWN;
             rxDescCache.cmdsts &= ~CMDSTS_MORE;
             rxDescCache.cmdsts |= CMDSTS_OK;
-            rxDescCache.cmdsts += rxCopied;   //i.e. set CMDSTS_SIZE
+            rxDescCache.cmdsts += rxPacket->length;   //i.e. set CMDSTS_SIZE
 
-            rxPacketFlag = false;
+#if 0
+            /* all the driver uses these are for its own stats keeping
+               which we don't care about, aren't necessary for functionality
+               and doing this would just slow us down.  if they end up using
+               this in a later version for functional purposes, just undef
+            */
             if (rxFilterEnable) {
                 rxDescCache.cmdsts &= ~CMDSTS_DEST_MASK;
                 if (rxFifo.front()->IsUnicast())
@@ -1044,76 +1248,113 @@ EtherDev::rxDone()
                 if (rxFifo.front()->IsBroadcast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_MASK;
             }
+#endif
 
-            PacketPtr &pkt = rxFifo.front();
-            eth_header *eth = (eth_header *) pkt->data;
+            eth_header *eth = (eth_header *) rxPacket->data;
             if (eth->type == 0x800 && extstsEnable) {
                 rxDescCache.extsts |= EXTSTS_IPPKT;
-                if (!ipChecksum(pkt, false))
+                if (!ipChecksum(rxPacket, false))
                     rxDescCache.extsts |= EXTSTS_IPERR;
                 ip_header *ip = rxFifo.front()->getIpHdr();
 
                 if (ip->protocol == 6) {
                     rxDescCache.extsts |= EXTSTS_TCPPKT;
-                    if (!tcpChecksum(pkt, false))
+                    if (!tcpChecksum(rxPacket, false))
                         rxDescCache.extsts |= EXTSTS_TCPERR;
                 } else if (ip->protocol == 17) {
                     rxDescCache.extsts |= EXTSTS_UDPPKT;
-                    if (!udpChecksum(pkt, false))
+                    if (!udpChecksum(rxPacket, false))
                         rxDescCache.extsts |= EXTSTS_UDPERR;
                 }
             }
 
-            rxFifo.front() = NULL;
-            rxFifo.pop_front();
-        } else { /* just the descriptor is done */
-            rxDescCache.cmdsts |= CMDSTS_OWN;
-            rxDescCache.cmdsts |= CMDSTS_MORE;
+            /* the driver seems to always receive into desc buffers
+               of size 1514, so you never have a pkt that is split
+               into multiple descriptors on the receive side, so
+               i don't implement that case, hence the assert above.
+            */
+
+            rxDmaAddr = (regs.rxdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
+            rxDmaData = &(rxDescCache.cmdsts);
+            rxDmaLen = sizeof(rxDescCache.cmdsts) + sizeof(rxDescCache.extsts);
+            rxDmaFree = dmaDescFree;
+
+            if (doRxDmaWrite())
+                goto exit;
         }
-        writeDescPhys.addr = regs.rxdp + LINK_LEN + BUFPTR_LEN;
-        writeDescPhys.length = CMDSTS_LEN;
+        break;
 
-        writeDescRequest.init(&rxDescDoneCB, 0, true, &writeDescPhys, 1,
-                              CMDSTS_LEN, (uint8_t *) &rxDescCache.cmdsts,
-                              CMDSTS_LEN, curTick);
+      case rxFragWrite:
+        if (rxDmaState != dmaIdle)
+            goto exit;
+
+        rxPacketBufPtr += rxXferLen;
+        rxFragPtr += rxXferLen;
+        rxPktBytes -= rxXferLen;
+
+        rxState = rxFifoBlock;
+        break;
+
+      case rxDescWrite:
+        if (rxDmaState != dmaIdle)
+            goto exit;
+
+        assert(rxDescCache.cmdsts & CMDSTS_OWN);
+
+        assert(rxPacket == 0);
+        devIntrPost(ISR_RXOK);
+
+        if (rxDescCache.cmdsts & CMDSTS_INTR)
+            devIntrPost(ISR_RXDESC);
+
+        if (rxHalt) {
+            rxState = rxIdle;
+            rxHalt = false;
+        } else
+            rxState = rxAdvance;
+        break;
+
+      case rxAdvance:
+        if (rxDescCache.link == 0) {
+            rxState = rxIdle;
+            return;
+        } else {
+            rxState = rxDescRead;
+            regs.rxdp = rxDescCache.link;
+            CRDD = false;
+
+            rxDmaAddr = regs.rxdp & 0x3fffffff;
+            rxDmaData = &rxDescCache;
+            rxDmaLen = sizeof(ns_desc);
+            rxDmaFree = dmaDescFree;
+
+            if (doRxDmaRead())
+                goto exit;
+        }
+        break;
+
+      default:
+        panic("Invalid rxState!");
     }
-}
 
-/**
- * This sets up a DMA transfer to read one descriptor into the network device.
- */
-void
-EtherDev::readOneDesc(dir_t dir, uint32_t len) {
-    readDescPhys.addr = (dir == tx) ? regs.txdp : regs.rxdp;
-    readDescPhys.length = len;
 
-    ns_desc *cache = (dir == tx) ? &txDescCache : &rxDescCache;
+    DPRINTF(Ethernet, "entering next rx state = %s\n",
+            NsRxStateStrings[rxState]);
 
-    /* THIS ASSUMES THAT DESC_LEN < regs.txcfg's maxdma value,
-       which is 512 bytes in the driver, so i'll just hard code it here */
-    readDescRequest.init(&txDescDoneCB, 0, false, &readDescPhys, 1,
-                         len, (uint8_t *) cache , len, curTick);
+    if (rxState == rxIdle) {
+        regs.command &= ~CR_RXE;
+        devIntrPost(ISR_RXIDLE);
+        return;
+    }
 
-    dma->doTransfer(&readDescRequest);
-}
+    goto next;
 
-/**
- * This sets up a DMA transfer to read one data segment of the descriptor in
- * txDescCache.  Assumes the value of txFragPtr is already correctly set
- */
-void
-EtherDev::readOneFrag()
-{
-    /* i think there is no need for an "in use" warning here like in old */
-    fragLen = (txDescCnt < txFifoAvail) ? txDescCnt : txFifoAvail;
-    readPhys.addr = txFragPtr;
-    readPhys.length = fragLen;
-
-    // Set up DMA request area
-    readRequest.init(&txDoneCB, 0, false, &readPhys, 1, fragLen,
-                     txPacketBufPtr, fragLen, curTick);
-
-    dma->doTransfer(&readRequest);
+  exit:
+    /**
+     * @todo do we want to schedule a future kick?
+     */
+    DPRINTF(Ethernet, "rx state machine exited state=%s\n",
+            NsRxStateStrings[rxState]);
 }
 
 void
@@ -1126,226 +1367,383 @@ EtherDev::transmit()
 
    if (interface->sendPacket(txFifo.front())) {
         DPRINTF(Ethernet, "transmit packet\n");
+        DDUMP(Ethernet, txFifo.front()->data, txFifo.front()->length);
         txBytes += txFifo.front()->length;
         txPackets++;
 
-        txFifoCnt -= txFifo.front()->length;
-
+        txFifoCnt -= (txFifo.front()->length - txPktXmitted);
+        txPktXmitted = 0;
         txFifo.front() = NULL;
         txFifo.pop_front();
 
-        txDescCache.cmdsts &= ~CMDSTS_OK;
-    } else {
-        txDescCache.cmdsts &= ~CMDSTS_ERR;
+        /* normally do a writeback of the descriptor here, and ONLY after that is
+           done, send this interrupt.  but since our stuff never actually fails,
+           just do this interrupt here, otherwise the code has to stray from this
+           nice format.  besides, it's functionally the same.
+        */
+        devIntrPost(ISR_TXOK);
+   }
+
+   if (!txFifo.empty() && !txEvent.scheduled()) {
+       DPRINTF(Ethernet, "reschedule transmit\n");
+       txEvent.schedule(curTick + 1000);
+   }
+}
+
+void
+EtherDev::txDmaReadCopy()
+{
+    assert(txDmaState == dmaReading);
+
+    memcpy(txDmaData, physmem->dma_addr(txDmaAddr, txDmaLen), txDmaLen);
+    txDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "tx dma read  paddr=%#x len=%d\n",
+            txDmaAddr, txDmaLen);
+    DDUMP(EthernetDMA, txDmaData, txDmaLen);
+}
+
+bool
+EtherDev::doTxDmaRead()
+{
+    assert(txDmaState == dmaIdle || txDmaState == dmaReadWaiting);
+    txDmaState = dmaReading;
+
+    if (dmaInterface && !txDmaFree) {
+        if (dmaInterface->busy())
+            txDmaState = dmaReadWaiting;
+        else
+            dmaInterface->doDMA(Read, txDmaAddr, txDmaLen, curTick,
+                                &txDmaReadEvent);
+        return true;
     }
 
-    txDescCache.cmdsts &= ~CMDSTS_OWN;
+    if (dmaReadDelay == 0 && dmaReadFactor == 0.0) {
+        txDmaReadCopy();
+        return false;
+    }
 
-    writeDescPhys.addr = descAddrFifo.front() + LINK_LEN + BUFPTR_LEN;
-    writeDescPhys.length = CMDSTS_LEN;
+    Tick factor = ((txDmaLen + ULL(63)) >> ULL(6)) * dmaReadFactor;
+    Tick start = curTick + dmaReadDelay + factor;
+    txDmaReadEvent.schedule(start);
+    return true;
+}
 
-    descAddrFifo.front() = 0;
-    descAddrFifo.pop_front();
+void
+EtherDev::txDmaReadDone()
+{
+    assert(txDmaState == dmaReading);
+    txDmaReadCopy();
 
-    writeDescRequest.init(&txDescDoneCB, 0, true, &writeDescPhys, 1,
-                          writeDescPhys.length,
-                          (uint8_t *) &(txDescCache.cmdsts),
-                          writeDescPhys.length, curTick);
+    // If the receive state machine  has a pending DMA, let it go first
+    if (rxDmaState == dmaReadWaiting || rxDmaState == dmaWriteWaiting)
+        rxKick();
 
-    dma->doTransfer(&writeDescRequest);
+    txKick();
+}
 
-    transmit();
+void
+EtherDev::txDmaWriteCopy()
+{
+    assert(txDmaState == dmaWriting);
+
+    memcpy(physmem->dma_addr(txDmaAddr, txDmaLen), txDmaData, txDmaLen);
+    txDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "tx dma write paddr=%#x len=%d\n",
+            txDmaAddr, txDmaLen);
+    DDUMP(EthernetDMA, txDmaData, txDmaLen);
+}
+
+bool
+EtherDev::doTxDmaWrite()
+{
+    assert(txDmaState == dmaIdle || txDmaState == dmaWriteWaiting);
+    txDmaState = dmaWriting;
+
+    if (dmaInterface && !txDmaFree) {
+        if (dmaInterface->busy())
+            txDmaState = dmaWriteWaiting;
+        else
+            dmaInterface->doDMA(WriteInvalidate, txDmaAddr, txDmaLen, curTick,
+                                &txDmaWriteEvent);
+        return true;
+    }
+
+    if (dmaWriteDelay == 0 && dmaWriteFactor == 0.0) {
+        txDmaWriteCopy();
+        return false;
+    }
+
+    Tick factor = ((txDmaLen + ULL(63)) >> ULL(6)) * dmaWriteFactor;
+    Tick start = curTick + dmaWriteDelay + factor;
+    txDmaWriteEvent.schedule(start);
+    return true;
+}
+
+void
+EtherDev::txDmaWriteDone()
+{
+    assert(txDmaState == dmaWriting);
+    txDmaWriteCopy();
+
+    // If the receive state machine  has a pending DMA, let it go first
+    if (rxDmaState == dmaReadWaiting || rxDmaState == dmaWriteWaiting)
+        rxKick();
+
+    txKick();
 }
 
 void
 EtherDev::txKick()
 {
-    DPRINTF(Ethernet, "transmit state machine activated\n");
-#if 0
-    if (DTRACE(Ethernet))
-        txDump();
-#endif
+    DPRINTF(Ethernet, "transmit kick state=%s\n", NsTxStateStrings[txState]);
 
-    if (CTDD) {
-        txState = txDescRefr;
-        readOneDesc(tx, LINK_LEN);
-    } else {
-        txState = txDescRead;
-        readOneDesc(tx);
+    if (rxKickTick > curTick) {
+        DPRINTF(Ethernet, "receive kick exiting, can't run till %d\n",
+                rxKickTick);
+
+        return;
     }
-}
 
-EtherDev::TxDescDone::TxDescDone(EtherDev *e)
-    : ethernet(e)
-{
-}
+  next:
+    switch(txDmaState) {
+      case dmaReadWaiting:
+        if (doTxDmaRead())
+            goto exit;
+        break;
+      case dmaWriteWaiting:
+        if (doTxDmaWrite())
+            goto exit;
+        break;
+      default:
+        break;
+    }
 
-std::string
-EtherDev::TxDescDone::name() const
-{
-    return ethernet->name() + ".txDescDoneCB";
-}
-
-void
-EtherDev::TxDescDone::process()
-{
-    DPRINTF(Ethernet, "transmit descriptor done callback\n");
-    ethernet->txDescDone();
-
-}
-
-void
-EtherDev::txDescDone()
-{
-    if (txState == txFifoBlock) {
-        if (txDescCache.cmdsts & CMDSTS_OK) {
-            devIntrPost(ISR_TXOK);
-        } else if (txDescCache.cmdsts & CMDSTS_ERR) {
-            devIntrPost(ISR_TXERR);
-        }
-    } else if (txState == txDescRefr || txState == txDescWrite) {
-
-        if (txState == txDescWrite) {
-            if (txDescCache.cmdsts & CMDSTS_INTR) {
-                devIntrPost(ISR_TXDESC);
-            }
+    switch (txState) {
+      case txIdle:
+        if (!regs.command & CR_TXE) {
+            DPRINTF(Ethernet, "Transmit disabled.  Nothing to do.\n");
+            goto exit;
         }
 
-        if (txDescCache.link == 0) {
-            txState = txIdle;
-            regs.command &= ~CR_TXE;
-            devIntrPost(ISR_TXIDLE);
-            return;
+        if (CTDD) {
+            txState = txDescRefr;
+
+            txDmaAddr = txDescCache.link & 0x3fffffff;
+            txDmaData = &txDescCache;
+            txDmaLen = sizeof(txDescCache.link);
+            txDmaFree = dmaDescFree;
+
+            if (doTxDmaRead())
+                goto exit;
+
         } else {
             txState = txDescRead;
-            regs.txdp = txDescCache.link;
-            CTDD = false;
-            readOneDesc(tx);
+
+            txDmaAddr = regs.txdp & 0x3fffffff;
+            txDmaData = &txDescCache + offsetof(ns_desc, link);
+            txDmaLen = sizeof(ns_desc);
+            txDmaFree = dmaDescFree;
+
+            if (doTxDmaRead())
+                goto exit;
         }
-    } else if (txState == txDescRead) {
+        break;
+
+      case txDescRefr:
+        if (txDmaState != dmaIdle)
+            goto exit;
+
+        txState = txAdvance;
+        break;
+
+      case txDescRead:
+        if (txDmaState != dmaIdle)
+            goto exit;
+
         if (txDescCache.cmdsts & CMDSTS_OWN) {
             txState = txFifoBlock;
             txFragPtr = txDescCache.bufptr;
             txDescCnt = txDescCache.cmdsts & CMDSTS_LEN_MASK;
-
-            if (txFifoAvail >= ((regs.txcfg & TXCFG_FLTH_MASK) >> 8)) {
-                txState = txFragRead;
-                if (!txPacketFlag) {
-                    txPacketFlag = true;
-                    /* find the total length of this packet */
-                    txPacketLen = txDescCnt;
-                    bool more = txDescCache.cmdsts & CMDSTS_MORE;
-                    uint8_t *addr = (uint8_t *) regs.txdp;
-                    while (more) {
-                        addr = physmem->dma_addr(((ns_desc *) addr)->link, sizeof(ns_desc));
-                        /* !!!!!!mask needed? */
-                        txPacketLen += ((ns_desc *)addr)->cmdsts & CMDSTS_LEN_MASK;
-                        more = ((ns_desc *) addr)->cmdsts & CMDSTS_MORE;
-                    }
-                    PacketPtr &packet = txDoneCB.packet;
-                    packet = new EtherPacket;
-                    packet->length = txPacketLen;
-                    packet->data = new uint8_t[txPacketLen];
-                    txPacketBufPtr = packet->data;
-                }
-                readOneFrag();
-            }
         } else {
             txState = txIdle;
-            regs.command &= ~CR_TXE;
-            devIntrPost(ISR_TXIDLE);
         }
-    }
-}
+        break;
 
-EtherDev::TxDone::TxDone(EtherDev *e)
-    : ethernet(e)
-{
-}
-
-std::string
-EtherDev::TxDone::name() const
-{
-    return ethernet->name() + ".txDoneCB";
-}
-
-
-void
-EtherDev::TxDone::process()
-{
-    DPRINTF(Ethernet, "transmit done callback\n");
-    ethernet->txDone(packet);
-}
-
-void
-EtherDev::txDone(PacketPtr packet)
-{
-    DPRINTF(Ethernet, "transmit done\n");
-
-    if (!txDescCache.cmdsts & CMDSTS_OWN)
-        panic("This descriptor is already owned by the driver!\n");
-
-    txState = txFifoBlock;
-
-    txPacketBufPtr += fragLen;  /* hope this ptr manipulation is right! */
-    txDescCnt -= fragLen;
-    txFifoCnt += fragLen;
-
-    if (txFifoCnt >= (regs.txcfg & TXCFG_DRTH_MASK)) {
-        if (txFifo.empty()) {
-            txFifoCnt -= (uint32_t) (txPacketBufPtr - packet->data);
-        } else {
-            transmit();
+      case txFifoBlock:
+        if (!txPacket) {
+            DPRINTF(Ethernet, "starting the tx of a new packet\n");
+            txPacket = new EtherPacket;
+            txPacket->data = new uint8_t[16384];
+            txPacketBufPtr = txPacket->data;
         }
-    }
 
-    if (txDescCnt) { /* if there is still more data to go in this desc */
-        if (txFifoAvail >= regs.txcfg & TXCFG_FLTH_MASK) {
-            txState = txFragRead;
-            readOneFrag();
-        }
-    } else { /* this descriptor is done */
-        /* but there is more descriptors for this packet */
-        if (txDescCache.cmdsts & CMDSTS_MORE) {
-            txState = txDescWrite;
-            txDescCache.cmdsts &= ~CMDSTS_OWN;
-            writeDescPhys.addr = regs.txdp + LINK_LEN + BUFPTR_LEN;
-            writeDescPhys.length = CMDSTS_LEN;
+        if (txDescCnt == 0) {
+            DPRINTF(Ethernet, "the txDescCnt == 0, done with descriptor\n");
+            if (txDescCache.cmdsts & CMDSTS_MORE) {
+                DPRINTF(Ethernet, "there are more descriptors to come\n");
+                txState = txDescWrite;
 
-            writeDescRequest.init(&txDescDoneCB, 0, true, &writeDescPhys, 1,
-                                  writeDescPhys.length,
-                                  (uint8_t*) &txDescCache.cmdsts,
-                                  writeDescPhys.length, curTick);
-        } else { /* this packet is totally done */
-            /* deal with the the packet that just finished */
-            if (regs.vtcr & VTCR_PPCHK && extstsEnable) {
-                if (txDescCache.extsts & EXTSTS_UDPPKT) {
-                    udpChecksum(packet, true);
-                } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
-                    tcpChecksum(packet, true);
-                } else if (txDescCache.extsts & EXTSTS_IPPKT) {
-                    ipChecksum(packet, true);
+                txDescCache.cmdsts &= ~CMDSTS_OWN;
+
+                txDmaAddr = (regs.txdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
+                txDmaData = &(txDescCache.cmdsts);
+                txDmaLen = sizeof(txDescCache.cmdsts);
+                txDmaFree = dmaDescFree;
+
+                if (doTxDmaWrite())
+                    goto exit;
+
+            } else { /* this packet is totally done */
+                DPRINTF(Ethernet, "This packet is done, let's wrap it up\n");
+                /* deal with the the packet that just finished */
+                if ((regs.vtcr & VTCR_PPCHK) && extstsEnable) {
+                    if (txDescCache.extsts & EXTSTS_UDPPKT) {
+                        udpChecksum(txPacket, true);
+                    } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
+                        tcpChecksum(txPacket, true);
+                    } else if (txDescCache.extsts & EXTSTS_IPPKT) {
+                        ipChecksum(txPacket, true);
+                    }
                 }
+
+                txPacket->length = txPacketBufPtr - txPacket->data;
+                /* this is just because the receive can't handle a packet bigger
+                   want to make sure */
+                assert(txPacket->length <= 1514);
+                txFifo.push_back(txPacket);
+
+
+                /* this following section is not to spec, but functionally shouldn't
+                   be any different.  normally, the chip will wait til the transmit has
+                   occurred before writing back the descriptor because it has to wait
+                   to see that it was successfully transmitted to decide whether to set
+                   CMDSTS_OK or not.  however, in the simulator since it is always
+                   successfully transmitted, and writing it exactly to spec would
+                   complicate the code, we just do it here
+                */
+                txDescCache.cmdsts &= ~CMDSTS_OWN;
+                txDescCache.cmdsts |= CMDSTS_OK;
+
+                txDmaAddr = regs.txdp & 0x3fffffff;
+                txDmaData = &txDescCache + offsetof(ns_desc, cmdsts);
+                txDmaLen = sizeof(txDescCache.cmdsts) + sizeof(txDescCache.extsts);
+                txDmaFree = dmaDescFree;
+
+
+                if (doTxDmaWrite())
+                    goto exit;
+
+                txPacket = 0;
+                transmit();
+
+                if (txHalt) {
+                    txState = txIdle;
+                    txHalt = false;
+                } else
+                    txState = txAdvance;
+            }
+        } else {
+            DPRINTF(Ethernet, "this descriptor isn't done yet\n");
+            /* the fill thresh is in units of 32 bytes, shift right by 8 to get the
+               value, shift left by 5 to get the real number of bytes */
+            if (txFifoAvail < ((regs.txcfg & TXCFG_FLTH_MASK) >> 3)) {
+                DPRINTF(Ethernet, "txFifoAvail=%d, regs.txcfg & TXCFG_FLTH_MASK = %#x\n",
+                        txFifoAvail, regs.txcfg & TXCFG_FLTH_MASK);
+                goto exit;
             }
 
-            txFifo.push_back(packet);
-            transmit();
-            txPacketFlag = false;
-            descAddrFifo.push_back(regs.txdp);
+            txState = txFragRead;
 
-            /* if there is not another descriptor ready for reading, go idle */
-            if (txDescCache.link == 0 || txHalt) {
-                txState = txIdle;
-                devIntrPost(ISR_TXIDLE);
-                txHalt = false;
-            } else { /* else go read next descriptor */
-                txState = txDescRead;
-                regs.txdp = txDescCache.link;
-                CTDD = false;
-                readOneDesc(tx);
+            /* The number of bytes transferred is either whatever is left
+               in the descriptor (txDescCnt), or if there is not enough
+               room in the fifo, just whatever room is left in the fifo
+            */
+            txXferLen = min<uint32_t>(txDescCnt, txFifoAvail);
+
+            txDmaAddr = txFragPtr & 0x3fffffff;
+            txDmaData = txPacketBufPtr;
+            txDmaLen = txXferLen;
+            txDmaFree = dmaDataFree;
+
+            if (doTxDmaRead())
+                goto exit;
+        }
+        break;
+
+      case txFragRead:
+        if (txDmaState != dmaIdle)
+            goto exit;
+
+        txPacketBufPtr += txXferLen;
+        txFragPtr += txXferLen;
+        txFifoCnt += txXferLen;
+        txDescCnt -= txXferLen;
+
+        txState = txFifoBlock;
+        break;
+
+      case txDescWrite:
+        if (txDmaState != dmaIdle)
+            goto exit;
+
+        if (txFifoCnt >= ((regs.txcfg & TXCFG_DRTH_MASK) << 5)) {
+            if (txFifo.empty()) {
+                uint32_t xmitted = (uint32_t) (txPacketBufPtr - txPacket->data - txPktXmitted);
+                txFifoCnt -= xmitted;
+                txPktXmitted += xmitted;
+            } else {
+                transmit();
             }
         }
+
+        if (txDescCache.cmdsts & CMDSTS_INTR) {
+            devIntrPost(ISR_TXDESC);
+        }
+
+        txState = txAdvance;
+        break;
+
+      case txAdvance:
+        if (txDescCache.link == 0) {
+            txState = txIdle;
+        } else {
+            txState = txDescRead;
+            regs.txdp = txDescCache.link;
+            CTDD = false;
+
+            txDmaAddr = txDescCache.link & 0x3fffffff;
+            txDmaData = &txDescCache;
+            txDmaLen = sizeof(ns_desc);
+            txDmaFree = dmaDescFree;
+
+            if (doTxDmaRead())
+                goto exit;
+        }
+        break;
+
+      default:
+        panic("invalid state");
     }
+
+    DPRINTF(Ethernet, "entering next tx state=%s\n",
+            NsTxStateStrings[txState]);
+
+    if (txState == txIdle) {
+        regs.command &= ~CR_TXE;
+        devIntrPost(ISR_TXIDLE);
+        return;
+    }
+
+    goto next;
+
+  exit:
+    /**
+     * @todo do we want to schedule a future kick?
+     */
+    DPRINTF(Ethernet, "tx state machine exited state=%s\n",
+            NsTxStateStrings[txState]);
 }
 
 void
@@ -1360,42 +1758,6 @@ EtherDev::transferDone()
         txEvent.reschedule(curTick + 1);
     else
         txEvent.schedule(curTick + 1);
-}
-
-void
-EtherDev::txDump() const
-{
-#if 0
-    int i = tx_ptr;
-    for (int loop = 0; loop < tx_ring_len; loop++) {
-        es_desc *desc = &tx_ring[i];
-
-        if (desc->addr)
-            cprintf("desc[%d]: addr=%#x, len=%d, flags=%#x\n",
-                    i, desc->addr, desc->length, desc->flags);
-
-        if (++i >= tx_ring_len)
-            i = 0;
-    }
-#endif
-}
-
-void
-EtherDev::rxDump() const
-{
-#if 0
-    int i = rx_ptr;
-    for (int loop = 0; loop < rx_ring_len; loop++) {
-        es_desc *desc = &rx_ring[i];
-
-        if (desc->addr)
-            cprintf("desc[%d]: addr=%#x, len=%d, flags=%#x\n",
-                    i, desc->addr, desc->length, desc->flags);
-
-        if (++i >= rx_ring_len)
-            i = 0;
-    }
-#endif
 }
 
 bool
@@ -1413,7 +1775,7 @@ EtherDev::rxFilter(PacketPtr packet)
 
         // If we make a perfect match
         if ((acceptPerfect)
-            && (memcmp(regs.perfectMatch, packet->data, sizeof(regs.perfectMatch)) == 0))
+            && (memcmp(rom.perfectMatch, packet->data, sizeof(rom.perfectMatch)) == 0))
             drop = false;
 
         eth_header *eth = (eth_header *) packet->data;
@@ -1474,10 +1836,10 @@ EtherDev::recvPacket(PacketPtr packet)
     }
 
     rxFifo.push_back(packet);
-    rxPktBytes = packet->length;
     rxFifoCnt += packet->length;
     interface->recvDone();
 
+    rxKick();
     return true;
 }
 
@@ -1582,263 +1944,311 @@ EtherDev::checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len)
 //
 //
 void
-dp_regs::serialize(ostream &os)
-{
-    SERIALIZE_SCALAR(command);
-    SERIALIZE_SCALAR(config);
-    SERIALIZE_SCALAR(isr);
-    SERIALIZE_SCALAR(imr);
-}
-
-void
-dp_regs::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_SCALAR(command);
-    UNSERIALIZE_SCALAR(config);
-    UNSERIALIZE_SCALAR(isr);
-    UNSERIALIZE_SCALAR(imr);
-#if 0
-    UNSERIALIZE_SCALAR(tx_ring);
-    UNSERIALIZE_SCALAR(rx_ring);
-    UNSERIALIZE_SCALAR(tx_ring_len);
-    UNSERIALIZE_SCALAR(rx_ring_len);
-    UNSERIALIZE_SCALAR(rom_addr);
-    UNSERIALIZE_SCALAR(rom_data);
-    UNSERIALIZE_SCALAR(rxfilt_ctl);
-    UNSERIALIZE_SCALAR(rxfilt_data);
-
-    UNSERIALIZE_ARRAY(perfect,EADDR_LEN);
-    UNSERIALIZE_ARRAY(hash_table,ES_HASH_SIZE);
-
-    UNSERIALIZE_SCALAR(tx_ring_ptr);
-    UNSERIALIZE_SCALAR(rx_ring_ptr);
-#endif
-}
-
-//---------------------------------------
-
-void
-EtherPacket::serialize(ostream &os)
-{
-    SERIALIZE_SCALAR(length);
-    SERIALIZE_ARRAY(data, length);
-}
-
-void
-EtherPacket::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_SCALAR(length);
-    data = new uint8_t[length];
-    UNSERIALIZE_ARRAY(data, length);
-}
-
-//---------------------------------------
-
-void
 EtherDev::serialize(ostream &os)
 {
+    /*
+     * Finalize any DMA events now.
+     */
+    if (rxDmaReadEvent.scheduled())
+        rxDmaReadCopy();
+    if (rxDmaWriteEvent.scheduled())
+        rxDmaWriteCopy();
+    if (txDmaReadEvent.scheduled())
+        txDmaReadCopy();
+    if (txDmaWriteEvent.scheduled())
+        txDmaWriteCopy();
 
-#if 0
-    regs.serialize(os);
+    /*
+     * Serialize the device registers
+     */
+    SERIALIZE_SCALAR(regs.command);
+    SERIALIZE_SCALAR(regs.config);
+    SERIALIZE_SCALAR(regs.mear);
+    SERIALIZE_SCALAR(regs.ptscr);
+    SERIALIZE_SCALAR(regs.isr);
+    SERIALIZE_SCALAR(regs.imr);
+    SERIALIZE_SCALAR(regs.ier);
+    SERIALIZE_SCALAR(regs.ihr);
+    SERIALIZE_SCALAR(regs.txdp);
+    SERIALIZE_SCALAR(regs.txdp_hi);
+    SERIALIZE_SCALAR(regs.txcfg);
+    SERIALIZE_SCALAR(regs.gpior);
+    SERIALIZE_SCALAR(regs.rxdp);
+    SERIALIZE_SCALAR(regs.rxdp_hi);
+    SERIALIZE_SCALAR(regs.rxcfg);
+    SERIALIZE_SCALAR(regs.pqcr);
+    SERIALIZE_SCALAR(regs.wcsr);
+    SERIALIZE_SCALAR(regs.pcr);
+    SERIALIZE_SCALAR(regs.rfcr);
+    SERIALIZE_SCALAR(regs.rfdr);
+    SERIALIZE_SCALAR(regs.srr);
+    SERIALIZE_SCALAR(regs.mibc);
+    SERIALIZE_SCALAR(regs.vrcr);
+    SERIALIZE_SCALAR(regs.vtcr);
+    SERIALIZE_SCALAR(regs.vdr);
+    SERIALIZE_SCALAR(regs.ccsr);
+    SERIALIZE_SCALAR(regs.tbicr);
+    SERIALIZE_SCALAR(regs.tbisr);
+    SERIALIZE_SCALAR(regs.tanar);
+    SERIALIZE_SCALAR(regs.tanlpar);
+    SERIALIZE_SCALAR(regs.taner);
+    SERIALIZE_SCALAR(regs.tesr);
 
-    // tx_ring & rx_ring are contained in the physmem...
-    SERIALIZE_SCALAR(cpuPendingIntr);
-    SERIALIZE_SCALAR(tx_ptr);
-    SERIALIZE_SCALAR(rx_ptr);
+    SERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
-    SERIALIZE_SCALAR(rxDoneCB.ptr);
-    SERIALIZE_SCALAR(rxDoneCB.ignore);
+    /*
+     * Serialize the various helper variables
+     */
+    uint32_t txPktBufPtr = (uint32_t) txPacketBufPtr;
+    SERIALIZE_SCALAR(txPktBufPtr);
+    uint32_t rxPktBufPtr = (uint32_t) rxPktBufPtr;
+    SERIALIZE_SCALAR(rxPktBufPtr);
+    SERIALIZE_SCALAR(txXferLen);
+    SERIALIZE_SCALAR(rxXferLen);
+    SERIALIZE_SCALAR(txPktXmitted);
 
-    SERIALIZE_SCALAR(txDoneCB.ptr);
-    SERIALIZE_SCALAR(txDoneCB.ignore);
-
-    for (int i=0; i<ES_MAX_DMA_SEGS; ++i) {
-        paramOut(os, csprintf("readPhys%d.addr",i),   readPhys[i].addr);
-        paramOut(os, csprintf("readPhys%d.length",i), readPhys[i].length);
-        paramOut(os, csprintf("writePhys%d.addr",i),   writePhys[i].addr);
-        paramOut(os, csprintf("writePhys%d.length",i), writePhys[i].length);
-    }
-
-    SERIALIZE_SCALAR(txEnable);
-    SERIALIZE_SCALAR(rxEnable);
-    SERIALIZE_SCALAR(txDelay);
-    SERIALIZE_SCALAR(rxDelay);
-
-    SERIALIZE_SCALAR(txbuf_len);
-
-    //Calculate the number here, actually dump them at end
-    int numTxPkts=0;
-    for (pktiter_t p=txbuf.begin(); p!=txbuf.end(); ++p) {
-        numTxPkts++;
-    }
-    SERIALIZE_SCALAR(numTxPkts);
-
-    SERIALIZE_SCALAR(rxbuf_len);
-    int numRxPkts=0;
-    for (pktiter_t p=rxbuf.begin(); p!=rxbuf.end(); ++p) {
-        numRxPkts++;
-    }
-    SERIALIZE_SCALAR(numRxPkts);
-
-    // output whether the tx and rx packets exist
-    bool txPacketExists = false;
-    if (txDoneCB.packet)
-        txPacketExists = true;
+    bool txPacketExists = txPacket;
     SERIALIZE_SCALAR(txPacketExists);
-
-    bool rxPacketExists = false;
-    if (rxPacket)
-        rxPacketExists = true;
+    bool rxPacketExists = rxPacket;
     SERIALIZE_SCALAR(rxPacketExists);
 
-    // output the names (unique by pointer) of the read and write requests
-    paramOut(os, csprintf("readReqName"), readRequest.name());
-    paramOut(os, csprintf("writeReqName"), writeRequest.name());
+    /*
+     * Serialize DescCaches
+     */
+    SERIALIZE_SCALAR(txDescCache.link);
+    SERIALIZE_SCALAR(txDescCache.bufptr);
+    SERIALIZE_SCALAR(txDescCache.cmdsts);
+    SERIALIZE_SCALAR(txDescCache.extsts);
+    SERIALIZE_SCALAR(rxDescCache.link);
+    SERIALIZE_SCALAR(rxDescCache.bufptr);
+    SERIALIZE_SCALAR(rxDescCache.cmdsts);
+    SERIALIZE_SCALAR(rxDescCache.extsts);
 
-    // Serialize txPacket, because its data is needed for readRequest
-    if (txPacketExists) {
-        nameOut(os, csprintf("%s.txPacket", name()));
-        txDoneCB.packet->serialize(os);
+    /*
+     * Serialize tx state machine
+     */
+    int txNumPkts = txFifo.size();
+    SERIALIZE_SCALAR(txNumPkts);
+    int txState = this->txState;
+    SERIALIZE_SCALAR(txState);
+    SERIALIZE_SCALAR(CTDD);
+    SERIALIZE_SCALAR(txFifoCnt);
+    SERIALIZE_SCALAR(txFifoAvail);
+    SERIALIZE_SCALAR(txHalt);
+    SERIALIZE_SCALAR(txFragPtr);
+    SERIALIZE_SCALAR(txDescCnt);
+    int txDmaState = this->txDmaState;
+    SERIALIZE_SCALAR(txDmaState);
+
+    /*
+     * Serialize rx state machine
+     */
+    int rxNumPkts = rxFifo.size();
+    SERIALIZE_SCALAR(rxNumPkts);
+    int rxState = this->rxState;
+    SERIALIZE_SCALAR(rxState);
+    SERIALIZE_SCALAR(CRDD);
+    SERIALIZE_SCALAR(rxPktBytes);
+    SERIALIZE_SCALAR(rxFifoCnt);
+    SERIALIZE_SCALAR(rxHalt);
+    SERIALIZE_SCALAR(rxDescCnt);
+    int rxDmaState = this->rxDmaState;
+    SERIALIZE_SCALAR(rxDmaState);
+
+    SERIALIZE_SCALAR(extstsEnable);
+
+   /*
+     * If there's a pending transmit, store the time so we can
+     * reschedule it later
+     */
+    Tick transmitTick = txEvent.scheduled() ? txEvent.when() - curTick : 0;
+    SERIALIZE_SCALAR(transmitTick);
+
+    /*
+     * Keep track of pending interrupt status.
+     */
+    SERIALIZE_SCALAR(intrTick);
+    SERIALIZE_SCALAR(cpuPendingIntr);
+    Tick intrEventTick = 0;
+    if (intrEvent)
+        intrEventTick = intrEvent->when();
+    SERIALIZE_SCALAR(intrEventTick);
+
+    int i = 0;
+    for (pktiter_t p = rxFifo.begin(); p != rxFifo.end(); ++p) {
+        nameOut(os, csprintf("%s.rxFifo%d", name(), i++));
+        (*p)->serialize(os);
     }
-
-    // Serialize rxPacket, because its data is needed for writeRequest
     if (rxPacketExists) {
         nameOut(os, csprintf("%s.rxPacket", name()));
         rxPacket->serialize(os);
     }
-
-    // create a section for the readRequest
-    nameOut(os, readRequest.name());
-    paramOut(os, csprintf("parent"), name());
-    paramOut(os, csprintf("id"), 0);
-    readRequest.serialize(os);
-
-    // create a section for the writeRequest
-    nameOut(os, writeRequest.name());
-    paramOut(os, csprintf("parent"), name());
-    paramOut(os, csprintf("id"), 1);
-    writeRequest.serialize(os);
-
-    //Redo the buffers, this time outputing them to the file
-    numTxPkts = 0;
-    for (pktiter_t p=txbuf.begin(); p!=txbuf.end(); ++p) {
-        nameOut(os, csprintf("%s.txbuf%d", name(),numTxPkts++));
+    i = 0;
+    for (pktiter_t p = txFifo.begin(); p != txFifo.end(); ++p) {
+        nameOut(os, csprintf("%s.txFifo%d", name(), i++));
         (*p)->serialize(os);
     }
-
-    numRxPkts = 0;
-    for (pktiter_t p=rxbuf.begin(); p!=rxbuf.end(); ++p) {
-        nameOut(os, csprintf("%s.rxbuf%d", name(),numRxPkts++));
-        (*p)->serialize(os);
+    if (txPacketExists) {
+        nameOut(os, csprintf("%s.txPacket", name()));
+        txPacket->serialize(os);
     }
-#endif
 }
 
 void
 EtherDev::unserialize(Checkpoint *cp, const std::string &section)
 {
-#if 0
-    regs.unserialize(cp, section);
+    UNSERIALIZE_SCALAR(regs.command);
+    UNSERIALIZE_SCALAR(regs.config);
+    UNSERIALIZE_SCALAR(regs.mear);
+    UNSERIALIZE_SCALAR(regs.ptscr);
+    UNSERIALIZE_SCALAR(regs.isr);
+    UNSERIALIZE_SCALAR(regs.imr);
+    UNSERIALIZE_SCALAR(regs.ier);
+    UNSERIALIZE_SCALAR(regs.ihr);
+    UNSERIALIZE_SCALAR(regs.txdp);
+    UNSERIALIZE_SCALAR(regs.txdp_hi);
+    UNSERIALIZE_SCALAR(regs.txcfg);
+    UNSERIALIZE_SCALAR(regs.gpior);
+    UNSERIALIZE_SCALAR(regs.rxdp);
+    UNSERIALIZE_SCALAR(regs.rxdp_hi);
+    UNSERIALIZE_SCALAR(regs.rxcfg);
+    UNSERIALIZE_SCALAR(regs.pqcr);
+    UNSERIALIZE_SCALAR(regs.wcsr);
+    UNSERIALIZE_SCALAR(regs.pcr);
+    UNSERIALIZE_SCALAR(regs.rfcr);
+    UNSERIALIZE_SCALAR(regs.rfdr);
+    UNSERIALIZE_SCALAR(regs.srr);
+    UNSERIALIZE_SCALAR(regs.mibc);
+    UNSERIALIZE_SCALAR(regs.vrcr);
+    UNSERIALIZE_SCALAR(regs.vtcr);
+    UNSERIALIZE_SCALAR(regs.vdr);
+    UNSERIALIZE_SCALAR(regs.ccsr);
+    UNSERIALIZE_SCALAR(regs.tbicr);
+    UNSERIALIZE_SCALAR(regs.tbisr);
+    UNSERIALIZE_SCALAR(regs.tanar);
+    UNSERIALIZE_SCALAR(regs.tanlpar);
+    UNSERIALIZE_SCALAR(regs.taner);
+    UNSERIALIZE_SCALAR(regs.tesr);
 
-    UNSERIALIZE_SCALAR(cpuPendingIntr);
+    UNSERIALIZE_ARRAY(rom.perfectMatch, EADDR_LEN);
 
-    // initialize the tx_ring
-    txReset();
+    /*
+     * unserialize the various helper variables
+     */
+    uint32_t txPktBufPtr;
+    UNSERIALIZE_SCALAR(txPktBufPtr);
+    txPacketBufPtr = (uint8_t *) txPktBufPtr;
+    uint32_t rxPktBufPtr;
+    UNSERIALIZE_SCALAR(rxPktBufPtr);
+    rxPacketBufPtr = (uint8_t *) rxPktBufPtr;
+    UNSERIALIZE_SCALAR(txXferLen);
+    UNSERIALIZE_SCALAR(rxXferLen);
+    UNSERIALIZE_SCALAR(txPktXmitted);
 
-    // initialize the rx_ring
-    rxReset();
-
-    UNSERIALIZE_SCALAR(tx_ptr);
-    UNSERIALIZE_SCALAR(rx_ptr);
-
-    PacketPtr p;
-    UNSERIALIZE_SCALAR(txbuf_len);
-    int numTxPkts;
-    UNSERIALIZE_SCALAR(numTxPkts);
-    for (int i=0; i<numTxPkts; ++i) {
-        p = new EtherPacket;
-        p->unserialize(cp, csprintf("%s.txbuf%d", section, i));
-        txbuf.push_back(p);
-    }
-
-    UNSERIALIZE_SCALAR(rxbuf_len);
-    int numRxPkts;
-    UNSERIALIZE_SCALAR(numRxPkts);
-    for (int i=0; i<numRxPkts; ++i) {
-        p = new EtherPacket;
-        p->unserialize(cp, csprintf("%s.rxbuf%d", section, i));
-        rxbuf.push_back(p);
-    }
-
-    UNSERIALIZE_SCALAR(rxDoneCB.ptr);
-    UNSERIALIZE_SCALAR(rxDoneCB.ignore);
-
-    UNSERIALIZE_SCALAR(txDoneCB.ptr);
-    UNSERIALIZE_SCALAR(txDoneCB.ignore);
-
-    for (int i=0; i<ES_MAX_DMA_SEGS; ++i) {
-        paramIn(cp, section, csprintf("readPhys%d.addr",i),
-                readPhys[i].addr);
-        paramIn(cp, section, csprintf("readPhys%d.length",i),
-                readPhys[i].length);
-        paramIn(cp, section, csprintf("writePhys%d.addr",i),
-                writePhys[i].addr);
-        paramIn(cp, section, csprintf("writePhys%d.length",i),
-                writePhys[i].length);
-    }
-
-    UNSERIALIZE_SCALAR(txEnable);
-    UNSERIALIZE_SCALAR(rxEnable);
-    UNSERIALIZE_SCALAR(txDelay);
-    UNSERIALIZE_SCALAR(rxDelay);
-
-    // Unserialize the current txPacket
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
-
-    txDoneCB.packet = NULL;
-    if (txPacketExists) {
-        txDoneCB.packet = new EtherPacket;
-        txDoneCB.packet->unserialize(cp, csprintf("%s.txPacket", section));
-    }
-
-    // Unserialize the current rxPacket
     bool rxPacketExists;
     UNSERIALIZE_SCALAR(rxPacketExists);
 
+    /*
+     * Unserialize DescCaches
+     */
+    UNSERIALIZE_SCALAR(txDescCache.link);
+    UNSERIALIZE_SCALAR(txDescCache.bufptr);
+    UNSERIALIZE_SCALAR(txDescCache.cmdsts);
+    UNSERIALIZE_SCALAR(txDescCache.extsts);
+    UNSERIALIZE_SCALAR(rxDescCache.link);
+    UNSERIALIZE_SCALAR(rxDescCache.bufptr);
+    UNSERIALIZE_SCALAR(rxDescCache.cmdsts);
+    UNSERIALIZE_SCALAR(rxDescCache.extsts);
+
+    /*
+     * unserialize tx state machine
+     */
+    int txNumPkts;
+    UNSERIALIZE_SCALAR(txNumPkts);
+    int txState;
+    UNSERIALIZE_SCALAR(txState);
+    this->txState = (TxState) txState;
+    UNSERIALIZE_SCALAR(CTDD);
+    UNSERIALIZE_SCALAR(txFifoCnt);
+    UNSERIALIZE_SCALAR(txFifoAvail);
+    UNSERIALIZE_SCALAR(txHalt);
+    UNSERIALIZE_SCALAR(txFragPtr);
+    UNSERIALIZE_SCALAR(txDescCnt);
+    int txDmaState;
+    UNSERIALIZE_SCALAR(txDmaState);
+    this->txDmaState = (DmaState) txDmaState;
+
+    /*
+     * unserialize rx state machine
+     */
+    int rxNumPkts;
+    UNSERIALIZE_SCALAR(rxNumPkts);
+    int rxState;
+    UNSERIALIZE_SCALAR(rxState);
+    this->rxState = (RxState) rxState;
+    UNSERIALIZE_SCALAR(CRDD);
+    UNSERIALIZE_SCALAR(rxPktBytes);
+    UNSERIALIZE_SCALAR(rxFifoCnt);
+    UNSERIALIZE_SCALAR(rxHalt);
+    UNSERIALIZE_SCALAR(rxDescCnt);
+    int rxDmaState;
+    UNSERIALIZE_SCALAR(rxDmaState);
+    this->rxDmaState = (DmaState) rxDmaState;
+
+    UNSERIALIZE_SCALAR(extstsEnable);
+
+     /*
+     * If there's a pending transmit, store the time so we can
+     * reschedule it later
+     */
+    Tick transmitTick;
+    UNSERIALIZE_SCALAR(transmitTick);
+    if (transmitTick)
+        txEvent.schedule(curTick + transmitTick);
+
+    /*
+     * Keep track of pending interrupt status.
+     */
+    UNSERIALIZE_SCALAR(intrTick);
+    UNSERIALIZE_SCALAR(cpuPendingIntr);
+    Tick intrEventTick;
+    UNSERIALIZE_SCALAR(intrEventTick);
+    if (intrEventTick) {
+        intrEvent = new IntrEvent(this, true);
+        intrEvent->schedule(intrEventTick);
+    }
+
+    for (int i = 0; i < rxNumPkts; ++i) {
+        PacketPtr p = new EtherPacket;
+        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
+        rxFifo.push_back(p);
+    }
     rxPacket = NULL;
     if (rxPacketExists) {
         rxPacket = new EtherPacket;
         rxPacket->unserialize(cp, csprintf("%s.rxPacket", section));
     }
-
-    std::string readReqName, writeReqName;
-    UNSERIALIZE_SCALAR(readReqName);
-    UNSERIALIZE_SCALAR(writeReqName);
-
-    // Unserialize and fixup the readRequest
-    readRequest.unserialize(cp, readReqName);
-    readRequest.phys = readPhys;
-    readRequest.bufferCB = 0;
-    readRequest.dmaDoneCB = &txDoneCB;
-    readRequest.data = NULL;
-
-    if (txDoneCB.packet)
-        readRequest.data = txDoneCB.packet->data;
-
-    // Unserialize and fixup the writeRequest
-    writeRequest.unserialize(cp, writeReqName);
-    writeRequest.phys = writePhys;
-    writeRequest.bufferCB = 0;
-    writeRequest.dmaDoneCB = &rxDoneCB;
-    writeRequest.data = NULL;
-
-    if (rxPacket)
-        writeRequest.data = rxPacket->data;
-#endif
+    for (int i = 0; i < txNumPkts; ++i) {
+        PacketPtr p = new EtherPacket;
+        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
+        txFifo.push_back(p);
+    }
+    if (txPacketExists) {
+        txPacket = new EtherPacket;
+        txPacket->unserialize(cp, csprintf("%s.txPacket", section));
+    }
 }
 
 
+Tick
+EtherDev::cacheAccess(MemReqPtr &req)
+{
+    DPRINTF(EthernetPIO, "timing access to paddr=%#x (daddr=%#x)\n",
+            req->paddr, req->paddr - addr);
+    return curTick + pioLatency;
+}
 //=====================================================================
 
 
@@ -1876,16 +2286,24 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDev)
 
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
-    SimObjectParam<DmaEngine *> engine;
-    Param<bool> use_interface;
     SimObjectParam<IntrControl *> intr_ctrl;
+    Param<Tick> intr_delay;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PhysicalMemory *> physmem;
     Param<Addr> addr;
-    Param<Addr> mask;
     Param<bool> rx_filter;
     Param<string> hardware_address;
-    SimObjectParam<PCIConfigAll *> configspace;
+    SimObjectParam<Bus*> header_bus;
+    SimObjectParam<Bus*> payload_bus;
+    SimObjectParam<HierParams *> hier;
+    Param<Tick> pio_latency;
+    Param<bool> dma_desc_free;
+    Param<bool> dma_data_free;
+    Param<Tick> dma_read_delay;
+    Param<Tick> dma_write_delay;
+    Param<Tick> dma_read_factor;
+    Param<Tick> dma_write_factor;
+    SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
     SimObjectParam<Tsunami *> tsunami;
     Param<uint32_t> pci_bus;
@@ -1898,16 +2316,24 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDev)
 
     INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
     INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
-    INIT_PARAM(engine, "DMA Engine"),
-    INIT_PARAM_DFLT(use_interface, "Use DMA Interface", true),
     INIT_PARAM(intr_ctrl, "Interrupt Controller"),
+    INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask"),
     INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
     INIT_PARAM_DFLT(hardware_address, "Ethernet Hardware Address",
                     "00:99:00:00:00:01"),
+    INIT_PARAM_DFLT(header_bus, "The IO Bus to attach to for headers", NULL),
+    INIT_PARAM_DFLT(payload_bus, "The IO Bus to attach to for payload", NULL),
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
+    INIT_PARAM_DFLT(dma_desc_free, "DMA of Descriptors is free", false),
+    INIT_PARAM_DFLT(dma_data_free, "DMA of Data is free", false),
+    INIT_PARAM_DFLT(dma_read_delay, "fixed delay for dma reads", 0),
+    INIT_PARAM_DFLT(dma_write_delay, "fixed delay for dma writes", 0),
+    INIT_PARAM_DFLT(dma_read_factor, "multiplier for dma reads", 0),
+    INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(tsunami, "Tsunami"),
@@ -1924,10 +2350,13 @@ CREATE_SIM_OBJECT(EtherDev)
     sscanf(((string)hardware_address).c_str(), "%x:%x:%x:%x:%x:%x",
            &eaddr[0], &eaddr[1], &eaddr[2], &eaddr[3], &eaddr[4], &eaddr[5]);
 
-    return new EtherDev(getInstanceName(), engine, use_interface,
-                        intr_ctrl, mmu, physmem, configspace, configdata,
+    return new EtherDev(getInstanceName(), intr_ctrl, intr_delay,
+                        physmem, tx_delay, rx_delay, mmu, hier, header_bus,
+                        payload_bus, pio_latency, dma_desc_free, dma_data_free,
+                        dma_read_delay, dma_write_delay, dma_read_factor,
+                        dma_write_factor, configspace, configdata,
                         tsunami, pci_bus, pci_dev, pci_func, rx_filter, eaddr,
-                        tx_delay, rx_delay, addr, mask);
+                        addr);
 }
 
 REGISTER_SIM_OBJECT("EtherDev", EtherDev)

@@ -34,7 +34,7 @@
 #ifndef __NS_GIGE_HH__
 #define __NS_GIGE_HH__
 
-#include "dev/dma.hh"
+//#include "base/range.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "sim/eventq.hh"
@@ -42,7 +42,8 @@
 #include "base/statistics.hh"
 #include "dev/pcidev.hh"
 #include "dev/tsunami.hh"
-#include "dev/pciconfigall.hh"
+#include "dev/io_device.hh"
+#include "mem/bus/bus.hh"
 
 /** defined by the NS83820 data sheet */
 #define MAX_TX_FIFO_SIZE 8192
@@ -50,14 +51,6 @@
 
 /** length of ethernet address in bytes */
 #define EADDR_LEN 6
-
-/** Transmit State Machine states */
-enum tx_state { txIdle, txDescRefr, txDescRead, txFifoBlock, txFragRead,
-               txDescWrite };
-
-/** Receive State Machine States */
-enum rx_state { rxIdle, rxDescRefr, rxDescRead, rxFifoBlock, rxFragWrite,
-                rxDescWrite, rxAdvance };
 
 /**
  * Ethernet device registers
@@ -95,173 +88,174 @@ struct dp_regs {
     uint32_t    tanlpar;
     uint32_t    taner;
     uint32_t    tesr;
-
-    /** for perfect match memory.  the linux driver doesn't use any other ROM */
-    uint8_t perfectMatch[EADDR_LEN];
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-/** an enum indicating direction, transmit or receive, used as a param for
-    some fns */
-enum dir_t { tx, rx };
+struct dp_rom {
+    /** for perfect match memory.  the linux driver doesn't use any other ROM */
+    uint8_t perfectMatch[EADDR_LEN];
+};
 
-class DmaEngine;
 class IntrControl;
 class EtherDevInt;
 class PhysicalMemory;
+class BaseInterface;
+class HierParams;
+class Bus;
+class PciConfigAll;
 
 /**
  * NS DP82830 Ethernet device model
  */
-class EtherDev : public PciDev, public DmaHolder
+class EtherDev : public PciDev
 {
+  public:
+    /** Transmit State Machine states */
+    enum TxState
+    {
+        txIdle,
+        txDescRefr,
+        txDescRead,
+        txFifoBlock,
+        txFragRead,
+        txDescWrite,
+        txAdvance
+    };
+
+    /** Receive State Machine States */
+    enum RxState
+    {
+        rxIdle,
+        rxDescRefr,
+        rxDescRead,
+        rxFifoBlock,
+        rxFragWrite,
+        rxDescWrite,
+        rxAdvance
+    };
+
+    enum DmaState
+    {
+        dmaIdle,
+        dmaReading,
+        dmaWriting,
+        dmaReadWaiting,
+        dmaWriteWaiting
+    };
+
   private:
     /** pointer to the chipset */
     Tsunami *tsunami;
 
-  protected:
+  private:
     Addr addr;
-    Addr mask;
+    static const Addr size = sizeof(dp_regs);
+
+  protected:
+    typedef std::deque<PacketPtr> pktbuf_t;
+    typedef pktbuf_t::iterator pktiter_t;
 
     /** device register file */
     dp_regs regs;
+    dp_rom rom;
 
      /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */
-    typedef std::deque<PacketPtr> pktbuf_t;
-    typedef pktbuf_t::iterator pktiter_t;
     pktbuf_t txFifo;
     pktbuf_t rxFifo;
 
-    /** for the tx side, to track addrs to write updated cmdsts to */
-    typedef std::deque<uint32_t> txdpbuf_t; /* ASSUME32 */
-    txdpbuf_t descAddrFifo;
-
     /** various helper vars */
-    uint32_t txPacketLen;
     uint8_t *txPacketBufPtr;
     uint8_t *rxPacketBufPtr;
-    uint8_t *rxDescBufPtr;
-    uint32_t fragLen;
-    uint32_t rxCopied;
+    uint32_t txXferLen;
+    uint32_t rxXferLen;
+    uint32_t txPktXmitted;
+    bool rxDmaFree;
+    bool txDmaFree;
+    PacketPtr txPacket;
+    PacketPtr rxPacket;
 
     /** DescCaches */
     ns_desc txDescCache;
     ns_desc rxDescCache;
 
     /* tx State Machine */
-    tx_state txState;
+    TxState txState;
     /** Current Transmit Descriptor Done */
     bool CTDD;
-    uint32_t txFifoCnt; /* amt of data in the txDataFifo in bytes (logical) */
-    uint32_t txFifoAvail; /* current amt of free space in txDataFifo in byes */
+    /** amt of data in the txDataFifo in bytes (logical) */
+    uint32_t txFifoCnt;
+    /** current amt of free space in txDataFifo in bytes */
+    uint32_t txFifoAvail;
+    /** halt the tx state machine after next packet */
     bool txHalt;
-    bool txPacketFlag;  /* when set, indicates not working on a new packet */
-    Addr txFragPtr; /* ptr to the next byte in the current fragment */
-    uint32_t txDescCnt; /* count of bytes remaining in the current descriptor */
+    /** ptr to the next byte in the current fragment */
+    Addr txFragPtr;
+    /** count of bytes remaining in the current descriptor */
+    uint32_t txDescCnt;
+    DmaState txDmaState;
 
     /** rx State Machine */
-    rx_state rxState;
-    bool CRDD; /* Current Receive Descriptor Done */
-    uint32_t rxPktBytes; /* num of bytes in the current packet being drained
-                            from rxDataFifo */
-    uint32_t rxFifoCnt; /* number of bytes in the rxFifo */
+    RxState rxState;
+    /** Current Receive Descriptor Done */
+    bool CRDD;
+    /** num of bytes in the current packet being drained from rxDataFifo */
+    uint32_t rxPktBytes;
+    /** number of bytes in the rxFifo */
+    uint32_t rxFifoCnt;
+    /** halt the rx state machine after current packet */
     bool rxHalt;
-    bool rxPacketFlag;  /* when set, indicates not working on a new packet */
-    Addr rxFragPtr; /* ptr to the next byte in current fragment */
-    uint32_t rxDescCnt; /* count of bytes remaining in the current descriptor */
+    /** ptr to the next byte in current fragment */
+    Addr rxFragPtr;
+    /** count of bytes remaining in the current descriptor */
+    uint32_t rxDescCnt;
+    DmaState rxDmaState;
 
     bool extstsEnable;
-    uint32_t maxTxBurst;
-    uint32_t maxRxBurst;
-
-    PhysicalMemory *physmem;
 
   protected:
-    /**
-     * Receive dma for descriptors done callback
-     */
-    class RxDescDone : public DmaCallback
-    {
-      public:
-        EtherDev *ethernet;
+    Tick dmaReadDelay;
+    Tick dmaWriteDelay;
 
-      public:
-        RxDescDone(EtherDev *e);
-        std::string name() const;
-        virtual void process();
-    };
+    Tick dmaReadFactor;
+    Tick dmaWriteFactor;
 
-    /**
-     * Receive dma done callback
-     */
-    class RxDone : public DmaCallback
-    {
-      public:
-        EtherDev *ethernet;
+    void *rxDmaData;
+    Addr  rxDmaAddr;
+    int   rxDmaLen;
+    bool  doRxDmaRead();
+    bool  doRxDmaWrite();
+    void  rxDmaReadCopy();
+    void  rxDmaWriteCopy();
 
-      public:
-        RxDone(EtherDev *e);
-        std::string name() const;
-        virtual void process();
-    };
+    void *txDmaData;
+    Addr  txDmaAddr;
+    int   txDmaLen;
+    bool  doTxDmaRead();
+    bool  doTxDmaWrite();
+    void  txDmaReadCopy();
+    void  txDmaWriteCopy();
 
-    /**
-     * Transmit dma for descriptors done callback
-     */
-    class TxDescDone : public DmaCallback
-    {
-      public:
-        EtherDev *ethernet;
+    void rxDmaReadDone();
+    friend class EventWrapper<EtherDev, &EtherDev::rxDmaReadDone>;
+    EventWrapper<EtherDev, &EtherDev::rxDmaReadDone> rxDmaReadEvent;
 
-      public:
-        TxDescDone(EtherDev *e);
-        std::string name() const;
-        virtual void process();
-    };
+    void rxDmaWriteDone();
+    friend class EventWrapper<EtherDev, &EtherDev::rxDmaWriteDone>;
+    EventWrapper<EtherDev, &EtherDev::rxDmaWriteDone> rxDmaWriteEvent;
 
-    /*
-     * Transmit dma done callback
-     */
-    class TxDone : public DmaCallback
-    {
-      public:
-        EtherDev *ethernet;
-        PacketPtr packet;
+    void txDmaReadDone();
+    friend class EventWrapper<EtherDev, &EtherDev::txDmaReadDone>;
+    EventWrapper<EtherDev, &EtherDev::txDmaReadDone> txDmaReadEvent;
 
-      public:
-        TxDone(EtherDev *e);
-        std::string name() const;
-        virtual void process();
-    };
+    void txDmaWriteDone();
+    friend class EventWrapper<EtherDev, &EtherDev::txDmaWriteDone>;
+    EventWrapper<EtherDev, &EtherDev::txDmaWriteDone> txDmaWriteEvent;
 
-    friend class TxDescDone;
-    friend class TxDone;
-    friend class RxDescDone;
-    friend class RxDone;
+    bool dmaDescFree;
+    bool dmaDataFree;
 
-    RxDescDone rxDescDoneCB;
-    RxDone rxDoneCB;
-    TxDescDone txDescDoneCB;
-    TxDone txDoneCB;
-
-    DmaEngine *dma;
-    DmaRequest readRequest;
-    DmaRequest writeRequest;
-    DmaRequest readDescRequest;
-    DmaRequest writeDescRequest;
-    PacketPtr rxPacket;
-    DmaPhys readPhys;
-    DmaPhys writePhys;
-    DmaPhys readDescPhys;
-    DmaPhys writeDescPhys;
-
-    EtherDevInt *interface;
 
   protected:
-    IntrControl *intctrl;
     Tick txDelay;
     Tick rxDelay;
 
@@ -269,6 +263,7 @@ class EtherDev : public PciDev, public DmaHolder
     void rxReset();
     void regsReset() {
         memset(&regs, 0, sizeof(regs));
+        regs.config = 0x80000000;
         regs.mear = 0x12;
         regs.isr = 0x00608000;
         regs.txcfg = 0x120;
@@ -279,44 +274,30 @@ class EtherDev : public PciDev, public DmaHolder
         regs.tesr = 0xc000;
     }
 
-    void txKick();
     void rxKick();
+    Tick rxKickTick;
+    typedef EventWrapper<EtherDev, &EtherDev::rxKick> RxKickEvent;
+    friend class RxKickEvent;
 
-    /*
+    void txKick();
+    Tick txKickTick;
+    typedef EventWrapper<EtherDev, &EtherDev::txKick> TxKickEvent;
+    friend class TxKickEvent;
+
+    /**
      * Retransmit event
      */
-    class TxEvent : public Event
-    {
-      protected:
-        EtherDev *dev;
-
-      public:
-        TxEvent(EtherDev *_dev)
-            : Event(&mainEventQueue), dev(_dev) {}
-        void process() { dev->transmit(); }
-        virtual const char *description() { return "retransmit"; }
-    };
+    void transmit();
+    typedef EventWrapper<EtherDev, &EtherDev::transmit> TxEvent;
     friend class TxEvent;
     TxEvent txEvent;
-    void transmit();
-
-
-    void txDescDone();
-    void rxDescDone();
-    void txDone(PacketPtr packet);
-    void rxDone();
 
     void txDump() const;
     void rxDump() const;
 
-    void devIntrPost(uint32_t interrupts);
-    void devIntrClear(uint32_t interrupts);
-    void devIntrChangeMask();
-
-    bool cpuPendingIntr;
-    void cpuIntrPost();
-    void cpuIntrClear();
-
+    /**
+     * receive address filter
+     */
     bool rxFilterEnable;
     bool rxFilter(PacketPtr packet);
     bool acceptBroadcast;
@@ -325,26 +306,53 @@ class EtherDev : public PciDev, public DmaHolder
     bool acceptPerfect;
     bool acceptArp;
 
+    PhysicalMemory *physmem;
+
+    /**
+     * Interrupt management
+     */
+    IntrControl *intctrl;
+    void devIntrPost(uint32_t interrupts);
+    void devIntrClear(uint32_t interrupts);
+    void devIntrChangeMask();
+
+    Tick intrDelay;
+    Tick intrTick;
+    bool cpuPendingIntr;
+    void cpuIntrPost(Tick when);
+    void cpuInterrupt();
+    void cpuIntrClear();
+
+    typedef EventWrapper<EtherDev, &EtherDev::cpuInterrupt> IntrEvent;
+    friend class IntrEvent;
+    IntrEvent *intrEvent;
+
+    /**
+     * Hardware checksum support
+     */
     bool udpChecksum(PacketPtr packet, bool gen);
     bool tcpChecksum(PacketPtr packet, bool gen);
     bool ipChecksum(PacketPtr packet, bool gen);
     uint16_t checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len);
 
+    EtherDevInt *interface;
+
   public:
-    EtherDev(const std::string &name, DmaEngine *de, bool use_interface,
-             IntrControl *i, MemoryController *mmu, PhysicalMemory *pmem,
-             PCIConfigAll *cf, PciConfigData *cd, Tsunami *t, uint32_t bus,
-             uint32_t dev, uint32_t func, bool rx_filter, const int eaddr[6],
-             Tick tx_delay, Tick rx_delay, Addr addr, Addr mask);
+    EtherDev(const std::string &name, IntrControl *i, Tick intr_delay,
+             PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
+             MemoryController *mmu, HierParams *hier, Bus *header_bus,
+             Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
+             bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
+             Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
+             PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
+             uint32_t func, bool rx_filter, const int eaddr[6], Addr addr);
     ~EtherDev();
 
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
 
-
-
-    Fault read(MemReqPtr req, uint8_t *data);
-    Fault write(MemReqPtr req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }
@@ -356,15 +364,6 @@ class EtherDev : public PciDev, public DmaHolder
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-    virtual DmaRequest *find_dmareq(uint32_t &id) {
-        if (id == 0)
-            return(&readRequest);
-        else if (id == 1)
-            return(&writeRequest);
-        else
-            return(NULL);
-    }
 
   public:
     void regStats();
@@ -379,9 +378,11 @@ class EtherDev : public PciDev, public DmaHolder
     Statistics::Formula txPacketRate;
     Statistics::Formula rxPacketRate;
 
-    void readOneDesc(dir_t dir, uint32_t len = sizeof(ns_desc));
-    void readOneFrag();
-    void writeOneFrag();
+  private:
+    Tick pioLatency;
+
+  public:
+    Tick cacheAccess(MemReqPtr &req);
 };
 
 /*
