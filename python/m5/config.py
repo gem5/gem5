@@ -198,12 +198,13 @@ class Proxy(object):
                 raise AttributeError, \
                       'Parent of %s type %s not found at path %s' \
                       % (base.name, ptype, self._path)
-            found, done = obj.find(ptype, self._path)
-            if isinstance(found, Proxy):
-                done = False
+            result, done = obj.find(ptype, self._path)
             obj = obj.parent
 
-        return self._mulcheck(found)
+        if isinstance(result, Proxy):
+            result = result.unproxy(obj, ptype)
+
+        return self._mulcheck(result)
 
     def getindex(obj, index):
         if index == None:
