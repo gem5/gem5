@@ -35,20 +35,42 @@
 
 #include "base/trace.hh"	// for DPRINTF
 
-#include "base/loader/exec_elf.h"
 
 using namespace std;
 
 ObjectFile *
 ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 {
-    if (memcmp(((Elf64_Ehdr *)data)->e_ident, ELFMAG, SELFMAG) == 0) {
-        // for now we'll assume it's a 64-bit Alpha Linux binary
+    Elf *elf;
+    GElf_Ehdr ehdr;
+
+
+    /* check that header matches library version */
+    assert(elf_version(EV_CURRENT) != EV_NONE);
+
+    /* get a pointer to elf structure */
+    elf = elf_memory((char*)data,len);
+    /* will only fail if fd is invalid */
+    assert(elf != NULL);
+
+    /*  Check that we actually have a elf file */
+    if(gelf_getehdr(elf, &ehdr) ==0)
+    {
+        DPRINTFR(Loader, "Not ELF\n");
+        elf_end(elf);
+        return NULL;
+    }
+    else
+    {
+        if (ehdr.e_ident[EI_CLASS] == ELFCLASS32)
+            panic("32 bit ELF Binary, Not Supported");
+        if (ehdr.e_machine != EM_ALPHA)
+            panic("Non Alpha Binary, Not Supported");
+
+        elf_end(elf);
+
         return new ElfObject(fname, fd, len, data,
                              ObjectFile::Alpha, ObjectFile::Linux);
-    }
-    else {
-        return NULL;
     }
 }
 
@@ -57,71 +79,117 @@ ElfObject::ElfObject(const string &_filename, int _fd,
                      size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
     : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
+
 {
-    ehdr = (Elf64_Ehdr *)fileData;
 
-    entry = ehdr->e_entry;
+    Elf *elf;
+    GElf_Ehdr ehdr;
 
-    phdr = (Elf64_Phdr *)(fileData + ehdr->e_phoff);
-    assert(sizeof(Elf64_Phdr) == ehdr->e_phentsize);
+    /* check that header matches library version */
+    assert(elf_version(EV_CURRENT) != EV_NONE);
 
-    bool foundText = false;
-    bool foundData = false;
-    for (int i = 0; i < ehdr->e_phnum; ++i) {
-        Elf64_Phdr *p = &phdr[i];
+    /* get a pointer to elf structure */
+    elf = elf_memory((char*)fileData,len);
+    /* will only fail if fd is invalid */
+    assert(elf != NULL);
 
-        // for now we don't care about non-loadable segments
-        if (!(p->p_type & PT_LOAD))
-            continue;
-
-        if (p->p_flags & PF_X) {
-            // executable: must be text
-            assert(!foundText);
-            foundText = true;
-            textPhdrIdx = i;
-            text.baseAddr = p->p_vaddr;
-            text.size = p->p_filesz;
-            assert(p->p_filesz == p->p_memsz);
-        }
-        else {
-            assert(p->p_flags & PF_R);
-            assert(!foundData);
-            foundData = true;
-            dataPhdrIdx = i;
-            data.baseAddr = p->p_vaddr;
-            data.size = p->p_filesz;
-            bss.baseAddr = data.baseAddr + data.size;
-            bss.size = p->p_memsz - p->p_filesz;
-        }
+    /*  Check that we actually have a elf file */
+    if(gelf_getehdr(elf, &ehdr) ==0)
+    {
+        panic("Not ELF, shouldn't be here");
     }
 
-    assert(foundText && foundData);
 
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
+    entry = ehdr.e_entry;
+    elf_end(elf);
+
+    /* We will actually read the sections when we need to load them*/
 }
 
 
 bool
 ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
 {
-    Addr textAddr = text.baseAddr;
-    Addr dataAddr = data.baseAddr;
+    Elf *elf;
+    int secidx = 1; /* there is a 0 but it is nothing, go figure*/
+    Elf_Scn *section;
+    GElf_Shdr shdr;
+    GElf_Ehdr ehdr;
 
-    if (loadPhys) {
-        textAddr &= (ULL(1) << 40) - 1;
-        dataAddr &= (ULL(1) << 40) - 1;
+    Addr address;
+    char *secname;
+
+    /* check that header matches library version */
+    assert(elf_version(EV_CURRENT) != EV_NONE);
+
+
+    /* get a pointer to elf structure */
+    elf = elf_memory((char*)fileData,len);
+
+    assert(elf != NULL);
+
+    /*  Check that we actually have a elf file */
+    if(gelf_getehdr(elf, &ehdr) ==0)
+    {
+        panic("Not ELF, shouldn't be here");
     }
 
-    // Since we don't really have an MMU and all memory is
-    // zero-filled, there's no need to set up the BSS segment.
-    if (text.size != 0)
-        mem->prot_write(textAddr, fileData + phdr[textPhdrIdx].p_offset,
-                        text.size);
-    if (data.size != 0)
-        mem->prot_write(dataAddr, fileData + phdr[dataPhdrIdx].p_offset,
-                        data.size);
+
+
+    /* Get the first section */
+    section = elf_getscn(elf, secidx);
+
+    /* While there are no more sections */
+    while (section != NULL)
+    {
+        gelf_getshdr(section, &shdr);
+
+
+        if (shdr.sh_flags & SHF_ALLOC)
+        {
+            /* we should load this */
+            DPRINTF(Loader,"Name: %20s Address: 0x%016llx Size: 0x%08llx Offset: 0x%08llx   Flags:0x%08llx %s\n",
+                    elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name), shdr.sh_addr,
+                    shdr.sh_size, shdr.sh_offset, shdr.sh_flags, shdr.sh_flags &    SHF_ALLOC ? "ALLOC" : "");
+            secname = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+            if(secname)
+            {
+                if (strcmp(secname, ".text")==0)
+                {
+                    text.baseAddr = shdr.sh_addr;
+                    text.size = shdr.sh_size;
+                }
+                if (strcmp(secname, ".data")==0)
+                {
+                    data.baseAddr = shdr.sh_addr;
+                    data.size = shdr.sh_size;
+                }
+                if (strcmp(secname, ".bss")==0)
+                {
+                    bss.baseAddr = shdr.sh_addr;
+                    bss.size = shdr.sh_size;
+                }
+            }
+            if(shdr.sh_size != 0)
+            {
+                if (loadPhys)
+                {
+                    address = shdr.sh_addr &= (ULL(1) << 40) - 1;
+                    mem->prot_write(address, fileData + shdr.sh_offset, shdr.sh_size);
+                }
+                else
+                {
+                    mem->prot_write(shdr.sh_addr, fileData + shdr.sh_offset, shdr.sh_size);
+                }
+            }
+
+        }
+
+        ++secidx;
+        section = elf_getscn(elf, secidx);
+    }
+
+    elf_end(elf);
 
     return true;
 }
@@ -130,13 +198,118 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
 bool
 ElfObject::loadGlobalSymbols(SymbolTable *symtab)
 {
-    // symbols not supported yet
-    return false;
+    Elf *elf;
+    int secidx = 1; /* there is a 0 but it is nothing, go figure*/
+    Elf_Scn *section;
+    GElf_Shdr shdr;
+    Elf_Data *data;
+    int count, ii;
+    bool found = false;
+    GElf_Sym sym;
+
+    if (!symtab)
+        return false;
+
+    /* check that header matches library version */
+    assert(elf_version(EV_CURRENT) != EV_NONE);
+
+    /* get a pointer to elf structure */
+    elf = elf_memory((char*)fileData,len);
+
+    assert(elf != NULL);
+
+
+    /* Get the first section */
+    section = elf_getscn(elf, secidx);
+
+    /* While there are no more sections */
+    while (section != NULL)
+    {
+        gelf_getshdr(section, &shdr);
+
+
+        if(shdr.sh_type == SHT_SYMTAB)
+        {
+            found = true;
+            data = elf_getdata(section, NULL);
+            count = shdr.sh_size / shdr.sh_entsize;
+            DPRINTF(Loader, "Found Symbol Table, %d symbols present\n", count);
+
+            /* loop through all the symbols, only loading global ones*/
+            for (ii = 0; ii < count; ++ii)
+            {
+                gelf_getsym(data, ii, &sym);
+                if (GELF_ST_BIND(sym.st_info) & STB_GLOBAL)
+                {
+                   symtab->insert(sym.st_value, elf_strptr(elf, shdr.sh_link, sym.st_name));
+                }
+            }
+        }
+        ++secidx;
+        section = elf_getscn(elf, secidx);
+    }
+
+    elf_end(elf);
+
+    return found;
 }
 
 bool
 ElfObject::loadLocalSymbols(SymbolTable *symtab)
 {
-    // symbols not supported yet
-    return false;
+
+    Elf *elf;
+    int secidx = 1; /* there is a 0 but it is nothing, go figure*/
+    Elf_Scn *section;
+    GElf_Shdr shdr;
+    Elf_Data *data;
+    int count, ii;
+    bool found = false;
+    GElf_Sym sym;
+
+    if (!symtab)
+        return false;
+
+    /* check that header matches library version */
+    assert(elf_version(EV_CURRENT) != EV_NONE);
+
+    /* get a pointer to elf structure */
+    elf = elf_memory((char*)fileData,len);
+
+    assert(elf != NULL);
+
+
+    /* Get the first section */
+    section = elf_getscn(elf, secidx);
+
+    /* While there are no more sections */
+    while (section != NULL)
+    {
+        gelf_getshdr(section, &shdr);
+
+
+        if(shdr.sh_type == SHT_SYMTAB)
+        {
+            found = true;
+            data = elf_getdata(section, NULL);
+            count = shdr.sh_size / shdr.sh_entsize;
+            DPRINTF(Loader, "Found Symbol Table, %d symbols present\n", count);
+
+            /* loop through all the symbols, only loading global ones*/
+            for (ii = 0; ii < count; ++ii)
+            {
+                gelf_getsym(data, ii, &sym);
+                if (GELF_ST_BIND(sym.st_info) & STB_LOCAL)
+                {
+                   symtab->insert(sym.st_value, elf_strptr(elf, shdr.sh_link, sym.st_name));
+                }
+            }
+        }
+        ++secidx;
+        section = elf_getscn(elf, secidx);
+    }
+
+    elf_end(elf);
+
+    return found;
 }

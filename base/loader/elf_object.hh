@@ -29,20 +29,13 @@
 #ifndef __ELF_OBJECT_HH__
 #define __ELF_OBJECT_HH__
 
+#include <libelf/gelf.h>
+#include <libelf/libelf.h>
 #include "base/loader/object_file.hh"
-
-// forward decls: avoid including exec_elf.hh here
-struct Elf64_Ehdr;
-struct Elf64_Phdr;
 
 class ElfObject : public ObjectFile
 {
   protected:
-    Elf64_Ehdr *ehdr;
-    Elf64_Phdr *phdr;
-
-    int textPhdrIdx;
-    int dataPhdrIdx;
 
     ElfObject(const std::string &_filename, int _fd,
               size_t _len, uint8_t *_data,
