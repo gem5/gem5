@@ -39,6 +39,36 @@
 
 using namespace std;
 
+bool
+split_first(const string &s, string &lhs, string &rhs, char c)
+{
+    string::size_type offset = s.find(c);
+    if (offset == string::npos) {
+        lhs = s;
+        rhs = "";
+        return false;
+    }
+
+    lhs = s.substr(0, offset);
+    rhs = s.substr(offset + 1);
+    return true;
+}
+
+bool
+split_last(const string &s, string &lhs, string &rhs, char c)
+{
+    string::size_type offset = s.rfind(c);
+    if (offset == string::npos) {
+        lhs = s;
+        rhs = "";
+        return false;
+    }
+
+    lhs = s.substr(0, offset);
+    rhs = s.substr(offset + 1);
+    return true;
+}
+
 void
 tokenize(vector<string>& v, const string &s, char token, bool ignore)
 {
