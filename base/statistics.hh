@@ -35,7 +35,6 @@
 *
 * Generalized N-dimensinal vector
 * documentation
-* fix AvgStor
 * key stats
 * interval stats
 *   -- these both can use the same function that prints out a
@@ -195,8 +194,9 @@ class Stat
 
   public:
     /**
-     * Create this stat and register it if reg is true.
-     * @param reg Register this stat in the database?
+     * Create this stat and perhaps register it with the stat database. To be
+     * printed a stat must be registered with the database.
+     * @param reg If true, register this stat in the database.
      */
     Stat(bool reg);
     /**
@@ -287,13 +287,32 @@ class Stat
 #endif
 };
 
-// Scalar stats involved in formulas
+/**
+ * Base class for all scalar stats. The class provides an interface to access
+ * the current value of the stat. This class can be used in formulas.
+ */
 class ScalarStat : public Stat
 {
   public:
+    /**
+     * Create and perhaps register this stat with the database.
+     * @param reg If true, register this stat with the database.
+     */
     ScalarStat(bool reg) : Stat(reg) {}
+    /**
+     * Return the current value of this statistic as a result type.
+     * @return The current value of this statistic.
+     */
     virtual result_t val() const = 0;
+    /**
+     * Return true if this stat has value zero.
+     * @return True if this stat is zero.
+     */
     virtual bool zero() const;
+    /**
+     * Print this stat to the provided ostream.
+     * @param stream The output stream.
+     */
     virtual void display(std::ostream &stream) const;
 };
 
@@ -305,14 +324,38 @@ VectorDisplay(std::ostream &stream, const std::string &myname,
               int myprecision, FormatFlags myflags, const rvec_t &vec,
               result_t mytotal);
 
-// Vector stats involved in formulas
+/**
+ * Base class for all vector stats. This class provides interfaces to access
+ * the current values of the stats as well as the totals. This class can be
+ * used in formulas.
+ */
 class VectorStat : public Stat
 {
   public:
+    /**
+     * Create and perhaps register this stat with the database.
+     * @param reg If true, register this stat with the database.
+     */
     VectorStat(bool reg) : Stat(reg) {}
+    /**
+     * Return a vector of result typesd of all the values in the vector.
+     * @return The values of the vector.
+     */
     virtual const rvec_t &val() const = 0;
+    /**
+     * Return the total of all the entries in the vector.
+     * @return The total of the vector.
+     */
     virtual result_t total() const = 0;
+    /**
+     * Return true if this stat has value zero.
+     * @return True if this stat is zero.
+     */
     virtual bool zero() const;
+    /**
+     * Print this stat to the provided ostream.
+     * @param stream The output stream.
+     */
     virtual void display(std::ostream &stream) const;
 };
 
@@ -321,82 +364,192 @@ class VectorStat : public Stat
 // Simple Statistics
 //
 //////////////////////////////////////////////////////////////////////
+
+/**
+ * Templatized storage and interface for a simple scalar stat.
+ */
 template <typename T>
 struct StatStor
 {
   public:
+    /** The paramaters for this storage type, none for a scalar. */
     struct Params { };
 
   private:
+    /** The statistic value. */
     T data;
 
   public:
+    /**
+     * Builds this storage element and calls the base constructor of the
+     * datatype.
+     */
     StatStor(const Params &) : data(T()) {}
 
+    /**
+     * The the stat to the given value.
+     * @param val The new value.
+     * @param p The paramters of this storage type.
+     */
     void set(T val, const Params &p) { data = val; }
+    /**
+     * Increment the stat by the given value.
+     * @param val The new value.
+     * @param p The paramters of this storage type.
+     */
     void inc(T val, const Params &p) { data += val; }
+    /**
+     * Decrement the stat by the given value.
+     * @param val The new value.
+     * @param p The paramters of this storage type.
+     */
     void dec(T val, const Params &p) { data -= val; }
+    /**
+     * Return the value of this stat as a result type.
+     * @param p The parameters of this storage type.
+     * @return The value of this stat.
+     */
     result_t val(const Params &p) const { return (result_t)data; }
+    /**
+     * Return the value of this stat as its base type.
+     * @param p The params of this storage type.
+     * @return The value of this stat.
+     */
     T value(const Params &p) const { return data; }
 };
 
+/**
+ * Templatized storage and interface to a per-cycle average stat. This keeps
+ * a current count and updates a total (count * cycles) when this count
+ * changes. This allows the quick calculation of a per cycle count of the item
+ * being watched. This is good for keeping track of residencies in structures
+ * among other things.
+ * @todo add lateny to the stat and fix binning.
+ */
 template <typename T>
 struct AvgStor
 {
   public:
+    /** The paramaters for this storage type, none for this average. */
     struct Params { };
 
   private:
+    /** The current count. */
     T current;
+    /** The total count for all cycles. */
     mutable result_t total;
+    /** The cycle that current last changed. */
     mutable Tick last;
 
   public:
+    /**
+     * Build and initializes this stat storage.
+     */
     AvgStor(const Params &) : current(T()), total(0), last(0) { }
 
+    /**
+     * Set the current count to the one provided, update the total and last
+     * set values.
+     * @param val The new count.
+     * @param p The parameters for this storage.
+     */
     void set(T val, const Params &p) {
         total += current * (curTick - last);
         last = curTick;
         current = val;
     }
+    /**
+     * Increment the current count by the provided value, calls set.
+     * @param val The amount to increment.
+     * @param p The parameters for this storage.
+     */
     void inc(T val, const Params &p) { set(current + val, p); }
+    /**
+     * Deccrement the current count by the provided value, calls set.
+     * @param val The amount to decrement.
+     * @param p The parameters for this storage.
+     */
     void dec(T val, const Params &p) { set(current - val, p); }
+    /**
+     * Return the current average.
+     * @param p The parameters for this storage.
+     * @return The current average.
+     */
     result_t val(const Params &p) const {
         total += current * (curTick - last);
         last = curTick;
         return (result_t)(total + current) / (result_t)(curTick + 1);
     }
+    /**
+     * Return the current count.
+     * @param p The parameters for this storage.
+     * @return The current count.
+     */
     T value(const Params &p) const { return current; }
 };
 
+/**
+ * Implementation of a scalar stat. The type of stat is determined by the
+ * Storage template. The storage for this stat is held within the Bin class.
+ * This allows for breaking down statistics across multiple bins easily.
+ */
 template <typename T, template <typename T> class Storage, class Bin>
 class ScalarBase : public ScalarStat
 {
   protected:
+    /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
+    /** Define the params of the storage class. */
     typedef typename storage_t::Params params_t;
+    /** Define the bin type. */
     typedef typename Bin::Bin<storage_t> bin_t;
 
   protected:
+    /** The bin of this stat. */
     bin_t bin;
+    /** The parameters for this stat. */
     params_t params;
 
   protected:
+    /**
+     * Retrieve the storage from the bin.
+     * @return The storage object for this stat.
+     */
     storage_t *data() { return bin.data(params); }
+    /**
+     * Retrieve a const pointer to the storage from the bin.
+     * @return A const pointer to the storage object for this stat.
+     */
     const storage_t *data() const {
         return (const_cast<bin_t *>(&bin))->data(params);
     }
 
   protected:
-    // Copying stats is not allowed
+    /**
+     * Copy constructor, copies are not allowed.
+     */
     ScalarBase(const ScalarBase &stat);
+    /**
+     * Can't copy stats.
+     */
     const ScalarBase &operator=(const ScalarBase &);
 
   public:
+    /**
+     * Return the current value of this stat as a result type.
+     * @return The current value.
+     */
     result_t val() const { return data()->val(params); }
+    /**
+     * Return the current value of this stat as its base type.
+     * @return The current value.
+     */
     T value() const { return data()->value(params); }
 
   public:
+    /**
+     * Create and initialize this stat, register it with the database.
+     */
     ScalarBase() : ScalarStat(true) {
         bin.init(params);
         setInit();
@@ -404,21 +557,50 @@ class ScalarBase : public ScalarStat
 
   public:
     // Common operators for stats
+    /**
+     * Increment the stat by 1. This calls the associated storage object inc
+     * function.
+     */
     void operator++() { data()->inc(1, params); }
+    /**
+     * Decrement the stat by 1. This calls the associated storage object dec
+     * function.
+     */
     void operator--() { data()->dec(1, params); }
 
+    /** Increment the stat by 1. */
     void operator++(int) { ++*this; }
+    /** Decrement the stat by 1. */
     void operator--(int) { --*this; }
 
+    /**
+     * Set the data value to the given value. This calls the associated storage
+     * object set function.
+     * @param v The new value.
+     */
     template <typename U>
     void operator=(const U& v) { data()->set(v, params); }
 
+    /**
+     * Increment the stat by the given value. This calls the associated
+     * storage object inc function.
+     * @param v The value to add.
+     */
     template <typename U>
     void operator+=(const U& v) { data()->inc(v, params); }
 
+    /**
+     * Decrement the stat by the given value. This calls the associated
+     * storage object dec function.
+     * @param v The value to substract.
+     */
     template <typename U>
     void operator-=(const U& v) { data()->dec(v, params); }
 
+    /**
+     * Return the number of elements, always 1 for a scalar.
+     * @return 1.
+     */
     virtual size_t size() const { return 1; }
 };
 
@@ -430,33 +612,60 @@ class ScalarBase : public ScalarStat
 template <typename T, template <typename T> class Storage, class Bin>
 class ScalarProxy;
 
+/**
+ * Implementation of a vector of stats. The type of stat is determined by the
+ * Storage class. @sa ScalarBase
+ */
 template <typename T, template <typename T> class Storage, class Bin>
 class VectorBase : public VectorStat
 {
   protected:
+    /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
+    /** Define the params of the storage class. */
     typedef typename storage_t::Params params_t;
+    /** Define the bin type. */
     typedef typename Bin::VectorBin<storage_t> bin_t;
 
   private:
+    /** Local storage for the entry values, used for printing. */
     mutable rvec_t *vec;
 
   protected:
+    /** The bin of this stat. */
     bin_t bin;
+    /** The parameters for this stat. */
     params_t params;
 
   protected:
+    /**
+     * Retrieve the storage from the bin  for the given index.
+     * @param index The vector index to access.
+     * @return The storage object at the given index.
+     */
     storage_t *data(int index) { return bin.data(index, params); }
+    /**
+     * Retrieve a const pointer to the storage from the bin
+     * for the given index.
+     * @param index The vector index to access.
+     * @return A const pointer to the storage object at the given index.
+     */
     const storage_t *data(int index) const {
         return (const_cast<bin_t *>(&bin))->data(index, params);
     }
 
   protected:
     // Copying stats is not allowed
+    /** Copying stats isn't allowed. */
     VectorBase(const VectorBase &stat);
+    /** Copying stats isn't allowed. */
     const VectorBase &operator=(const VectorBase &);
 
   public:
+    /**
+     * Copy the values to a local vector and return a reference to it.
+     * @return A reference to a vector of the stat values.
+     */
     const rvec_t &val() const {
         if (vec)
             vec->resize(size());
@@ -469,6 +678,10 @@ class VectorBase : public VectorStat
         return *vec;
     }
 
+    /**
+     * Return a total of all entries in this vector.
+     * @return The total of all vector entries.
+     */
     result_t total() const {
         result_t total = 0.0;
         for (int i = 0; i < size(); ++i)
@@ -477,9 +690,20 @@ class VectorBase : public VectorStat
     }
 
   public:
+    /**
+     * Create this vector and register it with the database.
+     */
     VectorBase() : VectorStat(true), vec(NULL) {}
+    /**
+     * Destructor.
+     */
     ~VectorBase() { if (vec) delete vec; }
 
+    /**
+     * Set this vector to have the given size.
+     * @param size The new size.
+     * @return A reference to this stat.
+     */
     VectorBase &init(size_t size) {
         bin.init(size, params);
         setInit();
@@ -488,37 +712,88 @@ class VectorBase : public VectorStat
     }
 
     friend class ScalarProxy<T, Storage, Bin>;
+
+    /**
+     * Return a reference (ScalarProxy) to the stat at the given index.
+     * @param index The vector index to access.
+     * @return A reference of the stat.
+     */
     ScalarProxy<T, Storage, Bin> operator[](int index);
 
+    /**
+     * Return the number of elements in this vector.
+     * @return The size of the vector.
+     */
     virtual size_t size() const { return bin.size(); }
 };
 
+/**
+ * A proxy class to access the stat at a given index in a VectorBase stat.
+ * Behaves like a ScalarBase.
+ */
 template <typename T, template <typename T> class Storage, class Bin>
 class ScalarProxy : public ScalarStat
 {
   protected:
+    /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
+    /** Define the params of the storage class. */
     typedef typename storage_t::Params params_t;
+    /** Define the bin type. */
     typedef typename Bin::VectorBin<storage_t> bin_t;
 
   private:
+    /** Pointer to the bin in the parent VectorBase. */
     bin_t *bin;
+    /** Pointer to the params in the parent VectorBase. */
     params_t *params;
+    /** The index to access in the parent VectorBase. */
     int index;
 
   protected:
+    /**
+     * Retrieve the storage from the bin.
+     * @return The storage from the bin for this stat.
+     */
     storage_t *data() { return bin->data(index, *params); }
+    /**
+     * Retrieve a const pointer to the storage from the bin.
+     * @return A const pointer to the storage for this stat.
+     */
     const storage_t *data() const { return bin->data(index, *params); }
 
   public:
+    /**
+     * Return the current value of this statas a result type.
+     * @return The current value.
+     */
     result_t val() const { return data()->val(*params); }
+    /**
+     * Return the current value of this stat as its base type.
+     * @return The current value.
+     */
     T value() const { return data()->value(*params); }
 
   public:
+    /**
+     * Create and initialize this proxy, do not register it with the database.
+     * @param b The bin to use.
+     * @param p The params to use.
+     * @param i The index to access.
+     */
     ScalarProxy(bin_t &b, params_t &p, int i)
         : ScalarStat(false), bin(&b), params(&p), index(i)  {}
+    /**
+     * Create a copy of the provided ScalarProxy.
+     * @param sp The proxy to copy.
+     */
     ScalarProxy(const ScalarProxy &sp)
         : ScalarStat(false), bin(sp.bin), params(sp.params), index(sp.index) {}
+    /**
+     * Set this proxy equal to the provided one.
+     * @param sp The proxy to copy.
+     * @return A reference to this proxy.
+     */
     const ScalarProxy &operator=(const ScalarProxy &sp) {
         bin = sp.bin;
         params = sp.params;
@@ -528,21 +803,50 @@ class ScalarProxy : public ScalarStat
 
   public:
     // Common operators for stats
+    /**
+     * Increment the stat by 1. This calls the associated storage object inc
+     * function.
+     */
     void operator++() { data()->inc(1, *params); }
+    /**
+     * Decrement the stat by 1. This calls the associated storage object dec
+     * function.
+     */
     void operator--() { data()->dec(1, *params); }
 
+    /** Increment the stat by 1. */
     void operator++(int) { ++*this; }
+    /** Decrement the stat by 1. */
     void operator--(int) { --*this; }
 
+    /**
+     * Set the data value to the given value. This calls the associated storage
+     * object set function.
+     * @param v The new value.
+     */
     template <typename U>
     void operator=(const U& v) { data()->set(v, *params); }
 
+    /**
+     * Increment the stat by the given value. This calls the associated
+     * storage object inc function.
+     * @param v The value to add.
+     */
     template <typename U>
     void operator+=(const U& v) { data()->inc(v, *params); }
 
+    /**
+     * Decrement the stat by the given value. This calls the associated
+     * storage object dec function.
+     * @param v The value to substract.
+     */
     template <typename U>
     void operator-=(const U& v) { data()->dec(v, *params); }
 
+    /**
+     * Return the number of elements, always 1 for a scalar.
+     * @return 1.
+     */
     virtual size_t size() const { return 1; }
 };
 
@@ -598,8 +902,8 @@ class Vector2dBase : public Stat
     }
 
     /**
-     * This makes the assumption that if you're gonna subnames a 2d vector,
-     * you're subnaming across all y
+     * @warning This makes the assumption that if you're gonna subnames a 2d
+     * vector, you're subnaming across all y
      */
     Vector2dBase &ysubnames(const char **names)
     {
@@ -770,31 +1074,53 @@ void DistDisplay(std::ostream &stream, const std::string &name,
                  result_t underflow, result_t overflow,
                  const rvec_t &vec, int min, int max, int bucket_size,
                  int size);
-
+/**
+ * Templatized storage and interface for a distrbution stat.
+ */
 template <typename T>
 struct DistStor
 {
   public:
+    /** The parameters for a distribution stat. */
     struct Params
     {
+        /** The minimum value to track. */
         int min;
+        /** The maximum value to track. */
         int max;
+        /** The number of entries in each bucket. */
         int bucket_size;
+        /** The number of buckets. Equal to (max-min)/bucket_size. */
         int size;
     };
 
   private:
+    /** The smallest value sampled. */
     T min_val;
+    /** The largest value sampled. */
     T max_val;
+    /** The number of values sampled less than min. */
     T underflow;
+    /** The number of values sampled more than max. */
     T overflow;
+    /** Counter for each bucket. */
     std::vector<T> vec;
 
   public:
+    /**
+     * Construct this storage with the supplied params.
+     * @param params The parameters.
+     */
     DistStor(const Params &params)
         : min_val(INT_MAX), max_val(INT_MIN), underflow(0), overflow(0),
           vec(params.size) {
     }
+    /**
+     * Add a value to the distribution for the given number of times.
+     * @param val The value to add.
+     * @param number The number of times to add the value.
+     * @param params The paramters of the distribution.
+     */
     void sample(T val, int number, const Params &params) {
         if (val < params.min)
             underflow += number;
@@ -813,20 +1139,39 @@ struct DistStor
             max_val = val;
     }
 
+    /**
+     * Return the number of buckets in this distribution.
+     * @return the number of buckets.
+     * @todo Is it faster to return the size from the parameters?
+     */
     size_t size(const Params &) const { return vec.size(); }
 
+    /**
+     * Returns true if any calls to sample have been made.
+     * @param params The paramters of the distribution.
+     * @return True if any values have been sampled.
+     */
     bool zero(const Params &params) const {
         if (underflow != 0 || overflow != 0)
-            return true;
+            return false;
 
         int s = size(params);
         for (int i = 0; i < s; i++)
             if (vec[i] != 0)
-                return true;
+                return false;
 
-        return false;
+        return true;
     }
 
+    /**
+     * Print this distribution and the given print data to the given ostream.
+     * @param stream The output stream.
+     * @param name The name of this stat (from StatData).
+     * @param desc The description of this stat (from StatData).
+     * @param precision The print precision (from StatData).
+     * @param flags The format flags (from StatData).
+     * @param params The paramters of this distribution.
+     */
     void display(std::ostream &stream, const std::string &name,
                  const std::string &desc, int precision, FormatFlags flags,
                  const Params &params) const {
@@ -853,29 +1198,61 @@ struct DistStor
 void FancyDisplay(std::ostream &stream, const std::string &name,
                   const std::string &desc, int precision, FormatFlags flags,
                   result_t mean, result_t variance);
+
+/**
+ * Templatized storage and interface for a distribution that calculates mean
+ * and variance.
+ */
 template <typename T>
 struct FancyStor
 {
   public:
+    /**
+     * No paramters for this storage.
+     */
     struct Params {};
 
   private:
+    /** The current sum. */
     T sum;
+    /** The sum of squares. */
     T squares;
+    /** The total number of samples. */
     int total;
 
   public:
+    /**
+     * Create and initialize this storage.
+     */
     FancyStor(const Params &) : sum(0), squares(0), total(0) {}
 
-    void sample(T val, int number, const Params &) {
+    /**
+     * Add a value the given number of times to this running average.
+     * Update the running sum and sum of squares, increment the number of
+     * values seen by the given number.
+     * @param val The value to add.
+     * @param number The number of times to add the value.
+     * @param p The parameters of this stat.
+     */
+    void sample(T val, int number, const Params &p) {
         T value = val * number;
         sum += value;
         squares += value * value;
         total += number;
     }
+
+    /**
+     * Print this distribution and the given print data to the given ostream.
+     * @param stream The output stream.
+     * @param name The name of this stat (from StatData).
+     * @param desc The description of this stat (from StatData).
+     * @param precision The print precision (from StatData).
+     * @param flags The format flags (from StatData).
+     * @param params The paramters of this distribution.
+     */
     void display(std::ostream &stream, const std::string &name,
                  const std::string &desc, int precision, FormatFlags flags,
-                 const Params &) const {
+                 const Params &params) const {
 
         result_t mean = NAN;
         result_t variance = NAN;
@@ -892,28 +1269,63 @@ struct FancyStor
         FancyDisplay(stream, name, desc, precision, flags, mean, variance);
     }
 
+    /**
+     * Return the number of entries in this stat, 1
+     * @return 1.
+     */
     size_t size(const Params &) const { return 1; }
+    /**
+     * Return true if no samples have been added.
+     * @return True if no samples have been added.
+     */
     bool zero(const Params &) const { return total == 0; }
 };
 
+/**
+ * Templatized storage for distribution that calculates per cycle mean and
+ * variance.
+ */
 template <typename T>
 struct AvgFancy
 {
   public:
+    /** No parameters for this storage. */
     struct Params {};
 
   private:
+    /** Current total. */
     T sum;
+    /** Current sum of squares. */
     T squares;
 
   public:
+    /**
+     * Create and initialize this storage.
+     */
     AvgFancy(const Params &) : sum(0), squares(0) {}
 
+    /**
+     * Add a value to the distribution for the given number of times.
+     * Update the running sum and sum of squares.
+     * @param val The value to add.
+     * @param number The number of times to add the value.
+     * @param p The paramters of the distribution.
+     */
     void sample(T val, int number, const Params& p) {
         T value = val * number;
         sum += value;
         squares += value * value;
     }
+
+    /**
+     * Print this distribution and the given print data to the given ostream.
+     * @param stream The output stream.
+     * @param name The name of this stat (from StatData).
+     * @param desc The description of this stat (from StatData).
+     * @param precision The print precision (from StatData).
+     * @param flags The format flags (from StatData).
+     * @param params The paramters of this distribution.
+     */
     void display(std::ostream &stream, const std::string &name,
                  const std::string &desc, int precision, FormatFlags flags,
                  const Params &params) const {
@@ -923,42 +1335,93 @@ struct AvgFancy
         FancyDisplay(stream, name, desc, precision, flags, mean, variance);
     }
 
+    /**
+     * Return the number of entries, in this case 1.
+     * @return 1.
+     */
     size_t size(const Params &params) const { return 1; }
+    /**
+     * Return true if no samples have been added.
+     * @return True if the sum is zero.
+     */
     bool zero(const Params &params) const { return sum == 0; }
 };
 
+/**
+ * Implementation of a distribution stat. The type of distribution is
+ * determined by the Storage template. @sa ScalarBase
+ */
 template <typename T, template <typename T> class Storage, class Bin>
 class DistBase : public Stat
 {
   protected:
+    /** Define the type of the storage class. */
     typedef Storage<T> storage_t;
+    /** Define the params of the storage class. */
     typedef typename storage_t::Params params_t;
+    /** Define the bin type. */
     typedef typename Bin::Bin<storage_t> bin_t;
 
   protected:
+    /** The bin of this stat. */
     bin_t bin;
+    /** The parameters for this stat. */
     params_t params;
 
   protected:
+    /**
+     * Retrieve the storage from the bin.
+     * @return The storage object for this stat.
+     */
     storage_t *data() { return bin.data(params); }
+    /**
+     * Retrieve a const pointer to the storage from the bin.
+     * @return A const pointer to the storage object for this stat.
+     */
     const storage_t *data() const {
         return (const_cast<bin_t *>(&bin))->data(params);
     }
 
   protected:
     // Copying stats is not allowed
+    /** Copies are not allowed. */
     DistBase(const DistBase &stat);
+    /** Copies are not allowed. */
     const DistBase &operator=(const DistBase &);
 
   public:
+    /**
+     * Create this distrubition and register it with the database.
+     */
     DistBase() : Stat(true) { }
+    /**
+     * Destructor.
+     */
     ~DistBase() { }
 
+    /**
+     * Add a value to the distribtion n times. Calls sample on the storage
+     * class.
+     * @param v The value to add.
+     * @param n The number of times to add it, defaults to 1.
+     */
     template <typename U>
     void sample(const U& v, int n = 1) { data()->sample(v, n, params); }
 
+    /**
+     * Return the number of entries in this stat.
+     * @return The number of entries.
+     */
     virtual size_t size() const { return data()->size(params); }
+    /**
+     * Return true if no samples have been added.
+     * @return True if there haven't been any samples.
+     */
     virtual bool zero() const { return data()->zero(params); }
+    /**
+     * Print this distribution to the given ostream.
+     * @param stream The output stream.
+     */
     virtual void display(std::ostream &stream) const {
         data()->display(stream, myname(), mydesc(), myprecision(), myflags(),
                         params);
@@ -1105,14 +1568,32 @@ VectorDistBase<T, Storage, Bin>::total(int index) const
 //  Formula Details
 //
 //////////////////////////////////////////////////////////////////////
+
+/**
+ * Base class for formula statistic node. These nodes are used to build a tree
+ * that represents the formula.
+ */
 class Node : public RefCounted
 {
   public:
+    /**
+     * Return the number of nodes in the subtree starting at this node.
+     * @return the number of nodes in this subtree.
+     */
     virtual size_t size() const = 0;
+    /**
+     * Return the result vector of this subtree.
+     * @return The result vector of this subtree.
+     */
     virtual const rvec_t &val() const = 0;
+    /**
+     * Return the total of the result vector.
+     * @return The total of the result vector.
+     */
     virtual result_t total() const = 0;
 };
 
+/** Reference counting pointer to a function Node. */
 typedef RefCountingPtr<Node> NodePtr;
 
 class ScalarStatNode : public Node
@@ -1341,36 +1822,108 @@ class SumNode : public Node
     virtual size_t size() const { return 1; }
 };
 
+/**
+ * Helper class to construct formula node trees.
+ */
 class Temp
 {
   private:
+    /**
+     * Pointer to a Node object.
+     */
     NodePtr node;
 
   public:
+    /**
+     * Copy the given pointer to this class.
+     * @param n A pointer to a Node object to copy.
+     */
     Temp(NodePtr n) : node(n) {}
+    /**
+     * Create a new ScalarStatNode.
+     * @param s The ScalarStat to place in a node.
+     */
     Temp(const ScalarStat &s) : node(new ScalarStatNode(s)) {}
+    /**
+     * Create a new ScalarProxyNode.
+     * @param p The ScalarProxy to place in a node.
+     */
     template <typename T, template <typename T> class Storage, class Bin>
     Temp(const ScalarProxy<T, Storage, Bin> &p)
         : node(new ScalarProxyNode<T, Storage, Bin>(p)) {}
+    /**
+     * Create a new VectorStatNode.
+     * @param s The VectorStat to place in a node.
+     */
     Temp(const VectorStat &s) : node(new VectorStatNode(s)) {}
 
-#define TempSCALAR(T) \
-    Temp(T value) : node(new ConstNode<T>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed char value) : node(new ConstNode<signed char>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned char value) : node(new ConstNode<unsigned char>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed short value) : node(new ConstNode<signed short>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned short value) : node(new ConstNode<unsigned short>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed int value) : node(new ConstNode<signed int>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned int value) : node(new ConstNode<unsigned int>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed long value) : node(new ConstNode<signed long>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned long value) : node(new ConstNode<unsigned long>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(signed long long value)
+        : node(new ConstNode<signed long long>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(unsigned long long value)
+        : node(new ConstNode<unsigned long long>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(float value) : node(new ConstNode<float>(value)) {}
+    /**
+     * Create a ConstNode
+     * @param value The value of the const node.
+     */
+    Temp(double value) : node(new ConstNode<double>(value)) {}
 
-    TempSCALAR(  signed char);
-    TempSCALAR(unsigned char);
-    TempSCALAR(  signed short);
-    TempSCALAR(unsigned short);
-    TempSCALAR(  signed int);
-    TempSCALAR(unsigned int);
-    TempSCALAR(  signed long);
-    TempSCALAR(unsigned long);
-    TempSCALAR(  signed long long);
-    TempSCALAR(unsigned long long);
-    TempSCALAR(float);
-    TempSCALAR(double);
-#undef TempSCALAR
-
+    /**
+     * Return the node pointer.
+     * @return the node pointer.
+     */
     operator NodePtr() { return node;}
 };
 
@@ -1578,91 +2131,98 @@ struct NoBin
 // Visible Statistics Types
 //
 //////////////////////////////////////////////////////////////////////
-/**@defgroup VStats  VisibleStatTypes
+/**
+ * @defgroup VisibleStats "Statistic Types"
+ * These are the statistics that are used in the simulator. By default these
+ * store counters and don't use binning, but are templatized to accept any type
+ * and any Bin class.
+ * @{
  */
 
-/** @ingroup VStats
- *This is the simplest counting stat. Default type is Counter, but can be
- *anything (like double, int, etc).  To bin, just designate the name of the bin
- * when declaring.  It can be used like a regular Counter.
- *Example:  Stat<> foo;
- *foo += num_foos;
+/**
+ * This is a simple scalar statistic, like a counter.
+ * @sa Stat, ScalarBase, StatStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class Scalar : public Detail::ScalarBase<T, Detail::StatStor, Bin>
 {
   public:
+    /** The base implementation. */
     typedef Detail::ScalarBase<T, Detail::StatStor, Bin> Base;
 
-/** sets Stat equal to value of type U */
+    /**
+     * Sets the stat equal to the given value. Calls the base implementation
+     * of operator=
+     * @param v The new value.
+     */
     template <typename U>
     void operator=(const U& v) { Base::operator=(v); }
 };
 
-/** @ingroup VStats
- *This calculates averages over number of cycles.  Additionally, the update per
- *cycle is implicit if there is no change.  In other words, if you want to know
- *the average number of instructions in the IQ per cycle, then you can use this
- * stat and not have to update it on cycles where there is no change.
+/**
+ * A stat that calculates the per cycle average of a value.
+ * @sa Stat, ScalarBase, AvgStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class Average : public Detail::ScalarBase<T, Detail::AvgStor, Bin>
 {
   public:
+    /** The base implementation. */
     typedef Detail::ScalarBase<T, Detail::AvgStor, Bin> Base;
 
-/** sets Average equalt to value of type U*/
+    /**
+     * Sets the stat equal to the given value. Calls the base implementation
+     * of operator=
+     * @param v The new value.
+     */
     template <typename U>
     void operator=(const U& v) { Base::operator=(v); }
 };
 
-/** @ingroup VStats
- *This is a vector of type T, ideally suited to track stats across something like
- * SMT threads.
+/**
+ * A vector of scalar stats.
+ * @sa Stat, VectorBase, StatStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class Vector : public Detail::VectorBase<T, Detail::StatStor, Bin>
 { };
 
-/** @ingroup VStats
- *This is a vector of Averages of type T
+/**
+ * A vector of Average stats.
+ * @sa Stat, VectorBase, AvgStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class AverageVector : public Detail::VectorBase<T, Detail::AvgStor, Bin>
 { };
 
-/** @ingroup VStats
- *This is a 2-dimensional vector.  Intended  usage is for something like tracking  a
- * Vector stat across another Vector like  SMT threads.
+/**
+ * A 2-Dimensional vecto of scalar stats.
+ * @sa Stat, Vector2dBase, StatStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class Vector2d : public Detail::Vector2dBase<T, Detail::StatStor, Bin>
 { };
 
-/** @ingroup VStats
- * This is essentially a Vector, but with minor differences.  Where a
- * Vector's index maps directly to what it's tracking, a Distribution's index can
- * map to an arbitrary bucket type.  For example, you could map 1-8 to bucket 0
- * of a Distribution, and if ever there are 1-8 instructions within an IQ, increment
- * bucket 0.
+/**
+ * A simple distribution stat.
+ * @sa Stat, DistBase, DistStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
 {
   private:
+    /** Base implementation. */
     typedef Detail::DistBase<T, Detail::DistStor, Bin> Base;
+    /** The Parameter type. */
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
     /**
-     *This must be called to set some data members of the distribution
-     *as well as to allocate the appropriate storage size.
-     *@param min The minimum value of the Distribution
-     *@param max The maximum value of the Distribution (NOT the size!)
-     *@param bkt The size of the buckets to indicate mapping.  I.e. if you have
-     *min=0, max=15, bkt=8, you will have two buckets, and anything from 0-7
-     *will go into bucket 0, and anything from 8-15 be in bucket 1.
-     *@return the Distribution itself.
+     * Set the parameters of this distribution. @sa DistStor::Params
+     * @param min The minimum value of the distribution.
+     * @param max The maximum value of the distribution.
+     * @param bkt The number of values in each bucket.
+     * @return A reference to this distribution.
      */
     Distribution &init(T min, T max, int bkt) {
         params.min = min;
@@ -1676,63 +2236,74 @@ class Distribution : public Detail::DistBase<T, Detail::DistStor, Bin>
     }
 };
 
-/** @ingroup VStats
- *This has the functionality of a standard deviation built into it.  Update it
- *every cycle, and at the end you will have the standard deviation.
+/**
+ * Calculates the mean and variance of all the samples.
+ * @sa Stat, DistBase, FancyStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class StandardDeviation : public Detail::DistBase<T, Detail::FancyStor, Bin>
 {
   private:
+    /** The base implementation */
     typedef Detail::DistBase<T, Detail::DistStor, Bin> Base;
+    /** The parameter type. */
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
+    /**
+     * Construct and initialize this distribution.
+     */
     StandardDeviation() {
         bin.init(params);
         setInit();
     }
 };
 
-/** @ingroup VStats
- *This also calculates standard deviations, but there is no need to
- *update every cycle if there is no change, the stat will update for you.
+/**
+ * Calculates the per cycle mean and variance of the samples.
+ * @sa Stat, DistBase, AvgFancy
  */
 template <typename T = Counter, class Bin = NoBin>
 class AverageDeviation : public Detail::DistBase<T, Detail::AvgFancy, Bin>
 {
   private:
+    /** The base implementation */
     typedef Detail::DistBase<T, Detail::DistStor, Bin> Base;
+    /** The parameter type. */
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
+    /**
+     * Construct and initialize this distribution.
+     */
     AverageDeviation() {
         bin.init(params);
         setInit();
     }
 };
 
-/** @ingroup VStats
- *This is a vector of Distributions. (The complexity increases!). Intended usage
- * is for something like tracking a distribution across a vector like SMT threads.
+/**
+ * A vector of distributions.
+ * @sa Stat, VectorDistBase, DistStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class VectorDistribution
     : public Detail::VectorDistBase<T, Detail::DistStor, Bin>
 {
   private:
+    /** The base implementation */
     typedef Detail::VectorDistBase<T, Detail::DistStor, Bin> Base;
+    /** The parameter type. */
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
     /**
-     *This must be called to set some data members and allocate storage space.
-     *@param size The size of the Vector
-     *@param min The minumum value of the Distribution
-     *@param max The maximum value of the Distribution (NOT the size)
-     *@param bkt The range of the bucket.  I.e if min=0, max=15, and bkt=8,
-     *then 0-7 will be bucket 0, and 8-15 will be bucket 1.
-     *@return return the VectorDistribution itself.
+     * Initialize storage and parameters for this distribution.
+     * @param size The size of the vector (the number of distributions).
+     * @param min The minimum value of the distribution.
+     * @param max The maximum value of the distribution.
+     * @param bkt The number of values in each bucket.
+     * @return A reference to this distribution.
      */
     VectorDistribution &init(int size, T min, T max, int bkt) {
         params.min = min;
@@ -1746,23 +2317,25 @@ class VectorDistribution
     }
 };
 
-/** @ingroup VStats
- *This is a vector of Standard Deviations.  Intended usage is for tracking
- *Standard Deviations across a vector like SMT threads.
+/**
+ * This is a vector of StandardDeviation stats.
+ * @sa Stat, VectorDistBase, FancyStor
  */
 template <typename T = Counter, class Bin = NoBin>
 class VectorStandardDeviation
     : public Detail::VectorDistBase<T, Detail::FancyStor, Bin>
 {
   private:
+    /** The base implementation */
     typedef Detail::VectorDistBase<T, Detail::FancyStor, Bin> Base;
+    /** The parameter type. */
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
-    /** This must be called to initialize some data members and allocate
-     * approprate storage space for the stat.
-     *@param size The size of the Vector
-     * @return the VectorStandardDeviation itself.
+    /**
+     * Initialize storage for this distribution.
+     * @param size The size of the vector.
+     * @return A reference to this distribution.
      */
     VectorStandardDeviation &init(int size) {
         bin.init(size, params);
@@ -1772,24 +2345,26 @@ class VectorStandardDeviation
     }
 };
 
-/** @ingroup VStats
- * This is a vector of Average Deviations.  Intended usage is for tracking
- *Average Deviations across a vector like SMT threads.
+/**
+ * This is a vector of AverageDeviation stats.
+ * @sa Stat, VectorDistBase, AvgFancy
  */
 template <typename T = Counter, class Bin = NoBin>
 class VectorAverageDeviation
     : public Detail::VectorDistBase<T, Detail::AvgFancy, Bin>
 {
   private:
+    /** The base implementation */
     typedef Detail::VectorDistBase<T, Detail::AvgFancy, Bin> Base;
+    /** The parameter type. */
     typedef typename Detail::DistStor<T>::Params Params;
 
   public:
-/** This must be called to initialize some data members and allocate
- * approprate storage space for the stat.
- *@param size The size of the Vector
- * @return The VectorAverageDeviation itself.
- */
+    /**
+     * Initialize storage for this distribution.
+     * @param size The size of the vector.
+     * @return A reference to this distribution.
+     */
     VectorAverageDeviation &init(int size) {
         bin.init(size, params);
         setInit();
@@ -1798,26 +2373,38 @@ class VectorAverageDeviation
     }
 };
 
-/** @ingroup VStats
- *This is a formula type.  When defining it, you can just say:
- *Formula foo = manchu + 3 / bar;
- *The calculations for Formulas are all done at the end of the simulation, this
- *really is just a definition of how to calculate at the end.
+/**
+ * A formula for statistics that is calculated when printed. A formula is
+ * stored as a tree of Nodes that represent the equation to calculate.
+ * @sa Stat, ScalarStat, VectorStat, Node, Detail::Temp
  */
 class Formula : public Detail::VectorStat
 {
   private:
     /** The root of the tree which represents the Formula */
     Detail::NodePtr root;
-    friend class Detail::Temp;
+    friend class Statistics::Detail::Temp;
 
   public:
+    /**
+     * Create and initialize thie formula, and register it with the database.
+     */
     Formula() : VectorStat(true) { setInit(); }
+    /**
+     * Create a formula with the given root node, register it with the
+     * database.
+     * @param r The root of the expression tree.
+     */
     Formula(Detail::Temp r) : VectorStat(true) {
         root = r;
         assert(size());
     }
 
+    /**
+     * Set an unitialized Formula to the given root.
+     * @param r The root of the expression tree.
+     * @return a reference to this formula.
+     */
     const Formula &operator=(Detail::Temp r) {
         assert(!root && "Can't change formulas");
         root = r;
@@ -1825,6 +2412,11 @@ class Formula : public Detail::VectorStat
         return *this;
     }
 
+    /**
+     * Add the given tree to the existing one.
+     * @param r The root of the expression tree.
+     * @return a reference to this formula.
+     */
     const Formula &operator+=(Detail::Temp r) {
         using namespace Detail;
         if (root)
@@ -1835,9 +2427,20 @@ class Formula : public Detail::VectorStat
         return *this;
     }
 
+    /**
+     * Return the vector of values of this formula.
+     * @return The result vector.
+     */
     const rvec_t &val() const { return root->val(); }
+    /**
+     * Return the total of the result vector.
+     * @return The total of the result vector.
+     */
     result_t total() const { return root->total(); }
 
+    /**
+     * Return the number of elements in the tree.
+     */
     size_t size() const {
         if (!root)
             return 0;
@@ -1845,6 +2448,10 @@ class Formula : public Detail::VectorStat
             return root->size();
     }
 };
+
+/**
+ * @}
+ */
 
 void check();
 void dump(std::ostream &stream);
