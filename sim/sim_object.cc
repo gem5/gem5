@@ -30,6 +30,7 @@
 
 #include "base/callback.hh"
 #include "base/inifile.hh"
+#include "base/match.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/stats/events.hh"
@@ -53,13 +54,21 @@ using namespace std;
 //
 SimObject::SimObjectList SimObject::simObjectList;
 
+namespace Stats {
+    extern ObjectMatch event_ignore;
+}
+
 //
 // SimObject constructor: used to maintain static simObjectList
 //
 SimObject::SimObject(const string &_name)
     : objName(_name)
 {
-    doRecordEvent = !Stats::ignoreEvent(_name);
+#ifdef DEBUG
+    doDebugBreak = false;
+#endif
+
+    doRecordEvent = !Stats::event_ignore.match(_name);
     simObjectList.push_back(this);
 }
 
@@ -171,6 +180,31 @@ SimObject::serializeAll(ostream &os)
         obj->serialize(os);
    }
 }
+
+#ifdef DEBUG
+//
+// static function: flag which objects should have the debugger break
+//
+void
+SimObject::debugObjectBreak(const string &objs)
+{
+    SimObjectList::const_iterator i = simObjectList.begin();
+    SimObjectList::const_iterator end = simObjectList.end();
+
+    ObjectMatch match(objs);
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        obj->doDebugBreak = match.match(obj->name());
+   }
+}
+
+extern "C"
+void
+debugObjectBreak(const char *objs)
+{
+    SimObject::debugObjectBreak(string(objs));
+}
+#endif
 
 void
 SimObject::recordEvent(const std::string &stat)

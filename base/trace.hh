@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "base/cprintf.hh"
+#include "base/match.hh"
 #include "sim/host.hh"
 #include "sim/universe.hh"
 
@@ -137,16 +138,13 @@ namespace Trace {
 
     extern Log theLog;
 
-    extern int dprintf_ignore_size;
-
-    bool
-    dprintf_ignore_name(const std::string &name);
+    extern ObjectMatch ignore;
 
     inline void
     dprintf(const char *format, cp::ArgList &args, Tick cycle,
             const std::string &name)
     {
-        if (!dprintf_ignore_size || name.empty() || !dprintf_ignore_name(name))
+        if (name.empty() || !ignore.match(name))
             theLog.append(new Trace::PrintfRecord(format, args, cycle, name));
     }
 

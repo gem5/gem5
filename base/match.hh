@@ -30,68 +30,28 @@
  * User Console Definitions
  */
 
-#ifndef __SIM_OBJECT_HH__
-#define __SIM_OBJECT_HH__
+#ifndef __BASE_MATCH_HH__
+#define __BASE_MATCH_HH__
 
-#include <map>
-#include <list>
+#include <string>
 #include <vector>
-#include <iostream>
 
-#include "sim/serialize.hh"
-
-/*
- * Abstract superclass for simulation objects.  Represents things that
- * correspond to physical components and can be specified via the
- * config file (CPUs, caches, etc.).
- */
-class SimObject : public Serializable
+class ObjectMatch
 {
   protected:
-    std::string objName;
-
-  private:
-    friend class Serializer;
-
-    typedef std::vector<SimObject *> SimObjectList;
-
-    // list of all instantiated simulation objects
-    static SimObjectList simObjectList;
+    std::vector<std::vector<std::string> > tokens;
+    bool domatch(const std::string &name) const;
 
   public:
-    SimObject(const std::string &_name);
-
-    virtual ~SimObject() {}
-
-    virtual const std::string name() const { return objName; }
-
-    // initialization pass of all objects.  Gets invoked by SimInit()
-    virtual void init();
-    static void initAll();
-
-    // register statistics for this object
-    virtual void regStats();
-    virtual void regFormulas();
-    virtual void resetStats();
-
-    // static: call reg_stats on all SimObjects
-    static void regAllStats();
-
-    // static: call resetStats on all SimObjects
-    static void resetAllStats();
-
-    // static: call nameOut() & serialize() on all SimObjects
-    static void serializeAll(std::ostream &);
-
-#ifdef DEBUG
-  public:
-    bool doDebugBreak;
-    static void debugObjectBreak(const std::string &objs);
-#endif
-
-  public:
-    bool doRecordEvent;
-    void recordEvent(const std::string &stat);
+    ObjectMatch();
+    ObjectMatch(const std::string &expression);
+    void setExpression(const std::string &expression);
+    void setExpression(const std::vector<std::string> &expression);
+    bool match(const std::string &name) const
+    {
+        return tokens.empty() ? false : domatch(name);
+    }
 };
 
-#endif // __SIM_OBJECT_HH__
+#endif // __BASE_MATCH_HH__
+

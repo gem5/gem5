@@ -37,8 +37,9 @@
 #include "base/stats/mysql_run.hh"
 #endif
 
-#include "base/str.hh"
+#include "base/match.hh"
 #include "sim/host.hh"
+#include "sim/sim_object.hh"
 #include "sim/universe.hh"
 
 using namespace std;
@@ -47,38 +48,7 @@ namespace Stats {
 
 Tick EventStart = ULL(0x7fffffffffffffff);
 
-vector<string> event_ignore;
-vector<vector<string> > ignore_tokens;
-vector<int> ignore_size;
-int event_ignore_size;
-
-bool
-ignoreEvent(const string &name)
-{
-    vector<string> name_tokens;
-    tokenize(name_tokens, name, '.');
-    int ntsize = name_tokens.size();
-
-    for (int i = 0; i < event_ignore_size; ++i) {
-        bool match = true;
-        int jstop = ignore_size[i];
-        for (int j = 0; j < jstop; ++j) {
-            if (j >= ntsize)
-                break;
-
-            const string &ignore = ignore_tokens[i][j];
-            if (ignore != "*" && ignore != name_tokens[j]) {
-                match = false;
-                break;
-            }
-        }
-
-        if (match == true)
-            return true;
-    }
-
-    return false;
-}
+ObjectMatch event_ignore;
 
 #ifdef USE_MYSQL
 class InsertEvent

@@ -51,39 +51,7 @@ FlagVec flags(NumFlags, false);
 //
 ostream *dprintf_stream = &cerr;
 
-int dprintf_ignore_size;
-vector<string> dprintf_ignore;
-vector<vector<string> > ignore_tokens;
-vector<int> ignore_size;
-
-bool
-dprintf_ignore_name(const string &name)
-{
-    vector<string> name_tokens;
-    tokenize(name_tokens, name, '.');
-    int ntsize = name_tokens.size();
-
-    for (int i = 0; i < dprintf_ignore_size; ++i) {
-        bool match = true;
-        int jstop = ignore_size[i];
-        for (int j = 0; j < jstop; ++j) {
-            if (j >= ntsize)
-                break;
-
-            const string &ignore = ignore_tokens[i][j];
-            if (ignore != "*" && ignore != name_tokens[j]) {
-                match = false;
-                break;
-            }
-        }
-
-        if (match == true)
-            return true;
-    }
-
-    return false;
-}
-
+ObjectMatch ignore;
 
 Log theLog;
 

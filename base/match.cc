@@ -26,72 +26,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * User Console Definitions
- */
+#include "base/match.hh"
+#include "base/str.hh"
 
-#ifndef __SIM_OBJECT_HH__
-#define __SIM_OBJECT_HH__
+using namespace std;
 
-#include <map>
-#include <list>
-#include <vector>
-#include <iostream>
-
-#include "sim/serialize.hh"
-
-/*
- * Abstract superclass for simulation objects.  Represents things that
- * correspond to physical components and can be specified via the
- * config file (CPUs, caches, etc.).
- */
-class SimObject : public Serializable
+ObjectMatch::ObjectMatch()
 {
-  protected:
-    std::string objName;
+}
 
-  private:
-    friend class Serializer;
+ObjectMatch::ObjectMatch(const string &expr)
+{
+    setExpression(expr);
+}
 
-    typedef std::vector<SimObject *> SimObjectList;
+void
+ObjectMatch::setExpression(const string &expr)
+{
+    tokens.resize(1);
+    tokenize(tokens[0], expr, '.');
+}
 
-    // list of all instantiated simulation objects
-    static SimObjectList simObjectList;
+void
+ObjectMatch::setExpression(const vector<string> &expr)
+{
+    if (expr.empty()) {
+        tokens.resize(0);
+    } else {
+        tokens.resize(expr.size());
+        for (int i = 0; i < expr.size(); ++i)
+            tokenize(tokens[i], expr[i], '.');
+    }
+}
 
-  public:
-    SimObject(const std::string &_name);
+/**
+ * @todo this should probably be changed to just use regular
+ * expression code
+ */
+bool
+ObjectMatch::domatch(const string &name) const
+{
+    vector<string> name_tokens;
+    tokenize(name_tokens, name, '.');
+    int ntsize = name_tokens.size();
 
-    virtual ~SimObject() {}
+    int num_expr = tokens.size();
+    for (int i = 0; i < num_expr; ++i) {
+        const vector<string> &token = tokens[i];
+        int jstop = token.size();
 
-    virtual const std::string name() const { return objName; }
+        bool match = true;
+        for (int j = 0; j < jstop; ++j) {
+            if (j >= ntsize)
+                break;
 
-    // initialization pass of all objects.  Gets invoked by SimInit()
-    virtual void init();
-    static void initAll();
+            const string &var = token[j];
+            if (var != "*" && var != name_tokens[j]) {
+                match = false;
+                break;
+            }
+        }
 
-    // register statistics for this object
-    virtual void regStats();
-    virtual void regFormulas();
-    virtual void resetStats();
+        if (match == true)
+            return true;
+    }
 
-    // static: call reg_stats on all SimObjects
-    static void regAllStats();
+    return false;
+}
 
-    // static: call resetStats on all SimObjects
-    static void resetAllStats();
-
-    // static: call nameOut() & serialize() on all SimObjects
-    static void serializeAll(std::ostream &);
-
-#ifdef DEBUG
-  public:
-    bool doDebugBreak;
-    static void debugObjectBreak(const std::string &objs);
-#endif
-
-  public:
-    bool doRecordEvent;
-    void recordEvent(const std::string &stat);
-};
-
-#endif // __SIM_OBJECT_HH__

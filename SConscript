@@ -59,6 +59,7 @@ base_sources = Split('''
 	base/hybrid_pred.cc
 	base/inifile.cc
 	base/intmath.cc
+	base/match.cc
 	base/misc.cc
 	base/pollevent.cc
 	base/python.cc
