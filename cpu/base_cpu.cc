@@ -242,6 +242,21 @@ BaseCPU::clear_interrupts()
     intstatus = 0;
 }
 
+
+void
+BaseCPU::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+    SERIALIZE_SCALAR(intstatus);
+}
+
+void
+BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+    UNSERIALIZE_SCALAR(intstatus);
+}
+
 #endif // FULL_SYSTEM
 
 DEFINE_SIM_OBJECT_CLASS_NAME("BaseCPU", BaseCPU)

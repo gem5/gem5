@@ -299,6 +299,7 @@ SimpleCPU::resetStats()
 void
 SimpleCPU::serialize(ostream &os)
 {
+    BaseCPU::serialize(os);
     SERIALIZE_ENUM(_status);
     SERIALIZE_SCALAR(inst);
     nameOut(os, csprintf("%s.xc", name()));
@@ -312,6 +313,7 @@ SimpleCPU::serialize(ostream &os)
 void
 SimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
+    BaseCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
     UNSERIALIZE_SCALAR(inst);
     xc->unserialize(cp, csprintf("%s.xc", section));
