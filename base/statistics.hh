@@ -2170,64 +2170,43 @@ class Temp
     operator NodePtr() { return node;}
 };
 
+} // namespace Detail
+
 
 //////////////////////////////////////////////////////////////////////
 //
 // Binning Interface
 //
 //////////////////////////////////////////////////////////////////////
-
-class BinBase
+struct MainBin
 {
   private:
+    std::string _name;
     char *mem;
 
   protected:
     off_t memsize;
     off_t size() const { return memsize; }
-    char *memory();
+    char *memory(off_t off);
 
   public:
-    BinBase();
-    virtual ~BinBase();
-};
-
-} // namespace Detail
-
-class GenBin : public Detail::BinBase
-{
-  public:
-    GenBin() : BinBase() {}
-    virtual ~GenBin() {};
-
-    virtual void activate() = 0;
-    virtual std::string name() const = 0;
-    void regBin(GenBin *bin, std::string name);
-};
-
-template <class BinType>
-struct StatBin : public GenBin
-{
-  private:
-    std::string _name;
-
-  public:
-    std::string name() const { return _name;}
-
-    static StatBin *&curBin() {
-        static StatBin *current = NULL;
+    static MainBin *&curBin()
+    {
+        static MainBin *current = NULL;
         return current;
     }
 
-    static void setCurBin(StatBin *bin) { curBin() = bin; }
-    static StatBin *current() { assert(curBin()); return curBin(); }
+    static void setCurBin(MainBin *bin) { curBin() = bin; }
+    static MainBin *current() { assert(curBin()); return curBin(); }
 
-    static off_t &offset() {
+    static off_t &offset()
+    {
         static off_t offset = 0;
         return offset;
     }
 
-    static off_t new_offset(size_t size) {
+    static off_t new_offset(size_t size)
+    {
         size_t mask = sizeof(u_int64_t) - 1;
         off_t off = offset();
 
@@ -2236,23 +2215,24 @@ struct StatBin : public GenBin
         return off;
     }
 
-    explicit StatBin(std::string name) : GenBin() {  _name = name; this->regBin(this, name); }
+  public:
+    MainBin(const std::string &name);
+    ~MainBin();
 
-    char *memory(off_t off) {
-        if (memsize == -1) {
-            memsize = CeilPow2((size_t) offset());
-        }
-        assert(offset() <= size());
-        return Detail::BinBase::memory() + off;
+    const std::string &
+    name() const
+    {
+        return _name;
     }
 
-    virtual void activate()  {
+    void
+    activate()
+    {
         setCurBin(this);
 #ifdef FS_MEASURE
         DPRINTF(TCPIP, "activating %s Bin\n", name());
 #endif
     }
-    static void activate(StatBin &bin) { setCurBin(&bin); }
 
     class BinBase
     {
@@ -2261,10 +2241,12 @@ struct StatBin : public GenBin
 
       public:
         BinBase() : offset(-1) {}
-        void allocate(size_t size) {
+        void allocate(size_t size)
+        {
             offset = new_offset(size);
         }
-        char *access() {
+        char *access()
+        {
             assert(offset != -1);
             return current()->memory(offset);
         }
@@ -2284,7 +2266,9 @@ struct StatBin : public GenBin
 
         int size() const { return 1; }
 
-        Storage *data(Params &params) {
+        Storage *
+        data(Params &params)
+        {
             assert(initialized());
             char *ptr = access();
             char *flags = ptr + sizeof(Storage);
@@ -2294,7 +2278,9 @@ struct StatBin : public GenBin
             }
             return reinterpret_cast<Storage *>(ptr);
         }
-        void reset()
+
+        void
+        reset()
         {
             char *ptr = access();
             char *flags = ptr + size() * sizeof(Storage);
@@ -2320,7 +2306,8 @@ struct StatBin : public GenBin
         VectorBin() : _size(0) {}
 
         bool initialized() const { return _size > 0; }
-        void init(int s, Params &params) {
+        void init(int s, Params &params)
+        {
             assert(!initialized());
             assert(s > 0);
             _size = s;
@@ -2329,7 +2316,8 @@ struct StatBin : public GenBin
 
         int size() const { return _size; }
 
-        Storage *data(int index, Params &params) {
+        Storage *data(int index, Params &params)
+        {
             assert(initialized());
             assert(index >= 0 && index < size());
             char *ptr = access();
@@ -2357,9 +2345,6 @@ struct StatBin : public GenBin
     };
 };
 
-class MainBinType {};
-typedef StatBin<MainBinType> MainBin;
-
 struct NoBin
 {
     template <class Storage>
@@ -2379,11 +2364,13 @@ struct NoBin
         }
 
         bool initialized() const { return true; }
-        void init(Params &params) {
+        void init(Params &params)
+        {
             new (ptr) Storage(params);
         }
         int size() const{ return 1; }
-        Storage *data(Params &params) {
+        Storage *data(Params &params)
+        {
             assert(initialized());
             return reinterpret_cast<Storage *>(ptr);
         }
@@ -2420,7 +2407,8 @@ struct NoBin
         }
 
         bool initialized() const { return ptr != NULL; }
-        void init(int s, Params &params) {
+        void init(int s, Params &params)
+        {
             assert(s > 0 && "size must be positive!");
             assert(!initialized());
             _size = s;
@@ -2431,7 +2419,8 @@ struct NoBin
 
         int size() const { return _size; }
 
-        Storage *data(int index, Params &params) {
+        Storage *data(int index, Params &params)
+        {
             assert(initialized());
             assert(index >= 0 && index < size());
             return reinterpret_cast<Storage *>(ptr + index * sizeof(Storage));

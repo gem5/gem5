@@ -105,10 +105,10 @@ printSystems()
 }
 
 #ifdef FS_MEASURE
-Statistics::GenBin *
+Statistics::MainBin *
 System::getBin(const std::string &name)
 {
-    std::map<const std::string, Statistics::GenBin *>::const_iterator i;
+    std::map<const std::string, Statistics::MainBin *>::const_iterator i;
     i = fnBins.find(name);
     if (i == fnBins.end())
         panic("trying to getBin that is not on system map!");
