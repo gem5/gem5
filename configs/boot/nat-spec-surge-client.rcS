@@ -2,17 +2,15 @@
 #
 # /etc/init.d/rcS
 #
+CLIENT=10.0.0.2
+SERVER=192.168.0.1
 
 echo -n "mounting swap..."
 /sbin/swapon /dev/hdc1
 echo "done."
 
 echo -n "setting up network..."
-/sbin/ifconfig eth0 192.168.0.1 txqueuelen 1000
-/sbin/ifconfig eth0:1 192.168.0.2 txqueuelen 1000
-/sbin/ifconfig eth0:2 192.168.0.3 txqueuelen 1000
-/sbin/ifconfig eth0:3 192.168.0.4 txqueuelen 1000
-/sbin/ifconfig eth0:4 192.168.0.5 txqueuelen 1000
+/sbin/ifconfig eth0 $CLIENT txqueuelen 1000
 /sbin/ifconfig lo 127.0.0.1
 
 echo "1" > /proc/sys/net/ipv4/tcp_tw_recycle
@@ -36,20 +34,18 @@ echo "300000" > /proc/sys/net/core/netdev_max_backlog
 echo "131072" > /proc/sys/fs/file-max
 echo "done."
 
-echo -n "mounting file set..."
-mkdir -p /z/htdocs
-mount /dev/hdb1 /z/htdocs
+echo "changing route table..."
+route add default gw 10.0.0.1 
+
+echo "waiting for server..."
+/usr/bin/netcat -c -l -p 8000
+
+echo -n "running surge client..."
+/bin/bash -c "cd /benchmarks/surge && ./spec-m5 1 20 1 $SERVER 5 40000 1000000000 1000"
 echo "done."
 
-echo -n "starting httpd..."
-/benchmarks/apache2/bin/apachectl start
-sleep 2
-cat /benchmarks/apache2/logs/error_log
-echo "done."
-
-echo "notifying client..."
-echo "server ready" | /usr/bin/netcat -c 192.168.0.10 8000
-echo "done"
+echo -n "halting machine"
+m5 exit
 
 echo -n "starting bash shell..."
 /bin/bash

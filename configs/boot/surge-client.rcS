@@ -32,9 +32,8 @@ echo "300000" > /proc/sys/net/core/netdev_max_backlog
 echo "131072" > /proc/sys/fs/file-max
 echo "done."
 
-echo -n "sleeping until server is running..."
-sleep 3
-echo "done."
+echo "waiting for server..."
+/usr/bin/netcat -c -l -p 8000
 
 echo -n "running surge client..."
 /bin/bash -c "cd /benchmarks/surge && ./Surge 2 100 1 192.168.0.1 5"
