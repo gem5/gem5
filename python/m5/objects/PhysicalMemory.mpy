@@ -4,4 +4,4 @@ simobj PhysicalMemory(FunctionalMemory):
     type = 'PhysicalMemory'
     range = Param.AddrRange("Device Address")
     file = Param.String('', "memory mapped file")
-    mmu = Param.MemoryController(Super, "Memory Controller")
+    mmu = Param.MemoryController(parent.any, "Memory Controller")

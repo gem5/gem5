@@ -48,8 +48,16 @@
  */
 class SimObject : public Serializable, protected StartupCallback
 {
+  public:
+    struct Params {
+        std::string name;
+    };
+
   protected:
-    std::string objName;
+    Params *_params;
+
+  public:
+    const Params *params() const { return _params; }
 
   private:
     friend class Serializer;
@@ -60,15 +68,12 @@ class SimObject : public Serializable, protected StartupCallback
     static SimObjectList simObjectList;
 
   public:
-
-// for Params struct
-#include "simobj/param/SimObject.hh"
-
+    SimObject(Params *_params);
     SimObject(const std::string &_name);
 
     virtual ~SimObject() {}
 
-    virtual const std::string name() const { return objName; }
+    virtual const std::string name() const { return params()->name; }
 
     // initialization pass of all objects.
     // Gets invoked after construction, before unserialize.

@@ -393,13 +393,11 @@ template <class T>
 Fault
 SimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    if (status() == DcacheMissStall) {
+    if (status() == DcacheMissStall || status() == DcacheMissSwitch) {
         Fault fault = xc->read(memReq,data);
 
         if (traceData) {
             traceData->setAddr(addr);
-            if (fault == No_Fault)
-                traceData->setData(data);
         }
         return fault;
     }
@@ -428,21 +426,11 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
             // do functional access
             fault = xc->read(memReq, data);
 
-            if (traceData) {
-                traceData->setAddr(addr);
-                if (fault == No_Fault)
-                    traceData->setData(data);
-            }
         }
     } else if(fault == No_Fault) {
         // do functional access
         fault = xc->read(memReq, data);
 
-        if (traceData) {
-            traceData->setAddr(addr);
-            if (fault == No_Fault)
-                traceData->setData(data);
-        }
     }
 
     if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
@@ -498,11 +486,6 @@ template <class T>
 Fault
 SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    if (traceData) {
-        traceData->setAddr(addr);
-        traceData->setData(data);
-    }
-
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
@@ -605,6 +588,8 @@ SimpleCPU::processCacheCompletion()
       case DcacheMissStall:
         if (memReq->cmd.isRead()) {
             curStaticInst->execute(this,traceData);
+            if (traceData)
+                traceData->finalize();
         }
         dcacheStallCycles += curTick - lastDcacheStall;
         _status = Running;
@@ -613,6 +598,8 @@ SimpleCPU::processCacheCompletion()
       case DcacheMissSwitch:
         if (memReq->cmd.isRead()) {
             curStaticInst->execute(this,traceData);
+            if (traceData)
+                traceData->finalize();
         }
         _status = SwitchedOut;
         sampler->signalSwitched();
@@ -785,8 +772,12 @@ SimpleCPU::tick()
             comLoadEventQueue[0]->serviceEvents(numLoad);
         }
 
-        if (traceData)
+        // If we have a dcache miss, then we can't finialize the instruction
+        // trace yet because we want to populate it with the data later
+        if (traceData &&
+                !(status() == DcacheMissStall && memReq->cmd.isRead())) {
             traceData->finalize();
+        }
 
         traceFunctions(xc->regs.pc);
 

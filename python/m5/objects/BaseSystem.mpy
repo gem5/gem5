@@ -1,8 +1,8 @@
 simobj BaseSystem(SimObject):
     type = 'BaseSystem'
     abstract = True
-    memctrl = Param.MemoryController(Super, "memory controller")
-    physmem = Param.PhysicalMemory(Super, "phsyical memory")
+    memctrl = Param.MemoryController(parent.any, "memory controller")
+    physmem = Param.PhysicalMemory(parent.any, "phsyical memory")
     kernel = Param.String("file that contains the kernel code")
     console = Param.String("file that contains the console code")
     pal = Param.String("file that contains palcode")

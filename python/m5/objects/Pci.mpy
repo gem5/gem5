@@ -47,5 +47,5 @@ simobj PciDevice(DmaDevice):
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
-    configdata = Param.PciConfigData(Super, "PCI Config data")
-    configspace = Param.PciConfigAll(Super, "PCI Configspace")
+    configdata = Param.PciConfigData(parent.any, "PCI Config data")
+    configspace = Param.PciConfigAll(parent.any, "PCI Configspace")
