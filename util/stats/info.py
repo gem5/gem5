@@ -152,7 +152,7 @@ class Statistic(object):
             if attr == 'bins':
                 if value is not None:
                     value = source.getBin(value)
-            elif attr == 'samples' and type(value) is str:
+            elif attr == 'ticks' and type(value) is str:
                 value = [ int(x) for x in value.split() ]
 
             self.__dict__[attr] = value
@@ -252,7 +252,7 @@ class FormulaStat(object):
 
 class Scalar(Statistic,FormulaStat):
     def getValue(self):
-        return source.data(self, self.bins)
+        return source.data(self, self.bins, self.ticks)
 
     def display(self):
         import display
