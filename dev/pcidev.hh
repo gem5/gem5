@@ -65,12 +65,12 @@ class PciConfigData : public SimObject
 class PciDev : public DmaDevice
 {
   protected:
-    MemoryController *MMU;
-    PciConfigAll *ConfigSpace;
-    PciConfigData *ConfigData;
-    uint32_t BusNum;
-    uint32_t DeviceNum;
-    uint32_t FunctionNum;
+    MemoryController *mmu;
+    PciConfigAll *configSpace;
+    PciConfigData *configData;
+    uint32_t busNum;
+    uint32_t deviceNum;
+    uint32_t functionNum;
 
     PCIConfig config;
     uint32_t BARSize[6];

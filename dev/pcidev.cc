@@ -52,8 +52,8 @@ using namespace std;
 
 PciDev::PciDev(const string &name, MemoryController *mmu, PciConfigAll *cf,
                PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func)
-    : DmaDevice(name), MMU(mmu), ConfigSpace(cf), ConfigData(cd), BusNum(bus),
-      DeviceNum(dev), FunctionNum(func)
+    : DmaDevice(name), mmu(mmu), configSpace(cf), configData(cd), busNum(bus),
+      deviceNum(dev), functionNum(func)
 {
     // copy the config data from the PciConfigData object
     if (cd) {
@@ -78,7 +78,7 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
         memcpy((uint32_t*)data, config.data + offset, sizeof(uint32_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                DeviceNum, FunctionNum, offset,
+                deviceNum, functionNum, offset,
                 *(uint32_t*)(config.data + offset));
         break;
 
@@ -86,7 +86,7 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
         memcpy((uint16_t*)data, config.data + offset, sizeof(uint16_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                DeviceNum, FunctionNum, offset,
+                deviceNum, functionNum, offset,
                 *(uint16_t*)(config.data + offset));
         break;
 
@@ -94,7 +94,7 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
         memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                DeviceNum, FunctionNum, offset,
+                deviceNum, functionNum, offset,
                 (uint16_t)(*(uint8_t*)(config.data + offset)));
         break;
 
@@ -117,7 +117,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     DPRINTF(PCIDEV,
             "write device: %#x function: %#x reg: %#x size: %#x data: %#x\n",
-            DeviceNum, FunctionNum, offset, size, word_value);
+            deviceNum, functionNum, offset, size, word_value);
 
     barnum = (offset - PCI0_BASE_ADDR0) >> 2;
 
@@ -186,11 +186,11 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
-                            MMU->add_child((FunctionalMemory *)this,
+                            mmu->add_child((FunctionalMemory *)this,
                                            Range<Addr>(base_addr,
                                                        base_addr + base_size));
                         else
-                            MMU->update_child((FunctionalMemory *)this,
+                            mmu->update_child((FunctionalMemory *)this,
                                               Range<Addr>(BARAddrs[barnum],
                                                           BARAddrs[barnum] +
                                                           base_size),
@@ -214,11 +214,11 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
-                            MMU->add_child((FunctionalMemory *)this,
+                            mmu->add_child((FunctionalMemory *)this,
                                            Range<Addr>(base_addr,
                                                        base_addr + base_size));
                         else
-                            MMU->update_child((FunctionalMemory *)this,
+                            mmu->update_child((FunctionalMemory *)this,
                                               Range<Addr>(BARAddrs[barnum],
                                                           BARAddrs[barnum] +
                                                           base_size),
