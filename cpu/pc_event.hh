@@ -143,7 +143,7 @@ PCEvent::schedule(Addr pc)
 {
     if (evpc != badpc)
         panic("cannot switch PC");
-    evpc = pc;
+    evpc = pc & ~0x3;
 
     return schedule();
 }
@@ -158,7 +158,7 @@ PCEvent::schedule(PCEventQueue *q, Addr pc)
         panic("cannot switch addresses");
 
     queue = q;
-    evpc = pc;
+    evpc = pc & ~0x3;
 
     return schedule();
 }

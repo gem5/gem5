@@ -384,11 +384,12 @@ if env['USE_MYSQL']:
     env.Append(CPPDEFINES = 'USE_MYSQL')
     env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
     env.Append(LIBS=['z'])
-    if sys.platform.lower().startswith('linux'):
-        extra_libraries.append('/usr/lib/mysql/libmysqlclient.a')
+    if os.path.isdir('/usr/lib64'):
+        env.Append(LIBPATH=['/usr/lib64/mysql'])
     else:
-        env.Append(LIBS=['mysql'])
-        env.Append(LIBPATH=['/usr/local/lib/mysql/'])
+        env.Append(LIBPATH=['/usr/lib/mysql/'])
+    env.Append(LIBS=['mysqlclient'])
+
 
 ###################################################
 #
