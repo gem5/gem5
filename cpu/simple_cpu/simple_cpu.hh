@@ -102,8 +102,7 @@ class SimpleCPU : public BaseCPU
 
   private:
     Trace::InstRecord *traceData;
-    template<typename T>
-    void trace_data(T data);
+
   public:
     //
     enum Status {
@@ -243,6 +242,11 @@ class SimpleCPU : public BaseCPU
 
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
+
+    // These functions are only used in CPU models that split
+    // effective address computation from the actual memory access.
+    void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
+    Addr getEA() 	{ panic("SimpleCPU::getEA() not implemented\n"); }
 
     void prefetch(Addr addr, unsigned flags)
     {

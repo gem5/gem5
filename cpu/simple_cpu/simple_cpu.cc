@@ -74,14 +74,6 @@
 
 using namespace std;
 
-template<typename T>
-void
-SimpleCPU::trace_data(T data) {
-    if (traceData) {
-        traceData->setData(data);
-    }
-}
-
 
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c)
     : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c), multiplier(1)
