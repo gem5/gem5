@@ -108,7 +108,7 @@ namespace Trace {
         int len;
 
       public:
-        RawDataRecord(Tick cycle, const uint8_t *_data, int _len);
+        RawDataRecord(Tick cycle, const void *_data, int _len);
         virtual ~RawDataRecord();
 
         virtual void dump(std::ostream &);
@@ -149,7 +149,7 @@ namespace Trace {
     }
 
     inline void
-    rawDump(const uint8_t *data, int len)
+    rawDump(const void *data, int len)
     {
         theLog.append(new Trace::RawDataRecord(curTick, data, len));
     }

@@ -208,8 +208,7 @@ PrintfRecord::dump(ostream &os)
 
 
 
-RawDataRecord::RawDataRecord(Tick _cycle,
-                                    const uint8_t *_data, int _len)
+RawDataRecord::RawDataRecord(Tick _cycle, const void *_data, int _len)
     : Record(_cycle), len(_len)
 {
     data = new uint8_t[len];
