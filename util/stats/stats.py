@@ -19,6 +19,9 @@ Usage: %s [-E] [-F] [-d <db> ] [-g <get> ] [-h <host>] [-p]
        stability   <pairnum> <stats>  Calculated statistical info about stats
        stat        <regex>            Show stat data (only matching regex)
        stats       [regex]            List all stats (only matching regex)
+
+       database    <command>          Where command is drop, init, or clean
+
 ''' % sys.argv[0]
     sys.exit(1)
 
