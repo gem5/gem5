@@ -104,7 +104,9 @@ int
 obreakFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     // change brk addr to first arg
-    p->brk_point = xc->getSyscallArg(0);
+    Addr new_brk = xc->getSyscallArg(0);
+    if (new_brk != 0)
+        p->brk_point = xc->getSyscallArg(0);
     return p->brk_point;
 }
 

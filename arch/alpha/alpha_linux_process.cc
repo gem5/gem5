@@ -106,6 +106,7 @@ class Linux {
         uint32_t	st_uid;		//!< owner's user ID
         uint32_t	st_gid;		//!< owner's group ID
         uint32_t	st_rdev;	//!< device number
+        int32_t		_pad1;		//!< for alignment
         int64_t		st_size;	//!< file size in bytes
         uint64_t	st_atimeX;	//!< time of last access
         uint64_t	st_mtimeX;	//!< time of last modification
@@ -264,7 +265,7 @@ class Linux {
               // I don't think this exactly matches the HW FPCR
               *fpcr = 0;
               fpcr.copyOut(xc->mem);
-              return 1;
+              return 0;
           }
 
           default:
@@ -273,7 +274,7 @@ class Linux {
             break;
         }
 
-        return 0;
+        return 1;
     }
 
     /// Target osf_setsysinfo() handler.
@@ -292,7 +293,7 @@ class Linux {
               fpcr.copyIn(xc->mem);
               DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                        " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
-              return 1;
+              return 0;
           }
 
           default:
@@ -301,7 +302,7 @@ class Linux {
             break;
         }
 
-        return 0;
+        return 1;
     }
 
     /// Target fnctl() handler.
@@ -810,6 +811,37 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 391 */ SyscallDesc("removexattr", unimplementedFunc),
     /* 392 */ SyscallDesc("lremovexattr", unimplementedFunc),
     /* 393 */ SyscallDesc("fremovexattr", unimplementedFunc),
+    /* 394 */ SyscallDesc("futex", unimplementedFunc),
+    /* 395 */ SyscallDesc("sched_setaffinity", unimplementedFunc),
+    /* 396 */ SyscallDesc("sched_getaffinity", unimplementedFunc),
+    /* 397 */ SyscallDesc("tuxcall", unimplementedFunc),
+    /* 398 */ SyscallDesc("io_setup", unimplementedFunc),
+    /* 399 */ SyscallDesc("io_destroy", unimplementedFunc),
+    /* 400 */ SyscallDesc("io_getevents", unimplementedFunc),
+    /* 401 */ SyscallDesc("io_submit", unimplementedFunc),
+    /* 402 */ SyscallDesc("io_cancel", unimplementedFunc),
+    /* 403 */ SyscallDesc("unknown #403", unimplementedFunc),
+    /* 404 */ SyscallDesc("unknown #404", unimplementedFunc),
+    /* 405 */ SyscallDesc("exit_group", exitFunc), // exit all threads...
+    /* 406 */ SyscallDesc("lookup_dcookie", unimplementedFunc),
+    /* 407 */ SyscallDesc("sys_epoll_create", unimplementedFunc),
+    /* 408 */ SyscallDesc("sys_epoll_ctl", unimplementedFunc),
+    /* 409 */ SyscallDesc("sys_epoll_wait", unimplementedFunc),
+    /* 410 */ SyscallDesc("remap_file_pages", unimplementedFunc),
+    /* 411 */ SyscallDesc("set_tid_address", unimplementedFunc),
+    /* 412 */ SyscallDesc("restart_syscall", unimplementedFunc),
+    /* 413 */ SyscallDesc("fadvise64", unimplementedFunc),
+    /* 414 */ SyscallDesc("timer_create", unimplementedFunc),
+    /* 415 */ SyscallDesc("timer_settime", unimplementedFunc),
+    /* 416 */ SyscallDesc("timer_gettime", unimplementedFunc),
+    /* 417 */ SyscallDesc("timer_getoverrun", unimplementedFunc),
+    /* 418 */ SyscallDesc("timer_delete", unimplementedFunc),
+    /* 419 */ SyscallDesc("clock_settime", unimplementedFunc),
+    /* 420 */ SyscallDesc("clock_gettime", unimplementedFunc),
+    /* 421 */ SyscallDesc("clock_getres", unimplementedFunc),
+    /* 422 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
+    /* 423 */ SyscallDesc("semtimedop", unimplementedFunc),
+    /* 424 */ SyscallDesc("tgkill", unimplementedFunc)
 };
 
 const int Linux::Num_Syscall_Descs =
@@ -838,4 +870,5 @@ AlphaLinuxProcess::AlphaLinuxProcess(const std::string &name,
                                      std::vector<std::string> &envp)
     : LiveProcess(name, objFile, stdin_fd, stdout_fd, stderr_fd, argv, envp)
 {
+    init_regs->intRegFile[0] = 0;
 }
