@@ -27,15 +27,14 @@
  */
 
 /* @file
- * PCI configspace devices
+ * Interface for devices using PCI configuration
  */
 
 #ifndef __PCI_DEV_HH__
 #define __PCI_DEV_HH__
 
 #include "dev/pcireg.h"
-#include "sim/sim_object.hh"
-#include "mem/functional_mem/functional_memory.hh"
+#include "dev/io_device.hh"
 
 class PciConfigAll;
 class MemoryController;
@@ -63,15 +62,15 @@ class PciConfigData : public SimObject
  * register with it. This object registers with the PCIConfig space
  * object.
  */
-class PciDev : public FunctionalMemory
+class PciDev : public DmaDevice
 {
   protected:
-    MemoryController *MMU;
+    MemoryController *mmu;
     PciConfigAll *configSpace;
     PciConfigData *configData;
-    uint32_t bus;
-    uint32_t device;
-    uint32_t function;
+    uint32_t busNum;
+    uint32_t deviceNum;
+    uint32_t functionNum;
 
     PCIConfig config;
     uint32_t BARSize[6];
