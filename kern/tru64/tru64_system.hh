@@ -67,8 +67,6 @@ class Tru64System : public System
     DebugPrintfEvent *debugPrintfrEvent;
     DumpMbufEvent *dumpMbufEvent;
 
-    std::vector<FnEvent *> fnEvents;
-
   private:
 
     Addr kernelStart;
@@ -104,17 +102,6 @@ class Tru64System : public System
 
     static void Printf(AlphaArguments args);
     static void DumpMbuf(AlphaArguments args);
-
-
-    // Lisa's binning stuff
-  private:
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
-
-  public:
-    bool findCaller(std::string callee, std::string caller) const;
-    void dumpState(ExecContext *xc) const;
-    //
 };
 
 #endif // __TRU64_SYSTEM_HH__
