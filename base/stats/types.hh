@@ -32,7 +32,7 @@
 #include <vector>
 #include <inttypes.h>
 
-namespace Statistics {
+namespace Stats {
 
 /** All counters are of 64-bit values. */
 typedef double Counter;
@@ -44,6 +44,6 @@ typedef double Result;
 /** vector of results. */
 typedef std::vector<Result> VResult;
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif // __BASE_STATS_TYPES_HH__

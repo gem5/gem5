@@ -210,7 +210,7 @@ class SimpleCPU : public BaseCPU
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;
-    Statistics::Scalar<> numInsts;
+    Stats::Scalar<> numInsts;
 
     virtual Counter totalInstructions() const
     {
@@ -218,22 +218,22 @@ class SimpleCPU : public BaseCPU
     }
 
     // number of simulated memory references
-    Statistics::Scalar<> numMemRefs;
+    Stats::Scalar<> numMemRefs;
 
     // number of simulated loads
     Counter numLoad;
     Counter startNumLoad;
 
     // number of idle cycles
-    Statistics::Average<> notIdleFraction;
-    Statistics::Formula idleFraction;
+    Stats::Average<> notIdleFraction;
+    Stats::Formula idleFraction;
 
     // number of cycles stalled for I-cache misses
-    Statistics::Scalar<> icacheStallCycles;
+    Stats::Scalar<> icacheStallCycles;
     Counter lastIcacheStall;
 
     // number of cycles stalled for D-cache misses
-    Statistics::Scalar<> dcacheStallCycles;
+    Stats::Scalar<> dcacheStallCycles;
     Counter lastDcacheStall;
 
     void processCacheCompletion();

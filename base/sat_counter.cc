@@ -69,7 +69,7 @@ SaturatingCounterPred::SaturatingCounterPred(string p_name,
 
 void SaturatingCounterPred::regStats()
 {
-    using namespace Statistics;
+    using namespace Stats;
     stringstream name, description;
 
     //
@@ -138,7 +138,7 @@ void SaturatingCounterPred::regStats()
 
 void SaturatingCounterPred::regFormulas()
 {
-    using namespace Statistics;
+    using namespace Stats;
     stringstream name, description;
 
     //

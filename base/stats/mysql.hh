@@ -34,7 +34,7 @@
 #include "base/stats/output.hh"
 
 namespace MySQL { class Connection; }
-namespace Statistics {
+namespace Stats {
 
 class DistDataData;
 class MySqlData;
@@ -144,6 +144,6 @@ class MySql : public Output
     void configure(const FormulaData &data);
 };
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif // __BASE_STATS_MYSQL_HH__

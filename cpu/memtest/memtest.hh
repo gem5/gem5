@@ -111,9 +111,9 @@ class MemTest : public BaseCPU
     Tick noResponseCycles;
 
     uint64_t numReads;
-    Statistics::Scalar<> numReadsStat;
-    Statistics::Scalar<> numWritesStat;
-    Statistics::Scalar<> numCopiesStat;
+    Stats::Scalar<> numReadsStat;
+    Stats::Scalar<> numWritesStat;
+    Stats::Scalar<> numCopiesStat;
 
     // called by MemCompleteEvent::process()
     void completeRequest(MemReqPtr &req, uint8_t *data);

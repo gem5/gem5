@@ -28,7 +28,7 @@
 
 #include "base/stats/visit.hh"
 
-namespace Statistics {
+namespace Stats {
 namespace Detail {
 
 Visit::Visit()
@@ -38,4 +38,4 @@ Visit::~Visit()
 {}
 
 /* namespace Detail */ }
-/* namespace Statistics */ }
+/* namespace Stats */ }

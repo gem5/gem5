@@ -44,7 +44,7 @@
 
 using namespace std;
 
-namespace Statistics {
+namespace Stats {
 
 struct MySqlData
 {
@@ -841,4 +841,4 @@ MySql::visit(const FormulaData &data)
         output(data);
 }
 
-/* namespace Statistics */ }
+/* namespace Stats */ }

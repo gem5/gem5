@@ -55,19 +55,19 @@ System::System(const std::string _name,
     // add self to global system list
     systemList.push_back(this);
     if (bin == true) {
-        Kernel = new Statistics::MainBin("non TCPIP Kernel stats");
+        Kernel = new Stats::MainBin("non TCPIP Kernel stats");
         Kernel->activate();
-        User = new Statistics::MainBin("User stats");
+        User = new Stats::MainBin("User stats");
 
         int end = binned_fns.size();
         assert(!(end & 1));
 
-        Statistics::MainBin *Bin;
+        Stats::MainBin *Bin;
 
         fnEvents.resize(end>>1);
 
         for (int i = 0; i < end; i +=2) {
-            Bin = new Statistics::MainBin(binned_fns[i]);
+            Bin = new Stats::MainBin(binned_fns[i]);
             fnBins.insert(make_pair(binned_fns[i], Bin));
 
             fnEvents[(i>>1)] = new FnEvent(&pcEventQueue, binned_fns[i], this);
@@ -178,10 +178,10 @@ System::dumpState(ExecContext *xc) const
     }
 }
 
-Statistics::MainBin *
+Stats::MainBin *
 System::getBin(const std::string &name)
 {
-    std::map<const std::string, Statistics::MainBin *>::const_iterator i;
+    std::map<const std::string, Stats::MainBin *>::const_iterator i;
     i = fnBins.find(name);
     if (i == fnBins.end())
         panic("trying to getBin %s that is not on system map!", name);

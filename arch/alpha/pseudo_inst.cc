@@ -37,7 +37,7 @@
 #include "sim/stats.hh"
 
 using namespace std;
-using namespace Statistics;
+using namespace Stats;
 
 namespace AlphaPseudo
 {
@@ -98,7 +98,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
-        using namespace Statistics;
+        using namespace Stats;
         SetupEvent(Reset, when, repeat);
     }
 
@@ -114,7 +114,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
-        using namespace Statistics;
+        using namespace Stats;
         SetupEvent(Dump, when, repeat);
     }
 
@@ -130,7 +130,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
-        using namespace Statistics;
+        using namespace Stats;
         SetupEvent(Dump|Reset, when, repeat);
     }
 

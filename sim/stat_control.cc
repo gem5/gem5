@@ -47,17 +47,17 @@
 
 using namespace std;
 
-Statistics::Formula hostInstRate;
-Statistics::Formula hostTickRate;
-Statistics::Value hostMemory;
-Statistics::Value hostSeconds;
+Stats::Formula hostInstRate;
+Stats::Formula hostTickRate;
+Stats::Value hostMemory;
+Stats::Value hostSeconds;
 
-Statistics::Value simTicks;
-Statistics::Value simInsts;
-Statistics::Value simFreq;
-Statistics::Formula simSeconds;
+Stats::Value simTicks;
+Stats::Value simInsts;
+Stats::Value simFreq;
+Stats::Formula simSeconds;
 
-namespace Statistics {
+namespace Stats {
 
 Time statTime(true);
 Tick startTick;
@@ -173,10 +173,10 @@ StatEvent::description()
 void
 StatEvent::process()
 {
-    if (flags & Statistics::Dump)
+    if (flags & Stats::Dump)
         DumpNow();
 
-    if (flags & Statistics::Reset)
+    if (flags & Stats::Reset)
         reset();
 
     if (repeat)
@@ -205,11 +205,11 @@ SetupEvent(int flags, Tick when, Tick repeat)
     new StatEvent(flags, when, repeat);
 }
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 extern "C" void
 debugDumpStats()
 {
-    Statistics::DumpNow();
+    Stats::DumpNow();
 }
 

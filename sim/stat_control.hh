@@ -32,7 +32,7 @@
 #include <fstream>
 #include <list>
 
-namespace Statistics {
+namespace Stats {
 
 enum {
     Reset = 0x1,
@@ -47,6 +47,6 @@ void SetupEvent(int flags, Tick when, Tick repeat = 0);
 
 void InitSimStats();
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif // __SIM_STAT_CONTROL_HH__

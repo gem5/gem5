@@ -61,24 +61,24 @@ class SaturatingCounterPred : public GenericPredictor
     unsigned *table;
 
     //  Statistics
-    Statistics::Scalar<> predicted_one;      // Total predictions of one, preds_one
-    Statistics::Scalar<> predicted_zero;     // Total predictions of zero, preds_zero
-    Statistics::Scalar<> correct_pred_one;   // Total correct predictions of one, correct_one
-    Statistics::Scalar<> correct_pred_zero;  // Total correct predictions of zero, correct_zero
+    Stats::Scalar<> predicted_one;      // Total predictions of one, preds_one
+    Stats::Scalar<> predicted_zero;     // Total predictions of zero, preds_zero
+    Stats::Scalar<> correct_pred_one;   // Total correct predictions of one, correct_one
+    Stats::Scalar<> correct_pred_zero;  // Total correct predictions of zero, correct_zero
 
-    Statistics::Scalar<> record_zero;        //updates_zero
-    Statistics::Scalar<> record_one;         //updates_one
+    Stats::Scalar<> record_zero;        //updates_zero
+    Stats::Scalar<> record_one;         //updates_one
 
-    Statistics::Formula preds_total;
-    Statistics::Formula pred_frac_zero;
-    Statistics::Formula pred_frac_one;
-    Statistics::Formula correct_total;
-    Statistics::Formula updates_total;
-    Statistics::Formula pred_rate;
-    Statistics::Formula frac_correct_zero;
-    Statistics::Formula frac_correct_one;
-    Statistics::Formula coverage_zero;
-    Statistics::Formula coverage_one;
+    Stats::Formula preds_total;
+    Stats::Formula pred_frac_zero;
+    Stats::Formula pred_frac_one;
+    Stats::Formula correct_total;
+    Stats::Formula updates_total;
+    Stats::Formula pred_rate;
+    Stats::Formula frac_correct_zero;
+    Stats::Formula frac_correct_one;
+    Stats::Formula coverage_zero;
+    Stats::Formula coverage_one;
 
   private:
     bool pred_one(unsigned &counter)  { return counter >  thresh; }

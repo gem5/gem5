@@ -46,7 +46,7 @@
 
 using namespace std;
 
-namespace Statistics {
+namespace Stats {
 
 StatData *
 DataAccess::find() const
@@ -346,4 +346,4 @@ registerResetCallback(Callback *cb)
     resetQueue.add(cb);
 }
 
-/* namespace Statistics */ }
+/* namespace Stats */ }

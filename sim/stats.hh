@@ -31,7 +31,7 @@
 
 #include "base/statistics.hh"
 
-extern Statistics::Formula simSeconds;
-extern Statistics::Value simTicks;
+extern Stats::Formula simSeconds;
+extern Stats::Value simTicks;
 
 #endif // __SIM_SIM_STATS_HH__

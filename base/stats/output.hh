@@ -33,7 +33,7 @@
 
 #include "base/stats/visit.hh"
 
-namespace Statistics {
+namespace Stats {
 
 struct Output : public Visit
 {
@@ -42,6 +42,6 @@ struct Output : public Visit
     virtual bool valid() const = 0;
 };
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif // __BASE_STATS_OUTPUT_HH__

@@ -95,7 +95,7 @@ Process::Process(const string &name,
 void
 Process::regStats()
 {
-    using namespace Statistics;
+    using namespace Stats;
 
     num_syscalls
         .name(name() + ".PROG:num_syscalls")

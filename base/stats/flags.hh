@@ -28,7 +28,7 @@
 
 #ifndef __BASE_STATS_FLAGS_HH__
 #define __BASE_STATS_FLAGS_HH__
-namespace Statistics {
+namespace Stats {
 
 /**
  * Define the storage for format flags.
@@ -68,6 +68,6 @@ enum DisplayMode
 
 extern DisplayMode DefaultMode;
 
-/* namespace Statistics */ }
+/* namespace Stats */ }
 
 #endif //  __BASE_STATS_FLAGS_HH__

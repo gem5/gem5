@@ -59,22 +59,22 @@ class HybridPredictor : public GenericPredictor
     //
     //  Stats
     //
-    Statistics::Scalar<> pred_one; //num_one_preds
-    Statistics::Scalar<> pred_zero; //num_zero_preds
-    Statistics::Scalar<> correct_pred_one; //num_one_correct
-    Statistics::Scalar<> correct_pred_zero; //num_zero_correct
-    Statistics::Scalar<> record_one; //num_one_updates
-    Statistics::Scalar<> record_zero; //num_zero_updates
+    Stats::Scalar<> pred_one; //num_one_preds
+    Stats::Scalar<> pred_zero; //num_zero_preds
+    Stats::Scalar<> correct_pred_one; //num_one_correct
+    Stats::Scalar<> correct_pred_zero; //num_zero_correct
+    Stats::Scalar<> record_one; //num_one_updates
+    Stats::Scalar<> record_zero; //num_zero_updates
 
-    Statistics::Formula total_preds;
-    Statistics::Formula frac_preds_zero;
-    Statistics::Formula frac_preds_one;
-    Statistics::Formula total_correct;
-    Statistics::Formula total_accuracy;
-    Statistics::Formula zero_accuracy;
-    Statistics::Formula one_accuracy;
-    Statistics::Formula zero_coverage;
-    Statistics::Formula one_coverage;
+    Stats::Formula total_preds;
+    Stats::Formula frac_preds_zero;
+    Stats::Formula frac_preds_one;
+    Stats::Formula total_correct;
+    Stats::Formula total_accuracy;
+    Stats::Formula zero_accuracy;
+    Stats::Formula one_accuracy;
+    Stats::Formula zero_coverage;
+    Stats::Formula one_coverage;
 
   public:
     HybridPredictor(const char *_p_name, const char *_z_name,

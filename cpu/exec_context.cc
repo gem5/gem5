@@ -128,7 +128,7 @@ ExecContext::serialize(ostream &os)
         SERIALIZE_SCALAR(ctx);
     }
     if (system->bin) {
-        Statistics::MainBin *cur = Statistics::MainBin::curBin();
+        Stats::MainBin *cur = Stats::MainBin::curBin();
         string bin_name = cur->name();
         SERIALIZE_SCALAR(bin_name);
     }

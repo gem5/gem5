@@ -130,7 +130,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
 void
 BaseCPU::regStats()
 {
-    using namespace Statistics;
+    using namespace Stats;
 
     numCycles
         .name(name() + ".numCycles")
