@@ -42,6 +42,7 @@
 #include "dev/pciareg.h"
 #include "dev/pcidev.hh"
 #include "dev/pciconfigall.hh"
+#include "mem/bus/bus.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/param.hh"
@@ -51,7 +52,8 @@
 using namespace std;
 
 PciDev::PciDev(Params *p)
-    : DmaDevice(p->name), _params(p), plat(p->plat), configData(p->configData)
+    : DmaDevice(p->name, p->plat), _params(p), plat(p->plat),
+      configData(p->configData)
 {
     // copy the config data from the PciConfigData object
     if (configData) {
@@ -283,6 +285,11 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
 
+    SimObjectParam<MemoryController *> mmu;
+    Param<Addr> addr;
+    SimObjectParam<Bus*> io_bus;
+    Param<Tick> pio_latency;
+
     Param<uint16_t> VendorID;
     Param<uint16_t> DeviceID;
     Param<uint16_t> Command;
@@ -319,6 +326,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
 END_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigData)
+
+    INIT_PARAM(mmu, "Memory Controller"),
+    INIT_PARAM(addr, "Device Address"),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
 
     INIT_PARAM(VendorID, "Vendor ID"),
     INIT_PARAM(DeviceID, "Device ID"),

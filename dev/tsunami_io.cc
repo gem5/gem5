@@ -162,7 +162,7 @@ TsunamiIO::ClockEvent::unserialize(Checkpoint *cp, const std::string &section)
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
                      Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
                      Tick pio_latency)
-    : PioDevice(name), addr(a), tsunami(t), rtc(t)
+    : PioDevice(name, t), addr(a), tsunami(t), rtc(t)
 {
     mmu->add_child(this, RangeSize(addr, size));
 

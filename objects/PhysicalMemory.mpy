@@ -1,0 +1,6 @@
+from FunctionalMemory import FunctionalMemory
+
+simobj PhysicalMemory(FunctionalMemory):
+    range = Param.AddrRange("Device Address")
+    file = Param.String('', "memory mapped file")
+    mmu = Param.MemoryController(Super, "Memory Controller")

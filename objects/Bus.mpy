@@ -1,0 +1,5 @@
+from BaseHier import BaseHier
+
+simobj Bus(BaseHier):
+    clock_ratio = Param.Int("ratio of CPU to bus frequency")
+    width = Param.Int("bus width in bytes")

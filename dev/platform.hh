@@ -47,8 +47,6 @@ class Platform : public SimObject
   public:
     /** Pointer to the interrupt controller */
     IntrControl *intrctrl;
-    /** Pointer to the simulation console */
-    SimConsole *cons;
     /** Pointer to the PCI configuration space */
     PciConfigAll *pciconfig;
 

@@ -1,0 +1,9 @@
+simobj AlphaTLB(SimObject):
+    abstract = True
+    size = Param.Int("TLB size")
+
+simobj AlphaDTB(AlphaTLB):
+    size = 64
+
+simobj AlphaITB(AlphaTLB):
+    size = 48

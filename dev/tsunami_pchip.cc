@@ -51,7 +51,7 @@ using namespace std;
 TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
                            MemoryController *mmu, HierParams *hier,
                            Bus *bus, Tick pio_latency)
-    : PioDevice(name), addr(a), tsunami(t)
+    : PioDevice(name, t), addr(a), tsunami(t)
 {
     mmu->add_child(this, RangeSize(addr, size));
 

@@ -1,0 +1,30 @@
+from BaseMem import BaseMem
+
+simobj BaseCache(BaseMem):
+    adaptive_compression = Param.Bool(false,
+        "Use an adaptive compression scheme")
+    assoc = Param.Int("associativity")
+    block_size = Param.Int("block size in bytes")
+    compressed_bus = Param.Bool(false,
+        "This cache connects to a compressed memory")
+    compression_latency = Param.Int(0,
+        "Latency in cycles of compression algorithm")
+    do_copy = Param.Bool(false, "perform fast copies in the cache")
+    hash_delay = Param.Int(1, "time in cycles of hash access")
+    in_bus = Param.Bus(NULL, "incoming bus object")
+    max_miss_count = Param.Counter(0,
+        "number of misses to handle before calling exit")
+    mshrs = Param.Int("number of MSHRs (max outstanding requests)")
+    out_bus = Param.Bus("outgoing bus object")
+    prioritizeRequests = Param.Bool(false,
+        "always service demand misses first")
+    protocol = Param.CoherenceProtocol(NULL, "coherence protocol to use")
+    repl = Param.Repl(NULL, "replacement policy")
+    size = Param.Int("capacity in bytes")
+    store_compressed = Param.Bool(false,
+        "Store compressed data in the cache")
+    subblock_size = Param.Int(0,
+        "Size of subblock in IIC used for compression")
+    tgts_per_mshr = Param.Int("max number of accesses per MSHR")
+    trace_addr = Param.Addr(0, "address to trace")
+    write_buffers = Param.Int(8, "number of write buffers")

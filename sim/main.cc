@@ -34,10 +34,12 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include <list>
 #include <string>
 #include <vector>
 
 #include "base/copyright.hh"
+#include "base/embedfile.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
@@ -254,6 +256,21 @@ main(int argc, char **argv)
 
             // switch on second char
             switch (arg_str[1]) {
+              case 'X': {
+                  list<EmbedFile> lst;
+                  EmbedMap::all(lst);
+                  list<EmbedFile>::iterator i = lst.begin();
+                  list<EmbedFile>::iterator end = lst.end();
+
+                  while (i != end) {
+                      cprintf("Embedded File: %s\n", i->name);
+                      cout.write(i->data, i->length);
+                      ++i;
+                  }
+
+                  return 0;
+              }
+
               case 'h':
                 // -h: show help
                 showLongHelp(cerr);
@@ -311,7 +328,7 @@ main(int argc, char **argv)
                     cprintf("Error processing file %s\n", filename);
                     exit(1);
                 }
-            } else if (ext == ".py") {
+            } else if (ext == ".py" || ext == ".mpy") {
                 if (!loadPythonConfig(filename, &simConfigDB)) {
                     cprintf("Error processing file %s\n", filename);
                     exit(1);
@@ -335,6 +352,11 @@ main(int argc, char **argv)
     // the stat file name is set via a .ini param... thus it just got
     // opened above during ParamContext::checkAllContexts().
 
+    // Now process the configuration hierarchy and create the SimObjects.
+    ConfigHierarchy configHierarchy(simConfigDB);
+    configHierarchy.build();
+    configHierarchy.createSimObjects();
+
     // Print hello message to stats file if it's actually a file.  If
     // it's not (i.e. it's cout or cerr) then we already did it above.
     if (outputStream != &cout && outputStream != &cerr)
@@ -343,11 +365,6 @@ main(int argc, char **argv)
     // Echo command line and all parameter settings to stats file as well.
     echoCommandLine(argc, argv, *outputStream);
     ParamContext::showAllContexts(*configStream);
-
-    // Now process the configuration hierarchy and create the SimObjects.
-    ConfigHierarchy configHierarchy(simConfigDB);
-    configHierarchy.build();
-    configHierarchy.createSimObjects();
 
     // Do a second pass to finish initializing the sim objects
     SimObject::initAll();

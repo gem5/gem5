@@ -397,19 +397,29 @@ END_INIT_SIM_OBJECT_PARAMS(LiveProcess)
 
 CREATE_SIM_OBJECT(LiveProcess)
 {
-    // initialize file descriptors to default: same as simulator
-    int stdin_fd = input.isValid() ? Process::openInputFile(input) : 0;
-    int stdout_fd = output.isValid() ? Process::openOutputFile(output) : 1;
-    int stderr_fd = output.isValid() ? stdout_fd : 2;
+    string in = input;
+    string out = output;
 
-    // dummy for default env
-    vector<string> null_vec;
+    // initialize file descriptors to default: same as simulator
+    int stdin_fd, stdout_fd, stderr_fd;
+
+    if (in == "stdin" || in == "cin")
+        stdin_fd = STDIN_FILENO;
+    else
+        stdin_fd = Process::openInputFile(input);
+
+    if (out == "stdout" || out == "cout")
+        stdout_fd = STDOUT_FILENO;
+    else if (out == "stderr" || out == "cerr")
+        stdout_fd = STDERR_FILENO;
+    else
+        stdout_fd = Process::openOutputFile(out);
+
+    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
 
     return LiveProcess::create(getInstanceName(),
                                stdin_fd, stdout_fd, stderr_fd,
-                               cmd,
-                               env.isValid() ? env : null_vec);
+                               cmd, env);
 }
-
 
 REGISTER_SIM_OBJECT("LiveProcess", LiveProcess)

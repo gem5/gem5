@@ -1,0 +1,4 @@
+from Device import PioDevice
+
+simobj BadDevice(PioDevice):
+    devicename = Param.String("Name of device to error on")

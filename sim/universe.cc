@@ -36,9 +36,10 @@
 #include <vector>
 
 #include "base/misc.hh"
-#include "sim/universe.hh"
+#include "sim/builder.hh"
 #include "sim/host.hh"
-#include "sim/param.hh"
+#include "sim/sim_object.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 
@@ -53,60 +54,13 @@ string outputDirectory;
 ostream *outputStream;
 ostream *configStream;
 
-class UniverseParamContext : public ParamContext
+// Dummy Object
+class Root : public SimObject
 {
   public:
-    UniverseParamContext(const string &is)
-        : ParamContext(is, OutputInitPhase) {}
-    void checkParams();
+    Root(const std::string &name) : SimObject(name) {}
 };
-
-UniverseParamContext universe("Universe");
-
-Param<Tick> universe_freq(&universe, "frequency", "tick frequency",
-                          200000000);
-
-Param<string> universe_output_dir(&universe, "output_dir",
-                                  "directory to output data to",
-                                  ".");
-Param<string> universe_output_file(&universe, "output_file",
-                                   "file to dump simulator output to",
-                                   "cout");
-Param<string> universe_config_output_file(&universe, "config_output_file",
-                                          "file to dump simulator config to",
-                                          "m5config.out");
-
-void
-UniverseParamContext::checkParams()
-{
-    ticksPerSecond = universe_freq;
-    double freq = double(ticksPerSecond);
-    __ticksPerMS = freq / 1.0e3;
-    __ticksPerUS = freq / 1.0e6;
-    __ticksPerNS = freq / 1.0e9;
-    __ticksPerPS = freq / 1.0e12;
-
-    if (universe_output_dir.isValid()) {
-        outputDirectory = universe_output_dir;
-
-        // guarantee that directory ends with a '/'
-        if (outputDirectory[outputDirectory.size() - 1] != '/')
-            outputDirectory += "/";
-
-        if (mkdir(outputDirectory.c_str(), 0777) < 0) {
-            if (errno != EEXIST) {
-                panic("%s\ncould not make output directory: %s\n",
-                      strerror(errno), outputDirectory);
-            }
-        }
-    }
-
-    outputStream = makeOutputStream(universe_output_file);
-    configStream = universe_config_output_file.isValid()
-        ? makeOutputStream(universe_config_output_file)
-        : outputStream;
-}
-
+Root *root = NULL;
 
 std::ostream *
 makeOutputStream(std::string &name)
@@ -146,4 +100,70 @@ closeOutputStream(std::ostream *os)
 }
 
 
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
+
+    Param<bool> full_system;
+    Param<Tick> frequency;
+    Param<string> output_dir;
+    Param<string> output_file;
+    Param<string> config_output_file;
+
+END_DECLARE_SIM_OBJECT_PARAMS(Root)
+
+BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
+
+    INIT_PARAM_DFLT(full_system, "full system simulation", true),
+    INIT_PARAM_DFLT(frequency, "tick frequency", 200000000),
+    INIT_PARAM_DFLT(output_dir, "directory to output data to", "."),
+    INIT_PARAM_DFLT(output_file, "file to dump simulator output to", "cout"),
+    INIT_PARAM_DFLT(config_output_file, "file to dump simulator config to",
+                    "m5config.out")
+
+END_INIT_SIM_OBJECT_PARAMS(Root)
+
+CREATE_SIM_OBJECT(Root)
+{
+#ifdef FULL_SYSTEM
+    if (!bool(full_system))
+        panic("FULL_SYSTEM compiled and configuration not full_system");
+#else
+    if (bool(full_system))
+        panic("FULL_SYSTEM not compiled but configuration is full_system");
+#endif
+
+    if (root)
+        panic("only one root object allowed!");
+    root = new Root(getInstanceName());
+
+    ticksPerSecond = frequency;
+    double freq = double(ticksPerSecond);
+    __ticksPerMS = freq / 1.0e3;
+    __ticksPerUS = freq / 1.0e6;
+    __ticksPerNS = freq / 1.0e9;
+    __ticksPerPS = freq / 1.0e12;
+
+    if (output_dir.isValid()) {
+        outputDirectory = output_dir;
+
+        // guarantee that directory ends with a '/'
+        if (outputDirectory[outputDirectory.size() - 1] != '/')
+            outputDirectory += "/";
+
+        if (mkdir(outputDirectory.c_str(), 0777) < 0) {
+            if (errno != EEXIST) {
+                panic("%s\ncould not make output directory: %s\n",
+                      strerror(errno), outputDirectory);
+            }
+        }
+    }
+
+    outputStream = makeOutputStream(output_file);
+    configStream = config_output_file.isValid()
+        ? makeOutputStream(config_output_file)
+        : outputStream;
+
+    return root;
+}
+
+REGISTER_SIM_OBJECT("Root", Root)
 

@@ -1,0 +1,20 @@
+simobj MemTest(SimObject):
+    cache = Param.BaseCache("L1 cache")
+    check_mem = Param.FunctionalMemory("check memory")
+    main_mem = Param.FunctionalMemory("hierarchical memory")
+    max_loads_all_threads = Param.Counter(0,
+        "terminate when all threads have reached this load count")
+    max_loads_any_thread = Param.Counter(0,
+        "terminate when any thread reaches this load count")
+    memory_size = Param.Int(65536, "memory size")
+    percent_copies = Param.Percent(0, "target copy percentage")
+    percent_dest_unaligned = Param.Percent(50,
+        "percent of copy dest address that are unaligned")
+    percent_reads = Param.Percent(65, "target read percentage")
+    percent_source_unaligned = Param.Percent(50,
+        "percent of copy source address that are unaligned")
+    percent_uncacheable = Param.Percent(10,
+        "target uncacheable percentage")
+    progress_interval = Param.Counter(1000000,
+        "progress report interval (in accesses)")
+    trace_addr = Param.Addr(0, "address to trace")

@@ -88,8 +88,8 @@ Uart::IntrEvent::scheduleIntr()
 
 Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
            Addr s, HierParams *hier, Bus *bus, Tick pio_latency, Platform *p)
-    : PioDevice(name), addr(a), size(s), cons(c), txIntrEvent(this, TX_INT),
-      rxIntrEvent(this, RX_INT), platform(p)
+    : PioDevice(name, p), addr(a), size(s), cons(c),
+      txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
