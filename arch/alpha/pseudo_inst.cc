@@ -26,16 +26,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string>
+
 #include "arch/alpha/pseudo_inst.hh"
 #include "cpu/exec_context.hh"
+#include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_stats.hh"
 
+using namespace std;
 using namespace Statistics;
 
 namespace AlphaPseudo
 {
+    bool doStatisticsInsts;
+    bool doCheckpointInsts;
+
     void
     m5exit_old(ExecContext *xc)
     {
@@ -53,6 +60,9 @@ namespace AlphaPseudo
     void
     resetstats(ExecContext *xc)
     {
+        if (!doStatisticsInsts)
+            return;
+
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
@@ -65,6 +75,9 @@ namespace AlphaPseudo
     void
     dumpstats(ExecContext *xc)
     {
+        if (!doStatisticsInsts)
+            return;
+
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
@@ -77,6 +90,9 @@ namespace AlphaPseudo
     void
     dumpresetstats(ExecContext *xc)
     {
+        if (!doStatisticsInsts)
+            return;
+
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
@@ -89,6 +105,9 @@ namespace AlphaPseudo
     void
     m5checkpoint(ExecContext *xc)
     {
+        if (!doCheckpointInsts)
+            return;
+
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
@@ -98,4 +117,22 @@ namespace AlphaPseudo
         SetupCheckpoint(when, repeat);
     }
 
+    class Context : public ParamContext
+    {
+      public:
+        Context(const string &section) : ParamContext(section) {}
+        void checkParams();
+    };
+
+    Context context("PseudoInsts");
+
+    Param<bool> __statistics(&context, "statistics", "yes");
+    Param<bool> __checkpoint(&context, "checkpoint", "yes");
+
+    void
+    Context::checkParams()
+    {
+        doStatisticsInsts = __statistics;
+        doCheckpointInsts = __checkpoint;
+    }
 }
