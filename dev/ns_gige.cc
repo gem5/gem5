@@ -187,6 +187,59 @@ NSGigE::regStats()
         .prereq(rxBytes)
         ;
 
+    txIPChecksums
+        .name(name() + ".txIPChecksums")
+        .desc("Number of tx IP Checksums done by device")
+        .precision(0)
+        .prereq(txBytes)
+        ;
+
+    rxIPChecksums
+        .name(name() + ".rxIPChecksums")
+        .desc("Number of rx IP Checksums done by device")
+        .precision(0)
+        .prereq(rxBytes)
+        ;
+
+    txTCPChecksums
+        .name(name() + ".txTCPChecksums")
+        .desc("Number of tx TCP Checksums done by device")
+        .precision(0)
+        .prereq(txBytes)
+        ;
+
+    rxTCPChecksums
+        .name(name() + ".rxTCPChecksums")
+        .desc("Number of rx TCP Checksums done by device")
+        .precision(0)
+        .prereq(rxBytes)
+        ;
+
+    descDmaReads
+        .name(name() + ".descDMAReads")
+        .desc("Number of descriptors the device read w/ DMA")
+        .precision(0)
+        ;
+
+    descDmaWrites
+        .name(name() + ".descDMAWrites")
+        .desc("Number of descriptors the device wrote w/ DMA")
+        .precision(0)
+        ;
+
+    descDmaRdBytes
+        .name(name() + ".descDmaReadBytes")
+        .desc("number of descriptor bytes read w/ DMA")
+        .precision(0)
+        ;
+
+   descDmaWrBytes
+        .name(name() + ".descDmaWriteBytes")
+        .desc("number of descriptor bytes write w/ DMA")
+        .precision(0)
+        ;
+
+
     txBandwidth
         .name(name() + ".txBandwidth")
         .desc("Transmit Bandwidth (bits/s)")
@@ -1146,7 +1199,7 @@ NSGigE::doRxDmaRead()
             rxDmaState = dmaReadWaiting;
         else
             dmaInterface->doDMA(Read, rxDmaAddr, rxDmaLen, curTick,
-                                &rxDmaReadEvent);
+                                &rxDmaReadEvent, true);
         return true;
     }
 
@@ -1198,7 +1251,7 @@ NSGigE::doRxDmaWrite()
             rxDmaState = dmaWriteWaiting;
         else
             dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen, curTick,
-                                &rxDmaWriteEvent);
+                                &rxDmaWriteEvent, true);
         return true;
     }
 
@@ -1273,6 +1326,9 @@ NSGigE::rxKick()
             rxDmaLen = sizeof(rxDescCache.link);
             rxDmaFree = dmaDescFree;
 
+            descDmaReads++;
+            descDmaRdBytes += rxDmaLen;
+
             if (doRxDmaRead())
                 goto exit;
         } else {
@@ -1282,6 +1338,9 @@ NSGigE::rxKick()
             rxDmaData = &rxDescCache;
             rxDmaLen = sizeof(ns_desc);
             rxDmaFree = dmaDescFree;
+
+            descDmaReads++;
+            descDmaRdBytes += rxDmaLen;
 
             if (doRxDmaRead())
                 goto exit;
@@ -1400,15 +1459,18 @@ NSGigE::rxKick()
 
             if (rxPacket->isIpPkt() && extstsEnable) {
                 rxDescCache.extsts |= EXTSTS_IPPKT;
+                rxIPChecksums++;
                 if (!ipChecksum(rxPacket, false)) {
                     DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
                     rxDescCache.extsts |= EXTSTS_IPERR;
                 }
                 if (rxPacket->isTcpPkt()) {
                     rxDescCache.extsts |= EXTSTS_TCPPKT;
+                    rxTCPChecksums++;
                     if (!tcpChecksum(rxPacket, false)) {
                         DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_TCPERR;
+
                     }
                 } else if (rxPacket->isUdpPkt()) {
                     rxDescCache.extsts |= EXTSTS_UDPPKT;
@@ -1433,6 +1495,9 @@ NSGigE::rxKick()
             rxDmaData = &(rxDescCache.cmdsts);
             rxDmaLen = sizeof(rxDescCache.cmdsts) + sizeof(rxDescCache.extsts);
             rxDmaFree = dmaDescFree;
+
+            descDmaWrites++;
+            descDmaWrBytes += rxDmaLen;
 
             if (doRxDmaWrite())
                 goto exit;
@@ -1586,7 +1651,7 @@ NSGigE::doTxDmaRead()
             txDmaState = dmaReadWaiting;
         else
             dmaInterface->doDMA(Read, txDmaAddr, txDmaLen, curTick,
-                                &txDmaReadEvent);
+                                &txDmaReadEvent, true);
         return true;
     }
 
@@ -1638,7 +1703,7 @@ NSGigE::doTxDmaWrite()
             txDmaState = dmaWriteWaiting;
         else
             dmaInterface->doDMA(WriteInvalidate, txDmaAddr, txDmaLen, curTick,
-                                &txDmaWriteEvent);
+                                &txDmaWriteEvent, true);
         return true;
     }
 
@@ -1707,6 +1772,9 @@ NSGigE::txKick()
             txDmaLen = sizeof(txDescCache.link);
             txDmaFree = dmaDescFree;
 
+            descDmaReads++;
+            descDmaRdBytes += txDmaLen;
+
             if (doTxDmaRead())
                 goto exit;
 
@@ -1717,6 +1785,9 @@ NSGigE::txKick()
             txDmaData = &txDescCache;
             txDmaLen = sizeof(ns_desc);
             txDmaFree = dmaDescFree;
+
+            descDmaReads++;
+            descDmaRdBytes += txDmaLen;
 
             if (doTxDmaRead())
                 goto exit;
@@ -1780,9 +1851,11 @@ NSGigE::txKick()
                         udpChecksum(txPacket, true);
                     } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
                         tcpChecksum(txPacket, true);
+                        txTCPChecksums++;
                     }
                     if (txDescCache.extsts & EXTSTS_IPPKT) {
                         ipChecksum(txPacket, true);
+                        txIPChecksums++;
                     }
                 }
 
@@ -1812,6 +1885,9 @@ NSGigE::txKick()
                 txDmaData = &(txDescCache.cmdsts);
                 txDmaLen = sizeof(txDescCache.cmdsts) + sizeof(txDescCache.extsts);
                 txDmaFree = dmaDescFree;
+
+                descDmaWrites++;
+                descDmaWrBytes += txDmaLen;
 
                 if (doTxDmaWrite())
                     goto exit;
