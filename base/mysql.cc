@@ -29,6 +29,7 @@
 #include <iostream>
 
 #include "base/mysql.hh"
+#include "base/trace.hh"
 
 using namespace std;
 
@@ -93,5 +94,17 @@ Connection::close()
 {
     mysql_close(&mysql);
 }
+
+bool
+Connection::query(const string &sql)
+{
+    DPRINTF(SQL, "Sending SQL query to server:\n%s", sql);
+    error.clear();
+    if (mysql_real_query(&mysql, sql.c_str(), sql.size()))
+        error.set(mysql_error(&mysql));
+
+    return error;
+}
+
 
 /* namespace MySQL */ }
