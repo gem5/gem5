@@ -161,8 +161,9 @@ OptCPU::tick()
         references += refInfo[set].size();
     }
     // exit;
-    fprintf(stderr, "OPT Misses: %d\nOPT Hits: %d\nOPT Accesses: %d\n",
-            misses, hits, references);
+    fprintf(stderr,"sys.cpu.misses %d #opt cache misses\n",misses);
+    fprintf(stderr,"sys.cpu.hits %d #opt cache hits\n", hits);
+    fprintf(stderr,"sys.cpu.accesses %d #opt cache acceses\n", references);
     new SimExitEvent("Finshed Memory Trace");
 }
 
