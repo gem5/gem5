@@ -35,17 +35,16 @@
 #ifndef __TSUNAMI_HH__
 #define __TSUNAMI_HH__
 
-#include "sim/sim_object.hh"
+#include "dev/platform.hh"
 
-class IntrControl;
-class ConsoleListener;
-class SimConsole;
 class AdaptecController;
 class TlaserClock;
 class EtherDev;
 class TsunamiCChip;
 class TsunamiPChip;
+class TsunamiIO;
 class PCIConfigAll;
+class System;
 
 /**
   * Top level class for Tsunami Chipset emulation.
@@ -54,18 +53,17 @@ class PCIConfigAll;
   * read work
   */
 
-class Tsunami : public SimObject
+class Tsunami : public Platform
 {
   public:
 
     /** Max number of CPUs in a Tsunami */
     static const int Max_CPUs = 4;
 
-    /** Pointer to the interrupt controller (used to post and ack interrupts on the CPU) */
-    IntrControl *intrctrl;
-    /** Pointer to the UART emulation code */
-    SimConsole *cons;
-
+    /** Pointer to the system */
+    System *system;
+    /** Pointer to the TsunamiIO device which has the RTC */
+    TsunamiIO *io;
     /** Pointer to the SCSI controller device */
     AdaptecController *scsi;
     /** Pointer to the ethernet controller device */
@@ -92,8 +90,6 @@ class Tsunami : public SimObject
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];
 
-    int interrupt_frequency;
-
   public:
     /**
       * Constructor for the Tsunami Class.
@@ -102,7 +98,7 @@ class Tsunami : public SimObject
       * @param intrcontrol pointer to the interrupt controller
       * @param intrFreq frequency that interrupts happen
       */
-    Tsunami(const std::string &name, EtherDev *ethernet, SimConsole *con,
+    Tsunami(const std::string &name, System *s, SimConsole *con,
             IntrControl *intctrl, int intrFreq);
 
     virtual void serialize(std::ostream &os);
