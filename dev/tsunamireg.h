@@ -65,4 +65,14 @@
 #define TSDEV_DC_DREV       0x22
 #define TSDEV_DC_DSC2       0x23
 
+// I/O Ports
+#define TSDEV_PIC1_MASK     0x21
+#define TSDEV_PIC2_MASK     0xA1
+#define TSDEV_DMA1_RESET    0x0D
+#define TSDEV_DMA2_RESET    0xDA
+#define TSDEV_DMA1_MODE     0x0B
+#define TSDEV_DMA2_MODE     0xD6
+#define TSDEV_DMA1_MASK     0x0A
+#define TSDEV_DMA2_MASK     0xD4
+
 #endif // __TSUNAMIREG_H__

@@ -45,6 +45,11 @@ class TsunamiDMA : public MmapDevice
 
   protected:
 
+      uint8_t mask1;
+      uint8_t mask2;
+      uint8_t mode1;
+      uint8_t mode2;
+
   public:
     TsunamiDMA(const std::string &name, /*Tsunami *t,*/
                Addr addr, Addr mask, MemoryController *mmu);

@@ -39,7 +39,8 @@ TsunamiDMA::read(MemReqPtr req, uint8_t *data)
  //   Addr daddr = (req->paddr & addr_mask) >> 6;
 //    ExecContext *xc = req->xc;
 //    int cpuid = xc->cpu_id;
-    *(uint64_t*)data = 0x00;
+     panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
+   // *(uint64_t*)data = 0x00;
 
     return No_Fault;
 }
@@ -50,7 +51,40 @@ TsunamiDMA::write(MemReqPtr req, const uint8_t *data)
     DPRINTF(Tsunami, "dma write - va=%#x size=%d IOPort=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
 
-    //Addr daddr = (req->paddr & addr_mask) >> 6;
+    Addr daddr = (req->paddr & addr_mask);
+
+    switch(req->size) {
+        case sizeof(uint8_t):
+            switch(daddr) {
+                case TSDEV_PIC1_MASK:
+                    mask1 = *(uint8_t*)data;
+                    return No_Fault;
+                case TSDEV_PIC2_MASK:
+                    mask2 = *(uint8_t*)data;
+                    return No_Fault;
+                case TSDEV_DMA1_RESET:
+                    return No_Fault;
+                case TSDEV_DMA2_RESET:
+                    return No_Fault;
+                case TSDEV_DMA1_MODE:
+                    mode1 = *(uint8_t*)data;
+                    return No_Fault;
+                case TSDEV_DMA2_MODE:
+                    mode2 = *(uint8_t*)data;
+                    return No_Fault;
+                case TSDEV_DMA1_MASK:
+                case TSDEV_DMA2_MASK:
+                    return No_Fault;
+                default:
+                    panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);
+            }
+        case sizeof(uint16_t):
+        case sizeof(uint32_t):
+        case sizeof(uint64_t):
+        default:
+            panic("I/O Write - invalid size - va %#x size %d\n", req->vaddr, req->size);
+    }
+
 
     return No_Fault;
 }
