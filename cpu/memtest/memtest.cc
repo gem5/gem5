@@ -40,7 +40,7 @@
 #include "mem/functional_mem/main_memory.hh"
 #include "sim/builder.hh"
 #include "sim/sim_events.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 using namespace std;
 
@@ -109,7 +109,6 @@ MemTest::MemTest(const string &name,
     // set up counters
     noResponseCycles = 0;
     numReads = 0;
-    numWrites = 0;
     tickEvent.schedule(0);
 }
 
@@ -142,21 +141,23 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
         }
 
         numReads++;
+        numReadsStat++;
 
-        if (numReads.value() == nextProgressMessage) {
-            cerr << name() << ": completed " << numReads.value()
-                 << " read accesses @ " << curTick << endl;
+        if (numReads == nextProgressMessage) {
+            ccprintf(cerr, "%s: completed %d read accesses @%d\n",
+                     name(), numReads, curTick);
             nextProgressMessage += progressInterval;
         }
 
-        comLoadEventQueue[0]->serviceEvents(numReads.value());
+        comLoadEventQueue[0]->serviceEvents(numReads);
         break;
 
       case Write:
-        numWrites++;
+        numWritesStat++;
         break;
 
       case Copy:
+        numCopiesStat++;
         break;
 
       default:
@@ -187,17 +188,18 @@ MemTest::regStats()
 {
     using namespace Statistics;
 
-    numReads
+
+    numReadsStat
         .name(name() + ".num_reads")
         .desc("number of read accesses completed")
         ;
 
-    numWrites
+    numWritesStat
         .name(name() + ".num_writes")
         .desc("number of write accesses completed")
         ;
 
-    numCopies
+    numCopiesStat
         .name(name() + ".num_copies")
         .desc("number of copy accesses completed")
         ;

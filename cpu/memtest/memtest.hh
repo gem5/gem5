@@ -36,7 +36,7 @@
 #include "cpu/exec_context.hh"
 
 #include "base/statistics.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 class MemTest : public BaseCPU
 {
@@ -110,9 +110,10 @@ class MemTest : public BaseCPU
 
     Tick noResponseCycles;
 
-    Statistics::Scalar<> numReads;
-    Statistics::Scalar<> numWrites;
-    Statistics::Scalar<> numCopies;
+    uint64_t numReads;
+    Statistics::Scalar<> numReadsStat;
+    Statistics::Scalar<> numWritesStat;
+    Statistics::Scalar<> numCopiesStat;
 
     // called by MemCompleteEvent::process()
     void completeRequest(MemReqPtr &req, uint8_t *data);

@@ -34,7 +34,8 @@
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stat_control.hh"
+#include "sim/stats.hh"
 
 using namespace std;
 using namespace Statistics;
@@ -82,6 +83,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
+        using namespace Statistics;
         SetupEvent(Reset, when, repeat);
     }
 
@@ -97,6 +99,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
+        using namespace Statistics;
         SetupEvent(Dump, when, repeat);
     }
 
@@ -112,6 +115,7 @@ namespace AlphaPseudo
         Tick when = curTick + NS2Ticks(delay);
         Tick repeat = NS2Ticks(period);
 
+        using namespace Statistics;
         SetupEvent(Dump|Reset, when, repeat);
     }
 

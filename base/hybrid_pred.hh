@@ -41,9 +41,7 @@
 #include <string>
 
 #include "base/sat_counter.hh"
-
 #include "base/statistics.hh"
-#include "sim/sim_stats.hh"
 
 class HybridPredictor : public GenericPredictor
 {

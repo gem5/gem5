@@ -43,7 +43,7 @@
 #endif
 #endif
 
-#include "base/trace_flags.hh"
+#include "base/traceflags.hh"
 
 namespace Trace {
 

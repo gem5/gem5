@@ -34,7 +34,7 @@
 #include "base/predictor.hh"
 
 #include "base/statistics.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 //
 //

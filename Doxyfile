@@ -1,4 +1,4 @@
-# Doxyfile 1.3.3
+# Doxyfile 1.3.6
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project
@@ -11,7 +11,7 @@
 # Values that contain spaces should be placed between quotes (" ")
 
 #---------------------------------------------------------------------------
-# General configuration options
+# Project related configuration options
 #---------------------------------------------------------------------------
 
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
@@ -38,7 +38,7 @@ OUTPUT_DIRECTORY       = docs/doxygen
 # The default language is English, other supported languages are: 
 # Brazilian, Catalan, Chinese, Chinese-Traditional, Croatian, Czech, Danish, Dutch, 
 # Finnish, French, German, Greek, Hungarian, Italian, Japanese, Japanese-en 
-# (Japanese with English messages), Korean, Norwegian, Polish, Portuguese, 
+# (Japanese with English messages), Korean, Korean-en, Norwegian, Polish, Portuguese, 
 # Romanian, Russian, Serbian, Slovak, Slovene, Spanish, Swedish, and Ukrainian.
 
 OUTPUT_LANGUAGE        = English
@@ -52,6 +52,141 @@ OUTPUT_LANGUAGE        = English
 # all platforms other than Windows).
 
 USE_WINDOWS_ENCODING   = NO
+
+# If the BRIEF_MEMBER_DESC tag is set to YES (the default) Doxygen will 
+# include brief member descriptions after the members that are listed in 
+# the file and class documentation (similar to JavaDoc). 
+# Set to NO to disable this.
+
+BRIEF_MEMBER_DESC      = YES
+
+# If the REPEAT_BRIEF tag is set to YES (the default) Doxygen will prepend 
+# the brief description of a member or function before the detailed description. 
+# Note: if both HIDE_UNDOC_MEMBERS and BRIEF_MEMBER_DESC are set to NO, the 
+# brief descriptions will be completely suppressed.
+
+REPEAT_BRIEF           = YES
+
+# This tag implements a quasi-intelligent brief description abbreviator 
+# that is used to form the text in various listings. Each string 
+# in this list, if found as the leading text of the brief description, will be 
+# stripped from the text and the result after processing the whole list, is used 
+# as the annotated text. Otherwise, the brief description is used as-is. If left 
+# blank, the following values are used ("$name" is automatically replaced with the 
+# name of the entity): "The $name class" "The $name widget" "The $name file" 
+# "is" "provides" "specifies" "contains" "represents" "a" "an" "the"
+
+ABBREVIATE_BRIEF       = 
+
+# If the ALWAYS_DETAILED_SEC and REPEAT_BRIEF tags are both set to YES then 
+# Doxygen will generate a detailed section even if there is only a brief 
+# description.
+
+ALWAYS_DETAILED_SEC    = YES
+
+# If the INLINE_INHERITED_MEMB tag is set to YES, doxygen will show all inherited 
+# members of a class in the documentation of that class as if those members were 
+# ordinary class members. Constructors, destructors and assignment operators of 
+# the base classes will not be shown.
+
+INLINE_INHERITED_MEMB  = NO
+
+# If the FULL_PATH_NAMES tag is set to YES then Doxygen will prepend the full 
+# path before files name in the file list and in the header files. If set 
+# to NO the shortest path that makes the file name unique will be used.
+
+FULL_PATH_NAMES        = YES
+
+# If the FULL_PATH_NAMES tag is set to YES then the STRIP_FROM_PATH tag 
+# can be used to strip a user-defined part of the path. Stripping is 
+# only done if one of the specified strings matches the left-hand part of 
+# the path. It is allowed to use relative paths in the argument list. 
+# If left blank the directory from which doxygen is run is used as the 
+# path to strip.
+
+STRIP_FROM_PATH        = .
+
+# If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter 
+# (but less readable) file names. This can be useful is your file systems 
+# doesn't support long names like on DOS, Mac, or CD-ROM.
+
+SHORT_NAMES            = NO
+
+# If the JAVADOC_AUTOBRIEF tag is set to YES then Doxygen 
+# will interpret the first line (until the first dot) of a JavaDoc-style 
+# comment as the brief description. If set to NO, the JavaDoc 
+# comments will behave just like the Qt-style comments (thus requiring an 
+# explicit @brief command for a brief description.
+
+JAVADOC_AUTOBRIEF      = YES
+
+# The MULTILINE_CPP_IS_BRIEF tag can be set to YES to make Doxygen 
+# treat a multi-line C++ special comment block (i.e. a block of //! or /// 
+# comments) as a brief description. This used to be the default behaviour. 
+# The new default is to treat a multi-line C++ comment block as a detailed 
+# description. Set this tag to YES if you prefer the old behaviour instead.
+
+MULTILINE_CPP_IS_BRIEF = NO
+
+# If the DETAILS_AT_TOP tag is set to YES then Doxygen 
+# will output the detailed description near the top, like JavaDoc.
+# If set to NO, the detailed description appears after the member 
+# documentation.
+
+DETAILS_AT_TOP         = NO
+
+# If the INHERIT_DOCS tag is set to YES (the default) then an undocumented 
+# member inherits the documentation from any documented member that it 
+# re-implements.
+
+INHERIT_DOCS           = YES
+
+# If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC 
+# tag is set to YES, then doxygen will reuse the documentation of the first 
+# member in the group (if any) for the other members of the group. By default 
+# all members of a group must be documented explicitly.
+
+DISTRIBUTE_GROUP_DOC   = NO
+
+# The TAB_SIZE tag can be used to set the number of spaces in a tab. 
+# Doxygen uses this value to replace tabs by spaces in code fragments.
+
+TAB_SIZE               = 8
+
+# This tag can be used to specify a number of aliases that acts 
+# as commands in the documentation. An alias has the form "name=value". 
+# For example adding "sideeffect=\par Side Effects:\n" will allow you to 
+# put the command \sideeffect (or @sideeffect) in the documentation, which 
+# will result in a user-defined paragraph with heading "Side Effects:". 
+# You can put \n's in the value part of an alias to insert newlines.
+
+ALIASES                = 
+
+# Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources 
+# only. Doxygen will then generate output that is more tailored for C. 
+# For instance, some of the names that are used will be different. The list 
+# of all members will be omitted, etc.
+
+OPTIMIZE_OUTPUT_FOR_C  = NO
+
+# Set the OPTIMIZE_OUTPUT_JAVA tag to YES if your project consists of Java sources 
+# only. Doxygen will then generate output that is more tailored for Java. 
+# For instance, namespaces will be presented as packages, qualified scopes 
+# will look different, etc.
+
+OPTIMIZE_OUTPUT_JAVA   = NO
+
+# Set the SUBGROUPING tag to YES (the default) to allow class member groups of 
+# the same type (for instance a group of public functions) to be put as a 
+# subgroup of that type (e.g. under the Public Functions section). Set it to 
+# NO to prevent subgrouping. Alternatively, this can be done per class using 
+# the \nosubgrouping command.
+
+SUBGROUPING            = YES
+
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
 
 # If the EXTRACT_ALL tag is set to YES doxygen will assume all entities in 
 # documentation are documented, even if no documentation was available. 
@@ -105,46 +240,6 @@ HIDE_FRIEND_COMPOUNDS  = NO
 
 HIDE_IN_BODY_DOCS      = NO
 
-# If the BRIEF_MEMBER_DESC tag is set to YES (the default) Doxygen will 
-# include brief member descriptions after the members that are listed in 
-# the file and class documentation (similar to JavaDoc). 
-# Set to NO to disable this.
-
-BRIEF_MEMBER_DESC      = YES
-
-# If the REPEAT_BRIEF tag is set to YES (the default) Doxygen will prepend 
-# the brief description of a member or function before the detailed description. 
-# Note: if both HIDE_UNDOC_MEMBERS and BRIEF_MEMBER_DESC are set to NO, the 
-# brief descriptions will be completely suppressed.
-
-REPEAT_BRIEF           = YES
-
-# If the ALWAYS_DETAILED_SEC and REPEAT_BRIEF tags are both set to YES then 
-# Doxygen will generate a detailed section even if there is only a brief 
-# description.
-
-ALWAYS_DETAILED_SEC    = YES
-
-# If the INLINE_INHERITED_MEMB tag is set to YES, doxygen will show all inherited 
-# members of a class in the documentation of that class as if those members were 
-# ordinary class members. Constructors, destructors and assignment operators of 
-# the base classes will not be shown.
-
-INLINE_INHERITED_MEMB  = NO
-
-# If the FULL_PATH_NAMES tag is set to YES then Doxygen will prepend the full 
-# path before files name in the file list and in the header files. If set 
-# to NO the shortest path that makes the file name unique will be used.
-
-FULL_PATH_NAMES        = YES
-
-# If the FULL_PATH_NAMES tag is set to YES then the STRIP_FROM_PATH tag 
-# can be used to strip a user-defined part of the path. Stripping is 
-# only done if one of the specified strings matches the left-hand part of 
-# the path. It is allowed to use relative paths in the argument list.
-
-STRIP_FROM_PATH        = .
-
 # The INTERNAL_DOCS tag determines if documentation 
 # that is typed after a \internal command is included. If the tag is set 
 # to NO (the default) then the documentation will be excluded. 
@@ -160,12 +255,6 @@ INTERNAL_DOCS          = NO
 
 CASE_SENSE_NAMES       = YES
 
-# If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter 
-# (but less readable) file names. This can be useful is your file systems 
-# doesn't support long names like on DOS, Mac, or CD-ROM.
-
-SHORT_NAMES            = NO
-
 # If the HIDE_SCOPE_NAMES tag is set to NO (the default) then Doxygen 
 # will show members with their full class and namespace scopes in the 
 # documentation. If set to YES the scope will be hidden.
@@ -177,35 +266,6 @@ HIDE_SCOPE_NAMES       = NO
 # of that file.
 
 SHOW_INCLUDE_FILES     = YES
-
-# If the JAVADOC_AUTOBRIEF tag is set to YES then Doxygen 
-# will interpret the first line (until the first dot) of a JavaDoc-style 
-# comment as the brief description. If set to NO, the JavaDoc 
-# comments will behave just like the Qt-style comments (thus requiring an 
-# explict @brief command for a brief description.
-
-JAVADOC_AUTOBRIEF      = YES
-
-# The MULTILINE_CPP_IS_BRIEF tag can be set to YES to make Doxygen 
-# treat a multi-line C++ special comment block (i.e. a block of //! or /// 
-# comments) as a brief description. This used to be the default behaviour. 
-# The new default is to treat a multi-line C++ comment block as a detailed 
-# description. Set this tag to YES if you prefer the old behaviour instead.
-
-MULTILINE_CPP_IS_BRIEF = NO
-
-# If the DETAILS_AT_TOP tag is set to YES then Doxygen 
-# will output the detailed description near the top, like JavaDoc.
-# If set to NO, the detailed description appears after the member 
-# documentation.
-
-DETAILS_AT_TOP         = NO
-
-# If the INHERIT_DOCS tag is set to YES (the default) then an undocumented 
-# member inherits the documentation from any documented member that it 
-# reimplements.
-
-INHERIT_DOCS           = YES
 
 # If the INLINE_INFO tag is set to YES (the default) then a tag [inline] 
 # is inserted in the documentation for inline members.
@@ -219,17 +279,22 @@ INLINE_INFO            = YES
 
 SORT_MEMBER_DOCS       = YES
 
-# If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC 
-# tag is set to YES, then doxygen will reuse the documentation of the first 
-# member in the group (if any) for the other members of the group. By default 
-# all members of a group must be documented explicitly.
+# If the SORT_BRIEF_DOCS tag is set to YES then doxygen will sort the 
+# brief documentation of file, namespace and class members alphabetically 
+# by member name. If set to NO (the default) the members will appear in 
+# declaration order.
 
-DISTRIBUTE_GROUP_DOC   = NO
+SORT_BRIEF_DOCS        = NO
 
-# The TAB_SIZE tag can be used to set the number of spaces in a tab. 
-# Doxygen uses this value to replace tabs by spaces in code fragments.
+# If the SORT_BY_SCOPE_NAME tag is set to YES, the class list will be 
+# sorted by fully-qualified names, including namespaces. If set to 
+# NO (the default), the class list will be sorted only by class name, 
+# not including the namespace part. 
+# Note: This option is not very useful if HIDE_SCOPE_NAMES is set to YES.
+# Note: This option applies only to the class list, not to the 
+# alphabetical list.
 
-TAB_SIZE               = 8
+SORT_BY_SCOPE_NAME     = NO
 
 # The GENERATE_TODOLIST tag can be used to enable (YES) or 
 # disable (NO) the todo list. This list is created by putting \todo 
@@ -255,15 +320,6 @@ GENERATE_BUGLIST       = YES
 
 GENERATE_DEPRECATEDLIST= YES
 
-# This tag can be used to specify a number of aliases that acts 
-# as commands in the documentation. An alias has the form "name=value". 
-# For example adding "sideeffect=\par Side Effects:\n" will allow you to 
-# put the command \sideeffect (or @sideeffect) in the documentation, which 
-# will result in a user-defined paragraph with heading "Side Effects:". 
-# You can put \n's in the value part of an alias to insert newlines.
-
-ALIASES                = 
-
 # The ENABLED_SECTIONS tag can be used to enable conditional 
 # documentation sections, marked by \if sectionname ... \endif.
 
@@ -279,33 +335,11 @@ ENABLED_SECTIONS       =
 
 MAX_INITIALIZER_LINES  = 30
 
-# Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources 
-# only. Doxygen will then generate output that is more tailored for C. 
-# For instance, some of the names that are used will be different. The list 
-# of all members will be omitted, etc.
-
-OPTIMIZE_OUTPUT_FOR_C  = NO
-
-# Set the OPTIMIZE_OUTPUT_JAVA tag to YES if your project consists of Java sources 
-# only. Doxygen will then generate output that is more tailored for Java. 
-# For instance, namespaces will be presented as packages, qualified scopes 
-# will look different, etc.
-
-OPTIMIZE_OUTPUT_JAVA   = NO
-
 # Set the SHOW_USED_FILES tag to NO to disable the list of files generated 
 # at the bottom of the documentation of classes and structs. If set to YES the 
 # list will mention the files that were used to generate the documentation.
 
 SHOW_USED_FILES        = YES
-
-# Set the SUBGROUPING tag to YES (the default) to allow class member groups of 
-# the same type (for instance a group of public functions) to be put as a 
-# subgroup of that type (e.g. under the Public Functions section). Set it to 
-# NO to prevent subgrouping. Alternatively, this can be done per class using 
-# the \nosubgrouping command.
-
-SUBGROUPING            = YES
 
 #---------------------------------------------------------------------------
 # configuration options related to warning and progress messages
@@ -346,7 +380,7 @@ WARN_FORMAT            = "$file:$line: $text"
 # and error messages should be written. If left blank the output is written 
 # to stderr.
 
-WARN_LOGFILE           =
+WARN_LOGFILE           = 
 
 #---------------------------------------------------------------------------
 # configuration options related to the input files
@@ -364,9 +398,13 @@ INPUT                  = .
 # and *.h) to filter out the source-files in the directories. If left 
 # blank the following patterns are tested: 
 # *.c *.cc *.cxx *.cpp *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx *.hpp 
-# *.h++ *.idl *.odl *.cs
+# *.h++ *.idl *.odl *.cs *.php *.php3 *.inc
 
-FILE_PATTERNS          = *.c *.cc *.h *.hh *.doxygen
+FILE_PATTERNS          = *.c \
+                         *.cc \
+                         *.h \
+                         *.hh \
+                         *.doxygen
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
@@ -378,7 +416,11 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = build configs setup PENDING RESYNC
+EXCLUDE                = build \
+                         configs \
+                         setup \
+                         PENDING \
+                         RESYNC
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or directories 
 # that are symbolic links (a Unix filesystem feature) are excluded from the input.
@@ -389,7 +431,9 @@ EXCLUDE_SYMLINKS       = YES
 # EXCLUDE_PATTERNS tag to specify one or more wildcard patterns to exclude 
 # certain files from those directories.
 
-EXCLUDE_PATTERNS       = */BitKeeper/* */Attic/*  */SCCS/*
+EXCLUDE_PATTERNS       = */BitKeeper/* \
+                         */Attic/* \
+                         */SCCS/*
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
 # directories that contain example code fragments that are included (see 
@@ -437,7 +481,9 @@ FILTER_SOURCE_FILES    = NO
 #---------------------------------------------------------------------------
 
 # If the SOURCE_BROWSER tag is set to YES then a list of source files will 
-# be generated. Documented entities will be cross-referenced with these sources.
+# be generated. Documented entities will be cross-referenced with these sources. 
+# Note: To get rid of all source code in the generated output, make sure also 
+# VERBATIM_HEADERS is set to NO.
 
 SOURCE_BROWSER         = YES
 
@@ -529,7 +575,9 @@ HTML_FOOTER            = docs/footer.html
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading 
 # style sheet that is used by each HTML page. It can be used to 
 # fine-tune the look of the HTML output. If the tag is left blank doxygen 
-# will generate a default style sheet
+# will generate a default style sheet. Note that doxygen will try to copy 
+# the style sheet file to the HTML output directory, so don't put your own 
+# stylesheet in the HTML output directory as well, or it will be erased!
 
 HTML_STYLESHEET        = 
 
@@ -549,7 +597,7 @@ GENERATE_HTMLHELP      = NO
 # If the GENERATE_HTMLHELP tag is set to YES, the CHM_FILE tag can 
 # be used to specify the file name of the resulting .chm file. You 
 # can add a path in front of the file if the result should not be 
-# written to the html output dir.
+# written to the html output directory.
 
 CHM_FILE               = 
 
@@ -684,7 +732,7 @@ LATEX_HIDE_INDICES     = NO
 #---------------------------------------------------------------------------
 
 # If the GENERATE_RTF tag is set to YES Doxygen will generate RTF output 
-# The RTF output is optimised for Word 97 and may not look very pretty with 
+# The RTF output is optimized for Word 97 and may not look very pretty with 
 # other RTF readers or editors.
 
 GENERATE_RTF           = NO
@@ -711,7 +759,7 @@ COMPACT_RTF            = NO
 RTF_HYPERLINKS         = NO
 
 # Load stylesheet definitions from file. Syntax is similar to doxygen's 
-# config file, i.e. a series of assigments. You only have to provide 
+# config file, i.e. a series of assignments. You only have to provide 
 # replacements, missing definitions are set to their default value.
 
 RTF_STYLESHEET_FILE    = 
@@ -755,9 +803,7 @@ MAN_LINKS              = NO
 
 # If the GENERATE_XML tag is set to YES Doxygen will 
 # generate an XML file that captures the structure of 
-# the code including all documentation. Note that this 
-# feature is still experimental and incomplete at the 
-# moment.
+# the code including all documentation.
 
 GENERATE_XML           = NO
 
@@ -778,6 +824,13 @@ XML_SCHEMA             =
 # syntax of the XML files.
 
 XML_DTD                = 
+
+# If the XML_PROGRAMLISTING tag is set to YES Doxygen will 
+# dump the program listings (including syntax highlighting 
+# and cross-referencing information) to the XML output. Note that 
+# enabling this will significantly increase the size of the XML output.
+
+XML_PROGRAMLISTING     = YES
 
 #---------------------------------------------------------------------------
 # configuration options for the AutoGen Definitions output
@@ -889,7 +942,7 @@ EXPAND_AS_DEFINED      =
 SKIP_FUNCTION_MACROS   = YES
 
 #---------------------------------------------------------------------------
-# Configuration::addtions related to external references   
+# Configuration::additions related to external references   
 #---------------------------------------------------------------------------
 
 # The TAGFILES option can be used to specify one or more tagfiles. 
@@ -938,7 +991,7 @@ PERL_PATH              = /usr/bin/perl
 # If the CLASS_DIAGRAMS tag is set to YES (the default) Doxygen will 
 # generate a inheritance diagram (in HTML, RTF and LaTeX) for classes with base or 
 # super classes. Setting the tag to NO turns the diagrams off. Note that this 
-# option is superceded by the HAVE_DOT option below. This is only a fallback. It is 
+# option is superseded by the HAVE_DOT option below. This is only a fallback. It is 
 # recommended to install and use dot, since it yields more powerful graphs.
 
 CLASS_DIAGRAMS         = YES
@@ -971,7 +1024,7 @@ CLASS_GRAPH            = YES
 COLLABORATION_GRAPH    = YES
 
 # If the UML_LOOK tag is set to YES doxygen will generate inheritance and 
-# collaboration diagrams in a style similiar to the OMG's Unified Modeling 
+# collaboration diagrams in a style similar to the OMG's Unified Modeling 
 # Language.
 
 UML_LOOK               = NO
@@ -1065,45 +1118,10 @@ GENERATE_LEGEND        = YES
 DOT_CLEANUP            = YES
 
 #---------------------------------------------------------------------------
-# Configuration::addtions related to the search engine   
+# Configuration::additions related to the search engine   
 #---------------------------------------------------------------------------
 
 # The SEARCHENGINE tag specifies whether or not a search engine should be 
 # used. If set to NO the values of all tags below this one will be ignored.
 
 SEARCHENGINE           = NO
-
-# The CGI_NAME tag should be the name of the CGI script that 
-# starts the search engine (doxysearch) with the correct parameters. 
-# A script with this name will be generated by doxygen.
-
-CGI_NAME               = search.cgi
-
-# The CGI_URL tag should be the absolute URL to the directory where the 
-# cgi binaries are located. See the documentation of your http daemon for 
-# details.
-
-CGI_URL                = 
-
-# The DOC_URL tag should be the absolute URL to the directory where the 
-# documentation is located. If left blank the absolute path to the 
-# documentation, with file:// prepended to it, will be used.
-
-DOC_URL                = 
-
-# The DOC_ABSPATH tag should be the absolute path to the directory where the 
-# documentation is located. If left blank the directory on the local machine 
-# will be used.
-
-DOC_ABSPATH            = 
-
-# The BIN_ABSPATH tag must point to the directory where the doxysearch binary 
-# is installed.
-
-BIN_ABSPATH            = /usr/local/bin/
-
-# The EXT_DOC_PATHS tag can be used to specify one or more paths to 
-# documentation generated for other projects. This allows doxysearch to search 
-# the documentation for these projects as well.
-
-EXT_DOC_PATHS          = 
