@@ -59,8 +59,8 @@ IniFile::IniFile()
 
 IniFile::~IniFile()
 {
-    ConfigTable::iterator i = table.begin();
-    ConfigTable::iterator end = table.end();
+    SectionTable::iterator i = table.begin();
+    SectionTable::iterator end = table.end();
 
     while (i != end) {
         delete (*i).second;
@@ -74,6 +74,16 @@ bool
 IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 {
     int fd[2];
+
+    // Open the file just to verify that we can.  Otherwise if the
+    // file doesn't exist or has bad permissions the user will get
+    // confusing errors from cpp/g++.
+    ifstream tmpf(file.c_str());
+
+    if (!tmpf.is_open())
+        return false;
+
+    tmpf.close();
 
 #ifdef CPP_PIPE
     if (pipe(fd) == -1)
@@ -183,7 +193,8 @@ IniFile::Entry::getValue() const
 
 void
 IniFile::Section::addEntry(const std::string &entryName,
-                           const std::string &value)
+                           const std::string &value,
+                           bool append)
 {
     EntryTable::iterator ei = table.find(entryName);
 
@@ -191,10 +202,35 @@ IniFile::Section::addEntry(const std::string &entryName,
         // new entry
         table[entryName] = new Entry(value);
     }
+    else if (append) {
+        // append new reult to old entry
+        ei->second->appendValue(value);
+    }
     else {
         // override old entry
         ei->second->setValue(value);
     }
+}
+
+
+bool
+IniFile::Section::add(const std::string &assignment)
+{
+    string::size_type offset = assignment.find('=');
+    if (offset == string::npos)  // no '=' found
+        return false;
+
+    // if "+=" rather than just "=" then append value
+    bool append = (assignment[offset-1] == '+');
+
+    string entryName = assignment.substr(0, append ? offset-1 : offset);
+    string value = assignment.substr(offset + 1);
+
+    eat_white(entryName);
+    eat_white(value);
+
+    addEntry(entryName, value, append);
+    return true;
 }
 
 
@@ -212,10 +248,10 @@ IniFile::Section::findEntry(const std::string &entryName) const
 IniFile::Section *
 IniFile::addSection(const string &sectionName)
 {
-    ConfigTable::iterator ci = table.find(sectionName);
+    SectionTable::iterator i = table.find(sectionName);
 
-    if (ci != table.end()) {
-        return ci->second;
+    if (i != table.end()) {
+        return i->second;
     }
     else {
         // new entry
@@ -229,9 +265,9 @@ IniFile::addSection(const string &sectionName)
 IniFile::Section *
 IniFile::findSection(const string &sectionName) const
 {
-    ConfigTable::const_iterator ci = table.find(sectionName);
+    SectionTable::const_iterator i = table.find(sectionName);
 
-    return (ci == table.end()) ? NULL : ci->second;
+    return (i == table.end()) ? NULL : i->second;
 }
 
 
@@ -248,21 +284,10 @@ IniFile::add(const string &str)
     string sectionName = str.substr(0, offset);
     string rest = str.substr(offset + 1);
 
-    offset = rest.find('=');
-    if (offset == string::npos)  // no '='found
-        return false;
-
-    string entryName = rest.substr(0, offset);
-    string value = rest.substr(offset + 1);
-
     eat_white(sectionName);
-    eat_white(entryName);
-    eat_white(value);
-
     Section *s = addSection(sectionName);
-    s->addEntry(entryName, value);
 
-    return true;
+    return s->add(rest);
 }
 
 bool
@@ -294,14 +319,8 @@ IniFile::load(istream &f)
         if (section == NULL)
             continue;
 
-        string::size_type offset = line.find('=');
-        string entryName = line.substr(0, offset);
-        string value = line.substr(offset + 1);
-
-        eat_white(entryName);
-        eat_white(value);
-
-        section->addEntry(entryName, value);
+        if (!section->add(line))
+            return false;
     }
 
     return true;
@@ -387,10 +406,10 @@ IniFile::printUnreferenced()
 {
     bool unref = false;
 
-    for (ConfigTable::iterator ci = table.begin();
-         ci != table.end(); ++ci) {
-        const string &sectionName = ci->first;
-        Section *section = ci->second;
+    for (SectionTable::iterator i = table.begin();
+         i != table.end(); ++i) {
+        const string &sectionName = i->first;
+        Section *section = i->second;
 
         if (!section->isReferenced()) {
             if (section->findEntry("unref_section_ok") == NULL) {
@@ -416,15 +435,15 @@ IniFile::Section::dump(const string &sectionName)
     for (EntryTable::iterator ei = table.begin();
          ei != table.end(); ++ei) {
         cout << sectionName << ": " << (*ei).first << " => "
-             << (*ei).second << "\n";
+             << (*ei).second->getValue() << "\n";
     }
 }
 
 void
 IniFile::dump()
 {
-    for (ConfigTable::iterator ci = table.begin();
-         ci != table.end(); ++ci) {
-        ci->second->dump(ci->first);
+    for (SectionTable::iterator i = table.begin();
+         i != table.end(); ++i) {
+        i->second->dump(i->first);
     }
 }

@@ -37,7 +37,7 @@ circletest: circletest.o circlebuf.o
 cprintftest: cprintftest.o cprintf.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
-initest: initest.o str.o inifile.o
+initest: initest.o str.o inifile.o cprintf.o
 	$(CXX) $(LFLAGS) -o $@ $^
 
 lrutest: lru_test.o
