@@ -314,14 +314,13 @@ SimConsole::setInt(int bits)
 
 
 void
-SimConsole::serialize()
+SimConsole::serialize(ostream &os)
 {
     panic("Unimplemented");
 }
 
 void
-SimConsole::unserialize(IniFile &db, const std::string &category,
-                        ConfigNode *node)
+SimConsole::unserialize(IniFile &db, const std::string &section)
 {
     panic("Unimplemented");
 }

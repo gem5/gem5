@@ -36,11 +36,41 @@
 
 #include <list>
 #include <iostream>
+#include <map>
 
 #include "sim/host.hh"
 #include "sim/configfile.hh"
 
 class IniFile;
+
+template <class T>
+void paramOut(std::ostream &os, const std::string &name, const T& param);
+
+template <class T>
+void paramIn(IniFile &db, const std::string &section,
+             const std::string &name, T& param);
+
+template <class T>
+void arrayParamOut(std::ostream &os, const std::string &name,
+                   const T *param, int size);
+
+template <class T>
+void arrayParamIn(IniFile &db, const std::string &section,
+                  const std::string &name, T *param, int size);
+
+//
+// These macros are streamlined to use in serialize/unserialize
+// functions.  It's assumed that serialize() has a parameter 'os' for
+// the ostream, and unserialize() has parameters 'db' and 'section'.
+#define SERIALIZE_MEMBER(member)	paramOut(os, #member, member)
+
+#define UNSERIALIZE_MEMBER(member)	paramIn(db, section, #member, member)
+
+#define SERIALIZE_ARRAY(member, size)	\
+        arrayParamOut(os, #member, member, size)
+
+#define UNSERIALIZE_ARRAY(member, size)	\
+        arrayParamIn(db, section, #member, member, size)
 
 /*
  * Basic support for object serialization.
@@ -48,32 +78,10 @@ class IniFile;
 class Serializeable
 {
   public:
-    // To allow other classes to do some of the serialization work.
-    class Proxy {
-      private:
-        Serializeable *obj;
-
-        // Make it so only Serializables can construct one of these.
-        Proxy(Serializeable *o) : obj(o) {};
-
-        friend class Serializeable;
-
-      public:
-        template <class T>
-        void paramOut(const std::string &name, const T& param) const {
-            obj->paramOut(name, param);
-        };
-    };
 
     friend class Serializer;
-    friend class Proxy;
-
-  private:
-    Proxy proxy;
 
   protected:
-    const Proxy &getProxy() { return(proxy); };
-
     // object name: should be unique
     std::string objName;
 
@@ -81,13 +89,8 @@ class Serializeable
     static Serializer *serializer;
 
     void mark();
-    void nameOut();
-    void nameOut(const std::string &_name);
-    void childOut(const std::string &name, Serializeable *child);
-    template <class T>
-    void paramOut(const std::string &name, const T& param);
-
-    std::ostream &out() const;
+    void nameOut(std::ostream& os);
+    void nameOut(std::ostream& os, const std::string &_name);
 
   public:
     Serializeable(const std::string &n);
@@ -99,12 +102,8 @@ class Serializeable
     const std::string &name() const { return objName; }
 
     virtual void nameChildren() {}
-    virtual void serialize() {}
-    virtual void unserialize(IniFile &db, const std::string &category,
-                             ConfigNode *node = NULL)
-    {
-        std::cout << name() << " is being unserialized" << std::endl;
-    }
+    virtual void serialize(std::ostream& os) {}
+    virtual void unserialize(IniFile &db, const std::string &section) {}
 };
 
 class Serializer
@@ -130,17 +129,6 @@ class Serializer
     void serialize(const std::string &file);
     const std::string &filename() const { return file; }
 };
-
-template <class T>
-inline void
-Serializeable::paramOut(const std::string &name, const T& param)
-{
-    out() << name << "=" << param << "\n";
-}
-
-template <> void
-Serializeable::paramOut(const std::string &name, const uint64_t& param);
-
 
 //
 // A SerializeableBuilder serves as an evaluation context for a set of

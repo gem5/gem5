@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "base/misc.hh"
+#include "base/str.hh"
 
 #include "sim/eventq.hh"
 #include "sim/param.hh"
@@ -48,7 +49,7 @@ using namespace std;
 Serializer *Serializeable::serializer = NULL;
 
 Serializeable::Serializeable(const string &n)
-    : proxy(this), objName(n), serialized(false)
+    : objName(n), serialized(false)
 { }
 
 Serializeable::~Serializeable()
@@ -63,30 +64,131 @@ Serializeable::mark()
     serialized = true;
 }
 
-ostream &
-Serializeable::out() const
+void
+Serializeable::nameOut(ostream &os)
 {
-    return serializer->out();
+    os << "\n[" << name() << "]\n";
 }
 
 void
-Serializeable::nameOut()
+Serializeable::nameOut(ostream &os, const string &_name)
 {
-    out() << "\n[" << name() << "]\n";
+    os << "\n[" << _name << "]\n";
 }
 
+template <class T> bool parseParam(const std::string &str, T &data);
+template <class T> void showParam(const std::ostream &os, T &data);
+
+template <class T>
 void
-Serializeable::nameOut(const string &_name)
+paramOut(ostream &os, const std::string &name, const T& param)
 {
-    out() << "\n[" << _name << "]\n";
+    os << name << "=";
+    showParam(os, param);
+    os << "\n";
 }
 
-template<> void
-Serializeable::paramOut(const string &name, const uint64_t& param)
+
+template <class T>
+void
+paramIn(IniFile &db, const std::string &section,
+        const std::string &name, T& param)
 {
-    out() << name << "=0x" << hex << param << dec << "\n";
+    std::string str;
+    if (!db.find(section, name, str) || !parseParam(str, param)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
 }
 
+
+template <class T>
+void
+arrayParamOut(ostream &os, const std::string &name,
+              const T *param, int size)
+{
+    os << name << "=";
+    if (size > 0)
+        showParam(os, param[0]);
+    for (int i = 1; i < size; ++i) {
+        os << " ";
+        showParam(os, param[i]);
+    }
+    os << "\n";
+}
+
+
+template <class T>
+void
+arrayParamIn(IniFile &db, const std::string &section,
+             const std::string &name, T *param, int size)
+{
+    std::string str;
+    if (!db.find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+
+    // code below stolen from VectorParam<T>::parse().
+    // it would be nice to unify these somehow...
+
+    vector<string> tokens;
+
+    tokenize(tokens, str, ' ');
+
+    // Need this if we were doing a vector
+    // value.resize(tokens.size());
+
+    if (tokens.size() != size) {
+        fatal("Array size mismatch on %s:%s'\n", section, name);
+    }
+
+    for (int i = 0; i < tokens.size(); i++) {
+        // need to parse into local variable to handle vector<bool>,
+        // for which operator[] returns a special reference class
+        // that's not the same as 'bool&', (since it's a packed
+        // vector)
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param[i] = scalar_value;
+    }
+}
+
+
+#define INSTANTIATE_PARAM_TEMPLATES(type)			\
+template void						\
+paramOut(ostream &os, const std::string &name, const type &param);	\
+template void						\
+paramIn(IniFile &db, const std::string &section,		\
+        const std::string &name, type & param);			\
+template void						\
+arrayParamOut(ostream &os, const std::string &name,		\
+              const type *param, int size);			\
+template void						\
+arrayParamIn(IniFile &db, const std::string &section,		\
+             const std::string &name, type *param, int size);
+
+
+INSTANTIATE_PARAM_TEMPLATES(int8_t)
+INSTANTIATE_PARAM_TEMPLATES(uint8_t)
+INSTANTIATE_PARAM_TEMPLATES(int16_t)
+INSTANTIATE_PARAM_TEMPLATES(uint16_t)
+INSTANTIATE_PARAM_TEMPLATES(int32_t)
+INSTANTIATE_PARAM_TEMPLATES(uint32_t)
+INSTANTIATE_PARAM_TEMPLATES(int64_t)
+INSTANTIATE_PARAM_TEMPLATES(uint64_t)
+INSTANTIATE_PARAM_TEMPLATES(string)
+
+
+#if 0
+// unneeded?
 void
 Serializeable::childOut(const string &name, Serializeable *child)
 {
@@ -96,6 +198,7 @@ Serializeable::childOut(const string &name, Serializeable *child)
 
     out() << name << "=" << child->name() << "\n";
 }
+#endif
 
 void
 Serializeable::setName(const string &name)
@@ -174,11 +277,12 @@ Serializer::serialize(const string &f)
 
     add_objects();
     while (!objects.empty()) {
-        Serializeable *serial = objects.front();
-        DPRINTF(Serialize, "Serializing %s\n", serial->name());
-        serial->serialize();
+        Serializeable *obj = objects.front();
+        DPRINTF(Serialize, "Serializing %s\n", obj->name());
+        obj->nameOut(out());
+        obj->serialize(out());
         objects.pop_front();
-        list.push_back(serial);
+        list.push_back(obj);
     }
 
     while (!list.empty()) {
@@ -203,7 +307,7 @@ class SerializeEvent : public Event
     ~SerializeEvent();
 
     virtual void process();
-    virtual void serialize();
+    virtual void serialize(std::ostream &os);
 };
 
 SerializeEvent::SerializeEvent(EventQueue *q, Tick when, const string &f)
@@ -226,7 +330,7 @@ SerializeEvent::process()
 }
 
 void
-SerializeEvent::serialize()
+SerializeEvent::serialize(ostream &os)
 {
     panic("Cannot serialize the SerializeEvent");
 }

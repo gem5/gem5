@@ -240,34 +240,13 @@ SimpleCPU::regStats()
 }
 
 void
-SimpleCPU::serialize()
+SimpleCPU::serialize(ostream &os)
 {
-    nameOut();
-
-#ifdef FULL_SYSTEM
-#if 0
-    // do we need this anymore?? egh
-    childOut("itb", xc->itb);
-    childOut("dtb", xc->dtb);
-    childOut("physmem", physmem);
-#endif
-#endif
-
-    for (int i = 0; i < NumIntRegs; i++) {
-        stringstream buf;
-        ccprintf(buf, "R%02d", i);
-        paramOut(buf.str(), xc->regs.intRegFile[i]);
-    }
-    for (int i = 0; i < NumFloatRegs; i++) {
-        stringstream buf;
-        ccprintf(buf, "F%02d", i);
-        paramOut(buf.str(), xc->regs.floatRegFile.q[i]);
-    }
-    // CPUTraitsType::serializeSpecialRegs(getProxy(), xc->regs);
+    xc->serialize(os);
 }
 
 void
-SimpleCPU::unserialize(IniFile &db, const string &category, ConfigNode *node)
+SimpleCPU::unserialize(IniFile &db, const string &category)
 {
     string data;
 

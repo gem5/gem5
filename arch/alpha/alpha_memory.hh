@@ -73,9 +73,8 @@ class AlphaTlb : public SimObject
     static void checkCacheability(MemReqPtr req);
 
     // Checkpointing
-    virtual void serialize();
-    virtual void unserialize(IniFile &db, const std::string &category,
-                             ConfigNode *node);
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(IniFile &db, const std::string &section);
 
 };
 

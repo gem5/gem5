@@ -41,6 +41,11 @@ typedef uint64 UINT64;
 #else
 typedef uint32_t UINT32;
 typedef uint64_t UINT64;
+
+#include <ostream>
+#include <string>
+class IniFile;
+
 #endif
 
 // This structure hacked up from simos
@@ -74,6 +79,11 @@ struct AlphaAccess
     UINT64	bootStrapImpure;	// 70:
     UINT32	bootStrapCPU;		// 78:
     UINT32	align2;			// 7C: Dummy placeholder for alignment
+
+#ifndef CONSOLE
+    void serialize(std::ostream &os);
+    void unserialize(IniFile &db, const std::string &section);
+#endif
 };
 
 #endif // __ALPHA_ACCESS_H__

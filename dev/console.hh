@@ -128,9 +128,8 @@ class SimConsole : public SimObject
     void initInt(IntrControl *i);
     void setInt(int bits);
 
-    virtual void serialize();
-    virtual void unserialize(IniFile &db, const std::string &category,
-                             ConfigNode *node);
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(IniFile &db, const std::string &section);
 };
 
 class ConsoleListener : public SimObject

@@ -98,6 +98,22 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 
 
 void
+ExecContext::serialize(ostream &os)
+{
+    SERIALIZE_ARRAY(regs.intRegFile, NumIntRegs);
+    SERIALIZE_ARRAY(regs.floatRegFile.q, NumFloatRegs);
+}
+
+
+void
+ExecContext::unserialize(IniFile &db, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(regs.intRegFile, NumIntRegs);
+    UNSERIALIZE_ARRAY(regs.floatRegFile.q, NumFloatRegs);
+}
+
+
+void
 ExecContext::setStatus(Status new_status)
 {
 #ifdef FULL_SYSTEM

@@ -246,7 +246,7 @@ class EventQueue : public Serializeable
     Tick nextEventTime() { return empty() ? curTick : head->when(); }
 
     virtual void nameChildren();
-    virtual void serialize();
+    virtual void serialize(std::ostream &os);
 };
 
 
