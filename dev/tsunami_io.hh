@@ -64,6 +64,19 @@ class TsunamiIO : public MmapDevice
 
     };
 
+    class RTCEvent : public Event
+    {
+      protected:
+        Tick interval;
+        uint8_t rtc_uip;
+
+      public:
+        RTCEvent();
+
+        virtual void process();
+        virtual const char *description();
+        uint8_t rtc_uip_value();
+    };
 
       uint8_t mask1;
       uint8_t mask2;

@@ -22,6 +22,38 @@
 #include "sim/system.hh"
 
 using namespace std;
+TsunamiIO::RTCEvent::RTCEvent()
+    : Event(&mainEventQueue)
+{
+    DPRINTF(Tsunami, "RTC Event Initilizing\n");
+    rtc_uip = 0;
+    schedule(curTick + (curTick % ticksPerSecond));
+}
+
+void
+TsunamiIO::RTCEvent::process()
+{
+    DPRINTF(Tsunami, "Timer Interrupt\n");
+    if (rtc_uip == 0) {
+        rtc_uip = 1; //Signal a second has occured
+        schedule(curTick + (curTick % ticksPerSecond) - 10);
+            }
+    else
+        rtc_uip = 0; //Done signaling second has occured
+        schedule(curTick + (curTick % ticksPerSecond));
+}
+
+const char *
+TsunamiIO::RTCEvent::description()
+{
+    return "tsunami RTC changte second";
+}
+
+uint8_t
+TsunamiIO::RTCEvent::rtc_uip_value()
+{
+    return rtc_uip;
+}
 
 TsunamiIO::ClockEvent::ClockEvent()
     : Event(&mainEventQueue)
