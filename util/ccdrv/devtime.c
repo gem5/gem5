@@ -34,6 +34,7 @@
 #include <asm/uaccess.h>
 #include <linux/kernel.h>
 #include <asm/io.h>
+#include <asm/page.h>
 #include <linux/netdevice.h>
 
 #ifdef __i386__
@@ -70,18 +71,34 @@ static int __init devtime_start(void)
         devSum = 0;
         devCnt = count;
 
-        printk("Preparing to read %#llx %d times.\n", addr, count);
-
-        t1 = cycleCounter(trash);
-        for (x=0; x < count; x++)
+        addr = ioremap(addr, PAGE_SIZE);
+        /**
+         * Make sure that the remapping actually worked. On alpha we have
+         * linear addressing, so its not a problem. But it can fail in x86
+         * if physical memory is mapped to this address.
+         */
+        if (addr)
         {
-            trash = readl(addr);
-            t2 = cycleCounter(trash);
-            devSum += t2 - t1;
-            t1 = t2;
-        }
+            printk("Preparing to read %#llx %d times.\n", addr, count);
 
-        printk("Read Address %#llx %ld times. Average latency %ld.\n", addr, devCnt, devSum/devCnt);
+            t1 = cycleCounter(trash);
+            for (x=0; x < count; x++)
+            {
+                trash = readl(addr);
+                t2 = cycleCounter(trash);
+                devSum += t2 - t1;
+                t1 = t2;
+            }
+
+            /**
+             * Unmap the address.
+             */
+            iounmap(addr);
+
+            printk("Read Address %#llx %ld times. Average latency %ld.\n", addr, devCnt, devSum/devCnt);
+        }
+        else
+            printk("Unable to remap address. Please try again later.\n");
     } else {
         dev = dev_get_by_name("eth0");
         if (dev)
@@ -90,6 +107,7 @@ static int __init devtime_start(void)
                     dev->mem_end, dev->base_addr);
             dev_put(dev);
         }
+        dev = 0;
         dev = dev_get_by_name("eth1");
         if (dev)
         {
