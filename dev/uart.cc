@@ -395,7 +395,7 @@ Uart::serialize(ostream &os)
     if (txIntrEvent.scheduled())
         txintrwhen = txIntrEvent.when();
     else
-        rxintrwhen = 0;
+        txintrwhen = 0;
      SERIALIZE_SCALAR(rxintrwhen);
      SERIALIZE_SCALAR(txintrwhen);
 #endif
