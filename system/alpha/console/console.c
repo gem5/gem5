@@ -1046,27 +1046,24 @@ DeviceOperation(long op, long channel, long count, long address, long block)
 
 #define MAX_ENVLEN 32
 
-char	env_booted_dev[MAX_ENVLEN]	= BOOTDEVICE_NAME;
-char	env_booted_osflags[MAX_ENVLEN]	= "";
-char	env_com1_baud[MAX_ENVLEN]	= "";
-char	env_secure[MAX_ENVLEN]		= "";
-
-#if 0
-char	env_auto_action[MAX_ENVLEN]	= "";
+char	env_auto_action[MAX_ENVLEN]	= "BOOT";
 char	env_boot_dev[MAX_ENVLEN]	= "";
 char	env_bootdef_dev[MAX_ENVLEN]	= "";
+char	env_booted_dev[MAX_ENVLEN]	= BOOTDEVICE_NAME;
 char	env_boot_file[MAX_ENVLEN]	= "";
 char	env_booted_file[MAX_ENVLEN]	= "";
 char	env_boot_osflags[MAX_ENVLEN]	= "";
+char	env_booted_osflags[MAX_ENVLEN]	= "";
 char	env_boot_reset[MAX_ENVLEN]	= "";
 char	env_dump_dev[MAX_ENVLEN]	= "";
 char	env_enable_audit[MAX_ENVLEN]	= "";
 char	env_license[MAX_ENVLEN]		= "";
 char	env_char_set[MAX_ENVLEN]	= "";
-int	env_language			= 0;
-char	env_tty_dev[MAX_ENVLEN]		= "";
+char	env_language[MAX_ENVLEN]	= "";
+char	env_tty_dev[MAX_ENVLEN]		= "0";
 char	env_scsiid[MAX_ENVLEN]		= "";
 char	env_scsifast[MAX_ENVLEN]	= "";
+char	env_com1_baud[MAX_ENVLEN]	= "";
 char	env_com1_modem[MAX_ENVLEN]	= "";
 char	env_com1_flow[MAX_ENVLEN]	= "";
 char	env_com1_misc[MAX_ENVLEN]	= "";
@@ -1075,9 +1072,54 @@ char	env_com2_modem[MAX_ENVLEN]	= "";
 char	env_com2_flow[MAX_ENVLEN]	= "";
 char	env_com2_misc[MAX_ENVLEN]	= "";
 char	env_password[MAX_ENVLEN]	= "";
+char	env_secure[MAX_ENVLEN]		= "";
 char	env_logfail[MAX_ENVLEN]		= "";
 char	env_srm2dev_id[MAX_ENVLEN]	= "";
-#endif
+
+#define MAX_ENV_INDEX 100
+char *env_ptr[MAX_ENV_INDEX] =
+{
+    0,					/* 0x00 */
+    env_auto_action,			/* 0x01 */
+    env_boot_dev,			/* 0x02 */
+    env_bootdef_dev,			/* 0x03 */
+    env_booted_dev,			/* 0x04 */
+    env_boot_file,			/* 0x05 */
+    env_booted_file,			/* 0x06 */
+    env_boot_osflags,			/* 0x07 */
+    env_booted_osflags,			/* 0x08 */
+    env_boot_reset,			/* 0x09 */
+    env_dump_dev,			/* 0x0A */
+    env_enable_audit,			/* 0x0B */
+    env_license,			/* 0x0C */
+    env_char_set,			/* 0x0D */
+    (char *)&env_language,		/* 0x0E */
+    env_tty_dev,			/* 0x0F */
+    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,	/* 0x10 - 0x1F */
+    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,	/* 0x20 - 0x2F */
+    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,	/* 0x30 - 0x3F */
+    0,					/* 0x40 */
+    0,					/* 0x41 */
+    env_scsiid,				/* 0x42 */
+    env_scsifast,			/* 0x43 */
+    env_com1_baud,			/* 0x44 */
+    env_com1_modem,			/* 0x45 */
+    env_com1_flow,			/* 0x46 */
+    env_com1_misc,			/* 0x47 */
+    env_com2_baud,			/* 0x48 */
+    env_com2_modem,			/* 0x49 */
+    env_com2_flow,			/* 0x4A */
+    env_com2_misc,			/* 0x4B */
+    env_password,			/* 0x4C */
+    env_secure,				/* 0x4D */
+    env_logfail,			/* 0x4E */
+    env_srm2dev_id,			/* 0x4F */
+    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,	/* 0x50 - 0x5F */
+    0,					/* 0x60 */
+    0,					/* 0x61 */
+    0,					/* 0x62 */
+    0,					/* 0x63 */
+};
 
 long
 CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
@@ -1094,63 +1136,21 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
       return a3;
 
    case CONSCB_GETENV:
-      switch (a1) {
-      case ENV_BOOTED_DEV:
-        i = strcpy((char*)a2, env_booted_dev);
-        break;
-
-      case ENV_BOOTED_OSFLAGS:
-        i = strcpy((char*)a2, env_booted_osflags);
-        break;
-
-      case ENV_COM1_BAUD:
-        i = strcpy((char*)a2, env_com1_baud);
-        break;
-
-      case ENV_SECURE:
-        i = strcpy((char *)a2, env_secure);
-        break;
-
-#if 0
-      case ENV_AUTO_ACTION:
-      case ENV_BOOT_DEV:
-      case ENV_BOOTDEF_DEV:
-      case ENV_BOOT_FILE:
-      case ENV_BOOTED_FILE:
-      case ENV_BOOT_OSFLAGS:
-      case ENV_BOOT_RESET:
-      case ENV_DUMP_DEV:
-      case ENV_ENABLE_AUDIT:
-      case ENV_LICENSE:
-      case ENV_CHAR_SET:
-      case ENV_LANGUAGE:
-      case ENV_TTY_DEV:
-      case ENV_SCSIID:
-      case ENV_SCSIFAST:
-      case ENV_COM1_MODEM:
-      case ENV_COM1_FLOW:
-      case ENV_COM1_MISC:
-      case ENV_COM2_BAUD:
-      case ENV_COM2_MODEM:
-      case ENV_COM2_FLOW:
-      case ENV_COM2_MISC:
-      case ENV_PASSWORD:
-      case ENV_LOGFAIL:
-      case ENV_SRM2DEV_ID:
-#endif
-      default:
-         strcpy((char*)a2,"");
+     if (a1 >= 0 && a1 < MAX_ENV_INDEX && env_ptr[a1] != 0 && *env_ptr[a1]) {
+         i = strcpy((char*)a2, env_ptr[a1]);
+     } else {
+         strcpy((char*)a2, "");
          i = (long)0xc000000000000000;
-         if (a1 >= 0 && a1 < 100)
-           printf ("GETENV unsupported option %d\n", a1);
+         if (a1 >= 0 && a1 < MAX_ENV_INDEX)
+             printf ("GETENV unsupported option %d (0x%x)\n", a1, a1);
          else
-           printf ("GETENV unsupported option %s\n", a1);
-         break;
-      }
-      if (i > a3) {
-         panic("CONSCB_GETENV overwrote buffer \n");
-      }
-      return i;
+             printf ("GETENV unsupported option %s\n", a1);
+     }
+
+     if (i > a3)
+         panic("CONSCB_GETENV overwrote buffer\n");
+     return i;
+
    case CONSCB_OPEN:
       bcopy((char*)a1,deviceState[numOpenDevices].name,a2);
       deviceState[numOpenDevices].name[a2] = '\0';
@@ -1161,12 +1161,14 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
    case CONSCB_READ:
       DeviceOperation(a0,a1,a2,a3,a4);
       break;
+
    case CONSCB_CLOSE:
       break;
+
    default:
-      panic("cher (%x,%x,%x,%x) \n",
-          a0,a1,a2,a3);
+      panic("cher (%x,%x,%x,%x)\n", a0, a1, a2, a3);
    }
+
    return 0;
 }
 
