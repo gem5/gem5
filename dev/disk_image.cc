@@ -405,7 +405,7 @@ CowDiskImage::write(const uint8_t *data, off_t offset)
 void
 CowDiskImage::serialize(ostream &os)
 {
-    string cowFilename = serializeFilename + ".cow";
+    string cowFilename = serializeFilename + "." + name() + ".cow";
     SERIALIZE_SCALAR(cowFilename);
     save(cowFilename);
 }
