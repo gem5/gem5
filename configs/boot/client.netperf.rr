@@ -9,7 +9,7 @@ ifconfig eth0 $CLIENT
 echo -n "waiting for server..."
 /usr/bin/netcat -c -l -p 8000
 
-BINARY=/usr/bin/netperf
+BINARY=/benchmarks/netperf/netperf
 TEST="TCP_RR"
 SHORT_ARGS="-l -1k"
 LONG_ARGS="-k10000,0 -K10000,0"

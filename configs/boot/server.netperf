@@ -7,7 +7,7 @@ ifconfig lo 127.0.0.1
 ifconfig eth0 $SERVER
 
 echo "running netserver..."
-/usr/bin/netserver
+/benchmarks/netperf/netserver
 
 echo -n "signal client to begin..."
 echo "server ready" | /usr/bin/netcat -c $CLIENT 8000
