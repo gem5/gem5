@@ -44,7 +44,7 @@ class BaseCPU;
 #include "targetarch/alpha_memory.hh"
 class MemoryController;
 
-#include "kern/tru64/kernel_stats.hh"
+#include "kern/kernel_stats.hh"
 #include "sim/system.hh"
 #include "sim/sw_context.hh"
 
