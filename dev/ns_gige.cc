@@ -1979,7 +1979,7 @@ NSGigE::transferDone()
 }
 
 bool
-NSGigE::rxFilter(PacketPtr &packet)
+NSGigE::rxFilter(const PacketPtr &packet)
 {
     EthPtr eth = packet;
     bool drop = true;
@@ -2019,7 +2019,7 @@ NSGigE::rxFilter(PacketPtr &packet)
 }
 
 bool
-NSGigE::recvPacket(PacketPtr &packet)
+NSGigE::recvPacket(PacketPtr packet)
 {
     rxBytes += packet->length;
     rxPackets++;

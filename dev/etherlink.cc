@@ -105,7 +105,7 @@ EtherLink::unserialize(Checkpoint *cp, const string &section)
 }
 
 void
-EtherLink::Link::txComplete(PacketPtr &packet)
+EtherLink::Link::txComplete(PacketPtr packet)
 {
     DPRINTF(Ethernet, "packet received: len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
@@ -122,7 +122,7 @@ class LinkDelayEvent : public Event
     LinkDelayEvent(EtherLink::Link *link);
 
   public:
-    LinkDelayEvent(EtherLink::Link *link, PacketPtr &pkt, Tick when);
+    LinkDelayEvent(EtherLink::Link *link, PacketPtr pkt, Tick when);
 
     void process();
 
@@ -153,7 +153,7 @@ EtherLink::Link::txDone()
 }
 
 bool
-EtherLink::Link::transmit(PacketPtr &pkt)
+EtherLink::Link::transmit(PacketPtr pkt)
 {
     if (busy()) {
         DPRINTF(Ethernet, "packet not sent, link busy\n");
@@ -217,7 +217,7 @@ LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l)
     setFlags(AutoDelete);
 }
 
-LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, PacketPtr &p, Tick when)
+LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, PacketPtr p, Tick when)
     : Event(&mainEventQueue), link(l), packet(p)
 {
     setFlags(AutoSerialize);

@@ -295,7 +295,7 @@ class NSGigE : public PciDev
      * receive address filter
      */
     bool rxFilterEnable;
-    bool rxFilter(PacketPtr &packet);
+    bool rxFilter(const PacketPtr &packet);
     bool acceptBroadcast;
     bool acceptMulticast;
     bool acceptUnicast;
@@ -360,7 +360,7 @@ class NSGigE : public PciDev
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }
 
-    bool recvPacket(PacketPtr &packet);
+    bool recvPacket(PacketPtr packet);
     void transferDone();
 
     void setInterface(NSGigEInt *i) { assert(!interface); interface = i; }
@@ -407,7 +407,7 @@ class NSGigEInt : public EtherInt
     NSGigEInt(const std::string &name, NSGigE *d)
         : EtherInt(name), dev(d) { dev->setInterface(this); }
 
-    virtual bool recvPacket(PacketPtr &pkt) { return dev->recvPacket(pkt); }
+    virtual bool recvPacket(PacketPtr pkt) { return dev->recvPacket(pkt); }
     virtual void sendDone() { dev->transferDone(); }
 };
 

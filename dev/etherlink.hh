@@ -75,7 +75,7 @@ class EtherLink : public SimObject
         DoneEvent doneEvent;
 
         friend class LinkDelayEvent;
-        void txComplete(PacketPtr &packet);
+        void txComplete(PacketPtr packet);
 
       public:
         Link(const std::string &name, double rate, Tick delay,
@@ -85,7 +85,7 @@ class EtherLink : public SimObject
         virtual const std::string name() const { return objName; }
 
         bool busy() const { return (bool)packet; }
-        bool transmit(PacketPtr &packet);
+        bool transmit(PacketPtr packet);
 
         void setTxInt(Interface *i) { assert(!txint); txint = i; }
         void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
@@ -104,7 +104,7 @@ class EtherLink : public SimObject
 
       public:
         Interface(const std::string &name, Link *txlink, Link *rxlink);
-        bool recvPacket(PacketPtr &packet) { return txlink->transmit(packet); }
+        bool recvPacket(PacketPtr packet) { return txlink->transmit(packet); }
         void sendDone() { peer->sendDone(); }
     };
 
