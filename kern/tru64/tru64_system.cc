@@ -318,7 +318,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
     Param<bool> bin;
     SimObjectParam<MemoryController *> mem_ctl;
     SimObjectParam<PhysicalMemory *> physmem;
-    Param<uint64_t> init_param;
+    Param<unsigned int> init_param;
 
     Param<string> kernel_code;
     Param<string> console_code;

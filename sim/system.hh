@@ -54,7 +54,7 @@ class System : public SimObject
     std::map<const Addr, SWContext *> swCtxMap;
 
   public:
-    Statistics::Scalar<Counter> fnCalls;
+    Statistics::Scalar<> fnCalls;
     Statistics::MainBin *Kernel;
     Statistics::MainBin *User;
 

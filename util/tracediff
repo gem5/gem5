@@ -41,8 +41,8 @@ $sim2 = shift;
 # be given to both invocations
 $simargs = '"' . join('" "', @ARGV) . '"';
 
-$cmd1 = "$sim1 $simargs --stats:file=tracediff-$$-1.stats 2>&1 |";
-$cmd2 = "$sim2 $simargs --stats:file=tracediff-$$-2.stats 2>&1 |";
+$cmd1 = "$sim1 $simargs --stats:text_file=tracediff-$$-1.stats 2>&1 |";
+$cmd2 = "$sim2 $simargs --stats:text_file=tracediff-$$-2.stats 2>&1 |";
 
 # This only works if you have rundiff in your path.  I just edit it
 # with an explicit path if necessary.

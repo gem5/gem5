@@ -42,7 +42,7 @@ using namespace std;
 // constructor
 #ifdef FULL_SYSTEM
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
-                         AlphaItb *_itb, AlphaDtb *_dtb,
+                         AlphaITB *_itb, AlphaDTB *_dtb,
                          FunctionalMemory *_mem)
     : _status(ExecContext::Unallocated),
       kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
@@ -60,6 +60,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
       process(_process), mem(process->getMemory()), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
+    memset(&regs, 0, sizeof(RegFile));
 }
 
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
@@ -67,6 +68,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
     : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
+    memset(&regs, 0, sizeof(RegFile));
 }
 #endif
 

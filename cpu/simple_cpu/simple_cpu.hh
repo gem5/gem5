@@ -40,8 +40,8 @@
 #ifdef FULL_SYSTEM
 class Processor;
 class Kernel;
-class AlphaItb;
-class AlphaDtb;
+class AlphaITB;
+class AlphaDTB;
 class PhysicalMemory;
 
 class RemoteGDB;
@@ -131,7 +131,7 @@ class SimpleCPU : public BaseCPU
               System *_system,
               Counter max_insts_any_thread, Counter max_insts_all_threads,
               Counter max_loads_any_thread, Counter max_loads_all_threads,
-              AlphaItb *itb, AlphaDtb *dtb, FunctionalMemory *mem,
+              AlphaITB *itb, AlphaDTB *dtb, FunctionalMemory *mem,
               MemInterface *icache_interface, MemInterface *dcache_interface,
               bool _def_reg, Tick freq);
 
@@ -250,6 +250,56 @@ class SimpleCPU : public BaseCPU
     Fault copySrcTranslate(Addr src);
 
     Fault copy(Addr dest);
+
+    uint64_t readIntReg(int reg_idx) { return xc->readIntReg(reg_idx); }
+
+    float readFloatRegSingle(int reg_idx)
+    { return xc->readFloatRegSingle(reg_idx); }
+
+    double readFloatRegDouble(int reg_idx)
+    { return xc->readFloatRegDouble(reg_idx); }
+
+    uint64_t readFloatRegInt(int reg_idx)
+    { return xc->readFloatRegInt(reg_idx); }
+
+    void setIntReg(int reg_idx, uint64_t val)
+    { return xc->setIntReg(reg_idx, val); }
+
+    void setFloatRegSingle(int reg_idx, float val)
+    { return xc->setFloatRegSingle(reg_idx, val); }
+
+    void setFloatRegDouble(int reg_idx, double val)
+    { return xc->setFloatRegDouble(reg_idx, val); }
+
+    void setFloatRegInt(int reg_idx, uint64_t val)
+    { return xc->setFloatRegInt(reg_idx, val); }
+
+    uint64_t readPC() { return xc->readPC(); }
+    void setNextPC(uint64_t val) { return xc->setNextPC(val); }
+
+    uint64_t readUniq() { return xc->readUniq(); }
+    void setUniq(uint64_t val) { return xc->setUniq(val); }
+
+    uint64_t readFpcr() { return xc->readFpcr(); }
+    void setFpcr(uint64_t val) { return xc->setFpcr(val); }
+
+#ifdef FULL_SYSTEM
+    uint64_t readIpr(int idx, Fault &fault) { return xc->readIpr(idx, fault); }
+    Fault setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
+    Fault hwrei() { return xc->hwrei(); }
+    int readIntrFlag() { return xc->readIntrFlag(); }
+    void setIntrFlag(int val) { xc->setIntrFlag(val); }
+    bool inPalMode() { return xc->inPalMode(); }
+    void ev5_trap(Fault fault) { return xc->ev5_trap(fault); }
+    bool simPalCheck(int palFunc) { return xc->simPalCheck(palFunc); }
+#else
+    void syscall() { xc->syscall(); }
+#endif
+
+    bool misspeculating() { return xc->misspeculating(); }
+    ExecContext *xcBase() { return xc; }
 };
+
+typedef SimpleCPU SimpleCPUExecContext;
 
 #endif // __SIMPLE_CPU_HH__

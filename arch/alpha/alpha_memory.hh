@@ -37,7 +37,7 @@
 
 class ExecContext;
 
-class AlphaTlb : public SimObject
+class AlphaTLB : public SimObject
 {
   protected:
     typedef std::multimap<Addr, int> PageTable;
@@ -51,8 +51,8 @@ class AlphaTlb : public SimObject
     AlphaISA::PTE *lookup(Addr vpn, uint8_t asn) const;
 
   public:
-    AlphaTlb(const std::string &name, int size);
-    virtual ~AlphaTlb();
+    AlphaTLB(const std::string &name, int size);
+    virtual ~AlphaTLB();
 
     int getsize() const { return size; }
 
@@ -77,7 +77,7 @@ class AlphaTlb : public SimObject
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-class AlphaItb : public AlphaTlb
+class AlphaITB : public AlphaTLB
 {
   protected:
     mutable Statistics::Scalar<> hits;
@@ -89,13 +89,13 @@ class AlphaItb : public AlphaTlb
     void fault(Addr pc, ExecContext *xc) const;
 
   public:
-    AlphaItb(const std::string &name, int size);
+    AlphaITB(const std::string &name, int size);
     virtual void regStats();
 
     Fault translate(MemReqPtr &req) const;
 };
 
-class AlphaDtb : public AlphaTlb
+class AlphaDTB : public AlphaTLB
 {
   protected:
     mutable Statistics::Scalar<> read_hits;
@@ -115,7 +115,7 @@ class AlphaDtb : public AlphaTlb
     void fault(Addr pc, uint64_t flags, ExecContext *xc) const;
 
   public:
-    AlphaDtb(const std::string &name, int size);
+    AlphaDTB(const std::string &name, int size);
     virtual void regStats();
 
     Fault translate(MemReqPtr &req, bool write) const;

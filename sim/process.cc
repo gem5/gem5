@@ -43,7 +43,7 @@
 #include "sim/builder.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 
 #ifdef TARGET_ALPHA
 #include "arch/alpha/alpha_tru64_process.hh"
@@ -75,6 +75,7 @@ Process::Process(const string &name,
 
     // allocate initial register file
     init_regs = new RegFile;
+    memset(init_regs, 0, sizeof(RegFile));
 
     // initialize first 3 fds (stdin, stdout, stderr)
     fd_map[STDIN_FILENO] = stdin_fd;
@@ -220,7 +221,7 @@ Process::sim_fd(int tgt_fd)
 // that can be constructed (i.e., no REGISTER_SIM_OBJECT() macro call,
 // which is where these get declared for concrete types).
 //
-DEFINE_SIM_OBJECT_CLASS_NAME("Process object", Process)
+DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -36,6 +36,7 @@
 // set this now (it causes things to break on 64-bit platforms).
 #define __LIBELF64_LINUX        0
 #define __LIBELF_NEED_LINK_H    0
+#define __LIBELF_SYMBOL_VERSIONS 0
 
 #include <libelf/libelf.h>
 #include <libelf/gelf.h>

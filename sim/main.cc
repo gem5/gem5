@@ -53,7 +53,8 @@
 #include "sim/sim_exit.hh"
 #include "sim/sim_init.hh"
 #include "sim/sim_object.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stat_control.hh"
+#include "sim/stats.hh"
 #include "sim/universe.hh"
 
 using namespace std;
@@ -235,7 +236,7 @@ main(int argc, char **argv)
     sayHello(cerr);
 
     // Initialize statistics database
-    initBaseStats();
+    Statistics::InitSimStats();
 
     vector<char *> cppArgs;
 

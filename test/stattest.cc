@@ -35,6 +35,9 @@
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
+#include "base/stats/text.hh"
+#include "base/stats/python.hh"
+#include "base/stats/mysql.hh"
 #include "sim/host.hh"
 
 using namespace std;
@@ -46,14 +49,14 @@ Tick ticksPerSecond = ULL(2000000000);
 Scalar<> s1;
 Scalar<> s2;
 Average<> s3;
-Scalar<Counter, MainBin> s4;
-Vector<Counter, MainBin> s5;
-Distribution<Counter, MainBin> s6;
-Vector<Counter, MainBin> s7;
+Scalar<MainBin> s4;
+Vector<MainBin> s5;
+Distribution<MainBin> s6;
+Vector<MainBin> s7;
 AverageVector<> s8;
 StandardDeviation<> s9;
 AverageDeviation<> s10;
-Scalar<Counter> s11;
+Scalar<> s11;
 Distribution<> s12;
 VectorDistribution<> s13;
 VectorStandardDeviation<> s14;
@@ -70,6 +73,8 @@ Formula f7;
 
 MainBin bin1("bin1");
 MainBin bin2("bin2");
+
+ostream *outputStream = &cout;
 
 double
 testfunc()
@@ -89,25 +94,56 @@ usage()
 {
     panic("incorrect usage.\n"
           "usage:\n"
-          "\t%s [-v]\n", progname);
+          "\t%s [-p <python file>] [-t [-c] [-d]]\n", progname);
 }
 
 int
 main(int argc, char *argv[])
 {
+    bool descriptions = false;
+    bool compat = false;
+    bool text = false;
+    string pyfile;
+    string mysql_name;
+    string mysql_host;
+    string mysql_user = "binkertn";
+    string mysql_passwd;
+
     char c;
     progname = argv[0];
-    PrintDescriptions = false;
-    while ((c = getopt(argc, argv, "v")) != -1) {
-        cprintf("c == %c\n", c);
+    while ((c = getopt(argc, argv, "cdh:P:p:s:tu:")) != -1) {
         switch (c) {
-          case 'v':
-            PrintDescriptions = true;
+          case 'c':
+            compat = true;
+            break;
+          case 'd':
+            descriptions = true;
+            break;
+          case 'h':
+            mysql_host = optarg;
+            break;
+          case 'P':
+            mysql_passwd = optarg;
+            break;
+          case 'p':
+            pyfile = optarg;
+            break;
+          case 's':
+            mysql_name = optarg;
+            break;
+          case 't':
+            text = true;
+            break;
+          case 'u':
+            mysql_user = optarg;
             break;
           default:
             usage();
         }
     }
+
+    if (!text && (compat || descriptions))
+        usage();
 
     s5.init(5);
     s6.init(1, 100, 13);
@@ -214,6 +250,8 @@ main(int argc, char *argv[])
         .flags(total)
         .subname(0, "sub0")
         .subname(1, "sub1")
+        .ysubname(0, "y0")
+        .ysubname(1, "y1")
         ;
 
     f1
@@ -509,9 +547,24 @@ main(int argc, char *argv[])
 
     s12.sample(100);
 
-//    dump(cout, mode_simplescalar);
-    python_start("/tmp/stats.py");
-    python_dump("stattest", "all");
+    if (text) {
+        Text out(cout);
+        out.descriptions = descriptions;
+        out.compat = compat;
+        out();
+    }
+
+    if (!pyfile.empty()) {
+        Python out(pyfile);
+        out();
+    }
+
+    if (!mysql_name.empty()) {
+        MySql out;
+        out.connect(mysql_host, mysql_user, mysql_passwd, "m5stats",
+                    mysql_name, "test");
+        out();
+    }
 
     return 0;
 }

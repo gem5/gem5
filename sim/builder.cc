@@ -32,6 +32,7 @@
 #include "base/misc.hh"
 #include "sim/builder.hh"
 #include "sim/configfile.hh"
+#include "sim/config_node.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/universe.hh"
@@ -153,7 +154,7 @@ SimObjectClass::createObject(IniFile &configDB,
     // (specified by 'type=' parameter)
     string simObjClassName;
 
-    if (!configDB.findDefault(configClassName, "type", simObjClassName)) {
+    if (!configNode->find("type", simObjClassName)) {
         cerr << "Configuration class '" << configClassName << "' not found."
              << endl;
         abort();

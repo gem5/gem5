@@ -313,8 +313,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherTap)
 
     SimObjectParam<EtherInt *> peer;
     SimObjectParam<EtherDump *> packet_dump;
-    Param<uint16_t> port;
-    Param<uint16_t> bufsz;
+    Param<unsigned> port;
+    Param<unsigned> bufsz;
 
 END_DECLARE_SIM_OBJECT_PARAMS(EtherTap)
 

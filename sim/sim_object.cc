@@ -35,7 +35,7 @@
 #include "sim/configfile.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 #include "sim/param.hh"
 
 using namespace std;
@@ -81,14 +81,6 @@ SimObject::regFormulas()
 
 void
 SimObject::resetStats()
-{
-}
-
-//
-// no default extra output
-//
-void
-SimObject::printExtraOutput(ostream &os)
 {
 }
 
@@ -160,21 +152,6 @@ SimObject::resetAllStats()
         SimObject *obj = *i;
         obj->resetStats();
     }
-}
-
-//
-// static function: call printExtraOutput() on all SimObjects.
-//
-void
-SimObject::printAllExtraOutput(ostream &os)
-{
-    SimObjectList::iterator i = simObjectList.begin();
-    SimObjectList::iterator end = simObjectList.end();
-
-    for (; i != end; ++i) {
-        SimObject *obj = *i;
-        obj->printExtraOutput(os);
-   }
 }
 
 //

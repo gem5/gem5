@@ -147,14 +147,14 @@ template <>
 bool
 parseParam(const string &s, bool &value)
 {
-    const string &lower = to_lower(s);
+    const string &ls = to_lower(s);
 
-    if (lower == "true" || lower == "t" || lower == "yes" || lower == "y") {
+    if (ls == "true" || ls == "t" || ls == "yes" || ls == "y" || ls == "1") {
         value = true;
         return true;
     }
 
-    if (lower == "false" || lower == "f" || lower == "no" || lower == "n") {
+    if (ls == "false" || ls == "f" || ls == "no" || ls == "n" || ls == "0") {
         value = false;
         return true;
     }
