@@ -53,6 +53,8 @@ MemTest::MemTest(const string &name,
                  unsigned _percentCopies,
                  unsigned _percentUncacheable,
                  unsigned _progressInterval,
+                 unsigned _percentSourceUnaligned,
+                 unsigned _percentDestUnaligned,
                  Addr _traceAddr,
                  Counter max_loads_any_thread,
                  Counter max_loads_all_threads)
@@ -66,7 +68,9 @@ MemTest::MemTest(const string &name,
       percentCopies(_percentCopies),
       percentUncacheable(_percentUncacheable),
       progressInterval(_progressInterval),
-      nextProgressMessage(_progressInterval)
+      nextProgressMessage(_progressInterval),
+      percentSourceUnaligned(_percentSourceUnaligned),
+      percentDestUnaligned(percentDestUnaligned)
 {
     vector<string> cmd;
     cmd.push_back("/bin/ls");
@@ -219,6 +223,8 @@ MemTest::tick()
     uint64_t data = random();
     unsigned access_size = random() % 4;
     unsigned cacheable = rand() % 100;
+    unsigned source_align = rand() % 100;
+    unsigned dest_align = rand() % 100;
 
     MemReqPtr req = new MemReq();
 
@@ -281,8 +287,14 @@ MemTest::tick()
         }
     } else {
         // copy
-        Addr source = blockAddr(((base) ? baseAddr1 : baseAddr2) + offset1);
-        Addr dest = blockAddr(((base) ? baseAddr2 : baseAddr1) + offset2);
+        Addr source = ((base) ? baseAddr1 : baseAddr2) + offset1;
+        Addr dest = ((base) ? baseAddr2 : baseAddr1) + offset2;
+        if (source_align >= percentSourceUnaligned) {
+            source = blockAddr(source);
+        }
+        if (dest_align >= percentDestUnaligned) {
+            dest = blockAddr(dest);
+        }
         req->cmd = Copy;
         req->flags &= ~UNCACHEABLE;
         req->paddr = source;
@@ -331,6 +343,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
     Param<unsigned> percent_copies;
     Param<unsigned> percent_uncacheable;
     Param<unsigned> progress_interval;
+    Param<unsigned> percent_source_unaligned;
+    Param<unsigned> percent_dest_unaligned;
     Param<Addr> trace_addr;
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
@@ -349,6 +363,10 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
     INIT_PARAM_DFLT(percent_uncacheable, "target uncacheable percentage", 10),
     INIT_PARAM_DFLT(progress_interval,
                     "progress report interval (in accesses)", 1000000),
+    INIT_PARAM_DFLT(percent_source_unaligned, "percent of copy source address "
+                    "that are unaligned", 50),
+    INIT_PARAM_DFLT(percent_dest_unaligned, "percent of copy dest address "
+                    "that are unaligned", 50),
     INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
     INIT_PARAM_DFLT(max_loads_any_thread,
                     "terminate when any thread reaches this load count",
@@ -365,6 +383,7 @@ CREATE_SIM_OBJECT(MemTest)
     return new MemTest(getInstanceName(), cache->getInterface(), main_mem,
                        check_mem, memory_size, percent_reads, percent_copies,
                        percent_uncacheable, progress_interval,
+                       percent_source_unaligned, percent_dest_unaligned,
                        trace_addr, max_loads_any_thread,
                        max_loads_all_threads);
 }

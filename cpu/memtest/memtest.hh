@@ -51,6 +51,8 @@ class MemTest : public BaseCPU
             unsigned _percentCopies,
             unsigned _percentUncacheable,
             unsigned _progressInterval,
+            unsigned _percentSourceUnaligned,
+            unsigned _percentDestUnaligned,
             Addr _traceAddr,
             Counter max_loads_any_thread,
             Counter max_loads_all_threads);
@@ -102,6 +104,9 @@ class MemTest : public BaseCPU
 
     unsigned progressInterval;	// frequency of progress reports
     Tick nextProgressMessage;	// access # for next progress report
+
+    unsigned percentSourceUnaligned;
+    unsigned percentDestUnaligned;
 
     Tick noResponseCycles;
 
