@@ -99,7 +99,7 @@ import sys
 #
 #####################################################################
 
-# The metaclass for ConfigNode (and thus for everything that dervies
+# The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
 # classes that derive from ConfigNode are instantiated, and provides
 # inherited class behavior (just like a class controls how instances
@@ -278,8 +278,8 @@ class ConfigNode(object):
         self._children[new_child._name] = new_child
 
     # operator overload for '+='.  You can say "node += child" to add
-    # # a child that was created with parent=None.  An early attempt
-    # at # playing with syntax; turns out not to be that useful.
+    # a child that was created with parent=None.  An early attempt
+    # at playing with syntax; turns out not to be that useful.
     def __iadd__(self, new_child):
         if new_child._parent != None:
             raise AttributeError, \
@@ -335,6 +335,23 @@ class SimObject(ConfigNode):
             if value != None:
                 print pname, '=', value
 
+    def _sim_code(cls):
+        name = cls.__name__
+        param_names = cls._param_dict.keys()
+        param_names.sort()
+        code = "BEGIN_DECLARE_SIM_OBJECT_PARAMS(%s)\n" % name
+        decls = ["  " + cls._param_dict[pname].sim_decl(pname) \
+                 for pname in param_names]
+        code += "\n".join(decls) + "\n"
+        code += "END_DECLARE_SIM_OBJECT_PARAMS(%s)\n\n" % name
+        code += "BEGIN_INIT_SIM_OBJECT_PARAMS(%s)\n" % name
+        inits = ["  " + cls._param_dict[pname].sim_init(pname) \
+                 for pname in param_names]
+        code += ",\n".join(inits) + "\n"
+        code += "END_INIT_SIM_OBJECT_PARAMS(%s)\n\n" % name
+        return code
+    _sim_code = classmethod(_sim_code)
+
 #####################################################################
 #
 # Parameter description classes
@@ -353,26 +370,41 @@ class SimObject(ConfigNode):
 #
 #####################################################################
 
-# Force parameter value (rhs of '=') to ptype (or None, which means
-# not set).
-def make_param_value(ptype, value):
-    # nothing to do if None or already correct type
-    if value == None or isinstance(value, ptype):
-        return value
-    # this type conversion will raise an exception if it's illegal
-    return ptype(value)
+def isNullPointer(value):
+    return isinstance(value, NullSimObject)
+
+def isSimObjectType(ptype):
+    return issubclass(ptype, SimObject)
 
 # Regular parameter.
 class Param(object):
     # Constructor.  E.g., Param(Int, "number of widgets", 5)
     def __init__(self, ptype, desc, default=None):
         self.ptype = ptype
+        self.ptype_name = self.ptype.__name__
         self.desc = desc
         self.default = default
 
-    # Convert assigned value to appropriate type.
+    # Convert assigned value to appropriate type.  Force parameter
+    # value (rhs of '=') to ptype (or None, which means not set).
     def make_value(self, value):
-        return make_param_value(self.ptype, value)
+        # nothing to do if None or already correct type.  Also allow NULL
+        # pointer to be assigned where a SimObject is expected.
+        if value == None or isinstance(value, self.ptype) or \
+               isNullPointer(value) and isSimObjectType(self.ptype):
+            return value
+        # this type conversion will raise an exception if it's illegal
+        return self.ptype(value)
+
+    def sim_decl(self, name):
+        return 'Param<%s> %s;' % (self.ptype_name, name)
+
+    def sim_init(self, name):
+        if self.default == None:
+            return 'INIT_PARAM(%s, "%s")' % (name, self.desc)
+        else:
+            return 'INIT_PARAM_DFLT(%s, "%s", %s)' % \
+                   (name, self.desc, str(self.default))
 
 # The _VectorParamValue class is a wrapper for vector-valued
 # parameters.  The leading underscore indicates that users shouldn't
@@ -391,12 +423,12 @@ class _VectorParamValue(object):
 # Vector-valued parameter description.  Just like Param, except that
 # the value is a vector (list) of the specified type instead of a
 # single value.
-class VectorParam(object):
-    # Constructor.  The resulting parameter will be a list of ptype.
+class VectorParam(Param):
+
+    # Inherit Param constructor.  However, the resulting parameter
+    # will be a list of ptype rather than a single element of ptype.
     def __init__(self, ptype, desc, default=None):
-        self.ptype = ptype
-        self.desc = desc
-        self.default = default
+        Param.__init__(self, ptype, desc, default)
 
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
@@ -404,13 +436,17 @@ class VectorParam(object):
         if value == None: return value
         if isinstance(value, list) or isinstance(value, tuple):
             # list: coerce each element into new list
-            val_list = [make_param_value(self.ptype, v) for v in
-                        iter(value)]
+            val_list = [Param.make_value(self, v) for v in iter(value)]
         else:
             # singleton: coerce & wrap in a list
-            val_list = [ make_param_value(self.ptype, value) ]
+            val_list = [Param.make_value(self, value)]
         # wrap list in _VectorParamValue (see above)
         return _VectorParamValue(val_list)
+
+    def sim_decl(self, name):
+        return 'VectorParam<%s> %s;' % (self.ptype_name, name)
+
+    # sim_init inherited from Param
 
 #####################################################################
 #
@@ -498,6 +534,19 @@ class String(object):
     def __str__(self):
         return self.value
 
+# Special class for NULL pointers.  Note the special check in
+# make_param_value() above that lets these be assigned where a
+# SimObject is required.
+class NullSimObject(object):
+    # Constructor.  No parameters, nothing to do.
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "NULL"
+
+# The only instance you'll ever need...
+NULL = NullSimObject()
 
 # Enumerated types are a little more complex.  The user specifies the
 # type as Enum(foo) where foo is either a list or dictionary of
@@ -673,7 +722,9 @@ def def_class(path):
         sys.exit(1)
     if not odesc_loaded[parent]:
         def_class(odesc_file[parent])
-    # define the class.
+    # define the class.  The _name attribute of the class lets us
+    # track the actual SimObject class name even when we derive new
+    # subclasses in scripts (to provide new parameter value settings).
     s = "class %s(%s): _name = '%s'" % (obj, parent, obj)
     try:
         # execute in global namespace, so new class will be globally
@@ -730,14 +781,24 @@ for objname, path in odesc_file.iteritems():
     if not odesc_loaded[objname]:
         def_class(path)
 
+sim_object_list = odesc_loaded.keys()
+sim_object_list.sort()
+
 # Iterate through files again and load parameters.
 for path in odesc_file.itervalues():
     def_params(path)
 
 #####################################################################
 
+# Hook to generate C++ parameter code.
+def gen_sim_code(file):
+    for objname in sim_object_list:
+        print >> file, eval("%s._sim_code()" % objname)
+
 # The final hook to generate .ini files.  Called from configuration
 # script once config is built.
 def instantiate(*objs):
     for obj in objs:
         obj._instantiate()
+
+
