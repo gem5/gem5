@@ -41,6 +41,8 @@
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
+extern SymbolTable *debugSymbolTable;
+
 //un-comment this to see the state of call stack when it changes.
 //#define SW_DEBUG
 
@@ -71,6 +73,7 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     if (!kernel->loadGlobalSymbols(kernelSymtab))
         panic("could not load kernel symbols\n");
+    debugSymbolTable = kernelSymtab;
 
     if (!console->loadGlobalSymbols(consoleSymtab))
         panic("could not load console symbols\n");
