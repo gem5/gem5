@@ -98,10 +98,11 @@ PciConfigAll::startup()
 Fault
 PciConfigAll::read(MemReqPtr &req, uint8_t *data)
 {
-    DPRINTF(PciConfigAll, "read  va=%#x size=%d\n",
-            req->vaddr, req->size);
 
     Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+
+    DPRINTF(PciConfigAll, "read  va=%#x da=%#x size=%d\n",
+            req->vaddr, daddr, req->size);
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;

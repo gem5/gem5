@@ -35,6 +35,8 @@ sys.path.append(joinpath(mypath, '../util/pbs'))
 
 pathlist = [ '.' ]
 
+m5_build_env = {}
+
 try:
     opts, args = getopt.getopt(sys.argv[1:], '-E:I:')
     for opt,arg in opts:
@@ -42,11 +44,12 @@ try:
             offset = arg.find('=')
             if offset == -1:
                 name = arg
-                value = True
+                value = '1'
             else:
                 name = arg[:offset]
                 value = arg[offset+1:]
             os.environ[name] = value
+            m5_build_env[name] = value
         if opt == '-I':
             pathlist.append(arg)
 except getopt.GetoptError:

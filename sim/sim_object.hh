@@ -60,6 +60,10 @@ class SimObject : public Serializable, protected StartupCallback
     static SimObjectList simObjectList;
 
   public:
+
+// for Params struct
+#include "simobj/param/SimObject.hh"
+
     SimObject(const std::string &_name);
 
     virtual ~SimObject() {}
