@@ -129,8 +129,8 @@ class Database
     typedef list<Stat *> list_t;
     typedef map<const Stat *, StatData *> map_t;
 
-    list<GenBin *> bins;
-    map<const GenBin *, std::string > bin_names;
+    list<MainBin *> bins;
+    map<const MainBin *, std::string > bin_names;
     list_t binnedStats;
 
     list_t allStats;
@@ -148,7 +148,7 @@ class Database
     void reset();
     void regStat(Stat *stat);
     StatData *print(Stat *stat);
-    void regBin(GenBin *bin, std::string name);
+    void regBin(MainBin *bin, std::string name);
 };
 
 Database::Database()
@@ -171,14 +171,14 @@ Database::dump(ostream &stream)
     }
 #endif //FS_MEASURE
 
-    list<GenBin *>::iterator j = bins.begin();
-    list<GenBin *>::iterator bins_end=bins.end();
+    list<MainBin *>::iterator j = bins.begin();
+    list<MainBin *>::iterator bins_end=bins.end();
 
     if (!bins.empty()) {
         ccprintf(stream, "PRINTING BINNED STATS\n");
         while (j != bins_end) {
             (*j)->activate();
-            map<const GenBin  *, std::string>::const_iterator iter;
+            map<const MainBin  *, std::string>::const_iterator iter;
             iter = bin_names.find(*j);
             if (iter == bin_names.end())
                 panic("a binned stat not found in names map!");
@@ -274,10 +274,10 @@ Database::reset()
 
     MainBin *orig = MainBin::curBin();
 
-    list<GenBin *>::iterator bi = bins.begin();
-    list<GenBin *>::iterator be = bins.end();
+    list<MainBin *>::iterator bi = bins.begin();
+    list<MainBin *>::iterator be = bins.end();
     while (bi != be) {
-        GenBin *bin = *bi;
+        MainBin *bin = *bi;
         bin->activate();
 
         i = allStats.begin();
@@ -308,7 +308,7 @@ Database::regStat(Stat *stat)
 }
 
 void
-Database::regBin(GenBin *bin, std::string name)
+Database::regBin(MainBin *bin, std::string name)
 {
     if (bin_names.find(bin) != bin_names.end())
         panic("shouldn't register bin twice");
@@ -910,35 +910,34 @@ FancyDisplay(ostream &stream, const string &name, const string &desc,
     PrintOne(stream, total, "**Ignore: " + name + NAMESEP + "TOT", desc, precision, flags);
 }
 
-BinBase::BinBase()
-    :  mem(NULL), memsize(-1)
+} // namespace Detail
+
+MainBin::MainBin(const std::string &name)
+    : _name(name), mem(NULL), memsize(-1)
 {
+    Detail::StatDB().regBin(this, name);
 }
 
-BinBase::~BinBase()
+MainBin::~MainBin()
 {
     if (mem)
         delete [] mem;
 }
 
 char *
-BinBase::memory()
+MainBin::memory(off_t off)
 {
     if (!mem) {
         mem = new char[memsize];
         memset(mem, 0, memsize);
     }
 
-    return mem;
-}
+    if (memsize == -1)
+        memsize = CeilPow2((size_t) offset());
 
-void
-GenBin::regBin(GenBin *bin, std::string name)
-{
-    Detail::StatDB().regBin(bin, name);
+    assert(offset() <= size());
+    return mem + off;
 }
-
-} // namespace Detail
 
 void
 check()

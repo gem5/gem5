@@ -92,7 +92,7 @@ class FnEvent : public PCEvent
 
   private:
     std::string _name;
-    Statistics::GenBin *myBin;
+    Statistics::MainBin *myBin;
 };
 #endif //FS_MEASURE
 #endif // __TRU64_EVENTS_HH__

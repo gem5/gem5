@@ -52,7 +52,7 @@ class System : public SimObject
 {
 #ifdef FS_MEASURE
   protected:
-    std::map<const std::string, Statistics::GenBin *> fnBins;
+    std::map<const std::string, Statistics::MainBin *> fnBins;
     std::map<const Addr, SWContext *> swCtxMap;
 #endif //FS_MEASURE
 
@@ -85,7 +85,7 @@ class System : public SimObject
     virtual bool breakpoint() = 0;
 
 #ifdef FS_MEASURE
-    Statistics::GenBin * getBin(const std::string &name);
+    Statistics::MainBin * getBin(const std::string &name);
     virtual bool findCaller(std::string, std::string) const = 0;
 
     SWContext *findContext(Addr pcb);
