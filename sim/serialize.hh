@@ -115,8 +115,8 @@ class Serializeable
     void nameOut(std::ostream& os, const std::string &_name);
 
   public:
-    Serializeable();
-    virtual ~Serializeable();
+    Serializeable() : serialized(false) {}
+    virtual ~Serializeable() {}
 
     // manditory virtual function, so objects must provide names
     virtual std::string name() const = 0;

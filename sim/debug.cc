@@ -66,6 +66,7 @@ class DebugBreakEvent : public Event
 DebugBreakEvent::DebugBreakEvent(EventQueue *q, Tick _when)
     : Event(q)
 {
+    setFlags(AutoDelete);
     schedule(_when, -20000);
 }
 
@@ -76,7 +77,6 @@ void
 DebugBreakEvent::process()
 {
     debug_break();
-    delete this;
 }
 
 

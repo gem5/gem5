@@ -50,13 +50,6 @@ using namespace std;
 
 Serializer *Serializeable::serializer = NULL;
 
-Serializeable::Serializeable()
-    : serialized(false)
-{ }
-
-Serializeable::~Serializeable()
-{ }
-
 void
 Serializeable::mark()
 {

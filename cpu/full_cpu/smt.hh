@@ -28,16 +28,11 @@
 
 /**
  * @file
- * Defines SMT_MAX_CPUS and SMT_MAX_THREADS.
+ * Defines SMT_MAX_THREADS.
  */
 
 #ifndef __SMT_HH__
 #define __SMT_HH__
-
-#ifndef SMT_MAX_CPUS
-/** The maximum number of cpus in any one system. */
-#define SMT_MAX_CPUS 4
-#endif
 
 #ifndef SMT_MAX_THREADS
 /** The number of TPUs in any processor. */
