@@ -204,9 +204,11 @@ SimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         ExecContext *xc = execContexts[i];
         if (xc->status() == ExecContext::Active && _status != Running) {
             _status = Running;
-            tickEvent.schedule(curTick + 1);
+            tickEvent.schedule(curTick);
         }
     }
+
+    oldCPU->switchOut();
 }
 
 
@@ -772,7 +774,8 @@ CREATE_SIM_OBJECT(SimpleCPU)
     cpu = new SimpleCPU(getInstanceName(), workload,
                         max_insts_any_thread, max_insts_all_threads,
                         max_loads_any_thread, max_loads_all_threads,
-                        icache->getInterface(), dcache->getInterface());
+                        (icache) ? icache->getInterface() : NULL,
+                        (dcache) ? dcache->getInterface() : NULL);
 
 #endif // FULL_SYSTEM
 
