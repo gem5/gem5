@@ -43,12 +43,12 @@ Import('env')
 
 # Base sources used by all configurations.
 base_sources = Split('''
-	targetarch/decoder.cc
-	targetarch/fast_cpu_exec.cc
-	targetarch/simple_cpu_exec.cc
-	targetarch/full_cpu_exec.cc
-	targetarch/faults.cc
-	targetarch/isa_traits.cc
+	arch/alpha/decoder.cc
+	arch/alpha/fast_cpu_exec.cc
+	arch/alpha/simple_cpu_exec.cc
+	arch/alpha/full_cpu_exec.cc
+	arch/alpha/faults.cc
+	arch/alpha/isa_traits.cc
 
 	base/circlebuf.cc
 	base/copyright.cc
@@ -237,12 +237,12 @@ mysql_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	targetarch/alpha_memory.cc
-	targetarch/arguments.cc
-	targetarch/ev5.cc
-	targetarch/osfpal.cc
-	targetarch/pseudo_inst.cc
-	targetarch/vtophys.cc
+	arch/alpha/alpha_memory.cc
+	arch/alpha/arguments.cc
+	arch/alpha/ev5.cc
+	arch/alpha/osfpal.cc
+	arch/alpha/pseudo_inst.cc
+	arch/alpha/vtophys.cc
 
 	base/crc.cc
 	base/inet.cc
@@ -310,9 +310,9 @@ full_system_sources = Split('''
         ''')
 
 full_system_obj_desc_files = Split('''
-        targetarch/AlphaDTB.od
-        targetarch/AlphaITB.od
-        targetarch/AlphaTLB.od
+        arch/alpha/AlphaDTB.od
+        arch/alpha/AlphaITB.od
+        arch/alpha/AlphaTLB.od
         dev/AlphaConsole.od
         dev/ConsoleListener.od
         dev/CowDiskImage.od
@@ -349,9 +349,9 @@ full_system_obj_desc_files = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
-	targetarch/alpha_common_syscall_emul.cc
-	targetarch/alpha_linux_process.cc
-	targetarch/alpha_tru64_process.cc
+	arch/alpha/alpha_common_syscall_emul.cc
+	arch/alpha/alpha_linux_process.cc
+	arch/alpha/alpha_tru64_process.cc
 	cpu/memtest/memtest.cc
         cpu/trace/opt_cpu.cc
 	cpu/trace/trace_cpu.cc
@@ -370,46 +370,31 @@ syscall_emulation_obj_desc_files = Split('''
 	''')
 
 targetarch_files = Split('''
-        alpha_common_syscall_emul.cc
         alpha_common_syscall_emul.hh
-        AlphaDTB.od
-        AlphaITB.od
-        alpha_linux_process.cc
         alpha_linux_process.hh
-        alpha_memory.cc
         alpha_memory.hh
-        AlphaTLB.od
-        alpha_tru64_process.cc
         alpha_tru64_process.hh
         aout_machdep.h
-        arguments.cc
         arguments.hh
         byte_swap.hh
         ecoff_machdep.h
         elf_machdep.h
-        ev5.cc
         ev5.hh
-        faults.cc
         faults.hh
-        isa_desc
         isa_fullsys_traits.hh
-        isa_traits.cc
         isa_traits.hh
         machine_exo.h
-        osfpal.cc
         osfpal.hh
         pmap.h
-        pseudo_inst.cc
         pseudo_inst.hh
-        PseudoInsts.pd
         syscalls.hh
         vptr.hh
-        vtophys.cc
         vtophys.hh
         ''')
 
 for f in targetarch_files:
-    env.Command('targetarch/' + f, 'arch/alpha/' + f, 'cp $SOURCE $TARGET')
+    env.Command('targetarch/' + f, 'arch/alpha/' + f,
+                '''echo '#include "arch/alpha/%s"' > $TARGET''' % f)
 
 
 # Set up complete list of sources based on configuration.
@@ -450,14 +435,14 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
             'python $SOURCE $TARGET.base')
 
 # several files are generated from arch/$TARGET_ISA/isa_desc.
-env.Command(Split('''targetarch/decoder.cc
-		     targetarch/decoder.hh
-		     targetarch/fast_cpu_exec.cc
-                     targetarch/simple_cpu_exec.cc
-                     targetarch/full_cpu_exec.cc'''),
-            Split('''targetarch/isa_desc
+env.Command(Split('''arch/alpha/decoder.cc
+		     arch/alpha/decoder.hh
+		     arch/alpha/fast_cpu_exec.cc
+                     arch/alpha/simple_cpu_exec.cc
+                     arch/alpha/full_cpu_exec.cc'''),
+            Split('''arch/alpha/isa_desc
 		     arch/isa_parser.py'''),
-            '$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir targetarch')
+            '$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/alpha')
 
 
 # libelf build is described in its own SConscript file.
