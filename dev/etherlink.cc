@@ -178,7 +178,7 @@ EtherLink::Link::serialize(const string &base, ostream &os)
         packet->serialize(base + ".packet", os);
 
     bool event_scheduled = doneEvent.scheduled();
-    paramOut(os, base + ".event_scheuled", event_scheduled);
+    paramOut(os, base + ".event_scheduled", event_scheduled);
     if (event_scheduled) {
         Tick event_time = doneEvent.when();
         paramOut(os, base + ".event_time", event_time);
