@@ -103,7 +103,7 @@ SimpleCPU::CacheCompletionEvent::CacheCompletionEvent(SimpleCPU *_cpu)
 
 void SimpleCPU::CacheCompletionEvent::process()
 {
-    cpu->processCacheCompletion(read);
+    cpu->processCacheCompletion();
 }
 
 const char *
@@ -414,24 +414,20 @@ template <class T>
 Fault
 SimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    Fault fault;
-
-    if (status() == DcacheMissStall) {
-        //Just do the functional access
-        fault = xc->read(memReq, data);
-
-        if (traceData) {
-            traceData->setAddr(addr);
-            if (fault == No_Fault)
-                traceData->setData(data);
-        }
-        return fault;
-    }
-
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    fault = xc->translateDataReadReq(memReq);
+    Fault fault = xc->translateDataReadReq(memReq);
+
+    // do functional access
+    if (fault == No_Fault)
+        fault = xc->read(memReq, data);
+
+    if (traceData) {
+        traceData->setAddr(addr);
+        if (fault == No_Fault)
+            traceData->setData(data);
+    }
 
     // if we have a cache, do cache access too
     if (fault == No_Fault && dcacheInterface) {
@@ -444,24 +440,10 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         // a miss.  We really should add first-class support for this
         // at some point.
         if (result != MA_HIT && dcacheInterface->doEvents()) {
-            cacheCompletionEvent.read = true;
             memReq->completionEvent = &cacheCompletionEvent;
-            //May later want to pass the staticinst as well, so it can call
-            //it independantly
             lastDcacheStall = curTick;
             unscheduleTickEvent();
             _status = DcacheMissStall;
-        }
-        else {
-            // do functional access
-            if (fault == No_Fault)
-                fault = xc->read(memReq, data);
-
-            if (traceData) {
-                traceData->setAddr(addr);
-                if (fault == No_Fault)
-                    traceData->setData(data);
-            }
         }
     }
 
@@ -543,7 +525,6 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         // a miss.  We really should add first-class support for this
         // at some point.
         if (result != MA_HIT && dcacheInterface->doEvents()) {
-            cacheCompletionEvent.read = false;
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
             unscheduleTickEvent();
@@ -615,7 +596,7 @@ Tick save_cycle = 0;
 
 
 void
-SimpleCPU::processCacheCompletion(bool read)
+SimpleCPU::processCacheCompletion()
 {
     switch (status()) {
       case IcacheMissStall:
@@ -625,9 +606,6 @@ SimpleCPU::processCacheCompletion(bool read)
         break;
       case DcacheMissStall:
         dcacheStallCycles += curTick - lastDcacheStall;
-        if (read) {
-            globalsi->execute(this,traceData);
-        }
         _status = Running;
         scheduleTickEvent(1);
         break;
@@ -751,7 +729,6 @@ SimpleCPU::tick()
             // a miss.  We really should add first-class support for this
             // at some point.
             if (result != MA_HIT && icacheInterface->doEvents()) {
-                cacheCompletionEvent.read = false;
                 memReq->completionEvent = &cacheCompletionEvent;
                 lastIcacheStall = curTick;
                 unscheduleTickEvent();
@@ -775,8 +752,6 @@ SimpleCPU::tick()
         // decode the instruction
     inst = htoa(inst);
         StaticInstPtr<TheISA> si(inst);
-
-        globalsi = si;
 
         traceData = Trace::getInstRecord(curTick, xc, this, si,
                                          xc->regs.pc);
