@@ -73,7 +73,8 @@ class Event : public Serializeable, public FastAlloc
         None = 0x0,
         Squashed = 0x1,
         Scheduled = 0x2,
-        AutoDelete = 0x4
+        AutoDelete = 0x4,
+        AutoSerialize = 0x8
     };
 
     bool getFlags(Flags f) const { return (_flags & f) == f; }
@@ -190,7 +191,7 @@ class Event : public Serializeable, public FastAlloc
     };
 
     virtual void serialize(std::ostream &os);
-    virtual void unserialize(const IniFile *db, const std::string &section);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 template <class T, void (T::* F)()>
@@ -221,6 +222,9 @@ class EventQueue : public Serializeable
   private:
     Event *head;
 
+    // only used to hold value between nameChildren() and serialize()
+    int numAutoSerializeEvents;
+
     void insert(Event *event);
     void remove(Event *event);
 
@@ -228,7 +232,7 @@ class EventQueue : public Serializeable
 
     // constructor
     EventQueue(const std::string &n)
-        : Serializeable(n), head(NULL)
+        : Serializeable(n), head(NULL), numAutoSerializeEvents(-1)
     {}
 
     // schedule the given event on this queue
@@ -264,6 +268,7 @@ class EventQueue : public Serializeable
 
     virtual void nameChildren();
     virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 

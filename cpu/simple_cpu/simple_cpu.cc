@@ -262,6 +262,7 @@ SimpleCPU::serialize(ostream &os)
 {
     SERIALIZE_ENUM(_status);
     SERIALIZE_SCALAR(inst);
+    nameOut(os, csprintf("%s.xc", name()));
     xc->serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
@@ -270,14 +271,14 @@ SimpleCPU::serialize(ostream &os)
 }
 
 void
-SimpleCPU::unserialize(const IniFile *db, const string &section)
+SimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     UNSERIALIZE_ENUM(_status);
     UNSERIALIZE_SCALAR(inst);
-    xc->unserialize(db, section);
-    tickEvent.unserialize(db, csprintf("%s.tickEvent", name()));
+    xc->unserialize(cp, csprintf("%s.xc", section));
+    tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
     cacheCompletionEvent
-        .unserialize(db, csprintf("%s.cacheCompletionEvent", name()));
+        .unserialize(cp, csprintf("%s.cacheCompletionEvent", section));
 }
 
 void

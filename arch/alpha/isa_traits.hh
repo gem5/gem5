@@ -34,7 +34,7 @@
 #include "base/misc.hh"
 
 class FullCPU;
-class IniFile;
+class Checkpoint;
 
 #define TARGET_ALPHA
 
@@ -160,7 +160,7 @@ class AlphaISA
         uint8_t opcode, ra;		// current instruction details (for intr's)
 
         void serialize(std::ostream &os);
-        void unserialize(const IniFile *db, const std::string &section);
+        void unserialize(Checkpoint *cp, const std::string &section);
     };
 
     static StaticInstPtr<AlphaISA> decodeInst(MachInst);

@@ -41,13 +41,14 @@
 #include "sim/host.hh"
 #include "sim/configfile.hh"
 
-class IniFile;
+class Serializeable;
+class Checkpoint;
 
 template <class T>
 void paramOut(std::ostream &os, const std::string &name, const T& param);
 
 template <class T>
-void paramIn(const IniFile *db, const std::string &section,
+void paramIn(Checkpoint *cp, const std::string &section,
              const std::string &name, T& param);
 
 template <class T>
@@ -55,16 +56,21 @@ void arrayParamOut(std::ostream &os, const std::string &name,
                    const T *param, int size);
 
 template <class T>
-void arrayParamIn(const IniFile *db, const std::string &section,
+void arrayParamIn(Checkpoint *cp, const std::string &section,
                   const std::string &name, T *param, int size);
+
+void
+objParamIn(Checkpoint *cp, const std::string &section,
+           const std::string &name, Serializeable * &param);
+
 
 //
 // These macros are streamlined to use in serialize/unserialize
 // functions.  It's assumed that serialize() has a parameter 'os' for
-// the ostream, and unserialize() has parameters 'db' and 'section'.
+// the ostream, and unserialize() has parameters 'cp' and 'section'.
 #define SERIALIZE_SCALAR(scalar)	paramOut(os, #scalar, scalar)
 
-#define UNSERIALIZE_SCALAR(scalar)	paramIn(db, section, #scalar, scalar)
+#define UNSERIALIZE_SCALAR(scalar)	paramIn(cp, section, #scalar, scalar)
 
 // ENUMs are like SCALARs, but we cast them to ints on the way out
 #define SERIALIZE_ENUM(scalar)		paramOut(os, #scalar, (int)scalar)
@@ -72,7 +78,7 @@ void arrayParamIn(const IniFile *db, const std::string &section,
 #define UNSERIALIZE_ENUM(scalar)		\
  do {						\
     int tmp;					\
-    paramIn(db, section, #scalar, tmp);		\
+    paramIn(cp, section, #scalar, tmp);		\
     scalar = (typeof(scalar))tmp;		\
   } while (0)
 
@@ -80,7 +86,16 @@ void arrayParamIn(const IniFile *db, const std::string &section,
         arrayParamOut(os, #member, member, size)
 
 #define UNSERIALIZE_ARRAY(member, size)	\
-        arrayParamIn(db, section, #member, member, size)
+        arrayParamIn(cp, section, #member, member, size)
+
+#define SERIALIZE_OBJPTR(objptr)	paramOut(os, #objptr, (objptr)->name())
+
+#define UNSERIALIZE_OBJPTR(objptr)			\
+  do {							\
+    Serializeable *sptr;				\
+    objParamIn(cp, section, #objptr, sptr);		\
+    objptr = dynamic_cast<typeof(objptr)>(sptr);	\
+  } while (0)
 
 /*
  * Basic support for object serialization.
@@ -113,7 +128,10 @@ class Serializeable
 
     virtual void nameChildren() {}
     virtual void serialize(std::ostream& os) {}
-    virtual void unserialize(const IniFile *db, const std::string &section) {}
+    virtual void unserialize(Checkpoint *cp, const std::string &section) {}
+
+    static Serializeable *create(Checkpoint *cp,
+                                 const std::string &section);
 };
 
 class Serializer
@@ -187,7 +205,8 @@ class SerializeableClass
     // for the object (specified by the second string argument), and
     // an optional config hierarchy node (specified by the third
     // argument).  A pointer to the new SerializeableBuilder is returned.
-    typedef SerializeableBuilder *(*CreateFunc)();
+    typedef Serializeable *(*CreateFunc)(Checkpoint *cp,
+                                         const std::string &section);
 
     static std::map<std::string,CreateFunc> *classMap;
 
@@ -200,9 +219,8 @@ class SerializeableClass
 
     // create Serializeable given name of class and pointer to
     // configuration hierarchy node
-    static Serializeable *createObject(IniFile &configDB,
-                                       const std::string &configClassName);
-
+    static Serializeable *createObject(Checkpoint *cp,
+                                       const std::string &section);
 };
 
 //
@@ -210,29 +228,29 @@ class SerializeableClass
 // SerializeableBuilder and SerializeableClass objects
 //
 
-#define CREATE_SERIALIZEABLE(OBJ_CLASS)				\
-OBJ_CLASS *OBJ_CLASS##Builder::create()
+#define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)			   \
+SerializeableClass the##OBJ_CLASS##Class(CLASS_NAME,			   \
+                                         OBJ_CLASS::createForUnserialize);
 
-#define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)		\
-class OBJ_CLASS##Builder : public SerializeableBuilder		\
-{								\
-  public: 							\
-                                                                \
-    OBJ_CLASS##Builder() {}					\
-    virtual ~OBJ_CLASS##Builder() {}				\
-                                                                \
-    OBJ_CLASS *create();					\
-};								\
-                                                                \
-                                                                \
-SerializeableBuilder *						\
-new##OBJ_CLASS##Builder()					\
-{								\
-    return new OBJ_CLASS##Builder();				\
-}								\
-                                                                \
-SerializeableClass the##OBJ_CLASS##Class(CLASS_NAME,		\
-                                     new##OBJ_CLASS##Builder);
+class Checkpoint
+{
+  private:
+
+    IniFile *db;
+    const std::string basePath;
+    const ConfigNode *configNode;
+    std::map<std::string, Serializeable*> objMap;
+
+  public:
+    Checkpoint(const std::string &filename, const std::string &path,
+               const ConfigNode *_configNode);
+
+    bool find(const std::string &section, const std::string &entry,
+              std::string &value);
+
+    bool findObj(const std::string &section, const std::string &entry,
+                 Serializeable *&value);
+};
 
 
 //

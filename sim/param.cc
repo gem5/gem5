@@ -97,7 +97,7 @@ parseParam(const string &s, T &value)
 
 template <class T>
 void
-showParam(ostream &os, const T &value)
+showParam(ostream &os, T const &value)
 {
     os << value;
 }
@@ -277,7 +277,7 @@ template VectorParam<type>;
 // types that can use the above templates
 #define INSTANTIATE_PARAM_TEMPLATES(type, typestr)			\
 template bool parseParam<type>(const string &s, type &value);		\
-template void showParam<type>(ostream &os, const type &value);		\
+template void showParam<type>(ostream &os, type const &value);		\
 template void Param<type>::parse(const string &);			\
 template void VectorParam<type>::parse(const string &);			\
 template void Param<type>::showValue(ostream &) const;			\

@@ -43,6 +43,7 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "base/trace.hh"
+#include "sim/config_node.hh"
 
 using namespace std;
 
@@ -88,11 +89,11 @@ paramOut(ostream &os, const std::string &name, const T& param)
 
 template <class T>
 void
-paramIn(const IniFile *db, const std::string &section,
+paramIn(Checkpoint *cp, const std::string &section,
         const std::string &name, T& param)
 {
     std::string str;
-    if (!db->find(section, name, str) || !parseParam(str, param)) {
+    if (!cp->find(section, name, str) || !parseParam(str, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
 }
@@ -116,11 +117,11 @@ arrayParamOut(ostream &os, const std::string &name,
 
 template <class T>
 void
-arrayParamIn(const IniFile *db, const std::string &section,
+arrayParamIn(Checkpoint *cp, const std::string &section,
              const std::string &name, T *param, int size)
 {
     std::string str;
-    if (!db->find(section, name, str)) {
+    if (!cp->find(section, name, str)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
 
@@ -159,17 +160,27 @@ arrayParamIn(const IniFile *db, const std::string &section,
 }
 
 
+void
+objParamIn(Checkpoint *cp, const std::string &section,
+           const std::string &name, Serializeable * &param)
+{
+    if (!cp->findObj(section, name, param)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+}
+
+
 #define INSTANTIATE_PARAM_TEMPLATES(type)				\
 template void								\
-paramOut(ostream &os, const std::string &name, const type &param);	\
+paramOut(ostream &os, const std::string &name, type const &param);	\
 template void								\
-paramIn(const IniFile *db, const std::string &section,			\
+paramIn(Checkpoint *cp, const std::string &section,			\
         const std::string &name, type & param);				\
 template void								\
 arrayParamOut(ostream &os, const std::string &name,			\
-              const type *param, int size);				\
+              type const *param, int size);				\
 template void								\
-arrayParamIn(const IniFile *db, const std::string &section,		\
+arrayParamIn(Checkpoint *cp, const std::string &section,		\
              const std::string &name, type *param, int size);
 
 
@@ -421,41 +432,74 @@ SerializeableClass::SerializeableClass(const string &className,
 //
 //
 Serializeable *
-SerializeableClass::createObject(IniFile &configDB,
-                                 const string &configClassName)
+SerializeableClass::createObject(Checkpoint *cp,
+                                 const std::string &section)
 {
-    // find simulation object class name from configuration class
-    // (specified by 'type=' parameter)
-    string simObjClassName;
+    string className;
 
-    if (!configDB.findDefault(configClassName, "type", simObjClassName)) {
-        cerr << "Configuration class '" << configClassName << "' not found."
-             << endl;
-        abort();
+    if (!cp->find(section, "type", className)) {
+        fatal("Serializeable::create: no 'type' entry in section '%s'.\n",
+              section);
     }
 
-    // look up className to get appropriate createFunc
-    if (classMap->find(simObjClassName) == classMap->end()) {
-        cerr << "Simulator object class '" << simObjClassName << "' not found."
-             << endl;
-        abort();
+    CreateFunc createFunc = (*classMap)[className];
+
+    if (createFunc == NULL) {
+        fatal("Serializeable::create: no create function for class '%s'.\n",
+              className);
     }
 
-    CreateFunc createFunc = (*classMap)[simObjClassName];
-
-    // builder instance
-    SerializeableBuilder *objectBuilder = (*createFunc)();
-
-    assert(objectBuilder != NULL);
-
-    // now create the actual simulation object
-    Serializeable *object = objectBuilder->create();
+    Serializeable *object = createFunc(cp, section);
 
     assert(object != NULL);
-
-    // done with the SerializeableBuilder now
-    delete objectBuilder;
 
     return object;
 }
 
+
+Serializeable *
+Serializeable::create(Checkpoint *cp, const std::string &section)
+{
+    Serializeable *object = SerializeableClass::createObject(cp, section);
+    object->unserialize(cp, section);
+    return object;
+}
+
+
+Checkpoint::Checkpoint(const std::string &filename, const std::string &path,
+                       const ConfigNode *_configNode)
+    : db(new IniFile), basePath(path), configNode(_configNode)
+{
+    if (!db->load(filename)) {
+        fatal("Can't load checkpoint file '%s'\n", filename);
+    }
+
+    mainEventQueue.unserialize(this, "MainEventQueue");
+}
+
+
+bool
+Checkpoint::find(const std::string &section, const std::string &entry,
+                 std::string &value)
+{
+    return db->find(section, entry, value);
+}
+
+
+bool
+Checkpoint::findObj(const std::string &section, const std::string &entry,
+                    Serializeable *&value)
+{
+    string path;
+
+    if (!db->find(section, entry, path))
+        return false;
+
+    if ((value = configNode->resolveSimObject(path)) != NULL)
+        return true;
+
+    if ((value = objMap[path]) != NULL)
+        return true;
+
+    return false;
+}
