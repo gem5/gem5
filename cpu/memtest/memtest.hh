@@ -108,7 +108,7 @@ class MemTest : public BaseCPU
     Statistics::Scalar<> numCopies;
 
     // called by MemCompleteEvent::process()
-    void completeRequest(MemReqPtr req, uint8_t *data);
+    void completeRequest(MemReqPtr &req, uint8_t *data);
 
     friend class MemCompleteEvent;
 };
@@ -122,7 +122,7 @@ class MemCompleteEvent : public Event
 
   public:
 
-    MemCompleteEvent(MemReqPtr _req, uint8_t *_data, MemTest *_tester)
+    MemCompleteEvent(MemReqPtr &_req, uint8_t *_data, MemTest *_tester)
         : Event(&mainEventQueue),
           req(_req), data(_data), tester(_tester)
     {

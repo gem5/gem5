@@ -73,7 +73,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons,
 }
 
 Fault
-AlphaConsole::read(MemReqPtr req, uint8_t *data)
+AlphaConsole::read(MemReqPtr &req, uint8_t *data)
 {
     memset(data, 0, req->size);
     uint64_t val;
@@ -109,7 +109,7 @@ AlphaConsole::read(MemReqPtr req, uint8_t *data)
 }
 
 Fault
-AlphaConsole::write(MemReqPtr req, const uint8_t *data)
+AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
 {
     uint64_t val;
 

@@ -119,7 +119,7 @@ printData(ostream &os, uint8_t *data, int nbytes)
 }
 
 void
-MemTest::completeRequest(MemReqPtr req, uint8_t *data)
+MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
 {
     switch (req->cmd) {
       case Read:
