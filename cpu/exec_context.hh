@@ -67,6 +67,11 @@ class ExecContext
 
   public:
     Status status() const { return _status; }
+
+    // Unlike setStatus(), initStatus() has no side effects other than
+    // setting the _status variable.
+    void initStatus(Status init_status) { _status = init_status; }
+
     void setStatus(Status new_status);
 
 #ifdef FULL_SYSTEM
@@ -83,12 +88,15 @@ class ExecContext
     // Index of hardware thread context on the CPU that this represents.
     int thread_num;
 
+    // ID of this context w.r.t. the System or Process object to which
+    // it belongs.  For full-system mode, this is the system CPU ID.
+    int cpu_id;
+
 #ifdef FULL_SYSTEM
 
     FunctionalMemory *mem;
     AlphaItb *itb;
     AlphaDtb *dtb;
-    int cpu_id;
     System *system;
 
     // the following two fields are redundant, since we can always
@@ -124,14 +132,15 @@ class ExecContext
     // constructor: initialize context from given process structure
 #ifdef FULL_SYSTEM
     ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                AlphaItb *_itb, AlphaDtb *_dtb, FunctionalMemory *_dem,
-                int _cpu_id);
+                AlphaItb *_itb, AlphaDtb *_dtb, FunctionalMemory *_dem);
 #else
     ExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
     ExecContext(BaseCPU *_cpu, int _thread_num, FunctionalMemory *_mem,
                 int _asid);
 #endif
     virtual ~ExecContext() {}
+
+    virtual void takeOverFrom(ExecContext *oldContext);
 
     void regStats(const std::string &name);
 
@@ -155,7 +164,6 @@ class ExecContext
     {
         return dtb->translate(req, true);
     }
-
 
 #else
     bool validInstAddr(Addr addr)
@@ -244,8 +252,8 @@ class ExecContext
         // and all other stores (WH64?).  Unsuccessful Store
         // Conditionals would have returned above, and wouldn't fall
         // through.
-        for (int i = 0; i < system->xcvec.size(); i++){
-            cregs = &system->xcvec[i]->regs.miscRegs;
+        for (int i = 0; i < system->execContexts.size(); i++){
+            cregs = &system->execContexts[i]->regs.miscRegs;
             if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
                 cregs->lock_flag = false;
             }

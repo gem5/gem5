@@ -90,6 +90,8 @@ class RemoteGDB
     RemoteGDB(System *system, ExecContext *context);
     ~RemoteGDB();
 
+    void replaceExecContext(ExecContext *xc) { context = xc; }
+
     void attach(int fd);
     void detach();
     bool isattached();

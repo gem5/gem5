@@ -217,8 +217,11 @@ bool
 IniFile::Section::add(const std::string &assignment)
 {
     string::size_type offset = assignment.find('=');
-    if (offset == string::npos)  // no '=' found
+    if (offset == string::npos) {
+        // no '=' found
+        cerr << "Can't parse .ini line " << assignment << endl;
         return false;
+    }
 
     // if "+=" rather than just "=" then append value
     bool append = (assignment[offset-1] == '+');

@@ -29,6 +29,8 @@
 #ifndef __TRU64_SYSTEM_HH__
 #define __TRU64_SYSTEM_HH__
 
+#include <vector>
+
 #include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
 
@@ -48,8 +50,6 @@ class AlphaArguments;
 class Tru64System : public System
 {
   private:
-    ExecContext *xc;
-
     EcoffObject *kernel;
     EcoffObject *console;
 
@@ -74,8 +74,8 @@ class Tru64System : public System
     Addr kernelEntry;
 
   public:
-    RemoteGDB *remoteGDB;
-    GDBListener *gdbListen;
+    std::vector<RemoteGDB *>   remoteGDB;
+    std::vector<GDBListener *> gdbListen;
 
   public:
     Tru64System(const std::string _name,
@@ -88,7 +88,8 @@ class Tru64System : public System
                 const std::string &boot_osflags);
     ~Tru64System();
 
-    void init(ExecContext *xc);
+    int registerExecContext(ExecContext *xc);
+    void replaceExecContext(ExecContext *xc, int xcIndex);
 
     Addr getKernelStart() const { return kernelStart; }
     Addr getKernelEnd() const { return kernelEnd; }

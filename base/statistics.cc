@@ -846,7 +846,7 @@ DistDisplay(ostream &stream, const string &name, const string &desc,
     for (int i = 0; i < size; ++i) {
         if (flags & nozero && vec[i] == 0.0 ||
             flags & nonan && isnan(vec[i]))
-            return;
+            continue;
 
         _min = i * bucket_size + min;
         _pdf = vec[i] / total * 100.0;

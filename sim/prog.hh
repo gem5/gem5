@@ -36,7 +36,7 @@
 //
 #ifndef FULL_SYSTEM
 
-#include <list>
+#include <vector>
 
 #include "targetarch/isa_traits.hh"
 #include "sim/sim_object.hh"
@@ -55,10 +55,10 @@ class Process : public SimObject
     bool initialContextLoaded;
 
     // execution contexts associated with this process
-    std::list<ExecContext *> execContexts;
-    // number of CPUs assigned to this process: should match number of
-    // contexts in execContexts list
-    unsigned numCpus;
+    std::vector<ExecContext *> execContexts;
+
+    // number of CPUs (esxec contexts, really) assigned to this process.
+    unsigned int numCpus() { return execContexts.size(); }
 
     // record of blocked context
     struct WaitRec
@@ -123,8 +123,12 @@ class Process : public SimObject
     // override of virtual SimObject method: register statistics
     virtual void regStats();
 
-    // register an execution context for this process
-    void registerExecContext(ExecContext *);
+    // register an execution context for this process.
+    // returns xc's cpu number (index into execContexts[])
+    int registerExecContext(ExecContext *xc);
+
+
+    void replaceExecContext(int xcIndex, ExecContext *xc);
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);
