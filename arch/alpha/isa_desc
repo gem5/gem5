@@ -1000,10 +1000,50 @@ def template PrefetchDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
+      protected:
+
+	/**
+	 * "Fake" effective address computation class for "%(mnemonic)s".
+	 */
+	class EAComp : public EACompBase
+	{
+	  public:
+	    /// Constructor
+	    EAComp(MachInst machInst)
+		: EACompBase(machInst)
+	    {
+		%(ea_constructor)s;
+	    }
+	};
+
+	/**
+	 * "Fake" memory access instruction class for "%(mnemonic)s".
+	 */
+	class MemAcc : public MemAccBase
+	{
+	  public:
+	    /// Constructor
+	    MemAcc(MachInst machInst)
+		: MemAccBase(machInst, %(op_class)s)
+	    {
+		%(memacc_constructor)s;
+	    }
+	};
+
+	/// Pointer to EAComp object.
+	StaticInstPtr<AlphaISA> eaCompPtr;
+	/// Pointer to MemAcc object.
+	StaticInstPtr<AlphaISA> memAccPtr;
+
       public:
+
+	StaticInstPtr<AlphaISA> eaCompInst() { return eaCompPtr; }
+	StaticInstPtr<AlphaISA> memAccInst() { return memAccPtr; }
+
 	/// Constructor
 	%(class_name)s(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
+	       eaCompPtr(new EAComp(machInst)), memAccPtr(new MemAcc(machInst))
 	{
 	    %(constructor)s;
 	}
