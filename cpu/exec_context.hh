@@ -189,17 +189,17 @@ class ExecContext
     int getInstAsid() { return ITB_ASN_ASN(regs.ipr[TheISA::IPR_ITB_ASN]); }
     int getDataAsid() { return DTB_ASN_ASN(regs.ipr[TheISA::IPR_DTB_ASN]); }
 
-    Fault translateInstReq(MemReqPtr req)
+    Fault translateInstReq(MemReqPtr &req)
     {
         return itb->translate(req);
     }
 
-    Fault translateDataReadReq(MemReqPtr req)
+    Fault translateDataReadReq(MemReqPtr &req)
     {
         return dtb->translate(req, false);
     }
 
-    Fault translateDataWriteReq(MemReqPtr req)
+    Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dtb->translate(req, true);
     }
@@ -214,7 +214,7 @@ class ExecContext
     int getInstAsid() { return asid; }
     int getDataAsid() { return asid; }
 
-    Fault dummyTranslation(MemReqPtr req)
+    Fault dummyTranslation(MemReqPtr &req)
     {
 #if 0
         assert((req->vaddr >> 48 & 0xffff) == 0);
@@ -225,15 +225,15 @@ class ExecContext
         req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
         return No_Fault;
     }
-    Fault translateInstReq(MemReqPtr req)
+    Fault translateInstReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
-    Fault translateDataReadReq(MemReqPtr req)
+    Fault translateDataReadReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
-    Fault translateDataWriteReq(MemReqPtr req)
+    Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
@@ -241,7 +241,7 @@ class ExecContext
 #endif
 
     template <class T>
-    Fault read(MemReqPtr req, T& data)
+    Fault read(MemReqPtr &req, T& data)
     {
 #if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
         if (req->flags & LOCKED) {
@@ -254,7 +254,7 @@ class ExecContext
     }
 
     template <class T>
-    Fault write(MemReqPtr req, T& data)
+    Fault write(MemReqPtr &req, T& data)
     {
 #if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
 

@@ -70,7 +70,7 @@ class AlphaTlb : public SimObject
         return (unimplBits == 0) || (unimplBits == VA_UNIMPL_MASK);
     }
 
-    static void checkCacheability(MemReqPtr req);
+    static void checkCacheability(MemReqPtr &req);
 
     // Checkpointing
     virtual void serialize(std::ostream &os);
@@ -92,7 +92,7 @@ class AlphaItb : public AlphaTlb
     AlphaItb(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(MemReqPtr req) const;
+    Fault translate(MemReqPtr &req) const;
 };
 
 class AlphaDtb : public AlphaTlb
@@ -118,7 +118,7 @@ class AlphaDtb : public AlphaTlb
     AlphaDtb(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(MemReqPtr req, bool write) const;
+    Fault translate(MemReqPtr &req, bool write) const;
 };
 
 #endif // __ALPHA_MEMORY_HH__
