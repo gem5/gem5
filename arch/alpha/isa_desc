@@ -1399,6 +1399,7 @@ declare {{
       protected:
 	int palFunc;	///< Function code part of instruction
 	int palOffset;	///< Target PC, offset from IPR_PAL_BASE
+	bool palValid;	///< is the function code valid?
 	bool palPriv;	///< is this call privileged?
 
 	/// Constructor.
@@ -1407,9 +1408,22 @@ declare {{
 	    : AlphaStaticInst(mnem, _machInst, __opClass),
 	      palFunc(PALFUNC)
 	{
-	    palPriv = ((machInst & 0x80) != 0);
-	    int shortPalFunc = (machInst & 0x3f);
-	    palOffset = 0x2001 + (palPriv << 12) + (shortPalFunc << 6);
+	    // From the 21164 HRM (paraphrased):
+	    // Bit 7 of the function code (mask 0x80) indicates
+	    // whether the call is privileged (bit 7 == 0) or
+	    // unprivileged (bit 7 == 1).  The privileged call table
+	    // starts at 0x2000, the unprivielged call table starts at
+	    // 0x3000.  Bits 5-0 (mask 0x3f) are used to calculate the
+	    // offset.
+	    const int palPrivMask = 0x80;
+	    const int palOffsetMask = 0x3f;
+
+	    // Pal call is invalid unless all other bits are 0
+	    palValid = ((machInst & ~(palPrivMask | palOffsetMask)) == 0);
+	    palPriv = ((machInst & palPrivMask) == 0);
+	    int shortPalFunc = (machInst & palOffsetMask);
+	    // Add 1 to base to set pal-mode bit
+	    palOffset = (palPriv ? 0x2001 : 0x3001) + (shortPalFunc << 6);
 	}
 
 	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
@@ -2353,25 +2367,33 @@ decode OPCODE default Unknown::unknown() {
 
 #ifdef FULL_SYSTEM
     0x00: CallPal::call_pal({{
-	if (palPriv && !PC_PAL(xc->regs.pc)) {
-	    // attempt to do privileged PAL call in non-PAL mode
+	using namespace AlphaISA;
+
+	if (!palValid ||
+	    (palPriv && xc->readIpr(IPR_ICM, fault) != mode_kernel)) {
+	    // invalid pal function code, or attempt to do privileged
+	    // PAL call in non-kernel mode
 	    fault = Unimplemented_Opcode_Fault;
 	}
 	else {
-	    // check to see if simulator wants to do something special
-	    // on this PAL call (including maybe suppress it)
-	    bool dopal = xc->simPalCheck(palFunc);
-
 	    if (!xc->misspeculating()) {
+		// check to see if simulator wants to do something special
+		// on this PAL call (including maybe suppress it)
+		bool dopal = xc->simPalCheck(palFunc);
+
 		Annotate::Callpal(xc, palFunc);
+
+		if (dopal) {
+		    swap_palshadow(&xc->regs, true);
+		    xc->setIpr(IPR_EXC_ADDR, NPC);
+		}
 	    }
 
+	    // if we're misspeculating, it's still safe (if
+	    // unrealistic) to set NPC, as the control-flow change
+	    // won't get committed.
 	    if (dopal) {
-		if (!xc->misspeculating()) {
-		    AlphaISA::swap_palshadow(&xc->regs, true);
-		}
-		xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
-		NPC = xc->readIpr(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
+		NPC = xc->readIpr(IPR_PAL_BASE, fault) + palOffset;
 	    }
 	}
     }});

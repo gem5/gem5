@@ -436,12 +436,12 @@ AlphaDtb::translate(MemReqPtr req, bool write) const
     else
         read_accesses++;
 
-    AlphaISA::md_mode_type mode =
-        (AlphaISA::md_mode_type)DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]);
+    AlphaISA::mode_type mode =
+        (AlphaISA::mode_type)DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]);
 
     if (PC_PAL(pc)) {
-        mode = (req->flags & ALTMODE) ? (AlphaISA::md_mode_type)
-            (ALT_MODE_AM(ipr[AlphaISA::IPR_ALT_MODE]))
+        mode = (req->flags & ALTMODE) ?
+            (AlphaISA::mode_type)ALT_MODE_AM(ipr[AlphaISA::IPR_ALT_MODE])
             : AlphaISA::mode_kernel;
     }
 

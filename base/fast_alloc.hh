@@ -68,6 +68,13 @@
 // (by bucket).
 // #define FAST_ALLOC_STATS
 
+#ifdef NO_FAST_ALLOC
+
+class FastAlloc {
+};
+
+#else
+
 class FastAlloc {
   public:
 
@@ -199,5 +206,7 @@ void FastAlloc::operator delete(void *p, size_t sz)
 {
     deallocate(p, sz);
 }
+
+#endif // NO_FAST_ALLOC
 
 #endif // __FAST_ALLOC_H__

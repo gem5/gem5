@@ -551,16 +551,14 @@ ExecContext::simPalCheck(int palFunc)
 
     switch (palFunc) {
       case PAL::halt:
-        if (!misspeculating()) {
-            halt();
-            if (--System::numSystemsRunning == 0)
-                new SimExitEvent("all cpus halted");
-        }
+        halt();
+        if (--System::numSystemsRunning == 0)
+            new SimExitEvent("all cpus halted");
         break;
 
       case PAL::bpt:
       case PAL::bugchk:
-        if (!misspeculating() && system->breakpoint())
+        if (system->breakpoint())
             return false;
         break;
     }
