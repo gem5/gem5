@@ -798,12 +798,13 @@ sys_int_21:
 sys_int_20:
         or      r31,3,r16                       // a0 means it is a I/O interrupt
         
-        bis     r31,0x801,r8
-        sll     r8,16,r8
-        bis     r8,0xa000,r8
-        sll     r8,16,r8
-        bis     r8,0x80,r8
-        ldl_p   r9, 0(r8)                       // read the MISC register
+	lda     r8,0x0801(r31)
+	sll     r8,32,r8
+	ldah    r9,0xa0(r31)
+	sll	r9,8,r9
+	bis	r8,r9,r8	
+	lda     r8,0x0080(r8)
+        ldqp    r9, 0(r8)                       // read the MISC register
         
         and     r9,0x1,r10                      // grab LSB and shift left 2
         sll     r10,2,r10
@@ -811,23 +812,28 @@ sys_int_20:
         sll     r11,5,r11
         
         mskbl   r8,0,r8                         // calculate DIRn address
-        bis     r8,0x280,r8
+        lda     r9,0x280(r31)
+	bis	r8,r9,r8
         or      r8,r10,r8
         or      r8,r11,r8
-        ldl_p   r9, 0(r8)                       // read DIRn
+        ldqp    r9, 0(r8)                       // read DIRn
 
-	or	r31,1,r17
-	sll	r17,63,r17			// load a 1 into the msb
+        or      r31,63,r17                      // load  63 into the counter
+	or	r31,1,r11
+	sll	r11,63,r11			// load a 1 into the msb
 
 find_msb:	
-	and	r9,r17,r10
+	and	r9,r11,r10
 	bne	r10, found_msb
-	srl	r17,1,r17
+	srl	r11,1,r11
+	subl    r17,1,r17 
 	br	r31, find_msb
 	
 found_msb:
-        mulq    r17,0x10,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
-        addq    r17,0x900,r17
+	lda	r9,0x10(r31)
+        mulq    r17,r9,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
+	lda     r9,0x900(r31)
+        addq    r17,r9,r17
         
         br      r31, pal_post_interrupt
 
