@@ -56,7 +56,7 @@ class AlphaTlb : public SimObject
 
     int getsize() const { return size; }
 
-    AlphaISA::PTE &index();
+    AlphaISA::PTE &index(bool advance = true);
     void insert(Addr vaddr, AlphaISA::PTE &pte);
 
     void flushAll();
