@@ -30,6 +30,13 @@ class ExecContext;
 
 namespace AlphaPseudo
 {
+    /**
+     * @todo these externs are only here for a hack in fullCPU::takeOver...
+     */
+    extern bool doStatisticsInsts;
+    extern bool doCheckpointInsts;
+    extern bool doQuiesce;
+
     void quiesce(ExecContext *xc);
     void m5exit(ExecContext *xc);
     void m5exit_old(ExecContext *xc);
