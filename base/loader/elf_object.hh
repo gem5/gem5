@@ -29,18 +29,17 @@
 #ifndef __ELF_OBJECT_HH__
 #define __ELF_OBJECT_HH__
 
-/* Because of the -Wundef flag we have to do this */
-#define __LIBELF_INTERNAL__     0
-#define __LIBELF64_LINUX        1
-#define __LIBELF_NEED_LINK_H    0
-
-#include <libelf/libelf.h>
-#include <libelf/gelf.h>
 #include "base/loader/object_file.hh"
 
 class ElfObject : public ObjectFile
 {
   protected:
+
+    uint8_t *fileTextBits; //!< Pointer to file's text segment image
+    uint8_t *fileDataBits; //!< Pointer to file's data segment image
+
+    /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
+    bool loadSomeSymbols(SymbolTable *symtab, int binding);
 
     ElfObject(const std::string &_filename, int _fd,
               size_t _len, uint8_t *_data,
