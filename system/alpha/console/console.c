@@ -8,8 +8,9 @@
  * ******************************************/
 
 
-/* from simos */
+typedef unsigned long long uint64_t;
 typedef unsigned long long uint64;
+typedef unsigned int uint32_t;
 typedef unsigned int uint32;
 
 #define CONSOLE
@@ -119,7 +120,7 @@ void InitConsole(void)
 char GetChar()
 {
    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
-   return 0;
+   return k1Conf->inputChar;
 }
 
 void PutChar(char c)
@@ -1127,12 +1128,11 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
    long i;
    switch (a0) {
    case CONSCB_GETC:
-      break;
+     return GetChar();
 
    case CONSCB_PUTS:
-      for(i = 0; i < a3; i++) {
+      for(i = 0; i < a3; i++)
          PutChar(*(char *)a2+i);
-      }
       return a3;
 
    case CONSCB_GETENV:

@@ -11,7 +11,7 @@ INCLUDEH = ../h
 dbmentry.o: dbmentry.s 
 	$(AS)  $(INCLUDES) -nointrinsics -o $*.o $*.s
 
-console.o: console.c 
+console.o: console.c
 	$(CC)  -g3 $(INCLUDES) -nointrinsics -o $*.o -c $*.c
 
 printf.o: printf.c 
@@ -44,6 +44,9 @@ paljtoslave.c.o: paljtoslave.c
 console: console.o dbmentry.o printf.o paljtokern.c.o paljtoslave.c.o 
 	$(LD) -o console  -N -T $(DBMENTRY) -non_shared \
 	dbmentry.o console.o printf.o paljtokern.c.o paljtoslave.c.o -lc
+
+install: console
+	scp console zizzer.eecs.umich.edu:/z/m5/system/testing/binaries/console
 
 clean:
 	rm -f *.o console *.strip paljtokern.c paljtoslave.c
