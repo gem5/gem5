@@ -743,19 +743,19 @@ EXPORT(sys_interrupt)
 //-
 	ALIGN_BRANCH
 sys_int_23:
-        or      r31,0,r16                       // IPI interrupt A0 = 0
+        or      r31,0,r16                        // IPI interrupt A0 = 0
         lda     r12,0xf01(r31)                   // build up an address for the MISC register
         sll     r12,16,r12
         lda     r12,0xa000(r12)                   
         sll     r12,16,r12                       
         lda     r12,0x080(r12)                  
 
-        ldq_p   r10,0(r12)                       // read misc register
-        and     r10,0x3,r10                     // isolate CPUID
+        mfpr    r10, pt_whami                   // get CPU ID
+	extbl	r10, 1, r10		        // Isolate just whami bits
         or      r31,0x1,r14                     // load r14 with bit to clear
-        sll     r14,r10,r14                       // left shift by CPU ID
+        sll     r14,r10,r14                     // left shift by CPU ID
         sll     r14,8,r14
-        stq_p   r14, 0(r12)                       // clear the rtc interrupt
+        stq_p   r14, 0(r12)                     // clear the rtc interrupt
 
  	br	r31, pal_post_interrupt		// Notify the OS 
 
@@ -763,17 +763,17 @@ sys_int_23:
 	ALIGN_BRANCH
 sys_int_22:
         or      r31,1,r16                       // a0 means it is a clock interrupt
-        lda     r12,0xf01(r31)                   // build up an address for the MISC register
+        lda     r12,0xf01(r31)                  // build up an address for the MISC register
         sll     r12,16,r12
         lda     r12,0xa000(r12)                   
         sll     r12,16,r12                       
         lda     r12,0x080(r12)                  
 
-        ldq_p   r10,0(r12)                       // read misc register
-        and     r10,0x3,r10                     // isolate CPUID
-        or      r31,0x10,r14                     // load r14 with bit to clear
-        sll     r14,r10,r14                       // left shift by CPU ID
-        stq_p   r14, 0(r12)                       // clear the rtc interrupt
+        mfpr    r10, pt_whami                   // get CPU ID
+	extbl	r10, 1, r10		        // Isolate just whami bits
+        or      r31,0x10,r14                    // load r14 with bit to clear
+        sll     r14,r10,r14                     // left shift by CPU ID
+        stq_p   r14, 0(r12)                     // clear the rtc interrupt
          
         br	r31, pal_post_interrupt		// Tell the OS
 
@@ -816,19 +816,20 @@ sys_int_21:
     sll	    r13,8,r13
     bis	    r12,r13,r12	
     lda     r12,0x0080(r12)
-    ldqp    r13, 0(r12)                       // read the MISC register for CPUID
+    mfpr    r13, pt_whami                   // get CPU ID
+    extbl   r13, 1, r10		            // Isolate just whami bits
         
-    and     r13,0x1,r14                      // grab LSB and shift left 6
+    and     r13,0x1,r14                     // grab LSB and shift left 6
     sll     r14,6,r14
-    and     r13,0x2,r10                      // grabl LSB+1 and shift left 9
+    and     r13,0x2,r10                     // grabl LSB+1 and shift left 9
     sll     r10,9,r10
     
-    mskbl   r12,0,r12                         // calculate DIRn address
+    mskbl   r12,0,r12                       // calculate DIRn address
     lda     r13,0x280(r31)
     bis	    r12,r13,r12
     or      r12,r14,r12
     or      r12,r10,r12
-    ldqp    r13, 0(r12)                       // read DIRn
+    ldqp    r13, 0(r12)                     // read DIRn
 
     or      r31,1,r14                       // set bit 55 (ISA Interrupt)
     sll     r14,55,r14                      
