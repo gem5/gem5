@@ -158,7 +158,7 @@ class ExecContext
      * number of executed instructions, for matching with syscall trace
      * points in EIO files.
      */
-    Counter func_exe_insn;
+    Counter func_exe_inst;
 
     //
     // Count failed store conditionals so we can warn of apparent

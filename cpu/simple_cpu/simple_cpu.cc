@@ -653,7 +653,7 @@ SimpleCPU::tick()
         numInst++;
 
         // check for instruction-count-based events
-        comInsnEventQueue[0]->serviceEvents(numInst);
+        comInstEventQueue[0]->serviceEvents(numInst);
 
         // decode the instruction
         StaticInstPtr<TheISA> si(inst);
@@ -666,7 +666,7 @@ SimpleCPU::tick()
         xc->regs.ra = (inst >> 21) & 0x1f;
 #endif // FULL_SYSTEM
 
-        xc->func_exe_insn++;
+        xc->func_exe_inst++;
 
         fault = si->execute(this, xc, traceData);
 #ifdef FS_MEASURE
@@ -770,10 +770,10 @@ END_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
     INIT_PARAM_DFLT(max_insts_any_thread,
-                    "terminate when any thread reaches this insn count",
+                    "terminate when any thread reaches this inst count",
                     0),
     INIT_PARAM_DFLT(max_insts_all_threads,
-                    "terminate when all threads have reached this insn count",
+                    "terminate when all threads have reached this inst count",
                     0),
     INIT_PARAM_DFLT(max_loads_any_thread,
                     "terminate when any thread reaches this load count",
