@@ -148,8 +148,10 @@ Process::registerExecContext(ExecContext *xc)
         // copy process's initial regs struct
         xc->regs = *init_regs;
 
-        // mark this context as active
-        xc->activate();
+        // mark this context as active.
+        // activate with zero delay so that we start ticking right
+        // away on cycle 0
+        xc->activate(0);
     }
 
     // return CPU number to caller and increment available CPU count

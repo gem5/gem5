@@ -45,7 +45,7 @@
  * correspond to physical components and can be specified via the
  * config file (CPUs, caches, etc.).
  */
-class SimObject : public Serializeable
+class SimObject : public Serializable
 {
   protected:
     std::string objName;
@@ -82,6 +82,9 @@ class SimObject : public Serializeable
 
     // static: call printExtraOutput on all SimObjects
     static void printAllExtraOutput(std::ostream&);
+
+    // static: call nameOut() & serialize() on all SimObjects
+    static void serializeAll(std::ostream &);
 };
 
 #endif // __SIM_OBJECT_HH__

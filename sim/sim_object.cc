@@ -155,3 +155,19 @@ SimObject::printAllExtraOutput(ostream &os)
         obj->printExtraOutput(os);
    }
 }
+
+//
+// static function: serialize all SimObjects.
+//
+void
+SimObject::serializeAll(ostream &os)
+{
+    SimObjectList::iterator i = simObjectList.begin();
+    SimObjectList::iterator end = simObjectList.end();
+
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        obj->nameOut(os);
+        obj->serialize(os);
+   }
+}

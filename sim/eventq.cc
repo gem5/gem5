@@ -184,7 +184,7 @@ EventQueue::unserialize(Checkpoint *cp, const std::string &section)
         paramIn(cp, section, csprintf("event%d", i), eventName);
 
         // create the event based on its pointer value
-        Serializeable::create(cp, eventName);
+        Serializable::create(cp, eventName);
     }
 }
 

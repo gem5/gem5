@@ -53,7 +53,7 @@ class EventQueue;	// forward declaration
  * event is specified by deriving a subclass and overriding the
  * process() member function.
  */
-class Event : public Serializeable, public FastAlloc
+class Event : public Serializable, public FastAlloc
 {
     friend class EventQueue;
 
@@ -204,7 +204,7 @@ DelayFunction(Tick when, T *object)
 /*
  * Queue of events sorted in time order
  */
-class EventQueue : public Serializeable
+class EventQueue : public Serializable
 {
   protected:
     std::string objName;

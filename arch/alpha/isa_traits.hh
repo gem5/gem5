@@ -225,7 +225,7 @@ class AlphaISA
                                   int regnum);
 
 #if 0
-    static void serializeSpecialRegs(const Serializeable::Proxy &proxy,
+    static void serializeSpecialRegs(const Serializable::Proxy &proxy,
                                      const RegFile &regs);
 
     static void unserializeSpecialRegs(const IniFile *db,

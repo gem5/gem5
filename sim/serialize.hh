@@ -41,7 +41,7 @@
 #include "sim/host.hh"
 #include "sim/configfile.hh"
 
-class Serializeable;
+class Serializable;
 class Checkpoint;
 
 template <class T>
@@ -61,7 +61,7 @@ void arrayParamIn(Checkpoint *cp, const std::string &section,
 
 void
 objParamIn(Checkpoint *cp, const std::string &section,
-           const std::string &name, Serializeable * &param);
+           const std::string &name, Serializable * &param);
 
 
 //
@@ -92,7 +92,7 @@ objParamIn(Checkpoint *cp, const std::string &section,
 
 #define UNSERIALIZE_OBJPTR(objptr)			\
   do {							\
-    Serializeable *sptr;				\
+    Serializable *sptr;				\
     objParamIn(cp, section, #objptr, sptr);		\
     objptr = dynamic_cast<typeof(objptr)>(sptr);	\
   } while (0)
@@ -100,23 +100,15 @@ objParamIn(Checkpoint *cp, const std::string &section,
 /*
  * Basic support for object serialization.
  */
-class Serializeable
+class Serializable
 {
-  public:
-
-    friend class Serializer;
-
   protected:
-    bool serialized;
-    static Serializer *serializer;
-
-    void mark();
     void nameOut(std::ostream& os);
     void nameOut(std::ostream& os, const std::string &_name);
 
   public:
-    Serializeable() : serialized(false) {}
-    virtual ~Serializeable() {}
+    Serializable() {}
+    virtual ~Serializable() {}
 
     // manditory virtual function, so objects must provide names
     virtual std::string name() const = 0;
@@ -124,70 +116,51 @@ class Serializeable
     virtual void serialize(std::ostream& os) {}
     virtual void unserialize(Checkpoint *cp, const std::string &section) {}
 
-    static Serializeable *create(Checkpoint *cp,
+    static Serializable *create(Checkpoint *cp,
                                  const std::string &section);
-};
 
-class Serializer
-{
-    friend class Serializeable;
-
-  protected:
-    typedef std::list<Serializeable *> serlist_t;
-    serlist_t objects;
-    std::ostream *output;
-    std::ostream &out() const;
-
-  public:
-    Serializer();
-    virtual ~Serializer();
-
-  private:
-    void add_object(Serializeable *obj);
-    void add_objects();
-
-  public:
-    void serialize();
+    static void serializeAll();
+    static void unserializeGlobals(Checkpoint *cp);
 };
 
 //
-// A SerializeableBuilder serves as an evaluation context for a set of
-// parameters that describe a specific instance of a Serializeable.  This
+// A SerializableBuilder serves as an evaluation context for a set of
+// parameters that describe a specific instance of a Serializable.  This
 // evaluation context corresponds to a section in the .ini file (as
 // with the base ParamContext) plus an optional node in the
 // configuration hierarchy (the configNode member) for resolving
-// Serializeable references.  SerializeableBuilder is an abstract superclass;
+// Serializable references.  SerializableBuilder is an abstract superclass;
 // derived classes specialize the class for particular subclasses of
-// Serializeable (e.g., BaseCache).
+// Serializable (e.g., BaseCache).
 //
 // For typical usage, see the definition of
-// SerializeableClass::createObject().
+// SerializableClass::createObject().
 //
-class SerializeableBuilder
+class SerializableBuilder
 {
   public:
 
-    SerializeableBuilder() {}
+    SerializableBuilder() {}
 
-    virtual ~SerializeableBuilder() {}
+    virtual ~SerializableBuilder() {}
 
-    // Create the actual Serializeable corresponding to the parameter
+    // Create the actual Serializable corresponding to the parameter
     // values in this context.  This function is overridden in derived
     // classes to call a specific constructor for a particular
-    // subclass of Serializeable.
-    virtual Serializeable *create() = 0;
+    // subclass of Serializable.
+    virtual Serializable *create() = 0;
 };
 
 //
-// An instance of SerializeableClass corresponds to a class derived from
-// Serializeable.  The SerializeableClass instance serves to bind the string
+// An instance of SerializableClass corresponds to a class derived from
+// Serializable.  The SerializableClass instance serves to bind the string
 // name (found in the config file) to a function that creates an
 // instance of the appropriate derived class.
 //
 // This would be much cleaner in Smalltalk or Objective-C, where types
 // are first-class objects themselves.
 //
-class SerializeableClass
+class SerializableClass
 {
   public:
 
@@ -196,32 +169,32 @@ class SerializeableClass
     // section (specified by the first string argument), a unique name
     // for the object (specified by the second string argument), and
     // an optional config hierarchy node (specified by the third
-    // argument).  A pointer to the new SerializeableBuilder is returned.
-    typedef Serializeable *(*CreateFunc)(Checkpoint *cp,
+    // argument).  A pointer to the new SerializableBuilder is returned.
+    typedef Serializable *(*CreateFunc)(Checkpoint *cp,
                                          const std::string &section);
 
     static std::map<std::string,CreateFunc> *classMap;
 
     // Constructor.  For example:
     //
-    // SerializeableClass baseCacheSerializeableClass("BaseCacheSerializeable",
-    //                         newBaseCacheSerializeableBuilder);
+    // SerializableClass baseCacheSerializableClass("BaseCacheSerializable",
+    //                         newBaseCacheSerializableBuilder);
     //
-    SerializeableClass(const std::string &className, CreateFunc createFunc);
+    SerializableClass(const std::string &className, CreateFunc createFunc);
 
-    // create Serializeable given name of class and pointer to
+    // create Serializable given name of class and pointer to
     // configuration hierarchy node
-    static Serializeable *createObject(Checkpoint *cp,
+    static Serializable *createObject(Checkpoint *cp,
                                        const std::string &section);
 };
 
 //
 // Macros to encapsulate the magic of declaring & defining
-// SerializeableBuilder and SerializeableClass objects
+// SerializableBuilder and SerializableClass objects
 //
 
 #define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)			   \
-SerializeableClass the##OBJ_CLASS##Class(CLASS_NAME,			   \
+SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,			   \
                                          OBJ_CLASS::createForUnserialize);
 
 class Checkpoint
@@ -231,7 +204,7 @@ class Checkpoint
     IniFile *db;
     const std::string basePath;
     const ConfigNode *configNode;
-    std::map<std::string, Serializeable*> objMap;
+    std::map<std::string, Serializable*> objMap;
 
   public:
     Checkpoint(const std::string &filename, const std::string &path,
@@ -241,7 +214,7 @@ class Checkpoint
               std::string &value);
 
     bool findObj(const std::string &section, const std::string &entry,
-                 Serializeable *&value);
+                 Serializable *&value);
 
     bool sectionExists(const std::string &section);
 };

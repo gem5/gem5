@@ -52,7 +52,7 @@ class EtherLink : public SimObject
      /*
       * Model for a single uni-directional link
       */
-    class Link : public Serializeable {
+    class Link : public Serializable {
       protected:
         std::string objName;
 

@@ -566,7 +566,9 @@ Tru64System::registerExecContext(ExecContext *xc)
     int xcIndex = System::registerExecContext(xc);
 
     if (xcIndex == 0) {
-        xc->activate();
+        // activate with zero delay so that we start ticking right
+        // away on cycle 0
+        xc->activate(0);
     }
 
     RemoteGDB *rgdb = new RemoteGDB(this, xc);

@@ -48,25 +48,14 @@
 
 using namespace std;
 
-Serializer *Serializeable::serializer = NULL;
-
 void
-Serializeable::mark()
-{
-    if (!serialized)
-        serializer->add_object(this);
-
-    serialized = true;
-}
-
-void
-Serializeable::nameOut(ostream &os)
+Serializable::nameOut(ostream &os)
 {
     os << "\n[" << name() << "]\n";
 }
 
 void
-Serializeable::nameOut(ostream &os, const string &_name)
+Serializable::nameOut(ostream &os, const string &_name)
 {
     os << "\n[" << _name << "]\n";
 }
@@ -156,7 +145,7 @@ arrayParamIn(Checkpoint *cp, const std::string &section,
 
 void
 objParamIn(Checkpoint *cp, const std::string &section,
-           const std::string &name, Serializeable * &param)
+           const std::string &name, Serializable * &param)
 {
     if (!cp->findObj(section, name, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
@@ -190,93 +179,69 @@ INSTANTIATE_PARAM_TEMPLATES(bool)
 INSTANTIATE_PARAM_TEMPLATES(string)
 
 
-#if 0
-// unneeded?
-void
-Serializeable::childOut(const string &name, Serializeable *child)
+/////////////////////////////
+
+/// Container for serializing global variables (not associated with
+/// any serialized object).
+class Globals : public Serializable
 {
-    child->mark();
-    if (child->name() == "")
-        panic("child is unnamed");
+  public:
+    string name() const;
+    void serialize(ostream& os);
+    void unserialize(Checkpoint *cp);
+};
 
-    out() << name << "=" << child->name() << "\n";
-}
-#endif
+/// The one and only instance of the Globals class.
+Globals globals;
 
-Serializer::Serializer()
-{ }
-
-Serializer::~Serializer()
-{ }
-
-ostream &
-Serializer::out() const
+string
+Globals::name() const
 {
-    if (!output)
-        panic("must set output before serializing");
-
-    return *output;
+    return "Globals";
 }
 
 void
-Serializer::add_object(Serializeable *obj)
+Globals::serialize(ostream& os)
 {
-    objects.push_back(obj);
+    nameOut(os);
+    SERIALIZE_SCALAR(curTick);
+
+    nameOut(os, "MainEventQueue");
+    mainEventQueue.serialize(os);
 }
 
 void
-Serializer::add_objects()
+Globals::unserialize(Checkpoint *cp)
 {
-    mainEventQueue.mark();
+    const string &section = name();
+    UNSERIALIZE_SCALAR(curTick);
 
-    SimObject::SimObjectList::iterator i = SimObject::simObjectList.begin();
-    SimObject::SimObjectList::iterator end = SimObject::simObjectList.end();
-
-    while (i != end) {
-        (*i)->mark();
-        ++i;
-    }
+    mainEventQueue.unserialize(cp, "MainEventQueue");
 }
 
 void
-Serializer::serialize()
+Serializable::serializeAll()
 {
-    if (Serializeable::serializer != NULL)
-        panic("in process of serializing!");
-
-    Serializeable::serializer = this;
-
     string dir = CheckpointDir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             warn("could mkdir %s\n", dir);
 
     string cpt_file = dir + "m5.cpt";
-    output = new ofstream(cpt_file.c_str());
+    ofstream outstream(cpt_file.c_str());
     time_t t = time(NULL);
-    *output << "// checkpoint generated: " << ctime(&t);
+    outstream << "// checkpoint generated: " << ctime(&t);
 
-    serlist_t list;
-
-    add_objects();
-    while (!objects.empty()) {
-        Serializeable *obj = objects.front();
-        DPRINTF(Serialize, "Serializing %s\n", obj->name());
-        obj->nameOut(out());
-        obj->serialize(out());
-        objects.pop_front();
-        list.push_back(obj);
-    }
-
-    while (!list.empty()) {
-        list.front()->serialized = false;
-        list.pop_front();
-    }
-
-    Serializeable::serializer = NULL;
-
-    delete output;
-    output = NULL;
+    globals.serialize(outstream);
+    SimObject::serializeAll(outstream);
 }
+
+
+void
+Serializable::unserializeGlobals(Checkpoint *cp)
+{
+    globals.unserialize(cp);
+}
+
 
 class SerializeEvent : public Event
 {
@@ -303,8 +268,7 @@ SerializeEvent::SerializeEvent(Tick _when, Tick _repeat)
 void
 SerializeEvent::process()
 {
-    Serializer serial;
-    serial.serialize();
+    Serializable::serializeAll();
     if (repeat)
         schedule(curTick + repeat);
 }
@@ -374,8 +338,7 @@ SerializeParamContext::checkParams()
 void
 debug_serialize()
 {
-    Serializer serial;
-    serial.serialize();
+    Serializable::serializeAll();
 }
 
 void
@@ -386,22 +349,22 @@ debug_serialize(Tick when)
 
 ////////////////////////////////////////////////////////////////////////
 //
-// SerializeableClass member definitions
+// SerializableClass member definitions
 //
 ////////////////////////////////////////////////////////////////////////
 
-// Map of class names to SerializeableBuilder creation functions.
+// Map of class names to SerializableBuilder creation functions.
 // Need to make this a pointer so we can force initialization on the
-// first reference; otherwise, some SerializeableClass constructors
+// first reference; otherwise, some SerializableClass constructors
 // may be invoked before the classMap constructor.
-map<string,SerializeableClass::CreateFunc> *SerializeableClass::classMap = 0;
+map<string,SerializableClass::CreateFunc> *SerializableClass::classMap = 0;
 
-// SerializeableClass constructor: add mapping to classMap
-SerializeableClass::SerializeableClass(const string &className,
+// SerializableClass constructor: add mapping to classMap
+SerializableClass::SerializableClass(const string &className,
                                        CreateFunc createFunc)
 {
     if (classMap == NULL)
-        classMap = new map<string,SerializeableClass::CreateFunc>();
+        classMap = new map<string,SerializableClass::CreateFunc>();
 
     if ((*classMap)[className])
     {
@@ -417,25 +380,25 @@ SerializeableClass::SerializeableClass(const string &className,
 
 //
 //
-Serializeable *
-SerializeableClass::createObject(Checkpoint *cp,
+Serializable *
+SerializableClass::createObject(Checkpoint *cp,
                                  const std::string &section)
 {
     string className;
 
     if (!cp->find(section, "type", className)) {
-        fatal("Serializeable::create: no 'type' entry in section '%s'.\n",
+        fatal("Serializable::create: no 'type' entry in section '%s'.\n",
               section);
     }
 
     CreateFunc createFunc = (*classMap)[className];
 
     if (createFunc == NULL) {
-        fatal("Serializeable::create: no create function for class '%s'.\n",
+        fatal("Serializable::create: no create function for class '%s'.\n",
               className);
     }
 
-    Serializeable *object = createFunc(cp, section);
+    Serializable *object = createFunc(cp, section);
 
     assert(object != NULL);
 
@@ -443,10 +406,10 @@ SerializeableClass::createObject(Checkpoint *cp,
 }
 
 
-Serializeable *
-Serializeable::create(Checkpoint *cp, const std::string &section)
+Serializable *
+Serializable::create(Checkpoint *cp, const std::string &section)
 {
-    Serializeable *object = SerializeableClass::createObject(cp, section);
+    Serializable *object = SerializableClass::createObject(cp, section);
     object->unserialize(cp, section);
     return object;
 }
@@ -459,8 +422,6 @@ Checkpoint::Checkpoint(const std::string &filename, const std::string &path,
     if (!db->load(filename)) {
         fatal("Can't load checkpoint file '%s'\n", filename);
     }
-
-    mainEventQueue.unserialize(this, "MainEventQueue");
 }
 
 
@@ -474,7 +435,7 @@ Checkpoint::find(const std::string &section, const std::string &entry,
 
 bool
 Checkpoint::findObj(const std::string &section, const std::string &entry,
-                    Serializeable *&value)
+                    Serializable *&value)
 {
     string path;
 

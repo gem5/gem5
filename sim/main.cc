@@ -389,6 +389,9 @@ main(int argc, char **argv)
     // Check to make sure that the stats package is properly initialized
     Statistics::check();
 
+    // Reset to put the stats in a consistent state.
+    Statistics::reset();
+
     // Nothing to simulate if we don't have at least one CPU somewhere.
     if (BaseCPU::numSimulatedCPUs() == 0) {
         cerr << "Fatal: no CPUs to simulate." << endl;
@@ -437,7 +440,7 @@ main(int argc, char **argv)
     // simulation to terminate (hit max cycles/insts, signal,
     // simulated system halts/exits) generates an exit event, so we
     // should never run out of events on the queue.
-    exitNow("improperly exited event loop!", 1);
+    exitNow("no events on event loop!  All CPUs must be idle.", 1);
 
     return 0;
 }
