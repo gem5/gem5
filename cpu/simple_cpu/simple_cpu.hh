@@ -68,12 +68,11 @@ class SimpleCPU : public BaseCPU
     void tick();
 
   private:
-    class TickEvent : public Event
+    struct TickEvent : public Event
     {
-      private:
         SimpleCPU *cpu;
+        int multiplier;
 
-      public:
         TickEvent(SimpleCPU *c);
         void process();
         const char *description();
@@ -95,6 +94,12 @@ class SimpleCPU : public BaseCPU
     {
         if (tickEvent.scheduled())
             tickEvent.squash();
+    }
+
+  public:
+    void setTickMultiplier(int multiplier)
+    {
+        tickEvent.multiplier = multiplier;
     }
 
   private:
