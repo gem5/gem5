@@ -1780,7 +1780,8 @@ NSGigE::txKick()
                         udpChecksum(txPacket, true);
                     } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
                         tcpChecksum(txPacket, true);
-                    } else if (txDescCache.extsts & EXTSTS_IPPKT) {
+                    }
+                    if (txDescCache.extsts & EXTSTS_IPPKT) {
                         ipChecksum(txPacket, true);
                     }
                 }
@@ -2043,15 +2044,25 @@ NSGigE::tcpChecksum(PacketPtr packet, bool gen)
     ip_header *ip = packet->getIpHdr();
     tcp_header *hdr = packet->getTcpHdr(ip);
 
+    uint16_t cksum;
     pseudo_header *pseudo = new pseudo_header;
+    if (!gen) {
+        pseudo->src_ip_addr = ip->src_ip_addr;
+        pseudo->dest_ip_addr = ip->dest_ip_addr;
+        pseudo->protocol = reverseEnd16(ip->protocol);
+        pseudo->len = reverseEnd16(reverseEnd16(ip->dgram_len) - (ip->vers_len & 0xf)*4);
 
-    pseudo->src_ip_addr = ip->src_ip_addr;
-    pseudo->dest_ip_addr = ip->dest_ip_addr;
-    pseudo->protocol = reverseEnd16(ip->protocol);
-    pseudo->len = reverseEnd16(reverseEnd16(ip->dgram_len) - (ip->vers_len & 0xf)*4);
-
-    uint16_t cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
+        cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
                                   (uint32_t) reverseEnd16(pseudo->len));
+    } else {
+        pseudo->src_ip_addr = 0;
+        pseudo->dest_ip_addr = 0;
+        pseudo->protocol = hdr->chksum;
+        pseudo->len = 0;
+        hdr->chksum = 0;
+        cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
+                             (uint32_t) (reverseEnd16(ip->dgram_len) - (ip->vers_len & 0xf)*4));
+    }
 
     delete pseudo;
     if (gen)
@@ -2071,7 +2082,7 @@ NSGigE::ipChecksum(PacketPtr packet, bool gen)
     uint16_t cksum = checksumCalc(NULL, (uint16_t *) hdr, (hdr->vers_len & 0xf)*4);
 
     if (gen) {
-        DPRINTF(Ethernet, "generated checksum: %#x\n", cksum);
+        DPRINTF(EthernetCksum, "generated checksum: %#x\n", cksum);
         hdr->hdr_chksum = cksum;
     }
     else
