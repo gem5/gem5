@@ -28,12 +28,11 @@ let {{
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/static_inst.hh"
 #include "sim/annotation.hh"
-#include "sim/serialize.hh"
-#include "sim/sim_events.hh"
-#include "sim/sim_stats.hh"
+#include "sim/sim_exit.hh"
 
 #ifdef FULL_SYSTEM
-#include "targetarch/ev5.hh"
+#include "arch/alpha/ev5.hh"
+#include "arch/alpha/pseudo_inst.hh"
 #endif
 
 namespace AlphaISA;
@@ -2429,62 +2428,28 @@ decode OPCODE default Unknown::unknown() {
 	    }}, No_OpClass);
 	    0x20: m5exit_old({{
 		if (!xc->misspeculating())
-		    SimExit(curTick, "m5_exit_old instruction encountered");
+		    AlphaPseudo::m5exit_old(xc);
 	    }}, No_OpClass);
 	    0x21: m5exit({{
-		if (!xc->misspeculating()) {
-		    Tick delay = xc->regs.intRegFile[16];
-		    Tick when = curTick + NS2Ticks(delay);
-		    SimExit(when, "m5_exit instruction encountered");
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::m5exit(xc);
 	    }}, No_OpClass);
             0x30: initparam({{ Ra = xc->cpu->system->init_param; }});
             0x40: resetstats({{
-		if (!xc->misspeculating()) {
-		    using namespace Statistics;
-		    Tick delay = xc->regs.intRegFile[16];
-		    Tick period = xc->regs.intRegFile[17];
-
-		    Tick when = curTick + NS2Ticks(delay);
-		    Tick repeat = NS2Ticks(period);
-
-		    SetupEvent(Reset, when, repeat);
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::resetstats(xc);
 	    }});
             0x41: dumpstats({{
-		if (!xc->misspeculating()) {
-		    using namespace Statistics;
-		    Tick delay = xc->regs.intRegFile[16];
-		    Tick period = xc->regs.intRegFile[17];
-
-		    Tick when = curTick + NS2Ticks(delay);
-		    Tick repeat = NS2Ticks(period);
-
-		    SetupEvent(Dump, when, repeat);
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::dumpstats(xc);
 	    }});
             0x42: dumpresetstats({{
-		if (!xc->misspeculating()) {
-		    using namespace Statistics;
-		    Tick delay = xc->regs.intRegFile[16];
-		    Tick period = xc->regs.intRegFile[17];
-
-		    Tick when = curTick + NS2Ticks(delay);
-		    Tick repeat = NS2Ticks(period);
-
-		    SetupEvent(Dump|Reset, when, repeat);
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::dumpresetstats(xc);
 	    }});
             0x43: m5checkpoint({{
-		if (!xc->misspeculating()) {
-		    Tick delay = xc->regs.intRegFile[16];
-		    Tick period = xc->regs.intRegFile[17];
-
-		    Tick when = curTick + NS2Ticks(delay);
-		    Tick repeat = NS2Ticks(period);
-
-		    SetupCheckpoint(when, repeat);
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::m5checkpoint(xc);
 	    }});
 	}
     }
