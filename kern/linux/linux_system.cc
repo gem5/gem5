@@ -141,7 +141,7 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
             physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (est_cycle_frequency)
-            *(uint64_t *)est_cycle_frequency = ticksPerSecond;
+            *(uint64_t *)est_cycle_frequency = htoa(ticksPerSecond);
     }
 
 
@@ -179,8 +179,8 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
         char *hwprb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (hwprb) {
-            *(uint64_t*)(hwprb+0x50) = 34;      // Tsunami
-            *(uint64_t*)(hwprb+0x58) = (1<<10); // Plain DP264
+            *(uint64_t*)(hwprb+0x50) = htoa(ULL(34));      // Tsunami
+            *(uint64_t*)(hwprb+0x58) = htoa(ULL(1)<<10); // Plain DP264
         }
         else
             panic("could not translate hwprb addr to set system type/variation\n");

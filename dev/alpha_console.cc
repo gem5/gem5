@@ -80,6 +80,16 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->cpuClock = cpu->getFreq() / 1000000;
         alphaAccess->intrClockFrequency = platform->intrFrequency();
     alphaAccess->diskUnit = 1;
+
+    alphaAccess->diskCount = 0;
+    alphaAccess->diskPAddr = 0;
+    alphaAccess->diskBlock = 0;
+    alphaAccess->diskOperation = 0;
+    alphaAccess->outputChar = 0;
+    alphaAccess->inputChar = 0;
+    alphaAccess->bootStrapImpure = 0;
+    alphaAccess->bootStrapCPU = 0;
+    alphaAccess->align2 = 0;
 }
 
 Fault

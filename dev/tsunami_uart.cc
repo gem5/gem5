@@ -214,7 +214,7 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
 
       case 0x0: // Data register (TX)
         char ourchar;
-        ourchar = *(uint64_t *)data;
+        ourchar = *(uint8_t *)data;
         if ((isprint(ourchar) || iscntrl(ourchar)) && (ourchar != 0x0C))
                 cons->out(ourchar);
         cons->clearInt(CONS_INT_TX);

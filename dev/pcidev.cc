@@ -75,7 +75,8 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
 {
     switch(size) {
       case sizeof(uint32_t):
-        memcpy((uint32_t*)data, config.data + offset, sizeof(uint32_t));
+        memcpy((uint8_t*)data, config.data + offset, sizeof(uint32_t));
+        *(uint32_t*)data = htoa(*(uint32_t*)data);
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
                 deviceNum, functionNum, offset, size,
@@ -83,7 +84,8 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
         break;
 
       case sizeof(uint16_t):
-        memcpy((uint16_t*)data, config.data + offset, sizeof(uint16_t));
+        memcpy((uint8_t*)data, config.data + offset, sizeof(uint16_t));
+        *(uint16_t*)data = htoa(*(uint16_t*)data);
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
                 deviceNum, functionNum, offset, size,
@@ -282,18 +284,18 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
 
-    Param<int> VendorID;
-    Param<int> DeviceID;
-    Param<int> Command;
-    Param<int> Status;
-    Param<int> Revision;
-    Param<int> ProgIF;
-    Param<int> SubClassCode;
-    Param<int> ClassCode;
-    Param<int> CacheLineSize;
-    Param<int> LatencyTimer;
-    Param<int> HeaderType;
-    Param<int> BIST;
+    Param<uint16_t> VendorID;
+    Param<uint16_t> DeviceID;
+    Param<uint16_t> Command;
+    Param<uint16_t> Status;
+    Param<uint8_t> Revision;
+    Param<uint8_t> ProgIF;
+    Param<uint8_t> SubClassCode;
+    Param<uint8_t> ClassCode;
+    Param<uint8_t> CacheLineSize;
+    Param<uint8_t> LatencyTimer;
+    Param<uint8_t> HeaderType;
+    Param<uint8_t> BIST;
     Param<uint32_t> BAR0;
     Param<uint32_t> BAR1;
     Param<uint32_t> BAR2;
@@ -301,13 +303,13 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
     Param<uint32_t> BAR4;
     Param<uint32_t> BAR5;
     Param<uint32_t> CardbusCIS;
-    Param<int> SubsystemVendorID;
-    Param<int> SubsystemID;
+    Param<uint16_t> SubsystemVendorID;
+    Param<uint16_t> SubsystemID;
     Param<uint32_t> ExpansionROM;
-    Param<int> InterruptLine;
-    Param<int> InterruptPin;
-    Param<int> MinimumGrant;
-    Param<int> MaximumLatency;
+    Param<uint8_t> InterruptLine;
+    Param<uint8_t> InterruptPin;
+    Param<uint8_t> MinimumGrant;
+    Param<uint8_t> MaximumLatency;
     Param<uint32_t> BAR0Size;
     Param<uint32_t> BAR1Size;
     Param<uint32_t> BAR2Size;
@@ -358,33 +360,33 @@ CREATE_SIM_OBJECT(PciConfigData)
 {
     PciConfigData *data = new PciConfigData(getInstanceName());
 
-    data->config.hdr.vendor = VendorID;
-    data->config.hdr.device = DeviceID;
-    data->config.hdr.command = Command;
-    data->config.hdr.status = Status;
-    data->config.hdr.revision = Revision;
-    data->config.hdr.progIF = ProgIF;
-    data->config.hdr.subClassCode = SubClassCode;
-    data->config.hdr.classCode = ClassCode;
-    data->config.hdr.cacheLineSize = CacheLineSize;
-    data->config.hdr.latencyTimer = LatencyTimer;
-    data->config.hdr.headerType = HeaderType;
-    data->config.hdr.bist = BIST;
+    data->config.hdr.vendor = htoa(VendorID);
+    data->config.hdr.device = htoa(DeviceID);
+    data->config.hdr.command = htoa(Command);
+    data->config.hdr.status = htoa(Status);
+    data->config.hdr.revision = htoa(Revision);
+    data->config.hdr.progIF = htoa(ProgIF);
+    data->config.hdr.subClassCode = htoa(SubClassCode);
+    data->config.hdr.classCode = htoa(ClassCode);
+    data->config.hdr.cacheLineSize = htoa(CacheLineSize);
+    data->config.hdr.latencyTimer = htoa(LatencyTimer);
+    data->config.hdr.headerType = htoa(HeaderType);
+    data->config.hdr.bist = htoa(BIST);
 
-    data->config.hdr.pci0.baseAddr0 = BAR0;
-    data->config.hdr.pci0.baseAddr1 = BAR1;
-    data->config.hdr.pci0.baseAddr2 = BAR2;
-    data->config.hdr.pci0.baseAddr3 = BAR3;
-    data->config.hdr.pci0.baseAddr4 = BAR4;
-    data->config.hdr.pci0.baseAddr5 = BAR5;
-    data->config.hdr.pci0.cardbusCIS = CardbusCIS;
-    data->config.hdr.pci0.subsystemVendorID = SubsystemVendorID;
-    data->config.hdr.pci0.subsystemID = SubsystemVendorID;
-    data->config.hdr.pci0.expansionROM = ExpansionROM;
-    data->config.hdr.pci0.interruptLine = InterruptLine;
-    data->config.hdr.pci0.interruptPin = InterruptPin;
-    data->config.hdr.pci0.minimumGrant = MinimumGrant;
-    data->config.hdr.pci0.maximumLatency = MaximumLatency;
+    data->config.hdr.pci0.baseAddr0 = htoa(BAR0);
+    data->config.hdr.pci0.baseAddr1 = htoa(BAR1);
+    data->config.hdr.pci0.baseAddr2 = htoa(BAR2);
+    data->config.hdr.pci0.baseAddr3 = htoa(BAR3);
+    data->config.hdr.pci0.baseAddr4 = htoa(BAR4);
+    data->config.hdr.pci0.baseAddr5 = htoa(BAR5);
+    data->config.hdr.pci0.cardbusCIS = htoa(CardbusCIS);
+    data->config.hdr.pci0.subsystemVendorID = htoa(SubsystemVendorID);
+    data->config.hdr.pci0.subsystemID = htoa(SubsystemVendorID);
+    data->config.hdr.pci0.expansionROM = htoa(ExpansionROM);
+    data->config.hdr.pci0.interruptLine = htoa(InterruptLine);
+    data->config.hdr.pci0.interruptPin = htoa(InterruptPin);
+    data->config.hdr.pci0.minimumGrant = htoa(MinimumGrant);
+    data->config.hdr.pci0.maximumLatency = htoa(MaximumLatency);
 
     data->BARSize[0] = BAR0Size;
     data->BARSize[1] = BAR1Size;
