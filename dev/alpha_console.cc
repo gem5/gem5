@@ -139,7 +139,7 @@ AlphaConsole::write(MemReqPtr req, const uint8_t *data)
     }
 
     if (paddr == offsetof(AlphaAccess, outputChar)) {
-        console->simple((char)(val & 0xff));
+        console->out((char)(val & 0xff), false);
         return No_Fault;
     }
 

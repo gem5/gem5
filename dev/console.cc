@@ -1,4 +1,30 @@
-/* $Id$ */
+/*
+ * Copyright (c) 2003 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /* @file
  * User Console Definitions
@@ -26,15 +52,6 @@
 
 using namespace std;
 
-// check whether an int is pending
-inline bool
-IntPending(int status, int mask)
-{ return (status & mask) != 0; }
-
-inline bool
-IntTransition(int ostaus, int omask, int nstatus, int nmask)
-{ return IntPending(ostaus, omask) != IntPending(nstatus, nmask); }
-
 ////////////////////////////////////////////////////////////////////////
 //
 //
@@ -56,7 +73,7 @@ SimConsole::Event::process(int revent)
 SimConsole::SimConsole(const string &name, const string &file, int num)
     : SimObject(name), event(NULL), number(num), in_fd(-1), out_fd(-1),
       listener(NULL), txbuf(16384), rxbuf(16384), outfile(NULL),
-      intr_status(0), intr_enable(0), intr(NULL)
+      _status(0), _enable(0), intr(NULL)
 {
     if (!file.empty())
         outfile = new ofstream(file.c_str());
@@ -182,13 +199,6 @@ SimConsole::write(const uint8_t *buf, size_t len)
     return ret;
 }
 
-///////////////////////////////////////////////////////////////////////
-// ConfigureTerm turns off all character processing by the host OS so
-// the launched OS can control it.
-//
-// We ignore anything except stdin; the sconsole program runs this
-// same code on the ttys for the slave consoles before connecting.
-//
 void
 SimConsole::configTerm()
 {
@@ -210,18 +220,6 @@ SimConsole::configTerm()
     }
 }
 
-
-///////////////////////////////////////////////////////////////////////
-// console i/o
-//
-
-///////////////////////////////////////////////////////////////////////
-//
-// Console input.
-// Returns -1 if there is no character pending, otherwise returns the
-// char. Calling this function clears the input int (if no further
-// chars are pending).
-//
 int
 SimConsole::in()
 {
@@ -234,21 +232,13 @@ SimConsole::in()
     rxbuf.read(&c, 1);
 
     DPRINTF(Console, "in: \'%c\' %#02x status: %#x\n",
-            isprint(c) ? c : ' ', c, intr_status);
+            isprint(c) ? c : ' ', c, _status);
 
     return c;
 }
 
-///////////////////////////////////////////////////////////////////////
-//
-// Console output.
-// NOTE: this very rudimentary device generates a TX int as soon as
-// a character is output, since it has unlimited TX buffer capacity.
-//
-// Console output.
-// Uses sim_console_out to perform functionality similar to 'write'
 void
-SimConsole::out(char c)
+SimConsole::out(char c, bool raise_int)
 {
     txbuf.write(c);
 
@@ -258,59 +248,39 @@ SimConsole::out(char c)
     if (outfile)
         outfile->write(&c, 1);
 
-    raiseInt(TransmitInterrupt);
+    if (raise_int)
+        raiseInt(TransmitInterrupt);
 
-    DPRINTF(Console, "out: \'%c\' %#02x status: %#x\n",
-            isprint(c) ? c : ' ', (int)c, intr_status);
-}
-
-// Simple console output used by Alpha firmware (not by the OS) -
-// outputs the character to console n, and doesn't raise any
-// interrupts
-void
-SimConsole::simple(char c)
-{
-    txbuf.write(c);
-
-    if (out_fd >= 0)
-        write(c);
-
-    if (outfile)
-        outfile->write(&c, 1);
-
-    DPRINTF(Console, "simple char: \'%c\' %#02x\n",
+    DPRINTF(Console, "out: \'%c\' %#02x",
             isprint(c) ? c : ' ', (int)c);
+
+    if (raise_int)
+        DPRINTF(Console, "status: %#x\n", _status);
+    else
+        DPRINTF(Console, "\n");
 }
 
-// Read the current interrupt status of this console.
-int
-SimConsole::intStatus()
-{
-#if 0
-    DPRINTF(Console, "interrupt %d status: %#x\n",
-            number, intr_status);
-#endif
-
-    return intr_status;
-}
+inline bool
+MaskStatus(int status, int mask)
+{ return (status & mask) != 0; }
 
 int
 SimConsole::clearInt(int i)
 {
-    int old_status = intr_status;
-    intr_status &= ~i;
-    if (IntTransition(old_status, intr_enable, intr_status, intr_enable) &&
-        intr)
+    int old = _status;
+    _status &= ~i;
+    if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
         intr->clear(TheISA::INTLEVEL_IRQ0);
-    return old_status;
+
+    return old;
 }
 
 void
 SimConsole::raiseInt(int i)
 {
-    int old = intr_status;
-    intr_status |= i;
-    if (IntTransition(old, intr_enable, intr_status, intr_enable) && intr)
+    int old = _status;
+    _status |= i;
+    if (MaskStatus(old, _enable) != MaskStatus(_status, _enable) && intr)
         intr->post(TheISA::INTLEVEL_IRQ0);
 }
 
@@ -320,27 +290,22 @@ SimConsole::initInt(IntrControl *i)
     if (intr)
         panic("Console has already been initialized.");
 
-    // note: intr_status and intr_enable will normally be 0, since
-    // cs is statically allocated. When restoring from a checkpoint,
-    // these fields will be set, so don't touch them here.
-    intr = i; // interrupt handler
+    intr = i;
 }
 
-// Set the interrupt enable bits.
 void
 SimConsole::setInt(int bits)
 {
-    int old_enable;
+    int old;
 
     if (bits & ~(TransmitInterrupt | ReceiveInterrupt))
         panic("An interrupt was not set!");
 
-    old_enable = intr_enable;
-    intr_enable |= bits;
+    old = _enable;
+    _enable |= bits;
 
-    if (IntTransition(intr_status, old_enable, intr_status, intr_enable) &&
-        intr) {
-        if (IntPending(intr_status, intr_enable))
+    if (MaskStatus(_status, old) != MaskStatus(_status, _enable) && intr) {
+        if (MaskStatus(_status, _enable))
             intr->post(TheISA::INTLEVEL_IRQ0);
         else
             intr->clear(TheISA::INTLEVEL_IRQ0);
@@ -356,7 +321,7 @@ SimConsole::serialize()
 
 void
 SimConsole::unserialize(IniFile &db, const std::string &category,
-                             ConfigNode *node)
+                        ConfigNode *node)
 {
     panic("Unimplemented");
 }
