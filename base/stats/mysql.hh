@@ -29,15 +29,17 @@
 #ifndef __BASE_STATS_MYSQL_HH__
 #define __BASE_STATS_MYSQL_HH__
 
+#include <map>
 #include <string>
 
 #include "base/stats/output.hh"
 
-namespace MySQL { class Connection; }
 namespace Stats {
 
 class DistDataData;
-class MySqlData;
+class MySqlRun;
+bool MySqlConnected();
+extern MySqlRun MySqlDB;
 
 struct SetupStat
 {
@@ -58,7 +60,7 @@ struct SetupStat
     uint16_t size;
 
     void init();
-    unsigned operator()(MySqlData *data);
+    unsigned setup();
 };
 
 class InsertData
@@ -70,14 +72,13 @@ class InsertData
     static const int maxsize = 1024*1024;
 
   public:
-    MySQL::Connection *mysql;
+    MySqlRun *run;
 
   public:
     uint64_t sample;
     double data;
     uint16_t stat;
     uint16_t bin;
-    uint16_t run;
     int16_t x;
     int16_t y;
 
@@ -92,25 +93,28 @@ class InsertData
 class MySql : public Output
 {
   protected:
-    std::list<FormulaData *> formulas;
-    MySqlData *mysql;
-    bool configured;
-    uint16_t run_id;
-
     SetupStat stat;
     InsertData newdata;
+    std::list<FormulaData *> formulas;
+    bool configured;
 
-    void insert(int sim_id, int db_id);
-    int find(int sim_id);
+  protected:
+    std::map<int, int> idmap;
 
+    void insert(int sim_id, int db_id)
+    {
+        using namespace std;
+        idmap.insert(make_pair(sim_id, db_id));
+    }
+
+    int find(int sim_id)
+    {
+        using namespace std;
+        map<int,int>::const_iterator i = idmap.find(sim_id);
+        assert(i != idmap.end());
+        return (*i).second;
+    }
   public:
-    MySql();
-    ~MySql();
-
-    void connect(const std::string &host, const std::string &user,
-                 const std::string &passwd, const std::string &db,
-                 const std::string &name, const std::string &project);
-
     // Implement Visit
     virtual void visit(const ScalarData &data);
     virtual void visit(const VectorData &data);
