@@ -27,7 +27,6 @@ typedef unsigned int uint32;
 #include "rpb.h"
 #include "cserve.h"
 
-
 #define CONS_INT_TX   0x01  /* interrupt enable / state bits */
 #define CONS_INT_RX   0x02
 
@@ -206,8 +205,8 @@ struct rpb xxm_rpb = {
 #if 0
    0x12,		/* 050: system type - masquarade as some random 21064 */
 #endif
-   12, /* masquerade a DEC_3000_500 (bugnion) */
-   (2<<1),		/* 058: system variation */
+   34, /* masquerade a Tsunami RGD */
+   (1<<10),		/* 058: system variation */
    'c'|('o'<<8)|('o'<<16)|('l'<< 24),		/* 060: system revision */
    1024*4096,		/* 068: scaled interval clock intr freq  OVERRIDEN*/
    0,			/* 070: cycle counter frequency */
@@ -1184,7 +1183,23 @@ CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
 
 long CallBackFixup(int a0, int a1, int a2)
 {
-   printf("CallbackFixup %x %x \n",a0,a1);
+   long temp;
+   /* Linux uses r8 for the current pointer (pointer to data structure
+      contating info about currently running process). It is set when the
+      kernel starts and is expected to remain there... Problem is that the
+      unlike the kernel, the console does not prevent the assembler from
+      using r8. So here is a work around. So far this has only been a problem
+      in CallBackFixup() but any other call back functions could cause a problem
+      at some point */
+
+   /* save off the current pointer to a temp variable */
+   asm("bis $8, $31, %0" : "=r" (temp));
+
+   /* call original code */
+   printf("CallbackFixup %x %x, t7=%x\n",a0,a1,temp);
+
+   /* restore the current pointer */
+   asm("bis %0, $31, $8" : : "r" (temp) : "$8");
 
 #if 0
   if (first[FIRST(a1)]==0) {

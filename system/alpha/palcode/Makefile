@@ -11,9 +11,10 @@ CFLAGS=-I . -E -P -D SIMOS -D BUILD_PALCODE -nostdinc -nostdinc++ -x c++
 GASFLAGS=-m21164
 LDFLAGS=-Ttext 0x4000
 
-SOURCES=osfpal.s platform_tlaser.s
+SOURCES=osfpal.s platform_tlaser.s platform_m5.s
 PREPROC := $(SOURCES:.s=.i)
-OBJS := $(SOURCES:.s=.o)
+TLOBJS = osfpal.o platform_tlaser.o
+TSOBJS = osfpal.o platform_m5.o
     
 %.i: %.s
 	$(CC) $(CFLAGS) $< > $@
@@ -21,9 +22,14 @@ OBJS := $(SOURCES:.s=.o)
 %.o: %.i
 	$(GAS) $(GASFLAGS) -o $@ $< 
 
+all: tlaser tsunami
+        
+tlaser: $(PREPROC) $(TLOBJS)
+	$(LD) $(LDFLAGS) -o tl_osfpal $(TLOBJS) 
 
-all: $(PREPROC) $(OBJS)
-	$(LD) $(LDFLAGS) -o osfpal $(OBJS) 
+tsunami: $(PREPROC) $(TSOBJS)
+	$(LD) $(LDFLAGS) -o ts_osfpal $(TSOBJS) 
 
 clean:
 	rm -f *.o *.i osfpal
+ 
