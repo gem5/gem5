@@ -26,10 +26,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import getopt, os, os.path, sys
+from os.path import join as joinpath, realpath
 
-sys.path.append('..')
-sys.path.append('../configs/kernel')
-sys.path.append('../sim/pyconfig')
+mypath = sys.path[0]
+sys.path.append(joinpath(mypath, '..'))
+sys.path.append(joinpath(mypath, '../configs/kernel'))
+sys.path.append(joinpath(mypath, '../sim/pyconfig'))
 
 from importer import mpy_exec, mpy_execfile, AddToPath
 from m5config import *
