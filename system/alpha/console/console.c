@@ -15,7 +15,6 @@ typedef unsigned int uint32;
 
 #define CONSOLE
 #include "alpha_access.h"
-#include "machine_defs.h"
 
 #if 0
 #include "new_aouthdr.h"
@@ -34,8 +33,7 @@ typedef unsigned int uint32;
 #define K1BASE 0xfffffc8000000000
 #define KSEG_TO_PHYS(x)(((ul)x) & ~KSEG)
 
-#define CDR ((volatile DevConsoleRegisters *) \
-             (__MAGIC_ZONE(0, 0, MAGIC_ZONE_BDOOR_DEV) + __MAGIC_BDOOR_CNSLE_OFFS))
+#define ALPHA_ACCESS_BASE 0xfffffc8000a00000
 
 
 #define PHYS_TO_K1(_x) (K1BASE|(_x))
@@ -118,7 +116,7 @@ void InitConsole(void)
 
 char GetChar()
 {
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
    return k1Conf->inputChar;
 }
 
@@ -130,7 +128,7 @@ void PutChar(char c)
 #if 0
    *(int*) PHYS_TO_K1(SLOT_D_COM1<<5) = c;
 #endif
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
    k1Conf->outputChar = c;
 
 }
@@ -144,7 +142,7 @@ int
 main(int argc, char **argv)
 {
    int x,i;
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
    ui *k1ptr,*ksegptr;
 
 
@@ -828,7 +826,7 @@ unixBoot(int go, int argc, char **argv)
      int i;
      for (i=1;i<simosConf.numCPUs;i++) {
         volatile struct AlphaAccess *k1Conf = (volatile struct AlphaAccess *)
-           (__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+           (ALPHA_ACCESS_BASE);
         SpinLock(&theLock);
         printf("Bootstraping CPU %d with sp=0x%x \n",
                i,bootStrapImpure[i]);
@@ -970,7 +968,7 @@ void
 DeviceOperation(long op, long channel, long count, long address, long block)
 {
    struct AlphaAccess *k1Conf = (struct AlphaAccess *)
-      (__MAGIC_ZONE(0, 0, MAGIC_ZONE_EV5_ALIAS));
+      (ALPHA_ACCESS_BASE);
 
    long pAddr;
 
