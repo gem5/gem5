@@ -36,13 +36,15 @@ TsunamiUart::TsunamiUart(const string &name, SimConsole *c, Addr a,
     : FunctionalMemory(name), addr(a), cons(c), status_store(0),
       valid_char(false)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
+
     IER = 0;
 }
 
 Fault
 TsunamiUart::read(MemReqPtr &req, uint8_t *data)
 {
-    Addr daddr = req->paddr & size;
+    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
     DPRINTF(TsunamiUart, " read register %#x\n", daddr);
 
     switch (req->size) {
@@ -61,7 +63,7 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
     }
 
     switch (daddr) {
-      case 0xD: // Status Register
+      case 0x5: // Status Register
         {
             int status = cons->intStatus();
             if (!valid_char) {
@@ -95,7 +97,7 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
             break;
         }
 
-      case 0x8: // Data register (RX)
+      case 0x0: // Data register (RX)
 //	if (!valid_char)
 //	    panic("Invalid character");
 
@@ -106,7 +108,7 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
         valid_char = false;
         return No_Fault;
 
-      case 0x9: // Interrupt Enable Register
+      case 0x1: // Interrupt Enable Register
         // This is the lovely way linux checks there is actually a serial
         // port at the desired address
         if (IER == 0)
@@ -116,7 +118,7 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
         else
             *data = 0;
         return No_Fault;
-      case 0xA:
+      case 0x2:
         //*data = 2<<6; // This means a 8250 serial port, do we want a 16550?
         *data = 0; // This means a 8250 serial port, do we want a 16550?
         return No_Fault;
@@ -130,11 +132,11 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
 Fault
 TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
 {
-    Addr daddr = req->paddr & size;
+    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
 
     DPRINTF(TsunamiUart, " write register %#x value %#x\n", daddr, *(uint8_t*)data);
     switch (daddr) {
-      case 0xb:
+      case 0x3:
         status_store = *data;
         switch (*data) {
           case 0x03: // going to read RR3
@@ -161,14 +163,14 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
             return No_Fault;
         }
 
-      case 0x8: // Data register (TX)
+      case 0x0: // Data register (TX)
         cons->out(*(uint64_t *)data);
         return No_Fault;
-      case 0x9: // DLM
+      case 0x1: // DLM
         DPRINTF(TsunamiUart, "writing to DLM/IER %#x\n", *(uint8_t*)data);
         IER = *(uint8_t*)data;
         return No_Fault;
-      case 0xc: // MCR
+      case 0x4: // MCR
         DPRINTF(TsunamiUart, "writing to MCR %#x\n", *(uint8_t*)data);
         return No_Fault;
 

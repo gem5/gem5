@@ -44,7 +44,7 @@ class TsunamiUart : public FunctionalMemory
 {
   private:
     Addr addr;
-    static const Addr size = 0xf;
+    static const Addr size = 0x8;
 
   protected:
     SimConsole *cons;

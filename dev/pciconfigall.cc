@@ -68,7 +68,7 @@ PCIConfigAll::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(PCIConfigAll, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr & size);
+    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
@@ -112,7 +112,7 @@ PCIConfigAll::read(MemReqPtr &req, uint8_t *data)
 Fault
 PCIConfigAll::write(MemReqPtr &req, const uint8_t *data)
 {
-    Addr daddr = (req->paddr & size);
+    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;

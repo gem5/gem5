@@ -47,7 +47,7 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr & size) >> 6;
+    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
     ExecContext *xc = req->xc;
 
     switch (req->size) {
@@ -133,7 +133,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "write - va=%#x size=%d \n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr & size) >> 6;
+    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
 
     switch (req->size) {
 

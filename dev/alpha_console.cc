@@ -81,7 +81,7 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
     memset(data, 0, req->size);
     uint64_t val;
 
-    Addr daddr = req->paddr - addr;
+    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
 
     switch (daddr) {
       case offsetof(AlphaAccess, inputChar):
@@ -129,7 +129,7 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         return Machine_Check_Fault;
     }
 
-    Addr daddr = req->paddr - addr;
+    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
     ExecContext *other_xc;
 
     switch (daddr) {

@@ -153,7 +153,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
 
-    Addr daddr = (req->paddr & size);
+    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
 //    ExecContext *xc = req->xc;
 //    int cpuid = xc->cpu_id;
 
@@ -228,7 +228,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
 
-    Addr daddr = (req->paddr & size);
+    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK));
 
     switch(req->size) {
       case sizeof(uint8_t):
