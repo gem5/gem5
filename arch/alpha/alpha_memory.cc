@@ -68,24 +68,27 @@ AlphaTLB::~AlphaTLB()
 AlphaISA::PTE *
 AlphaTLB::lookup(Addr vpn, uint8_t asn) const
 {
-    DPRINTF(TLB, "lookup %#x, asn %#x\n", vpn, (int)asn);
+    // assume not found...
+    AlphaISA::PTE *retval = NULL;
 
     PageTable::const_iterator i = lookupTable.find(vpn);
-    if (i == lookupTable.end())
-        return NULL;
+    if (i != lookupTable.end()) {
+        while (i->first == vpn) {
+            int index = i->second;
+            AlphaISA::PTE *pte = &table[index];
+            assert(pte->valid);
+            if (vpn == pte->tag && (pte->asma || pte->asn == asn)) {
+                retval = pte;
+                break;
+            }
 
-    while (i->first == vpn) {
-        int index = i->second;
-        AlphaISA::PTE *pte = &table[index];
-        assert(pte->valid);
-        if (vpn == pte->tag && (pte->asma || pte->asn == asn))
-            return pte;
-
-        ++i;
+            ++i;
+        }
     }
 
-    // not found...
-    return NULL;
+    DPRINTF(TLB, "lookup %#x, asn %#x -> %s ppn %#x\n", vpn, (int)asn,
+            retval ? "hit" : "miss", retval ? retval->ppn : 0);
+    return retval;
 }
 
 

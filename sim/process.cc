@@ -287,7 +287,7 @@ LiveProcess::LiveProcess(const string &name, ObjectFile *objFile,
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
-    mmap_base = 0x10000;
+    mmap_start = mmap_end = 0x10000;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);

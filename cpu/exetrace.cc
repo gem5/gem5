@@ -154,7 +154,7 @@ class ExecutionTraceParamContext : public ParamContext
 ExecutionTraceParamContext exeTraceParams("exetrace");
 
 Param<bool> exe_trace_spec(&exeTraceParams, "speculative",
-                           "capture speculative instructions", false);
+                           "capture speculative instructions", true);
 
 Param<bool> exe_trace_print_cycle(&exeTraceParams, "print_cycle",
                                   "print cycle number", true);

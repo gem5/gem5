@@ -179,6 +179,9 @@ static const Addr PageOffset = PageBytes - 1;
 
     static StaticInstPtr<AlphaISA> decodeInst(MachInst);
 
+    // return a no-op instruction... used for instruction fetch faults
+    static const MachInst NoopMachInst;
+
     enum annotes {
         ANNOTE_NONE = 0,
         // An impossible number for instruction annotations

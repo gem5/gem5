@@ -410,8 +410,8 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 
     if (start == 0) {
         // user didn't give an address... pick one from our "mmap region"
-        start = p->mmap_base;
-        p->mmap_base += RoundUp<Addr>(length, VMPageSize);
+        start = p->mmap_end;
+        p->mmap_end += RoundUp<Addr>(length, VMPageSize);
     }
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {

@@ -93,7 +93,8 @@ class Process : public SimObject
     Addr next_thread_stack_base;
 
     // Base of region for mmaps (when user doesn't specify an address).
-    Addr mmap_base;
+    Addr mmap_start;
+    Addr mmap_end;
 
     std::string prog_fname;	// file name
     Addr prog_entry;		// entry point (initial PC)
@@ -158,7 +159,8 @@ class Process : public SimObject
     {
         return ((data_base <= addr && addr < brk_point) ||
                 ((stack_base - 16*1024*1024) <= addr && addr < stack_base) ||
-                (text_base <= addr && addr < (text_base + text_size)));
+                (text_base <= addr && addr < (text_base + text_size)) ||
+                (mmap_start <= addr && addr < mmap_end));
     }
 
     virtual void syscall(ExecContext *xc) = 0;

@@ -110,7 +110,7 @@ baseFlags = [
     'IICMore',
     'MSHR',
     'Chains',
-    'Dispatch',
+    'Pipeline',
     'Stats',
     'StatEvents',
     'Context',
