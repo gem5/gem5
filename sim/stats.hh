@@ -31,11 +31,7 @@
 
 #include "base/statistics.hh"
 
-extern Statistics::Formula simTicks;
 extern Statistics::Formula simSeconds;
-extern Statistics::Formula simInsts;
-extern Statistics::Formula hostSeconds;
-extern Statistics::Formula hostTickRate;
-extern Statistics::Formula hostInstRate;
+extern Statistics::Value simTicks;
 
 #endif // __SIM_SIM_STATS_HH__

@@ -32,18 +32,9 @@
 #include <string>
 
 #include "cpu/pc_event.hh"
+#include "kern/system_events.hh"
 
 class ExecContext;
-
-class System;
-
-class SkipFuncEvent : public PCEvent
-{
-  public:
-    SkipFuncEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
-    virtual void process(ExecContext *xc);
-};
 
 class BadAddrEvent : public SkipFuncEvent
 {
@@ -80,15 +71,4 @@ class DumpMbufEvent : public PCEvent
     virtual void process(ExecContext *xc);
 };
 
-class FnEvent : public PCEvent
-{
-  public:
-    FnEvent(PCEventQueue *q, const std::string &desc, System *system);
-    virtual void process(ExecContext *xc);
-    std::string myname() const { return _name; }
-
-  private:
-    std::string _name;
-    Statistics::MainBin *myBin;
-};
 #endif // __TRU64_EVENTS_HH__

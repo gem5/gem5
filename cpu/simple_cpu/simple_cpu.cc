@@ -50,7 +50,6 @@
 #include "cpu/static_inst.hh"
 #include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
-#include "sim/annotation.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
@@ -287,8 +286,6 @@ SimpleCPU::regStats()
         ;
 
     idleFraction = constant(1.0) - notIdleFraction;
-    numInsts = Statistics::scalar(numInst) - Statistics::scalar(startNumInst);
-    simInsts += numInsts;
 }
 
 void
@@ -581,7 +578,6 @@ SimpleCPU::post_interrupt(int int_num, int index)
     if (xc->status() == ExecContext::Suspended) {
                 DPRINTF(IPI,"Suspended Processor awoke\n");
         xc->activate();
-        Annotate::Resume(xc);
     }
 }
 #endif // FULL_SYSTEM
@@ -590,6 +586,8 @@ SimpleCPU::post_interrupt(int int_num, int index)
 void
 SimpleCPU::tick()
 {
+    numCycles++;
+
     traceData = NULL;
 
     Fault fault = No_Fault;
@@ -697,6 +695,7 @@ SimpleCPU::tick()
 
         // keep an instruction count
         numInst++;
+        numInsts++;
 
         // check for instruction-count-based events
         comInstEventQueue[0]->serviceEvents(numInst);

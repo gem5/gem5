@@ -1,39 +1,66 @@
 // -*- mode:c++ -*-
+
+////////////////////////////////////////////////////////////////////
 //
 // Alpha ISA description file.
 //
-
-let {{
-    global rcs_id
-    rcs_id = "$Id$"
-}};
+////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////////////////////////////////////
+//
+// Output include file directives.
+//
+
+output header {{
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+
+#include "cpu/static_inst.hh"
+#include "mem/mem_req.hh"  // some constructors use MemReq flags
+}};
+
+output decoder {{
+#include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
+#include "cpu/exec_context.hh"  // for Jump::branchTarget()
 
 #include <math.h>
 #if defined(linux)
 #include <fenv.h>
 #endif
+}};
 
-#include "base/cprintf.hh"
-#include "base/misc.hh"
-#include "cpu/exec_context.hh"
+output exec {{
+#include <math.h>
+#if defined(linux)
+#include <fenv.h>
+#endif
+
+#include "cpu/base_cpu.hh"
 #include "cpu/exetrace.hh"
-#include "cpu/full_cpu/dyn_inst.hh"
-#include "cpu/simple_cpu/simple_cpu.hh"
-#include "cpu/static_inst.hh"
-#include "sim/annotation.hh"
 #include "sim/sim_exit.hh"
 
 #ifdef FULL_SYSTEM
 #include "arch/alpha/ev5.hh"
 #include "arch/alpha/pseudo_inst.hh"
 #endif
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Namespace statement.  Everything below this line will be in the
+// AlphaISAInst namespace.
+//
+
 
 namespace AlphaISA;
+
+////////////////////////////////////////////////////////////////////
+//
+// Bitfield definitions.
+//
 
 // Universal (format-independent) fields
 def bitfield OPCODE	<31:26>;
@@ -93,70 +120,48 @@ def bitfield HW_IPR_IDX <15:0>;	 // IPR index
 // M5 instructions
 def bitfield M5FUNC <7:0>;
 
-let {{
-    global operandTypeMap
-    operandTypeMap = {
-	'sb' : ('signed int', 8),
-	'ub' : ('unsigned int', 8),
-	'sw' : ('signed int', 16),
-	'uw' : ('unsigned int', 16),
-	'sl' : ('signed int', 32),
-	'ul' : ('unsigned int', 32),
-	'sq' : ('signed int', 64),
-	'uq' : ('unsigned int', 64),
-	'sf' : ('float', 32),
-	'df' : ('float', 64)
-    }
-
-    global operandTraitsMap
-    operandTraitsMap = {
-	# Int regs default to unsigned, but code should not count on this.
-	# For clarity, descriptions that depend on unsigned behavior should
-	# explicitly specify '.uq'.
-	'Ra': IntRegOperandTraits('uq', 'RA', 'IsInteger', 1),
-	'Rb': IntRegOperandTraits('uq', 'RB', 'IsInteger', 2),
-	'Rc': IntRegOperandTraits('uq', 'RC', 'IsInteger', 3),
-	'Fa': FloatRegOperandTraits('df', 'FA', 'IsFloating', 1),
-	'Fb': FloatRegOperandTraits('df', 'FB', 'IsFloating', 2),
-	'Fc': FloatRegOperandTraits('df', 'FC', 'IsFloating', 3),
-	'Mem': MemOperandTraits('uq', None,
-				('IsMemRef', 'IsLoad', 'IsStore'), 4),
-	'NPC': NPCOperandTraits('uq', None, ( None, None, 'IsControl' ), 4),
-	'Runiq': ControlRegOperandTraits('uq', 'Uniq', None, 1),
-	'FPCR':  ControlRegOperandTraits('uq', 'Fpcr', None, 1),
-	# The next two are hacks for non-full-system call-pal emulation
-	'R0':  IntRegOperandTraits('uq', '0', None, 1),
-	'R16': IntRegOperandTraits('uq', '16', None, 1),
-    }
-
-    defineDerivedOperandVars()
+def operand_types {{
+    'sb' : ('signed int', 8),
+    'ub' : ('unsigned int', 8),
+    'sw' : ('signed int', 16),
+    'uw' : ('unsigned int', 16),
+    'sl' : ('signed int', 32),
+    'ul' : ('unsigned int', 32),
+    'sq' : ('signed int', 64),
+    'uq' : ('unsigned int', 64),
+    'sf' : ('float', 32),
+    'df' : ('float', 64)
 }};
 
-declare {{
-// just temporary, while comparing with old code for debugging
-// #define SS_COMPATIBLE_DISASSEMBLY
+def operands {{
+    # Int regs default to unsigned, but code should not count on this.
+    # For clarity, descriptions that depend on unsigned behavior should
+    # explicitly specify '.uq'.
+    'Ra': IntRegOperandTraits('uq', 'RA', 'IsInteger', 1),
+    'Rb': IntRegOperandTraits('uq', 'RB', 'IsInteger', 2),
+    'Rc': IntRegOperandTraits('uq', 'RC', 'IsInteger', 3),
+    'Fa': FloatRegOperandTraits('df', 'FA', 'IsFloating', 1),
+    'Fb': FloatRegOperandTraits('df', 'FB', 'IsFloating', 2),
+    'Fc': FloatRegOperandTraits('df', 'FC', 'IsFloating', 3),
+    'Mem': MemOperandTraits('uq', None,
+                            ('IsMemRef', 'IsLoad', 'IsStore'), 4),
+    'NPC': NPCOperandTraits('uq', None, ( None, None, 'IsControl' ), 4),
+    'Runiq': ControlRegOperandTraits('uq', 'Uniq', None, 1),
+    'FPCR':  ControlRegOperandTraits('uq', 'Fpcr', None, 1),
+    # The next two are hacks for non-full-system call-pal emulation
+    'R0':  IntRegOperandTraits('uq', '0', None, 1),
+    'R16': IntRegOperandTraits('uq', '16', None, 1)
+}};
 
-    /// Check "FP enabled" machine status bit.  Called when executing any FP
-    /// instruction in full-system mode.
-    /// @retval Full-system mode: No_Fault if FP is enabled, Fen_Fault
-    /// if not.  Non-full-system mode: always returns No_Fault.
-#ifdef FULL_SYSTEM
-    template <class XC>
-    inline Fault checkFpEnableFault(XC *xc)
-    {
-	Fault fault = No_Fault;	// dummy... this ipr access should not fault
-	if (!ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
-	    fault = Fen_Fault;
-	}
-	return fault;
-    }
-#else
-    template <class XC>
-    inline Fault checkFpEnableFault(XC *xc)
-    {
-	return No_Fault;
-    }
-#endif
+////////////////////////////////////////////////////////////////////
+//
+// Basic instruction classes/templates/formats etc.
+//
+
+output header {{
+// uncomment the following to get SimpleScalar-compatible disassembly
+// (useful for diffing output traces).
+// #define SS_COMPATIBLE_DISASSEMBLY
 
     /**
      * Base class for all Alpha static instructions.
@@ -184,47 +189,60 @@ declare {{
 
 	/// Print a register name for disassembly given the unique
 	/// dependence tag number (FP or int).
-	void printReg(std::ostream &os, int reg)
-	{
-	    if (reg < FP_Base_DepTag) {
-		ccprintf(os, "r%d", reg);
-	    }
-	    else {
-		ccprintf(os, "f%d", reg - FP_Base_DepTag);
-	    }
-	}
+	void printReg(std::ostream &os, int reg);
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    std::stringstream ss;
-
-	    ccprintf(ss, "%-10s ", mnemonic);
-
-	    // just print the first two source regs... if there's
-	    // a third one, it's a read-modify-write dest (Rc),
-	    // e.g. for CMOVxx
-	    if (_numSrcRegs > 0) {
-		printReg(ss, _srcRegIdx[0]);
-	    }
-	    if (_numSrcRegs > 1) {
-		ss << ",";
-		printReg(ss, _srcRegIdx[1]);
-	    }
-
-	    // just print the first dest... if there's a second one,
-	    // it's generally implicit
-	    if (_numDestRegs > 0) {
-		if (_numSrcRegs > 0)
-		    ss << ",";
-		printReg(ss, _destRegIdx[0]);
-	    }
-
-	    return ss.str();
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 }};
 
+output decoder {{
+    void
+    AlphaStaticInst::printReg(std::ostream &os, int reg)
+    {
+	if (reg < FP_Base_DepTag) {
+	    ccprintf(os, "r%d", reg);
+	}
+	else {
+	    ccprintf(os, "f%d", reg - FP_Base_DepTag);
+	}
+    }
 
+    std::string
+    AlphaStaticInst::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	std::stringstream ss;
+
+	ccprintf(ss, "%-10s ", mnemonic);
+
+	// just print the first two source regs... if there's
+	// a third one, it's a read-modify-write dest (Rc),
+	// e.g. for CMOVxx
+	if (_numSrcRegs > 0) {
+	    printReg(ss, _srcRegIdx[0]);
+	}
+	if (_numSrcRegs > 1) {
+	    ss << ",";
+	    printReg(ss, _srcRegIdx[1]);
+	}
+
+	// just print the first dest... if there's a second one,
+	// it's generally implicit
+	if (_numDestRegs > 0) {
+	    if (_numSrcRegs > 0)
+		ss << ",";
+	    printReg(ss, _destRegIdx[0]);
+	}
+
+	return ss.str();
+    }
+}};
+
+// Declarations for execute() methods.
+def template BasicExecDeclare {{
+    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *);
+}};
+
+// Basic instruction class declaration template.
 def template BasicDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -233,18 +251,24 @@ def template BasicDeclare {{
     {
       public:
 	/// Constructor.
-	%(class_name)s(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-	{
-	    %(constructor)s;
-	}
+	%(class_name)s(MachInst machInst);
 
-	%(exec_func_declarations)s
+	%(BasicExecDeclare)s
     };
 }};
 
+// Basic instruction class constructor template.
+def template BasicConstructor {{
+    inline %(class_name)s::%(class_name)s(MachInst machInst)
+	 : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+	%(constructor)s;
+    }
+}};
+
+// Basic instruction class execute method template.
 def template BasicExecute {{
-    Fault %(class_name)s::execute(%(cpu_model)s *xc,
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
 				  Trace::InstRecord *traceData)
     {
 	Fault fault = No_Fault;
@@ -262,10 +286,12 @@ def template BasicExecute {{
     }
 }};
 
+// Basic decode template.
 def template BasicDecode {{
     return new %(class_name)s(machInst);
 }};
 
+// Basic decode template, passing mnemonic in as string arg to constructor.
 def template BasicDecodeWithMnemonic {{
     return new %(class_name)s("%(mnemonic)s", machInst);
 }};
@@ -273,14 +299,20 @@ def template BasicDecodeWithMnemonic {{
 // The most basic instruction format... used only for a few misc. insts
 def format BasicOperate(code, *flags) {{
     iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code), flags)
-    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 
 
 ////////////////////////////////////////////////////////////////////
+//
+// Nop
+//
 
-declare {{
+output header {{
     /**
      * Static instruction class for no-ops.  This is a leaf class.
      */
@@ -300,21 +332,21 @@ declare {{
 
 	~Nop() { }
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-	    return originalDisassembly;
-#else
-	    return csprintf("%-10s (%s)", "nop", originalDisassembly);
-#endif
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
 
-	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
-        { return No_Fault; }
-
-	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
-        { return No_Fault; }
+	%(BasicExecDeclare)s
     };
+}};
+
+output decoder {{
+    std::string Nop::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+	return originalDisassembly;
+#else
+	return csprintf("%-10s (%s)", "nop", originalDisassembly);
+#endif
+    }
 
     /// Helper function for decoding nops.  Substitute Nop object
     /// for original inst passed in as arg (and delete latter).
@@ -328,10 +360,13 @@ declare {{
     }
 }};
 
-def format Nop() {{
-    return ('', 'return new Nop("%s", machInst);\n' % name, 'return No_Fault;')
+output exec {{
+    Fault
+    Nop::execute(%(CPU_exec_context)s *, Trace::InstRecord *)
+    {
+	return No_Fault;
+    }
 }};
-
 
 // integer & FP operate instructions use Rc as dest, so check for
 // Rc == 31 to detect nops
@@ -339,7 +374,7 @@ def template OperateNopCheckDecode {{
  {
      AlphaStaticInst *i = new %(class_name)s(machInst);
      if (RC == 31) {
-	 i = makeNop(i);
+         i = makeNop(i);
      }
      return i;
  }
@@ -349,7 +384,10 @@ def template OperateNopCheckDecode {{
 def format BasicOperateWithNopCheck(code, *opt_args) {{
     iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code),
 			opt_args)
-    return iop.subst('BasicDeclare', 'OperateNopCheckDecode', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = OperateNopCheckDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 
@@ -358,7 +396,7 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
 // Integer operate instructions
 //
 
-declare {{
+output header {{
     /**
      * Base class for integer immediate instructions.
      */
@@ -374,39 +412,45 @@ declare {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    std::stringstream ss;
-
-	    ccprintf(ss, "%-10s ", mnemonic);
-
-	    // just print the first source reg... if there's
-	    // a second one, it's a read-modify-write dest (Rc),
-	    // e.g. for CMOVxx
-	    if (_numSrcRegs > 0) {
-		printReg(ss, _srcRegIdx[0]);
-		ss << ",";
-	    }
-
-	    ss << (int)imm;
- 
-	    if (_numDestRegs > 0) {
-		ss << ",";
-		printReg(ss, _destRegIdx[0]);
-	    }
-
-	    return ss.str();
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 }};
+
+output decoder {{
+    std::string
+    IntegerImm::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	std::stringstream ss;
+
+	ccprintf(ss, "%-10s ", mnemonic);
+
+	// just print the first source reg... if there's
+	// a second one, it's a read-modify-write dest (Rc),
+	// e.g. for CMOVxx
+	if (_numSrcRegs > 0) {
+	    printReg(ss, _srcRegIdx[0]);
+	    ss << ",";
+	}
+
+	ss << (int)imm;
+ 
+	if (_numDestRegs > 0) {
+	    ss << ",";
+	    printReg(ss, _destRegIdx[0]);
+	}
+
+	return ss.str();
+    }
+}};
+
 
 def template RegOrImmDecode {{
  {
      AlphaStaticInst *i =
-	 (IMM) ? (AlphaStaticInst *)new %(class_name)sImm(machInst)
-	 : (AlphaStaticInst *)new %(class_name)s(machInst);
+         (IMM) ? (AlphaStaticInst *)new %(class_name)sImm(machInst)
+               : (AlphaStaticInst *)new %(class_name)s(machInst);
      if (RC == 31) {
-	 i = makeNop(i);
+         i = makeNop(i);
      }
      return i;
  }
@@ -433,24 +477,23 @@ def format IntegerOperate(code, *opt_flags) {{
     # generate declaration for register version
     cblk = CodeBlock(code)
     iop = InstObjParams(name, Name, 'AlphaStaticInst', cblk, opt_flags)
-    (decls, exec_code) = iop.subst('BasicDeclare', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 
     if uses_imm:
         # append declaration for imm version
         imm_cblk = CodeBlock(imm_code)
         imm_iop = InstObjParams(name, Name + 'Imm', 'IntegerImm', imm_cblk,
 				opt_flags)
-        (imm_decls, imm_exec_code) = \
-		   imm_iop.subst('BasicDeclare', 'BasicExecute')
-	decls += imm_decls
-        exec_code += imm_exec_code
+	header_output += BasicDeclare.subst(imm_iop)
+        decoder_output += BasicConstructor.subst(imm_iop)
+        exec_output += BasicExecute.subst(imm_iop)
         # decode checks IMM bit to pick correct version
-	decode = iop.subst('RegOrImmDecode')
+	decode_block = RegOrImmDecode.subst(iop)
     else:
         # no imm version: just check for nop
-        decode = iop.subst('OperateNopCheckDecode')
-
-    return (decls, decode, exec_code)
+        decode_block = OperateNopCheckDecode.subst(iop)
 }};
 
 
@@ -463,7 +506,29 @@ def format IntegerOperate(code, *opt_flags) {{
 //	BasicOperateWithNopCheck.
 //
 
-declare {{
+output exec {{
+    /// Check "FP enabled" machine status bit.  Called when executing any FP
+    /// instruction in full-system mode.
+    /// @retval Full-system mode: No_Fault if FP is enabled, Fen_Fault
+    /// if not.  Non-full-system mode: always returns No_Fault.
+#ifdef FULL_SYSTEM
+    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    {
+	Fault fault = No_Fault;	// dummy... this ipr access should not fault
+	if (!ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
+	    fault = Fen_Fault;
+	}
+	return fault;
+    }
+#else
+    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    {
+	return No_Fault;
+    }
+#endif
+}};
+
+output header {{
     /**
      * Base class for general floating-point instructions.  Includes
      * support for various Alpha rounding and trapping modes.  Only FP
@@ -525,78 +590,14 @@ declare {{
 	}
 
 #if defined(linux)
-	int
-	getC99RoundingMode(uint64_t fpcr_val)
-	{
-	    if (roundingMode == Dynamic) {
-		return alphaToC99RoundingMode[bits(fpcr_val, 59, 58)];
-	    }
-	    else {
-		return alphaToC99RoundingMode[roundingMode];
-	    }
-	}
+	int getC99RoundingMode(uint64_t fpcr_val);
 #endif
 
 	// This differs from the AlphaStaticInst version only in
 	// printing suffixes for non-default rounding & trapping modes.
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    std::string mnem_str(mnemonic);
-
-#ifndef SS_COMPATIBLE_DISASSEMBLY
-	    std::string suffix("");
-	    suffix += ((_destRegIdx[0] >= FP_Base_DepTag)
-		       ? fpTrappingModeSuffix[trappingMode]
-		       : intTrappingModeSuffix[trappingMode]);
-	    suffix += roundingModeSuffix[roundingMode];
-
-	    if (suffix != "") {
-		mnem_str = csprintf("%s/%s", mnemonic, suffix);
-	    }
-#endif
-
-	    std::stringstream ss;
-	    ccprintf(ss, "%-10s ", mnem_str.c_str());
-
-	    // just print the first two source regs... if there's
-	    // a third one, it's a read-modify-write dest (Rc),
-	    // e.g. for CMOVxx
-	    if (_numSrcRegs > 0) {
-		printReg(ss, _srcRegIdx[0]);
-	    }
-	    if (_numSrcRegs > 1) {
-		ss << ",";
-		printReg(ss, _srcRegIdx[1]);
-	    }
-
-	    // just print the first dest... if there's a second one,
-	    // it's generally implicit
-	    if (_numDestRegs > 0) {
-		if (_numSrcRegs > 0)
-		    ss << ",";
-		printReg(ss, _destRegIdx[0]);
-	    }
-
-	    return ss.str();
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 
-#if defined(linux)
-    const int AlphaFP::alphaToC99RoundingMode[] = {
-	FE_TOWARDZERO,	// Chopped
-	FE_DOWNWARD,	// Minus_Infinity
-	FE_TONEAREST,	// Normal
-	FE_UPWARD	// Dynamic in inst, Plus_Infinity in FPCR
-    };
-#endif
-
-    const char *AlphaFP::roundingModeSuffix[] = { "c", "m", "", "d" };
-    // mark invalid trapping modes, but don't fail on them, because
-    // you could decode anything on a misspeculated path
-    const char *AlphaFP::fpTrappingModeSuffix[] =
-	{ "", "u", "INVTM2", "INVTM3", "INVTM4", "su", "INVTM6", "sui" };
-    const char *AlphaFP::intTrappingModeSuffix[] =
-	{ "", "v", "INVTM2", "INVTM3", "INVTM4", "sv", "INVTM6", "svi" };
 }};
 
 
@@ -616,17 +617,93 @@ def template FloatingPointDecode {{
  }
 }};
 
+output decoder {{
+#if defined(linux)
+    int
+    AlphaFP::getC99RoundingMode(uint64_t fpcr_val)
+    {
+	if (roundingMode == Dynamic) {
+	    return alphaToC99RoundingMode[bits(fpcr_val, 59, 58)];
+	}
+	else {
+	    return alphaToC99RoundingMode[roundingMode];
+	}
+    }
+#endif
+
+    std::string
+    AlphaFP::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	std::string mnem_str(mnemonic);
+
+#ifndef SS_COMPATIBLE_DISASSEMBLY
+	std::string suffix("");
+	suffix += ((_destRegIdx[0] >= FP_Base_DepTag)
+		   ? fpTrappingModeSuffix[trappingMode]
+		   : intTrappingModeSuffix[trappingMode]);
+	suffix += roundingModeSuffix[roundingMode];
+
+	if (suffix != "") {
+	    mnem_str = csprintf("%s/%s", mnemonic, suffix);
+	}
+#endif
+
+	std::stringstream ss;
+	ccprintf(ss, "%-10s ", mnem_str.c_str());
+
+	// just print the first two source regs... if there's
+	// a third one, it's a read-modify-write dest (Rc),
+	// e.g. for CMOVxx
+	if (_numSrcRegs > 0) {
+	    printReg(ss, _srcRegIdx[0]);
+	}
+	if (_numSrcRegs > 1) {
+	    ss << ",";
+	    printReg(ss, _srcRegIdx[1]);
+	}
+
+	// just print the first dest... if there's a second one,
+	// it's generally implicit
+	if (_numDestRegs > 0) {
+	    if (_numSrcRegs > 0)
+		ss << ",";
+	    printReg(ss, _destRegIdx[0]);
+	}
+
+	return ss.str();
+    }
+
+#if defined(linux)
+    const int AlphaFP::alphaToC99RoundingMode[] = {
+	FE_TOWARDZERO,	// Chopped
+	FE_DOWNWARD,	// Minus_Infinity
+	FE_TONEAREST,	// Normal
+	FE_UPWARD	// Dynamic in inst, Plus_Infinity in FPCR
+    };
+#endif
+
+    const char *AlphaFP::roundingModeSuffix[] = { "c", "m", "", "d" };
+    // mark invalid trapping modes, but don't fail on them, because
+    // you could decode anything on a misspeculated path
+    const char *AlphaFP::fpTrappingModeSuffix[] =
+	{ "", "u", "INVTM2", "INVTM3", "INVTM4", "su", "INVTM6", "sui" };
+    const char *AlphaFP::intTrappingModeSuffix[] =
+	{ "", "v", "INVTM2", "INVTM3", "INVTM4", "sv", "INVTM6", "svi" };
+}};
+
 // General format for floating-point operate instructions:
 // - Checks trapping and rounding mode flags.  Trapping modes
 //   currently unimplemented (will fail).
 // - Generates NOP if FC == 31.
 def format FloatingPointOperate(code, *opt_args) {{
     iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code), opt_args)
-    decode = iop.subst('FloatingPointDecode')
+    decode_block = FloatingPointDecode.subst(iop)
 
     fast_iop = InstObjParams(name, Name + 'Fast', 'AlphaFP',
-    CodeBlock(code), opt_args)
-    (fast_declare, fast_exec) = fast_iop.subst('BasicDeclare', 'BasicExecute')
+			     CodeBlock(code), opt_args)
+    header_output = BasicDeclare.subst(fast_iop)
+    decoder_output = BasicConstructor.subst(fast_iop)
+    exec_output = BasicExecute.subst(fast_iop)
 
     gen_code_prefix = r'''
 #if defined(linux)
@@ -641,9 +718,9 @@ def format FloatingPointOperate(code, *opt_args) {{
 
     gen_iop = InstObjParams(name, Name + 'General', 'AlphaFP',
     CodeBlock(gen_code_prefix + code + gen_code_suffix), opt_args)
-    (gen_declare, gen_exec) = gen_iop.subst('BasicDeclare', 'BasicExecute')
-    
-    return (fast_declare + gen_declare, decode, fast_exec + gen_exec)
+    header_output += BasicDeclare.subst(gen_iop)
+    decoder_output += BasicConstructor.subst(gen_iop)
+    exec_output += BasicExecute.subst(gen_iop)
 }};
 
 
@@ -652,7 +729,7 @@ def format FloatingPointOperate(code, *opt_args) {{
 // Memory-format instructions: LoadAddress, Load, Store
 //
 
-declare {{
+output header {{
     /**
      * Base class for general Alpha memory-format instructions.
      */
@@ -660,48 +737,70 @@ declare {{
     {
       protected:
 
-	/// Displacement for EA calculation (signed).
-	int32_t disp;
 	/// Memory request flags.  See mem_req_base.hh.
         unsigned memAccessFlags;
+	/// Pointer to EAComp object.
+	const StaticInstPtr<AlphaISA> eaCompPtr;
+	/// Pointer to MemAcc object.
+	const StaticInstPtr<AlphaISA> memAccPtr;
 
 	/// Constructor
-	Memory(const char *mnem, MachInst _machInst, OpClass __opClass)
+	Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
+	       StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+	       StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
 	    : AlphaStaticInst(mnem, _machInst, __opClass),
-	      disp(MEMDISP), memAccessFlags(0)
+	      memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr)
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+
+      public:
+
+	const StaticInstPtr<AlphaISA> &eaCompInst() const { return eaCompPtr; }
+	const StaticInstPtr<AlphaISA> &memAccInst() const { return memAccPtr; }
+    };
+
+    /**
+     * Base class for memory-format instructions using a 32-bit
+     * displacement (i.e. most of them).
+     */
+    class MemoryDisp32 : public Memory
+    {
+      protected:
+	/// Displacement for EA calculation (signed).
+	int32_t disp;
+
+	/// Constructor.
+	MemoryDisp32(const char *mnem, MachInst _machInst, OpClass __opClass,
+		     StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+		     StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+	    : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
+	      disp(MEMDISP)
 	{
-	    return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
-			    flags[IsFloating] ? 'f' : 'r', RA, MEMDISP, RB);
 	}
     };
+
 
     /**
      * Base class for a few miscellaneous memory-format insts
      * that don't interpret the disp field: wh64, fetch, fetch_m, ecb.
      * None of these instructions has a destination register either.
      */
-    class MemoryNoDisp : public AlphaStaticInst
+    class MemoryNoDisp : public Memory
     {
       protected:
-	/// Memory request flags.  See mem_req_base.hh.
-        unsigned memAccessFlags;
-
 	/// Constructor
-	MemoryNoDisp(const char *mnem, MachInst _machInst, OpClass __opClass)
-	    : AlphaStaticInst(mnem, _machInst, __opClass),
-	      memAccessFlags(0)
+	MemoryNoDisp(const char *mnem, MachInst _machInst, OpClass __opClass,
+		     StaticInstPtr<AlphaISA> _eaCompPtr,
+		     StaticInstPtr<AlphaISA> _memAccPtr)
+	    : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    return csprintf("%-10s (r%d)", mnemonic, RB);
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
+
 
     /**
      * Base class for "fake" effective-address computation
@@ -716,11 +815,7 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
-        { panic("attempt to execute eacomp"); }
-
-	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
-        { panic("attempt to execute eacomp"); }
+	%(BasicExecDeclare)s
     };
 
     /**
@@ -736,19 +831,48 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
-        { panic("attempt to execute memacc"); }
-
-	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
-        { panic("attempt to execute memacc"); }
+	%(BasicExecDeclare)s
     };
 
 }};
 
 
+output decoder {{
+    std::string
+    Memory::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
+			flags[IsFloating] ? 'f' : 'r', RA, MEMDISP, RB);
+    }
+
+    std::string
+    MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	return csprintf("%-10s (r%d)", mnemonic, RB);
+    }
+}};
+
+output exec {{
+    Fault
+    EACompBase::execute(%(CPU_exec_context)s *, Trace::InstRecord *)
+    {
+	panic("attempt to execute eacomp");
+    }
+
+    Fault
+    MemAccBase::execute(%(CPU_exec_context)s *, Trace::InstRecord *)
+    {
+	panic("attempt to execute memacc");
+    }
+}};
+
+
 def format LoadAddress(code) {{
-    iop = InstObjParams(name, Name, 'Memory', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
+    iop = InstObjParams(name, Name, 'MemoryDisp32', CodeBlock(code))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 
@@ -767,11 +891,7 @@ def template LoadStoreDeclare {{
 	{
 	  public:
 	    /// Constructor
-	    EAComp(MachInst machInst)
-		: EACompBase(machInst)
-	    {
-		%(ea_constructor)s;
-	    }
+	    EAComp(MachInst machInst);
 	};
 
 	/**
@@ -781,37 +901,41 @@ def template LoadStoreDeclare {{
 	{
 	  public:
 	    /// Constructor
-	    MemAcc(MachInst machInst)
-		: MemAccBase(machInst, %(op_class)s)
-	    {
-		%(memacc_constructor)s;
-	    }
+	    MemAcc(MachInst machInst);
 	};
-
-	/// Pointer to EAComp object.
-	StaticInstPtr<AlphaISA> eaCompPtr;
-	/// Pointer to MemAcc object.
-	StaticInstPtr<AlphaISA> memAccPtr;
 
       public:
 
-	StaticInstPtr<AlphaISA> eaCompInst() { return eaCompPtr; }
-	StaticInstPtr<AlphaISA> memAccInst() { return memAccPtr; }
-
 	/// Constructor.
-	%(class_name)s(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
-	       eaCompPtr(new EAComp(machInst)), memAccPtr(new MemAcc(machInst))
-	{
-	    %(constructor)s;
-	}
+	%(class_name)s(MachInst machInst);
 
-	%(exec_func_declarations)s
+	%(BasicExecDeclare)s
     };
 }};
 
+def template LoadStoreConstructor {{
+    inline %(class_name)s::EAComp::EAComp(MachInst machInst)
+	: EACompBase(machInst)
+    {
+	%(ea_constructor)s;
+    }
+
+    inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
+	: MemAccBase(machInst, %(op_class)s)
+    {
+	%(memacc_constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(MachInst machInst)
+	 : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+			  new EAComp(machInst), new MemAcc(machInst))
+    {
+	%(constructor)s;
+    }
+}};
+
 def template LoadStoreExecute {{
-    Fault %(class_name)s::execute(%(cpu_model)s *xc,
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
 				  Trace::InstRecord *traceData)
     {
 	Addr EA;
@@ -843,66 +967,9 @@ def template LoadStoreExecute {{
     }
 }};
 
-def template PrefetchDeclare {{
-    /**
-     * Static instruction class for "%(mnemonic)s".
-     */
-    class %(class_name)s : public %(base_class)s
-    {
-      protected:
-
-	/**
-	 * "Fake" effective address computation class for "%(mnemonic)s".
-	 */
-	class EAComp : public EACompBase
-	{
-	  public:
-	    /// Constructor
-	    EAComp(MachInst machInst)
-		: EACompBase(machInst)
-	    {
-		%(ea_constructor)s;
-	    }
-	};
-
-	/**
-	 * "Fake" memory access instruction class for "%(mnemonic)s".
-	 */
-	class MemAcc : public MemAccBase
-	{
-	  public:
-	    /// Constructor
-	    MemAcc(MachInst machInst)
-		: MemAccBase(machInst, %(op_class)s)
-	    {
-		%(memacc_constructor)s;
-	    }
-	};
-
-	/// Pointer to EAComp object.
-	StaticInstPtr<AlphaISA> eaCompPtr;
-	/// Pointer to MemAcc object.
-	StaticInstPtr<AlphaISA> memAccPtr;
-
-      public:
-
-	StaticInstPtr<AlphaISA> eaCompInst() { return eaCompPtr; }
-	StaticInstPtr<AlphaISA> memAccInst() { return memAccPtr; }
-
-	/// Constructor
-	%(class_name)s(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
-	       eaCompPtr(new EAComp(machInst)), memAccPtr(new MemAcc(machInst))
-	{
-	    %(constructor)s;
-	}
-
-	%(exec_func_declarations)s
-    };
-}};
 
 def template PrefetchExecute {{
-    Fault %(class_name)s::execute(%(cpu_model)s *xc,
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
 				  Trace::InstRecord *traceData)
     {
 	Addr EA;
@@ -948,12 +1015,10 @@ def template LoadPrefetchCheckDecode {{
 
 
 let {{
-global LoadStoreBase
 def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
-		  base_class = 'Memory', flags = [],
-		  declare_template = 'LoadStoreDeclare',
-		  decode_template = 'BasicDecode',
-		  exec_template = 'LoadStoreExecute'):
+		  base_class = 'MemoryDisp32', flags = [],
+		  decode_template = BasicDecode,
+		  exec_template = LoadStoreExecute):
     # Segregate flags into instruction flags (handled by InstObjParams)
     # and memory access flags (handled here).
 
@@ -984,62 +1049,68 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
     if mem_flags != '':
         iop.constructor += '\n\tmemAccessFlags = ' + mem_flags + ';'
 
-    return iop.subst(declare_template, decode_template, exec_template)
+    # (header_output, decoder_output, decode_block, exec_output)
+    return (LoadStoreDeclare.subst(iop), LoadStoreConstructor.subst(iop),
+	    decode_template.subst(iop), exec_template.subst(iop))
 }};
 
 
 def format LoadOrNop(ea_code, memacc_code, *flags) {{
-    return LoadStoreBase(name, Name, ea_code, memacc_code,
-			 flags = flags,
-			 decode_template = 'LoadNopCheckDecode')
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
+                      decode_template = LoadNopCheckDecode)
 }};
 
 
 // Note that the flags passed in apply only to the prefetch version
 def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     # declare the load instruction object and generate the decode block
-    (decls, decode, exec_code) = \
+    (header_output, decoder_output, decode_block, exec_output) = \
 	LoadStoreBase(name, Name, ea_code, memacc_code,
-		      decode_template = 'LoadPrefetchCheckDecode')
+		      decode_template = LoadPrefetchCheckDecode)
 
     # Declare the prefetch instruction object.
 
     # convert flags from tuple to list to make them mutable
     pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'RdPort']
 
-    (pfdecls, pfdecode, pfexec) = \
+    (pf_header_output, pf_decoder_output, _, pf_exec_output) = \
 	LoadStoreBase(name, Name + 'Prefetch', ea_code, '',
-		      flags = pf_flags,
-		      declare_template = 'PrefetchDeclare',
-		      exec_template = 'PrefetchExecute')
+		      flags = pf_flags, exec_template = PrefetchExecute)
 
-    return (decls + pfdecls, decode, exec_code + pfexec)
+    header_output += pf_header_output
+    decoder_output += pf_decoder_output
+    exec_output += pf_exec_output
 }};
 
 
 def format Store(ea_code, memacc_code, *flags) {{
-    return LoadStoreBase(name, Name, ea_code, memacc_code,
-			 flags = flags)
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags)
 }};
 
 
 def format StoreCond(ea_code, memacc_code, postacc_code, *flags) {{
-    return LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code,
-			 flags = flags)
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code,
+                      flags = flags)
 }};
 
 
 // Use 'MemoryNoDisp' as base: for wh64, fetch, ecb
 def format MiscPrefetch(ea_code, memacc_code, *flags) {{
-    return LoadStoreBase(name, Name, ea_code, memacc_code,
-			 flags = flags, base_class = 'MemoryNoDisp')
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
+                      base_class = 'MemoryNoDisp')
 }};
 
 
 ////////////////////////////////////////////////////////////////////
+//
+// Control transfer instructions
+//
 
-
-declare {{
+output header {{
 
     /**
      * Base class for instructions whose disassembly is not purely a
@@ -1066,22 +1137,7 @@ declare {{
 	{
 	}
 
-	const std::string &disassemble(Addr pc, const SymbolTable *symtab)
-	{
-	    if (!cachedDisassembly ||
-		pc != cachedPC || symtab != cachedSymtab)
-	    {
-		if (cachedDisassembly)
-		    delete cachedDisassembly;
-
-		cachedDisassembly =
-		    new std::string(generateDisassembly(pc, symtab));
-		cachedPC = pc;
-		cachedSymtab = symtab;
-	    }
-
-	    return *cachedDisassembly;
-	}
+	const std::string &disassemble(Addr pc, const SymbolTable *symtab);
     };
 
     /**
@@ -1101,47 +1157,9 @@ declare {{
 	{
 	}
 
-	Addr branchTarget(Addr branchPC) const
-	{
-	    return branchPC + 4 + disp;
-	}
+	Addr branchTarget(Addr branchPC) const;
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    std::stringstream ss;
-
-	    ccprintf(ss, "%-10s ", mnemonic);
-
-	    // There's only one register arg (RA), but it could be
-	    // either a source (the condition for conditional
-	    // branches) or a destination (the link reg for
-	    // unconditional branches)
-	    if (_numSrcRegs > 0) {
-		printReg(ss, _srcRegIdx[0]);
-		ss << ",";
-	    }
-	    else if (_numDestRegs > 0) {
-		printReg(ss, _destRegIdx[0]);
-		ss << ",";
-	    }
-
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-	    if (_numSrcRegs == 0 && _numDestRegs == 0) {
-		printReg(ss, 31);
-		ss << ",";
-	    }
-#endif
-
-	    Addr target = pc + 4 + disp;
-
-	    std::string str;
-	    if (symtab && symtab->findSymbol(target, str))
-		ss << str;
-	    else 
-		ccprintf(ss, "0x%x", target);
-
-	    return ss.str();
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 
     /**
@@ -1163,36 +1181,106 @@ declare {{
 	{
 	}
 
-	Addr branchTarget(ExecContext *xc) const
+	Addr branchTarget(ExecContext *xc) const;
+
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+    };
+}};
+
+output decoder {{
+    Addr
+    Branch::branchTarget(Addr branchPC) const
+    {
+	return branchPC + 4 + disp;
+    }
+
+    Addr
+    Jump::branchTarget(ExecContext *xc) const
+    {
+	Addr NPC = xc->readPC() + 4;
+	uint64_t Rb = xc->readIntReg(_srcRegIdx[0]);
+	return (Rb & ~3) | (NPC & 1);
+    }
+
+    const std::string &
+    PCDependentDisassembly::disassemble(Addr pc, const SymbolTable *symtab)
+    {
+	if (!cachedDisassembly ||
+	    pc != cachedPC || symtab != cachedSymtab)
 	{
-	    Addr NPC = xc->readPC() + 4;
-	    uint64_t Rb = xc->readIntReg(_srcRegIdx[0]);
-	    return (Rb & ~3) | (NPC & 1);
+	    if (cachedDisassembly)
+		delete cachedDisassembly;
+
+	    cachedDisassembly =
+		new std::string(generateDisassembly(pc, symtab));
+	    cachedPC = pc;
+	    cachedSymtab = symtab;
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    std::stringstream ss;
+	return *cachedDisassembly;
+    }
 
-	    ccprintf(ss, "%-10s ", mnemonic);
+    std::string
+    Branch::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	std::stringstream ss;
+
+	ccprintf(ss, "%-10s ", mnemonic);
+
+	// There's only one register arg (RA), but it could be
+	// either a source (the condition for conditional
+	// branches) or a destination (the link reg for
+	// unconditional branches)
+	if (_numSrcRegs > 0) {
+	    printReg(ss, _srcRegIdx[0]);
+	    ss << ",";
+	}
+	else if (_numDestRegs > 0) {
+	    printReg(ss, _destRegIdx[0]);
+	    ss << ",";
+	}
 
 #ifdef SS_COMPATIBLE_DISASSEMBLY
-	    if (_numDestRegs == 0) {
-		printReg(ss, 31);
-		ss << ",";
-	    }
+	if (_numSrcRegs == 0 && _numDestRegs == 0) {
+	    printReg(ss, 31);
+	    ss << ",";
+	}
 #endif
 
-	    if (_numDestRegs > 0) {
-		printReg(ss, _destRegIdx[0]);
-		ss << ",";
-	    }
+	Addr target = pc + 4 + disp;
 
-	    ccprintf(ss, "(r%d)", RB);
+	std::string str;
+	if (symtab && symtab->findSymbol(target, str))
+	    ss << str;
+	else 
+	    ccprintf(ss, "0x%x", target);
 
-	    return ss.str();
+	return ss.str();
+    }
+
+    std::string
+    Jump::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	std::stringstream ss;
+
+	ccprintf(ss, "%-10s ", mnemonic);
+
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+	if (_numDestRegs == 0) {
+	    printReg(ss, 31);
+	    ss << ",";
 	}
-    };
+#endif
+
+	if (_numDestRegs > 0) {
+	    printReg(ss, _destRegIdx[0]);
+	    ss << ",";
+	}
+
+	ccprintf(ss, "(r%d)", RB);
+
+	return ss.str();
+    }
 }};
 
 def template JumpOrBranchDecode {{
@@ -1205,44 +1293,56 @@ def format CondBranch(code) {{
     code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
 			('IsDirectControl', 'IsCondControl'))
-    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 let {{
-global UncondCtrlBase
 def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     # Declare basic control transfer w/o link (i.e. link reg is R31)
     nolink_code = 'NPC = %s;\n' % npc_expr
     nolink_iop = InstObjParams(name, Name, base_class,
                                CodeBlock(nolink_code), flags)
-    (decls, exec_code) = nolink_iop.subst('BasicDeclare', 'BasicExecute')
+    header_output = BasicDeclare.subst(nolink_iop)
+    decoder_output = BasicConstructor.subst(nolink_iop)
+    exec_output = BasicExecute.subst(nolink_iop)
 
     # Generate declaration of '*AndLink' version, append to decls
     link_code = 'Ra = NPC & ~3;\n' + nolink_code
     link_iop = InstObjParams(name, Name + 'AndLink', base_class,
                              CodeBlock(link_code), flags)
-    (link_decls, link_exec_code) = \
-	link_iop.subst('BasicDeclare', 'BasicExecute')
-    decls += link_decls
-    exec_code += link_exec_code
+    header_output += BasicDeclare.subst(link_iop)
+    decoder_output += BasicConstructor.subst(link_iop)
+    exec_output += BasicExecute.subst(link_iop)
 
     # need to use link_iop for the decode template since it is expecting
     # the shorter version of class_name (w/o "AndLink")
-    return (decls, nolink_iop.subst('JumpOrBranchDecode'), exec_code)
+
+    return (header_output, decoder_output,
+            JumpOrBranchDecode.subst(nolink_iop), exec_output)
 }};
 
 def format UncondBranch(*flags) {{
     flags += ('IsUncondControl', 'IsDirectControl')
-    return UncondCtrlBase(name, Name, 'Branch', 'NPC + disp', flags) 
+    (header_output, decoder_output, decode_block, exec_output) = \
+        UncondCtrlBase(name, Name, 'Branch', 'NPC + disp', flags)
 }};
 
 def format Jump(*flags) {{
     flags += ('IsUncondControl', 'IsIndirectControl')
-    return UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (NPC & 1)', flags) 
+    (header_output, decoder_output, decode_block, exec_output) = \
+        UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (NPC & 1)', flags)
 }};
 
 
-declare {{
+////////////////////////////////////////////////////////////////////
+//
+// PAL calls
+//
+
+output header {{
     /**
      * Base class for emulated call_pal calls (used only in
      * non-full-system mode).
@@ -1258,23 +1358,31 @@ declare {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-	    return csprintf("%s %s", "call_pal", mnemonic);
-#else
-	    return csprintf("%-10s %s", "call_pal", mnemonic);
-#endif
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
+}};
+
+output decoder {{
+    std::string
+    EmulatedCallPal::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+	return csprintf("%s %s", "call_pal", mnemonic);
+#else
+	return csprintf("%-10s %s", "call_pal", mnemonic);
+#endif
+    }
 }};
 
 def format EmulatedCallPal(code) {{
     iop = InstObjParams(name, Name, 'EmulatedCallPal', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
-declare {{
+output header {{
     /**
      * Base class for full-system-mode call_pal instructions.
      * Probably could turn this into a leaf class and get rid of the
@@ -1290,106 +1398,130 @@ declare {{
 
 	/// Constructor.
 	CallPalBase(const char *mnem, MachInst _machInst,
-		    OpClass __opClass)
-	    : AlphaStaticInst(mnem, _machInst, __opClass),
-	      palFunc(PALFUNC)
-	{
-	    // From the 21164 HRM (paraphrased):
-	    // Bit 7 of the function code (mask 0x80) indicates
-	    // whether the call is privileged (bit 7 == 0) or
-	    // unprivileged (bit 7 == 1).  The privileged call table
-	    // starts at 0x2000, the unprivielged call table starts at
-	    // 0x3000.  Bits 5-0 (mask 0x3f) are used to calculate the
-	    // offset.
-	    const int palPrivMask = 0x80;
-	    const int palOffsetMask = 0x3f;
+		    OpClass __opClass);
 
-	    // Pal call is invalid unless all other bits are 0
-	    palValid = ((machInst & ~(palPrivMask | palOffsetMask)) == 0);
-	    palPriv = ((machInst & palPrivMask) == 0);
-	    int shortPalFunc = (machInst & palOffsetMask);
-	    // Add 1 to base to set pal-mode bit
-	    palOffset = (palPriv ? 0x2001 : 0x3001) + (shortPalFunc << 6);
-	}
-
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    return csprintf("%-10s %#x", "call_pal", palFunc);
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 }};
 
+output decoder {{
+    inline
+    CallPalBase::CallPalBase(const char *mnem, MachInst _machInst,
+			     OpClass __opClass)
+	: AlphaStaticInst(mnem, _machInst, __opClass),
+	palFunc(PALFUNC)
+    {
+	// From the 21164 HRM (paraphrased):
+	// Bit 7 of the function code (mask 0x80) indicates
+	// whether the call is privileged (bit 7 == 0) or
+	// unprivileged (bit 7 == 1).  The privileged call table
+	// starts at 0x2000, the unprivielged call table starts at
+	// 0x3000.  Bits 5-0 (mask 0x3f) are used to calculate the
+	// offset.
+	const int palPrivMask = 0x80;
+	const int palOffsetMask = 0x3f;
+
+	// Pal call is invalid unless all other bits are 0
+	palValid = ((machInst & ~(palPrivMask | palOffsetMask)) == 0);
+	palPriv = ((machInst & palPrivMask) == 0);
+	int shortPalFunc = (machInst & palOffsetMask);
+	// Add 1 to base to set pal-mode bit
+	palOffset = (palPriv ? 0x2001 : 0x3001) + (shortPalFunc << 6);
+    }
+
+    std::string
+    CallPalBase::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	return csprintf("%-10s %#x", "call_pal", palFunc);
+    }
+}};
 
 def format CallPal(code) {{
     iop = InstObjParams(name, Name, 'CallPalBase', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
+////////////////////////////////////////////////////////////////////
 //
 // hw_ld, hw_st
 //
-declare {{
+
+output header {{
     /**
      * Base class for hw_ld and hw_st.
      */
-    class HwLoadStore : public AlphaStaticInst
+    class HwLoadStore : public Memory
     {
       protected:
 
 	/// Displacement for EA calculation (signed).
 	int16_t disp;
-	/// Memory request flags.  See mem_req_base.hh.
-	unsigned memAccessFlags;
 
 	/// Constructor
-	HwLoadStore(const char *mnem, MachInst _machInst, OpClass __opClass)
-	    : AlphaStaticInst(mnem, _machInst, __opClass), disp(HW_LDST_DISP)
-	{
-	    memAccessFlags = 0;
-	    if (HW_LDST_PHYS) memAccessFlags |= PHYSICAL;
-	    if (HW_LDST_ALT)  memAccessFlags |= ALTMODE;
-	    if (HW_LDST_VPTE) memAccessFlags |= VPTE;
-	    if (HW_LDST_LOCK) memAccessFlags |= LOCKED;
-	}
+	HwLoadStore(const char *mnem, MachInst _machInst, OpClass __opClass,
+		    StaticInstPtr<AlphaISA> _eaCompPtr,
+		    StaticInstPtr<AlphaISA> _memAccPtr);
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-	    return csprintf("%-10s r%d,%d(r%d)", mnemonic, RA, disp, RB);
-#else
-	    // HW_LDST_LOCK and HW_LDST_COND are the same bit.
-	    const char *lock_str =
-		(HW_LDST_LOCK) ? (flags[IsLoad] ? ",LOCK" : ",COND") : "";
-
-	    return csprintf("%-10s r%d,%d(r%d)%s%s%s%s%s",
-			    mnemonic, RA, disp, RB,
-			    HW_LDST_PHYS ? ",PHYS" : "",
-			    HW_LDST_ALT ? ",ALT" : "",
-			    HW_LDST_QUAD ? ",QUAD" : "",
-			    HW_LDST_VPTE ? ",VPTE" : "",
-			    lock_str);
-#endif
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 }};
 
 
+output decoder {{
+    inline
+    HwLoadStore::HwLoadStore(const char *mnem, MachInst _machInst,
+			     OpClass __opClass,
+			     StaticInstPtr<AlphaISA> _eaCompPtr,
+			     StaticInstPtr<AlphaISA> _memAccPtr)
+	: Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
+	disp(HW_LDST_DISP)
+    {
+	memAccessFlags = 0;
+	if (HW_LDST_PHYS) memAccessFlags |= PHYSICAL;
+	if (HW_LDST_ALT)  memAccessFlags |= ALTMODE;
+	if (HW_LDST_VPTE) memAccessFlags |= VPTE;
+	if (HW_LDST_LOCK) memAccessFlags |= LOCKED;
+    }
+
+    std::string
+    HwLoadStore::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+	return csprintf("%-10s r%d,%d(r%d)", mnemonic, RA, disp, RB);
+#else
+	// HW_LDST_LOCK and HW_LDST_COND are the same bit.
+	const char *lock_str =
+	    (HW_LDST_LOCK) ? (flags[IsLoad] ? ",LOCK" : ",COND") : "";
+
+	return csprintf("%-10s r%d,%d(r%d)%s%s%s%s%s",
+			mnemonic, RA, disp, RB,
+			HW_LDST_PHYS ? ",PHYS" : "",
+			HW_LDST_ALT ? ",ALT" : "",
+			HW_LDST_QUAD ? ",QUAD" : "",
+			HW_LDST_VPTE ? ",VPTE" : "",
+			lock_str);
+#endif
+    }
+}};
+
 def format HwLoadStore(ea_code, memacc_code, class_ext, *flags) {{
-    return LoadStoreBase(name, Name + class_ext, ea_code, memacc_code,
-                         flags = flags,
-			 base_class = 'HwLoadStore')
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name + class_ext, ea_code, memacc_code,
+		      flags = flags, base_class = 'HwLoadStore')
 }};
 
 
 def format HwStoreCond(ea_code, memacc_code, postacc_code, class_ext, *flags) {{
-    return LoadStoreBase(name, Name + class_ext,
-			 ea_code, memacc_code, postacc_code,
-                         flags = flags,
-			 base_class = 'HwLoadStore')
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name + class_ext, ea_code, memacc_code,
+		      postacc_code, flags = flags, base_class = 'HwLoadStore')
 }};
 
 
-declare {{
+output header {{
     /**
      * Base class for hw_mfpr and hw_mtpr.
      */
@@ -1406,28 +1538,42 @@ declare {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    if (_numSrcRegs > 0) {
-		// must be mtpr
-		return csprintf("%-10s r%d,IPR(%#x)",
-				mnemonic, RA, ipr_index);
-	    }
-	    else {
-		// must be mfpr
-		return csprintf("%-10s IPR(%#x),r%d",
-				mnemonic, ipr_index, RA);
-	    }
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
+}};
+
+output decoder {{
+    std::string
+    HwMoveIPR::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	if (_numSrcRegs > 0) {
+	    // must be mtpr
+	    return csprintf("%-10s r%d,IPR(%#x)",
+			    mnemonic, RA, ipr_index);
+	}
+	else {
+	    // must be mfpr
+	    return csprintf("%-10s IPR(%#x),r%d",
+			    mnemonic, ipr_index, RA);
+	}
+    }
 }};
 
 def format HwMoveIPR(code) {{
     iop = InstObjParams(name, Name, 'HwMoveIPR', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
-declare {{
+
+////////////////////////////////////////////////////////////////////
+//
+// Unimplemented instructions
+//
+
+output header {{
     /**
      * Static instruction class for unimplemented instructions that
      * cause simulator termination.  Note that these are recognized
@@ -1444,29 +1590,9 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPUExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    panic("attempt to execute unimplemented instruction '%s' "
-		  "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
-	    return Unimplemented_Opcode_Fault;
-	}
+	%(BasicExecDeclare)s
 
-	Fault execute(FullCPUExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    // don't panic if this is a misspeculated instruction
-	    if (!xc->misspeculating())
-		panic("attempt to execute unimplemented instruction '%s' "
-		      "(inst 0x%08x, opcode 0x%x)",
-		      mnemonic, machInst, OPCODE);
-	    return Unimplemented_Opcode_Fault;
-	}
-
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    return csprintf("%-10s (unimplemented)", mnemonic);
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 
     /**
@@ -1491,38 +1617,55 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPUExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
+	%(BasicExecDeclare)s
+
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+    };
+}};
+
+output decoder {{
+    std::string
+    FailUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	return csprintf("%-10s (unimplemented)", mnemonic);
+    }
+
+    std::string
+    WarnUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+	return csprintf("%-10s", mnemonic);
+#else
+	return csprintf("%-10s (unimplemented)", mnemonic);
+#endif
+    }
+}};
+
+output exec {{
+    Fault
+    FailUnimplemented::execute(%(CPU_exec_context)s *xc,
+			       Trace::InstRecord *traceData)
+    {
+	if (!xc->misspeculating())
+	    panic("attempt to execute unimplemented instruction '%s' "
+		  "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
+	return Unimplemented_Opcode_Fault;
+    }
+
+    Fault
+    WarnUnimplemented::execute(%(CPU_exec_context)s *xc,
+			       Trace::InstRecord *traceData)
+    {
+	if (!xc->misspeculating())
 	    if (!warned) {
 		warn("instruction '%s' unimplemented\n", mnemonic);
 		warned = true;
 	    }
 
-	    return No_Fault;
-	}
-
-	Fault execute(FullCPUExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    if (!xc->misspeculating() && !warned) {
-		warn("instruction '%s' unimplemented\n", mnemonic);
-		warned = true;
-	    }
-
-	    return No_Fault;
-	}
-
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-	    return csprintf("%-10s", mnemonic);
-#else
-	    return csprintf("%-10s (unimplemented)", mnemonic);
-#endif
-	}
-    };
+	return No_Fault;
+    }
 }};
+
 
 def template WarnUnimplDeclare {{
     /**
@@ -1542,15 +1685,16 @@ def template WarnUnimplDeclare {{
 
 def format FailUnimpl() {{
     iop = InstObjParams(name, 'FailUnimplemented')
-    return ('', iop.subst('BasicDecodeWithMnemonic'), '')
+    decode_block = BasicDecodeWithMnemonic.subst(iop)
 }};
 
 def format WarnUnimpl() {{
     iop = InstObjParams(name, Name, 'WarnUnimplemented')
-    return iop.subst('WarnUnimplDeclare', 'BasicDecode') + ['']
+    header_output = WarnUnimplDeclare.subst(iop)
+    decode_block = BasicDecode.subst(iop)
 }};
 
-declare {{
+output header {{
     /**
      * Static instruction class for unknown (illegal) instructions.
      * These cause simulator termination if they are executed in a
@@ -1565,37 +1709,47 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPUExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    panic("attempt to execute unknown instruction "
-		  "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
-	    return Unimplemented_Opcode_Fault;
-	}
+	%(BasicExecDeclare)s
 
-	Fault execute(FullCPUExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    // don't panic if this is a misspeculated instruction
-	    if (!xc->misspeculating())
-		panic("attempt to execute unknown instruction "
-		      "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
-	    return Unimplemented_Opcode_Fault;
-	}
-
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
-	{
-	    return csprintf("%-10s (inst 0x%x, opcode 0x%x)",
-			    "unknown", machInst, OPCODE);
-	}
+	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
     };
 }};
 
-def format Unknown() {{
-    return ('', 'return new Unknown(machInst);\n', '')
+////////////////////////////////////////////////////////////////////
+//
+// Unknown instructions
+//
+
+output decoder {{
+    std::string
+    Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    {
+	return csprintf("%-10s (inst 0x%x, opcode 0x%x)",
+			"unknown", machInst, OPCODE);
+    }
 }};
 
-declare {{
+output exec {{
+    Fault
+    Unknown::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData)
+    {
+	if (!xc->misspeculating())
+	    panic("attempt to execute unknown instruction "
+		  "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
+	return Unimplemented_Opcode_Fault;
+    }
+}};
+
+def format Unknown() {{
+    decode_block = 'return new Unknown(machInst);\n'
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Utility functions for execute methods
+//
+
+output exec {{
 
     /// Return opa + opb, summing carry into third arg.
     inline uint64_t
@@ -1609,7 +1763,7 @@ declare {{
 
     /// Multiply two 64-bit values (opa * opb), returning the 128-bit
     /// product in res_hi and res_lo.
-    void
+    inline void
     mul128(uint64_t opa, uint64_t opb, uint64_t &res_hi, uint64_t &res_lo)
     {
 	// do a 64x64 --> 128 multiply using four 32x32 --> 64 multiplies
@@ -1678,6 +1832,11 @@ declare {{
 		| t_val<58:29>);     // rest of exp & fraction
     }
 }};
+
+////////////////////////////////////////////////////////////////////
+//
+// The actual decoder specification
+//
 
 decode OPCODE default Unknown::unknown() {
 
@@ -2297,8 +2456,6 @@ decode OPCODE default Unknown::unknown() {
 		// on this PAL call (including maybe suppress it)
 		dopal = xc->simPalCheck(palFunc);
 
-		Annotate::Callpal(xc->xcBase(), palFunc);
-
 		if (dopal) {
 		    AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
 		    xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
@@ -2357,24 +2514,20 @@ decode OPCODE default Unknown::unknown() {
 	// M5 special opcodes use the reserved 0x01 opcode space
 	0x01: decode M5FUNC {
 	    0x00: arm({{
-		if (!xc->misspeculating()) {
-		    Annotate::ARM(xc->xcBase());
-		    xc->xcBase()->kernelStats.arm();
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::arm(xc->xcBase());
 	    }});
 	    0x01: quiesce({{
 		if (!xc->misspeculating())
 		    AlphaPseudo::quiesce(xc->xcBase());
 	    }});
 	    0x10: ivlb({{
-		if (!xc->misspeculating()) {
-		    Annotate::BeginInterval(xc->xcBase());
-		    xc->xcBase()->kernelStats.ivlb();
-		}
+		if (!xc->misspeculating())
+		    AlphaPseudo::ivlb(xc->xcBase());
 	    }}, No_OpClass);
 	    0x11: ivle({{
 		if (!xc->misspeculating())
-		    Annotate::EndInterval(xc->xcBase());
+		    AlphaPseudo::ivle(xc->xcBase());
 	    }}, No_OpClass);
 	    0x20: m5exit_old({{
 		if (!xc->misspeculating())

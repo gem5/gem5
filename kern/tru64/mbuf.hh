@@ -32,6 +32,8 @@
 #include "sim/host.hh"
 #include "targetarch/isa_traits.hh"
 
+namespace tru64 {
+
 struct m_hdr {
     Addr	mh_next;	// 0x00
     Addr	mh_nextpkt;	// 0x08
@@ -90,5 +92,7 @@ struct mbuf {
 #define	m_ext		M_dat.MH.MH_dat.MH_ext
 #define	m_pktdat	M_dat.MH.MH_dat.MH_databuf
 #define	m_dat		M_dat.M_databuf
+
+}
 
 #endif // __MBUF_HH__

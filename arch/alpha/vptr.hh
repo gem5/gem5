@@ -26,65 +26,88 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/exec_context.hh"
-#include "cpu/base_cpu.hh"
-#include "kern/system_events.hh"
-#include "kern/tru64/tru64_events.hh"
-#include "kern/tru64/dump_mbuf.hh"
-#include "kern/tru64/printf.hh"
-#include "targetarch/arguments.hh"
-#include "mem/functional_mem/memory_control.hh"
+#ifndef __VPTR_HH__
+#define __VPTR_HH__
 
-//void SkipFuncEvent::process(ExecContext *xc);
+#include "arch/alpha/vtophys.hh"
 
-void
-BadAddrEvent::process(ExecContext *xc)
+class ExecContext;
+
+template <class T>
+class VPtr
 {
-    // The following gross hack is the equivalent function to the
-    // annotation for vmunix::badaddr in:
-    // simos/simulation/apps/tcl/osf/tlaser.tcl
+  public:
+    typedef T Type;
 
-    uint64_t a0 = xc->regs.intRegFile[ArgumentReg0];
+  private:
+    ExecContext *xc;
+    Addr ptr;
 
-    if (a0 < ALPHA_K0SEG_BASE || a0 >= ALPHA_K1SEG_BASE ||
-        xc->memCtrl->badaddr(ALPHA_K0SEG_TO_PHYS(a0) & PA_IMPL_MASK)) {
+  public:
+    ExecContext *GetXC() const { return xc; }
+    Addr GetPointer() const { return ptr; }
 
-        DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
-        xc->regs.intRegFile[ReturnValueReg] = 0x1;
-        SkipFuncEvent::process(xc);
+  public:
+    explicit VPtr(ExecContext *_xc, Addr p = 0) : xc(_xc), ptr(p) { }
+    template <class U>
+    VPtr(const VPtr<U> &vp) : xc(vp.GetXC()), ptr(vp.GetPointer()) {}
+    ~VPtr() {}
+
+    bool operator!() const
+    {
+        return ptr == 0;
     }
-    else
-        DPRINTF(BADADDR, "badaddr arg=%#x good\n", a0);
-}
 
-void
-PrintfEvent::process(ExecContext *xc)
-{
-    if (DTRACE(Printf)) {
-        DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
+    VPtr<T> operator+(int offset)
+    {
+        VPtr<T> ptr(*this);
+        ptr += offset;
 
-        AlphaArguments args(xc);
-        tru64::Printf(args);
+        return ptr;
     }
-}
 
-void
-DebugPrintfEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        if (!raw)
-            DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
+    const VPtr<T> &operator+=(int offset)
+    {
+        ptr += offset;
+        assert((ptr & (ALPHA_PGBYTES - 1)) + sizeof(T) < ALPHA_PGBYTES);
 
-        AlphaArguments args(xc);
-        tru64::Printf(args);
+        return *this;
     }
-}
 
-void
-DumpMbufEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        AlphaArguments args(xc);
-        tru64::DumpMbuf(args);
+    const VPtr<T> &operator=(Addr p)
+    {
+        assert((p & (ALPHA_PGBYTES - 1)) + sizeof(T) < ALPHA_PGBYTES);
+        ptr = p;
+
+        return *this;
     }
-}
+
+    template <class U>
+    const VPtr<T> &operator=(const VPtr<U> &vp)
+    {
+        xc = vp.GetXC();
+        ptr = vp.GetPointer();
+
+        return *this;
+    }
+
+    operator T *()
+    {
+        void *addr = vtomem(xc, ptr, sizeof(T));
+        return (T *)addr;
+    }
+
+    T *operator->()
+    {
+        void *addr = vtomem(xc, ptr, sizeof(T));
+        return (T *)addr;
+    }
+
+    T &operator*()
+    {
+        void *addr = vtomem(xc, ptr, sizeof(T));
+        return *(T *)addr;
+    }
+};
+
+#endif // __VPTR_HH__

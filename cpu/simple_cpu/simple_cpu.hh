@@ -34,7 +34,7 @@
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "base/statistics.hh"
-
+#include "cpu/exec_context.hh"
 
 // forward declarations
 #ifdef FULL_SYSTEM
@@ -46,6 +46,11 @@ class PhysicalMemory;
 
 class RemoteGDB;
 class GDBListener;
+
+#else
+
+class Process;
+
 #endif // FULL_SYSTEM
 
 class MemInterface;
@@ -204,7 +209,12 @@ class SimpleCPU : public BaseCPU
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;
-    Statistics::Formula numInsts;
+    Statistics::Scalar<> numInsts;
+
+    virtual Counter totalInstructions() const
+    {
+        return numInst - startNumInst;
+    }
 
     // number of simulated memory references
     Statistics::Scalar<> numMemRefs;
@@ -299,7 +309,5 @@ class SimpleCPU : public BaseCPU
     bool misspeculating() { return xc->misspeculating(); }
     ExecContext *xcBase() { return xc; }
 };
-
-typedef SimpleCPU SimpleCPUExecContext;
 
 #endif // __SIMPLE_CPU_HH__

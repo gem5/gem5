@@ -26,65 +26,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/exec_context.hh"
-#include "cpu/base_cpu.hh"
-#include "kern/system_events.hh"
-#include "kern/tru64/tru64_events.hh"
-#include "kern/tru64/dump_mbuf.hh"
-#include "kern/tru64/printf.hh"
-#include "targetarch/arguments.hh"
-#include "mem/functional_mem/memory_control.hh"
+#ifndef __SYSTEM_EVENTS_HH__
+#define __SYSTEM_EVENTS_HH__
 
-//void SkipFuncEvent::process(ExecContext *xc);
+#include "cpu/pc_event.hh"
 
-void
-BadAddrEvent::process(ExecContext *xc)
+class System;
+
+class SkipFuncEvent : public PCEvent
 {
-    // The following gross hack is the equivalent function to the
-    // annotation for vmunix::badaddr in:
-    // simos/simulation/apps/tcl/osf/tlaser.tcl
+  public:
+    SkipFuncEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-    uint64_t a0 = xc->regs.intRegFile[ArgumentReg0];
-
-    if (a0 < ALPHA_K0SEG_BASE || a0 >= ALPHA_K1SEG_BASE ||
-        xc->memCtrl->badaddr(ALPHA_K0SEG_TO_PHYS(a0) & PA_IMPL_MASK)) {
-
-        DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
-        xc->regs.intRegFile[ReturnValueReg] = 0x1;
-        SkipFuncEvent::process(xc);
-    }
-    else
-        DPRINTF(BADADDR, "badaddr arg=%#x good\n", a0);
-}
-
-void
-PrintfEvent::process(ExecContext *xc)
+class FnEvent : public PCEvent
 {
-    if (DTRACE(Printf)) {
-        DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
+  public:
+    FnEvent(PCEventQueue *q, const std::string &desc, System *system);
+    virtual void process(ExecContext *xc);
+    std::string myname() const { return _name; }
 
-        AlphaArguments args(xc);
-        tru64::Printf(args);
-    }
-}
+  private:
+    std::string _name;
+    Statistics::MainBin *myBin;
+};
 
-void
-DebugPrintfEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        if (!raw)
-            DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
-
-        AlphaArguments args(xc);
-        tru64::Printf(args);
-    }
-}
-
-void
-DumpMbufEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        AlphaArguments args(xc);
-        tru64::DumpMbuf(args);
-    }
-}
+#endif // __SYSTEM_EVENTS_HH__
