@@ -32,6 +32,7 @@
 
 #include <sys/time.h>
 
+#include <algorithm>
 #include <string>
 
 #include "base/misc.hh"
@@ -41,8 +42,8 @@
 
 using std::string;
 
-EtherDump::EtherDump(const string &name, const string &file)
-    : SimObject(name)
+EtherDump::EtherDump(const string &name, const string &file, int max)
+    : SimObject(name), maxlen(max)
 {
     if (!file.empty())
         stream.open(file.c_str());
@@ -113,22 +114,24 @@ EtherDump::dumpPacket(PacketPtr &packet)
     pcap_pkthdr pkthdr;
     pkthdr.seconds = curtime + (curTick / s_freq);
     pkthdr.microseconds = (curTick / us_freq) % ULL(1000000);
-    pkthdr.caplen = packet->length;
+    pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;
     stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
-    stream.write(reinterpret_cast<char *>(packet->data), packet->length);
+    stream.write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
     stream.flush();
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
 
     Param<string> file;
+    Param<int> maxlen;
 
 END_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
-    INIT_PARAM(file, "file to dump packets to")
+    INIT_PARAM(file, "file to dump packets to"),
+    INIT_PARAM_DFLT(maxlen, "max portion of packet data to dump", 96)
 
 END_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
@@ -148,7 +151,7 @@ CREATE_SIM_OBJECT(EtherDump)
         }
     }
 
-    return new EtherDump(getInstanceName(), filename);
+    return new EtherDump(getInstanceName(), filename, maxlen);
 }
 
 REGISTER_SIM_OBJECT("EtherDump", EtherDump)
