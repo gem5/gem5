@@ -1264,10 +1264,8 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * re-add addrRanges to bus bridges
      */
-    if (pioInterface) {
+    if (pioInterface)
         pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
-        pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
-    }
 }
 
 Tick
