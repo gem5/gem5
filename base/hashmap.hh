@@ -57,6 +57,7 @@ namespace m5 {
 //
 
 namespace __hash_namespace {
+#if !defined(__LP64__)
     template<>
     struct hash<uint64_t> {
         size_t operator()(uint64_t r) const {
@@ -65,11 +66,12 @@ namespace __hash_namespace {
     };
 
     template<>
-    struct hash<Counter> {
-        size_t operator()(Counter r) const {
+    struct hash<int64_t> {
+        size_t operator()(int64_t r) const {
             return r;
         };
     };
+#endif
 
     template<>
     struct hash<std::string> {
