@@ -45,12 +45,11 @@
 #include "base/misc.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "dev/platform.hh"
 #include "dev/simconsole.hh"
+#include "dev/uart.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
-#include "targetarch/ev5.hh"
-#include "dev/uart.hh"
-#include "dev/platform.hh"
 
 using namespace std;
 
