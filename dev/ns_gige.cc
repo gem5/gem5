@@ -1299,19 +1299,15 @@ NSGigE::rxKick()
             }
 #endif
 
-            eth_header *eth = (eth_header *) rxPacket->data;
-            // eth->type 0x800 indicated that it's an ip packet.
-            if (eth->type == 0x800 && extstsEnable) {
-                rxDescCache.extsts |= EXTSTS_IPPKT;
+            if (rxPacket->isIpPkt() && extstsEnable) {			      rxDescCache.extsts |= EXTSTS_IPPKT;
                 if (!ipChecksum(rxPacket, false))
                     rxDescCache.extsts |= EXTSTS_IPERR;
-                ip_header *ip = rxFifo.front()->getIpHdr();
 
-                if (ip->protocol == 6) {
+                if (rxPacket->isTcpPkt()) {
                     rxDescCache.extsts |= EXTSTS_TCPPKT;
                     if (!tcpChecksum(rxPacket, false))
                         rxDescCache.extsts |= EXTSTS_TCPERR;
-                } else if (ip->protocol == 17) {
+                } else if (rxPacket->isUdpPkt()) {
                     rxDescCache.extsts |= EXTSTS_UDPPKT;
                     if (!udpChecksum(rxPacket, false))
                         rxDescCache.extsts |= EXTSTS_UDPERR;
@@ -1914,9 +1910,8 @@ NSGigE::recvPacket(PacketPtr packet)
 bool
 NSGigE::udpChecksum(PacketPtr packet, bool gen)
 {
-    udp_header *hdr = (udp_header *)  packet->getTransportHdr();
-
     ip_header *ip = packet->getIpHdr();
+    udp_header *hdr = packet->getUdpHdr(ip);
 
     pseudo_header *pseudo = new pseudo_header;
 
@@ -1941,9 +1936,8 @@ NSGigE::udpChecksum(PacketPtr packet, bool gen)
 bool
 NSGigE::tcpChecksum(PacketPtr packet, bool gen)
 {
-    tcp_header *hdr = (tcp_header *) packet->getTransportHdr();
-
     ip_header *ip = packet->getIpHdr();
+    tcp_header *hdr = packet->getTcpHdr(ip);
 
     pseudo_header *pseudo = new pseudo_header;
 
