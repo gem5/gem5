@@ -96,9 +96,9 @@ vtophys(ExecContext *xc, Addr vaddr)
 {
     Addr ptbr = xc->regs.ipr[AlphaISA::IPR_PALtemp20];
     Addr paddr = 0;
-    if (PC_PAL(vaddr)) {
-        paddr = vaddr & ~ULL(1);
-    } else {
+//    if (PC_PAL(vaddr)) {
+//	paddr = vaddr & ~ULL(1);
+//    } else {
         if (vaddr >= ALPHA_K0SEG_BASE && vaddr <= ALPHA_K0SEG_END) {
             paddr = ALPHA_K0SEG_TO_PHYS(vaddr);
         } else if (!ptbr) {
@@ -109,7 +109,7 @@ vtophys(ExecContext *xc, Addr vaddr)
             if (pte && entry_valid(entry))
                 paddr = PMAP_PTE_PA(entry) | (vaddr & PGOFSET);
         }
-    }
+//    }
 
     DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
 

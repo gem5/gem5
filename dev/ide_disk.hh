@@ -40,8 +40,8 @@
 
 #define DMA_BACKOFF_PERIOD 200
 
-#define MAX_DMA_SIZE (16384)
-#define MAX_MULTSECT (32)
+#define MAX_DMA_SIZE (131072) // 256 * SectorSize (512)
+#define MAX_MULTSECT (128)
 
 #define PRD_BASE_MASK  0xfffffffe
 #define PRD_COUNT_MASK 0xfffe

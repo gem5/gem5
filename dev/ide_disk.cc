@@ -55,8 +55,9 @@ using namespace std;
 
 IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
                  int id, int delay)
-    : SimObject(name), ctrl(NULL), image(img), physmem(phys), dmaTransferEvent(this),
-      dmaReadWaitEvent(this), dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
+    : SimObject(name), ctrl(NULL), image(img), physmem(phys),
+      dmaTransferEvent(this), dmaReadWaitEvent(this),
+      dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
       dmaReadEvent(this), dmaWriteEvent(this)
 {
     diskDelay = (delay * ticksPerSecond / 1000) / image->size();
@@ -379,8 +380,9 @@ IdeDisk::dmaWriteDone()
     }
 
     // copy the data to memory
-    Addr dmaAddr =
-        ctrl->tsunami->pchip->translatePciToDma(curPrd.getBaseAddr());
+    Addr dmaAddr = ctrl->tsunami->pchip->
+        translatePciToDma(curPrd.getBaseAddr());
+
     memcpy(physmem->dma_addr(dmaAddr, curPrd.getByteCount()),
            (void *)dataBuffer, curPrd.getByteCount());
 
@@ -665,7 +667,9 @@ IdeDisk::updateState(DevAction_t action)
             cmdReg.status |= STATUS_DRQ_BIT;
 
             // put the first two bytes into the data register
-            memcpy((void *)&cmdReg.data0, (void *)dataBuffer, sizeof(uint16_t));
+            memcpy((void *)&cmdReg.data0, (void *)dataBuffer,
+                   sizeof(uint16_t));
+
             // copy the data into the data buffer
             if (curCommand == WIN_IDENTIFY)
                 memcpy((void *)dataBuffer, (void *)&driveID,
@@ -753,7 +757,9 @@ IdeDisk::updateState(DevAction_t action)
         break;
 
       case Transfer_Data_Out:
-        if (action == ACT_DATA_WRITE_BYTE || action == ACT_DATA_WRITE_SHORT) {
+        if (action == ACT_DATA_WRITE_BYTE ||
+            action == ACT_DATA_WRITE_SHORT) {
+
             if (action == ACT_DATA_READ_BYTE) {
                 panic("DEBUG: WRITING DATA ONE BYTE AT A TIME!\n");
             } else {
@@ -863,7 +869,8 @@ END_INIT_SIM_OBJECT_PARAMS(IdeDisk)
 
 CREATE_SIM_OBJECT(IdeDisk)
 {
-    return new IdeDisk(getInstanceName(), image, physmem, driveID, disk_delay);
+    return new IdeDisk(getInstanceName(), image, physmem, driveID,
+                       disk_delay);
 }
 
 REGISTER_SIM_OBJECT("IdeDisk", IdeDisk)

@@ -95,6 +95,31 @@ SymbolTable::load(const string &filename)
 }
 
 bool
+SymbolTable::findNearestSymbol(Addr address, string &symbol) const
+{
+    ATable::const_iterator i = addrTable.lower_bound(address);
+
+    // check for PALCode
+    if (address & 0x1)
+        return false;
+
+    // first check for the end
+    if (i == addrTable.end())
+        i--;
+    else if (i == addrTable.begin() && (*i).first != address)
+        return false;
+    else if ((*i).first != address)
+        i--;
+
+    symbol = (*i).second;
+
+    if (address != (*i).first)
+        symbol += csprintf("+%d", address - (*i).first);
+
+    return true;
+}
+
+bool
 SymbolTable::findSymbol(Addr address, string &symbol) const
 {
     ATable::const_iterator i = addrTable.find(address);

@@ -18,6 +18,7 @@
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
 #include "mem/functional_mem/memory_control.hh"
+#include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -217,12 +218,21 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
     return No_Fault;
 }
 
+#define DMA_ADDR_MASK ULL(0x3ffffffff)
+
 Addr
 TsunamiPChip::translatePciToDma(Addr busAddr)
 {
     // compare the address to the window base registers
+    uint64_t tbaMask = 0;
+    uint64_t baMask = 0;
+
     uint64_t windowMask = 0;
     uint64_t windowBase = 0;
+
+    uint64_t pteEntry = 0;
+
+    Addr pteAddr;
     Addr dmaAddr;
 
     for (int i = 0; i < 4; i++) {
@@ -230,15 +240,38 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
         windowMask = ~wsm[i] & (0x7ff << 20);
 
         if ((busAddr & windowMask) == (windowBase & windowMask)) {
-            windowMask = (wsm[i] & (0x7ff << 20)) | 0xfffff;
+
 
             if (wsba[i] & 0x1) {   // see if enabled
-                if (wsba[i] & 0x2) // see if SG bit is set
-                    panic("PCI to system SG mapping not currently implemented!\n");
-                else
-                    dmaAddr = (tba[i] & ~windowMask) | (busAddr & windowMask);
+                if (wsba[i] & 0x2) { // see if SG bit is set
+                    /** @todo
+                        This currently is faked by just doing a direct
+                        read from memory, however, to be realistic, this
+                        needs to actually do a bus transaction.  The process
+                        is explained in the tsunami documentation on page
+                        10-12 and basically munges the address to look up a
+                        PTE from a table in memory and then uses that mapping
+                        to create an address for the SG page
+                    */
 
-                return dmaAddr;
+                    tbaMask = ~(((wsm[i] & (0x7ff << 20)) >> 10) | 0x3ff);
+                    baMask = (wsm[i] & (0x7ff << 20)) | (0x7f << 13);
+                    pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
+
+                    memcpy((void *)&pteEntry,
+                           tsunami->system->
+                           physmem->dma_addr(pteAddr, sizeof(uint64_t)),
+                           sizeof(uint64_t));
+
+                    dmaAddr = ((pteEntry & ~0x1) << 12) | (busAddr & 0xfff);
+
+                } else {
+                    baMask = (wsm[i] & (0x7ff << 20)) | 0xfffff;
+                    tbaMask = ~baMask;
+                    dmaAddr = (tba[i] & tbaMask) | (busAddr & baMask);
+                }
+
+                return (dmaAddr & DMA_ADDR_MASK);
             }
         }
     }
