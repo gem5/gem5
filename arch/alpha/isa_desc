@@ -5,7 +5,7 @@
 
 let {{
     global rcs_id
-    rcs_id = "$Id: s.isa_desc 1.43 04/02/29 22:41:10-05:00 ehallnor@zazzer.eecs.umich.edu $"
+    rcs_id = "$Id$"
 }};
 
 
@@ -22,9 +22,7 @@ let {{
 #include "base/misc.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
-#include "cpu/full_cpu/full_cpu.hh"
-#include "cpu/full_cpu/op_class.hh"
-#include "cpu/full_cpu/spec_state.hh"
+#include "cpu/full_cpu/dyn_inst.hh"
 #include "cpu/simple_cpu/simple_cpu.hh"
 #include "cpu/static_inst.hh"
 #include "sim/annotation.hh"
@@ -143,7 +141,8 @@ declare {{
     /// @retval Full-system mode: No_Fault if FP is enabled, Fen_Fault
     /// if not.  Non-full-system mode: always returns No_Fault.
 #ifdef FULL_SYSTEM
-    inline Fault checkFpEnableFault(ExecContext *xc)
+    template <class XC>
+    inline Fault checkFpEnableFault(XC *xc)
     {
 	Fault fault = No_Fault;	// dummy... this ipr access should not fault
 	if (!ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
@@ -152,7 +151,8 @@ declare {{
 	return fault;
     }
 #else
-    inline Fault checkFpEnableFault(ExecContext *xc)
+    template <class XC>
+    inline Fault checkFpEnableFault(XC *xc)
     {
 	return No_Fault;
     }
@@ -239,42 +239,27 @@ def template BasicDeclare {{
 	    %(constructor)s;
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    SimpleCPU *memAccessObj __attribute__((unused)) = cpu;
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(simple_rd)s;
-	    %(code)s;
-
-	    if (fault == No_Fault) {
-		%(simple_wb)s;
-	    }
-
-	    return fault;
-	}
-
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{
-	    DynInst *memAccessObj __attribute__((unused)) = dynInst;
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(dtld_rd)s;
-	    %(code)s;
-
-	    if (fault == No_Fault) {
-		%(dtld_wb)s;
-	    }
-
-	    return fault;
-	}
+	%(exec_func_declarations)s
     };
+}};
+
+def template BasicExecute {{
+    Fault %(class_name)s::execute(%(cpu_model)s *xc,
+				  Trace::InstRecord *traceData)
+    {
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_rd)s;
+	%(code)s;
+
+	if (fault == No_Fault) {
+	    %(op_wb)s;
+	}
+
+	return fault;
+    }
 }};
 
 def template BasicDecode {{
@@ -288,7 +273,7 @@ def template BasicDecodeWithMnemonic {{
 // The most basic instruction format... used only for a few misc. insts
 def format BasicOperate(code, *flags) {{
     iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code), flags)
-    return iop.subst('BasicDeclare', 'BasicDecode')
+    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
 }};
 
 
@@ -315,18 +300,6 @@ declare {{
 
 	~Nop() { }
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    return No_Fault;
-	}
-
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{
-	    return No_Fault;
-	}
-
 	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
 	{
 #ifdef SS_COMPATIBLE_DISASSEMBLY
@@ -335,6 +308,12 @@ declare {{
 	    return csprintf("%-10s (%s)", "nop", originalDisassembly);
 #endif
 	}
+
+	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
+        { return No_Fault; }
+
+	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
+        { return No_Fault; }
     };
 
     /// Helper function for decoding nops.  Substitute Nop object
@@ -350,7 +329,7 @@ declare {{
 }};
 
 def format Nop() {{
-    return ('', 'return new Nop("%s", machInst);\n' % name)
+    return ('', 'return new Nop("%s", machInst);\n' % name, 'return No_Fault;')
 }};
 
 
@@ -370,7 +349,7 @@ def template OperateNopCheckDecode {{
 def format BasicOperateWithNopCheck(code, *opt_args) {{
     iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code),
 			opt_args)
-    return iop.subst('BasicDeclare', 'OperateNopCheckDecode')
+    return iop.subst('BasicDeclare', 'OperateNopCheckDecode', 'BasicExecute')
 }};
 
 
@@ -454,21 +433,24 @@ def format IntegerOperate(code, *opt_flags) {{
     # generate declaration for register version
     cblk = CodeBlock(code)
     iop = InstObjParams(name, Name, 'AlphaStaticInst', cblk, opt_flags)
-    decls = iop.subst('BasicDeclare')
+    (decls, exec_code) = iop.subst('BasicDeclare', 'BasicExecute')
 
     if uses_imm:
         # append declaration for imm version
         imm_cblk = CodeBlock(imm_code)
         imm_iop = InstObjParams(name, Name + 'Imm', 'IntegerImm', imm_cblk,
 				opt_flags)
-        decls += imm_iop.subst('BasicDeclare')
+        (imm_decls, imm_exec_code) = \
+		   imm_iop.subst('BasicDeclare', 'BasicExecute')
+	decls += imm_decls
+        exec_code += imm_exec_code
         # decode checks IMM bit to pick correct version
 	decode = iop.subst('RegOrImmDecode')
     else:
         # no imm version: just check for nop
         decode = iop.subst('OperateNopCheckDecode')
 
-    return (decls, decode)
+    return (decls, decode, exec_code)
 }};
 
 
@@ -544,10 +526,10 @@ declare {{
 
 #if defined(linux)
 	int
-	getC99RoundingMode(ExecContext *xc)
+	getC99RoundingMode(uint64_t fpcr_val)
 	{
 	    if (roundingMode == Dynamic) {
-		return alphaToC99RoundingMode[bits(xc->readFpcr(), 59, 58)];
+		return alphaToC99RoundingMode[bits(fpcr_val, 59, 58)];
 	    }
 	    else {
 		return alphaToC99RoundingMode[roundingMode];
@@ -618,124 +600,6 @@ declare {{
 }};
 
 
-def template FloatingPointDeclare {{
-    /**
-     * "Fast" static instruction class for "%(mnemonic)s" (imprecise
-     * trapping mode, normal rounding mode).
-     */
-    class %(class_name)sFast : public %(base_class)s
-    {
-      public:
-	/// Constructor.
-	%(class_name)sFast(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-	{
-	    %(constructor)s;
-	}
-
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(simple_rd)s;
-	    %(code)s;
-
-	    if (fault == No_Fault) {
-		%(simple_wb)s;
-	    }
-
-	    return fault;
-	}
-
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(dtld_rd)s;
-	    %(code)s;
-
-	    if (fault == No_Fault) {
-		%(dtld_wb)s;
-	    }
-
-	    return fault;
-	}
-    };
-
-    /**
-     * General static instruction class for "%(mnemonic)s".  Supports
-     * all the various rounding and trapping modes.
-     */
-    class %(class_name)sGeneral : public %(base_class)s
-    {
-      public:
-	/// Constructor.
-	%(class_name)sGeneral(MachInst machInst)
-	     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-	{
-	    %(constructor)s;
-	}
-
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(simple_rd)s;
-
-#if defined(linux)
-	    fesetround(getC99RoundingMode(xc));
-#endif
-
-	    %(code)s;
-
-#if defined(linux)
-	    fesetround(FE_TONEAREST);
-#endif
-
-	    if (fault == No_Fault) {
-		%(simple_wb)s;
-	    }
-
-	    return fault;
-	}
-
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(dtld_rd)s;
-
-#if defined(linux)
-	    fesetround(getC99RoundingMode(xc));
-#endif
-
-	    %(code)s;
-
-#if defined(linux)
-	    fesetround(FE_TONEAREST);
-#endif
-
-	    if (fault == No_Fault) {
-		%(dtld_wb)s;
-	    }
-
-	    return fault;
-	}
-    };
-}};
-
 def template FloatingPointDecode {{
  {
      bool fast = (FP_TRAPMODE == AlphaFP::Imprecise
@@ -752,15 +616,34 @@ def template FloatingPointDecode {{
  }
 }};
 
-
 // General format for floating-point operate instructions:
 // - Checks trapping and rounding mode flags.  Trapping modes
 //   currently unimplemented (will fail).
 // - Generates NOP if FC == 31.
 def format FloatingPointOperate(code, *opt_args) {{
-    iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code),
-			opt_args)
-    return iop.subst('FloatingPointDeclare', 'FloatingPointDecode')
+    iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code), opt_args)
+    decode = iop.subst('FloatingPointDecode')
+
+    fast_iop = InstObjParams(name, Name + 'Fast', 'AlphaFP',
+    CodeBlock(code), opt_args)
+    (fast_declare, fast_exec) = fast_iop.subst('BasicDeclare', 'BasicExecute')
+
+    gen_code_prefix = r'''
+#if defined(linux)
+    fesetround(getC99RoundingMode(xc->readFpcr()));
+#endif
+'''
+    gen_code_suffix = r'''
+#if defined(linux)
+    fesetround(FE_TONEAREST);
+#endif
+'''
+
+    gen_iop = InstObjParams(name, Name + 'General', 'AlphaFP',
+    CodeBlock(gen_code_prefix + code + gen_code_suffix), opt_args)
+    (gen_declare, gen_exec) = gen_iop.subst('BasicDeclare', 'BasicExecute')
+    
+    return (fast_declare + gen_declare, decode, fast_exec + gen_exec)
 }};
 
 
@@ -833,13 +716,11 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{ panic("attempt to execute eacomp"); }
+	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
+        { panic("attempt to execute eacomp"); }
 
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{ panic("attempt to execute eacomp"); }
+	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
+        { panic("attempt to execute eacomp"); }
     };
 
     /**
@@ -855,13 +736,11 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{ panic("attempt to execute memacc"); }
+	Fault execute(SimpleCPUExecContext *, Trace::InstRecord *)
+        { panic("attempt to execute memacc"); }
 
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{ panic("attempt to execute memacc"); }
+	Fault execute(FullCPUExecContext *, Trace::InstRecord *)
+        { panic("attempt to execute memacc"); }
     };
 
 }};
@@ -869,7 +748,7 @@ declare {{
 
 def format LoadAddress(code) {{
     iop = InstObjParams(name, Name, 'Memory', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode')
+    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
 }};
 
 
@@ -927,72 +806,42 @@ def template LoadStoreDeclare {{
 	    %(constructor)s;
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    SimpleCPU *memAccessObj = cpu;
-	    Addr EA;
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(simple_nonmem_rd)s;
-	    %(ea_code)s;
-
-	    if (fault == No_Fault) {
-		%(simple_mem_rd)s;
-		%(memacc_code)s;
-	    }
-
-	    if (fault == No_Fault) {
-		%(simple_mem_wb)s;
-	    }
-
-	    if (fault == No_Fault) {
-		%(postacc_code)s;
-	    }
-
-	    if (fault == No_Fault) {
-		%(simple_nonmem_wb)s;
-	    }
-
-	    return fault;
-	}
-
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{
-	    DynInst *memAccessObj = dynInst;
-	    Addr EA;
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(dtld_nonmem_rd)s;
-	    %(ea_code)s;
-
-	    if (fault == No_Fault) {
-		%(dtld_mem_rd)s;
-		%(memacc_code)s;
-	    }
-
-	    if (fault == No_Fault) {
-		%(dtld_mem_wb)s;
-	    }
-
-	    if (fault == No_Fault) {
-		%(postacc_code)s;
-	    }
-
-	    if (fault == No_Fault) {
-		%(dtld_nonmem_wb)s;
-	    }
-
-	    return fault;
-	}
+	%(exec_func_declarations)s
     };
 }};
 
+def template LoadStoreExecute {{
+    Fault %(class_name)s::execute(%(cpu_model)s *xc,
+				  Trace::InstRecord *traceData)
+    {
+	Addr EA;
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_nonmem_rd)s;
+	%(ea_code)s;
+
+	if (fault == No_Fault) {
+	    %(op_mem_rd)s;
+	    %(memacc_code)s;
+	}
+
+	if (fault == No_Fault) {
+	    %(op_mem_wb)s;
+	}
+
+	if (fault == No_Fault) {
+	    %(postacc_code)s;
+	}
+
+	if (fault == No_Fault) {
+	    %(op_nonmem_wb)s;
+	}
+
+	return fault;
+    }
+}};
 
 def template PrefetchDeclare {{
     /**
@@ -1048,44 +897,29 @@ def template PrefetchDeclare {{
 	    %(constructor)s;
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
-		      Trace::InstRecord *traceData)
-	{
-	    Addr EA;
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(simple_nonmem_rd)s;
-	    %(ea_code)s;
-
-	    if (fault == No_Fault) {
-		cpu->prefetch(EA, memAccessFlags);
-	    }
-
-	    return No_Fault;
-	}
-
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
-		      Trace::InstRecord *traceData)
-	{
-	    Addr EA;
-	    Fault fault = No_Fault;
-
-	    %(fp_enable_check)s;
-	    %(exec_decl)s;
-	    %(dtld_nonmem_rd)s;
-	    %(ea_code)s;
-
-	    if (fault == No_Fault) {
-		dynInst->prefetch(EA, memAccessFlags);
-	    }
-
-	    return No_Fault;
-	}
+	%(exec_func_declarations)s
     };
 }};
 
+def template PrefetchExecute {{
+    Fault %(class_name)s::execute(%(cpu_model)s *xc,
+				  Trace::InstRecord *traceData)
+    {
+	Addr EA;
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_nonmem_rd)s;
+	%(ea_code)s;
+
+	if (fault == No_Fault) {
+	    xc->prefetch(EA, memAccessFlags);
+	}
+
+	return No_Fault;
+    }
+}};
 
 // load instructions use Ra as dest, so check for
 // Ra == 31 to detect nops
@@ -1118,7 +952,8 @@ global LoadStoreBase
 def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
 		  base_class = 'Memory', flags = [],
 		  declare_template = 'LoadStoreDeclare',
-		  decode_template = 'BasicDecode'):
+		  decode_template = 'BasicDecode',
+		  exec_template = 'LoadStoreExecute'):
     # Segregate flags into instruction flags (handled by InstObjParams)
     # and memory access flags (handled here).
 
@@ -1149,7 +984,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
     if mem_flags != '':
         iop.constructor += '\n\tmemAccessFlags = ' + mem_flags + ';'
 
-    return iop.subst(declare_template, decode_template)
+    return iop.subst(declare_template, decode_template, exec_template)
 }};
 
 
@@ -1163,7 +998,7 @@ def format LoadOrNop(ea_code, memacc_code, *flags) {{
 // Note that the flags passed in apply only to the prefetch version
 def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     # declare the load instruction object and generate the decode block
-    (decls, decode) = \
+    (decls, decode, exec_code) = \
 	LoadStoreBase(name, Name, ea_code, memacc_code,
 		      decode_template = 'LoadPrefetchCheckDecode')
 
@@ -1172,12 +1007,13 @@ def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     # convert flags from tuple to list to make them mutable
     pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'RdPort']
 
-    (pfdecls, pfdecode) = \
+    (pfdecls, pfdecode, pfexec) = \
 	LoadStoreBase(name, Name + 'Prefetch', ea_code, '',
 		      flags = pf_flags,
-		      declare_template = 'PrefetchDeclare')
+		      declare_template = 'PrefetchDeclare',
+		      exec_template = 'PrefetchExecute')
 
-    return (decls + pfdecls, decode)
+    return (decls + pfdecls, decode, exec_code + pfexec)
 }};
 
 
@@ -1369,7 +1205,7 @@ def format CondBranch(code) {{
     code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
 			('IsDirectControl', 'IsCondControl'))
-    return iop.subst('BasicDeclare', 'BasicDecode')
+    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
 }};
 
 let {{
@@ -1379,17 +1215,20 @@ def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     nolink_code = 'NPC = %s;\n' % npc_expr
     nolink_iop = InstObjParams(name, Name, base_class,
                                CodeBlock(nolink_code), flags)
-    decls = nolink_iop.subst('BasicDeclare')
+    (decls, exec_code) = nolink_iop.subst('BasicDeclare', 'BasicExecute')
 
     # Generate declaration of '*AndLink' version, append to decls
     link_code = 'Ra = NPC & ~3;\n' + nolink_code
     link_iop = InstObjParams(name, Name + 'AndLink', base_class,
                              CodeBlock(link_code), flags)
-    decls += link_iop.subst('BasicDeclare')
+    (link_decls, link_exec_code) = \
+	link_iop.subst('BasicDeclare', 'BasicExecute')
+    decls += link_decls
+    exec_code += link_exec_code
 
     # need to use link_iop for the decode template since it is expecting
     # the shorter version of class_name (w/o "AndLink")
-    return (decls, nolink_iop.subst('JumpOrBranchDecode'))
+    return (decls, nolink_iop.subst('JumpOrBranchDecode'), exec_code)
 }};
 
 def format UncondBranch(*flags) {{
@@ -1432,7 +1271,7 @@ declare {{
 
 def format EmulatedCallPal(code) {{
     iop = InstObjParams(name, Name, 'EmulatedCallPal', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode')
+    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
 }};
 
 declare {{
@@ -1483,7 +1322,7 @@ declare {{
 
 def format CallPal(code) {{
     iop = InstObjParams(name, Name, 'CallPalBase', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode')
+    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
 }};
 
 //
@@ -1585,7 +1424,7 @@ declare {{
 
 def format HwMoveIPR(code) {{
     iop = InstObjParams(name, Name, 'HwMoveIPR', CodeBlock(code))
-    return iop.subst('BasicDeclare', 'BasicDecode')
+    return iop.subst('BasicDeclare', 'BasicDecode', 'BasicExecute')
 }};
 
 declare {{
@@ -1605,7 +1444,7 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
+	Fault execute(SimpleCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    panic("attempt to execute unimplemented instruction '%s' "
@@ -1613,11 +1452,11 @@ declare {{
 	    return Unimplemented_Opcode_Fault;
 	}
 
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    // don't panic if this is a misspeculated instruction
-	    if (!xc->spec_mode)
+	    if (!xc->misspeculating())
 		panic("attempt to execute unimplemented instruction '%s' "
 		      "(inst 0x%08x, opcode 0x%x)",
 		      mnemonic, machInst, OPCODE);
@@ -1652,7 +1491,7 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
+	Fault execute(SimpleCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    if (!warned) {
@@ -1663,10 +1502,10 @@ declare {{
 	    return No_Fault;
 	}
 
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
-	    if (!xc->spec_mode && !warned) {
+	    if (!xc->misspeculating() && !warned) {
 		warn("instruction '%s' unimplemented\n", mnemonic);
 		warned = true;
 	    }
@@ -1703,12 +1542,12 @@ def template WarnUnimplDeclare {{
 
 def format FailUnimpl() {{
     iop = InstObjParams(name, 'FailUnimplemented')
-    return ('', iop.subst('BasicDecodeWithMnemonic'))
+    return ('', iop.subst('BasicDecodeWithMnemonic'), '')
 }};
 
 def format WarnUnimpl() {{
     iop = InstObjParams(name, Name, 'WarnUnimplemented')
-    return iop.subst('WarnUnimplDeclare', 'BasicDecode')
+    return iop.subst('WarnUnimplDeclare', 'BasicDecode') + ['']
 }};
 
 declare {{
@@ -1726,7 +1565,7 @@ declare {{
 	{
 	}
 
-	Fault execute(SimpleCPU *cpu, ExecContext *xc,
+	Fault execute(SimpleCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    panic("attempt to execute unknown instruction "
@@ -1734,11 +1573,11 @@ declare {{
 	    return Unimplemented_Opcode_Fault;
 	}
 
-	Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+	Fault execute(FullCPUExecContext *xc,
 		      Trace::InstRecord *traceData)
 	{
 	    // don't panic if this is a misspeculated instruction
-	    if (!xc->spec_mode)
+	    if (!xc->misspeculating())
 		panic("attempt to execute unknown instruction "
 		      "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
 	    return Unimplemented_Opcode_Fault;
@@ -1753,7 +1592,7 @@ declare {{
 }};
 
 def format Unknown() {{
-    return ('', 'return new Unknown(machInst);\n')
+    return ('', 'return new Unknown(machInst);\n', '')
 }};
 
 declare {{
@@ -1855,7 +1694,7 @@ decode OPCODE default Unknown::unknown() {
 	0x2a: ldl_l({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }}, LOCKED);
 	0x2b: ldq_l({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, LOCKED);
 	0x20: copy_load({{EA = Ra;}}, 
-	                {{ fault = memAccessObj->copySrcTranslate(EA);}},
+	                {{ fault = xc->copySrcTranslate(EA);}},
 			IsMemRef, IsLoad, IsCopy);
     }
 
@@ -1877,7 +1716,7 @@ decode OPCODE default Unknown::unknown() {
 	0x26: sts({{ EA = Rb + disp; }}, {{ Mem.ul = t_to_s(Fa.uq); }});
 	0x27: stt({{ EA = Rb + disp; }}, {{ Mem.df = Fa; }});
 	0x24: copy_store({{EA = Rb;}},
-	                 {{ fault = memAccessObj->copy(EA);}},
+	                 {{ fault = xc->copy(EA);}},
 			 IsMemRef, IsStore, IsCopy);
     }
 
@@ -2383,7 +2222,7 @@ decode OPCODE default Unknown::unknown() {
 
 	format MiscPrefetch {
 	    0xf800: wh64({{ EA = Rb; }},
-			 {{ memAccessObj->writeHint(EA, 64); }},
+			 {{ xc->writeHint(EA, 64); }},
 			 IsMemRef, IsStore, WrPort);
 	}
 
@@ -2421,15 +2260,15 @@ decode OPCODE default Unknown::unknown() {
 #ifdef FULL_SYSTEM
 	format BasicOperate {
 	    0xe000: rc({{
-		Ra = xc->regs.intrflag;
+		Ra = xc->readIntrFlag();
 		if (!xc->misspeculating()) {
-		    xc->regs.intrflag = 0;
+		    xc->setIntrFlag(0);
 		}
 	    }});
 	    0xf000: rs({{
-		Ra = xc->regs.intrflag;
+		Ra = xc->readIntrFlag();
 		if (!xc->misspeculating()) {
-		    xc->regs.intrflag = 1;
+		    xc->setIntrFlag(1);
 		}
 	    }});
 	}
@@ -2458,10 +2297,10 @@ decode OPCODE default Unknown::unknown() {
 		// on this PAL call (including maybe suppress it)
 		dopal = xc->simPalCheck(palFunc);
 
-		Annotate::Callpal(xc, palFunc);
+		Annotate::Callpal(xc->xcBase(), palFunc);
 
 		if (dopal) {
-		    AlphaISA::swap_palshadow(&xc->regs, true);
+		    AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
 		    xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
 		}
 	    }
@@ -2519,48 +2358,48 @@ decode OPCODE default Unknown::unknown() {
 	0x01: decode M5FUNC {
 	    0x00: arm({{
 		if (!xc->misspeculating()) {
-		    Annotate::ARM(xc);
-		    xc->kernelStats.arm();
+		    Annotate::ARM(xc->xcBase());
+		    xc->xcBase()->kernelStats.arm();
 		}
 	    }});
 	    0x01: quiesce({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::quiesce(xc);
+		    AlphaPseudo::quiesce(xc->xcBase());
 	    }});
 	    0x10: ivlb({{
 		if (!xc->misspeculating()) {
-		    Annotate::BeginInterval(xc);
-		    xc->kernelStats.ivlb();
+		    Annotate::BeginInterval(xc->xcBase());
+		    xc->xcBase()->kernelStats.ivlb();
 		}
 	    }}, No_OpClass);
 	    0x11: ivle({{
 		if (!xc->misspeculating())
-		    Annotate::EndInterval(xc);
+		    Annotate::EndInterval(xc->xcBase());
 	    }}, No_OpClass);
 	    0x20: m5exit_old({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::m5exit_old(xc);
+		    AlphaPseudo::m5exit_old(xc->xcBase());
 	    }}, No_OpClass);
 	    0x21: m5exit({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::m5exit(xc);
+		    AlphaPseudo::m5exit(xc->xcBase());
 	    }}, No_OpClass);
-            0x30: initparam({{ Ra = cpu->system->init_param; }});
+            0x30: initparam({{ Ra = xc->xcBase()->cpu->system->init_param; }});
             0x40: resetstats({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::resetstats(xc);
+		    AlphaPseudo::resetstats(xc->xcBase());
 	    }});
             0x41: dumpstats({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::dumpstats(xc);
+		    AlphaPseudo::dumpstats(xc->xcBase());
 	    }});
             0x42: dumpresetstats({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::dumpresetstats(xc);
+		    AlphaPseudo::dumpresetstats(xc->xcBase());
 	    }});
             0x43: m5checkpoint({{
 		if (!xc->misspeculating())
-		    AlphaPseudo::m5checkpoint(xc);
+		    AlphaPseudo::m5checkpoint(xc->xcBase());
 	    }});
 	}
     }
@@ -2568,7 +2407,7 @@ decode OPCODE default Unknown::unknown() {
     format HwMoveIPR {
 	0x19: hw_mfpr({{
 	    // this instruction is only valid in PAL mode
-	    if (!PC_PAL(xc->regs.pc)) {
+	    if (!xc->inPalMode()) {
 		fault = Unimplemented_Opcode_Fault;
 	    }
 	    else {
@@ -2577,7 +2416,7 @@ decode OPCODE default Unknown::unknown() {
 	}});
 	0x1d: hw_mtpr({{
 	    // this instruction is only valid in PAL mode
-	    if (!PC_PAL(xc->regs.pc)) {
+	    if (!xc->inPalMode()) {
 		fault = Unimplemented_Opcode_Fault;
 	    }
 	    else {

@@ -41,10 +41,10 @@
 
 // forward declarations
 class ExecContext;
-class SpecExecContext;
-class SimpleCPU;
-class FullCPU;
 class DynInst;
+typedef DynInst FullCPUExecContext;
+class SimpleCPU;
+typedef SimpleCPU SimpleCPUExecContext;
 class SymbolTable;
 
 namespace Trace {
@@ -307,13 +307,13 @@ class StaticInst : public StaticInstBase
     /**
      * Execute this instruction under SimpleCPU model.
      */
-    virtual Fault execute(SimpleCPU *cpu, ExecContext *xc,
+    virtual Fault execute(SimpleCPUExecContext *xc,
                           Trace::InstRecord *traceData) = 0;
 
     /**
      * Execute this instruction under detailed FullCPU model.
      */
-    virtual Fault execute(FullCPU *cpu, SpecExecContext *xc, DynInst *dynInst,
+    virtual Fault execute(FullCPUExecContext *xc,
                           Trace::InstRecord *traceData) = 0;
 
     /**

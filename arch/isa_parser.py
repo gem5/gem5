@@ -32,19 +32,9 @@ import os
 import sys
 import re
 import string
+import traceback
 # get type names
 from types import *
-
-# Check arguments.  Right now there are only two: the name of the ISA
-# description (input) file and the name of the C++ decoder (output) file.
-isa_desc_filename = sys.argv[1]
-decoder_filename = sys.argv[2]
-
-# Might as well suck the file in while we're here.  This way if it's a
-# bad filename we don't waste a lot of time building the parser :-).
-input = open(isa_desc_filename)
-isa_desc = input.read()
-input.close()
 
 # Prepend the directory where the PLY lex & yacc modules are found
 # to the search path.  Assumes we're compiling in a subdirectory
@@ -225,8 +215,8 @@ def p_specification(t):
     isa_name = t[2]
     namespace = isa_name + "Inst"
     global_decls2 = t[3]
-    (inst_decls, code) = t[4]
-    code = indent(code)
+    (inst_decls, decode_code, exec_code) = t[4]
+    decode_code = indent(decode_code)
     # grab the last three path components of isa_desc_filename
     filename = '/'.join(isa_desc_filename.split('/')[-3:])
     # if the isa_desc file defines a 'rcs_id' string,
@@ -306,6 +296,8 @@ namespace %(namespace)s
 
 %(inst_decls)s
 
+%(exec_code)s
+
 } // namespace %(namespace)s
 
 //////////////////////
@@ -316,7 +308,7 @@ StaticInstPtr<%(isa_name)s>
 %(isa_name)s::decodeInst(%(isa_name)s::MachInst machInst)
 {
     using namespace %(namespace)s;
-%(code)s
+%(decode_code)s
 } // decodeInst
 ''' % vars()
     output.close()
@@ -461,18 +453,19 @@ def p_param_1(t):
 def p_decode_block(t):
     'decode_block : DECODE ID opt_default LBRACE decode_stmt_list RBRACE'
     default_defaults = defaultStack.pop()
-    (decls, code, has_default) = t[5]
+    (decls, decode_code, exec_code, has_default) = t[5]
     # use the "default defaults" only if there was no explicit
     # default statement in decode_stmt_list
     if not has_default:
-        (default_decls, default_code) = default_defaults
+        (default_decls, default_decode, default_exec) = default_defaults
         decls += default_decls
-        code += default_code
+        decode_code += default_decode
+        exec_code += default_exec
     t[0] = (decls,  '''
 switch (%s) {
 %s
 }
-''' % (t[2], indent(code)))
+''' % (t[2], indent(decode_code)), exec_code)
 
 # The opt_default statement serves only to push the "default defaults"
 # onto defaultStack.  This value will be used by nested decode blocks,
@@ -488,8 +481,8 @@ def p_opt_default_0(t):
 def p_opt_default_1(t):
     'opt_default : DEFAULT inst'
     # push the new default
-    (decls, code) = t[2]
-    defaultStack.push((decls, '\ndefault:\n%sbreak;' % code))
+    (decls, decode_code, exec_code) = t[2]
+    defaultStack.push((decls, '\ndefault:\n%sbreak;' % decode_code, exec_code))
     # no meaningful value returned
     t[0] = None
 
@@ -499,12 +492,12 @@ def p_decode_stmt_list_0(t):
 
 def p_decode_stmt_list_1(t):
     'decode_stmt_list : decode_stmt decode_stmt_list'
-    (decls1, code1, has_default1) = t[1]
-    (decls2, code2, has_default2) = t[2]
+    (decls1, decode_code1, exec_code1, has_default1) = t[1]
+    (decls2, decode_code2, exec_code2, has_default2) = t[2]
     if (has_default1 and has_default2):
         error(t.lineno(1), 'Two default cases in decode block')
-    t[0] = (decls1 + '\n' + decls2, code1 + '\n' + code2,
-            has_default1 or has_default2)
+    t[0] = (decls1 + '\n' + decls2, decode_code1 + '\n' + decode_code2,
+            exec_code1 + '\n' + exec_code2, has_default1 or has_default2)
 
 #
 # Decode statement rules
@@ -525,7 +518,7 @@ def p_decode_stmt_list_1(t):
 # the other statements.
 def p_decode_stmt_cpp(t):
     'decode_stmt : CPPDIRECTIVE'
-    t[0] = (t[1], t[1], 0)
+    t[0] = (t[1], t[1], t[1], 0)
 
 # A format block 'format <foo> { ... }' sets the default instruction
 # format used to handle instruction definitions inside the block.
@@ -555,17 +548,19 @@ def p_push_format_id(t):
 def p_decode_stmt_decode(t):
     'decode_stmt : case_label COLON decode_block'
     (label, is_default) = t[1]
-    (decls, code) = t[3]
+    (decls, decode_code, exec_code) = t[3]
     # just wrap the decoding code from the block as a case in the
     # outer switch statement.
-    t[0] = (decls, '\n%s:\n%s' % (label, indent(code)), is_default)
+    t[0] = (decls, '\n%s:\n%s' % (label, indent(decode_code)),
+            exec_code, is_default)
 
 # Instruction definition (finally!).
 def p_decode_stmt_inst(t):
     'decode_stmt : case_label COLON inst SEMI'
     (label, is_default) = t[1]
-    (decls, code) = t[3]
-    t[0] = (decls, '\n%s:%sbreak;' % (label, indent(code)), is_default)
+    (decls, decode_code, exec_code) = t[3]
+    t[0] = (decls, '\n%s:%sbreak;' % (label, indent(decode_code)),
+            exec_code, is_default)
 
 # The case label is either a list of one or more constants or 'default'
 def p_case_label_0(t):
@@ -596,12 +591,13 @@ def p_inst_0(t):
     'inst : ID LPAREN arg_list RPAREN'
     # Pass the ID and arg list to the current format class to deal with.
     currentFormat = formatStack.top()
-    (decls, code) = currentFormat.defineInst(t[1], t[3], t.lineno(1))
+    (decls, decode_code, exec_code) = \
+            currentFormat.defineInst(t[1], t[3], t.lineno(1))
     args = ','.join(map(str, t[3]))
     args = re.sub('(?m)^', '//', args)
     args = re.sub('^//', '', args)
     comment = '// %s::%s(%s)\n' % (currentFormat.id, t[1], args)
-    t[0] = (comment + decls, comment + code)
+    t[0] = (comment + decls, comment + decode_code, comment + exec_code)
 
 # Define an instruction using an explicitly specified format:
 # "<fmt>::<mnemonic>(<args>)"
@@ -611,9 +607,10 @@ def p_inst_1(t):
         format = formatMap[t[1]]
     except KeyError:
         error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
-    (decls, code) = format.defineInst(t[3], t[5], t.lineno(1))
+    (decls, decode_code, exec_code) = \
+            format.defineInst(t[3], t[5], t.lineno(1))
     comment = '// %s::%s(%s)\n' % (t[1], t[3], t[5])
-    t[0] = (comment + decls, comment + code)
+    t[0] = (comment + decls, comment + decode_code, comment + exec_code)
 
 def p_arg_list_0(t):
     'arg_list : empty'
@@ -673,7 +670,8 @@ class Format:
             code = '    pass\n'
         param_list = string.join(params, ", ")
         f = 'def defInst(name, Name, ' + param_list + '):\n' + code
-        exec(f)
+        c = compile(f, 'def format ' + id, 'exec')
+        exec(c)
         self.func = defInst
 
     def defineInst(self, name, args, lineno):
@@ -773,8 +771,9 @@ def error(lineno, string):
 # Like error(), but include a Python stack backtrace (for processing
 # Python exceptions).
 def error_bt(lineno, string):
+    traceback.print_exc()
     print >> sys.stderr, "%s:%d: %s" % (isa_desc_filename, lineno, string)
-    raise
+    sys.exit(1)
 
 
 #####################################################################
@@ -944,7 +943,7 @@ class IntRegOperandTraits(OperandTraits):
                  (op_desc.dest_reg_idx, self.reg_spec)
         return c
 
-    def makeRead(self, op_desc, cpu_model):
+    def makeRead(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         if (type == 'float' or type == 'double'):
             error(0, 'Attempt to read integer register as FP')
@@ -955,7 +954,7 @@ class IntRegOperandTraits(OperandTraits):
             return '%s = bits(xc->readIntReg(_srcRegIdx[%d]), %d, 0);\n' % \
                    (op_desc.munged_name, op_desc.src_reg_idx, size-1)
 
-    def makeWrite(self, op_desc, cpu_model):
+    def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         if (type == 'float' or type == 'double'):
             error(0, 'Attempt to write integer register as FP')
@@ -988,7 +987,7 @@ class FloatRegOperandTraits(OperandTraits):
                  (op_desc.dest_reg_idx, self.reg_spec)
         return c
 
-    def makeRead(self, op_desc, cpu_model):
+    def makeRead(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         bit_select = 0
         if (type == 'float'):
@@ -1007,7 +1006,7 @@ class FloatRegOperandTraits(OperandTraits):
         else:
             return '%s = %s;\n' % (op_desc.munged_name, base)
 
-    def makeWrite(self, op_desc, cpu_model):
+    def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         final_val = op_desc.munged_name
         if (type == 'float'):
@@ -1044,7 +1043,7 @@ class ControlRegOperandTraits(OperandTraits):
                  (op_desc.dest_reg_idx, self.reg_spec)
         return c
 
-    def makeRead(self, op_desc, cpu_model):
+    def makeRead(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         bit_select = 0
         if (type == 'float' or type == 'double'):
@@ -1056,7 +1055,7 @@ class ControlRegOperandTraits(OperandTraits):
             return '%s = bits(%s, %d, 0);\n' % \
                    (op_desc.munged_name, base, size-1)
 
-    def makeWrite(self, op_desc, cpu_model):
+    def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         if (type == 'float' or type == 'double'):
             error(0, 'Attempt to write control register as FP')
@@ -1087,16 +1086,16 @@ class MemOperandTraits(OperandTraits):
             c += 'uint64_t %s_write_result = 0;\n' % op_desc.base_name
         return c
 
-    def makeRead(self, op_desc, cpu_model):
+    def makeRead(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         eff_type = 'uint%d_t' % size
-        return 'fault = memAccessObj->read(EA, (%s&)%s, %s_flags);\n' \
+        return 'fault = xc->read(EA, (%s&)%s, %s_flags);\n' \
                % (eff_type, op_desc.munged_name, op_desc.base_name)
 
-    def makeWrite(self, op_desc, cpu_model):
+    def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         eff_type = 'uint%d_t' % size
-        return 'fault = memAccessObj->write((%s&)%s, EA, %s_flags,' \
+        return 'fault = xc->write((%s&)%s, EA, %s_flags,' \
                ' &%s_write_result);\n' \
                % (eff_type, op_desc.munged_name, op_desc.base_name,
                   op_desc.base_name)
@@ -1105,10 +1104,10 @@ class NPCOperandTraits(OperandTraits):
     def makeConstructor(self, op_desc):
         return ''
 
-    def makeRead(self, op_desc, cpu_model):
+    def makeRead(self, op_desc):
         return '%s = xc->readPC() + 4;\n' % op_desc.munged_name
 
-    def makeWrite(self, op_desc, cpu_model):
+    def makeWrite(self, op_desc):
         return 'xc->setNextPC(%s);\n' % op_desc.munged_name
 
 
@@ -1172,21 +1171,17 @@ class OperandDescriptor:
     def finalize(self):
         self.flags = self.traits.getFlags(self)
         self.constructor = self.traits.makeConstructor(self)
-        self.exec_decl = self.traits.makeDecl(self)
+        self.op_decl = self.traits.makeDecl(self)
 
         if self.is_src:
-            self.simple_rd = self.traits.makeRead(self, 'simple')
-            self.dtld_rd = self.traits.makeRead(self, 'dtld')
+            self.op_rd = self.traits.makeRead(self)
         else:
-            self.simple_rd = ''
-            self.dtld_rd = ''
+            self.op_rd = ''
 
         if self.is_dest:
-            self.simple_wb = self.traits.makeWrite(self, 'simple')
-            self.dtld_wb = self.traits.makeWrite(self, 'dtld')
+            self.op_wb = self.traits.makeWrite(self)
         else:
-            self.simple_wb = ''
-            self.dtld_wb = ''
+            self.op_wb = ''
 
 class OperandDescriptorList:
     def __init__(self):
@@ -1348,32 +1343,21 @@ class CodeBlock:
         self.constructor += \
                  '\n\t_numIntDestRegs = %d;' % self.operands.numIntDestRegs
 
-        self.exec_decl = self.operands.concatAttrStrings('exec_decl')
+        self.op_decl = self.operands.concatAttrStrings('op_decl')
 
         is_mem = lambda op: op.traits.isMem()
         not_mem = lambda op: not op.traits.isMem()
 
-        self.simple_rd = self.operands.concatAttrStrings('simple_rd')
-        self.simple_wb = self.operands.concatAttrStrings('simple_wb')
-        self.simple_mem_rd = \
-                 self.operands.concatSomeAttrStrings(is_mem, 'simple_rd')
-        self.simple_mem_wb = \
-                 self.operands.concatSomeAttrStrings(is_mem, 'simple_wb')
-        self.simple_nonmem_rd = \
-                 self.operands.concatSomeAttrStrings(not_mem, 'simple_rd')
-        self.simple_nonmem_wb = \
-                 self.operands.concatSomeAttrStrings(not_mem, 'simple_wb')
-
-        self.dtld_rd = self.operands.concatAttrStrings('dtld_rd')
-        self.dtld_wb = self.operands.concatAttrStrings('dtld_wb')
-        self.dtld_mem_rd = \
-                 self.operands.concatSomeAttrStrings(is_mem, 'dtld_rd')
-        self.dtld_mem_wb = \
-                 self.operands.concatSomeAttrStrings(is_mem, 'dtld_wb')
-        self.dtld_nonmem_rd = \
-                 self.operands.concatSomeAttrStrings(not_mem, 'dtld_rd')
-        self.dtld_nonmem_wb = \
-                 self.operands.concatSomeAttrStrings(not_mem, 'dtld_wb')
+        self.op_rd = self.operands.concatAttrStrings('op_rd')
+        self.op_wb = self.operands.concatAttrStrings('op_wb')
+        self.op_mem_rd = \
+                 self.operands.concatSomeAttrStrings(is_mem, 'op_rd')
+        self.op_mem_wb = \
+                 self.operands.concatSomeAttrStrings(is_mem, 'op_wb')
+        self.op_nonmem_rd = \
+                 self.operands.concatSomeAttrStrings(not_mem, 'op_rd')
+        self.op_nonmem_wb = \
+                 self.operands.concatSomeAttrStrings(not_mem, 'op_wb')
 
         self.flags = self.operands.concatAttrLists('flags')
 
@@ -1401,6 +1385,10 @@ class InstObjParams:
         self.mnemonic = mnem
         self.class_name = class_name
         self.base_class = base_class
+        self.exec_func_declarations = '''
+    Fault execute(SimpleCPUExecContext *, Trace::InstRecord *);
+    Fault execute(FullCPUExecContext *, Trace::InstRecord *);
+'''
         if code_block:
             for code_attr in code_block.__dict__.keys():
                 setattr(self, code_attr, getattr(code_block, code_attr))
@@ -1431,20 +1419,48 @@ class InstObjParams:
         else:
             self.fp_enable_check = ''
 
+    def _subst(self, template):
+        try:
+            return template % self.__dict__
+        except KeyError, key:
+            raise KeyError, 'InstObjParams.subst: no definition for %s' % key
+
     def subst(self, *args):
         result = []
         for t in args:
-            if not templateMap.has_key(t):
+            try: template = templateMap[t]
+            except KeyError:
                 error(0, 'InstObjParams::subst: undefined template "%s"' % t)
-            try:
-                result.append(templateMap[t] % self.__dict__)
-            except KeyError, key:
-                error(0, 'InstObjParams::subst: no definition for "%s"' % key)
+            if template.find('%(cpu_model)') != -1:
+                tmp = ''
+                for cpu_model in ('SimpleCPUExecContext', 'FullCPUExecContext'):
+                    self.cpu_model = cpu_model
+                    tmp += self._subst(template)
+                result.append(tmp)
+            else:
+                result.append(self._subst(template))
         if len(args) == 1:
             result = result[0]
         return result
 
 #
-# All set... read in and parse the ISA description.
+# Read in and parse the ISA description.
 #
-yacc.parse(isa_desc)
+def parse_isa_desc(isa_desc_file, decoder_file):
+    # Arguments are the name of the ISA description (input) file and
+    # the name of the C++ decoder (output) file.
+    global isa_desc_filename, decoder_filename
+    isa_desc_filename = isa_desc_file
+    decoder_filename = decoder_file
+
+    # Suck the ISA description file in.
+    input = open(isa_desc_filename)
+    isa_desc = input.read()
+    input.close()
+
+    # Parse it.
+    yacc.parse(isa_desc)
+
+# Called as script: get args from command line.
+if __name__ == '__main__':
+    parse_isa_desc(sys.argv[1], sys.argv[2])

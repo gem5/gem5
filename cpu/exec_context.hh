@@ -387,7 +387,10 @@ class ExecContext
 #ifdef FULL_SYSTEM
     uint64_t readIpr(int idx, Fault &fault);
     Fault setIpr(int idx, uint64_t val);
+    int readIntrFlag() { return regs.intrflag; }
+    void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();
+    bool inPalMode() { return PC_PAL(regs.pc); }
     void ev5_trap(Fault fault);
     bool simPalCheck(int palFunc);
 #endif

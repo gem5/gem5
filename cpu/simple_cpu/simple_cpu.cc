@@ -714,7 +714,7 @@ SimpleCPU::tick()
 
         xc->func_exe_inst++;
 
-        fault = si->execute(this, xc, traceData);
+        fault = si->execute(this, traceData);
 
 #ifdef FULL_SYSTEM
         SWContext *ctx = xc->swCtx;
