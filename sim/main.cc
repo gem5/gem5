@@ -108,7 +108,7 @@ abortHandler(int sigtype)
 }
 
 /// Simulator executable name
-const char *myProgName = "";
+char *myProgName = "";
 
 /// Show brief help message.
 void
