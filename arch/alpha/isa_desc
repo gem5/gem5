@@ -2364,7 +2364,7 @@ decode OPCODE default Unknown::unknown() {
 	format EmulatedCallPal {
 	    0x00: halt ({{
 		if (!xc->misspeculating()) 
-		    SimExit("halt instruction encountered");
+		    SimExit(curTick, "halt instruction encountered");
 	    }});
 	    0x83: callsys({{ 
 		if (!xc->misspeculating()) 
