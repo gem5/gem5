@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright (c) 2005 The Regents of The University of Michigan
 # All rights reserved.
 #
