@@ -32,8 +32,8 @@
 #define ALT_MODE_AM(X)			(((X) >> 3) & 0x3)
 
 #define DTB_CM_CM(X)			(((X) >> 3) & 0x3)
-#define DTB_ASN_ASN(X)			(((X) >> 57) & 0x7f)
-#define DTB_PTE_PPN(X)			(((X) >> 32) & 0x07ffffff)
+#define DTB_ASN_ASN(X)			(((X) >> 57) & 0xff)
+#define DTB_PTE_PPN(X)			(((X) >> 32) & 0x07fffffff)
 #define DTB_PTE_XRE(X)			(((X) >> 8) & 0xf)
 #define DTB_PTE_XWE(X)			(((X) >> 12) & 0xf)
 #define DTB_PTE_FONR(X)			(((X) >> 1) & 0x1)
@@ -42,8 +42,8 @@
 #define DTB_PTE_ASMA(X)			(((X) >> 4) & 0x1)
 
 #define ICM_CM(X)			(((X) >> 3) & 0x3)
-#define ITB_ASN_ASN(X)			(((X) >> 4) & 0x7f)
-#define ITB_PTE_PPN(X)			(((X) >> 32) & 0x07ffffff)
+#define ITB_ASN_ASN(X)			(((X) >> 4) & 0xff)
+#define ITB_PTE_PPN(X)			(((X) >> 32) & 0x07fffffff)
 #define ITB_PTE_XRE(X)			(((X) >> 8) & 0xf)
 #define ITB_PTE_FONR(X)			(((X) >> 1) & 0x1)
 #define ITB_PTE_FONW(X)			(((X) >> 2) & 0x1)
@@ -54,12 +54,15 @@
 #define VA_IMPL_MASK			ULL(0x000007ffffffffff)
 #define VA_IMPL(X)			((X) & VA_IMPL_MASK)
 #define VA_VPN(X)			(VA_IMPL(X) >> 13)
-#define VA_SPACE(X)			(((X) >> 41) & 0x3)
+#define VA_SPACE_EV5(X)			(((X) >> 41) & 0x3)
+#define VA_SPACE_EV6(X) 	        (((X) >> 41) & 0x7f)
 #define VA_POFS(X)			((X) & 0x1fff)
 
 #define PA_IMPL_MASK			ULL(0xfffffffffff) // for Tsunami
 #define PA_UNCACHED_BIT_39		ULL(0x8000000000)
 #define PA_UNCACHED_BIT_40		ULL(0x10000000000)
+#define PA_UNCACHED_BIT_43		ULL(0x80000000000)
+#define PA_UNCACHED_MASK                ULL(0x807ffffffff) // Clear PA<42:35>
 #define PA_IPR_SPACE(X)			((X) >= ULL(0xFFFFFF00000))
 
 #define PA_PFN2PA(X)			((X) << 13)

@@ -101,25 +101,7 @@ AlphaTLB::checkCacheability(MemReqPtr &req)
      * to catch a weird case where both are used, which shouldn't happen.
      */
 
-    if (req->paddr & PA_UNCACHED_BIT_40 ||
-        req->paddr & PA_UNCACHED_BIT_39) {
-
-#ifdef DEBUG
-        if (req->paddr & PA_UNCACHED_BIT_40) {
-            if(uncacheBit39)
-                panic("Bit 40 access follows bit 39 access, PA=%x\n",
-                      req->paddr);
-
-            uncacheBit40 = true;
-        } else if (req->paddr & PA_UNCACHED_BIT_39) {
-            if(uncacheBit40)
-                panic("Bit 39 acceess follows bit 40 access, PA=%x\n",
-                      req->paddr);
-
-            uncacheBit39 = true;
-        }
-#endif
-
+    if (req->paddr & PA_UNCACHED_BIT_43) {
         // IPR memory space not implemented
         if (PA_IPR_SPACE(req->paddr))
             if (!req->xc->misspeculating())
@@ -128,6 +110,9 @@ AlphaTLB::checkCacheability(MemReqPtr &req)
 
         // mark request as uncacheable
         req->flags |= UNCACHEABLE;
+
+        // Clear bits 42:35 of the physical address (10-2 in Tsunami manual)
+        req->paddr &= PA_UNCACHED_MASK;
     }
 }
 
@@ -313,10 +298,10 @@ AlphaITB::translate(MemReqPtr &req) const
             return ITB_Acv_Fault;
         }
 
-        // Check for "superpage" mapping: when SP<1> is set, and
-        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
-        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
-               VA_SPACE(req->vaddr) == 2) {
+
+        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13> for EV5
+        // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
+        if (VA_SPACE_EV6(req->vaddr) == 0x7e) {
 
             // only valid in kernel mode
             if (ICM_CM(ipr[AlphaISA::IPR_ICM]) != AlphaISA::mode_kernel) {
@@ -328,11 +313,10 @@ AlphaITB::translate(MemReqPtr &req) const
             req->paddr = req->vaddr & PA_IMPL_MASK;
 
             // sign extend the physical address properly
-            if (req->paddr & PA_UNCACHED_BIT_39 ||
-                req->paddr & PA_UNCACHED_BIT_40)
-                req->paddr |= 0xf0000000000ULL;
+            if (req->paddr & PA_UNCACHED_BIT_40)
+                req->paddr |= ULL(0xf0000000000);
             else
-                req->paddr &= 0xffffffffffULL;
+                req->paddr &= ULL(0xffffffffff);
 
         } else {
             // not a physical address: need to look up pte
@@ -499,10 +483,8 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
             return DTB_Fault_Fault;
         }
 
-        // Check for "superpage" mapping: when SP<1> is set, and
-        // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13>.
-        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
-            VA_SPACE(req->vaddr) == 2) {
+        // Check for "superpage" mapping
+        if (VA_SPACE_EV6(req->vaddr) == 0x7e) {
 
             // only valid in kernel mode
             if (DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]) !=
@@ -517,11 +499,10 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
             req->paddr = req->vaddr & PA_IMPL_MASK;
 
             // sign extend the physical address properly
-            if (req->paddr & PA_UNCACHED_BIT_39 ||
-                req->paddr & PA_UNCACHED_BIT_40)
-                req->paddr |= 0xf0000000000ULL;
+            if (req->paddr & PA_UNCACHED_BIT_40)
+                req->paddr |= ULL(0xf0000000000);
             else
-                req->paddr &= 0xffffffffffULL;
+                req->paddr &= ULL(0xffffffffff);
 
         } else {
             if (write)
