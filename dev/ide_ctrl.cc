@@ -664,6 +664,7 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
 
+    Param<Addr> addr;
     SimObjectVectorParam<IdeDisk *> disks;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PciConfigAll *> configspace;
@@ -680,6 +681,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(IdeController)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
 
+    INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(disks, "IDE disks attached to this controller"),
     INIT_PARAM(mmu, "Memory controller"),
     INIT_PARAM(configspace, "PCI Configspace"),

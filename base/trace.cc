@@ -98,6 +98,8 @@ Log::append(Record *rec)
     // dump record to output stream if there's one open
     if (dprintf_stream != NULL) {
         rec->dump(*dprintf_stream);
+    } else {
+        rec->dump(cout);
     }
 
     // no buffering: justget rid of it now

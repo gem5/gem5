@@ -208,12 +208,12 @@ LinuxSystem::setDelayLoop(ExecContext *xc)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
-    SimObjectParam<MemoryController *> mem_ctl;
+    SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
-    Param<string> kernel_code;
-    Param<string> console_code;
-    Param<string> pal_code;
+    Param<string> kernel;
+    Param<string> console;
+    Param<string> pal;
 
     Param<string> boot_osflags;
     Param<string> readfile;
@@ -230,11 +230,11 @@ END_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
 
-    INIT_PARAM(mem_ctl, "memory controller"),
+    INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
-    INIT_PARAM(kernel_code, "file that contains the kernel code"),
-    INIT_PARAM(console_code, "file that contains the console code"),
-    INIT_PARAM(pal_code, "file that contains palcode"),
+    INIT_PARAM(kernel, "file that contains the kernel code"),
+    INIT_PARAM(console, "file that contains the console code"),
+    INIT_PARAM(pal, "file that contains palcode"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                     "a"),
     INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
@@ -251,11 +251,11 @@ CREATE_SIM_OBJECT(LinuxSystem)
 {
     System::Params *p = new System::Params;
     p->name = getInstanceName();
-    p->memctrl = mem_ctl;
+    p->memctrl = memctrl;
     p->physmem = physmem;
-    p->kernel_path = kernel_code;
-    p->console_path = console_code;
-    p->palcode = pal_code;
+    p->kernel_path = kernel;
+    p->console_path = console;
+    p->palcode = pal;
     p->boot_osflags = boot_osflags;
     p->init_param = init_param;
     p->readfile = readfile;

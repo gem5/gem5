@@ -334,47 +334,6 @@ IniFile::find(const string &sectionName, const string &entryName,
 }
 
 bool
-IniFile::findDefault(const string &_section, const string &entry,
-                     string &value) const
-{
-    string section = _section;
-    while (!findAppend(section, entry, value)) {
-        if (!find(section, "default", section)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-IniFile::findAppend(const string &_section, const string &entry,
-                    string &value) const
-{
-    string section = _section;
-    bool ret = false;
-    bool first = true;
-
-    do {
-        string val;
-        if (find(section, entry, val)) {
-            ret = true;
-            if (first) {
-                value = val;
-                first = false;
-            } else {
-                value += " ";
-                value += val;
-            }
-
-        }
-    } while (find(section, "append", section));
-
-    return ret;
-}
-
-
-bool
 IniFile::sectionExists(const string &sectionName) const
 {
     return findSection(sectionName) != NULL;

@@ -1,0 +1,38 @@
+simobj BaseCPU(SimObject):
+    abstract = True
+    icache = Param.BaseMem(NULL, "L1 instruction cache object")
+    dcache = Param.BaseMem(NULL, "L1 data cache object")
+
+    dtb = Param.AlphaDTB("Data TLB")
+    itb = Param.AlphaITB("Instruction TLB")
+    mem = Param.FunctionalMemory("memory")
+    system = Param.BaseSystem(Super, "system object")
+    workload = VectorParam.Process("processes to run")
+
+    max_insts_all_threads = Param.Counter(0,
+        "terminate when all threads have reached this inst count")
+    max_insts_any_thread = Param.Counter(0,
+        "terminate when any thread reaches this inst count")
+    max_loads_all_threads = Param.Counter(0,
+        "terminate when all threads have reached this load count")
+    max_loads_any_thread = Param.Counter(0,
+        "terminate when any thread reaches this load count")
+
+    defer_registration = Param.Bool(false,
+        "defer registration with system (for sampling)")
+
+    def check(self):
+        has_workload = self._hasvalue('workload')
+        has_dtb = self._hasvalue('dtb')
+        has_itb = self._hasvalue('itb')
+        has_mem = self._hasvalue('mem')
+        has_system = self._hasvalue('system')
+
+        if has_workload:
+            self.dtb.disable = True
+            self.itb.disable = True
+            self.mem.disable = True
+            self.system.disable = True
+
+        if has_dtb or has_itb or has_mem or has_system:
+            self.workload.disable = True

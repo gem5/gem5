@@ -1,0 +1,7 @@
+simobj Repl(SimObject):
+    abstract = True
+
+simobj GenRepl(Repl):
+    fresh_res = Param.Int("associativity")
+    num_pools = Param.Int("capacity in bytes")
+    pool_res = Param.Int("block size in bytes")

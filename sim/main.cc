@@ -34,14 +34,17 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include <list>
 #include <string>
 #include <vector>
 
 #include "base/copyright.hh"
+#include "base/embedfile.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "base/statistics.hh"
+#include "base/str.hh"
 #include "base/time.hh"
 #include "cpu/base_cpu.hh"
 #include "cpu/full_cpu/smt.hh"
@@ -241,6 +244,8 @@ main(int argc, char **argv)
     // -u to override.
     bool quitOnUnreferenced = true;
 
+    bool python_initialized = false;
+
     // Parse command-line options.
     // Since most of the complex options are handled through the
     // config database, we don't mess with getopts, and just parse
@@ -254,6 +259,21 @@ main(int argc, char **argv)
 
             // switch on second char
             switch (arg_str[1]) {
+              case 'X': {
+                  list<EmbedFile> lst;
+                  EmbedMap::all(lst);
+                  list<EmbedFile>::iterator i = lst.begin();
+                  list<EmbedFile>::iterator end = lst.end();
+
+                  while (i != end) {
+                      cprintf("Embedded File: %s\n", i->name);
+                      cout.write(i->data, i->length);
+                      ++i;
+                  }
+
+                  return 0;
+              }
+
               case 'h':
                 // -h: show help
                 showLongHelp(cerr);
@@ -266,7 +286,6 @@ main(int argc, char **argv)
 
               case 'D':
               case 'U':
-              case 'I':
                 // cpp options: record & pass to cpp.  Note that these
                 // cannot have spaces, i.e., '-Dname=val' is OK, but
                 // '-D name=val' is not.  I don't consider this a
@@ -274,6 +293,30 @@ main(int argc, char **argv)
                 // latter, other cpp implementations do not (Tru64,
                 // for one).
                 cppArgs.push_back(arg_str);
+                break;
+
+              case 'I': {
+                  // We push -I as an argument to cpp
+                  cppArgs.push_back(arg_str);
+
+                  string arg = arg_str + 2;
+                  eat_white(arg);
+
+                  // Send this as the python path
+                  addPythonPath(arg);
+              } break;
+
+              case 'P':
+                if (!python_initialized) {
+                    initPythonConfig();
+                    python_initialized = true;
+                }
+                writePythonString(arg_str + 2);
+                writePythonString("\n");
+
+              case 'E':
+                if (putenv(arg_str + 2) == -1)
+                    panic("putenv: %s\n", strerror(errno));
                 break;
 
               case '-':
@@ -311,11 +354,12 @@ main(int argc, char **argv)
                     cprintf("Error processing file %s\n", filename);
                     exit(1);
                 }
-            } else if (ext == ".py") {
-                if (!loadPythonConfig(filename, &simConfigDB)) {
-                    cprintf("Error processing file %s\n", filename);
-                    exit(1);
+            } else if (ext == ".py" || ext == ".mpy") {
+                if (!python_initialized) {
+                    initPythonConfig();
+                    python_initialized = true;
                 }
+                loadPythonConfig(filename);
             }
             else {
                 cprintf("Config file name '%s' must end in '.py' or '.ini'.\n",
@@ -323,6 +367,11 @@ main(int argc, char **argv)
                 exit(1);
             }
         }
+    }
+
+    if (python_initialized && !finishPythonConfig(simConfigDB)) {
+        cprintf("Error processing python code\n");
+        exit(1);
     }
 
     // The configuration database is now complete; start processing it.
@@ -335,6 +384,11 @@ main(int argc, char **argv)
     // the stat file name is set via a .ini param... thus it just got
     // opened above during ParamContext::checkAllContexts().
 
+    // Now process the configuration hierarchy and create the SimObjects.
+    ConfigHierarchy configHierarchy(simConfigDB);
+    configHierarchy.build();
+    configHierarchy.createSimObjects();
+
     // Print hello message to stats file if it's actually a file.  If
     // it's not (i.e. it's cout or cerr) then we already did it above.
     if (outputStream != &cout && outputStream != &cerr)
@@ -343,11 +397,6 @@ main(int argc, char **argv)
     // Echo command line and all parameter settings to stats file as well.
     echoCommandLine(argc, argv, *outputStream);
     ParamContext::showAllContexts(*configStream);
-
-    // Now process the configuration hierarchy and create the SimObjects.
-    ConfigHierarchy configHierarchy(simConfigDB);
-    configHierarchy.build();
-    configHierarchy.createSimObjects();
 
     // Do a second pass to finish initializing the sim objects
     SimObject::initAll();

@@ -249,6 +249,37 @@ def commands(options, command, args):
         info.source.listRuns(user)
         return
 
+    if command == 'stability':
+        stats = info.source.getStat(args[0])
+        info.source.get = "avg"
+
+        #loop through all the stats selected
+        for stat in stats:
+            avg = float(stat)
+
+            #loop through all the selected runs
+            for run in runs:
+                info.display_run = run.run;
+                #print run.name
+                #print avg
+                runTicks = info.source.retTicks([ run ])
+                #throw away the first one, it's 0
+                runTicks.pop(0)
+
+                #loop through all the various ticks for each run
+                for tick in runTicks:
+                    stat.ticks = str(tick)
+                    val = float(stat)
+                    if (val < (avg * .9)) or (val > (avg * 1.1)):
+                        print '%s:%s is %f, which is more than 10%% of the'\
+                              'mean %f' % (run.name, stat.name, stat, avg)
+
+
+
+
+        return
+
+
     if command == 'stats':
         if len(args) == 0:
             info.source.listStats()
@@ -268,6 +299,10 @@ def commands(options, command, args):
             if options.graph:
                 graphdata(runs, options, stat.name, stat.name, stat)
             else:
+                if options.ticks:
+                   print 'only displaying sample %s' % options.ticks
+                   stat.ticks = options.ticks
+
                 if options.binned:
                     print 'kernel ticks'
                     stat.bins = 'kernel'
@@ -282,7 +317,7 @@ def commands(options, command, args):
                     printdata(runs, stat)
 
                     print 'interrupt ticks'
-                    stat.bins = 'user'
+                    stat.bins = 'interrupt'
                     printdata(runs, stat)
 
                     print 'total ticks'
@@ -315,7 +350,7 @@ def commands(options, command, args):
                     printdata(runs, stat)
 
                     print 'interrupt ticks'
-                    stat.bins = 'user'
+                    stat.bins = 'interrupt'
                     printdata(runs, stat)
 
                     print 'total ticks'
@@ -645,8 +680,9 @@ if __name__ == '__main__':
     options.binned = False
     options.graph = False
     options.graph68 = False
+    options.ticks = False
 
-    opts, args = getopts(sys.argv[1:], '-6BEFGd:g:h:pr:s:u:')
+    opts, args = getopts(sys.argv[1:], '-6BEFGd:g:h:pr:s:u:T:')
     for o,a in opts:
         if o == '-6':
             options.graph68 = True
@@ -672,6 +708,8 @@ if __name__ == '__main__':
             options.user = a
         if o == '-s':
             options.system = a
+        if o == '-T':
+            options.ticks = a
 
     if len(args) == 0:
         usage()

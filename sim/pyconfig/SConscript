@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2004 The Regents of The University of Michigan
+# Copyright (c) 2005 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,164 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import os, os.path, re
 
-Import('env', 'obj_desc_files')
+def WriteEmbeddedPyFile(target, source, path, name, ext):
+    if isinstance(source, str):
+        source = file(source, 'r')
 
-my_obj_desc_files = map(lambda x: '../../' + x, obj_desc_files)
+    if isinstance(target, str):
+        target = file(target, 'w')
 
-env.Command('m5odescs.py', my_obj_desc_files,
-            '$TARGET.srcdir/load_odescs.py $_CPPDEFFLAGS $SOURCES $TARGET')
+    print >>target, "AddModule(%s, %s, %s, '''\\" % (`path`, `name`, `ext`)
 
-# Python modules to encapsulate
-string_module_bases = Split('m5config m5configbase m5odescs')
-string_modules = map(lambda x: x + '_as_string.py', string_module_bases)
+    for line in source:
+        line = line
+        # escape existing backslashes
+        line = line.replace('\\', '\\\\')
+        # escape existing triple quotes
+        line = line.replace("'''", r"\'\'\'")
 
-for m in string_module_bases:
-    env.Command(m + '_as_string.py', m + '.py',
-                '$TARGET.srcdir/make_string_module.py $SOURCE $TARGET')
+        print >>target, line,
 
-embedded_py_files = Split('string_importer.py') + string_modules
+    print >>target, "''')"
+    print >>target
 
-env.Command('code.cc', embedded_py_files,
-            '$TARGET.srcdir/make_c_file.py pyconfig_code $SOURCES $TARGET')
+def WriteCFile(target, source, name):
+    if isinstance(source, str):
+        source = file(source, 'r')
 
+    if isinstance(target, str):
+        target = file(target, 'w')
+
+    print >>target, 'const char %s_string[] = {' % name
+
+    count = 0
+    from array import array
+    try:
+        while True:
+            foo = array('B')
+            foo.fromfile(source, 10000)
+            l = [ str(i) for i in foo.tolist() ]
+            count += len(l)
+            for i in xrange(0,9999,20):
+                print >>target, ','.join(l[i:i+20]) + ','
+    except EOFError:
+        l = [ str(i) for i in foo.tolist() ]
+        count += len(l)
+        for i in xrange(0,len(l),20):
+            print >>target, ','.join(l[i:i+20]) + ','
+        print >>target, ','.join(l[i:]) + ','
+
+    print >>target, '};'
+    print >>target, 'const int %s_length = %d;' % (name, count)
+    print >>target
+
+def splitpath(path):
+    dir,file = os.path.split(path)
+    path = []
+    assert(file)
+    while dir:
+        dir,base = os.path.split(dir)
+        path.insert(0, base)
+    return path, file
+
+Import('env')
+def MakeEmbeddedPyFile(target, source, env):
+    target = file(str(target[0]), 'w')
+   
+    tree = {}
+    for src in source:
+        src = str(src)
+        path,pyfile = splitpath(src)
+        node = tree
+        for dir in path:
+            if not node.has_key(dir):
+                node[dir] = { }
+            node = node[dir]
+
+        name,ext = pyfile.split('.')
+        if name == '__init__':
+            node['.hasinit'] = True
+        node[pyfile] = (src,name,ext)
+
+    done = False
+    while not done:
+        done = True
+        for name,entry in tree.items():
+            if not isinstance(entry, dict): continue
+            if entry.has_key('.hasinit'): continue
+
+            done = False
+            del tree[name]
+            for key,val in entry.iteritems():
+                if tree.has_key(key):
+                    raise NameError, \
+                          "dir already has %s can't add it again" % key
+                tree[key] = val
+
+    files = []
+    def populate(node, path = []):
+        names = node.keys()
+        names.sort()
+        for name in names:
+            if name == '.hasinit':
+                continue
+            
+            entry = node[name]
+            if isinstance(entry, dict):
+                if not entry.has_key('.hasinit'):
+                    raise NameError, 'package directory missing __init__.py'
+                populate(entry, path + [ name ])
+            else:
+                pyfile,name,ext = entry
+                files.append((pyfile, path, name, ext))
+    populate(tree)
+
+    for pyfile, path, name, ext in files:
+        WriteEmbeddedPyFile(target, pyfile, path, name, ext)
+
+CFileCounter = 0
+def MakePythonCFile(target, source, env):
+    global CFileCounter
+    target = file(str(target[0]), 'w')
+
+    print >>target, '''\
+#include "base/embedfile.hh"
+
+namespace {
+'''
+    for src in source:
+        src = str(src)
+        fname = os.path.basename(src)
+        name = 'embedded_file%d' % CFileCounter
+        CFileCounter += 1
+        WriteCFile(target, src, name)
+        print >>target, '''\
+EmbedMap %(name)s("%(fname)s",
+    %(name)s_string, %(name)s_length);
+
+''' % locals()
+    print >>target, '''\
+
+/* namespace */ }
+'''
+
+embedded_py_files = ['m5config.py']
+objpath = os.path.join(env['SRCDIR'], 'objects')
+for root, dirs, files in os.walk(objpath, topdown=True):
+    for i,dir in enumerate(dirs):
+        if dir == 'SCCS':
+            del dirs[i]
+            break
+
+    assert(root.startswith(objpath))
+    for f in files:
+        if f.endswith('.mpy') or f.endswith('.py'):
+            embedded_py_files.append(os.path.join(root, f))
+
+embedfile_hh = os.path.join(env['SRCDIR'], 'base/embedfile.hh')
+env.Depends('embedded_py.cc', embedfile_hh)
+env.Command('embedded_py.py', embedded_py_files, MakeEmbeddedPyFile)
+env.Command('embedded_py.cc', ['importer.py', 'embedded_py.py'],
+            MakePythonCFile)

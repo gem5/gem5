@@ -37,6 +37,7 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "dev/baddev.hh"
+#include "dev/platform.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
@@ -48,7 +49,7 @@ using namespace std;
 
 BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
                      HierParams *hier, Bus *bus, const string &devicename)
-    : PioDevice(name), addr(a), devname(devicename)
+    : PioDevice(name, NULL), addr(a), devname(devicename)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
@@ -83,20 +84,24 @@ BadDevice::cacheAccess(MemReqPtr &req)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
+    SimObjectParam<Platform *> platform;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     SimObjectParam<HierParams *> hier;
     SimObjectParam<Bus*> io_bus;
+    Param<Tick> pio_latency;
     Param<string> devicename;
 
 END_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
+    INIT_PARAM(platform, "Platform"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
     INIT_PARAM(devicename, "Name of device to error on")
 
 END_INIT_SIM_OBJECT_PARAMS(BadDevice)

@@ -107,7 +107,6 @@ Tsunami::unserialize(Checkpoint *cp, const std::string &section)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
     SimObjectParam<System *> system;
-    SimObjectParam<SimConsole *> cons;
     SimObjectParam<IntrControl *> intrctrl;
     SimObjectParam<PciConfigAll *> pciconfig;
     Param<int> interrupt_frequency;
@@ -117,7 +116,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
     INIT_PARAM(system, "system"),
-    INIT_PARAM(cons, "system console"),
     INIT_PARAM(intrctrl, "interrupt controller"),
     INIT_PARAM(pciconfig, "PCI configuration"),
     INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1024)

@@ -39,14 +39,9 @@
 
 using namespace std;
 
-SimObjectBuilder::SimObjectBuilder(const string &_configClass,
-                                   const string &_instanceName,
-                                   ConfigNode *_configNode,
-                                   const string &_simObjClassName)
-    : ParamContext(_configClass, NoAutoInit),
-      instanceName(_instanceName),
-      configNode(_configNode),
-      simObjClassName(_simObjClassName)
+SimObjectBuilder::SimObjectBuilder(ConfigNode *_configNode)
+    : ParamContext(_configNode->getPath(), NoAutoInit),
+      configNode(_configNode)
 {
 }
 
@@ -72,13 +67,8 @@ SimObjectBuilder::parseParams(IniFile &iniFile)
 
     for (i = paramList->begin(); i != paramList->end(); ++i) {
         string string_value;
-
-        if (iniFile.findDefault(instanceName, (*i)->name, string_value)) {
+        if (iniFile.find(iniSection, (*i)->name, string_value))
             (*i)->parse(string_value);
-        }
-        else if (iniFile.findDefault(iniSection, (*i)->name, string_value)) {
-            (*i)->parse(string_value);
-        }
     }
 }
 
@@ -86,9 +76,8 @@ SimObjectBuilder::parseParams(IniFile &iniFile)
 void
 SimObjectBuilder::printErrorProlog(ostream &os)
 {
-    os << "Error creating object '" << getInstanceName()
-       << "' of type '" << simObjClassName
-       << "', section '" << iniSection << "':" << endl;
+    ccprintf(os, "Error creating object '%s' of type '%s':\n",
+             iniSection, configNode->getType());
 }
 
 
@@ -111,11 +100,7 @@ SimObjectClass::SimObjectClass(const string &className, CreateFunc createFunc)
         classMap = new map<string,SimObjectClass::CreateFunc>();
 
     if ((*classMap)[className])
-    {
-        cerr << "Error: simulation object class " << className << " redefined"
-             << endl;
-        fatal("");
-    }
+        panic("Error: simulation object class '%s' redefined\n", className);
 
     // add className --> createFunc to class map
     (*classMap)[className] = createFunc;
@@ -125,35 +110,20 @@ SimObjectClass::SimObjectClass(const string &className, CreateFunc createFunc)
 //
 //
 SimObject *
-SimObjectClass::createObject(IniFile &configDB,
-                             const string &configClassName,
-                             const string &objName,
-                             ConfigNode *configNode)
+SimObjectClass::createObject(IniFile &configDB, ConfigNode *configNode)
 {
-    // find simulation object class name from configuration class
-    // (specified by 'type=' parameter)
-    string simObjClassName;
-
-    if (!configNode->find("type", simObjClassName)) {
-        cerr << "Configuration class '" << configClassName << "' not found."
-             << endl;
-        abort();
-    }
+    const string &type = configNode->getType();
 
     // look up className to get appropriate createFunc
-    if (classMap->find(simObjClassName) == classMap->end()) {
-        cerr << "Simulator object class '" << simObjClassName << "' not found."
-             << endl;
-        abort();
-    }
+    if (classMap->find(type) == classMap->end())
+        panic("Simulator object type '%s' not found.\n", type);
 
-    CreateFunc createFunc = (*classMap)[simObjClassName];
+
+    CreateFunc createFunc = (*classMap)[type];
 
     // call createFunc with config hierarchy node to get object
     // builder instance (context with parameters for object creation)
-    SimObjectBuilder *objectBuilder = (*createFunc)(configClassName,
-                                                    objName, configNode,
-                                                    simObjClassName);
+    SimObjectBuilder *objectBuilder = (*createFunc)(configNode);
 
     assert(objectBuilder != NULL);
 
@@ -167,10 +137,10 @@ SimObjectClass::createObject(IniFile &configDB,
 
     // echo object parameters to stats file (for documenting the
     // config used to generate the associated stats)
-    *configStream << "[" << object->name() << "]" << endl;
-    *configStream << "type=" << simObjClassName << endl;
+    ccprintf(*configStream, "[%s]\n", object->name());
+    ccprintf(*configStream, "type=%s\n", type);
     objectBuilder->showParams(*configStream);
-    *configStream << endl;
+    ccprintf(*configStream, "\n");
 
     // done with the SimObjectBuilder now
     delete objectBuilder;
@@ -194,7 +164,7 @@ SimObjectClass::describeAllClasses(ostream &os)
         os << "[" << className << "]\n";
 
         // create dummy object builder just to instantiate parameters
-        SimObjectBuilder *objectBuilder = (*createFunc)("", "", NULL, "");
+        SimObjectBuilder *objectBuilder = (*createFunc)(NULL);
 
         // now get the object builder to describe ite params
         objectBuilder->describeParams(os);

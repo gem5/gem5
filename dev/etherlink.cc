@@ -261,28 +261,27 @@ REGISTER_SERIALIZEABLE("LinkDelayEvent", LinkDelayEvent)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
 
-    SimObjectParam<EtherInt *> interface1;
-    SimObjectParam<EtherInt *> interface2;
-    Param<Tick> link_speed;
-    Param<Tick> link_delay;
-    SimObjectParam<EtherDump *> packet_dump;
+    SimObjectParam<EtherInt *> int1;
+    SimObjectParam<EtherInt *> int2;
+    Param<Tick> speed;
+    Param<Tick> delay;
+    SimObjectParam<EtherDump *> dump;
 
 END_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(EtherLink)
 
-    INIT_PARAM(interface1, "interface 1"),
-    INIT_PARAM(interface2, "interface 2"),
-    INIT_PARAM_DFLT(link_speed, "link speed in bits per second", 100000000),
-    INIT_PARAM_DFLT(link_delay, "transmit delay of packets in us", 0),
-    INIT_PARAM_DFLT(packet_dump, "object to dump network packets to", NULL)
+    INIT_PARAM(int1, "interface 1"),
+    INIT_PARAM(int2, "interface 2"),
+    INIT_PARAM_DFLT(speed, "link speed in bits per second", 100000000),
+    INIT_PARAM_DFLT(delay, "transmit delay of packets in us", 0),
+    INIT_PARAM_DFLT(dump, "object to dump network packets to", NULL)
 
 END_INIT_SIM_OBJECT_PARAMS(EtherLink)
 
 CREATE_SIM_OBJECT(EtherLink)
 {
-    return new EtherLink(getInstanceName(), interface1, interface2, link_speed,
-                         link_delay, packet_dump);
+    return new EtherLink(getInstanceName(), int1, int2, speed, delay, dump);
 }
 
 REGISTER_SIM_OBJECT("EtherLink", EtherLink)

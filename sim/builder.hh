@@ -54,22 +54,13 @@ class SimObject;
 class SimObjectBuilder : public ParamContext
 {
   private:
-    // name of the instance we are creating
-    std::string instanceName;
-
     // The corresponding node in the configuration hierarchy.
     // (optional: may be null if the created object is not in the
     // hierarchy)
     ConfigNode *configNode;
 
-    // The external SimObject class name (for error messages)
-    std::string simObjClassName;
-
   public:
-    SimObjectBuilder(const std::string &_configClass,
-                     const std::string &_instanceName,
-                     ConfigNode *_configNode,
-                     const std::string &_simObjClassName);
+    SimObjectBuilder(ConfigNode *_configNode);
 
     virtual ~SimObjectBuilder();
 
@@ -82,7 +73,7 @@ class SimObjectBuilder : public ParamContext
 
     // generate the name for this SimObject instance (derived from the
     // configuration hierarchy node label and position)
-    virtual const std::string &getInstanceName() { return instanceName; }
+    virtual const std::string &getInstanceName() { return iniSection; }
 
     // return the configuration hierarchy node for this context.
     virtual ConfigNode *getConfigNode() { return configNode; }
@@ -132,10 +123,7 @@ class SimObjectClass
     // for the object (specified by the second string argument), and
     // an optional config hierarchy node (specified by the third
     // argument).  A pointer to the new SimObjectBuilder is returned.
-    typedef SimObjectBuilder *(*CreateFunc)(const std::string &configClassName,
-                                            const std::string &objName,
-                                            ConfigNode *configNode,
-                                            const std::string &simObjClassName);
+    typedef SimObjectBuilder *(*CreateFunc)(ConfigNode *configNode);
 
     static std::map<std::string,CreateFunc> *classMap;
 
@@ -147,10 +135,7 @@ class SimObjectClass
 
     // create SimObject given name of class and pointer to
     // configuration hierarchy node
-    static SimObject *createObject(IniFile &configDB,
-                                   const std::string &configClassName,
-                                   const std::string &objName,
-                                   ConfigNode *configNode);
+    static SimObject *createObject(IniFile &configDB, ConfigNode *configNode);
 
     // print descriptions of all parameters registered with all
     // SimObject classes
@@ -169,22 +154,15 @@ class OBJ_CLASS##Builder : public SimObjectBuilder		\
 
 #define END_DECLARE_SIM_OBJECT_PARAMS(OBJ_CLASS)		\
                                                                 \
-    OBJ_CLASS##Builder(const std::string &configClass,		\
-                       const std::string &instanceName,		\
-                       ConfigNode *configNode,			\
-                       const std::string &simObjClassName);	\
+    OBJ_CLASS##Builder(ConfigNode *configNode);			\
     virtual ~OBJ_CLASS##Builder() {}				\
                                                                 \
     OBJ_CLASS *create();					\
 };
 
-#define BEGIN_INIT_SIM_OBJECT_PARAMS(OBJ_CLASS)				   \
-OBJ_CLASS##Builder::OBJ_CLASS##Builder(const std::string &configClass,	   \
-                                       const std::string &instanceName,	   \
-                                       ConfigNode *configNode,		   \
-                                       const std::string &simObjClassName) \
-    : SimObjectBuilder(configClass, instanceName,			   \
-                       configNode, simObjClassName),
+#define BEGIN_INIT_SIM_OBJECT_PARAMS(OBJ_CLASS)			\
+OBJ_CLASS##Builder::OBJ_CLASS##Builder(ConfigNode *configNode)	\
+    : SimObjectBuilder(configNode),
 
 
 #define END_INIT_SIM_OBJECT_PARAMS(OBJ_CLASS)			\
@@ -196,13 +174,9 @@ OBJ_CLASS *OBJ_CLASS##Builder::create()
 
 #define REGISTER_SIM_OBJECT(CLASS_NAME, OBJ_CLASS)		\
 SimObjectBuilder *						\
-new##OBJ_CLASS##Builder(const std::string &configClass,		\
-                        const std::string &instanceName,	\
-                        ConfigNode *configNode,			\
-                        const std::string &simObjClassName)	\
+new##OBJ_CLASS##Builder(ConfigNode *configNode)			\
 {								\
-    return new OBJ_CLASS##Builder(configClass, instanceName,	\
-                                  configNode, simObjClassName);	\
+    return new OBJ_CLASS##Builder(configNode);			\
 }								\
                                                                 \
 SimObjectClass the##OBJ_CLASS##Class(CLASS_NAME,		\

@@ -1,0 +1,5 @@
+Coherence = Enum('uni', 'msi', 'mesi', 'mosi', 'moesi')
+
+simobj CoherenceProtocol(SimObject):
+    do_upgrades = Param.Bool(true, "use upgrade transactions?")
+    protocol = Param.Coherence("name of coherence protocol")

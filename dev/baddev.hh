@@ -31,8 +31,8 @@
  * kernel that touches the frame buffer which isn't allowed.
  */
 
-#ifndef __BADDEV_HH__
-#define __BADDEV_HH__
+#ifndef __DEV_BADDEV_HH__
+#define __DEV_BADDEV_HH__
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
@@ -90,4 +90,4 @@ class BadDevice : public PioDevice
     Tick cacheAccess(MemReqPtr &req);
 };
 
-#endif // __BADDEV_HH__
+#endif // __DEV_BADDEV_HH__
