@@ -272,6 +272,8 @@ Database::reset()
         ++i;
     }
 
+    MainBin *orig = MainBin::current();
+
     list<GenBin *>::iterator bi = bins.begin();
     list<GenBin *>::iterator be = bins.end();
     while (bi != be) {
@@ -286,6 +288,8 @@ Database::reset()
         }
         ++bi;
     }
+
+    orig->activate();
 }
 
 void
