@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     os.symlink(joinpath(jobdir, 'output'), 'status.out')
 
-    args = [ joinpath(basedir, 'm5'), joinpath(basedir, 'run.mpy') ]
+    args = [ joinpath(basedir, 'm5'), '-d', '%s' % jobdir, joinpath(basedir, 'run.mpy') ]
     if not len(args):
         sys.exit("no arguments")
 
