@@ -29,9 +29,13 @@
 #ifndef __INTR_CONTROL_HH__
 #define __INTR_CONTROL_HH__
 
+#include <vector>
 #include "base/misc.hh"
 #include "cpu/base_cpu.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
+#include "cpu/exec_context.hh"
+
 
 class IntrControl : public SimObject
 {
@@ -41,15 +45,9 @@ class IntrControl : public SimObject
 
     void clear(int int_num, int index = 0);
     void post(int int_num, int index = 0);
+    void clear(int cpu_id, int int_num, int index);
+    void post(int cpu_id, int int_num, int index);
 };
-
-inline void
-IntrControl::post(int int_num, int index)
-{ cpu->post_interrupt(int_num, index); }
-
-inline void
-IntrControl::clear(int int_num, int index)
-{ cpu->clear_interrupt(int_num, index); }
 
 #endif // __INTR_CONTROL_HH__
 
