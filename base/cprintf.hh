@@ -75,7 +75,7 @@ class ArgList
                 break;
 
               default:
-                format_invalid(out);
+                out << "<bad format>";
                 break;
             }
         }

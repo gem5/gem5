@@ -43,8 +43,10 @@ struct Format
     int precision;
     int width;
 
-    Format() { }
-    void clear() {
+    Format() { clear(); }
+
+    void clear()
+    {
         alternate_form = false;
         flush_left = false;
         print_sign = false;
@@ -57,15 +59,6 @@ struct Format
         width = 0;
     }
 };
-
-inline void
-format_invalid(std::ostream &out)
-{
-    using namespace std;
-
-    out << "format invalid!!!" << endl;
-}
-
 
 template <typename T>
 inline void
@@ -233,7 +226,7 @@ _format_string(std::ostream &out, const T& data, Format &fmt)
 template <typename T>
 inline void
 format_char(std::ostream &out, const T& data, Format &fmt)
-{ format_invalid(out); }
+{ out << "<bad arg type for char format>"; }
 
 inline void
 format_char(std::ostream &out, char data, Format &fmt)
@@ -329,7 +322,7 @@ format_integer(std::ostream &out, unsigned long long data, Format &fmt)
 template <typename T>
 inline void
 format_float(std::ostream &out, const T& data, Format &fmt)
-{ format_invalid(out); }
+{ out << "<bad arg type for float format>"; }
 
 inline void
 format_float(std::ostream &out, float data, Format &fmt)
