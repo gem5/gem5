@@ -45,66 +45,35 @@ class ExecContext;
 
 class System : public SimObject
 {
-  private:
-
-    SymbolTable *kernelSymtab;
-    SymbolTable *consoleSymtab;
-
-    BreakPCEvent kernel_panic_event;
-    BreakPCEvent console_panic_event;
-    BadAddrEvent badaddr_event;
-    SkipFuncEvent skip_power_state;
-    SkipFuncEvent skip_scavenge_boot;
-    PrintfEvent printf_event;
-    DebugPrintfEvent debug_printf_event;
-    DebugPrintfEvent debug_printfr_event;
-    DumpMbufEvent dump_mbuf_event;
-
-    RegFile *initRegs;
-
-    Addr kernelStart;
-    Addr kernelEnd;
-    Addr kernelEntry;
-
   public:
-
     MemoryController *memCtrl;
     PhysicalMemory *physmem;
 
     PCEventQueue pcEventQueue;
 
     std::vector<ExecContext *> xcvec;
-
-    RemoteGDB *remoteGDB;
-    GDBListener *gdbListen;
-
-    System(const std::string name,
-           MemoryController *, PhysicalMemory *,
-           const std::string &kernel_path, const std::string &console_path,
-           const std::string &palcode, const std::string &boot_osflags);
-
-    ~System();
-
-    const SymbolTable *getKernelSymtab() const { return kernelSymtab; }
-    const SymbolTable *getConsoleSymtab() const { return consoleSymtab; }
-
-    Addr getKernelStart() const { return kernelStart; }
-    Addr getKernelEnd() const { return kernelEnd; }
-    Addr getKernelEntry() const { return kernelEntry; }
-
-    void initBootContext(ExecContext *xc);
     void registerExecContext(ExecContext *xc);
 
+  public:
+    System(const std::string name, MemoryController *, PhysicalMemory *);
+    ~System();
+
+    virtual void init(ExecContext *xc) = 0;
+
+    virtual Addr getKernelStart() const = 0;
+    virtual Addr getKernelEnd() const = 0;
+    virtual Addr getKernelEntry() const = 0;
+    virtual bool breakpoint() = 0;
+
+
+  public:
     ////////////////////////////////////////////
     //
     // STATIC GLOBAL SYSTEM LIST
     //
     ////////////////////////////////////////////
 
-  public:
-
     static std::vector<System *> systemList;
-
     static int numSystemsRunning;
 
     static void printSystems();

@@ -26,47 +26,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <algorithm>
+#ifndef __TRU64_EVENTS_HH__
+#define __TRU64_EVENTS_HH__
 
-#include "base/cprintf.hh"
-#include "base/trace.hh"
-#include "kern/tru64/mbuf.hh"
-#include "sim/host.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/isa_traits.hh"
-#include "targetarch/vtophys.hh"
+#include <string>
 
-namespace Tru64 {
+#include "cpu/pc_event.hh"
 
-void
-DumpMbuf(AlphaArguments args)
+class ExecContext;
+
+class SkipFuncEvent : public PCEvent
 {
-    ExecContext *xc = args.getExecContext();
-    Addr addr = (Addr)args;
-    struct mbuf m;
+  public:
+    SkipFuncEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-    CopyData(xc, &m, addr, sizeof(m));
+class BadAddrEvent : public SkipFuncEvent
+{
+  public:
+    BadAddrEvent(PCEventQueue *q, const std::string &desc)
+        : SkipFuncEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-    int count = m.m_pkthdr.len;
+class PrintfEvent : public PCEvent
+{
+  public:
+    PrintfEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-    ccprintf(DebugOut(), "m=%#lx, m->m_pkthdr.len=%#d\n", addr,
-             m.m_pkthdr.len);
+class DebugPrintfEvent : public PCEvent
+{
+  private:
+    bool raw;
 
-    while (count > 0) {
-        ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
-                 addr, m.m_data, m.m_len);
-        char *buffer = new char[m.m_len];
-        CopyData(xc, buffer, m.m_data, m.m_len);
-        Trace::rawDump((uint8_t *)buffer, m.m_len);
-        delete [] buffer;
+  public:
+    DebugPrintfEvent(PCEventQueue *q, const std::string &desc, bool r = false)
+        : PCEvent(q, desc), raw(r) {}
+    virtual void process(ExecContext *xc);
+};
 
-        count -= m.m_len;
-        if (!m.m_next)
-            break;
+class DumpMbufEvent : public PCEvent
+{
+  public:
+    DumpMbufEvent(PCEventQueue *q, const std::string &desc)
+        : PCEvent(q, desc) {}
+    virtual void process(ExecContext *xc);
+};
 
-        CopyData(xc, &m, m.m_next, sizeof(m));
-    }
-}
-
-} // namespace Tru64
+#endif // __TRU64_EVENTS_HH__

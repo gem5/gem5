@@ -37,15 +37,6 @@
 #include "base/trace.hh"
 #include "sim/universe.hh"
 
-#ifdef FULL_SYSTEM
-#include "targetarch/arguments.hh"
-#include "targetarch/pmap.h"
-#include "mem/functional_mem/memory_control.hh"
-#include "cpu/full_cpu/cpu.hh"
-#include "sim/system.hh"
-#include "cpu/full_cpu/bpred.hh"
-#endif
-
 using namespace std;
 
 PCEventQueue::PCEventQueue()
@@ -123,80 +114,6 @@ PCEventQueue::equal_range(Addr pc)
 {
     return std::equal_range(pc_map.begin(), pc_map.end(), pc, MapCompare());
 }
-
-#ifdef FULL_SYSTEM
-void
-SkipFuncEvent::process(ExecContext *xc)
-{
-    Addr newpc = xc->regs.intRegFile[ReturnAddressReg];
-
-    DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            xc->regs.pc, newpc);
-
-    xc->regs.pc = newpc;
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
-
-    BranchPred *bp = xc->cpu->getBranchPred();
-    if (bp != NULL) {
-        bp->popRAS(xc->thread_num);
-    }
-}
-
-void
-BadAddrEvent::process(ExecContext *xc)
-{
-    // The following gross hack is the equivalent function to the
-    // annotation for vmunix::badaddr in:
-    // simos/simulation/apps/tcl/osf/tlaser.tcl
-
-    uint64_t a0 = xc->regs.intRegFile[ArgumentReg0];
-
-    if (a0 < ALPHA_K0SEG_BASE || a0 >= ALPHA_K1SEG_BASE ||
-        xc->memCtrl->badaddr(ALPHA_K0SEG_TO_PHYS(a0) & PA_IMPL_MASK)) {
-
-        DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
-        xc->regs.intRegFile[ReturnValueReg] = 0x1;
-        SkipFuncEvent::process(xc);
-    }
-    else
-        DPRINTF(BADADDR, "badaddr arg=%#x good\n", a0);
-}
-
-void Printf(AlphaArguments args);
-void DumpMbuf(AlphaArguments args);
-
-void
-PrintfEvent::process(ExecContext *xc)
-{
-    if (DTRACE(Printf)) {
-        DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
-
-        AlphaArguments args(xc);
-        Printf(args);
-    }
-}
-
-void
-DebugPrintfEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        if (!raw)
-            DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
-
-        AlphaArguments args(xc);
-        Printf(args);
-    }
-}
-
-void
-DumpMbufEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        AlphaArguments args(xc);
-        DumpMbuf(args);
-    }
-}
-#endif
 
 BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, bool del)
     : PCEvent(q, desc), remove(del)

@@ -163,52 +163,6 @@ PCEvent::schedule(PCEventQueue *q, Addr pc)
     return schedule();
 }
 
-
-#ifdef FULL_SYSTEM
-class SkipFuncEvent : public PCEvent
-{
-  public:
-    SkipFuncEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
-    virtual void process(ExecContext *xc);
-};
-
-class BadAddrEvent : public SkipFuncEvent
-{
-  public:
-    BadAddrEvent(PCEventQueue *q, const std::string &desc)
-        : SkipFuncEvent(q, desc) {}
-    virtual void process(ExecContext *xc);
-};
-
-class PrintfEvent : public PCEvent
-{
-  public:
-    PrintfEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
-    virtual void process(ExecContext *xc);
-};
-
-class DebugPrintfEvent : public PCEvent
-{
-  private:
-    bool raw;
-
-  public:
-    DebugPrintfEvent(PCEventQueue *q, const std::string &desc, bool r = false)
-        : PCEvent(q, desc), raw(r) {}
-    virtual void process(ExecContext *xc);
-};
-
-class DumpMbufEvent : public PCEvent
-{
-  public:
-    DumpMbufEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
-    virtual void process(ExecContext *xc);
-};
-#endif
-
 class BreakPCEvent : public PCEvent
 {
   protected:
@@ -218,6 +172,5 @@ class BreakPCEvent : public PCEvent
     BreakPCEvent(PCEventQueue *q, const std::string &desc, bool del = false);
     virtual void process(ExecContext *xc);
 };
-
 
 #endif // __PC_EVENT_HH__

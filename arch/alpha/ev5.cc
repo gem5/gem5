@@ -560,7 +560,7 @@ ExecContext::simPalCheck(int palFunc)
 
       case PAL::bpt:
       case PAL::bugchk:
-        if (system->remoteGDB->trap(ALPHA_KENTRY_IF))
+        if (system->breakpoint())
             return false;
         break;
     }

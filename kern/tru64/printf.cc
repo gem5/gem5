@@ -37,6 +37,8 @@
 
 using namespace std;
 
+namespace Tru64 {
+
 void
 Printf(AlphaArguments args)
 {
@@ -260,3 +262,5 @@ Printf(AlphaArguments args)
     DebugOut().fill(old_fill);
     DebugOut().precision(old_precision);
 }
+
+} // namespace Tru64

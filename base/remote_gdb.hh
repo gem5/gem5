@@ -29,6 +29,8 @@
 #ifndef __REMOTE_GDB_HH__
 #define __REMOTE_GDB_HH__
 
+#include <map>
+
 #include "base/kgdb.h"
 #include "cpu/pc_event.hh"
 #include "base/pollevent.hh"

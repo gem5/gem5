@@ -26,47 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <algorithm>
+#ifndef __DUMP_MBUF_HH__
+#define __DUMP_MBUF_HH__
 
-#include "base/cprintf.hh"
-#include "base/trace.hh"
-#include "kern/tru64/mbuf.hh"
-#include "sim/host.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/isa_traits.hh"
-#include "targetarch/vtophys.hh"
+class AlphaArguments;
 
 namespace Tru64 {
-
-void
-DumpMbuf(AlphaArguments args)
-{
-    ExecContext *xc = args.getExecContext();
-    Addr addr = (Addr)args;
-    struct mbuf m;
-
-    CopyData(xc, &m, addr, sizeof(m));
-
-    int count = m.m_pkthdr.len;
-
-    ccprintf(DebugOut(), "m=%#lx, m->m_pkthdr.len=%#d\n", addr,
-             m.m_pkthdr.len);
-
-    while (count > 0) {
-        ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
-                 addr, m.m_data, m.m_len);
-        char *buffer = new char[m.m_len];
-        CopyData(xc, buffer, m.m_data, m.m_len);
-        Trace::rawDump((uint8_t *)buffer, m.m_len);
-        delete [] buffer;
-
-        count -= m.m_len;
-        if (!m.m_next)
-            break;
-
-        CopyData(xc, &m, m.m_next, sizeof(m));
-    }
+    void DumpMbuf(AlphaArguments args);
 }
 
-} // namespace Tru64
+#endif // __DUMP_MBUF_HH__
