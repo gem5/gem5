@@ -32,7 +32,6 @@
 #include <assert.h>
 
 #include "base/refcnt.hh"
-#include "kern/tru64/kernel.hh"
 #include "sim/host.hh"
 #include "targetarch/vtophys.hh"
 

@@ -30,6 +30,7 @@
 #define __SYSTEM_HH__
 
 #include <string>
+#include <vector>
 
 #include "sim/sim_object.hh"
 #include "cpu/pc_event.hh"
@@ -72,8 +73,7 @@ class System : public SimObject
 
     PCEventQueue pcEventQueue;
 
-    ExecContext *xc_array[12/*MAX_CPUS*/];
-    int num_cpus;
+    std::vector<ExecContext *> xcvec;
 
     RemoteGDB *remoteGDB;
     GDBListener *gdbListen;

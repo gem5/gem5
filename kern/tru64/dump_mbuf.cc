@@ -26,25 +26,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __VTOPHYS_H__
-#define __VTOPHYS_H__
+#include <sys/types.h>
+#include <algorithm>
 
+#include "base/cprintf.hh"
+#include "base/trace.hh"
+#include "kern/tru64/mbuf.hh"
+#include "sim/host.hh"
+#include "targetarch/arguments.hh"
 #include "targetarch/isa_traits.hh"
-#include "targetarch/pmap.h"
+#include "targetarch/vtophys.hh"
 
-inline bool entry_valid(uint64_t entry)
-{ return (entry & ALPHA_PTE_VALID) != 0; }
+void
+DumpMbuf(AlphaArguments args)
+{
+    ExecContext *xc = args.getExecContext();
+    Addr addr = (Addr)args;
+    struct mbuf m;
 
-class ExecContext;
-class PhysicalMemory;
+    CopyData(xc, &m, addr, sizeof(m));
 
-Addr kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, Addr vaddr);
-Addr vtophys(PhysicalMemory *xc, Addr vaddr);
-Addr vtophys(ExecContext *xc, Addr vaddr);
-uint8_t *vtomem(ExecContext *xc, Addr vaddr, size_t len);
+    int count = m.m_pkthdr.len;
 
-void CopyData(ExecContext *xc, void *dst, Addr vaddr, size_t len);
-void CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
+    ccprintf(DebugOut(), "m=%#lx, m->m_pkthdr.len=%#d\n", addr,
+             m.m_pkthdr.len);
 
-#endif // __VTOPHYS_H__
+    while (count > 0) {
+        ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
+                 addr, m.m_data, m.m_len);
+        char *buffer = new char[m.m_len];
+        CopyData(xc, buffer, m.m_data, m.m_len);
+        Trace::rawDump((uint8_t *)buffer, m.m_len);
+        delete [] buffer;
 
+        count -= m.m_len;
+        if (!m.m_next)
+            break;
+
+        CopyData(xc, &m, m.m_next, sizeof(m));
+    }
+}

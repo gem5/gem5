@@ -114,11 +114,6 @@ System::System(const std::string _name,
 #ifdef FULL_SYSTEM
     Addr addr = 0;
 
-    for(int i = 0; i < 12/*MAX_CPUS*/; i++)
-        xc_array[i] = (ExecContext *) 0;
-
-    num_cpus = 0;
-
     if (kernelSymtab->findAddress("enable_async_printf", addr)) {
         Addr paddr = vtophys(physmem, addr);
         uint8_t *enable_async_printf =
@@ -204,10 +199,13 @@ System::initBootContext(ExecContext *xc)
 void
 System::registerExecContext(ExecContext *xc)
 {
-    if (num_cpus == 12/*MAX_CPUS*/)
+    if (xc->cpu_id >= 12/*MAX_CPUS*/)
         panic("Too many CPU's\n");
-    xc_array[xc->cpu_id] = xc;
-    num_cpus++;
+
+    if (xc->cpu_id >= xcvec.size())
+        xcvec.resize(xc->cpu_id + 1);
+
+    xcvec[xc->cpu_id] = xc;
 }
 
 

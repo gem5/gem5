@@ -40,7 +40,6 @@
 #ifdef FULL_SYSTEM
 #include "targetarch/arguments.hh"
 #include "targetarch/pmap.h"
-#include "kern/tru64/kernel.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "cpu/full_cpu/cpu.hh"
 #include "sim/system.hh"
@@ -163,6 +162,9 @@ BadAddrEvent::process(ExecContext *xc)
         DPRINTF(BADADDR, "badaddr arg=%#x good\n", a0);
 }
 
+void Printf(AlphaArguments args);
+void DumpMbuf(AlphaArguments args);
+
 void
 PrintfEvent::process(ExecContext *xc)
 {
@@ -170,7 +172,7 @@ PrintfEvent::process(ExecContext *xc)
         DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
 
         AlphaArguments args(xc);
-        Kernel::Printf(args);
+        Printf(args);
     }
 }
 
@@ -182,7 +184,7 @@ DebugPrintfEvent::process(ExecContext *xc)
             DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
 
         AlphaArguments args(xc);
-        Kernel::Printf(args);
+        Printf(args);
     }
 }
 
@@ -191,7 +193,7 @@ DumpMbufEvent::process(ExecContext *xc)
 {
     if (DTRACE(DebugPrintf)) {
         AlphaArguments args(xc);
-        Kernel::DumpMbuf(args);
+        DumpMbuf(args);
     }
 }
 #endif

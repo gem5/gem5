@@ -245,8 +245,8 @@ class ExecContext
         // stores (WH64?)
         // Unsuccesful Store Conditionals would have returned above,
         // and wouldn't fall through
-        for(int i = 0; i < system->num_cpus; i++){
-            cregs = &system->xc_array[i]->regs.miscRegs;
+        for(int i = 0; i < system->xcvec.size(); i++){
+            cregs = &system->xcvec[i]->regs.miscRegs;
             if((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
                 cregs->lock_flag = false;
             }
