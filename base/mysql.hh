@@ -180,6 +180,7 @@ class Connection
     bool
     query(const std::string &sql)
     {
+        DPRINTF(SQL, "Sending SQL query to server:\n%s", sql);
         error.clear();
         if (mysql_real_query(&mysql, sql.c_str(), sql.size()))
             error.set(mysql_error(&mysql));
