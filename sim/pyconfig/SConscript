@@ -170,7 +170,7 @@ EmbedMap %(name)s("%(fname)s",
 /* namespace */ }
 '''
 
-embedded_py_files = ['m5config.py', '../../util/pbs/jobfile.py']
+embedded_py_files = ['m5config.py', 'importer.py', '../../util/pbs/jobfile.py']
 objpath = os.path.join(env['SRCDIR'], 'objects')
 for root, dirs, files in os.walk(objpath, topdown=True):
     for i,dir in enumerate(dirs):
@@ -184,7 +184,7 @@ for root, dirs, files in os.walk(objpath, topdown=True):
             embedded_py_files.append(os.path.join(root, f))
 
 embedfile_hh = os.path.join(env['SRCDIR'], 'base/embedfile.hh')
-env.Depends('embedded_py.cc', embedfile_hh)
 env.Command('embedded_py.py', embedded_py_files, MakeEmbeddedPyFile)
-env.Command('embedded_py.cc', ['importer.py', 'embedded_py.py'],
+env.Depends('embedded_py.cc', embedfile_hh)
+env.Command('embedded_py.cc', ['string_importer.py', 'embedded_py.py'],
             MakePythonCFile)

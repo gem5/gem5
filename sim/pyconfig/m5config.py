@@ -26,6 +26,9 @@
 
 from __future__ import generators
 import os, re, sys, types, inspect
+
+from importer import AddToPath, LoadMpyFile
+
 noDot = False
 try:
     import pydot
