@@ -34,6 +34,7 @@
 class BaseInterface;
 class Bus;
 class HierParams;
+template <class Bus> class DMAInterface;
 
 class PioDevice : public FunctionalMemory
 {
@@ -48,7 +49,7 @@ class PioDevice : public FunctionalMemory
 class DmaDevice : public PioDevice
 {
   protected:
-    BaseInterface *dmaInterface;
+    DMAInterface<Bus> *dmaInterface;
 
   public:
     DmaDevice(const std::string &name);

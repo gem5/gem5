@@ -28,6 +28,7 @@
 
 #include "dev/io_device.hh"
 #include "mem/bus/base_interface.hh"
+#include "mem/bus/dma_interface.hh"
 
 PioDevice::PioDevice(const std::string &name)
     : FunctionalMemory(name), pioInterface(NULL)
