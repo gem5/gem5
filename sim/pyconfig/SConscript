@@ -144,6 +144,28 @@ def MakeEmbeddedPyFile(target, source, env):
     for pyfile, path, name, ext, filename in files:
         WriteEmbeddedPyFile(target, pyfile, path, name, ext, filename)
 
+def MakeDefinesPyFile(target, source, env):
+    target = file(str(target[0]), 'w')
+
+    defines = env['CPPDEFINES']
+    if isinstance(defines, list):
+        for var in defines:
+            if isinstance(var, tuple):
+                key,val = var
+            else:
+                key,val = var,'True'
+
+            if not isinstance(key, basestring):
+                panic("invalid type for define: %s" % type(key))
+                
+            print >>target, "env['%s'] = '%s'" % (key, val)
+
+    elif isinstance(defines, dict):
+        for key,val in defines.iteritems():
+            print >>target, "env['%s'] = '%s'" % (key, val)
+    else:
+        panic("invalid type for defines: %s" % type(defines))
+
 CFileCounter = 0
 def MakePythonCFile(target, source, env):
     global CFileCounter
@@ -170,7 +192,7 @@ EmbedMap %(name)s("%(fname)s",
 /* namespace */ }
 '''
 
-embedded_py_files = ['m5config.py', '../../util/pbs/jobfile.py']
+embedded_py_files = ['m5config.py', 'importer.py', '../../util/pbs/jobfile.py']
 objpath = os.path.join(env['SRCDIR'], 'objects')
 for root, dirs, files in os.walk(objpath, topdown=True):
     for i,dir in enumerate(dirs):
@@ -184,7 +206,9 @@ for root, dirs, files in os.walk(objpath, topdown=True):
             embedded_py_files.append(os.path.join(root, f))
 
 embedfile_hh = os.path.join(env['SRCDIR'], 'base/embedfile.hh')
-env.Depends('embedded_py.cc', embedfile_hh)
+env.Command('defines.py', None, MakeDefinesPyFile)
 env.Command('embedded_py.py', embedded_py_files, MakeEmbeddedPyFile)
-env.Command('embedded_py.cc', ['importer.py', 'embedded_py.py'],
+env.Depends('embedded_py.cc', embedfile_hh)
+env.Command('embedded_py.cc',
+            ['string_importer.py', 'defines.py', 'embedded_py.py'],
             MakePythonCFile)
