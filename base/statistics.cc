@@ -272,7 +272,7 @@ Database::reset()
         ++i;
     }
 
-    MainBin *orig = MainBin::current();
+    MainBin *orig = MainBin::curBin();
 
     list<GenBin *>::iterator bi = bins.begin();
     list<GenBin *>::iterator be = bins.end();
