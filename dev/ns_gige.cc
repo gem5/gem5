@@ -1889,11 +1889,7 @@ NSGigE::txKick()
                 descDmaWrites++;
                 descDmaWrBytes += txDmaLen;
 
-                if (doTxDmaWrite())
-                    goto exit;
-
                 transmit();
-
                 txPacket = 0;
 
                 if (txHalt) {
@@ -1902,6 +1898,9 @@ NSGigE::txKick()
                     txHalt = false;
                 } else
                     txState = txAdvance;
+
+                if (doTxDmaWrite())
+                    goto exit;
             }
         } else {
             DPRINTF(EthernetSM, "this descriptor isn't done yet\n");
