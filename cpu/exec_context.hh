@@ -30,7 +30,7 @@
 #define __EXEC_CONTEXT_HH__
 
 #include "sim/host.hh"
-#include "targetarch/mem_req.hh"
+#include "mem/mem_req.hh"
 
 // forward declaration: see functional_memory.hh
 class FunctionalMemory;

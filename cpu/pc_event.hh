@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include "targetarch/mem_req.hh"
+#include "mem/mem_req.hh"
 
 class ExecContext;
 class PCEventQueue;
