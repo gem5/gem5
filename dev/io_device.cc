@@ -29,6 +29,7 @@
 #include "dev/io_device.hh"
 #include "mem/bus/base_interface.hh"
 #include "mem/bus/dma_interface.hh"
+#include "sim/builder.hh"
 
 PioDevice::PioDevice(const std::string &name)
     : FunctionalMemory(name), pioInterface(NULL)
@@ -40,6 +41,8 @@ PioDevice::~PioDevice()
         delete pioInterface;
 }
 
+DEFINE_SIM_OBJECT_CLASS_NAME("PioDevice", PioDevice)
+
 DmaDevice::DmaDevice(const std::string &name)
     : PioDevice(name), dmaInterface(NULL)
 {}
@@ -49,4 +52,6 @@ DmaDevice::~DmaDevice()
     if (dmaInterface)
         delete dmaInterface;
 }
+
+DEFINE_SIM_OBJECT_CLASS_NAME("DmaDevice", DmaDevice)
 

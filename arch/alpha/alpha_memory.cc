@@ -563,6 +563,8 @@ AlphaTLB::index(bool advance)
     return *pte;
 }
 
+DEFINE_SIM_OBJECT_CLASS_NAME("AlphaTLB", AlphaTLB)
+
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaITB)
 
     Param<int> size;

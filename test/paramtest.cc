@@ -76,7 +76,7 @@ const EnumParamMap enum2_map[] =
     { "ten", 10 },
     { "twenty", 20 },
     { "thirty", 30 },
-    { "fourty", 40 }
+    { "forty", 40 }
 };
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(ParamTest)
