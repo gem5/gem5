@@ -30,7 +30,11 @@
 
 // Because of the -Wundef flag we have to do this
 #define __LIBELF_INTERNAL__     0
-#define __LIBELF64_LINUX        1
+// counterintuitive, but the flag below causes libelf to define
+// 64-bit elf types that apparently didn't exist in some older
+// versions of Linux.  They seem to be there in 2.4.x, so don't
+// set this now (it causes things to break on 64-bit platforms).
+#define __LIBELF64_LINUX        0
 #define __LIBELF_NEED_LINK_H    0
 
 #include <libelf/libelf.h>
