@@ -45,7 +45,7 @@ using namespace std;
 
 namespace Stats {
 
-Tick EventStart = ULL(0xffffffffffffffff);
+Tick EventStart = ULL(0x7fffffffffffffff);
 
 vector<string> event_ignore;
 vector<vector<string> > ignore_tokens;
