@@ -43,6 +43,7 @@ simobj PciConfigAll(FooPioDevice):
 simobj PciDevice(DmaDevice):
     type = 'PciDevice'
     abstract = True
+    addr = 0xffffffff
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
