@@ -48,6 +48,7 @@ class MemTest : public BaseCPU
             FunctionalMemory *check_mem,
             unsigned _memorySize,
             unsigned _percentReads,
+            unsigned _percentCopies,
             unsigned _percentUncacheable,
             unsigned _progressInterval,
             Addr _traceAddr,
@@ -81,6 +82,7 @@ class MemTest : public BaseCPU
     unsigned size;		// size of testing memory region
 
     unsigned percentReads;	// target percentage of read accesses
+    unsigned percentCopies;	// target percentage of copy accesses
     unsigned percentUncacheable;
 
     unsigned blockSize;

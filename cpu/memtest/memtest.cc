@@ -50,6 +50,7 @@ MemTest::MemTest(const string &name,
                  FunctionalMemory *check_mem,
                  unsigned _memorySize,
                  unsigned _percentReads,
+                 unsigned _percentCopies,
                  unsigned _percentUncacheable,
                  unsigned _progressInterval,
                  Addr _traceAddr,
@@ -62,6 +63,7 @@ MemTest::MemTest(const string &name,
       checkMem(check_mem),
       size(_memorySize),
       percentReads(_percentReads),
+      percentCopies(_percentCopies),
       percentUncacheable(_percentUncacheable),
       progressInterval(_progressInterval),
       nextProgressMessage(_progressInterval)
@@ -149,6 +151,8 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
         numWrites++;
         break;
 
+      case Copy:
+        break;
 
       default:
         panic("invalid command");
@@ -156,7 +160,8 @@ MemTest::completeRequest(MemReqPtr &req, uint8_t *data)
 
     if (blockAddr(req->paddr) == traceBlockAddr) {
         cerr << name() << ": completed "
-             << (req->cmd.isWrite() ? "write" : "read") << " access of "
+             << (req->cmd.isWrite() ? "write" : "read")
+             << " access of "
              << req->size << " bytes at address 0x"
              << hex << req->paddr << ", value = 0x";
         printData(cerr, req->data, req->size);
@@ -209,6 +214,7 @@ MemTest::tick()
     //make new request
     unsigned cmd = rand() % 100;
     unsigned offset1 = random() % size;
+    unsigned offset2 = random() % size;
     unsigned base = random() % 2;
     uint64_t data = random();
     unsigned access_size = random() % 4;
@@ -250,7 +256,7 @@ MemTest::tick()
             req->completionEvent = new MemCompleteEvent(req, result, this);
             cacheInterface->access(req);
         }
-    } else {
+    } else if (cmd < (100 - percentCopies)){
         // write
         req->cmd = Write;
         memcpy(req->data, &data, req->size);
@@ -271,6 +277,28 @@ MemTest::tick()
             req->completionEvent = new MemCompleteEvent(req, NULL, this);
             cacheInterface->access(req);
         }
+    } else {
+        // copy
+        Addr source = blockAddr(((base) ? baseAddr1 : baseAddr2) + offset1);
+        Addr dest = blockAddr(((base) ? baseAddr2 : baseAddr1) + offset2);
+        req->cmd = Copy;
+        req->flags &= ~UNCACHEABLE;
+        req->paddr = source;
+        req->dest = dest;
+        delete [] req->data;
+        req->data = new uint8_t[blockSize];
+        req->size = blockSize;
+        if (source == traceBlockAddr || dest == traceBlockAddr) {
+            cerr << name() << ": initiating copy of "
+                 << req->size << " bytes from addr 0x"
+                 << hex << source << " to addr 0x"
+                 << hex << dest << " at cycle "
+                 << dec << curTick << endl;
+        }
+        cacheInterface->access(req);
+        uint8_t result[blockSize];
+        checkMem->access(Read, source, &result, blockSize);
+        checkMem->access(Write, dest, &result, blockSize);
     }
 }
 
@@ -297,6 +325,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
     SimObjectParam<FunctionalMemory *> check_mem;
     Param<unsigned> memory_size;
     Param<unsigned> percent_reads;
+    Param<unsigned> percent_copies;
     Param<unsigned> percent_uncacheable;
     Param<unsigned> progress_interval;
     Param<Addr> trace_addr;
@@ -313,6 +342,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
     INIT_PARAM(check_mem, "check memory"),
     INIT_PARAM_DFLT(memory_size, "memory size", 65536),
     INIT_PARAM_DFLT(percent_reads, "target read percentage", 65),
+    INIT_PARAM_DFLT(percent_copies, "target copy percentage", 0),
     INIT_PARAM_DFLT(percent_uncacheable, "target uncacheable percentage", 10),
     INIT_PARAM_DFLT(progress_interval,
                     "progress report interval (in accesses)", 1000000),
@@ -330,7 +360,7 @@ END_INIT_SIM_OBJECT_PARAMS(MemTest)
 CREATE_SIM_OBJECT(MemTest)
 {
     return new MemTest(getInstanceName(), cache->getInterface(), main_mem,
-                       check_mem, memory_size, percent_reads,
+                       check_mem, memory_size, percent_reads, percent_copies,
                        percent_uncacheable, progress_interval,
                        trace_addr, max_loads_any_thread,
                        max_loads_all_threads);
