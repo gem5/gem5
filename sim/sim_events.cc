@@ -30,6 +30,7 @@
 
 #include "cpu.hh"
 #include "eventq.hh"
+#include "hostinfo.hh"
 #include "sim_events.hh"
 #include "sim_exit.hh"
 #include "sim_stats.hh"
@@ -122,7 +123,7 @@ CheckSwapEvent::process()
     long swap;
 
     /*  returns free swap in KBytes  */
-    swap = proc_info("/proc/meminfo", "SwapFree:");
+    swap = procInfo("/proc/meminfo", "SwapFree:");
 
     if (swap < 1000)
         ccprintf(cerr, "\a\a\aWarning! Swap space is low (%d)\n", swap);

@@ -26,71 +26,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
-#include <string>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <math.h>
 
-#include "cprintf.hh"
 #include "host.hh"
-#include "hostinfo.hh"
-#include "misc.hh"
-#include "trace.hh"
-#include "universe.hh"
 
-using namespace std;
-
-void
-__panic(const string &format, cp::ArgList &args, const char *func,
-        const char *file, int line)
+uint64_t
+procInfo(char *filename, char *target)
 {
-    string fmt = "panic: " + format + " [%s:%s, line %d]\n";
-    args.append(func);
-    args.append(file);
-    args.append(line);
-    args.dump(cerr, fmt);
+    int  done = 0;
+    char line[80];
+    char format[80];
+    uint64_t usage;
 
-    delete &args;
+    FILE *fp = fopen(filename, "r");
 
-#if TRACING_ON
-    // dump trace buffer, if there is one
-    Trace::theLog.dump(cerr);
-#endif
+    while (fp && !feof(fp) && !done) {
+        if (fgets(line, 80, fp)) {
+            if (strncmp(line, target, strlen(target)) == 0) {
+                sprintf(format, "%s %%ld", target);
+                sscanf(line, format, &usage);
 
-    abort();
-}
+                fclose(fp);
+                return usage ;
+            }
+        }
+    }
 
-void
-__fatal(const string &format, cp::ArgList &args, const char *func,
-        const char *file, int line)
-{
-    string fmt = "fatal: " + format + " [%s:%s, line %d]\n"
-        "\n%d\nMemory Usage: %ld KBytes\n";
+    if (fp)
+      fclose(fp);
 
-    args.append(func);
-    args.append(file);
-    args.append(line);
-    args.append(curTick);
-    args.append(memUsage());
-    args.dump(cerr, fmt);
-
-    delete &args;
-
-    exit(1);
-}
-
-void
-__warn(const string &format, cp::ArgList &args, const char *func,
-       const char *file, int line)
-{
-    string fmt = "warn: " + format;
-#ifdef VERBOSE_WARN
-    fmt += " [%s:%s, line %d]\n";
-    args.append(func);
-    args.append(file);
-    args.append(line);
-#else
-    fmt += "\n";
-#endif
-    args.dump(cerr, fmt);
-
-    delete &args;
+    return 0;
 }

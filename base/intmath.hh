@@ -107,6 +107,29 @@ CeilPow2(T n)
     return (T)1 << CeilLog2(n);
 }
 
+template <class T>
+inline T
+DivCeil(T a, T b)
+{
+    return (a + b - 1) / b;
+}
+
+template <class T>
+inline T
+RoundUp(T val, T align)
+{
+    T mask = align - 1;
+    return (val + mask) & ~mask;
+}
+
+template <class T>
+inline T
+RoundDown(T val, T align)
+{
+    T mask = align - 1;
+    return val & ~mask;
+}
+
 inline bool
 IsHex(char c)
 {

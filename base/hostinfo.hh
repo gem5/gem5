@@ -26,71 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
-#include <string>
+#ifndef __HOSTINFO_HH__
+#define __HOSTINFO_HH__
 
-#include "cprintf.hh"
 #include "host.hh"
-#include "hostinfo.hh"
-#include "misc.hh"
-#include "trace.hh"
-#include "universe.hh"
 
-using namespace std;
+uint64_t procInfo(char *filename, char *target);
 
-void
-__panic(const string &format, cp::ArgList &args, const char *func,
-        const char *file, int line)
-{
-    string fmt = "panic: " + format + " [%s:%s, line %d]\n";
-    args.append(func);
-    args.append(file);
-    args.append(line);
-    args.dump(cerr, fmt);
+inline uint64_t memUsage()
+{ return procInfo("/proc/self/status", "VmSize:"); }
 
-    delete &args;
-
-#if TRACING_ON
-    // dump trace buffer, if there is one
-    Trace::theLog.dump(cerr);
-#endif
-
-    abort();
-}
-
-void
-__fatal(const string &format, cp::ArgList &args, const char *func,
-        const char *file, int line)
-{
-    string fmt = "fatal: " + format + " [%s:%s, line %d]\n"
-        "\n%d\nMemory Usage: %ld KBytes\n";
-
-    args.append(func);
-    args.append(file);
-    args.append(line);
-    args.append(curTick);
-    args.append(memUsage());
-    args.dump(cerr, fmt);
-
-    delete &args;
-
-    exit(1);
-}
-
-void
-__warn(const string &format, cp::ArgList &args, const char *func,
-       const char *file, int line)
-{
-    string fmt = "warn: " + format;
-#ifdef VERBOSE_WARN
-    fmt += " [%s:%s, line %d]\n";
-    args.append(func);
-    args.append(file);
-    args.append(line);
-#else
-    fmt += "\n";
-#endif
-    args.dump(cerr, fmt);
-
-    delete &args;
-}
+#endif // __HOSTINFO_HH__
