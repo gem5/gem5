@@ -110,7 +110,20 @@ class TsunamiIO : public PioDevice
          */
         uint8_t Status();
 
-    };
+        /**
+         * Serialize this object to the given output stream.
+         * @param os The stream to serialize to.
+         */
+        virtual void serialize(std::ostream &os);
+
+
+        /**
+         * Reconstruct the state of this object from a checkpoint.
+         * @param cp The checkpoint use.
+         * @param section The section name of this object
+         */
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
+     };
 
     /**
      * Process RTC timer events and generate interrupts appropriately.
@@ -136,7 +149,20 @@ class TsunamiIO : public PioDevice
            */
           virtual const char *description();
 
-    };
+          /**
+           * Serialize this object to the given output stream.
+           * @param os The stream to serialize to.
+           */
+          virtual void serialize(std::ostream &os);
+
+
+          /**
+           * Reconstruct the state of this object from a checkpoint.
+           * @param cp The checkpoint use.
+           * @param section The section name of this object
+           */
+          virtual void unserialize(Checkpoint *cp, const std::string &section);
+     };
 
     /** uip UpdateInProgess says that the rtc is updating, but we just fake it
      * by alternating it on every read of the bit since we are going to

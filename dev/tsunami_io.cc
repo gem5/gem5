@@ -76,6 +76,22 @@ TsunamiIO::RTCEvent::description()
     return "tsunami RTC 1024Hz interrupt";
 }
 
+void
+TsunamiIO::RTCEvent::serialize(std::ostream &os)
+{
+    Tick time = when();
+    SERIALIZE_SCALAR(time);
+}
+
+void
+TsunamiIO::RTCEvent::unserialize(Checkpoint *cp, const std::string &section)
+{
+    Tick time;
+    UNSERIALIZE_SCALAR(time);
+    reschedule(time);
+}
+
+
 // Timer Event for PIT Timers
 TsunamiIO::ClockEvent::ClockEvent()
     : Event(&mainEventQueue)
@@ -120,6 +136,27 @@ uint8_t
 TsunamiIO::ClockEvent::Status()
 {
     return status;
+}
+
+void
+TsunamiIO::ClockEvent::serialize(std::ostream &os)
+{
+    Tick time = when();
+    SERIALIZE_SCALAR(time);
+    SERIALIZE_SCALAR(status);
+    SERIALIZE_SCALAR(mode);
+    SERIALIZE_SCALAR(interval);
+}
+
+void
+TsunamiIO::ClockEvent::unserialize(Checkpoint *cp, const std::string &section)
+{
+    Tick time;
+    UNSERIALIZE_SCALAR(time);
+    UNSERIALIZE_SCALAR(status);
+    UNSERIALIZE_SCALAR(mode);
+    UNSERIALIZE_SCALAR(interval);
+    schedule(time);
 }
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
@@ -250,8 +287,11 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
 Fault
 TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
 {
+
+#if TRACING_ON
     uint8_t dt = *(uint8_t*)data;
     uint64_t dt64 = dt;
+#endif
 
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
@@ -399,12 +439,6 @@ TsunamiIO::serialize(std::ostream &os)
     SERIALIZE_SCALAR(mode2);
     SERIALIZE_SCALAR(picr);
     SERIALIZE_SCALAR(picInterrupting);
-    Tick time0when = timer0.when();
-    Tick time2when = timer2.when();
-    Tick rtcwhen = rtc.when();
-    SERIALIZE_SCALAR(time0when);
-    SERIALIZE_SCALAR(time2when);
-    SERIALIZE_SCALAR(rtcwhen);
     SERIALIZE_SCALAR(RTCAddress);
 
 }
@@ -420,15 +454,6 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(mode2);
     UNSERIALIZE_SCALAR(picr);
     UNSERIALIZE_SCALAR(picInterrupting);
-    Tick time0when;
-    Tick time2when;
-    Tick rtcwhen;
-    UNSERIALIZE_SCALAR(time0when);
-    UNSERIALIZE_SCALAR(time2when);
-    UNSERIALIZE_SCALAR(rtcwhen);
-    timer0.schedule(time0when);
-    timer2.schedule(time2when);
-    rtc.reschedule(rtcwhen);
     UNSERIALIZE_SCALAR(RTCAddress);
 }
 

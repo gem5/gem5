@@ -255,7 +255,10 @@ IdeController::cacheAccess(MemReqPtr &req)
 void
 IdeController::ReadConfig(int offset, int size, uint8_t *data)
 {
+
+#if TRACING_ON
     Addr origOffset = offset;
+#endif
 
     if (offset < PCI_DEVICE_SPECIFIC) {
         PciDev::ReadConfig(offset, size, data);
