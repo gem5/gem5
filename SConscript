@@ -259,6 +259,7 @@ full_system_sources = Split('''
 	kern/linux/linux_events.cc
 	kern/linux/linux_syscalls.cc
 	kern/linux/linux_system.cc
+	kern/linux/printk.cc
 	kern/tru64/dump_mbuf.cc
 	kern/tru64/printf.cc
 	kern/tru64/tru64_events.cc
