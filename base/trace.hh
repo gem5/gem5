@@ -179,9 +179,8 @@ std::ostream &DebugOut();
 
 #define DDUMP(x, data, count) \
 do { \
-    using namespace Trace; \
     if (Trace::IsOn(Trace::x)) \
-        rawDump(data, count); \
+        Trace::rawDump(data, count); \
 } while (0)
 
 #define __dprintf(cycle, name, format, args...) \
@@ -204,6 +203,11 @@ do { \
     __dprintf(curTick, name(), args, cp::ArgListNull()); \
 } while (0)
 
+#define DPRINTFNR(args...) \
+do { \
+    __dprintf((Tick)-1, string(), args, cp::ArgListNull()); \
+} while (0)
+
 #else // !TRACING_ON
 
 #define DTRACE(x) (false)
@@ -211,6 +215,7 @@ do { \
 #define DPRINTF(x, args...) do {} while (0)
 #define DPRINTFR(args...) do {} while (0)
 #define DPRINTFN(args...) do {} while (0)
+#define DPRINTFNR(args...) do {} while (0)
 #define DDUMP(x, data, count) do {} while (0)
 
 #endif	// TRACING_ON

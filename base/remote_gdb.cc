@@ -171,11 +171,17 @@ GDBListener::~GDBListener()
         delete event;
 }
 
+string
+GDBListener::name()
+{
+    return gdb->name() + ".listener";
+}
+
 void
 GDBListener::listen()
 {
     while (!listener.listen(port, true)) {
-        DPRINTF(RGDB, "GDBListener(listen): Can't bind port %d\n", port);
+        DPRINTF(GDBMisc, "Can't bind port %d\n", port);
         port++;
     }
 
@@ -188,7 +194,7 @@ void
 GDBListener::accept()
 {
     if (!listener.islistening())
-        panic("GDBListener(accept): cannot accept a connection if we're not listening!");
+        panic("GDBListener::accept(): cannot accept if we're not listening!");
 
     int sfd = listener.accept(true);
 
@@ -216,7 +222,12 @@ RemoteGDB::Event::Event(RemoteGDB *g, int fd, int e)
 
 void
 RemoteGDB::Event::process(int revent)
-{ gdb->trap(ALPHA_KENTRY_IF); }
+{
+    if (revent & POLLIN)
+        gdb->trap(ALPHA_KENTRY_IF);
+    else if (revent & POLLNVAL)
+        gdb->detach();
+}
 
 RemoteGDB::RemoteGDB(System *_system, ExecContext *c)
     : event(NULL), fd(-1), active(false), attached(false),
@@ -229,6 +240,12 @@ RemoteGDB::~RemoteGDB()
 {
     if (event)
         delete event;
+}
+
+string
+RemoteGDB::name()
+{
+    return system->name() + ".remote_gdb";
 }
 
 bool
@@ -316,17 +333,17 @@ RemoteGDB::acc(Addr va, size_t len)
 
     do  {
         if (va < ALPHA_K0SEG_BASE) {
-            DPRINTF(RGDB, "RGDB(acc):   Mapping is invalid %#x < K0SEG\n", va);
+            DPRINTF(GDBAcc, "acc:   Mapping is invalid %#x < K0SEG\n", va);
             return false;
         }
 
         if (va < ALPHA_K1SEG_BASE) {
             if (va < (ALPHA_K0SEG_BASE + pmem->getSize())) {
-                DPRINTF(RGDB, "RGDB(acc):   Mapping is valid  K0SEG <= "
+                DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
                         "%#x < K0SEG + size\n", va);
                 return true;
             } else {
-                DPRINTF(RGDB, "RGDB(acc):   Mapping is invalid %#x < K0SEG\n",
+                DPRINTF(GDBAcc, "acc:   Mapping is invalid %#x < K0SEG\n",
                         va);
                 return false;
             }
@@ -335,13 +352,13 @@ RemoteGDB::acc(Addr va, size_t len)
         Addr ptbr = context->regs.ipr[AlphaISA::IPR_PALtemp20];
         pte = kernel_pte_lookup(pmem, ptbr, va);
         if (!pte || !entry_valid(pmem->phys_read_qword(pte))) {
-            DPRINTF(RGDB, "RGDB(acc):   %#x pte is invalid\n", va);
+            DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
         }
         va += ALPHA_PGBYTES;
     } while (va < last_va);
 
-    DPRINTF(RGDB, "RGDB(acc):   %#x mapping is valid\n", va);
+    DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
     return true;
 }
 
@@ -355,6 +372,9 @@ int
 RemoteGDB::signal(int type)
 {
     switch (type) {
+      case ALPHA_KENTRY_INT:
+        return (SIGTRAP);
+
       case ALPHA_KENTRY_UNA:
         return (SIGBUS);
 
@@ -399,7 +419,8 @@ RemoteGDB::getregs()
 void
 RemoteGDB::setregs()
 {
-    memcpy(context->regs.intRegFile, &gdbregs[KGDB_REG_V0], 32 * sizeof(uint64_t));
+    memcpy(context->regs.intRegFile, &gdbregs[KGDB_REG_V0],
+           32 * sizeof(uint64_t));
 #ifdef KGDB_FP_REGS
     memcpy(context->regs.floatRegFile.q, &gdbregs[KGDB_REG_F0],
            32 * sizeof(uint64_t));
@@ -410,7 +431,7 @@ RemoteGDB::setregs()
 void
 RemoteGDB::setTempBreakpoint(TempBreakpoint &bkpt, Addr addr)
 {
-    DPRINTF(RGDB, "RGDB(setTempBreakpoint): addr=%#x\n", addr);
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", addr);
 
     bkpt.address = addr;
     insertHardBreak(addr, 4);
@@ -419,7 +440,7 @@ RemoteGDB::setTempBreakpoint(TempBreakpoint &bkpt, Addr addr)
 void
 RemoteGDB::clearTempBreakpoint(TempBreakpoint &bkpt)
 {
-    DPRINTF(RGDB, "RGDB(setTempBreakpoint): addr=%#x\n",
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n",
             bkpt.address);
 
 
@@ -430,7 +451,7 @@ RemoteGDB::clearTempBreakpoint(TempBreakpoint &bkpt)
 void
 RemoteGDB::clearSingleStep()
 {
-    DPRINTF(RGDB, "clearSingleStep bt_addr=%#x nt_addr=%#x\n",
+    DPRINTF(GDBMisc, "clearSingleStep bt_addr=%#x nt_addr=%#x\n",
             takenBkpt.address, notTakenBkpt.address);
 
     if (takenBkpt.address != 0)
@@ -460,7 +481,7 @@ RemoteGDB::setSingleStep()
             set_bt = true;
     }
 
-    DPRINTF(RGDB, "setSingleStep bt_addr=%#x nt_addr=%#x\n",
+    DPRINTF(GDBMisc, "setSingleStep bt_addr=%#x nt_addr=%#x\n",
             takenBkpt.address, notTakenBkpt.address);
 
     setTempBreakpoint(notTakenBkpt, npc);
@@ -494,7 +515,7 @@ RemoteGDB::send(const char *bp)
     const char *p;
     uint8_t csum, c;
 
-//    DPRINTF(RGDB, "RGDB(send):  %s\n", bp);
+    DPRINTF(GDBSend, "send:  %s\n", bp);
 
     do {
         p = bp;
@@ -554,7 +575,7 @@ RemoteGDB::recv(char *bp, int maxlen)
         putbyte(KGDB_BADP);
     } while (1);
 
-//    DPRINTF(RGDB, "RGDB(recv):  %s: %s\n", gdb_command(*bp), bp);
+    DPRINTF(GDBRecv, "recv:  %s: %s\n", gdb_command(*bp), bp);
 
     return (len);
 }
@@ -569,11 +590,11 @@ RemoteGDB::read(Addr vaddr, size_t size, char *data)
     uint8_t *maddr;
 
     if (vaddr < 10) {
-      DPRINTF(RGDB, "\nRGDB(read):  reading memory location zero!\n");
+      DPRINTF(GDBRead, "read:  reading memory location zero!\n");
       vaddr = lastaddr + lastsize;
     }
 
-    DPRINTF(RGDB, "RGDB(read):  addr=%#x, size=%d", vaddr, size);
+    DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 #if TRACING_ON
     char *d = data;
     size_t s = size;
@@ -607,10 +628,13 @@ RemoteGDB::read(Addr vaddr, size_t size, char *data)
     }
 
 #if TRACING_ON
-    if (DTRACE(RGDB)) {
-      char buf[1024];
-      mem2hex(buf, d, s);
-      cprintf(": %s\n", buf);
+    if (DTRACE(GDBRead)) {
+        if (DTRACE(GDBExtra)) {
+            char buf[1024];
+            mem2hex(buf, d, s);
+            DPRINTFNR(": %s\n", buf);
+        } else
+            DPRINTFNR("\n");
     }
 #endif
 
@@ -627,14 +651,18 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
     uint8_t *maddr;
 
     if (vaddr < 10) {
-      DPRINTF(RGDB, "RGDB(write): writing memory location zero!\n");
+      DPRINTF(GDBWrite, "write: writing memory location zero!\n");
       vaddr = lastaddr + lastsize;
     }
 
-    if (DTRACE(RGDB)) {
-      char buf[1024];
-      mem2hex(buf, data, size);
-      cprintf("RGDB(write): addr=%#x, size=%d: %s\n", vaddr, size, buf);
+    if (DTRACE(GDBWrite)) {
+        DPRINTFN("write: addr=%#x, size=%d", vaddr, size);
+        if (DTRACE(GDBExtra)) {
+            char buf[1024];
+            mem2hex(buf, data, size);
+            DPRINTFNR(": %s\n", buf);
+        } else
+            DPRINTFNR("\n");
     }
 
     lastaddr = vaddr;
@@ -682,17 +710,17 @@ RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
     : PCEvent(_gdb->getPcEventQueue(), "HardBreakpoint Event", pc),
       gdb(_gdb), refcount(0)
 {
-    DPRINTF(RGDB, "creating hardware breakpoint at %#x\n", evpc);
+    DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
     schedule();
 }
 
 void
 RemoteGDB::HardBreakpoint::process(ExecContext *xc)
 {
-    DPRINTF(RGDB, "handling hardware breakpoint at %#x\n", pc());
+    DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
     if (xc == gdb->context)
-        gdb->trap(ALPHA_KENTRY_IF);
+        gdb->trap(ALPHA_KENTRY_INT);
 }
 
 bool
@@ -719,7 +747,7 @@ RemoteGDB::insertHardBreak(Addr addr, size_t len)
     if (len != sizeof(MachInst))
         panic("invalid length\n");
 
-    DPRINTF(RGDB, "inserting hardware breakpoint at %#x\n", addr);
+    DPRINTF(GDBMisc, "inserting hardware breakpoint at %#x\n", addr);
 
     HardBreakpoint *&bkpt = hardBreakMap[addr];
     if (bkpt == 0)
@@ -728,19 +756,6 @@ RemoteGDB::insertHardBreak(Addr addr, size_t len)
     bkpt->refcount++;
 
     return true;
-
-#if 0
-    break_iter_t i = hardBreakMap.find(addr);
-    if (i == hardBreakMap.end()) {
-        HardBreakpoint *bkpt = new HardBreakpoint(this, addr);
-        hardBreakMap[addr] = bkpt;
-        i = hardBreakMap.insert(make_pair(addr, bkpt));
-        if (i == hardBreakMap.end())
-            return false;
-    }
-
-    (*i).second->refcount++;
-#endif
 }
 
 bool
@@ -749,7 +764,7 @@ RemoteGDB::removeHardBreak(Addr addr, size_t len)
     if (len != sizeof(MachInst))
         panic("invalid length\n");
 
-    DPRINTF(RGDB, "removing hardware breakpoint at %#x\n", addr);
+    DPRINTF(GDBMisc, "removing hardware breakpoint at %#x\n", addr);
 
     break_iter_t i = hardBreakMap.find(addr);
     if (i == hardBreakMap.end())
@@ -798,7 +813,7 @@ RemoteGDB::trap(int type)
     if (!attached)
         return false;
 
-    DPRINTF(RGDB, "RGDB(trap): PC=%#x NPC=%#x\n",
+    DPRINTF(GDBMisc, "trap: PC=%#x NPC=%#x\n",
             context->regs.pc, context->regs.npc);
 
     clearSingleStep();
@@ -813,17 +828,12 @@ RemoteGDB::trap(int type)
      * After the debugger is "active" (connected) it will be
      * waiting for a "signaled" message from us.
      */
-    if (!active) {
-        if (!IS_BREAKPOINT_TRAP(type, 0)) {
-            // No debugger active -- let trap handle this.
-            return false;
-        }
+    if (!active)
         active = true;
-    } else {
+    else
         // Tell remote host that an exception has occurred.
         sprintf((char *)buffer, "S%02x", signal(type));
         send(buffer);
-    }
 
     // Stick frame regs into our reg cache.
     getregs();
@@ -1000,7 +1010,7 @@ RemoteGDB::trap(int type)
             if (*p++ != ',') send("E0D");
             len = hex2i(&p);
 
-            DPRINTF(RGDB, "kgdb: clear %s, addr=%#x, len=%d\n",
+            DPRINTF(GDBMisc, "clear %s, addr=%#x, len=%d\n",
                     break_type(subcmd), val, len);
 
             ret = false;
@@ -1032,7 +1042,7 @@ RemoteGDB::trap(int type)
             if (*p++ != ',') send("E0D");
             len = hex2i(&p);
 
-            DPRINTF(RGDB, "kgdb: set %s, addr=%#x, len=%d\n",
+            DPRINTF(GDBMisc, "set %s, addr=%#x, len=%d\n",
                     break_type(subcmd), val, len);
 
             ret = false;
@@ -1077,15 +1087,15 @@ RemoteGDB::trap(int type)
           case KGDB_TARGET_EXIT:
           case KGDB_BINARY_DLOAD:
             // Unsupported command
-            DPRINTF(RGDB, "kgdb: Unsupported command: %s\n",
+            DPRINTF(GDBMisc, "Unsupported command: %s\n",
                     gdb_command(command));
-            DDUMP(RGDB, (uint8_t *)data, datalen);
+            DDUMP(GDBMisc, (uint8_t *)data, datalen);
             send("");
             continue;
 
           default:
             // Unknown command.
-            DPRINTF(RGDB, "kgdb: Unknown command: %c(%#x)\n",
+            DPRINTF(GDBMisc, "Unknown command: %c(%#x)\n",
                     command, command);
             send("");
             continue;
