@@ -38,11 +38,11 @@ enum Fault {
     Ndtb_Miss_Fault,		// DTB miss
     Pdtb_Miss_Fault,		// nested DTB miss
     Alignment_Fault,		// unaligned access
-    Dtb_Fault_Fault,		// DTB page fault
-    Dtb_Acv_Fault,		// DTB access violation
-    Itb_Miss_Fault,		// ITB miss
-    Itb_Fault_Fault,		// ITB page fault
-    Itb_Acv_Fault,		// ITB access violation
+    DTB_Fault_Fault,		// DTB page fault
+    DTB_Acv_Fault,		// DTB access violation
+    ITB_Miss_Fault,		// ITB miss
+    ITB_Fault_Fault,		// ITB page fault
+    ITB_Acv_Fault,		// ITB access violation
     Unimplemented_Opcode_Fault,	// invalid/unimplemented instruction
     Fen_Fault,			// FP not-enabled fault
     Pal_Fault,			// call_pal S/W interrupt

@@ -40,8 +40,8 @@
 #ifdef FULL_SYSTEM
 class Processor;
 class Kernel;
-class AlphaItb;
-class AlphaDtb;
+class AlphaITB;
+class AlphaDTB;
 class PhysicalMemory;
 
 class RemoteGDB;
@@ -131,7 +131,7 @@ class SimpleCPU : public BaseCPU
               System *_system,
               Counter max_insts_any_thread, Counter max_insts_all_threads,
               Counter max_loads_any_thread, Counter max_loads_all_threads,
-              AlphaItb *itb, AlphaDtb *dtb, FunctionalMemory *mem,
+              AlphaITB *itb, AlphaDTB *dtb, FunctionalMemory *mem,
               MemInterface *icache_interface, MemInterface *dcache_interface,
               bool _def_reg, Tick freq);
 

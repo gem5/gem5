@@ -68,11 +68,11 @@ AlphaISA::fault_addr[Num_Faults] = {
     0x0201,	/* Ndtb_Miss_Fault */
     0x0281,	/* Pdtb_Miss_Fault */
     0x0301,	/* Alignment_Fault */
-    0x0381,	/* Dtb_Fault_Fault */
-    0x0381,	/* Dtb_Acv_Fault */
-    0x0181,	/* Itb_Miss_Fault */
-    0x0181,	/* Itb_Fault_Fault */
-    0x0081,	/* Itb_Acv_Fault */
+    0x0381,	/* DTB_Fault_Fault */
+    0x0381,	/* DTB_Acv_Fault */
+    0x0181,	/* ITB_Miss_Fault */
+    0x0181,	/* ITB_Fault_Fault */
+    0x0081,	/* ITB_Acv_Fault */
     0x0481,	/* Unimplemented_Opcode_Fault */
     0x0581,	/* Fen_Fault */
     0x2001,	/* Pal_Fault */

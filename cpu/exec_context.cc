@@ -42,7 +42,7 @@ using namespace std;
 // constructor
 #ifdef FULL_SYSTEM
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
-                         AlphaItb *_itb, AlphaDtb *_dtb,
+                         AlphaITB *_itb, AlphaDTB *_dtb,
                          FunctionalMemory *_mem)
     : _status(ExecContext::Unallocated),
       kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),

@@ -124,8 +124,8 @@ class ExecContext
 #ifdef FULL_SYSTEM
 
     FunctionalMemory *mem;
-    AlphaItb *itb;
-    AlphaDtb *dtb;
+    AlphaITB *itb;
+    AlphaDTB *dtb;
     System *system;
 
     // the following two fields are redundant, since we can always
@@ -174,7 +174,7 @@ class ExecContext
     // constructor: initialize context from given process structure
 #ifdef FULL_SYSTEM
     ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                AlphaItb *_itb, AlphaDtb *_dtb, FunctionalMemory *_dem);
+                AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
 #else
     ExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
     ExecContext(BaseCPU *_cpu, int _thread_num, FunctionalMemory *_mem,

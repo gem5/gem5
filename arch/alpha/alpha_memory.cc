@@ -465,7 +465,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                   req->xc);
 
             if (write) { write_acv++; } else { read_acv++; }
-            return Dtb_Fault_Fault;
+            return DTB_Fault_Fault;
         }
 
         // Check for "superpage" mapping: when SP<1> is set, and
@@ -480,7 +480,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                       ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_ACV_MASK),
                       req->xc);
                 if (write) { write_acv++; } else { read_acv++; }
-                return Dtb_Acv_Fault;
+                return DTB_Acv_Fault;
             }
 
             req->paddr = req->vaddr & PA_IMPL_MASK;
@@ -512,13 +512,13 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                           (pte->fonw ? MM_STAT_FONW_MASK : 0),
                           req->xc);
                     write_acv++;
-                    return Dtb_Fault_Fault;
+                    return DTB_Fault_Fault;
                 }
                 if (pte->fonw) {
                     fault(req->vaddr, MM_STAT_WR_MASK | MM_STAT_FONW_MASK,
                           req->xc);
                     write_acv++;
-                    return Dtb_Fault_Fault;
+                    return DTB_Fault_Fault;
                 }
             } else {
                 if (!(pte->xre & MODE2MASK(mode))) {
@@ -527,12 +527,12 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                           (pte->fonr ? MM_STAT_FONR_MASK : 0),
                           req->xc);
                     read_acv++;
-                    return Dtb_Acv_Fault;
+                    return DTB_Acv_Fault;
                 }
                 if (pte->fonr) {
                     fault(req->vaddr, MM_STAT_FONR_MASK, req->xc);
                     read_acv++;
-                    return Dtb_Fault_Fault;
+                    return DTB_Fault_Fault;
                 }
             }
         }
