@@ -63,108 +63,45 @@ using namespace std;
 // This is a hack to get this parameter from the old stats package.
 namespace Statistics {
 bool PrintDescriptions = true;
+DisplayMode default_mode = mode_simplescalar;
 
-namespace Detail {
-/**
- * Struct to contain a name and description of statistic subfield.
- */
-struct SubData
+namespace Database
 {
-    /** Subfield name. */
-    string name;
-    /** Subfield desc. */
-    string desc;
-};
+    class Data
+    {
+      private:
+        typedef list<StatData *> list_t;
+        typedef map<void *, StatData *> map_t;
 
-/**
- * Struct to contain print data of a Stat.
- */
-struct StatData
-{
-    /**
-     * Create this struct.
-     */
-    StatData();
-    /**
-     * Destructor.
-     */
-    ~StatData();
+        list<MainBin *> bins;
+        map<const MainBin *, string > bin_names;
+        list_t binnedStats;
 
-    /** True if the stat has been initialized. */
-    bool init;
-    /** True if the stat should be printed. */
-    bool print;
-    /** The name of the stat. */
-    string name;
-    /** Names and descriptions of subfields. */
-    vector<SubData> *subdata;
-    /** The description of the stat. */
-    string desc;
-    /** The display precision. */
-    int precision;
-    /** The formatting flags. */
-    FormatFlags flags;
-    /** A pointer to a prerequisite Stat. */
-    const Stat *prereq;
-};
+        list_t allStats;
+        list_t printStats;
+        map_t statMap;
 
-StatData::StatData()
-    : init(false), print(false), subdata(NULL), precision(-1), flags(none),
-      prereq(NULL)
-{
-}
+      public:
+        void dump(ostream &stream);
 
-StatData::~StatData()
-{
-    if (subdata)
-        delete subdata;
-}
+        StatData *find(void *stat);
+        void mapStat(void *stat, StatData *data);
 
-class Database
-{
-  private:
-    Database(const Database &) {}
+        void check();
+        void reset();
+        void regBin(MainBin *bin, string name);
+        void regPrint(void *stat);
+    };
 
-  private:
-    typedef list<Stat *> list_t;
-    typedef map<const Stat *, StatData *> map_t;
-
-    list<MainBin *> bins;
-    map<const MainBin *, std::string > bin_names;
-    list_t binnedStats;
-
-    list_t allStats;
-    list_t printStats;
-    map_t statMap;
-
-  public:
-    Database();
-    ~Database();
-
-    void dump(ostream &stream);
-
-    StatData *find(const Stat *stat);
-    void check();
-    void reset();
-    void regStat(Stat *stat);
-    StatData *print(Stat *stat);
-    void regBin(MainBin *bin, std::string name);
-};
-
-Database::Database()
-{}
-
-Database::~Database()
-{}
 
 void
-Database::dump(ostream &stream)
+Data::dump(ostream &stream)
 {
 #ifndef FS_MEASURE
     list_t::iterator i = printStats.begin();
     list_t::iterator end = printStats.end();
     while (i != end) {
-        Stat *stat = *i;
+        StatData *stat = *i;
         if (stat->binned())
             binnedStats.push_back(stat);
         ++i;
@@ -178,7 +115,7 @@ Database::dump(ostream &stream)
         ccprintf(stream, "PRINTING BINNED STATS\n");
         while (j != bins_end) {
             (*j)->activate();
-            map<const MainBin  *, std::string>::const_iterator iter;
+            map<const MainBin  *, string>::const_iterator iter;
             iter = bin_names.find(*j);
             if (iter == bin_names.end())
                 panic("a binned stat not found in names map!");
@@ -192,7 +129,7 @@ Database::dump(ostream &stream)
             list_t::iterator end = binnedStats.end();
 #endif
             while (i != end) {
-                Stat *stat = *i;
+                StatData *stat = *i;
                 if (stat->dodisplay())
                     stat->display(stream);
                 ++i;
@@ -213,8 +150,8 @@ Database::dump(ostream &stream)
     list_t::iterator k = printStats.begin();
     list_t::iterator endprint = printStats.end();
     while (k != endprint) {
-        Stat *stat = *k;
-        if (stat->dodisplay() && !stat->binned())
+        StatData *stat = *k;
+        if (stat->dodisplay() /*&& !stat->binned()*/)
             stat->display(stream);
         ++k;
     }
@@ -222,7 +159,7 @@ Database::dump(ostream &stream)
 }
 
 StatData *
-Database::find(const Stat *stat)
+Data::find(void *stat)
 {
     map_t::const_iterator i = statMap.find(stat);
 
@@ -233,41 +170,26 @@ Database::find(const Stat *stat)
 }
 
 void
-Database::check()
+Data::check()
 {
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
 
     while (i != end) {
-        Stat *stat = *i;
-        StatData *data = find(stat);
-        if (!data || !data->init) {
-#ifdef STAT_DEBUG
-            cprintf("this is stat number %d\n",(*i)->number);
-#endif
-            panic("Not all stats have been initialized");
-        }
-
-        if (data->print) {
-            if (data->name.empty())
-                panic("all printable stats must be named");
-
-            list_t::iterator j = printStats.insert(printStats.end(), *i);
-            inplace_merge(printStats.begin(), j,
-                          printStats.end(), Stat::less);
-        }
-
+        StatData *stat = *i;
+        assert(stat);
+        stat->check();
         ++i;
     }
 }
 
 void
-Database::reset()
+Data::reset()
 {
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
     while (i != end) {
-        Stat *stat = *i;
+        StatData *stat = *i;
         stat->reset();
         ++i;
     }
@@ -282,7 +204,7 @@ Database::reset()
 
         i = allStats.begin();
         while (i != end) {
-            Stat *stat = *i;
+            StatData *stat = *i;
             stat->reset();
             ++i;
         }
@@ -294,21 +216,20 @@ Database::reset()
 }
 
 void
-Database::regStat(Stat *stat)
+Data::mapStat(void *stat, StatData *data)
 {
     if (statMap.find(stat) != statMap.end())
         panic("shouldn't register stat twice!");
 
-    allStats.push_back(stat);
+    allStats.push_back(data);
 
-    StatData *data = new StatData;
     bool success = (statMap.insert(make_pair(stat, data))).second;
     assert(statMap.find(stat) != statMap.end());
     assert(success && "this should never fail");
 }
 
 void
-Database::regBin(MainBin *bin, std::string name)
+Data::regBin(MainBin *bin, string name)
 {
     if (bin_names.find(bin) != bin_names.end())
         panic("shouldn't register bin twice");
@@ -322,11 +243,79 @@ Database::regBin(MainBin *bin, std::string name)
     cprintf("registering %s\n", name);
 }
 
-bool
-Stat::less(Stat *stat1, Stat *stat2)
+void
+Data::regPrint(void *stat)
 {
-    const string &name1 = stat1->myname();
-    const string &name2 = stat2->myname();
+    StatData *data = find(stat);
+
+    if (!data->print) {
+        data->print = true;
+
+        list_t::iterator j = printStats.insert(printStats.end(), data);
+        inplace_merge(printStats.begin(), j,
+                      printStats.end(), StatData::less);
+    }
+
+}
+
+Data &
+StatDB()
+{
+    static Data db;
+    return db;
+}
+
+}
+
+StatData *
+DataAccess::find() const
+{
+    return Database::StatDB().find(const_cast<void *>((const void *)this));
+}
+
+void
+DataAccess::map(StatData *data)
+{
+    Database::StatDB().mapStat(this, data);
+}
+
+StatData *
+DataAccess::statData()
+{
+    StatData *ptr = find();
+    assert(ptr);
+    return ptr;
+}
+
+const StatData *
+DataAccess::statData() const
+{
+    const StatData *ptr = find();
+    assert(ptr);
+    return ptr;
+}
+
+void
+DataAccess::setInit()
+{
+    statData()->init = true;
+}
+
+void
+DataAccess::setPrint()
+{
+    Database::StatDB().regPrint(this);
+}
+
+StatData::~StatData()
+{
+}
+
+bool
+StatData::less(StatData *stat1, StatData *stat2)
+{
+    const string &name1 = stat1->name;
+    const string &name2 = stat2->name;
 
     vector<string> v1;
     vector<string> v2;
@@ -348,209 +337,27 @@ Stat::less(Stat *stat1, Stat *stat2)
     return false;
 }
 
-StatData *
-Database::print(Stat *stat)
+bool
+StatData::check() const
 {
-    StatData *data = find(stat);
-    assert(data);
-
-    data->print = true;
-
-    return data;
-}
-
-Database &
-StatDB()
-{
-    static Database db;
-    return db;
-}
-
-Stat::Stat(bool reg)
-{
-#if 0
-    // This assert can help you find that pesky stat.
-    assert(this != (void *)0xbffff5c0);
-#endif
-
-    if (reg)
-        StatDB().regStat(this);
-
+    if (!init) {
 #ifdef STAT_DEBUG
-    number = ++total_stats;
-    cprintf("I'm stat number %d\n",number);
+        cprintf("this is stat number %d\n",(*i)->number);
 #endif
-}
+        panic("Not all stats have been initialized");
+        return false;
+    }
 
-void
-Stat::setInit()
-{ mydata()->init = true; }
+    if (print && name.empty()) {
+        panic("all printable stats must be named");
+        return false;
+    }
 
-StatData *
-Stat::mydata()
-{
-    StatData *data = StatDB().find(this);
-    assert(data);
-
-    return data;
-}
-
-const StatData *
-Stat::mydata() const
-{
-    StatData *data = StatDB().find(this);
-    assert(data);
-
-    return data;
-}
-
-const SubData *
-Stat::mysubdata(int index) const
-{
-    assert(index >= 0);
-    if (index >= size())
-        return NULL;
-
-    const StatData *data = this->mydata();
-    if (!data->subdata || data->subdata->size() <= index)
-        return NULL;
-
-    return &(*data->subdata)[index];
-}
-
-SubData *
-Stat::mysubdata_create(int index)
-{
-    int size = this->size();
-    assert(index >= 0 && (size == 0 || size > 0 && index < size));
-
-    StatData *data = this->mydata();
-    if (!data->subdata) {
-        if (!data->subdata) {
-            if (size == 0)
-                size = index + 1;
-
-            data->subdata = new vector<SubData>(size);
-        }
-    } else if (data->subdata->size() <= index)
-            data->subdata->resize(index + 1);
-
-    SubData *sd = &(*data->subdata)[index];
-    assert(sd);
-
-    return sd;
+    return true;
 }
 
 string
-Stat::myname() const
-{ return mydata()->name; }
-
-string
-Stat::mysubname(int index) const
-{
-    const SubData *sd = mysubdata(index);
-    return sd ? sd->name : "";
-}
-
-string
-Stat::mydesc() const
-{ return mydata()->desc; }
-
-string
-Stat::mysubdesc(int index) const
-{
-    const SubData *sd = mysubdata(index);
-    return sd ? sd->desc : "";
-}
-
-int
-Stat::myprecision() const
-{ return mydata()->precision; }
-
-FormatFlags
-Stat::myflags() const
-{ return mydata()->flags; }
-
-bool
-Stat::dodisplay() const
-{ return !mydata()->prereq || !mydata()->prereq->zero(); }
-
-StatData *
-Stat::print()
-{
-    StatData *data = StatDB().print(this);
-    assert(data && data->init);
-
-    return data;
-}
-
-Stat &
-Stat::name(const string &name)
-{
-    print()->name = name;
-    return *this;
-}
-
-Stat &
-Stat::desc(const string &desc)
-{
-    print()->desc = desc;
-    return *this;
-}
-
-Stat &
-Stat::precision(int precision)
-{
-    print()->precision = precision;
-    return *this;
-}
-
-Stat &
-Stat::flags(FormatFlags flags)
-{
-    if (flags & __reserved)
-        panic("Cannot set reserved flags!\n");
-
-    print()->flags |= flags;
-    return *this;
-}
-
-Stat &
-Stat::prereq(const Stat &prereq)
-{
-    print()->prereq = &prereq;
-    return *this;
-}
-
-Stat &
-Stat::subname(int index, const string &name)
-{
-    print();
-    mysubdata_create(index)->name = name;
-    return *this;
-}
-Stat &
-Stat::subdesc(int index, const string &desc)
-{
-    print();
-    mysubdata_create(index)->desc = desc;
-    return *this;
-}
-
-bool
-ScalarStat::zero() const
-{
-    return val() == 0.0;
-}
-
-bool
-VectorStat::zero() const
-{
-    return val()[0] == 0.0;
-}
-
-string
-ValueToString(result_t value, int precision)
+ValueToString(result_t value, DisplayMode mode, int precision)
 {
     stringstream val;
 
@@ -564,20 +371,33 @@ ValueToString(result_t value, int precision)
         val.setf(ios::fixed);
         val << value;
     } else {
-#ifndef STAT_DISPLAY_COMPAT
-        val << "no value";
-#else
-        val << "<err: div-0>";
-#endif
+        val << (mode == mode_m5 ? "no value" : "<err: div-0>");
     }
 
     return val.str();
 }
 
+struct ScalarPrint
+{
+    result_t value;
+    string name;
+    string desc;
+    int precision;
+    DisplayMode mode;
+    FormatFlags flags;
+    result_t pdf;
+    result_t cdf;
+
+    ScalarPrint()
+        : value(0.0), precision(0), mode(default_mode), flags(0),
+          pdf(NAN), cdf(NAN)
+    {}
+
+    void operator()(ostream &stream) const;
+};
+
 void
-PrintOne(ostream &stream, result_t value,
-         const string &name, const string &desc, int precision,
-         FormatFlags flags, result_t pdf = NAN, result_t cdf = NAN)
+ScalarPrint::operator()(ostream &stream) const
 {
     if (flags & nozero && value == 0.0 ||
         flags & nonan && isnan(value))
@@ -591,16 +411,13 @@ PrintOne(ostream &stream, result_t value,
     if (!isnan(cdf))
         ccprintf(cdfstr, "%.2f%%", cdf * 100.0);
 
-#ifdef STAT_DISPLAY_COMPAT
-    if (flags & __substat) {
+    if (mode == mode_simplescalar && flags & __substat) {
         ccprintf(stream, "%32s %12s %10s %10s", name,
-                 ValueToString(value, precision),
+                 ValueToString(value, mode, precision),
                  pdfstr, cdfstr);
-    } else
-#endif
-    {
+    } else {
         ccprintf(stream, "%-40s %12s %10s %10s", name,
-                 ValueToString(value, precision), pdfstr, cdfstr);
+                 ValueToString(value, mode, precision), pdfstr, cdfstr);
     }
 
     if (PrintDescriptions) {
@@ -610,244 +427,184 @@ PrintOne(ostream &stream, result_t value,
     stream << endl;
 }
 
-void
-ScalarStat::display(ostream &stream) const
+struct VectorPrint
 {
-    PrintOne(stream, val(), myname(), mydesc(), myprecision(), myflags());
-}
+    string name;
+    string desc;
+    vector<string> subnames;
+    vector<string> subdescs;
+    int precision;
+    DisplayMode mode;
+    FormatFlags flags;
+    rvec_t vec;
+    result_t total;
+
+    VectorPrint()
+        : subnames(0), subdescs(0), precision(-1), mode(default_mode),
+          flags(0), total(NAN)
+    {}
+
+    void operator()(ostream &stream) const;
+};
 
 void
-VectorStat::display(ostream &stream) const
-{
-    bool have_subname = false;
-    bool have_subdesc = false;
-    int size = this->size();
-    for (int i = 0; i < size; ++i) {
-        if (!mysubname(i).empty())
-            have_subname = true;
-        if (!mysubdesc(i).empty())
-            have_subdesc = true;
-    }
-
-    vector<string> *subnames = 0;
-    vector<string> *subdescs = 0;
-    if (have_subname) {
-        subnames = new vector<string>(size);
-        for (int i = 0; i < size; ++i)
-            (*subnames)[i] = mysubname(i);
-    }
-    if (have_subdesc) {
-        subdescs = new vector<string>(size);
-        for (int i = 0; i < size; ++i)
-            (*subdescs)[i] = mysubdesc(i);
-    }
-
-    VectorDisplay(stream, myname(), subnames, mydesc(), subdescs,
-                  myprecision(), myflags(), val(), total());
-}
-
-#ifndef STAT_DISPLAY_COMPAT
-#define NAMESEP "::"
-#else
-#define NAMESEP "_"
-#endif
-
-#ifndef STAT_DISPLAY_COMPAT
-void
-VectorDisplay(std::ostream &stream,
-              const std::string &myname,
-              const std::vector<std::string> *mysubnames,
-              const std::string &mydesc,
-              const std::vector<std::string> *mysubdescs,
-              int myprecision, FormatFlags myflags,
-              const rvec_t &vec, result_t mytotal)
+VectorPrint::operator()(std::ostream &stream) const
 {
     int _size = vec.size();
     result_t _total = 0.0;
-    result_t _pdf, _cdf = 0.0;
 
-    if (myflags & (pdf | cdf)) {
+    if (flags & (pdf | cdf)) {
         for (int i = 0; i < _size; ++i) {
             _total += vec[i];
         }
     }
 
-    if (_size == 1) {
-        PrintOne(stream, vec[0], myname, mydesc, myprecision, myflags);
-    } else {
-        for (int i = 0; i < _size; ++i) {
-            string subname;
-            if (mysubnames) {
-                subname = (*mysubnames)[i];
-                if (subname.empty())
-                    continue;
-            } else {
-                subname = to_string(i);
-            }
+    string base = name + ((mode == mode_simplescalar) ? "_" : "::");
 
-            string name = myname + NAMESEP + subname;
-            if (!(myflags & pdf))
-                PrintOne(stream, vec[i], name, mydesc, myprecision, myflags);
-            else {
-                _pdf = vec[i] / _total;
-                _cdf += _pdf;
-                PrintOne(stream, vec[i], name, mydesc, myprecision, myflags,
-                         _pdf, _cdf);
-            }
-        }
+    ScalarPrint print;
+    print.name = name;
+    print.desc = desc;
+    print.precision = precision;
+    print.flags = flags;
 
-        if (myflags & total)
-            PrintOne(stream, mytotal, myname + NAMESEP + "total",
-                     mydesc, myprecision, myflags);
-    }
-}
-#else
-void
-VectorDisplay(std::ostream &stream,
-              const std::string &myname,
-              const std::vector<std::string> *mysubnames,
-              const std::string &mydesc,
-              const std::vector<std::string> *mysubdescs,
-              int myprecision, FormatFlags myflags,
-              const rvec_t &vec, result_t mytotal)
-{
-    int _size = vec.size();
-    result_t _total = 0.0;
-    result_t _pdf, _cdf = 0.0;
-
-    if (myflags & (pdf | cdf)) {
-        for (int i = 0; i < _size; ++i) {
-            _total += vec[i];
-        }
-    }
+    bool havesub = !subnames.empty();
 
     if (_size == 1) {
-        PrintOne(stream, vec[0], myname, mydesc, myprecision, myflags);
-    } else {
-        if (myflags & total)
-            PrintOne(stream, mytotal, myname, mydesc, myprecision, myflags);
+        print.value = vec[0];
+        print(stream);
+    } else if (mode == mode_m5) {
+        for (int i = 0; i < _size; ++i) {
+            if (havesub && (i >= subnames.size() || subnames[i].empty()))
+                continue;
 
-        if (myflags & dist) {
-            ccprintf(stream, "%s.start_dist\n", myname);
+            print.name = base + (havesub ? subnames[i] : to_string(i));
+            print.desc = subdescs.empty() ? desc : subdescs[i];
+            print.value = vec[i];
+
+            if (_total && (flags & pdf)) {
+                print.pdf = vec[i] / _total;
+                print.cdf += print.pdf;
+            }
+
+            print(stream);
+        }
+
+        if (flags & ::Statistics::total) {
+            print.name = base + "total";
+            print.desc = desc;
+            print.value = total;
+            print(stream);
+        }
+    } else {
+        if (flags & ::Statistics::total) {
+            print.value = total;
+            print(stream);
+        }
+
+        result_t _pdf = 0.0;
+        result_t _cdf = 0.0;
+        if (flags & dist) {
+            ccprintf(stream, "%s.start_dist\n", name);
             for (int i = 0; i < _size; ++i) {
-                string subname, subdesc;
-                subname = to_string(i);
-                if (mysubnames) {
-                    if (!subname.empty()) {
-                        subname = (*mysubnames)[i];
-                    }
+                print.name = havesub ? subnames[i] : to_string(i);
+                print.desc = subdescs.empty() ? desc : subdescs[i];
+                print.flags |= __substat;
+                print.value = vec[i];
+
+                if (_total) {
+                    _pdf = vec[i] / _total;
+                    _cdf += _pdf;
                 }
-                if (mysubdescs) {
-                    subdesc = (*mysubdescs)[i];
-                }
-                if (!(myflags & (pdf | cdf))) {
-                    PrintOne(stream, vec[i], subname, subdesc, myprecision,
-                             myflags | __substat);
-                } else {
-                    if (_total) {
-                        _pdf = vec[i] / _total;
-                        _cdf += _pdf;
-                    } else {
-                        _pdf = _cdf = 0.0;
-                    }
-                    if (!(myflags & cdf)) {
-                        PrintOne(stream, vec[i], subname, subdesc, myprecision,
-                                 myflags | __substat, _pdf);
-                    } else {
-                        PrintOne(stream, vec[i], subname, subdesc, myprecision,
-                                 myflags | __substat, _pdf, _cdf);
-                    }
-                }
+
+                if (flags & pdf)
+                    print.pdf = _pdf;
+                if (flags & cdf)
+                    print.cdf = _cdf;
+
+                print(stream);
             }
-            ccprintf(stream, "%s.end_dist\n", myname);
+            ccprintf(stream, "%s.end_dist\n", name);
         } else {
             for (int i = 0; i < _size; ++i) {
-                string subname;
-                if (mysubnames) {
-                    subname = (*mysubnames)[i];
-                    if (subname.empty())
-                        continue;
+                if (havesub && subnames[i].empty())
+                    continue;
+
+                print.name = base;
+                print.name += havesub ? subnames[i] : to_string(i);
+                print.desc = subdescs.empty() ? desc : subdescs[i];
+                print.value = vec[i];
+
+                if (_total) {
+                    _pdf = vec[i] / _total;
+                    _cdf += _pdf;
                 } else {
-                    subname = to_string(i);
+                    _pdf = _cdf = NAN;
                 }
 
-                string name = myname + NAMESEP + subname;
-                if (!(myflags & pdf)) {
-                    PrintOne(stream, vec[i], name, mydesc, myprecision,
-                             myflags);
-                } else {
-                    if (_total) {
-                        _pdf = vec[i] / _total;
-                        _cdf += _pdf;
-                    } else {
-                        _pdf = _cdf = NAN;
-                    }
-                    PrintOne(stream, vec[i], name, mydesc, myprecision,
-                             myflags, _pdf, _cdf);
+                if (flags & pdf) {
+                    print.pdf = _pdf;
+                    print.cdf = _cdf;
                 }
+
+                print(stream);
             }
         }
     }
 }
-#endif
 
-#ifndef STAT_DISPLAY_COMPAT
-void
-DistDisplay(ostream &stream, const string &name, const string &desc,
-            int precision, FormatFlags flags,
-            result_t min_val, result_t max_val,
-            result_t underflow, result_t overflow,
-            const rvec_t &vec, int min, int max, int bucket_size, int size);
+struct DistPrint
 {
-    assert(size == vec.size());
+    string name;
+    string desc;
+    int precision;
+    DisplayMode mode;
+    FormatFlags flags;
 
-    result_t total = 0.0;
-    result_t pdf, cdf = 0.0;
+    result_t min_val;
+    result_t max_val;
+    result_t underflow;
+    result_t overflow;
+    rvec_t vec;
+    result_t sum;
+    result_t squares;
+    result_t samples;
 
-    total += underflow;
-    for (int i = 0; i < size; ++i)
-        total += vec[i];
-    total += overflow;
+    int min;
+    int max;
+    int bucket_size;
+    int size;
+    bool fancy;
 
-    pdf = underflow / total;
-    cdf += pdf;
+    void operator()(ostream &stream) const;
+};
 
-    PrintOne(stream, underflow, name + NAMESEP + "underflow", desc,
-             precision, myflags, pdf, cdf);
+void
+DistPrint::operator()(ostream &stream) const
+{
+    if (fancy) {
+        ScalarPrint print;
+        string base = name + ((mode == mode_m5) ? "::" : "_");
 
-    for (int i = 0; i < size; ++i) {
-        stringstream namestr;
-        namestr << name;
+        print.precision = precision;
+        print.flags = flags;
+        print.desc = desc;
 
-        int low = i * bucket_size + min;
-        int high = ::std::min((i + 1) * bucket_size + min - 1, max);
-        namestr << low;
-        if (low < high)
-            namestr << "-" << high;
+        print.name = base + "mean";
+        print.value = samples ? sum / samples : NAN;
+        print(stream);
 
-        pdf = vec[i] / total;
-        cdf += pdf;
-        PrintOne(stream, vec[i], namestr.str(), desc, precision, myflags,
-                 pdf, cdf);
+        print.name = base + "stdev";
+        print.value = samples ? sqrt((samples * squares - sum * sum) /
+                                     (samples * (samples - 1.0))) : NAN;
+        print(stream);
+
+        print.name = "**Ignore: " + base + "TOT";
+        print.value = samples;
+        print(stream);
+        return;
     }
 
-    pdf = overflow / total;
-    cdf += pdf;
-    PrintOne(stream, overflow, name + NAMESEP + "overflow", desc,
-             precision, myflags, pdf, cdf);
-    PrintOne(stream, total, name + NAMESEP + "total", desc,
-             precision, myflags);
-}
-#else
-void
-DistDisplay(ostream &stream, const string &name, const string &desc,
-            int precision, FormatFlags flags,
-            result_t min_val, result_t max_val,
-            result_t underflow, result_t overflow,
-            const rvec_t &vec, int min, int max, int bucket_size, int size)
-{
     assert(size == vec.size());
-    string blank;
 
     result_t total = 0.0;
 
@@ -856,66 +613,377 @@ DistDisplay(ostream &stream, const string &name, const string &desc,
         total += vec[i];
     total += overflow;
 
-    ccprintf(stream, "%-42s", name + ".start_dist");
-    if (PrintDescriptions && !desc.empty())
-        ccprintf(stream, "                     # %s", desc);
-    stream << endl;
+    string base = name + (mode == mode_m5 ? "::" : ".");
 
-    PrintOne(stream, total, name + ".samples", blank, precision, flags);
-    PrintOne(stream, min_val, name + ".min_value", blank, precision, flags);
+    ScalarPrint print;
+    print.desc = (mode == mode_m5) ? desc : "";
+    print.precision = precision;
+    print.mode = mode;
+    print.flags = flags;
 
-    if (underflow > 0)
-        PrintOne(stream, min_val, name + ".underflows", blank, precision,
-                 flags);
+    if (mode == mode_simplescalar) {
+        ccprintf(stream, "%-42s", base + "start_dist");
+        if (PrintDescriptions && !desc.empty())
+            ccprintf(stream, "                     # %s", desc);
+        stream << endl;
+    }
 
-    int _min;
-    result_t _pdf, _cdf, mypdf, mycdf;
+    print.name = base + "samples";
+    print.value = samples;
+    print(stream);
 
-    _cdf = 0.0;
+    print.name = base + "min_value";
+    print.value = min_val;
+    print(stream);
+
+    if (mode == mode_m5 || underflow > 0.0) {
+        print.name = base + "underflows";
+        print.value = underflow;
+        if (mode == mode_m5 && total) {
+            print.pdf = underflow / total;
+            print.cdf += print.pdf;
+        }
+        print(stream);
+    }
+
+
+    if (mode == mode_m5) {
+        for (int i = 0; i < size; ++i) {
+            stringstream namestr;
+            namestr << name;
+
+            int low = i * bucket_size + min;
+            int high = ::min((i + 1) * bucket_size + min - 1, max);
+            namestr << low;
+            if (low < high)
+                namestr << "-" << high;
+
+            print.name = namestr.str();
+            print.value = vec[i];
+            if (total) {
+                print.pdf = vec[i] / total;
+                print.cdf += print.pdf;
+            }
+            print(stream);
+        }
+
+    } else {
+        int _min;
+        result_t _pdf;
+        result_t _cdf = 0.0;
+
+        print.flags = flags | __substat;
+
+        for (int i = 0; i < size; ++i) {
+            if (flags & nozero && vec[i] == 0.0 ||
+                flags & nonan && isnan(vec[i]))
+                continue;
+
+            _min = i * bucket_size + min;
+            _pdf = vec[i] / total * 100.0;
+            _cdf += _pdf;
+
+
+            print.name = ValueToString(_min, mode, 0);
+            print.value = vec[i];
+            print.pdf = (flags & pdf) ? _pdf : NAN;
+            print.cdf = (flags & cdf) ? _cdf : NAN;
+            print(stream);
+        }
+
+        print.flags = flags;
+        if (flags & (pdf || cdf)) {
+            print.pdf = NAN;
+            print.cdf = NAN;
+        }
+    }
+
+    if (mode == mode_m5 || overflow > 0.0) {
+        print.name = base + "overflows";
+        print.value = overflow;
+        if (mode == mode_m5 && total) {
+            print.pdf = overflow / total;
+            print.cdf += print.pdf;
+        }
+        print(stream);
+    }
+
+    print.pdf = NAN;
+    print.cdf = NAN;
+
+    if (mode != mode_simplescalar) {
+        print.name = base + "total";
+        print.value = total;
+        print(stream);
+    }
+
+    print.name = base + "max_value";
+    print.value = max_val;
+    print(stream);
+
+    if (mode != mode_simplescalar && samples != 0) {
+        print.name = base + "mean";
+        print.value = sum / samples;
+        print(stream);
+
+        print.name = base + "stdev";
+        print.value = sqrt((samples * squares - sum * sum) /
+                           (samples * (samples - 1.0)));
+        print(stream);
+    }
+
+    if (mode == mode_simplescalar)
+        ccprintf(stream, "%send_dist\n\n", base);
+}
+
+void
+ScalarDataBase::display(ostream &stream) const
+{
+    ScalarPrint print;
+    print.value = val();
+    print.name = name;
+    print.desc = desc;
+    print.precision = precision;
+    print.flags = flags;
+
+    print(stream);
+}
+
+void
+VectorDataBase::display(ostream &stream) const
+{
+    int size = this->size();
+    const_cast<VectorDataBase *>(this)->update();
+
+    VectorPrint print;
+
+    print.name = name;
+    print.desc = desc;
+    print.mode = mode;
+    print.flags = flags;
+    print.precision = precision;
+    print.vec = val();
+    print.total = total();
+
     for (int i = 0; i < size; ++i) {
-        if (flags & nozero && vec[i] == 0.0 ||
-            flags & nonan && isnan(vec[i]))
+        if (!subnames[i].empty()) {
+            print.subnames = subnames;
+            print.subnames.resize(size);
+            for (int i = 0; i < size; ++i) {
+                if (!subnames[i].empty() && !subdescs[i].empty()) {
+                    print.subdescs = subdescs;
+                    print.subdescs.resize(size);
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+
+    print(stream);
+}
+
+void
+Vector2dDataBase::display(ostream &stream) const
+{
+    const_cast<Vector2dDataBase *>(this)->update();
+
+    bool havesub = false;
+    VectorPrint print;
+
+    print.subnames = y_subnames;
+    print.mode = mode;
+    print.flags = flags;
+    print.precision = precision;
+
+    if (!subnames.empty()) {
+        for (int i = 0; i < x; ++i)
+            if (!subnames[i].empty())
+                havesub = true;
+    }
+
+    rvec_t tot_vec(y);
+    result_t super_total = 0.0;
+    for (int i = 0; i < x; ++i) {
+        if (havesub && (i >= subnames.size() || subnames[i].empty()))
             continue;
 
-        _min = i * bucket_size + min;
-        _pdf = vec[i] / total * 100.0;
-        _cdf += _pdf;
+        int iy = i * y;
+        rvec_t yvec(y);
 
-        mypdf = (flags & pdf) ? _pdf : NAN;
-        mycdf = (flags & cdf) ? _cdf : NAN;
+        result_t total = 0.0;
+        for (int j = 0; j < y; ++j) {
+            yvec[j] = vec[iy + j];
+            tot_vec[j] += yvec[j];
+            total += yvec[j];
+            super_total += yvec[j];
+        }
 
-        PrintOne(stream, vec[i], ValueToString(_min, 0), blank, precision,
-                 flags | __substat, mypdf, mycdf);
+        print.name = name + "_" + (havesub ? subnames[i] : to_string(i));
+        print.desc = desc;
+        print.vec = yvec;
+        print.total = total;
+        print(stream);
     }
 
-    if (overflow > 0)
-        PrintOne(stream, overflow, name + ".overflows", blank, precision,
-                 flags);
-    PrintOne(stream, max_val, name + ".max_value", blank, precision, flags);
-    ccprintf(stream, "%s.end_dist\n\n", name);
+    if ((flags & ::Statistics::total) && (x > 1)) {
+        print.name = name;
+        print.desc = desc;
+        print.vec = tot_vec;
+        print.total = super_total;
+        print(stream);
+    }
 }
-#endif
 
-/**
- * @todo  get rid of the ugly hack **Ignore for total
- */
 void
-FancyDisplay(ostream &stream, const string &name, const string &desc,
-             int precision, FormatFlags flags, result_t mean,
-             result_t variance, result_t total)
+DistDataBase::display(ostream &stream) const
 {
-    result_t stdev = isnan(variance) ? NAN : sqrt(variance);
-    PrintOne(stream, mean, name + NAMESEP + "mean", desc, precision, flags);
-    PrintOne(stream, stdev, name + NAMESEP + "stdev", desc, precision, flags);
-    PrintOne(stream, total, "**Ignore: " + name + NAMESEP + "TOT", desc, precision, flags);
+    const_cast<DistDataBase *>(this)->update();
+
+    DistPrint print;
+
+    print.name = name;
+    print.desc = desc;
+    print.precision = precision;
+    print.mode = mode;
+    print.flags = flags;
+
+    print.min_val = data.min_val;
+    print.max_val = data.max_val;
+    print.underflow = data.underflow;
+    print.overflow = data.overflow;
+    print.vec = data.vec;
+    print.sum = data.sum;
+    print.squares = data.squares;
+    print.samples = data.samples;
+
+    print.min = data.min;
+    print.max = data.max;
+    print.bucket_size = data.bucket_size;
+    print.size = data.size;
+    print.fancy = data.fancy;
+
+    print(stream);
 }
 
-} // namespace Detail
+void
+VectorDistDataBase::display(ostream &stream) const
+{
+    const_cast<VectorDistDataBase *>(this)->update();
 
-MainBin::MainBin(const std::string &name)
+    for (int i = 0; i < size(); ++i) {
+        DistPrint print;
+
+        print.name = name +
+            (subnames[i].empty() ? ("_" + to_string(i)) : subnames[i]);
+        print.desc = subdescs[i].empty() ? desc : subdescs[i];
+        print.precision = precision;
+        print.mode = mode;
+        print.flags = flags;
+
+        print.min_val = data[i].min_val;
+        print.max_val = data[i].max_val;
+        print.underflow = data[i].underflow;
+        print.overflow = data[i].overflow;
+        print.vec = data[i].vec;
+        print.sum = data[i].sum;
+        print.squares = data[i].squares;
+        print.samples = data[i].samples;
+
+        print.min = data[i].min;
+        print.max = data[i].max;
+        print.bucket_size = data[i].bucket_size;
+        print.size = data[i].size;
+        print.fancy = data[i].fancy;
+
+        print(stream);
+    }
+}
+
+void
+FormulaBase::val(rvec_t &vec) const
+{
+    vec = root->val();
+}
+
+result_t
+FormulaBase::total() const
+{
+    return root->total();
+}
+
+size_t
+FormulaBase::size() const
+{
+    if (!root)
+        return 0;
+    else
+        return root->size();
+}
+
+bool
+FormulaBase::binned() const
+{
+    return root->binned();
+}
+
+void
+FormulaBase::reset()
+{
+}
+
+bool
+FormulaBase::zero() const
+{
+    rvec_t vec;
+    val(vec);
+    for (int i = 0; i < vec.size(); ++i)
+        if (vec[i] != 0.0)
+            return false;
+    return true;
+}
+
+void
+FormulaBase::update(StatData *)
+{
+}
+
+Formula::Formula()
+{
+    setInit();
+}
+
+Formula::Formula(Temp r)
+{
+    root = r;
+    assert(size());
+}
+
+const Formula &
+Formula::operator=(Temp r)
+{
+    assert(!root && "Can't change formulas");
+    root = r;
+    assert(size());
+    return *this;
+}
+
+const Formula &
+Formula::operator+=(Temp r)
+{
+    if (root)
+        root = NodePtr(new BinaryNode<std::plus<result_t> >(root, r));
+    else
+        root = r;
+    assert(size());
+    return *this;
+}
+
+MainBin::MainBin(const string &name)
     : _name(name), mem(NULL), memsize(-1)
 {
-    Detail::StatDB().regBin(this, name);
+    Database::StatDB().regBin(this, name);
 }
 
 MainBin::~MainBin()
@@ -927,13 +995,13 @@ MainBin::~MainBin()
 char *
 MainBin::memory(off_t off)
 {
+    if (memsize == -1)
+        memsize = CeilPow2((size_t) offset());
+
     if (!mem) {
         mem = new char[memsize];
         memset(mem, 0, memsize);
     }
-
-    if (memsize == -1)
-        memsize = CeilPow2((size_t) offset());
 
     assert(offset() <= size());
     return mem + off;
@@ -942,13 +1010,13 @@ MainBin::memory(off_t off)
 void
 check()
 {
-    Detail::StatDB().check();
+    Database::StatDB().check();
 }
 
 void
 dump(ostream &stream)
 {
-    Detail::StatDB().dump(stream);
+    Database::StatDB().dump(stream);
 }
 
 CallbackQueue resetQueue;
@@ -962,7 +1030,7 @@ RegResetCallback(Callback *cb)
 void
 reset()
 {
-    Detail::StatDB().reset();
+    Database::StatDB().reset();
     resetQueue.process();
 }
 
