@@ -22,7 +22,7 @@ pebi = tebi * 1024
 exbi = pebi * 1024
 
 # memory size configuration stuff
-def to_integer(value):
+def toInteger(value):
     if not isinstance(value, str):
         result = int(value)
     elif value.endswith('Ei'):
@@ -64,7 +64,7 @@ def to_integer(value):
 
     return result
 
-def to_bool(val):
+def toBool(val):
     t = type(val)
     if t == bool:
         return val
@@ -82,9 +82,9 @@ def to_bool(val):
         elif val == "false" or val == "f" or val == "no" or val == "n":
             return False
 
-    return to_integer(val) != 0
+    return toInteger(val) != 0
 
-def to_frequency(value):
+def toFrequency(value):
     if not isinstance(value, str):
         result = float(value)
     elif value.endswith('THz'):
@@ -102,7 +102,7 @@ def to_frequency(value):
 
     return result
 
-def to_latency(value):
+def toLatency(value):
     if not isinstance(value, str):
         result = float(value)
     elif value.endswith('c'):
@@ -122,7 +122,7 @@ def to_latency(value):
 
     return result;
 
-def to_network_bandwidth(value):
+def toNetworkBandwidth(value):
     if not isinstance(value, str):
         result = float(value)
     elif value.endswith('Tbps'):
@@ -140,7 +140,7 @@ def to_network_bandwidth(value):
 
     return result
 
-def to_memory_bandwidth(value):
+def toMemoryBandwidth(value):
     if not isinstance(value, str):
         result = int(value)
     elif value.endswith('PB/s'):
@@ -160,7 +160,7 @@ def to_memory_bandwidth(value):
 
     return result
 
-def to_memory_size(value):
+def toMemorySize(value):
     if not isinstance(value, str):
         result = int(value)
     elif value.endswith('PB'):
