@@ -61,7 +61,27 @@ class MemoryController;
 class ExecContext
 {
   public:
-    enum Status { Unallocated, Active, Suspended, Halted };
+    enum Status
+    {
+        /// Initialized but not running yet.  All CPUs start in
+        /// this state, but most transition to Active on cycle 1.
+        /// In MP or SMT systems, non-primary contexts will stay
+        /// in this state until a thread is assigned to them.
+        Unallocated,
+
+        /// Running.  Instructions should be executed only when
+        /// the context is in this state.
+        Active,
+
+        /// Temporarily inactive.  Entered while waiting for
+        /// synchronization, etc.
+        Suspended,
+
+        /// Permanently shut down.  Entered when target executes
+        /// m5exit pseudo-instruction.  When all contexts enter
+        /// this state, the simulation will terminate.
+        Halted
+    };
 
   private:
     Status _status;
