@@ -211,6 +211,11 @@ template <class T>
 void
 VectorParam<T>::parse(const string &s)
 {
+    if (s.empty()) {
+        wasSet = true;
+        return;
+    }
+
     vector<string> tokens;
 
     tokenize(tokens, s, ' ');
