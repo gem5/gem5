@@ -41,7 +41,6 @@
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"
-#include "dev/tsunami_cchip.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"
@@ -51,7 +50,7 @@
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
-#include "sim/sim_stats.hh"
+#include "sim/stats.hh"
 #include "targetarch/vtophys.hh"
 
 const char *NsRxStateStrings[] =
@@ -92,64 +91,62 @@ using namespace Net;
 //
 // NSGigE PCI Device
 //
-NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
-               PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
-               MemoryController *mmu, HierParams *hier, Bus *header_bus,
-               Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
-               bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
-               Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
-               PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-               uint32_t func, bool rx_filter, EthAddr eaddr,
-               uint32_t tx_fifo_size, uint32_t rx_fifo_size)
-    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), ioEnable(false),
-      maxTxFifoSize(tx_fifo_size), maxRxFifoSize(rx_fifo_size),
+NSGigE::NSGigE(Params *p)
+    : PciDev(p), ioEnable(false),
+      txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), txState(txIdle), txEnable(false),
-      CTDD(false), txFifoAvail(tx_fifo_size),
+      CTDD(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
-      rxEnable(false), CRDD(false), rxPktBytes(0), rxFifoCnt(0),
+      rxEnable(false), CRDD(false), rxPktBytes(0),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
       rxDmaReadEvent(this), rxDmaWriteEvent(this),
       txDmaReadEvent(this), txDmaWriteEvent(this),
-      dmaDescFree(dma_desc_free), dmaDataFree(dma_data_free),
-      txDelay(tx_delay), rxDelay(rx_delay), rxKickTick(0), txKickTick(0),
-      txEvent(this), rxFilterEnable(rx_filter), acceptBroadcast(false),
+      dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
+      txDelay(p->tx_delay), rxDelay(p->rx_delay),
+      rxKickTick(0), txKickTick(0),
+      txEvent(this), rxFilterEnable(p->rx_filter), acceptBroadcast(false),
       acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false),
-      physmem(pmem), intctrl(i), intrTick(0), cpuPendingIntr(false),
+      physmem(p->pmem), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
-    if (header_bus) {
-        pioInterface = newPioInterface(name, hier, header_bus, this,
+    if (p->header_bus) {
+        pioInterface = newPioInterface(name(), p->hier,
+                                       p->header_bus, this,
                                        &NSGigE::cacheAccess);
 
-        pioLatency = pio_latency * header_bus->clockRatio;
+        pioLatency = p->pio_latency * p->header_bus->clockRatio;
 
-        if (payload_bus)
-            dmaInterface = new DMAInterface<Bus>(name + ".dma",
-                                                 header_bus, payload_bus, 1);
+        if (p->payload_bus)
+            dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                                 p->header_bus,
+                                                 p->payload_bus, 1);
         else
-            dmaInterface = new DMAInterface<Bus>(name + ".dma",
-                                                 header_bus, header_bus, 1);
-    } else if (payload_bus) {
-        pioInterface = newPioInterface(name, hier, payload_bus, this,
+            dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                                 p->header_bus,
+                                                 p->header_bus, 1);
+    } else if (p->payload_bus) {
+        pioInterface = newPioInterface(name(), p->hier,
+                                       p->payload_bus, this,
                                        &NSGigE::cacheAccess);
 
-        pioLatency = pio_latency * payload_bus->clockRatio;
+        pioLatency = p->pio_latency * p->payload_bus->clockRatio;
 
-        dmaInterface = new DMAInterface<Bus>(name + ".dma", payload_bus,
-                                         payload_bus, 1);
+        dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                             p->payload_bus,
+                                             p->payload_bus, 1);
     }
 
 
-    intrDelay = US2Ticks(intr_delay);
-    dmaReadDelay = dma_read_delay;
-    dmaWriteDelay = dma_write_delay;
-    dmaReadFactor = dma_read_factor;
-    dmaWriteFactor = dma_write_factor;
+    intrDelay = US2Ticks(p->intr_delay);
+    dmaReadDelay = p->dma_read_delay;
+    dmaWriteDelay = p->dma_write_delay;
+    dmaReadFactor = p->dma_read_factor;
+    dmaWriteFactor = p->dma_write_factor;
 
     regsReset();
-    memcpy(&rom.perfectMatch, eaddr.bytes(), ETH_ADDR_LEN);
+    memcpy(&rom.perfectMatch, p->eaddr.bytes(), ETH_ADDR_LEN);
 }
 
 NSGigE::~NSGigE()
@@ -339,7 +336,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
 
-            BARAddrs[0] &= PA_UNCACHED_MASK;
+            BARAddrs[0] &= EV5::PAddrUncachedMask;
         }
         break;
       case PCI0_BASE_ADDR1:
@@ -347,7 +344,7 @@ NSGigE::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
 
-            BARAddrs[1] &= PA_UNCACHED_MASK;
+            BARAddrs[1] &= EV5::PAddrUncachedMask;
         }
         break;
     }
@@ -1028,8 +1025,8 @@ NSGigE::cpuInterrupt()
         // Send interrupt
         cpuPendingIntr = true;
 
-        DPRINTF(EthernetIntr, "posting cchip interrupt\n");
-        tsunami->postPciInt(configData->config.hdr.pci0.interruptLine);
+        DPRINTF(EthernetIntr, "posting interrupt\n");
+        intrPost();
     }
 }
 
@@ -1048,8 +1045,8 @@ NSGigE::cpuIntrClear()
 
     cpuPendingIntr = false;
 
-    DPRINTF(EthernetIntr, "clearing cchip interrupt\n");
-    tsunami->clearPciInt(configData->config.hdr.pci0.interruptLine);
+    DPRINTF(EthernetIntr, "clearing interrupt\n");
+    intrClear();
 }
 
 bool
@@ -1063,7 +1060,6 @@ NSGigE::txReset()
     DPRINTF(Ethernet, "transmit reset\n");
 
     CTDD = false;
-    txFifoAvail = maxTxFifoSize;
     txEnable = false;;
     txFragPtr = 0;
     assert(txDescCnt == 0);
@@ -1079,7 +1075,6 @@ NSGigE::rxReset()
 
     CRDD = false;
     assert(rxPktBytes == 0);
-    rxFifoCnt = 0;
     rxEnable = false;
     rxFragPtr = 0;
     assert(rxDescCnt == 0);
@@ -1349,9 +1344,7 @@ NSGigE::rxKick()
 
             // Must clear the value before popping to decrement the
             // reference count
-            rxFifo.front() = NULL;
-            rxFifo.pop_front();
-            rxFifoCnt -= rxPacket->length;
+            rxFifo.pop();
         }
 
 
@@ -1539,7 +1532,7 @@ NSGigE::transmit()
     }
 
     DPRINTF(Ethernet, "Attempt Pkt Transmit: txFifo length=%d\n",
-            maxTxFifoSize - txFifoAvail);
+            txFifo.size());
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
         if (DTRACE(Ethernet)) {
@@ -1559,12 +1552,9 @@ NSGigE::transmit()
         txBytes += txFifo.front()->length;
         txPackets++;
 
-        txFifoAvail += txFifo.front()->length;
-
         DPRINTF(Ethernet, "Successful Xmit! now txFifoAvail is %d\n",
-                txFifoAvail);
-        txFifo.front() = NULL;
-        txFifo.pop_front();
+                txFifo.avail());
+        txFifo.pop();
 
         /*
          * normally do a writeback of the descriptor here, and ONLY
@@ -1832,7 +1822,7 @@ NSGigE::txKick()
                 // this is just because the receive can't handle a
                 // packet bigger want to make sure
                 assert(txPacket->length <= 1514);
-                txFifo.push_back(txPacket);
+                txFifo.push(txPacket);
 
                 /*
                  * this following section is not tqo spec, but
@@ -1878,7 +1868,7 @@ NSGigE::txKick()
             }
         } else {
             DPRINTF(EthernetSM, "this descriptor isn't done yet\n");
-            if (txFifoAvail) {
+            if (!txFifo.full()) {
                 txState = txFragRead;
 
                 /*
@@ -1887,7 +1877,7 @@ NSGigE::txKick()
                  * is not enough room in the fifo, just whatever room
                  * is left in the fifo
                  */
-                txXferLen = min<uint32_t>(txDescCnt, txFifoAvail);
+                txXferLen = min<uint32_t>(txDescCnt, txFifo.avail());
 
                 txDmaAddr = txFragPtr & 0x3fffffff;
                 txDmaData = txPacketBufPtr;
@@ -1913,7 +1903,6 @@ NSGigE::txKick()
         txPacketBufPtr += txXferLen;
         txFragPtr += txXferLen;
         txDescCnt -= txXferLen;
-        txFifoAvail -= txXferLen;
 
         txState = txFifoBlock;
         break;
@@ -1982,7 +1971,7 @@ NSGigE::transferDone()
 }
 
 bool
-NSGigE::rxFilter(PacketPtr &packet)
+NSGigE::rxFilter(const PacketPtr &packet)
 {
     EthPtr eth = packet;
     bool drop = true;
@@ -2022,13 +2011,13 @@ NSGigE::rxFilter(PacketPtr &packet)
 }
 
 bool
-NSGigE::recvPacket(PacketPtr &packet)
+NSGigE::recvPacket(PacketPtr packet)
 {
     rxBytes += packet->length;
     rxPackets++;
 
     DPRINTF(Ethernet, "Receiving packet from wire, rxFifoAvail=%d\n",
-            maxRxFifoSize - rxFifoCnt);
+            rxFifo.avail());
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
@@ -2043,15 +2032,14 @@ NSGigE::recvPacket(PacketPtr &packet)
         return true;
     }
 
-    if ((rxFifoCnt + packet->length) >= maxRxFifoSize) {
+    if (rxFifo.avail() < packet->length) {
         DPRINTF(Ethernet,
                 "packet will not fit in receive buffer...packet dropped\n");
         devIntrPost(ISR_RXORN);
         return false;
     }
 
-    rxFifo.push_back(packet);
-    rxFifoCnt += packet->length;
+    rxFifo.push(packet);
     interface->recvDone();
 
     rxKick();
@@ -2122,23 +2110,8 @@ NSGigE::serialize(ostream &os)
     /*
      * Serialize the data Fifos
      */
-    int txNumPkts = txFifo.size();
-    SERIALIZE_SCALAR(txNumPkts);
-    int i = 0;
-    pktiter_t end = txFifo.end();
-    for (pktiter_t p = txFifo.begin(); p != end; ++p) {
-        nameOut(os, csprintf("%s.txFifo%d", name(), i++));
-        (*p)->serialize(os);
-    }
-
-    int rxNumPkts = rxFifo.size();
-    SERIALIZE_SCALAR(rxNumPkts);
-    i = 0;
-    end = rxFifo.end();
-    for (pktiter_t p = rxFifo.begin(); p != end; ++p) {
-        nameOut(os, csprintf("%s.rxFifo%d", name(), i++));
-        (*p)->serialize(os);
-    }
+    rxFifo.serialize("rxFifo", os);
+    txFifo.serialize("txFifo", os);
 
     /*
      * Serialize the various helper variables
@@ -2146,8 +2119,7 @@ NSGigE::serialize(ostream &os)
     bool txPacketExists = txPacket;
     SERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
-        nameOut(os, csprintf("%s.txPacket", name()));
-        txPacket->serialize(os);
+        txPacket->serialize("txPacket", os);
         uint32_t txPktBufPtr = (uint32_t) (txPacketBufPtr - txPacket->data);
         SERIALIZE_SCALAR(txPktBufPtr);
     }
@@ -2155,8 +2127,7 @@ NSGigE::serialize(ostream &os)
     bool rxPacketExists = rxPacket;
     SERIALIZE_SCALAR(rxPacketExists);
     if (rxPacketExists) {
-        nameOut(os, csprintf("%s.rxPacket", name()));
-        rxPacket->serialize(os);
+        rxPacket->serialize("rxPacket", os);
         uint32_t rxPktBufPtr = (uint32_t) (rxPacketBufPtr - rxPacket->data);
         SERIALIZE_SCALAR(rxPktBufPtr);
     }
@@ -2183,7 +2154,6 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(txState);
     SERIALIZE_SCALAR(txEnable);
     SERIALIZE_SCALAR(CTDD);
-    SERIALIZE_SCALAR(txFifoAvail);
     SERIALIZE_SCALAR(txFragPtr);
     SERIALIZE_SCALAR(txDescCnt);
     int txDmaState = this->txDmaState;
@@ -2197,7 +2167,6 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxEnable);
     SERIALIZE_SCALAR(CRDD);
     SERIALIZE_SCALAR(rxPktBytes);
-    SERIALIZE_SCALAR(rxFifoCnt);
     SERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState = this->rxDmaState;
     SERIALIZE_SCALAR(rxDmaState);
@@ -2279,22 +2248,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * unserialize the data fifos
      */
-    int txNumPkts;
-    UNSERIALIZE_SCALAR(txNumPkts);
-    int i;
-    for (i = 0; i < txNumPkts; ++i) {
-        PacketPtr p = new PacketData;
-        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
-        txFifo.push_back(p);
-    }
-
-    int rxNumPkts;
-    UNSERIALIZE_SCALAR(rxNumPkts);
-    for (i = 0; i < rxNumPkts; ++i) {
-        PacketPtr p = new PacketData;
-        p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
-        rxFifo.push_back(p);
-    }
+    rxFifo.unserialize("rxFifo", cp, section);
+    txFifo.unserialize("txFifo", cp, section);
 
     /*
      * unserialize the various helper variables
@@ -2303,7 +2258,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
         txPacket = new PacketData;
-        txPacket->unserialize(cp, csprintf("%s.txPacket", section));
+        txPacket->unserialize("txPacket", cp, section);
         uint32_t txPktBufPtr;
         UNSERIALIZE_SCALAR(txPktBufPtr);
         txPacketBufPtr = (uint8_t *) txPacket->data + txPktBufPtr;
@@ -2315,7 +2270,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     rxPacket = 0;
     if (rxPacketExists) {
         rxPacket = new PacketData;
-        rxPacket->unserialize(cp, csprintf("%s.rxPacket", section));
+        rxPacket->unserialize("rxPacket", cp, section);
         uint32_t rxPktBufPtr;
         UNSERIALIZE_SCALAR(rxPktBufPtr);
         rxPacketBufPtr = (uint8_t *) rxPacket->data + rxPktBufPtr;
@@ -2345,7 +2300,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     this->txState = (TxState) txState;
     UNSERIALIZE_SCALAR(txEnable);
     UNSERIALIZE_SCALAR(CTDD);
-    UNSERIALIZE_SCALAR(txFifoAvail);
     UNSERIALIZE_SCALAR(txFragPtr);
     UNSERIALIZE_SCALAR(txDescCnt);
     int txDmaState;
@@ -2361,7 +2315,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxEnable);
     UNSERIALIZE_SCALAR(CRDD);
     UNSERIALIZE_SCALAR(rxPktBytes);
-    UNSERIALIZE_SCALAR(rxFifoCnt);
     UNSERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState;
     UNSERIALIZE_SCALAR(rxDmaState);
@@ -2450,7 +2403,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
-    SimObjectParam<IntrControl *> intr_ctrl;
     Param<Tick> intr_delay;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PhysicalMemory *> physmem;
@@ -2468,7 +2420,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<Tick> dma_write_factor;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
-    SimObjectParam<Tsunami *> tsunami;
+    SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
@@ -2481,7 +2433,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
     INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
-    INIT_PARAM(intr_ctrl, "Interrupt Controller"),
     INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
@@ -2500,7 +2451,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(tsunami, "Tsunami"),
+    INIT_PARAM(platform, "Platform"),
     INIT_PARAM(pci_bus, "PCI bus"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
@@ -2512,14 +2463,36 @@ END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
 CREATE_SIM_OBJECT(NSGigE)
 {
-    return new NSGigE(getInstanceName(), intr_ctrl, intr_delay,
-                      physmem, tx_delay, rx_delay, mmu, hier, header_bus,
-                      payload_bus, pio_latency, dma_desc_free, dma_data_free,
-                      dma_read_delay, dma_write_delay, dma_read_factor,
-                      dma_write_factor, configspace, configdata,
-                      tsunami, pci_bus, pci_dev, pci_func, rx_filter,
-                      EthAddr((string)hardware_address),
-                      tx_fifo_size, rx_fifo_size);
+    NSGigE::Params *params = new NSGigE::Params;
+
+    params->name = getInstanceName();
+    params->mmu = mmu;
+    params->configSpace = configspace;
+    params->configData = configdata;
+    params->plat = platform;
+    params->busNum = pci_bus;
+    params->deviceNum = pci_dev;
+    params->functionNum = pci_func;
+
+    params->intr_delay = intr_delay;
+    params->pmem = physmem;
+    params->tx_delay = tx_delay;
+    params->rx_delay = rx_delay;
+    params->hier = hier;
+    params->header_bus = header_bus;
+    params->payload_bus = payload_bus;
+    params->pio_latency = pio_latency;
+    params->dma_desc_free = dma_desc_free;
+    params->dma_data_free = dma_data_free;
+    params->dma_read_delay = dma_read_delay;
+    params->dma_write_delay = dma_write_delay;
+    params->dma_read_factor = dma_read_factor;
+    params->dma_write_factor = dma_write_factor;
+    params->rx_filter = rx_filter;
+    params->eaddr = hardware_address;
+    params->tx_fifo_size = tx_fifo_size;
+    params->rx_fifo_size = rx_fifo_size;
+    return new NSGigE(params);
 }
 
 REGISTER_SIM_OBJECT("NSGigE", NSGigE)

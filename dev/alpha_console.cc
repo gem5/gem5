@@ -98,7 +98,7 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
 {
     memset(data, 0, req->size);
 
-    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
+    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
 
     switch (req->size)
     {
@@ -198,7 +198,7 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         return Machine_Check_Fault;
     }
 
-    Addr daddr = req->paddr - (addr & PA_IMPL_MASK);
+    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
     ExecContext *other_xc;
 
     switch (daddr) {

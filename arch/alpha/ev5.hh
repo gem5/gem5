@@ -1,116 +1,79 @@
 /* $Id$ */
 
-#ifndef __EV5_H__
-#define __EV5_H__
+#ifndef __ARCH_ALPHA_EV5_HH__
+#define __ARCH_ALPHA_EV5_HH__
 
-#ifndef SYSTEM_EV5
-#error This code is only valid for EV5 systems
-#endif
-
-#define MODE2MASK(X)			(1 << (X))
-
-// Alpha IPR register accessors
-#define PC_PAL(X)			((X) & 0x1)
-#define MCSR_SP(X)			(((X) >> 1) & 0x3)
-
-#define ICSR_SDE(X)			(((X) >> 30) & 0x1)
-#define ICSR_SPE(X)			(((X) >> 28) & 0x3)
-#define ICSR_FPE(X)			(((X) >> 26) & 0x1)
-
-#define ALT_MODE_AM(X)			(((X) >> 3) & 0x3)
-
-#define DTB_CM_CM(X)			(((X) >> 3) & 0x3)
+namespace EV5 {
 
 #ifdef ALPHA_TLASER
-#define DTB_ASN_ASN(X)          (((X) >> 57) & 0x7f)
-#define DTB_PTE_PPN(X)          (((X) >> 32) & 0x07ffffff)
+const uint64_t AsnMask = ULL(0x7f);
 #else
-#define DTB_ASN_ASN(X)			(((X) >> 57) & 0xff)
-#define DTB_PTE_PPN(X)			(((X) >> 32) & 0x07fffffff)
+const uint64_t AsnMask = ULL(0xff);
 #endif
 
-#define DTB_PTE_XRE(X)			(((X) >> 8) & 0xf)
-#define DTB_PTE_XWE(X)			(((X) >> 12) & 0xf)
-#define DTB_PTE_FONR(X)			(((X) >> 1) & 0x1)
-#define DTB_PTE_FONW(X)			(((X) >> 2) & 0x1)
-#define DTB_PTE_GH(X)			(((X) >> 5) & 0x3)
-#define DTB_PTE_ASMA(X)			(((X) >> 4) & 0x1)
-
-#define ICM_CM(X)				(((X) >> 3) & 0x3)
+const int VAddrImplBits = 43;
+const Addr VAddrImplMask = (ULL(1) << VAddrImplBits) - 1;
+const Addr VAddrUnImplMask = ~VAddrImplMask;
+inline Addr VAddrImpl(Addr a) { return a & VAddrImplMask; }
+inline Addr VAddrVPN(Addr a) { return a >> AlphaISA::PageShift; }
+inline Addr VAddrOffset(Addr a) { return a & AlphaISA::PageOffset; }
+inline Addr VAddrSpaceEV5(Addr a) { return a >> 41 & 0x3; }
+inline Addr VAddrSpaceEV6(Addr a) { return a >> 41 & 0x7f; }
 
 #ifdef ALPHA_TLASER
-#define ITB_ASN_ASN(X)          (((X) >> 4) & 0x7f)
-#define ITB_PTE_PPN(X)          (((X) >> 32) & 0x07ffffff)
+inline bool PAddrIprSpace(Addr a) { return a >= ULL(0xFFFFF00000); }
+const int PAddrImplBits = 40;
 #else
-#define ITB_ASN_ASN(X)			(((X) >> 4) & 0xff)
-#define ITB_PTE_PPN(X)			(((X) >> 32) & 0x07fffffff)
+inline bool PAddrIprSpace(Addr a) { return a >= ULL(0xFFFFFF00000); }
+const int PAddrImplBits = 44; // for Tsunami
 #endif
+const Addr PAddrImplMask = (ULL(1) << PAddrImplBits) - 1;
+const Addr PAddrUncachedBit39 = ULL(0x8000000000);
+const Addr PAddrUncachedBit40 = ULL(0x10000000000);
+const Addr PAddrUncachedBit43 = ULL(0x80000000000);
+const Addr PAddrUncachedMask = ULL(0x807ffffffff); // Clear PA<42:35>
 
-#define ITB_PTE_XRE(X)			(((X) >> 8) & 0xf)
-#define ITB_PTE_FONR(X)			(((X) >> 1) & 0x1)
-#define ITB_PTE_FONW(X)			(((X) >> 2) & 0x1)
-#define ITB_PTE_GH(X)			(((X) >> 5) & 0x3)
-#define ITB_PTE_ASMA(X)			(((X) >> 4) & 0x1)
+inline int DTB_ASN_ASN(uint64_t reg) { return reg >> 57 & AsnMask; }
+inline Addr DTB_PTE_PPN(uint64_t reg)
+{ return reg >> 32 & (ULL(1) << PAddrImplBits - AlphaISA::PageShift) - 1; }
+inline int DTB_PTE_XRE(uint64_t reg) { return reg >> 8 & 0xf; }
+inline int DTB_PTE_XWE(uint64_t reg) { return reg >> 12 & 0xf; }
+inline int DTB_PTE_FONR(uint64_t reg) { return reg >> 1 & 0x1; }
+inline int DTB_PTE_FONW(uint64_t reg) { return reg >> 2 & 0x1; }
+inline int DTB_PTE_GH(uint64_t reg) { return reg >> 5 & 0x3; }
+inline int DTB_PTE_ASMA(uint64_t reg) { return reg >> 4 & 0x1; }
 
-#define VA_UNIMPL_MASK			ULL(0xfffff80000000000)
-#define VA_IMPL_MASK			ULL(0x000007ffffffffff)
-#define VA_IMPL(X)				((X) & VA_IMPL_MASK)
-#define VA_VPN(X)				(VA_IMPL(X) >> 13)
-#define VA_SPACE_EV5(X)			(((X) >> 41) & 0x3)
-#define VA_SPACE_EV6(X) 	    (((X) >> 41) & 0x7f)
-#define VA_POFS(X)				((X) & 0x1fff)
+inline int ITB_ASN_ASN(uint64_t reg) { return reg >> 4 & AsnMask; }
+inline Addr ITB_PTE_PPN(uint64_t reg)
+{ return reg >> 32 & (ULL(1) << PAddrImplBits - AlphaISA::PageShift) - 1; }
+inline int ITB_PTE_XRE(uint64_t reg) { return reg >> 8 & 0xf; }
+inline bool ITB_PTE_FONR(uint64_t reg) { return reg >> 1 & 0x1; }
+inline bool ITB_PTE_FONW(uint64_t reg) { return reg >> 2 & 0x1; }
+inline int ITB_PTE_GH(uint64_t reg) { return reg >> 5 & 0x3; }
+inline bool ITB_PTE_ASMA(uint64_t reg) { return reg >> 4 & 0x1; }
 
-#define PA_UNCACHED_BIT_39		ULL(0x8000000000)
-#define PA_UNCACHED_BIT_40		ULL(0x10000000000)
-#define PA_UNCACHED_BIT_43		ULL(0x80000000000)
-#define PA_UNCACHED_MASK                ULL(0x807ffffffff) // Clear PA<42:35>
-#ifdef ALPHA_TLASER
-#define PA_IPR_SPACE(X)         ((X) >= ULL(0xFFFFF00000))
-#define PA_IMPL_MASK			ULL(0xffffffffff)
-#else
-#define PA_IPR_SPACE(X)			((X) >= ULL(0xFFFFFF00000))
-#define PA_IMPL_MASK			ULL(0xfffffffffff) // for Tsunami
-#endif
+inline uint64_t MCSR_SP(uint64_t reg) { return reg >> 1 & 0x3; }
 
-#define PA_PFN2PA(X)			((X) << 13)
+inline bool ICSR_SDE(uint64_t reg) { return reg >> 30 & 0x1; }
+inline int ICSR_SPE(uint64_t reg) { return reg >> 28 & 0x3; }
+inline bool ICSR_FPE(uint64_t reg) { return reg >> 26 & 0x1; }
 
+inline uint64_t ALT_MODE_AM(uint64_t reg) { return reg >> 3 & 0x3; }
+inline uint64_t DTB_CM_CM(uint64_t reg) { return reg >> 3 & 0x3; }
+inline uint64_t ICM_CM(uint64_t reg) { return reg >> 3 & 0x3; }
 
-#define MM_STAT_BAD_VA_MASK		0x0020
-#define MM_STAT_DTB_MISS_MASK		0x0010
-#define MM_STAT_FONW_MASK		0x0008
-#define MM_STAT_FONR_MASK		0x0004
-#define MM_STAT_ACV_MASK		0x0002
-#define MM_STAT_WR_MASK			0x0001
+const uint64_t MM_STAT_BAD_VA_MASK = ULL(0x0020);
+const uint64_t MM_STAT_DTB_MISS_MASK = ULL(0x0010);
+const uint64_t MM_STAT_FONW_MASK = ULL(0x0008);
+const uint64_t MM_STAT_FONR_MASK = ULL(0x0004);
+const uint64_t MM_STAT_ACV_MASK = ULL(0x0002);
+const uint64_t MM_STAT_WR_MASK = ULL(0x0001);
+inline int Opcode(AlphaISA::MachInst inst) { return inst >> 26 & 0x3f; }
+inline int Ra(AlphaISA::MachInst inst) { return inst >> 21 & 0x1f; }
 
-#define OPCODE(X)                       (X >> 26) & 0x3f
-#define RA(X)                           (X >> 21) & 0x1f
+const Addr PalBase = 0x4000;
+const Addr PalMax = 0x10000;
 
-////////////////////////////////////////////////////////////////////////
-//
-//
-//
+/* namespace EV5 */ }
 
-// VPTE size for HW_LD/HW_ST
-#define HW_VPTE		((inst >> 11) & 0x1)
-
-// QWORD size for HW_LD/HW_ST
-#define HW_QWORD	((inst >> 12) & 0x1)
-
-// ALT mode for HW_LD/HW_ST
-#define HW_ALT		(((inst >> 14) & 0x1) ? ALTMODE : 0)
-
-// LOCK/COND mode for HW_LD/HW_ST
-#define HW_LOCK		(((inst >> 10) & 0x1) ? LOCKED : 0)
-#define HW_COND		(((inst >> 10) & 0x1) ? LOCKED : 0)
-
-// PHY size for HW_LD/HW_ST
-#define HW_PHY		(((inst >> 15) & 0x1) ? PHYSICAL : 0)
-
-// OFFSET for HW_LD/HW_ST
-#define HW_OFS		(inst & 0x3ff)
-
-
-#define PAL_BASE 0x4000
-#define PAL_MAX  0x10000
-
-#endif //__EV5_H__
+#endif // __ARCH_ALPHA_EV5_HH__

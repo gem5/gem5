@@ -31,8 +31,8 @@
  * components.
  */
 
-#ifndef __ETHERINT_HH__
-#define __ETHERINT_HH__
+#ifndef __DEV_ETHERINT_HH__
+#define __DEV_ETHERINT_HH__
 
 #include <string>
 
@@ -54,13 +54,13 @@ class EtherInt : public SimObject
     virtual ~EtherInt() {}
 
     void setPeer(EtherInt *p);
-    virtual bool recvPacket(PacketPtr &packet) = 0;
+
     void recvDone() { peer->sendDone(); }
-    bool sendPacket(PacketPtr &packet)
-    {
-        return peer ? peer->recvPacket(packet) : true;
-    }
     virtual void sendDone() = 0;
+
+    bool sendPacket(PacketPtr packet)
+    { return peer ? peer->recvPacket(packet) : true; }
+    virtual bool recvPacket(PacketPtr packet) = 0;
 };
 
-#endif // __ETHERINT_HH__
+#endif // __DEV_ETHERINT_HH__

@@ -34,16 +34,15 @@
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "dev/dma.hh"
-#include "dev/pcireg.h"
-#include "dev/pciconfigall.hh"
-#include "dev/ide_disk.hh"
 #include "dev/ide_ctrl.hh"
-#include "dev/tsunami_cchip.hh"
+#include "dev/ide_disk.hh"
+#include "dev/pciconfigall.hh"
+#include "dev/pcireg.h"
+#include "dev/platform.hh"
 #include "mem/bus/bus.hh"
+#include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
-#include "mem/bus/dma_interface.hh"
-#include "dev/tsunami.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "sim/builder.hh"
@@ -55,13 +54,8 @@ using namespace std;
 // Initialization and destruction
 ////
 
-IdeController::IdeController(const string &name, IntrControl *ic,
-                             const vector<IdeDisk *> &new_disks,
-                             MemoryController *mmu, PciConfigAll *cf,
-                             PciConfigData *cd, Tsunami *t, uint32_t bus_num,
-                             uint32_t dev_num, uint32_t func_num,
-                             Bus *host_bus, Tick pio_latency, HierParams *hier)
-    : PciDev(name, mmu, cf, cd, bus_num, dev_num, func_num), tsunami(t)
+IdeController::IdeController(Params *p)
+    : PciDev(p)
 {
     // initialize the PIO interface addresses
     pri_cmd_addr = 0;
@@ -96,23 +90,25 @@ IdeController::IdeController(const string &name, IntrControl *ic,
     memset(cmd_in_progress, 0, sizeof(cmd_in_progress));
 
     // create the PIO and DMA interfaces
-    if (host_bus) {
-        pioInterface = newPioInterface(name, hier, host_bus, this,
+    if (params()->host_bus) {
+        pioInterface = newPioInterface(name(), params()->hier,
+                                       params()->host_bus, this,
                                        &IdeController::cacheAccess);
 
-        dmaInterface = new DMAInterface<Bus>(name + ".dma", host_bus,
-                                             host_bus, 1);
-        pioLatency = pio_latency * host_bus->clockRatio;
+        dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                             params()->host_bus,
+                                             params()->host_bus, 1);
+        pioLatency = params()->pio_latency * params()->host_bus->clockRatio;
     }
 
     // setup the disks attached to controller
     memset(disks, 0, sizeof(IdeDisk *) * 4);
 
-    if (new_disks.size() > 3)
+    if (params()->disks.size() > 3)
         panic("IDE controllers support a maximum of 4 devices attached!\n");
 
-    for (int i = 0; i < new_disks.size(); i++) {
-        disks[i] = new_disks[i];
+    for (int i = 0; i < params()->disks.size(); i++) {
+        disks[i] = params()->disks[i];
         disks[i]->setController(this, dmaInterface);
     }
 }
@@ -233,22 +229,6 @@ IdeController::setDmaComplete(IdeDisk *disk)
         // set the interrupt bit
         bmi_regs[BMIS1] |= IDEINTS;
     }
-}
-
-////
-// Interrupt handling
-////
-
-void
-IdeController::intrPost()
-{
-    tsunami->postPciInt(configData->config.hdr.pci0.interruptLine);
-}
-
-void
-IdeController::intrClear()
-{
-    tsunami->clearPciInt(configData->config.hdr.pci0.interruptLine);
 }
 
 ////
@@ -377,7 +357,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(pri_cmd_addr,
                                                      pri_cmd_size));
 
-            pri_cmd_addr &= PA_UNCACHED_MASK;
+            pri_cmd_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -388,7 +368,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(pri_ctrl_addr,
                                                      pri_ctrl_size));
 
-            pri_ctrl_addr &= PA_UNCACHED_MASK;
+            pri_ctrl_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -399,7 +379,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(sec_cmd_addr,
                                                      sec_cmd_size));
 
-            sec_cmd_addr &= PA_UNCACHED_MASK;
+            sec_cmd_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -410,7 +390,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
                 pioInterface->addAddrRange(RangeSize(sec_ctrl_addr,
                                                      sec_ctrl_size));
 
-            sec_ctrl_addr &= PA_UNCACHED_MASK;
+            sec_ctrl_addr &= EV5::PAddrUncachedMask;
         }
         break;
 
@@ -420,7 +400,7 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
             if (pioInterface)
                 pioInterface->addAddrRange(RangeSize(bmi_addr, bmi_size));
 
-            bmi_addr &= PA_UNCACHED_MASK;
+            bmi_addr &= EV5::PAddrUncachedMask;
         }
         break;
     }
@@ -684,12 +664,11 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
 
-    SimObjectParam<IntrControl *> intr_ctrl;
     SimObjectVectorParam<IdeDisk *> disks;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
-    SimObjectParam<Tsunami *> tsunami;
+    SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
@@ -701,12 +680,11 @@ END_DECLARE_SIM_OBJECT_PARAMS(IdeController)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
 
-    INIT_PARAM(intr_ctrl, "Interrupt Controller"),
     INIT_PARAM(disks, "IDE disks attached to this controller"),
     INIT_PARAM(mmu, "Memory controller"),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(tsunami, "Tsunami chipset pointer"),
+    INIT_PARAM(platform, "Platform pointer"),
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
@@ -718,9 +696,21 @@ END_INIT_SIM_OBJECT_PARAMS(IdeController)
 
 CREATE_SIM_OBJECT(IdeController)
 {
-    return new IdeController(getInstanceName(), intr_ctrl, disks, mmu,
-                             configspace, configdata, tsunami, pci_bus,
-                             pci_dev, pci_func, io_bus, pio_latency, hier);
+    IdeController::Params *params = new IdeController::Params;
+    params->name = getInstanceName();
+    params->mmu = mmu;
+    params->configSpace = configspace;
+    params->configData = configdata;
+    params->plat = platform;
+    params->busNum = pci_bus;
+    params->deviceNum = pci_dev;
+    params->functionNum = pci_func;
+
+    params->disks = disks;
+    params->host_bus = io_bus;
+    params->pio_latency = pio_latency;
+    params->hier = hier;
+    return new IdeController(params);
 }
 
 REGISTER_SIM_OBJECT("IdeController", IdeController)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2002-2004 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,79 +26,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Interface to connect a simulated ethernet device to the real world
- */
+#ifndef __DEV_PKTFIFO_HH__
+#define __DEV_PKTFIFO_HH__
 
-#ifndef __ETHERTAP_HH__
-#define __ETHERTAP_HH__
-
-#include <queue>
+#include <iosfwd>
+#include <list>
 #include <string>
 
-#include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
-#include "sim/eventq.hh"
-#include "base/pollevent.hh"
-#include "sim/sim_object.hh"
+#include "sim/serialize.hh"
 
-/*
- * Interface to connect a simulated ethernet device to the real world
- */
-class EtherTap : public EtherInt
+class Checkpoint;
+class PacketFifo
 {
   protected:
-    friend class TapEvent;
-    TapEvent *event;
-
-  protected:
-    friend class TapListener;
-    TapListener *listener;
-    int socket;
-    char *buffer;
-    int buflen;
-    int32_t buffer_offset;
-    int32_t data_len;
-
-    EtherDump *dump;
-
-    void attach(int fd);
-    void detach();
-
-  protected:
-    std::string device;
-    std::queue<PacketPtr> packetBuffer;
-
-    void process(int revent);
-    void enqueue(PacketData *packet);
-    void retransmit();
-
-    /*
-     */
-    class TxEvent : public Event
-    {
-      protected:
-        EtherTap *tap;
-
-      public:
-        TxEvent(EtherTap *_tap)
-            : Event(&mainEventQueue), tap(_tap) {}
-        void process() { tap->retransmit(); }
-        virtual const char *description() { return "retransmit event"; }
-    };
-
-    friend class TxEvent;
-    TxEvent txEvent;
+    std::list<PacketPtr> fifo;
+    int _maxsize;
+    int _size;
 
   public:
-    EtherTap(const std::string &name, EtherDump *dump, int port, int bufsz);
-    virtual ~EtherTap();
+    explicit PacketFifo(int max) : _maxsize(max), _size(0) {}
+    virtual ~PacketFifo() {}
 
-    virtual bool recvPacket(PacketPtr packet);
-    virtual void sendDone();
+    int maxsize() const { return _maxsize; }
+    int packets() const { return fifo.size(); }
+    int size() const { return _size; }
+    int avail() const { return _maxsize - _size; }
+    bool empty() const { return _size == 0; }
+    bool full() const { return _size >= _maxsize; }
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    bool push(PacketPtr ptr)
+    {
+        if (avail() < ptr->length)
+            return false;
+
+        _size += ptr->length;
+        fifo.push_back(ptr);
+        return true;
+    }
+
+    PacketPtr front() { return fifo.front(); }
+
+    void pop()
+    {
+        if (empty())
+            return;
+
+        _size -= fifo.front()->length;
+        fifo.front() = NULL;
+        fifo.pop_front();
+    }
+
+    void clear()
+    {
+        fifo.clear();
+        _size = 0;
+    }
+
+/**
+ * Serialization stuff
+ */
+  public:
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base,
+                     Checkpoint *cp, const std::string &section);
 };
 
-#endif // __ETHERTAP_HH__
+#endif // __DEV_PKTFIFO_HH__

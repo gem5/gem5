@@ -30,11 +30,12 @@
  * Interface for devices using PCI configuration
  */
 
-#ifndef __PCI_DEV_HH__
-#define __PCI_DEV_HH__
+#ifndef __DEV_PCIDEV_HH__
+#define __DEV_PCIDEV_HH__
 
-#include "dev/pcireg.h"
 #include "dev/io_device.hh"
+#include "dev/pcireg.h"
+#include "dev/platform.hh"
 
 class PciConfigAll;
 class MemoryController;
@@ -78,29 +79,43 @@ class PciConfigData : public SimObject
 class PciDev : public DmaDevice
 {
   protected:
-    MemoryController *mmu;
-    /** A pointer to the configspace all object that calls
-     * us when a read comes to this particular device/function.
-     */
-    PciConfigAll *configSpace;
+    struct Params;
+    Params *_params;
 
-    /**
-     * A pointer to the object that contains the first 64 bytes of
-     * config space
-     */
-    PciConfigData *configData;
+  public:
+    struct Params
+    {
+        std::string name;
+        Platform *plat;
+        MemoryController *mmu;
 
-    /** The bus number we are on */
-    uint32_t busNum;
+        /**
+         * A pointer to the configspace all object that calls us when
+         * a read comes to this particular device/function.
+         */
+        PciConfigAll *configSpace;
 
-    /** The device number we have */
-    uint32_t deviceNum;
+        /**
+         * A pointer to the object that contains the first 64 bytes of
+         * config space
+         */
+        PciConfigData *configData;
 
-    /** The function number */
-    uint32_t functionNum;
+        /** The bus number we are on */
+        uint32_t busNum;
 
-    /** The current config space. Unlike the PciConfigData this is updated
-     * during simulation while continues to refelect what was in the config file.
+        /** The device number we have */
+        uint32_t deviceNum;
+
+        /** The function number */
+        uint32_t functionNum;
+    };
+    const Params *params() const { return _params; }
+
+  protected:
+    /** The current config space. Unlike the PciConfigData this is
+     * updated during simulation while continues to refelect what was
+     * in the config file.
      */
     PCIConfig config;
 
@@ -110,21 +125,29 @@ class PciDev : public DmaDevice
     /** The current address mapping of the BARs */
     Addr BARAddrs[6];
 
+  protected:
+    Platform *plat;
+    PciConfigData *configData;
+
+  public:
+    Addr pciToDma(Addr pciAddr) const
+    { return plat->pciToDma(pciAddr); }
+
+    void
+    intrPost()
+    { plat->postPciInt(configData->config.hdr.pci0.interruptLine); }
+
+    void
+    intrClear()
+    { plat->clearPciInt(configData->config.hdr.pci0.interruptLine); }
+
   public:
     /**
-     * Constructor for PCI Dev. This function copies data from the config file
-     * object PCIConfigData and registers the device with a PciConfigAll object.
-     * @param name name of the object
-     * @param mmu a pointer to the memory controller
-     * @param cf a pointer to the config space object that this device need to
-     *           register with
-     * @param cd A pointer to the config space values specified in the conig file
-     * @param bus the bus this device is on
-     * @param dev the device id of this device
-     * @param func the function number of this device
+     * Constructor for PCI Dev. This function copies data from the
+     * config file object PCIConfigData and registers the device with
+     * a PciConfigAll object.
      */
-    PciDev(const std::string &name, MemoryController *mmu, PciConfigAll *cf,
-           PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func);
+    PciDev(Params *params);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data) {
         return No_Fault;
@@ -168,4 +191,4 @@ class PciDev : public DmaDevice
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __PCI_DEV_HH__
+#endif // __DEV_PCIDEV_HH__

@@ -105,7 +105,7 @@ EtherLink::unserialize(Checkpoint *cp, const string &section)
 }
 
 void
-EtherLink::Link::txComplete(PacketPtr &packet)
+EtherLink::Link::txComplete(PacketPtr packet)
 {
     DPRINTF(Ethernet, "packet received: len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
@@ -122,7 +122,7 @@ class LinkDelayEvent : public Event
     LinkDelayEvent(EtherLink::Link *link);
 
   public:
-    LinkDelayEvent(EtherLink::Link *link, PacketPtr &pkt, Tick when);
+    LinkDelayEvent(EtherLink::Link *link, PacketPtr pkt, Tick when);
 
     void process();
 
@@ -153,7 +153,7 @@ EtherLink::Link::txDone()
 }
 
 bool
-EtherLink::Link::transmit(PacketPtr &pkt)
+EtherLink::Link::transmit(PacketPtr pkt)
 {
     if (busy()) {
         DPRINTF(Ethernet, "packet not sent, link busy\n");
@@ -185,10 +185,8 @@ EtherLink::Link::serialize(ostream &os)
         SERIALIZE_SCALAR(event_time);
     }
 
-    if (packet_exists) {
-        nameOut(os, csprintf("%s.packet", name()));
-        packet->serialize(os);
-    }
+    if (packet_exists)
+        packet->serialize("packet", os);
 }
 
 void
@@ -198,7 +196,7 @@ EtherLink::Link::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(packet_exists);
     if (packet_exists) {
         packet = new PacketData;
-        packet->unserialize(cp, csprintf("%s.packet", section));
+        packet->unserialize("packet", cp, section);
     }
 
     bool event_scheduled;
@@ -217,7 +215,7 @@ LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l)
     setFlags(AutoDelete);
 }
 
-LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, PacketPtr &p, Tick when)
+LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, PacketPtr p, Tick when)
     : Event(&mainEventQueue), link(l), packet(p)
 {
     setFlags(AutoSerialize);
@@ -238,8 +236,7 @@ LinkDelayEvent::serialize(ostream &os)
     Event::serialize(os);
     SERIALIZE_OBJPTR(link);
 
-    nameOut(os, csprintf("%s.packet", name()));
-    packet->serialize(os);
+    packet->serialize("packet", os);
 }
 
 
@@ -248,7 +245,7 @@ LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 {
     Event::unserialize(cp, section);
     packet = new PacketData;
-    packet->unserialize(cp, csprintf("%s.packet", section));
+    packet->unserialize("packet", cp, section);
 }
 
 

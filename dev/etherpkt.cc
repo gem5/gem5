@@ -28,22 +28,23 @@
 
 #include <iostream>
 
+#include "base/misc.hh"
 #include "dev/etherpkt.hh"
 #include "sim/serialize.hh"
 
 using namespace std;
 
 void
-PacketData::serialize(ostream &os)
+PacketData::serialize(const string &base, ostream &os)
 {
-    SERIALIZE_SCALAR(length);
-    SERIALIZE_ARRAY(data, length);
+    paramOut(os, base + ".length", length);
+    arrayParamOut(os, base + ".data", data, length);
 }
 
 void
-PacketData::unserialize(Checkpoint *cp, const string &section)
+PacketData::unserialize(const string &base, Checkpoint *cp,
+                        const string &section)
 {
-    UNSERIALIZE_SCALAR(length);
-    data = new uint8_t[length];
-    UNSERIALIZE_ARRAY(data, length);
+    paramIn(cp, section, base + ".length", length);
+    arrayParamIn(cp, section, base + ".data", data, length);
 }

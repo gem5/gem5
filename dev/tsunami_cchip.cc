@@ -83,7 +83,7 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
     ExecContext *xc = req->xc;
 
     switch (req->size) {
@@ -169,7 +169,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "write - va=%#x value=%#x size=%d \n",
             req->vaddr, *(uint64_t*)data, req->size);
 
-    Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
 
     bool supportedWrite = false;
     uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();

@@ -41,7 +41,7 @@
 #include "dev/io_device.hh"
 #include "dev/ns_gige_reg.h"
 #include "dev/pcidev.hh"
-#include "dev/tsunami.hh"
+#include "dev/pktfifo.hh"
 #include "mem/bus/bus.hh"
 #include "sim/eventq.hh"
 
@@ -139,10 +139,6 @@ class NSGigE : public PciDev
     };
 
   private:
-    /** pointer to the chipset */
-    Tsunami *tsunami;
-
-  private:
     Addr addr;
     static const Addr size = sizeof(dp_regs);
 
@@ -163,10 +159,8 @@ class NSGigE : public PciDev
 
     /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */
-    pktbuf_t txFifo;
-    uint32_t maxTxFifoSize;
-    pktbuf_t rxFifo;
-    uint32_t maxRxFifoSize;
+    PacketFifo txFifo;
+    PacketFifo rxFifo;
 
     /** various helper vars */
     PacketPtr txPacket;
@@ -188,8 +182,6 @@ class NSGigE : public PciDev
 
     /** Current Transmit Descriptor Done */
     bool CTDD;
-    /** current amt of free space in txDataFifo in bytes */
-    uint32_t txFifoAvail;
     /** halt the tx state machine after next packet */
     bool txHalt;
     /** ptr to the next byte in the current fragment */
@@ -206,8 +198,6 @@ class NSGigE : public PciDev
     bool CRDD;
     /** num of bytes in the current packet being drained from rxDataFifo */
     uint32_t rxPktBytes;
-    /** number of bytes in the rxFifo */
-    uint32_t rxFifoCnt;
     /** halt the rx state machine after current packet */
     bool rxHalt;
     /** ptr to the next byte in current fragment */
@@ -300,7 +290,7 @@ class NSGigE : public PciDev
      * receive address filter
      */
     bool rxFilterEnable;
-    bool rxFilter(PacketPtr &packet);
+    bool rxFilter(const PacketPtr &packet);
     bool acceptBroadcast;
     bool acceptMulticast;
     bool acceptUnicast;
@@ -330,16 +320,31 @@ class NSGigE : public PciDev
     NSGigEInt *interface;
 
   public:
-    NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
-           PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
-           MemoryController *mmu, HierParams *hier, Bus *header_bus,
-           Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
-           bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
-           Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
-           PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-           uint32_t func, bool rx_filter, Net::EthAddr eaddr,
-           uint32_t tx_fifo_size, uint32_t rx_fifo_size);
+    struct Params : public PciDev::Params
+    {
+        PhysicalMemory *pmem;
+        HierParams *hier;
+        Bus *header_bus;
+        Bus *payload_bus;
+        Tick intr_delay;
+        Tick tx_delay;
+        Tick rx_delay;
+        Tick pio_latency;
+        bool dma_desc_free;
+        bool dma_data_free;
+        Tick dma_read_delay;
+        Tick dma_write_delay;
+        Tick dma_read_factor;
+        Tick dma_write_factor;
+        bool rx_filter;
+        Net::EthAddr eaddr;
+        uint32_t tx_fifo_size;
+        uint32_t rx_fifo_size;
+    };
+
+    NSGigE(Params *params);
     ~NSGigE();
+    const Params *params() const { return (const Params *)_params; }
 
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
@@ -350,7 +355,7 @@ class NSGigE : public PciDev
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }
 
-    bool recvPacket(PacketPtr &packet);
+    bool recvPacket(PacketPtr packet);
     void transferDone();
 
     void setInterface(NSGigEInt *i) { assert(!interface); interface = i; }
@@ -397,7 +402,7 @@ class NSGigEInt : public EtherInt
     NSGigEInt(const std::string &name, NSGigE *d)
         : EtherInt(name), dev(d) { dev->setInterface(this); }
 
-    virtual bool recvPacket(PacketPtr &pkt) { return dev->recvPacket(pkt); }
+    virtual bool recvPacket(PacketPtr pkt) { return dev->recvPacket(pkt); }
     virtual void sendDone() { dev->transferDone(); }
 };
 

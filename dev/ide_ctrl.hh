@@ -80,14 +80,14 @@ typedef enum RegType {
     BMI_BLOCK
 } RegType_t;
 
+class BaseInterface;
+class Bus;
+class HierParams;
 class IdeDisk;
 class IntrControl;
 class PciConfigAll;
-class Tsunami;
 class PhysicalMemory;
-class BaseInterface;
-class HierParams;
-class Bus;
+class Platform;
 
 /**
  * Device model for an Intel PIIX4 IDE controller
@@ -95,6 +95,8 @@ class Bus;
 
 class IdeController : public PciDev
 {
+    friend class IdeDisk;
+
   private:
     /** Primary command block registers */
     Addr pri_cmd_addr;
@@ -125,10 +127,6 @@ class IdeController : public PciDev
     bool bm_enabled;
     bool cmd_in_progress[4];
 
-  public:
-    /** Pointer to the chipset */
-    Tsunami *tsunami;
-
   private:
     /** IDE disks connected to controller */
     IdeDisk *disks[4];
@@ -149,36 +147,22 @@ class IdeController : public PciDev
     bool isDiskSelected(IdeDisk *diskPtr);
 
   public:
-    /**
-     * Constructs and initializes this controller.
-     * @param name The name of this controller.
-     * @param ic The interrupt controller.
-     * @param mmu The memory controller
-     * @param cf PCI config space
-     * @param cd PCI config data
-     * @param bus_num The PCI bus number
-     * @param dev_num The PCI device number
-     * @param func_num The PCI function number
-     * @param host_bus The host bus to connect to
-     * @param hier The hierarchy parameters
-     */
-    IdeController(const std::string &name, IntrControl *ic,
-                  const std::vector<IdeDisk *> &new_disks,
-                  MemoryController *mmu, PciConfigAll *cf,
-                  PciConfigData *cd, Tsunami *t,
-                  uint32_t bus_num, uint32_t dev_num, uint32_t func_num,
-                  Bus *host_bus, Tick pio_latency, HierParams *hier);
+    struct Params : public PciDev::Params
+    {
+        /** Array of disk objects */
+        std::vector<IdeDisk *> disks;
+        Bus *host_bus;
+        Tick pio_latency;
+        HierParams *hier;
+    };
+    const Params *params() const { return (const Params *)_params; }
 
-    /**
-     * Deletes the connected devices.
-     */
+  public:
+    IdeController(Params *p);
     ~IdeController();
 
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
-
-    void intrPost();
-    void intrClear();
 
     void setDmaComplete(IdeDisk *disk);
 

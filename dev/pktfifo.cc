@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
+ * Copyright (c) 2002-2004 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * Generic interface for platforms
- */
+#include "base/misc.hh"
+#include "dev/pktfifo.hh"
 
-#ifndef __PLATFORM_HH_
-#define __PLATFORM_HH_
+using namespace std;
 
-#include "sim/sim_object.hh"
-#include "targetarch/isa_traits.hh"
-
-class PciConfigAll;
-class IntrControl;
-class SimConsole;
-class Uart;
-
-class Platform : public SimObject
+void
+PacketFifo::serialize(const string &base, ostream &os)
 {
-  public:
-    /** Pointer to the interrupt controller */
-    IntrControl *intrctrl;
-    /** Pointer to the simulation console */
-    SimConsole *cons;
-    /** Pointer to the PCI configuration space */
-    PciConfigAll *pciconfig;
+    paramOut(os, base + ".size", _size);
+    paramOut(os, base + ".maxsize", _maxsize);
+    paramOut(os, base + ".packets", fifo.size());
 
-    /** Pointer to the UART, set by the uart */
-    Uart *uart;
+    int i = 0;
+    std::list<PacketPtr>::iterator p = fifo.begin();
+    std::list<PacketPtr>::iterator end = fifo.end();
+    while (p != end) {
+        (*p)->serialize(csprintf("%s.packet%d", base, i), os);
+        ++p;
+        ++i;
+    }
+}
 
-    int interrupt_frequency;
+void
+PacketFifo::unserialize(const string &base, Checkpoint *cp,
+                        const string &section)
+{
+    paramIn(cp, section, base + ".size", _size);
+    paramIn(cp, section, base + ".maxsize", _maxsize);
+    int fifosize;
+    paramIn(cp, section, base + ".packets", fifosize);
 
-  public:
-    Platform(const std::string &name, IntrControl *intctrl,
-             PciConfigAll *pci, int intrFreq)
-        : SimObject(name), intrctrl(intctrl), pciconfig(pci),
-          interrupt_frequency(intrFreq) {}
-    virtual ~Platform() {}
-    virtual void postConsoleInt() = 0;
-    virtual void clearConsoleInt() = 0;
-    virtual Tick intrFrequency() = 0;
-    virtual void postPciInt(int line);
-    virtual void clearPciInt(int line);
-    virtual Addr pciToDma(Addr pciAddr) const;
-};
+    fifo.clear();
+    fifo.resize(fifosize);
 
-#endif // __PLATFORM_HH_
+    for (int i = 0; i < fifosize; ++i) {
+        PacketPtr p = new PacketData;
+        p->unserialize(csprintf("%s.packet%d", base, i), cp, section);
+        fifo.push_back(p);
+    }
+}

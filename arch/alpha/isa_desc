@@ -38,14 +38,12 @@ output exec {{
 #include <fenv.h>
 #endif
 
+#ifdef FULL_SYSTEM
+#include "arch/alpha/pseudo_inst.hh"
+#endif
 #include "cpu/base_cpu.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
-
-#ifdef FULL_SYSTEM
-#include "arch/alpha/ev5.hh"
-#include "arch/alpha/pseudo_inst.hh"
-#endif
 }};
 
 ////////////////////////////////////////////////////////////////////
@@ -515,7 +513,7 @@ output exec {{
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
 	Fault fault = No_Fault;	// dummy... this ipr access should not fault
-	if (!ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
+	if (!EV5::ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
 	    fault = Fen_Fault;
 	}
 	return fault;
