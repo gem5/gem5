@@ -25,8 +25,6 @@ using namespace std;
 
 #define UNIX_YEAR_OFFSET 52
 
-//This will have to be dynamic if we want support usermode access of the RTC
-#define RTC_RATE  1024
 
 // Timer Event for Periodic interrupt of RTC
 TsunamiIO::RTCEvent::RTCEvent(Tsunami* t)
@@ -39,7 +37,7 @@ TsunamiIO::RTCEvent::RTCEvent(Tsunami* t)
 void
 TsunamiIO::RTCEvent::process()
 {
-    DPRINTF(MC146818, "Timer Interrupt\n");
+    DPRINTF(MC146818, "RTC Timer Interrupt\n");
     schedule(curTick + ticksPerSecond/RTC_RATE);
     //Actually interrupt the processor here
     if (!tsunami->cchip->RTCInterrupting) {
@@ -105,8 +103,8 @@ TsunamiIO::ClockEvent::Status()
 
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                       Addr addr, Addr mask, uint32_t f, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), tsunami(t), rtc(t), freq(f)
+                       Addr addr, Addr mask, MemoryController *mmu)
+    : MmapDevice(name, addr, mask, mmu), tsunami(t), rtc(t)
 {
     timerData = 0;
     set_time(init_time == 0 ? time(NULL) : init_time);
@@ -300,7 +298,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
-    Param<uint32_t> frequency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
@@ -311,15 +308,14 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
             "(0 for actual time, default is 1/1/06", ULL(1136073600)),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask"),
-    INIT_PARAM(frequency, "clock interrupt frequency")
+    INIT_PARAM(mask, "Address Mask")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
     return new TsunamiIO(getInstanceName(), tsunami, time,  addr,
-                         mask, frequency, mmu);
+                         mask, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

@@ -388,8 +388,8 @@ CREATE_SIM_OBJECT(SimConsole)
     SimConsole *console = new SimConsole(getInstanceName(), filename, number);
     ((ConsoleListener *)listener)->add(console);
     ((SimConsole *)console)->initInt(intr_control);
-    ((SimConsole *)console)->setInt(SimConsole::TransmitInterrupt |
-                                    SimConsole::ReceiveInterrupt);
+//    ((SimConsole *)console)->setInt(SimConsole::TransmitInterrupt |
+//				    SimConsole::ReceiveInterrupt);
 
     return console;
 }

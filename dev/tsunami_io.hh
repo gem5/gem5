@@ -27,11 +27,13 @@
  */
 
 /* @file
- * Tsunnami Fake DMA memory map
+ * Tsunami Fake I/O Space mapping including RTC/timer interrupts
  */
 
 #ifndef __TSUNAMI_DMA_HH__
 #define __TSUNAMI_DMA_HH__
+
+#define RTC_RATE 1024
 
 #include "mem/functional_mem/mmap_device.hh"
 #include "dev/tsunami.hh"
@@ -107,13 +109,12 @@ class TsunamiIO : public MmapDevice
 
       uint32_t timerData;
 
-    uint32_t  freq;
 
   public:
-    uint32_t  frequency() const { return freq; }
+    uint32_t  frequency() const { return RTC_RATE; }
 
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
-               Addr addr, Addr mask, uint32_t f, MemoryController *mmu);
+               Addr addr, Addr mask,  MemoryController *mmu);
 
     void set_time(time_t t);
 

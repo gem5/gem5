@@ -148,10 +148,11 @@ TsunamiCChip::write(MemReqPtr req, const uint8_t *data)
                    return No_Fault;
               case TSDEV_CC_MISC:
                 //If it is the seventh bit, clear the RTC interrupt
-                if ((*(uint64_t*) data) & (1<<7)) {
+                if ((*(uint64_t*) data) & (1<<4)) {
                     RTCInterrupting = false;
                     tsunami->intrctrl->clear(0, TheISA::INTLEVEL_IRQ2, 0);
-                    misc &= ~(1<<7);
+                    DPRINTF(Tsunami, "clearing rtc interrupt\n");
+                    misc &= ~(1<<4);
                 } else panic("TSDEV_CC_MISC write not implemented\n");
                   return No_Fault;
               case TSDEV_CC_AAR0:
