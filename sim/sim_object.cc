@@ -28,12 +28,13 @@
 
 #include <assert.h>
 
-#include "sim/sim_object.hh"
+#include "base/callback.hh"
 #include "base/inifile.hh"
-#include "sim/configfile.hh"
-#include "sim/host.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "sim/configfile.hh"
+#include "sim/host.hh"
+#include "sim/sim_object.hh"
 #include "sim/sim_stats.hh"
 
 using namespace std;
@@ -72,6 +73,21 @@ SimObject::regFormulas()
 {
 }
 
+namespace {
+    class __SimObjectResetCB : public Callback
+    {
+      public:
+        __SimObjectResetCB() { Statistics::RegResetCallback(this); }
+        virtual void process() { SimObject::resetAllStats(); }
+    };
+    __SimObjectResetCB __theSimObjectResetCB;
+}
+
+void
+SimObject::resetStats()
+{
+}
+
 //
 // no default extra output
 //
@@ -107,6 +123,14 @@ SimObject::regAllStats()
 #endif
         (*i)->regFormulas();
    }
+}
+
+//
+// static function: call resetStats() on all SimObjects.
+//
+void
+SimObject::resetAllStats()
+{
 }
 
 //

@@ -68,6 +68,7 @@ class SimObject : public Serializeable
     // register statistics for this object
     virtual void regStats();
     virtual void regFormulas();
+    virtual void resetStats();
 
     // print extra results for this object not covered by registered
     // statistics (called at end of simulation)
@@ -75,6 +76,9 @@ class SimObject : public Serializeable
 
     // static: call reg_stats on all SimObjects
     static void regAllStats();
+
+    // static: call resetStats on all SimObjects
+    static void resetAllStats();
 
     // static: call printExtraOutput on all SimObjects
     static void printAllExtraOutput(std::ostream&);
