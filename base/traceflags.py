@@ -57,6 +57,7 @@ baseFlags = [
     'Mbox',
     'PCIA',
     'PCIDEV',
+    'PciConfigAll',
     'ISP',
     'BADADDR',
     'Console',
@@ -103,7 +104,11 @@ baseFlags = [
     'Context',
     'Config',
     'Sampler',
-    'WriteBarrier'
+    'WriteBarrier',
+    'IdeCtrl',
+    'IdeDisk',
+    'Tsunami',
+    'TsunamiUart'
     ]
 
 #
@@ -118,7 +123,8 @@ compoundFlagMap = {
     'GDBAll' : [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend', 'GDBRecv', 'GDBExtra' ],
     'ScsiAll' : [ 'ScsiDisk', 'ScsiCtrl', 'ScsiNone' ],
     'DiskImageAll' : [ 'DiskImage', 'DiskImageRead', 'DiskImageWrite' ],
-    'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' ]
+    'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' ],
+    'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ]
 }
 
 #############################################################

@@ -62,41 +62,6 @@ class LinuxSystem : public System
     SymbolTable *bootloaderSymtab;
     SymbolTable *consoleSymtab;
 
-
-    //INSTRUMENTATION CODEGEN BEGIN ONE
-    Statistics::MainBin *esIntrBin;
-    Statistics::MainBin *esRxeofBin;
-    Statistics::MainBin *esNewbufBin;
-    Statistics::MainBin *esDmaLoadBin;
-    Statistics::MainBin *dmaMapLoadBin;
-    Statistics::MainBin *etherInputBin;
-    Statistics::MainBin *netisrInputBin;
-    Statistics::MainBin *schednetisrIsrBin;
-    Statistics::MainBin *ipintrBin;
-    Statistics::MainBin *ipDooptionsBin;
-    Statistics::MainBin *ipReassBin;
-    Statistics::MainBin *tcpInputBin;
-    Statistics::MainBin *sbappendBin;
-    Statistics::MainBin *readBin;
-    Statistics::MainBin *sooReadBin;
-    Statistics::MainBin *orecvBin;
-    Statistics::MainBin *recvitBin;
-    Statistics::MainBin *soreceiveBin;
-    Statistics::MainBin *osendBin;
-    Statistics::MainBin *writeBin;
-    Statistics::MainBin *sooWriteBin;
-    Statistics::MainBin *senditBin;
-    Statistics::MainBin *sosendBin;
-    Statistics::MainBin *tcpSosendBin;
-    Statistics::MainBin *tcpOutputBin;
-    Statistics::MainBin *ipOutputBin;
-    Statistics::MainBin *etherOutputBin;
-    Statistics::MainBin *esStartBin;
-    Statistics::MainBin *esTransmitBin;
-    Statistics::MainBin *esTxeofBin;
-    Statistics::MainBin *idleThreadBin;
-    //INSTRUMENTATION CODEGEN END
-
     BreakPCEvent *kernelPanicEvent;
     BreakPCEvent *consolePanicEvent;
     LinuxBadAddrEvent *badaddrEvent;
@@ -109,40 +74,6 @@ class LinuxSystem : public System
     LinuxDebugPrintfEvent *debugPrintfEvent;
     LinuxDebugPrintfEvent *debugPrintfrEvent;
     LinuxDumpMbufEvent *dumpMbufEvent;
-
-    //INSTRUMENTATION CODEGEN BEGIN TWO
-    FnEvent *esIntrEvent;
-    FnEvent *esRxeofEvent;
-    FnEvent *esNewbufEvent;
-    FnEvent *esDmaLoadEvent;
-    FnEvent *dmaMapLoadEvent;
-    FnEvent *etherInputEvent;
-    FnEvent *netisrInputEvent;
-    FnEvent *schednetisrIsrEvent;
-    FnEvent *ipintrEvent;
-    FnEvent *ipDooptionsEvent;
-    FnEvent *ipReassEvent;
-    FnEvent *tcpInputEvent;
-    FnEvent *sbappendEvent;
-    FnEvent *readEvent;
-    FnEvent *sooReadEvent;
-    FnEvent *orecvEvent;
-    FnEvent *recvitEvent;
-    FnEvent *soreceiveEvent;
-    FnEvent *osendEvent;
-    FnEvent *writeEvent;
-    FnEvent *sooWriteEvent;
-    FnEvent *senditEvent;
-    FnEvent *sosendEvent;
-    FnEvent *tcpSosendEvent;
-    FnEvent *tcpOutputEvent;
-    FnEvent *ipOutputEvent;
-    FnEvent *etherOutputEvent;
-    FnEvent *esStartEvent;
-    FnEvent *esTransmitEvent;
-    FnEvent *esTxeofEvent;
-    FnEvent *idleThreadEvent;
-    //INSTRUMENTATION CODEGEN END
 
   private:
 

@@ -44,6 +44,11 @@ using namespace std;
 //
 //  Alpha TLB
 //
+#ifdef DEBUG
+bool uncacheBit39 = false;
+bool uncacheBit40 = false;
+#endif
+
 AlphaTLB::AlphaTLB(const string &name, int s)
     : SimObject(name), size(s), nlu(0)
 {
@@ -317,7 +322,7 @@ AlphaITB::translate(MemReqPtr &req) const
             if (ICM_CM(ipr[AlphaISA::IPR_ICM]) != AlphaISA::mode_kernel) {
                 fault(req->vaddr, req->xc);
                 acv++;
-                return Itb_Acv_Fault;
+                return ITB_Acv_Fault;
             }
 
             req->paddr = req->vaddr & PA_IMPL_MASK;
@@ -337,7 +342,7 @@ AlphaITB::translate(MemReqPtr &req) const
             if (!pte) {
                 fault(req->vaddr, req->xc);
                 misses++;
-                return Itb_Fault_Fault;
+                return ITB_Fault_Fault;
             }
 
             req->paddr = PA_PFN2PA(pte->ppn) + VA_POFS(req->vaddr & ~3);
@@ -347,7 +352,7 @@ AlphaITB::translate(MemReqPtr &req) const
                 // instruction access fault
                 fault(req->vaddr, req->xc);
                 acv++;
-                return Itb_Acv_Fault;
+                return ITB_Acv_Fault;
             }
 
             hits++;
@@ -506,7 +511,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                       ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_ACV_MASK),
                       req->xc);
                 if (write) { write_acv++; } else { read_acv++; }
-                return Dtb_Acv_Fault;
+                return DTB_Acv_Fault;
             }
 
             req->paddr = req->vaddr & PA_IMPL_MASK;
@@ -546,13 +551,13 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                           (pte->fonw ? MM_STAT_FONW_MASK : 0),
                           req->xc);
                     write_acv++;
-                    return Dtb_Fault_Fault;
+                    return DTB_Fault_Fault;
                 }
                 if (pte->fonw) {
                     fault(req->vaddr, MM_STAT_WR_MASK | MM_STAT_FONW_MASK,
                           req->xc);
                     write_acv++;
-                    return Dtb_Fault_Fault;
+                    return DTB_Fault_Fault;
                 }
             } else {
                 if (!(pte->xre & MODE2MASK(mode))) {
@@ -561,12 +566,12 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                           (pte->fonr ? MM_STAT_FONR_MASK : 0),
                           req->xc);
                     read_acv++;
-                    return Dtb_Acv_Fault;
+                    return DTB_Acv_Fault;
                 }
                 if (pte->fonr) {
                     fault(req->vaddr, MM_STAT_FONR_MASK, req->xc);
                     read_acv++;
-                    return Dtb_Fault_Fault;
+                    return DTB_Fault_Fault;
                 }
             }
         }
