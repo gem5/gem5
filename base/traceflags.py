@@ -30,8 +30,15 @@
 # This file generates the header and source files for the flags
 # that control the tracing facility.
 #
-hhfilename="traceflags.hh"
-ccfilename="traceflags.cc"
+
+import sys
+
+if len(sys.argv) != 2:
+    print "%s: Need argument (basename of cc/hh files)" % sys.argv[0]
+    sys.exit(1)
+
+hhfilename = sys.argv[1] + '.hh'
+ccfilename = sys.argv[1] + '.cc'
 
 #
 # The list of trace flags that can be used to condition DPRINTFs etc.
