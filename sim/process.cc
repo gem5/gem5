@@ -392,14 +392,10 @@ CREATE_SIM_OBJECT(LiveProcess)
     // dummy for default env
     vector<string> null_vec;
 
-    //  We do this with "temp" because of the bogus compiler warning
-    //  you get with g++ 2.95 -O if you just "return new LiveProcess(..."
-    LiveProcess *temp = LiveProcess::create(getInstanceName(),
-                                            stdin_fd, stdout_fd, stderr_fd,
-                                            cmd,
-                                            env.isValid() ? env : null_vec);
-
-    return temp;
+    return LiveProcess::create(getInstanceName(),
+                               stdin_fd, stdout_fd, stderr_fd,
+                               cmd,
+                               env.isValid() ? env : null_vec);
 }
 
 
