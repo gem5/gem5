@@ -71,6 +71,26 @@
 #define osfpcb_q_Ksp pcb_q_ksp
 #define pal_impure_common_size ((0x200 + 7) & 0xfff8)
 
+#ifdef BIG_TSUNAMI
+#define MAXPROC         0x3f
+#define IPIQ_addr       0x800
+#define IPIQ_shift      0
+#define IPIR_addr       0x840
+#define IPIR_shift      0
+#define RTC_addr        0x880
+#define RTC_shift       0
+#define DIR_addr        0xa2
+#else
+#define MAXPROC         0x3
+#define IPIQ_addr       0x080
+#define IPIQ_shift      12
+#define IPIR_addr       0x080
+#define IPIR_shift      8
+#define RTC_addr        0x080
+#define RTC_shift       4
+#define DIR_addr        0xa0
+#endif
+
 #define ALIGN_BLOCK \
         .align 5
 
@@ -431,12 +451,10 @@ EXPORT(sys_wripir)
 //++
 // Convert the processor number to a CPU mask
 //--
-
-        and	r16,0x3, r14		// mask the top stuff (4 CPUs supported)
+        and	r16,MAXPROC, r14	// mask the top stuff (4 or 64 CPUs supported)
         bis	r31,0x1,r16		// get a one
         sll	r16,r14,r14		// shift the bit to the right place
-        sll     r14,12,r14
-
+        sll     r14,IPIQ_shift,r14
 
 //++
 // Build the Broadcast Space base address
@@ -446,7 +464,7 @@ EXPORT(sys_wripir)
         ldah    r13,0xa0(r31)
         sll	r13,8,r13
         bis	r16,r13,r16
-        lda     r16,0x0080(r16)
+        lda     r16,IPIQ_addr(r16)
 
 //++
 // Send out the IP Intr
@@ -748,14 +766,14 @@ sys_int_23:
         sll     r12,16,r12
         lda     r12,0xa000(r12)
         sll     r12,16,r12
-        lda     r12,0x080(r12)
+        lda     r12,IPIR_addr(r12)
 
         mfpr    r10, pt_whami                   // get CPU ID
         extbl	r10, 1, r10		        // Isolate just whami bits
         or      r31,0x1,r14                     // load r14 with bit to clear
         sll     r14,r10,r14                     // left shift by CPU ID
-        sll     r14,8,r14
-        stq_p   r14, 0(r12)                     // clear the rtc interrupt
+        sll     r14,IPIR_shift,r14
+        stq_p   r14, 0(r12)                     // clear the ipi interrupt
 
         br	r31, pal_post_interrupt		// Notify the OS
 
@@ -767,12 +785,13 @@ sys_int_22:
         sll     r12,16,r12
         lda     r12,0xa000(r12)
         sll     r12,16,r12
-        lda     r12,0x080(r12)
+        lda     r12,RTC_addr(r12)
 
         mfpr    r10, pt_whami                   // get CPU ID
         extbl	r10, 1, r10		        // Isolate just whami bits
-        or      r31,0x10,r14                    // load r14 with bit to clear
+        or      r31,0x1,r14                     // load r14 with bit to clear
         sll     r14,r10,r14                     // left shift by CPU ID
+        sll     r14,RTC_shift,r14               // put the bits in the right position
         stq_p   r14, 0(r12)                     // clear the rtc interrupt
 
         br	r31, pal_post_interrupt		// Tell the OS
@@ -810,15 +829,20 @@ sys_int_20:
         ALIGN_BRANCH
 sys_int_21:
 
-    lda     r12,0xf01(r31)
+    lda     r12,0xf01(r31)                // calculate DIRn address
     sll     r12,32,r12
-    ldah    r13,0xa0(r31)
+    ldah    r13,DIR_addr(r31)
     sll	    r13,8,r13
     bis	    r12,r13,r12
-    lda     r12,0x0080(r12)
+
     mfpr    r13, pt_whami                   // get CPU ID
     extbl   r13, 1, r13		            // Isolate just whami bits
 
+#ifdef BIG_TSUNAMI
+    sll     r13,4,r13
+    or      r12,r13,r12
+#else
+    lda     r12,0x0080(r12)
     and     r13,0x1,r14                     // grab LSB and shift left 6
     sll     r14,6,r14
     and     r13,0x2,r10                     // grabl LSB+1 and shift left 9
@@ -826,9 +850,11 @@ sys_int_21:
 
     mskbl   r12,0,r12                       // calculate DIRn address
     lda     r13,0x280(r31)
-    bis	    r12,r13,r12
+    bis     r12,r13,r12
     or      r12,r14,r12
     or      r12,r10,r12
+#endif
+
     ldqp    r13, 0(r12)                     // read DIRn
 
     or      r31,1,r14                       // set bit 55 (ISA Interrupt)

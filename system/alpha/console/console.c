@@ -58,7 +58,7 @@ typedef unsigned int uint32;
 /* Kernel write | kernel read | valid */
 #define KPTE(x) ((ul)((((ul)(x)) << 32) | 0x1101))
 
-#define HWRPB_PAGES 4
+#define HWRPB_PAGES 16
 #define MDT_BITMAP_PAGES  4
 
 #define CSERVE_K_JTOKERN       0x18
@@ -480,6 +480,7 @@ unixBoot(int go, int argc, char **argv)
    first[1] = KPTE(PFN(first)); /* Region 3 */
 
    second[SECOND(0x10000000)] = KPTE(PFN(third_rpb));	/* Region 0 */
+
    for (i=0;i<NUM_KERNEL_THIRD;i++) {
       second[SECOND(0x20000000)+i] = KPTE(PFN(third_kernel)+i);	/* Region 1 */
    }
@@ -720,9 +721,10 @@ unixBoot(int go, int argc, char **argv)
   rpb_crb->rpb_map[0].rpb_pgcount = HWRPB_PAGES;
 
 
-  printf_lock("Console Callback at 0x%x, fixup at 0x%x \n",
+  printf_lock("Console Callback at 0x%x, fixup at 0x%x, crb offset: 0x%x\n",
           rpb_crb->rpb_va_disp,
-          rpb_crb->rpb_va_fixup );
+          rpb_crb->rpb_va_fixup,
+          rpb->rpb_crb_off);
 
   rpb_mdt = (struct _xxm_rpb_mdt *) (((ul)rpb_crb) + sizeof(struct rpb_crb));
   rpb->rpb_mdt_off = (ul)rpb_mdt - (ul)rpb;
@@ -811,11 +813,7 @@ unixBoot(int go, int argc, char **argv)
  {
      ul *ptr = (ul*)((char*)rpb_dsr + sizeof(struct rpb_dsr ));
      rpb_crb->rpb_pa_disp = KSEG_TO_PHYS(ptr);
-#if 0
-     rpb_crb->rpb_va_disp = 0x10000000 + ((ul)ptr&(0x2000*HWRPB_PAGES-1));
-#else
-     rpb_crb->rpb_va_disp = 0x10000000 + ((ul)ptr & 0x1fff);
-#endif
+     rpb_crb->rpb_va_disp = 0x10000000 + (((ul)ptr - (ul)rpb) & (0x2000*HWRPB_PAGES-1));
      printf_lock("ConsoleDispatch at virt %x phys %x val %x\n",
              rpb_crb->rpb_va_disp,
             rpb_crb->rpb_pa_disp,
@@ -823,12 +821,9 @@ unixBoot(int go, int argc, char **argv)
      *ptr++ = 0;
      *ptr++ = (ul) consoleCallback;
      rpb_crb->rpb_pa_fixup = KSEG_TO_PHYS(ptr);
-#if 0
-     rpb_crb->rpb_va_fixup = 0x10000000 + ((ul)ptr& (0x2000*HWRPB_PAGES-1));
-#else
-     rpb_crb->rpb_va_fixup = 0x10000000 + ((ul)ptr & 0x1fff);
-#endif
+     rpb_crb->rpb_va_fixup = 0x10000000 + (((ul)ptr - (ul)rpb) & (0x2000*HWRPB_PAGES-1));
      *ptr++ = 0;
+
      *ptr++ = (ul) consoleFixup;
   }
 
