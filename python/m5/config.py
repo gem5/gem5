@@ -781,9 +781,8 @@ class Node(object):
             # before cpu0).  Changing ordering can also influence timing
             # in the current memory system, as caches get added to a bus
             # in different orders which affects their priority in the
-            # case of simulataneous requests.  We should uncomment the
-            # following line once we take care of that issue.
-            # self.children.sort(lambda x,y: cmp(x.name, y.name))
+            # case of simulataneous requests.
+            self.children.sort(lambda x,y: cmp(x.name, y.name))
             children = [ c.name for c in self.children if not c.paramcontext]
             print 'children =', ' '.join(children)
 
