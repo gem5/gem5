@@ -811,7 +811,7 @@ output header {{
       public:
 	/// Constructor
 	EACompBase(MachInst machInst)
-	    : AlphaStaticInst("(eacomp)", machInst, IntALU)
+	    : AlphaStaticInst("(eacomp)", machInst, IntAluOp)
 	{
 	}
 
@@ -1072,7 +1072,7 @@ def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     # Declare the prefetch instruction object.
 
     # convert flags from tuple to list to make them mutable
-    pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'RdPort']
+    pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'MemReadOp']
 
     (pf_header_output, pf_decoder_output, _, pf_exec_output) = \
 	LoadStoreBase(name, Name + 'Prefetch', ea_code, '',
@@ -2083,13 +2083,13 @@ decode OPCODE default Unknown::unknown() {
 	}
 
 	0x13: decode INTFUNC {	// integer multiplies
-	    0x00: mull({{ Rc.sl = Ra.sl * Rb_or_imm.sl; }}, IntMULT);
-	    0x20: mulq({{ Rc    = Ra    * Rb_or_imm;    }}, IntMULT);
+	    0x00: mull({{ Rc.sl = Ra.sl * Rb_or_imm.sl; }}, IntMultOp);
+	    0x20: mulq({{ Rc    = Ra    * Rb_or_imm;    }}, IntMultOp);
 	    0x30: umulh({{
 		uint64_t hi, lo;
 		mul128(Ra, Rb_or_imm, hi, lo);
 		Rc = hi;
-	    }}, IntMULT);
+	    }}, IntMultOp);
 	    0x40: mullv({{
 		// 32-bit multiply with trap on overflow
 		int64_t Rax = Ra.sl;	// sign extended version of Ra.sl
@@ -2102,7 +2102,7 @@ decode OPCODE default Unknown::unknown() {
 		if (sign_bits != 0 && sign_bits != mask(33))
 		    fault = Integer_Overflow_Fault;
 		Rc.sl = tmp<31:0>;
-	    }}, IntMULT);
+	    }}, IntMultOp);
 	    0x60: mulqv({{
 		// 64-bit multiply with trap on overflow
 		uint64_t hi, lo;
@@ -2113,7 +2113,7 @@ decode OPCODE default Unknown::unknown() {
 		      (hi == mask(64) && lo<63:> == 1)))
 		    fault = Integer_Overflow_Fault;
 		Rc = lo;
-	    }}, IntMULT);
+	    }}, IntMultOp);
 	}
 
 	0x1c: decode INTFUNC {
@@ -2141,11 +2141,11 @@ decode OPCODE default Unknown::unknown() {
 
 	    format BasicOperateWithNopCheck {
 		0x70: decode RB {
-		    31: ftoit({{ Rc = Fa.uq; }}, FloatCVT);
+		    31: ftoit({{ Rc = Fa.uq; }}, FloatCvtOp);
 		}
 		0x78: decode RB {
 		    31: ftois({{ Rc.sl = t_to_s(Fa.uq); }},
-			      FloatCVT);
+			      FloatCvtOp);
 		}
 	    }
 	}
@@ -2192,8 +2192,8 @@ decode OPCODE default Unknown::unknown() {
 	0x4: decode RB {
 	    31: decode FP_FULLFUNC {
 		format BasicOperateWithNopCheck {
-		    0x004: itofs({{ Fc.uq = s_to_t(Ra.ul); }}, FloatCVT);
-		    0x024: itoft({{ Fc.uq = Ra.uq; }}, FloatCVT);
+		    0x004: itofs({{ Fc.uq = s_to_t(Ra.ul); }}, FloatCvtOp);
+		    0x024: itoft({{ Fc.uq = Ra.uq; }}, FloatCvtOp);
 		    0x014: FailUnimpl::itoff();	// VAX-format conversion
 		}
 	    }
@@ -2208,19 +2208,19 @@ decode OPCODE default Unknown::unknown() {
 			if (Fb < 0.0)
 			    fault = Arithmetic_Fault;
 			Fc = sqrt(Fb);
-		    }}, FloatSQRT);
+		    }}, FloatSqrtOp);
 #else
 		    0x0b: sqrts({{
 			if (Fb.sf < 0.0)
 			    fault = Arithmetic_Fault;
 			Fc.sf = sqrt(Fb.sf);
-		    }}, FloatSQRT);
+		    }}, FloatSqrtOp);
 #endif
 		    0x2b: sqrtt({{
 			if (Fb < 0.0)
 			    fault = Arithmetic_Fault;
 			Fc = sqrt(Fb);
-		    }}, FloatSQRT);
+		    }}, FloatSqrtOp);
 		}
 	    }
 	}
@@ -2246,19 +2246,19 @@ decode OPCODE default Unknown::unknown() {
 #ifdef SS_COMPATIBLE_FP
 		0x00: adds({{ Fc = Fa + Fb; }});
 		0x01: subs({{ Fc = Fa - Fb; }});
-		0x02: muls({{ Fc = Fa * Fb; }}, FloatMULT);
-		0x03: divs({{ Fc = Fa / Fb; }}, FloatDIV);
+		0x02: muls({{ Fc = Fa * Fb; }}, FloatMultOp);
+		0x03: divs({{ Fc = Fa / Fb; }}, FloatDivOp);
 #else
 		0x00: adds({{ Fc.sf = Fa.sf + Fb.sf; }});
 		0x01: subs({{ Fc.sf = Fa.sf - Fb.sf; }});
-		0x02: muls({{ Fc.sf = Fa.sf * Fb.sf; }}, FloatMULT);
-		0x03: divs({{ Fc.sf = Fa.sf / Fb.sf; }}, FloatDIV);
+		0x02: muls({{ Fc.sf = Fa.sf * Fb.sf; }}, FloatMultOp);
+		0x03: divs({{ Fc.sf = Fa.sf / Fb.sf; }}, FloatDivOp);
 #endif
 
 		0x20: addt({{ Fc = Fa + Fb; }});
 		0x21: subt({{ Fc = Fa - Fb; }});
-		0x22: mult({{ Fc = Fa * Fb; }}, FloatMULT);
-		0x23: divt({{ Fc = Fa / Fb; }}, FloatDIV);
+		0x22: mult({{ Fc = Fa * Fb; }}, FloatMultOp);
+		0x23: divt({{ Fc = Fa / Fb; }}, FloatDivOp);
 	    }
 	}
 
@@ -2272,14 +2272,14 @@ decode OPCODE default Unknown::unknown() {
 	1: decode FP_FULLFUNC {
 	    format BasicOperateWithNopCheck {
 		0x0a5, 0x5a5: cmpteq({{ Fc = (Fa == Fb) ? 2.0 : 0.0; }},
-				     FloatCMP);
+				     FloatCmpOp);
 		0x0a7, 0x5a7: cmptle({{ Fc = (Fa <= Fb) ? 2.0 : 0.0; }},
-				     FloatCMP);
+				     FloatCmpOp);
 		0x0a6, 0x5a6: cmptlt({{ Fc = (Fa <  Fb) ? 2.0 : 0.0; }},
-				     FloatCMP);
+				     FloatCmpOp);
 		0x0a4, 0x5a4: cmptun({{ // unordered
 		    Fc = (!(Fa < Fb) && !(Fa == Fb) && !(Fa > Fb)) ? 2.0 : 0.0;
-		}}, FloatCMP);
+		}}, FloatCmpOp);
 	    }
 	}
 
@@ -2371,7 +2371,7 @@ decode OPCODE default Unknown::unknown() {
 	format MiscPrefetch {
 	    0xf800: wh64({{ EA = Rb; }},
 			 {{ xc->writeHint(EA, 64); }},
-			 IsMemRef, IsStore, WrPort);
+			 IsMemRef, IsStore, MemWriteOp);
 	}
 
 	format BasicOperate {
@@ -2401,8 +2401,8 @@ decode OPCODE default Unknown::unknown() {
 	    // them the same though.
 	    0x0000: trapb({{ }}, IsSerializing, No_OpClass);
 	    0x0400: excb({{ }}, IsSerializing, No_OpClass);
-	    0x4000: mb({{ }}, IsMemBarrier, RdPort);
-	    0x4400: wmb({{ }}, IsWriteBarrier, WrPort);
+	    0x4000: mb({{ }}, IsMemBarrier, MemReadOp);
+	    0x4400: wmb({{ }}, IsWriteBarrier, MemWriteOp);
 	}
 
 #ifdef FULL_SYSTEM
