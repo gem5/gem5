@@ -52,6 +52,7 @@ class LinuxSkipDelayLoopEvent;
 class SkipFuncEvent;
 class FnEvent;
 class AlphaArguments;
+class PrintThreadInfo;
 
 /**
  * This class contains linux specific system code (Loading, Events, Binning).
@@ -94,6 +95,8 @@ class LinuxSystem : public System
      * calculated
      */
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
+
+    PrintThreadInfo *printThreadEvent;
 
     /** Begining of kernel code */
     Addr kernelStart;

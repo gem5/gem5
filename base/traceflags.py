@@ -122,7 +122,8 @@ baseFlags = [
     'Tsunami',
     'Uart',
     'Split',
-    'SQL'
+    'SQL',
+    'Thread'
     ]
 
 #

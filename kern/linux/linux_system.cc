@@ -132,6 +132,8 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     debugPrintkEvent = new DebugPrintkEvent(&pcEventQueue, "dprintk");
 
+    printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo");
+
     Addr addr = 0;
 
     /**
@@ -242,6 +244,10 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     if (kernelSymtab->findAddress("dprintk", addr))
         debugPrintkEvent->schedule(addr+sizeof(MachInst)*2);
+
+    if (kernelSymtab->findAddress("alpha_switch_to", addr) &&
+            DTRACE(Thread))
+        printThreadEvent->schedule(addr+sizeof(MachInst)*6);
 }
 
 LinuxSystem::~LinuxSystem()
