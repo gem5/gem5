@@ -160,6 +160,8 @@ MemTest::completeRequest(MemReqPtr req, uint8_t *data)
              << req->size << " bytes at address 0x"
              << hex << req->paddr << ", value = 0x";
         printData(cerr, req->data, req->size);
+        cerr << " @ cycle " << dec << curTick;
+
         cerr << endl;
     }
 
@@ -211,6 +213,7 @@ MemTest::tick()
     uint64_t data = random();
     unsigned access_size = random() % 4;
     unsigned cacheable = rand() % 100;
+    unsigned probe = rand() % 2;
 
     MemReqPtr req = new MemReq();
 
@@ -233,29 +236,40 @@ MemTest::tick()
         uint8_t *result = new uint8_t[8];
         checkMem->access(Read, req->paddr, result, req->size);
         if (blockAddr(req->paddr) == traceBlockAddr) {
-            cerr << name() << ": initiating read of "
+            cerr << name() << ": initiating read "
+                 << ((probe)?"probe of ":"access of ")
                  << req->size << " bytes from addr 0x"
                  << hex << req->paddr << " at cycle "
                  << dec << curTick << endl;
         }
-
-        req->completionEvent = new MemCompleteEvent(req, result, this);
-        cacheInterface->access(req);
+        if (probe) {
+            cacheInterface->probeAndUpdate(req);
+            completeRequest(req, result);
+        } else {
+            req->completionEvent = new MemCompleteEvent(req, result, this);
+            cacheInterface->access(req);
+        }
     } else {
         // write
         req->cmd = Write;
         memcpy(req->data, &data, req->size);
         checkMem->access(Write, req->paddr, req->data, req->size);
         if (blockAddr(req->paddr) == traceBlockAddr) {
-            cerr << name() << ": initiating write of "
+            cerr << name() << ": initiating write "
+                 << ((probe)?"probe of ":"access of ")
                  << req->size << " bytes (value = 0x";
             printData(cerr, req->data, req->size);
             cerr << ") to addr 0x"
                  << hex << req->paddr << " at cycle "
                  << dec << curTick << endl;
         }
-        req->completionEvent = new MemCompleteEvent(req, NULL, this);
-        cacheInterface->access(req);
+        if (probe) {
+            cacheInterface->probeAndUpdate(req);
+            completeRequest(req, NULL);
+        } else {
+            req->completionEvent = new MemCompleteEvent(req, NULL, this);
+            cacheInterface->access(req);
+        }
     }
 }
 
