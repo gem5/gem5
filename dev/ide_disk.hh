@@ -320,7 +320,7 @@ class IdeDisk : public SimObject
     // Utility functions
     bool isBSYSet() { return (status & STATUS_BSY_BIT); }
     bool isIENSet() { return nIENBit; }
-    bool isDEVSelect() { return ((cmdReg.drive & SELECT_DEV_BIT) == devID); }
+    bool isDEVSelect();
 
     void setComplete()
     {

@@ -192,6 +192,22 @@ IdeController::getDisk(IdeDisk *diskPtr)
     return -1;
 }
 
+bool
+IdeController::isDiskSelected(IdeDisk *diskPtr)
+{
+    for (int i = 0; i < 4; i++) {
+        if ((long)diskPtr == (long)disks[i]) {
+            // is disk is on primary or secondary channel
+            int channel = i/2;
+            // is disk the master or slave
+            int devID = i%2;
+
+            return (dev[channel] == devID);
+        }
+    }
+    panic("Unable to find disk by pointer!!\n");
+}
+
 ////
 // Command completion
 ////

@@ -167,6 +167,12 @@ IdeDisk::reset(int id)
 // Utility functions
 ////
 
+bool
+IdeDisk::isDEVSelect()
+{
+    return ctrl->isDiskSelected(this);
+}
+
 Addr
 IdeDisk::pciToDma(Addr pciAddr)
 {
