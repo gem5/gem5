@@ -41,6 +41,7 @@
 #include "dev/io_device.hh"
 #include "dev/ns_gige_reg.h"
 #include "dev/pcidev.hh"
+#include "dev/pktfifo.hh"
 #include "mem/bus/bus.hh"
 #include "sim/eventq.hh"
 
@@ -158,10 +159,8 @@ class NSGigE : public PciDev
 
     /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */
-    pktbuf_t txFifo;
-    uint32_t maxTxFifoSize;
-    pktbuf_t rxFifo;
-    uint32_t maxRxFifoSize;
+    PacketFifo txFifo;
+    PacketFifo rxFifo;
 
     /** various helper vars */
     PacketPtr txPacket;
@@ -183,8 +182,6 @@ class NSGigE : public PciDev
 
     /** Current Transmit Descriptor Done */
     bool CTDD;
-    /** current amt of free space in txDataFifo in bytes */
-    uint32_t txFifoAvail;
     /** halt the tx state machine after next packet */
     bool txHalt;
     /** ptr to the next byte in the current fragment */
@@ -201,8 +198,6 @@ class NSGigE : public PciDev
     bool CRDD;
     /** num of bytes in the current packet being drained from rxDataFifo */
     uint32_t rxPktBytes;
-    /** number of bytes in the rxFifo */
-    uint32_t rxFifoCnt;
     /** halt the rx state machine after current packet */
     bool rxHalt;
     /** ptr to the next byte in current fragment */

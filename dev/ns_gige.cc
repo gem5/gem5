@@ -1060,7 +1060,6 @@ NSGigE::txReset()
     DPRINTF(Ethernet, "transmit reset\n");
 
     CTDD = false;
-    txFifoAvail = maxTxFifoSize;
     txEnable = false;;
     txFragPtr = 0;
     assert(txDescCnt == 0);
@@ -1076,7 +1075,6 @@ NSGigE::rxReset()
 
     CRDD = false;
     assert(rxPktBytes == 0);
-    rxFifoCnt = 0;
     rxEnable = false;
     rxFragPtr = 0;
     assert(rxDescCnt == 0);
@@ -1346,9 +1344,7 @@ NSGigE::rxKick()
 
             // Must clear the value before popping to decrement the
             // reference count
-            rxFifo.front() = NULL;
-            rxFifo.pop_front();
-            rxFifoCnt -= rxPacket->length;
+            rxFifo.pop();
         }
 
 
@@ -1536,7 +1532,7 @@ NSGigE::transmit()
     }
 
     DPRINTF(Ethernet, "Attempt Pkt Transmit: txFifo length=%d\n",
-            maxTxFifoSize - txFifoAvail);
+            txFifo.size());
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
         if (DTRACE(Ethernet)) {
@@ -1556,12 +1552,9 @@ NSGigE::transmit()
         txBytes += txFifo.front()->length;
         txPackets++;
 
-        txFifoAvail += txFifo.front()->length;
-
         DPRINTF(Ethernet, "Successful Xmit! now txFifoAvail is %d\n",
-                txFifoAvail);
-        txFifo.front() = NULL;
-        txFifo.pop_front();
+                txFifo.avail());
+        txFifo.pop();
 
         /*
          * normally do a writeback of the descriptor here, and ONLY
@@ -1829,7 +1822,7 @@ NSGigE::txKick()
                 // this is just because the receive can't handle a
                 // packet bigger want to make sure
                 assert(txPacket->length <= 1514);
-                txFifo.push_back(txPacket);
+                txFifo.push(txPacket);
 
                 /*
                  * this following section is not tqo spec, but
@@ -1875,7 +1868,7 @@ NSGigE::txKick()
             }
         } else {
             DPRINTF(EthernetSM, "this descriptor isn't done yet\n");
-            if (txFifoAvail) {
+            if (!txFifo.full()) {
                 txState = txFragRead;
 
                 /*
@@ -1884,7 +1877,7 @@ NSGigE::txKick()
                  * is not enough room in the fifo, just whatever room
                  * is left in the fifo
                  */
-                txXferLen = min<uint32_t>(txDescCnt, txFifoAvail);
+                txXferLen = min<uint32_t>(txDescCnt, txFifo.avail());
 
                 txDmaAddr = txFragPtr & 0x3fffffff;
                 txDmaData = txPacketBufPtr;
@@ -1910,7 +1903,6 @@ NSGigE::txKick()
         txPacketBufPtr += txXferLen;
         txFragPtr += txXferLen;
         txDescCnt -= txXferLen;
-        txFifoAvail -= txXferLen;
 
         txState = txFifoBlock;
         break;
@@ -2025,7 +2017,7 @@ NSGigE::recvPacket(PacketPtr packet)
     rxPackets++;
 
     DPRINTF(Ethernet, "Receiving packet from wire, rxFifoAvail=%d\n",
-            maxRxFifoSize - rxFifoCnt);
+            rxFifo.avail());
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
@@ -2040,15 +2032,14 @@ NSGigE::recvPacket(PacketPtr packet)
         return true;
     }
 
-    if ((rxFifoCnt + packet->length) >= maxRxFifoSize) {
+    if (rxFifo.avail() < packet->length) {
         DPRINTF(Ethernet,
                 "packet will not fit in receive buffer...packet dropped\n");
         devIntrPost(ISR_RXORN);
         return false;
     }
 
-    rxFifo.push_back(packet);
-    rxFifoCnt += packet->length;
+    rxFifo.push(packet);
     interface->recvDone();
 
     rxKick();
@@ -2119,19 +2110,8 @@ NSGigE::serialize(ostream &os)
     /*
      * Serialize the data Fifos
      */
-    int txNumPkts = txFifo.size();
-    SERIALIZE_SCALAR(txNumPkts);
-    int i = 0;
-    pktiter_t end = txFifo.end();
-    for (pktiter_t p = txFifo.begin(); p != end; ++p)
-        (*p)->serialize(csprintf("txFifo%d", i++), os);
-
-    int rxNumPkts = rxFifo.size();
-    SERIALIZE_SCALAR(rxNumPkts);
-    i = 0;
-    end = rxFifo.end();
-    for (pktiter_t p = rxFifo.begin(); p != end; ++p)
-        (*p)->serialize(csprintf("rxFifo%d", i++), os);
+    rxFifo.serialize("rxFifo", os);
+    txFifo.serialize("txFifo", os);
 
     /*
      * Serialize the various helper variables
@@ -2174,7 +2154,6 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(txState);
     SERIALIZE_SCALAR(txEnable);
     SERIALIZE_SCALAR(CTDD);
-    SERIALIZE_SCALAR(txFifoAvail);
     SERIALIZE_SCALAR(txFragPtr);
     SERIALIZE_SCALAR(txDescCnt);
     int txDmaState = this->txDmaState;
@@ -2188,7 +2167,6 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxEnable);
     SERIALIZE_SCALAR(CRDD);
     SERIALIZE_SCALAR(rxPktBytes);
-    SERIALIZE_SCALAR(rxFifoCnt);
     SERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState = this->rxDmaState;
     SERIALIZE_SCALAR(rxDmaState);
@@ -2270,22 +2248,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * unserialize the data fifos
      */
-    int txNumPkts;
-    UNSERIALIZE_SCALAR(txNumPkts);
-    int i;
-    for (i = 0; i < txNumPkts; ++i) {
-        PacketPtr p = new PacketData;
-        p->unserialize(csprintf("rxFifo%d", i), cp, section);
-        txFifo.push_back(p);
-    }
-
-    int rxNumPkts;
-    UNSERIALIZE_SCALAR(rxNumPkts);
-    for (i = 0; i < rxNumPkts; ++i) {
-        PacketPtr p = new PacketData;
-        p->unserialize(csprintf("rxFifo%d", i), cp, section);
-        rxFifo.push_back(p);
-    }
+    rxFifo.unserialize("rxFifo", cp, section);
+    txFifo.unserialize("txFifo", cp, section);
 
     /*
      * unserialize the various helper variables
@@ -2336,7 +2300,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     this->txState = (TxState) txState;
     UNSERIALIZE_SCALAR(txEnable);
     UNSERIALIZE_SCALAR(CTDD);
-    UNSERIALIZE_SCALAR(txFifoAvail);
     UNSERIALIZE_SCALAR(txFragPtr);
     UNSERIALIZE_SCALAR(txDescCnt);
     int txDmaState;
@@ -2352,7 +2315,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxEnable);
     UNSERIALIZE_SCALAR(CRDD);
     UNSERIALIZE_SCALAR(rxPktBytes);
-    UNSERIALIZE_SCALAR(rxFifoCnt);
     UNSERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState;
     UNSERIALIZE_SCALAR(rxDmaState);
