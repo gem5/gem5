@@ -115,9 +115,13 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
     Elf_Scn *section;
     GElf_Shdr shdr;
     GElf_Ehdr ehdr;
+    uint8_t *zeromem;
+    uint8_t *sectionData;
 
     Addr address;
     char *secname;
+
+
 
     /* check that header matches library version */
     assert(elf_version(EV_CURRENT) != EV_NONE);
@@ -152,6 +156,9 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
                     elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name), shdr.sh_addr,
                     shdr.sh_size, shdr.sh_offset, shdr.sh_flags, shdr.sh_flags &    SHF_ALLOC ? "ALLOC" : "");
             secname = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+
+            sectionData = fileData + shdr.sh_offset;
+
             if(secname)
             {
                 if (strcmp(secname, ".text")==0)
@@ -168,6 +175,13 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
                 {
                     bss.baseAddr = shdr.sh_addr;
                     bss.size = shdr.sh_size;
+
+                    /* If this is the .bss section it must be 0, so just
+                       to be extra causious, lets allocate some memory
+                       bzero it, and write that */
+                    zeromem = (uint8_t*)malloc(shdr.sh_size);
+                    memset(zeromem, 0, shdr.sh_size);
+                    sectionData = zeromem;
                 }
             }
             if(shdr.sh_size != 0)
@@ -175,11 +189,11 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
                 if (loadPhys)
                 {
                     address = shdr.sh_addr &= (ULL(1) << 40) - 1;
-                    mem->prot_write(address, fileData + shdr.sh_offset, shdr.sh_size);
+                    mem->prot_write(address, sectionData, shdr.sh_size);
                 }
                 else
                 {
-                    mem->prot_write(shdr.sh_addr, fileData + shdr.sh_offset, shdr.sh_size);
+                    mem->prot_write(shdr.sh_addr, sectionData, shdr.sh_size);
                 }
             }
 
@@ -188,6 +202,7 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
         ++secidx;
         section = elf_getscn(elf, secidx);
     }
+    free(zeromem);
 
     elf_end(elf);
 
@@ -239,7 +254,8 @@ ElfObject::loadGlobalSymbols(SymbolTable *symtab)
             for (ii = 0; ii < count; ++ii)
             {
                 gelf_getsym(data, ii, &sym);
-                if (GELF_ST_BIND(sym.st_info) & STB_GLOBAL)
+                if ((GELF_ST_BIND(sym.st_info) & STB_GLOBAL) &&
+                    ((GELF_ST_TYPE(sym.st_info) == STT_FUNC) || (GELF_ST_TYPE(sym.st_info) == STT_NOTYPE)))
                 {
                    symtab->insert(sym.st_value, elf_strptr(elf, shdr.sh_link, sym.st_name));
                 }
