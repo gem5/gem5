@@ -35,6 +35,7 @@
 #include "base/stats/events.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/mysql_run.hh"
+#include "base/str.hh"
 #endif
 
 #include "base/match.hh"
