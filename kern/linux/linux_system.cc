@@ -77,6 +77,9 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
         panic("could not load kernel symbols\n");
     debugSymbolTable = kernelSymtab;
 
+    if (!kernel->loadLocalSymbols(kernelSymtab))
+        panic("could not load kernel local symbols\n");
+
     if (!console->loadGlobalSymbols(consoleSymtab))
         panic("could not load console symbols\n");
 
@@ -271,6 +274,7 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 #endif //FS_MEASURE
 
     Addr addr = 0;
+
     if (kernelSymtab->findAddress("est_cycle_freq", addr)) {
         Addr paddr = vtophys(physmem, addr);
         uint8_t *est_cycle_frequency =
@@ -278,6 +282,16 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
         if (est_cycle_frequency)
             *(uint64_t *)est_cycle_frequency = ticksPerSecond;
+    }
+
+    if (kernelSymtab->findAddress("aic7xxx_no_reset", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        uint8_t *aic7xxx_no_reset =
+            physmem->dma_addr(paddr, sizeof(uint32_t));
+
+        if (aic7xxx_no_reset) {
+            *(uint32_t *)aic7xxx_no_reset = 1;
+        }
     }
 
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {

@@ -225,7 +225,7 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding)
             // loop through all the symbols, only loading global ones
             for (ii = 0; ii < count; ++ii) {
                 gelf_getsym(data, ii, &sym);
-                if (GELF_ST_BIND(sym.st_info) & binding) {
+                if (GELF_ST_BIND(sym.st_info) == binding) {
                    symtab->insert(sym.st_value,
                                   elf_strptr(elf, shdr.sh_link, sym.st_name));
                 }
