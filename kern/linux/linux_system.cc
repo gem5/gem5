@@ -51,6 +51,7 @@
 #include "dev/platform.hh"
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
+#include "sim/debug.hh"
 
 extern SymbolTable *debugSymbolTable;
 
@@ -187,6 +188,26 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 
     } else
         panic("could not find hwprb to set system type/variation\n");
+
+    /**
+     * EV5 only supports 127 ASNs so we are going to tell the kernel that the
+     * paritiuclar EV6 we have only supports 127 asns.
+     * @todo At some point we should change ev5.hh and the palcode to support
+     * 255 ASNs.
+     */
+    if (kernelSymtab->findAddress("dp264_mv", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        char *dp264_mv = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
+
+        if (dp264_mv) {
+            *(uint32_t*)(dp264_mv+0x18) = htoa((uint32_t)127);
+        } else
+            panic("could not translate dp264_mv addr to set the MAX_ASN to 127\n");
+
+    } else
+        panic("could not find dp264_mv to set the MAX_ASN to 127\n");
+
+
 
 #ifdef DEBUG
     if (kernelSymtab->findAddress("panic", addr))
