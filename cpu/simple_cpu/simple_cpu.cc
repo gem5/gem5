@@ -247,7 +247,7 @@ SimpleCPU::setStatus(Status new_status)
 
       case Idle:
         assert(old_status == Running);
-        idleFraction++;
+        notIdleFraction--;
         if (tickEvent.scheduled())
             tickEvent.squash();
         break;
@@ -256,8 +256,8 @@ SimpleCPU::setStatus(Status new_status)
         assert(old_status == Idle ||
                old_status == DcacheMissStall ||
                old_status == IcacheMissComplete);
-        if (old_status == Idle && curTick != 0)
-            idleFraction--;
+        if (old_status == Idle)
+            notIdleFraction++;
 
         if (tickEvent.squashed())
             tickEvent.reschedule(curTick + 1);
@@ -304,6 +304,7 @@ SimpleCPU::regStats()
         .prereq(dcacheStallCycles)
         ;
 
+    idleFraction = constant(1.0) - notIdleFraction;
     numInsts = Statistics::scalar(numInst) - Statistics::scalar(startNumInst);
     simInsts += numInsts;
 }
@@ -312,6 +313,7 @@ void
 SimpleCPU::resetStats()
 {
     startNumInst = numInst;
+    notIdleFraction = (_status != Idle);
 }
 
 void

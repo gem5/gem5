@@ -193,7 +193,8 @@ class SimpleCPU : public BaseCPU
     Counter startNumLoad;
 
     // number of idle cycles
-    Statistics::Average<> idleFraction;
+    Statistics::Average<> notIdleFraction;
+    Statistics::Formula idleFraction;
 
     // number of cycles stalled for I-cache misses
     Statistics::Scalar<> icacheStallCycles;
