@@ -1347,7 +1347,7 @@ class SimObject(ConfigNode, ParamType):
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = ['env', 'issequence',
+__all__ = ['env', 'issequence', 'panic',
            'ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Super', 'Enum',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
