@@ -62,6 +62,10 @@ struct Range
         invalidate();
     }
 
+    Range(T first, T second)
+        : start(first), end(second)
+    {}
+
     template <class U>
     Range(const Range<U> &r)
         : start(r.start), end(r.end)
@@ -100,11 +104,18 @@ struct Range
     }
 
     void invalidate() { start = 0; end = 0; }
-    bool size() const { return end - start; }
+    T size() const { return end - start; }
     bool valid() const { return start < end; }
 };
 
-template<class T>
+template <class T>
+inline Range<T>
+make_range(T start, T end)
+{
+    return Range<T>(start, end);
+}
+
+template <class T>
 inline std::ostream &
 operator<<(std::ostream &o, const Range<T> &r)
 {
@@ -124,7 +135,7 @@ operator<<(std::ostream &o, const Range<T> &r)
  * @param range2 is a range.
  * @return if range1 and range2 are identical.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator==(const Range<T> &range1, const Range<U> &range2)
 {
@@ -137,7 +148,7 @@ operator==(const Range<T> &range1, const Range<U> &range2)
  * @param range2 is a range.
  * @return if range1 and range2 are not identical.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator!=(const Range<T> &range1, const Range<U> &range2)
 {
@@ -150,7 +161,7 @@ operator!=(const Range<T> &range1, const Range<U> &range2)
  * @param range2 is a range.
  * @return if range1 is less than range2 and does not overlap range1.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator<(const Range<T> &range1, const Range<U> &range2)
 {
@@ -164,7 +175,7 @@ operator<(const Range<T> &range1, const Range<U> &range2)
  * @return if range1 is less than range2.  range1 may overlap range2,
  * but not extend beyond the end of range2.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator<=(const Range<T> &range1, const Range<U> &range2)
 {
@@ -177,7 +188,7 @@ operator<=(const Range<T> &range1, const Range<U> &range2)
  * @param range2 is a range.
  * @return if range1 is greater than range2 and does not overlap range2.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator>(const Range<T> &range1, const Range<U> &range2)
 {
@@ -191,7 +202,7 @@ operator>(const Range<T> &range1, const Range<U> &range2)
  * @return if range1 is greater than range2.  range1 may overlap range2,
  * but not extend beyond the beginning of range2.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator>=(const Range<T> &range1, const Range<U> &range2)
 {
@@ -209,7 +220,7 @@ operator>=(const Range<T> &range1, const Range<U> &range2)
  * @param range range compared against.
  * @return indicates that position pos is within the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator==(const T &pos, const Range<U> &range)
 {
@@ -222,7 +233,7 @@ operator==(const T &pos, const Range<U> &range)
  * @param range range compared against.
  * @return indicates that position pos is not within the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator!=(const T &pos, const Range<U> &range)
 {
@@ -235,7 +246,7 @@ operator!=(const T &pos, const Range<U> &range)
  * @param range range compared against.
  * @return indicates that position pos is below the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator<(const T &pos, const Range<U> &range)
 {
@@ -248,7 +259,7 @@ operator<(const T &pos, const Range<U> &range)
  * @param range range compared against.
  * @return indicates that position pos is below or in the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator<=(const T &pos, const Range<U> &range)
 {
@@ -261,7 +272,7 @@ operator<=(const T &pos, const Range<U> &range)
  * @param range range compared against.
  * @return indicates that position pos is above the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator>(const T &pos, const Range<U> &range)
 {
@@ -274,7 +285,7 @@ operator>(const T &pos, const Range<U> &range)
  * @param range range compared against.
  * @return indicates that position pos is above or in the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator>=(const T &pos, const Range<U> &range)
 {
@@ -292,7 +303,7 @@ operator>=(const T &pos, const Range<U> &range)
  * @param pos position compared to the range.
  * @return indicates that position pos is within the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator==(const Range<T> &range, const U &pos)
 {
@@ -305,7 +316,7 @@ operator==(const Range<T> &range, const U &pos)
  * @param pos position compared to the range.
  * @return indicates that position pos is not within the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator!=(const Range<T> &range, const U &pos)
 {
@@ -318,7 +329,7 @@ operator!=(const Range<T> &range, const U &pos)
  * @param pos position compared to the range.
  * @return indicates that position pos is above the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator<(const Range<T> &range, const U &pos)
 {
@@ -331,7 +342,7 @@ operator<(const Range<T> &range, const U &pos)
  * @param pos position compared to the range.
  * @return indicates that position pos is above or in the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator<=(const Range<T> &range, const U &pos)
 {
@@ -344,7 +355,7 @@ operator<=(const Range<T> &range, const U &pos)
  * @param pos position compared to the range.
  * 'range > pos' indicates that position pos is below the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator>(const Range<T> &range, const U &pos)
 {
@@ -357,7 +368,7 @@ operator>(const Range<T> &range, const U &pos)
  * @param pos position compared to the range.
  * 'range >= pos' indicates that position pos is below or in the range.
  */
-template<class T, class U>
+template <class T, class U>
 inline bool
 operator>=(const Range<T> &range, const U &pos)
 {
