@@ -160,7 +160,6 @@ Database::~Database()
 void
 Database::dump(ostream &stream)
 {
-
 #ifndef FS_MEASURE
     list_t::iterator i = printStats.begin();
     list_t::iterator end = printStats.end();
@@ -179,7 +178,7 @@ Database::dump(ostream &stream)
         ccprintf(stream, "PRINTING BINNED STATS\n");
         while (j != bins_end) {
             (*j)->activate();
-           map<const GenBin  *, std::string>::const_iterator iter;
+            map<const GenBin  *, std::string>::const_iterator iter;
             iter = bin_names.find(*j);
             if (iter == bin_names.end())
                 panic("a binned stat not found in names map!");
@@ -187,19 +186,19 @@ Database::dump(ostream &stream)
 
 #ifdef FS_MEASURE
             list_t::iterator i = printStats.begin();
-                    list_t::iterator end = printStats.end();
+            list_t::iterator end = printStats.end();
 #else
-           list_t::iterator i = binnedStats.begin();
-           list_t::iterator end = binnedStats.end();
+            list_t::iterator i = binnedStats.begin();
+            list_t::iterator end = binnedStats.end();
 #endif
-           while (i != end) {
-               Stat *stat = *i;
-               if (stat->dodisplay())
-                   stat->display(stream);
-               ++i;
-           }
-           ++j;
-           ccprintf(stream, "---------------------------------\n");
+            while (i != end) {
+                Stat *stat = *i;
+                if (stat->dodisplay())
+                    stat->display(stream);
+                ++i;
+            }
+            ++j;
+            ccprintf(stream, "---------------------------------\n");
         }
 #ifndef FS_MEASURE
         ccprintf(stream, "**************ALL STATS************\n");

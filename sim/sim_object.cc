@@ -73,16 +73,6 @@ SimObject::regFormulas()
 {
 }
 
-namespace {
-    class __SimObjectResetCB : public Callback
-    {
-      public:
-        __SimObjectResetCB() { Statistics::RegResetCallback(this); }
-        virtual void process() { SimObject::resetAllStats(); }
-    };
-    __SimObjectResetCB __theSimObjectResetCB;
-}
-
 void
 SimObject::resetStats()
 {
@@ -101,6 +91,15 @@ SimObject::printExtraOutput(ostream &os)
 //   call regStats() on all SimObjects and then regFormulas() on all
 //   SimObjects.
 //
+struct SimObjectResetCB : public Callback
+{
+    virtual void process() { SimObject::resetAllStats(); }
+};
+
+namespace {
+    static SimObjectResetCB StatResetCB;
+}
+
 void
 SimObject::regAllStats()
 {
@@ -122,7 +121,9 @@ SimObject::regAllStats()
         cprintf("registering formulas for %s\n", (*i)->name());
 #endif
         (*i)->regFormulas();
-   }
+    }
+
+    Statistics::RegResetCallback(&StatResetCB);
 }
 
 //

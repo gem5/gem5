@@ -159,7 +159,9 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
     memReq->data = new uint8_t[64];
 
     numInst = 0;
+    startNumInst = 0;
     numLoad = 0;
+    startNumLoad = 0;
     lastIcacheStall = 0;
     lastDcacheStall = 0;
 
@@ -215,6 +217,8 @@ SimpleCPU::execCtxStatusChg(int thread_num) {
 void
 SimpleCPU::regStats()
 {
+    using namespace Statistics;
+
     BaseCPU::regStats();
 
     numInsts
@@ -244,8 +248,14 @@ SimpleCPU::regStats()
         .prereq(dcacheStallCycles)
         ;
 
-    numInsts = Statistics::scalar(numInst);
+    numInsts = Statistics::scalar(numInst) - Statistics::scalar(startNumInst);
     simInsts += numInsts;
+}
+
+void
+SimpleCPU::resetStats()
+{
+    startNumInst = numInst;
 }
 
 void

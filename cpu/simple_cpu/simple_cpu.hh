@@ -231,10 +231,12 @@ class SimpleCPU : public BaseCPU
     }
 
     // statistics
-    void regStats();
+    virtual void regStats();
+    virtual void resetStats();
 
     // number of simulated instructions
     Counter numInst;
+    Counter startNumInst;
     Statistics::Formula numInsts;
 
     // number of simulated memory references
@@ -242,6 +244,7 @@ class SimpleCPU : public BaseCPU
 
     // number of simulated loads
     Counter numLoad;
+    Counter startNumLoad;
 
     // number of idle cycles
     Statistics::Average<> idleFraction;
