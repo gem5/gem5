@@ -208,6 +208,13 @@ class IniFile
     bool findAppend(const std::string &section, const std::string &entry,
                     std::string &value) const;
 
+    /// Determine whether the named section exists in the .ini file.
+    /// Note that the 'Section' class is (intentionally) not public,
+    /// so all clients can do is get a bool that says whether there
+    /// are any values in that section or not.
+    /// @return True if the section exists.
+    bool sectionExists(const std::string &section) const;
+
     /// Print unreferenced entries in object.  Iteratively calls
     /// printUnreferend() on all the constituent sections.
     bool printUnreferenced();

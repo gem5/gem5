@@ -494,3 +494,10 @@ Checkpoint::findObj(const std::string &section, const std::string &entry,
 
     return false;
 }
+
+
+bool
+Checkpoint::sectionExists(const std::string &section)
+{
+    return db->sectionExists(section);
+}

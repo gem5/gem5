@@ -244,6 +244,8 @@ class Checkpoint
 
     bool findObj(const std::string &section, const std::string &entry,
                  Serializeable *&value);
+
+    bool sectionExists(const std::string &section);
 };
 
 
