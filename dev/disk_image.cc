@@ -427,7 +427,7 @@ CowDiskImage::serialize(ostream &os)
 {
     string cowFilename = name() + ".cow";
     SERIALIZE_SCALAR(cowFilename);
-    save(cowFilename);
+    save(Checkpoint::dir() + "/" + cowFilename);
 }
 
 void
