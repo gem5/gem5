@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "sim/configfile.hh"
+#include "sim/startup.hh"
 
 // forward decls
 class BaseParam;
@@ -44,7 +45,7 @@ class SimObject;
 // SimObjectBuilder (which derives from ParamContext), but abstracted
 // here to support more global simulator control parameters as well.
 //
-class ParamContext
+class ParamContext : protected StartupCallback
 {
   private:
 

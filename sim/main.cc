@@ -51,7 +51,6 @@
 #include "sim/host.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
-#include "sim/sim_init.hh"
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
@@ -350,6 +349,9 @@ main(int argc, char **argv)
     configHierarchy.build();
     configHierarchy.createSimObjects();
 
+    // Do a second pass to finish initializing the sim objects
+    SimObject::initAll();
+
     // Restore checkpointed state, if any.
     configHierarchy.unserializeSimObjects();
 
@@ -382,9 +384,8 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    SimInit();
     warn("Entering event queue.  Starting simulation...\n");
-
+    SimStartup();
     while (!mainEventQueue.empty()) {
         assert(curTick <= mainEventQueue.nextTick() &&
                "event scheduled in the past");

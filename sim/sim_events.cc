@@ -34,7 +34,7 @@
 #include "sim/param.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
-#include "sim/sim_init.hh"
+#include "sim/startup.hh"
 #include "sim/stats.hh"
 
 using namespace std;
@@ -210,12 +210,11 @@ ProgressEvent::description()
 
 // Parameter space for execution address tracing options.  Derive
 // from ParamContext so we can override checkParams() function.
-class ProgressParamContext : public ParamContext
+struct ProgressParamContext : public ParamContext
 {
-  public:
     ProgressParamContext(const string &_iniSection)
         : ParamContext(_iniSection) {}
-    void checkParams();
+    void startup();
 };
 
 ProgressParamContext progessMessageParams("progress");
@@ -223,24 +222,9 @@ ProgressParamContext progessMessageParams("progress");
 Param<Tick> progress_interval(&progessMessageParams, "cycle",
                                 "cycle interval for progress messages");
 
-namespace {
-    struct SetupProgress : public Callback
-    {
-        Tick interval;
-        SetupProgress(Tick tick) : interval(tick) {}
-
-        virtual void process()
-        {
-            new ProgressEvent(&mainEventQueue, interval);
-            delete this;
-        }
-    };
-}
-
-/* check execute options */
 void
-ProgressParamContext::checkParams()
+ProgressParamContext::startup()
 {
     if (progress_interval.isValid())
-        registerInitCallback(new SetupProgress(progress_interval));
+        new ProgressEvent(&mainEventQueue, progress_interval);
 }

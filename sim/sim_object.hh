@@ -39,13 +39,14 @@
 #include <iostream>
 
 #include "sim/serialize.hh"
+#include "sim/startup.hh"
 
 /*
  * Abstract superclass for simulation objects.  Represents things that
  * correspond to physical components and can be specified via the
  * config file (CPUs, caches, etc.).
  */
-class SimObject : public Serializable
+class SimObject : public Serializable, protected StartupCallback
 {
   protected:
     std::string objName;
@@ -65,7 +66,8 @@ class SimObject : public Serializable
 
     virtual const std::string name() const { return objName; }
 
-    // initialization pass of all objects.  Gets invoked by SimInit()
+    // initialization pass of all objects.
+    // Gets invoked after construction, before unserialize.
     virtual void init();
     static void initAll();
 

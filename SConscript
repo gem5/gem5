@@ -187,8 +187,8 @@ base_sources = Split('''
 	sim/serialize.cc
 	sim/sim_events.cc
 	sim/sim_exit.cc
-	sim/sim_init.cc
 	sim/sim_object.cc
+	sim/startup.cc
 	sim/stat_context.cc
 	sim/stat_control.cc
 	sim/trace_context.cc
