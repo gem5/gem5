@@ -46,7 +46,7 @@ const Addr PARAM_ADDR =  ULL(0xfffffc000030a000);
 class ExecContext;
 class ElfObject;
 class SymbolTable;
-
+class DebugPrintkEvent;
 class BreakPCEvent;
 class LinuxSkipDelayLoopEvent;
 class SkipFuncEvent;
@@ -86,6 +86,9 @@ class LinuxSystem : public System
 
     /** PC based event to skip the ide_delay_50ms() call */
     SkipFuncEvent *skipIdeDelay50msEvent;
+
+    /** PC based event to skip the dprink() call and emulate its functionality */
+    DebugPrintkEvent *debugPrintkEvent;
 
     /** Skip calculate_delay_loop() rather than waiting for this to be
      * calculated

@@ -98,7 +98,7 @@ vtophys(ExecContext *xc, Addr vaddr)
     Addr paddr = 0;
     //@todo Andrew couldn't remember why he commented some of this code
     //so I put it back in. Perhaps something to do with gdb debugging?
-    if (PC_PAL(vaddr)) {
+    if (PC_PAL(vaddr) && (vaddr < PAL_MAX)) {
         paddr = vaddr & ~ULL(1);
     } else {
         if (vaddr >= ALPHA_K0SEG_BASE && vaddr <= ALPHA_K0SEG_END) {

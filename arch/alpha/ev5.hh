@@ -123,5 +123,6 @@
 
 
 #define PAL_BASE 0x4000
+#define PAL_MAX  0x10000
 
 #endif //__EV5_H__
