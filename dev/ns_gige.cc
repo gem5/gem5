@@ -1597,8 +1597,10 @@ NSGigE::rxKick()
                     DPRINTF(Ethernet, "ID is %d\n", ip->id());
                     TcpPtr tcp(ip);
                     if (tcp) {
-                        DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
-                                tcp->sport(), tcp->dport());
+                        DPRINTF(Ethernet,
+                                "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                                tcp->sport(), tcp->dport(), tcp->seq(),
+                                tcp->ack());
                     }
                 }
             }
@@ -1803,14 +1805,15 @@ NSGigE::transmit()
                 DPRINTF(Ethernet, "ID is %d\n", ip->id());
                 TcpPtr tcp(ip);
                 if (tcp) {
-                    DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
-                            tcp->sport(), tcp->dport());
+                    DPRINTF(Ethernet,
+                            "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                            tcp->sport(), tcp->dport(), tcp->seq(), tcp->ack());
                 }
             }
         }
 #endif
 
-        DDUMP(Ethernet, txFifo.front()->data, txFifo.front()->length);
+        DDUMP(EthernetData, txFifo.front()->data, txFifo.front()->length);
         txBytes += txFifo.front()->length;
         txPackets++;
 
@@ -2296,8 +2299,18 @@ NSGigE::recvPacket(PacketPtr packet)
     }
 
     if (rxFifo.avail() < packet->length) {
-        DPRINTF(Ethernet,
-                "packet will not fit in receive buffer...packet dropped\n");
+#if TRACING_ON
+        IpPtr ip(packet);
+        TcpPtr tcp(ip);
+        if (ip) {
+            DPRINTF(Ethernet,
+                    "packet won't fit in receive buffer...pkt ID %d dropped\n",
+                    ip->id());
+            if (tcp) {
+                DPRINTF(Ethernet, "Seq=%d\n", tcp->seq());
+            }
+        }
+#endif
         droppedPackets++;
         devIntrPost(ISR_RXORN);
         return false;
