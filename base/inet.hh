@@ -81,6 +81,19 @@ struct EthAddr : protected eth_addr
     bool multicast() const { return data[0] == 0x01; }
     bool broadcast() const { return data[0] == 0xff; }
     std::string string() const;
+
+    operator uint64_t() const
+    {
+        uint64_t reg = 0;
+        reg |= ((uint64_t)data[0]) << 40;
+        reg |= ((uint64_t)data[1]) << 32;
+        reg |= ((uint64_t)data[2]) << 24;
+        reg |= ((uint64_t)data[3]) << 16;
+        reg |= ((uint64_t)data[4]) << 8;
+        reg |= ((uint64_t)data[5]) << 0;
+        return reg;
+    }
+
 };
 
 std::ostream &operator<<(std::ostream &stream, const EthAddr &ea);
