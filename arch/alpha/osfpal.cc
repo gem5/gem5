@@ -224,8 +224,8 @@ namespace {
         0,		// 0xbc
         0,		// 0xbd
         "nphalt",	// 0xbe
+        "copypal",	// 0xbf
 #if 0
-        0,		// 0xbf
         0,		// 0xc0
         0,		// 0xc1
         0,		// 0xc2
