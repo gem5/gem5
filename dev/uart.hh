@@ -62,14 +62,16 @@ class Uart : public PioDevice
     {
         protected:
             Uart *uart;
+            int intrBit;
         public:
-            IntrEvent(Uart *u);
+            IntrEvent(Uart *u, int bit);
             virtual void process();
             virtual const char *description();
             void scheduleIntr();
     };
 
-    IntrEvent intrEvent;
+    IntrEvent txIntrEvent;
+    IntrEvent rxIntrEvent;
     Platform *platform;
 
   public:

@@ -48,10 +48,11 @@
 
 using namespace std;
 
-Uart::IntrEvent::IntrEvent(Uart *u)
+Uart::IntrEvent::IntrEvent(Uart *u, int bit)
     : Event(&mainEventQueue), uart(u)
 {
     DPRINTF(Uart, "UART Interrupt Event Initilizing\n");
+    intrBit = bit;
 }
 
 const char *
@@ -63,10 +64,10 @@ Uart::IntrEvent::description()
 void
 Uart::IntrEvent::process()
 {
-    if (UART_IER_THRI & uart->IER) {
+    if (intrBit & uart->IER) {
        DPRINTF(Uart, "UART InterEvent, interrupting\n");
        uart->platform->postConsoleInt();
-       uart->status |= TX_INT;
+       uart->status |= intrBit;
     }
     else
        DPRINTF(Uart, "UART InterEvent, not interrupting\n");
@@ -76,18 +77,20 @@ Uart::IntrEvent::process()
 void
 Uart::IntrEvent::scheduleIntr()
 {
-    DPRINTF(Uart, "Scheduling IER interrupt\n");
+    DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
+            curTick + (ticksPerSecond/2000) * 350);
     if (!scheduled())
         /* @todo Make this cleaner, will be much easier with
          *       nanosecond time everywhere. Hint hint  Nate. */
-        schedule(curTick + (ticksPerSecond/2000) * 350);
+        schedule(curTick + (ticksPerSecond/2000000000) * 450);
     else
-        reschedule(curTick + (ticksPerSecond/2000) * 350);
+        reschedule(curTick + (ticksPerSecond/2000000000) * 450);
 }
 
 Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
                          Addr s, HierParams *hier, Bus *bus, Platform *p)
-    : PioDevice(name), addr(a), size(s), cons(c), intrEvent(this), platform(p)
+    : PioDevice(name), addr(a), size(s), cons(c), txIntrEvent(this, TX_INT),
+      rxIntrEvent(this, RX_INT), platform(p)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
 
@@ -179,7 +182,6 @@ Uart::read(MemReqPtr &req, uint8_t *data)
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // read byte
-                //assert(cons->dataAvailable());
                 if (cons->dataAvailable())
                     cons->in(*data);
                 else {
@@ -187,14 +189,11 @@ Uart::read(MemReqPtr &req, uint8_t *data)
                     // A limited amount of these are ok.
                     DPRINTF(Uart, "empty read of RX register\n");
                 }
+                status &= ~RX_INT;
+                platform->clearConsoleInt();
 
-                if (cons->dataAvailable())
-                    platform->postConsoleInt();
-                else
-                {
-                    status &= ~RX_INT;
-                    platform->clearConsoleInt();
-                }
+                if (cons->dataAvailable() && (IER & UART_IER_RDI))
+                    rxIntrEvent.scheduleIntr();
             } else { // dll divisor latch
                ;
             }
@@ -207,10 +206,11 @@ Uart::read(MemReqPtr &req, uint8_t *data)
             }
             break;
         case 0x2: // Intr Identification Register (IIR)
+            DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
             if (status)
-                *(uint8_t*)data = 1;
-            else
                 *(uint8_t*)data = 0;
+            else
+                *(uint8_t*)data = 1;
             break;
         case 0x3: // Line Control Register (LCR)
             *(uint8_t*)data = LCR;
@@ -290,7 +290,7 @@ Uart::write(MemReqPtr &req, const uint8_t *data)
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)
-                    intrEvent.scheduleIntr();
+                    txIntrEvent.scheduleIntr();
             } else { // dll divisor latch
                ;
             }
@@ -298,19 +298,32 @@ Uart::write(MemReqPtr &req, const uint8_t *data)
         case 0x1:
             if (!(LCR & 0x80)) { // Intr Enable Register(IER)
                 IER = *(uint8_t*)data;
-                if ((UART_IER_THRI & IER) || ((UART_IER_RDI & IER) && cons->dataAvailable()))
-                    platform->postConsoleInt();
+                if (UART_IER_THRI & IER)
+                {
+                    DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
+                    txIntrEvent.scheduleIntr();
+                }
                 else
                 {
-                    platform->clearConsoleInt();
-                    if (intrEvent.scheduled())
-                        intrEvent.deschedule();
-
-                }
-                if (!(UART_IER_THRI & IER))
+                    DPRINTF(Uart, "IER: IER_THRI cleared, descheduling TX intrrupt\n");
+                    if (txIntrEvent.scheduled())
+                        txIntrEvent.deschedule();
+                    if (status & TX_INT)
+                        platform->clearConsoleInt();
                     status &= ~TX_INT;
-                if (!((UART_IER_RDI & IER) && cons->dataAvailable()))
+                }
+
+                if ((UART_IER_RDI & IER) && cons->dataAvailable()) {
+                    DPRINTF(Uart, "IER: IER_RDI set, scheduling RX intrrupt\n");
+                    rxIntrEvent.scheduleIntr();
+                } else {
+                    DPRINTF(Uart, "IER: IER_RDI cleared, descheduling RX intrrupt\n");
+                    if (rxIntrEvent.scheduled())
+                        rxIntrEvent.deschedule();
+                    if (status & RX_INT)
+                        platform->clearConsoleInt();
                     status &= ~RX_INT;
+                }
              } else { // DLM divisor latch MSB
                 ;
             }
@@ -372,12 +385,18 @@ Uart::serialize(ostream &os)
     SERIALIZE_SCALAR(DLAB);
     SERIALIZE_SCALAR(LCR);
     SERIALIZE_SCALAR(MCR);
-    Tick intrwhen;
-    if (intrEvent.scheduled())
-        intrwhen = intrEvent.when();
+    Tick rxintrwhen;
+    if (rxIntrEvent.scheduled())
+        rxintrwhen = rxIntrEvent.when();
     else
-        intrwhen = 0;
-    SERIALIZE_SCALAR(intrwhen);
+        rxintrwhen = 0;
+    Tick txintrwhen;
+    if (txIntrEvent.scheduled())
+        txintrwhen = txIntrEvent.when();
+    else
+        rxintrwhen = 0;
+     SERIALIZE_SCALAR(rxintrwhen);
+     SERIALIZE_SCALAR(txintrwhen);
 #endif
 }
 
@@ -393,10 +412,14 @@ Uart::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(DLAB);
     UNSERIALIZE_SCALAR(LCR);
     UNSERIALIZE_SCALAR(MCR);
-    Tick intrwhen;
-    UNSERIALIZE_SCALAR(intrwhen);
-    if (intrwhen != 0)
-        intrEvent.schedule(intrwhen);
+    Tick rxintrwhen;
+    Tick txintrwhen;
+    UNSERIALIZE_SCALAR(rxintrwhen);
+    UNSERIALIZE_SCALAR(txintrwhen);
+    if (rxintrwhen != 0)
+        rxIntrEvent.schedule(rxintrwhen);
+    if (txintrwhen != 0)
+        txIntrEvent.schedule(txintrwhen);
 #endif
 
 }
