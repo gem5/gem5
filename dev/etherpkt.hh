@@ -35,6 +35,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <assert.h>
 
 #include "sim/host.hh"
 #include "base/refcnt.hh"

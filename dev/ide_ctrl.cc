@@ -653,6 +653,17 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(io_enabled);
     UNSERIALIZE_SCALAR(bm_enabled);
     UNSERIALIZE_ARRAY(cmd_in_progress, 4);
+    if (pioInterface) {
+        pioInterface->addAddrRange(pri_cmd_addr, pri_cmd_addr +
+                                   pri_cmd_size - 1);
+        pioInterface->addAddrRange(pri_ctrl_addr, pri_ctrl_addr +
+                                   pri_ctrl_size - 1);
+        pioInterface->addAddrRange(sec_cmd_addr, sec_cmd_addr +
+                                   sec_cmd_size - 1);
+        pioInterface->addAddrRange(sec_ctrl_addr, sec_ctrl_addr +
+                                   sec_ctrl_size - 1);
+        pioInterface->addAddrRange(bmi_addr, bmi_addr + bmi_size - 1);
+   }
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
