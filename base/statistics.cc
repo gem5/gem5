@@ -592,13 +592,13 @@ PrintOne(ostream &stream, result_t value,
 
 #ifdef STAT_DISPLAY_COMPAT
     if (flags & __substat) {
-        ccprintf(stream, "%32s%12s%10s%10s", name,
+        ccprintf(stream, "%32s %12s %10s %10s", name,
                  ValueToString(value, precision),
                  pdfstr, cdfstr);
     } else
 #endif
     {
-        ccprintf(stream, "%-40s%12s%10s%10s", name,
+        ccprintf(stream, "%-40s %12s %10s %10s", name,
                  ValueToString(value, precision), pdfstr, cdfstr);
     }
 
