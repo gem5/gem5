@@ -61,14 +61,29 @@ namespace Stats {
 //
 // SimObject constructor: used to maintain static simObjectList
 //
-SimObject::SimObject(const string &_name)
-    : objName(_name)
+SimObject::SimObject(Params *p)
+    : _params(p)
 {
 #ifdef DEBUG
     doDebugBreak = false;
 #endif
 
-    doRecordEvent = !Stats::event_ignore.match(_name);
+    doRecordEvent = !Stats::event_ignore.match(name());
+    simObjectList.push_back(this);
+}
+
+//
+// SimObject constructor: used to maintain static simObjectList
+//
+SimObject::SimObject(const string &_name)
+    : _params(new Params)
+{
+    _params->name = _name;
+#ifdef DEBUG
+    doDebugBreak = false;
+#endif
+
+    doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
 }
 
