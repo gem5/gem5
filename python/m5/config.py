@@ -1145,7 +1145,7 @@ class Tick(CheckedInt):     cppname = 'Tick';     size = 64; unsigned = True
 class TcpPort(CheckedInt):  cppname = 'uint16_t'; size = 16; unsigned = True
 class UdpPort(CheckedInt):  cppname = 'uint16_t'; size = 16; unsigned = True
 
-class Percent(CheckedInt): cppname = 'int'; min = 0; max = 100
+class Percent(CheckedInt):  cppname = 'int'; min = 0; max = 100
 
 class MemorySize(CheckedInt):
     cppname = 'uint64_t'
