@@ -41,7 +41,6 @@
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"
-#include "dev/tsunami_cchip.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"
@@ -92,64 +91,62 @@ using namespace Net;
 //
 // NSGigE PCI Device
 //
-NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
-               PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
-               MemoryController *mmu, HierParams *hier, Bus *header_bus,
-               Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
-               bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
-               Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
-               PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-               uint32_t func, bool rx_filter, EthAddr eaddr,
-               uint32_t tx_fifo_size, uint32_t rx_fifo_size)
-    : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), ioEnable(false),
-      maxTxFifoSize(tx_fifo_size), maxRxFifoSize(rx_fifo_size),
+NSGigE::NSGigE(Params *p)
+    : PciDev(p), ioEnable(false),
+      txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), txState(txIdle), txEnable(false),
-      CTDD(false), txFifoAvail(tx_fifo_size),
+      CTDD(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
-      rxEnable(false), CRDD(false), rxPktBytes(0), rxFifoCnt(0),
+      rxEnable(false), CRDD(false), rxPktBytes(0),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
       rxDmaReadEvent(this), rxDmaWriteEvent(this),
       txDmaReadEvent(this), txDmaWriteEvent(this),
-      dmaDescFree(dma_desc_free), dmaDataFree(dma_data_free),
-      txDelay(tx_delay), rxDelay(rx_delay), rxKickTick(0), txKickTick(0),
-      txEvent(this), rxFilterEnable(rx_filter), acceptBroadcast(false),
+      dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
+      txDelay(p->tx_delay), rxDelay(p->rx_delay),
+      rxKickTick(0), txKickTick(0),
+      txEvent(this), rxFilterEnable(p->rx_filter), acceptBroadcast(false),
       acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false),
-      physmem(pmem), intctrl(i), intrTick(0), cpuPendingIntr(false),
+      physmem(p->pmem), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
-    if (header_bus) {
-        pioInterface = newPioInterface(name, hier, header_bus, this,
+    if (p->header_bus) {
+        pioInterface = newPioInterface(name(), p->hier,
+                                       p->header_bus, this,
                                        &NSGigE::cacheAccess);
 
-        pioLatency = pio_latency * header_bus->clockRatio;
+        pioLatency = p->pio_latency * p->header_bus->clockRatio;
 
-        if (payload_bus)
-            dmaInterface = new DMAInterface<Bus>(name + ".dma",
-                                                 header_bus, payload_bus, 1);
+        if (p->payload_bus)
+            dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                                 p->header_bus,
+                                                 p->payload_bus, 1);
         else
-            dmaInterface = new DMAInterface<Bus>(name + ".dma",
-                                                 header_bus, header_bus, 1);
-    } else if (payload_bus) {
-        pioInterface = newPioInterface(name, hier, payload_bus, this,
+            dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                                 p->header_bus,
+                                                 p->header_bus, 1);
+    } else if (p->payload_bus) {
+        pioInterface = newPioInterface(name(), p->hier,
+                                       p->payload_bus, this,
                                        &NSGigE::cacheAccess);
 
-        pioLatency = pio_latency * payload_bus->clockRatio;
+        pioLatency = p->pio_latency * p->payload_bus->clockRatio;
 
-        dmaInterface = new DMAInterface<Bus>(name + ".dma", payload_bus,
-                                         payload_bus, 1);
+        dmaInterface = new DMAInterface<Bus>(name() + ".dma",
+                                             p->payload_bus,
+                                             p->payload_bus, 1);
     }
 
 
-    intrDelay = US2Ticks(intr_delay);
-    dmaReadDelay = dma_read_delay;
-    dmaWriteDelay = dma_write_delay;
-    dmaReadFactor = dma_read_factor;
-    dmaWriteFactor = dma_write_factor;
+    intrDelay = US2Ticks(p->intr_delay);
+    dmaReadDelay = p->dma_read_delay;
+    dmaWriteDelay = p->dma_write_delay;
+    dmaReadFactor = p->dma_read_factor;
+    dmaWriteFactor = p->dma_write_factor;
 
     regsReset();
-    memcpy(&rom.perfectMatch, eaddr.bytes(), ETH_ADDR_LEN);
+    memcpy(&rom.perfectMatch, p->eaddr.bytes(), ETH_ADDR_LEN);
 }
 
 NSGigE::~NSGigE()
@@ -1028,8 +1025,8 @@ NSGigE::cpuInterrupt()
         // Send interrupt
         cpuPendingIntr = true;
 
-        DPRINTF(EthernetIntr, "posting cchip interrupt\n");
-        tsunami->postPciInt(configData->config.hdr.pci0.interruptLine);
+        DPRINTF(EthernetIntr, "posting interrupt\n");
+        intrPost();
     }
 }
 
@@ -1048,8 +1045,8 @@ NSGigE::cpuIntrClear()
 
     cpuPendingIntr = false;
 
-    DPRINTF(EthernetIntr, "clearing cchip interrupt\n");
-    tsunami->clearPciInt(configData->config.hdr.pci0.interruptLine);
+    DPRINTF(EthernetIntr, "clearing interrupt\n");
+    intrClear();
 }
 
 bool
@@ -2450,7 +2447,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
-    SimObjectParam<IntrControl *> intr_ctrl;
     Param<Tick> intr_delay;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PhysicalMemory *> physmem;
@@ -2468,7 +2464,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<Tick> dma_write_factor;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
-    SimObjectParam<Tsunami *> tsunami;
+    SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
@@ -2481,7 +2477,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
     INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
-    INIT_PARAM(intr_ctrl, "Interrupt Controller"),
     INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
@@ -2500,7 +2495,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(tsunami, "Tsunami"),
+    INIT_PARAM(platform, "Platform"),
     INIT_PARAM(pci_bus, "PCI bus"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
@@ -2512,14 +2507,36 @@ END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
 CREATE_SIM_OBJECT(NSGigE)
 {
-    return new NSGigE(getInstanceName(), intr_ctrl, intr_delay,
-                      physmem, tx_delay, rx_delay, mmu, hier, header_bus,
-                      payload_bus, pio_latency, dma_desc_free, dma_data_free,
-                      dma_read_delay, dma_write_delay, dma_read_factor,
-                      dma_write_factor, configspace, configdata,
-                      tsunami, pci_bus, pci_dev, pci_func, rx_filter,
-                      EthAddr((string)hardware_address),
-                      tx_fifo_size, rx_fifo_size);
+    NSGigE::Params *params = new NSGigE::Params;
+
+    params->name = getInstanceName();
+    params->mmu = mmu;
+    params->configSpace = configspace;
+    params->configData = configdata;
+    params->plat = platform;
+    params->busNum = pci_bus;
+    params->deviceNum = pci_dev;
+    params->functionNum = pci_func;
+
+    params->intr_delay = intr_delay;
+    params->pmem = physmem;
+    params->tx_delay = tx_delay;
+    params->rx_delay = rx_delay;
+    params->hier = hier;
+    params->header_bus = header_bus;
+    params->payload_bus = payload_bus;
+    params->pio_latency = pio_latency;
+    params->dma_desc_free = dma_desc_free;
+    params->dma_data_free = dma_data_free;
+    params->dma_read_delay = dma_read_delay;
+    params->dma_write_delay = dma_write_delay;
+    params->dma_read_factor = dma_read_factor;
+    params->dma_write_factor = dma_write_factor;
+    params->rx_filter = rx_filter;
+    params->eaddr = hardware_address;
+    params->tx_fifo_size = tx_fifo_size;
+    params->rx_fifo_size = rx_fifo_size;
+    return new NSGigE(params);
 }
 
 REGISTER_SIM_OBJECT("NSGigE", NSGigE)

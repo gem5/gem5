@@ -32,5 +32,23 @@
 
 using namespace std;
 
+void
+Platform::postPciInt(int line)
+{
+   panic("No PCI interrupt support in platform.");
+}
+
+void
+Platform::clearPciInt(int line)
+{
+   panic("No PCI interrupt support in platform.");
+}
+
+Addr
+Platform::pciToDma(Addr pciAddr) const
+{
+   panic("No PCI dma support in platform.");
+}
+
 DEFINE_SIM_OBJECT_CLASS_NAME("Platform", Platform)
 

@@ -41,7 +41,6 @@
 #include "dev/io_device.hh"
 #include "dev/ns_gige_reg.h"
 #include "dev/pcidev.hh"
-#include "dev/tsunami.hh"
 #include "mem/bus/bus.hh"
 #include "sim/eventq.hh"
 
@@ -137,10 +136,6 @@ class NSGigE : public PciDev
         dmaReadWaiting,
         dmaWriteWaiting
     };
-
-  private:
-    /** pointer to the chipset */
-    Tsunami *tsunami;
 
   private:
     Addr addr;
@@ -330,16 +325,31 @@ class NSGigE : public PciDev
     NSGigEInt *interface;
 
   public:
-    NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
-           PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
-           MemoryController *mmu, HierParams *hier, Bus *header_bus,
-           Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
-           bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
-           Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
-           PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-           uint32_t func, bool rx_filter, Net::EthAddr eaddr,
-           uint32_t tx_fifo_size, uint32_t rx_fifo_size);
+    struct Params : public PciDev::Params
+    {
+        PhysicalMemory *pmem;
+        HierParams *hier;
+        Bus *header_bus;
+        Bus *payload_bus;
+        Tick intr_delay;
+        Tick tx_delay;
+        Tick rx_delay;
+        Tick pio_latency;
+        bool dma_desc_free;
+        bool dma_data_free;
+        Tick dma_read_delay;
+        Tick dma_write_delay;
+        Tick dma_read_factor;
+        Tick dma_write_factor;
+        bool rx_filter;
+        Net::EthAddr eaddr;
+        uint32_t tx_fifo_size;
+        uint32_t rx_fifo_size;
+    };
+
+    NSGigE(Params *params);
     ~NSGigE();
+    const Params *params() const { return (const Params *)_params; }
 
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);

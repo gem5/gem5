@@ -177,7 +177,7 @@ Addr
 IdeDisk::pciToDma(Addr pciAddr)
 {
     if (ctrl)
-        return ctrl->tsunami->pchip->translatePciToDma(pciAddr);
+        return ctrl->plat->pciToDma(pciAddr);
     else
         panic("Access to unset controller!\n");
 }

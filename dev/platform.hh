@@ -35,6 +35,7 @@
 #define __PLATFORM_HH_
 
 #include "sim/sim_object.hh"
+#include "targetarch/isa_traits.hh"
 
 class PciConfigAll;
 class IntrControl;
@@ -65,8 +66,9 @@ class Platform : public SimObject
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
     virtual Tick intrFrequency() = 0;
-    virtual void postPciInt(int line) = 0;
-    virtual void clearPciInt(int line) = 0;
+    virtual void postPciInt(int line);
+    virtual void clearPciInt(int line);
+    virtual Addr pciToDma(Addr pciAddr) const;
 };
 
 #endif // __PLATFORM_HH_

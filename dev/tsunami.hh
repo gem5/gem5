@@ -118,6 +118,8 @@ class Tsunami : public Platform
      */
     virtual void clearPciInt(int line);
 
+    virtual Addr pciToDma(Addr pciAddr) const;
+
   /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
