@@ -33,10 +33,12 @@
 #include <deque>
 #include <string>
 #include <vector>
+#include <bitset>
 
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
+#include "dev/pcireg.h"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
@@ -63,6 +65,33 @@ PciConfigAll::PciConfigAll(const string &name, Addr a, MemoryController *mmu,
     for(int x=0; x < MAX_PCI_DEV; x++)
         for(int y=0; y < MAX_PCI_FUNC; y++)
           devices[x][y] = NULL;
+}
+
+// If two interrupts share the same line largely bad things will happen.
+// Since we don't track how many times an interrupt was set and correspondingly
+// cleared two devices on the same interrupt line and assert and deassert each
+// others interrupt "line". Interrupts will not work correctly.
+void
+PciConfigAll::startup()
+{
+    bitset<256> intLines;
+    PciDev *tempDev;
+    uint8_t intline;
+
+    for (int x = 0; x < MAX_PCI_DEV; x++) {
+        for (int y = 0; y < MAX_PCI_FUNC; y++) {
+           if (devices[x][y] != NULL) {
+               tempDev = devices[x][y];
+               intline = tempDev->interruptLine();
+               if (intLines.test(intline))
+                   warn("Interrupt line %#X is used multiple times"
+                        "(You probably want to fix this).\n", (uint32_t)intline);
+               else
+                   intLines.set(intline);
+           } // devices != NULL
+        } // PCI_FUNC
+    } // PCI_DEV
+
 }
 
 Fault
