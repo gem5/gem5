@@ -36,7 +36,7 @@
 #include "sim/universe.hh"
 
 #ifndef TRACING_ON
-#ifdef DEBUG
+#ifndef NDEBUG
 #define TRACING_ON	1
 #else
 #define TRACING_ON	0

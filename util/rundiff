@@ -87,6 +87,10 @@ my ($fh1, $fh2);
 open($fh1, $file1) or die "Can't open $file1";
 open($fh2, $file2) or die "Can't open $file2";
 
+# print files to output so we know which is which
+print "-$file1\n";
+print "+$file2\n";
+
 # buffer of matching lines for pre-diff context
 my @precontext = ();
 # number of post-diff matching lines remaining to print

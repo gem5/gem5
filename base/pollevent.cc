@@ -223,14 +223,14 @@ PollQueue::setupHandler()
 
     act.sa_handler = handleIO;
     sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
+    act.sa_flags = SA_RESTART;
 
     if (sigaction(SIGIO, &act, &oldio) == -1)
         panic("could not do sigaction");
 
     act.sa_handler = handleALRM;
     sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
+    act.sa_flags = SA_RESTART;
 
     if (sigaction(SIGALRM, &act, &oldalrm) == -1)
         panic("could not do sigaction");
