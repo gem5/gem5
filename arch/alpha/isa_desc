@@ -187,15 +187,16 @@ output header {{
 
 	/// Print a register name for disassembly given the unique
 	/// dependence tag number (FP or int).
-	void printReg(std::ostream &os, int reg);
+	void printReg(std::ostream &os, int reg) const;
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
     void
-    AlphaStaticInst::printReg(std::ostream &os, int reg)
+    AlphaStaticInst::printReg(std::ostream &os, int reg) const
     {
 	if (reg < FP_Base_DepTag) {
 	    ccprintf(os, "r%d", reg);
@@ -206,7 +207,8 @@ output decoder {{
     }
 
     std::string
-    AlphaStaticInst::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    AlphaStaticInst::generateDisassembly(Addr pc,
+					 const SymbolTable *symtab) const
     {
 	std::stringstream ss;
 
@@ -237,7 +239,7 @@ output decoder {{
 
 // Declarations for execute() methods.
 def template BasicExecDeclare {{
-    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *);
+    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
 // Basic instruction class declaration template.
@@ -267,7 +269,7 @@ def template BasicConstructor {{
 // Basic instruction class execute method template.
 def template BasicExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
-				  Trace::InstRecord *traceData)
+				  Trace::InstRecord *traceData) const
     {
 	Fault fault = No_Fault;
 
@@ -330,14 +332,16 @@ output header {{
 
 	~Nop() { }
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
 	%(BasicExecDeclare)s
     };
 }};
 
 output decoder {{
-    std::string Nop::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    std::string Nop::generateDisassembly(Addr pc,
+					 const SymbolTable *symtab) const
     {
 #ifdef SS_COMPATIBLE_DISASSEMBLY
 	return originalDisassembly;
@@ -360,7 +364,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Nop::execute(%(CPU_exec_context)s *, Trace::InstRecord *)
+    Nop::execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
     {
 	return No_Fault;
     }
@@ -410,13 +414,14 @@ output header {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
     std::string
-    IntegerImm::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    IntegerImm::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	std::stringstream ss;
 
@@ -588,12 +593,13 @@ output header {{
 	}
 
 #if defined(linux)
-	int getC99RoundingMode(uint64_t fpcr_val);
+	int getC99RoundingMode(uint64_t fpcr_val) const;
 #endif
 
 	// This differs from the AlphaStaticInst version only in
 	// printing suffixes for non-default rounding & trapping modes.
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 
 }};
@@ -618,7 +624,7 @@ def template FloatingPointDecode {{
 output decoder {{
 #if defined(linux)
     int
-    AlphaFP::getC99RoundingMode(uint64_t fpcr_val)
+    AlphaFP::getC99RoundingMode(uint64_t fpcr_val) const
     {
 	if (roundingMode == Dynamic) {
 	    return alphaToC99RoundingMode[bits(fpcr_val, 59, 58)];
@@ -630,7 +636,7 @@ output decoder {{
 #endif
 
     std::string
-    AlphaFP::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    AlphaFP::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	std::string mnem_str(mnemonic);
 
@@ -751,7 +757,8 @@ output header {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
       public:
 
@@ -796,21 +803,22 @@ output header {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
 
 output decoder {{
     std::string
-    Memory::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
 			flags[IsFloating] ? 'f' : 'r', RA, MEMDISP, RB);
     }
 
     std::string
-    MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	return csprintf("%-10s (r%d)", mnemonic, RB);
     }
@@ -894,7 +902,7 @@ def template LoadStoreConstructor {{
 def template EACompExecute {{
     Fault
     %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
-				   Trace::InstRecord *traceData)
+				   Trace::InstRecord *traceData) const
     {
 	Addr EA;
 	Fault fault = No_Fault;
@@ -916,7 +924,7 @@ def template EACompExecute {{
 def template MemAccExecute {{
     Fault
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-				   Trace::InstRecord *traceData)
+				   Trace::InstRecord *traceData) const
     {
 	Addr EA;
 	Fault fault = No_Fault;
@@ -950,7 +958,7 @@ def template MemAccExecute {{
 
 def template LoadStoreExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
-				  Trace::InstRecord *traceData)
+				  Trace::InstRecord *traceData) const
     {
 	Addr EA;
 	Fault fault = No_Fault;
@@ -984,7 +992,7 @@ def template LoadStoreExecute {{
 
 def template PrefetchExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
-				  Trace::InstRecord *traceData)
+				  Trace::InstRecord *traceData) const
     {
 	Addr EA;
 	Fault fault = No_Fault;
@@ -1158,9 +1166,9 @@ output header {{
     {
       protected:
 	/// Cached program counter from last disassembly
-	Addr	     	   cachedPC;
+	mutable Addr cachedPC;
 	/// Cached symbol table pointer from last disassembly
-	const SymbolTable *cachedSymtab;
+	mutable const SymbolTable *cachedSymtab;
 
 	/// Constructor
 	PCDependentDisassembly(const char *mnem, MachInst _machInst,
@@ -1170,7 +1178,8 @@ output header {{
 	{
 	}
 
-	const std::string &disassemble(Addr pc, const SymbolTable *symtab);
+	const std::string &
+	disassemble(Addr pc, const SymbolTable *symtab) const;
     };
 
     /**
@@ -1192,7 +1201,8 @@ output header {{
 
 	Addr branchTarget(Addr branchPC) const;
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 
     /**
@@ -1216,7 +1226,8 @@ output header {{
 
 	Addr branchTarget(ExecContext *xc) const;
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
@@ -1236,7 +1247,8 @@ output decoder {{
     }
 
     const std::string &
-    PCDependentDisassembly::disassemble(Addr pc, const SymbolTable *symtab)
+    PCDependentDisassembly::disassemble(Addr pc,
+					const SymbolTable *symtab) const
     {
 	if (!cachedDisassembly ||
 	    pc != cachedPC || symtab != cachedSymtab)
@@ -1254,7 +1266,7 @@ output decoder {{
     }
 
     std::string
-    Branch::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	std::stringstream ss;
 
@@ -1292,7 +1304,7 @@ output decoder {{
     }
 
     std::string
-    Jump::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    Jump::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	std::stringstream ss;
 
@@ -1391,13 +1403,15 @@ output header {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
     std::string
-    EmulatedCallPal::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    EmulatedCallPal::generateDisassembly(Addr pc,
+					 const SymbolTable *symtab) const
     {
 #ifdef SS_COMPATIBLE_DISASSEMBLY
 	return csprintf("%s %s", "call_pal", mnemonic);
@@ -1433,7 +1447,8 @@ output header {{
 	CallPalBase(const char *mnem, MachInst _machInst,
 		    OpClass __opClass);
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
@@ -1463,7 +1478,7 @@ output decoder {{
     }
 
     std::string
-    CallPalBase::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    CallPalBase::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	return csprintf("%-10s %#x", "call_pal", palFunc);
     }
@@ -1498,7 +1513,8 @@ output header {{
 		    StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
 		    StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr);
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
@@ -1520,7 +1536,7 @@ output decoder {{
     }
 
     std::string
-    HwLoadStore::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    HwLoadStore::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 #ifdef SS_COMPATIBLE_DISASSEMBLY
 	return csprintf("%-10s r%d,%d(r%d)", mnemonic, RA, disp, RB);
@@ -1571,13 +1587,14 @@ output header {{
 	{
 	}
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
     std::string
-    HwMoveIPR::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    HwMoveIPR::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	if (_numSrcRegs > 0) {
 	    // must be mtpr
@@ -1628,7 +1645,8 @@ output header {{
 
 	%(BasicExecDeclare)s
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 
     /**
@@ -1644,7 +1662,7 @@ output header {{
     {
       private:
 	/// Have we warned on this instruction yet?
-	bool warned;
+	mutable bool warned;
 
       public:
 	/// Constructor
@@ -1658,19 +1676,22 @@ output header {{
 
 	%(BasicExecDeclare)s
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
 output decoder {{
     std::string
-    FailUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    FailUnimplemented::generateDisassembly(Addr pc,
+					   const SymbolTable *symtab) const
     {
 	return csprintf("%-10s (unimplemented)", mnemonic);
     }
 
     std::string
-    WarnUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    WarnUnimplemented::generateDisassembly(Addr pc,
+					   const SymbolTable *symtab) const
     {
 #ifdef SS_COMPATIBLE_DISASSEMBLY
 	return csprintf("%-10s", mnemonic);
@@ -1683,7 +1704,7 @@ output decoder {{
 output exec {{
     Fault
     FailUnimplemented::execute(%(CPU_exec_context)s *xc,
-			       Trace::InstRecord *traceData)
+			       Trace::InstRecord *traceData) const
     {
 	panic("attempt to execute unimplemented instruction '%s' "
 	      "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
@@ -1692,7 +1713,7 @@ output exec {{
 
     Fault
     WarnUnimplemented::execute(%(CPU_exec_context)s *xc,
-			       Trace::InstRecord *traceData)
+			       Trace::InstRecord *traceData) const
     {
 	if (!warned) {
 	    warn("instruction '%s' unimplemented\n", mnemonic);
@@ -1734,7 +1755,8 @@ output header {{
 
 	%(BasicExecDeclare)s
 
-	std::string generateDisassembly(Addr pc, const SymbolTable *symtab);
+	std::string
+	generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 }};
 
@@ -1745,7 +1767,7 @@ output header {{
 
 output decoder {{
     std::string
-    Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab)
+    Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
 	return csprintf("%-10s (inst 0x%x, opcode 0x%x)",
 			"unknown", machInst, OPCODE);
@@ -1754,7 +1776,8 @@ output decoder {{
 
 output exec {{
     Fault
-    Unknown::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData)
+    Unknown::execute(%(CPU_exec_context)s *xc,
+		     Trace::InstRecord *traceData) const
     {
 	panic("attempt to execute unknown instruction "
 	      "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
