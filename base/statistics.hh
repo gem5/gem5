@@ -528,7 +528,6 @@ struct AvgStor
      */
     void reset()
     {
-        current = T();
         total = 0;
         last = curTick;
     }

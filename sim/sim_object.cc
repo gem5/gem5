@@ -131,6 +131,13 @@ SimObject::regAllStats()
 void
 SimObject::resetAllStats()
 {
+    SimObjectList::iterator i = simObjectList.begin();
+    SimObjectList::iterator end = simObjectList.end();
+
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        obj->resetStats();
+    }
 }
 
 //
@@ -139,9 +146,11 @@ SimObject::resetAllStats()
 void
 SimObject::printAllExtraOutput(ostream &os)
 {
-    SimObjectList::iterator i;
+    SimObjectList::iterator i = simObjectList.begin();
+    SimObjectList::iterator end = simObjectList.end();
 
-    for (i = simObjectList.begin(); i != simObjectList.end(); ++i) {
-        (*i)->printExtraOutput(os);
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        obj->printExtraOutput(os);
    }
 }
