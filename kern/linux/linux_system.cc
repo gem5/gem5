@@ -145,29 +145,32 @@ LinuxSystem::LinuxSystem(Params *p)
         printThreadEvent->schedule(addr + sizeof(MachInst) * 6);
 
     intStartEvent = new InterruptStartEvent(&pcEventQueue, "intStartEvent");
-    if (palSymtab->findAddress("sys_int_21", addr))
-        intStartEvent->schedule(addr + sizeof(MachInst) * 2);
-    else
-        panic("could not find symbol: sys_int_21\n");
 
-    intEndEvent = new InterruptEndEvent(&pcEventQueue, "intEndEvent");
-    if (palSymtab->findAddress("rti_to_kern", addr))
-        intEndEvent->schedule(addr) ;
-    else
-        panic("could not find symbol: rti_to_kern\n");
+    if (params->bin_int) {
+        if (palSymtab->findAddress("sys_int_21", addr))
+            intStartEvent->schedule(addr + sizeof(MachInst) * 2);
+        else
+            panic("could not find symbol: sys_int_21\n");
 
-    intEndEvent2 = new InterruptEndEvent(&pcEventQueue, "intEndEvent2");
-    if (palSymtab->findAddress("rti_to_user", addr))
-        intEndEvent2->schedule(addr);
-    else
-        panic("could not find symbol: rti_to_user\n");
+        intEndEvent = new InterruptEndEvent(&pcEventQueue, "intEndEvent");
+        if (palSymtab->findAddress("rti_to_kern", addr))
+            intEndEvent->schedule(addr) ;
+        else
+            panic("could not find symbol: rti_to_kern\n");
+
+        intEndEvent2 = new InterruptEndEvent(&pcEventQueue, "intEndEvent2");
+        if (palSymtab->findAddress("rti_to_user", addr))
+            intEndEvent2->schedule(addr);
+        else
+            panic("could not find symbol: rti_to_user\n");
 
 
-    intEndEvent3 = new InterruptEndEvent(&pcEventQueue, "intEndEvent3");
-    if (kernelSymtab->findAddress("do_softirq", addr))
-        intEndEvent3->schedule(addr + sizeof(MachInst) * 2);
-    else
-        panic("could not find symbol: do_softirq\n");
+        intEndEvent3 = new InterruptEndEvent(&pcEventQueue, "intEndEvent3");
+        if (kernelSymtab->findAddress("do_softirq", addr))
+            intEndEvent3->schedule(addr + sizeof(MachInst) * 2);
+        else
+            panic("could not find symbol: do_softirq\n");
+    }
 }
 
 LinuxSystem::~LinuxSystem()

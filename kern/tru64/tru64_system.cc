@@ -168,6 +168,7 @@ CREATE_SIM_OBJECT(Tru64System)
     p->system_rev = system_rev;
     p->bin = bin;
     p->binned_fns = binned_fns;
+    p->bin_int = false;
 
     return new Tru64System(p);
 }
