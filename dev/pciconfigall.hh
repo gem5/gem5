@@ -26,7 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/*
+ * @todo
+ * Should derive Tsunami from common platform class so PCI will work with
+ * multiple platforms
+ *
+ * @file
  * PCI Config space implementation.
  */
 
@@ -58,6 +63,7 @@ class PCIConfigAll : public MmapDevice
     /**
       * Pointer to the Tsunmi Object so we can communicate
       * to other Tsunami devices in need be.
+      * @todo Make this more generic for multiple platforms
       */
     Tsunami *tsunami;
 

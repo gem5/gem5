@@ -45,7 +45,7 @@ class TlaserClock;
 class EtherDev;
 class TsunamiCChip;
 class TsunamiPChip;
-class TsunamiPCIConfig;
+class PCIConfigAll;
 
 /**
   * Top level class for Tsunami Chipset emulation.
@@ -83,11 +83,11 @@ class Tsunami : public SimObject
       */
     TsunamiPChip *pchip;
 
-    /** Pointer to the Tsunami PCI Config Space
-      * The config space in tsunami all needs to return
+    /** Pointer to the PCI Config Space
+      * The config space in Tsunami all needs to return
       * -1 if a device is not there.
       */
-    TsunamiPCIConfig *pciconfig;
+    PCIConfigAll *pciconfig;
 
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];
@@ -99,9 +99,8 @@ class Tsunami : public SimObject
       * Constructor for the Tsunami Class.
       * @param
       */
-    Tsunami(const std::string &name, AdaptecController *scsi,
-               EtherDev *ethernet,
-               SimConsole *, IntrControl *intctrl, int intrFreq);
+    Tsunami(const std::string &name, EtherDev *ethernet, SimConsole *con,
+            IntrControl *intctrl, int intrFreq);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

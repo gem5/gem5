@@ -33,10 +33,28 @@
 #ifndef __PCI_DEV_HH__
 #define __PCI_DEV_HH__
 
-#include "mem/functional_mem/mmap_device.hh"
 #include "dev/pcireg.h"
+#include "sim/sim_object.hh"
+#include "mem/functional_mem/mmap_device.hh"
 
 class PCIConfigAll;
+class MemoryController;
+
+class PciConfigData : public SimObject
+{
+  public:
+    PciConfigData(const std::string &name)
+        : SimObject(name)
+    {
+        memset(config.data, 0, sizeof(config.data));
+        memset(BARAddrs, 0, sizeof(BARAddrs));
+        memset(BARSize, 0, sizeof(BARSize));
+    }
+
+    PCIConfig config;
+    uint32_t BARSize[6];
+    Addr BARAddrs[6];
+};
 
 /**
  * PCI device, base implemnation is only config space.
@@ -47,22 +65,31 @@ class PCIConfigAll;
  */
 class PciDev : public MmapDevice
 {
-  private:
+  protected:
+    MemoryController *MMU;
+    PCIConfigAll *ConfigSpace;
+    PciConfigData *ConfigData;
     uint32_t Bus;
     uint32_t Device;
     uint32_t Function;
-  public:
-    PciDev(const std::string &name, PCIConfigAll *cf, uint32_t bus,
-           uint32_t dev, uint32_t func);
 
-    PCIConfigAll *ConfigSpace;
     PCIConfig config;
     uint32_t BARSize[6];
     Addr BARAddrs[6];
 
+  public:
+    PciDev(const std::string &name, MemoryController *mmu, PCIConfigAll *cf,
+           PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func);
+
+    virtual Fault read(MemReqPtr &req, uint8_t *data) {
+        return No_Fault;
+    }
+    virtual Fault write(MemReqPtr &req, const uint8_t *data) {
+        return No_Fault;
+    }
+
     virtual void WriteConfig(int offset, int size, uint32_t data);
     virtual void ReadConfig(int offset, int size, uint8_t *data);
-
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

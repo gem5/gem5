@@ -50,46 +50,56 @@
 
 using namespace std;
 
-PciDev::PciDev(const string &name, PCIConfigAll *cf, uint32_t bus,
-               uint32_t dev, uint32_t func)
-    : MMapDevice(name), ConfigSpace(cf), Bus(bus), Device(dev), Function(func), MMU(mmu)
+PciDev::PciDev(const string &name, MemoryController *mmu, PCIConfigAll *cf,
+               PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func)
+    : MmapDevice(name), MMU(mmu), ConfigSpace(cf), ConfigData(cd),
+      Bus(bus), Device(dev), Function(func)
 {
-    memset(config.data, 0, sizeof(config.data));
-    memset(BARAddrs, 0, sizeof(Addr) * 6);
+    // copy the config data from the PciConfigData object
+    if (cd) {
+        memcpy(config.data, cd->config.data, sizeof(config.data));
+        memcpy(BARSize, cd->BARSize, sizeof(BARSize));
+        memcpy(BARAddrs, cd->BARAddrs, sizeof(BARAddrs));
+    } else
+        panic("NULL pointer to configuration data");
 
     // Setup pointer in config space to point to this entry
-    if(cf->devices[dev][func] != NULL)
+    if (cf->devices[dev][func] != NULL)
         panic("Two PCI devices occuping same dev: %#x func: %#x", dev, func);
     else
         cf->devices[dev][func] = this;
 }
 
-
 void
 PciDev::ReadConfig(int offset, int size, uint8_t *data)
 {
     switch(size) {
-        case sizeof(uint32_t):
-            memcpy((uint32_t*)data, config.data + offset, sizeof(uint32_t));
-            DPRINTF(PCIDEV, "read device: %#x function: %#x register: %#x data: %#x\n",
+      case sizeof(uint32_t):
+        memcpy((uint32_t*)data, config.data + offset, sizeof(uint32_t));
+        DPRINTF(PCIDEV,
+                "read device: %#x function: %#x register: %#x data: %#x\n",
                 Device, Function, offset, *(uint32_t*)(config.data + offset));
-            break;
-        case sizeof(uint16_t):
-            memcpy((uint16_t*)data, config.data + offset, sizeof(uint16_t));
-            DPRINTF(PCIDEV, "read device: %#x function: %#x register: %#x data: %#x\n",
+        break;
+
+      case sizeof(uint16_t):
+        memcpy((uint16_t*)data, config.data + offset, sizeof(uint16_t));
+        DPRINTF(PCIDEV,
+                "read device: %#x function: %#x register: %#x data: %#x\n",
                 Device, Function, offset, *(uint16_t*)(config.data + offset));
-            break;
-        case sizeof(uint8_t):
-            memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
-            printf("data: %#x\n", *(uint8_t*)(config.data + offset));
-            DPRINTF(PCIDEV, "read device: %#x function: %#x register: %#x data: %#x\n",
+        break;
+
+      case sizeof(uint8_t):
+        memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
+        printf("data: %#x\n", *(uint8_t*)(config.data + offset));
+        DPRINTF(PCIDEV,
+                "read device: %#x function: %#x register: %#x data: %#x\n",
                 Device, Function, offset, *(uint8_t*)(config.data + offset));
-            break;
-        default:
-            panic("Invalid Read Size");
+        break;
+
+      default:
+        panic("Invalid Read Size");
     }
 }
-
 
 void
 PciDev::WriteConfig(int offset, int size, uint32_t data)
@@ -103,8 +113,9 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
     };
     word_value = data;
 
-    DPRINTF(PCIDEV, "write device: %#x function: %#x register: %#x size: %#x data: %#x\n",
-                Device, Function, offset, size, word_value);
+    DPRINTF(PCIDEV,
+            "write device: %#x function: %#x reg: %#x size: %#x data: %#x\n",
+            Device, Function, offset, size, word_value);
 
     barnum = (offset - PCI0_BASE_ADDR0) >> 2;
 
@@ -145,63 +156,63 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
           case PCI0_BASE_ADDR3:
           case PCI0_BASE_ADDR4:
           case PCI0_BASE_ADDR5:
-              // Writing 0xffffffff to a BAR tells the card to set the value of the bar
-              // to size of memory it needs
-              if (word_value == 0xffffffff) {
-                 // This is I/O Space, bottom two bits are read only
-                  if(config.data[offset] & 0x1) {
+            // Writing 0xffffffff to a BAR tells the card to set the
+            // value of the bar
+            // to size of memory it needs
+            if (word_value == 0xffffffff) {
+                // This is I/O Space, bottom two bits are read only
+                if (config.data[offset] & 0x1) {
                     *(uint32_t *)&config.data[offset] =
                         ~(BARSize[barnum] - 1) |
                         (config.data[offset] & 0x3);
-                  } else {
-                  // This is memory space, bottom four bits are read only
+                } else {
+                    // This is memory space, bottom four bits are read only
                     *(uint32_t *)&config.data[offset] =
                         ~(BARSize[barnum] - 1) |
                         (config.data[offset] & 0xF);
-                  }
-
-
-              } else {
-                  // This is I/O Space, bottom two bits are read only
-                  if(config.data[offset] & 0x1) {
+                }
+            } else {
+                // This is I/O Space, bottom two bits are read only
+                if(config.data[offset] & 0x1) {
                     *(uint32_t *)&config.data[offset] = (word_value & ~0x3) |
-                                                        (config.data[offset] & 0x3);
+                        (config.data[offset] & 0x3);
                     if (word_value) {
                         // It's never been set
-                        if (BARAddr[barnum] == 0)
+                        if (BARAddrs[barnum] == 0)
                             AddMapping(word_value, BARSize[barnum]-1, MMU);
                         else
-                            UpdateMapping(BARAddr[barnum], BARSize[barnum]-1,
+                            ChangeMapping(BARAddrs[barnum], BARSize[barnum]-1,
                                           word_value, BARSize[barnum]-1, MMU);
-                        BARAddr[barnum] = word_value;
+                        BARAddrs[barnum] = word_value;
                     }
 
-                  } else {
-                  // This is memory space, bottom four bits are read only
+                } else {
+                    // This is memory space, bottom four bits are read only
                     *(uint32_t *)&config.data[offset] = (word_value & ~0xF) |
-                                                        (config.data[offset] & 0xF);
-                  }
-              }
+                        (config.data[offset] & 0xF);
+                }
+            }
             break;
-          case PCI0_ROM_BASE_ADDR:
-                    if (word_value == 0xfffffffe)
-                        *(uint32_t *)&config.data[offset] = 0xffffffff;
-                    else
-                        *(uint32_t *)&config.data[offset] = word_value;
-                break;
-          case PCI_COMMAND:
-                // This could also clear some of the error bits in the Status register
-                // However they should never get set, so lets ignore it for now
-                *(uint16_t *)&config.data[offset] = half_value;
-                break;
 
+          case PCI0_ROM_BASE_ADDR:
+            if (word_value == 0xfffffffe)
+                *(uint32_t *)&config.data[offset] = 0xffffffff;
+            else
+                *(uint32_t *)&config.data[offset] = word_value;
+            break;
+
+          case PCI_COMMAND:
+            // This could also clear some of the error bits in the Status
+            // register. However they should never get set, so lets ignore
+            // it for now
+            *(uint16_t *)&config.data[offset] = half_value;
+            break;
 
           default:
             panic("writing to a read only register");
         }
         break;
     }
-
 }
 
 void
@@ -216,8 +227,9 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(config.data, 64);
 }
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciDev)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
 
     Param<int> VendorID;
     Param<int> DeviceID;
@@ -252,18 +264,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciDev)
     Param<uint32_t> BAR4Size;
     Param<uint32_t> BAR5Size;
 
-    SimObjectParam<MemoryController *> mmu;
-    SimObjectParam<PCIConfigAll*> cf;
-    Param<Addr> addr;
-    Param<Addr> mask;
-    Param<uint32_t> bus;
-    Param<uint32_t> device;
-    Param<uint32_t> func;
+END_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
 
-
-END_DECLARE_SIM_OBJECT_PARAMS(PciDev)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(PciDev)
+BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigData)
 
     INIT_PARAM(VendorID, "Vendor ID"),
     INIT_PARAM(DeviceID, "Device ID"),
@@ -296,56 +299,52 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(PciDev)
     INIT_PARAM_DFLT(BAR2Size, "Base Address Register 2 Size", 0x00),
     INIT_PARAM_DFLT(BAR3Size, "Base Address Register 3 Size", 0x00),
     INIT_PARAM_DFLT(BAR4Size, "Base Address Register 4 Size", 0x00),
-    INIT_PARAM_DFLT(BAR5Size, "Base Address Register 5 Size", 0x00),
+    INIT_PARAM_DFLT(BAR5Size, "Base Address Register 5 Size", 0x00)
 
-    INIT_PARAM(cf, "Pointer to Configspace device"),
-    INIT_PARAM(bus, "PCI Bus Number"),
-    INIT_PARAM(device, "PCI Device number"),
-    INIT_PARAM(func, "PCI Function Number")
+END_INIT_SIM_OBJECT_PARAMS(PciConfigData)
 
-
-END_INIT_SIM_OBJECT_PARAMS(PciDev)
-
-CREATE_SIM_OBJECT(PciDev)
+CREATE_SIM_OBJECT(PciConfigData)
 {
-    PciDev *dev = new PciDev(getInstanceName(), cf, bus, device, func);
+    PciConfigData *data = new PciConfigData(getInstanceName());
 
-    dev->config.hdr.vendor = VendorID;
-    dev->config.hdr.device = DeviceID;
-    dev->config.hdr.command = Command;
-    dev->config.hdr.status = Status;
-    dev->config.hdr.revision = Revision;
-    dev->config.hdr.progIF = ProgIF;
-    dev->config.hdr.subClassCode = SubClassCode;
-    dev->config.hdr.classCode = ClassCode;
-    dev->config.hdr.cacheLineSize = CacheLineSize;
-    dev->config.hdr.latencyTimer = LatencyTimer;
-    dev->config.hdr.headerType = HeaderType;
-    dev->config.hdr.bist = BIST;
+    data->config.hdr.vendor = VendorID;
+    data->config.hdr.device = DeviceID;
+    data->config.hdr.command = Command;
+    data->config.hdr.status = Status;
+    data->config.hdr.revision = Revision;
+    data->config.hdr.progIF = ProgIF;
+    data->config.hdr.subClassCode = SubClassCode;
+    data->config.hdr.classCode = ClassCode;
+    data->config.hdr.cacheLineSize = CacheLineSize;
+    data->config.hdr.latencyTimer = LatencyTimer;
+    data->config.hdr.headerType = HeaderType;
+    data->config.hdr.bist = BIST;
 
-    dev->config.hdr.pci0.baseAddr0 = BAR0;
-    dev->config.hdr.pci0.baseAddr1 = BAR1;
-    dev->config.hdr.pci0.baseAddr2 = BAR2;
-    dev->config.hdr.pci0.baseAddr3 = BAR3;
-    dev->config.hdr.pci0.baseAddr4 = BAR4;
-    dev->config.hdr.pci0.baseAddr5 = BAR5;
-    dev->config.hdr.pci0.cardbusCIS = CardbusCIS;
-    dev->config.hdr.pci0.subsystemVendorID = SubsystemVendorID;
-    dev->config.hdr.pci0.subsystemID = SubsystemVendorID;
-    dev->config.hdr.pci0.expansionROM = ExpansionROM;
-    dev->config.hdr.pci0.interruptLine = InterruptLine;
-    dev->config.hdr.pci0.interruptPin = InterruptPin;
-    dev->config.hdr.pci0.minimumGrant = MinimumGrant;
-    dev->config.hdr.pci0.maximumLatency = MaximumLatency;
+    data->config.hdr.pci0.baseAddr0 = BAR0;
+    data->config.hdr.pci0.baseAddr1 = BAR1;
+    data->config.hdr.pci0.baseAddr2 = BAR2;
+    data->config.hdr.pci0.baseAddr3 = BAR3;
+    data->config.hdr.pci0.baseAddr4 = BAR4;
+    data->config.hdr.pci0.baseAddr5 = BAR5;
+    data->config.hdr.pci0.cardbusCIS = CardbusCIS;
+    data->config.hdr.pci0.subsystemVendorID = SubsystemVendorID;
+    data->config.hdr.pci0.subsystemID = SubsystemVendorID;
+    data->config.hdr.pci0.expansionROM = ExpansionROM;
+    data->config.hdr.pci0.interruptLine = InterruptLine;
+    data->config.hdr.pci0.interruptPin = InterruptPin;
+    data->config.hdr.pci0.minimumGrant = MinimumGrant;
+    data->config.hdr.pci0.maximumLatency = MaximumLatency;
 
-    dev->BARSize[0] = BAR0Size;
-    dev->BARSize[1] = BAR1Size;
-    dev->BARSize[2] = BAR2Size;
-    dev->BARSize[3] = BAR3Size;
-    dev->BARSize[4] = BAR4Size;
-    dev->BARSize[5] = BAR5Size;
+    data->BARSize[0] = BAR0Size;
+    data->BARSize[1] = BAR1Size;
+    data->BARSize[2] = BAR2Size;
+    data->BARSize[3] = BAR3Size;
+    data->BARSize[4] = BAR4Size;
+    data->BARSize[5] = BAR5Size;
 
-    return dev;
+    return data;
 }
 
-REGISTER_SIM_OBJECT("PciDev", PciDev)
+REGISTER_SIM_OBJECT("PciConfigData", PciConfigData)
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS

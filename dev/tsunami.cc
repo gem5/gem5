@@ -43,9 +43,9 @@
 
 using namespace std;
 
-Tsunami::Tsunami(const string &name, AdaptecController *s, EtherDev *e,
-                       SimConsole *con, IntrControl *ic, int intr_freq)
-    : SimObject(name), intrctrl(ic), cons(con), scsi(s), ethernet(e),
+Tsunami::Tsunami(const string &name, EtherDev *e, SimConsole *con,
+                 IntrControl *ic, int intr_freq)
+    : SimObject(name), intrctrl(ic), cons(con), ethernet(e),
       interrupt_frequency(intr_freq)
 {
     for (int i = 0; i < Tsunami::Max_CPUs; i++)
@@ -66,7 +66,6 @@ Tsunami::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
-    SimObjectParam<AdaptecController *> scsi;
     SimObjectParam<EtherDev *> ethernet;
     SimObjectParam<SimConsole *> cons;
     SimObjectParam<IntrControl *> intrctrl;
@@ -76,7 +75,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
-    INIT_PARAM(scsi, "scsi controller"),
     INIT_PARAM(ethernet, "ethernet controller"),
     INIT_PARAM(cons, "system console"),
     INIT_PARAM(intrctrl, "interrupt controller"),
@@ -84,12 +82,10 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
 END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
-
 CREATE_SIM_OBJECT(Tsunami)
 {
-    return new Tsunami(getInstanceName(), scsi, ethernet,
-                           cons, intrctrl, interrupt_frequency);
+    return new Tsunami(getInstanceName(), ethernet, cons, intrctrl,
+                       interrupt_frequency);
 }
 
 REGISTER_SIM_OBJECT("Tsunami", Tsunami)
-
