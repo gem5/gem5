@@ -106,7 +106,7 @@ EtherDump::init()
 }
 
 void
-EtherDump::dumpPacket(PacketPtr packet)
+EtherDump::dumpPacket(PacketPtr &packet)
 {
     pcap_pkthdr pkthdr;
     pkthdr.ts.tv_sec = curtime + (curTick / s_freq);

@@ -2067,7 +2067,7 @@ class UnaryNode : public Node
     mutable rvec_t result;
 
   public:
-    UnaryNode(NodePtr p) : l(p) {}
+    UnaryNode(NodePtr &p) : l(p) {}
 
     const rvec_t &val() const {
         const rvec_t &lvec = l->val();
@@ -2110,7 +2110,7 @@ class BinaryNode : public Node
     mutable rvec_t result;
 
   public:
-    BinaryNode(NodePtr a, NodePtr b) : l(a), r(b) {}
+    BinaryNode(NodePtr &a, NodePtr &b) : l(a), r(b) {}
 
     const rvec_t &val() const {
         Op op;
@@ -2179,7 +2179,7 @@ class SumNode : public Node
     mutable rvec_t result;
 
   public:
-    SumNode(NodePtr p) : l(p), result(1) {}
+    SumNode(NodePtr &p) : l(p), result(1) {}
 
     const rvec_t &val() const {
         const rvec_t &lvec = l->val();
@@ -2999,7 +2999,7 @@ class Temp
      * Return the node pointer.
      * @return the node pointer.
      */
-    operator NodePtr() { return node;}
+    operator NodePtr&() { return node;}
 
   public:
     /**

@@ -94,7 +94,7 @@ class EtherTap : public EtherInt
     EtherTap(const std::string &name, EtherDump *dump, int port, int bufsz);
     virtual ~EtherTap();
 
-    virtual bool recvPacket(PacketPtr packet);
+    virtual bool recvPacket(PacketPtr &packet);
     virtual void sendDone();
 
     virtual void serialize(std::ostream &os);

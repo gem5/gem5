@@ -102,7 +102,7 @@ EtherLink::Link::txDone()
 }
 
 bool
-EtherLink::Link::transmit(PacketPtr pkt)
+EtherLink::Link::transmit(PacketPtr &pkt)
 {
     if (busy()) {
         DPRINTF(Ethernet, "EtherLink packet not sent, link busy\n");
