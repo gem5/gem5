@@ -289,7 +289,7 @@ for build_dir in build_dirs:
 ###################################################
 #
 # Let SCons do its thing.  At this point SCons will use the defined
-# build enviornments to build the requested targets.
+# build environments to build the requested targets.
 #
 ###################################################
 

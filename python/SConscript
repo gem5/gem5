@@ -26,7 +26,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os, os.path, re
+import os, os.path, re, sys
+
+Import('env')
+
+# tell python where to find m5 python code
+sys.path.append(os.path.join(env['SRCDIR'], 'python'))
+
+import m5scons
 
 def WriteEmbeddedPyFile(target, source, path, name, ext, filename):
     if isinstance(source, str):
@@ -89,7 +96,6 @@ def splitpath(path):
         path.insert(0, base)
     return path, file
 
-Import('env')
 def MakeEmbeddedPyFile(target, source, env):
     target = file(str(target[0]), 'w')
    
@@ -145,27 +151,11 @@ def MakeEmbeddedPyFile(target, source, env):
         WriteEmbeddedPyFile(target, pyfile, path, name, ext, filename)
 
 def MakeDefinesPyFile(target, source, env):
-    target = file(str(target[0]), 'w')
-
-    print >>target, "import os"
-    defines = env['CPPDEFINES']
-    if isinstance(defines, list):
-        for var in defines:
-            if isinstance(var, tuple):
-                key,val = var
-            else:
-                key,val = var,'True'
-
-            if not isinstance(key, basestring):
-                panic("invalid type for define: %s" % type(key))
-                
-            print >>target, "os.environ['%s'] = '%s'" % (key, val)
-
-    elif isinstance(defines, dict):
-        for key,val in defines.iteritems():
-            print >>target, "os.environ['%s'] = '%s'" % (key, val)
-    else:
-        panic("invalid type for defines: %s" % type(defines))
+    f = file(str(target[0]), 'w')
+    print >>f, "import __main__"
+    print >>f, "__main__.m5_build_env = ",
+    print >>f, m5scons.flatten_defines(env['CPPDEFINES'])
+    f.close()
 
 CFileCounter = 0
 def MakePythonCFile(target, source, env):

@@ -27,7 +27,6 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
-from smartdict import SmartDict
 from convert import *
 
 noDot = False
@@ -35,13 +34,6 @@ try:
     import pydot
 except:
     noDot = True
-
-env = SmartDict()
-env.update(os.environ)
-
-def panic(string):
-    print >>sys.stderr, 'panic:', string
-    sys.exit(1)
 
 def issequence(value):
     return isinstance(value, tuple) or isinstance(value, list)
@@ -1347,7 +1339,7 @@ class SimObject(ConfigNode, ParamType):
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = ['env', 'issequence', 'panic',
+__all__ = ['issequence',
            'ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Super', 'Enum',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
