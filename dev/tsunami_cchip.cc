@@ -134,7 +134,6 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
-    uint64_t olddim;
 
     switch (req->size) {
 
@@ -175,13 +174,17 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                   else
                       number = 3;
 
+                  uint64_t bitvector;
+                  uint64_t olddim;
+                  uint64_t olddir;
+
                   olddim = dim[number];
+                  olddir = dir[number];
                   dim[number] = *(uint64_t*)data;
                   dir[number] = dim[number] & drir;
-                  uint64_t bitvector;
                   for(int x = 0; x < 64; x++)
                   {
-                      bitvector = 1 << x;
+                      bitvector = (uint64_t)1 << x;
                       // Figure out which bits have changed
                       if ((dim[number] & bitvector) != (olddim & bitvector))
                       {
@@ -191,7 +194,8 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                               tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
                               DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
                           }
-                          else if (!(dir[number] & bitvector))
+                          else if ((olddir & bitvector) &&
+                                  !(dir[number] & bitvector))
                           {
                               // The bit was set and now its now clear and
                               // we were interrupting on that bit before
@@ -244,7 +248,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 void
 TsunamiCChip::postDRIR(uint32_t interrupt)
 {
-    uint64_t bitvector = 0x1 << interrupt;
+    uint64_t bitvector = (uint64_t)0x1 << interrupt;
     drir |= bitvector;
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
         dir[i] = dim[i] & drir;
@@ -259,7 +263,7 @@ TsunamiCChip::postDRIR(uint32_t interrupt)
 void
 TsunamiCChip::clearDRIR(uint32_t interrupt)
 {
-    uint64_t bitvector = 0x1 << interrupt;
+    uint64_t bitvector = (uint64_t)0x1 << interrupt;
     if (drir & bitvector)
     {
         drir &= ~bitvector;
