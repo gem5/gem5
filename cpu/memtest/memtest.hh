@@ -29,13 +29,14 @@
 #ifndef __MEMTEST_HH__
 #define __MEMTEST_HH__
 
-#include "sim/sim_object.hh"
-#include "mem/mem_interface.hh"
-#include "mem/functional_mem/functional_memory.hh"
-#include "cpu/base_cpu.hh"
-#include "cpu/exec_context.hh"
+#include <set>
 
 #include "base/statistics.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "mem/mem_interface.hh"
+#include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
 class MemTest : public BaseCPU
@@ -86,6 +87,10 @@ class MemTest : public BaseCPU
     unsigned percentReads;	// target percentage of read accesses
     unsigned percentCopies;	// target percentage of copy accesses
     unsigned percentUncacheable;
+
+    int id;
+
+    std::set<unsigned> outstandingAddrs;
 
     unsigned blockSize;
 

@@ -414,20 +414,21 @@ template <class T>
 Fault
 SimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
+    if (status() == DcacheMissStall) {
+        Fault fault = xc->read(memReq,data);
+
+        if (traceData) {
+            traceData->setAddr(addr);
+            if (fault == No_Fault)
+                traceData->setData(data);
+        }
+        return fault;
+    }
+
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
     Fault fault = xc->translateDataReadReq(memReq);
-
-    // do functional access
-    if (fault == No_Fault)
-        fault = xc->read(memReq, data);
-
-    if (traceData) {
-        traceData->setAddr(addr);
-        if (fault == No_Fault)
-            traceData->setData(data);
-    }
 
     // if we have a cache, do cache access too
     if (fault == No_Fault && dcacheInterface) {
@@ -444,6 +445,24 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
             lastDcacheStall = curTick;
             unscheduleTickEvent();
             _status = DcacheMissStall;
+        } else {
+            // do functional access
+            fault = xc->read(memReq, data);
+
+            if (traceData) {
+                traceData->setAddr(addr);
+                if (fault == No_Fault)
+                    traceData->setData(data);
+            }
+        }
+    } else if(fault == No_Fault) {
+        // do functional access
+        fault = xc->read(memReq, data);
+
+        if (traceData) {
+            traceData->setAddr(addr);
+            if (fault == No_Fault)
+                traceData->setData(data);
         }
     }
 
@@ -605,6 +624,9 @@ SimpleCPU::processCacheCompletion()
         scheduleTickEvent(1);
         break;
       case DcacheMissStall:
+        if (memReq->cmd.isRead()) {
+            curStaticInst->execute(this,traceData);
+        }
         dcacheStallCycles += curTick - lastDcacheStall;
         _status = Running;
         scheduleTickEvent(1);
@@ -750,10 +772,10 @@ SimpleCPU::tick()
         comInstEventQueue[0]->serviceEvents(numInst);
 
         // decode the instruction
-    inst = htoa(inst);
-        StaticInstPtr<TheISA> si(inst);
+        inst = htoa(inst);
+        curStaticInst = StaticInst<TheISA>::decode(inst);
 
-        traceData = Trace::getInstRecord(curTick, xc, this, si,
+        traceData = Trace::getInstRecord(curTick, xc, this, curStaticInst,
                                          xc->regs.pc);
 
 #ifdef FULL_SYSTEM
@@ -762,18 +784,18 @@ SimpleCPU::tick()
 
         xc->func_exe_inst++;
 
-        fault = si->execute(this, traceData);
+        fault = curStaticInst->execute(this, traceData);
 
 #ifdef FULL_SYSTEM
         if (xc->fnbin)
-            xc->execute(si.get());
+            xc->execute(curStaticInst.get());
 #endif
 
-        if (si->isMemRef()) {
+        if (curStaticInst->isMemRef()) {
             numMemRefs++;
         }
 
-        if (si->isLoad()) {
+        if (curStaticInst->isLoad()) {
             ++numLoad;
             comLoadEventQueue[0]->serviceEvents(numLoad);
         }

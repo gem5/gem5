@@ -184,6 +184,8 @@ class SimpleCPU : public BaseCPU
     // Refcounted pointer to the one memory request.
     MemReqPtr memReq;
 
+    StaticInstPtr<TheISA> curStaticInst;
+
     class CacheCompletionEvent : public Event
     {
       private:
