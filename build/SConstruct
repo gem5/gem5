@@ -239,6 +239,8 @@ default_env = Environment(ENV = os.environ,  # inherit user's enviroment vars
                           FULL_SYSTEM = False,
                           USE_MYSQL = False)
 
+default_env.SConsignFile("sconsign")
+
 # For some reason, the CC and CXX variables don't get passed into the
 # environment correctly.  This is probably some sort of scons bug that
 # will eventually be fixed.
