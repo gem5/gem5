@@ -29,8 +29,13 @@
 #ifndef __ELF_OBJECT_HH__
 #define __ELF_OBJECT_HH__
 
-#include <libelf/gelf.h>
+/* Because of the -Wundef flag we have to do this */
+#define __LIBELF_INTERNAL__     0
+#define __LIBELF64_LINUX        1
+#define __LIBELF_NEED_LINK_H    0
+
 #include <libelf/libelf.h>
+#include <libelf/gelf.h>
 #include "base/loader/object_file.hh"
 
 class ElfObject : public ObjectFile
