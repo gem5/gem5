@@ -26,14 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LINUX_SYSCALLS_HH__
-#define __LINUX_SYSCALLS_HH__
+#ifndef __KERN_LINUX_LINUX_SYSCALLS_HH__
+#define __KERN_LINUX_LINUX_SYSCALLS_HH__
 
 #include "kern/linux/linux.hh"
 
 template <class OS>
 class SystemCalls;
 
+template <>
 class SystemCalls<Linux>
 {
   public:
@@ -322,4 +323,4 @@ class SystemCalls<Linux>
 
 };
 
-#endif // __LINUX_SYSCALLS_HH__
+#endif // __KERN_LINUX_LINUX_SYSCALLS_HH__

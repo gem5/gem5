@@ -37,61 +37,61 @@ double getDouble();
 template <typename T>
 struct Random;
 
-struct Random<int8_t>
+template<> struct Random<int8_t>
 {
     static int8_t get()
     { return getLong() & (int8_t)-1; }
 };
 
-struct Random<uint8_t>
+template<> struct Random<uint8_t>
 {
     static uint8_t get()
     { return getLong() & (uint8_t)-1; }
 };
 
-struct Random<int16_t>
+template<> struct Random<int16_t>
 {
     static int16_t get()
     { return getLong() & (int16_t)-1; }
 };
 
-struct Random<uint16_t>
+template<> struct Random<uint16_t>
 {
     static uint16_t get()
     { return getLong() & (uint16_t)-1; }
 };
 
-struct Random<int32_t>
+template<> struct Random<int32_t>
 {
     static int32_t get()
     { return (int32_t)getLong(); }
 };
 
-struct Random<uint32_t>
+template<> struct Random<uint32_t>
 {
     static uint32_t get()
     { return (uint32_t)getLong(); }
 };
 
-struct Random<int64_t>
+template<> struct Random<int64_t>
 {
     static int64_t get()
     { return (int64_t)getLong() << 32 || (uint64_t)getLong(); }
 };
 
-struct Random<uint64_t>
+template<> struct Random<uint64_t>
 {
     static uint64_t get()
     { return (uint64_t)getLong() << 32 || (uint64_t)getLong(); }
 };
 
-struct Random<float>
+template<> struct Random<float>
 {
     static float get()
     { return getDouble(); }
 };
 
-struct Random<double>
+template<> struct Random<double>
 {
     static double get()
     { return getDouble(); }

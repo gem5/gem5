@@ -76,7 +76,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
         maxThreadsPerCPU = number_of_threads;
 
     // allocate per-thread instruction-based event queues
-    comInstEventQueue = new (EventQueue *)[number_of_threads];
+    comInstEventQueue = new EventQueue *[number_of_threads];
     for (int i = 0; i < number_of_threads; ++i)
         comInstEventQueue[i] = new EventQueue("instruction-based event queue");
 
@@ -101,7 +101,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads, bool _def_reg,
     }
 
     // allocate per-thread load-based event queues
-    comLoadEventQueue = new (EventQueue *)[number_of_threads];
+    comLoadEventQueue = new EventQueue *[number_of_threads];
     for (int i = 0; i < number_of_threads; ++i)
         comLoadEventQueue[i] = new EventQueue("load-based event queue");
 

@@ -29,20 +29,32 @@
 #include <list>
 
 #include "base/misc.hh"
-#include "sim/startup.hh"
 #include "sim/debug.hh"
+#include "sim/startup.hh"
 
 typedef std::list<StartupCallback *> startupq_t;
-startupq_t &startupq() { static startupq_t queue; return queue; }
-StartupCallback::StartupCallback() { startupq().push_back(this); }
-StartupCallback::~StartupCallback() { startupq().remove(this); }
+
+startupq_t *startupq = NULL;
+
+StartupCallback::StartupCallback()
+{
+    if (startupq == NULL)
+        startupq = new startupq_t;
+    startupq->push_back(this);
+}
+
+StartupCallback::~StartupCallback()
+{
+    startupq->remove(this);
+}
+
 void StartupCallback::startup() { }
 
 void
 SimStartup()
 {
-    startupq_t::iterator i = startupq().begin();
-    startupq_t::iterator end = startupq().end();
+    startupq_t::iterator i = startupq->begin();
+    startupq_t::iterator end = startupq->end();
 
     while (i != end) {
         (*i)->startup();

@@ -26,15 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIMPLE_CPU_HH__
-#define __SIMPLE_CPU_HH__
+#ifndef __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
+#define __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
 
-#include "cpu/base_cpu.hh"
-#include "sim/eventq.hh"
-#include "cpu/pc_event.hh"
 #include "base/statistics.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
+#include "sim/eventq.hh"
 
 // forward declarations
 #ifdef FULL_SYSTEM
@@ -103,12 +103,7 @@ class SimpleCPU : public BaseCPU
   private:
     Trace::InstRecord *traceData;
     template<typename T>
-    void trace_data(T data) {
-      if (traceData) {
-        traceData->setData(data);
-      }
-    };
-
+    void trace_data(T data);
   public:
     //
     enum Status {
@@ -346,4 +341,4 @@ class SimpleCPU : public BaseCPU
     ExecContext *xcBase() { return xc; }
 };
 
-#endif // __SIMPLE_CPU_HH__
+#endif // __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__

@@ -85,4 +85,4 @@ StaticInst<ISA>::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt)
 
 
 // force instantiation of template function(s) above
-template StaticInst<AlphaISA>;
+template class StaticInst<AlphaISA>;
