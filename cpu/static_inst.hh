@@ -312,10 +312,11 @@ class StaticInst : public StaticInstBase
     }
 
     /**
-     * Return the target address for an indirect branch (jump).
-     * The register value is read from the supplied execution context.
-     * Invalid if not an indirect branch (i.e. isIndirectCtrl()
-     * should be true).
+     * Return the target address for an indirect branch (jump).  The
+     * register value is read from the supplied execution context, so
+     * the result is valid only if the execution context is about to
+     * execute the branch in question.  Invalid if not an indirect
+     * branch (i.e. isIndirectCtrl() should be true).
      */
     virtual Addr branchTarget(ExecContext *xc)
     {

@@ -51,7 +51,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 #ifdef FS_MEASURE
       swCtx(NULL),
 #endif
-      func_exe_insn(0), storeCondFailures(0)
+      func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
 }
@@ -61,14 +61,14 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
       process(_process), mem(process->getMemory()), asid(_asid),
-      func_exe_insn(0), storeCondFailures(0)
+      func_exe_inst(0), storeCondFailures(0)
 {
 }
 
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
                          FunctionalMemory *_mem, int _asid)
     : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
-      func_exe_insn(0), storeCondFailures(0)
+      func_exe_inst(0), storeCondFailures(0)
 {
 }
 #endif
@@ -92,7 +92,7 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 #endif
     regs = oldContext->regs;
     cpu_id = oldContext->cpu_id;
-    func_exe_insn = oldContext->func_exe_insn;
+    func_exe_inst = oldContext->func_exe_inst;
 
     storeCondFailures = 0;
 
@@ -106,7 +106,7 @@ ExecContext::serialize(ostream &os)
     SERIALIZE_ENUM(_status);
     regs.serialize(os);
     // thread_num and cpu_id are deterministic from the config
-    SERIALIZE_SCALAR(func_exe_insn);
+    SERIALIZE_SCALAR(func_exe_inst);
 }
 
 
@@ -116,7 +116,7 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ENUM(_status);
     regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
-    UNSERIALIZE_SCALAR(func_exe_insn);
+    UNSERIALIZE_SCALAR(func_exe_inst);
 }
 
 

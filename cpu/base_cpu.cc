@@ -71,16 +71,16 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
         maxThreadsPerCPU = number_of_threads;
 
     // allocate per-thread instruction-based event queues
-    comInsnEventQueue = new (EventQueue *)[number_of_threads];
+    comInstEventQueue = new (EventQueue *)[number_of_threads];
     for (int i = 0; i < number_of_threads; ++i)
-        comInsnEventQueue[i] = new EventQueue("instruction-based event queue");
+        comInstEventQueue[i] = new EventQueue("instruction-based event queue");
 
     //
     // set up instruction-count-based termination events, if any
     //
     if (max_insts_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comInsnEventQueue[i], max_insts_any_thread,
+            new SimExitEvent(comInstEventQueue[i], max_insts_any_thread,
                 "a thread reached the max instruction count");
 
     if (max_insts_all_threads != 0) {
@@ -90,7 +90,7 @@ BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
         int *counter = new int;
         *counter = number_of_threads;
         for (int i = 0; i < number_of_threads; ++i)
-            new CountedExitEvent(comInsnEventQueue[i],
+            new CountedExitEvent(comInstEventQueue[i],
                 "all threads reached the max instruction count",
                 max_insts_all_threads, *counter);
     }

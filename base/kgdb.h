@@ -172,32 +172,4 @@
 #define ALPHA_KENTRY_UNA        4
 #define ALPHA_KENTRY_SYS        5
 
-/*
- * MMCSR Fault Type Codes.  [OSF/1 PALcode Specific]
- */
-
-#define ALPHA_MMCSR_INVALTRANS  0
-#define ALPHA_MMCSR_ACCESS      1
-#define ALPHA_MMCSR_FOR         2
-#define ALPHA_MMCSR_FOE         3
-#define ALPHA_MMCSR_FOW         4
-
-/*
- * Instruction Fault Type Codes.  [OSF/1 PALcode Specific]
- */
-
-#define ALPHA_IF_CODE_BPT       0
-#define ALPHA_IF_CODE_BUGCHK    1
-#define ALPHA_IF_CODE_GENTRAP   2
-#define ALPHA_IF_CODE_FEN       3
-#define ALPHA_IF_CODE_OPDEC     4
-
-#define BKPT_INST       0x00000080      // breakpoint instruction
-#define BKPT_SIZE       (4)             // size of breakpoint inst
-
-#define IS_BREAKPOINT_TRAP(type, code)  ((type) == ALPHA_KENTRY_IF && \
-                                         (code) == ALPHA_IF_CODE_BPT)
-#define IS_WATCHPOINT_TRAP(type, code)  0
-
-
 #endif /* __KGDB_H__ */

@@ -169,7 +169,7 @@ EtherTap::detach()
 }
 
 bool
-EtherTap::recvPacket(PacketPtr packet)
+EtherTap::recvPacket(PacketPtr &packet)
 {
     if (dump)
         dump->dump(packet);

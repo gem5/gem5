@@ -838,7 +838,7 @@ class ScalarBase : public DataAccess
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U& v) { data()->set(v, params); }
+    void operator=(const U &v) { data()->set(v, params); }
 
     /**
      * Increment the stat by the given value. This calls the associated
@@ -846,7 +846,7 @@ class ScalarBase : public DataAccess
      * @param v The value to add.
      */
     template <typename U>
-    void operator+=(const U& v) { data()->inc(v, params); }
+    void operator+=(const U &v) { data()->inc(v, params); }
 
     /**
      * Decrement the stat by the given value. This calls the associated
@@ -854,7 +854,7 @@ class ScalarBase : public DataAccess
      * @param v The value to substract.
      */
     template <typename U>
-    void operator-=(const U& v) { data()->dec(v, params); }
+    void operator-=(const U &v) { data()->dec(v, params); }
 
     /**
      * Return the number of elements, always 1 for a scalar.
@@ -1105,7 +1105,7 @@ class ScalarProxy
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U& v) { data()->set(v, *params); }
+    void operator=(const U &v) { data()->set(v, *params); }
 
     /**
      * Increment the stat by the given value. This calls the associated
@@ -1113,7 +1113,7 @@ class ScalarProxy
      * @param v The value to add.
      */
     template <typename U>
-    void operator+=(const U& v) { data()->inc(v, *params); }
+    void operator+=(const U &v) { data()->inc(v, *params); }
 
     /**
      * Decrement the stat by the given value. This calls the associated
@@ -1121,7 +1121,7 @@ class ScalarProxy
      * @param v The value to substract.
      */
     template <typename U>
-    void operator-=(const U& v) { data()->dec(v, *params); }
+    void operator-=(const U &v) { data()->dec(v, *params); }
 
     /**
      * Return the number of elements, always 1 for a scalar.
@@ -1574,7 +1574,7 @@ struct AvgFancy
      * @param number The number of times to add the value.
      * @param p The paramters of the distribution.
      */
-    void sample(T val, int number, const Params& p)
+    void sample(T val, int number, const Params &p)
     {
         T value = val * number;
         sum += value;
@@ -1663,7 +1663,7 @@ class DistBase : public DataAccess
      * @param n The number of times to add it, defaults to 1.
      */
     template <typename U>
-    void sample(const U& v, int n = 1) { data()->sample(v, n, params); }
+    void sample(const U &v, int n = 1) { data()->sample(v, n, params); }
 
     /**
      * Return the number of entries in this stat.
@@ -1787,7 +1787,7 @@ class DistProxy
 
   public:
     template <typename U>
-    void sample(const U& v, int n = 1) { data()->sample(v, n, cstat->params); }
+    void sample(const U &v, int n = 1) { data()->sample(v, n, cstat->params); }
 
     size_t size() const { return 1; }
     bool zero() const { return data()->zero(cstat->params); }
@@ -2067,7 +2067,7 @@ class UnaryNode : public Node
     mutable rvec_t result;
 
   public:
-    UnaryNode(NodePtr p) : l(p) {}
+    UnaryNode(NodePtr &p) : l(p) {}
 
     const rvec_t &val() const {
         const rvec_t &lvec = l->val();
@@ -2110,7 +2110,7 @@ class BinaryNode : public Node
     mutable rvec_t result;
 
   public:
-    BinaryNode(NodePtr a, NodePtr b) : l(a), r(b) {}
+    BinaryNode(NodePtr &a, NodePtr &b) : l(a), r(b) {}
 
     const rvec_t &val() const {
         Op op;
@@ -2179,7 +2179,7 @@ class SumNode : public Node
     mutable rvec_t result;
 
   public:
-    SumNode(NodePtr p) : l(p), result(1) {}
+    SumNode(NodePtr &p) : l(p), result(1) {}
 
     const rvec_t &val() const {
         const rvec_t &lvec = l->val();
@@ -2534,7 +2534,7 @@ class Scalar
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U& v) { Base::operator=(v); }
+    void operator=(const U &v) { Base::operator=(v); }
 };
 
 /**
@@ -2562,7 +2562,7 @@ class Average
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U& v) { Base::operator=(v); }
+    void operator=(const U &v) { Base::operator=(v); }
 };
 
 /**
@@ -2999,7 +2999,7 @@ class Temp
      * Return the node pointer.
      * @return the node pointer.
      */
-    operator NodePtr() { return node;}
+    operator NodePtr&() { return node;}
 
   public:
     /**

@@ -83,7 +83,7 @@ AlphaTlb::lookup(Addr vpn, uint8_t asn) const
 
 
 void
-AlphaTlb::checkCacheability(MemReqPtr req)
+AlphaTlb::checkCacheability(MemReqPtr &req)
 {
     // in Alpha, cacheability is controlled by upper-level bits of the
     // physical address
@@ -268,7 +268,7 @@ AlphaItb::fault(Addr pc, ExecContext *xc) const
 
 
 Fault
-AlphaItb::translate(MemReqPtr req) const
+AlphaItb::translate(MemReqPtr &req) const
 {
     InternalProcReg *ipr = req->xc->regs.ipr;
 
@@ -433,7 +433,7 @@ AlphaDtb::fault(Addr vaddr, uint64_t flags, ExecContext *xc) const
 }
 
 Fault
-AlphaDtb::translate(MemReqPtr req, bool write) const
+AlphaDtb::translate(MemReqPtr &req, bool write) const
 {
     RegFile *regs = &req->xc->regs;
     Addr pc = regs->pc;

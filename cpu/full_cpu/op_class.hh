@@ -51,7 +51,6 @@ enum OpClass {
     FloatSQRT,		/* floating point square root */
     RdPort,		/* memory read port */
     WrPort,		/* memory write port */
-    LvqPort,		/* load value queue read port (redundant threading) */
     IPrefPort,
     Num_OpClasses	/* total functional unit classes */
 };

@@ -128,7 +128,7 @@ class BaseCPU : public SimObject
      * scheduling events based on number of instructions committed by
      * a particular thread.
      */
-    EventQueue **comInsnEventQueue;
+    EventQueue **comInstEventQueue;
 
     /**
      * Vector of per-thread load-based event queues.  Used for

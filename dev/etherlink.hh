@@ -92,7 +92,7 @@ class EtherLink : public SimObject
         virtual std::string name() const { return objName; }
 
         bool busy() const { return (bool)packet; }
-        bool transmit(PacketPtr packet);
+        bool transmit(PacketPtr &packet);
 
         void setTxInt(Interface *i) { assert(!txint); txint = i; }
         void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
@@ -108,7 +108,7 @@ class EtherLink : public SimObject
 
       public:
         Interface(const std::string &name, Link *txlink, Link *rxlink);
-        bool recvPacket(PacketPtr packet) { return txlink->transmit(packet); }
+        bool recvPacket(PacketPtr &packet) { return txlink->transmit(packet); }
         void sendDone() { }
     };
 

@@ -1287,6 +1287,13 @@ declare {{
 	{
 	}
 
+	Addr branchTarget(ExecContext *xc)
+	{
+	    Addr NPC = xc->readPC() + 4;
+	    uint64_t Rb = xc->readIntReg(_srcRegIdx[0]);
+	    return (Rb & ~3) | (NPC & 1);
+	}
+
 	std::string generateDisassembly(Addr pc, const SymbolTable *symtab)
 	{
 	    std::stringstream ss;

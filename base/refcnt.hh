@@ -64,7 +64,7 @@ class RefCountingPtr
   public:
     RefCountingPtr() : data(NULL) {}
     RefCountingPtr(T *data) { copy(data); }
-    RefCountingPtr(const RefCountingPtr& r) { copy(r.data); }
+    RefCountingPtr(const RefCountingPtr &r) { copy(r.data); }
     ~RefCountingPtr() { del(); }
 
     T *operator->() { return data; }
@@ -83,7 +83,7 @@ class RefCountingPtr
         return *this;
     }
 
-    RefCountingPtr &operator=(const RefCountingPtr& r) {
+    RefCountingPtr &operator=(const RefCountingPtr &r) {
         if (data != r.data) {
             del();
             copy(r.data);
