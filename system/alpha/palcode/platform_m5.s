@@ -694,13 +694,15 @@ EXPORT(sys_interrupt)
 
 	cmpeq	r13, 23, r12
 	bne	r12, sys_int_23 		// Check for level 23 interrupt
+                                                // IPI in Tsunami
 	
 	cmpeq	r13, 22, r12
-	bne	r12, sys_int_22 		// Check for level 22 interrupt (might be 
-						//  interprocessor or timer interrupt)
+	bne	r12, sys_int_22 		// Check for level 22 interrupt 
+						//  timer interrupt
 
 	cmpeq	r13, 21, r12
 	bne	r12, sys_int_21 		// Check for level 21 interrupt
+                                                // I/O
 
 	cmpeq	r13, 20, r12
 	bne	r12, sys_int_20			// Check for level 20 interrupt (might be corrected 
@@ -753,16 +755,20 @@ sys_int_23:
 
 	ALIGN_BRANCH
 sys_int_22:
-        or      r31,1,r16                       // a0 means it is a I/O interrupt
-        lda     r8,0xf01(r31)
+        or      r31,1,r16                       // a0 means it is a clock interrupt
+        lda     r8,0xf01(r31)                   // build up an address for the MISC register
         sll     r8,16,r8
-        lda     r8,0xa000(r8)
-        sll     r8,16,r8
-        lda     r8,0x080(r8)
-        or      r31,0x10,r9
+        lda     r8,0xa000(r8)                   
+        sll     r8,16,r8                       
+        lda     r8,0x080(r8)                  
+
+        ldq_p   r10,0(r8)                       // read misc register
+        and     r10,0x3,r10                     // isolate CPUID
+        or      r31,0x10,r9                     // load r9 with bit to clear
+        sll     r9,r10,r9                       // left shift by CPU ID
         stq_p   r9, 0(r8)                       // clear the rtc interrupt
          
-        br	r31, pal_post_interrupt		// 
+        br	r31, pal_post_interrupt		// Tell the OS
 
 
 	ALIGN_BRANCH

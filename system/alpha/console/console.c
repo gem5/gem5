@@ -205,7 +205,7 @@ struct rpb xxm_rpb = {
 #if 0
    0x12,		/* 050: system type - masquarade as some random 21064 */
 #endif
-   34, /* masquerade a Tsunami RGD */
+   0, /* masquerade a Tsunami RGD */
    (1<<10),		/* 058: system variation */
    'c'|('o'<<8)|('o'<<16)|('l'<< 24),		/* 060: system revision */
    1024*4096,		/* 068: scaled interval clock intr freq  OVERRIDEN*/
