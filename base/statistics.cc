@@ -131,6 +131,10 @@ class Database
     typedef list<Stat *> list_t;
     typedef map<const Stat *, StatData *> map_t;
 
+    list<BinBase *> bins;
+    map<const BinBase *, std::string > bin_names;
+    list_t binnedStats;
+
     list_t allStats;
     list_t printStats;
     map_t map;
@@ -145,6 +149,7 @@ class Database
     void check();
     void regStat(Stat *stat);
     StatData *print(Stat *stat);
+    void regBin(BinBase *bin, std::string name);
 };
 
 Database::Database()
@@ -156,14 +161,50 @@ Database::~Database()
 void
 Database::dump(ostream &stream)
 {
+
     list_t::iterator i = printStats.begin();
     list_t::iterator end = printStats.end();
-
     while (i != end) {
         Stat *stat = *i;
-        if (stat->dodisplay())
-            stat->display(stream);
+        if (stat->binned())
+            binnedStats.push_back(stat);
         ++i;
+    }
+
+    list<BinBase *>::iterator j = bins.begin();
+    list<BinBase *>::iterator bins_end=bins.end();
+
+    if (!bins.empty()) {
+        ccprintf(stream, "PRINTING BINNED STATS\n");
+        while (j != bins_end) {
+            (*j)->activate();
+           ::map<const BinBase  *, std::string>::const_iterator iter;
+            iter = bin_names.find(*j);
+            if (iter == bin_names.end())
+                panic("a binned stat not found in names map!");
+            ccprintf(stream,"---%s Bin------------\n", (*iter).second);
+
+           list_t::iterator i = binnedStats.begin();
+           list_t::iterator end = binnedStats.end();
+           while (i != end) {
+               Stat *stat = *i;
+               if (stat->dodisplay())
+                   stat->display(stream);
+               ++i;
+           }
+           ++j;
+           ccprintf(stream, "---------------------------------\n");
+        }
+    }
+
+    list_t::iterator k = printStats.begin();
+    list_t::iterator endprint = printStats.end();
+    ccprintf(stream, "*****ALL STATS*****\n");
+    while (k != endprint) {
+        Stat *stat = *k;
+        if (stat->dodisplay() && !stat->binned())
+            stat->display(stream);
+        ++k;
     }
 }
 
@@ -221,6 +262,21 @@ Database::regStat(Stat *stat)
     assert(success && "this should never fail");
 }
 
+void
+Database::regBin(BinBase *bin, std::string name)
+{
+    if (bin_names.find(bin) != bin_names.end())
+        panic("shouldn't register bin twice");
+
+    bins.push_back(bin);
+
+    bool success = (bin_names.insert(make_pair(bin,name))).second;
+    assert(bin_names.find(bin) != bin_names.end());
+    assert(success && "this should not fail");
+
+    cprintf("registering %s\n", name);
+}
+
 bool
 Stat::less(Stat *stat1, Stat *stat2)
 {
@@ -274,6 +330,7 @@ Stat::Stat(bool reg)
 
     if (reg)
         StatDB().regStat(this);
+
 #ifdef STAT_DEBUG
     number = ++total_stats;
     cprintf("I'm stat number %d\n",number);
@@ -826,6 +883,12 @@ BinBase::memory()
     }
 
     return mem;
+}
+
+void
+BinBase::regBin(BinBase *bin, std::string name)
+{
+    StatDB().regBin(bin, name);
 }
 
 } // namespace Detail
