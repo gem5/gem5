@@ -59,6 +59,12 @@
 
 #include "sim/host.hh"
 
+//
+//  Un-comment this to enable wierdo-stat debugging
+//
+// #define STAT_DEBUG
+
+
 #ifndef NAN
 float __nan();
 /** Define Not a number. */
