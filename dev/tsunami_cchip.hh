@@ -71,7 +71,11 @@ class TsunamiCChip : public FunctionalMemory
      * that can occur.
      */
     uint64_t drir;
+
+    uint64_t misc;
+
     uint64_t ipiInterrupting[Tsunami::Max_CPUs];
+    bool RTCInterrupting[Tsunami::Max_CPUs];
 
   public:
     TsunamiCChip(const std::string &name, Tsunami *t, Addr a,
@@ -80,14 +84,12 @@ class TsunamiCChip : public FunctionalMemory
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
+    void postRTC();
     void postDRIR(uint32_t interrupt);
     void clearDRIR(uint32_t interrupt);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-    uint64_t misc;
-    bool RTCInterrupting[Tsunami::Max_CPUs];
 };
 
 #endif // __TSUNAMI_CCHIP_HH__

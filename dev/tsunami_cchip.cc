@@ -137,7 +137,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
 
     bool supportedWrite = false;
-
+    uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
 
     switch (req->size) {
 
@@ -155,11 +155,11 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                 if ((itintr = (*(uint64_t*) data) & (0xf<<4))) {
                     //Clear the bits in ITINTR
                     misc &= ~(itintr);
-                    for (int i=0; i < 4; i++) {
+                    for (int i=0; i < size; i++) {
                         if ((itintr & (1 << (i+4))) && RTCInterrupting[i]) {
                             tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ2, 0);
                             RTCInterrupting[i] = false;
-                            DPRINTF(Tsunami, "clearing rtc interrupt\n");
+                            DPRINTF(Tsunami, "clearing rtc interrupt to cpu=%d\n", i);
                         }
                     }
                     supportedWrite = true;
@@ -169,7 +169,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                 if ((ipreq = (*(uint64_t*) data) & (0xf << 12))) {
                     //Set the bits in IPINTR
                     misc |= (ipreq >> 4);
-                    for (int i=0; i < 4; i++) {
+                    for (int i=0; i < size; i++) {
                         if ((ipreq & (1 << (i + 12)))) {
                             if (!ipiInterrupting[i])
                                 tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ3, 0);
@@ -185,7 +185,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                 if ((ipintr = (*(uint64_t*) data) & (0xf << 8))) {
                     //Clear the bits in IPINTR
                     misc &= ~(ipintr);
-                    for (int i=0; i < 4; i++) {
+                    for (int i=0; i < size; i++) {
                         if ((ipintr & (1 << (i + 8))) && ipiInterrupting[i]) {
                             if (!(--ipiInterrupting[i]))
                                 tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ3, 0);
@@ -289,11 +289,28 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 }
 
 void
+TsunamiCChip::postRTC()
+{
+    int size = tsunami->intrctrl->cpu->system->execContexts.size();
+
+    for (int i = 0; i < size; i++) {
+        if (!RTCInterrupting[i]) {
+            misc |= 16 << i;
+            RTCInterrupting[i] = true;
+            tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
+            DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d", i);
+        }
+    }
+
+}
+
+void
 TsunamiCChip::postDRIR(uint32_t interrupt)
 {
     uint64_t bitvector = (uint64_t)0x1 << interrupt;
     drir |= bitvector;
-    for(int i=0; i < Tsunami::Max_CPUs; i++) {
+    uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
+    for(int i=0; i < size; i++) {
         dir[i] = dim[i] & drir;
         if (dim[i] & bitvector) {
                 tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
@@ -307,10 +324,11 @@ void
 TsunamiCChip::clearDRIR(uint32_t interrupt)
 {
     uint64_t bitvector = (uint64_t)0x1 << interrupt;
+    uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
     if (drir & bitvector)
     {
         drir &= ~bitvector;
-        for(int i=0; i < Tsunami::Max_CPUs; i++) {
+        for(int i=0; i < size; i++) {
             if (dir[i] & bitvector) {
                 tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
                 DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"

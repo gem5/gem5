@@ -65,15 +65,8 @@ TsunamiIO::RTCEvent::process()
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
     schedule(curTick + ticksPerSecond/RTC_RATE);
     //Actually interrupt the processor here
-    int size = tsunami->intrctrl->cpu->system->execContexts.size();
+    tsunami->cchip->postRTC();
 
-    for (int i = 0; i < size; i++) {
-        if (!tsunami->cchip->RTCInterrupting[i]) {
-            tsunami->cchip->misc |= 16 << i;
-            tsunami->cchip->RTCInterrupting[i] = true;
-            tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
-        }
-    }
 }
 
 const char *
