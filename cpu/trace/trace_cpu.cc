@@ -75,9 +75,14 @@ TraceCPU::tick()
                 icacheInterface->squash(nextReq->asid);
             } else {
                 ++instReqs;
-                nextReq->completionEvent =
-                    new TraceCompleteEvent(nextReq, this);
-                icacheInterface->access(nextReq);
+                if (icacheInterface->doEvents()) {
+                    nextReq->completionEvent =
+                        new TraceCompleteEvent(nextReq, this);
+                    icacheInterface->access(nextReq);
+                } else {
+                    icacheInterface->access(nextReq);
+                    completeRequest(nextReq);
+                }
             }
         } else {
             if (dcacheInterface->isBlocked())
@@ -85,9 +90,15 @@ TraceCPU::tick()
 
             ++dataReqs;
             nextReq->time = curTick;
-            nextReq->completionEvent =
-                new TraceCompleteEvent(nextReq, this);
-            dcacheInterface->access(nextReq);
+            if (dcacheInterface->doEvents()) {
+                nextReq->completionEvent =
+                    new TraceCompleteEvent(nextReq, this);
+                dcacheInterface->access(nextReq);
+            } else {
+                dcacheInterface->access(nextReq);
+                completeRequest(nextReq);
+            }
+
         }
         nextCycle = dataTrace->getNextReq(nextReq);
     }

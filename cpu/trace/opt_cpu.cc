@@ -52,7 +52,13 @@ OptCPU::OptCPU(const string &name,
       numBlks(cache_size/block_size), assoc(_assoc), numSets(numBlks/assoc),
       setMask(numSets - 1)
 {
-    int log_block_size = (int)(log((double) block_size)/log(2.0));
+    int log_block_size = 0;
+    int tmp_block_size = block_size;
+    while (tmp_block_size > 1) {
+        ++log_block_size;
+        tmp_block_size = tmp_block_size >> 1;
+    }
+    assert(1<<log_block_size == block_size);
     MemReqPtr req;
     trace->getNextReq(req);
     refInfo.resize(numSets);
@@ -124,7 +130,7 @@ OptCPU::processSet(int set)
     for (int start = assoc/2; start >= 0; --start) {
         heapify(set,start);
     }
-    verifyHeap(set,0);
+    //verifyHeap(set,0);
 
     for (; i < refInfo[set].size(); ++i) {
         RefIndex cache_index = lookupValue(refInfo[set][i].addr);
@@ -134,8 +140,11 @@ OptCPU::processSet(int set)
             // replace from cacheHeap[0]
             // mark replaced block as absent
             setValue(refInfo[set][cacheHeap[0]].addr, -1);
+            setValue(refInfo[set][i].addr, 0);
             cacheHeap[0] = i;
             heapify(set, 0);
+            // Make sure its in the cache
+            assert(lookupValue(refInfo[set][i].addr) != -1);
         } else {
             // hit
             hits++;
@@ -143,9 +152,11 @@ OptCPU::processSet(int set)
                    refInfo[set][i].addr);
             assert(refInfo[set][cacheHeap[cache_index]].nextRefTime == i);
             assert(heapLeft(cache_index) >= assoc);
+
+            cacheHeap[cache_index] = i;
+            processRankIncrease(set, cache_index);
+            assert(lookupValue(refInfo[set][i].addr) != -1);
         }
-        cacheHeap[cache_index] = i;
-        processRankIncrease(set, cache_index);
     }
 }
 void
