@@ -338,16 +338,29 @@ change_thread_state(int thread_number, int activate, int priority)
 Fault
 SimpleCPU::copySrcTranslate(Addr src)
 {
-    memReq->reset(src, (dcacheInterface) ?
-                  dcacheInterface->getBlockSize()
-                  : 64);
+    static bool no_warn = true;
+    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    // Only support block sizes of 64 atm.
+    assert(blk_size == 64);
+    int offset = src & (blk_size - 1);
+
+    // Make sure block doesn't span page
+    if (no_warn && (src & (~8191)) == ((src + blk_size) & (~8191))) {
+        warn("Copied block source spans pages.");
+        no_warn = false;
+    }
+
+
+    memReq->reset(src & ~(blk_size - 1), blk_size);
 
     // translate to physical address
     Fault fault = xc->translateDataReadReq(memReq);
 
+    assert(fault != Alignment_Fault);
+
     if (fault == No_Fault) {
         xc->copySrcAddr = src;
-        xc->copySrcPhysAddr = memReq->paddr;
+        xc->copySrcPhysAddr = memReq->paddr + offset;
     } else {
         xc->copySrcAddr = 0;
         xc->copySrcPhysAddr = 0;
@@ -358,14 +371,28 @@ SimpleCPU::copySrcTranslate(Addr src)
 Fault
 SimpleCPU::copy(Addr dest)
 {
+    static bool no_warn = true;
     int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    // Only support block sizes of 64 atm.
+    assert(blk_size == 64);
     uint8_t data[blk_size];
-    assert(xc->copySrcAddr);
-    memReq->reset(dest, blk_size);
+    //assert(xc->copySrcAddr);
+    int offset = dest & (blk_size - 1);
+
+    // Make sure block doesn't span page
+    if (no_warn && (dest & (~8191)) == ((dest + blk_size) & (~8191))) {
+        no_warn = false;
+        warn("Copied block destination spans pages. ");
+    }
+
+    memReq->reset(dest & ~(blk_size -1), blk_size);
     // translate to physical address
     Fault fault = xc->translateDataWriteReq(memReq);
+
+    assert(fault != Alignment_Fault);
+
     if (fault == No_Fault) {
-        Addr dest_addr = memReq->paddr;
+        Addr dest_addr = memReq->paddr + offset;
         // Need to read straight from memory since we have more than 8 bytes.
         memReq->paddr = xc->copySrcPhysAddr;
         xc->mem->read(memReq, data);

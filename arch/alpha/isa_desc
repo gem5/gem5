@@ -1842,7 +1842,7 @@ decode OPCODE default Unknown::unknown() {
 	0x2a: ldl_l({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }}, LOCKED);
 	0x2b: ldq_l({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, LOCKED);
 	0x20: copy_load({{EA = Ra;}}, 
-	                {{ fault = xc->copySrcTranslate(EA);}},
+	                {{fault = xc->copySrcTranslate(EA);}},
 			IsMemRef, IsLoad, IsCopy);
     }
 
@@ -1864,7 +1864,7 @@ decode OPCODE default Unknown::unknown() {
 	0x26: sts({{ EA = Rb + disp; }}, {{ Mem.ul = t_to_s(Fa.uq); }});
 	0x27: stt({{ EA = Rb + disp; }}, {{ Mem.df = Fa; }});
 	0x24: copy_store({{EA = Rb;}},
-	                 {{ fault = xc->copy(EA);}},
+	                 {{fault = xc->copy(EA);}},
 			 IsMemRef, IsStore, IsCopy);
     }
 
