@@ -54,6 +54,8 @@ class EtherLink : public SimObject
       */
     class Link : public Serializeable {
       protected:
+        std::string objName;
+
         Interface *txint;
         Interface *rxint;
 
@@ -86,6 +88,8 @@ class EtherLink : public SimObject
       public:
         Link(const std::string &name, double rate, EtherDump *dump);
         ~Link() {}
+
+        virtual std::string name() const { return objName; }
 
         bool busy() const { return (bool)packet; }
         bool transmit(PacketPtr packet);

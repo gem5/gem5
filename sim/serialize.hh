@@ -107,9 +107,6 @@ class Serializeable
     friend class Serializer;
 
   protected:
-    // object name: should be unique
-    std::string objName;
-
     bool serialized;
     static Serializer *serializer;
 
@@ -118,15 +115,12 @@ class Serializeable
     void nameOut(std::ostream& os, const std::string &_name);
 
   public:
-    Serializeable(const std::string &n);
+    Serializeable();
     virtual ~Serializeable();
 
-    void setName(const std::string &name);
+    // manditory virtual function, so objects must provide names
+    virtual std::string name() const = 0;
 
-    // return name
-    const std::string &name() const { return objName; }
-
-    virtual void nameChildren() {}
     virtual void serialize(std::ostream& os) {}
     virtual void unserialize(Checkpoint *cp, const std::string &section) {}
 

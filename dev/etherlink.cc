@@ -80,7 +80,7 @@ EtherLink::Interface::Interface(const std::string &name, Link *tx, Link *rx)
 }
 
 EtherLink::Link::Link(const std::string &name, double rate, EtherDump *d)
-    : Serializeable(name), txint(NULL), rxint(NULL), ticks_per_byte(rate),
+    : objName(name), txint(NULL), rxint(NULL), ticks_per_byte(rate),
       dump(d), event(&mainEventQueue, this)
 {}
 

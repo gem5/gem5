@@ -49,8 +49,8 @@ using namespace std;
 
 Serializer *Serializeable::serializer = NULL;
 
-Serializeable::Serializeable(const string &n)
-    : objName(n), serialized(false)
+Serializeable::Serializeable()
+    : serialized(false)
 { }
 
 Serializeable::~Serializeable()
@@ -209,16 +209,6 @@ Serializeable::childOut(const string &name, Serializeable *child)
 }
 #endif
 
-void
-Serializeable::setName(const string &name)
-{
-    if (objName != "") {
-        cprintf("Renaming object '%s' to '%s'.\n", objName, name);
-    }
-
-    objName = name;
-}
-
 Serializer::Serializer()
 { }
 
@@ -269,20 +259,6 @@ Serializer::serialize(const string &f)
     *output << "// checkpoint generated: " << ctime(&t);
 
     serlist_t list;
-
-    add_objects();
-    while (!objects.empty()) {
-        Serializeable *serial = objects.front();
-        DPRINTF(Serialize, "Naming children of %s\n", serial->name());
-        serial->nameChildren();
-        objects.pop_front();
-        list.push_back(serial);
-    }
-
-    while (!list.empty()) {
-        list.front()->serialized = false;
-        list.pop_front();
-    }
 
     add_objects();
     while (!objects.empty()) {
