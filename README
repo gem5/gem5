@@ -1,4 +1,3 @@
-
 This is release m5_1.0_beta1 of the M5 simulator.
 
 This file contains brief "getting started" information and release
@@ -13,13 +12,23 @@ distribution.  The archive you've unpacked has three subdirectories:
  - m5: the simulator itself
  - m5-test: regression tests and scripts to run them
  - ext: less-common external packages needed to build m5
-   (currently just "ply")
+   (currently ply and libelf)
 
-Although M5 is capable of full-system simulation, the only OS it
-currently supports is the proprietary Compaq/HP Tru64 version of Unix.
-We are thus unable to distribute bootable disk images freely.  If you
-have a Tru64 license and are interested in obtaining disk images,
-contact us at m5-dev@eecs.umich.edu.
+M5 is a capable, full-system simulator that current supports both Linux
+2.4/2.6 and the proprietary Compaq/HP Tru64 version of Unix. We are able 
+to distribute Linux bootdisks, but we are unable to distribute bootable
+disk images of Tru64 Unix. If you have a Tru64 license and are interested 
+in obtaining disk images, contact us at m5-dev@eecs.umich.edu.
+
+WHAT'S NEEDED
+-------------
+-GCC(3.X)
+-Python(2.2.2+)
+
+WHAT'S RECOMMENDED
+------------------
+-MySQL (for statistics complex statistics storage/retrieval)
+-Python-MysqlDB (for statistics analysis) 
 
 GETTING STARTED
 ---------------
@@ -28,24 +37,23 @@ The following steps will build and test the simulator.  The variable
 "$top" refers to the top directory where you've unpacked the files,
 i.e., the one containing the m5, m5-test, and ext directories.
 
-cd $top/m5/setup
-./setup ALPHA		# set up build/ALPHA directory
-cd $top/m5/build/ALPHA
-make m5.opt		# use "-j N" if you've got an MP system
-# wait for build...
+There are three different build targets and three optimizations in each level:
+Target:
+-------
+ALPHA  - Syscall emulation simulation
+KERNEL - Linux full system simulation
+KERNEL_TLASER - Tru64 Unix full system simulation
+
+Optimization:
+-------------
+m5.debug - debug version of the code with tracing and without optimization
+m5.opt   - optimized version of code with tracing
+m5.fast  - optimized version of the code without tracing and asserts
+
+cd $top/m5/build
+scons TARGET/OPTLEVL  # e.g. KERNEL/m5.opt, use -j N if you have a MP system
 cd $top/m5-test
 ./do-tests.pl -B ALPHA	# test what you just built
+./do-tests.pl -B KERNEL	# test what you just built
 # wait for tests to run...
 # should end with "finished do-tests successfully!"
-
-If you run into errors regarding m5/arch/alpha/decoder.cc, just
-"touch" that file to update its timestamp.  This file is generated
-from a compact ISA description using a program written in Python.  If
-you have Python 2.2.2 or later installed on your system, you should be
-able to generate it yourself, but if you don't have Python (or have an
-older version), you may run in to trouble.  Since we've shipped a
-working copy of decoder.cc, it's not necessary to have Python to build
-M5 (unless you start modifying the ISA decription).  Unfortunately,
-sometimes make gets confused and tries to do so anyway.  The "touch"
-should convince make to stop trying.
-
