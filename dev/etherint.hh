@@ -56,7 +56,10 @@ class EtherInt : public SimObject
     void setPeer(EtherInt *p);
     virtual bool recvPacket(PacketPtr packet) = 0;
     void recvDone() { peer->sendDone(); }
-    bool sendPacket(PacketPtr packet) { return peer->recvPacket(packet); }
+    bool sendPacket(PacketPtr packet)
+    {
+        return peer ? peer->recvPacket(packet) : true;
+    }
     virtual void sendDone() = 0;
 };
 
