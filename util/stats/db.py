@@ -207,15 +207,42 @@ class Database(object):
 
     # Name: listTicks
     # Desc: Prints all samples for a given run
-    def listTicks(self, run=None):
+    def listTicks(self, runs=None):
         print "tick"
         print "----------------------------------------"
-        sql = 'select distinct dt_tick from data where dt_stat=1950'
-        #if run != None:
-        #    sql += ' where dt_run=%d' % run
+        sql = 'select distinct dt_tick from data where dt_stat=1180 and ('
+        if runs != None:
+            first = True
+            for run in runs:
+               if first:
+            #       sql += ' where'
+                   first = False
+               else:
+                   sql += ' or'
+               sql += ' dt_run=%s' % run.run
+            sql += ')'
         self.query(sql)
         for r in self.cursor.fetchall():
             print r[0]
+
+    # Name: retTicks
+    # Desc: Prints all samples for a given run
+    def retTicks(self, runs=None):
+        sql = 'select distinct dt_tick from data where dt_stat=1180 and ('
+        if runs != None:
+            first = True
+            for run in runs:
+               if first:
+                   first = False
+               else:
+                   sql += ' or'
+               sql += ' dt_run=%s' % run.run
+            sql += ')'
+        self.query(sql)
+        ret = []
+        for r in self.cursor.fetchall():
+            ret.append(r[0])
+        return ret
 
     # Name: liststats
     # Desc: Prints all statistics that appear in the database,

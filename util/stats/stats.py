@@ -249,6 +249,37 @@ def commands(options, command, args):
         info.source.listRuns(user)
         return
 
+    if command == 'stability':
+        stats = info.source.getStat(args[0])
+        info.source.get = "avg"
+
+        #loop through all the stats selected
+        for stat in stats:
+            avg = float(stat)
+
+            #loop through all the selected runs
+            for run in runs:
+                info.display_run = run.run;
+                #print run.name
+                #print avg
+                runTicks = info.source.retTicks([ run ])
+                #throw away the first one, it's 0
+                runTicks.pop(0)
+
+                #loop through all the various ticks for each run
+                for tick in runTicks:
+                    stat.ticks = str(tick)
+                    val = float(stat)
+                    if (val < (avg * .9)) or (val > (avg * 1.1)):
+                        print '%s:%s is %f, which is more than 10%% of the'\
+                              'mean %f' % (run.name, stat.name, stat, avg)
+
+
+
+
+        return
+
+
     if command == 'stats':
         if len(args) == 0:
             info.source.listStats()
