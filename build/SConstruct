@@ -239,6 +239,15 @@ default_env = Environment(ENV = os.environ,  # inherit user's enviroment vars
                           FULL_SYSTEM = False,
                           USE_MYSQL = False)
 
+# For some reason, the CC and CXX variables don't get passed into the
+# environment correctly.  This is probably some sort of scons bug that
+# will eventually be fixed.
+if os.environ.has_key('CC'):
+    default_env.Replace(CC=os.environ['CC'])
+
+if os.environ.has_key('CXX'):
+    default_env.Replace(CXX=os.environ['CXX'])
+
 # M5_EXT is used by isa_parser.py to find the PLY package.
 default_env.Append(ENV = { 'M5_EXT' : EXT_SRCDIR })
 
