@@ -87,6 +87,7 @@ class Tru64System : public System
     Statistics::MainBin *sooWriteBin;
     Statistics::MainBin *senditBin;
     Statistics::MainBin *sosendBin;
+    Statistics::MainBin *tcpSosendBin;
     Statistics::MainBin *tcpOutputBin;
     Statistics::MainBin *ipOutputBin;
     Statistics::MainBin *etherOutputBin;
@@ -130,6 +131,7 @@ class Tru64System : public System
     FnEvent *sooWriteEvent;
     FnEvent *senditEvent;
     FnEvent *sosendEvent;
+    FnEvent *tcpSosendEvent;
     FnEvent *tcpOutputEvent;
     FnEvent *ipOutputEvent;
     FnEvent *etherOutputEvent;

@@ -164,6 +164,9 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         sosendBin = new Statistics::MainBin(name() + " sosend");
         fnBins.insert(make_pair("sosend", sosendBin));
 
+        tcpSosendBin = new Statistics::MainBin(name() + " tcp_sosend");
+        fnBins.insert(make_pair("tcp_sosend", tcpSosendBin));
+
         tcpOutputBin = new Statistics::MainBin(name() + " tcp_output");
         fnBins.insert(make_pair("tcp_output", tcpOutputBin));
 
@@ -226,6 +229,7 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
           sooWriteEvent = new FnEvent(&pcEventQueue, "soo_write", this);
           senditEvent = new FnEvent(&pcEventQueue, "sendit", this);
           sosendEvent = new FnEvent(&pcEventQueue, "sosend", this);
+          tcpSosendEvent = new FnEvent(&pcEventQueue, "tcp_sosend", this);
           tcpOutputEvent = new FnEvent(&pcEventQueue, "tcp_output", this);
           ipOutputEvent = new FnEvent(&pcEventQueue, "ip_output", this);
           etherOutputEvent = new FnEvent(&pcEventQueue, "ether_output", this);
@@ -405,6 +409,11 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         else
             panic("could not find kernel symbol \'sosend\'");
 
+        if (kernelSymtab->findAddress("tcp_sosend", addr))
+            tcpSosendEvent->schedule(addr);
+        else
+            panic("could not find kernel symbol \'tcp_sosend\'");
+
         if (kernelSymtab->findAddress("tcp_output", addr))
             tcpOutputEvent->schedule(addr);
         else
@@ -466,10 +475,13 @@ Tru64System::Tru64System(const string _name, const uint64_t _init_param,
         populateMap("soreceive", "soo_read");
 
         populateMap("write", "");
-        populateMap("sendit", "write");
+        populateMap("osend", "");
+        populateMap("soo_write", "write");
+        populateMap("sendit", "osend");
         populateMap("sosend", "sendit");
-
-        populateMap("tcp_output", "");
+        populateMap("sosend", "soo_write");
+        populateMap("tcp_sosend", "sosend");
+        populateMap("tcp_output", "tcp_sosend");
         populateMap("ip_output", "tcp_output");
         populateMap("ether_output", "ip_output");
         populateMap("es_start", "ether_output");
@@ -524,6 +536,7 @@ Tru64System::~Tru64System()
         delete sooWriteEvent;
         delete senditEvent;
         delete sosendEvent;
+        delete tcpSosendEvent;
         delete tcpOutputEvent;
         delete ipOutputEvent;
         delete etherOutputEvent;
