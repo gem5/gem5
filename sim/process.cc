@@ -88,8 +88,6 @@ Process::Process(const string &name,
         fd_map[i] = -1;
     }
 
-    num_syscalls = 0;
-
     // other parameters will be initialized when the program is loaded
 }
 
@@ -145,21 +143,28 @@ Process::registerExecContext(ExecContext *xc)
     execContexts.push_back(xc);
 
     if (myIndex == 0) {
-        // first exec context for this process... initialize & enable
-
         // copy process's initial regs struct
         xc->regs = *init_regs;
-
-        // mark this context as active.
-        // activate with zero delay so that we start ticking right
-        // away on cycle 0
-        xc->activate(0);
     }
 
     // return CPU number to caller and increment available CPU count
     return myIndex;
 }
 
+void
+Process::startup()
+{
+    if (execContexts.empty())
+        return;
+
+    // first exec context for this process... initialize & enable
+    ExecContext *xc = execContexts[0];
+
+    // mark this context as active.
+    // activate with zero delay so that we start ticking right
+    // away on cycle 0
+    xc->activate(0);
+}
 
 void
 Process::replaceExecContext(ExecContext *xc, int xcIndex)

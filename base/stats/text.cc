@@ -126,7 +126,7 @@ Text::output()
     using namespace Database;
 
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
-    if (bins().empty()) {
+    if (bins().empty() || bins().size() == 1) {
         stat_list_t::const_iterator i, end = stats().end();
         for (i = stats().begin(); i != end; ++i)
             (*i)->visit(*this);
