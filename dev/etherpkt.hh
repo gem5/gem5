@@ -38,7 +38,6 @@
 #include <assert.h>
 
 #include "base/refcnt.hh"
-#include "base/inet.hh"
 #include "sim/host.hh"
 
 /*
@@ -56,17 +55,6 @@ class PacketData : public RefCounted
     PacketData(std::auto_ptr<uint8_t> d, int l)
         : data(d.release()), length(l) { }
     ~PacketData() { if (data) delete [] data; }
-
-  public:
-    const EthHdr *eth() const { return (const EthHdr *)data; }
-    const IpHdr *ip() const {const EthHdr *h = eth(); return h ? h->ip() : 0;}
-    const TcpHdr *tcp() const {const IpHdr *h = ip(); return h ? h->tcp() : 0;}
-    const UdpHdr *udp() const {const IpHdr *h = ip(); return h ? h->udp() : 0;}
-
-    EthHdr *eth() { return (EthHdr *)data; }
-    IpHdr *ip()   { EthHdr *h = eth(); return h ? h->ip() : 0; }
-    TcpHdr *tcp() { IpHdr *h = ip(); return h ? h->tcp() : 0; }
-    UdpHdr *udp() { IpHdr *h = ip(); return h ? h->udp() : 0; }
 
   public:
     void serialize(std::ostream &os);
