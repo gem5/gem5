@@ -6,9 +6,6 @@ display_run = 0
 global globalTicks
 globalTicks = None
 
-def issequence(t):
-    return isinstance(t, types.TupleType) or isinstance(t, types.ListType)
-
 def total(f):
     if isinstance(f, FormulaStat):
         v = f.value
@@ -16,7 +13,7 @@ def total(f):
         v = f
 
     f = FormulaStat()
-    if issequence(v):
+    if isinstance(v, (list, tuple)):
         f.value = reduce(operator.add, v)
     else:
         f.value = v
@@ -29,7 +26,7 @@ def unaryop(op, f):
     else:
         v = f
 
-    if issequence(v):
+    if isinstance(v, (list, tuple)):
         return map(op, v)
     else:
         return op(v)
@@ -109,19 +106,19 @@ def binaryop(op, lf, rf):
     return result
 
 def sums(x, y):
-    if issequence(x):
+    if isinstance(x, (list, tuple)):
         return map(lambda x, y: x + y, x, y)
     else:
         return x + y
 
-def alltrue(list):
-    return reduce(lambda x, y: x and y, list)
+def alltrue(seq):
+    return reduce(lambda x, y: x and y, seq)
 
-def allfalse(list):
-    return not reduce(lambda x, y: x or y, list)
+def allfalse(seq):
+    return not reduce(lambda x, y: x or y, seq)
 
-def enumerate(list):
-    return map(None, range(len(list)), list)
+def enumerate(seq):
+    return map(None, range(len(seq)), seq)
 
 def cmp(a, b):
     if a < b:
@@ -323,10 +320,11 @@ class Vector(Statistic,FormulaStat):
                len(self.value) == len(other.value)
 
     def __eq__(self, other):
-        if issequence(self.value) != issequence(other.value):
+        if isinstance(self.value, (list, tuple)) != \
+               isinstance(other.value, (list, tuple)):
             return False
 
-        if issequence(self.value):
+        if isinstance(self.value, (list, tuple)):
             if len(self.value) != len(other.value):
                 return False
             else:
@@ -348,7 +346,7 @@ class Vector(Statistic,FormulaStat):
     def __itruediv__(self, other):
         if not other:
             return self
-        if issequence(self.value):
+        if isinstance(self.value, (list, tuple)):
             for i in xrange(len(self.value)):
                 self.value[i] /= other
         else:
@@ -642,7 +640,8 @@ class VectorDist(Statistic):
         return alltrue(map(lambda x, y : x == y, self.dist, other.dist))
 
     def __isub__(self, other):
-        if issequence(self.dist) and issequence(other.dist):
+        if isinstance(self.dist, (list, tuple)) and \
+               isinstance(other.dist, (list, tuple)):
             for sd,od in zip(self.dist, other.dist):
                 sd -= od
         else:
@@ -650,7 +649,8 @@ class VectorDist(Statistic):
         return self
 
     def __iadd__(self, other):
-        if issequence(self.dist) and issequence(other.dist):
+        if isinstance(self.dist, (list, tuple)) and \
+               isinstance(other.dist, (list, tuple)):
             for sd,od in zip(self.dist, other.dist):
                 sd += od
         else:
@@ -660,7 +660,7 @@ class VectorDist(Statistic):
     def __itruediv__(self, other):
         if not other:
             return self
-        if issequence(self.dist):
+        if isinstance(self.dist, (list, tuple)):
             for dist in self.dist:
                 dist /= other
         else:

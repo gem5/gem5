@@ -35,9 +35,6 @@ try:
 except:
     noDot = True
 
-def issequence(value):
-    return isinstance(value, tuple) or isinstance(value, list)
-
 class Singleton(type):
     def __call__(cls, *args, **kwargs):
         if hasattr(cls, '_instance'):
@@ -181,7 +178,7 @@ def isSimObject(value):
         return False
 
 def isSimObjSequence(value):
-    if not issequence(value):
+    if not isinstance(value, (list, tuple)):
         return False
 
     for val in value:
@@ -455,7 +452,7 @@ class MetaConfigNode(type):
         if isNullPointer(child) or instance.top_child_names.has_key(name):
             return
 
-        if issequence(child):
+        if isinstance(child, (list, tuple)):
             kid = []
             for i,c in enumerate(child):
                 n = '%s%d' % (name, i)
@@ -483,10 +480,10 @@ class MetaConfigNode(type):
         for key,value in cls._getvalues().iteritems():
             if isConfigNode(value):
                 cls.add_child(instance, key, value)
-            if issequence(value):
-                list = [ v for v in value if isConfigNode(v) ]
-                if len(list):
-                    cls.add_child(instance, key, list)
+            if isinstance(value, (list, tuple)):
+                vals = [ v for v in value if isConfigNode(v) ]
+                if len(vals):
+                    cls.add_child(instance, key, vals)
 
         for pname,param in cls._getparams().iteritems():
             try:
@@ -497,7 +494,7 @@ class MetaConfigNode(type):
             try:
                 if isConfigNode(value):
                     value = instance.child_objects[value]
-                elif issequence(value):
+                elif isinstance(value, (list, tuple)):
                     v = []
                     for val in value:
                         if isConfigNode(val):
@@ -699,7 +696,7 @@ class Node(object):
             pval = param.value
 
             try:
-                if issequence(pval):
+                if isinstance(pval, (list, tuple)):
                     param.value = [ self.unproxy(ptype, pv) for pv in pval ]
                 else:
                     param.value = self.unproxy(ptype, pval)
@@ -952,7 +949,7 @@ class _VectorParam(_Param):
         if value == None:
             return True
 
-        if issequence(value):
+        if isinstance(value, (list, tuple)):
             for val in value:
                 if not isinstance(val, Proxy):
                     self.ptype._convert(val)
@@ -965,7 +962,7 @@ class _VectorParam(_Param):
         if value == None:
             return []
 
-        if issequence(value):
+        if isinstance(value, (list, tuple)):
             # list: coerce each element into new list
             return [ self.ptype._convert(v) for v in value ]
         else:
@@ -973,7 +970,7 @@ class _VectorParam(_Param):
             return self.ptype._convert(value)
 
     def string(self, value):
-        if issequence(value):
+        if isinstance(value, (list, tuple)):
             return ' '.join([ self.ptype._string(v) for v in value])
         else:
             return self.ptype._string(value)
@@ -1339,8 +1336,7 @@ class SimObject(ConfigNode, ParamType):
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = ['issequence',
-           'ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
+__all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Super', 'Enum',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
