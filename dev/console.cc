@@ -319,7 +319,7 @@ SimConsole::serialize(ostream &os)
 }
 
 void
-SimConsole::unserialize(const IniFile *db, const std::string &section)
+SimConsole::unserialize(Checkpoint *cp, const std::string &section)
 {
 }
 

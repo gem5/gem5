@@ -129,7 +129,7 @@ Event::serialize(std::ostream &os)
 
 
 void
-Event::unserialize(const IniFile *db, const string &section)
+Event::unserialize(Checkpoint *cp, const string &section)
 {
     if (scheduled())
         deschedule();
@@ -154,38 +154,50 @@ Event::unserialize(const IniFile *db, const string &section)
 void
 EventQueue::nameChildren()
 {
-#if 0
-    int j = 0;
-
+    int numEvents = 0;
     Event *event = head;
     while (event) {
-        stringstream stream;
-        ccprintf(stream, "%s.event%d", name(), j++);
-        event->setName(stream.str());
-
+        if (event->getFlags(Event::AutoSerialize)) {
+            event->setName(csprintf("%s.event%d", name(), numEvents++));
+        }
         event = event->next;
     }
-#endif
+
+    numAutoSerializeEvents = numEvents;
 }
 
 void
 EventQueue::serialize(ostream &os)
 {
-#if 0
-    string objects = "";
+    // should have been set by a preceding call to nameChildren()
+    assert(numAutoSerializeEvents >= 0);
 
+    SERIALIZE_SCALAR(numAutoSerializeEvents);
+
+    int numEvents = 0;
     Event *event = head;
     while (event) {
-        objects += event->name();
-        objects += " ";
-        event->serialize(os);
-
+        if (event->getFlags(Event::AutoSerialize)) {
+            event->nameOut(os);
+            event->serialize(os);
+            numEvents++;
+        }
         event = event->next;
     }
-    nameOut(os, "Serialized");
-    SERIALIZE_SCALAR(objects);
-#endif
+
+    assert(numEvents == numAutoSerializeEvents);
 }
+
+
+void
+EventQueue::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(numAutoSerializeEvents);
+    for (int eventNum = 0; eventNum < numAutoSerializeEvents; ++eventNum) {
+        Serializeable::create(cp, csprintf("%s.event%d", section, eventNum));
+    }
+}
+
 
 void
 EventQueue::dump()

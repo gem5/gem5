@@ -204,13 +204,13 @@ AlphaTlb::serialize(ostream &os)
 }
 
 void
-AlphaTlb::unserialize(const IniFile *db, const string &section)
+AlphaTlb::unserialize(Checkpoint *cp, const string &section)
 {
     UNSERIALIZE_SCALAR(size);
     UNSERIALIZE_SCALAR(nlu);
 
     for (int i = 0; i < size; i++) {
-        table[i].unserialize(db, csprintf("%s.PTE%d", section, i));
+        table[i].unserialize(cp, csprintf("%s.PTE%d", section, i));
         if (table[i].valid) {
             lookupTable.insert(make_pair(table[i].tag, i));
         }

@@ -142,7 +142,7 @@ class ExecContext
     void regStats(const std::string &name);
 
     void serialize(std::ostream &os);
-    void unserialize(const IniFile *db, const std::string &section);
+    void unserialize(Checkpoint *cp, const std::string &section);
 
 #ifdef FULL_SYSTEM
     bool validInstAddr(Addr addr) { return true; }

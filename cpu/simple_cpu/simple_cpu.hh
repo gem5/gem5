@@ -49,7 +49,7 @@ class GDBListener;
 #endif // FULL_SYSTEM
 
 class MemInterface;
-class IniFile;
+class Checkpoint;
 
 namespace Trace {
     class InstRecord;
@@ -259,7 +259,7 @@ class SimpleCPU : public BaseCPU
     void processCacheCompletion();
 
     virtual void serialize(std::ostream &os);
-    virtual void unserialize(const IniFile *db, const std::string &section);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     template <class T>
     Fault read(Addr addr, T& data, unsigned flags);

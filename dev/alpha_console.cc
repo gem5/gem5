@@ -188,7 +188,7 @@ AlphaAccess::serialize(ostream &os)
 }
 
 void
-AlphaAccess::unserialize(const IniFile *db, const std::string &section)
+AlphaAccess::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(last_offset);
     UNSERIALIZE_SCALAR(version);
@@ -216,9 +216,9 @@ AlphaConsole::serialize(ostream &os)
 }
 
 void
-AlphaConsole::unserialize(const IniFile *db, const std::string &section)
+AlphaConsole::unserialize(Checkpoint *cp, const std::string &section)
 {
-    alphaAccess->unserialize(db, section);
+    alphaAccess->unserialize(cp, section);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)

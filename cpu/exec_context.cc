@@ -108,10 +108,10 @@ ExecContext::serialize(ostream &os)
 
 
 void
-ExecContext::unserialize(const IniFile *db, const std::string &section)
+ExecContext::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ENUM(_status);
-    regs.unserialize(db, section);
+    regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(func_exe_insn);
 }

@@ -44,7 +44,7 @@ typedef uint64_t UINT64;
 
 #include <ostream>
 #include <string>
-class IniFile;
+class Checkpoint;
 
 #endif
 
@@ -82,7 +82,7 @@ struct AlphaAccess
 
 #ifndef CONSOLE
     void serialize(std::ostream &os);
-    void unserialize(const IniFile *db, const std::string &section);
+    void unserialize(Checkpoint *cp, const std::string &section);
 #endif
 };
 
