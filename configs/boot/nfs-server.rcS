@@ -9,10 +9,6 @@ echo "done."
 
 echo -n "setting up network..."
 /sbin/ifconfig eth0 10.0.0.1 txqueuelen 1000
-/sbin/ifconfig eth0:1 192.168.0.2 txqueuelen 1000
-/sbin/ifconfig eth0:2 192.168.0.3 txqueuelen 1000
-/sbin/ifconfig eth0:3 192.168.0.4 txqueuelen 1000
-/sbin/ifconfig eth0:4 192.168.0.5 txqueuelen 1000
 /sbin/ifconfig lo 127.0.0.1
                                                                                 
 echo "1" > /proc/sys/net/ipv4/tcp_tw_recycle
@@ -36,8 +32,6 @@ echo "300000" > /proc/sys/net/core/netdev_max_backlog
 echo "131072" > /proc/sys/fs/file-max
 echo "done."
 
-echo "/nfs 10.0.0.0/255.0.0.0(rw,sync,no_root_squash)" > /etc/exports
-
 #if [ ! -x /dev/sda ] 
 #then
 #     mknod /dev/sda b 8 0
@@ -56,12 +50,13 @@ chmod a+rwx /nfs
 /usr/sbin/sfdisk -uM -l /dev/sda
 echo "done."
 
+echo "/nfs 10.0.0.0/255.0.0.0(rw,sync,no_root_squash)" > /etc/exports
 echo -n "starting nfs kernel server..."
-/sbin/nfsd 8 &
-/sbin/statd &
-/sbin/portmap &
-/sbin/lockd &
-/sbin/mountd &
+/sbin/portmap
+/sbin/lockd
+/sbin/statd
+/sbin/nfsd 8
+/sbin/mountd
 echo "done."
 
 echo "Exporting shares..."
@@ -70,7 +65,6 @@ echo "Exporting shares..."
 echo -n "signal client to mount..."
 echo "server ready" | /usr/bin/netcat -c 10.0.0.2 8000
 echo "done."
-
 
 echo -n "starting bash shell..."
 /bin/bash
