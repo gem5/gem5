@@ -58,7 +58,7 @@ def graphdata(runs, tag, label, value):
 
     for bench,dma,cache,sys,cpt in names:
         base = '%s.%s.%s.%s.%s' % (bench, dma, cache, sys, cpt)
-        fname = '/n/ziff/z/binkertn/graph/data.ibm/%s.%s.dat' % (tag, base)
+        fname = '/n/ziff/z/binkertn/graph/test0/data/%s.%s.dat' % (tag, base)
         f = open(fname, 'w')
         print >>f, '#set TITLE = %s' % base
         print >>f, '#set xlbl = Configuration'
@@ -177,7 +177,7 @@ def commands(options, command, args):
 
         stats = info.source.getStat(args[0])
         for stat in stats:
-            if graph:
+            if options.graph:
                 graphdata(runs, stat.name, stat.name, stat)
             else:
                 print stat.name
@@ -222,7 +222,7 @@ def commands(options, command, args):
         user = copy.copy(system.full_cpu.numCycles)
         user.bins = 'user'
 
-        if graph:
+        if options.graph:
             graphdata(runs, 'usertime', 'User Fraction',
                       user / system.full_cpu.numCycles)
         else:
@@ -230,7 +230,7 @@ def commands(options, command, args):
         return
 
     if command == 'ticks':
-        if binned:
+        if options.binned:
             print 'kernel ticks'
             system.full_cpu.numCycles.bins = 'kernel'
             printdata(runs, system.full_cpu.numCycles)
@@ -251,7 +251,7 @@ def commands(options, command, args):
 
     if command == 'packets':
         packets = system.tsunami.nsgige.rxPackets
-        if graph:
+        if options.graph:
             graphdata(runs, 'packets', 'Packets', packets)
         else:
             printdata(runs, packets)
@@ -264,7 +264,7 @@ def commands(options, command, args):
 
     if command == 'pps':
         pps = system.tsunami.nsgige.rxPackets / sim_seconds
-        if graph:
+        if options.graph:
             graphdata(runs, 'pps', 'Packets/s', pps)
         else:
             printdata(runs, pps)
@@ -273,7 +273,7 @@ def commands(options, command, args):
     if command == 'bpt' or command == 'tpb':
         bytes = system.tsunami.nsgige.rxBytes + system.tsunami.nsgige.txBytes
         bpt = bytes / sim_ticks * 8
-        if graph:
+        if options.graph:
             graphdata(runs, 'bpt', 'bps / Hz', bpt)
         else:
             printdata(runs, bpt, command == 'tpb')
@@ -299,7 +299,7 @@ def commands(options, command, args):
     if command == 'bytes':
         stat = system.tsunami.nsgige.rxBytes + system.tsunami.nsgige.txBytes
 
-        if binned:
+        if options.binned:
             print '%s kernel stats' % stat.name
             stat.bins = 'kernel'
             printdata(runs, stat)
@@ -320,7 +320,7 @@ def commands(options, command, args):
 
     if command == 'rxbps':
         gbps = system.tsunami.nsgige.rxBandwidth / 1e9
-        if graph:
+        if options.graph:
             graphdata(runs, 'rxbps', 'Bandwidth (Gbps)',  gbps)
         else:
             printdata(runs, gbps)
@@ -328,7 +328,7 @@ def commands(options, command, args):
 
     if command == 'txbps':
         gbps = system.tsunami.nsgige.txBandwidth / 1e9
-        if graph:
+        if options.graph:
             graphdata(runs, 'txbps', 'Bandwidth (Gbps)',  gbps)
         else:
             printdata(runs, gbps)
@@ -338,7 +338,7 @@ def commands(options, command, args):
         rxbps = system.tsunami.nsgige.rxBandwidth
         txbps = system.tsunami.nsgige.txBandwidth
         gbps = (rxbps + txbps) / 1e9
-        if graph:
+        if options.graph:
             graphdata(runs, 'bps', 'Bandwidth (Gbps)',  gbps)
         else:
             printdata(runs, gbps)
@@ -346,7 +346,7 @@ def commands(options, command, args):
 
     if command == 'misses':
         stat = system.L3.overall_mshr_misses
-        if binned:
+        if options.binned:
             print '%s kernel stats' % stat.name
             stat.bins = 'kernel'
             printdata(runs, stat)
@@ -362,7 +362,7 @@ def commands(options, command, args):
             print '%s total stats' % stat.name
 
         stat.bins = None
-        if graph:
+        if options.graph:
             graphdata(runs, 'misses', 'Overall MSHR Misses', stat)
         else:
             printdata(runs, stat)
@@ -373,7 +373,7 @@ def commands(options, command, args):
         rxbytes = system.tsunami.nsgige.rxBytes
         txbytes = system.tsunami.nsgige.txBytes
 
-        if binned:
+        if options.binned:
             print 'mpkb kernel stats'
             misses.bins = 'kernel'
             mpkb = misses / ((rxbytes + txbytes) / 1024)
@@ -393,7 +393,7 @@ def commands(options, command, args):
 
         mpkb = misses / ((rxbytes + txbytes) / 1024)
         misses.bins = None
-        if graph:
+        if options.graph:
             graphdata(runs, 'mpkb', 'Misses / KB',  mpkb)
         else:
             printdata(runs, mpkb)
@@ -424,9 +424,6 @@ def commands(options, command, args):
     raise CommandException
 
 
-graph = False
-binned = False
-
 class Options: pass
 
 if __name__ == '__main__':
@@ -440,6 +437,8 @@ if __name__ == '__main__':
     options.runs = None
     options.system = 'client'
     options.get = None
+    options.binned = False
+    options.graph = False
 
     opts, args = getopts(sys.argv[1:], '-BEFGd:g:h:pr:s:u:')
     for o,a in opts:
