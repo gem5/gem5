@@ -34,6 +34,7 @@
 #include "sim/host.hh"
 #include "targetarch/arguments.hh"
 #include "targetarch/vtophys.hh"
+#include "kern/linux/printk.hh"
 
 using namespace std;
 
