@@ -492,10 +492,11 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
         (AlphaISA::mode_type)DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]);
 
 
-    /* @todo this should actually be in there but for whatever reason
-     * Its not working at present.
+    /**
+     * Check for alignment faults
      */
     if (req->vaddr & (req->size - 1)) {
+        fault(req, write ? MM_STAT_WR_MASK : 0);
         return Alignment_Fault;
     }
 
@@ -510,8 +511,8 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
     } else {
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->vaddr)) {
-            fault(req, ((write ? MM_STAT_WR_MASK : 0) | MM_STAT_BAD_VA_MASK |
-                        MM_STAT_ACV_MASK));
+            fault(req, (write ? MM_STAT_WR_MASK : 0) | MM_STAT_BAD_VA_MASK |
+                        MM_STAT_ACV_MASK);
 
             if (write) { write_acv++; } else { read_acv++; }
             return DTB_Fault_Fault;

@@ -100,6 +100,9 @@ System::System(Params *p)
     if (!pal->loadGlobalSymbols(palSymtab))
         panic("could not load pal symbols\n");
 
+    if (!pal->loadLocalSymbols(palSymtab))
+        panic("could not load pal symbols\n");
+
     if (!kernel->loadGlobalSymbols(debugSymbolTable))
         panic("could not load kernel symbols\n");
 

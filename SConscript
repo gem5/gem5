@@ -382,6 +382,7 @@ extra_libraries = []
 if env['USE_MYSQL']:
     sources += mysql_sources
     env.Append(CPPDEFINES = 'USE_MYSQL')
+    env.Append(CPPDEFINES = 'STATS_BINNING')
     env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
     env.Append(LIBS=['z'])
     if os.path.isdir('/usr/lib64'):
