@@ -57,7 +57,8 @@ MySqlConnected()
 
 void
 MySqlRun::connect(const string &host, const string &user, const string &passwd,
-                  const string &db, const string &name, const string &project)
+                  const string &db, const string &name, const string &sample,
+                  const string &project)
 {
     if (connected())
         panic("can only get one database connection at this time!");
@@ -68,21 +69,22 @@ MySqlRun::connect(const string &host, const string &user, const string &passwd,
 
     remove(name);
     cleanup();
-    setup(name, user, project);
+    setup(name, sample, user, project);
 }
 
 void
-MySqlRun::setup(const string &name, const string &user, const string &project)
+MySqlRun::setup(const string &name, const string &sample, const string &user,
+                const string &project)
 {
     assert(mysql.connected());
 
     stringstream insert;
     ccprintf(insert,
              "INSERT INTO "
-             "runs(rn_name, rn_user, rn_project, rn_date, rn_expire)"
-             "values(\"%s\", \"%s\", \"%s\", NOW(),"
+             "runs(rn_name,rn_sample,rn_user,rn_project,rn_date,rn_expire)"
+             "values(\"%s\", \"%s\", \"%s\", \"%s\", NOW(),"
              "DATE_ADD(CURDATE(), INTERVAL 31 DAY))",
-             name, user, project);
+             name, sample, user, project);
 
     mysql.query(insert);
     if (mysql.error)

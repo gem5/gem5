@@ -46,10 +46,11 @@ struct MySqlRun
     bool connected() const { return mysql.connected(); }
     void connect(const std::string &host, const std::string &user,
                  const std::string &passwd, const std::string &db,
-                 const std::string &name, const std::string &project);
+                 const std::string &name, const std::string &sample,
+                 const std::string &project);
 
-    void setup(const std::string &name, const std::string &user,
-               const std::string &project);
+    void setup(const std::string &name, const std::string &sample,
+               const std::string &user, const std::string &project);
 
     void remove(const std::string &name);
     void cleanup();
