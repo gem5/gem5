@@ -254,6 +254,7 @@ default_env.Append(ENV = { 'M5_EXT' : EXT_SRCDIR })
 default_env.Append(CCFLAGS='-pipe')
 default_env.Append(CCFLAGS='-fno-strict-aliasing')
 default_env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+default_env.Append(CPPPATH=[os.path.join(EXT_SRCDIR + '/dnet')])
 
 # libelf build is described in its own SConscript file.  Using a
 # dictionary for exports lets us export "default_env" so the

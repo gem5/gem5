@@ -244,6 +244,7 @@ full_system_sources = Split('''
 	arch/alpha/pseudo_inst.cc
 	arch/alpha/vtophys.cc
 
+	base/crc.cc
 	base/inet.cc
 	base/remote_gdb.cc
 

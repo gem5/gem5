@@ -87,11 +87,6 @@ const char *NsDmaState[] =
 
 using namespace std;
 
-// helper function declarations
-// These functions reverse Endianness so we can evaluate network data
-// correctly
-uint16_t reverseEnd16(uint16_t);
-uint32_t reverseEnd32(uint32_t);
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -194,30 +189,44 @@ NSGigE::regStats()
         .prereq(rxBytes)
         ;
 
-    txIPChecksums
-        .name(name() + ".txIPChecksums")
+    txIpChecksums
+        .name(name() + ".txIpChecksums")
         .desc("Number of tx IP Checksums done by device")
         .precision(0)
         .prereq(txBytes)
         ;
 
-    rxIPChecksums
-        .name(name() + ".rxIPChecksums")
+    rxIpChecksums
+        .name(name() + ".rxIpChecksums")
         .desc("Number of rx IP Checksums done by device")
         .precision(0)
         .prereq(rxBytes)
         ;
 
-    txTCPChecksums
-        .name(name() + ".txTCPChecksums")
+    txTcpChecksums
+        .name(name() + ".txTcpChecksums")
         .desc("Number of tx TCP Checksums done by device")
         .precision(0)
         .prereq(txBytes)
         ;
 
-    rxTCPChecksums
-        .name(name() + ".rxTCPChecksums")
+    rxTcpChecksums
+        .name(name() + ".rxTcpChecksums")
         .desc("Number of rx TCP Checksums done by device")
+        .precision(0)
+        .prereq(rxBytes)
+        ;
+
+    txUdpChecksums
+        .name(name() + ".txUdpChecksums")
+        .desc("Number of tx UDP Checksums done by device")
+        .precision(0)
+        .prereq(txBytes)
+        ;
+
+    rxUdpChecksums
+        .name(name() + ".rxUdpChecksums")
+        .desc("Number of rx UDP Checksums done by device")
         .precision(0)
         .prereq(rxBytes)
         ;
@@ -1332,14 +1341,13 @@ NSGigE::rxKick()
 
 #if TRACING_ON
             if (DTRACE(Ethernet)) {
-                if (rxPacket->isIpPkt()) {
-                    ip_header *ip = rxPacket->getIpHdr();
-                    DPRINTF(Ethernet, "ID is %d\n", reverseEnd16(ip->ID));
-                    if (rxPacket->isTcpPkt()) {
-                        tcp_header *tcp = rxPacket->getTcpHdr(ip);
+                const IpHdr *ip = rxPacket->ip();
+                if (ip) {
+                    DPRINTF(Ethernet, "ID is %d\n", ip->id());
+                    const TcpHdr *tcp = rxPacket->tcp();
+                    if (tcp) {
                         DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
-                                reverseEnd16(tcp->src_port_num),
-                                reverseEnd16(tcp->dest_port_num));
+                                tcp->sport(), tcp->dport());
                     }
                 }
             }
@@ -1395,33 +1403,36 @@ NSGigE::rxKick()
              */
             if (rxFilterEnable) {
                 rxDescCache.cmdsts &= ~CMDSTS_DEST_MASK;
-                if (rxFifo.front()->IsUnicast())
+                EthHdr *eth = rxFifoFront()->eth();
+                if (eth->unicast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_SELF;
-                if (rxFifo.front()->IsMulticast())
+                if (eth->multicast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_MULTI;
-                if (rxFifo.front()->IsBroadcast())
+                if (eth->broadcast())
                     rxDescCache.cmdsts |= CMDSTS_DEST_MASK;
             }
 #endif
 
-            if (rxPacket->isIpPkt() && extstsEnable) {
+            if (extstsEnable && rxPacket->ip()) {
                 rxDescCache.extsts |= EXTSTS_IPPKT;
-                rxIPChecksums++;
-                if (!ipChecksum(rxPacket, false)) {
+                rxIpChecksums++;
+                IpHdr *ip = rxPacket->ip();
+                if (ip->ip_cksum() != 0) {
                     DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
                     rxDescCache.extsts |= EXTSTS_IPERR;
                 }
-                if (rxPacket->isTcpPkt()) {
+                if (rxPacket->tcp()) {
                     rxDescCache.extsts |= EXTSTS_TCPPKT;
-                    rxTCPChecksums++;
-                    if (!tcpChecksum(rxPacket, false)) {
+                    rxTcpChecksums++;
+                    if (ip->tu_cksum() != 0) {
                         DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_TCPERR;
 
                     }
-                } else if (rxPacket->isUdpPkt()) {
+                } else if (rxPacket->udp()) {
                     rxDescCache.extsts |= EXTSTS_UDPPKT;
-                    if (!udpChecksum(rxPacket, false)) {
+                    rxUdpChecksums++;
+                    if (ip->tu_cksum() != 0) {
                         DPRINTF(EthernetCksum, "Rx UDP Checksum Error\n");
                         rxDescCache.extsts |= EXTSTS_UDPERR;
                     }
@@ -1539,14 +1550,13 @@ NSGigE::transmit()
     if (interface->sendPacket(txFifo.front())) {
 #if TRACING_ON
         if (DTRACE(Ethernet)) {
-            if (txFifo.front()->isIpPkt()) {
-                ip_header *ip = txFifo.front()->getIpHdr();
-                DPRINTF(Ethernet, "ID is %d\n", reverseEnd16(ip->ID));
-                if (txFifo.front()->isTcpPkt()) {
-                    tcp_header *tcp = txFifo.front()->getTcpHdr(ip);
+            const IpHdr *ip = txFifo.front()->ip();
+            if (ip) {
+                DPRINTF(Ethernet, "ID is %d\n", ip->id());
+                const TcpHdr *tcp = txFifo.front()->tcp();
+                if (tcp) {
                     DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
-                            reverseEnd16(tcp->src_port_num),
-                            reverseEnd16(tcp->dest_port_num));
+                            tcp->sport(), tcp->dport());
                 }
             }
         }
@@ -1780,7 +1790,7 @@ NSGigE::txKick()
       case txFifoBlock:
         if (!txPacket) {
             DPRINTF(EthernetSM, "****starting the tx of a new packet****\n");
-            txPacket = new EtherPacket;
+            txPacket = new PacketData;
             txPacket->data = new uint8_t[16384];
             txPacketBufPtr = txPacket->data;
         }
@@ -1806,15 +1816,22 @@ NSGigE::txKick()
                 DPRINTF(EthernetSM, "This packet is done, let's wrap it up\n");
                 /* deal with the the packet that just finished */
                 if ((regs.vtcr & VTCR_PPCHK) && extstsEnable) {
+                    IpHdr *ip = txPacket->ip();
                     if (txDescCache.extsts & EXTSTS_UDPPKT) {
-                        udpChecksum(txPacket, true);
+                        UdpHdr *udp = txPacket->udp();
+                        udp->sum(0);
+                        udp->sum(ip->tu_cksum());
+                        txUdpChecksums++;
                     } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
-                        tcpChecksum(txPacket, true);
-                        txTCPChecksums++;
+                        TcpHdr *tcp = txPacket->tcp();
+                        tcp->sum(0);
+                        tcp->sum(ip->tu_cksum());
+                        txTcpChecksums++;
                     }
                     if (txDescCache.extsts & EXTSTS_IPPKT) {
-                        ipChecksum(txPacket, true);
-                        txIPChecksums++;
+                        ip->sum(0);
+                        ip->sum(ip->ip_cksum());
+                        txIpChecksums++;
                     }
                 }
 
@@ -1977,9 +1994,8 @@ NSGigE::rxFilter(PacketPtr packet)
     bool drop = true;
     string type;
 
-    if (packet->IsUnicast()) {
-        type = "unicast";
-
+    EthHdr *eth = packet->eth();
+    if (eth->unicast()) {
         // If we're accepting all unicast addresses
         if (acceptUnicast)
             drop = false;
@@ -1989,28 +2005,19 @@ NSGigE::rxFilter(PacketPtr packet)
             memcmp(rom.perfectMatch, packet->data, EADDR_LEN) == 0)
             drop = false;
 
-        eth_header *eth = (eth_header *) packet->data;
-        if ((acceptArp) && (eth->type == 0x608))
+        if (acceptArp && eth->type() == ETH_TYPE_ARP)
             drop = false;
 
-    } else if (packet->IsBroadcast()) {
-        type = "broadcast";
-
+    } else if (eth->broadcast()) {
         // if we're accepting broadcasts
         if (acceptBroadcast)
             drop = false;
 
-    } else if (packet->IsMulticast()) {
-        type = "multicast";
-
+    } else if (eth->multicast()) {
         // if we're accepting all multicasts
         if (acceptMulticast)
             drop = false;
 
-    } else {
-        type = "unknown";
-
-        // oh well, punt on this one
     }
 
     if (drop) {
@@ -2056,121 +2063,6 @@ NSGigE::recvPacket(PacketPtr packet)
 
     rxKick();
     return true;
-}
-
-/**
- * does a udp checksum.  if gen is true, then it generates it and puts
- * it in the right place else, it just checks what it calculates
- * against the value in the header in packet
- */
-bool
-NSGigE::udpChecksum(PacketPtr packet, bool gen)
-{
-    ip_header *ip = packet->getIpHdr();
-    udp_header *hdr = packet->getUdpHdr(ip);
-
-    pseudo_header *pseudo = new pseudo_header;
-
-    pseudo->src_ip_addr = ip->src_ip_addr;
-    pseudo->dest_ip_addr = ip->dest_ip_addr;
-    pseudo->protocol = ip->protocol;
-    pseudo->len = hdr->len;
-
-    uint16_t cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
-                                  (uint32_t) hdr->len);
-
-    delete pseudo;
-    if (gen)
-        hdr->chksum = cksum;
-    else
-        if (cksum != 0)
-            return false;
-
-    return true;
-}
-
-bool
-NSGigE::tcpChecksum(PacketPtr packet, bool gen)
-{
-    ip_header *ip = packet->getIpHdr();
-    tcp_header *hdr = packet->getTcpHdr(ip);
-
-    uint16_t cksum;
-    pseudo_header *pseudo = new pseudo_header;
-    if (!gen) {
-        pseudo->src_ip_addr = ip->src_ip_addr;
-        pseudo->dest_ip_addr = ip->dest_ip_addr;
-        pseudo->protocol = reverseEnd16(ip->protocol);
-        pseudo->len = reverseEnd16(reverseEnd16(ip->dgram_len) -
-                                   (ip->vers_len & 0xf)*4);
-
-        cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
-                             (uint32_t) reverseEnd16(pseudo->len));
-    } else {
-        pseudo->src_ip_addr = 0;
-        pseudo->dest_ip_addr = 0;
-        pseudo->protocol = hdr->chksum;
-        pseudo->len = 0;
-        hdr->chksum = 0;
-        cksum = checksumCalc((uint16_t *) pseudo, (uint16_t *) hdr,
-                             (uint32_t) (reverseEnd16(ip->dgram_len) -
-                                         (ip->vers_len & 0xf)*4));
-    }
-
-    delete pseudo;
-    if (gen)
-        hdr->chksum = cksum;
-    else
-        if (cksum != 0)
-            return false;
-
-    return true;
-}
-
-bool
-NSGigE::ipChecksum(PacketPtr packet, bool gen)
-{
-    ip_header *hdr = packet->getIpHdr();
-
-    uint16_t cksum = checksumCalc(NULL, (uint16_t *) hdr,
-                                  (hdr->vers_len & 0xf)*4);
-
-    if (gen) {
-        DPRINTF(EthernetCksum, "generated checksum: %#x\n", cksum);
-        hdr->hdr_chksum = cksum;
-    }
-    else
-        if (cksum != 0)
-            return false;
-
-    return true;
-}
-
-uint16_t
-NSGigE::checksumCalc(uint16_t *pseudo, uint16_t *buf, uint32_t len)
-{
-    uint32_t sum = 0;
-
-    uint16_t last_pad = 0;
-    if (len & 1) {
-        last_pad = buf[len/2] & 0xff;
-        len--;
-        sum += last_pad;
-    }
-
-    if (pseudo) {
-        sum = pseudo[0] + pseudo[1] + pseudo[2] +
-            pseudo[3] + pseudo[4] + pseudo[5];
-    }
-
-    for (int i=0; i < (len/2); ++i) {
-        sum += buf[i];
-    }
-
-    while (sum >> 16)
-        sum = (sum >> 16) + (sum & 0xffff);
-
-    return ~sum;
 }
 
 //=====================================================================
@@ -2398,7 +2290,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(txNumPkts);
     int i;
     for (i = 0; i < txNumPkts; ++i) {
-        PacketPtr p = new EtherPacket;
+        PacketPtr p = new PacketData;
         p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
         txFifo.push_back(p);
     }
@@ -2406,7 +2298,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     int rxNumPkts;
     UNSERIALIZE_SCALAR(rxNumPkts);
     for (i = 0; i < rxNumPkts; ++i) {
-        PacketPtr p = new EtherPacket;
+        PacketPtr p = new PacketData;
         p->unserialize(cp, csprintf("%s.rxFifo%d", section, i));
         rxFifo.push_back(p);
     }
@@ -2417,7 +2309,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
-        txPacket = new EtherPacket;
+        txPacket = new PacketData;
         txPacket->unserialize(cp, csprintf("%s.txPacket", section));
         uint32_t txPktBufPtr;
         UNSERIALIZE_SCALAR(txPktBufPtr);
@@ -2429,7 +2321,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxPacketExists);
     rxPacket = 0;
     if (rxPacketExists) {
-        rxPacket = new EtherPacket;
+        rxPacket = new PacketData;
         rxPacket->unserialize(cp, csprintf("%s.rxPacket", section));
         uint32_t rxPktBufPtr;
         UNSERIALIZE_SCALAR(rxPktBufPtr);
@@ -2530,28 +2422,6 @@ NSGigE::cacheAccess(MemReqPtr &req)
             req->paddr, req->paddr - addr);
     return curTick + pioLatency;
 }
-//=====================================================================
-
-
-//********** helper functions******************************************
-
-uint16_t reverseEnd16(uint16_t num)
-{
-    uint16_t reverse = (num & 0xff)<<8;
-    reverse += ((num & 0xff00) >> 8);
-    return reverse;
-}
-
-uint32_t reverseEnd32(uint32_t num)
-{
-    uint32_t reverse = (reverseEnd16(num & 0xffff)) << 16;
-    reverse += reverseEnd16((uint16_t) ((num & 0xffff0000) >> 8));
-    return reverse;
-}
-
-
-
-//=====================================================================
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
 

@@ -37,70 +37,50 @@
 #include <memory>
 #include <assert.h>
 
-#include "sim/host.hh"
 #include "base/refcnt.hh"
-#include "base/inet_hdrs.hh"
+#include "base/inet.hh"
+#include "sim/host.hh"
 
-class Checkpoint;
 /*
  * Reference counted class containing ethernet packet data
  */
-class EtherPacket : public RefCounted
+class Checkpoint;
+class PacketData : public RefCounted
 {
   public:
     uint8_t *data;
     int length;
 
-  public:
-    EtherPacket() : data(NULL), length(0) {}
-    EtherPacket(std::auto_ptr<uint8_t> d, int l)
-        : data(d.release()), length(l) {}
-    ~EtherPacket() { if (data) delete [] data; }
+  protected:
+    uint8_t *_eth;
+    uint8_t *_ip;
+    uint8_t *_tcp;
+    uint8_t *_udp;
+
+    void doext();
+    void ext()
+    {
+        if (_eth != data)
+            doext();
+    }
 
   public:
-    bool IsUnicast() { return data[0] == 0x00; }
-    bool IsMulticast() { return data[0] == 0x01; }
-    bool IsBroadcast() { return data[0] == 0xff; }
+    PacketData() : data(NULL), length(0) { doext(); }
+    PacketData(std::auto_ptr<uint8_t> d, int l)
+        : data(d.release()), length(l) { doext(); }
+    ~PacketData() { if (data) delete [] data; }
 
-    bool isIpPkt() {
-        eth_header *eth = (eth_header *) data;
-        return (eth->type == 0x8);
-    }
-    bool isTcpPkt(ip_header *ip) {
-        return (ip->protocol == 0x6);
-    }
-    bool isTcpPkt() {
-        ip_header *ip = getIpHdr();
-        return (ip->protocol == 0x6);
-    }
-    bool isUdpPkt(ip_header *ip) {
-        return (ip->protocol == 17);
-    }
-    bool isUdpPkt() {
-        ip_header *ip = getIpHdr();
-        return (ip->protocol == 17);
-    }
+  public:
+    EthHdr *eth() { ext(); return (EthHdr *)_eth; }
+    IpHdr *ip() { ext(); return (IpHdr *)_ip; }
+    TcpHdr *tcp() { ext(); return (TcpHdr *)_tcp; }
+    UdpHdr *udp() { ext(); return (UdpHdr *)_udp; }
 
-    ip_header *getIpHdr() {
-        assert(isIpPkt());
-        return (ip_header *) (data + sizeof(eth_header));
-    }
-
-    tcp_header *getTcpHdr(ip_header *ip) {
-        assert(isTcpPkt(ip));
-        return (tcp_header *) ((uint8_t *) ip + (ip->vers_len & 0xf)*4);
-    }
-
-    udp_header *getUdpHdr(ip_header *ip) {
-        assert(isUdpPkt(ip));
-        return (udp_header *) ((uint8_t *) ip + (ip->vers_len & 0xf)*4);
-    }
-    typedef RefCountingPtr<EtherPacket> PacketPtr;
-
+  public:
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-typedef RefCountingPtr<EtherPacket> PacketPtr;
+typedef RefCountingPtr<PacketData> PacketPtr;
 
 #endif // __ETHERPKT_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
+ * Copyright (c) 2002-2003 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,47 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
+#ifndef __BASE_CRC_HH__
+#define __BASE_CRC_HH__
 
-#include "dev/etherpkt.hh"
-#include "sim/serialize.hh"
+#include "sim/host.hh"
 
-using namespace std;
+uint32_t crc32be(const uint8_t *buf, size_t len);
+uint32_t crc32le(const uint8_t *buf, size_t len);
 
-void
-PacketData::doext()
-{
-    _eth = 0;
-    _ip = 0;
-    _tcp = 0;
-    _udp = 0;
-
-    if (!data)
-        return;
-
-    _eth = data;
-    if (eth()->type() == ETH_TYPE_IP) {
-        _ip = eth()->payload();
-
-        if (ip()->proto() == IP_PROTO_TCP)
-            _tcp = ip()->payload();
-
-        if (ip()->proto() == IP_PROTO_UDP)
-            _udp = ip()->payload();
-    }
-}
-
-void
-PacketData::serialize(ostream &os)
-{
-    SERIALIZE_SCALAR(length);
-    SERIALIZE_ARRAY(data, length);
-}
-
-void
-PacketData::unserialize(Checkpoint *cp, const string &section)
-{
-    UNSERIALIZE_SCALAR(length);
-    data = new uint8_t[length];
-    UNSERIALIZE_ARRAY(data, length);
-}
+#endif // __BASE_CRC_HH__

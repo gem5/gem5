@@ -48,7 +48,7 @@ class RefCounted
 template <class T>
 class RefCountingPtr
 {
-  private:
+  protected:
     T *data;
 
     void copy(T *d) {
