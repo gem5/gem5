@@ -105,7 +105,7 @@ InitSimStats()
         ;
 
     simFreq
-        .scalar(ticksPerSecond)
+        .scalar(Clock::Frequency)
         .name("sim_freq")
         .desc("Frequency of simulated ticks")
         ;

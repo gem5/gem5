@@ -138,7 +138,7 @@ NSGigE::NSGigE(Params *p)
     }
 
 
-    intrDelay = US2Ticks(p->intr_delay);
+    intrDelay = p->intr_delay * Clock::Int::us;
     dmaReadDelay = p->dma_read_delay;
     dmaWriteDelay = p->dma_write_delay;
     dmaReadFactor = p->dma_read_factor;

@@ -716,7 +716,7 @@ class Tru64 {
               TypedBufferArg<Tru64::tbl_sysinfo> elp(xc->getSyscallArg(2));
 
               const int clk_hz = one_million;
-              elp->si_user = curTick / (ticksPerSecond / clk_hz);
+              elp->si_user = curTick / (Clock::Frequency / clk_hz);
               elp->si_nice = 0;
               elp->si_sys = 0;
               elp->si_idle = 0;

@@ -79,7 +79,7 @@ const char *TxStateStrings[] =
 //
 Base::Base(Params *p)
     : PciDev(p), rxEnable(false), txEnable(false),
-      intrDelay(US2Ticks(p->intr_delay)),
+      intrDelay(p->intr_delay * Clock::Int::us),
       intrTick(0), cpuIntrEnable(false), cpuPendingIntr(false), intrEvent(0),
       interface(NULL)
 {

@@ -95,6 +95,13 @@ TsunamiIO::RTCEvent::unserialize(Checkpoint *cp, const std::string &section)
 TsunamiIO::ClockEvent::ClockEvent()
     : Event(&mainEventQueue)
 {
+    /* This is the PIT Tick Rate. A constant for the 8254 timer. The
+     * Tsunami platform has one of these cycle counters on the Cypress
+     * South Bridge and it is used by linux for estimating the cycle
+     * frequency of the machine it is running on. --Ali
+     */
+    interval = (Tick)(Clock::Float::s / 1193180.0);
+
     DPRINTF(Tsunami, "Clock Event Initilizing\n");
     mode = 0;
 }
@@ -113,9 +120,7 @@ void
 TsunamiIO::ClockEvent::Program(int count)
 {
     DPRINTF(Tsunami, "Timer set to curTick + %d\n", count);
-    // should be count * (cpufreq/pitfreq)
-    interval = count * ticksPerSecond/1193180UL;
-    schedule(curTick + interval);
+    schedule(curTick + count * interval);
     status = 0;
 }
 

@@ -49,8 +49,6 @@ class EtherDump : public SimObject
     void init();
 
     Tick curtime;
-    Tick s_freq;
-    Tick us_freq;
 
   public:
     EtherDump(const std::string &name, const std::string &file, int max);
