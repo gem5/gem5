@@ -43,6 +43,7 @@ class PacketFifo
     std::list<PacketPtr> fifo;
     int _maxsize;
     int _size;
+    int _reserved;
 
   public:
     explicit PacketFifo(int max) : _maxsize(max), _size(0) {}
@@ -50,18 +51,27 @@ class PacketFifo
 
     int maxsize() const { return _maxsize; }
     int packets() const { return fifo.size(); }
-    int size() const { return _size; }
-    int avail() const { return _maxsize - _size; }
-    bool empty() const { return _size == 0; }
-    bool full() const { return _size >= _maxsize; }
+    int size() const { return _size + _reserved; }
+    int avail() const { return maxsize() - size(); }
+    bool empty() const { return size() == 0; }
+    bool full() const { return size() >= maxsize(); }
+
+    int reserve(int len = 0)
+    {
+        _reserved += len;
+        assert(avail() >= 0);
+        return _reserved;
+    }
 
     bool push(PacketPtr ptr)
     {
-        if (avail() < ptr->length)
+        assert(_reserved <= ptr->length);
+        if (avail() < ptr->length - _reserved)
             return false;
 
         _size += ptr->length;
         fifo.push_back(ptr);
+        _reserved = 0;
         return true;
     }
 
