@@ -168,9 +168,18 @@ Data::check()
     list_t::iterator end = allStats.end();
 
     while (i != end) {
-        StatData *stat = *i;
-        assert(stat);
-        stat->check();
+        StatData *data = *i;
+        assert(data);
+        data->check();
+        ++i;
+    }
+
+    i = allStats.begin();
+    int j = 0;
+    while (i != end) {
+        StatData *data = *i;
+        if (!(data->flags & print))
+            data->name = "__Stat" + to_string(j++);
         ++i;
     }
 }
@@ -178,16 +187,20 @@ Data::check()
 void
 Data::reset()
 {
+    // reset non-binned stats
     list_t::iterator i = allStats.begin();
     list_t::iterator end = allStats.end();
     while (i != end) {
-        StatData *stat = *i;
-        stat->reset();
+        StatData *data = *i;
+        if (!data->binned())
+            data->reset();
         ++i;
     }
 
+    // save the bin so we can go back to where we were
     MainBin *orig = MainBin::curBin();
 
+    // reset binned stats
     list<MainBin *>::iterator bi = bins.begin();
     list<MainBin *>::iterator be = bins.end();
     while (bi != be) {
@@ -196,15 +209,16 @@ Data::reset()
 
         i = allStats.begin();
         while (i != end) {
-            StatData *stat = *i;
-            stat->reset();
+            StatData *data = *i;
+            if (data->binned())
+                data->reset();
             ++i;
         }
         ++bi;
     }
 
-    if (orig)
-        orig->activate();
+    // restore bin
+    MainBin::curBin() = orig;
 }
 
 void
@@ -751,21 +765,22 @@ VectorDataBase::display(ostream &stream, DisplayMode mode) const
     print.vec = val();
     print.total = total();
 
-    for (int i = 0; i < size; ++i) {
-        if (!subnames[i].empty()) {
-            print.subnames = subnames;
-            print.subnames.resize(size);
-            for (int i = 0; i < size; ++i) {
-                if (!subnames[i].empty() && !subdescs[i].empty()) {
-                    print.subdescs = subdescs;
-                    print.subdescs.resize(size);
-                    break;
+    if (!subnames.empty()) {
+        for (int i = 0; i < size; ++i) {
+            if (!subnames[i].empty()) {
+                print.subnames = subnames;
+                print.subnames.resize(size);
+                for (int i = 0; i < size; ++i) {
+                    if (!subnames[i].empty() && !subdescs[i].empty()) {
+                        print.subdescs = subdescs;
+                        print.subdescs.resize(size);
+                        break;
+                    }
                 }
+                break;
             }
-            break;
         }
     }
-
 
     print(stream);
 }
@@ -911,7 +926,7 @@ FormulaBase::size() const
 bool
 FormulaBase::binned() const
 {
-    return root->binned();
+    return root && root->binned();
 }
 
 void

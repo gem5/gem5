@@ -46,23 +46,20 @@
 #define __STATISTICS_HH__
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <functional>
 #include <iosfwd>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include <assert.h>
-
+#include "base/cprintf.hh"
+#include "base/intmath.hh"
 #include "base/refcnt.hh"
 #include "base/str.hh"
-#include "base/intmath.hh"
-#include <math.h>
 #include "sim/host.hh"
 
-#ifdef FS_MEASURE
-#include "base/trace.hh"
-#endif
 //
 //  Un-comment this to enable weirdo-stat debugging
 //
@@ -235,12 +232,14 @@ struct VectorDataBase : public StatData
     virtual result_t total() const  = 0;
     virtual void update()
     {
-        int s = size();
-        if (subnames.size() < s)
-            subnames.resize(s);
+        if (!subnames.empty()) {
+            int s = size();
+            if (subnames.size() < s)
+                subnames.resize(s);
 
-        if (subdescs.size() < s)
-            subdescs.resize(s);
+            if (subdescs.size() < s)
+                subdescs.resize(s);
+        }
     }
 };
 
@@ -272,7 +271,6 @@ class VectorData : public VectorDataBase
         s.update(this);
     }
 };
-
 
 struct DistDataData
 {
@@ -2178,9 +2176,6 @@ struct MainBin
     activate()
     {
         setCurBin(this);
-#ifdef FS_MEASURE
-        DPRINTF(TCPIP, "activating %s Bin\n", name());
-#endif
     }
 
     class BinBase
