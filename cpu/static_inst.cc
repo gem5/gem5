@@ -68,7 +68,7 @@ StaticInst<AlphaISA>::nullStaticInstPtr;
 
 template <class ISA>
 bool
-StaticInst<ISA>::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt)
+StaticInst<ISA>::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
 {
     if (isDirectCtrl()) {
         tgt = branchTarget(pc);

@@ -294,13 +294,13 @@ class StaticInst : public StaticInstBase
      * String representation of disassembly (lazily evaluated via
      * disassemble()).
      */
-    std::string *cachedDisassembly;
+    mutable std::string *cachedDisassembly;
 
     /**
      * Internal function to generate disassembly string.
      */
-    virtual std::string generateDisassembly(Addr pc,
-                                            const SymbolTable *symtab) = 0;
+    virtual std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
 
     /// Constructor.
     StaticInst(const char *_mnemonic, MachInst _machInst, OpClass __opClass)
@@ -347,7 +347,7 @@ class StaticInst : public StaticInstBase
      * Return true if the instruction is a control transfer, and if so,
      * return the target address as well.
      */
-    bool hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt);
+    bool hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const;
 
     /**
      * Return string representation of disassembled instruction.
@@ -357,7 +357,7 @@ class StaticInst : public StaticInstBase
      * should not be cached, this function should be overridden directly.
      */
     virtual const std::string &disassemble(Addr pc,
-                                           const SymbolTable *symtab = 0)
+                                           const SymbolTable *symtab = 0) const
     {
         if (!cachedDisassembly)
             cachedDisassembly =

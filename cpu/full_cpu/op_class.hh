@@ -51,6 +51,7 @@ enum OpClass {
     FloatSqrtOp,	/* floating point square root */
     MemReadOp,		/* memory read port */
     MemWriteOp,		/* memory write port */
+    IprAccessOp,	/* Internal Processor Register read/write port */
     InstPrefetchOp,	/* instruction prefetch port (on I-cache) */
     Num_OpClasses	/* total functional unit classes */
 };

@@ -26,7 +26,9 @@
 #
 # Authors: Nathan Binkert
 
-from os.path import expanduser
+from os.path import expanduser, isfile, join as joinpath
+import sys
+
 def crossproduct(options):
     number = len(options)
     indexes = [ 0 ] * number
@@ -49,9 +51,16 @@ def crossproduct(options):
         done = next()
 
 class JobFile(object):
-    def __init__(self, file):
+    def __init__(self, jfile):
         self.data = {}
-        execfile(expanduser(file), self.data)
+        jfile = expanduser(jfile)
+        if not isfile(jfile):
+            for p in sys.path:
+                if isfile(joinpath(p, jfile)):
+                    jfile = joinpath(p, jfile)
+                    break
+
+        execfile(jfile, self.data)
         self.options = self.data['options']
         self.environment = self.data['environment']
         self.jobinfo = {}

@@ -1,4 +1,4 @@
-Coherence = Enum('uni', 'msi', 'mesi', 'mosi', 'moesi')
+class Coherence(Enum): vals = ['uni', 'msi', 'mesi', 'mosi', 'moesi']
 
 simobj CoherenceProtocol(SimObject):
     type = 'CoherenceProtocol'
