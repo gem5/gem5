@@ -44,6 +44,7 @@ Import('env')
 # Base sources used by all configurations.
 base_sources = Split('''
 	arch/alpha/decoder.cc
+        arch/alpha/alpha_full_cpu_exec.cc
 	arch/alpha/fast_cpu_exec.cc
 	arch/alpha/simple_cpu_exec.cc
 	arch/alpha/full_cpu_exec.cc
@@ -85,10 +86,23 @@ base_sources = Split('''
 	base/stats/text.cc
 
 	cpu/base_cpu.cc
+        cpu/base_dyn_inst.cc
 	cpu/exec_context.cc
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
+        cpu/beta_cpu/alpha_dyn_inst.cc
+        cpu/beta_cpu/alpha_full_cpu.cc
+        cpu/beta_cpu/commit.cc
+        cpu/beta_cpu/decode.cc
+        cpu/beta_cpu/fetch.cc
+        cpu/beta_cpu/free_list.cc
+        cpu/beta_cpu/full_cpu.cc
+        cpu/beta_cpu/iew.cc
+        cpu/beta_cpu/inst_queue.cc
+        cpu/beta_cpu/rename.cc
+        cpu/beta_cpu/rename_map.cc
+        cpu/beta_cpu/rob.cc
 	cpu/fast_cpu/fast_cpu.cc
 	cpu/full_cpu/bpred.cc
 	cpu/full_cpu/commit.cc
@@ -395,6 +409,7 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
 # several files are generated from arch/$TARGET_ISA/isa_desc.
 env.Command(Split('''arch/alpha/decoder.cc
 		     arch/alpha/decoder.hh
+                     arch/alpha/alpha_full_cpu_exec.cc
 		     arch/alpha/fast_cpu_exec.cc
                      arch/alpha/simple_cpu_exec.cc
                      arch/alpha/full_cpu_exec.cc'''),

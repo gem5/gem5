@@ -122,7 +122,18 @@ baseFlags = [
     'Tsunami',
     'Uart',
     'Split',
-    'SQL'
+    'SQL',
+    'Fetch',
+    'Decode',
+    'Rename',
+    'IEW',
+    'Commit',
+    'IQ',
+    'ROB',
+    'FreeList',
+    'RenameMap',
+    'DynInst',
+    'FullCPU'
     ]
 
 #
@@ -138,7 +149,8 @@ compoundFlagMap = {
     'ScsiAll' : [ 'ScsiDisk', 'ScsiCtrl', 'ScsiNone' ],
     'DiskImageAll' : [ 'DiskImage', 'DiskImageRead', 'DiskImageWrite' ],
     'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
-    'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ]
+    'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
+    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'DynInst', 'FullCPU']
 }
 
 #############################################################

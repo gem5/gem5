@@ -41,6 +41,7 @@
 
 // forward declarations
 class ExecContext;
+class AlphaDynInst;
 class DynInst;
 class FastCPU;
 class SimpleCPU;
@@ -307,20 +308,7 @@ class StaticInst : public StaticInstBase
             delete cachedDisassembly;
     }
 
-    /**
-     * Execute this instruction under SimpleCPU model.
-     */
-    virtual Fault execute(SimpleCPU *xc, Trace::InstRecord *traceData) = 0;
-
-    /**
-     * Execute this instruction under FastCPU model.
-     */
-    virtual Fault execute(FastCPU *xc, Trace::InstRecord *traceData) = 0;
-
-    /**
-     * Execute this instruction under detailed FullCPU model.
-     */
-    virtual Fault execute(DynInst *xc, Trace::InstRecord *traceData) = 0;
+#include "static_inst_impl.hh"
 
     /**
      * Return the target address for a PC-relative branch.
