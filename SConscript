@@ -385,9 +385,7 @@ targetarch_files = Split('''
         isa_traits.hh
         machine_exo.h
         osfpal.hh
-        pmap.h
         pseudo_inst.hh
-        syscalls.hh
         vptr.hh
         vtophys.hh
         ''')
