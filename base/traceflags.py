@@ -121,7 +121,8 @@ baseFlags = [
     'IdeDisk',
     'Tsunami',
     'Uart',
-    'Split'
+    'Split',
+    'SQL'
     ]
 
 #
