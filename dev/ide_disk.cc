@@ -655,7 +655,7 @@ IdeDisk::startCommand()
 
         // Supported PIO data-in commands
       case WIN_IDENTIFY:
-        cmdBytesLeft = drqBytesLeft = sizeof(struct hd_driveid);
+        cmdBytesLeft = sizeof(struct hd_driveid);
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
         break;
@@ -670,9 +670,9 @@ IdeDisk::startCommand()
         else
             cmdBytesLeft = (cmdReg.sec_count * SectorSize);
 
-        drqBytesLeft = SectorSize;
         curSector = getLBABase();
 
+        /** @todo make this a scheduled event to simulate disk delay */
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
         break;
@@ -688,7 +688,6 @@ IdeDisk::startCommand()
         else
             cmdBytesLeft = (cmdReg.sec_count * SectorSize);
 
-        drqBytesLeft = SectorSize;
         curSector = getLBABase();
 
         devState = Prepare_Data_Out;
@@ -707,7 +706,6 @@ IdeDisk::startCommand()
         else
             cmdBytesLeft = (cmdReg.sec_count * SectorSize);
 
-        drqBytesLeft = SectorSize;
         curSector = getLBABase();
 
         devState = Prepare_Data_Dma;
@@ -831,16 +829,23 @@ IdeDisk::updateState(DevAction_t action)
             // set the DRQ bit
             cmdReg.status |= STATUS_DRQ_BIT;
 
+            // copy the data into the data buffer
+            if (curCommand == WIN_IDENTIFY) {
+                // Reset the drqBytes for this block
+                drqBytesLeft = sizeof(struct hd_driveid);
+
+                memcpy((void *)dataBuffer, (void *)&driveID,
+                       sizeof(struct hd_driveid));
+            } else {
+                // Reset the drqBytes for this block
+                drqBytesLeft = SectorSize;
+
+                readDisk(curSector++, dataBuffer);
+            }
+
             // put the first two bytes into the data register
             memcpy((void *)&cmdReg.data0, (void *)dataBuffer,
                    sizeof(uint16_t));
-
-            // copy the data into the data buffer
-            if (curCommand == WIN_IDENTIFY)
-                memcpy((void *)dataBuffer, (void *)&driveID,
-                       sizeof(struct hd_driveid));
-            else
-                readDisk(curSector++, dataBuffer);
 
             if (!isIENSet()) {
                 devState = Data_Ready_INTRQ_In;
@@ -867,9 +872,10 @@ IdeDisk::updateState(DevAction_t action)
                 cmdBytesLeft -= 2;
 
                 // copy next short into data registers
-                memcpy((void *)&cmdReg.data0,
-                       (void *)&dataBuffer[SectorSize - drqBytesLeft],
-                       sizeof(uint16_t));
+                if (drqBytesLeft)
+                    memcpy((void *)&cmdReg.data0,
+                           (void *)&dataBuffer[SectorSize - drqBytesLeft],
+                           sizeof(uint16_t));
             }
 
             if (drqBytesLeft == 0) {
@@ -879,7 +885,14 @@ IdeDisk::updateState(DevAction_t action)
                     devState = Device_Idle_S;
                 } else {
                     devState = Prepare_Data_In;
+                    // set the BSY_BIT
                     cmdReg.status |= STATUS_BSY_BIT;
+                    // clear the DRQ_BIT
+                    cmdReg.status &= ~STATUS_DRQ_BIT;
+
+                    /** @todo change this to a scheduled event to simulate
+                        disk delay */
+                    updateState(ACT_DATA_READY);
                 }
             }
         }
