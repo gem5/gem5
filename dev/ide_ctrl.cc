@@ -38,6 +38,7 @@
 #include "dev/pciconfigall.hh"
 #include "dev/ide_disk.hh"
 #include "dev/ide_ctrl.hh"
+#include "dev/tsunami_cchip.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
@@ -84,13 +85,13 @@ IdeController::IdeController(const string &name, IntrControl *ic,
     bmi_size = BARSize[4];
 
     // zero out all of the registers
-    memset(regs, 0, sizeof(regs));
+    memset(bmi_regs, 0, sizeof(bmi_regs));
     memset(pci_regs, 0, sizeof(pci_regs));
 
     // setup initial values
     *(uint32_t *)&pci_regs[IDETIM] = 0x80008000; // enable both channels
-    *(uint8_t *)&regs[BMI + BMIS0] = 0x60;
-    *(uint8_t *)&regs[BMI + BMIS1] = 0x60;
+    *(uint8_t *)&bmi_regs[BMIS0] = 0x60;
+    *(uint8_t *)&bmi_regs[BMIS1] = 0x60;
 
     // reset all internal variables
     io_enabled = false;
@@ -114,7 +115,7 @@ IdeController::IdeController(const string &name, IntrControl *ic,
 
     for (int i = 0; i < new_disks.size(); i++) {
         disks[i] = new_disks[i];
-        disks[i]->setController(this);
+        disks[i]->setController(this, dmaInterface);
     }
 }
 
@@ -123,6 +124,51 @@ IdeController::~IdeController()
     for (int i = 0; i < 4; i++)
         if (disks[i])
             delete disks[i];
+}
+
+////
+// Command completion
+////
+
+void
+IdeController::setDmaComplete(IdeDisk *disk)
+{
+    int diskNum = getDisk(disk);
+
+    if (diskNum < 0)
+        panic("Unable to find disk based on pointer %#x\n", disk);
+
+    if (diskNum < 2) {
+        // clear the start/stop bit in the command register
+        bmi_regs[BMIC0] &= ~SSBM;
+        // clear the bus master active bit in the status register
+        bmi_regs[BMIS0] &= ~BMIDEA;
+        // set the interrupt bit
+        bmi_regs[BMIS0] |= IDEINTS;
+    } else {
+        // clear the start/stop bit in the command register
+        bmi_regs[BMIC1] &= ~SSBM;
+        // clear the bus master active bit in the status register
+        bmi_regs[BMIS1] &= ~BMIDEA;
+        // set the interrupt bit
+        bmi_regs[BMIS1] |= IDEINTS;
+    }
+}
+
+////
+// Interrupt handling
+////
+
+void
+IdeController::intrPost()
+{
+    tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
+}
+
+void
+IdeController::intrClear()
+{
+    tsunami->cchip->clearDRIR(configData->config.hdr.pci0.interruptLine);
 }
 
 ////
@@ -289,7 +335,16 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
 Fault
 IdeController::read(MemReqPtr &req, uint8_t *data)
 {
-    Addr offset = getOffset(req->paddr);
+    Addr offset;
+    bool primary;
+    bool byte;
+    bool cmdBlk;
+    RegType_t type;
+    int disk;
+
+    parseAddr(req->paddr, offset, primary, type);
+    byte = (req->size == sizeof(uint8_t)) ? true : false;
+    cmdBlk = (type == COMMAND_BLOCK) ? true : false;
 
     if (!io_enabled)
         return No_Fault;
@@ -299,11 +354,18 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
         req->size != sizeof(uint32_t))
         panic("IDE controller read of invalid size: %#x\n", req->size);
 
-    DPRINTF(IdeCtrl, "IDE default read from offset: %#x size: %#x data: %#x\n",
-            offset, req->size, *(uint32_t *)&regs[offset]);
+    if (type != BMI_BLOCK) {
+        assert(req->size != sizeof(uint32_t));
 
-    // copy the data from the control registers
-    memcpy((void *)data, &regs[offset], req->size);
+        disk = getDisk(primary);
+        if (disks[disk])
+            disks[disk]->read(offset, byte, cmdBlk, data);
+    } else {
+        memcpy((void *)data, &bmi_regs[offset], req->size);
+    }
+
+    DPRINTF(IdeCtrl, "IDE read from offset: %#x size: %#x data: %#x\n",
+            offset, req->size, *(uint32_t *)data);
 
     return No_Fault;
 }
@@ -311,153 +373,144 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
 Fault
 IdeController::write(MemReqPtr &req, const uint8_t *data)
 {
-    int disk = 0; // selected disk index
-    uint8_t oldVal, newVal;
+    Addr offset;
+    bool primary;
+    bool byte;
+    bool cmdBlk;
+    RegType_t type;
+    int disk;
 
-    Addr offset = getOffset(req->paddr);
+    parseAddr(req->paddr, offset, primary, type);
+    byte = (req->size == sizeof(uint8_t)) ? true : false;
+    cmdBlk = (type == COMMAND_BLOCK) ? true : false;
+
+    DPRINTF(IdeCtrl, "IDE write from offset: %#x size: %#x data: %#x\n",
+            offset, req->size, *(uint32_t *)data);
+
+    uint8_t oldVal, newVal;
 
     if (!io_enabled)
         return No_Fault;
 
-    if (offset >= BMI && !bm_enabled)
+    if (type == BMI_BLOCK && !bm_enabled)
         return No_Fault;
 
-    switch (offset) {
-        // Bus master IDE command register
-      case (BMI + BMIC1):
-      case (BMI + BMIC0):
-        if (req->size != sizeof(uint8_t))
-            panic("Invalid BMIC write size: %x\n", req->size);
-
-        // select the current disk based on DEV bit
-        disk = getDisk(offset);
-
-        oldVal = regs[offset];
-        newVal = *data;
-
-        // if a DMA transfer is in progress, R/W control cannot change
-        if (oldVal & SSBM) {
-            if ((oldVal & RWCON) ^ (newVal & RWCON)) {
-                (oldVal & RWCON) ? newVal |= RWCON : newVal &= ~RWCON;
-            }
+    if (type != BMI_BLOCK) {
+        // shadow the dev bit
+        if (type == COMMAND_BLOCK && offset == IDE_SELECT_OFFSET) {
+            uint8_t *devBit = (primary ? &dev[0] : &dev[1]);
+            *devBit = ((*data & IDE_SELECT_DEV_BIT) ? 1 : 0);
         }
 
-        // see if the start/stop bit is being changed
-        if ((oldVal & SSBM) ^ (newVal & SSBM)) {
+        assert(req->size != sizeof(uint32_t));
+
+        disk = getDisk(primary);
+        if (disks[disk])
+            disks[disk]->write(offset, byte, cmdBlk, data);
+    } else {
+        switch (offset) {
+            // Bus master IDE command register
+          case BMIC1:
+          case BMIC0:
+            if (req->size != sizeof(uint8_t))
+                panic("Invalid BMIC write size: %x\n", req->size);
+
+            // select the current disk based on DEV bit
+            disk = getDisk(primary);
+
+            oldVal = bmi_regs[offset];
+            newVal = *data;
+
+            // if a DMA transfer is in progress, R/W control cannot change
             if (oldVal & SSBM) {
-                // stopping DMA transfer
-                DPRINTF(IdeCtrl, "Stopping DMA transfer\n");
-
-                // clear the BMIDEA bit
-                regs[offset + 0x2] &= ~BMIDEA;
-
-                if (disks[disk] == NULL)
-                    panic("DMA stop for disk %d which does not exist\n", disk);
-
-                // inform the disk of the DMA transfer abort
-                disks[disk]->dmaStop();
-            } else {
-                // starting DMA transfer
-                DPRINTF(IdeCtrl, "Starting DMA transfer\n");
-
-                // set the BMIDEA bit
-                regs[offset + 0x2] |= BMIDEA;
-
-                if (disks[disk] == NULL)
-                    panic("DMA start for disk %d which does not exist\n",
-                          disk);
-
-                // inform the disk of the DMA transfer start
-                disks[disk]->dmaStart();
+                if ((oldVal & RWCON) ^ (newVal & RWCON)) {
+                    (oldVal & RWCON) ? newVal |= RWCON : newVal &= ~RWCON;
+                }
             }
+
+            // see if the start/stop bit is being changed
+            if ((oldVal & SSBM) ^ (newVal & SSBM)) {
+                if (oldVal & SSBM) {
+                    // stopping DMA transfer
+                    DPRINTF(IdeCtrl, "Stopping DMA transfer\n");
+
+                    // clear the BMIDEA bit
+                    bmi_regs[offset + 0x2] &= ~BMIDEA;
+
+                    if (disks[disk] == NULL)
+                        panic("DMA stop for disk %d which does not exist\n",
+                              disk);
+
+                    // inform the disk of the DMA transfer abort
+                    disks[disk]->abortDma();
+                } else {
+                    // starting DMA transfer
+                    DPRINTF(IdeCtrl, "Starting DMA transfer\n");
+
+                    // set the BMIDEA bit
+                    bmi_regs[offset + 0x2] |= BMIDEA;
+
+                    if (disks[disk] == NULL)
+                        panic("DMA start for disk %d which does not exist\n",
+                              disk);
+
+                    // inform the disk of the DMA transfer start
+                    if (primary)
+                        disks[disk]->startDma(*(uint32_t *)&bmi_regs[BMIDTP0]);
+                    else
+                        disks[disk]->startDma(*(uint32_t *)&bmi_regs[BMIDTP1]);
+                }
+            }
+
+            // update the register value
+            bmi_regs[offset] = newVal;
+            break;
+
+            // Bus master IDE status register
+          case BMIS0:
+          case BMIS1:
+            if (req->size != sizeof(uint8_t))
+                panic("Invalid BMIS write size: %x\n", req->size);
+
+            oldVal = bmi_regs[offset];
+            newVal = *data;
+
+            // the BMIDEA bit is RO
+            newVal |= (oldVal & BMIDEA);
+
+            // to reset (set 0) IDEINTS and IDEDMAE, write 1 to each
+            if ((oldVal & IDEINTS) && (newVal & IDEINTS))
+                newVal &= ~IDEINTS; // clear the interrupt?
+            else
+                (oldVal & IDEINTS) ? newVal |= IDEINTS : newVal &= ~IDEINTS;
+
+            if ((oldVal & IDEDMAE) && (newVal & IDEDMAE))
+                newVal &= ~IDEDMAE;
+            else
+                (oldVal & IDEDMAE) ? newVal |= IDEDMAE : newVal &= ~IDEDMAE;
+
+            bmi_regs[offset] = newVal;
+            break;
+
+            // Bus master IDE descriptor table pointer register
+          case BMIDTP0:
+          case BMIDTP1:
+            if (req->size != sizeof(uint32_t))
+                panic("Invalid BMIDTP write size: %x\n", req->size);
+
+            *(uint32_t *)&bmi_regs[offset] = *(uint32_t *)data & ~0x3;
+            break;
+
+          default:
+            if (req->size != sizeof(uint8_t) &&
+                req->size != sizeof(uint16_t) &&
+                req->size != sizeof(uint32_t))
+                panic("IDE controller write of invalid write size: %x\n",
+                      req->size);
+
+            // do a default copy of data into the registers
+            memcpy((void *)&bmi_regs[offset], data, req->size);
         }
-
-        // update the register value
-        regs[offset] = newVal;
-        break;
-
-        // Bus master IDE status register
-      case (BMI + BMIS0):
-      case (BMI + BMIS1):
-        if (req->size != sizeof(uint8_t))
-            panic("Invalid BMIS write size: %x\n", req->size);
-
-        oldVal = regs[offset];
-        newVal = *data;
-
-        // the BMIDEA bit is RO
-        newVal |= (oldVal & BMIDEA);
-
-        // to reset (set 0) IDEINTS and IDEDMAE, write 1 to each
-        if ((oldVal & IDEINTS) && (newVal & IDEINTS))
-            newVal &= ~IDEINTS; // clear the interrupt?
-        else
-            (oldVal & IDEINTS) ? newVal |= IDEINTS : newVal &= ~IDEINTS;
-
-        if ((oldVal & IDEDMAE) && (newVal & IDEDMAE))
-            newVal &= ~IDEDMAE;
-        else
-            (oldVal & IDEDMAE) ? newVal |= IDEDMAE : newVal &= ~IDEDMAE;
-
-        regs[offset] = newVal;
-        break;
-
-        // Bus master IDE descriptor table pointer register
-      case (BMI + BMIDTP0):
-      case (BMI + BMIDTP1):
-        if (req->size != sizeof(uint32_t))
-            panic("Invalid BMIDTP write size: %x\n", req->size);
-
-        *(uint32_t *)&regs[offset] = *(uint32_t *)data & ~0x3;
-        break;
-
-        // Write the data word in the command register block
-      case (CMD1 + IDE_DATA_OFFSET):
-      case (CMD0 + IDE_DATA_OFFSET):
-        if (req->size != sizeof(uint16_t))
-            panic("Invalid command block data write size: %x\n", req->size);
-
-        break;
-
-        // Write the command byte in command register block
-      case (CMD1 + IDE_COMMAND_OFFSET):
-      case (CMD0 + IDE_COMMAND_OFFSET):
-        if (req->size != sizeof(uint8_t))
-            panic("Invalid command block command write size: %x\n", req->size);
-
-        // select the disk based on the DEV bit
-        disk = getDisk(offset);
-
-        if (cmd_in_progress[disk])
-            panic("Command on disk %d already in progress!\n", disk);
-        if (disks[disk] == NULL)
-            panic("Specified disk %d does not exist!\n", disk);
-
-        cmd_in_progress[disk] = true;
-
-        // write to both the command/status and alternate status
-        regs[offset] = *data;
-        regs[offset + 3] = *data;
-
-        // issue the command to the disk
-        if (disk < 2)
-            disks[disk]->startIO(&regs[CMD0], &regs[BMI + BMIDTP0]);
-        else
-            disks[disk]->startIO(&regs[CMD1], &regs[BMI + BMIDTP1]);
-
-        break;
-
-      default:
-        if (req->size != sizeof(uint8_t) && req->size != sizeof(uint16_t) &&
-            req->size != sizeof(uint32_t))
-            panic("IDE controller write of invalid write size: %x\n",
-                  req->size);
-
-        DPRINTF(IdeCtrl, "IDE default write offset: %#x size: %#x data: %#x\n",
-                offset, req->size, *(uint32_t *)data);
-
-        // do a default copy of data into the registers
-        memcpy((void *)&regs[offset], data, req->size);
     }
 
     return No_Fault;
