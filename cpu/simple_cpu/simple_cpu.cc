@@ -75,14 +75,17 @@
 using namespace std;
 
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c), multiplier(1)
 {
 }
 
 void
 SimpleCPU::TickEvent::process()
 {
-    cpu->tick();
+    int count = multiplier;
+    do {
+        cpu->tick();
+    } while (--count > 0 && cpu->status() == Running);
 }
 
 const char *
@@ -267,6 +270,11 @@ SimpleCPU::regStats()
     numMemRefs
         .name(name() + ".num_refs")
         .desc("Number of memory references")
+        ;
+
+    notIdleFraction
+        .name(name() + ".not_idle_fraction")
+        .desc("Percentage of non-idle cycles")
         ;
 
     idleFraction
@@ -799,6 +807,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     SimObjectParam<BaseMem *> dcache;
 
     Param<bool> defer_registration;
+    Param<int> multiplier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 
@@ -830,7 +839,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM_DFLT(icache, "L1 instruction cache object", NULL),
     INIT_PARAM_DFLT(dcache, "L1 data cache object", NULL),
     INIT_PARAM_DFLT(defer_registration, "defer registration with system "
-                    "(for sampling)", false)
+                    "(for sampling)", false),
+
+    INIT_PARAM_DFLT(multiplier, "clock multiplier", 1)
 
 END_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
@@ -860,6 +871,8 @@ CREATE_SIM_OBJECT(SimpleCPU)
                         defer_registration);
 
 #endif // FULL_SYSTEM
+
+    cpu->setTickMultiplier(multiplier);
 
     return cpu;
 }
