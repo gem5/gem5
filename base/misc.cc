@@ -42,7 +42,8 @@ void
 __panic(const string &format, cp::ArgList &args, const char *func,
         const char *file, int line)
 {
-    string fmt = "panic: " + format + " [%s:%s, line %d]\n";
+    string fmt = "panic: " + format + " @ cycle %d\n[%s:%s, line %d]\n";
+    args.append(curTick);
     args.append(func);
     args.append(file);
     args.append(line);
@@ -62,13 +63,13 @@ void
 __fatal(const string &format, cp::ArgList &args, const char *func,
         const char *file, int line)
 {
-    string fmt = "fatal: " + format + " [%s:%s, line %d]\n"
-        "\n%d\nMemory Usage: %ld KBytes\n";
+    string fmt = "fatal: " + format + " @ cycle %d\n[%s:%s, line %d]\n"
+        "Memory Usage: %ld KBytes\n";
 
+    args.append(curTick);
     args.append(func);
     args.append(file);
     args.append(line);
-    args.append(curTick);
     args.append(memUsage());
     args.dump(cerr, fmt);
 
@@ -83,7 +84,8 @@ __warn(const string &format, cp::ArgList &args, const char *func,
 {
     string fmt = "warn: " + format;
 #ifdef VERBOSE_WARN
-    fmt += " [%s:%s, line %d]\n";
+    fmt += " @ cycle %d\n[%s:%s, line %d]\n";
+    args.append(curTick);
     args.append(func);
     args.append(file);
     args.append(line);
