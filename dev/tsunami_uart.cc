@@ -42,6 +42,7 @@ Fault
 TsunamiUart::read(MemReqPtr req, uint8_t *data)
 {
     Addr daddr = req->paddr & addr_mask;
+    DPRINTF(TsunamiUart, " read register %#x\n", daddr);
 
     switch (req->size) {
       case sizeof(uint64_t):
@@ -85,7 +86,7 @@ TsunamiUart::read(MemReqPtr req, uint8_t *data)
                     return No_Fault;
                 }
             } else {
-                int reg = (1 << 2);
+                int reg = (1 << 2) | (1 << 5) | (1 << 6);
                 if (status & CONS_INT_RX)
                     reg |= (1 << 0);
                 *data = reg;
@@ -105,6 +106,9 @@ TsunamiUart::read(MemReqPtr req, uint8_t *data)
         next_char = -1;
 //    cons.next();
         return No_Fault;
+      case 0x9: // Interrupt Enable Register
+        *data = 0;
+        return No_Fault;
     }
 
     panic("%s: read daddr=%#x type=read *data=%#x\n", name(), daddr, *data);
@@ -116,6 +120,8 @@ Fault
 TsunamiUart::write(MemReqPtr req, const uint8_t *data)
 {
     Addr daddr = req->paddr & addr_mask;
+
+    DPRINTF(TsunamiUart, " write register %#x value %#x\n", daddr, *(uint8_t*)data);
     switch (daddr) {
       case 0xb:
         status_store = *data;
@@ -148,10 +154,10 @@ TsunamiUart::write(MemReqPtr req, const uint8_t *data)
         cons->out(*(uint64_t *)data);
         return No_Fault;
       case 0x9: // DLM
-        DPRINTF(TsunamiUart, "writing to DLM/IER %#x\n", *(uint64_t*)data);
+        DPRINTF(TsunamiUart, "writing to DLM/IER %#x\n", *(uint8_t*)data);
         return No_Fault;
       case 0xc: // MCR
-        DPRINTF(TsunamiUart, "writing to MCR %#x\n", *(uint64_t*)data);
+        DPRINTF(TsunamiUart, "writing to MCR %#x\n", *(uint8_t*)data);
         return No_Fault;
 
     }
