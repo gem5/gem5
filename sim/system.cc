@@ -50,13 +50,11 @@ System::System(const std::string _name,
 {
     // add self to global system list
     systemList.push_back(this);
-#ifdef FS_MEASURE
     if (bin == true) {
-        nonPath = new Statistics::MainBin("non TCPIP path stats");
-        nonPath->activate();
+        Kernel = new Statistics::MainBin("non TCPIP Kernel stats");
+        Kernel->activate();
     } else
-        nonPath = NULL;
-#endif
+        Kernel = NULL;
 }
 
 
@@ -104,7 +102,6 @@ printSystems()
     System::printSystems();
 }
 
-#ifdef FS_MEASURE
 Statistics::MainBin *
 System::getBin(const std::string &name)
 {
@@ -127,7 +124,6 @@ System::findContext(Addr pcb)
   } else
       return NULL;
 }
-#endif //FS_MEASURE
 
 DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 

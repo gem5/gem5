@@ -35,9 +35,7 @@
 
 class ExecContext;
 
-#ifdef FS_MEASURE
 class System;
-#endif
 
 class SkipFuncEvent : public PCEvent
 {
@@ -82,7 +80,6 @@ class DumpMbufEvent : public PCEvent
     virtual void process(ExecContext *xc);
 };
 
-#ifdef FS_MEASURE
 class FnEvent : public PCEvent
 {
   public:
@@ -94,5 +91,4 @@ class FnEvent : public PCEvent
     std::string _name;
     Statistics::MainBin *myBin;
 };
-#endif //FS_MEASURE
 #endif // __TRU64_EVENTS_HH__

@@ -2498,7 +2498,7 @@ struct NoBin
  * binned.  If the typedef is NoBin, nothing is binned.  If it is
  * MainBin, then all stats are binned under that Bin.
  */
-#if defined(STATS_BINNING)
+#if defined(FS_MEASURE)
 typedef MainBin DefaultBin;
 #else
 typedef NoBin DefaultBin;

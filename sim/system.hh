@@ -54,7 +54,7 @@ class System : public SimObject
 
   public:
     Statistics::Scalar<Counter> fnCalls;
-    Statistics::MainBin *nonPath;
+    Statistics::MainBin *Kernel;
 
     Statistics::MainBin * getBin(const std::string &name);
     virtual bool findCaller(std::string, std::string) const = 0;
