@@ -35,11 +35,8 @@
 #include "kern/tru64/tru64_events.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "targetarch/arguments.hh"
-
-#ifdef FS_MEASURE
 #include "sim/system.hh"
 #include "sim/sw_context.hh"
-#endif
 
 void
 SkipFuncEvent::process(ExecContext *xc)
@@ -110,7 +107,6 @@ DumpMbufEvent::process(ExecContext *xc)
     }
 }
 
-#ifdef FS_MEASURE
 FnEvent::FnEvent(PCEventQueue *q, const std::string & desc, System *system)
     : PCEvent(q, desc), _name(desc)
 {
@@ -128,13 +124,23 @@ FnEvent::process(ExecContext *xc)
     DPRINTF(TCPIP, "%s: %s Event!!!\n", xc->system->name(), description);
 
     if (ctx && !ctx->callStack.empty()) {
+        DPRINTF(TCPIP, "already a callstack!\n");
         fnCall *last = ctx->callStack.top();
+
+        if (last->name == "idle_thread")
+            ctx->calls++;
+
         if (!xc->system->findCaller(myname(), last->name)) {
+            DPRINTF(TCPIP, "but can't find parent %s\n", last->name);
             return;
         }
         ctx->calls--;
+
+        //assert(!ctx->calls && "on a binned fn, calls should == 0 (but can happen in boot)");
     } else {
+        DPRINTF(TCPIP, "no callstack yet\n");
         if (!xc->system->findCaller(myname(), "")) {
+            DPRINTF(TCPIP, "not the right function, returning\n");
             return;
         }
         if (!ctx)  {
@@ -150,6 +156,7 @@ FnEvent::process(ExecContext *xc)
     ctx->callStack.push(call);
     myBin->activate();
     xc->system->fnCalls++;
+    DPRINTF(TCPIP, "fnCalls for %s is %d\n", description,
+            xc->system->fnCalls.val());
     xc->system->dumpState(xc);
 }
-#endif //FS_MEASURE
