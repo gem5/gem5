@@ -400,6 +400,15 @@ SimpleCPU::copy(Addr dest)
         xc->mem->read(memReq, data);
         memReq->paddr = dest_addr;
         xc->mem->write(memReq, data);
+        if (dcacheInterface) {
+            memReq->cmd = Copy;
+            memReq->completionEvent = NULL;
+            memReq->paddr = xc->copySrcPhysAddr;
+            memReq->dest = dest_addr;
+            memReq->size = 64;
+            memReq->time = curTick;
+            dcacheInterface->access(memReq);
+        }
     }
     return fault;
 }

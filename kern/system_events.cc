@@ -70,6 +70,7 @@ void
 IdleStartEvent::process(ExecContext *xc)
 {
     xc->kernelStats->setIdleProcess(xc->regs.ipr[AlphaISA::IPR_PALtemp23]);
+    remove();
 }
 
 void
