@@ -1,5 +1,5 @@
-#ifndef __ALPHA_IMPL_HH__
-#define __ALPHA_IMPL_HH__
+#ifndef __CPU_BETA_CPU_ALPHA_IMPL_HH__
+#define __CPU_BETA_CPU_ALPHA_IMPL_HH__
 
 #include "arch/alpha/isa_traits.hh"
 
@@ -51,4 +51,4 @@ struct AlphaSimpleImpl
     };
 };
 
-#endif // __ALPHA_IMPL_HH__
+#endif // __CPU_BETA_CPU_ALPHA_IMPL_HH__

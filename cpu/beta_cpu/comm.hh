@@ -1,12 +1,10 @@
-#ifndef __COMM_HH__
-#define __COMM_HH__
+#ifndef __CPU_BETA_CPU_COMM_HH__
+#define __CPU_BETA_CPU_COMM_HH__
 
 #include <stdint.h>
 #include <vector>
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/inst_seq.hh"
-
-using namespace std;
 
 // Find better place to put this typedef.
 // The impl might be the best place for this.
@@ -18,7 +16,7 @@ struct SimpleFetchSimpleDecode {
 
     int size;
 
-    DynInstPtr insts[Impl::MaxWidth + 1];
+    DynInstPtr insts[Impl::MaxWidth];
 };
 
 template<class Impl>
@@ -27,7 +25,7 @@ struct SimpleDecodeSimpleRename {
 
     int size;
 
-    DynInstPtr insts[Impl::MaxWidth + 1];
+    DynInstPtr insts[Impl::MaxWidth];
 };
 
 template<class Impl>
@@ -36,7 +34,7 @@ struct SimpleRenameSimpleIEW {
 
     int size;
 
-    DynInstPtr insts[Impl::MaxWidth + 1];
+    DynInstPtr insts[Impl::MaxWidth];
 };
 
 template<class Impl>
@@ -45,7 +43,7 @@ struct SimpleIEWSimpleCommit {
 
     int size;
 
-    DynInstPtr insts[Impl::MaxWidth + 1];
+    DynInstPtr insts[Impl::MaxWidth];
 
     bool squash;
     bool branchMispredict;
@@ -62,7 +60,7 @@ struct IssueStruct {
 
     int size;
 
-    DynInstPtr insts[Impl::MaxWidth + 1];
+    DynInstPtr insts[Impl::MaxWidth];
 };
 
 struct TimeBufStruct {
@@ -142,4 +140,4 @@ struct TimeBufStruct {
     commitComm commitInfo;
 };
 
-#endif //__COMM_HH__
+#endif //__CPU_BETA_CPU_COMM_HH__

@@ -1,6 +1,6 @@
 
 #include "cpu/beta_cpu/alpha_dyn_inst.hh"
-#include "cpu/beta_cpu/rename_impl.hh"
 #include "cpu/beta_cpu/alpha_impl.hh"
+#include "cpu/beta_cpu/rename_impl.hh"
 
-template SimpleRename<AlphaSimpleImpl>;
+template class SimpleRename<AlphaSimpleImpl>;

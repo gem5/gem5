@@ -1,5 +1,5 @@
-#ifndef __CPU_POLICY_HH__
-#define __CPU_POLICY_HH__
+#ifndef __CPU_BETA_CPU_CPU_POLICY_HH__
+#define __CPU_BETA_CPU_CPU_POLICY_HH__
 
 #include "cpu/beta_cpu/bpred_unit.hh"
 #include "cpu/beta_cpu/inst_queue.hh"
@@ -57,4 +57,4 @@ struct SimpleCPUPolicy
 
 };
 
-#endif //__CPU_POLICY_HH__
+#endif //__CPU_BETA_CPU_CPU_POLICY_HH__

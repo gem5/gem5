@@ -2,14 +2,14 @@
 //Need to handle delaying writes to the writeback bus if it's full at the
 //given time.  Load store queue.
 
-#ifndef __SIMPLE_IEW_HH__
-#define __SIMPLE_IEW_HH__
+#ifndef __CPU_BETA_CPU_SIMPLE_IEW_HH__
+#define __CPU_BETA_CPU_SIMPLE_IEW_HH__
 
 #include <queue>
 
+#include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/beta_cpu/comm.hh"
-#include "base/statistics.hh"
 
 //Can IEW even stall?  Space should be available/allocated already...maybe
 //if there's not enough write ports on the ROB or waiting for CDB
@@ -187,4 +187,4 @@ class SimpleIEW
     Stats::Scalar<> predictedTakenIncorrect;
 };
 
-#endif
+#endif // __CPU_BETA_CPU_IEW_HH__

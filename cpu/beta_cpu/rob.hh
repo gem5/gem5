@@ -4,15 +4,13 @@
 // all instructions after the instruction, and all instructions after *and*
 // including that instruction.
 
-#ifndef __ROB_HH__
-#define __ROB_HH__
+#ifndef __CPU_BETA_CPU_ROB_HH__
+#define __CPU_BETA_CPU_ROB_HH__
 
-#include<utility>
-#include<vector>
+#include <utility>
+#include <vector>
 
-#include "arch/alpha/isa_traits.hh"
-
-using namespace std;
+//#include "arch/alpha/isa_traits.hh"
 
 /**
  * ROB class.  Uses the instruction list that exists within the CPU to
@@ -28,7 +26,7 @@ class ROB
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
-    typedef pair<RegIndex, PhysRegIndex> UnmapInfo_t;
+    typedef std::pair<RegIndex, PhysRegIndex> UnmapInfo_t;
     typedef typename list<DynInstPtr>::iterator InstIt_t;
 
   public:
@@ -135,4 +133,4 @@ class ROB
     bool doneSquashing;
 };
 
-#endif //__ROB_HH__
+#endif //__CPU_BETA_CPU_ROB_HH__

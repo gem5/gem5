@@ -20,8 +20,6 @@
 #include "cpu/beta_cpu/cpu_policy.hh"
 #include "sim/process.hh"
 
-using namespace std;
-
 class FunctionalMemory;
 class Process;
 

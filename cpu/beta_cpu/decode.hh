@@ -5,11 +5,12 @@
 // Fix up squashing too, as it's too
 // dependent upon the iew stage continually telling it to squash.
 
-#ifndef __SIMPLE_DECODE_HH__
-#define __SIMPLE_DECODE_HH__
+#ifndef __CPU_BETA_CPU_SIMPLE_DECODE_HH__
+#define __CPU_BETA_CPU_SIMPLE_DECODE_HH__
 
 #include <queue>
 
+#include "base/statistics.hh"
 #include "base/timebuf.hh"
 
 template<class Impl>
@@ -141,4 +142,4 @@ class SimpleDecode
     Stats::Scalar<> decodeSquashedInsts;
 };
 
-#endif // __SIMPLE_DECODE_HH__
+#endif // __CPU_BETA_CPU_SIMPLE_DECODE_HH__

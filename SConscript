@@ -432,7 +432,7 @@ env.Append(CPPPATH='.')
 
 # Debug binary
 debug = env.Copy(OBJSUFFIX='.do')
-debug.Append(CCFLAGS=Split('-g -gstabs+ -O0 -lefence'))
+debug.Append(CCFLAGS=Split('-g -gstabs+ -O0'))
 debug.Append(CPPDEFINES='DEBUG')
 debug.Program(target = 'm5.debug', source = make_objs(sources, debug))
 

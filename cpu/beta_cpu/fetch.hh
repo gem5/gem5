@@ -4,17 +4,17 @@
 // Figure out where to advance time buffer.  Add a way to get a
 // stage's current status.
 
-#ifndef __SIMPLE_FETCH_HH__
-#define __SIMPLE_FETCH_HH__
+#ifndef __CPU_BETA_CPU_SIMPLE_FETCH_HH__
+#define __CPU_BETA_CPU_SIMPLE_FETCH_HH__
 
 //Will want to include: time buffer, structs, MemInterface, Event,
 //whatever class bzero uses, MemReqPtr
 
+#include "base/statistics.hh"
 #include "base/timebuf.hh"
-#include "sim/eventq.hh"
 #include "cpu/pc_event.hh"
 #include "mem/mem_interface.hh"
-#include "base/statistics.hh"
+#include "sim/eventq.hh"
 
 /**
  * SimpleFetch class to fetch a single instruction each cycle.  SimpleFetch
@@ -207,4 +207,4 @@ class SimpleFetch
     Stats::Distribution<> fetch_nisn_dist;
 };
 
-#endif //__SIMPLE_FETCH_HH__
+#endif //__CPU_BETA_CPU_SIMPLE_FETCH_HH__

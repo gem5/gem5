@@ -1,6 +1,3 @@
-#ifndef __SIMPLE_DECODE_CC__
-#define __SIMPLE_DECODE_CC__
-
 #include "cpu/beta_cpu/decode.hh"
 
 template<class Impl>
@@ -392,5 +389,3 @@ SimpleDecode<Impl>::decode()
 
      numInst = 0;
 }
-
-#endif // __SIMPLE_DECODE_CC__

@@ -3,15 +3,11 @@
 // Read and write are horribly hacked up between not being sure where to
 // copy their code from, and Ron's memory changes.
 
-#ifndef __ALPHA_FULL_CPU_HH__
-#define __ALPHA_FULL_CPU_HH__
+#ifndef __CPU_BETA_CPU_ALPHA_FULL_CPU_HH__
+#define __CPU_BETA_CPU_ALPHA_FULL_CPU_HH__
 
 // To include: comm, full cpu, ITB/DTB if full sys,
-//#include "cpu/beta_cpu/comm.hh"
-//#include "cpu/beta_cpu/alpha_impl.hh"
 #include "cpu/beta_cpu/full_cpu.hh"
-
-using namespace std;
 
 template <class Impl>
 class AlphaFullCPU : public FullBetaCPU<Impl>
@@ -250,4 +246,4 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 
 };
 
-#endif // __ALPHA_FULL_CPU_HH__
+#endif // __CPU_BETA_CPU_ALPHA_FULL_CPU_HH__

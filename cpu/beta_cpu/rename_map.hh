@@ -2,16 +2,14 @@
 // Have it so that there's a more meaningful name given to the variable
 // that marks the beginning of the FP registers.
 
-#ifndef __RENAME_MAP_HH__
-#define __RENAME_MAP_HH__
+#ifndef __CPU_BETA_CPU_RENAME_MAP_HH__
+#define __CPU_BETA_CPU_RENAME_MAP_HH__
 
 #include <iostream>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "cpu/beta_cpu/free_list.hh"
-
-using namespace std;
 
 class SimpleRenameMap
 {
@@ -21,7 +19,7 @@ class SimpleRenameMap
      * previous mapping of a logical register to a physical register.
      * Used to roll back the rename map to a previous state.
      */
-    typedef pair<RegIndex, PhysRegIndex> UnmapInfo;
+    typedef std::pair<RegIndex, PhysRegIndex> UnmapInfo;
 
     /**
      * Pair of a physical register and a physical register.  Used to
@@ -29,7 +27,7 @@ class SimpleRenameMap
      * renamed to, and the previous physical register that the same
      * logical register was previously mapped to.
      */
-    typedef pair<PhysRegIndex, PhysRegIndex> RenameInfo;
+    typedef std::pair<PhysRegIndex, PhysRegIndex> RenameInfo;
 
   public:
     //Constructor
@@ -128,17 +126,17 @@ class SimpleRenameMap
     /** Scoreboard of physical integer registers, saying whether or not they
      *  are ready.
      */
-    vector<bool> intScoreboard;
+    std::vector<bool> intScoreboard;
 
     /** Scoreboard of physical floating registers, saying whether or not they
      *  are ready.
      */
-    vector<bool> floatScoreboard;
+    std::vector<bool> floatScoreboard;
 
     /** Scoreboard of miscellaneous registers, saying whether or not they
      *  are ready.
      */
-    vector<bool> miscScoreboard;
+    std::vector<bool> miscScoreboard;
 };
 
-#endif //__RENAME_MAP_HH__
+#endif //__CPU_BETA_CPU_RENAME_MAP_HH__

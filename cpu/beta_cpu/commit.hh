@@ -12,14 +12,11 @@
 // Probably not a big deal if the IPR stuff isn't cycle accurate.  Can just
 // have the original function handle writing to the IPR register.
 
-#ifndef __SIMPLE_COMMIT_HH__
-#define __SIMPLE_COMMIT_HH__
+#ifndef __CPU_BETA_CPU_SIMPLE_COMMIT_HH__
+#define __CPU_BETA_CPU_SIMPLE_COMMIT_HH__
 
-//#include "arch/alpha/isa_traits.hh"
+#include "base/statistics.hh"
 #include "base/timebuf.hh"
-//#include "cpu/beta_cpu/comm.hh"
-//#include "cpu/beta_cpu/rename_map.hh"
-//#include "cpu/beta_cpu/rob.hh"
 #include "mem/memory_interface.hh"
 
 template<class Impl>
@@ -157,4 +154,4 @@ class SimpleCommit
     Stats::Distribution<> n_committed_dist;
 };
 
-#endif // __SIMPLE_COMMIT_HH__
+#endif // __CPU_BETA_CPU_SIMPLE_COMMIT_HH__

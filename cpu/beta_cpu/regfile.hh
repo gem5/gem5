@@ -3,8 +3,6 @@
 
 // @todo: Destructor
 
-using namespace std;
-
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/beta_cpu/comm.hh"
 

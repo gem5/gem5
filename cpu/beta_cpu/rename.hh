@@ -3,11 +3,12 @@
 // May want to have different statuses to differentiate the different stall
 // conditions.
 
-#ifndef __SIMPLE_RENAME_HH__
-#define __SIMPLE_RENAME_HH__
+#ifndef __CPU_BETA_CPU_SIMPLE_RENAME_HH__
+#define __CPU_BETA_CPU_SIMPLE_RENAME_HH__
 
 #include <list>
 
+#include "base/statistics.hh"
 #include "base/timebuf.hh"
 
 // Will need rename maps for both the int reg file and fp reg file.
@@ -202,4 +203,4 @@ class SimpleRename
     Stats::Scalar<> renameValidUndoneMaps;
 };
 
-#endif // __SIMPLE_RENAME_HH__
+#endif // __CPU_BETA_CPU_SIMPLE_RENAME_HH__

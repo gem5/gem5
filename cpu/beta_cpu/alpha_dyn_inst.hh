@@ -1,7 +1,7 @@
 //Todo:
 
-#ifndef __ALPHA_DYN_INST_HH__
-#define __ALPHA_DYN_INST_HH__
+#ifndef __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
+#define __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
 
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/beta_cpu/alpha_full_cpu.hh"
@@ -76,5 +76,5 @@ class AlphaDynInst : public BaseDynInst<Impl>
 
 };
 
-#endif // __ALPHA_DYN_INST_HH__
+#endif // __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
 
