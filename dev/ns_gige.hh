@@ -284,7 +284,13 @@ class NSGigE : public PciDev
      * Retransmit event
      */
     void transmit();
-    typedef EventWrapper<NSGigE, &NSGigE::transmit> TxEvent;
+    void txEventTransmit()
+    {
+        transmit();
+        if (txState == txFifoBlock)
+            txKick();
+    }
+    typedef EventWrapper<NSGigE, &NSGigE::txEventTransmit> TxEvent;
     friend class TxEvent;
     TxEvent txEvent;
 
