@@ -47,6 +47,11 @@ void
 AlphaISA::initCPU(RegFile *regs)
 {
     initIPRs(regs);
+    // CPU comes up with PAL regs enabled
+    swap_palshadow(regs, true);
+
+    regs->pc = regs->ipr[IPR_PAL_BASE] + fault_addr[Reset_Fault];
+    regs->npc = regs->pc + sizeof(MachInst);
 }
 
 void
@@ -97,6 +102,7 @@ AlphaISA::initIPRs(RegFile *regs)
 
     bzero((char *)ipr, NumInternalProcRegs * sizeof(InternalProcReg));
     ipr[IPR_PAL_BASE] = PAL_BASE;
+    ipr[IPR_MCSR] = 0x6;
 }
 
 

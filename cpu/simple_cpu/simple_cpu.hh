@@ -154,9 +154,6 @@ class SimpleCPU : public BaseCPU
     // current instruction
     MachInst inst;
 
-    // current fault status
-    Fault fault;
-
     // Refcounted pointer to the one memory request.
     MemReqPtr memReq;
 

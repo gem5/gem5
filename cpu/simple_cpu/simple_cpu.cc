@@ -126,19 +126,10 @@ SimpleCPU::SimpleCPU(const string &_name, Process *_process,
 #ifdef FULL_SYSTEM
     xc = new ExecContext(this, 0, system, itb, dtb, mem);
 
+    // initialize CPU, including PC
     TheISA::initCPU(&xc->regs);
-
-    IntReg *ipr = xc->regs.ipr;
-    ipr[TheISA::IPR_MCSR] = 0x6;
-
-    AlphaISA::swap_palshadow(&xc->regs, true);
-
-    fault = Reset_Fault;
-    xc->regs.pc = ipr[TheISA::IPR_PAL_BASE] + AlphaISA::fault_addr[fault];
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
 #else
     xc = new ExecContext(this, /* thread_num */ 0, _process, /* asid */ 0);
-    fault = No_Fault;
 #endif // !FULL_SYSTEM
 
     icacheInterface = icache_interface;
@@ -524,8 +515,10 @@ SimpleCPU::tick()
 {
     traceData = NULL;
 
+    Fault fault = No_Fault;
+
 #ifdef FULL_SYSTEM
-    if (fault == No_Fault && AlphaISA::check_interrupts &&
+    if (AlphaISA::check_interrupts &&
         xc->cpu->check_interrupts() &&
         !PC_PAL(xc->regs.pc) &&
         status() != IcacheMissComplete) {
