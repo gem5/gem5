@@ -28,6 +28,7 @@
 
 #include "cpu/exec_context.hh"
 #include "targetarch/vtophys.hh"
+#include "sim/param.hh"
 #include "sim/system.hh"
 
 using namespace std;

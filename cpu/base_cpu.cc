@@ -34,6 +34,7 @@
 #include "base/cprintf.hh"
 #include "cpu/exec_context.hh"
 #include "base/misc.hh"
+#include "sim/param.hh"
 #include "sim/sim_events.hh"
 
 using namespace std;
