@@ -218,6 +218,9 @@ EtherDev::regStats()
     rxPacketRate = rxPackets / simSeconds;
 }
 
+/**
+ * This is to read the PCI general configuration registers
+ */
 void
 EtherDev::ReadConfig(int offset, int size, uint8_t *data)
 {
@@ -228,6 +231,9 @@ EtherDev::ReadConfig(int offset, int size, uint8_t *data)
     }
 }
 
+/**
+ * This is to write to the PCI general configuration registers
+ */
 void
 EtherDev::WriteConfig(int offset, int size, uint32_t data)
 {
@@ -237,13 +243,21 @@ EtherDev::WriteConfig(int offset, int size, uint32_t data)
         panic("Need to do that\n");
 }
 
+/**
+ * This reads the device registers, which are detailed in the NS83820
+ * spec sheet
+ */
 Fault
 EtherDev::read(MemReqPtr &req, uint8_t *data)
 {
+    //The mask is to give you only the offset into the device register file
     Addr daddr = req->paddr & 0xfff;
     DPRINTF(EthernetPIO, "read  da=%#x pa=%#x va=%#x size=%d\n",
             daddr, req->paddr, req->vaddr, req->size);
 
+
+    //there are some reserved registers, you can see ns_gige_reg.h and
+    //the spec sheet for details
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
@@ -252,6 +266,7 @@ EtherDev::read(MemReqPtr &req, uint8_t *data)
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
+        // MIB are just hardware stats keepers
         uint32_t &reg = *(uint32_t *) data;
         reg = 0;
         return No_Fault;
@@ -266,6 +281,7 @@ EtherDev::read(MemReqPtr &req, uint8_t *data)
             switch (daddr) {
               case CR:
                 reg = regs.command;
+                //these are supposed to be cleared on a read
                 reg &= ~(CR_RXD | CR_TXD | CR_TXR | CR_RXR);
                 break;
 
@@ -338,6 +354,10 @@ EtherDev::read(MemReqPtr &req, uint8_t *data)
                 reg = regs.pcr;
                 break;
 
+                //see the spec sheet for how RFCR and RFDR work
+                //basically, you write to RFCR to tell the machine what you want to do next
+                //then you act upon RFDR, and the device will be prepared b/c
+                //of what you wrote to RFCR
               case RFCR:
                 reg = regs.rfcr;
                 break;
@@ -454,6 +474,7 @@ EtherDev::write(MemReqPtr &req, const uint8_t *data)
             if ((reg & (CR_TXE | CR_TXD)) == (CR_TXE | CR_TXD)) {
                 txHalt = true;
             } else if (reg & CR_TXE) {
+                //the kernel is enabling the transmit machine
                 if (txState == txIdle)
                     txKick();
             } else if (reg & CR_TXD) {
@@ -496,6 +517,8 @@ EtherDev::write(MemReqPtr &req, const uint8_t *data)
             regs.config |= reg & ~(CFG_LNKSTS | CFG_SPDSTS | CFG_DUPSTS | CFG_RESERVED |
                                   CFG_T64ADDR | CFG_PCI64_DET);
 
+// all these #if 0's are because i don't THINK the kernel needs to have these implemented
+// if there is a problem relating to one of these, you may need to add functionality in
 #if 0
               if (reg & CFG_TBI_EN) ;
               if (reg & CFG_MODE_1000) ;
@@ -1130,6 +1153,12 @@ EtherDev::rxKick()
         break;
     }
 
+    // see state machine from spec for details
+    // the way this works is, if you finish work on one state and can go directly to
+    // another, you do that through jumping to the label "next".  however, if you have
+    // intermediate work, like DMA so that you can't go to the next state yet, you go to
+    // exit and exit the loop.  however, when the DMA is done it will trigger an
+    // event and come back to this loop.
     switch (rxState) {
       case rxIdle:
         if (!regs.command & CR_RXE) {
@@ -1251,6 +1280,7 @@ EtherDev::rxKick()
 #endif
 
             eth_header *eth = (eth_header *) rxPacket->data;
+            // eth->type 0x800 indicated that it's an ip packet.
             if (eth->type == 0x800 && extstsEnable) {
                 rxDescCache.extsts |= EXTSTS_IPPKT;
                 if (!ipChecksum(rxPacket, false))
@@ -1843,6 +1873,10 @@ EtherDev::recvPacket(PacketPtr packet)
     return true;
 }
 
+/**
+ * does a udp checksum.  if gen is true, then it generates it and puts it in the right place
+ * else, it just checks what it calculates against the value in the header in packet
+ */
 bool
 EtherDev::udpChecksum(PacketPtr packet, bool gen)
 {
