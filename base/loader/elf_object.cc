@@ -111,15 +111,15 @@ bool
 ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
 {
     Elf *elf;
-    int secidx = 1; /* there is a 0 but it is nothing, go figure*/
+    int sec_idx = 1; /* there is a 0 but it is nothing, go figure*/
     Elf_Scn *section;
     GElf_Shdr shdr;
     GElf_Ehdr ehdr;
-    uint8_t *zeromem;
-    uint8_t *sectionData;
+    uint8_t *zero_mem;
+    uint8_t *section_data;
 
     Addr address;
-    char *secname;
+    char *sec_name;
 
 
 
@@ -141,7 +141,7 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
 
 
     /* Get the first section */
-    section = elf_getscn(elf, secidx);
+    section = elf_getscn(elf, sec_idx);
 
     /* While there are no more sections */
     while (section != NULL)
@@ -155,23 +155,23 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
             DPRINTF(Loader,"Name: %20s Address: 0x%016llx Size: 0x%08llx Offset: 0x%08llx   Flags:0x%08llx %s\n",
                     elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name), shdr.sh_addr,
                     shdr.sh_size, shdr.sh_offset, shdr.sh_flags, shdr.sh_flags &    SHF_ALLOC ? "ALLOC" : "");
-            secname = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+            sec_name = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
 
-            sectionData = fileData + shdr.sh_offset;
+            section_data = fileData + shdr.sh_offset;
 
-            if(secname)
+            if(sec_name)
             {
-                if (strcmp(secname, ".text")==0)
+                if (strcmp(sec_name, ".text")==0)
                 {
                     text.baseAddr = shdr.sh_addr;
                     text.size = shdr.sh_size;
                 }
-                if (strcmp(secname, ".data")==0)
+                if (strcmp(sec_name, ".data")==0)
                 {
                     data.baseAddr = shdr.sh_addr;
                     data.size = shdr.sh_size;
                 }
-                if (strcmp(secname, ".bss")==0)
+                if (strcmp(sec_name, ".bss")==0)
                 {
                     bss.baseAddr = shdr.sh_addr;
                     bss.size = shdr.sh_size;
@@ -179,9 +179,9 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
                     /* If this is the .bss section it must be 0, so just
                        to be extra causious, lets allocate some memory
                        bzero it, and write that */
-                    zeromem = (uint8_t*)malloc(shdr.sh_size);
-                    memset(zeromem, 0, shdr.sh_size);
-                    sectionData = zeromem;
+                    zero_mem = (uint8_t*)malloc(shdr.sh_size);
+                    memset(zero_mem, 0, shdr.sh_size);
+                    section_data = zero_mem;
                 }
             }
             if(shdr.sh_size != 0)
@@ -189,20 +189,20 @@ ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
                 if (loadPhys)
                 {
                     address = shdr.sh_addr &= (ULL(1) << 40) - 1;
-                    mem->prot_write(address, sectionData, shdr.sh_size);
+                    mem->prot_write(address, section_data, shdr.sh_size);
                 }
                 else
                 {
-                    mem->prot_write(shdr.sh_addr, sectionData, shdr.sh_size);
+                    mem->prot_write(shdr.sh_addr, section_data, shdr.sh_size);
                 }
             }
 
         }
 
-        ++secidx;
-        section = elf_getscn(elf, secidx);
+        ++sec_idx;
+        section = elf_getscn(elf, sec_idx);
     }
-    free(zeromem);
+    free(zero_mem);
 
     elf_end(elf);
 
@@ -214,7 +214,7 @@ bool
 ElfObject::loadGlobalSymbols(SymbolTable *symtab)
 {
     Elf *elf;
-    int secidx = 1; /* there is a 0 but it is nothing, go figure*/
+    int sec_idx = 1; /* there is a 0 but it is nothing, go figure*/
     Elf_Scn *section;
     GElf_Shdr shdr;
     Elf_Data *data;
@@ -235,7 +235,7 @@ ElfObject::loadGlobalSymbols(SymbolTable *symtab)
 
 
     /* Get the first section */
-    section = elf_getscn(elf, secidx);
+    section = elf_getscn(elf, sec_idx);
 
     /* While there are no more sections */
     while (section != NULL)
@@ -261,8 +261,8 @@ ElfObject::loadGlobalSymbols(SymbolTable *symtab)
                 }
             }
         }
-        ++secidx;
-        section = elf_getscn(elf, secidx);
+        ++sec_idx;
+        section = elf_getscn(elf, sec_idx);
     }
 
     elf_end(elf);
@@ -275,7 +275,7 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab)
 {
 
     Elf *elf;
-    int secidx = 1; /* there is a 0 but it is nothing, go figure*/
+    int sec_idx = 1; /* there is a 0 but it is nothing, go figure*/
     Elf_Scn *section;
     GElf_Shdr shdr;
     Elf_Data *data;
@@ -296,7 +296,7 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab)
 
 
     /* Get the first section */
-    section = elf_getscn(elf, secidx);
+    section = elf_getscn(elf, sec_idx);
 
     /* While there are no more sections */
     while (section != NULL)
@@ -321,8 +321,8 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab)
                 }
             }
         }
-        ++secidx;
-        section = elf_getscn(elf, secidx);
+        ++sec_idx;
+        section = elf_getscn(elf, sec_idx);
     }
 
     elf_end(elf);
