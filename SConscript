@@ -216,6 +216,7 @@ full_system_sources = Split('''
         dev/simconsole.cc
 	dev/disk_image.cc
 	dev/dma.cc
+	dev/etherbus.cc
 	dev/etherdump.cc
 	dev/etherint.cc
 	dev/etherlink.cc
