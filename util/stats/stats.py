@@ -2,6 +2,7 @@
 from __future__ import division
 import re, sys, math
 
+
 def usage():
     print '''\
 Usage: %s [-E] [-F] [-d <db> ] [-g <get> ] [-h <host>] [-p]
@@ -257,18 +258,18 @@ def commands(options, command, args):
         for stat in stats:
 
             print "%s:" % stat.name
-            print "%-30s %12s %12s %4s %5s %5s %5s" % \
-                  ("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV", "SAMP")
-            print "%-30s %12s %12s %4s %5s %5s %5s" % \
-                  ("------------------------------", "------------",
-                   "------------", "----", "-----", "-----", "-----")
+            print "%-20s %12s %12s %4s %5s %5s %5s %6s" % \
+                  ("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV", "SAMP", "CV")
+            print "%-20s %12s %12s %4s %5s %5s %5s %6s" % \
+                  ("--------------------", "------------",
+                   "------------", "----", "-----", "-----", "-----", "------")
             #loop through all the selected runs
             for run in runs:
                 info.display_run = run.run;
                 runTicks = info.source.retTicks([ run ])
                 #throw away the first one, it's 0
                 runTicks.pop(0)
-                stat.ticks = runTicks
+                info.globalTicks = runTicks
                 avg = float(stat)
                 stdev = 0
                 numoutsideavg  = 0
@@ -277,7 +278,8 @@ def commands(options, command, args):
 
                 #loop through all the various ticks for each run
                 for tick in runTicks:
-                    stat.ticks = str(tick)
+                    #stat.ticks = str(tick)
+                    info.globalTicks = [ tick ]
                     val = float(stat)
                     if (val < (avg * .9)) or (val > (avg * 1.1)):
                         numoutsideavg += 1
@@ -285,17 +287,18 @@ def commands(options, command, args):
 
                 stdev = math.sqrt(stdev / len(runTicks))
                 for tick in runTicks:
-                    stat.ticks = str(tick)
+                    info.globalTicks = [ tick ]
                     val = float(stat)
                     if (val < (avg - stdev)) or (val > (avg + stdev)):
                         numoutside1std += 1
                     if (val < (avg - (2*stdev))) or (val > (avg + (2*stdev))):
                         numoutside2std += 1
 
-                print "%-30s %12s %12s %4s %5s %5s %5s" % \
+                print "%-20s %12s %12s %4s %5s %5s %5s %6s" % \
                       (run.name, "%.1f" % avg, "%.1f" % stdev,
                        "%d" % numoutsideavg, "%d" % numoutside1std,
-                       "%d" % numoutside2std, "%d" % len(runTicks))
+                       "%d" % numoutside2std, "%d" % len(runTicks),
+                       "%.1f" % (stdev/avg*100))
         return
 
 
@@ -320,7 +323,7 @@ def commands(options, command, args):
             else:
                 if options.ticks:
                    print 'only displaying sample %s' % options.ticks
-                   stat.ticks = options.ticks
+                   info.globalTicks = [ int(x) for x in options.ticks.split() ]
 
                 if options.binned:
                     print 'kernel ticks'
