@@ -72,6 +72,8 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned executeWidth;
     unsigned executeIntWidth;
     unsigned executeFloatWidth;
+    unsigned executeBranchWidth;
+    unsigned executeMemoryWidth;
 
     //
     // Commit
@@ -84,16 +86,37 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     //
     // Branch predictor (BP & BTB)
     //
+/*
     unsigned localPredictorSize;
     unsigned localPredictorCtrBits;
+*/
+
+    unsigned local_predictor_size;
+    unsigned local_ctr_bits;
+    unsigned local_history_table_size;
+    unsigned local_history_bits;
+    unsigned global_predictor_size;
+    unsigned global_ctr_bits;
+    unsigned global_history_bits;
+    unsigned choice_predictor_size;
+    unsigned choice_ctr_bits;
+
     unsigned BTBEntries;
     unsigned BTBTagSize;
+
+    unsigned RASSize;
 
     //
     // Load store queue
     //
     unsigned LQEntries;
     unsigned SQEntries;
+
+    //
+    // Memory dependence
+    //
+    unsigned SSITSize;
+    unsigned LFSTSize;
 
     //
     // Miscellaneous

@@ -75,18 +75,34 @@ DefaultBP::getLocalIndex(Addr &branch_addr)
 bool
 DefaultBP::lookup(Addr &branch_addr)
 {
+    bool taken;
     uint8_t local_prediction;
     unsigned local_predictor_idx = getLocalIndex(branch_addr);
 
     DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
             local_predictor_idx);
 
+    assert(local_predictor_idx < localPredictorSize);
+
     local_prediction = localCtrs[local_predictor_idx].read();
 
     DPRINTF(Fetch, "Branch predictor: prediction is %i.\n",
             (int)local_prediction);
 
-    return getPrediction(local_prediction);
+    taken = getPrediction(local_prediction);
+
+#if 0
+    // Speculative update.
+    if (taken) {
+        DPRINTF(Fetch, "Branch predictor: Branch updated as taken.\n");
+        localCtrs[local_predictor_idx].increment();
+    } else {
+        DPRINTF(Fetch, "Branch predictor: Branch updated as not taken.\n");
+        localCtrs[local_predictor_idx].decrement();
+    }
+#endif
+
+    return taken;
 }
 
 void
@@ -100,11 +116,17 @@ DefaultBP::update(Addr &branch_addr, bool taken)
     DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
             local_predictor_idx);
 
+    assert(local_predictor_idx < localPredictorSize);
+
+    // Increment or decrement twice to undo speculative update, then
+    // properly update
     if (taken) {
         DPRINTF(Fetch, "Branch predictor: Branch updated as taken.\n");
         localCtrs[local_predictor_idx].increment();
+//        localCtrs[local_predictor_idx].increment();
     } else {
         DPRINTF(Fetch, "Branch predictor: Branch updated as not taken.\n");
         localCtrs[local_predictor_idx].decrement();
+//        localCtrs[local_predictor_idx].decrement();
     }
 }

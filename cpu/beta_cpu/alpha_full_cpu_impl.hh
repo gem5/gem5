@@ -27,6 +27,19 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params &params)
     rob.setCPU(this);
 }
 
+template <class Impl>
+void
+AlphaFullCPU<Impl>::regStats()
+{
+    // Register stats for everything that has stats.
+    fullCPURegStats();
+    fetch.regStats();
+    decode.regStats();
+    rename.regStats();
+    iew.regStats();
+    commit.regStats();
+}
+
 #ifndef FULL_SYSTEM
 
 template <class Impl>
@@ -92,6 +105,14 @@ AlphaFullCPU<Impl>::squashStages()
 
     rob.squash(rob_head);
     commit.setSquashing();
+
+    // Now hack the time buffer to clear the sequence numbers in the places
+    // where the stages might read it.?
+    for (int i = 0; i < 5; ++i)
+    {
+        timeBuffer.access(-i)->commitInfo.doneSeqNum = 0;
+    }
+
 }
 
 #endif // FULL_SYSTEM
@@ -178,7 +199,7 @@ template <class Impl>
 uint64_t *
 AlphaFullCPU<Impl>::getIpr()
 {
-    return regs.ipr;
+    return regFile.getIpr();
 }
 
 template <class Impl>
@@ -564,7 +585,7 @@ AlphaFullCPU<Impl>::setIntrFlag(int val)
     regs.intrflag = val;
 }
 
-// Maybe have this send back from IEW stage to squash and update PC.
+// Can force commit stage to squash and stuff.
 template <class Impl>
 Fault
 AlphaFullCPU<Impl>::hwrei()

@@ -54,7 +54,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs);
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Access to float register %i as single, has "
                 "data %8.8f\n", int(reg_idx), (float)floatRegFile[reg_idx].d);
@@ -67,7 +67,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs);
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Access to float register %i as double, has "
                 " data %8.8f\n", int(reg_idx), floatRegFile[reg_idx].d);
@@ -80,7 +80,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs);
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, has data "
                 "%lli\n", int(reg_idx), floatRegFile[reg_idx].q);
@@ -103,7 +103,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs);
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
                 int(reg_idx), val);
@@ -116,7 +116,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs);
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
                 int(reg_idx), val);
@@ -129,7 +129,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs);
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
                 int(reg_idx), val);

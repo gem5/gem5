@@ -5,6 +5,8 @@ StoreSet::StoreSet(int _SSIT_size, int _LFST_size)
     : SSIT_size(_SSIT_size), LFST_size(_LFST_size)
 {
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
+    DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
+            SSIT_size, LFST_size);
 
     SSIT = new SSID[SSIT_size];
 
@@ -31,10 +33,12 @@ StoreSet::StoreSet(int _SSIT_size, int _LFST_size)
 }
 
 void
-StoreSet::violation(Addr load_PC, Addr store_PC)
+StoreSet::violation(Addr store_PC, Addr load_PC)
 {
     int load_index = calcIndex(load_PC);
     int store_index = calcIndex(store_PC);
+
+    assert(load_index < SSIT_size && store_index < SSIT_size);
 
     bool valid_load_SSID = validSSIT[load_index];
     bool valid_store_SSID = validSSIT[store_index];
@@ -51,7 +55,14 @@ StoreSet::violation(Addr load_PC, Addr store_PC)
 
         SSIT[store_index] = new_set;
 
+        assert(new_set < LFST_size);
+
         SSCounters[new_set]++;
+
+
+        DPRINTF(StoreSet, "StoreSet: Neither load nor store had a valid "
+                "storeset, creating a new one: %i for load %#x, store %#x\n",
+                new_set, load_PC, store_PC);
     } else if (valid_load_SSID && !valid_store_SSID) {
         SSID load_SSID = SSIT[load_index];
 
@@ -59,7 +70,13 @@ StoreSet::violation(Addr load_PC, Addr store_PC)
 
         SSIT[store_index] = load_SSID;
 
+        assert(load_SSID < LFST_size);
+
         SSCounters[load_SSID]++;
+
+        DPRINTF(StoreSet, "StoreSet: Load had a valid store set.  Adding "
+                "store to that set: %i for load %#x, store %#x\n",
+                load_SSID, load_PC, store_PC);
     } else if (!valid_load_SSID && valid_store_SSID) {
         SSID store_SSID = SSIT[store_index];
 
@@ -69,9 +86,15 @@ StoreSet::violation(Addr load_PC, Addr store_PC)
 
         // Because we are having a load point to an already existing set,
         // the size of the store set is not incremented.
+
+        DPRINTF(StoreSet, "StoreSet: Store had a valid store set: %i for "
+                "load %#x, store %#x\n",
+                store_SSID, load_PC, store_PC);
     } else {
         SSID load_SSID = SSIT[load_index];
         SSID store_SSID = SSIT[store_index];
+
+        assert(load_SSID < LFST_size && store_SSID < LFST_size);
 
         int load_SS_size = SSCounters[load_SSID];
         int store_SS_size = SSCounters[store_SSID];
@@ -83,11 +106,19 @@ StoreSet::violation(Addr load_PC, Addr store_PC)
 
             SSCounters[load_SSID]++;
             SSCounters[store_SSID]--;
+
+            DPRINTF(StoreSet, "StoreSet: Load had bigger store set: %i; "
+                    "for load %#x, store %#x\n",
+                    load_SSID, load_PC, store_PC);
         } else {
             SSIT[load_index] = store_SSID;
 
             SSCounters[store_SSID]++;
             SSCounters[load_SSID]--;
+
+            DPRINTF(StoreSet, "StoreSet: Store had bigger store set: %i; "
+                    "for load %#x, store %#x\n",
+                    store_SSID, load_PC, store_PC);
         }
     }
 }
@@ -106,6 +137,8 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num)
 
     int store_SSID;
 
+    assert(index < SSIT_size);
+
     if (!validSSIT[index]) {
         // Do nothing if there's no valid entry.
         return;
@@ -116,6 +149,11 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num)
 
         // Update the last store that was fetched with the current one.
         LFST[store_SSID] = store_seq_num;
+
+        validLFST[store_SSID] = 1;
+
+        DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n",
+                store_PC, store_SSID);
     }
 }
 
@@ -126,7 +164,12 @@ StoreSet::checkInst(Addr PC)
 
     int inst_SSID;
 
+    assert(index < SSIT_size);
+
     if (!validSSIT[index]) {
+        DPRINTF(StoreSet, "Inst %#x with index %i had no SSID\n",
+                PC, index);
+
         // Return 0 if there's no valid entry.
         return 0;
     } else {
@@ -135,8 +178,15 @@ StoreSet::checkInst(Addr PC)
         assert(inst_SSID < LFST_size);
 
         if (!validLFST[inst_SSID]) {
+
+            DPRINTF(StoreSet, "Inst %#x with index %i and SSID %i had no "
+                    "dependency\n", PC, index, inst_SSID);
+
             return 0;
         } else {
+            DPRINTF(StoreSet, "Inst %#x with index %i and SSID %i had LFST "
+                    "inum of %i\n", PC, index, inst_SSID, LFST[inst_SSID]);
+
             return LFST[inst_SSID];
         }
     }
@@ -154,14 +204,21 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
 
     int store_SSID;
 
+    assert(index < SSIT_size);
+
     // Make sure the SSIT still has a valid entry for the issued store.
-    assert(validSSIT[index]);
+    if (!validSSIT[index]) {
+        return;
+    }
 
     store_SSID = SSIT[index];
+
+    assert(store_SSID < LFST_size);
 
     // If the last fetched store in the store set refers to the store that
     // was just issued, then invalidate the entry.
     if (validLFST[store_SSID] && LFST[store_SSID] == issued_seq_num) {
+        DPRINTF(StoreSet, "StoreSet: store invalidated itself in LFST.\n");
         validLFST[store_SSID] = false;
     }
 }
@@ -170,9 +227,14 @@ void
 StoreSet::squash(InstSeqNum squashed_num)
 {
     // Not really sure how to do this well.
+    // Generally this is small enough that it should be okay; short circuit
+    // evaluation should take care of invalid entries.
+
+    DPRINTF(StoreSet, "StoreSet: Squashing until inum %i\n",
+            squashed_num);
 
     for (int i = 0; i < LFST_size; ++i) {
-        if (LFST[i] < squashed_num) {
+        if (validLFST[i] && LFST[i] < squashed_num) {
             validLFST[i] = false;
         }
     }

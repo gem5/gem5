@@ -23,6 +23,51 @@ SimpleCommit<Impl>::SimpleCommit(Params &params)
 
 template <class Impl>
 void
+SimpleCommit<Impl>::regStats()
+{
+    commitCommittedInsts
+        .name(name() + ".commitCommittedInsts")
+        .desc("The number of committed instructions")
+        .prereq(commitCommittedInsts);
+    commitSquashedInsts
+        .name(name() + ".commitSquashedInsts")
+        .desc("The number of squashed insts skipped by commit")
+        .prereq(commitSquashedInsts);
+    commitSquashEvents
+        .name(name() + ".commitSquashEvents")
+        .desc("The number of times commit is told to squash")
+        .prereq(commitSquashEvents);
+    commitNonSpecStalls
+        .name(name() + ".commitNonSpecStalls")
+        .desc("The number of times commit has been forced to stall to "
+              "communicate backwards")
+        .prereq(commitNonSpecStalls);
+    commitCommittedBranches
+        .name(name() + ".commitCommittedBranches")
+        .desc("The number of committed branches")
+        .prereq(commitCommittedBranches);
+    commitCommittedLoads
+        .name(name() + ".commitCommittedLoads")
+        .desc("The number of committed loads")
+        .prereq(commitCommittedLoads);
+    commitCommittedMemRefs
+        .name(name() + ".commitCommittedMemRefs")
+        .desc("The number of committed memory references")
+        .prereq(commitCommittedMemRefs);
+    branchMispredicts
+        .name(name() + ".branchMispredicts")
+        .desc("The number of times a branch was mispredicted")
+        .prereq(branchMispredicts);
+    n_committed_dist
+        .init(0,commitWidth,1)
+        .name(name() + ".COM:committed_per_cycle")
+        .desc("Number of insts commited each cycle")
+        .flags(Stats::pdf)
+        ;
+}
+
+template <class Impl>
+void
 SimpleCommit<Impl>::setCPU(FullCPU *cpu_ptr)
 {
     DPRINTF(Commit, "Commit: Setting CPU pointer.\n");
@@ -143,12 +188,12 @@ SimpleCommit<Impl>::commit()
     // Should I also check if the commit stage is telling the ROB to squah?
     // This might be necessary to keep the same timing between the IQ and
     // the ROB...
-    if (robInfoFromIEW->iewInfo.squash) {
+    if (fromIEW->squash) {
         DPRINTF(Commit, "Commit: Squashing instructions in the ROB.\n");
 
         _status = ROBSquashing;
 
-        InstSeqNum squashed_inst = robInfoFromIEW->iewInfo.squashedSeqNum;
+        InstSeqNum squashed_inst = fromIEW->squashedSeqNum;
 
         rob->squash(squashed_inst);
 
@@ -162,15 +207,19 @@ SimpleCommit<Impl>::commit()
         // ROB is in the process of squashing.
         toIEW->commitInfo.robSquashing = true;
 
-        toIEW->commitInfo.branchMispredict =
-            robInfoFromIEW->iewInfo.branchMispredict;
+        toIEW->commitInfo.branchMispredict = fromIEW->branchMispredict;
 
-        toIEW->commitInfo.branchTaken =
-            robInfoFromIEW->iewInfo.branchTaken;
+        toIEW->commitInfo.branchTaken = fromIEW->branchTaken;
 
-        toIEW->commitInfo.nextPC = robInfoFromIEW->iewInfo.nextPC;
+        toIEW->commitInfo.nextPC = fromIEW->nextPC;
 
-        toIEW->commitInfo.mispredPC = robInfoFromIEW->iewInfo.mispredPC;
+        toIEW->commitInfo.mispredPC = fromIEW->mispredPC;
+
+        toIEW->commitInfo.globalHist = fromIEW->globalHist;
+
+        if (toIEW->commitInfo.branchMispredict) {
+            ++branchMispredicts;
+        }
     }
 
     if (_status != ROBSquashing) {
@@ -237,6 +286,8 @@ SimpleCommit<Impl>::commitInsts()
             // inst in the ROB without affecting any other stages.
             rob->retireHead();
 
+            ++commitSquashedInsts;
+
         } else {
             // Increment the total number of non-speculative instructions
             // executed.
@@ -249,7 +300,7 @@ SimpleCommit<Impl>::commitInsts()
             bool commit_success = commitHead(head_inst, num_committed);
 
             // Update what instruction we are looking at if the commit worked.
-            if(commit_success) {
+            if (commit_success) {
                 ++num_committed;
 
                 // Send back which instruction has been committed.
@@ -258,7 +309,11 @@ SimpleCommit<Impl>::commitInsts()
                 // sequence number instead (copy).
                 toIEW->commitInfo.doneSeqNum = head_inst->seqNum;
 
-                cpu->instDone();
+                ++commitCommittedInsts;
+
+                if (!head_inst->isNop()) {
+                    cpu->instDone();
+                }
             } else {
                 break;
             }
@@ -267,6 +322,8 @@ SimpleCommit<Impl>::commitInsts()
         // Update the pointer to read the next instruction in the ROB.
         head_inst = rob->readHeadInst();
     }
+
+    n_committed_dist.sample(num_committed);
 }
 
 template <class Impl>
@@ -276,18 +333,13 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // Make sure instruction is valid
     assert(head_inst);
 
-    Fault fault = No_Fault;
-
-    // If the head instruction is a store or a load, then execute it
-    // because this simple model does no speculative memory access.
-    // Hopefully this covers all memory references.
-    // Also check if it's nonspeculative.  Or a nop.  Then it will be
-    // executed only when it reaches the head of the ROB.  Actually
-    // executing a nop is a bit overkill...
+    // If the instruction is not executed yet, then it is a non-speculative
+    // or store inst.  Signal backwards that it should be executed.
     if (!head_inst->isExecuted()) {
         // Keep this number correct.  We have not yet actually executed
         // and committed this instruction.
         cpu->funcExeInst--;
+
         if (head_inst->isStore() || head_inst->isNonSpeculative()) {
             DPRINTF(Commit, "Commit: Encountered a store or non-speculative "
                     "instruction at the head of the ROB, PC %#x.\n",
@@ -299,24 +351,13 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             // it is executed.
             head_inst->clearCanCommit();
 
+            ++commitNonSpecStalls;
+
             return false;
         } else {
             panic("Commit: Trying to commit un-executed instruction "
                   "of unknown type!\n");
         }
-    }
-
-    // Check if memory access was successful.
-    if (fault != No_Fault) {
-        // Handle data cache miss here.  In the future, set the status
-        // to data cache miss, then exit the stage.  Have an event
-        // that handles commiting the head instruction, then setting
-        // the stage back to running, when the event is run.  (just
-        // make sure that event is commit's run for that cycle)
-        panic("Commit: Load/store instruction failed, not sure what "
-              "to do.\n");
-        // Also will want to clear the instruction's fault after being
-        // handled here so it's not handled again below.
     }
 
     // Now check if it's one of the special trap or barrier or
@@ -335,38 +376,42 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
     // Check if the instruction caused a fault.  If so, trap.
     if (head_inst->getFault() != No_Fault) {
-#ifdef FULL_SYSTEM
-        cpu->trap(fault);
-#else // !FULL_SYSTEM
         if (!head_inst->isNop()) {
+#ifdef FULL_SYSTEM
+            cpu->trap(fault);
+#else // !FULL_SYSTEM
             panic("fault (%d) detected @ PC %08p", head_inst->getFault(),
                   head_inst->PC);
-        }
 #endif // FULL_SYSTEM
+        }
     }
 
     // Check if we're really ready to commit.  If not then return false.
     // I'm pretty sure all instructions should be able to commit if they've
     // reached this far.  For now leave this in as a check.
     if(!rob->isHeadReady()) {
-        DPRINTF(Commit, "Commit: Unable to commit head instruction!\n");
+        panic("Commit: Unable to commit head instruction!\n");
         return false;
     }
 
     // If it's a branch, then send back branch prediction update info
     // to the fetch stage.
     // This should be handled in the iew stage if a mispredict happens...
-#if 0
+
     if (head_inst->isControl()) {
 
+#if 0
         toIEW->nextPC = head_inst->readPC();
         //Maybe switch over to BTB incorrect.
         toIEW->btbMissed = head_inst->btbMiss();
         toIEW->target = head_inst->nextPC;
         //Maybe also include global history information.
         //This simple version will have no branch prediction however.
-    }
 #endif
+
+        ++commitCommittedBranches;
+    }
+
 
 #if 0
     // Check if the instruction has a destination register.
@@ -383,8 +428,12 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // the LDSTQ will already have been told that a store has reached the head
     // of the ROB.  Consider including communication if it's a store as well
     // to keep things orthagonal.
-    if (head_inst->isLoad()) {
-        toIEW->commitInfo.commitIsLoad = true;
+    if (head_inst->isMemRef()) {
+        ++commitCommittedMemRefs;
+        if (head_inst->isLoad()) {
+            toIEW->commitInfo.commitIsLoad = true;
+            ++commitCommittedLoads;
+        }
     }
 
     // Now that the instruction is going to be committed, finalize its

@@ -14,7 +14,7 @@ class StoreSet
   public:
     StoreSet(int SSIT_size, int LFST_size);
 
-    void violation(Addr load_PC, Addr store_PC);
+    void violation(Addr store_PC, Addr load_PC);
 
     void insertLoad(Addr load_PC, InstSeqNum load_seq_num);
 

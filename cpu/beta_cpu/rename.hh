@@ -54,6 +54,8 @@ class SimpleRename
   public:
     SimpleRename(Params &params);
 
+    void regStats();
+
     void setCPU(FullCPU *cpu_ptr);
 
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -182,6 +184,22 @@ class SimpleRename
      *  group of instructions, it can restart at the proper instruction.
      */
     unsigned numInst;
+
+    Stats::Scalar<> renameSquashCycles;
+    Stats::Scalar<> renameIdleCycles;
+    Stats::Scalar<> renameBlockCycles;
+    Stats::Scalar<> renameUnblockCycles;
+    Stats::Scalar<> renameRenamedInsts;
+    Stats::Scalar<> renameSquashedInsts;
+    Stats::Scalar<> renameROBFullEvents;
+    Stats::Scalar<> renameIQFullEvents;
+    Stats::Scalar<> renameFullRegistersEvents;
+    Stats::Scalar<> renameRenamedOperands;
+    Stats::Scalar<> renameRenameLookups;
+    Stats::Scalar<> renameHBPlaceHolders;
+    Stats::Scalar<> renameCommittedMaps;
+    Stats::Scalar<> renameUndoneMaps;
+    Stats::Scalar<> renameValidUndoneMaps;
 };
 
 #endif // __SIMPLE_RENAME_HH__

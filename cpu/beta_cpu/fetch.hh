@@ -14,6 +14,7 @@
 #include "sim/eventq.hh"
 #include "cpu/pc_event.hh"
 #include "mem/mem_interface.hh"
+#include "base/statistics.hh"
 
 /**
  * SimpleFetch class to fetch a single instruction each cycle.  SimpleFetch
@@ -59,6 +60,8 @@ class SimpleFetch
     /** SimpleFetch constructor. */
     SimpleFetch(Params &params);
 
+    void regStats();
+
     void setCPU(FullCPU *cpu_ptr);
 
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
@@ -73,9 +76,13 @@ class SimpleFetch
 
 //  private:
     // Figure out PC vs next PC and how it should be updated
-    void squash(Addr newPC);
+    void squash(const Addr &new_PC);
 
   private:
+    inline void doSquash(const Addr &new_PC);
+
+    void squashFromDecode(const Addr &new_PC, const InstSeqNum &seq_num);
+
     /**
      * Looks up in the branch predictor to see if the next PC should be
      * either next PC+=MachInst or a branch target.
@@ -84,7 +91,27 @@ class SimpleFetch
      * the next PC will be.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(Addr &next_PC);
+    bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC);
+
+    // Might not want this function...
+//    inline void recordGlobalHist(DynInstPtr &inst);
+
+    /**
+     * Fetches the cache line that contains fetch_PC.  Returns any
+     * fault that happened.  Puts the data into the class variable
+     * cacheData.
+     * @params fetch_PC The PC address that is being fetched from.
+     * @return Any fault that occured.
+     */
+    Fault fetchCacheLine(Addr fetch_PC);
+
+    // Align an address (typically a PC) to the start of an I-cache block.
+    // We fold in the PISA 64- to 32-bit conversion here as well.
+    Addr icacheBlockAlignPC(Addr addr)
+    {
+        addr = ISA::realPCToFetchPC(addr);
+        return (addr & ~(cacheBlkMask));
+    }
 
   public:
     class CacheCompletionEvent : public Event
@@ -99,7 +126,7 @@ class SimpleFetch
         virtual const char *description();
     };
 
-    CacheCompletionEvent cacheCompletionEvent;
+//    CacheCompletionEvent cacheCompletionEvent;
 
   private:
     /** Pointer to the FullCPU. */
@@ -152,20 +179,32 @@ class SimpleFetch
     unsigned fetchWidth;
 
     /** Cache block size. */
-    int blkSize;
+    int cacheBlkSize;
 
     /** Mask to get a cache block's address. */
-    Addr cacheBlockMask;
+    Addr cacheBlkMask;
 
     /** The instruction being fetched. */
-    MachInst inst;
+//    MachInst inst;
+
+    /** The cache line being fetched. */
+    uint8_t *cacheData;
 
     /** Size of instructions. */
     int instSize;
 
     /** Icache stall statistics. */
-//     Stats::Scalar<> icacheStallCycles;
-//     Counter lastIcacheStall;
+    Counter lastIcacheStall;
+
+    Stats::Scalar<> icacheStallCycles;
+    Stats::Scalar<> fetchedInsts;
+    Stats::Scalar<> predictedBranches;
+    Stats::Scalar<> fetchCycles;
+    Stats::Scalar<> fetchSquashCycles;
+    Stats::Scalar<> fetchBlockedCycles;
+    Stats::Scalar<> fetchedCacheLines;
+
+    Stats::Distribution<> fetch_nisn_dist;
 };
 
 #endif //__SIMPLE_FETCH_HH__

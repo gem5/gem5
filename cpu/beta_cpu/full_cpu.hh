@@ -115,6 +115,8 @@ class FullBetaCPU : public BaseFullCPU
 
     void init();
 
+    void fullCPURegStats();
+
     void activateContext(int thread_num, int delay);
     void suspendContext(int thread_num);
     void deallocateContext(int thread_num);
@@ -204,6 +206,9 @@ class FullBetaCPU : public BaseFullCPU
 
     /** Remove all instructions that are not currently in the ROB. */
     void removeInstsNotInROB();
+
+    /** Remove all instructions younger than the given sequence number. */
+    void removeInstsUntil(const InstSeqNum &seq_num);
 
     /** Remove all instructions from the list. */
     void removeAllInsts();

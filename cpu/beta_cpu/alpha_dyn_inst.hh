@@ -19,19 +19,19 @@ template <class Impl>
 class AlphaDynInst : public BaseDynInst<Impl>
 {
   public:
-    // Typedef for the CPU.
+    /** Typedef for the CPU. */
     typedef typename Impl::FullCPU FullCPU;
 
-    //Typedef to get the ISA.
+    /** Typedef to get the ISA. */
     typedef typename Impl::ISA ISA;
 
-    /// Binary machine instruction type.
+    /** Binary machine instruction type. */
     typedef typename ISA::MachInst MachInst;
-    /// Memory address type.
+    /** Memory address type. */
     typedef typename ISA::Addr	   Addr;
-    /// Logical register index type.
+    /** Logical register index type. */
     typedef typename ISA::RegIndex RegIndex;
-    /// Integer register index type.
+    /** Integer register index type. */
     typedef typename ISA::IntReg   IntReg;
 
     enum {
@@ -54,6 +54,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
         return fault;
     }
 
+  public:
     uint64_t readUniq();
     void setUniq(uint64_t val);
 

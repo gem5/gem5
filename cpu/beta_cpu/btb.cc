@@ -50,6 +50,8 @@ DefaultBTB::valid(const Addr &inst_PC)
 
     Addr inst_tag = getTag(inst_PC);
 
+    assert(btb_idx < numEntries);
+
     if (btb[btb_idx].valid && inst_tag == btb[btb_idx].tag) {
         return true;
     } else {
@@ -67,6 +69,8 @@ DefaultBTB::lookup(const Addr &inst_PC)
 
     Addr inst_tag = getTag(inst_PC);
 
+    assert(btb_idx < numEntries);
+
     if (btb[btb_idx].valid && inst_tag == btb[btb_idx].tag) {
         return btb[btb_idx].target;
     } else {
@@ -78,6 +82,8 @@ void
 DefaultBTB::update(const Addr &inst_PC, const Addr &target)
 {
     unsigned btb_idx = getIndex(inst_PC);
+
+    assert(btb_idx < numEntries);
 
     btb[btb_idx].valid = true;
     btb[btb_idx].target = target;

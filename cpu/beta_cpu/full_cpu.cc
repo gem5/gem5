@@ -168,6 +168,13 @@ FullBetaCPU<Impl>::~FullBetaCPU()
 
 template <class Impl>
 void
+FullBetaCPU<Impl>::fullCPURegStats()
+{
+    // Register any of the FullCPU's stats here.
+}
+
+template <class Impl>
+void
 FullBetaCPU<Impl>::tick()
 {
     DPRINTF(FullCPU, "\n\nFullCPU: Ticking main, FullBetaCPU.\n");
@@ -424,19 +431,17 @@ template <class Impl>
 void
 FullBetaCPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
-    DynInstPtr inst_to_delete;
+    DynInstPtr inst_to_remove;
 
-    // The front instruction should be the same one being asked to be deleted.
+    // The front instruction should be the same one being asked to be removed.
     assert(instList.front() == inst);
 
     // Remove the front instruction.
-    inst_to_delete = inst;
+    inst_to_remove = inst;
     instList.pop_front();
 
-    DPRINTF(FullCPU, "FullCPU: Deleting committed instruction %#x, PC %#x\n",
-            inst_to_delete, inst_to_delete->readPC());
-
-//    delete inst_to_delete;
+    DPRINTF(FullCPU, "FullCPU: Removing committed instruction %#x, PC %#x\n",
+            inst_to_remove, inst_to_remove->readPC());
 }
 
 template <class Impl>
@@ -449,6 +454,33 @@ FullBetaCPU<Impl>::removeInstsNotInROB()
     DynInstPtr rob_tail = rob.readTailInst();
 
     removeBackInst(rob_tail);
+}
+
+template <class Impl>
+void
+FullBetaCPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num)
+{
+    DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
+            "list.\n");
+
+    DynInstPtr inst_to_delete;
+
+    while (instList.back()->seqNum > seq_num) {
+        assert(!instList.empty());
+
+        // Obtain the pointer to the instruction.
+        inst_to_delete = instList.back();
+
+        DPRINTF(FullCPU, "FullCPU: Removing instruction %i, PC %#x\n",
+                inst_to_delete->seqNum, inst_to_delete->readPC());
+
+        // Remove the instruction from the list.
+        instList.pop_back();
+
+        // Mark it as squashed.
+        inst_to_delete->setSquashed();
+    }
+
 }
 
 template <class Impl>

@@ -146,7 +146,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool threadsyncWait;
 
     /** If the BTB missed. */
-    bool btbMissed;
+//    bool btbMissed;
+
+    /** The global history of this instruction (branch). */
+//    unsigned globalHistory;
 
     /** The thread this instruction is from. */
     short threadNumber;
@@ -212,7 +215,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     static int instcount;
 
     /** Did this instruction do a spec write? */
-    bool specMemWrite;
+//    bool specMemWrite;
 
   private:
     /** Physical register index of the destination registers of this
@@ -287,14 +290,21 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Returns whether the instruction was predicted taken or not. */
     bool predTaken() {
-//        DPRINTF(FullCPU, "PC: %08p\n", PC);
-//        DPRINTF(FullCPU, "predPC: %08p\n", predPC);
-
         return( predPC != (PC + sizeof(MachInst) ) );
     }
 
     /** Returns whether the instruction mispredicted. */
     bool mispredicted() { return (predPC != nextPC); }
+
+/*
+    unsigned readGlobalHist() {
+        return globalHistory;
+    }
+
+    void setGlobalHist(unsigned history) {
+        globalHistory = history;
+    }
+*/
 
     //
     //  Instruction types.  Forward checks to StaticInst object.
@@ -452,7 +462,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     OpClass opClass() const { return staticInst->opClass(); }
 
     /** Returns whether or not the BTB missed. */
-    bool btbMiss() const { return btbMissed; }
+//    bool btbMiss() const { return btbMissed; }
 
     /** Returns the branch target address. */
     Addr branchTarget() const { return staticInst->branchTarget(PC); }
@@ -579,8 +589,8 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     storeSize = sizeof(T);
     storeData = data;
-    if (specMode)
-        specMemWrite = true;
+//    if (specMode)
+//	specMemWrite = true;
 
     MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
 

@@ -24,15 +24,13 @@ InstructionQueue<Impl>::InstructionQueue(Params &params)
       numEntries(params.numIQEntries),
       intWidth(params.executeIntWidth),
       floatWidth(params.executeFloatWidth),
+      branchWidth(params.executeBranchWidth),
+      memoryWidth(params.executeMemoryWidth),
       totalWidth(params.issueWidth),
       numPhysIntRegs(params.numPhysIntRegs),
       numPhysFloatRegs(params.numPhysFloatRegs),
       commitToIEWDelay(params.commitToIEWDelay)
 {
-    // HACK: HARDCODED NUMBER.  REMOVE LATER AND ADD TO PARAMETER.
-    branchWidth = 1;
-    memoryWidth = 1;
-
     DPRINTF(IQ, "IQ: Int width is %i.\n", params.executeIntWidth);
 
     // Initialize the number of free IQ entries.
@@ -64,6 +62,87 @@ InstructionQueue<Impl>::InstructionQueue(Params &params)
         regScoreboard[i] = false;
     }
 
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::regStats()
+{
+    iqInstsAdded
+        .name(name() + ".iqInstsAdded")
+        .desc("Number of instructions added to the IQ (excludes non-spec)")
+        .prereq(iqInstsAdded);
+
+    iqNonSpecInstsAdded
+        .name(name() + ".iqNonSpecInstsAdded")
+        .desc("Number of non-speculative instructions added to the IQ")
+        .prereq(iqNonSpecInstsAdded);
+
+//    iqIntInstsAdded;
+
+    iqIntInstsIssued
+        .name(name() + ".iqIntInstsIssued")
+        .desc("Number of integer instructions issued")
+        .prereq(iqIntInstsIssued);
+
+//    iqFloatInstsAdded;
+
+    iqFloatInstsIssued
+        .name(name() + ".iqFloatInstsIssued")
+        .desc("Number of float instructions issued")
+        .prereq(iqFloatInstsIssued);
+
+//    iqBranchInstsAdded;
+
+    iqBranchInstsIssued
+        .name(name() + ".iqBranchInstsIssued")
+        .desc("Number of branch instructions issued")
+        .prereq(iqBranchInstsIssued);
+
+//    iqMemInstsAdded;
+
+    iqMemInstsIssued
+        .name(name() + ".iqMemInstsIssued")
+        .desc("Number of memory instructions issued")
+        .prereq(iqMemInstsIssued);
+
+//    iqMiscInstsAdded;
+
+    iqMiscInstsIssued
+        .name(name() + ".iqMiscInstsIssued")
+        .desc("Number of miscellaneous instructions issued")
+        .prereq(iqMiscInstsIssued);
+
+    iqSquashedInstsIssued
+        .name(name() + ".iqSquashedInstsIssued")
+        .desc("Number of squashed instructions issued")
+        .prereq(iqSquashedInstsIssued);
+
+    iqLoopSquashStalls
+        .name(name() + ".iqLoopSquashStalls")
+        .desc("Number of times issue loop had to restart due to squashed "
+              "inst; mainly for profiling")
+        .prereq(iqLoopSquashStalls);
+
+    iqSquashedInstsExamined
+        .name(name() + ".iqSquashedInstsExamined")
+        .desc("Number of squashed instructions iterated over during squash;"
+              " mainly for profiling")
+        .prereq(iqSquashedInstsExamined);
+
+    iqSquashedOperandsExamined
+        .name(name() + ".iqSquashedOperandsExamined")
+        .desc("Number of squashed operands that are examined and possibly "
+              "removed from graph")
+        .prereq(iqSquashedOperandsExamined);
+
+    iqSquashedNonSpecRemoved
+        .name(name() + ".iqSquashedNonSpecRemoved")
+        .desc("Number of squashed non-spec instructions that were removed")
+        .prereq(iqSquashedNonSpecRemoved);
+
+    // Tell mem dependence unit to reg stats as well.
+    memDepUnit.regStats();
 }
 
 template <class Impl>
@@ -161,10 +240,14 @@ InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
     // unit.
     if (new_inst->isMemRef()) {
         memDepUnit.insert(new_inst);
+        // Uh..forgot to look it up and put it on the proper dependency list
+        // if the instruction should not go yet.
+    } else {
+        // If the instruction is ready then add it to the ready list.
+        addIfReady(new_inst);
     }
 
-    // If the instruction is ready then add it to the ready list.
-    addIfReady(new_inst);
+    ++iqInstsAdded;
 
     assert(freeEntries == (numEntries - countInsts()));
 }
@@ -219,13 +302,16 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &inst)
     // If it's a memory instruction, add it to the memory dependency
     // unit.
     if (inst->isMemRef()) {
-        memDepUnit.insert(inst);
+        memDepUnit.insertNonSpec(inst);
     }
+
+    ++iqNonSpecInstsAdded;
 }
 
 // Slightly hack function to advance the tail iterator in the case that
 // the IEW stage issues an instruction that is not added to the IQ.  This
 // is needed in case a long chain of such instructions occurs.
+// I don't think this is used anymore.
 template <class Impl>
 void
 InstructionQueue<Impl>::advanceTail(DynInstPtr &inst)
@@ -288,7 +374,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     bool insts_available = !readyBranchInsts.empty() ||
         !readyIntInsts.empty() ||
         !readyFloatInsts.empty() ||
-        !readyMemInsts.empty() ||
+        !memDepUnit.empty() ||
         !readyMiscInsts.empty() ||
         !squashedInsts.empty();
 
@@ -327,6 +413,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             if (int_head_inst->isSquashed()) {
                 readyIntInsts.pop();
+
+                ++iqLoopSquashStalls;
+
                 continue;
             }
 
@@ -344,6 +433,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             if (float_head_inst->isSquashed()) {
                 readyFloatInsts.pop();
+
+                ++iqLoopSquashStalls;
+
                 continue;
             } else if (float_head_inst->seqNum < oldest_inst) {
                 oldest_inst = float_head_inst->seqNum;
@@ -361,6 +453,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             if (branch_head_inst->isSquashed()) {
                 readyBranchInsts.pop();
+
+                ++iqLoopSquashStalls;
+
                 continue;
             } else if (branch_head_inst->seqNum < oldest_inst) {
                 oldest_inst = branch_head_inst->seqNum;
@@ -370,15 +465,18 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         }
 
-        if (!readyMemInsts.empty() &&
+        if (!memDepUnit.empty() &&
             memory_issued < memoryWidth) {
 
             insts_available = true;
 
-            mem_head_inst = readyMemInsts.top();
+            mem_head_inst = memDepUnit.top();
 
             if (mem_head_inst->isSquashed()) {
-                readyMemInsts.pop();
+                memDepUnit.pop();
+
+                ++iqLoopSquashStalls;
+
                 continue;
             } else if (mem_head_inst->seqNum < oldest_inst) {
                 oldest_inst = mem_head_inst->seqNum;
@@ -395,6 +493,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             if (misc_head_inst->isSquashed()) {
                 readyMiscInsts.pop();
+
+                ++iqLoopSquashStalls;
+
                 continue;
             } else if (misc_head_inst->seqNum < oldest_inst) {
                 oldest_inst = misc_head_inst->seqNum;
@@ -450,9 +551,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
           case Memory:
             issuing_inst = mem_head_inst;
 
-            memDepUnit.issue(mem_head_inst);
-
-            readyMemInsts.pop();
+            memDepUnit.pop();
             ++memory_issued;
             DPRINTF(IQ, "IQ: Issuing memory instruction PC %#x.\n",
                     issuing_inst->readPC());
@@ -461,6 +560,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
           case Misc:
             issuing_inst = misc_head_inst;
             readyMiscInsts.pop();
+
+            ++iqMiscInstsIssued;
+
             DPRINTF(IQ, "IQ: Issuing a miscellaneous instruction PC %#x.\n",
                     issuing_inst->readPC());
             break;
@@ -476,6 +578,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         if (list_with_oldest != None) {
             i2e_info->insts[total_issued] = issuing_inst;
+            i2e_info->size++;
 
             issuing_inst->setIssued();
 
@@ -485,12 +588,21 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         assert(freeEntries == (numEntries - countInsts()));
     }
+
+    iqIntInstsIssued += int_issued;
+    iqFloatInstsIssued += float_issued;
+    iqBranchInstsIssued += branch_issued;
+    iqMemInstsIssued += memory_issued;
+    iqSquashedInstsIssued += squashed_issued;
 }
 
 template <class Impl>
 void
 InstructionQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
 {
+    DPRINTF(IQ, "IQ: Marking nonspeculative instruction with sequence "
+            "number %i as ready to execute.\n", inst);
+
     non_spec_it_t inst_it = nonSpecInsts.find(inst);
 
     assert(inst_it != nonSpecInsts.end());
@@ -499,7 +611,11 @@ InstructionQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
     (*inst_it).second->setCanIssue();
 
     // Now schedule the instruction.
-    addIfReady((*inst_it).second);
+    if (!(*inst_it).second->isMemRef()) {
+        addIfReady((*inst_it).second);
+    } else {
+        memDepUnit.nonSpecInstReady((*inst_it).second);
+    }
 
     nonSpecInsts.erase(inst_it);
 }
@@ -552,6 +668,7 @@ InstructionQueue<Impl>::doSquash()
         // hasn't already been squashed in the IQ.
         if (!squashed_inst->isIssued() &&
             !squashed_inst->isSquashedInIQ()) {
+
             // Remove the instruction from the dependency list.
             // Hack for now: These below don't add themselves to the
             // dependency list, so don't try to remove them.
@@ -576,7 +693,15 @@ InstructionQueue<Impl>::doSquash()
                         src_reg < numPhysRegs) {
                         dependGraph[src_reg].remove(squashed_inst);
                     }
+
+                    ++iqSquashedOperandsExamined;
                 }
+
+                // Might want to remove producers as well.
+            } else {
+                nonSpecInsts.erase(squashed_inst->seqNum);
+
+                ++iqSquashedNonSpecRemoved;
             }
 
             // Might want to also clear out the head of the dependency graph.
@@ -590,11 +715,8 @@ InstructionQueue<Impl>::doSquash()
                     squashed_inst->readPC());
         }
 
-        if (squashed_inst->isNonSpeculative() || squashed_inst->isStore()) {
-            nonSpecInsts.erase(squashed_inst->seqNum);
-        }
-
         --squashIt;
+        ++iqSquashedInstsExamined;
     }
 }
 
@@ -664,6 +786,8 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
             addIfReady(curr->inst);
 
             dependGraph[dest_reg].next = curr->next;
+
+            DependencyEntry::mem_alloc_counter--;
 
             delete curr;
         }
@@ -749,13 +873,9 @@ InstructionQueue<Impl>::createDependency(DynInstPtr &new_inst)
         }
 
         dependGraph[dest_reg].inst = new_inst;
-#if 0
-        if (dependGraph[dest_reg].next) {
-            panic("Dependency chain of dest reg %i is not empty.\n",
-                  dest_reg);
-        }
-#endif
+
         assert(!dependGraph[dest_reg].next);
+
         // Mark the scoreboard to say it's not yet ready.
         regScoreboard[dest_reg] = false;
     }
@@ -776,6 +896,8 @@ InstructionQueue<Impl>::DependencyEntry::insert(DynInstPtr &new_inst)
 
     // Then actually add it to the chain.
     this->next = new_entry;
+
+    ++mem_alloc_counter;
 }
 
 template <class Impl>
@@ -804,6 +926,8 @@ InstructionQueue<Impl>::DependencyEntry::remove(DynInstPtr &inst_to_remove)
 
     // Now remove this instruction from the list.
     prev->next = curr->next;
+
+    --mem_alloc_counter;
 
     delete curr;
 }
@@ -855,12 +979,26 @@ InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
 
             DPRINTF(IQ, "IQ: Checking if memory instruction can issue.\n");
 
+            // Message to the mem dependence unit that this instruction has
+            // its registers ready.
+
+            memDepUnit.regsReady(inst);
+
+#if 0
             if (memDepUnit.readyToIssue(inst)) {
                 DPRINTF(IQ, "IQ: Memory instruction is ready to issue, "
                         "putting it onto the ready list, PC %#x.\n",
                         inst->readPC());
                 readyMemInsts.push(inst);
+            } else {
+                // Make dependent on the store.
+                // Will need some way to get the store instruction it should
+                // be dependent upon; then when the store issues it can
+                // put the instruction on the ready list.
+                // Yet another tree?
+                assert(0 && "Instruction has no way to actually issue");
             }
+#endif
 
         } else if (inst->isInteger()) {
 
@@ -923,7 +1061,7 @@ InstructionQueue<Impl>::dumpLists()
 
     cprintf("Ready branch list size: %i\n", readyBranchInsts.size());
 
-    cprintf("Ready memory list size: %i\n", readyMemInsts.size());
+//    cprintf("Ready memory list size: %i\n", readyMemInsts.size());
 
     cprintf("Ready misc list size: %i\n", readyMiscInsts.size());
 

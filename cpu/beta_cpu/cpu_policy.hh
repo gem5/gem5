@@ -22,7 +22,7 @@
 template<class Impl>
 struct SimpleCPUPolicy
 {
-    typedef DefaultBPredUnit<Impl> BPredUnit;
+    typedef TwobitBPredUnit<Impl> BPredUnit;
     typedef PhysRegFile<Impl> RegFile;
     typedef SimpleFreeList FreeList;
     typedef SimpleRenameMap RenameMap;

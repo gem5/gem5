@@ -139,9 +139,7 @@ bool
 ROB<Impl>::isHeadReady()
 {
     if (numInstsInROB != 0) {
-        DynInstPtr head_inst = cpu->instList.front();
-
-        return head_inst->readyToCommit();
+        return cpu->instList.front()->readyToCommit();
     }
 
     return false;

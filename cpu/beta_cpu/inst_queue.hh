@@ -7,13 +7,9 @@
 #include <stdint.h>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
-
-//Perhaps have a better separation between the data structure underlying
-//and the actual algorithm.
-//somewhat nasty to try to have a nice ordering.
-// Consider moving to STL list or slist for the LL stuff.
 
 /**
  * A standard instruction queue class.  It holds instructions in an
@@ -74,6 +70,8 @@ class InstructionQueue
 
     InstructionQueue(Params &params);
 
+    void regStats();
+
     void setCPU(FullCPU *cpu);
 
     void setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2eQueue);
@@ -98,6 +96,7 @@ class InstructionQueue
 
     void violation(DynInstPtr &store, DynInstPtr &faulting_load);
 
+    // Change this to take in the sequence number
     void squash();
 
     void doSquash();
@@ -159,7 +158,7 @@ class InstructionQueue
     ReadyInstQueue readyBranchInsts;
 
     /** List of ready memory instructions. */
-    ReadyInstQueue readyMemInsts;
+//    ReadyInstQueue readyMemInsts;
 
     /** List of ready miscellaneous instructions. */
     ReadyInstQueue readyMiscInsts;
@@ -228,9 +227,6 @@ class InstructionQueue
     /** The sequence number of the squashed instruction. */
     InstSeqNum squashedSeqNum;
 
-    /** Iterator that points to the oldest instruction in the IQ. */
-//    ListIt head;
-
     /** Iterator that points to the youngest instruction in the IQ. */
     ListIt tail;
 
@@ -261,6 +257,9 @@ class InstructionQueue
         void insert(DynInstPtr &new_inst);
 
         void remove(DynInstPtr &inst_to_remove);
+
+        // Debug variable, remove when done testing.
+        static unsigned mem_alloc_counter;
     };
 
     /** Array of linked lists.  Each linked list is a list of all the
@@ -285,6 +284,25 @@ class InstructionQueue
     void dumpDependGraph();
 
     void addIfReady(DynInstPtr &inst);
+
+    Stats::Scalar<> iqInstsAdded;
+    Stats::Scalar<> iqNonSpecInstsAdded;
+//    Stats::Scalar<> iqIntInstsAdded;
+    Stats::Scalar<> iqIntInstsIssued;
+//    Stats::Scalar<> iqFloatInstsAdded;
+    Stats::Scalar<> iqFloatInstsIssued;
+//    Stats::Scalar<> iqBranchInstsAdded;
+    Stats::Scalar<> iqBranchInstsIssued;
+//    Stats::Scalar<> iqMemInstsAdded;
+    Stats::Scalar<> iqMemInstsIssued;
+//    Stats::Scalar<> iqMiscInstsAdded;
+    Stats::Scalar<> iqMiscInstsIssued;
+    Stats::Scalar<> iqSquashedInstsIssued;
+    Stats::Scalar<> iqLoopSquashStalls;
+    Stats::Scalar<> iqSquashedInstsExamined;
+    Stats::Scalar<> iqSquashedOperandsExamined;
+    Stats::Scalar<> iqSquashedNonSpecRemoved;
+
 };
 
 #endif //__INST_QUEUE_HH__

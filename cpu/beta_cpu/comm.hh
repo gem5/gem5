@@ -9,6 +9,7 @@
 using namespace std;
 
 // Find better place to put this typedef.
+// The impl might be the best place for this.
 typedef short int PhysRegIndex;
 
 template<class Impl>
@@ -45,6 +46,14 @@ struct SimpleIEWSimpleCommit {
     int size;
 
     DynInstPtr insts[Impl::MaxWidth + 1];
+
+    bool squash;
+    bool branchMispredict;
+    bool branchTaken;
+    uint64_t mispredPC;
+    uint64_t nextPC;
+    unsigned globalHist;
+    InstSeqNum squashedSeqNum;
 };
 
 template<class Impl>
@@ -63,10 +72,15 @@ struct TimeBufStruct {
         bool predIncorrect;
         uint64_t branchAddr;
 
+        InstSeqNum doneSeqNum;
+
+        // Might want to package this kind of branch stuff into a single
+        // struct as it is used pretty frequently.
         bool branchMispredict;
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
+        unsigned globalHist;
     };
 
     decodeComm decodeInfo;
@@ -84,17 +98,10 @@ struct TimeBufStruct {
     renameComm renameInfo;
 
     struct iewComm {
-        bool squash;
         bool stall;
 
         // Also eventually include skid buffer space.
         unsigned freeIQEntries;
-
-        bool branchMispredict;
-        bool branchTaken;
-        uint64_t mispredPC;
-        uint64_t nextPC;
-        InstSeqNum squashedSeqNum;
     };
 
     iewComm iewInfo;
@@ -108,6 +115,7 @@ struct TimeBufStruct {
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
+        unsigned globalHist;
 
         // Think of better names here.
         // Will need to be a variety of sizes...

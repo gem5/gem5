@@ -29,6 +29,8 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 #endif
 
   public:
+    void regStats();
+
 #ifdef FULL_SYSTEM
     bool inPalMode();
 
@@ -66,87 +68,23 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
         req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
         return No_Fault;
     }
+
     Fault translateInstReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
+
     Fault translateDataReadReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
+
     Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
 
 #endif
-
-    template <class T>
-    Fault read(MemReqPtr &req, T &data)
-    {
-#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
-        if (req->flags & LOCKED) {
-            MiscRegFile *cregs = &req->xc->regs.miscRegs;
-            cregs->lock_addr = req->paddr;
-            cregs->lock_flag = true;
-        }
-#endif
-
-        Fault error;
-        error = mem->read(req, data);
-        data = htoa(data);
-        return error;
-    }
-
-    template <class T>
-    Fault write(MemReqPtr &req, T &data)
-    {
-#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
-
-        MiscRegFile *cregs;
-
-        // If this is a store conditional, act appropriately
-        if (req->flags & LOCKED) {
-            cregs = &xc->regs.miscRegs;
-
-            if (req->flags & UNCACHEABLE) {
-                // Don't update result register (see stq_c in isa_desc)
-                req->result = 2;
-                req->xc->storeCondFailures = 0;//Needed? [RGD]
-            } else {
-                req->result = cregs->lock_flag;
-                if (!cregs->lock_flag ||
-                    ((cregs->lock_addr & ~0xf) != (req->paddr & ~0xf))) {
-                    cregs->lock_flag = false;
-                    if (((++req->xc->storeCondFailures) % 100000) == 0) {
-                        std::cerr << "Warning: "
-                                  << req->xc->storeCondFailures
-                                  << " consecutive store conditional failures "
-                                  << "on cpu " << cpu_id
-                                  << std::endl;
-                    }
-                    return No_Fault;
-                }
-                else req->xc->storeCondFailures = 0;
-            }
-        }
-
-        // Need to clear any locked flags on other proccessors for
-        // this address.  Only do this for succsful Store Conditionals
-        // and all other stores (WH64?).  Unsuccessful Store
-        // Conditionals would have returned above, and wouldn't fall
-        // through.
-        for (int i = 0; i < system->execContexts.size(); i++){
-            cregs = &system->execContexts[i]->regs.miscRegs;
-            if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
-                cregs->lock_flag = false;
-            }
-        }
-
-#endif
-
-        return mem->write(req, (T)htoa(data));
-    }
 
     // Later on may want to remove this misc stuff from the regfile and
     // have it handled at this level.  Might prove to be an issue when
@@ -240,6 +178,76 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
     // Called by initCPU.  Implement as I please.
     void initIPRs(RegFile *regs);
 #endif
+
+
+    template <class T>
+    Fault read(MemReqPtr &req, T &data)
+    {
+#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
+        if (req->flags & LOCKED) {
+            MiscRegFile *cregs = &req->xc->regs.miscRegs;
+            cregs->lock_addr = req->paddr;
+            cregs->lock_flag = true;
+        }
+#endif
+
+        Fault error;
+        error = mem->read(req, data);
+        data = htoa(data);
+        return error;
+    }
+
+
+    template <class T>
+    Fault write(MemReqPtr &req, T &data)
+    {
+#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
+
+        MiscRegFile *cregs;
+
+        // If this is a store conditional, act appropriately
+        if (req->flags & LOCKED) {
+            cregs = &xc->regs.miscRegs;
+
+            if (req->flags & UNCACHEABLE) {
+                // Don't update result register (see stq_c in isa_desc)
+                req->result = 2;
+                req->xc->storeCondFailures = 0;//Needed? [RGD]
+            } else {
+                req->result = cregs->lock_flag;
+                if (!cregs->lock_flag ||
+                    ((cregs->lock_addr & ~0xf) != (req->paddr & ~0xf))) {
+                    cregs->lock_flag = false;
+                    if (((++req->xc->storeCondFailures) % 100000) == 0) {
+                        std::cerr << "Warning: "
+                                  << req->xc->storeCondFailures
+                                  << " consecutive store conditional failures "
+                                  << "on cpu " << cpu_id
+                                  << std::endl;
+                    }
+                    return No_Fault;
+                }
+                else req->xc->storeCondFailures = 0;
+            }
+        }
+
+        // Need to clear any locked flags on other proccessors for
+        // this address.  Only do this for succsful Store Conditionals
+        // and all other stores (WH64?).  Unsuccessful Store
+        // Conditionals would have returned above, and wouldn't fall
+        // through.
+        for (int i = 0; i < system->execContexts.size(); i++){
+            cregs = &system->execContexts[i]->regs.miscRegs;
+            if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
+                cregs->lock_flag = false;
+            }
+        }
+
+#endif
+
+        return mem->write(req, (T)htoa(data));
+    }
+
 };
 
 #endif // __ALPHA_FULL_CPU_HH__

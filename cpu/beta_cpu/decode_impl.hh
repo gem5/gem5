@@ -16,6 +16,45 @@ SimpleDecode<Impl>::SimpleDecode(Params &params)
     _status = Idle;
 }
 
+template <class Impl>
+void
+SimpleDecode<Impl>::regStats()
+{
+    decodeIdleCycles
+        .name(name() + ".decodeIdleCycles")
+        .desc("Number of cycles decode is idle")
+        .prereq(decodeIdleCycles);
+    decodeBlockedCycles
+        .name(name() + ".decodeBlockedCycles")
+        .desc("Number of cycles decode is blocked")
+        .prereq(decodeBlockedCycles);
+    decodeUnblockCycles
+        .name(name() + ".decodeUnblockCycles")
+        .desc("Number of cycles decode is unblocking")
+        .prereq(decodeUnblockCycles);
+    decodeSquashCycles
+        .name(name() + ".decodeSquashCycles")
+        .desc("Number of cycles decode is squashing")
+        .prereq(decodeSquashCycles);
+    decodeBranchMispred
+        .name(name() + ".decodeBranchMispred")
+        .desc("Number of times decode detected a branch misprediction")
+        .prereq(decodeBranchMispred);
+    decodeControlMispred
+        .name(name() + ".decodeControlMispred")
+        .desc("Number of times decode detected an instruction incorrectly"
+              " predicted as a control")
+        .prereq(decodeControlMispred);
+    decodeDecodedInsts
+        .name(name() + ".decodeDecodedInsts")
+        .desc("Number of instructions handled by decode")
+        .prereq(decodeDecodedInsts);
+    decodeSquashedInsts
+        .name(name() + ".decodeSquashedInsts")
+        .desc("Number of squashed instructions handled by decode")
+        .prereq(decodeSquashedInsts);
+}
+
 template<class Impl>
 void
 SimpleDecode<Impl>::setCPU(FullCPU *cpu_ptr)
@@ -91,7 +130,7 @@ SimpleDecode<Impl>::unblock()
 
     // If there's still information in the skid buffer, then
     // continue to tell previous stages to stall.  They will be
-            // able to restart once the skid buffer is empty.
+    // able to restart once the skid buffer is empty.
     if (!skidBuffer.empty()) {
         toFetch->decodeInfo.stall = true;
     } else {
@@ -110,9 +149,12 @@ SimpleDecode<Impl>::squash(DynInstPtr &inst)
                     "detected at decode.\n");
     Addr new_PC = inst->nextPC;
 
+    toFetch->decodeInfo.branchMispredict = true;
+    toFetch->decodeInfo.doneSeqNum = inst->seqNum;
     toFetch->decodeInfo.predIncorrect = true;
     toFetch->decodeInfo.squash = true;
     toFetch->decodeInfo.nextPC = new_PC;
+    toFetch->decodeInfo.branchTaken = true;
 
     // Set status to squashing.
     _status = Squashing;
@@ -164,6 +206,8 @@ SimpleDecode<Impl>::tick()
         // buffer were used.  Remove those instructions and handle
         // the rest of unblocking.
         if (_status == Unblocking) {
+            ++decodeUnblockCycles;
+
             if (fromFetch->size > 0) {
                 // Add the current inputs to the skid buffer so they can be
                 // reprocessed when this stage unblocks.
@@ -173,6 +217,8 @@ SimpleDecode<Impl>::tick()
             unblock();
         }
     } else if (_status == Blocked) {
+        ++decodeBlockedCycles;
+
         if (fromFetch->size > 0) {
             block();
         }
@@ -197,6 +243,8 @@ SimpleDecode<Impl>::tick()
             squash();
         }
     } else if (_status == Squashing) {
+        ++decodeSquashCycles;
+
         if (!fromCommit->commitInfo.squash &&
             !fromCommit->commitInfo.robSquashing) {
             _status = Running;
@@ -228,17 +276,16 @@ SimpleDecode<Impl>::decode()
     // Check fetch queue to see if instructions are available.
     // If no available instructions, do nothing, unless this stage is
     // currently unblocking.
-    if (!fromFetch->insts[0] && _status != Unblocking) {
+    if (fromFetch->size == 0 && _status != Unblocking) {
         DPRINTF(Decode, "Decode: Nothing to do, breaking out early.\n");
         // Should I change the status to idle?
+        ++decodeIdleCycles;
         return;
     }
 
+    // Might be better to use a base DynInst * instead?
     DynInstPtr inst;
 
-    // Instead have a class member variable that records which instruction
-    // was the last one that was ended on.  At the tick() stage, it can
-    // check if that's equal to 0.  If not, then don't pop stuff off.
     unsigned to_rename_index = 0;
 
     int insts_available = _status == Unblocking ?
@@ -264,18 +311,10 @@ SimpleDecode<Impl>::decode()
     }
 #endif
 
-    // Check to make sure that instructions coming from fetch are valid.
-    // Normally at this stage the branch target of PC-relative branches
-    // should be computed here.  However in this simple model all
-    // computation will take place at execute.  Hence doneTargCalc()
-    // will always be false.
      while (insts_available > 0)
      {
         DPRINTF(Decode, "Decode: Sending instruction to rename.\n");
-        // Might create some sort of accessor to get an instruction
-        // on a per thread basis.  Or might be faster to just get
-        // a pointer to an array or list of instructions and use that
-        // within this code.
+
         inst = _status == Unblocking ? skidBuffer.front().insts[numInst] :
                fromFetch->insts[numInst];
 
@@ -286,6 +325,8 @@ SimpleDecode<Impl>::decode()
             DPRINTF(Decode, "Decode: Instruction %i with PC %#x is "
                     "squashed, skipping.\n",
                     inst->seqNum, inst->readPC());
+
+            ++decodeSquashedInsts;
 
             ++numInst;
             --insts_available;
@@ -305,22 +346,33 @@ SimpleDecode<Impl>::decode()
         if (inst->predTaken() && !inst->isControl()) {
             panic("Instruction predicted as a branch!");
 
+            ++decodeControlMispred;
             // Might want to set some sort of boolean and just do
             // a check at the end
             squash(inst);
             break;
         }
 
-        // Ensure that the predicted branch target is the actual branch
-        // target if possible (branches that are PC relative).
-        if (inst->isControl() && inst->doneTargCalc()) {
+        // Go ahead and compute any PC-relative branches.
+
+        if (inst->isDirectCtrl() && inst->isUncondCtrl() &&
+            inst->numDestRegs() == 0 && inst->numSrcRegs() == 0) {
+            inst->execute();
+            inst->setExecuted();
+
             if (inst->mispredicted()) {
+                ++decodeBranchMispred;
                 // Might want to set some sort of boolean and just do
                 // a check at the end
                 squash(inst);
                 break;
             }
         }
+
+        // Normally can check if a direct branch has the right target
+        // addr (either the immediate, or the branch PC + 4) and redirect
+        // fetch if it's incorrect.
+
 
         // Also check if instructions have no source registers.  Mark
         // them as ready to issue at any time.  Not sure if this check
@@ -334,6 +386,7 @@ SimpleDecode<Impl>::decode()
         // Increment which instruction we're looking at.
         ++numInst;
         ++to_rename_index;
+        ++decodeDecodedInsts;
 
         --insts_available;
     }

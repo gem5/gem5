@@ -1,10 +1,8 @@
-// Todo: Add in branch prediction.  With probe path, should
-// be able to specify
-// size of data to fetch.  Will be able to get full cache line.
-
-// Remove this later.
+// Remove this later; used only for debugging.
 #define OPCODE(X)                       (X >> 26) & 0x3f
 
+
+#include "arch/alpha/byte_swap.hh"
 #include "cpu/exetrace.hh"
 #include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
@@ -37,15 +35,14 @@ SimpleFetch<Impl>::CacheCompletionEvent::description()
 
 template<class Impl>
 SimpleFetch<Impl>::SimpleFetch(Params &params)
-    : cacheCompletionEvent(this),
+    : //cacheCompletionEvent(this),
       icacheInterface(params.icacheInterface),
       branchPred(params),
       decodeToFetchDelay(params.decodeToFetchDelay),
       renameToFetchDelay(params.renameToFetchDelay),
       iewToFetchDelay(params.iewToFetchDelay),
       commitToFetchDelay(params.commitToFetchDelay),
-      fetchWidth(params.fetchWidth),
-      inst(0)
+      fetchWidth(params.fetchWidth)
 {
     // Set status to idle.
     _status = Idle;
@@ -62,13 +59,63 @@ SimpleFetch<Impl>::SimpleFetch(Params &params)
     memReq->data = new uint8_t[64];
 
     // Size of cache block.
-    blkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
+    cacheBlkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
 
     // Create mask to get rid of offset bits.
-    cacheBlockMask = (blkSize - 1);
+    cacheBlkMask = (cacheBlkSize - 1);
 
     // Get the size of an instruction.
     instSize = sizeof(MachInst);
+
+    // Create space to store a cache line.
+    cacheData = new uint8_t[cacheBlkSize];
+}
+
+template <class Impl>
+void
+SimpleFetch<Impl>::regStats()
+{
+    icacheStallCycles
+        .name(name() + ".icacheStallCycles")
+        .desc("Number of cycles fetch is stalled on an Icache miss")
+        .prereq(icacheStallCycles);
+
+    fetchedInsts
+        .name(name() + ".fetchedInsts")
+        .desc("Number of instructions fetch has processed")
+        .prereq(fetchedInsts);
+    predictedBranches
+        .name(name() + ".predictedBranches")
+        .desc("Number of branches that fetch has predicted taken")
+        .prereq(predictedBranches);
+    fetchCycles
+        .name(name() + ".fetchCycles")
+        .desc("Number of cycles fetch has run and was not squashing or"
+              " blocked")
+        .prereq(fetchCycles);
+    fetchSquashCycles
+        .name(name() + ".fetchSquashCycles")
+        .desc("Number of cycles fetch has spent squashing")
+        .prereq(fetchSquashCycles);
+    fetchBlockedCycles
+        .name(name() + ".fetchBlockedCycles")
+        .desc("Number of cycles fetch has spent blocked")
+        .prereq(fetchBlockedCycles);
+    fetchedCacheLines
+        .name(name() + ".fetchedCacheLines")
+        .desc("Number of cache lines fetched")
+        .prereq(fetchedCacheLines);
+
+    fetch_nisn_dist
+        .init(/* base value */ 0,
+              /* last value */ fetchWidth,
+              /* bucket size */ 1)
+        .name(name() + ".FETCH:rate_dist")
+        .desc("Number of instructions fetched each cycle (Total)")
+        .flags(Stats::pdf)
+        ;
+
+    branchPred.regStats();
 }
 
 template<class Impl>
@@ -122,19 +169,40 @@ SimpleFetch<Impl>::processCacheCompletion()
         _status = IcacheMissComplete;
 }
 
-template<class Impl>
-bool
-SimpleFetch<Impl>::lookupAndUpdateNextPC(Addr &next_PC)
+#if 0
+template <class Impl>
+inline void
+SimpleFetch<Impl>::recordGlobalHist(DynInstPtr &inst)
 {
-#if 1
+    inst->setGlobalHist(branchPred.BPReadGlobalHist());
+}
+#endif
+
+template <class Impl>
+bool
+SimpleFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
+{
     // Do branch prediction check here.
-    bool predict_taken =  branchPred.BPLookup(next_PC);
-    Addr predict_target;
+    // A bit of a misnomer...next_PC is actually the current PC until
+    // this function updates it.
+    bool predict_taken;
+
+    if (!inst->isControl()) {
+        next_PC = next_PC + instSize;
+        inst->setPredTarg(next_PC);
+        return false;
+    }
+
+    predict_taken = branchPred.predict(inst, next_PC);
+
+#if 0
+    predict_taken = branchPred.BPLookup(next_PC)
 
     DPRINTF(Fetch, "Fetch: Branch predictor predicts taken? %i\n",
             predict_taken);
 
-    if (branchPred.BTBValid(next_PC)) {
+    // Only check the BTB if the BP has predicted taken.
+    if (predict_taken && branchPred.BTBValid(next_PC)) {
         predict_target = branchPred.BTBLookup(next_PC);
         DPRINTF(Fetch, "Fetch: BTB target is %#x.\n", predict_target);
     } else {
@@ -142,42 +210,135 @@ SimpleFetch<Impl>::lookupAndUpdateNextPC(Addr &next_PC)
         DPRINTF(Fetch, "Fetch: BTB does not have a valid entry.\n");
     }
 
-    // Now update the PC to fetch the next instruction in the cache
-    // line.
-    if (!predict_taken) {
-        next_PC = next_PC + instSize;
-        return false;
-    } else {
-        next_PC = predict_target;
-        return true;
+#endif
+    if (predict_taken) {
+        ++predictedBranches;
     }
-#endif
 
-#if 0
-    next_PC = next_PC + instSize;
-    return false;
-#endif
+    return predict_taken;
 }
 
-template<class Impl>
-void
-SimpleFetch<Impl>::squash(Addr new_PC)
+template <class Impl>
+Fault
+SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
+{
+    // Check if the instruction exists within the cache.
+    // If it does, then proceed on to read the instruction and the rest
+    // of the instructions in the cache line until either the end of the
+    // cache line or a predicted taken branch is encountered.
+
+#ifdef FULL_SYSTEM
+    // Flag to say whether or not address is physical addr.
+    unsigned flags = cpu->inPalMode() ? PHYSICAL : 0;
+#else
+    unsigned flags = 0;
+#endif // FULL_SYSTEM
+
+    Fault fault = No_Fault;
+
+    // Align the fetch PC so it's at the start of a cache block.
+    fetch_PC = icacheBlockAlignPC(fetch_PC);
+
+    // Setup the memReq to do a read of the first isntruction's address.
+    // Set the appropriate read size and flags as well.
+    memReq->cmd = Read;
+    memReq->reset(fetch_PC, cacheBlkSize, flags);
+
+    // Translate the instruction request.
+    // Should this function be
+    // in the CPU class ?  Probably...ITB/DTB should exist within the
+    // CPU.
+
+    fault = cpu->translateInstReq(memReq);
+
+    // In the case of faults, the fetch stage may need to stall and wait
+    // on what caused the fetch (ITB or Icache miss).
+
+    // If translation was successful, attempt to read the first
+    // instruction.
+    if (fault == No_Fault) {
+        DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
+        fault = cpu->mem->read(memReq, cacheData);
+        // This read may change when the mem interface changes.
+
+        fetchedCacheLines++;
+    }
+
+    // Now do the timing access to see whether or not the instruction
+    // exists within the cache.
+    if (icacheInterface && fault == No_Fault) {
+        DPRINTF(Fetch, "Fetch: Doing timing memory access.\n");
+        memReq->completionEvent = NULL;
+
+        memReq->time = curTick;
+
+        MemAccessResult result = icacheInterface->access(memReq);
+
+        // If the cache missed (in this model functional and timing
+        // memories are different), then schedule an event to wake
+        // up this stage once the cache miss completes.
+        if (result != MA_HIT && icacheInterface->doEvents()) {
+            memReq->completionEvent = new CacheCompletionEvent(this);
+//            lastIcacheStall = curTick;
+
+            // How does current model work as far as individual
+            // stages scheduling/unscheduling?
+            // Perhaps have only the main CPU scheduled/unscheduled,
+            // and have it choose what stages to run appropriately.
+
+            DPRINTF(Fetch, "Fetch: Stalling due to icache miss.\n");
+            _status = IcacheMissStall;
+        }
+    }
+
+    return fault;
+}
+
+template <class Impl>
+inline void
+SimpleFetch<Impl>::doSquash(const Addr &new_PC)
 {
     DPRINTF(Fetch, "Fetch: Squashing, setting PC to: %#x.\n", new_PC);
 
     cpu->setNextPC(new_PC + instSize);
     cpu->setPC(new_PC);
 
-    _status = Squashing;
-
     // Clear the icache miss if it's outstanding.
     if (_status == IcacheMissStall && icacheInterface) {
+        DPRINTF(Fetch, "Fetch: Squashing outstanding Icache miss.\n");
         // @todo: Use an actual thread number here.
         icacheInterface->squash(0);
     }
 
-    // Tell the CPU to remove any instructions that aren't currently
-    // in the ROB (instructions in flight that were killed).
+    _status = Squashing;
+
+    ++fetchSquashCycles;
+}
+
+template<class Impl>
+void
+SimpleFetch<Impl>::squashFromDecode(const Addr &new_PC,
+                                    const InstSeqNum &seq_num)
+{
+    DPRINTF(Fetch, "Fetch: Squashing from decode.\n");
+
+    doSquash(new_PC);
+
+    // Tell the CPU to remove any instructions that are in flight between
+    // fetch and decode.
+    cpu->removeInstsUntil(seq_num);
+
+}
+
+template <class Impl>
+void
+SimpleFetch<Impl>::squash(const Addr &new_PC)
+{
+    DPRINTF(Fetch, "Fetch: Squash from commit.\n");
+
+    doSquash(new_PC);
+
+    // Tell the CPU to remove any instructions that are not in the ROB.
     cpu->removeInstsNotInROB();
 }
 
@@ -185,7 +346,6 @@ template<class Impl>
 void
 SimpleFetch<Impl>::tick()
 {
-#if 1
     // Check squash signals from commit.
     if (fromCommit->commitInfo.squash) {
         DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
@@ -196,13 +356,18 @@ SimpleFetch<Impl>::tick()
 
         // Also check if there's a mispredict that happened.
         if (fromCommit->commitInfo.branchMispredict) {
-            branchPred.BPUpdate(fromCommit->commitInfo.mispredPC,
-                                 fromCommit->commitInfo.branchTaken);
-            branchPred.BTBUpdate(fromCommit->commitInfo.mispredPC,
-                                  fromCommit->commitInfo.nextPC);
+            branchPred.squash(fromCommit->commitInfo.doneSeqNum,
+                              fromCommit->commitInfo.nextPC,
+                              fromCommit->commitInfo.branchTaken);
+        } else {
+            branchPred.squash(fromCommit->commitInfo.doneSeqNum);
         }
 
         return;
+    } else if (fromCommit->commitInfo.doneSeqNum) {
+        // Update the branch predictor if it wasn't a squashed instruction
+        // that was braodcasted.
+        branchPred.update(fromCommit->commitInfo.doneSeqNum);
     }
 
     // Check ROB squash signals from commit.
@@ -211,6 +376,8 @@ SimpleFetch<Impl>::tick()
 
         // Continue to squash.
         _status = Squashing;
+
+        ++fetchSquashCycles;
         return;
     }
 
@@ -220,21 +387,21 @@ SimpleFetch<Impl>::tick()
                 "from decode.\n");
 
         // Update the branch predictor.
-        if (fromCommit->decodeInfo.branchMispredict) {
-            branchPred.BPUpdate(fromDecode->decodeInfo.mispredPC,
-                                 fromDecode->decodeInfo.branchTaken);
-            branchPred.BTBUpdate(fromDecode->decodeInfo.mispredPC,
-                                  fromDecode->decodeInfo.nextPC);
+        if (fromDecode->decodeInfo.branchMispredict) {
+            branchPred.squash(fromDecode->decodeInfo.doneSeqNum,
+                              fromDecode->decodeInfo.nextPC,
+                              fromDecode->decodeInfo.branchTaken);
+        } else {
+            branchPred.squash(fromDecode->decodeInfo.doneSeqNum);
         }
 
         if (_status != Squashing) {
             // Squash unless we're already squashing?
-            squash(fromDecode->decodeInfo.nextPC);
+            squashFromDecode(fromDecode->decodeInfo.nextPC,
+                             fromDecode->decodeInfo.doneSeqNum);
             return;
         }
     }
-
-
 
     // Check if any of the stall signals are high.
     if (fromDecode->decodeInfo.stall ||
@@ -253,12 +420,15 @@ SimpleFetch<Impl>::tick()
                 fromCommit->commitInfo.stall);
 
         _status = Blocked;
+
+        ++fetchBlockedCycles;
         return;
     } else if (_status == Blocked) {
         // Unblock stage if status is currently blocked and none of the
         // stall signals are being held high.
         _status = Running;
 
+        ++fetchBlockedCycles;
         return;
     }
 
@@ -273,74 +443,15 @@ SimpleFetch<Impl>::tick()
 
         // Switch status to running
         _status = Running;
+
+        ++fetchSquashCycles;
     } else if (_status != IcacheMissStall) {
         DPRINTF(Fetch, "Fetch: Running stage.\n");
 
-        fetch();
-    }
-#endif
-
-#if 0
-    if (_status != Blocked &&
-        _status != Squashing &&
-        _status != IcacheMissStall) {
-        DPRINTF(Fetch, "Fetch: Running stage.\n");
+        ++fetchCycles;
 
         fetch();
-    } else if (_status == Blocked) {
-        // If still being told to stall, do nothing.
-        if (fromDecode->decodeInfo.stall ||
-            fromRename->renameInfo.stall ||
-            fromIEW->iewInfo.stall ||
-            fromCommit->commitInfo.stall)
-        {
-            DPRINTF(Fetch, "Fetch: Stalling stage.\n");
-            DPRINTF(Fetch, "Fetch: Statuses: Decode: %i Rename: %i IEW: %i "
-                    "Commit: %i\n",
-                    fromDecode->decodeInfo.stall,
-                    fromRename->renameInfo.stall,
-                    fromIEW->iewInfo.stall,
-                    fromCommit->commitInfo.stall);
-        } else {
-
-            DPRINTF(Fetch, "Fetch: Done blocking.\n");
-            _status = Running;
-        }
-
-        if (fromCommit->commitInfo.squash) {
-            DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
-                    "from commit.\n");
-            squash(fromCommit->commitInfo.nextPC);
-            return;
-        } else if (fromDecode->decodeInfo.squash) {
-            DPRINTF(Fetch, "Fetch: Squashing instructions due to squash "
-                    "from decode.\n");
-            squash(fromDecode->decodeInfo.nextPC);
-            return;
-        } else if (fromCommit->commitInfo.robSquashing) {
-            DPRINTF(Fetch, "Fetch: ROB is still squashing.\n");
-            _status = Squashing;
-            return;
-        }
-    } else if (_status == Squashing) {
-        // If there are no squash signals then change back to running.
-        // Note that when a squash starts happening, commitInfo.squash will
-        // be high.  But if the squash is still in progress, then only
-        // commitInfo.robSquashing will be high.
-        if (!fromCommit->commitInfo.squash &&
-            !fromCommit->commitInfo.robSquashing) {
-
-            DPRINTF(Fetch, "Fetch: Done squashing.\n");
-            _status = Running;
-        } else if (fromCommit->commitInfo.squash) {
-            // If there's a new squash, then start squashing again.
-            squash(fromCommit->commitInfo.nextPC);
-        } else {
-            // Purely a debugging statement.
-            DPRINTF(Fetch, "Fetch: ROB still squashing.\n");
-        }
     }
-#endif
 }
 
 template<class Impl>
@@ -350,13 +461,6 @@ SimpleFetch<Impl>::fetch()
     //////////////////////////////////////////
     // Start actual fetch
     //////////////////////////////////////////
-
-#ifdef FULL_SYSTEM
-    // Flag to say whether or not address is physical addr.
-    unsigned flags = cpu->inPalMode() ? PHYSICAL : 0;
-#else
-    unsigned flags = 0;
-#endif // FULL_SYSTEM
 
     // The current PC.
     Addr fetch_PC = cpu->readPC();
@@ -379,64 +483,14 @@ SimpleFetch<Impl>::fetch()
                        "instruction, starting at PC %08p.\n",
                 fetch_PC);
 
-        // Otherwise check if the instruction exists within the cache.
-        // If it does, then proceed on to read the instruction and the rest
-        // of the instructions in the cache line until either the end of the
-        // cache line or a predicted taken branch is encountered.
-        // Note that this simply checks if the first instruction exists
-        // within the cache, assuming the rest of the cache line also exists
-        // within the cache.
+        fault = fetchCacheLine(fetch_PC);
+    }
 
-        // Setup the memReq to do a read of the first isntruction's address.
-        // Set the appropriate read size and flags as well.
-        memReq->cmd = Read;
-        memReq->reset(fetch_PC, instSize, flags);
-
-        // Translate the instruction request.
-        // Should this function be
-        // in the CPU class ?  Probably...ITB/DTB should exist within the
-        // CPU.
-
-        fault = cpu->translateInstReq(memReq);
-
-        // In the case of faults, the fetch stage may need to stall and wait
-        // on what caused the fetch (ITB or Icache miss).
-
-        // If translation was successful, attempt to read the first
-        // instruction.
-        if (fault == No_Fault) {
-            DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
-            fault = cpu->mem->read(memReq, inst);
-            // This read may change when the mem interface changes.
-        }
-
-        // Now do the timing access to see whether or not the instruction
-        // exists within the cache.
-        if (icacheInterface && fault == No_Fault) {
-            DPRINTF(Fetch, "Fetch: Doing timing memory access.\n");
-            memReq->completionEvent = NULL;
-
-            memReq->time = curTick;
-
-            MemAccessResult result = icacheInterface->access(memReq);
-
-            // If the cache missed (in this model functional and timing
-            // memories are different), then schedule an event to wake
-            // up this stage once the cache miss completes.
-            if (result != MA_HIT && icacheInterface->doEvents()) {
-                memReq->completionEvent = &cacheCompletionEvent;
-//        	    lastIcacheStall = curTick;
-
-                // How does current model work as far as individual
-                // stages scheduling/unscheduling?
-                // Perhaps have only the main CPU scheduled/unscheduled,
-                // and have it choose what stages to run appropriately.
-
-                DPRINTF(Fetch, "Fetch: Stalling due to icache miss.\n");
-                _status = IcacheMissStall;
-                return;
-            }
-        }
+    // If we had a stall due to an icache miss, then return.  It'd
+    // be nicer if this were handled through the kind of fault that
+    // is returned by the function.
+    if (_status == IcacheMissStall) {
+        return;
     }
 
     // As far as timing goes, the CPU will need to send an event through
@@ -446,11 +500,15 @@ SimpleFetch<Impl>::fetch()
 
     Addr next_PC = fetch_PC;
     InstSeqNum inst_seq;
+    MachInst inst;
+    unsigned offset = fetch_PC & cacheBlkMask;
+    unsigned fetched;
 
-    // If the read of the first instruction was successful, then grab the
-    // instructions from the rest of the cache line and put them into the
-    // queue heading to decode.
     if (fault == No_Fault) {
+        // If the read of the first instruction was successful, then grab the
+        // instructions from the rest of the cache line and put them into the
+        // queue heading to decode.
+
         DPRINTF(Fetch, "Fetch: Adding instructions to queue to decode.\n");
 
         //////////////////////////
@@ -461,124 +519,59 @@ SimpleFetch<Impl>::fetch()
         // ended this fetch block.
         bool predicted_branch = false;
 
-        // Might want to keep track of various stats.
-//        numLinesFetched++;
-
-        // Get a sequence number.
-        inst_seq = cpu->getAndIncrementInstSeq();
-
-        // Update the next PC; it either is PC+sizeof(MachInst), or
-        // branch_target.  Check whether or not a branch was taken.
-        predicted_branch = lookupAndUpdateNextPC(next_PC);
-
-        // Because the first instruction was already fetched, create the
-        // DynInst and put it into the queue to decode.
-        DynInstPtr instruction = new DynInst(inst, fetch_PC, next_PC,
-                                             inst_seq, cpu);
-
-        DPRINTF(Fetch, "Fetch: Instruction %i created, with PC %#x\n",
-                inst_seq, instruction->readPC());
-        DPRINTF(Fetch, "Fetch: Instruction opcode is: %03p\n",
-                OPCODE(inst));
-
-        instruction->traceData =
-            Trace::getInstRecord(curTick, cpu->xcBase(), cpu,
-                                 instruction->staticInst,
-                                 instruction->readPC(), 0);
-
-        cpu->addInst(instruction);
-
-        // Write the instruction to the first slot in the queue
-        // that heads to decode.
-        toDecode->insts[0] = instruction;
-
-        toDecode->size++;
-
-        fetch_PC = next_PC;
-
-        //////////////////////////
-        // Fetch other instructions
-        //////////////////////////
-
-        // Obtain the index into the cache line by getting only the low
-        // order bits.  Will need to do shifting as well.
-        int line_index = fetch_PC & cacheBlockMask;
-
-        // Take instructions and put them into the queue heading to decode.
-        // Then read the next instruction in the cache line.  Continue
-        // until either all of the fetch bandwidth is used (not an issue for
-        // non-SMT), or the end of the cache line is reached.  Note that
-        // this assumes standard cachelines, and not something like a trace
-        // cache where lines might not end at cache-line size aligned
-        // addresses.
-        // @todo: Fix the horrible amount of translates/reads that must
-        // take place due to reading an entire cacheline.  Ideally it
-        // should all take place at once, return an array of binary
-        // instructions, which can then be used to get all the instructions
-        // needed.  Figure out if I can roll it back into one loop.
-        for (int fetched = 1;
-             line_index < blkSize &&
+        for (fetched = 0;
+             offset < cacheBlkSize &&
                  fetched < fetchWidth &&
                  !predicted_branch;
-             line_index+=instSize, ++fetched)
+             ++fetched)
         {
-            // Reset the mem request to setup the read of the next
-            // instruction.
-            memReq->reset(fetch_PC, instSize, flags);
-
-            // Translate the instruction request.
-            fault = cpu->translateInstReq(memReq);
-
-            // Read instruction.
-            if (fault == No_Fault) {
-                fault = cpu->mem->read(memReq, inst);
-            }
-
-            // Check if there was a fault.
-            if (fault != No_Fault) {
-                panic("Fetch: Read of instruction faulted when it should "
-                      "succeed; most likely exceeding cache line.\n");
-            }
 
             // Get a sequence number.
             inst_seq = cpu->getAndIncrementInstSeq();
 
-            predicted_branch = lookupAndUpdateNextPC(next_PC);
+            // Make sure this is a valid index.
+            assert(offset <= cacheBlkSize - instSize);
 
-            // Create the actual DynInst.  Parameters are:
-            // DynInst(instruction, PC, predicted PC, CPU pointer).
-            // Because this simple model has no branch prediction, the
-            // predicted PC will simply be PC+sizeof(MachInst).
-            // Update to actually use a branch predictor to predict the
-            // target in the future.
-            DynInstPtr instruction =
-                new DynInst(inst, fetch_PC, next_PC, inst_seq, cpu);
+            // Get the instruction from the array of the cache line.
+            inst = htoa(*reinterpret_cast<MachInst *>
+                        (&cacheData[offset]));
+
+            // Create a new DynInst from the instruction fetched.
+            DynInstPtr instruction = new DynInst(inst, fetch_PC, next_PC,
+                                                 inst_seq, cpu);
+
+            DPRINTF(Fetch, "Fetch: Instruction %i created, with PC %#x\n",
+                    inst_seq, instruction->readPC());
+
+            DPRINTF(Fetch, "Fetch: Instruction opcode is: %03p\n",
+                    OPCODE(inst));
 
             instruction->traceData =
                 Trace::getInstRecord(curTick, cpu->xcBase(), cpu,
                                      instruction->staticInst,
                                      instruction->readPC(), 0);
 
-            DPRINTF(Fetch, "Fetch: Instruction %i created, with PC %#x\n",
-                    inst_seq, instruction->readPC());
-            DPRINTF(Fetch, "Fetch: Instruction opcode is: %03p\n",
-                    OPCODE(inst));
+            predicted_branch = lookupAndUpdateNextPC(instruction, next_PC);
 
+            // Add instruction to the CPU's list of instructions.
             cpu->addInst(instruction);
 
-            // Write the instruction to the proper slot in the queue
+            // Write the instruction to the first slot in the queue
             // that heads to decode.
             toDecode->insts[fetched] = instruction;
 
             toDecode->size++;
 
-            // Might want to keep track of various stats.
-//             numInstsFetched++;
+            // Increment stat of fetched instructions.
+            ++fetchedInsts;
 
-            // Update the PC with the next PC.
+            // Move to the next instruction, unless we have a branch.
             fetch_PC = next_PC;
+
+            offset+= instSize;
         }
 
+        fetch_nisn_dist.sample(fetched);
     }
 
     // Now that fetching is completed, update the PC to signify what the next
@@ -592,6 +585,12 @@ SimpleFetch<Impl>::fetch()
         cpu->setPC(next_PC);
         cpu->setNextPC(next_PC + instSize);
     } else {
+        // If the issue was an icache miss, then we can just return and
+        // wait until it is handled.
+        if (_status == IcacheMissStall) {
+            return;
+        }
+
         // Handle the fault.
         // This stage will not be able to continue until all the ROB
         // slots are empty, at which point the fault can be handled.

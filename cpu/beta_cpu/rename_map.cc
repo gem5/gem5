@@ -72,7 +72,7 @@ SimpleRenameMap::SimpleRenameMap(unsigned _numLogicalIntRegs,
         floatRenameMap[index].physical_reg = float_reg_idx++;
     }
 
-    for (RegIndex index = numPhysicalIntRegs;
+    for (PhysRegIndex index = numPhysicalIntRegs;
          index < numPhysicalIntRegs + numLogicalFloatRegs; ++index)
     {
         floatScoreboard[index] = 1;
@@ -88,7 +88,7 @@ SimpleRenameMap::SimpleRenameMap(unsigned _numLogicalIntRegs,
     }
 
     // Initialize the entries in the misc register scoreboard to be ready.
-    for (RegIndex index = numPhysicalRegs;
+    for (PhysRegIndex index = numPhysicalRegs;
          index < numPhysicalRegs + numMiscRegs; ++index)
     {
         miscScoreboard[index] = 1;

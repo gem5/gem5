@@ -59,6 +59,8 @@ class SimpleCommit
   public:
     SimpleCommit(Params &params);
 
+    void regStats();
+
     void setCPU(FullCPU *cpu_ptr);
 
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -142,6 +144,17 @@ class SimpleCommit
 
     /** Commit width, in instructions. */
     unsigned commitWidth;
+
+    Stats::Scalar<> commitCommittedInsts;
+    Stats::Scalar<> commitSquashedInsts;
+    Stats::Scalar<> commitSquashEvents;
+    Stats::Scalar<> commitNonSpecStalls;
+    Stats::Scalar<> commitCommittedBranches;
+    Stats::Scalar<> commitCommittedLoads;
+    Stats::Scalar<> commitCommittedMemRefs;
+    Stats::Scalar<> branchMispredicts;
+
+    Stats::Distribution<> n_committed_dist;
 };
 
 #endif // __SIMPLE_COMMIT_HH__

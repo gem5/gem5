@@ -5,3 +5,6 @@
 
 // Force instantiation of InstructionQueue.
 template InstructionQueue<AlphaSimpleImpl>;
+
+unsigned
+InstructionQueue<AlphaSimpleImpl>::DependencyEntry::mem_alloc_counter = 0;

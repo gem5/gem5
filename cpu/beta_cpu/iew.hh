@@ -9,6 +9,7 @@
 
 #include "base/timebuf.hh"
 #include "cpu/beta_cpu/comm.hh"
+#include "base/statistics.hh"
 
 //Can IEW even stall?  Space should be available/allocated already...maybe
 //if there's not enough write ports on the ROB or waiting for CDB
@@ -50,7 +51,9 @@ class SimpleIEW
   public:
     void squash();
 
-    void squash(DynInstPtr &inst);
+    void squashDueToBranch(DynInstPtr &inst);
+
+    void squashDueToMem(DynInstPtr &inst);
 
     void block();
 
@@ -58,6 +61,8 @@ class SimpleIEW
 
   public:
     SimpleIEW(Params &params);
+
+    void regStats();
 
     void setCPU(FullCPU *cpu_ptr);
 
@@ -76,6 +81,10 @@ class SimpleIEW
     void iew();
 
   private:
+    void dispatchInsts();
+
+    void executeInsts();
+
     //Interfaces to objects inside and outside of IEW.
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
@@ -159,9 +168,23 @@ class SimpleIEW
      */
     unsigned cyclesSquashing;
 
-    //Will implement later
-    //Load queue interface (probably one and the same)
-    //Store queue interface
+    Stats::Scalar<> iewIdleCycles;
+    Stats::Scalar<> iewSquashCycles;
+    Stats::Scalar<> iewBlockCycles;
+    Stats::Scalar<> iewUnblockCycles;
+//    Stats::Scalar<> iewWBInsts;
+    Stats::Scalar<> iewDispatchedInsts;
+    Stats::Scalar<> iewDispSquashedInsts;
+    Stats::Scalar<> iewDispLoadInsts;
+    Stats::Scalar<> iewDispStoreInsts;
+    Stats::Scalar<> iewDispNonSpecInsts;
+    Stats::Scalar<> iewIQFullEvents;
+    Stats::Scalar<> iewExecutedInsts;
+    Stats::Scalar<> iewExecLoadInsts;
+    Stats::Scalar<> iewExecStoreInsts;
+    Stats::Scalar<> iewExecSquashedInsts;
+    Stats::Scalar<> memOrderViolationEvents;
+    Stats::Scalar<> predictedTakenIncorrect;
 };
 
 #endif

@@ -3,12 +3,32 @@
 
 #include "cpu/beta_cpu/mem_dep_unit.hh"
 
-// Hack: dependence predictor sizes are hardcoded.
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::MemDepUnit(Params &params)
-    : depPred(4028, 128)
+    : depPred(params.SSITSize, params.LFSTSize)
 {
     DPRINTF(MemDepUnit, "MemDepUnit: Creating MemDepUnit object.\n");
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::regStats()
+{
+    insertedLoads
+        .name(name() + ".memDep.insertedLoads")
+        .desc("Number of loads inserted to the mem dependence unit.");
+
+    insertedStores
+        .name(name() + ".memDep.insertedStores")
+        .desc("Number of stores inserted to the mem dependence unit.");
+
+    conflictingLoads
+        .name(name() + ".memDep.conflictingLoads")
+        .desc("Number of conflicting loads.");
+
+    conflictingStores
+        .name(name() + ".memDep.conflictingStores")
+        .desc("Number of conflicting stores.");
 }
 
 template <class MemDepPred, class Impl>
@@ -17,46 +37,202 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 {
     InstSeqNum inst_seq_num = inst->seqNum;
 
+    Dependency unresolved_dependencies(inst_seq_num);
 
     InstSeqNum producing_store = depPred.checkInst(inst->readPC());
 
     if (producing_store == 0 ||
-        dependencies.find(producing_store) == dependencies.end()) {
-        readyInsts.insert(inst_seq_num);
+        storeDependents.find(producing_store) == storeDependents.end()) {
+
+        DPRINTF(MemDepUnit, "MemDepUnit: No dependency for inst PC "
+                "%#x.\n", inst->readPC());
+
+        unresolved_dependencies.storeDep = storeDependents.end();
+
+        if (inst->readyToIssue()) {
+            readyInsts.insert(inst_seq_num);
+        } else {
+            unresolved_dependencies.memDepReady = true;
+
+            waitingInsts.insert(unresolved_dependencies);
+        }
     } else {
+        DPRINTF(MemDepUnit, "MemDepUnit: Adding to dependency list; "
+                "inst PC %#x is dependent on seq num %i.\n",
+                inst->readPC(), producing_store);
+
+        if (inst->readyToIssue()) {
+            unresolved_dependencies.regsReady = true;
+        }
+
+        // Find the store that this instruction is dependent on.
+        sd_it_t store_loc = storeDependents.find(producing_store);
+
+        assert(store_loc != storeDependents.end());
+
+        // Record the location of the store that this instruction is
+        // dependent on.
+        unresolved_dependencies.storeDep = store_loc;
+
         // If it's not already ready, then add it to the renamed
         // list and the dependencies.
-        renamedInsts.insert(inst_seq_num);
+        dep_it_t inst_loc =
+            (waitingInsts.insert(unresolved_dependencies)).first;
 
-        dependencies[producing_store].push_back(inst_seq_num);
+        // Add this instruction to the list of dependents.
+        (*store_loc).second.push_back(inst_loc);
+
+        assert(!(*store_loc).second.empty());
+
+        if (inst->isLoad()) {
+            ++conflictingLoads;
+        } else {
+            ++conflictingStores;
+        }
     }
 
     if (inst->isStore()) {
+        DPRINTF(MemDepUnit, "MemDepUnit: Inserting store PC %#x.\n",
+                inst->readPC());
+
         depPred.insertStore(inst->readPC(), inst_seq_num);
 
         // Make sure this store isn't already in this list.
-        assert(dependencies.find(inst_seq_num) == dependencies.end());
+        assert(storeDependents.find(inst_seq_num) == storeDependents.end());
 
         // Put a dependency entry in at the store's sequence number.
         // Uh, not sure how this works...I want to create an entry but
         // I don't have anything to put into the value yet.
-        dependencies[inst_seq_num];
-    } else if (!inst->isLoad()) {
+        storeDependents[inst_seq_num];
+
+        assert(storeDependents.size() != 0);
+
+        ++insertedStores;
+
+    } else if (inst->isLoad()) {
+        ++insertedLoads;
+    } else {
         panic("MemDepUnit: Unknown type! (most likely a barrier).");
+    }
+
+    memInsts[inst_seq_num] = inst;
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
+{
+    InstSeqNum inst_seq_num = inst->seqNum;
+
+    Dependency non_spec_inst(inst_seq_num);
+
+    non_spec_inst.storeDep = storeDependents.end();
+
+    waitingInsts.insert(non_spec_inst);
+
+    // Might want to turn this part into an inline function or something.
+    // It's shared between both insert functions.
+    if (inst->isStore()) {
+        DPRINTF(MemDepUnit, "MemDepUnit: Inserting store PC %#x.\n",
+                inst->readPC());
+
+        depPred.insertStore(inst->readPC(), inst_seq_num);
+
+        // Make sure this store isn't already in this list.
+        assert(storeDependents.find(inst_seq_num) == storeDependents.end());
+
+        // Put a dependency entry in at the store's sequence number.
+        // Uh, not sure how this works...I want to create an entry but
+        // I don't have anything to put into the value yet.
+        storeDependents[inst_seq_num];
+
+        assert(storeDependents.size() != 0);
+
+        ++insertedStores;
+
+    } else if (inst->isLoad()) {
+        ++insertedLoads;
+    } else {
+        panic("MemDepUnit: Unknown type! (most likely a barrier).");
+    }
+
+    memInsts[inst_seq_num] = inst;
+}
+
+template <class MemDepPred, class Impl>
+typename Impl::DynInstPtr &
+MemDepUnit<MemDepPred, Impl>::top()
+{
+    topInst = memInsts.find( (*readyInsts.begin()) );
+
+    DPRINTF(MemDepUnit, "MemDepUnit: Top instruction is PC %#x.\n",
+            (*topInst).second->readPC());
+
+    return (*topInst).second;
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::pop()
+{
+    DPRINTF(MemDepUnit, "MemDepUnit: Removing instruction PC %#x.\n",
+            (*topInst).second->readPC());
+
+    wakeDependents((*topInst).second);
+
+    issue((*topInst).second);
+
+    memInsts.erase(topInst);
+
+    topInst = memInsts.end();
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::regsReady(DynInstPtr &inst)
+{
+    DPRINTF(MemDepUnit, "MemDepUnit: Marking registers as ready for "
+            "instruction PC %#x.\n",
+            inst->readPC());
+
+    InstSeqNum inst_seq_num = inst->seqNum;
+
+    Dependency inst_to_find(inst_seq_num);
+
+    dep_it_t waiting_inst = waitingInsts.find(inst_to_find);
+
+    assert(waiting_inst != waitingInsts.end());
+
+    if ((*waiting_inst).memDepReady) {
+        DPRINTF(MemDepUnit, "MemDepUnit: Instruction has its memory "
+                "dependencies resolved, adding it to the ready list.\n");
+
+        moveToReady(waiting_inst);
+    } else {
+        DPRINTF(MemDepUnit, "MemDepUnit: Instruction still waiting on "
+                "memory dependency.\n");
+
+        (*waiting_inst).regsReady = true;
     }
 }
 
 template <class MemDepPred, class Impl>
-bool
-MemDepUnit<MemDepPred, Impl>::readyToIssue(DynInstPtr &inst)
+void
+MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(DynInstPtr &inst)
 {
+    DPRINTF(MemDepUnit, "MemDepUnit: Marking non speculative "
+            "instruction PC %#x as ready.\n",
+            inst->readPC());
+
     InstSeqNum inst_seq_num = inst->seqNum;
 
-    if (readyInsts.find(inst_seq_num) == readyInsts.end()) {
-        return false;
-    } else {
-        return true;
-    }
+    Dependency inst_to_find(inst_seq_num);
+
+    dep_it_t waiting_inst = waitingInsts.find(inst_to_find);
+
+    assert(waiting_inst != waitingInsts.end());
+
+    moveToReady(waiting_inst);
 }
 
 template <class MemDepPred, class Impl>
@@ -65,46 +241,63 @@ MemDepUnit<MemDepPred, Impl>::issue(DynInstPtr &inst)
 {
     assert(readyInsts.find(inst->seqNum) != readyInsts.end());
 
+    DPRINTF(MemDepUnit, "MemDepUnit: Issuing instruction PC %#x.\n",
+            inst->readPC());
+
     // Remove the instruction from the ready list.
     readyInsts.erase(inst->seqNum);
+
+    depPred.issued(inst->readPC(), inst->seqNum, inst->isStore());
 }
 
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::wakeDependents(DynInstPtr &inst)
 {
-    // Wake any dependencies.
-    dep_it_t dep_it = dependencies.find(inst);
-
-    // If there's no entry, then return.  Really there should only be
-    // no entry if the instruction is a load.
-    if (dep_it == dependencies.end()) {
+    // Only stores have dependents.
+    if (!inst->isStore()) {
         return;
     }
 
-    assert(inst->isStore());
+    // Wake any dependencies.
+    sd_it_t sd_it = storeDependents.find(inst->seqNum);
 
-    for(int i = 0; i < (*dep_it).second.size(); ++i ) {
-        InstSeqNum woken_inst = (*dep_it).second[i];
+    // If there's no entry, then return.  Really there should only be
+    // no entry if the instruction is a load.
+    if (sd_it == storeDependents.end()) {
+        DPRINTF(MemDepUnit, "MemDepUnit: Instruction PC %#x, sequence "
+                "number %i has no dependents.\n",
+                inst->readPC(), inst->seqNum);
 
+        return;
+    }
+
+    for (int i = 0; i < (*sd_it).second.size(); ++i ) {
+        dep_it_t woken_inst = (*sd_it).second[i];
+
+        DPRINTF(MemDepUnit, "MemDepUnit: Waking up a dependent inst, "
+                "sequence number %i.\n",
+                (*woken_inst).seqNum);
+#if 0
         // Should we have reached instructions that are actually squashed,
         // there will be no more useful instructions in this dependency
         // list.  Break out early.
-        if (renamedInsts.find(woken_inst) == renamedInsts.end()) {
+        if (waitingInsts.find(woken_inst) == waitingInsts.end()) {
             DPRINTF(MemDepUnit, "MemDepUnit: Dependents on inst PC %#x "
                     "are squashed, starting at SN %i.  Breaking early.\n",
                     inst->readPC(), woken_inst);
             break;
         }
+#endif
 
-        // Remove it from the renamed instructions.
-        renamedInsts.erase(woken_inst);
-
-        // Add it to the ready list.
-        readyInsts.insert(woken_inst);
+        if ((*woken_inst).regsReady) {
+            moveToReady(woken_inst);
+        } else {
+            (*woken_inst).memDepReady = true;
+        }
     }
 
-    dependencies.erase(dep_it);
+    storeDependents.erase(sd_it);
 }
 
 template <class MemDepPred, class Impl>
@@ -112,17 +305,30 @@ void
 MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num)
 {
 
-    if (!renamedInsts.empty()) {
-        sn_it_t renamed_it = renamedInsts.end();
+    if (!waitingInsts.empty()) {
+        dep_it_t waiting_it = waitingInsts.end();
 
-        --renamed_it;
+        --waiting_it;
 
         // Remove entries from the renamed list as long as we haven't reached
         // the end and the entries continue to be younger than the squashed.
-        while (!renamedInsts.empty() &&
-               (*renamed_it) > squashed_num)
+        while (!waitingInsts.empty() &&
+               (*waiting_it).seqNum > squashed_num)
         {
-            renamedInsts.erase(renamed_it--);
+            if (!(*waiting_it).memDepReady &&
+                (*waiting_it).storeDep != storeDependents.end()) {
+                sd_it_t sd_it = (*waiting_it).storeDep;
+
+                // Make sure the iterator that the store has pointing
+                // back is actually to this instruction.
+                assert((*sd_it).second.back() == waiting_it);
+
+                // Now remove this from the store's list of dependent
+                // instructions.
+                (*sd_it).second.pop_back();
+            }
+
+            waitingInsts.erase(waiting_it--);
         }
     }
 
@@ -139,16 +345,19 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num)
         }
     }
 
-    if (!dependencies.empty()) {
-        dep_it_t dep_it = dependencies.end();
+    if (!storeDependents.empty()) {
+        sd_it_t dep_it = storeDependents.end();
 
         --dep_it;
 
         // Same for the dependencies list.
-        while (!dependencies.empty() &&
+        while (!storeDependents.empty() &&
                (*dep_it).first > squashed_num)
         {
-            dependencies.erase(dep_it--);
+            // This store's list of dependent instructions should be empty.
+            assert((*dep_it).second.empty());
+
+            storeDependents.erase(dep_it--);
         }
     }
 
@@ -161,6 +370,23 @@ void
 MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
                                         DynInstPtr &violating_load)
 {
+    DPRINTF(MemDepUnit, "MemDepUnit: Passing violating PCs to store sets,"
+            " load: %#x, store: %#x\n", violating_load->readPC(),
+            store_inst->readPC());
     // Tell the memory dependence unit of the violation.
     depPred.violation(violating_load->readPC(), store_inst->readPC());
+}
+
+template <class MemDepPred, class Impl>
+inline void
+MemDepUnit<MemDepPred, Impl>::moveToReady(dep_it_t &woken_inst)
+{
+    DPRINTF(MemDepUnit, "MemDepUnit: Adding instruction sequence number %i "
+            "to the ready list.\n", (*woken_inst).seqNum);
+
+    // Add it to the ready list.
+    readyInsts.insert((*woken_inst).seqNum);
+
+    // Remove it from the waiting instructions.
+    waitingInsts.erase(woken_inst);
 }

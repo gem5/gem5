@@ -83,7 +83,7 @@ BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
 
     seqNum = seq_num;
 
-    specMemWrite = false;
+//    specMemWrite = false;
 
     canIssue = false;
     issued = false;
@@ -95,7 +95,7 @@ BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
     blockingInst = false;
     recoverInst = false;
     specMode = false;
-    btbMissed = false;
+//    btbMissed = false;
     // Eventually make this a parameter.
     threadNumber = 0;
     // Also make this a parameter.
@@ -139,12 +139,12 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr<ISA> &_staticInst)
     effAddr = MemReq::inval_addr;
     physEffAddr = MemReq::inval_addr;
 
-    specMemWrite = false;
+//    specMemWrite = false;
 
     blockingInst = false;
     recoverInst = false;
     specMode = false;
-    btbMissed = false;
+//    btbMissed = false;
 
     // Make sure to have the renamed register entries set to the same
     // as the normal register entries.  It will allow the IQ to work

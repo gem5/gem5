@@ -106,10 +106,12 @@ base_sources = Split('''
         cpu/beta_cpu/inst_queue.cc
         cpu/beta_cpu/ldstq.cc
         cpu/beta_cpu/mem_dep_unit.cc
+        cpu/beta_cpu/ras.cc
         cpu/beta_cpu/rename.cc
         cpu/beta_cpu/rename_map.cc
         cpu/beta_cpu/rob.cc
         cpu/beta_cpu/store_set.cc
+        cpu/beta_cpu/tournament_pred.cc
 	cpu/fast_cpu/fast_cpu.cc
 	cpu/full_cpu/bpred.cc
 	cpu/full_cpu/commit.cc
@@ -481,7 +483,7 @@ env.Append(CPPPATH='.')
 
 # Debug binary
 debug = env.Copy(OBJSUFFIX='.do')
-debug.Append(CCFLAGS=Split('-g -gstabs+ -O0'))
+debug.Append(CCFLAGS=Split('-g -gstabs+ -O0 -lefence'))
 debug.Append(CPPDEFINES='DEBUG')
 debug.Program(target = 'm5.debug', source = make_objs(sources, debug))
 

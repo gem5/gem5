@@ -6,10 +6,8 @@
 
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/beta_cpu/comm.hh"
+#include "base/traceflags.hh"
 #include "base/trace.hh"
-
-// Question: Do I even need the number of logical registers?
-// How to avoid freeing registers instantly?  Same with ROB entries.
 
 /**
  * FreeList class that simply holds the list of free integer and floating
@@ -153,8 +151,6 @@ SimpleFreeList::addIntReg(PhysRegIndex freed_reg)
     assert(!freeIntRegsScoreboard[freed_reg]);
     freeIntRegsScoreboard[freed_reg] = 1;
 
-    //Might want to add in a check for whether or not this register is
-    //already in there.  A bit vector or something similar would be useful.
     freeIntRegs.push(freed_reg);
 }
 
@@ -167,8 +163,6 @@ SimpleFreeList::addFloatReg(PhysRegIndex freed_reg)
     assert(!freeFloatRegsScoreboard[freed_reg]);
     freeFloatRegsScoreboard[freed_reg] = 1;
 
-    //Might want to add in a check for whether or not this register is
-    //already in there.  A bit vector or something similar would be useful.
     freeFloatRegs.push(freed_reg);
 }
 

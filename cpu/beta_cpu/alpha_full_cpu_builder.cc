@@ -81,16 +81,37 @@ Param<unsigned> issueWidth;
 Param<unsigned> executeWidth;
 Param<unsigned> executeIntWidth;
 Param<unsigned> executeFloatWidth;
+Param<unsigned> executeBranchWidth;
+Param<unsigned> executeMemoryWidth;
 
 Param<unsigned> iewToCommitDelay;
 Param<unsigned> renameToROBDelay;
 Param<unsigned> commitWidth;
 Param<unsigned> squashWidth;
 
+#if 0
 Param<unsigned> localPredictorSize;
 Param<unsigned> localPredictorCtrBits;
+#endif
+Param<unsigned> local_predictor_size;
+Param<unsigned> local_ctr_bits;
+Param<unsigned> local_history_table_size;
+Param<unsigned> local_history_bits;
+Param<unsigned> global_predictor_size;
+Param<unsigned> global_ctr_bits;
+Param<unsigned> global_history_bits;
+Param<unsigned> choice_predictor_size;
+Param<unsigned> choice_ctr_bits;
+
 Param<unsigned> BTBEntries;
 Param<unsigned> BTBTagSize;
+
+Param<unsigned> RASSize;
+
+Param<unsigned> LQEntries;
+Param<unsigned> SQEntries;
+Param<unsigned> LFSTSize;
+Param<unsigned> SSITSize;
 
 Param<unsigned> numPhysIntRegs;
 Param<unsigned> numPhysFloatRegs;
@@ -168,6 +189,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseFullCPU)
     INIT_PARAM(executeWidth, "Execute width"),
     INIT_PARAM(executeIntWidth, "Integer execute width"),
     INIT_PARAM(executeFloatWidth, "Floating point execute width"),
+    INIT_PARAM(executeBranchWidth, "Branch execute width"),
+    INIT_PARAM(executeMemoryWidth, "Memory execute width"),
 
     INIT_PARAM(iewToCommitDelay, "Issue/Execute/Writeback to commit "
                "delay"),
@@ -175,12 +198,30 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseFullCPU)
     INIT_PARAM(commitWidth, "Commit width"),
     INIT_PARAM(squashWidth, "Squash width"),
 
+#if 0
     INIT_PARAM(localPredictorSize, "Size of the local predictor in entries. "
                "Must be a power of 2."),
     INIT_PARAM(localPredictorCtrBits, "Number of bits per counter for bpred"),
+#endif
+    INIT_PARAM(local_predictor_size, "Size of local predictor"),
+    INIT_PARAM(local_ctr_bits, "Bits per counter"),
+    INIT_PARAM(local_history_table_size, "Size of local history table"),
+    INIT_PARAM(local_history_bits, "Bits for the local history"),
+    INIT_PARAM(global_predictor_size, "Size of global predictor"),
+    INIT_PARAM(global_ctr_bits, "Bits per counter"),
+    INIT_PARAM(global_history_bits, "Bits of history"),
+    INIT_PARAM(choice_predictor_size, "Size of choice predictor"),
+    INIT_PARAM(choice_ctr_bits, "Bits of choice counters"),
+
     INIT_PARAM(BTBEntries, "Number of BTB entries"),
     INIT_PARAM(BTBTagSize, "Size of the BTB tags, in bits"),
 
+    INIT_PARAM(RASSize, "RAS size"),
+
+    INIT_PARAM(LQEntries, "Number of load queue entries"),
+    INIT_PARAM(SQEntries, "Number of store queue entries"),
+    INIT_PARAM(LFSTSize, "Last fetched store table size"),
+    INIT_PARAM(SSITSize, "Store set ID table size"),
 
     INIT_PARAM(numPhysIntRegs, "Number of physical integer registers"),
     INIT_PARAM(numPhysFloatRegs, "Number of physical floating point "
@@ -277,16 +318,36 @@ CREATE_SIM_OBJECT(BaseFullCPU)
     params.executeWidth = executeWidth;
     params.executeIntWidth = executeIntWidth;
     params.executeFloatWidth = executeFloatWidth;
+    params.executeBranchWidth = executeBranchWidth;
+    params.executeMemoryWidth = executeMemoryWidth;
 
     params.iewToCommitDelay = iewToCommitDelay;
     params.renameToROBDelay = renameToROBDelay;
     params.commitWidth = commitWidth;
     params.squashWidth = squashWidth;
-
+#if 0
     params.localPredictorSize = localPredictorSize;
     params.localPredictorCtrBits = localPredictorCtrBits;
+#endif
+    params.local_predictor_size = local_predictor_size;
+    params.local_ctr_bits = local_ctr_bits;
+    params.local_history_table_size = local_history_table_size;
+    params.local_history_bits = local_history_bits;
+    params.global_predictor_size = global_predictor_size;
+    params.global_ctr_bits = global_ctr_bits;
+    params.global_history_bits = global_history_bits;
+    params.choice_predictor_size = choice_predictor_size;
+    params.choice_ctr_bits = choice_ctr_bits;
+
     params.BTBEntries = BTBEntries;
     params.BTBTagSize = BTBTagSize;
+
+    params.RASSize = RASSize;
+
+    params.LQEntries = LQEntries;
+    params.SQEntries = SQEntries;
+    params.SSITSize = SSITSize;
+    params.LFSTSize = LFSTSize;
 
     params.numPhysIntRegs = numPhysIntRegs;
     params.numPhysFloatRegs = numPhysFloatRegs;

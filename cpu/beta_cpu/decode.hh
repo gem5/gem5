@@ -49,6 +49,8 @@ class SimpleDecode
   public:
     SimpleDecode(Params &params);
 
+    void regStats();
+
     void setCPU(FullCPU *cpu_ptr);
 
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -128,6 +130,15 @@ class SimpleDecode
      *  group of instructions, it can restart at the proper instruction.
      */
     unsigned numInst;
+
+    Stats::Scalar<> decodeIdleCycles;
+    Stats::Scalar<> decodeBlockedCycles;
+    Stats::Scalar<> decodeUnblockCycles;
+    Stats::Scalar<> decodeSquashCycles;
+    Stats::Scalar<> decodeBranchMispred;
+    Stats::Scalar<> decodeControlMispred;
+    Stats::Scalar<> decodeDecodedInsts;
+    Stats::Scalar<> decodeSquashedInsts;
 };
 
 #endif // __SIMPLE_DECODE_HH__
