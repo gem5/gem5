@@ -148,13 +148,21 @@ PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
 void
 PciConfigAll::serialize(std::ostream &os)
 {
-    // code should be written
+    /*
+     * There is no state associated with this object that requires
+     * serialization.  The only real state are the device pointers
+     * which are all setup by the constructor of the PciDev class
+     */
 }
 
 void
 PciConfigAll::unserialize(Checkpoint *cp, const std::string &section)
 {
-    //code should be written
+    /*
+     * There is no state associated with this object that requires
+     * serialization.  The only real state are the device pointers
+     * which are all setup by the constructor of the PciDev class
+     */
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

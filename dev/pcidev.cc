@@ -256,13 +256,26 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 void
 PciDev::serialize(ostream &os)
 {
+    SERIALIZE_ARRAY(BARSize, 6);
+    SERIALIZE_ARRAY(BARAddrs, 6);
     SERIALIZE_ARRAY(config.data, 64);
 }
 
 void
 PciDev::unserialize(Checkpoint *cp, const std::string &section)
 {
+    UNSERIALIZE_ARRAY(BARSize, 6);
+    UNSERIALIZE_ARRAY(BARAddrs, 6);
     UNSERIALIZE_ARRAY(config.data, 64);
+
+    // Add the MMU mappings for the BARs
+    for (int i=0; i < 6; i++) {
+        if (BARAddrs[i] != 0)
+            mmu->add_child((FunctionalMemory *)this,
+                           Range<Addr>(BARAddrs[i],
+                                       BARAddrs[i] +
+                                       BARSize[i] - 1));
+    }
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

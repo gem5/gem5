@@ -338,7 +338,10 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
         memcpy((void *)&pci_regs[offset], (void *)&data, size);
     }
 
-    if (offset == PCI_COMMAND) {
+    // Catch the writes to specific PCI registers that have side affects
+    // (like updating the PIO ranges)
+    switch (offset) {
+      case PCI_COMMAND:
         if (config.data[offset] & IOSE)
             io_enabled = true;
         else
@@ -348,53 +351,61 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
             bm_enabled = true;
         else
             bm_enabled = false;
+        break;
 
-    } else if (data != 0xffffffff) {
-        switch (offset) {
-          case PCI0_BASE_ADDR0:
+      case PCI0_BASE_ADDR0:
+        if (BARAddrs[0] != 0) {
             pri_cmd_addr = BARAddrs[0];
             if (pioInterface)
                 pioInterface->addAddrRange(pri_cmd_addr,
                                            pri_cmd_addr + pri_cmd_size - 1);
 
-            pri_cmd_addr = pri_cmd_addr & PA_UNCACHED_MASK;
-            break;
+            pri_cmd_addr &= PA_UNCACHED_MASK;
+        }
+        break;
 
-          case PCI0_BASE_ADDR1:
+      case PCI0_BASE_ADDR1:
+        if (BARAddrs[1] != 0) {
             pri_ctrl_addr = BARAddrs[1];
             if (pioInterface)
                 pioInterface->addAddrRange(pri_ctrl_addr,
                                            pri_ctrl_addr + pri_ctrl_size - 1);
 
-            pri_ctrl_addr = pri_ctrl_addr & PA_UNCACHED_MASK;
-            break;
+            pri_ctrl_addr &= PA_UNCACHED_MASK;
+        }
+        break;
 
-          case PCI0_BASE_ADDR2:
+      case PCI0_BASE_ADDR2:
+        if (BARAddrs[2] != 0) {
             sec_cmd_addr = BARAddrs[2];
             if (pioInterface)
                 pioInterface->addAddrRange(sec_cmd_addr,
                                            sec_cmd_addr + sec_cmd_size - 1);
 
-            sec_cmd_addr = sec_cmd_addr & PA_UNCACHED_MASK;
-            break;
+            sec_cmd_addr &= PA_UNCACHED_MASK;
+        }
+        break;
 
-          case PCI0_BASE_ADDR3:
+      case PCI0_BASE_ADDR3:
+        if (BARAddrs[3] != 0) {
             sec_ctrl_addr = BARAddrs[3];
             if (pioInterface)
                 pioInterface->addAddrRange(sec_ctrl_addr,
                                            sec_ctrl_addr + sec_ctrl_size - 1);
 
-            sec_ctrl_addr = sec_ctrl_addr & PA_UNCACHED_MASK;
-            break;
+            sec_ctrl_addr &= PA_UNCACHED_MASK;
+        }
+        break;
 
-          case PCI0_BASE_ADDR4:
+      case PCI0_BASE_ADDR4:
+        if (BARAddrs[4] != 0) {
             bmi_addr = BARAddrs[4];
             if (pioInterface)
                 pioInterface->addAddrRange(bmi_addr, bmi_addr + bmi_size - 1);
 
-            bmi_addr = bmi_addr & PA_UNCACHED_MASK;
-            break;
+            bmi_addr &= PA_UNCACHED_MASK;
         }
+        break;
     }
 }
 
@@ -589,6 +600,9 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
 void
 IdeController::serialize(std::ostream &os)
 {
+    // Serialize the PciDev base class
+    PciDev::serialize(os);
+
     // Serialize register addresses and sizes
     SERIALIZE_SCALAR(pri_cmd_addr);
     SERIALIZE_SCALAR(pri_cmd_size);
@@ -615,6 +629,9 @@ IdeController::serialize(std::ostream &os)
 void
 IdeController::unserialize(Checkpoint *cp, const std::string &section)
 {
+    // Unserialize the PciDev base class
+    PciDev::unserialize(cp, section);
+
     // Unserialize register addresses and sizes
     UNSERIALIZE_SCALAR(pri_cmd_addr);
     UNSERIALIZE_SCALAR(pri_cmd_size);
