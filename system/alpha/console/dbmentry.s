@@ -2,12 +2,12 @@
 /* taken from ebfw/rom/dbmentry.s */
 
 #define EB164 
-#ifndef LINT
+/*#ifndef LINT
 .data
 .asciiz "$Id: dbmentry.s,v 1.1.1.1 1997/10/30 23:27:12 verghese Exp $"
 .text
 #endif
-
+*/
 /*
  * Debug Monitor Entry code
  */

@@ -219,7 +219,7 @@ FormatItem(const char *f, va_list *ap)
       case '-': leftjust = TRUE;
         break;
       case 'c': {
-        char a = va_arg(*ap, char);
+        char a = va_arg(*ap, char *);
 
         if (leftjust) PutChar(a & 0x7f);
         if (fieldwidth > 0) PutRepChar(fill, fieldwidth - 1);

@@ -234,7 +234,7 @@ date.c
 extern void printDate(void);
 extern void setDate(ub * date);
 extern ui gettime(void);
-extern time_t time(void);
+//extern time_t time(void);
 extern void CheckDate(void);
 
 /*::::::::::::::
