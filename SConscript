@@ -276,6 +276,7 @@ full_system_sources = Split('''
 	dev/scsi_ctrl.cc
 	dev/scsi_disk.cc
 	dev/scsi_none.cc
+	dev/sinic.cc
 	dev/simple_disk.cc
 	dev/tlaser_clock.cc
 	dev/tlaser_ipi.cc
