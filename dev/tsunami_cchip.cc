@@ -254,7 +254,7 @@ TsunamiCChip::postDRIR(uint64_t bitvector)
             dir[i] |= bitvector;
             if (!dirInterrupting[i]) {
                 dirInterrupting[i] = true;
-                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, 0);
+                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ0, 0);
                 DPRINTF(Tsunami, "posting dir interrupt to cpu %d\n",i);
             }
         }
@@ -269,7 +269,7 @@ TsunamiCChip::clearDRIR(uint64_t bitvector)
         dir[i] &= ~bitvector;
         if (!dir[i]) {
             dirInterrupting[i] = false;
-            tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, 0);
+            tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ0, 0);
             DPRINTF(Tsunami, "clearing dir interrupt to cpu %d\n", i);
 
         }
