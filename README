@@ -1,0 +1,51 @@
+
+This is release m5_1.0_beta1 of the M5 simulator.
+
+This file contains brief "getting started" information and release
+notes.  For more information, see http://m5.eecs.umich.edu.  If you
+have questions, please send mail to m5sim-users@lists.sourceforge.net.
+
+WHAT'S INCLUDED (AND NOT)
+-------------------------
+
+Since you're reading this file, presumably you've managed to untar the
+distribution.  The archive you've unpacked has three subdirectories:
+ - m5: the simulator itself
+ - m5-test: regression tests and scripts to run them
+ - ext: less-common external packages needed to build m5
+   (currently just "ply")
+
+Although M5 is capable of full-system simulation, the only OS it
+currently supports is the proprietary Compaq/HP Tru64 version of Unix.
+We are thus unable to distribute bootable disk images freely.  If you
+have a Tru64 license and are interested in obtaining disk images,
+contact us at m5-dev@eecs.umich.edu.
+
+GETTING STARTED
+---------------
+
+The following steps will build and test the simulator.  The variable
+"$top" refers to the top directory where you've unpacked the files,
+i.e., the one containing the m5, m5-test, and ext directories.
+
+cd $top/m5/setup
+./setup ALPHA		# set up build/ALPHA directory
+cd $top/m5/build/ALPHA
+make m5.opt		# use "-j N" if you've got an MP system
+# wait for build...
+cd $top/m5-test
+./do-tests.pl -B ALPHA	# test what you just built
+# wait for tests to run...
+# should end with "finished do-tests successfully!"
+
+If you run into errors regarding m5/arch/alpha/decoder.cc, just
+"touch" that file to update its timestamp.  This file is generated
+from a compact ISA description using a program written in Python.  If
+you have Python 2.2.2 or later installed on your system, you should be
+able to generate it yourself, but if you don't have Python (or have an
+older version), you may run in to trouble.  Since we've shipped a
+working copy of decoder.cc, it's not necessary to have Python to build
+M5 (unless you start modifying the ISA decription).  Unfortunately,
+sometimes make gets confused and tries to do so anyway.  The "touch"
+should convince make to stop trying.
+
