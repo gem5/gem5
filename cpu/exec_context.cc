@@ -100,16 +100,20 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 void
 ExecContext::serialize(ostream &os)
 {
-    SERIALIZE_ARRAY(regs.intRegFile, NumIntRegs);
-    SERIALIZE_ARRAY(regs.floatRegFile.q, NumFloatRegs);
+    SERIALIZE_ENUM(_status);
+    regs.serialize(os);
+    // thread_num and cpu_id are deterministic from the config
+    SERIALIZE_SCALAR(func_exe_insn);
 }
 
 
 void
 ExecContext::unserialize(const IniFile *db, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(regs.intRegFile, NumIntRegs);
-    UNSERIALIZE_ARRAY(regs.floatRegFile.q, NumFloatRegs);
+    UNSERIALIZE_ENUM(_status);
+    regs.unserialize(db, section);
+    // thread_num and cpu_id are deterministic from the config
+    UNSERIALIZE_SCALAR(func_exe_insn);
 }
 
 

@@ -158,6 +158,9 @@ class AlphaISA
 #endif // FULL_SYSTEM
         // Are these architectural, or just for convenience?
         uint8_t opcode, ra;		// current instruction details (for intr's)
+
+        void serialize(std::ostream &os);
+        void unserialize(const IniFile *db, const std::string &section);
     };
 
     static StaticInstPtr<AlphaISA> decodeInst(MachInst);

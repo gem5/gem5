@@ -66,6 +66,16 @@ void arrayParamIn(const IniFile *db, const std::string &section,
 
 #define UNSERIALIZE_SCALAR(scalar)	paramIn(db, section, #scalar, scalar)
 
+// ENUMs are like SCALARs, but we cast them to ints on the way out
+#define SERIALIZE_ENUM(scalar)		paramOut(os, #scalar, (int)scalar)
+
+#define UNSERIALIZE_ENUM(scalar)		\
+ do {						\
+    int tmp;					\
+    paramIn(db, section, #scalar, tmp);		\
+    scalar = (typeof(scalar))tmp;		\
+  } while (0)
+
 #define SERIALIZE_ARRAY(member, size)	\
         arrayParamOut(os, #member, member, size)
 
