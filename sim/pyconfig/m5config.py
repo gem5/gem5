@@ -28,9 +28,9 @@ from __future__ import generators
 import os, re, sys, types
 noDot = False
 try:
-   import pydot
+    import pydot
 except:
-   noDot = True
+    noDot = True
 
 env = {}
 env.update(os.environ)
