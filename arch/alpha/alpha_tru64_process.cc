@@ -171,6 +171,9 @@ class Tru64 {
     static const unsigned TIOCGETC   = 0x40067412;
     static const unsigned FIONREAD   = 0x4004667f;
     static const unsigned TIOCISATTY = 0x2000745e;
+    // TIOCGETS not defined in tru64, so I made up a number
+    static const unsigned TIOCGETS   = 0x40000000;
+    static const unsigned TIOCGETA   = 0x402c7413;
     //@}
 
     /// Resource enumeration for getrlimit().
@@ -1356,7 +1359,7 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 7 */ SyscallDesc("wait4", unimplementedFunc),
     /* 8 */ SyscallDesc("old_creat", unimplementedFunc),
     /* 9 */ SyscallDesc("link", unimplementedFunc),
-    /* 10 */ SyscallDesc("unlink", unimplementedFunc),
+    /* 10 */ SyscallDesc("unlink", unlinkFunc),
     /* 11 */ SyscallDesc("execv", unimplementedFunc),
     /* 12 */ SyscallDesc("chdir", unimplementedFunc),
     /* 13 */ SyscallDesc("fchdir", unimplementedFunc),
@@ -1475,7 +1478,7 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 125 */ SyscallDesc("old_recvfrom", unimplementedFunc),
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 127 */ SyscallDesc("setregid", unimplementedFunc),
-    /* 128 */ SyscallDesc("rename", unimplementedFunc),
+    /* 128 */ SyscallDesc("rename", renameFunc),
     /* 129 */ SyscallDesc("truncate", unimplementedFunc),
     /* 130 */ SyscallDesc("ftruncate", unimplementedFunc),
     /* 131 */ SyscallDesc("flock", unimplementedFunc),
@@ -1492,7 +1495,7 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 142 */ SyscallDesc("gethostid", unimplementedFunc),
     /* 143 */ SyscallDesc("sethostid", unimplementedFunc),
     /* 144 */ SyscallDesc("getrlimit", getrlimitFunc<Tru64>),
-    /* 145 */ SyscallDesc("setrlimit", unimplementedFunc),
+    /* 145 */ SyscallDesc("setrlimit", ignoreFunc),
     /* 146 */ SyscallDesc("old_killpg", unimplementedFunc),
     /* 147 */ SyscallDesc("setsid", unimplementedFunc),
     /* 148 */ SyscallDesc("quotactl", unimplementedFunc),
