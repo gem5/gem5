@@ -97,6 +97,10 @@ class Process : public SimObject
     Addr mmap_start;
     Addr mmap_end;
 
+    // Base of region for nxm data
+    Addr nxm_start;
+    Addr nxm_end;
+
     std::string prog_fname;	// file name
     Addr prog_entry;		// entry point (initial PC)
 
@@ -159,9 +163,14 @@ class Process : public SimObject
     bool validDataAddr(Addr addr)
     {
         return ((data_base <= addr && addr < brk_point) ||
+#ifdef FULLSYSTEM
                 ((stack_base - 16*1024*1024) <= addr && addr < stack_base) ||
+#else
+                (next_thread_stack_base <= addr && addr < stack_base) ||
+#endif
                 (text_base <= addr && addr < (text_base + text_size)) ||
-                (mmap_start <= addr && addr < mmap_end));
+                (mmap_start <= addr && addr < mmap_end) ||
+                (nxm_start <= addr && addr < nxm_end));
     }
 
     virtual void syscall(ExecContext *xc) = 0;

@@ -877,6 +877,10 @@ class Tru64 {
         *configptr_ptr = config_addr;
         configptr_ptr.copyOut(xc->mem);
 
+        // Register this as a valid address range with the process
+        process->nxm_start = base_addr;
+        process->nxm_end = cur_addr;
+
         return 0;
     }
 
