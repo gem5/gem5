@@ -134,7 +134,7 @@ InsertEvent::insert(const string &stat)
     first = false;
 
     size += sprintf(query + size, "(%u,%u,%llu)",
-                    event, run, curTick);
+                    event, run, (unsigned long long)curTick);
 }
 
 void

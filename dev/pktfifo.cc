@@ -54,7 +54,7 @@ PacketFifo::unserialize(const string &base, Checkpoint *cp,
                         const string &section)
 {
     paramIn(cp, section, base + ".size", _size);
-    paramIn(cp, section, base + ".maxsize", _maxsize);
+//  paramIn(cp, section, base + ".maxsize", _maxsize);
     paramIn(cp, section, base + ".reserved", _reserved);
     int fifosize;
     paramIn(cp, section, base + ".packets", fifosize);

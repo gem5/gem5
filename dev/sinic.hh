@@ -262,6 +262,10 @@ class Device : public Base
 
     Stats::Scalar<> txBytes;
     Stats::Formula  txBandwidth;
+    Stats::Formula totBandwidth;
+    Stats::Formula totPackets;
+    Stats::Formula totBytes;
+    Stats::Formula totPacketRate;
     Stats::Scalar<> txPackets;
     Stats::Formula  txPacketRate;
     Stats::Scalar<> txIpPackets;

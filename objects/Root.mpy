@@ -7,3 +7,4 @@ simobj Root(SimObject):
                                       "file to dump simulator config to")
     full_system = Param.Bool("Full system simulation?")
     hier = HierParams(do_data = false, do_events = true)
+    checkpoint = Param.String('', "Checkpoint file")
