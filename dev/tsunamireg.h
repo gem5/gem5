@@ -78,4 +78,26 @@
 #define TSDEV_TMR2_CTL      0x43
 #define TSDEV_TMR2_DATA     0x42
 #define TSDEV_TMR0_DATA     0x40
+
+#define TSDEV_RTC_ADDR      0x70
+#define TSDEV_RTC_DATA      0x71
+
+// RTC defines
+#define RTC_SECOND          0	// second of minute [0..59]
+#define RTC_SECOND_ALARM    1	// seconds to alarm
+#define RTC_MINUTE          2	// minute of hour [0..59]
+#define RTC_MINUTE_ALARM    3	// minutes to alarm
+#define RTC_HOUR            4	// hour of day [0..23]
+#define RTC_HOUR_ALARM      5	// hours to alarm
+#define RTC_DAY_OF_WEEK     6	// day of week [1..7]
+#define RTC_DAY_OF_MONTH    7	// day of month [1..31]
+#define RTC_MONTH           8	// month of year [1..12]
+#define RTC_YEAR            9	// year [00..99]
+#define RTC_CONTROL_REGISTERA   10	// control register A
+#define RTC_CONTROL_REGISTERB   11	// control register B
+#define RTC_CONTROL_REGISTERC   12	// control register C
+#define RTC_CONTROL_REGISTERD   13	// control register D
+#define RTC_REGNUMBER_RTC_CR1   0x6A	// control register 1
+
+
 #endif // __TSUNAMIREG_H__

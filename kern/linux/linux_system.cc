@@ -265,13 +265,13 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
 #endif //FS_MEASURE
 
     Addr addr = 0;
-    if (kernelSymtab->findAddress("enable_async_printf", addr)) {
+    if (kernelSymtab->findAddress("est_cycle_freq", addr)) {
         Addr paddr = vtophys(physmem, addr);
-        uint8_t *enable_async_printf =
-            physmem->dma_addr(paddr, sizeof(uint32_t));
+        uint8_t *est_cycle_frequency =
+            physmem->dma_addr(paddr, sizeof(uint64_t));
 
-        if (enable_async_printf)
-            *(uint32_t *)enable_async_printf = 0;
+        if (est_cycle_frequency)
+            *(uint64_t *)est_cycle_frequency = ticksPerSecond;
     }
 
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {

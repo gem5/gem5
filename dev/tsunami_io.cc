@@ -1,8 +1,10 @@
 /* $Id$ */
 
 /* @file
- * Tsunami DMA fake
+ * Tsunami I/O including PIC, PIT, RTC, DMA
  */
+
+#include <sys/time.h>
 
 #include <deque>
 #include <string>
@@ -11,50 +13,43 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "dev/console.hh"
-#include "dev/etherdev.hh"
-#include "dev/scsi_ctrl.hh"
 #include "dev/tlaser_clock.hh"
 #include "dev/tsunami_io.hh"
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
-#include "sim/system.hh"
 
 using namespace std;
+
+#define UNIX_YEAR_OFFSET 52
+
+//This will have to be dynamic if we want support usermode access of the RTC
+#define RTC_RATE  1024
+
+// Timer Event for Periodic interrupt of RTC
 TsunamiIO::RTCEvent::RTCEvent()
     : Event(&mainEventQueue)
 {
-    DPRINTF(Tsunami, "RTC Event Initilizing\n");
-    rtc_uip = 0;
-    schedule(curTick + (curTick % ticksPerSecond));
+    DPRINTF(MC146818, "RTC Event Initilizing\n");
+    schedule(curTick + ticksPerSecond/RTC_RATE);
 }
 
 void
 TsunamiIO::RTCEvent::process()
 {
-    DPRINTF(Tsunami, "Timer Interrupt\n");
-    if (rtc_uip == 0) {
-        rtc_uip = 1; //Signal a second has occured
-        schedule(curTick + (curTick % ticksPerSecond) - 10);
-            }
-    else
-        rtc_uip = 0; //Done signaling second has occured
-        schedule(curTick + (curTick % ticksPerSecond));
+    DPRINTF(MC146818, "Timer Interrupt\n");
+    schedule(curTick + ticksPerSecond/RTC_RATE);
+    //Actually interrupt the processor here
 }
 
 const char *
 TsunamiIO::RTCEvent::description()
 {
-    return "tsunami RTC changte second";
+    return "tsunami RTC 1024Hz interrupt";
 }
 
-uint8_t
-TsunamiIO::RTCEvent::rtc_uip_value()
-{
-    return rtc_uip;
-}
-
+// Timer Event for PIT Timers
 TsunamiIO::ClockEvent::ClockEvent()
     : Event(&mainEventQueue)
 {
@@ -76,7 +71,8 @@ void
 TsunamiIO::ClockEvent::Program(int count)
 {
     DPRINTF(Tsunami, "Timer set to curTick + %d\n", count);
-    interval = count * ticksPerSecond/1193180UL; // should be count * (cpufreq/pitfreq)
+    // should be count * (cpufreq/pitfreq)
+    interval = count * ticksPerSecond/1193180UL;
     schedule(curTick + interval);
     status = 0;
 }
@@ -100,11 +96,22 @@ TsunamiIO::ClockEvent::Status()
 }
 
 
-TsunamiIO::TsunamiIO(const string &name, /*Tsunami *t,*/
+
+
+TsunamiIO::TsunamiIO(const string &name, /*Tsunami *t,*/ time_t init_time,
                        Addr addr, Addr mask, MemoryController *mmu)
     : MmapDevice(name, addr, mask, mmu)/*, tsunami(t) */
 {
     timerData = 0;
+    set_time(init_time == 0 ? time(NULL) : init_time);
+    uip = 1;
+}
+
+void
+TsunamiIO::set_time(time_t t)
+{
+    gmtime_r(&t, &tm);
+    DPRINTFN("Real-time clock set to %s", asctime(&tm));
 }
 
 Fault
@@ -123,6 +130,47 @@ TsunamiIO::read(MemReqPtr req, uint8_t *data)
                 case TSDEV_TMR_CTL:
                     *(uint8_t*)data = timer2.Status();
                     return No_Fault;
+                case TSDEV_RTC_DATA:
+                    switch(RTCAddress) {
+                        case RTC_CONTROL_REGISTERA:
+                            *(uint8_t*)data = uip << 7 | 0x26;
+                            uip = !uip;
+                            return No_Fault;
+                        case RTC_CONTROL_REGISTERB:
+                            // DM and 24/12 and UIE
+                            *(uint8_t*)data = 0x46;
+                            return No_Fault;
+                        case RTC_CONTROL_REGISTERC:
+                            // If we want to support RTC user access in linux
+                            // This won't work, but for now it's fine
+                            *(uint8_t*)data = 0x00;
+                            return No_Fault;
+                        case RTC_CONTROL_REGISTERD:
+                            panic("RTC Control Register D not implemented");
+                        case RTC_SECOND:
+                            *(uint8_t *)data = tm.tm_sec;
+                            return No_Fault;
+                        case RTC_MINUTE:
+                            *(uint8_t *)data = tm.tm_min;
+                            return No_Fault;
+                        case RTC_HOUR:
+                            *(uint8_t *)data = tm.tm_hour;
+                            return No_Fault;
+                        case RTC_DAY_OF_WEEK:
+                            *(uint8_t *)data = tm.tm_wday;
+                            return No_Fault;
+                        case RTC_DAY_OF_MONTH:
+                            *(uint8_t *)data = tm.tm_mday;
+                        case RTC_MONTH:
+                            *(uint8_t *)data = tm.tm_mon + 1;
+                            return No_Fault;
+                        case RTC_YEAR:
+                            *(uint8_t *)data = tm.tm_year - UNIX_YEAR_OFFSET;
+                            return No_Fault;
+                        default:
+                            panic("Unknown RTC Address\n");
+                    }
+
                 default:
                     panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
             }
@@ -177,13 +225,9 @@ TsunamiIO::write(MemReqPtr req, const uint8_t *data)
                         case 0:
                             timer0.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
                             break;
-                        case 1:
-                            timer1.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
-                            break;
                         case 2:
                             timer2.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
                             break;
-                        case 3:
                         default:
                             panic("Read Back Command not implemented\n");
                     }
@@ -212,6 +256,11 @@ TsunamiIO::write(MemReqPtr req, const uint8_t *data)
                             timerData |= 0x1000;
                         }
                         return No_Fault;
+                case TSDEV_RTC_ADDR:
+                        RTCAddress = *(uint8_t*)data;
+                        return No_Fault;
+                case TSDEV_RTC_DATA:
+                        panic("RTC Write not implmented (rtc.o won't work)\n");
                  default:
                     panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);
             }
@@ -241,6 +290,7 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
  //   SimObjectParam<Tsunami *> tsunami;
+    Param<time_t> time;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
@@ -250,6 +300,8 @@ END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 //    INIT_PARAM(tsunami, "Tsunami"),
+    INIT_PARAM_DFLT(time, "System time to use "
+            "(0 for actual time, default is 1/1/06", ULL(1136073600)),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask")
@@ -258,7 +310,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
-    return new TsunamiIO(getInstanceName(), /*tsunami,*/ addr, mask, mmu);
+    return new TsunamiIO(getInstanceName(), /*tsunami,*/ time,  addr, mask, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

@@ -42,7 +42,13 @@
 class TsunamiIO : public MmapDevice
 {
 
-  public:
+  private:
+    struct tm tm;
+
+    // In Tsunami RTC only has two i/o ports
+    // one  for data and one for address, so you
+    // write the address and then read/write the data
+    uint8_t RTCAddress;
 
   protected:
 
@@ -66,32 +72,42 @@ class TsunamiIO : public MmapDevice
 
     class RTCEvent : public Event
     {
-      protected:
-        Tick interval;
-        uint8_t rtc_uip;
-
       public:
         RTCEvent();
 
         virtual void process();
         virtual const char *description();
-        uint8_t rtc_uip_value();
     };
+
+      uint8_t uip;
 
       uint8_t mask1;
       uint8_t mask2;
       uint8_t mode1;
       uint8_t mode2;
 
+      /* This timer is initilized, but after I wrote the code
+         it doesn't seem to be used again, and best I can tell
+         it too is not connected to any interrupt port */
       ClockEvent timer0;
-      ClockEvent timer1;
+
+      /* This timer is used to control the speaker, which
+         we normally could care less about, however it is
+         also used to calculated the clockspeed and hense
+         bogomips which is kinda important to the scheduler
+         so we need to implemnt it although after boot I can't
+         imagine we would be playing with the PC speaker much */
       ClockEvent timer2;
+
+      RTCEvent rtc;
 
       uint32_t timerData;
 
   public:
-    TsunamiIO(const std::string &name, /*Tsunami *t,*/
+    TsunamiIO(const std::string &name, /*Tsunami *t,*/ time_t init_time,
                Addr addr, Addr mask, MemoryController *mmu);
+
+    void set_time(time_t t);
 
     virtual Fault read(MemReqPtr req, uint8_t *data);
     virtual Fault write(MemReqPtr req, const uint8_t *data);
