@@ -37,6 +37,7 @@
 #include "cpu/base_cpu.hh"
 #include "cpu/sampling_cpu/sampling_cpu.hh"
 #include "cpu/exec_context.hh"
+#include "kern/kernel_stats.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -60,7 +61,7 @@ namespace AlphaPseudo
     void
     arm(ExecContext *xc)
     {
-        xc->kernelStats.arm();
+        xc->kernelStats->arm();
     }
 
     void
@@ -70,13 +71,13 @@ namespace AlphaPseudo
             return;
 
         xc->suspend();
-        xc->kernelStats.quiesce();
+        xc->kernelStats->quiesce();
     }
 
     void
     ivlb(ExecContext *xc)
     {
-        xc->kernelStats.ivlb();
+        xc->kernelStats->ivlb();
     }
 
     void
@@ -164,7 +165,7 @@ namespace AlphaPseudo
     void
     readfile(ExecContext *xc)
     {
-        const string &file = xc->cpu->system->readfile;
+        const string &file = xc->cpu->system->params->readfile;
         if (file.empty()) {
             xc->regs.intRegFile[0] = ULL(0);
             return;

@@ -30,9 +30,9 @@
 #include "cpu/base_cpu.hh"
 #include "cpu/full_cpu/bpred.hh"
 #include "cpu/full_cpu/full_cpu.hh"
+#include "kern/kernel_stats.hh"
 #include "kern/system_events.hh"
 #include "sim/system.hh"
-#include "sim/sw_context.hh"
 
 void
 SkipFuncEvent::process(ExecContext *xc)
@@ -52,11 +52,9 @@ SkipFuncEvent::process(ExecContext *xc)
 }
 
 
-FnEvent::FnEvent(PCEventQueue *q, const std::string & desc, System *system)
-    : PCEvent(q, desc), _name(desc)
+FnEvent::FnEvent(PCEventQueue *q, const std::string &desc, Stats::MainBin *bin)
+    : PCEvent(q, desc), _name(desc), mybin(bin)
 {
-    myBin = system->getBin(desc);
-    assert(myBin);
 }
 
 void
@@ -64,46 +62,12 @@ FnEvent::process(ExecContext *xc)
 {
     if (xc->misspeculating())
         return;
-    assert(xc->system->bin && "FnEvent must be in a binned system");
-    SWContext *ctx = xc->swCtx;
-    DPRINTF(TCPIP, "%s: %s Event!!!\n", xc->system->name(), description);
 
-    if (ctx && !ctx->callStack.empty()) {
-        DPRINTF(TCPIP, "already a callstack!\n");
-        fnCall *last = ctx->callStack.top();
+    xc->system->kernelBinning->call(xc, mybin);
+}
 
-        if (last->name == "idle_thread")
-            ctx->calls++;
-
-        if (!xc->system->findCaller(myname(), "" ) &&
-            !xc->system->findCaller(myname(), last->name)) {
-
-            DPRINTF(TCPIP, "but can't find parent %s\n", last->name);
-            return;
-        }
-        ctx->calls--;
-
-        //assert(!ctx->calls && "on a binned fn, calls should == 0 (but can happen in boot)");
-    } else {
-        DPRINTF(TCPIP, "no callstack yet\n");
-        if (!xc->system->findCaller(myname(), "")) {
-            DPRINTF(TCPIP, "not the right function, returning\n");
-            return;
-        }
-        if (!ctx)  {
-            DPRINTF(TCPIP, "creating new context for %s\n", myname());
-            ctx = new SWContext;
-            xc->swCtx = ctx;
-        }
-    }
-    DPRINTF(TCPIP, "adding fn %s to context\n", myname());
-    fnCall *call = new fnCall;
-    call->myBin = myBin;
-    call->name = myname();
-    ctx->callStack.push(call);
-    myBin->activate();
-    xc->system->fnCalls++;
-    DPRINTF(TCPIP, "fnCalls for %s is %d\n", description,
-            xc->system->fnCalls.value());
-    xc->system->dumpState(xc);
+void
+IdleStartEvent::process(ExecContext *xc)
+{
+    xc->kernelStats->setIdleProcess(xc->regs.ipr[AlphaISA::IPR_PALtemp23]);
 }

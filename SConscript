@@ -190,7 +190,6 @@ base_sources = Split('''
 	sim/sim_object.cc
 	sim/stat_context.cc
 	sim/stat_control.cc
-	sim/sw_context.cc
 	sim/trace_context.cc
 	sim/universe.cc
         sim/pyconfig/pyconfig.cc
@@ -288,6 +287,7 @@ full_system_sources = Split('''
 	dev/tsunami_pchip.cc
 	dev/uart.cc
 
+	kern/kernel_binning.cc
 	kern/kernel_stats.cc
 	kern/system_events.cc
 	kern/linux/linux_events.cc

@@ -161,7 +161,7 @@ Process::registerExecContext(ExecContext *xc)
 
 
 void
-Process::replaceExecContext(int xcIndex, ExecContext *xc)
+Process::replaceExecContext(ExecContext *xc, int xcIndex)
 {
     if (xcIndex >= execContexts.size()) {
         panic("replaceExecContext: bad xcIndex, %d >= %d\n",

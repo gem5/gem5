@@ -26,32 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LINUX_SYSTEM_HH__
-#define __LINUX_SYSTEM_HH__
+#ifndef __KERN_LINUX_LINUX_SYSTEM_HH__
+#define __KERN_LINUX_LINUX_SYSTEM_HH__
 
-#include <vector>
-
-#include "sim/system.hh"
 #include "sim/host.hh"
+#include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
-
-#include <map>
 
 /**
  * MAGIC address where the kernel arguments should go. Defined as
  * PARAM in linux kernel alpha-asm.
  */
-const Addr PARAM_ADDR =  ULL(0xfffffc000030a000);
+const Addr PARAM_ADDR = ULL(0xfffffc000030a000);
 
 class ExecContext;
-class ElfObject;
-class SymbolTable;
+
+class BreakPCEvent;
 class DebugPrintkEvent;
 class BreakPCEvent;
 class LinuxSkipDelayLoopEvent;
 class SkipFuncEvent;
-class FnEvent;
-class AlphaArguments;
+class IdleStartEvent;
 class PrintThreadInfo;
 
 /**
@@ -62,96 +57,42 @@ class PrintThreadInfo;
 class LinuxSystem : public System
 {
   private:
-    /** Object pointer for the kernel code */
-    ElfObject *kernel;
-
-    /** Object pointer for the console code */
-    ElfObject *console;
-
-    /** kernel Symbol table */
-    SymbolTable *kernelSymtab;
-
-    /** console symbol table */
-    SymbolTable *consoleSymtab;
-
+#ifdef DEBUG
     /** Event to halt the simulator if the kernel calls panic()  */
     BreakPCEvent *kernelPanicEvent;
+#endif
 
-    /** Event to halt the simulator if the console calls panic() */
-    BreakPCEvent *consolePanicEvent;
-
-    /** Event to skip determine_cpu_caches() because we don't support the
-     * IPRs that the code can access to figure out cache sizes
+    /**
+     * Event to skip determine_cpu_caches() because we don't support
+     * the IPRs that the code can access to figure out cache sizes
      */
     SkipFuncEvent *skipCacheProbeEvent;
 
     /** PC based event to skip the ide_delay_50ms() call */
     SkipFuncEvent *skipIdeDelay50msEvent;
 
-    /** PC based event to skip the dprink() call and emulate its functionality */
+    /**
+     * PC based event to skip the dprink() call and emulate its
+     * functionality
+     */
     DebugPrintkEvent *debugPrintkEvent;
 
-    /** Skip calculate_delay_loop() rather than waiting for this to be
+    /**
+     * Skip calculate_delay_loop() rather than waiting for this to be
      * calculated
      */
     LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
 
     PrintThreadInfo *printThreadEvent;
 
-    /** Begining of kernel code */
-    Addr kernelStart;
-
-    /** End of kernel code */
-    Addr kernelEnd;
-
-    /** Entry point in the kernel to start at */
-    Addr kernelEntry;
-
-    bool bin;
-    std::vector<string> binned_fns;
+    /** Grab the PCBB of the idle process when it starts */
+    IdleStartEvent *idleStartEvent;
 
   public:
-    std::vector<RemoteGDB *>   remoteGDB;
-    std::vector<GDBListener *> gdbListen;
-
-    LinuxSystem(const std::string _name,
-                const uint64_t _init_param,
-                MemoryController *_memCtrl,
-                PhysicalMemory *_physmem,
-                const std::string &kernel_path,
-                const std::string &console_path,
-                const std::string &palcode,
-                const std::string &boot_osflags,
-                const bool _bin,
-                const std::vector<std::string> &_binned_fns);
-
+    LinuxSystem(Params *p);
     ~LinuxSystem();
 
     void setDelayLoop(ExecContext *xc);
-
-    int registerExecContext(ExecContext *xc);
-    void replaceExecContext(ExecContext *xc, int xcIndex);
-
-    /**
-     * Returns the addess the kernel starts at.
-     * @return address the kernel starts at
-     */
-    Addr getKernelStart() const { return kernelStart; }
-
-    /**
-     * Returns the addess the kernel ends at.
-     * @return address the kernel ends at
-     */
-    Addr getKernelEnd() const { return kernelEnd; }
-
-    /**
-     * Returns the addess the entry point to the kernel code.
-     * @return entry point of the kernel code
-     */
-    Addr getKernelEntry() const { return kernelEntry; }
-
-
-    bool breakpoint();
 };
 
-#endif // __LINUX_SYSTEM_HH__
+#endif // __KERN_LINUX_LINUX_SYSTEM_HH__

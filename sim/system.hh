@@ -37,80 +37,112 @@
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
 #include "sim/sim_object.hh"
-#include "sim/sw_context.hh"
 
 class MemoryController;
 class PhysicalMemory;
 class Platform;
 class RemoteGDB;
 class GDBListener;
-
+class ObjectFile;
 class ExecContext;
+namespace Kernel { class Binning; }
 
 class System : public SimObject
 {
-    // lisa's binning stuff
-  private:
-    std::map<const std::string, Stats::MainBin *> fnBins;
-    std::map<const Addr, SWContext *> swCtxMap;
-
-  protected:
-    std::vector<FnEvent *> fnEvents;
-
   public:
-    Stats::Scalar<> fnCalls;
-    Stats::MainBin *Kernel;
-    Stats::MainBin *User;
-
-    Stats::MainBin * getBin(const std::string &name);
-    bool findCaller(std::string, std::string) const;
-
-    SWContext *findContext(Addr pcb);
-    bool addContext(Addr pcb, SWContext *ctx) {
-        return (swCtxMap.insert(make_pair(pcb, ctx))).second;
-    }
-    void remContext(Addr pcb) {
-        swCtxMap.erase(pcb);
-        return;
-    }
-    void dumpState(ExecContext *xc) const;
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-
-  private:
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
-//
-
-  public:
-    const uint64_t init_param;
-    MemoryController *memCtrl;
+    MemoryController *memctrl;
     PhysicalMemory *physmem;
     Platform *platform;
-    bool bin;
-    std::vector<string> binned_fns;
-
     PCEventQueue pcEventQueue;
+    uint64_t init_param;
 
     std::vector<ExecContext *> execContexts;
 
-    std::string readfile;
+    /** kernel Symbol table */
+    SymbolTable *kernelSymtab;
 
-    virtual int registerExecContext(ExecContext *xc);
-    virtual void replaceExecContext(int xcIndex, ExecContext *xc);
+    /** console symbol table */
+    SymbolTable *consoleSymtab;
+
+    /** Object pointer for the kernel code */
+    ObjectFile *kernel;
+
+    /** Object pointer for the console code */
+    ObjectFile *console;
+
+    /** Object pointer for the PAL code */
+    ObjectFile *pal;
+
+    /** Begining of kernel code */
+    Addr kernelStart;
+
+    /** End of kernel code */
+    Addr kernelEnd;
+
+    /** Entry point in the kernel to start at */
+    Addr kernelEntry;
+
+    Kernel::Binning *kernelBinning;
+
+#ifdef DEBUG
+    /** Event to halt the simulator if the console calls panic() */
+    BreakPCEvent *consolePanicEvent;
+#endif
 
   public:
-    System(const std::string _name, const uint64_t _init_param,
-           MemoryController *, PhysicalMemory *, const bool,
-           const std::vector<string> &binned_fns);
+    std::vector<RemoteGDB *> remoteGDB;
+    std::vector<GDBListener *> gdbListen;
+    bool breakpoint();
+
+  public:
+    struct Params
+    {
+        std::string name;
+        MemoryController *memctrl;
+        PhysicalMemory *physmem;
+        uint64_t init_param;
+        bool bin;
+        std::vector<std::string> binned_fns;
+
+        std::string kernel_path;
+        std::string console_path;
+        std::string palcode;
+        std::string boot_osflags;
+
+        std::string readfile;
+        uint64_t system_type;
+        uint64_t system_rev;
+    };
+    Params *params;
+
+    System(Params *p);
     ~System();
 
-    virtual Addr getKernelStart() const = 0;
-    virtual Addr getKernelEnd() const = 0;
-    virtual Addr getKernelEntry() const = 0;
-    virtual bool breakpoint() = 0;
+  public:
+    /**
+     * Returns the addess the kernel starts at.
+     * @return address the kernel starts at
+     */
+    Addr getKernelStart() const { return kernelStart; }
+
+    /**
+     * Returns the addess the kernel ends at.
+     * @return address the kernel ends at
+     */
+    Addr getKernelEnd() const { return kernelEnd; }
+
+    /**
+     * Returns the addess the entry point to the kernel code.
+     * @return entry point of the kernel code
+     */
+    Addr getKernelEntry() const { return kernelEntry; }
+
+    int registerExecContext(ExecContext *xc);
+    void replaceExecContext(ExecContext *xc, int xcIndex);
+
+    void regStats();
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 
   public:
     ////////////////////////////////////////////

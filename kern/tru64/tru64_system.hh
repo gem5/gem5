@@ -26,18 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __TRU64_SYSTEM_HH__
-#define __TRU64_SYSTEM_HH__
-
-#include <map>
-#include <vector>
+#ifndef __KERN_TRU64_TRU64_SYSTEM_HH__
+#define __KERN_TRU64_TRU64_SYSTEM_HH__
 
 #include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
 
 class ExecContext;
-class EcoffObject;
-class SymbolTable;
 
 class BreakPCEvent;
 class BadAddrEvent;
@@ -45,20 +40,16 @@ class SkipFuncEvent;
 class PrintfEvent;
 class DebugPrintfEvent;
 class DumpMbufEvent;
-class FnEvent;
 class AlphaArguments;
 
 class Tru64System : public System
 {
   private:
-    EcoffObject *kernel;
-    EcoffObject *console;
-
-    SymbolTable *kernelSymtab;
-    SymbolTable *consoleSymtab;
-
+#ifdef DEBUG
+    /** Event to halt the simulator if the kernel calls panic()  */
     BreakPCEvent *kernelPanicEvent;
-    BreakPCEvent *consolePanicEvent;
+#endif
+
     BadAddrEvent *badaddrEvent;
     SkipFuncEvent *skipPowerStateEvent;
     SkipFuncEvent *skipScavengeBootEvent;
@@ -67,43 +58,12 @@ class Tru64System : public System
     DebugPrintfEvent *debugPrintfrEvent;
     DumpMbufEvent *dumpMbufEvent;
 
-  private:
-
-    Addr kernelStart;
-    Addr kernelEnd;
-    Addr kernelEntry;
-    bool bin;
-    std::vector<string> binned_fns;
-
   public:
-    std::vector<RemoteGDB *>   remoteGDB;
-    std::vector<GDBListener *> gdbListen;
-
-  public:
-    Tru64System(const std::string _name,
-                const uint64_t _init_param,
-                MemoryController *_memCtrl,
-                PhysicalMemory *_physmem,
-                const std::string &kernel_path,
-                const std::string &console_path,
-                const std::string &palcode,
-                const std::string &boot_osflags,
-                const bool _bin,
-                const std::vector<string> &binned_fns,
-        const uint64_t system_type,
-        const uint64_t system_rev);
+    Tru64System(Params *p);
     ~Tru64System();
-
-    int registerExecContext(ExecContext *xc);
-    void replaceExecContext(ExecContext *xc, int xcIndex);
-
-    Addr getKernelStart() const { return kernelStart; }
-    Addr getKernelEnd() const { return kernelEnd; }
-    Addr getKernelEntry() const { return kernelEntry; }
-    bool breakpoint();
 
     static void Printf(AlphaArguments args);
     static void DumpMbuf(AlphaArguments args);
 };
 
-#endif // __TRU64_SYSTEM_HH__
+#endif // __KERN_TRU64_TRU64_SYSTEM_HH__

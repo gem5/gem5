@@ -44,13 +44,24 @@ class SkipFuncEvent : public PCEvent
 class FnEvent : public PCEvent
 {
   public:
-    FnEvent(PCEventQueue *q, const std::string &desc, System *system);
+    FnEvent(PCEventQueue *q, const std::string &desc, Stats::MainBin *bin);
     virtual void process(ExecContext *xc);
     std::string myname() const { return _name; }
 
   private:
     std::string _name;
-    Stats::MainBin *myBin;
+    Stats::MainBin *mybin;
 };
 
+class IdleStartEvent : public PCEvent
+{
+  private:
+    System *system;
+
+  public:
+    IdleStartEvent(PCEventQueue *q, const std::string &desc, System *sys)
+        : PCEvent(q, desc), system(sys)
+    {}
+    virtual void process(ExecContext *xc);
+};
 #endif // __SYSTEM_EVENTS_HH__

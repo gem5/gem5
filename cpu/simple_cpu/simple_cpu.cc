@@ -733,9 +733,8 @@ SimpleCPU::tick()
         fault = si->execute(this, traceData);
 
 #ifdef FULL_SYSTEM
-        SWContext *ctx = xc->swCtx;
-        if (ctx)
-            ctx->process(xc, si.get());
+        if (xc->fnbin)
+            xc->execute(si.get());
 #endif
 
         if (si->isMemRef()) {

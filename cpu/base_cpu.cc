@@ -185,10 +185,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         newXC->takeOverFrom(oldXC);
         assert(newXC->cpu_id == oldXC->cpu_id);
 #ifdef FULL_SYSTEM
-        system->replaceExecContext(newXC->cpu_id, newXC);
+        system->replaceExecContext(newXC, newXC->cpu_id);
 #else
         assert(newXC->process == oldXC->process);
-        newXC->process->replaceExecContext(newXC->cpu_id, newXC);
+        newXC->process->replaceExecContext(newXC, newXC->cpu_id);
 #endif
     }
 

@@ -157,8 +157,16 @@ namespace Trace {
     extern const std::string DefaultName;
 };
 
-inline const std::string &name() { return Trace::DefaultName; }
+// This silly little class allows us to wrap a string in a functor
+// object so that we can give a name() that DPRINTF will like
+struct StringWrap
+{
+    std::string str;
+    StringWrap(const std::string &s) : str(s) {}
+    const std::string &operator()() const { return str; }
+};
 
+inline const std::string &name() { return Trace::DefaultName; }
 std::ostream &DebugOut();
 
 //

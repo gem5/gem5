@@ -26,7 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
+#include "base/remote_gdb.hh"
 #include "cpu/exec_context.hh"
+#include "kern/kernel_stats.hh"
+#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional_mem/physical_memory.hh"
 #include "targetarch/vtophys.hh"
 #include "sim/param.hh"
 #include "sim/system.hh"
@@ -38,82 +44,160 @@ vector<System *> System::systemList;
 
 int System::numSystemsRunning = 0;
 
-System::System(const std::string _name,
-               const uint64_t _init_param,
-               MemoryController *_memCtrl,
-               PhysicalMemory *_physmem,
-               const bool _bin,
-               const std::vector<string> &binned_fns)
+extern SymbolTable *debugSymbolTable;
 
-    : SimObject(_name),
-      init_param(_init_param),
-      memCtrl(_memCtrl),
-      physmem(_physmem),
-      bin(_bin),
-      binned_fns(binned_fns)
+System::System(Params *p)
+    : SimObject(p->name), memctrl(p->memctrl), physmem(p->physmem),
+      init_param(p->init_param), params(p)
 {
-    // increment the number of running systems
-    numSystemsRunning++;
-
     // add self to global system list
     systemList.push_back(this);
-    if (bin == true) {
-        Kernel = new Stats::MainBin("non TCPIP Kernel stats");
-        Kernel->activate();
-        User = new Stats::MainBin("User stats");
 
-        int end = binned_fns.size();
-        assert(!(end & 1));
+    kernelSymtab = new SymbolTable;
+    consoleSymtab = new SymbolTable;
+    debugSymbolTable = kernelSymtab;
 
-        Stats::MainBin *Bin;
+    /**
+     * Load the kernel, pal, and console code into memory
+     */
+    // Load kernel code
+    kernel = createObjectFile(params->kernel_path);
+    if (kernel == NULL)
+        fatal("Could not load kernel file %s", params->kernel_path);
 
-        fnEvents.resize(end>>1);
+    // Load Console Code
+    console = createObjectFile(params->console_path);
+    if (console == NULL)
+        fatal("Could not load console file %s", params->console_path);
 
-        for (int i = 0; i < end; i +=2) {
-            Bin = new Stats::MainBin(binned_fns[i]);
-            fnBins.insert(make_pair(binned_fns[i], Bin));
+    // Load pal file
+    pal = createObjectFile(params->palcode);
+    if (pal == NULL)
+        fatal("Could not load PALcode file %s", params->palcode);
 
-            fnEvents[(i>>1)] = new FnEvent(&pcEventQueue, binned_fns[i], this);
 
-            if (binned_fns[i+1] == "null")
-                populateMap(binned_fns[i], "");
-            else
-                populateMap(binned_fns[i], binned_fns[i+1]);
-        }
+    // Load program sections into memory
+    pal->loadSections(physmem, true);
+    console->loadSections(physmem, true);
+    kernel->loadSections(physmem, true);
 
-        fnCalls
-            .name(name() + ":fnCalls")
-            .desc("all fn calls being tracked")
-            ;
+    // setup entry points
+    kernelStart = kernel->textBase();
+    kernelEnd = kernel->bssBase() + kernel->bssSize();
+    kernelEntry = kernel->entryPoint();
 
+    // load symbols
+    if (!kernel->loadGlobalSymbols(kernelSymtab))
+        panic("could not load kernel symbols\n");
+        debugSymbolTable = kernelSymtab;
+
+    if (!kernel->loadLocalSymbols(kernelSymtab))
+        panic("could not load kernel local symbols\n");
+
+    if (!console->loadGlobalSymbols(consoleSymtab))
+        panic("could not load console symbols\n");
+
+    DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
+    DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
+    DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
+    DPRINTF(Loader, "Kernel loaded...\n");
+
+    Addr addr = 0;
+#ifdef DEBUG
+    consolePanicEvent = new BreakPCEvent(&pcEventQueue, "console panic");
+    if (consoleSymtab->findAddress("panic", addr))
+        consolePanicEvent->schedule(addr);
+#endif
+
+    /**
+     * Copy the osflags (kernel arguments) into the consoles
+     * memory. (Presently Linux does not use the console service
+     * routine to get these command line arguments, but Tru64 and
+     * others do.)
+     */
+    if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        char *osflags = (char *)physmem->dma_addr(paddr, sizeof(uint32_t));
+
+        if (osflags)
+              strcpy(osflags, params->boot_osflags.c_str());
+    }
+
+    /**
+     * Set the hardware reset parameter block system type and revision
+     * information to Tsunami.
+     */
+    if (consoleSymtab->findAddress("xxm_rpb", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        char *hwrpb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
+
+        if (!hwrpb)
+            panic("could not translate hwrpb addr\n");
+
+        *(uint64_t*)(hwrpb+0x50) = params->system_type;
+        *(uint64_t*)(hwrpb+0x58) = params->system_rev;
     } else
-        Kernel = NULL;
-}
+        panic("could not find hwrpb\n");
 
+    // increment the number of running systms
+    numSystemsRunning++;
+
+    kernelBinning = new Kernel::Binning(this);
+}
 
 System::~System()
 {
-    if (bin == true) {
-        int end = fnEvents.size();
-        for (int i = 0; i < end; ++i) {
-            delete fnEvents[i];
-        }
-        fnEvents.clear();
-    }
+    delete kernelSymtab;
+    delete consoleSymtab;
+    delete kernel;
+    delete console;
+    delete pal;
+
+    delete kernelBinning;
+
+#ifdef DEBUG
+    delete consolePanicEvent;
+#endif
 }
 
+bool
+System::breakpoint()
+{
+    return remoteGDB[0]->trap(ALPHA_KENTRY_INT);
+}
 
 int
 System::registerExecContext(ExecContext *xc)
 {
-    int myIndex = execContexts.size();
+    int xcIndex = execContexts.size();
     execContexts.push_back(xc);
-    return myIndex;
+
+    if (xcIndex == 0) {
+        // activate with zero delay so that we start ticking right
+        // away on cycle 0
+        xc->activate(0);
+    }
+
+    RemoteGDB *rgdb = new RemoteGDB(this, xc);
+    GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
+    gdbl->listen();
+    /**
+     * Uncommenting this line waits for a remote debugger to connect
+     * to the simulator before continuing.
+     */
+    //gdbl->accept();
+
+    if (remoteGDB.size() <= xcIndex) {
+        remoteGDB.resize(xcIndex+1);
+    }
+
+    remoteGDB[xcIndex] = rgdb;
+
+    return xcIndex;
 }
 
-
 void
-System::replaceExecContext(int xcIndex, ExecContext *xc)
+System::replaceExecContext(ExecContext *xc, int xcIndex)
 {
     if (xcIndex >= execContexts.size()) {
         panic("replaceExecContext: bad xcIndex, %d >= %d\n",
@@ -121,8 +205,27 @@ System::replaceExecContext(int xcIndex, ExecContext *xc)
     }
 
     execContexts[xcIndex] = xc;
+    remoteGDB[xcIndex]->replaceExecContext(xc);
 }
 
+void
+System::regStats()
+{
+    kernelBinning->regStats(name() + ".kern");
+}
+
+void
+System::serialize(ostream &os)
+{
+    kernelBinning->serialize(os);
+}
+
+
+void
+System::unserialize(Checkpoint *cp, const string &section)
+{
+    kernelBinning->unserialize(cp, section);
+}
 
 void
 System::printSystems()
@@ -140,135 +243,6 @@ void
 printSystems()
 {
     System::printSystems();
-}
-
-void
-System::populateMap(std::string callee, std::string caller)
-{
-    multimap<const string, string>::const_iterator i;
-    i = callerMap.insert(make_pair(callee, caller));
-    assert(i != callerMap.end() && "should not fail populating callerMap");
-}
-
-bool
-System::findCaller(std::string callee, std::string caller) const
-{
-    typedef multimap<const std::string, std::string>::const_iterator iter;
-    pair<iter, iter> range;
-
-    range = callerMap.equal_range(callee);
-    for (iter i = range.first; i != range.second; ++i) {
-        if ((*i).second == caller)
-            return true;
-    }
-    return false;
-}
-
-void
-System::dumpState(ExecContext *xc) const
-{
-    if (xc->swCtx) {
-        stack<fnCall *> copy(xc->swCtx->callStack);
-        if (copy.empty())
-            return;
-        DPRINTF(TCPIP, "xc->swCtx, size: %d:\n", copy.size());
-        fnCall *top;
-        DPRINTF(TCPIP, "||     call : %d\n",xc->swCtx->calls);
-        for (top = copy.top(); !copy.empty(); copy.pop() ) {
-            top = copy.top();
-            DPRINTF(TCPIP, "||  %13s : %s \n", top->name, top->myBin->name());
-        }
-    }
-}
-
-Stats::MainBin *
-System::getBin(const std::string &name)
-{
-    std::map<const std::string, Stats::MainBin *>::const_iterator i;
-    i = fnBins.find(name);
-    if (i == fnBins.end())
-        panic("trying to getBin %s that is not on system map!", name);
-    return (*i).second;
-}
-
-SWContext *
-System::findContext(Addr pcb)
-{
-  std::map<Addr, SWContext *>::const_iterator iter;
-  iter = swCtxMap.find(pcb);
-  if (iter != swCtxMap.end()) {
-      SWContext *ctx = (*iter).second;
-      assert(ctx != NULL && "should never have a null ctx in ctxMap");
-      return ctx;
-  } else
-      return NULL;
-}
-
-void
-System::serialize(std::ostream &os)
-{
-    if (bin == true) {
-        map<const Addr, SWContext *>::const_iterator iter, end;
-        iter = swCtxMap.begin();
-        end = swCtxMap.end();
-
-        int numCtxs = swCtxMap.size();
-        SERIALIZE_SCALAR(numCtxs);
-        SWContext *ctx;
-        for (int i = 0; iter != end; ++i, ++iter) {
-            paramOut(os, csprintf("Addr[%d]",i), (*iter).first);
-            ctx = (*iter).second;
-            paramOut(os, csprintf("calls[%d]",i), ctx->calls);
-
-            stack<fnCall *> *stack = &(ctx->callStack);
-            fnCall *top;
-            int size = stack->size();
-            paramOut(os, csprintf("stacksize[%d]",i), size);
-            for (int j=0; j<size; ++j) {
-                top = stack->top();
-                paramOut(os, csprintf("ctx[%d].stackpos[%d]",i,j),
-                         top->name);
-                delete top;
-                stack->pop();
-            }
-        }
-    }
-}
-
-void
-System::unserialize(Checkpoint *cp, const std::string &section)
-{
-    if (bin == true) {
-        int numCtxs;
-        UNSERIALIZE_SCALAR(numCtxs);
-
-        SWContext *ctx;
-        Addr addr;
-        int size;
-        for(int i = 0; i < numCtxs; ++i) {
-            ctx = new SWContext;
-            paramIn(cp, section, csprintf("Addr[%d]",i), addr);
-            paramIn(cp, section, csprintf("calls[%d]",i), ctx->calls);
-
-            paramIn(cp, section, csprintf("stacksize[%d]",i), size);
-
-            vector<fnCall *> calls;
-            fnCall *call;
-            for (int j = 0; j < size; ++j) {
-                call = new fnCall;
-                paramIn(cp, section, csprintf("ctx[%d].stackpos[%d]",i,j),
-                        call->name);
-                call->myBin = getBin(call->name);
-                calls.push_back(call);
-            }
-
-            for (int j=size-1; j>=0; --j) {
-                ctx->callStack.push(calls[j]);
-            }
-
-            addContext(addr, ctx);
-        }
-    }
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("System", System)

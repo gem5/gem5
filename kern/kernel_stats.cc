@@ -30,134 +30,82 @@
 #include <stack>
 #include <string>
 
-#include "base/statistics.hh"
+#include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"
+#include "base/statistics.hh"
+#include "base/stats/bin.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/pc_event.hh"
+#include "cpu/static_inst.hh"
 #include "kern/kernel_stats.hh"
-#include "sim/stats.hh"
-#include "sim/sw_context.hh"
-#include "targetarch/isa_traits.hh"
-#include "targetarch/osfpal.hh"
-#include "targetarch/syscalls.hh"
+#include "kern/linux/linux_syscalls.hh"
 
 using namespace std;
 using namespace Stats;
 
-class KSData
+namespace Kernel {
+
+const char *modestr[] = { "kernel", "user", "idle" };
+
+Statistics::Statistics(ExecContext *context)
+    : xc(context), idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
+      iplLast(0), iplLastTick(0)
 {
-  private:
-    string _name;
-    ExecContext *xc;
-    BaseCPU *cpu;
-
-  public:
-    KSData(ExecContext *_xc, BaseCPU *_cpu)
-        : xc(_xc), cpu(_cpu), iplLast(0), iplLastTick(0), lastUser(false),
-          lastModeTick(0)
-    {}
-
-    const string &name() { return _name; }
-    void regStats(const string &name);
-
-  public:
-    Scalar<> _arm;
-    Scalar<> _quiesce;
-    Scalar<> _ivlb;
-    Scalar<> _ivle;
-    Scalar<> _hwrei;
-
-    Vector<> _iplCount;
-    Vector<> _iplGood;
-    Vector<> _iplTicks;
-    Formula _iplUsed;
-
-    Vector<> _callpal;
-    Vector<> _syscall;
-    Vector<> _faults;
-
-    Vector<> _mode;
-    Vector<> _modeGood;
-    Formula _modeFraction;
-    Vector<> _modeTicks;
-
-    Scalar<> _swap_context;
-
-  private:
-    int iplLast;
-    Tick iplLastTick;
-
-    bool lastUser;
-    Tick lastModeTick;
-
-  public:
-    void swpipl(int ipl);
-    void mode(bool user);
-    void callpal(int code);
-};
-
-KernelStats::KernelStats(ExecContext *xc, BaseCPU *cpu)
-{ data = new KSData(xc, cpu); }
-
-KernelStats::~KernelStats()
-{ delete data; }
+}
 
 void
-KernelStats::regStats(const string &name)
-{ data->regStats(name); }
-
-void
-KSData::regStats(const string &name)
+Statistics::regStats(const string &_name)
 {
-    _name = name;
+    myname = _name;
 
     _arm
-        .name(name + ".inst.arm")
+        .name(name() + ".inst.arm")
         .desc("number of arm instructions executed")
         ;
 
     _quiesce
-        .name(name + ".inst.quiesce")
+        .name(name() + ".inst.quiesce")
         .desc("number of quiesce instructions executed")
         ;
 
     _ivlb
-        .name(name + ".inst.ivlb")
+        .name(name() + ".inst.ivlb")
         .desc("number of ivlb instructions executed")
         ;
 
     _ivle
-        .name(name + ".inst.ivle")
+        .name(name() + ".inst.ivle")
         .desc("number of ivle instructions executed")
         ;
 
     _hwrei
-        .name(name + ".inst.hwrei")
+        .name(name() + ".inst.hwrei")
         .desc("number of hwrei instructions executed")
         ;
 
     _iplCount
         .init(32)
-        .name(name + ".ipl_count")
+        .name(name() + ".ipl_count")
         .desc("number of times we switched to this ipl")
         .flags(total | pdf | nozero | nonan)
         ;
 
     _iplGood
         .init(32)
-        .name(name + ".ipl_good")
+        .name(name() + ".ipl_good")
         .desc("number of times we switched to this ipl from a different ipl")
         .flags(total | pdf | nozero | nonan)
         ;
 
     _iplTicks
         .init(32)
-        .name(name + ".ipl_ticks")
+        .name(name() + ".ipl_ticks")
         .desc("number of cycles we spent at this ipl")
         .flags(total | pdf | nozero | nonan)
         ;
 
     _iplUsed
-        .name(name + ".ipl_used")
+        .name(name() + ".ipl_used")
         .desc("fraction of swpipl calls that actually changed the ipl")
         .flags(total | nozero | nonan)
         ;
@@ -166,7 +114,7 @@ KSData::regStats(const string &name)
 
     _callpal
         .init(256)
-        .name(name + ".callpal")
+        .name(name() + ".callpal")
         .desc("number of callpals executed")
         .flags(total | pdf | nozero | nonan)
         ;
@@ -179,7 +127,7 @@ KSData::regStats(const string &name)
 
     _syscall
         .init(SystemCalls<Tru64>::Number)
-        .name(name + ".syscall")
+        .name(name() + ".syscall")
         .desc("number of syscalls executed")
         .flags(total | pdf | nozero | nonan)
         ;
@@ -193,7 +141,7 @@ KSData::regStats(const string &name)
 
     _faults
         .init(Num_Faults)
-        .name(name + ".faults")
+        .name(name() + ".faults")
         .desc("number of faults")
         .flags(total | pdf | nozero | nonan)
         ;
@@ -205,85 +153,79 @@ KSData::regStats(const string &name)
     }
 
     _mode
-        .init(2)
-        .name(name + ".mode_switch")
-        .subname(0, "kernel")
-        .subname(1, "user")
+        .init(3)
+        .name(name() + ".mode_switch")
         .desc("number of protection mode switches")
         ;
 
+    for (int i = 0; i < 3; ++i)
+        _mode.subname(i, modestr[i]);
+
     _modeGood
-        .init(2)
-        .name(name + ".mode_good")
+        .init(3)
+        .name(name() + ".mode_good")
         ;
 
+    for (int i = 0; i < 3; ++i)
+        _modeGood.subname(i, modestr[i]);
+
     _modeFraction
-        .name(name + ".mode_switch_good")
-        .subname(0, "kernel")
-        .subname(1, "user")
+        .name(name() + ".mode_switch_good")
         .desc("fraction of useful protection mode switches")
         .flags(total)
         ;
+
+    for (int i = 0; i < 3; ++i)
+        _modeFraction.subname(i, modestr[i]);
+
     _modeFraction = _modeGood / _mode;
 
     _modeTicks
-        .init(2)
-        .name(name + ".mode_ticks")
-        .subname(0, "kernel")
-        .subname(1, "user")
+        .init(3)
+        .name(name() + ".mode_ticks")
         .desc("number of ticks spent at the given mode")
         .flags(pdf)
         ;
+    for (int i = 0; i < 3; ++i)
+        _modeTicks.subname(i, modestr[i]);
 
     _swap_context
-        .name(name + ".swap_context")
+        .name(name() + ".swap_context")
         .desc("number of times the context was actually changed")
         ;
 }
 
 void
-KernelStats::arm()
-{ data->_arm++; }
+Statistics::setIdleProcess(Addr idlepcbb)
+{
+    assert(themode == kernel);
+    idleProcess = idlepcbb;
+    themode = idle;
+    changeMode(themode);
+}
 
 void
-KernelStats::quiesce()
-{ data->_quiesce++; }
+Statistics::changeMode(cpu_mode newmode)
+{
+    _mode[newmode]++;
+
+    if (newmode == themode)
+        return;
+
+    DPRINTF(Context, "old mode=%-8s new mode=%-8s\n",
+            modestr[themode], modestr[newmode]);
+
+    _modeGood[newmode]++;
+    _modeTicks[themode] += curTick - lastModeTick;
+
+    xc->system->kernelBinning->changeMode(newmode);
+
+    lastModeTick = curTick;
+    themode = newmode;
+}
 
 void
-KernelStats::ivlb()
-{ data->_ivlb++; }
-
-void
-KernelStats::ivle()
-{ data->_ivle++; }
-
-void
-KernelStats::hwrei()
-{ data->_hwrei++; }
-
-void
-KernelStats::fault(Fault fault)
-{ data->_faults[fault]++; }
-
-void
-KernelStats::swpipl(int ipl)
-{ data->swpipl(ipl); }
-
-void
-KernelStats::mode(bool user)
-{ data->mode(user); }
-
-void
-KernelStats::context(Addr old_pcbb, Addr new_pcbb)
-{ data->_swap_context++; }
-
-void
-KernelStats::callpal(int code)
-{ data->callpal(code); }
-
-
-void
-KSData::swpipl(int ipl)
+Statistics::swpipl(int ipl)
 {
     assert(ipl >= 0 && ipl <= 0x1f && "invalid IPL\n");
 
@@ -299,30 +241,28 @@ KSData::swpipl(int ipl)
 }
 
 void
-KSData::mode(bool user)
+Statistics::mode(bool usermode)
 {
-    _mode[user]++;
-    if (user == lastUser)
-        return;
+    Addr pcbb = xc->regs.ipr[AlphaISA::IPR_PALtemp23];
 
-    _modeGood[user]++;
-    _modeTicks[lastUser] += curTick - lastModeTick;
+    cpu_mode newmode = usermode ? user : kernel;
+    if (newmode == kernel && pcbb == idleProcess)
+        newmode = idle;
 
-    lastModeTick = curTick;
-    lastUser = user;
-
-    if (xc->system->bin) {
-        if (!xc->swCtx || xc->swCtx->callStack.empty()) {
-            if (user)
-                xc->system->User->activate();
-            else
-                xc->system->Kernel->activate();
-        }
-    }
+    changeMode(newmode);
 }
 
 void
-KSData::callpal(int code)
+Statistics::context(Addr oldpcbb, Addr newpcbb)
+{
+    assert(themode != user);
+
+    _swap_context++;
+    changeMode(newpcbb == idleProcess ? idle : kernel);
+}
+
+void
+Statistics::callpal(int code)
 {
     if (!PAL::name(code))
         return;
@@ -330,63 +270,34 @@ KSData::callpal(int code)
     _callpal[code]++;
 
     switch (code) {
-      case PAL::callsys:
-        {
-            int number = xc->regs.intRegFile[0];
-            if (SystemCalls<Tru64>::validSyscallNumber(number)) {
-                int cvtnum = SystemCalls<Tru64>::convert(number);
-                _syscall[cvtnum]++;
-            }
-        }
+      case PAL::callsys: {
+          int number = xc->regs.intRegFile[0];
+          if (SystemCalls<Tru64>::validSyscallNumber(number)) {
+              int cvtnum = SystemCalls<Tru64>::convert(number);
+              _syscall[cvtnum]++;
+          }
+      } break;
+
+      case PAL::swpctx:
+        if (xc->system->kernelBinning)
+            xc->system->kernelBinning->palSwapContext(xc);
         break;
     }
-
-    if (code == PAL::swpctx) {
-        SWContext *out = xc->swCtx;
-        System *sys = xc->system;
-        if (!sys->bin)
-            return;
-        DPRINTF(TCPIP, "swpctx event\n");
-        if (out) {
-            DPRINTF(TCPIP, "swapping context out with this stack!\n");
-            xc->system->dumpState(xc);
-            Addr oldPCB = xc->regs.ipr[TheISA::IPR_PALtemp23];
-
-            if (out->callStack.empty()) {
-                DPRINTF(TCPIP, "but removing it, cuz empty!\n");
-                SWContext *find = sys->findContext(oldPCB);
-                if (find) {
-                    assert(sys->findContext(oldPCB) == out);
-                    sys->remContext(oldPCB);
-                }
-                delete out;
-            } else {
-                DPRINTF(TCPIP, "switching out context with pcb %#x, top fn %s\n",
-                        oldPCB, out->callStack.top()->name);
-                if (!sys->findContext(oldPCB)) {
-                    if (!sys->addContext(oldPCB, out))
-                        panic("could not add context");
-                }
-            }
-        }
-
-        Addr newPCB = xc->regs.intRegFile[16];
-        SWContext *in = sys->findContext(newPCB);
-        xc->swCtx = in;
-
-        if (in) {
-            assert(!in->callStack.empty() &&
-                   "should not be switching in empty context");
-            DPRINTF(TCPIP, "swapping context in with this callstack!\n");
-            xc->system->dumpState(xc);
-            sys->remContext(newPCB);
-            fnCall *top = in->callStack.top();
-            DPRINTF(TCPIP, "switching in to pcb %#x, %s\n", newPCB, top->name);
-            assert(top->myBin && "should not switch to context with no Bin");
-            top->myBin->activate();
-        } else {
-            sys->Kernel->activate();
-        }
-        DPRINTF(TCPIP, "end swpctx\n");
-    }
 }
+
+void
+Statistics::serialize(ostream &os)
+{
+    int exemode = themode;
+    SERIALIZE_SCALAR(exemode);
+}
+
+void
+Statistics::unserialize(Checkpoint *cp, const string &section)
+{
+    int exemode;
+    UNSERIALIZE_SCALAR(exemode);
+    themode = (cpu_mode)exemode;
+}
+
+/* end namespace Kernel */ }

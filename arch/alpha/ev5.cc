@@ -9,6 +9,7 @@
 #include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/fast_cpu/fast_cpu.hh"
+#include "kern/kernel_stats.hh"
 #include "sim/debug.hh"
 #include "sim/sim_events.hh"
 
@@ -167,7 +168,7 @@ ExecContext::ev5_trap(Fault fault)
     cpu->recordEvent(csprintf("Fault %s", FaultName(fault)));
 
     assert(!misspeculating());
-    kernelStats.fault(fault);
+    kernelStats->fault(fault);
 
     if (fault == Arithmetic_Fault)
         panic("Arithmetic traps are unimplemented!");
@@ -232,7 +233,7 @@ ExecContext::hwrei()
     setNextPC(ipr[AlphaISA::IPR_EXC_ADDR]);
 
     if (!misspeculating()) {
-        kernelStats.hwrei();
+        kernelStats->hwrei();
 
         if ((ipr[AlphaISA::IPR_EXC_ADDR] & 1) == 0)
             AlphaISA::swap_palshadow(&regs, false);
@@ -415,7 +416,7 @@ ExecContext::setIpr(int idx, uint64_t val)
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
-        kernelStats.context(old, val);
+        kernelStats->context(old, val);
         break;
 
       case AlphaISA::IPR_DTB_PTE:
@@ -442,11 +443,11 @@ ExecContext::setIpr(int idx, uint64_t val)
 
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-        kernelStats.swpipl(ipr[idx]);
+        kernelStats->swpipl(ipr[idx]);
         break;
 
       case AlphaISA::IPR_DTB_CM:
-        kernelStats.mode((val & 0x18) != 0);
+        kernelStats->mode((val & 0x18) != 0);
 
       case AlphaISA::IPR_ICM:
         // only write two mode bits - processor mode
@@ -622,7 +623,7 @@ ExecContext::setIpr(int idx, uint64_t val)
 bool
 ExecContext::simPalCheck(int palFunc)
 {
-    kernelStats.callpal(palFunc);
+    kernelStats->callpal(palFunc);
 
     switch (palFunc) {
       case PAL::halt:

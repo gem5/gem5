@@ -29,35 +29,165 @@
 #ifndef __KERNEL_STATS_HH__
 #define __KERNEL_STATS_HH__
 
+#include <map>
+#include <stack>
 #include <string>
+#include <vector>
 
-class KSData;
-class ExecContext;
+#include "base/statistics.hh"
+#include "sim/serialize.hh"
+#include "targetarch/isa_traits.hh"
+
 class BaseCPU;
+class ExecContext;
+class FnEvent;
 enum Fault;
 
-class KernelStats
+namespace Kernel {
+
+enum cpu_mode { kernel, user, idle, cpu_mode_num };
+extern const char *modestr[];
+
+class Binning
 {
   private:
-    KSData *data;
+    std::string myname;
+    System *system;
+
+  private:
+    // lisa's binning stuff
+    struct fnCall
+    {
+        Stats::MainBin *myBin;
+        std::string name;
+    };
+
+    struct SWContext
+    {
+        Counter calls;
+        std::stack<fnCall *> callStack;
+    };
+
+    std::map<const std::string, Stats::MainBin *> fnBins;
+    std::map<const Addr, SWContext *> swCtxMap;
+
+    std::multimap<const std::string, std::string> callerMap;
+    void populateMap(std::string caller, std::string callee);
+
+    std::vector<FnEvent *> fnEvents;
+
+    Stats::Scalar<> fnCalls;
+
+    Stats::MainBin *getBin(const std::string &name);
+    bool findCaller(std::string, std::string) const;
+
+    SWContext *findContext(Addr pcb);
+    bool addContext(Addr pcb, SWContext *ctx)
+    {
+        return (swCtxMap.insert(std::make_pair(pcb, ctx))).second;
+    }
+
+    void remContext(Addr pcb)
+    {
+        swCtxMap.erase(pcb);
+    }
+
+    void dumpState() const;
+
+    SWContext *swctx;
+    std::vector<std::string> binned_fns;
+
+  private:
+    Stats::MainBin *modeBin[3];
 
   public:
-    KernelStats(ExecContext *_xc, BaseCPU *_cpu);
-    ~KernelStats();
+    const bool bin;
+    const bool fnbin;
 
+    cpu_mode themode;
+    void palSwapContext(ExecContext *xc);
+    void execute(ExecContext *xc, const StaticInstBase *inst);
+    void call(ExecContext *xc, Stats::MainBin *myBin);
+    void changeMode(cpu_mode mode);
+
+  public:
+    Binning(System *sys);
+    virtual ~Binning();
+
+    const std::string name() const { return myname; }
     void regStats(const std::string &name);
 
-    void arm();
-    void quiesce();
-    void ivlb();
-    void ivle();
-    void hwrei();
-
-    void fault(Fault fault);
-    void swpipl(int ipl);
-    void mode(bool user);
-    void context(Addr old_pcbb, Addr new_pcbb);
-    void callpal(int code);
+  public:
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
+
+class Statistics : public Serializable
+{
+    friend class Binning;
+
+  private:
+    std::string myname;
+    ExecContext *xc;
+
+    Addr idleProcess;
+    cpu_mode themode;
+    Tick lastModeTick;
+
+    void changeMode(cpu_mode newmode);
+
+  private:
+    Stats::Scalar<> _arm;
+    Stats::Scalar<> _quiesce;
+    Stats::Scalar<> _ivlb;
+    Stats::Scalar<> _ivle;
+    Stats::Scalar<> _hwrei;
+
+    Stats::Vector<> _iplCount;
+    Stats::Vector<> _iplGood;
+    Stats::Vector<> _iplTicks;
+    Stats::Formula _iplUsed;
+
+    Stats::Vector<> _callpal;
+    Stats::Vector<> _syscall;
+    Stats::Vector<> _faults;
+
+    Stats::Vector<> _mode;
+    Stats::Vector<> _modeGood;
+    Stats::Formula _modeFraction;
+    Stats::Vector<> _modeTicks;
+
+    Stats::Scalar<> _swap_context;
+
+  private:
+    int iplLast;
+    Tick iplLastTick;
+
+  public:
+    Statistics(ExecContext *context);
+
+    const std::string name() const { return myname; }
+    void regStats(const std::string &name);
+
+  public:
+    void arm() { _arm++; }
+    void quiesce() { _quiesce++; }
+    void ivlb() { _ivlb++; }
+    void ivle() { _ivle++; }
+    void hwrei() { _hwrei++; }
+    void fault(Fault fault) { _faults[fault]++; }
+    void swpipl(int ipl);
+    void mode(bool usermode);
+    void context(Addr oldpcbb, Addr newpcbb);
+    void callpal(int code);
+
+    void setIdleProcess(Addr idle);
+
+  public:
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+/* end namespace Kernel */ }
 
 #endif // __KERNEL_STATS_HH__

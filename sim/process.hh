@@ -130,7 +130,7 @@ class Process : public SimObject
     int registerExecContext(ExecContext *xc);
 
 
-    void replaceExecContext(int xcIndex, ExecContext *xc);
+    void replaceExecContext(ExecContext *xc, int xcIndex);
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);

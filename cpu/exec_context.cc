@@ -32,6 +32,9 @@
 #include "cpu/exec_context.hh"
 
 #ifdef FULL_SYSTEM
+#include "base/cprintf.hh"
+#include "kern/kernel_stats.hh"
+#include "sim/serialize.hh"
 #include "sim/system.hh"
 #else
 #include "sim/process.hh"
@@ -44,12 +47,13 @@ using namespace std;
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaITB *_itb, AlphaDTB *_dtb,
                          FunctionalMemory *_mem)
-    : _status(ExecContext::Unallocated),
-      kernelStats(this, _cpu), cpu(_cpu), thread_num(_thread_num),
+    : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
-      memCtrl(_sys->memCtrl), physmem(_sys->physmem),
-      swCtx(NULL), func_exe_inst(0), storeCondFailures(0)
+      memctrl(_sys->memctrl), physmem(_sys->physmem),
+      kernelBinning(system->kernelBinning), bin(kernelBinning->bin),
+      fnbin(kernelBinning->fnbin), func_exe_inst(0), storeCondFailures(0)
 {
+    kernelStats = new Kernel::Statistics(this);
     memset(&regs, 0, sizeof(RegFile));
 }
 #else
@@ -72,6 +76,13 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
 }
 #endif
 
+ExecContext::~ExecContext()
+{
+#ifdef FULL_SYSTEM
+    delete kernelStats;
+#endif
+}
+
 
 void
 ExecContext::takeOverFrom(ExecContext *oldContext)
@@ -86,9 +97,6 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 
     // copy over functional state
     _status = oldContext->_status;
-#ifdef FULL_SYSTEM
-    kernelStats = oldContext->kernelStats;
-#endif
     regs = oldContext->regs;
     cpu_id = oldContext->cpu_id;
     func_exe_inst = oldContext->func_exe_inst;
@@ -98,6 +106,14 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
     oldContext->_status = ExecContext::Unallocated;
 }
 
+#ifdef FULL_SYSTEM
+void
+ExecContext::execute(const StaticInstBase *inst)
+{
+    assert(kernelStats);
+    system->kernelBinning->execute(this, inst);
+}
+#endif
 
 void
 ExecContext::serialize(ostream &os)
@@ -109,31 +125,8 @@ ExecContext::serialize(ostream &os)
     SERIALIZE_SCALAR(inst);
 
 #ifdef FULL_SYSTEM
-    bool ctx = false;
-    if (swCtx) {
-        ctx = true;
-        SERIALIZE_SCALAR(ctx);
-        SERIALIZE_SCALAR(swCtx->calls);
-        std::stack<fnCall *> *stack = &(swCtx->callStack);
-        fnCall *top;
-        int size = stack->size();
-        SERIALIZE_SCALAR(size);
-
-        for (int j=0; j<size; ++j) {
-            top = stack->top();
-            paramOut(os, csprintf("stackpos[%d]",j), top->name);
-            delete top;
-            stack->pop();
-        }
-    } else {
-        SERIALIZE_SCALAR(ctx);
-    }
-    if (system->bin) {
-        Stats::MainBin *cur = Stats::MainBin::curBin();
-        string bin_name = cur->name();
-        SERIALIZE_SCALAR(bin_name);
-    }
-#endif //FULL_SYSTEM
+    kernelStats->serialize(os);
+#endif
 }
 
 
@@ -147,35 +140,8 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(inst);
 
 #ifdef FULL_SYSTEM
-    bool ctx;
-    UNSERIALIZE_SCALAR(ctx);
-    if (ctx) {
-        swCtx = new SWContext;
-        UNSERIALIZE_SCALAR(swCtx->calls);
-        int size;
-        UNSERIALIZE_SCALAR(size);
-
-        vector<fnCall *> calls;
-        fnCall *call;
-        for (int i=0; i<size; ++i) {
-            call = new fnCall;
-            paramIn(cp, section, csprintf("stackpos[%d]",i), call->name);
-            call->myBin = system->getBin(call->name);
-            calls.push_back(call);
-        }
-
-        for (int i=size-1; i>=0; --i) {
-            swCtx->callStack.push(calls[i]);
-        }
-
-    }
-
-    if (system->bin) {
-        string bin_name;
-        UNSERIALIZE_SCALAR(bin_name);
-        system->getBin(bin_name)->activate();
-    }
-#endif //FULL_SYSTEM
+    kernelStats->unserialize(cp, section);
+#endif
 }
 
 
@@ -232,7 +198,7 @@ void
 ExecContext::regStats(const string &name)
 {
 #ifdef FULL_SYSTEM
-    kernelStats.regStats(name + ".kern");
+    kernelStats->regStats(name + ".kern");
 #endif
 }
 
