@@ -183,8 +183,10 @@ EmbedMap %(name)s("%(fname)s",
 /* namespace */ }
 '''
 
-embedded_py_files = [ 'mpy_importer.py', '../util/pbs/jobfile.py' ]
-objpath = os.path.join(env['SRCDIR'], 'python/m5')
+# base list of .py files to embed
+embedded_py_files = [ '../util/pbs/jobfile.py' ]
+# add all .py and .mpy files in python/m5 
+objpath = os.path.join(env['SRCDIR'], 'python', 'm5')
 for root, dirs, files in os.walk(objpath, topdown=True):
     for i,dir in enumerate(dirs):
         if dir == 'SCCS':
