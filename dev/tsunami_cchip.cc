@@ -134,6 +134,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
             req->vaddr, req->size);
 
     Addr daddr = (req->paddr - (addr & PA_IMPL_MASK)) >> 6;
+    uint64_t olddim;
 
     switch (req->size) {
 
@@ -161,47 +162,47 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                   panic("TSDEV_CC_AARx write not implemeted\n");
                   return No_Fault;
               case TSDEV_CC_DIM0:
-                   dim[0] = *(uint64_t*)data;
-                   if (dim[0] & drir) {
-                       dir[0] = dim[0] & drir;
-                       if (!dirInterrupting[0]) {
-                           dirInterrupting[0] = true;
-                           tsunami->intrctrl->post(0, TheISA::INTLEVEL_IRQ1, 0);
-                           DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
-                       }
-                   }
-                  return No_Fault;
               case TSDEV_CC_DIM1:
-                  dim[1] = *(uint64_t*)data;
-                  if (dim[1] & drir) {
-                       dir[1] = dim[1] & drir;
-                       if (!dirInterrupting[1]) {
-                           dirInterrupting[1] = true;
-                           tsunami->intrctrl->post(1, TheISA::INTLEVEL_IRQ1, 0);
-                           DPRINTF(Tsunami, "posting dir interrupt to cpu 1\n");
-                       }
-                  }
-                  return No_Fault;
               case TSDEV_CC_DIM2:
-                  dim[2] = *(uint64_t*)data;
-                  if (dim[2] & drir) {
-                       dir[2] = dim[2] & drir;
-                       if (!dirInterrupting[2]) {
-                           dirInterrupting[2] = true;
-                           tsunami->intrctrl->post(2, TheISA::INTLEVEL_IRQ1, 0);
-                           DPRINTF(Tsunami, "posting dir interrupt to cpu 2\n");
-                       }
-                  }
-                  return No_Fault;
               case TSDEV_CC_DIM3:
-                  dim[3] = *(uint64_t*)data;
-                  if ((dim[3] & drir) /*And Not Already Int*/) {
-                       dir[3] = dim[3] & drir;
-                       if (!dirInterrupting[3]) {
-                           dirInterrupting[3] = true;
-                           tsunami->intrctrl->post(3, TheISA::INTLEVEL_IRQ1, 0);
-                           DPRINTF(Tsunami, "posting dir interrupt to cpu 3\n");
-                       }
+                  int number;
+                  if(daddr == TSDEV_CC_DIM0)
+                      number = 0;
+                  else if(daddr == TSDEV_CC_DIM1)
+                      number = 1;
+                  else if(daddr == TSDEV_CC_DIM2)
+                      number = 2;
+                  else
+                      number = 3;
+
+                  olddim = dim[number];
+                  dim[number] = *(uint64_t*)data;
+                  dir[number] = dim[number] & drir;
+                  uint64_t bitvector;
+                  for(int x = 0; x < 64; x++)
+                  {
+                      bitvector = 1 << x;
+                      // Figure out which bits have changed
+                      if ((dim[number] & bitvector) != (olddim & bitvector))
+                      {
+                          // The bit is now set and it wasn't before (set)
+                          if((dim[number] & bitvector) && (dir[number] & bitvector))
+                          {
+                              tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
+                              DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
+                          }
+                          else if (!(dir[number] & bitvector))
+                          {
+                              // The bit was set and now its now clear and
+                              // we were interrupting on that bit before
+                              tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
+                              DPRINTF(Tsunami, "dim write resulting in clear"
+                                      "dir interrupt to cpu 0\n");
+
+                          }
+
+
+                      }
                   }
                   return No_Fault;
               case TSDEV_CC_DIR0:
@@ -209,25 +210,20 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
               case TSDEV_CC_DIR2:
               case TSDEV_CC_DIR3:
                   panic("TSDEV_CC_DIR write not implemented\n");
-                  return No_Fault;
               case TSDEV_CC_DRIR:
                   panic("TSDEV_CC_DRIR write not implemented\n");
-                  return No_Fault;
               case TSDEV_CC_PRBEN:
                   panic("TSDEV_CC_PRBEN write not implemented\n");
-                  return No_Fault;
               case TSDEV_CC_IIC0:
               case TSDEV_CC_IIC1:
               case TSDEV_CC_IIC2:
               case TSDEV_CC_IIC3:
                   panic("TSDEV_CC_IICx write not implemented\n");
-                  return No_Fault;
               case TSDEV_CC_MPR0:
               case TSDEV_CC_MPR1:
               case TSDEV_CC_MPR2:
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx write not implemented\n");
-                  return No_Fault;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
           }
@@ -246,34 +242,39 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 }
 
 void
-TsunamiCChip::postDRIR(uint64_t bitvector)
+TsunamiCChip::postDRIR(uint32_t interrupt)
 {
+    uint64_t bitvector = 0x1 << interrupt;
     drir |= bitvector;
     for(int i=0; i < Tsunami::Max_CPUs; i++) {
-        if (bitvector & dim[i]) {
-            dir[i] |= bitvector;
-            if (!dirInterrupting[i]) {
-                dirInterrupting[i] = true;
-                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, 0);
-                DPRINTF(Tsunami, "posting dir interrupt to cpu %d\n",i);
-            }
+        dir[i] = dim[i] & drir;
+        if (dim[i] & bitvector) {
+                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
+                DPRINTF(Tsunami, "posting dir interrupt to cpu %d,"
+                        "interrupt %d\n",i, interrupt);
         }
     }
 }
 
 void
-TsunamiCChip::clearDRIR(uint64_t bitvector)
+TsunamiCChip::clearDRIR(uint32_t interrupt)
 {
-    drir &= ~bitvector;
-    for(int i=0; i < Tsunami::Max_CPUs; i++) {
-        dir[i] &= ~bitvector;
-        if (!dir[i]) {
-            dirInterrupting[i] = false;
-            tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, 0);
-            DPRINTF(Tsunami, "clearing dir interrupt to cpu %d\n", i);
+    uint64_t bitvector = 0x1 << interrupt;
+    if (drir & bitvector)
+    {
+        drir &= ~bitvector;
+        for(int i=0; i < Tsunami::Max_CPUs; i++) {
+            if (dir[i] & bitvector) {
+                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
+                DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"
+                    "interrupt %d\n",i, interrupt);
 
+            }
+            dir[i] = dim[i] & drir;
         }
     }
+    else
+        DPRINTF(Tsunami, "Spurrious clear? interrupt %d\n", interrupt);
 }
 
 void
