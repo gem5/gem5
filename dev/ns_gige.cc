@@ -96,17 +96,19 @@ uint32_t reverseEnd32(uint32_t);
 // NSGigE PCI Device
 //
 NSGigE::NSGigE(const std::string &name, IntrControl *i, Tick intr_delay,
-             PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
-             MemoryController *mmu, HierParams *hier, Bus *header_bus,
-             Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
-             bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
-             Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
-             PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
-             uint32_t func, bool rx_filter, const int eaddr[6])
+               PhysicalMemory *pmem, Tick tx_delay, Tick rx_delay,
+               MemoryController *mmu, HierParams *hier, Bus *header_bus,
+               Bus *payload_bus, Tick pio_latency, bool dma_desc_free,
+               bool dma_data_free, Tick dma_read_delay, Tick dma_write_delay,
+               Tick dma_read_factor, Tick dma_write_factor, PciConfigAll *cf,
+               PciConfigData *cd, Tsunami *t, uint32_t bus, uint32_t dev,
+               uint32_t func, bool rx_filter, const int eaddr[6],
+               uint32_t tx_fifo_size, uint32_t rx_fifo_size)
     : PciDev(name, mmu, cf, cd, bus, dev, func), tsunami(t), ioEnable(false),
+      maxTxFifoSize(tx_fifo_size), maxRxFifoSize(rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), txState(txIdle), CTDD(false),
-      txFifoAvail(MAX_TX_FIFO_SIZE), txHalt(false),
+      txFifoAvail(tx_fifo_size), txHalt(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
       CRDD(false), rxPktBytes(0), rxFifoCnt(0), rxHalt(false),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
@@ -1127,7 +1129,7 @@ NSGigE::txReset()
     DPRINTF(Ethernet, "transmit reset\n");
 
     CTDD = false;
-    txFifoAvail = MAX_TX_FIFO_SIZE;
+    txFifoAvail = maxTxFifoSize;
     txHalt = false;
     txFragPtr = 0;
     assert(txDescCnt == 0);
@@ -1587,7 +1589,7 @@ NSGigE::transmit()
     }
 
     DPRINTF(Ethernet, "\n\nAttempt Pkt Transmit: txFifo length = %d\n",
-            MAX_TX_FIFO_SIZE - txFifoAvail);
+            maxTxFifoSize - txFifoAvail);
     if (interface->sendPacket(txFifo.front())) {
         if (DTRACE(Ethernet)) {
             if (txFifo.front()->isIpPkt()) {
@@ -1904,21 +1906,29 @@ NSGigE::txKick()
             }
         } else {
             DPRINTF(EthernetSM, "this descriptor isn't done yet\n");
-            txState = txFragRead;
+            if (txFifoAvail) {
+                txState = txFragRead;
 
-            /* The number of bytes transferred is either whatever is left
-               in the descriptor (txDescCnt), or if there is not enough
-               room in the fifo, just whatever room is left in the fifo
-            */
-            txXferLen = min<uint32_t>(txDescCnt, txFifoAvail);
+                /* The number of bytes transferred is either whatever is left
+                   in the descriptor (txDescCnt), or if there is not enough
+                   room in the fifo, just whatever room is left in the fifo
+                */
+                txXferLen = min<uint32_t>(txDescCnt, txFifoAvail);
 
-            txDmaAddr = txFragPtr & 0x3fffffff;
-            txDmaData = txPacketBufPtr;
-            txDmaLen = txXferLen;
-            txDmaFree = dmaDataFree;
+                txDmaAddr = txFragPtr & 0x3fffffff;
+                txDmaData = txPacketBufPtr;
+                txDmaLen = txXferLen;
+                txDmaFree = dmaDataFree;
 
-            if (doTxDmaRead())
-                goto exit;
+                if (doTxDmaRead())
+                    goto exit;
+            } else {
+                txState = txFifoBlock;
+                transmit();
+
+                break;
+            }
+
         }
         break;
 
@@ -2054,7 +2064,7 @@ NSGigE::recvPacket(PacketPtr packet)
     rxBytes += packet->length;
     rxPackets++;
 
-    DPRINTF(Ethernet, "\n\nReceiving packet from wire, rxFifoAvail = %d\n", MAX_RX_FIFO_SIZE - rxFifoCnt);
+    DPRINTF(Ethernet, "\n\nReceiving packet from wire, rxFifoAvail = %d\n", maxRxFifoSize - rxFifoCnt);
 
     if (rxState == rxIdle) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
@@ -2068,7 +2078,7 @@ NSGigE::recvPacket(PacketPtr packet)
         return true;
     }
 
-    if ((rxFifoCnt + packet->length) >= MAX_RX_FIFO_SIZE) {
+    if ((rxFifoCnt + packet->length) >= maxRxFifoSize) {
         DPRINTF(Ethernet,
                 "packet will not fit in receive buffer...packet dropped\n");
         devIntrPost(ISR_RXORN);
@@ -2630,6 +2640,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
+    Param<uint32_t> tx_fifo_size;
+    Param<uint32_t> rx_fifo_size;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -2659,7 +2671,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(pci_bus, "PCI bus"),
     INIT_PARAM(pci_dev, "PCI device number"),
-    INIT_PARAM(pci_func, "PCI function code")
+    INIT_PARAM(pci_func, "PCI function code"),
+    INIT_PARAM_DFLT(tx_fifo_size, "max size in bytes of txFifo", 131072),
+    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072)
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -2675,7 +2689,8 @@ CREATE_SIM_OBJECT(NSGigE)
                       payload_bus, pio_latency, dma_desc_free, dma_data_free,
                       dma_read_delay, dma_write_delay, dma_read_factor,
                       dma_write_factor, configspace, configdata,
-                      tsunami, pci_bus, pci_dev, pci_func, rx_filter, eaddr);
+                      tsunami, pci_bus, pci_dev, pci_func, rx_filter, eaddr,
+                      tx_fifo_size, rx_fifo_size);
 }
 
 REGISTER_SIM_OBJECT("NSGigE", NSGigE)
