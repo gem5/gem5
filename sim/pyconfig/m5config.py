@@ -28,19 +28,20 @@ from __future__ import generators
 import os, re, sys, types
 noDot = False
 try:
-   import pydot
+    import pydot
 except:
-   noDot = True
+    noDot = True
 
 env = {}
 env.update(os.environ)
 
 def panic(*args, **kwargs):
-    sys.exit(*args, **kwargs)
+    print >>sys.stderr, 'panic:', string
+    sys.exit(1)
 
 def AddToPath(path):
     path = os.path.realpath(path)
-    if os.path.isdir(path):
+    if os.path.isdir(path) and path not in sys.path:
         sys.path.append(path)
 
 def Import(path):
@@ -349,6 +350,13 @@ class MetaConfigNode(type):
             for p,v in c._values.iteritems():
                 if not values.has_key(p):
                     values[p] = v
+            for p,v in c._params.iteritems():
+                if not values.has_key(p) and hasattr(v, 'default'):
+                    v.valid(v.default)
+                    v = v.default
+                    cls._setvalue(p, v)
+                    values[p] = v
+
         return values
 
     def _getvalue(cls, name, default = AttributeError):

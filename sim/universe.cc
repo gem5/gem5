@@ -26,10 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-
 #include <cstring>
 #include <fstream>
 #include <list>
@@ -37,6 +33,7 @@
 #include <vector>
 
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "sim/builder.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
@@ -51,7 +48,7 @@ double __ticksPerUS;
 double __ticksPerNS;
 double __ticksPerPS;
 
-string outputDirectory;
+bool fullSystem;
 ostream *outputStream;
 ostream *configStream;
 
@@ -61,80 +58,39 @@ class Root : public SimObject
   public:
     Root(const std::string &name) : SimObject(name) {}
 };
-Root *root = NULL;
-
-std::ostream *
-makeOutputStream(std::string &name)
-{
-    if (name == "cerr" || name == "stderr")
-        return &std::cerr;
-
-    if (name == "cout" || name == "stdout")
-        return &std::cout;
-
-    string path = (name[0] != '/') ? outputDirectory + name : name;
-
-    // have to dynamically allocate a stream since we're going to
-    // return it... though the caller can't easily free it since it
-    // may be cerr or cout.  need GC!
-    ofstream *s = new ofstream(path.c_str(), ios::trunc);
-
-    if (!s->is_open())
-        fatal("Cannot open file %s", path);
-
-    return s;
-}
-
-
-void
-closeOutputStream(std::ostream *os)
-{
-    // can't close cerr or cout
-    if (os == &std::cerr || os == &std::cout)
-        return;
-
-    // can only close ofstreams, not generic ostreams, so try to
-    // downcast and close only if the downcast succeeds
-    std::ofstream *ofs = dynamic_cast<std::ofstream *>(os);
-    if (ofs)
-        ofs->close();
-}
-
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
 
     Param<bool> full_system;
     Param<Tick> frequency;
-    Param<string> output_dir;
     Param<string> output_file;
-    Param<string> config_output_file;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Root)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
 
-    INIT_PARAM_DFLT(full_system, "full system simulation", true),
-    INIT_PARAM_DFLT(frequency, "tick frequency", 200000000),
-    INIT_PARAM_DFLT(output_dir, "directory to output data to", "."),
-    INIT_PARAM_DFLT(output_file, "file to dump simulator output to", "cout"),
-    INIT_PARAM_DFLT(config_output_file, "file to dump simulator config to",
-                    "m5config.out")
+    INIT_PARAM(full_system, "full system simulation"),
+    INIT_PARAM(frequency, "tick frequency"),
+    INIT_PARAM(output_file, "file to dump simulator output to")
 
 END_INIT_SIM_OBJECT_PARAMS(Root)
 
 CREATE_SIM_OBJECT(Root)
 {
+    static bool created = false;
+    if (created)
+        panic("only one root object allowed!");
+
+    created = true;
+    fullSystem = full_system;
+
 #ifdef FULL_SYSTEM
-    if (!bool(full_system))
+    if (!fullSystem)
         panic("FULL_SYSTEM compiled and configuration not full_system");
 #else
-    if (bool(full_system))
+    if (fullSystem)
         panic("FULL_SYSTEM not compiled but configuration is full_system");
 #endif
-
-    if (root)
-        panic("only one root object allowed!");
-    root = new Root(getInstanceName());
 
     ticksPerSecond = frequency;
     double freq = double(ticksPerSecond);
@@ -143,29 +99,9 @@ CREATE_SIM_OBJECT(Root)
     __ticksPerNS = freq / 1.0e9;
     __ticksPerPS = freq / 1.0e12;
 
-    outputDirectory = output_dir;
-    if (!outputDirectory.empty()) {
-        outputDirectory = output_dir;
+    outputStream = simout.find(output_file);
 
-        // guarantee that directory ends with a '/'
-        if (outputDirectory[outputDirectory.size() - 1] != '/')
-            outputDirectory += "/";
-
-        if (mkdir(outputDirectory.c_str(), 0777) < 0) {
-            if (errno != EEXIST) {
-                panic("%s\ncould not make output directory: %s\n",
-                      strerror(errno), outputDirectory);
-            }
-        }
-    }
-
-    outputStream = makeOutputStream(output_file);
-    configStream = outputStream;
-    string cof = config_output_file;
-    if (!cof.empty())
-        configStream = makeOutputStream(cof);
-
-    return root;
+    return new Root(getInstanceName());
 }
 
 REGISTER_SIM_OBJECT("Root", Root)

@@ -30,10 +30,11 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "sim/host.hh"
 #include "base/hostinfo.hh"
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "base/trace.hh"
+#include "sim/host.hh"
 #include "sim/universe.hh"
 
 using namespace std;
@@ -116,7 +117,7 @@ __warn(const string &format, cp::ArgList &args, const char *func,
 #endif
 
     args.dump(cerr, fmt);
-    if (outputStream != &cerr && outputStream != &cout)
+    if (simout.isFile(*outputStream))
         args.dump(*outputStream, fmt);
 
     delete &args;
