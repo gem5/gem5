@@ -2409,7 +2409,10 @@ typedef NoBin DefaultBin;
  * @sa Stat, ScalarBase, StatStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Scalar : public Wrap<Scalar<T, Bin>, ScalarBase<T, StatStor, Bin>, ScalarData>
+class Scalar
+    : public Wrap<Scalar<T, Bin>,
+                  ScalarBase<T, StatStor, Bin>,
+                  ScalarData>
 {
   public:
     /** The base implementation. */
@@ -2434,7 +2437,10 @@ class Scalar : public Wrap<Scalar<T, Bin>, ScalarBase<T, StatStor, Bin>, ScalarD
  * @sa Stat, ScalarBase, AvgStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Average : public Wrap<Average<T, Bin>, ScalarBase<T, AvgStor, Bin>, ScalarData>
+class Average
+    : public Wrap<Average<T, Bin>,
+                  ScalarBase<T, AvgStor, Bin>,
+                  ScalarData>
 {
   public:
     /** The base implementation. */
@@ -2459,7 +2465,10 @@ class Average : public Wrap<Average<T, Bin>, ScalarBase<T, AvgStor, Bin>, Scalar
  * @sa Stat, VectorBase, StatStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Vector : public WrapVec<Vector<T, Bin>, VectorBase<T, StatStor, Bin>, VectorData>
+class Vector
+    : public WrapVec<Vector<T, Bin>,
+                     VectorBase<T, StatStor, Bin>,
+                     VectorData>
 {
   public:
     /**
@@ -2480,7 +2489,10 @@ class Vector : public WrapVec<Vector<T, Bin>, VectorBase<T, StatStor, Bin>, Vect
  * @sa Stat, VectorBase, AvgStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class AverageVector : public WrapVec<AverageVector<T, Bin>, VectorBase<T, AvgStor, Bin>, VectorData>
+class AverageVector
+    : public WrapVec<AverageVector<T, Bin>,
+                     VectorBase<T, AvgStor, Bin>,
+                     VectorData>
 {
   public:
     /**
@@ -2501,7 +2513,10 @@ class AverageVector : public WrapVec<AverageVector<T, Bin>, VectorBase<T, AvgSto
  * @sa Stat, Vector2dBase, StatStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Vector2d : public WrapVec2d<Vector2d<T, Bin>, Vector2dBase<T, StatStor, Bin>, Vector2dData>
+class Vector2d
+    : public WrapVec2d<Vector2d<T, Bin>,
+                       Vector2dBase<T, StatStor, Bin>,
+                       Vector2dData>
 {
   public:
     Vector2d &init(size_t _x, size_t _y) {
@@ -2519,7 +2534,10 @@ class Vector2d : public WrapVec2d<Vector2d<T, Bin>, Vector2dBase<T, StatStor, Bi
  * @sa Stat, DistBase, DistStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class Distribution : public Wrap<Distribution<T, Bin>, DistBase<T, DistStor, Bin>, DistData>
+class Distribution
+    : public Wrap<Distribution<T, Bin>,
+                  DistBase<T, DistStor, Bin>,
+                  DistData>
 {
   private:
     /** Base implementation. */
@@ -2552,7 +2570,10 @@ class Distribution : public Wrap<Distribution<T, Bin>, DistBase<T, DistStor, Bin
  * @sa Stat, DistBase, FancyStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class StandardDeviation : public Wrap<StandardDeviation<T, Bin>, DistBase<T, FancyStor, Bin>, DistData>
+class StandardDeviation
+    : public Wrap<StandardDeviation<T, Bin>,
+                  DistBase<T, FancyStor, Bin>,
+                  DistData>
 {
   private:
     /** The base implementation */
@@ -2575,7 +2596,10 @@ class StandardDeviation : public Wrap<StandardDeviation<T, Bin>, DistBase<T, Fan
  * @sa Stat, DistBase, AvgFancy
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class AverageDeviation : public Wrap<AverageDeviation<T, Bin>, DistBase<T, AvgFancy, Bin>, DistData>
+class AverageDeviation
+    : public Wrap<AverageDeviation<T, Bin>,
+                  DistBase<T, AvgFancy, Bin>,
+                  DistData>
 {
   private:
     /** The base implementation */
@@ -2599,7 +2623,10 @@ class AverageDeviation : public Wrap<AverageDeviation<T, Bin>, DistBase<T, AvgFa
  * @sa Stat, VectorDistBase, DistStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class VectorDistribution : public WrapVec<VectorDistribution<T, Bin>, VectorDistBase<T, DistStor, Bin>, VectorDistData>
+class VectorDistribution
+    : public WrapVec<VectorDistribution<T, Bin>,
+                     VectorDistBase<T, DistStor, Bin>,
+                     VectorDistData>
 {
   private:
     /** The base implementation */
@@ -2633,7 +2660,10 @@ class VectorDistribution : public WrapVec<VectorDistribution<T, Bin>, VectorDist
  * @sa Stat, VectorDistBase, FancyStor
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class VectorStandardDeviation : public WrapVec<VectorStandardDeviation<T, Bin>, VectorDistBase<T, FancyStor, Bin>, VectorDistData>
+class VectorStandardDeviation
+    : public WrapVec<VectorStandardDeviation<T, Bin>,
+                     VectorDistBase<T, FancyStor, Bin>,
+                     VectorDistData>
 {
   private:
     /** The base implementation */
@@ -2660,7 +2690,10 @@ class VectorStandardDeviation : public WrapVec<VectorStandardDeviation<T, Bin>, 
  * @sa Stat, VectorDistBase, AvgFancy
  */
 template <typename T = Counter, class Bin = DefaultBin>
-class VectorAverageDeviation : public WrapVec<VectorAverageDeviation<T, Bin>, VectorDistBase<T, AvgFancy, Bin>, VectorDistData>
+class VectorAverageDeviation
+    : public WrapVec<VectorAverageDeviation<T, Bin>,
+                     VectorDistBase<T, AvgFancy, Bin>,
+                     VectorDistData>
 {
   private:
     /** The base implementation */
