@@ -5124,7 +5124,22 @@ hw_rei_update_spe_10_:	mfpr	r9, pt_pcbb			// Kernel mode
 
 
 copypal_impl:	
-	mov r16, r0	 
+	mov r16, r0
+	and r16, 63, r8
+	and r17, 63, r9
+	bis r8, r9, r8
+	bne r8, cache_copy_done
+	bic r18, 63, r8
+	and r18, 63, r18
+	beq r8, cache_copy_done
+ cache_loop:
+	ldf f17, 0(r16)
+	stf f17, 0(r16)
+	addq r17, 64, r17
+	addq r16, 64, r16
+	subq r8, 64, r8
+	bne r8, cache_loop
+cache_copy_done:	 	 
 	ble r18, finished	#if len <=0 we are finished 
 	ldq_u r8, 0(r17) 
 	xor r17, r16, r9 
