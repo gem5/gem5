@@ -839,39 +839,22 @@ sys_int_21:
     bis	    r8,r9,r8	
     ldqp    r9,0x0020(r8)                   // read PIC1 ISR for interrupting dev
 
-#if 0 // we have a 21164 so this won't work because of the ctlz, if we ever change that...
 normal_int:    
-    ctlz    r9,r10                          // count the number of leading zeros
+    //ctlz    r9,r10                          // count the number of leading zeros
+    // EV5 doesn't have ctlz, but we do, so lets use it
+    .byte 0x4a
+    .byte 0x06
+    .byte 0xe9
+    .byte 0x73
     lda     r11,63(r31)
     subq    r11,r10,r17                     // subtract from 
     
     lda	    r9,0x10(r31)
     mulq    r17,r9,r17                    // compute 0x900 + (0x10 * Highest DIRn-bit)
-    lda     r9,0x900(r31)
-    addq    r17,r9,r17
-       
-    br      r31, pal_post_interrupt
-#endif 
-
-normal_int:    
-    or      r31,63,r17                      // load  63 into the counter
-    or	r31,1,r11
-    sll	r11,63,r11			// load a 1 into the msb
-
-find_msb:	
-    and	r9,r11,r10
-    bne	r10, found_msb
-	srl	r11,1,r11
-    subl    r17,1,r17 
-    br	r31, find_msb
-	
-found_msb:
-    lda	r9,0x10(r31)
-    mulq    r17,r9,r17                    // compute offset + (0x10 * Highest DIRn-bit)
     addq    r17,r13,r17
        
     br      r31, pal_post_interrupt
-        
+ 
 	ALIGN_BRANCH
 pal_post_dev_interrupt:
 	or	r13, r31, r17			// move vector to a1
