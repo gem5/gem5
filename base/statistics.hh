@@ -717,6 +717,7 @@ class VectorBase : public VectorStat
         return *this;
     }
 
+    /** Friend this class with the associated scalar proxy. */
     friend class ScalarProxy<T, Storage, Bin>;
 
     /**

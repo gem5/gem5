@@ -37,7 +37,7 @@
 #include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
-namespace Tru64 {
+namespace tru64 {
 
 void
 DumpMbuf(AlphaArguments args)

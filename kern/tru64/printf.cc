@@ -37,7 +37,7 @@
 
 using namespace std;
 
-namespace Tru64 {
+namespace tru64 {
 
 void
 Printf(AlphaArguments args)

@@ -80,7 +80,7 @@ PrintfEvent::process(ExecContext *xc)
         DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
 
         AlphaArguments args(xc);
-        Tru64::Printf(args);
+        tru64::Printf(args);
     }
 }
 
@@ -92,7 +92,7 @@ DebugPrintfEvent::process(ExecContext *xc)
             DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
 
         AlphaArguments args(xc);
-        Tru64::Printf(args);
+        tru64::Printf(args);
     }
 }
 
@@ -101,7 +101,7 @@ DumpMbufEvent::process(ExecContext *xc)
 {
     if (DTRACE(DebugPrintf)) {
         AlphaArguments args(xc);
-        Tru64::DumpMbuf(args);
+        tru64::DumpMbuf(args);
     }
 }
 
