@@ -36,6 +36,7 @@ TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
     : MmapDevice(name, addr, mask, mmu),
       cons(c), status_store(0), valid_char(false)
 {
+    IER = 0;
 }
 
 Fault
@@ -95,8 +96,8 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
         }
 
       case 0x8: // Data register (RX)
-        if (!valid_char)
-            panic("Invalid character");
+//	if (!valid_char)
+//	    panic("Invalid character");
 
         DPRINTF(TsunamiUart, "read data register \'%c\' %#02x\n",
                 isprint(next_char) ? next_char : ' ', next_char);
@@ -106,7 +107,18 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
         return No_Fault;
 
       case 0x9: // Interrupt Enable Register
-        *data = 0;
+        // This is the lovely way linux checks there is actually a serial
+        // port at the desired address
+        if (IER == 0)
+            *data = 0;
+        else if (IER == 0x0F)
+            *data = 0x0F;
+        else
+            *data = 0;
+        return No_Fault;
+      case 0xA:
+        //*data = 2<<6; // This means a 8250 serial port, do we want a 16550?
+        *data = 0; // This means a 8250 serial port, do we want a 16550?
         return No_Fault;
     }
     *data = 0;
@@ -145,7 +157,7 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
 
           default:
             DPRINTF(TsunamiUart, "writing status register %#x \n",
-                    *(uint64_t *)data);
+                    *(uint8_t *)data);
             return No_Fault;
         }
 
@@ -154,6 +166,7 @@ TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
         return No_Fault;
       case 0x9: // DLM
         DPRINTF(TsunamiUart, "writing to DLM/IER %#x\n", *(uint8_t*)data);
+        IER = *(uint8_t*)data;
         return No_Fault;
       case 0xc: // MCR
         DPRINTF(TsunamiUart, "writing to MCR %#x\n", *(uint8_t*)data);

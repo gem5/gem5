@@ -125,6 +125,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
           case PCI_CACHE_LINE_SIZE:
+          case PCI_LATENCY_TIMER:
             *(uint8_t *)&config.data[offset] = byte_value;
             break;
 
