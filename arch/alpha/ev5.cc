@@ -168,11 +168,11 @@ ExecContext::hwrei()
     if (!PC_PAL(regs.pc))
         return Unimplemented_Opcode_Fault;
 
-    kernelStats.hwrei();
-
-    regs.npc = ipr[AlphaISA::IPR_EXC_ADDR];
+    setNextPC(ipr[AlphaISA::IPR_EXC_ADDR]);
 
     if (!misspeculating()) {
+        kernelStats.hwrei();
+
         if ((ipr[AlphaISA::IPR_EXC_ADDR] & 1) == 0)
             AlphaISA::swap_palshadow(&regs, false);
 
@@ -560,7 +560,7 @@ ExecContext::simPalCheck(int palFunc)
 
       case PAL::bpt:
       case PAL::bugchk:
-        if (system->breakpoint())
+        if (!misspeculating() && system->breakpoint())
             return false;
         break;
     }

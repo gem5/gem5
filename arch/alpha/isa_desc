@@ -2322,11 +2322,15 @@ decode OPCODE default Unknown::unknown() {
 	format BasicOperate {
 	    0xe000: rc({{
 		Ra = xc->regs.intrflag;
-		xc->regs.intrflag = 0;
+		if (!xc->misspeculating()) {
+		    xc->regs.intrflag = 0;
+		}
 	    }}, No_OpClass);
 	    0xf000: rs({{
 		Ra = xc->regs.intrflag;
-		xc->regs.intrflag = 1;
+		if (!xc->misspeculating()) {
+		    xc->regs.intrflag = 1;
+		}
 	    }}, No_OpClass);
 	}
 #else
@@ -2343,7 +2347,9 @@ decode OPCODE default Unknown::unknown() {
 	// on this PAL call (including maybe suppress it)
 	bool dopal = xc->simPalCheck(palFunc);
 
-	Annotate::Callpal(xc, palFunc);
+	if (!xc->misspeculating()) {
+	    Annotate::Callpal(xc, palFunc);
+	}
 
 	if (dopal) {
 	    if (!xc->misspeculating()) {
@@ -2360,7 +2366,10 @@ decode OPCODE default Unknown::unknown() {
 		if (!xc->misspeculating()) 
 		    SimExit("halt instruction encountered");
 	    }});
-	    0x83: callsys({{ xc->syscall(); }});
+	    0x83: callsys({{ 
+		if (!xc->misspeculating()) 
+		    xc->syscall();
+	    }});
 	    // Read uniq reg into ABI return value register (r0)
 	    0x9e: rduniq({{ R0 = Runiq; }});
 	    // Write uniq reg with value from ABI arg register (r16)
