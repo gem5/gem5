@@ -754,7 +754,7 @@ sys_int_23:
 	ALIGN_BRANCH
 sys_int_22:
         or      r31,1,r16                       // a0 means it is a I/O interrupt
-        lda     r8,0x101(r31)
+        lda     r8,0xf01(r31)
         sll     r8,16,r8
         lda     r8,0xa000(r8)
         sll     r8,16,r8
@@ -766,7 +766,7 @@ sys_int_22:
 
 
 	ALIGN_BRANCH
-sys_int_21:
+sys_int_20:
 	Read_TLINTRSUMx(r13,r10,r14)		// read the right TLINTRSUMx
 	srl	r13, 12, r13			// shift down to examine IPL15
 
@@ -795,10 +795,10 @@ sys_int_21:
 
 
 	ALIGN_BRANCH
-sys_int_20:
+sys_int_21:
         or      r31,3,r16                       // a0 means it is a I/O interrupt
         
-	lda     r8,0x0801(r31)
+	lda     r8,0xf01(r31)
 	sll     r8,32,r8
 	ldah    r9,0xa0(r31)
 	sll	r9,8,r9
