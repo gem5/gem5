@@ -76,7 +76,7 @@ class InsertData
     MySqlRun *run;
 
   public:
-    uint64_t sample;
+    uint64_t tick;
     double data;
     uint16_t stat;
     uint16_t bin;
