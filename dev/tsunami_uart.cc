@@ -31,10 +31,10 @@ using namespace std;
 #define CONS_INT_TX   0x01  // interrupt enable / state bits
 #define CONS_INT_RX   0x02
 
-TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
-                       Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu),
-      cons(c), status_store(0), valid_char(false)
+TsunamiUart::TsunamiUart(const string &name, SimConsole *c, Addr a,
+                         MemoryController *mmu)
+    : FunctionalMemory(name), addr(a), cons(c), status_store(0),
+      valid_char(false)
 {
     IER = 0;
 }
@@ -42,7 +42,7 @@ TsunamiUart::TsunamiUart(const string &name, SimConsole *c,
 Fault
 TsunamiUart::read(MemReqPtr &req, uint8_t *data)
 {
-    Addr daddr = req->paddr & addr_mask;
+    Addr daddr = req->paddr & size;
     DPRINTF(TsunamiUart, " read register %#x\n", daddr);
 
     switch (req->size) {
@@ -130,7 +130,7 @@ TsunamiUart::read(MemReqPtr &req, uint8_t *data)
 Fault
 TsunamiUart::write(MemReqPtr &req, const uint8_t *data)
 {
-    Addr daddr = req->paddr & addr_mask;
+    Addr daddr = req->paddr & size;
 
     DPRINTF(TsunamiUart, " write register %#x value %#x\n", daddr, *(uint8_t*)data);
     switch (daddr) {
@@ -198,7 +198,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)
     SimObjectParam<SimConsole *> console;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    Param<Addr> mask;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiUart)
 
@@ -206,14 +205,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiUart)
 
     INIT_PARAM(console, "The console"),
     INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask")
+    INIT_PARAM(addr, "Device Address")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiUart)
 
 CREATE_SIM_OBJECT(TsunamiUart)
 {
-    return new TsunamiUart(getInstanceName(), console, addr, mask, mmu);
+    return new TsunamiUart(getInstanceName(), console, addr, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiUart", TsunamiUart)

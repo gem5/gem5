@@ -51,10 +51,10 @@
 using namespace std;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons,
-                           SimpleDisk *d, int size, System *system,
+                           SimpleDisk *d, System *system,
                            BaseCPU *cpu, TsunamiIO *clock, int num_cpus,
-                           Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), disk(d), console(cons)
+                           Addr a, MemoryController *mmu)
+    : FunctionalMemory(name), disk(d), console(cons), addr(a)
 {
     mmu->add_child(this, Range<Addr>(addr, addr + size));
 
@@ -272,7 +272,7 @@ END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 CREATE_SIM_OBJECT(AlphaConsole)
 {
     return  new AlphaConsole(getInstanceName(), sim_console, disk,
-                             system, cpu, clock, num_cpus, mmu, addr);
+                             system, cpu, clock, num_cpus, addr, mmu);
 }
 
 REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

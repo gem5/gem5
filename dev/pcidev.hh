@@ -35,7 +35,7 @@
 
 #include "dev/pcireg.h"
 #include "sim/sim_object.hh"
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
 
 class PCIConfigAll;
 class MemoryController;
@@ -63,7 +63,7 @@ class PciConfigData : public SimObject
  * register with it. This object registers with the PCIConfig space
  * object.
  */
-class PciDev : public MmapDevice
+class PciDev : public FunctionalMemory
 {
   protected:
     MemoryController *MMU;

@@ -47,10 +47,12 @@
 
 using namespace std;
 
-PCIConfigAll::PCIConfigAll(const string &name, Tsunami *t,
-                           Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), tsunami(t)
+PCIConfigAll::PCIConfigAll(const string &name, Tsunami *t, Addr a,
+                           MemoryController *mmu)
+    : FunctionalMemory(name), addr(a), tsunami(t)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
+
     // Put back pointer in tsunami
     tsunami->pciconfig = this;
 
@@ -66,7 +68,7 @@ PCIConfigAll::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(PCIConfigAll, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr & addr_mask);
+    Addr daddr = (req->paddr & size);
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
@@ -110,7 +112,7 @@ PCIConfigAll::read(MemReqPtr &req, uint8_t *data)
 Fault
 PCIConfigAll::write(MemReqPtr &req, const uint8_t *data)
 {
-    Addr daddr = (req->paddr & addr_mask);
+    Addr daddr = (req->paddr & size);
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
@@ -182,7 +184,7 @@ END_INIT_SIM_OBJECT_PARAMS(PCIConfigAll)
 
 CREATE_SIM_OBJECT(PCIConfigAll)
 {
-    return new PCIConfigAll(getInstanceName(), tsunami, addr, mask, mmu);
+    return new PCIConfigAll(getInstanceName(), tsunami, addr, mmu);
 }
 
 REGISTER_SIM_OBJECT("PCIConfigAll", PCIConfigAll)

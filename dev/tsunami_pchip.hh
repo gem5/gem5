@@ -33,15 +33,17 @@
 #ifndef __TSUNAMI_PCHIP_HH__
 #define __TSUNAMI_PCHIP_HH__
 
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
 #include "dev/tsunami.hh"
 
 /*
  * Tsunami PChip
  */
-class TsunamiPChip : public MmapDevice
+class TsunamiPChip : public FunctionalMemory
 {
-  public:
+  private:
+    Addr addr;
+    static const Addr size = 0xfff;
 
   protected:
     Tsunami *tsunami;
@@ -61,8 +63,8 @@ class TsunamiPChip : public MmapDevice
 
 
   public:
-    TsunamiPChip(const std::string &name, Tsunami *t,
-               Addr addr, Addr mask, MemoryController *mmu);
+    TsunamiPChip(const std::string &name, Tsunami *t, Addr a,
+                 MemoryController *mmu);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);

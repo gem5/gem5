@@ -23,10 +23,12 @@
 
 using namespace std;
 
-TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t,
-                       Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), tsunami(t)
+TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
+                           MemoryController *mmu)
+    : FunctionalMemory(name), addr(a), tsunami(t)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
+
     wsba0 = 0;
     wsba1 = 0;
     wsba2 = 0;
@@ -50,7 +52,7 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "read  va=%#x size=%d\n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr & addr_mask) >> 6;
+    Addr daddr = (req->paddr & size) >> 6;
 //    ExecContext *xc = req->xc;
 //    int cpuid = xc->cpu_id;
 
@@ -140,7 +142,7 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "write - va=%#x size=%d \n",
             req->vaddr, req->size);
 
-    Addr daddr = (req->paddr & addr_mask) >> 6;
+    Addr daddr = (req->paddr & size) >> 6;
 
     switch (req->size) {
 
@@ -239,7 +241,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
     SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    Param<Addr> mask;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
 
@@ -247,14 +248,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
     INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask")
+    INIT_PARAM(addr, "Device Address")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
 CREATE_SIM_OBJECT(TsunamiPChip)
 {
-    return new TsunamiPChip(getInstanceName(), tsunami, addr, mask, mmu);
+    return new TsunamiPChip(getInstanceName(), tsunami, addr, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiPChip", TsunamiPChip)

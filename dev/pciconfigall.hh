@@ -38,7 +38,7 @@
 #ifndef __PCICONFIGALL_HH__
 #define __PCICONFIGALL_HH__
 
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
 #include "dev/tsunami.hh"
 #include "dev/pcireg.h"
 
@@ -54,9 +54,11 @@ class PciDev;
  * space and passes the requests on to TsunamiPCIDev devices as
  * appropriate.
  */
-class PCIConfigAll : public MmapDevice
+class PCIConfigAll : public FunctionalMemory
 {
   private:
+    Addr addr;
+    static const Addr size = 0xffffff;
 
   protected:
 
@@ -77,8 +79,8 @@ class PCIConfigAll : public MmapDevice
     /**
       * The default constructor.
       */
-    PCIConfigAll(const std::string &name, Tsunami *t,
-                 Addr addr, Addr mask, MemoryController *mmu);
+    PCIConfigAll(const std::string &name, Tsunami *t, Addr a,
+                 MemoryController *mmu);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);

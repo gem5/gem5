@@ -34,7 +34,7 @@
 #ifndef __BADDEV_HH__
 #define __BADDEV_HH__
 
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
 
 /**
  * BadDevice
@@ -42,24 +42,23 @@
  * the user that the kernel they are running has unsupported
  * options (i.e. frame buffer)
  */
-class BadDevice : public MmapDevice
+class BadDevice : public FunctionalMemory
 {
   private:
+    Addr addr;
+    static const Addr size = 0xf;
 
-      std::string devname;
-  protected:
+    std::string devname;
 
   public:
     /**
-      * The default constructor.
-      */
-    BadDevice(const std::string &name, Addr addr, Addr mask,
-              MemoryController *mmu, const std::string &devicename);
+     * The default constructor.
+     */
+    BadDevice(const std::string &name, Addr a, MemoryController *mmu,
+              const std::string &devicename);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
-
-
 };
 
 #endif // __BADDEV_HH__

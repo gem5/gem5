@@ -35,16 +35,18 @@
 
 #define RTC_RATE 1024
 
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
 #include "dev/tsunami.hh"
 
 /*
  * Tsunami I/O device
  */
-class TsunamiIO : public MmapDevice
+class TsunamiIO : public FunctionalMemory
 {
-
   private:
+    Addr addr;
+    static const Addr size = 0xff;
+
     struct tm tm;
 
     // In Tsunami RTC only has two i/o ports
@@ -121,7 +123,7 @@ class TsunamiIO : public MmapDevice
     uint32_t  frequency() const { return RTC_RATE; }
 
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
-              Addr addr, Addr mask,  MemoryController *mmu);
+              Addr a, MemoryController *mmu);
 
     void set_time(time_t t);
 

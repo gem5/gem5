@@ -90,10 +90,9 @@ class AlphaConsole : public FunctionalMemory
   public:
     /** Standard Constructor */
     AlphaConsole(const std::string &name, SimConsole *cons,
-                 SimpleDisk *d, int size,
-                 System *system, BaseCPU *cpu,
+                 SimpleDisk *d, System *system, BaseCPU *cpu,
                  TsunamiIO *clock, int num_cpus,
-                 Addr addr, Addr mask, MemoryController *mmu);
+                 Addr a, MemoryController *mmu);
 
     /**
      * memory mapped reads and writes

@@ -125,9 +125,11 @@ TsunamiIO::ClockEvent::Status()
 }
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                     Addr addr, Addr mask, MemoryController *mmu)
-    : MmapDevice(name, addr, mask, mmu), tsunami(t), rtc(t)
+                     Addr a, MemoryController *mmu)
+    : FunctionalMemory(name), addr(a), tsunami(t), rtc(t)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
+
     // set the back pointer from tsunami to myself
     tsunami->io = this;
 
@@ -151,7 +153,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
 
-    Addr daddr = (req->paddr & addr_mask);
+    Addr daddr = (req->paddr & size);
 //    ExecContext *xc = req->xc;
 //    int cpuid = xc->cpu_id;
 
@@ -226,7 +228,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
 
-    Addr daddr = (req->paddr & addr_mask);
+    Addr daddr = (req->paddr & size);
 
     switch(req->size) {
       case sizeof(uint8_t):
@@ -359,7 +361,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     Param<time_t> time;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    Param<Addr> mask;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
@@ -369,15 +370,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
     INIT_PARAM_DFLT(time, "System time to use "
             "(0 for actual time, default is 1/1/06", ULL(1136073600)),
     INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask")
+    INIT_PARAM(addr, "Device Address")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
-    return new TsunamiIO(getInstanceName(), tsunami, time,  addr,
-                         mask, mmu);
+    return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

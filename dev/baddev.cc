@@ -20,10 +20,11 @@
 
 using namespace std;
 
-BadDevice::BadDevice(const string &name,
-                       Addr addr, Addr mask, MemoryController *mmu, const string &devicename)
-    : MmapDevice(name, addr, mask, mmu), devname(devicename)
+BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
+                     const string &devicename)
+    : FunctionalMemory(name), addr(a), devname(devicename)
 {
+    mmu->add_child(this, Range<Addr>(addr, addr + size));
 }
 
 Fault
@@ -46,7 +47,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    Param<Addr> mask;
     Param<string> devicename;
 
 END_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
@@ -55,14 +55,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask"),
     INIT_PARAM(devicename, "Name of device to error on")
 
 END_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
 CREATE_SIM_OBJECT(BadDevice)
 {
-    return new BadDevice(getInstanceName(), addr, mask, mmu, devicename);
+    return new BadDevice(getInstanceName(), addr, mmu, devicename);
 }
 
 REGISTER_SIM_OBJECT("BadDevice", BadDevice)

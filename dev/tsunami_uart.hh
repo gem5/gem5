@@ -33,15 +33,19 @@
 #ifndef __TSUNAMI_UART_HH__
 #define __TSUNAMI_UART_HH__
 
-#include "mem/functional_mem/mmap_device.hh"
+#include "mem/functional_mem/functional_memory.hh"
 
 class SimConsole;
 
 /*
  * Tsunami UART
  */
-class TsunamiUart : public MmapDevice
+class TsunamiUart : public FunctionalMemory
 {
+  private:
+    Addr addr;
+    static const Addr size = 0xf;
+
   protected:
     SimConsole *cons;
     int status_store;
@@ -50,8 +54,8 @@ class TsunamiUart : public MmapDevice
     uint8_t IER;
 
   public:
-    TsunamiUart(const std::string &name, SimConsole *c,
-               Addr addr, Addr mask, MemoryController *mmu);
+    TsunamiUart(const std::string &name, SimConsole *c, Addr a,
+                MemoryController *mmu);
 
     Fault read(MemReqPtr &req, uint8_t *data);
     Fault write(MemReqPtr &req, const uint8_t *data);

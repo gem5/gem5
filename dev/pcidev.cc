@@ -53,7 +53,7 @@ using namespace std;
 
 PciDev::PciDev(const string &name, MemoryController *mmu, PCIConfigAll *cf,
                PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func)
-    : MmapDevice(name), MMU(mmu), ConfigSpace(cf), ConfigData(cd),
+    : FunctionalMemory(name), MMU(mmu), ConfigSpace(cf), ConfigData(cd),
       Bus(bus), Device(dev), Function(func)
 {
     // copy the config data from the PciConfigData object
@@ -180,15 +180,24 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                         (config.data[offset] & 0x3);
 
                     if (word_value & ~0x1) {
+                        Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
+                        Addr base_size = BARSize[barnum]-1;
+
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
-                            AddMapping((word_value & ~0x1) + TSUNAMI_PCI0_IO,
-                                       BARSize[barnum]-1, MMU);
+                            MMU->add_child(this,
+                                           Range<Addr>(base_addr,
+                                                       base_addr + base_size));
                         else
-                            ChangeMapping(BARAddrs[barnum], BARSize[barnum]-1,
-                                          (word_value & ~0x1) + TSUNAMI_PCI0_IO,
-                                          BARSize[barnum]-1, MMU);
-                        BARAddrs[barnum] = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
+                            MMU->update_child(this,
+                                              Range<Addr>(BARAddrs[barnum],
+                                                          BARAddrs[barnum] +
+                                                          base_size),
+                                              Range<Addr>(base_addr,
+                                                          base_addr +
+                                                          base_size));
+
+                        BARAddrs[barnum] = base_addr;
                     }
 
                 } else {
@@ -197,17 +206,26 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                         (config.data[offset] & 0xF);
 
                     if (word_value & ~0x3) {
+                        Addr base_addr = (word_value & ~0x3) +
+                            TSUNAMI_PCI0_MEMORY;
+
+                        Addr base_size = BARSize[barnum]-1;
+
                         // It's never been set
                         if (BARAddrs[barnum] == 0)
-                            AddMapping((word_value & ~0x3) + TSUNAMI_PCI0_MEMORY,
-                                       BARSize[barnum]-1, MMU);
+                            MMU->add_child(this,
+                                           Range<Addr>(base_addr,
+                                                       base_addr + base_size));
                         else
-                            ChangeMapping(BARAddrs[barnum], BARSize[barnum]-1,
-                                          (word_value & ~0x3) +
-                                          TSUNAMI_PCI0_MEMORY,
-                                          BARSize[barnum]-1, MMU);
-                        BARAddrs[barnum] = (word_value & ~0x3) +
-                                           TSUNAMI_PCI0_MEMORY;
+                            MMU->update_child(this,
+                                              Range<Addr>(BARAddrs[barnum],
+                                                          BARAddrs[barnum] +
+                                                          base_size),
+                                              Range<Addr>(base_addr,
+                                                          base_addr +
+                                                          base_size));
+
+                        BARAddrs[barnum] = base_addr;
                     }
                  }
             }
