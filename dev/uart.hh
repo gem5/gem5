@@ -75,7 +75,7 @@ class Uart : public PioDevice
     Platform *platform;
 
   public:
-    Uart(const string &name, SimConsole *c, MemoryController *mmu,
+    Uart(const std::string &name, SimConsole *c, MemoryController *mmu,
          Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
          Platform *p);
 
