@@ -629,7 +629,7 @@ class Tru64 {
         // just pass basep through uninterpreted.
         TypedBufferArg<int64_t> basep(tgt_basep);
         basep.copyIn(xc->mem);
-        ::off_t host_basep = (off_t)*basep;
+        long host_basep = (off_t)*basep;
         int host_result = getdirentries(fd, host_buf, tgt_nbytes, &host_basep);
 
         // check for error
