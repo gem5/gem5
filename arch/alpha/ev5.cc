@@ -7,6 +7,7 @@
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/fast_cpu/fast_cpu.hh"
 #include "sim/debug.hh"
 #include "sim/sim_events.hh"
 
@@ -97,6 +98,64 @@ AlphaISA::initIPRs(RegFile *regs)
     ipr[IPR_MCSR] = 0x6;
 }
 
+
+template <class XC>
+void
+AlphaISA::processInterrupts(XC *xc)
+{
+    //Check if there are any outstanding interrupts
+    //Handle the interrupts
+    int ipl = 0;
+    int summary = 0;
+    IntReg *ipr = xc->getIprPtr();
+
+    check_interrupts = 0;
+
+    if (ipr[IPR_ASTRR])
+        panic("asynchronous traps not implemented\n");
+
+    if (ipr[IPR_SIRR]) {
+        for (int i = INTLEVEL_SOFTWARE_MIN;
+             i < INTLEVEL_SOFTWARE_MAX; i++) {
+            if (ipr[IPR_SIRR] & (ULL(1) << i)) {
+                // See table 4-19 of the 21164 hardware reference
+                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
+                summary |= (ULL(1) << i);
+            }
+        }
+    }
+
+    uint64_t interrupts = xc->intr_status();
+
+    if (interrupts) {
+        for (int i = INTLEVEL_EXTERNAL_MIN;
+             i < INTLEVEL_EXTERNAL_MAX; i++) {
+            if (interrupts & (ULL(1) << i)) {
+                // See table 4-19 of the 21164 hardware reference
+                ipl = i;
+                summary |= (ULL(1) << i);
+            }
+        }
+    }
+
+    if (ipl && ipl > ipr[IPR_IPLR]) {
+        ipr[IPR_ISR] = summary;
+        ipr[IPR_INTID] = ipl;
+        xc->trap(Interrupt_Fault);
+        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
+                ipr[IPR_IPLR], ipl, summary);
+    }
+
+}
+
+template <class XC>
+void
+AlphaISA::zeroRegisters(XC *xc)
+{
+    // Insure ISA semantics
+    xc->setIntReg(ZeroReg, 0);
+    xc->setFloatRegDouble(ZeroReg, 0.0);
+}
 
 void
 ExecContext::ev5_trap(Fault fault)
@@ -581,5 +640,13 @@ ExecContext::simPalCheck(int palFunc)
 
     return true;
 }
+
+//Forward instantiation for FastCPU object
+template
+void AlphaISA::processInterrupts(FastCPU *xc);
+
+//Forward instantiation for FastCPU object
+template
+void AlphaISA::zeroRegisters(FastCPU *xc);
 
 #endif // FULL_SYSTEM

@@ -106,6 +106,7 @@ ExecContext::serialize(ostream &os)
     regs.serialize(os);
     // thread_num and cpu_id are deterministic from the config
     SERIALIZE_SCALAR(func_exe_inst);
+    SERIALIZE_SCALAR(inst);
 
 #ifdef FULL_SYSTEM
     bool ctx = false;
@@ -143,6 +144,7 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(func_exe_inst);
+    UNSERIALIZE_SCALAR(inst);
 
 #ifdef FULL_SYSTEM
     bool ctx;
@@ -231,5 +233,18 @@ ExecContext::regStats(const string &name)
 {
 #ifdef FULL_SYSTEM
     kernelStats.regStats(name + ".kern");
+#endif
+}
+
+void
+ExecContext::trap(Fault fault)
+{
+    //TheISA::trap(fault);    //One possible way to do it...
+
+    /** @todo: Going to hack it for now.  Do a true fixup later. */
+#ifdef FULL_SYSTEM
+    ev5_trap(fault);
+#else
+    fatal("fault (%d) detected @ PC 0x%08p", fault, readPC());
 #endif
 }

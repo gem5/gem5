@@ -42,6 +42,7 @@
 // forward declarations
 class ExecContext;
 class DynInst;
+class FastCPU;
 class SimpleCPU;
 class SymbolTable;
 
@@ -311,6 +312,11 @@ class StaticInst : public StaticInstBase
      * Execute this instruction under SimpleCPU model.
      */
     virtual Fault execute(SimpleCPU *xc, Trace::InstRecord *traceData) = 0;
+
+    /**
+     * Execute this instruction under FastCPU model.
+     */
+    virtual Fault execute(FastCPU *xc, Trace::InstRecord *traceData) = 0;
 
     /**
      * Execute this instruction under detailed FullCPU model.

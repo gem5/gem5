@@ -71,6 +71,8 @@
 #define MM_STAT_ACV_MASK		0x0002
 #define MM_STAT_WR_MASK			0x0001
 
+#define OPCODE(X)                       (X >> 26) & 0x3f
+#define RA(X)                           (X >> 21) & 0x1f
 
 ////////////////////////////////////////////////////////////////////////
 //
