@@ -49,9 +49,9 @@ use strict;
 # and generally quite adequate algorithm will be used instead.
 my $use_complexdiff = 0;
 
-if ($use_complexdiff) {
-    use Algorithm::Diff qw(traverse_sequences);
-};
+#if ($use_complexdiff) {
+#    use Algorithm::Diff qw(traverse_sequences);
+#};
 
 my $lookahead_lines = 200;
 my $precontext_lines = 3;
