@@ -132,7 +132,7 @@ Text::output()
         for (i = bins().begin(); i != end; ++i) {
             MainBin *bin = *i;
             bin->activate();
-            ccprintf(*stream,"---%s Bin------------\n", bin);
+            ccprintf(*stream,"---%s Bin------------\n", bin->name());
             stat_list_t::const_iterator i, end = stats().end();
             for (i = stats().begin(); i != end; ++i)
                 (*i)->visit(*this);
