@@ -2388,7 +2388,14 @@ decode OPCODE default Unknown::unknown() {
 	}
 
 	format BasicOperate {
-	    0xc000: rpcc({{ Ra = curTick; }});
+	    0xc000: rpcc({{
+#ifdef FULL_SYSTEM
+		uint64_t cc = xc->readIpr(AlphaISA::IPR_CC, fault);
+		Ra = (cc<63:32> | curTick<31:0>);
+#else
+		Ra = curTick;
+#endif
+	    }});
 
 	    // All of the barrier instructions below do nothing in
 	    // their execute() methods (hence the empty code blocks).

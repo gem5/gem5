@@ -329,10 +329,22 @@ ExecContext::setIpr(int idx, uint64_t val)
       case AlphaISA::IPR_PAL_BASE:
       case AlphaISA::IPR_IC_PERR_STAT:
       case AlphaISA::IPR_DC_PERR_STAT:
-      case AlphaISA::IPR_CC_CTL:
-      case AlphaISA::IPR_CC:
       case AlphaISA::IPR_PMCTR:
         // write entire quad w/ no side-effect
+        ipr[idx] = val;
+        break;
+
+      case AlphaISA::IPR_CC_CTL:
+        // This IPR resets the cycle counter.  We assume this only
+        // happens once... let's verify that.
+        assert(ipr[idx] == 0);
+        ipr[idx] = 1;
+        break;
+
+      case AlphaISA::IPR_CC:
+        // This IPR only writes the upper 64 bits.  It's ok to write
+        // all 64 here since we mask out the lower 32 in rpcc (see
+        // isa_desc).
         ipr[idx] = val;
         break;
 
