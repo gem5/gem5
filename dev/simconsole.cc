@@ -315,7 +315,7 @@ CREATE_SIM_OBJECT(SimConsole)
 {
     string filename;
 
-    if (!output.isValid()) {
+    if (filename.empty()) {
         filename = getInstanceName();
     } else if (append_name) {
         filename = (string)output + "." + getInstanceName();

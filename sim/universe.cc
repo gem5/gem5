@@ -143,7 +143,8 @@ CREATE_SIM_OBJECT(Root)
     __ticksPerNS = freq / 1.0e9;
     __ticksPerPS = freq / 1.0e12;
 
-    if (output_dir.isValid()) {
+    outputDirectory = output_dir;
+    if (!outputDirectory.empty()) {
         outputDirectory = output_dir;
 
         // guarantee that directory ends with a '/'
@@ -159,9 +160,10 @@ CREATE_SIM_OBJECT(Root)
     }
 
     outputStream = makeOutputStream(output_file);
-    configStream = config_output_file.isValid()
-        ? makeOutputStream(config_output_file)
-        : outputStream;
+    configStream = outputStream;
+    string cof = config_output_file;
+    if (!cof.empty())
+        configStream = makeOutputStream(cof);
 
     return root;
 }
