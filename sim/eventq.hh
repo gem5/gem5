@@ -97,8 +97,6 @@ class Event : public Serializeable, public FastAlloc
 
   public:
 
-    static const std::string defaultName;
-
     /*
      * Event constructor
      * @param queue that the event gets scheduled on
@@ -115,7 +113,7 @@ class Event : public Serializeable, public FastAlloc
     ~Event() {}
 
     virtual std::string name() const {
-        return csprintf("%s_%x", defaultName, (uintptr_t)this);
+        return csprintf("Event_%x", (uintptr_t)this);
     }
 
     /// Determine if the current event is scheduled

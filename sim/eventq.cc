@@ -42,8 +42,6 @@
 
 using namespace std;
 
-const string Event::defaultName("event");
-
 //
 // Main Event Queue
 //
@@ -160,18 +158,12 @@ EventQueue::serialize(ostream &os)
     while (event) {
         if (event->getFlags(Event::AutoSerialize)) {
             eventPtrs.push_back(event);
-            numEvents++;
+            paramOut(os, csprintf("event%d", numEvents++), event->name());
         }
         event = event->next;
     }
 
     SERIALIZE_SCALAR(numEvents);
-
-    int i = 0;
-    for (std::list<Event *>::iterator it=eventPtrs.begin();
-         it != eventPtrs.end(); ++it) {
-        paramOut(os, csprintf("%s.eventPtr%d", name(), i++), (uintptr_t)*it);
-    }
 
     for (std::list<Event *>::iterator it=eventPtrs.begin();
          it != eventPtrs.end(); ++it) {
@@ -184,16 +176,15 @@ void
 EventQueue::unserialize(Checkpoint *cp, const std::string &section)
 {
     int numEvents;
-    uintptr_t ptr;
-
     UNSERIALIZE_SCALAR(numEvents);
 
+    std::string eventName;
     for (int i = 0; i < numEvents; i++) {
         // get the pointer value associated with the event
-        paramIn(cp, section, csprintf("%s.eventPtr%d", name(), i), ptr);
+        paramIn(cp, section, csprintf("event%d", i), eventName);
 
         // create the event based on its pointer value
-        Serializeable::create(cp, csprintf("%s_%x", Event::defaultName, ptr));
+        Serializeable::create(cp, eventName);
     }
 }
 
