@@ -604,7 +604,6 @@ Tru64System::breakpoint()
     return remoteGDB[0]->trap(ALPHA_KENTRY_INT);
 }
 
-#ifdef FS_MEASURE
 void
 Tru64System::populateMap(std::string callee, std::string caller)
 {
@@ -646,7 +645,6 @@ Tru64System::dumpState(ExecContext *xc) const
         }
     }
 }
-#endif //FS_MEASURE
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
 
@@ -672,7 +670,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64System)
     INIT_PARAM(console_code, "file that contains the console code"),
     INIT_PARAM(pal_code, "file that contains palcode"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
-                                   "a")
+                    "a")
 
 
 END_INIT_SIM_OBJECT_PARAMS(Tru64System)
