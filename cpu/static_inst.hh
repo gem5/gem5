@@ -32,12 +32,12 @@
 #include <bitset>
 #include <string>
 
-#include "host.hh"
-#include "hashmap.hh"
-#include "refcnt.hh"
+#include "sim/host.hh"
+#include "base/hashmap.hh"
+#include "base/refcnt.hh"
 
-#include "op_class.hh"
-#include "isa_traits.hh"
+#include "cpu/full_cpu/op_class.hh"
+#include "targetarch/isa_traits.hh"
 
 // forward declarations
 class ExecContext;

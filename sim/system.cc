@@ -26,15 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "exec_context.hh"
-#include "object_file.hh"
-#include "memory_control.hh"
-#include "physical_memory.hh"
-#include "symtab.hh"
-#include "remote_gdb.hh"
-#include "vtophys.hh"
-#include "system.hh"
-#include "trace.hh"
+#include "cpu/exec_context.hh"
+#include "base/loader/object_file.hh"
+#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "base/loader/symtab.hh"
+#include "base/remote_gdb.hh"
+#include "targetarch/vtophys.hh"
+#include "sim/system.hh"
+#include "base/trace.hh"
 
 using namespace std;
 

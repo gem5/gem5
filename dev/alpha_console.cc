@@ -35,17 +35,17 @@
 
 #include <string>
 
-#include "alpha_console.hh"
-#include "base_cpu.hh"
-#include "console.hh"
-#include "exec_context.hh"
-#include "memory_control.hh"
-#include "simple_disk.hh"
-#include "tlaser_clock.hh"
-#include "system.hh"
-#include "trace.hh"
-#include "inifile.hh"
-#include "str.hh"	// for to_number()
+#include "dev/alpha_console.hh"
+#include "cpu/base_cpu.hh"
+#include "dev/console.hh"
+#include "cpu/exec_context.hh"
+#include "mem/functional_mem/memory_control.hh"
+#include "dev/simple_disk.hh"
+#include "dev/tlaser_clock.hh"
+#include "sim/system.hh"
+#include "base/trace.hh"
+#include "base/inifile.hh"
+#include "base/str.hh"	// for to_number()
 
 using namespace std;
 

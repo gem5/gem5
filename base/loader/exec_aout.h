@@ -57,6 +57,6 @@
         (N_GETMAGIC(ex) != NMAGIC && N_GETMAGIC(ex) != OMAGIC && \
         N_GETMAGIC(ex) != ZMAGIC)
 
-#include "aout_machdep.h"
+#include "targetarch/aout_machdep.h"
 
 #endif /* !_SYS_EXEC_AOUT_H_ */

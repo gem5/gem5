@@ -26,10 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arguments.hh"
-#include "exec_context.hh"
-#include "physical_memory.hh"
-#include "vtophys.hh"
+#include "targetarch/arguments.hh"
+#include "cpu/exec_context.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "targetarch/vtophys.hh"
 
 AlphaArguments::Data::~Data()
 {

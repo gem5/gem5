@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 
-#include "hashmap.hh"
+#include "base/hashmap.hh"
 
 class IniFile
 {

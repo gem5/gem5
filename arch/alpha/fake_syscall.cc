@@ -32,18 +32,18 @@
 #include <sys/stat.h>
 #include <string.h>	// for memset()
 
-#include "host.hh"
-#include "base_cpu.hh"
-#include "functional_memory.hh"
-#include "prog.hh"
-#include "exec_context.hh"
-#include "fake_syscall.hh"
-#include "sim_events.hh"
+#include "sim/host.hh"
+#include "cpu/base_cpu.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "sim/prog.hh"
+#include "cpu/exec_context.hh"
+#include "sim/fake_syscall.hh"
+#include "sim/sim_events.hh"
 
-#include "osf_syscalls.h"
-#include "universe.hh"	// for curTick & ticksPerSecond
+#include "targetarch/osf_syscalls.h"
+#include "sim/universe.hh"	// for curTick & ticksPerSecond
 
-#include "trace.hh"
+#include "base/trace.hh"
 
 using namespace std;
 

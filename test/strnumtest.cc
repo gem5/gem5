@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#include "str.hh"
+#include "base/str.hh"
 
 int
 main(int argc, char *argv[])

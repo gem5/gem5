@@ -29,7 +29,7 @@
 #ifndef __FIFO_BUFFER_HH__
 #define __FIFO_BUFFER_HH__
 
-#include "res_list.hh"
+#include "base/res_list.hh"
 
 
 //

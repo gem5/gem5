@@ -30,11 +30,11 @@
 #include <sstream>
 #include <iostream>
 
-#include "base_cpu.hh"
-#include "cprintf.hh"
-#include "exec_context.hh"
-#include "misc.hh"
-#include "sim_events.hh"
+#include "cpu/base_cpu.hh"
+#include "base/cprintf.hh"
+#include "cpu/exec_context.hh"
+#include "base/misc.hh"
+#include "sim/sim_events.hh"
 
 using namespace std;
 

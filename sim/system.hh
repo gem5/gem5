@@ -31,9 +31,9 @@
 
 #include <string>
 
-#include "sim_object.hh"
-#include "pc_event.hh"
-#include "symtab.hh"
+#include "sim/sim_object.hh"
+#include "cpu/pc_event.hh"
+#include "base/loader/symtab.hh"
 
 class MemoryController;
 class PhysicalMemory;

@@ -31,10 +31,10 @@
 
 #include <string>
 
-#include "predictor.hh"
+#include "base/predictor.hh"
 
-#include "statistics.hh"
-#include "sim_stats.hh"
+#include "base/statistics.hh"
+#include "sim/sim_stats.hh"
 
 struct stat_sdb_t;
 

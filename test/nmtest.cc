@@ -31,9 +31,9 @@
 #include <vector>
 
 #include "ecoff.hh"
-#include "object_file.hh"
-#include "str.hh"
-#include "symtab.hh"
+#include "base/loader/object_file.hh"
+#include "base/str.hh"
+#include "base/loader/symtab.hh"
 
 Tick curTick;
 

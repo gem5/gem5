@@ -49,8 +49,8 @@
 #include <vector>
 #include <string>
 
-#include "inifile.hh"
-#include "str.hh"
+#include "base/inifile.hh"
+#include "base/str.hh"
 
 using namespace std;
 

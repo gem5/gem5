@@ -35,9 +35,9 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "host.hh"
-#include "misc.hh"
-#include "socket.hh"
+#include "sim/host.hh"
+#include "base/misc.hh"
+#include "base/socket.hh"
 
 using namespace std;
 

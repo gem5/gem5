@@ -38,10 +38,10 @@
 
 #include <list>
 
-#include "isa_traits.hh"
-#include "sim_object.hh"
-#include "sim_stats.hh"
-#include "statistics.hh"
+#include "targetarch/isa_traits.hh"
+#include "sim/sim_object.hh"
+#include "sim/sim_stats.hh"
+#include "base/statistics.hh"
 
 class ExecContext;
 class FunctionalMemory;

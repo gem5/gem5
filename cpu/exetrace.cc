@@ -29,14 +29,14 @@
 #include <fstream>
 #include <iomanip>
 
-#include "dyn_inst.hh"
-#include "spec_state.hh"
-#include "issue.hh"
-#include "exetrace.hh"
-#include "exec_context.hh"
-#include "symtab.hh"
-#include "base_cpu.hh"
-#include "static_inst.hh"
+#include "cpu/full_cpu/dyn_inst.hh"
+#include "cpu/full_cpu/spec_state.hh"
+#include "cpu/full_cpu/issue.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/exec_context.hh"
+#include "base/loader/symtab.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/static_inst.hh"
 
 using namespace std;
 

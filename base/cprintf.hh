@@ -36,7 +36,7 @@
 
 namespace cp {
 
-#include "cprintf_formats.hh"
+#include "base/cprintf_formats.hh"
 
 class ArgList
 {

@@ -31,10 +31,10 @@
 #include <string>
 #include <vector>
 
-#include "host.hh"
-#include "misc.hh"
-#include "str.hh"
-#include "symtab.hh"
+#include "sim/host.hh"
+#include "base/misc.hh"
+#include "base/str.hh"
+#include "base/loader/symtab.hh"
 
 using namespace std;
 

@@ -33,8 +33,8 @@
 #ifndef __SIMPLE_DISK_HH__
 #define __SIMPLE_DISK_HH__
 
-#include "physical_memory.hh"
-#include "sim_object.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "sim/sim_object.hh"
 
 class DiskImage;
 

@@ -31,9 +31,9 @@
 
 #include <vector>
 
-#include "cprintf.hh"
-#include "host.hh"
-#include "universe.hh"
+#include "base/cprintf.hh"
+#include "sim/host.hh"
+#include "sim/universe.hh"
 
 #ifndef TRACING_ON
 #ifdef DEBUG
@@ -43,7 +43,7 @@
 #endif
 #endif
 
-#include "trace_flags.hh"
+#include "base/trace_flags.hh"
 
 namespace Trace {
 

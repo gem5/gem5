@@ -36,47 +36,47 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "host.hh"
-#include "cprintf.hh"
-#include "misc.hh"
-#include "smt.hh"
+#include "sim/host.hh"
+#include "base/cprintf.hh"
+#include "base/misc.hh"
+#include "cpu/full_cpu/smt.hh"
 
-#include "annotation.hh"
-#include "exec_context.hh"
-#include "base_cpu.hh"
-#include "debug.hh"
-#include "simple_cpu.hh"
-#include "inifile.hh"
-#include "mem_interface.hh"
-#include "base_mem.hh"
-#include "static_inst.hh"
+#include "sim/annotation.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/base_cpu.hh"
+#include "sim/debug.hh"
+#include "cpu/simple_cpu/simple_cpu.hh"
+#include "base/inifile.hh"
+#include "mem/mem_interface.hh"
+#include "mem/base_mem.hh"
+#include "cpu/static_inst.hh"
 
 #ifdef FULL_SYSTEM
-#include "memory_control.hh"
-#include "physical_memory.hh"
-#include "alpha_memory.hh"
-#include "system.hh"
+#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "targetarch/alpha_memory.hh"
+#include "sim/system.hh"
 #else // !FULL_SYSTEM
-#include "functional_memory.hh"
-#include "prog.hh"
-#include "eio.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "sim/prog.hh"
+#include "eio/eio.hh"
 #endif // FULL_SYSTEM
 
-#include "exetrace.hh"
-#include "trace.hh"
-#include "sim_events.hh"
-#include "pollevent.hh"
-#include "sim_object.hh"
-#include "sim_stats.hh"
+#include "cpu/exetrace.hh"
+#include "base/trace.hh"
+#include "sim/sim_events.hh"
+#include "base/pollevent.hh"
+#include "sim/sim_object.hh"
+#include "sim/sim_stats.hh"
 
-#include "range.hh"
-#include "symtab.hh"
+#include "base/range.hh"
+#include "base/loader/symtab.hh"
 
 #ifdef FULL_SYSTEM
-#include "vtophys.hh"
-#include "pciareg.h"
-#include "remote_gdb.hh"
-#include "alpha_access.h"
+#include "targetarch/vtophys.hh"
+#include "dev/pciareg.h"
+#include "base/remote_gdb.hh"
+#include "dev/alpha_access.h"
 #endif
 
 

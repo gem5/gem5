@@ -30,7 +30,7 @@
 #define __MISC_HH__
 
 #include <assert.h>
-#include "cprintf.hh"
+#include "base/cprintf.hh"
 
 //
 // This implements a cprintf based panic

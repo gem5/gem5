@@ -33,10 +33,10 @@
 #include <string>
 #include <vector>
 
-#include "debug.hh"
-#include "eventq.hh"
-#include "param.hh"
-#include "sim_events.hh"
+#include "sim/debug.hh"
+#include "sim/eventq.hh"
+#include "sim/param.hh"
+#include "sim/sim_events.hh"
 
 using namespace std;
 

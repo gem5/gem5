@@ -29,9 +29,9 @@
 #include <string>
 #include <vector>
 
-#include "base_cpu.hh"
-#include "intr_control.hh"
-#include "sim_object.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/intr_control.hh"
+#include "sim/sim_object.hh"
 
 using namespace std;
 

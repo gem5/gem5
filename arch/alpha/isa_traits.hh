@@ -29,9 +29,9 @@
 #ifndef __ISA_TRAITS_HH__
 #define __ISA_TRAITS_HH__
 
-#include "host.hh"
-#include "faults.hh"
-#include "misc.hh"
+#include "sim/host.hh"
+#include "targetarch/faults.hh"
+#include "base/misc.hh"
 
 class CPU;
 class IniFile;
@@ -124,7 +124,7 @@ class AlphaISA
 
     typedef uint64_t InternalProcReg;
 
-#include "isa_fullsys_traits.hh"
+#include "targetarch/isa_fullsys_traits.hh"
 
 #else
     enum {
@@ -276,7 +276,7 @@ const int NumInterruptLevels = TheISA::NumInterruptLevels;
 
 // more stuff that should be imported here, but I'm too tired to do it
 // right now...
-#include "ev5.hh"
+#include "targetarch/ev5.hh"
 #endif
 
 #endif // __ALPHA_ISA_H__

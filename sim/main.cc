@@ -37,23 +37,23 @@
 #include <string>
 #include <vector>
 
-#include "host.hh"
-#include "misc.hh"
+#include "sim/host.hh"
+#include "base/misc.hh"
 
-#include "copyright.hh"
-#include "inifile.hh"
-#include "configfile.hh"
-#include "pollevent.hh"
-#include "statistics.hh"
-#include "sim_events.hh"
-#include "sim_exit.hh"
-#include "sim_object.hh"
-#include "sim_stats.hh"
-#include "sim_time.hh"
-#include "smt.hh"
+#include "base/copyright.hh"
+#include "base/inifile.hh"
+#include "sim/configfile.hh"
+#include "base/pollevent.hh"
+#include "base/statistics.hh"
+#include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
+#include "sim/sim_object.hh"
+#include "sim/sim_stats.hh"
+#include "sim/sim_time.hh"
+#include "cpu/full_cpu/smt.hh"
 
-#include "base_cpu.hh"
-#include "async.hh"
+#include "cpu/base_cpu.hh"
+#include "sim/async.hh"
 
 using namespace std;
 

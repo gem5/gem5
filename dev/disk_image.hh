@@ -35,8 +35,8 @@
 
 #include <fstream>
 
-#include "hashmap.hh"
-#include "sim_object.hh"
+#include "base/hashmap.hh"
+#include "sim/sim_object.hh"
 
 #define SectorSize (512)
 

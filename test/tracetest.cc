@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "host.hh"
-#include "trace.hh"
+#include "sim/host.hh"
+#include "base/trace.hh"
 
 using namespace std;
 

@@ -33,11 +33,11 @@
 #ifndef __ETHERLINK_HH__
 #define __ETHERLINK_HH__
 
-#include "host.hh"
-#include "eventq.hh"
-#include "etherint.hh"
-#include "etherpkt.hh"
-#include "sim_object.hh"
+#include "sim/host.hh"
+#include "sim/eventq.hh"
+#include "dev/etherint.hh"
+#include "dev/etherpkt.hh"
+#include "sim/sim_object.hh"
 
 class EtherDump;
 

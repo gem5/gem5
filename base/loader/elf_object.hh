@@ -29,7 +29,7 @@
 #ifndef __ELF_OBJECT_HH__
 #define __ELF_OBJECT_HH__
 
-#include "object_file.hh"
+#include "base/loader/object_file.hh"
 
 // forward decls: avoid including exec_elf.hh here
 struct Elf64_Ehdr;

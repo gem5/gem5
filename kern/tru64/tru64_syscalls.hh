@@ -29,8 +29,8 @@
 #ifndef __TRU64_SYSCALLS_HH__
 #define __TRU64_SYSCALLS_HH__
 
-#include "syscalls.hh"
-#include "tru64.hh"
+#include "targetarch/syscalls.hh"
+#include "kern/tru64/tru64.hh"
 
 struct SystemCalls<Tru64>
 {

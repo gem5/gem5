@@ -35,13 +35,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "cprintf.hh"
-#include "object_file.hh"
-#include "symtab.hh"
+#include "base/cprintf.hh"
+#include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
 
-#include "ecoff_object.hh"
-#include "aout_object.hh"
-#include "elf_object.hh"
+#include "base/loader/ecoff_object.hh"
+#include "base/loader/aout_object.hh"
+#include "base/loader/elf_object.hh"
 
 using namespace std;
 

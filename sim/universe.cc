@@ -30,9 +30,9 @@
 #include <string>
 #include <vector>
 
-#include "universe.hh"
-#include "host.hh"
-#include "param.hh"
+#include "sim/universe.hh"
+#include "sim/host.hh"
+#include "sim/param.hh"
 
 using namespace std;
 

@@ -29,7 +29,7 @@
 #ifndef __VTOPHYS_H__
 #define __VTOPHYS_H__
 
-#include "pmap.h"
+#include "targetarch/pmap.h"
 
 inline bool entry_valid(uint64_t entry)
 { return (entry & ALPHA_PTE_VALID) != 0; }

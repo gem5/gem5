@@ -35,9 +35,9 @@
 
 #include <memory>
 
-#include "host.hh"
+#include "sim/host.hh"
 
-#include "refcnt.hh"
+#include "base/refcnt.hh"
 
 /*
  * Reference counted class containing ethernet packet data

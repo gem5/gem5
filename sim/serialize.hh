@@ -37,8 +37,8 @@
 #include <list>
 #include <iostream>
 
-#include "host.hh"
-#include "configfile.hh"
+#include "sim/host.hh"
+#include "sim/configfile.hh"
 
 class IniFile;
 

@@ -1,16 +1,16 @@
 /* $Id$ */
 
-#include "alpha_memory.hh"
-#include "annotation.hh"
+#include "targetarch/alpha_memory.hh"
+#include "sim/annotation.hh"
 #ifdef DEBUG
-#include "debug.hh"
+#include "sim/debug.hh"
 #endif
-#include "exec_context.hh"
-#include "sim_events.hh"
-#include "isa_traits.hh"
-#include "remote_gdb.hh"
-#include "kgdb.h"	// for ALPHA_KENTRY_IF
-#include "osfpal.hh"
+#include "cpu/exec_context.hh"
+#include "sim/sim_events.hh"
+#include "targetarch/isa_traits.hh"
+#include "base/remote_gdb.hh"
+#include "base/kgdb.h"	// for ALPHA_KENTRY_IF
+#include "targetarch/osfpal.hh"
 
 #ifdef FULL_SYSTEM
 

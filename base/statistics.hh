@@ -51,9 +51,9 @@
 
 #include <assert.h>
 
-#include "host.hh"
-#include "refcnt.hh"
-#include "str.hh"
+#include "sim/host.hh"
+#include "base/refcnt.hh"
+#include "base/str.hh"
 
 #ifndef NAN
 float __nan();

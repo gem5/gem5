@@ -26,9 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "etherint.hh"
-#include "misc.hh"
-#include "sim_object.hh"
+#include "dev/etherint.hh"
+#include "base/misc.hh"
+#include "sim/sim_object.hh"
 
 void
 EtherInt::setPeer(EtherInt *p)

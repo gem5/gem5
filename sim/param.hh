@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-#include "configfile.hh"
+#include "sim/configfile.hh"
 
 // forward decls
 class BaseParam;

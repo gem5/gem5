@@ -9,11 +9,11 @@
 
 #include <iostream>
 
-#include "circlebuf.hh"
-#include "intr_control.hh"
-#include "pollevent.hh"
-#include "socket.hh"
-#include "sim_object.hh"
+#include "base/circlebuf.hh"
+#include "cpu/intr_control.hh"
+#include "base/pollevent.hh"
+#include "base/socket.hh"
+#include "sim/sim_object.hh"
 
 class ConsoleListener;
 class SimConsole : public SimObject

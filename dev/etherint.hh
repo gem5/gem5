@@ -36,8 +36,8 @@
 
 #include <string>
 
-#include "etherpkt.hh"
-#include "sim_object.hh"
+#include "dev/etherpkt.hh"
+#include "sim/sim_object.hh"
 
 /*
  * Class representing the actual interface between two ethernet

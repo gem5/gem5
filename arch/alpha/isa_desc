@@ -18,20 +18,20 @@ let {{
 #include <fenv.h>
 #endif
 
-#include "static_inst.hh"
-#include "cprintf.hh"
-#include "misc.hh"
-#include "op_class.hh"
+#include "cpu/static_inst.hh"
+#include "base/cprintf.hh"
+#include "base/misc.hh"
+#include "cpu/full_cpu/op_class.hh"
 
-#include "exec_context.hh"
-#include "simple_cpu.hh"
-#include "spec_state.hh"
-#include "cpu.hh"
-#include "exetrace.hh"
-#include "annotation.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/simple_cpu/simple_cpu.hh"
+#include "cpu/full_cpu/spec_state.hh"
+#include "cpu/full_cpu/cpu.hh"
+#include "cpu/exetrace.hh"
+#include "sim/annotation.hh"
 
 #ifdef FULL_SYSTEM
-#include "ev5.hh"
+#include "targetarch/ev5.hh"
 #endif
 
 namespace AlphaISA;

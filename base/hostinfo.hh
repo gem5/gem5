@@ -29,7 +29,7 @@
 #ifndef __HOSTINFO_HH__
 #define __HOSTINFO_HH__
 
-#include "host.hh"
+#include "sim/host.hh"
 
 uint64_t procInfo(char *filename, char *target);
 

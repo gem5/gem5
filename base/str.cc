@@ -34,8 +34,8 @@
 #include <string>
 #include <vector>
 
-#include "intmath.hh"
-#include "str.hh"
+#include "base/intmath.hh"
+#include "base/str.hh"
 
 using namespace std;
 

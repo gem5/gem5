@@ -36,12 +36,12 @@
 
 #include <math.h>
 
-#include "etherbus.hh"
-#include "etherdump.hh"
-#include "etherint.hh"
-#include "etherpkt.hh"
-#include "trace.hh"
-#include "universe.hh"
+#include "dev/etherbus.hh"
+#include "dev/etherdump.hh"
+#include "dev/etherint.hh"
+#include "dev/etherpkt.hh"
+#include "base/trace.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 

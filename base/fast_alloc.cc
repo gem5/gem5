@@ -37,7 +37,7 @@
 #endif
 
 #include <assert.h>
-#include "fast_alloc.hh"
+#include "base/fast_alloc.hh"
 
 void *FastAlloc::freeLists[Num_Buckets];
 

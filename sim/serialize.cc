@@ -33,15 +33,15 @@
 #include <string>
 #include <vector>
 
-#include "misc.hh"
+#include "base/misc.hh"
 
-#include "eventq.hh"
-#include "param.hh"
-#include "serialize.hh"
-#include "inifile.hh"
-#include "sim_events.hh"
-#include "sim_object.hh"
-#include "trace.hh"
+#include "sim/eventq.hh"
+#include "sim/param.hh"
+#include "sim/serialize.hh"
+#include "base/inifile.hh"
+#include "sim/sim_events.hh"
+#include "sim/sim_object.hh"
+#include "base/trace.hh"
 
 using namespace std;
 

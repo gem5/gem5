@@ -31,8 +31,8 @@
 
 #include <assert.h>
 
-#include "intmath.hh"
-#include "str.hh"
+#include "base/intmath.hh"
+#include "base/str.hh"
 
 template<class T>
 class Range

@@ -31,9 +31,9 @@
 
 #include <assert.h>
 
-#include "host.hh"
-#include "kernel.hh"
-#include "refcnt.hh"
+#include "sim/host.hh"
+#include "targetarch/kernel.hh"
+#include "base/refcnt.hh"
 
 class ExecContext;
 

@@ -33,9 +33,9 @@
 #ifndef __ALPHA_CONSOLE_HH__
 #define __ALPHA_CONSOLE_HH__
 
-#include "host.hh"
-#include "alpha_access.h"
-#include "mmap_device.hh"
+#include "sim/host.hh"
+#include "dev/alpha_access.h"
+#include "mem/functional_mem/mmap_device.hh"
 
 class BaseCPU;
 class SimConsole;

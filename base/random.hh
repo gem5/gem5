@@ -29,7 +29,7 @@
 #ifndef __RANDOM_HH__
 #define __RANDOM_HH__
 
-#include "host.hh"
+#include "sim/host.hh"
 
 long getLong();
 double getDouble();

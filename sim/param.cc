@@ -34,14 +34,14 @@
 
 #include <assert.h>
 
-#include "param.hh"
-#include "sim_object.hh"
-#include "inifile.hh"
-#include "configfile.hh"
-#include "config_node.hh"
-#include "misc.hh"
-#include "str.hh"
-#include "trace.hh"
+#include "sim/param.hh"
+#include "sim/sim_object.hh"
+#include "base/inifile.hh"
+#include "sim/configfile.hh"
+#include "sim/config_node.hh"
+#include "base/misc.hh"
+#include "base/str.hh"
+#include "base/trace.hh"
 
 using namespace std;
 

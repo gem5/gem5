@@ -33,14 +33,14 @@
 #include <iomanip>
 #include <vector>
 
-#include "memtest.hh"
-#include "misc.hh"
-#include "sim_events.hh"
-#include "main_memory.hh"
-#include "base_cache.hh"
+#include "cpu/memtest/memtest.hh"
+#include "base/misc.hh"
+#include "sim/sim_events.hh"
+#include "mem/functional_mem/main_memory.hh"
+#include "mem/cache/base_cache.hh"
 
-#include "statistics.hh"
-#include "sim_stats.hh"
+#include "base/statistics.hh"
+#include "sim/sim_stats.hh"
 
 using namespace std;
 

@@ -40,14 +40,14 @@
 #include <deque>
 #include <string>
 
-#include "etherdump.hh"
-#include "etherint.hh"
-#include "etherpkt.hh"
-#include "ethertap.hh"
-#include "pollevent.hh"
-#include "socket.hh"
-#include "trace.hh"
-#include "misc.hh"
+#include "dev/etherdump.hh"
+#include "dev/etherint.hh"
+#include "dev/etherpkt.hh"
+#include "dev/ethertap.hh"
+#include "base/pollevent.hh"
+#include "base/socket.hh"
+#include "base/trace.hh"
+#include "base/misc.hh"
 
 using namespace std;
 

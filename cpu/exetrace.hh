@@ -32,11 +32,11 @@
 #include <fstream>
 #include <vector>
 
-#include "host.hh"
-#include "inst_seq.hh"	// for InstSeqNum
-#include "trace.hh"
-#include "exec_context.hh"
-#include "static_inst.hh"
+#include "sim/host.hh"
+#include "cpu/inst_seq.hh"	// for InstSeqNum
+#include "base/trace.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/static_inst.hh"
 
 class BaseCPU;
 

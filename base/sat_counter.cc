@@ -28,10 +28,10 @@
 
 #include <sstream>
 
-#include "sat_counter.hh"
+#include "base/sat_counter.hh"
 
-#include "statistics.hh"
-#include "sim_stats.hh"
+#include "base/statistics.hh"
+#include "sim/sim_stats.hh"
 
 
 using namespace std;

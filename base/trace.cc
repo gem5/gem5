@@ -33,9 +33,9 @@
 #include <string>
 #include <vector>
 
-#include "misc.hh"
-#include "trace.hh"
-#include "str.hh"
+#include "base/misc.hh"
+#include "base/trace.hh"
+#include "base/str.hh"
 
 using namespace std;
 

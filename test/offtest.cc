@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdio.h>
-#include "pcireg.h"
+#include "dev/pcireg.h"
 
 int
 main()

@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "intmath.hh"
+#include "base/intmath.hh"
 
 int
 PrevPrime(int n)

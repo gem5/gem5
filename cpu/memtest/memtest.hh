@@ -29,14 +29,14 @@
 #ifndef __MEMTEST_HH__
 #define __MEMTEST_HH__
 
-#include "sim_object.hh"
-#include "mem_interface.hh"
-#include "functional_memory.hh"
-#include "base_cpu.hh"
-#include "exec_context.hh"
+#include "sim/sim_object.hh"
+#include "mem/mem_interface.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
 
-#include "statistics.hh"
-#include "sim_stats.hh"
+#include "base/statistics.hh"
+#include "sim/sim_stats.hh"
 
 class MemTest : public BaseCPU
 {

@@ -28,16 +28,16 @@
 
 #include <string>
 
-#include "ecoff_object.hh"
+#include "base/loader/ecoff_object.hh"
 
-#include "functional_memory.hh"
-#include "symtab.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "base/loader/symtab.hh"
 
-#include "trace.hh"	// for DPRINTF
+#include "base/trace.hh"	// for DPRINTF
 
-#include "exec_ecoff.h"
-#include "coff_sym.h"
-#include "coff_symconst.h"
+#include "base/loader/exec_ecoff.h"
+#include "base/loader/coff_sym.h"
+#include "base/loader/coff_symconst.h"
 
 using namespace std;
 

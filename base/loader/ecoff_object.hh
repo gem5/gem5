@@ -29,7 +29,7 @@
 #ifndef __ECOFF_OBJECT_HH__
 #define __ECOFF_OBJECT_HH__
 
-#include "object_file.hh"
+#include "base/loader/object_file.hh"
 
 // forward decls: avoid including exec_ecoff.h here
 struct ecoff_exechdr;

@@ -29,7 +29,7 @@
 #ifndef __AOUT_OBJECT_HH__
 #define __AOUT_OBJECT_HH__
 
-#include "object_file.hh"
+#include "base/loader/object_file.hh"
 
 // forward decls: avoid including exec_aout.h here
 struct aout_exechdr;

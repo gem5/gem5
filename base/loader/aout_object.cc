@@ -28,14 +28,14 @@
 
 #include <string>
 
-#include "aout_object.hh"
+#include "base/loader/aout_object.hh"
 
-#include "functional_memory.hh"
-#include "symtab.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "base/loader/symtab.hh"
 
-#include "trace.hh"	// for DPRINTF
+#include "base/trace.hh"	// for DPRINTF
 
-#include "exec_aout.h"
+#include "base/loader/exec_aout.h"
 
 using namespace std;
 

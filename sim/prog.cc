@@ -32,19 +32,19 @@
 
 #include <string>
 
-#include "main_memory.hh"
-#include "prog.hh"
+#include "mem/functional_mem/main_memory.hh"
+#include "sim/prog.hh"
 
-#include "eio.hh"
-#include "intmath.hh"
-#include "thread.hh"
-#include "fake_syscall.hh"
-#include "object_file.hh"
-#include "exec_context.hh"
-#include "smt.hh"
+#include "eio/eio.hh"
+#include "base/intmath.hh"
+#include "cpu/full_cpu/thread.hh"
+#include "sim/fake_syscall.hh"
+#include "base/loader/object_file.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/full_cpu/smt.hh"
 
-#include "statistics.hh"
-#include "sim_stats.hh"
+#include "base/statistics.hh"
+#include "sim/sim_stats.hh"
 
 using namespace std;
 

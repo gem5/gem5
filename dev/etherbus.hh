@@ -33,9 +33,9 @@
 #ifndef __ETHERBUS_H__
 #define __ETHERBUS_H__
 
-#include "eventq.hh"
-#include "etherpkt.hh"
-#include "sim_object.hh"
+#include "sim/eventq.hh"
+#include "dev/etherpkt.hh"
+#include "sim/sim_object.hh"
 
 class EtherDump;
 class EtherInt;

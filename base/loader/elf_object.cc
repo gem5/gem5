@@ -28,14 +28,14 @@
 
 #include <string>
 
-#include "elf_object.hh"
+#include "base/loader/elf_object.hh"
 
-#include "functional_memory.hh"
-#include "symtab.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "base/loader/symtab.hh"
 
-#include "trace.hh"	// for DPRINTF
+#include "base/trace.hh"	// for DPRINTF
 
-#include "exec_elf.h"
+#include "base/loader/exec_elf.h"
 
 using namespace std;
 

@@ -29,8 +29,8 @@
 #ifndef __SYMTAB_HH__
 #define __SYMTAB_HH__
 
-#include "hashmap.hh"
-#include "isa_traits.hh"	// for Addr
+#include "base/hashmap.hh"
+#include "targetarch/isa_traits.hh"	// for Addr
 
 class SymbolTable
 {

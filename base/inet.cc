@@ -29,9 +29,9 @@
 #include <sstream>
 #include <string>
 
-#include "cprintf.hh"
-#include "host.hh"
-#include "inet.hh"
+#include "base/cprintf.hh"
+#include "sim/host.hh"
+#include "base/inet.hh"
 
 using namespace::std;
 string

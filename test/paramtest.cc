@@ -32,8 +32,8 @@
 // to the sources list, then use configs/test.ini as the configuration
 // file.
 //
-#include "sim_object.hh"
-#include "cache.hh"
+#include "sim/sim_object.hh"
+#include "mem/cache/cache.hh"
 
 class ParamTest : public SimObject
 {

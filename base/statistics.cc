@@ -35,12 +35,12 @@
 
 #include <math.h>
 
-#include "cprintf.hh"
-#include "intmath.hh"
-#include "misc.hh"
-#include "statistics.hh"
-#include "str.hh"
-#include "universe.hh"
+#include "base/cprintf.hh"
+#include "base/intmath.hh"
+#include "base/misc.hh"
+#include "base/statistics.hh"
+#include "base/str.hh"
+#include "sim/universe.hh"
 
 #ifdef __M5_NAN
 float

@@ -31,10 +31,10 @@
 #include <string>
 #include <unistd.h>
 
-#include "cprintf.hh"
-#include "host.hh"
-#include "misc.hh"
-#include "statistics.hh"
+#include "base/cprintf.hh"
+#include "sim/host.hh"
+#include "base/misc.hh"
+#include "base/statistics.hh"
 
 using namespace std;
 using namespace Statistics;

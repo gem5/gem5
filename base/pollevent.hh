@@ -31,7 +31,7 @@
 
 #include <vector>
 #include <poll.h>
-#include "universe.hh"
+#include "sim/universe.hh"
 
 class PollEvent
 {

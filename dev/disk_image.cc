@@ -40,11 +40,11 @@
 #include <fstream>
 #include <string>
 
-#include "disk_image.hh"
-#include "misc.hh"
-#include "trace.hh"
-#include "sim_exit.hh"
-#include "callback.hh"
+#include "dev/disk_image.hh"
+#include "base/misc.hh"
+#include "base/trace.hh"
+#include "sim/sim_exit.hh"
+#include "base/callback.hh"
 
 using namespace std;
 

@@ -7,7 +7,7 @@
 #error This code is only valid for EV5 systems
 #endif
 
-#include "isa_traits.hh"
+#include "targetarch/isa_traits.hh"
 
 void m5_exit();
 

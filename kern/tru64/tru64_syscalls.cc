@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "tru64_syscalls.hh"
+#include "kern/tru64/tru64_syscalls.hh"
 
 namespace {
     const char *

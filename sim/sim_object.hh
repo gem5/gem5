@@ -38,8 +38,8 @@
 #include <vector>
 #include <iostream>
 
-#include "param.hh"
-#include "serialize.hh"
+#include "sim/param.hh"
+#include "sim/serialize.hh"
 
 /*
  * Abstract superclass for simulation objects.  Represents things that

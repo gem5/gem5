@@ -28,8 +28,8 @@
 
 #include <iostream.h>
 
-#include "str.hh"
-#include "symtab.hh"
+#include "base/str.hh"
+#include "base/loader/symtab.hh"
 
 Tick curTick = 0;
 

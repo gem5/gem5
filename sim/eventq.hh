@@ -40,11 +40,11 @@
 #include <string>
 #include <vector>
 
-#include "host.hh"	// for Tick
+#include "sim/host.hh"	// for Tick
 
-#include "fast_alloc.hh"
-#include "serialize.hh"
-#include "trace.hh"
+#include "base/fast_alloc.hh"
+#include "sim/serialize.hh"
+#include "base/trace.hh"
 
 class EventQueue;	// forward declaration
 

@@ -29,7 +29,7 @@
 #ifndef __SIM_EVENTS_HH__
 #define __SIM_EVENTS_HH__
 
-#include "eventq.hh"
+#include "sim/eventq.hh"
 
 //
 // Event to terminate simulation at a particular cycle/instruction

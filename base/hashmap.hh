@@ -37,7 +37,7 @@
 
 #include <string>
 
-#include "host.hh"
+#include "sim/host.hh"
 
 #if defined(__GNUC__) && __GNUC__ >= 3
     #define __hash_namespace __gnu_cxx

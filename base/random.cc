@@ -29,8 +29,8 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "param.hh"
-#include "random.hh"
+#include "sim/param.hh"
+#include "base/random.hh"
 
 using namespace std;
 

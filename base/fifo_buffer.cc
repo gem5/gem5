@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "fifo_buffer.hh"
+#include "base/fifo_buffer.hh"
 
 template<class T>
 void

@@ -29,9 +29,9 @@
 #include <string>
 #include <sstream>
 
-#include "hybrid_pred.hh"
-#include "statistics.hh"
-#include "sim_stats.hh"
+#include "base/hybrid_pred.hh"
+#include "base/statistics.hh"
+#include "sim/sim_stats.hh"
 
 using namespace std;
 

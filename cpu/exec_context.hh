@@ -29,8 +29,8 @@
 #ifndef __EXEC_CONTEXT_HH__
 #define __EXEC_CONTEXT_HH__
 
-#include "host.hh"
-#include "mem_req.hh"
+#include "sim/host.hh"
+#include "targetarch/mem_req.hh"
 
 // forward declaration: see functional_memory.hh
 class FunctionalMemory;
@@ -39,15 +39,15 @@ class BaseCPU;
 
 #ifdef FULL_SYSTEM
 
-#include "alpha_memory.hh"
+#include "targetarch/alpha_memory.hh"
 class MemoryController;
 
-#include "kernel_stats.hh"
-#include "system.hh"
+#include "kern/tru64/kernel_stats.hh"
+#include "sim/system.hh"
 
 #else // !FULL_SYSTEM
 
-#include "prog.hh"
+#include "sim/prog.hh"
 
 #endif // FULL_SYSTEM
 

@@ -33,12 +33,12 @@
 #include <sstream>
 #include <vector>
 
-#include "smt.hh"
-#include "misc.hh"
+#include "cpu/full_cpu/smt.hh"
+#include "base/misc.hh"
 
-#include "eventq.hh"
-#include "trace.hh"
-#include "universe.hh"
+#include "sim/eventq.hh"
+#include "base/trace.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 

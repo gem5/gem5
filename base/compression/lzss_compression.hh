@@ -33,7 +33,7 @@
  * LZSSCompression declarations.
  */
 
-#include "host.hh" // for uint8_t
+#include "sim/host.hh" // for uint8_t
 
 /**
  * Simple LZSS compression scheme.

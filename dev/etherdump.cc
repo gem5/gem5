@@ -34,9 +34,9 @@
 
 #include <string>
 
-#include "universe.hh"
-#include "etherdump.hh"
-#include "universe.hh"
+#include "sim/universe.hh"
+#include "dev/etherdump.hh"
+#include "sim/universe.hh"
 
 using std::string;
 

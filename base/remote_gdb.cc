@@ -93,17 +93,17 @@
 
 #include <string>
 
-#include "exec_context.hh"
-#include "intmath.hh"
-#include "kgdb.h"
+#include "cpu/exec_context.hh"
+#include "base/intmath.hh"
+#include "base/kgdb.h"
 
-#include "physical_memory.hh"
-#include "remote_gdb.hh"
-#include "socket.hh"
-#include "trace.hh"
-#include "vtophys.hh"
-#include "system.hh"
-#include "static_inst.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "base/remote_gdb.hh"
+#include "base/socket.hh"
+#include "base/trace.hh"
+#include "targetarch/vtophys.hh"
+#include "sim/system.hh"
+#include "cpu/static_inst.hh"
 
 using namespace std;
 

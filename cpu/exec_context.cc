@@ -28,13 +28,13 @@
 
 #include <string>
 
-#include "base_cpu.hh"
-#include "exec_context.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
 
 #ifdef FULL_SYSTEM
-#include "system.hh"
+#include "sim/system.hh"
 #else
-#include "prog.hh"
+#include "sim/prog.hh"
 #endif
 
 using namespace std;

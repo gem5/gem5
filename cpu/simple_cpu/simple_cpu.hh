@@ -29,11 +29,11 @@
 #ifndef __SIMPLE_CPU_HH__
 #define __SIMPLE_CPU_HH__
 
-#include "base_cpu.hh"
-#include "eventq.hh"
-#include "symtab.hh"
-#include "pc_event.hh"
-#include "statistics.hh"
+#include "cpu/base_cpu.hh"
+#include "sim/eventq.hh"
+#include "base/loader/symtab.hh"
+#include "cpu/pc_event.hh"
+#include "base/statistics.hh"
 
 
 // forward declarations

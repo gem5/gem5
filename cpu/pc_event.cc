@@ -31,20 +31,20 @@
 #include <string>
 #include <utility>
 
-#include "debug.hh"
-#include "exec_context.hh"
-#include "pc_event.hh"
-#include "trace.hh"
-#include "universe.hh"
+#include "sim/debug.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/pc_event.hh"
+#include "base/trace.hh"
+#include "sim/universe.hh"
 
 #ifdef FULL_SYSTEM
-#include "arguments.hh"
-#include "pmap.h"
-#include "kernel.hh"
-#include "memory_control.hh"
-#include "cpu.hh"
-#include "system.hh"
-#include "bpred.hh"
+#include "targetarch/arguments.hh"
+#include "targetarch/pmap.h"
+#include "targetarch/kernel.hh"
+#include "mem/functional_mem/memory_control.hh"
+#include "cpu/full_cpu/cpu.hh"
+#include "sim/system.hh"
+#include "cpu/full_cpu/bpred.hh"
 #endif
 
 using namespace std;

@@ -52,7 +52,7 @@ extern "C" {
 #include <list>
 #include <string>
 
-#include "cprintf.hh"
+#include "base/cprintf.hh"
 
 #define panic(arg...) \
   do { cprintf("Panic: " arg); exit(1); } while (0)

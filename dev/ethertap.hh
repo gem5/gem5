@@ -36,11 +36,11 @@
 #include <queue>
 #include <string>
 
-#include "etherint.hh"
-#include "etherpkt.hh"
-#include "eventq.hh"
-#include "pollevent.hh"
-#include "sim_object.hh"
+#include "dev/etherint.hh"
+#include "dev/etherpkt.hh"
+#include "sim/eventq.hh"
+#include "base/pollevent.hh"
+#include "sim/sim_object.hh"
 
 /*
  * Interface to connect a simulated ethernet device to the real world

@@ -16,13 +16,13 @@
 #include <sstream>
 #include <string>
 
-#include "misc.hh"
-#include "ev5.hh"
+#include "base/misc.hh"
+#include "targetarch/ev5.hh"
 
-#include "console.hh"
-#include "socket.hh"
-#include "trace.hh"
-#include "memory_control.hh"
+#include "dev/console.hh"
+#include "base/socket.hh"
+#include "base/trace.hh"
+#include "mem/functional_mem/memory_control.hh"
 
 using namespace std;
 

@@ -33,11 +33,11 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "async.hh"
-#include "host.hh"
-#include "misc.hh"
-#include "pollevent.hh"
-#include "universe.hh"
+#include "sim/async.hh"
+#include "sim/host.hh"
+#include "base/misc.hh"
+#include "base/pollevent.hh"
+#include "sim/universe.hh"
 
 PollQueue pollQueue;
 

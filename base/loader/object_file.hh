@@ -29,7 +29,7 @@
 #ifndef __OBJECT_FILE_HH__
 #define __OBJECT_FILE_HH__
 
-#include "isa_traits.hh"	// for Addr
+#include "targetarch/isa_traits.hh"	// for Addr
 
 class FunctionalMemory;
 class SymbolTable;

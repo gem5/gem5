@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-#include "inifile.hh"
+#include "base/inifile.hh"
 
 char *progname;
 

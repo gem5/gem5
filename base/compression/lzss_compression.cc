@@ -32,9 +32,9 @@
 
 #include <assert.h>
 
-#include "lzss_compression.hh"
+#include "base/compression/lzss_compression.hh"
 
-#include "misc.hh" //for fatal
+#include "base/misc.hh" //for fatal
 
 int
 LZSSCompression::findSubString(uint8_t *src, int front, int back, int size)

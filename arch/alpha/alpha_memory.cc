@@ -30,12 +30,12 @@
 #include <string>
 #include <vector>
 
-#include "alpha_memory.hh"
-#include "ev5.hh"
-#include "exec_context.hh"
-#include "trace.hh"
-#include "inifile.hh"
-#include "str.hh"
+#include "targetarch/alpha_memory.hh"
+#include "targetarch/ev5.hh"
+#include "cpu/exec_context.hh"
+#include "base/trace.hh"
+#include "base/inifile.hh"
+#include "base/str.hh"
 
 using namespace std;
 

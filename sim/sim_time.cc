@@ -31,7 +31,7 @@
 #include <time.h>
 #include <iostream>
 
-#include "sim_time.hh"
+#include "sim/sim_time.hh"
 
 using namespace std;
 

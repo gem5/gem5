@@ -28,12 +28,12 @@
 
 #include <string>
 
-#include "cpu.hh"
-#include "eventq.hh"
-#include "hostinfo.hh"
-#include "sim_events.hh"
-#include "sim_exit.hh"
-#include "sim_stats.hh"
+#include "cpu/full_cpu/cpu.hh"
+#include "sim/eventq.hh"
+#include "base/hostinfo.hh"
+#include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
+#include "sim/sim_stats.hh"
 
 using namespace std;
 

@@ -29,7 +29,7 @@
 #ifndef __INET_HH__
 #define __INET_HH__
 
-#include "host.hh"
+#include "sim/host.hh"
 
 uint32_t crc32be(const uint8_t *buf, size_t len);
 uint32_t crc32le(const uint8_t *buf, size_t len);

@@ -31,10 +31,10 @@
 
 #include <vector>
 
-#include "eventq.hh"
-#include "sim_object.hh"
+#include "sim/eventq.hh"
+#include "sim/sim_object.hh"
 
-#include "isa_traits.hh"	// for Addr
+#include "targetarch/isa_traits.hh"	// for Addr
 
 #ifdef FULL_SYSTEM
 class System;

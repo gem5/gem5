@@ -38,11 +38,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "disk_image.hh"
-#include "misc.hh"
-#include "physical_memory.hh"
-#include "simple_disk.hh"
-#include "trace.hh"
+#include "dev/disk_image.hh"
+#include "base/misc.hh"
+#include "mem/functional_mem/physical_memory.hh"
+#include "dev/simple_disk.hh"
+#include "base/trace.hh"
 
 using namespace std;
 

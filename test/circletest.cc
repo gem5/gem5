@@ -30,7 +30,7 @@
 #include <iostream.h>
 #include <unistd.h>
 
-#include "circlebuf.hh"
+#include "base/circlebuf.hh"
 
 char *strings[] =
 { "This is the first test\n",

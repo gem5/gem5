@@ -39,7 +39,7 @@
 #ifndef	_SYS_EXEC_ECOFF_H_
 #define	_SYS_EXEC_ECOFF_H_
 
-#include "ecoff_machdep.h"
+#include "targetarch/ecoff_machdep.h"
 
 struct ecoff_filehdr {
         coff_ushort f_magic;	/* magic number */

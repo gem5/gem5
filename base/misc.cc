@@ -29,12 +29,12 @@
 #include <iostream>
 #include <string>
 
-#include "cprintf.hh"
-#include "host.hh"
-#include "hostinfo.hh"
-#include "misc.hh"
-#include "trace.hh"
-#include "universe.hh"
+#include "base/cprintf.hh"
+#include "sim/host.hh"
+#include "base/hostinfo.hh"
+#include "base/misc.hh"
+#include "base/trace.hh"
+#include "sim/universe.hh"
 
 using namespace std;
 

@@ -28,13 +28,13 @@
 
 #include <assert.h>
 
-#include "sim_object.hh"
-#include "inifile.hh"
-#include "configfile.hh"
-#include "host.hh"
-#include "misc.hh"
-#include "trace.hh"
-#include "sim_stats.hh"
+#include "sim/sim_object.hh"
+#include "base/inifile.hh"
+#include "sim/configfile.hh"
+#include "sim/host.hh"
+#include "base/misc.hh"
+#include "base/trace.hh"
+#include "sim/sim_stats.hh"
 
 using namespace std;
 

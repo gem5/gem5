@@ -31,9 +31,9 @@
 
 #include <map>
 
-#include "mem_req.hh"
-#include "sim_object.hh"
-#include "statistics.hh"
+#include "targetarch/mem_req.hh"
+#include "sim/sim_object.hh"
+#include "base/statistics.hh"
 
 class ExecContext;
 

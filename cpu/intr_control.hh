@@ -29,9 +29,9 @@
 #ifndef __INTR_CONTROL_HH__
 #define __INTR_CONTROL_HH__
 
-#include "misc.hh"
-#include "base_cpu.hh"
-#include "sim_object.hh"
+#include "base/misc.hh"
+#include "cpu/base_cpu.hh"
+#include "sim/sim_object.hh"
 
 class IntrControl : public SimObject
 {

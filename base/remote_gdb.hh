@@ -29,10 +29,10 @@
 #ifndef __REMOTE_GDB_HH__
 #define __REMOTE_GDB_HH__
 
-#include "kgdb.h"
-#include "pc_event.hh"
-#include "pollevent.hh"
-#include "socket.hh"
+#include "base/kgdb.h"
+#include "cpu/pc_event.hh"
+#include "base/pollevent.hh"
+#include "base/socket.hh"
 
 class System;
 class ExecContext;

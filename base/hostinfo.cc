@@ -34,7 +34,7 @@
 #include <errno.h>
 #include <math.h>
 
-#include "host.hh"
+#include "sim/host.hh"
 
 uint64_t
 procInfo(char *filename, char *target)
