@@ -49,12 +49,38 @@ class SymbolTable
     bool insert(Addr address, std::string symbol);
     bool load(const std::string &file);
 
-    bool findNearestSymbol(Addr address, std::string &symbol) const;
+    /// Find the nearest symbol equal to or less than the supplied
+    /// address (e.g., the label for the enclosing function).
+    /// @param address The address to look up.
+    /// @param symbol  Return reference for symbol string.
+    /// @param sym_address Return reference for symbol address.
+    /// @param next_sym_address Address of following symbol (for
+    /// determining valid range of symbol).
+    /// @retval True if a symbol was found.
+    bool findNearestSymbol(Addr address, std::string &symbol,
+                           Addr &sym_address, Addr &next_sym_address) const;
+
+    /// Overload for findNearestSymbol() for callers who don't care
+    /// about next_sym_address.
+    bool findNearestSymbol(Addr address, std::string &symbol,
+                           Addr &sym_address) const
+    {
+        Addr dummy;
+        return findNearestSymbol(address, symbol, sym_address, dummy);
+    }
+
+
     bool findSymbol(Addr address, std::string &symbol) const;
     bool findAddress(const std::string &symbol, Addr &address) const;
 
     std::string find(Addr addr) const;
     Addr find(const std::string &symbol) const;
 };
+
+/// Global unified debugging symbol table (for target).  Conceptually
+/// there should be one of these per System object for full system,
+/// and per Process object for non-full-system, but so far one big
+/// global one has worked well enough.
+extern SymbolTable *debugSymbolTable;
 
 #endif // __SYMTAB_HH__

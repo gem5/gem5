@@ -38,6 +38,8 @@
 
 using namespace std;
 
+SymbolTable *debugSymbolTable = NULL;
+
 bool
 SymbolTable::insert(Addr address, string symbol)
 {
@@ -95,26 +97,20 @@ SymbolTable::load(const string &filename)
 }
 
 bool
-SymbolTable::findNearestSymbol(Addr address, string &symbol) const
+SymbolTable::findNearestSymbol(Addr address, string &symbol,
+                               Addr &sym_address, Addr &next_sym_address) const
 {
-    ATable::const_iterator i = addrTable.lower_bound(address);
+    // find first key *larger* than desired address
+    ATable::const_iterator i = addrTable.upper_bound(address);
 
-    // check for PALCode
-    if (address & 0x1)
+    // if very first key is larger, we're out of luck
+    if (i == addrTable.begin())
         return false;
 
-    // first check for the end
-    if (i == addrTable.end())
-        i--;
-    else if (i == addrTable.begin() && (*i).first != address)
-        return false;
-    else if ((*i).first != address)
-        i--;
-
-    symbol = (*i).second;
-
-    if (address != (*i).first)
-        symbol += csprintf("+%d", address - (*i).first);
+    next_sym_address = i->first;
+    --i;
+    sym_address = i->first;
+    symbol = i->second;
 
     return true;
 }

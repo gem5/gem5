@@ -32,7 +32,7 @@
 #include <list>
 
 /**
- * Generic callback class.  This base class provides a virutal process
+ * Generic callback class.  This base class provides a virtual process
  * function that gets called when the callback queue is processed.
  */
 class Callback
@@ -103,6 +103,8 @@ class CallbackQueue
     }
 };
 
+/// Helper template class to turn a simple class member function into
+/// a callback.
 template <class T, void (T::* F)()>
 class MakeCallback : public Callback
 {
@@ -111,8 +113,9 @@ class MakeCallback : public Callback
 
   public:
     MakeCallback(T *o)
-    : object(o)
+        : object(o)
     { }
+
     void process() { (object->*F)(); }
 };
 

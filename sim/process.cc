@@ -34,6 +34,7 @@
 
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/full_cpu/smt.hh"
@@ -262,6 +263,18 @@ LiveProcess::LiveProcess(const string &name, ObjectFile *objFile,
 
     // load object file into target memory
     objFile->loadSections(memory);
+
+    // load up symbols, if any... these may be used for debugging or
+    // profiling.
+    if (!debugSymbolTable) {
+        debugSymbolTable = new SymbolTable();
+        if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
+            !objFile->loadLocalSymbols(debugSymbolTable)) {
+            // didn't load any symbols
+            delete debugSymbolTable;
+            debugSymbolTable = NULL;
+        }
+    }
 
     // Set up stack.  On Alpha, stack goes below text section.  This
     // code should get moved to some architecture-specific spot.

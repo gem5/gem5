@@ -44,8 +44,6 @@ vector<System *> System::systemList;
 
 int System::numSystemsRunning = 0;
 
-extern SymbolTable *debugSymbolTable;
-
 System::System(Params *p)
     : SimObject(p->name), memctrl(p->memctrl), physmem(p->physmem),
       init_param(p->init_param), params(p)
