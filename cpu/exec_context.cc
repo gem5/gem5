@@ -105,6 +105,7 @@ ExecContext::serialize(ostream &os)
     // thread_num and cpu_id are deterministic from the config
     SERIALIZE_SCALAR(func_exe_inst);
 
+#ifdef FULL_SYSTEM
     bool ctx = false;
     if (swCtx) {
         ctx = true;
@@ -129,6 +130,7 @@ ExecContext::serialize(ostream &os)
         string bin_name = cur->name();
         SERIALIZE_SCALAR(bin_name);
     }
+#endif //FULL_SYSTEM
 }
 
 
@@ -140,6 +142,7 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(func_exe_inst);
 
+#ifdef FULL_SYSTEM
     bool ctx;
     UNSERIALIZE_SCALAR(ctx);
     if (ctx) {
@@ -168,6 +171,7 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
         UNSERIALIZE_SCALAR(bin_name);
         system->getBin(bin_name)->activate();
     }
+#endif //FULL_SYSTEM
 }
 
 
