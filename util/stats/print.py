@@ -71,7 +71,7 @@ class VectorDisplay:
         p.flags = self.flags
         p.precision = self.precision
 
-        if issequence(self.value):
+        if isinstance(self.value, (list, tuple)):
             if not len(self.value):
                 return
 

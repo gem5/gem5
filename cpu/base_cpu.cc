@@ -207,8 +207,7 @@ BaseCPU::registerExecContexts()
 void
 BaseCPU::switchOut(SamplingCPU *sampler)
 {
-    // default: do nothing, signal done
-    sampler->signalSwitched();
+    panic("This CPU doesn't support sampling!");
 }
 
 void
