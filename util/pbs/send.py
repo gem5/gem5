@@ -54,7 +54,7 @@ Usage:
 
 try:
     import getopt
-    opts, args = getopt.getopt(sys.argv[1:], '-cefhlq:v')
+    opts, args = getopt.getopt(sys.argv[1:], '-cd:efhlq:v')
 except getopt.GetoptError:
     sys.exit(usage)
 
@@ -65,42 +65,48 @@ force = False
 listonly = False
 queue = ''
 verbose = False
-for o,a in opts:
-    if o == '-c':
+rootdir = re.sub(r'^/\.automount/', r'/n/', os.getcwd())
+for opt,arg in opts:
+    if opt == '-c':
         clean = True
-    if o == '-e':
+    if opt == '-d':
+        rootdir = arg
+    if opt == '-e':
         onlyecho = True
-    if o == '-f':
+    if opt == '-f':
         force = True
-    if o == '-h':
+    if opt == '-h':
         print usage
         sys.exit(0)
-    if o == '-l':
+    if opt == '-l':
         listonly = True
-    if o == '-q':
-        queue = a
-    if o == '-v':
+    if opt == '-q':
+        queue = arg
+    if opt == '-v':
         verbose = True
+
+basedir = joinpath(rootdir, 'Base')
+linkdir = joinpath(rootdir, 'Link')
 
 for arg in args:
     exprs.append(re.compile(arg))
 
-if not listonly and not onlyecho and isdir('Link'):
+if not listonly and not onlyecho and isdir(linkdir):
     print 'Checking for outdated files in Link directory'
-    entries = listdir('Link')
+    entries = listdir(linkdir)
     for entry in entries:
-        link = joinpath('Link', entry)
-        if not islink(link):
+        link = joinpath(linkdir, entry)
+        if not islink(link) or not isfile(link):
             continue
 
-        base = joinpath('Base', entry)
+        base = joinpath(basedir, entry)
         if not isfile(base) or not filecmp(link, base):
-            print '%s is different than source %s...copying' % (base, link)
+            print 'Base/%s is different than Link/%s: copying' % (entry, entry)
             copyfile(link, base)
 
 import job, jobfile, pbs
 
-test = jobfile.JobFile(joinpath('Base', 'test.py'))
+test = jobfile.JobFile(joinpath(basedir, 'test.py'))
 
 joblist = []
 for jobname in test.jobs:
@@ -143,7 +149,6 @@ if not onlyecho:
     jl.append(jobname)
     joblist = jl
 
-rootdir = re.sub(r'^/\.automount/', r'/n/', os.getcwd())
 for jobname in joblist:
     jobdir = joinpath(rootdir, jobname)
 
@@ -165,5 +170,5 @@ for jobname in joblist:
     if len(queue):
         qsub.queue = queue
 
-    qsub.do(joinpath('Base', 'job.py'))
+    qsub.do(joinpath(basedir, 'job.py'))
     print >>sys.stderr, ''
