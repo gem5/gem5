@@ -43,7 +43,7 @@ SimObjectBuilder::SimObjectBuilder(const string &_configClass,
                                    const string &_instanceName,
                                    ConfigNode *_configNode,
                                    const string &_simObjClassName)
-    : ParamContext(_configClass, true),
+    : ParamContext(_configClass, NoAutoInit),
       instanceName(_instanceName),
       configNode(_configNode),
       simObjClassName(_simObjClassName)

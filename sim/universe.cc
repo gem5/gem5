@@ -56,7 +56,8 @@ ostream *configStream;
 class UniverseParamContext : public ParamContext
 {
   public:
-    UniverseParamContext(const string &is) : ParamContext(is) {}
+    UniverseParamContext(const string &is)
+        : ParamContext(is, OutputInitPhase) {}
     void checkParams();
 };
 

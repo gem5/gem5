@@ -74,11 +74,30 @@ class ParamContext
 
   public:
 
-    // Second arg, if set to true, says don't put on paramContextList
-    // (i.e. don't automatically parse params).  Used by derived
-    // SimObjectBuilder class, where parsing is done in
-    // SimObject::create()
-    ParamContext(const std::string &_iniSection, bool noAutoParse = false);
+    /// Initialization phases for ParamContext objects.
+    enum InitPhase {
+        NoAutoInit = -1,	///< Don't initialize at all... params
+                                /// will be parsed later (used by
+                                /// SimObjectBuilder, which parses
+                                /// params in SimObject::create().
+        OutputInitPhase = 0,	///< Output stream initialization
+        TraceInitPhase = 1,	///< Trace context initialization:
+                                /// depends on output streams, but
+                                /// needs to come before others so we
+                                /// can use tracing in other
+                                /// ParamContext init code
+        StatsInitPhase = 2,	///< Stats output initialization
+        DefaultInitPhase = 3	///< Everything else
+    };
+
+    /// Records the initialization phase for this ParamContext.
+    InitPhase initPhase;
+
+    /// Constructor.
+    /// @param _iniSection Name of .ini section corresponding to this context.
+    /// @param _initPhase Initialization phase  (see InitPhase).
+    ParamContext(const std::string &_iniSection,
+                 InitPhase _initPhase = DefaultInitPhase);
 
     virtual ~ParamContext() {}
 

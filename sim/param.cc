@@ -560,15 +560,27 @@ SimObjectBaseParam::parse(const string &s, vector<SimObject *>&value)
 
 list<ParamContext *> *ParamContext::ctxList = NULL;
 
-ParamContext::ParamContext(const string &_iniSection, bool noAutoParse)
+ParamContext::ParamContext(const string &_iniSection, InitPhase _initPhase)
     : iniFilePtr(NULL),	// initialized on call to parseParams()
-      iniSection(_iniSection), paramList(NULL)
+      iniSection(_iniSection), paramList(NULL),
+      initPhase(_initPhase)
 {
-    if (!noAutoParse) {
+    // Put this context on global list for initialization
+    if (initPhase != NoAutoInit) {
         if (ctxList == NULL)
             ctxList = new list<ParamContext *>();
 
-        (*ctxList).push_back(this);
+        // keep list sorted by ascending initPhase values
+        list<ParamContext *>::iterator i = ctxList->begin();
+        list<ParamContext *>::iterator end = ctxList->end();
+        for (; i != end; ++i) {
+            if (initPhase <= (*i)->initPhase) {
+                // found where we want to insert
+                break;
+            }
+        }
+        // (fall through case: insert at end)
+        ctxList->insert(i, this);
     }
 }
 
