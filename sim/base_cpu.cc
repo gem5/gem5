@@ -1,0 +1,158 @@
+/*
+ * Copyright (c) 2003 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <string>
+#include <sstream>
+#include <iostream>
+
+#include "base_cpu.hh"
+#include "cprintf.hh"
+#include "stats.hh"
+#include "exec_context.hh"
+#include "misc.hh"
+#include "sim_events.hh"
+
+using namespace std;
+
+vector<BaseCPU *> BaseCPU::cpuList;
+
+// This variable reflects the max number of threads in any CPU.  Be
+// careful to only use it once all the CPUs that you care about have
+// been initialized
+int maxThreadsPerCPU = 1;
+
+#ifdef FULL_SYSTEM
+BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
+                 Counter max_insts_any_thread,
+                 Counter max_insts_all_threads,
+                 System *_system, int num, Tick freq)
+    : SimObject(_name), number(num), frequency(freq),
+      number_of_threads(_number_of_threads), system(_system)
+#else
+BaseCPU::BaseCPU(const string &_name, int _number_of_threads,
+                 Counter max_insts_any_thread,
+                 Counter max_insts_all_threads)
+    : SimObject(_name), number_of_threads(_number_of_threads)
+#endif
+{
+    // add self to global list of CPUs
+    cpuList.push_back(this);
+
+    if (number_of_threads > maxThreadsPerCPU)
+        maxThreadsPerCPU = number_of_threads;
+
+    // allocate per-thread instruction-based event queues
+    comInsnEventQueue = new (EventQueue *)[number_of_threads];
+    for (int i = 0; i < number_of_threads; ++i)
+        comInsnEventQueue[i] = new EventQueue("instruction-based event queue");
+
+    //
+    // set up instruction-count-based termination events, if any
+    //
+    if (max_insts_any_thread != 0)
+        for (int i = 0; i < number_of_threads; ++i)
+            new SimExitEvent(comInsnEventQueue[i], max_insts_any_thread,
+                "a thread reached the max instruction count");
+
+    if (max_insts_all_threads != 0) {
+        // allocate & initialize shared downcounter: each event will
+        // decrement this when triggered; simulation will terminate
+        // when counter reaches 0
+        int *counter = new int;
+        *counter = number_of_threads;
+        for (int i = 0; i < number_of_threads; ++i)
+            new CountedExitEvent(comInsnEventQueue[i],
+                "all threads reached the max instruction count",
+                max_insts_all_threads, *counter);
+    }
+
+#ifdef FULL_SYSTEM
+    memset(interrupts, 0, sizeof(interrupts));
+    intstatus = 0;
+#endif
+}
+
+void
+BaseCPU::regStats()
+{
+    int size = contexts.size();
+    if (size > 1) {
+        for (int i = 0; i < size; ++i) {
+            stringstream namestr;
+            ccprintf(namestr, "%s.ctx%d", name(), i);
+            contexts[i]->regStats(namestr.str());
+        }
+    } else if (size == 1)
+        contexts[0]->regStats(name());
+}
+
+#ifdef FULL_SYSTEM
+void
+BaseCPU::post_interrupt(int int_num, int index)
+{
+    DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
+
+    if (int_num < 0 || int_num >= NumInterruptLevels)
+        panic("int_num out of bounds\n");
+
+    if (index < 0 || index >= sizeof(uint8_t) * 8)
+        panic("int_num out of bounds\n");
+
+    AlphaISA::check_interrupts = 1;
+    interrupts[int_num] |= 1 << index;
+    intstatus |= (ULL(1) << int_num);
+}
+
+void
+BaseCPU::clear_interrupt(int int_num, int index)
+{
+    DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
+
+    if (int_num < 0 || int_num >= NumInterruptLevels)
+        panic("int_num out of bounds\n");
+
+    if (index < 0 || index >= sizeof(uint8_t) * 8)
+        panic("int_num out of bounds\n");
+
+    interrupts[int_num] &= ~(1 << index);
+    if (interrupts[int_num] == 0)
+        intstatus &= ~(ULL(1) << int_num);
+}
+
+void
+BaseCPU::clear_interrupts()
+{
+    DPRINTF(Interrupt, "Interrupts all cleared\n");
+
+    memset(interrupts, 0, sizeof(interrupts));
+    intstatus = 0;
+}
+
+#endif // FULL_SYSTEM
+
+DEFINE_SIM_OBJECT_CLASS_NAME("BaseCPU", BaseCPU)
