@@ -49,12 +49,13 @@ class PacketFifo
     explicit PacketFifo(int max) : _maxsize(max), _size(0), _reserved(0) {}
     virtual ~PacketFifo() {}
 
-    int maxsize() const { return _maxsize; }
     int packets() const { return fifo.size(); }
-    int size() const { return _size + _reserved; }
-    int avail() const { return maxsize() - size(); }
-    bool empty() const { return size() == 0; }
-    bool full() const { return size() >= maxsize(); }
+    int maxsize() const { return _maxsize; }
+    int size() const { return _size; }
+    int reserved() const { return _reserved; }
+    int avail() const { return _maxsize - _size - _reserved; }
+    bool empty() const { return size() <= 0; }
+    bool full() const { return avail() <= 0; }
 
     int reserve(int len = 0)
     {
@@ -91,6 +92,7 @@ class PacketFifo
     {
         fifo.clear();
         _size = 0;
+        _reserved = 0;
     }
 
 /**
