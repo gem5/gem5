@@ -71,12 +71,12 @@ usage()
 
 int verbose = 0;
 #define DPRINTF(args...) do { \
-    if (verbose > 1) \
+    if (verbose >= 1) \
         cprintf(args); \
 } while (0)
 
 #define DDUMP(args...) do { \
-    if (verbose > 2) \
+    if (verbose >= 2) \
         dump((const u_char *)args); \
 } while (0)
 
@@ -126,13 +126,13 @@ Socket(int reuse)
 {
     int fd = ::socket(PF_INET, SOCK_STREAM, 0);
     if (fd < 0)
-        panic("Can't create socket!");
+        panic("Can't create socket!\n");
 
     if (reuse) {
         int i = 1;
         if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&i,
                          sizeof(i)) < 0)
-            panic("setsockopt() SO_REUSEADDR failed!");
+            panic("setsockopt() SO_REUSEADDR failed!\n");
     }
 
     return fd;
@@ -148,10 +148,10 @@ Listen(int fd, int port)
     sockaddr.sin_port = htons(port);
     int ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
     if (ret == -1)
-        panic("bind() failed!");
+        panic("bind() failed!\n");
 
     if (::listen(fd, 1) == -1)
-        panic("listen() failed!");
+        panic("listen() failed!\n");
 }
 
 // Open a connection.  Accept will block, so if you don't want it to,
@@ -163,7 +163,7 @@ Accept(int fd, bool nodelay)
     socklen_t slen = sizeof (sockaddr);
     int sfd = ::accept(fd, (struct sockaddr *)&sockaddr, &slen);
     if (sfd == -1)
-        panic("accept() failed!");
+        panic("accept() failed!\n");
 
     if (nodelay) {
         int i = 1;
@@ -188,7 +188,7 @@ Connect(int fd, const string &host, int port)
 
     sockaddr.sin_port = htons(port);
     if (::connect(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != 0)
-        panic("could not connect to %s on port %d", host, port);
+        panic("could not connect to %s on port %d\n", host, port);
 
     DPRINTF("connected to %s on port %d\n", host, port);
 }
@@ -269,13 +269,14 @@ main(int argc, char *argv[])
     }
 
     char errbuf[PCAP_ERRBUF_SIZE];
+    memset(errbuf, 0, sizeof errbuf);
     pcap_t *pcap = pcap_open_live(device, 1500, 1, -1, errbuf);
     if (pcap == NULL)
         panic("pcap_open_live failed: %s\n", errbuf);
 
     bpf_program program;
     bpf_u_int32 localnet, netmask;
-    if (!pcap_lookupnet(device, &localnet, &netmask, errbuf))
+    if (pcap_lookupnet(device, &localnet, &netmask, errbuf) == -1)
         panic("pcap_lookupnet failed: %s\n", errbuf);
 
     if (pcap_compile(pcap, &program, filter, 1, netmask) == -1)
@@ -285,6 +286,8 @@ main(int argc, char *argv[])
         panic("pcap_setfilter failed\n");
 
     eth_t *ethernet = eth_open(device);
+    if (!ethernet)
+        panic("cannot open the ethernet device for writing\n");
 
     pollfd pfds[3];
     pfds[0].fd = Socket(true);
@@ -312,6 +315,7 @@ main(int argc, char *argv[])
     int32_t buffer_offset = 0;
     int32_t data_len = 0;
 
+    DPRINTF("Begin poll loop\n");
     while (!quit) {
         int ret = ::poll(pfds, npfds, INFTIM);
         if (ret < 0)
@@ -392,14 +396,15 @@ main(int argc, char *argv[])
 
                 if (listening)
                     npfds--;
-                else
+                else {
+                    DPRINTF("Calling it quits because of poll error\n");
                     quit = true;
+                }
             }
 
             if (client_pfd)
                 client_pfd->revents = 0;
         }
-
     }
 
     delete [] buffer;
