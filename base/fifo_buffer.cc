@@ -30,7 +30,7 @@
 
 template<class T>
 void
-FifoBuffer<T>::dump(void)
+FifoBuffer<T>::dump()
 {
     if (buffer->count() > 0)
         for (iterator i=buffer->tail(); i.notnull(); i=i.prev())

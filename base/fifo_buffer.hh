@@ -37,7 +37,8 @@
 //  constructor and a dump() method
 //
 template<class T>
-class FifoBuffer {
+class FifoBuffer
+{
   public:
     typedef typename res_list<T>::iterator iterator;
 
@@ -59,23 +60,15 @@ class FifoBuffer {
         buffer->add_head(item);
     }
 
-    iterator head(void) { return buffer->head(); }
-    iterator tail(void) { return buffer->tail(); }
+    iterator head() { return buffer->head(); }
+    iterator tail() { return buffer->tail(); }
 
-    unsigned count(void) {return buffer->count();}
-    unsigned free_slots(void) {return buffer->num_free();}
+    unsigned count() {return buffer->count();}
+    unsigned free_slots() {return buffer->num_free();}
 
-    T * peek(void)
-    {
-        if (count() > 0) {
-            return tail().data_ptr();
-        }
-        else {
-            return 0;
-        }
-    }
+    T *peek() { return (count() > 0) ? tail().data_ptr() : 0; }
 
-    T remove(void)
+    T remove()
     {
         assert(buffer->count() > 0);
         T rval = *buffer->tail();
@@ -83,7 +76,7 @@ class FifoBuffer {
         return rval;
     }
 
-    void dump(void);
+    void dump();
 
     ~FifoBuffer() { delete buffer; }
 };
