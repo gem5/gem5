@@ -300,6 +300,20 @@ LinuxSystem::LinuxSystem(const string _name, const uint64_t _init_param,
             strcpy(osflags, boot_osflags.c_str());
     }
 
+    if (consoleSymtab->findAddress("xxm_rpb", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        char *hwprb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
+
+        if (hwprb) {
+            *(uint64_t*)(hwprb+0x50) = 34;      // Tsunami
+            *(uint64_t*)(hwprb+0x58) = (1<<10);
+        }
+        else
+            panic("could not translate hwprb addr to set system type/variation\n");
+
+    } else
+        panic("could not find hwprb to set system type/variation\n");
+
     if (kernelSymtab->findAddress("panic", addr))
         kernelPanicEvent->schedule(addr);
     else

@@ -36,6 +36,7 @@
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/sim_stats.hh"
+#include "sim/param.hh"
 
 using namespace std;
 
@@ -191,3 +192,5 @@ SimObject::serializeAll(ostream &os)
         obj->serialize(os);
    }
 }
+
+DEFINE_SIM_OBJECT_CLASS_NAME("SimObject", SimObject)

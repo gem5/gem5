@@ -53,8 +53,8 @@ using namespace std;
 
 PciDev::PciDev(const string &name, MemoryController *mmu, PciConfigAll *cf,
                PciConfigData *cd, uint32_t bus, uint32_t dev, uint32_t func)
-    : FunctionalMemory(name), MMU(mmu), ConfigSpace(cf), ConfigData(cd),
-      Bus(bus), Device(dev), Function(func)
+    : FunctionalMemory(name), MMU(mmu), configSpace(cf), configData(cd),
+      bus(bus), device(dev), function(func)
 {
     // copy the config data from the PciConfigData object
     if (cd) {
@@ -79,21 +79,21 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
         memcpy((uint32_t*)data, config.data + offset, sizeof(uint32_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                Device, Function, offset, *(uint32_t*)(config.data + offset));
+                device, function, offset, *(uint32_t*)(config.data + offset));
         break;
 
       case sizeof(uint16_t):
         memcpy((uint16_t*)data, config.data + offset, sizeof(uint16_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                Device, Function, offset, *(uint16_t*)(config.data + offset));
+                device, function, offset, *(uint16_t*)(config.data + offset));
         break;
 
       case sizeof(uint8_t):
         memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x data: %#x\n",
-                Device, Function, offset, (uint16_t)(*(uint8_t*)(config.data + offset)));
+                device, function, offset, (uint16_t)(*(uint8_t*)(config.data + offset)));
         break;
 
       default:
@@ -115,7 +115,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     DPRINTF(PCIDEV,
             "write device: %#x function: %#x reg: %#x size: %#x data: %#x\n",
-            Device, Function, offset, size, word_value);
+            device, function, offset, size, word_value);
 
     barnum = (offset - PCI0_BASE_ADDR0) >> 2;
 
