@@ -413,12 +413,12 @@ else:
     obj_desc_files += syscall_emulation_obj_desc_files
 
 extra_libraries = []
+env.Append(LIBS=['z'])
 if env['USE_MYSQL']:
     sources += mysql_sources
     env.Append(CPPDEFINES = 'USE_MYSQL')
     env.Append(CPPDEFINES = 'STATS_BINNING')
     env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
-    env.Append(LIBS=['z'])
     if os.path.isdir('/usr/lib64'):
         env.Append(LIBPATH=['/usr/lib64/mysql'])
     else:
