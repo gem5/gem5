@@ -29,6 +29,10 @@
 #ifndef __INTMATH_HH__
 #define __INTMATH_HH__
 
+#include <assert.h>
+
+#include "sim/host.hh"
+
 // Returns the prime number one less than n.
 int PrevPrime(int n);
 
@@ -68,12 +72,10 @@ IsPowerOf2(T n)
     return n != 0 && LeastSigBit(n) == n;
 }
 
-template <class T>
 inline int
-FloorLog2(T x)
+FloorLog2(uint32_t x)
 {
-    if (x == 0)
-        return -1;
+    assert(x > 0);
 
     int y = 0;
 
@@ -86,11 +88,45 @@ FloorLog2(T x)
     return y;
 }
 
+inline int
+FloorLog2(uint64_t x)
+{
+    assert(x > 0);
+
+    int y = 0;
+
+    if (x & ULL(0xffffffff00000000)) { y += 32; x >>= 32; }
+    if (x & ULL(0x00000000ffff0000)) { y += 16; x >>= 16; }
+    if (x & ULL(0x000000000000ff00)) { y +=  8; x >>=  8; }
+    if (x & ULL(0x00000000000000f0)) { y +=  4; x >>=  4; }
+    if (x & ULL(0x000000000000000c)) { y +=  2; x >>=  2; }
+    if (x & ULL(0x0000000000000002)) { y +=  1; }
+
+    return y;
+}
+
+inline int
+FloorLog2(int32_t x)
+{
+    assert(x > 0);
+    return FloorLog2(x);
+}
+
+inline int
+FloorLog2(int64_t x)
+{
+    assert(x > 0);
+    return FloorLog2(x);
+}
+
 template <class T>
 inline int
 CeilLog2(T n)
 {
-    return FloorLog2(n - 1) + 1;
+    if (n == 1)
+        return 0;
+
+    return FloorLog2(n - (T)1) + 1;
 }
 
 template <class T>
