@@ -1038,7 +1038,7 @@ NSGigE::cpuInterrupt()
         cpuPendingIntr = true;
 
         DPRINTF(EthernetIntr, "posting cchip interrupt\n");
-        tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
+        tsunami->postPciInt(configData->config.hdr.pci0.interruptLine);
     }
 }
 
@@ -1058,7 +1058,7 @@ NSGigE::cpuIntrClear()
     cpuPendingIntr = false;
 
     DPRINTF(EthernetIntr, "clearing cchip interrupt\n");
-    tsunami->cchip->clearDRIR(configData->config.hdr.pci0.interruptLine);
+    tsunami->clearPciInt(configData->config.hdr.pci0.interruptLine);
 }
 
 bool

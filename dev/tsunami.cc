@@ -75,6 +75,18 @@ Tsunami::clearConsoleInt()
 }
 
 void
+Tsunami::postPciInt(int line)
+{
+   this->cchip->postDRIR(line);
+}
+
+void
+Tsunami::clearPciInt(int line)
+{
+   this->cchip->clearDRIR(line);
+}
+
+void
 Tsunami::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);

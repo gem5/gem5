@@ -245,13 +245,13 @@ IdeController::setDmaComplete(IdeDisk *disk)
 void
 IdeController::intrPost()
 {
-    tsunami->cchip->postDRIR(configData->config.hdr.pci0.interruptLine);
+    tsunami->postPciInt(configData->config.hdr.pci0.interruptLine);
 }
 
 void
 IdeController::intrClear()
 {
-    tsunami->cchip->clearDRIR(configData->config.hdr.pci0.interruptLine);
+    tsunami->clearPciInt(configData->config.hdr.pci0.interruptLine);
 }
 
 ////

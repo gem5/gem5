@@ -65,6 +65,8 @@ class Platform : public SimObject
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
     virtual Tick intrFrequency() = 0;
+    virtual void postPciInt(int line) = 0;
+    virtual void clearPciInt(int line) = 0;
 };
 
 #endif // __PLATFORM_HH_

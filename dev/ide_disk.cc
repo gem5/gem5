@@ -732,6 +732,7 @@ IdeDisk::startCommand()
 void
 IdeDisk::intrPost()
 {
+    DPRINTF(IdeDisk, "IDE Disk Posting Interrupt\n");
     if (intrPending)
         panic("Attempt to post an interrupt with one pending\n");
 
@@ -745,6 +746,7 @@ IdeDisk::intrPost()
 void
 IdeDisk::intrClear()
 {
+    DPRINTF(IdeDisk, "IDE Disk Clearing Interrupt\n");
     if (!intrPending)
         panic("Attempt to clear a non-pending interrupt\n");
 
