@@ -50,7 +50,7 @@ TraceCPU::TraceCPU(const string &name,
                    MemTraceReader *data_trace,
                    int icache_ports,
                    int dcache_ports)
-    : BaseCPU(name, 1), icacheInterface(icache_interface),
+    : BaseCPU(name, 4), icacheInterface(icache_interface),
       dcacheInterface(dcache_interface), instTrace(inst_trace),
       dataTrace(data_trace), icachePorts(icache_ports),
       dcachePorts(dcache_ports), outstandingRequests(0), tickEvent(this)
@@ -78,10 +78,10 @@ TraceCPU::tick()
 
     while (nextDataReq && (dataReqs < dcachePorts) &&
            curTick >= nextDataCycle) {
+        assert(nextDataReq->thread_num < 4 && "Not enough threads");
         if (dcacheInterface->isBlocked())
             break;
 
-        ++outstandingRequests;
         ++dataReqs;
         nextDataReq->time = curTick;
         nextDataReq->completionEvent =
@@ -92,6 +92,7 @@ TraceCPU::tick()
 
     while (nextInstReq && (instReqs < icachePorts) &&
            curTick >= nextInstCycle) {
+        assert(nextInstReq->thread_num < 4 && "Not enough threads");
         if (icacheInterface->isBlocked())
             break;
 
@@ -99,7 +100,6 @@ TraceCPU::tick()
         if (nextInstReq->cmd == Squash) {
             icacheInterface->squash(nextInstReq->asid);
         } else {
-            ++outstandingRequests;
             ++instReqs;
             nextInstReq->completionEvent =
                 new TraceCompleteEvent(nextInstReq, this);
@@ -124,7 +124,6 @@ TraceCPU::tick()
 void
 TraceCPU::completeRequest(MemReqPtr& req)
 {
-    --outstandingRequests;
 }
 
 void

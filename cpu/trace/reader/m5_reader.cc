@@ -61,6 +61,8 @@ M5Reader::getNextReq(MemReqPtr &req)
         tmp_req = new MemReq();
         tmp_req->paddr = ref.paddr;
         tmp_req->asid = ref.asid;
+        // Assume asid == thread_num
+        tmp_req->thread_num = ref.asid;
         tmp_req->cmd = (MemCmdEnum)ref.cmd;
         tmp_req->size = ref.size;
         tmp_req->dest = ref.dest;
