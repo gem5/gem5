@@ -184,6 +184,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         newXC->process->replaceExecContext(newXC->cpu_id, newXC);
 #endif
     }
+
+    for (int i = 0; i < NumInterruptLevels; ++i)
+        interrupts[i] = oldCPU->interrupts[i];
+    intstatus = oldCPU->intstatus;
 }
 
 
