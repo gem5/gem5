@@ -1,8 +1,7 @@
 from Device import FooPioDevice, DmaDevice
 
-simobj PciConfigData(FooPioDevice):
+simobj PciConfigData(SimObject):
     type = 'PciConfigData'
-    addr = 0xffffffffffffffffL
     VendorID = Param.UInt16("Vendor ID")
     DeviceID = Param.UInt16("Device ID")
     Command = Param.UInt16(0, "Command")
@@ -49,4 +48,3 @@ simobj PciDevice(DmaDevice):
     pci_func = Param.Int("PCI function code")
     configdata = Param.PciConfigData(Super, "PCI Config data")
     configspace = Param.PciConfigAll(Super, "PCI Configspace")
-    addr = 0xffffffffffffffffL
