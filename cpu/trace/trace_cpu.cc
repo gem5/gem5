@@ -47,7 +47,7 @@ TraceCPU::TraceCPU(const string &name,
                    MemInterface *icache_interface,
                    MemInterface *dcache_interface,
                    MemTraceReader *data_trace)
-    : BaseCPU(name, 4), icacheInterface(icache_interface),
+    : BaseCPU(name, 4, true), icacheInterface(icache_interface),
       dcacheInterface(dcache_interface),
       dataTrace(data_trace), outstandingRequests(0), tickEvent(this)
 {
