@@ -698,9 +698,11 @@ class Node(object):
             # instantiate children in same order they were added for
             # backward compatibility (else we can end up with cpu1
             # before cpu0).
+            self.children.sort(lambda x,y: cmp(x.name, y.name))
             children = [ c.name for c in self.children if not c.paramcontext]
             print 'children =', ' '.join(children)
 
+        self.params.sort(lambda x,y: cmp(x.name, y.name))
         for param in self.params:
             try:
                 if param.value is None:
