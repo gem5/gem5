@@ -39,6 +39,8 @@
 
 #include "base/refcnt.hh"
 
+class IniFile;
+
 /*
  * Reference counted class containing ethernet packet data
  */
@@ -58,6 +60,9 @@ class EtherPacket : public RefCounted
     bool IsUnicast() { return data[0] == 0x00; }
     bool IsMulticast() { return data[0] == 0x01; }
     bool IsBroadcast() { return data[0] == 0xff; }
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(const IniFile *db, const std::string &section);
 };
 
 typedef RefCountingPtr<EtherPacket> PacketPtr;
