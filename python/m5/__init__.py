@@ -1,13 +1,13 @@
 import sys, os
 
-# the mpy import code is added to the global import meta_path as a
-# side effect of this import
-from mpy_importer import AddToPath, LoadMpyFile
-
 # define this here so we can use it right away if necessary
 def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
+
+# the mpy import code is added to the global import meta_path as a
+# side effect of this import
+from mpy_importer import AddToPath, LoadMpyFile
 
 # find the m5 compile options: must be specified as a dict in
 # __main__.m5_build_env.
