@@ -237,10 +237,9 @@ class SimpleCPU : public BaseCPU
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
-    Fault prefetch(Addr addr, unsigned flags)
+    void prefetch(Addr addr, unsigned flags)
     {
         // need to do this...
-        return No_Fault;
     }
 
     void writeHint(Addr addr, int size)
