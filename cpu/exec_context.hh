@@ -241,7 +241,7 @@ class ExecContext
 #endif
 
     template <class T>
-    Fault read(MemReqPtr &req, T& data)
+    Fault read(MemReqPtr &req, T &data)
     {
 #if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
         if (req->flags & LOCKED) {
@@ -254,7 +254,7 @@ class ExecContext
     }
 
     template <class T>
-    Fault write(MemReqPtr &req, T& data)
+    Fault write(MemReqPtr &req, T &data)
     {
 #if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
 

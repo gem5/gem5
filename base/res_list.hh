@@ -103,7 +103,7 @@ class res_list : public res_list_base
         iterator prev(void) { return iterator(p->prev); }
         bool operator== (iterator x) { return (x.p == this->p); }
         bool operator != (iterator x) { return (x.p != this->p); }
-        T& operator * (void) { return *(p->data); }
+        T &operator * (void) { return *(p->data); }
         T* operator -> (void) { return p->data; }
         bool isnull(void) { return (p==0); }
         bool notnull(void) { return (p!=0); }

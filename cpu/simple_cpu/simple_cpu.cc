@@ -321,7 +321,7 @@ change_thread_state(int thread_number, int activate, int priority)
 // precise architected memory state accessor macros
 template <class T>
 Fault
-SimpleCPU::read(Addr addr, T& data, unsigned flags)
+SimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     memReq->reset(addr, sizeof(T), flags);
 

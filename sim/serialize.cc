@@ -62,7 +62,7 @@ Serializable::nameOut(ostream &os, const string &_name)
 
 template <class T>
 void
-paramOut(ostream &os, const std::string &name, const T& param)
+paramOut(ostream &os, const std::string &name, const T &param)
 {
     os << name << "=";
     showParam(os, param);
@@ -73,7 +73,7 @@ paramOut(ostream &os, const std::string &name, const T& param)
 template <class T>
 void
 paramIn(Checkpoint *cp, const std::string &section,
-        const std::string &name, T& param)
+        const std::string &name, T &param)
 {
     std::string str;
     if (!cp->find(section, name, str) || !parseParam(str, param)) {
