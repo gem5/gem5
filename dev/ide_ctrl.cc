@@ -289,15 +289,16 @@ IdeController::ReadConfig(int offset, int size, uint8_t *data)
         memcpy((void *)data, (void *)&pci_regs[offset], size);
     }
 
-    DPRINTF(IdeCtrl, "IDE PCI read offset: %#x (%#x) size: %#x data: %#x\n",
-                origOffset, offset, size, *(uint32_t *)data);
+    DPRINTF(IdeCtrl, "PCI read offset: %#x (%#x) size: %#x data: %#x\n",
+            origOffset, offset, size,
+            (*(uint32_t *)data) & (0xffffffff >> 8 * (4 - size)));
 }
 
 void
 IdeController::WriteConfig(int offset, int size, uint32_t data)
 {
-    DPRINTF(IdeCtrl, "IDE PCI write offset: %#x size: %#x data: %#x\n",
-            offset, size, data);
+    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %#x data: %#x\n",
+            offset, size, data & (0xffffffff >> 8 * (4 - size)));
 
     // do standard write stuff if in standard PCI space
     if (offset < PCI_DEVICE_SPECIFIC) {
@@ -438,8 +439,9 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
         memcpy((void *)data, &bmi_regs[offset], req->size);
     }
 
-    DPRINTF(IdeCtrl, "IDE read from offset: %#x size: %#x data: %#x\n",
-            offset, req->size, *(uint32_t *)data);
+    DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
+            offset, req->size,
+            (*(uint32_t *)data) & (0xffffffff >> 8 * (4 - req->size)));
 
     return No_Fault;
 }
@@ -458,8 +460,9 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     byte = (req->size == sizeof(uint8_t)) ? true : false;
     cmdBlk = (type == COMMAND_BLOCK) ? true : false;
 
-    DPRINTF(IdeCtrl, "IDE write from offset: %#x size: %#x data: %#x\n",
-            offset, req->size, *(uint32_t *)data);
+    DPRINTF(IdeCtrl, "write from offset: %#x size: %#x data: %#x\n",
+            offset, req->size,
+            (*(uint32_t *)data) & (0xffffffff >> 8 * (4 - req->size)));
 
     uint8_t oldVal, newVal;
 

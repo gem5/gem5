@@ -7,7 +7,6 @@ simobj Root(SimObject):
     type = 'Root'
     frequency = Param.RootFrequency('200MHz', "tick frequency")
     output_file = Param.String('cout', "file to dump simulator output to")
-    full_system = Param.Bool("Full system simulation?")
     hier = HierParams(do_data = False, do_events = True)
     checkpoint = Param.String('', "Checkpoint file")
     stats = Statistics()

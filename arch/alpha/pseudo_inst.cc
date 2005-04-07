@@ -95,7 +95,7 @@ namespace AlphaPseudo
     m5exit(ExecContext *xc)
     {
         Tick delay = xc->regs.intRegFile[16];
-        Tick when = curTick + NS2Ticks(delay);
+        Tick when = curTick + delay * Clock::Int::ns;
         SimExit(when, "m5_exit instruction encountered");
     }
 
@@ -108,8 +108,8 @@ namespace AlphaPseudo
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
-        Tick when = curTick + NS2Ticks(delay);
-        Tick repeat = NS2Ticks(period);
+        Tick when = curTick + delay * Clock::Int::ns;
+        Tick repeat = period * Clock::Int::ns;
 
         using namespace Stats;
         SetupEvent(Reset, when, repeat);
@@ -124,8 +124,8 @@ namespace AlphaPseudo
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
-        Tick when = curTick + NS2Ticks(delay);
-        Tick repeat = NS2Ticks(period);
+        Tick when = curTick + delay * Clock::Int::ns;
+        Tick repeat = period * Clock::Int::ns;
 
         using namespace Stats;
         SetupEvent(Dump, when, repeat);
@@ -140,8 +140,8 @@ namespace AlphaPseudo
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
-        Tick when = curTick + NS2Ticks(delay);
-        Tick repeat = NS2Ticks(period);
+        Tick when = curTick + delay * Clock::Int::ns;
+        Tick repeat = period * Clock::Int::ns;
 
         using namespace Stats;
         SetupEvent(Dump|Reset, when, repeat);
@@ -156,8 +156,8 @@ namespace AlphaPseudo
         Tick delay = xc->regs.intRegFile[16];
         Tick period = xc->regs.intRegFile[17];
 
-        Tick when = curTick + NS2Ticks(delay);
-        Tick repeat = NS2Ticks(period);
+        Tick when = curTick + delay * Clock::Int::ns;
+        Tick repeat = period * Clock::Int::ns;
 
         Checkpoint::setup(when, repeat);
     }

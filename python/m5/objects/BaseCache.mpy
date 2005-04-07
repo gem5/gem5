@@ -1,5 +1,7 @@
 from BaseMem import BaseMem
 
+class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
+
 simobj BaseCache(BaseMem):
     type = 'BaseCache'
     adaptive_compression = Param.Bool(False,
@@ -36,3 +38,23 @@ simobj BaseCache(BaseMem):
     two_queue = Param.Bool(False,
         "whether the lifo should have two queue replacement")
     write_buffers = Param.Int(8, "number of write buffers")
+    prefetch_miss = Param.Bool(False,
+         "wheter you are using the hardware prefetcher from Miss stream")
+    prefetch_access = Param.Bool(False,
+         "wheter you are using the hardware prefetcher from Access stream")
+    prefetcher_size = Param.Int(100,
+         "Number of entries in the harware prefetch queue")
+    prefetch_past_page = Param.Bool(False,
+         "Allow prefetches to cross virtual page boundaries")
+    prefetch_serial_squash = Param.Bool(False,
+         "Squash prefetches with a later time on a subsequent miss")
+    prefetch_degree = Param.Int(1,
+         "Degree of the prefetch depth")
+    prefetch_latency = Param.Tick(10,
+         "Latency of the prefetcher")
+    prefetch_policy = Param.Prefetch('none',
+         "Type of prefetcher to use")
+    prefetch_cache_check_push = Param.Bool(True,
+         "Check if in cash on push or pop of prefetch queue")
+    prefetch_use_cpu_id = Param.Bool(True,
+         "Use the CPU ID to seperate calculations of prefetches")

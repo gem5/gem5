@@ -42,15 +42,39 @@
 using namespace std;
 
 Tick curTick = 0;
-Tick ticksPerSecond;
-double __ticksPerMS;
-double __ticksPerUS;
-double __ticksPerNS;
-double __ticksPerPS;
-
-bool fullSystem;
 ostream *outputStream;
 ostream *configStream;
+
+/// The simulated frequency of curTick. (This is only here for a short time)
+Tick ticksPerSecond;
+
+namespace Clock {
+/// The simulated frequency of curTick. (In ticks per second)
+Tick Frequency;
+
+namespace Float {
+double s;
+double ms;
+double us;
+double ns;
+double ps;
+
+double Hz;
+double kHz;
+double MHz;
+double GHZ;
+/* namespace Float */ }
+
+namespace Int {
+Tick s;
+Tick ms;
+Tick us;
+Tick ns;
+Tick ps;
+/* namespace Float */ }
+
+/* namespace Clock */ }
+
 
 // Dummy Object
 class Root : public SimObject
@@ -61,7 +85,6 @@ class Root : public SimObject
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
 
-    Param<bool> full_system;
     Param<Tick> frequency;
     Param<string> output_file;
 
@@ -69,7 +92,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(Root)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
 
-    INIT_PARAM(full_system, "full system simulation"),
     INIT_PARAM(frequency, "tick frequency"),
     INIT_PARAM(output_file, "file to dump simulator output to")
 
@@ -82,27 +104,32 @@ CREATE_SIM_OBJECT(Root)
         panic("only one root object allowed!");
 
     created = true;
-    fullSystem = full_system;
-
-#ifdef FULL_SYSTEM
-    if (!fullSystem)
-        panic("FULL_SYSTEM compiled and configuration not full_system");
-#else
-    if (fullSystem)
-        panic("FULL_SYSTEM not compiled but configuration is full_system");
-#endif
-
-    ticksPerSecond = frequency;
-    double freq = double(ticksPerSecond);
-    __ticksPerMS = freq / 1.0e3;
-    __ticksPerUS = freq / 1.0e6;
-    __ticksPerNS = freq / 1.0e9;
-    __ticksPerPS = freq / 1.0e12;
 
     outputStream = simout.find(output_file);
+    Root *root = new Root(getInstanceName());
 
-    return new Root(getInstanceName());
+    ticksPerSecond = frequency;
+
+    using namespace Clock;
+    Frequency = frequency;
+    Float::s = static_cast<double>(Frequency);
+    Float::ms = Float::s / 1.0e3;
+    Float::us = Float::s / 1.0e6;
+    Float::ns = Float::s / 1.0e9;
+    Float::ps = Float::s / 1.0e12;
+
+    Float::Hz  = 1.0 / Float::s;
+    Float::kHz = 1.0 / Float::ms;
+    Float::MHz = 1.0 / Float::us;
+    Float::GHZ = 1.0 / Float::ns;
+
+    Int::s  = Frequency;
+    Int::ms = Int::s / 1000;
+    Int::us = Int::ms / 1000;
+    Int::ns = Int::us / 1000;
+    Int::ps = Int::ns / 1000;
+
+    return root;
 }
 
 REGISTER_SIM_OBJECT("Root", Root)
-

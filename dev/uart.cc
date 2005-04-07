@@ -73,17 +73,28 @@ Uart::IntrEvent::process()
 
 }
 
+/* The linux serial driver (8250.c about line 1182) loops reading from
+ * the device until the device reports it has no more data to
+ * read. After a maximum of 255 iterations the code prints "serial8250
+ * too much work for irq X," and breaks out of the loop. Since the
+ * simulated system is so much slower than the actual system, if a
+ * user is typing on the keyboard it is very easy for them to provide
+ * input at a fast enough rate to not allow the loop to exit and thus
+ * the error to be printed. This magic number provides a delay between
+ * the time the UART receives a character to send to the simulated
+ * system and the time it actually notifies the system it has a
+ * character to send to alleviate this problem. --Ali
+ */
 void
 Uart::IntrEvent::scheduleIntr()
 {
+    static const Tick interval = (Tick)((Clock::Float::s / 2e9) * 450);
     DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
-            curTick + (ticksPerSecond/2000) * 350);
+            curTick + interval);
     if (!scheduled())
-        /* @todo Make this cleaner, will be much easier with
-         *       nanosecond time everywhere. Hint hint  Nate. */
-        schedule(curTick + (ticksPerSecond/2000000000) * 450);
+        schedule(curTick + interval);
     else
-        reschedule(curTick + (ticksPerSecond/2000000000) * 450);
+        reschedule(curTick + interval);
 }
 
 Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,

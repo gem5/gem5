@@ -153,15 +153,15 @@ def toNetworkBandwidth(value):
         raise TypeError, "wrong type '%s' should be str" % type(value)
 
     if value.endswith('Tbps'):
-        return float(value[:-3]) * tera
+        return float(value[:-4]) * tera
     elif value.endswith('Gbps'):
-        return float(value[:-3]) * giga
+        return float(value[:-4]) * giga
     elif value.endswith('Mbps'):
-        return float(value[:-3]) * mega
+        return float(value[:-4]) * mega
     elif value.endswith('kbps'):
-        return float(value[:-3]) * kilo
+        return float(value[:-4]) * kilo
     elif value.endswith('bps'):
-        return float(value[:-2])
+        return float(value[:-3])
     else:
         return float(value)
 

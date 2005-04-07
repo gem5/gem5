@@ -222,9 +222,7 @@ template <class T1, class T2>
 void
 getElapsedTime(T1 &sec, T2 &usec)
 {
-    int cycles_per_usec = ticksPerSecond / one_million;
-
-    int elapsed_usecs = curTick / cycles_per_usec;
+    int elapsed_usecs = curTick / Clock::Int::us;
     sec = elapsed_usecs / one_million;
     usec = elapsed_usecs % one_million;
 }

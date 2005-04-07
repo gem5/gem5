@@ -139,7 +139,8 @@ baseFlags = [
     'DynInst',
     'FullCPU',
     'CommitRate',
-    'OoOCPU'
+    'OoOCPU',
+    'HWPrefetch'
     ]
 
 #

@@ -52,7 +52,7 @@ EtherLink::EtherLink(const string &name, EtherInt *peer0, EtherInt *peer1,
     : SimObject(name)
 {
     double rate = ((double)ticksPerSecond * 8.0) / (double)speed;
-    Tick delay = US2Ticks(dly);
+    Tick delay = dly * Clock::Int::us;
 
     link[0] = new Link(name + ".link0", this, 0, rate, delay, dump);
     link[1] = new Link(name + ".link1", this, 1, rate, delay, dump);

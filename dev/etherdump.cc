@@ -74,9 +74,6 @@ void
 EtherDump::init()
 {
     curtime = time(NULL);
-    s_freq = ticksPerSecond;
-    us_freq = ticksPerSecond / ULL(1000000);
-
     struct pcap_file_header hdr;
     hdr.magic = TCPDUMP_MAGIC;
     hdr.version_major = PCAP_VERSION_MAJOR;
@@ -108,8 +105,8 @@ void
 EtherDump::dumpPacket(PacketPtr &packet)
 {
     pcap_pkthdr pkthdr;
-    pkthdr.seconds = curtime + (curTick / s_freq);
-    pkthdr.microseconds = (curTick / us_freq) % ULL(1000000);
+    pkthdr.seconds = curtime + (curTick / Clock::Int::s);
+    pkthdr.microseconds = (curTick / Clock::Int::us) % ULL(1000000);
     pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;
     stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
