@@ -83,15 +83,23 @@ class AlphaConsole : public PioDevice
     /** the system console (the terminal) is accessable from the console */
     SimConsole *console;
 
+    /** a pointer to the system we are running in */
+    System *system;
+
+    /** a pointer to the CPU boot cpu */
+    BaseCPU *cpu;
+
     Addr addr;
     static const Addr size = 0x80; // equal to sizeof(alpha_access);
 
   public:
     /** Standard Constructor */
     AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
-                 System *system, BaseCPU *cpu, Platform *platform,
+                 System *s, BaseCPU *c, Platform *platform,
                  int num_cpus, MemoryController *mmu, Addr addr,
                  HierParams *hier, Bus *bus);
+
+    virtual void init();
 
     /**
      * memory mapped reads and writes

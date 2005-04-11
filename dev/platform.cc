@@ -32,6 +32,15 @@
 
 using namespace std;
 
+Platform::Platform(const string &name, IntrControl *intctrl, PciConfigAll *pci)
+    : SimObject(name), intrctrl(intctrl), pciconfig(pci)
+{
+}
+
+Platform::~Platform()
+{
+}
+
 void
 Platform::postPciInt(int line)
 {

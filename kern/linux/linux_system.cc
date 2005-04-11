@@ -68,7 +68,8 @@ LinuxSystem::LinuxSystem(Params *p)
             physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (est_cycle_frequency)
-            *(uint64_t *)est_cycle_frequency = htoa(ticksPerSecond);
+            *(uint64_t *)est_cycle_frequency =
+                Clock::Frequency / p->boot_cpu_frequency;
     }
 
 
@@ -206,8 +207,8 @@ LinuxSystem::setDelayLoop(ExecContext *xc)
         uint8_t *loops_per_jiffy =
             physmem->dma_addr(paddr, sizeof(uint32_t));
 
-        Tick cpuFreq = xc->cpu->getFreq();
-        Tick intrFreq = platform->interrupt_frequency;
+        Tick cpuFreq = xc->cpu->frequency();
+        Tick intrFreq = platform->intrFrequency();
         *(uint32_t *)loops_per_jiffy =
             (uint32_t)((cpuFreq / intrFreq) * 0.9988);
     }
@@ -215,6 +216,7 @@ LinuxSystem::setDelayLoop(ExecContext *xc)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
+    Param<Tick> boot_cpu_frequency;
     SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
@@ -237,6 +239,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
 
+    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
@@ -258,6 +261,7 @@ CREATE_SIM_OBJECT(LinuxSystem)
 {
     System::Params *p = new System::Params;
     p->name = getInstanceName();
+    p->boot_cpu_frequency = boot_cpu_frequency;
     p->memctrl = memctrl;
     p->physmem = physmem;
     p->kernel_path = kernel;

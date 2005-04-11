@@ -162,9 +162,7 @@ Process::startup()
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
 
-    // mark this context as active.
-    // activate with zero delay so that we start ticking right
-    // away on cycle 0
+    // mark this context as active so it will start ticking.
     xc->activate(0);
 }
 

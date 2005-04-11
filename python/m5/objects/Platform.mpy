@@ -1,5 +1,4 @@
 simobj Platform(SimObject):
     type = 'Platform'
     abstract = True
-    interrupt_frequency = Param.Tick(1200, "frequency of interrupts")
     intrctrl = Param.IntrControl(parent.any, "interrupt controller")

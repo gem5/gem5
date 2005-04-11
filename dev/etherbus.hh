@@ -44,7 +44,7 @@ class EtherBus : public SimObject
   protected:
     typedef std::list<EtherInt *> devlist_t;
     devlist_t devlist;
-    double ticks_per_byte;
+    double ticksPerByte;
     bool loopback;
 
   protected:
@@ -66,7 +66,7 @@ class EtherBus : public SimObject
     EtherDump *dump;
 
   public:
-    EtherBus(const std::string &name, double ticks_per_byte, bool loopback,
+    EtherBus(const std::string &name, double speed, bool loopback,
              EtherDump *dump);
     virtual ~EtherBus() {}
 

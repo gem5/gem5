@@ -248,7 +248,7 @@ class IdeDisk : public SimObject
      * @param disk_delay The disk delay in milliseconds
      */
     IdeDisk(const std::string &name, DiskImage *img, PhysicalMemory *phys,
-            int id, int disk_delay);
+            int id, Tick disk_delay);
 
     /**
      * Delete the data buffer.

@@ -37,14 +37,15 @@
 #include "kern/system_events.hh"
 #include "sim/sim_object.hh"
 
+class BaseCPU;
+class ExecContext;
+class GDBListener;
 class MemoryController;
+class ObjectFile;
 class PhysicalMemory;
 class Platform;
 class RemoteGDB;
-class GDBListener;
 class SymbolTable;
-class ObjectFile;
-class ExecContext;
 namespace Kernel { class Binning; }
 
 class System : public SimObject
@@ -101,6 +102,7 @@ class System : public SimObject
     struct Params
     {
         std::string name;
+        Tick boot_cpu_frequency;
         MemoryController *memctrl;
         PhysicalMemory *physmem;
         uint64_t init_param;

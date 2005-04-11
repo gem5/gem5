@@ -51,11 +51,12 @@ int maxThreadsPerCPU = 1;
 
 #ifdef FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), frequency(p->freq), checkInterrupts(true),
+    : SimObject(p->name), cycleTime(p->cycleTime), checkInterrupts(true),
       params(p), number_of_threads(p->numberOfThreads), system(p->system)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), params(p), number_of_threads(p->numberOfThreads)
+    : SimObject(p->name), cycleTime(p->cycleTime), params(p),
+      number_of_threads(p->numberOfThreads)
 #endif
 {
     // add self to global list of CPUs

@@ -48,12 +48,9 @@
 using namespace std;
 
 EtherLink::EtherLink(const string &name, EtherInt *peer0, EtherInt *peer1,
-                     Tick speed, Tick dly, EtherDump *dump)
+                     double rate, Tick delay, EtherDump *dump)
     : SimObject(name)
 {
-    double rate = ((double)ticksPerSecond * 8.0) / (double)speed;
-    Tick delay = dly * Clock::Int::us;
-
     link[0] = new Link(name + ".link0", this, 0, rate, delay, dump);
     link[1] = new Link(name + ".link1", this, 1, rate, delay, dump);
 
@@ -271,7 +268,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
 
     SimObjectParam<EtherInt *> int1;
     SimObjectParam<EtherInt *> int2;
-    Param<Tick> speed;
+    Param<double> speed;
     Param<Tick> delay;
     SimObjectParam<EtherDump *> dump;
 
@@ -281,9 +278,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(EtherLink)
 
     INIT_PARAM(int1, "interface 1"),
     INIT_PARAM(int2, "interface 2"),
-    INIT_PARAM_DFLT(speed, "link speed in bits per second", 100000000),
-    INIT_PARAM_DFLT(delay, "transmit delay of packets in us", 0),
-    INIT_PARAM_DFLT(dump, "object to dump network packets to", NULL)
+    INIT_PARAM(speed, "link speed in bits per second"),
+    INIT_PARAM(delay, "transmit delay of packets in us"),
+    INIT_PARAM(dump, "object to dump network packets to")
 
 END_INIT_SIM_OBJECT_PARAMS(EtherLink)
 
