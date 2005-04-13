@@ -46,6 +46,7 @@
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
@@ -228,7 +229,7 @@ void
 Serializable::serializeAll()
 {
     if (maxCount && count++ > maxCount)
-        SimExit("Maximum number of checkpoints dropped");
+        exitNow("Maximum number of checkpoints dropped", 0);
 
     string dir = Checkpoint::dir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
