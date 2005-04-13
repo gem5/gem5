@@ -119,6 +119,8 @@ class Serializable
     static Serializable *create(Checkpoint *cp,
                                  const std::string &section);
 
+    static int count;
+    static int maxCount;
     static void serializeAll();
     static void unserializeGlobals(Checkpoint *cp);
 };
