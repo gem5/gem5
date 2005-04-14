@@ -46,9 +46,13 @@
 #include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
+
+int Serializable::maxCount;
+int Serializable::count;
 
 void
 Serializable::nameOut(ostream &os)
@@ -224,6 +228,9 @@ Globals::unserialize(Checkpoint *cp)
 void
 Serializable::serializeAll()
 {
+    if (maxCount && count++ > maxCount)
+        exitNow("Maximum number of checkpoints dropped", 0);
+
     string dir = Checkpoint::dir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             fatal("couldn't mkdir %s\n", dir);
@@ -321,7 +328,8 @@ Param<Counter> serialize_period(&serialParams,
                                 "period to repeat serializations",
                                 0);
 
-
+Param<int> serialize_count(&serialParams, "count",
+                           "maximum number of checkpoints to drop");
 
 SerializeParamContext::SerializeParamContext(const string &section)
     : ParamContext(section), event(NULL)
@@ -342,6 +350,8 @@ SerializeParamContext::checkParams()
 
     if (serialize_cycle > 0)
         Checkpoint::setup(serialize_cycle, serialize_period);
+
+    Serializable::maxCount = serialize_count;
 }
 
 void

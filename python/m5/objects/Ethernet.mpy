@@ -10,16 +10,15 @@ simobj EtherLink(SimObject):
     type = 'EtherLink'
     int1 = Param.EtherInt("interface 1")
     int2 = Param.EtherInt("interface 2")
-    delay = Param.Tick(0, "transmit delay of packets in us")
-    speed = Param.Tick(100000000, "link speed in bits per second")
+    delay = Param.Latency('0us', "packet transmit delay")
+    speed = Param.NetworkBandwidth('100Mbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
 
 simobj EtherBus(SimObject):
     type = 'EtherBus'
-    loopback = Param.Bool(True,
-        "send packet back to the interface from which it came")
+    loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
-    speed = Param.UInt64(100000000, "bus speed in bits per second")
+    speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
 
 simobj EtherTap(EtherInt):
     type = 'EtherTap'
@@ -38,16 +37,16 @@ simobj EtherDev(DmaDevice):
 
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
-    dma_read_delay = Param.Tick(0, "fixed delay for dma reads")
-    dma_read_factor = Param.Tick(0, "multiplier for dma reads")
-    dma_write_delay = Param.Tick(0, "fixed delay for dma writes")
-    dma_write_factor = Param.Tick(0, "multiplier for dma writes")
+    dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
+    dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
+    dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
+    dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
-    rx_delay = Param.Tick(1000, "Receive Delay")
-    tx_delay = Param.Tick(1000, "Transmit Delay")
+    rx_delay = Param.Latency('1us', "Receive Delay")
+    tx_delay = Param.Latency('1us', "Transmit Delay")
 
-    intr_delay = Param.Tick(0, "Interrupt Delay in microseconds")
+    intr_delay = Param.Latency('0us', "Interrupt Delay")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
     physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
     tlaser = Param.Turbolaser(parent.any, "Turbolaser")
@@ -57,21 +56,23 @@ simobj NSGigE(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
+    cycle_time = Param.Frequency('100MHz', "State machine processor frequency")
+
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
-    dma_read_delay = Param.Tick(0, "fixed delay for dma reads")
-    dma_read_factor = Param.Tick(0, "multiplier for dma reads")
-    dma_write_delay = Param.Tick(0, "fixed delay for dma writes")
-    dma_write_factor = Param.Tick(0, "multiplier for dma writes")
+    dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
+    dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
+    dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
+    dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
-    rx_delay = Param.Tick(1000, "Receive Delay")
-    tx_delay = Param.Tick(1000, "Transmit Delay")
+    rx_delay = Param.Latency('1us', "Receive Delay")
+    tx_delay = Param.Latency('1us', "Transmit Delay")
 
     rx_fifo_size = Param.MemorySize('128kB', "max size in bytes of rxFifo")
     tx_fifo_size = Param.MemorySize('128kB', "max size in bytes of txFifo")
 
-    intr_delay = Param.Tick(0, "Interrupt Delay in microseconds")
+    intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
     physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
 

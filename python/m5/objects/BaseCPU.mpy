@@ -23,3 +23,5 @@ simobj BaseCPU(SimObject):
 
     defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")
+
+    cycle_time = Param.ClockPeriod(parent.frequency, "clock speed")

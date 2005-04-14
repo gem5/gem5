@@ -53,18 +53,18 @@ using namespace std;
 #define UNIX_YEAR_OFFSET 52
 
 // Timer Event for Periodic interrupt of RTC
-TsunamiIO::RTCEvent::RTCEvent(Tsunami* t)
-    : Event(&mainEventQueue), tsunami(t)
+TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
+    : Event(&mainEventQueue), tsunami(t), interval(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
-    schedule(curTick + ticksPerSecond/RTC_RATE);
+    schedule(curTick + interval);
 }
 
 void
 TsunamiIO::RTCEvent::process()
 {
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
-    schedule(curTick + ticksPerSecond/RTC_RATE);
+    schedule(curTick + interval);
     //Actually interrupt the processor here
     tsunami->cchip->postRTC();
 }
@@ -72,7 +72,7 @@ TsunamiIO::RTCEvent::process()
 const char *
 TsunamiIO::RTCEvent::description()
 {
-    return "tsunami RTC 1024Hz interrupt";
+    return "tsunami RTC interrupt";
 }
 
 void
@@ -119,7 +119,7 @@ TsunamiIO::ClockEvent::process()
 void
 TsunamiIO::ClockEvent::Program(int count)
 {
-    DPRINTF(Tsunami, "Timer set to curTick + %d\n", count);
+    DPRINTF(Tsunami, "Timer set to curTick + %d\n", count * interval);
     schedule(curTick + count * interval);
     status = 0;
 }
@@ -166,8 +166,8 @@ TsunamiIO::ClockEvent::unserialize(Checkpoint *cp, const std::string &section)
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
                      Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
-                     Tick pio_latency)
-    : PioDevice(name, t), addr(a), tsunami(t), rtc(t)
+                     Tick pio_latency, Tick ci)
+    : PioDevice(name, t), addr(a), clockInterval(ci), tsunami(t), rtc(t, ci)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
@@ -186,6 +186,12 @@ TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
     uip = 1;
     picr = 0;
     picInterrupting = false;
+}
+
+Tick
+TsunamiIO::frequency() const
+{
+    return Clock::Frequency / clockInterval;
 }
 
 void
@@ -485,26 +491,27 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     SimObjectParam<Bus*> io_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
+    Param<Tick> frequency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
     INIT_PARAM(tsunami, "Tsunami"),
-    INIT_PARAM_DFLT(time, "System time to use "
-            "(0 for actual time, default is 1/1/06", ULL(1136073600)),
+    INIT_PARAM(time, "System time to use (0 for actual time"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
+    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
+    INIT_PARAM(frequency, "clock interrupt frequency")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
     return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu, hier,
-                         io_bus, pio_latency);
+                         io_bus, pio_latency, frequency);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

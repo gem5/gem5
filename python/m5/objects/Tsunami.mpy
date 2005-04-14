@@ -5,7 +5,6 @@ simobj Tsunami(Platform):
     type = 'Tsunami'
     pciconfig = Param.PciConfigAll("PCI configuration")
     system = Param.BaseSystem(parent.any, "system")
-    interrupt_frequency = Param.Int(1024, "frequency of interrupts")
 
 simobj TsunamiCChip(FooPioDevice):
     type = 'TsunamiCChip'
@@ -19,6 +18,7 @@ simobj TsunamiIO(FooPioDevice):
     time = Param.UInt64(1136073600,
         "System time to use (0 for actual time, default is 1/1/06)")
     tsunami = Param.Tsunami(parent.any, "Tsunami")
+    frequency = Param.Frequency('1024Hz', "frequency of interrupts")
 
 simobj TsunamiPChip(FooPioDevice):
     type = 'TsunamiPChip'

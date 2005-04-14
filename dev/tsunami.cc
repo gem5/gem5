@@ -45,9 +45,9 @@
 
 using namespace std;
 
-Tsunami::Tsunami(const string &name, System *s,
-                 IntrControl *ic, PciConfigAll *pci, int intr_freq)
-    : Platform(name, ic, pci, intr_freq), system(s)
+Tsunami::Tsunami(const string &name, System *s, IntrControl *ic,
+                 PciConfigAll *pci)
+    : Platform(name, ic, pci), system(s)
 {
     // set the back pointer from the system to myself
     system->platform = this;
@@ -109,7 +109,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
     SimObjectParam<System *> system;
     SimObjectParam<IntrControl *> intrctrl;
     SimObjectParam<PciConfigAll *> pciconfig;
-    Param<int> interrupt_frequency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
@@ -117,15 +116,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
     INIT_PARAM(system, "system"),
     INIT_PARAM(intrctrl, "interrupt controller"),
-    INIT_PARAM(pciconfig, "PCI configuration"),
-    INIT_PARAM_DFLT(interrupt_frequency, "frequency of interrupts", 1024)
+    INIT_PARAM(pciconfig, "PCI configuration")
 
 END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
 CREATE_SIM_OBJECT(Tsunami)
 {
-    return new Tsunami(getInstanceName(), system, intrctrl, pciconfig,
-                       interrupt_frequency);
+    return new Tsunami(getInstanceName(), system, intrctrl, pciconfig);
 }
 
 REGISTER_SIM_OBJECT("Tsunami", Tsunami)

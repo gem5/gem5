@@ -38,9 +38,6 @@
 #include "dev/tsunami.hh"
 #include "sim/eventq.hh"
 
-/** How often the RTC interrupts */
-static const int RTC_RATE  = 1024;
-
 /*
  * Tsunami I/O device is a catch all for all the south bridge stuff we care
  * to implement.
@@ -136,10 +133,14 @@ class TsunamiIO : public PioDevice
       protected:
         /** A pointer back to tsunami to create interrupt the processor. */
         Tsunami* tsunami;
+        Tick interval;
+
       public:
-        /** RTC Event initializes the RTC event by scheduling an event
-         * RTC_RATE times pre second. */
-        RTCEvent(Tsunami* t);
+        /**
+         * RTC Event initializes the RTC event by scheduling an event
+         * RTC_RATE times pre second.
+         */
+        RTCEvent(Tsunami* t, Tick i);
 
         /**
          * Interrupth the processor and reschedule the event.
@@ -191,6 +192,8 @@ class TsunamiIO : public PioDevice
     /** Is the pic interrupting right now or not. */
     bool picInterrupting;
 
+    Tick clockInterval;
+
     /** A pointer to the Tsunami device which be belong to */
     Tsunami *tsunami;
 
@@ -225,7 +228,7 @@ class TsunamiIO : public PioDevice
      * Return the freqency of the RTC
      * @return interrupt rate of the RTC
      */
-    Tick  frequency() const { return RTC_RATE; }
+    Tick frequency() const;
 
     /**
      * Initialize all the data for devices supported by Tsunami I/O.
@@ -237,7 +240,7 @@ class TsunamiIO : public PioDevice
      */
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
               Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
-              Tick pio_latency);
+              Tick pio_latency, Tick ci);
 
     /**
      * Create the tm struct from seconds since 1970

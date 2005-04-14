@@ -56,10 +56,10 @@
 using namespace std;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
-                           System *system, BaseCPU *cpu, Platform *p,
+                           System *s, BaseCPU *c, Platform *p,
                            int num_cpus, MemoryController *mmu, Addr a,
                            HierParams *hier, Bus *bus)
-    : PioDevice(name, p), disk(d), console(cons), addr(a)
+    : PioDevice(name, p), disk(d), console(cons), system(s), cpu(c), addr(a)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
@@ -71,15 +71,9 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
 
     alphaAccess = new AlphaAccess;
     alphaAccess->last_offset = size - 1;
-    alphaAccess->kernStart = system->getKernelStart();
-    alphaAccess->kernEnd = system->getKernelEnd();
-    alphaAccess->entryPoint = system->getKernelEntry();
 
     alphaAccess->version = ALPHA_ACCESS_VERSION;
     alphaAccess->numCPUs = num_cpus;
-    alphaAccess->mem_size = system->physmem->size();
-    alphaAccess->cpuClock = cpu->getFreq() / 1000000;
-    alphaAccess->intrClockFrequency = platform->intrFrequency();
     alphaAccess->diskUnit = 1;
 
     alphaAccess->diskCount = 0;
@@ -91,6 +85,17 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->bootStrapImpure = 0;
     alphaAccess->bootStrapCPU = 0;
     alphaAccess->align2 = 0;
+}
+
+void
+AlphaConsole::init()
+{
+    alphaAccess->kernStart = system->getKernelStart();
+    alphaAccess->kernEnd = system->getKernelEnd();
+    alphaAccess->entryPoint = system->getKernelEntry();
+    alphaAccess->mem_size = system->physmem->size();
+    alphaAccess->cpuClock = cpu->frequency() / 1000000; // In MHz
+    alphaAccess->intrClockFrequency = platform->intrFrequency();
 }
 
 Fault

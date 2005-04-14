@@ -225,7 +225,7 @@ void
 MemTest::tick()
 {
     if (!tickEvent.scheduled())
-        tickEvent.schedule(curTick + 1);
+        tickEvent.schedule(curTick + cycles(1));
 
     if (++noResponseCycles >= 500000) {
         cerr << name() << ": deadlocked at cycle " << curTick << endl;

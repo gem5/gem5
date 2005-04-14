@@ -108,8 +108,6 @@ CREATE_SIM_OBJECT(Root)
     outputStream = simout.find(output_file);
     Root *root = new Root(getInstanceName());
 
-    ticksPerSecond = frequency;
-
     using namespace Clock;
     Frequency = frequency;
     Float::s = static_cast<double>(Frequency);

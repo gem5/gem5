@@ -55,17 +55,14 @@
 using namespace std;
 
 IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
-                 int id, int delay)
-    : SimObject(name), ctrl(NULL), image(img), physmem(phys),
+                 int id, Tick delay)
+    : SimObject(name), ctrl(NULL), image(img), physmem(phys), diskDelay(delay),
       dmaTransferEvent(this), dmaReadWaitEvent(this),
       dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
       dmaReadEvent(this), dmaWriteEvent(this)
 {
     // Reset the device state
     reset(id);
-
-    // calculate disk delay in microseconds
-    diskDelay = (delay * ticksPerSecond / 100000);
 
     // fill out the drive ID structure
     memset(&driveID, 0, sizeof(struct hd_driveid));
@@ -354,8 +351,11 @@ IdeDisk::dmaPrdReadDone()
 void
 IdeDisk::doDmaRead()
 {
+    /** @TODO we need to figure out what the delay actually will be */
     Tick totalDiskDelay = diskDelay + (curPrd.getByteCount() / SectorSize);
 
+    DPRINTF(IdeDisk, "doDmaRead, diskDelay: %d totalDiskDelay: %d\n",
+            diskDelay, totalDiskDelay);
     if (dmaInterface) {
         if (dmaInterface->busy()) {
             // reschedule after waiting period
@@ -455,7 +455,11 @@ IdeDisk::dmaReadDone()
 void
 IdeDisk::doDmaWrite()
 {
+    /** @TODO we need to figure out what the delay actually will be */
     Tick totalDiskDelay = diskDelay + (curPrd.getByteCount() / SectorSize);
+
+    DPRINTF(IdeDisk, "doDmaWrite, diskDelay: %d totalDiskDelay: %d\n",
+            diskDelay, totalDiskDelay);
 
     if (dmaInterface) {
         if (dmaInterface->busy()) {

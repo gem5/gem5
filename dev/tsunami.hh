@@ -89,7 +89,7 @@ class Tsunami : public Platform
      * @param intrFreq frequency that interrupts happen
      */
     Tsunami(const std::string &name, System *s, IntrControl *intctrl,
-            PciConfigAll *pci, int intrFreq);
+            PciConfigAll *pci);
 
     /**
      * Return the interrupting frequency to AlphaAccess

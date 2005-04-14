@@ -45,12 +45,12 @@
 
 using namespace std;
 
-EtherBus::EtherBus(const string &name, double rate, bool loop,
+EtherBus::EtherBus(const string &name, double speed, bool loop,
                    EtherDump *packet_dump)
-    : SimObject(name), ticks_per_byte(rate), loopback(loop),
-      event(&mainEventQueue, this),
-      sender(0), dump(packet_dump)
-{ }
+    : SimObject(name), ticksPerByte(speed), loopback(loop),
+      event(&mainEventQueue, this), sender(0), dump(packet_dump)
+{
+}
 
 void
 EtherBus::txDone()
@@ -93,9 +93,9 @@ EtherBus::send(EtherInt *sndr, PacketPtr &pkt)
 
     packet = pkt;
     sender = sndr;
-    int delay = (int)ceil(((double)pkt->length * ticks_per_byte) + 1.0);
+    int delay = (int)ceil(((double)pkt->length * ticksPerByte) + 1.0);
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
-            delay, ticks_per_byte);
+            delay, ticksPerByte);
     event.schedule(curTick + delay);
 
     return true;
@@ -104,25 +104,22 @@ EtherBus::send(EtherInt *sndr, PacketPtr &pkt)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherBus)
 
     Param<bool> loopback;
-    Param<int> speed;
+    Param<double> speed;
     SimObjectParam<EtherDump *> packet_dump;
 
 END_DECLARE_SIM_OBJECT_PARAMS(EtherBus)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(EtherBus)
 
-    INIT_PARAM_DFLT(loopback,
-                    "send the packet back to the interface from which it came",
-                    true),
-    INIT_PARAM_DFLT(speed, "bus speed in bits per second", 100000000),
-    INIT_PARAM_DFLT(packet_dump, "object to dump network packets to", NULL)
+    INIT_PARAM(loopback, "send the packet back to the sending interface"),
+    INIT_PARAM(speed, "bus speed in ticks per byte"),
+    INIT_PARAM(packet_dump, "object to dump network packets to")
 
 END_INIT_SIM_OBJECT_PARAMS(EtherBus)
 
 CREATE_SIM_OBJECT(EtherBus)
 {
-    double rate = ((double)ticksPerSecond * 8.0) / (double)speed;
-    return new EtherBus(getInstanceName(), rate, loopback, packet_dump);
+    return new EtherBus(getInstanceName(), speed, loopback, packet_dump);
 }
 
 REGISTER_SIM_OBJECT("EtherBus", EtherBus)

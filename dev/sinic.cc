@@ -78,10 +78,9 @@ const char *TxStateStrings[] =
 // Sinic PCI Device
 //
 Base::Base(Params *p)
-    : PciDev(p), rxEnable(false), txEnable(false),
-      intrDelay(p->intr_delay * Clock::Int::us),
-      intrTick(0), cpuIntrEnable(false), cpuPendingIntr(false), intrEvent(0),
-      interface(NULL)
+    : PciDev(p), rxEnable(false), txEnable(false), cycleTime(p->cycle_time),
+      intrDelay(p->intr_delay), intrTick(0), cpuIntrEnable(false),
+      cpuPendingIntr(false), intrEvent(0), interface(NULL)
 {
 }
 
@@ -888,7 +887,7 @@ Device::transmit()
   reschedule:
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
-       txEvent.schedule(curTick + 1000);
+       txEvent.schedule(curTick + retryTime);
    }
 }
 
@@ -1025,9 +1024,9 @@ Device::transferDone()
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
     if (txEvent.scheduled())
-        txEvent.reschedule(curTick + 1);
+        txEvent.reschedule(curTick + cycles(1));
     else
-        txEvent.schedule(curTick + 1);
+        txEvent.schedule(curTick + cycles(1));
 }
 
 bool
@@ -1361,6 +1360,7 @@ REGISTER_SIM_OBJECT("SinicInt", Interface)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
 
+    Param<Tick> cycle_time;
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
     Param<Tick> intr_delay;
@@ -1393,6 +1393,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
 
+    INIT_PARAM(cycle_time, "State machine cycle time"),
     INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
     INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
     INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
@@ -1431,6 +1432,7 @@ CREATE_SIM_OBJECT(Device)
     params->name = getInstanceName();
     params->intr_delay = intr_delay;
     params->physmem = physmem;
+    params->cycle_time = cycle_time;
     params->tx_delay = tx_delay;
     params->rx_delay = rx_delay;
     params->mmu = mmu;

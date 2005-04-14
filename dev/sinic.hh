@@ -48,6 +48,8 @@ class Base : public PciDev
   protected:
     bool rxEnable;
     bool txEnable;
+    Tick cycleTime;
+    inline Tick cycles(int numCycles) const { return numCycles * cycleTime; }
 
   protected:
     Tick intrDelay;
@@ -79,6 +81,7 @@ class Base : public PciDev
   public:
     struct Params : public PciDev::Params
     {
+        Tick cycle_time;
         Tick intr_delay;
     };
 

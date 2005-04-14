@@ -118,7 +118,7 @@ class EtherLink : public SimObject
 
   public:
     EtherLink(const std::string &name, EtherInt *peer0, EtherInt *peer1,
-              Tick speed, Tick delay, EtherDump *dump);
+              double rate, Tick delay, EtherDump *dump);
     virtual ~EtherLink();
 
     virtual void serialize(std::ostream &os);

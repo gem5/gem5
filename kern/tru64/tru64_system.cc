@@ -28,6 +28,7 @@
 
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
+#include "cpu/base_cpu.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/tru64_system.hh"
@@ -116,6 +117,7 @@ Tru64System::~Tru64System()
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
 
+    Param<Tick> boot_cpu_frequency;
     SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
@@ -137,6 +139,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64System)
 
+    INIT_PARAM(boot_cpu_frequency, "frequency of the boot cpu"),
     INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
@@ -157,6 +160,7 @@ CREATE_SIM_OBJECT(Tru64System)
 {
     System::Params *p = new System::Params;
     p->name = getInstanceName();
+    p->boot_cpu_frequency = boot_cpu_frequency;
     p->memctrl = memctrl;
     p->physmem = physmem;
     p->kernel_path = kernel;

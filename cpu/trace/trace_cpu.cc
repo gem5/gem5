@@ -108,10 +108,10 @@ TraceCPU::tick()
         if (mainEventQueue.empty()) {
             new SimExitEvent("Finshed Memory Trace");
         } else {
-            tickEvent.schedule(mainEventQueue.nextEventTime() + 1);
+            tickEvent.schedule(mainEventQueue.nextEventTime() + cycles(1));
         }
     } else {
-        tickEvent.schedule(max(curTick + 1, nextCycle));
+        tickEvent.schedule(max(curTick + cycles(1), nextCycle));
     }
 }
 

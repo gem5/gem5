@@ -297,7 +297,7 @@ ExecContext::readIpr(int idx, Fault &fault)
 
       case AlphaISA::IPR_CC:
         retval |= ipr[idx] & ULL(0xffffffff00000000);
-        retval |= curTick  & ULL(0x00000000ffffffff);
+        retval |= cpu->curCycle()  & ULL(0x00000000ffffffff);
         break;
 
       case AlphaISA::IPR_VA:

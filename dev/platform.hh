@@ -31,8 +31,8 @@
  * Generic interface for platforms
  */
 
-#ifndef __PLATFORM_HH_
-#define __PLATFORM_HH_
+#ifndef __DEV_PLATFORM_HH__
+#define __DEV_PLATFORM_HH__
 
 #include "sim/sim_object.hh"
 #include "targetarch/isa_traits.hh"
@@ -47,20 +47,16 @@ class Platform : public SimObject
   public:
     /** Pointer to the interrupt controller */
     IntrControl *intrctrl;
+
     /** Pointer to the PCI configuration space */
     PciConfigAll *pciconfig;
 
     /** Pointer to the UART, set by the uart */
     Uart *uart;
 
-    int interrupt_frequency;
-
   public:
-    Platform(const std::string &name, IntrControl *intctrl,
-             PciConfigAll *pci, int intrFreq)
-        : SimObject(name), intrctrl(intctrl), pciconfig(pci),
-          interrupt_frequency(intrFreq) {}
-    virtual ~Platform() {}
+    Platform(const std::string &name, IntrControl *intctrl, PciConfigAll *pci);
+    virtual ~Platform();
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
     virtual Tick intrFrequency() = 0;
@@ -69,4 +65,4 @@ class Platform : public SimObject
     virtual Addr pciToDma(Addr pciAddr) const;
 };
 
-#endif // __PLATFORM_HH_
+#endif // __DEV_PLATFORM_HH__

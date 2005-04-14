@@ -80,12 +80,12 @@ class SimpleCPU : public BaseCPU
     TickEvent tickEvent;
 
     /// Schedule tick event, regardless of its current state.
-    void scheduleTickEvent(int delay)
+    void scheduleTickEvent(int numCycles)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + delay);
+            tickEvent.reschedule(curTick + cycles(numCycles));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + delay);
+            tickEvent.schedule(curTick + cycles(numCycles));
     }
 
     /// Unschedule tick event, regardless of its current state.

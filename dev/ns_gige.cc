@@ -94,8 +94,8 @@ NSGigE::NSGigE(Params *p)
     : PciDev(p), ioEnable(false),
       txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
-      txXferLen(0), rxXferLen(0), txState(txIdle), txEnable(false),
-      CTDD(false),
+      txXferLen(0), rxXferLen(0), cycleTime(p->cycle_time),
+      txState(txIdle), txEnable(false), CTDD(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
       rxEnable(false), CRDD(false), rxPktBytes(0),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
@@ -138,7 +138,7 @@ NSGigE::NSGigE(Params *p)
     }
 
 
-    intrDelay = p->intr_delay * Clock::Int::us;
+    intrDelay = p->intr_delay;
     dmaReadDelay = p->dma_read_delay;
     dmaWriteDelay = p->dma_write_delay;
     dmaReadFactor = p->dma_read_factor;
@@ -1833,7 +1833,7 @@ NSGigE::transmit()
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
-       txEvent.schedule(curTick + 1000);
+       txEvent.schedule(curTick + retryTime);
    }
 }
 
@@ -2231,9 +2231,9 @@ NSGigE::transferDone()
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
     if (txEvent.scheduled())
-        txEvent.reschedule(curTick + 1);
+        txEvent.reschedule(curTick + cycles(1));
     else
-        txEvent.schedule(curTick + 1);
+        txEvent.schedule(curTick + cycles(1));
 }
 
 bool
@@ -2682,6 +2682,7 @@ REGISTER_SIM_OBJECT("NSGigEInt", NSGigEInt)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     Param<Addr> addr;
+    Param<Tick> cycle_time;
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
     Param<Tick> intr_delay;
@@ -2713,9 +2714,10 @@ END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
-    INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
-    INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
+    INIT_PARAM(cycle_time, "State machine processor frequency"),
+    INIT_PARAM(tx_delay, "Transmit Delay"),
+    INIT_PARAM(rx_delay, "Receive Delay"),
+    INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
     INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
@@ -2756,6 +2758,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
 
+    params->cycle_time = cycle_time;
     params->intr_delay = intr_delay;
     params->pmem = physmem;
     params->tx_delay = tx_delay;

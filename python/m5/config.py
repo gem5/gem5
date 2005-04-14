@@ -265,7 +265,6 @@ def isParamContext(value):
     except:
         return False
 
-
 class_decorator = 'M5M5_SIMOBJECT_'
 expr_decorator = 'M5M5_EXPRESSION_'
 dot_decorator = '_M5M5_DOT_'
@@ -652,6 +651,14 @@ class Node(object):
                               'parent.any matched more than one: %s %s' % \
                               (obj.path, child.path)
                     obj = child
+            for param in self.params:
+                if isConfigNode(param.ptype):
+                    continue
+                if issubclass(param.ptype, realtype):
+                    if obj is not None:
+                        raise AttributeError, \
+                              'parent.any matched more than one: %s' % obj.path
+                    obj = param.value
             return obj, obj is not None
 
         try:
@@ -672,7 +679,7 @@ class Node(object):
                 return Proxy.getindex(value, index), True
             elif obj.param_names.has_key(last):
                 value = obj.param_names[last]
-                realtype._convert(value.value)
+                #realtype._convert(value.value)
                 return Proxy.getindex(value.value, index), True
         except KeyError:
             pass
@@ -731,9 +738,18 @@ class Node(object):
                     raise AttributeError, 'Parameter with no value'
 
                 value = param.convert(param.value)
+                if hasattr(value, 'relative') and value.relative and value:
+                    if param.name == 'cycle_time':
+                        start = self.parent
+                    else:
+                        start = self
+                    val = start.unproxy(parent.cycle_time,
+                                        (Frequency, Latency, ClockPeriod))
+                    value.clock = Frequency._convert(val)
                 string = param.string(value)
             except Exception, e:
-                msg = 'exception in %s:%s\n%s' % (self.path, param.name, e)
+                msg = 'exception in %s:%s=%s\n%s' % (self.path, param.name,
+                                                     value, e)
                 e.args = (msg, )
                 raise
 
@@ -765,6 +781,9 @@ class Node(object):
                     raise AttributeError, 'Parameter with no value'
 
                 value = param.convert(param.value)
+                if param.ptype in (Frequency, Latency, ClockPeriod):
+                    val = self.parent.unproxy(parent.frequency, Frequency)
+                    param.clock = Frequency._convert(val)
                 string = param.string(value)
             except Exception, e:
                 msg = 'exception in %s:%s\n%s' % (self.name, param.name, e)
@@ -1382,27 +1401,33 @@ class RootFrequency(float,ParamType):
     _convert = classmethod(_convert)
 
     def _string(cls, value):
-        return '%d' % int(value)
+        return '%d' % int(round(value))
     _string = classmethod(_string)
 
 class ClockPeriod(float,ParamType):
     _cpp_param_decl = 'Tick'
     def __new__(cls, value):
+        absolute = False
         relative = False
         try:
             val = toClockPeriod(value)
         except ValueError, e:
-            relative = True
             if value.endswith('f'):
                 val = float(value[:-1])
                 if val:
                     val = 1 / val
+                relative = True
             elif value.endswith('c'):
                 val = float(value[:-1])
+                relative = True
+            elif value.endswith('t'):
+                val = float(value[:-1])
+                absolute = True
             else:
                 raise e
 
         self = super(cls, ClockPeriod).__new__(cls, val)
+        self.absolute = absolute
         self.relative = relative
         return self
 
@@ -1411,10 +1436,14 @@ class ClockPeriod(float,ParamType):
     _convert = classmethod(_convert)
 
     def _string(cls, value):
-        if not value.relative:
-            value *= root_frequency
+        if value and not value.absolute:
+            if value.relative:
+                base = root_frequency / value.clock
+            else:
+                base = root_frequency
+            value *= base
 
-        return '%d' % int(value)
+        return '%d' % int(round(value))
     _string = classmethod(_string)
 
 class Frequency(float,ParamType):
@@ -1439,15 +1468,21 @@ class Frequency(float,ParamType):
     _convert = classmethod(_convert)
 
     def _string(cls, value):
-        if not value.relative:
-            value = root_frequency / value
+        if value:
+            if value.relative:
+                base = root_frequency / value.clock
+            else:
+                base = root_frequency
 
-        return '%d' % int(value)
+            value = base / value
+
+        return '%d' % int(round(value))
     _string = classmethod(_string)
 
 class Latency(float,ParamType):
     _cpp_param_decl = 'Tick'
     def __new__(cls, value):
+        absolute = False
         relative = False
         try:
             val = toLatency(value)
@@ -1455,9 +1490,13 @@ class Latency(float,ParamType):
             if value.endswith('c'):
                 val = float(value[:-1])
                 relative = True
+            elif value.endswith('t'):
+                val = float(value[:-1])
+                absolute = True
             else:
                 raise e
         self = super(cls, Latency).__new__(cls, val)
+        self.absolute = absolute
         self.relative = relative
         return self
 
@@ -1466,11 +1505,44 @@ class Latency(float,ParamType):
     _convert = classmethod(_convert)
 
     def _string(cls, value):
-        if not value.relative:
-            value *= root_frequency
-        return '%d' % value
+        if value and not value.absolute:
+            if value.relative:
+                base = root_frequency / value.clock
+            else:
+                base = root_frequency
+            value *= base
+        return '%d' % int(round(value))
     _string = classmethod(_string)
 
+class NetworkBandwidth(float,ParamType):
+    _cpp_param_decl = 'float'
+    def __new__(cls, value):
+        val = toNetworkBandwidth(value) / 8.0
+        return super(cls, NetworkBandwidth).__new__(cls, val)
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        value = root_frequency / value
+        return '%f' % value
+    _string = classmethod(_string)
+
+class MemoryBandwidth(float,ParamType):
+    _cpp_param_decl = 'float'
+    def __new__(self, value):
+        val = toMemoryBandwidth(value)
+        return super(cls, MemoryBandwidth).__new__(cls, val)
+
+    def _convert(cls, value):
+        return cls(value)
+    _convert = classmethod(_convert)
+
+    def _string(cls, value):
+        value = root_frequency / value
+        return '%f' % value
+    _string = classmethod(_string)
 
 # Some memory range specifications use this as a default upper bound.
 MaxAddr = Addr.max
@@ -1518,6 +1590,6 @@ __all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
            'MemorySize', 'RootFrequency', 'Frequency', 'Latency',
-           'ClockPeriod',
+           'ClockPeriod', 'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory', 'NULL',
            'NextEthernetAddr', 'instantiate']
