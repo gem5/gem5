@@ -44,7 +44,7 @@ try:
             offset = arg.find('=')
             if offset == -1:
                 name = arg
-                value = '1'
+                value = 'True'
             else:
                 name = arg[:offset]
                 value = arg[offset+1:]

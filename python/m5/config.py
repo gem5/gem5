@@ -177,7 +177,7 @@ class Proxy(object):
 
     # support multiplying proxies by constants
     def __mul__(self, other):
-        if not isinstance(other, int):
+        if not isinstance(other, (int, float)):
             raise TypeError, "Proxy multiplier must be integer"
         if self._multiplier == None:
             self._multiplier = other
@@ -186,13 +186,19 @@ class Proxy(object):
             self._multiplier *= other
         return self
 
+    __rmul__ = __mul__
+
     def _mulcheck(self, result):
         if self._multiplier == None:
             return result
         if not isinstance(result, int):
-            raise TypeError, "Proxy with multiplier resolves to " \
-                  "non-integer value"
-        return result * self._multiplier
+            # this was an error, but for now we'll assume if it's not
+            # an int it must be a Frequency (yuk)
+            result = Frequency._convert(result)
+        # assuming we're dealing with a frequency here, turn it into
+        # a string and give it a 't' suffix so the Frequency._convert
+        # doesn't choke on it later.
+        return ("%d" % int(round((result * self._multiplier)))) + 't'
 
     def unproxy(self, base, ptype):
         obj = base
