@@ -747,6 +747,10 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 reg = regs.tesr;
                 break;
 
+              case M5REG:
+                reg = params()->m5reg;
+                break;
+
               default:
                 panic("reading unimplemented register: addr=%#x", daddr);
             }
@@ -2708,6 +2712,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<uint32_t> pci_func;
     Param<uint32_t> tx_fifo_size;
     Param<uint32_t> rx_fifo_size;
+    Param<uint32_t> m5reg;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -2740,7 +2745,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
     INIT_PARAM_DFLT(tx_fifo_size, "max size in bytes of txFifo", 131072),
-    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072)
+    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072),
+    INIT_PARAM(m5reg, "m5 register")
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -2777,6 +2783,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->eaddr = hardware_address;
     params->tx_fifo_size = tx_fifo_size;
     params->rx_fifo_size = rx_fifo_size;
+    params->m5reg = m5reg;
     return new NSGigE(params);
 }
 

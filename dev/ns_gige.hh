@@ -343,6 +343,7 @@ class NSGigE : public PciDev
         Net::EthAddr eaddr;
         uint32_t tx_fifo_size;
         uint32_t rx_fifo_size;
+        uint32_t m5reg;
     };
 
     NSGigE(Params *params);

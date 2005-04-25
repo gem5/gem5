@@ -117,7 +117,8 @@
 #define TANLPAR		0xec
 #define TANER		0xf0
 #define TESR		0xf4
-#define LAST            0xf4
+#define M5REG		0xf8
+#define LAST            0xf8
 #define RESERVED        0xfc
 
 /* chip command register */
