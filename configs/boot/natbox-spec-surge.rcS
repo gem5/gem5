@@ -23,6 +23,8 @@ echo "100000" > /proc/sys/net/core/netdev_max_backlog
 
 echo "1" > /proc/sys/net/ipv4/ip_forward
 
+echo "262144" > /proc/sys/net/ipv4/ip_conntrack_max
+
 echo "waiting for netserver..."
 /usr/bin/netcat -c -l -p 8000
 
