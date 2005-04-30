@@ -24,7 +24,7 @@ echo "running netserver..."
 /benchmarks/netperf/netserver
 
 echo -n "signal natbox to begin..."
-sleep 1
+sleep 5
 echo "server ready" | /usr/bin/netcat -c $NATBOX 8000
 echo "done."
 
