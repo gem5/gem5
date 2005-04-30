@@ -97,7 +97,8 @@ IdeController::IdeController(Params *p)
 
         dmaInterface = new DMAInterface<Bus>(name() + ".dma",
                                              params()->host_bus,
-                                             params()->host_bus, 1);
+                                             params()->host_bus, 1,
+                                             true);
         pioLatency = params()->pio_latency * params()->host_bus->clockRatio;
     }
 

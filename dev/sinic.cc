@@ -103,11 +103,11 @@ Device::Device(Params *p)
         if (p->payload_bus)
             dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
                                                  p->header_bus, p->payload_bus,
-                                                 1);
+                                                 1, p->dma_no_allocate);
         else
             dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
                                                  p->header_bus, p->header_bus,
-                                                 1);
+                                                 1, p->dma_no_allocate);
     } else if (p->payload_bus) {
         pioInterface = newPioInterface(p->name, p->hier, p->payload_bus, this,
                                        &Device::cacheAccess);
@@ -115,7 +115,8 @@ Device::Device(Params *p)
         pioLatency = p->pio_latency * p->payload_bus->clockRatio;
 
         dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->payload_bus,
-                                             p->payload_bus, 1);
+                                             p->payload_bus, 1,
+                                             p->dma_no_allocate);
     }
 }
 
@@ -1388,6 +1389,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<Tick> dma_read_factor;
     Param<Tick> dma_write_delay;
     Param<Tick> dma_write_factor;
+    Param<bool> dma_no_allocate;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
@@ -1421,7 +1423,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM_DFLT(dma_read_delay, "fixed delay for dma reads", 0),
     INIT_PARAM_DFLT(dma_read_factor, "multiplier for dma reads", 0),
     INIT_PARAM_DFLT(dma_write_delay, "fixed delay for dma writes", 0),
-    INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0)
+    INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0),
+    INIT_PARAM_DFLT(dma_no_allocate, "Should we allocat on read in cache", true)
 
 END_INIT_SIM_OBJECT_PARAMS(Device)
 
@@ -1458,6 +1461,7 @@ CREATE_SIM_OBJECT(Device)
     params->dma_read_factor = dma_read_factor;
     params->dma_write_delay = dma_write_delay;
     params->dma_write_factor = dma_write_factor;
+    params->dma_no_allocate = dma_no_allocate;
     return new Device(params);
 }
 

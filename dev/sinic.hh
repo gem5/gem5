@@ -316,6 +316,7 @@ class Device : public Base
         Tick dma_read_factor;
         Tick dma_write_delay;
         Tick dma_write_factor;
+        bool dma_no_allocate;
     };
 
   protected:
