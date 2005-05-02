@@ -46,5 +46,6 @@ PacketData::unserialize(const string &base, Checkpoint *cp,
                         const string &section)
 {
     paramIn(cp, section, base + ".length", length);
-    arrayParamIn(cp, section, base + ".data", data, length);
+    if (length)
+        arrayParamIn(cp, section, base + ".data", data, length);
 }
