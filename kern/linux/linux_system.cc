@@ -132,8 +132,9 @@ LinuxSystem::LinuxSystem(Params *p)
 
     skipDelayLoopEvent = new LinuxSkipDelayLoopEvent(&pcEventQueue,
                                                      "calibrate_delay");
-    if (kernelSymtab->findAddress("calibrate_delay", addr))
-        skipDelayLoopEvent->schedule(addr+sizeof(MachInst));
+    if (kernelSymtab->findAddress("calibrate_delay", addr)) {
+        skipDelayLoopEvent->schedule(addr + 3 * sizeof(MachInst));
+    }
 
     skipCacheProbeEvent = new SkipFuncEvent(&pcEventQueue,
                                             "determine_cpu_caches");
