@@ -93,7 +93,7 @@ ListenSocket::listen(int port, bool reuse)
     return true;
 }
 
-#if !defined(__OpenBSD__) && !defined(linux)
+#if defined(__APPLE__)
 typedef int socklen_t;
 #endif
 

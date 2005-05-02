@@ -73,7 +73,7 @@ IsPowerOf2(T n)
 }
 
 inline int
-FloorLog2(uint32_t x)
+FloorLog2(unsigned x)
 {
     assert(x > 0);
 
@@ -89,7 +89,26 @@ FloorLog2(uint32_t x)
 }
 
 inline int
-FloorLog2(uint64_t x)
+FloorLog2(unsigned long x)
+{
+    assert(x > 0);
+
+    int y = 0;
+
+#if defined(__LP64__)
+    if (x & ULL(0xffffffff00000000)) { y += 32; x >>= 32; }
+#endif
+    if (x & 0xffff0000) { y += 16; x >>= 16; }
+    if (x & 0x0000ff00) { y +=  8; x >>=  8; }
+    if (x & 0x000000f0) { y +=  4; x >>=  4; }
+    if (x & 0x0000000c) { y +=  2; x >>=  2; }
+    if (x & 0x00000002) { y +=  1; }
+
+    return y;
+}
+
+inline int
+FloorLog2(unsigned long long x)
 {
     assert(x > 0);
 
@@ -106,17 +125,24 @@ FloorLog2(uint64_t x)
 }
 
 inline int
-FloorLog2(int32_t x)
+FloorLog2(int x)
 {
     assert(x > 0);
-    return FloorLog2((uint32_t)x);
+    return FloorLog2((unsigned)x);
 }
 
 inline int
-FloorLog2(int64_t x)
+FloorLog2(long x)
 {
     assert(x > 0);
-    return FloorLog2((uint64_t)x);
+    return FloorLog2((unsigned long)x);
+}
+
+inline int
+FloorLog2(long long x)
+{
+    assert(x > 0);
+    return FloorLog2((unsigned long long)x);
 }
 
 #if defined(__APPLE__)

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdio>
@@ -180,15 +181,17 @@ namespace AlphaPseudo
         if (fd < 0)
             panic("could not open file %s\n", file);
 
+        if (::lseek(fd, offset, SEEK_SET) < 0)
+            panic("could not seek: %s", strerror(errno));
+
         char *buf = new char[len];
         char *p = buf;
         while (len > 0) {
-            int bytes = ::pread(fd, p, len, offset);
+            int bytes = ::read(fd, p, len);
             if (bytes <= 0)
                 break;
 
             p += bytes;
-            offset += bytes;
             result += bytes;
             len -= bytes;
         }

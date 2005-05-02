@@ -120,11 +120,13 @@ NSGigE::NSGigE(Params *p)
         if (p->payload_bus)
             dmaInterface = new DMAInterface<Bus>(name() + ".dma",
                                                  p->header_bus,
-                                                 p->payload_bus, 1);
+                                                 p->payload_bus, 1,
+                                                 p->dma_no_allocate);
         else
             dmaInterface = new DMAInterface<Bus>(name() + ".dma",
                                                  p->header_bus,
-                                                 p->header_bus, 1);
+                                                 p->header_bus, 1,
+                                                 p->dma_no_allocate);
     } else if (p->payload_bus) {
         pioInterface = newPioInterface(name(), p->hier,
                                        p->payload_bus, this,
@@ -134,7 +136,8 @@ NSGigE::NSGigE(Params *p)
 
         dmaInterface = new DMAInterface<Bus>(name() + ".dma",
                                              p->payload_bus,
-                                             p->payload_bus, 1);
+                                             p->payload_bus, 1,
+                                             p->dma_no_allocate);
     }
 
 
@@ -745,6 +748,10 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
 
               case TESR:
                 reg = regs.tesr;
+                break;
+
+              case M5REG:
+                reg = params()->m5reg;
                 break;
 
               default:
@@ -2708,6 +2715,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<uint32_t> pci_func;
     Param<uint32_t> tx_fifo_size;
     Param<uint32_t> rx_fifo_size;
+    Param<uint32_t> m5reg;
+    Param<bool> dma_no_allocate;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -2740,7 +2749,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
     INIT_PARAM_DFLT(tx_fifo_size, "max size in bytes of txFifo", 131072),
-    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072)
+    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072),
+    INIT_PARAM(m5reg, "m5 register"),
+    INIT_PARAM_DFLT(dma_no_allocate, "Should DMA reads allocate cache lines", true)
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -2777,6 +2788,8 @@ CREATE_SIM_OBJECT(NSGigE)
     params->eaddr = hardware_address;
     params->tx_fifo_size = tx_fifo_size;
     params->rx_fifo_size = rx_fifo_size;
+    params->m5reg = m5reg;
+    params->dma_no_allocate = dma_no_allocate;
     return new NSGigE(params);
 }
 

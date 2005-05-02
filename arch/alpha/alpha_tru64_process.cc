@@ -622,6 +622,9 @@ class Tru64 {
     getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+#ifdef __CYGWIN__
+        panic("getdirent not implemented on cygwin!");
+#else
         int fd = process->sim_fd(xc->getSyscallArg(0));
         Addr tgt_buf = xc->getSyscallArg(1);
         int tgt_nbytes = xc->getSyscallArg(2);
@@ -670,6 +673,7 @@ class Tru64 {
         basep.copyOut(xc->mem);
 
         return tgt_buf_ptr - tgt_buf;
+#endif
     }
 
     /// Target sigreturn() handler.

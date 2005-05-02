@@ -125,7 +125,7 @@ void
 BreakPCEvent::process(ExecContext *xc)
 {
     StringWrap name(xc->cpu->name() + ".break_event");
-    DPRINTFN("break event %s triggered", descr());
+    DPRINTFN("break event %s triggered\n", descr());
     debug_break();
     if (remove)
         delete this;

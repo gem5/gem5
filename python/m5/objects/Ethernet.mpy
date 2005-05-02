@@ -41,6 +41,7 @@ simobj EtherDev(DmaDevice):
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
     dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
     dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
+    dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
     rx_delay = Param.Latency('1us', "Receive Delay")
@@ -64,6 +65,8 @@ simobj NSGigE(PciDevice):
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
     dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
     dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
+    dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
+
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
     rx_delay = Param.Latency('1us', "Receive Delay")
@@ -71,6 +74,8 @@ simobj NSGigE(PciDevice):
 
     rx_fifo_size = Param.MemorySize('128kB', "max size in bytes of rxFifo")
     tx_fifo_size = Param.MemorySize('128kB', "max size in bytes of txFifo")
+
+    m5reg = Param.UInt32(0, "Register for m5 usage")
 
     intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")

@@ -109,12 +109,13 @@ LinuxSystem::LinuxSystem(Params *p)
         kernelPanicEvent->schedule(addr);
     else
         panic("could not find kernel symbol \'panic\'");
-
+#if 0
     kernelDieEvent = new BreakPCEvent(&pcEventQueue, "die if kernel");
     if (kernelSymtab->findAddress("die_if_kernel", addr))
         kernelDieEvent->schedule(addr);
     else
         panic("could not find kernel symbol \'die_if_kernel\'");
+#endif
 
 #endif
 
