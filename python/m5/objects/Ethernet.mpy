@@ -89,4 +89,33 @@ simobj NSGigEInt(EtherInt):
     type = 'NSGigEInt'
     device = Param.NSGigE("Ethernet device of this interface")
 
+simobj Sinic(PciDevice):
+    type = 'Sinic'
+    hardware_address = Param.EthernetAddr(NextEthernetAddr,
+        "Ethernet Hardware Address")
 
+    cycle_time = Param.Frequency('100MHz', "State machine processor frequency")
+
+    dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
+    dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
+    dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
+    dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
+
+    rx_filter = Param.Bool(True, "Enable Receive Filter")
+    rx_delay = Param.Latency('1us', "Receive Delay")
+    tx_delay = Param.Latency('1us', "Transmit Delay")
+
+    rx_max_copy = Param.MemorySize('16kB', "rx max copy")
+    tx_max_copy = Param.MemorySize('16kB', "tx max copy")
+    rx_fifo_size = Param.MemorySize('64kB', "max size of rx fifo")
+    tx_fifo_size = Param.MemorySize('64kB', "max size of tx fifo")
+    rx_fifo_threshold = Param.MemorySize('48kB', "rx fifo high threshold")
+    tx_fifo_threshold = Param.MemorySize('16kB', "tx fifo low threshold")
+
+    intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
+    payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
+    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
+
+simobj SinicInt(EtherInt):
+    type = 'SinicInt'
+    device = Param.Sinic("Ethernet device of this interface")

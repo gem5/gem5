@@ -299,7 +299,7 @@ class Device : public Base
         Tick tx_delay;
         Tick rx_delay;
         HierParams *hier;
-        Bus *header_bus;
+        Bus *io_bus;
         Bus *payload_bus;
         Tick pio_latency;
         PhysicalMemory *physmem;

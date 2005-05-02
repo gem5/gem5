@@ -94,20 +94,20 @@ Device::Device(Params *p)
 {
     reset();
 
-    if (p->header_bus) {
-        pioInterface = newPioInterface(p->name, p->hier, p->header_bus, this,
+    if (p->io_bus) {
+        pioInterface = newPioInterface(p->name, p->hier, p->io_bus, this,
                                        &Device::cacheAccess);
 
-        pioLatency = p->pio_latency * p->header_bus->clockRatio;
+        pioLatency = p->pio_latency * p->io_bus->clockRatio;
 
         if (p->payload_bus)
-            dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
-                                                 p->header_bus, p->payload_bus,
-                                                 1, p->dma_no_allocate);
+            dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->io_bus,
+                                                 p->payload_bus, 1,
+                                                 p->dma_no_allocate);
         else
-            dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
-                                                 p->header_bus, p->header_bus,
-                                                 1, p->dma_no_allocate);
+            dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->io_bus,
+                                                 p->io_bus, 1,
+                                                 p->dma_no_allocate);
     } else if (p->payload_bus) {
         pioInterface = newPioInterface(p->name, p->hier, p->payload_bus, this,
                                        &Device::cacheAccess);
@@ -1361,6 +1361,7 @@ REGISTER_SIM_OBJECT("SinicInt", Interface)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
 
+    Param<Addr> addr;
     Param<Tick> cycle_time;
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
@@ -1369,7 +1370,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     SimObjectParam<PhysicalMemory *> physmem;
     Param<bool> rx_filter;
     Param<string> hardware_address;
-    SimObjectParam<Bus*> header_bus;
+    SimObjectParam<Bus*> io_bus;
     SimObjectParam<Bus*> payload_bus;
     SimObjectParam<HierParams *> hier;
     Param<Tick> pio_latency;
@@ -1395,6 +1396,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
 
+    INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(cycle_time, "State machine cycle time"),
     INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
     INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
@@ -1404,7 +1406,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
     INIT_PARAM_DFLT(hardware_address, "Ethernet Hardware Address",
                     "00:99:00:00:00:01"),
-    INIT_PARAM_DFLT(header_bus, "The IO Bus to attach to for headers", NULL),
+    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to for headers", NULL),
     INIT_PARAM_DFLT(payload_bus, "The IO Bus to attach to for payload", NULL),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
@@ -1440,7 +1442,7 @@ CREATE_SIM_OBJECT(Device)
     params->rx_delay = rx_delay;
     params->mmu = mmu;
     params->hier = hier;
-    params->header_bus = header_bus;
+    params->io_bus = io_bus;
     params->payload_bus = payload_bus;
     params->pio_latency = pio_latency;
     params->configSpace = configspace;
