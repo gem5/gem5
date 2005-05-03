@@ -74,7 +74,6 @@ class SimpleFetch
 
     void processCacheCompletion();
 
-//  private:
     // Figure out PC vs next PC and how it should be updated
     void squash(const Addr &new_PC);
 
@@ -92,9 +91,6 @@ class SimpleFetch
      * @return Whether or not a branch was predicted as taken.
      */
     bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC);
-
-    // Might not want this function...
-//    inline void recordGlobalHist(DynInstPtr &inst);
 
     /**
      * Fetches the cache line that contains fetch_PC.  Returns any
@@ -183,9 +179,6 @@ class SimpleFetch
 
     /** Mask to get a cache block's address. */
     Addr cacheBlkMask;
-
-    /** The instruction being fetched. */
-//    MachInst inst;
 
     /** The cache line being fetched. */
     uint8_t *cacheData;

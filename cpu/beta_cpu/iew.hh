@@ -14,7 +14,7 @@
 //Can IEW even stall?  Space should be available/allocated already...maybe
 //if there's not enough write ports on the ROB or waiting for CDB
 //arbitration.
-template<class Impl, class IQ>
+template<class Impl>
 class SimpleIEW
 {
   private:
@@ -25,6 +25,7 @@ class SimpleIEW
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::Params Params;
 
+    typedef typename CPUPol::IQ IQ;
     typedef typename CPUPol::RenameMap RenameMap;
     typedef typename CPUPol::LDSTQ LDSTQ;
 
@@ -33,6 +34,7 @@ class SimpleIEW
     typedef typename CPUPol::RenameStruct RenameStruct;
     typedef typename CPUPol::IssueStruct IssueStruct;
 
+    friend class Impl::FullCPU;
   public:
     enum Status {
         Running,
@@ -49,15 +51,17 @@ class SimpleIEW
     Status _wbStatus;
 
   public:
-    void squash();
+    class WritebackEvent : public Event {
+      private:
+        DynInstPtr inst;
+        SimpleIEW<Impl> *iewStage;
 
-    void squashDueToBranch(DynInstPtr &inst);
+      public:
+        WritebackEvent(DynInstPtr &_inst, SimpleIEW<Impl> *_iew);
 
-    void squashDueToMem(DynInstPtr &inst);
-
-    void block();
-
-    inline void unblock();
+        virtual void process();
+        virtual const char *description();
+    };
 
   public:
     SimpleIEW(Params &params);
@@ -74,16 +78,29 @@ class SimpleIEW
 
     void setRenameMap(RenameMap *rm_ptr);
 
+    void squash();
+
+    void squashDueToBranch(DynInstPtr &inst);
+
+    void squashDueToMem(DynInstPtr &inst);
+
+    void block();
+
+    inline void unblock();
+
     void wakeDependents(DynInstPtr &inst);
 
-    void tick();
-
-    void iew();
+    void instToCommit(DynInstPtr &inst);
 
   private:
     void dispatchInsts();
 
     void executeInsts();
+
+  public:
+    void tick();
+
+    void iew();
 
     //Interfaces to objects inside and outside of IEW.
     /** Time buffer interface. */
@@ -121,11 +138,18 @@ class SimpleIEW
     /** Skid buffer between rename and IEW. */
     std::queue<RenameStruct> skidBuffer;
 
+  protected:
     /** Instruction queue. */
     IQ instQueue;
 
     LDSTQ ldstQueue;
 
+#ifndef FULL_SYSTEM
+  public:
+    void lsqWriteback();
+#endif
+
+  private:
     /** Pointer to rename map.  Might not want this stage to directly
      *  access this though...
      */

@@ -28,8 +28,6 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
     void regStats();
 
 #ifdef FULL_SYSTEM
-    bool inPalMode();
-
     //Note that the interrupt stuff from the base CPU might be somewhat
     //ISA specific (ie NumInterruptLevels).  These functions might not
     //be needed in FullCPU though.
@@ -106,13 +104,16 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
     }
 
 #ifdef FULL_SYSTEM
-    uint64_t *getIPR();
+    uint64_t *getIpr();
     uint64_t readIpr(int idx, Fault &fault);
     Fault setIpr(int idx, uint64_t val);
     int readIntrFlag();
     void setIntrFlag(int val);
     Fault hwrei();
-    bool inPalMode();
+    bool inPalMode() { return AlphaISA::PcPAL(this->regFile.readPC()); }
+    bool inPalMode(uint64_t PC)
+    { return AlphaISA::PcPAL(PC); }
+
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
 
@@ -153,7 +154,7 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
         }
     }
 
-    void syscall();
+    void syscall(short thread_num);
     void squashStages();
 
 #endif
@@ -168,11 +169,13 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
     // Not sure this is used anywhere.
     void intr_post(RegFile *regs, Fault fault, Addr pc);
     // Actually used within exec files.  Implement properly.
-    void swap_palshadow(RegFile *regs, bool use_shadow);
+    void swapPALShadow(bool use_shadow);
     // Called by CPU constructor.  Can implement as I please.
     void initCPU(RegFile *regs);
     // Called by initCPU.  Implement as I please.
     void initIPRs(RegFile *regs);
+
+    void halt() { panic("Halt not implemented!\n"); }
 #endif
 
 
@@ -193,6 +196,11 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
         return error;
     }
 
+    template <class T>
+    Fault read(MemReqPtr &req, T &data, int load_idx)
+    {
+        return this->iew.ldstQueue.read(req, data, load_idx);
+    }
 
     template <class T>
     Fault write(MemReqPtr &req, T &data)
@@ -218,7 +226,7 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
                         std::cerr << "Warning: "
                                   << req->xc->storeCondFailures
                                   << " consecutive store conditional failures "
-                                  << "on cpu " << cpu_id
+                                  << "on cpu " << this->cpu_id
                                   << std::endl;
                     }
                     return No_Fault;
@@ -232,8 +240,8 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
         // and all other stores (WH64?).  Unsuccessful Store
         // Conditionals would have returned above, and wouldn't fall
         // through.
-        for (int i = 0; i < system->execContexts.size(); i++){
-            cregs = &system->execContexts[i]->regs.miscRegs;
+        for (int i = 0; i < this->system->execContexts.size(); i++){
+            cregs = &this->system->execContexts[i]->regs.miscRegs;
             if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
                 cregs->lock_flag = false;
             }
@@ -242,6 +250,12 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 #endif
 
         return this->mem->write(req, (T)htoa(data));
+    }
+
+    template <class T>
+    Fault write(MemReqPtr &req, T &data, int store_idx)
+    {
+        return this->iew.ldstQueue.write(req, data, store_idx);
     }
 
 };

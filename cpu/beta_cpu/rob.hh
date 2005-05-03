@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-//#include "arch/alpha/isa_traits.hh"
-
 /**
  * ROB class.  Uses the instruction list that exists within the CPU to
  * represent the ROB.  This class doesn't contain that list, but instead

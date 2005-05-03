@@ -50,7 +50,6 @@ struct SimpleIEWSimpleCommit {
     bool branchTaken;
     uint64_t mispredPC;
     uint64_t nextPC;
-    unsigned globalHist;
     InstSeqNum squashedSeqNum;
 };
 
@@ -78,7 +77,6 @@ struct TimeBufStruct {
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
-        unsigned globalHist;
     };
 
     decodeComm decodeInfo;
@@ -113,12 +111,11 @@ struct TimeBufStruct {
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
-        unsigned globalHist;
 
         // Think of better names here.
         // Will need to be a variety of sizes...
         // Maybe make it a vector, that way only need one object.
-        std::vector<PhysRegIndex> freeRegs;
+//        std::vector<PhysRegIndex> freeRegs;
 
         bool robSquashing;
 
@@ -129,7 +126,7 @@ struct TimeBufStruct {
 
         // Extra bits of information so that the LDSTQ only updates when it
         // needs to.
-        bool commitIsStore;
+//        bool commitIsStore;
         bool commitIsLoad;
 
         // Communication specifically to the IQ to tell the IQ that it can

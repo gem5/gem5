@@ -68,11 +68,15 @@ class SimpleDecode
     void squash();
 
   private:
+    inline bool fetchInstsValid();
+
     void block();
 
     inline void unblock();
 
     void squash(DynInstPtr &inst);
+
+    void dumpFetchQueue();
 
     // Interfaces to objects outside of decode.
     /** CPU interface. */

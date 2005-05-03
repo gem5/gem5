@@ -43,8 +43,6 @@
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/beta_cpu/alpha_impl.hh"
 #include "cpu/beta_cpu/alpha_full_cpu.hh"
-#include "cpu/ooo_cpu/ooo_impl.hh"
-#include "cpu/ooo_cpu/ooo_cpu.hh"
 
 using namespace std;
 
@@ -384,14 +382,9 @@ BaseDynInst<Impl>::eaSrcsReady()
 
 // Forward declaration...
 template class BaseDynInst<AlphaSimpleImpl>;
-template class BaseDynInst<OoOImpl>;
 
 template <>
 int
 BaseDynInst<AlphaSimpleImpl>::instcount = 0;
-
-template <>
-int
-BaseDynInst<OoOImpl>::instcount = 0;
 
 #endif // __CPU_BASE_DYN_INST_CC__

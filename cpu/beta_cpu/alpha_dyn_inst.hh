@@ -47,11 +47,10 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** BaseDynInst constructor given a static inst pointer. */
     AlphaDynInst(StaticInstPtr<AlphaISA> &_staticInst);
 
-    /** Executes the instruction.  Why the hell did I put this here? */
+    /** Executes the instruction.*/
     Fault execute()
     {
-        this->fault = this->staticInst->execute(this, this->traceData);
-        return this->fault;
+        return this->fault = this->staticInst->execute(this, this->traceData);
     }
 
   public:
@@ -105,47 +104,47 @@ class AlphaDynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntReg(StaticInst<ISA> *si, int idx)
+    uint64_t readIntReg(const StaticInst<ISA> *si, int idx)
     {
         return this->cpu->readIntReg(_srcRegIdx[idx]);
     }
 
-    float readFloatRegSingle(StaticInst<ISA> *si, int idx)
+    float readFloatRegSingle(const StaticInst<ISA> *si, int idx)
     {
         return this->cpu->readFloatRegSingle(_srcRegIdx[idx]);
     }
 
-    double readFloatRegDouble(StaticInst<ISA> *si, int idx)
+    double readFloatRegDouble(const StaticInst<ISA> *si, int idx)
     {
         return this->cpu->readFloatRegDouble(_srcRegIdx[idx]);
     }
 
-    uint64_t readFloatRegInt(StaticInst<ISA> *si, int idx)
+    uint64_t readFloatRegInt(const StaticInst<ISA> *si, int idx)
     {
         return this->cpu->readFloatRegInt(_srcRegIdx[idx]);
     }
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntReg(StaticInst<ISA> *si, int idx, uint64_t val)
+    void setIntReg(const StaticInst<ISA> *si, int idx, uint64_t val)
     {
         this->cpu->setIntReg(_destRegIdx[idx], val);
         this->instResult.integer = val;
     }
 
-    void setFloatRegSingle(StaticInst<ISA> *si, int idx, float val)
+    void setFloatRegSingle(const StaticInst<ISA> *si, int idx, float val)
     {
         this->cpu->setFloatRegSingle(_destRegIdx[idx], val);
         this->instResult.fp = val;
     }
 
-    void setFloatRegDouble(StaticInst<ISA> *si, int idx, double val)
+    void setFloatRegDouble(const StaticInst<ISA> *si, int idx, double val)
     {
         this->cpu->setFloatRegDouble(_destRegIdx[idx], val);
         this->instResult.dbl = val;
     }
 
-    void setFloatRegInt(StaticInst<ISA> *si, int idx, uint64_t val)
+    void setFloatRegInt(const StaticInst<ISA> *si, int idx, uint64_t val)
     {
         this->cpu->setFloatRegInt(_destRegIdx[idx], val);
         this->instResult.integer = val;

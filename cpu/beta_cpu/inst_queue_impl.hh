@@ -31,8 +31,6 @@ InstructionQueue<Impl>::InstructionQueue(Params &params)
       numPhysFloatRegs(params.numPhysFloatRegs),
       commitToIEWDelay(params.commitToIEWDelay)
 {
-    DPRINTF(IQ, "IQ: Int width is %i.\n", params.executeIntWidth);
-
     // Initialize the number of free IQ entries.
     freeEntries = numEntries;
 
@@ -290,10 +288,6 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &inst)
 
     // Decrease the number of free entries.
     --freeEntries;
-
-    // Look through its source registers (physical regs), and mark any
-    // dependencies.
-//    addToDependents(inst);
 
     // Have this instruction set itself as the producer of its destination
     // register(s).
@@ -568,15 +562,20 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             break;
 
           case Squashed:
-            issuing_inst = squashed_head_inst;
+//            issuing_inst = squashed_head_inst;
+            assert(0 && "Squashed insts should not issue any more!");
             squashedInsts.pop();
+            // Set the squashed instruction as able to commit so that commit
+            // can just drop it from the ROB.  This is a bit faked.
             ++squashed_issued;
+            ++freeEntries;
+
             DPRINTF(IQ, "IQ: Issuing squashed instruction PC %#x.\n",
-                    issuing_inst->readPC());
+                    squashed_head_inst->readPC());
             break;
         }
 
-        if (list_with_oldest != None) {
+        if (list_with_oldest != None && list_with_oldest != Squashed) {
             i2e_info->insts[total_issued] = issuing_inst;
             i2e_info->size++;
 
@@ -641,8 +640,10 @@ InstructionQueue<Impl>::squash()
     // Setup the squash iterator to point to the tail.
     squashIt = tail;
 
-    // Call doSquash.
-    doSquash();
+    // Call doSquash if there are insts in the IQ
+    if (freeEntries != numEntries) {
+        doSquash();
+    }
 
     // Also tell the memory dependence unit to squash.
     memDepUnit.squash(squashedSeqNum);
@@ -672,12 +673,12 @@ InstructionQueue<Impl>::doSquash()
             // Remove the instruction from the dependency list.
             // Hack for now: These below don't add themselves to the
             // dependency list, so don't try to remove them.
-            if (!squashed_inst->isNonSpeculative() &&
-                !squashed_inst->isStore()) {
-                int8_t total_src_regs = squashed_inst->numSrcRegs();
+            if (!squashed_inst->isNonSpeculative()/* &&
+                                                     !squashed_inst->isStore()*/
+                ) {
 
                 for (int src_reg_idx = 0;
-                     src_reg_idx < total_src_regs;
+                     src_reg_idx < squashed_inst->numSrcRegs();
                      src_reg_idx++)
                 {
                     PhysRegIndex src_reg =
@@ -699,6 +700,8 @@ InstructionQueue<Impl>::doSquash()
 
                 // Might want to remove producers as well.
             } else {
+                nonSpecInsts[squashed_inst->seqNum] = NULL;
+
                 nonSpecInsts.erase(squashed_inst->seqNum);
 
                 ++iqSquashedNonSpecRemoved;
@@ -709,7 +712,11 @@ InstructionQueue<Impl>::doSquash()
             // Mark it as squashed within the IQ.
             squashed_inst->setSquashedInIQ();
 
-            squashedInsts.push(squashed_inst);
+//            squashedInsts.push(squashed_inst);
+            squashed_inst->setIssued();
+            squashed_inst->setCanCommit();
+
+            ++freeEntries;
 
             DPRINTF(IQ, "IQ: Instruction PC %#x squashed.\n",
                     squashed_inst->readPC());
@@ -718,6 +725,13 @@ InstructionQueue<Impl>::doSquash()
         --squashIt;
         ++iqSquashedInstsExamined;
     }
+
+    assert(freeEntries <= numEntries);
+
+    if (freeEntries == numEntries) {
+        tail = cpu->instList.end();
+    }
+
 }
 
 template <class Impl>
@@ -739,8 +753,6 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
     //Look at the physical destination register of the DynInst
     //and look it up on the dependency graph.  Then mark as ready
     //any instructions within the instruction queue.
-    int8_t total_dest_regs = completed_inst->numDestRegs();
-
     DependencyEntry *curr;
 
     // Tell the memory dependence unit to wake any dependents on this
@@ -751,7 +763,7 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
     }
 
     for (int dest_reg_idx = 0;
-         dest_reg_idx < total_dest_regs;
+         dest_reg_idx < completed_inst->numDestRegs();
          dest_reg_idx++)
     {
         PhysRegIndex dest_reg =
@@ -759,7 +771,7 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 
         // Special case of uniq or control registers.  They are not
         // handled by the IQ and thus have no dependency graph entry.
-        // @todo Figure out a cleaner way to handle thie.
+        // @todo Figure out a cleaner way to handle this.
         if (dest_reg >= numPhysRegs) {
             continue;
         }
@@ -788,6 +800,8 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
             dependGraph[dest_reg].next = curr->next;
 
             DependencyEntry::mem_alloc_counter--;
+
+            curr->inst = NULL;
 
             delete curr;
         }
@@ -874,7 +888,10 @@ InstructionQueue<Impl>::createDependency(DynInstPtr &new_inst)
 
         dependGraph[dest_reg].inst = new_inst;
 
-        assert(!dependGraph[dest_reg].next);
+        if (dependGraph[dest_reg].next) {
+            dumpDependGraph();
+            panic("IQ: Dependency graph not empty!");
+        }
 
         // Mark the scoreboard to say it's not yet ready.
         regScoreboard[dest_reg] = false;
@@ -929,34 +946,10 @@ InstructionQueue<Impl>::DependencyEntry::remove(DynInstPtr &inst_to_remove)
 
     --mem_alloc_counter;
 
+    // Could push this off to the destructor of DependencyEntry
+    curr->inst = NULL;
+
     delete curr;
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::dumpDependGraph()
-{
-    DependencyEntry *curr;
-
-    for (int i = 0; i < numPhysRegs; ++i)
-    {
-        curr = &dependGraph[i];
-
-        if (curr->inst) {
-            cprintf("dependGraph[%i]: producer: %#x consumer: ", i,
-                    curr->inst->readPC());
-        } else {
-            cprintf("dependGraph[%i]: No producer. consumer: ", i);
-        }
-
-        while (curr->next != NULL) {
-            curr = curr->next;
-
-            cprintf("%#x ", curr->inst->readPC());
-        }
-
-        cprintf("\n");
-    }
 }
 
 template <class Impl>
@@ -1024,12 +1017,21 @@ InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
     }
 }
 
+/*
+ * Caution, this function must not be called prior to tail being updated at
+ * least once, otherwise it will fail the assertion.  This is because
+ * instList.begin() actually changes upon the insertion of an element into the
+ * list when the list is empty.
+ */
 template <class Impl>
 int
 InstructionQueue<Impl>::countInsts()
 {
     ListIt count_it = cpu->instList.begin();
     int total_insts = 0;
+
+    if (tail == cpu->instList.end())
+        return 0;
 
     while (count_it != tail) {
         if (!(*count_it)->isIssued()) {
@@ -1049,6 +1051,33 @@ InstructionQueue<Impl>::countInsts()
     }
 
     return total_insts;
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::dumpDependGraph()
+{
+    DependencyEntry *curr;
+
+    for (int i = 0; i < numPhysRegs; ++i)
+    {
+        curr = &dependGraph[i];
+
+        if (curr->inst) {
+            cprintf("dependGraph[%i]: producer: %#x consumer: ", i,
+                    curr->inst->readPC());
+        } else {
+            cprintf("dependGraph[%i]: No producer. consumer: ", i);
+        }
+
+        while (curr->next != NULL) {
+            curr = curr->next;
+
+            cprintf("%#x ", curr->inst->readPC());
+        }
+
+        cprintf("\n");
+    }
 }
 
 template <class Impl>

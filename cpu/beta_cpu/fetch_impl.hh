@@ -44,6 +44,8 @@ SimpleFetch<Impl>::SimpleFetch(Params &params)
       commitToFetchDelay(params.commitToFetchDelay),
       fetchWidth(params.fetchWidth)
 {
+    DPRINTF(Fetch, "Fetch: Fetch constructor called\n");
+
     // Set status to idle.
     _status = Idle;
 
@@ -52,7 +54,7 @@ SimpleFetch<Impl>::SimpleFetch(Params &params)
     // Not sure of this parameter.  I think it should be based on the
     // thread number.
 #ifndef FULL_SYSTEM
-    memReq->asid = params.asid;
+    memReq->asid = 0;
 #else
     memReq->asid = 0;
 #endif // FULL_SYSTEM
@@ -163,20 +165,9 @@ SimpleFetch<Impl>::processCacheCompletion()
     // to return.
     // Can keep track of how many cache accesses go unused due to
     // misspeculation here.
-    // How to handle an outstanding miss which gets cancelled due to squash,
-    // then a new icache miss gets scheduled?
     if (_status == IcacheMissStall)
         _status = IcacheMissComplete;
 }
-
-#if 0
-template <class Impl>
-inline void
-SimpleFetch<Impl>::recordGlobalHist(DynInstPtr &inst)
-{
-    inst->setGlobalHist(branchPred.BPReadGlobalHist());
-}
-#endif
 
 template <class Impl>
 bool
@@ -311,7 +302,6 @@ SimpleFetch<Impl>::squashFromDecode(const Addr &new_PC,
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
     cpu->removeInstsUntil(seq_num);
-
 }
 
 template <class Impl>
@@ -428,7 +418,9 @@ SimpleFetch<Impl>::tick()
         // Switch status to running
         _status = Running;
 
-        ++fetchSquashCycles;
+        ++fetchCycles;
+
+        fetch();
     } else if (_status != IcacheMissStall) {
         DPRINTF(Fetch, "Fetch: Running stage.\n");
 

@@ -122,7 +122,7 @@ class OoOCPU : public BaseCPU
     enum Status {
         Running,
         Idle,
-        IcacheMissStall,
+        IcacheMiss,
         IcacheMissComplete,
         DcacheMissStall,
         SwitchedOut
@@ -160,6 +160,8 @@ class OoOCPU : public BaseCPU
     OoOCPU(Params *params);
 
     virtual ~OoOCPU();
+
+    void init();
 
   private:
     void copyFromXC();
@@ -203,14 +205,21 @@ class OoOCPU : public BaseCPU
     // Will need to create a cache completion event upon any memory miss.
     ICacheCompletionEvent iCacheCompletionEvent;
 
+    class DCacheCompletionEvent;
+
+    typedef typename
+    std::list<DCacheCompletionEvent>::iterator DCacheCompEventIt;
+
     class DCacheCompletionEvent : public Event
     {
       private:
         OoOCPU *cpu;
         DynInstPtr inst;
+        DCacheCompEventIt dcceIt;
 
       public:
-        DCacheCompletionEvent(OoOCPU *_cpu, DynInstPtr &_inst);
+        DCacheCompletionEvent(OoOCPU *_cpu, DynInstPtr &_inst,
+                              DCacheCompEventIt &_dcceIt);
 
         virtual void process();
         virtual const char *description();
@@ -218,6 +227,11 @@ class OoOCPU : public BaseCPU
 
     friend class DCacheCompletionEvent;
 
+  protected:
+    std::list<DCacheCompletionEvent> dCacheCompList;
+    DCacheCompEventIt dcceIt;
+
+  private:
     Status status() const { return _status; }
 
     virtual void activateContext(int thread_num, int delay);
@@ -259,6 +273,8 @@ class OoOCPU : public BaseCPU
     Counter lastDcacheStall;
 
     void processICacheCompletion();
+
+  public:
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
@@ -350,7 +366,7 @@ class OoOCPU : public BaseCPU
 
     void commitHeadInst();
 
-    bool grabInst();
+    bool getOneInst();
 
     Fault fetchCacheLine();
 
@@ -471,6 +487,7 @@ class OoOCPU : public BaseCPU
     // ROB tracking stuff.
     DynInstPtr robHeadPtr;
     DynInstPtr robTailPtr;
+    unsigned robSize;
     unsigned robInsts;
 
     // List of outstanding EA instructions.
@@ -545,10 +562,8 @@ OoOCPU<Impl>::read(Addr addr, T &data, unsigned flags, DynInstPtr inst)
         /*MemAccessResult result = */dcacheInterface->access(readReq);
 
         if (dcacheInterface->doEvents()) {
-            readReq->completionEvent = new DCacheCompletionEvent(this, inst);
-            lastDcacheStall = curTick;
-            unscheduleTickEvent();
-            _status = DcacheMissStall;
+            readReq->completionEvent = new DCacheCompletionEvent(this, inst,
+                                                                 dcceIt);
         }
     }
 
@@ -579,7 +594,7 @@ OoOCPU<Impl>::write(T data, Addr addr, unsigned flags,
     writeReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(writeReq);
+    Fault fault = translateDataWriteReq(writeReq);
 
     // do functional access
     if (fault == No_Fault)
@@ -593,10 +608,8 @@ OoOCPU<Impl>::write(T data, Addr addr, unsigned flags,
         /*MemAccessResult result = */dcacheInterface->access(writeReq);
 
         if (dcacheInterface->doEvents()) {
-            writeReq->completionEvent = new DCacheCompletionEvent(this, inst);
-            lastDcacheStall = curTick;
-            unscheduleTickEvent();
-            _status = DcacheMissStall;
+            writeReq->completionEvent = new DCacheCompletionEvent(this, inst,
+                                                                  dcceIt);
         }
     }
 

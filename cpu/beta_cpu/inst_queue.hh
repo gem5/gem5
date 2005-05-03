@@ -174,7 +174,7 @@ class InstructionQueue
      *  once the IQ gets a signal from commit.  While it's redundant to
      *  have the key be a part of the value (the sequence number is stored
      *  inside of DynInst), when these instructions are woken up only
-     *  the sequence number will be available.  Thus it is necessary to be
+     *  the sequence number will be available.  Thus it is most efficient to be
      *  able to search by the sequence number alone.
      */
     std::map<InstSeqNum, DynInstPtr> nonSpecInsts;

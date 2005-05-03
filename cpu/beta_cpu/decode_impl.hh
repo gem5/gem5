@@ -99,6 +99,13 @@ SimpleDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 }
 
 template<class Impl>
+inline bool
+SimpleDecode<Impl>::fetchInstsValid()
+{
+    return fromFetch->size > 0;
+}
+
+template<class Impl>
 void
 SimpleDecode<Impl>::block()
 {
@@ -156,14 +163,14 @@ SimpleDecode<Impl>::squash(DynInstPtr &inst)
     // Set status to squashing.
     _status = Squashing;
 
-    // Maybe advance the time buffer?  Not sure what to do in the normal
-    // case.
-
     // Clear the skid buffer in case it has any data in it.
-    while (!skidBuffer.empty())
-    {
+    while (!skidBuffer.empty()) {
         skidBuffer.pop();
     }
+
+    // Squash instructions up until this one
+    // Slightly unrealistic!
+    cpu->removeInstsUntil(inst->seqNum);
 }
 
 template<class Impl>
@@ -205,7 +212,7 @@ SimpleDecode<Impl>::tick()
         if (_status == Unblocking) {
             ++decodeUnblockCycles;
 
-            if (fromFetch->size > 0) {
+            if (fetchInstsValid()) {
                 // Add the current inputs to the skid buffer so they can be
                 // reprocessed when this stage unblocks.
                 skidBuffer.push(*fromFetch);
@@ -216,7 +223,7 @@ SimpleDecode<Impl>::tick()
     } else if (_status == Blocked) {
         ++decodeBlockedCycles;
 
-        if (fromFetch->size > 0) {
+        if (fetchInstsValid()) {
             block();
         }
 
@@ -240,12 +247,12 @@ SimpleDecode<Impl>::tick()
             squash();
         }
     } else if (_status == Squashing) {
-        ++decodeSquashCycles;
-
         if (!fromCommit->commitInfo.squash &&
             !fromCommit->commitInfo.robSquashing) {
             _status = Running;
         } else if (fromCommit->commitInfo.squash) {
+            ++decodeSquashCycles;
+
             squash();
         }
     }
@@ -264,8 +271,7 @@ SimpleDecode<Impl>::decode()
     // Check time buffer if being told to stall.
     if (fromRename->renameInfo.stall ||
         fromIEW->iewInfo.stall ||
-        fromCommit->commitInfo.stall)
-    {
+        fromCommit->commitInfo.stall) {
         block();
         return;
     }
@@ -273,7 +279,7 @@ SimpleDecode<Impl>::decode()
     // Check fetch queue to see if instructions are available.
     // If no available instructions, do nothing, unless this stage is
     // currently unblocking.
-    if (fromFetch->size == 0 && _status != Unblocking) {
+    if (!fetchInstsValid() && _status != Unblocking) {
         DPRINTF(Decode, "Decode: Nothing to do, breaking out early.\n");
         // Should I change the status to idle?
         ++decodeIdleCycles;
@@ -286,7 +292,7 @@ SimpleDecode<Impl>::decode()
     unsigned to_rename_index = 0;
 
     int insts_available = _status == Unblocking ?
-        skidBuffer.front().size :
+        skidBuffer.front().size - numInst :
         fromFetch->size;
 
     // Debug block...
@@ -308,8 +314,8 @@ SimpleDecode<Impl>::decode()
     }
 #endif
 
-     while (insts_available > 0)
-     {
+    while (insts_available > 0)
+    {
         DPRINTF(Decode, "Decode: Sending instruction to rename.\n");
 
         inst = _status == Unblocking ? skidBuffer.front().insts[numInst] :
@@ -329,6 +335,16 @@ SimpleDecode<Impl>::decode()
             --insts_available;
 
             continue;
+        }
+
+
+        // Also check if instructions have no source registers.  Mark
+        // them as ready to issue at any time.  Not sure if this check
+        // should exist here or at a later stage; however it doesn't matter
+        // too much for function correctness.
+        // Isn't this handled by the inst queue?
+        if (inst->numSrcRegs() == 0) {
+            inst->setCanIssue();
         }
 
         // This current instruction is valid, so add it into the decode
@@ -368,16 +384,6 @@ SimpleDecode<Impl>::decode()
         // Normally can check if a direct branch has the right target
         // addr (either the immediate, or the branch PC + 4) and redirect
         // fetch if it's incorrect.
-
-
-        // Also check if instructions have no source registers.  Mark
-        // them as ready to issue at any time.  Not sure if this check
-        // should exist here or at a later stage; however it doesn't matter
-        // too much for function correctness.
-        // Isn't this handled by the inst queue?
-        if (inst->numSrcRegs() == 0) {
-            inst->setCanIssue();
-        }
 
         // Increment which instruction we're looking at.
         ++numInst;

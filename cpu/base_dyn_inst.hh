@@ -404,6 +404,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     const Addr &getEA() const { return instEffAddr; }
     bool doneEACalc() { return eaCalcDone; }
     bool eaSrcsReady();
+
+  public:
+    int16_t lqIdx;
+    int16_t sqIdx;
 };
 
 template<class Impl>
@@ -419,6 +423,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     // Record key MemReq parameters so we can generate another one
     // just like it for the timing access without calling translate()
     // again (which might mess up the TLB).
+    // Do I ever really need this? -KTL 3/05
     effAddr = req->vaddr;
     physEffAddr = req->paddr;
     memReqFlags = req->flags;
@@ -433,7 +438,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 #endif
 
     if (fault == No_Fault) {
-        fault = cpu->read(req, data);
+        fault = cpu->read(req, data, lqIdx);
     }
     else {
         // Return a fixed value to keep simulation deterministic even
@@ -459,8 +464,8 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
 
-    storeSize = sizeof(T);
-    storeData = data;
+//    storeSize = sizeof(T);
+//    storeData = data;
 
     MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
 
@@ -485,7 +490,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 #endif
 
     if (fault == No_Fault) {
-        fault = cpu->write(req, data);
+        fault = cpu->write(req, data, sqIdx);
     }
 
     if (res) {

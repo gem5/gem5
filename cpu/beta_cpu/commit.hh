@@ -113,9 +113,6 @@ class SimpleCommit
     /** Pointer to FullCPU. */
     FullCPU *cpu;
 
-    /** Pointer to the rename map.  DO NOT USE if possible. */
-//    typename Impl::CPUPol::RenameMap *renameMap;
-
     //Store buffer interface?  Will need to move committed stores to the
     //store buffer
 

@@ -16,7 +16,7 @@
 using namespace std;
 
 BaseFullCPU::BaseFullCPU(Params &params)
-    : BaseCPU(&params)
+    : BaseCPU(&params), cpu_id(0)
 {
 }
 
@@ -82,15 +82,14 @@ FullBetaCPU<Impl>::FullBetaCPU(Params &params)
 
 #ifdef FULL_SYSTEM
       system(params.system),
-      memCtrl(system->memCtrl),
+      memCtrl(system->memctrl),
       physmem(system->physmem),
       itb(params.itb),
       dtb(params.dtb),
       mem(params.mem),
 #else
-      process(params.process),
-      asid(params.asid),
-      mem(process->getMemory()),
+      // Hardcoded for a single thread!!
+      mem(params.workload[0]->getMemory()),
 #endif // FULL_SYSTEM
 
       icacheInterface(params.icacheInterface),
@@ -100,20 +99,40 @@ FullBetaCPU<Impl>::FullBetaCPU(Params &params)
       funcExeInst(0)
 {
     _status = Idle;
+
+#ifndef FULL_SYSTEM
+    thread.resize(this->number_of_threads);
+#endif
+
+    for (int i = 0; i < this->number_of_threads; ++i) {
 #ifdef FULL_SYSTEM
-    xc = new ExecContext(this, 0, system, itb, dtb, mem);
+        assert(i == 0);
+        system->execContexts[i] =
+            new ExecContext(this, i, system, itb, dtb, mem);
 
-    // initialize CPU, including PC
-    TheISA::initCPU(&xc->regs);
+        // initialize CPU, including PC
+        TheISA::initCPU(&system->execContexts[i]->regs);
+        execContexts.push_back(system->execContexts[i]);
 #else
-    DPRINTF(FullCPU, "FullCPU: Process's starting PC is %#x, process is %#x",
-            process->prog_entry, process);
-    xc = new ExecContext(this, /* thread_num */ 0, process, /* asid */ 0);
-
-    assert(process->getMemory() != NULL);
-    assert(mem != NULL);
+        if (i < params.workload.size()) {
+            DPRINTF(FullCPU, "FullCPU: Workload[%i]'s starting PC is %#x, "
+                    "process is %#x",
+                    i, params.workload[i]->prog_entry, thread[i]);
+            thread[i] = new ExecContext(this, i, params.workload[i], i);
+        }
+        assert(params.workload[i]->getMemory() != NULL);
+        assert(mem != NULL);
+        execContexts.push_back(thread[i]);
 #endif // !FULL_SYSTEM
-    execContexts.push_back(xc);
+    }
+
+    // Note that this is a hack so that my code which still uses xc-> will
+    // still work.  I should remove this eventually
+#ifdef FULL_SYSTEM
+    xc = system->execContexts[0];
+#else
+    xc = thread[0];
+#endif
 
     // The stages also need their CPU pointer setup.  However this must be
     // done at the upper level CPU because they have pointers to the upper
@@ -202,29 +221,33 @@ FullBetaCPU<Impl>::init()
 
         // Need to do a copy of the xc->regs into the CPU's regfile so
         // that it can start properly.
-
+#ifdef FULL_SYSTEM
+        ExecContext *src_xc = system->execContexts[0];
+#else
+        ExecContext *src_xc = thread[0];
+#endif
         // First loop through the integer registers.
         for (int i = 0; i < Impl::ISA::NumIntRegs; ++i)
         {
-            regFile.intRegFile[i] = xc->regs.intRegFile[i];
+            regFile.intRegFile[i] = src_xc->regs.intRegFile[i];
         }
 
         // Then loop through the floating point registers.
         for (int i = 0; i < Impl::ISA::NumFloatRegs; ++i)
         {
-            regFile.floatRegFile[i].d = xc->regs.floatRegFile.d[i];
-            regFile.floatRegFile[i].q = xc->regs.floatRegFile.q[i];
+            regFile.floatRegFile[i].d = src_xc->regs.floatRegFile.d[i];
+            regFile.floatRegFile[i].q = src_xc->regs.floatRegFile.q[i];
         }
 
         // Then loop through the misc registers.
-        regFile.miscRegs.fpcr = xc->regs.miscRegs.fpcr;
-        regFile.miscRegs.uniq = xc->regs.miscRegs.uniq;
-        regFile.miscRegs.lock_flag = xc->regs.miscRegs.lock_flag;
-        regFile.miscRegs.lock_addr = xc->regs.miscRegs.lock_addr;
+        regFile.miscRegs.fpcr = src_xc->regs.miscRegs.fpcr;
+        regFile.miscRegs.uniq = src_xc->regs.miscRegs.uniq;
+        regFile.miscRegs.lock_flag = src_xc->regs.miscRegs.lock_flag;
+        regFile.miscRegs.lock_addr = src_xc->regs.miscRegs.lock_addr;
 
         // Then finally set the PC and the next PC.
-        regFile.pc = xc->regs.pc;
-        regFile.npc = xc->regs.npc;
+        regFile.pc = src_xc->regs.pc;
+        regFile.npc = src_xc->regs.npc;
     }
 }
 
@@ -277,13 +300,13 @@ FullBetaCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     // Set all status's to active, schedule the
     // CPU's tick event.
-    tickEvent.schedule(curTick);
     for (int i = 0; i < execContexts.size(); ++i) {
-        execContexts[i]->activate();
+        ExecContext *xc = execContexts[i];
+        if (xc->status() == ExecContext::Active && _status != Running) {
+            _status = Running;
+            tickEvent.schedule(curTick);
+        }
     }
-
-    // Switch out the other CPU.
-    oldCPU->switchOut();
 }
 
 template <class Impl>
@@ -463,6 +486,7 @@ FullBetaCPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num)
                 inst_to_delete->seqNum, inst_to_delete->readPC());
 
         // Remove the instruction from the list.
+        instList.back() = NULL;
         instList.pop_back();
 
         // Mark it as squashed.

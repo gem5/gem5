@@ -34,7 +34,7 @@ struct SimpleCPUPolicy
     typedef SimpleFetch<Impl> Fetch;
     typedef SimpleDecode<Impl> Decode;
     typedef SimpleRename<Impl> Rename;
-    typedef SimpleIEW<Impl, IQ> IEW;
+    typedef SimpleIEW<Impl> IEW;
     typedef SimpleCommit<Impl> Commit;
 
     /** The struct for communication between fetch and decode. */

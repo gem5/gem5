@@ -33,8 +33,17 @@
 #include "mem/functional_mem/functional_memory.hh"
 #endif // FULL_SYSTEM
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseFullCPU)
+class DerivAlphaFullCPU : public AlphaFullCPU<AlphaSimpleImpl>
+{
+  public:
+    DerivAlphaFullCPU(AlphaSimpleParams p)
+        : AlphaFullCPU<AlphaSimpleImpl>(p)
+    { }
+};
 
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
+
+    Param<int> cycle_time;
     Param<int> numThreads;
 
 #ifdef FULL_SYSTEM
@@ -44,8 +53,6 @@ SimObjectParam<AlphaDTB *> dtb;
 Param<int> mult;
 #else
 SimObjectVectorParam<Process *> workload;
-SimObjectParam<Process *> process;
-Param<short> asid;
 #endif // FULL_SYSTEM
 SimObjectParam<FunctionalMemory *> mem;
 
@@ -120,23 +127,25 @@ Param<unsigned> numROBEntries;
 
 Param<unsigned> instShiftAmt;
 
-Param<bool> defReg;
+Param<bool> defer_registration;
 
-END_DECLARE_SIM_OBJECT_PARAMS(BaseFullCPU)
+Param<bool> function_trace;
+Param<Tick> function_trace_start;
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(BaseFullCPU)
+END_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
+BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
+
+    INIT_PARAM(cycle_time, "cpu cycle time"),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
 
 #ifdef FULL_SYSTEM
     INIT_PARAM(system, "System object"),
     INIT_PARAM(itb, "Instruction translation buffer"),
     INIT_PARAM(dtb, "Data translation buffer"),
-    INIT_PARAM_DFLT(mult, "System clock multiplier", 1),
+    INIT_PARAM(mult, "System clock multiplier"),
 #else
     INIT_PARAM(workload, "Processes to run"),
-    INIT_PARAM_DFLT(process, "Process to run", NULL),
-    INIT_PARAM(asid, "Address space ID"),
 #endif // FULL_SYSTEM
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
@@ -230,14 +239,16 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseFullCPU)
     INIT_PARAM(numROBEntries, "Number of reorder buffer entries"),
 
     INIT_PARAM(instShiftAmt, "Number of bits to shift instructions by"),
+    INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
 
-    INIT_PARAM(defReg, "Defer registration")
+    INIT_PARAM(function_trace, "Enable function trace"),
+    INIT_PARAM(function_trace_start, "Cycle to start function trace")
 
-END_INIT_SIM_OBJECT_PARAMS(BaseFullCPU)
+END_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
-CREATE_SIM_OBJECT(BaseFullCPU)
+CREATE_SIM_OBJECT(DerivAlphaFullCPU)
 {
-    AlphaFullCPU<AlphaSimpleImpl> *cpu;
+    DerivAlphaFullCPU *cpu;
 
 #ifdef FULL_SYSTEM
     if (mult != 1)
@@ -255,30 +266,21 @@ CREATE_SIM_OBJECT(BaseFullCPU)
         fatal("Must specify at least one workload!");
     }
 
-    Process *actual_process;
-
-    if (process == NULL) {
-        actual_process = workload[0];
-    } else {
-        actual_process = process;
-    }
-
 #endif
 
     AlphaSimpleParams params;
+
+    params.cycleTime = cycle_time;
 
     params.name = getInstanceName();
     params.numberOfThreads = actual_num_threads;
 
 #ifdef FULL_SYSTEM
-    params._system = system;
+    params.system = system;
     params.itb = itb;
     params.dtb = dtb;
-    params.freq = ticksPerSecond * mult;
 #else
     params.workload = workload;
-    params.process = actual_process;
-    params.asid = asid;
 #endif // FULL_SYSTEM
 
     params.mem = mem;
@@ -356,12 +358,15 @@ CREATE_SIM_OBJECT(BaseFullCPU)
 
     params.instShiftAmt = 2;
 
-    params.defReg = defReg;
+    params.defReg = defer_registration;
 
-    cpu = new AlphaFullCPU<AlphaSimpleImpl>(params);
+    params.functionTrace = function_trace;
+    params.functionTraceStart = function_trace_start;
+
+    cpu = new DerivAlphaFullCPU(params);
 
     return cpu;
 }
 
-REGISTER_SIM_OBJECT("AlphaFullCPU", BaseFullCPU)
+REGISTER_SIM_OBJECT("DerivAlphaFullCPU", DerivAlphaFullCPU)
 

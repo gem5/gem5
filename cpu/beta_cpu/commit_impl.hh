@@ -166,9 +166,9 @@ SimpleCommit<Impl>::commit()
     // hwrei() is what resets the PC to the place where instruction execution
     // beings again.
 #ifdef FULL_SYSTEM
-    if (ISA::check_interrupts &&
+    if (//checkInterrupts &&
         cpu->check_interrupts() &&
-        !xc->inPalMode()) {
+        !cpu->inPalMode(readCommitPC())) {
         // Will need to squash all instructions currently in flight and have
         // the interrupt handler restart at the last non-committed inst.
         // Most of that can be handled through the trap() function.  The
@@ -215,8 +215,6 @@ SimpleCommit<Impl>::commit()
 
         toIEW->commitInfo.mispredPC = fromIEW->mispredPC;
 
-        toIEW->commitInfo.globalHist = fromIEW->globalHist;
-
         if (toIEW->commitInfo.branchMispredict) {
             ++branchMispredicts;
         }
@@ -257,6 +255,9 @@ SimpleCommit<Impl>::commitInsts()
     // Can't commit and squash things at the same time...
     ////////////////////////////////////
 
+    if (rob->isEmpty())
+        return;
+
     DynInstPtr head_inst = rob->readHeadInst();
 
     unsigned num_committed = 0;
@@ -275,9 +276,11 @@ SimpleCommit<Impl>::commitInsts()
         if (head_inst->isSquashed()) {
             // Hack to avoid the instruction being retired (and deleted) if
             // it hasn't been through the IEW stage yet.
+/*
             if (!head_inst->isExecuted()) {
                 break;
             }
+*/
 
             DPRINTF(Commit, "Commit: Retiring squashed instruction from "
                     "ROB.\n");
@@ -341,7 +344,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // and committed this instruction.
         cpu->funcExeInst--;
 
-        if (head_inst->isStore() || head_inst->isNonSpeculative()) {
+        if (head_inst->isNonSpeculative()) {
             DPRINTF(Commit, "Commit: Encountered a store or non-speculative "
                     "instruction at the head of the ROB, PC %#x.\n",
                     head_inst->readPC());
@@ -376,12 +379,14 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     }
 
     // Check if the instruction caused a fault.  If so, trap.
-    if (head_inst->getFault() != No_Fault) {
+    Fault inst_fault = head_inst->getFault();
+
+    if (inst_fault != No_Fault && inst_fault != Fake_Mem_Fault) {
         if (!head_inst->isNop()) {
 #ifdef FULL_SYSTEM
-            cpu->trap(fault);
+            cpu->trap(inst_fault);
 #else // !FULL_SYSTEM
-            panic("fault (%d) detected @ PC %08p", head_inst->getFault(),
+            panic("fault (%d) detected @ PC %08p", inst_fault,
                   head_inst->PC);
 #endif // FULL_SYSTEM
         }
@@ -390,7 +395,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // Check if we're really ready to commit.  If not then return false.
     // I'm pretty sure all instructions should be able to commit if they've
     // reached this far.  For now leave this in as a check.
-    if(!rob->isHeadReady()) {
+    if (!rob->isHeadReady()) {
         panic("Commit: Unable to commit head instruction!\n");
         return false;
     }
@@ -413,17 +418,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         ++commitCommittedBranches;
     }
 
-
 #if 0
-    // Check if the instruction has a destination register.
-    // If so add the previous physical register of its logical register's
-    // destination to the free list through the time buffer.
-    for (int i = 0; i < head_inst->numDestRegs(); i++)
-    {
-        toIEW->commitInfo.freeRegs.push_back(head_inst->prevDestRegIdx(i));
-    }
-#endif
-
     // Explicit communication back to the LDSTQ that a load has been committed
     // and can be removed from the LDSTQ.  Stores don't need this because
     // the LDSTQ will already have been told that a store has reached the head
@@ -436,6 +431,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             ++commitCommittedLoads;
         }
     }
+#endif
 
     // Now that the instruction is going to be committed, finalize its
     // trace data.
@@ -487,7 +483,7 @@ SimpleCommit<Impl>::markCompletedInsts()
     // Grab completed insts out of the IEW instruction queue, and mark
     // instructions completed within the ROB.
     for (int inst_num = 0;
-         inst_num < iewWidth && fromIEW->insts[inst_num];
+         inst_num < fromIEW->size && fromIEW->insts[inst_num];
          ++inst_num)
     {
         DPRINTF(Commit, "Commit: Marking PC %#x, SN %i ready within ROB.\n",

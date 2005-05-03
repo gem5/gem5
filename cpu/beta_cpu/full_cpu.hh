@@ -5,11 +5,12 @@
 //itself properly.  Constructor.  Derived alpha class.  Threads!
 // Avoid running stages and advancing queues if idle/stalled.
 
-#ifndef __SIMPLE_FULL_CPU_HH__
-#define __SIMPLE_FULL_CPU_HH__
+#ifndef __CPU_BETA_CPU_FULL_CPU_HH__
+#define __CPU_BETA_CPU_FULL_CPU_HH__
 
 #include <iostream>
 #include <list>
+#include <vector>
 
 #include "cpu/beta_cpu/comm.hh"
 
@@ -19,6 +20,11 @@
 #include "cpu/exec_context.hh"
 #include "cpu/beta_cpu/cpu_policy.hh"
 #include "sim/process.hh"
+
+#ifdef FULL_SYSTEM
+#include "arch/alpha/ev5.hh"
+using namespace EV5;
+#endif
 
 class FunctionalMemory;
 class Process;
@@ -34,6 +40,9 @@ class BaseFullCPU : public BaseCPU
 #else
     BaseFullCPU(Params &params);
 #endif // FULL_SYSTEM
+
+  private:
+    int cpu_id;
 };
 
 template <class Impl>
@@ -41,6 +50,7 @@ class FullBetaCPU : public BaseFullCPU
 {
   public:
     //Put typedefs from the Impl here.
+    typedef typename Impl::ISA ISA;
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -114,19 +124,21 @@ class FullBetaCPU : public BaseFullCPU
     bool validDataAddr(Addr addr) { return true; }
 
     /** Get instruction asid. */
-    int getInstAsid() { return ITB_ASN_ASN(regs.ipr[ISA::IPR_ITB_ASN]); }
+    int getInstAsid()
+    { return ITB_ASN_ASN(regFile.getIpr()[ISA::IPR_ITB_ASN]); }
 
     /** Get data asid. */
-    int getDataAsid() { return DTB_ASN_ASN(regs.ipr[ISA::IPR_DTB_ASN]); }
+    int getDataAsid()
+    { return DTB_ASN_ASN(regFile.getIpr()[ISA::IPR_DTB_ASN]); }
 #else
     bool validInstAddr(Addr addr)
-    { return process->validInstAddr(addr); }
+    { return thread[0]->validInstAddr(addr); }
 
     bool validDataAddr(Addr addr)
-    { return process->validDataAddr(addr); }
+    { return thread[0]->validDataAddr(addr); }
 
-    int getInstAsid() { return asid; }
-    int getDataAsid() { return asid; }
+    int getInstAsid() { return thread[0]->asid; }
+    int getDataAsid() { return thread[0]->asid; }
 
 #endif
 
@@ -284,7 +296,14 @@ class FullBetaCPU : public BaseFullCPU
     ExecContext *xc;
 
     /** Temporary function to get pointer to exec context. */
-    ExecContext *xcBase() { return xc; }
+    ExecContext *xcBase()
+    {
+#ifdef FULL_SYSTEM
+        return system->execContexts[0];
+#else
+        return thread[0];
+#endif
+    }
 
     InstSeqNum globalSeqNum;
 
@@ -299,12 +318,7 @@ class FullBetaCPU : public BaseFullCPU
 
 //    SWContext *swCtx;
 #else
-    Process *process;
-
-    // Address space ID.  Note that this is used for TIMING cache
-    // simulation only; all functional memory accesses should use
-    // one of the FunctionalMemory pointers above.
-    short asid;
+    std::vector<ExecContext *> thread;
 #endif
 
     FunctionalMemory *mem;

@@ -1,5 +1,5 @@
-#ifndef __ROB_IMPL_HH__
-#define __ROB_IMPL_HH__
+#ifndef __CPU_BETA_CPU_ROB_IMPL_HH__
+#define __CPU_BETA_CPU_ROB_IMPL_HH__
 
 #include "cpu/beta_cpu/rob.hh"
 
@@ -107,10 +107,8 @@ ROB<Impl>::retireHead()
     assert(numInstsInROB == countInsts());
     assert(numInstsInROB > 0);
 
-    DynInstPtr head_inst;
-
     // Get the head ROB instruction.
-    head_inst = cpu->instList.front();
+    DynInstPtr head_inst = cpu->instList.front();
 
     // Make certain this can retire.
     assert(head_inst->readyToCommit());
@@ -126,11 +124,10 @@ ROB<Impl>::retireHead()
     // A special case is needed if the instruction being retired is the
     // only instruction in the ROB; otherwise the tail iterator will become
     // invalidated.
-    if (tail == cpu->instList.begin()) {
-        cpu->removeFrontInst(head_inst);
+    cpu->removeFrontInst(head_inst);
+
+    if (numInstsInROB == 0) {
         tail = cpu->instList.end();
-    } else {
-        cpu->removeFrontInst(head_inst);
     }
 }
 
@@ -283,4 +280,4 @@ ROB<Impl>::readTailSeqNum()
     return (*tail)->seqNum;
 }
 
-#endif // __ROB_IMPL_HH__
+#endif // __CPU_BETA_CPU_ROB_IMPL_HH__

@@ -41,6 +41,9 @@
 class BaseCPU;
 class ExecContext;
 class FnEvent;
+// What does kernel stats expect is included?
+class StaticInstBase;
+class System;
 enum Fault;
 
 namespace Kernel {

@@ -4,4 +4,4 @@
 #include "cpu/beta_cpu/iew_impl.hh"
 #include "cpu/beta_cpu/inst_queue.hh"
 
-template class SimpleIEW<AlphaSimpleImpl, AlphaSimpleImpl::CPUPol::IQ>;
+template class SimpleIEW<AlphaSimpleImpl>;

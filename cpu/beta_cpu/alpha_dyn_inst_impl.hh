@@ -129,7 +129,8 @@ template <class Impl>
 void
 AlphaDynInst<Impl>::syscall()
 {
-    this->cpu->syscall();
+    this->cpu->syscall(this->threadNumber);
+//    this->cpu->syscall();
 }
 #endif
 

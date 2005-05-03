@@ -41,15 +41,11 @@
 
 // forward declarations
 struct AlphaSimpleImpl;
-struct OoOImpl;
 class ExecContext;
 class DynInst;
 
 template <class Impl>
 class AlphaDynInst;
-
-template <class Impl>
-class OoODynInst;
 
 class FastCPU;
 class SimpleCPU;
@@ -260,7 +256,7 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the EA computation.
      */
-    virtual
+    virtual const
     StaticInstPtr<ISA> &eaCompInst() const { return nullStaticInstPtr; }
 
     /**
@@ -269,7 +265,7 @@ class StaticInst : public StaticInstBase
      * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
      * just the memory access (not the EA computation).
      */
-    virtual
+    virtual const
     StaticInstPtr<ISA> &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.

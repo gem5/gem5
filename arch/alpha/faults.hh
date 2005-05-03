@@ -47,6 +47,7 @@ enum Fault {
     Fen_Fault,			// FP not-enabled fault
     Pal_Fault,			// call_pal S/W interrupt
     Integer_Overflow_Fault,
+    Fake_Mem_Fault,
     Num_Faults			// number of faults
 };
 

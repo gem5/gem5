@@ -12,8 +12,36 @@
 #include "base/timebuf.hh"
 #include "cpu/beta_cpu/iew.hh"
 
-template<class Impl, class IQ>
-SimpleIEW<Impl, IQ>::SimpleIEW(Params &params)
+template<class Impl>
+SimpleIEW<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst,
+                                                SimpleIEW<Impl> *_iew)
+    : Event(&mainEventQueue, CPU_Tick_Pri), inst(_inst), iewStage(_iew)
+{
+    this->setFlags(Event::AutoDelete);
+}
+
+template<class Impl>
+void
+SimpleIEW<Impl>::WritebackEvent::process()
+{
+    DPRINTF(IEW, "IEW: WRITEBACK EVENT!!!!\n");
+
+    // Need to insert instruction into queue to commit
+    iewStage->instToCommit(inst);
+    // Need to execute second half of the instruction, do actual writing to
+    // registers and such
+    inst->execute();
+}
+
+template<class Impl>
+const char *
+SimpleIEW<Impl>::WritebackEvent::description()
+{
+    return "LSQ writeback event";
+}
+
+template<class Impl>
+SimpleIEW<Impl>::SimpleIEW(Params &params)
     : // Just make this time buffer really big for now
       issueToExecQueue(5, 5),
       instQueue(params),
@@ -36,11 +64,13 @@ SimpleIEW<Impl, IQ>::SimpleIEW(Params &params)
 
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
+
+    ldstQueue.setIEW(this);
 }
 
-template <class Impl, class IQ>
+template <class Impl>
 void
-SimpleIEW<Impl, IQ>::regStats()
+SimpleIEW<Impl>::regStats()
 {
     instQueue.regStats();
 
@@ -111,9 +141,9 @@ SimpleIEW<Impl, IQ>::regStats()
         .desc("Number of branches that were predicted taken incorrectly");
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::setCPU(FullCPU *cpu_ptr)
+SimpleIEW<Impl>::setCPU(FullCPU *cpu_ptr)
 {
     DPRINTF(IEW, "IEW: Setting CPU pointer.\n");
     cpu = cpu_ptr;
@@ -122,9 +152,9 @@ SimpleIEW<Impl, IQ>::setCPU(FullCPU *cpu_ptr)
     ldstQueue.setCPU(cpu_ptr);
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+SimpleIEW<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     DPRINTF(IEW, "IEW: Setting time buffer pointer.\n");
     timeBuffer = tb_ptr;
@@ -139,9 +169,9 @@ SimpleIEW<Impl, IQ>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
     instQueue.setTimeBuffer(tb_ptr);
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
+SimpleIEW<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
     DPRINTF(IEW, "IEW: Setting rename queue pointer.\n");
     renameQueue = rq_ptr;
@@ -150,9 +180,9 @@ SimpleIEW<Impl, IQ>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
     fromRename = renameQueue->getWire(-renameToIEWDelay);
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
+SimpleIEW<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 {
     DPRINTF(IEW, "IEW: Setting IEW queue pointer.\n");
     iewQueue = iq_ptr;
@@ -161,63 +191,17 @@ SimpleIEW<Impl, IQ>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
     toCommit = iewQueue->getWire(0);
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::setRenameMap(RenameMap *rm_ptr)
+SimpleIEW<Impl>::setRenameMap(RenameMap *rm_ptr)
 {
     DPRINTF(IEW, "IEW: Setting rename map pointer.\n");
     renameMap = rm_ptr;
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::wakeDependents(DynInstPtr &inst)
-{
-    instQueue.wakeDependents(inst);
-}
-
-template<class Impl, class IQ>
-void
-SimpleIEW<Impl, IQ>::block()
-{
-    DPRINTF(IEW, "IEW: Blocking.\n");
-    // Set the status to Blocked.
-    _status = Blocked;
-
-    // Add the current inputs to the skid buffer so they can be
-    // reprocessed when this stage unblocks.
-    skidBuffer.push(*fromRename);
-
-    // Note that this stage only signals previous stages to stall when
-    // it is the cause of the stall originates at this stage.  Otherwise
-    // the previous stages are expected to check all possible stall signals.
-}
-
-template<class Impl, class IQ>
-inline void
-SimpleIEW<Impl, IQ>::unblock()
-{
-    // Check if there's information in the skid buffer.  If there is, then
-    // set status to unblocking, otherwise set it directly to running.
-    DPRINTF(IEW, "IEW: Reading instructions out of the skid "
-            "buffer.\n");
-    // Remove the now processed instructions from the skid buffer.
-    skidBuffer.pop();
-
-    // If there's still information in the skid buffer, then
-    // continue to tell previous stages to stall.  They will be
-    // able to restart once the skid buffer is empty.
-    if (!skidBuffer.empty()) {
-        toRename->iewInfo.stall = true;
-    } else {
-        DPRINTF(IEW, "IEW: Stage is done unblocking.\n");
-        _status = Running;
-    }
-}
-
-template<class Impl, class IQ>
-void
-SimpleIEW<Impl, IQ>::squash()
+SimpleIEW<Impl>::squash()
 {
     DPRINTF(IEW, "IEW: Squashing all instructions.\n");
     _status = Squashing;
@@ -229,9 +213,9 @@ SimpleIEW<Impl, IQ>::squash()
     ldstQueue.squash(fromCommit->commitInfo.doneSeqNum);
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::squashDueToBranch(DynInstPtr &inst)
+SimpleIEW<Impl>::squashDueToBranch(DynInstPtr &inst)
 {
     DPRINTF(IEW, "IEW: Squashing from a specific instruction, PC: %#x.\n",
             inst->PC);
@@ -251,9 +235,9 @@ SimpleIEW<Impl, IQ>::squashDueToBranch(DynInstPtr &inst)
         (inst->readPC() + sizeof(MachInst));
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::squashDueToMem(DynInstPtr &inst)
+SimpleIEW<Impl>::squashDueToMem(DynInstPtr &inst)
 {
     DPRINTF(IEW, "IEW: Squashing from a specific instruction, PC: %#x.\n",
             inst->PC);
@@ -268,9 +252,63 @@ SimpleIEW<Impl, IQ>::squashDueToMem(DynInstPtr &inst)
     toCommit->nextPC = inst->readNextPC();
 }
 
-template <class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::dispatchInsts()
+SimpleIEW<Impl>::block()
+{
+    DPRINTF(IEW, "IEW: Blocking.\n");
+    // Set the status to Blocked.
+    _status = Blocked;
+
+    // Add the current inputs to the skid buffer so they can be
+    // reprocessed when this stage unblocks.
+    skidBuffer.push(*fromRename);
+
+    // Note that this stage only signals previous stages to stall when
+    // it is the cause of the stall originates at this stage.  Otherwise
+    // the previous stages are expected to check all possible stall signals.
+}
+
+template<class Impl>
+inline void
+SimpleIEW<Impl>::unblock()
+{
+    // Check if there's information in the skid buffer.  If there is, then
+    // set status to unblocking, otherwise set it directly to running.
+    DPRINTF(IEW, "IEW: Reading instructions out of the skid "
+            "buffer.\n");
+    // Remove the now processed instructions from the skid buffer.
+    skidBuffer.pop();
+
+    // If there's still information in the skid buffer, then
+    // continue to tell previous stages to stall.  They will be
+    // able to restart once the skid buffer is empty.
+    if (!skidBuffer.empty()) {
+        toRename->iewInfo.stall = true;
+    } else {
+        DPRINTF(IEW, "IEW: Stage is done unblocking.\n");
+        _status = Running;
+    }
+}
+
+template<class Impl>
+void
+SimpleIEW<Impl>::wakeDependents(DynInstPtr &inst)
+{
+    instQueue.wakeDependents(inst);
+}
+
+
+template<class Impl>
+void
+SimpleIEW<Impl>::instToCommit(DynInstPtr &inst)
+{
+
+}
+
+template <class Impl>
+void
+SimpleIEW<Impl>::dispatchInsts()
 {
     ////////////////////////////////////////
     // DISPATCH/ISSUE stage
@@ -329,14 +367,14 @@ SimpleIEW<Impl, IQ>::dispatchInsts()
                 // a signal to this stage to issue and execute that
                 // store.  Change to be a bit that says the instruction
                 // has extra work to do at commit.
-                inst->setCanCommit();
+//                inst->setCanCommit();
 
-                instQueue.insertNonSpec(inst);
+//                instQueue.insertNonSpec(inst);
 
                 ++iewDispStoreInsts;
-                ++iewDispNonSpecInsts;
+//                ++iewDispNonSpecInsts;
 
-                continue;
+//                continue;
             } else if (inst->isNonSpeculative()) {
                 DPRINTF(IEW, "IEW: Issue: Nonspeculative instruction "
                         "encountered, skipping.\n");
@@ -385,9 +423,9 @@ SimpleIEW<Impl, IQ>::dispatchInsts()
     }
 }
 
-template <class Impl, class IQ>
+template <class Impl>
 void
-SimpleIEW<Impl, IQ>::executeInsts()
+SimpleIEW<Impl>::executeInsts()
 {
     ////////////////////////////////////////
     //EXECUTE/WRITEBACK stage
@@ -403,6 +441,8 @@ SimpleIEW<Impl, IQ>::executeInsts()
 
     int fu_usage = 0;
     bool fetch_redirect = false;
+    int inst_slot = 0;
+    int time_slot = 0;
 
     // Execute/writeback any instructions that are available.
     for (int inst_num = 0;
@@ -452,7 +492,7 @@ SimpleIEW<Impl, IQ>::executeInsts()
 
                 ++iewExecLoadInsts;
             } else if (inst->isStore()) {
-                ldstQueue.executeStore();
+                ldstQueue.executeStore(inst);
 
                 ++iewExecStoreInsts;
             } else {
@@ -473,9 +513,23 @@ SimpleIEW<Impl, IQ>::executeInsts()
         // For now naively assume that all instructions take one cycle.
         // Otherwise would have to look into the time buffer based on the
         // latency of the instruction.
+        (*iewQueue)[time_slot].insts[inst_slot];
+        while ((*iewQueue)[time_slot].insts[inst_slot]) {
+            if (inst_slot < issueWidth) {
+                ++inst_slot;
+            } else {
+                ++time_slot;
+                inst_slot = 0;
+            }
+
+            assert(time_slot < 5);
+        }
+
+        // May actually have to work this out, especially with loads and stores
 
         // Add finished instruction to queue to commit.
-        toCommit->insts[inst_num] = inst;
+        (*iewQueue)[time_slot].insts[inst_slot] = inst;
+        (*iewQueue)[time_slot].size++;
 
         // Check if branch was correct.  This check happens after the
         // instruction is added to the queue because even if the branch
@@ -518,9 +572,9 @@ SimpleIEW<Impl, IQ>::executeInsts()
     }
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::tick()
+SimpleIEW<Impl>::tick()
 {
     // Considering putting all the state-determining stuff in this section.
 
@@ -594,14 +648,20 @@ SimpleIEW<Impl, IQ>::tick()
     // Write back number of free IQ entries here.
     toRename->iewInfo.freeIQEntries = instQueue.numFreeEntries();
 
+    ldstQueue.writebackStores();
+
     // Check the committed load/store signals to see if there's a load
     // or store to commit.  Also check if it's being told to execute a
     // nonspeculative instruction.
-    if (fromCommit->commitInfo.commitIsStore) {
+    // This is pretty inefficient...
+//    if (0/*fromCommit->commitInfo.commitIsStore*/) {
+    if (!fromCommit->commitInfo.squash &&
+        !fromCommit->commitInfo.robSquashing) {
         ldstQueue.commitStores(fromCommit->commitInfo.doneSeqNum);
-    } else if (fromCommit->commitInfo.commitIsLoad) {
+//    } else if (fromCommit->commitInfo.commitIsLoad) {
         ldstQueue.commitLoads(fromCommit->commitInfo.doneSeqNum);
     }
+//    }
 
     if (fromCommit->commitInfo.nonSpecSeqNum != 0) {
         instQueue.scheduleNonSpec(fromCommit->commitInfo.nonSpecSeqNum);
@@ -611,9 +671,9 @@ SimpleIEW<Impl, IQ>::tick()
             instQueue.numFreeEntries());
 }
 
-template<class Impl, class IQ>
+template<class Impl>
 void
-SimpleIEW<Impl, IQ>::iew()
+SimpleIEW<Impl>::iew()
 {
     // Might want to put all state checks in the tick() function.
     // Check if being told to stall from commit.
@@ -663,3 +723,12 @@ SimpleIEW<Impl, IQ>::iew()
     // Not the best place for it, but this works (hopefully).
     issueToExecQueue.advance();
 }
+
+#ifndef FULL_SYSTEM
+template<class Impl>
+void
+SimpleIEW<Impl>::lsqWriteback()
+{
+    ldstQueue.writebackAllInsts();
+}
+#endif
