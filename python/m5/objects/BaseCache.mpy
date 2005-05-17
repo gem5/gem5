@@ -19,6 +19,8 @@ simobj BaseCache(BaseMem):
         "whether this NIC partition should use LIFO repl. policy")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
+    mem_trace = Param.MemTraceWriter(NULL,
+                                     "memory trace writer to record accesses")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
     out_bus = Param.Bus("outgoing bus object")
     prioritizeRequests = Param.Bool(False,
