@@ -1,12 +1,12 @@
 
-#ifndef __MEM_DEP_UNIT_HH__
-#define __MEM_DEP_UNIT_HH__
+#ifndef __CPU_BETA_CPU_MEM_DEP_UNIT_HH__
+#define __CPU_BETA_CPU_MEM_DEP_UNIT_HH__
 
-#include <set>
 #include <map>
+#include <set>
 
-#include "cpu/inst_seq.hh"
 #include "base/statistics.hh"
+#include "cpu/inst_seq.hh"
 
 /**
  * Memory dependency unit class.  This holds the memory dependence predictor.
@@ -34,6 +34,12 @@ class MemDepUnit {
 
     void insertNonSpec(DynInstPtr &inst);
 
+    // Will want to make this operation relatively fast.  Right now it
+    // is somewhat slow.
+    DynInstPtr &top();
+
+    void pop();
+
     void regsReady(DynInstPtr &inst);
 
     void nonSpecInstReady(DynInstPtr &inst);
@@ -45,12 +51,6 @@ class MemDepUnit {
     void squash(const InstSeqNum &squashed_num);
 
     void violation(DynInstPtr &store_inst, DynInstPtr &violating_load);
-
-    // Will want to make this operation relatively fast.  Right now it
-    // kind of sucks.
-    DynInstPtr &top();
-
-    void pop();
 
     inline bool empty()
     { return readyInsts.empty(); }
@@ -91,11 +91,8 @@ class MemDepUnit {
         }
     };
 
-
-  private:
     inline void moveToReady(dep_it_t &woken_inst);
 
-  private:
     /** List of instructions that have passed through rename, yet are still
      *  waiting on either a memory dependence to resolve or source registers to
      *  become available before they can issue.
@@ -137,4 +134,4 @@ class MemDepUnit {
     Stats::Scalar<> conflictingStores;
 };
 
-#endif
+#endif // __CPU_BETA_CPU_MEM_DEP_UNIT_HH__

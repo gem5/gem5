@@ -361,20 +361,7 @@ SimpleIEW<Impl>::dispatchInsts()
             } else if (inst->isStore()) {
                 ldstQueue.insertStore(inst);
 
-                // A bit of a hack.  Set that it can commit so that
-                // the commit stage will try committing it, and then
-                // once commit realizes it's a store it will send back
-                // a signal to this stage to issue and execute that
-                // store.  Change to be a bit that says the instruction
-                // has extra work to do at commit.
-//                inst->setCanCommit();
-
-//                instQueue.insertNonSpec(inst);
-
                 ++iewDispStoreInsts;
-//                ++iewDispNonSpecInsts;
-
-//                continue;
             } else if (inst->isNonSpeculative()) {
                 DPRINTF(IEW, "IEW: Issue: Nonspeculative instruction "
                         "encountered, skipping.\n");
@@ -403,8 +390,6 @@ SimpleIEW<Impl>::dispatchInsts()
                 assert(0 && "Instruction shouldn't be executed.\n");
                 DPRINTF(IEW, "IEW: Issue: Executed branch encountered, "
                         "skipping.\n");
-
-//                assert(inst->isDirectCtrl());
 
                 inst->setIssued();
                 inst->setCanCommit();
@@ -614,10 +599,6 @@ SimpleIEW<Impl>::tick()
         }
 
         ++iewSquashCycles;
-
-        // Also should advance its own time buffers if the stage ran.
-        // Not sure about this...
-//        issueToExecQueue.advance();
     } else if (_status == Blocked) {
         // Continue to tell previous stage to stall.
         toRename->iewInfo.stall = true;
@@ -654,14 +635,11 @@ SimpleIEW<Impl>::tick()
     // or store to commit.  Also check if it's being told to execute a
     // nonspeculative instruction.
     // This is pretty inefficient...
-//    if (0/*fromCommit->commitInfo.commitIsStore*/) {
     if (!fromCommit->commitInfo.squash &&
         !fromCommit->commitInfo.robSquashing) {
         ldstQueue.commitStores(fromCommit->commitInfo.doneSeqNum);
-//    } else if (fromCommit->commitInfo.commitIsLoad) {
         ldstQueue.commitLoads(fromCommit->commitInfo.doneSeqNum);
     }
-//    }
 
     if (fromCommit->commitInfo.nonSpecSeqNum != 0) {
         instQueue.scheduleNonSpec(fromCommit->commitInfo.nonSpecSeqNum);

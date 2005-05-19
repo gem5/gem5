@@ -1,6 +1,3 @@
-#ifndef __INST_QUEUE_IMPL_HH__
-#define __INST_QUEUE_IMPL_HH__
-
 // Todo:
 // Current ordering allows for 0 cycle added-to-scheduled.  Could maybe fake
 // it; either do in reverse order, or have added instructions put into a
@@ -171,6 +168,13 @@ InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
     fromCommit = timeBuffer->getWire(-commitToIEWDelay);
 }
 
+template <class Impl>
+unsigned
+InstructionQueue<Impl>::numFreeEntries()
+{
+    return freeEntries;
+}
+
 // Might want to do something more complex if it knows how many instructions
 // will be issued this cycle.
 template <class Impl>
@@ -182,13 +186,6 @@ InstructionQueue<Impl>::isFull()
     } else {
         return(false);
     }
-}
-
-template <class Impl>
-unsigned
-InstructionQueue<Impl>::numFreeEntries()
-{
-    return freeEntries;
 }
 
 template <class Impl>
@@ -562,7 +559,6 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             break;
 
           case Squashed:
-//            issuing_inst = squashed_head_inst;
             assert(0 && "Squashed insts should not issue any more!");
             squashedInsts.pop();
             // Set the squashed instruction as able to commit so that commit
@@ -617,6 +613,77 @@ InstructionQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
     }
 
     nonSpecInsts.erase(inst_it);
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
+{
+    DPRINTF(IQ, "IQ: Waking dependents of completed instruction.\n");
+    //Look at the physical destination register of the DynInst
+    //and look it up on the dependency graph.  Then mark as ready
+    //any instructions within the instruction queue.
+    DependencyEntry *curr;
+
+    // Tell the memory dependence unit to wake any dependents on this
+    // instruction if it is a memory instruction.
+
+    if (completed_inst->isMemRef()) {
+        memDepUnit.wakeDependents(completed_inst);
+    }
+
+    for (int dest_reg_idx = 0;
+         dest_reg_idx < completed_inst->numDestRegs();
+         dest_reg_idx++)
+    {
+        PhysRegIndex dest_reg =
+            completed_inst->renamedDestRegIdx(dest_reg_idx);
+
+        // Special case of uniq or control registers.  They are not
+        // handled by the IQ and thus have no dependency graph entry.
+        // @todo Figure out a cleaner way to handle this.
+        if (dest_reg >= numPhysRegs) {
+            continue;
+        }
+
+        DPRINTF(IQ, "IQ: Waking any dependents on register %i.\n",
+                (int) dest_reg);
+
+        //Maybe abstract this part into a function.
+        //Go through the dependency chain, marking the registers as ready
+        //within the waiting instructions.
+        while (dependGraph[dest_reg].next) {
+
+            curr = dependGraph[dest_reg].next;
+
+            DPRINTF(IQ, "IQ: Waking up a dependent instruction, PC%#x.\n",
+                    curr->inst->readPC());
+
+            // Might want to give more information to the instruction
+            // so that it knows which of its source registers is ready.
+            // However that would mean that the dependency graph entries
+            // would need to hold the src_reg_idx.
+            curr->inst->markSrcRegReady();
+
+            addIfReady(curr->inst);
+
+            dependGraph[dest_reg].next = curr->next;
+
+            DependencyEntry::mem_alloc_counter--;
+
+            curr->inst = NULL;
+
+            delete curr;
+        }
+
+        // Reset the head node now that all of its dependents have been woken
+        // up.
+        dependGraph[dest_reg].next = NULL;
+        dependGraph[dest_reg].inst = NULL;
+
+        // Mark the scoreboard as having that register ready.
+        regScoreboard[dest_reg] = true;
+    }
 }
 
 template <class Impl>
@@ -747,73 +814,56 @@ InstructionQueue<Impl>::stopSquash()
 
 template <class Impl>
 void
-InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
+InstructionQueue<Impl>::DependencyEntry::insert(DynInstPtr &new_inst)
 {
-    DPRINTF(IQ, "IQ: Waking dependents of completed instruction.\n");
-    //Look at the physical destination register of the DynInst
-    //and look it up on the dependency graph.  Then mark as ready
-    //any instructions within the instruction queue.
-    DependencyEntry *curr;
+    //Add this new, dependent instruction at the head of the dependency
+    //chain.
 
-    // Tell the memory dependence unit to wake any dependents on this
-    // instruction if it is a memory instruction.
+    // First create the entry that will be added to the head of the
+    // dependency chain.
+    DependencyEntry *new_entry = new DependencyEntry;
+    new_entry->next = this->next;
+    new_entry->inst = new_inst;
 
-    if (completed_inst->isMemRef()) {
-        memDepUnit.wakeDependents(completed_inst);
+    // Then actually add it to the chain.
+    this->next = new_entry;
+
+    ++mem_alloc_counter;
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::DependencyEntry::remove(DynInstPtr &inst_to_remove)
+{
+    DependencyEntry *prev = this;
+    DependencyEntry *curr = this->next;
+
+    // Make sure curr isn't NULL.  Because this instruction is being
+    // removed from a dependency list, it must have been placed there at
+    // an earlier time.  The dependency chain should not be empty,
+    // unless the instruction dependent upon it is already ready.
+    if (curr == NULL) {
+        return;
     }
 
-    for (int dest_reg_idx = 0;
-         dest_reg_idx < completed_inst->numDestRegs();
-         dest_reg_idx++)
+    // Find the instruction to remove within the dependency linked list.
+    while(curr->inst != inst_to_remove)
     {
-        PhysRegIndex dest_reg =
-            completed_inst->renamedDestRegIdx(dest_reg_idx);
+        prev = curr;
+        curr = curr->next;
 
-        // Special case of uniq or control registers.  They are not
-        // handled by the IQ and thus have no dependency graph entry.
-        // @todo Figure out a cleaner way to handle this.
-        if (dest_reg >= numPhysRegs) {
-            continue;
-        }
-
-        DPRINTF(IQ, "IQ: Waking any dependents on register %i.\n",
-                (int) dest_reg);
-
-        //Maybe abstract this part into a function.
-        //Go through the dependency chain, marking the registers as ready
-        //within the waiting instructions.
-        while (dependGraph[dest_reg].next) {
-
-            curr = dependGraph[dest_reg].next;
-
-            DPRINTF(IQ, "IQ: Waking up a dependent instruction, PC%#x.\n",
-                    curr->inst->readPC());
-
-            // Might want to give more information to the instruction
-            // so that it knows which of its source registers is ready.
-            // However that would mean that the dependency graph entries
-            // would need to hold the src_reg_idx.
-            curr->inst->markSrcRegReady();
-
-            addIfReady(curr->inst);
-
-            dependGraph[dest_reg].next = curr->next;
-
-            DependencyEntry::mem_alloc_counter--;
-
-            curr->inst = NULL;
-
-            delete curr;
-        }
-
-        // Reset the head node now that all of its dependents have been woken
-        // up.
-        dependGraph[dest_reg].next = NULL;
-        dependGraph[dest_reg].inst = NULL;
-
-        // Mark the scoreboard as having that register ready.
-        regScoreboard[dest_reg] = true;
+        assert(curr != NULL);
     }
+
+    // Now remove this instruction from the list.
+    prev->next = curr->next;
+
+    --mem_alloc_counter;
+
+    // Could push this off to the destructor of DependencyEntry
+    curr->inst = NULL;
+
+    delete curr;
 }
 
 template <class Impl>
@@ -896,60 +946,6 @@ InstructionQueue<Impl>::createDependency(DynInstPtr &new_inst)
         // Mark the scoreboard to say it's not yet ready.
         regScoreboard[dest_reg] = false;
     }
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::DependencyEntry::insert(DynInstPtr &new_inst)
-{
-    //Add this new, dependent instruction at the head of the dependency
-    //chain.
-
-    // First create the entry that will be added to the head of the
-    // dependency chain.
-    DependencyEntry *new_entry = new DependencyEntry;
-    new_entry->next = this->next;
-    new_entry->inst = new_inst;
-
-    // Then actually add it to the chain.
-    this->next = new_entry;
-
-    ++mem_alloc_counter;
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::DependencyEntry::remove(DynInstPtr &inst_to_remove)
-{
-    DependencyEntry *prev = this;
-    DependencyEntry *curr = this->next;
-
-    // Make sure curr isn't NULL.  Because this instruction is being
-    // removed from a dependency list, it must have been placed there at
-    // an earlier time.  The dependency chain should not be empty,
-    // unless the instruction dependent upon it is already ready.
-    if (curr == NULL) {
-        return;
-    }
-
-    // Find the instruction to remove within the dependency linked list.
-    while(curr->inst != inst_to_remove)
-    {
-        prev = curr;
-        curr = curr->next;
-
-        assert(curr != NULL);
-    }
-
-    // Now remove this instruction from the list.
-    prev->next = curr->next;
-
-    --mem_alloc_counter;
-
-    // Could push this off to the destructor of DependencyEntry
-    curr->inst = NULL;
-
-    delete curr;
 }
 
 template <class Impl>
@@ -1090,8 +1086,6 @@ InstructionQueue<Impl>::dumpLists()
 
     cprintf("Ready branch list size: %i\n", readyBranchInsts.size());
 
-//    cprintf("Ready memory list size: %i\n", readyMemInsts.size());
-
     cprintf("Ready misc list size: %i\n", readyMiscInsts.size());
 
     cprintf("Squashed list size: %i\n", squashedInsts.size());
@@ -1110,5 +1104,3 @@ InstructionQueue<Impl>::dumpLists()
     cprintf("\n");
 
 }
-
-#endif // __INST_QUEUE_IMPL_HH__

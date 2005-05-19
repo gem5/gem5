@@ -8,8 +8,8 @@
 #include "cpu/beta_cpu/comm.hh"
 
 #ifdef FULL_SYSTEM
-#include "kern/kernel_stats.hh"
 #include "arch/alpha/ev5.hh"
+#include "kern/kernel_stats.hh"
 
 using namespace EV5;
 #endif
@@ -18,8 +18,6 @@ using namespace EV5;
 // to see if I can make it depend on nothing...
 // Things that are in the ifdef FULL_SYSTEM are pretty dependent on the ISA,
 // and should go in the AlphaFullCPU.
-
-extern void debug_break();
 
 template <class Impl>
 class PhysRegFile
@@ -203,8 +201,11 @@ class PhysRegFile
     /** Miscellaneous register file. */
     MiscRegFile miscRegs;
 
-    Addr pc;            // program counter
-    Addr npc;            // next-cycle program counter
+    /** Program counter. */
+    Addr pc;
+
+    /** Next-cycle program counter. */
+    Addr npc;
 
 #ifdef FULL_SYSTEM
   private:
@@ -408,7 +409,6 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
-//        kernelStats.context(old, val);
         break;
 
       case ISA::IPR_DTB_PTE:
@@ -435,14 +435,9 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-//        kernelStats.swpipl(ipr[idx]);
         break;
 
       case ISA::IPR_DTB_CM:
-//        if (val & 0x18)
-//            kernelStats->mode(Kernel::user);
-//        else
-//            kernelStats->mode(Kernel::kernel);
 
       case ISA::IPR_ICM:
         // only write two mode bits - processor mode

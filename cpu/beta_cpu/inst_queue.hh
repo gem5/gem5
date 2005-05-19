@@ -1,5 +1,5 @@
-#ifndef __INST_QUEUE_HH__
-#define __INST_QUEUE_HH__
+#ifndef __CPU_BETA_CPU_INST_QUEUE_HH__
+#define __CPU_BETA_CPU_INST_QUEUE_HH__
 
 #include <list>
 #include <map>
@@ -103,19 +103,6 @@ class InstructionQueue
 
     void stopSquash();
 
-    /** Debugging function to dump all the list sizes, as well as print
-     *  out the list of nonspeculative instructions.  Should not be used
-     *  in any other capacity, but it has no harmful sideaffects.
-     */
-    void dumpLists();
-
-  private:
-    /** Debugging function to count how many entries are in the IQ.  It does
-     *  a linear walk through the instructions, so do not call this function
-     *  during normal execution.
-     */
-    int countInsts();
-
   private:
     /** Pointer to the CPU. */
     FullCPU *cpu;
@@ -156,9 +143,6 @@ class InstructionQueue
 
     /** List of ready branch instructions. */
     ReadyInstQueue readyBranchInsts;
-
-    /** List of ready memory instructions. */
-//    ReadyInstQueue readyMemInsts;
 
     /** List of ready miscellaneous instructions. */
     ReadyInstQueue readyMiscInsts;
@@ -281,9 +265,25 @@ class InstructionQueue
     bool addToDependents(DynInstPtr &new_inst);
     void insertDependency(DynInstPtr &new_inst);
     void createDependency(DynInstPtr &new_inst);
-    void dumpDependGraph();
 
     void addIfReady(DynInstPtr &inst);
+
+  private:
+    /** Debugging function to count how many entries are in the IQ.  It does
+     *  a linear walk through the instructions, so do not call this function
+     *  during normal execution.
+     */
+    int countInsts();
+
+    /** Debugging function to dump out the dependency graph.
+     */
+    void dumpDependGraph();
+
+    /** Debugging function to dump all the list sizes, as well as print
+     *  out the list of nonspeculative instructions.  Should not be used
+     *  in any other capacity, but it has no harmful sideaffects.
+     */
+    void dumpLists();
 
     Stats::Scalar<> iqInstsAdded;
     Stats::Scalar<> iqNonSpecInstsAdded;
@@ -305,4 +305,4 @@ class InstructionQueue
 
 };
 
-#endif //__INST_QUEUE_HH__
+#endif //__CPU_BETA_CPU_INST_QUEUE_HH__

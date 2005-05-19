@@ -35,8 +35,7 @@ SimpleFetch<Impl>::CacheCompletionEvent::description()
 
 template<class Impl>
 SimpleFetch<Impl>::SimpleFetch(Params &params)
-    : //cacheCompletionEvent(this),
-      icacheInterface(params.icacheInterface),
+    : icacheInterface(params.icacheInterface),
       branchPred(params),
       decodeToFetchDelay(params.decodeToFetchDelay),
       renameToFetchDelay(params.renameToFetchDelay),
@@ -254,7 +253,6 @@ SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
         // up this stage once the cache miss completes.
         if (result != MA_HIT && icacheInterface->doEvents()) {
             memReq->completionEvent = new CacheCompletionEvent(this);
-//            lastIcacheStall = curTick;
 
             // How does current model work as far as individual
             // stages scheduling/unscheduling?

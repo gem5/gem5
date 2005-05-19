@@ -3,8 +3,8 @@
 
 #include "arch/alpha/isa_traits.hh"
 
-#include "cpu/beta_cpu/cpu_policy.hh"
 #include "cpu/beta_cpu/alpha_params.hh"
+#include "cpu/beta_cpu/cpu_policy.hh"
 
 // Forward declarations.
 template <class Impl>

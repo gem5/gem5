@@ -1,5 +1,5 @@
-#ifndef __RAS_HH__
-#define __RAS_HH__
+#ifndef __CPU_BETA_CPU_RAS_HH__
+#define __CPU_BETA_CPU_RAS_HH__
 
 // For Addr type.
 #include "arch/alpha/isa_traits.hh"
@@ -23,7 +23,7 @@ class ReturnAddrStack
 
   private:
     inline void incrTos()
-    { tos = (tos + 1) % numEntries; }
+    { if (++tos == numEntries) tos = 0; }
 
     inline void decrTos()
     { tos = (tos == 0 ? numEntries - 1 : tos - 1); }
@@ -37,4 +37,4 @@ class ReturnAddrStack
     unsigned tos;
 };
 
-#endif // __RAS_HH__
+#endif // __CPU_BETA_CPU_RAS_HH__

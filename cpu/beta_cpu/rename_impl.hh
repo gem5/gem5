@@ -507,6 +507,7 @@ SimpleRename<Impl>::tick()
 
             DPRINTF(Rename, "Rename: Done squashing, going to running.\n");
             _status = Running;
+            rename();
         } else {
             doSquash();
         }
@@ -522,25 +523,6 @@ SimpleRename<Impl>::tick()
         removeFromHistory(fromCommit->commitInfo.doneSeqNum);
 #endif
     }
-
-    // Perhaps put this outside of this function, since this will
-    // happen regardless of whether or not the stage is blocked or
-    // squashing.
-    // Read from the time buffer any necessary data.
-    // Read registers that are freed, and add them to the freelist.
-    // This is unnecessary due to the history buffer (assuming the history
-    // buffer works properly).
-/*
-    while(!fromCommit->commitInfo.freeRegs.empty())
-    {
-        PhysRegIndex freed_reg = fromCommit->commitInfo.freeRegs.back();
-        DPRINTF(Rename, "Rename: Adding freed register %i to freelist.\n",
-                (int)freed_reg);
-        freeList->addReg(freed_reg);
-
-        fromCommit->commitInfo.freeRegs.pop_back();
-    }
-*/
 
 }
 

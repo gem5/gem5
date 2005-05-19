@@ -1,14 +1,8 @@
-// Todo: add in statistics, only get the MachInst and let decode actually
-// decode, think about SMT fetch,
-// fix up branch prediction stuff into one thing,
-// Figure out where to advance time buffer.  Add a way to get a
-// stage's current status.
+// Todo: SMT fetch,
+// Add a way to get a stage's current status.
 
 #ifndef __CPU_BETA_CPU_SIMPLE_FETCH_HH__
 #define __CPU_BETA_CPU_SIMPLE_FETCH_HH__
-
-//Will want to include: time buffer, structs, MemInterface, Event,
-//whatever class bzero uses, MemReqPtr
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
@@ -57,6 +51,19 @@ class SimpleFetch
     bool stalled;
 
   public:
+    class CacheCompletionEvent : public Event
+    {
+      private:
+        SimpleFetch *fetch;
+
+      public:
+        CacheCompletionEvent(SimpleFetch *_fetch);
+
+        virtual void process();
+        virtual const char *description();
+    };
+
+  public:
     /** SimpleFetch constructor. */
     SimpleFetch(Params &params);
 
@@ -68,20 +75,9 @@ class SimpleFetch
 
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
-    void tick();
-
-    void fetch();
-
     void processCacheCompletion();
 
-    // Figure out PC vs next PC and how it should be updated
-    void squash(const Addr &new_PC);
-
   private:
-    inline void doSquash(const Addr &new_PC);
-
-    void squashFromDecode(const Addr &new_PC, const InstSeqNum &seq_num);
-
     /**
      * Looks up in the branch predictor to see if the next PC should be
      * either next PC+=MachInst or a branch target.
@@ -101,6 +97,18 @@ class SimpleFetch
      */
     Fault fetchCacheLine(Addr fetch_PC);
 
+    inline void doSquash(const Addr &new_PC);
+
+    void squashFromDecode(const Addr &new_PC, const InstSeqNum &seq_num);
+
+  public:
+    // Figure out PC vs next PC and how it should be updated
+    void squash(const Addr &new_PC);
+
+    void tick();
+
+    void fetch();
+
     // Align an address (typically a PC) to the start of an I-cache block.
     // We fold in the PISA 64- to 32-bit conversion here as well.
     Addr icacheBlockAlignPC(Addr addr)
@@ -108,21 +116,6 @@ class SimpleFetch
         addr = ISA::realPCToFetchPC(addr);
         return (addr & ~(cacheBlkMask));
     }
-
-  public:
-    class CacheCompletionEvent : public Event
-    {
-      private:
-        SimpleFetch *fetch;
-
-      public:
-        CacheCompletionEvent(SimpleFetch *_fetch);
-
-        virtual void process();
-        virtual const char *description();
-    };
-
-//    CacheCompletionEvent cacheCompletionEvent;
 
   private:
     /** Pointer to the FullCPU. */

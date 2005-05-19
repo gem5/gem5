@@ -30,21 +30,6 @@ DefaultBP::DefaultBP(unsigned _localPredictorSize,
             instShiftAmt);
 }
 
-inline
-bool
-DefaultBP::getPrediction(uint8_t &count)
-{
-    // Get the MSB of the count
-    return (count >> (localCtrBits - 1));
-}
-
-inline
-unsigned
-DefaultBP::getLocalIndex(Addr &branch_addr)
-{
-    return (branch_addr >> instShiftAmt) & indexMask;
-}
-
 bool
 DefaultBP::lookup(Addr &branch_addr)
 {
@@ -91,15 +76,26 @@ DefaultBP::update(Addr &branch_addr, bool taken)
 
     assert(local_predictor_idx < localPredictorSize);
 
-    // Increment or decrement twice to undo speculative update, then
-    // properly update
     if (taken) {
         DPRINTF(Fetch, "Branch predictor: Branch updated as taken.\n");
         localCtrs[local_predictor_idx].increment();
-//        localCtrs[local_predictor_idx].increment();
     } else {
         DPRINTF(Fetch, "Branch predictor: Branch updated as not taken.\n");
         localCtrs[local_predictor_idx].decrement();
-//        localCtrs[local_predictor_idx].decrement();
     }
+}
+
+inline
+bool
+DefaultBP::getPrediction(uint8_t &count)
+{
+    // Get the MSB of the count
+    return (count >> (localCtrBits - 1));
+}
+
+inline
+unsigned
+DefaultBP::getLocalIndex(Addr &branch_addr)
+{
+    return (branch_addr >> instShiftAmt) & indexMask;
 }

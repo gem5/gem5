@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
+
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 
@@ -112,11 +113,6 @@ struct TimeBufStruct {
         uint64_t mispredPC;
         uint64_t nextPC;
 
-        // Think of better names here.
-        // Will need to be a variety of sizes...
-        // Maybe make it a vector, that way only need one object.
-//        std::vector<PhysRegIndex> freeRegs;
-
         bool robSquashing;
 
         // Represents the instruction that has either been retired or
@@ -124,9 +120,8 @@ struct TimeBufStruct {
         // retired or squashed sequence number.
         InstSeqNum doneSeqNum;
 
-        // Extra bits of information so that the LDSTQ only updates when it
+        // Extra bit of information so that the LDSTQ only updates when it
         // needs to.
-//        bool commitIsStore;
         bool commitIsLoad;
 
         // Communication specifically to the IQ to tell the IQ that it can

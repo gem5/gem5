@@ -36,18 +36,15 @@ class TwobitBPredUnit
 
     bool predict(DynInstPtr &inst, Addr &PC);
 
-    void squash(const InstSeqNum &squashed_sn, const Addr &corr_target,
-                bool actually_taken);
+    void update(const InstSeqNum &done_sn);
 
     void squash(const InstSeqNum &squashed_sn);
 
-    void update(const InstSeqNum &done_sn);
+    void squash(const InstSeqNum &squashed_sn, const Addr &corr_target,
+                bool actually_taken);
 
     bool BPLookup(Addr &inst_PC)
     { return BP.lookup(inst_PC); }
-
-    unsigned BPReadGlobalHist()
-    { return 0; }
 
     bool BTBValid(Addr &inst_PC)
     { return BTB.valid(inst_PC); }
@@ -56,7 +53,7 @@ class TwobitBPredUnit
     { return BTB.lookup(inst_PC); }
 
     // Will want to include global history.
-    void BPUpdate(Addr &inst_PC, unsigned global_history, bool taken)
+    void BPUpdate(Addr &inst_PC, bool taken)
     { BP.update(inst_PC, taken); }
 
     void BTBUpdate(Addr &inst_PC, Addr &target_PC)

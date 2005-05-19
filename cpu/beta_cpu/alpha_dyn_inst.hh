@@ -1,5 +1,3 @@
-//Todo:
-
 #ifndef __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
 #define __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
 
@@ -123,6 +121,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     {
         return this->cpu->readFloatRegInt(_srcRegIdx[idx]);
     }
+
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */

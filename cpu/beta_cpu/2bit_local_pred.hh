@@ -31,8 +31,12 @@ class DefaultBP
 
   private:
 
+    /** Returns the taken/not taken prediction given the value of the
+     *  counter.
+     */
     inline bool getPrediction(uint8_t &count);
 
+    /** Calculates the local index based on the PC. */
     inline unsigned getLocalIndex(Addr &PC);
 
     /** Array of counters that make up the local predictor. */

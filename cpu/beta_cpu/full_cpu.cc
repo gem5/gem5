@@ -1,6 +1,3 @@
-#ifndef __SIMPLE_FULL_CPU_CC__
-#define __SIMPLE_FULL_CPU_CC__
-
 #ifdef FULL_SYSTEM
 #include "sim/system.hh"
 #else
@@ -528,5 +525,3 @@ FullBetaCPU<Impl>::wakeDependents(DynInstPtr &inst)
 
 // Forward declaration of FullBetaCPU.
 template class FullBetaCPU<AlphaSimpleImpl>;
-
-#endif // __SIMPLE_FULL_CPU_HH__

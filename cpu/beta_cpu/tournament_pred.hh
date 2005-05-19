@@ -37,7 +37,7 @@ class TournamentBP
      */
     void update(Addr &branch_addr, unsigned global_history, bool taken);
 
-    inline unsigned readGlobalHist() { return global_history; }
+    inline unsigned readGlobalHist() { return globalHistory; }
 
   private:
 
@@ -50,56 +50,56 @@ class TournamentBP
     inline void updateHistoriesNotTaken(unsigned local_history_idx);
 
     /** Local counters. */
-    SatCounter *local_ctrs;
+    SatCounter *localCtrs;
 
     /** Size of the local predictor. */
-    unsigned local_predictor_size;
+    unsigned localPredictorSize;
 
     /** Number of bits of the local predictor's counters. */
-    unsigned local_ctr_bits;
+    unsigned localCtrBits;
 
     /** Array of local history table entries. */
-    unsigned *local_history_table;
+    unsigned *localHistoryTable;
 
     /** Size of the local history table. */
-    unsigned local_history_table_size;
+    unsigned localHistoryTableSize;
 
     /** Number of bits for each entry of the local history table.
      *  @todo Doesn't this come from the size of the local predictor?
      */
-    unsigned local_history_bits;
+    unsigned localHistoryBits;
 
     /** Mask to get the proper local history. */
     unsigned localHistoryMask;
 
 
     /** Array of counters that make up the global predictor. */
-    SatCounter *global_ctrs;
+    SatCounter *globalCtrs;
 
     /** Size of the global predictor. */
-    unsigned global_predictor_size;
+    unsigned globalPredictorSize;
 
     /** Number of bits of the global predictor's counters. */
-    unsigned global_ctr_bits;
+    unsigned globalCtrBits;
 
     /** Global history register. */
-    unsigned global_history;
+    unsigned globalHistory;
 
     /** Number of bits for the global history. */
-    unsigned global_history_bits;
+    unsigned globalHistoryBits;
 
     /** Mask to get the proper global history. */
     unsigned globalHistoryMask;
 
 
     /** Array of counters that make up the choice predictor. */
-    SatCounter *choice_ctrs;
+    SatCounter *choiceCtrs;
 
     /** Size of the choice predictor (identical to the global predictor). */
-    unsigned choice_predictor_size;
+    unsigned choicePredictorSize;
 
     /** Number of bits of the choice predictor's counters. */
-    unsigned choice_ctr_bits;
+    unsigned choiceCtrBits;
 
     /** Number of bits to shift the instruction over to get rid of the word
      *  offset.

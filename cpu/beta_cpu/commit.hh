@@ -72,10 +72,6 @@ class SimpleCommit
 
     void commit();
 
-    uint64_t readCommitPC();
-
-    void setSquashing() { _status = ROBSquashing; }
-
   private:
 
     void commitInsts();
@@ -86,6 +82,12 @@ class SimpleCommit
 
     void markCompletedInsts();
 
+  public:
+    uint64_t readCommitPC();
+
+    void setSquashing() { _status = ROBSquashing; }
+
+  private:
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
 
@@ -112,9 +114,6 @@ class SimpleCommit
 
     /** Pointer to FullCPU. */
     FullCPU *cpu;
-
-    //Store buffer interface?  Will need to move committed stores to the
-    //store buffer
 
     /** Memory interface.  Used for d-cache accesses. */
     MemInterface *dcacheInterface;

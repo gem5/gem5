@@ -1,13 +1,13 @@
-#ifndef __FREE_LIST_HH__
-#define __FREE_LIST_HH__
+#ifndef __CPU_BETA_CPU_FREE_LIST_HH__
+#define __CPU_BETA_CPU_FREE_LIST_HH__
 
 #include <iostream>
 #include <queue>
 
 #include "arch/alpha/isa_traits.hh"
-#include "cpu/beta_cpu/comm.hh"
-#include "base/traceflags.hh"
 #include "base/trace.hh"
+#include "base/traceflags.hh"
+#include "cpu/beta_cpu/comm.hh"
 
 /**
  * FreeList class that simply holds the list of free integer and floating
@@ -25,8 +25,6 @@
  */
 class SimpleFreeList
 {
-  public:
-
   private:
     /** The list of free integer registers. */
     std::queue<PhysRegIndex> freeIntRegs;
@@ -60,15 +58,15 @@ class SimpleFreeList
                    unsigned _numLogicalFloatRegs,
                    unsigned _numPhysicalFloatRegs);
 
-    PhysRegIndex getIntReg();
+    inline PhysRegIndex getIntReg();
 
-    PhysRegIndex getFloatReg();
+    inline PhysRegIndex getFloatReg();
 
-    void addReg(PhysRegIndex freed_reg);
+    inline void addReg(PhysRegIndex freed_reg);
 
-    void addIntReg(PhysRegIndex freed_reg);
+    inline void addIntReg(PhysRegIndex freed_reg);
 
-    void addFloatReg(PhysRegIndex freed_reg);
+    inline void addFloatReg(PhysRegIndex freed_reg);
 
     bool hasFreeIntRegs()
     { return !freeIntRegs.empty(); }
@@ -166,4 +164,4 @@ SimpleFreeList::addFloatReg(PhysRegIndex freed_reg)
     freeFloatRegs.push(freed_reg);
 }
 
-#endif // __FREE_LIST_HH__
+#endif // __CPU_BETA_CPU_FREE_LIST_HH__

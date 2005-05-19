@@ -130,7 +130,6 @@ void
 AlphaDynInst<Impl>::syscall()
 {
     this->cpu->syscall(this->threadNumber);
-//    this->cpu->syscall();
 }
 #endif
 

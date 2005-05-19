@@ -103,6 +103,9 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
         this->regFile.setFpcr(val);
     }
 
+    // Most of the full system code and syscall emulation is not yet
+    // implemented.  These functions do show what the final interface will
+    // look like.
 #ifdef FULL_SYSTEM
     uint64_t *getIpr();
     uint64_t readIpr(int idx, Fault &fault);

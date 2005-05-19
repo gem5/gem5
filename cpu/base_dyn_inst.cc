@@ -63,11 +63,6 @@ typedef m5::hash_map<const BaseDynInst *, const BaseDynInst *, MyHashFunc> my_ha
 my_hash_t thishash;
 #endif
 
-/** This may need to be specific to an implementation. */
-//int BaseDynInst<Impl>::instcount = 0;
-
-//int break_inst = -1;
-
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
                                Addr pred_PC, InstSeqNum seq_num,
@@ -129,31 +124,11 @@ BaseDynInst<Impl>::initVars()
 template <class Impl>
 BaseDynInst<Impl>::~BaseDynInst()
 {
-/*
-    if (specMemWrite) {
-        // Remove effects of this instruction from speculative memory
-        xc->spec_mem->erase(effAddr);
-    }
-*/
     --instcount;
     DPRINTF(FullCPU, "DynInst: Instruction destroyed.  Instcount=%i\n",
             instcount);
 }
-/*
-template <class Impl>
-FunctionalMemory *
-BaseDynInst<Impl>::getMemory(void)
-{
-    return xc->mem;
-}
 
-template <class Impl>
-IntReg *
-BaseDynInst<Impl>::getIntegerRegs(void)
-{
-    return (spec_mode ? xc->specIntRegFile : xc->regs.intRegFile);
-}
-*/
 template <class Impl>
 void
 BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
@@ -369,8 +344,6 @@ BaseDynInst<Impl>::eaSrcsReady()
     // EA calc depends on.  (i.e. src reg 0 is the source of the data to be
     // stored)
 
-//    StaticInstPtr<ISA> eaInst = staticInst->eaCompInst();
-
     for (int i = 1; i < numSrcRegs(); ++i)
     {
         if (!_readySrcRegIdx[i])
@@ -380,7 +353,7 @@ BaseDynInst<Impl>::eaSrcsReady()
     return true;
 }
 
-// Forward declaration...
+// Forward declaration
 template class BaseDynInst<AlphaSimpleImpl>;
 
 template <>

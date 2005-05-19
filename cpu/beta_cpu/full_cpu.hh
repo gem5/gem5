@@ -12,13 +12,12 @@
 #include <list>
 #include <vector>
 
-#include "cpu/beta_cpu/comm.hh"
-
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/base_cpu.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/beta_cpu/comm.hh"
 #include "cpu/beta_cpu/cpu_policy.hh"
+#include "cpu/exec_context.hh"
 #include "sim/process.hh"
 
 #ifdef FULL_SYSTEM
@@ -96,14 +95,14 @@ class FullBetaCPU : public BaseFullCPU
     }
 
   public:
-    void tick();
-
     FullBetaCPU(Params &params);
     ~FullBetaCPU();
 
-    void init();
-
     void fullCPURegStats();
+
+    void tick();
+
+    void init();
 
     void activateContext(int thread_num, int delay);
     void suspendContext(int thread_num);

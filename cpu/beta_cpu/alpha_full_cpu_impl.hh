@@ -71,8 +71,8 @@ AlphaFullCPU<Impl>::syscall(short thread_num)
     // Copy over all important state to xc once all the unrolling is done.
     copyToXC();
 
+    // This is hardcoded to thread 0 while the CPU is only single threaded.
     this->thread[0]->syscall();
-//    this->thread[thread_num]->syscall();
 
     // Copy over all important state back to CPU.
     copyFromXC();
@@ -355,15 +355,6 @@ AlphaFullCPU<Impl>::swapPALShadow(bool use_shadow)
 
     // Will have to lookup in rename map to get physical registers, then
     // swap.
-/*
-    for (int i = 0; i < AlphaISA::NumIntRegs; i++) {
-        if (reg_redir[i]) {
-            AlphaISA::IntReg temp = regs->intRegFile[i];
-            regs->intRegFile[i] = regs->palregs[i];
-            regs->palregs[i] = temp;
-        }
-    }
-*/
 }
 
 #endif // FULL_SYSTEM

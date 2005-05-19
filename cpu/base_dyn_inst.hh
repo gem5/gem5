@@ -78,6 +78,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
         MaxInstDestRegs = ISA::MaxInstDestRegs,	//< Max dest regs
     };
 
+    /** The static inst used by this dyn inst. */
     StaticInstPtr<ISA> staticInst;
 
     ////////////////////////////////////////////
@@ -99,7 +100,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Fault copySrcTranslate(Addr src);
     Fault copy(Addr dest);
 
-    // Probably should be private...
+    /** @todo: Consider making this private. */
   public:
     /** Is this instruction valid. */
     bool valid;
@@ -219,6 +220,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     ~BaseDynInst();
 
   private:
+    /** Function to initialize variables in the constructors. */
     void initVars();
 
   public:
@@ -244,9 +246,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     bool doneTargCalc() { return false; }
 
-    /** Returns the calculated target of the branch. */
-//    Addr readCalcTarg() { return nextPC; }
-
+    /** Returns the next PC.  This could be the speculative next PC if it is
+     *  called prior to the actual branch target being calculated.
+     */
     Addr readNextPC() { return nextPC; }
 
     /** Set the predicted target of this current instruction. */
@@ -294,7 +296,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the branch target address. */
     Addr branchTarget() const { return staticInst->branchTarget(PC); }
 
+    /** Number of source registers. */
     int8_t numSrcRegs()	 const { return staticInst->numSrcRegs(); }
+
+    /** Number of destination registers. */
     int8_t numDestRegs() const { return staticInst->numDestRegs(); }
 
     // the following are used to track physical register usage
@@ -314,8 +319,13 @@ class BaseDynInst : public FastAlloc, public RefCounted
         return staticInst->srcRegIdx(i);
     }
 
+    /** Returns the result of an integer instruction. */
     uint64_t readIntResult() { return instResult.integer; }
+
+    /** Returns the result of a floating point instruction. */
     float readFloatResult() { return instResult.fp; }
+
+    /** Returns the result of a floating point (double) instruction. */
     double readDoubleResult() { return instResult.dbl; }
 
     //Push to .cc file.
@@ -328,6 +338,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
         }
     }
 
+    /** Marks a specific register as ready.
+     *  @todo: Move this to .cc file.
+     */
     void markSrcRegReady(RegIndex src_idx)
     {
         ++readyRegs;
@@ -339,13 +352,16 @@ class BaseDynInst : public FastAlloc, public RefCounted
         }
     }
 
+    /** Returns if a source register is ready. */
     bool isReadySrcRegIdx(int idx) const
     {
         return this->_readySrcRegIdx[idx];
     }
 
+    /** Sets this instruction as completed. */
     void setCompleted() { completed = true; }
 
+    /** Returns whethe or not this instruction is completed. */
     bool isCompleted() const { return completed; }
 
     /** Sets this instruction as ready to issue. */
@@ -393,20 +409,39 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Set the next PC of this instruction (its actual target). */
     void setNextPC(uint64_t val) { nextPC = val; }
 
+    /** Returns the exec context.
+     *  @todo: Remove this once the ExecContext is no longer used.
+     */
     ExecContext *xcBase() { return xc; }
 
   private:
+    /** Instruction effective address.
+     *  @todo: Consider if this is necessary or not.
+     */
     Addr instEffAddr;
+    /** Whether or not the effective address calculation is completed.
+     *  @todo: Consider if this is necessary or not.
+     */
     bool eaCalcDone;
 
   public:
+    /** Sets the effective address. */
     void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
+
+    /** Returns the effective address. */
     const Addr &getEA() const { return instEffAddr; }
+
+    /** Returns whether or not the eff. addr. calculation has been completed. */
     bool doneEACalc() { return eaCalcDone; }
+
+    /** Returns whether or not the eff. addr. source registers are ready. */
     bool eaSrcsReady();
 
   public:
+    /** Load queue index. */
     int16_t lqIdx;
+
+    /** Store queue index. */
     int16_t sqIdx;
 };
 
@@ -439,8 +474,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 
     if (fault == No_Fault) {
         fault = cpu->read(req, data, lqIdx);
-    }
-    else {
+    } else {
         // Return a fixed value to keep simulation deterministic even
         // along misspeculated paths.
         data = (T)-1;
@@ -463,9 +497,6 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setAddr(addr);
         traceData->setData(data);
     }
-
-//    storeSize = sizeof(T);
-//    storeData = data;
 
     MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
 

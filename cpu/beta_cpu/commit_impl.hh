@@ -1,10 +1,3 @@
-// @todo: Bug when something reaches execute, and mispredicts, but is never
-// put into the ROB because the ROB is full.  Need rename stage to predict
-// the free ROB entries better.
-
-#ifndef __COMMIT_IMPL_HH__
-#define __COMMIT_IMPL_HH__
-
 #include "base/timebuf.hh"
 #include "cpu/beta_cpu/commit.hh"
 #include "cpu/exetrace.hh"
@@ -274,13 +267,6 @@ SimpleCommit<Impl>::commitInsts()
         // time.  However, we need to avoid updating any other state
         // incorrectly if it's already been squashed.
         if (head_inst->isSquashed()) {
-            // Hack to avoid the instruction being retired (and deleted) if
-            // it hasn't been through the IEW stage yet.
-/*
-            if (!head_inst->isExecuted()) {
-                break;
-            }
-*/
 
             DPRINTF(Commit, "Commit: Retiring squashed instruction from "
                     "ROB.\n");
@@ -418,21 +404,6 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         ++commitCommittedBranches;
     }
 
-#if 0
-    // Explicit communication back to the LDSTQ that a load has been committed
-    // and can be removed from the LDSTQ.  Stores don't need this because
-    // the LDSTQ will already have been told that a store has reached the head
-    // of the ROB.  Consider including communication if it's a store as well
-    // to keep things orthagonal.
-    if (head_inst->isMemRef()) {
-        ++commitCommittedMemRefs;
-        if (head_inst->isLoad()) {
-            toIEW->commitInfo.commitIsLoad = true;
-            ++commitCommittedLoads;
-        }
-    }
-#endif
-
     // Now that the instruction is going to be committed, finalize its
     // trace data.
     if (head_inst->traceData) {
@@ -501,5 +472,3 @@ SimpleCommit<Impl>::readCommitPC()
 {
     return rob->readHeadPC();
 }
-
-#endif // __COMMIT_IMPL_HH__

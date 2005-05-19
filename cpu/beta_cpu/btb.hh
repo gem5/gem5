@@ -1,5 +1,5 @@
-#ifndef __BTB_HH__
-#define __BTB_HH__
+#ifndef __CPU_BETA_CPU_BTB_HH__
+#define __CPU_BETA_CPU_BTB_HH__
 
 // For Addr type.
 #include "arch/alpha/isa_traits.hh"
@@ -49,4 +49,4 @@ class DefaultBTB
     unsigned tagShiftAmt;
 };
 
-#endif // __BTB_HH__
+#endif // __CPU_BETA_CPU_BTB_HH__

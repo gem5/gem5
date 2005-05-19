@@ -64,9 +64,6 @@ class SimpleDecode
 
     void decode();
 
-    // Might want to make squash a friend function.
-    void squash();
-
   private:
     inline bool fetchInstsValid();
 
@@ -76,8 +73,11 @@ class SimpleDecode
 
     void squash(DynInstPtr &inst);
 
-    void dumpFetchQueue();
+  public:
+    // Might want to make squash a friend function.
+    void squash();
 
+  private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */
     FullCPU *cpu;
@@ -113,7 +113,6 @@ class SimpleDecode
     /** Skid buffer between fetch and decode. */
     std::queue<FetchStruct> skidBuffer;
 
-  private:
     //Consider making these unsigned to avoid any confusion.
     /** Rename to decode delay, in ticks. */
     unsigned renameToDecodeDelay;
