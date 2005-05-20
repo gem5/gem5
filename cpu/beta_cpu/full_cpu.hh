@@ -40,7 +40,7 @@ class BaseFullCPU : public BaseCPU
     BaseFullCPU(Params &params);
 #endif // FULL_SYSTEM
 
-  private:
+  protected:
     int cpu_id;
 };
 

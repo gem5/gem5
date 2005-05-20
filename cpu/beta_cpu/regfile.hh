@@ -428,11 +428,6 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
         break;
 
       case ISA::IPR_IPLR:
-#ifdef DEBUG
-        if (break_ipl != -1 && break_ipl == (val & 0x1f))
-            debug_break();
-#endif
-
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
         break;
