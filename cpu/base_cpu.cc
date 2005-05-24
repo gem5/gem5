@@ -51,7 +51,6 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
-extern void debug_break();
 #ifdef FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
     : SimObject(p->name), cycleTime(p->cycleTime), checkInterrupts(true),
@@ -63,8 +62,6 @@ BaseCPU::BaseCPU(Params *p)
 #endif
 {
     DPRINTF(FullCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
-
-    debug_break();
 
     // add self to global list of CPUs
     cpuList.push_back(this);
