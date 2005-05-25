@@ -33,7 +33,11 @@
 #include "base/cprintf.hh"
 
 //
-// This implements a cprintf based panic
+// This implements a cprintf based panic() function.  panic() should
+// be called when something happens that should never ever happen
+// regardless of what the user does (i.e., an acutal m5 bug).  panic()
+// calls abort which can dump core or enter the debugger.
+//
 //
 void __panic(const std::string&, cp::ArgList &, const char*, const char*, int)
     __attribute__((noreturn));
@@ -44,7 +48,12 @@ void __panic(const std::string&, cp::ArgList &, const char*, const char*, int)
     __panic__(args, cp::ArgListNull())
 
 //
-// This implements a cprintf based fatal
+// This implements a cprintf based fatal() function.  fatal() should
+// be called when the simulation cannot continue due to some condition
+// that is the user's fault (bad configuration, invalid arguments,
+// etc.) and not a simulator bug.  fatal() calls exit(1), i.e., a
+// "normal" exit with an error code, as opposed to abort() like
+// panic() does.
 //
 void __fatal(const std::string&, cp::ArgList &, const char*, const char*, int)
     __attribute__((noreturn));
