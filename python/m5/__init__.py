@@ -5,9 +5,12 @@ def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
-# the mpy import code is added to the global import meta_path as a
-# side effect of this import
-from mpy_importer import AddToPath, LoadMpyFile
+# Add given directory to system module search path, if it is not
+# already there.
+def AddToPath(path):
+    path = os.path.realpath(path)
+    if os.path.isdir(path) and path not in sys.path:
+        sys.path.append(path)
 
 # find the m5 compile options: must be specified as a dict in
 # __main__.m5_build_env.
@@ -26,12 +29,7 @@ env.update(os.environ)
 
 # import the main m5 config code
 from config import *
-config.add_param_types(config)
 
 # import the built-in object definitions
 from objects import *
-config.add_param_types(objects)
-
-cpp_classes = config.MetaSimObject.cpp_classes
-cpp_classes.sort()
 

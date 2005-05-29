@@ -1,4 +1,0 @@
-simobj SimpleDisk(SimObject):
-    type = 'SimpleDisk'
-    disk = Param.DiskImage("Disk Image")
-    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")

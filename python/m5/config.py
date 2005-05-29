@@ -1,4 +1,4 @@
-# Copyright (c) 2004 The Regents of The University of Michigan
+# Copyright (c) 2004-2005 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,8 @@
 from __future__ import generators
 import os, re, sys, types, inspect
 
-from m5 import panic, env
+import m5
+panic = m5.panic
 from convert import *
 from multidict import multidict
 
@@ -50,7 +51,7 @@ class Singleton(type):
 # M5 Python Configuration Utility
 #
 # The basic idea is to write simple Python programs that build Python
-# objects corresponding to M5 SimObjects for the deisred simulation
+# objects corresponding to M5 SimObjects for the desired simulation
 # configuration.  For now, the Python emits a .ini file that can be
 # parsed by M5.  In the future, some tighter integration between M5
 # and the Python interpreter may allow bypassing the .ini file.
@@ -65,12 +66,9 @@ class Singleton(type):
 # object, either using keyword assignment in the constructor or in
 # separate assignment statements.  For example:
 #
-# cache = BaseCache('my_cache', root, size='64KB')
+# cache = BaseCache(size='64KB')
 # cache.hit_latency = 3
 # cache.assoc = 8
-#
-# (The first two constructor arguments specify the name of the created
-# cache and its parent node in the hierarchy.)
 #
 # The magic lies in the mapping of the Python attributes for SimObject
 # classes to the actual SimObject parameter specifications.  This
@@ -81,13 +79,6 @@ class Singleton(type):
 # parameter requires an integer, respectively.  This magic is done
 # primarily by overriding the special __setattr__ method that controls
 # assignment to object attributes.
-#
-# The Python module provides another class, ConfigNode, which is a
-# superclass of SimObject.  ConfigNode implements the parent/child
-# relationship for building the configuration hierarchy tree.
-# Concrete instances of ConfigNode can be used to group objects in the
-# hierarchy, but do not correspond to SimObjects themselves (like a
-# .ini section with "children=" but no "type=".
 #
 # Once a set of Python objects have been instantiated in a hierarchy,
 # calling 'instantiate(obj)' (where obj is the root of the hierarchy)
@@ -140,162 +131,21 @@ class Singleton(type):
 #
 #####################################################################
 
-class Proxy(object):
-    def __init__(self, path):
-        self._object = None
-        if path == 'any':
-            self._path = None
-        else:
-            # path is a list of (attr,index) tuples
-            self._path = [(path,None)]
-        self._index = None
-        self._multiplier = None
-
-    def __getattr__(self, attr):
-        # python uses __bases__ internally for inheritance
-        if attr == '__bases__':
-            return super(Proxy, self).__getattr__(self, attr)
-        if (self._path == None):
-            panic("Can't add attributes to 'any' proxy")
-        self._path.append((attr,None))
-        return self
-
-    def __setattr__(self, attr, value):
-        if not attr.startswith('_'):
-            raise AttributeError, 'cannot set attribute %s' % attr
-        super(Proxy, self).__setattr__(attr, value)
-
-    # support indexing on proxies (e.g., parent.cpu[0])
-    def __getitem__(self, key):
-        if not isinstance(key, int):
-            raise TypeError, "Proxy object requires integer index"
-        if self._path == None:
-            raise IndexError, "Index applied to 'any' proxy"
-        # replace index portion of last path element with new index
-        self._path[-1] = (self._path[-1][0], key)
-        return self
-
-    # support multiplying proxies by constants
-    def __mul__(self, other):
-        if not isinstance(other, (int, float)):
-            raise TypeError, "Proxy multiplier must be integer"
-        if self._multiplier == None:
-            self._multiplier = other
-        else:
-            # support chained multipliers
-            self._multiplier *= other
-        return self
-
-    __rmul__ = __mul__
-
-    def _mulcheck(self, result):
-        if self._multiplier == None:
-            return result
-        if not isinstance(result, int):
-            # this was an error, but for now we'll assume if it's not
-            # an int it must be a Frequency (yuk)
-            result = Frequency._convert(result)
-        # assuming we're dealing with a frequency here, turn it into
-        # a string and give it a 't' suffix so the Frequency._convert
-        # doesn't choke on it later.
-        return ("%d" % int(round((result * self._multiplier)))) + 't'
-
-    def unproxy(self, base, ptype):
-        obj = base
-        done = False
-        while not done:
-            if obj is None:
-                raise AttributeError, \
-                      'Parent of %s type %s not found at path %s' \
-                      % (base.name, ptype, self._path)
-
-            result, done = obj.find(ptype, self._path)
-            obj = obj.parent
-
-        if isinstance(result, Proxy):
-            result = result.unproxy(obj, ptype)
-
-        return self._mulcheck(result)
-
-    def getindex(obj, index):
-        if index == None:
-            return obj
-        try:
-            obj = obj[index]
-        except TypeError:
-            if index != 0:
-                raise
-            # if index is 0 and item is not subscriptable, just
-            # use item itself (so cpu[0] works on uniprocessors)
-        return obj
-    getindex = staticmethod(getindex)
-
-class ProxyFactory(object):
-    def __getattr__(self, attr):
-        return Proxy(attr)
-
-# global object for handling parent.foo proxies
-parent = ProxyFactory()
-
-def isSubClass(value, cls):
-    try:
-        return issubclass(value, cls)
-    except:
-        return False
-
-def isConfigNode(value):
-    try:
-        return issubclass(value, ConfigNode)
-    except:
-        return False
-
 def isSimObject(value):
-    try:
-        return issubclass(value, SimObject)
-    except:
-        return False
+    return isinstance(value, SimObject)
 
 def isSimObjSequence(value):
     if not isinstance(value, (list, tuple)):
         return False
 
     for val in value:
-        if not isNullPointer(val) and not isConfigNode(val):
+        if not isNullPointer(val) and not isSimObject(val):
             return False
 
     return True
 
-def isParamContext(value):
-    try:
-        return issubclass(value, ParamContext)
-    except:
-        return False
-
-class_decorator = 'M5M5_SIMOBJECT_'
-expr_decorator = 'M5M5_EXPRESSION_'
-dot_decorator = '_M5M5_DOT_'
-
-# 'Global' map of legitimate types for SimObject parameters.
-param_types = {}
-
-# Dummy base class to identify types that are legitimate for SimObject
-# parameters.
-class ParamType(object):
-    pass
-
-# Add types defined in given context (dict or module) that are derived
-# from ParamType to param_types map.
-def add_param_types(ctx):
-    if isinstance(ctx, types.DictType):
-        source_dict = ctx
-    elif isinstance(ctx, types.ModuleType):
-        source_dict = ctx.__dict__
-    else:
-        raise TypeError, \
-              "m5.config.add_param_types requires dict or module as arg"
-    for key,val in source_dict.iteritems():
-        if isinstance(val, type) and issubclass(val, ParamType):
-            param_types[key] = val
+def isNullPointer(value):
+    return isinstance(value, NullSimObject)
 
 # The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
@@ -303,9 +153,10 @@ def add_param_types(ctx):
 # inherited class behavior (just like a class controls how instances
 # of that class are instantiated, and provides inherited instance
 # behavior).
-class MetaConfigNode(type):
+class MetaSimObject(type):
     # Attributes that can be set only at initialization time
-    init_keywords = {}
+    init_keywords = { 'abstract' : types.BooleanType,
+                      'type' : types.StringType }
     # Attributes that can be set any time
     keywords = { 'check' : types.FunctionType,
                  'children' : types.ListType }
@@ -325,27 +176,32 @@ class MetaConfigNode(type):
                 cls_dict[key] = val
                 del dict[key]
         cls_dict['_init_dict'] = dict
-        return super(MetaConfigNode, mcls).__new__(mcls, name, bases, cls_dict)
+        return super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
 
     # initialization
     def __init__(cls, name, bases, dict):
-        super(MetaConfigNode, cls).__init__(name, bases, dict)
+        super(MetaSimObject, cls).__init__(name, bases, dict)
 
         # initialize required attributes
         cls._params = multidict()
         cls._values = multidict()
-        cls._param_types = {}
-        cls._bases = [c for c in cls.__mro__ if isConfigNode(c)]
         cls._anon_subclass_counter = 0
 
-        # We don't support multiple inheritence.  If you want to, you
+        # We don't support multiple inheritance.  If you want to, you
         # must fix multidict to deal with it properly.
-        cnbase = [ base for base in bases if isConfigNode(base) ]
-        if len(cnbase) == 1:
+        if len(bases) > 1:
+            raise TypeError, "SimObjects do not support multiple inheritance"
+
+        base = bases[0]
+
+        if isinstance(base, MetaSimObject):
+            cls._params.parent = base._params
+            cls._values.parent = base._values
+
             # If your parent has a value in it that's a config node, clone
             # it.  Do this now so if we update any of the values'
             # attributes we are updating the clone and not the original.
-            for key,val in cnbase[0]._values.iteritems():
+            for key,val in base._values.iteritems():
 
                 # don't clone if (1) we're about to overwrite it with
                 # a local setting or (2) we've already cloned a copy
@@ -353,50 +209,23 @@ class MetaConfigNode(type):
                 if cls._init_dict.has_key(key) or cls._values.has_key(key):
                     continue
 
-                if isConfigNode(val):
+                if isSimObject(val):
                     cls._values[key] = val()
                 elif isSimObjSequence(val) and len(val):
                     cls._values[key] = [ v() for v in val ]
 
-            cls._params.parent = cnbase[0]._params
-            cls._values.parent = cnbase[0]._values
-
-        elif len(cnbase) > 1:
-            panic("""\
-The config hierarchy only supports single inheritence of SimObject
-classes. You're trying to derive from:
-%s""" % str(cnbase))
-
-        # process param types from _init_dict, as these may be needed
-        # by param descriptions also in _init_dict
-        for key,val in cls._init_dict.items():
-            if isinstance(val, type) and issubclass(val, ParamType):
-                cls._param_types[key] = val
-                if not issubclass(val, ConfigNode):
-                    del cls._init_dict[key]
-
         # now process remaining _init_dict items
         for key,val in cls._init_dict.items():
+            if isinstance(val, (types.FunctionType, types.TypeType)):
+                type.__setattr__(cls, key, val)
+
             # param descriptions
-            if isinstance(val, ParamBase):
+            elif isinstance(val, ParamDesc):
                 cls._new_param(key, val)
 
             # init-time-only keywords
             elif cls.init_keywords.has_key(key):
                 cls._set_keyword(key, val, cls.init_keywords[key])
-
-            # See description of decorators in the importer.py file.
-            # We just strip off the expr_decorator now since we don't
-            # need from this point on.
-            elif key.startswith(expr_decorator):
-                key = key[len(expr_decorator):]
-                # because it had dots into a list so that we can find the
-                # proper variable to modify.
-                key = key.split(dot_decorator)
-                c = cls
-                for item in key[:-1]:
-                    c = getattr(c, item)
-                setattr(c, key[-1], val)
 
             # default: use normal path (ends up in __setattr__)
             else:
@@ -413,9 +242,7 @@ classes. You're trying to derive from:
     def _new_param(cls, name, value):
         cls._params[name] = value
         if hasattr(value, 'default'):
-            cls._values[name] = value.default
-        # try to resolve local param types in local param_types scope
-        value.maybe_resolve_type(cls._param_types)
+            setattr(cls, name, value.default)
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -433,341 +260,182 @@ classes. You're trying to derive from:
         param = cls._params.get(attr, None)
         if param:
             # It's ok: set attribute by delegating to 'object' class.
-            # Note the use of param.make_value() to verify/canonicalize
-            # the assigned value
             try:
-                param.valid(value)
+                cls._values[attr] = param.convert(value)
             except Exception, e:
                 msg = "%s\nError setting param %s.%s to %s\n" % \
                       (e, cls.__name__, attr, value)
                 e.args = (msg, )
                 raise
-            cls._values[attr] = value
-        elif isConfigNode(value) or isSimObjSequence(value):
-            cls._values[attr] = value
+        # I would love to get rid of this
+        elif isSimObject(value) or isSimObjSequence(value) or isParamContext(value):
+           cls._values[attr] = value
         else:
             raise AttributeError, \
                   "Class %s has no parameter %s" % (cls.__name__, attr)
 
     def __getattr__(cls, attr):
-        if cls._params.has_key(attr) or cls._values.has_key(attr):
-            return Value(cls, attr)
-
-        if attr == '_cpp_param_decl' and hasattr(cls, 'type'):
-            return cls.type + '*'
+        if cls._values.has_key(attr):
+            return cls._values[attr]
 
         raise AttributeError, \
               "object '%s' has no attribute '%s'" % (cls.__name__, attr)
 
-    def add_child(cls, instance, name, child):
-        if isNullPointer(child) or instance.top_child_names.has_key(name):
-            return
-
-        if isinstance(child, (list, tuple)):
-            kid = []
-            for i,c in enumerate(child):
-                n = '%s%d' % (name, i)
-                k = c.instantiate(n, instance)
-
-                instance.children.append(k)
-                instance.child_names[n] = k
-                instance.child_objects[c] = k
-                kid.append(k)
-        else:
-            kid = child.instantiate(name, instance)
-            instance.children.append(kid)
-            instance.child_names[name] = kid
-            instance.child_objects[child] = kid
-
-        instance.top_child_names[name] = kid
-
-    # Print instance info to .ini file.
-    def instantiate(cls, name, parent = None):
-        instance = Node(name, cls, parent, isParamContext(cls))
-
-        if hasattr(cls, 'check'):
-            cls.check()
-
-        for key,value in cls._values.iteritems():
-            if isConfigNode(value):
-                cls.add_child(instance, key, value)
-            if isinstance(value, (list, tuple)):
-                vals = [ v for v in value if isConfigNode(v) ]
-                if len(vals):
-                    cls.add_child(instance, key, vals)
-
-        for pname,param in cls._params.iteritems():
-            value = cls._values.get(pname, None)
-            if value is None:
-                panic('Error getting %s from %s' % (pname, name))
-
-            try:
-                if isConfigNode(value):
-                    value = instance.child_objects[value]
-                elif isinstance(value, (list, tuple)):
-                    v = []
-                    for val in value:
-                        if isConfigNode(val):
-                            v.append(instance.child_objects[val])
-                        else:
-                            v.append(val)
-                    value = v
-
-                p = NodeParam(pname, param, value)
-                instance.params.append(p)
-                instance.param_names[pname] = p
-            except Exception, e:
-                msg = 'Exception while evaluating %s.%s\n%s' % \
-                      (instance.path, pname, e)
-                e.args = (msg, )
-                raise
-
-        return instance
-
-    def _convert(cls, value):
-        realvalue = value
-        if isinstance(value, Node):
-            realvalue = value.realtype
-
-        if isinstance(realvalue, Proxy):
-            return value
-
-        if realvalue == None or isNullPointer(realvalue):
-            return value
-
-        if isSubClass(realvalue, cls):
-            return value
-
-        raise TypeError, 'object %s type %s wrong type, should be %s' % \
-              (repr(realvalue), realvalue, cls)
-
-    def _string(cls, value):
-        if isNullPointer(value):
-            return 'Null'
-        return Node._string(value)
-
 # The ConfigNode class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
-class ConfigNode(object):
-    # Specify metaclass.  Any class inheriting from ConfigNode will
+class SimObject(object):
+    # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
-    __metaclass__ = MetaConfigNode
+    __metaclass__ = MetaSimObject
 
-    def __new__(cls, **kwargs):
-        name = cls.__name__ + ("_%d" % cls._anon_subclass_counter)
-        cls._anon_subclass_counter += 1
-        return cls.__metaclass__(name, (cls, ), kwargs)
+    def __init__(self, _value_parent = None, **kwargs):
+        self._children = {}
+        if not _value_parent:
+            _value_parent = self.__class__
+        # clone values
+        self._values = multidict(_value_parent._values)
+        for key,val in _value_parent._values.iteritems():
+            if isSimObject(val):
+                setattr(self, key, val())
+            elif isSimObjSequence(val) and len(val):
+                setattr(self, key, [ v() for v in val ])
+        # apply attribute assignments from keyword args, if any
+        for key,val in kwargs.iteritems():
+            setattr(self, key, val)
 
-class ParamContext(ConfigNode,ParamType):
-    pass
+    def __call__(self, **kwargs):
+        return self.__class__(_value_parent = self, **kwargs)
 
-class MetaSimObject(MetaConfigNode):
-    # init_keywords and keywords are inherited from MetaConfigNode,
-    # with overrides/additions
-    init_keywords = MetaConfigNode.init_keywords
-    init_keywords.update({ 'abstract' : types.BooleanType,
-                           'type' : types.StringType })
+    def __getattr__(self, attr):
+        if self._values.has_key(attr):
+            return self._values[attr]
 
-    keywords = MetaConfigNode.keywords
-    # no additional keywords
+        raise AttributeError, "object '%s' has no attribute '%s'" \
+              % (self.__class__.__name__, attr)
 
-    cpp_classes = []
+    # Set attribute (called on foo.attr = value when foo is an
+    # instance of class cls).
+    def __setattr__(self, attr, value):
+        # normal processing for private attributes
+        if attr.startswith('_'):
+            object.__setattr__(self, attr, value)
+            return
 
-    # initialization
-    def __init__(cls, name, bases, dict):
-        super(MetaSimObject, cls).__init__(name, bases, dict)
-
-        if hasattr(cls, 'type'):
-            if name == 'SimObject':
-                cls._cpp_base = None
-            elif hasattr(cls._bases[1], 'type'):
-                cls._cpp_base = cls._bases[1].type
-            else:
-                panic("SimObject %s derives from a non-C++ SimObject %s "\
-                      "(no 'type')" % (cls, cls_bases[1].__name__))
-
-            # This class corresponds to a C++ class: put it on the global
-            # list of C++ objects to generate param structs, etc.
-            MetaSimObject.cpp_classes.append(cls)
-
-    def _cpp_decl(cls):
-        name = cls.__name__
-        code = ""
-        code += "\n".join([e.cpp_declare() for e in cls._param_types.values()])
-        code += "\n"
-        param_names = cls._params.keys()
-        param_names.sort()
-        code += "struct Params"
-        if cls._cpp_base:
-            code += " : public %s::Params" % cls._cpp_base
-        code += " {\n    "
-        code += "\n    ".join([cls._params[pname].cpp_decl(pname) \
-                               for pname in param_names])
-        code += "\n};\n"
-        return code
-
-class NodeParam(object):
-    def __init__(self, name, param, value):
-        self.name = name
-        self.param = param
-        self.ptype = param.ptype
-        self.convert = param.convert
-        self.string = param.string
-        self.value = value
-
-class Node(object):
-    all = {}
-    def __init__(self, name, realtype, parent, paramcontext):
-        self.name = name
-        self.realtype = realtype
-        if isSimObject(realtype):
-            self.type = realtype.type
-        else:
-            self.type = None
-        self.parent = parent
-        self.children = []
-        self.child_names = {}
-        self.child_objects = {}
-        self.top_child_names = {}
-        self.params = []
-        self.param_names = {}
-        self.paramcontext = paramcontext
-
-        path = [ self.name ]
-        node = self.parent
-        while node is not None:
-            if node.name != 'root':
-                path.insert(0, node.name)
-            else:
-                assert(node.parent is None)
-            node = node.parent
-        self.path = '.'.join(path)
-
-    def find(self, realtype, path):
-        if not path:
-            if issubclass(self.realtype, realtype):
-                return self, True
-
-            obj = None
-            for child in self.children:
-                if issubclass(child.realtype, realtype):
-                    if obj is not None:
-                        raise AttributeError, \
-                              'parent.any matched more than one: %s %s' % \
-                              (obj.path, child.path)
-                    obj = child
-            for param in self.params:
-                if isConfigNode(param.ptype):
-                    continue
-                if issubclass(param.ptype, realtype):
-                    if obj is not None:
-                        raise AttributeError, \
-                              'parent.any matched more than one: %s' % obj.path
-                    obj = param.value
-            return obj, obj is not None
-
-        try:
-            obj = self
-            for (node,index) in path[:-1]:
-                if obj.child_names.has_key(node):
-                    obj = obj.child_names[node]
-                else:
-                    obj = obj.top_child_names[node]
-                obj = Proxy.getindex(obj, index)
-
-            (last,index) = path[-1]
-            if obj.child_names.has_key(last):
-                value = obj.child_names[last]
-                return Proxy.getindex(value, index), True
-            elif obj.top_child_names.has_key(last):
-                value = obj.top_child_names[last]
-                return Proxy.getindex(value, index), True
-            elif obj.param_names.has_key(last):
-                value = obj.param_names[last]
-                #realtype._convert(value.value)
-                return Proxy.getindex(value.value, index), True
-        except KeyError:
+        # must be SimObject param
+        param = self._params.get(attr, None)
+        if param:
+            # It's ok: set attribute by delegating to 'object' class.
+            try:
+                value = param.convert(value)
+            except Exception, e:
+                msg = "%s\nError setting param %s.%s to %s\n" % \
+                      (e, self.__class__.__name__, attr, value)
+                e.args = (msg, )
+                raise
+        # I would love to get rid of this
+        elif isSimObject(value) or isSimObjSequence(value) or isParamContext(value):
             pass
+        else:
+            raise AttributeError, "Class %s has no parameter %s" \
+                  % (self.__class__.__name__, attr)
 
-        return None, False
+        if isSimObject(value):
+            value.set_path(self, attr)
+        elif isSimObjSequence(value):
+            value = SimObjVector(value)
+            [v.set_path(self, "%s%d" % (attr, i)) for i,v in enumerate(value)]
 
-    def unproxy(self, param, ptype):
-        if not isinstance(param, Proxy):
-            return param
-        return param.unproxy(self, ptype)
+        self._values[attr] = value
 
-    def fixup(self):
-        self.all[self.path] = self
+    # this hack allows tacking a '[0]' onto parameters that may or may
+    # not be vectors, and always getting the first element (e.g. cpus)
+    def __getitem__(self, key):
+        if key == 0:
+            return self
+        raise TypeError, "Non-zero index '%s' to SimObject" % key
 
-        for param in self.params:
-            ptype = param.ptype
-            pval = param.value
+    def add_child(self, name, value):
+        self._children[name] = value
 
-            try:
-                if isinstance(pval, (list, tuple)):
-                    param.value = [ self.unproxy(pv, ptype) for pv in pval ]
-                else:
-                    param.value = self.unproxy(pval, ptype)
-            except Exception, e:
-                msg = 'Error while fixing up %s:%s\n%s' % \
-                      (self.path, param.name, e)
-                e.args = (msg, )
-                raise
+    def set_path(self, parent, name):
+        if not hasattr(self, '_parent'):
+            self._parent = parent
+            self._name = name
+            parent.add_child(name, self)
 
-        for child in self.children:
-            assert(child != self)
-            child.fixup()
+    def path(self):
+        if not hasattr(self, '_parent'):
+            return 'root'
+        ppath = self._parent.path()
+        if ppath == 'root':
+            return self._name
+        return ppath + "." + self._name
 
-    # print type and parameter values to .ini file
-    def display(self):
-        print '[' + self.path + ']'	# .ini section header
+    def __str__(self):
+        return self.path()
 
-        if isSimObject(self.realtype):
-            print 'type = %s' % self.type
+    def ini_str(self):
+        return self.path()
 
-        if self.children:
-            # instantiate children in same order they were added for
-            # backward compatibility (else we can end up with cpu1
-            # before cpu0).  Changing ordering can also influence timing
-            # in the current memory system, as caches get added to a bus
-            # in different orders which affects their priority in the
-            # case of simulataneous requests.
-            self.children.sort(lambda x,y: cmp(x.name, y.name))
-            children = [ c.name for c in self.children if not c.paramcontext]
-            print 'children =', ' '.join(children)
+    def find_any(self, ptype):
+        if isinstance(self, ptype):
+            return self, True
 
-        self.params.sort(lambda x,y: cmp(x.name, y.name))
-        for param in self.params:
-            try:
-                if param.value is None:
-                    raise AttributeError, 'Parameter with no value'
+        found_obj = None
+        for child in self._children.itervalues():
+            if isinstance(child, ptype):
+                if found_obj != None and child != found_obj:
+                    raise AttributeError, \
+                          'parent.any matched more than one: %s %s' % \
+                          (obj.path, child.path)
+                found_obj = child
+        # search param space
+        for pname,pdesc in self._params.iteritems():
+            if issubclass(pdesc.ptype, ptype):
+                match_obj = self._values[pname]
+                if found_obj != None and found_obj != match_obj:
+                    raise AttributeError, \
+                          'parent.any matched more than one: %s' % obj.path
+                found_obj = match_obj
+        return found_obj, found_obj != None
 
-                value = param.convert(param.value)
-                if hasattr(value, 'relative') and value.relative and value:
-                    if param.name == 'cycle_time':
-                        start = self.parent
-                    else:
-                        start = self
-                    val = start.unproxy(parent.cycle_time,
-                                        (Frequency, Latency, ClockPeriod))
-                    value.clock = Frequency._convert(val)
-                string = param.string(value)
-            except Exception, e:
-                msg = 'exception in %s:%s=%s\n%s' % (self.path, param.name,
-                                                     value, e)
-                e.args = (msg, )
-                raise
+    def print_ini(self):
+        print '[' + self.path() + ']'	# .ini section header
 
-            print '%s = %s' % (param.name, string)
+        if hasattr(self, 'type') and not isinstance(self, ParamContext):
+            print 'type =', self.type
 
-        print
+        child_names = self._children.keys()
+        child_names.sort()
+        np_child_names = [c for c in child_names \
+                          if not isinstance(self._children[c], ParamContext)]
+        if len(np_child_names):
+            print 'children =', ' '.join(np_child_names)
 
-        # recursively dump out children
-        for c in self.children:
-            c.display()
+        param_names = self._params.keys()
+        param_names.sort()
+        for param in param_names:
+            value = self._values.get(param, None)
+            if value != None:
+                if isproxy(value):
+                    try:
+                        value = value.unproxy(self)
+                    except:
+                        print >> sys.stderr, \
+                              "Error in unproxying param '%s' of %s" % \
+                              (param, self.path())
+                        raise
+                    setattr(self, param, value)
+                print param, '=', self._values[param].ini_str()
 
-    # print type and parameter values to .ini file
+        print	# blank line between objects
+
+        for child in child_names:
+            self._children[child].print_ini()
+
+    # generate output file for 'dot' to display as a pretty graph.
+    # this code is currently broken.
     def outputDot(self, dot):
         label = "{%s|" % self.path
         if isSimObject(self.realtype):
@@ -786,17 +454,14 @@ class Node(object):
                 if param.value is None:
                     raise AttributeError, 'Parameter with no value'
 
-                value = param.convert(param.value)
-                if param.ptype in (Frequency, Latency, ClockPeriod):
-                    val = self.parent.unproxy(parent.frequency, Frequency)
-                    param.clock = Frequency._convert(val)
+                value = param.value
                 string = param.string(value)
             except Exception, e:
                 msg = 'exception in %s:%s\n%s' % (self.name, param.name, e)
                 e.args = (msg, )
                 raise
 
-            if isConfigNode(param.ptype) and string != "Null":
+            if isSimObject(param.ptype) and string != "Null":
                 simobjs.append(string)
             else:
                 label += '%s = %s\\n' % (param.name, string)
@@ -812,11 +477,166 @@ class Node(object):
         for c in self.children:
             c.outputDot(dot)
 
-    def _string(cls, value):
-        if not isinstance(value, Node):
-            raise AttributeError, 'expecting %s got %s' % (Node, value)
-        return value.path
-    _string = classmethod(_string)
+class ParamContext(SimObject):
+    pass
+
+#####################################################################
+#
+# Proxy object support.
+#
+#####################################################################
+
+class BaseProxy(object):
+    def __init__(self, search_self, search_up):
+        self._search_self = search_self
+        self._search_up = search_up
+        self._multiplier = None
+
+    def __setattr__(self, attr, value):
+        if not attr.startswith('_'):
+            raise AttributeError, 'cannot set attribute on proxy object'
+        super(BaseProxy, self).__setattr__(attr, value)
+
+    # support multiplying proxies by constants
+    def __mul__(self, other):
+        if not isinstance(other, (int, float)):
+            raise TypeError, "Proxy multiplier must be integer"
+        if self._multiplier == None:
+            self._multiplier = other
+        else:
+            # support chained multipliers
+            self._multiplier *= other
+        return self
+
+    __rmul__ = __mul__
+
+    def _mulcheck(self, result):
+        if self._multiplier == None:
+            return result
+        return result * self._multiplier
+
+    def unproxy(self, base):
+        obj = base
+        done = False
+
+        if self._search_self:
+            result, done = self.find(obj)
+
+        if self._search_up:
+            while not done:
+                try: obj = obj._parent
+                except: break
+
+                result, done = self.find(obj)
+
+        if not done:
+            raise AttributeError, "Can't resolve proxy '%s' from '%s'" % \
+                  (self.path(), base.path())
+
+        if isinstance(result, BaseProxy):
+            if result == self:
+                raise RuntimeError, "Cycle in unproxy"
+            result = result.unproxy(obj)
+
+        return self._mulcheck(result)
+
+    def getindex(obj, index):
+        if index == None:
+            return obj
+        try:
+            obj = obj[index]
+        except TypeError:
+            if index != 0:
+                raise
+            # if index is 0 and item is not subscriptable, just
+            # use item itself (so cpu[0] works on uniprocessors)
+        return obj
+    getindex = staticmethod(getindex)
+
+    def set_param_desc(self, pdesc):
+        self._pdesc = pdesc
+
+class AttrProxy(BaseProxy):
+    def __init__(self, search_self, search_up, attr):
+        super(AttrProxy, self).__init__(search_self, search_up)
+        self._attr = attr
+        self._modifiers = []
+
+    def __getattr__(self, attr):
+        # python uses __bases__ internally for inheritance
+        if attr.startswith('_'):
+            return super(AttrProxy, self).__getattr__(self, attr)
+        if hasattr(self, '_pdesc'):
+            raise AttributeError, "Attribute reference on bound proxy"
+        self._modifiers.append(attr)
+        return self
+
+    # support indexing on proxies (e.g., Self.cpu[0])
+    def __getitem__(self, key):
+        if not isinstance(key, int):
+            raise TypeError, "Proxy object requires integer index"
+        self._modifiers.append(key)
+        return self
+
+    def find(self, obj):
+        try:
+            val = getattr(obj, self._attr)
+        except:
+            return None, False
+        while isproxy(val):
+            val = val.unproxy(obj)
+        for m in self._modifiers:
+            if isinstance(m, str):
+                val = getattr(val, m)
+            elif isinstance(m, int):
+                val = val[m]
+            else:
+                assert("Item must be string or integer")
+            while isproxy(val):
+                val = val.unproxy(obj)
+        return val, True
+
+    def path(self):
+        p = self._attr
+        for m in self._modifiers:
+            if isinstance(m, str):
+                p += '.%s' % m
+            elif isinstance(m, int):
+                p += '[%d]' % m
+            else:
+                assert("Item must be string or integer")
+        return p
+
+class AnyProxy(BaseProxy):
+    def find(self, obj):
+        return obj.find_any(self._pdesc.ptype)
+
+    def path(self):
+        return 'any'
+
+def isproxy(obj):
+    if isinstance(obj, BaseProxy):
+        return True
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            if isproxy(v):
+                return True
+    return False
+
+class ProxyFactory(object):
+    def __init__(self, search_self, search_up):
+        self.search_self = search_self
+        self.search_up = search_up
+
+    def __getattr__(self, attr):
+        if attr == 'any':
+            return AnyProxy(self.search_self, self.search_up)
+        else:
+            return AttrProxy(self.search_self, self.search_up, attr)
+
+# global objects for handling proxies
+Parent = ProxyFactory(search_self = False, search_up = True)
+Self = ProxyFactory(search_self = True, search_up = False)
 
 #####################################################################
 #
@@ -835,47 +655,27 @@ class Node(object):
 #
 #####################################################################
 
-def isNullPointer(value):
-    return isinstance(value, NullSimObject)
+# Dummy base class to identify types that are legitimate for SimObject
+# parameters.
+class ParamValue(object):
 
-class Value(object):
-    def __init__(self, obj, attr):
-        super(Value, self).__setattr__('attr', attr)
-        super(Value, self).__setattr__('obj', obj)
+    # default for printing to .ini file is regular string conversion.
+    # will be overridden in some cases
+    def ini_str(self):
+        return str(self)
 
-    def _getattr(self):
-        return self.obj._values.get(self.attr)
+    # allows us to blithely call unproxy() on things without checking
+    # if they're really proxies or not
+    def unproxy(self, base):
+        return self
 
-    def __setattr__(self, attr, value):
-        setattr(self._getattr(), attr, value)
-
-    def __getattr__(self, attr):
-        return getattr(self._getattr(), attr)
-
-    def __getitem__(self, index):
-        return self._getattr().__getitem__(index)
-
-    def __call__(self, *args, **kwargs):
-        return self._getattr().__call__(*args, **kwargs)
-
-    def __nonzero__(self):
-        return bool(self._getattr())
-
-    def __str__(self):
-        return str(self._getattr())
-
-    def __len__(self):
-        return len(self._getattr())
-
-# Regular parameter.
-class ParamBase(object):
-    def __init__(self, ptype, *args, **kwargs):
-        if isinstance(ptype, types.StringType):
-            self.ptype_string = ptype
-        elif isinstance(ptype, type):
+# Regular parameter description.
+class ParamDesc(object):
+    def __init__(self, ptype_str, ptype, *args, **kwargs):
+        self.ptype_str = ptype_str
+        # remember ptype only if it is provided
+        if ptype != None:
             self.ptype = ptype
-        else:
-            raise TypeError, "Param type is not a type (%s)" % ptype
 
         if args:
             if len(args) == 1:
@@ -902,114 +702,94 @@ class ParamBase(object):
         if not hasattr(self, 'desc'):
             raise TypeError, 'desc attribute missing'
 
-    def maybe_resolve_type(self, context):
-        # check if already resolved... don't use hasattr(),
-        # as that calls __getattr__()
-        if self.__dict__.has_key('ptype'):
-            return
-        try:
-            self.ptype = context[self.ptype_string]
-        except KeyError:
-            # no harm in trying... we'll try again later using global scope
-            pass
-
     def __getattr__(self, attr):
         if attr == 'ptype':
             try:
-                self.ptype = param_types[self.ptype_string]
-                return self.ptype
-            except:
-                panic("undefined Param type %s" % self.ptype_string)
-        else:
-            raise AttributeError, "'%s' object has no attribute '%s'" % \
-                  (type(self).__name__, attr)
-
-    def valid(self, value):
-        if not isinstance(value, Proxy):
-            self.ptype._convert(value)
+                ptype = eval(self.ptype_str, m5.__dict__)
+                if not isinstance(ptype, type):
+                    panic("Param qualifier is not a type: %s" % self.ptype)
+                self.ptype = ptype
+                return ptype
+            except NameError:
+                pass
+        raise AttributeError, "'%s' object has no attribute '%s'" % \
+              (type(self).__name__, attr)
 
     def convert(self, value):
-        return self.ptype._convert(value)
+        if isinstance(value, BaseProxy):
+            value.set_param_desc(self)
+            return value
+        if not hasattr(self, 'ptype') and isNullPointer(value):
+            # deferred evaluation of SimObject; continue to defer if
+            # we're just assigning a null pointer
+            return value
+        if isinstance(value, self.ptype):
+            return value
+        if isNullPointer(value) and issubclass(self.ptype, SimObject):
+            return value
+        return self.ptype(value)
 
-    def string(self, value):
-        return self.ptype._string(value)
-
-    def set(self, name, instance, value):
-        instance.__dict__[name] = value
-
-    def cpp_decl(self, name):
-        return '%s %s;' % (self.ptype._cpp_param_decl, name)
-
-class ParamFactory(object):
-    def __init__(self, type):
-        self.ptype = type
-
-    # E.g., Param.Int(5, "number of widgets")
-    def __call__(self, *args, **kwargs):
-        return ParamBase(self.ptype, *args, **kwargs)
-
-    # Strange magic to theoretically allow dotted names as Param classes,
-    # e.g., Param.Foo.Bar(...) to have a param of type Foo.Bar
-    def __getattr__(self, attr):
-        if attr == '__bases__':
-            raise AttributeError, ''
-        cls = type(self)
-        return cls(attr)
-
-    def __setattr__(self, attr, value):
-        if attr != 'ptype':
-            raise AttributeError, \
-                  'Attribute %s not available in %s' % (attr, self.__class__)
-        super(ParamFactory, self).__setattr__(attr, value)
-
-Param = ParamFactory(None)
-
-# Vector-valued parameter description.  Just like Param, except that
-# the value is a vector (list) of the specified type instead of a
+# Vector-valued parameter description.  Just like ParamDesc, except
+# that the value is a vector (list) of the specified type instead of a
 # single value.
-class VectorParamBase(ParamBase):
-    def __init__(self, type, *args, **kwargs):
-        ParamBase.__init__(self, type, *args, **kwargs)
 
-    def valid(self, value):
-        if value == None:
-            return True
+class VectorParamValue(list):
+    def ini_str(self):
+        return ' '.join([str(v) for v in self])
 
-        if isinstance(value, (list, tuple)):
-            for val in value:
-                if not isinstance(val, Proxy):
-                    self.ptype._convert(val)
-        elif not isinstance(value, Proxy):
-            self.ptype._convert(value)
+    def unproxy(self, base):
+        return [v.unproxy(base) for v in self]
 
+class SimObjVector(VectorParamValue):
+    def print_ini(self):
+        for v in self:
+            v.print_ini()
+
+class VectorParamDesc(ParamDesc):
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
     def convert(self, value):
-        if value == None:
-            return []
-
         if isinstance(value, (list, tuple)):
             # list: coerce each element into new list
-            return [ self.ptype._convert(v) for v in value ]
+            tmp_list = [ ParamDesc.convert(self, v) for v in value ]
+            if isSimObjSequence(tmp_list):
+                return SimObjVector(tmp_list)
+            else:
+                return VectorParamValue(tmp_list)
         else:
-            # singleton: coerce & wrap in a list
-            return self.ptype._convert(value)
+            # singleton: leave it be (could coerce to a single-element
+            # list here, but for some historical reason we don't...
+            return ParamDesc.convert(self, value)
 
-    def string(self, value):
-        if isinstance(value, (list, tuple)):
-            return ' '.join([ self.ptype._string(v) for v in value])
-        else:
-            return self.ptype._string(value)
 
-    def cpp_decl(self, name):
-        return 'std::vector<%s> %s;' % (self.ptype._cpp_param_decl, name)
+class ParamFactory(object):
+    def __init__(self, param_desc_class, ptype_str = None):
+        self.param_desc_class = param_desc_class
+        self.ptype_str = ptype_str
 
-class VectorParamFactory(ParamFactory):
-    # E.g., VectorParam.Int(5, "number of widgets")
+    def __getattr__(self, attr):
+        if self.ptype_str:
+            attr = self.ptype_str + '.' + attr
+        return ParamFactory(self.param_desc_class, attr)
+
+    # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        return VectorParamBase(self.ptype, *args, **kwargs)
+        caller_frame = inspect.stack()[1][0]
+        ptype = None
+        try:
+            ptype = eval(self.ptype_str,
+                         caller_frame.f_globals, caller_frame.f_locals)
+            if not isinstance(ptype, type):
+                raise TypeError, \
+                      "Param qualifier is not a type: %s" % ptype
+        except NameError:
+            # if name isn't defined yet, assume it's a SimObject, and
+            # try to resolve it later
+            pass
+        return self.param_desc_class(self.ptype_str, ptype, *args, **kwargs)
 
-VectorParam = VectorParamFactory(None)
+Param = ParamFactory(ParamDesc)
+VectorParam = ParamFactory(VectorParamDesc)
 
 #####################################################################
 #
@@ -1025,80 +805,44 @@ VectorParam = VectorParamFactory(None)
 #
 #####################################################################
 
-class MetaRange(type):
-    def __init__(cls, name, bases, dict):
-        super(MetaRange, cls).__init__(name, bases, dict)
-        if name == 'Range':
-            return
-        cls._cpp_param_decl = 'Range<%s>' % cls.type._cpp_param_decl
-
-    def _convert(cls, value):
-        if not isinstance(value, Range):
-            raise TypeError, 'value %s is not a Pair' % value
-        value = cls(value)
-        value.first = cls.type._convert(value.first)
-        value.second = cls.type._convert(value.second)
-        return value
-
-    def _string(cls, value):
-        first = int(value.first)
-        second = int(value.second)
-        if value.extend:
-            second += first
-        if not value.inclusive:
-            second -= 1
-        return '%s:%s' % (cls.type._string(first), cls.type._string(second))
-
-class Range(ParamType):
-    __metaclass__ = MetaRange
+class Range(ParamValue):
+    type = int # default; can be overridden in subclasses
     def __init__(self, *args, **kwargs):
-        if len(args) == 0:
-            self.first = kwargs.pop('start')
 
+        def handle_kwargs(self, kwargs):
             if 'end' in kwargs:
-                self.second = kwargs.pop('end')
-                self.inclusive = True
-                self.extend = False
+                self.second = self.type(kwargs.pop('end'))
             elif 'size' in kwargs:
-                self.second = kwargs.pop('size')
-                self.inclusive = False
-                self.extend = True
+                self.second = self.first + self.type(kwargs.pop('size')) - 1
             else:
                 raise TypeError, "Either end or size must be specified"
 
+        if len(args) == 0:
+            self.first = self.type(kwargs.pop('start'))
+            handle_kwargs(self, kwargs)
+
         elif len(args) == 1:
             if kwargs:
-                self.first = args[0]
-                if 'end' in kwargs:
-                    self.second = kwargs.pop('end')
-                    self.inclusive = True
-                    self.extend = False
-                elif 'size' in kwargs:
-                    self.second = kwargs.pop('size')
-                    self.inclusive = False
-                    self.extend = True
-                else:
-                    raise TypeError, "Either end or size must be specified"
+                self.first = self.type(args[0])
+                handle_kwargs(self, kwargs)
             elif isinstance(args[0], Range):
-                self.first = args[0].first
-                self.second = args[0].second
-                self.inclusive = args[0].inclusive
-                self.extend = args[0].extend
+                self.first = self.type(args[0].first)
+                self.second = self.type(args[0].second)
             else:
-                self.first = 0
-                self.second = args[0]
-                self.inclusive = False
-                self.extend = True
+                self.first = self.type(0)
+                self.second = self.type(args[0]) - 1
 
         elif len(args) == 2:
-            self.first, self.second = args
-            self.inclusive = True
-            self.extend = False
+            self.first = self.type(args[0])
+            self.second = self.type(args[1])
         else:
             raise TypeError, "Too many arguments specified"
 
         if kwargs:
             raise TypeError, "too many keywords: %s" % kwargs.keys()
+
+    def __str__(self):
+        return '%s:%s' % (self.first, self.second)
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(type):
@@ -1123,72 +867,51 @@ class CheckedIntType(type):
                 cls.min = -(2 ** (cls.size - 1))
                 cls.max = (2 ** (cls.size - 1)) - 1
 
-        cls._cpp_param_decl = cls.cppname
-
-    def _convert(cls, value):
-        if isinstance(value, bool):
-            return int(value)
-
-        if not isinstance(value, (int, long, float, str)):
-            raise TypeError, 'Integer param of invalid type %s' % type(value)
-
-        if isinstance(value, float):
-            value = long(value)
-        elif isinstance(value, str):
-            value = toInteger(value)
-
-        if not cls.min <= value <= cls.max:
-            raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
-                  (cls.min, value, cls.max)
-
-        return value
-
-    def _string(cls, value):
-        return str(value)
-
 # Abstract superclass for bounds-checked integer parameters.  This
 # class is subclassed to generate parameter classes with specific
 # bounds.  Initialization of the min and max bounds is done in the
 # metaclass CheckedIntType.__init__.
-class CheckedInt(long,ParamType):
+class CheckedInt(long,ParamValue):
     __metaclass__ = CheckedIntType
 
-class Int(CheckedInt):      cppname = 'int';      size = 32; unsigned = False
-class Unsigned(CheckedInt): cppname = 'unsigned'; size = 32; unsigned = True
+    def __new__(cls, value):
+        if isinstance(value, str):
+            value = toInteger(value)
 
-class Int8(CheckedInt):     cppname =  'int8_t';  size =  8; unsigned = False
-class UInt8(CheckedInt):    cppname = 'uint8_t';  size =  8; unsigned = True
-class Int16(CheckedInt):    cppname =  'int16_t'; size = 16; unsigned = False
-class UInt16(CheckedInt):   cppname = 'uint16_t'; size = 16; unsigned = True
-class Int32(CheckedInt):    cppname =  'int32_t'; size = 32; unsigned = False
-class UInt32(CheckedInt):   cppname = 'uint32_t'; size = 32; unsigned = True
-class Int64(CheckedInt):    cppname =  'int64_t'; size = 64; unsigned = False
-class UInt64(CheckedInt):   cppname = 'uint64_t'; size = 64; unsigned = True
+        self = long.__new__(cls, value)
 
-class Counter(CheckedInt):  cppname = 'Counter';  size = 64; unsigned = True
-class Tick(CheckedInt):     cppname = 'Tick';     size = 64; unsigned = True
-class TcpPort(CheckedInt):  cppname = 'uint16_t'; size = 16; unsigned = True
-class UdpPort(CheckedInt):  cppname = 'uint16_t'; size = 16; unsigned = True
+        if not cls.min <= self <= cls.max:
+            raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
+                  (cls.min, self, cls.max)
+        return self
 
-class Percent(CheckedInt):  cppname = 'int'; min = 0; max = 100
+class Int(CheckedInt):      size = 32; unsigned = False
+class Unsigned(CheckedInt): size = 32; unsigned = True
+
+class Int8(CheckedInt):     size =  8; unsigned = False
+class UInt8(CheckedInt):    size =  8; unsigned = True
+class Int16(CheckedInt):    size = 16; unsigned = False
+class UInt16(CheckedInt):   size = 16; unsigned = True
+class Int32(CheckedInt):    size = 32; unsigned = False
+class UInt32(CheckedInt):   size = 32; unsigned = True
+class Int64(CheckedInt):    size = 64; unsigned = False
+class UInt64(CheckedInt):   size = 64; unsigned = True
+
+class Counter(CheckedInt):  size = 64; unsigned = True
+class Tick(CheckedInt):     size = 64; unsigned = True
+class TcpPort(CheckedInt):  size = 16; unsigned = True
+class UdpPort(CheckedInt):  size = 16; unsigned = True
+
+class Percent(CheckedInt):  min = 0; max = 100
 
 class MemorySize(CheckedInt):
-    cppname = 'uint64_t'
     size = 64
     unsigned = True
     def __new__(cls, value):
         return super(MemorySize, cls).__new__(cls, toMemorySize(value))
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
-
-    def _string(cls, value):
-        return '%d' % value
-    _string = classmethod(_string)
 
 class Addr(CheckedInt):
-    cppname = 'Addr'
     size = 64
     unsigned = True
     def __new__(cls, value):
@@ -1198,56 +921,31 @@ class Addr(CheckedInt):
             value = long(value)
         return super(Addr, cls).__new__(cls, value)
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
-
-    def _string(cls, value):
-        return '%d' % value
-    _string = classmethod(_string)
-
 class AddrRange(Range):
     type = Addr
 
-# Boolean parameter type.
-class Bool(ParamType):
-    _cpp_param_decl = 'bool'
+# String-valued parameter.  Just mixin the ParamValue class
+# with the built-in str class.
+class String(ParamValue,str):
+    pass
+
+# Boolean parameter type.  Python doesn't let you subclass bool, since
+# it doesn't want to let you create multiple instances of True and
+# False.  Thus this is a little more complicated than String.
+class Bool(ParamValue):
     def __init__(self, value):
         try:
             self.value = toBool(value)
         except TypeError:
             self.value = bool(value)
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
+    def __str__(self):
+        return str(self.value)
 
-    def _string(cls, value):
-        if value.value:
-            return "true"
-        else:
-            return "false"
-    _string = classmethod(_string)
-
-# String-valued parameter.
-class String(ParamType):
-    _cpp_param_decl = 'string'
-
-    # Constructor.  Value must be Python string.
-    def _convert(cls,value):
-        if value is None:
-            return ''
-        if isinstance(value, str):
-            return value
-
-        raise TypeError, \
-              "String param got value %s %s" % (repr(value), type(value))
-    _convert = classmethod(_convert)
-
-    # Generate printable string version.  Not too tricky.
-    def _string(cls, value):
-        return value
-    _string = classmethod(_string)
+    def ini_str(self):
+        if self.value:
+            return 'true'
+        return 'false'
 
 def IncEthernetAddr(addr, val = 1):
     bytes = map(lambda x: int(x, 16), addr.split(':'))
@@ -1269,12 +967,11 @@ class NextEthernetAddr(object):
         self.value = self.addr
         self.addr = IncEthernetAddr(self.addr, inc)
 
-class EthernetAddr(ParamType):
-    _cpp_param_decl = 'EthAddr'
-
-    def _convert(cls, value):
+class EthernetAddr(ParamValue):
+    def __init__(self, value):
         if value == NextEthernetAddr:
-            return value
+            self.value = value
+            return
 
         if not isinstance(value, str):
             raise TypeError, "expected an ethernet address and didn't get one"
@@ -1287,14 +984,12 @@ class EthernetAddr(ParamType):
             if not 0 <= int(byte) <= 256:
                 raise TypeError, 'invalid ethernet address %s' % value
 
-        return value
-    _convert = classmethod(_convert)
+        self.value = value
 
-    def _string(cls, value):
-        if value == NextEthernetAddr:
-            value = value().value
-        return value
-    _string = classmethod(_string)
+    def __str__(self):
+        if self.value == NextEthernetAddr:
+            self.value = self.value().value
+        return self.value
 
 # Special class for NULL pointers.  Note the special check in
 # make_param_value() above that lets these be assigned where a
@@ -1309,20 +1004,8 @@ class NullSimObject(object):
     def _instantiate(self, parent = None, path = ''):
         pass
 
-    def _convert(cls, value):
-        if value == None:
-            return
-
-        if isinstance(value, cls):
-            return value
-
-        raise TypeError, 'object %s %s of the wrong type, should be %s' % \
-              (repr(value), type(value), cls)
-    _convert = classmethod(_convert)
-
-    def _string():
-        return 'NULL'
-    _string = staticmethod(_string)
+    def ini_str(self):
+        return 'Null'
 
 # The only instance you'll ever need...
 Null = NULL = NullSimObject()
@@ -1364,8 +1047,6 @@ class MetaEnum(type):
             raise TypeError, "Enum-derived class must define "\
                   "attribute 'map' or 'vals'"
 
-        cls._cpp_param_decl = name
-
         super(MetaEnum, cls).__init__(name, bases, init_dict)
 
     def cpp_declare(cls):
@@ -1375,180 +1056,148 @@ class MetaEnum(type):
         return s
 
 # Base class for enum types.
-class Enum(ParamType):
+class Enum(ParamValue):
     __metaclass__ = MetaEnum
     vals = []
 
-    def _convert(self, value):
+    def __init__(self, value):
         if value not in self.map:
             raise TypeError, "Enum param got bad value '%s' (not in %s)" \
                   % (value, self.vals)
-        return value
-    _convert = classmethod(_convert)
+        self.value = value
 
-    # Generate printable string version of value.
-    def _string(self, value):
-        return str(value)
-    _string = classmethod(_string)
+    def __str__(self):
+        return self.value
 
-root_frequency = None
+ticks_per_sec = None
 
-#
-# "Constants"... handy aliases for various values.
-#
-class RootFrequency(float,ParamType):
-    _cpp_param_decl = 'Tick'
+# how big does a rounding error need to be before we warn about it?
+frequency_tolerance = 0.001  # 0.1%
 
-    def __new__(cls, value):
-        return super(cls, RootFrequency).__new__(cls, toFrequency(value))
+# convert a floting-point # of ticks to integer, and warn if rounding
+# discards too much precision
+def tick_check(float_ticks):
+    if float_ticks == 0:
+        return 0
+    int_ticks = int(round(float_ticks))
+    err = (float_ticks - int_ticks) / float_ticks
+    if err > frequency_tolerance:
+        print >> sys.stderr, "Warning: rounding error > tolerance"
+    return int_ticks
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
+# superclass for "numeric" parameter values, to emulate math
+# operations in a type-safe way.  e.g., a Latency times an int returns
+# a new Latency object.
+class NumericParamValue(ParamValue):
+    def __mul__(self, other):
+        newobj = self.__class__(self)
+        newobj.value *= other
+        return newobj
 
-    def _string(cls, value):
-        return '%d' % int(round(value))
-    _string = classmethod(_string)
+    __rmul__ = __mul__
 
-class ClockPeriod(float,ParamType):
-    _cpp_param_decl = 'Tick'
-    def __new__(cls, value):
-        absolute = False
-        relative = False
-        try:
-            val = toClockPeriod(value)
-        except ValueError, e:
-            if value.endswith('f'):
-                val = float(value[:-1])
-                if val:
-                    val = 1 / val
-                relative = True
-            elif value.endswith('c'):
-                val = float(value[:-1])
-                relative = True
-            elif value.endswith('t'):
-                val = float(value[:-1])
-                absolute = True
-            else:
-                raise e
+class Latency(NumericParamValue):
+    def __init__(self, value):
+        if isinstance(value, Latency):
+            self.value = value.value
+        elif isinstance(value, Frequency):
+            self.value = 1 / value.value
+        elif isinstance(value, str):
+            try:
+                self.value = toLatency(value)
+            except ValueError:
+                try:
+                    freq = toFrequency(value)
+                except ValueError:
+                    raise ValueError, "Latency value '%s' is neither " \
+                          "frequency nor period" % value
+                self.value = 1 / freq
+        elif value == 0:
+            # the one unitless value that's OK...
+            self.value = value
+        else:
+            raise ValueError, "Invalid Latency value '%s'" % value
 
-        self = super(cls, ClockPeriod).__new__(cls, val)
-        self.absolute = absolute
-        self.relative = relative
-        return self
+    def __getattr__(self, attr):
+        if attr in ('latency', 'period'):
+            return self
+        if attr == 'frequency':
+            return Frequency(self)
+        raise AttributeError, "Latency object has no attribute '%s'" % attr
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
+    def __str__(self):
+        return str(self.value)
 
-    def _string(cls, value):
-        if value and not value.absolute:
-            if value.relative:
-                base = root_frequency / value.clock
-            else:
-                base = root_frequency
-            value *= base
+    # convert latency to ticks
+    def ini_str(self):
+        return str(tick_check(self.value * ticks_per_sec))
 
-        return '%d' % int(round(value))
-    _string = classmethod(_string)
+class Frequency(NumericParamValue):
+    def __init__(self, value):
+        if isinstance(value, Frequency):
+            self.value = value.value
+        elif isinstance(value, Latency):
+            self.value = 1 / value.value
+        elif isinstance(value, str):
+            try:
+                self.value = toFrequency(value)
+            except ValueError:
+                try:
+                    freq = toLatency(value)
+                except ValueError:
+                    raise ValueError, "Frequency value '%s' is neither " \
+                          "frequency nor period" % value
+                self.value = 1 / freq
+        else:
+            raise ValueError, "Invalid Frequency value '%s'" % value
 
-class Frequency(float,ParamType):
-    _cpp_param_decl = 'Tick'
+    def __getattr__(self, attr):
+        if attr == 'frequency':
+            return self
+        if attr in ('latency', 'period'):
+            return Latency(self)
+        raise AttributeError, "Frequency object has no attribute '%s'" % attr
 
-    def __new__(cls, value):
-        relative = False
-        try:
-            val = toFrequency(value)
-        except ValueError, e:
-            if value.endswith('f'):
-                val = float(value[:-1])
-                relative = True
-            else:
-                raise e
-        self = super(cls, Frequency).__new__(cls, val)
-        self.relative = relative
-        return self
+    def __str__(self):
+        return str(self.value)
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
+    def __float__(self):
+        return float(self.value)
 
-    def _string(cls, value):
-        if value:
-            if value.relative:
-                base = root_frequency / value.clock
-            else:
-                base = root_frequency
+    # convert frequency to ticks per period
+    def ini_str(self):
+        return self.period.ini_str()
 
-            value = base / value
+# Just like Frequency, except ini_str() is absolute # of ticks per sec (Hz)
+class RootFrequency(Frequency):
+    def ini_str(self):
+        return str(tick_check(self.value))
 
-        return '%d' % int(round(value))
-    _string = classmethod(_string)
-
-class Latency(float,ParamType):
-    _cpp_param_decl = 'Tick'
-    def __new__(cls, value):
-        absolute = False
-        relative = False
-        try:
-            val = toLatency(value)
-        except ValueError, e:
-            if value.endswith('c'):
-                val = float(value[:-1])
-                relative = True
-            elif value.endswith('t'):
-                val = float(value[:-1])
-                absolute = True
-            else:
-                raise e
-        self = super(cls, Latency).__new__(cls, val)
-        self.absolute = absolute
-        self.relative = relative
-        return self
-
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
-
-    def _string(cls, value):
-        if value and not value.absolute:
-            if value.relative:
-                base = root_frequency / value.clock
-            else:
-                base = root_frequency
-            value *= base
-        return '%d' % int(round(value))
-    _string = classmethod(_string)
-
-class NetworkBandwidth(float,ParamType):
-    _cpp_param_decl = 'float'
+class NetworkBandwidth(float,ParamValue):
     def __new__(cls, value):
         val = toNetworkBandwidth(value) / 8.0
         return super(cls, NetworkBandwidth).__new__(cls, val)
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
+    def __str__(self):
+        return str(self.val)
 
-    def _string(cls, value):
-        value = root_frequency / value
-        return '%f' % value
-    _string = classmethod(_string)
+    def ini_str(self):
+        return '%f' % (ticks_per_sec / self.val)
 
-class MemoryBandwidth(float,ParamType):
-    _cpp_param_decl = 'float'
+class MemoryBandwidth(float,ParamValue):
     def __new__(self, value):
         val = toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
 
-    def _convert(cls, value):
-        return cls(value)
-    _convert = classmethod(_convert)
+    def __str__(self):
+        return str(self.val)
 
-    def _string(cls, value):
-        value = root_frequency / value
-        return '%f' % value
-    _string = classmethod(_string)
+    def ini_str(self):
+        return '%f' % (ticks_per_sec / self.val)
+
+#
+# "Constants"... handy aliases for various values.
+#
 
 # Some memory range specifications use this as a default upper bound.
 MaxAddr = Addr.max
@@ -1560,11 +1209,10 @@ AllMemory = AddrRange(0, MaxAddr)
 # The final hook to generate .ini files.  Called from configuration
 # script once config is built.
 def instantiate(root):
-    global root_frequency
-    instance = root.instantiate('root')
-    root_frequency = RootFrequency._convert(root.frequency._getattr())
-    instance.fixup()
-    instance.display()
+    global ticks_per_sec
+    ticks_per_sec = float(root.frequency)
+    root.print_ini()
+    noDot = True # temporary until we fix dot
     if not noDot:
        dot = pydot.Dot()
        instance.outputDot(dot)
@@ -1575,27 +1223,19 @@ def instantiate(root):
        dot.write("config.dot")
        dot.write_ps("config.ps")
 
-# SimObject is a minimal extension of ConfigNode, implementing a
-# hierarchy node that corresponds to an M5 SimObject.  It prints out a
-# "type=" line to indicate its SimObject class, prints out the
-# assigned parameters corresponding to its class, and allows
-# parameters to be set by keyword in the constructor.  Note that most
-# of the heavy lifting for the SimObject param handling is done in the
-# MetaConfigNode metaclass.
-class SimObject(ConfigNode, ParamType):
-    __metaclass__ = MetaSimObject
-    type = 'SimObject'
-
-
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = ['ConfigNode', 'SimObject', 'ParamContext', 'Param', 'VectorParam',
-           'parent', 'Enum',
+__all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
+           'Parent', 'Self',
+           'Enum', 'Bool', 'String',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
-           'MemorySize', 'RootFrequency', 'Frequency', 'Latency',
-           'ClockPeriod', 'NetworkBandwidth', 'MemoryBandwidth',
-           'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory', 'NULL',
+           'TcpPort', 'UdpPort', 'EthernetAddr',
+           'MemorySize', 'Latency', 'Frequency', 'RootFrequency',
+           'NetworkBandwidth', 'MemoryBandwidth',
+           'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
+           'Null', 'NULL',
            'NextEthernetAddr', 'instantiate']
+

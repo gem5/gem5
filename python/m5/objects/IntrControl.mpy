@@ -1,3 +1,0 @@
-simobj IntrControl(SimObject):
-    type = 'IntrControl'
-    cpu = Param.BaseCPU(parent.any, "the cpu")

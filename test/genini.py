@@ -55,14 +55,19 @@ try:
 except getopt.GetoptError:
     sys.exit('Improper Usage')
 
+import __main__
+__main__.m5_build_env = m5_build_env
+
 from m5 import *
 
 for path in pathlist:
     AddToPath(path)
 
 for arg in args:
-    LoadMpyFile(arg)
+    AddToPath(os.path.dirname(arg))
+    execfile(arg)
 
-if globals().has_key('root') and isinstance(root, type) \
-       and issubclass(root, Root):
+if globals().has_key('root') and isinstance(root, Root):
     instantiate(root)
+else:
+    print "Instantiation skipped: no root object found."

@@ -1,6 +1,7 @@
+from m5 import *
 class Coherence(Enum): vals = ['uni', 'msi', 'mesi', 'mosi', 'moesi']
 
-simobj CoherenceProtocol(SimObject):
+class CoherenceProtocol(SimObject):
     type = 'CoherenceProtocol'
     do_upgrades = Param.Bool(True, "use upgrade transactions?")
     protocol = Param.Coherence("name of coherence protocol")

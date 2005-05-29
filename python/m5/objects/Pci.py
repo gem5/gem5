@@ -1,6 +1,7 @@
+from m5 import *
 from Device import FooPioDevice, DmaDevice
 
-simobj PciConfigData(SimObject):
+class PciConfigData(SimObject):
     type = 'PciConfigData'
     VendorID = Param.UInt16("Vendor ID")
     DeviceID = Param.UInt16("Device ID")
@@ -37,15 +38,15 @@ simobj PciConfigData(SimObject):
     MaximumLatency = Param.UInt8(0x00, "Maximum Latency")
     MinimumGrant = Param.UInt8(0x00, "Minimum Grant")
 
-simobj PciConfigAll(FooPioDevice):
+class PciConfigAll(FooPioDevice):
     type = 'PciConfigAll'
 
-simobj PciDevice(DmaDevice):
+class PciDevice(DmaDevice):
     type = 'PciDevice'
     abstract = True
     addr = 0xffffffffL
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
-    configdata = Param.PciConfigData(parent.any, "PCI Config data")
-    configspace = Param.PciConfigAll(parent.any, "PCI Configspace")
+    configdata = Param.PciConfigData(Parent.any, "PCI Config data")
+    configspace = Param.PciConfigAll(Parent.any, "PCI Configspace")

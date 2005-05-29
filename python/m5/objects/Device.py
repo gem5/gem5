@@ -1,3 +1,4 @@
+from m5 import *
 from FunctionalMemory import FunctionalMemory
 
 # This device exists only because there are some devices that I don't
@@ -10,24 +11,24 @@ from FunctionalMemory import FunctionalMemory
 # some further configuration must be done, it must be done during the
 # initialization phase at which point all SimObject pointers will be
 # valid.
-simobj FooPioDevice(FunctionalMemory):
+class FooPioDevice(FunctionalMemory):
     type = 'PioDevice'
     abstract = True
     addr = Param.Addr("Device Address")
-    mmu = Param.MemoryController(parent.any, "Memory Controller")
+    mmu = Param.MemoryController(Parent.any, "Memory Controller")
     io_bus = Param.Bus(NULL, "The IO Bus to attach to")
     pio_latency = Param.Tick(1, "Programmed IO latency in bus cycles")
 
-simobj FooDmaDevice(FooPioDevice):
+class FooDmaDevice(FooPioDevice):
     type = 'DmaDevice'
     abstract = True
 
-simobj PioDevice(FooPioDevice):
+class PioDevice(FooPioDevice):
     type = 'PioDevice'
     abstract = True
-    platform = Param.Platform(parent.any, "Platform")
+    platform = Param.Platform(Parent.any, "Platform")
 
-simobj DmaDevice(PioDevice):
+class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
 

@@ -1,4 +1,5 @@
-simobj MemTest(SimObject):
+from m5 import *
+class MemTest(SimObject):
     type = 'MemTest'
     cache = Param.BaseCache("L1 cache")
     check_mem = Param.FunctionalMemory("check memory")

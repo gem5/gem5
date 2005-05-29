@@ -1,9 +1,0 @@
-from Device import PioDevice
-
-simobj AlphaConsole(PioDevice):
-    type = 'AlphaConsole'
-    cpu = Param.BaseCPU(parent.any, "Processor")
-    disk = Param.SimpleDisk("Simple Disk")
-    num_cpus = Param.Int(1, "Number of CPUs")
-    sim_console = Param.SimConsole(parent.any, "The Simulator Console")
-    system = Param.BaseSystem(parent.any, "system object")

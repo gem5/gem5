@@ -1,12 +1,13 @@
+from m5 import *
 from Device import DmaDevice
 from Pci import PciDevice
 
-simobj EtherInt(SimObject):
+class EtherInt(SimObject):
     type = 'EtherInt'
     abstract = True
     peer = Param.EtherInt(NULL, "peer interface")
 
-simobj EtherLink(SimObject):
+class EtherLink(SimObject):
     type = 'EtherLink'
     int1 = Param.EtherInt("interface 1")
     int2 = Param.EtherInt("interface 2")
@@ -14,23 +15,23 @@ simobj EtherLink(SimObject):
     speed = Param.NetworkBandwidth('100Mbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
 
-simobj EtherBus(SimObject):
+class EtherBus(SimObject):
     type = 'EtherBus'
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
 
-simobj EtherTap(EtherInt):
+class EtherTap(EtherInt):
     type = 'EtherTap'
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     port = Param.UInt16(3500, "tap port")
 
-simobj EtherDump(SimObject):
+class EtherDump(SimObject):
     type = 'EtherDump'
     file = Param.String("dump file")
 
-simobj EtherDev(DmaDevice):
+class EtherDev(DmaDevice):
     type = 'EtherDev'
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
@@ -49,10 +50,10 @@ simobj EtherDev(DmaDevice):
 
     intr_delay = Param.Latency('0us', "Interrupt Delay")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
-    tlaser = Param.Turbolaser(parent.any, "Turbolaser")
+    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
+    tlaser = Param.Turbolaser(Parent.any, "Turbolaser")
 
-simobj NSGigE(PciDevice):
+class NSGigE(PciDevice):
     type = 'NSGigE'
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
@@ -79,17 +80,17 @@ simobj NSGigE(PciDevice):
 
     intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
+    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
 
-simobj EtherDevInt(EtherInt):
+class EtherDevInt(EtherInt):
     type = 'EtherDevInt'
     device = Param.EtherDev("Ethernet device of this interface")
 
-simobj NSGigEInt(EtherInt):
+class NSGigEInt(EtherInt):
     type = 'NSGigEInt'
     device = Param.NSGigE("Ethernet device of this interface")
 
-simobj Sinic(PciDevice):
+class Sinic(PciDevice):
     type = 'Sinic'
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
@@ -114,8 +115,8 @@ simobj Sinic(PciDevice):
 
     intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(parent.any, "Physical Memory")
+    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
 
-simobj SinicInt(EtherInt):
+class SinicInt(EtherInt):
     type = 'SinicInt'
     device = Param.Sinic("Ethernet device of this interface")

@@ -1,4 +1,0 @@
-simobj Platform(SimObject):
-    type = 'Platform'
-    abstract = True
-    intrctrl = Param.IntrControl(parent.any, "interrupt controller")

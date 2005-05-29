@@ -1,10 +1,11 @@
-simobj BaseSystem(SimObject):
+from m5 import *
+class BaseSystem(SimObject):
     type = 'BaseSystem'
     abstract = True
-    boot_cpu_frequency = Param.ClockPeriod(parent.cpu[0].cycle_time,
-        "Boot Processor Frequency")
-    memctrl = Param.MemoryController(parent.any, "memory controller")
-    physmem = Param.PhysicalMemory(parent.any, "phsyical memory")
+    boot_cpu_frequency = Param.Frequency(Self.cpu[0].cycle_time.frequency,
+                                         "boot processor frequency")
+    memctrl = Param.MemoryController(Parent.any, "memory controller")
+    physmem = Param.PhysicalMemory(Parent.any, "phsyical memory")
     kernel = Param.String("file that contains the kernel code")
     console = Param.String("file that contains the console code")
     pal = Param.String("file that contains palcode")

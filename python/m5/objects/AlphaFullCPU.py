@@ -1,6 +1,7 @@
+from m5 import *
 from BaseCPU import BaseCPU
 
-simobj DerivAlphaFullCPU(BaseCPU):
+class DerivAlphaFullCPU(BaseCPU):
     type = 'DerivAlphaFullCPU'
 
     numThreads = Param.Unsigned("number of HW thread contexts")

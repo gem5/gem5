@@ -1,8 +1,9 @@
-simobj Repl(SimObject):
+from m5 import *
+class Repl(SimObject):
     type = 'Repl'
     abstract = True
 
-simobj GenRepl(Repl):
+class GenRepl(Repl):
     type = 'GenRepl'
     fresh_res = Param.Int("associativity")
     num_pools = Param.Int("capacity in bytes")

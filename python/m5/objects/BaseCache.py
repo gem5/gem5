@@ -1,8 +1,9 @@
+from m5 import *
 from BaseMem import BaseMem
 
 class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
 
-simobj BaseCache(BaseMem):
+class BaseCache(BaseMem):
     type = 'BaseCache'
     adaptive_compression = Param.Bool(False,
         "Use an adaptive compression scheme")
@@ -10,7 +11,7 @@ simobj BaseCache(BaseMem):
     block_size = Param.Int("block size in bytes")
     compressed_bus = Param.Bool(False,
         "This cache connects to a compressed memory")
-    compression_latency = Param.Latency('0c',
+    compression_latency = Param.Latency(0,
         "Latency in cycles of compression algorithm")
     do_copy = Param.Bool(False, "perform fast copies in the cache")
     hash_delay = Param.Int(1, "time in cycles of hash access")

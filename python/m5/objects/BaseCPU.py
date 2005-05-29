@@ -1,4 +1,5 @@
-simobj BaseCPU(SimObject):
+from m5 import *
+class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True
     icache = Param.BaseMem(NULL, "L1 instruction cache object")
@@ -8,7 +9,7 @@ simobj BaseCPU(SimObject):
         dtb = Param.AlphaDTB("Data TLB")
         itb = Param.AlphaITB("Instruction TLB")
         mem = Param.FunctionalMemory("memory")
-        system = Param.BaseSystem(parent.any, "system object")
+        system = Param.BaseSystem(Parent.any, "system object")
     else:
         workload = VectorParam.Process("processes to run")
 
@@ -24,4 +25,4 @@ simobj BaseCPU(SimObject):
     defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")
 
-    cycle_time = Param.ClockPeriod(parent.frequency, "clock speed")
+    cycle_time = Param.Latency(Parent.frequency.latency, "clock speed")

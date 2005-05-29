@@ -1,25 +1,26 @@
+from m5 import *
 from Device import FooPioDevice
 from Platform import Platform
 
-simobj Tsunami(Platform):
+class Tsunami(Platform):
     type = 'Tsunami'
     pciconfig = Param.PciConfigAll("PCI configuration")
-    system = Param.BaseSystem(parent.any, "system")
+    system = Param.BaseSystem(Parent.any, "system")
 
-simobj TsunamiCChip(FooPioDevice):
+class TsunamiCChip(FooPioDevice):
     type = 'TsunamiCChip'
-    tsunami = Param.Tsunami(parent.any, "Tsunami")
+    tsunami = Param.Tsunami(Parent.any, "Tsunami")
 
-simobj TsunamiFake(FooPioDevice):
+class TsunamiFake(FooPioDevice):
     type = 'TsunamiFake'
 
-simobj TsunamiIO(FooPioDevice):
+class TsunamiIO(FooPioDevice):
     type = 'TsunamiIO'
     time = Param.UInt64(1136073600,
         "System time to use (0 for actual time, default is 1/1/06)")
-    tsunami = Param.Tsunami(parent.any, "Tsunami")
+    tsunami = Param.Tsunami(Parent.any, "Tsunami")
     frequency = Param.Frequency('1024Hz', "frequency of interrupts")
 
-simobj TsunamiPChip(FooPioDevice):
+class TsunamiPChip(FooPioDevice):
     type = 'TsunamiPChip'
-    tsunami = Param.Tsunami(parent.any, "Tsunami")
+    tsunami = Param.Tsunami(Parent.any, "Tsunami")

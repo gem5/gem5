@@ -1,13 +1,14 @@
-simobj DiskImage(SimObject):
+from m5 import *
+class DiskImage(SimObject):
     type = 'DiskImage'
     abstract = True
     image_file = Param.String("disk image file")
     read_only = Param.Bool(False, "read only image")
 
-simobj RawDiskImage(DiskImage):
+class RawDiskImage(DiskImage):
     type = 'RawDiskImage'
 
-simobj CowDiskImage(DiskImage):
+class CowDiskImage(DiskImage):
     type = 'CowDiskImage'
     child = Param.DiskImage("child image")
     table_size = Param.Int(65536, "initial table size")
