@@ -601,7 +601,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 reg &= ~(CR_RXD | CR_TXD | CR_TXR | CR_RXR);
                 break;
 
-              case CFG:
+              case CFGR:
                 reg = regs.config;
                 break;
 
@@ -638,7 +638,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 reg = regs.txdp_hi;
                 break;
 
-              case TXCFG:
+              case TX_CFG:
                 reg = regs.txcfg;
                 break;
 
@@ -654,7 +654,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 reg = regs.rxdp_hi;
                 break;
 
-              case RXCFG:
+              case RX_CFG:
                 reg = regs.rxcfg;
                 break;
 
@@ -831,65 +831,65 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             }
             break;
 
-          case CFG:
-            if (reg & CFG_LNKSTS ||
-                reg & CFG_SPDSTS ||
-                reg & CFG_DUPSTS ||
-                reg & CFG_RESERVED ||
-                reg & CFG_T64ADDR ||
-                reg & CFG_PCI64_DET)
-                panic("writing to read-only or reserved CFG bits!\n");
+          case CFGR:
+            if (reg & CFGR_LNKSTS ||
+                reg & CFGR_SPDSTS ||
+                reg & CFGR_DUPSTS ||
+                reg & CFGR_RESERVED ||
+                reg & CFGR_T64ADDR ||
+                reg & CFGR_PCI64_DET)
+                panic("writing to read-only or reserved CFGR bits!\n");
 
-            regs.config |= reg & ~(CFG_LNKSTS | CFG_SPDSTS | CFG_DUPSTS |
-                                   CFG_RESERVED | CFG_T64ADDR | CFG_PCI64_DET);
+            regs.config |= reg & ~(CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
+                                   CFGR_RESERVED | CFGR_T64ADDR | CFGR_PCI64_DET);
 
 // all these #if 0's are because i don't THINK the kernel needs to
 // have these implemented. if there is a problem relating to one of
 // these, you may need to add functionality in.
 #if 0
-            if (reg & CFG_TBI_EN) ;
-            if (reg & CFG_MODE_1000) ;
+            if (reg & CFGR_TBI_EN) ;
+            if (reg & CFGR_MODE_1000) ;
 #endif
 
-            if (reg & CFG_AUTO_1000)
-                panic("CFG_AUTO_1000 not implemented!\n");
+            if (reg & CFGR_AUTO_1000)
+                panic("CFGR_AUTO_1000 not implemented!\n");
 
 #if 0
-            if (reg & CFG_PINT_DUPSTS ||
-                reg & CFG_PINT_LNKSTS ||
-                reg & CFG_PINT_SPDSTS)
+            if (reg & CFGR_PINT_DUPSTS ||
+                reg & CFGR_PINT_LNKSTS ||
+                reg & CFGR_PINT_SPDSTS)
                 ;
 
-            if (reg & CFG_TMRTEST) ;
-            if (reg & CFG_MRM_DIS) ;
-            if (reg & CFG_MWI_DIS) ;
+            if (reg & CFGR_TMRTEST) ;
+            if (reg & CFGR_MRM_DIS) ;
+            if (reg & CFGR_MWI_DIS) ;
 
-            if (reg & CFG_T64ADDR)
-                panic("CFG_T64ADDR is read only register!\n");
+            if (reg & CFGR_T64ADDR)
+                panic("CFGR_T64ADDR is read only register!\n");
 
-            if (reg & CFG_PCI64_DET)
-                panic("CFG_PCI64_DET is read only register!\n");
+            if (reg & CFGR_PCI64_DET)
+                panic("CFGR_PCI64_DET is read only register!\n");
 
-            if (reg & CFG_DATA64_EN) ;
-            if (reg & CFG_M64ADDR) ;
-            if (reg & CFG_PHY_RST) ;
-            if (reg & CFG_PHY_DIS) ;
+            if (reg & CFGR_DATA64_EN) ;
+            if (reg & CFGR_M64ADDR) ;
+            if (reg & CFGR_PHY_RST) ;
+            if (reg & CFGR_PHY_DIS) ;
 #endif
 
-            if (reg & CFG_EXTSTS_EN)
+            if (reg & CFGR_EXTSTS_EN)
                 extstsEnable = true;
             else
                 extstsEnable = false;
 
 #if 0
-              if (reg & CFG_REQALG) ;
-              if (reg & CFG_SB) ;
-              if (reg & CFG_POW) ;
-              if (reg & CFG_EXD) ;
-              if (reg & CFG_PESEL) ;
-              if (reg & CFG_BROM_DIS) ;
-              if (reg & CFG_EXT_125) ;
-              if (reg & CFG_BEM) ;
+              if (reg & CFGR_REQALG) ;
+              if (reg & CFGR_SB) ;
+              if (reg & CFGR_POW) ;
+              if (reg & CFGR_EXD) ;
+              if (reg & CFGR_PESEL) ;
+              if (reg & CFGR_BROM_DIS) ;
+              if (reg & CFGR_EXT_125) ;
+              if (reg & CFGR_BEM) ;
 #endif
             break;
 
@@ -948,14 +948,14 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             regs.txdp_hi = reg;
             break;
 
-          case TXCFG:
+          case TX_CFG:
             regs.txcfg = reg;
 #if 0
-            if (reg & TXCFG_CSI) ;
-            if (reg & TXCFG_HBI) ;
-            if (reg & TXCFG_MLB) ;
-            if (reg & TXCFG_ATP) ;
-            if (reg & TXCFG_ECRETRY) {
+            if (reg & TX_CFG_CSI) ;
+            if (reg & TX_CFG_HBI) ;
+            if (reg & TX_CFG_MLB) ;
+            if (reg & TX_CFG_ATP) ;
+            if (reg & TX_CFG_ECRETRY) {
                 /*
                  * this could easily be implemented, but considering
                  * the network is just a fake pipe, wouldn't make
@@ -963,12 +963,12 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
                  */
             }
 
-            if (reg & TXCFG_BRST_DIS) ;
+            if (reg & TX_CFG_BRST_DIS) ;
 #endif
 
 #if 0
             /* we handle our own DMA, ignore the kernel's exhortations */
-            if (reg & TXCFG_MXDMA) ;
+            if (reg & TX_CFG_MXDMA) ;
 #endif
 
             // also, we currently don't care about fill/drain
@@ -992,23 +992,23 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             regs.rxdp_hi = reg;
             break;
 
-          case RXCFG:
+          case RX_CFG:
             regs.rxcfg = reg;
 #if 0
-            if (reg & RXCFG_AEP) ;
-            if (reg & RXCFG_ARP) ;
-            if (reg & RXCFG_STRIPCRC) ;
-            if (reg & RXCFG_RX_RD) ;
-            if (reg & RXCFG_ALP) ;
-            if (reg & RXCFG_AIRL) ;
+            if (reg & RX_CFG_AEP) ;
+            if (reg & RX_CFG_ARP) ;
+            if (reg & RX_CFG_STRIPCRC) ;
+            if (reg & RX_CFG_RX_RD) ;
+            if (reg & RX_CFG_ALP) ;
+            if (reg & RX_CFG_AIRL) ;
 
             /* we handle our own DMA, ignore what kernel says about it */
-            if (reg & RXCFG_MXDMA) ;
+            if (reg & RX_CFG_MXDMA) ;
 
             //also, we currently don't care about fill/drain thresholds
             //though this may change in the future with more realistic
             //networks or a driver which changes it according to feedback
-            if (reg & (RXCFG_DRTH | RXCFG_DRTH0)) ;
+            if (reg & (RX_CFG_DRTH | RX_CFG_DRTH0)) ;
 #endif
             break;
 
@@ -1359,8 +1359,8 @@ void
 NSGigE::regsReset()
 {
     memset(&regs, 0, sizeof(regs));
-    regs.config = CFG_LNKSTS;
-    regs.mear = MEAR_MDDIR | MEAR_EEDO;
+    regs.config = CFGR_LNKSTS;
+    regs.mear = 0x22;
     regs.txcfg = 0x120; // set drain threshold to 1024 bytes and
                         // fill threshold to 32 bytes
     regs.rxcfg = 0x4;   // set drain threshold to 16 bytes
