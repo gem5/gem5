@@ -26,35 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Portions of code taken from: */
-
-/* ns83820.c by Benjamin LaHaise with contributions.
- *
- * Questions/comments/discussion to linux-ns83820@kvack.org.
- *
- * $Revision: 1.34.2.23 $
- *
- * Copyright 2001 Benjamin LaHaise.
- * Copyright 2001, 2002 Red Hat.
- *
- * Mmmm, chocolate vanilla mocha...
- *
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
 /* @file
  * Ethernet device register definitions for the National
  * Semiconductor DP83820 Ethernet controller
@@ -63,26 +34,9 @@
 #ifndef __DEV_NS_GIGE_REG_H__
 #define __DEV_NS_GIGE_REG_H__
 
-/*
- * Configuration Register Map
- */
-#define NS_ID                   0x00    /* identification register */
-#define NS_CS                   0x04    /* command and status register */
-#define NS_RID                  0x08    /* revision ID register */
-#define NS_LAT			0x0C	/* latency timer register */
-#define NS_IOA			0x10	/* IO base address register */
-#define NS_MA			0x14	/* memory address register */
-#define NS_MA1			0x18	/* memory address high dword register */
-#define NS_SID	                0x2C	/* subsystem identification register */
-#define NS_ROM	                0x30	/* boot ROM configuration register */
-#define NS_CAPPTR		0x34	/* number of tx descriptors */
-#define NS_INT	                0x3C	/* interrupt select register */
-#define NS_PMCAP 		0x40	/* power mgmt capabilities register */
-#define NS_PMCS    		0x44	/* power mgmt control and status
-                                           register */
-/* Operational Register Map */
+/* Device Register Address Map */
 #define CR		0x00
-#define CFG		0x04
+#define CFGR		0x04
 #define MEAR		0x08
 #define PTSCR		0x0c
 #define	ISR		0x10
@@ -91,11 +45,11 @@
 #define	IHR		0x1c
 #define TXDP		0x20
 #define TXDP_HI		0x24
-#define TXCFG		0x28
+#define TX_CFG		0x28
 #define GPIOR		0x2c
 #define RXDP		0x30
 #define RXDP_HI		0x34
-#define RXCFG		0x38
+#define RX_CFG		0x38
 #define PQCR		0x3c
 #define WCSR		0x40
 #define PCR		0x44
@@ -121,7 +75,7 @@
 #define LAST            0xf8
 #define RESERVED        0xfc
 
-/* chip command register */
+/* Chip Command Register */
 #define CR_TXE		0x00000001
 #define CR_TXD		0x00000002
 #define CR_RXE		0x00000004
@@ -132,37 +86,37 @@
 #define CR_RST		0x00000100
 
 /* configuration register */
-#define CFG_LNKSTS	0x80000000
-#define CFG_SPDSTS	0x60000000
-#define CFG_SPDSTS1	0x40000000
-#define CFG_SPDSTS0	0x20000000
-#define CFG_DUPSTS	0x10000000
-#define CFG_TBI_EN	0x01000000
-#define CFG_RESERVED    0x0e000000
-#define CFG_MODE_1000	0x00400000
-#define CFG_AUTO_1000	0x00200000
-#define CFG_PINT_CTL	0x001c0000
-#define CFG_PINT_DUPSTS	0x00100000
-#define CFG_PINT_LNKSTS	0x00080000
-#define CFG_PINT_SPDSTS	0x00040000
-#define CFG_TMRTEST	0x00020000
-#define CFG_MRM_DIS	0x00010000
-#define CFG_MWI_DIS	0x00008000
-#define CFG_T64ADDR	0x00004000
-#define CFG_PCI64_DET	0x00002000
-#define CFG_DATA64_EN	0x00001000
-#define CFG_M64ADDR	0x00000800
-#define CFG_PHY_RST	0x00000400
-#define CFG_PHY_DIS	0x00000200
-#define CFG_EXTSTS_EN	0x00000100
-#define CFG_REQALG	0x00000080
-#define CFG_SB		0x00000040
-#define CFG_POW		0x00000020
-#define CFG_EXD		0x00000010
-#define CFG_PESEL	0x00000008
-#define CFG_BROM_DIS	0x00000004
-#define CFG_EXT_125	0x00000002
-#define CFG_BEM		0x00000001
+#define CFGR_LNKSTS	0x80000000
+#define CFGR_SPDSTS	0x60000000
+#define CFGR_SPDSTS1	0x40000000
+#define CFGR_SPDSTS0	0x20000000
+#define CFGR_DUPSTS	0x10000000
+#define CFGR_TBI_EN	0x01000000
+#define CFGR_RESERVED    0x0e000000
+#define CFGR_MODE_1000	0x00400000
+#define CFGR_AUTO_1000	0x00200000
+#define CFGR_PINT_CTL	0x001c0000
+#define CFGR_PINT_DUPSTS	0x00100000
+#define CFGR_PINT_LNKSTS	0x00080000
+#define CFGR_PINT_SPDSTS	0x00040000
+#define CFGR_TMRTEST	0x00020000
+#define CFGR_MRM_DIS	0x00010000
+#define CFGR_MWI_DIS	0x00008000
+#define CFGR_T64ADDR	0x00004000
+#define CFGR_PCI64_DET	0x00002000
+#define CFGR_DATA64_EN	0x00001000
+#define CFGR_M64ADDR	0x00000800
+#define CFGR_PHY_RST	0x00000400
+#define CFGR_PHY_DIS	0x00000200
+#define CFGR_EXTSTS_EN	0x00000100
+#define CFGR_REQALG	0x00000080
+#define CFGR_SB		0x00000040
+#define CFGR_POW		0x00000020
+#define CFGR_EXD		0x00000010
+#define CFGR_PESEL	0x00000008
+#define CFGR_BROM_DIS	0x00000004
+#define CFGR_EXT_125	0x00000002
+#define CFGR_BEM		0x00000001
 
 /* EEPROM access register */
 #define MEAR_EEDI             	0x00000001
@@ -222,24 +176,24 @@
                            ISR_RXIDLE|ISR_RXDESC|ISR_RXOK))
 
 /* transmit configuration register */
-#define TXCFG_CSI	0x80000000
-#define TXCFG_HBI	0x40000000
-#define TXCFG_MLB	0x20000000
-#define TXCFG_ATP	0x10000000
-#define TXCFG_ECRETRY	0x00800000
-#define TXCFG_BRST_DIS	0x00080000
-#define TXCFG_MXDMA1024	0x00000000
-#define TXCFG_MXDMA512	0x00700000
-#define TXCFG_MXDMA256	0x00600000
-#define TXCFG_MXDMA128	0x00500000
-#define TXCFG_MXDMA64	0x00400000
-#define TXCFG_MXDMA32	0x00300000
-#define TXCFG_MXDMA16	0x00200000
-#define TXCFG_MXDMA8	0x00100000
-#define TXCFG_MXDMA     0x00700000
+#define TX_CFG_CSI	0x80000000
+#define TX_CFG_HBI	0x40000000
+#define TX_CFG_MLB	0x20000000
+#define TX_CFG_ATP	0x10000000
+#define TX_CFG_ECRETRY	0x00800000
+#define TX_CFG_BRST_DIS	0x00080000
+#define TX_CFG_MXDMA1024	0x00000000
+#define TX_CFG_MXDMA512	0x00700000
+#define TX_CFG_MXDMA256	0x00600000
+#define TX_CFG_MXDMA128	0x00500000
+#define TX_CFG_MXDMA64	0x00400000
+#define TX_CFG_MXDMA32	0x00300000
+#define TX_CFG_MXDMA16	0x00200000
+#define TX_CFG_MXDMA8	0x00100000
+#define TX_CFG_MXDMA     0x00700000
 
-#define TXCFG_FLTH_MASK 0x0000ff00
-#define TXCFG_DRTH_MASK 0x000000ff
+#define TX_CFG_FLTH_MASK 0x0000ff00
+#define TX_CFG_DRTH_MASK 0x000000ff
 
 /*general purpose I/O control register */
 #define GPIOR_GP5_OE		0x00000200
@@ -251,16 +205,16 @@
 #define GPIOR_GP1_OUT		0x00000001
 
 /* receive configuration register */
-#define RXCFG_AEP	0x80000000
-#define RXCFG_ARP	0x40000000
-#define RXCFG_STRIPCRC	0x20000000
-#define RXCFG_RX_FD	0x10000000
-#define RXCFG_ALP	0x08000000
-#define RXCFG_AIRL	0x04000000
-#define RXCFG_MXDMA512	0x00700000
-#define RXCFG_MXDMA     0x00700000
-#define RXCFG_DRTH	0x0000003e
-#define RXCFG_DRTH0	0x00000002
+#define RX_CFG_AEP	0x80000000
+#define RX_CFG_ARP	0x40000000
+#define RX_CFG_STRIPCRC	0x20000000
+#define RX_CFG_RX_FD	0x10000000
+#define RX_CFG_ALP	0x08000000
+#define RX_CFG_AIRL	0x04000000
+#define RX_CFG_MXDMA512	0x00700000
+#define RX_CFG_MXDMA     0x00700000
+#define RX_CFG_DRTH	0x0000003e
+#define RX_CFG_DRTH0	0x00000002
 
 /* pause control status register */
 #define PCR_PSEN	(1 << 31)
@@ -367,6 +321,6 @@ struct ns_desc {
 
 
 /* speed status */
-#define SPDSTS_POLARITY	(CFG_SPDSTS1 | CFG_SPDSTS0 | CFG_DUPSTS | (lnksts ? CFG_LNKSTS : 0))
+#define SPDSTS_POLARITY	(CFGR_SPDSTS1 | CFGR_SPDSTS0 | CFGR_DUPSTS | (lnksts ? CFGR_LNKSTS : 0))
 
 #endif /* __DEV_NS_GIGE_REG_H__ */
