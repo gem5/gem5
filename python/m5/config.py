@@ -268,7 +268,7 @@ class MetaSimObject(type):
                 e.args = (msg, )
                 raise
         # I would love to get rid of this
-        elif isSimObject(value) or isSimObjSequence(value) or isParamContext(value):
+        elif isSimObject(value) or isSimObjSequence(value):
            cls._values[attr] = value
         else:
             raise AttributeError, \
@@ -334,11 +334,14 @@ class SimObject(object):
                 e.args = (msg, )
                 raise
         # I would love to get rid of this
-        elif isSimObject(value) or isSimObjSequence(value) or isParamContext(value):
+        elif isSimObject(value) or isSimObjSequence(value):
             pass
         else:
             raise AttributeError, "Class %s has no parameter %s" \
                   % (self.__class__.__name__, attr)
+
+        # clear out old child with this name, if any
+        self.clear_child(attr)
 
         if isSimObject(value):
             value.set_path(self, attr)
@@ -354,6 +357,16 @@ class SimObject(object):
         if key == 0:
             return self
         raise TypeError, "Non-zero index '%s' to SimObject" % key
+
+    # clear out children with given name, even if it's a vector
+    def clear_child(self, name):
+        if not self._children.has_key(name):
+            return
+        child = self._children[name]
+        if isinstance(child, SimObjVector):
+            for i in xrange(len(child)):
+                del self._children["s%d" % (name, i)]
+        del self._children[name]
 
     def add_child(self, name, value):
         self._children[name] = value
