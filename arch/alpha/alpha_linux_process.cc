@@ -44,7 +44,7 @@
 
 #include "arch/alpha/alpha_common_syscall_emul.hh"
 #include "sim/syscall_emul.hh"
-#include "sim/universe.hh"	// for curTick & ticksPerSecond
+#include "sim/root.hh"	// for curTick & ticksPerSecond
 
 #include "arch/alpha/alpha_linux_process.hh"
 

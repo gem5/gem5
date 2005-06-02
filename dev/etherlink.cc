@@ -43,7 +43,7 @@
 #include "sim/builder.hh"
 #include "sim/serialize.hh"
 #include "sim/system.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 

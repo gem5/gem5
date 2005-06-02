@@ -31,7 +31,7 @@
 
 #include <vector>
 #include <poll.h>
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 class Checkpoint;
 

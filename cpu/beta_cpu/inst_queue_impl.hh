@@ -36,7 +36,7 @@
 
 #include <vector>
 
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 #include "cpu/beta_cpu/inst_queue.hh"
 

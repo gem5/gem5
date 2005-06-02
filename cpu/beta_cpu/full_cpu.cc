@@ -31,7 +31,7 @@
 #else
 #include "sim/process.hh"
 #endif
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 #include "cpu/beta_cpu/alpha_dyn_inst.hh"
 #include "cpu/beta_cpu/alpha_impl.hh"

@@ -41,7 +41,7 @@
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "sim/builder.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 

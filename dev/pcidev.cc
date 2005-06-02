@@ -46,7 +46,7 @@
 #include "mem/functional_mem/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/param.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 #include "dev/tsunamireg.h"
 
 using namespace std;

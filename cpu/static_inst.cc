@@ -28,7 +28,7 @@
 
 #include <iostream>
 #include "cpu/static_inst.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 template <class ISA>
 StaticInstPtr<ISA> StaticInst<ISA>::nullStaticInstPtr;

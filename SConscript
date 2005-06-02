@@ -223,6 +223,7 @@ base_sources = Split('''
 	sim/main.cc
 	sim/param.cc
 	sim/profile.cc
+	sim/root.cc
 	sim/serialize.cc
 	sim/sim_events.cc
 	sim/sim_exit.cc
@@ -231,7 +232,6 @@ base_sources = Split('''
 	sim/stat_context.cc
 	sim/stat_control.cc
 	sim/trace_context.cc
-	sim/universe.cc
         ''')
 
 # MySql sources

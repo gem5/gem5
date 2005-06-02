@@ -34,7 +34,7 @@
 #include "base/cprintf.hh"
 #include "base/match.hh"
 #include "sim/host.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 #ifndef TRACING_ON
 #ifndef NDEBUG

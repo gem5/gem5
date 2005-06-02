@@ -43,7 +43,7 @@
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 

@@ -45,7 +45,7 @@
 #include "arch/alpha/alpha_tru64_process.hh"
 
 #include "sim/syscall_emul.hh"
-#include "sim/universe.hh"	// for curTick & ticksPerSecond
+#include "sim/root.hh"	// for curTick & ticksPerSecond
 
 #include "base/trace.hh"
 

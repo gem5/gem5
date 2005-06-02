@@ -37,7 +37,7 @@
 #include "sim/builder.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 

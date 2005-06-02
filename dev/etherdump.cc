@@ -39,7 +39,7 @@
 #include "base/output.hh"
 #include "dev/etherdump.hh"
 #include "sim/builder.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using std::string;
 

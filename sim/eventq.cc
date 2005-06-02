@@ -38,7 +38,7 @@
 
 #include "sim/eventq.hh"
 #include "base/trace.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 

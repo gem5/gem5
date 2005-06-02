@@ -61,7 +61,7 @@
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 

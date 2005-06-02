@@ -37,7 +37,7 @@
 #include "mem/mem_req.hh"
 #include "cpu/beta_cpu/fetch.hh"
 
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 template<class Impl>
 SimpleFetch<Impl>::CacheCompletionEvent

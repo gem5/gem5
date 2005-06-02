@@ -36,7 +36,7 @@
 #include "cpu/exec_context.hh"
 #include "cpu/pc_event.hh"
 #include "sim/debug.hh"
-#include "sim/universe.hh"
+#include "sim/root.hh"
 
 using namespace std;
 
