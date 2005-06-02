@@ -1212,7 +1212,7 @@ class NetworkBandwidth(float,ParamValue):
         return str(self.val)
 
     def ini_str(self):
-        return '%f' % (ticks_per_sec / self.val)
+        return '%f' % (ticks_per_sec / float(self))
 
 class MemoryBandwidth(float,ParamValue):
     def __new__(self, value):
@@ -1223,7 +1223,7 @@ class MemoryBandwidth(float,ParamValue):
         return str(self.val)
 
     def ini_str(self):
-        return '%f' % (ticks_per_sec / self.val)
+        return '%f' % (ticks_per_sec / float(self))
 
 #
 # "Constants"... handy aliases for various values.

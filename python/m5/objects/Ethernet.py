@@ -12,7 +12,7 @@ class EtherLink(SimObject):
     int1 = Param.EtherInt("interface 1")
     int2 = Param.EtherInt("interface 2")
     delay = Param.Latency('0us', "packet transmit delay")
-    speed = Param.NetworkBandwidth('100Mbps', "link speed")
+    speed = Param.NetworkBandwidth('1Gbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
 
 class EtherBus(SimObject):
