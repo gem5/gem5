@@ -37,7 +37,7 @@
 #
 # Then type 'scons' to build the default configuration (see below), or
 # 'scons <CONFIG>/<binary>' to build some other configuration (e.g.,
-# 'KERNEL/m5.opt' for the optimized full-system version).
+# 'ALPHA_FS/m5.opt' for the optimized full-system version).
 #
 ###################################################
 
@@ -73,7 +73,7 @@ sys.path.append(os.path.join(SRCDIR, 'python'))
 # The build system infers the build options from the subdirectory name
 # that the simulator is built under.  The subdirectory name must be of
 # the form <CONFIG>[.<OPT>]*, where <CONFIG> is a base configuration
-# (e.g., ALPHA or KERNEL) and OPT is an option (e.g., MYSQL).  The
+# (e.g., ALPHA_SE or ALPHA_FS) and OPT is an option (e.g., MYSQL).  The
 # following code defines the standard configurations and options.
 # Additional local configurations and options are read from the file
 # 'local_configs' if it exists.
@@ -88,20 +88,20 @@ sys.path.append(os.path.join(SRCDIR, 'python'))
 ###################################################
 
 # Base non-full-system Alpha ISA configuration.
-def AlphaConfig(env):
+def AlphaSyscallEmulConfig(env):
     env.Replace(TARGET_ISA = 'alpha')
     env.Append(CPPDEFINES = 'SS_COMPATIBLE_FP')
 
 # Base full-system configuration.
-def KernelConfig(env):
+def AlphaFullSysConfig(env):
     env.Replace(TARGET_ISA = 'alpha')
     env.Replace(FULL_SYSTEM = True)
     env.Append(CPPDEFINES = ['FULL_SYSTEM'])
 
 # Base configurations map.
 configs_map = {
-    'ALPHA' : AlphaConfig,
-    'KERNEL' : KernelConfig
+    'ALPHA_SE' : AlphaSyscallEmulConfig,
+    'ALPHA_FS' : AlphaFullSysConfig
     }
 
 # Disable FastAlloc object allocation.
@@ -141,7 +141,7 @@ def set_dir_options(dir, env):
 
 # Set the default configuration and binary.  The default target (if
 # scons is invoked at the top level with no command-line targets) is
-# 'ALPHA/m5.debug'.  If scons is invoked in a subdirectory with no
+# 'ALPHA_SE/m5.debug'.  If scons is invoked in a subdirectory with no
 # command-line targets, the configuration
 
 ###################################################
@@ -163,7 +163,7 @@ def set_dir_options(dir, env):
 #
 # 3. If there are no command-line targets and scons was invoked from
 #    the root build directory, a default configuration is used.  The
-#    built-in default is ALPHA, but this can be overridden by setting the
+#    built-in default is ALPHA_SE, but this can be overridden by setting the
 #    M5_DEFAULT_CONFIG shell environment veriable.
 #
 # In cases 2 & 3, the specific file target defaults to 'm5.debug', but
@@ -173,7 +173,7 @@ def set_dir_options(dir, env):
 ###################################################
 
 # Find default configuration & binary.
-default_config = os.environ.get('M5_DEFAULT_CONFIG', 'ALPHA')
+default_config = os.environ.get('M5_DEFAULT_CONFIG', 'ALPHA_SE')
 default_binary = os.environ.get('M5_DEFAULT_BINARY', 'm5.debug')
 
 # Ask SCons which directory it was invoked from.  If you invoke SCons
@@ -187,7 +187,7 @@ if launch_dir == ROOT:
         # easy: use specified targets as is
         my_targets = COMMAND_LINE_TARGETS
     else:
-        # default target (ALPHA/m5.debug, unless overridden)
+        # default target (ALPHA_SE/m5.debug, unless overridden)
         target = os.path.join(default_config, default_binary)
         my_targets = [target]
         Default(target)

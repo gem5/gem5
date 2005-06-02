@@ -23,7 +23,7 @@ in obtaining disk images, contact us at m5-dev@eecs.umich.edu.
 WHAT'S NEEDED
 -------------
 -GCC(3.X)
--Python(2.2.2+)
+-Python(2.4+)
 
 WHAT'S RECOMMENDED
 ------------------
@@ -40,9 +40,9 @@ i.e., the one containing the m5, m5-test, and ext directories.
 There are three different build targets and three optimizations in each level:
 Target:
 -------
-ALPHA  - Syscall emulation simulation
-KERNEL - Linux full system simulation
-KERNEL_TLASER - Tru64 Unix full system simulation
+ALPHA_SE - Syscall emulation simulation
+ALPHA_FS - Linux full system simulation
+ALPHA_FS_TL - Tru64 (Turbolaser) Unix full system simulation
 
 Optimization:
 -------------
@@ -51,9 +51,9 @@ m5.opt   - optimized version of code with tracing
 m5.fast  - optimized version of the code without tracing and asserts
 
 cd $top/m5/build
-scons TARGET/OPTLEVL  # e.g. KERNEL/m5.opt, use -j N if you have a MP system
+scons TARGET/OPTLEVL  # e.g. ALPHA_FS/m5.opt, use -j N if you have a MP system
 cd $top/m5-test
-./do-tests.pl -B ALPHA	# test what you just built
-./do-tests.pl -B KERNEL	# test what you just built
+./do-tests.pl -B ALPHA_SE	# test what you just built
+./do-tests.pl -B ALPHA_FS	# test what you just built
 # wait for tests to run...
 # should end with "finished do-tests successfully!"
