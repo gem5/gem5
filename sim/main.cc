@@ -127,11 +127,12 @@ showBriefHelp(ostream &out)
 "   -I            add the directory <dir> to python's path\n"
 "   -P            execute <python> directly in the configuration\n"
 "   --var=val     set the python variable <var> to '<val>'\n"
-"   <configfile>  config file name (.py or .mpy)\n",
+"   <configfile>  config file name (ends in .py)\n\n",
              prog);
 
-    ccprintf(out, "%s -X\n    -X            extract embedded files\n", prog);
-    ccprintf(out, "%s -h\n    -h            print long help\n", prog);
+    ccprintf(out, "%s -X\n   -X            extract embedded files\n\n", prog);
+    ccprintf(out, "%s -h\n   -h            print short help\n\n", prog);
+    ccprintf(out, "%s -H\n   -H            print long help\n\n", prog);
 }
 
 /// Show verbose help message.  Includes parameter listing from
@@ -245,11 +246,16 @@ main(int argc, char **argv)
     signal(SIGINT, exitNowHandler);		// dump final stats and exit
     signal(SIGABRT, abortHandler);
 
-    sayHello(cerr);
-
     bool configfile_found = false;
     PythonConfig pyconfig;
     string outdir;
+
+    if (argc < 2) {
+        showBriefHelp(cerr);
+        exit(1);
+    }
+
+    sayHello(cerr);
 
     // Parse command-line options.
     // Since most of the complex options are handled through the
@@ -283,6 +289,10 @@ main(int argc, char **argv)
                 break;
 
               case 'h':
+                showBriefHelp(cerr);
+                exit(1);
+
+              case 'H':
                 showLongHelp(cerr);
                 exit(1);
 
@@ -328,9 +338,8 @@ main(int argc, char **argv)
             string file(arg_str);
             string base, ext;
 
-            if (!split_last(file, base, ext, '.') ||
-                ext != "py" && ext != "mpy")
-                panic("Config file '%s' must end in '.py' or '.mpy'\n", file);
+            if (!split_last(file, base, ext, '.') || ext != "py")
+                panic("Config file '%s' must end in '.py'\n", file);
 
             pyconfig.load(file);
             configfile_found = true;
