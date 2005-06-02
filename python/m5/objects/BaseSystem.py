@@ -2,7 +2,7 @@ from m5 import *
 class BaseSystem(SimObject):
     type = 'BaseSystem'
     abstract = True
-    boot_cpu_frequency = Param.Frequency(Self.cpu[0].cycle_time.frequency,
+    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
                                          "boot processor frequency")
     memctrl = Param.MemoryController(Parent.any, "memory controller")
     physmem = Param.PhysicalMemory(Parent.any, "phsyical memory")

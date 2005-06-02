@@ -58,7 +58,7 @@ class NSGigE(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
-    cycle_time = Param.Frequency('100MHz', "State machine processor frequency")
+    clock = Param.Clock('100MHz', "State machine processor frequency")
 
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
@@ -95,7 +95,7 @@ class Sinic(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
-    cycle_time = Param.Frequency('100MHz', "State machine processor frequency")
+    clock = Param.Clock('100MHz', "State machine processor frequency")
 
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")

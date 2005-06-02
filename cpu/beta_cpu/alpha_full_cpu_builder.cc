@@ -71,7 +71,7 @@ class DerivAlphaFullCPU : public AlphaFullCPU<AlphaSimpleImpl>
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
-    Param<int> cycle_time;
+    Param<int> clock;
     Param<int> numThreads;
 
 #ifdef FULL_SYSTEM
@@ -164,7 +164,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
-    INIT_PARAM(cycle_time, "cpu cycle time"),
+    INIT_PARAM(clock, "clock speed"),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
 
 #ifdef FULL_SYSTEM
@@ -298,7 +298,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
 
     AlphaSimpleParams params;
 
-    params.cycleTime = cycle_time;
+    params.clock = clock;
 
     params.name = getInstanceName();
     params.numberOfThreads = actual_num_threads;

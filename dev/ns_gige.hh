@@ -176,8 +176,8 @@ class NSGigE : public PciDev
     ns_desc rxDescCache;
 
     /* state machine cycle time */
-    Tick cycleTime;
-    inline Tick cycles(int numCycles) const { return numCycles * cycleTime; }
+    Tick clock;
+    inline Tick cycles(int numCycles) const { return numCycles * clock; }
 
     /* tx State Machine */
     TxState txState;
@@ -328,7 +328,7 @@ class NSGigE : public PciDev
         HierParams *hier;
         Bus *header_bus;
         Bus *payload_bus;
-        Tick cycle_time;
+        Tick clock;
         Tick intr_delay;
         Tick tx_delay;
         Tick rx_delay;

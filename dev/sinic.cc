@@ -98,7 +98,7 @@ Device::Device(Params *p)
         pioInterface = newPioInterface(p->name, p->hier, p->io_bus, this,
                                        &Device::cacheAccess);
 
-        pioLatency = p->pio_latency * p->io_bus->clockRatio;
+        pioLatency = p->pio_latency * p->io_bus->clockRate;
 
         if (p->payload_bus)
             dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->io_bus,
@@ -112,7 +112,7 @@ Device::Device(Params *p)
         pioInterface = newPioInterface(p->name, p->hier, p->payload_bus, this,
                                        &Device::cacheAccess);
 
-        pioLatency = p->pio_latency * p->payload_bus->clockRatio;
+        pioLatency = p->pio_latency * p->payload_bus->clockRate;
 
         dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->payload_bus,
                                              p->payload_bus, 1,

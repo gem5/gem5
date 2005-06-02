@@ -59,7 +59,7 @@ PciConfigAll::PciConfigAll(const string &name,
         pioInterface = newPioInterface(name, hier, bus, this,
                                       &PciConfigAll::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * bus->clockRatio;
+        pioLatency = pio_latency * bus->clockRate;
     }
 
     // Make all the pointers to devices null

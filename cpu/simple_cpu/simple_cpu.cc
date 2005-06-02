@@ -831,7 +831,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
 
-    Param<int> cycle_time;
+    Param<int> clock;
     SimObjectParam<BaseMem *> icache;
     SimObjectParam<BaseMem *> dcache;
 
@@ -863,7 +863,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
 
-    INIT_PARAM(cycle_time, "cpu cycle time"),
+    INIT_PARAM(clock, "clock speed"),
     INIT_PARAM(icache, "L1 instruction cache object"),
     INIT_PARAM(dcache, "L1 data cache object"),
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
@@ -889,7 +889,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
     params->deferRegistration = defer_registration;
-    params->cycleTime = cycle_time;
+    params->clock = clock;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
     params->icache_interface = (icache) ? icache->getInterface() : NULL;

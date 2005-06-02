@@ -25,4 +25,4 @@ class BaseCPU(SimObject):
     defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")
 
-    cycle_time = Param.Latency(Parent.frequency.latency, "clock speed")
+    clock = Param.Clock(Parent.clock, "clock speed")

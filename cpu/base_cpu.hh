@@ -48,12 +48,12 @@ class BaseCPU : public SimObject
 {
   protected:
     // CPU's clock period in terms of the number of ticks of curTime.
-    Tick cycleTime;
+    Tick clock;
 
   public:
-    inline Tick frequency() const { return Clock::Frequency / cycleTime; }
-    inline Tick cycles(int numCycles) const { return cycleTime * numCycles; }
-    inline Tick curCycle() const { return curTick / cycleTime; }
+    inline Tick frequency() const { return Clock::Frequency / clock; }
+    inline Tick cycles(int numCycles) const { return clock * numCycles; }
+    inline Tick curCycle() const { return curTick / clock; }
 
 #ifdef FULL_SYSTEM
   protected:
@@ -106,7 +106,7 @@ class BaseCPU : public SimObject
         Counter max_insts_all_threads;
         Counter max_loads_any_thread;
         Counter max_loads_all_threads;
-        Tick cycleTime;
+        Tick clock;
         bool functionTrace;
         Tick functionTraceStart;
 #ifdef FULL_SYSTEM

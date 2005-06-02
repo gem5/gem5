@@ -1096,12 +1096,20 @@ def tick_check(float_ticks):
     err = (float_ticks - int_ticks) / float_ticks
     if err > frequency_tolerance:
         print >> sys.stderr, "Warning: rounding error > tolerance"
+        print >> sys.stderr, "    %f rounded to %d" % (float_ticks, int_ticks)
+        #raise ValueError
     return int_ticks
 
 # superclass for "numeric" parameter values, to emulate math
 # operations in a type-safe way.  e.g., a Latency times an int returns
 # a new Latency object.
 class NumericParamValue(ParamValue):
+    def __str__(self):
+        return str(self.value)
+
+    def __float__(self):
+        return float(self.value)
+
     def __mul__(self, other):
         newobj = self.__class__(self)
         newobj.value *= other
@@ -1109,27 +1117,31 @@ class NumericParamValue(ParamValue):
 
     __rmul__ = __mul__
 
+    def __div__(self, other):
+        newobj = self.__class__(self)
+        newobj.value /= other
+        return newobj
+
+
+def getLatency(value):
+    if isinstance(value, Latency) or isinstance(value, Clock):
+        return value.value
+    elif isinstance(value, Frequency) or isinstance(value, RootClock):
+        return 1 / value.value
+    elif isinstance(value, str):
+        try:
+            return toLatency(value)
+        except ValueError:
+            try:
+                return 1 / toFrequency(value)
+            except ValueError:
+                pass # fall through
+    raise ValueError, "Invalid Frequency/Latency value '%s'" % value
+
+
 class Latency(NumericParamValue):
     def __init__(self, value):
-        if isinstance(value, Latency):
-            self.value = value.value
-        elif isinstance(value, Frequency):
-            self.value = 1 / value.value
-        elif isinstance(value, str):
-            try:
-                self.value = toLatency(value)
-            except ValueError:
-                try:
-                    freq = toFrequency(value)
-                except ValueError:
-                    raise ValueError, "Latency value '%s' is neither " \
-                          "frequency nor period" % value
-                self.value = 1 / freq
-        elif value == 0:
-            # the one unitless value that's OK...
-            self.value = value
-        else:
-            raise ValueError, "Invalid Latency value '%s'" % value
+        self.value = getLatency(value)
 
     def __getattr__(self, attr):
         if attr in ('latency', 'period'):
@@ -1138,31 +1150,13 @@ class Latency(NumericParamValue):
             return Frequency(self)
         raise AttributeError, "Latency object has no attribute '%s'" % attr
 
-    def __str__(self):
-        return str(self.value)
-
     # convert latency to ticks
     def ini_str(self):
         return str(tick_check(self.value * ticks_per_sec))
 
 class Frequency(NumericParamValue):
     def __init__(self, value):
-        if isinstance(value, Frequency):
-            self.value = value.value
-        elif isinstance(value, Latency):
-            self.value = 1 / value.value
-        elif isinstance(value, str):
-            try:
-                self.value = toFrequency(value)
-            except ValueError:
-                try:
-                    freq = toLatency(value)
-                except ValueError:
-                    raise ValueError, "Frequency value '%s' is neither " \
-                          "frequency nor period" % value
-                self.value = 1 / freq
-        else:
-            raise ValueError, "Invalid Frequency value '%s'" % value
+        self.value = 1 / getLatency(value)
 
     def __getattr__(self, attr):
         if attr == 'frequency':
@@ -1171,20 +1165,43 @@ class Frequency(NumericParamValue):
             return Latency(self)
         raise AttributeError, "Frequency object has no attribute '%s'" % attr
 
-    def __str__(self):
-        return str(self.value)
-
-    def __float__(self):
-        return float(self.value)
-
     # convert frequency to ticks per period
     def ini_str(self):
         return self.period.ini_str()
 
-# Just like Frequency, except ini_str() is absolute # of ticks per sec (Hz)
-class RootFrequency(Frequency):
+# Just like Frequency, except ini_str() is absolute # of ticks per sec (Hz).
+# We can't inherit from Frequency because we don't want it to be directly
+# assignable to a regular Frequency parameter.
+class RootClock(ParamValue):
+    def __init__(self, value):
+        self.value = 1 / getLatency(value)
+
+    def __getattr__(self, attr):
+        if attr == 'frequency':
+            return Frequency(self)
+        if attr in ('latency', 'period'):
+            return Latency(self)
+        raise AttributeError, "Frequency object has no attribute '%s'" % attr
+
     def ini_str(self):
         return str(tick_check(self.value))
+
+# A generic frequency and/or Latency value.  Value is stored as a latency,
+# but to avoid ambiguity this object does not support numeric ops (* or /).
+# An explicit conversion to a Latency or Frequency must be made first.
+class Clock(ParamValue):
+    def __init__(self, value):
+        self.value = getLatency(value)
+
+    def __getattr__(self, attr):
+        if attr == 'frequency':
+            return Frequency(self)
+        if attr in ('latency', 'period'):
+            return Latency(self)
+        raise AttributeError, "Frequency object has no attribute '%s'" % attr
+
+    def ini_str(self):
+        return self.period.ini_str()
 
 class NetworkBandwidth(float,ParamValue):
     def __new__(cls, value):
@@ -1223,7 +1240,7 @@ AllMemory = AddrRange(0, MaxAddr)
 # script once config is built.
 def instantiate(root):
     global ticks_per_sec
-    ticks_per_sec = float(root.frequency)
+    ticks_per_sec = float(root.clock.frequency)
     root.print_ini()
     noDot = True # temporary until we fix dot
     if not noDot:
@@ -1246,7 +1263,7 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
            'TcpPort', 'UdpPort', 'EthernetAddr',
-           'MemorySize', 'Latency', 'Frequency', 'RootFrequency',
+           'MemorySize', 'Latency', 'Frequency', 'RootClock', 'Clock',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',

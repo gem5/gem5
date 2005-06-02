@@ -11,7 +11,7 @@ class BaseCache(BaseMem):
     block_size = Param.Int("block size in bytes")
     compressed_bus = Param.Bool(False,
         "This cache connects to a compressed memory")
-    compression_latency = Param.Latency(0,
+    compression_latency = Param.Latency('0ns',
         "Latency in cycles of compression algorithm")
     do_copy = Param.Bool(False, "perform fast copies in the cache")
     hash_delay = Param.Int(1, "time in cycles of hash access")

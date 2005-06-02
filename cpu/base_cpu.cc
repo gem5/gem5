@@ -53,11 +53,11 @@ int maxThreadsPerCPU = 1;
 
 #ifdef FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), cycleTime(p->cycleTime), checkInterrupts(true),
+    : SimObject(p->name), clock(p->clock), checkInterrupts(true),
       params(p), number_of_threads(p->numberOfThreads), system(p->system)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), cycleTime(p->cycleTime), params(p),
+    : SimObject(p->name), clock(p->clock), params(p),
       number_of_threads(p->numberOfThreads)
 #endif
 {

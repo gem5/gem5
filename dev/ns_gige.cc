@@ -94,7 +94,7 @@ NSGigE::NSGigE(Params *p)
     : PciDev(p), ioEnable(false),
       txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
-      txXferLen(0), rxXferLen(0), cycleTime(p->cycle_time),
+      txXferLen(0), rxXferLen(0), clock(p->clock),
       txState(txIdle), txEnable(false), CTDD(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
       rxEnable(false), CRDD(false), rxPktBytes(0),
@@ -115,7 +115,7 @@ NSGigE::NSGigE(Params *p)
                                        p->header_bus, this,
                                        &NSGigE::cacheAccess);
 
-        pioLatency = p->pio_latency * p->header_bus->clockRatio;
+        pioLatency = p->pio_latency * p->header_bus->clockRate;
 
         if (p->payload_bus)
             dmaInterface = new DMAInterface<Bus>(name() + ".dma",
@@ -132,7 +132,7 @@ NSGigE::NSGigE(Params *p)
                                        p->payload_bus, this,
                                        &NSGigE::cacheAccess);
 
-        pioLatency = p->pio_latency * p->payload_bus->clockRatio;
+        pioLatency = p->pio_latency * p->payload_bus->clockRate;
 
         dmaInterface = new DMAInterface<Bus>(name() + ".dma",
                                              p->payload_bus,
@@ -2689,7 +2689,7 @@ REGISTER_SIM_OBJECT("NSGigEInt", NSGigEInt)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     Param<Addr> addr;
-    Param<Tick> cycle_time;
+    Param<Tick> clock;
     Param<Tick> tx_delay;
     Param<Tick> rx_delay;
     Param<Tick> intr_delay;
@@ -2723,7 +2723,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(cycle_time, "State machine processor frequency"),
+    INIT_PARAM(clock, "State machine processor frequency"),
     INIT_PARAM(tx_delay, "Transmit Delay"),
     INIT_PARAM(rx_delay, "Receive Delay"),
     INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
@@ -2769,7 +2769,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
 
-    params->cycle_time = cycle_time;
+    params->clock = clock;
     params->intr_delay = intr_delay;
     params->pmem = physmem;
     params->tx_delay = tx_delay;

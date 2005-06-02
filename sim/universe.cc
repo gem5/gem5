@@ -85,14 +85,14 @@ class Root : public SimObject
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
 
-    Param<Tick> frequency;
+    Param<Tick> clock;
     Param<string> output_file;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Root)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
 
-    INIT_PARAM(frequency, "tick frequency"),
+    INIT_PARAM(clock, "tick frequency"),
     INIT_PARAM(output_file, "file to dump simulator output to")
 
 END_INIT_SIM_OBJECT_PARAMS(Root)
@@ -109,7 +109,7 @@ CREATE_SIM_OBJECT(Root)
     Root *root = new Root(getInstanceName());
 
     using namespace Clock;
-    Frequency = frequency;
+    Frequency = clock;
     Float::s = static_cast<double>(Frequency);
     Float::ms = Float::s / 1.0e3;
     Float::us = Float::s / 1.0e6;

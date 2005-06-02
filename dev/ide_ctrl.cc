@@ -99,7 +99,7 @@ IdeController::IdeController(Params *p)
                                              params()->host_bus,
                                              params()->host_bus, 1,
                                              true);
-        pioLatency = params()->pio_latency * params()->host_bus->clockRatio;
+        pioLatency = params()->pio_latency * params()->host_bus->clockRate;
     }
 
     // setup the disks attached to controller
