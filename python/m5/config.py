@@ -291,6 +291,10 @@ class SimObject(object):
 
     def __init__(self, _value_parent = None, **kwargs):
         self._children = {}
+        if _value_parent and type(_value_parent) != type(self):
+            # this was called as a type conversion rather than a clone
+            raise TypeError, "Cannot convert %s to %s" % \
+                  (_value_parent.__class__.__name__, self.__class__.__name__)
         if not _value_parent:
             _value_parent = self.__class__
         # clone values
