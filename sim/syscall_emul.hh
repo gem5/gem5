@@ -158,46 +158,70 @@ class TypedBufferArg : public BaseBufferArg
 
 
 /// Handler for unimplemented syscalls that we haven't thought about.
-SyscallReturn unimplementedFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
+                                Process *p, ExecContext *xc);
 
 /// Handler for unimplemented syscalls that we never intend to
 /// implement (signal handling, etc.) and should not affect the correct
 /// behavior of the program.  Print a warning only if the appropriate
 /// trace flag is enabled.  Return success to the target program.
-SyscallReturn ignoreFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn ignoreFunc(SyscallDesc *desc, int num,
+                         Process *p, ExecContext *xc);
 
 /// Target exit() handler: terminate simulation.
-SyscallReturn exitFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn exitFunc(SyscallDesc *desc, int num,
+                       Process *p, ExecContext *xc);
 
 /// Target getpagesize() handler.
-SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num,
+                              Process *p, ExecContext *xc);
 
 /// Target obreak() handler: set brk address.
-SyscallReturn obreakFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn obreakFunc(SyscallDesc *desc, int num,
+                         Process *p, ExecContext *xc);
 
 /// Target close() handler.
-SyscallReturn closeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn closeFunc(SyscallDesc *desc, int num,
+                        Process *p, ExecContext *xc);
 
 /// Target read() handler.
-SyscallReturn readFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn readFunc(SyscallDesc *desc, int num,
+                       Process *p, ExecContext *xc);
 
 /// Target write() handler.
-SyscallReturn writeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn writeFunc(SyscallDesc *desc, int num,
+                        Process *p, ExecContext *xc);
 
 /// Target lseek() handler.
-SyscallReturn lseekFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn lseekFunc(SyscallDesc *desc, int num,
+                        Process *p, ExecContext *xc);
 
 /// Target munmap() handler.
-SyscallReturn munmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn munmapFunc(SyscallDesc *desc, int num,
+                         Process *p, ExecContext *xc);
 
 /// Target gethostname() handler.
-SyscallReturn gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn gethostnameFunc(SyscallDesc *desc, int num,
+                              Process *p, ExecContext *xc);
 
 /// Target unlink() handler.
-SyscallReturn unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
+                         Process *p, ExecContext *xc);
 
 /// Target rename() handler.
-SyscallReturn renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc);
+SyscallReturn renameFunc(SyscallDesc *desc, int num,
+                         Process *p, ExecContext *xc);
+
+
+/// Target truncate() handler.
+SyscallReturn truncateFunc(SyscallDesc *desc, int num,
+                           Process *p, ExecContext *xc);
+
+
+/// Target ftruncate() handler.
+SyscallReturn ftruncateFunc(SyscallDesc *desc, int num,
+                            Process *p, ExecContext *xc);
+
 
 /// This struct is used to build an target-OS-dependent table that
 /// maps the target's open() flags to the host open() flags.
@@ -264,7 +288,8 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
         return -ENOTTY;
 
       default:
-        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ 0x%llx\n", fd, req, xc->readPC());
+        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ 0x%llx\n",
+              fd, req, xc->readPC());
     }
 }
 
@@ -282,7 +307,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
     if (path == "/dev/sysdev0") {
         // This is a memory-mapped high-resolution timer device on Alpha.
         // We don't support it, so just punt.
-        DCOUT(SyscallWarnings) << "Ignoring open(" << path << ", ...)" << std::endl;
+        warn("Ignoring open(%s, ...)\n", path);
         return -ENOENT;
     }
 
@@ -300,11 +325,13 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 
     // any target flags left?
     if (tgtFlags != 0)
-        std::cerr << "Syscall: open: cannot decode flags: " <<  tgtFlags << std::endl;
+        warn("Syscall: open: cannot decode flags 0x%x", tgtFlags);
 
 #ifdef __CYGWIN32__
     hostFlags |= O_BINARY;
 #endif
+
+    DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
 
     // open the file
     int fd = open(path.c_str(), hostFlags, mode);
@@ -383,6 +410,52 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
+/// Target statfs() handler.
+template <class OS>
+SyscallReturn
+statfsFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    std::string path;
+
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+        return -EFAULT;
+
+    struct statfs hostBuf;
+    int result = statfs(path.c_str(), &hostBuf);
+
+    if (result < 0)
+        return errno;
+
+    OS::copyOutStatfsBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
+
+    return 0;
+}
+
+
+/// Target fstatfs() handler.
+template <class OS>
+SyscallReturn
+fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
+            ExecContext *xc)
+{
+    int fd = process->sim_fd(xc->getSyscallArg(0));
+
+    if (fd < 0)
+        return -EBADF;
+
+    struct statfs hostBuf;
+    int result = fstatfs(fd, &hostBuf);
+
+    if (result < 0)
+        return errno;
+
+    OS::copyOutStatfsBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
+
+    return 0;
+}
+
+
 /// Target mmap() handler.
 ///
 /// We don't really handle mmap().  If the target is mmaping an
@@ -440,7 +513,8 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
         break;
 
       default:
-        std::cerr << "getrlimitFunc: unimplemented resource " << resource << std::endl;
+        std::cerr << "getrlimitFunc: unimplemented resource " << resource
+                  << std::endl;
         abort();
         break;
     }

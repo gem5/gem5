@@ -31,6 +31,7 @@
 #include <fcntl.h>	// for host open() flags
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 #include <string.h>	// for memset()
 #include <dirent.h>
 
@@ -71,6 +72,8 @@ class Tru64 {
     typedef uint32_t time_t;
     typedef uint32_t mode_t;
     typedef uint32_t ino_t;
+    typedef struct { int val[2]; } quad;
+    typedef quad fsid_t;
     //@}
 
     //@{
@@ -99,12 +102,10 @@ class Tru64 {
     /// Number of entries in openFlagTable[].
     static const int NUM_OPEN_FLAGS;
 
-    /// Stat buffer.  Note that Tru64 v5.0+ use a new "F64" stat structure,
-    /// and a new set of syscall numbers for stat calls.  Backwards
-    /// compatibility with v4.x should be feasible by implementing
-    /// another set of stat functions using the old structure
-    /// definition and binding them to the old syscall numbers, but we
-    /// haven't done that yet.
+    /// Stat buffer.  Note that Tru64 v5.0+ use a new "F64" stat
+    /// structure, and a new set of syscall numbers for stat calls.
+    /// On some hosts (notably Linux) define st_atime, st_mtime, and
+    /// st_ctime as macros, so we append an X to get around this.
     struct F64_stat {
         dev_t	st_dev;			//!< st_dev
         int32_t	st_retired1;		//!< st_retired1
@@ -139,6 +140,79 @@ class Tru64 {
         uint64_t	st_blocks;	//!< st_blocks
     };
 
+
+    /// Old Tru64 v4.x stat struct.
+    /// Tru64 maintains backwards compatibility with v4.x by
+    /// implementing another set of stat functions using the old
+    /// structure definition and binding them to the old syscall
+    /// numbers.
+    struct pre_F64_stat {
+        dev_t   st_dev;
+        ino_t   st_ino;
+        mode_t  st_mode;
+        nlink_t st_nlink;
+        uid_t   st_uid;
+        gid_t   st_gid;
+        dev_t   st_rdev;
+        off_t   st_size;
+        time_t  st_atimeX;
+        int32_t st_uatime;
+        time_t  st_mtimeX;
+        int32_t st_umtime;
+        time_t  st_ctimeX;
+        int32_t st_uctime;
+        uint32_t st_blksize;
+        int32_t st_blocks;
+        uint32_t st_flags;
+        uint32_t st_gen;
+    };
+
+    /// For statfs().
+    struct F64_statfs {
+        int16_t   f_type;
+        int16_t   f_flags;
+        int32_t     f_retired1;
+        int32_t     f_retired2;
+        int32_t     f_retired3;
+        int32_t     f_retired4;
+        int32_t     f_retired5;
+        int32_t     f_retired6;
+        int32_t     f_retired7;
+        fsid_t	f_fsid;
+        int32_t     f_spare[9];
+        char    f_retired8[90];
+        char    f_retired9[90];
+        uint64_t dummy[10]; // was union mount_info mount_info;
+        uint64_t  f_flags2;
+        int64_t    f_spare2[14];
+        int64_t    f_fsize;
+        int64_t    f_bsize;
+        int64_t    f_blocks;
+        int64_t    f_bfree;
+        int64_t    f_bavail;
+        int64_t    f_files;
+        int64_t    f_ffree;
+        char    f_mntonname[1024];
+        char    f_mntfromname[1024];
+    };
+
+    /// For old Tru64 v4.x statfs()
+    struct pre_F64_statfs {
+        int16_t   f_type;
+        int16_t   f_flags;
+        int32_t     f_fsize;
+        int32_t     f_bsize;
+        int32_t     f_blocks;
+        int32_t     f_bfree;
+        int32_t     f_bavail;
+        int32_t     f_files;
+        int32_t     f_ffree;
+        fsid_t  f_fsid;
+        int32_t     f_spare[9];
+        char    f_mntonname[90];
+        char    f_mntfromname[90];
+        uint64_t dummy[10]; // was union mount_info mount_info;
+    };
 
     /// For getdirentries().
     struct dirent
@@ -224,6 +298,11 @@ class Tru64 {
         uint32_t     mhz;		//!< mhz
         uint32_t     unused[3];		//!< future expansion
     };
+
+    //@{
+    /// For setsysinfo().
+    static const unsigned SSI_IEEE_FP_CONTROL = 14; //!< ieee_set_fp_control()
+    //@}
 
     /// For gettimeofday.
     struct timeval {
@@ -448,11 +527,89 @@ class Tru64 {
 
     /// Helper function to convert a host stat buffer to a target stat
     /// buffer.  Also copies the target buffer out to the simulated
-    /// memorty space.  Used by stat(), fstat(), and lstat().
+    /// memory space.  Used by stat(), fstat(), and lstat().
+    template <class T>
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct ::stat *host)
     {
-        TypedBufferArg<Tru64::F64_stat> tgt(addr);
+        TypedBufferArg<T> tgt(addr);
+
+        tgt->st_dev = host->st_dev;
+        tgt->st_ino = host->st_ino;
+        tgt->st_mode = host->st_mode;
+        tgt->st_nlink = host->st_nlink;
+        tgt->st_uid = host->st_uid;
+        tgt->st_gid = host->st_gid;
+        tgt->st_rdev = host->st_rdev;
+        tgt->st_size = host->st_size;
+        tgt->st_atimeX = host->st_atime;
+        tgt->st_mtimeX = host->st_mtime;
+        tgt->st_ctimeX = host->st_ctime;
+        tgt->st_blksize = host->st_blksize;
+        tgt->st_blocks = host->st_blocks;
+
+        tgt.copyOut(mem);
+    }
+
+    /// Helper function to convert a host statfs buffer to a target statfs
+    /// buffer.  Also copies the target buffer out to the simulated
+    /// memory space.  Used by statfs() and fstatfs().
+    template <class T>
+    static void
+    copyOutStatfsBuf(FunctionalMemory *mem, Addr addr, struct ::statfs *host)
+    {
+        TypedBufferArg<T> tgt(addr);
+
+        tgt->f_type = host->f_type;
+        tgt->f_bsize = host->f_bsize;
+        tgt->f_blocks = host->f_blocks;
+        tgt->f_bfree = host->f_bfree;
+        tgt->f_bavail = host->f_bavail;
+        tgt->f_files = host->f_files;
+        tgt->f_ffree = host->f_ffree;
+        memcpy(&tgt->f_fsid, &host->f_fsid, sizeof(host->f_fsid));
+
+        tgt.copyOut(mem);
+    }
+
+    class F64 {
+      public:
+        static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
+                                   struct ::stat *host)
+        {
+            Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
+        }
+
+        static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
+                                     struct ::statfs *host)
+        {
+            Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
+        }
+    };
+
+    class PreF64 {
+      public:
+        static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
+                                   struct ::stat *host)
+        {
+            Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
+        }
+
+        static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
+                                     struct ::statfs *host)
+        {
+            Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
+        }
+    };
+
+    /// Helper function to convert a host stat buffer to an old pre-F64
+    /// (4.x) target stat buffer.  Also copies the target buffer out to
+    /// the simulated memory space.  Used by pre_F64_stat(),
+    /// pre_F64_fstat(), and pre_F64_lstat().
+    static void
+    copyOutPreF64StatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    {
+        TypedBufferArg<Tru64::pre_F64_stat> tgt(addr);
 
         tgt->st_dev = host->st_dev;
         tgt->st_ino = host->st_ino;
@@ -565,8 +722,28 @@ class Tru64 {
           }
 
           default:
-            cerr << "getsysinfo: unknown op " << op << endl;
-            abort();
+            warn("getsysinfo: unknown op %d\n", op);
+            break;
+        }
+
+        return 0;
+    }
+
+    /// Target setsysyinfo() handler.
+    static SyscallReturn
+    setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+                   ExecContext *xc)
+    {
+        unsigned op = xc->getSyscallArg(0);
+
+        switch (op) {
+          case SSI_IEEE_FP_CONTROL:
+            warn("setsysinfo: ignoring ieee_set_fp_control() arg 0x%x\n",
+                 xc->getSyscallArg(1));
+            break;
+
+          default:
+            warn("setsysinfo: unknown op %d\n", op);
             break;
         }
 
@@ -649,7 +826,7 @@ class Tru64 {
         char *host_buf_ptr = host_buf;
         char *host_buf_end = host_buf + host_result;
         while (host_buf_ptr < host_buf_end) {
-            struct dirent *host_dp = (struct dirent *)host_buf_ptr;
+            struct ::dirent *host_dp = (struct ::dirent *)host_buf_ptr;
             int namelen = strlen(host_dp->d_name);
 
             // Actual size includes padded string rounded up for alignment.
@@ -1287,8 +1464,7 @@ class Tru64 {
     doSyscall(int callnum, Process *process, ExecContext *xc)
     {
         if (callnum < Min_Syscall_Desc || callnum > Max_Syscall_Desc) {
-            cerr << "Syscall " << callnum << " out of range" << endl;
-            abort();
+            fatal("Syscall %d out of range\n", callnum);
         }
 
         SyscallDesc *desc =
@@ -1424,8 +1600,8 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 64 */ SyscallDesc("getpagesize", getpagesizeFunc),
     /* 65 */ SyscallDesc("mremap", unimplementedFunc),
     /* 66 */ SyscallDesc("vfork", unimplementedFunc),
-    /* 67 */ SyscallDesc("pre_F64_stat", unimplementedFunc),
-    /* 68 */ SyscallDesc("pre_F64_lstat", unimplementedFunc),
+    /* 67 */ SyscallDesc("pre_F64_stat", statFunc<Tru64::PreF64>),
+    /* 68 */ SyscallDesc("pre_F64_lstat", lstatFunc<Tru64::PreF64>),
     /* 69 */ SyscallDesc("sbrk", unimplementedFunc),
     /* 70 */ SyscallDesc("sstk", unimplementedFunc),
     /* 71 */ SyscallDesc("mmap", mmapFunc<Tru64>),
@@ -1448,7 +1624,7 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 88 */ SyscallDesc("sethostname", unimplementedFunc),
     /* 89 */ SyscallDesc("getdtablesize", unimplementedFunc),
     /* 90 */ SyscallDesc("dup2", unimplementedFunc),
-    /* 91 */ SyscallDesc("pre_F64_fstat", unimplementedFunc),
+    /* 91 */ SyscallDesc("pre_F64_fstat", fstatFunc<Tru64::PreF64>),
     /* 92 */ SyscallDesc("fcntl", fcntlFunc),
     /* 93 */ SyscallDesc("select", unimplementedFunc),
     /* 94 */ SyscallDesc("poll", unimplementedFunc),
@@ -1487,8 +1663,8 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 127 */ SyscallDesc("setregid", unimplementedFunc),
     /* 128 */ SyscallDesc("rename", renameFunc),
-    /* 129 */ SyscallDesc("truncate", unimplementedFunc),
-    /* 130 */ SyscallDesc("ftruncate", unimplementedFunc),
+    /* 129 */ SyscallDesc("truncate", truncateFunc),
+    /* 130 */ SyscallDesc("ftruncate", ftruncateFunc),
     /* 131 */ SyscallDesc("flock", unimplementedFunc),
     /* 132 */ SyscallDesc("setgid", unimplementedFunc),
     /* 133 */ SyscallDesc("sendto", unimplementedFunc),
@@ -1518,8 +1694,8 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 157 */ SyscallDesc("sigwaitprim", unimplementedFunc),
     /* 158 */ SyscallDesc("nfssvc", unimplementedFunc),
     /* 159 */ SyscallDesc("getdirentries", getdirentriesFunc),
-    /* 160 */ SyscallDesc("pre_F64_statfs", unimplementedFunc),
-    /* 161 */ SyscallDesc("pre_F64_fstatfs", unimplementedFunc),
+    /* 160 */ SyscallDesc("pre_F64_statfs", statfsFunc<Tru64::PreF64>),
+    /* 161 */ SyscallDesc("pre_F64_fstatfs", fstatfsFunc<Tru64::PreF64>),
     /* 162 */ SyscallDesc("unknown #162", unimplementedFunc),
     /* 163 */ SyscallDesc("async_daemon", unimplementedFunc),
     /* 164 */ SyscallDesc("getfh", unimplementedFunc),
@@ -1582,11 +1758,11 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 221 */ SyscallDesc("unknown #221", unimplementedFunc),
     /* 222 */ SyscallDesc("security", unimplementedFunc),
     /* 223 */ SyscallDesc("kloadcall", unimplementedFunc),
-    /* 224 */ SyscallDesc("stat", statFunc<Tru64>),
-    /* 225 */ SyscallDesc("lstat", lstatFunc<Tru64>),
-    /* 226 */ SyscallDesc("fstat", fstatFunc<Tru64>),
-    /* 227 */ SyscallDesc("statfs", unimplementedFunc),
-    /* 228 */ SyscallDesc("fstatfs", unimplementedFunc),
+    /* 224 */ SyscallDesc("stat", statFunc<Tru64::F64>),
+    /* 225 */ SyscallDesc("lstat", lstatFunc<Tru64::F64>),
+    /* 226 */ SyscallDesc("fstat", fstatFunc<Tru64::F64>),
+    /* 227 */ SyscallDesc("statfs", statfsFunc<Tru64::F64>),
+    /* 228 */ SyscallDesc("fstatfs", fstatfsFunc<Tru64::F64>),
     /* 229 */ SyscallDesc("getfsstat", unimplementedFunc),
     /* 230 */ SyscallDesc("gettimeofday64", unimplementedFunc),
     /* 231 */ SyscallDesc("settimeofday64", unimplementedFunc),
@@ -1615,7 +1791,7 @@ SyscallDesc Tru64::syscallDescs[] = {
     /* 254 */ SyscallDesc("sysfs", unimplementedFunc),
     /* 255 */ SyscallDesc("subsys_info", unimplementedFunc),
     /* 256 */ SyscallDesc("getsysinfo", getsysinfoFunc),
-    /* 257 */ SyscallDesc("setsysinfo", unimplementedFunc),
+    /* 257 */ SyscallDesc("setsysinfo", setsysinfoFunc),
     /* 258 */ SyscallDesc("afs_syscall", unimplementedFunc),
     /* 259 */ SyscallDesc("swapctl", unimplementedFunc),
     /* 260 */ SyscallDesc("memcntl", unimplementedFunc),

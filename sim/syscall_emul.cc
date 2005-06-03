@@ -193,7 +193,7 @@ gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 SyscallReturn
 unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    std::string path;
+    string path;
 
     if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
         return (TheISA::IntReg)-EFAULT;
@@ -205,17 +205,44 @@ unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 SyscallReturn
 renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    std::string old_name;
+    string old_name;
 
     if (xc->mem->readString(old_name, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
-    std::string new_name;
+    string new_name;
 
     if (xc->mem->readString(new_name, xc->getSyscallArg(1)) != No_Fault)
         return -EFAULT;
 
-    int64_t result = rename(old_name.c_str(),new_name.c_str());
+    int64_t result = rename(old_name.c_str(), new_name.c_str());
     return (result == -1) ? -errno : result;
 }
 
+SyscallReturn
+truncateFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
+{
+    string path;
+
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+        return -EFAULT;
+
+    off_t length = xc->getSyscallArg(1);
+
+    int result = truncate(path.c_str(), length);
+    return (result == -1) ? -errno : result;
+}
+
+SyscallReturn
+ftruncateFunc(SyscallDesc *desc, int num, Process *process, ExecContext *xc)
+{
+    int fd = process->sim_fd(xc->getSyscallArg(0));
+
+    if (fd < 0)
+        return -EBADF;
+
+    off_t length = xc->getSyscallArg(1);
+
+    int result = ftruncate(fd, length);
+    return (result == -1) ? -errno : result;
+}
