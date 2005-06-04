@@ -182,7 +182,7 @@ EmbedMap %(name)s("%(fname)s",
 
 # base list of .py files to embed
 embedded_py_files = [ '../util/pbs/jobfile.py' ]
-# add all .py and .mpy files in python/m5 
+# add all .py files in python/m5 
 objpath = os.path.join(env['SRCDIR'], 'python', 'm5')
 for root, dirs, files in os.walk(objpath, topdown=True):
     for i,dir in enumerate(dirs):
@@ -192,7 +192,7 @@ for root, dirs, files in os.walk(objpath, topdown=True):
 
     assert(root.startswith(objpath))
     for f in files:
-        if f.endswith('.mpy') or f.endswith('.py'):
+        if f.endswith('.py'):
             embedded_py_files.append(os.path.join(root, f))
 
 embedfile_hh = os.path.join(env['SRCDIR'], 'base/embedfile.hh')
