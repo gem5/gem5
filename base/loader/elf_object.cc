@@ -58,7 +58,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
     GElf_Ehdr ehdr;
 
     // check that header matches library version
-    assert(elf_version(EV_CURRENT) != EV_NONE);
+    if (elf_version(EV_CURRENT) == EV_NONE)
+        panic("wrong elf version number!");
 
     // get a pointer to elf structure
     elf = elf_memory((char*)data,len);
@@ -97,7 +98,8 @@ ElfObject::ElfObject(const string &_filename, int _fd,
     GElf_Ehdr ehdr;
 
     // check that header matches library version
-    assert(elf_version(EV_CURRENT) != EV_NONE);
+    if (elf_version(EV_CURRENT) == EV_NONE)
+        panic("wrong elf version number!");
 
     // get a pointer to elf structure
     elf = elf_memory((char*)fileData,len);
@@ -205,7 +207,8 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding)
         return false;
 
     // check that header matches library version
-    assert(elf_version(EV_CURRENT) != EV_NONE);
+    if (elf_version(EV_CURRENT) == EV_NONE)
+        panic("wrong elf version number!");
 
     // get a pointer to elf structure
     elf = elf_memory((char*)fileData,len);
