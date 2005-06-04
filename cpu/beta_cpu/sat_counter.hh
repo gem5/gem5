@@ -29,7 +29,7 @@
 #ifndef __CPU_BETA_CPU_SAT_COUNTER_HH__
 #define __CPU_BETA_CPU_SAT_COUNTER_HH__
 
-#include <stdint.h>
+#include "sim/host.hh"
 
 /**
  * Private counter class for the internal saturating counters.

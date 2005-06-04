@@ -32,12 +32,12 @@
 #include <list>
 #include <map>
 #include <queue>
-#include <stdint.h>
 #include <vector>
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
+#include "sim/host.hh"
 
 /**
  * A standard instruction queue class.  It holds ready instructions, in

@@ -29,11 +29,11 @@
 #ifndef __CPU_BETA_CPU_COMM_HH__
 #define __CPU_BETA_CPU_COMM_HH__
 
-#include <stdint.h>
 #include <vector>
 
 #include "arch/alpha/isa_traits.hh"
 #include "cpu/inst_seq.hh"
+#include "sim/host.hh"
 
 // Find better place to put this typedef.
 // The impl might be the best place for this.

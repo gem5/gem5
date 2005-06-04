@@ -140,6 +140,10 @@ InsertEvent::insert(const string &stat)
 void
 InsertEvent::flush()
 {
+    static const char query_header[] = "INSERT INTO "
+        "events(ev_event, ev_run, ev_tick)"
+        "values";
+
     if (size) {
         MySQL::Connection &mysql = MySqlDB.conn();
         assert(mysql.connected());
@@ -147,12 +151,9 @@ InsertEvent::flush()
     }
 
     query[0] = '\0';
-    size = 0;
+    size = sizeof(query_header);
     first = true;
-    strcpy(query, "INSERT INTO "
-           "events(ev_event, ev_run, ev_tick)"
-           "values");
-    size = strlen(query);
+    memcpy(query, query_header, size);
 }
 
 void

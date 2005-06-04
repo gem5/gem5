@@ -26,8 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <math.h>
-
+#include "base/intmath.hh"
 #include "base/trace.hh"
 #include "cpu/beta_cpu/btb.hh"
 
@@ -53,7 +52,7 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
 
     tagMask = (1 << tagBits) - 1;
 
-    tagShiftAmt = instShiftAmt + (int)log2(numEntries);
+    tagShiftAmt = instShiftAmt + FloorLog2(numEntries);
 }
 
 inline

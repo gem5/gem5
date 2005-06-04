@@ -26,31 +26,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>	// for host open() flags
 #include <sys/types.h>
 #include <sys/stat.h>
+#if defined(__OpenBSD__)
+#include <sys/param.h>
+#include <sys/mount.h>
+#else
 #include <sys/statfs.h>
-#include <string.h>	// for memset()
-#include <dirent.h>
+#endif
 
-#include "sim/host.hh"
-#include "cpu/base_cpu.hh"
-#include "mem/functional_mem/functional_memory.hh"
-#include "sim/process.hh"
-#include "cpu/exec_context.hh"
-#include "sim/fake_syscall.hh"
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>	// for host open() flags
+#include <string.h>	// for memset()
+#include <unistd.h>
 
 #include "arch/alpha/alpha_common_syscall_emul.hh"
 #include "arch/alpha/alpha_tru64_process.hh"
-
-#include "sim/syscall_emul.hh"
-#include "sim/root.hh"	// for curTick & ticksPerSecond
-
 #include "base/trace.hh"
+#include "cpu/base_cpu.hh"
+#include "cpu/exec_context.hh"
+#include "mem/functional_mem/functional_memory.hh"
+#include "sim/fake_syscall.hh"
+#include "sim/host.hh"
+#include "sim/process.hh"
+#include "sim/root.hh"
+#include "sim/syscall_emul.hh"
 
 using namespace std;
+
+typedef struct stat global_stat;
+typedef struct statfs global_statfs;
+typedef struct dirent global_dirent;
 
 ///
 /// This class encapsulates the types, structures, constants,
@@ -530,7 +537,7 @@ class Tru64 {
     /// memory space.  Used by stat(), fstat(), and lstat().
     template <class T>
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct ::stat *host)
+    copyOutStatBuf(FunctionalMemory *mem, Addr addr, global_stat *host)
     {
         TypedBufferArg<T> tgt(addr);
 
@@ -556,11 +563,15 @@ class Tru64 {
     /// memory space.  Used by statfs() and fstatfs().
     template <class T>
     static void
-    copyOutStatfsBuf(FunctionalMemory *mem, Addr addr, struct ::statfs *host)
+    copyOutStatfsBuf(FunctionalMemory *mem, Addr addr, global_statfs *host)
     {
         TypedBufferArg<T> tgt(addr);
 
+#if defined(__OpenBSD__)
+        tgt->f_type = 0;
+#else
         tgt->f_type = host->f_type;
+#endif
         tgt->f_bsize = host->f_bsize;
         tgt->f_blocks = host->f_blocks;
         tgt->f_bfree = host->f_bfree;
@@ -575,13 +586,13 @@ class Tru64 {
     class F64 {
       public:
         static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
-                                   struct ::stat *host)
+                                   global_stat *host)
         {
             Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
         }
 
         static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
-                                     struct ::statfs *host)
+                                     global_statfs *host)
         {
             Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
         }
@@ -590,13 +601,13 @@ class Tru64 {
     class PreF64 {
       public:
         static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
-                                   struct ::stat *host)
+                                   global_stat *host)
         {
             Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
         }
 
         static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
-                                     struct ::statfs *host)
+                                     global_statfs *host)
         {
             Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
         }
@@ -826,7 +837,7 @@ class Tru64 {
         char *host_buf_ptr = host_buf;
         char *host_buf_end = host_buf + host_result;
         while (host_buf_ptr < host_buf_end) {
-            struct ::dirent *host_dp = (struct ::dirent *)host_buf_ptr;
+            global_dirent *host_dp = (global_dirent *)host_buf_ptr;
             int namelen = strlen(host_dp->d_name);
 
             // Actual size includes padded string rounded up for alignment.

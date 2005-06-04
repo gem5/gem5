@@ -79,7 +79,8 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
     tmpf.close();
 
-    char *cfile = strcpy(new char[file.size() + 1], file.c_str());
+    char *cfile = strncpy(new char[file.size() + 1], file.c_str(),
+                          file.size());
     char *dir = dirname(cfile);
     char *dir_arg = NULL;
     if (*dir != '.') {
@@ -87,7 +88,7 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
         arg += dir;
 
         dir_arg = new char[arg.size() + 1];
-        strcpy(dir_arg, arg.c_str());
+        strncpy(dir_arg, arg.c_str(), arg.size());
     }
 
     delete [] cfile;
