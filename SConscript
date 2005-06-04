@@ -48,7 +48,6 @@ base_sources = Split('''
         arch/alpha/alpha_full_cpu_exec.cc
 	arch/alpha/fast_cpu_exec.cc
 	arch/alpha/simple_cpu_exec.cc
-	arch/alpha/inorder_cpu_exec.cc
 	arch/alpha/full_cpu_exec.cc
 	arch/alpha/faults.cc
 	arch/alpha/isa_traits.cc
@@ -155,7 +154,6 @@ base_sources = Split('''
         cpu/full_cpu/iq/segmented/seg_chain.cc
         cpu/full_cpu/iq/seznec/iq_seznec.cc
         cpu/full_cpu/iq/standard/iq_standard.cc
-        cpu/inorder_cpu/inorder_cpu.cc
         cpu/sampling_cpu/sampling_cpu.cc
         cpu/simple_cpu/simple_cpu.cc
         cpu/trace/reader/mem_trace_reader.cc
@@ -396,7 +394,6 @@ env.Command(Split('''arch/alpha/decoder.cc
                      arch/alpha/alpha_full_cpu_exec.cc
 		     arch/alpha/fast_cpu_exec.cc
                      arch/alpha/simple_cpu_exec.cc
-                     arch/alpha/inorder_cpu_exec.cc
                      arch/alpha/full_cpu_exec.cc'''),
             Split('''arch/alpha/isa_desc
 		     arch/isa_parser.py'''),
