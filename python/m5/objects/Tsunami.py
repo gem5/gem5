@@ -5,7 +5,7 @@ from Platform import Platform
 class Tsunami(Platform):
     type = 'Tsunami'
     pciconfig = Param.PciConfigAll("PCI configuration")
-    system = Param.BaseSystem(Parent.any, "system")
+    system = Param.System(Parent.any, "system")
 
 class TsunamiCChip(FooPioDevice):
     type = 'TsunamiCChip'

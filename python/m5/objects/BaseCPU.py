@@ -9,7 +9,7 @@ class BaseCPU(SimObject):
         dtb = Param.AlphaDTB("Data TLB")
         itb = Param.AlphaITB("Instruction TLB")
         mem = Param.FunctionalMemory("memory")
-        system = Param.BaseSystem(Parent.any, "system object")
+        system = Param.System(Parent.any, "system object")
     else:
         workload = VectorParam.Process("processes to run")
 

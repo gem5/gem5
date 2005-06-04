@@ -34,7 +34,7 @@
 #include "mem/functional_mem/memory_control.hh"
 #include "mem/functional_mem/physical_memory.hh"
 #include "targetarch/vtophys.hh"
-#include "sim/param.hh"
+#include "sim/builder.hh"
 #include "sim/system.hh"
 #include "base/trace.hh"
 
@@ -269,5 +269,69 @@ printSystems()
     System::printSystems();
 }
 
-DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
+
+    Param<Tick> boot_cpu_frequency;
+    SimObjectParam<MemoryController *> memctrl;
+    SimObjectParam<PhysicalMemory *> physmem;
+
+    Param<string> kernel;
+    Param<string> console;
+    Param<string> pal;
+
+    Param<string> boot_osflags;
+    Param<string> readfile;
+    Param<unsigned int> init_param;
+
+    Param<uint64_t> system_type;
+    Param<uint64_t> system_rev;
+
+    Param<bool> bin;
+    VectorParam<string> binned_fns;
+    Param<bool> bin_int;
+
+END_DECLARE_SIM_OBJECT_PARAMS(System)
+
+BEGIN_INIT_SIM_OBJECT_PARAMS(System)
+
+    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
+    INIT_PARAM(memctrl, "memory controller"),
+    INIT_PARAM(physmem, "phsyical memory"),
+    INIT_PARAM(kernel, "file that contains the kernel code"),
+    INIT_PARAM(console, "file that contains the console code"),
+    INIT_PARAM(pal, "file that contains palcode"),
+    INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
+                    "a"),
+    INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
+    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
+    INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
+    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10),
+    INIT_PARAM_DFLT(bin, "is this system to be binned", false),
+    INIT_PARAM(binned_fns, "functions to be broken down and binned"),
+    INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
+
+END_INIT_SIM_OBJECT_PARAMS(System)
+
+CREATE_SIM_OBJECT(System)
+{
+    System::Params *p = new System::Params;
+    p->name = getInstanceName();
+    p->boot_cpu_frequency = boot_cpu_frequency;
+    p->memctrl = memctrl;
+    p->physmem = physmem;
+    p->kernel_path = kernel;
+    p->console_path = console;
+    p->palcode = pal;
+    p->boot_osflags = boot_osflags;
+    p->init_param = init_param;
+    p->readfile = readfile;
+    p->system_type = system_type;
+    p->system_rev = system_rev;
+    p->bin = bin;
+    p->binned_fns = binned_fns;
+    p->bin_int = bin_int;
+    return new System(p);
+}
+
+REGISTER_SIM_OBJECT("System", System)
 
