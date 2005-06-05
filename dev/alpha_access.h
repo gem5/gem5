@@ -29,11 +29,11 @@
 #ifndef __ALPHA_ACCESS_H__
 #define __ALPHA_ACCESS_H__
 
-/* @file
+/** @file
  * System Console Memory Mapped Register Definition
  */
 
-#define ALPHA_ACCESS_VERSION (1301) /* CH++*/
+#define ALPHA_ACCESS_VERSION (1301)
 
 #ifndef CONSOLE
 #include <iosfwd>
