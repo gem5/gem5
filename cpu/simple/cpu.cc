@@ -147,7 +147,7 @@ SimpleCPU::~SimpleCPU()
 }
 
 void
-SimpleCPU::switchOut(SamplingCPU *s)
+SimpleCPU::switchOut(Sampler *s)
 {
     sampler = s;
     if (status() == DcacheMissStall) {
