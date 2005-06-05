@@ -71,7 +71,7 @@ class ThreadInfo
         std::string
         curTaskName()
         {
-            return curTaskInfo()->comm;
+            return curTaskInfo()->name;
         }
 
         int32_t
@@ -83,7 +83,7 @@ class ThreadInfo
         uint64_t
         curTaskStart()
         {
-            return curTaskInfo()->start_time;
+            return curTaskInfo()->start;
         }
 };
 }

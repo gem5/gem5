@@ -37,9 +37,9 @@ namespace Linux {
         uint8_t junk1[0xf4];
         int32_t pid;
         uint8_t junk2[0x190];
-        uint64_ta start_time;
+        uint64_ta start;
         uint8_t junk3[0x5c];
-        char comm[16];
+        char name[16];
     };
 
 
