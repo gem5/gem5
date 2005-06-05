@@ -27,58 +27,66 @@
  */
 
 /** @file
- * Base class for UART
+ * Defines a 8250 UART
  */
 
-#ifndef __UART_HH__
-#define __UART_HH__
+#ifndef __TSUNAMI_UART_HH__
+#define __TSUNAMI_UART_HH__
 
+#include "dev/tsunamireg.h"
 #include "base/range.hh"
 #include "dev/io_device.hh"
+#include "dev/uart.hh"
 
 class SimConsole;
 class Platform;
 
-const int RX_INT = 0x1;
-const int TX_INT = 0x2;
-
-
-class Uart : public PioDevice
+class Uart8250 : public Uart
 {
 
+
   protected:
-    int status;
-    Addr addr;
-    Addr size;
-    SimConsole *cons;
+    uint8_t IER, DLAB, LCR, MCR;
+
+    class IntrEvent : public Event
+    {
+        protected:
+            Uart8250 *uart;
+            int intrBit;
+        public:
+            IntrEvent(Uart8250 *u, int bit);
+            virtual void process();
+            virtual const char *description();
+            void scheduleIntr();
+    };
+
+    IntrEvent txIntrEvent;
+    IntrEvent rxIntrEvent;
 
   public:
-    Uart(const std::string &name, SimConsole *c, MemoryController *mmu,
+    Uart8250(const std::string &name, SimConsole *c, MemoryController *mmu,
          Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
          Platform *p);
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data) = 0;
-    virtual Fault write(MemReqPtr &req, const uint8_t *data) = 0;
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
 
     /**
      * Inform the uart that there is data available.
      */
-    virtual void dataAvailable() = 0;
+    virtual void dataAvailable();
 
 
     /**
      * Return if we have an interrupt pending
      * @return interrupt status
      */
-    bool intStatus() { return status ? true : false; }
+    virtual bool intStatus() { return status ? true : false; }
 
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
 };
 
-#endif // __UART_HH__
+#endif // __TSUNAMI_UART_HH__

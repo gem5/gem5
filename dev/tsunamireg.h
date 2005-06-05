@@ -26,6 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** @file
+ * List of Tsunami CSRs
+ */
+
 #ifndef __TSUNAMIREG_H__
 #define __TSUNAMIREG_H__
 
