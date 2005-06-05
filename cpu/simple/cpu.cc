@@ -67,7 +67,6 @@
 #include "targetarch/alpha_memory.hh"
 #include "targetarch/vtophys.hh"
 #else // !FULL_SYSTEM
-#include "eio/eio.hh"
 #include "mem/functional/functional.hh"
 #endif // FULL_SYSTEM
 

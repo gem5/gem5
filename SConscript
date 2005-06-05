@@ -329,9 +329,9 @@ syscall_emulation_sources = Split('''
 	cpu/memtest/memtest.cc
         cpu/trace/opt_cpu.cc
 	cpu/trace/trace_cpu.cc
-	eio/eio.cc
-	eio/exolex.cc
-	eio/libexo.cc
+	encumbered/eio/eio.cc
+	encumbered/eio/exolex.cc
+	encumbered/eio/libexo.cc
 	sim/process.cc
 	sim/syscall_emul.cc
         ''')
@@ -350,7 +350,6 @@ targetarch_files = Split('''
         faults.hh
         isa_fullsys_traits.hh
         isa_traits.hh
-        machine_exo.h
         osfpal.hh
         pseudo_inst.hh
         vptr.hh
