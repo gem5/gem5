@@ -66,7 +66,6 @@ base_sources = Split('''
 	base/misc.cc
 	base/output.cc
 	base/pollevent.cc
-	base/python.cc
 	base/range.cc
 	base/random.cc
 	base/sat_counter.cc
@@ -84,7 +83,6 @@ base_sources = Split('''
 	base/loader/object_file.cc
 	base/loader/symtab.cc
 	base/stats/events.cc
-	base/stats/python.cc
 	base/stats/statdb.cc
 	base/stats/visit.cc
 	base/stats/text.cc

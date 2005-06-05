@@ -36,7 +36,6 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/stats/text.hh"
-#include "base/stats/python.hh"
 #include "base/stats/mysql.hh"
 #include "sim/host.hh"
 
@@ -94,7 +93,7 @@ usage()
 {
     panic("incorrect usage.\n"
           "usage:\n"
-          "\t%s [-p <python file>] [-t [-c] [-d]]\n", progname);
+          "\t%s [-t [-c] [-d]]\n", progname);
 }
 
 int
@@ -103,7 +102,6 @@ main(int argc, char *argv[])
     bool descriptions = false;
     bool compat = false;
     bool text = false;
-    string pyfile;
     string mysql_name;
     string mysql_host;
     string mysql_user = "binkertn";
@@ -124,9 +122,6 @@ main(int argc, char *argv[])
             break;
           case 'P':
             mysql_passwd = optarg;
-            break;
-          case 'p':
-            pyfile = optarg;
             break;
           case 's':
             mysql_name = optarg;
@@ -551,11 +546,6 @@ main(int argc, char *argv[])
         Text out(cout);
         out.descriptions = descriptions;
         out.compat = compat;
-        out();
-    }
-
-    if (!pyfile.empty()) {
-        Python out(pyfile);
         out();
     }
 
