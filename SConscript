@@ -343,7 +343,6 @@ targetarch_files = Split('''
         arguments.hh
         byte_swap.hh
         ecoff_machdep.h
-        elf_machdep.h
         ev5.hh
         faults.hh
         isa_fullsys_traits.hh
