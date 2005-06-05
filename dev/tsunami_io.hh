@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Tsunami Fake I/O Space mapping including RTC/timer interrupts
+/** @file
+ * Tsunami I/O Space mapping including RTC/timer interrupts
  */
 
 #ifndef __DEV_TSUNAMI_IO_HH__
@@ -38,7 +38,7 @@
 #include "dev/tsunami.hh"
 #include "sim/eventq.hh"
 
-/*
+/**
  * Tsunami I/O device is a catch all for all the south bridge stuff we care
  * to implement.
  */

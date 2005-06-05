@@ -33,8 +33,9 @@
 #ifndef __IDE_DISK_HH__
 #define __IDE_DISK_HH__
 
-#include "dev/ide.hh"
 #include "dev/disk_image.hh"
+#include "dev/ide_atareg.h"
+#include "dev/ide_wdcreg.h"
 #include "dev/io_device.hh"
 #include "sim/eventq.hh"
 
@@ -204,7 +205,7 @@ class IdeDisk : public SimObject
 
   private:
     /** Drive identification structure for this disk */
-    struct hd_driveid driveID;
+    struct ataparams driveID;
     /** Data buffer for transfers */
     uint8_t *dataBuffer;
     /** Number of bytes in command data transfer */

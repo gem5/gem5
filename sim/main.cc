@@ -132,34 +132,6 @@ showBriefHelp(ostream &out)
 
     ccprintf(out, "%s -X\n   -X            extract embedded files\n\n", prog);
     ccprintf(out, "%s -h\n   -h            print short help\n\n", prog);
-    ccprintf(out, "%s -H\n   -H            print long help\n\n", prog);
-}
-
-/// Show verbose help message.  Includes parameter listing from
-/// showBriefHelp(), plus an exhaustive list of ini-file parameters
-/// and SimObjects (with their parameters).
-void
-showLongHelp(ostream &out)
-{
-    showBriefHelp(out);
-
-    out << endl
-        << endl
-        << "-----------------" << endl
-        << "Global Parameters" << endl
-        << "-----------------" << endl
-        << endl;
-
-    ParamContext::describeAllContexts(out);
-
-    out << endl
-        << endl
-        << "-----------------" << endl
-        << "Simulator Objects" << endl
-        << "-----------------" << endl
-        << endl;
-
-    SimObjectClass::describeAllClasses(out);
 }
 
 /// Print welcome message.
@@ -290,10 +262,6 @@ main(int argc, char **argv)
 
               case 'h':
                 showBriefHelp(cerr);
-                exit(1);
-
-              case 'H':
-                showLongHelp(cerr);
                 exit(1);
 
               case 'E':

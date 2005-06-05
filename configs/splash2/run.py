@@ -34,14 +34,14 @@ if 'SYSTEM' not in env:
 
 if env['SYSTEM'] == 'Simple':
     from SimpleConfig import *
-    BaseCPU.workload = parent.workload
+    BaseCPU.workload = Parent.workload
     SimpleStandAlone.cpu = [ CPU() for i in xrange(int(env['NP'])) ]
-    root = SimpleStandAlone
+    root = SimpleStandAlone()
 elif env['SYSTEM'] == 'Detailed':
     from DetailedConfig import *
-    BaseCPU.workload = parent.workload
+    BaseCPU.workload = Parent.workload
     DetailedStandAlone.cpu = [ DetailedCPU() for i in xrange(int(env['NP'])) ]
-    root = DetailedStandAlone
+    root = DetailedStandAlone()
 else:
     panic("The SYSTEM environment variable was set to something improper.\n Use Simple or Detailed\n")
 

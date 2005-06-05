@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/** @file
  * System Console Interface
  */
 
@@ -44,7 +44,7 @@ class SimConsole;
 class System;
 class SimpleDisk;
 
-/*
+/**
  * Memory mapped interface to the system console. This device
  * represents a shared data region between the OS Kernel and the
  * System Console.

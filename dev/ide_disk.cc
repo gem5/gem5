@@ -65,7 +65,7 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     reset(id);
 
     // fill out the drive ID structure
-    memset(&driveID, 0, sizeof(struct hd_driveid));
+    memset(&driveID, 0, sizeof(struct ataparams));
 
     // Calculate LBA and C/H/S values
     uint16_t cylinders;
@@ -92,30 +92,30 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     }
 
     // Setup the model name
-    sprintf((char *)driveID.model, "5MI EDD si k");
+    sprintf((char *)driveID.atap_model, "5MI EDD si k");
     // Set the maximum multisector transfer size
-    driveID.max_multsect = MAX_MULTSECT;
+    driveID.atap_multi = MAX_MULTSECT;
     // IORDY supported, IORDY disabled, LBA enabled, DMA enabled
-    driveID.capability = 0x7;
+    driveID.atap_capabilities1 = 0x7;
     // UDMA support, EIDE support
-    driveID.field_valid = 0x6;
+    driveID.atap_extensions = 0x6;
     // Setup default C/H/S settings
-    driveID.cyls = cylinders;
-    driveID.sectors = sectors;
-    driveID.heads = heads;
+    driveID.atap_cylinders = cylinders;
+    driveID.atap_sectors = sectors;
+    driveID.atap_heads = heads;
     // Setup the current multisector transfer size
-    driveID.multsect = MAX_MULTSECT;
-    driveID.multsect_valid = 0x1;
+    driveID.atap_curmulti = MAX_MULTSECT;
+    driveID.atap_curmulti_valid = 0x1;
     // Number of sectors on disk
-    driveID.lba_capacity = lba_size;
+    driveID.atap_capacity = lba_size;
     // Multiword DMA mode 2 and below supported
-    driveID.dma_mword = 0x400;
+    driveID.atap_dmamode_supp = 0x400;
     // Set PIO mode 4 and 3 supported
-    driveID.eide_pio_modes = 0x3;
+    driveID.atap_piomode_supp = 0x3;
     // Set DMA mode 4 and below supported
-    driveID.dma_ultra = 0x10;
+    driveID.atap_udmamode_supp = 0x10;
     // Statically set hardware config word
-    driveID.hw_config = 0x4001;
+    driveID.atap_hwreset_res = 0x4001;
 }
 
 IdeDisk::~IdeDisk()
@@ -632,7 +632,7 @@ IdeDisk::startCommand()
     // Decode commands
     switch (cmdReg.command) {
         // Supported non-data commands
-      case WIN_READ_NATIVE_MAX:
+      case WDSF_READ_NATIVE_MAX:
         size = image->size() - 1;
         cmdReg.sec_num = (size & 0xff);
         cmdReg.cyl_low = ((size & 0xff00) >> 8);
@@ -643,27 +643,27 @@ IdeDisk::startCommand()
         action = ACT_CMD_COMPLETE;
         break;
 
-      case WIN_RECAL:
-      case WIN_SPECIFY:
-      case WIN_STANDBYNOW1:
-      case WIN_FLUSH_CACHE:
-      case WIN_VERIFY:
-      case WIN_SEEK:
-      case WIN_SETFEATURES:
-      case WIN_SETMULT:
+      case WDCC_RECAL:
+      case WDCC_IDP:
+      case WDCC_STANDBY_IMMED:
+      case WDCC_FLUSHCACHE:
+      case WDSF_VERIFY:
+      case WDSF_SEEK:
+      case SET_FEATURES:
+      case WDCC_SETMULTI:
         devState = Command_Execution;
         action = ACT_CMD_COMPLETE;
         break;
 
         // Supported PIO data-in commands
-      case WIN_IDENTIFY:
-        cmdBytes = cmdBytesLeft = sizeof(struct hd_driveid);
+      case WDCC_IDENTIFY:
+        cmdBytes = cmdBytesLeft = sizeof(struct ataparams);
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
         break;
 
-      case WIN_MULTREAD:
-      case WIN_READ:
+      case WDCC_READMULTI:
+      case WDCC_READ:
         if (!(cmdReg.drive & DRIVE_LBA_BIT))
             panic("Attempt to perform CHS access, only supports LBA\n");
 
@@ -680,8 +680,8 @@ IdeDisk::startCommand()
         break;
 
         // Supported PIO data-out commands
-      case WIN_MULTWRITE:
-      case WIN_WRITE:
+      case WDCC_WRITEMULTI:
+      case WDCC_WRITE:
         if (!(cmdReg.drive & DRIVE_LBA_BIT))
             panic("Attempt to perform CHS access, only supports LBA\n");
 
@@ -697,9 +697,9 @@ IdeDisk::startCommand()
         break;
 
         // Supported DMA commands
-      case WIN_WRITEDMA:
+      case WDCC_WRITEDMA:
         dmaRead = true;  // a write to the disk is a DMA read from memory
-      case WIN_READDMA:
+      case WDCC_READDMA:
         if (!(cmdReg.drive & DRIVE_LBA_BIT))
             panic("Attempt to perform CHS access, only supports LBA\n");
 
@@ -850,12 +850,12 @@ IdeDisk::updateState(DevAction_t action)
             status |= STATUS_DRQ_BIT;
 
             // copy the data into the data buffer
-            if (cmdReg.command == WIN_IDENTIFY) {
+            if (cmdReg.command == WDCC_IDENTIFY) {
                 // Reset the drqBytes for this block
-                drqBytesLeft = sizeof(struct hd_driveid);
+                drqBytesLeft = sizeof(struct ataparams);
 
                 memcpy((void *)dataBuffer, (void *)&driveID,
-                       sizeof(struct hd_driveid));
+                       sizeof(struct ataparams));
             } else {
                 // Reset the drqBytes for this block
                 drqBytesLeft = SectorSize;

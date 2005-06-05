@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/** @file
  * Emulation of the Tsunami CChip CSRs
  */
 
@@ -37,8 +37,9 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
-/*
- * Tsunami CChip
+/**
+ * Tsunami CChip CSR Emulation. This device includes all the interrupt
+ * handling code for the chipset.
  */
 class TsunamiCChip : public PioDevice
 {

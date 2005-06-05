@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/** @file
  * This devices just panics when touched. For example if you have a
  * kernel that touches the frame buffer which isn't allowed.
  */
