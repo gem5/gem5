@@ -109,7 +109,7 @@ class SimpleFetch
     /**
      * Looks up in the branch predictor to see if the next PC should be
      * either next PC+=MachInst or a branch target.
-     * @params next_PC Next PC variable passed in by reference.  It is
+     * @param next_PC Next PC variable passed in by reference.  It is
      * expected to be set to the current PC; it will be updated with what
      * the next PC will be.
      * @return Whether or not a branch was predicted as taken.
@@ -120,7 +120,7 @@ class SimpleFetch
      * Fetches the cache line that contains fetch_PC.  Returns any
      * fault that happened.  Puts the data into the class variable
      * cacheData.
-     * @params fetch_PC The PC address that is being fetched from.
+     * @param fetch_PC The PC address that is being fetched from.
      * @return Any fault that occured.
      */
     Fault fetchCacheLine(Addr fetch_PC);

@@ -57,15 +57,15 @@ class ROB
 
   public:
     /** ROB constructor.
-     *  @params _numEntries Number of entries in ROB.
-     *  @params _squashWidth Number of instructions that can be squashed in a
+     *  @param _numEntries Number of entries in ROB.
+     *  @param _squashWidth Number of instructions that can be squashed in a
      *                       single cycle.
      */
     ROB(unsigned _numEntries, unsigned _squashWidth);
 
     /** Function to set the CPU pointer, necessary due to which object the ROB
      *  is created within.
-     *  @params cpu_ptr Pointer to the implementation specific full CPU object.
+     *  @param cpu_ptr Pointer to the implementation specific full CPU object.
      */
     void setCPU(FullCPU *cpu_ptr);
 
@@ -73,7 +73,7 @@ class ROB
      *  not truly required, but is useful for checking correctness.  Note
      *  that whatever calls this function must ensure that there is enough
      *  space within the ROB for the new instruction.
-     *  @params inst The instruction being inserted into the ROB.
+     *  @param inst The instruction being inserted into the ROB.
      *  @todo Remove the parameter once correctness is ensured.
      */
     void insertInst(DynInstPtr &inst);

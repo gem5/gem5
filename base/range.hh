@@ -36,8 +36,10 @@
 /**
  * @param s range string
  * EndExclusive Ranges are in the following format:
+ * @verbatim
  *    <range> := {<start_val>}:{<end>}
  *    <start>   := <end_val> | +<delta>
+ * @endverbatim
  */
 template <class T>
 bool __parse_range(const std::string &s, T &start, T &end);

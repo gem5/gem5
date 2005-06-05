@@ -139,7 +139,7 @@ class TsunamiCChip : public PioDevice
 
     /**
      * clear a timer interrupt previously posted to the CPU.
-     * @param interrupt the cpu number to clear(bitvector)
+     * @param itintr the cpu number to clear(bitvector)
      */
     void clearITI(uint64_t itintr);
 

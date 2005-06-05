@@ -85,8 +85,7 @@ class SimpleRenameMap
     /**
      * Marks the given register as ready, meaning that its value has been
      * calculated and written to the register file.
-     * @params ready_reg The index of the physical register that is now
-     *                   ready.
+     * @param ready_reg The index of the physical register that is now ready.
      */
     void markAsReady(PhysRegIndex ready_reg);
 

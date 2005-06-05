@@ -26,7 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @file Implementation of Tsunami platform.
+/** @file
+ * Implementation of Tsunami platform.
  */
 
 #include <deque>
