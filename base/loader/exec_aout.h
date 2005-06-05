@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * Taken from NetBSD sys/exec_aout.h
  */

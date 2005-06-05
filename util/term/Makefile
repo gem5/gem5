@@ -1,4 +1,4 @@
-# Copyright (c) 2003 The Regents of The University of Michigan
+# Copyright (c) 2003, 2005 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
-
-# $Id$
 
 CC= gcc
 CCFLAGS= -g -O0

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * Taken from binutils-2.14.90.0.5 include/coff/sym.h
  */

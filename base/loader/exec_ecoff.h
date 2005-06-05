@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * Taken from NetBSD sys/exec_ecoff.h
  */

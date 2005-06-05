@@ -1,4 +1,3 @@
-/* $Id$ */
 /* $OpenBSD: netcat.c,v 1.57 2002/12/30 18:00:18 stevesk Exp $ */
 /*
  * Copyright (c) 2001 Eric Jackson <ericj@monkey.org>

@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 
-# $Id$
-
 # Copyright (c) 2003 The Regents of The University of Michigan
 # All rights reserved.
 #

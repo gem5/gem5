@@ -1,5 +1,3 @@
-# $Id$
-
 CC?= gcc
 CXX?= g++
 PYTHON?=/usr/bin/env python

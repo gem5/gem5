@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * Taken from NetBSD arch/alpha/ecoff_machdep.h
  */
