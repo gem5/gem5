@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * System Console Definition
+/** @file
+ * Alpha Console Definition
  */
 
 #include <cstddef>

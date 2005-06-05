@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/** @file
  * Disk Image Interfaces
  */
 
@@ -40,7 +40,7 @@
 
 #define SectorSize (512)
 
-/*
+/**
  * Basic interface for accessing a disk image.
  */
 class DiskImage : public SimObject
@@ -58,7 +58,7 @@ class DiskImage : public SimObject
     virtual off_t write(const uint8_t *data, off_t offset) = 0;
 };
 
-/*
+/**
  * Specialization for accessing a raw disk image
  */
 class RawDiskImage : public DiskImage
@@ -83,7 +83,7 @@ class RawDiskImage : public DiskImage
     virtual off_t write(const uint8_t *data, off_t offset);
 };
 
-/*
+/**
  * Specialization for accessing a copy-on-write disk image layer.
  * A copy-on-write(COW) layer must be stacked on top of another disk
  * image layer this layer can be another CowDiskImage, or a

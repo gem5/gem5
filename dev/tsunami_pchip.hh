@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Tsunami PChip
+/** @file
+ * Tsunami PCI interface CSRs
  */
 
 #ifndef __TSUNAMI_PCHIP_HH__
@@ -37,8 +37,8 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
-/*
- * Tsunami PChip
+/**
+ * A very simple implementation of the Tsunami PCI interface chips.
  */
 class TsunamiPChip : public PioDevice
 {
