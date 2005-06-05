@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_INST_QUEUE_HH__
-#define __CPU_BETA_CPU_INST_QUEUE_HH__
+#ifndef __CPU_O3_CPU_INST_QUEUE_HH__
+#define __CPU_O3_CPU_INST_QUEUE_HH__
 
 #include <list>
 #include <map>
@@ -333,4 +333,4 @@ class InstructionQueue
 
 };
 
-#endif //__CPU_BETA_CPU_INST_QUEUE_HH__
+#endif //__CPU_O3_CPU_INST_QUEUE_HH__

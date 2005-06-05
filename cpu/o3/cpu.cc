@@ -46,28 +46,28 @@ BaseFullCPU::BaseFullCPU(Params &params)
 }
 
 template <class Impl>
-FullBetaCPU<Impl>::TickEvent::TickEvent(FullBetaCPU<Impl> *c)
+FullO3CPU<Impl>::TickEvent::TickEvent(FullO3CPU<Impl> *c)
     : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c)
 {
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::TickEvent::process()
+FullO3CPU<Impl>::TickEvent::process()
 {
     cpu->tick();
 }
 
 template <class Impl>
 const char *
-FullBetaCPU<Impl>::TickEvent::description()
+FullO3CPU<Impl>::TickEvent::description()
 {
-    return "FullBetaCPU tick event";
+    return "FullO3CPU tick event";
 }
 
 //Call constructor to all the pipeline stages here
 template <class Impl>
-FullBetaCPU<Impl>::FullBetaCPU(Params &params)
+FullO3CPU<Impl>::FullO3CPU(Params &params)
 #ifdef FULL_SYSTEM
     : BaseFullCPU(params),
 #else
@@ -161,7 +161,7 @@ FullBetaCPU<Impl>::FullBetaCPU(Params &params)
 
     // The stages also need their CPU pointer setup.  However this must be
     // done at the upper level CPU because they have pointers to the upper
-    // level CPU, and not this FullBetaCPU.
+    // level CPU, and not this FullO3CPU.
 
     // Give each of the stages the time buffer they will use.
     fetch.setTimeBuffer(&timeBuffer);
@@ -194,22 +194,22 @@ FullBetaCPU<Impl>::FullBetaCPU(Params &params)
 }
 
 template <class Impl>
-FullBetaCPU<Impl>::~FullBetaCPU()
+FullO3CPU<Impl>::~FullO3CPU()
 {
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::fullCPURegStats()
+FullO3CPU<Impl>::fullCPURegStats()
 {
     // Register any of the FullCPU's stats here.
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::tick()
+FullO3CPU<Impl>::tick()
 {
-    DPRINTF(FullCPU, "\n\nFullCPU: Ticking main, FullBetaCPU.\n");
+    DPRINTF(FullCPU, "\n\nFullCPU: Ticking main, FullO3CPU.\n");
 
     //Tick each of the stages if they're actually running.
     //Will want to figure out a way to unschedule itself if they're all
@@ -238,7 +238,7 @@ FullBetaCPU<Impl>::tick()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::init()
+FullO3CPU<Impl>::init()
 {
     if(!deferRegistration)
     {
@@ -278,7 +278,7 @@ FullBetaCPU<Impl>::init()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::activateContext(int thread_num, int delay)
+FullO3CPU<Impl>::activateContext(int thread_num, int delay)
 {
     // Needs to set each stage to running as well.
 
@@ -289,35 +289,35 @@ FullBetaCPU<Impl>::activateContext(int thread_num, int delay)
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::suspendContext(int thread_num)
+FullO3CPU<Impl>::suspendContext(int thread_num)
 {
     panic("suspendContext unimplemented!");
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::deallocateContext(int thread_num)
+FullO3CPU<Impl>::deallocateContext(int thread_num)
 {
     panic("deallocateContext unimplemented!");
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::haltContext(int thread_num)
+FullO3CPU<Impl>::haltContext(int thread_num)
 {
     panic("haltContext unimplemented!");
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::switchOut()
+FullO3CPU<Impl>::switchOut()
 {
-    panic("FullBetaCPU does not have a switch out function.\n");
+    panic("FullO3CPU does not have a switch out function.\n");
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
+FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
@@ -336,7 +336,7 @@ FullBetaCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
 template <class Impl>
 InstSeqNum
-FullBetaCPU<Impl>::getAndIncrementInstSeq()
+FullO3CPU<Impl>::getAndIncrementInstSeq()
 {
     // Hopefully this works right.
     return globalSeqNum++;
@@ -344,91 +344,91 @@ FullBetaCPU<Impl>::getAndIncrementInstSeq()
 
 template <class Impl>
 uint64_t
-FullBetaCPU<Impl>::readIntReg(int reg_idx)
+FullO3CPU<Impl>::readIntReg(int reg_idx)
 {
     return regFile.readIntReg(reg_idx);
 }
 
 template <class Impl>
 float
-FullBetaCPU<Impl>::readFloatRegSingle(int reg_idx)
+FullO3CPU<Impl>::readFloatRegSingle(int reg_idx)
 {
     return regFile.readFloatRegSingle(reg_idx);
 }
 
 template <class Impl>
 double
-FullBetaCPU<Impl>::readFloatRegDouble(int reg_idx)
+FullO3CPU<Impl>::readFloatRegDouble(int reg_idx)
 {
     return regFile.readFloatRegDouble(reg_idx);
 }
 
 template <class Impl>
 uint64_t
-FullBetaCPU<Impl>::readFloatRegInt(int reg_idx)
+FullO3CPU<Impl>::readFloatRegInt(int reg_idx)
 {
     return regFile.readFloatRegInt(reg_idx);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::setIntReg(int reg_idx, uint64_t val)
+FullO3CPU<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
     regFile.setIntReg(reg_idx, val);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::setFloatRegSingle(int reg_idx, float val)
+FullO3CPU<Impl>::setFloatRegSingle(int reg_idx, float val)
 {
     regFile.setFloatRegSingle(reg_idx, val);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::setFloatRegDouble(int reg_idx, double val)
+FullO3CPU<Impl>::setFloatRegDouble(int reg_idx, double val)
 {
     regFile.setFloatRegDouble(reg_idx, val);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::setFloatRegInt(int reg_idx, uint64_t val)
+FullO3CPU<Impl>::setFloatRegInt(int reg_idx, uint64_t val)
 {
     regFile.setFloatRegInt(reg_idx, val);
 }
 
 template <class Impl>
 uint64_t
-FullBetaCPU<Impl>::readPC()
+FullO3CPU<Impl>::readPC()
 {
     return regFile.readPC();
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::setNextPC(uint64_t val)
+FullO3CPU<Impl>::setNextPC(uint64_t val)
 {
     regFile.setNextPC(val);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::setPC(Addr new_PC)
+FullO3CPU<Impl>::setPC(Addr new_PC)
 {
     regFile.setPC(new_PC);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::addInst(DynInstPtr &inst)
+FullO3CPU<Impl>::addInst(DynInstPtr &inst)
 {
     instList.push_back(inst);
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::instDone()
+FullO3CPU<Impl>::instDone()
 {
     // Keep an instruction count.
     numInsts++;
@@ -439,7 +439,7 @@ FullBetaCPU<Impl>::instDone()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeBackInst(DynInstPtr &inst)
+FullO3CPU<Impl>::removeBackInst(DynInstPtr &inst)
 {
     DynInstPtr inst_to_delete;
 
@@ -465,7 +465,7 @@ FullBetaCPU<Impl>::removeBackInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeFrontInst(DynInstPtr &inst)
+FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
     DynInstPtr inst_to_remove;
 
@@ -482,7 +482,7 @@ FullBetaCPU<Impl>::removeFrontInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeInstsNotInROB()
+FullO3CPU<Impl>::removeInstsNotInROB()
 {
     DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
             "list.\n");
@@ -494,7 +494,7 @@ FullBetaCPU<Impl>::removeInstsNotInROB()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num)
+FullO3CPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num)
 {
     DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
             "list.\n");
@@ -522,14 +522,14 @@ FullBetaCPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num)
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::removeAllInsts()
+FullO3CPU<Impl>::removeAllInsts()
 {
     instList.clear();
 }
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::dumpInsts()
+FullO3CPU<Impl>::dumpInsts()
 {
     int num = 0;
     typename list<DynInstPtr>::iterator inst_list_it = instList.begin();
@@ -546,10 +546,10 @@ FullBetaCPU<Impl>::dumpInsts()
 
 template <class Impl>
 void
-FullBetaCPU<Impl>::wakeDependents(DynInstPtr &inst)
+FullO3CPU<Impl>::wakeDependents(DynInstPtr &inst)
 {
     iew.wakeDependents(inst);
 }
 
-// Forward declaration of FullBetaCPU.
-template class FullBetaCPU<AlphaSimpleImpl>;
+// Forward declaration of FullO3CPU.
+template class FullO3CPU<AlphaSimpleImpl>;

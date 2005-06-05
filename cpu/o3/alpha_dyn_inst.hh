@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
-#define __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
+#ifndef __CPU_O3_CPU_ALPHA_DYN_INST_HH__
+#define __CPU_O3_CPU_ALPHA_DYN_INST_HH__
 
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/o3/alpha_cpu.hh"
@@ -231,5 +231,5 @@ class AlphaDynInst : public BaseDynInst<Impl>
     }
 };
 
-#endif // __CPU_BETA_CPU_ALPHA_DYN_INST_HH__
+#endif // __CPU_O3_CPU_ALPHA_DYN_INST_HH__
 

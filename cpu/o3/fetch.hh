@@ -29,8 +29,8 @@
 // Todo: SMT fetch,
 // Add a way to get a stage's current status.
 
-#ifndef __CPU_BETA_CPU_SIMPLE_FETCH_HH__
-#define __CPU_BETA_CPU_SIMPLE_FETCH_HH__
+#ifndef __CPU_O3_CPU_SIMPLE_FETCH_HH__
+#define __CPU_O3_CPU_SIMPLE_FETCH_HH__
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
@@ -221,4 +221,4 @@ class SimpleFetch
     Stats::Distribution<> fetch_nisn_dist;
 };
 
-#endif //__CPU_BETA_CPU_SIMPLE_FETCH_HH__
+#endif //__CPU_O3_CPU_SIMPLE_FETCH_HH__

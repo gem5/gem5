@@ -29,13 +29,13 @@
 // Todo: Find all the stuff in ExecContext and ev5 that needs to be
 // specifically designed for this CPU.
 
-#ifndef __CPU_BETA_CPU_ALPHA_FULL_CPU_HH__
-#define __CPU_BETA_CPU_ALPHA_FULL_CPU_HH__
+#ifndef __CPU_O3_CPU_ALPHA_FULL_CPU_HH__
+#define __CPU_O3_CPU_ALPHA_FULL_CPU_HH__
 
 #include "cpu/o3/cpu.hh"
 
 template <class Impl>
-class AlphaFullCPU : public FullBetaCPU<Impl>
+class AlphaFullCPU : public FullO3CPU<Impl>
 {
   public:
     typedef typename Impl::ISA AlphaISA;
@@ -288,4 +288,4 @@ class AlphaFullCPU : public FullBetaCPU<Impl>
 
 };
 
-#endif // __CPU_BETA_CPU_ALPHA_FULL_CPU_HH__
+#endif // __CPU_O3_CPU_ALPHA_FULL_CPU_HH__

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_ALPHA_SIMPLE_PARAMS_HH__
-#define __CPU_BETA_CPU_ALPHA_SIMPLE_PARAMS_HH__
+#ifndef __CPU_O3_CPU_ALPHA_SIMPLE_PARAMS_HH__
+#define __CPU_O3_CPU_ALPHA_SIMPLE_PARAMS_HH__
 
 #include "cpu/o3/cpu.hh"
 
@@ -160,4 +160,4 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     bool defReg;
 };
 
-#endif // __CPU_BETA_CPU_ALPHA_PARAMS_HH__
+#endif // __CPU_O3_CPU_ALPHA_PARAMS_HH__

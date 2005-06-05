@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_COMM_HH__
-#define __CPU_BETA_CPU_COMM_HH__
+#ifndef __CPU_O3_CPU_COMM_HH__
+#define __CPU_O3_CPU_COMM_HH__
 
 #include <vector>
 
@@ -160,4 +160,4 @@ struct TimeBufStruct {
     commitComm commitInfo;
 };
 
-#endif //__CPU_BETA_CPU_COMM_HH__
+#endif //__CPU_O3_CPU_COMM_HH__

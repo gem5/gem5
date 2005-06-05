@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_REGFILE_HH__
-#define __CPU_BETA_CPU_REGFILE_HH__
+#ifndef __CPU_O3_CPU_REGFILE_HH__
+#define __CPU_O3_CPU_REGFILE_HH__
 
 // @todo: Destructor
 
@@ -631,4 +631,4 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 
 #endif // #ifdef FULL_SYSTEM
 
-#endif // __CPU_BETA_CPU_REGFILE_HH__
+#endif // __CPU_O3_CPU_REGFILE_HH__

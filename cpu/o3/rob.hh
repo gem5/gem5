@@ -32,8 +32,8 @@
 // all instructions after the instruction, and all instructions after *and*
 // including that instruction.
 
-#ifndef __CPU_BETA_CPU_ROB_HH__
-#define __CPU_BETA_CPU_ROB_HH__
+#ifndef __CPU_O3_CPU_ROB_HH__
+#define __CPU_O3_CPU_ROB_HH__
 
 #include <utility>
 #include <vector>
@@ -159,4 +159,4 @@ class ROB
     bool doneSquashing;
 };
 
-#endif //__CPU_BETA_CPU_ROB_HH__
+#endif //__CPU_O3_CPU_ROB_HH__

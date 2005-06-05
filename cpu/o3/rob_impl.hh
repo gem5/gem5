@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_ROB_IMPL_HH__
-#define __CPU_BETA_CPU_ROB_IMPL_HH__
+#ifndef __CPU_O3_CPU_ROB_IMPL_HH__
+#define __CPU_O3_CPU_ROB_IMPL_HH__
 
 #include "cpu/o3/rob.hh"
 
@@ -308,4 +308,4 @@ ROB<Impl>::readTailSeqNum()
     return (*tail)->seqNum;
 }
 
-#endif // __CPU_BETA_CPU_ROB_IMPL_HH__
+#endif // __CPU_O3_CPU_ROB_IMPL_HH__

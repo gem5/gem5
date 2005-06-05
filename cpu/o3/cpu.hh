@@ -33,8 +33,8 @@
 //itself properly.  Threads!
 // Avoid running stages and advancing queues if idle/stalled.
 
-#ifndef __CPU_BETA_CPU_FULL_CPU_HH__
-#define __CPU_BETA_CPU_FULL_CPU_HH__
+#ifndef __CPU_O3_CPU_FULL_CPU_HH__
+#define __CPU_O3_CPU_FULL_CPU_HH__
 
 #include <iostream>
 #include <list>
@@ -73,7 +73,7 @@ class BaseFullCPU : public BaseCPU
 };
 
 template <class Impl>
-class FullBetaCPU : public BaseFullCPU
+class FullO3CPU : public BaseFullCPU
 {
   public:
     //Put typedefs from the Impl here.
@@ -96,10 +96,10 @@ class FullBetaCPU : public BaseFullCPU
     class TickEvent : public Event
     {
       private:
-        FullBetaCPU<Impl> *cpu;
+        FullO3CPU<Impl> *cpu;
 
       public:
-        TickEvent(FullBetaCPU<Impl> *c);
+        TickEvent(FullO3CPU<Impl> *c);
         void process();
         const char *description();
     };
@@ -123,8 +123,8 @@ class FullBetaCPU : public BaseFullCPU
     }
 
   public:
-    FullBetaCPU(Params &params);
-    ~FullBetaCPU();
+    FullO3CPU(Params &params);
+    ~FullO3CPU();
 
     void fullCPURegStats();
 

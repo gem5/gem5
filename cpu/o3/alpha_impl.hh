@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_ALPHA_IMPL_HH__
-#define __CPU_BETA_CPU_ALPHA_IMPL_HH__
+#ifndef __CPU_O3_CPU_ALPHA_IMPL_HH__
+#define __CPU_O3_CPU_ALPHA_IMPL_HH__
 
 #include "arch/alpha/isa_traits.hh"
 
@@ -79,4 +79,4 @@ struct AlphaSimpleImpl
     };
 };
 
-#endif // __CPU_BETA_CPU_ALPHA_IMPL_HH__
+#endif // __CPU_O3_CPU_ALPHA_IMPL_HH__

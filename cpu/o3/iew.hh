@@ -30,8 +30,8 @@
 //Need to handle delaying writes to the writeback bus if it's full at the
 //given time.
 
-#ifndef __CPU_BETA_CPU_SIMPLE_IEW_HH__
-#define __CPU_BETA_CPU_SIMPLE_IEW_HH__
+#ifndef __CPU_O3_CPU_SIMPLE_IEW_HH__
+#define __CPU_O3_CPU_SIMPLE_IEW_HH__
 
 #include <queue>
 
@@ -236,4 +236,4 @@ class SimpleIEW
     Stats::Scalar<> predictedTakenIncorrect;
 };
 
-#endif // __CPU_BETA_CPU_IEW_HH__
+#endif // __CPU_O3_CPU_IEW_HH__

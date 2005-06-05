@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_FREE_LIST_HH__
-#define __CPU_BETA_CPU_FREE_LIST_HH__
+#ifndef __CPU_O3_CPU_FREE_LIST_HH__
+#define __CPU_O3_CPU_FREE_LIST_HH__
 
 #include <iostream>
 #include <queue>
@@ -192,4 +192,4 @@ SimpleFreeList::addFloatReg(PhysRegIndex freed_reg)
     freeFloatRegs.push(freed_reg);
 }
 
-#endif // __CPU_BETA_CPU_FREE_LIST_HH__
+#endif // __CPU_O3_CPU_FREE_LIST_HH__

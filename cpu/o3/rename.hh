@@ -31,8 +31,8 @@
 // May want to have different statuses to differentiate the different stall
 // conditions.
 
-#ifndef __CPU_BETA_CPU_SIMPLE_RENAME_HH__
-#define __CPU_BETA_CPU_SIMPLE_RENAME_HH__
+#ifndef __CPU_O3_CPU_SIMPLE_RENAME_HH__
+#define __CPU_O3_CPU_SIMPLE_RENAME_HH__
 
 #include <list>
 
@@ -231,4 +231,4 @@ class SimpleRename
     Stats::Scalar<> renameValidUndoneMaps;
 };
 
-#endif // __CPU_BETA_CPU_SIMPLE_RENAME_HH__
+#endif // __CPU_O3_CPU_SIMPLE_RENAME_HH__

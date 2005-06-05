@@ -30,8 +30,8 @@
 // Have it so that there's a more meaningful name given to the variable
 // that marks the beginning of the FP registers.
 
-#ifndef __CPU_BETA_CPU_RENAME_MAP_HH__
-#define __CPU_BETA_CPU_RENAME_MAP_HH__
+#ifndef __CPU_O3_CPU_RENAME_MAP_HH__
+#define __CPU_O3_CPU_RENAME_MAP_HH__
 
 #include <iostream>
 #include <utility>
@@ -167,4 +167,4 @@ class SimpleRenameMap
     std::vector<bool> miscScoreboard;
 };
 
-#endif //__CPU_BETA_CPU_RENAME_MAP_HH__
+#endif //__CPU_O3_CPU_RENAME_MAP_HH__

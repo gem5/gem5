@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_RAS_HH__
-#define __CPU_BETA_CPU_RAS_HH__
+#ifndef __CPU_O3_CPU_RAS_HH__
+#define __CPU_O3_CPU_RAS_HH__
 
 // For Addr type.
 #include "arch/alpha/isa_traits.hh"
@@ -65,4 +65,4 @@ class ReturnAddrStack
     unsigned tos;
 };
 
-#endif // __CPU_BETA_CPU_RAS_HH__
+#endif // __CPU_O3_CPU_RAS_HH__

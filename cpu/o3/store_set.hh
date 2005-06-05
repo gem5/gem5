@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_STORE_SET_HH__
-#define __CPU_BETA_CPU_STORE_SET_HH__
+#ifndef __CPU_O3_CPU_STORE_SET_HH__
+#define __CPU_O3_CPU_STORE_SET_HH__
 
 #include <vector>
 
@@ -83,4 +83,4 @@ class StoreSet
     int offset_bits;
 };
 
-#endif // __CPU_BETA_CPU_STORE_SET_HH__
+#endif // __CPU_O3_CPU_STORE_SET_HH__

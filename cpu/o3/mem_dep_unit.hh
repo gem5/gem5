@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_BETA_CPU_MEM_DEP_UNIT_HH__
-#define __CPU_BETA_CPU_MEM_DEP_UNIT_HH__
+#ifndef __CPU_O3_CPU_MEM_DEP_UNIT_HH__
+#define __CPU_O3_CPU_MEM_DEP_UNIT_HH__
 
 #include <map>
 #include <set>
@@ -161,4 +161,4 @@ class MemDepUnit {
     Stats::Scalar<> conflictingStores;
 };
 
-#endif // __CPU_BETA_CPU_MEM_DEP_UNIT_HH__
+#endif // __CPU_O3_CPU_MEM_DEP_UNIT_HH__
