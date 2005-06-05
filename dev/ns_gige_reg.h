@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/** @file
  * Ethernet device register definitions for the National
  * Semiconductor DP83820 Ethernet controller
  */

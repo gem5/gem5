@@ -27,52 +27,66 @@
  */
 
 /** @file
- * Implements a 8250 UART
+ * Defines a 8250 UART
  */
 
-#include <string>
-#include <vector>
+#ifndef __TSUNAMI_UART_HH__
+#define __TSUNAMI_UART_HH__
 
-#include "base/inifile.hh"
-#include "base/str.hh"        // for to_number
-#include "base/trace.hh"
-#include "dev/simconsole.hh"
+#include "dev/tsunamireg.h"
+#include "base/range.hh"
+#include "dev/io_device.hh"
 #include "dev/uart.hh"
-#include "dev/platform.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
-#include "sim/builder.hh"
 
-using namespace std;
+class SimConsole;
+class Platform;
 
-Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
-           Addr s, HierParams *hier, Bus *bus, Tick pio_latency, Platform *p)
-    : PioDevice(name, p), addr(a), size(s), cons(c)
+class Uart8250 : public Uart
 {
-    mmu->add_child(this, RangeSize(addr, size));
 
 
-    if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
-                                      &Uart::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * bus->clockRate;
-    }
+  protected:
+    uint8_t IER, DLAB, LCR, MCR;
 
-    status = 0;
+    class IntrEvent : public Event
+    {
+        protected:
+            Uart8250 *uart;
+            int intrBit;
+        public:
+            IntrEvent(Uart8250 *u, int bit);
+            virtual void process();
+            virtual const char *description();
+            void scheduleIntr();
+    };
 
-    // set back pointers
-    cons->uart = this;
-    platform->uart = this;
-}
+    IntrEvent txIntrEvent;
+    IntrEvent rxIntrEvent;
 
-Tick
-Uart::cacheAccess(MemReqPtr &req)
-{
-    return curTick + pioLatency;
-}
+  public:
+    Uart8250(const std::string &name, SimConsole *c, MemoryController *mmu,
+         Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
+         Platform *p);
 
-DEFINE_SIM_OBJECT_CLASS_NAME("Uart", Uart)
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
+
+    /**
+     * Inform the uart that there is data available.
+     */
+    virtual void dataAvailable();
+
+
+    /**
+     * Return if we have an interrupt pending
+     * @return interrupt status
+     */
+    virtual bool intStatus() { return status ? true : false; }
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+};
+
+#endif // __TSUNAMI_UART_HH__

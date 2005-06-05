@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
+/** @file
  * Device module for modelling the National Semiconductor
  * DP83820 ethernet controller
  */
