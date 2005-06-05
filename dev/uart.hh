@@ -26,14 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Defines a 8250 UART
+/** @file
+ * Base class for UART
  */
 
-#ifndef __TSUNAMI_UART_HH__
-#define __TSUNAMI_UART_HH__
+#ifndef __UART_HH__
+#define __UART_HH__
 
-#include "dev/tsunamireg.h"
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
@@ -47,45 +46,25 @@ const int TX_INT = 0x2;
 class Uart : public PioDevice
 {
 
-  private:
+  protected:
+    int status;
     Addr addr;
     Addr size;
     SimConsole *cons;
-
-
-  protected:
-    int readAddr; // tlaser only
-    uint8_t IER, DLAB, LCR, MCR;
-    int status;
-
-    class IntrEvent : public Event
-    {
-        protected:
-            Uart *uart;
-            int intrBit;
-        public:
-            IntrEvent(Uart *u, int bit);
-            virtual void process();
-            virtual const char *description();
-            void scheduleIntr();
-    };
-
-    IntrEvent txIntrEvent;
-    IntrEvent rxIntrEvent;
 
   public:
     Uart(const std::string &name, SimConsole *c, MemoryController *mmu,
          Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
          Platform *p);
 
-    Fault read(MemReqPtr &req, uint8_t *data);
-    Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data) = 0;
+    virtual Fault write(MemReqPtr &req, const uint8_t *data) = 0;
 
 
     /**
      * Inform the uart that there is data available.
      */
-    void dataAvailable();
+    virtual void dataAvailable() = 0;
 
 
     /**
@@ -93,9 +72,6 @@ class Uart : public PioDevice
      * @return interrupt status
      */
     bool intStatus() { return status ? true : false; }
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     /**
      * Return how long this access will take.
@@ -105,4 +81,4 @@ class Uart : public PioDevice
     Tick cacheAccess(MemReqPtr &req);
 };
 
-#endif // __TSUNAMI_UART_HH__
+#endif // __UART_HH__

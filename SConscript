@@ -280,6 +280,8 @@ full_system_sources = Split('''
 	dev/tsunami_io.cc
 	dev/tsunami_pchip.cc
 	dev/uart.cc
+	dev/uart8530.cc
+	dev/uart8250.cc
 
 	encumbered/dev/dma.cc
 	encumbered/dev/etherdev.cc
