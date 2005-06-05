@@ -30,17 +30,17 @@
 # Script to simplify using rundiff on trace outputs from two
 # invocations of m5.
 #
-# Note that you need to enable some trace flags in the args in order
-# to do anything useful!
+# ******Note that you need to enable some trace flags in the args in order
+# to do anything useful!******
 #
 # If you want to pass different arguments to the two instances of m5,
 # you can embed them in the simulator arguments like this:
 #
-# % tracediff "m5.opt --foo:bar=1" "m5.opt --foo:bar=2" [common args]
+# % tracediff "m5.opt --foo.bar=1" "m5.opt --foo.bar=2" [common args]
 #
 
 if (@ARGV < 2) {
-    die "Usage: tracediff sim1 sim2 [--trace:flags=X args...]\n";
+    die "Usage: tracediff sim1 sim2 [--root.trace.flags=X args...]\n";
 }
 
 # First two args are the two simulator binaries to compare
