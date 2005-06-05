@@ -49,7 +49,7 @@
 
 using namespace std;
 
-extern SamplingCPU *SampCPU;
+extern Sampler *SampCPU;
 
 using namespace Stats;
 
