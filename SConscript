@@ -45,7 +45,7 @@ Import('env')
 # Base sources used by all configurations.
 base_sources = Split('''
 	arch/alpha/decoder.cc
-        arch/alpha/alpha_full_cpu_exec.cc
+        arch/alpha/alpha_o3_exec.cc
 	arch/alpha/fast_cpu_exec.cc
 	arch/alpha/simple_cpu_exec.cc
 	arch/alpha/full_cpu_exec.cc
@@ -89,77 +89,79 @@ base_sources = Split('''
 	base/stats/visit.cc
 	base/stats/text.cc
 
-	cpu/base_cpu.cc
+	cpu/base.cc
         cpu/base_dyn_inst.cc
 	cpu/exec_context.cc
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
-        cpu/beta_cpu/2bit_local_pred.cc
-        cpu/beta_cpu/alpha_dyn_inst.cc
-        cpu/beta_cpu/alpha_full_cpu.cc
-        cpu/beta_cpu/alpha_full_cpu_builder.cc
-        cpu/beta_cpu/bpred_unit.cc
-        cpu/beta_cpu/btb.cc
-        cpu/beta_cpu/commit.cc
-        cpu/beta_cpu/decode.cc
-        cpu/beta_cpu/fetch.cc
-        cpu/beta_cpu/free_list.cc
-        cpu/beta_cpu/full_cpu.cc
-        cpu/beta_cpu/iew.cc
-        cpu/beta_cpu/inst_queue.cc
-        cpu/beta_cpu/ldstq.cc
-        cpu/beta_cpu/mem_dep_unit.cc
-        cpu/beta_cpu/ras.cc
-        cpu/beta_cpu/rename.cc
-        cpu/beta_cpu/rename_map.cc
-        cpu/beta_cpu/rob.cc
-        cpu/beta_cpu/sat_counter.cc
-        cpu/beta_cpu/store_set.cc
-        cpu/beta_cpu/tournament_pred.cc
-	cpu/fast_cpu/fast_cpu.cc
-	cpu/full_cpu/bpred.cc
-	cpu/full_cpu/commit.cc
-	cpu/full_cpu/create_vector.cc
-	cpu/full_cpu/cv_spec_state.cc
-	cpu/full_cpu/dd_queue.cc
-	cpu/full_cpu/dep_link.cc
-	cpu/full_cpu/dispatch.cc
-	cpu/full_cpu/dyn_inst.cc
-	cpu/full_cpu/execute.cc
-	cpu/full_cpu/fetch.cc
-	cpu/full_cpu/floss_reasons.cc
-	cpu/full_cpu/fu_pool.cc
-	cpu/full_cpu/full_cpu.cc
-	cpu/full_cpu/inst_fifo.cc
-	cpu/full_cpu/instpipe.cc
-	cpu/full_cpu/issue.cc
-	cpu/full_cpu/ls_queue.cc
-	cpu/full_cpu/machine_queue.cc
-        cpu/full_cpu/pc_sample_profile.cc
-        cpu/full_cpu/pipetrace.cc
-        cpu/full_cpu/readyq.cc
-        cpu/full_cpu/reg_info.cc
-        cpu/full_cpu/rob_station.cc
-        cpu/full_cpu/spec_memory.cc
-        cpu/full_cpu/spec_state.cc
-        cpu/full_cpu/storebuffer.cc
-        cpu/full_cpu/writeback.cc
-        cpu/full_cpu/iq/iq_station.cc
-        cpu/full_cpu/iq/iqueue.cc
-        cpu/full_cpu/iq/segmented/chain_info.cc
-        cpu/full_cpu/iq/segmented/chain_wire.cc
-        cpu/full_cpu/iq/segmented/iq_seg.cc
-        cpu/full_cpu/iq/segmented/iq_segmented.cc
-        cpu/full_cpu/iq/segmented/seg_chain.cc
-        cpu/full_cpu/iq/seznec/iq_seznec.cc
-        cpu/full_cpu/iq/standard/iq_standard.cc
-        cpu/sampling_cpu/sampling_cpu.cc
-        cpu/simple_cpu/simple_cpu.cc
+        cpu/o3/2bit_local_pred.cc
+        cpu/o3/alpha_dyn_inst.cc
+        cpu/o3/alpha_cpu.cc
+        cpu/o3/alpha_cpu_builder.cc
+        cpu/o3/bpred_unit.cc
+        cpu/o3/btb.cc
+        cpu/o3/commit.cc
+        cpu/o3/decode.cc
+        cpu/o3/fetch.cc
+        cpu/o3/free_list.cc
+        cpu/o3/cpu.cc
+        cpu/o3/iew.cc
+        cpu/o3/inst_queue.cc
+        cpu/o3/ldstq.cc
+        cpu/o3/mem_dep_unit.cc
+        cpu/o3/ras.cc
+        cpu/o3/rename.cc
+        cpu/o3/rename_map.cc
+        cpu/o3/rob.cc
+        cpu/o3/sat_counter.cc
+        cpu/o3/store_set.cc
+        cpu/o3/tournament_pred.cc
+	cpu/fast/cpu.cc
+        cpu/sampler/sampler.cc
+        cpu/simple/cpu.cc
         cpu/trace/reader/mem_trace_reader.cc
         cpu/trace/reader/ibm_reader.cc
         cpu/trace/reader/itx_reader.cc
         cpu/trace/reader/m5_reader.cc
+
+	encumbered/cpu/full/bpred.cc
+	encumbered/cpu/full/commit.cc
+	encumbered/cpu/full/cpu.cc
+	encumbered/cpu/full/create_vector.cc
+	encumbered/cpu/full/cv_spec_state.cc
+	encumbered/cpu/full/dd_queue.cc
+	encumbered/cpu/full/dep_link.cc
+	encumbered/cpu/full/dispatch.cc
+	encumbered/cpu/full/dyn_inst.cc
+	encumbered/cpu/full/execute.cc
+	encumbered/cpu/full/fetch.cc
+	encumbered/cpu/full/floss_reasons.cc
+	encumbered/cpu/full/fu_pool.cc
+	encumbered/cpu/full/inst_fifo.cc
+	encumbered/cpu/full/instpipe.cc
+	encumbered/cpu/full/issue.cc
+	encumbered/cpu/full/ls_queue.cc
+	encumbered/cpu/full/machine_queue.cc
+        encumbered/cpu/full/pc_sample_profile.cc
+        encumbered/cpu/full/pipetrace.cc
+        encumbered/cpu/full/readyq.cc
+        encumbered/cpu/full/reg_info.cc
+        encumbered/cpu/full/rob_station.cc
+        encumbered/cpu/full/spec_memory.cc
+        encumbered/cpu/full/spec_state.cc
+        encumbered/cpu/full/storebuffer.cc
+        encumbered/cpu/full/writeback.cc
+        encumbered/cpu/full/iq/iq_station.cc
+        encumbered/cpu/full/iq/iqueue.cc
+        encumbered/cpu/full/iq/segmented/chain_info.cc
+        encumbered/cpu/full/iq/segmented/chain_wire.cc
+        encumbered/cpu/full/iq/segmented/iq_seg.cc
+        encumbered/cpu/full/iq/segmented/iq_segmented.cc
+        encumbered/cpu/full/iq/segmented/seg_chain.cc
+        encumbered/cpu/full/iq/seznec/iq_seznec.cc
+        encumbered/cpu/full/iq/standard/iq_standard.cc
+	encumbered/mem/functional/main.cc
 
 	mem/base_hier.cc
 	mem/base_mem.cc
@@ -202,11 +204,10 @@ base_sources = Split('''
 	mem/cache/tags/split_lru.cc
 	mem/cache/tags/repl/gen.cc
 	mem/cache/tags/repl/repl.cc
-	mem/functional_mem/functional_memory.cc
-	mem/functional_mem/main_memory.cc
-	mem/timing_mem/base_memory.cc
-	mem/timing_mem/memory_builder.cc
-	mem/timing_mem/simple_mem_bank.cc
+	mem/functional/functional.cc
+	mem/timing/base_memory.cc
+	mem/timing/memory_builder.cc
+	mem/timing/simple_mem_bank.cc
         mem/trace/itx_writer.cc
 	mem/trace/mem_trace_writer.cc
 	mem/trace/m5_writer.cc
@@ -257,7 +258,6 @@ full_system_sources = Split('''
 	dev/baddev.cc
         dev/simconsole.cc
 	dev/disk_image.cc
-	dev/dma.cc
 	dev/etherbus.cc
 	dev/etherdump.cc
 	dev/etherint.cc
@@ -268,31 +268,34 @@ full_system_sources = Split('''
 	dev/ide_disk.cc
 	dev/io_device.cc
 	dev/ns_gige.cc
-	dev/etherdev.cc
 	dev/pciconfigall.cc
 	dev/pcidev.cc
 	dev/pktfifo.cc
-	dev/scsi.cc
-	dev/scsi_ctrl.cc
-	dev/scsi_disk.cc
-	dev/scsi_none.cc
+        dev/platform.cc
 	dev/sinic.cc
 	dev/simple_disk.cc
-	dev/tlaser_clock.cc
-	dev/tlaser_ipi.cc
-	dev/tlaser_mbox.cc
-	dev/tlaser_mc146818.cc
-	dev/tlaser_node.cc
-	dev/tlaser_pcia.cc
-	dev/tlaser_pcidev.cc
-	dev/tlaser_serial.cc
-	dev/turbolaser.cc
 	dev/tsunami.cc
 	dev/tsunami_cchip.cc
 	dev/tsunami_fake.cc
 	dev/tsunami_io.cc
 	dev/tsunami_pchip.cc
 	dev/uart.cc
+
+	encumbered/dev/dma.cc
+	encumbered/dev/etherdev.cc
+	encumbered/dev/scsi.cc
+	encumbered/dev/scsi_ctrl.cc
+	encumbered/dev/scsi_disk.cc
+	encumbered/dev/scsi_none.cc
+	encumbered/dev/tlaser_clock.cc
+	encumbered/dev/tlaser_ipi.cc
+	encumbered/dev/tlaser_mbox.cc
+	encumbered/dev/tlaser_mc146818.cc
+	encumbered/dev/tlaser_node.cc
+	encumbered/dev/tlaser_pcia.cc
+	encumbered/dev/tlaser_pcidev.cc
+	encumbered/dev/tlaser_serial.cc
+	encumbered/dev/turbolaser.cc
 
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
@@ -307,9 +310,8 @@ full_system_sources = Split('''
 	kern/tru64/tru64_syscalls.cc
 	kern/tru64/tru64_system.cc
 
-	mem/functional_mem/memory_control.cc
-	mem/functional_mem/physical_memory.cc
-        dev/platform.cc
+	mem/functional/memory_control.cc
+	mem/functional/physical.cc
 
 	sim/system.cc
         ''')
@@ -391,7 +393,7 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
 # several files are generated from arch/$TARGET_ISA/isa_desc.
 env.Command(Split('''arch/alpha/decoder.cc
 		     arch/alpha/decoder.hh
-                     arch/alpha/alpha_full_cpu_exec.cc
+                     arch/alpha/alpha_o3_exec.cc
 		     arch/alpha/fast_cpu_exec.cc
                      arch/alpha/simple_cpu_exec.cc
                      arch/alpha/full_cpu_exec.cc'''),

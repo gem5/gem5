@@ -30,13 +30,13 @@
 #include <iomanip>
 
 #include "sim/param.hh"
-#include "cpu/full_cpu/dyn_inst.hh"
-#include "cpu/full_cpu/spec_state.hh"
-#include "cpu/full_cpu/issue.hh"
+#include "encumbered/cpu/full/dyn_inst.hh"
+#include "encumbered/cpu/full/spec_state.hh"
+#include "encumbered/cpu/full/issue.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/exec_context.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/static_inst.hh"
 
 using namespace std;

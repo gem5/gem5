@@ -31,7 +31,7 @@
 #include "arch/alpha/vtophys.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include "mem/functional/physical.hh"
 
 using namespace std;
 

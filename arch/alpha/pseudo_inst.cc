@@ -35,8 +35,8 @@
 
 #include "arch/alpha/pseudo_inst.hh"
 #include "arch/alpha/vtophys.hh"
-#include "cpu/base_cpu.hh"
-#include "cpu/sampling_cpu/sampling_cpu.hh"
+#include "cpu/base.hh"
+#include "cpu/sampler/sampler.hh"
 #include "cpu/exec_context.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/param.hh"

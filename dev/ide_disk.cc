@@ -42,7 +42,7 @@
 #include "dev/ide_ctrl.hh"
 #include "dev/tsunami.hh"
 #include "dev/tsunami_pchip.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include "mem/functional/physical.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"

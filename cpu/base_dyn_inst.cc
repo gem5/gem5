@@ -41,8 +41,8 @@
 #include "mem/mem_req.hh"
 
 #include "cpu/base_dyn_inst.hh"
-#include "cpu/beta_cpu/alpha_impl.hh"
-#include "cpu/beta_cpu/alpha_full_cpu.hh"
+#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/alpha_cpu.hh"
 
 using namespace std;
 

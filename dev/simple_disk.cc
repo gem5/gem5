@@ -42,7 +42,7 @@
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
 #include "dev/simple_disk.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 
 using namespace std;

@@ -34,9 +34,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional_mem/functional_memory.hh"
+#include "mem/functional/functional.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/host.hh"
 #include "sim/process.hh"

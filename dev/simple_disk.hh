@@ -30,13 +30,14 @@
  * Simple disk interface for the system console
  */
 
-#ifndef __SIMPLE_DISK_HH__
-#define __SIMPLE_DISK_HH__
+#ifndef __DEV_SIMPLE_DISK_HH__
+#define __DEV_SIMPLE_DISK_HH__
 
-#include "mem/functional_mem/physical_memory.hh"
 #include "sim/sim_object.hh"
+#include "targetarch/isa_traits.hh"
 
 class DiskImage;
+class PhysicalMemory;
 
 /*
  * Trivial interface to a disk image used by the System Console
@@ -57,4 +58,5 @@ public:
   void read(Addr addr, baddr_t block, int count) const;
   void write(Addr addr, baddr_t block, int count);
 };
-#endif // __SIMPLE_DISK_HH__
+
+#endif // __DEV_SIMPLE_DISK_HH__

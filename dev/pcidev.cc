@@ -39,11 +39,10 @@
 #include "base/misc.hh"
 #include "base/str.hh"	// for to_number
 #include "base/trace.hh"
-#include "dev/pciareg.h"
 #include "dev/pcidev.hh"
 #include "dev/pciconfigall.hh"
 #include "mem/bus/bus.hh"
-#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/param.hh"
 #include "sim/root.hh"

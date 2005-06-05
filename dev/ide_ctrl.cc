@@ -33,7 +33,6 @@
 
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
-#include "dev/dma.hh"
 #include "dev/ide_ctrl.hh"
 #include "dev/ide_disk.hh"
 #include "dev/pciconfigall.hh"
@@ -43,8 +42,8 @@
 #include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional_mem/memory_control.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include "mem/functional/memory_control.hh"
+#include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 

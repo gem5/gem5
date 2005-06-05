@@ -29,7 +29,7 @@
 #include "arch/alpha/arguments.hh"
 #include "arch/alpha/vtophys.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include "mem/functional/physical.hh"
 
 AlphaArguments::Data::~Data()
 {

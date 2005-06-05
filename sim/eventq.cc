@@ -33,7 +33,7 @@
 #include <sstream>
 #include <vector>
 
-#include "cpu/full_cpu/smt.hh"
+#include "cpu/smt.hh"
 #include "base/misc.hh"
 
 #include "sim/eventq.hh"

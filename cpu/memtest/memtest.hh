@@ -32,7 +32,7 @@
 #include <set>
 
 #include "base/statistics.hh"
-#include "mem/functional_mem/functional_memory.hh"
+#include "mem/functional/functional.hh"
 #include "mem/mem_interface.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"

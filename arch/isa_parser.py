@@ -628,16 +628,16 @@ class CpuModel:
 # CPU-model-specific information in this file.  Note that the ISA
 # description itself should have *no* CPU-model-specific content.
 CpuModel('SimpleCPU', 'simple_cpu_exec.cc',
-         '#include "cpu/simple_cpu/simple_cpu.hh"',
+         '#include "cpu/simple/cpu.hh"',
          { 'CPU_exec_context': 'SimpleCPU' })
 CpuModel('FastCPU', 'fast_cpu_exec.cc',
-         '#include "cpu/fast_cpu/fast_cpu.hh"',
+         '#include "cpu/fast/cpu.hh"',
          { 'CPU_exec_context': 'FastCPU' })
 CpuModel('FullCPU', 'full_cpu_exec.cc',
-         '#include "cpu/full_cpu/dyn_inst.hh"',
+         '#include "encumbered/cpu/full/dyn_inst.hh"',
          { 'CPU_exec_context': 'DynInst' })
-CpuModel('AlphaFullCPU', 'alpha_full_cpu_exec.cc',
-         '#include "cpu/beta_cpu/alpha_dyn_inst.hh"',
+CpuModel('AlphaFullCPU', 'alpha_o3_exec.cc',
+         '#include "cpu/o3/alpha_dyn_inst.hh"',
          { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
 
 # Expand template with CPU-specific references into a dictionary with

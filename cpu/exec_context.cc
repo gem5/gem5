@@ -28,7 +28,7 @@
 
 #include <string>
 
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 
 #ifdef FULL_SYSTEM

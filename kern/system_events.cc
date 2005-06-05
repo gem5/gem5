@@ -27,9 +27,9 @@
  */
 
 #include "cpu/exec_context.hh"
-#include "cpu/base_cpu.hh"
-#include "cpu/full_cpu/bpred.hh"
-#include "cpu/full_cpu/full_cpu.hh"
+#include "cpu/base.hh"
+#include "encumbered/cpu/full/bpred.hh"
+#include "encumbered/cpu/full/cpu.hh"
 #include "kern/kernel_stats.hh"
 #include "kern/system_events.hh"
 #include "sim/system.hh"

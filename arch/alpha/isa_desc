@@ -41,7 +41,7 @@ output exec {{
 #ifdef FULL_SYSTEM
 #include "arch/alpha/pseudo_inst.hh"
 #endif
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
 }};

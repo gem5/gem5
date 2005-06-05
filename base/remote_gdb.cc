@@ -116,22 +116,20 @@
 
 #include <sys/signal.h>
 
-#include <unistd.h>
-
 #include <cstdio>
 #include <string>
+#include <unistd.h>
 
-#include "cpu/exec_context.hh"
 #include "base/intmath.hh"
 #include "base/kgdb.h"
-
-#include "mem/functional_mem/physical_memory.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "targetarch/vtophys.hh"
-#include "sim/system.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
+#include "mem/functional/physical.hh"
+#include "sim/system.hh"
+#include "targetarch/vtophys.hh"
 
 using namespace std;
 

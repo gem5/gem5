@@ -29,7 +29,7 @@
 #ifndef __DEV_IO_DEVICE_HH__
 #define __DEV_IO_DEVICE_HH__
 
-#include "mem/functional_mem/functional_memory.hh"
+#include "mem/functional/functional.hh"
 
 class BaseInterface;
 class Bus;

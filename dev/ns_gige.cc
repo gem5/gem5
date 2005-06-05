@@ -36,7 +36,6 @@
 
 #include "base/inet.hh"
 #include "cpu/exec_context.hh"
-#include "dev/dma.hh"
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"
@@ -44,8 +43,8 @@
 #include "mem/bus/dma_interface.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional_mem/memory_control.hh"
-#include "mem/functional_mem/physical_memory.hh"
+#include "mem/functional/memory_control.hh"
+#include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"

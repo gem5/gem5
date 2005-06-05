@@ -27,12 +27,12 @@
  */
 
 #include "cpu/exec_context.hh"
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "kern/system_events.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
-#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional/memory_control.hh"
 #include "targetarch/arguments.hh"
 #include "targetarch/isa_traits.hh"
 

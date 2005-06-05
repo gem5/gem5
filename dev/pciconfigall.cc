@@ -42,7 +42,7 @@
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional_mem/memory_control.hh"
+#include "mem/functional/memory_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 

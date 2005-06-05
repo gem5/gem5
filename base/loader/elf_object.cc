@@ -43,7 +43,7 @@
 
 #include "base/loader/elf_object.hh"
 
-#include "mem/functional_mem/functional_memory.hh"
+#include "mem/functional/functional.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF

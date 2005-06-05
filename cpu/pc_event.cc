@@ -32,7 +32,7 @@
 #include <utility>
 
 #include "base/trace.hh"
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/pc_event.hh"
 #include "sim/debug.hh"

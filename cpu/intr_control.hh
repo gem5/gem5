@@ -31,7 +31,7 @@
 
 #include <vector>
 #include "base/misc.hh"
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 #include "cpu/exec_context.hh"

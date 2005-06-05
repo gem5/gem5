@@ -39,7 +39,6 @@
 #include "cpu/exec_context.hh"
 #include "cpu/memtest/memtest.hh"
 #include "mem/cache/base_cache.hh"
-#include "mem/functional_mem/main_memory.hh"
 #include "sim/builder.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"

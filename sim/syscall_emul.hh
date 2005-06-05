@@ -39,7 +39,7 @@
 #include <string>
 
 #include "base/intmath.hh"	// for RoundUp
-#include "mem/functional_mem/functional_memory.hh"
+#include "mem/functional/functional.hh"
 #include "targetarch/isa_traits.hh"	// for Addr
 
 #include "base/trace.hh"

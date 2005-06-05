@@ -26,12 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __EXEC_CONTEXT_HH__
-#define __EXEC_CONTEXT_HH__
+#ifndef __CPU_EXEC_CONTEXT_HH__
+#define __CPU_EXEC_CONTEXT_HH__
 
-#include "sim/host.hh"
+#include "mem/functional/functional.hh"
 #include "mem/mem_req.hh"
-#include "mem/functional_mem/functional_memory.hh"
+#include "sim/host.hh"
 #include "sim/serialize.hh"
 #include "targetarch/byte_swap.hh"
 
@@ -467,4 +467,4 @@ ExecContext::misspeculating()
     return false;
 }
 
-#endif // __EXEC_CONTEXT_HH__
+#endif // __CPU_EXEC_CONTEXT_HH__

@@ -34,7 +34,7 @@
 #include "sim/syscall_emul.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "sim/process.hh"
 
 #include "sim/sim_events.hh"

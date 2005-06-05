@@ -34,16 +34,15 @@
 
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
-
-#include "cpu/beta_cpu/comm.hh"
 #include "cpu/exetrace.hh"
-#include "cpu/full_cpu/bpred_update.hh"
-#include "cpu/full_cpu/op_class.hh"
-#include "cpu/full_cpu/spec_memory.hh"
-#include "cpu/full_cpu/spec_state.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/static_inst.hh"
-#include "mem/functional_mem/main_memory.hh"
+#include "encumbered/cpu/full/bpred_update.hh"
+#include "encumbered/cpu/full/op_class.hh"
+#include "encumbered/cpu/full/spec_memory.hh"
+#include "encumbered/cpu/full/spec_state.hh"
+#include "encumbered/mem/functional/main.hh"
 
 /**
  * @file

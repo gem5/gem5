@@ -39,7 +39,7 @@
 #include "base/str.hh"
 #include "base/time.hh"
 #include "base/stats/output.hh"
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "sim/stat_control.hh"

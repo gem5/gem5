@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "cpu/base_cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"

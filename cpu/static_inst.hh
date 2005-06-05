@@ -32,11 +32,10 @@
 #include <bitset>
 #include <string>
 
-#include "sim/host.hh"
 #include "base/hashmap.hh"
 #include "base/refcnt.hh"
-
-#include "cpu/full_cpu/op_class.hh"
+#include "encumbered/cpu/full/op_class.hh"
+#include "sim/host.hh"
 #include "targetarch/isa_traits.hh"
 
 // forward declarations
