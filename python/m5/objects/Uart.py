@@ -10,6 +10,7 @@ class Uart(PioDevice):
 class Uart8250(Uart):
     type = 'Uart8250'
 
-class Uart8530(Uart):
-    type = 'Uart8530'
+if build_env['ALPHA_TLASER']:
+    class Uart8530(Uart):
+        type = 'Uart8530'
 

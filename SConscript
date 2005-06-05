@@ -280,24 +280,7 @@ full_system_sources = Split('''
 	dev/tsunami_io.cc
 	dev/tsunami_pchip.cc
 	dev/uart.cc
-	dev/uart8530.cc
 	dev/uart8250.cc
-
-	encumbered/dev/dma.cc
-	encumbered/dev/etherdev.cc
-	encumbered/dev/scsi.cc
-	encumbered/dev/scsi_ctrl.cc
-	encumbered/dev/scsi_disk.cc
-	encumbered/dev/scsi_none.cc
-	encumbered/dev/tlaser_clock.cc
-	encumbered/dev/tlaser_ipi.cc
-	encumbered/dev/tlaser_mbox.cc
-	encumbered/dev/tlaser_mc146818.cc
-	encumbered/dev/tlaser_node.cc
-	encumbered/dev/tlaser_pcia.cc
-	encumbered/dev/tlaser_pcidev.cc
-	encumbered/dev/tlaser_serial.cc
-	encumbered/dev/turbolaser.cc
 
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
@@ -316,6 +299,26 @@ full_system_sources = Split('''
 	mem/functional/physical.cc
 
 	sim/system.cc
+        ''')
+
+# turbolaser encumbered sources
+turbolaser_sources = Split('''
+	encumbered/dev/dma.cc
+	encumbered/dev/etherdev.cc
+	encumbered/dev/scsi.cc
+	encumbered/dev/scsi_ctrl.cc
+	encumbered/dev/scsi_disk.cc
+	encumbered/dev/scsi_none.cc
+	encumbered/dev/tlaser_clock.cc
+	encumbered/dev/tlaser_ipi.cc
+	encumbered/dev/tlaser_mbox.cc
+	encumbered/dev/tlaser_mc146818.cc
+	encumbered/dev/tlaser_node.cc
+	encumbered/dev/tlaser_pcia.cc
+	encumbered/dev/tlaser_pcidev.cc
+	encumbered/dev/tlaser_serial.cc
+	encumbered/dev/turbolaser.cc
+	encumbered/dev/uart8530.cc
         ''')
 
 # Syscall emulation (non-full-system) sources
@@ -364,6 +367,8 @@ sources = base_sources
 
 if env['FULL_SYSTEM']:
     sources += full_system_sources
+    if env['ALPHA_TLASER']:
+        sources += turbolaser_sources
 else:
     sources += syscall_emulation_sources
 

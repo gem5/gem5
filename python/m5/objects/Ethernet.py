@@ -31,27 +31,33 @@ class EtherDump(SimObject):
     type = 'EtherDump'
     file = Param.String("dump file")
 
-class EtherDev(DmaDevice):
-    type = 'EtherDev'
-    hardware_address = Param.EthernetAddr(NextEthernetAddr,
-        "Ethernet Hardware Address")
+if build_env['ALPHA_TLASER']:
 
-    dma_data_free = Param.Bool(False, "DMA of Data is free")
-    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
-    dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
-    dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
-    dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
-    dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
-    dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
+    class EtherDev(DmaDevice):
+        type = 'EtherDev'
+        hardware_address = Param.EthernetAddr(NextEthernetAddr,
+            "Ethernet Hardware Address")
 
-    rx_filter = Param.Bool(True, "Enable Receive Filter")
-    rx_delay = Param.Latency('1us', "Receive Delay")
-    tx_delay = Param.Latency('1us', "Transmit Delay")
+        dma_data_free = Param.Bool(False, "DMA of Data is free")
+        dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
+        dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
+        dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
+        dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
+        dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
+        dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
 
-    intr_delay = Param.Latency('0us', "Interrupt Delay")
-    payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
-    tlaser = Param.Turbolaser(Parent.any, "Turbolaser")
+        rx_filter = Param.Bool(True, "Enable Receive Filter")
+        rx_delay = Param.Latency('1us', "Receive Delay")
+        tx_delay = Param.Latency('1us', "Transmit Delay")
+
+        intr_delay = Param.Latency('0us', "Interrupt Delay")
+        payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
+        physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
+        tlaser = Param.Turbolaser(Parent.any, "Turbolaser")
+
+    class EtherDevInt(EtherInt):
+        type = 'EtherDevInt'
+        device = Param.EtherDev("Ethernet device of this interface")
 
 class NSGigE(PciDevice):
     type = 'NSGigE'
@@ -81,10 +87,6 @@ class NSGigE(PciDevice):
     intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
     physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
-
-class EtherDevInt(EtherInt):
-    type = 'EtherDevInt'
-    device = Param.EtherDev("Ethernet device of this interface")
 
 class NSGigEInt(EtherInt):
     type = 'NSGigEInt'

@@ -234,6 +234,7 @@ default_env = Environment(ENV = os.environ,  # inherit user's enviroment vars
                           EXT_SRCDIR = EXT_SRCDIR,
                           CPPDEFINES = [],
                           FULL_SYSTEM = False,
+                          ALPHA_TLASER = False,
                           USE_MYSQL = False)
 
 default_env.SConsignFile("sconsign")
