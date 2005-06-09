@@ -1,6 +1,6 @@
 from m5 import *
 class System(SimObject):
-    type = 'BaseSystem'
+    type = 'System'
     boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
                                          "boot processor frequency")
     memctrl = Param.MemoryController(Parent.any, "memory controller")
