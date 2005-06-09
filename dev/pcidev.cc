@@ -138,7 +138,13 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
           case PCI_LATENCY_TIMER:
             *(uint8_t *)&config.data[offset] = htoa(byte_value);
             break;
-
+          /* Do nothing for these read-only registers */
+          case PCI0_INTERRUPT_PIN:
+          case PCI0_MINIMUM_GRANT:
+          case PCI0_MAXIMUM_LATENCY:
+          case PCI_CLASS_CODE:
+          case PCI_REVISION_ID:
+            break;
           default:
             panic("writing to a read only register");
         }
@@ -192,7 +198,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                         htoa((word_value & ~0x3) |
                         (htoa(config.data[offset]) & 0x3));
 
-                    if (word_value & ~0x1) {
+                    if (word_value != 0x1) {
                         Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
                         Addr base_size = BARSize[barnum];
 

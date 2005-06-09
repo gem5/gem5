@@ -207,12 +207,16 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) + 0x20;
 
 
     switch(req->size) {
       case sizeof(uint8_t):
         switch(daddr) {
+          // PIC1 mask read
+          case TSDEV_PIC1_MASK:
+            *(uint8_t*)data = ~mask1;
+            return No_Fault;
           case TSDEV_PIC1_ISR:
               // !!! If this is modified 64bit case needs to be too
               // Pal code has to do a 64 bit physical read because there is
@@ -267,6 +271,14 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 panic("Unknown RTC Address\n");
             }
 
+          /* Added for keyboard reads */
+          case TSDEV_KBD:
+            *(uint8_t *)data = 0x00;
+            return No_Fault;
+          /* Added for ATA PCI DMA */
+          case ATA_PCI_DMA:
+            *(uint8_t *)data = 0x00;
+            return No_Fault;
           default:
             panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
         }
@@ -309,7 +321,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) + 0x20;
 
     switch(req->size) {
       case sizeof(uint8_t):
@@ -395,6 +407,8 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
             return No_Fault;
           case TSDEV_RTC_ADDR:
             RTCAddress = *(uint8_t*)data;
+            return No_Fault;
+          case TSDEV_KBD:
             return No_Fault;
           case TSDEV_RTC_DATA:
             panic("RTC Write not implmented (rtc.o won't work)\n");

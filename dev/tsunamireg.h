@@ -123,6 +123,18 @@
 #define TSDEV_TMR2_DATA     0x42
 #define TSDEV_TMR0_DATA     0x40
 
+/* Added for keyboard accesses */
+#define TSDEV_KBD           0x64
+
+/* Added for ATA PCI DMA */
+#define ATA_PCI_DMA         0x00
+#define ATA_PCI_DMA2        0x02
+#define ATA_PCI_DMA3        0x16
+#define ATA_PCI_DMA4        0x17
+#define ATA_PCI_DMA5        0x1a
+#define ATA_PCI_DMA6        0x11
+#define ATA_PCI_DMA7        0x14
+
 #define TSDEV_RTC_ADDR      0x70
 #define TSDEV_RTC_DATA      0x71
 
