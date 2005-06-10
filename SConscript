@@ -278,6 +278,7 @@ full_system_sources = Split('''
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
 	kern/system_events.cc
+	kern/freebsd/freebsd_system.cc
 	kern/linux/linux_events.cc
 	kern/linux/linux_syscalls.cc
 	kern/linux/linux_system.cc
