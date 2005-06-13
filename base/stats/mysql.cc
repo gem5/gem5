@@ -67,16 +67,14 @@ MySqlRun::connect(const string &host, const string &user, const string &passwd,
     if (mysql.error)
         panic("could not connect to database server\n%s\n", mysql.error);
 
-    mysql.query("LOCK TABLES runs WRITE");
-    if (mysql.error)
-        panic("could not lock tables\n%s\n", mysql.error);
+    if (mysql.autocommit(false))
+        panic("could not set autocommit\n");
 
     remove(name);
-//    cleanup();
+    //cleanup();
     setup(name, sample, user, project);
-    mysql.query("UNLOCK TABLES");
-    if (mysql.error)
-        panic("could not unlock tables\n%s\n", mysql.error);
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 }
 
 void
@@ -206,6 +204,8 @@ SetupStat::setup()
     if (!result)
         panic("could not find stat\n%s\n", mysql.error);
 
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 
     assert(result.num_fields() == 16);
     MySQL::Row row = result.fetch_row();
@@ -293,9 +293,8 @@ SetupBin(const string &bin)
     Connection &mysql = MySqlDB.conn();
     assert(mysql.connected());
 
-    mysql.query("LOCK TABLES bins WRITE");
-    if (mysql.error)
-        panic("could not lock bin table\n%s\n", mysql.error);
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 
     uint16_t bin_id;
 
@@ -324,9 +323,8 @@ SetupBin(const string &bin)
     binmap.insert(make_pair(bin, bin_id));
 
   exit:
-    mysql.query("UNLOCK TABLES");
-    if (mysql.error)
-        panic("could not unlock tables\n%s\n", mysql.error);
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 
     return bin_id;
 }
@@ -352,6 +350,8 @@ InsertData::flush()
         mysql.query(query);
         if (mysql.error)
             panic("could not insert data\n%s\n", mysql.error);
+        if (mysql.commit())
+            panic("could not commit transaction\n");
     }
 
     query[0] = '\0';
@@ -406,6 +406,9 @@ InsertSubData::setup()
     mysql.query(insert);
 //    if (mysql.error)
 //	panic("could not insert subdata\n%s\n", mysql.error);
+
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 }
 
 void
@@ -430,6 +433,9 @@ InsertFormula(uint16_t stat, const string &formula)
     mysql.query(insert_ref);
 //    if (mysql.error)
 //	panic("could not insert formula reference\n%s\n", mysql.error);
+
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 }
 
 void
@@ -443,6 +449,9 @@ UpdatePrereq(uint16_t stat, uint16_t prereq)
     mysql.query(update);
     if (mysql.error)
         panic("could not update prereq\n%s\n", mysql.error);
+
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 }
 
 void
@@ -454,18 +463,13 @@ MySql::configure()
     using namespace Database;
 
     MySQL::Connection &mysql = MySqlDB.conn();
-    mysql.query("LOCK TABLES "
-                "stats WRITE, "
-                "bins WRITE, "
-                "subdata WRITE, "
-                "formulas WRITE, "
-                "formula_ref WRITE");
-    if (mysql.error)
-        panic("could not lock tables\n%s\n", mysql.error);
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 
     stat_list_t::const_iterator i, end = stats().end();
-    for (i = stats().begin(); i != end; ++i)
+    for (i = stats().begin(); i != end; ++i) {
         (*i)->visit(*this);
+    }
 
     for (i = stats().begin(); i != end; ++i) {
         StatData *data = *i;
@@ -478,9 +482,8 @@ MySql::configure()
         }
     }
 
-    mysql.query("UNLOCK TABLES");
-    if (mysql.error)
-        panic("could not unlock tables\n%s\n", mysql.error);
+    if (mysql.commit())
+        panic("could not commit transaction\n");
 
     configured = true;
 }
@@ -632,6 +635,8 @@ MySql::configure(const FormulaData &data)
 void
 MySql::output(MainBin *bin)
 {
+    MySQL::Connection &mysql = MySqlDB.conn();
+
     if (bin) {
         bin->activate();
         newdata.bin = SetupBin(bin->name());
@@ -642,8 +647,11 @@ MySql::output(MainBin *bin)
     Database::stat_list_t::const_iterator i, end = Database::stats().end();
     for (i = Database::stats().begin(); i != end; ++i) {
         StatData *stat = *i;
-        if (bin && stat->binned() || !bin && !stat->binned())
+        if (bin && stat->binned() || !bin && !stat->binned()) {
             stat->visit(*this);
+            if (mysql.commit())
+                panic("could not commit transaction\n");
+        }
     }
 }
 
