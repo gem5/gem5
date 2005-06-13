@@ -42,18 +42,19 @@ struct MySqlRun
     MySQL::Connection mysql;
     uint16_t run_id;
 
+  protected:
+    void setup(const std::string &name, const std::string &sample,
+               const std::string &user, const std::string &project);
+
+    void remove(const std::string &name);
+    void cleanup();
+
   public:
     bool connected() const { return mysql.connected(); }
     void connect(const std::string &host, const std::string &user,
                  const std::string &passwd, const std::string &db,
                  const std::string &name, const std::string &sample,
                  const std::string &project);
-
-    void setup(const std::string &name, const std::string &sample,
-               const std::string &user, const std::string &project);
-
-    void remove(const std::string &name);
-    void cleanup();
 
     MySQL::Connection &conn() { return mysql; }
     uint16_t run() const { return run_id; }

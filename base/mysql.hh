@@ -185,6 +185,24 @@ class Connection
         return query(sql.str());
     }
 
+    bool
+    autocommit(bool mode)
+    {
+        return mysql_autocommit(&mysql, mode);
+    }
+
+    bool
+    commit()
+    {
+        return mysql_commit(&mysql);
+    }
+
+    bool
+    rollback()
+    {
+        return mysql_rollback(&mysql);
+    }
+
     unsigned
     field_count()
     {
