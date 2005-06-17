@@ -99,7 +99,7 @@ class Bus;
 class PciConfigAll;
 
 /**
- * NS DP82830 Ethernet device model
+ * NS DP83820 Ethernet device model
  */
 class NSGigE : public PciDev
 {

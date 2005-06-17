@@ -51,7 +51,7 @@ class TsunamiIO : public PioDevice
     /** The size of mappad from the above address */
     static const Addr size = 0xff;
 
-    struct tm tm;
+    static struct tm tm;
 
     /**
      * In Tsunami RTC only has two i/o ports one for data and one for

@@ -52,6 +52,8 @@ using namespace std;
 
 #define UNIX_YEAR_OFFSET 52
 
+struct tm TsunamiIO::tm = { 0 };
+
 // Timer Event for Periodic interrupt of RTC
 TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
     : Event(&mainEventQueue), tsunami(t), interval(i)
@@ -67,6 +69,9 @@ TsunamiIO::RTCEvent::process()
     schedule(curTick + interval);
     //Actually interrupt the processor here
     tsunami->cchip->postRTC();
+
+    // For FreeBSD
+    tm.tm_sec++;
 }
 
 const char *
@@ -217,6 +222,9 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
           case TSDEV_PIC1_MASK:
             *(uint8_t*)data = ~mask1;
             return No_Fault;
+          case TSDEV_PIC2_MASK:
+            *(uint8_t*)data = ~mask2;
+            return No_Fault;
           case TSDEV_PIC1_ISR:
               // !!! If this is modified 64bit case needs to be too
               // Pal code has to do a 64 bit physical read because there is
@@ -261,6 +269,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 return No_Fault;
               case RTC_DOM:
                 *(uint8_t *)data = tm.tm_mday;
+                return No_Fault;
               case RTC_MON:
                 *(uint8_t *)data = tm.tm_mon + 1;
                 return No_Fault;
@@ -411,7 +420,38 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
           case TSDEV_KBD:
             return No_Fault;
           case TSDEV_RTC_DATA:
-            panic("RTC Write not implmented (rtc.o won't work)\n");
+            switch(RTCAddress) {
+              case RTC_CNTRL_REGA:
+                return No_Fault;
+              case RTC_CNTRL_REGB:
+                return No_Fault;
+              case RTC_CNTRL_REGC:
+                return No_Fault;
+              case RTC_CNTRL_REGD:
+                return No_Fault;
+              case RTC_SEC:
+                tm.tm_sec = *(uint8_t *)data;
+                return No_Fault;
+              case RTC_MIN:
+                tm.tm_min = *(uint8_t *)data;
+                return No_Fault;
+              case RTC_HR:
+                tm.tm_hour = *(uint8_t *)data;
+                return No_Fault;
+              case RTC_DOW:
+                tm.tm_wday = *(uint8_t *)data;
+                return No_Fault;
+              case RTC_DOM:
+                tm.tm_mday = *(uint8_t *)data;
+                return No_Fault;
+              case RTC_MON:
+                 tm.tm_mon = *(uint8_t *)data - 1;
+                return No_Fault;
+              case RTC_YEAR:
+                tm.tm_year = *(uint8_t *)data + UNIX_YEAR_OFFSET;
+                return No_Fault;
+            //panic("RTC Write not implmented (rtc.o won't work)\n");
+            }
           default:
             panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);
         }

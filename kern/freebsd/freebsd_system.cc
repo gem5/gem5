@@ -29,7 +29,7 @@
 /**
  * @file
  * Modifications for the FreeBSD kernel.  Based off of kern/linux/linux_system.cc.
- * Currently only used to skip DELAY function. -Ben
+ * Currently only used to skip DELAY function.
  *
  */
 
@@ -64,11 +64,60 @@ FreebsdSystem::FreebsdSystem(Params *p)
     skipDelayEvent = new SkipFuncEvent(&pcEventQueue, "DELAY");
     if (kernelSymtab->findAddress("DELAY", addr))
         skipDelayEvent->schedule(addr+sizeof(MachInst));
+
+    skipOROMEvent = new SkipFuncEvent(&pcEventQueue, "orm_identify");
+    if (kernelSymtab->findAddress("orm_identify", addr))
+        skipOROMEvent->schedule(addr+sizeof(MachInst));
+
+    skipAicEvent = new SkipFuncEvent(&pcEventQueue, "ahc_isa_identify");
+    if (kernelSymtab->findAddress("ahc_isa_identify", addr))
+        skipAicEvent->schedule(addr+sizeof(MachInst));
+
+    skipPNPEvent = new SkipFuncEvent(&pcEventQueue, "pnp_identify");
+    if (kernelSymtab->findAddress("pnp_identify", addr))
+        skipPNPEvent->schedule(addr+sizeof(MachInst));
+
+    skipATAEvent = new SkipFuncEvent(&pcEventQueue, "ata_attach");
+    if (kernelSymtab->findAddress("ata_attach", addr))
+        skipATAEvent->schedule(addr+sizeof(MachInst));
+
+    skipCalibrateClocks = new FreebsdSkipCalibrateClocksEvent(&pcEventQueue, "calibrate_clocks");
+    if (kernelSymtab->findAddress("calibrate_clocks", addr))
+        skipCalibrateClocks->schedule(addr + sizeof(MachInst) * 2);
+
 }
+
 
 FreebsdSystem::~FreebsdSystem()
 {
     delete skipDelayEvent;
+    delete skipOROMEvent;
+    delete skipAicEvent;
+    delete skipATAEvent;
+    delete skipPNPEvent;
+    delete skipCalibrateClocks;
+}
+
+
+void
+FreebsdSystem::doCalibrateClocks(ExecContext *xc)
+{
+    Addr ppc_vaddr = 0;
+    Addr timer_vaddr = 0;
+    Addr ppc_paddr = 0;
+    Addr timer_paddr = 0;
+
+    ppc_vaddr = (Addr)xc->regs.intRegFile[ArgumentReg1];
+    timer_vaddr = (Addr)xc->regs.intRegFile[ArgumentReg2];
+
+    ppc_paddr = vtophys(physmem, ppc_vaddr);
+    timer_paddr = vtophys(physmem, timer_vaddr);
+
+    uint8_t *ppc = physmem->dma_addr(ppc_paddr, sizeof(uint32_t));
+    uint8_t *timer = physmem->dma_addr(timer_paddr, sizeof(uint32_t));
+
+    *(uint32_t *)ppc = 2000000000;
+    *(uint32_t *)timer = 1193180;
 }
 
 

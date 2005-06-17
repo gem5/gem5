@@ -32,10 +32,11 @@
 #include "sim/host.hh"
 #include "sim/system.hh"
 #include "targetarch/isa_traits.hh"
+#include "kern/freebsd/freebsd_events.hh"
 
 
 /**
- * This class skips a lengthy function in the FreeBSD kernel.
+ * This class skips lengthy functions in the FreeBSD kernel.
  */
 class FreebsdSystem : public System
 {
@@ -44,10 +45,21 @@ class FreebsdSystem : public System
     /** PC based event to skip the DELAY call */
     SkipFuncEvent *skipDelayEvent;
 
+    SkipFuncEvent *skipOROMEvent;
+
+    SkipFuncEvent *skipAicEvent;
+
+    SkipFuncEvent *skipPNPEvent;
+
+    SkipFuncEvent *skipATAEvent;
+
+    FreebsdSkipCalibrateClocksEvent *skipCalibrateClocks;
+
   public:
     FreebsdSystem(Params *p);
     ~FreebsdSystem();
+    void doCalibrateClocks(ExecContext *xc);
 
 };
 
-#endif // __KERN_LINUX_LINUX_SYSTEM_HH__
+#endif // __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
