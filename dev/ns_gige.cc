@@ -473,8 +473,9 @@ NSGigE::regStats()
     coalescedTxDesc = totalTxDesc / postedInterrupts;
     coalescedRxOrn = totalRxOrn / postedInterrupts;
 
-    coalescedTotal = (totalSwi + totalRxIdle + totalRxOk + totalRxDesc + totalTxOk
-                      + totalTxIdle + totalTxDesc + totalRxOrn) / postedInterrupts;
+    coalescedTotal = (totalSwi + totalRxIdle + totalRxOk + totalRxDesc +
+                      totalTxOk + totalTxIdle + totalTxDesc +
+                      totalRxOrn) / postedInterrupts;
 
     txBandwidth = txBytes * Stats::constant(8) / simSeconds;
     rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
@@ -1956,7 +1957,6 @@ NSGigE::txKick()
     if (txKickTick > curTick) {
         DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
                 txKickTick);
-
         return;
     }
 
@@ -2293,7 +2293,6 @@ NSGigE::recvPacket(PacketPtr packet)
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
-        debug_break();
         interface->recvDone();
         return true;
     }
