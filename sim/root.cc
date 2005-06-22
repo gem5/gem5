@@ -36,6 +36,7 @@
 #include "base/output.hh"
 #include "sim/builder.hh"
 #include "sim/host.hh"
+#include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
 
@@ -79,13 +80,33 @@ Tick ps;
 // Dummy Object
 class Root : public SimObject
 {
+  private:
+    Tick max_time;
+    Tick progress_interval;
+
   public:
-    Root(const std::string &name) : SimObject(name) {}
+    Root(const std::string &name, Tick maxtime, Tick pi)
+        : SimObject(name), max_time(maxtime), progress_interval(pi)
+    {}
+
+    virtual void startup();
 };
+
+void
+Root::startup()
+{
+    if (max_time != 0)
+        new SimExitEvent(curTick + max_time, "reached maximum cycle count");
+
+    if (progress_interval != 0)
+        new ProgressEvent(&mainEventQueue, progress_interval);
+}
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
 
     Param<Tick> clock;
+    Param<Tick> max_time;
+    Param<Tick> progress_interval;
     Param<string> output_file;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Root)
@@ -93,6 +114,8 @@ END_DECLARE_SIM_OBJECT_PARAMS(Root)
 BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
 
     INIT_PARAM(clock, "tick frequency"),
+    INIT_PARAM(max_time, "maximum simulation time"),
+    INIT_PARAM(progress_interval, "print a progress message"),
     INIT_PARAM(output_file, "file to dump simulator output to")
 
 END_INIT_SIM_OBJECT_PARAMS(Root)
@@ -106,7 +129,7 @@ CREATE_SIM_OBJECT(Root)
     created = true;
 
     outputStream = simout.find(output_file);
-    Root *root = new Root(getInstanceName());
+    Root *root = new Root(getInstanceName(), max_time, progress_interval);
 
     using namespace Clock;
     Frequency = clock;
