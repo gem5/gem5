@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream.h>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -35,35 +35,47 @@
 int
 main(int argc, char *argv[])
 {
-  if (argc != 3) {
-    cout << "Usage: " << argv[0] << " <string> <token>\n";
-    exit(1);
-  }
+    using namespace std;
 
-  int i;
-  string test = argv[1];
-  vector<string> tokens1;
-  vector<string> tokens2;
-  char token = argv[2][0];
+    if (argc != 3) {
+        cout << "Usage: " << argv[0] << " <string> <token>\n";
+        exit(1);
+    }
 
-  cout << "string = \"" << test << "\", token = \'" << token << "\'\n";
-  cout << "testing without ignore\n";
-  tokenize(tokens1, test, token, false);
+    int i;
+    string test = argv[1];
+    vector<string> tokens1;
+    vector<string> tokens2;
+    char token = argv[2][0];
 
-  if (tokens1.size()) {
-      for (i = 0; i < tokens1.size() - 1; i++)
-          cout << tokens1[i] << "(" << tokens1[i].size() << "), ";
-      cout << tokens1[i]  << "(" << tokens1[i].size() << ")\n";
-  }
+    cout << "string = \"" << test << "\", token = \'" << token << "\'\n";
+    cout << "testing without ignore\n";
+    tokenize(tokens1, test, token, false);
 
-  cout << "testing with ignore\n";
-  tokenize(tokens2, test, token, true);
+    if (tokens1.size()) {
+        int size = tokens1.size();
+        cout << "size = " << size << "\n";
+        for (i = 0; i < size; i++) {
+            cout << "'" << tokens1[i] << "' (" << tokens1[i].size()
+                 << ")" << ((i == size - 1) ? "\n" : ", ");
+        }
+    } else {
+        cout << "no tokens" << endl;
+    }
 
-  if (tokens2.size()) {
-      for (i = 0; i < tokens2.size() - 1; i++)
-          cout << tokens2[i] << "(" << tokens2[i].size() << "), ";
-      cout << tokens2[i] << "(" << tokens2[i].size() << ")\n";
-  }
+    cout << "testing with ignore\n";
+    tokenize(tokens2, test, token, true);
 
-  return 0;
+    if (tokens2.size()) {
+        int size = tokens2.size();
+        cout << "size = " << size << "\n";
+        for (i = 0; i < size; i++) {
+            cout << "'" << tokens2[i] << "' (" << tokens2[i].size()
+                 << ")" << ((i == size - 1) ? "\n" : ", ");
+        }
+    } else {
+        cout << "no tokens" << endl;
+    }
+
+    return 0;
 }
