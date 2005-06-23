@@ -122,6 +122,8 @@ base_sources = Split('''
         cpu/trace/reader/ibm_reader.cc
         cpu/trace/reader/itx_reader.cc
         cpu/trace/reader/m5_reader.cc
+        cpu/trace/opt_cpu.cc
+        cpu/trace/trace_cpu.cc
 
 	encumbered/cpu/full/bpred.cc
 	encumbered/cpu/full/commit.cc
@@ -322,8 +324,6 @@ syscall_emulation_sources = Split('''
 	arch/alpha/alpha_linux_process.cc
 	arch/alpha/alpha_tru64_process.cc
 	cpu/memtest/memtest.cc
-        cpu/trace/opt_cpu.cc
-	cpu/trace/trace_cpu.cc
 	encumbered/eio/eio.cc
 	encumbered/eio/exolex.cc
 	encumbered/eio/libexo.cc

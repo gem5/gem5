@@ -26,11 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
-
-#include <string.h>
 #include <ctype.h>
 
+#include <cstring>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -75,15 +74,17 @@ tokenize(vector<string>& v, const string &s, char token, bool ignore)
     string::size_type first = 0;
     string::size_type last = s.find_first_of(token);
 
-    if (ignore) {
-        if (last == first) {
-            while (last == first)
-                last = s.find_first_of(token, ++first);
+    if (s.empty())
+        return;
 
-            if (last == string::npos) {
-                v.push_back(s);
-                return;
-            }
+    if (ignore && last == first) {
+        while (last == first)
+            last = s.find_first_of(token, ++first);
+
+        if (last == string::npos) {
+            if (first != s.size())
+                v.push_back(s.substr(first));
+            return;
         }
     }
 

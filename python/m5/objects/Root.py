@@ -7,6 +7,9 @@ from Trace import Trace
 class Root(SimObject):
     type = 'Root'
     clock = Param.RootClock('200MHz', "tick frequency")
+    max_time = Param.Latency('0ns', "maximum simulation time (0 = infinite)")
+    progress_interval = Param.Latency('0ns',
+        "print a progress message at a regular interval (0 = never)")
     output_file = Param.String('cout', "file to dump simulator output to")
     checkpoint = Param.String('', "checkpoint file to load")
 #    hier = Param.HierParams(HierParams(do_data = False, do_events = True),

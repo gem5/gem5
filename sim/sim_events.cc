@@ -129,60 +129,6 @@ CheckSwapEvent::description()
     return "check swap";
 }
 
-
-///////////////////////////////////////////////////
-//
-// Simulation termination parameters
-//
-///////////////////////////////////////////////////
-
-class TermParamContext : public ParamContext
-{
-  public:
-    TermParamContext(const string &_iniSection)
-        : ParamContext(_iniSection) {}
-    void checkParams();
-};
-
-TermParamContext simTerminationParams("max");
-
-Param<Tick> max_cycle(&simTerminationParams, "cycle",
-                        "maximum number of cycles to execute");
-
-void
-TermParamContext::checkParams()
-{
-    // if a max cycle count was specified, put a termination event on
-    // the event queue at that point
-    if (max_cycle.isValid())
-        new SimExitEvent(max_cycle, "reached maximum cycle count");
-}
-
-//
-// Progress event: print out cycle every so often so we know we're
-// making forward progress.
-//
-class ProgressEvent : public Event
-{
-  protected:
-    Tick interval;
-
-  public:
-    ProgressEvent(EventQueue *q, Tick interval);
-
-    void process();	// process event
-    virtual const char *description();
-};
-
-//
-// constructor: schedule at specified time
-//
-ProgressEvent::ProgressEvent(EventQueue *q, Tick _interval)
-    : Event(q), interval(_interval)
-{
-    schedule(curTick + interval);
-}
-
 //
 // handle progress event: print message and reschedule
 //
@@ -199,32 +145,4 @@ const char *
 ProgressEvent::description()
 {
     return "progress message";
-}
-
-/////////
-//
-// Periodic progress message support: print out a message every n
-// cycles so we know we're making forward progress.
-//
-/////////
-
-// Parameter space for execution address tracing options.  Derive
-// from ParamContext so we can override checkParams() function.
-struct ProgressParamContext : public ParamContext
-{
-    ProgressParamContext(const string &_iniSection)
-        : ParamContext(_iniSection) {}
-    void startup();
-};
-
-ProgressParamContext progessMessageParams("progress");
-
-Param<Tick> progress_interval(&progessMessageParams, "cycle",
-                                "cycle interval for progress messages");
-
-void
-ProgressParamContext::startup()
-{
-    if (progress_interval.isValid())
-        new ProgressEvent(&mainEventQueue, progress_interval);
 }

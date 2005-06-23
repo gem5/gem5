@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIM_EVENTS_HH__
-#define __SIM_EVENTS_HH__
+#ifndef __SIM_SIM_EVENTS_HH__
+#define __SIM_SIM_EVENTS_HH__
 
 #include "sim/eventq.hh"
 
@@ -87,7 +87,7 @@ class CountedExitEvent : public Event
 };
 
 //
-// Event to cause a statistics dump
+// Event to check swap usage
 //
 class CheckSwapEvent : public Event
 {
@@ -97,11 +97,30 @@ class CheckSwapEvent : public Event
   public:
     CheckSwapEvent(EventQueue *q, int ival)
         : Event(q), interval(ival)
-        { schedule(interval); }
+    { schedule(curTick + interval); }
 
     void process();	// process event
 
     virtual const char *description();
 };
 
-#endif  // __SIM_EVENTS_HH__
+//
+// Progress event: print out cycle every so often so we know we're
+// making forward progress.
+//
+class ProgressEvent : public Event
+{
+  protected:
+    Tick interval;
+
+  public:
+    ProgressEvent(EventQueue *q, Tick ival)
+        : Event(q), interval(ival)
+    { schedule(curTick + interval); }
+
+    void process();	// process event
+
+    virtual const char *description();
+};
+
+#endif  // __SIM_SIM_EVENTS_HH__
