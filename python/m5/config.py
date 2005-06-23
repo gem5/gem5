@@ -421,14 +421,14 @@ class SimObject(object):
         print '[' + self.path() + ']'	# .ini section header
 
         if hasattr(self, 'type') and not isinstance(self, ParamContext):
-            print 'type =', self.type
+            print 'type=%s' % self.type
 
         child_names = self._children.keys()
         child_names.sort()
         np_child_names = [c for c in child_names \
                           if not isinstance(self._children[c], ParamContext)]
         if len(np_child_names):
-            print 'children =', ' '.join(np_child_names)
+            print 'children=%s' % ' '.join(np_child_names)
 
         param_names = self._params.keys()
         param_names.sort()
@@ -444,7 +444,7 @@ class SimObject(object):
                               (param, self.path())
                         raise
                     setattr(self, param, value)
-                print param, '=', self._values[param].ini_str()
+                print '%s=%s' % (param, self._values[param].ini_str())
 
         print	# blank line between objects
 
@@ -921,6 +921,9 @@ class UdpPort(CheckedInt):  size = 16; unsigned = True
 
 class Percent(CheckedInt):  min = 0; max = 100
 
+class Float(ParamValue, float):
+    pass
+
 class MemorySize(CheckedInt):
     size = 64
     unsigned = True
@@ -1022,6 +1025,14 @@ class NullSimObject(object):
         pass
 
     def ini_str(self):
+        return 'Null'
+
+    def unproxy(self,base):
+        return self
+
+    def set_path(self, parent, name):
+        pass
+    def __str__(self):
         return 'Null'
 
 # The only instance you'll ever need...
@@ -1262,7 +1273,7 @@ def instantiate(root):
 # short to avoid polluting other namespaces.
 __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Parent', 'Self',
-           'Enum', 'Bool', 'String',
+           'Enum', 'Bool', 'String', 'Float',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
