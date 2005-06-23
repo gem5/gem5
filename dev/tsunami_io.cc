@@ -65,13 +65,16 @@ TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
 void
 TsunamiIO::RTCEvent::process()
 {
+    static int intr_count = 0;
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
     schedule(curTick + interval);
     //Actually interrupt the processor here
     tsunami->cchip->postRTC();
+    if (intr_count == 1023)
+        tm.tm_sec = (tm.tm_sec + 1) % 60;
 
-    // For FreeBSD
-    tm.tm_sec++;
+    intr_count = (intr_count + 1) % 1024;
+
 }
 
 const char *
@@ -109,6 +112,11 @@ TsunamiIO::ClockEvent::ClockEvent()
 
     DPRINTF(Tsunami, "Clock Event Initilizing\n");
     mode = 0;
+
+    current_count.whole = 0;
+    latched_count.whole = 0;
+    latch_on = false;
+    read_msb = false;
 }
 
 void
@@ -119,6 +127,8 @@ TsunamiIO::ClockEvent::process()
         status = 0x20; // set bit that linux is looking for
     else
         schedule(curTick + interval);
+
+     current_count.whole--; //decrement count
 }
 
 void
@@ -127,6 +137,8 @@ TsunamiIO::ClockEvent::Program(int count)
     DPRINTF(Tsunami, "Timer set to curTick + %d\n", count * interval);
     schedule(curTick + count * interval);
     status = 0;
+
+    current_count.whole = count;
 }
 
 const char *
@@ -146,6 +158,38 @@ TsunamiIO::ClockEvent::Status()
 {
     return status;
 }
+
+void
+TsunamiIO::ClockEvent::LatchCount()
+{
+    if(!latch_on) {
+        latch_on = true;
+        read_msb = false;
+        latched_count.whole = current_count.whole;
+    }
+}
+
+uint8_t
+TsunamiIO::ClockEvent::Read()
+{
+    if(latch_on) {
+        if(!read_msb) {
+            read_msb = true;
+            return latched_count.half.lsb;
+        } else {
+            latch_on = false;
+            return latched_count.half.msb;
+        }
+    } else {
+        if(!read_msb) {
+            read_msb = true;
+            return current_count.half.lsb;
+        } else {
+            return current_count.half.msb;
+        }
+    }
+}
+
 
 void
 TsunamiIO::ClockEvent::serialize(std::ostream &os)
@@ -237,6 +281,9 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
               return No_Fault;
           case TSDEV_TMR_CTL:
             *(uint8_t*)data = timer2.Status();
+            return No_Fault;
+          case TSDEV_TMR0_DATA:
+            *(uint8_t *)data = timer0.Read();
             return No_Fault;
           case TSDEV_RTC_DATA:
             switch(RTCAddress) {
@@ -376,8 +423,24 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
           case TSDEV_TMR_CTL:
             return No_Fault;
           case TSDEV_TMR2_CTL:
-            if ((*(uint8_t*)data & 0x30) != 0x30)
-                panic("Only L/M write supported\n");
+            switch((*(uint8_t*)data >> 4) & 0x3) {
+              case 0x0:
+                switch(*(uint8_t*)data >> 6) {
+                  case 0:
+                    timer0.LatchCount();
+                    break;
+                  case 2:
+                    timer2.LatchCount();
+                    break;
+                  default:
+                    panic("Read Back Command not implemented\n");
+                }
+                break;
+              case 0x3:
+                break;
+              default:
+                panic("Only L/M write and Counter-Latch read supported\n");
+            }
 
             switch(*(uint8_t*)data >> 6) {
               case 0:

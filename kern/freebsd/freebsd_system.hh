@@ -35,23 +35,11 @@
 #include "kern/freebsd/freebsd_events.hh"
 
 
-/**
- * This class skips lengthy functions in the FreeBSD kernel.
- */
 class FreebsdSystem : public System
 {
   private:
 
-    /** PC based event to skip the DELAY call */
     SkipFuncEvent *skipDelayEvent;
-
-    SkipFuncEvent *skipOROMEvent;
-
-    SkipFuncEvent *skipAicEvent;
-
-    SkipFuncEvent *skipPNPEvent;
-
-    SkipFuncEvent *skipATAEvent;
 
     FreebsdSkipCalibrateClocksEvent *skipCalibrateClocks;
 

@@ -134,6 +134,8 @@ IdeDisk::reset(int id)
     memset(&cmdReg, 0, sizeof(CommandReg_t));
     memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
 
+    cmdReg.error = 1;
+
     dmaInterfaceBytes = 0;
     curPrdAddr = 0;
     curSector = 0;
@@ -745,6 +747,7 @@ IdeDisk::intrPost()
 
     // talk to controller to set interrupt
     if (ctrl)
+        ctrl->bmi_regs[BMIS0] |= IDEINTS;
         ctrl->intrPost();
 }
 

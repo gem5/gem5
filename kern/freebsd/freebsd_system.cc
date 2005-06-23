@@ -55,31 +55,12 @@ FreebsdSystem::FreebsdSystem(Params *p)
     Addr addr = 0;
 
     /**
-     * Any time ide_delay_50ms, calibarte_delay or
-     * determine_cpu_caches is called just skip the
-     * function. Currently determine_cpu_caches only is used put
-     * information in proc, however if that changes in the future we
-     * will have to fill in the cache size variables appropriately.
+     * Any time DELAY is called just skip the function.
+     * Replace calibrate_clocks with function below.
      */
     skipDelayEvent = new SkipFuncEvent(&pcEventQueue, "DELAY");
     if (kernelSymtab->findAddress("DELAY", addr))
         skipDelayEvent->schedule(addr+sizeof(MachInst));
-
-    skipOROMEvent = new SkipFuncEvent(&pcEventQueue, "orm_identify");
-    if (kernelSymtab->findAddress("orm_identify", addr))
-        skipOROMEvent->schedule(addr+sizeof(MachInst));
-
-    skipAicEvent = new SkipFuncEvent(&pcEventQueue, "ahc_isa_identify");
-    if (kernelSymtab->findAddress("ahc_isa_identify", addr))
-        skipAicEvent->schedule(addr+sizeof(MachInst));
-
-    skipPNPEvent = new SkipFuncEvent(&pcEventQueue, "pnp_identify");
-    if (kernelSymtab->findAddress("pnp_identify", addr))
-        skipPNPEvent->schedule(addr+sizeof(MachInst));
-
-    skipATAEvent = new SkipFuncEvent(&pcEventQueue, "ata_attach");
-    if (kernelSymtab->findAddress("ata_attach", addr))
-        skipATAEvent->schedule(addr+sizeof(MachInst));
 
     skipCalibrateClocks = new FreebsdSkipCalibrateClocksEvent(&pcEventQueue, "calibrate_clocks");
     if (kernelSymtab->findAddress("calibrate_clocks", addr))
@@ -91,10 +72,6 @@ FreebsdSystem::FreebsdSystem(Params *p)
 FreebsdSystem::~FreebsdSystem()
 {
     delete skipDelayEvent;
-    delete skipOROMEvent;
-    delete skipAicEvent;
-    delete skipATAEvent;
-    delete skipPNPEvent;
     delete skipCalibrateClocks;
 }
 
