@@ -173,7 +173,7 @@ Accept(int fd, bool nodelay)
 }
 
 void
-Connect(int fd, const string &host, int port)
+Connect(int fd, const std::string &host, int port)
 {
     struct sockaddr_in sockaddr;
     if (::inet_aton(host.c_str(), &sockaddr.sin_addr) == 0) {
@@ -193,6 +193,133 @@ Connect(int fd, const string &host, int port)
     DPRINTF("connected to %s on port %d\n", host, port);
 }
 
+class Ethernet
+{
+  protected:
+    int fd;
+
+  public:
+    virtual ~Ethernet() {}
+
+    int getfd() const { return fd; }
+    virtual bool read(const char *&data, int &len) = 0;
+    virtual bool write(const char *data, int len) = 0;
+};
+
+class Tap : public Ethernet
+{
+  private:
+    char buffer[65536];
+    int fd;
+
+  public:
+    Tap(char *device);
+    ~Tap();
+    virtual bool read(const char *&data, int &len);
+    virtual bool write(const char *data, int len);
+};
+
+class PCap : public Ethernet
+{
+  private:
+    pcap_t *pcap;
+    eth_t *ethernet;
+
+  public:
+    PCap(char *device, char *filter = NULL);
+    ~PCap();
+    virtual bool read(const char *&data, int &len);
+    virtual bool write(const char *data, int len);
+};
+
+PCap::PCap(char *device, char *filter)
+{
+    char errbuf[PCAP_ERRBUF_SIZE];
+    memset(errbuf, 0, sizeof errbuf);
+    pcap = pcap_open_live(device, 1500, 1, -1, errbuf);
+    if (pcap == NULL)
+        panic("pcap_open_live failed: %s\n", errbuf);
+
+    if (filter) {
+        bpf_program program;
+        bpf_u_int32 localnet, netmask;
+        if (pcap_lookupnet(device, &localnet, &netmask, errbuf) == -1) {
+            DPRINTF("pcap_lookupnet failed: %s\n", errbuf);
+            netmask = 0xffffff00;
+        }
+
+        if (pcap_compile(pcap, &program, filter, 1, netmask) == -1)
+            panic("pcap_compile failed, invalid filter:\n%s\n", filter);
+
+        if (pcap_setfilter(pcap, &program) == -1)
+            panic("pcap_setfilter failed\n");
+    }
+
+    ethernet = eth_open(device);
+    if (!ethernet)
+        panic("cannot open the ethernet device for writing\n");
+
+    fd = pcap_fileno(pcap);
+}
+
+PCap::~PCap()
+{
+    pcap_close(pcap);
+    eth_close(ethernet);
+}
+
+bool
+PCap::read(const char *&data, int &len)
+{
+    pcap_pkthdr hdr;
+    data = (const char *)pcap_next(pcap, &hdr);
+    if (!data)
+        return false;
+
+    len = hdr.len;
+    return true;
+}
+
+bool
+PCap::write(const char *data, int len)
+{
+    eth_send(ethernet, data, len);
+}
+
+Tap::Tap(char *device)
+{
+    fd = open(device, O_RDWR, 0);
+    if (fd < 0)
+        panic("could not open %s: %s\n", device, strerror(errno));
+}
+
+Tap::~Tap()
+{
+    close(fd);
+}
+
+bool
+Tap::read(const char *&data, int &len)
+{
+    DPRINTF("tap read!\n");
+    data = buffer;
+    len = ::read(fd, buffer, sizeof(buffer));
+    if (len < 0)
+        return false;
+
+    return true;
+}
+
+bool
+Tap::write(const char *data, int len)
+{
+    int result = ::write(fd, data, len);
+    if (result < 0)
+        return false;
+
+    return true;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -201,13 +328,16 @@ main(int argc, char *argv[])
     bool listening = false;
     char *device = NULL;
     char *filter = NULL;
+    Ethernet *tap = NULL;
+    bool usetap = false;
     char c;
     int daemon = false;
-    string host;
+    std::string host;
+    int devfd;
 
     program = basename(argv[0]);
 
-    while ((c = getopt(argc, argv, "b:df:lp:v")) != -1) {
+    while ((c = getopt(argc, argv, "b:df:lp:tv")) != -1) {
         switch (c) {
           case 'b':
             bufsize = atoi(optarg);
@@ -223,6 +353,9 @@ main(int argc, char *argv[])
             break;
           case 'p':
             port = atoi(optarg);
+            break;
+          case 't':
+            usetap = true;
             break;
           case 'v':
             verbose++;
@@ -268,30 +401,13 @@ main(int argc, char *argv[])
         host = *argv;
     }
 
-    char errbuf[PCAP_ERRBUF_SIZE];
-    memset(errbuf, 0, sizeof errbuf);
-    pcap_t *pcap = pcap_open_live(device, 1500, 1, -1, errbuf);
-    if (pcap == NULL)
-        panic("pcap_open_live failed: %s\n", errbuf);
-
-    if (filter) {
-        bpf_program program;
-        bpf_u_int32 localnet, netmask;
-        if (pcap_lookupnet(device, &localnet, &netmask, errbuf) == -1) {
-            DPRINTF("pcap_lookupnet failed: %s\n", errbuf);
-            netmask = 0xffffff00;
-        }
-
-        if (pcap_compile(pcap, &program, filter, 1, netmask) == -1)
-            panic("pcap_compile failed, invalid filter:\n%s\n", filter);
-
-        if (pcap_setfilter(pcap, &program) == -1)
-            panic("pcap_setfilter failed\n");
+    if (usetap) {
+        if (filter)
+            panic("-f parameter not valid with a tap device!");
+        tap = new Tap(device);
+    } else {
+        tap = new PCap(device, filter);
     }
-
-    eth_t *ethernet = eth_open(device);
-    if (!ethernet)
-        panic("cannot open the ethernet device for writing\n");
 
     pollfd pfds[3];
     pfds[0].fd = Socket(true);
@@ -303,7 +419,7 @@ main(int argc, char *argv[])
     else
         Connect(pfds[0].fd, host, port);
 
-    pfds[1].fd = pcap_fileno(pcap);
+    pfds[1].fd = tap->getfd();
     pfds[1].events = POLLIN;
     pfds[1].revents = 0;
 
@@ -341,16 +457,16 @@ main(int argc, char *argv[])
             listen_pfd->revents = 0;
         }
 
+        DPRINTF("tap events: %x\n", tap_pfd->revents);
         if (tap_pfd && tap_pfd->revents) {
             if (tap_pfd->revents & POLLIN) {
-                pcap_pkthdr hdr;
-                const u_char *data = pcap_next(pcap, &hdr);
-                if (data && client_pfd) {
-                    DPRINTF("Received packet from ethernet len=%d\n", hdr.len);
-                    DDUMP(data, hdr.len);
-                    u_int32_t len = htonl(hdr.len);
-                    write(client_pfd->fd, &len, sizeof(len));
-                    write(client_pfd->fd, data, hdr.len);
+                const char *data; int len;
+                if (tap->read(data, len) && client_pfd) {
+                    DPRINTF("Received packet from ethernet len=%d\n", len);
+                    DDUMP(data, len);
+                    u_int32_t swaplen = htonl(len);
+                    write(client_pfd->fd, &swaplen, sizeof(swaplen));
+                    write(client_pfd->fd, data, len);
                 }
             }
 
@@ -379,7 +495,7 @@ main(int argc, char *argv[])
                 while (data_len != 0 &&
                        buffer_offset >= data_len + sizeof(u_int32_t)) {
                     char *data = buffer + sizeof(u_int32_t);
-                    eth_send(ethernet, data, data_len);
+                    tap->write(data, data_len);
                     DPRINTF("Sent packet to ethernet len = %d\n", data_len);
                     DDUMP(data, data_len);
 
@@ -412,8 +528,8 @@ main(int argc, char *argv[])
     }
 
     delete [] buffer;
-    pcap_close(pcap);
-    eth_close(ethernet);
+    delete tap;
+
     if (listen_pfd)
         close(listen_pfd->fd);
 
