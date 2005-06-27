@@ -35,6 +35,7 @@
 
 #include "dev/disk_image.hh"
 #include "dev/ide_atareg.h"
+#include "dev/ide_ctrl.hh"
 #include "dev/ide_wdcreg.h"
 #include "dev/io_device.hh"
 #include "sim/eventq.hh"
@@ -103,9 +104,8 @@ class PrdTableEntry {
 #define DEV1 (1)
 
 typedef struct CommandReg {
-    uint8_t data0;
+    uint16_t data;
     union {
-        uint8_t data1;
         uint8_t error;
         uint8_t features;
     };
@@ -272,7 +272,7 @@ class IdeDisk : public SimObject
     }
 
     // Device register read/write
-    void read(const Addr &offset, bool byte, bool cmdBlk, uint8_t *data);
+    uint16_t read(const Addr &offset, RegType_t type);
     void write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data);
 
     // Start/abort functions

@@ -1359,7 +1359,7 @@ void
 NSGigE::regsReset()
 {
     memset(&regs, 0, sizeof(regs));
-    regs.config = CFGR_LNKSTS;
+    regs.config = (CFGR_LNKSTS | CFGR_TBI_EN | CFGR_MODE_1000);
     regs.mear = 0x22;
     regs.txcfg = 0x120; // set drain threshold to 1024 bytes and
                         // fill threshold to 32 bytes

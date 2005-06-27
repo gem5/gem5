@@ -412,14 +412,10 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
 {
     Addr offset;
     bool primary;
-    bool byte;
-    bool cmdBlk;
     RegType_t type;
     int disk;
 
     parseAddr(req->paddr, offset, primary, type);
-    byte = (req->size == sizeof(uint8_t)) ? true : false;
-    cmdBlk = (type == COMMAND_BLOCK) ? true : false;
 
     if (!io_enabled)
         return No_Fault;
@@ -430,11 +426,19 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
         panic("IDE controller read of invalid size: %#x\n", req->size);
 
     if (type != BMI_BLOCK) {
-        assert(req->size != sizeof(uint32_t));
 
         disk = getDisk(primary);
         if (disks[disk])
-            disks[disk]->read(offset, byte, cmdBlk, data);
+            if (req->size == sizeof(uint32_t) && offset == DATA_OFFSET) {
+                *((uint16_t*)data) = disks[disk]->read(offset, type);
+                *((uint16_t*)data + 1) = disks[disk]->read(offset, type);
+            }
+            else if (req->size == sizeof(uint8_t) && offset == DATA_OFFSET) {
+                panic("IDE read of data reg invalid size: %#x\n", req->size);
+            }
+            else {
+                *data = disks[disk]->read(offset, type);
+            }
     } else {
         memcpy((void *)data, &bmi_regs[offset], req->size);
     }
