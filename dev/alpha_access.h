@@ -33,12 +33,15 @@
  * System Console Memory Mapped Register Definition
  */
 
-#define ALPHA_ACCESS_VERSION (1301)
+#define ALPHA_ACCESS_VERSION (1302)
 
 #ifndef CONSOLE
 #include <iosfwd>
 #include <string>
 class Checkpoint;
+#else
+typedef unsigned uint32_t;
+typedef unsigned long uint64_t;
 #endif
 
 // This structure hacked up from simos

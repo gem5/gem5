@@ -108,7 +108,8 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
     switch (req->size)
     {
         case sizeof(uint32_t):
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *(uint32_t*)data);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    *(uint32_t*)data);
             switch (daddr)
             {
                 case offsetof(AlphaAccess, last_offset):
@@ -133,7 +134,8 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
             }
             break;
         case sizeof(uint64_t):
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *(uint64_t*)data);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    *(uint64_t*)data);
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):

@@ -147,7 +147,7 @@ System::System(Params *p)
      * Set the hardware reset parameter block system type and revision
      * information to Tsunami.
      */
-    if (consoleSymtab->findAddress("xxm_rpb", addr)) {
+    if (consoleSymtab->findAddress("m5_rpb", addr)) {
         Addr paddr = vtophys(physmem, addr);
         char *hwrpb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
