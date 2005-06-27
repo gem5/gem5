@@ -30,7 +30,7 @@ import os, os.path, re, sys
 
 Import('env')
 
-import m5scons
+import scons_helper
 
 def WriteEmbeddedPyFile(target, source, path, name, ext, filename):
     if isinstance(source, str):
@@ -151,7 +151,7 @@ def MakeDefinesPyFile(target, source, env):
     f = file(str(target[0]), 'w')
     print >>f, "import __main__"
     print >>f, "__main__.m5_build_env = ",
-    print >>f, m5scons.flatten_defines(env['CPPDEFINES'])
+    print >>f, scons_helper.flatten_defines(env['CPPDEFINES'])
     f.close()
 
 CFileCounter = 0
