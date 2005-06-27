@@ -1,85 +1,77 @@
 /*
-Copyright (c) 2003, 2004
-The Regents of The University of Michigan
-All Rights Reserved
-
-This code is part of the M5 simulator, developed by Nathan Binkert,
-Erik Hallnor, Steve Raasch, and Steve Reinhardt, with contributions
-from Ron Dreslinski, Dave Greene, Lisa Hsu, Ali Saidi, and Andrew
-Schultz.
-
-Permission is granted to use, copy, create derivative works and
-redistribute this software and such derivative works for any purpose,
-so long as the copyright notice above, this grant of permission, and
-the disclaimer below appear in all copies made; and so long as the
-name of The University of Michigan is not used in any advertising or
-publicity pertaining to the use or distribution of this software
-without specific, written prior authorization.
-
-THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION FROM THE
-UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY PURPOSE, AND WITHOUT
-WARRANTY BY THE UNIVERSITY OF MICHIGAN OF ANY KIND, EITHER EXPRESS OR
-IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE REGENTS OF
-THE UNIVERSITY OF MICHIGAN SHALL NOT BE LIABLE FOR ANY DAMAGES,
-INCLUDING DIRECT, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
-DAMAGES, WITH RESPECT TO ANY CLAIM ARISING OUT OF OR IN CONNECTION
-WITH THE USE OF THE SOFTWARE, EVEN IF IT HAS BEEN OR IS HEREAFTER
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
-/*
-Copyright 1993 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-/* ******************************************
- * SimOS SRM  Console
+ * Copyright (c) 2003, 2004
+ * The Regents of The University of Michigan
+ * All Rights Reserved
  *
- * Derived from Lance Berc's SRM console
- * for the SRC XXM Machine
+ * This code is part of the M5 simulator, developed by Nathan Binkert,
+ * Erik Hallnor, Steve Raasch, and Steve Reinhardt, with contributions
+ * from Ron Dreslinski, Dave Greene, Lisa Hsu, Ali Saidi, and Andrew
+ * Schultz.
+ *
+ * Permission is granted to use, copy, create derivative works and
+ * redistribute this software and such derivative works for any purpose,
+ * so long as the copyright notice above, this grant of permission, and
+ * the disclaimer below appear in all copies made; and so long as the
+ * name of The University of Michigan is not used in any advertising or
+ * publicity pertaining to the use or distribution of this software
+ * without specific, written prior authorization.
+ *
+ * THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION FROM THE
+ * UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY PURPOSE, AND WITHOUT
+ * WARRANTY BY THE UNIVERSITY OF MICHIGAN OF ANY KIND, EITHER EXPRESS OR
+ * IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE REGENTS OF
+ * THE UNIVERSITY OF MICHIGAN SHALL NOT BE LIABLE FOR ANY DAMAGES,
+ * INCLUDING DIRECT, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+ * DAMAGES, WITH RESPECT TO ANY CLAIM ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OF THE SOFTWARE, EVEN IF IT HAS BEEN OR IS HEREAFTER
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ */
+
+/*
+ * Copyright 1993 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/* ******************************************
+ * M5 Console
  * ******************************************/
 
-
-typedef unsigned long long uint64_t;
-typedef unsigned long long uint64;
-typedef unsigned int uint32_t;
-typedef unsigned int uint32;
+#include <linux/stddef.h>
+#include <sys/types.h>
 
 #define CONSOLE
 #include "alpha_access.h"
-
-#if 0
-#include "new_aouthdr.h"
-#include "srcmax.h"
-#endif
-
-/* from ../h */
-#include "lib.h"
-#include "rpb.h"
 #include "cserve.h"
+#include "rpb.h"
 
 #define CONS_INT_TX   0x01  /* interrupt enable / state bits */
 #define CONS_INT_RX   0x02
 
+#define PAGE_SIZE (8192)
+
 #define KSEG   0xfffffc0000000000
 #define K1BASE 0xfffffc8000000000
-#define KSEG_TO_PHYS(x)(((ul)x) & ~KSEG)
+#define KSEG_TO_PHYS(x) (((ulong)x) & ~KSEG)
 
 #ifdef TSUNAMI
 #define ALPHA_ACCESS_BASE 0xfffffd0200000000
@@ -89,74 +81,53 @@ typedef unsigned int uint32;
 #error TSUNAMI/TLASER not defined.
 #endif
 
-#define PHYS_TO_K1(_x) (K1BASE|(_x))
+#define ROUNDUP8(x) ((ulong)(((ulong)x)+7) & ~7)
+#define ROUNDUP128(x) ((ulong)(((ulong)x) + 127) & ~127)
+#define ROUNDUP8K(x) ((ulong)(((ulong)(x)) + 8191) & ~8191)
 
-#define AOUT_LOAD_ADDR (KSEG|0xf000)
-
-#define ROUNDUP8(x) ((ul)(((ul)x)+7) & ~7)
-#define ROUNDUP128(x) ((ul)(((ul)x)+127) & ~127)
-#define ROUNDUP8K(x) ((ul)(((ul)(x))+8191) & ~8191)
-
-#define FIRST(x)  ((((ul)(x)) >> 33) & 0x3ff)
-#define SECOND(x) ((((ul)(x)) >> 23) & 0x3ff)
-#define THIRD(x) ((((ul)(x)) >> 13) & 0x3ff)
-#define THIRD_XXX(x)  ((((ul)(x)) >> 13) & 0xfff)
-#define PFN(x)  ((((ul)(x) & ~KSEG) >> 13))
+#define FIRST(x)  ((((ulong)(x)) >> 33) & 0x3ff)
+#define SECOND(x) ((((ulong)(x)) >> 23) & 0x3ff)
+#define THIRD(x) ((((ulong)(x)) >> 13) & 0x3ff)
+#define THIRD_XXX(x)  ((((ulong)(x)) >> 13) & 0xfff)
+#define PFN(x)  ((((ulong)(x) & ~KSEG) >> 13))
 
 /* Kernel write | kernel read | valid */
-#define KPTE(x) ((ul)((((ul)(x)) << 32) | 0x1101))
+#define KPTE(x) ((ulong)((((ulong)(x)) << 32) | 0x1101))
 
 #define HWRPB_PAGES 16
 #define MDT_BITMAP_PAGES  4
 
-#define CSERVE_K_JTOKERN       0x18
-
 #define NUM_KERNEL_THIRD (4)
 
-#define printf_lock(args...)  \
-    do { \
-    SpinLock(&theLock); \
-    printf(args); \
-    SpinUnlock(&theLock); \
+#define printf_lock(args...)		\
+    do {				\
+        SpinLock(&theLock);		\
+        printf(args);			\
+        SpinUnlock(&theLock);		\
     } while (0)
 
 
-static unixBoot(int go, int argc, char **argv);
-void jToPal(ul bootadr);
+void unixBoot(int go, int argc, char **argv);
+void JToKern(char *bootadr, ulong rpb_percpu, ulong free_pfn, ulong k_argc,
+             char **k_argv, char **envp);
+void JToPal(ulong bootadr);
 void SlaveLoop(int cpu);
 
+struct AlphaAccess m5Conf;
 
-struct AlphaAccess simosConf;
+ulong theLock;
 
-/* **************************************************************
- * Console callbacks use VMS calling conventions
- * read AXP manual, 2-64.
- * ***************************************************************/
-typedef struct OpenVMSFunc {
-   long dummy;
-   long func;
-}OpenVMSFunc;
-
-OpenVMSFunc callbackFunc, fixupFunc;
-
-
-
-
-ul theLock;
-
-
-extern void SpinLock(ul *lock);
+extern void SpinLock(ulong *lock);
 #define SpinUnlock(_x) *(_x) = 0;
 
 struct _kernel_params {
-   char *bootadr;
-   ul rpb_percpu;
-   ul free_pfn;
-   ul argc;
-   ul argv;
-   ul envp; /* NULL */
+    char *bootadr;
+    ulong rpb_percpu;
+    ulong free_pfn;
+    ulong argc;
+    ulong argv;
+    ulong envp; /* NULL */
 };
-
 
 extern consoleCallback[];
 extern consoleFixup[];
@@ -164,220 +135,204 @@ long CallBackDispatcher();
 long CallBackFixup();
 
 /*
- * simos console output
+ * m5 console output
  */
 
-void InitConsole(void)
+void
+InitConsole()
 {
-#if 0
-   CDR->intr_status =(DevRegister)(DEV_CNSLE_RX_INTR |DEV_CNSLE_TX_INTR);
-#endif
 }
 
-char GetChar()
+char
+GetChar()
 {
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
-   return k1Conf->inputChar;
+    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
+    return k1Conf->inputChar;
 }
 
-void PutChar(char c)
+void
+PutChar(char c)
 {
-#if 0
-   CDR->data = c;
-#endif
-#if 0
-   *(int*) PHYS_TO_K1(SLOT_D_COM1<<5) = c;
-#endif
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
-   k1Conf->outputChar = c;
-
+    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
+    k1Conf->outputChar = c;
 }
-
 
 int
 passArgs(int argc)
-{ return 0; }
+{
+    return 0;
+}
 
 int
 main(int argc, char **argv)
 {
-   int x,i;
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
-   ui *k1ptr,*ksegptr;
+    int x, i;
+    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
+    uint *k1ptr, *ksegptr;
 
+    InitConsole();
+    printf_lock("M5 console\n");
 
-   InitConsole();
-   printf_lock("M5 console\n");
-   /*
-    * get configuration from backdoor
-    */
-   simosConf.last_offset = k1Conf->last_offset;
-   printf_lock("Got Configuration %d \n",simosConf.last_offset);
+    /*
+     * get configuration from backdoor
+     */
+    m5Conf.last_offset = k1Conf->last_offset;
+    printf_lock("Got Configuration %d\n", m5Conf.last_offset);
 
-    simosConf.last_offset = k1Conf->last_offset;
-    simosConf.version = k1Conf->version;
-    simosConf.numCPUs = k1Conf->numCPUs;
-    simosConf.intrClockFrequency = k1Conf->intrClockFrequency;
-    simosConf.cpuClock = k1Conf->cpuClock;
-    simosConf.mem_size = k1Conf->mem_size;
-    simosConf.kernStart = k1Conf->kernStart;
-    simosConf.kernEnd = k1Conf->kernEnd;
-    simosConf.entryPoint = k1Conf->entryPoint;
-    simosConf.diskUnit = k1Conf->diskUnit;
-    simosConf.diskCount = k1Conf->diskCount;
-    simosConf.diskPAddr = k1Conf->diskPAddr;
-    simosConf.diskBlock = k1Conf->diskBlock;
-    simosConf.diskOperation = k1Conf->diskOperation;
-    simosConf.outputChar = k1Conf->outputChar;
-    simosConf.inputChar = k1Conf->inputChar;
-    simosConf.bootStrapImpure = k1Conf->bootStrapImpure;
-    simosConf.bootStrapCPU = k1Conf->bootStrapCPU;
+    m5Conf.last_offset = k1Conf->last_offset;
+    m5Conf.version = k1Conf->version;
+    m5Conf.numCPUs = k1Conf->numCPUs;
+    m5Conf.intrClockFrequency = k1Conf->intrClockFrequency;
+    m5Conf.cpuClock = k1Conf->cpuClock;
+    m5Conf.mem_size = k1Conf->mem_size;
+    m5Conf.kernStart = k1Conf->kernStart;
+    m5Conf.kernEnd = k1Conf->kernEnd;
+    m5Conf.entryPoint = k1Conf->entryPoint;
+    m5Conf.diskUnit = k1Conf->diskUnit;
+    m5Conf.diskCount = k1Conf->diskCount;
+    m5Conf.diskPAddr = k1Conf->diskPAddr;
+    m5Conf.diskBlock = k1Conf->diskBlock;
+    m5Conf.diskOperation = k1Conf->diskOperation;
+    m5Conf.outputChar = k1Conf->outputChar;
+    m5Conf.inputChar = k1Conf->inputChar;
+    m5Conf.bootStrapImpure = k1Conf->bootStrapImpure;
+    m5Conf.bootStrapCPU = k1Conf->bootStrapCPU;
 
-   if (simosConf.version != ALPHA_ACCESS_VERSION)  {
-      panic("Console version mismatch. Console expects %d. has %d \n",
-            ALPHA_ACCESS_VERSION,simosConf.version);
-   }
+    if (m5Conf.version != ALPHA_ACCESS_VERSION)  {
+        panic("Console version mismatch. Console expects %d. has %d \n",
+              ALPHA_ACCESS_VERSION, m5Conf.version);
+    }
 
+    /*
+     * setup arguments to kernel
+     */
+    unixBoot(1, argc, argv);
 
-   /*
-    * setup arguments to kernel
-    */
-   unixBoot(1,argc,argv);
-
-   x = *(volatile int *)(K1BASE-4);
-   while(1) continue;
-   return x;
+    x = *(volatile int *)(K1BASE-4);
+    while (1)
+        continue;
+    return x;
 }
 
 /*
  * BOOTING
  */
-struct rpb xxm_rpb = {
-   NULL,		/* 000: physical self-reference */
-   ((long)'H') | (((long)'W') << 8) | (((long)'R') << 16) |
-   ((long)'P' << 24) | (((long)'B') << 32),  /* 008: contains string "HWRPB" */
-   6,			/* 010: HWRPB version number */
-   /* the byte count is wrong, but who needs it? - lance */
-   0,			/* 018: bytes in RPB perCPU CTB CRB MEDSC */
-   0,			/* 020: primary cpu id */
-   8192,		/* 028: page size in bytes */
-   43,		/* 030: number of phys addr bits */
-   127,		/* 038: max valid ASN */
-   {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'},	/* 040: system serial num: 10 ascii chars */
-#ifdef undef
-/* To be legitimate, the following system type and variation are correct for the XXM.
-   But there are too many #ifdefs etc to deal with in Unix, so we tell the kernel
-   that we're an Avanti, which is similar enough.
-   */
-   31,		/* 050: system type - XXM is now in the Alpha SRM */
-   (1 << 10) | (2<<1),/* 058: system variation - XXM w/EV5 & embeded console */
-#endif
-#if 0
-   0x12,		/* 050: system type - masquarade as some random 21064 */
-#endif
-   0, /* OVERRIDDEN */
-   (1<<10),		/* 058: system variation OVERRIDDEN */
-   'c'|('o'<<8)|('o'<<16)|('l'<< 24),		/* 060: system revision */
-   1024*4096,		/* 068: scaled interval clock intr freq  OVERRIDEN*/
-   0,			/* 070: cycle counter frequency */
-   0x200000000,	/* 078: virtual page table base */
-   0,			/* 080: reserved */
-   0,			/* 088: offset to translation buffer hint */
-   1,			/* 090: number of processor slots OVERRIDDEN*/
-   sizeof(struct rpb_percpu),	/* 098: per-cpu slot size. OVERRIDDEN */
-   0,			/* 0A0: offset to per_cpu slots */
-   1,			/* 0A8: number of CTBs */
-#ifdef bugnion_gone
-   sizeof(struct rpb_ctb),	/* 0B0: bytes in largest CTB */
-#else
-   sizeof(struct ctb_tt),
-#endif
-   0,			/* 0B8: offset to CTB (cons term block) */
-   0,			/* 0C0: offset to CRB (cons routine block) */
-   0,			/* 0C8: offset to memory descriptor table */
-   0,			/* 0D0: offset to config data block */
-   0,			/* 0D8: offset to FRU table */
-   0,			/* 0E0: virt addr of save term routine */
-   0,			/* 0E8: proc value for save term routine */
-   0,			/* 0F0: virt addr of restore term routine */
-   0,			/* 0F8: proc value for restore term routine */
-   0,			/* 100: virt addr of CPU restart routine */
-   0,			/* 108: proc value for CPU restart routine */
-   0,			/* 110: used to determine presence of kdebug */
-   0,			/* 118: reserved for hardware */
+struct rpb m5_rpb = {
+    NULL,		/* 000: physical self-reference */
+    ((long)'H') | (((long)'W') << 8) | (((long)'R') << 16) |
+    ((long)'P' << 24) | (((long)'B') << 32),  /* 008: contains "HWRPB" */
+    6,			/* 010: HWRPB version number */
+    /* the byte count is wrong, but who needs it? - lance */
+    0,			/* 018: bytes in RPB perCPU CTB CRB MEDSC */
+    0,			/* 020: primary cpu id */
+    PAGE_SIZE,		/* 028: page size in bytes */
+    43,			/* 030: number of phys addr bits */
+    127,		/* 038: max valid ASN */
+    {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','1'},
+                        /* 040: system serial num: 10 ascii chars */
+    0, /* OVERRIDDEN */
+    (1<<10),		/* 058: system variation */
+    'c'|('o'<<8)|('o'<<16)|('l'<< 24),	/* 060: system revision */
+    1024*4096,		/* 068: scaled interval clock intr freq */
+    0,			/* 070: cycle counter frequency */
+    0x200000000,	/* 078: virtual page table base */
+    0,			/* 080: reserved */
+    0,			/* 088: offset to translation buffer hint */
+    1,			/* 090: number of processor slots OVERRIDDEN*/
+    sizeof(struct rpb_percpu),	/* 098: per-cpu slot size. OVERRIDDEN */
+    0,			/* 0A0: offset to per_cpu slots */
+    1,			/* 0A8: number of CTBs */
+    sizeof(struct ctb_tt),
+    0,			/* 0B8: offset to CTB (cons term block) */
+    0,			/* 0C0: offset to CRB (cons routine block) */
+    0,			/* 0C8: offset to memory descriptor table */
+    0,			/* 0D0: offset to config data block */
+    0,			/* 0D8: offset to FRU table */
+    0,			/* 0E0: virt addr of save term routine */
+    0,			/* 0E8: proc value for save term routine */
+    0,			/* 0F0: virt addr of restore term routine */
+    0,			/* 0F8: proc value for restore term routine */
+    0,			/* 100: virt addr of CPU restart routine */
+    0,			/* 108: proc value for CPU restart routine */
+    0,			/* 110: used to determine presence of kdebug */
+    0,			/* 118: reserved for hardware */
 /* the checksum is wrong, but who needs it? - lance */
-   0,			/* 120: checksum of prior entries in rpb */
-   0,			/* 128: receive ready bitmask */
-   0,			/* 130: transmit ready bitmask */
-   0,			/* 138: Dynamic System Recog. offset */
+    0,			/* 120: checksum of prior entries in rpb */
+    0,			/* 128: receive ready bitmask */
+    0,			/* 130: transmit ready bitmask */
+    0,			/* 138: Dynamic System Recog. offset */
 };
 
-ul xxm_tbb[] = { 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e,
-                 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e};
+ulong m5_tbb[] = { 0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e,
+                   0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e,
+                   0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e,
+                   0x1e1e1e1e1e1e1e1e, 0x1e1e1e1e1e1e1e1e };
 
-struct rpb_percpu xxm_rpb_percpu = {
-   {0,0,0,0,0,0,1,{0,0},{0,0,0,0,0,0,0,0}},				/* 000: boot/restart HWPCB */
-   (STATE_PA | STATE_PP | STATE_CV | STATE_PV | STATE_PMV | STATE_PL), 	/* 080: per-cpu state bits */
-   0xc000,				/* 088: palcode memory length */
-   0x2000,				/* 090: palcode scratch length */
-   0x4000,				/* 098: phys addr of palcode mem space */
-   0x2000,				/* 0A0: phys addr of palcode scratch space */
-   (2 << 16) | (5 << 8) | 1,		/* 0A8: PALcode rev required */
-   11 | (2L  << 32),				/* 0B0: processor type */
-   7,					/* 0B8: processor variation */
-   'M'|('5'<<8)|('A'<<16)|('0'<<24),	/* 0C0: processor revision */
-   {'M','5','/','A','l','p','h','a','0','0','0','0','0','0','0','0'},	/* 0C8: proc serial num: 10 ascii chars */
-   0,					/* 0D8: phys addr of logout area */
-   0,					/* 0E0: length in bytes of logout area */
-   0,					/* 0E8: halt pcb base */
-   0,					/* 0F0: halt pc */
-   0,					/* 0F8: halt ps */
-   0,					/* 100: halt arg list (R25) */
-   0,					/* 108: halt return address (R26) */
-   0,					/* 110: halt procedure value (R27) */
-   0,		       			/* 118: reason for halt */
-   0,		       			/* 120: for software */
-   {0},				/* 128: inter-console communications buffer */
-   {1,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0},	/* 1D0: PALcode revs available */
-   0					/* 250: reserved for arch use */
+struct rpb_percpu m5_rpb_percpu = {
+    {0,0,0,0,0,0,1,{0,0},{0,0,0,0,0,0,0,0}}, /* 000: boot/restart HWPCB */
+    (STATE_PA | STATE_PP | STATE_CV |
+     STATE_PV | STATE_PMV | STATE_PL), 	/* 080: per-cpu state bits */
+    0xc000,				/* 088: palcode memory length */
+    0x2000,				/* 090: palcode scratch length */
+    0x4000,				/* 098: paddr of pal mem space */
+    0x2000,				/* 0A0: paddr of pal scratch space */
+    (2 << 16) | (5 << 8) | 1,		/* 0A8: PALcode rev required */
+    11 | (2L  << 32),			/* 0B0: processor type */
+    7,					/* 0B8: processor variation */
+    'M'|('5'<<8)|('A'<<16)|('0'<<24),	/* 0C0: processor revision */
+    {'M','5','/','A','l','p','h','a','0','0','0','0','0','0','0','0'},
+                                        /* 0C8: proc serial num: 10 chars */
+    0,					/* 0D8: phys addr of logout area */
+    0,					/* 0E0: len in bytes of logout area */
+    0,					/* 0E8: halt pcb base */
+    0,					/* 0F0: halt pc */
+    0,					/* 0F8: halt ps */
+    0,					/* 100: halt arg list (R25) */
+    0,					/* 108: halt return address (R26) */
+    0,					/* 110: halt procedure value (R27) */
+    0,		       			/* 118: reason for halt */
+    0,		       			/* 120: for software */
+    {0},				/* 128: inter-console comm buffer */
+    {1,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0},	/* 1D0: PALcode revs available */
+    0					/* 250: reserved for arch use */
 /* the dump stack grows from the end of the rpb page not to reach here */
 };
 
-struct _xxm_rpb_mdt {
-   long   rpb_checksum;	/* 000: checksum of entire mem desc table */
-   long   rpb_impaddr;		/* 008: PA of implementation dep info */
-   long   rpb_numcl;		/* 010: number of clusters */
-   struct rpb_cluster rpb_cluster[3];	/* first instance of a cluster */
+struct _m5_rpb_mdt {
+    long   rpb_checksum;	/* 000: checksum of entire mem desc table */
+    long   rpb_impaddr;		/* 008: PA of implementation dep info */
+    long   rpb_numcl;		/* 010: number of clusters */
+    struct rpb_cluster rpb_cluster[3];	/* first instance of a cluster */
 };
 
-struct _xxm_rpb_mdt xxm_rpb_mdt = {
-   0,		/* 000: checksum of entire mem desc table */
-   0,		/* 008: PA of implementation dep info */
-   0,		/* 010: number of clusters */
-   {{	0,		/* 000: starting PFN of this cluster */
+struct _m5_rpb_mdt m5_rpb_mdt = {
+    0,			/* 000: checksum of entire mem desc table */
+    0,			/* 008: PA of implementation dep info */
+    0,			/* 010: number of clusters */
+    {{	0,		/* 000: starting PFN of this cluster */
         0,		/* 008: count of PFNs in this cluster */
         0,		/* 010: count of tested PFNs in cluster */
         0,		/* 018: va of bitmap */
         0,		/* 020: pa of bitmap */
         0,		/* 028: checksum of bitmap */
         1		/* 030: usage of cluster */
-   },
-    {   0,		/* 000: starting PFN of this cluster */
-        0,		/* 008: count of PFNs in this cluster */
-        0,		/* 010: count of tested PFNs in cluster */
-        0,		/* 018: va of bitmap */
-        0,		/* 020: pa of bitmap */
-        0,		/* 028: checksum of bitmap */
-        0		/* 030: usage of cluster */
-    },
-    {   0,		/* 000: starting PFN of this cluster */
-        0,		/* 008: count of PFNs in this cluster */
-        0,		/* 010: count of tested PFNs in cluster */
-        0,		/* 018: va of bitmap */
-        0,		/* 020: pa of bitmap */
-        0,		/* 028: checksum of bitmap */
-        0		/* 030: usage of cluster */
-    }}
+     },
+     {   0,		/* 000: starting PFN of this cluster */
+         0,		/* 008: count of PFNs in this cluster */
+         0,		/* 010: count of tested PFNs in cluster */
+         0,		/* 018: va of bitmap */
+         0,		/* 020: pa of bitmap */
+         0,		/* 028: checksum of bitmap */
+         0		/* 030: usage of cluster */
+     },
+     {   0,		/* 000: starting PFN of this cluster */
+         0,		/* 008: count of PFNs in this cluster */
+         0,		/* 010: count of tested PFNs in cluster */
+         0,		/* 018: va of bitmap */
+         0,		/* 020: pa of bitmap */
+         0,		/* 028: checksum of bitmap */
+         0		/* 030: usage of cluster */
+     }}
 };
 
 /* constants for slotinfo bus_type subfield */
@@ -386,643 +341,524 @@ struct _xxm_rpb_mdt xxm_rpb_mdt = {
 #define SLOTINFO_EISA	2
 #define SLOTINFO_PCI	3
 
-struct rpb_ctb xxm_rpb_ctb = {
-   CONS_DZ,	/* 000: console type */
-   0,		/* 008: console unit */
-   0,		/* 010: reserved */
-   0		/* 018: byte length of device dep portion */
+struct rpb_ctb m5_rpb_ctb = {
+    CONS_DZ,	/* 000: console type */
+    0,		/* 008: console unit */
+    0,		/* 010: reserved */
+    0		/* 018: byte length of device dep portion */
 };
 
 /* we don't do any fixup (aka relocate the console) - we hope */
-struct rpb_crb xxm_rpb_crb = {
-   0,		/* va of call-back dispatch rtn */
-   0,		/* pa of call-back dispatch rtn */
-   0,		/* va of call-back fixup rtn */
-   0,		/* pa of call-back fixup rtn */
-   0,		/* number of entries in phys/virt map */
-   0		/* Number of pages to be mapped */
+struct rpb_crb m5_rpb_crb = {
+    0,		/* va of call-back dispatch rtn */
+    0,		/* pa of call-back dispatch rtn */
+    0,		/* va of call-back fixup rtn */
+    0,		/* pa of call-back fixup rtn */
+    0,		/* number of entries in phys/virt map */
+    0		/* Number of pages to be mapped */
 };
 
 struct _rpb_name {
-   unsigned long length;
-   char name[16];
+    ulong length;
+    char name[16];
 };
 
-extern struct _rpb_name xxm_name;
+extern struct _rpb_name m5_name;
 
-struct rpb_dsr xxm_rpb_dsr = {
-   0,
-   0,
-   0,
+struct rpb_dsr m5_rpb_dsr = {
+    0,
+    0,
+    0,
 };
 
-struct _rpb_name xxm_name = {
-   16,
-   {'D','E','C',' ','S','R','C',' ','X','X','M',' ','D','G','C',0},
+struct _rpb_name m5_name = {
+    16,
+    {'U','M','I','C','H',' ','M','5','/','A','L','P','H','A',' ',0},
 };
 
-/* XXM has one LURT entry - 1050 is for workstations, 1100 is servers (and is needed for CXX) */
-long xxm_lurt[10] = { 9, 12, -1, -1, -1, -1, -1, -1, 1100, 1100 };
+/*
+ * M5 has one LURT entry:
+ *   1050 is for workstations
+ *   1100 is servers (and is needed for CXX)
+ */
+long m5_lurt[10] = { 9, 12, -1, -1, -1, -1, -1, -1, 1100, 1100 };
 
-ul unix_boot_mem;
-unsigned long bootadr;
-#if 0
-unsigned long  aout_bss_addr, aout_bss_size, aout_entry, aout_text_start, aout_data_addr;
-#endif
+ulong unix_boot_mem;
+ulong bootadr;
+
 char **kargv;
 int kargc;
-ul free_pfn;
+ulong free_pfn;
 struct rpb_percpu *rpb_percpu;
-
 
 #define MAX_CPUS 32
 
-ul bootStrapImpure[MAX_CPUS];
+ulong bootStrapImpure[MAX_CPUS];
 
-
-char *unix_boot_alloc(int pages)
+char *
+unix_boot_alloc(int pages)
 {
-   char *ret = (char *) unix_boot_mem;
-   unix_boot_mem += (pages * 8192);
-   return ret;
+    char *ret = (char *) unix_boot_mem;
+    unix_boot_mem += (pages * PAGE_SIZE);
+    return ret;
 }
 
-ul *first = 0;
-ul *third_rpb = 0;
-ul *reservedFixup = 0;
+ulong *first = 0;
+ulong *third_rpb = 0;
+ulong *reservedFixup = 0;
 
 int strcpy(char *dst, char *src);
 
 struct rpb *rpb;
+extern ulong _end;
 
+void
 unixBoot(int go, int argc, char **argv)
 {
-   ul *second,  *third_kernel, ptr, *tbb, size, *percpu_logout;
-   unsigned char *mdt_bitmap;
-   long *lp1, *lp2, sum;
-   int i, cl;
-   int kern_first_page;
-   int mem_size = simosConf.mem_size;
+    ulong *second,  *third_kernel, ptr, *tbb, size, *percpu_logout;
+    unsigned char *mdt_bitmap;
+    long *lp1, *lp2, sum;
+    int i, cl;
+    int kern_first_page;
+    int mem_size = m5Conf.mem_size;
 
-   int mem_pages = mem_size / 8192, cons_pages;
-   ul kernel_bytes, ksp, kernel_end, *unix_kernel_stack, bss, ksp_bottom, ksp_top;
-   struct rpb_ctb *rpb_ctb;
-   struct ctb_tt *ctb_tt;
-   struct rpb_dsr *rpb_dsr;
-   struct rpb_crb *rpb_crb;
-   struct _xxm_rpb_mdt *rpb_mdt;
-   int *rpb_lurt;
-   char *rpb_name;
-   ul nextPtr;
+    int mem_pages = mem_size / PAGE_SIZE, cons_pages;
+    ulong kernel_bytes, ksp, kernel_end, *unix_kernel_stack, bss,
+        ksp_bottom, ksp_top;
+    struct rpb_ctb *rpb_ctb;
+    struct ctb_tt *ctb_tt;
+    struct rpb_dsr *rpb_dsr;
+    struct rpb_crb *rpb_crb;
+    struct _m5_rpb_mdt *rpb_mdt;
+    int *rpb_lurt;
+    char *rpb_name;
+    ulong nextPtr;
 
-   printf_lock( "memsize %x pages %x \n",mem_size,mem_pages);
+    printf_lock("memsize %x pages %x \n", mem_size, mem_pages);
 
+    /* Allocate:
+     *   two pages for the HWRPB
+     *   five page table pages:
+     *     1: First level page table
+     *     1: Second level page table
+     *     1: Third level page table for HWRPB
+     *     2: Third level page table for kernel (for up to 16MB)
+     * set up the page tables
+     * load the kernel at the physical address 0x230000
+     * build the HWRPB
+     *   set up memory descriptor table to give up the
+     *   physical memory between the end of the page
+     *   tables and the start of the kernel
+     * enable kseg addressing
+     * jump to the kernel
+     */
 
+    unix_boot_mem = ROUNDUP8K(&_end);
 
-#ifdef notnow
-   if (unixArgs()) return;
-#endif
+    printf_lock("First free page after ROM 0x%x\n", unix_boot_mem);
 
-   /* Allocate:
-    *   two pages for the HWRPB
-    *   five page table pages:
-    *     1: First level page table
-    *     1: Second level page table
-    *     1: Third level page table for HWRPB
-    *     2: Third level page table for kernel (for up to 16MB)
-    * set up the page tables
-    * load the kernel at the physical address 0x230000
-    * build the HWRPB
-    *   set up memory descriptor table to give up the
-    *   physical memory between the end of the page
-    *   tables and the start of the kernel
-    * enable kseg addressing
-    * jump to the kernel
-    */
+    rpb = (struct rpb *) unix_boot_alloc( HWRPB_PAGES);
 
-   unix_boot_mem = ROUNDUP8K(&_end);
+    mdt_bitmap =  (unsigned char *) unix_boot_alloc(MDT_BITMAP_PAGES);
+    first = (ulong *)unix_boot_alloc(1);
+    second = (ulong *)unix_boot_alloc(1);
+    third_rpb = (ulong *)unix_boot_alloc(1);
+    reservedFixup = (ulong*) unix_boot_alloc(1);
+    third_kernel = (ulong *)unix_boot_alloc(NUM_KERNEL_THIRD);
+    percpu_logout = (ulong*)unix_boot_alloc(1);
 
-   printf_lock("First free page after ROM 0x%x\n", unix_boot_mem);
+    cons_pages = KSEG_TO_PHYS(unix_boot_mem) / PAGE_SIZE;
 
-   rpb = (struct rpb *) unix_boot_alloc( HWRPB_PAGES);
+    /* Set up the page tables */
+    bzero((char *)first, PAGE_SIZE);
+    bzero((char *)second, PAGE_SIZE);
+    bzero((char *)reservedFixup, PAGE_SIZE);
+    bzero((char *)third_rpb, HWRPB_PAGES * PAGE_SIZE);
+    bzero((char *)third_kernel, PAGE_SIZE * NUM_KERNEL_THIRD);
 
-   mdt_bitmap =  (unsigned char *) unix_boot_alloc(MDT_BITMAP_PAGES);
-   first = (ul *)unix_boot_alloc(1);
-   second = (ul *)unix_boot_alloc(1);
-   third_rpb = (ul *)unix_boot_alloc(1);
-   reservedFixup = (ul*) unix_boot_alloc(1);
-   third_kernel = (ul *)unix_boot_alloc(NUM_KERNEL_THIRD);
-   percpu_logout = (ul*)unix_boot_alloc(1);
+    first[0] = KPTE(PFN(second));
+    first[1] = KPTE(PFN(first)); /* Region 3 */
 
+    /* Region 0 */
+    second[SECOND(0x10000000)] = KPTE(PFN(third_rpb));
 
-   cons_pages = KSEG_TO_PHYS(unix_boot_mem) / 8192;
-
-   /* Set up the page tables */
-   bzero((char *)first, 8192);
-   bzero((char *)second, 8192);
-   bzero((char *)reservedFixup,8192);
-   bzero((char *)third_rpb, HWRPB_PAGES * 8192);
-   bzero((char *)third_kernel, 8192 * NUM_KERNEL_THIRD);
-
-   first[0] = KPTE(PFN(second));
-   first[1] = KPTE(PFN(first)); /* Region 3 */
-
-   second[SECOND(0x10000000)] = KPTE(PFN(third_rpb));	/* Region 0 */
-
-   for (i=0;i<NUM_KERNEL_THIRD;i++) {
-      second[SECOND(0x20000000)+i] = KPTE(PFN(third_kernel)+i);	/* Region 1 */
-   }
-   second[SECOND(0x40000000)] = KPTE(PFN(second));	/* Region 2 */
+    for (i = 0; i < NUM_KERNEL_THIRD; i++) {
+        /* Region 1 */
+        second[SECOND(0x20000000) + i] = KPTE(PFN(third_kernel) + i);
+    }
+    /* Region 2 */
+    second[SECOND(0x40000000)] = KPTE(PFN(second));
 
 
-   {
-
-      /* For some obscure reason, Dec Unix's database read
-       * from /etc/sysconfigtab is written to this fixed
-       * mapped memory location. Go figure, since it is
-       * not initialized by the console. Maybe it is
-       * to look at the database from the console
-       * after a boot/crash.
-       *
-       * Black magic to estimate the max size. SEGVs on overflow
-       * bugnion
-       */
+    /* For some obscure reason, Dec Unix's database read
+     * from /etc/sysconfigtab is written to this fixed
+     * mapped memory location. Go figure, since it is
+     * not initialized by the console. Maybe it is
+     * to look at the database from the console
+     * after a boot/crash.
+     *
+     * Black magic to estimate the max size. SEGVs on overflow
+     * bugnion
+     */
 
 #define DATABASE_BASE           0x20000000
-#ifdef not_not
-#define DATABASE_END            0x20230000 /* don't need all that */
-#endif
-
 #define DATABASE_END            0x20020000
 
-      int i;
-      ul *dbPage = (ul*)unix_boot_alloc(1);
-      second[SECOND(DATABASE_BASE)] = KPTE(PFN(dbPage));
-      for (i=DATABASE_BASE; i <DATABASE_END ; i+= 8096) {
-         ul *db = (ul*)unix_boot_alloc(1);
-         dbPage[THIRD(i)] = KPTE(PFN(db));
-      }
-   }
+    ulong *dbPage = (ulong*)unix_boot_alloc(1);
+    second[SECOND(DATABASE_BASE)] = KPTE(PFN(dbPage));
+    for (i = DATABASE_BASE; i < DATABASE_END ; i += 8096) {
+        ulong *db = (ulong*)unix_boot_alloc(1);
+        dbPage[THIRD(i)] = KPTE(PFN(db));
+    }
 
-   /* Region 0 */
-   /* Map the HWRPB */
-   for (i = 0; i < HWRPB_PAGES; i++) third_rpb[i] = KPTE(PFN(rpb) + i);
+    /* Region 0 */
+    /* Map the HWRPB */
+    for (i = 0; i < HWRPB_PAGES; i++)
+        third_rpb[i] = KPTE(PFN(rpb) + i);
 
-   /* Map the MDT bitmap table */
-   for (i=0;i<MDT_BITMAP_PAGES;i++) {
-      third_rpb[HWRPB_PAGES+i] = KPTE(PFN(mdt_bitmap)+i);
-   }
+    /* Map the MDT bitmap table */
+    for (i = 0; i < MDT_BITMAP_PAGES; i++) {
+        third_rpb[HWRPB_PAGES + i] = KPTE(PFN(mdt_bitmap) + i);
+    }
 
-   /* Protect the PAL pages */
-   for (i = 1; i < PFN(first); i++) third_rpb[HWRPB_PAGES + MDT_BITMAP_PAGES + i] = KPTE(i);
+    /* Protect the PAL pages */
+    for (i = 1; i < PFN(first); i++)
+        third_rpb[HWRPB_PAGES + MDT_BITMAP_PAGES + i] = KPTE(i);
 
    /* Set up third_kernel after it's loaded, when we know where it is */
+    kern_first_page = (KSEG_TO_PHYS(m5Conf.kernStart)/PAGE_SIZE);
+    kernel_end = ksp_top = ROUNDUP8K(m5Conf.kernEnd);
+    bootadr = m5Conf.entryPoint;
 
-#ifdef original__xxm
-   if (unixLoadKernel(AOUT_LOAD_ADDR, argv[1]) == -1) return;
-   aoutfixup(AOUT_LOAD_ADDR);
-#else
-   /* aoutfixup(simosConf.kernelFileHdr); */
-#endif
-#if 0
-   bss = aout_bss_addr;
+    printf_lock("HWRPB 0x%x l1pt 0x%x l2pt 0x%x l3pt_rpb 0x%x l3pt_kernel 0x%x"
+                " l2reserv 0x%x\n",
+                rpb, first, second, third_rpb, third_kernel, reservedFixup);
+    if (kernel_end - m5Conf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
+        printf_lock("Kernel is more than 8MB 0x%x - 0x%x = 0x%x\n",
+                    kernel_end, m5Conf.kernStart,
+                    kernel_end - m5Conf.kernStart );
+        panic("kernel too big\n");
+    }
 
-   kern_first_page = (KSEG_TO_PHYS(aout_text_start) / 8192);
-   kernel_end = ksp_top = ROUNDUP8K(aout_bss_addr + aout_bss_size);
-   bootadr = aout_entry;
-#endif
+    /* Map the kernel's pages into the third level of region 2 */
+    for (ptr = m5Conf.kernStart; ptr < kernel_end; ptr += PAGE_SIZE) {
+        third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
+    }
 
-   kern_first_page = (KSEG_TO_PHYS(simosConf.kernStart)/8192);
-   kernel_end = ksp_top = ROUNDUP8K(simosConf.kernEnd);
-   bootadr = simosConf.entryPoint;
+    /* blow 2 pages of phys mem for guards since it maintains 1-to-1 mapping */
+    ksp = ksp_top + (3 * PAGE_SIZE);
+    if (ksp - m5Conf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
+        printf_lock("Kernel stack pushd us over 8MB\n");
+        panic("ksp too big\n");
+    }
+    if (THIRD_XXX((ulong)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
+        panic("increase NUM_KERNEL_THIRD, and change THIRD_XXX\n");
+    }
+    ptr = (ulong) ksp_top;
+    bzero((char *)ptr, PAGE_SIZE * 2);
+    third_kernel[THIRD_XXX(ptr)] = 0;		/* Stack Guard Page */
+    ptr += PAGE_SIZE;
+    third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr)); /* Kernel Stack Pages */
+    ptr += PAGE_SIZE;
+    third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
+    ptr += PAGE_SIZE;
+    third_kernel[THIRD_XXX(ptr)] = 0;		/* Stack Guard Page */
 
+    /* put argv into the bottom of the stack - argv starts at 1 because
+     * the command thatr got us here (i.e. "unixboot) is in argv[0].
+     */
+    ksp -= 8;			/* Back up one longword */
+    ksp -= argc * sizeof(char *);	/* Make room for argv */
+    kargv = (char **) ksp;
+    for (i = 1; i < argc; i++) {	/* Copy arguments to stack */
+        ksp -= ((strlen(argv[i]) + 1) + 7) & ~0x7;
+        kargv[i-1] = (char *) ksp;
+        strcpy(kargv[i - 1], argv[i]);
+    }
+    kargc = i - 1;
+    kargv[kargc] = NULL;	/* just to be sure; doesn't seem to be used */
+    ksp -= sizeof(char *);	/* point above last arg for no real reason */
 
-   printf_lock("HWRPB 0x%x l1pt 0x%x l2pt 0x%x l3pt_rpb 0x%x l3pt_kernel 0x%x l2reserv 0x%x\n",
-          rpb, first, second, third_rpb, third_kernel,reservedFixup);
-   if (kernel_end - simosConf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-      printf_lock("Kernel is more than 8MB 0x%x - 0x%x = 0x%x\n",
-             kernel_end, simosConf.kernStart,
-             kernel_end -simosConf.kernStart );
-      panic("kernel too big\n");
+    free_pfn = PFN(ptr);
 
-   }
-   /* Map the kernel's pages into the third level of region 2 */
+    bcopy((char *)&m5_rpb, (char *)rpb, sizeof(struct rpb));
 
-   for (ptr = simosConf.kernStart; ptr < kernel_end; ptr += 8192) {
+    rpb->rpb_selfref = (struct rpb *) KSEG_TO_PHYS(rpb);
+    rpb->rpb_string = 0x0000004250525748;
 
-      third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-   }
-   /* blow 2 pages of phys mem for guards since it maintains 1-to-1 mapping */
-   ksp = ksp_top + (3 * 8192);
-   if (ksp - simosConf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-      printf_lock("Kernel stack pushd us over 8MB\n");
-      panic("ksp too big\n");
-   }
-   if (THIRD_XXX((ul)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
-      panic("increase NUM_KERNEL_THIRD, and change THIRD_XXX\n");
-   }
-   ptr = (ul) ksp_top;
-   bzero((char *)ptr, 8192 * 2);
-   third_kernel[THIRD_XXX(ptr)] = 0;			/* Stack Guard Page */
-   ptr += 8192;
-   third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));	/* Kernel Stack Pages */
-   ptr += 8192;
-   third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-   ptr += 8192;
-   third_kernel[THIRD_XXX(ptr)] = 0;			/* Stack Guard Page */
+    tbb = (ulong *) (((char *) rpb) + ROUNDUP8(sizeof(struct rpb)));
+    rpb->rpb_trans_off = (ulong)tbb - (ulong)rpb;
+    bcopy((char *)m5_tbb, (char *)tbb, sizeof(m5_tbb));
 
-   /* put argv into the bottom of the stack - argv starts at 1 because
-    * the command thatr got us here (i.e. "unixboot) is in argv[0].
-    */
-   ksp -= 8;			/* Back up one longword */
-   ksp -= argc * sizeof(char *);	/* Make room for argv */
-   kargv = (char **) ksp;
-   for (i = 1; i < argc; i++) {	/* Copy arguments to stack */
-      ksp -= ((strlen(argv[i]) + 1) + 7) & ~0x7;
-      kargv[i-1] = (char *) ksp;
-      strcpy(kargv[i-1], argv[i]);
-   }
-   kargc = i - 1;
-   kargv[kargc] = NULL;		/* just to be sure; doesn't seem to be used */
-   ksp -= sizeof(char *);	/* point above last arg for no real reason */
+    /*
+     * rpb_counter. Use to determine timeouts in OS.
+     * XXX must be patched after a checkpoint restore (I guess)
+     */
 
-   free_pfn = PFN(ptr);
+    printf_lock("CPU Clock at %d MHz IntrClockFrequency=%d \n",
+                m5Conf.cpuClock, m5Conf.intrClockFrequency);
+    rpb->rpb_counter = m5Conf.cpuClock * 1000 * 1000;
 
-   bcopy((char *)&xxm_rpb, (char *)rpb, sizeof(struct rpb));
+    /*
+     * By definition, the rpb_clock is scaled by 4096 (in hz)
+     */
+    rpb->rpb_clock = m5Conf.intrClockFrequency * 4096;
 
-   rpb->rpb_selfref = (struct rpb *) KSEG_TO_PHYS(rpb);
-   rpb->rpb_string = 0x0000004250525748;
+    /*
+     * Per CPU Slots. Multiprocessor support.
+     */
+    int percpu_size = ROUNDUP128(sizeof(struct rpb_percpu));
 
-   tbb = (ul *) (((char *) rpb) + ROUNDUP8(sizeof(struct rpb)));
-   rpb->rpb_trans_off = (ul)tbb - (ul)rpb;
-   bcopy((char *)xxm_tbb, (char *)tbb, sizeof(xxm_tbb));
+    printf_lock("Booting with %d processor(s) \n", m5Conf.numCPUs);
 
+    rpb->rpb_numprocs = m5Conf.numCPUs;
+    rpb->rpb_slotsize = percpu_size;
+    rpb_percpu = (struct rpb_percpu *)
+        ROUNDUP128(((ulong)tbb) + (sizeof(m5_tbb)));
 
-   /*
-    * rpb_counter. Use to determine timeouts in OS.
-    * XXX must be patched after a checkpoint restore (I guess)
-    */
+    rpb->rpb_percpu_off = (ulong)rpb_percpu - (ulong)rpb;
 
-   printf_lock("CPU Clock at %d MHz IntrClockFrequency=%d \n", simosConf.cpuClock,simosConf.intrClockFrequency);
-   rpb->rpb_counter = simosConf.cpuClock * 1000 * 1000;
+    for (i = 0; i < m5Conf.numCPUs; i++) {
+        struct rpb_percpu *thisCPU = (struct rpb_percpu*)
+            ((ulong)rpb_percpu + percpu_size * i);
 
-   /*
-    * By definition, the rpb_clock is scaled by 4096 (in hz)
-    */
-   rpb->rpb_clock = simosConf.intrClockFrequency * 4096;
+        bzero((char *)thisCPU, percpu_size);
+        bcopy((char *)&m5_rpb_percpu, (char *)thisCPU,
+              sizeof(struct rpb_percpu));
 
+        thisCPU->rpb_pcb.rpb_ksp = ksp;
+        thisCPU->rpb_pcb.rpb_ptbr = PFN(first);
 
+        thisCPU->rpb_logout = KSEG_TO_PHYS(percpu_logout);
+        thisCPU->rpb_logout_len = PAGE_SIZE;
 
-   /*
-    * Per CPU Slots. Multiprocessor support.
-    */
-   {
-      int i;
-      int size = ROUNDUP128(sizeof(struct rpb_percpu));
+        printf_lock("KSP: 0x%x PTBR 0x%x\n",
+                    thisCPU->rpb_pcb.rpb_ksp, thisCPU->rpb_pcb.rpb_ptbr);
 
-      printf_lock("Booting with %d processor(s) \n",simosConf.numCPUs);
+        if (i) {
+            bootStrapImpure[i] = (ulong)unix_boot_alloc(1);
+        }
+    }
 
-      rpb->rpb_numprocs = simosConf.numCPUs;
-      rpb->rpb_slotsize = size;
-      rpb_percpu = (struct rpb_percpu *)
-         ROUNDUP128(((ul) tbb) +(sizeof(xxm_tbb)));
+    nextPtr = (ulong)rpb_percpu + percpu_size * m5Conf.numCPUs;
 
-      rpb->rpb_percpu_off = (ul)rpb_percpu - (ul)rpb;
+    /*
+     * Console Terminal Block
+     */
+    rpb_ctb = (struct rpb_ctb *) nextPtr;
+    ctb_tt = (struct ctb_tt*) rpb_ctb;
 
-      for (i=0;i<simosConf.numCPUs;i++) {
-         struct rpb_percpu *thisCPU = (struct rpb_percpu*)
-            ((ul)rpb_percpu + size*i);
+    rpb->rpb_ctb_off = ((ulong)rpb_ctb) - (ulong)rpb;
+    rpb->rpb_ctb_size  = sizeof(struct rpb_ctb);
 
-         bzero((char *)thisCPU, size);
-         bcopy((char *)&xxm_rpb_percpu,
-               (char *)thisCPU,
-               sizeof(struct rpb_percpu));
+    bzero((char *)rpb_ctb, sizeof(struct ctb_tt));
 
-         thisCPU->rpb_pcb.rpb_ksp = ksp;
-         thisCPU->rpb_pcb.rpb_ptbr = PFN(first);
+    rpb_ctb->rpb_type = CONS_DZ;
+    rpb_ctb->rpb_length = sizeof(ctb_tt) - sizeof(rpb_ctb);
 
-         thisCPU->rpb_logout = KSEG_TO_PHYS(percpu_logout);
-         thisCPU->rpb_logout_len = 8192;
+    /*
+     * uart initizliation
+     */
+    ctb_tt->ctb_csr = 0;
+    ctb_tt->ctb_tivec = 0x6c0;  /* matches tlaser pal code */
+    ctb_tt->ctb_rivec = 0x680;  /* matches tlaser pal code */
+    ctb_tt->ctb_baud = 9600;
+    ctb_tt->ctb_put_sts = 0;
+    ctb_tt->ctb_get_sts = 0;
 
-/*  thisCPU->rpb_pcb.rpb_ptbr = PFN(second);*/
+    rpb_crb = (struct rpb_crb *) (((ulong)rpb_ctb) + sizeof(struct ctb_tt));
+    rpb->rpb_crb_off = ((ulong)rpb_crb) - (ulong)rpb;
 
-         printf_lock("KSP: 0x%x PTBR 0x%x\n", thisCPU->rpb_pcb.rpb_ksp, thisCPU->rpb_pcb.rpb_ptbr);
+    bzero((char *)rpb_crb, sizeof(struct rpb_crb));
 
-         if (i) {
-            bootStrapImpure[i] = (ul)unix_boot_alloc(1);
-         }
+    /*
+     * console callback stuff (m5)
+     */
+    rpb_crb->rpb_num = 1;
+    rpb_crb->rpb_mapped_pages = HWRPB_PAGES;
+    rpb_crb->rpb_map[0].rpb_virt = 0x10000000;
+    rpb_crb->rpb_map[0].rpb_phys = KSEG_TO_PHYS(((ulong)rpb) & ~0x1fff);
+    rpb_crb->rpb_map[0].rpb_pgcount = HWRPB_PAGES;
 
-      }
+    printf_lock("Console Callback at 0x%x, fixup at 0x%x, crb offset: 0x%x\n",
+                rpb_crb->rpb_va_disp, rpb_crb->rpb_va_fixup, rpb->rpb_crb_off);
 
-      nextPtr = (ul)rpb_percpu + size*simosConf.numCPUs;
-   }
-
-   /*
-    * Console Terminal Block
-    */
-
-
-      rpb_ctb = (struct rpb_ctb *) nextPtr;
-      ctb_tt = (struct ctb_tt*) rpb_ctb;
-
-      rpb->rpb_ctb_off = ((ul)rpb_ctb) - (ul)rpb;
-      rpb->rpb_ctb_size  = sizeof(struct rpb_ctb);
-
-   bzero((char *)rpb_ctb, sizeof(struct ctb_tt));
-
-#ifdef original_xxm
-   if (tga_slot == -1)
-      rpb_ctb->rpb_type = CONS_DZ;
-  else {
-    rpb_ctb->rpb_type = CONS_GRPH;
-    rpb_ctb->rpb_unit = (SLOTINFO_PCI << 16) | (0 << 8) | tga_slot;
-  }
-#else
-  rpb_ctb->rpb_type = CONS_DZ;
-#endif
-
-  rpb_ctb->rpb_length = sizeof(ctb_tt)-sizeof(rpb_ctb);
-
-  /*
-   * uart initizliation
-   */
-  ctb_tt->ctb_csr = 0;
-  ctb_tt->ctb_tivec = 0x6c0;  /* matches tlaser pal code */
-  ctb_tt->ctb_rivec = 0x680;  /* matches tlaser pal code */
-  ctb_tt->ctb_baud = 9600;
-  ctb_tt->ctb_put_sts = 0;
-  ctb_tt->ctb_get_sts = 0;
+    rpb_mdt = (struct _m5_rpb_mdt *)((ulong)rpb_crb + sizeof(struct rpb_crb));
+    rpb->rpb_mdt_off = (ulong)rpb_mdt - (ulong)rpb;
+    bcopy((char *)&m5_rpb_mdt, (char *)rpb_mdt, sizeof(struct _m5_rpb_mdt));
 
 
-  rpb_crb = (struct rpb_crb *) (((ul)rpb_ctb) + sizeof(struct ctb_tt));
-  rpb->rpb_crb_off = ((ul)rpb_crb) - (ul)rpb;
+    cl = 0;
+    rpb_mdt->rpb_cluster[cl].rpb_pfncount = kern_first_page;
+    cl++;
 
-  bzero((char *)rpb_crb, sizeof(struct rpb_crb));
-  /*
-   * console callback stuff (simos)
-   */
+    rpb_mdt->rpb_cluster[cl].rpb_pfn = kern_first_page;
+    rpb_mdt->rpb_cluster[cl].rpb_pfncount = mem_pages - kern_first_page;
+    rpb_mdt->rpb_cluster[cl].rpb_pfntested =
+        rpb_mdt->rpb_cluster[cl].rpb_pfncount;
+    rpb_mdt->rpb_cluster[cl].rpb_pa = KSEG_TO_PHYS(mdt_bitmap);
+    rpb_mdt->rpb_cluster[cl].rpb_va = 0x10000000 + HWRPB_PAGES * PAGE_SIZE;
+    cl++;
 
-  rpb_crb->rpb_num = 1;
-  rpb_crb->rpb_mapped_pages = HWRPB_PAGES;
-  rpb_crb->rpb_map[0].rpb_virt = 0x10000000;
-  rpb_crb->rpb_map[0].rpb_phys = KSEG_TO_PHYS(((ul)rpb) & ~0x1fff);
-  rpb_crb->rpb_map[0].rpb_pgcount = HWRPB_PAGES;
+    rpb_mdt->rpb_numcl = cl;
 
+    for (i = 0; i < cl; i++)
+        printf_lock("Memory cluster %d [%d - %d]\n", i,
+                    rpb_mdt->rpb_cluster[i].rpb_pfn,
+                    rpb_mdt->rpb_cluster[i].rpb_pfncount);
 
-  printf_lock("Console Callback at 0x%x, fixup at 0x%x, crb offset: 0x%x\n",
-          rpb_crb->rpb_va_disp,
-          rpb_crb->rpb_va_fixup,
-          rpb->rpb_crb_off);
+    /* Checksum the rpb for good luck */
+    sum = 0;
+    lp1 = (long *)&rpb_mdt->rpb_impaddr;
+    lp2 = (long *)&rpb_mdt->rpb_cluster[cl];
+    while (lp1 < lp2) sum += *lp1++;
+    rpb_mdt->rpb_checksum = sum;
 
-  rpb_mdt = (struct _xxm_rpb_mdt *) (((ul)rpb_crb) + sizeof(struct rpb_crb));
-  rpb->rpb_mdt_off = (ul)rpb_mdt - (ul)rpb;
-  bcopy((char *)&xxm_rpb_mdt, (char *)rpb_mdt, sizeof(struct _xxm_rpb_mdt));
+    /* XXX should checksum the cluster descriptors */
+    bzero((char *)mdt_bitmap, MDT_BITMAP_PAGES * PAGE_SIZE);
+    for (i = 0; i < mem_pages/8; i++)
+        ((unsigned char *)mdt_bitmap)[i] = 0xff;
 
+    printf_lock("Initalizing mdt_bitmap addr 0x%x mem_pages %x \n",
+                (long)mdt_bitmap,(long)mem_pages);
 
-  cl = 0;
-#ifdef undef
-  /* Until Digital Unix can handle it, account all pages below the kernel
-   * as "console" memory. */
-  rpb_mdt->rpb_cluster[cl].rpb_pfncount = cons_pages;
-#endif
-  rpb_mdt->rpb_cluster[cl].rpb_pfncount = kern_first_page;
-  cl++;
+    m5_rpb.rpb_config_off = 0;
+    m5_rpb.rpb_fru_off = 0;
 
-  rpb_mdt->rpb_cluster[cl].rpb_pfn = kern_first_page;
-  rpb_mdt->rpb_cluster[cl].rpb_pfncount = mem_pages - kern_first_page;
-  rpb_mdt->rpb_cluster[cl].rpb_pfntested=rpb_mdt->rpb_cluster[cl].rpb_pfncount;
-  rpb_mdt->rpb_cluster[cl].rpb_pa = KSEG_TO_PHYS(mdt_bitmap);
-  rpb_mdt->rpb_cluster[cl].rpb_va = 0x10000000 + HWRPB_PAGES * 8192;
-  cl++;
+    rpb_dsr = (struct rpb_dsr *)((ulong)rpb_mdt + sizeof(struct _m5_rpb_mdt));
+    rpb->rpb_dsr_off = (ulong)rpb_dsr - (ulong)rpb;
+    bzero((char *)rpb_dsr, sizeof(struct rpb_dsr));
+    rpb_dsr->rpb_smm = 1578; /* Official XXM SMM number as per SRM */
+    rpb_dsr->rpb_smm = 1089; /* Official Alcor SMM number as per SRM */
 
-#ifdef undef
-  /* The stupid Unix kernel needs to have all mdt clusters in ascending
-   * order, and the last cluster is used to compute the top of memory.
-   * It can't make use of memory between the console and the kernel.
-   */
-  rpb_mdt->rpb_cluster[cl].rpb_pfn = cons_pages;
-  rpb_mdt->rpb_cluster[cl].rpb_pfncount = kern_first_page - cons_pages;
-  rpb_mdt->rpb_cluster[cl].rpb_pfntested=rpb_mdt->rpb_cluster[cl].rpb_pfncount;
-  rpb_mdt->rpb_cluster[cl].rpb_pa = KSEG_TO_PHYS(mdt_bitmap);
-  rpb_mdt->rpb_cluster[cl].rpb_va = 0x10000000 + HWRPB_PAGES * 8192;
-  cl++;
-#endif
+    rpb_lurt = (int *) ROUNDUP8((ulong)rpb_dsr + sizeof(struct rpb_dsr));
+    rpb_dsr->rpb_lurt_off = ((ulong) rpb_lurt) - (ulong) rpb_dsr;
+    bcopy((char *)m5_lurt, (char *)rpb_lurt, sizeof(m5_lurt));
 
-  rpb_mdt->rpb_numcl = cl;
-
-  for (i = 0; i < cl; i++)
-    printf_lock("Memory cluster %d [%d - %d]\n", i, rpb_mdt->rpb_cluster[i].rpb_pfn, rpb_mdt->rpb_cluster[i].rpb_pfncount);
-
-
-
-  /* Checksum the rpb for good luck */
-  sum = 0;
-  lp1 = (long *)&rpb_mdt->rpb_impaddr;
-  lp2 = (long *)&rpb_mdt->rpb_cluster[cl];
-  while (lp1 < lp2) sum += *lp1++;
-  rpb_mdt->rpb_checksum = sum;
-
-  /* XXX should checksum the cluster descriptors */
-
-  bzero((char *)mdt_bitmap, MDT_BITMAP_PAGES * 8192);
-  for (i = 0; i < mem_pages/8; i++) ((unsigned char *)mdt_bitmap)[i] = 0xff;
-
-  printf_lock("Initalizing mdt_bitmap addr 0x%x mem_pages %x \n",
-         (long)mdt_bitmap,(long)mem_pages);
-
-  xxm_rpb.rpb_config_off = 0;
-  xxm_rpb.rpb_fru_off = 0;
-
-  rpb_dsr = (struct rpb_dsr *) (((ul)rpb_mdt) + sizeof(struct _xxm_rpb_mdt));
-  rpb->rpb_dsr_off = ((ul)rpb_dsr) - (ul)rpb;
-  bzero((char *)rpb_dsr, sizeof(struct rpb_dsr));
-  rpb_dsr->rpb_smm = 1578; /* Official XXM SMM number as per SRM */
-  rpb_dsr->rpb_smm = 1089; /* Official Alcor SMM number as per SRM */
-
-  rpb_lurt = (int *) ROUNDUP8(((ul)rpb_dsr) + sizeof(struct rpb_dsr));
-  rpb_dsr->rpb_lurt_off = ((ul) rpb_lurt) - (ul) rpb_dsr;
-  bcopy((char *)xxm_lurt, (char *)rpb_lurt, sizeof(xxm_lurt));
-
-  rpb_name = (char *) ROUNDUP8(((ul)rpb_lurt) + sizeof(xxm_lurt));
-  rpb_dsr->rpb_sysname_off = ((ul) rpb_name) - (ul) rpb_dsr;
+    rpb_name = (char *) ROUNDUP8(((ulong)rpb_lurt) + sizeof(m5_lurt));
+    rpb_dsr->rpb_sysname_off = ((ulong) rpb_name) - (ulong) rpb_dsr;
 #define THENAME "             M5/Alpha       "
-  sum = sizeof(THENAME);
-  bcopy(THENAME, rpb_name, sum);
-  *(ul *)rpb_name = sizeof(THENAME); /* put in length field */
+    sum = sizeof(THENAME);
+    bcopy(THENAME, rpb_name, sum);
+    *(ulong *)rpb_name = sizeof(THENAME); /* put in length field */
 
-  /* calculate size of rpb */
-  rpb->rpb_size = ((ul) &rpb_name[sum]) - (ul)rpb;
+    /* calculate size of rpb */
+    rpb->rpb_size = ((ulong) &rpb_name[sum]) - (ulong)rpb;
 
-  if (rpb->rpb_size > 8192*HWRPB_PAGES) {
-     panic("HWRPB_PAGES=%d too small for HWRPB !!! \n");
-  }
+    if (rpb->rpb_size > PAGE_SIZE * HWRPB_PAGES) {
+        panic("HWRPB_PAGES=%d too small for HWRPB !!! \n");
+    }
 
+    ulong *rpbptr = (ulong*)((char*)rpb_dsr + sizeof(struct rpb_dsr));
+    rpb_crb->rpb_pa_disp = KSEG_TO_PHYS(rpbptr);
+    rpb_crb->rpb_va_disp = 0x10000000 +
+        (((ulong)rpbptr - (ulong)rpb) & (0x2000 * HWRPB_PAGES - 1));
+    printf_lock("ConsoleDispatch at virt %x phys %x val %x\n",
+                rpb_crb->rpb_va_disp, rpb_crb->rpb_pa_disp, consoleCallback);
+    *rpbptr++ = 0;
+    *rpbptr++ = (ulong) consoleCallback;
+    rpb_crb->rpb_pa_fixup = KSEG_TO_PHYS(rpbptr);
+    rpb_crb->rpb_va_fixup = 0x10000000 +
+        (((ulong)rpbptr - (ulong)rpb) & (0x2000 * HWRPB_PAGES - 1));
+    *rpbptr++ = 0;
 
- {
-     ul *ptr = (ul*)((char*)rpb_dsr + sizeof(struct rpb_dsr ));
-     rpb_crb->rpb_pa_disp = KSEG_TO_PHYS(ptr);
-     rpb_crb->rpb_va_disp = 0x10000000 + (((ul)ptr - (ul)rpb) & (0x2000*HWRPB_PAGES-1));
-     printf_lock("ConsoleDispatch at virt %x phys %x val %x\n",
-             rpb_crb->rpb_va_disp,
-            rpb_crb->rpb_pa_disp,
-            consoleCallback);
-     *ptr++ = 0;
-     *ptr++ = (ul) consoleCallback;
-     rpb_crb->rpb_pa_fixup = KSEG_TO_PHYS(ptr);
-     rpb_crb->rpb_va_fixup = 0x10000000 + (((ul)ptr - (ul)rpb) & (0x2000*HWRPB_PAGES-1));
-     *ptr++ = 0;
+    *rpbptr++ = (ulong) consoleFixup;
 
-     *ptr++ = (ul) consoleFixup;
-  }
-
-
-  /* Checksum the rpb for good luck */
-  sum = 0;
-  lp1 = (long *)rpb;
-  lp2 = &rpb->rpb_checksum;
-  while (lp1 < lp2)
-    sum += *lp1++;
-  *lp2 = sum;
-
+    /* Checksum the rpb for good luck */
+    sum = 0;
+    lp1 = (long *)rpb;
+    lp2 = &rpb->rpb_checksum;
+    while (lp1 < lp2)
+        sum += *lp1++;
+    *lp2 = sum;
 
   /*
    * MP bootstrap
    */
-
-  {
-     int i;
-     for (i=1;i<simosConf.numCPUs;i++) {
-        volatile struct AlphaAccess *k1Conf = (volatile struct AlphaAccess *)
-           (ALPHA_ACCESS_BASE);
-        printf_lock("Bootstraping CPU %d with sp=0x%x \n",
-               i,bootStrapImpure[i]);
+    for (i = 1; i < m5Conf.numCPUs; i++) {
+        volatile struct AlphaAccess *k1Conf;
+        k1Conf = (volatile struct AlphaAccess *)(ALPHA_ACCESS_BASE);
+        printf_lock("Bootstraping CPU %d with sp=0x%x\n",
+                    i, bootStrapImpure[i]);
         k1Conf->bootStrapImpure = bootStrapImpure[i];
         k1Conf->bootStrapCPU = i;
-     }
-  }
+    }
 
-  /*
-   * Make sure that we are not stepping on the kernel
-   */
-  if ((ul)unix_boot_mem >= (ul)simosConf.kernStart) {
-     panic("CONSOLE: too much memory. Smashing kernel  \n");
-  } else {
-     printf_lock("unix_boot_mem ends at %x \n",unix_boot_mem);
-  }
+    /*
+     * Make sure that we are not stepping on the kernel
+     */
+    if ((ulong)unix_boot_mem >= (ulong)m5Conf.kernStart) {
+        panic("CONSOLE: too much memory. Smashing kernel\n");
+    } else {
+        printf_lock("unix_boot_mem ends at %x \n", unix_boot_mem);
+    }
 
-
-#ifdef undef
-#define CSERVE_K_JTOKERN	0x18
-  cServe(bootadr, (ul) rpb_percpu, CSERVE_K_JTOKERN, free_pfn);
-#endif
-
-  if (go) JToKern(bootadr, rpb_percpu, free_pfn, kargc, kargv, NULL);
+    if (go)
+        JToKern((char *)bootadr, (ulong)rpb_percpu, free_pfn, kargc, kargv,
+                NULL);
 }
 
 
-#if 0
-aoutfixup(char *p)
+void
+JToKern(char *bootadr, ulong rpb_percpu, ulong free_pfn, ulong k_argc,
+        char **k_argv, char **envp)
 {
-  int i;
-  unsigned long rem, len, off, dst;
+    extern ulong palJToKern[];
 
+    struct _kernel_params *kernel_params = (struct _kernel_params *) KSEG;
+    int i;
 
-  struct new_aouthdr *ao = (struct new_aouthdr *) &p[NEW_FILHSZ];
-#if 0
-  struct scnhdr *s = (struct scnhdr *) &p[FILHSZ + AOUTHSZ];
-  struct scnhdr *t, *d, *b;
-  printf("aoutfixup: %d sections \n",fh->f_nscns);
-#endif
+    printf_lock("k_argc = %d ", k_argc);
+    for (i = 0; i < k_argc; i++) {
+        printf_lock("'%s' ", k_argv[i]);
+    }
+    printf_lock("\n");
 
-
-  aout_text_start = ((ul)ao->text_start_hi<<32) + ao->text_start;
-  aout_data_addr = ((ul)ao->data_start_hi<<32) + ao->data_start;
-  aout_bss_addr = ((ul)ao->bss_start_hi<<32) + ao->bss_start;
-  aout_bss_size = ((ul)ao->bsize_hi<<32) +  ao->bsize;
-  aout_entry = ((ul)ao->entry_hi<<32) + ao->entry;
-
-  printf("_text 0x%16x %8d @ %08d\n", aout_text_start, ao->tsize,0 /* t->s_scnptr*/);
-  printf("_data 0x%16x %8d @ %08d\n", aout_data_addr, ao->dsize,0/* d->s_scnptr*/);
-  printf("_bss  0x%16x %8d\n", aout_bss_addr,  ao->bsize);
-  printf("entry 0x%16x\n", aout_entry);
-#if 0
-  for (i = 0; i < fh->f_nscns; i++) {
-     printf("section %d %s \n",i,s[i].s_name);
-    if (!strcmp(s[i].s_name, ".text")) t = &s[i];
-    else if (!strcmp(s[i].s_name, ".data")) d = &s[i];
-    else if (!strcmp(s[i].s_name, ".bss")) b = &s[i];
-  }
-  bcopy(&p[t->s_scnptr], (char *)ao->text_start, ao->tsize);
-  bcopy(&p[d->s_scnptr], (char *)ao->data_start, ao->dsize);
-#endif
-}
-#endif
-
-extern ui palJToKern[];
-
-JToKern(bootadr, rpb_percpu, free_pfn, k_argc, k_argv, envp)
-char * bootadr;
-ul rpb_percpu;
-ul free_pfn;
-ul k_argc;
-char **k_argv;
-char **envp;
-{
-  struct _kernel_params *kernel_params = (struct _kernel_params *) KSEG;
-  int i;
-
-  printf_lock("k_argc = %d ", k_argc);
-  for (i = 0; i < k_argc; i++) {
-    printf_lock("'%s' ", k_argv[i]);
-  }
-  printf_lock("\n");
-
-/*  rpb_percpu |= 0xfffffc0000000000;*/
-  kernel_params->bootadr = bootadr;
-  kernel_params->rpb_percpu = KSEG_TO_PHYS(rpb_percpu);
-  kernel_params->free_pfn = free_pfn;
-  kernel_params->argc = k_argc;
-  kernel_params->argv = (ul)k_argv;
-  kernel_params->envp = (ul)envp;
-  printf_lock("jumping to kernel at 0x%x, (PCBB 0x%x pfn %d)\n", bootadr, rpb_percpu, free_pfn);
-  jToPal(KSEG_TO_PHYS((ul)palJToKern));
-  printf_lock("returned from jToPal. Looping\n");
-  while(1) continue;
+    kernel_params->bootadr = bootadr;
+    kernel_params->rpb_percpu = KSEG_TO_PHYS(rpb_percpu);
+    kernel_params->free_pfn = free_pfn;
+    kernel_params->argc = k_argc;
+    kernel_params->argv = (ulong)k_argv;
+    kernel_params->envp = (ulong)envp;
+    printf_lock("jumping to kernel at 0x%x, (PCBB 0x%x pfn %d)\n",
+                bootadr, rpb_percpu, free_pfn);
+    JToPal(KSEG_TO_PHYS(palJToKern));
+    printf_lock("returned from JToPal. Looping\n");
+    while (1)
+        continue;
 }
 
-
-void jToPal(ul bootadr)
+void
+JToPal(ulong bootadr)
 {
-  cServe(bootadr, 0, CSERVE_K_JTOPAL);
+    cServe(bootadr, 0, CSERVE_K_JTOPAL);
+
+    /*
+     * Make sure that floating point is enabled incase
+     * it was disabled by the user program.
+     */
+    wrfen(1);
+}
+
+int
+strcpy(char *dst, char *src)
+{
+    int i = 0;
+    while (*src) {
+        *dst++ = *src++;
+        i++;
+    }
+    return i;
+}
 
 /*
- * Make sure that floating point is enabled incase
- * it was disabled by the user program.
- */
-  wrfen(1);
-}
-
-
-int strcpy(char *dst, char *src)
-{
-   int i=0;
-   while(*src) {
-      *dst++ = *src++;
-      i++;
-   }
-   return i;
-}
-
-
-
-
-/* *****************************************
  * Console I/O
- * ******************************************/
+ *
+ */
 
 int numOpenDevices = 11;
 struct {
-   char name[128];
+    char name[128];
 } deviceState[32];
 
 #define BOOTDEVICE_NAME "SCSI 1 0 0 1 100 0"
@@ -1030,35 +866,27 @@ struct {
 void
 DeviceOperation(long op, long channel, long count, long address, long block)
 {
-   struct AlphaAccess *k1Conf = (struct AlphaAccess *)
-      (ALPHA_ACCESS_BASE);
+    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
+    long pAddr;
 
-   long pAddr;
+    if (strcmp(deviceState[channel].name, BOOTDEVICE_NAME )) {
+        panic("DeviceRead: only implemented for root disk \n");
+    }
+    pAddr = KSEG_TO_PHYS(address);
+    if (pAddr + count > m5Conf.mem_size) {
+        panic("DeviceRead: request out of range \n");
+    }
 
-#if 0
-   printf("Console::DeviceRead count=0x%x address=0x%x block=0x%x\n",
-          count,address,block);
-#endif
-
-   if (strcmp(deviceState[channel].name, BOOTDEVICE_NAME )) {
-      panic("DeviceRead: only implemented for root disk \n");
-   }
-   pAddr = KSEG_TO_PHYS(address);
-   if (pAddr + count > simosConf.mem_size) {
-      panic("DeviceRead: request out of range \n");
-   }
-
-   k1Conf->diskCount = count;
-   k1Conf->diskPAddr = pAddr;
-   k1Conf->diskBlock = block;
-   k1Conf->diskOperation = op; /* launch */
+    k1Conf->diskCount = count;
+    k1Conf->diskPAddr = pAddr;
+    k1Conf->diskBlock = block;
+    k1Conf->diskOperation = op; /* launch */
 }
 
-
-
-/* *************************************************************************
- * SimoS Console callbacks
- * **************************************************/
+/*
+ * M5 Console callbacks
+ *
+ */
 
 /* AXP manual 2-31 */
 #define CONSCB_GETC 0x1
@@ -1109,39 +937,38 @@ DeviceOperation(long op, long channel, long count, long address, long block)
 
 #define MAX_ENVLEN 32
 
-char	env_auto_action[MAX_ENVLEN]	= "BOOT";
-char	env_boot_dev[MAX_ENVLEN]	= "";
-char	env_bootdef_dev[MAX_ENVLEN]	= "";
-char	env_booted_dev[MAX_ENVLEN]	= BOOTDEVICE_NAME;
-char	env_boot_file[MAX_ENVLEN]	= "";
-char	env_booted_file[MAX_ENVLEN]	= "";
-char	env_boot_osflags[MAX_ENVLEN]	= "";
-char	env_booted_osflags[MAX_ENVLEN]	= "";
-char	env_boot_reset[MAX_ENVLEN]	= "";
-char	env_dump_dev[MAX_ENVLEN]	= "";
-char	env_enable_audit[MAX_ENVLEN]	= "";
-char	env_license[MAX_ENVLEN]		= "";
-char	env_char_set[MAX_ENVLEN]	= "";
-char	env_language[MAX_ENVLEN]	= "";
-char	env_tty_dev[MAX_ENVLEN]		= "0";
-char	env_scsiid[MAX_ENVLEN]		= "";
-char	env_scsifast[MAX_ENVLEN]	= "";
-char	env_com1_baud[MAX_ENVLEN]	= "";
-char	env_com1_modem[MAX_ENVLEN]	= "";
-char	env_com1_flow[MAX_ENVLEN]	= "";
-char	env_com1_misc[MAX_ENVLEN]	= "";
-char	env_com2_baud[MAX_ENVLEN]	= "";
-char	env_com2_modem[MAX_ENVLEN]	= "";
-char	env_com2_flow[MAX_ENVLEN]	= "";
-char	env_com2_misc[MAX_ENVLEN]	= "";
-char	env_password[MAX_ENVLEN]	= "";
-char	env_secure[MAX_ENVLEN]		= "";
-char	env_logfail[MAX_ENVLEN]		= "";
-char	env_srm2dev_id[MAX_ENVLEN]	= "";
+char env_auto_action[MAX_ENVLEN]	= "BOOT";
+char env_boot_dev[MAX_ENVLEN]		= "";
+char env_bootdef_dev[MAX_ENVLEN]	= "";
+char env_booted_dev[MAX_ENVLEN]		= BOOTDEVICE_NAME;
+char env_boot_file[MAX_ENVLEN]		= "";
+char env_booted_file[MAX_ENVLEN]	= "";
+char env_boot_osflags[MAX_ENVLEN]	= "";
+char env_booted_osflags[MAX_ENVLEN]	= "";
+char env_boot_reset[MAX_ENVLEN]		= "";
+char env_dump_dev[MAX_ENVLEN]		= "";
+char env_enable_audit[MAX_ENVLEN]	= "";
+char env_license[MAX_ENVLEN]		= "";
+char env_char_set[MAX_ENVLEN]		= "";
+char env_language[MAX_ENVLEN]		= "";
+char env_tty_dev[MAX_ENVLEN]		= "0";
+char env_scsiid[MAX_ENVLEN]		= "";
+char env_scsifast[MAX_ENVLEN]		= "";
+char env_com1_baud[MAX_ENVLEN]		= "";
+char env_com1_modem[MAX_ENVLEN]		= "";
+char env_com1_flow[MAX_ENVLEN]		= "";
+char env_com1_misc[MAX_ENVLEN]		= "";
+char env_com2_baud[MAX_ENVLEN]		= "";
+char env_com2_modem[MAX_ENVLEN]		= "";
+char env_com2_flow[MAX_ENVLEN]		= "";
+char env_com2_misc[MAX_ENVLEN]		= "";
+char env_password[MAX_ENVLEN]		= "";
+char env_secure[MAX_ENVLEN]		= "";
+char env_logfail[MAX_ENVLEN]		= "";
+char env_srm2dev_id[MAX_ENVLEN]		= "";
 
 #define MAX_ENV_INDEX 100
-char *env_ptr[MAX_ENV_INDEX] =
-{
+char *envptr[MAX_ENV_INDEX] = {
     0,					/* 0x00 */
     env_auto_action,			/* 0x01 */
     env_boot_dev,			/* 0x02 */
@@ -1187,140 +1014,128 @@ char *env_ptr[MAX_ENV_INDEX] =
 long
 CallBackDispatcher(long a0, long a1, long a2, long a3, long a4)
 {
-   long i;
-   switch (a0) {
-   case CONSCB_GETC:
-     return GetChar();
+    long i;
+    switch (a0) {
+      case CONSCB_GETC:
+        return GetChar();
 
-   case CONSCB_PUTS:
-      for(i = 0; i < a3; i++)
-         PutChar(*((char *)a2+i));
-      return a3;
+      case CONSCB_PUTS:
+        for (i = 0; i < a3; i++)
+            PutChar(*((char *)a2 + i));
+        return a3;
 
-   case CONSCB_GETENV:
-     if (a1 >= 0 && a1 < MAX_ENV_INDEX && env_ptr[a1] != 0 && *env_ptr[a1]) {
-         i = strcpy((char*)a2, env_ptr[a1]);
-     } else {
-         strcpy((char*)a2, "");
-         i = (long)0xc000000000000000;
-         if (a1 >= 0 && a1 < MAX_ENV_INDEX)
-             printf_lock("GETENV unsupported option %d (0x%x)\n", a1, a1);
-         else
-             printf_lock("GETENV unsupported option %s\n", a1);
-     }
+      case CONSCB_GETENV:
+        if (a1 >= 0 && a1 < MAX_ENV_INDEX && envptr[a1] != 0 && *envptr[a1]) {
+            i = strcpy((char*)a2, envptr[a1]);
+        } else {
+            strcpy((char*)a2, "");
+            i = (long)0xc000000000000000;
+            if (a1 >= 0 && a1 < MAX_ENV_INDEX)
+                printf_lock("GETENV unsupported option %d (0x%x)\n", a1, a1);
+            else
+                printf_lock("GETENV unsupported option %s\n", a1);
+        }
 
-     if (i > a3)
-         panic("CONSCB_GETENV overwrote buffer\n");
-     return i;
+        if (i > a3)
+            panic("CONSCB_GETENV overwrote buffer\n");
+        return i;
 
-   case CONSCB_OPEN:
-      bcopy((char*)a1,deviceState[numOpenDevices].name,a2);
-      deviceState[numOpenDevices].name[a2] = '\0';
-      printf_lock("CONSOLE OPEN : %s --> success \n",
-             deviceState[numOpenDevices].name);
-      return numOpenDevices++;
+      case CONSCB_OPEN:
+        bcopy((char*)a1, deviceState[numOpenDevices].name, a2);
+        deviceState[numOpenDevices].name[a2] = '\0';
+        printf_lock("CONSOLE OPEN : %s --> success \n",
+                    deviceState[numOpenDevices].name);
+        return numOpenDevices++;
 
-   case CONSCB_READ:
-      DeviceOperation(a0,a1,a2,a3,a4);
-      break;
+      case CONSCB_READ:
+        DeviceOperation(a0, a1, a2, a3, a4);
+        break;
 
-   case CONSCB_CLOSE:
-      break;
-   case CONSCB_OPEN_CONSOLE:
-      printf_lock("CONSOLE OPEN\n");
-      return 0; /* success */
-      break; /* not rearched */
-   case CONSCB_CLOSE_CONSOLE:
-      printf_lock("CONSOLE CLOSE\n");
-      return 0; /* success */
-      break; /* not reached */
+      case CONSCB_CLOSE:
+        break;
 
-   default:
-      panic("cher (%x,%x,%x,%x)\n", a0, a1, a2, a3);
-   }
+      case CONSCB_OPEN_CONSOLE:
+        printf_lock("CONSOLE OPEN\n");
+        return 0; /* success */
+        break; /* not reached */
 
-   return 0;
+      case CONSCB_CLOSE_CONSOLE:
+        printf_lock("CONSOLE CLOSE\n");
+        return 0; /* success */
+        break; /* not reached */
+
+      default:
+        panic("CallBackDispatcher(%x,%x,%x,%x,%x)\n", a0, a1, a2, a3, a4);
+    }
+
+    return 0;
 }
 
-long CallBackFixup(int a0, int a1, int a2)
+long
+CallBackFixup(int a0, int a1, int a2)
 {
-   long temp;
-   /* Linux uses r8 for the current pointer (pointer to data structure
-      contating info about currently running process). It is set when the
-      kernel starts and is expected to remain there... Problem is that the
-      unlike the kernel, the console does not prevent the assembler from
-      using r8. So here is a work around. So far this has only been a problem
-      in CallBackFixup() but any other call back functions could cause a problem
-      at some point */
+    long temp;
+    /*
+     * Linux uses r8 for the current pointer (pointer to data
+     * structure contating info about currently running process). It
+     * is set when the kernel starts and is expected to remain
+     * there... Problem is that the unlike the kernel, the console
+     * does not prevent the assembler from using r8. So here is a work
+     * around. So far this has only been a problem in CallBackFixup()
+     * but any other call back functions couldd cause a problem at
+     * some point
+     */
 
-   /* save off the current pointer to a temp variable */
-   asm("bis $8, $31, %0" : "=r" (temp));
+    /* save off the current pointer to a temp variable */
+    asm("bis $8, $31, %0" : "=r" (temp));
 
-   /* call original code */
-   printf_lock("CallbackFixup %x %x, t7=%x\n",a0,a1,temp);
+    /* call original code */
+    printf_lock("CallbackFixup %x %x, t7=%x\n", a0, a1, temp);
 
-   /* restore the current pointer */
-   asm("bis %0, $31, $8" : : "r" (temp) : "$8");
+    /* restore the current pointer */
+    asm("bis %0, $31, $8" : : "r" (temp) : "$8");
 
-#if 0
-  if (first[FIRST(a1)]==0) {
-      first[FIRST(a1)] = KPTE(PFN(reservedFixup));
-   } else {
-      panic("CallBakcfixup\n");
-   }
-   second[SECOND(a1)] = KPTE(PFN(third_rpb));	/* Region 0 */
-   printf("Fixup: FISRT(a1)=0x%x SECOND(a1)=0x%x THIRD(a1)=0x%x\n",
-          FIRST(a1),SECOND(a1),THIRD(a1));
-
-#endif
-   return 0;
+    return 0;
 }
 
-
-
-
-
-void SlaveCmd(int cpu, struct rpb_percpu *my_rpb)
+void
+SlaveCmd(int cpu, struct rpb_percpu *my_rpb)
 {
-/*   extern void palJToSlave[]; */
-   extern unsigned int palJToSlave[];
+    extern ulong palJToSlave[];
 
-   printf_lock("Slave CPU %d console command %s", cpu,my_rpb->rpb_iccb.iccb_rxbuf);
+    printf_lock("Slave CPU %d console command %s", cpu,
+                my_rpb->rpb_iccb.iccb_rxbuf);
 
-   my_rpb->rpb_state |= STATE_BIP;
-   my_rpb->rpb_state &= ~STATE_RC;
+    my_rpb->rpb_state |= STATE_BIP;
+    my_rpb->rpb_state &= ~STATE_RC;
 
-   printf_lock("SlaveCmd: restart %x %x vptb %x my_rpb %x my_rpb_phys %x\n",
-          rpb->rpb_restart,
-          rpb->rpb_restart_pv,
-          rpb->rpb_vptb, my_rpb,
-          KSEG_TO_PHYS(my_rpb));
+    printf_lock("SlaveCmd: restart %x %x vptb %x my_rpb %x my_rpb_phys %x\n",
+                rpb->rpb_restart, rpb->rpb_restart_pv, rpb->rpb_vptb, my_rpb,
+                KSEG_TO_PHYS(my_rpb));
 
-   cServe(KSEG_TO_PHYS((ul)palJToSlave),
-          (ul)rpb->rpb_restart,
-          CSERVE_K_JTOPAL,
-          rpb->rpb_restart_pv,
-          rpb->rpb_vptb,
-          KSEG_TO_PHYS(my_rpb));
+    cServe(KSEG_TO_PHYS(palJToSlave), (ulong)rpb->rpb_restart,
+           CSERVE_K_JTOPAL, rpb->rpb_restart_pv, rpb->rpb_vptb,
+           KSEG_TO_PHYS(my_rpb));
 
-   panic("SlaveCmd returned \n");
+    panic("SlaveCmd returned \n");
 }
 
-void SlaveLoop( int cpu)
+void
+SlaveLoop(int cpu)
 {
-   int size = ROUNDUP128(sizeof(struct rpb_percpu));
-   struct rpb_percpu *my_rpb = (struct rpb_percpu*)
-      ((ul)rpb_percpu + size*cpu);
+    int size = ROUNDUP128(sizeof(struct rpb_percpu));
+    struct rpb_percpu *my_rpb = (struct rpb_percpu*)
+        ((ulong)rpb_percpu + size * cpu);
 
-   if (cpu==0) {
-      panic("CPU 0 entering slaveLoop. Reenetering the console. HOSED \n");
-   } else {
-      printf_lock("Entering slaveloop for cpu %d my_rpb=%x \n",cpu,my_rpb);
-   }
+    if (cpu == 0) {
+        panic("CPU 0 entering slaveLoop. Reenetering the console. HOSED\n");
+    } else {
+        printf_lock("Entering slaveloop for cpu %d my_rpb=%x\n", cpu, my_rpb);
+    }
 
-   // swap the processors context to the one in the
-   // rpb_percpu struct very carefully (i.e. no stack usage)
-   // so that linux knows which processor ends up in __smp_callin
-   // and we don't trash any data is the process
-   SlaveSpin(cpu,my_rpb,&my_rpb->rpb_iccb.iccb_rxlen);
+    // swap the processors context to the one in the
+    // rpb_percpu struct very carefully (i.e. no stack usage)
+    // so that linux knows which processor ends up in __smp_callin
+    // and we don't trash any data is the process
+    SlaveSpin(cpu, my_rpb, &my_rpb->rpb_iccb.iccb_rxlen);
 }

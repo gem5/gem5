@@ -1,55 +1,52 @@
 /*
-Copyright 1995 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright 1995 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef EV5_DEFS_INCLUDED
 #define EV5_DEFS_INCLUDED 1
 
 // adapted from the version emailed to lance..pb Nov/95
 
-
-// ********************************************************************************************************************************
-//  Created 25-JUL-1995 14:21:23 by VAX SDL V3.2-12     Source: 21-JUL-1995 11:03:08 EV5$:[EV5.DVT.SUP]EV5_DEFS.SDL;24
-// ********************************************************************************************************************************
-
-//	.MACRO	$EV5DEF,..EQU=<=>,..COL=<:>
-// EV5$K_REVISION'..equ'34
-//  In the definitions below, registers are annotated with one of the following
-//  symbols:
+//  In the definitions below, registers are annotated with one of the
+//  following symbols:
 //
-//       RW - The register may be read and written
+//      RW - The register may be read and written
 //   	RO - The register may only be read
 //   	WO - The register may only be written
 //
-//  For RO and WO registers, all bits and fields within the register are also
-//  read-only or write-only.  For RW registers, each bit or field within
-//  the register is annotated with one of the following:
+//  For RO and WO registers, all bits and fields within the register
+//  are also read-only or write-only.  For RW registers, each bit or
+//  field within the register is annotated with one of the following:
 //
 //   	RW - The bit/field may be read and written
 //   	RO - The bit/field may be read; writes are ignored
-//   	WO - The bit/field may be written; reads return an UNPREDICTABLE result.
+//   	WO - The bit/field may be written; reads return an UNPREDICTABLE result
 //   	WZ - The bit/field may be written; reads return a 0
 //   	WC - The bit/field may be read; writes cause state to clear
-//   	RC - The bit/field may be read, which also causes state to clear; writes are ignored
+//   	RC - The bit/field may be read, which also causes state to clear;
+//           writes are ignored
 //  Architecturally-defined (SRM) registers for EVMS
+
 #define pt0 320
 #define pt1 321
 #define pt2 322

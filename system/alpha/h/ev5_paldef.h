@@ -1,24 +1,26 @@
 /*
-Copyright 1993 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright 1993 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef EV5_PALDEF_INCLUDED
 #define EV5_PALDEF_INCLUDED 1
@@ -26,18 +28,12 @@ SOFTWARE.
 // from ev5_paldef.mar from Lance's fetch directory...pb Nov/95
 // some entries have been superceeded by the more recent evt_defs.h
 
-// These are lower-caseified and have the $ signs (unnecessarily we now discover) removed.
+// These are lower-caseified and have the $ signs (unnecessarily we
+// now discover) removed.
 
 // Note that at the bottom of this file is the version of ev5_defs.mar
-// which is more recent than the top part of the file and contains overlapping information...pb Nov/95
-
-//	.MACRO	PALDEFS
-//	PALDEF_VER == 1		; Flag the version number of this file.
-//	.ENDM
-//
-//
-//	.MACRO	_HALT_CODES,_GBL
-//	_DEFINI	HALT_CODES,_GBL
+// which is more recent than the top part of the file and contains
+// overlapping information...pb Nov/95
 
 #define hlt_c_reset		0
 #define hlt_c_hw_halt		1
@@ -51,12 +47,6 @@ SOFTWARE.
 #define hlt_c_callback		33
 #define hlt_c_mpstart		34
 #define hlt_c_lfu_start		35
-
-// halt codes above 255 reserved for platform specific errors
-//	_DEFEND	HALT_CODES,_GBL,DEF
-//	.ENDM
-//	.MACRO	_MCHK_CODES,_GBL
-//	_DEFINI	MCHK_CODES,_GBL
 
 #define mchk_c_tperr			(64<<1)
 #define mchk_c_tcperr			(65<<1)
@@ -80,23 +70,11 @@ SOFTWARE.
 #define mchk_c_sys_hrd_error		(257<<1)
 #define mchk_c_sys_ecc			(258<<1)
 
-//	_DEFEND	MCHK_CODES,_GBL,DEF
-//	.ENDM
-
-//	.MACRO	_EV5_MM,_GBL
-//	_DEFINI	_EV5_MM,_GBL
-
 #define page_seg_size_bits	 10
 #define page_offset_size_bits	 13
 #define page_size_bytes		 8192
 #define va_size_bits		 43
 #define pa_size_bits		 45
-
-//	_DEFEND	_EV5_MM,_GBL,DEF
-//	.ENDM
-
-//	.MACRO	_PALTEMP,_GBL
-//	_DEFINI	_PALTEMP,_GBL
 
 // replaced by ev5_defs.h #define pt0  		(0x140)
 // replaced by ev5_defs.h #define pt1  		(0x141)
@@ -153,23 +131,11 @@ SOFTWARE.
 #define pt_misc_v_switch 48
 #define pt_misc_v_cm     56
 
-//	_DEFEND	_PALTEMP,_GBL,DEF
-//	.ENDM
-
-//	.MACRO	_OSF_MMCSR_DEF,_GBL
-//	_DEFINI	OSFMMCSR,_GBL
-
 #define mmcsr_c_tnv		0
 #define mmcsr_c_acv		1
 #define mmcsr_c_for		2
 #define mmcsr_c_foe		3
 #define mmcsr_c_fow		4
-
-//	_DEFEND	OSFMMCSR,_GBL,DEF
-//	.ENDM
-
-//	.MACRO	_MM_STAT_DEF,_GBL
-//	_DEFINI	MMSTATDEF,_GBL
 
 #define mm_stat_m_opcode  	(0x3F)
 #define mm_stat_m_ra  		(0x1F)
@@ -177,31 +143,16 @@ SOFTWARE.
 #define EVX_OPC_SYNC	 	(0x18)
 #define evx_opc_hw_ld	 	(0x1B)
 
-//	_DEFEND	MMSTATDEF,_GBL,DEF
-//	.ENDM
-
-//	.MACRO	_OSF_A0_DEF,_GBL
-//	_DEFINI	OSFA0DEF,_GBL
-
 #define osf_a0_bpt	  	(0x0)
 #define osf_a0_bugchk	  	(0x1)
 #define osf_a0_gentrap	  	(0x2)
 #define osf_a0_fen	  	(0x3)
 #define osf_a0_opdec	  	(0x4)
 
-//	_DEFEND	OSFA0DEF,_GBL,DEF
-//	.ENDM
-
-//	.MACRO	_EV5_IPLDEF,_GBL
-//	_DEFINI	EV5_IPLDEF,_GBL
-
 #define ipl_machine_check	31
 #define ipl_powerfail		30
 #define ipl_perf_count		29
 #define ipl_clock		22
 #define ipl_interprocessor	22
-
-//	_DEFEND	EV5_IPLDEF,_GBL,DEF
-//	.ENDM
 
 #endif

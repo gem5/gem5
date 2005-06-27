@@ -1,138 +1,72 @@
 /*
-Copyright (c) 2003, 2004
-The Regents of The University of Michigan
-All Rights Reserved
-
-This code is part of the M5 simulator, developed by Nathan Binkert,
-Erik Hallnor, Steve Raasch, and Steve Reinhardt, with contributions
-from Ron Dreslinski, Dave Greene, Lisa Hsu, Ali Saidi, and Andrew
-Schultz.
-
-Permission is granted to use, copy, create derivative works and
-redistribute this software and such derivative works for any purpose,
-so long as the copyright notice above, this grant of permission, and
-the disclaimer below appear in all copies made; and so long as the
-name of The University of Michigan is not used in any advertising or
-publicity pertaining to the use or distribution of this software
-without specific, written prior authorization.
-
-THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION FROM THE
-UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY PURPOSE, AND WITHOUT
-WARRANTY BY THE UNIVERSITY OF MICHIGAN OF ANY KIND, EITHER EXPRESS OR
-IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE REGENTS OF
-THE UNIVERSITY OF MICHIGAN SHALL NOT BE LIABLE FOR ANY DAMAGES,
-INCLUDING DIRECT, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
-DAMAGES, WITH RESPECT TO ANY CLAIM ARISING OUT OF OR IN CONNECTION
-WITH THE USE OF THE SOFTWARE, EVEN IF IT HAS BEEN OR IS HEREAFTER
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
+ * Copyright (c) 2003, 2004
+ * The Regents of The University of Michigan
+ * All Rights Reserved
+ *
+ * This code is part of the M5 simulator, developed by Nathan Binkert,
+ * Erik Hallnor, Steve Raasch, and Steve Reinhardt, with contributions
+ * from Ron Dreslinski, Dave Greene, Lisa Hsu, Ali Saidi, and Andrew
+ * Schultz.
+ *
+ * Permission is granted to use, copy, create derivative works and
+ * redistribute this software and such derivative works for any purpose,
+ * so long as the copyright notice above, this grant of permission, and
+ * the disclaimer below appear in all copies made; and so long as the
+ * name of The University of Michigan is not used in any advertising or
+ * publicity pertaining to the use or distribution of this software
+ * without specific, written prior authorization.
+ *
+ * THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION FROM THE
+ * UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY PURPOSE, AND WITHOUT
+ * WARRANTY BY THE UNIVERSITY OF MICHIGAN OF ANY KIND, EITHER EXPRESS OR
+ * IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE REGENTS OF
+ * THE UNIVERSITY OF MICHIGAN SHALL NOT BE LIABLE FOR ANY DAMAGES,
+ * INCLUDING DIRECT, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+ * DAMAGES, WITH RESPECT TO ANY CLAIM ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OF THE SOFTWARE, EVEN IF IT HAS BEEN OR IS HEREAFTER
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ */
 /*
-Copyright 1993 Hewlett-Packard Development Company, L.P.
+ * Copyright 1993 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-/* taken from ebfw/rom/dbmentry.s */
-
-#define EB164
-/*#ifndef LINT
-.data
-.asciiz "$Id: dbmentry.s,v 1.1.1.1 1997/10/30 23:27:12 verghese Exp $"
-.text
-#endif
-*/
 /*
  * Debug Monitor Entry code
  */
-
-#ifndef MAKEDEPEND
-#include "ev5_impure.h"
-#include "cserve.h"
 #include "fromHudsonOsf.h"
-#endif
-
-//#include "paldefs.h"
-#include "regdefs.h"
-#include "eb164.h"
-//#include "ledcodes.h"
 
         .text
 
 /* return address and padding to octaword align */
 #define STARTFRM 16
 
-        .globl  __start
-        .ent    __start, 0
-__start:
+        .globl  _start
+        .ent    _start, 0
+_start:
 _entry:
         br      t0, 2f			# get the current PC
 2:	ldgp    gp, 0(t0)               # init gp
-
-
-#ifdef original_xxm
-        lda	a2, CSERVE_K_RD_IMPURE
-        call_pal PAL_CSERVE_ENTRY
-        lda	v0,  CNS_Q_BASE(v0)
-
-        # Add KSEG offset to the impure area
-        subq	zero, 1, t0
-        sll	t0, 42, t0
-        addq	t0, v0, v0
-
-        lda	t0, CNS_Q_SIGNATURE(v0)
-        bic 	t0, 0x07, t0		# Clear bottom 3 bits to avoid
-                                        # allignment errors if the
-                                        # impure area is total rubbish
-        ldq	t0, 0x00(t0)
-        srl	t0, 16, t0		# Shift signature into bottom 16 bits.
-        lda	t6, 0xDECB(zero)	# Load the expected valid signature.
-        zap	t6, 0xFC, t6		# Clear the upper bits.
-        cmpeq	t0, t6, t0		# Is this a valid signature?
-        beq	t0, 1f			# Not valid, don't trust input params.
-
-/*
- *	Init the stack at the first 8K boundary
- *	below the top of memory.
- */
-        lda	t0, CNS_Q_MEM_SIZE(v0)
-        ldq	t0, 0x00(t0)		# Load memory size.
-        subq	t0, 1, t0		# Last address in memory
-        srl	t0, 13, t0		# Align to first 8KB boundary
-        sll	t0, 13, sp		# below the top of memory.
-        br	zero, 2f
-
-/*
- *	If memory size was not passed in via the
- *	PALcode impure data use the system specific
- *	MINIMUM_SYSTEM_MEMORY definition.
- */
-1:
-        lda	sp, (MINIMUM_SYSTEM_MEMORY&0xffff)(zero)
-        ldah	sp, ((MINIMUM_SYSTEM_MEMORY+0x8000)>>16)(sp)
-        lda	t0, (8*1024)(zero)	# Allow for 8KB guard page.
-        subq	sp, t0, sp
-
-2:
-
-#endif /* original_xxm */
-
 
         /*
          * SimOS. Stack pointer is start of a valid phys or KSEG page
@@ -145,13 +79,6 @@ slave:	lda	v0,(8*1024)(sp) /* end of page  */
         subq	zero, 1, t0
         sll	t0, 42, t0
         bis	t0, v0, sp
-
-#ifdef original_xxm
-        # Add KSEG offset to the stack pointer
-        subq	zero, 1, t0
-        sll	t0, 42, t0
-        addq	t0, sp, sp
-#endif
 
         lda     sp, -STARTFRM(sp)	# Create a stack frame
         stq     ra, 0(sp)		# Place return address on the stack
@@ -186,7 +113,7 @@ master:
         ldgp	gp, 0(ra)
         bsr	zero, _exit
 
-.end	__start
+.end	_start
 
 
 

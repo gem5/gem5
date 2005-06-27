@@ -30,35 +30,32 @@
  */
 
 /*
-Copyright 1992, 1993, 1994, 1995 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright 1992, 1993, 1994, 1995 Hewlett-Packard Development
+ * Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 // modified to use the Hudson style "impure.h" instead of ev5_impure.sdl
 // since we don't have a mechanism to expand the data structures.... pb Nov/95
-
-// build_fixed_image: not sure what means
-// real_mm to be replaced during rewrite
-// remove_save_state  remove_restore_state can be remooved to save space ??
-
-
 #include "ev5_defs.h"
 #include "ev5_impure.h"
 #include "ev5_alpha_defs.h"
@@ -68,262 +65,29 @@ SOFTWARE.
 #include "fromHudsonOsf.h"
 #include "dc21164FromGasSources.h"
 
-#ifdef SIMOS
 #define DEBUGSTORE(c) nop
-#else
-#define DEBUGSTORE(c) \
-        lda	r13, c(zero) ; \
-        bsr	r25, debugstore
-#endif
 
 #define DEBUG_EXC_ADDR()\
         bsr	r25, put_exc_addr; \
         DEBUGSTORE(13)		; \
         DEBUGSTORE(10)
 
-#define egore 0
-#define acore 0
-#define beh_model 0
-#define ev5_p2 1
-#define ev5_p1 0
-#define ldvpte_bug_fix 1
-#define osf_chm_fix  0
-
-// Do we want to do this?? pb
-#define spe_fix 0
-// Do we want to do this?? pb
-#define build_fixed_image 0
-
-#define ev5_pass2
-#define enable_p4_fixups 0
-#define osf_svmin 1
-#define enable_physical_console 0
-#define fill_err_hack 0
-#define icflush_on_tbix 0
-#define max_cpuid 1
-#define perfmon_debug 0
-#define rawhide_system 0
-#define rax_mode 0
-
-
-// This is the fix for the user-mode super page references causing the machine to crash.
-#if (spe_fix == 1) && (build_fixed_image==1)
-#define hw_rei_spe	br	r31, hw_rei_update_spe
-#else
+// This is the fix for the user-mode super page references causing the
+// machine to crash.
 #define hw_rei_spe	hw_rei
-#endif
 
-
-// redefine a few of the distribution-code names to match the Hudson gas names.
-// opcodes
-#define ldqp ldq_p
-#define stqp stq_p
-#define ldlp ldl_p
-#define stlp stl_p
-
-#define r0 $0
-#define r1 $1
-#define r2 $2
-#define r3 $3
-#define r4 $4
-#define r5 $5
-#define r6 $6
-#define r7 $7
-#define r8 $8
-#define r9 $9
-#define r10 $10
-#define r11 $11
-#define r12 $12
-#define r13 $13
-#define r14 $14
-#define r15 $15
-#define r16 $16
-#define r17 $17
-#define r18 $18
-#define r19 $19
-#define r20 $20
-#define r21 $21
-#define r22 $22
-#define r23 $23
-#define r24 $24
-#define r25 $25
-#define r26 $26
-#define r27 $27
-#define r28 $28
-#define r29 $29
-#define r30 $30
-#define r31 $31
-
-// 	.title	"EV5 OSF PAL"
-// 	.ident	"V1.18"
-//
-//****************************************************************************
-//*									    *
-//*  Copyright (c) 1992, 1993, 1994, 1995                      		    *
-//*  by DIGITAL Equipment Corporation, Maynard, Mass.			    *
-//* 									    *
-//*  This software is furnished under a license and may be used and  copied  *
-//*  only  in  accordance  with  the  terms  of  such  license and with the  *
-//*  inclusion of the above copyright notice.  This software or  any  other  *
-//*  copies  thereof may not be provided or otherwise made available to any  *
-//*  other person.  No title to and ownership of  the  software  is  hereby  *
-//*  transferred.							    *
-//* 									    *
-//*  The information in this software is subject to change  without  notice  *
-//*  and  should  not  be  construed  as  a commitment by DIGITAL Equipment  *
-//*  Corporation.							    *
-//* 									    *
-//*  DIGITAL assumes no responsibility for the use or  reliability  of  its  *
-//*  software on equipment which is not supplied by DIGITAL.		    *
-//*									    *
-//****************************************************************************
-
-// .sbttl	"Edit History"
-//+
-// Who		Rev	When		What
-// ------------	---	-----------	--------------------------------
-// DB		0.0	03-Nov-1992	Start
-// DB		0.1	28-Dec-1992	add swpctx
-// DB		0.2	05-Jan-1993	Bug: PVC found mtpr dtb_CM -> virt ref bug
-// DB		0.3	11-Jan-1993	rearrange trap entry points
-// DB		0.4	01-Feb-1993	add tbi
-// DB		0.5	04-Feb-1993	real MM, kludge reset flow, kludge swppal
-// DB		0.6	09-Feb-1993	Bug: several stack pushers used r16 for pc (should be r14)
-// DB		0.7	10-Feb-1993	Bug: pushed wrong PC (+8) on CALL_PAL OPCDEC
-//					Bug: typo on register number for store in wrunique
-//					Bug: rti to kern uses r16 as scratch
-//					Bug: callsys saving wrong value in pt_usp
-// DB		0.8	16-Feb-1993	PVC: fix possible pt write->read bug in wrkgp, wrusp
-// DB		0.9	18-Feb-1993	Bug: invalid_dpte_handler shifted pte twice
-//					Bug: rti stl_c could corrupt the stack
-//					Bug: unaligned returning wrong value in r17 (or should be and)
-// DB		0.10	19-Feb-1993	Add draina, rd/wrmces, cflush, cserve, interrupt
-// DB		0.11	23-Feb-1993	Turn caches on in reset flow
-// DB		0.12	10-Mar-1993	Bug: wrong value for icsr for FEN in kern mode flow
-// DB		0.13	15-Mar-1993	Bug: wrong value pushed for PC in invalid_dpte_handler if stack push tbmisses
-// DB		0.14	23-Mar-1993	Add impure pointer paltemp, reshuffle some other paltemps to match VMS
-// DB		0.15	15-Apr-1993	Combine paltemps for WHAMI and MCES
-// DB		0.16    12-May-1993	Update reset
-//                                       New restriction: no mfpr exc_addr in cycle 1 of call_pal flows
-//					Bug: in wrmces, not clearing DPC, DSC
-//					Update swppal
-//					Add pal bugchecks, pal_save_state, pal_restore_state
-// DB		0.17    24-May-1993	Add dfault_in_pal flow; fixup stack builder to have common state for pc/ps.
-//                                       New restriction: No hw_rei_stall in 0,1,2 after mtpr itb_asn
-// DB		0.18    26-May-1993	PVC fixes
-// JM  		0.19	01-jul-1993	Bug: OSFPAL_CALPAL_OPCDEC, TRAP_OPCDEC -- move mt exc_addr after stores
-// JM  		0.20	07-jul-1993	Update cns_ and mchk_ names for impure.mar conversion to .sdl
-//					Bug:  exc_addr was being loaded before stores that could dtb_miss in the following
-//						routines: TRAP_FEN,FEN_TO_OPCDEC,CALL_PAL_CALLSYS,RTI_TO_KERN
-// JM 		0.21	26-jul-1993	Bug: move exc_addr load after ALL stores in the following routines:
-//						TRAP_IACCVIO::,TRAP_OPCDEC::,TRAP_ARITH::,TRAP_FEN::
-//						dfault_trap_cont:,fen_to_opcdec:,invalid_dpte_handler:
-//						osfpal_calpal_opcdec:,CALL_PAL_callsys::,TRAP_UNALIGN::
-//					Bugs from PVC: trap_unalign - mt pt0 ->mf pt0 within 2 cycles
-// JM 		0.22	28-jul-1993	Add WRIPIR instruction
-// JM 		0.23	05-aug-1993	Bump version number for release
-// JM 		0.24	11-aug-1993	Bug: call_pal_swpipl - palshadow write -> hw_rei violation
-// JM		0.25	09-sep-1993	Disable certain "hidden" pvc checks in call_pals;
-//					New restriction: No hw_rei_stall in 0,1,2,3,4 after mtpr itb_asn - affects HALT(raxmode),
-//						and SWPCTX
-// JM		0.26	07-oct-1993	Re-implement pal_version
-// JM		0.27	12-oct-1993	One more time:  change pal_version format to conform to SRM
-// JM		0.28	14-oct-1993	Change ic_flush routine to pal_ic_flush
-// JM		0.29	19-oct-1993	BUG(?): dfault_in_pal: use exc_addr to check for dtbmiss,itbmiss check instead
-//						of mm_stat<opcode>.  mm_stat contains original opcode, not hw_ld.
-// JM		0.30	28-oct-1993	BUG: PVC violation - mf exc_addr in first cycles of call_pal in rti,retsys
-// JM		0.31	15-nov-1993	BUG: WRFEN trashing r0
-// JM            0.32	21-nov-1993	BUG: dtb_ldq,itb_ldq (used in dfault_in_pal) not defined when real_mm=0
-// JM		0.33	24-nov-1993	save/restore_state -
-//						BUG: use ivptbr to restore mvptbr
-// 						BUG: adjust hw_ld/st base/offsets to accomodate 10-bit offset limit
-//					     	CHANGE: Load 2 pages into dtb to accomodate compressed logout area/multiprocessors
-// JM		0.34	20-dec-1993	BUG: set r11<mode> to kernel for ksnv halt case
-//					BUG: generate ksnv halt when tb miss on kernel stack accesses
-//					     save exc_addr in r14 for invalid_dpte stack builder
-// JM		0.35	30-dec-1993	BUG: PVC violation in trap_arith - mt exc_sum in shadow of store with mf exc_mask in
-//					     the same shadow
-// JM		0.36	 6-jan-1994	BUG: fen_to_opcdec - savePC should be PC+4, need to save old PS, update new PS
-//					      New palcode restiction: mt icsr<fpe,hwe> --> 3 bubbles to hw_rei --affects wrfen
-// JM		0.37	25-jan-1994	BUG: PVC violations in restore_state - mt dc_mode/maf_mode ->mbox instructions
-//					Hide impure area manipulations in macros
-//					BUG: PVC violation in save and restore state-- move mt icsr out of shadow of ld/st
-//					Add some pvc_violate statements
-// JM		0.38	 1-feb-1994	Changes to save_state:  save pt1; don't save r31,f31; update comments to reflect reality;
-//					Changes to restore_state: restore pt1, icsr; don't restore r31,f31; update comments
-//						Add code to ensure fen bit set in icsr before ldt
-//					conditionally compile rax_more_reset out.
-//					move ldqp,stqp macro definitions to ev5_pal_macros.mar and add .mcall's for them here
-//					move rax reset stuff to ev5_osf_system_pal.m64
-// JM		0.39	 7-feb-1994	Move impure pointer to pal scratch space.  Use former pt_impure for bc_ctl shadow
-//						and performance monitoring bits
-//					Change to save_state routine to save more iprs.
-// JM		0.40	19-feb-1994	Change algorithm in save/restore_state routines; add f31,r31 back in
-// JM		0.41	21-feb-1994     Add flags to compile out save/restore state (not needed in some systems)
-//						remove_save_state,remove_restore_state;fix new pvc violation in save_state
-// JM		0.42	22-feb-1994     BUG: save_state overwriting r3
-// JM		0.43	24-feb-1994	BUG: save_state saving wrong icsr
-// JM		0.44	28-feb-1994	Remove ic_flush from wr_tbix instructions
-// JM		0.45	15-mar-1994	BUG: call_pal_tbi trashes a0 prior to range check (instruction order problem)
-//					New pal restriction in pal_restore_state: icsr<fpe>->floating instr = 3 bubbles
-//					Add exc_sum and exc_mask to pal_save_state (not restore)
-// JM		0.46	22-apr-1994	Move impure pointer back into paltemp;  Move bc_ctl shadow and pmctr_ctl into impure
-//						area.
-//					Add performance counter support to swpctx and wrperfmon
-// JM            0.47    9-may-1994	Bump version # (for ev5_osf_system_pal.m64 sys_perfmon fix)
-// JM		0.48	13-jun-1994	BUG: trap_interrupt --> put new ev5 ipl at 30 for all osfipl6 interrupts
-// JM		0.49	8-jul-1994	BUG: In the unlikely (impossible?) event that the branch to pal_pal_bug_check is
-//						taken in the interrupt flow, stack is pushed twice.
-//					SWPPAL - update to support ECO 59 to allow 0 as a valid address
-//					Add itb flush to save/restore state routines
-//					Change hw_rei to hw_rei_stall in ic_flush routine.  Shouldn't be necessary, but
-//						conforms to itbia restriction.
-//					Added enable_physical_console flag (for enter/exit console routines only)
-// JM		0.50	29-jul-1994	Add code to dfault & invalid_dpte_handler to ignore exceptions on a
-//						load to r31/f31.  changed dfault_fetch_err to dfault_fetch_ldr31_err and
-//						nmiss_fetch_err to nmiss_fetch_ldr31_err.
-// JM		1.00	 1-aug-1994	Add pass2 support (swpctx)
-// JM		1.01	 2-aug-1994	swppal now passes bc_ctl/bc_config in r1/r2
-// JM		1.02	15-sep-1994	BUG: swpctx missing shift of pme bit to correct position in icsr (pass2)
-//					Moved perfmon code here from system file.
-//					BUG: pal_perfmon - enable function not saving correct enables when pme not set (pass1)
-// JM		1.03	3-oct-1994	Added (pass2 only) code to wrperfmon enable function to look at pme bit.
-// JM		1.04	14-oct-1994	BUG: trap_interrupt - ISR read (and saved) before INTID -- INTID can change
-//						after ISR read, but we won't catch the ISR update.  reverse order
-// JM		1.05	17-nov-1994	Add code to dismiss UNALIGN trap if LD r31/F31
-// JM		1.06	28-nov-1994	BUG: missing mm_stat shift for store case in trap_unalign (new bug due to "dismiss" code)
-// JM		1.07	 1-dec-1994	EV5 PASS1,2,3 BUG WORKAROUND:  Add flag LDVPTE_BUG_FIX.  In DTBMISS_DOUBLE, branch to
-//					DTBMISS_SINGLE if not in palmode.
-// JM            1.08     9-jan-1995     Bump version number for change to EV5_OSF_SYSTEM_PAL.M64 - ei_stat fix in mchk logout frame
-// JM 		1.09	 2-feb-1995	Add flag "spe_fix" and accompanying code to workaround pre-pass4 bug:  Disable Ibox
-//					superpage mode in User mode and re-enable in kernel mode.
-//					EV5_OSF_SYSTEM_PAL.M64 and EV5_PALDEF.MAR (added pt_misc_v_cm) also changed to support this.
-// JM		1.10    24-feb-1995	Set ldvpte_bug_fix regardless of ev5 pass.   set default to ev5_p2
-// ES		1.11	10-mar-1995	Add flag "osf_chm_fix" to enable dcache in user mode only to avoid
-//					cpu bug.
-// JM		1.12	17-mar-1995	BUG FIX: Fix F0 corruption problem in pal_restore_state
-// ES		1.13	17-mar-1995	Refine osf_chm_fix
-// ES		1.14	20-mar-1995	Don't need as many stalls before hw_rei_stall in chm_fix
-// ES		1.15	21-mar-1995	Add a stall to avoid a pvc violation in pal_restore_state
-//					Force pvc checking of exit_console
-// ES		1.16	26-apr-1995	In the wrperfmon disable function, correct meaning of R17<2:0> to ctl2,ctl2,ctl0
-// ES		1.17	01-may-1995	In hw_rei_update_spe code, in the osf_chm fix, use bic and bis (self-correcting)
-//					instead of xor to maintain previous mode in pt_misc
-// ES		1.18	14-jul-1995	In wrperfmon enable on pass2, update pmctr even if current process does
-//					not have pme set. The bits in icsr maintain the master enable state.
-//					In sys_reset, add icsr<17>=1 for ev56 byte/word eco enable
-//
 #define vmaj 1
 #define vmin 18
 #define vms_pal 1
 #define osf_pal 2
 #define pal_type osf_pal
 #define osfpal_version_l ((pal_type<<16) | (vmaj<<8) | (vmin<<0))
-//-
 
-// .sbttl	"PALtemp register usage"
 
-//+
+///////////////////////////
+// PALtemp register usage
+///////////////////////////
+
 //  The EV5 Ibox holds 24 PALtemp registers.  This maps the OSF PAL usage
 //  for these PALtemps:
 //
@@ -343,7 +107,8 @@ SOFTWARE.
 //	pt13  reserved for system specific PAL
 //	pt14  reserved for system specific PAL
 //	pt15  reserved for system specific PAL
-//	pt16  MISC: scratch ! WHAMI<7:0> ! 0 0 0 MCES<4:0> pt_misc, pt_whami, pt_mces
+//	pt16  MISC: scratch ! WHAMI<7:0> ! 0 0 0 MCES<4:0> pt_misc, pt_whami,
+//                pt_mces
 //	pt17  sysval					pt_sysval
 //	pt18  usp					pt_usp
 //	pt19  ksp					pt_ksp
@@ -352,11 +117,13 @@ SOFTWARE.
 //	pt22  kgp					pt_kgp
 //	pt23  PCBB					pt_pcbb
 //
-//-
-
-// .sbttl	"PALshadow register usage"
 //
-//+
+
+
+/////////////////////////////
+// PALshadow register usage
+/////////////////////////////
+
 //
 // EV5 shadows R8-R14 and R25 when in PALmode and ICSR<shadow_enable> = 1.
 // This maps the OSF PAL usage of R8 - R14 and R25:
@@ -370,36 +137,6 @@ SOFTWARE.
 //	r14   local scratch
 //	r25   local scratch
 //
-//
-//-
-
-// .sbttl	"ALPHA symbol definitions"
-// 	_OSF_PSDEF	GLOBAL
-// 	_OSF_PTEDEF	GLOBAL
-// 	_OSF_VADEF	GLOBAL
-// 	_OSF_PCBDEF	GLOBAL
-//         _OSF_SFDEF      GLOBAL
-//         _OSF_MMCSR_DEF  GLOBAL
-// 	_SCBDEF		GLOBAL
-// 	_FRMDEF		GLOBAL
-// 	_EXSDEF		GLOBAL
-// 	_OSF_A0_DEF	GLOBAL
-// 	_MCESDEF	GLOBAL
-
-// .sbttl	"EV5 symbol definitions"
-
-// 	_EV5DEF
-// 	_PALTEMP
-// 	_MM_STAT_DEF
-//         _EV5_MM
-//         _EV5_IPLDEF
-
-//         _HALT_CODES     GLOBAL
-//         _MCHK_CODES     GLOBAL
-
-//         _PAL_IMPURE
-//         _PAL_LOGOUT
-
 
 
 
@@ -410,233 +147,21 @@ SOFTWARE.
 // the following). The options that can be adjusted cause the resultant PALcode
 // to reflect the desired target system.
 
-
-#define osfpal 1				// This is the PALcode for OSF.
-
-#ifndef rawhide_system
-
-#define rawhide_system 0
-#endif
-
-
-#ifndef real_mm
-// Page table translation vs 1-1 mapping
-#define real_mm 1
-#endif
-
-
-#ifndef rax_mode
-
-#define rax_mode 0
-#endif
-
-#ifndef egore
-// End of reset flow starts a program at 200000(hex).
-#define egore 1
-#endif
-
-#ifndef acore
-// End of reset flow starts a program at 40000(hex).
-#define acore 0
-#endif
-
-
-// 	assume acore+egore+rax_mode lt 2	// Assertion checker
-
-#ifndef beh_model
-// EV5 behavioral model specific code
-#define beh_model 1
-#endif
-
-#ifndef init_cbox
-// Reset flow init of Bcache and Scache
-#define init_cbox 1
-#endif
-
-#ifndef disable_crd
-// Decides whether the reset flow will disable
-#define disable_crd 0
-#endif
-
-                                                // correctable read interrupts via ICSR
-#ifndef perfmon_debug
-#define perfmon_debug 0
-#endif
-
-#ifndef icflush_on_tbix
-#define icflush_on_tbix 0
-#endif
-
-#ifndef remove_restore_state
-#define remove_restore_state 0
-#endif
-
-#ifndef remove_save_state
-#define remove_save_state 0
-#endif
-
-#ifndef enable_physical_console
-#define enable_physical_console 0
-#endif
-
-#ifndef ev5_p1
-#define ev5_p1 0
-#endif
-
-#ifndef ev5_p2
-#define ev5_p2 1
-#endif
-
-// 	assume ev5_p1+ev5_p2 eq 1
-
-#ifndef ldvpte_bug_fix
-#define ldvpte_bug_fix 1			// If set, fix ldvpte bug in dtbmiss_double flow.
-#endif
-
-#ifndef spe_fix
-// If set, disable super-page mode in user mode and re-enable
-#define spe_fix 0
-#endif
-                                                // in kernel.  Workaround for cpu bug.
-#ifndef build_fixed_image
-#define build_fixed_image 0
-#endif
-
-
-#ifndef fill_err_hack
-// If set, disable fill_error mode in user mode and re-enable
-#define fill_err_hack 0
-#endif
-
-                                                    // in kernel.  Workaround for cpu bug.
-
-//	.macro hw_rei_spe
-//	.iif eq spe_fix, hw_rei
-//#if spe_fix != 0
-//
-//
-//#define hw_rei_chm_count hw_rei_chm_count + 1
-//	p4_fixup_label	\hw_rei_chm_count
-//	.iif eq	build_fixed_image,	br	r31, hw_rei_update_spe
-//	.iif ne build_fixed_image,	hw_rei
-//#endif
-//
-//	.endm
-
-// Add flag "osf_chm_fix" to enable dcache in user mode only
-// to avoid cpu bug.
-
-#ifndef osf_chm_fix
-// If set, enable D-Cache in
-#define osf_chm_fix 0
-#endif
-
-#if osf_chm_fix != 0
-// user mode only.
-#define hw_rei_chm_count 0
-#endif
-
-#if osf_chm_fix != 0
-
-#define hw_rei_stall_chm_count 0
-#endif
-
-#ifndef enable_p4_fixups
-
-#define enable_p4_fixups 0
-#endif
-
-                                        // If set, do EV5 Pass 4 fixups
-#if spe_fix == 0
-
-#define osf_chm_fix 0
-#endif
-
-#if spe_fix == 0
-
-#define enable_p4_fixups 0
-#endif
-
-                                        // Only allow fixups if fix enabled
-
-        //Turn off fill_errors and MEM_NEM in user mode
-//	.macro fill_error_hack ?L10_, ?L20_, ?L30_, ?L40_
-//	//save r22,r23,r24
-//	stqp r22, 0x150(r31)	//add
-//	stqp r23, 0x158(r31)	//contents
-//	stqp r24, 0x160(r31)	//bit mask
-//
-//        lda     r22, 0x82(r31)
-//        ldah    r22, 0x8740(r22)
-//        sll     r22, 8, r22
-//        ldlp    r23, 0x80(r22)          // r23 <- contents of CIA_MASK
-//        bis     r23,r31,r23
-//
-//	lda	r24, 0x8(r31)		// r24 <- MEM_NEM bit
-//	beq	r10, L10_		// IF user mode (r10<0> == 0) pal mode
-//	bic	r23, r24, r23		// set fillerr_en bit
-//	br	r31, L20_		// ELSE
-//L10_:	bis	r23, r24, r23		// clear fillerr_en bit
-//L20_:					// ENDIF
-//
-//	stlp	r23, 0x80(r22)		// write back the CIA_MASK register
-//	mb
-//	ldlp    r23, 0x80(r22)
-//	bis     r23,r31,r23
-//	mb
-//
-//	lda	r22, 1(r31)		// r22 <- 87.4000.0100 ptr to CIA_CTRL
-//	ldah	r22, 0x8740(r22)
-//	sll	r22, 8, r22
-//	ldlp	r23, 0(r22)		// r23 <- contents of CIA_CTRL
-//	bis     r23,r31,r23
-//
-//
-//	lda	r24, 0x400(r31)		// r9 <- fillerr_en bit
-//	beq	r10, L30_		// IF user mode (r10<0> == 0) pal mode
-//	bic	r23, r24, r23		// set fillerr_en bit
-//	br	r31, L40_		// ELSE
-//L30_:	bis	r23, r24, r23		// clear fillerr_en bit
-//L40_:					// ENDIF
-//
-//	stlp	r23, 0(r22)		// write back the CIA_CTRL register
-//	mb
-//	ldlp    r23, 0(r22)
-//	bis     r23,r31,r23
-//	mb
-//
-//	//restore r22,r23,r24
-//	ldqp r22, 0x150(r31)
-//	ldqp r23, 0x158(r31)
-//	ldqp r24, 0x160(r31)
-//
-//	.endm
-
 // multiprocessor support can be enabled for a max of n processors by
 // setting the following to the number of processors on the system.
 // Note that this is really the max cpuid.
 
+#define max_cpuid 1
 #ifndef max_cpuid
 #define max_cpuid 8
 #endif
 
-#ifndef osf_svmin			// platform specific palcode version number
-#define osf_svmin 0
-#endif
-
-
+#define osf_svmin 1
 #define osfpal_version_h ((max_cpuid<<16) | (osf_svmin<<0))
 
-// .mcall ldqp		// override macro64 definition with macro from library
-// .mcall stqp		// override macro64 definition with macro from library
-
-
-// 	.psect	_pal,mix
-// huh pb pal_base:
-// huh pb #define current_block_base . - pal_base
-
-// .sbttl	"RESET	-  Reset Trap Entry Point"
-//+
+//
+// RESET	-  Reset Trap Entry Point
+//
 // RESET - offset 0000
 // Entry:
 //	Vectored into via hardware trap on reset, or branched to
@@ -650,30 +175,21 @@ SOFTWARE.
 //
 // Function:
 //
-//-
+//
 
         .text	0
         . = 0x0000
+        .globl _start
         .globl Pal_Base
+_start:
 Pal_Base:
         HDW_VECTOR(PAL_RESET_ENTRY)
 Trap_Reset:
         nop
-#ifdef SIMOS
         /*
          * store into r1
          */
         br r1,sys_reset
-#else
-        /* following is a srcmax change */
-
-        DEBUGSTORE(0x41)
-        /* The original code jumped using r1 as a linkage register to pass the base
-           of PALcode to the platform specific code.  We use r1 to pass a parameter
-           from the SROM, so we hardcode the address of Pal_Base in platform.s
-         */
-        br	r31, sys_reset
-#endif
 
         // Specify PAL version info as a constant
         // at a known location (reset + 8).
@@ -686,38 +202,11 @@ pal_impure_start:
         .quad 0
 pal_debug_ptr:
         .quad 0				// reserved for debug pointer ; 20
-#if beh_model == 0
 
 
-#if enable_p4_fixups != 0
-
-
-        .quad 0
-        .long p4_fixup_hw_rei_fixup_table
-#endif
-
-#else
-
-        .quad 0				//
-        .quad 0	//0x0030
-        .quad 0
-        .quad 0 //0x0040
-        .quad 0
-        .quad 0 //0x0050
-        .quad 0
-        .quad 0 //0x0060
-        .quad 0
-pal_enter_cns_address:
-        .quad 0				//0x0070 -- address to jump to from enter_console
-        .long <<sys_exit_console-pal_base>+1>      //0x0078 -- offset to sys_exit_console (set palmode bit)
-#endif
-
-
-
-
-// .sbttl	"IACCVIO- Istream Access Violation Trap Entry Point"
-
-//+
+//
+// IACCVIO - Istream Access Violation Trap Entry Point
+//
 // IACCVIO - offset 0080
 // Entry:
 //	Vectored into via hardware trap on Istream access violation or sign check error on PC.
@@ -728,7 +217,7 @@ pal_enter_cns_address:
 //	a1 <- MMCSR  (1 for ACV)
 //	a2 <- -1 (for ifetch fault)
 //	vector via entMM
-//-
+//
 
         HDW_VECTOR(PAL_IACCVIO_ENTRY)
 Trap_Iaccvio:
@@ -774,9 +263,9 @@ TRAP_IACCVIO_10_:
         hw_rei_spe
 
 
-// .sbttl	"INTERRUPT- Interrupt Trap Entry Point"
-
-//+
+//
+// INTERRUPT - Interrupt Trap Entry Point
+//
 // INTERRUPT - offset 0100
 // Entry:
 //	Vectored into via trap on hardware interrupt
@@ -784,13 +273,11 @@ TRAP_IACCVIO_10_:
 // Function:
 //	check for halt interrupt
 //	check for passive release (current ipl geq requestor)
-//	if necessary, switch to kernel mode
-//	push stack frame, update ps (including current mode and ipl copies), sp, and gp
+//	if necessary, switch to kernel mode push stack frame,
+//      update ps (including current mode and ipl copies), sp, and gp
 //	pass the interrupt info to the system module
 //
-//-
-
-
+//
         HDW_VECTOR(PAL_INTERRUPT_ENTRY)
 Trap_Interrupt:
         mfpr    r13, ev5__intid         // Fetch level of interruptor
@@ -837,27 +324,19 @@ TRAP_INTERRUPT_10_:
         mfpr	r12, pt_intmask
         and	r11, osfps_m_ipl, r14	// Isolate just new ipl (not really needed, since all non-ipl bits zeroed already)
 
-#ifdef SIMOS
         /*
          * Lance had space problems. We don't.
          */
         extbl	r12, r14, r14		// Translate new OSFIPL->EV5IPL
         mfpr	r29, pt_kgp		// update gp
         mtpr	r14, ev5__ipl		// load the new IPL into Ibox
-#else
-// Moved the following three lines to sys_interrupt to make room for debug
-//	extbl	r12, r14, r14		// Translate new OSFIPL->EV5IPL
-//	mfpr	r29, pt_kgp		// update gp
-
-//	mtpr	r14, ev5__ipl		// load the new IPL into Ibox
-#endif
         br	r31, sys_interrupt	// Go handle interrupt
 
 
 
-// .sbttl	"ITBMISS- Istream TBmiss Trap Entry Point"
-
-//+
+//
+// ITBMISS - Istream TBmiss Trap Entry Point
+//
 // ITBMISS - offset 0180
 // Entry:
 //	Vectored into via hardware trap on Istream translation buffer miss.
@@ -867,28 +346,11 @@ TRAP_INTERRUPT_10_:
 //       Can trap into DTBMISS_DOUBLE.
 //       This routine can use the PALshadow registers r8, r9, and r10
 //
-//-
+//
 
         HDW_VECTOR(PAL_ITB_MISS_ENTRY)
 Trap_Itbmiss:
-#if real_mm == 0
-
-
-                                        // Simple 1-1 va->pa mapping
-
-        nop				// Pad to align to E1
-        mfpr 	r8, exc_addr
-
-        srl	r8, page_offset_size_bits, r9
-        sll	r9, 32, r9
-
-        lda	r9, 0x3301(r9)		// Make PTE, V set, all KRE, URE, KWE, UWE
-        mtpr	r9, itb_pte		// E1
-
-        hw_rei_stall			// Nital says I don't have to obey shadow wait rule here.
-#else
-
-                                        // Real MM mapping
+        // Real MM mapping
         nop
         mfpr	r8, ev5__ifault_va_form // Get virtual address of PTE.
 
@@ -913,50 +375,23 @@ pal_itb_ldq:
 
         hw_rei_stall			//
 
-#endif
 
-
-
-
-// .sbttl	"DTBMISS_SINGLE	- Dstream Single TBmiss Trap Entry Point"
-
-//+
+//
+// DTBMISS_SINGLE - Dstream Single TBmiss Trap Entry Point
+//
 // DTBMISS_SINGLE - offset 0200
 // Entry:
-//	Vectored into via hardware trap on Dstream single translation buffer miss.
+//	Vectored into via hardware trap on Dstream single translation
+//      buffer miss.
 //
 // Function:
 //	Do a virtual fetch of the PTE, and fill the DTB if the PTE is valid.
 //	Can trap into DTBMISS_DOUBLE.
 //	This routine can use the PALshadow registers r8, r9, and r10
-//-
+//
 
         HDW_VECTOR(PAL_DTB_MISS_ENTRY)
 Trap_Dtbmiss_Single:
-#if real_mm == 0
-                                        // Simple 1-1 va->pa mapping
-        mfpr 	r8, va			// E0
-        srl	r8, page_offset_size_bits, r9
-
-        sll	r9, 32, r9
-        lda	r9, 0x3301(r9)		// Make PTE, V set, all KRE, URE, KWE, UWE
-
-        mtpr	r9, dtb_pte		// E0
-        nop				// Pad to align to E0
-
-
-
-        mtpr	r8, dtb_tag		// E0
-        nop
-
-        nop				// Pad tag write
-        nop
-
-        nop				// Pad tag write
-        nop
-
-        hw_rei
-#else
         mfpr	r8, ev5__va_form      	// Get virtual address of PTE - 1 cycle delay.  E0.
         mfpr    r10, exc_addr           // Get PC of faulting instruction in case of error.  E1.
 
@@ -984,17 +419,16 @@ pal_dtb_ldq:
         mfpr	r31,  pt0		// Pad the write to dtb_tag
 
         hw_rei                          // Done, return
-#endif
 
 
-
-
-// .sbttl	"DTBMISS_DOUBLE	- Dstream Double TBmiss Trap Entry Point"
-
-//+
+//
+// DTBMISS_DOUBLE - Dstream Double TBmiss Trap Entry Point
+//
+//
 // DTBMISS_DOUBLE - offset 0280
 // Entry:
-//	Vectored into via hardware trap on Double TBmiss from single miss flows.
+//	Vectored into via hardware trap on Double TBmiss from single
+//      miss flows.
 //
 //	r8   - faulting VA
 //	r9   - original MMstat
@@ -1009,16 +443,14 @@ pal_dtb_ldq:
 //	pt4 and pt5 are reserved for this flow.
 //
 //
-//-
+//
 
         HDW_VECTOR(PAL_DOUBLE_MISS_ENTRY)
 Trap_Dtbmiss_double:
-#if ldvpte_bug_fix != 0
         mtpr 	r8, pt4			// save r8 to do exc_addr check
         mfpr	r8, exc_addr
         blbc	r8, Trap_Dtbmiss_Single	//if not in palmode, should be in the single routine, dummy!
         mfpr	r8, pt4			// restore r8
-#endif
         nop
         mtpr	r22, pt5		// Get some scratch space. E1.
                                         // Due to virtual scheme, we can skip the first lookup and go
@@ -1033,7 +465,7 @@ Trap_Dtbmiss_double:
         addq    r21, r22, r21           // Index into page table for level 2 PTE.
 
         sll    	r8, (64-((1*page_seg_size_bits)+page_offset_size_bits)), r22  // Clean off upper bits of VA
-        ldqp   	r21, 0(r21)            	// Get level 2 PTE (addr<2:0> ignored)
+        ldq_p   	r21, 0(r21)            	// Get level 2 PTE (addr<2:0> ignored)
 
         srl    	r22, 61-page_seg_size_bits, r22	// Get Va<seg1>*8
         blbc 	r21, double_pte_inv		// Check for Invalid PTE.
@@ -1044,7 +476,7 @@ Trap_Dtbmiss_double:
         addq    r21, r22, r21           // Index into page table for level 3 PTE.
         nop
 
-        ldqp   	r21, 0(r21)            	// Get level 3 PTE (addr<2:0> ignored)
+        ldq_p   	r21, 0(r21)            	// Get level 3 PTE (addr<2:0> ignored)
         blbc	r21, double_pte_inv	// Check for invalid PTE.
 
         mtpr	r21, ev5__dtb_pte	// Write the PTE.  E0.
@@ -1063,8 +495,9 @@ Trap_Dtbmiss_double:
 
 
 
-// .sbttl	"UNALIGN -- Dstream unalign trap"
-//+
+//
+// UNALIGN -- Dstream unalign trap
+//
 // UNALIGN - offset 0300
 // Entry:
 //	Vectored into via hardware trap on unaligned Dstream reference.
@@ -1075,7 +508,7 @@ Trap_Dtbmiss_double:
 //	a1 <- Opcode
 //	a2 <- src/dst register number
 //	vector via entUna
-//-
+//
 
         HDW_VECTOR(PAL_UNALIGN_ENTRY)
 Trap_Unalign:
@@ -1135,14 +568,13 @@ UNALIGN_NO_DISMISS_10_:
         br 	r31, unalign_trap_cont
 
 
-
-
-// .sbttl	"DFAULT	- Dstream Fault Trap Entry Point"
-
-//+
+//
+// DFAULT	- Dstream Fault Trap Entry Point
+//
 // DFAULT - offset 0380
 // Entry:
-//	Vectored into via hardware trap on dstream fault or sign check error on DVA.
+//	Vectored into via hardware trap on dstream fault or sign check
+//      error on DVA.
 //
 // Function:
 //	Ignore faults on FETCH/FETCH_M
@@ -1153,7 +585,7 @@ UNALIGN_NO_DISMISS_10_:
 //	a2 <- R/W
 //	vector via entMM
 //
-//-
+//
         HDW_VECTOR(PAL_D_FAULT_ENTRY)
 Trap_Dfault:
 //	DEBUGSTORE(0x48)
@@ -1200,19 +632,16 @@ dfault_no_dismiss:
         br	r31, dfault_trap_cont
 
 
-
-
-
-// .sbttl	"MCHK	-  Machine Check Trap Entry Point"
-
-//+
+//
+// MCHK	-  Machine Check Trap Entry Point
+//
 // MCHK - offset 0400
 // Entry:
 //	Vectored into via hardware trap on machine check.
 //
 // Function:
 //
-//-
+//
 
         HDW_VECTOR(PAL_MCHK_ENTRY)
 Trap_Mchk:
@@ -1221,11 +650,9 @@ Trap_Mchk:
         br      r31, sys_machine_check
 
 
-
-
-// .sbttl	"OPCDEC	-  Illegal Opcode Trap Entry Point"
-
-//+
+//
+// OPCDEC	-  Illegal Opcode Trap Entry Point
+//
 // OPCDEC - offset 0480
 // Entry:
 //	Vectored into via hardware trap on illegal opcode.
@@ -1236,7 +663,7 @@ Trap_Mchk:
 //	a2 <- unpred
 //	vector via entIF
 //
-//-
+//
 
         HDW_VECTOR(PAL_OPCDEC_ENTRY)
 Trap_Opcdec:
@@ -1284,13 +711,9 @@ TRAP_OPCDEC_10_:
         hw_rei_spe			// done, E1
 
 
-
-
-
-
-// .sbttl	"ARITH	-  Arithmetic Exception Trap Entry Point"
-
-//+
+//
+// ARITH	-  Arithmetic Exception Trap Entry Point
+//
 // ARITH - offset 0500
 // Entry:
 //	Vectored into via hardware trap on arithmetic excpetion.
@@ -1302,7 +725,7 @@ TRAP_OPCDEC_10_:
 //	a2 <- unpred
 //	vector via entArith
 //
-//-
+//
         HDW_VECTOR(PAL_ARITH_ENTRY)
 Trap_Arith:
         DEBUGSTORE(0x4b)
@@ -1341,7 +764,7 @@ TRAP_ARITH_10_: 	lda	sp, 0-osfsf_c_size(sp)	// allocate stack space
         bis	r25, r31, r11		// set new ps
 
         stq	r16, osfsf_a0(sp)	// save regs
-        srl	r13, exc_sum_v_swc, r16// shift data to correct position
+        srl	r13, exc_sum_v_swc, r16	// shift data to correct position
 
         stq	r18, osfsf_a2(sp)
 //	pvc_violate 354			// ok, but make sure reads of exc_mask/sum are not in same trap shadow
@@ -1354,13 +777,9 @@ TRAP_ARITH_10_: 	lda	sp, 0-osfsf_c_size(sp)	// allocate stack space
         hw_rei_spe			// done - E1
 
 
-
-
-
-
-// .sbttl	"FEN	-  Illegal Floating Point Operation Trap Entry Point"
-
-//+
+//
+// FEN	-  Illegal Floating Point Operation Trap Entry Point
+//
 // FEN - offset 0580
 // Entry:
 //	Vectored into via hardware trap on illegal FP op.
@@ -1372,7 +791,7 @@ TRAP_ARITH_10_: 	lda	sp, 0-osfsf_c_size(sp)	// allocate stack space
 //	a2 <- unpred
 //	vector via entIF
 //
-//-
+//
 
         HDW_VECTOR(PAL_FEN_ENTRY)
 Trap_Fen:
@@ -1437,10 +856,12 @@ fen_to_opcdec:
 
 
 
-// .sbttl	"Misc handlers"
-                                                // Start area for misc code.
-//+
-//dfault_trap_cont
+//////////////////////////////////////////////////////////////////////////////
+// Misc handlers - Start area for misc code.
+//////////////////////////////////////////////////////////////////////////////
+
+//
+// dfault_trap_cont
 //	A dfault trap has been taken.  The sp has been updated if necessary.
 //	Push a stack frame a vector via entMM.
 //
@@ -1449,7 +870,7 @@ fen_to_opcdec:
 //		r13 - MMstat
 //		VA - locked
 //
-//-
+//
         ALIGN_BLOCK
 dfault_trap_cont:
         lda	sp, 0-osfsf_c_size(sp)// allocate stack space
@@ -1479,7 +900,7 @@ dfault_trap_cont:
 
         hw_rei_spe			// done
 
-//+
+//
 //unalign_trap_cont
 //	An unalign trap has been taken.  Just need to finish up a few things.
 //
@@ -1487,7 +908,7 @@ dfault_trap_cont:
 //		r25 - entUna
 //		r13 - shifted MMstat
 //
-//-
+//
         ALIGN_BLOCK
 unalign_trap_cont:
         mtpr	r25, exc_addr		// load exc_addr with entUna
@@ -1501,7 +922,7 @@ unalign_trap_cont:
 
 
 
-//+
+//
 // dfault_in_pal
 //	Dfault trap was taken, exc_addr points to a PAL PC.
 //	r9 - mmstat<opcode> right justified
@@ -1523,7 +944,7 @@ unalign_trap_cont:
 //			r11 - original PS
 //
 //
-//-
+//
         ALIGN_BLOCK
 dfault_in_pal:
         DEBUGSTORE(0x50)
@@ -1531,8 +952,8 @@ dfault_in_pal:
         mfpr	r9, pal_base
 
         mfpr	r31, va			// unlock VA
-#if real_mm != 0
-                        // if not real_mm, should never get here from miss flows
+
+        // if not real_mm, should never get here from miss flows
 
         subq    r9, r8, r8            // pal_base - offset
 
@@ -1543,7 +964,6 @@ dfault_in_pal:
         lda     r9, pal_dtb_ldq-pal_base(r8)
 
         beq 	r9, dfault_do_bugcheck
-#endif
 
 //
 // KSP invalid halt case --
@@ -1556,7 +976,6 @@ ksp_inval_halt:
         mtpr	r31, ips
 
         mtpr	r14, exc_addr		// Set PC to instruction that caused trouble
-//orig	pvc_jsr updpcb, bsr=1
         bsr     r0, pal_update_pcb      // update the pcb
 
         lda     r0, hlt_c_ksp_inval(r31)  // set halt code to hw halt
@@ -1568,14 +987,14 @@ dfault_do_bugcheck:
         br	r31, pal_pal_bug_check
 
 
-        ALIGN_BLOCK
-//+
+//
 // dfault_fetch_ldr31_err - ignore faults on fetch(m) and loads to r31/f31
 //	On entry -
 //		r14 - exc_addr
 //		VA is locked
 //
-//-
+//
+        ALIGN_BLOCK
 dfault_fetch_ldr31_err:
         mtpr	r11, ev5__dtb_cm
         mtpr	r11, ev5__ps		// Make sure ps hasn't changed
@@ -1591,11 +1010,11 @@ dfault_fetch_ldr31_err:
 
 
         ALIGN_BLOCK
-//+
+//
 // sys_from_kern
 //	callsys from kernel mode - OS bugcheck machine check
 //
-//-
+//
 sys_from_kern:
         mfpr	r14, exc_addr			// PC points to call_pal
         subq	r14, 4, r14
@@ -1604,15 +1023,15 @@ sys_from_kern:
         br      r31, pal_pal_mchk
 
 
-// .sbttl	"Continuation of long call_pal flows"
-        ALIGN_BLOCK
-//+
+// Continuation of long call_pal flows
+//
 // wrent_tbl
 //	Table to write *int in paltemps.
 //	4 instructions/entry
 //	r16 has new value
 //
-//-
+//
+        ALIGN_BLOCK
 wrent_tbl:
 //orig	pvc_jsr	wrent, dest=1
         nop
@@ -1662,25 +1081,18 @@ wrent_tbl:
         hw_rei
 
         ALIGN_BLOCK
-//+
+//
 // tbi_tbl
 //	Table to do tbi instructions
 //	4 instructions per entry
-//-
+//
 tbi_tbl:
         // -2 tbia
 //orig	pvc_jsr tbi, dest=1
         mtpr	r31, ev5__dtb_ia	// Flush DTB
         mtpr	r31, ev5__itb_ia	// Flush ITB
 
-#if icflush_on_tbix != 0
-
-
-        br	r31, pal_ic_flush		// Flush Icache
-#else
-
         hw_rei_stall
-#endif
 
         nop				// Pad table
 
@@ -1689,14 +1101,7 @@ tbi_tbl:
         mtpr	r31, ev5__dtb_iap	// Flush DTB
         mtpr	r31, ev5__itb_iap	// Flush ITB
 
-#if icflush_on_tbix != 0
-
-
-        br	r31, pal_ic_flush		// Flush Icache
-#else
-
         hw_rei_stall
-#endif
 
         nop				// Pad table
 
@@ -1711,23 +1116,11 @@ tbi_tbl:
 
         // 1 tbisi
 //orig	pvc_jsr tbi, dest=1
-#if icflush_on_tbix != 0
-
-
-
-        nop
-        br	r31, pal_ic_flush_and_tbisi		// Flush Icache
-        nop
-        nop				// Pad table
-#else
 
         nop
         nop
         mtpr	r17, ev5__itb_is	// Flush ITB
         hw_rei_stall
-#endif
-
-
 
         // 2 tbisd
 //orig	pvc_jsr tbi, dest=1
@@ -1741,25 +1134,19 @@ tbi_tbl:
         // 3 tbis
 //orig	pvc_jsr tbi, dest=1
         mtpr	r17, ev5__dtb_is	// Flush DTB
-#if icflush_on_tbix != 0
-
-
-        br	r31, pal_ic_flush_and_tbisi	// Flush Icache and ITB
-#else
         br	r31, tbi_finish
         ALIGN_BRANCH
 tbi_finish:
         mtpr	r17, ev5__itb_is	// Flush ITB
         hw_rei_stall
-#endif
 
 
 
         ALIGN_BLOCK
-//+
+//
 // bpt_bchk_common:
 //	Finish up the bpt/bchk instructions
-//-
+//
 bpt_bchk_common:
         stq	r18, osfsf_a2(sp) 	// a2
         mfpr	r13, pt_entif		// get entry point
@@ -1778,10 +1165,10 @@ bpt_bchk_common:
 
 
         ALIGN_BLOCK
-//+
+//
 // rti_to_user
 //	Finish up the rti instruction
-//-
+//
 rti_to_user:
         mtpr	r11, ev5__dtb_cm	// set Mbox current mode - no virt ref for 2 cycles
         mtpr	r11, ev5__ps		// set Ibox current mode - 2 bubble to hw_rei
@@ -1794,10 +1181,10 @@ rti_to_user:
 
 
         ALIGN_BLOCK
-//+
+//
 // rti_to_kern
 //	Finish up the rti instruction
-//-
+//
 rti_to_kern:
         and	r12, osfps_m_ipl, r11	// clean ps
         mfpr	r12, pt_intmask		// get int mask
@@ -1812,36 +1199,17 @@ rti_to_kern:
         hw_rei
 
         ALIGN_BLOCK
-//+
+//
 // swpctx_cont
 //	Finish up the swpctx instruction
-//-
+//
 
 swpctx_cont:
-#if ev5_p1 != 0
-
-
-        bic	r25, r24, r25		// clean icsr<FPE>
-        get_impure r8			// get impure pointer
-
-        sll	r12, icsr_v_fpe, r12	// shift new fen to pos
-        fix_impure_ipr r8		// adjust impure pointer
-
-        restore_reg1 pmctr_ctl, r8, r8, ipr=1	// "ldqp" - get pmctr_ctl bits
-        srl	r23, 32, r24		// move asn to low asn pos
-
-        ldqp	r14, osfpcb_q_mmptr(r16)// get new mmptr
-        srl	r22, osfpcb_v_pme, r22		// get pme down to bit 0
-
-        or	r25, r12, r25		// icsr with new fen
-        sll	r24, itb_asn_v_asn, r12
-
-#else
 
         bic	r25, r24, r25		// clean icsr<FPE,PMP>
         sll	r12, icsr_v_fpe, r12	// shift new fen to pos
 
-        ldqp	r14, osfpcb_q_mmptr(r16)// get new mmptr
+        ldq_p	r14, osfpcb_q_mmptr(r16)// get new mmptr
         srl	r22, osfpcb_v_pme, r22	// get pme down to bit 0
 
         or	r25, r12, r25		// icsr with new fen
@@ -1854,7 +1222,6 @@ swpctx_cont:
         nop
 
         or	r25, r22, r25		// icsr with new pme
-#endif
 
         sll	r24, dtb_asn_v_asn, r24
 
@@ -1865,85 +1232,24 @@ swpctx_cont:
         mtpr	r25, icsr		// write the icsr
 
         sll	r14, page_offset_size_bits, r14 // Move PTBR into internal position.
-        ldqp	r25, osfpcb_q_usp(r16)	// get new usp
+        ldq_p	r25, osfpcb_q_usp(r16)	// get new usp
 
         insll	r13, 4, r13		// >> 32
-//	pvc_violate 379			// ldqp can't trap except replay.  only problem if mf same ipr in same shadow
+//	pvc_violate 379			// ldq_p can't trap except replay.  only problem if mf same ipr in same shadow
         mtpr	r14, pt_ptbr		// load the new ptbr
 
         mtpr	r13, cc			// set new offset
-        ldqp	r30, osfpcb_q_ksp(r16)	// get new ksp
+        ldq_p	r30, osfpcb_q_ksp(r16)	// get new ksp
 
-//	pvc_violate 379			// ldqp can't trap except replay.  only problem if mf same ipr in same shadow
+//	pvc_violate 379			// ldq_p can't trap except replay.  only problem if mf same ipr in same shadow
         mtpr	r25, pt_usp		// save usp
-
-#if ev5_p1 != 0
-
-
-        blbc	r8, no_pm_change		// if monitoring all processes -- no need to change pm
-
-        // otherwise, monitoring select processes - update pm
-        lda	r25, 0x3F(r31)
-        cmovlbc	r22, r31, r8			// if pme set, disable counters, otherwise use saved encodings
-
-        sll	r25, pmctr_v_ctl2, r25		// create ctl field bit mask
-        mfpr	r22, ev5__pmctr
-
-        and	r8, r25, r8			// mask new ctl value
-        bic	r22, r25, r22			// clear ctl field in pmctr
-
-        or	r8, r22, r8
-        mtpr	r8, ev5__pmctr
-
-no_pm_change:
-#endif
-
-
-#if osf_chm_fix != 0
-
-
-        p4_fixup_hw_rei_stall		// removes this section for Pass 4 by placing a hw_rei_stall here
-
-#if build_fixed_image != 0
-
-
-        hw_rei_stall
-#else
-
-        mfpr	r9, pt_pcbb		// get FEN
-#endif
-
-        ldqp	r9, osfpcb_q_fen(r9)
-        blbc	r9, no_pm_change_10_			// skip if FEN disabled
-
-        mb				// ensure no outstanding fills
-        lda r12, 1<<dc_mode_v_dc_ena(r31)
-        mtpr	r12, dc_mode		// turn dcache on so we can flush it
-        nop				// force correct slotting
-        mfpr	r31, pt0		// no mbox instructions in 1,2,3,4
-        mfpr	r31, pt0		// no mbox instructions in 1,2,3,4
-        mfpr	r31, pt0		// no mbox instructions in 1,2,3,4
-        mfpr	r31, pt0		// no mbox instructions in 1,2,3,4
-
-        lda	r8, 0(r31)		// flood the dcache with junk data
-no_pm_change_5_:	ldqp	r31, 0(r8)
-        lda	r8, 0x20(r8)		// touch each cache block
-        srl	r8, 13, r9
-        blbc	r9, no_pm_change_5_
-
-        mb				// ensure no outstanding fills
-        mtpr	r31, dc_mode		// turn the dcache back off
-        nop				// force correct slotting
-        mfpr	r31, pt0		// no hw_rei_stall in 0,1
-#endif
-
 
 no_pm_change_10_:	hw_rei_stall			// back we go
 
         ALIGN_BLOCK
-//+
+//
 // swppal_cont - finish up the swppal call_pal
-//-
+//
 
 swppal_cont:
         mfpr	r2, pt_misc		// get misc bits
@@ -1976,7 +1282,7 @@ swppal_fail:
 // .sbttl	"Memory management"
 
         ALIGN_BLOCK
-//+
+//
 //foe_ipte_handler
 // IFOE detected on level 3 pte, sort out FOE vs ACV
 //
@@ -1988,7 +1294,7 @@ swppal_fail:
 // Function
 //	Determine TNV vs ACV vs FOE. Build stack and dispatch
 //	Will not be here if TNV.
-//-
+//
 
 foe_ipte_handler:
         sll	r11, 63-osfps_v_mode, r25 // Shift mode up to MS bit
@@ -2036,7 +1342,7 @@ foe_ipte_handler_10_:	srl	r8, osfpte_v_kre, r25	// get kre to <0>
         hw_rei_spe			// out to exec
 
         ALIGN_BLOCK
-//+
+//
 //invalid_ipte_handler
 // TNV detected on level 3 pte, sort out TNV vs ACV
 //
@@ -2047,7 +1353,7 @@ foe_ipte_handler_10_:	srl	r8, osfpte_v_kre, r25	// get kre to <0>
 //
 // Function
 //	Determine TNV vs ACV. Build stack and dispatch.
-//-
+//
 
 invalid_ipte_handler:
         sll	r11, 63-osfps_v_mode, r25 // Shift mode up to MS bit
@@ -2098,7 +1404,7 @@ invalid_ipte_handler_10_:	srl	r8, osfpte_v_kre, r25	// get kre to <0>
 
 
         ALIGN_BLOCK
-//+
+//
 //invalid_dpte_handler
 // INVALID detected on level 3 pte, sort out TNV vs ACV
 //
@@ -2111,7 +1417,7 @@ invalid_ipte_handler_10_:	srl	r8, osfpte_v_kre, r25	// get kre to <0>
 //
 // Function
 //	Determine TNV vs ACV. Build stack and dispatch
-//-
+//
 
 
 invalid_dpte_handler:
@@ -2185,14 +1491,14 @@ invalid_dpte_no_dismiss_10_:	srl	r8, osfpte_v_kre, r12	// get kre to <0>
 
         hw_rei_spe			// out to exec
 
-//+
+//
 //
 // We come here if we are erring on a dtb_miss, and the instr is a
 // fetch, fetch_m, of load to r31/f31.
 // The PC is incremented, and we return to the program.
 // essentially ignoring the instruction and error.
 //
-//-
+//
         ALIGN_BLOCK
 nmiss_fetch_ldr31_err:
         mfpr	r12, pt6
@@ -2204,7 +1510,7 @@ nmiss_fetch_ldr31_err:
         hw_rei				//
 
         ALIGN_BLOCK
-//+
+//
 // double_pte_inv
 //	We had a single tbmiss which turned into a double tbmiss which found
 //	an invalid PTE.  Return to single miss with a fake pte, and the invalid
@@ -2222,7 +1528,7 @@ nmiss_fetch_ldr31_err:
 //	r8	fake PTE
 //
 //
-//-
+//
 double_pte_inv:
         srl	r21, osfpte_v_kre, r21	// get the kre bit to <0>
         mfpr	r22, exc_addr		// get the pc
@@ -2239,13 +1545,13 @@ double_pte_inv:
         hw_rei				// back to tb miss
 
         ALIGN_BLOCK
-//+
+//
 //tnv_in_pal
 //	The only places in pal that ld or store are the
 // 	stack builders, rti or retsys.  Any of these mean we
 //	need to take a ksp not valid halt.
 //
-//-
+//
 tnv_in_pal:
 
 
@@ -2255,11 +1561,11 @@ tnv_in_pal:
 // .sbttl	"Icache flush routines"
 
         ALIGN_BLOCK
-//+
+//
 // Common Icache flush routine.
 //
 //
-//-
+//
 pal_ic_flush:
         nop
         mtpr	r31, ev5__ic_flush_ctl		// Icache flush - E1
@@ -2327,94 +1633,8 @@ one_cycle_and_hw_rei:
 
         hw_rei_stall
 
-#if icflush_on_tbix != 0
-
-
         ALIGN_BLOCK
-
-//+
-// Common Icache flush and ITB invalidate single routine.
-// ITBIS and hw_rei_stall must be in same octaword.
-//	r17 - has address to invalidate
 //
-//-
-PAL_IC_FLUSH_AND_TBISI:
-        nop
-        mtpr	r31, ev5__ic_flush_ctl		// Icache flush - E1
-        nop
-        nop
-
-// Now, do 44 NOPs.  3RFB prefetches (24) + IC buffer,IB,slot,issue (20)
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop		// 10
-
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop		// 20
-
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop		// 30
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop
-        nop
-        nop
-
-        nop
-        nop		// 40
-
-
-        nop
-        nop
-
-        nop
-        nop
-
-        // A quadword is 64 bits, so an octaword is 128 bits -> 16 bytes -> 4 instructions
-        // 44 nops plus 4 instructions before it is 48 instructions.
-        // Since this routine started on a 32-byte (8 instruction) boundary,
-        // the following 2 instructions will be in the same octword as required.
-//	ALIGN_BRANCH
-        mtpr	r17, ev5__itb_is	// Flush ITB
-        hw_rei_stall
-
-#endif
-
-        ALIGN_BLOCK
-//+
 //osfpal_calpal_opcdec
 //  Here for all opcdec CALL_PALs
 //
@@ -2424,7 +1644,7 @@ PAL_IC_FLUSH_AND_TBISI:
 //	a2 <- unpred
 //	vector via entIF
 //
-//-
+//
 
 osfpal_calpal_opcdec:
         sll	r11, 63-osfps_v_mode, r25 // Shift mode up to MS bit
@@ -2473,12 +1693,12 @@ osfpal_calpal_opcdec_10_:
 
 
 
-//+
+//
 //pal_update_pcb
 //	Update the PCB with the current SP, AST, and CC info
 //
 //	r0 - return linkage
-//-
+//
         ALIGN_BLOCK
 
 pal_update_pcb:
@@ -2486,25 +1706,20 @@ pal_update_pcb:
         and	r11, osfps_m_mode, r25	// get mode
         beq	r25, pal_update_pcb_10_		// in kern? no need to update user sp
         mtpr	r30, pt_usp		// save user stack
-        stqp	r30, osfpcb_q_usp(r12)	// store usp
+        stq_p	r30, osfpcb_q_usp(r12)	// store usp
         br	r31, pal_update_pcb_20_		// join common
-pal_update_pcb_10_:	stqp	r30, osfpcb_q_ksp(r12)	// store ksp
+pal_update_pcb_10_:	stq_p	r30, osfpcb_q_ksp(r12)	// store ksp
 pal_update_pcb_20_:	rpcc	r13			// get cyccounter
         srl	r13, 32, r14		// move offset
         addl	r13, r14, r14		// merge for new time
-        stlp	r14, osfpcb_l_cc(r12)	// save time
+        stl_p	r14, osfpcb_l_cc(r12)	// save time
 
 //orig	pvc_jsr	updpcb, bsr=1, dest=1
         ret	r31, (r0)
 
 
-
-#if remove_save_state == 0
-
-// .sbttl  "PAL_SAVE_STATE"
-//+
 //
-// Pal_save_state
+// pal_save_state
 //
 //	Function
 //		All chip state saved, all PT's, SR's FR's, IPR's
@@ -2525,8 +1740,7 @@ pal_update_pcb_20_:	rpcc	r13			// get cyccounter
 //		r3 = return_address
 //		r4 = scratch
 //
-//-
-
+//
 
         ALIGN_BLOCK
         .globl pal_save_state
@@ -2581,24 +1795,18 @@ pal_save_state:
         // Get out of shadow mode
         //
 
-        mfpr	r2, icsr		// Get icsr			//orig
-//orig	ldah	r0, <1@<icsr_v_sde-16>>(r31)	// Get a one in SHADOW_ENABLE bit location
+        mfpr	r2, icsr		// Get icsr
         ldah	r0, (1<<(icsr_v_sde-16))(r31)
-        bic	r2, r0, r0		// ICSR with SDE clear		//orig
-        mtpr	r0, icsr		// Turn off SDE			//orig
+        bic	r2, r0, r0		// ICSR with SDE clear
+        mtpr	r0, icsr		// Turn off SDE
 
-        mfpr	r31, pt0		// SDE bubble cycle 1		//orig
-        mfpr	r31, pt0		// SDE bubble cycle 2		//orig
-        mfpr	r31, pt0		// SDE bubble cycle 3		//orig
-        nop								//orig
+        mfpr	r31, pt0		// SDE bubble cycle 1
+        mfpr	r31, pt0		// SDE bubble cycle 2
+        mfpr	r31, pt0		// SDE bubble cycle 3
+        nop
 
 
         // save integer regs R4-r31
-//orig  #define t 4
-//orig	.repeat 28
-//orig	  store_reg \t
-//orig #define t t + 1
-//orig	.endr
         SAVE_GPR(r4,CNS_Q_GPR+0x20,r1)
         SAVE_GPR(r5,CNS_Q_GPR+0x28,r1)
         SAVE_GPR(r6,CNS_Q_GPR+0x30,r1)
@@ -2632,11 +1840,6 @@ pal_save_state:
 
 //orig	unfix_impure_gpr	r1		// adjust impure area pointer for gpr stores
 //orig	fix_impure_ipr	r1			// adjust impure area pointer for pt stores
-//orig #define t 1
-//orig	.repeat 23
-//orig	  store_reg \t	, pal=1
-//orig #define t t + 1
-//orig	.endr
 
         lda	r1, -0x200(r1)		// Restore the impure base address.
         lda	r1, CNS_Q_IPR(r1)	// Point to the base of IPR area.
@@ -2666,24 +1869,16 @@ pal_save_state:
         SAVE_IPR(pt23,CNS_Q_PT+0xB8,r1)
 
         // Restore shadow mode
-        mfpr	r31, pt0		// pad write to icsr out of shadow of store (trap does not abort write)	//orig
-        mfpr	r31, pt0											//orig
-        mtpr	r2, icsr		// Restore original ICSR						//orig
+        mfpr	r31, pt0		// pad write to icsr out of shadow of store (trap does not abort write)
+        mfpr	r31, pt0
+        mtpr	r2, icsr		// Restore original ICSR
 
-        mfpr	r31, pt0		// SDE bubble cycle 1							//orig
-        mfpr	r31, pt0		// SDE bubble cycle 2							//orig
-        mfpr	r31, pt0		// SDE bubble cycle 3							//orig
-        nop													//orig
+        mfpr	r31, pt0		// SDE bubble cycle 1
+        mfpr	r31, pt0		// SDE bubble cycle 2
+        mfpr	r31, pt0		// SDE bubble cycle 3
+        nop
 
         // save all integer shadow regs
-
-//orig #define t 8
-//orig	.repeat 7
-//orig	  store_reg \t,  shadow=1
-//orig #define t t + 1
-//orig	.endr
-//orig	store_reg 25,  shadow=1
-
         SAVE_SHADOW( r8,CNS_Q_SHADOW+0x00,r1)	// also called p0...p7 in the Hudson code
         SAVE_SHADOW( r9,CNS_Q_SHADOW+0x08,r1)
         SAVE_SHADOW(r10,CNS_Q_SHADOW+0x10,r1)
@@ -2692,22 +1887,6 @@ pal_save_state:
         SAVE_SHADOW(r13,CNS_Q_SHADOW+0x28,r1)
         SAVE_SHADOW(r14,CNS_Q_SHADOW+0x30,r1)
         SAVE_SHADOW(r25,CNS_Q_SHADOW+0x38,r1)
-
-//orig	store_reg exc_addr,	ipr=1	// save ipr
-//orig	store_reg pal_base,	ipr=1	// save ipr
-//orig	store_reg mm_stat,	ipr=1	// save ipr
-//orig	store_reg va,		ipr=1	// save ipr
-//orig	store_reg icsr,		ipr=1   // save ipr
-//orig	store_reg ipl,		ipr=1	// save ipr
-//orig	store_reg ps,		ipr=1	// save ipr
-//orig	store_reg itb_asn,	ipr=1   // save ipr
-//orig	store_reg aster,	ipr=1	// save ipr
-//orig	store_reg astrr,	ipr=1	// save ipr
-//orig	store_reg sirr,		ipr=1	// save ipr
-//orig	store_reg isr,		ipr=1	// save ipr
-//orig	store_reg ivptbr,	ipr=1	// save ipr
-//orig	store_reg mcsr,		ipr=1	// save ipr
-//orig	store_reg dc_mode,	ipr=1	// save ipr
 
         SAVE_IPR(excAddr,CNS_Q_EXC_ADDR,r1)
         SAVE_IPR(palBase,CNS_Q_PAL_BASE,r1)
@@ -2734,18 +1913,6 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
 
         //the following iprs are informational only -- will not be restored
 
-//orig	store_reg icperr_stat,	ipr=1
-//orig	store_reg pmctr,	ipr=1
-//orig	store_reg intid,	ipr=1
-//orig	store_reg exc_sum,	ipr=1
-//orig	store_reg exc_mask,	ipr=1
-//orig	ldah	r14, 0xfff0(r31)
-//orig	zap	r14, 0xE0, r14			// Get Cbox IPR base
-//orig	nop					// pad mf dcperr_stat out of shadow of last store
-//orig	nop
-//orig	nop
-//orig	store_reg dcperr_stat,	ipr=1
-
         SAVE_IPR(icPerr,CNS_Q_ICPERR_STAT,r1)
         SAVE_IPR(PmCtr,CNS_Q_PM_CTR,r1)
         SAVE_IPR(intId,CNS_Q_INT_ID,r1)
@@ -2760,21 +1927,6 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
 
         // read cbox ipr state
 
-//orig	mb
-//orig	ldqp	r2, ev5__sc_ctl(r14)
-//orig	ldqp	r13, ld_lock(r14)
-//orig	ldqp	r4, ev5__sc_addr(r14)
-//orig	ldqp	r5, ev5__ei_addr(r14)
-//orig	ldqp	r6, ev5__bc_tag_addr(r14)
-//orig	ldqp	r7, ev5__fill_syn(r14)
-//orig	bis	r5, r4, r31
-//orig	bis	r7, r6, r31		// make sure previous loads finish before reading stat registers which unlock them
-//orig	ldqp	r8, ev5__sc_stat(r14)	// unlocks sc_stat,sc_addr
-//orig	ldqp	r9, ev5__ei_stat(r14)	// may unlock ei_*, bc_tag_addr, fill_syn
-//orig	ldqp	r31, ev5__ei_stat(r14)	// ensures it is really unlocked
-//orig	mb
-
-#ifndef SIMOS
         mb
         ldq_p	r2, scCtl(r14)
         ldq_p	r13, ldLock(r14)
@@ -2788,18 +1940,8 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
         ldq_p	r9, eiStat(r14)		// Unlocks eiAddr, bcTagAddr, fillSyn.
         ldq_p	zero, eiStat(r14)	// Make sure it is really unlocked.
         mb
-#endif
-//orig	// save cbox ipr state
-//orig	store_reg1 sc_ctl, r2, r1, ipr=1
-//orig	store_reg1 ld_lock, r13, r1, ipr=1
-//orig	store_reg1 sc_addr, r4, r1, ipr=1
-//orig	store_reg1 ei_addr, r5, r1, ipr=1
-//orig	store_reg1 bc_tag_addr, r6, r1, ipr=1
-//orig	store_reg1 fill_syn, r7, r1, ipr=1
-//orig	store_reg1 sc_stat, r8, r1, ipr=1
-//orig	store_reg1 ei_stat, r9, r1, ipr=1
-//orig //bc_config? sl_rcv?
 
+        // save cbox ipr state
         SAVE_SHADOW(r2,CNS_Q_SC_CTL,r1);
         SAVE_SHADOW(r13,CNS_Q_LD_LOCK,r1);
         SAVE_SHADOW(r4,CNS_Q_SC_ADDR,r1);
@@ -2808,29 +1950,20 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
         SAVE_SHADOW(r7,CNS_Q_FILL_SYN,r1);
         SAVE_SHADOW(r8,CNS_Q_SC_STAT,r1);
         SAVE_SHADOW(r9,CNS_Q_EI_STAT,r1);
+        //bc_config? sl_rcv?
 
-// restore impure base								//orig
+// restore impure base
 //orig	unfix_impure_ipr r1
         lda	r1, -CNS_Q_IPR(r1)
 
-// save all floating regs							//orig
-        mfpr	r0, icsr		// get icsr				//orig
-        or	r31, 1, r2		// get a one				//orig
-//orig	sll	r2, #icsr_v_fpe, r2	// shift for fpu spot			//orig
+// save all floating regs
+        mfpr	r0, icsr		// get icsr
+        or	r31, 1, r2		// get a one
         sll	r2, icsr_v_fpe, r2	// Shift it into ICSR<FPE> position
-        or	r2, r0, r0		// set FEN on				//orig
-        mtpr	r0, icsr		// write to icsr, enabling FEN		//orig
+        or	r2, r0, r0		// set FEN on
+        mtpr	r0, icsr		// write to icsr, enabling FEN
 
 // map the save area virtually
-// orig	mtpr	r31, dtb_ia		// clear the dtb
-// orig	srl	r1, page_offset_size_bits, r0 // Clean off low bits of VA
-// orig	sll	r0, 32, r0		// shift to PFN field
-// orig	lda	r2, 0xff(r31)		// all read enable and write enable bits set
-// orig	sll	r2, 8, r2		// move to PTE location
-// orig	addq	r0, r2, r0		// combine with PFN
-// orig	mtpr	r0, dtb_pte		// Load PTE and set TB valid bit
-// orig	mtpr	r1, dtb_tag		// write TB tag
-
         mtpr	r31, dtbIa		// Clear all DTB entries
         srl	r1, va_s_off, r0	// Clean off byte-within-page offset
         sll	r0, pte_v_pfn, r0	// Shift to form PFN
@@ -2839,16 +1972,7 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
         mtpr	r1, dtbTag		// Write the PTE and tag into the DTB
 
 
-//orig // map the next page too - in case the impure area crosses a page boundary
-//orig	lda 	r4, 1@page_offset_size_bits(r1)	// generate address for next page
-//orig	srl	r4, page_offset_size_bits, r0 // Clean off low bits of VA
-//orig	sll	r0, 32, r0		// shift to PFN field
-//orig	lda	r2, 0xff(r31)		// all read enable and write enable bits set
-//orig	sll	r2, 8, r2		// move to PTE location
-//orig	addq	r0, r2, r0		// combine with PFN
-//orig	mtpr	r0, dtb_pte		// Load PTE and set TB valid bit
-//orig	mtpr	r4, dtb_tag		// write TB tag
-
+// map the next page too - in case the impure area crosses a page boundary
         lda	r4, (1<<va_s_off)(r1)	// Generate address for next page
         srl	r4, va_s_off, r0	// Clean off byte-within-page offset
         sll	r0, pte_v_pfn, r0	// Shift to form PFN
@@ -2856,24 +1980,16 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
         mtpr	r0, dtbPte		// Load the PTE and set valid
         mtpr	r4, dtbTag		// Write the PTE and tag into the DTB
 
-        sll	r31, 0, r31		// stall cycle 1				// orig
-        sll	r31, 0, r31		// stall cycle 2				// orig
-        sll	r31, 0, r31		// stall cycle 3				// orig
-        nop										// orig
+        sll	r31, 0, r31		// stall cycle 1
+        sll	r31, 0, r31		// stall cycle 2
+        sll	r31, 0, r31		// stall cycle 3
+        nop
 
-//orig // add offset for saving fpr regs
+// add offset for saving fpr regs
 //orig	fix_impure_gpr r1
-
         lda	r1, 0x200(r1)		// Point to center of CPU segment
 
 // now save the regs - F0-F31
-
-//orig #define t 0
-//orig	.repeat 32
-//orig	  store_reg \t , fpu=1
-//orig #define t t + 1
-//orig	.endr
-
         mf_fpcr  f0			// original
 
         SAVE_FPR(f0,CNS_Q_FPR+0x00,r1)
@@ -2909,15 +2025,15 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
         SAVE_FPR(f30,CNS_Q_FPR+0xF0,r1)
         SAVE_FPR(f31,CNS_Q_FPR+0xF8,r1)
 
-//orig	//switch impure offset from gpr to ipr---
+//switch impure offset from gpr to ipr---
 //orig	unfix_impure_gpr	r1
 //orig	fix_impure_ipr	r1
 //orig	store_reg1 fpcsr, f0, r1, fpcsr=1
 
-        SAVE_FPR(f0,CNS_Q_FPCSR,r1)	// fpcsr loaded above into f0 -- can it reach// pb
+        SAVE_FPR(f0,CNS_Q_FPCSR,r1)	// fpcsr loaded above into f0 -- can it reach
         lda	r1, -0x200(r1)		// Restore the impure base address
 
-//orig	// and back to gpr ---
+// and back to gpr ---
 //orig	unfix_impure_ipr	r1
 //orig	fix_impure_gpr	r1
 
@@ -2941,23 +2057,20 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
         SAVE_GPR(r0,CNS_Q_FLAG,r1)	// // set dump area valid flag
         mb
 
-//orig	// restore impure area base
+        // restore impure area base
 //orig	unfix_impure_gpr r1
         lda	r1, -0x200(r1)		// Point to center of CPU segment
 
-        mtpr	r31, dtb_ia		// clear the dtb	//orig
-        mtpr	r31, itb_ia		// clear the itb	//orig
+        mtpr	r31, dtb_ia		// clear the dtb
+        mtpr	r31, itb_ia		// clear the itb
 
 //orig	pvc_jsr	savsta, bsr=1, dest=1
         ret	r31, (r3)		// and back we go
-#endif
 
-
-#if remove_restore_state == 0
 
 
 // .sbttl  "PAL_RESTORE_STATE"
-//+
+//
 //
 //	Pal_restore_state
 //
@@ -2972,24 +2085,13 @@ pvc$osf35$379:				    // loads. HW_ST ok here, so ignore
 //		All chip state restored, all SRs, FRs, PTs, IPRs
 //					*** except R1, R3, PT0, PT4, PT5 ***
 //
-//-
+//
         ALIGN_BLOCK
 pal_restore_state:
 
 //need to restore sc_ctl,bc_ctl,bc_config??? if so, need to figure out a safe way to do so.
 
-//orig	// map the console io area virtually
-//orig	mtpr	r31, dtb_ia		// clear the dtb
-//orig	srl	r1, page_offset_size_bits, r0 // Clean off low bits of VA
-//orig	sll	r0, 32, r0		// shift to PFN field
-//orig	lda	r2, 0xff(r31)		// all read enable and write enable bits set
-//orig	sll	r2, 8, r2		// move to PTE location
-//orig	addq	r0, r2, r0		// combine with PFN
-//orig
-//orig	mtpr	r0, dtb_pte		// Load PTE and set TB valid bit
-//orig	mtpr	r1, dtb_tag		// write TB tag
-//orig
-
+// map the console io area virtually
         mtpr	r31, dtbIa		// Clear all DTB entries
         srl	r1, va_s_off, r0	// Clean off byte-within-page offset
         sll	r0, pte_v_pfn, r0	// Shift to form PFN
@@ -2998,17 +2100,7 @@ pal_restore_state:
         mtpr	r1, dtbTag		// Write the PTE and tag into the DTB
 
 
-//orig	// map the next page too, in case impure area crosses page boundary
-//orig	lda 	r4, 1@page_offset_size_bits(r1)	// generate address for next page
-//orig	srl	r4, page_offset_size_bits, r0 // Clean off low bits of VA
-//orig	sll	r0, 32, r0		// shift to PFN field
-//orig	lda	r2, 0xff(r31)		// all read enable and write enable bits set
-//orig	sll	r2, 8, r2		// move to PTE location
-//orig	addq	r0, r2, r0		// combine with PFN
-//orig
-//orig	mtpr	r0, dtb_pte		// Load PTE and set TB valid bit
-//orig	mtpr	r4, dtb_tag		// write TB tag - no virtual mbox instruction for 3 cycles
-
+// map the next page too, in case impure area crosses page boundary
         lda	r4, (1<<VA_S_OFF)(r1)	// Generate address for next page
         srl	r4, va_s_off, r0	// Clean off byte-within-page offset
         sll	r0, pte_v_pfn, r0	// Shift to form PFN
@@ -3016,14 +2108,7 @@ pal_restore_state:
         mtpr	r0, dtbPte		// Load the PTE and set valid
         mtpr	r4, dtbTag		// Write the PTE and tag into the DTB
 
-//orig	// save all floating regs
-//orig	mfpr	r0, icsr		// get icsr
-//orig// 	assume	ICSR_V_SDE gt <ICSR_V_FPE>		// assertion checker
-//orig	or	r31, <<1@<ICSR_V_SDE-ICSR_V_FPE>> ! 1>, r2	// set SDE and FPE
-//orig	sll	r2, #icsr_v_fpe, r2	// shift for fpu spot
-//orig	or	r2, r0, r0		// set FEN on
-//orig	mtpr	r0, icsr		// write to icsr, enabling FEN and SDE.  3 bubbles to floating instr.
-
+// save all floating regs
         mfpr	r0, icsr		// Get current ICSR
         bis	zero, 1, r2		// Get a '1'
         or	r2, (1<<(icsr_v_sde-icsr_v_fpe)), r2
@@ -3041,19 +2126,13 @@ pal_restore_state:
 //orig
 //orig	unfix_impure_ipr r1
 //orig	fix_impure_gpr r1		// adjust impure pointer offset for gpr access
-//orig
-//orig	// restore all floating regs
-//orig#define t 0
-//orig	.repeat 32
-//orig	  restore_reg \t , fpu=1
-//orig#define t t + 1
-//orig	.endr
-
         lda	r1, 200(r1)	// Point to base of IPR area again
         RESTORE_FPR(f0,CNS_Q_FPCSR,r1)		// can it reach?? pb
         mt_fpcr  f0			// original
 
         lda	r1, 0x200(r1)		// point to center of CPU segment
+
+// restore all floating regs
         RESTORE_FPR(f0,CNS_Q_FPR+0x00,r1)
         RESTORE_FPR(f1,CNS_Q_FPR+0x08,r1)
         RESTORE_FPR(f2,CNS_Q_FPR+0x10,r1)
@@ -3087,19 +2166,13 @@ pal_restore_state:
         RESTORE_FPR(f30,CNS_Q_FPR+0xF0,r1)
         RESTORE_FPR(f31,CNS_Q_FPR+0xF8,r1)
 
-//orig	// switch impure pointer from gpr to ipr area --
+// switch impure pointer from gpr to ipr area --
 //orig	unfix_impure_gpr r1
 //orig	fix_impure_ipr r1
-//orig
-//orig	// restore all pal regs
-//orig#define t 1
-//orig	.repeat 23
-//orig	  restore_reg \t	, pal=1
-//orig#define t t + 1
-//orig	.endr
-
         lda	r1, -0x200(r1)		// Restore base address of impure area.
         lda	r1, CNS_Q_IPR(r1)	// Point to base of IPR area.
+
+// restore all pal regs
         RESTORE_IPR(pt0,CNS_Q_PT+0x00,r1)		// the osf code didn't save/restore palTemp 0 ?? pboyle
         RESTORE_IPR(pt1,CNS_Q_PT+0x08,r1)
         RESTORE_IPR(pt2,CNS_Q_PT+0x10,r1)
@@ -3173,14 +2246,6 @@ pal_restore_state:
 
 
         // restore all integer shadow regs
-//orig#define t 8
-//orig	.repeat 7
-//orig	  restore_reg \t, shadow=1
-//orig#define t t + 1
-//orig	.endr
-//orig	restore_reg 25, shadow=1
-//orig	restore_reg dc_mode, 	ipr=1		// no mbox instructions for 4 cycles
-
         RESTORE_SHADOW( r8,CNS_Q_SHADOW+0x00,r1)	// also called p0...p7 in the Hudson code
         RESTORE_SHADOW( r9,CNS_Q_SHADOW+0x08,r1)
         RESTORE_SHADOW(r10,CNS_Q_SHADOW+0x10,r1)
@@ -3195,34 +2260,28 @@ pal_restore_state:
         // Get out of shadow mode
         //
 
-        mfpr	r31, pt0		// pad last load to icsr write (in case of replay, icsr will be written anyway)	//orig
-        mfpr	r31, pt0		// ""										//orig
-        mfpr	r0, icsr		// Get icsr									//orig
-//orig	ldah	r2,  <1@<icsr_v_sde-16>>(r31)	// Get a one in SHADOW_ENABLE bit location
-        ldah	r2,  (1<<(ICSR_V_SDE-16))(r31)	// Get a one in SHADOW_ENABLE bit location				//orig
-        bic	r0, r2, r2		// ICSR with SDE clear								//orig
-        mtpr	r2, icsr		// Turn off SDE - no palshadow rd/wr for 3 bubble cycles			//orig
+        mfpr	r31, pt0		// pad last load to icsr write (in case of replay, icsr will be written anyway)
+        mfpr	r31, pt0		// ""
+        mfpr	r0, icsr		// Get icsr
+        ldah	r2,  (1<<(ICSR_V_SDE-16))(r31)	// Get a one in SHADOW_ENABLE bit location
+        bic	r0, r2, r2		// ICSR with SDE clear
+        mtpr	r2, icsr		// Turn off SDE - no palshadow rd/wr for 3 bubble cycles
 
-        mfpr	r31, pt0		// SDE bubble cycle 1								//orig
-        mfpr	r31, pt0		// SDE bubble cycle 2								//orig
-        mfpr	r31, pt0		// SDE bubble cycle 3								//orig
-        nop														//orig
+        mfpr	r31, pt0		// SDE bubble cycle 1
+        mfpr	r31, pt0		// SDE bubble cycle 2
+        mfpr	r31, pt0		// SDE bubble cycle 3
+        nop
 
-//orig	// switch impure pointer from ipr to gpr area --
+// switch impure pointer from ipr to gpr area --
 //orig	unfix_impure_ipr	r1
 //orig	fix_impure_gpr	r1
-//orig	// restore all integer regs
-//orig#define t 4
-//orig	.repeat 28
-//orig	  restore_reg \t
-//orig#define t t + 1
-//orig	.endr
 
 // Restore GPRs (r0, r2 are restored later, r1 and r3 are trashed) ...
 
         lda	r1, -CNS_Q_IPR(r1)	// Restore base address of impure area
         lda	r1, 0x200(r1)		// Point to center of CPU segment
 
+        // restore all integer regs
         RESTORE_GPR(r4,CNS_Q_GPR+0x20,r1)
         RESTORE_GPR(r5,CNS_Q_GPR+0x28,r1)
         RESTORE_GPR(r6,CNS_Q_GPR+0x30,r1)
@@ -3284,17 +2343,16 @@ pal_restore_state:
         RESTORE_GPR(r0,CNS_Q_GPR+0x00,r1)
         lda	r1, -0x200(r1)		// Restore impure base address
 
-        mfpr	r31, pt0		// stall for ldqp above		//orig
+        mfpr	r31, pt0		// stall for ldq_p above		//orig
 
         mtpr	r31, dtb_ia		// clear the tb			//orig
         mtpr	r31, itb_ia		// clear the itb		//orig
 
 //orig	pvc_jsr	rststa, bsr=1, dest=1
         ret	r31, (r3)		// back we go			//orig
-#endif
 
 
-//+
+//
 // pal_pal_bug_check -- code has found a bugcheck situation.
 //	Set things up and join common machine check flow.
 //
@@ -3312,7 +2370,7 @@ pal_restore_state:
 //       pt_misc<31:16> - scb vector
 //	r14	- base of Cbox IPRs in IO space
 //	MCES<mchk> is set
-//-
+//
 
                 ALIGN_BLOCK
         .globl pal_pal_bug_check_from_int
@@ -3361,11 +2419,13 @@ pal_pal_mchk:
 
         br	r31, sys_mchk_collect_iprs	// Join common machine check flow
 
-//	align_to_call_pal_section	// Align to address of first call_pal entry point - 2000
 
-// .sbttl	"HALT	- PALcode for HALT instruction"
 
-//+
+//	align_to_call_pal_section
+//      Align to address of first call_pal entry point - 2000
+
+//
+// HALT	- PALcode for HALT instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3373,13 +2433,12 @@ pal_pal_mchk:
 // Function:
 //	GO to console code
 //
-//-
+//
 
         .text	1
 //	. = 0x2000
        CALL_PAL_PRIV(PAL_HALT_ENTRY)
 call_pal_halt:
-#if rax_mode == 0
         mfpr	r31, pt0		// Pad exc_addr read
         mfpr	r31, pt0
 
@@ -3394,29 +2453,8 @@ call_pal_halt:
         lda    r0, hlt_c_sw_halt(r31)  	// set halt code to sw halt
         br     r31, sys_enter_console  	// enter the console
 
-#else					// RAX mode
-        mb
-        mb
-        mtpr	r9, ev5__dtb_asn	// no Dstream virtual ref for next 3 cycles.
-        mtpr	r9, ev5__itb_asn	// E1.  Update ITB ASN.  No hw_rei for 5 cycles.
-        mtpr    r8, exc_addr		// no HW_REI for 1 cycle.
-        blbc	r9, not_begin_case
-        mtpr    r31, ev5__dtb_ia        // clear DTB. No Dstream virtual ref for 2 cycles.
-        mtpr    r31, ev5__itb_ia        // clear ITB.
-
-not_begin_case:
-        nop
-        nop
-
-        nop
-        nop				// pad mt itb_asn ->hw_rei_stall
-
-        hw_rei_stall
-#endif
-
-// .sbttl	"CFLUSH- PALcode for CFLUSH instruction"
-
-//+
+//
+// CFLUSH - PALcode for CFLUSH instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3427,14 +2465,14 @@ not_begin_case:
 //	Flush all Dstream caches of 1 entire page
 //	The CFLUSH routine is in the system specific module.
 //
-//-
+//
 
         CALL_PAL_PRIV(PAL_CFLUSH_ENTRY)
 Call_Pal_Cflush:
         br	r31, sys_cflush
 
-// .sbttl	"DRAINA	- PALcode for DRAINA instruction"
-//+
+//
+// DRAINA	- PALcode for DRAINA instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3445,7 +2483,7 @@ Call_Pal_Cflush:
 //	complete without incurring aborts.  For the EV5 implementation, this
 //	means waiting until all pending DREADS are returned.
 //
-//-
+//
 
         CALL_PAL_PRIV(PAL_DRAINA_ENTRY)
 Call_Pal_Draina:
@@ -3467,7 +2505,7 @@ DRAINA_LOOP:
 DRAINA_LOOP_TOO_LONG:
         br	r31, call_pal_halt
 
-// .sbttl	"CALL_PAL OPCDECs"
+// CALL_PAL OPCDECs
 
         CALL_PAL_PRIV(0x0003)
 CallPal_OpcDec03:
@@ -3493,8 +2531,8 @@ CallPal_OpcDec07:
 CallPal_OpcDec08:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"CSERVE- PALcode for CSERVE instruction"
-//+
+//
+// CSERVE - PALcode for CSERVE instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3506,15 +2544,14 @@ CallPal_OpcDec08:
 //       arguments in r16....
 //	The CSERVE routine is in the system specific module.
 //
-//-
+//
 
         CALL_PAL_PRIV(PAL_CSERVE_ENTRY)
 Call_Pal_Cserve:
         br	r31, sys_cserve
 
-// .sbttl	"swppal - PALcode for swppal instruction"
-
-//+
+//
+// swppal - PALcode for swppal instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3530,7 +2567,7 @@ Call_Pal_Cserve:
 //
 // Function:
 //       Swap control to another PAL.
-//-
+//
 
         CALL_PAL_PRIV(PAL_SWPPAL_ENTRY)
 Call_Pal_Swppal:
@@ -3551,7 +2588,7 @@ Call_Pal_Swppal:
 //orig	halt				// don't know how to get the address here - kludge ok, load pal at 0
         .long	0			// ?? hack upon hack...pb
 
-CALL_PAL_SWPPAL_10_: 	ldlp	r3, 0(r2)		// fetch target addr
+CALL_PAL_SWPPAL_10_: 	ldl_p	r3, 0(r2)		// fetch target addr
 //	ble	r3, swppal_fail		; if OSF not linked in say not loaded.
         mfpr	r2, pal_base		// fetch pal base
 
@@ -3574,8 +2611,8 @@ CallPal_OpcDec0B:
 CallPal_OpcDec0C:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"wripir- PALcode for wripir instruction"
-//+
+//
+// wripir - PALcode for wripir instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3588,7 +2625,7 @@ CallPal_OpcDec0C:
 // Exit:
 //	interprocessor interrupt is recorded on the target processor
 //	and is initiated when the proper enabling conditions are present.
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRIPIR_ENTRY)
 Call_Pal_Wrpir:
@@ -3604,16 +2641,15 @@ CallPal_OpcDec0E:
 CallPal_OpcDec0F:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"rdmces- PALcode for rdmces instruction"
-
-//+
+//
+// rdmces - PALcode for rdmces instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	R0 <- ZEXT(MCES)
-//-
+//
 
         CALL_PAL_PRIV(PAL_RDMCES_ENTRY)
 Call_Pal_Rdmces:
@@ -3622,9 +2658,8 @@ Call_Pal_Rdmces:
 
         hw_rei
 
-// .sbttl	"wrmces- PALcode for wrmces instruction"
-
-//+
+//
+// wrmces - PALcode for wrmces instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3636,7 +2671,7 @@ Call_Pal_Rdmces:
 //	MCES<3> <- R16<3>		   (DPC)
 //	MCES<4> <- R16<4>		   (DSC)
 //
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRMCES_ENTRY)
 Call_Pal_Wrmces:
@@ -3652,18 +2687,14 @@ Call_Pal_Wrmces:
         or	r1, r17, r1		// Update DPC and DSC
         mtpr	r1, pt_mces		// Write MCES back
 
-#if rawhide_system == 0
         nop				// Pad to fix PT write->read restriction
-#else
-        blbs	r16, RAWHIDE_clear_mchk_lock	// Clear logout from lock
-#endif
 
         nop
         hw_rei
 
 
 
-// .sbttl	"CALL_PAL OPCDECs"
+// CALL_PAL OPCDECs
 
         CALL_PAL_PRIV(0x0012)
 CallPal_OpcDec12:
@@ -3765,9 +2796,8 @@ CallPal_OpcDec29:
 CallPal_OpcDec2A:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"wrfen - PALcode for wrfen instruction"
-
-//+
+//
+// wrfen - PALcode for wrfen instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3775,10 +2805,11 @@ CallPal_OpcDec2A:
 // Function:
 //	a0<0> -> ICSR<FPE>
 //	Store new FEN in PCB
-//	Final value of t0 (r1), t8..t10 (r22..r24) and a0 (r16) are UNPREDICTABLE
+//	Final value of t0 (r1), t8..t10 (r22..r24) and a0 (r16)
+//          are UNPREDICTABLE
 //
 // Issue: What about pending FP loads when FEN goes from on->off????
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRFEN_ENTRY)
 Call_Pal_Wrfen:
@@ -3795,7 +2826,7 @@ Call_Pal_Wrfen:
         mfpr	r12, pt_pcbb		// Get PCBB - E1
 
         mtpr	r1, ev5__icsr		// write new ICSR.  3 Bubble cycles to HW_REI
-        stlp	r16, osfpcb_q_fen(r12)	// Store FEN in PCB.
+        stl_p	r16, osfpcb_q_fen(r12)	// Store FEN in PCB.
 
         mfpr	r31, pt0		// Pad ICSR<FPE> write.
         mfpr	r31, pt0
@@ -3809,15 +2840,15 @@ Call_Pal_Wrfen:
 CallPal_OpcDec2C:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"wrvptpr - PALcode for wrvptpr instruction"
-//+
+//
+// wrvptpr - PALcode for wrvptpr instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	vptptr <- a0 (r16)
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRVPTPTR_ENTRY)
 Call_Pal_Wrvptptr:
@@ -3835,9 +2866,9 @@ CallPal_OpcDec2E:
 CallPal_OpcDec2F:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"swpctx- PALcode for swpctx instruction"
 
-//+
+//
+// swpctx - PALcode for swpctx instruction
 //
 // Entry:
 //       hardware dispatch via callPal instruction
@@ -3850,44 +2881,44 @@ CallPal_OpcDec2F:
 //       old pcbb returned in R0
 //
 //  Note: need to add perf monitor stuff
-//-
+//
 
         CALL_PAL_PRIV(PAL_SWPCTX_ENTRY)
 Call_Pal_Swpctx:
         rpcc	r13			// get cyccounter
         mfpr	r0, pt_pcbb		// get pcbb
 
-        ldqp	r22, osfpcb_q_fen(r16)	// get new fen/pme
-        ldqp	r23, osfpcb_l_cc(r16)	// get new asn
+        ldq_p	r22, osfpcb_q_fen(r16)	// get new fen/pme
+        ldq_p	r23, osfpcb_l_cc(r16)	// get new asn
 
         srl	r13, 32, r25		// move offset
         mfpr	r24, pt_usp		// get usp
 
-        stqp	r30, osfpcb_q_ksp(r0)	// store old ksp
-//	pvc_violate 379			// stqp can't trap except replay.  only problem if mf same ipr in same shadow.
+        stq_p	r30, osfpcb_q_ksp(r0)	// store old ksp
+//	pvc_violate 379			// stq_p can't trap except replay.  only problem if mf same ipr in same shadow.
         mtpr	r16, pt_pcbb		// set new pcbb
 
-        stqp	r24, osfpcb_q_usp(r0)	// store usp
+        stq_p	r24, osfpcb_q_usp(r0)	// store usp
         addl	r13, r25, r25		// merge for new time
 
-        stlp	r25, osfpcb_l_cc(r0)	// save time
+        stl_p	r25, osfpcb_l_cc(r0)	// save time
         ldah	r24, (1<<(icsr_v_fpe-16))(r31)
 
         and	r22, 1, r12		// isolate fen
         mfpr	r25, icsr		// get current icsr
 
-        ev5_pass2 	lda	r24, (1<<icsr_v_pmp)(r24)
+        lda	r24, (1<<icsr_v_pmp)(r24)
         br	r31, swpctx_cont
 
-// .sbttl	"wrval - PALcode for wrval instruction"
-//+
+//
+// wrval - PALcode for wrval instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	sysvalue <- a0 (r16)
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRVAL_ENTRY)
 Call_Pal_Wrval:
@@ -3897,17 +2928,15 @@ Call_Pal_Wrval:
         nop
         hw_rei
 
-
-// .sbttl	"rdval - PALcode for rdval instruction"
-
-//+
+//
+// rdval - PALcode for rdval instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	v0 (r0) <- sysvalue
-//-
+//
 
         CALL_PAL_PRIV(PAL_RDVAL_ENTRY)
 Call_Pal_Rdval:
@@ -3916,8 +2945,8 @@ Call_Pal_Rdval:
         nop
         hw_rei
 
-// .sbttl	"tbi - PALcode for tbi instruction"
-//+
+//
+// tbi - PALcode for tbi instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3926,7 +2955,7 @@ Call_Pal_Rdval:
 //	TB invalidate
 //       r16/a0 = TBI type
 //       r17/a1 = Va for TBISx instructions
-//-
+//
 
         CALL_PAL_PRIV(PAL_TBI_ENTRY)
 Call_Pal_Tbi:
@@ -3946,8 +2975,8 @@ CALL_PAL_tbi_30_:
         hw_rei
         nop
 
-// .sbttl	"wrent - PALcode for wrent instruction"
-//+
+//
+// wrent - PALcode for wrent instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3958,7 +2987,7 @@ CALL_PAL_tbi_30_:
 //       r17/a1 = Entry Number 0..5
 //
 //       r22, r23 trashed
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRENT_ENTRY)
 Call_Pal_Wrent:
@@ -3978,8 +3007,8 @@ CALL_PAL_wrent_10_:	bic	r16, 3, r16	// clean pc
 CALL_PAL_wrent_30_:
         hw_rei				// out of range, just return
 
-// .sbttl	"swpipl - PALcode for swpipl instruction"
-//+
+//
+// swpipl - PALcode for swpipl instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -3989,7 +3018,7 @@ CALL_PAL_wrent_30_:
 //	PS<IPL>  <- a0<2:0>  (r16)
 //
 //	t8 (r22) is scratch
-//-
+//
 
         CALL_PAL_PRIV(PAL_SWPIPL_ENTRY)
 Call_Pal_Swpipl:
@@ -4007,15 +3036,15 @@ Call_Pal_Swpipl:
 
         hw_rei				// back
 
-// .sbttl	"rdps - PALcode for rdps instruction"
-//+
+//
+// rdps - PALcode for rdps instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	v0 (r0) <- ps
-//-
+//
 
         CALL_PAL_PRIV(PAL_RDPS_ENTRY)
 Call_Pal_Rdps:
@@ -4023,15 +3052,15 @@ Call_Pal_Rdps:
         nop				// Must be 2 cycles long
         hw_rei
 
-// .sbttl	"wrkgp - PALcode for wrkgp instruction"
-//+
+//
+// wrkgp - PALcode for wrkgp instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	kgp <- a0 (r16)
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRKGP_ENTRY)
 Call_Pal_Wrkgp:
@@ -4041,15 +3070,15 @@ Call_Pal_Wrkgp:
         nop
         hw_rei
 
-// .sbttl	"wrusp - PALcode for wrusp instruction"
-//+
+//
+// wrusp - PALcode for wrusp instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //       usp <- a0 (r16)
-//-
+//
 
         CALL_PAL_PRIV(PAL_WRUSP_ENTRY)
 Call_Pal_Wrusp:
@@ -4059,8 +3088,8 @@ Call_Pal_Wrusp:
         nop
         hw_rei
 
-// .sbttl	"wrperfmon - PALcode for wrperfmon instruction"
-//+
+//
+// wrperfmon - PALcode for wrperfmon instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4137,7 +3166,6 @@ Call_Pal_Wrusp:
         CALL_PAL_PRIV(0x0039)
 // unsupported in Hudson code .. pboyle Nov/95
 CALL_PAL_Wrperfmon:
-#if perfmon_debug == 0
         // "real" performance monitoring code
         cmpeq	r16, 1, r0		// check for enable
         bne	r0, perfmon_en		// br if requested to enable
@@ -4162,20 +3190,16 @@ CALL_PAL_Wrperfmon:
 
         beq	r16, perfmon_dis	// br if requested to disable (r16=0)
         br	r31, perfmon_unknown	// br if unknown request
-#else
 
-        br	r31, pal_perfmon_debug
-#endif
-
-// .sbttl	"rdusp - PALcode for rdusp instruction"
-//+
+//
+// rdusp - PALcode for rdusp instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	v0 (r0) <- usp
-//-
+//
 
         CALL_PAL_PRIV(PAL_RDUSP_ENTRY)
 Call_Pal_Rdusp:
@@ -4188,15 +3212,15 @@ Call_Pal_Rdusp:
 CallPal_OpcDec3B:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"whami - PALcode for whami instruction"
-//+
+//
+// whami - PALcode for whami instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
 //
 // Function:
 //	v0 (r0) <- whami
-//-
+//
         CALL_PAL_PRIV(PAL_WHAMI_ENTRY)
 Call_Pal_Whami:
         nop
@@ -4204,7 +3228,8 @@ Call_Pal_Whami:
         extbl	r0, 1, r0		// Isolate just whami bits
         hw_rei
 
-// .sbttl	"retsys - PALcode for retsys instruction"
+//
+// retsys - PALcode for retsys instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4216,7 +3241,7 @@ Call_Pal_Whami:
 //       mode switched from kern to user.
 //       stacks swapped, ugp, upc restored.
 //       r23, r25 junked
-//-
+//
 
         CALL_PAL_PRIV(PAL_RETSYS_ENTRY)
 Call_Pal_Retsys:
@@ -4250,8 +3275,8 @@ Call_Pal_Retsys:
 CallPal_OpcDec3E:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"rti - PALcode for rti instruction"
-//+
+//
+// rti - PALcode for rti instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4263,13 +3288,11 @@ CallPal_OpcDec3E:
 //	24(sp) -> r16 (a0)
 //	32(sp) -> r17 (a1)
 //	40(sp) -> r18 (a3)
-//-
+//
 
         CALL_PAL_PRIV(PAL_RTI_ENTRY)
-#ifdef SIMOS
         /* called once by platform_tlaser */
         .globl Call_Pal_Rti
-#endif
 Call_Pal_Rti:
         lda	r25, osfsf_c_size(sp)	// get updated sp
         bis	r25, r31, r14		// touch r14,r25 to stall mf exc_addr
@@ -4296,9 +3319,12 @@ Call_Pal_Rti:
         br	r31, rti_to_user	// out of call_pal space
 
 
-// .sbttl  "Start the Unprivileged CALL_PAL Entry Points"
-// .sbttl	"bpt- PALcode for bpt instruction"
-//+
+///////////////////////////////////////////////////
+// Start the Unprivileged CALL_PAL Entry Points
+///////////////////////////////////////////////////
+
+//
+// bpt - PALcode for bpt instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4310,7 +3336,7 @@ Call_Pal_Rti:
 //	a2 <- unpred
 //	vector via entIF
 //
-//-
+//
 //
         .text	1
 //	. = 0x3000
@@ -4340,8 +3366,8 @@ CALL_PAL_bpt_10_:
         br	r31, bpt_bchk_common	// out of call_pal space
 
 
-// .sbttl	"bugchk- PALcode for bugchk instruction"
-//+
+//
+// bugchk - PALcode for bugchk instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4353,7 +3379,7 @@ CALL_PAL_bpt_10_:
 //	a2 <- unpred
 //	vector via entIF
 //
-//-
+//
 //
         CALL_PAL_UNPRIV(PAL_BUGCHK_ENTRY)
 Call_Pal_Bugchk:
@@ -4385,8 +3411,8 @@ CALL_PAL_bugchk_10_:
 CallPal_OpcDec82:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"callsys - PALcode for callsys instruction"
-//+
+//
+// callsys - PALcode for callsys instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4397,7 +3423,7 @@ CallPal_OpcDec82:
 //       gp = kgp
 //	t8 - t10 (r22-r24) trashed
 //
-//-
+//
 //
         CALL_PAL_UNPRIV(PAL_CALLSYS_ENTRY)
 Call_Pal_Callsys:
@@ -4408,9 +3434,9 @@ Call_Pal_Callsys:
         beq	r24, sys_from_kern 	// sysCall from kern is not allowed
         mfpr	r12, pt_entsys		// get address of callSys routine
 
-//+
+//
 // from here on we know we are in user going to Kern
-//-
+//
         mtpr	r31, ev5__dtb_cm	// set Mbox current mode - no virt ref for 2 cycles
         mtpr	r31, ev5__ps		// set Ibox current mode - 2 bubble to hw_rei
 
@@ -4440,8 +3466,8 @@ CallPal_OpcDec84:
 CallPal_OpcDec85:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"imb - PALcode for imb instruction"
-//+
+//
+// imb - PALcode for imb instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4449,7 +3475,7 @@ CallPal_OpcDec85:
 // Function:
 //       Flush the writebuffer and flush the Icache
 //
-//-
+//
 //
         CALL_PAL_UNPRIV(PAL_IMB_ENTRY)
 Call_Pal_Imb:
@@ -4460,7 +3486,7 @@ Call_Pal_Imb:
         br      r31, pal_ic_flush           // Flush Icache
 
 
-// .sbttl	"CALL_PAL OPCDECs"
+// CALL_PAL OPCDECs
 
         CALL_PAL_UNPRIV(0x0087)
 CallPal_OpcDec87:
@@ -4554,8 +3580,8 @@ CallPal_OpcDec9C:
 CallPal_OpcDec9D:
         br	r31, osfpal_calpal_opcdec
 
-// .sbttl	"rdunique - PALcode for rdunique instruction"
-//+
+//
+// rdunique - PALcode for rdunique instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4563,17 +3589,17 @@ CallPal_OpcDec9D:
 // Function:
 //	v0 (r0) <- unique
 //
-//-
+//
 //
         CALL_PAL_UNPRIV(PAL_RDUNIQUE_ENTRY)
 CALL_PALrdunique_:
         mfpr	r0, pt_pcbb		// get pcb pointer
-        ldqp	r0, osfpcb_q_unique(r0) // get new value
+        ldq_p	r0, osfpcb_q_unique(r0) // get new value
 
         hw_rei
 
-// .sbttl	"wrunique - PALcode for wrunique instruction"
-//+
+//
+// wrunique - PALcode for wrunique instruction
 //
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4581,17 +3607,17 @@ CALL_PALrdunique_:
 // Function:
 //	unique <- a0 (r16)
 //
-//-
+//
 //
 CALL_PAL_UNPRIV(PAL_WRUNIQUE_ENTRY)
 CALL_PAL_Wrunique:
         nop
         mfpr	r12, pt_pcbb		// get pcb pointer
-        stqp	r16, osfpcb_q_unique(r12)// get new value
+        stq_p	r16, osfpcb_q_unique(r12)// get new value
         nop				// Pad palshadow write
         hw_rei				// back
 
-// .sbttl	"CALL_PAL OPCDECs"
+// CALL_PAL OPCDECs
 
         CALL_PAL_UNPRIV(0x00A0)
 CallPal_OpcDecA0:
@@ -4634,8 +3660,9 @@ CallPal_OpcDecA9:
         br	r31, osfpal_calpal_opcdec
 
 
-// .sbttl	"gentrap - PALcode for gentrap instruction"
-//+
+//
+// gentrap - PALcode for gentrap instruction
+//
 // CALL_PAL_gentrap:
 // Entry:
 //	Vectored into via hardware PALcode instruction dispatch.
@@ -4647,7 +3674,7 @@ CallPal_OpcDecA9:
 //	a2 <- unpred
 //	vector via entIF
 //
-//-
+//
 
         CALL_PAL_UNPRIV(0x00AA)
 // unsupported in Hudson code .. pboyle Nov/95
@@ -4676,7 +3703,7 @@ CALL_PAL_gentrap_10_:
         br	r31, bpt_bchk_common	// out of call_pal space
 
 
-// .sbttl	"CALL_PAL OPCDECs"
+// CALL_PAL OPCDECs
 
         CALL_PAL_UNPRIV(0x00AB)
 CallPal_OpcDecAB:
@@ -4773,9 +3800,8 @@ CallPal_OpcDecBF:
         . = 0x4000
 
 
-// .sbttl	"Continuation of MTPR_PERFMON"
+// Continuation of MTPR_PERFMON
         ALIGN_BLOCK
-#if perfmon_debug == 0
           // "real" performance monitoring code
 // mux ctl
 perfmon_muxctl:
@@ -4804,7 +3830,7 @@ perfmon_muxctl:
         bic	r16, r8, r16			// isolate old mux select bits
         or	r16, r25, r25			// create new bc_ctl
         mb					// clear out cbox for future ipr write
-        stqp	r25, ev5__bc_ctl(r14)		// store to cbox ipr
+        stq_p	r25, ev5__bc_ctl(r14)		// store to cbox ipr
         mb					// clear out cbox for future ipr write
 
 //orig	update_bc_ctl_shadow	r25, r16	// r25=value, r16-overwritten with adjusted impure ptr
@@ -4875,26 +3901,20 @@ perfmon_en_cont:
         lda	r25, CNS_Q_IPR(r25)
         RESTORE_SHADOW(r25,CNS_Q_PM_CTL,r25);
 
-        ldqp	r16, osfpcb_q_fen(r8)	// read DAT/PME/FEN quadword
+        ldq_p	r16, osfpcb_q_fen(r8)	// read DAT/PME/FEN quadword
         mfpr	r14, ev5__pmctr		// read ibox pmctr ipr
         srl 	r16, osfpcb_v_pme, r16	// get pme bit
         mfpr	r13, icsr
         and	r16,  1, r16		// isolate pme bit
 
         // this code only needed in pass2 and later
-//orig	sget_addr	r12, 1<<icsr_v_pmp, r31
         lda	r12, 1<<icsr_v_pmp(r31)		// pb
         bic	r13, r12, r13		// clear pmp bit
         sll	r16, icsr_v_pmp, r12	// move pme bit to icsr<pmp> position
         or	r12, r13, r13		// new icsr with icsr<pmp> bit set/clear
-        ev5_pass2 	mtpr	r13, icsr		// update icsr
+        mtpr	r13, icsr		// update icsr
 
-#if ev5_p1 != 0
-        lda	r12, 1(r31)
-        cmovlbc	r25, r12, r16		// r16<0> set if either pme=1 or sprocess=0 (sprocess in bit 0 of r25)
-#else
         bis	r31, 1, r16		// set r16<0> on pass2 to update pmctr always (icsr provides real enable)
-#endif
 
         sll	r25, 6, r25		// shift frequency bits into pmctr_v_ctl positions
         bis	r14, r31, r13		// copy pmctr
@@ -4982,7 +4002,7 @@ perfmon_ctl:
         lda	r12, CNS_Q_IPR(r12)
         RESTORE_SHADOW(r14,CNS_Q_PM_CTL,r12);
 
-//orig	get_addr r8, (1<<pmctr_v_killu) | (1<<pmctr_v_killp) | (1<<pmctr_v_killk), r31          // build mode mask for pmctr register
+        // build mode mask for pmctr register
         LDLI(r8, ((1<<pmctr_v_killu) | (1<<pmctr_v_killp) | (1<<pmctr_v_killk)))
         mfpr	r0, ev5__pmctr
         and	r17, r8, r25			// isolate pmctr mode bits
@@ -4990,17 +4010,19 @@ perfmon_ctl:
         or	r0, r25, r25			// or in new mode bits
         mtpr	r25, ev5__pmctr
 
-//;the following code will only be used in pass2, but should not hurt anything if run in pass1.
+        // the following code will only be used in pass2, but should
+        // not hurt anything if run in pass1.
         mfpr	r8, icsr
         lda	r25, 1<<icsr_v_pma(r31)		// set icsr<pma> if r17<0>=0
         bic 	r8, r25, r8			// clear old pma bit
         cmovlbs r17, r31, r25			// and clear icsr<pma> if r17<0>=1
         or	r8, r25, r8
-        ev5_pass2 mtpr	r8, icsr		// 4 bubbles to hw_rei
+        mtpr	r8, icsr		// 4 bubbles to hw_rei
         mfpr	r31, pt0			// pad icsr write
         mfpr	r31, pt0			// pad icsr write
 
-//;the following code not needed for pass2 and later, but should work anyway.
+        // the following code not needed for pass2 and later, but
+        // should work anyway.
         bis     r14, 1, r14       		// set for select processes
         blbs	r17, perfmon_sp			// branch if select processes
         bic	r14, 1, r14			// all processes
@@ -5018,7 +4040,7 @@ perfmon_freq:
 
         lda	r8, 0x3F(r31)
 //orig	sll	r8, pmctr_ctl_v_frq2, r8		// build mask for frequency select field
-// I guess this should be a shift of 4 bits from the above control register structure	.. pb
+// I guess this should be a shift of 4 bits from the above control register structure
 #define	pmctr_ctl_v_frq2_SHIFT 4
         sll	r8, pmctr_ctl_v_frq2_SHIFT, r8		// build mask for frequency select field
 
@@ -5043,8 +4065,7 @@ perfmon_wr:
         lda	r8, 0x3FFF(r31)		// ctr2<13:0> mask
         sll	r8, pmctr_v_ctr2, r8
 
-//orig	get_addr r9, 0xFFFFFFFF, r31, verify=0	// ctr2<15:0>,ctr1<15:0> mask
-        LDLI(r9, (0xFFFFFFFF))
+        LDLI(r9, (0xFFFFFFFF))		// ctr2<15:0>,ctr1<15:0> mask
         sll	r9, pmctr_v_ctr1, r9
         or	r8, r9, r8		// or ctr2, ctr1, ctr0 mask
         bic	r14, r8, r14		// clear ctr fields
@@ -5062,123 +4083,33 @@ perfmon_unknown:
         or	r31, r31, r0		// set fail
         hw_rei				// back to user
 
-#else
 
-// end of "real code", start of debug code
-
-//+
-// Debug environment:
-// (in pass2, always set icsr<pma> to ensure master counter enable is on)
-// 	R16 = 0		Write to on-chip performance monitor ipr
-//	   r17 = 	  on-chip ipr
-//	   r0 = 	  return value of read of on-chip performance monitor ipr
-//	R16 = 1		Setup Cbox mux selects
-//	   r17 = 	  Cbox mux selects in same position as in bc_ctl ipr.
-//	   r0 = 	  return value of read of on-chip performance monitor ipr
-//
-//-
-pal_perfmon_debug:
-        mfpr	r8, icsr
-        lda	r9, 1<<icsr_v_pma(r31)
-        bis	r8, r9, r8
-        mtpr	r8, icsr
-
-        mfpr	r0,  ev5__pmctr		// read old value
-        bne	r16, cbox_mux_sel
-
-        mtpr	r17, ev5__pmctr		// update pmctr ipr
-        br	r31, end_pm
-
-cbox_mux_sel:
-        // ok, now tackle cbox mux selects
-        ldah    r14, 0xfff0(r31)
-        zap     r14, 0xE0, r14                 // Get Cbox IPR base
-//orig	get_bc_ctl_shadow	r16		// bc_ctl returned
-        mfpr	r16, pt_impure
-        lda	r16, CNS_Q_IPR(r16)
-        RESTORE_SHADOW(r16,CNS_Q_BC_CTL,r16);
-
-        lda	r8, 0x3F(r31)			// build mux select mask
-        sll	r8, BC_CTL_V_PM_MUX_SEL, r8
-
-        and	r17, r8, r25			// isolate bc_ctl mux select bits
-        bic	r16, r8, r16			// isolate old mux select bits
-        or	r16, r25, r25			// create new bc_ctl
-        mb					// clear out cbox for future ipr write
-        stqp	r25, ev5__bc_ctl(r14)		// store to cbox ipr
-        mb					// clear out cbox for future ipr write
-//orig	update_bc_ctl_shadow	r25, r16	// r25=value, r16-overwritten with adjusted impure ptr
-        mfpr	r16, pt_impure
-        lda	r16, CNS_Q_IPR(r16)
-        SAVE_SHADOW(r25,CNS_Q_BC_CTL,r16);
-
-end_pm:	hw_rei
-
-#endif
-
-
-//;The following code is a workaround for a cpu bug where Istream prefetches to
-//;super-page address space in user mode may escape off-chip.
-#if spe_fix != 0
-
-        ALIGN_BLOCK
-hw_rei_update_spe:
-        mfpr	r12, pt_misc			// get previous mode
-        srl	r11, osfps_v_mode, r10		// isolate current mode bit
-        and	r10, 1, r10
-        extbl	r12, 7, r8			// get previous mode field
-        and	r8, 1, r8	 		// isolate previous mode bit
-        cmpeq	r10, r8, r8			// compare previous and current modes
-        beq	r8, hw_rei_update_spe_5_
-        hw_rei					// if same, just return
-
-hw_rei_update_spe_5_:
-
-#if fill_err_hack != 0
-
-        fill_error_hack
-#endif
-
-        mfpr	r8, icsr			// get current icsr value
-        ldah	r9, (2<<(icsr_v_spe-16))(r31)	// get spe bit mask
-        bic	r8, r9, r8			// disable spe
-        xor	r10, 1, r9			// flip mode for new spe bit
-        sll	r9, icsr_v_spe+1, r9		// shift into position
-        bis	r8, r9, r8			// enable/disable spe
-        lda	r9, 1(r31)			// now update our flag
-        sll	r9, pt_misc_v_cm, r9		// previous mode saved bit mask
-        bic	r12, r9, r12			// clear saved previous mode
-        sll	r10, pt_misc_v_cm, r9		// current mode saved bit mask
-        bis	r12, r9, r12			// set saved current mode
-        mtpr	r12, pt_misc			// update pt_misc
-        mtpr	r8, icsr			// update icsr
-
-#if osf_chm_fix != 0
-
-
-        blbc	r10, hw_rei_update_spe_10_			// branch if not user mode
-
-        mb					// ensure no outstanding fills
-        lda	r12, 1<<dc_mode_v_dc_ena(r31)	// User mode
-        mtpr	r12, dc_mode			// Turn on dcache
-        mtpr	r31, dc_flush			// and flush it
-        br	r31, pal_ic_flush
-
-hw_rei_update_spe_10_:	mfpr	r9, pt_pcbb			// Kernel mode
-        ldqp	r9, osfpcb_q_Fen(r9)		// get FEN
-        blbc	r9, pal_ic_flush		// return if FP disabled
-        mb					// ensure no outstanding fills
-        mtpr	r31, dc_mode			// turn off dcache
-#endif
-
-
-        br	r31, pal_ic_flush		// Pal restriction - must flush Icache if changing ICSR<SPE>
-#endif
-
+//////////////////////////////////////////////////////////
+// Copy code
+//////////////////////////////////////////////////////////
 
 copypal_impl:
         mov r16, r0
-        ble r18, finished	#if len <=0 we are finished
+#ifdef CACHE_COPY
+#ifndef CACHE_COPY_UNALIGNED
+        and r16, 63, r8
+        and r17, 63, r9
+        bis r8, r9, r8
+        bne r8, cache_copy_done
+#endif
+        bic r18, 63, r8
+        and r18, 63, r18
+        beq r8, cache_copy_done
+cache_loop:
+        ldf f17, 0(r16)
+        stf f17, 0(r16)
+        addq r17, 64, r17
+        addq r16, 64, r16
+        subq r8, 64, r8
+        bne r8, cache_loop
+cache_copy_done:
+#endif
+        ble r18, finished	// if len <=0 we are finished
         ldq_u r8, 0(r17)
         xor r17, r16, r9
         and r9, 7, r9

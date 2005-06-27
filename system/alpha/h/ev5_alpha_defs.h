@@ -1,24 +1,26 @@
 /*
-Copyright 1993 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright 1993 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef EV5_ALPHA_DEFS_INCLUDED
 #define EV5_ALPHA_DEFS_INCLUDED 1
@@ -26,24 +28,19 @@ SOFTWARE.
 // from ev5_alpha_defs.mar from Lance's fetch directory
 // Lower-caseified and $ signs removed ... pb Nov/95
 
-//	.MACRO	_ALPHADEFS
-//	  ALPHADEF_VER == 6	; Flag the version number of this file.
-//	.ENDM
-//	.MACRO	_PSDEF,_GBL
-//	_DEFINI	PS,_GBL
-//;+
-//; PS Layout - PS
-//;	Loc	Size	name 	function
-//;	------	------	______	-----------------------------------
-//;	<31:29>	3	SA	stack alignment
-//;	<31:13>	24	RES	Reserved MBZ
-//;	<12:8>	5	IPL	Priority level
-//;	<7>	1	VMM	Virtual Mach Monitor
-//;	<6:5>	2	RES	Reserved MBZ
-//;	<4:3>	2	CM	Current Mode
-//;	<2>	1	IP	Interrupt Pending
-//;	<1:0>	2	SW	Software bits
-//;-
+//
+// PS Layout - PS
+//	Loc	Size	name 	function
+//	------	------	______	-----------------------------------
+//	<31:29>	3	SA	stack alignment
+//	<31:13>	24	RES	Reserved MBZ
+//	<12:8>	5	IPL	Priority level
+//	<7>	1	VMM	Virtual Mach Monitor
+//	<6:5>	2	RES	Reserved MBZ
+//	<4:3>	2	CM	Current Mode
+//	<2>	1	IP	Interrupt Pending
+//	<1:0>	2	SW	Software bits
+//
 
 #define ps_v_sw		0
 #define ps_m_sw		(3<<ps_v_sw)
@@ -101,33 +98,29 @@ SOFTWARE.
 #define ps_c_ipl30	(0x1E00)
 #define ps_c_ipl31	(0x1F00)
 
-//	_DEFEND	PS,_GBL,DEF
-//	.ENDM
-//;+
-//; PTE layout - symbol prefix PTE_
-//;
-//;	Loc	Size	name 	function
-//;	------	------	------	-----------------------------------
-//;	<63:32>	32	PFN	Page Frame Number
-//;	<31:16>	16	SOFT	Bits reserved for software use
-//;	<15>	1	UWE	User write enable
-//;	<14>	1	SWE	Super write enable
-//;	<13>	1	EWE	Exec write enable
-//;	<12>	1	KWE	Kernel write enable
-//;	<11>	1	URE	User read enable
-//;	<10>	1	SRE	Super read enable
-//;	<9>	1	ERE	Exec read enable
-//;	<8>	1	KRE	Kernel read enable
-//;	<7:6>	2	RES	Reserved SBZ
-//;	<5>	1	HPF	Huge Page Flag
-//;	<4>	1	ASM	Wild card address space number match
-//;	<3>	1	FOE	Fault On execute
-//;	<2>	1	FOW	Fault On Write
-//;	<1>	1	FOR	Fault On Read
-//; 	<0>	1	V	valid bit
-//;-
-//	.MACRO	_PTEDEF,_GBL
-//	_DEFINI	PTE,_GBL
+//
+// PTE layout - symbol prefix PTE_
+//
+//	Loc	Size	name 	function
+//	------	------	------	-----------------------------------
+//	<63:32>	32	PFN	Page Frame Number
+//	<31:16>	16	SOFT	Bits reserved for software use
+//	<15>	1	UWE	User write enable
+//	<14>	1	SWE	Super write enable
+//	<13>	1	EWE	Exec write enable
+//	<12>	1	KWE	Kernel write enable
+//	<11>	1	URE	User read enable
+//	<10>	1	SRE	Super read enable
+//	<9>	1	ERE	Exec read enable
+//	<8>	1	KRE	Kernel read enable
+//	<7:6>	2	RES	Reserved SBZ
+//	<5>	1	HPF	Huge Page Flag
+//	<4>	1	ASM	Wild card address space number match
+//	<3>	1	FOE	Fault On execute
+//	<2>	1	FOW	Fault On Write
+//	<1>	1	FOR	Fault On Read
+// 	<0>	1	V	valid bit
+//
 
 #define pte_v_pfn	32
 #define pte_m_soft	(0xFFFF0000)
@@ -161,20 +154,16 @@ SOFTWARE.
 #define pte_m_v		(0x0001)
 #define pte_v_v		0
 
-//	_DEFEND	PTE,_GBL,DEF
-//	.ENDM
-//;+
-//; VA layout - symbol prefix VA_
-//;
-//;	Loc	Size	name 	function
-//;	------	------	-------	-----------------------------------
-//;	<42:33>	10	SEG1	First seg table offset for mapping
-//;	<32:23>	10	SEG2	Second seg table offset for mapping
-//;	<22:13>	10	SEG3	Third seg table offset for mapping
-//;	<12:0>	13	OFFSET	Byte within page
-//;-
-//	.MACRO	_VADEF,_GBL
-//	_DEFINI	VA,_GBL
+//
+// VA layout - symbol prefix VA_
+//
+//	Loc	Size	name 	function
+//	------	------	-------	-----------------------------------
+//	<42:33>	10	SEG1	First seg table offset for mapping
+//	<32:23>	10	SEG2	Second seg table offset for mapping
+//	<22:13>	10	SEG3	Third seg table offset for mapping
+//	<12:0>	13	OFFSET	Byte within page
+//
 
 #define va_m_offset	(0x000000001FFF)
 #define va_v_offset	0
@@ -185,13 +174,9 @@ SOFTWARE.
 #define va_m_seg1	(0x7FE00000000)
 #define va_v_seg1	33
 
-//	_DEFEND	VA,_GBL,DEF
-//	.ENDM
-//;+
-//; PRIVILEGED CONTEXT BLOCK (PCB)
-//;-
-//	.MACRO	_PCBDEF,_GBL
-//	_DEFINI	PCB,_GBL
+//
+//PRIVILEGED CONTEXT BLOCK (PCB)
+//
 #define pcb_q_ksp	0
 #define pcb_q_esp	8
 #define pcb_q_ssp	16
@@ -211,13 +196,9 @@ SOFTWARE.
 #define pcb_v_dat	63
 #define pcb_v_pme	62
 
-//	_DEFEND	PCB,_GBL,DEF
-//	.ENDM
-//;+
-//; SYSTEM CONTROL BLOCK (SCB)
-//;-
-//	.MACRO	_SCBDEF,_GBL
-//	_DEFINI	SCB,_GBL
+//
+// SYSTEM CONTROL BLOCK (SCB)
+//
 
 #define scb_v_fen		(0x0010)
 #define scb_v_acv		(0x0080)
@@ -266,13 +247,9 @@ SOFTWARE.
 #define scb_v_procmchk		(0x0670)
 #define scb_v_passive_rel	(0x06F0)
 
-//	_DEFEND	SCB,_GBL,DEF
-//	.ENDM
-//;+
-//; Stack frame (FRM)
-//;-
-//	.MACRO	_FRMDEF,_GBL
-//	_DEFINI	FRM,_GBL
+//
+// Stack frame (FRM)
+//
 
 #define frm_v_r2		(0x0000)
 #define frm_v_r3		(0x0008)
@@ -283,13 +260,9 @@ SOFTWARE.
 #define frm_v_pc		(0x0030)
 #define frm_v_ps		(0x0038)
 
-//	_DEFEND	FRM,_GBL,DEF
-//	.ENDM
-//;+
-//; Exeception summary register (EXS)
-//;-
-//	.MACRO	_EXSDEF,_GBL
-//	_DEFINI	EXS,_GBL
+//
+// Exeception summary register (EXS)
+//
 // exs_v_swc		<0>	; Software completion
 // exs_v_inv		<1>	; Ivalid operation
 // exs_v_dze		<2>	; Div by zero
@@ -313,13 +286,9 @@ SOFTWARE.
 #define exs_m_ine               (1<<exs_v_ine)
 #define exs_m_iov               (1<<exs_v_iov)
 
-//	_defend	exs,_gbl,def
-//	.endm
-//;+
-//; machine check error summary register (mces)
-//;-
-//	.macro	_mcesdef,_gbl
-//	_defini	mces,_gbl
+//
+// machine check error summary register (mces)
+//
 // mces_v_mchk		<0>	; machine check in progress
 // mces_v_sce		<1>	; system correctable error
 // mces_v_pce		<2>	; processor correctable error
@@ -337,9 +306,5 @@ SOFTWARE.
 #define mces_m_dpc               (1<<mces_v_dpc)
 #define mces_m_dsc               (1<<mces_v_dsc)
 #define mces_m_all		 ((1<<mces_v_mchk) | (1<<mces_v_sce) | (1<<mces_v_pce) | (1<<mces_v_dpc) | (1<<mces_v_dsc))
-//	_defend	mces,_gbl,def
-//	.endm
-
-
 
 #endif

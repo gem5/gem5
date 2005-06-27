@@ -1,104 +1,29 @@
 /*
-Copyright 1993 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright 1993 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef DC21164FROMGASSOURCES_INCLUDED
 #define	DC21164FROMGASSOURCES_INCLUDED	1
-
-/*
-**
-**  FACILITY:
-**
-**      DECchip 21164 PALcode
-**
-**  MODULE:
-**
-**      dc21164.h
-**
-**  MODULE DESCRIPTION:
-**
-**      DECchip 21164 specific definitions
-**
-**  AUTHOR: ER
-**
-**  CREATION DATE:  24-Nov-1993
-**
-**  $Id: dc21164FromGasSources.h,v 1.1.1.1 1997/10/30 23:27:19 verghese Exp $
-**
-**  MODIFICATION HISTORY:
-**
-**  $Log: dc21164FromGasSources.h,v $
-**  Revision 1.1.1.1  1997/10/30 23:27:19  verghese
-**  current 10/29/97
-**
-**  Revision 1.1  1995/11/18 01:45:46  boyle
-**  Initial revision
-**
-**  Revision 1.15  1995/04/21  02:06:30  fdh
-**  Replaced C++ style comments with Standard C style comments.
-**
-**  Revision 1.14  1995/03/20  14:55:23  samberg
-**  Add flushIc to make Roger Cruz's life easier.
-**
-**  Revision 1.13  1994/12/14  15:52:48  samberg
-**  Add slXmit and slRcv bit definitions
-**
-**  Revision 1.12  1994/09/07  15:43:49  samberg
-**  Changes for Makefile.vpp, take out OSF definition
-**
-**  Revision 1.11  1994/07/26  17:38:35  samberg
-**  Changes for SD164.
-**
-**  Revision 1.10  1994/07/08  17:02:12  samberg
-**  Changes to support platform specific additions
-**
-**  Revision 1.8  1994/05/31  15:49:21  ericr
-**  Moved ptKdebug from pt10 to pt13; pt10 is used in MCHK flows
-**
-**  Revision 1.7  1994/05/26  19:29:51  ericr
-**  Added BC_CONFIG definitions
-**
-**  Revision 1.6  1994/05/25  14:27:25  ericr
-**  Added physical bit to ldq_lp and stq_cp macros
-**
-**  Revision 1.5  1994/05/20  18:07:50  ericr
-**  Changed line comments to C++ style comment character
-**
-**  Revision 1.4  1994/01/17  21:46:54  ericr
-**  Added floating point register definitions
-**
-**  Revision 1.3  1994/01/03  19:31:49  ericr
-**  Added cache parity error status register definitions
-**
-**  Revision 1.2  1993/12/22  20:42:35  eric
-**  Added ptTrap, ptMisc and flag definitions
-**  Added PAL shadow regsiter definitions
-**
-**  Revision 1.1  1993/12/16  21:55:05  eric
-**  Initial revision
-**
-**
-**--
-*/
-
 
 /*
 **

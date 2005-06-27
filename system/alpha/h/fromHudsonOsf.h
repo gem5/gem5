@@ -1,98 +1,31 @@
 /*
-Copyright 1993, 1994 Hewlett-Packard Development Company, L.P.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ * Copyright 1993, 1994 Hewlett-Packard Development Company, L.P.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef FROMHUDSONOSF_INCLUDED
 #define FROMHUDSONOSF_INCLUDED 1
-/*
- *      VID: [T1.2] PT: [Fri Apr 21 16:47:14 1995] SF: [osf.h]
- *       TI: [/sae_users/cruz/bin/vice -iplatform.s -l// -p# -DEB164 -h -m -aeb164 ]
- */
-#define	__OSF_LOADED	1
-/*
-**
-**  FACILITY:
-**
-**	DECchip 21164 PALcode
-**
-**  MODULE:
-**
-**	osf.h
-**
-**  MODULE DESCRIPTION:
-**
-**      OSF/1 specific definitions
-**
-**  AUTHOR: ER
-**
-**  CREATION DATE:  24-Nov-1993
-**
-**  $Id: fromHudsonOsf.h,v 1.1.1.1 1997/10/30 23:27:19 verghese Exp $
-**
-**  MODIFICATION HISTORY:
-**
-**  $Log: fromHudsonOsf.h,v $
-**  Revision 1.1.1.1  1997/10/30 23:27:19  verghese
-**  current 10/29/97
-**
-**  Revision 1.1  1995/11/18 01:46:31  boyle
-**  Initial revision
-**
-**  Revision 1.11  1995/04/21  02:06:30  fdh
-**  Replaced C++ style comments with Standard C style comments.
-**
-**  Revision 1.10  1994/09/26  14:17:47  samberg
-**  Complete VICE work and EB164/SD164 breakout.
-**
-**  Revision 1.9  1994/07/26  17:39:10  samberg
-**  Changes for SD164.
-**
-**  Revision 1.8  1994/07/08  17:03:48  samberg
-**  Changes to support platform specific additions
-**
-**  Revision 1.7  1994/05/20  19:23:51  ericr
-**  Moved STACK_FRAME macro from osfpal.s to here
-**
-**  Revision 1.6  1994/05/20  18:08:19  ericr
-**  Changed line comments to C++ style comment character
-**
-**  Revision 1.5  1994/01/11  18:43:33  ericr
-**  Removed PAL version/revision and size constants
-**
-**  Revision 1.4  1994/01/05  16:22:32  ericr
-**  Added more SCB vector offsets and MCHK error code
-**
-**  Revision 1.3  1994/01/03  19:35:40  ericr
-**  Derive mask definitions from field constants
-**
-**  Revision 1.2  1993/12/22  20:43:01  eric
-**  Added mask definitions for MCES bits
-**
-**  Revision 1.1  1993/12/16  21:55:05  eric
-**  Initial revision
-**
-**
-**--
-*/
 
+#define	__OSF_LOADED	1
 /*
 **  Seg0 and Seg1 Virtual Address (VA) Format
 **
