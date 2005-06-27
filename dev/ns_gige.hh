@@ -266,11 +266,13 @@ class NSGigE : public PciDev
     Tick rxKickTick;
     typedef EventWrapper<NSGigE, &NSGigE::rxKick> RxKickEvent;
     friend void RxKickEvent::process();
+    RxKickEvent rxKickEvent;
 
     void txKick();
     Tick txKickTick;
     typedef EventWrapper<NSGigE, &NSGigE::txKick> TxKickEvent;
     friend void TxKickEvent::process();
+    TxKickEvent txKickEvent;
 
     /**
      * Retransmit event
