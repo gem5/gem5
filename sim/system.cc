@@ -30,6 +30,7 @@
 #include "base/loader/symtab.hh"
 #include "base/remote_gdb.hh"
 #include "cpu/exec_context.hh"
+#include "dev/alpha_access.h"
 #include "kern/kernel_stats.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
@@ -142,6 +143,21 @@ System::System(Params *p)
         if (osflags)
               strcpy(osflags, params->boot_osflags.c_str());
     }
+
+    /**
+     * Set the m5AlphaAccess pointer in the console
+     */
+    if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        uint64_t *m5AlphaAccess =
+            (uint64_t *)physmem->dma_addr(paddr, sizeof(uint64_t));
+
+        if (!m5AlphaAccess)
+            panic("could not translate m5AlphaAccess addr\n");
+
+        *m5AlphaAccess = htoa(ALPHA_ACCESS_BASE);
+    } else
+        panic("could not find m5AlphaAccess\n");
 
     /**
      * Set the hardware reset parameter block system type and revision

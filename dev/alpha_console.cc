@@ -69,7 +69,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
         pioInterface->addAddrRange(RangeSize(addr, size));
     }
 
-    alphaAccess = new AlphaAccess;
+    alphaAccess = new Access;
     alphaAccess->last_offset = size - 1;
 
     alphaAccess->version = ALPHA_ACCESS_VERSION;
@@ -268,7 +268,7 @@ AlphaConsole::cacheAccess(MemReqPtr &req)
 }
 
 void
-AlphaAccess::serialize(ostream &os)
+AlphaConsole::Access::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(last_offset);
     SERIALIZE_SCALAR(version);
@@ -291,7 +291,7 @@ AlphaAccess::serialize(ostream &os)
 }
 
 void
-AlphaAccess::unserialize(Checkpoint *cp, const std::string &section)
+AlphaConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(last_offset);
     UNSERIALIZE_SCALAR(version);
