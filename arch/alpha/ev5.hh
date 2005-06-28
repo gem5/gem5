@@ -58,6 +58,16 @@ const Addr PAddrUncachedBit39 = ULL(0x8000000000);
 const Addr PAddrUncachedBit40 = ULL(0x10000000000);
 const Addr PAddrUncachedBit43 = ULL(0x80000000000);
 const Addr PAddrUncachedMask = ULL(0x807ffffffff); // Clear PA<42:35>
+inline Addr Phys2K0Seg(Addr addr)
+{
+#ifndef ALPHA_TLASER
+    if (addr & PAddrUncachedBit43) {
+        addr &= PAddrUncachedMask;
+        addr |= PAddrUncachedBit40;
+    }
+#endif
+    return addr | AlphaISA::K0SegBase;
+}
 
 inline int DTB_ASN_ASN(uint64_t reg) { return reg >> 57 & AsnMask; }
 inline Addr DTB_PTE_PPN(uint64_t reg)

@@ -35,23 +35,22 @@
 #include <string>
 
 #include "base/inifile.hh"
-#include "base/str.hh"	// for to_number()
+#include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "dev/alpha_console.hh"
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
+#include "dev/tsunami_io.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
-#include "sim/system.hh"
-#include "dev/tsunami_io.hh"
 #include "sim/sim_object.hh"
-#include "targetarch/byte_swap.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -69,7 +68,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
         pioInterface->addAddrRange(RangeSize(addr, size));
     }
 
-    alphaAccess = new AlphaAccess;
+    alphaAccess = new Access;
     alphaAccess->last_offset = size - 1;
 
     alphaAccess->version = ALPHA_ACCESS_VERSION;
@@ -85,6 +84,8 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->bootStrapImpure = 0;
     alphaAccess->bootStrapCPU = 0;
     alphaAccess->align2 = 0;
+
+    system->setAlphaAccess(addr);
 }
 
 void
@@ -108,7 +109,8 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
     switch (req->size)
     {
         case sizeof(uint32_t):
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *(uint32_t*)data);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    *(uint32_t*)data);
             switch (daddr)
             {
                 case offsetof(AlphaAccess, last_offset):
@@ -133,7 +135,8 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
             }
             break;
         case sizeof(uint64_t):
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *(uint64_t*)data);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    *(uint64_t*)data);
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):
@@ -266,7 +269,7 @@ AlphaConsole::cacheAccess(MemReqPtr &req)
 }
 
 void
-AlphaAccess::serialize(ostream &os)
+AlphaConsole::Access::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(last_offset);
     SERIALIZE_SCALAR(version);
@@ -289,7 +292,7 @@ AlphaAccess::serialize(ostream &os)
 }
 
 void
-AlphaAccess::unserialize(Checkpoint *cp, const std::string &section)
+AlphaConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(last_offset);
     UNSERIALIZE_SCALAR(version);

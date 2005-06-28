@@ -64,7 +64,7 @@ class NSGigE(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
-    clock = Param.Clock('100MHz', "State machine processor frequency")
+    clock = Param.Clock('0ns', "State machine processor frequency")
 
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")

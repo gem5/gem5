@@ -33,12 +33,11 @@
  * System Console Memory Mapped Register Definition
  */
 
-#define ALPHA_ACCESS_VERSION (1301)
+#define ALPHA_ACCESS_VERSION (1303)
 
-#ifndef CONSOLE
-#include <iosfwd>
-#include <string>
-class Checkpoint;
+#ifdef CONSOLE
+typedef unsigned uint32_t;
+typedef unsigned long uint64_t;
 #endif
 
 // This structure hacked up from simos
@@ -71,11 +70,6 @@ struct AlphaAccess
     uint64_t	bootStrapImpure;	// 70:
     uint32_t	bootStrapCPU;		// 78:
     uint32_t	align2;			// 7C: Dummy placeholder for alignment
-
-#ifndef CONSOLE
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-#endif
 };
 
 #endif // __ALPHA_ACCESS_H__

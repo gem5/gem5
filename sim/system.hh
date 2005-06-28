@@ -128,6 +128,11 @@ class System : public SimObject
 
   public:
     /**
+     * Set the m5AlphaAccess pointer in the console
+     */
+    void setAlphaAccess(Addr access);
+
+    /**
      * Returns the addess the kernel starts at.
      * @return address the kernel starts at
      */

@@ -102,7 +102,7 @@ NSGigE::NSGigE(Params *p)
       txDmaReadEvent(this), txDmaWriteEvent(this),
       dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
       txDelay(p->tx_delay), rxDelay(p->rx_delay),
-      rxKickTick(0), txKickTick(0),
+      rxKickTick(0), rxKickEvent(this), txKickTick(0), txKickEvent(this),
       txEvent(this), rxFilterEnable(p->rx_filter), acceptBroadcast(false),
       acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false),
@@ -841,7 +841,8 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
                 panic("writing to read-only or reserved CFGR bits!\n");
 
             regs.config |= reg & ~(CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
-                                   CFGR_RESERVED | CFGR_T64ADDR | CFGR_PCI64_DET);
+                                   CFGR_RESERVED | CFGR_T64ADDR |
+                                   CFGR_PCI64_DET);
 
 // all these #if 0's are because i don't THINK the kernel needs to
 // have these implemented. if there is a problem relating to one of
@@ -1487,13 +1488,19 @@ NSGigE::rxKick()
     DPRINTF(EthernetSM, "receive kick rxState=%s (rxBuf.size=%d)\n",
             NsRxStateStrings[rxState], rxFifo.size());
 
-    if (rxKickTick > curTick) {
-        DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
-                rxKickTick);
-        return;
+  next:
+    if (clock) {
+        if (rxKickTick > curTick) {
+            DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
+                    rxKickTick);
+
+            goto exit;
+        }
+
+        // Go to the next state machine clock tick.
+        rxKickTick = curTick + cycles(1);
     }
 
-  next:
     switch(rxDmaState) {
       case dmaReadWaiting:
         if (doRxDmaRead())
@@ -1561,8 +1568,7 @@ NSGigE::rxKick()
         if (rxDmaState != dmaIdle)
             goto exit;
 
-        DPRINTF(EthernetDesc,
-                "rxDescCache: addr=%08x read descriptor\n",
+        DPRINTF(EthernetDesc, "rxDescCache: addr=%08x read descriptor\n",
                 regs.rxdp & 0x3fffffff);
         DPRINTF(EthernetDesc,
                 "rxDescCache: link=%08x bufptr=%08x cmdsts=%08x extsts=%08x\n",
@@ -1783,7 +1789,6 @@ NSGigE::rxKick()
 
     DPRINTF(EthernetSM, "entering next rxState=%s\n",
             NsRxStateStrings[rxState]);
-
     goto next;
 
   exit:
@@ -1792,6 +1797,9 @@ NSGigE::rxKick()
      */
     DPRINTF(EthernetSM, "rx state machine exited rxState=%s\n",
             NsRxStateStrings[rxState]);
+
+    if (clock && !rxKickEvent.scheduled())
+        rxKickEvent.schedule(rxKickTick);
 }
 
 void
@@ -1954,13 +1962,18 @@ NSGigE::txKick()
     DPRINTF(EthernetSM, "transmit kick txState=%s\n",
             NsTxStateStrings[txState]);
 
-    if (txKickTick > curTick) {
-        DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
-                txKickTick);
-        return;
+  next:
+    if (clock) {
+        if (txKickTick > curTick) {
+            DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
+                    txKickTick);
+            goto exit;
+        }
+
+        // Go to the next state machine clock tick.
+        txKickTick = curTick + cycles(1);
     }
 
-  next:
     switch(txDmaState) {
       case dmaReadWaiting:
         if (doTxDmaRead())
@@ -2022,6 +2035,8 @@ NSGigE::txKick()
         if (txDmaState != dmaIdle)
             goto exit;
 
+        DPRINTF(EthernetDesc, "txDescCache: addr=%08x read descriptor\n",
+                regs.txdp & 0x3fffffff);
         DPRINTF(EthernetDesc,
                 "txDescCache: link=%08x bufptr=%08x cmdsts=%08x extsts=%08x\n",
                 txDescCache.link, txDescCache.bufptr, txDescCache.cmdsts,
@@ -2186,7 +2201,12 @@ NSGigE::txKick()
         if (txDescCache.cmdsts & CMDSTS_INTR)
             devIntrPost(ISR_TXDESC);
 
-        txState = txAdvance;
+        if (!txEnable) {
+            DPRINTF(EthernetSM, "halting TX state machine\n");
+            txState = txIdle;
+            goto exit;
+        } else
+            txState = txAdvance;
         break;
 
       case txAdvance:
@@ -2215,7 +2235,6 @@ NSGigE::txKick()
 
     DPRINTF(EthernetSM, "entering next txState=%s\n",
             NsTxStateStrings[txState]);
-
     goto next;
 
   exit:
@@ -2224,6 +2243,9 @@ NSGigE::txKick()
      */
     DPRINTF(EthernetSM, "tx state machine exited txState=%s\n",
             NsTxStateStrings[txState]);
+
+    if (clock && !txKickEvent.scheduled())
+        txKickEvent.schedule(txKickTick);
 }
 
 void
@@ -2429,6 +2451,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxDescCache.bufptr);
     SERIALIZE_SCALAR(rxDescCache.cmdsts);
     SERIALIZE_SCALAR(rxDescCache.extsts);
+    SERIALIZE_SCALAR(extstsEnable);
 
     /*
      * Serialize tx state machine
@@ -2441,6 +2464,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(txDescCnt);
     int txDmaState = this->txDmaState;
     SERIALIZE_SCALAR(txDmaState);
+    SERIALIZE_SCALAR(txKickTick);
 
     /*
      * Serialize rx state machine
@@ -2454,8 +2478,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxDescCnt);
     int rxDmaState = this->rxDmaState;
     SERIALIZE_SCALAR(rxDmaState);
-
-    SERIALIZE_SCALAR(extstsEnable);
+    SERIALIZE_SCALAR(rxKickTick);
 
     /*
      * If there's a pending transmit, store the time so we can
@@ -2575,6 +2598,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxDescCache.bufptr);
     UNSERIALIZE_SCALAR(rxDescCache.cmdsts);
     UNSERIALIZE_SCALAR(rxDescCache.extsts);
+    UNSERIALIZE_SCALAR(extstsEnable);
 
     /*
      * unserialize tx state machine
@@ -2589,6 +2613,9 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     int txDmaState;
     UNSERIALIZE_SCALAR(txDmaState);
     this->txDmaState = (DmaState) txDmaState;
+    UNSERIALIZE_SCALAR(txKickTick);
+    if (txKickTick)
+        txKickEvent.schedule(txKickTick);
 
     /*
      * unserialize rx state machine
@@ -2604,8 +2631,9 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     int rxDmaState;
     UNSERIALIZE_SCALAR(rxDmaState);
     this->rxDmaState = (DmaState) rxDmaState;
-
-    UNSERIALIZE_SCALAR(extstsEnable);
+    UNSERIALIZE_SCALAR(rxKickTick);
+    if (rxKickTick)
+        rxKickEvent.schedule(rxKickTick);
 
      /*
      * If there's a pending transmit, reschedule it now
