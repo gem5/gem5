@@ -35,23 +35,22 @@
 #include <string>
 
 #include "base/inifile.hh"
-#include "base/str.hh"	// for to_number()
+#include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "dev/alpha_console.hh"
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
+#include "dev/tsunami_io.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
-#include "sim/system.hh"
-#include "dev/tsunami_io.hh"
 #include "sim/sim_object.hh"
-#include "targetarch/byte_swap.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -85,6 +84,8 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->bootStrapImpure = 0;
     alphaAccess->bootStrapCPU = 0;
     alphaAccess->align2 = 0;
+
+    system->setAlphaAccess(addr);
 }
 
 void

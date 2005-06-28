@@ -38,12 +38,6 @@
 #ifdef CONSOLE
 typedef unsigned uint32_t;
 typedef unsigned long uint64_t;
-#else
-#ifdef ALPHA_TLASER
-#define ALPHA_ACCESS_BASE ULL(0xfffffc8000a00000)
-#else
-#define ALPHA_ACCESS_BASE ULL(0xfffffd0200000000)
-#endif
 #endif
 
 // This structure hacked up from simos
