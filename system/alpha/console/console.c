@@ -73,14 +73,6 @@
 #define K1BASE 0xfffffc8000000000
 #define KSEG_TO_PHYS(x) (((ulong)x) & ~KSEG)
 
-#ifdef TSUNAMI
-#define ALPHA_ACCESS_BASE 0xfffffd0200000000
-#elif TLASER
-#define ALPHA_ACCESS_BASE 0xfffffc8000a00000
-#else
-#error TSUNAMI/TLASER not defined.
-#endif
-
 #define ROUNDUP8(x) ((ulong)(((ulong)x)+7) & ~7)
 #define ROUNDUP128(x) ((ulong)(((ulong)x) + 127) & ~127)
 #define ROUNDUP8K(x) ((ulong)(((ulong)(x)) + 8191) & ~8191)
@@ -113,6 +105,7 @@ void JToKern(char *bootadr, ulong rpb_percpu, ulong free_pfn, ulong k_argc,
 void JToPal(ulong bootadr);
 void SlaveLoop(int cpu);
 
+volatile struct AlphaAccess *m5AlphaAccess;
 struct AlphaAccess m5Conf;
 
 ulong theLock;
@@ -146,15 +139,13 @@ InitConsole()
 char
 GetChar()
 {
-    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
-    return k1Conf->inputChar;
+    return m5AlphaAccess->inputChar;
 }
 
 void
 PutChar(char c)
 {
-    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
-    k1Conf->outputChar = c;
+    m5AlphaAccess->outputChar = c;
 }
 
 int
@@ -167,36 +158,35 @@ int
 main(int argc, char **argv)
 {
     int x, i;
-    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
     uint *k1ptr, *ksegptr;
 
     InitConsole();
-    printf_lock("M5 console\n");
+    printf_lock("M5 console: m5AlphaAccess @ 0x%x\n", m5AlphaAccess);
 
     /*
      * get configuration from backdoor
      */
-    m5Conf.last_offset = k1Conf->last_offset;
+    m5Conf.last_offset = m5AlphaAccess->last_offset;
     printf_lock("Got Configuration %d\n", m5Conf.last_offset);
 
-    m5Conf.last_offset = k1Conf->last_offset;
-    m5Conf.version = k1Conf->version;
-    m5Conf.numCPUs = k1Conf->numCPUs;
-    m5Conf.intrClockFrequency = k1Conf->intrClockFrequency;
-    m5Conf.cpuClock = k1Conf->cpuClock;
-    m5Conf.mem_size = k1Conf->mem_size;
-    m5Conf.kernStart = k1Conf->kernStart;
-    m5Conf.kernEnd = k1Conf->kernEnd;
-    m5Conf.entryPoint = k1Conf->entryPoint;
-    m5Conf.diskUnit = k1Conf->diskUnit;
-    m5Conf.diskCount = k1Conf->diskCount;
-    m5Conf.diskPAddr = k1Conf->diskPAddr;
-    m5Conf.diskBlock = k1Conf->diskBlock;
-    m5Conf.diskOperation = k1Conf->diskOperation;
-    m5Conf.outputChar = k1Conf->outputChar;
-    m5Conf.inputChar = k1Conf->inputChar;
-    m5Conf.bootStrapImpure = k1Conf->bootStrapImpure;
-    m5Conf.bootStrapCPU = k1Conf->bootStrapCPU;
+    m5Conf.last_offset = m5AlphaAccess->last_offset;
+    m5Conf.version = m5AlphaAccess->version;
+    m5Conf.numCPUs = m5AlphaAccess->numCPUs;
+    m5Conf.intrClockFrequency = m5AlphaAccess->intrClockFrequency;
+    m5Conf.cpuClock = m5AlphaAccess->cpuClock;
+    m5Conf.mem_size = m5AlphaAccess->mem_size;
+    m5Conf.kernStart = m5AlphaAccess->kernStart;
+    m5Conf.kernEnd = m5AlphaAccess->kernEnd;
+    m5Conf.entryPoint = m5AlphaAccess->entryPoint;
+    m5Conf.diskUnit = m5AlphaAccess->diskUnit;
+    m5Conf.diskCount = m5AlphaAccess->diskCount;
+    m5Conf.diskPAddr = m5AlphaAccess->diskPAddr;
+    m5Conf.diskBlock = m5AlphaAccess->diskBlock;
+    m5Conf.diskOperation = m5AlphaAccess->diskOperation;
+    m5Conf.outputChar = m5AlphaAccess->outputChar;
+    m5Conf.inputChar = m5AlphaAccess->inputChar;
+    m5Conf.bootStrapImpure = m5AlphaAccess->bootStrapImpure;
+    m5Conf.bootStrapCPU = m5AlphaAccess->bootStrapCPU;
 
     if (m5Conf.version != ALPHA_ACCESS_VERSION)  {
         panic("Console version mismatch. Console expects %d. has %d \n",
@@ -776,12 +766,10 @@ unixBoot(int go, int argc, char **argv)
    * MP bootstrap
    */
     for (i = 1; i < m5Conf.numCPUs; i++) {
-        volatile struct AlphaAccess *k1Conf;
-        k1Conf = (volatile struct AlphaAccess *)(ALPHA_ACCESS_BASE);
         printf_lock("Bootstraping CPU %d with sp=0x%x\n",
                     i, bootStrapImpure[i]);
-        k1Conf->bootStrapImpure = bootStrapImpure[i];
-        k1Conf->bootStrapCPU = i;
+        m5AlphaAccess->bootStrapImpure = bootStrapImpure[i];
+        m5AlphaAccess->bootStrapCPU = i;
     }
 
     /*
@@ -866,7 +854,6 @@ struct {
 void
 DeviceOperation(long op, long channel, long count, long address, long block)
 {
-    struct AlphaAccess *k1Conf = (struct AlphaAccess *)(ALPHA_ACCESS_BASE);
     long pAddr;
 
     if (strcmp(deviceState[channel].name, BOOTDEVICE_NAME )) {
@@ -877,10 +864,10 @@ DeviceOperation(long op, long channel, long count, long address, long block)
         panic("DeviceRead: request out of range \n");
     }
 
-    k1Conf->diskCount = count;
-    k1Conf->diskPAddr = pAddr;
-    k1Conf->diskBlock = block;
-    k1Conf->diskOperation = op; /* launch */
+    m5AlphaAccess->diskCount = count;
+    m5AlphaAccess->diskPAddr = pAddr;
+    m5AlphaAccess->diskBlock = block;
+    m5AlphaAccess->diskOperation = op; /* launch */
 }
 
 /*

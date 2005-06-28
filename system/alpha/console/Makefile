@@ -36,34 +36,23 @@ LD=$(CROSS_COMPILE)ld
 
 DBMENTRY= fffffc0000010000
 CFLAGS=-I . -I ../h -I$(M5)/dev -fno-builtin -Wa,-m21164
-OBJS=dbmentry.o printf.o paljtokern.o paljtoslave.o
-TLOBJS+=$(OBJS) console_tl.o
-TSOBJS+=$(OBJS) console_ts.o
+OBJS=dbmentry.o printf.o paljtokern.o paljtoslave.o console.o
 
 ### Make sure that the M5 variable is set ###
 ifndef M5
 $(error The M5 variable must be set)
 endif
 
-all: console_tl console_ts
+all: console
 
 %.o: %.S
 	$(CC) $(CFLAGS) -nostdinc -o $@ -c $<
 
-console_ts.o: console.c
-	$(CC)  -g3 $(CFLAGS) -D TSUNAMI -o $@ -c $<
-
-console_tl.o: console.c
-	$(CC)  -g3 $(CFLAGS) -D TLASER  -o $@ -c $< 
-
-printf.o: printf.c 
+%.o: %.c
 	$(CC)  -g3 $(CFLAGS) -o $@ -c $<
 
-console_ts: $(TSOBJS)
-	$(LD) -o console_ts -N -Ttext $(DBMENTRY) -non_shared $(TSOBJS) -lc
-
-console_tl: $(TLOBJS)
-	$(LD) -o console_tl -N -Ttext $(DBMENTRY) -non_shared $(TLOBJS) -lc
+console: $(OBJS)
+	$(LD) -o console -N -Ttext $(DBMENTRY) -non_shared $(OBJS) -lc
 
 clean:
-	rm -f *.o console_t?
+	rm -f *.o console
