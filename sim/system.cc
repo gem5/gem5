@@ -46,7 +46,7 @@ int System::numSystemsRunning = 0;
 
 System::System(Params *p)
     : SimObject(p->name), memctrl(p->memctrl), physmem(p->physmem),
-      init_param(p->init_param), params(p)
+      init_param(p->init_param), numcpus(0), params(p)
 {
     // add self to global system list
     systemList.push_back(this);
@@ -204,13 +204,26 @@ System::breakpoint()
 }
 
 int
-System::registerExecContext(ExecContext *xc)
+System::registerExecContext(ExecContext *xc, int id)
 {
-    int xcIndex = execContexts.size();
-    execContexts.push_back(xc);
+    if (id == -1) {
+        for (id = 0; id < execContexts.size(); id++) {
+            if (!execContexts[id])
+                break;
+        }
+    }
+
+    if (execContexts.size() <= id)
+        execContexts.resize(id + 1);
+
+    if (execContexts[id])
+        panic("Cannot have two CPUs with the same id (%d)\n", id);
+
+    execContexts[id] = xc;
+    numcpus++;
 
     RemoteGDB *rgdb = new RemoteGDB(this, xc);
-    GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
+    GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
     gdbl->listen();
     /**
      * Uncommenting this line waits for a remote debugger to connect
@@ -218,13 +231,13 @@ System::registerExecContext(ExecContext *xc)
      */
     //gdbl->accept();
 
-    if (remoteGDB.size() <= xcIndex) {
-        remoteGDB.resize(xcIndex+1);
+    if (remoteGDB.size() <= id) {
+        remoteGDB.resize(id + 1);
     }
 
-    remoteGDB[xcIndex] = rgdb;
+    remoteGDB[id] = rgdb;
 
-    return xcIndex;
+    return id;
 }
 
 void
@@ -238,15 +251,15 @@ System::startup()
 }
 
 void
-System::replaceExecContext(ExecContext *xc, int xcIndex)
+System::replaceExecContext(ExecContext *xc, int id)
 {
-    if (xcIndex >= execContexts.size()) {
-        panic("replaceExecContext: bad xcIndex, %d >= %d\n",
-              xcIndex, execContexts.size());
+    if (id >= execContexts.size()) {
+        panic("replaceExecContext: bad id, %d >= %d\n",
+              id, execContexts.size());
     }
 
-    execContexts[xcIndex] = xc;
-    remoteGDB[xcIndex]->replaceExecContext(xc);
+    execContexts[id] = xc;
+    remoteGDB[id]->replaceExecContext(xc);
 }
 
 void

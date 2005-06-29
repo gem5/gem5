@@ -10,6 +10,7 @@ class BaseCPU(SimObject):
         itb = Param.AlphaITB("Instruction TLB")
         mem = Param.FunctionalMemory("memory")
         system = Param.System(Parent.any, "system object")
+        cpu_id = Param.Int(-1, "CPU identifier")
     else:
         workload = VectorParam.Process("processes to run")
 

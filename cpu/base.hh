@@ -111,6 +111,7 @@ class BaseCPU : public SimObject
         Tick functionTraceStart;
 #ifdef FULL_SYSTEM
         System *system;
+        int cpu_id;
 #endif
     };
 
