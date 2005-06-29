@@ -56,7 +56,7 @@ using namespace std;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
                            System *s, BaseCPU *c, Platform *p,
-                           int num_cpus, MemoryController *mmu, Addr a,
+                           MemoryController *mmu, Addr a,
                            HierParams *hier, Bus *bus)
     : PioDevice(name, p), disk(d), console(cons), system(s), cpu(c), addr(a)
 {
@@ -72,7 +72,6 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->last_offset = size - 1;
 
     alphaAccess->version = ALPHA_ACCESS_VERSION;
-    alphaAccess->numCPUs = num_cpus;
     alphaAccess->diskUnit = 1;
 
     alphaAccess->diskCount = 0;
@@ -89,8 +88,9 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
 }
 
 void
-AlphaConsole::init()
+AlphaConsole::startup()
 {
+    alphaAccess->numCPUs = system->getNumCPUs();
     alphaAccess->kernStart = system->getKernelStart();
     alphaAccess->kernEnd = system->getKernelEnd();
     alphaAccess->entryPoint = system->getKernelEntry();
@@ -330,7 +330,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 
     SimObjectParam<SimConsole *> sim_console;
     SimObjectParam<SimpleDisk *> disk;
-    Param<int> num_cpus;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     SimObjectParam<System *> system;
@@ -346,7 +345,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
     INIT_PARAM(sim_console, "The Simulator Console"),
     INIT_PARAM(disk, "Simple Disk"),
-    INIT_PARAM_DFLT(num_cpus, "Number of CPU's", 1),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(system, "system object"),
@@ -361,8 +359,7 @@ END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 CREATE_SIM_OBJECT(AlphaConsole)
 {
     return new AlphaConsole(getInstanceName(), sim_console, disk,
-                            system, cpu, platform, num_cpus, mmu,
-                            addr, hier, io_bus);
+                            system, cpu, platform, mmu, addr, hier, io_bus);
 }
 
 REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

@@ -58,6 +58,15 @@ class System : public SimObject
     uint64_t init_param;
 
     std::vector<ExecContext *> execContexts;
+    int numcpus;
+
+    int getNumCPUs()
+    {
+        if (numcpus != execContexts.size())
+            panic("cpu array not fully populated!");
+
+        return numcpus;
+    }
 
     /** kernel Symbol table */
     SymbolTable *kernelSymtab;
@@ -150,7 +159,7 @@ class System : public SimObject
      */
     Addr getKernelEntry() const { return kernelEntry; }
 
-    int registerExecContext(ExecContext *xc);
+    int registerExecContext(ExecContext *xc, int xcIndex);
     void replaceExecContext(ExecContext *xc, int xcIndex);
 
     void regStats();

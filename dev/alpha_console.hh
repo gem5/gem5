@@ -102,10 +102,10 @@ class AlphaConsole : public PioDevice
     /** Standard Constructor */
     AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
                  System *s, BaseCPU *c, Platform *platform,
-                 int num_cpus, MemoryController *mmu, Addr addr,
+                 MemoryController *mmu, Addr addr,
                  HierParams *hier, Bus *bus);
 
-    virtual void init();
+    virtual void startup();
 
     /**
      * memory mapped reads and writes

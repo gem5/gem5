@@ -71,9 +71,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
 #ifdef FULL_SYSTEM
 SimObjectParam<System *> system;
+Param<int> cpu_id;
 SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
-Param<int> mult;
 #else
 SimObjectVectorParam<Process *> workload;
 #endif // FULL_SYSTEM
@@ -164,9 +164,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
 #ifdef FULL_SYSTEM
     INIT_PARAM(system, "System object"),
+    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(itb, "Instruction translation buffer"),
     INIT_PARAM(dtb, "Data translation buffer"),
-    INIT_PARAM(mult, "System clock multiplier"),
 #else
     INIT_PARAM(workload, "Processes to run"),
 #endif // FULL_SYSTEM
@@ -274,9 +274,6 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     DerivAlphaFullCPU *cpu;
 
 #ifdef FULL_SYSTEM
-    if (mult != 1)
-        panic("Processor clock multiplier must be 1?\n");
-
     // Full-system only supports a single thread for the moment.
     int actual_num_threads = 1;
 #else
@@ -300,6 +297,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
 
 #ifdef FULL_SYSTEM
     params.system = system;
+    params.cpu_id = cpu_id;
     params.itb = itb;
     params.dtb = dtb;
 #else
