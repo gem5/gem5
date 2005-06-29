@@ -135,7 +135,6 @@ IdeDisk::reset(int id)
     memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
 
     cmdReg.error = 1;
-
     dmaInterfaceBytes = 0;
     curPrdAddr = 0;
     curSector = 0;
@@ -211,7 +210,6 @@ IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
 uint16_t
 IdeDisk::read(const Addr &offset, RegType_t type)
 {
-
     uint16_t data;
     DevAction_t action = ACT_NONE;
 
