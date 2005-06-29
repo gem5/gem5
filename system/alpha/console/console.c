@@ -99,7 +99,7 @@
     } while (0)
 
 
-void unixBoot(int go, int argc, char **argv);
+void unixBoot(int argc, char **argv);
 void JToKern(char *bootadr, ulong rpb_percpu, ulong free_pfn, ulong k_argc,
              char **k_argv, char **envp);
 void JToPal(ulong bootadr);
@@ -196,12 +196,10 @@ main(int argc, char **argv)
     /*
      * setup arguments to kernel
      */
-    unixBoot(1, argc, argv);
+    unixBoot(argc, argv);
 
-    x = *(volatile int *)(K1BASE-4);
-    while (1)
-        continue;
-    return x;
+    panic("unix failed to boot\n");
+    return 1;
 }
 
 /*
@@ -381,14 +379,10 @@ int kargc;
 ulong free_pfn;
 struct rpb_percpu *rpb_percpu;
 
-#define MAX_CPUS 32
-
-ulong bootStrapImpure[MAX_CPUS];
-
 char *
 unix_boot_alloc(int pages)
 {
-    char *ret = (char *) unix_boot_mem;
+    char *ret = (char *)unix_boot_mem;
     unix_boot_mem += (pages * PAGE_SIZE);
     return ret;
 }
@@ -403,7 +397,7 @@ struct rpb *rpb;
 extern ulong _end;
 
 void
-unixBoot(int go, int argc, char **argv)
+unixBoot(int argc, char **argv)
 {
     ulong *second,  *third_kernel, ptr, *tbb, size, *percpu_logout;
     unsigned char *mdt_bitmap;
@@ -447,9 +441,9 @@ unixBoot(int go, int argc, char **argv)
 
     printf_lock("First free page after ROM 0x%x\n", unix_boot_mem);
 
-    rpb = (struct rpb *) unix_boot_alloc( HWRPB_PAGES);
+    rpb = (struct rpb *)unix_boot_alloc(HWRPB_PAGES);
 
-    mdt_bitmap =  (unsigned char *) unix_boot_alloc(MDT_BITMAP_PAGES);
+    mdt_bitmap =  (unsigned char *)unix_boot_alloc(MDT_BITMAP_PAGES);
     first = (ulong *)unix_boot_alloc(1);
     second = (ulong *)unix_boot_alloc(1);
     third_rpb = (ulong *)unix_boot_alloc(1);
@@ -624,10 +618,6 @@ unixBoot(int go, int argc, char **argv)
 
         printf_lock("KSP: 0x%x PTBR 0x%x\n",
                     thisCPU->rpb_pcb.rpb_ksp, thisCPU->rpb_pcb.rpb_ptbr);
-
-        if (i) {
-            bootStrapImpure[i] = (ulong)unix_boot_alloc(1);
-        }
     }
 
     nextPtr = (ulong)rpb_percpu + percpu_size * m5Conf.numCPUs;
@@ -766,9 +756,9 @@ unixBoot(int go, int argc, char **argv)
    * MP bootstrap
    */
     for (i = 1; i < m5Conf.numCPUs; i++) {
-        printf_lock("Bootstraping CPU %d with sp=0x%x\n",
-                    i, bootStrapImpure[i]);
-        m5AlphaAccess->bootStrapImpure = bootStrapImpure[i];
+        ulong stack = (ulong)unix_boot_alloc(1);
+        printf_lock("Bootstraping CPU %d with sp=0x%x\n", i, stack);
+        m5AlphaAccess->bootStrapImpure = stack;
         m5AlphaAccess->bootStrapCPU = i;
     }
 
@@ -781,9 +771,7 @@ unixBoot(int go, int argc, char **argv)
         printf_lock("unix_boot_mem ends at %x \n", unix_boot_mem);
     }
 
-    if (go)
-        JToKern((char *)bootadr, (ulong)rpb_percpu, free_pfn, kargc, kargv,
-                NULL);
+    JToKern((char *)bootadr, (ulong)rpb_percpu, free_pfn, kargc, kargv, NULL);
 }
 
 
