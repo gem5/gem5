@@ -260,7 +260,6 @@ IdeDisk::read(const Addr &offset, RegType_t type)
         updateState(action);
 
     return data;
-
 }
 
 void
@@ -787,7 +786,7 @@ IdeDisk::intrPost()
     intrPending = true;
 
     // talk to controller to set interrupt
-    if (ctrl){
+    if (ctrl) {
         ctrl->bmi_regs[BMIS0] |= IDEINTS;
         ctrl->intrPost();
     }
