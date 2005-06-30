@@ -203,6 +203,8 @@ System::breakpoint()
     return remoteGDB[0]->trap(ALPHA_KENTRY_INT);
 }
 
+int rgdb_wait = -1;
+
 int
 System::registerExecContext(ExecContext *xc, int id)
 {
@@ -229,7 +231,8 @@ System::registerExecContext(ExecContext *xc, int id)
      * Uncommenting this line waits for a remote debugger to connect
      * to the simulator before continuing.
      */
-    //gdbl->accept();
+    if (rgdb_wait != -1 && rgdb_wait == id)
+        gdbl->accept();
 
     if (remoteGDB.size() <= id) {
         remoteGDB.resize(id + 1);
