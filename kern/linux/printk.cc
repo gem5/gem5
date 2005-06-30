@@ -29,12 +29,8 @@
 #include <sys/types.h>
 #include <algorithm>
 
-#include "base/cprintf.hh"
 #include "base/trace.hh"
-#include "sim/host.hh"
 #include "targetarch/arguments.hh"
-#include "targetarch/vtophys.hh"
-#include "kern/linux/printk.hh"
 
 using namespace std;
 

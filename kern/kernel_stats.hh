@@ -34,10 +34,6 @@
 #include <string>
 #include <vector>
 
-#include "base/statistics.hh"
-#include "sim/serialize.hh"
-#include "targetarch/isa_traits.hh"
-
 class BaseCPU;
 class ExecContext;
 class FnEvent;

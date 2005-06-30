@@ -29,11 +29,7 @@
 #ifndef __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
 #define __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
 
-#include "sim/host.hh"
-#include "sim/system.hh"
-#include "targetarch/isa_traits.hh"
 #include "kern/freebsd/freebsd_events.hh"
-
 
 class FreebsdSystem : public System
 {

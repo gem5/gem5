@@ -32,13 +32,8 @@
 
 #include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"
-#include "base/statistics.hh"
-#include "base/stats/bin.hh"
 #include "cpu/exec_context.hh"
-#include "cpu/pc_event.hh"
-#include "cpu/static_inst.hh"
 #include "kern/kernel_stats.hh"
-#include "kern/linux/linux_syscalls.hh"
 #include "kern/tru64/tru64_syscalls.hh"
 
 using namespace std;

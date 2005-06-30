@@ -29,10 +29,6 @@
 #ifndef __KERN_LINUX_LINUX_SYSTEM_HH__
 #define __KERN_LINUX_LINUX_SYSTEM_HH__
 
-#include "sim/host.hh"
-#include "sim/system.hh"
-#include "targetarch/isa_traits.hh"
-
 /**
  * MAGIC address where the kernel arguments should go. Defined as
  * PARAM in linux kernel alpha-asm.

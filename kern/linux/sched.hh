@@ -29,9 +29,6 @@
 #ifndef __KERN_LINUX_SCHED_HH__
 #define __KERN_LINUX_SCHED_HH__
 
-#include "targetarch/isa_traits.hh"
-#include "kern/linux/aligned.hh"
-
 namespace Linux {
     struct task_struct {
         uint8_t junk1[0xf4];

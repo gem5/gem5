@@ -28,24 +28,19 @@
 
 /**
  * @file
- * Modifications for the FreeBSD kernel.  Based off of kern/linux/linux_system.cc.
+ * Modifications for the FreeBSD kernel.
+ * Based on kern/linux/linux_system.cc.
  * Currently only used to skip DELAY function.
  *
  */
 
 #include "base/loader/symtab.hh"
-#include "base/trace.hh"
 #include "cpu/exec_context.hh"
-#include "cpu/base.hh"
 #include "kern/freebsd/freebsd_system.hh"
-#include "kern/system_events.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
-#include "dev/platform.hh"
-#include "targetarch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
-#include "sim/debug.hh"
 
 using namespace std;
 

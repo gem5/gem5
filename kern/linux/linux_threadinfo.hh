@@ -30,9 +30,7 @@
 #define __LINUX_TREADNIFO_HH__
 
 
-#include "targetarch/isa_traits.hh"
 #include "targetarch/vptr.hh"
-#include "cpu/exec_context.hh"
 #include "kern/linux/thread_info.hh"
 #include "kern/linux/sched.hh"
 

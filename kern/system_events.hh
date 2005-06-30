@@ -29,8 +29,6 @@
 #ifndef __SYSTEM_EVENTS_HH__
 #define __SYSTEM_EVENTS_HH__
 
-#include "cpu/pc_event.hh"
-
 class System;
 
 class SkipFuncEvent : public PCEvent

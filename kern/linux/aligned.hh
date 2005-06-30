@@ -30,9 +30,6 @@
 #define __KERN_LINUX_ALIGNED_HH__
 
 
-#include "sim/host.hh"
-#include "targetarch/isa_traits.hh"
-
 /* GCC 3.3.X has a bug in which attributes+typedefs don't work. 3.2.X is fine
  * as in 3.4.X, but the bug is marked will not fix in 3.3.X so here is
  * the work around.
