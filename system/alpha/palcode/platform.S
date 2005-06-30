@@ -313,17 +313,34 @@ EXPORT(sys_wripir)
     and   r16, MAXPROC, r14	// mask the top stuff: MAXPROC+1 CPUs supported
     bis   r31, 0x1, r16		// get a one
     sll   r16, r14, r14		// shift the bit to the right place
+#if defined(TSUNAMI) || defined(BIG_TSUNAMI)
+    sll   r14,IPIQ_shift,r14
+#endif
+
 
     //
     // Build the Broadcast Space base address
     //
+#if defined(TSUNAMI) || defined(BIG_TSUNAMI)
+    lda   r16,0xf01(r31)
+    sll   r16,32,r16
+    ldah  r13,0xa0(r31)
+    sll   r13,8,r13
+    bis   r16,r13,r16
+    lda   r16,IPIQ_addr(r16)
+#elif defined(TLASER)
     lda   r13, 0xff8e(r31)	// Load the upper address bits
     sll   r13, 24, r13		// shift them to the top
+#endif
 
     //
     // Send out the IP Intr
     //
+#if defined(TSUNAMI) || defined(BIG_TSUNAMI)
+    stq_p r14, 0(r16)		// Tsunami MISC Register
+#elif defined(TLASER)
     stq_p r14, 0x40(r13)	// Write to TLIPINTR reg
+#endif
     wmb				// Push out the store
     hw_rei
 
