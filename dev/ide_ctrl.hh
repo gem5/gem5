@@ -64,15 +64,9 @@
 #define IDE_COMMAND_OFFSET      IDE_STATUS_OFFSET
 
 // PCI device specific register byte offsets
-#define PCI_IDE_TIMING    0x40
-#define PCI_SLAVE_TIMING  0x44
-#define PCI_UDMA33_CTRL   0x48
-#define PCI_UDMA33_TIMING 0x4a
+#define IDE_CTRL_CONFIG_START 0x40
+#define IDE_CTRL_CONFIG_END ((IDE_CTRL_CONFIG_START) + sizeof(pci_config_regs))
 
-#define IDETIM  (0)
-#define SIDETIM (4)
-#define UDMACTL (5)
-#define UDMATIM (6)
 
 typedef enum RegType {
     COMMAND_BLOCK = 0,
@@ -119,8 +113,30 @@ class IdeController : public PciDev
     uint8_t bmi_regs[16];
     /** Shadows of the device select bit */
     uint8_t dev[2];
-    /** Registers used in PCI configuration */
-    uint8_t pci_regs[8];
+    /** Registers used in device specific PCI configuration */
+    union {
+        uint8_t data[22];
+
+        struct {
+            uint32_t idetim;
+            uint8_t sidetim;
+            uint8_t reserved_45;
+            uint8_t reserved_46;
+            uint8_t reserved_47;
+            uint8_t udmactl;
+            uint8_t reserved_49;
+            uint16_t udmatim;
+            uint8_t reserved_4c;
+            uint8_t reserved_4d;
+            uint8_t reserved_4e;
+            uint8_t reserved_4f;
+            uint8_t reserved_50;
+            uint8_t reserved_51;
+            uint8_t reserved_52;
+            uint8_t reserved_53;
+            uint16_t ideconfig;
+        };
+    } pci_config_regs;
 
     // Internal management variables
     bool io_enabled;

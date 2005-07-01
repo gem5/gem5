@@ -78,33 +78,35 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
 
     switch(size) {
       case sizeof(uint32_t):
-        memcpy((uint8_t*)data, config.data + offset, sizeof(uint32_t));
+        memcpy(data, &config.data[offset], sizeof(uint32_t));
         *(uint32_t*)data = htoa(*(uint32_t*)data);
+
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
                 params()->deviceNum, params()->functionNum, offset, size,
-                *(uint32_t*)(config.data + offset));
+                *(uint32_t*)data);
         break;
 
       case sizeof(uint16_t):
-        memcpy((uint8_t*)data, config.data + offset, sizeof(uint16_t));
+        memcpy(data, &config.data[offset], sizeof(uint16_t));
         *(uint16_t*)data = htoa(*(uint16_t*)data);
+
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
                 params()->deviceNum, params()->functionNum, offset, size,
-                *(uint16_t*)(config.data + offset));
+                *(uint16_t*)data);
         break;
 
       case sizeof(uint8_t):
-        memcpy((uint8_t*)data, config.data + offset, sizeof(uint8_t));
+        memcpy(data, &config.data[offset], sizeof(uint8_t));
         DPRINTF(PCIDEV,
                 "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
                 params()->deviceNum, params()->functionNum, offset, size,
-                (uint16_t)(*(uint8_t*)(config.data + offset)));
+                *data);
         break;
 
       default:
-        panic("Invalid Read Size");
+        panic("Invalid PCI configuration read size!\n");
     }
 }
 

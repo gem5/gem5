@@ -59,17 +59,18 @@ TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
     : Event(&mainEventQueue), tsunami(t), interval(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
+    intr_count = 0;
     schedule(curTick + interval);
 }
 
 void
 TsunamiIO::RTCEvent::process()
 {
-    static int intr_count = 0;
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
     schedule(curTick + interval);
     //Actually interrupt the processor here
     tsunami->cchip->postRTC();
+
     if (intr_count == 1023)
         tm.tm_sec = (tm.tm_sec + 1) % 60;
 
@@ -113,10 +114,10 @@ TsunamiIO::ClockEvent::ClockEvent()
     DPRINTF(Tsunami, "Clock Event Initilizing\n");
     mode = 0;
 
-    current_count.whole = 0;
-    latched_count.whole = 0;
+    current_count = 0;
+    latched_count = 0;
     latch_on = false;
-    read_msb = false;
+    read_byte = READ_LSB;
 }
 
 void
@@ -128,7 +129,7 @@ TsunamiIO::ClockEvent::process()
     else
         schedule(curTick + interval);
 
-     current_count.whole--; //decrement count
+    current_count--; //decrement count
 }
 
 void
@@ -138,7 +139,7 @@ TsunamiIO::ClockEvent::Program(int count)
     schedule(curTick + count * interval);
     status = 0;
 
-    current_count.whole = count;
+    current_count = (uint16_t)count;
 }
 
 const char *
@@ -162,32 +163,45 @@ TsunamiIO::ClockEvent::Status()
 void
 TsunamiIO::ClockEvent::LatchCount()
 {
+    // behave like a real latch
     if(!latch_on) {
         latch_on = true;
-        read_msb = false;
-        latched_count.whole = current_count.whole;
+        read_byte = READ_LSB;
+        latched_count = current_count;
     }
 }
 
 uint8_t
 TsunamiIO::ClockEvent::Read()
 {
+   uint8_t result = 0;
+
     if(latch_on) {
-        if(!read_msb) {
-            read_msb = true;
-            return latched_count.half.lsb;
-        } else {
+        switch (read_byte) {
+          case READ_LSB:
+            read_byte = READ_MSB;
+            result = (uint8_t)latched_count;
+            break;
+          case READ_MSB:
+            read_byte = READ_LSB;
             latch_on = false;
-            return latched_count.half.msb;
+            result = latched_count >> 8;
+            break;
         }
     } else {
-        if(!read_msb) {
-            read_msb = true;
-            return current_count.half.lsb;
-        } else {
-            return current_count.half.msb;
+        switch (read_byte) {
+          case READ_LSB:
+            read_byte = READ_MSB;
+            result = (uint8_t)current_count;
+            break;
+          case READ_MSB:
+            read_byte = READ_LSB;
+            result = current_count >> 8;
+            break;
         }
     }
+
+    return result;
 }
 
 
