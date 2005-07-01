@@ -72,8 +72,14 @@ class SimpleDisk;
 class AlphaConsole : public PioDevice
 {
   protected:
+    struct Access : public AlphaAccess
+    {
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
+
     union {
-        AlphaAccess *alphaAccess;
+        Access *alphaAccess;
         uint8_t *consoleData;
     };
 
@@ -96,10 +102,10 @@ class AlphaConsole : public PioDevice
     /** Standard Constructor */
     AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
                  System *s, BaseCPU *c, Platform *platform,
-                 int num_cpus, MemoryController *mmu, Addr addr,
+                 MemoryController *mmu, Addr addr,
                  HierParams *hier, Bus *bus);
 
-    virtual void init();
+    virtual void startup();
 
     /**
      * memory mapped reads and writes

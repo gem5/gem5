@@ -46,7 +46,7 @@ int System::numSystemsRunning = 0;
 
 System::System(Params *p)
     : SimObject(p->name), memctrl(p->memctrl), physmem(p->physmem),
-      init_param(p->init_param), params(p)
+      init_param(p->init_param), numcpus(0), params(p)
 {
     // add self to global system list
     systemList.push_back(this);
@@ -147,7 +147,7 @@ System::System(Params *p)
      * Set the hardware reset parameter block system type and revision
      * information to Tsunami.
      */
-    if (consoleSymtab->findAddress("xxm_rpb", addr)) {
+    if (consoleSymtab->findAddress("m5_rpb", addr)) {
         Addr paddr = vtophys(physmem, addr);
         char *hwrpb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
@@ -180,34 +180,67 @@ System::~System()
 #endif
 }
 
+void
+System::setAlphaAccess(Addr access)
+{
+    Addr addr = 0;
+    if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
+        Addr paddr = vtophys(physmem, addr);
+        uint64_t *m5AlphaAccess =
+            (uint64_t *)physmem->dma_addr(paddr, sizeof(uint64_t));
+
+        if (!m5AlphaAccess)
+            panic("could not translate m5AlphaAccess addr\n");
+
+        *m5AlphaAccess = htoa(EV5::Phys2K0Seg(access));
+    } else
+        panic("could not find m5AlphaAccess\n");
+}
+
 bool
 System::breakpoint()
 {
     return remoteGDB[0]->trap(ALPHA_KENTRY_INT);
 }
 
+int rgdb_wait = -1;
+
 int
-System::registerExecContext(ExecContext *xc)
+System::registerExecContext(ExecContext *xc, int id)
 {
-    int xcIndex = execContexts.size();
-    execContexts.push_back(xc);
+    if (id == -1) {
+        for (id = 0; id < execContexts.size(); id++) {
+            if (!execContexts[id])
+                break;
+        }
+    }
+
+    if (execContexts.size() <= id)
+        execContexts.resize(id + 1);
+
+    if (execContexts[id])
+        panic("Cannot have two CPUs with the same id (%d)\n", id);
+
+    execContexts[id] = xc;
+    numcpus++;
 
     RemoteGDB *rgdb = new RemoteGDB(this, xc);
-    GDBListener *gdbl = new GDBListener(rgdb, 7000 + xcIndex);
+    GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
     gdbl->listen();
     /**
      * Uncommenting this line waits for a remote debugger to connect
      * to the simulator before continuing.
      */
-    //gdbl->accept();
+    if (rgdb_wait != -1 && rgdb_wait == id)
+        gdbl->accept();
 
-    if (remoteGDB.size() <= xcIndex) {
-        remoteGDB.resize(xcIndex+1);
+    if (remoteGDB.size() <= id) {
+        remoteGDB.resize(id + 1);
     }
 
-    remoteGDB[xcIndex] = rgdb;
+    remoteGDB[id] = rgdb;
 
-    return xcIndex;
+    return id;
 }
 
 void
@@ -221,15 +254,15 @@ System::startup()
 }
 
 void
-System::replaceExecContext(ExecContext *xc, int xcIndex)
+System::replaceExecContext(ExecContext *xc, int id)
 {
-    if (xcIndex >= execContexts.size()) {
-        panic("replaceExecContext: bad xcIndex, %d >= %d\n",
-              xcIndex, execContexts.size());
+    if (id >= execContexts.size()) {
+        panic("replaceExecContext: bad id, %d >= %d\n",
+              id, execContexts.size());
     }
 
-    execContexts[xcIndex] = xc;
-    remoteGDB[xcIndex]->replaceExecContext(xc);
+    execContexts[id] = xc;
+    remoteGDB[id]->replaceExecContext(xc);
 }
 
 void

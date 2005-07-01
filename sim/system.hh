@@ -58,6 +58,15 @@ class System : public SimObject
     uint64_t init_param;
 
     std::vector<ExecContext *> execContexts;
+    int numcpus;
+
+    int getNumCPUs()
+    {
+        if (numcpus != execContexts.size())
+            panic("cpu array not fully populated!");
+
+        return numcpus;
+    }
 
     /** kernel Symbol table */
     SymbolTable *kernelSymtab;
@@ -128,6 +137,11 @@ class System : public SimObject
 
   public:
     /**
+     * Set the m5AlphaAccess pointer in the console
+     */
+    void setAlphaAccess(Addr access);
+
+    /**
      * Returns the addess the kernel starts at.
      * @return address the kernel starts at
      */
@@ -145,7 +159,7 @@ class System : public SimObject
      */
     Addr getKernelEntry() const { return kernelEntry; }
 
-    int registerExecContext(ExecContext *xc);
+    int registerExecContext(ExecContext *xc, int xcIndex);
     void replaceExecContext(ExecContext *xc, int xcIndex);
 
     void regStats();

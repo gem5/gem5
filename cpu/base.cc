@@ -189,15 +189,15 @@ BaseCPU::registerExecContexts()
 {
     for (int i = 0; i < execContexts.size(); ++i) {
         ExecContext *xc = execContexts[i];
-        int cpu_id;
-
 #ifdef FULL_SYSTEM
-        cpu_id = system->registerExecContext(xc);
-#else
-        cpu_id = xc->process->registerExecContext(xc);
-#endif
+        int id = params->cpu_id;
+        if (id != -1)
+            id += i;
 
-        xc->cpu_id = cpu_id;
+        xc->cpu_id = system->registerExecContext(xc, id);
+#else
+        xc->cpu_id = xc->process->registerExecContext(xc);
+#endif
     }
 }
 

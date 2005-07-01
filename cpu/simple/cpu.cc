@@ -823,7 +823,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     SimObjectParam<AlphaDTB *> dtb;
     SimObjectParam<FunctionalMemory *> mem;
     SimObjectParam<System *> system;
-    Param<int> mult;
+    Param<int> cpu_id;
 #else
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
@@ -855,7 +855,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM(dtb, "Data TLB"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
-    INIT_PARAM(mult, "system clock multiplier"),
+    INIT_PARAM(cpu_id, "processor ID"),
 #else
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
@@ -873,11 +873,6 @@ END_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 
 CREATE_SIM_OBJECT(SimpleCPU)
 {
-#ifdef FULL_SYSTEM
-    if (mult != 1)
-        panic("processor clock multiplier must be 1\n");
-#endif
-
     SimpleCPU::Params *params = new SimpleCPU::Params();
     params->name = getInstanceName();
     params->numberOfThreads = 1;
@@ -898,6 +893,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->dtb = dtb;
     params->mem = mem;
     params->system = system;
+    params->cpu_id = cpu_id;
 #else
     params->process = workload;
 #endif
