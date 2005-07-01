@@ -13,7 +13,7 @@ class TsunamiCChip(FooPioDevice):
 
 class TsunamiFake(FooPioDevice):
     type = 'TsunamiFake'
-    size = Param.Addr("Size of address range")
+    size = Param.Addr(0x8, "Size of address range")
 
 class TsunamiIO(FooPioDevice):
     type = 'TsunamiIO'

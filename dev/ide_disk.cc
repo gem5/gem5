@@ -220,40 +220,43 @@ IdeDisk::read(const Addr &offset, RegType_t type)
         else if (offset == DATA_OFFSET)
             action = ACT_DATA_READ_SHORT;
 
-            switch (offset) {
-              case DATA_OFFSET:
-                data = cmdReg.data;
-                break;
-              case ERROR_OFFSET:
-                data = cmdReg.error;
-                break;
-              case NSECTOR_OFFSET:
-                data = cmdReg.sec_count;
-                break;
-              case SECTOR_OFFSET:
-                data = cmdReg.sec_num;
-                break;
-              case LCYL_OFFSET:
-                data = cmdReg.cyl_low;
-                break;
-              case HCYL_OFFSET:
-                data = cmdReg.cyl_high;
-                break;
-              case SELECT_OFFSET:
-                data = cmdReg.drive;
-                break;
-              case STATUS_OFFSET:
-                data = status;
-                break;
-              default:
-                panic("Invalid IDE command register offset: %#x\n", offset);
-            }
+        switch (offset) {
+          case DATA_OFFSET:
+            data = cmdReg.data;
+            break;
+          case ERROR_OFFSET:
+            data = cmdReg.error;
+            break;
+          case NSECTOR_OFFSET:
+            data = cmdReg.sec_count;
+            break;
+          case SECTOR_OFFSET:
+            data = cmdReg.sec_num;
+            break;
+          case LCYL_OFFSET:
+            data = cmdReg.cyl_low;
+            break;
+          case HCYL_OFFSET:
+            data = cmdReg.cyl_high;
+            break;
+          case SELECT_OFFSET:
+            data = cmdReg.drive;
+            break;
+          case STATUS_OFFSET:
+            data = status;
+            break;
+          default:
+            panic("Invalid IDE command register offset: %#x\n", offset);
+        }
     }
     else if (type == CONTROL_BLOCK) {
         if (offset != ALTSTAT_OFFSET)
             panic("Invalid IDE control register offset: %#x\n", offset);
 
         data = status;
+    }
+    else {
+        panic("Invalid IDE register type: %#x\n", type);
     }
 
     if (action != ACT_NONE)
