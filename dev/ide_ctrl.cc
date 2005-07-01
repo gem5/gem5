@@ -76,10 +76,10 @@ IdeController::IdeController(Params *p)
 
     // zero out all of the registers
     memset(bmi_regs, 0, sizeof(bmi_regs));
-    memset(pci_regs, 0, sizeof(pci_regs));
+    memset(pci_config_regs.data, 0, sizeof(pci_config_regs.data));
 
     // setup initial values
-    *(uint32_t *)&pci_regs[IDETIM] = 0x80008000; // enable both channels
+    pci_config_regs.idetim = htoa((uint32_t)0x80008000); // enable both channels
     *(uint8_t *)&bmi_regs[BMIS0] = 0x60;
     *(uint8_t *)&bmi_regs[BMIS1] = 0x60;
 
@@ -249,6 +249,7 @@ IdeController::cacheAccess(MemReqPtr &req)
 void
 IdeController::ReadConfig(int offset, int size, uint8_t *data)
 {
+    int config_offset;
 
 #if TRACING_ON
     Addr origOffset = offset;
@@ -256,85 +257,66 @@ IdeController::ReadConfig(int offset, int size, uint8_t *data)
 
     if (offset < PCI_DEVICE_SPECIFIC) {
         PciDev::ReadConfig(offset, size, data);
-    } else {
-        if (offset >= PCI_IDE_TIMING && offset < (PCI_IDE_TIMING + 4)) {
-            offset -= PCI_IDE_TIMING;
-            offset += IDETIM;
+    } else if (offset >= IDE_CTRL_CONFIG_START && (offset + size) <= IDE_CTRL_CONFIG_END) {
 
-            if ((offset + size) > (IDETIM + 4))
-                panic("PCI read of IDETIM with invalid size\n");
-        } else if (offset == PCI_SLAVE_TIMING) {
-            offset -= PCI_SLAVE_TIMING;
-            offset += SIDETIM;
+        config_offset = offset - IDE_CTRL_CONFIG_START;
 
-            if ((offset + size) > (SIDETIM + 1))
-                panic("PCI read of SIDETIM with invalid size\n");
-        } else if (offset == PCI_UDMA33_CTRL) {
-            offset -= PCI_UDMA33_CTRL;
-            offset += UDMACTL;
+        switch(size) {
+          case sizeof(uint32_t):
+            memcpy(data, &pci_config_regs.data[config_offset], sizeof(uint32_t));
+            *(uint32_t*)data = htoa(*(uint32_t*)data);
+            break;
 
-            if ((offset + size) > (UDMACTL + 1))
-                panic("PCI read of UDMACTL with invalid size\n");
-        } else if (offset >= PCI_UDMA33_TIMING &&
-                   offset < (PCI_UDMA33_TIMING + 2)) {
-            offset -= PCI_UDMA33_TIMING;
-            offset += UDMATIM;
+          case sizeof(uint16_t):
+            memcpy(data, &pci_config_regs.data[config_offset], sizeof(uint16_t));
+            *(uint16_t*)data = htoa(*(uint16_t*)data);
+            break;
 
-            if ((offset + size) > (UDMATIM + 2))
-                panic("PCI read of UDMATIM with invalid size\n");
-        } else {
-            panic("PCI read of unimplemented register: %x\n", offset);
+          case sizeof(uint8_t):
+            memcpy(data, &pci_config_regs.data[config_offset], sizeof(uint8_t));
+            break;
+
+          default:
+            panic("Invalid PCI configuration read size!\n");
         }
-
-        memcpy((void *)data, (void *)&pci_regs[offset], size);
+    } else {
+        panic("Read of unimplemented PCI config. register: %x\n", offset);
     }
 
     DPRINTF(IdeCtrl, "PCI read offset: %#x (%#x) size: %#x data: %#x\n",
             origOffset, offset, size,
-            (*(uint32_t *)data) & (0xffffffff >> 8 * (4 - size)));
+            *(uint32_t *)data & (0xffffffff >> 8 * (4 - size)));
 }
 
 void
 IdeController::WriteConfig(int offset, int size, uint32_t data)
 {
+    int config_offset;
+
+    if (offset < PCI_DEVICE_SPECIFIC) {
+        PciDev::WriteConfig(offset, size, data);
+    } else if (offset >= IDE_CTRL_CONFIG_START && (offset + size) <= IDE_CTRL_CONFIG_END) {
+
+        config_offset = offset - IDE_CTRL_CONFIG_START;
+
+        switch(size) {
+          case sizeof(uint32_t):
+          case sizeof(uint16_t):
+          case sizeof(uint8_t):
+            memcpy(&pci_config_regs.data[config_offset], &data, size);
+            break;
+
+          default:
+            panic("Invalid PCI configuration write size!\n");
+        }
+
+    } else {
+        panic("Write of unimplemented PCI config. register: %x\n", offset);
+    }
+
     DPRINTF(IdeCtrl, "PCI write offset: %#x size: %#x data: %#x\n",
             offset, size, data & (0xffffffff >> 8 * (4 - size)));
 
-    // do standard write stuff if in standard PCI space
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::WriteConfig(offset, size, data);
-    } else {
-        if (offset >= PCI_IDE_TIMING && offset < (PCI_IDE_TIMING + 4)) {
-            offset -= PCI_IDE_TIMING;
-            offset += IDETIM;
-
-            if ((offset + size) > (IDETIM + 4))
-                panic("PCI write to IDETIM with invalid size\n");
-        } else if (offset == PCI_SLAVE_TIMING) {
-            offset -= PCI_SLAVE_TIMING;
-            offset += SIDETIM;
-
-            if ((offset + size) > (SIDETIM + 1))
-                panic("PCI write to SIDETIM with invalid size\n");
-        } else if (offset == PCI_UDMA33_CTRL) {
-            offset -= PCI_UDMA33_CTRL;
-            offset += UDMACTL;
-
-            if ((offset + size) > (UDMACTL + 1))
-                panic("PCI write to UDMACTL with invalid size\n");
-        } else if (offset >= PCI_UDMA33_TIMING &&
-                   offset < (PCI_UDMA33_TIMING + 2)) {
-            offset -= PCI_UDMA33_TIMING;
-            offset += UDMATIM;
-
-            if ((offset + size) > (UDMATIM + 2))
-                panic("PCI write to UDMATIM with invalid size\n");
-        } else {
-            panic("PCI write to unimplemented register: %x\n", offset);
-        }
-
-        memcpy((void *)&pci_regs[offset], (void *)&data, size);
-    }
 
     // Catch the writes to specific PCI registers that have side affects
     // (like updating the PIO ranges)
@@ -421,17 +403,22 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
         return No_Fault;
 
     // sanity check the size (allows byte, word, or dword access)
-    if (req->size != sizeof(uint8_t) && req->size != sizeof(uint16_t) &&
-        req->size != sizeof(uint32_t))
+    switch (req->size) {
+      case sizeof(uint8_t):
+      case sizeof(uint16_t):
+      case sizeof(uint32_t):
+        break;
+      default:
         panic("IDE controller read of invalid size: %#x\n", req->size);
+    }
 
     if (type != BMI_BLOCK) {
 
         disk = getDisk(primary);
         if (disks[disk])
             if (req->size == sizeof(uint32_t) && offset == DATA_OFFSET) {
-                *((uint16_t*)data) = disks[disk]->read(offset, type);
-                *((uint16_t*)data + 1) = disks[disk]->read(offset, type);
+                ((uint16_t*)data)[0] = disks[disk]->read(offset, type);
+                ((uint16_t*)data)[1] = disks[disk]->read(offset, type);
             }
             else if (req->size == sizeof(uint8_t) && offset == DATA_OFFSET) {
                 panic("IDE read of data reg invalid size: %#x\n", req->size);
@@ -622,7 +609,7 @@ IdeController::serialize(std::ostream &os)
     // Serialize registers
     SERIALIZE_ARRAY(bmi_regs, 16);
     SERIALIZE_ARRAY(dev, 2);
-    SERIALIZE_ARRAY(pci_regs, 8);
+    SERIALIZE_ARRAY(pci_config_regs.data, 22);
 
     // Serialize internal state
     SERIALIZE_SCALAR(io_enabled);
@@ -651,7 +638,7 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
     // Unserialize registers
     UNSERIALIZE_ARRAY(bmi_regs, 16);
     UNSERIALIZE_ARRAY(dev, 2);
-    UNSERIALIZE_ARRAY(pci_regs, 8);
+    UNSERIALIZE_ARRAY(pci_config_regs.data, 22);
 
     // Unserialize internal state
     UNSERIALIZE_SCALAR(io_enabled);

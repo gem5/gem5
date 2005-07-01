@@ -211,8 +211,7 @@ IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
 uint16_t
 IdeDisk::read(const Addr &offset, RegType_t type)
 {
-
-    uint16_t data;
+    uint16_t data = 0;
     DevAction_t action = ACT_NONE;
 
     if (type == COMMAND_BLOCK) {
@@ -222,34 +221,34 @@ IdeDisk::read(const Addr &offset, RegType_t type)
         else if (offset == DATA_OFFSET)
             action = ACT_DATA_READ_SHORT;
 
-            switch (offset) {
-              case DATA_OFFSET:
-                data = cmdReg.data;
-                break;
-              case ERROR_OFFSET:
-                data = cmdReg.error;
-                break;
-              case NSECTOR_OFFSET:
-                data = cmdReg.sec_count;
-                break;
-              case SECTOR_OFFSET:
-                data = cmdReg.sec_num;
-                break;
-              case LCYL_OFFSET:
-                data = cmdReg.cyl_low;
-                break;
-              case HCYL_OFFSET:
-                data = cmdReg.cyl_high;
-                break;
-              case SELECT_OFFSET:
-                data = cmdReg.drive;
-                break;
-              case STATUS_OFFSET:
-                data = status;
-                break;
-              default:
-                panic("Invalid IDE command register offset: %#x\n", offset);
-            }
+        switch (offset) {
+          case DATA_OFFSET:
+            data = cmdReg.data;
+            break;
+          case ERROR_OFFSET:
+            data = cmdReg.error;
+            break;
+          case NSECTOR_OFFSET:
+            data = cmdReg.sec_count;
+            break;
+          case SECTOR_OFFSET:
+            data = cmdReg.sec_num;
+            break;
+          case LCYL_OFFSET:
+            data = cmdReg.cyl_low;
+            break;
+          case HCYL_OFFSET:
+            data = cmdReg.cyl_high;
+            break;
+          case SELECT_OFFSET:
+            data = cmdReg.drive;
+            break;
+          case STATUS_OFFSET:
+            data = status;
+            break;
+          default:
+            panic("Invalid IDE command register offset: %#x\n", offset);
+        }
     }
     else if (type == CONTROL_BLOCK) {
         if (offset != ALTSTAT_OFFSET)
@@ -262,7 +261,6 @@ IdeDisk::read(const Addr &offset, RegType_t type)
         updateState(action);
 
     return data;
-
 }
 
 void

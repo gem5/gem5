@@ -75,18 +75,14 @@ class TsunamiIO : public PioDevice
         uint8_t mode;
         /** The status of the PIT */
         uint8_t status;
-        /** The counts (current and latched) of the PIT */
-        union {
-            uint16_t whole;
-            struct {
-                uint8_t msb;
-                uint8_t lsb;
-            } half;
-        } current_count, latched_count;
-
-        /** Thse state of the output latch of the PIT */
+        /** The current count of the PIT */
+        uint16_t current_count;
+        /** The latched count of the PIT */
+        uint16_t latched_count;
+        /** The state of the output latch of the PIT */
         bool latch_on;
-        bool read_msb;
+        /** The next count half (byte) to read */
+        enum {READ_LSB, READ_MSB} read_byte;
 
       public:
         /**
@@ -157,6 +153,9 @@ class TsunamiIO : public PioDevice
         /** A pointer back to tsunami to create interrupt the processor. */
         Tsunami* tsunami;
         Tick interval;
+
+        /** Count of the number of RTC interrupts that have occured */
+        uint32_t intr_count;
 
       public:
         /**
