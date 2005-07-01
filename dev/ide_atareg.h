@@ -33,7 +33,14 @@
 #ifndef _DEV_ATA_ATAREG_H_
 #define _DEV_ATA_ATAREG_H_
 
+#if defined(linux)
+#include <endian.h>
+#else
+#include <machine/endian.h>
+#endif
+
 #define ATA_BYTE_ORDER LITTLE_ENDIAN
+
 /*
  * Drive parameter structure for ATA/ATAPI.
  * Bit fields: WDC_* : common to ATA/ATAPI

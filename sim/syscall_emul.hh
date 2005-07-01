@@ -37,6 +37,9 @@
 
 #include <errno.h>
 #include <string>
+#ifdef __CYGWIN32__
+#include <sys/fcntl.h>	// for O_BINARY
+#endif
 
 #include "base/intmath.hh"	// for RoundUp
 #include "mem/functional/functional.hh"

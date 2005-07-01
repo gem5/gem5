@@ -103,6 +103,8 @@ IdeController::IdeController(Params *p)
 
     // setup the disks attached to controller
     memset(disks, 0, sizeof(IdeDisk *) * 4);
+    dev[0] = 0;
+    dev[1] = 0;
 
     if (params()->disks.size() > 3)
         panic("IDE controllers support a maximum of 4 devices attached!\n");
