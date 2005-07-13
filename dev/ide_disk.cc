@@ -116,6 +116,9 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     driveID.atap_udmamode_supp = 0x10;
     // Statically set hardware config word
     driveID.atap_hwreset_res = 0x4001;
+
+    //arbitrary for now...
+    driveID.atap_ata_major = WDC_VER_ATA7;
 }
 
 IdeDisk::~IdeDisk()
@@ -134,7 +137,6 @@ IdeDisk::reset(int id)
     memset(&cmdReg, 0, sizeof(CommandReg_t));
     memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
 
-    cmdReg.error = 1;
     dmaInterfaceBytes = 0;
     curPrdAddr = 0;
     curSector = 0;
@@ -159,6 +161,8 @@ IdeDisk::reset(int id)
 
     // set the device ready bit
     status = STATUS_DRDY_BIT;
+
+    cmdReg.error = 0x1;
 }
 
 ////
@@ -207,62 +211,63 @@ IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
 // Device registers read/write
 ////
 
-uint16_t
-IdeDisk::read(const Addr &offset, RegType_t type)
+void
+IdeDisk::read(const Addr &offset, RegType_t type, uint8_t *data)
 {
-    uint16_t data;
     DevAction_t action = ACT_NONE;
 
-    if (type == COMMAND_BLOCK) {
-
+    switch (type) {
+      case COMMAND_BLOCK:
         if (offset == STATUS_OFFSET)
             action = ACT_STAT_READ;
         else if (offset == DATA_OFFSET)
             action = ACT_DATA_READ_SHORT;
 
         switch (offset) {
+          // Data transfers occur 16 bits at a time
           case DATA_OFFSET:
-            data = cmdReg.data;
+            // use memcpy to preserve little-endianess
+            memcpy(data, &cmdReg.data, sizeof(uint16_t));
             break;
+          // All other transfers are 8 bit
           case ERROR_OFFSET:
-            data = cmdReg.error;
+            *data = cmdReg.error;
             break;
           case NSECTOR_OFFSET:
-            data = cmdReg.sec_count;
+            *data = cmdReg.sec_count;
             break;
           case SECTOR_OFFSET:
-            data = cmdReg.sec_num;
+            *data = cmdReg.sec_num;
             break;
           case LCYL_OFFSET:
-            data = cmdReg.cyl_low;
+            *data = cmdReg.cyl_low;
             break;
           case HCYL_OFFSET:
-            data = cmdReg.cyl_high;
+            *data = cmdReg.cyl_high;
             break;
-          case SELECT_OFFSET:
-            data = cmdReg.drive;
+          case DRIVE_OFFSET:
+            *data = cmdReg.drive;
             break;
           case STATUS_OFFSET:
-            data = status;
+            *data = status;
             break;
           default:
             panic("Invalid IDE command register offset: %#x\n", offset);
         }
-    }
-    else if (type == CONTROL_BLOCK) {
-        if (offset != ALTSTAT_OFFSET)
+        break;
+      case CONTROL_BLOCK:
+        if (offset == ALTSTAT_OFFSET)
+            *data = status;
+        else
             panic("Invalid IDE control register offset: %#x\n", offset);
+        break;
 
-        data = status;
-    }
-    else {
-        panic("Invalid IDE register type: %#x\n", type);
+      default:
+        panic("Unknown register block!\n");
     }
 
     if (action != ACT_NONE)
         updateState(action);
-
-    return data;
 }
 
 void
@@ -271,8 +276,6 @@ IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
     DevAction_t action = ACT_NONE;
 
     if (cmdBlk) {
-        if (offset < 0 || offset > sizeof(CommandReg_t))
-            panic("Invalid disk command register offset: %#x\n", offset);
 
         if (!byte && offset != DATA_OFFSET)
             panic("Invalid 16-bit write, only allowed on data reg\n");
@@ -282,10 +285,10 @@ IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
         else {
             switch (offset) {
               case DATA_OFFSET:
-                cmdReg.data = *data;
+                memcpy(&cmdReg.data, data, sizeof(uint16_t));
                 break;
               case FEATURES_OFFSET:
-                cmdReg.features = *data;
+                //cmdReg.features = *data;
                 break;
               case NSECTOR_OFFSET:
                 cmdReg.sec_count = *data;
@@ -299,7 +302,7 @@ IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
               case HCYL_OFFSET:
                 cmdReg.cyl_high = *data;
                 break;
-              case SELECT_OFFSET:
+              case DRIVE_OFFSET:
                 cmdReg.drive = *data;
                 break;
               case COMMAND_OFFSET:
@@ -318,7 +321,7 @@ IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
                 action = ACT_DATA_WRITE_BYTE;
             else
                 action = ACT_DATA_WRITE_SHORT;
-        } else if (offset == SELECT_OFFSET) {
+        } else if (offset == DRIVE_OFFSET) {
             action = ACT_SELECT_WRITE;
         }
 

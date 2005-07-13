@@ -251,49 +251,57 @@ IdeController::cacheAccess(MemReqPtr &req)
 void
 IdeController::ReadConfig(int offset, int size, uint8_t *data)
 {
-    int config_offset;
+    union {
+        uint8_t byte;
+        uint16_t word;
+        uint32_t dword;
+    };
 
-#if TRACING_ON
-    Addr origOffset = offset;
-#endif
+    int config_offset;
 
     if (offset < PCI_DEVICE_SPECIFIC) {
         PciDev::ReadConfig(offset, size, data);
     } else if (offset >= IDE_CTRL_CONFIG_START && (offset + size) <= IDE_CTRL_CONFIG_END) {
 
         config_offset = offset - IDE_CTRL_CONFIG_START;
+        dword = 0;
 
-        switch(size) {
-          case sizeof(uint32_t):
-            memcpy(data, &pci_config_regs.data[config_offset], sizeof(uint32_t));
-            *(uint32_t*)data = htoa(*(uint32_t*)data);
-            break;
-
-          case sizeof(uint16_t):
-            memcpy(data, &pci_config_regs.data[config_offset], sizeof(uint16_t));
-            *(uint16_t*)data = htoa(*(uint16_t*)data);
-            break;
-
+        switch (size) {
           case sizeof(uint8_t):
-            memcpy(data, &pci_config_regs.data[config_offset], sizeof(uint8_t));
+          case sizeof(uint16_t):
+          case sizeof(uint32_t):
+            memcpy(&byte, &pci_config_regs.data[config_offset], size);
             break;
 
           default:
             panic("Invalid PCI configuration read size!\n");
         }
+
+        switch (size) {
+          case sizeof(uint8_t):
+            *data = byte;
+            break;
+          case sizeof(uint16_t):
+            *(uint16_t*)data = htoa(word);
+            break;
+          case sizeof(uint32_t):
+            *(uint32_t*)data = htoa(dword);
+            break;
+        }
+
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: %#x data: %#x\n",
+                offset, size, htoa(dword));
+
     } else {
         panic("Read of unimplemented PCI config. register: %x\n", offset);
     }
-
-    DPRINTF(IdeCtrl, "PCI read offset: %#x (%#x) size: %#x data: %#x\n",
-            origOffset, offset, size,
-            *(uint32_t *)data & (0xffffffff >> 8 * (4 - size)));
 }
 
 void
 IdeController::WriteConfig(int offset, int size, uint32_t data)
 {
     int config_offset;
+    uint32_t write_data;
 
     if (offset < PCI_DEVICE_SPECIFIC) {
         PciDev::WriteConfig(offset, size, data);
@@ -301,24 +309,24 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
 
         config_offset = offset - IDE_CTRL_CONFIG_START;
 
+        write_data = htoa(data);
+
         switch(size) {
-          case sizeof(uint32_t):
-          case sizeof(uint16_t):
           case sizeof(uint8_t):
-            memcpy(&pci_config_regs.data[config_offset], &data, size);
+          case sizeof(uint16_t):
+          case sizeof(uint32_t):
+            memcpy(&pci_config_regs.data[config_offset], &write_data, size);
             break;
 
           default:
             panic("Invalid PCI configuration write size!\n");
         }
-
     } else {
         panic("Write of unimplemented PCI config. register: %x\n", offset);
     }
 
     DPRINTF(IdeCtrl, "PCI write offset: %#x size: %#x data: %#x\n",
-            offset, size, data & (0xffffffff >> 8 * (4 - size)));
-
+            offset, size, data);
 
     // Catch the writes to specific PCI registers that have side affects
     // (like updating the PIO ranges)
@@ -399,6 +407,12 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     RegType_t type;
     int disk;
 
+    union {
+        uint8_t byte;
+        uint16_t word[2];
+        uint32_t dword;
+    };
+
     parseAddr(req->paddr, offset, primary, type);
 
     if (!io_enabled)
@@ -414,27 +428,59 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
         panic("IDE controller read of invalid size: %#x\n", req->size);
     }
 
-    if (type != BMI_BLOCK) {
+    switch (type) {
+      case BMI_BLOCK:
+        memcpy(&byte, &bmi_regs[offset], req->size);
+        switch (req->size) {
+          case sizeof(uint8_t):
+            *data = byte;
+            break;
+          case sizeof(uint16_t):
+            *(uint16_t*)data = htoa(word[0]);
+            break;
+          case sizeof(uint32_t):
+            *(uint32_t*)data = htoa(dword);
+            break;
+        }
+        break;
 
+      case COMMAND_BLOCK:
+      case CONTROL_BLOCK:
         disk = getDisk(primary);
-        if (disks[disk])
-            if (req->size == sizeof(uint32_t) && offset == DATA_OFFSET) {
-                ((uint16_t*)data)[0] = disks[disk]->read(offset, type);
-                ((uint16_t*)data)[1] = disks[disk]->read(offset, type);
-            }
-            else if (req->size == sizeof(uint8_t) && offset == DATA_OFFSET) {
+
+        if (disks[disk] == NULL)
+            break;
+
+        switch (offset) {
+          case DATA_OFFSET:
+            switch (req->size) {
+              case sizeof(uint16_t):
+                disks[disk]->read(offset, type, (uint8_t*)&word[0]);
+                *(uint16_t*)data = htoa(word[0]);
+                break;
+
+              case sizeof(uint32_t):
+                disks[disk]->read(offset, type, (uint8_t*)&word[0]);
+                disks[disk]->read(offset, type, (uint8_t*)&word[1]);
+                *(uint32_t*)data = htoa(dword);
+                break;
+
+              default:
                 panic("IDE read of data reg invalid size: %#x\n", req->size);
             }
-            else {
-                *data = disks[disk]->read(offset, type);
-            }
-    } else {
-        memcpy((void *)data, &bmi_regs[offset], req->size);
+            break;
+          default:
+            if (req->size == sizeof(uint8_t)) {
+                disks[disk]->read(offset, type, &byte);
+                *data = byte;
+            } else
+                panic("IDE read of command reg of invalid size: %#x\n", req->size);
+        }
+        break;
     }
 
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, req->size,
-            (*(uint32_t *)data) & (0xffffffff >> 8 * (4 - req->size)));
+            offset, req->size, htoa(dword));
 
     return No_Fault;
 }

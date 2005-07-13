@@ -88,7 +88,7 @@ Uart8250::IntrEvent::process()
 void
 Uart8250::IntrEvent::scheduleIntr()
 {
-    static const Tick interval = (Tick)((Clock::Float::s / 2e9) * 450);
+    static const Tick interval = (Tick)((Clock::Float::s / 2e9) * 600);
     DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
             curTick + interval);
     if (!scheduled())
@@ -146,10 +146,11 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             break;
         case 0x2: // Intr Identification Register (IIR)
             DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
-            if (status)
-                *(uint8_t*)data = 0;
+            status &= ~TX_INT;
+            if (status & RX_INT)
+                *(uint8_t*)data = 0x4;
             else
-                *(uint8_t*)data = 1;
+                *(uint8_t*)data = 0x1;
             break;
         case 0x3: // Line Control Register (LCR)
             *(uint8_t*)data = LCR;

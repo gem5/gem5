@@ -115,7 +115,7 @@ class PciDev : public DmaDevice
 
   protected:
     /** The current config space. Unlike the PciConfigData this is
-     * updated during simulation while continues to refelect what was
+     * updated during simulation while continues to reflect what was
      * in the config file.
      */
     PCIConfig config;

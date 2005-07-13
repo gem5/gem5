@@ -270,7 +270,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) + 0x20;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
 
 
     switch(req->size) {
@@ -318,6 +318,12 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 panic("RTC Control Register D not implemented");
               case RTC_SEC:
                 *(uint8_t *)data = tm.tm_sec;
+                return No_Fault;
+              case RTC_SEC_ALRM:
+              case RTC_MIN_ALRM:
+              case RTC_HR_ALRM:
+                // RTC alarm functionality is not currently implemented
+                *(uint8_t *)data = 0x00;
                 return No_Fault;
               case RTC_MIN:
                 *(uint8_t *)data = tm.tm_min;
@@ -391,7 +397,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) + 0x20;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
 
     switch(req->size) {
       case sizeof(uint8_t):
