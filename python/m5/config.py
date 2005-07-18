@@ -405,7 +405,7 @@ class SimObject(object):
                 if found_obj != None and child != found_obj:
                     raise AttributeError, \
                           'parent.any matched more than one: %s %s' % \
-                          (obj.path, child.path)
+                          (found_obj.path, child.path)
                 found_obj = child
         # search param space
         for pname,pdesc in self._params.iteritems():
