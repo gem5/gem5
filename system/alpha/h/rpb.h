@@ -22,6 +22,36 @@
  * SOFTWARE.
  */
 
+/* $NetBSD: rpb.h,v 1.20 1998/04/15 00:47:33 mjacob Exp $ */
+/* $FreeBSD: src/sys/alpha/include/rpb.h,v 1.9 2001/03/30 22:04:08 gallatin Exp $ */
+
+/*
+ * Copyright (c) 1994, 1995, 1996 Carnegie-Mellon University.
+ * All rights reserved.
+ *
+ * Author: Keith Bostic, Chris G. Demetriou
+ *
+ * Permission to use, copy, modify and distribute this software and
+ * its documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
+ * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ *
+ * Carnegie Mellon requests users of this software to return to
+ *
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ *
+ * any improvements or extensions that they make and grant Carnegie the
+ * rights to redistribute these changes.
+ */
+
 /*
  * Defines for the architected startup addresses.
  */
@@ -258,17 +288,44 @@ struct rpb_mdt {
  * UART console device.
  */
 struct ctb_tt {
-    long ctb_type;		/* 000: console type */
-    long ctb_unit;		/* 008: console unit */
-    long ctb_resv;		/* 010: reserved */
-    long ctb_length;		/* 018: byte length of device dep portion */
-    long ctb_csr;		/* 020: CSR Address */
-    long ctb_tivec;		/* 028: <63>=tie; interrupt vector */
-    long ctb_rivec;		/* 030: <63>=rie; interrupt vector */
-    long ctb_baud;		/* 038: baud rate */
-    long ctb_put_sts;		/* 040: PUTS callback extended status */
-    long ctb_get_sts;		/* 048: GETS callback extended status */
-    long ctb_rsvd[1];		/* 050: reserved for console use */
+
+    long ctb_type;               /*   0: always 4 */
+    long ctb_unit;               /*   8: */
+    long ctb_reserved;           /*  16: */
+    long ctb_len;                /*  24: bytes of info */
+    long ctb_ipl;                /*  32: console ipl level */
+    long ctb_tintr_vec;          /*  40: transmit vec (0x800) */
+    long ctb_rintr_vec;          /*  48: receive vec (0x800) */
+#define CTB_GRAPHICS       3     /* graphics device */
+#define CTB_NETWORK     0xC0     /* network device */
+#define CTB_PRINTERPORT    2     /* printer port on the SCC */
+    long ctb_term_type;          /*  56: terminal type */
+    long ctb_keybd_type;         /*  64: keyboard nationality */
+    long ctb_keybd_trans;        /*  72: trans. table addr */
+    long ctb_keybd_map;          /*  80: map table addr */
+    long ctb_keybd_state;        /*  88: keyboard flags */
+    long ctb_keybd_last;         /*  96: last key entered */
+    long ctb_font_us;            /* 104: US font table addr */
+    long ctb_font_mcs;           /* 112: MCS font table addr */
+    long ctb_font_width;         /* 120: font width, height */
+    long ctb_font_height;        /* 128:         in pixels */
+    long ctb_mon_width;          /* 136: monitor width, height */
+    long ctb_mon_height;         /* 144:         in pixels */
+    long ctb_dpi;                /* 152: monitor dots per inch */
+    long ctb_planes;             /* 160: # of planes */
+    long ctb_cur_width;          /* 168: cursor width, height */
+    long ctb_cur_height;         /* 176:         in pixels */
+    long ctb_head_cnt;           /* 184: # of heads */
+    long ctb_opwindow;           /* 192: opwindow on screen */
+    long ctb_head_offset;        /* 200: offset to head info */
+    long ctb_putchar;            /* 208: output char to TURBO */
+    long ctb_io_state;           /* 216: I/O flags */
+    long ctb_listen_state;       /* 224: listener flags */
+    long ctb_xaddr;              /* 232: extended info addr */
+    long ctb_turboslot;          /* 248: TURBOchannel slot # */
+    long ctb_server_off;         /* 256: offset to server info */
+    long ctb_line_off;           /* 264: line parameter offset */
+    char ctb_csd;                /* 272: console specific data */
 };
 
 /*
