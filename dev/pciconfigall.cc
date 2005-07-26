@@ -159,10 +159,10 @@ PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
     else {
             switch (req->size) {
             case sizeof(uint8_t):
-                word_value = *(uint8_t*)data & 0x000000FF;
+                word_value = *(uint8_t*)data;
                 break;
             case sizeof(uint16_t):
-                word_value = *(uint16_t*)data & 0x0000FFFF;
+                word_value = *(uint16_t*)data;
                 break;
             case sizeof(uint32_t):
                 word_value = *(uint32_t*)data;

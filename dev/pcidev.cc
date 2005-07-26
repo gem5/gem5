@@ -74,37 +74,31 @@ void
 PciDev::ReadConfig(int offset, int size, uint8_t *data)
 {
     union {
-      uint8_t byte;
-      uint16_t word;
-      uint32_t dword;
+        uint8_t byte;
+        uint16_t word;
+        uint32_t dword;
     };
-
-    dword = 0;
 
     if (offset >= PCI_DEVICE_SPECIFIC)
         panic("Device specific PCI config space not implemented!\n");
 
+    dword = 0;
+
     switch(size) {
       case sizeof(uint8_t):
-      case sizeof(uint16_t):
-      case sizeof(uint32_t):
         memcpy(&byte, &config.data[offset], size);
-        break;
-
-      default:
-        panic("Invalid PCI configuration read size!\n");
-    }
-
-    switch(size) {
-      case sizeof(uint8_t):
         *data = byte;
         break;
       case sizeof(uint16_t):
+        memcpy(&byte, &config.data[offset], size);
         *(uint16_t*)data = htoa(word);
         break;
       case sizeof(uint32_t):
+        memcpy(&byte, &config.data[offset], size);
         *(uint32_t*)data = htoa(dword);
         break;
+      default:
+        panic("Invalid PCI configuration read size!\n");
     }
 
     DPRINTF(PCIDEV,
@@ -121,9 +115,9 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     uint32_t barnum;
 
-    uint8_t byte_value = data;
-    uint16_t half_value = data;
-    uint32_t word_value = data;
+    uint8_t byte_value;
+    uint16_t half_value;
+    uint32_t word_value;
 
     DPRINTF(PCIDEV,
             "write device: %#x function: %#x reg: %#x size: %d data: %#x\n",
@@ -134,6 +128,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     switch (size) {
       case sizeof(uint8_t): // 1-byte access
+        byte_value = data;
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
           case PCI_CACHE_LINE_SIZE:
@@ -153,6 +148,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         break;
 
       case sizeof(uint16_t): // 2-byte access
+        half_value = data;
         switch (offset) {
           case PCI_COMMAND:
           case PCI_STATUS:
@@ -166,6 +162,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         break;
 
       case sizeof(uint32_t): // 4-byte access
+        word_value = data;
         switch (offset) {
           case PCI0_BASE_ADDR0:
           case PCI0_BASE_ADDR1:

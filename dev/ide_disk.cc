@@ -226,10 +226,10 @@ IdeDisk::read(const Addr &offset, RegType_t type, uint8_t *data)
         switch (offset) {
           // Data transfers occur 16 bits at a time
           case DATA_OFFSET:
-            // use memcpy to preserve little-endianess
+            // use memcpy to preserve IDE's little-endianess
             memcpy(data, &cmdReg.data, sizeof(uint16_t));
             break;
-          // All other transfers are 8 bit
+          // All other transfers are 8-bit
           case ERROR_OFFSET:
             *data = cmdReg.error;
             break;

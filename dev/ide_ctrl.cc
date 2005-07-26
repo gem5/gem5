@@ -268,25 +268,19 @@ IdeController::ReadConfig(int offset, int size, uint8_t *data)
 
         switch (size) {
           case sizeof(uint8_t):
-          case sizeof(uint16_t):
-          case sizeof(uint32_t):
             memcpy(&byte, &pci_config_regs.data[config_offset], size);
-            break;
-
-          default:
-            panic("Invalid PCI configuration read size!\n");
-        }
-
-        switch (size) {
-          case sizeof(uint8_t):
             *data = byte;
             break;
           case sizeof(uint16_t):
+            memcpy(&byte, &pci_config_regs.data[config_offset], size);
             *(uint16_t*)data = htoa(word);
             break;
           case sizeof(uint32_t):
+            memcpy(&byte, &pci_config_regs.data[config_offset], size);
             *(uint32_t*)data = htoa(dword);
             break;
+          default:
+            panic("Invalid PCI configuration read size!\n");
         }
 
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: %#x data: %#x\n",
@@ -407,40 +401,48 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     RegType_t type;
     int disk;
 
+
+    /*   union
+     *   +--  --+--  --+--  --+--  --+
+     *   |  0   |  1   |  2   |  3   |
+     *   +--  --+--  --+--  --+--  --+
+     *   | byte |  ..  |  ..  |  ..  |
+     *   +--  --+--  --+--  --+--  --+
+     *   |    word0    |    word1    |
+     *   +--         --+--         --+
+     *   |           dword           |
+     *   +--                       --+
+     */
     union {
         uint8_t byte;
         uint16_t word[2];
         uint32_t dword;
     };
 
+    dword = 0;
+
     parseAddr(req->paddr, offset, primary, type);
 
     if (!io_enabled)
         return No_Fault;
 
-    // sanity check the size (allows byte, word, or dword access)
-    switch (req->size) {
-      case sizeof(uint8_t):
-      case sizeof(uint16_t):
-      case sizeof(uint32_t):
-        break;
-      default:
-        panic("IDE controller read of invalid size: %#x\n", req->size);
-    }
-
     switch (type) {
       case BMI_BLOCK:
-        memcpy(&byte, &bmi_regs[offset], req->size);
         switch (req->size) {
           case sizeof(uint8_t):
+            memcpy(&byte, &bmi_regs[offset], sizeof(uint8_t));
             *data = byte;
             break;
           case sizeof(uint16_t):
+            memcpy(&byte, &bmi_regs[offset], sizeof(uint16_t));
             *(uint16_t*)data = htoa(word[0]);
             break;
           case sizeof(uint32_t):
+            memcpy(&byte, &bmi_regs[offset], sizeof(uint32_t));
             *(uint32_t*)data = htoa(dword);
             break;
+          default:
+            panic("IDE read of BMI reg invalid size: %#x\n", req->size);
         }
         break;
 
@@ -499,7 +501,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     byte = (req->size == sizeof(uint8_t)) ? true : false;
     cmdBlk = (type == COMMAND_BLOCK) ? true : false;
 
-    DPRINTF(IdeCtrl, "write from offset: %#x size: %#x data: %#x\n",
+    DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
             offset, req->size,
             (*(uint32_t *)data) & (0xffffffff >> 8 * (4 - req->size)));
 

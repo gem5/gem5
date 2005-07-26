@@ -88,7 +88,7 @@ Uart8250::IntrEvent::process()
 void
 Uart8250::IntrEvent::scheduleIntr()
 {
-    static const Tick interval = (Tick)((Clock::Float::s / 2e9) * 600);
+    static const Tick interval = (Tick)((Clock::Float::s / 2e9) * 450);
     DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
             curTick + interval);
     if (!scheduled())

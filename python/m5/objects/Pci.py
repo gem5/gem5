@@ -50,3 +50,6 @@ class PciDevice(DmaDevice):
     pci_func = Param.Int("PCI function code")
     configdata = Param.PciConfigData(Parent.any, "PCI Config data")
     configspace = Param.PciConfigAll(Parent.any, "PCI Configspace")
+
+class PciFake(PciDevice):
+    type = 'PciFake'

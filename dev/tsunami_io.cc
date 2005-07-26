@@ -75,7 +75,6 @@ TsunamiIO::RTCEvent::process()
         tm.tm_sec = (tm.tm_sec + 1) % 60;
 
     intr_count = (intr_count + 1) % 1024;
-
 }
 
 const char *
@@ -316,14 +315,14 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 return No_Fault;
               case RTC_CNTRL_REGD:
                 panic("RTC Control Register D not implemented");
-              case RTC_SEC:
-                *(uint8_t *)data = tm.tm_sec;
-                return No_Fault;
               case RTC_SEC_ALRM:
               case RTC_MIN_ALRM:
               case RTC_HR_ALRM:
                 // RTC alarm functionality is not currently implemented
                 *(uint8_t *)data = 0x00;
+                return No_Fault;
+              case RTC_SEC:
+                *(uint8_t *)data = tm.tm_sec;
                 return No_Fault;
               case RTC_MIN:
                 *(uint8_t *)data = tm.tm_min;
