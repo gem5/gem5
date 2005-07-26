@@ -470,6 +470,7 @@ unixBoot(int argc, char **argv)
         /* Region 1 */
         second[SECOND(0x20000000) + i] = KPTE(PFN(third_kernel) + i);
     }
+
     /* Region 2 */
     second[SECOND(0x40000000)] = KPTE(PFN(second));
 
@@ -489,8 +490,9 @@ unixBoot(int argc, char **argv)
 #define DATABASE_END            0x20020000
 
     ulong *dbPage = (ulong*)unix_boot_alloc(1);
+    bzero(dbPage, PAGE_SIZE);
     second[SECOND(DATABASE_BASE)] = KPTE(PFN(dbPage));
-    for (i = DATABASE_BASE; i < DATABASE_END ; i += 8096) {
+    for (i = DATABASE_BASE; i < DATABASE_END ; i += PAGE_SIZE) {
         ulong *db = (ulong*)unix_boot_alloc(1);
         dbPage[THIRD(i)] = KPTE(PFN(db));
     }
@@ -523,30 +525,27 @@ unixBoot(int argc, char **argv)
                     kernel_end - m5Conf.kernStart );
         panic("kernel too big\n");
     }
-
+    printf_lock("kstart = 0x%x, kend = 0x%x, kentry = 0x%x, numCPUs = 0x%x\n", m5Conf.kernStart, m5Conf.kernEnd, m5Conf.entryPoint, m5Conf.numCPUs);
     /* Map the kernel's pages into the third level of region 2 */
-    for (ptr = m5Conf.kernStart; ptr < kernel_end; ptr += PAGE_SIZE) {
-        third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-    }
+    //for (ptr = m5Conf.kernStart; ptr < kernel_end; ptr += PAGE_SIZE) {
+      //  third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
+    //}
 
-    /* blow 2 pages of phys mem for guards since it maintains 1-to-1 mapping */
-    ksp = ksp_top + (3 * PAGE_SIZE);
-    if (ksp - m5Conf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-        printf_lock("Kernel stack pushd us over 8MB\n");
-        panic("ksp too big\n");
-    }
-    if (THIRD_XXX((ulong)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
-        panic("increase NUM_KERNEL_THIRD, and change THIRD_XXX\n");
-    }
+    ksp_top = (ulong)unix_boot_alloc(1);
+    ksp = ksp_top + PAGE_SIZE;
+
+    //if (ksp - m5Conf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
+      //  printf_lock("Kernel stack pushd us over 8MB\n");
+      //  panic("ksp too big\n");
+    //}
+    //if (THIRD_XXX((ulong)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
+      //  panic("increase NUM_KERNEL_THIRD, and change THIRD_XXX\n");
+    //}
     ptr = (ulong) ksp_top;
     bzero((char *)ptr, PAGE_SIZE * 2);
-    third_kernel[THIRD_XXX(ptr)] = 0;		/* Stack Guard Page */
-    ptr += PAGE_SIZE;
-    third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr)); /* Kernel Stack Pages */
-    ptr += PAGE_SIZE;
-    third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-    ptr += PAGE_SIZE;
-    third_kernel[THIRD_XXX(ptr)] = 0;		/* Stack Guard Page */
+    dbPage[THIRD(0x20040000)] = 0;		/* Stack Guard Page */
+    dbPage[THIRD(0x20042000)] = KPTE(PFN(ptr)); /* Kernel Stack Pages */
+    dbPage[THIRD(0x20046000)] = 0;		/* Stack Guard Page */
 
     /* put argv into the bottom of the stack - argv starts at 1 because
      * the command thatr got us here (i.e. "unixboot) is in argv[0].
@@ -563,7 +562,7 @@ unixBoot(int argc, char **argv)
     kargv[kargc] = NULL;	/* just to be sure; doesn't seem to be used */
     ksp -= sizeof(char *);	/* point above last arg for no real reason */
 
-    free_pfn = PFN(ptr);
+    free_pfn = PFN(kernel_end);
 
     bcopy((char *)&m5_rpb, (char *)rpb, sizeof(struct rpb));
 
@@ -610,7 +609,7 @@ unixBoot(int argc, char **argv)
         bcopy((char *)&m5_rpb_percpu, (char *)thisCPU,
               sizeof(struct rpb_percpu));
 
-        thisCPU->rpb_pcb.rpb_ksp = ksp;
+        thisCPU->rpb_pcb.rpb_ksp = (0x20044000 - 0x18);
         thisCPU->rpb_pcb.rpb_ptbr = PFN(first);
 
         thisCPU->rpb_logout = KSEG_TO_PHYS(percpu_logout);
@@ -633,18 +632,15 @@ unixBoot(int argc, char **argv)
 
     bzero((char *)rpb_ctb, sizeof(struct ctb_tt));
 
-    rpb_ctb->rpb_type = CONS_DZ;
+    rpb_ctb->rpb_type = CONS_REM;
     rpb_ctb->rpb_length = sizeof(ctb_tt) - sizeof(rpb_ctb);
 
     /*
      * uart initizliation
      */
-    ctb_tt->ctb_csr = 0;
-    ctb_tt->ctb_tivec = 0x6c0;  /* matches tlaser pal code */
-    ctb_tt->ctb_rivec = 0x680;  /* matches tlaser pal code */
-    ctb_tt->ctb_baud = 9600;
-    ctb_tt->ctb_put_sts = 0;
-    ctb_tt->ctb_get_sts = 0;
+    ctb_tt->ctb_tintr_vec = 0x6c0;  /* matches tlaser pal code */
+    ctb_tt->ctb_rintr_vec = 0x680;  /* matches tlaser pal code */
+    ctb_tt->ctb_term_type = CTB_GRAPHICS;
 
     rpb_crb = (struct rpb_crb *) (((ulong)rpb_ctb) + sizeof(struct ctb_tt));
     rpb->rpb_crb_off = ((ulong)rpb_crb) - (ulong)rpb;
