@@ -110,7 +110,22 @@ class IdeController : public PciDev
 
   private:
     /** Registers used for bus master interface */
-    uint8_t bmi_regs[16];
+    union {
+        uint8_t data[16];
+
+        struct {
+            uint8_t bmic0;
+            uint8_t padding_0;
+            uint8_t bmis0;
+            uint8_t padding_1;
+            uint32_t bmidtp0;
+            uint8_t bmic1;
+            uint8_t padding_2;
+            uint8_t bmis1;
+            uint8_t padding_3;
+            uint32_t bmidtp1;
+        };
+    } bmi_regs;
     /** Shadows of the device select bit */
     uint8_t dev[2];
     /** Registers used in device specific PCI configuration */

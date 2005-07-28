@@ -115,10 +115,6 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     uint32_t barnum;
 
-    uint8_t byte_value;
-    uint16_t half_value;
-    uint32_t word_value;
-
     DPRINTF(PCIDEV,
             "write device: %#x function: %#x reg: %#x size: %d data: %#x\n",
             params()->deviceNum, params()->functionNum, offset, size,
@@ -128,7 +124,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     switch (size) {
       case sizeof(uint8_t): // 1-byte access
-        byte_value = data;
+        uint8_t byte_value = data;
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
           case PCI_CACHE_LINE_SIZE:
@@ -148,7 +144,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         break;
 
       case sizeof(uint16_t): // 2-byte access
-        half_value = data;
+        uint16_t half_value = data;
         switch (offset) {
           case PCI_COMMAND:
           case PCI_STATUS:
@@ -162,7 +158,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         break;
 
       case sizeof(uint32_t): // 4-byte access
-        word_value = data;
+        uint32_t word_value = data;
         switch (offset) {
           case PCI0_BASE_ADDR0:
           case PCI0_BASE_ADDR1:
@@ -194,7 +190,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                         htoa((word_value & ~0x3) |
                         (htoa(config.data[offset]) & 0x3));
 
-                    if (word_value != 0x1) {
+                    if (word_value &= ~0x1) {
                         Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
                         Addr base_size = BARSize[barnum];
 
