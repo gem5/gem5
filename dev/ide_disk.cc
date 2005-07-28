@@ -116,6 +116,9 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     driveID.atap_udmamode_supp = 0x10;
     // Statically set hardware config word
     driveID.atap_hwreset_res = 0x4001;
+
+    //arbitrary for now...
+    driveID.atap_ata_major = WDC_VER_ATA7;
 }
 
 IdeDisk::~IdeDisk()
@@ -133,8 +136,6 @@ IdeDisk::reset(int id)
     memset(dataBuffer, 0, MAX_DMA_SIZE);
     memset(&cmdReg, 0, sizeof(CommandReg_t));
     memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
-
-    cmdReg.error = 1;
 
     dmaInterfaceBytes = 0;
     curPrdAddr = 0;
@@ -160,6 +161,8 @@ IdeDisk::reset(int id)
 
     // set the device ready bit
     status = STATUS_DRDY_BIT;
+
+    cmdReg.error = 0x1;
 }
 
 ////
@@ -208,134 +211,113 @@ IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
 // Device registers read/write
 ////
 
-uint16_t
-IdeDisk::read(const Addr &offset, RegType_t type)
+void
+IdeDisk::read(const Addr &offset, RegType_t type, uint8_t *data)
 {
-    uint16_t data = 0;
     DevAction_t action = ACT_NONE;
 
-    if (type == COMMAND_BLOCK) {
-
-        if (offset == STATUS_OFFSET)
-            action = ACT_STAT_READ;
-        else if (offset == DATA_OFFSET)
-            action = ACT_DATA_READ_SHORT;
-
+    switch (type) {
+      case COMMAND_BLOCK:
         switch (offset) {
+          // Data transfers occur two bytes at a time
           case DATA_OFFSET:
-            data = cmdReg.data;
+            memcpy(data, &cmdReg.data, sizeof(uint16_t));
+            action = ACT_DATA_READ_SHORT;
             break;
           case ERROR_OFFSET:
-            data = cmdReg.error;
+            *data = cmdReg.error;
             break;
           case NSECTOR_OFFSET:
-            data = cmdReg.sec_count;
+            *data = cmdReg.sec_count;
             break;
           case SECTOR_OFFSET:
-            data = cmdReg.sec_num;
+            *data = cmdReg.sec_num;
             break;
           case LCYL_OFFSET:
-            data = cmdReg.cyl_low;
+            *data = cmdReg.cyl_low;
             break;
           case HCYL_OFFSET:
-            data = cmdReg.cyl_high;
+            *data = cmdReg.cyl_high;
             break;
-          case SELECT_OFFSET:
-            data = cmdReg.drive;
+          case DRIVE_OFFSET:
+            *data = cmdReg.drive;
             break;
           case STATUS_OFFSET:
-            data = status;
+            *data = status;
+            action = ACT_STAT_READ;
             break;
           default:
             panic("Invalid IDE command register offset: %#x\n", offset);
         }
-    }
-    else if (type == CONTROL_BLOCK) {
-        if (offset != ALTSTAT_OFFSET)
+        break;
+      case CONTROL_BLOCK:
+        if (offset == ALTSTAT_OFFSET)
+            *data = status;
+        else
             panic("Invalid IDE control register offset: %#x\n", offset);
-
-        data = status;
+        break;
+      default:
+        panic("Unknown register block!\n");
     }
 
     if (action != ACT_NONE)
         updateState(action);
-
-    return data;
 }
 
 void
-IdeDisk::write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data)
+IdeDisk::write(const Addr &offset, RegType_t type, const uint8_t *data)
 {
     DevAction_t action = ACT_NONE;
 
-    if (cmdBlk) {
-        if (offset < 0 || offset > sizeof(CommandReg_t))
-            panic("Invalid disk command register offset: %#x\n", offset);
-
-        if (!byte && offset != DATA_OFFSET)
-            panic("Invalid 16-bit write, only allowed on data reg\n");
-
-        if (!byte)
-            *((uint16_t *)&cmdReg.data) = *(uint16_t *)data;
-        else {
-            switch (offset) {
-              case DATA_OFFSET:
-                cmdReg.data = *data;
-                break;
-              case FEATURES_OFFSET:
-                cmdReg.features = *data;
-                break;
-              case NSECTOR_OFFSET:
-                cmdReg.sec_count = *data;
-                break;
-              case SECTOR_OFFSET:
-                cmdReg.sec_num = *data;
-                break;
-              case LCYL_OFFSET:
-                cmdReg.cyl_low = *data;
-                break;
-              case HCYL_OFFSET:
-                cmdReg.cyl_high = *data;
-                break;
-              case SELECT_OFFSET:
-                cmdReg.drive = *data;
-                break;
-              case COMMAND_OFFSET:
-                cmdReg.command = *data;
-                break;
-              default:
-                panic("Invalid IDE command register offset: %#x\n", offset);
-            }
-        }
-
-        // determine if an action needs to be taken on the state machine
-        if (offset == COMMAND_OFFSET) {
-            action = ACT_CMD_WRITE;
-        } else if (offset == DATA_OFFSET) {
-            if (byte)
-                action = ACT_DATA_WRITE_BYTE;
-            else
-                action = ACT_DATA_WRITE_SHORT;
-        } else if (offset == SELECT_OFFSET) {
+    switch (type) {
+      case COMMAND_BLOCK:
+        switch (offset) {
+          case DATA_OFFSET:
+            memcpy(&cmdReg.data, data, sizeof(uint16_t));
+            action = ACT_DATA_WRITE_SHORT;
+            break;
+          case FEATURES_OFFSET:
+            break;
+          case NSECTOR_OFFSET:
+            cmdReg.sec_count = *data;
+            break;
+          case SECTOR_OFFSET:
+            cmdReg.sec_num = *data;
+            break;
+          case LCYL_OFFSET:
+            cmdReg.cyl_low = *data;
+            break;
+          case HCYL_OFFSET:
+            cmdReg.cyl_high = *data;
+            break;
+          case DRIVE_OFFSET:
+            cmdReg.drive = *data;
             action = ACT_SELECT_WRITE;
+            break;
+          case COMMAND_OFFSET:
+            cmdReg.command = *data;
+            action = ACT_CMD_WRITE;
+            break;
+          default:
+            panic("Invalid IDE command register offset: %#x\n", offset);
         }
+        break;
+      case CONTROL_BLOCK:
+        if (offset == CONTROL_OFFSET) {
+            if (*data & CONTROL_RST_BIT) {
+                // force the device into the reset state
+                devState = Device_Srst;
+                action = ACT_SRST_SET;
+            } else if (devState == Device_Srst && !(*data & CONTROL_RST_BIT))
+                action = ACT_SRST_CLEAR;
 
-    } else {
-        if (offset != CONTROL_OFFSET)
-            panic("Invalid disk control register offset: %#x\n", offset);
-
-        if (!byte)
-            panic("Invalid 16-bit write to control block\n");
-
-        if (*data & CONTROL_RST_BIT) {
-            // force the device into the reset state
-            devState = Device_Srst;
-            action = ACT_SRST_SET;
-        } else if (devState == Device_Srst && !(*data & CONTROL_RST_BIT)) {
-            action = ACT_SRST_CLEAR;
+            nIENBit = (*data & CONTROL_IEN_BIT) ? true : false;
         }
-
-        nIENBit = (*data & CONTROL_IEN_BIT) ? true : false;
+        else
+            panic("Invalid IDE control register offset: %#x\n", offset);
+        break;
+      default:
+        panic("Unknown register block!\n");
     }
 
     if (action != ACT_NONE)
@@ -787,8 +769,8 @@ IdeDisk::intrPost()
     intrPending = true;
 
     // talk to controller to set interrupt
-    if (ctrl){
-        ctrl->bmi_regs[BMIS0] |= IDEINTS;
+    if (ctrl) {
+        ctrl->bmi_regs.bmis0 |= IDEINTS;
         ctrl->intrPost();
     }
 }

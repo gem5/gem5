@@ -329,7 +329,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 *(uint8_t *)data = tm.tm_wday + 1;
                 return No_Fault;
               case RTC_DOM:
-                *(uint8_t *)data = tm.tm_mday + 1;
+                *(uint8_t *)data = tm.tm_mday;
                 return No_Fault;
               case RTC_MON:
                 *(uint8_t *)data = tm.tm_mon + 1;
@@ -340,15 +340,6 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
               default:
                 panic("Unknown RTC Address\n");
             }
-
-          /* Added for keyboard reads */
-          case TSDEV_KBD:
-            *(uint8_t *)data = 0x00;
-            return No_Fault;
-          /* Added for ATA PCI DMA */
-          case ATA_PCI_DMA:
-            *(uint8_t *)data = 0x00;
-            return No_Fault;
           default:
             panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
         }
@@ -542,7 +533,6 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
               case RTC_YEAR:
                 tm.tm_year = *(uint8_t *)data;
                 return No_Fault;
-            //panic("RTC Write not implmented (rtc.o won't work)\n");
             }
           default:
             panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);

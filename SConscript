@@ -265,6 +265,7 @@ full_system_sources = Split('''
 	dev/ns_gige.cc
 	dev/pciconfigall.cc
 	dev/pcidev.cc
+        dev/pcifake.cc
 	dev/pktfifo.cc
         dev/platform.cc
 	dev/sinic.cc
