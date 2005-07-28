@@ -73,41 +73,38 @@ PciDev::PciDev(Params *p)
 void
 PciDev::ReadConfig(int offset, int size, uint8_t *data)
 {
+    union {
+        uint8_t byte;
+        uint16_t word;
+        uint32_t dword;
+    };
+
     if (offset >= PCI_DEVICE_SPECIFIC)
         panic("Device specific PCI config space not implemented!\n");
 
+    dword = 0;
+
     switch(size) {
-      case sizeof(uint32_t):
-        memcpy(data, &config.data[offset], sizeof(uint32_t));
-        *(uint32_t*)data = htoa(*(uint32_t*)data);
-
-        DPRINTF(PCIDEV,
-                "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
-                params()->deviceNum, params()->functionNum, offset, size,
-                *(uint32_t*)data);
-        break;
-
-      case sizeof(uint16_t):
-        memcpy(data, &config.data[offset], sizeof(uint16_t));
-        *(uint16_t*)data = htoa(*(uint16_t*)data);
-
-        DPRINTF(PCIDEV,
-                "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
-                params()->deviceNum, params()->functionNum, offset, size,
-                *(uint16_t*)data);
-        break;
-
       case sizeof(uint8_t):
-        memcpy(data, &config.data[offset], sizeof(uint8_t));
-        DPRINTF(PCIDEV,
-                "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
-                params()->deviceNum, params()->functionNum, offset, size,
-                *data);
+        memcpy(&byte, &config.data[offset], size);
+        *data = byte;
         break;
-
+      case sizeof(uint16_t):
+        memcpy(&byte, &config.data[offset], size);
+        *(uint16_t*)data = htoa(word);
+        break;
+      case sizeof(uint32_t):
+        memcpy(&byte, &config.data[offset], size);
+        *(uint32_t*)data = htoa(dword);
+        break;
       default:
         panic("Invalid PCI configuration read size!\n");
     }
+
+    DPRINTF(PCIDEV,
+            "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
+            params()->deviceNum, params()->functionNum, offset, size,
+            htoa(dword));
 }
 
 void
@@ -118,22 +115,16 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 
     uint32_t barnum;
 
-    union {
-        uint8_t byte_value;
-        uint16_t half_value;
-        uint32_t word_value;
-    };
-    word_value = data;
-
     DPRINTF(PCIDEV,
             "write device: %#x function: %#x reg: %#x size: %d data: %#x\n",
             params()->deviceNum, params()->functionNum, offset, size,
-            word_value);
+            data);
 
     barnum = (offset - PCI0_BASE_ADDR0) >> 2;
 
     switch (size) {
       case sizeof(uint8_t): // 1-byte access
+        uint8_t byte_value = data;
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
           case PCI_CACHE_LINE_SIZE:
@@ -153,6 +144,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         break;
 
       case sizeof(uint16_t): // 2-byte access
+        uint16_t half_value = data;
         switch (offset) {
           case PCI_COMMAND:
           case PCI_STATUS:
@@ -165,10 +157,8 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         }
         break;
 
-      case sizeof(uint16_t)+1: // 3-byte access
-        panic("invalid access size");
-
       case sizeof(uint32_t): // 4-byte access
+        uint32_t word_value = data;
         switch (offset) {
           case PCI0_BASE_ADDR0:
           case PCI0_BASE_ADDR1:
@@ -183,12 +173,12 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                 // This is I/O Space, bottom two bits are read only
                 if (htoa(config.data[offset]) & 0x1) {
                     *(uint32_t *)&config.data[offset] = htoa(
-                        ~(BARSize[barnum] - 1) |
+                        (~(BARSize[barnum] - 1) & ~0x3) |
                         (htoa(config.data[offset]) & 0x3));
                 } else {
                     // This is memory space, bottom four bits are read only
                     *(uint32_t *)&config.data[offset] = htoa(
-                        ~(BARSize[barnum] - 1) |
+                        (~(BARSize[barnum] - 1) & ~0xF) |
                         (htoa(config.data[offset]) & 0xF));
                 }
             } else {
@@ -200,7 +190,7 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
                         htoa((word_value & ~0x3) |
                         (htoa(config.data[offset]) & 0x3));
 
-                    if (word_value != 0x1) {
+                    if (word_value &= ~0x1) {
                         Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
                         Addr base_size = BARSize[barnum];
 
@@ -263,6 +253,9 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
             DPRINTF(PCIDEV, "Writing to a read only register");
         }
         break;
+
+      default:
+        panic("invalid access size");
     }
 }
 

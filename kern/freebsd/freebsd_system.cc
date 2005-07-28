@@ -65,7 +65,6 @@ FreebsdSystem::FreebsdSystem(Params *p)
     skipCalibrateClocks = new FreebsdSkipCalibrateClocksEvent(&pcEventQueue, "calibrate_clocks");
     if (kernelSymtab->findAddress("calibrate_clocks", addr))
         skipCalibrateClocks->schedule(addr + sizeof(MachInst) * 2);
-
 }
 
 

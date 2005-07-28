@@ -146,10 +146,11 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             break;
         case 0x2: // Intr Identification Register (IIR)
             DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
-            if (status)
-                *(uint8_t*)data = 0;
+            status &= ~TX_INT;
+            if (status & RX_INT)
+                *(uint8_t*)data = IIR_RXID;
             else
-                *(uint8_t*)data = 1;
+                *(uint8_t*)data = IIR_NOPEND;
             break;
         case 0x3: // Line Control Register (LCR)
             *(uint8_t*)data = LCR;

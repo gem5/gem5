@@ -152,21 +152,17 @@ PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
     int func = (daddr >> 8) & 0x7;
     int reg = daddr & 0xFF;
 
-    union {
-        uint8_t byte_value;
-        uint16_t half_value;
-        uint32_t word_value;
-    };
+    uint32_t word_value = 0;
 
     if (devices[device][func] == NULL)
         panic("Attempting to write to config space on non-existant device\n");
     else {
             switch (req->size) {
             case sizeof(uint8_t):
-                byte_value = *(uint8_t*)data;
+                word_value = *(uint8_t*)data;
                 break;
             case sizeof(uint16_t):
-                half_value = *(uint16_t*)data;
+                word_value = *(uint16_t*)data;
                 break;
             case sizeof(uint32_t):
                 word_value = *(uint32_t*)data;

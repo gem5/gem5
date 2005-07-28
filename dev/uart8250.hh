@@ -38,6 +38,9 @@
 #include "dev/io_device.hh"
 #include "dev/uart.hh"
 
+#define IIR_NOPEND 0x1
+#define IIR_RXID   0x4
+
 class SimConsole;
 class Platform;
 

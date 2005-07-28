@@ -52,14 +52,11 @@ using namespace std;
 
 #define UNIX_YEAR_OFFSET 52
 
-struct tm TsunamiIO::tm = { 0 };
-
 // Timer Event for Periodic interrupt of RTC
 TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
     : Event(&mainEventQueue), tsunami(t), interval(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
-    intr_count = 0;
     schedule(curTick + interval);
 }
 
@@ -70,12 +67,6 @@ TsunamiIO::RTCEvent::process()
     schedule(curTick + interval);
     //Actually interrupt the processor here
     tsunami->cchip->postRTC();
-
-    if (intr_count == 1023)
-        tm.tm_sec = (tm.tm_sec + 1) % 60;
-
-    intr_count = (intr_count + 1) % 1024;
-
 }
 
 const char *
@@ -99,6 +90,11 @@ TsunamiIO::RTCEvent::unserialize(Checkpoint *cp, const std::string &section)
     reschedule(time);
 }
 
+void
+TsunamiIO::RTCEvent::scheduleIntr()
+{
+  schedule(curTick + interval);
+}
 
 // Timer Event for PIT Timers
 TsunamiIO::ClockEvent::ClockEvent()
@@ -126,10 +122,8 @@ TsunamiIO::ClockEvent::process()
     DPRINTF(Tsunami, "Timer Interrupt\n");
     if (mode == 0)
         status = 0x20; // set bit that linux is looking for
-    else
-        schedule(curTick + interval);
-
-    current_count--; //decrement count
+    else if (mode == 2)
+        schedule(curTick + current_count*interval);
 }
 
 void
@@ -270,7 +264,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) + 0x20;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
 
 
     switch(req->size) {
@@ -302,12 +296,12 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
           case TSDEV_RTC_DATA:
             switch(RTCAddress) {
               case RTC_CNTRL_REGA:
-                *(uint8_t*)data = uip << 7 | 0x26;
+                *(uint8_t*)data = uip << 7 | RTCA_32768HZ | RTCA_1024HZ;
                 uip = !uip;
                 return No_Fault;
               case RTC_CNTRL_REGB:
                 // DM and 24/12 and UIE
-                *(uint8_t*)data = 0x46;
+                *(uint8_t*)data = RTCB_PRDC_IE | RTCB_BIN | RTCB_24HR;
                 return No_Fault;
               case RTC_CNTRL_REGC:
                 // If we want to support RTC user access in linux
@@ -316,6 +310,12 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 return No_Fault;
               case RTC_CNTRL_REGD:
                 panic("RTC Control Register D not implemented");
+              case RTC_SEC_ALRM:
+              case RTC_MIN_ALRM:
+              case RTC_HR_ALRM:
+                // RTC alarm functionality is not currently implemented
+                *(uint8_t *)data = 0x00;
+                return No_Fault;
               case RTC_SEC:
                 *(uint8_t *)data = tm.tm_sec;
                 return No_Fault;
@@ -326,16 +326,16 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
                 *(uint8_t *)data = tm.tm_hour;
                 return No_Fault;
               case RTC_DOW:
-                *(uint8_t *)data = tm.tm_wday;
+                *(uint8_t *)data = tm.tm_wday + 1;
                 return No_Fault;
               case RTC_DOM:
-                *(uint8_t *)data = tm.tm_mday;
+                *(uint8_t *)data = tm.tm_mday + 1;
                 return No_Fault;
               case RTC_MON:
                 *(uint8_t *)data = tm.tm_mon + 1;
                 return No_Fault;
               case RTC_YEAR:
-                *(uint8_t *)data = tm.tm_year - UNIX_YEAR_OFFSET;
+                *(uint8_t *)data = tm.tm_year;
                 return No_Fault;
               default:
                 panic("Unknown RTC Address\n");
@@ -391,7 +391,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) + 0x20;
+    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
 
     switch(req->size) {
       case sizeof(uint8_t):
@@ -442,10 +442,10 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
                 switch(*(uint8_t*)data >> 6) {
                   case 0:
                     timer0.LatchCount();
-                    break;
+                    return No_Fault;
                   case 2:
                     timer2.LatchCount();
-                    break;
+                    return No_Fault;
                   default:
                     panic("Read Back Command not implemented\n");
                 }
@@ -483,9 +483,10 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
             /* two writes before we actually start the Timer
                so I set a flag in the timerData */
             if(timerData & 0x1000) {
-                timerData &= 0x1000;
+                timerData &= ~0x1000;
                 timerData += *(uint8_t*)data << 8;
                 timer0.Program(timerData);
+                timerData = 0;
             } else {
                 timerData = *(uint8_t*)data;
                 timerData |= 0x1000;
@@ -499,12 +500,26 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
           case TSDEV_RTC_DATA:
             switch(RTCAddress) {
               case RTC_CNTRL_REGA:
+                if (*data != (RTCA_32768HZ | RTCA_1024HZ))
+                    panic("Unimplemented RTC register A value write!\n");
                 return No_Fault;
               case RTC_CNTRL_REGB:
+                if ((*data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
+                    panic("Write to RTC reg B bits that are not implemented!\n");
+
+                if (*data & RTCB_PRDC_IE) {
+                    if (!rtc.scheduled())
+                        rtc.scheduleIntr();
+                } else {
+                    if (rtc.scheduled())
+                        rtc.deschedule();
+                }
                 return No_Fault;
               case RTC_CNTRL_REGC:
+                panic("Write to RTC reg C not implemented!\n");
                 return No_Fault;
               case RTC_CNTRL_REGD:
+                panic("Write to RTC reg D not implemented!\n");
                 return No_Fault;
               case RTC_SEC:
                 tm.tm_sec = *(uint8_t *)data;
@@ -522,10 +537,10 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
                 tm.tm_mday = *(uint8_t *)data;
                 return No_Fault;
               case RTC_MON:
-                 tm.tm_mon = *(uint8_t *)data - 1;
+                 tm.tm_mon = *(uint8_t *)data;
                 return No_Fault;
               case RTC_YEAR:
-                tm.tm_year = *(uint8_t *)data + UNIX_YEAR_OFFSET;
+                tm.tm_year = *(uint8_t *)data;
                 return No_Fault;
             //panic("RTC Write not implmented (rtc.o won't work)\n");
             }

@@ -38,9 +38,7 @@
 class FreebsdSystem : public System
 {
   private:
-
     SkipFuncEvent *skipDelayEvent;
-
     FreebsdSkipCalibrateClocksEvent *skipCalibrateClocks;
 
   public:

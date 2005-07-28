@@ -51,7 +51,7 @@ class TsunamiIO : public PioDevice
     /** The size of mappad from the above address */
     static const Addr size = 0xff;
 
-    static struct tm tm;
+    struct tm tm;
 
     /**
      * In Tsunami RTC only has two i/o ports one for data and one for
@@ -154,9 +154,6 @@ class TsunamiIO : public PioDevice
         Tsunami* tsunami;
         Tick interval;
 
-        /** Count of the number of RTC interrupts that have occured */
-        uint32_t intr_count;
-
       public:
         /**
          * RTC Event initializes the RTC event by scheduling an event
@@ -165,7 +162,7 @@ class TsunamiIO : public PioDevice
         RTCEvent(Tsunami* t, Tick i);
 
         /**
-         * Interrupth the processor and reschedule the event.
+         * Interrupt the processor and reschedule the event.
          */
         virtual void process();
 
@@ -187,6 +184,8 @@ class TsunamiIO : public PioDevice
          * @param section The section name of this object
          */
         virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+        void scheduleIntr();
     };
 
     /** uip UpdateInProgess says that the rtc is updating, but we just fake it
@@ -243,7 +242,7 @@ class TsunamiIO : public PioDevice
      * This variable contains a flag as to how many writes have happened, and
      * the time so far.
      */
-    uint32_t timerData;
+    uint16_t timerData;
 
   public:
     /**
