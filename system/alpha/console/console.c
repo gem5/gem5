@@ -69,6 +69,8 @@
 
 #define PAGE_SIZE (8192)
 
+#define KSTACK_REGION_VA 0x20040000
+
 #define KSEG   0xfffffc0000000000
 #define K1BASE 0xfffffc8000000000
 #define KSEG_TO_PHYS(x) (((ulong)x) & ~KSEG)
@@ -513,7 +515,7 @@ unixBoot(int argc, char **argv)
 
    /* Set up third_kernel after it's loaded, when we know where it is */
     kern_first_page = (KSEG_TO_PHYS(m5Conf.kernStart)/PAGE_SIZE);
-    kernel_end = ksp_top = ROUNDUP8K(m5Conf.kernEnd);
+    kernel_end = ROUNDUP8K(m5Conf.kernEnd);
     bootadr = m5Conf.entryPoint;
 
     printf_lock("HWRPB 0x%x l1pt 0x%x l2pt 0x%x l3pt_rpb 0x%x l3pt_kernel 0x%x"
@@ -526,31 +528,18 @@ unixBoot(int argc, char **argv)
         panic("kernel too big\n");
     }
     printf_lock("kstart = 0x%x, kend = 0x%x, kentry = 0x%x, numCPUs = 0x%x\n", m5Conf.kernStart, m5Conf.kernEnd, m5Conf.entryPoint, m5Conf.numCPUs);
-    /* Map the kernel's pages into the third level of region 2 */
-    //for (ptr = m5Conf.kernStart; ptr < kernel_end; ptr += PAGE_SIZE) {
-      //  third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-    //}
-
-    ksp_top = (ulong)unix_boot_alloc(1);
-    ksp = ksp_top + PAGE_SIZE;
-
-    //if (ksp - m5Conf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-      //  printf_lock("Kernel stack pushd us over 8MB\n");
-      //  panic("ksp too big\n");
-    //}
-    //if (THIRD_XXX((ulong)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
-      //  panic("increase NUM_KERNEL_THIRD, and change THIRD_XXX\n");
-    //}
-    ptr = (ulong) ksp_top;
-    bzero((char *)ptr, PAGE_SIZE * 2);
-    dbPage[THIRD(0x20040000)] = 0;		/* Stack Guard Page */
-    dbPage[THIRD(0x20042000)] = KPTE(PFN(ptr)); /* Kernel Stack Pages */
-    dbPage[THIRD(0x20046000)] = 0;		/* Stack Guard Page */
+    ksp_bottom = (ulong)unix_boot_alloc(1);
+    ksp_top = ksp_bottom + PAGE_SIZE;
+    ptr = (ulong) ksp_bottom;
+    bzero((char *)ptr, PAGE_SIZE);
+    dbPage[THIRD(KSTACK_REGION_VA)] = 0;		          /* Stack Guard Page */
+    dbPage[THIRD(KSTACK_REGION_VA + PAGE_SIZE)] = KPTE(PFN(ptr)); /* Kernel Stack Page */
+    dbPage[THIRD(KSTACK_REGION_VA + 2*PAGE_SIZE)] = 0;		  /* Stack Guard Page */
 
     /* put argv into the bottom of the stack - argv starts at 1 because
      * the command thatr got us here (i.e. "unixboot) is in argv[0].
      */
-    ksp -= 8;			/* Back up one longword */
+    ksp = ksp_top - 8;			/* Back up one longword */
     ksp -= argc * sizeof(char *);	/* Make room for argv */
     kargv = (char **) ksp;
     for (i = 1; i < argc; i++) {	/* Copy arguments to stack */
@@ -609,7 +598,7 @@ unixBoot(int argc, char **argv)
         bcopy((char *)&m5_rpb_percpu, (char *)thisCPU,
               sizeof(struct rpb_percpu));
 
-        thisCPU->rpb_pcb.rpb_ksp = (0x20044000 - 0x18);
+        thisCPU->rpb_pcb.rpb_ksp = (KSTACK_REGION_VA + 2*PAGE_SIZE - (ksp_top - ksp));
         thisCPU->rpb_pcb.rpb_ptbr = PFN(first);
 
         thisCPU->rpb_logout = KSEG_TO_PHYS(percpu_logout);
