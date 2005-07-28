@@ -69,6 +69,8 @@
 
 #define PAGE_SIZE (8192)
 
+#define KSTACK_REGION_VA 0x20040000
+
 #define KSEG   0xfffffc0000000000
 #define K1BASE 0xfffffc8000000000
 #define KSEG_TO_PHYS(x) (((ulong)x) & ~KSEG)
@@ -470,6 +472,7 @@ unixBoot(int argc, char **argv)
         /* Region 1 */
         second[SECOND(0x20000000) + i] = KPTE(PFN(third_kernel) + i);
     }
+
     /* Region 2 */
     second[SECOND(0x40000000)] = KPTE(PFN(second));
 
@@ -489,8 +492,9 @@ unixBoot(int argc, char **argv)
 #define DATABASE_END            0x20020000
 
     ulong *dbPage = (ulong*)unix_boot_alloc(1);
+    bzero(dbPage, PAGE_SIZE);
     second[SECOND(DATABASE_BASE)] = KPTE(PFN(dbPage));
-    for (i = DATABASE_BASE; i < DATABASE_END ; i += 8096) {
+    for (i = DATABASE_BASE; i < DATABASE_END ; i += PAGE_SIZE) {
         ulong *db = (ulong*)unix_boot_alloc(1);
         dbPage[THIRD(i)] = KPTE(PFN(db));
     }
@@ -511,7 +515,7 @@ unixBoot(int argc, char **argv)
 
    /* Set up third_kernel after it's loaded, when we know where it is */
     kern_first_page = (KSEG_TO_PHYS(m5Conf.kernStart)/PAGE_SIZE);
-    kernel_end = ksp_top = ROUNDUP8K(m5Conf.kernEnd);
+    kernel_end = ROUNDUP8K(m5Conf.kernEnd);
     bootadr = m5Conf.entryPoint;
 
     printf_lock("HWRPB 0x%x l1pt 0x%x l2pt 0x%x l3pt_rpb 0x%x l3pt_kernel 0x%x"
@@ -523,35 +527,21 @@ unixBoot(int argc, char **argv)
                     kernel_end - m5Conf.kernStart );
         panic("kernel too big\n");
     }
+    printf_lock("kstart = 0x%x, kend = 0x%x, kentry = 0x%x, numCPUs = 0x%x\n", m5Conf.kernStart, m5Conf.kernEnd, m5Conf.entryPoint, m5Conf.numCPUs);
 
-    /* Map the kernel's pages into the third level of region 2 */
-    for (ptr = m5Conf.kernStart; ptr < kernel_end; ptr += PAGE_SIZE) {
-        third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-    }
+    ksp_bottom = (ulong)unix_boot_alloc(1);
+    ksp_top = ksp_bottom + PAGE_SIZE;
 
-    /* blow 2 pages of phys mem for guards since it maintains 1-to-1 mapping */
-    ksp = ksp_top + (3 * PAGE_SIZE);
-    if (ksp - m5Conf.kernStart > (0x800000*NUM_KERNEL_THIRD)) {
-        printf_lock("Kernel stack pushd us over 8MB\n");
-        panic("ksp too big\n");
-    }
-    if (THIRD_XXX((ulong)ksp_top) >  NUM_KERNEL_THIRD * 1024) {
-        panic("increase NUM_KERNEL_THIRD, and change THIRD_XXX\n");
-    }
-    ptr = (ulong) ksp_top;
-    bzero((char *)ptr, PAGE_SIZE * 2);
-    third_kernel[THIRD_XXX(ptr)] = 0;		/* Stack Guard Page */
-    ptr += PAGE_SIZE;
-    third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr)); /* Kernel Stack Pages */
-    ptr += PAGE_SIZE;
-    third_kernel[THIRD_XXX(ptr)] = KPTE(PFN(ptr));
-    ptr += PAGE_SIZE;
-    third_kernel[THIRD_XXX(ptr)] = 0;		/* Stack Guard Page */
+    ptr = (ulong) ksp_bottom;
+    bzero((char *)ptr, PAGE_SIZE);
+    dbPage[THIRD(KSTACK_REGION_VA)] = 0;		          /* Stack Guard Page */
+    dbPage[THIRD(KSTACK_REGION_VA + PAGE_SIZE)] = KPTE(PFN(ptr)); /* Kernel Stack Page */
+    dbPage[THIRD(KSTACK_REGION_VA + 2*PAGE_SIZE)] = 0;		  /* Stack Guard Page */
 
     /* put argv into the bottom of the stack - argv starts at 1 because
      * the command thatr got us here (i.e. "unixboot) is in argv[0].
      */
-    ksp -= 8;			/* Back up one longword */
+    ksp = ksp_top - 8;			/* Back up one longword */
     ksp -= argc * sizeof(char *);	/* Make room for argv */
     kargv = (char **) ksp;
     for (i = 1; i < argc; i++) {	/* Copy arguments to stack */
@@ -563,7 +553,7 @@ unixBoot(int argc, char **argv)
     kargv[kargc] = NULL;	/* just to be sure; doesn't seem to be used */
     ksp -= sizeof(char *);	/* point above last arg for no real reason */
 
-    free_pfn = PFN(ptr);
+    free_pfn = PFN(kernel_end);
 
     bcopy((char *)&m5_rpb, (char *)rpb, sizeof(struct rpb));
 
@@ -610,7 +600,7 @@ unixBoot(int argc, char **argv)
         bcopy((char *)&m5_rpb_percpu, (char *)thisCPU,
               sizeof(struct rpb_percpu));
 
-        thisCPU->rpb_pcb.rpb_ksp = ksp;
+        thisCPU->rpb_pcb.rpb_ksp = (KSTACK_REGION_VA + 2*PAGE_SIZE - (ksp_top - ksp));
         thisCPU->rpb_pcb.rpb_ptbr = PFN(first);
 
         thisCPU->rpb_logout = KSEG_TO_PHYS(percpu_logout);
@@ -642,7 +632,7 @@ unixBoot(int argc, char **argv)
     ctb_tt->ctb_csr = 0;
     ctb_tt->ctb_tivec = 0x6c0;  /* matches tlaser pal code */
     ctb_tt->ctb_rivec = 0x680;  /* matches tlaser pal code */
-    ctb_tt->ctb_baud = 9600;
+    ctb_tt->ctb_term_type = 2;
     ctb_tt->ctb_put_sts = 0;
     ctb_tt->ctb_get_sts = 0;
 

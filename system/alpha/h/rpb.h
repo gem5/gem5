@@ -265,7 +265,7 @@ struct ctb_tt {
     long ctb_csr;		/* 020: CSR Address */
     long ctb_tivec;		/* 028: <63>=tie; interrupt vector */
     long ctb_rivec;		/* 030: <63>=rie; interrupt vector */
-    long ctb_baud;		/* 038: baud rate */
+    long ctb_term_type;         /* 038: baud rate */
     long ctb_put_sts;		/* 040: PUTS callback extended status */
     long ctb_get_sts;		/* 048: GETS callback extended status */
     long ctb_rsvd[1];		/* 050: reserved for console use */
