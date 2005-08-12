@@ -30,7 +30,6 @@
  * @file
  * Modifications for the FreeBSD kernel.
  * Based on kern/linux/linux_system.cc.
- * Currently only used to skip DELAY function.
  *
  */
 
@@ -51,7 +50,6 @@ FreebsdSystem::FreebsdSystem(Params *p)
 
     /**
      * Any time DELAY is called just skip the function.
-     * Replace calibrate_clocks with function below.
      */
     skipDelayEvent = new SkipFuncEvent(&pcEventQueue, "DELAY");
     if (kernelSymtab->findAddress("DELAY", addr))

@@ -45,6 +45,17 @@
 #include "mem/bus/bus.hh"
 #include "sim/eventq.hh"
 
+// Hash filtering constants
+const uint16_t FHASH_ADDR  = 0x100;
+const uint16_t FHASH_SIZE  = 0x100;
+
+// EEPROM constants
+const uint8_t  EEPROM_READ = 0x2;
+const uint8_t  EEPROM_SIZE = 64; // Size in words of NSC93C46 EEPROM
+const uint8_t  EEPROM_PMATCH2_ADDR = 0xA; // EEPROM Address of PMATCH word 2
+const uint8_t  EEPROM_PMATCH1_ADDR = 0xB; // EEPROM Address of PMATCH word 1
+const uint8_t  EEPROM_PMATCH0_ADDR = 0xC; // EEPROM Address of PMATCH word 0
+
 /**
  * Ethernet device registers
  */
@@ -69,6 +80,8 @@ struct dp_regs {
     uint32_t    pcr;
     uint32_t    rfcr;
     uint32_t    rfdr;
+    uint32_t    brar;
+    uint32_t    brdr;
     uint32_t    srr;
     uint32_t    mibc;
     uint32_t    vrcr;
@@ -89,6 +102,12 @@ struct dp_rom {
      * the linux driver doesn't use any other ROM
      */
     uint8_t perfectMatch[ETH_ADDR_LEN];
+
+    /**
+     * for hash table memory.
+     * used by the freebsd driver
+     */
+    uint8_t filterHash[FHASH_SIZE];
 };
 
 class NSGigEInt;
@@ -135,6 +154,15 @@ class NSGigE : public PciDev
         dmaWriting,
         dmaReadWaiting,
         dmaWriteWaiting
+    };
+
+    /** EEPROM State Machine States */
+    enum EEPROMState
+    {
+        eepromStart,
+        eepromGetOpcode,
+        eepromGetAddress,
+        eepromRead
     };
 
   private:
@@ -211,6 +239,14 @@ class NSGigE : public PciDev
 
     bool extstsEnable;
 
+    /** EEPROM State Machine */
+    EEPROMState eepromState;
+    bool eepromClk;
+    uint8_t eepromBitsToRx;
+    uint8_t eepromOpcode;
+    uint8_t eepromAddress;
+    uint16_t eepromData;
+
   protected:
     Tick dmaReadDelay;
     Tick dmaWriteDelay;
@@ -274,6 +310,8 @@ class NSGigE : public PciDev
     friend void TxKickEvent::process();
     TxKickEvent txKickEvent;
 
+    void eepromKick();
+
     /**
      * Retransmit event
      */
@@ -301,6 +339,7 @@ class NSGigE : public PciDev
     bool acceptUnicast;
     bool acceptPerfect;
     bool acceptArp;
+    bool multicastHashEnable;
 
     PhysicalMemory *physmem;
 

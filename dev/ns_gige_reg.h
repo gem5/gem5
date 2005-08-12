@@ -196,12 +196,21 @@
 #define TX_CFG_DRTH_MASK 0x000000ff
 
 /*general purpose I/O control register */
+#define GPIOR_UNUSED		0xffff8000
+#define GPIOR_GP5_IN		0x00004000
+#define GPIOR_GP4_IN		0x00002000
+#define GPIOR_GP3_IN		0x00001000
+#define GPIOR_GP2_IN		0x00000800
+#define GPIOR_GP1_IN		0x00000400
 #define GPIOR_GP5_OE		0x00000200
 #define GPIOR_GP4_OE		0x00000100
 #define GPIOR_GP3_OE		0x00000080
 #define GPIOR_GP2_OE		0x00000040
 #define GPIOR_GP1_OE		0x00000020
+#define GPIOR_GP5_OUT		0x00000010
+#define GPIOR_GP4_OUT		0x00000008
 #define GPIOR_GP3_OUT		0x00000004
+#define GPIOR_GP2_OUT		0x00000002
 #define GPIOR_GP1_OUT		0x00000001
 
 /* receive configuration register */
@@ -283,10 +292,14 @@
 #define TBISR_MR_AN_COMPLETE	0x00000004
 
 /* TBI auto-negotiation advertisement register */
+#define TANAR_NP		0x00008000
+#define TANAR_RF2		0x00002000
+#define TANAR_RF1		0x00001000
 #define TANAR_PS2 		0x00000100
 #define TANAR_PS1 		0x00000080
-#define TANAR_HALF_DUP 		0x00000040
-#define TANAR_FULL_DUP 		0x00000020
+#define TANAR_HALF_DUP		0x00000040
+#define TANAR_FULL_DUP		0x00000020
+#define TANAR_UNUSED		0x00000E1F
 
 /*
  * descriptor format currently assuming link and bufptr

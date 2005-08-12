@@ -56,7 +56,7 @@ using namespace std;
 TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
     : Event(&mainEventQueue), tsunami(t), interval(i)
 {
-    DPRINTF(MC146818, "RTC Event Initilizing\n");
+    DPRINTF(MC146818, "RTC Event Initializing\n");
     schedule(curTick + interval);
 }
 

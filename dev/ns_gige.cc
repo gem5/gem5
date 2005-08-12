@@ -98,14 +98,14 @@ NSGigE::NSGigE(Params *p)
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
       rxEnable(false), CRDD(false), rxPktBytes(0),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
-      rxDmaReadEvent(this), rxDmaWriteEvent(this),
+      eepromState(eepromStart), rxDmaReadEvent(this), rxDmaWriteEvent(this),
       txDmaReadEvent(this), txDmaWriteEvent(this),
       dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
       txDelay(p->tx_delay), rxDelay(p->rx_delay),
       rxKickTick(0), rxKickEvent(this), txKickTick(0), txKickEvent(this),
       txEvent(this), rxFilterEnable(p->rx_filter), acceptBroadcast(false),
       acceptMulticast(false), acceptUnicast(false),
-      acceptPerfect(false), acceptArp(false),
+      acceptPerfect(false), acceptArp(false), multicastHashEnable(false),
       physmem(p->pmem), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
@@ -680,7 +680,9 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 break;
 
               case RFDR:
-                switch (regs.rfcr & RFCR_RFADDR) {
+                uint16_t rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
+                switch (rfaddr) {
+                  // Read from perfect match ROM octets
                   case 0x000:
                     reg = rom.perfectMatch[1];
                     reg = reg << 8;
@@ -695,9 +697,21 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                     reg += rom.perfectMatch[4];
                     break;
                   default:
-                    panic("reading RFDR for something other than PMATCH!\n");
-                    // didn't implement other RFDR functionality b/c
-                    // driver didn't use it
+                    // Read filter hash table
+                    if (rfaddr >= FHASH_ADDR &&
+                        rfaddr < FHASH_ADDR + FHASH_SIZE) {
+
+                        // Only word-aligned reads supported
+                        if (rfaddr % 2)
+                            panic("unaligned read from filter hash table!");
+
+                        reg = rom.filterHash[rfaddr - FHASH_ADDR + 1] << 8;
+                        reg += rom.filterHash[rfaddr - FHASH_ADDR];
+                        break;
+                    }
+
+                    panic("reading RFDR for something other than pattern\
+                        matching or hashing! %#x\n", rfaddr);
                 }
                 break;
 
@@ -838,8 +852,12 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
                 reg & CFGR_RESERVED ||
                 reg & CFGR_T64ADDR ||
                 reg & CFGR_PCI64_DET)
-                panic("writing to read-only or reserved CFGR bits!\n");
 
+            // First clear all writable bits
+            regs.config &= CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
+                                   CFGR_RESERVED | CFGR_T64ADDR |
+                                   CFGR_PCI64_DET;
+            // Now set the appropriate writable bits
             regs.config |= reg & ~(CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
                                    CFGR_RESERVED | CFGR_T64ADDR |
                                    CFGR_PCI64_DET);
@@ -895,15 +913,27 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             break;
 
           case MEAR:
-            regs.mear = reg;
+            // Clear writable bits
+            regs.mear &= MEAR_EEDO;
+            // Set appropriate writable bits
+            regs.mear |= reg & ~MEAR_EEDO;
+
+            // FreeBSD uses the EEPROM to read PMATCH (for the MAC address)
+            // even though it could get it through RFDR
+            if (reg & MEAR_EESEL) {
+                // Rising edge of clock
+                if (reg & MEAR_EECLK && !eepromClk)
+                    eepromKick();
+            }
+            else {
+                eepromState = eepromStart;
+                regs.mear &= ~MEAR_EEDI;
+            }
+
+            eepromClk = reg & MEAR_EECLK;
+
             // since phy is completely faked, MEAR_MD* don't matter
-            // and since the driver never uses MEAR_EE*, they don't
-            // matter
 #if 0
-            if (reg & MEAR_EEDI) ;
-            if (reg & MEAR_EEDO) ; // this one is read only
-            if (reg & MEAR_EECLK) ;
-            if (reg & MEAR_EESEL) ;
             if (reg & MEAR_MDIO) ;
             if (reg & MEAR_MDDIR) ;
             if (reg & MEAR_MDC) ;
@@ -980,7 +1010,11 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             break;
 
           case GPIOR:
-            regs.gpior = reg;
+            // Only write writable bits
+            regs.gpior &= GPIOR_UNUSED | GPIOR_GP5_IN | GPIOR_GP4_IN
+                        | GPIOR_GP3_IN | GPIOR_GP2_IN | GPIOR_GP1_IN;
+            regs.gpior |= reg & ~(GPIOR_UNUSED | GPIOR_GP5_IN | GPIOR_GP4_IN
+                                | GPIOR_GP3_IN | GPIOR_GP2_IN | GPIOR_GP1_IN);
             /* these just control general purpose i/o pins, don't matter */
             break;
 
@@ -1037,14 +1071,14 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             acceptUnicast = (reg & RFCR_AAU) ? true : false;
             acceptPerfect = (reg & RFCR_APM) ? true : false;
             acceptArp = (reg & RFCR_AARP) ? true : false;
+            multicastHashEnable = (reg & RFCR_MHEN) ? true : false;
 
 #if 0
             if (reg & RFCR_APAT)
                 panic("RFCR_APAT not implemented!\n");
 #endif
-
-            if (reg & RFCR_MHEN || reg & RFCR_UHEN)
-                panic("hash filtering not implemented!\n");
+            if (reg & RFCR_UHEN)
+                panic("Unicast hash filtering not used by drivers!\n");
 
             if (reg & RFCR_ULM)
                 panic("RFCR_ULM not implemented!\n");
@@ -1052,10 +1086,41 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             break;
 
           case RFDR:
-            panic("the driver never writes to RFDR, something is wrong!\n");
+            uint16_t rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
+            switch (rfaddr) {
+              case 0x000:
+                rom.perfectMatch[0] = (uint8_t)reg;
+                rom.perfectMatch[1] = (uint8_t)(reg >> 8);
+                break;
+              case 0x002:
+                rom.perfectMatch[2] = (uint8_t)reg;
+                rom.perfectMatch[3] = (uint8_t)(reg >> 8);
+                break;
+              case 0x004:
+                rom.perfectMatch[4] = (uint8_t)reg;
+                rom.perfectMatch[5] = (uint8_t)(reg >> 8);
+                break;
+              default:
+
+                if (rfaddr >= FHASH_ADDR &&
+                    rfaddr < FHASH_ADDR + FHASH_SIZE) {
+
+                    // Only word-aligned writes supported
+                    if (rfaddr % 2)
+                        panic("unaligned write to filter hash table!");
+
+                    rom.filterHash[rfaddr - FHASH_ADDR] = (uint8_t)reg;
+                    rom.filterHash[rfaddr - FHASH_ADDR + 1]
+                        = (uint8_t)(reg >> 8);
+                    break;
+                }
+                panic("writing RFDR for something other than pattern matching\
+                    or hashing! %#x\n", rfaddr);
+            }
 
           case BRAR:
-            panic("the driver never uses BRAR, something is wrong!\n");
+            regs.brar = reg;
+            break;
 
           case BRDR:
             panic("the driver never uses BRDR, something is wrong!\n");
@@ -1076,7 +1141,6 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 
           case VDR:
             panic("the driver never uses VDR, something is wrong!\n");
-            break;
 
           case CCSR:
             /* not going to implement clockrun stuff */
@@ -1103,12 +1167,16 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             panic("TBISR is read only register!\n");
 
           case TANAR:
-            regs.tanar = reg;
-            if (reg & TANAR_PS2)
-                panic("this isn't used in driver, something wrong!\n");
+            // Only write the writable bits
+            regs.tanar &= TANAR_RF1 | TANAR_RF2 | TANAR_UNUSED;
+            regs.tanar |= reg & ~(TANAR_RF1 | TANAR_RF2 | TANAR_UNUSED);
 
-            if (reg & TANAR_PS1)
-                panic("this isn't used in driver, something wrong!\n");
+            // Pause capability unimplemented
+#if 0
+            if (reg & TANAR_PS2) ;
+            if (reg & TANAR_PS1) ;
+#endif
+
             break;
 
           case TANLPAR:
@@ -1361,7 +1429,7 @@ NSGigE::regsReset()
 {
     memset(&regs, 0, sizeof(regs));
     regs.config = (CFGR_LNKSTS | CFGR_TBI_EN | CFGR_MODE_1000);
-    regs.mear = 0x22;
+    regs.mear = 0x12;
     regs.txcfg = 0x120; // set drain threshold to 1024 bytes and
                         // fill threshold to 32 bytes
     regs.rxcfg = 0x4;   // set drain threshold to 16 bytes
@@ -1369,6 +1437,7 @@ NSGigE::regsReset()
     regs.mibc = MIBC_FRZ;
     regs.vdr = 0x81;    // set the vlan tag type to 802.1q
     regs.tesr = 0xc000; // TBI capable of both full and half duplex
+    regs.brar = 0xffffffff;
 
     extstsEnable = false;
     acceptBroadcast = false;
@@ -2248,6 +2317,107 @@ NSGigE::txKick()
         txKickEvent.schedule(txKickTick);
 }
 
+/**
+ * Advance the EEPROM state machine
+ * Called on rising edge of EEPROM clock bit in MEAR
+ */
+void
+NSGigE::eepromKick()
+{
+    switch (eepromState) {
+
+      case eepromStart:
+
+        // Wait for start bit
+        if (regs.mear & MEAR_EEDI) {
+            // Set up to get 2 opcode bits
+            eepromState = eepromGetOpcode;
+            eepromBitsToRx = 2;
+            eepromOpcode = 0;
+        }
+        break;
+
+      case eepromGetOpcode:
+        eepromOpcode <<= 1;
+        eepromOpcode += (regs.mear & MEAR_EEDI) ? 1 : 0;
+        --eepromBitsToRx;
+
+        // Done getting opcode
+        if (eepromBitsToRx == 0) {
+            if (eepromOpcode != EEPROM_READ)
+                panic("only EEPROM reads are implemented!");
+
+            // Set up to get address
+            eepromState = eepromGetAddress;
+            eepromBitsToRx = 6;
+            eepromAddress = 0;
+        }
+        break;
+
+      case eepromGetAddress:
+        eepromAddress <<= 1;
+        eepromAddress += (regs.mear & MEAR_EEDI) ? 1 : 0;
+        --eepromBitsToRx;
+
+        // Done getting address
+        if (eepromBitsToRx == 0) {
+
+            if (eepromAddress >= EEPROM_SIZE)
+                panic("EEPROM read access out of range!");
+
+            switch (eepromAddress) {
+
+              case EEPROM_PMATCH2_ADDR:
+                eepromData = rom.perfectMatch[5];
+                eepromData <<= 8;
+                eepromData += rom.perfectMatch[4];
+                break;
+
+              case EEPROM_PMATCH1_ADDR:
+                eepromData = rom.perfectMatch[3];
+                eepromData <<= 8;
+                eepromData += rom.perfectMatch[2];
+                break;
+
+              case EEPROM_PMATCH0_ADDR:
+                eepromData = rom.perfectMatch[1];
+                eepromData <<= 8;
+                eepromData += rom.perfectMatch[0];
+                break;
+
+              default:
+                panic("FreeBSD driver only uses EEPROM to read PMATCH!");
+            }
+            // Set up to read data
+            eepromState = eepromRead;
+            eepromBitsToRx = 16;
+
+            // Clear data in bit
+            regs.mear &= ~MEAR_EEDI;
+        }
+        break;
+
+      case eepromRead:
+        // Clear Data Out bit
+        regs.mear &= ~MEAR_EEDO;
+        // Set bit to value of current EEPROM bit
+        regs.mear |= (eepromData & 0x8000) ? MEAR_EEDO : 0x0;
+
+        eepromData <<= 1;
+        --eepromBitsToRx;
+
+        // All done
+        if (eepromBitsToRx == 0) {
+            eepromState = eepromStart;
+        }
+        break;
+
+      default:
+        panic("invalid EEPROM state");
+    }
+
+}
+
 void
 NSGigE::transferDone()
 {
@@ -2294,6 +2464,9 @@ NSGigE::rxFilter(const PacketPtr &packet)
         if (acceptMulticast)
             drop = false;
 
+        // Multicast hashing faked - all packets accepted
+        if (multicastHashEnable)
+            drop = false;
     }
 
     if (drop) {
@@ -2319,7 +2492,14 @@ NSGigE::recvPacket(PacketPtr packet)
         return true;
     }
 
-    if (rxFilterEnable && rxFilter(packet)) {
+    if (!rxFilterEnable) {
+        DPRINTF(Ethernet,
+            "receive packet filtering disabled . . . packet dropped\n");
+        interface->recvDone();
+        return true;
+    }
+
+    if (rxFilter(packet)) {
         DPRINTF(Ethernet, "packet filtered...dropped\n");
         interface->recvDone();
         return true;
@@ -2394,6 +2574,8 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(regs.pcr);
     SERIALIZE_SCALAR(regs.rfcr);
     SERIALIZE_SCALAR(regs.rfdr);
+    SERIALIZE_SCALAR(regs.brar);
+    SERIALIZE_SCALAR(regs.brdr);
     SERIALIZE_SCALAR(regs.srr);
     SERIALIZE_SCALAR(regs.mibc);
     SERIALIZE_SCALAR(regs.vrcr);
@@ -2408,6 +2590,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(regs.tesr);
 
     SERIALIZE_ARRAY(rom.perfectMatch, ETH_ADDR_LEN);
+    SERIALIZE_ARRAY(rom.filterHash, FHASH_SIZE);
 
     SERIALIZE_SCALAR(ioEnable);
 
@@ -2481,6 +2664,17 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxKickTick);
 
     /*
+     * Serialize EEPROM state machine
+     */
+    int eepromState = this->eepromState;
+    SERIALIZE_SCALAR(eepromState);
+    SERIALIZE_SCALAR(eepromClk);
+    SERIALIZE_SCALAR(eepromBitsToRx);
+    SERIALIZE_SCALAR(eepromOpcode);
+    SERIALIZE_SCALAR(eepromAddress);
+    SERIALIZE_SCALAR(eepromData);
+
+    /*
      * If there's a pending transmit, store the time so we can
      * reschedule it later
      */
@@ -2496,6 +2690,7 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(acceptUnicast);
     SERIALIZE_SCALAR(acceptPerfect);
     SERIALIZE_SCALAR(acceptArp);
+    SERIALIZE_SCALAR(multicastHashEnable);
 
     /*
      * Keep track of pending interrupt status.
@@ -2535,6 +2730,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(regs.pcr);
     UNSERIALIZE_SCALAR(regs.rfcr);
     UNSERIALIZE_SCALAR(regs.rfdr);
+    UNSERIALIZE_SCALAR(regs.brar);
+    UNSERIALIZE_SCALAR(regs.brdr);
     UNSERIALIZE_SCALAR(regs.srr);
     UNSERIALIZE_SCALAR(regs.mibc);
     UNSERIALIZE_SCALAR(regs.vrcr);
@@ -2549,6 +2746,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(regs.tesr);
 
     UNSERIALIZE_ARRAY(rom.perfectMatch, ETH_ADDR_LEN);
+    UNSERIALIZE_ARRAY(rom.filterHash, FHASH_SIZE);
 
     UNSERIALIZE_SCALAR(ioEnable);
 
@@ -2635,7 +2833,19 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     if (rxKickTick)
         rxKickEvent.schedule(rxKickTick);
 
-     /*
+    /*
+     * Unserialize EEPROM state machine
+     */
+    int eepromState;
+    UNSERIALIZE_SCALAR(eepromState);
+    this->eepromState = (EEPROMState) eepromState;
+    UNSERIALIZE_SCALAR(eepromClk);
+    UNSERIALIZE_SCALAR(eepromBitsToRx);
+    UNSERIALIZE_SCALAR(eepromOpcode);
+    UNSERIALIZE_SCALAR(eepromAddress);
+    UNSERIALIZE_SCALAR(eepromData);
+
+    /*
      * If there's a pending transmit, reschedule it now
      */
     Tick transmitTick;
@@ -2652,6 +2862,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(acceptUnicast);
     UNSERIALIZE_SCALAR(acceptPerfect);
     UNSERIALIZE_SCALAR(acceptArp);
+    UNSERIALIZE_SCALAR(multicastHashEnable);
 
     /*
      * Keep track of pending interrupt status.
@@ -2756,8 +2967,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
     INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
-    INIT_PARAM_DFLT(hardware_address, "Ethernet Hardware Address",
-                    "00:99:00:00:00:01"),
+    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
     INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to for headers", NULL),
     INIT_PARAM_DFLT(payload_bus, "The IO Bus to attach to for payload", NULL),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
