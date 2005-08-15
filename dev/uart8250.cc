@@ -146,7 +146,10 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             break;
         case 0x2: // Intr Identification Register (IIR)
             DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
+
+            //Tx interrupts are cleared on IIR reads
             status &= ~TX_INT;
+
             if (status & RX_INT)
                 *(uint8_t*)data = IIR_RXID;
             else

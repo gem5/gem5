@@ -238,7 +238,7 @@ class Device : public Base
  * PCI Configuration interface
  */
   public:
-    virtual void WriteConfig(int offset, int size, uint32_t data);
+    virtual void writeConfig(int offset, int size, const uint8_t *data);
 
 /**
  * Memory Interface

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,80 +27,59 @@
  */
 
 /** @file
- * Defines a 8250 UART
+ * Declaration of a fake device.
  */
 
-#ifndef __TSUNAMI_UART_HH__
-#define __TSUNAMI_UART_HH__
+#ifndef __ISA_FAKE_HH__
+#define __ISA_FAKE_HH__
 
-#include "dev/tsunamireg.h"
+#include "dev/tsunami.hh"
 #include "base/range.hh"
 #include "dev/io_device.hh"
-#include "dev/uart.hh"
 
-
-/* UART8250 Interrupt ID Register
- *  bit 0    Interrupt Pending 0 = true, 1 = false
- *  bit 2:1  ID of highest priority interrupt
- *  bit 7:3  zeroes
+/**
+ * IsaFake is a device that returns -1 on all reads and
+ * accepts all writes. It is meant to be placed at an address range
+ * so that an mcheck doesn't occur when an os probes a piece of hw
+ * that doesn't exist (e.g. UARTs1-3).
  */
-#define IIR_NOPEND 0x1
-
-// Interrupt IDs
-#define IIR_MODEM 0x00 /* Modem Status (lowest priority) */
-#define IIR_TXID  0x02 /* Tx Data */
-#define IIR_RXID  0x04 /* Rx Data */
-#define IIR_LINE  0x06 /* Rx Line Status (highest priority)*/
-
-class SimConsole;
-class Platform;
-
-class Uart8250 : public Uart
+class IsaFake : public PioDevice
 {
-
-
-  protected:
-    uint8_t IER, DLAB, LCR, MCR;
-
-    class IntrEvent : public Event
-    {
-        protected:
-            Uart8250 *uart;
-            int intrBit;
-        public:
-            IntrEvent(Uart8250 *u, int bit);
-            virtual void process();
-            virtual const char *description();
-            void scheduleIntr();
-    };
-
-    IntrEvent txIntrEvent;
-    IntrEvent rxIntrEvent;
+  private:
+    /** The address in memory that we respond to */
+    Addr addr;
 
   public:
-    Uart8250(const std::string &name, SimConsole *c, MemoryController *mmu,
-         Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
-         Platform *p);
+    /**
+      * The constructor for Tsunmami Fake just registers itself with the MMU.
+      * @param name name of this device.
+      * @param a address to respond to.
+      * @param mmu the mmu we register with.
+      * @param size number of addresses to respond to
+      */
+    IsaFake(const std::string &name, Addr a, MemoryController *mmu,
+                HierParams *hier, Bus *bus, Addr size = 0x8);
 
+    /**
+     * This read always returns -1.
+     * @param req The memory request.
+     * @param data Where to put the data.
+     */
     virtual Fault read(MemReqPtr &req, uint8_t *data);
+
+    /**
+     * All writes are simply ignored.
+     * @param req The memory request.
+     * @param data the data to not write.
+     */
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
-
     /**
-     * Inform the uart that there is data available.
+     * Return how long this access will take.
+     * @param req the memory request to calcuate
+     * @return Tick when the request is done
      */
-    virtual void dataAvailable();
-
-
-    /**
-     * Return if we have an interrupt pending
-     * @return interrupt status
-     */
-    virtual bool intStatus() { return status ? true : false; }
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
+    Tick cacheAccess(MemReqPtr &req);
 };
 
-#endif // __TSUNAMI_UART_HH__
+#endif // __ISA_FAKE_HH__

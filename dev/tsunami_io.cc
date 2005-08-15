@@ -39,6 +39,7 @@
 #include "base/trace.hh"
 #include "dev/tsunami_io.hh"
 #include "dev/tsunami.hh"
+#include "dev/pitreg.h"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
@@ -50,18 +51,136 @@
 
 using namespace std;
 
-#define UNIX_YEAR_OFFSET 52
+TsunamiIO::RTC::RTC(Tsunami* t, Tick i)
+    : SimObject("RTC"), event(t, i), addr(0)
+{
+    memset(clock_data, 0, sizeof(clock_data));
+    stat_regA = RTCA_32768HZ | RTCA_1024HZ;
+    stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
+}
 
-// Timer Event for Periodic interrupt of RTC
-TsunamiIO::RTCEvent::RTCEvent(Tsunami* t, Tick i)
+void
+TsunamiIO::RTC::set_time(time_t t)
+{
+    struct tm tm;
+    gmtime_r(&t, &tm);
+
+    sec = tm.tm_sec;
+    min = tm.tm_min;
+    hour = tm.tm_hour;
+    wday = tm.tm_wday + 1;
+    mday = tm.tm_mday;
+    mon = tm.tm_mon + 1;
+    year = tm.tm_year;
+
+    DPRINTFN("Real-time clock set to %s", asctime(&tm));
+}
+
+void
+TsunamiIO::RTC::writeAddr(const uint8_t *data)
+{
+    if (*data <= RTC_STAT_REGD)
+        addr = *data;
+    else
+        panic("RTC addresses over 0xD are not implemented.\n");
+}
+
+void
+TsunamiIO::RTC::writeData(const uint8_t *data)
+{
+    if (addr < RTC_STAT_REGA)
+        clock_data[addr] = *data;
+    else {
+        switch (addr) {
+          case RTC_STAT_REGA:
+            if (*data != (RTCA_32768HZ | RTCA_1024HZ))
+                panic("Unimplemented RTC register A value write!\n");
+            stat_regA = *data;
+            break;
+          case RTC_STAT_REGB:
+            if ((*data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
+                panic("Write to RTC reg B bits that are not implemented!\n");
+
+            if (*data & RTCB_PRDC_IE) {
+                if (!event.scheduled())
+                    event.scheduleIntr();
+            } else {
+                if (event.scheduled())
+                    event.deschedule();
+            }
+            stat_regB = *data;
+            break;
+          case RTC_STAT_REGC:
+          case RTC_STAT_REGD:
+            panic("RTC status registers C and D are not implemented.\n");
+            break;
+        }
+    }
+}
+
+void
+TsunamiIO::RTC::readData(uint8_t *data)
+{
+    if (addr < RTC_STAT_REGA)
+        *data = clock_data[addr];
+    else {
+        switch (addr) {
+          case RTC_STAT_REGA:
+            // toggle UIP bit for linux
+            stat_regA ^= RTCA_UIP;
+            *data = stat_regA;
+            break;
+          case RTC_STAT_REGB:
+            *data = stat_regB;
+            break;
+          case RTC_STAT_REGC:
+          case RTC_STAT_REGD:
+            *data = 0x00;
+            break;
+        }
+    }
+}
+
+void
+TsunamiIO::RTC::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(addr);
+    SERIALIZE_ARRAY(clock_data, sizeof(clock_data));
+    SERIALIZE_SCALAR(stat_regA);
+    SERIALIZE_SCALAR(stat_regB);
+
+    // serialize the RTC event
+    nameOut(os, csprintf("%s.event", name()));
+    event.serialize(os);
+}
+
+void
+TsunamiIO::RTC::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(addr);
+    UNSERIALIZE_ARRAY(clock_data, sizeof(clock_data));
+    UNSERIALIZE_SCALAR(stat_regA);
+    UNSERIALIZE_SCALAR(stat_regB);
+
+    // unserialze the event
+    event.unserialize(cp, csprintf("%s.event", section));
+}
+
+TsunamiIO::RTC::RTCEvent::RTCEvent(Tsunami*t, Tick i)
     : Event(&mainEventQueue), tsunami(t), interval(i)
 {
-    DPRINTF(MC146818, "RTC Event Initializing\n");
+    DPRINTF(MC146818, "RTC Event Initilizing\n");
     schedule(curTick + interval);
 }
 
 void
-TsunamiIO::RTCEvent::process()
+TsunamiIO::RTC::RTCEvent::scheduleIntr()
+{
+  schedule(curTick + interval);
+}
+
+void
+TsunamiIO::RTC::RTCEvent::process()
 {
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
     schedule(curTick + interval);
@@ -70,152 +189,256 @@ TsunamiIO::RTCEvent::process()
 }
 
 const char *
-TsunamiIO::RTCEvent::description()
+TsunamiIO::RTC::RTCEvent::description()
 {
     return "tsunami RTC interrupt";
 }
 
 void
-TsunamiIO::RTCEvent::serialize(std::ostream &os)
+TsunamiIO::RTC::RTCEvent::serialize(std::ostream &os)
 {
     Tick time = when();
     SERIALIZE_SCALAR(time);
 }
 
 void
-TsunamiIO::RTCEvent::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiIO::RTC::RTCEvent::unserialize(Checkpoint *cp, const std::string &section)
 {
     Tick time;
     UNSERIALIZE_SCALAR(time);
     reschedule(time);
 }
 
-void
-TsunamiIO::RTCEvent::scheduleIntr()
+TsunamiIO::PITimer::PITimer()
+    : SimObject("PITimer"), counter0(counter[0]), counter1(counter[1]),
+      counter2(counter[2])
 {
-  schedule(curTick + interval);
+
 }
 
-// Timer Event for PIT Timers
-TsunamiIO::ClockEvent::ClockEvent()
+void
+TsunamiIO::PITimer::writeControl(const uint8_t *data)
+{
+    int rw;
+    int sel;
+
+    sel = GET_CTRL_SEL(*data);
+
+    if (sel == PIT_READ_BACK)
+       panic("PITimer Read-Back Command is not implemented.\n");
+
+    rw = GET_CTRL_RW(*data);
+
+    if (rw == PIT_RW_LATCH_COMMAND)
+        counter[sel].latchCount();
+    else {
+        counter[sel].setRW(rw);
+        counter[sel].setMode(GET_CTRL_MODE(*data));
+        counter[sel].setBCD(GET_CTRL_BCD(*data));
+    }
+}
+
+void
+TsunamiIO::PITimer::serialize(std::ostream &os)
+{
+    // serialize the counters
+    nameOut(os, csprintf("%s.counter0", name()));
+    counter0.serialize(os);
+
+    nameOut(os, csprintf("%s.counter1", name()));
+    counter1.serialize(os);
+
+    nameOut(os, csprintf("%s.counter2", name()));
+    counter2.serialize(os);
+}
+
+void
+TsunamiIO::PITimer::unserialize(Checkpoint *cp, const std::string &section)
+{
+    // unserialze the counters
+    counter0.unserialize(cp, csprintf("%s.counter0", section));
+    counter1.unserialize(cp, csprintf("%s.counter1", section));
+    counter2.unserialize(cp, csprintf("%s.counter2", section));
+}
+
+TsunamiIO::PITimer::Counter::Counter()
+    : SimObject("Counter"), event(this), count(0), latched_count(0), period(0),
+      mode(0), output_high(false), latch_on(false), read_byte(LSB),
+      write_byte(LSB)
+{
+
+}
+
+void
+TsunamiIO::PITimer::Counter::latchCount()
+{
+    // behave like a real latch
+    if(!latch_on) {
+        latch_on = true;
+        read_byte = LSB;
+        latched_count = count;
+    }
+}
+
+void
+TsunamiIO::PITimer::Counter::read(uint8_t *data)
+{
+    if (latch_on) {
+        switch (read_byte) {
+          case LSB:
+            read_byte = MSB;
+            *data = (uint8_t)latched_count;
+            break;
+          case MSB:
+            read_byte = LSB;
+            latch_on = false;
+            *data = latched_count >> 8;
+            break;
+        }
+    } else {
+        switch (read_byte) {
+          case LSB:
+            read_byte = MSB;
+            *data = (uint8_t)count;
+            break;
+          case MSB:
+            read_byte = LSB;
+            *data = count >> 8;
+            break;
+        }
+    }
+}
+
+void
+TsunamiIO::PITimer::Counter::write(const uint8_t *data)
+{
+    switch (write_byte) {
+      case LSB:
+        count = (count & 0xFF00) | *data;
+
+        if (event.scheduled())
+          event.deschedule();
+        output_high = false;
+        write_byte = MSB;
+        break;
+
+      case MSB:
+        count = (count & 0x00FF) | (*data << 8);
+        period = count;
+
+        if (period > 0) {
+            DPRINTF(Tsunami, "Timer set to curTick + %d\n", count * event.interval);
+            event.schedule(curTick + count * event.interval);
+        }
+        write_byte = LSB;
+        break;
+    }
+}
+
+void
+TsunamiIO::PITimer::Counter::setRW(int rw_val)
+{
+    if (rw_val != PIT_RW_16BIT)
+        panic("Only LSB/MSB read/write is implemented.\n");
+}
+
+void
+TsunamiIO::PITimer::Counter::setMode(int mode_val)
+{
+    if(mode_val != PIT_MODE_INTTC && mode_val != PIT_MODE_RATEGEN &&
+       mode_val != PIT_MODE_SQWAVE)
+        panic("PIT mode %#x is not implemented: \n", mode_val);
+
+    mode = mode_val;
+}
+
+void
+TsunamiIO::PITimer::Counter::setBCD(int bcd_val)
+{
+    if (bcd_val != PIT_BCD_FALSE)
+        panic("PITimer does not implement BCD counts.\n");
+}
+
+bool
+TsunamiIO::PITimer::Counter::outputHigh()
+{
+    return output_high;
+}
+
+void
+TsunamiIO::PITimer::Counter::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(count);
+    SERIALIZE_SCALAR(latched_count);
+    SERIALIZE_SCALAR(period);
+    SERIALIZE_SCALAR(mode);
+    SERIALIZE_SCALAR(output_high);
+    SERIALIZE_SCALAR(latch_on);
+    SERIALIZE_SCALAR(read_byte);
+    SERIALIZE_SCALAR(write_byte);
+
+    // serialize the counter event
+    nameOut(os, csprintf("%s.event", name()));
+    event.serialize(os);
+}
+
+void
+TsunamiIO::PITimer::Counter::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(count);
+    UNSERIALIZE_SCALAR(latched_count);
+    UNSERIALIZE_SCALAR(period);
+    UNSERIALIZE_SCALAR(mode);
+    UNSERIALIZE_SCALAR(output_high);
+    UNSERIALIZE_SCALAR(latch_on);
+    UNSERIALIZE_SCALAR(read_byte);
+    UNSERIALIZE_SCALAR(write_byte);
+
+    // unserialze the counter event
+    event.unserialize(cp, csprintf("%s.event", section));
+}
+
+TsunamiIO::PITimer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
     : Event(&mainEventQueue)
 {
-    /* This is the PIT Tick Rate. A constant for the 8254 timer. The
-     * Tsunami platform has one of these cycle counters on the Cypress
-     * South Bridge and it is used by linux for estimating the cycle
-     * frequency of the machine it is running on. --Ali
-     */
     interval = (Tick)(Clock::Float::s / 1193180.0);
-
-    DPRINTF(Tsunami, "Clock Event Initilizing\n");
-    mode = 0;
-
-    current_count = 0;
-    latched_count = 0;
-    latch_on = false;
-    read_byte = READ_LSB;
+    counter = c_ptr;
 }
 
 void
-TsunamiIO::ClockEvent::process()
+TsunamiIO::PITimer::Counter::CounterEvent::process()
 {
     DPRINTF(Tsunami, "Timer Interrupt\n");
-    if (mode == 0)
-        status = 0x20; // set bit that linux is looking for
-    else if (mode == 2)
-        schedule(curTick + current_count*interval);
-}
-
-void
-TsunamiIO::ClockEvent::Program(int count)
-{
-    DPRINTF(Tsunami, "Timer set to curTick + %d\n", count * interval);
-    schedule(curTick + count * interval);
-    status = 0;
-
-    current_count = (uint16_t)count;
+    switch (counter->mode) {
+      case PIT_MODE_INTTC:
+        counter->output_high = true;
+      case PIT_MODE_RATEGEN:
+      case PIT_MODE_SQWAVE:
+        break;
+      default:
+        panic("Unimplemented PITimer mode.\n");
+    }
 }
 
 const char *
-TsunamiIO::ClockEvent::description()
+TsunamiIO::PITimer::Counter::CounterEvent::description()
 {
     return "tsunami 8254 Interval timer";
 }
 
 void
-TsunamiIO::ClockEvent::ChangeMode(uint8_t md)
-{
-    mode = md;
-}
-
-uint8_t
-TsunamiIO::ClockEvent::Status()
-{
-    return status;
-}
-
-void
-TsunamiIO::ClockEvent::LatchCount()
-{
-    // behave like a real latch
-    if(!latch_on) {
-        latch_on = true;
-        read_byte = READ_LSB;
-        latched_count = current_count;
-    }
-}
-
-uint8_t
-TsunamiIO::ClockEvent::Read()
-{
-   uint8_t result = 0;
-
-    if(latch_on) {
-        switch (read_byte) {
-          case READ_LSB:
-            read_byte = READ_MSB;
-            result = (uint8_t)latched_count;
-            break;
-          case READ_MSB:
-            read_byte = READ_LSB;
-            latch_on = false;
-            result = latched_count >> 8;
-            break;
-        }
-    } else {
-        switch (read_byte) {
-          case READ_LSB:
-            read_byte = READ_MSB;
-            result = (uint8_t)current_count;
-            break;
-          case READ_MSB:
-            read_byte = READ_LSB;
-            result = current_count >> 8;
-            break;
-        }
-    }
-
-    return result;
-}
-
-
-void
-TsunamiIO::ClockEvent::serialize(std::ostream &os)
+TsunamiIO::PITimer::Counter::CounterEvent::serialize(std::ostream &os)
 {
     Tick time = scheduled() ? when() : 0;
     SERIALIZE_SCALAR(time);
-    SERIALIZE_SCALAR(status);
-    SERIALIZE_SCALAR(mode);
     SERIALIZE_SCALAR(interval);
 }
 
 void
-TsunamiIO::ClockEvent::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiIO::PITimer::Counter::CounterEvent::unserialize(Checkpoint *cp, const std::string &section)
 {
     Tick time;
     UNSERIALIZE_SCALAR(time);
-    UNSERIALIZE_SCALAR(status);
-    UNSERIALIZE_SCALAR(mode);
     UNSERIALIZE_SCALAR(interval);
     if (time)
         schedule(time);
@@ -239,8 +462,7 @@ TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
     tsunami->io = this;
 
     timerData = 0;
-    set_time(init_time == 0 ? time(NULL) : init_time);
-    uip = 1;
+    rtc.set_time(init_time == 0 ? time(NULL) : init_time);
     picr = 0;
     picInterrupting = false;
 }
@@ -249,13 +471,6 @@ Tick
 TsunamiIO::frequency() const
 {
     return Clock::Frequency / clockInterval;
-}
-
-void
-TsunamiIO::set_time(time_t t)
-{
-    gmtime_r(&t, &tm);
-    DPRINTFN("Real-time clock set to %s", asctime(&tm));
 }
 
 Fault
@@ -287,59 +502,24 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
               // PIC2 not implemnted... just return 0
               *(uint8_t*)data = 0x00;
               return No_Fault;
-          case TSDEV_TMR_CTL:
-            *(uint8_t*)data = timer2.Status();
-            return No_Fault;
           case TSDEV_TMR0_DATA:
-            *(uint8_t *)data = timer0.Read();
+            pitimer.counter0.read(data);
+            return No_Fault;
+          case TSDEV_TMR1_DATA:
+            pitimer.counter1.read(data);
+            return No_Fault;
+          case TSDEV_TMR2_DATA:
+            pitimer.counter2.read(data);
             return No_Fault;
           case TSDEV_RTC_DATA:
-            switch(RTCAddress) {
-              case RTC_CNTRL_REGA:
-                *(uint8_t*)data = uip << 7 | RTCA_32768HZ | RTCA_1024HZ;
-                uip = !uip;
-                return No_Fault;
-              case RTC_CNTRL_REGB:
-                // DM and 24/12 and UIE
-                *(uint8_t*)data = RTCB_PRDC_IE | RTCB_BIN | RTCB_24HR;
-                return No_Fault;
-              case RTC_CNTRL_REGC:
-                // If we want to support RTC user access in linux
-                // This won't work, but for now it's fine
-                *(uint8_t*)data = 0x00;
-                return No_Fault;
-              case RTC_CNTRL_REGD:
-                panic("RTC Control Register D not implemented");
-              case RTC_SEC_ALRM:
-              case RTC_MIN_ALRM:
-              case RTC_HR_ALRM:
-                // RTC alarm functionality is not currently implemented
-                *(uint8_t *)data = 0x00;
-                return No_Fault;
-              case RTC_SEC:
-                *(uint8_t *)data = tm.tm_sec;
-                return No_Fault;
-              case RTC_MIN:
-                *(uint8_t *)data = tm.tm_min;
-                return No_Fault;
-              case RTC_HR:
-                *(uint8_t *)data = tm.tm_hour;
-                return No_Fault;
-              case RTC_DOW:
-                *(uint8_t *)data = tm.tm_wday + 1;
-                return No_Fault;
-              case RTC_DOM:
-                *(uint8_t *)data = tm.tm_mday;
-                return No_Fault;
-              case RTC_MON:
-                *(uint8_t *)data = tm.tm_mon + 1;
-                return No_Fault;
-              case RTC_YEAR:
-                *(uint8_t *)data = tm.tm_year;
-                return No_Fault;
-              default:
-                panic("Unknown RTC Address\n");
-            }
+            rtc.readData(data);
+            return No_Fault;
+          case TSDEV_CTRL_PORTB:
+            if (pitimer.counter2.outputHigh())
+                *data = PORTB_SPKR_HIGH;
+            else
+                *data = 0x00;
+            return No_Fault;
           default:
             panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
         }
@@ -410,6 +590,14 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
             if (!(picr & mask1))
                 tsunami->cchip->clearDRIR(55);
             return No_Fault;
+          case TSDEV_DMA1_CMND:
+            return No_Fault;
+          case TSDEV_DMA2_CMND:
+            return No_Fault;
+          case TSDEV_DMA1_MMASK:
+            return No_Fault;
+          case TSDEV_DMA2_MMASK:
+            return No_Fault;
           case TSDEV_PIC2_ACK:
             return No_Fault;
           case TSDEV_DMA1_RESET:
@@ -425,117 +613,31 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
           case TSDEV_DMA1_MASK:
           case TSDEV_DMA2_MASK:
             return No_Fault;
-          case TSDEV_TMR_CTL:
+          case TSDEV_TMR0_DATA:
+            pitimer.counter0.write(data);
             return No_Fault;
-          case TSDEV_TMR2_CTL:
-            switch((*(uint8_t*)data >> 4) & 0x3) {
-              case 0x0:
-                switch(*(uint8_t*)data >> 6) {
-                  case 0:
-                    timer0.LatchCount();
-                    return No_Fault;
-                  case 2:
-                    timer2.LatchCount();
-                    return No_Fault;
-                  default:
-                    panic("Read Back Command not implemented\n");
-                }
-                break;
-              case 0x3:
-                break;
-              default:
-                panic("Only L/M write and Counter-Latch read supported\n");
-            }
-
-            switch(*(uint8_t*)data >> 6) {
-              case 0:
-                timer0.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
-                break;
-              case 2:
-                timer2.ChangeMode((*(uint8_t*)data & 0xF) >> 1);
-                break;
-              default:
-                panic("Read Back Command not implemented\n");
-            }
+          case TSDEV_TMR1_DATA:
+            pitimer.counter1.write(data);
             return No_Fault;
           case TSDEV_TMR2_DATA:
-            /* two writes before we actually start the Timer
-               so I set a flag in the timerData */
-            if(timerData & 0x1000) {
-                timerData &= 0x1000;
-                timerData += *(uint8_t*)data << 8;
-                timer2.Program(timerData);
-            } else {
-                timerData = *(uint8_t*)data;
-                timerData |= 0x1000;
-            }
+            pitimer.counter2.write(data);
             return No_Fault;
-          case TSDEV_TMR0_DATA:
-            /* two writes before we actually start the Timer
-               so I set a flag in the timerData */
-            if(timerData & 0x1000) {
-                timerData &= ~0x1000;
-                timerData += *(uint8_t*)data << 8;
-                timer0.Program(timerData);
-                timerData = 0;
-            } else {
-                timerData = *(uint8_t*)data;
-                timerData |= 0x1000;
-            }
+          case TSDEV_TMR_CTRL:
+            pitimer.writeControl(data);
             return No_Fault;
           case TSDEV_RTC_ADDR:
-            RTCAddress = *(uint8_t*)data;
+            rtc.writeAddr(data);
             return No_Fault;
           case TSDEV_KBD:
             return No_Fault;
           case TSDEV_RTC_DATA:
-            switch(RTCAddress) {
-              case RTC_CNTRL_REGA:
-                if (*data != (RTCA_32768HZ | RTCA_1024HZ))
-                    panic("Unimplemented RTC register A value write!\n");
-                return No_Fault;
-              case RTC_CNTRL_REGB:
-                if ((*data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
-                    panic("Write to RTC reg B bits that are not implemented!\n");
-
-                if (*data & RTCB_PRDC_IE) {
-                    if (!rtc.scheduled())
-                        rtc.scheduleIntr();
-                } else {
-                    if (rtc.scheduled())
-                        rtc.deschedule();
-                }
-                return No_Fault;
-              case RTC_CNTRL_REGC:
-                panic("Write to RTC reg C not implemented!\n");
-                return No_Fault;
-              case RTC_CNTRL_REGD:
-                panic("Write to RTC reg D not implemented!\n");
-                return No_Fault;
-              case RTC_SEC:
-                tm.tm_sec = *(uint8_t *)data;
-                return No_Fault;
-              case RTC_MIN:
-                tm.tm_min = *(uint8_t *)data;
-                return No_Fault;
-              case RTC_HR:
-                tm.tm_hour = *(uint8_t *)data;
-                return No_Fault;
-              case RTC_DOW:
-                tm.tm_wday = *(uint8_t *)data;
-                return No_Fault;
-              case RTC_DOM:
-                tm.tm_mday = *(uint8_t *)data;
-                return No_Fault;
-              case RTC_MON:
-                 tm.tm_mon = *(uint8_t *)data;
-                return No_Fault;
-              case RTC_YEAR:
-                tm.tm_year = *(uint8_t *)data;
-                return No_Fault;
-            }
+            rtc.writeData(data);
+            return No_Fault;
+          case TSDEV_CTRL_PORTB:
+            // System Control Port B not implemented
+            return No_Fault;
           default:
-            panic("I/O Write - va%#x size %d\n", req->vaddr, req->size);
+            panic("I/O Write - va%#x size %d data %#x\n", req->vaddr, req->size, (int)*data);
         }
       case sizeof(uint16_t):
       case sizeof(uint32_t):
@@ -581,20 +683,16 @@ void
 TsunamiIO::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(timerData);
-    SERIALIZE_SCALAR(uip);
     SERIALIZE_SCALAR(mask1);
     SERIALIZE_SCALAR(mask2);
     SERIALIZE_SCALAR(mode1);
     SERIALIZE_SCALAR(mode2);
     SERIALIZE_SCALAR(picr);
     SERIALIZE_SCALAR(picInterrupting);
-    SERIALIZE_SCALAR(RTCAddress);
 
     // Serialize the timers
-    nameOut(os, csprintf("%s.timer0", name()));
-    timer0.serialize(os);
-    nameOut(os, csprintf("%s.timer2", name()));
-    timer2.serialize(os);
+    nameOut(os, csprintf("%s.pitimer", name()));
+    pitimer.serialize(os);
     nameOut(os, csprintf("%s.rtc", name()));
     rtc.serialize(os);
 }
@@ -603,18 +701,15 @@ void
 TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(timerData);
-    UNSERIALIZE_SCALAR(uip);
     UNSERIALIZE_SCALAR(mask1);
     UNSERIALIZE_SCALAR(mask2);
     UNSERIALIZE_SCALAR(mode1);
     UNSERIALIZE_SCALAR(mode2);
     UNSERIALIZE_SCALAR(picr);
     UNSERIALIZE_SCALAR(picInterrupting);
-    UNSERIALIZE_SCALAR(RTCAddress);
 
     // Unserialize the timers
-    timer0.unserialize(cp, csprintf("%s.timer0", section));
-    timer2.unserialize(cp, csprintf("%s.timer2", section));
+    pitimer.unserialize(cp, csprintf("%s.pitimer", section));
     rtc.unserialize(cp, csprintf("%s.rtc", section));
 }
 

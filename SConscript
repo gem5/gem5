@@ -272,7 +272,7 @@ full_system_sources = Split('''
 	dev/simple_disk.cc
 	dev/tsunami.cc
 	dev/tsunami_cchip.cc
-	dev/tsunami_fake.cc
+	dev/isa_fake.cc
 	dev/tsunami_io.cc
 	dev/tsunami_pchip.cc
 	dev/uart.cc

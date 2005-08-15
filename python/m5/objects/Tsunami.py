@@ -11,9 +11,9 @@ class TsunamiCChip(FooPioDevice):
     type = 'TsunamiCChip'
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
 
-class TsunamiFake(FooPioDevice):
-    type = 'TsunamiFake'
-    size = Param.Addr(0x8, "Size of address range")
+class IsaFake(FooPioDevice):
+    type = 'IsaFake'
+    size = Param.Addr("Size of address range")
 
 class TsunamiIO(FooPioDevice):
     type = 'TsunamiIO'

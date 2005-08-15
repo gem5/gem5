@@ -71,31 +71,20 @@ PciDev::PciDev(Params *p)
 }
 
 void
-PciDev::ReadConfig(int offset, int size, uint8_t *data)
+PciDev::readConfig(int offset, int size, uint8_t *data)
 {
-    union {
-        uint8_t byte;
-        uint16_t word;
-        uint32_t dword;
-    };
-
     if (offset >= PCI_DEVICE_SPECIFIC)
         panic("Device specific PCI config space not implemented!\n");
 
-    dword = 0;
-
     switch(size) {
       case sizeof(uint8_t):
-        memcpy(&byte, &config.data[offset], size);
-        *data = byte;
+        *data = config.data[offset];
         break;
       case sizeof(uint16_t):
-        memcpy(&byte, &config.data[offset], size);
-        *(uint16_t*)data = htoa(word);
+        *(uint16_t*)data = *(uint16_t*)&config.data[offset];
         break;
       case sizeof(uint32_t):
-        memcpy(&byte, &config.data[offset], size);
-        *(uint32_t*)data = htoa(dword);
+        *(uint32_t*)data = *(uint32_t*)&config.data[offset];
         break;
       default:
         panic("Invalid PCI configuration read size!\n");
@@ -104,32 +93,32 @@ PciDev::ReadConfig(int offset, int size, uint8_t *data)
     DPRINTF(PCIDEV,
             "read device: %#x function: %#x register: %#x %d bytes: data: %#x\n",
             params()->deviceNum, params()->functionNum, offset, size,
-            htoa(dword));
+            *(uint32_t*)data);
 }
 
 void
-PciDev::WriteConfig(int offset, int size, uint32_t data)
+PciDev::writeConfig(int offset, int size, const uint8_t *data)
 {
     if (offset >= PCI_DEVICE_SPECIFIC)
         panic("Device specific PCI config space not implemented!\n");
 
-    uint32_t barnum;
+    uint8_t &data8 = *(uint8_t*)data;
+    uint16_t &data16 = *(uint16_t*)data;
+    uint32_t &data32 = *(uint32_t*)data;
 
     DPRINTF(PCIDEV,
             "write device: %#x function: %#x reg: %#x size: %d data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, size,
-            data);
-
-    barnum = (offset - PCI0_BASE_ADDR0) >> 2;
+            params()->deviceNum, params()->functionNum, offset, size, data32);
 
     switch (size) {
       case sizeof(uint8_t): // 1-byte access
-        uint8_t byte_value = data;
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
+            config.interruptLine = data8;
           case PCI_CACHE_LINE_SIZE:
+            config.cacheLineSize = data8;
           case PCI_LATENCY_TIMER:
-            *(uint8_t *)&config.data[offset] = htoa(byte_value);
+            config.latencyTimer = data8;
             break;
           /* Do nothing for these read-only registers */
           case PCI0_INTERRUPT_PIN:
@@ -144,21 +133,20 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
         break;
 
       case sizeof(uint16_t): // 2-byte access
-        uint16_t half_value = data;
         switch (offset) {
           case PCI_COMMAND:
+            config.command = data16;
           case PCI_STATUS:
+            config.status = data16;
           case PCI_CACHE_LINE_SIZE:
-            *(uint16_t *)&config.data[offset] = htoa(half_value);
+            config.cacheLineSize = data16;
             break;
-
           default:
             panic("writing to a read only register");
         }
         break;
 
       case sizeof(uint32_t): // 4-byte access
-        uint32_t word_value = data;
         switch (offset) {
           case PCI0_BASE_ADDR0:
           case PCI0_BASE_ADDR1:
@@ -166,87 +154,65 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
           case PCI0_BASE_ADDR3:
           case PCI0_BASE_ADDR4:
           case PCI0_BASE_ADDR5:
+
+            uint32_t barnum, bar_mask;
+            Addr base_addr, base_size, space_base;
+
+            barnum = BAR_NUMBER(offset);
+
+            if (BAR_IO_SPACE(letoh(config.baseAddr[barnum]))) {
+                bar_mask = BAR_IO_MASK;
+                space_base = TSUNAMI_PCI0_IO;
+            } else {
+                bar_mask = BAR_MEM_MASK;
+                space_base = TSUNAMI_PCI0_MEMORY;
+            }
+
             // Writing 0xffffffff to a BAR tells the card to set the
-            // value of the bar
-            // to size of memory it needs
-            if (word_value == 0xffffffff) {
+            // value of the bar to size of memory it needs
+            if (letoh(data32) == 0xffffffff) {
                 // This is I/O Space, bottom two bits are read only
-                if (htoa(config.data[offset]) & 0x1) {
-                    *(uint32_t *)&config.data[offset] = htoa(
-                        (~(BARSize[barnum] - 1) & ~0x3) |
-                        (htoa(config.data[offset]) & 0x3));
-                } else {
-                    // This is memory space, bottom four bits are read only
-                    *(uint32_t *)&config.data[offset] = htoa(
-                        (~(BARSize[barnum] - 1) & ~0xF) |
-                        (htoa(config.data[offset]) & 0xF));
-                }
+
+                config.baseAddr[barnum] = letoh(
+                        (~(BARSize[barnum] - 1) & ~bar_mask) |
+                        (letoh(config.baseAddr[barnum]) & bar_mask));
             } else {
                 MemoryController *mmu = params()->mmu;
 
-                // This is I/O Space, bottom two bits are read only
-                if(htoa(config.data[offset]) & 0x1) {
-                    *(uint32_t *)&config.data[offset] =
-                        htoa((word_value & ~0x3) |
-                        (htoa(config.data[offset]) & 0x3));
+                config.baseAddr[barnum] = letoh(
+                    (letoh(data32) & ~bar_mask) |
+                    (letoh(config.baseAddr[barnum]) & bar_mask));
 
-                    if (word_value & ~0x1) {
-                        Addr base_addr = (word_value & ~0x1) + TSUNAMI_PCI0_IO;
-                        Addr base_size = BARSize[barnum];
+                if (letoh(config.baseAddr[barnum]) & ~bar_mask) {
+                    base_addr = (letoh(data32) & ~bar_mask) + space_base;
+                    base_size = BARSize[barnum];
 
-                        // It's never been set
-                        if (BARAddrs[barnum] == 0)
-                            mmu->add_child((FunctionalMemory *)this,
-                                           RangeSize(base_addr, base_size));
-                        else
-                            mmu->update_child((FunctionalMemory *)this,
-                                              RangeSize(BARAddrs[barnum],
-                                                        base_size),
-                                              RangeSize(base_addr, base_size));
+                    // It's never been set
+                    if (BARAddrs[barnum] == 0)
+                        mmu->add_child((FunctionalMemory *)this,
+                                       RangeSize(base_addr, base_size));
+                    else
+                        mmu->update_child((FunctionalMemory *)this,
+                                          RangeSize(BARAddrs[barnum], base_size),
+                                          RangeSize(base_addr, base_size));
 
-                        BARAddrs[barnum] = base_addr;
-                    }
-
-                } else {
-                    // This is memory space, bottom four bits are read only
-                    *(uint32_t *)&config.data[offset] =
-                        htoa((word_value & ~0xF) |
-                        (htoa(config.data[offset]) & 0xF));
-
-                    if (word_value & ~0x3) {
-                        Addr base_addr = (word_value & ~0x3) +
-                            TSUNAMI_PCI0_MEMORY;
-
-                        Addr base_size = BARSize[barnum];
-
-                        // It's never been set
-                        if (BARAddrs[barnum] == 0)
-                            mmu->add_child((FunctionalMemory *)this,
-                                           RangeSize(base_addr, base_size));
-                        else
-                            mmu->update_child((FunctionalMemory *)this,
-                                              RangeSize(BARAddrs[barnum],
-                                                        base_size),
-                                              RangeSize(base_addr, base_size));
-
-                        BARAddrs[barnum] = base_addr;
-                    }
-                 }
+                    BARAddrs[barnum] = base_addr;
+                }
             }
             break;
 
           case PCI0_ROM_BASE_ADDR:
-            if (word_value == 0xfffffffe)
-                *(uint32_t *)&config.data[offset] = 0xffffffff;
+            if (letoh(data32) == 0xfffffffe)
+                config.expansionROM = letoh(0xffffffff);
             else
-                *(uint32_t *)&config.data[offset] = htoa(word_value);
+                config.expansionROM = data32;
             break;
 
           case PCI_COMMAND:
             // This could also clear some of the error bits in the Status
             // register. However they should never get set, so lets ignore
             // it for now
-            *(uint16_t *)&config.data[offset] = htoa(half_value);
+            config.command = data16;
             break;
 
           default:
@@ -262,17 +228,17 @@ PciDev::WriteConfig(int offset, int size, uint32_t data)
 void
 PciDev::serialize(ostream &os)
 {
-    SERIALIZE_ARRAY(BARSize, 6);
-    SERIALIZE_ARRAY(BARAddrs, 6);
-    SERIALIZE_ARRAY(config.data, 64);
+    SERIALIZE_ARRAY(BARSize, sizeof(BARSize));
+    SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs));
+    SERIALIZE_ARRAY(config.data, sizeof(config.data));
 }
 
 void
 PciDev::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(BARSize, 6);
-    UNSERIALIZE_ARRAY(BARAddrs, 6);
-    UNSERIALIZE_ARRAY(config.data, 64);
+    UNSERIALIZE_ARRAY(BARSize, sizeof(BARSize));
+    UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs));
+    UNSERIALIZE_ARRAY(config.data, sizeof(config.data));
 
     // Add the MMU mappings for the BARs
     for (int i=0; i < 6; i++) {
@@ -361,33 +327,33 @@ CREATE_SIM_OBJECT(PciConfigData)
 {
     PciConfigData *data = new PciConfigData(getInstanceName());
 
-    data->config.hdr.vendor = htoa(VendorID);
-    data->config.hdr.device = htoa(DeviceID);
-    data->config.hdr.command = htoa(Command);
-    data->config.hdr.status = htoa(Status);
-    data->config.hdr.revision = htoa(Revision);
-    data->config.hdr.progIF = htoa(ProgIF);
-    data->config.hdr.subClassCode = htoa(SubClassCode);
-    data->config.hdr.classCode = htoa(ClassCode);
-    data->config.hdr.cacheLineSize = htoa(CacheLineSize);
-    data->config.hdr.latencyTimer = htoa(LatencyTimer);
-    data->config.hdr.headerType = htoa(HeaderType);
-    data->config.hdr.bist = htoa(BIST);
+    data->config.vendor = htole(VendorID);
+    data->config.device = htole(DeviceID);
+    data->config.command = htole(Command);
+    data->config.status = htole(Status);
+    data->config.revision = htole(Revision);
+    data->config.progIF = htole(ProgIF);
+    data->config.subClassCode = htole(SubClassCode);
+    data->config.classCode = htole(ClassCode);
+    data->config.cacheLineSize = htole(CacheLineSize);
+    data->config.latencyTimer = htole(LatencyTimer);
+    data->config.headerType = htole(HeaderType);
+    data->config.bist = htole(BIST);
 
-    data->config.hdr.pci0.baseAddr0 = htoa(BAR0);
-    data->config.hdr.pci0.baseAddr1 = htoa(BAR1);
-    data->config.hdr.pci0.baseAddr2 = htoa(BAR2);
-    data->config.hdr.pci0.baseAddr3 = htoa(BAR3);
-    data->config.hdr.pci0.baseAddr4 = htoa(BAR4);
-    data->config.hdr.pci0.baseAddr5 = htoa(BAR5);
-    data->config.hdr.pci0.cardbusCIS = htoa(CardbusCIS);
-    data->config.hdr.pci0.subsystemVendorID = htoa(SubsystemVendorID);
-    data->config.hdr.pci0.subsystemID = htoa(SubsystemVendorID);
-    data->config.hdr.pci0.expansionROM = htoa(ExpansionROM);
-    data->config.hdr.pci0.interruptLine = htoa(InterruptLine);
-    data->config.hdr.pci0.interruptPin = htoa(InterruptPin);
-    data->config.hdr.pci0.minimumGrant = htoa(MinimumGrant);
-    data->config.hdr.pci0.maximumLatency = htoa(MaximumLatency);
+    data->config.baseAddr0 = htole(BAR0);
+    data->config.baseAddr1 = htole(BAR1);
+    data->config.baseAddr2 = htole(BAR2);
+    data->config.baseAddr3 = htole(BAR3);
+    data->config.baseAddr4 = htole(BAR4);
+    data->config.baseAddr5 = htole(BAR5);
+    data->config.cardbusCIS = htole(CardbusCIS);
+    data->config.subsystemVendorID = htole(SubsystemVendorID);
+    data->config.subsystemID = htole(SubsystemVendorID);
+    data->config.expansionROM = htole(ExpansionROM);
+    data->config.interruptLine = htole(InterruptLine);
+    data->config.interruptPin = htole(InterruptPin);
+    data->config.minimumGrant = htole(MinimumGrant);
+    data->config.maximumLatency = htole(MaximumLatency);
 
     data->BARSize[0] = BAR0Size;
     data->BARSize[1] = BAR1Size;

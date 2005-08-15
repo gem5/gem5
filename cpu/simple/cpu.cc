@@ -738,7 +738,7 @@ SimpleCPU::tick()
         comInstEventQueue[0]->serviceEvents(numInst);
 
         // decode the instruction
-        inst = htoa(inst);
+        inst = gtoh(inst);
         curStaticInst = StaticInst<TheISA>::decode(inst);
 
         traceData = Trace::getInstRecord(curTick, xc, this, curStaticInst,

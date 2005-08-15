@@ -65,7 +65,7 @@ PciConfigAll::PciConfigAll(const string &name,
     // Make all the pointers to devices null
     for(int x=0; x < MAX_PCI_DEV; x++)
         for(int y=0; y < MAX_PCI_FUNC; y++)
-          devices[x][y] = NULL;
+            devices[x][y] = NULL;
 }
 
 // If two interrupts share the same line largely bad things will happen.
@@ -130,7 +130,7 @@ PciConfigAll::read(MemReqPtr &req, uint8_t *data)
             case sizeof(uint32_t):
             case sizeof(uint16_t):
             case sizeof(uint8_t):
-                devices[device][func]->ReadConfig(reg, req->size, data);
+                devices[device][func]->readConfig(reg, req->size, data);
                 return No_Fault;
             default:
                 panic("invalid access size(?) for PCI configspace!\n");
@@ -152,30 +152,17 @@ PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
     int func = (daddr >> 8) & 0x7;
     int reg = daddr & 0xFF;
 
-    uint32_t word_value = 0;
-
     if (devices[device][func] == NULL)
         panic("Attempting to write to config space on non-existant device\n");
-    else {
-            switch (req->size) {
-            case sizeof(uint8_t):
-                word_value = *(uint8_t*)data;
-                break;
-            case sizeof(uint16_t):
-                word_value = *(uint16_t*)data;
-                break;
-            case sizeof(uint32_t):
-                word_value = *(uint32_t*)data;
-                break;
-            default:
-                panic("invalid access size(?) for PCI configspace!\n");
-            }
-    }
+    else if (req->size != sizeof(uint8_t) &&
+             req->size != sizeof(uint16_t) &&
+             req->size != sizeof(uint32_t))
+        panic("invalid access size(?) for PCI configspace!\n");
 
     DPRINTF(PciConfigAll, "write - va=%#x size=%d data=%#x\n",
-            req->vaddr, req->size, word_value);
+            req->vaddr, req->size, *(uint32_t*)data);
 
-    devices[device][func]->WriteConfig(reg, req->size, word_value);
+    devices[device][func]->writeConfig(reg, req->size, data);
 
     return No_Fault;
 }

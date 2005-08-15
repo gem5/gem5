@@ -263,7 +263,7 @@ class ExecContext
 
         Fault error;
         error = mem->read(req, data);
-        data = htoa(data);
+        data = gtoh(data);
         return error;
     }
 
@@ -313,7 +313,7 @@ class ExecContext
         }
 
 #endif
-        return mem->write(req, (T)htoa(data));
+        return mem->write(req, (T)htog(data));
     }
 
     virtual bool misspeculating();

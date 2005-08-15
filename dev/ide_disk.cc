@@ -162,6 +162,8 @@ IdeDisk::reset(int id)
     // set the device ready bit
     status = STATUS_DRDY_BIT;
 
+    /* The error register must be set to 0x1 on start-up to
+       indicate that no diagnostic error was detected */
     cmdReg.error = 0x1;
 }
 
@@ -212,16 +214,16 @@ IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
 ////
 
 void
-IdeDisk::read(const Addr &offset, RegType_t type, uint8_t *data)
+IdeDisk::read(const Addr &offset, IdeRegType reg_type, uint8_t *data)
 {
     DevAction_t action = ACT_NONE;
 
-    switch (type) {
+    switch (reg_type) {
       case COMMAND_BLOCK:
         switch (offset) {
           // Data transfers occur two bytes at a time
           case DATA_OFFSET:
-            memcpy(data, &cmdReg.data, sizeof(uint16_t));
+            *(uint16_t*)data = cmdReg.data;
             action = ACT_DATA_READ_SHORT;
             break;
           case ERROR_OFFSET:
@@ -265,15 +267,15 @@ IdeDisk::read(const Addr &offset, RegType_t type, uint8_t *data)
 }
 
 void
-IdeDisk::write(const Addr &offset, RegType_t type, const uint8_t *data)
+IdeDisk::write(const Addr &offset, IdeRegType reg_type, const uint8_t *data)
 {
     DevAction_t action = ACT_NONE;
 
-    switch (type) {
+    switch (reg_type) {
       case COMMAND_BLOCK:
         switch (offset) {
           case DATA_OFFSET:
-            memcpy(&cmdReg.data, data, sizeof(uint16_t));
+            cmdReg.data = *(uint16_t*)data;
             action = ACT_DATA_WRITE_SHORT;
             break;
           case FEATURES_OFFSET:

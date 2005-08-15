@@ -237,7 +237,7 @@ void
 SafeReadSwap(ifstream &stream, T &data)
 {
     SafeRead(stream, &data, sizeof(data));
-    data = htoa(data);
+    data = letoh(data); //is this the proper byte order conversion?
 }
 
 bool
@@ -319,7 +319,7 @@ template<class T>
 void
 SafeWriteSwap(ofstream &stream, const T &data)
 {
-    T swappeddata = htoa(data);
+    T swappeddata = letoh(data); //is this the proper byte order conversion?
     SafeWrite(stream, &swappeddata, sizeof(data));
 }
 void

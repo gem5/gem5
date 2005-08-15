@@ -270,8 +270,8 @@ class IdeDisk : public SimObject
     }
 
     // Device register read/write
-    void read(const Addr &offset, RegType_t type, uint8_t *data);
-    void write(const Addr &offset, RegType_t type, const uint8_t *data);
+    void read(const Addr &offset, IdeRegType regtype, uint8_t *data);
+    void write(const Addr &offset, IdeRegType regtype, const uint8_t *data);
 
     // Start/abort functions
     void startDma(const uint32_t &prdTableBase);

@@ -36,68 +36,44 @@
 #include <sys/types.h>
 
 union PCIConfig {
-    uint8_t	data[64];
+    uint8_t data[64];
 
-    struct hdr {
-        uint16_t	vendor;
-        uint16_t	device;
-        uint16_t	command;
-        uint16_t	status;
-        uint8_t		revision;
-        uint8_t		progIF;
-        uint8_t		subClassCode;
-        uint8_t		classCode;
-        uint8_t		cacheLineSize;
-        uint8_t		latencyTimer;
-        uint8_t		headerType;
-        uint8_t		bist;
-
+    struct {
+        uint16_t vendor;
+        uint16_t device;
+        uint16_t command;
+        uint16_t status;
+        uint8_t revision;
+        uint8_t progIF;
+        uint8_t subClassCode;
+        uint8_t classCode;
+        uint8_t cacheLineSize;
+        uint8_t latencyTimer;
+        uint8_t headerType;
+        uint8_t bist;
         union {
-            struct {
-                uint32_t	baseAddr0;
-                uint32_t	baseAddr1;
-                uint32_t	baseAddr2;
-                uint32_t	baseAddr3;
-                uint32_t	baseAddr4;
-                uint32_t	baseAddr5;
-                uint32_t	cardbusCIS;
-                uint16_t	subsystemVendorID;
-                uint16_t	subsystemID;
-                uint32_t	expansionROM;
-                uint32_t	reserved0;
-                uint32_t	reserved1;
-                uint8_t		interruptLine;
-                uint8_t		interruptPin;
-                uint8_t		minimumGrant;
-                uint8_t		maximumLatency;
-            } pci0;
+            uint32_t baseAddr[6];
 
             struct {
-                uint32_t	baseAddr0;
-                uint32_t	baseAddr1;
-                uint8_t		priBusNum;
-                uint8_t		secBusNum;
-                uint8_t		subBusNum;
-                uint8_t		secLatency;
-                uint8_t		ioBase;
-                uint8_t		minimumGrantioLimit;
-                uint16_t	secStatus;
-                uint16_t	memBase;
-                uint16_t	memLimit;
-                uint16_t	prefetchMemBase;
-                uint16_t	prefetchMemLimit;
-                uint32_t	prfBaseUpper32;
-                uint32_t	prfLimitUpper32;
-                uint16_t	ioBaseUpper16;
-                uint16_t	ioLimitUpper16;
-                uint32_t	reserved0;
-                uint32_t	expansionROM;
-                uint8_t		interruptLine;
-                uint8_t		interruptPin;
-                uint16_t	bridgeControl;
-            } pci1;
+                uint32_t baseAddr0;
+                uint32_t baseAddr1;
+                uint32_t baseAddr2;
+                uint32_t baseAddr3;
+                uint32_t baseAddr4;
+                uint32_t baseAddr5;
+            };
         };
-    } hdr;
+        uint32_t cardbusCIS;
+        uint16_t subsystemVendorID;
+        uint16_t subsystemID;
+        uint32_t expansionROM;
+        uint32_t reserved0;
+        uint32_t reserved1;
+        uint8_t interruptLine;
+        uint8_t interruptPin;
+        uint8_t minimumGrant;
+        uint8_t maximumLatency;
+    };
 };
 
 // Common PCI offsets

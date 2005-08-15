@@ -76,10 +76,12 @@ IdeController::IdeController(Params *p)
 
     // zero out all of the registers
     memset(bmi_regs.data, 0, sizeof(bmi_regs));
-    memset(pci_config_regs.data, 0, sizeof(pci_config_regs.data));
+    memset(config_regs.data, 0, sizeof(config_regs.data));
 
     // setup initial values
-    pci_config_regs.idetim = htoa((uint32_t)0x80008000); // enable both channels
+    // enable both channels
+    config_regs.idetim0 = htole((uint16_t)IDETIM_DECODE_EN);
+    config_regs.idetim1 = htole((uint16_t)IDETIM_DECODE_EN);
     bmi_regs.bmis0 = DMA1CAP | DMA0CAP;
     bmi_regs.bmis1 = DMA1CAP | DMA0CAP;
 
@@ -127,46 +129,46 @@ IdeController::~IdeController()
 ///
 
 void
-IdeController::parseAddr(const Addr &addr, Addr &offset, bool &primary,
-                         RegType_t &type)
+IdeController::parseAddr(const Addr &addr, Addr &offset, IdeChannel &channel,
+                         IdeRegType &reg_type)
 {
     offset = addr;
 
     if (addr >= pri_cmd_addr && addr < (pri_cmd_addr + pri_cmd_size)) {
         offset -= pri_cmd_addr;
-        type = COMMAND_BLOCK;
-        primary = true;
+        reg_type = COMMAND_BLOCK;
+        channel = PRIMARY;
     } else if (addr >= pri_ctrl_addr &&
                addr < (pri_ctrl_addr + pri_ctrl_size)) {
         offset -= pri_ctrl_addr;
-        type = CONTROL_BLOCK;
-        primary = true;
+        reg_type = CONTROL_BLOCK;
+        channel = PRIMARY;
     } else if (addr >= sec_cmd_addr &&
                addr < (sec_cmd_addr + sec_cmd_size)) {
         offset -= sec_cmd_addr;
-        type = COMMAND_BLOCK;
-        primary = false;
+        reg_type = COMMAND_BLOCK;
+        channel = SECONDARY;
     } else if (addr >= sec_ctrl_addr &&
                addr < (sec_ctrl_addr + sec_ctrl_size)) {
         offset -= sec_ctrl_addr;
-        type = CONTROL_BLOCK;
-        primary = false;
+        reg_type = CONTROL_BLOCK;
+        channel = SECONDARY;
     } else if (addr >= bmi_addr && addr < (bmi_addr + bmi_size)) {
         offset -= bmi_addr;
-        type = BMI_BLOCK;
-        primary = (offset < BMIC1) ? true : false;
+        reg_type = BMI_BLOCK;
+        channel = (offset < BMIC1) ? PRIMARY : SECONDARY;
     } else {
         panic("IDE controller access to invalid address: %#x\n", addr);
     }
 }
 
 int
-IdeController::getDisk(bool primary)
+IdeController::getDisk(IdeChannel channel)
 {
     int disk = 0;
     uint8_t *devBit = &dev[0];
 
-    if (!primary) {
+    if (channel == SECONDARY) {
         disk += 2;
         devBit = &dev[1];
     }
@@ -249,43 +251,33 @@ IdeController::cacheAccess(MemReqPtr &req)
 ////
 
 void
-IdeController::ReadConfig(int offset, int size, uint8_t *data)
+IdeController::readConfig(int offset, int size, uint8_t *data)
 {
-    union {
-        uint8_t byte;
-        uint16_t word;
-        uint32_t dword;
-    };
-
     int config_offset;
 
     if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::ReadConfig(offset, size, data);
-    } else if (offset >= IDE_CTRL_CONFIG_START &&
-               (offset + size) <= IDE_CTRL_CONFIG_END) {
+        PciDev::readConfig(offset, size, data);
+    } else if (offset >= IDE_CTRL_CONF_START &&
+               (offset + size) <= IDE_CTRL_CONF_END) {
 
-        config_offset = offset - IDE_CTRL_CONFIG_START;
-        dword = 0;
+        config_offset = offset - IDE_CTRL_CONF_START;
 
         switch (size) {
           case sizeof(uint8_t):
-            memcpy(&byte, &pci_config_regs.data[config_offset], size);
-            *data = byte;
+            *data = config_regs.data[config_offset];
             break;
           case sizeof(uint16_t):
-            memcpy(&byte, &pci_config_regs.data[config_offset], size);
-            *(uint16_t*)data = htoa(word);
+            *(uint16_t*)data = *(uint16_t*)&config_regs.data[config_offset];
             break;
           case sizeof(uint32_t):
-            memcpy(&byte, &pci_config_regs.data[config_offset], size);
-            *(uint32_t*)data = htoa(dword);
+            *(uint32_t*)data = *(uint32_t*)&config_regs.data[config_offset];
             break;
           default:
             panic("Invalid PCI configuration read size!\n");
         }
 
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: %#x data: %#x\n",
-                offset, size, htoa(dword));
+                offset, size, *(uint32_t*)data);
 
     } else {
         panic("Read of unimplemented PCI config. register: %x\n", offset);
@@ -293,27 +285,25 @@ IdeController::ReadConfig(int offset, int size, uint8_t *data)
 }
 
 void
-IdeController::WriteConfig(int offset, int size, uint32_t data)
+IdeController::writeConfig(int offset, int size, const uint8_t *data)
 {
     int config_offset;
-    uint32_t write_data;
 
     if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::WriteConfig(offset, size, data);
-    } else if (offset >= IDE_CTRL_CONFIG_START &&
-               (offset + size) <= IDE_CTRL_CONFIG_END) {
+        PciDev::writeConfig(offset, size, data);
+    } else if (offset >= IDE_CTRL_CONF_START &&
+               (offset + size) <= IDE_CTRL_CONF_END) {
 
-        config_offset = offset - IDE_CTRL_CONFIG_START;
-
-        write_data = htoa(data);
+        config_offset = offset - IDE_CTRL_CONF_START;
 
         switch(size) {
           case sizeof(uint8_t):
+            config_regs.data[config_offset] = *data;
           case sizeof(uint16_t):
+            *(uint16_t*)&config_regs.data[config_offset] = *(uint16_t*)data;
           case sizeof(uint32_t):
-            memcpy(&pci_config_regs.data[config_offset], &write_data, size);
+            *(uint32_t*)&config_regs.data[config_offset] = *(uint32_t*)data;
             break;
-
           default:
             panic("Invalid PCI configuration write size!\n");
         }
@@ -328,12 +318,12 @@ IdeController::WriteConfig(int offset, int size, uint32_t data)
     // (like updating the PIO ranges)
     switch (offset) {
       case PCI_COMMAND:
-        if (config.data[offset] & PCI_CMD_IOSE)
+        if (letoh(config.command) & PCI_CMD_IOSE)
             io_enabled = true;
         else
             io_enabled = false;
 
-        if (config.data[offset] & PCI_CMD_BME)
+        if (letoh(config.command) & PCI_CMD_BME)
             bm_enabled = true;
         else
             bm_enabled = false;
@@ -399,48 +389,26 @@ Fault
 IdeController::read(MemReqPtr &req, uint8_t *data)
 {
     Addr offset;
-    bool primary;
-    RegType_t type;
+    IdeChannel channel;
+    IdeRegType reg_type;
     int disk;
 
-    /*   union
-     *   +--  --+--  --+--  --+--  --+
-     *   |  0   |  1   |  2   |  3   |
-     *   +--  --+--  --+--  --+--  --+
-     *   | byte |  ..  |  ..  |  ..  |
-     *   +--  --+--  --+--  --+--  --+
-     *   |    word0    |    word1    |
-     *   +--         --+--         --+
-     *   |           dword           |
-     *   +--                       --+
-     */
-    union {
-        uint8_t byte;
-        uint16_t word[2];
-        uint32_t dword;
-    };
-
-    dword = 0;
-
-    parseAddr(req->paddr, offset, primary, type);
+    parseAddr(req->paddr, offset, channel, reg_type);
 
     if (!io_enabled)
         return No_Fault;
 
-    switch (type) {
+    switch (reg_type) {
       case BMI_BLOCK:
         switch (req->size) {
           case sizeof(uint8_t):
-            memcpy(&byte, &bmi_regs.data[offset], sizeof(uint8_t));
-            *data = byte;
+            *data = bmi_regs.data[offset];
             break;
           case sizeof(uint16_t):
-            memcpy(&byte, &bmi_regs.data[offset], sizeof(uint16_t));
-            *(uint16_t*)data = htoa(word[0]);
+            *(uint16_t*)data = *(uint16_t*)&bmi_regs.data[offset];
             break;
           case sizeof(uint32_t):
-            memcpy(&byte, &bmi_regs.data[offset], sizeof(uint32_t));
-            *(uint32_t*)data = htoa(dword);
+            *(uint32_t*)data = *(uint32_t*)&bmi_regs.data[offset];
             break;
           default:
             panic("IDE read of BMI reg invalid size: %#x\n", req->size);
@@ -449,7 +417,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
 
       case COMMAND_BLOCK:
       case CONTROL_BLOCK:
-        disk = getDisk(primary);
+        disk = getDisk(channel);
 
         if (disks[disk] == NULL)
             break;
@@ -458,14 +426,12 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
           case DATA_OFFSET:
             switch (req->size) {
               case sizeof(uint16_t):
-                disks[disk]->read(offset, type, (uint8_t*)&word[0]);
-                *(uint16_t*)data = htoa(word[0]);
+                disks[disk]->read(offset, reg_type, data);
                 break;
 
               case sizeof(uint32_t):
-                disks[disk]->read(offset, type, (uint8_t*)&word[0]);
-                disks[disk]->read(offset, type, (uint8_t*)&word[1]);
-                *(uint32_t*)data = htoa(dword);
+                disks[disk]->read(offset, reg_type, data);
+                disks[disk]->read(offset, reg_type, &data[2]);
                 break;
 
               default:
@@ -474,8 +440,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
             break;
           default:
             if (req->size == sizeof(uint8_t)) {
-                disks[disk]->read(offset, type, &byte);
-                *data = byte;
+                disks[disk]->read(offset, reg_type, data);
             } else
                 panic("IDE read of command reg of invalid size: %#x\n", req->size);
         }
@@ -485,7 +450,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     }
 
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, req->size, htoa(dword));
+            offset, req->size, *(uint32_t*)data);
 
     return No_Fault;
 }
@@ -494,26 +459,17 @@ Fault
 IdeController::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr offset;
-    bool primary;
-    RegType_t type;
+    IdeChannel channel;
+    IdeRegType reg_type;
     int disk;
-
-    union {
-        uint8_t byte;
-        uint16_t word[2];
-        uint32_t dword;
-    };
-
-    dword = 0;
-
-    parseAddr(req->paddr, offset, primary, type);
-
     uint8_t oldVal, newVal;
+
+    parseAddr(req->paddr, offset, channel, reg_type);
 
     if (!io_enabled)
         return No_Fault;
 
-    switch (type) {
+    switch (reg_type) {
       case BMI_BLOCK:
         if (!bm_enabled)
             return No_Fault;
@@ -526,11 +482,10 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
                 panic("Invalid BMIC write size: %x\n", req->size);
 
             // select the current disk based on DEV bit
-            disk = getDisk(primary);
+            disk = getDisk(channel);
 
-            oldVal = bmi_regs.data[offset];
-            byte = *data;
-            newVal = byte;
+            oldVal = letoh(bmi_regs.chan[channel].bmic);
+            newVal = letoh(*data);
 
             // if a DMA transfer is in progress, R/W control cannot change
             if (oldVal & SSBM) {
@@ -546,7 +501,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
                     DPRINTF(IdeCtrl, "Stopping DMA transfer\n");
 
                     // clear the BMIDEA bit
-                    bmi_regs.data[offset + 0x2] &= ~BMIDEA;
+                    bmi_regs.chan[channel].bmis = letoh(
+                        letoh(bmi_regs.chan[channel].bmis) & ~BMIDEA);
 
                     if (disks[disk] == NULL)
                         panic("DMA stop for disk %d which does not exist\n",
@@ -559,22 +515,20 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
                     DPRINTF(IdeCtrl, "Starting DMA transfer\n");
 
                     // set the BMIDEA bit
-                    bmi_regs.data[offset + 0x2] |= BMIDEA;
+                    bmi_regs.chan[channel].bmis = letoh(
+                        letoh(bmi_regs.chan[channel].bmis) | BMIDEA);
 
                     if (disks[disk] == NULL)
                         panic("DMA start for disk %d which does not exist\n",
                               disk);
 
                     // inform the disk of the DMA transfer start
-                    if (primary)
-                        disks[disk]->startDma(bmi_regs.bmidtp0);
-                    else
-                        disks[disk]->startDma(bmi_regs.bmidtp1);
+                    disks[disk]->startDma(letoh(bmi_regs.chan[channel].bmidtp));
                 }
             }
 
             // update the register value
-            bmi_regs.data[offset] = newVal;
+            bmi_regs.chan[channel].bmic = letoh(newVal);
             break;
 
             // Bus master IDE status register
@@ -583,9 +537,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             if (req->size != sizeof(uint8_t))
                 panic("Invalid BMIS write size: %x\n", req->size);
 
-            oldVal = bmi_regs.data[offset];
-            byte = *data;
-            newVal = byte;
+            oldVal = letoh(bmi_regs.chan[channel].bmis);
+            newVal = letoh(*data);
 
             // the BMIDEA bit is RO
             newVal |= (oldVal & BMIDEA);
@@ -601,7 +554,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             else
                 (oldVal & IDEDMAE) ? newVal |= IDEDMAE : newVal &= ~IDEDMAE;
 
-            bmi_regs.data[offset] = newVal;
+            bmi_regs.chan[channel].bmis = letoh(newVal);
             break;
 
             // Bus master IDE descriptor table pointer register
@@ -610,8 +563,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             if (req->size != sizeof(uint32_t))
                 panic("Invalid BMIDTP write size: %x\n", req->size);
 
-            dword = htoa(*(uint32_t *)data & ~0x3);
-            *(uint32_t *)&bmi_regs.data[offset] = dword;
+            bmi_regs.chan[channel].bmidtp = letoh(
+                letoh(*(uint32_t*)data) & ~0x3);
             break;
 
           default:
@@ -622,17 +575,17 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
                       req->size);
 
             // do a default copy of data into the registers
-            memcpy((void *)&bmi_regs.data[offset], data, req->size);
+            memcpy(&bmi_regs.data[offset], data, req->size);
         }
         break;
       case COMMAND_BLOCK:
         if (offset == IDE_SELECT_OFFSET) {
-            uint8_t *devBit = (primary ? &dev[0] : &dev[1]);
-            *devBit = ((*data & IDE_SELECT_DEV_BIT) ? 1 : 0);
+            uint8_t *devBit = &dev[channel];
+            *devBit = (letoh(*data) & IDE_SELECT_DEV_BIT) ? 1 : 0;
         }
         // fall-through ok!
       case CONTROL_BLOCK:
-        disk = getDisk(primary);
+        disk = getDisk(channel);
 
         if (disks[disk] == NULL)
             break;
@@ -641,14 +594,12 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
           case DATA_OFFSET:
             switch (req->size) {
               case sizeof(uint16_t):
-                word[0] = htoa(*(uint16_t*)data);
-                disks[disk]->write(offset, type, (uint8_t*)&word[0]);
+                disks[disk]->write(offset, reg_type, data);
                 break;
 
               case sizeof(uint32_t):
-                dword = htoa(*(uint32_t*)data);
-                disks[disk]->write(offset, type, (uint8_t*)&word[0]);
-                disks[disk]->write(offset, type, (uint8_t*)&word[1]);
+                disks[disk]->write(offset, reg_type, data);
+                disks[disk]->write(offset, reg_type, &data[2]);
                 break;
               default:
                 panic("IDE write of data reg invalid size: %#x\n", req->size);
@@ -656,8 +607,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             break;
           default:
             if (req->size == sizeof(uint8_t)) {
-                byte = *data;
-                disks[disk]->write(offset, type, &byte);
+                disks[disk]->write(offset, reg_type, data);
             } else
                 panic("IDE write of command reg of invalid size: %#x\n", req->size);
         }
@@ -667,7 +617,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     }
 
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, req->size, dword);
+            offset, req->size, *(uint32_t*)data);
 
     return No_Fault;
 }
@@ -697,7 +647,7 @@ IdeController::serialize(std::ostream &os)
     // Serialize registers
     SERIALIZE_ARRAY(bmi_regs.data, sizeof(bmi_regs));
     SERIALIZE_ARRAY(dev, sizeof(dev));
-    SERIALIZE_ARRAY(pci_config_regs.data, sizeof(pci_config_regs));
+    SERIALIZE_ARRAY(config_regs.data, sizeof(config_regs));
 
     // Serialize internal state
     SERIALIZE_SCALAR(io_enabled);
@@ -726,7 +676,7 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
     // Unserialize registers
     UNSERIALIZE_ARRAY(bmi_regs.data, sizeof(bmi_regs));
     UNSERIALIZE_ARRAY(dev, sizeof(dev));
-    UNSERIALIZE_ARRAY(pci_config_regs.data, sizeof(pci_config_regs));
+    UNSERIALIZE_ARRAY(config_regs.data, sizeof(config_regs));
 
     // Unserialize internal state
     UNSERIALIZE_SCALAR(io_enabled);

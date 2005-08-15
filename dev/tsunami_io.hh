@@ -53,129 +53,95 @@ class TsunamiIO : public PioDevice
 
     struct tm tm;
 
-    /**
-     * In Tsunami RTC only has two i/o ports one for data and one for
-     * address, so you write the address and then read/write the
-     * data. This store the address you are going to be reading from
-     * on a read.
-     */
-    uint8_t RTCAddress;
-
   protected:
 
-    /**
-     * The ClockEvent is handles the PIT interrupts
-     */
-    class ClockEvent : public Event
+    /** Real-Time Clock (MC146818) */
+    class RTC : public SimObject
     {
-      protected:
-        /** how often the PIT fires */
-        Tick interval;
-        /** The mode of the PIT */
-        uint8_t mode;
-        /** The status of the PIT */
-        uint8_t status;
-        /** The current count of the PIT */
-        uint16_t current_count;
-        /** The latched count of the PIT */
-        uint16_t latched_count;
-        /** The state of the output latch of the PIT */
-        bool latch_on;
-        /** The next count half (byte) to read */
-        enum {READ_LSB, READ_MSB} read_byte;
+      /** Event for RTC periodic interrupt */
+      class RTCEvent : public Event
+      {
+        private:
+          /** A pointer back to tsunami to create interrupt the processor. */
+          Tsunami* tsunami;
+          Tick interval;
+
+        public:
+          RTCEvent(Tsunami* t, Tick i);
+
+          /** Schedule the RTC periodic interrupt */
+          void scheduleIntr();
+
+          /** Event process to occur at interrupt*/
+          virtual void process();
+
+          /** Event description */
+          virtual const char *description();
+
+          /**
+           * Serialize this object to the given output stream.
+           * @param os The stream to serialize to.
+           */
+          virtual void serialize(std::ostream &os);
+
+          /**
+           * Reconstruct the state of this object from a checkpoint.
+           * @param cp The checkpoint use.
+           * @param section The section name of this object
+           */
+          virtual void unserialize(Checkpoint *cp, const std::string &section);
+      };
+
+      private:
+        /** RTC periodic interrupt event */
+        RTCEvent event;
+
+        /** Current RTC register address/index */
+        int addr;
+
+        /** Data for real-time clock function */
+        union {
+            uint8_t clock_data[10];
+
+            struct {
+                uint8_t sec;
+                uint8_t sec_alrm;
+                uint8_t min;
+                uint8_t min_alrm;
+                uint8_t hour;
+                uint8_t hour_alrm;
+                uint8_t wday;
+                uint8_t mday;
+                uint8_t mon;
+                uint8_t year;
+            };
+        };
+
+        /** RTC status register A */
+        uint8_t stat_regA;
+
+        /** RTC status register B */
+        uint8_t stat_regB;
 
       public:
-        /**
-         * Just set the mode to 0
-         */
-        ClockEvent();
+        RTC(Tsunami* t, Tick i);
+
+        /** Set the initial RTC time/date */
+        void set_time(time_t t);
+
+        /** RTC address port: write address of RTC RAM data to access */
+        void writeAddr(const uint8_t *data);
+
+        /** RTC write data */
+        void writeData(const uint8_t *data);
+
+        /** RTC read data */
+        void readData(uint8_t *data);
 
         /**
-         * processs the timer event
-         */
-        virtual void process();
-
-        /**
-         * Returns a description of this event
-         * @return the description
-         */
-        virtual const char *description();
-
-        /**
-         * Schedule a timer interrupt to occur sometime in the future.
-         */
-        void Program(int count);
-
-        /**
-         * Write the mode bits of the PIT.
-         * @param mode the new mode
-         */
-        void ChangeMode(uint8_t mode);
-
-        /**
-         * The current PIT status.
-         * @return the status of the PIT
-         */
-        uint8_t Status();
-
-        /**
-         * Latch the count of the PIT.
-         */
-        void LatchCount();
-
-        /**
-         * The current PIT count.
-         * @return the count of the PIT
-         */
-        uint8_t Read();
-
-       /**
-         * Serialize this object to the given output stream.
-         * @param os The stream to serialize to.
-         */
-        virtual void serialize(std::ostream &os);
-
-
-        /**
-         * Reconstruct the state of this object from a checkpoint.
-         * @param cp The checkpoint use.
-         * @param section The section name of this object
-         */
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-     };
-
-    /**
-     * Process RTC timer events and generate interrupts appropriately.
-     */
-    class RTCEvent : public Event
-    {
-      protected:
-        /** A pointer back to tsunami to create interrupt the processor. */
-        Tsunami* tsunami;
-        Tick interval;
-
-      public:
-        /**
-         * RTC Event initializes the RTC event by scheduling an event
-         * RTC_RATE times pre second.
-         */
-        RTCEvent(Tsunami* t, Tick i);
-
-        /**
-         * Interrupt the processor and reschedule the event.
-         */
-        virtual void process();
-
-        /**
-         * Return a description of this event.
-         * @return a description
-         */
-        virtual const char *description();
-
-        /**
-         * Serialize this object to the given output stream.
-         * @param os The stream to serialize to.
-         */
+          * Serialize this object to the given output stream.
+          * @param os The stream to serialize to.
+          */
         virtual void serialize(std::ostream &os);
 
         /**
@@ -184,16 +150,140 @@ class TsunamiIO : public PioDevice
          * @param section The section name of this object
          */
         virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-        void scheduleIntr();
     };
 
-    /** uip UpdateInProgess says that the rtc is updating, but we just fake it
-     * by alternating it on every read of the bit since we are going to
-     * override the loop_per_jiffy time that it is trying to use the UIP to
-     * calculate.
-     */
-    uint8_t uip;
+    /** Programmable Interval Timer (Intel 8254) */
+    class PITimer : public SimObject
+    {
+        /** Counter element for PIT */
+        class Counter : public SimObject
+        {
+            /** Event for counter interrupt */
+            class CounterEvent : public Event
+            {
+              private:
+                /** Pointer back to Counter */
+                Counter* counter;
+                Tick interval;
+
+              public:
+                CounterEvent(Counter*);
+
+                /** Event process */
+                virtual void process();
+
+                /** Event description */
+                virtual const char *description();
+
+                /**
+                 * Serialize this object to the given output stream.
+                 * @param os The stream to serialize to.
+                 */
+                virtual void serialize(std::ostream &os);
+
+                /**
+                 * Reconstruct the state of this object from a checkpoint.
+                 * @param cp The checkpoint use.
+                 * @param section The section name of this object
+                 */
+                virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+                friend class Counter;
+            };
+
+          private:
+            CounterEvent event;
+
+            /** Current count value */
+            uint16_t count;
+
+            /** Latched count */
+            uint16_t latched_count;
+
+            /** Interrupt period */
+            uint16_t period;
+
+            /** Current mode of operation */
+            uint8_t mode;
+
+            /** Output goes high when the counter reaches zero */
+            bool output_high;
+
+            /** State of the count latch */
+            bool latch_on;
+
+            /** Set of values for read_byte and write_byte */
+            enum {LSB, MSB};
+
+            /** Determine which byte of a 16-bit count value to read/write */
+            uint8_t read_byte, write_byte;
+
+          public:
+            Counter();
+
+            /** Latch the current count (if one is not already latched) */
+            void latchCount();
+
+            /** Set the read/write mode */
+            void setRW(int rw_val);
+
+            /** Set operational mode */
+            void setMode(int mode_val);
+
+            /** Set count encoding */
+            void setBCD(int bcd_val);
+
+            /** Read a count byte */
+            void read(uint8_t *data);
+
+            /** Write a count byte */
+            void write(const uint8_t *data);
+
+            /** Is the output high? */
+            bool outputHigh();
+
+            /**
+             * Serialize this object to the given output stream.
+             * @param os The stream to serialize to.
+             */
+            virtual void serialize(std::ostream &os);
+
+            /**
+             * Reconstruct the state of this object from a checkpoint.
+             * @param cp The checkpoint use.
+             * @param section The section name of this object
+             */
+            virtual void unserialize(Checkpoint *cp, const std::string &section);
+        };
+
+      private:
+        /** PIT has three seperate counters */
+        Counter counter[3];
+
+      public:
+        /** Public way to access individual counters (avoid array accesses) */
+        Counter &counter0;
+        Counter &counter1;
+        Counter &counter2;
+
+        PITimer();
+
+        /** Write control word */
+        void writeControl(const uint8_t* data);
+
+        /**
+         * Serialize this object to the given output stream.
+         * @param os The stream to serialize to.
+         */
+        virtual void serialize(std::ostream &os);
+
+        /**
+         * Reconstruct the state of this object from a checkpoint.
+         * @param cp The checkpoint use.
+         * @param section The section name of this object
+         */
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
+    };
 
     /** Mask of the PIC1 */
     uint8_t mask1;
@@ -218,25 +308,10 @@ class TsunamiIO : public PioDevice
     /** A pointer to the Tsunami device which be belong to */
     Tsunami *tsunami;
 
-    /**
-     * This timer is initilized, but after I wrote the code
-     * it doesn't seem to be used again, and best I can tell
-     * it too is not connected to any interrupt port
-     */
-    ClockEvent timer0;
+    /** Intel 8253 Periodic Interval Timer */
+    PITimer pitimer;
 
-    /**
-     * This timer is used to control the speaker, which
-     * we normally could care less about, however it is
-     * also used to calculated the clockspeed and hense
-     * bogomips which is kinda important to the scheduler
-     * so we need to implemnt it although after boot I can't
-     * imagine we would be playing with the PC speaker much
-     */
-    ClockEvent timer2;
-
-    /** This is the event used to interrupt the cpu like an RTC.  */
-    RTCEvent rtc;
+    RTC rtc;
 
     /** The interval is set via two writes to the PIT.
      * This variable contains a flag as to how many writes have happened, and
@@ -262,11 +337,6 @@ class TsunamiIO : public PioDevice
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
               Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
               Tick pio_latency, Tick ci);
-
-    /**
-     * Create the tm struct from seconds since 1970
-     */
-    void set_time(time_t t);
 
     /**
       * Process a read to one of the devices we are emulating.

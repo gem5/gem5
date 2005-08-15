@@ -63,16 +63,19 @@
 #define IDE_FEATURE_OFFSET      IDE_ERROR_OFFSET
 #define IDE_COMMAND_OFFSET      IDE_STATUS_OFFSET
 
+// IDE Timing Register bit fields
+#define IDETIM_DECODE_EN 0x8000
+
 // PCI device specific register byte offsets
-#define IDE_CTRL_CONFIG_START 0x40
-#define IDE_CTRL_CONFIG_END ((IDE_CTRL_CONFIG_START) + sizeof(pci_config_regs))
+#define IDE_CTRL_CONF_START 0x40
+#define IDE_CTRL_CONF_END ((IDE_CTRL_CONF_START) + sizeof(config_regs))
 
 
-typedef enum RegType {
-    COMMAND_BLOCK = 0,
+enum IdeRegType {
+    COMMAND_BLOCK,
     CONTROL_BLOCK,
     BMI_BLOCK
-} RegType_t;
+};
 
 class BaseInterface;
 class Bus;
@@ -90,6 +93,11 @@ class Platform;
 class IdeController : public PciDev
 {
     friend class IdeDisk;
+
+    enum IdeChannel {
+        PRIMARY = 0,
+        SECONDARY = 1
+    };
 
   private:
     /** Primary command block registers */
@@ -115,16 +123,25 @@ class IdeController : public PciDev
 
         struct {
             uint8_t bmic0;
-            uint8_t padding_0;
+            uint8_t reserved_0;
             uint8_t bmis0;
-            uint8_t padding_1;
+            uint8_t reserved_1;
             uint32_t bmidtp0;
             uint8_t bmic1;
-            uint8_t padding_2;
+            uint8_t reserved_2;
             uint8_t bmis1;
-            uint8_t padding_3;
+            uint8_t reserved_3;
             uint32_t bmidtp1;
         };
+
+        struct {
+            uint8_t bmic;
+            uint8_t reserved_4;
+            uint8_t bmis;
+            uint8_t reserved_5;
+            uint32_t bmidtp;
+        } chan[2];
+
     } bmi_regs;
     /** Shadows of the device select bit */
     uint8_t dev[2];
@@ -133,25 +150,17 @@ class IdeController : public PciDev
         uint8_t data[22];
 
         struct {
-            uint32_t idetim;
+            uint16_t idetim0;
+            uint16_t idetim1;
             uint8_t sidetim;
-            uint8_t reserved_45;
-            uint8_t reserved_46;
-            uint8_t reserved_47;
+            uint8_t reserved_0[3];
             uint8_t udmactl;
-            uint8_t reserved_49;
+            uint8_t reserved_1;
             uint16_t udmatim;
-            uint8_t reserved_4c;
-            uint8_t reserved_4d;
-            uint8_t reserved_4e;
-            uint8_t reserved_4f;
-            uint8_t reserved_50;
-            uint8_t reserved_51;
-            uint8_t reserved_52;
-            uint8_t reserved_53;
+            uint8_t reserved_2[8];
             uint16_t ideconfig;
         };
-    } pci_config_regs;
+    } config_regs;
 
     // Internal management variables
     bool io_enabled;
@@ -164,11 +173,11 @@ class IdeController : public PciDev
 
   private:
     /** Parse the access address to pass on to device */
-    void parseAddr(const Addr &addr, Addr &offset, bool &primary,
-                   RegType_t &type);
+    void parseAddr(const Addr &addr, Addr &offset, IdeChannel &channel,
+                   IdeRegType &reg_type);
 
     /** Select the disk based on the channel and device bit */
-    int getDisk(bool primary);
+    int getDisk(IdeChannel channel);
 
     /** Select the disk based on a pointer */
     int getDisk(IdeDisk *diskPtr);
@@ -192,8 +201,8 @@ class IdeController : public PciDev
     IdeController(Params *p);
     ~IdeController();
 
-    virtual void WriteConfig(int offset, int size, uint32_t data);
-    virtual void ReadConfig(int offset, int size, uint8_t *data);
+    virtual void writeConfig(int offset, int size, const uint8_t *data);
+    virtual void readConfig(int offset, int size, uint8_t *data);
 
     void setDmaComplete(IdeDisk *disk);
 
