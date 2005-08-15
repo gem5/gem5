@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define RTC_SEC                 0x00
-#define RTC_SEC_ALRM            0x01
-#define RTC_MIN                 0x02
-#define RTC_MIN_ALRM            0x03
-#define RTC_HR                  0x04
-#define RTC_HR_ALRM             0x05
-#define RTC_DOW                 0x06
-#define RTC_DOM                 0x07
-#define RTC_MON                 0x08
-#define RTC_YEAR                0x09
+/* @file
+ * Device register definitions for a device's PCI config space
+ */
 
-#define RTC_STAT_REGA           0x0A
-#define  RTCA_1024HZ            0x06  /* 1024Hz periodic interrupt frequency */
-#define  RTCA_32768HZ           0x20  /* 22-stage divider, 32.768KHz timebase */
-#define  RTCA_UIP               0x80  /* 1 = date and time update in progress */
+#ifndef __PITREG_H__
+#define __PITREG_H__
 
-#define RTC_STAT_REGB           0x0B
-#define  RTCB_DST               0x01  /* USA Daylight Savings Time enable */
-#define  RTCB_24HR              0x02  /* 0 = 12 hours, 1 = 24 hours */
-#define  RTCB_BIN               0x04  /* 0 = BCD, 1 = Binary coded time */
-#define  RTCB_SQWE              0x08  /* 1 = output sqare wave at SQW pin */
-#define  RTCB_UPDT_IE           0x10  /* 1 = enable update-ended interrupt */
-#define  RTCB_ALRM_IE           0x20  /* 1 = enable alarm interrupt */
-#define  RTCB_PRDC_IE           0x40  /* 1 = enable periodic clock interrupt */
-#define  RTCB_NO_UPDT           0x80  /* stop clock updates */
+#include <sys/types.h>
 
-#define RTC_STAT_REGC           0x0C
-#define RTC_STAT_REGD           0x0D
+// Control Word Format
 
+#define PIT_SEL_SHFT  0x6
+#define PIT_RW_SHFT   0x4
+#define PIT_MODE_SHFT 0x1
+#define PIT_BCD_SHFT  0x0
+
+#define PIT_SEL_MASK  0x3
+#define PIT_RW_MASK   0x3
+#define PIT_MODE_MASK 0x7
+#define PIT_BCD_MASK  0x1
+
+#define GET_CTRL_FIELD(x, s, m) (((x) >> s) & m)
+#define GET_CTRL_SEL(x) GET_CTRL_FIELD(x, PIT_SEL_SHFT, PIT_SEL_MASK)
+#define GET_CTRL_RW(x) GET_CTRL_FIELD(x, PIT_RW_SHFT, PIT_RW_MASK)
+#define GET_CTRL_MODE(x) GET_CTRL_FIELD(x, PIT_MODE_SHFT, PIT_MODE_MASK)
+#define GET_CTRL_BCD(x) GET_CTRL_FIELD(x, PIT_BCD_SHFT, PIT_BCD_MASK)
+
+#define PIT_READ_BACK 0x3
+
+#define PIT_RW_LATCH_COMMAND 0x0
+#define PIT_RW_LSB_ONLY      0x1
+#define PIT_RW_MSB_ONLY      0x2
+#define PIT_RW_16BIT         0x3
+
+#define PIT_MODE_INTTC    0x0
+#define PIT_MODE_ONESHOT  0x1
+#define PIT_MODE_RATEGEN  0x2
+#define PIT_MODE_SQWAVE   0x3
+#define PIT_MODE_SWSTROBE 0x4
+#define PIT_MODE_HWSTROBE 0x5
+
+#define PIT_BCD_FALSE 0x0
+#define PIT_BCD_TRUE  0x1
+
+#endif // __PITREG_H__

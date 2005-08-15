@@ -118,10 +118,18 @@
 #define TSDEV_DMA2_MODE     0xD6
 #define TSDEV_DMA1_MASK     0x0A
 #define TSDEV_DMA2_MASK     0xD4
-#define TSDEV_TMR_CTL       0x61
-#define TSDEV_TMR2_CTL      0x43
-#define TSDEV_TMR2_DATA     0x42
+#define TSDEV_CTRL_PORTB    0x61
 #define TSDEV_TMR0_DATA     0x40
+#define TSDEV_TMR1_DATA     0x41
+#define TSDEV_TMR2_DATA     0x42
+#define TSDEV_TMR_CTRL      0x43
+#define TSDEV_KBD           0x64
+#define TSDEV_DMA1_CMND     0x08
+#define TSDEV_DMA1_STAT     TSDEV_DMA1_CMND
+#define TSDEV_DMA2_CMND     0xD0
+#define TSDEV_DMA2_STAT     TSDEV_DMA2_CMND
+#define TSDEV_DMA1_MMASK    0x0F
+#define TSDEV_DMA2_MMASK    0xDE
 
 #define TSDEV_RTC_ADDR      0x70
 #define TSDEV_RTC_DATA      0x71
@@ -144,5 +152,8 @@
 #define UART_LSR_DR     0x01
 
 #define UART_MCR_LOOP   0x10
+
+// System Control PortB Status Bits
+#define PORTB_SPKR_HIGH 0x20
 
 #endif // __TSUNAMIREG_H__

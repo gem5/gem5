@@ -96,7 +96,7 @@ LinuxSystem::LinuxSystem(Params *p)
         char *dp264_mv = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (dp264_mv) {
-            *(uint32_t*)(dp264_mv+0x18) = htoa((uint32_t)127);
+            *(uint32_t*)(dp264_mv+0x18) = htog((uint32_t)127);
         } else
             panic("could not translate dp264_mv addr\n");
 

@@ -35,6 +35,7 @@
 
 #include "dev/disk_image.hh"
 #include "dev/ide_atareg.h"
+#include "dev/ide_ctrl.hh"
 #include "dev/ide_wdcreg.h"
 #include "dev/io_device.hh"
 #include "sim/eventq.hh"
@@ -83,6 +84,7 @@ class PrdTableEntry {
 #define LCYL_OFFSET     (4)
 #define HCYL_OFFSET     (5)
 #define SELECT_OFFSET   (6)
+#define DRIVE_OFFSET    (6)
 #define STATUS_OFFSET   (7)
 #define COMMAND_OFFSET  (7)
 
@@ -103,12 +105,8 @@ class PrdTableEntry {
 #define DEV1 (1)
 
 typedef struct CommandReg {
-    uint8_t data0;
-    union {
-        uint8_t data1;
-        uint8_t error;
-        uint8_t features;
-    };
+    uint16_t data;
+    uint8_t error;
     uint8_t sec_count;
     uint8_t sec_num;
     uint8_t cyl_low;
@@ -272,8 +270,8 @@ class IdeDisk : public SimObject
     }
 
     // Device register read/write
-    void read(const Addr &offset, bool byte, bool cmdBlk, uint8_t *data);
-    void write(const Addr &offset, bool byte, bool cmdBlk, const uint8_t *data);
+    void read(const Addr &offset, IdeRegType regtype, uint8_t *data);
+    void write(const Addr &offset, IdeRegType regtype, const uint8_t *data);
 
     // Start/abort functions
     void startDma(const uint32_t &prdTableBase);

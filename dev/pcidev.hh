@@ -37,6 +37,12 @@
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
 
+#define BAR_IO_MASK 0x3
+#define BAR_MEM_MASK 0xF
+#define BAR_IO_SPACE_BIT 0x1
+#define BAR_IO_SPACE(x) ((x) & BAR_IO_SPACE_BIT)
+#define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
+
 class PciConfigAll;
 class MemoryController;
 
@@ -136,15 +142,15 @@ class PciDev : public DmaDevice
 
     void
     intrPost()
-    { plat->postPciInt(configData->config.hdr.pci0.interruptLine); }
+    { plat->postPciInt(configData->config.interruptLine); }
 
     void
     intrClear()
-    { plat->clearPciInt(configData->config.hdr.pci0.interruptLine); }
+    { plat->clearPciInt(configData->config.interruptLine); }
 
     uint8_t
     interruptLine()
-    { return configData->config.hdr.pci0.interruptLine; }
+    { return configData->config.interruptLine; }
 
   public:
     /**
@@ -169,7 +175,7 @@ class PciDev : public DmaDevice
      * @param size the size of the write
      * @param data the data to write
      */
-    virtual void WriteConfig(int offset, int size, uint32_t data);
+    virtual void writeConfig(int offset, int size, const uint8_t* data);
 
 
     /**
@@ -180,7 +186,7 @@ class PciDev : public DmaDevice
      * @param size the size of the read
      * @param data pointer to the location where the read value should be stored
      */
-    virtual void ReadConfig(int offset, int size, uint8_t *data);
+    virtual void readConfig(int offset, int size, uint8_t *data);
 
     /**
      * Serialize this object to the given output stream.

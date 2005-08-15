@@ -491,10 +491,10 @@ NSGigE::regStats()
  * This is to read the PCI general configuration registers
  */
 void
-NSGigE::ReadConfig(int offset, int size, uint8_t *data)
+NSGigE::readConfig(int offset, int size, uint8_t *data)
 {
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::ReadConfig(offset, size, data);
+        PciDev::readConfig(offset, size, data);
     else
         panic("Device specific PCI config space not implemented!\n");
 }
@@ -503,10 +503,10 @@ NSGigE::ReadConfig(int offset, int size, uint8_t *data)
  * This is to write to the PCI general configuration registers
  */
 void
-NSGigE::WriteConfig(int offset, int size, uint32_t data)
+NSGigE::writeConfig(int offset, int size, const uint8_t* data)
 {
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::WriteConfig(offset, size, data);
+        PciDev::writeConfig(offset, size, data);
     else
         panic("Device specific PCI config space not implemented!\n");
 
@@ -577,7 +577,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        ReadConfig(daddr & 0xff, req->size, data);
+        readConfig(daddr & 0xff, req->size, data);
         return No_Fault;
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
@@ -783,7 +783,7 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        WriteConfig(daddr & 0xff, req->size, *(uint32_t *)data);
+        writeConfig(daddr & 0xff, req->size, data);
         return No_Fault;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
@@ -1360,7 +1360,7 @@ void
 NSGigE::regsReset()
 {
     memset(&regs, 0, sizeof(regs));
-    regs.config = CFGR_LNKSTS;
+    regs.config = (CFGR_LNKSTS | CFGR_TBI_EN | CFGR_MODE_1000);
     regs.mear = 0x22;
     regs.txcfg = 0x120; // set drain threshold to 1024 bytes and
                         // fill threshold to 32 bytes

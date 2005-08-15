@@ -99,7 +99,7 @@ class Bus;
 class PciConfigAll;
 
 /**
- * NS DP82830 Ethernet device model
+ * NS DP83820 Ethernet device model
  */
 class NSGigE : public PciDev
 {
@@ -353,8 +353,8 @@ class NSGigE : public PciDev
     ~NSGigE();
     const Params *params() const { return (const Params *)_params; }
 
-    virtual void WriteConfig(int offset, int size, uint32_t data);
-    virtual void ReadConfig(int offset, int size, uint8_t *data);
+    virtual void writeConfig(int offset, int size, const uint8_t *data);
+    virtual void readConfig(int offset, int size, uint8_t *data);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
