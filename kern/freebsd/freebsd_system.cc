@@ -41,6 +41,8 @@
 #include "sim/builder.hh"
 #include "targetarch/vtophys.hh"
 
+#define TIMER_FREQUENCY 1193180
+
 using namespace std;
 
 FreebsdSystem::FreebsdSystem(Params *p)
@@ -85,8 +87,8 @@ FreebsdSystem::doCalibrateClocks(ExecContext *xc)
     uint8_t *ppc = physmem->dma_addr(ppc_paddr, sizeof(uint32_t));
     uint8_t *timer = physmem->dma_addr(timer_paddr, sizeof(uint32_t));
 
-    *(uint32_t *)ppc = htoa((uint32_t)2000000000);
-    *(uint32_t *)timer = htoa((uint32_t)1193180);
+    *(uint32_t *)ppc = htog((uint32_t)Clock::Frequency);
+    *(uint32_t *)timer = htog((uint32_t)TIMER_FREQUENCY);
 }
 
 
