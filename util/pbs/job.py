@@ -83,37 +83,35 @@ def readval(filename):
 
 if __name__ == '__main__':
     rootdir = env.setdefault('ROOTDIR', os.getcwd())
-    jobid = env['PBS_JOBID']
-    jobname = env['PBS_JOBNAME']
-    jobdir = joinpath(rootdir, jobname)
+    pbs_jobid = env['PBS_JOBID']
+    pbs_jobname = env['PBS_JOBNAME']
     basedir = joinpath(rootdir, 'Base')
-    user = env['USER']
-
+    jobname = env.setdefault('JOBNAME', pbs_jobname)
+    jobfile = env.setdefault('JOBFILE', joinpath(basedir, 'test.py'))
+    outdir = env.setdefault('OUTPUT_DIR', joinpath(rootdir, jobname))
     env['POOLJOB'] = 'True'
-    env['OUTPUT_DIR'] = jobdir
-    env['JOBFILE'] = joinpath(basedir, 'test.py')
-    env['JOBNAME'] = jobname
-
-    def echofile(filename, string):
-        try:
-            f = file(joinpath(jobdir, filename), 'w')
-            print >>f, string
-            f.flush()
-            f.close()
-        except IOError,e:
-            sys.exit(e)
 
     if os.path.isdir("/work"):
         workbase = "/work"
     else:
         workbase = "/tmp/"
 
-    workdir = joinpath(workbase, '%s.%s' % (user, jobid))
+    workdir = joinpath(workbase, '%s.%s' % (env['USER'], pbs_jobid))
+
+    def echofile(filename, string):
+        try:
+            f = file(joinpath(outdir, filename), 'w')
+            print >>f, string
+            f.flush()
+            f.close()
+        except IOError,e:
+            sys.exit(e)
 
     os.umask(0022)
 
     echofile('.start', date())
-    echofile('.jobid', jobid)
+    echofile('.pbs_jobid', pbs_jobid)
+    echofile('.pbs_jobname', pbs_jobid)
     echofile('.host', socket.gethostname())
 
     if os.path.isdir(workdir):
@@ -132,7 +130,7 @@ if __name__ == '__main__':
     except OSError,e:
         sys.exit(e)
 
-    os.symlink(joinpath(jobdir, 'output'), 'status.out')
+    os.symlink(joinpath(outdir, 'output'), 'status.out')
 
     args = [ joinpath(basedir, 'm5'), joinpath(basedir, 'run.py') ]
     if not len(args):
@@ -147,7 +145,7 @@ if __name__ == '__main__':
     if not childpid:
         # Execute command
         sys.stdin.close()
-        fd = os.open(joinpath(jobdir, "output"),
+        fd = os.open(joinpath(outdir, "output"),
                      os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
         os.dup2(fd, sys.stdout.fileno())
         os.dup2(fd, sys.stderr.fileno())
