@@ -417,6 +417,9 @@ class SimObject(object):
                 found_obj = match_obj
         return found_obj, found_obj != None
 
+    def unproxy(self, base):
+        return self
+
     def print_ini(self):
         print '[' + self.path() + ']'	# .ini section header
 
@@ -632,7 +635,7 @@ class AnyProxy(BaseProxy):
         return 'any'
 
 def isproxy(obj):
-    if isinstance(obj, BaseProxy):
+    if isinstance(obj, (BaseProxy, EthernetAddr)):
         return True
     elif isinstance(obj, (list, tuple)):
         for v in obj:
@@ -980,12 +983,11 @@ def IncEthernetAddr(addr, val = 1):
     return ':'.join(map(lambda x: '%02x' % x, bytes))
 
 class NextEthernetAddr(object):
-    __metaclass__ = Singleton
     addr = "00:90:00:00:00:01"
 
     def __init__(self, inc = 1):
-        self.value = self.addr
-        self.addr = IncEthernetAddr(self.addr, inc)
+        self.value = NextEthernetAddr.addr
+        NextEthernetAddr.addr = IncEthernetAddr(NextEthernetAddr.addr, inc)
 
 class EthernetAddr(ParamValue):
     def __init__(self, value):
@@ -1006,10 +1008,16 @@ class EthernetAddr(ParamValue):
 
         self.value = value
 
+    def unproxy(self, base):
+        if self.value == NextEthernetAddr:
+            self.addr = self.value().value
+        return self
+
     def __str__(self):
         if self.value == NextEthernetAddr:
-            self.value = self.value().value
-        return self.value
+            return self.addr
+        else:
+            return self.value
 
 # Special class for NULL pointers.  Note the special check in
 # make_param_value() above that lets these be assigned where a
@@ -1027,7 +1035,7 @@ class NullSimObject(object):
     def ini_str(self):
         return 'Null'
 
-    def unproxy(self,base):
+    def unproxy(self, base):
         return self
 
     def set_path(self, parent, name):

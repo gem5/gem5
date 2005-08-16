@@ -30,9 +30,9 @@
 
 import os, os.path, re, socket, sys
 from os import environ as env, listdir
-from os.path import basename, isdir, isfile, islink, join as joinpath
+from os.path import basename, isdir, isfile, islink, join as joinpath, normpath
 from filecmp import cmp as filecmp
-from shutil import copyfile
+from shutil import copy
 
 def nfspath(dir):
     if dir.startswith('/.automount/'):
@@ -40,6 +40,38 @@ def nfspath(dir):
     elif not dir.startswith('/n/'):
         dir = '/n/%s%s' % (socket.gethostname().split('.')[0], dir)
     return dir
+
+def syncdir(srcdir, destdir):
+    srcdir = normpath(srcdir)
+    destdir = normpath(destdir)
+    if not isdir(destdir):
+        sys.exit('destination directory "%s" does not exist' % destdir)
+
+    for root, dirs, files in os.walk(srcdir):
+        root = normpath(root)
+        prefix = os.path.commonprefix([root, srcdir])
+        root = root[len(prefix):]
+        if root.startswith('/'):
+            root = root[1:]
+        for rem in [ d for d in dirs if d.startswith('.') or d == 'SCCS']:
+            dirs.remove(rem)
+
+        for entry in dirs:
+            newdir = joinpath(destdir, root, entry)
+            if not isdir(newdir):
+                os.mkdir(newdir)
+                print 'mkdir', newdir
+
+        for i,d in enumerate(dirs):
+            if islink(joinpath(srcdir, root, d)):
+                dirs[i] = joinpath(d, '.')
+
+        for entry in files:
+            dest = normpath(joinpath(destdir, root, entry))
+            src = normpath(joinpath(srcdir, root, entry))
+            if not isfile(dest) or not filecmp(src, dest):
+                print 'copy %s %s' % (dest, src)
+                copy(src, dest)
 
 progpath = nfspath(sys.path[0])
 progname = basename(sys.argv[0])
@@ -107,16 +139,7 @@ for arg in args:
 if not listonly and not onlyecho and isdir(linkdir):
     if verbose:
         print 'Checking for outdated files in Link directory'
-    entries = listdir(linkdir)
-    for entry in entries:
-        link = joinpath(linkdir, entry)
-        if not islink(link) or not isfile(link):
-            continue
-
-        base = joinpath(basedir, entry)
-        if not isfile(base) or not filecmp(link, base):
-            print 'Base/%s is different than Link/%s: copying' % (entry, entry)
-            copyfile(link, base)
+    syncdir(linkdir, basedir)
 
 import job, jobfile, pbs
 
@@ -164,6 +187,21 @@ if not onlyecho:
         jl.append(jobname)
     joblist = jl
 
+def setname(jobid, jobname):
+    # since pbs can handle jobnames of 15 characters or less, don't
+    # use the raj hack.
+    if len(jobname) <= 15:
+        return
+
+    import socket
+    s = socket.socket()
+    # Connect to pbs.pool and send the jobid/jobname pair to port
+    # 24465 (Raj didn't realize that there are only 64k ports and
+    # setup inetd to point to port 90001)
+    s.connect(("pbs.pool", 24465))
+    s.send("%s %s\n" % (jobid, jobname))
+    s.close()
+
 for jobname in joblist:
     jobdir = joinpath(rootdir, jobname)
 
@@ -176,10 +214,11 @@ for jobname in joblist:
     qsub = pbs.qsub()
     qsub.pbshost = 'simpool.eecs.umich.edu'
     qsub.stdout = joinpath(jobdir, 'jobout')
-    qsub.name = jobname
+    qsub.name = jobname[:15]
     qsub.join = True
     qsub.node_type = 'FAST'
     qsub.env['ROOTDIR'] = rootdir
+    qsub.env['JOBNAME'] = jobname
     if len(queue):
         qsub.queue = queue
     qsub.build(joinpath(progpath, 'job.py'))
@@ -190,6 +229,8 @@ for jobname in joblist:
     if not onlyecho:
         ec = qsub.do()
         if ec == 0:
-            print 'PBS Jobid:      %s' % qsub.result
+            jobid = qsub.result
+            print 'PBS Jobid:      %s' % jobid
+            setname(jobid, jobname)
         else:
             print 'PBS Failed'
