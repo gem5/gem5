@@ -593,6 +593,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
       case sizeof(uint32_t):
         {
             uint32_t &reg = *(uint32_t *)data;
+            uint16_t rfaddr;
 
             switch (daddr) {
               case CR:
@@ -680,7 +681,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 break;
 
               case RFDR:
-                uint16_t rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
+                rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
                 switch (rfaddr) {
                   // Read from perfect match ROM octets
                   case 0x000:
@@ -710,8 +711,8 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                         break;
                     }
 
-                    panic("reading RFDR for something other than pattern\
-                        matching or hashing! %#x\n", rfaddr);
+                    panic("reading RFDR for something other than pattern"
+                          " matching or hashing! %#x\n", rfaddr);
                 }
                 break;
 
@@ -804,6 +805,8 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 
     if (req->size == sizeof(uint32_t)) {
         uint32_t reg = *(uint32_t *)data;
+        uint16_t rfaddr;
+
         DPRINTF(EthernetPIO, "write data=%d data=%#x\n", reg, reg);
 
         switch (daddr) {
@@ -1086,7 +1089,7 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             break;
 
           case RFDR:
-            uint16_t rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
+            rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
             switch (rfaddr) {
               case 0x000:
                 rom.perfectMatch[0] = (uint8_t)reg;
