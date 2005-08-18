@@ -621,7 +621,7 @@ unixBoot(int argc, char **argv)
 
     bzero((char *)rpb_ctb, sizeof(struct ctb_tt));
 
-    rpb_ctb->rpb_type = CONS_REM;
+    rpb_ctb->rpb_type = CONS_DZ;
     rpb_ctb->rpb_length = sizeof(ctb_tt) - sizeof(rpb_ctb);
 
     /*
