@@ -65,9 +65,10 @@ To build and test the syscall-emulation simulator:
 2. In $top/m5-test, run "./do-tests.pl -B ALPHA_SE".
 
 The tests should end with "finished do-tests successfully!"
-Note: if you're running under Cygwin several tests will fail with an
-"EIO icount mismatch".  This is due to the lack of fesetround() under
-Cygwin causing differences in floating-point rounding.
+Note: if you're running under Cygwin, several tests will fail with an
+"EIO trace inconsistency: ICNT mismatch" error.  This is due to the
+lack of fesetround() under Cygwin causing differences in floating-point
+rounding.  Other than that discrepancy your simulator is working perfectly.
 
 To build and test the full-system simualator:
 

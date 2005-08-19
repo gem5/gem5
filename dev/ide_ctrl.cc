@@ -484,8 +484,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             // select the current disk based on DEV bit
             disk = getDisk(channel);
 
-            oldVal = letoh(bmi_regs.chan[channel].bmic);
-            newVal = letoh(*data);
+            oldVal = bmi_regs.chan[channel].bmic;
+            newVal = *data;
 
             // if a DMA transfer is in progress, R/W control cannot change
             if (oldVal & SSBM) {
@@ -501,8 +501,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
                     DPRINTF(IdeCtrl, "Stopping DMA transfer\n");
 
                     // clear the BMIDEA bit
-                    bmi_regs.chan[channel].bmis = letoh(
-                        letoh(bmi_regs.chan[channel].bmis) & ~BMIDEA);
+                    bmi_regs.chan[channel].bmis =
+                        bmi_regs.chan[channel].bmis & ~BMIDEA;
 
                     if (disks[disk] == NULL)
                         panic("DMA stop for disk %d which does not exist\n",
@@ -515,8 +515,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
                     DPRINTF(IdeCtrl, "Starting DMA transfer\n");
 
                     // set the BMIDEA bit
-                    bmi_regs.chan[channel].bmis = letoh(
-                        letoh(bmi_regs.chan[channel].bmis) | BMIDEA);
+                    bmi_regs.chan[channel].bmis =
+                        bmi_regs.chan[channel].bmis | BMIDEA;
 
                     if (disks[disk] == NULL)
                         panic("DMA start for disk %d which does not exist\n",
@@ -528,7 +528,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             }
 
             // update the register value
-            bmi_regs.chan[channel].bmic = letoh(newVal);
+            bmi_regs.chan[channel].bmic = newVal;
             break;
 
             // Bus master IDE status register
@@ -537,8 +537,8 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             if (req->size != sizeof(uint8_t))
                 panic("Invalid BMIS write size: %x\n", req->size);
 
-            oldVal = letoh(bmi_regs.chan[channel].bmis);
-            newVal = letoh(*data);
+            oldVal = bmi_regs.chan[channel].bmis;
+            newVal = *data;
 
             // the BMIDEA bit is RO
             newVal |= (oldVal & BMIDEA);
@@ -554,17 +554,20 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
             else
                 (oldVal & IDEDMAE) ? newVal |= IDEDMAE : newVal &= ~IDEDMAE;
 
-            bmi_regs.chan[channel].bmis = letoh(newVal);
+            bmi_regs.chan[channel].bmis = newVal;
             break;
 
             // Bus master IDE descriptor table pointer register
           case BMIDTP0:
           case BMIDTP1:
-            if (req->size != sizeof(uint32_t))
-                panic("Invalid BMIDTP write size: %x\n", req->size);
+            {
+                if (req->size != sizeof(uint32_t))
+                    panic("Invalid BMIDTP write size: %x\n", req->size);
 
-            bmi_regs.chan[channel].bmidtp = letoh(
-                letoh(*(uint32_t*)data) & ~0x3);
+                uint32_t host_data =  letoh(*(uint32_t*)data);
+                host_data &= ~0x3;
+                bmi_regs.chan[channel].bmidtp = htole(host_data);
+            }
             break;
 
           default:

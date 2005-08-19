@@ -203,7 +203,7 @@ PciDev::writeConfig(int offset, int size, const uint8_t *data)
 
           case PCI0_ROM_BASE_ADDR:
             if (letoh(data32) == 0xfffffffe)
-                config.expansionROM = letoh(0xffffffff);
+                config.expansionROM = htole((uint32_t)0xffffffff);
             else
                 config.expansionROM = data32;
             break;
