@@ -54,45 +54,33 @@ class TsunamiIO : public PioDevice
     struct tm tm;
 
   protected:
-
     /** Real-Time Clock (MC146818) */
-    class RTC : public SimObject
+    class RTC
     {
-      /** Event for RTC periodic interrupt */
-      class RTCEvent : public Event
-      {
-        private:
-          /** A pointer back to tsunami to create interrupt the processor. */
-          Tsunami* tsunami;
-          Tick interval;
+      private:
+        /** Event for RTC periodic interrupt */
+        struct RTCEvent : public Event
+        {
+            /** A pointer back to tsunami to create interrupt the processor. */
+            Tsunami* tsunami;
+            Tick interval;
 
-        public:
-          RTCEvent(Tsunami* t, Tick i);
+            RTCEvent(Tsunami* t, Tick i);
 
-          /** Schedule the RTC periodic interrupt */
-          void scheduleIntr();
+            /** Schedule the RTC periodic interrupt */
+            void scheduleIntr();
 
-          /** Event process to occur at interrupt*/
-          virtual void process();
+            /** Event process to occur at interrupt*/
+            virtual void process();
 
-          /** Event description */
-          virtual const char *description();
-
-          /**
-           * Serialize this object to the given output stream.
-           * @param os The stream to serialize to.
-           */
-          virtual void serialize(std::ostream &os);
-
-          /**
-           * Reconstruct the state of this object from a checkpoint.
-           * @param cp The checkpoint use.
-           * @param section The section name of this object
-           */
-          virtual void unserialize(Checkpoint *cp, const std::string &section);
-      };
+            /** Event description */
+            virtual const char *description();
+        };
 
       private:
+        std::string _name;
+        const std::string &name() const { return _name; }
+
         /** RTC periodic interrupt event */
         RTCEvent event;
 
@@ -124,7 +112,7 @@ class TsunamiIO : public PioDevice
         uint8_t stat_regB;
 
       public:
-        RTC(Tsunami* t, Tick i);
+        RTC(const std::string &name, Tsunami* t, Tick i);
 
         /** Set the initial RTC time/date */
         void set_time(time_t t);
@@ -142,21 +130,22 @@ class TsunamiIO : public PioDevice
           * Serialize this object to the given output stream.
           * @param os The stream to serialize to.
           */
-        virtual void serialize(std::ostream &os);
+        void serialize(const std::string &base, std::ostream &os);
 
         /**
          * Reconstruct the state of this object from a checkpoint.
          * @param cp The checkpoint use.
          * @param section The section name of this object
          */
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
+        void unserialize(const std::string &base, Checkpoint *cp,
+                         const std::string &section);
     };
 
     /** Programmable Interval Timer (Intel 8254) */
-    class PITimer : public SimObject
+    class PITimer
     {
         /** Counter element for PIT */
-        class Counter : public SimObject
+        class Counter
         {
             /** Event for counter interrupt */
             class CounterEvent : public Event
@@ -175,23 +164,13 @@ class TsunamiIO : public PioDevice
                 /** Event description */
                 virtual const char *description();
 
-                /**
-                 * Serialize this object to the given output stream.
-                 * @param os The stream to serialize to.
-                 */
-                virtual void serialize(std::ostream &os);
-
-                /**
-                 * Reconstruct the state of this object from a checkpoint.
-                 * @param cp The checkpoint use.
-                 * @param section The section name of this object
-                 */
-                virtual void unserialize(Checkpoint *cp, const std::string &section);
-
                 friend class Counter;
             };
 
           private:
+            std::string _name;
+            const std::string &name() const { return _name; }
+
             CounterEvent event;
 
             /** Current count value */
@@ -219,7 +198,7 @@ class TsunamiIO : public PioDevice
             uint8_t read_byte, write_byte;
 
           public:
-            Counter();
+            Counter(const std::string &name);
 
             /** Latch the current count (if one is not already latched) */
             void latchCount();
@@ -246,27 +225,31 @@ class TsunamiIO : public PioDevice
              * Serialize this object to the given output stream.
              * @param os The stream to serialize to.
              */
-            virtual void serialize(std::ostream &os);
+            void serialize(const std::string &base, std::ostream &os);
 
             /**
              * Reconstruct the state of this object from a checkpoint.
              * @param cp The checkpoint use.
              * @param section The section name of this object
              */
-            virtual void unserialize(Checkpoint *cp, const std::string &section);
+            void unserialize(const std::string &base, Checkpoint *cp,
+                             const std::string &section);
         };
 
       private:
+        std::string _name;
+        const std::string &name() const { return _name; }
+
         /** PIT has three seperate counters */
-        Counter counter[3];
+        Counter *counter[3];
 
       public:
         /** Public way to access individual counters (avoid array accesses) */
-        Counter &counter0;
-        Counter &counter1;
-        Counter &counter2;
+        Counter counter0;
+        Counter counter1;
+        Counter counter2;
 
-        PITimer();
+        PITimer(const std::string &name);
 
         /** Write control word */
         void writeControl(const uint8_t* data);
@@ -275,14 +258,15 @@ class TsunamiIO : public PioDevice
          * Serialize this object to the given output stream.
          * @param os The stream to serialize to.
          */
-        virtual void serialize(std::ostream &os);
+        void serialize(const std::string &base, std::ostream &os);
 
         /**
          * Reconstruct the state of this object from a checkpoint.
          * @param cp The checkpoint use.
          * @param section The section name of this object
          */
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
+        void unserialize(const std::string &base, Checkpoint *cp,
+                         const std::string &section);
     };
 
     /** Mask of the PIC1 */

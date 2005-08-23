@@ -56,7 +56,7 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
     mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
+        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
                                       &TsunamiCChip::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
         pioLatency = pio_latency * bus->clockRate;

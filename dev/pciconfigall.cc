@@ -56,7 +56,7 @@ PciConfigAll::PciConfigAll(const string &name,
     mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
+        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
                                       &PciConfigAll::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
         pioLatency = pio_latency * bus->clockRate;

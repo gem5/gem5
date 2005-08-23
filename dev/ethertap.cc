@@ -270,7 +270,8 @@ EtherTap::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(socket);
     SERIALIZE_SCALAR(buflen);
-    SERIALIZE_ARRAY((uint8_t *)buffer,buflen);
+    uint8_t *buffer = (uint8_t *)this->buffer;
+    SERIALIZE_ARRAY(buffer, buflen);
     SERIALIZE_SCALAR(buffer_offset);
     SERIALIZE_SCALAR(data_len);
 
@@ -290,7 +291,8 @@ EtherTap::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(socket);
     UNSERIALIZE_SCALAR(buflen);
-    UNSERIALIZE_ARRAY((uint8_t *)buffer,buflen);
+    uint8_t *buffer = (uint8_t *)this->buffer;
+    UNSERIALIZE_ARRAY(buffer, buflen);
     UNSERIALIZE_SCALAR(buffer_offset);
     UNSERIALIZE_SCALAR(data_len);
 

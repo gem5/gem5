@@ -228,17 +228,18 @@ PciDev::writeConfig(int offset, int size, const uint8_t *data)
 void
 PciDev::serialize(ostream &os)
 {
-    SERIALIZE_ARRAY(BARSize, sizeof(BARSize));
-    SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs));
-    SERIALIZE_ARRAY(config.data, sizeof(config.data));
+    SERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
+    SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
+    SERIALIZE_ARRAY(config.data, sizeof(config.data) / sizeof(config.data[0]));
 }
 
 void
 PciDev::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(BARSize, sizeof(BARSize));
-    UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs));
-    UNSERIALIZE_ARRAY(config.data, sizeof(config.data));
+    UNSERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
+    UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
+    UNSERIALIZE_ARRAY(config.data,
+                      sizeof(config.data) / sizeof(config.data[0]));
 
     // Add the MMU mappings for the BARs
     for (int i=0; i < 6; i++) {

@@ -51,8 +51,8 @@
 
 using namespace std;
 
-TsunamiIO::RTC::RTC(Tsunami* t, Tick i)
-    : SimObject("RTC"), event(t, i), addr(0)
+TsunamiIO::RTC::RTC(const string &name, Tsunami* t, Tick i)
+    : _name(name), event(t, i), addr(0)
 {
     memset(clock_data, 0, sizeof(clock_data));
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
@@ -142,28 +142,28 @@ TsunamiIO::RTC::readData(uint8_t *data)
 }
 
 void
-TsunamiIO::RTC::serialize(std::ostream &os)
+TsunamiIO::RTC::serialize(const string &base, ostream &os)
 {
-    SERIALIZE_SCALAR(addr);
-    SERIALIZE_ARRAY(clock_data, sizeof(clock_data));
-    SERIALIZE_SCALAR(stat_regA);
-    SERIALIZE_SCALAR(stat_regB);
-
-    // serialize the RTC event
-    nameOut(os, csprintf("%s.event", name()));
-    event.serialize(os);
+    paramOut(os, base + ".addr", addr);
+    arrayParamOut(os, base + ".clock_data", clock_data, sizeof(clock_data));
+    paramOut(os, base + ".stat_regA", stat_regA);
+    paramOut(os, base + ".stat_regB", stat_regB);
 }
 
 void
-TsunamiIO::RTC::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiIO::RTC::unserialize(const string &base, Checkpoint *cp,
+                            const string &section)
 {
-    UNSERIALIZE_SCALAR(addr);
-    UNSERIALIZE_ARRAY(clock_data, sizeof(clock_data));
-    UNSERIALIZE_SCALAR(stat_regA);
-    UNSERIALIZE_SCALAR(stat_regB);
+    paramIn(cp, section, base + ".addr", addr);
+    arrayParamIn(cp, section, base + ".clock_data", clock_data,
+                 sizeof(clock_data));
+    paramIn(cp, section, base + ".stat_regA", stat_regA);
+    paramIn(cp, section, base + ".stat_regB", stat_regB);
 
-    // unserialze the event
-    event.unserialize(cp, csprintf("%s.event", section));
+    // We're not unserializing the event here, but we need to
+    // rescehedule the event since curTick was moved forward by the
+    // checkpoint
+    event.reschedule(curTick + event.interval);
 }
 
 TsunamiIO::RTC::RTCEvent::RTCEvent(Tsunami*t, Tick i)
@@ -194,26 +194,13 @@ TsunamiIO::RTC::RTCEvent::description()
     return "tsunami RTC interrupt";
 }
 
-void
-TsunamiIO::RTC::RTCEvent::serialize(std::ostream &os)
+TsunamiIO::PITimer::PITimer(const string &name)
+    : _name(name), counter0(name + ".counter0"), counter1(name + ".counter1"),
+      counter2(name + ".counter2")
 {
-    Tick time = when();
-    SERIALIZE_SCALAR(time);
-}
-
-void
-TsunamiIO::RTC::RTCEvent::unserialize(Checkpoint *cp, const std::string &section)
-{
-    Tick time;
-    UNSERIALIZE_SCALAR(time);
-    reschedule(time);
-}
-
-TsunamiIO::PITimer::PITimer()
-    : SimObject("PITimer"), counter0(counter[0]), counter1(counter[1]),
-      counter2(counter[2])
-{
-
+    counter[0] = &counter0;
+    counter[1] = &counter0;
+    counter[2] = &counter0;
 }
 
 void
@@ -230,39 +217,35 @@ TsunamiIO::PITimer::writeControl(const uint8_t *data)
     rw = GET_CTRL_RW(*data);
 
     if (rw == PIT_RW_LATCH_COMMAND)
-        counter[sel].latchCount();
+        counter[sel]->latchCount();
     else {
-        counter[sel].setRW(rw);
-        counter[sel].setMode(GET_CTRL_MODE(*data));
-        counter[sel].setBCD(GET_CTRL_BCD(*data));
+        counter[sel]->setRW(rw);
+        counter[sel]->setMode(GET_CTRL_MODE(*data));
+        counter[sel]->setBCD(GET_CTRL_BCD(*data));
     }
 }
 
 void
-TsunamiIO::PITimer::serialize(std::ostream &os)
+TsunamiIO::PITimer::serialize(const string &base, ostream &os)
 {
     // serialize the counters
-    nameOut(os, csprintf("%s.counter0", name()));
-    counter0.serialize(os);
-
-    nameOut(os, csprintf("%s.counter1", name()));
-    counter1.serialize(os);
-
-    nameOut(os, csprintf("%s.counter2", name()));
-    counter2.serialize(os);
+    counter0.serialize(base + ".counter0", os);
+    counter1.serialize(base + ".counter1", os);
+    counter2.serialize(base + ".counter2", os);
 }
 
 void
-TsunamiIO::PITimer::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiIO::PITimer::unserialize(const string &base, Checkpoint *cp,
+                                const string &section)
 {
     // unserialze the counters
-    counter0.unserialize(cp, csprintf("%s.counter0", section));
-    counter1.unserialize(cp, csprintf("%s.counter1", section));
-    counter2.unserialize(cp, csprintf("%s.counter2", section));
+    counter0.unserialize(base + ".counter0", cp, section);
+    counter1.unserialize(base + ".counter1", cp, section);
+    counter2.unserialize(base + ".counter2", cp, section);
 }
 
-TsunamiIO::PITimer::Counter::Counter()
-    : SimObject("Counter"), event(this), count(0), latched_count(0), period(0),
+TsunamiIO::PITimer::Counter::Counter(const string &name)
+    : _name(name), event(this), count(0), latched_count(0), period(0),
       mode(0), output_high(false), latch_on(false), read_byte(LSB),
       write_byte(LSB)
 {
@@ -327,7 +310,8 @@ TsunamiIO::PITimer::Counter::write(const uint8_t *data)
         period = count;
 
         if (period > 0) {
-            DPRINTF(Tsunami, "Timer set to curTick + %d\n", count * event.interval);
+            DPRINTF(Tsunami, "Timer set to curTick + %d\n",
+                    count * event.interval);
             event.schedule(curTick + count * event.interval);
         }
         write_byte = LSB;
@@ -366,36 +350,40 @@ TsunamiIO::PITimer::Counter::outputHigh()
 }
 
 void
-TsunamiIO::PITimer::Counter::serialize(std::ostream &os)
+TsunamiIO::PITimer::Counter::serialize(const string &base, ostream &os)
 {
-    SERIALIZE_SCALAR(count);
-    SERIALIZE_SCALAR(latched_count);
-    SERIALIZE_SCALAR(period);
-    SERIALIZE_SCALAR(mode);
-    SERIALIZE_SCALAR(output_high);
-    SERIALIZE_SCALAR(latch_on);
-    SERIALIZE_SCALAR(read_byte);
-    SERIALIZE_SCALAR(write_byte);
+    paramOut(os, base + ".count", count);
+    paramOut(os, base + ".latched_count", latched_count);
+    paramOut(os, base + ".period", period);
+    paramOut(os, base + ".mode", mode);
+    paramOut(os, base + ".output_high", output_high);
+    paramOut(os, base + ".latch_on", latch_on);
+    paramOut(os, base + ".read_byte", read_byte);
+    paramOut(os, base + ".write_byte", write_byte);
 
-    // serialize the counter event
-    nameOut(os, csprintf("%s.event", name()));
-    event.serialize(os);
+    Tick event_tick = 0;
+    if (event.scheduled())
+        event_tick = event.when();
+    paramOut(os, base + ".event_tick", event_tick);
 }
 
 void
-TsunamiIO::PITimer::Counter::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiIO::PITimer::Counter::unserialize(const string &base, Checkpoint *cp,
+                                         const string &section)
 {
-    UNSERIALIZE_SCALAR(count);
-    UNSERIALIZE_SCALAR(latched_count);
-    UNSERIALIZE_SCALAR(period);
-    UNSERIALIZE_SCALAR(mode);
-    UNSERIALIZE_SCALAR(output_high);
-    UNSERIALIZE_SCALAR(latch_on);
-    UNSERIALIZE_SCALAR(read_byte);
-    UNSERIALIZE_SCALAR(write_byte);
+    paramIn(cp, section, base + ".count", count);
+    paramIn(cp, section, base + ".latched_count", latched_count);
+    paramIn(cp, section, base + ".period", period);
+    paramIn(cp, section, base + ".mode", mode);
+    paramIn(cp, section, base + ".output_high", output_high);
+    paramIn(cp, section, base + ".latch_on", latch_on);
+    paramIn(cp, section, base + ".read_byte", read_byte);
+    paramIn(cp, section, base + ".write_byte", write_byte);
 
-    // unserialze the counter event
-    event.unserialize(cp, csprintf("%s.event", section));
+    Tick event_tick;
+    paramIn(cp, section, base + ".event_tick", event_tick);
+    if (event_tick)
+        event.schedule(event_tick);
 }
 
 TsunamiIO::PITimer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
@@ -426,33 +414,16 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
     return "tsunami 8254 Interval timer";
 }
 
-void
-TsunamiIO::PITimer::Counter::CounterEvent::serialize(std::ostream &os)
-{
-    Tick time = scheduled() ? when() : 0;
-    SERIALIZE_SCALAR(time);
-    SERIALIZE_SCALAR(interval);
-}
-
-void
-TsunamiIO::PITimer::Counter::CounterEvent::unserialize(Checkpoint *cp, const std::string &section)
-{
-    Tick time;
-    UNSERIALIZE_SCALAR(time);
-    UNSERIALIZE_SCALAR(interval);
-    if (time)
-        schedule(time);
-}
-
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
                      Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
                      Tick pio_latency, Tick ci)
-    : PioDevice(name, t), addr(a), clockInterval(ci), tsunami(t), rtc(t, ci)
+    : PioDevice(name, t), addr(a), clockInterval(ci), tsunami(t),
+      pitimer(name + "pitimer"), rtc(name + ".rtc", t, ci)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
+        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
                                        &TsunamiIO::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
         pioLatency = pio_latency * bus->clockRate;
@@ -680,7 +651,7 @@ TsunamiIO::cacheAccess(MemReqPtr &req)
 }
 
 void
-TsunamiIO::serialize(std::ostream &os)
+TsunamiIO::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(timerData);
     SERIALIZE_SCALAR(mask1);
@@ -691,14 +662,12 @@ TsunamiIO::serialize(std::ostream &os)
     SERIALIZE_SCALAR(picInterrupting);
 
     // Serialize the timers
-    nameOut(os, csprintf("%s.pitimer", name()));
-    pitimer.serialize(os);
-    nameOut(os, csprintf("%s.rtc", name()));
-    rtc.serialize(os);
+    pitimer.serialize("pitimer", os);
+    rtc.serialize("rtc", os);
 }
 
 void
-TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
+TsunamiIO::unserialize(Checkpoint *cp, const string &section)
 {
     UNSERIALIZE_SCALAR(timerData);
     UNSERIALIZE_SCALAR(mask1);
@@ -709,8 +678,8 @@ TsunamiIO::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(picInterrupting);
 
     // Unserialize the timers
-    pitimer.unserialize(cp, csprintf("%s.pitimer", section));
-    rtc.unserialize(cp, csprintf("%s.rtc", section));
+    pitimer.unserialize("pitimer", cp, section);
+    rtc.unserialize("rtc", cp, section);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)

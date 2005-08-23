@@ -53,7 +53,7 @@ IsaFake::IsaFake(const string &name, Addr a, MemoryController *mmu,
     mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
+        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
                                       &IsaFake::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
     }

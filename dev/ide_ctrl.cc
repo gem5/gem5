@@ -92,7 +92,7 @@ IdeController::IdeController(Params *p)
 
     // create the PIO and DMA interfaces
     if (params()->host_bus) {
-        pioInterface = newPioInterface(name(), params()->hier,
+        pioInterface = newPioInterface(name() + ".pio", params()->hier,
                                        params()->host_bus, this,
                                        &IdeController::cacheAccess);
 
@@ -101,10 +101,13 @@ IdeController::IdeController(Params *p)
                                              params()->host_bus, 1,
                                              true);
         pioLatency = params()->pio_latency * params()->host_bus->clockRate;
+    } else {
+        pioInterface = NULL;
+        dmaInterface = NULL;
     }
 
     // setup the disks attached to controller
-    memset(disks, 0, sizeof(IdeDisk *) * 4);
+    memset(disks, 0, sizeof(disks));
     dev[0] = 0;
     dev[1] = 0;
 
@@ -648,14 +651,17 @@ IdeController::serialize(std::ostream &os)
     SERIALIZE_SCALAR(bmi_size);
 
     // Serialize registers
-    SERIALIZE_ARRAY(bmi_regs.data, sizeof(bmi_regs));
-    SERIALIZE_ARRAY(dev, sizeof(dev));
-    SERIALIZE_ARRAY(config_regs.data, sizeof(config_regs));
+    SERIALIZE_ARRAY(bmi_regs.data,
+                    sizeof(bmi_regs.data) / sizeof(bmi_regs.data[0]));
+    SERIALIZE_ARRAY(dev, sizeof(dev) / sizeof(dev[0]));
+    SERIALIZE_ARRAY(config_regs.data,
+                    sizeof(config_regs.data) / sizeof(config_regs.data[0]));
 
     // Serialize internal state
     SERIALIZE_SCALAR(io_enabled);
     SERIALIZE_SCALAR(bm_enabled);
-    SERIALIZE_ARRAY(cmd_in_progress, sizeof(cmd_in_progress));
+    SERIALIZE_ARRAY(cmd_in_progress,
+                    sizeof(cmd_in_progress) / sizeof(cmd_in_progress[0]));
 }
 
 void
@@ -677,14 +683,17 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(bmi_size);
 
     // Unserialize registers
-    UNSERIALIZE_ARRAY(bmi_regs.data, sizeof(bmi_regs));
-    UNSERIALIZE_ARRAY(dev, sizeof(dev));
-    UNSERIALIZE_ARRAY(config_regs.data, sizeof(config_regs));
+    UNSERIALIZE_ARRAY(bmi_regs.data,
+                      sizeof(bmi_regs.data) / sizeof(bmi_regs.data[0]));
+    UNSERIALIZE_ARRAY(dev, sizeof(dev) / sizeof(dev[0]));
+    UNSERIALIZE_ARRAY(config_regs.data,
+                      sizeof(config_regs.data) / sizeof(config_regs.data[0]));
 
     // Unserialize internal state
     UNSERIALIZE_SCALAR(io_enabled);
     UNSERIALIZE_SCALAR(bm_enabled);
-    UNSERIALIZE_ARRAY(cmd_in_progress, sizeof(cmd_in_progress));
+    UNSERIALIZE_ARRAY(cmd_in_progress,
+                      sizeof(cmd_in_progress) / sizeof(cmd_in_progress[0]));
 
     if (pioInterface) {
         pioInterface->addAddrRange(RangeSize(pri_cmd_addr, pri_cmd_size));

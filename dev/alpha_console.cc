@@ -63,7 +63,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     mmu->add_child(this, RangeSize(addr, size));
 
     if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
+        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
                                        &AlphaConsole::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
     }
