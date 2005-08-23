@@ -52,6 +52,24 @@ LinuxSystem::LinuxSystem(Params *p)
     : System(p)
 {
     Addr addr = 0;
+    Addr paddr = 0;
+
+    /**
+     * The symbol swapper_pg_dir marks the beginning of the kernel and
+     * the location of bootloader passed arguments
+     */
+    if (!kernelSymtab->findAddress("swapper_pg_dir", KernelStart)) {
+        panic("Could not determine start location of kernel");
+    }
+
+    /**
+     * Since we aren't using a bootloader, we have to copy the
+     * kernel arguments directly into the kernel's memory.
+     */
+    paddr = vtophys(physmem, CommandLine());
+    char *commandline = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
+    if (commandline)
+        strncpy(commandline, params->boot_osflags.c_str(), CommandLineSize);
 
     /**
      * find the address of the est_cycle_freq variable and insert it
@@ -59,7 +77,7 @@ LinuxSystem::LinuxSystem(Params *p)
      * calculated it by using the PIT, RTC, etc.
      */
     if (kernelSymtab->findAddress("est_cycle_freq", addr)) {
-        Addr paddr = vtophys(physmem, addr);
+        paddr = vtophys(physmem, addr);
         uint8_t *est_cycle_frequency =
             physmem->dma_addr(paddr, sizeof(uint64_t));
 
@@ -70,25 +88,13 @@ LinuxSystem::LinuxSystem(Params *p)
 
 
     /**
-     * Since we aren't using a bootloader, we have to copy the kernel arguments
-     * directly into the kernels memory.
-     */
-    {
-        Addr paddr = vtophys(physmem, PARAM_ADDR);
-        char *commandline = (char*)physmem->dma_addr(paddr, sizeof(uint64_t));
-        if (commandline)
-            strcpy(commandline, params->boot_osflags.c_str());
-    }
-
-
-    /**
      * EV5 only supports 127 ASNs so we are going to tell the kernel that the
      * paritiuclar EV6 we have only supports 127 asns.
      * @todo At some point we should change ev5.hh and the palcode to support
      * 255 ASNs.
      */
     if (kernelSymtab->findAddress("dp264_mv", addr)) {
-        Addr paddr = vtophys(physmem, addr);
+        paddr = vtophys(physmem, addr);
         char *dp264_mv = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (dp264_mv) {

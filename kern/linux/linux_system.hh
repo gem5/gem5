@@ -29,12 +29,6 @@
 #ifndef __KERN_LINUX_LINUX_SYSTEM_HH__
 #define __KERN_LINUX_LINUX_SYSTEM_HH__
 
-/**
- * MAGIC address where the kernel arguments should go. Defined as
- * PARAM in linux kernel alpha-asm.
- */
-const Addr PARAM_ADDR = ULL(0xfffffc000030a000);
-
 class ExecContext;
 
 class BreakPCEvent;
@@ -52,6 +46,26 @@ class PrintThreadInfo;
  */
 class LinuxSystem : public System
 {
+  private:
+    /**
+     * Addresses defining where the kernel bootloader places various
+     * elements.  Details found in include/asm-alpha/system.h
+     */
+    Addr KernelStart; // Lookup the symbol swapper_pg_dir
+
+  public:
+    Addr InitStack() const { return KernelStart + 0x02000; }
+    Addr EmptyPGT() const  { return KernelStart + 0x04000; }
+    Addr EmptyPGE() const  { return KernelStart + 0x08000; }
+    Addr ZeroPGE() const   { return KernelStart + 0x0A000; }
+    Addr StartAddr() const { return KernelStart + 0x10000; }
+
+    Addr Param() const { return ZeroPGE() + 0x0; }
+    Addr CommandLine() const { return Param() + 0x0; }
+    Addr InitrdStart() const { return Param() + 0x100; }
+    Addr InitrdSize() const { return Param() + 0x108; }
+    static const int CommandLineSize = 256;
+
   private:
 #ifndef NDEBUG
     /** Event to halt the simulator if the kernel calls panic()  */
