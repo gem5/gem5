@@ -92,7 +92,8 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     }
 
     // Setup the model name
-    sprintf((char *)driveID.atap_model, "5MI EDD si k");
+    strncpy((char *)driveID.atap_model, "5MI EDD si k",
+            sizeof(driveID.atap_model));
     // Set the maximum multisector transfer size
     driveID.atap_multi = MAX_MULTSECT;
     // IORDY supported, IORDY disabled, LBA enabled, DMA enabled

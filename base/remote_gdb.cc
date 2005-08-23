@@ -834,7 +834,7 @@ RemoteGDB::trap(int type)
         active = true;
     else
         // Tell remote host that an exception has occurred.
-        sprintf((char *)buffer, "S%02x", signal(type));
+        snprintf((char *)buffer, sizeof(buffer), "S%02x", signal(type));
         send(buffer);
 
     // Stick frame regs into our reg cache.
@@ -852,7 +852,7 @@ RemoteGDB::trap(int type)
             // if this command came from a running gdb, answer it --
             // the other guy has no way of knowing if we're in or out
             // of this loop when he issues a "remote-signal".
-            sprintf((char *)buffer, "S%02x", signal(type));
+            snprintf((char *)buffer, sizeof(buffer), "S%02x", signal(type));
             send(buffer);
             continue;
 
