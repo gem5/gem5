@@ -45,6 +45,12 @@
 import sys
 import os
 
+# Check for recent-enough Python version
+(major, minor) = sys.version_info[:2]
+if major < 2 or (major == 2 and minor < 3):
+    print "Error: M5 requires Python 2.3 or later."
+    sys.exit(1)
+
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
 
