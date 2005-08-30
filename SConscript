@@ -366,18 +366,11 @@ if env['FULL_SYSTEM']:
 else:
     sources += syscall_emulation_sources
 
-extra_libraries = []
-env.Append(LIBS=['z'])
-if isdir('/usr/lib64/mysql') or isdir('/usr/lib/mysql') or \
-   isdir('/usr/local/lib/mysql'):
-    print 'Compiling with MySQL support!'
-    env.Append(LIBPATH=['/usr/lib64/mysql', '/usr/local/lib/mysql/',
-                        '/usr/lib/mysql'])
-    env.Append(CPPPATH=['/usr/local/include/mysql', '/usr/include/mysql'])
+if env['USE_MYSQL']:
     sources += mysql_sources
-    env.Append(CPPDEFINES = 'USE_MYSQL')
-    env.Append(CPPDEFINES = 'STATS_BINNING')
-    env.Append(LIBS=['mysqlclient'])
+
+for opt in env.ExportOptions:
+    env.ConfigFile(opt)
 
 ###################################################
 #
@@ -421,7 +414,6 @@ def make_objs(sources, env):
     date_obj = env.Object('base/date.cc')
     env.Depends(date_obj, objs)
     objs.append(date_obj)
-    objs.extend(extra_libraries)
     return objs
 
 ###################################################

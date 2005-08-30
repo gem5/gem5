@@ -62,6 +62,7 @@
 #include "base/stats/flags.hh"
 #include "base/stats/visit.hh"
 #include "base/stats/types.hh"
+#include "config/stats_binning.hh"
 #include "sim/host.hh"
 
 class Callback;
@@ -2184,7 +2185,7 @@ class SumNode : public Node
  * binned.  If the typedef is NoBin, nothing is binned.  If it is
  * MainBin, then all stats are binned under that Bin.
  */
-#if defined(STATS_BINNING)
+#if STATS_BINNING
 typedef MainBin DefaultBin;
 #else
 typedef NoBin DefaultBin;

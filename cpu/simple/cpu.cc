@@ -59,7 +59,7 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "base/remote_gdb.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
@@ -115,7 +115,7 @@ SimpleCPU::SimpleCPU(Params *p)
       cacheCompletionEvent(this)
 {
     _status = Idle;
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
 
     // initialize CPU, including PC
@@ -562,7 +562,7 @@ SimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 }
 
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 Addr
 SimpleCPU::dbg_vtophys(Addr addr)
 {
@@ -608,7 +608,7 @@ SimpleCPU::processCacheCompletion()
     }
 }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 void
 SimpleCPU::post_interrupt(int int_num, int index)
 {
@@ -631,7 +631,7 @@ SimpleCPU::tick()
 
     Fault fault = No_Fault;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     if (checkInterrupts && check_interrupts() && !xc->inPalMode() &&
         status() != IcacheMissComplete) {
         int ipl = 0;
@@ -692,7 +692,7 @@ SimpleCPU::tick()
         // Try to fetch an instruction
 
         // set up memory request for instruction fetch
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #define IFETCH_FLAGS(pc)	((pc) & 1) ? PHYSICAL : 0
 #else
 #define IFETCH_FLAGS(pc)	0
@@ -744,7 +744,7 @@ SimpleCPU::tick()
         traceData = Trace::getInstRecord(curTick, xc, this, curStaticInst,
                                          xc->regs.pc);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         xc->setInst(inst);
 #endif // FULL_SYSTEM
 
@@ -752,7 +752,7 @@ SimpleCPU::tick()
 
         fault = curStaticInst->execute(this, traceData);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         if (xc->fnbin)
             xc->execute(curStaticInst.get());
 #endif
@@ -778,7 +778,7 @@ SimpleCPU::tick()
     }	// if (fault == No_Fault)
 
     if (fault != No_Fault) {
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         xc->ev5_trap(fault);
 #else // !FULL_SYSTEM
         fatal("fault (%d) detected @ PC 0x%08p", fault, xc->regs.pc);
@@ -790,7 +790,7 @@ SimpleCPU::tick()
         xc->regs.npc += sizeof(MachInst);
     }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     Addr oldpc;
     do {
         oldpc = xc->regs.pc;
@@ -818,7 +818,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
     SimObjectParam<FunctionalMemory *> mem;
@@ -850,7 +850,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
     INIT_PARAM(mem, "memory"),
@@ -888,7 +888,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->dcache_interface = (dcache) ? dcache->getInterface() : NULL;
     params->width = width;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
     params->mem = mem;

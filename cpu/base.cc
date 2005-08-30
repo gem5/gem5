@@ -51,7 +51,7 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
     : SimObject(p->name), clock(p->clock), checkInterrupts(true),
       params(p), number_of_threads(p->numberOfThreads), system(p->system)
@@ -122,7 +122,7 @@ BaseCPU::BaseCPU(Params *p)
                 p->max_loads_all_threads, *counter);
     }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     memset(interrupts, 0, sizeof(interrupts));
     intstatus = 0;
 #endif
@@ -189,7 +189,7 @@ BaseCPU::registerExecContexts()
 {
     for (int i = 0; i < execContexts.size(); ++i) {
         ExecContext *xc = execContexts[i];
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         int id = params->cpu_id;
         if (id != -1)
             id += i;
@@ -219,7 +219,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 
         newXC->takeOverFrom(oldXC);
         assert(newXC->cpu_id == oldXC->cpu_id);
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         system->replaceExecContext(newXC, newXC->cpu_id);
 #else
         assert(newXC->process == oldXC->process);
@@ -227,7 +227,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 #endif
     }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     for (int i = 0; i < NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
@@ -235,7 +235,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 }
 
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 void
 BaseCPU::post_interrupt(int int_num, int index)
 {

@@ -34,6 +34,7 @@
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
+#include "config/alpha_tlaser.hh"
 #include "cpu/exec_context.hh"
 #include "sim/builder.hh"
 
@@ -107,7 +108,7 @@ AlphaTLB::checkCacheability(MemReqPtr &req)
      */
 
 
-#ifdef ALPHA_TLASER
+#if ALPHA_TLASER
     if (req->paddr & PAddrUncachedBit39) {
 #else
     if (req->paddr & PAddrUncachedBit43) {
@@ -129,7 +130,7 @@ AlphaTLB::checkCacheability(MemReqPtr &req)
             // mark request as uncacheable
             req->flags |= UNCACHEABLE;
 
-#ifndef ALPHA_TLASER
+#if !ALPHA_TLASER
             // Clear bits 42:35 of the physical address (10-2 in Tsunami manual)
             req->paddr &= PAddrUncachedMask;
 #endif
@@ -323,7 +324,7 @@ AlphaITB::translate(MemReqPtr &req) const
 
         // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13> for EV5
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
-#ifdef ALPHA_TLASER
+#if ALPHA_TLASER
         if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
             VAddrSpaceEV5(req->vaddr) == 2) {
 #else
@@ -339,7 +340,7 @@ AlphaITB::translate(MemReqPtr &req) const
 
             req->paddr = req->vaddr & PAddrImplMask;
 
-#ifndef ALPHA_TLASER
+#if !ALPHA_TLASER
             // sign extend the physical address properly
             if (req->paddr & PAddrUncachedBit40)
                 req->paddr |= ULL(0xf0000000000);
@@ -529,7 +530,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
         }
 
         // Check for "superpage" mapping
-#ifdef ALPHA_TLASER
+#if ALPHA_TLASER
         if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
             VAddrSpaceEV5(req->vaddr) == 2) {
 #else
@@ -547,7 +548,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
             req->paddr = req->vaddr & PAddrImplMask;
 
-#ifndef ALPHA_TLASER
+#if !ALPHA_TLASER
             // sign extend the physical address properly
             if (req->paddr & PAddrUncachedBit40)
                 req->paddr |= ULL(0xf0000000000);

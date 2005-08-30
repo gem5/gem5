@@ -29,6 +29,7 @@
 #ifndef __CPU_O3_CPU_ROB_IMPL_HH__
 #define __CPU_O3_CPU_ROB_IMPL_HH__
 
+#include "config/full_system.hh"
 #include "cpu/o3/rob.hh"
 
 template <class Impl>
@@ -209,7 +210,7 @@ ROB<Impl>::doSquash()
         // will never be false.  Normally the squash would never be able
         // to go past the head of the ROB; in this case it might, so it
         // must be handled otherwise it will segfault.
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
         if (squashIt == cpu->instList.begin()) {
             DPRINTF(ROB, "ROB: Reached head of instruction list while "
                     "squashing.\n");

@@ -28,11 +28,12 @@
 
 #include <vector>
 
-#ifdef USE_MYSQL
+#include "base/stats/events.hh"
+
+#if USE_MYSQL
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/mysql.hh"
-#include "base/stats/events.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/mysql_run.hh"
 #include "base/str.hh"
@@ -51,7 +52,7 @@ Tick EventStart = ULL(0x7fffffffffffffff);
 
 ObjectMatch event_ignore;
 
-#ifdef USE_MYSQL
+#if USE_MYSQL
 class InsertEvent
 {
   private:

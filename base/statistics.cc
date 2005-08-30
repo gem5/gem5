@@ -42,6 +42,7 @@
 #include "base/time.hh"
 #include "base/trace.hh"
 #include "base/stats/statdb.hh"
+#include "config/stats_binning.hh"
 
 using namespace std;
 
@@ -285,7 +286,7 @@ check()
 
     Database::stats().sort(StatData::less);
 
-#if defined(STATS_BINNING)
+#if STATS_BINNING
     if (MainBin::curBin() == NULL) {
         static MainBin mainBin("main bin");
         mainBin.activate();

@@ -28,6 +28,7 @@
 
 #include <list>
 
+#include "config/full_system.hh"
 #include "cpu/o3/rename.hh"
 
 template <class Impl>
@@ -232,7 +233,7 @@ SimpleRename<Impl>::doSquash()
 
     InstSeqNum squashed_seq_num = fromCommit->commitInfo.doneSeqNum;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     assert(!historyBuffer.empty());
 #else
     // After a syscall squashes everything, the history buffer may be empty
@@ -543,7 +544,7 @@ SimpleRename<Impl>::tick()
 
     // Ugly code, revamp all of the tick() functions eventually.
     if (fromCommit->commitInfo.doneSeqNum != 0 && _status != Squashing) {
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
         if (!fromCommit->commitInfo.squash) {
             removeFromHistory(fromCommit->commitInfo.doneSeqNum);
         }

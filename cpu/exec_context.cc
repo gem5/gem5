@@ -31,7 +31,7 @@
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "base/cprintf.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
@@ -43,7 +43,7 @@
 using namespace std;
 
 // constructor
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaITB *_itb, AlphaDTB *_dtb,
                          FunctionalMemory *_mem)
@@ -78,7 +78,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
 
 ExecContext::~ExecContext()
 {
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     delete kernelStats;
 #endif
 }
@@ -89,7 +89,7 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 {
     // some things should already be set up
     assert(mem == oldContext->mem);
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     assert(system == oldContext->system);
 #else
     assert(process == oldContext->process);
@@ -106,7 +106,7 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
     oldContext->_status = ExecContext::Unallocated;
 }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 void
 ExecContext::execute(const StaticInstBase *inst)
 {
@@ -124,7 +124,7 @@ ExecContext::serialize(ostream &os)
     SERIALIZE_SCALAR(func_exe_inst);
     SERIALIZE_SCALAR(inst);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     kernelStats->serialize(os);
 #endif
 }
@@ -139,7 +139,7 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(func_exe_inst);
     UNSERIALIZE_SCALAR(inst);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     kernelStats->unserialize(cp, section);
 #endif
 }
@@ -161,7 +161,7 @@ ExecContext::suspend()
     if (status() == Suspended)
         return;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
     if (cpu->check_interrupts()) {
         assert(status() == Active);
@@ -197,7 +197,7 @@ ExecContext::halt()
 void
 ExecContext::regStats(const string &name)
 {
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     kernelStats->regStats(name + ".kern");
 #endif
 }
@@ -208,7 +208,7 @@ ExecContext::trap(Fault fault)
     //TheISA::trap(fault);    //One possible way to do it...
 
     /** @todo: Going to hack it for now.  Do a true fixup later. */
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     ev5_trap(fault);
 #else
     fatal("fault (%d) detected @ PC 0x%08p", fault, readPC());

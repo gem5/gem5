@@ -42,13 +42,14 @@
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/exec_context.hh"
 #include "sim/process.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "arch/alpha/ev5.hh"
 using namespace EV5;
 #endif
@@ -62,7 +63,7 @@ class BaseFullCPU : public BaseCPU
   public:
     typedef BaseCPU::Params Params;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     BaseFullCPU(Params &params);
 #else
     BaseFullCPU(Params &params);
@@ -143,7 +144,7 @@ class FullO3CPU : public BaseFullCPU
     /** Get the current instruction sequence number, and increment it. */
     InstSeqNum getAndIncrementInstSeq();
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     /** Check if this address is a valid instruction address. */
     bool validInstAddr(Addr addr) { return true; }
 
@@ -325,7 +326,7 @@ class FullO3CPU : public BaseFullCPU
     /** Temporary function to get pointer to exec context. */
     ExecContext *xcBase()
     {
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         return system->execContexts[0];
 #else
         return thread[0];
@@ -334,7 +335,7 @@ class FullO3CPU : public BaseFullCPU
 
     InstSeqNum globalSeqNum;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     System *system;
 
     MemoryController *memCtrl;

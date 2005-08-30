@@ -36,6 +36,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
+#include "config/full_system.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/smt.hh"
 #include "encumbered/cpu/full/thread.hh"
@@ -58,7 +59,7 @@ using namespace std;
 // when there's no OS: thus there's no resone to use it in FULL_SYSTEM
 // mode when we do have an OS
 //
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #error "process.cc not compatible with FULL_SYSTEM"
 #endif
 

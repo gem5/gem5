@@ -105,17 +105,20 @@ def toInteger(value):
 
     return result
 
+_bool_dict = {
+    'true' : True,   't' : True,  'yes' : True, 'y' : True,  '1' : True,
+    'false' : False, 'f' : False, 'no' : False, 'n' : False, '0' : False
+    }
+
 def toBool(value):
     if not isinstance(value, str):
         raise TypeError, "wrong type '%s' should be str" % type(value)
 
     value = value.lower()
-    if value == "true" or value == "t" or value == "yes" or value == "y":
-        return True
-    elif value == "false" or value == "f" or value == "no" or value == "n":
-        return False
-
-    raise ValueError, "cannot convert '%s' to bool" % value
+    result = _bool_dict.get(value, None)
+    if result == None:
+        raise ValueError, "cannot convert '%s' to bool" % value
+    return result
 
 def toFrequency(value):
     if not isinstance(value, str):

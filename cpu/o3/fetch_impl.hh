@@ -80,7 +80,7 @@ SimpleFetch<Impl>::SimpleFetch(Params &params)
     memReq = new MemReq();
     // Not sure of this parameter.  I think it should be based on the
     // thread number.
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     memReq->asid = 0;
 #else
     memReq->asid = 0;
@@ -229,7 +229,7 @@ SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
     // of the instructions in the cache line until either the end of the
     // cache line or a predicted taken branch is encountered.
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     // Flag to say whether or not address is physical addr.
     unsigned flags = cpu->inPalMode() ? PHYSICAL : 0;
 #else
@@ -605,7 +605,7 @@ SimpleFetch<Impl>::fetch()
         DPRINTF(Fetch, "Fetch: Blocked, need to handle the trap.\n");
 
         _status = Blocked;
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 //        cpu->trap(fault);
         // Send a signal to the ROB indicating that there's a trap from the
         // fetch stage that needs to be handled.  Need to indicate that

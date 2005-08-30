@@ -29,9 +29,11 @@
 #ifndef __ARCH_ALPHA_EV5_HH__
 #define __ARCH_ALPHA_EV5_HH__
 
+#include "config/alpha_tlaser.hh"
+
 namespace EV5 {
 
-#ifdef ALPHA_TLASER
+#if ALPHA_TLASER
 const uint64_t AsnMask = ULL(0x7f);
 #else
 const uint64_t AsnMask = ULL(0xff);
@@ -46,7 +48,7 @@ inline Addr VAddrOffset(Addr a) { return a & AlphaISA::PageOffset; }
 inline Addr VAddrSpaceEV5(Addr a) { return a >> 41 & 0x3; }
 inline Addr VAddrSpaceEV6(Addr a) { return a >> 41 & 0x7f; }
 
-#ifdef ALPHA_TLASER
+#if ALPHA_TLASER
 inline bool PAddrIprSpace(Addr a) { return a >= ULL(0xFFFFF00000); }
 const int PAddrImplBits = 40;
 #else
@@ -60,7 +62,7 @@ const Addr PAddrUncachedBit43 = ULL(0x80000000000);
 const Addr PAddrUncachedMask = ULL(0x807ffffffff); // Clear PA<42:35>
 inline Addr Phys2K0Seg(Addr addr)
 {
-#ifndef ALPHA_TLASER
+#if !ALPHA_TLASER
     if (addr & PAddrUncachedBit43) {
         addr &= PAddrUncachedMask;
         addr |= PAddrUncachedBit40;

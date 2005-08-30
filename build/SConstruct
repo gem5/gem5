@@ -45,11 +45,9 @@
 import sys
 import os
 
-# Check for recent-enough Python version
-(major, minor) = sys.version_info[:2]
-if major < 2 or (major == 2 and minor < 3):
-    print "Error: M5 requires Python 2.3 or later."
-    sys.exit(1)
+# Check for recent-enough Python and SCons versions
+EnsurePythonVersion(2,3)
+EnsureSConsVersion(0,96)
 
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
@@ -61,94 +59,15 @@ EXT_SRCDIR = os.path.join(ROOT, 'ext')
 # Check for 'm5' and 'ext' links, die if they don't exist.
 if not os.path.isdir(SRCDIR):
     print "Error: '%s' must be a link to the M5 source tree." % SRCDIR
-    sys.exit(1)
+    Exit(1)
 
 if not os.path.isdir('ext'):
     print "Error: '%s' must be a link to the M5 external source tree." \
           % EXT_SRCDIR
-    sys.exit(1)
+    Exit(1)
 
 # tell python where to find m5 python code
 sys.path.append(os.path.join(SRCDIR, 'python'))
-
-
-###################################################
-#
-# Define Configurations
-#
-# The build system infers the build options from the subdirectory name
-# that the simulator is built under.  The subdirectory name must be of
-# the form <CONFIG>[.<OPT>]*, where <CONFIG> is a base configuration
-# (e.g., ALPHA_SE or ALPHA_FS) and OPT is an option (e.g., MYSQL).  The
-# following code defines the standard configurations and options.
-# Additional local configurations and options are read from the file
-# 'local_configs' if it exists.
-#
-# Each base configuration or option is defined in two steps: a
-# function that takes an SCons build environment and modifies it
-# appropriately for that config or option, and an entry in the
-# 'configs_map' or 'options_map' dictionary that maps the directory
-# name string to the function.  (The directory names are all upper
-# case, by convention.)
-#
-###################################################
-
-# Base non-full-system Alpha ISA configuration.
-def AlphaSyscallEmulConfig(env):
-    env.Replace(TARGET_ISA = 'alpha')
-    env.Append(CPPDEFINES = 'SS_COMPATIBLE_FP')
-
-# Base full-system configuration.
-def AlphaFullSysConfig(env):
-    env.Replace(TARGET_ISA = 'alpha')
-    env.Replace(FULL_SYSTEM = True)
-    env.Append(CPPDEFINES = ['FULL_SYSTEM'])
-
-# Base configurations map.
-configs_map = {
-    'ALPHA_SE' : AlphaSyscallEmulConfig,
-    'ALPHA_FS' : AlphaFullSysConfig
-    }
-
-# Disable FastAlloc object allocation.
-def NoFastAllocOpt(env):
-    env.Append(CPPDEFINES = 'NO_FAST_ALLOC')
-
-# Enable efence
-def EfenceOpt(env):
-    env.Append(LIBS=['efence'])
-
-# Configuration options map.
-options_map = {
-    'NO_FAST_ALLOC' : NoFastAllocOpt,
-    'EFENCE' : EfenceOpt
-    }
-
-# The 'local_configs' file can be used to define additional base
-# configurations and/or options without changing this file.
-if os.path.isfile('local_configs'):
-    SConscript('local_configs', exports = ['configs_map', 'options_map'])
-
-# This function parses a directory name of the form <CONFIG>[.<OPT>]*
-# and sets up the build environment appropriately.  Returns True if
-# successful, False if the base config or any of the options were not
-# defined.
-def set_dir_options(dir, env):
-    parts = dir.split('.')
-    config = parts[0]
-    opts = parts[1:]
-    try:
-        configs_map[config](env)
-        map(lambda opt: options_map[opt](env), opts)
-        return True
-    except KeyError, key:
-        print "Config/option '%s' not found." % key
-        return False
-
-# Set the default configuration and binary.  The default target (if
-# scons is invoked at the top level with no command-line targets) is
-# 'ALPHA_SE/m5.debug'.  If scons is invoked in a subdirectory with no
-# command-line targets, the configuration
 
 ###################################################
 #
@@ -202,7 +121,7 @@ else:
     if not launch_dir.startswith(ROOT):
         print "Error: launch dir (%s) not a subdirectory of ROOT (%s)!" \
               (launch_dir, ROOT)
-        sys.exit(1)
+        Exit(1)
     # make launch_dir relative to ROOT (strip ROOT plus slash off front)
     launch_dir = launch_dir[len(ROOT)+1:]
     if len(COMMAND_LINE_TARGETS) != 0:
@@ -227,6 +146,12 @@ for t in my_targets:
     if dir not in build_dirs:
         build_dirs.append(dir)
 
+# Make a first pass to verify that build dirs are valid
+for build_dir in build_dirs:
+    if not os.path.isdir(build_dir):
+        print "Error: build directory", build_dir, "does not exist."
+        Exit(1)
+
 ###################################################
 #
 # Set up the default build environment.  This environment is copied
@@ -234,43 +159,69 @@ for t in my_targets:
 #
 ###################################################
 
-default_env = Environment(ENV = os.environ,  # inherit user's enviroment vars
-                          ROOT = ROOT,
-                          SRCDIR = SRCDIR,
-                          EXT_SRCDIR = EXT_SRCDIR,
-                          CPPDEFINES = [],
-                          FULL_SYSTEM = False,
-                          ALPHA_TLASER = False,
-                          USE_MYSQL = False)
+env = Environment(ENV = os.environ,  # inherit user's environment vars
+                  ROOT = ROOT,
+                  SRCDIR = SRCDIR,
+                  EXT_SRCDIR = EXT_SRCDIR)
 
-default_env.SConsignFile("sconsign")
+env.SConsignFile("sconsign")
 
-# For some reason, the CC and CXX variables don't get passed into the
-# environment correctly.  This is probably some sort of scons bug that
-# will eventually be fixed.
 if os.environ.has_key('CC'):
-    default_env.Replace(CC=os.environ['CC'])
+    env.Replace(CC=os.environ['CC'])
 
 if os.environ.has_key('CXX'):
-    default_env.Replace(CXX=os.environ['CXX'])
+    env.Replace(CXX=os.environ['CXX'])
 
 # M5_EXT is used by isa_parser.py to find the PLY package.
-default_env.Append(ENV = { 'M5_EXT' : EXT_SRCDIR })
+env.Append(ENV = { 'M5_EXT' : EXT_SRCDIR })
 
-default_env.Append(CCFLAGS='-pipe')
-default_env.Append(CCFLAGS='-fno-strict-aliasing')
-default_env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+# Set up default C++ compiler flags
+env.Append(CCFLAGS='-pipe')
+env.Append(CCFLAGS='-fno-strict-aliasing')
+env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
-    default_env.Append(CCFLAGS=Split("-Wno-uninitialized"))
-default_env.Append(CPPPATH=[os.path.join(EXT_SRCDIR + '/dnet')])
+    env.Append(CCFLAGS=Split("-Wno-uninitialized"))
+env.Append(CPPPATH=[os.path.join(EXT_SRCDIR + '/dnet')])
 
-# libelf build is described in its own SConscript file.  Using a
-# dictionary for exports lets us export "default_env" so the
-# SConscript will see it as "env".  SConscript-global is the build in
-# build/libelf shared among all configs.
-default_env.SConscript('m5/libelf/SConscript-global',
-                       exports={'env' : default_env})
+# Default libraries
+env.Append(LIBS=['z'])
+
+# Platform-specific configuration
+conf = Configure(env)
+
+# Check for <fenv.h> (C99 FP environment control)
+have_fenv = conf.CheckHeader('fenv.h', '<>')
+if not have_fenv:
+    print "Warning: Header file <fenv.h> not found."
+    print "         This host has no IEEE FP rounding mode control."
+
+# Check for mysql
+mysql_config = WhereIs('mysql_config')
+have_mysql = mysql_config != None
+
+env = conf.Finish()
+
+# The source operand is a Value node containing the value of the option.
+def build_config_file(target, source, env, option):
+    f = file(str(target[0]), 'w')
+    print >> f, '#define', option, source[0]
+    f.close()
+    return None
+
+def config_builder(env, option):
+    target = os.path.join('config', option.lower() + '.hh')
+    source = Value(env[option])
+    def my_build_config_file(target, source, env):
+        build_config_file(target, source, env, option)
+    env.Command(target, source, my_build_config_file)
+
+env.Append(BUILDERS = { 'ConfigFile' : config_builder })
+
+# libelf build is described in its own SConscript file.
+# SConscript-global is the build in build/libelf shared among all
+# configs.
+env.SConscript('m5/libelf/SConscript-global', exports = 'env')
 
 ###################################################
 #
@@ -278,20 +229,67 @@ default_env.SConscript('m5/libelf/SConscript-global',
 #
 ###################################################
 
+# rename base env
+base_env = env
+
 for build_dir in build_dirs:
     # Make a copy of the default environment to use for this config.
-    env = default_env.Copy()
-    # Modify 'env' according to the build directory config.
-    print "Configuring options for directory '%s'." % build_dir
-    if not set_dir_options(build_dir, env):
-        print "Skipping directory '%s'." % build_dir
-        continue
+    env = base_env.Copy()
+    # Set env according to the build directory config.
+    options_file = os.path.join(build_dir, 'build_options')
+    opts = Options(options_file, ARGUMENTS)
+    opts.AddOptions(
+        EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha')),
+        BoolOption('FULL_SYSTEM', 'Full-system support', False),
+        BoolOption('ALPHA_TLASER',
+                   'Model Alpha TurboLaser platform (vs. Tsunami)', False),
+        BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
+        BoolOption('EFENCE', 'Link with Electric Fence malloc debugger',
+                   False),
+        BoolOption('SS_COMPATIBLE_FP',
+                   'Make floating-point results compatible with SimpleScalar',
+                   False),
+        BoolOption('STATS_BINNING', 'Bin statistics by CPU mode', have_mysql),
+        BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
+        BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv)
+        )
 
+    opts.Update(env)
+    opts.Save(options_file, env)
+
+    env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
+                         'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
+                         'STATS_BINNING']
+
+    # Process option settings.
+
+    if not have_fenv and env['USE_FENV']:
+        print "Warning: <fenv.h> not available; " \
+              "forcing USE_FENV to False in", build_dir + "."
+        env['USE_FENV'] = False
+
+    if not env['USE_FENV']:
+        print "Warning: No IEEE FP rounding mode control in", build_dir + "."
+        print "         FP results may deviate slightly", \
+              "and some regression tests may fail."
+
+    if env['EFENCE']:
+        env.Append(LIBS=['efence'])
+
+    if env['USE_MYSQL']:
+        if not have_mysql:
+            print "Warning: MySQL not available; " \
+                  "forcing USE_MYSQL to False in", build_dir + "."
+            env['USE_MYSQL'] = False
+        else:
+            print "Compiling in", build_dir, "with MySQL support."
+            env.ParseConfig(mysql_config + ' --libs')
+            env.ParseConfig(mysql_config + ' --include')
+    
     # The m5/SConscript file sets up the build rules in 'env' according
     # to the configured options.
     SConscript('m5/SConscript', build_dir = build_dir, exports = 'env',
                duplicate=0)
-
 
 ###################################################
 #

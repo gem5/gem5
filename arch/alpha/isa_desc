@@ -45,30 +45,29 @@ output header {{
 #include <iostream>
 #include <iomanip>
 
+#include "config/ss_compatible_fp.hh"
 #include "cpu/static_inst.hh"
 #include "mem/mem_req.hh"  // some constructors use MemReq flags
 }};
 
 output decoder {{
 #include "base/cprintf.hh"
+#include "base/fenv.hh"
 #include "base/loader/symtab.hh"
+#include "config/ss_compatible_fp.hh"
 #include "cpu/exec_context.hh"  // for Jump::branchTarget()
 
 #include <math.h>
-#if defined(linux)
-#include <fenv.h>
-#endif
 }};
 
 output exec {{
 #include <math.h>
-#if defined(linux)
-#include <fenv.h>
-#endif
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "arch/alpha/pseudo_inst.hh"
 #endif
+#include "base/fenv.hh"
+#include "config/ss_compatible_fp.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
@@ -542,7 +541,7 @@ output exec {{
     /// instruction in full-system mode.
     /// @retval Full-system mode: No_Fault if FP is enabled, Fen_Fault
     /// if not.  Non-full-system mode: always returns No_Fault.
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
 	Fault fault = No_Fault;	// dummy... this ipr access should not fault
@@ -593,9 +592,8 @@ output header {{
 	};
 
       protected:
-#if defined(linux)
+	/// Map Alpha rounding mode to C99 constants from <fenv.h>.
 	static const int alphaToC99RoundingMode[];
-#endif
 
 	/// Map enum RoundingMode values to disassembly suffixes.
 	static const char *roundingModeSuffix[];
@@ -620,9 +618,7 @@ output header {{
 	    }
 	}
 
-#if defined(linux)
 	int getC99RoundingMode(uint64_t fpcr_val) const;
-#endif
 
 	// This differs from the AlphaStaticInst version only in
 	// printing suffixes for non-default rounding & trapping modes.
@@ -650,7 +646,6 @@ def template FloatingPointDecode {{
 }};
 
 output decoder {{
-#if defined(linux)
     int
     AlphaFP::getC99RoundingMode(uint64_t fpcr_val) const
     {
@@ -661,7 +656,6 @@ output decoder {{
 	    return alphaToC99RoundingMode[roundingMode];
 	}
     }
-#endif
 
     std::string
     AlphaFP::generateDisassembly(Addr pc, const SymbolTable *symtab) const
@@ -705,14 +699,12 @@ output decoder {{
 	return ss.str();
     }
 
-#if defined(linux)
     const int AlphaFP::alphaToC99RoundingMode[] = {
 	FE_TOWARDZERO,	// Chopped
 	FE_DOWNWARD,	// Minus_Infinity
 	FE_TONEAREST,	// Normal
 	FE_UPWARD	// Dynamic in inst, Plus_Infinity in FPCR
     };
-#endif
 
     const char *AlphaFP::roundingModeSuffix[] = { "c", "m", "", "d" };
     // mark invalid trapping modes, but don't fail on them, because
@@ -738,14 +730,11 @@ def format FloatingPointOperate(code, *opt_args) {{
     exec_output = BasicExecute.subst(fast_iop)
 
     gen_code_prefix = r'''
-#if defined(linux)
     fesetround(getC99RoundingMode(xc->readFpcr()));
-#endif
 '''
+
     gen_code_suffix = r'''
-#if defined(linux)
     fesetround(FE_TONEAREST);
-#endif
 '''
 
     gen_iop = InstObjParams(name, Name + 'General', 'AlphaFP',
@@ -2080,7 +2069,7 @@ decode OPCODE default Unknown::unknown() {
 		    1: decode INTIMM {
 			// return EV5 for FULL_SYSTEM and EV6 otherwise
 			1: implver({{
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 			     Rc = 1;
 #else
 			     Rc = 2;
@@ -2090,7 +2079,7 @@ decode OPCODE default Unknown::unknown() {
 		}
 	    }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 	    // The mysterious 11.25...
 	    0x25: WarnUnimpl::eleven25();
 #endif
@@ -2310,7 +2299,7 @@ decode OPCODE default Unknown::unknown() {
 	0xb: decode FA {
 	    31: decode FP_TYPEFUNC {
 		format FloatingPointOperate {
-#ifdef SS_COMPATIBLE_FP
+#if SS_COMPATIBLE_FP
 		    0x0b: sqrts({{
 			if (Fb < 0.0)
 			    fault = Arithmetic_Fault;
@@ -2350,7 +2339,7 @@ decode OPCODE default Unknown::unknown() {
 	// and source type.
 	0: decode FP_TYPEFUNC {
 	    format FloatingPointOperate {
-#ifdef SS_COMPATIBLE_FP
+#if SS_COMPATIBLE_FP
 		0x00: adds({{ Fc = Fa + Fb; }});
 		0x01: subs({{ Fc = Fa - Fb; }});
 		0x02: muls({{ Fc = Fa * Fb; }}, FloatMultOp);
@@ -2484,7 +2473,7 @@ decode OPCODE default Unknown::unknown() {
 
 	format BasicOperate {
 	    0xc000: rpcc({{
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         /* Rb is a fake dependency so here is a fun way to get
          * the parser to understand that.
          */
@@ -2517,7 +2506,7 @@ decode OPCODE default Unknown::unknown() {
 	    0x4400: wmb({{ }}, IsWriteBarrier, MemWriteOp);
 	}
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 	format BasicOperate {
 	    0xe000: rc({{
 		Ra = xc->readIntrFlag();
@@ -2536,7 +2525,7 @@ decode OPCODE default Unknown::unknown() {
 #endif
     }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     0x00: CallPal::call_pal({{
 	if (!palValid ||
 	    (palPriv
@@ -2574,7 +2563,7 @@ decode OPCODE default Unknown::unknown() {
     }
 #endif
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     format HwLoadStore {
 	0x1b: decode HW_LDST_QUAD {
 	    0: hw_ld({{ EA = (Rb + disp) & ~3; }}, {{ Ra = Mem.ul; }}, L);

@@ -68,7 +68,9 @@
 // (by bucket).
 // #define FAST_ALLOC_STATS
 
-#ifdef NO_FAST_ALLOC
+#include "config/no_fast_alloc.hh"
+
+#if NO_FAST_ALLOC
 
 class FastAlloc {
 };

@@ -32,6 +32,7 @@
 #include "base/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/fast/cpu.hh"
@@ -39,7 +40,7 @@
 #include "sim/debug.hh"
 #include "sim/sim_events.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 
 using namespace EV5;
 

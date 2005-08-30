@@ -26,41 +26,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_STATS_EVENTS_HH__
-#define __BASE_STATS_EVENTS_HH__
+#ifndef __BASE_FENV_HH__
+#define __BASE_FENV_HH__
 
-#include <string>
+#include "config/use_fenv.hh"
 
-#include "base/trace.hh"
-#include "config/use_mysql.hh"
+#if USE_FENV
 
-namespace Stats {
+#include <fenv.h>
 
-extern Tick EventStart;
+#else
 
-#if USE_MYSQL
-void __event(const std::string &stat);
-bool MySqlConnected();
-#endif
+// Dummy definitions to allow code to compile w/o a real <fenv.h>.
 
-bool ignoreEvent(const std::string &name);
+#define FE_TONEAREST    0
+#define FE_DOWNWARD     0
+#define FE_UPWARD       0
+#define FE_TOWARDZERO   0
 
-inline void
-recordEvent(const std::string &stat)
-{
-    if (EventStart > curTick)
-        return;
+inline int fesetround(int rounding_mode) { return 0; }
 
-    DPRINTF(StatEvents, "Statistics Event: %s\n", stat);
+#endif // USE_FENV
 
-#if USE_MYSQL
-    if (!MySqlConnected())
-        return;
 
-    __event(stat);
-#endif
-}
-
-/* namespace Stats */ }
-
-#endif // __BASE_STATS_EVENTS_HH__
+#endif // __BASE_FENV_HH__

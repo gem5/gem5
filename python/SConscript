@@ -151,7 +151,7 @@ def MakeDefinesPyFile(target, source, env):
     f = file(str(target[0]), 'w')
     print >>f, "import __main__"
     print >>f, "__main__.m5_build_env = ",
-    print >>f, scons_helper.flatten_defines(env['CPPDEFINES'])
+    print >>f, source[0]
     f.close()
 
 CFileCounter = 0
@@ -196,7 +196,10 @@ for root, dirs, files in os.walk(objpath, topdown=True):
             embedded_py_files.append(os.path.join(root, f))
 
 embedfile_hh = os.path.join(env['SRCDIR'], 'base/embedfile.hh')
-env.Command('defines.py', None, MakeDefinesPyFile)
+
+optionDict = dict([(opt, env[opt]) for opt in env.ExportOptions])
+env.Command('defines.py', Value(optionDict), MakeDefinesPyFile)
+
 env.Command('embedded_py.py', embedded_py_files, MakeEmbeddedPyFile)
 env.Depends('embedded_py.cc', embedfile_hh)
 env.Command('embedded_py.cc',

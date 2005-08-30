@@ -32,12 +32,13 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "config/full_system.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "targetarch/isa_traits.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 class System;
 #endif
 
@@ -55,7 +56,7 @@ class BaseCPU : public SimObject
     inline Tick cycles(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick / clock; }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
   protected:
     uint64_t interrupts[NumInterruptLevels];
     uint64_t intstatus;
@@ -109,7 +110,7 @@ class BaseCPU : public SimObject
         Tick clock;
         bool functionTrace;
         Tick functionTraceStart;
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         System *system;
         int cpu_id;
 #endif
@@ -153,7 +154,7 @@ class BaseCPU : public SimObject
      */
     EventQueue **comLoadEventQueue;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     System *system;
 
     /**

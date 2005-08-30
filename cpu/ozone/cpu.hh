@@ -30,6 +30,7 @@
 #define __CPU_OOO_CPU_OOO_CPU_HH__
 
 #include "base/statistics.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "encumbered/cpu/full/fu_pool.hh"
@@ -40,7 +41,7 @@
 #include "sim/eventq.hh"
 
 // forward declarations
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 class Processor;
 class AlphaITB;
 class AlphaDTB;
@@ -147,7 +148,7 @@ class OoOCPU : public BaseCPU
         MemInterface *icache_interface;
         MemInterface *dcache_interface;
         int width;
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         AlphaITB *itb;
         AlphaDTB *dtb;
         FunctionalMemory *mem;
@@ -173,7 +174,7 @@ class OoOCPU : public BaseCPU
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
 
     bool interval_stats;
@@ -279,7 +280,7 @@ class OoOCPU : public BaseCPU
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     bool validInstAddr(Addr addr) { return true; }
     bool validDataAddr(Addr addr) { return true; }
     int getInstAsid() { return xc->regs.instAsid(); }
@@ -381,7 +382,7 @@ class OoOCPU : public BaseCPU
     DynInstPtr commitTable[ISA::TotalNumRegs];
 
     // Might need a table of the shadow registers as well.
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     DynInstPtr palShadowTable[ISA::NumIntRegs];
 #endif
 
@@ -510,7 +511,7 @@ class OoOCPU : public BaseCPU
     uint64_t readFpcr() { return xc->readFpcr(); }
     void setFpcr(uint64_t val) { xc->setFpcr(val); }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     uint64_t readIpr(int idx, Fault &fault) { return xc->readIpr(idx, fault); }
     Fault setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
     Fault hwrei() { return xc->hwrei(); }

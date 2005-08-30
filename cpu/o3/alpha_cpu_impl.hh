@@ -39,7 +39,7 @@
 #include "cpu/o3/alpha_params.hh"
 #include "cpu/o3/comm.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/isa_traits.hh"
 //#include "arch/alpha/ev5.hh"
@@ -75,7 +75,7 @@ AlphaFullCPU<Impl>::regStats()
     this->commit.regStats();
 }
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
 
 // Will probably need to know which thread is calling syscall
 // Will need to pass that information in to the DynInst when it is constructed,
@@ -238,7 +238,7 @@ AlphaFullCPU<Impl>::copyFromXC()
     this->funcExeInst = this->xc->func_exe_inst;
 }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 
 template <class Impl>
 uint64_t *

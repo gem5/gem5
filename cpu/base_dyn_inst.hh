@@ -34,6 +34,7 @@
 
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/comm.hh"
@@ -467,7 +468,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
      * Replace the disjoint functional memory with a unified one and remove
      * this hack.
      */
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     req->paddr = req->vaddr;
 #endif
 
@@ -515,7 +516,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
      * Replace the disjoint functional memory with a unified one and remove
      * this hack.
      */
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     req->paddr = req->vaddr;
 #endif
 

@@ -29,6 +29,7 @@
 #ifndef __CPU_EXEC_CONTEXT_HH__
 #define __CPU_EXEC_CONTEXT_HH__
 
+#include "config/full_system.hh"
 #include "mem/functional/functional.hh"
 #include "mem/mem_req.hh"
 #include "sim/host.hh"
@@ -40,7 +41,7 @@ class FunctionalMemory;
 class PhysicalMemory;
 class BaseCPU;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 
 #include "sim/system.hh"
 #include "targetarch/alpha_memory.hh"
@@ -121,7 +122,7 @@ class ExecContext
     // it belongs.  For full-system mode, this is the system CPU ID.
     int cpu_id;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     FunctionalMemory *mem;
     AlphaITB *itb;
     AlphaDTB *dtb;
@@ -176,7 +177,7 @@ class ExecContext
     unsigned storeCondFailures;
 
     // constructor: initialize context from given process structure
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
                 AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
 #else
@@ -193,7 +194,7 @@ class ExecContext
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     bool validInstAddr(Addr addr) { return true; }
     bool validDataAddr(Addr addr) { return true; }
     int getInstAsid() { return regs.instAsid(); }
@@ -253,7 +254,7 @@ class ExecContext
     template <class T>
     Fault read(MemReqPtr &req, T &data)
     {
-#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
+#if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
             MiscRegFile *cregs = &req->xc->regs.miscRegs;
             cregs->lock_addr = req->paddr;
@@ -270,7 +271,7 @@ class ExecContext
     template <class T>
     Fault write(MemReqPtr &req, T &data)
     {
-#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
+#if FULL_SYSTEM && defined(TARGET_ALPHA)
 
         MiscRegFile *cregs;
 
@@ -404,7 +405,7 @@ class ExecContext
         regs.miscRegs.fpcr = val;
     }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     uint64_t readIpr(int idx, Fault &fault);
     Fault setIpr(int idx, uint64_t val);
     int readIntrFlag() { return regs.intrflag; }
@@ -423,7 +424,7 @@ class ExecContext
 
     void trap(Fault fault);
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     IntReg getSyscallArg(int i)
     {
         return regs.intRegFile[ArgumentReg0 + i];

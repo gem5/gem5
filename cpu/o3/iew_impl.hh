@@ -726,7 +726,7 @@ SimpleIEW<Impl>::iew()
     issueToExecQueue.advance();
 }
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
 template<class Impl>
 void
 SimpleIEW<Impl>::lsqWriteback()

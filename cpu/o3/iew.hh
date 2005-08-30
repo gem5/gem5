@@ -35,6 +35,7 @@
 
 #include <queue>
 
+#include "config/full_system.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/o3/comm.hh"
@@ -169,7 +170,7 @@ class SimpleIEW
 
     LDSTQ ldstQueue;
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
   public:
     void lsqWriteback();
 #endif

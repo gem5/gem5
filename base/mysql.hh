@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_MYQSL_HH__
-#define __BASE_MYQSL_HH__
+#ifndef __BASE_MYSQL_HH__
+#define __BASE_MYSQL_HH__
 
 #define TO_BE_INCLUDED_LATER 0
 
@@ -417,4 +417,4 @@ class Statement
 
 /* namespace MySQL */ }
 
-#endif // __BASE_MYQSL_HH__
+#endif // __BASE_MYSQL_HH__

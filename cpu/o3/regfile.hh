@@ -33,9 +33,10 @@
 
 #include "arch/alpha/isa_traits.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "arch/alpha/ev5.hh"
 #include "kern/kernel_stats.hh"
 
@@ -209,7 +210,7 @@ class PhysRegFile
         miscRegs.fpcr = val;
     }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     uint64_t readIpr(int idx, Fault &fault);
     Fault setIpr(int idx, uint64_t val);
     InternalProcReg *getIpr() { return ipr; }
@@ -235,7 +236,7 @@ class PhysRegFile
     /** Next-cycle program counter. */
     Addr npc;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
   private:
     // This is ISA specifc stuff; remove it eventually once ISAImpl is used
     IntReg palregs[NumIntRegs];	// PAL shadow registers
@@ -267,7 +268,7 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
     memset(floatRegFile, 0, sizeof(*floatRegFile));
 }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 
 //Problem:  This code doesn't make sense at the RegFile level because it
 //needs things such as the itb and dtb.  Either put it at the CPU level or
@@ -629,6 +630,6 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
     return No_Fault;
 }
 
-#endif // #ifdef FULL_SYSTEM
+#endif // #if FULL_SYSTEM
 
 #endif // __CPU_O3_CPU_REGFILE_HH__

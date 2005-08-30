@@ -32,6 +32,7 @@
 #include <utility>
 
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/pc_event.hh"
@@ -131,7 +132,7 @@ BreakPCEvent::process(ExecContext *xc)
         delete this;
 }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 extern "C"
 void
 sched_break_pc_sys(System *sys, Addr addr)

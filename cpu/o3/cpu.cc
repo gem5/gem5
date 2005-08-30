@@ -26,7 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef FULL_SYSTEM
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM
 #include "sim/system.hh"
 #else
 #include "sim/process.hh"
@@ -68,7 +70,7 @@ FullO3CPU<Impl>::TickEvent::description()
 //Call constructor to all the pipeline stages here
 template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(Params &params)
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     : BaseFullCPU(params),
 #else
     : BaseFullCPU(params),
@@ -105,7 +107,7 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
 
       globalSeqNum(1),
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
       system(params.system),
       memCtrl(system->memctrl),
       physmem(system->physmem),
@@ -125,12 +127,12 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
 {
     _status = Idle;
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     thread.resize(this->number_of_threads);
 #endif
 
     for (int i = 0; i < this->number_of_threads; ++i) {
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         assert(i == 0);
         system->execContexts[i] =
             new ExecContext(this, i, system, itb, dtb, mem);
@@ -153,7 +155,7 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
 
     // Note that this is a hack so that my code which still uses xc-> will
     // still work.  I should remove this eventually
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     xc = system->execContexts[0];
 #else
     xc = thread[0];
@@ -246,7 +248,7 @@ FullO3CPU<Impl>::init()
 
         // Need to do a copy of the xc->regs into the CPU's regfile so
         // that it can start properly.
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         ExecContext *src_xc = system->execContexts[0];
 #else
         ExecContext *src_xc = thread[0];

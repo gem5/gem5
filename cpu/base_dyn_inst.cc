@@ -166,7 +166,7 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
      * Replace the disjoint functional memory with a unified one and remove
      * this hack.
      */
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     req->paddr = req->vaddr;
 #endif
 

@@ -186,7 +186,7 @@ SimpleCommit<Impl>::commit()
     // in the IPR.  Look at IPR[EXC_ADDR];
     // hwrei() is what resets the PC to the place where instruction execution
     // beings again.
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     if (//checkInterrupts &&
         cpu->check_interrupts() &&
         !cpu->inPalMode(readCommitPC())) {
@@ -397,7 +397,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
     if (inst_fault != No_Fault && inst_fault != Fake_Mem_Fault) {
         if (!head_inst->isNop()) {
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
             cpu->trap(inst_fault);
 #else // !FULL_SYSTEM
             panic("fault (%d) detected @ PC %08p", inst_fault,

@@ -30,6 +30,7 @@
 #define __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
 
 #include "base/statistics.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/pc_event.hh"
@@ -38,7 +39,7 @@
 #include "sim/eventq.hh"
 
 // forward declarations
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 class Processor;
 class AlphaITB;
 class AlphaDTB;
@@ -130,7 +131,7 @@ class SimpleCPU : public BaseCPU
         MemInterface *icache_interface;
         MemInterface *dcache_interface;
         int width;
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         AlphaITB *itb;
         AlphaDTB *dtb;
         FunctionalMemory *mem;
@@ -148,7 +149,7 @@ class SimpleCPU : public BaseCPU
     void switchOut(Sampler *s);
     void takeOverFrom(BaseCPU *oldCPU);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
 
     bool interval_stats;
@@ -323,7 +324,7 @@ class SimpleCPU : public BaseCPU
     uint64_t readFpcr() { return xc->readFpcr(); }
     void setFpcr(uint64_t val) { xc->setFpcr(val); }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     uint64_t readIpr(int idx, Fault &fault) { return xc->readIpr(idx, fault); }
     Fault setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
     Fault hwrei() { return xc->hwrei(); }

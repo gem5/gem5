@@ -49,7 +49,7 @@ class AlphaSimpleParams : public BaseFullCPU::Params
 {
   public:
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     AlphaITB *itb; AlphaDTB *dtb;
 #else
     std::vector<Process *> workload;

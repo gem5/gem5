@@ -44,7 +44,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
   public:
     AlphaFullCPU(Params &params);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     AlphaITB *itb;
     AlphaDTB *dtb;
 #endif
@@ -52,7 +52,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
   public:
     void regStats();
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     //Note that the interrupt stuff from the base CPU might be somewhat
     //ISA specific (ie NumInterruptLevels).  These functions might not
     //be needed in FullCPU though.
@@ -131,7 +131,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     // Most of the full system code and syscall emulation is not yet
     // implemented.  These functions do show what the final interface will
     // look like.
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     uint64_t *getIpr();
     uint64_t readIpr(int idx, Fault &fault);
     Fault setIpr(int idx, uint64_t val);
@@ -149,7 +149,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 #endif
 
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
     // Need to change these into regfile calls that directly set a certain
     // register.  Actually, these functions should handle most of this
     // functionality by themselves; should look up the rename and then
@@ -191,7 +191,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     void copyFromXC();
 
   public:
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     bool palShadowEnabled;
 
     // Not sure this is used anywhere.
@@ -210,7 +210,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     template <class T>
     Fault read(MemReqPtr &req, T &data)
     {
-#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
+#if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
             MiscRegFile *cregs = &req->xc->regs.miscRegs;
             cregs->lock_addr = req->paddr;
@@ -233,7 +233,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     template <class T>
     Fault write(MemReqPtr &req, T &data)
     {
-#if defined(TARGET_ALPHA) && defined(FULL_SYSTEM)
+#if FULL_SYSTEM && defined(TARGET_ALPHA)
 
         MiscRegFile *cregs;
 

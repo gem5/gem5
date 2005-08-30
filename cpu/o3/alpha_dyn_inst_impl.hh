@@ -95,7 +95,7 @@ AlphaDynInst<Impl>::setFpcr(uint64_t val)
     this->cpu->setFpcr(val);
 }
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 template <class Impl>
 uint64_t
 AlphaDynInst<Impl>::readIpr(int idx, Fault &fault)

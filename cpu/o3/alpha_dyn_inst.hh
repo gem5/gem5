@@ -86,7 +86,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     uint64_t readFpcr();
     void setFpcr(uint64_t val);
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     uint64_t readIpr(int idx, Fault &fault);
     Fault setIpr(int idx, uint64_t val);
     Fault hwrei();

@@ -31,6 +31,7 @@
 
 #include "arch/alpha/faults.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
 #include "sim/host.hh"
 
 class FastCPU;
@@ -131,7 +132,7 @@ static const Addr PageBytes = ULL(1) << PageShift;
 static const Addr PageMask = ~(PageBytes - 1);
 static const Addr PageOffset = PageBytes - 1;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 
     typedef uint64_t InternalProcReg;
 
@@ -164,7 +165,7 @@ static const Addr PageOffset = PageBytes - 1;
         MiscRegFile miscRegs;		// control register file
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
         IntReg palregs[NumIntRegs];	// PAL shadow registers
         InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
         int intrflag;			// interrupt flag
@@ -291,7 +292,7 @@ const int ArgumentReg2 = TheISA::ArgumentReg2;
 const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
 const int MaxAddr = (Addr)-1;
 
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
 class SyscallReturn {
         public:
            template <class T>
@@ -328,7 +329,7 @@ class SyscallReturn {
 #endif
 
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 typedef TheISA::InternalProcReg InternalProcReg;
 const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
 const int NumInterruptLevels = TheISA::NumInterruptLevels;

@@ -45,7 +45,7 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 #include "base/remote_gdb.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
@@ -69,7 +69,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     Param<int> clock;
     Param<int> numThreads;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
 SimObjectParam<System *> system;
 Param<int> cpu_id;
 SimObjectParam<AlphaITB *> itb;
@@ -162,7 +162,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(clock, "clock speed"),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     INIT_PARAM(system, "System object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(itb, "Instruction translation buffer"),
@@ -273,7 +273,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
 {
     DerivAlphaFullCPU *cpu;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     // Full-system only supports a single thread for the moment.
     int actual_num_threads = 1;
 #else
@@ -295,7 +295,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params.name = getInstanceName();
     params.numberOfThreads = actual_num_threads;
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
     params.system = system;
     params.cpu_id = cpu_id;
     params.itb = itb;

@@ -34,7 +34,9 @@
 // when there's no OS: thus there's no reason to use it in FULL_SYSTEM
 // mode when we do have an OS.
 //
-#ifndef FULL_SYSTEM
+#include "config/full_system.hh"
+
+#if !FULL_SYSTEM
 
 #include <vector>
 
