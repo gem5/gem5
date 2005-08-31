@@ -196,11 +196,15 @@ have_mysql = mysql_config != None
 
 # Check MySQL version.
 if have_mysql:
-    mysql_vers = os.popen(mysql_config + ' --version').read()
-    mv = [int(v) for v in mysql_vers.split('.')]
+    mysql_version = os.popen(mysql_config + ' --version').read()
+    mysql_version = mysql_version.split('.')
+    mysql_major = int(mysql_version[0])
+    mysql_minor = int(mysql_version[1])
     # This version check is probably overly conservative, but it deals
     # with the versions we have installed.
-    if mv[0] < 3 or (mv[0] == 3 and mv[1] < 23) or (mv[0] == 4 and mv[1] < 1):
+    if mysql_major < 3 or \
+           mysql_major == 3 and mysql_minor < 23 or \
+           mysql_major == 4 and mysql_minor < 1:
         print "Warning: MySQL v3.23 or v4.1 or newer required."
         have_mysql = False
 
@@ -210,7 +214,7 @@ if have_mysql:
     if os.system(mysql_config_include + ' > /dev/null') != 0:
         # older mysql_config versions don't support --include, use
         # --cflags instead
-        mysql_config_include = mysql_config + ' --cflags'
+        mysql_config_include = mysql_config + ' --cflags | sed s/\\\'//g'
     # This seems to work in all versions
     mysql_config_libs = mysql_config + ' --libs'
 
