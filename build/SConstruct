@@ -146,12 +146,6 @@ for t in my_targets:
     if dir not in build_dirs:
         build_dirs.append(dir)
 
-# Make a first pass to verify that build dirs are valid
-for build_dir in build_dirs:
-    if not os.path.isdir(build_dir):
-        print "Error: build directory", build_dir, "does not exist."
-        Exit(1)
-
 ###################################################
 #
 # Set up the default build environment.  This environment is copied
@@ -256,7 +250,9 @@ for build_dir in build_dirs:
     # Make a copy of the default environment to use for this config.
     env = base_env.Copy()
     # Set env according to the build directory config.
-    options_file = os.path.join(build_dir, 'build_options')
+    options_file = os.path.join('build_options', build_dir)
+    if not os.path.isfile(options_file):
+        print "Options file %s not found, using defaults." % options_file
     opts = Options(options_file, ARGUMENTS)
     opts.AddOptions(
         EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha')),
