@@ -196,9 +196,29 @@ if not have_fenv:
     print "Warning: Header file <fenv.h> not found."
     print "         This host has no IEEE FP rounding mode control."
 
-# Check for mysql
+# Check for mysql.
 mysql_config = WhereIs('mysql_config')
 have_mysql = mysql_config != None
+
+# Check MySQL version.
+if have_mysql:
+    mysql_vers = os.popen(mysql_config + ' --version').read()
+    mv = [int(v) for v in mysql_vers.split('.')]
+    # This version check is probably overly conservative, but it deals
+    # with the versions we have installed.
+    if mv[0] < 3 or (mv[0] == 3 and mv[1] < 23) or (mv[0] == 4 and mv[1] < 1):
+        print "Warning: MySQL v3.23 or v4.1 or newer required."
+        have_mysql = False
+
+# Set up mysql_config commands.
+if have_mysql:
+    mysql_config_include = mysql_config + ' --include'
+    if os.system(mysql_config_include + ' > /dev/null') != 0:
+        # older mysql_config versions don't support --include, use
+        # --cflags instead
+        mysql_config_include = mysql_config + ' --cflags'
+    # This seems to work in all versions
+    mysql_config_libs = mysql_config + ' --libs'
 
 env = conf.Finish()
 
@@ -283,8 +303,8 @@ for build_dir in build_dirs:
             env['USE_MYSQL'] = False
         else:
             print "Compiling in", build_dir, "with MySQL support."
-            env.ParseConfig(mysql_config + ' --libs')
-            env.ParseConfig(mysql_config + ' --include')
+            env.ParseConfig(mysql_config_libs)
+            env.ParseConfig(mysql_config_include)
     
     # The m5/SConscript file sets up the build rules in 'env' according
     # to the configured options.
