@@ -223,7 +223,7 @@ env = conf.Finish()
 # The source operand is a Value node containing the value of the option.
 def build_config_file(target, source, env, option):
     f = file(str(target[0]), 'w')
-    print >> f, '#define', option, source[0]
+    print >> f, '#define', option, int(eval(str(source[0])))
     f.close()
     return None
 
