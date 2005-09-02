@@ -177,6 +177,7 @@ AlphaTLB::insert(Addr addr, AlphaISA::PTE &pte)
 void
 AlphaTLB::flushAll()
 {
+    DPRINTF(TLB, "flushAll\n");
     memset(table, 0, sizeof(AlphaISA::PTE[size]));
     lookupTable.clear();
     nlu = 0;
@@ -192,13 +193,16 @@ AlphaTLB::flushProcesses()
         AlphaISA::PTE *pte = &table[index];
         assert(pte->valid);
 
+        // we can't increment i after we erase it, so save a copy and
+        // increment it to get the next entry now
+        PageTable::iterator cur = i;
+        ++i;
+
         if (!pte->asma) {
             DPRINTF(TLB, "flush @%d: %#x -> %#x\n", index, pte->tag, pte->ppn);
             pte->valid = false;
-            lookupTable.erase(i);
+            lookupTable.erase(cur);
         }
-
-        ++i;
     }
 }
 
