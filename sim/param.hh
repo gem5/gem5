@@ -762,12 +762,14 @@ class SimObjectVectorParam<T *> : public SimObjectBaseParam
 // automatically invoked by REGISTER_SIM_OBJECT() (see sim_object.hh).
 //
 #define DEFINE_SIM_OBJECT_CLASS_NAME(CLASS_NAME, OBJ_CLASS)		\
+template<>								\
 void									\
 SimObjectParam<OBJ_CLASS *>::showType(std::ostream &os)	const		\
 {									\
     os << CLASS_NAME;							\
 }									\
                                                                         \
+template<>								\
 void									\
 SimObjectVectorParam<OBJ_CLASS *>::showType(std::ostream &os) const	\
 {									\
