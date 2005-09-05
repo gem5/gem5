@@ -31,12 +31,25 @@ def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
-# Add given directory to system module search path, if it is not
-# already there.
+def m5execfile(f, global_dict):
+    # copy current sys.path
+    oldpath = sys.path[:]
+    # push file's directory onto front of path
+    sys.path.insert(0, os.path.abspath(os.path.dirname(f)))
+    execfile(f, global_dict)
+    # restore original path
+    sys.path = oldpath
+
+# Prepend given directory to system module search path.
 def AddToPath(path):
+    # if it's a relative path and we know what directory the current
+    # python script is in, make the path relative to that directory.
+    if not os.path.isabs(path) and sys.path[0]:
+        path = os.path.join(sys.path[0], path)
     path = os.path.realpath(path)
-    if os.path.isdir(path) and path not in sys.path:
-        sys.path.append(path)
+    # sys.path[0] should always refer to the current script's directory,
+    # so place the new dir right after that.
+    sys.path.insert(1, path)
 
 # find the m5 compile options: must be specified as a dict in
 # __main__.m5_build_env.

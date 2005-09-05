@@ -160,11 +160,11 @@ env = Environment(ENV = os.environ,  # inherit user's environment vars
 
 env.SConsignFile("sconsign")
 
-if os.environ.has_key('CC'):
-    env.Replace(CC=os.environ['CC'])
-
-if os.environ.has_key('CXX'):
-    env.Replace(CXX=os.environ['CXX'])
+# I waffle on this setting... it does avoid a few painful but
+# unnecessary builds, but it also seems to make trivial builds take
+# noticeably longer.
+if False:
+    env.TargetSignatures('content')
 
 # M5_EXT is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_EXT' : EXT_SRCDIR })
@@ -220,26 +220,90 @@ if have_mysql:
 
 env = conf.Finish()
 
-# The source operand is a Value node containing the value of the option.
-def build_config_file(target, source, env, option):
-    f = file(str(target[0]), 'w')
-    print >> f, '#define', option, int(eval(str(source[0])))
-    f.close()
-    return None
+# Sticky options get saved in the options file so they persist from
+# one invocation to the next (unless overridden, in which case the new
+# value becomes sticky).
+sticky_opts = Options(args=ARGUMENTS)
+sticky_opts.AddOptions(
+    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha')),
+    BoolOption('FULL_SYSTEM', 'Full-system support', False),
+    BoolOption('ALPHA_TLASER',
+               'Model Alpha TurboLaser platform (vs. Tsunami)', False),
+    BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
+    BoolOption('EFENCE', 'Link with Electric Fence malloc debugger',
+               False),
+    BoolOption('SS_COMPATIBLE_FP',
+               'Make floating-point results compatible with SimpleScalar',
+               False),
+    BoolOption('STATS_BINNING', 'Bin statistics by CPU mode', have_mysql),
+    BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
+    BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
+    ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
+    ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX']))
+    )
 
-def config_builder(env, option):
-    target = os.path.join('config', option.lower() + '.hh')
-    source = Value(env[option])
-    def my_build_config_file(target, source, env):
-        build_config_file(target, source, env, option)
-    env.Command(target, source, my_build_config_file)
+# Non-sticky options only apply to the current build.
+nonsticky_opts = Options(args=ARGUMENTS)
+nonsticky_opts.AddOptions(
+    BoolOption('update_ref', 'Update test reference outputs', False)
+    )
 
-env.Append(BUILDERS = { 'ConfigFile' : config_builder })
+# These options get exported to #defines in config/*.hh (see m5/SConscript).
+env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
+                     'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
+                     'STATS_BINNING']
+
+# Define a handy 'no-op' action
+def no_action(target, source, env):
+    return 0
+
+env.NoAction = Action(no_action, None)
 
 # libelf build is described in its own SConscript file.
 # SConscript-global is the build in build/libelf shared among all
 # configs.
 env.SConscript('m5/libelf/SConscript-global', exports = 'env')
+
+###################################################
+#
+# Define a SCons builder for configuration flag headers.
+#
+###################################################
+
+# This function generates a config header file that #defines the
+# option symbol to the current option setting (0 or 1).  The source
+# operands are the name of the option and a Value node containing the
+# value of the option.
+def build_config_file(target, source, env):
+    (option, value) = [s.get_contents() for s in source]
+    f = file(str(target[0]), 'w')
+    print >> f, '#define', option, value
+    f.close()
+    return None
+
+# Generate the message to be printed when building the config file.
+def build_config_file_string(target, source, env):
+    (option, value) = [s.get_contents() for s in source]
+    return "Defining %s as %s in %s." % (option, value, target[0])
+
+# Combine the two functions into a scons Action object.
+config_action = Action(build_config_file, build_config_file_string)
+
+# The emitter munges the source & target node lists to reflect what
+# we're really doing.
+def config_emitter(target, source, env):
+    # extract option name from Builder arg
+    option = str(target[0])
+    # True target is config header file
+    target = os.path.join('config', option.lower() + '.hh')
+    # Force value to 0/1 even if it's a Python bool
+    val = int(eval(str(env[option])))
+    # Sources are option name & value (packaged in SCons Value nodes)
+    return ([target], [Value(option), Value(val)])
+
+config_builder = Builder(emitter = config_emitter, action = config_action)
+
+env.Append(BUILDERS = { 'ConfigFile' : config_builder })
 
 ###################################################
 #
@@ -255,31 +319,13 @@ for build_dir in build_dirs:
     env = base_env.Copy()
     # Set env according to the build directory config.
     options_file = os.path.join('build_options', build_dir)
-    if not os.path.isfile(options_file):
+    if os.path.isfile(options_file):
+        sticky_opts.files = [options_file]
+    else:
         print "Options file %s not found, using defaults." % options_file
-    opts = Options(options_file, ARGUMENTS)
-    opts.AddOptions(
-        EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha')),
-        BoolOption('FULL_SYSTEM', 'Full-system support', False),
-        BoolOption('ALPHA_TLASER',
-                   'Model Alpha TurboLaser platform (vs. Tsunami)', False),
-        BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
-        BoolOption('EFENCE', 'Link with Electric Fence malloc debugger',
-                   False),
-        BoolOption('SS_COMPATIBLE_FP',
-                   'Make floating-point results compatible with SimpleScalar',
-                   False),
-        BoolOption('STATS_BINNING', 'Bin statistics by CPU mode', have_mysql),
-        BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
-        BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv)
-        )
 
-    opts.Update(env)
-    opts.Save(options_file, env)
-
-    env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
-                         'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
-                         'STATS_BINNING']
+    sticky_opts.Update(env)
+    nonsticky_opts.Update(env)
 
     # Process option settings.
 
@@ -305,11 +351,21 @@ for build_dir in build_dirs:
             print "Compiling in", build_dir, "with MySQL support."
             env.ParseConfig(mysql_config_libs)
             env.ParseConfig(mysql_config_include)
-    
+
+    # Save sticky option settings back to file
+    sticky_opts.Save(options_file, env)
+
     # The m5/SConscript file sets up the build rules in 'env' according
-    # to the configured options.
-    SConscript('m5/SConscript', build_dir = build_dir, exports = 'env',
-               duplicate=0)
+    # to the configured options.  It returns a list of environments,
+    # one for each variant build (debug, opt, etc.)
+    envList = SConscript('m5/SConscript', build_dir = build_dir,
+                         exports = 'env', duplicate = False)
+
+    # Set up the regression tests for each build.
+    for e in envList:
+        SConscript('m5-test/SConscript',
+                   build_dir = os.path.join(build_dir, 'test', e.Label),
+                   exports = { 'env' : e }, duplicate = False)
 
 ###################################################
 #

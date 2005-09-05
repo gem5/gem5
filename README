@@ -61,21 +61,15 @@ make) to run N jobs in parallel.
 
 To build and test the syscall-emulation simulator:
 
-1. In $top/m5/build, run "scons ALPHA_SE/m5.opt".
-2. In $top/m5-test, run "./do-tests.pl -B ALPHA_SE".
-
-The tests should end with "finished do-tests successfully!"
-Note: if you're running under Cygwin, several tests will fail with an
-"EIO trace inconsistency: ICNT mismatch" error.  This is due to the
-lack of fesetround() under Cygwin causing differences in floating-point
-rounding.  Other than that discrepancy your simulator is working perfectly.
+	cd $top/m5/build
+	scons ALPHA_SE/test/opt/quick
 
 To build and test the full-system simualator:
 
-1. Download the full-system binary package from XXX.  This package includes
+1. Download the full-system binary package from
+   http://m5.eecs.umich.edu/dist/m5_system_1.1.tar.bz2.  This package includes
    disk images and kernel, palcode, and console binaries for Linux and FreeBSD.
 2. Edit SYSTEMDIR in $top/m5-test/SysPaths.py to point to your local copy
    of the binaries.
-3. In $top/m5/build, run "scons ALPHA_FS/m5.opt".
-4. In $top/m5-test, run "./do-tests.pl -B ALPHA_FS".
+3. In $top/m5/build, run "scons ALPHA_FS/opt/test/quick".
 

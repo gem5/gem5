@@ -430,25 +430,42 @@ def make_objs(sources, env):
 env.Append(CPPPATH='.')
 
 # Debug binary
-debug = env.Copy(OBJSUFFIX='.do')
-debug.Append(CCFLAGS=Split('-g -gstabs+ -O0'))
-debug.Append(CPPDEFINES='DEBUG')
-debug.Program(target = 'm5.debug', source = make_objs(sources, debug))
+debugEnv = env.Copy(OBJSUFFIX='.do')
+debugEnv.Label = 'debug'
+debugEnv.Append(CCFLAGS=Split('-g -gstabs+ -O0'))
+debugEnv.Append(CPPDEFINES='DEBUG')
+tlist = debugEnv.Program(target = 'm5.debug',
+                         source = make_objs(sources, debugEnv))
+debugEnv.M5Binary = tlist[0]
 
 # Optimized binary
-opt = env.Copy()
-opt.Append(CCFLAGS=Split('-g -O5'))
-opt.Program(target = 'm5.opt', source = make_objs(sources, opt))
+optEnv = env.Copy()
+optEnv.Label = 'opt'
+optEnv.Append(CCFLAGS=Split('-g -O5'))
+tlist = optEnv.Program(target = 'm5.opt',
+                       source = make_objs(sources, optEnv))
+optEnv.M5Binary = tlist[0]
 
 # "Fast" binary
-fast = env.Copy(OBJSUFFIX='.fo')
-fast.Append(CCFLAGS=Split('-O5'))
-fast.Append(CPPDEFINES='NDEBUG')
-fast.Program(target = 'm5.fast.unstripped', source = make_objs(sources, fast))
-fast.Command(target = 'm5.fast', source = 'm5.fast.unstripped',
-             action = 'strip $SOURCE -o $TARGET')
+fastEnv = env.Copy(OBJSUFFIX='.fo')
+fastEnv.Label = 'fast'
+fastEnv.Append(CCFLAGS=Split('-O5'))
+fastEnv.Append(CPPDEFINES='NDEBUG')
+fastEnv.Program(target = 'm5.fast.unstripped',
+                source = make_objs(sources, fastEnv))
+tlist = fastEnv.Command(target = 'm5.fast',
+                        source = 'm5.fast.unstripped',
+                        action = 'strip $SOURCE -o $TARGET')
+fastEnv.M5Binary = tlist[0]
 
 # Profiled binary
-prof = env.Copy(OBJSUFFIX='.po')
-prof.Append(CCFLAGS=Split('-O5 -g -pg'), LINKFLAGS='-pg')
-prof.Program(target = 'm5.prof', source = make_objs(sources, prof))
+profEnv = env.Copy(OBJSUFFIX='.po')
+profEnv.Label = 'prof'
+profEnv.Append(CCFLAGS=Split('-O5 -g -pg'), LINKFLAGS='-pg')
+tlist = profEnv.Program(target = 'm5.prof',
+                        source = make_objs(sources, profEnv))
+profEnv.M5Binary = tlist[0]
+
+envList = [debugEnv, optEnv, fastEnv, profEnv]
+
+Return('envList')
