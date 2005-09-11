@@ -256,14 +256,19 @@ def p_def_or_output(t):
 # Output blocks 'output <foo> {{...}}' (C++ code blocks) are copied
 # directly to the appropriate output section.
 
+
+# Protect any non-dict-substitution '%'s in a format string
+# (i.e. those not followed by '(')
+def protect_non_subst_percents(s):
+    return re.sub(r'%(?!\()', '%%', s)
+
 # Massage output block by substituting in template definitions and bit
 # operators.  We handle '%'s embedded in the string that don't
 # indicate template substitutions (or CPU-specific symbols, which get
 # handled in GenCode) by doubling them first so that the format
 # operation will reduce them back to single '%'s.
 def process_output(s):
-    # protect any non-substitution '%'s (not followed by '(')
-    s = re.sub(r'%(?!\()', '%%', s)
+    s = protect_non_subst_percents(s)
     # protects cpu-specific symbols too
     s = protect_cpu_symbols(s)
     return substBitOps(s % templateMap)
@@ -921,8 +926,12 @@ class Template:
             myDict.update(d.__dict__)
         else:
             raise TypeError, "Template.subst() arg must be or have dictionary"
+        # Protect non-Python-dict substitutions (e.g. if there's a printf
+        # in the templated C++ code)
+        template = protect_non_subst_percents(self.template)
         # CPU-model-specific substitutions are handled later (in GenCode).
-        return protect_cpu_symbols(self.template) % myDict
+        template = protect_cpu_symbols(template)
+        return template % myDict
 
     # Convert to string.  This handles the case when a template with a
     # CPU-specific term gets interpolated into another template or into

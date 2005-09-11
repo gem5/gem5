@@ -565,7 +565,7 @@ output header {{
      * instructions that require this support are derived from this
      * class; the rest derive directly from AlphaStaticInst.
      */
-    class AlphaFP : public  AlphaStaticInst
+    class AlphaFP : public AlphaStaticInst
     {
       public:
 	/// Alpha FP rounding modes.
@@ -607,15 +607,22 @@ output header {{
 	/// This instruction's trapping mode.
 	TrappingMode trappingMode;
 
+	/// Have we warned about this instruction's unsupported
+	/// rounding mode (if applicable)?
+	mutable bool warnedOnRounding;
+
+	/// Have we warned about this instruction's unsupported
+	/// trapping mode (if applicable)?
+	mutable bool warnedOnTrapping;
+
 	/// Constructor
 	AlphaFP(const char *mnem, MachInst _machInst, OpClass __opClass)
 	    : AlphaStaticInst(mnem, _machInst, __opClass),
 	      roundingMode((enum RoundingMode)FP_ROUNDMODE),
-	      trappingMode((enum TrappingMode)FP_TRAPMODE)
+	      trappingMode((enum TrappingMode)FP_TRAPMODE),
+	      warnedOnRounding(false),
+	      warnedOnTrapping(false)
 	{
-	    if (trappingMode != Imprecise) {
-		warn("precise FP traps unimplemented\n");
-	    }
 	}
 
 	int getC99RoundingMode(uint64_t fpcr_val) const;
@@ -628,22 +635,6 @@ output header {{
 
 }};
 
-
-def template FloatingPointDecode {{
- {
-     bool fast = (FP_TRAPMODE == AlphaFP::Imprecise
-		  && FP_ROUNDMODE == AlphaFP::Normal);
-     AlphaStaticInst *i =
-	 fast ? (AlphaStaticInst *)new %(class_name)sFast(machInst) :
-	        (AlphaStaticInst *)new %(class_name)sGeneral(machInst);
-
-     if (FC == 31) {
-	 i = makeNop(i);
-     }
-
-     return i;
- }
-}};
 
 output decoder {{
     int
@@ -715,6 +706,86 @@ output decoder {{
 	{ "", "v", "INVTM2", "INVTM3", "INVTM4", "sv", "INVTM6", "svi" };
 }};
 
+// FP instruction class execute method template.  Handles non-standard
+// rounding modes.
+def template FloatingPointExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+				  Trace::InstRecord *traceData) const
+    {
+	if (trappingMode != Imprecise) {
+	    warn("%s: non-standard trapping mode not supported",
+		 generateDisassembly(0, NULL));
+	    warnedOnTrapping = true;
+	}
+
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_rd)s;
+#if USE_FENV
+	if (roundingMode == Normal) {
+	    %(code)s;
+	} else {
+	    fesetround(getC99RoundingMode(xc->readFpcr()));
+	    %(code)s;
+	    fesetround(FE_TONEAREST);
+	}
+#else
+	if (roundingMode != Normal && !warnedOnRounding) {
+	    warn("%s: non-standard rounding mode not supported",
+		 generateDisassembly(0, NULL));
+	    warnedOnRounding = true;
+	}
+	%(code)s;
+#endif
+
+	if (fault == No_Fault) {
+	    %(op_wb)s;
+	}
+
+	return fault;
+    }
+}};
+
+// FP instruction class execute method template where no dynamic
+// rounding mode control is needed.  Like BasicExecute, but includes
+// check & warning for non-standard trapping mode.
+def template FPFixedRoundingExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+				  Trace::InstRecord *traceData) const
+    {
+	if (trappingMode != Imprecise) {
+	    warn("%s: non-standard trapping mode not supported",
+		 generateDisassembly(0, NULL));
+	    warnedOnTrapping = true;
+	}
+
+	Fault fault = No_Fault;
+
+	%(fp_enable_check)s;
+	%(op_decl)s;
+	%(op_rd)s;
+	%(code)s;
+
+	if (fault == No_Fault) {
+	    %(op_wb)s;
+	}
+
+	return fault;
+    }
+}};
+
+def template FloatingPointDecode {{
+ {
+     AlphaStaticInst *i = new %(class_name)s(machInst);
+     if (FC == 31) {
+	 i = makeNop(i);
+     }
+     return i;
+ }
+}};
+
 // General format for floating-point operate instructions:
 // - Checks trapping and rounding mode flags.  Trapping modes
 //   currently unimplemented (will fail).
@@ -722,28 +793,20 @@ output decoder {{
 def format FloatingPointOperate(code, *opt_args) {{
     iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code), opt_args)
     decode_block = FloatingPointDecode.subst(iop)
-
-    fast_iop = InstObjParams(name, Name + 'Fast', 'AlphaFP',
-			     CodeBlock(code), opt_args)
-    header_output = BasicDeclare.subst(fast_iop)
-    decoder_output = BasicConstructor.subst(fast_iop)
-    exec_output = BasicExecute.subst(fast_iop)
-
-    gen_code_prefix = r'''
-    fesetround(getC99RoundingMode(xc->readFpcr()));
-'''
-
-    gen_code_suffix = r'''
-    fesetround(FE_TONEAREST);
-'''
-
-    gen_iop = InstObjParams(name, Name + 'General', 'AlphaFP',
-    CodeBlock(gen_code_prefix + code + gen_code_suffix), opt_args)
-    header_output += BasicDeclare.subst(gen_iop)
-    decoder_output += BasicConstructor.subst(gen_iop)
-    exec_output += BasicExecute.subst(gen_iop)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    exec_output = FloatingPointExecute.subst(iop)
 }};
 
+// Special format for cvttq where rounding mode is pre-decoded
+def format FPFixedRounding(code, class_suffix, *opt_args) {{
+    Name += class_suffix
+    iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code), opt_args)
+    decode_block = FloatingPointDecode.subst(iop)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    exec_output = FPFixedRoundingExecute.subst(iop)
+}};
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -2193,30 +2256,30 @@ decode OPCODE default Unknown::unknown() {
 	0x1c: decode INTFUNC {
 	    0x00: decode RA { 31: sextb({{ Rc.sb = Rb_or_imm< 7:0>; }}); }
 	    0x01: decode RA { 31: sextw({{ Rc.sw = Rb_or_imm<15:0>; }}); }
-        0x32: ctlz({{
-            uint64_t count = 0;
-            uint64_t temp = Rb;
-            if (temp<63:32>) temp >>= 32; else count += 32;
-            if (temp<31:16>) temp >>= 16; else count += 16;
-            if (temp<15:8>) temp >>= 8; else count += 8;
-            if (temp<7:4>) temp >>= 4; else count += 4;
-            if (temp<3:2>) temp >>= 2; else count += 2;
-            if (temp<1:1>) temp >>= 1; else count += 1;
-            if ((temp<0:0>) != 0x1) count += 1; 
-            Rc = count; 
-            }}, IntAluOp);
+	    0x32: ctlz({{
+			     uint64_t count = 0;
+			     uint64_t temp = Rb;
+			     if (temp<63:32>) temp >>= 32; else count += 32;
+			     if (temp<31:16>) temp >>= 16; else count += 16;
+			     if (temp<15:8>) temp >>= 8; else count += 8;
+			     if (temp<7:4>) temp >>= 4; else count += 4;
+			     if (temp<3:2>) temp >>= 2; else count += 2;
+			     if (temp<1:1>) temp >>= 1; else count += 1;
+			     if ((temp<0:0>) != 0x1) count += 1; 
+			     Rc = count; 
+			   }}, IntAluOp);
          
-        0x33: cttz({{
-            uint64_t count = 0;
-            uint64_t temp = Rb;
-            if (!(temp<31:0>)) { temp >>= 32; count += 32; }
-            if (!(temp<15:0>)) { temp >>= 16; count += 16; }
-            if (!(temp<7:0>)) { temp >>= 8; count += 8; }
-            if (!(temp<3:0>)) { temp >>= 4; count += 4; }
-            if (!(temp<1:0>)) { temp >>= 2; count += 2; }
-            if (!(temp<0:0> & ULL(0x1))) count += 1; 
-            Rc = count; 
-        }}, IntAluOp);
+	    0x33: cttz({{
+			     uint64_t count = 0;
+			     uint64_t temp = Rb;
+			     if (!(temp<31:0>)) { temp >>= 32; count += 32; }
+			     if (!(temp<15:0>)) { temp >>= 16; count += 16; }
+			     if (!(temp<7:0>)) { temp >>= 8; count += 8; }
+			     if (!(temp<3:0>)) { temp >>= 4; count += 4; }
+			     if (!(temp<1:0>)) { temp >>= 2; count += 2; }
+			     if (!(temp<0:0> & ULL(0x1))) count += 1; 
+			     Rc = count; 
+			   }}, IntAluOp);
 
 	    format FailUnimpl {
 		0x30: ctpop();
@@ -2282,7 +2345,7 @@ decode OPCODE default Unknown::unknown() {
 	}
     }
 
-    // IEEE floating point
+    // Square root and integer-to-FP moves
     0x14: decode FP_SHORTFUNC {
 	// Integer to FP register moves must have RB == 31
 	0x4: decode RB {
@@ -2327,35 +2390,40 @@ decode OPCODE default Unknown::unknown() {
 
     // IEEE floating point
     0x16: decode FP_SHORTFUNC_TOP2 {
-	// The top two bits of the short function code break this space
-	// into four groups: binary ops, compares, reserved, and conversions.
-	// See Table 4-12 of AHB.	
+	// The top two bits of the short function code break this
+	// space into four groups: binary ops, compares, reserved, and
+	// conversions.  See Table 4-12 of AHB.  There are different
+	// special cases in these different groups, so we decode on
+	// these top two bits first just to select a decode strategy.
 	// Most of these instructions may have various trapping and
 	// rounding mode flags set; these are decoded in the
 	// FloatingPointDecode template used by the
 	// FloatingPointOperate format.
 
 	// add/sub/mul/div: just decode on the short function code
-	// and source type.
-	0: decode FP_TYPEFUNC {
-	    format FloatingPointOperate {
+	// and source type.  All valid trapping and rounding modes apply.
+	0: decode FP_TRAPMODE {
+	    // check for valid trapping modes here
+	    0,1,5,7: decode FP_TYPEFUNC {
+		   format FloatingPointOperate {
 #if SS_COMPATIBLE_FP
-		0x00: adds({{ Fc = Fa + Fb; }});
-		0x01: subs({{ Fc = Fa - Fb; }});
-		0x02: muls({{ Fc = Fa * Fb; }}, FloatMultOp);
-		0x03: divs({{ Fc = Fa / Fb; }}, FloatDivOp);
+		       0x00: adds({{ Fc = Fa + Fb; }});
+		       0x01: subs({{ Fc = Fa - Fb; }});
+		       0x02: muls({{ Fc = Fa * Fb; }}, FloatMultOp);
+		       0x03: divs({{ Fc = Fa / Fb; }}, FloatDivOp);
 #else
-		0x00: adds({{ Fc.sf = Fa.sf + Fb.sf; }});
-		0x01: subs({{ Fc.sf = Fa.sf - Fb.sf; }});
-		0x02: muls({{ Fc.sf = Fa.sf * Fb.sf; }}, FloatMultOp);
-		0x03: divs({{ Fc.sf = Fa.sf / Fb.sf; }}, FloatDivOp);
+		       0x00: adds({{ Fc.sf = Fa.sf + Fb.sf; }});
+		       0x01: subs({{ Fc.sf = Fa.sf - Fb.sf; }});
+		       0x02: muls({{ Fc.sf = Fa.sf * Fb.sf; }}, FloatMultOp);
+		       0x03: divs({{ Fc.sf = Fa.sf / Fb.sf; }}, FloatDivOp);
 #endif
 
-		0x20: addt({{ Fc = Fa + Fb; }});
-		0x21: subt({{ Fc = Fa - Fb; }});
-		0x22: mult({{ Fc = Fa * Fb; }}, FloatMultOp);
-		0x23: divt({{ Fc = Fa / Fb; }}, FloatDivOp);
-	    }
+		       0x20: addt({{ Fc = Fa + Fb; }});
+		       0x21: subt({{ Fc = Fa - Fb; }});
+		       0x22: mult({{ Fc = Fa * Fb; }}, FloatMultOp);
+		       0x23: divt({{ Fc = Fa / Fb; }}, FloatDivOp);
+		   }
+	     }
 	}
 
 	// Floating-point compare instructions must have the default
@@ -2384,7 +2452,17 @@ decode OPCODE default Unknown::unknown() {
 	3: decode FA {
 	    31: decode FP_TYPEFUNC {
 		format FloatingPointOperate {
-		    0x2f: cvttq({{ Fc.sq = (int64_t)rint(Fb); }});
+		    0x2f: decode FP_ROUNDMODE {
+			format FPFixedRounding {
+			    // "chopped" i.e. round toward zero
+			    0: cvttq({{ Fc.sq = (int64_t)trunc(Fb); }},
+				     Chopped);
+			    // round to minus infinity
+			    1: cvttq({{ Fc.sq = (int64_t)floor(Fb); }},
+				     MinusInfinity);
+			}
+		      default: cvttq({{ Fc.sq = (int64_t)nearbyint(Fb); }});
+		    }
 
 		    // The cvtts opcode is overloaded to be cvtst if the trap
 		    // mode is 2 or 6 (which are not valid otherwise)
