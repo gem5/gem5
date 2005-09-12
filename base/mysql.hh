@@ -33,6 +33,7 @@
 
 #include <cassert>
 #include <iosfwd>
+#include <mysql_version.h>
 #include <mysql.h>
 #include <string>
 #include <sstream>
@@ -89,6 +90,8 @@ class Result
     {
         if (result)
             refcount = new int(1);
+        else
+            refcount = NULL;
     }
 
     Result(const Result &result)

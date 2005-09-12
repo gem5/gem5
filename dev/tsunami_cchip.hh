@@ -37,6 +37,8 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
+class MemoryController;
+
 /**
  * Tsunami CChip CSR Emulation. This device includes all the interrupt
  * handling code for the chipset.

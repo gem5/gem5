@@ -37,6 +37,8 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
+class MemoryController;
+
 /**
  * A very simple implementation of the Tsunami PCI interface chips.
  */

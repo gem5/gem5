@@ -42,6 +42,9 @@
 #include "base/pollevent.hh"
 #include "sim/sim_object.hh"
 
+class TapEvent;
+class TapListener;
+
 /*
  * Interface to connect a simulated ethernet device to the real world
  */

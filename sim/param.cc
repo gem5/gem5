@@ -303,8 +303,8 @@ template void Param<type>::parse(const string &);			\
 template void VectorParam<type>::parse(const string &);			\
 template void Param<type>::showValue(ostream &) const;			\
 template void VectorParam<type>::showValue(ostream &) const;		\
-void Param<type>::showType(ostream &os) const { os << typestr; }	\
-void VectorParam<type>::showType(ostream &os) const {			\
+template <> void Param<type>::showType(ostream &os) const { os << typestr; }	\
+template <> void VectorParam<type>::showType(ostream &os) const {			\
     os << "vector of " << typestr;					\
 }
 #endif

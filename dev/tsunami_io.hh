@@ -38,6 +38,8 @@
 #include "dev/tsunami.hh"
 #include "sim/eventq.hh"
 
+class MemoryController;
+
 /**
  * Tsunami I/O device is a catch all for all the south bridge stuff we care
  * to implement.
