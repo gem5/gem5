@@ -43,6 +43,7 @@ static const uint32_t MAX_PCI_DEV = 32;
 static const uint32_t MAX_PCI_FUNC = 8;
 
 class PciDev;
+class MemoryController;
 
 /**
  * PCI Config Space

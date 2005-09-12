@@ -34,6 +34,7 @@
 #include "sim/root.hh"
 
 class Checkpoint;
+class PollQueue;
 
 class PollEvent
 {
