@@ -336,8 +336,7 @@ for build_dir in build_dirs:
 
     if not env['USE_FENV']:
         print "Warning: No IEEE FP rounding mode control in", build_dir + "."
-        print "         FP results may deviate slightly", \
-              "and some regression tests may fail."
+        print "         FP results may deviate slightly from other platforms."
 
     if env['EFENCE']:
         env.Append(LIBS=['efence'])
