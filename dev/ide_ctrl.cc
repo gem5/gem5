@@ -302,8 +302,10 @@ IdeController::writeConfig(int offset, int size, const uint8_t *data)
         switch(size) {
           case sizeof(uint8_t):
             config_regs.data[config_offset] = *data;
+            break;
           case sizeof(uint16_t):
             *(uint16_t*)&config_regs.data[config_offset] = *(uint16_t*)data;
+            break;
           case sizeof(uint32_t):
             *(uint32_t*)&config_regs.data[config_offset] = *(uint32_t*)data;
             break;
