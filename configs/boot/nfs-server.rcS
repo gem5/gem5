@@ -28,24 +28,17 @@ echo "524287" > /proc/sys/net/core/wmem_max
 echo "524287" > /proc/sys/net/core/optmem_max
 echo "300000" > /proc/sys/net/core/netdev_max_backlog
 echo "131072" > /proc/sys/fs/file-max
+echo "10" > /proc/sys/vm/dirty_writeback_centisecs
 echo "done."
 
-#if [ ! -x /dev/sda ] 
-#then
-#     mknod /dev/sda b 8 0
-#     mknod /dev/sda1 b 8 1
-#fi
-
-/sbin/insmod /modules/scsi_debug.ko dev_size_mb=512
+echo "load scsi_debug kernel module..."
+/sbin/insmod /modules/scsi_debug.ko dev_size_mb=768
 
 echo -n "creating partition and formatting..."
-#echo "1,767,L" > /tmp/sfdisk.run
-#/usr/sbin/sfdisk -uM --force /dev/sda < /tmp/sfdisk.run
 /sbin/mke2fs -F /dev/sda 
 mkdir /nfs
-/bin/mount  /dev/sda /nfs 
+/bin/mount /dev/sda /nfs 
 chmod a+rwx /nfs
-#/usr/sbin/sfdisk -uM -l /dev/sda
 echo "done."
 
 echo "/nfs 10.0.0.0/255.0.0.0(rw,sync,no_root_squash)" > /etc/exports
@@ -53,7 +46,7 @@ echo -n "starting nfs kernel server..."
 /sbin/portmap
 /sbin/lockd
 /sbin/statd
-/sbin/nfsd 8
+/sbin/nfsd 15
 /sbin/mountd
 echo "done."
 

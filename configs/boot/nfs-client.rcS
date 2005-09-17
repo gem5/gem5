@@ -43,6 +43,6 @@ mkdir /nfs
 mount 10.0.0.1:/nfs /nfs
 echo "done."
 
-/bin/bonnie++ -u 99 -s 500 -r 0 -n 0 -f -F -d /nfs
+/bin/bonnie++ -u 99 -s 700 -r 0 -n 0 -f -F -d /nfs
 
 /sbin/m5 exit

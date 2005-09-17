@@ -75,7 +75,7 @@ sleep 5
 mount /dev/sda /mnt
 cd /mnt
 
-initparam=`cat /proc/m5/initparam`
+initparam=`m5 initparam`
 
 if test X$initparam == X0; then
     /sbin/m5 checkpoint 100000000 2000000000

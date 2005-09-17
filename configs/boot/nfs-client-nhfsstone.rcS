@@ -43,6 +43,7 @@ mkdir /nfs
 mount 10.0.0.1:/nfs /nfs
 echo "done."
 
-/benchmarks/nhfsstone/nhfsstone -t 30 -p 10 /nfs
+/sbin/m5 checkpoint 8000000000 2000000000
+/benchmarks/nfs/nhfsstone -l 300 -t 50 -p 14 -m /benchmarks/nfs/nfs.mix2 /nfs
 
 /sbin/m5 exit
