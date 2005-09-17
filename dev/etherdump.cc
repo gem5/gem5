@@ -123,8 +123,8 @@ END_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDump)
 
-    INIT_PARAM_DFLT(file, "file to dump packets to", "etherdump"),
-    INIT_PARAM_DFLT(maxlen, "max portion of packet data to dump", 96)
+    INIT_PARAM(file, "file to dump packets to"),
+    INIT_PARAM(maxlen, "max portion of packet data to dump")
 
 END_INIT_SIM_OBJECT_PARAMS(EtherDump)
 

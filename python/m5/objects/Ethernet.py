@@ -30,6 +30,7 @@ class EtherTap(EtherInt):
 class EtherDump(SimObject):
     type = 'EtherDump'
     file = Param.String("dump file")
+    maxlen = Param.Int(96, "max portion of packet data to dump")
 
 if build_env['ALPHA_TLASER']:
 
