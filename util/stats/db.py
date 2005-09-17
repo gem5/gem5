@@ -101,7 +101,7 @@ class Node(object):
     def __init__(self, name):
         self.name = name
     def __str__(self):
-        return name
+        return self.name
 
 class Database(object):
     def __init__(self):
@@ -466,3 +466,6 @@ class Database(object):
 
             runs[data.run][data.x][data.y] = data.data
         return runs
+
+    def __getitem__(self, key):
+        return self.stattop[key]

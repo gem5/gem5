@@ -96,7 +96,7 @@ Usage:
 
 try:
     import getopt
-    opts, args = getopt.getopt(sys.argv[1:], '-cd:efhj:lq:v')
+    opts, args = getopt.getopt(sys.argv[1:], '-CRcd:efhj:lq:v')
 except getopt.GetoptError:
     sys.exit(usage)
 
@@ -107,13 +107,18 @@ force = False
 listonly = False
 queue = ''
 verbose = False
-rootdir = nfspath(os.getcwd())
-jfile = 'test.py'
+jfile = 'Base/test.py'
+docpts = False
+doruns = True
+runflag = False
+
 for opt,arg in opts:
+    if opt == '-C':
+        docpts = True
+    if opt == '-R':
+        runflag = True
     if opt == '-c':
         clean = True
-    if opt == '-d':
-        rootdir = arg
     if opt == '-e':
         onlyecho = True
     if opt == '-f':
@@ -130,95 +135,123 @@ for opt,arg in opts:
     if opt == '-v':
         verbose = True
 
-basedir = joinpath(rootdir, 'Base')
-linkdir = joinpath(rootdir, 'Link')
+if docpts:
+    doruns = runflag
 
 for arg in args:
     exprs.append(re.compile(arg))
 
-if not listonly and not onlyecho and isdir(linkdir):
+import jobfile, pbs
+from job import JobDir, date
+
+conf = jobfile.JobFile(jfile)
+
+if not listonly and not onlyecho and isdir(conf.linkdir):
     if verbose:
         print 'Checking for outdated files in Link directory'
-    syncdir(linkdir, basedir)
+    syncdir(conf.linkdir, conf.basedir)
 
-import job, jobfile, pbs
-
-test = jobfile.JobFile(joinpath(basedir, jfile))
-
+jobnames = {}
 joblist = []
-for jobname in test.jobs:
-    if not exprs:
-        joblist.append(jobname)
+
+if docpts and doruns:
+    gen = conf.alljobs()
+elif docpts:
+    gen = conf.checkpoints()
+elif doruns:
+    gen = conf.jobs()
+
+for job in gen:
+    if job.name in jobnames:
         continue
 
-    for expr in exprs:
-        if expr.match(jobname):
-            joblist.append(jobname)
-            break
+    if exprs:
+        for expr in exprs:
+            if expr.match(job.name):
+                joblist.append(job)
+                break
+    else:
+        joblist.append(job)
 
 if listonly:
     if verbose:
-        for jobname in joblist:
-            test.printinfo(jobname)
+        for job in joblist:
+            job.printinfo()
     else:
-        for jobname in joblist:
-            print jobname
+        for job in joblist:
+            print job.name
     sys.exit(0)
 
 if not onlyecho:
-    jl = []
-    for jobname in joblist:
-        jobdir = joinpath(rootdir, jobname)
-        if os.path.exists(jobname):
+    newlist = []
+    for job in joblist:
+        jobdir = JobDir(joinpath(conf.rootdir, job.name))
+        if jobdir.exists():
             if not force:
-                if os.path.isfile(joinpath(jobdir, '.success')):
+                status = jobdir.getstatus()
+                if status == 'queued':
                     continue
 
-                if os.path.isfile(joinpath(jobdir, '.start')) and \
-                       not os.path.isfile(joinpath(jobdir, '.stop')):
+                if status == 'running':
+                    continue
+
+                if status == 'success':
                     continue
 
             if not clean:
-                sys.exit('job directory not clean!')
+                sys.exit('job directory %s not clean!' % jobdir)
 
-            job.cleandir(jobdir)
-        else:
-            os.mkdir(jobdir)
-        jl.append(jobname)
-    joblist = jl
+            jobdir.clean()
+        newlist.append(job)
+    joblist = newlist
 
-def setname(jobid, jobname):
-    # since pbs can handle jobnames of 15 characters or less, don't
-    # use the raj hack.
-    if len(jobname) <= 15:
-        return
+class NameHack(object):
+    def __init__(self, host='pbs.pool', port=24465):
+        self.host = host
+        self.port = port
+        self.socket = None
 
-    import socket
-    s = socket.socket()
-    # Connect to pbs.pool and send the jobid/jobname pair to port
-    # 24465 (Raj didn't realize that there are only 64k ports and
-    # setup inetd to point to port 90001)
-    s.connect(("pbs.pool", 24465))
-    s.send("%s %s\n" % (jobid, jobname))
-    s.close()
+    def setname(self, jobid, jobname):
+        try:
+            jobid = int(jobid)
+        except ValueError:
+            jobid = int(jobid.strip().split('.')[0])
 
-for jobname in joblist:
-    jobdir = joinpath(rootdir, jobname)
+        jobname = jobname.strip()
+        # since pbs can handle jobnames of 15 characters or less,
+        # don't use the raj hack.
+        if len(jobname) <= 15:
+            return
 
-    if not onlyecho and not os.path.isdir(jobdir):
-        sys.exit('%s is not a directory.  Cannot build job' % jobdir)
+        if self.socket is None:
+            import socket
+            self.socket = socket.socket()
+            # Connect to pbs.pool and send the jobid/jobname pair to port
+            # 24465 (Raj didn't realize that there are only 64k ports and
+            # setup inetd to point to port 90001)
+            self.socket.connect((self.host, self.port))
 
-    print 'Job name:       %s' % jobname
+        self.socket.send("%s %s\n" % (jobid, jobname))
+
+namehack = NameHack()
+
+for job in joblist:
+    jobdir = JobDir(joinpath(conf.rootdir, job.name))
+
+    if not onlyecho:
+        jobdir.create()
+
+    print 'Job name:       %s' % job.name
     print 'Job directory:  %s' % jobdir
 
     qsub = pbs.qsub()
     qsub.pbshost = 'simpool.eecs.umich.edu'
-    qsub.stdout = joinpath(jobdir, 'jobout')
-    qsub.name = jobname[:15]
+    qsub.stdout = jobdir.file('jobout')
+    qsub.name = job.name[:15]
     qsub.join = True
     qsub.node_type = 'FAST'
-    qsub.env['ROOTDIR'] = rootdir
-    qsub.env['JOBNAME'] = jobname
+    qsub.env['ROOTDIR'] = conf.rootdir
+    qsub.env['JOBNAME'] = job.name
     if len(queue):
         qsub.queue = queue
     qsub.build(joinpath(progpath, 'job.py'))
@@ -231,6 +264,9 @@ for jobname in joblist:
         if ec == 0:
             jobid = qsub.result
             print 'PBS Jobid:      %s' % jobid
-            setname(jobid, jobname)
+            namehack.setname(jobid, job.name)
+            queued = date()
+            jobdir.echofile('.queued', queued)
+            jobdir.setstatus('queued on %s' % queued)
         else:
             print 'PBS Failed'
