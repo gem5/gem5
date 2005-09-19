@@ -1211,7 +1211,7 @@ NSGigE::devIntrPost(uint32_t interrupts)
     if (interrupts & ISR_NOIMPL)
         warn("interrupt not implemented %#x\n", interrupts);
 
-    interrupts &= ~ISR_NOIMPL;
+    interrupts &= ISR_IMPL;
     regs.isr |= interrupts;
 
     if (interrupts & regs.imr) {
@@ -1247,7 +1247,7 @@ NSGigE::devIntrPost(uint32_t interrupts)
 
     if ((regs.isr & regs.imr)) {
         Tick when = curTick;
-        if (!(regs.isr & regs.imr & ISR_NODELAY))
+        if ((regs.isr & regs.imr & ISR_NODELAY) == 0)
             when += intrDelay;
         cpuIntrPost(when);
     }
@@ -1289,8 +1289,7 @@ NSGigE::devIntrClear(uint32_t interrupts)
         postedRxOrn++;
     }
 
-    if (regs.isr & regs.imr & (ISR_SWI | ISR_RXIDLE | ISR_RXOK | ISR_RXDESC |
-                               ISR_TXOK | ISR_TXIDLE | ISR_TXDESC | ISR_RXORN) )
+    if (regs.isr & regs.imr & ISR_IMPL)
         postedInterrupts++;
 
     interrupts &= ~ISR_NOIMPL;
