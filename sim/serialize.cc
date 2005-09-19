@@ -51,8 +51,8 @@
 
 using namespace std;
 
-int Serializable::maxCount;
-int Serializable::count;
+int Serializable::maxCount = 0;
+int Serializable::count = 0;
 
 void
 Serializable::nameOut(ostream &os)
@@ -229,9 +229,6 @@ Globals::unserialize(Checkpoint *cp)
 void
 Serializable::serializeAll()
 {
-    if (maxCount && count++ > maxCount)
-        exitNow("Maximum number of checkpoints dropped", 0);
-
     string dir = Checkpoint::dir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             fatal("couldn't mkdir %s\n", dir);
@@ -243,6 +240,9 @@ Serializable::serializeAll()
 
     globals.serialize(outstream);
     SimObject::serializeAll(outstream);
+
+    if (maxCount && ++count >= maxCount)
+        SimExit(curTick + 1, "Maximum number of checkpoints dropped");
 }
 
 
