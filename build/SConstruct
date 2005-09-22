@@ -239,7 +239,9 @@ sticky_opts.AddOptions(
     BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
-    ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX']))
+    ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
+    BoolOption('BATCH', 'Use batch pool for build and tests', False),
+    ('BATCH_CMD', 'Batch pool submission command name', 'qdo')
     )
 
 # Non-sticky options only apply to the current build.
@@ -353,6 +355,12 @@ for build_dir in build_dirs:
 
     # Save sticky option settings back to file
     sticky_opts.Save(options_file, env)
+
+    # Do this after we save setting back, or else we'll tack on an
+    # extra 'qdo' every time we run scons.
+    if env['BATCH']:
+        env['CC']  = env['BATCH_CMD'] + ' ' + env['CC']
+        env['CXX'] = env['BATCH_CMD'] + ' ' + env['CXX']
 
     # The m5/SConscript file sets up the build rules in 'env' according
     # to the configured options.  It returns a list of environments,
