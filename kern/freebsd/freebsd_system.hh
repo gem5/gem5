@@ -29,13 +29,22 @@
 #ifndef __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
 #define __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
 
-#include "kern/freebsd/freebsd_events.hh"
+#include "kern/system_events.hh"
 
 class FreebsdSystem : public System
 {
   private:
+    class SkipCalibrateClocksEvent : public SkipFuncEvent
+    {
+      public:
+        SkipCalibrateClocksEvent(PCEventQueue *q, const std::string &desc,
+                                 Addr addr)
+            : SkipFuncEvent(q, desc, addr) {}
+        virtual void process(ExecContext *xc);
+    };
+
     SkipFuncEvent *skipDelayEvent;
-    FreebsdSkipCalibrateClocksEvent *skipCalibrateClocks;
+    SkipCalibrateClocksEvent *skipCalibrateClocks;
 
   public:
     FreebsdSystem(Params *p);

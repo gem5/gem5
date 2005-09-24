@@ -47,8 +47,9 @@ SkipFuncEvent::process(ExecContext *xc)
 }
 
 
-FnEvent::FnEvent(PCEventQueue *q, const std::string &desc, Stats::MainBin *bin)
-    : PCEvent(q, desc), _name(desc), mybin(bin)
+FnEvent::FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                 Stats::MainBin *bin)
+    : PCEvent(q, desc, addr), _name(desc), mybin(bin)
 {
 }
 

@@ -48,18 +48,13 @@ using namespace std;
 FreebsdSystem::FreebsdSystem(Params *p)
     : System(p)
 {
-    Addr addr = 0;
-
     /**
      * Any time DELAY is called just skip the function.
+     * Shouldn't we actually emulate the delay?
      */
-    skipDelayEvent = new SkipFuncEvent(&pcEventQueue, "DELAY");
-    if (kernelSymtab->findAddress("DELAY", addr))
-        skipDelayEvent->schedule(addr+sizeof(MachInst));
-
-    skipCalibrateClocks = new FreebsdSkipCalibrateClocksEvent(&pcEventQueue, "calibrate_clocks");
-    if (kernelSymtab->findAddress("calibrate_clocks", addr))
-        skipCalibrateClocks->schedule(addr + sizeof(MachInst) * 2);
+    skipDelayEvent = addKernelFuncEvent<SkipFuncEvent>("DELAY");
+    skipCalibrateClocks =
+        addKernelFuncEvent<SkipCalibrateClocksEvent>("calibrate_clocks");
 }
 
 
@@ -89,6 +84,14 @@ FreebsdSystem::doCalibrateClocks(ExecContext *xc)
 
     *(uint32_t *)ppc = htog((uint32_t)Clock::Frequency);
     *(uint32_t *)timer = htog((uint32_t)TIMER_FREQUENCY);
+}
+
+
+void
+FreebsdSystem::SkipCalibrateClocksEvent::process(ExecContext *xc)
+{
+    SkipFuncEvent::process(xc);
+    ((FreebsdSystem *)xc->system)->doCalibrateClocks(xc);
 }
 
 

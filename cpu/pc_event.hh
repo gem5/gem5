@@ -47,25 +47,17 @@ class PCEvent
     Addr evpc;
 
   public:
-    PCEvent() : queue(0), evpc(badpc) { }
-
-    PCEvent(const std::string &desc)
-        : description(desc), queue(0), evpc(badpc) { }
-
-    PCEvent(PCEventQueue *q, Addr pc = badpc) : queue(q), evpc(pc) { }
-
-    PCEvent(PCEventQueue *q, const std::string &desc, Addr pc = badpc)
-        : description(desc), queue(q), evpc(pc) { }
+    PCEvent(PCEventQueue *q, const std::string &desc, Addr pc);
 
     virtual ~PCEvent() { if (queue) remove(); }
+
+    // for DPRINTF
+    virtual const std::string name() const { return description; }
 
     std::string descr() const { return description; }
     Addr pc() const { return evpc; }
 
     bool remove();
-    bool schedule();
-    bool schedule(Addr pc);
-    bool schedule(PCEventQueue *q, Addr pc);
     virtual void process(ExecContext *xc) = 0;
 };
 
@@ -120,6 +112,14 @@ class PCEventQueue
     void dump() const;
 };
 
+
+inline
+PCEvent::PCEvent(PCEventQueue *q, const std::string &desc, Addr pc)
+    : description(desc), queue(q), evpc(pc)
+{
+    queue->schedule(this);
+}
+
 inline bool
 PCEvent::remove()
 {
@@ -129,47 +129,14 @@ PCEvent::remove()
     return queue->remove(this);
 }
 
-inline bool
-PCEvent::schedule()
-{
-    if (!queue || evpc == badpc)
-        panic("cannot schedule an uninitialized event;");
-
-    return queue->schedule(this);
-}
-
-inline bool
-PCEvent::schedule(Addr pc)
-{
-    if (evpc != badpc)
-        panic("cannot switch PC");
-    evpc = pc & ~0x3;
-
-    return schedule();
-}
-
-inline bool
-PCEvent::schedule(PCEventQueue *q, Addr pc)
-{
-    if (queue)
-        panic("cannot switch event queues");
-
-    if (evpc != badpc)
-        panic("cannot switch addresses");
-
-    queue = q;
-    evpc = pc & ~0x3;
-
-    return schedule();
-}
-
 class BreakPCEvent : public PCEvent
 {
   protected:
     bool remove;
 
   public:
-    BreakPCEvent(PCEventQueue *q, const std::string &desc, bool del = false);
+    BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                 bool del = false);
     virtual void process(ExecContext *xc);
 };
 

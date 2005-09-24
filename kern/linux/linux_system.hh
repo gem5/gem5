@@ -32,10 +32,6 @@
 class ExecContext;
 
 class BreakPCEvent;
-class DebugPrintkEvent;
-class BreakPCEvent;
-class LinuxSkipDelayLoopEvent;
-class SkipFuncEvent;
 class IdleStartEvent;
 class PrintThreadInfo;
 
@@ -47,6 +43,34 @@ class PrintThreadInfo;
 class LinuxSystem : public System
 {
   private:
+    class SkipDelayLoopEvent : public SkipFuncEvent
+    {
+      public:
+        SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+            : SkipFuncEvent(q, desc, addr) {}
+        virtual void process(ExecContext *xc);
+    };
+
+    class DebugPrintkEvent : public SkipFuncEvent
+    {
+      private:
+        bool raw;
+
+      public:
+        DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                         bool r = false)
+            : SkipFuncEvent(q, desc, addr), raw(r) {}
+        virtual void process(ExecContext *xc);
+    };
+
+    class PrintThreadInfo : public PCEvent
+    {
+      public:
+        PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
+            : PCEvent(q, desc, addr) {}
+        virtual void process(ExecContext *xc);
+    };
+
     /**
      * Addresses defining where the kernel bootloader places various
      * elements.  Details found in include/asm-alpha/system.h
@@ -94,7 +118,7 @@ class LinuxSystem : public System
      * Skip calculate_delay_loop() rather than waiting for this to be
      * calculated
      */
-    LinuxSkipDelayLoopEvent *skipDelayLoopEvent;
+    SkipDelayLoopEvent *skipDelayLoopEvent;
 
     /**
      * Event to print information about thread switches if the trace flag

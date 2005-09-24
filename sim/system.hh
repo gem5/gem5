@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
 #include "sim/sim_object.hh"
@@ -45,7 +46,6 @@ class ObjectFile;
 class PhysicalMemory;
 class Platform;
 class RemoteGDB;
-class SymbolTable;
 namespace Kernel { class Binning; }
 
 class System : public SimObject
@@ -68,7 +68,7 @@ class System : public SimObject
         return numcpus;
     }
 
-    /** kernel Symbol table */
+    /** kernel symbol table */
     SymbolTable *kernelSymtab;
 
     /** console symbol table */
@@ -101,6 +101,53 @@ class System : public SimObject
     /** Event to halt the simulator if the console calls panic() */
     BreakPCEvent *consolePanicEvent;
 #endif
+
+  protected:
+
+    /**
+     * Fix up an address used to match PCs for hooking simulator
+     * events on to target function executions.  See comment in
+     * system.cc for details.
+     */
+    Addr fixFuncEventAddr(Addr addr);
+
+    /**
+     * Add a function-based event to the given function, to be looked
+     * up in the specified symbol table.
+     */
+    template <class T>
+    T *System::addFuncEvent(SymbolTable *symtab, const char *lbl)
+    {
+        Addr addr;
+
+        if (symtab->findAddress(lbl, addr)) {
+            T *ev = new T(&pcEventQueue, lbl, fixFuncEventAddr(addr));
+            return ev;
+        }
+
+        return NULL;
+    }
+
+    /** Add a function-based event to kernel code. */
+    template <class T>
+    T *System::addKernelFuncEvent(const char *lbl)
+    {
+        return addFuncEvent<T>(kernelSymtab, lbl);
+    }
+
+    /** Add a function-based event to PALcode. */
+    template <class T>
+    T *System::addPalFuncEvent(const char *lbl)
+    {
+        return addFuncEvent<T>(palSymtab, lbl);
+    }
+
+    /** Add a function-based event to the console code. */
+    template <class T>
+    T *System::addConsoleFuncEvent(const char *lbl)
+    {
+        return addFuncEvent<T>(consoleSymtab, lbl);
+    }
 
   public:
     std::vector<RemoteGDB *> remoteGDB;

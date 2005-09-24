@@ -54,8 +54,8 @@ class Tru64System : public System
     SkipFuncEvent *skipPowerStateEvent;
     SkipFuncEvent *skipScavengeBootEvent;
     PrintfEvent *printfEvent;
-    DebugPrintfEvent *debugPrintfEvent;
-    DebugPrintfEvent *debugPrintfrEvent;
+    DebugPrintfEvent  *debugPrintfEvent;
+    DebugPrintfrEvent *debugPrintfrEvent;
     DumpMbufEvent *dumpMbufEvent;
 
   public:

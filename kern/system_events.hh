@@ -29,20 +29,24 @@
 #ifndef __SYSTEM_EVENTS_HH__
 #define __SYSTEM_EVENTS_HH__
 
+#include "cpu/pc_event.hh"
+
 class System;
 
 class SkipFuncEvent : public PCEvent
 {
   public:
-    SkipFuncEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
+    SkipFuncEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr)
+    {}
     virtual void process(ExecContext *xc);
 };
 
 class FnEvent : public PCEvent
 {
   public:
-    FnEvent(PCEventQueue *q, const std::string &desc, Stats::MainBin *bin);
+    FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+            Stats::MainBin *bin);
     virtual void process(ExecContext *xc);
     std::string myname() const { return _name; }
 
@@ -53,12 +57,9 @@ class FnEvent : public PCEvent
 
 class IdleStartEvent : public PCEvent
 {
-  private:
-    System *system;
-
   public:
-    IdleStartEvent(PCEventQueue *q, const std::string &desc, System *sys)
-        : PCEvent(q, desc), system(sys)
+    IdleStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr)
     {}
     virtual void process(ExecContext *xc);
 };
@@ -66,8 +67,8 @@ class IdleStartEvent : public PCEvent
 class InterruptStartEvent : public PCEvent
 {
   public:
-    InterruptStartEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc)
+    InterruptStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr)
     {}
     virtual void process(ExecContext *xc);
 };
@@ -75,8 +76,8 @@ class InterruptStartEvent : public PCEvent
 class InterruptEndEvent : public PCEvent
 {
   public:
-    InterruptEndEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc)
+    InterruptEndEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr)
     {}
     virtual void process(ExecContext *xc);
 };

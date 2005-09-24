@@ -117,8 +117,9 @@ PCEventQueue::equal_range(Addr pc)
     return std::equal_range(pc_map.begin(), pc_map.end(), pc, MapCompare());
 }
 
-BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, bool del)
-    : PCEvent(q, desc), remove(del)
+BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                           bool del)
+    : PCEvent(q, desc, addr), remove(del)
 {
 }
 
@@ -137,8 +138,7 @@ extern "C"
 void
 sched_break_pc_sys(System *sys, Addr addr)
 {
-    PCEvent *event = new BreakPCEvent(&sys->pcEventQueue, "debug break", true);
-    event->schedule(addr);
+    new BreakPCEvent(&sys->pcEventQueue, "debug break", addr, true);
 }
 
 extern "C"

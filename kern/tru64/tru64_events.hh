@@ -39,16 +39,16 @@ class ExecContext;
 class BadAddrEvent : public SkipFuncEvent
 {
   public:
-    BadAddrEvent(PCEventQueue *q, const std::string &desc)
-        : SkipFuncEvent(q, desc) {}
+    BadAddrEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : SkipFuncEvent(q, desc, addr) {}
     virtual void process(ExecContext *xc);
 };
 
 class PrintfEvent : public PCEvent
 {
   public:
-    PrintfEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
+    PrintfEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr) {}
     virtual void process(ExecContext *xc);
 };
 
@@ -58,16 +58,25 @@ class DebugPrintfEvent : public PCEvent
     bool raw;
 
   public:
-    DebugPrintfEvent(PCEventQueue *q, const std::string &desc, bool r = false)
-        : PCEvent(q, desc), raw(r) {}
+    DebugPrintfEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                     bool r = false)
+        : PCEvent(q, desc, addr), raw(r) {}
     virtual void process(ExecContext *xc);
+};
+
+class DebugPrintfrEvent : public DebugPrintfEvent
+{
+  public:
+    DebugPrintfrEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : DebugPrintfEvent(q, desc, addr, true)
+    {}
 };
 
 class DumpMbufEvent : public PCEvent
 {
   public:
-    DumpMbufEvent(PCEventQueue *q, const std::string &desc)
-        : PCEvent(q, desc) {}
+    DumpMbufEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : PCEvent(q, desc, addr) {}
     virtual void process(ExecContext *xc);
 };
 

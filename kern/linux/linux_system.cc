@@ -38,12 +38,14 @@
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
-#include "kern/linux/linux_events.hh"
 #include "kern/linux/linux_system.hh"
+#include "kern/linux/linux_threadinfo.hh"
+#include "kern/linux/printk.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "dev/platform.hh"
+#include "targetarch/arguments.hh"
 #include "targetarch/vtophys.hh"
 
 using namespace std;
@@ -106,80 +108,57 @@ LinuxSystem::LinuxSystem(Params *p)
         panic("could not find dp264_mv\n");
 
 #ifndef NDEBUG
-    kernelPanicEvent = new BreakPCEvent(&pcEventQueue, "kernel panic");
-    if (kernelSymtab->findAddress("panic", addr))
-        kernelPanicEvent->schedule(addr);
-    else
+    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
+    if (!kernelPanicEvent)
         panic("could not find kernel symbol \'panic\'");
+
 #if 0
-    kernelDieEvent = new BreakPCEvent(&pcEventQueue, "die if kernel");
-    if (kernelSymtab->findAddress("die_if_kernel", addr))
-        kernelDieEvent->schedule(addr);
-    else
+    kernelDieEvent = addKernelFuncEvent<BreakPCEvent>("die_if_kernel");
+    if (!kernelDieEvent)
         panic("could not find kernel symbol \'die_if_kernel\'");
 #endif
 
 #endif
 
     /**
-     * Any time ide_delay_50ms, calibarte_delay or
+v     * Any time ide_delay_50ms, calibarte_delay or
      * determine_cpu_caches is called just skip the
      * function. Currently determine_cpu_caches only is used put
      * information in proc, however if that changes in the future we
      * will have to fill in the cache size variables appropriately.
      */
-    skipIdeDelay50msEvent = new SkipFuncEvent(&pcEventQueue, "ide_delay_50ms");
-    if (kernelSymtab->findAddress("ide_delay_50ms", addr))
-        skipIdeDelay50msEvent->schedule(addr+sizeof(MachInst));
 
-    skipDelayLoopEvent = new LinuxSkipDelayLoopEvent(&pcEventQueue,
-                                                     "calibrate_delay");
-    if (kernelSymtab->findAddress("calibrate_delay", addr)) {
-        skipDelayLoopEvent->schedule(addr + 3 * sizeof(MachInst));
+    skipIdeDelay50msEvent =
+        addKernelFuncEvent<SkipFuncEvent>("ide_delay_50ms");
+    skipDelayLoopEvent =
+        addKernelFuncEvent<SkipDelayLoopEvent>("calibrate_delay");
+    skipCacheProbeEvent =
+        addKernelFuncEvent<SkipFuncEvent>("determine_cpu_caches");
+    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
+    idleStartEvent = addKernelFuncEvent<IdleStartEvent>("cpu_idle");
+
+    if (kernelSymtab->findAddress("alpha_switch_to", addr) && DTRACE(Thread)) {
+        printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo",
+                                               addr + sizeof(MachInst) * 6);
+    } else {
+        printThreadEvent = NULL;
     }
 
-    skipCacheProbeEvent = new SkipFuncEvent(&pcEventQueue,
-                                            "determine_cpu_caches");
-    if (kernelSymtab->findAddress("determine_cpu_caches", addr))
-        skipCacheProbeEvent->schedule(addr+sizeof(MachInst));
-
-    debugPrintkEvent = new DebugPrintkEvent(&pcEventQueue, "dprintk");
-    if (kernelSymtab->findAddress("dprintk", addr))
-        debugPrintkEvent->schedule(addr+8);
-
-    idleStartEvent = new IdleStartEvent(&pcEventQueue, "cpu_idle", this);
-    if (kernelSymtab->findAddress("cpu_idle", addr))
-        idleStartEvent->schedule(addr);
-
-    printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo");
-    if (kernelSymtab->findAddress("alpha_switch_to", addr) && DTRACE(Thread))
-        printThreadEvent->schedule(addr + sizeof(MachInst) * 6);
-
-    intStartEvent = new InterruptStartEvent(&pcEventQueue, "intStartEvent");
-
     if (params->bin_int) {
-        if (palSymtab->findAddress("sys_int_21", addr))
-            intStartEvent->schedule(addr + sizeof(MachInst) * 2);
-        else
+        intStartEvent = addPalFuncEvent<InterruptStartEvent>("sys_int_21");
+        if (!intStartEvent)
             panic("could not find symbol: sys_int_21\n");
 
-        intEndEvent = new InterruptEndEvent(&pcEventQueue, "intEndEvent");
-        if (palSymtab->findAddress("rti_to_kern", addr))
-            intEndEvent->schedule(addr) ;
-        else
+        intEndEvent = addPalFuncEvent<InterruptEndEvent>("rti_to_kern");
+        if (!intEndEvent)
             panic("could not find symbol: rti_to_kern\n");
 
-        intEndEvent2 = new InterruptEndEvent(&pcEventQueue, "intEndEvent2");
-        if (palSymtab->findAddress("rti_to_user", addr))
-            intEndEvent2->schedule(addr);
-        else
+        intEndEvent2 = addPalFuncEvent<InterruptEndEvent>("rti_to_user");
+        if (!intEndEvent2)
             panic("could not find symbol: rti_to_user\n");
 
-
-        intEndEvent3 = new InterruptEndEvent(&pcEventQueue, "intEndEvent3");
-        if (kernelSymtab->findAddress("do_softirq", addr))
-            intEndEvent3->schedule(addr + sizeof(MachInst) * 2);
-        else
+        intEndEvent3 = addKernelFuncEvent<InterruptEndEvent>("do_softirq");
+        if (!intEndEvent3)
             panic("could not find symbol: do_softirq\n");
     }
 }
@@ -217,6 +196,39 @@ LinuxSystem::setDelayLoop(ExecContext *xc)
             (uint32_t)((cpuFreq / intrFreq) * 0.9988);
     }
 }
+
+void
+LinuxSystem::SkipDelayLoopEvent::process(ExecContext *xc)
+{
+    SkipFuncEvent::process(xc);
+    // calculate and set loops_per_jiffy
+    ((LinuxSystem *)xc->system)->setDelayLoop(xc);
+}
+
+void
+LinuxSystem::DebugPrintkEvent::process(ExecContext *xc)
+{
+    if (DTRACE(DebugPrintf)) {
+        if (!raw) {
+            StringWrap name(xc->system->name() + ".dprintk");
+            DPRINTFN("");
+        }
+
+        AlphaArguments args(xc);
+        Printk(args);
+        SkipFuncEvent::process(xc);
+    }
+}
+
+void
+LinuxSystem::PrintThreadInfo::process(ExecContext *xc)
+{
+    Linux::ThreadInfo ti(xc);
+
+    DPRINTF(Thread, "Currently Executing Thread %s, pid %d, started at: %d\n",
+            ti.curTaskName(), ti.curTaskPID(), ti.curTaskStart());
+}
+
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
 

@@ -713,7 +713,6 @@ RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
       gdb(_gdb), refcount(0)
 {
     DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
-    schedule();
 }
 
 void

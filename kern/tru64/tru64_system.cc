@@ -55,47 +55,25 @@ Tru64System::Tru64System(Tru64System::Params *p)
     }
 
 #ifdef DEBUG
-    kernelPanicEvent = new BreakPCEvent(&pcEventQueue, "kernel panic");
-    if (kernelSymtab->findAddress("panic", addr))
-        kernelPanicEvent->schedule(addr);
-    else
+    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
+    if (!kernelPanicEvent)
         panic("could not find kernel symbol \'panic\'");
 #endif
 
-    badaddrEvent = new BadAddrEvent(&pcEventQueue, "badaddr");
-    if (kernelSymtab->findAddress("badaddr", addr))
-        badaddrEvent->schedule(addr);
-    else
+    badaddrEvent = addKernelFuncEvent<BadAddrEvent>("badaddr");
+    if (!badaddrEvent)
         panic("could not find kernel symbol \'badaddr\'");
 
-    skipPowerStateEvent = new SkipFuncEvent(&pcEventQueue,
-                                            "tl_v48_capture_power_state");
-    if (kernelSymtab->findAddress("tl_v48_capture_power_state", addr))
-        skipPowerStateEvent->schedule(addr);
-
-    skipScavengeBootEvent = new SkipFuncEvent(&pcEventQueue,
-                                              "pmap_scavenge_boot");
-    if (kernelSymtab->findAddress("pmap_scavenge_boot", addr))
-        skipScavengeBootEvent->schedule(addr);
+    skipPowerStateEvent =
+        addKernelFuncEvent<SkipFuncEvent>("tl_v48_capture_power_state");
+    skipScavengeBootEvent =
+        addKernelFuncEvent<SkipFuncEvent>("pmap_scavenge_boot");
 
 #if TRACING_ON
-    printfEvent = new PrintfEvent(&pcEventQueue, "printf");
-    if (kernelSymtab->findAddress("printf", addr))
-        printfEvent->schedule(addr);
-
-    debugPrintfEvent = new DebugPrintfEvent(&pcEventQueue, "debug_printf",
-                                            false);
-    if (kernelSymtab->findAddress("m5printf", addr))
-        debugPrintfEvent->schedule(addr);
-
-    debugPrintfrEvent = new DebugPrintfEvent(&pcEventQueue, "debug_printfr",
-                                             true);
-    if (kernelSymtab->findAddress("m5printfr", addr))
-        debugPrintfrEvent->schedule(addr);
-
-    dumpMbufEvent = new DumpMbufEvent(&pcEventQueue, "dump_mbuf");
-    if (kernelSymtab->findAddress("m5_dump_mbuf", addr))
-        dumpMbufEvent->schedule(addr);
+    printfEvent = addKernelFuncEvent<PrintfEvent>("printf");
+    debugPrintfEvent = addKernelFuncEvent<DebugPrintfEvent>("m5printf");
+    debugPrintfrEvent = addKernelFuncEvent<DebugPrintfrEvent>("m5printfr");
+    dumpMbufEvent = addKernelFuncEvent<DumpMbufEvent>("m5_dump_mbuf");
 #endif
 }
 
