@@ -2660,6 +2660,28 @@ decode OPCODE default Unknown::unknown() {
 	}
     }
 
+    format HwMoveIPR {
+	0x19: hw_mfpr({{
+	    // this instruction is only valid in PAL mode
+	    if (!xc->inPalMode()) {
+		fault = Unimplemented_Opcode_Fault;
+	    }
+	    else {
+		Ra = xc->readIpr(ipr_index, fault);
+	    }
+	}});
+	0x1d: hw_mtpr({{
+	    // this instruction is only valid in PAL mode
+	    if (!xc->inPalMode()) {
+		fault = Unimplemented_Opcode_Fault;
+	    }
+	    else {
+		xc->setIpr(ipr_index, Ra);
+		if (traceData) { traceData->setData(Ra); }
+	    }
+	}});
+    }
+
     format BasicOperate {
 	0x1e: hw_rei({{ xc->hwrei(); }}, IsSerializing);
 
@@ -2700,35 +2722,12 @@ decode OPCODE default Unknown::unknown() {
 		AlphaPseudo::readfile(xc->xcBase());
 	    }}, IsNonSpeculative);
             0x51: m5break({{
-        AlphaPseudo::debugbreak(xc->xcBase());
-        }}, IsNonSpeculative);
+		AlphaPseudo::debugbreak(xc->xcBase());
+	    }}, IsNonSpeculative);
             0x52: m5switchcpu({{
-        AlphaPseudo::switchcpu(xc->xcBase());
-        }}, IsNonSpeculative);
-
+		AlphaPseudo::switchcpu(xc->xcBase());
+	    }}, IsNonSpeculative);
 	}
-    }
-
-    format HwMoveIPR {
-	0x19: hw_mfpr({{
-	    // this instruction is only valid in PAL mode
-	    if (!xc->inPalMode()) {
-		fault = Unimplemented_Opcode_Fault;
-	    }
-	    else {
-		Ra = xc->readIpr(ipr_index, fault);
-	    }
-	}});
-	0x1d: hw_mtpr({{
-	    // this instruction is only valid in PAL mode
-	    if (!xc->inPalMode()) {
-		fault = Unimplemented_Opcode_Fault;
-	    }
-	    else {
-		xc->setIpr(ipr_index, Ra);
-		if (traceData) { traceData->setData(Ra); }
-	    }
-	}});
     }
 #endif
 }
