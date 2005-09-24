@@ -114,7 +114,7 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
     // Set PIO mode 4 and 3 supported
     driveID.atap_piomode_supp = 0x3;
     // Set DMA mode 4 and below supported
-    driveID.atap_udmamode_supp = 0x10;
+    driveID.atap_udmamode_supp = 0x1f;
     // Statically set hardware config word
     driveID.atap_hwreset_res = 0x4001;
 
