@@ -320,12 +320,19 @@ for build_dir in build_dirs:
     # Make a copy of the default environment to use for this config.
     env = base_env.Copy()
     # Set env according to the build directory config.
-    options_file = os.path.join('build_options', build_dir)
-    if os.path.isfile(options_file):
-        sticky_opts.files = [options_file]
-    else:
-        print "Options file %s not found, using defaults." % options_file
 
+    sticky_opts.files = []
+    default_options_file = os.path.join('build_options', 'default', build_dir)
+    if os.path.isfile(default_options_file):
+        sticky_opts.files.append(default_options_file)
+    current_options_file = os.path.join('build_options', 'current', build_dir)
+    if os.path.isfile(current_options_file):
+        sticky_opts.files.append(current_options_file)
+    if not sticky_opts.files:
+        print "%s: No options file found in build_options, using defaults." \
+              % build_dir
+
+    # Apply current option settings to env
     sticky_opts.Update(env)
     nonsticky_opts.Update(env)
 
@@ -353,8 +360,8 @@ for build_dir in build_dirs:
             env.ParseConfig(mysql_config_libs)
             env.ParseConfig(mysql_config_include)
 
-    # Save sticky option settings back to file
-    sticky_opts.Save(options_file, env)
+    # Save sticky option settings back to current options file
+    sticky_opts.Save(current_options_file, env)
 
     # Do this after we save setting back, or else we'll tack on an
     # extra 'qdo' every time we run scons.
