@@ -92,7 +92,7 @@ class Shell(pexpect.spawn):
             self.kill(15)
             self.close(wait=True)
             sys.exit(1)
-        self.do_command('PS1="qdo$ "')
+        self.do_command('unset PROMPT_COMMAND; PS1="qdo$ "')
 
     # version of expect that updates full_output too
     def expect(self, regexp, timeout = -1):
