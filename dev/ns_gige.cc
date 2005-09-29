@@ -1840,6 +1840,8 @@ NSGigE::rxKick()
             CRDD = true;
             goto exit;
         } else {
+            if (rxDmaState != dmaIdle)
+                goto exit;
             rxState = rxDescRead;
             regs.rxdp = rxDescCache.link;
             CRDD = false;
@@ -2286,6 +2288,8 @@ NSGigE::txKick()
             txState = txIdle;
             goto exit;
         } else {
+            if (txDmaState != dmaIdle)
+                goto exit;
             txState = txDescRead;
             regs.txdp = txDescCache.link;
             CTDD = false;
