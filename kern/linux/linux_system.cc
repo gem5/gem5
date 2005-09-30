@@ -121,7 +121,7 @@ LinuxSystem::LinuxSystem(Params *p)
 #endif
 
     /**
-v     * Any time ide_delay_50ms, calibarte_delay or
+     * Any time ide_delay_50ms, calibarte_delay or
      * determine_cpu_caches is called just skip the
      * function. Currently determine_cpu_caches only is used put
      * information in proc, however if that changes in the future we

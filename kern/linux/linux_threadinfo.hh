@@ -26,64 +26,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LINUX_TREADNIFO_HH__
-#define __LINUX_TREADNIFO_HH__
+#ifndef __KERN_LINUX_LINUX_TREADNIFO_HH__
+#define __KERN_LINUX_LINUX_TREADNIFO_HH__
 
-
-#include "targetarch/vptr.hh"
 #include "kern/linux/thread_info.hh"
 #include "kern/linux/sched.hh"
-
+#include "targetarch/vptr.hh"
 
 namespace Linux {
 
 class ThreadInfo
 {
-    private:
-        ExecContext *xc;
+  private:
+    ExecContext *xc;
 
-    public:
-        ThreadInfo(ExecContext *exec) : xc(exec) {}
-        ~ThreadInfo() {}
+  public:
+    ThreadInfo(ExecContext *exec) : xc(exec) {}
+    ~ThreadInfo() {}
 
-        inline VPtr<thread_info>
-        curThreadInfo()
-        {
-            Addr current;
+    inline VPtr<thread_info>
+    curThreadInfo()
+    {
+        Addr current;
 
-            /* Each kernel stack is only 2 pages, the start of which is the
-             * thread_info struct. So we can get the address by masking off
-             * the lower 14 bits.
-             */
-            current = xc->regs.intRegFile[StackPointerReg] & ~0x3fff;
-            return VPtr<thread_info>(xc, current);
-        }
+        /* Each kernel stack is only 2 pages, the start of which is the
+         * thread_info struct. So we can get the address by masking off
+         * the lower 14 bits.
+         */
+        current = xc->regs.intRegFile[StackPointerReg] & ~0x3fff;
+        return VPtr<thread_info>(xc, current);
+    }
 
-        inline VPtr<task_struct>
-        curTaskInfo()
-        {
-            Addr task = curThreadInfo()->task;
-            return VPtr<task_struct>(xc, task);
-        }
+    inline VPtr<task_struct>
+    curTaskInfo()
+    {
+        Addr task = curThreadInfo()->task;
+        return VPtr<task_struct>(xc, task);
+    }
 
-        std::string
-        curTaskName()
-        {
-            return curTaskInfo()->name;
-        }
+    std::string
+    curTaskName()
+    {
+        return curTaskInfo()->name;
+    }
 
-        int32_t
-        curTaskPID()
-        {
-            return curTaskInfo()->pid;
-        }
+    int32_t
+    curTaskPID()
+    {
+        return curTaskInfo()->pid;
+    }
 
-        uint64_t
-        curTaskStart()
-        {
-            return curTaskInfo()->start;
-        }
+    uint64_t
+    curTaskStart()
+    {
+        return curTaskInfo()->start;
+    }
 };
-}
 
-#endif /* __LINUX_THREADINFO_HH__ */
+/* namespace Linux */ }
+
+#endif // __KERN_LINUX_LINUX_THREADINFO_HH__
