@@ -1,0 +1,155 @@
+#! /usr/bin/env python
+# Copyright (c) 2005 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
+
+import sys
+import os
+import optparse
+import datetime
+
+#
+# Regression invocation:
+#
+# regress \
+#      --workdir poolfs \
+#      --scons-opts 'BATCH=yes USE_MYSQL=no -j 30 -Q' \
+#      --recurse
+
+progname = os.path.basename(sys.argv[0])
+
+optparser = optparse.OptionParser()
+optparser.add_option('-v', '--verbose', dest='verbose', action='store_true',
+                     default=False,
+                     help='echo commands before executing')
+optparser.add_option('--scratch', dest='scratch', action='store_true',
+                     default=False,
+                     help='rebuld from scratch')
+optparser.add_option('--builds', dest='builds',
+                     default='ALPHA_SE,ALPHA_FS,ALPHA_FS_TL',
+                     help='comma-separated list of builds to test')
+optparser.add_option('--variants', dest='variants',
+                     default='opt',
+                     help='comma-separated list of build variants to test')
+optparser.add_option('--workdir', dest='workdir',
+                     help='directory for checked-out source trees')
+optparser.add_option('--scons-opts', dest='scons_opts', default='',
+                     help='scons options')
+optparser.add_option('--no-pull', dest='pull', action='store_false',
+                     default=True,
+                     help="don't pull changes from repository")
+optparser.add_option('--recurse', dest='recurse', action='store_true',
+                     default=False,
+                     help='call recursively to get summary up front')
+
+(options, tests) = optparser.parse_args()
+
+
+# split list options on ',' to get Python lists
+builds = options.builds.split(',')
+variants = options.variants.split(',')
+
+# Repositories to clone/update
+repos = ['m5', 'm5-test', 'ext']
+
+# Call os.system() and raise exception if return status is non-zero
+def system(cmd):
+    if options.verbose:
+        print cmd
+    status = os.system(cmd)
+    if status != 0:
+        upper = (status & 0xff00) >> 8
+        lower = (status & 0xff)
+        raise OSError, "shell command '%s' failed, status %d:%d" \
+              % (cmd, upper, lower)
+
+# Quote string s so it can be passed as a shell arg
+def shellquote(s):
+    if ' ' in s:
+        s = "'%s'" % s
+    return s
+
+# The '--recurse' option invokes scons once to perform any necessary
+# rebuilds/test runs with the (possibly verbose) output placed in a
+# log file, then (if the buld was successful) returns scons to print a
+# summary of the results.
+if options.recurse:
+    sys.argv.remove('--recurse')  # avoid infinite recursion...
+    timestr = datetime.datetime.now().isoformat('-')[:19]
+    logfile = '%s-%s' % (progname, timestr)
+    # quote args for shell
+    qargs = [shellquote(a) for a in sys.argv]
+    # always run the sub-job in verbose mode
+    qargs.append('-v')
+    cmd = '%s > %s 2>&1' % (' '.join(qargs), logfile)
+    try:
+        system(cmd)
+    except OSError, exc:
+        print "Error: recursive invocation failed, aborting."
+        print exc
+        print "======================="
+        os.system('cat %s' % logfile)
+        sys.exit(1)
+    # recursive call succeeded... re-run to generate summary
+    # don't *re*-build from scratch now
+    options.scratch = False
+    # no need to re-pull since the recursive call shoudl have done that
+    options.pull = False
+    print "Recursive invocation successful, see %s for output." % logfile
+
+try:
+    if options.workdir:
+        if options.verbose:
+            print 'cd', options.workdir
+        os.chdir(options.workdir)
+
+    if options.scratch:
+        for dir in repos:
+            system('rm -rf %s' % dir)
+            system('bk clone /bk/%s' % dir)
+    elif options.pull:
+        for dir in repos:
+            system('cd %s; bk pull' % dir)
+
+    if not tests:
+        print "No tests specified."
+        sys.exit(1)
+
+    if options.verbose:
+        print 'cd m5/build'
+    os.chdir('m5/build')
+
+    targets = ['%s/test/%s/%s' % (build, variant, test)
+               for build in builds for variant in variants for test in tests]
+
+    system('scons %s %s' % (options.scons_opts, ' '.join(targets)))
+
+    sys.exit(0)
+
+except OSError, exc:
+    print "%s: " % progname, exc
+    sys.exit(1)
