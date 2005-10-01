@@ -342,12 +342,13 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
 LiveProcess *
 LiveProcess::create(const string &nm,
                     int stdin_fd, int stdout_fd, int stderr_fd,
+                    string executable,
                     vector<string> &argv, vector<string> &envp)
 {
     LiveProcess *process = NULL;
-    ObjectFile *objFile = createObjectFile(argv[0]);
+    ObjectFile *objFile = createObjectFile(executable);
     if (objFile == NULL) {
-        fatal("Can't load object file %s", argv[0]);
+        fatal("Can't load object file %s", executable);
     }
 
     // check object type & set up syscall emulation pointer
@@ -384,6 +385,7 @@ LiveProcess::create(const string &nm,
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
 
     VectorParam<string> cmd;
+    Param<string> executable;
     Param<string> input;
     Param<string> output;
     VectorParam<string> env;
@@ -394,6 +396,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
 BEGIN_INIT_SIM_OBJECT_PARAMS(LiveProcess)
 
     INIT_PARAM(cmd, "command line (executable plus arguments)"),
+    INIT_PARAM(executable, "executable (overrides cmd[0] if set)"),
     INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
     INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
     INIT_PARAM(env, "environment settings")
@@ -425,6 +428,7 @@ CREATE_SIM_OBJECT(LiveProcess)
 
     return LiveProcess::create(getInstanceName(),
                                stdin_fd, stdout_fd, stderr_fd,
+                               (string)executable == "" ? cmd[0] : executable,
                                cmd, env);
 }
 

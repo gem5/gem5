@@ -6,6 +6,7 @@ class Process(SimObject):
 
 class LiveProcess(Process):
     type = 'LiveProcess'
+    executable = Param.String('', "executable (overrides cmd[0] if set)")
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String('', "environment settings")
     input = Param.String('cin', "filename for stdin")

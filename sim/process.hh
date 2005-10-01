@@ -194,6 +194,7 @@ class LiveProcess : public Process
     // open and look at the object file.
     static LiveProcess *create(const std::string &nm,
                                int stdin_fd, int stdout_fd, int stderr_fd,
+                               std::string executable,
                                std::vector<std::string> &argv,
                                std::vector<std::string> &envp);
 };
