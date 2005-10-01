@@ -322,7 +322,10 @@ for build_dir in build_dirs:
     # Set env according to the build directory config.
 
     sticky_opts.files = []
-    default_options_file = os.path.join('build_options', 'default', build_dir)
+    # Name of default options file is taken from 'default=' on command
+    # line if set, otherwise name of build dir.
+    default_options_file = os.path.join('build_options', 'default',
+                                        ARGUMENTS.get('default', build_dir))
     if os.path.isfile(default_options_file):
         sticky_opts.files.append(default_options_file)
     current_options_file = os.path.join('build_options', 'current', build_dir)
