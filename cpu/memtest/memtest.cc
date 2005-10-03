@@ -236,23 +236,20 @@ MemTest::tick()
     }
 
     //make new request
-    unsigned cmd = rand() % 100;
-    unsigned offset1 = random() % size;
-    unsigned offset2 = random() % size;
+    unsigned cmd = random() % 100;
+    unsigned offset = random() % size;
     unsigned base = random() % 2;
     uint64_t data = random();
     unsigned access_size = random() % 4;
-    unsigned cacheable = rand() % 100;
-    unsigned source_align = rand() % 100;
-    unsigned dest_align = rand() % 100;
+    unsigned cacheable = random() % 100;
 
     //If we aren't doing copies, use id as offset, and do a false sharing
     //mem tester
     if (percentCopies == 0) {
         //We can eliminate the lower bits of the offset, and then use the id
         //to offset within the blks
-        offset1 &= ~63; //Not the low order bits
-        offset1 += id;
+        offset &= ~63; //Not the low order bits
+        offset += id;
         access_size = 0;
     }
 
@@ -260,12 +257,12 @@ MemTest::tick()
 
     if (cacheable < percentUncacheable) {
         req->flags |= UNCACHEABLE;
-        req->paddr = uncacheAddr + offset1;
+        req->paddr = uncacheAddr + offset;
     } else {
-        req->paddr = ((base) ? baseAddr1 : baseAddr2) + offset1;
+        req->paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    bool probe = (rand() % 2 == 1) && !req->isUncacheable();
-    probe = false;
+    // bool probe = (random() % 2 == 1) && !req->isUncacheable();
+    bool probe = false;
 
     req->size = 1 << access_size;
     req->data = new uint8_t[req->size];
@@ -288,7 +285,7 @@ MemTest::tick()
         if (blockAddr(req->paddr) == traceBlockAddr) {
             cerr << name()
                  << ": initiating read "
-                 << ((probe)?"probe of ":"access of ")
+                 << ((probe) ? "probe of " : "access of ")
                  << dec << req->size << " bytes from addr 0x"
                  << hex << req->paddr
                  << " (0x" << hex << blockAddr(req->paddr) << ")"
@@ -334,7 +331,11 @@ MemTest::tick()
         }
     } else {
         // copy
-        Addr source = ((base) ? baseAddr1 : baseAddr2) + offset1;
+        unsigned source_align = random() % 100;
+        unsigned dest_align = random() % 100;
+        unsigned offset2 = random() % size;
+
+        Addr source = ((base) ? baseAddr1 : baseAddr2) + offset;
         Addr dest = ((base) ? baseAddr2 : baseAddr1) + offset2;
         if (outstandingAddrs.find(source) != outstandingAddrs.end()) return;
         else outstandingAddrs.insert(source);
