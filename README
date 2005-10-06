@@ -1,24 +1,38 @@
 This is release m5_1.1 of the M5 simulator.
 
-This file contains brief "getting started" information and release
-notes.  For more information, see http://m5.eecs.umich.edu.  If you
-have questions, please send mail to m5sim-users@lists.sourceforge.net.
+This file contains brief "getting started" instructions.  For more
+information, see http://m5.eecs.umich.edu.  If you have questions,
+please send mail to m5sim-users@lists.sourceforge.net.
 
 WHAT'S INCLUDED (AND NOT)
 -------------------------
 
-Since you're reading this file, presumably you've managed to untar the
-distribution.  The archive you've unpacked has three subdirectories:
+The basic source release includes these subdirectories:
  - m5: the simulator itself
- - m5-test: regression tests and scripts to run them
+ - m5-test: regression tests
  - ext: less-common external packages needed to build m5
  - alpha-system: source for Alpha console and PALcode
 
-M5 is a capable, full-system simulator that current supports both Linux
-2.4/2.6 and the proprietary Compaq/HP Tru64 version of Unix. We are able 
-to distribute Linux bootdisks, but we are unable to distribute bootable
-disk images of Tru64 Unix. If you have a Tru64 license and are interested 
-in obtaining disk images, contact us at m5-dev@eecs.umich.edu.
+To run full-system simulations, you will need compiled console,
+PALcode, and kernel binaries and one or more disk images.  These files
+are collected in a separate archive, m5_system_1.1.tar.bz2.  This file
+is included on the CD release, or you can download it separately from
+Sourceforge.
+
+M5 supports Linux 2.4/2.6, FreeBSD, and the proprietary Compaq/HP
+Tru64 version of Unix. We are able to distribute Linux and FreeBSD
+bootdisks, but we are unable to distribute bootable disk images of
+Tru64 Unix. If you have a Tru64 license and are interested in
+obtaining disk images, contact us at m5-dev@eecs.umich.edu.
+
+The CD release includes a few extra goodies, such as a tar file
+containing doxygen-generated HTML documentation (html-docs.tar.gz), a
+set of Linux source patches (linux_m5-2.6.8.1.diff), and the scons
+program needed to build M5.  If you do not have the CD, the same HTML
+documentation is available online at http://m5.eecs.umich.edu/docs,
+the Linux source patches are available at
+http://m5.eecs.umich.edu/dist/linux_m5-2.6.8.1.diff, and the scons
+program is available from http://www.scons.org.
 
 WHAT'S NEEDED
 -------------
@@ -50,8 +64,8 @@ m5.fast  - optimized version of the code without tracing and asserts
 Different targets are built in different subdirectories of m5/build.
 Binaries with the same target but different optimization levels share
 the same directory.  Note that you can build m5 in any directory you
-choose by copying the SConstruct file there and creating symbolic links
-to the 'm5' and 'ext' directories.
+choose;p just configure the target directory using the 'mkbuilddir'
+script in m5/build.
 
 The following steps will build and test the simulator.  The variable
 "$top" refers to the top directory where you've unpacked the files,
@@ -64,14 +78,19 @@ To build and test the syscall-emulation simulator:
 	cd $top/m5/build
 	scons ALPHA_SE/test/opt/quick
 
-To build and test the full-system simualator:
+This process takes under 10 minutes on a dual 3GHz Xeon system (using
+the '-j 4' option).
 
-1. Unpack the full-system binaries from m5_system_1.1.tar.bz2.  This file
-   is included on the CD release, or you can download it from
-   http://m5.eecs.umich.edu/dist/ m5_system_1.1.tar.bz2.)  This package
-   includes disk images and kernel, palcode, and console binaries
-   for Linux and FreeBSD.
-2. Edit SYSTEMDIR in $top/m5-test/SysPaths.py to point to your local copy
-   of the binaries.
-3. In $top/m5/build, run "scons ALPHA_FS/opt/test/quick".
+To build and test the full-system simulator:
+
+1. Unpack the full-system binaries from m5_system_1.1.tar.bz2.  (See
+   above for directions on obtaining this file if you don't have it.)
+   This package includes disk images and kernel, palcode, and console
+   binaries for Linux and FreeBSD.
+2. Edit the SYSTEMDIR search path in $top/m5-test/SysPaths.py to
+   include the path to your local copy of the binaries.
+3. In $top/m5/build, run "scons ALPHA_FS/test/opt/quick".
+
+This process also takes under 10 minutes on a dual 3GHz Xeon system
+(again using the '-j 4' option).
 

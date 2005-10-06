@@ -1,0 +1,29 @@
+Oct. 8, 2005: m5_1.1
+--------------------
+Update release for IOSCA workshop mini-tutorial.  New features include:
+- Preliminary FreeBSD support
+- Integration of regression tests into scons build framework
+- Several bug fixes and better compatibility for Cygwin hosts
+- Major cleanup of Alpha system code (console, PAL, etc.) to make
+  it easier for others to build/modify
+- Fixes to enable compilation under g++ 4.0 
+- Numerous minor bug fixes
+
+June 10, 2005: m5_1.0_web
+-------------------------
+The 1.0 release posted on Sourceforge after the ISCA tutorial contains
+just a few very minor fixes relative to the CD.
+
+June 5, 2005: m5_1.0_tutorial
+-----------------------------
+First non-beta release.  This release was on the CD distributed at the
+ISCA tutorial.  Major enhancements relative to beta releases include
+Linux support and Python-based configuration language.
+
+June 17, 2004: m5_1.0_beta2
+---------------------------
+Stealth-mode beta bug-fix update, not widely advertised.
+
+Oct. 17, 2003: m5_1.0_beta1
+---------------------------
+Early beta release.
