@@ -3,6 +3,7 @@ from HierParams import HierParams
 from Serialize import Serialize
 from Statistics import Statistics
 from Trace import Trace
+from ExeTrace import ExecutionTrace
 
 class Root(SimObject):
     type = 'Root'
@@ -20,4 +21,5 @@ class Root(SimObject):
     hier = HierParams(do_data = False, do_events = True)
     stats = Statistics()
     trace = Trace()
+    exetrace = ExecutionTrace()
     serialize = Serialize()

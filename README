@@ -22,9 +22,9 @@ in obtaining disk images, contact us at m5-dev@eecs.umich.edu.
 
 WHAT'S NEEDED
 -------------
-- GCC (version 3.3 or 3.4 recommended)
+- GCC version 3.3 or newer
 - Python 2.3 or newer
-- SCons 0.96.1 (see http://www.scons.org)
+- SCons 0.96.1 or newer (see http://www.scons.org)
 
 WHAT'S RECOMMENDED
 ------------------
@@ -66,9 +66,11 @@ To build and test the syscall-emulation simulator:
 
 To build and test the full-system simualator:
 
-1. Download the full-system binary package from
-   http://m5.eecs.umich.edu/dist/m5_system_1.1.tar.bz2.  This package includes
-   disk images and kernel, palcode, and console binaries for Linux and FreeBSD.
+1. Unpack the full-system binaries from m5_system_1.1.tar.bz2.  This file
+   is included on the CD release, or you can download it from
+   http://m5.eecs.umich.edu/dist/ m5_system_1.1.tar.bz2.)  This package
+   includes disk images and kernel, palcode, and console binaries
+   for Linux and FreeBSD.
 2. Edit SYSTEMDIR in $top/m5-test/SysPaths.py to point to your local copy
    of the binaries.
 3. In $top/m5/build, run "scons ALPHA_FS/opt/test/quick".
