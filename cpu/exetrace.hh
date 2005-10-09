@@ -143,6 +143,7 @@ class InstRecord : public Record
         PRINT_INT_REGS,
         PRINT_FETCH_SEQ,
         PRINT_CP_SEQ,
+        INTEL_FORMAT,
         NUM_BITS
     };
 

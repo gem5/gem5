@@ -51,81 +51,91 @@ using namespace std;
 void
 Trace::InstRecord::dump(ostream &outs)
 {
+    if (flags[INTEL_FORMAT]) {
+        ccprintf(outs, "%7d ) ", cycle);
+        outs << "0x" << hex << PC << ":\t";
+        if (staticInst->isLoad()) {
+            outs << "<RD 0x" << hex << addr;
+            outs << ">";
+        } else if (staticInst->isStore()) {
+            outs << "<WR 0x" << hex << addr;
+            outs << ">";
+        }
+    } else {
+        if (flags[PRINT_CYCLE])
+            ccprintf(outs, "%7d: ", cycle);
 
-    if (flags[PRINT_CYCLE])
-        ccprintf(outs, "%7d: ", cycle);
+        outs << cpu->name() << " ";
 
-    outs << cpu->name() << " ";
+        if (flags[TRACE_MISSPEC])
+            outs << (misspeculating ? "-" : "+") << " ";
 
-    if (flags[TRACE_MISSPEC])
-        outs << (misspeculating ? "-" : "+") << " ";
-
-    if (flags[PRINT_THREAD_NUM])
-        outs << "T" << thread << " : ";
+        if (flags[PRINT_THREAD_NUM])
+            outs << "T" << thread << " : ";
 
 
-    std::string sym_str;
-    Addr sym_addr;
-    if (debugSymbolTable
-        && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
-        if (PC != sym_addr)
-            sym_str += csprintf("+%d", PC - sym_addr);
-        outs << "@" << sym_str << " : ";
-    }
-    else {
-        outs << "0x" << hex << PC << " : ";
-    }
+        std::string sym_str;
+        Addr sym_addr;
+        if (debugSymbolTable
+            && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
+            if (PC != sym_addr)
+                sym_str += csprintf("+%d", PC - sym_addr);
+            outs << "@" << sym_str << " : ";
+        }
+        else {
+            outs << "0x" << hex << PC << " : ";
+        }
 
-    //
-    //  Print decoded instruction
-    //
+        //
+        //  Print decoded instruction
+        //
 
 #if defined(__GNUC__) && (__GNUC__ < 3)
-    // There's a bug in gcc 2.x library that prevents setw()
-    // from working properly on strings
-    string mc(staticInst->disassemble(PC, debugSymbolTable));
-    while (mc.length() < 26)
-        mc += " ";
-    outs << mc;
+        // There's a bug in gcc 2.x library that prevents setw()
+        // from working properly on strings
+        string mc(staticInst->disassemble(PC, debugSymbolTable));
+        while (mc.length() < 26)
+            mc += " ";
+        outs << mc;
 #else
-    outs << setw(26) << left << staticInst->disassemble(PC, debugSymbolTable);
+        outs << setw(26) << left << staticInst->disassemble(PC, debugSymbolTable);
 #endif
 
-    outs << " : ";
+        outs << " : ";
 
-    if (flags[PRINT_OP_CLASS]) {
-        outs << opClassStrings[staticInst->opClass()] << " : ";
-    }
+        if (flags[PRINT_OP_CLASS]) {
+            outs << opClassStrings[staticInst->opClass()] << " : ";
+        }
 
-    if (flags[PRINT_RESULT_DATA] && data_status != DataInvalid) {
-        outs << " D=";
+        if (flags[PRINT_RESULT_DATA] && data_status != DataInvalid) {
+            outs << " D=";
 #if 0
-        if (data_status == DataDouble)
-            ccprintf(outs, "%f", data.as_double);
-        else
-            ccprintf(outs, "%#018x", data.as_int);
+            if (data_status == DataDouble)
+                ccprintf(outs, "%f", data.as_double);
+            else
+                ccprintf(outs, "%#018x", data.as_int);
 #else
-        ccprintf(outs, "%#018x", data.as_int);
+            ccprintf(outs, "%#018x", data.as_int);
 #endif
+        }
+
+        if (flags[PRINT_EFF_ADDR] && addr_valid)
+            outs << " A=0x" << hex << addr;
+
+        if (flags[PRINT_INT_REGS] && regs_valid) {
+            for (int i = 0; i < 32;)
+                for (int j = i + 1; i <= j; i++)
+                    ccprintf(outs, "r%02d = %#018x%s", i, iregs->regs[i],
+                             ((i == j) ? "\n" : "    "));
+            outs << "\n";
+        }
+
+        if (flags[PRINT_FETCH_SEQ] && fetch_seq_valid)
+            outs << "  FetchSeq=" << dec << fetch_seq;
+
+        if (flags[PRINT_CP_SEQ] && cp_seq_valid)
+            outs << "  CPSeq=" << dec << cp_seq;
     }
-
-    if (flags[PRINT_EFF_ADDR] && addr_valid)
-        outs << " A=0x" << hex << addr;
-
-    if (flags[PRINT_INT_REGS] && regs_valid) {
-        for (int i = 0; i < 32;)
-            for (int j = i + 1; i <= j; i++)
-                ccprintf(outs, "r%02d = %#018x%s", i, iregs->regs[i],
-                         ((i == j) ? "\n" : "    "));
-        outs << "\n";
-    }
-
-    if (flags[PRINT_FETCH_SEQ] && fetch_seq_valid)
-        outs << "  FetchSeq=" << dec << fetch_seq;
-
-    if (flags[PRINT_CP_SEQ] && cp_seq_valid)
-        outs << "  CPSeq=" << dec << cp_seq;
-
     //
     //  End of line...
     //
@@ -172,6 +182,9 @@ Param<bool> exe_trace_print_fetchseq(&exeTraceParams, "print_fetchseq",
                                   "print fetch sequence number", false);
 Param<bool> exe_trace_print_cp_seq(&exeTraceParams, "print_cpseq",
                                   "print correct-path sequence number", false);
+Param<bool> exe_trace_intel_format(&exeTraceParams, "intel_format",
+                                   "print trace in intel compatible format", false);
+
 
 //
 // Helper function for ExecutionTraceParamContext::checkParams() just
@@ -190,6 +203,7 @@ Trace::InstRecord::setParams()
     flags[PRINT_INT_REGS]    = exe_trace_print_iregs;
     flags[PRINT_FETCH_SEQ]   = exe_trace_print_fetchseq;
     flags[PRINT_CP_SEQ]      = exe_trace_print_cp_seq;
+    flags[INTEL_FORMAT]      = exe_trace_intel_format;
 }
 
 void
