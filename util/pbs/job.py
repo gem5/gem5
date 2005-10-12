@@ -168,8 +168,6 @@ if __name__ == '__main__':
     started = date()
     jobdir.echofile('.running', started)
     jobdir.rmfile('.queued')
-    jobdir.echofile('.pbs_jobid', pbs_jobid)
-    jobdir.echofile('.pbs_jobname', pbs_jobid)
     jobdir.echofile('.host', host)
 
     jobdir.setstatus('running on %s on %s' % (host, started))
@@ -219,7 +217,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGQUIT, handler)
     signal.signal(signal.SIGTERM, handler)
-    signal.signal(signal.SIGSTOP, handler)
     signal.signal(signal.SIGCONT, handler)
     signal.signal(signal.SIGUSR1, handler)
     signal.signal(signal.SIGUSR2, handler)

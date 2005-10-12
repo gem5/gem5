@@ -266,6 +266,8 @@ for job in joblist:
             print 'PBS Jobid:      %s' % jobid
             namehack.setname(jobid, job.name)
             queued = date()
+            jobdir.echofile('.pbs_jobid', jobid)
+            jobdir.echofile('.pbs_jobname', job.name)
             jobdir.echofile('.queued', queued)
             jobdir.setstatus('queued on %s' % queued)
         else:
