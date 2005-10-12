@@ -40,8 +40,13 @@ class System;
 class ExecContext;
 class PhysicalMemory;
 
+class GDBListener;
 class RemoteGDB
 {
+  private:
+    friend void debugger();
+    friend class GDBListener;
+
   protected:
     class Event : public PollEvent
     {
@@ -55,6 +60,8 @@ class RemoteGDB
 
     friend class Event;
     Event *event;
+    GDBListener *listener;
+    int number;
 
   protected:
     int fd;

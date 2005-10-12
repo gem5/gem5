@@ -134,13 +134,19 @@
 using namespace std;
 
 #ifdef DEBUG
-RemoteGDB *theDebugger = NULL;
+vector<RemoteGDB *> debuggers;
+int current_debugger = -1;
 
 void
 debugger()
 {
-    if (theDebugger)
-        theDebugger->trap(ALPHA_KENTRY_IF);
+    if (current_debugger >= 0 && current_debugger < debuggers.size()) {
+        RemoteGDB *gdb = debuggers[current_debugger];
+        if (!gdb->isattached())
+            gdb->listener->accept();
+        if (gdb->isattached())
+            gdb->trap(ALPHA_KENTRY_IF);
+    }
 }
 #endif
 
@@ -161,7 +167,10 @@ GDBListener::Event::process(int revent)
 
 GDBListener::GDBListener(RemoteGDB *g, int p)
     : event(NULL), gdb(g), port(p)
-{}
+{
+    assert(!gdb->listener);
+    gdb->listener = this;
+}
 
 GDBListener::~GDBListener()
 {
@@ -183,9 +192,21 @@ GDBListener::listen()
         port++;
     }
 
-    cerr << "Listening for remote gdb connection on port " << port << endl;
     event = new Event(this, listener.getfd(), POLLIN);
     pollQueue.schedule(event);
+
+#ifdef DEBUG
+    gdb->number = debuggers.size();
+    debuggers.push_back(gdb);
+#endif
+
+#ifdef DEBUG
+    ccprintf(cerr, "%d: %s: listening for remote gdb #%d on port %d\n",
+             curTick, name(), gdb->number, port);
+#else
+    ccprintf(cerr, "%d: %s: listening for remote gdb on port %d\n",
+             curTick, name(), port);
+#endif
 }
 
 void
@@ -228,7 +249,8 @@ RemoteGDB::Event::process(int revent)
 }
 
 RemoteGDB::RemoteGDB(System *_system, ExecContext *c)
-    : event(NULL), fd(-1), active(false), attached(false),
+    : event(NULL), listener(NULL), number(-1), fd(-1),
+      active(false), attached(false),
       system(_system), pmem(_system->physmem), context(c)
 {
     memset(gdbregs, 0, sizeof(gdbregs));
@@ -260,9 +282,6 @@ RemoteGDB::attach(int f)
 
     attached = true;
     DPRINTFN("remote gdb attached\n");
-#ifdef DEBUG
-    theDebugger = this;
-#endif
 }
 
 void
