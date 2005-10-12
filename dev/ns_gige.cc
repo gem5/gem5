@@ -148,6 +148,11 @@ NSGigE::NSGigE(Params *p)
 
     regsReset();
     memcpy(&rom.perfectMatch, p->eaddr.bytes(), ETH_ADDR_LEN);
+
+    memset(&rxDesc32, 0, sizeof(rxDesc32));
+    memset(&txDesc32, 0, sizeof(txDesc32));
+    memset(&rxDesc64, 0, sizeof(rxDesc64));
+    memset(&txDesc64, 0, sizeof(txDesc64));
 }
 
 NSGigE::~NSGigE()
@@ -868,15 +873,12 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
 // all these #if 0's are because i don't THINK the kernel needs to
 // have these implemented. if there is a problem relating to one of
 // these, you may need to add functionality in.
-#if 0
             if (reg & CFGR_TBI_EN) ;
             if (reg & CFGR_MODE_1000) ;
-#endif
 
             if (reg & CFGR_AUTO_1000)
                 panic("CFGR_AUTO_1000 not implemented!\n");
 
-#if 0
             if (reg & CFGR_PINT_DUPSTS ||
                 reg & CFGR_PINT_LNKSTS ||
                 reg & CFGR_PINT_SPDSTS)
@@ -886,8 +888,8 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             if (reg & CFGR_MRM_DIS) ;
             if (reg & CFGR_MWI_DIS) ;
 
-            if (reg & CFGR_T64ADDR)
-                panic("CFGR_T64ADDR is read only register!\n");
+            if (reg & CFGR_T64ADDR) ;
+            // panic("CFGR_T64ADDR is read only register!\n");
 
             if (reg & CFGR_PCI64_DET)
                 panic("CFGR_PCI64_DET is read only register!\n");
@@ -896,23 +898,20 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             if (reg & CFGR_M64ADDR) ;
             if (reg & CFGR_PHY_RST) ;
             if (reg & CFGR_PHY_DIS) ;
-#endif
 
             if (reg & CFGR_EXTSTS_EN)
                 extstsEnable = true;
             else
                 extstsEnable = false;
 
-#if 0
-              if (reg & CFGR_REQALG) ;
-              if (reg & CFGR_SB) ;
-              if (reg & CFGR_POW) ;
-              if (reg & CFGR_EXD) ;
-              if (reg & CFGR_PESEL) ;
-              if (reg & CFGR_BROM_DIS) ;
-              if (reg & CFGR_EXT_125) ;
-              if (reg & CFGR_BEM) ;
-#endif
+            if (reg & CFGR_REQALG) ;
+            if (reg & CFGR_SB) ;
+            if (reg & CFGR_POW) ;
+            if (reg & CFGR_EXD) ;
+            if (reg & CFGR_PESEL) ;
+            if (reg & CFGR_BROM_DIS) ;
+            if (reg & CFGR_EXT_125) ;
+            if (reg & CFGR_BEM) ;
             break;
 
           case MEAR:
@@ -936,11 +935,9 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             eepromClk = reg & MEAR_EECLK;
 
             // since phy is completely faked, MEAR_MD* don't matter
-#if 0
             if (reg & MEAR_MDIO) ;
             if (reg & MEAR_MDDIR) ;
             if (reg & MEAR_MDC) ;
-#endif
             break;
 
           case PTSCR:
@@ -1556,8 +1553,15 @@ NSGigE::rxDmaWriteDone()
 void
 NSGigE::rxKick()
 {
-    DPRINTF(EthernetSM, "receive kick rxState=%s (rxBuf.size=%d)\n",
-            NsRxStateStrings[rxState], rxFifo.size());
+    bool is64bit = (bool)(regs.config & CFGR_M64ADDR);
+
+    DPRINTF(EthernetSM,
+            "receive kick rxState=%s (rxBuf.size=%d) %d-bit\n",
+            NsRxStateStrings[rxState], rxFifo.size(), is64bit ? 64 : 32);
+
+    Addr link, bufptr;
+    uint32_t &cmdsts = is64bit ? rxDesc64.cmdsts : rxDesc32.cmdsts;
+    uint32_t &extsts = is64bit ? rxDesc64.extsts : rxDesc32.extsts;
 
   next:
     if (clock) {
@@ -1585,6 +1589,9 @@ NSGigE::rxKick()
         break;
     }
 
+    link = is64bit ? (Addr)rxDesc64.link : (Addr)rxDesc32.link;
+    bufptr = is64bit ? (Addr)rxDesc64.bufptr : (Addr)rxDesc32.bufptr;
+
     // see state machine from spec for details
     // the way this works is, if you finish work on one state and can
     // go directly to another, you do that through jumping to the
@@ -1603,8 +1610,9 @@ NSGigE::rxKick()
             rxState = rxDescRefr;
 
             rxDmaAddr = regs.rxdp & 0x3fffffff;
-            rxDmaData = &rxDescCache + offsetof(ns_desc, link);
-            rxDmaLen = sizeof(rxDescCache.link);
+            rxDmaData =
+                is64bit ? (void *)&rxDesc64.link : (void *)&rxDesc32.link;
+            rxDmaLen = is64bit ? sizeof(rxDesc64.link) : sizeof(rxDesc32.link);
             rxDmaFree = dmaDescFree;
 
             descDmaReads++;
@@ -1616,8 +1624,8 @@ NSGigE::rxKick()
             rxState = rxDescRead;
 
             rxDmaAddr = regs.rxdp & 0x3fffffff;
-            rxDmaData = &rxDescCache;
-            rxDmaLen = sizeof(ns_desc);
+            rxDmaData = is64bit ? (void *)&rxDesc64 : (void *)&rxDesc32;
+            rxDmaLen = is64bit ? sizeof(rxDesc64) : sizeof(rxDesc32);
             rxDmaFree = dmaDescFree;
 
             descDmaReads++;
@@ -1639,21 +1647,20 @@ NSGigE::rxKick()
         if (rxDmaState != dmaIdle)
             goto exit;
 
-        DPRINTF(EthernetDesc, "rxDescCache: addr=%08x read descriptor\n",
+        DPRINTF(EthernetDesc, "rxDesc: addr=%08x read descriptor\n",
                 regs.rxdp & 0x3fffffff);
         DPRINTF(EthernetDesc,
-                "rxDescCache: link=%08x bufptr=%08x cmdsts=%08x extsts=%08x\n",
-                rxDescCache.link, rxDescCache.bufptr, rxDescCache.cmdsts,
-                rxDescCache.extsts);
+                "rxDesc: link=%#x bufptr=%#x cmdsts=%08x extsts=%08x\n",
+                link, bufptr, cmdsts, extsts);
 
-        if (rxDescCache.cmdsts & CMDSTS_OWN) {
+        if (cmdsts & CMDSTS_OWN) {
             devIntrPost(ISR_RXIDLE);
             rxState = rxIdle;
             goto exit;
         } else {
             rxState = rxFifoBlock;
-            rxFragPtr = rxDescCache.bufptr;
-            rxDescCnt = rxDescCache.cmdsts & CMDSTS_LEN_MASK;
+            rxFragPtr = bufptr;
+            rxDescCnt = cmdsts & CMDSTS_LEN_MASK;
         }
         break;
 
@@ -1719,11 +1726,11 @@ NSGigE::rxKick()
             assert(rxPktBytes == 0);
             DPRINTF(EthernetSM, "done with receiving packet\n");
 
-            rxDescCache.cmdsts |= CMDSTS_OWN;
-            rxDescCache.cmdsts &= ~CMDSTS_MORE;
-            rxDescCache.cmdsts |= CMDSTS_OK;
-            rxDescCache.cmdsts &= 0xffff0000;
-            rxDescCache.cmdsts += rxPacket->length;   //i.e. set CMDSTS_SIZE
+            cmdsts |= CMDSTS_OWN;
+            cmdsts &= ~CMDSTS_MORE;
+            cmdsts |= CMDSTS_OK;
+            cmdsts &= 0xffff0000;
+            cmdsts += rxPacket->length;   //i.e. set CMDSTS_SIZE
 
 #if 0
             /*
@@ -1734,41 +1741,41 @@ NSGigE::rxKick()
              * functional purposes, just undef
              */
             if (rxFilterEnable) {
-                rxDescCache.cmdsts &= ~CMDSTS_DEST_MASK;
+                cmdsts &= ~CMDSTS_DEST_MASK;
                 const EthAddr &dst = rxFifoFront()->dst();
                 if (dst->unicast())
-                    rxDescCache.cmdsts |= CMDSTS_DEST_SELF;
+                    cmdsts |= CMDSTS_DEST_SELF;
                 if (dst->multicast())
-                    rxDescCache.cmdsts |= CMDSTS_DEST_MULTI;
+                    cmdsts |= CMDSTS_DEST_MULTI;
                 if (dst->broadcast())
-                    rxDescCache.cmdsts |= CMDSTS_DEST_MASK;
+                    cmdsts |= CMDSTS_DEST_MASK;
             }
 #endif
 
             IpPtr ip(rxPacket);
             if (extstsEnable && ip) {
-                rxDescCache.extsts |= EXTSTS_IPPKT;
+                extsts |= EXTSTS_IPPKT;
                 rxIpChecksums++;
                 if (cksum(ip) != 0) {
                     DPRINTF(EthernetCksum, "Rx IP Checksum Error\n");
-                    rxDescCache.extsts |= EXTSTS_IPERR;
+                    extsts |= EXTSTS_IPERR;
                 }
                 TcpPtr tcp(ip);
                 UdpPtr udp(ip);
                 if (tcp) {
-                    rxDescCache.extsts |= EXTSTS_TCPPKT;
+                    extsts |= EXTSTS_TCPPKT;
                     rxTcpChecksums++;
                     if (cksum(tcp) != 0) {
                         DPRINTF(EthernetCksum, "Rx TCP Checksum Error\n");
-                        rxDescCache.extsts |= EXTSTS_TCPERR;
+                        extsts |= EXTSTS_TCPERR;
 
                     }
                 } else if (udp) {
-                    rxDescCache.extsts |= EXTSTS_UDPPKT;
+                    extsts |= EXTSTS_UDPPKT;
                     rxUdpChecksums++;
                     if (cksum(udp) != 0) {
                         DPRINTF(EthernetCksum, "Rx UDP Checksum Error\n");
-                        rxDescCache.extsts |= EXTSTS_UDPERR;
+                        extsts |= EXTSTS_UDPERR;
                     }
                 }
             }
@@ -1782,16 +1789,21 @@ NSGigE::rxKick()
              */
 
             DPRINTF(EthernetDesc,
-                    "rxDescCache: addr=%08x writeback cmdsts extsts\n",
+                    "rxDesc: addr=%08x writeback cmdsts extsts\n",
                     regs.rxdp & 0x3fffffff);
             DPRINTF(EthernetDesc,
-                    "rxDescCache: link=%08x bufptr=%08x cmdsts=%08x extsts=%08x\n",
-                    rxDescCache.link, rxDescCache.bufptr, rxDescCache.cmdsts,
-                    rxDescCache.extsts);
+                    "rxDesc: link=%#x bufptr=%#x cmdsts=%08x extsts=%08x\n",
+                    link, bufptr, cmdsts, extsts);
 
-            rxDmaAddr = (regs.rxdp + offsetof(ns_desc, cmdsts)) & 0x3fffffff;
-            rxDmaData = &(rxDescCache.cmdsts);
-            rxDmaLen = sizeof(rxDescCache.cmdsts) + sizeof(rxDescCache.extsts);
+            rxDmaAddr = regs.rxdp & 0x3fffffff;
+            rxDmaData = &cmdsts;
+            if (is64bit) {
+                rxDmaAddr += offsetof(ns_desc64, cmdsts);
+                rxDmaLen = sizeof(rxDesc64.cmdsts) + sizeof(rxDesc64.extsts);
+            } else {
+                rxDmaAddr += offsetof(ns_desc32, cmdsts);
+                rxDmaLen = sizeof(rxDesc32.cmdsts) + sizeof(rxDesc32.extsts);
+            }
             rxDmaFree = dmaDescFree;
 
             descDmaWrites++;
@@ -1817,12 +1829,12 @@ NSGigE::rxKick()
         if (rxDmaState != dmaIdle)
             goto exit;
 
-        assert(rxDescCache.cmdsts & CMDSTS_OWN);
+        assert(cmdsts & CMDSTS_OWN);
 
         assert(rxPacket == 0);
         devIntrPost(ISR_RXOK);
 
-        if (rxDescCache.cmdsts & CMDSTS_INTR)
+        if (cmdsts & CMDSTS_INTR)
             devIntrPost(ISR_RXDESC);
 
         if (!rxEnable) {
@@ -1834,7 +1846,7 @@ NSGigE::rxKick()
         break;
 
       case rxAdvance:
-        if (rxDescCache.link == 0) {
+        if (link == 0) {
             devIntrPost(ISR_RXIDLE);
             rxState = rxIdle;
             CRDD = true;
@@ -1843,12 +1855,12 @@ NSGigE::rxKick()
             if (rxDmaState != dmaIdle)
                 goto exit;
             rxState = rxDescRead;
-            regs.rxdp = rxDescCache.link;
+            regs.rxdp = link;
             CRDD = false;
 
             rxDmaAddr = regs.rxdp & 0x3fffffff;
-            rxDmaData = &rxDescCache;
-            rxDmaLen = sizeof(ns_desc);
+            rxDmaData = is64bit ? (void *)&rxDesc64 : (void *)&rxDesc32;
+            rxDmaLen = is64bit ? sizeof(rxDesc64) : sizeof(rxDesc32);
             rxDmaFree = dmaDescFree;
 
             if (doRxDmaRead())
@@ -1895,7 +1907,8 @@ NSGigE::transmit()
                 if (tcp) {
                     DPRINTF(Ethernet,
                             "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
-                            tcp->sport(), tcp->dport(), tcp->seq(), tcp->ack());
+                            tcp->sport(), tcp->dport(), tcp->seq(),
+                            tcp->ack());
                 }
             }
         }
@@ -2032,8 +2045,14 @@ NSGigE::txDmaWriteDone()
 void
 NSGigE::txKick()
 {
-    DPRINTF(EthernetSM, "transmit kick txState=%s\n",
-            NsTxStateStrings[txState]);
+    bool is64bit = (bool)(regs.config & CFGR_M64ADDR);
+
+    DPRINTF(EthernetSM, "transmit kick txState=%s %d-bit\n",
+            NsTxStateStrings[txState], is64bit ? 64 : 32);
+
+    Addr link, bufptr;
+    uint32_t &cmdsts = is64bit ? txDesc64.cmdsts : txDesc32.cmdsts;
+    uint32_t &extsts = is64bit ? txDesc64.extsts : txDesc32.extsts;
 
   next:
     if (clock) {
@@ -2060,6 +2079,8 @@ NSGigE::txKick()
         break;
     }
 
+    link = is64bit ? (Addr)txDesc64.link : (Addr)txDesc32.link;
+    bufptr = is64bit ? (Addr)txDesc64.bufptr : (Addr)txDesc32.bufptr;
     switch (txState) {
       case txIdle:
         if (!txEnable) {
@@ -2071,8 +2092,9 @@ NSGigE::txKick()
             txState = txDescRefr;
 
             txDmaAddr = regs.txdp & 0x3fffffff;
-            txDmaData = &txDescCache + offsetof(ns_desc, link);
-            txDmaLen = sizeof(txDescCache.link);
+            txDmaData =
+                is64bit ? (void *)&txDesc64.link : (void *)&txDesc32.link;
+            txDmaLen = is64bit ? sizeof(txDesc64.link) : sizeof(txDesc32.link);
             txDmaFree = dmaDescFree;
 
             descDmaReads++;
@@ -2085,8 +2107,8 @@ NSGigE::txKick()
             txState = txDescRead;
 
             txDmaAddr = regs.txdp & 0x3fffffff;
-            txDmaData = &txDescCache;
-            txDmaLen = sizeof(ns_desc);
+            txDmaData = is64bit ? (void *)&txDesc64 : (void *)&txDesc32;
+            txDmaLen = is64bit ? sizeof(txDesc64) : sizeof(txDesc32);
             txDmaFree = dmaDescFree;
 
             descDmaReads++;
@@ -2108,17 +2130,16 @@ NSGigE::txKick()
         if (txDmaState != dmaIdle)
             goto exit;
 
-        DPRINTF(EthernetDesc, "txDescCache: addr=%08x read descriptor\n",
+        DPRINTF(EthernetDesc, "txDesc: addr=%08x read descriptor\n",
                 regs.txdp & 0x3fffffff);
         DPRINTF(EthernetDesc,
-                "txDescCache: link=%08x bufptr=%08x cmdsts=%08x extsts=%08x\n",
-                txDescCache.link, txDescCache.bufptr, txDescCache.cmdsts,
-                txDescCache.extsts);
+                "txDesc: link=%#x bufptr=%#x cmdsts=%#08x extsts=%#08x\n",
+                link, bufptr, cmdsts, extsts);
 
-        if (txDescCache.cmdsts & CMDSTS_OWN) {
+        if (cmdsts & CMDSTS_OWN) {
             txState = txFifoBlock;
-            txFragPtr = txDescCache.bufptr;
-            txDescCnt = txDescCache.cmdsts & CMDSTS_LEN_MASK;
+            txFragPtr = bufptr;
+            txDescCnt = cmdsts & CMDSTS_LEN_MASK;
         } else {
             devIntrPost(ISR_TXIDLE);
             txState = txIdle;
@@ -2135,16 +2156,21 @@ NSGigE::txKick()
 
         if (txDescCnt == 0) {
             DPRINTF(EthernetSM, "the txDescCnt == 0, done with descriptor\n");
-            if (txDescCache.cmdsts & CMDSTS_MORE) {
+            if (cmdsts & CMDSTS_MORE) {
                 DPRINTF(EthernetSM, "there are more descriptors to come\n");
                 txState = txDescWrite;
 
-                txDescCache.cmdsts &= ~CMDSTS_OWN;
+                cmdsts &= ~CMDSTS_OWN;
 
-                txDmaAddr = regs.txdp + offsetof(ns_desc, cmdsts);
-                txDmaAddr &= 0x3fffffff;
-                txDmaData = &(txDescCache.cmdsts);
-                txDmaLen = sizeof(txDescCache.cmdsts);
+                txDmaAddr = regs.txdp & 0x3fffffff;
+                txDmaData = &cmdsts;
+                if (is64bit) {
+                    txDmaAddr += offsetof(ns_desc64, cmdsts);
+                    txDmaLen = sizeof(txDesc64.cmdsts);
+                } else {
+                    txDmaAddr += offsetof(ns_desc32, cmdsts);
+                    txDmaLen = sizeof(txDesc32.cmdsts);
+                }
                 txDmaFree = dmaDescFree;
 
                 if (doTxDmaWrite())
@@ -2155,18 +2181,18 @@ NSGigE::txKick()
                 /* deal with the the packet that just finished */
                 if ((regs.vtcr & VTCR_PPCHK) && extstsEnable) {
                     IpPtr ip(txPacket);
-                    if (txDescCache.extsts & EXTSTS_UDPPKT) {
+                    if (extsts & EXTSTS_UDPPKT) {
                         UdpPtr udp(ip);
                         udp->sum(0);
                         udp->sum(cksum(udp));
                         txUdpChecksums++;
-                    } else if (txDescCache.extsts & EXTSTS_TCPPKT) {
+                    } else if (extsts & EXTSTS_TCPPKT) {
                         TcpPtr tcp(ip);
                         tcp->sum(0);
                         tcp->sum(cksum(tcp));
                         txTcpChecksums++;
                     }
-                    if (txDescCache.extsts & EXTSTS_IPPKT) {
+                    if (extsts & EXTSTS_IPPKT) {
                         ip->sum(0);
                         ip->sum(cksum(ip));
                         txIpChecksums++;
@@ -2176,7 +2202,10 @@ NSGigE::txKick()
                 txPacket->length = txPacketBufPtr - txPacket->data;
                 // this is just because the receive can't handle a
                 // packet bigger want to make sure
-                assert(txPacket->length <= 1514);
+                if (txPacket->length > 1514)
+                    panic("transmit packet too large, %s > 1514\n",
+                          txPacket->length);
+
 #ifndef NDEBUG
                 bool success =
 #endif
@@ -2195,19 +2224,25 @@ NSGigE::txKick()
                  * spec would complicate the code, we just do it here
                  */
 
-                txDescCache.cmdsts &= ~CMDSTS_OWN;
-                txDescCache.cmdsts |= CMDSTS_OK;
+                cmdsts &= ~CMDSTS_OWN;
+                cmdsts |= CMDSTS_OK;
 
                 DPRINTF(EthernetDesc,
                         "txDesc writeback: cmdsts=%08x extsts=%08x\n",
-                        txDescCache.cmdsts, txDescCache.extsts);
+                        cmdsts, extsts);
 
-                txDmaAddr = regs.txdp + offsetof(ns_desc, cmdsts);
-                txDmaAddr &= 0x3fffffff;
-                txDmaData = &(txDescCache.cmdsts);
-                txDmaLen = sizeof(txDescCache.cmdsts) +
-                    sizeof(txDescCache.extsts);
                 txDmaFree = dmaDescFree;
+                txDmaAddr = regs.txdp & 0x3fffffff;
+                txDmaData = &cmdsts;
+                if (is64bit) {
+                    txDmaAddr += offsetof(ns_desc64, cmdsts);
+                    txDmaLen =
+                        sizeof(txDesc64.cmdsts) + sizeof(txDesc64.extsts);
+                } else {
+                    txDmaAddr += offsetof(ns_desc32, cmdsts);
+                    txDmaLen =
+                        sizeof(txDesc32.cmdsts) + sizeof(txDesc32.extsts);
+                }
 
                 descDmaWrites++;
                 descDmaWrBytes += txDmaLen;
@@ -2271,7 +2306,7 @@ NSGigE::txKick()
         if (txDmaState != dmaIdle)
             goto exit;
 
-        if (txDescCache.cmdsts & CMDSTS_INTR)
+        if (cmdsts & CMDSTS_INTR)
             devIntrPost(ISR_TXDESC);
 
         if (!txEnable) {
@@ -2283,7 +2318,7 @@ NSGigE::txKick()
         break;
 
       case txAdvance:
-        if (txDescCache.link == 0) {
+        if (link == 0) {
             devIntrPost(ISR_TXIDLE);
             txState = txIdle;
             goto exit;
@@ -2291,12 +2326,12 @@ NSGigE::txKick()
             if (txDmaState != dmaIdle)
                 goto exit;
             txState = txDescRead;
-            regs.txdp = txDescCache.link;
+            regs.txdp = link;
             CTDD = false;
 
-            txDmaAddr = txDescCache.link & 0x3fffffff;
-            txDmaData = &txDescCache;
-            txDmaLen = sizeof(ns_desc);
+            txDmaAddr = link & 0x3fffffff;
+            txDmaData = is64bit ? (void *)&txDesc64 : (void *)&txDesc32;
+            txDmaLen = is64bit ? sizeof(txDesc64) : sizeof(txDesc32);
             txDmaFree = dmaDescFree;
 
             if (doTxDmaRead())
@@ -2630,16 +2665,24 @@ NSGigE::serialize(ostream &os)
     SERIALIZE_SCALAR(rxXferLen);
 
     /*
-     * Serialize DescCaches
+     * Serialize Cached Descriptors
      */
-    SERIALIZE_SCALAR(txDescCache.link);
-    SERIALIZE_SCALAR(txDescCache.bufptr);
-    SERIALIZE_SCALAR(txDescCache.cmdsts);
-    SERIALIZE_SCALAR(txDescCache.extsts);
-    SERIALIZE_SCALAR(rxDescCache.link);
-    SERIALIZE_SCALAR(rxDescCache.bufptr);
-    SERIALIZE_SCALAR(rxDescCache.cmdsts);
-    SERIALIZE_SCALAR(rxDescCache.extsts);
+    SERIALIZE_SCALAR(rxDesc64.link);
+    SERIALIZE_SCALAR(rxDesc64.bufptr);
+    SERIALIZE_SCALAR(rxDesc64.cmdsts);
+    SERIALIZE_SCALAR(rxDesc64.extsts);
+    SERIALIZE_SCALAR(txDesc64.link);
+    SERIALIZE_SCALAR(txDesc64.bufptr);
+    SERIALIZE_SCALAR(txDesc64.cmdsts);
+    SERIALIZE_SCALAR(txDesc64.extsts);
+    SERIALIZE_SCALAR(rxDesc32.link);
+    SERIALIZE_SCALAR(rxDesc32.bufptr);
+    SERIALIZE_SCALAR(rxDesc32.cmdsts);
+    SERIALIZE_SCALAR(rxDesc32.extsts);
+    SERIALIZE_SCALAR(txDesc32.link);
+    SERIALIZE_SCALAR(txDesc32.bufptr);
+    SERIALIZE_SCALAR(txDesc32.cmdsts);
+    SERIALIZE_SCALAR(txDesc32.extsts);
     SERIALIZE_SCALAR(extstsEnable);
 
     /*
@@ -2792,16 +2835,24 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxXferLen);
 
     /*
-     * Unserialize DescCaches
+     * Unserialize Cached Descriptors
      */
-    UNSERIALIZE_SCALAR(txDescCache.link);
-    UNSERIALIZE_SCALAR(txDescCache.bufptr);
-    UNSERIALIZE_SCALAR(txDescCache.cmdsts);
-    UNSERIALIZE_SCALAR(txDescCache.extsts);
-    UNSERIALIZE_SCALAR(rxDescCache.link);
-    UNSERIALIZE_SCALAR(rxDescCache.bufptr);
-    UNSERIALIZE_SCALAR(rxDescCache.cmdsts);
-    UNSERIALIZE_SCALAR(rxDescCache.extsts);
+    UNSERIALIZE_SCALAR(rxDesc64.link);
+    UNSERIALIZE_SCALAR(rxDesc64.bufptr);
+    UNSERIALIZE_SCALAR(rxDesc64.cmdsts);
+    UNSERIALIZE_SCALAR(rxDesc64.extsts);
+    UNSERIALIZE_SCALAR(txDesc64.link);
+    UNSERIALIZE_SCALAR(txDesc64.bufptr);
+    UNSERIALIZE_SCALAR(txDesc64.cmdsts);
+    UNSERIALIZE_SCALAR(txDesc64.extsts);
+    UNSERIALIZE_SCALAR(rxDesc32.link);
+    UNSERIALIZE_SCALAR(rxDesc32.bufptr);
+    UNSERIALIZE_SCALAR(rxDesc32.cmdsts);
+    UNSERIALIZE_SCALAR(rxDesc32.extsts);
+    UNSERIALIZE_SCALAR(txDesc32.link);
+    UNSERIALIZE_SCALAR(txDesc32.bufptr);
+    UNSERIALIZE_SCALAR(txDesc32.cmdsts);
+    UNSERIALIZE_SCALAR(txDesc32.extsts);
     UNSERIALIZE_SCALAR(extstsEnable);
 
     /*

@@ -200,8 +200,10 @@ class NSGigE : public PciDev
     bool txDmaFree;
 
     /** DescCaches */
-    ns_desc txDescCache;
-    ns_desc rxDescCache;
+    ns_desc32 txDesc32;
+    ns_desc32 rxDesc32;
+    ns_desc64 txDesc64;
+    ns_desc64 rxDesc64;
 
     /* state machine cycle time */
     Tick clock;
@@ -288,7 +290,6 @@ class NSGigE : public PciDev
 
     bool dmaDescFree;
     bool dmaDataFree;
-
 
   protected:
     Tick txDelay;

@@ -304,15 +304,18 @@
 #define TANAR_FULL_DUP		0x00000020
 #define TANAR_UNUSED		0x00000E1F
 
-/*
- * descriptor format currently assuming link and bufptr
- * are set for 32 bits,( may be wrong ) ASSUME32
- */
-struct ns_desc {
-  uint32_t link;    /* link field to next descriptor in linked list */
-  uint32_t bufptr;  /* pointer to the first fragment or buffer */
-  uint32_t cmdsts;  /* command/status field */
-  uint32_t extsts;  /* extended status field for VLAN and IP info */
+struct ns_desc32 {
+    uint32_t link;    /* link field to next descriptor in linked list */
+    uint32_t bufptr;  /* pointer to the first fragment or buffer */
+    uint32_t cmdsts;  /* command/status field */
+    uint32_t extsts;  /* extended status field for VLAN and IP info */
+};
+
+struct ns_desc64 {
+    uint64_t link;    /* link field to next descriptor in linked list */
+    uint64_t bufptr;  /* pointer to the first fragment or buffer */
+    uint32_t cmdsts;  /* command/status field */
+    uint32_t extsts;  /* extended status field for VLAN and IP info */
 };
 
 /* cmdsts flags for descriptors */
