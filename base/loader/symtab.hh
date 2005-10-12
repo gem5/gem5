@@ -34,12 +34,27 @@
 
 class SymbolTable
 {
-  private:
+  public:
     typedef std::map<Addr, std::string> ATable;
     typedef std::map<std::string, Addr> STable;
 
+  private:
     ATable addrTable;
     STable symbolTable;
+
+  private:
+    bool
+    upperBound(Addr addr, ATable::const_iterator &iter) const
+    {
+        // find first key *larger* than desired address
+        iter = addrTable.upper_bound(addr);
+
+        // if very first key is larger, we're out of luck
+        if (iter == addrTable.begin())
+            return false;
+
+        return true;
+    }
 
   public:
     SymbolTable() {}
@@ -49,6 +64,32 @@ class SymbolTable
     bool insert(Addr address, std::string symbol);
     bool load(const std::string &file);
 
+    const ATable &getAddrTable() const { return addrTable; }
+    const STable &getSymbolTable() const { return symbolTable; }
+
+  public:
+    bool
+    findSymbol(Addr address, std::string &symbol) const
+    {
+        ATable::const_iterator i = addrTable.find(address);
+        if (i == addrTable.end())
+            return false;
+
+        symbol = (*i).second;
+        return true;
+    }
+
+    bool
+    findAddress(const std::string &symbol, Addr &address) const
+    {
+        STable::const_iterator i = symbolTable.find(symbol);
+        if (i == symbolTable.end())
+            return false;
+
+        address = (*i).second;
+        return true;
+    }
+
     /// Find the nearest symbol equal to or less than the supplied
     /// address (e.g., the label for the enclosing function).
     /// @param address The address to look up.
@@ -57,21 +98,61 @@ class SymbolTable
     /// @param next_sym_address Address of following symbol (for
     /// determining valid range of symbol).
     /// @retval True if a symbol was found.
-    bool findNearestSymbol(Addr address, std::string &symbol,
-                           Addr &sym_address, Addr &next_sym_address) const;
+    bool
+    findNearestSymbol(Addr addr, std::string &symbol, Addr &symaddr,
+                      Addr &nextaddr) const
+    {
+        ATable::const_iterator i;
+        if (!upperBound(addr, i))
+            return false;
+
+        nextaddr = i->first;
+        --i;
+        symaddr = i->first;
+        symbol = i->second;
+        return true;
+    }
 
     /// Overload for findNearestSymbol() for callers who don't care
     /// about next_sym_address.
-    bool findNearestSymbol(Addr address, std::string &symbol,
-                           Addr &sym_address) const
+    bool
+    findNearestSymbol(Addr addr, std::string &symbol, Addr &symaddr) const
     {
-        Addr dummy;
-        return findNearestSymbol(address, symbol, sym_address, dummy);
+        ATable::const_iterator i;
+        if (!upperBound(addr, i))
+            return false;
+
+        --i;
+        symaddr = i->first;
+        symbol = i->second;
+        return true;
     }
 
 
-    bool findSymbol(Addr address, std::string &symbol) const;
-    bool findAddress(const std::string &symbol, Addr &address) const;
+    bool
+    findNearestAddr(Addr addr, Addr &symaddr, Addr &nextaddr) const
+    {
+        ATable::const_iterator i;
+        if (!upperBound(addr, i))
+            return false;
+
+        nextaddr = i->first;
+        --i;
+        symaddr = i->first;
+        return true;
+    }
+
+    bool
+    findNearestAddr(Addr addr, Addr &symaddr) const
+    {
+        ATable::const_iterator i;
+        if (!upperBound(addr, i))
+            return false;
+
+        --i;
+        symaddr = i->first;
+        return true;
+    }
 };
 
 /// Global unified debugging symbol table (for target).  Conceptually
