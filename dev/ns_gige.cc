@@ -315,7 +315,7 @@ NSGigE::regStats()
 
     totalSwi
         .name(name() + ".totalSwi")
-        .desc("number of total Swi written to ISR")
+        .desc("total number of Swi written to ISR")
         .precision(0)
         ;
 
@@ -333,7 +333,7 @@ NSGigE::regStats()
 
     totalRxIdle
         .name(name() + ".totalRxIdle")
-        .desc("number of total RxIdle written to ISR")
+        .desc("total number of RxIdle written to ISR")
         .precision(0)
         ;
 
@@ -351,7 +351,7 @@ NSGigE::regStats()
 
     totalRxOk
         .name(name() + ".totalRxOk")
-        .desc("number of total RxOk written to ISR")
+        .desc("total number of RxOk written to ISR")
         .precision(0)
         ;
 
@@ -369,7 +369,7 @@ NSGigE::regStats()
 
     totalRxDesc
         .name(name() + ".totalRxDesc")
-        .desc("number of total RxDesc written to ISR")
+        .desc("total number of RxDesc written to ISR")
         .precision(0)
         ;
 
@@ -387,7 +387,7 @@ NSGigE::regStats()
 
     totalTxOk
         .name(name() + ".totalTxOk")
-        .desc("number of total TxOk written to ISR")
+        .desc("total number of TxOk written to ISR")
         .precision(0)
         ;
 
@@ -405,7 +405,7 @@ NSGigE::regStats()
 
     totalTxIdle
         .name(name() + ".totalTxIdle")
-        .desc("number of total TxIdle written to ISR")
+        .desc("total number of TxIdle written to ISR")
         .precision(0)
         ;
 
@@ -423,7 +423,7 @@ NSGigE::regStats()
 
     totalTxDesc
         .name(name() + ".totalTxDesc")
-        .desc("number of total TxDesc written to ISR")
+        .desc("total number of TxDesc written to ISR")
         .precision(0)
         ;
 
@@ -441,7 +441,7 @@ NSGigE::regStats()
 
     totalRxOrn
         .name(name() + ".totalRxOrn")
-        .desc("number of total RxOrn written to ISR")
+        .desc("total number of RxOrn written to ISR")
         .precision(0)
         ;
 
