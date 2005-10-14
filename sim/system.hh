@@ -118,7 +118,7 @@ class System : public SimObject
     template <class T>
     T *System::addFuncEvent(SymbolTable *symtab, const char *lbl)
     {
-        Addr addr;
+        Addr addr = 0; // initialize only to avoid compiler warning
 
         if (symtab->findAddress(lbl, addr)) {
             T *ev = new T(&pcEventQueue, lbl, fixFuncEventAddr(addr));
