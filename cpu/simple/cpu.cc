@@ -50,6 +50,7 @@
 #include "cpu/simple/cpu.hh"
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
+#include "kern/kernel_stats.hh"
 #include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
 #include "sim/builder.hh"
@@ -65,6 +66,7 @@
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
 #include "targetarch/alpha_memory.hh"
+#include "targetarch/stacktrace.hh"
 #include "targetarch/vtophys.hh"
 #else // !FULL_SYSTEM
 #include "mem/functional/functional.hh"
@@ -753,8 +755,21 @@ SimpleCPU::tick()
         fault = curStaticInst->execute(this, traceData);
 
 #if FULL_SYSTEM
-        if (xc->fnbin)
-            xc->execute(curStaticInst.get());
+        if (xc->fnbin) {
+            assert(xc->kernelStats);
+            system->kernelBinning->execute(xc, inst);
+        }
+
+        if (xc->profile) {
+            bool usermode = (xc->regs.ipr[AlphaISA::IPR_DTB_CM] & 0x18) != 0;
+            xc->profilePC = usermode ? 1 : xc->regs.pc;
+            StackTrace *trace = StackTrace::create(xc, inst);
+            if (trace) {
+                xc->profileNode = xc->profile->consume(trace);
+                trace->dprintf();
+                delete trace;
+            }
+        }
 #endif
 
         if (curStaticInst->isMemRef()) {
@@ -806,7 +821,6 @@ SimpleCPU::tick()
         tickEvent.schedule(curTick + cycles(1));
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 //
 //  SimpleCPU Simulation Object
@@ -824,6 +838,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     SimObjectParam<FunctionalMemory *> mem;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
+    Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
@@ -856,6 +871,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
+    INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
@@ -894,6 +910,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->mem = mem;
     params->system = system;
     params->cpu_id = cpu_id;
+    params->profile = profile;
 #else
     params->process = workload;
 #endif

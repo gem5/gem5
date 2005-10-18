@@ -32,10 +32,15 @@
 #include "cpu/exec_context.hh"
 
 #if FULL_SYSTEM
+#include "base/callback.hh"
 #include "base/cprintf.hh"
+#include "base/output.hh"
+#include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
+#include "targetarch/stacktrace.hh"
 #else
 #include "sim/process.hh"
 #endif
@@ -51,10 +56,24 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
       cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
       memctrl(_sys->memctrl), physmem(_sys->physmem),
       kernelBinning(system->kernelBinning), bin(kernelBinning->bin),
-      fnbin(kernelBinning->fnbin), func_exe_inst(0), storeCondFailures(0)
+      fnbin(kernelBinning->fnbin), profile(NULL),
+      func_exe_inst(0), storeCondFailures(0)
 {
     kernelStats = new Kernel::Statistics(this);
     memset(&regs, 0, sizeof(RegFile));
+
+    if (cpu->params->profile) {
+        profile = new FunctionProfile(system->allSymtab);
+        Callback *cb =
+            new MakeCallback<ExecContext, &ExecContext::dumpFuncProfile>(this);
+        registerExitCallback(cb);
+    }
+
+    // let's fill with a dummy node for now so we don't get a segfault
+    // on the first cycle when there's no node available.
+    static ProfileNode dummyNode;
+    profileNode = &dummyNode;
+    profilePC = 3;
 }
 #else
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
@@ -83,6 +102,14 @@ ExecContext::~ExecContext()
 #endif
 }
 
+#if FULL_SYSTEM
+void
+ExecContext::dumpFuncProfile()
+{
+    std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+    profile->dump(this, *os);
+}
+#endif
 
 void
 ExecContext::takeOverFrom(ExecContext *oldContext)
@@ -105,15 +132,6 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 
     oldContext->_status = ExecContext::Unallocated;
 }
-
-#if FULL_SYSTEM
-void
-ExecContext::execute(const StaticInstBase *inst)
-{
-    assert(kernelStats);
-    system->kernelBinning->execute(this, inst);
-}
-#endif
 
 void
 ExecContext::serialize(ostream &os)

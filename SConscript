@@ -143,7 +143,6 @@ base_sources = Split('''
 	encumbered/cpu/full/issue.cc
 	encumbered/cpu/full/ls_queue.cc
 	encumbered/cpu/full/machine_queue.cc
-        encumbered/cpu/full/pc_sample_profile.cc
         encumbered/cpu/full/pipetrace.cc
         encumbered/cpu/full/readyq.cc
         encumbered/cpu/full/reg_info.cc
@@ -241,6 +240,7 @@ full_system_sources = Split('''
 	arch/alpha/ev5.cc
 	arch/alpha/osfpal.cc
 	arch/alpha/pseudo_inst.cc
+	arch/alpha/stacktrace.cc
 	arch/alpha/vtophys.cc
 
 	base/crc.cc
@@ -248,6 +248,7 @@ full_system_sources = Split('''
 	base/remote_gdb.cc
 
 	cpu/intr_control.cc
+        cpu/profile.cc
 
 	dev/alpha_console.cc
 	dev/baddev.cc
@@ -345,6 +346,7 @@ targetarch_files = Split('''
         isa_traits.hh
         osfpal.hh
         pseudo_inst.hh
+        stacktrace.hh
         vptr.hh
         vtophys.hh
         ''')

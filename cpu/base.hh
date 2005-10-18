@@ -33,6 +33,7 @@
 
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
@@ -76,6 +77,18 @@ class BaseCPU : public SimObject
 
     bool check_interrupts() const { return intstatus != 0; }
     uint64_t intr_status() const { return intstatus; }
+
+    class ProfileEvent : public Event
+    {
+      private:
+        BaseCPU *cpu;
+        int interval;
+
+      public:
+        ProfileEvent(BaseCPU *cpu, int interval);
+        void process();
+    };
+    ProfileEvent *profileEvent;
 #endif
 
   protected:
@@ -113,7 +126,10 @@ class BaseCPU : public SimObject
 #if FULL_SYSTEM
         System *system;
         int cpu_id;
+        Tick profile;
 #endif
+
+        Params();
     };
 
     const Params *params;
@@ -122,6 +138,7 @@ class BaseCPU : public SimObject
     virtual ~BaseCPU();
 
     virtual void init();
+    virtual void startup();
     virtual void regStats();
 
     void registerExecContexts();

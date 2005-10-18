@@ -142,8 +142,19 @@ BaseCPU::BaseCPU(Params *p)
             e->schedule(p->functionTraceStart);
         }
     }
+#if FULL_SYSTEM
+    profileEvent = NULL;
+    if (params->profile)
+        profileEvent = new ProfileEvent(this, params->profile);
+#endif
 }
 
+BaseCPU::Params::Params()
+{
+#if FULL_SYSTEM
+    profile = false;
+#endif
+}
 
 void
 BaseCPU::enableFunctionTrace()
@@ -161,6 +172,16 @@ BaseCPU::init()
     if (!params->deferRegistration)
         registerExecContexts();
 }
+
+void
+BaseCPU::startup()
+{
+#if FULL_SYSTEM
+    if (!params->deferRegistration && profileEvent)
+        profileEvent->schedule(curTick);
+#endif
+}
+
 
 void
 BaseCPU::regStats()
@@ -231,11 +252,32 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     for (int i = 0; i < NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
+
+    for (int i = 0; i < execContexts.size(); ++i)
+        execContexts[i]->profile->clear();
+
+    if (profileEvent)
+        profileEvent->schedule(curTick);
 #endif
 }
 
 
 #if FULL_SYSTEM
+BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
+    : Event(&mainEventQueue), cpu(_cpu), interval(_interval)
+{ }
+
+void
+BaseCPU::ProfileEvent::process()
+{
+    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
+        ExecContext *xc = cpu->execContexts[i];
+        xc->profile->sample(xc->profileNode, xc->profilePC);
+    }
+
+    schedule(curTick + interval);
+}
+
 void
 BaseCPU::post_interrupt(int int_num, int index)
 {

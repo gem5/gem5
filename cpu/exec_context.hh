@@ -46,8 +46,9 @@ class BaseCPU;
 #include "sim/system.hh"
 #include "targetarch/alpha_memory.hh"
 
+class FunctionProfile;
+class ProfileNode;
 class MemoryController;
-class StaticInstBase;
 namespace Kernel { class Binning; class Statistics; }
 
 #else // !FULL_SYSTEM
@@ -138,7 +139,11 @@ class ExecContext
     Kernel::Statistics *kernelStats;
     bool bin;
     bool fnbin;
-    void execute(const StaticInstBase *inst);
+
+    FunctionProfile *profile;
+    ProfileNode *profileNode;
+    Addr profilePC;
+    void dumpFuncProfile();
 
 #else
     Process *process;

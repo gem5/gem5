@@ -34,11 +34,12 @@
 #include <string>
 #include <vector>
 
+#include "cpu/static_inst.hh"
+
 class BaseCPU;
 class ExecContext;
 class FnEvent;
 // What does kernel stats expect is included?
-class StaticInstBase;
 class System;
 enum Fault;
 
@@ -105,7 +106,7 @@ class Binning
 
     cpu_mode themode;
     void palSwapContext(ExecContext *xc);
-    void execute(ExecContext *xc, const StaticInstBase *inst);
+    void execute(ExecContext *xc, StaticInstPtr<TheISA> inst);
     void call(ExecContext *xc, Stats::MainBin *myBin);
     void changeMode(cpu_mode mode);
 
