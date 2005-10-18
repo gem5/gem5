@@ -91,19 +91,20 @@ class MyPOpen(object):
 
 class qsub:
     def __init__(self):
+        self.afterok = None
         self.hold = False
         self.join = False
         self.keep_stdout = False
         self.keep_stderr = False
-        self.node_type = ''
+        self.node_type = None
         self.mail_abort = False
         self.mail_begin = False
         self.mail_end = False
-        self.name = ''
-        self.stdout = ''
-        self.priority = 0
-        self.queue = ''
-        self.pbshost = ''
+        self.name = None
+        self.stdout = None
+        self.priority = None
+        self.queue = None
+        self.pbshost = None
         self.qsub = 'qsub'
         self.env = {}
 
@@ -118,7 +119,7 @@ class qsub:
         if self.hold:
             self.cmd.append('-h')
 
-        if len(self.stdout):
+        if self.stdout:
             self.cmd.append('-olocalhost:' + self.stdout)
 
         if self.keep_stdout and self.keep_stderr:
@@ -133,7 +134,7 @@ class qsub:
         if self.join:
             self.cmd.append('-joe')
 
-        if len(self.node_type):
+        if self.node_type:
             self.cmd.append('-lnodes=' + self.node_type)
 
         if self.mail_abort or self.mail_begin or self.mail_end:
@@ -147,14 +148,17 @@ class qsub:
             if len(flags):
                 self.cmd.append('-m ' + flags)
 
-        if len(self.name):
+        if self.name:
             self.cmd.append("-N%s" % self.name)
 
-        if self.priority != 0:
+        if self.priority:
             self.cmd.append('-p' + self.priority)
 
-        if len(self.queue):
+        if self.queue:
             self.cmd.append('-q' + self.queue)
+
+        if self.afterok:
+            self.cmd.append('-Wdepend=afterok:%s' % self.after)
 
         self.cmd.extend(args)
         self.script = script

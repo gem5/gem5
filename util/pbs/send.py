@@ -82,11 +82,11 @@ Usage:
     -e           only echo pbs command info, don't actually send the job
     -f           force the job to run regardless of state
     -q <queue>   submit job to the named queue
-    -j <jobfile> specify the jobfile (default is <basedir>/test.py)
+    -j <jobfile> specify the jobfile (default is <rootdir>/Test.py)
     -v           be verbose
 
     %(progname)s [-j <jobfile>] -l [-v] <regexp>
-    -j <jobfile> specify the jobfile (default is <basedir>/test.py)
+    -j <jobfile> specify the jobfile (default is <rootdir>/Test.py)
     -l           list job names, don't submit
     -v           be verbose (list job parameters)
 
@@ -96,10 +96,11 @@ Usage:
 
 try:
     import getopt
-    opts, args = getopt.getopt(sys.argv[1:], '-CRcd:efhj:lq:v')
+    opts, args = getopt.getopt(sys.argv[1:], '-Ccdefhj:lq:Rt:v')
 except getopt.GetoptError:
     sys.exit(usage)
 
+depend = False
 clean = False
 onlyecho = False
 exprs = []
@@ -107,18 +108,19 @@ force = False
 listonly = False
 queue = ''
 verbose = False
-jfile = 'Base/test.py'
+jfile = 'Test.py'
 docpts = False
 doruns = True
 runflag = False
+node_type = 'FAST'
 
 for opt,arg in opts:
     if opt == '-C':
         docpts = True
-    if opt == '-R':
-        runflag = True
     if opt == '-c':
         clean = True
+    if opt == '-d':
+        depend = True
     if opt == '-e':
         onlyecho = True
     if opt == '-f':
@@ -132,6 +134,10 @@ for opt,arg in opts:
         listonly = True
     if opt == '-q':
         queue = arg
+    if opt == '-R':
+        runflag = True
+    if opt == '-t':
+        node_type = arg
     if opt == '-v':
         verbose = True
 
@@ -149,6 +155,8 @@ conf = jobfile.JobFile(jfile)
 if not listonly and not onlyecho and isdir(conf.linkdir):
     if verbose:
         print 'Checking for outdated files in Link directory'
+    if not isdir(conf.basedir):
+        os.mkdir(conf.basedir)
     syncdir(conf.linkdir, conf.basedir)
 
 jobnames = {}
@@ -237,6 +245,9 @@ namehack = NameHack()
 
 for job in joblist:
     jobdir = JobDir(joinpath(conf.rootdir, job.name))
+    if depend:
+        cptdir = JobDir(joinpath(conf.rootdir, job.checkpoint.name))
+        cptjob = cptdir.readval('.pbs_jobid')
 
     if not onlyecho:
         jobdir.create()
@@ -249,10 +260,12 @@ for job in joblist:
     qsub.stdout = jobdir.file('jobout')
     qsub.name = job.name[:15]
     qsub.join = True
-    qsub.node_type = 'FAST'
+    qsub.node_type = node_type
     qsub.env['ROOTDIR'] = conf.rootdir
     qsub.env['JOBNAME'] = job.name
-    if len(queue):
+    if depend:
+        qsub.afterok = cptjob
+    if queue:
         qsub.queue = queue
     qsub.build(joinpath(progpath, 'job.py'))
 

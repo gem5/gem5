@@ -149,7 +149,7 @@ if __name__ == '__main__':
     pbs_jobname = env['PBS_JOBNAME']
     basedir = joinpath(rootdir, 'Base')
     jobname = env.setdefault('JOBNAME', pbs_jobname)
-    jobfile = env.setdefault('JOBFILE', joinpath(basedir, 'test.py'))
+    jobfile = env.setdefault('JOBFILE', joinpath(rootdir, 'Test.py'))
     outdir = env.setdefault('OUTPUT_DIR', joinpath(rootdir, jobname))
     env['POOLJOB'] = 'True'
 
