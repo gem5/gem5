@@ -96,10 +96,10 @@ class StatOutput(object):
         self.printdata(printmode=printmode)
 
     def graph(self, graphdir):
-        from os.path import expanduser, join as joinpath
+        from os.path import expanduser, isdir, join as joinpath
         from barchart import BarChart
-        from matplotlib.numerix import Float, zeros
-        import re
+        from matplotlib.numerix import Float, array, zeros
+        import os, re
 
         confgroups = self.jobfile.groups()
         ngroups = len(confgroups)
@@ -130,6 +130,8 @@ class StatOutput(object):
             raise AttributeError, 'No group selected for graph bars'
 
         directory = expanduser(graphdir)
+        if not isdir(directory):
+            os.mkdir(directory)
         html = file(joinpath(directory, '%s.html' % self.name), 'w')
         print >>html, '<html>'
         print >>html, '<title>Graphs for %s</title>' % self.name
@@ -143,6 +145,8 @@ class StatOutput(object):
             for g,gopt in enumerate(groupopts):
                 for b,bopt in enumerate(baropts):
                     job = self.jobfile.job(options + [ gopt, bopt ])
+                    if not job:
+                        continue
 
                     val = self.info.get(job, self.stat)
                     if val is None:
@@ -155,6 +159,10 @@ class StatOutput(object):
                             raise ValueError, "some stats stacked, some not"
 
                     data[g][b] = val
+
+            data = array(data)
+            if data.sum() == 0:
+                continue
 
             bar_descs = [ opt.desc for opt in baropts ]
             group_descs = [ opt.desc for opt in groupopts ]
