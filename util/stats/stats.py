@@ -465,10 +465,11 @@ if __name__ == '__main__':
     options.graph = False
     options.ticks = False
     options.printmode = 'G'
+    jobfilename = 'Test.py'
     options.jobfile = None
     options.all = False
 
-    opts, args = getopts(sys.argv[1:], '-BEFG:ad:g:h:j:pr:s:u:T:')
+    opts, args = getopts(sys.argv[1:], '-BEFG:Jad:g:h:j:pr:s:u:T:')
     for o,a in opts:
         if o == '-B':
             options.binned = True
@@ -487,8 +488,10 @@ if __name__ == '__main__':
             options.graphdir = a
         if o == '-h':
             options.host = a
+        if o == '-J':
+            jobfilename = None
         if o == '-j':
-            options.jobfile = JobFile(a)
+            jobfilename = a
         if o == '-p':
             options.passwd = getpass.getpass()
         if o == '-r':
@@ -500,7 +503,8 @@ if __name__ == '__main__':
         if o == '-T':
             options.ticks = a
 
-    if options.jobfile:
+    if jobfilename:
+        options.jobfile = JobFile(jobfilename)
         if not options.host:
             options.host = options.jobfile.dbhost
         if not options.db:
