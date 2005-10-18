@@ -33,8 +33,8 @@ initest: test/initest.cc base/str.cc base/inifile.cc base/cprintf.cc
 lrutest: test/lru_test.cc
 	$(CXX) $(CCFLAGS) -o $@ $^
 
-nmtest: test/nmtest.cc base/object_file.cc base/symtab.cc base/misc.cc base/str.cc
-	$(CXX) $(CCFLAGS) -o $@ $^
+nmtest: test/nmtest.cc base/output.cc base/hostinfo.cc base/cprintf.cc base/misc.cc base/loader/object_file.cc base/loader/symtab.cc base/misc.cc base/str.cc base/loader/aout_object.cc base/loader/ecoff_object.cc base/loader/elf_object.cc
+	$(CXX) $(CCFLAGS) -I/n/ziff/z/binkertn/build/work/ALPHA_FS -lelf -o $@ $^
 
 offtest: test/offtest.cc
 	$(CXX) $(CCFLAGS) -o $@ $^

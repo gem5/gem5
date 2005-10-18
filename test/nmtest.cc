@@ -30,45 +30,53 @@
 #include <string>
 #include <vector>
 
-#include "ecoff.hh"
 #include "base/loader/object_file.hh"
-#include "base/str.hh"
 #include "base/loader/symtab.hh"
+#include "base/misc.hh"
+#include "base/str.hh"
 
+using namespace std;
 Tick curTick;
+
+ostream *outputStream = &cout;
 
 int
 main(int argc, char *argv[])
 {
-    EcoffObject obj;
-    if (argc != 3) {
-        cout << "usage: " << argv[0] << " <filename> <symbol>\n";
-        return 1;
-    }
+    if (argc != 2 && argc != 3)
+        panic("usage: %s <filename> <symbol>\n", argv[0]);
 
-    if (!obj.open(argv[1])) {
-        cout << "file not found\n";
-        return 1;
-    }
+    ObjectFile *obj = createObjectFile(argv[1]);
+    if (!obj)
+        panic("file not found\n");
 
     SymbolTable symtab;
-    obj.loadGlobals(&symtab);
+    obj->loadGlobalSymbols(&symtab);
+    obj->loadLocalSymbols(&symtab);
 
-    string symbol = argv[2];
-    Addr address;
-
-    if (symbol[0] == '0' && symbol[1] == 'x') {
-        if (to_number(symbol, address) && symtab.findSymbol(address, symbol))
-            cout << "address = 0x" << hex << address
-                 << ", symbol = " << symbol << "\n";
-        else
-            cout << "address = 0x" << hex << address << " was not found\n";
+    if (argc == 2) {
+        SymbolTable::ATable::const_iterator i = symtab.getAddrTable().begin();
+        SymbolTable::ATable::const_iterator end = symtab.getAddrTable().end();
+        while (i != end) {
+            cprintf("%#x %s\n", i->first, i->second);
+            ++i;
+        }
     } else {
-        if (symtab.findAddress(symbol, address))
-            cout << "symbol = " << symbol << ", address = 0x" << hex
-                 << address << "\n";
-        else
-            cout << "symbol = " << symbol << " was not found\n";
+        string symbol = argv[2];
+        Addr address;
+
+        if (symbol[0] == '0' && symbol[1] == 'x') {
+            if (to_number(symbol, address) &&
+                symtab.findSymbol(address, symbol))
+                cprintf("address = %#x, symbol = %s\n", address, symbol);
+            else
+                cprintf("address = %#x was not found\n", address);
+        } else {
+            if (symtab.findAddress(symbol, address))
+                cprintf("symbol = %s address = %#x\n", symbol, address);
+            else
+                cprintf("symbol = %s was not found\n", symbol);
+        }
     }
 
     return 0;
