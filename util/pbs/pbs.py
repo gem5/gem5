@@ -158,7 +158,7 @@ class qsub:
             self.cmd.append('-q' + self.queue)
 
         if self.afterok:
-            self.cmd.append('-Wdepend=afterok:%s' % self.after)
+            self.cmd.append('-Wdepend=afterok:%s' % self.afterok)
 
         self.cmd.extend(args)
         self.script = script
