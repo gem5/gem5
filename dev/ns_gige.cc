@@ -771,7 +771,9 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                 break;
 
               case M5REG:
-                reg = params()->m5reg;
+                reg = 0;
+                if (params()->dedicated)
+                    reg |= M5REG_DEDICATED;
                 break;
 
               default:
@@ -3009,7 +3011,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<uint32_t> pci_func;
     Param<uint32_t> tx_fifo_size;
     Param<uint32_t> rx_fifo_size;
-    Param<uint32_t> m5reg;
+    Param<bool> dedicated;
     Param<bool> dma_no_allocate;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
@@ -3043,7 +3045,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(pci_func, "PCI function code"),
     INIT_PARAM_DFLT(tx_fifo_size, "max size in bytes of txFifo", 131072),
     INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072),
-    INIT_PARAM(m5reg, "m5 register"),
+    INIT_PARAM(dedicated, "dedicate a kernel thread to the driver"),
     INIT_PARAM_DFLT(dma_no_allocate, "Should DMA reads allocate cache lines", true)
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
@@ -3081,7 +3083,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->eaddr = hardware_address;
     params->tx_fifo_size = tx_fifo_size;
     params->rx_fifo_size = rx_fifo_size;
-    params->m5reg = m5reg;
+    params->dedicated = dedicated;
     params->dma_no_allocate = dma_no_allocate;
     return new NSGigE(params);
 }

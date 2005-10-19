@@ -83,7 +83,7 @@ class NSGigE(PciDevice):
     rx_fifo_size = Param.MemorySize('128kB', "max size in bytes of rxFifo")
     tx_fifo_size = Param.MemorySize('128kB', "max size in bytes of txFifo")
 
-    m5reg = Param.UInt32(0, "Register for m5 usage")
+    dedicated = Param.Bool(False, "dedicated kernel thread for driver")
 
     intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")

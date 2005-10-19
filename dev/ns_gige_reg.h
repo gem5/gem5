@@ -304,6 +304,10 @@
 #define TANAR_FULL_DUP		0x00000020
 #define TANAR_UNUSED		0x00000E1F
 
+/* M5 control register */
+#define M5REG_RESERVED		0xfffffffe
+#define M5REG_DEDICATED		0x00000001
+
 struct ns_desc32 {
     uint32_t link;    /* link field to next descriptor in linked list */
     uint32_t bufptr;  /* pointer to the first fragment or buffer */
