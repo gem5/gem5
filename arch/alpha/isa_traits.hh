@@ -73,8 +73,10 @@ class AlphaISA
         // the rest of these depend on the ABI
         StackPointerReg = 30,
         GlobalPointerReg = 29,
+        ProcedureValueReg = 27,
         ReturnAddressReg = 26,
         ReturnValueReg = 0,
+        FramePointerReg = 15,
         ArgumentReg0 = 16,
         ArgumentReg1 = 17,
         ArgumentReg2 = 18,
