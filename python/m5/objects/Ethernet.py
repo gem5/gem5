@@ -60,65 +60,49 @@ if build_env['ALPHA_TLASER']:
         type = 'EtherDevInt'
         device = Param.EtherDev("Ethernet device of this interface")
 
-class NSGigE(PciDevice):
-    type = 'NSGigE'
+class EtherDevBase(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
     clock = Param.Clock('0ns', "State machine processor frequency")
 
-    dma_data_free = Param.Bool(False, "DMA of Data is free")
-    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
+    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
+
+    hier = Param.HierParams(Parent.any, "Hierarchy global variables")
+    payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
     dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
     dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
     dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
 
-
-    rx_filter = Param.Bool(True, "Enable Receive Filter")
     rx_delay = Param.Latency('1us', "Receive Delay")
     tx_delay = Param.Latency('1us', "Transmit Delay")
+    rx_fifo_size = Param.MemorySize('512kB', "max size of rx fifo")
+    tx_fifo_size = Param.MemorySize('512kB', "max size of tx fifo")
 
-    rx_fifo_size = Param.MemorySize('128kB', "max size in bytes of rxFifo")
-    tx_fifo_size = Param.MemorySize('128kB', "max size in bytes of txFifo")
+    rx_filter = Param.Bool(True, "Enable Receive Filter")
+    intr_delay = Param.Latency('10us', "Interrupt Propagation Delay")
 
-    dedicated = Param.Bool(False, "dedicated kernel thread for driver")
+class NSGigE(EtherDevBase):
+    type = 'NSGigE'
 
-    intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
-    payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
+    dma_data_free = Param.Bool(False, "DMA of Data is free")
+    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
+
+    dedicated = Param.Bool(False, "dedicate a kernel thread to the driver")
 
 class NSGigEInt(EtherInt):
     type = 'NSGigEInt'
     device = Param.NSGigE("Ethernet device of this interface")
 
-class Sinic(PciDevice):
+class Sinic(EtherDevBase):
     type = 'Sinic'
-    hardware_address = Param.EthernetAddr(NextEthernetAddr,
-        "Ethernet Hardware Address")
 
-    clock = Param.Clock('100MHz', "State machine processor frequency")
-
-    dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
-    dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
-    dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
-    dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
-
-    rx_filter = Param.Bool(True, "Enable Receive Filter")
-    rx_delay = Param.Latency('1us', "Receive Delay")
-    tx_delay = Param.Latency('1us', "Transmit Delay")
-
-    rx_max_copy = Param.MemorySize('16kB', "rx max copy")
+    rx_max_copy = Param.MemorySize('1514B', "rx max copy")
     tx_max_copy = Param.MemorySize('16kB', "tx max copy")
-    rx_fifo_size = Param.MemorySize('64kB', "max size of rx fifo")
-    tx_fifo_size = Param.MemorySize('64kB', "max size of tx fifo")
     rx_fifo_threshold = Param.MemorySize('48kB', "rx fifo high threshold")
     tx_fifo_threshold = Param.MemorySize('16kB', "tx fifo low threshold")
-
-    intr_delay = Param.Latency('0us', "Interrupt Delay in microseconds")
-    payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
-    physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
 
 class SinicInt(EtherInt):
     type = 'SinicInt'

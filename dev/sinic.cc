@@ -77,7 +77,7 @@ const char *TxStateStrings[] =
 // Sinic PCI Device
 //
 Base::Base(Params *p)
-    : PciDev(p), rxEnable(false), txEnable(false), cycleTime(p->cycle_time),
+    : PciDev(p), rxEnable(false), txEnable(false), clock(p->clock),
       intrDelay(p->intr_delay), intrTick(0), cpuIntrEnable(false),
       cpuPendingIntr(false), intrEvent(0), interface(NULL)
 {
@@ -1360,71 +1360,79 @@ REGISTER_SIM_OBJECT("SinicInt", Interface)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
 
+    Param<Tick> clock;
+
     Param<Addr> addr;
-    Param<Tick> cycle_time;
-    Param<Tick> tx_delay;
-    Param<Tick> rx_delay;
-    Param<Tick> intr_delay;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PhysicalMemory *> physmem;
-    Param<bool> rx_filter;
-    Param<string> hardware_address;
-    SimObjectParam<Bus*> io_bus;
-    SimObjectParam<Bus*> payload_bus;
-    SimObjectParam<HierParams *> hier;
-    Param<Tick> pio_latency;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
     SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
+
+    SimObjectParam<HierParams *> hier;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> payload_bus;
+    Param<Tick> dma_read_delay;
+    Param<Tick> dma_read_factor;
+    Param<Tick> dma_write_delay;
+    Param<Tick> dma_write_factor;
+    Param<bool> dma_no_allocate;
+    Param<Tick> pio_latency;
+    Param<Tick> intr_delay;
+
+    Param<Tick> rx_delay;
+    Param<Tick> tx_delay;
     Param<uint32_t> rx_max_copy;
     Param<uint32_t> tx_max_copy;
     Param<uint32_t> rx_fifo_size;
     Param<uint32_t> tx_fifo_size;
     Param<uint32_t> rx_fifo_threshold;
     Param<uint32_t> tx_fifo_threshold;
-    Param<Tick> dma_read_delay;
-    Param<Tick> dma_read_factor;
-    Param<Tick> dma_write_delay;
-    Param<Tick> dma_write_factor;
-    Param<bool> dma_no_allocate;
+
+    Param<bool> rx_filter;
+    Param<string> hardware_address;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
 
+    INIT_PARAM(clock, "State machine cycle time"),
+
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(cycle_time, "State machine cycle time"),
-    INIT_PARAM_DFLT(tx_delay, "Transmit Delay", 1000),
-    INIT_PARAM_DFLT(rx_delay, "Receive Delay", 1000),
-    INIT_PARAM_DFLT(intr_delay, "Interrupt Delay in microseconds", 0),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
-    INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
-    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to for headers", NULL),
-    INIT_PARAM_DFLT(payload_bus, "The IO Bus to attach to for payload", NULL),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(platform, "Platform"),
     INIT_PARAM(pci_bus, "PCI bus"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(rx_max_copy, "rx max copy", 16*1024),
-    INIT_PARAM_DFLT(tx_max_copy, "rx max copy", 16*1024),
-    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 64*1024),
-    INIT_PARAM_DFLT(tx_fifo_size, "max size in bytes of txFifo", 64*1024),
-    INIT_PARAM_DFLT(rx_fifo_threshold, "max size in bytes of rxFifo", 48*1024),
-    INIT_PARAM_DFLT(tx_fifo_threshold, "max size in bytes of txFifo", 16*1024),
-    INIT_PARAM_DFLT(dma_read_delay, "fixed delay for dma reads", 0),
-    INIT_PARAM_DFLT(dma_read_factor, "multiplier for dma reads", 0),
-    INIT_PARAM_DFLT(dma_write_delay, "fixed delay for dma writes", 0),
-    INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0),
-    INIT_PARAM_DFLT(dma_no_allocate, "Should we allocat on read in cache", true)
+
+    INIT_PARAM(hier, "Hierarchy global variables"),
+    INIT_PARAM(io_bus, "The IO Bus to attach to for headers"),
+    INIT_PARAM(payload_bus, "The IO Bus to attach to for payload"),
+    INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
+    INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
+    INIT_PARAM(dma_write_delay, "fixed delay for dma writes"),
+    INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
+    INIT_PARAM(dma_no_allocate, "Should we allocat on read in cache"),
+    INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
+    INIT_PARAM(intr_delay, "Interrupt Delay"),
+
+    INIT_PARAM(rx_delay, "Receive Delay"),
+    INIT_PARAM(tx_delay, "Transmit Delay"),
+    INIT_PARAM(rx_max_copy, "rx max copy"),
+    INIT_PARAM(tx_max_copy, "rx max copy"),
+    INIT_PARAM(rx_fifo_size, "max size in bytes of rxFifo"),
+    INIT_PARAM(tx_fifo_size, "max size in bytes of txFifo"),
+    INIT_PARAM(rx_fifo_threshold, "max size in bytes of rxFifo"),
+    INIT_PARAM(tx_fifo_threshold, "max size in bytes of txFifo"),
+
+    INIT_PARAM(rx_filter, "Enable Receive Filter"),
+    INIT_PARAM(hardware_address, "Ethernet Hardware Address")
 
 END_INIT_SIM_OBJECT_PARAMS(Device)
 
@@ -1432,36 +1440,42 @@ END_INIT_SIM_OBJECT_PARAMS(Device)
 CREATE_SIM_OBJECT(Device)
 {
     Device::Params *params = new Device::Params;
+
     params->name = getInstanceName();
-    params->intr_delay = intr_delay;
-    params->physmem = physmem;
-    params->cycle_time = cycle_time;
-    params->tx_delay = tx_delay;
-    params->rx_delay = rx_delay;
+
+    params->clock = clock;
     params->mmu = mmu;
-    params->hier = hier;
-    params->io_bus = io_bus;
-    params->payload_bus = payload_bus;
-    params->pio_latency = pio_latency;
+    params->physmem = physmem;
     params->configSpace = configspace;
     params->configData = configdata;
     params->plat = platform;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
-    params->rx_filter = rx_filter;
-    params->eaddr = hardware_address;
+
+    params->hier = hier;
+    params->io_bus = io_bus;
+    params->payload_bus = payload_bus;
+    params->dma_read_delay = dma_read_delay;
+    params->dma_read_factor = dma_read_factor;
+    params->dma_write_delay = dma_write_delay;
+    params->dma_write_factor = dma_write_factor;
+    params->dma_no_allocate = dma_no_allocate;
+    params->pio_latency = pio_latency;
+    params->intr_delay = intr_delay;
+
+    params->tx_delay = tx_delay;
+    params->rx_delay = rx_delay;
     params->rx_max_copy = rx_max_copy;
     params->tx_max_copy = tx_max_copy;
     params->rx_fifo_size = rx_fifo_size;
     params->tx_fifo_size = tx_fifo_size;
     params->rx_fifo_threshold = rx_fifo_threshold;
     params->tx_fifo_threshold = tx_fifo_threshold;
-    params->dma_read_delay = dma_read_delay;
-    params->dma_read_factor = dma_read_factor;
-    params->dma_write_delay = dma_write_delay;
-    params->dma_write_factor = dma_write_factor;
-    params->dma_no_allocate = dma_no_allocate;
+
+    params->rx_filter = rx_filter;
+    params->eaddr = hardware_address;
+
     return new Device(params);
 }
 

@@ -2984,69 +2984,77 @@ REGISTER_SIM_OBJECT("NSGigEInt", NSGigEInt)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
-    Param<Addr> addr;
     Param<Tick> clock;
-    Param<Tick> tx_delay;
-    Param<Tick> rx_delay;
-    Param<Tick> intr_delay;
+
+    Param<Addr> addr;
     SimObjectParam<MemoryController *> mmu;
     SimObjectParam<PhysicalMemory *> physmem;
-    Param<bool> rx_filter;
-    Param<string> hardware_address;
-    SimObjectParam<Bus*> io_bus;
-    SimObjectParam<Bus*> payload_bus;
-    SimObjectParam<HierParams *> hier;
-    Param<Tick> pio_latency;
-    Param<bool> dma_desc_free;
-    Param<bool> dma_data_free;
-    Param<Tick> dma_read_delay;
-    Param<Tick> dma_write_delay;
-    Param<Tick> dma_read_factor;
-    Param<Tick> dma_write_factor;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
     SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
-    Param<uint32_t> tx_fifo_size;
-    Param<uint32_t> rx_fifo_size;
-    Param<bool> dedicated;
+
+    SimObjectParam<HierParams *> hier;
+    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> payload_bus;
+    Param<bool> dma_desc_free;
+    Param<bool> dma_data_free;
+    Param<Tick> dma_read_delay;
+    Param<Tick> dma_write_delay;
+    Param<Tick> dma_read_factor;
+    Param<Tick> dma_write_factor;
     Param<bool> dma_no_allocate;
+    Param<Tick> pio_latency;
+    Param<Tick> intr_delay;
+
+    Param<Tick> rx_delay;
+    Param<Tick> tx_delay;
+    Param<uint32_t> rx_fifo_size;
+    Param<uint32_t> tx_fifo_size;
+
+    Param<bool> rx_filter;
+    Param<string> hardware_address;
+    Param<bool> dedicated;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
-    INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(clock, "State machine processor frequency"),
-    INIT_PARAM(tx_delay, "Transmit Delay"),
-    INIT_PARAM(rx_delay, "Receive Delay"),
-    INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
+
+    INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(physmem, "Physical Memory"),
-    INIT_PARAM_DFLT(rx_filter, "Enable Receive Filter", true),
-    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to for headers", NULL),
-    INIT_PARAM_DFLT(payload_bus, "The IO Bus to attach to for payload", NULL),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(dma_desc_free, "DMA of Descriptors is free", false),
-    INIT_PARAM_DFLT(dma_data_free, "DMA of Data is free", false),
-    INIT_PARAM_DFLT(dma_read_delay, "fixed delay for dma reads", 0),
-    INIT_PARAM_DFLT(dma_write_delay, "fixed delay for dma writes", 0),
-    INIT_PARAM_DFLT(dma_read_factor, "multiplier for dma reads", 0),
-    INIT_PARAM_DFLT(dma_write_factor, "multiplier for dma writes", 0),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(platform, "Platform"),
     INIT_PARAM(pci_bus, "PCI bus"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(tx_fifo_size, "max size in bytes of txFifo", 131072),
-    INIT_PARAM_DFLT(rx_fifo_size, "max size in bytes of rxFifo", 131072),
-    INIT_PARAM(dedicated, "dedicate a kernel thread to the driver"),
-    INIT_PARAM_DFLT(dma_no_allocate, "Should DMA reads allocate cache lines", true)
+
+    INIT_PARAM(hier, "Hierarchy global variables"),
+    INIT_PARAM(io_bus, "The IO Bus to attach to for headers"),
+    INIT_PARAM(payload_bus, "The IO Bus to attach to for payload"),
+    INIT_PARAM(dma_desc_free, "DMA of Descriptors is free"),
+    INIT_PARAM(dma_data_free, "DMA of Data is free"),
+    INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
+    INIT_PARAM(dma_write_delay, "fixed delay for dma writes"),
+    INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
+    INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
+    INIT_PARAM(dma_no_allocate, "Should DMA reads allocate cache lines"),
+    INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
+    INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
+
+    INIT_PARAM(rx_delay, "Receive Delay"),
+    INIT_PARAM(tx_delay, "Transmit Delay"),
+    INIT_PARAM(rx_fifo_size, "max size in bytes of rxFifo"),
+    INIT_PARAM(tx_fifo_size, "max size in bytes of txFifo"),
+
+    INIT_PARAM(rx_filter, "Enable Receive Filter"),
+    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
+    INIT_PARAM(dedicated, "dedicate a kernel thread to the driver")
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3056,7 +3064,11 @@ CREATE_SIM_OBJECT(NSGigE)
     NSGigE::Params *params = new NSGigE::Params;
 
     params->name = getInstanceName();
+
+    params->clock = clock;
+
     params->mmu = mmu;
+    params->pmem = physmem;
     params->configSpace = configspace;
     params->configData = configdata;
     params->plat = platform;
@@ -3064,27 +3076,28 @@ CREATE_SIM_OBJECT(NSGigE)
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
 
-    params->clock = clock;
-    params->intr_delay = intr_delay;
-    params->pmem = physmem;
-    params->tx_delay = tx_delay;
-    params->rx_delay = rx_delay;
     params->hier = hier;
     params->header_bus = io_bus;
     params->payload_bus = payload_bus;
-    params->pio_latency = pio_latency;
     params->dma_desc_free = dma_desc_free;
     params->dma_data_free = dma_data_free;
     params->dma_read_delay = dma_read_delay;
     params->dma_write_delay = dma_write_delay;
     params->dma_read_factor = dma_read_factor;
     params->dma_write_factor = dma_write_factor;
+    params->dma_no_allocate = dma_no_allocate;
+    params->pio_latency = pio_latency;
+    params->intr_delay = intr_delay;
+
+    params->rx_delay = rx_delay;
+    params->tx_delay = tx_delay;
+    params->rx_fifo_size = rx_fifo_size;
+    params->tx_fifo_size = tx_fifo_size;
+
     params->rx_filter = rx_filter;
     params->eaddr = hardware_address;
-    params->tx_fifo_size = tx_fifo_size;
-    params->rx_fifo_size = rx_fifo_size;
     params->dedicated = dedicated;
-    params->dma_no_allocate = dma_no_allocate;
+
     return new NSGigE(params);
 }
 
