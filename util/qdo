@@ -45,7 +45,11 @@ optparser.add_option('-o', dest='stdout_file',
                      help='command stdout output file')
 optparser.add_option('-l', dest='save_log', action='store_true',
                      help='save qsub output log file')
-optparser.add_option('-q', dest='qsub_timeout', type='int',
+optparser.add_option('-N', dest='job_name',
+                     help='qsub job name')
+optparser.add_option('-q', dest='dest_queue',
+                     help='qsub destination queue')
+optparser.add_option('--qwait', dest='qsub_timeout', type='int',
                      help='qsub queue wait timeout', default=30*60)
 optparser.add_option('-t', dest='cmd_timeout', type='int',
                      help='command execution timeout', default=600*60)
@@ -55,6 +59,9 @@ optparser.add_option('-t', dest='cmd_timeout', type='int',
 if cmd == []:
     print >>sys.stderr, "%s: missing command" % progname
     sys.exit(1)
+
+if not options.job_name:
+    options.job_name = cmd[0]
 
 cwd = os.getcwd()
 
@@ -137,6 +144,9 @@ if False and len(cmd) > 50:
     print "%s: running %s on poolfs" % (progname, cmd[0])
 else:
     shell_cmd = 'qsub -I -S /bin/sh'
+    shell_cmd += ' -N "%s"' % options.job_name
+    if options.dest_queue:
+        shell_cmd += ' -q ' + options.dest_queue
 
 shell = Shell(shell_cmd)
 
