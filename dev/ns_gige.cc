@@ -2531,20 +2531,17 @@ NSGigE::recvPacket(PacketPtr packet)
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
-        interface->recvDone();
         return true;
     }
 
     if (!rxFilterEnable) {
         DPRINTF(Ethernet,
             "receive packet filtering disabled . . . packet dropped\n");
-        interface->recvDone();
         return true;
     }
 
     if (rxFilter(packet)) {
         DPRINTF(Ethernet, "packet filtered...dropped\n");
-        interface->recvDone();
         return true;
     }
 
@@ -2567,7 +2564,6 @@ NSGigE::recvPacket(PacketPtr packet)
     }
 
     rxFifo.push(packet);
-    interface->recvDone();
 
     rxKick();
     return true;

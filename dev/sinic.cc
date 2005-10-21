@@ -1085,13 +1085,11 @@ Device::recvPacket(PacketPtr packet)
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
-        interface->recvDone();
         return true;
     }
 
     if (rxFilter(packet)) {
         DPRINTF(Ethernet, "packet filtered...dropped\n");
-        interface->recvDone();
         return true;
     }
 
@@ -1104,7 +1102,6 @@ Device::recvPacket(PacketPtr packet)
         return false;
     }
 
-    interface->recvDone();
     devIntrPost(Regs::Intr_RxDone);
     rxKick();
     return true;
