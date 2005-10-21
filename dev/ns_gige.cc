@@ -127,7 +127,7 @@ NSGigE::NSGigE(Params *p)
                                                  p->header_bus, 1,
                                                  p->dma_no_allocate);
     } else if (p->payload_bus) {
-        pioInterface = newPioInterface(name() + ".pio2", p->hier,
+        pioInterface = newPioInterface(name() + ".pio", p->hier,
                                        p->payload_bus, this,
                                        &NSGigE::cacheAccess);
 

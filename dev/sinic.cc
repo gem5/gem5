@@ -94,8 +94,8 @@ Device::Device(Params *p)
     reset();
 
     if (p->io_bus) {
-        pioInterface = newPioInterface(p->name, p->hier, p->io_bus, this,
-                                       &Device::cacheAccess);
+        pioInterface = newPioInterface(p->name + ".pio", p->hier, p->io_bus,
+                                       this, &Device::cacheAccess);
 
         pioLatency = p->pio_latency * p->io_bus->clockRate;
 
