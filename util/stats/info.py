@@ -51,7 +51,7 @@ def values(stat, run):
     stat = unproxy(stat)
     result = []
     for i in xrange(len(stat)):
-        val = value(stat, run.run, i)
+        val = value(stat, run, i)
         if val is None:
             return None
         result.append(val)

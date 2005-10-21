@@ -158,7 +158,7 @@ class Database(object):
             print 'run "%s" not found' % job
             return None
 
-        from info import scalar, vector, value, total, len
+        from info import scalar, vector, value, values, total, len
         stat.system = self[job.system]
         if scalar(stat):
             return value(stat, run.run)
