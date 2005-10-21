@@ -316,7 +316,7 @@ class Profile(object):
             symbols.tree.dot(dot, threshold=threshold)
             dot.write(symbols.filename[:-3] + 'dot')
 
-    def write_txt(self, jobfile=None, jobs=None):
+    def write_txt(self, jobfile=None, jobs=None, limit=None):
         if jobs is None:
             jobs = [ job for job in jobfile.jobs() ]
 
@@ -327,7 +327,7 @@ class Profile(object):
                 continue
 
             output = file(symbols.filename[:-3] + 'txt', 'w')
-            symbols.display(output)
+            symbols.display(output, limit)
 
     def display(self, jobfile=None, jobs=None, limit=None):
         if jobs is None:
@@ -453,6 +453,8 @@ if __name__ == '__main__':
         else:
             profile = PCProfile()
 
+        if not categorize:
+            profile.categorize = None
         profile.inputdir(jobfile.rootdir)
 
         if graph:
@@ -470,11 +472,6 @@ if __name__ == '__main__':
                 profile.cpu = cpu
                 profile.write_dot(jobfile=jobfile, threshold=threshold)
 
-        if not categorize:
-            for cpu in cpus:
-                profile.cpu = cpu
-                profile.categorize = None
-
         if textout:
             for cpu in cpus:
                 profile.cpu = cpu
@@ -482,5 +479,7 @@ if __name__ == '__main__':
 
         if not graph and not textout and not dodot:
             for cpu in cpus:
+                if not categorize:
+                    profile.categorize = None
                 profile.cpu = cpu
                 profile.display(jobfile=jobfile, limit=numsyms)
