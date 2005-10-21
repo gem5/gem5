@@ -26,24 +26,8 @@
 #
 # Authors: Nathan Binkert
 
-class dbinfo(object):
-    def get(self, job, stat):
-        import info
-
-        run = info.source.allRunNames.get(job.name, None)
-        if run is None:
-            print 'run "%s" not found' % job
-            return None
-
-        stat.system = info.source[job.system]
-        info.display_run = run.run;
-        val = float(stat)
-        if val == 1e300*1e300:
-            return None
-        return val
-
 class StatOutput(object):
-    def __init__(self, name, jobfile, stat=None, info=dbinfo(), binstats=None):
+    def __init__(self, name, jobfile, info, stat=None, binstats=None):
         self.name = name
         self.jobfile = jobfile
         self.stat = stat
@@ -141,7 +125,7 @@ class StatOutput(object):
             data = zeros((len(groupopts), len(baropts)), Float)
             data = [ [ None ] * len(baropts) for i in xrange(len(groupopts)) ]
             enabled = False
-            stacked = None
+            stacked = 0
             for g,gopt in enumerate(groupopts):
                 for b,bopt in enumerate(baropts):
                     job = self.jobfile.job(options + [ gopt, bopt ])
@@ -149,16 +133,27 @@ class StatOutput(object):
                         continue
 
                     val = self.info.get(job, self.stat)
-                    if val is None:
-                        val = 0.0
-                    curstacked = isinstance(val, (list, tuple))
-                    if stacked is None:
-                        stacked = curstacked
-                    else:
-                        if stacked != curstacked:
-                            raise ValueError, "some stats stacked, some not"
+                    if isinstance(val, (list, tuple)):
+                        if len(val) == 1:
+                            val = val[0]
+                        else:
+                            stacked = len(val)
 
                     data[g][b] = val
+
+            if stacked == 0:
+                for i in xrange(len(groupopts)):
+                    for j in xrange(len(baropts)):
+                        if data[i][j] is None:
+                            data[i][j] = 0.0
+            else:
+                for i in xrange(len(groupopts)):
+                    for j in xrange(len(baropts)):
+                        val = data[i][j]
+                        if val is None:
+                            data[i][j] = [] * stacked
+                        elif len(val) != stacked:
+                            raise ValueError, "some stats stacked, some not"
 
             data = array(data)
             if data.sum() == 0:
@@ -167,7 +162,10 @@ class StatOutput(object):
             bar_descs = [ opt.desc for opt in baropts ]
             group_descs = [ opt.desc for opt in groupopts ]
             if stacked:
-                legend = self.info.rcategories
+                try:
+                    legend = self.info.rcategories
+                except:
+                    legend = [ str(i) for i in xrange(stacked) ]
             else:
                 legend = bar_descs
 
