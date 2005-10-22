@@ -115,18 +115,30 @@ class Device : public Base
 
     /** device register file */
     struct {
-        uint32_t Config;
-        uint32_t RxMaxCopy;
-        uint32_t TxMaxCopy;
-        uint32_t RxThreshold;
-        uint32_t TxThreshold;
-        uint32_t IntrStatus;
-        uint32_t IntrMask;
-        uint64_t RxData;
-        uint64_t RxDone;
-        uint64_t TxData;
-        uint64_t TxDone;
+        uint32_t Config;       // 0x00
+        uint32_t Command;      // 0x04
+        uint32_t IntrStatus;   // 0x08
+        uint32_t IntrMask;     // 0x0c
+        uint32_t RxMaxCopy;    // 0x10
+        uint32_t TxMaxCopy;    // 0x14
+        uint32_t RxMaxIntr;    // 0x18
+        uint32_t Reserved0;    // 0x1c
+        uint32_t RxFifoSize;   // 0x20
+        uint32_t TxFifoSize;   // 0x24
+        uint32_t RxFifoMark;   // 0x28
+        uint32_t TxFifoMark;   // 0x2c
+        uint64_t RxData;       // 0x30
+        uint64_t RxDone;       // 0x38
+        uint64_t RxWait;       // 0x40
+        uint64_t TxData;       // 0x48
+        uint64_t TxDone;       // 0x50
+        uint64_t TxWait;       // 0x58
+        uint64_t HwAddr;       // 0x60
     } regs;
+
+    uint8_t  &regData8(Addr daddr) { return *((uint8_t *)&regs + daddr); }
+    uint32_t &regData32(Addr daddr) { return *(uint32_t *)&regData8(daddr); }
+    uint64_t &regData64(Addr daddr) { return *(uint64_t *)&regData8(daddr); }
 
   private:
     Addr addr;
@@ -135,6 +147,7 @@ class Device : public Base
   protected:
     RxState rxState;
     PacketFifo rxFifo;
+    bool rxEmpty;
     PacketPtr rxPacket;
     uint8_t *rxPacketBufPtr;
     int rxPktBytes;
@@ -145,6 +158,7 @@ class Device : public Base
 
     TxState txState;
     PacketFifo txFifo;
+    bool txFull;
     PacketPtr txPacket;
     uint8_t *txPacketBufPtr;
     int txPktBytes;
@@ -191,6 +205,7 @@ class Device : public Base
  * device configuration
  */
     void changeConfig(uint32_t newconfig);
+    void command(uint32_t command);
 
 /**
  * device ethernet interface
@@ -212,7 +227,7 @@ class Device : public Base
     void txDmaCopy();
     void txDmaDone();
     friend class EventWrapper<Device, &Device::txDmaDone>;
-    EventWrapper<Device, &Device::rxDmaDone> txDmaEvent;
+    EventWrapper<Device, &Device::txDmaDone> txDmaEvent;
 
     Tick dmaReadDelay;
     Tick dmaReadFactor;
@@ -244,6 +259,8 @@ class Device : public Base
  * Memory Interface
  */
   public:
+    void prepareRead();
+    Fault iprRead(Addr daddr, uint64_t &result);
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
     Tick cacheAccess(MemReqPtr &req);
@@ -308,6 +325,7 @@ class Device : public Base
         Net::EthAddr eaddr;
         uint32_t rx_max_copy;
         uint32_t tx_max_copy;
+        uint32_t rx_max_intr;
         uint32_t rx_fifo_size;
         uint32_t tx_fifo_size;
         uint32_t rx_fifo_threshold;
@@ -317,6 +335,7 @@ class Device : public Base
         Tick dma_write_delay;
         Tick dma_write_factor;
         bool dma_no_allocate;
+        bool dedicated;
     };
 
   protected:
