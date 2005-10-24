@@ -60,8 +60,11 @@ if cmd == []:
     print >>sys.stderr, "%s: missing command" % progname
     sys.exit(1)
 
-if not options.job_name:
-    options.job_name = cmd[0]
+# If we want to do this, need to add check here to make sure cmd[0] is
+# a valid PBS job name, else qsub will die on us.
+#
+#if not options.job_name:
+#    options.job_name = cmd[0]
 
 cwd = os.getcwd()
 
@@ -144,7 +147,8 @@ if False and len(cmd) > 50:
     print "%s: running %s on poolfs" % (progname, cmd[0])
 else:
     shell_cmd = 'qsub -I -S /bin/sh'
-    shell_cmd += ' -N "%s"' % options.job_name
+    if options.job_name:
+        shell_cmd += ' -N "%s"' % options.job_name
     if options.dest_queue:
         shell_cmd += ' -q ' + options.dest_queue
 
