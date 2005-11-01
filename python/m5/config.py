@@ -825,6 +825,40 @@ VectorParam = ParamFactory(VectorParamDesc)
 #
 #####################################################################
 
+# superclass for "numeric" parameter values, to emulate math
+# operations in a type-safe way.  e.g., a Latency times an int returns
+# a new Latency object.
+class NumericParamValue(ParamValue):
+    def __str__(self):
+        return str(self.value)
+
+    def __float__(self):
+        return float(self.value)
+
+    # hook for bounds checking
+    def _check(self):
+        return
+
+    def __mul__(self, other):
+        newobj = self.__class__(self)
+        newobj.value *= other
+        newobj._check()
+        return newobj
+
+    __rmul__ = __mul__
+
+    def __div__(self, other):
+        newobj = self.__class__(self)
+        newobj.value /= other
+        newobj._check()
+        return newobj
+
+    def __sub__(self, other):
+        newobj = self.__class__(self)
+        newobj.value -= other
+        newobj._check()
+        return newobj
+
 class Range(ParamValue):
     type = int # default; can be overridden in subclasses
     def __init__(self, *args, **kwargs):
@@ -891,18 +925,20 @@ class CheckedIntType(type):
 # class is subclassed to generate parameter classes with specific
 # bounds.  Initialization of the min and max bounds is done in the
 # metaclass CheckedIntType.__init__.
-class CheckedInt(long,ParamValue):
+class CheckedInt(NumericParamValue):
     __metaclass__ = CheckedIntType
 
-    def __new__(cls, value):
-        if isinstance(value, str):
-            value = toInteger(value)
-
-        self = long.__new__(cls, value)
-
-        if not cls.min <= self <= cls.max:
+    def _check(self):
+        if not self.min <= self.value <= self.max:
             raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
-                  (cls.min, self, cls.max)
+                  (self.min, self.value, self.max)
+
+    def __init__(self, value):
+        if isinstance(value, str):
+            self.value = toInteger(value)
+        elif isinstance(value, (int, long)):
+            self.value = long(value)
+        self._check()
         return self
 
 class Int(CheckedInt):      size = 32; unsigned = False
@@ -930,19 +966,28 @@ class Float(ParamValue, float):
 class MemorySize(CheckedInt):
     size = 64
     unsigned = True
-    def __new__(cls, value):
-        return super(MemorySize, cls).__new__(cls, toMemorySize(value))
+    def __init__(self, value):
+        if isinstance(value, MemorySize):
+            self.value = value.value
+        else:
+            self.value = toMemorySize(value)
+        self._check()
+        return self
 
 
 class Addr(CheckedInt):
     size = 64
     unsigned = True
-    def __new__(cls, value):
-        try:
-            value = long(toMemorySize(value))
-        except TypeError:
-            value = long(value)
-        return super(Addr, cls).__new__(cls, value)
+    def __init__(self, value):
+        if isinstance(value, Addr):
+            self.value = value.value
+        else:
+            try:
+                self.value = toMemorySize(value)
+            except TypeError:
+                self.value = long(value)
+        self._check()
+        return self
 
 class AddrRange(Range):
     type = Addr
@@ -1122,29 +1167,6 @@ def tick_check(float_ticks):
         print >> sys.stderr, "    %f rounded to %d" % (float_ticks, int_ticks)
         #raise ValueError
     return int_ticks
-
-# superclass for "numeric" parameter values, to emulate math
-# operations in a type-safe way.  e.g., a Latency times an int returns
-# a new Latency object.
-class NumericParamValue(ParamValue):
-    def __str__(self):
-        return str(self.value)
-
-    def __float__(self):
-        return float(self.value)
-
-    def __mul__(self, other):
-        newobj = self.__class__(self)
-        newobj.value *= other
-        return newobj
-
-    __rmul__ = __mul__
-
-    def __div__(self, other):
-        newobj = self.__class__(self)
-        newobj.value /= other
-        return newobj
-
 
 def getLatency(value):
     if isinstance(value, Latency) or isinstance(value, Clock):
