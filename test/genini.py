@@ -64,8 +64,7 @@ for path in pathlist:
     AddToPath(path)
 
 for arg in args:
-    AddToPath(os.path.dirname(arg))
-    execfile(arg)
+    m5execfile(arg, globals())
 
 if globals().has_key('root') and isinstance(root, Root):
     instantiate(root)
