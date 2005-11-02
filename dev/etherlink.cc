@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 
+#include "base/random.hh"
 #include "base/trace.hh"
 #include "dev/etherdump.hh"
 #include "dev/etherint.hh"
@@ -48,11 +49,11 @@
 using namespace std;
 
 EtherLink::EtherLink(const string &name, EtherInt *peer0, EtherInt *peer1,
-                     double rate, Tick delay, EtherDump *dump)
+                     double rate, Tick delay, Tick delayVar, EtherDump *dump)
     : SimObject(name)
 {
-    link[0] = new Link(name + ".link0", this, 0, rate, delay, dump);
-    link[1] = new Link(name + ".link1", this, 1, rate, delay, dump);
+    link[0] = new Link(name + ".link0", this, 0, rate, delay, delayVar, dump);
+    link[1] = new Link(name + ".link1", this, 1, rate, delay, delayVar, dump);
 
     interface[0] = new Interface(name + ".int0", link[0], link[1]);
     interface[1] = new Interface(name + ".int1", link[1], link[0]);
@@ -80,9 +81,9 @@ EtherLink::Interface::Interface(const string &name, Link *tx, Link *rx)
 }
 
 EtherLink::Link::Link(const string &name, EtherLink *p, int num,
-                      double rate, Tick delay, EtherDump *d)
+                      double rate, Tick delay, Tick delay_var, EtherDump *d)
     : objName(name), parent(p), number(num), txint(NULL), rxint(NULL),
-      ticksPerByte(rate), linkDelay(delay), dump(d),
+      ticksPerByte(rate), linkDelay(delay), delayVar(delay_var), dump(d),
       doneEvent(this)
 { }
 
@@ -158,7 +159,9 @@ EtherLink::Link::transmit(PacketPtr pkt)
     DDUMP(EthernetData, pkt->data, pkt->length);
 
     packet = pkt;
-    Tick delay = (Tick)ceil(((double)pkt->length * ticksPerByte) + 1.0);
+    Random<Tick> var;
+    Tick delay = (Tick)ceil(((double)pkt->length * ticksPerByte) + 1.0 +
+                            var.uniform(delayVar));
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
     doneEvent.schedule(curTick + delay);
@@ -270,6 +273,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
     SimObjectParam<EtherInt *> int2;
     Param<double> speed;
     Param<Tick> delay;
+    Param<Tick> delay_var;
     SimObjectParam<EtherDump *> dump;
 
 END_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
@@ -280,13 +284,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(EtherLink)
     INIT_PARAM(int2, "interface 2"),
     INIT_PARAM(speed, "link speed in bits per second"),
     INIT_PARAM(delay, "transmit delay of packets in us"),
+    INIT_PARAM(delay_var, "Difference in amount of time to traverse wire"),
     INIT_PARAM(dump, "object to dump network packets to")
 
 END_INIT_SIM_OBJECT_PARAMS(EtherLink)
 
 CREATE_SIM_OBJECT(EtherLink)
 {
-    return new EtherLink(getInstanceName(), int1, int2, speed, delay, dump);
+    return new EtherLink(getInstanceName(), int1, int2, speed, delay, delay_var,
+                         dump);
 }
 
 REGISTER_SIM_OBJECT("EtherLink", EtherLink)

@@ -33,6 +33,8 @@
 
 long getLong();
 double getDouble();
+uint64_t getUniformPos(uint64_t max);
+int64_t getUniform(int64_t max);
 
 template <typename T>
 struct Random;
@@ -41,48 +43,72 @@ template<> struct Random<int8_t>
 {
     static int8_t get()
     { return getLong() & (int8_t)-1; }
+
+    static int8_t uniform(int8_t maxmin)
+    { return getUniform(maxmin); }
 };
 
 template<> struct Random<uint8_t>
 {
     static uint8_t get()
     { return getLong() & (uint8_t)-1; }
+
+    static uint8_t uniform(uint8_t max)
+    { return getUniformPos(max); }
 };
 
 template<> struct Random<int16_t>
 {
     static int16_t get()
     { return getLong() & (int16_t)-1; }
+
+    static int16_t uniform(int16_t maxmin)
+    { return getUniform(maxmin); }
 };
 
 template<> struct Random<uint16_t>
 {
     static uint16_t get()
     { return getLong() & (uint16_t)-1; }
+
+    static uint16_t uniform(uint16_t max)
+    { return getUniformPos(max); }
 };
 
 template<> struct Random<int32_t>
 {
     static int32_t get()
     { return (int32_t)getLong(); }
+
+    static int32_t uniform(int32_t maxmin)
+    { return getUniform(maxmin); }
 };
 
 template<> struct Random<uint32_t>
 {
     static uint32_t get()
     { return (uint32_t)getLong(); }
+
+    static uint32_t uniform(uint32_t max)
+    { return getUniformPos(max); }
 };
 
 template<> struct Random<int64_t>
 {
     static int64_t get()
     { return (int64_t)getLong() << 32 || (uint64_t)getLong(); }
+
+    static int64_t uniform(int64_t maxmin)
+    { return getUniform(maxmin); }
 };
 
 template<> struct Random<uint64_t>
 {
     static uint64_t get()
     { return (uint64_t)getLong() << 32 || (uint64_t)getLong(); }
+
+    static uint64_t uniform(uint64_t max)
+    { return getUniformPos(max); }
 };
 
 template<> struct Random<float>

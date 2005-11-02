@@ -66,6 +66,7 @@ class EtherLink : public SimObject
 
         double ticksPerByte;
         Tick linkDelay;
+        Tick delayVar;
         EtherDump *dump;
 
       protected:
@@ -83,7 +84,7 @@ class EtherLink : public SimObject
 
       public:
         Link(const std::string &name, EtherLink *p, int num,
-             double rate, Tick delay, EtherDump *dump);
+             double rate, Tick delay, Tick delay_var, EtherDump *dump);
         ~Link() {}
 
         const std::string name() const { return objName; }
@@ -118,7 +119,7 @@ class EtherLink : public SimObject
 
   public:
     EtherLink(const std::string &name, EtherInt *peer0, EtherInt *peer1,
-              double rate, Tick delay, EtherDump *dump);
+              double rate, Tick delay, Tick delayVar, EtherDump *dump);
     virtual ~EtherLink();
 
     virtual void serialize(std::ostream &os);

@@ -31,6 +31,7 @@
 
 #include "sim/param.hh"
 #include "base/random.hh"
+#include "base/trace.hh"
 
 using namespace std;
 
@@ -52,14 +53,32 @@ seed(&paramContext, "seed", "seed to random number generator", 1);
 void
 RandomContext::checkParams()
 {
-    ::srandom(seed);
+    ::srand48(seed);
 }
 
 long
 getLong()
 {
-    return random();
+    return mrand48();
 }
+
+int64_t
+getUniform(int64_t maxmin)
+{
+    double r;
+    r = (drand48() - 0.500) * 2 * maxmin;
+    DPRINTFN("getUniform %f\n", r);
+    return (int64_t)round(r);
+}
+
+uint64_t
+getUniformPos(uint64_t max)
+{
+    double r;
+    r = drand48() * 2 * max;
+    return (uint64_t)round(r);
+}
+
 
 // idea for generating a double from erand48
 double
@@ -70,8 +89,8 @@ getDouble()
         uint16_t _short[4];
     };
 
-    _long[0] = random();
-    _long[1] = random();
+    _long[0] = mrand48();
+    _long[1] = mrand48();
 
     return ldexp((double) _short[0], -48) +
         ldexp((double) _short[1], -32) +
