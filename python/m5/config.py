@@ -755,7 +755,7 @@ class ParamDesc(object):
 
 class VectorParamValue(list):
     def ini_str(self):
-        return ' '.join([str(v) for v in self])
+        return ' '.join([v.ini_str() for v in self])
 
     def unproxy(self, base):
         return [v.unproxy(base) for v in self]
