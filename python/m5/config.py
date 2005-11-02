@@ -936,7 +936,7 @@ class CheckedInt(NumericParamValue):
     def __init__(self, value):
         if isinstance(value, str):
             self.value = toInteger(value)
-        elif isinstance(value, (int, long)):
+        elif isinstance(value, (int, long, float)):
             self.value = long(value)
         self._check()
 
