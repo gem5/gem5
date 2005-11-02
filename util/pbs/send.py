@@ -79,6 +79,8 @@ usage = """\
 Usage:
     %(progname)s [-c] [-e] [-f] [-j <jobfile>] [-q queue] [-v] <regexp>
     -c           clean directory if job can be run
+    -C           submit the checkpointing runs
+    -d           Make jobs be dependent on the completion of the checkpoint runs
     -e           only echo pbs command info, don't actually send the job
     -f           force the job to run regardless of state
     -q <queue>   submit job to the named queue
