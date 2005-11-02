@@ -939,7 +939,6 @@ class CheckedInt(NumericParamValue):
         elif isinstance(value, (int, long)):
             self.value = long(value)
         self._check()
-        return self
 
 class Int(CheckedInt):      size = 32; unsigned = False
 class Unsigned(CheckedInt): size = 32; unsigned = True
@@ -972,7 +971,6 @@ class MemorySize(CheckedInt):
         else:
             self.value = toMemorySize(value)
         self._check()
-        return self
 
 
 class Addr(CheckedInt):
@@ -987,7 +985,6 @@ class Addr(CheckedInt):
             except TypeError:
                 self.value = long(value)
         self._check()
-        return self
 
 class AddrRange(Range):
     type = Addr
