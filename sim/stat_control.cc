@@ -61,6 +61,7 @@ namespace Stats {
 
 Time statTime(true);
 Tick startTick;
+Tick lastDump(0);
 
 class SimTicksReset : public Callback
 {
@@ -194,6 +195,11 @@ list<Output *> OutputList;
 void
 DumpNow()
 {
+    assert(lastDump <= curTick);
+    if (lastDump == curTick)
+        return;
+    lastDump = curTick;
+
     list<Output *>::iterator i = OutputList.begin();
     list<Output *>::iterator end = OutputList.end();
     for (; i != end; ++i) {
