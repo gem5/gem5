@@ -181,7 +181,7 @@ def commands(options, command, args):
         info.source.get = "sum"
 
         def disp(*args):
-            print "%-20s %12s %12s %4s %5s %5s %5s %10s" % args
+            print "%-35s %12s %12s %4s %5s %5s %5s %10s" % args
 
         # temporary variable containing a bunch of dashes
         d = '-' * 100
@@ -191,7 +191,7 @@ def commands(options, command, args):
             print "%s:" % stat.name
             disp("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV",
                  "SAMP", "CV")
-            disp(d[:20], d[:12], d[:12], d[:4], d[:5], d[:5], d[:5], d[:10])
+            disp(d[:35], d[:12], d[:12], d[:4], d[:5], d[:5], d[:5], d[:10])
 
             #loop through all the selected runs
             for run in runs:
