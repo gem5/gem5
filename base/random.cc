@@ -67,7 +67,6 @@ getUniform(int64_t maxmin)
 {
     double r;
     r = (drand48() - 0.500) * 2 * maxmin;
-    DPRINTFN("getUniform %f\n", r);
     return (int64_t)round(r);
 }
 
