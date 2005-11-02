@@ -147,6 +147,8 @@ class qsub:
                 flags.append('e')
             if len(flags):
                 self.cmd.append('-m ' + flags)
+        else:
+            self.cmd.append('-mn')
 
         if self.name:
             self.cmd.append("-N%s" % self.name)
