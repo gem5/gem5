@@ -127,7 +127,7 @@ NSGigE::NSGigE(Params *p)
                                                  p->header_bus, 1,
                                                  p->dma_no_allocate);
     } else if (p->payload_bus) {
-        pioInterface = newPioInterface(name() + ".pio2", p->hier,
+        pioInterface = newPioInterface(name() + ".pio", p->hier,
                                        p->payload_bus, this,
                                        &NSGigE::cacheAccess);
 
@@ -2531,20 +2531,17 @@ NSGigE::recvPacket(PacketPtr packet)
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
-        interface->recvDone();
         return true;
     }
 
     if (!rxFilterEnable) {
         DPRINTF(Ethernet,
             "receive packet filtering disabled . . . packet dropped\n");
-        interface->recvDone();
         return true;
     }
 
     if (rxFilter(packet)) {
         DPRINTF(Ethernet, "packet filtered...dropped\n");
-        interface->recvDone();
         return true;
     }
 
@@ -2567,7 +2564,6 @@ NSGigE::recvPacket(PacketPtr packet)
     }
 
     rxFifo.push(packet);
-    interface->recvDone();
 
     rxKick();
     return true;

@@ -103,6 +103,20 @@ class Node(object):
     def __str__(self):
         return self.name
 
+class Result(object):
+    def __init__(self, x, y):
+        self.data = {}
+        self.x = x
+        self.y = y
+
+    def __contains__(self, run):
+        return run in self.data
+
+    def __getitem__(self, run):
+        if run not in self.data:
+            self.data[run] = [ [ 0.0 ] * self.y for i in xrange(self.x) ]
+        return self.data[run]
+
 class Database(object):
     def __init__(self):
         self.host = 'zizzer.pool'
@@ -135,7 +149,23 @@ class Database(object):
         self.runs = None
         self.bins = None
         self.ticks = None
-        self.__dict__['get'] = type(self).sum
+        self.method = 'sum'
+        self._method = type(self).sum
+
+    def get(self, job, stat):
+        run = self.allRunNames.get(job.name, None)
+        if run is None:
+            print 'run "%s" not found' % job
+            return None
+
+        from info import scalar, vector, value, values, total, len
+        stat.system = self[job.system]
+        if scalar(stat):
+            return value(stat, run.run)
+        if vector(stat):
+            return values(stat, run.run)
+
+        return None
 
     def query(self, sql):
         self.cursor.execute(sql)
@@ -203,7 +233,7 @@ class Database(object):
         self.query('select * from stats')
         import info
         for result in self.cursor.fetchall():
-            stat = info.NewStat(StatData(result))
+            stat = info.NewStat(self, StatData(result))
             self.append(stat)
             self.allStats.append(stat)
             self.allStatIds[stat.stat] = stat
@@ -421,30 +451,17 @@ class Database(object):
     def stdev(self, stat, bins, ticks):
         return self.outer('stddev', 'sum', stat, bins, ticks)
 
-    def __getattribute__(self, attr):
-        if attr != 'get':
-            return super(Database, self).__getattribute__(attr)
-
-        if self.__dict__['get'] == type(self).sum:
-            return 'sum'
-        elif self.__dict__['get'] == type(self).avg:
-            return 'avg'
-        elif self.__dict__['get'] == type(self).stdev:
-            return 'stdev'
-        else:
-            return ''
-
     def __setattr__(self, attr, value):
-        if attr != 'get':
-            super(Database, self).__setattr__(attr, value)
+        super(Database, self).__setattr__(attr, value)
+        if attr != 'method':
             return
 
         if value == 'sum':
-            self.__dict__['get'] = type(self).sum
+            self._method = self.sum
         elif value == 'avg':
-            self.__dict__['get'] = type(self).avg
+            self._method = self.avg
         elif value == 'stdev':
-            self.__dict__['get'] = type(self).stdev
+            self._method = self.stdev
         else:
             raise AttributeError, "can only set get to: sum | avg | stdev"
 
@@ -453,10 +470,12 @@ class Database(object):
             bins = self.bins
         if ticks is None:
             ticks = self.ticks
-        sql = self.__dict__['get'](self, stat, bins, ticks)
+        sql = self._method(self, stat, bins, ticks)
         self.query(sql)
 
         runs = {}
+        xmax = 0
+        ymax = 0
         for x in self.cursor.fetchall():
             data = Data(x)
             if not runs.has_key(data.run):
@@ -464,8 +483,17 @@ class Database(object):
             if not runs[data.run].has_key(data.x):
                 runs[data.run][data.x] = {}
 
+            xmax = max(xmax, data.x)
+            ymax = max(ymax, data.y)
             runs[data.run][data.x][data.y] = data.data
-        return runs
+
+        results = Result(xmax + 1, ymax + 1)
+        for run,data in runs.iteritems():
+            result = results[run]
+            for x,ydata in data.iteritems():
+                for y,data in ydata.iteritems():
+                    result[x][y] = data
+        return results
 
     def __getitem__(self, key):
         return self.stattop[key]

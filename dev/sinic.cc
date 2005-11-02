@@ -94,8 +94,8 @@ Device::Device(Params *p)
     reset();
 
     if (p->io_bus) {
-        pioInterface = newPioInterface(p->name, p->hier, p->io_bus, this,
-                                       &Device::cacheAccess);
+        pioInterface = newPioInterface(p->name + ".pio", p->hier, p->io_bus,
+                                       this, &Device::cacheAccess);
 
         pioLatency = p->pio_latency * p->io_bus->clockRate;
 
@@ -108,7 +108,8 @@ Device::Device(Params *p)
                                                  p->io_bus, 1,
                                                  p->dma_no_allocate);
     } else if (p->payload_bus) {
-        pioInterface = newPioInterface(p->name, p->hier, p->payload_bus, this,
+        pioInterface = newPioInterface(p->name + ".pio", p->hier,
+                                       p->payload_bus, this,
                                        &Device::cacheAccess);
 
         pioLatency = p->pio_latency * p->payload_bus->clockRate;
@@ -315,9 +316,26 @@ Device::writeConfig(int offset, int size, const uint8_t *data)
     }
 }
 
+void
+Device::prepareRead()
+{
+    using namespace Regs;
+
+    // update rx registers
+    regs.RxDone = set_RxDone_Packets(regs.RxDone, rxFifo.packets());
+    regs.RxWait = regs.RxDone;
+
+    // update tx regsiters
+    regs.TxDone = set_TxDone_Packets(regs.TxDone, txFifo.packets());
+    regs.TxDone = set_TxDone_Full(regs.TxDone,
+                                  txFifo.avail() < regs.TxMaxCopy);
+    regs.TxDone = set_TxDone_Low(regs.TxDone,
+                                 txFifo.size() < regs.TxFifoMark);
+    regs.TxWait = regs.TxDone;
+}
+
 /**
- * This reads the device registers, which are detailed in the NS83820
- * spec sheet
+ * I/O read of device register
  */
 Fault
 Device::read(MemReqPtr &req, uint8_t *data)
@@ -327,118 +345,115 @@ Device::read(MemReqPtr &req, uint8_t *data)
     //The mask is to give you only the offset into the device register file
     Addr daddr = req->paddr & 0xfff;
 
-    if (Regs::regSize(daddr) == 0)
-        panic("invalid address: da=%#x pa=%#x va=%#x size=%d",
+    if (!regValid(daddr))
+        panic("invalid register: da=%#x pa=%#x va=%#x size=%d",
               daddr, req->paddr, req->vaddr, req->size);
 
-    if (req->size != Regs::regSize(daddr))
+    const Regs::Info &info = regInfo(daddr);
+    if (!info.read)
+        panic("reading write only register: %s: da=%#x pa=%#x va=%#x size=%d",
+              info.name, daddr, req->paddr, req->vaddr, req->size);
+
+    if (req->size != info.size)
         panic("invalid size for reg %s: da=%#x pa=%#x va=%#x size=%d",
-              Regs::regName(daddr), daddr, req->paddr, req->vaddr, req->size);
+              info.name, daddr, req->paddr, req->vaddr, req->size);
 
-    DPRINTF(EthernetPIO, "read reg=%s da=%#x pa=%#x va=%#x size=%d\n",
-            Regs::regName(daddr), daddr, req->paddr, req->vaddr, req->size);
+    prepareRead();
 
-    uint32_t &reg32 = *(uint32_t *)data;
-    uint64_t &reg64 = *(uint64_t *)data;
-
-    switch (daddr) {
-      case Regs::Config:
-        reg32 = regs.Config;
-        break;
-
-      case Regs::RxMaxCopy:
-        reg32 = regs.RxMaxCopy;
-        break;
-
-      case Regs::TxMaxCopy:
-        reg32 = regs.TxMaxCopy;
-        break;
-
-      case Regs::RxThreshold:
-        reg32 = regs.RxThreshold;
-        break;
-
-      case Regs::TxThreshold:
-        reg32 = regs.TxThreshold;
-        break;
-
-      case Regs::IntrStatus:
-        reg32 = regs.IntrStatus;
-        devIntrClear();
-        break;
-
-      case Regs::IntrMask:
-        reg32 = regs.IntrMask;
-        break;
-
-      case Regs::RxData:
-        reg64 = regs.RxData;
-        break;
-
-      case Regs::RxDone:
-      case Regs::RxWait:
-        reg64 = Regs::set_RxDone_FifoLen(regs.RxDone,
-                                         min(rxFifo.packets(), 255));
-        break;
-
-      case Regs::TxData:
-        reg64 = regs.TxData;
-        break;
-
-      case Regs::TxDone:
-      case Regs::TxWait:
-        reg64 = Regs::set_TxDone_FifoLen(regs.TxDone,
-                                         min(txFifo.packets(), 255));
-        break;
-
-      case Regs::HwAddr:
-        reg64 = params()->eaddr;
-        break;
-
-      default:
-        panic("reading write only register %s: da=%#x pa=%#x va=%#x size=%d",
-              Regs::regName(daddr), daddr, req->paddr, req->vaddr, req->size);
+    uint64_t value = 0;
+    if (req->size == 4) {
+        uint32_t &reg = *(uint32_t *)data;
+        reg = regData32(daddr);
+        value = reg;
     }
 
-    DPRINTF(EthernetPIO, "read reg=%s done val=%#x\n", Regs::regName(daddr),
-            Regs::regSize(daddr) == 4 ? reg32 : reg64);
+    if (req->size == 8) {
+        uint64_t &reg = *(uint64_t *)data;
+        reg = regData64(daddr);
+        value = reg;
+    }
+
+    DPRINTF(EthernetPIO, "read reg=%s da=%#x pa=%#x va=%#x size=%d val=%#x\n",
+            info.name, daddr, req->paddr, req->vaddr, req->size, value);
+
+    // reading the interrupt status register has the side effect of
+    // clearing it
+    if (daddr == Regs::IntrStatus)
+        devIntrClear();
 
     return No_Fault;
 }
 
+/**
+ * IPR read of device register
+ */
+Fault
+Device::iprRead(Addr daddr, uint64_t &result)
+{
+    if (!regValid(daddr))
+        panic("invalid address: da=%#x", daddr);
+
+    const Regs::Info &info = regInfo(daddr);
+    if (!info.read)
+        panic("reading write only register %s: da=%#x", info.name, daddr);
+
+    DPRINTF(EthernetPIO, "read reg=%s da=%#x\n", info.name, daddr);
+
+    prepareRead();
+
+    if (info.size == 4)
+        result = regData32(daddr);
+
+    if (info.size == 8)
+        result = regData64(daddr);
+
+    DPRINTF(EthernetPIO, "IPR read reg=%s da=%#x val=%#x\n",
+            info.name, result);
+
+    return No_Fault;
+}
+
+/**
+ * I/O write of device register
+ */
 Fault
 Device::write(MemReqPtr &req, const uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
+
+    //The mask is to give you only the offset into the device register file
     Addr daddr = req->paddr & 0xfff;
 
-    if (Regs::regSize(daddr) == 0)
+    if (!regValid(daddr))
         panic("invalid address: da=%#x pa=%#x va=%#x size=%d",
               daddr, req->paddr, req->vaddr, req->size);
 
-    if (req->size != Regs::regSize(daddr))
-        panic("invalid size: reg=%s da=%#x pa=%#x va=%#x size=%d",
-              Regs::regName(daddr), daddr, req->paddr, req->vaddr, req->size);
+    const Regs::Info &info = regInfo(daddr);
+    if (!info.write)
+        panic("writing read only register %s: da=%#x", info.name, daddr);
+
+    if (req->size != info.size)
+        panic("invalid size for reg %s: da=%#x pa=%#x va=%#x size=%d",
+              info.name, daddr, req->paddr, req->vaddr, req->size);
 
     uint32_t reg32 = *(uint32_t *)data;
     uint64_t reg64 = *(uint64_t *)data;
 
     DPRINTF(EthernetPIO, "write reg=%s val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            Regs::regName(daddr), Regs::regSize(daddr) == 4 ? reg32 : reg64,
-            daddr, req->paddr, req->vaddr, req->size);
-
+            info.name, info.size == 4 ? reg32 : reg64, daddr, req->paddr,
+            req->vaddr, req->size);
 
     switch (daddr) {
       case Regs::Config:
         changeConfig(reg32);
         break;
 
-      case Regs::RxThreshold:
-        regs.RxThreshold = reg32;
+      case Regs::Command:
+        command(reg32);
         break;
 
-      case Regs::TxThreshold:
-        regs.TxThreshold = reg32;
+      case Regs::IntrStatus:
+        devIntrClear(regs.IntrStatus & reg32);
         break;
 
       case Regs::IntrMask:
@@ -447,9 +462,10 @@ Device::write(MemReqPtr &req, const uint8_t *data)
 
       case Regs::RxData:
         if (rxState != rxIdle)
-            panic("receive machine busy with another request!");
+            panic("receive machine busy with another request! rxState=%s",
+                  RxStateStrings[rxState]);
 
-        regs.RxDone = 0;
+        regs.RxDone = Regs::RxDone_Busy;
         regs.RxData = reg64;
         if (rxEnable) {
             rxState = rxFifoBlock;
@@ -459,19 +475,16 @@ Device::write(MemReqPtr &req, const uint8_t *data)
 
       case Regs::TxData:
         if (txState != txIdle)
-            panic("transmit machine busy with another request!");
+            panic("transmit machine busy with another request! txState=%s",
+                  TxStateStrings[txState]);
 
-        regs.TxDone = 0;
+        regs.TxDone = Regs::TxDone_Busy;
         regs.TxData = reg64;
         if (txEnable) {
             txState = txFifoBlock;
             txKick();
         }
         break;
-
-      default:
-        panic("writing read only register %s: da=%#x pa=%#x va=%#x size=%d",
-              Regs::regName(daddr), daddr, req->paddr, req->vaddr, req->size);
     }
 
     return No_Fault;
@@ -489,9 +502,25 @@ Device::devIntrPost(uint32_t interrupts)
             "interrupt written to intStatus: intr=%#x status=%#x mask=%#x\n",
             interrupts, regs.IntrStatus, regs.IntrMask);
 
-    if ((regs.IntrStatus & regs.IntrMask)) {
+    interrupts = regs.IntrStatus & regs.IntrMask;
+
+    // Intr_RxHigh is special, we only signal it if we've emptied the fifo
+    // and then filled it above the high watermark
+    if (rxEmpty)
+        rxEmpty = false;
+    else
+        interrupts &= ~Regs::Intr_RxHigh;
+
+    // Intr_TxLow is special, we only signal it if we've filled up the fifo
+    // and then dropped below the low watermark
+    if (txFull)
+        txFull = false;
+    else
+        interrupts &= ~Regs::Intr_TxLow;
+
+    if (interrupts) {
         Tick when = curTick;
-        if ((regs.IntrStatus & regs.IntrMask & Regs::Intr_NoDelay) == 0)
+        if ((interrupts & Regs::Intr_NoDelay) == 0)
             when += intrDelay;
         cpuIntrPost(when);
     }
@@ -627,12 +656,6 @@ Device::changeConfig(uint32_t newconf)
 
     regs.Config = newconf;
 
-    if ((changed & Regs::Config_Reset)) {
-        assert(regs.Config & Regs::Config_Reset);
-        reset();
-        regs.Config &= ~Regs::Config_Reset;
-    }
-
     if ((changed & Regs::Config_IntEn)) {
         cpuIntrEnable = regs.Config & Regs::Config_IntEn;
         if (cpuIntrEnable) {
@@ -657,19 +680,39 @@ Device::changeConfig(uint32_t newconf)
 }
 
 void
+Device::command(uint32_t command)
+{
+    if (command & Regs::Command_Reset)
+        reset();
+}
+
+void
 Device::reset()
 {
     using namespace Regs;
+
     memset(&regs, 0, sizeof(regs));
+
+    regs.Config = 0;
+    if (params()->dedicated)
+        regs.Config |= Config_Thread;
+    regs.IntrMask = Intr_RxHigh | Intr_RxDMA | Intr_TxLow;
     regs.RxMaxCopy = params()->rx_max_copy;
     regs.TxMaxCopy = params()->tx_max_copy;
-    regs.IntrMask = Intr_TxFifo | Intr_RxFifo | Intr_RxData;
+    regs.RxMaxIntr = params()->rx_max_intr;
+    regs.RxFifoSize = params()->rx_fifo_size;
+    regs.TxFifoSize = params()->tx_fifo_size;
+    regs.RxFifoMark = params()->rx_fifo_threshold;
+    regs.TxFifoMark = params()->tx_fifo_threshold;
+    regs.HwAddr = params()->eaddr;
 
     rxState = rxIdle;
     txState = txIdle;
 
     rxFifo.clear();
     txFifo.clear();
+    rxEmpty = false;
+    txFull = false;
 }
 
 void
@@ -680,13 +723,18 @@ Device::rxDmaCopy()
     physmem->dma_write(rxDmaAddr, (uint8_t *)rxDmaData, rxDmaLen);
     DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n",
             rxDmaAddr, rxDmaLen);
-    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
+    DDUMP(EthernetData, rxDmaData, rxDmaLen);
 }
 
 void
 Device::rxDmaDone()
 {
     rxDmaCopy();
+
+    // If the transmit state machine  has a pending DMA, let it go first
+    if (txState == txBeginCopy)
+        txKick();
+
     rxKick();
 }
 
@@ -706,6 +754,8 @@ Device::rxKick()
     switch (rxState) {
       case rxIdle:
         if (rxPioRequest) {
+            DPRINTF(EthernetPIO, "rxIdle: PIO waiting responding at %d\n",
+                    curTick + pioLatency);
             pioInterface->respond(rxPioRequest, curTick);
             rxPioRequest = 0;
         }
@@ -761,20 +811,20 @@ Device::rxKick()
         break;
 
       case rxBeginCopy:
+        if (dmaInterface && dmaInterface->busy())
+            goto exit;
+
         rxDmaAddr = plat->pciToDma(Regs::get_RxData_Addr(regs.RxData));
         rxDmaLen = min<int>(Regs::get_RxData_Len(regs.RxData), rxPktBytes);
         rxDmaData = rxPacketBufPtr;
+        rxState = rxCopy;
 
         if (dmaInterface) {
-            if (!dmaInterface->busy()) {
-                dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen,
-                                    curTick, &rxDmaEvent, true);
-                rxState = rxCopy;
-            }
+            dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen,
+                                curTick, &rxDmaEvent, true);
             goto exit;
         }
 
-        rxState = rxCopy;
         if (dmaWriteDelay != 0 || dmaWriteFactor != 0) {
             Tick factor = ((rxDmaLen + ULL(63)) >> ULL(6)) * dmaWriteFactor;
             Tick start = curTick + dmaWriteDelay + factor;
@@ -802,7 +852,7 @@ Device::rxKick()
         }
 
         regs.RxDone |= Regs::RxDone_Complete;
-        devIntrPost(Regs::Intr_RxData);
+        devIntrPost(Regs::Intr_RxDMA);
         rxState = rxIdle;
         break;
 
@@ -831,13 +881,18 @@ Device::txDmaCopy()
     physmem->dma_read((uint8_t *)txDmaData, txDmaAddr, txDmaLen);
     DPRINTF(EthernetDMA, "tx dma read paddr=%#x len=%d\n",
             txDmaAddr, txDmaLen);
-    DDUMP(EthernetDMA, txDmaData, txDmaLen);
+    DDUMP(EthernetData, txDmaData, txDmaLen);
 }
 
 void
 Device::txDmaDone()
 {
     txDmaCopy();
+
+    // If the receive state machine  has a pending DMA, let it go first
+    if (rxState == rxBeginCopy)
+        rxKick();
+
     txKick();
 }
 
@@ -849,6 +904,7 @@ Device::transmit()
         return;
     }
 
+    uint32_t interrupts;
     PacketPtr packet = txFifo.front();
     if (!interface->sendPacket(packet)) {
         DPRINTF(Ethernet, "Packet Transmit: failed txFifo available %d\n",
@@ -857,7 +913,6 @@ Device::transmit()
     }
 
     txFifo.pop();
-
 #if TRACING_ON
     if (DTRACE(Ethernet)) {
         IpPtr ip(packet);
@@ -872,17 +927,17 @@ Device::transmit()
     }
 #endif
 
-    DDUMP(Ethernet, packet->data, packet->length);
+    DDUMP(EthernetData, packet->data, packet->length);
     txBytes += packet->length;
     txPackets++;
 
     DPRINTF(Ethernet, "Packet Transmit: successful txFifo Available %d\n",
             txFifo.avail());
 
-    if (txFifo.size() <= params()->tx_fifo_threshold)
-        devIntrPost(Regs::Intr_TxFifo);
-
-    devIntrPost(Regs::Intr_TxDone);
+    interrupts = Regs::Intr_TxPacket;
+    if (txFifo.size() < regs.TxFifoMark)
+        interrupts |= Regs::Intr_TxLow;
+    devIntrPost(interrupts);
 
   reschedule:
    if (!txFifo.empty() && !txEvent.scheduled()) {
@@ -907,6 +962,8 @@ Device::txKick()
     switch (txState) {
       case txIdle:
         if (txPioRequest) {
+            DPRINTF(EthernetPIO, "txIdle: PIO waiting responding at %d\n",
+                    curTick + pioLatency);
             pioInterface->respond(txPioRequest, curTick + pioLatency);
             txPioRequest = 0;
         }
@@ -929,21 +986,20 @@ Device::txKick()
         break;
 
       case txBeginCopy:
+        if (dmaInterface && dmaInterface->busy())
+            goto exit;
+
         txDmaAddr = plat->pciToDma(Regs::get_TxData_Addr(regs.TxData));
         txDmaLen = Regs::get_TxData_Len(regs.TxData);
         txDmaData = txPacketBufPtr;
+        txState = txCopy;
 
         if (dmaInterface) {
-            if (!dmaInterface->busy()) {
-                dmaInterface->doDMA(Read, txDmaAddr, txDmaLen,
-                                    curTick, &txDmaEvent, true);
-                txState = txCopy;
-            }
-
+            dmaInterface->doDMA(Read, txDmaAddr, txDmaLen,
+                                curTick, &txDmaEvent, true);
             goto exit;
         }
 
-        txState = txCopy;
         if (dmaReadDelay != 0 || dmaReadFactor != 0) {
             Tick factor = ((txDmaLen + ULL(63)) >> ULL(6)) * dmaReadFactor;
             Tick start = curTick + dmaReadDelay + factor;
@@ -987,12 +1043,16 @@ Device::txKick()
                 }
             }
             txFifo.push(txPacket);
+            if (txFifo.avail() < regs.TxMaxCopy) {
+                devIntrPost(Regs::Intr_TxFull);
+                txFull = true;
+            }
             txPacket = 0;
             transmit();
         }
 
         regs.TxDone = txDmaLen | Regs::TxDone_Complete;
-        devIntrPost(Regs::Intr_TxData);
+        devIntrPost(Regs::Intr_TxDMA);
         txState = txIdle;
         break;
 
@@ -1085,18 +1145,16 @@ Device::recvPacket(PacketPtr packet)
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
-        interface->recvDone();
         return true;
     }
 
     if (rxFilter(packet)) {
         DPRINTF(Ethernet, "packet filtered...dropped\n");
-        interface->recvDone();
         return true;
     }
 
-    if (rxFifo.size() >= params()->rx_fifo_threshold)
-        devIntrPost(Regs::Intr_RxFifo);
+    if (rxFifo.size() >= regs.RxFifoMark)
+        devIntrPost(Regs::Intr_RxHigh);
 
     if (!rxFifo.push(packet)) {
         DPRINTF(Ethernet,
@@ -1104,8 +1162,7 @@ Device::recvPacket(PacketPtr packet)
         return false;
     }
 
-    interface->recvDone();
-    devIntrPost(Regs::Intr_RxDone);
+    devIntrPost(Regs::Intr_RxPacket);
     rxKick();
     return true;
 }
@@ -1163,22 +1220,23 @@ Device::serialize(ostream &os)
     // Serialize the PciDev base class
     Base::serialize(os);
 
-    if (rxDmaEvent.scheduled())
-        rxDmaCopy();
+    if (rxState == rxCopy)
+        panic("can't serialize with an in flight dma request rxState=%s",
+              RxStateStrings[rxState]);
 
-    if (txDmaEvent.scheduled())
-        txDmaCopy();
+    if (txState == txCopy)
+        panic("can't serialize with an in flight dma request txState=%s",
+              TxStateStrings[txState]);
 
     /*
      * Serialize the device registers
      */
     SERIALIZE_SCALAR(regs.Config);
-    SERIALIZE_SCALAR(regs.RxMaxCopy);
-    SERIALIZE_SCALAR(regs.TxMaxCopy);
-    SERIALIZE_SCALAR(regs.RxThreshold);
-    SERIALIZE_SCALAR(regs.TxThreshold);
     SERIALIZE_SCALAR(regs.IntrStatus);
     SERIALIZE_SCALAR(regs.IntrMask);
+    SERIALIZE_SCALAR(regs.RxMaxCopy);
+    SERIALIZE_SCALAR(regs.TxMaxCopy);
+    SERIALIZE_SCALAR(regs.RxMaxIntr);
     SERIALIZE_SCALAR(regs.RxData);
     SERIALIZE_SCALAR(regs.RxDone);
     SERIALIZE_SCALAR(regs.TxData);
@@ -1189,6 +1247,7 @@ Device::serialize(ostream &os)
      */
     int rxState = this->rxState;
     SERIALIZE_SCALAR(rxState);
+    SERIALIZE_SCALAR(rxEmpty);
     rxFifo.serialize("rxFifo", os);
     bool rxPacketExists = rxPacket;
     SERIALIZE_SCALAR(rxPacketExists);
@@ -1205,6 +1264,7 @@ Device::serialize(ostream &os)
      */
     int txState = this->txState;
     SERIALIZE_SCALAR(txState);
+    SERIALIZE_SCALAR(txFull);
     txFifo.serialize("txFifo", os);
     bool txPacketExists = txPacket;
     SERIALIZE_SCALAR(txPacketExists);
@@ -1233,12 +1293,11 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
      * Unserialize the device registers
      */
     UNSERIALIZE_SCALAR(regs.Config);
-    UNSERIALIZE_SCALAR(regs.RxMaxCopy);
-    UNSERIALIZE_SCALAR(regs.TxMaxCopy);
-    UNSERIALIZE_SCALAR(regs.RxThreshold);
-    UNSERIALIZE_SCALAR(regs.TxThreshold);
     UNSERIALIZE_SCALAR(regs.IntrStatus);
     UNSERIALIZE_SCALAR(regs.IntrMask);
+    UNSERIALIZE_SCALAR(regs.RxMaxCopy);
+    UNSERIALIZE_SCALAR(regs.TxMaxCopy);
+    UNSERIALIZE_SCALAR(regs.RxMaxIntr);
     UNSERIALIZE_SCALAR(regs.RxData);
     UNSERIALIZE_SCALAR(regs.RxDone);
     UNSERIALIZE_SCALAR(regs.TxData);
@@ -1249,6 +1308,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
      */
     int rxState;
     UNSERIALIZE_SCALAR(rxState);
+    UNSERIALIZE_SCALAR(rxEmpty);
     this->rxState = (RxState) rxState;
     rxFifo.unserialize("rxFifo", cp, section);
     bool rxPacketExists;
@@ -1269,6 +1329,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
      */
     int txState;
     UNSERIALIZE_SCALAR(txState);
+    UNSERIALIZE_SCALAR(txFull);
     this->txState = (TxState) txState;
     txFifo.unserialize("txFifo", cp, section);
     bool txPacketExists;
@@ -1310,15 +1371,19 @@ Device::cacheAccess(MemReqPtr &req)
     Tick when = curTick + pioLatency;
 
     switch (daddr) {
-      case Regs::RxDone:
+      case Regs::RxWait:
         if (rxState != rxIdle) {
+            DPRINTF(EthernetPIO, "rxState=%s (not idle)... waiting\n",
+                    TxStateStrings[txState]);
             rxPioRequest = req;
             when = 0;
         }
         break;
 
-      case Regs::TxDone:
+      case Regs::TxWait:
         if (txState != txIdle) {
+            DPRINTF(EthernetPIO, "txState=%s (not idle)... waiting\n",
+                    TxStateStrings[txState]);
             txPioRequest = req;
             when = 0;
         }
@@ -1387,6 +1452,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<Tick> tx_delay;
     Param<uint32_t> rx_max_copy;
     Param<uint32_t> tx_max_copy;
+    Param<uint32_t> rx_max_intr;
     Param<uint32_t> rx_fifo_size;
     Param<uint32_t> tx_fifo_size;
     Param<uint32_t> rx_fifo_threshold;
@@ -1394,6 +1460,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
 
     Param<bool> rx_filter;
     Param<string> hardware_address;
+    Param<bool> dedicated;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
@@ -1426,13 +1493,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(tx_delay, "Transmit Delay"),
     INIT_PARAM(rx_max_copy, "rx max copy"),
     INIT_PARAM(tx_max_copy, "rx max copy"),
+    INIT_PARAM(rx_max_intr, "rx max intr"),
     INIT_PARAM(rx_fifo_size, "max size in bytes of rxFifo"),
     INIT_PARAM(tx_fifo_size, "max size in bytes of txFifo"),
     INIT_PARAM(rx_fifo_threshold, "max size in bytes of rxFifo"),
     INIT_PARAM(tx_fifo_threshold, "max size in bytes of txFifo"),
 
     INIT_PARAM(rx_filter, "Enable Receive Filter"),
-    INIT_PARAM(hardware_address, "Ethernet Hardware Address")
+    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
+    INIT_PARAM(dedicated, "dedicate a kernel thread to the driver")
 
 END_INIT_SIM_OBJECT_PARAMS(Device)
 
@@ -1444,6 +1513,7 @@ CREATE_SIM_OBJECT(Device)
     params->name = getInstanceName();
 
     params->clock = clock;
+
     params->mmu = mmu;
     params->physmem = physmem;
     params->configSpace = configspace;
@@ -1468,6 +1538,7 @@ CREATE_SIM_OBJECT(Device)
     params->rx_delay = rx_delay;
     params->rx_max_copy = rx_max_copy;
     params->tx_max_copy = tx_max_copy;
+    params->rx_max_intr = rx_max_intr;
     params->rx_fifo_size = rx_fifo_size;
     params->tx_fifo_size = tx_fifo_size;
     params->rx_fifo_threshold = rx_fifo_threshold;
@@ -1475,6 +1546,7 @@ CREATE_SIM_OBJECT(Device)
 
     params->rx_filter = rx_filter;
     params->eaddr = hardware_address;
+    params->dedicated = dedicated;
 
     return new Device(params);
 }

@@ -98,28 +98,26 @@ def commands(options, command, args):
 
         raise CommandException
 
-    import db, info
-    info.source = db.Database()
-    info.source.host = options.host
-    info.source.db = options.db
-    info.source.passwd = options.passwd
-    info.source.user = options.user
-    info.source.connect()
-    #info.source.update_dict(globals())
+    import db
+    source = db.Database()
+    source.host = options.host
+    source.db = options.db
+    source.passwd = options.passwd
+    source.user = options.user
+    source.connect()
+    #source.update_dict(globals())
 
-    if type(options.get) is str:
-        info.source.get = options.get
+    if type(options.method) is str:
+        source.method = options.method
 
     if options.runs is None:
-        runs = info.source.allRuns
+        runs = source.allRuns
     else:
         rx = re.compile(options.runs)
         runs = []
-        for run in info.source.allRuns:
+        for run in source.allRuns:
             if rx.match(run.name):
                 runs.append(run)
-
-    info.display_run = runs[0].run
 
     if command == 'runs':
         user = None
@@ -129,14 +127,14 @@ def commands(options, command, args):
         for o,a in opts:
             if o == '-u':
                 user = a
-        info.source.listRuns(user)
+        source.listRuns(user)
         return
 
     if command == 'stats':
         if len(args) == 0:
-            info.source.listStats()
+            source.listStats()
         elif len(args) == 1:
-            info.source.listStats(args[0])
+            source.listStats(args[0])
         else:
             raise CommandException
 
@@ -144,9 +142,9 @@ def commands(options, command, args):
 
     if command == 'bins':
         if len(args) == 0:
-            info.source.listBins()
+            source.listBins()
         elif len(args) == 1:
-            info.source.listBins(args[0])
+            source.listBins(args[0])
         else:
             raise CommandException
 
@@ -154,9 +152,9 @@ def commands(options, command, args):
 
     if command == 'formulas':
         if len(args) == 0:
-            info.source.listFormulas()
+            source.listFormulas()
         elif len(args) == 1:
-            info.source.listFormulas(args[0])
+            source.listFormulas(args[0])
         else:
             raise CommandException
 
@@ -166,7 +164,7 @@ def commands(options, command, args):
         if len(args):
             raise CommandException
 
-        info.source.listTicks(runs)
+        source.listTicks(runs)
         return
 
     if command == 'stability':
@@ -177,8 +175,8 @@ def commands(options, command, args):
             merge = int(args[0])
         except ValueError:
             usage()
-        stats = info.source.getStat(args[1])
-        info.source.get = "sum"
+        stats = source.getStat(args[1])
+        source.method = 'sum'
 
         def disp(*args):
             print "%-35s %12s %12s %4s %5s %5s %5s %10s" % args
@@ -195,18 +193,17 @@ def commands(options, command, args):
 
             #loop through all the selected runs
             for run in runs:
-                info.display_run = run.run;
-                runTicks = info.source.retTicks([ run ])
+                runTicks = source.retTicks([ run ])
                 #throw away the first one, it's 0
                 runTicks.pop(0)
-                info.globalTicks = runTicks
+                source.ticks = runTicks
                 avg = 0
                 stdev = 0
                 numoutsideavg  = 0
                 numoutside1std = 0
                 numoutside2std = 0
                 pairRunTicks = []
-                if float(stat) == 1e300*1e300:
+                if value(stat, run.run) == 1e300*1e300:
                     continue
                 for t in range(0, len(runTicks)-(merge-1), merge):
                     tempPair = []
@@ -215,17 +212,17 @@ def commands(options, command, args):
                     pairRunTicks.append(tempPair)
                 #loop through all the various ticks for each run
                 for tick in pairRunTicks:
-                    info.globalTicks = tick
-                    avg += float(stat)
+                    source.ticks = tick
+                    avg += value(stat, run.run)
                 avg /= len(pairRunTicks)
                 for tick in pairRunTicks:
-                    info.globalTicks = tick
-                    val = float(stat)
+                    source.ticks = tick
+                    val = value(stat, run.run)
                     stdev += pow((val-avg),2)
                 stdev = math.sqrt(stdev / len(pairRunTicks))
                 for tick in pairRunTicks:
-                    info.globalTicks = tick
-                    val = float(stat)
+                    source.ticks = tick
+                    val = value(stat, run.run)
                     if (val < (avg * .9)) or (val > (avg * 1.1)):
                         numoutsideavg += 1
                     if (val < (avg - stdev)) or (val > (avg + stdev)):
@@ -264,9 +261,9 @@ def commands(options, command, args):
     if options.ticks:
         if not options.graph:
             print 'only displaying sample %s' % options.ticks
-        info.globalTicks = [ int(x) for x in options.ticks.split() ]
+        source.ticks = [ int(x) for x in options.ticks.split() ]
 
-    from output import StatOutput
+    import output
 
     def display():
         if options.graph:
@@ -280,12 +277,12 @@ def commands(options, command, args):
             raise CommandException
 
         if command == 'stat':
-            stats = info.source.getStat(args[0])
+            stats = source.getStat(args[0])
         if command == 'formula':
             stats = eval(args[0])
 
         for stat in stats:
-            output = StatOutput(stat.name, options.jobfile)
+            output = output.StatOutput(stat.name, options.jobfile, source)
             output.stat = stat
             output.label = stat.name
             display()
@@ -295,12 +292,11 @@ def commands(options, command, args):
     if len(args):
         raise CommandException
 
-    system = info.source.__dict__[options.system]
-
-    from proxy import ProxyGroup
-    sim_ticks = info.source['sim_ticks']
-    sim_seconds = info.source['sim_seconds']
-    proxy = ProxyGroup(system = info.source[options.system])
+    system = source.__dict__[options.system]
+    from info import ProxyGroup
+    sim_ticks = source['sim_ticks']
+    sim_seconds = source['sim_seconds']
+    proxy = ProxyGroup(system = source[options.system])
     system = proxy.system
 
     etherdev = system.tsunami.etherdev0
@@ -309,7 +305,7 @@ def commands(options, command, args):
     packets = etherdev.rxPackets + etherdev.txPackets
     bps = etherdev.rxBandwidth + etherdev.txBandwidth
 
-    output = StatOutput(command, options.jobfile)
+    output = output.StatOutput(command, options.jobfile, source)
 
     if command == 'usertime':
         import copy
@@ -460,7 +456,7 @@ if __name__ == '__main__':
     options.user = getpass.getuser()
     options.runs = None
     options.system = 'client'
-    options.get = None
+    options.method = None
     options.binned = False
     options.graph = False
     options.ticks = False
@@ -469,7 +465,7 @@ if __name__ == '__main__':
     options.jobfile = None
     options.all = False
 
-    opts, args = getopts(sys.argv[1:], '-BEFG:Jad:g:h:j:pr:s:u:T:')
+    opts, args = getopts(sys.argv[1:], '-BEFJad:g:h:j:m:pr:s:u:T:')
     for o,a in opts:
         if o == '-B':
             options.binned = True
@@ -477,8 +473,6 @@ if __name__ == '__main__':
             options.printmode = 'E'
         if o == '-F':
             options.printmode = 'F'
-        if o == '-G':
-            options.get = a
         if o == '-a':
             options.all = True
         if o == '-d':
@@ -492,6 +486,8 @@ if __name__ == '__main__':
             jobfilename = None
         if o == '-j':
             jobfilename = a
+        if o == '-m':
+            options.method = a
         if o == '-p':
             options.passwd = getpass.getpass()
         if o == '-r':

@@ -147,6 +147,8 @@ class qsub:
                 flags.append('e')
             if len(flags):
                 self.cmd.append('-m ' + flags)
+        else:
+            self.cmd.append('-mn')
 
         if self.name:
             self.cmd.append("-N%s" % self.name)
@@ -158,7 +160,7 @@ class qsub:
             self.cmd.append('-q' + self.queue)
 
         if self.afterok:
-            self.cmd.append('-Wdepend=afterok:%s' % self.after)
+            self.cmd.append('-Wdepend=afterok:%s' % self.afterok)
 
         self.cmd.extend(args)
         self.script = script

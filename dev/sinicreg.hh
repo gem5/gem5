@@ -57,23 +57,28 @@ namespace Regs {
 
 // Registers
 __SINIC_REG32(Config,      0x00); // 32: configuration register
-__SINIC_REG32(RxMaxCopy,   0x04); // 32: max rx copy
-__SINIC_REG32(TxMaxCopy,   0x08); // 32: max tx copy
-__SINIC_REG32(RxThreshold, 0x0c); // 32: receive fifo threshold
-__SINIC_REG32(TxThreshold, 0x10); // 32: transmit fifo threshold
-__SINIC_REG32(IntrStatus,  0x14); // 32: interrupt status
-__SINIC_REG32(IntrMask,    0x18); // 32: interrupt mask
-__SINIC_REG32(RxData,      0x20); // 64: receive data
-__SINIC_REG32(RxDone,      0x28); // 64: receive done
-__SINIC_REG32(RxWait,      0x30); // 64: receive done (busy wait)
-__SINIC_REG32(TxData,      0x38); // 64: transmit data
-__SINIC_REG32(TxDone,      0x40); // 64: transmit done
-__SINIC_REG32(TxWait,      0x48); // 64: transmit done (busy wait)
-__SINIC_REG32(HwAddr,      0x50); // 64: mac address
-__SINIC_REG32(Size,        0x58);
+__SINIC_REG32(Command,     0x04); // 32: command register
+__SINIC_REG32(IntrStatus,  0x08); // 32: interrupt status
+__SINIC_REG32(IntrMask,    0x0c); // 32: interrupt mask
+__SINIC_REG32(RxMaxCopy,   0x10); // 32: max bytes per rx copy
+__SINIC_REG32(TxMaxCopy,   0x14); // 32: max bytes per tx copy
+__SINIC_REG32(RxMaxIntr,   0x18); // 32: max receives per interrupt
+__SINIC_REG32(Reserved0,   0x1c); // 32: reserved
+__SINIC_REG32(RxFifoSize,  0x20); // 32: rx fifo capacity in bytes
+__SINIC_REG32(TxFifoSize,  0x24); // 32: tx fifo capacity in bytes
+__SINIC_REG32(RxFifoMark,  0x28); // 32: rx fifo high watermark
+__SINIC_REG32(TxFifoMark,  0x2c); // 32: tx fifo low watermark
+__SINIC_REG32(RxData,      0x30); // 64: receive data
+__SINIC_REG32(RxDone,      0x38); // 64: receive done
+__SINIC_REG32(RxWait,      0x40); // 64: receive done (busy wait)
+__SINIC_REG32(TxData,      0x48); // 64: transmit data
+__SINIC_REG32(TxDone,      0x50); // 64: transmit done
+__SINIC_REG32(TxWait,      0x58); // 64: transmit done (busy wait)
+__SINIC_REG32(HwAddr,      0x60); // 64: mac address
+__SINIC_REG32(Size,        0x68); // register addres space size
 
 // Config register bits
-__SINIC_VAL32(Config_Reset,  31, 1); // reset chip
+__SINIC_VAL32(Config_Thread,  8, 1); // enable receive filter
 __SINIC_VAL32(Config_Filter,  7, 1); // enable receive filter
 __SINIC_VAL32(Config_Vlan,    6, 1); // enable vlan tagging
 __SINIC_VAL32(Config_Virtual, 5, 1); // enable virtual addressing
@@ -83,105 +88,103 @@ __SINIC_VAL32(Config_IntEn,   2, 1); // enable interrupts
 __SINIC_VAL32(Config_TxEn,    1, 1); // enable transmit
 __SINIC_VAL32(Config_RxEn,    0, 1); // enable receive
 
+// Command register bits
+__SINIC_VAL32(Command_Reset, 0, 1); // reset chip
+
 // Interrupt register bits
-__SINIC_VAL32(Intr_TxFifo, 5, 1);  // Fifo oflow/uflow/threshold
-__SINIC_VAL32(Intr_TxData, 4, 1);  // DMA Completed w/ interrupt
-__SINIC_VAL32(Intr_TxDone, 3, 1);  // Packet transmitted
-__SINIC_VAL32(Intr_RxFifo, 2, 1); // Fifo oflow/uflow/threshold
-__SINIC_VAL32(Intr_RxData, 1, 1); // DMA Completed w/ interrupt
-__SINIC_VAL32(Intr_RxDone, 0, 1); // Packet received
-__SINIC_REG32(Intr_All,     0x3f);
-__SINIC_REG32(Intr_NoDelay, 0x24);
-__SINIC_REG32(Intr_Res,    ~0x3f);
+__SINIC_VAL32(Intr_TxLow,     7, 1); // tx fifo dropped below watermark
+__SINIC_VAL32(Intr_TxFull,    6, 1); // tx fifo full
+__SINIC_VAL32(Intr_TxDMA,     5, 1); // tx dma completed w/ interrupt
+__SINIC_VAL32(Intr_TxPacket,  4, 1); // packet transmitted
+__SINIC_VAL32(Intr_RxHigh,    3, 1); // rx fifo above high watermark
+__SINIC_VAL32(Intr_RxEmpty,   2, 1); // rx fifo empty
+__SINIC_VAL32(Intr_RxDMA,     1, 1); // rx dma completed w/ interrupt
+__SINIC_VAL32(Intr_RxPacket,  0, 1); // packet received
+__SINIC_REG32(Intr_All,       0xff); // all valid interrupts
+__SINIC_REG32(Intr_NoDelay,   0xcc); // interrupts that shouldn't be coalesced
+__SINIC_REG32(Intr_Res,      ~0xff); // reserved interrupt bits
 
 // RX Data Description
 __SINIC_VAL64(RxData_Len, 40, 20); // 0 - 1M
 __SINIC_VAL64(RxData_Addr, 0, 40); // Address 1TB
 
 // TX Data Description
-__SINIC_VAL64(TxData_More,     63,  1);
-__SINIC_VAL64(TxData_Checksum, 62,  1);
+__SINIC_VAL64(TxData_More,     63,  1); // Packet not complete (will dma more)
+__SINIC_VAL64(TxData_Checksum, 62,  1); // do checksum
 __SINIC_VAL64(TxData_Len,      40, 20); // 0 - 1M
 __SINIC_VAL64(TxData_Addr,      0, 40); // Address 1TB
 
 // RX Done/Busy Information
-__SINIC_VAL64(RxDone_Complete,  63,  1);
-__SINIC_VAL64(RxDone_IpPacket,  45,  1);
-__SINIC_VAL64(RxDone_TcpPacket, 44,  1);
-__SINIC_VAL64(RxDone_UdpPacket, 43,  1);
-__SINIC_VAL64(RxDone_IpError,   42,  1);
-__SINIC_VAL64(RxDone_TcpError,  41,  1);
-__SINIC_VAL64(RxDone_UdpError,  40,  1);
-__SINIC_VAL64(RxDone_More,      32,  1);
-__SINIC_VAL64(RxDone_FifoLen,   20,  8); // up to 255 packets
+__SINIC_VAL64(RxDone_Packets,   32, 16); // number of packets in rx fifo
+__SINIC_VAL64(RxDone_Busy,      31,  1); // receive dma busy copying
+__SINIC_VAL64(RxDone_Complete,  30,  1); // valid data (packet complete)
+__SINIC_VAL64(RxDone_More,      29,  1); // Packet has more data (dma again)
+__SINIC_VAL64(RxDone_TcpError,  25,  1); // TCP packet error (bad checksum)
+__SINIC_VAL64(RxDone_UdpError,  24,  1); // UDP packet error (bad checksum)
+__SINIC_VAL64(RxDone_IpError,   23,  1); // IP packet error (bad checksum)
+__SINIC_VAL64(RxDone_TcpPacket, 22,  1); // this is a TCP packet
+__SINIC_VAL64(RxDone_UdpPacket, 21,  1); // this is a UDP packet
+__SINIC_VAL64(RxDone_IpPacket,  20,  1); // this is an IP packet
 __SINIC_VAL64(RxDone_CopyLen,    0, 20); // up to 256k
 
 // TX Done/Busy Information
-__SINIC_VAL64(TxDone_Complete, 63,  1);
-__SINIC_VAL64(TxDone_FifoLen,  20,  8); // up to 255 packets
-__SINIC_VAL64(TxDone_CopyLen,   0, 20); // up to 256k
+__SINIC_VAL64(TxDone_Packets,   32, 16); // number of packets in tx fifo
+__SINIC_VAL64(TxDone_Busy,      31,  1); // transmit dma busy copying
+__SINIC_VAL64(TxDone_Complete,  30,  1); // valid data (packet complete)
+__SINIC_VAL64(TxDone_Full,      29,  1); // tx fifo is full
+__SINIC_VAL64(TxDone_Low,       28,  1); // tx fifo is below the watermark
+__SINIC_VAL64(TxDone_CopyLen,    0, 20); // up to 256k
 
-inline int
-regSize(int offset)
+struct Info
 {
-    static const char sizes[] = {
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        0,
-        8, 0,
-        8, 0,
-        8, 0,
-        8, 0,
-        8, 0,
-        8, 0,
-        8, 0
-    };
-
-    if (offset & 0x3)
-        return 0;
-
-    if (offset >= Size)
-        return 0;
-
-    return sizes[offset / 4];
-}
-
-inline const char *
-regName(int offset)
-{
-    static const char *names[] = {
-        "Config",
-        "RxMaxCopy",
-        "TxMaxCopy",
-        "RxThreshold",
-        "TxThreshold",
-        "IntrStatus",
-        "IntrMask",
-        "invalid",
-        "RxData", "invalid",
-        "RxDone", "invalid",
-        "RxWait", "invalid",
-        "TxData", "invalid",
-        "TxDone", "invalid",
-        "TxWait", "invalid",
-        "HwAddr", "invalid"
-    };
-
-    if (offset & 0x3)
-        return "invalid";
-
-    if (offset >= Size)
-        return "invalid";
-
-    return names[offset / 4];
-}
+    uint8_t size;
+    bool read;
+    bool write;
+    const char *name;
+};
 
 /* namespace Regs */ }
+
+inline const Regs::Info&
+regInfo(Addr daddr)
+{
+    static Regs::Info info [] = {
+        { 4, true,  true,  "Config"     },
+        { 4, false, true,  "Command"    },
+        { 4, true,  true,  "IntrStatus" },
+        { 4, true,  true,  "IntrMask"   },
+        { 4, true,  false, "RxMaxCopy"  },
+        { 4, true,  false, "TxMaxCopy"  },
+        { 4, true,  false, "RxMaxIntr"  },
+        { 0, false, false, "invalid"    },
+        { 4, true,  false, "RxFifoSize" },
+        { 4, true,  false, "TxFifoSize" },
+        { 4, true,  false, "RxFifoMark" },
+        { 4, true,  false, "TxFifoMark" },
+        { 8, true,  true,  "RxData"     }, { 0, false, false, "invalid" },
+        { 8, true,  false, "RxDone"     }, { 0, false, false, "invalid" },
+        { 8, true,  false, "RxWait"     }, { 0, false, false, "invalid" },
+        { 8, true,  true,  "TxData"     }, { 0, false, false, "invalid" },
+        { 8, true,  false, "TxDone"     }, { 0, false, false, "invalid" },
+        { 8, true,  false, "TxWait"     }, { 0, false, false, "invalid" },
+        { 8, true,  false, "HwAddr"     }, { 0, false, false, "invalid" }
+    };
+
+    return info[daddr / 4];
+}
+
+inline bool
+regValid(Addr daddr)
+{
+    if (daddr > Regs::Size)
+        return false;
+
+    if (regInfo(daddr).size == 0)
+        return false;
+
+    return true;
+}
+
 /* namespace Sinic */ }
 
 #endif // __DEV_SINICREG_HH__

@@ -27,390 +27,346 @@
 from __future__ import division
 import operator, re, types
 
-source = None
-display_run = 0
-global globalTicks
-globalTicks = None
+def unproxy(proxy):
+    if hasattr(proxy, '__unproxy__'):
+        return proxy.__unproxy__()
 
-def total(f):
-    if isinstance(f, FormulaStat):
-        v = f.value
-    else:
-        v = f
+    return proxy
 
-    f = FormulaStat()
-    if isinstance(v, (list, tuple)):
-        f.value = reduce(operator.add, v)
-    else:
-        f.value = v
+def scalar(stat):
+    stat = unproxy(stat)
+    assert(stat.__scalar__() != stat.__vector__())
+    return stat.__scalar__()
 
-    return f
+def vector(stat):
+    stat = unproxy(stat)
+    assert(stat.__scalar__() != stat.__vector__())
+    return stat.__vector__()
 
-def unaryop(op, f):
-    if isinstance(f, FormulaStat):
-        v = f.value
-    else:
-        v = f
+def value(stat, *args):
+    stat = unproxy(stat)
+    return stat.__value__(*args)
 
-    if isinstance(v, (list, tuple)):
-        return map(op, v)
-    else:
-        return op(v)
-
-def zerodiv(lv, rv):
-    if rv == 0.0:
-        return 0.0
-    else:
-        return operator.truediv(lv, rv)
-
-def wrapop(op, lv, rv):
-    if isinstance(lv, str):
-        return lv
-
-    if isinstance(rv, str):
-        return rv
-
-    return op(lv, rv)
-
-def same(lrun, rrun):
-    for lx,rx in zip(lrun.keys(),rrun.keys()):
-        if lx != rx:
-            print 'lx != rx'
-            print lx, rx
-            print lrun.keys()
-            print rrun.keys()
-            return False
-        for ly,ry in zip(lrun[lx].keys(),rrun[rx].keys()):
-            if ly != ry:
-                print 'ly != ry'
-                print ly, ry
-                print lrun[lx].keys()
-                print rrun[rx].keys()
-                return False
-    return True
-
-
-def binaryop(op, lf, rf):
-    result = {}
-
-    if isinstance(lf, FormulaStat) and isinstance(rf, FormulaStat):
-        lv = lf.value
-        rv = rf.value
-
-        theruns = []
-        for r in lv.keys():
-            if rv.has_key(r):
-                if same(lv[r], rv[r]):
-                    theruns.append(r)
-                else:
-                    raise AttributeError
-
-        for run in theruns:
-            result[run] = {}
-            for x in lv[run].keys():
-                result[run][x] = {}
-                for y in lv[run][x].keys():
-                    result[run][x][y] = wrapop(op, lv[run][x][y],
-                                               rv[run][x][y])
-    elif isinstance(lf, FormulaStat):
-        lv = lf.value
-        for run in lv.keys():
-            result[run] = {}
-            for x in lv[run].keys():
-                result[run][x] = {}
-                for y in lv[run][x].keys():
-                    result[run][x][y] = wrapop(op, lv[run][x][y], rf)
-    elif isinstance(rf, FormulaStat):
-        rv = rf.value
-        for run in rv.keys():
-            result[run] = {}
-            for x in rv[run].keys():
-                result[run][x] = {}
-                for y in rv[run][x].keys():
-                    result[run][x][y] = wrapop(op, lf, rv[run][x][y])
-
+def values(stat, run):
+    stat = unproxy(stat)
+    result = []
+    for i in xrange(len(stat)):
+        val = value(stat, run, i)
+        if val is None:
+            return None
+        result.append(val)
     return result
 
-def sums(x, y):
-    if isinstance(x, (list, tuple)):
-        return map(lambda x, y: x + y, x, y)
-    else:
-        return x + y
+def total(stat, run):
+    return sum(values(stat, run))
 
-def alltrue(seq):
-    return reduce(lambda x, y: x and y, seq)
+def len(stat):
+    stat = unproxy(stat)
+    return stat.__len__()
 
-def allfalse(seq):
-    return not reduce(lambda x, y: x or y, seq)
+class Value(object):
+    def __scalar__(self):
+        raise AttributeError, "must define __scalar__ for %s" % (type (self))
+    def __vector__(self):
+        raise AttributeError, "must define __vector__ for %s" % (type (self))
 
-def enumerate(seq):
-    return map(None, range(len(seq)), seq)
+    def __add__(self, other):
+        return BinaryProxy(operator.__add__, self, other)
+    def __sub__(self, other):
+        return BinaryProxy(operator.__sub__, self, other)
+    def __mul__(self, other):
+        return BinaryProxy(operator.__mul__, self, other)
+    def __div__(self, other):
+        return BinaryProxy(operator.__div__, self, other)
+    def __truediv__(self, other):
+        return BinaryProxy(operator.__truediv__, self, other)
+    def __floordiv__(self, other):
+        return BinaryProxy(operator.__floordiv__, self, other)
 
-def cmp(a, b):
-    if a < b:
-        return -1
-    elif a == b:
-        return 0
-    else:
-        return 1
+    def __radd__(self, other):
+        return BinaryProxy(operator.__add__, other, self)
+    def __rsub__(self, other):
+        return BinaryProxy(operator.__sub__, other, self)
+    def __rmul__(self, other):
+        return BinaryProxy(operator.__mul__, other, self)
+    def __rdiv__(self, other):
+        return BinaryProxy(operator.__div__, other, self)
+    def __rtruediv__(self, other):
+        return BinaryProxy(operator.__truediv__, other, self)
+    def __rfloordiv__(self, other):
+        return BinaryProxy(operator.__floordiv__, other, self)
 
-class Statistic(object):
+    def __neg__(self):
+        return UnaryProxy(operator.__neg__, self)
+    def __pos__(self):
+        return UnaryProxy(operator.__pos__, self)
+    def __abs__(self):
+        return UnaryProxy(operator.__abs__, self)
 
-    def __init__(self, data):
-        self.__dict__.update(data.__dict__)
-        if not self.__dict__.has_key('value'):
-            self.__dict__['value'] = None
-        if not self.__dict__.has_key('bins'):
-            self.__dict__['bins'] = None
-        if not self.__dict__.has_key('ticks'):
-            self.__dict__['ticks'] = None
-        if 'vc' not in self.__dict__:
-            self.vc = {}
+class Scalar(Value):
+    def __scalar__(self):
+        return True
 
-    def __getattribute__(self, attr):
-        if attr == 'ticks':
-            if self.__dict__['ticks'] != globalTicks:
-                self.__dict__['value'] = None
-                self.__dict__['ticks'] = globalTicks
-            return self.__dict__['ticks']
-        if attr == 'value':
-            if self.__dict__['ticks'] != globalTicks:
-                if self.__dict__['ticks'] != None and \
-                                    len(self.__dict__['ticks']) == 1:
-                    self.vc[self.__dict__['ticks'][0]] = self.__dict__['value']
-                self.__dict__['ticks'] = globalTicks
-                if len(globalTicks) == 1 and self.vc.has_key(globalTicks[0]):
-                    self.__dict__['value'] = self.vc[globalTicks[0]]
-                else:
-                    self.__dict__['value'] = None
-            if self.__dict__['value'] == None:
-                self.__dict__['value'] = self.getValue()
-            return self.__dict__['value']
-        else:
-            return super(Statistic, self).__getattribute__(attr)
-
-    def __setattr__(self, attr, value):
-        if attr == 'bins' or attr == 'ticks':
-            if attr == 'bins':
-                if value is not None:
-                    value = source.getBin(value)
-            #elif attr == 'ticks' and type(value) is str:
-            #    value = [ int(x) for x in value.split() ]
-
-            self.__dict__[attr] = value
-            self.__dict__['value'] = None
-            self.vc = {}
-        else:
-            super(Statistic, self).__setattr__(attr, value)
-
-    def getValue(self):
-        raise AttributeError, 'getValue() must be defined'
-
-    def zero(self):
+    def __vector__(self):
         return False
 
-    def __ne__(self, other):
-        return not (self == other)
+    def __value__(self, run):
+        raise AttributeError, '__value__ must be defined'
 
-    def __str__(self):
-        return '%f' % (float(self))
+class VectorItemProxy(Value):
+    def __init__(self, proxy, index):
+        self.proxy = proxy
+        self.index = index
 
-class FormulaStat(object):
-    def __add__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.add, self, other)
-        return f
-    def __sub__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.sub, self, other)
-        return f
-    def __mul__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.mul, self, other)
-        return f
-    def __truediv__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(zerodiv, self, other)
-        return f
-    def __mod__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.mod, self, other)
-        return f
-    def __radd__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.add, other, self)
-        return f
-    def __rsub__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.sub, other, self)
-        return f
-    def __rmul__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.mul, other, self)
-        return f
-    def __rtruediv__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(zerodiv, other, self)
-        return f
-    def __rmod__(self, other):
-        f = FormulaStat()
-        f.value = binaryop(operator.mod, other, self)
-        return f
-    def __neg__(self):
-        f = FormulaStat()
-        f.value = unaryop(operator.neg, self)
-        return f
-    def __getitem__(self, idx):
-        f = FormulaStat()
-        f.value = {}
-        for key in self.value.keys():
-            f.value[key] = {}
-            f.value[key][0] = {}
-            f.value[key][0][0] = self.value[key][idx][0]
-        return f
+    def __scalar__(self):
+        return True
 
-    def __float__(self):
-        if isinstance(self.value, FormulaStat):
-            return float(self.value)
-        if not self.value.has_key(display_run):
-            return (1e300*1e300)
-        if len(self.value[display_run]) == 1:
-            return self.value[display_run][0][0]
-        else:
-            #print self.value[display_run]
-            return self.value[display_run][4][0]
-            #raise ValueError
+    def __vector__(self):
+        return False
 
-    def display(self):
-        import display
-        d = display.VectorDisplay()
-        d.flags = 0
-        d.precision = 1
-        d.name = 'formula'
-        d.desc = 'formula'
-        val = self.value[display_run]
-        d.value = [ val[x][0] for x in val.keys() ]
-        d.display()
+    def __value__(self, run):
+        return value(self.proxy, run, self.index)
 
+class Vector(Value):
+    def __scalar__(self):
+        return False
 
-class Scalar(Statistic,FormulaStat):
-    def getValue(self):
-        return source.data(self, self.bins, self.ticks)
+    def __vector__(self):
+        return True
 
-    def display(self):
+    def __value__(self, run, index):
+        raise AttributeError, '__value__ must be defined'
+
+    def __getitem__(self, index):
+        return VectorItemProxy(self, index)
+
+class ScalarConstant(Scalar):
+    def __init__(self, constant):
+        self.constant = constant
+    def __value__(self, run):
+        return self.constant
+
+class VectorConstant(Vector):
+    def __init__(self, constant):
+        self.constant = constant
+    def __value__(self, run, index):
+        return self.constant[index]
+    def __len__(self):
+        return len(self.constant)
+
+def WrapValue(value):
+    if isinstance(value, (int, long, float)):
+        return ScalarConstant(value)
+    if isinstance(value, (list, tuple)):
+        return VectorConstant(value)
+    if isinstance(value, Value):
+        return value
+
+    raise AttributeError, 'Only values can be wrapped'
+
+class Statistic(object):
+    def __getattr__(self, attr):
+        if attr in ('data', 'x', 'y'):
+            result = self.source.data(self, self.bins, self.ticks)
+            self.data = result.data
+            self.x = result.x
+            self.y = result.y
+        return super(Statistic, self).__getattribute__(attr)
+
+    def __setattr__(self, attr, value):
+        if attr == 'stat':
+            raise AttributeError, '%s is read only' % stat
+        if attr in ('source', 'bins', 'ticks'):
+            if getattr(self, attr) != value:
+                if hasattr(self, 'data'):
+                    delattr(self, 'data')
+
+        super(Statistic, self).__setattr__(attr, value)
+
+class ValueProxy(Value):
+    def __getattr__(self, attr):
+        if attr == '__value__':
+            if scalar(self):
+                return self.__scalarvalue__
+            if vector(self):
+                return self.__vectorvalue__
+        if attr == '__len__':
+            if vector(self):
+                return self.__vectorlen__
+        return super(ValueProxy, self).__getattribute__(attr)
+
+class UnaryProxy(ValueProxy):
+    def __init__(self, op, arg):
+        self.op = op
+        self.arg = WrapValue(arg)
+
+    def __scalar__(self):
+        return scalar(self.arg)
+
+    def __vector__(self):
+        return vector(self.arg)
+
+    def __scalarvalue__(self, run):
+        val = value(self.arg, run)
+        if val is None:
+            return None
+        return self.op(val)
+
+    def __vectorvalue__(self, run, index):
+        val = value(self.arg, run, index)
+        if val is None:
+            return None
+        return self.op(val)
+
+    def __vectorlen__(self):
+        return len(unproxy(self.arg))
+
+class BinaryProxy(ValueProxy):
+    def __init__(self, op, arg0, arg1):
+        super(BinaryProxy, self).__init__()
+        self.op = op
+        self.arg0 = WrapValue(arg0)
+        self.arg1 = WrapValue(arg1)
+
+    def __scalar__(self):
+        return scalar(self.arg0) and scalar(self.arg1)
+
+    def __vector__(self):
+        return vector(self.arg0) or vector(self.arg1)
+
+    def __scalarvalue__(self, run):
+        val0 = value(self.arg0, run)
+        val1 = value(self.arg1, run)
+        if val0 is None or val1 is None:
+            return None
+        return self.op(val0, val1)
+
+    def __vectorvalue__(self, run, index):
+        if scalar(self.arg0):
+            val0 = value(self.arg0, run)
+        if vector(self.arg0):
+            val0 = value(self.arg0, run, index)
+        if scalar(self.arg1):
+            val1 = value(self.arg1, run)
+        if vector(self.arg1):
+            val1 = value(self.arg1, run, index)
+
+        if val0 is None or val1 is None:
+            return None
+
+        return self.op(val0, val1)
+
+    def __vectorlen__(self):
+        if vector(self.arg0) and scalar(self.arg1):
+            return len(self.arg0)
+        if scalar(self.arg0) and vector(self.arg1):
+            return len(self.arg1)
+
+        len0 = len(self.arg0)
+        len1 = len(self.arg1)
+
+        if len0 != len1:
+            raise AttributeError, \
+                  "vectors of different lengths %d != %d" % (len0, len1)
+
+        return len0
+
+class Proxy(Value):
+    def __init__(self, name, dict):
+        self.name = name
+        self.dict = dict
+
+    def __unproxy__(self):
+        return unproxy(self.dict[self.name])
+
+    def __getitem__(self, index):
+        return ItemProxy(self, index)
+
+    def __getattr__(self, attr):
+        return AttrProxy(self, attr)
+
+class ItemProxy(Proxy):
+    def __init__(self, proxy, index):
+        self.proxy = proxy
+        self.index = index
+
+    def __unproxy__(self):
+        return unproxy(unproxy(self.proxy)[self.index])
+
+class AttrProxy(Proxy):
+    def __init__(self, proxy, attr):
+        self.proxy = proxy
+        self.attr = attr
+
+    def __unproxy__(self):
+        return unproxy(getattr(unproxy(self.proxy), self.attr))
+
+class ProxyGroup(object):
+    def __init__(self, dict=None, **kwargs):
+        self.__dict__['dict'] = {}
+
+        if dict is not None:
+            self.dict.update(dict)
+
+        if kwargs:
+            self.dict.update(kwargs)
+
+    def __getattr__(self, name):
+        return Proxy(name, self.dict)
+
+    def __setattr__(self, attr, value):
+        self.dict[attr] = value
+
+class ScalarStat(Statistic,Scalar):
+    def __value__(self, run):
+        if run not in self.data:
+            return None
+        return self.data[run][0][0]
+
+    def display(self, run=None):
         import display
         p = display.Print()
         p.name = self.name
         p.desc = self.desc
-        p.value = float(self)
+        p.value = value(self, run)
         p.flags = self.flags
         p.precision = self.precision
         if display.all or (self.flags & flags.printable):
             p.display()
 
-    def comparable(self, other):
-        return self.name == other.name
+class VectorStat(Statistic,Vector):
+    def __value__(self, run, item):
+        if run not in self.data:
+            return None
+        return self.data[run][item][0]
 
-    def __eq__(self, other):
-        return self.value == other.value
+    def __len__(self):
+        return self.x
 
-    def __isub__(self, other):
-        self.value -= other.value
-        return self
-
-    def __iadd__(self, other):
-        self.value += other.value
-        return self
-
-    def __itruediv__(self, other):
-        if not other:
-            return self
-        self.value /= other
-        return self
-
-class Vector(Statistic,FormulaStat):
-    def getValue(self):
-        return source.data(self, self.bins, self.ticks);
-
-    def display(self):
+    def display(self, run=None):
         import display
-        if not display.all and not (self.flags & flags.printable):
-            return
-
         d = display.VectorDisplay()
-        d.__dict__.update(self.__dict__)
+        d.name = self.name
+        d.desc = self.desc
+        d.value = [ value(self, run, i) for i in xrange(len(self)) ]
+        d.flags = self.flags
+        d.precision = self.precision
         d.display()
 
-    def comparable(self, other):
-        return self.name == other.name and \
-               len(self.value) == len(other.value)
+class Formula(Value):
+    def __getattribute__(self, attr):
+        if attr not in ( '__scalar__', '__vector__', '__value__', '__len__' ):
+            return super(Formula, self).__getattribute__(attr)
 
-    def __eq__(self, other):
-        if isinstance(self.value, (list, tuple)) != \
-               isinstance(other.value, (list, tuple)):
-            return False
-
-        if isinstance(self.value, (list, tuple)):
-            if len(self.value) != len(other.value):
-                return False
-            else:
-                for v1,v2 in zip(self.value, other.value):
-                    if v1 != v2:
-                        return False
-                return True
-        else:
-            return self.value == other.value
-
-    def __isub__(self, other):
-        self.value = binaryop(operator.sub, self.value, other.value)
-        return self
-
-    def __iadd__(self, other):
-        self.value = binaryop(operator.add, self.value, other.value)
-        return self
-
-    def __itruediv__(self, other):
-        if not other:
-            return self
-        if isinstance(self.value, (list, tuple)):
-            for i in xrange(len(self.value)):
-                self.value[i] /= other
-        else:
-            self.value /= other
-        return self
-
-class Formula(Vector):
-    def getValue(self):
         formula = re.sub(':', '__', self.formula)
-        x = eval(formula, source.stattop)
-        return x.value
+        value = eval(formula, self.source.stattop)
+        return getattr(value, attr)
 
-    def comparable(self, other):
-        return self.name == other.name and \
-               compare(self.dist, other.dist)
-
-    def __eq__(self, other):
-        return self.value == other.value
-
-    def __isub__(self, other):
-        return self
-
-    def __iadd__(self, other):
-        return self
-
-    def __itruediv__(self, other):
-        if not other:
-            return self
-        return self
-
-class SimpleDist(object):
+class SimpleDist(Statistic):
     def __init__(self, sums, squares, samples):
         self.sums = sums
         self.squares = squares
         self.samples = samples
-
-    def getValue(self):
-        return 0.0
 
     def display(self, name, desc, flags, precision):
         import display
@@ -481,9 +437,6 @@ class FullDist(SimpleDist):
         self.max = max
         self.bsize = bsize
         self.size = size
-
-    def getValue(self):
-        return 0.0
 
     def display(self, name, desc, flags, precision):
         import display
@@ -574,9 +527,6 @@ class FullDist(SimpleDist):
         return self
 
 class Dist(Statistic):
-    def getValue(self):
-        return 0.0
-
     def display(self):
         import display
         if not display.all and not (self.flags & flags.printable):
@@ -606,9 +556,6 @@ class Dist(Statistic):
         return self
 
 class VectorDist(Statistic):
-    def getValue(self):
-        return 0.0
-
     def display(self):
         import display
         if not display.all and not (self.flags & flags.printable):
@@ -694,9 +641,6 @@ class VectorDist(Statistic):
         return self
 
 class Vector2d(Statistic):
-    def getValue(self):
-        return 0.0
-
     def display(self):
         import display
         if not display.all and not (self.flags & flags.printable):
@@ -748,20 +692,25 @@ class Vector2d(Statistic):
             return self
         return self
 
-def NewStat(data):
+def NewStat(source, data):
     stat = None
     if data.type == 'SCALAR':
-        stat = Scalar(data)
+        stat = ScalarStat()
     elif data.type == 'VECTOR':
-        stat = Vector(data)
+        stat = VectorStat()
     elif data.type == 'DIST':
-        stat = Dist(data)
+        stat = Dist()
     elif data.type == 'VECTORDIST':
-        stat = VectorDist(data)
+        stat = VectorDist()
     elif data.type == 'VECTOR2D':
-        stat = Vector2d(data)
+        stat = Vector2d()
     elif data.type == 'FORMULA':
-        stat = Formula(data)
+        stat = Formula()
+
+    stat.__dict__['source'] = source
+    stat.__dict__['bins'] = None
+    stat.__dict__['ticks'] = None
+    stat.__dict__.update(data.__dict__)
 
     return stat
 

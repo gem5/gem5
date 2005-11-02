@@ -89,17 +89,9 @@ def toFloat(value):
     else:
         return float(value)
 
-def toLong(value):
-    value = toFloat(value)
-    result = int(value)
-    if value != result:
-        raise ValueError, "cannot convert '%s' to long" % value
-
-    return result
-
 def toInteger(value):
     value = toFloat(value)
-    result = int(value)
+    result = long(value)
     if value != result:
         raise ValueError, "cannot convert '%s' to integer" % value
 
@@ -220,16 +212,16 @@ def toMemorySize(value):
         raise TypeError, "wrong type '%s' should be str" % type(value)
 
     if value.endswith('PB'):
-        return float(value[:-2]) * pebi
+        return long(value[:-2]) * pebi
     elif value.endswith('TB'):
-        return float(value[:-2]) * tebi
+        return long(value[:-2]) * tebi
     elif value.endswith('GB'):
-        return float(value[:-2]) * gibi
+        return long(value[:-2]) * gibi
     elif value.endswith('MB'):
-        return float(value[:-2]) * mebi
+        return long(value[:-2]) * mebi
     elif value.endswith('kB'):
-        return float(value[:-2]) * kibi
+        return long(value[:-2]) * kibi
     elif value.endswith('B'):
-        return float(value[:-1])
+        return long(value[:-1])
 
     raise ValueError, "cannot convert '%s' to memory size" % value

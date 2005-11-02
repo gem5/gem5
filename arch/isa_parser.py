@@ -794,20 +794,19 @@ def defFormat(id, params, code, lineno):
 
 ##############
 # Stack: a simple stack object.  Used for both formats (formatStack)
-# and default cases (defaultStack).
+# and default cases (defaultStack).  Simply wraps a list to give more
+# stack-like syntax and enable initialization with an argument list
+# (as opposed to an argument that's a list).
 
-class Stack:
-    def __init__(self, initItem):
-        self.stack = [ initItem ]
+class Stack(list):
+    def __init__(self, *items):
+        list.__init__(self, items)
 
     def push(self, item):
-        self.stack.append(item);
-
-    def pop(self):
-        return self.stack.pop()
+        self.append(item);
 
     def top(self):
-        return self.stack[-1]
+        return self[-1]
 
 # The global format stack.
 formatStack = Stack(NoFormat())

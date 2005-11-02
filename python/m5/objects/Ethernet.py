@@ -84,6 +84,7 @@ class EtherDevBase(PciDevice):
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
     intr_delay = Param.Latency('10us', "Interrupt Propagation Delay")
+    dedicated = Param.Bool(False, "dedicate a kernel thread to the driver")
 
 class NSGigE(EtherDevBase):
     type = 'NSGigE'
@@ -91,7 +92,6 @@ class NSGigE(EtherDevBase):
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
 
-    dedicated = Param.Bool(False, "dedicate a kernel thread to the driver")
 
 class NSGigEInt(EtherInt):
     type = 'NSGigEInt'
@@ -102,6 +102,7 @@ class Sinic(EtherDevBase):
 
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")
     tx_max_copy = Param.MemorySize('16kB', "tx max copy")
+    rx_max_intr = Param.UInt32(10, "max rx packets per interrupt")
     rx_fifo_threshold = Param.MemorySize('48kB', "rx fifo high threshold")
     tx_fifo_threshold = Param.MemorySize('16kB', "tx fifo low threshold")
 
