@@ -839,6 +839,7 @@ MySql::visit(const VectorData &data)
 void
 MySql::visit(const DistData &data)
 {
+    return;
     if (!configured)
         configure(data);
     else
@@ -848,6 +849,7 @@ MySql::visit(const DistData &data)
 void
 MySql::visit(const VectorDistData &data)
 {
+    return;
     if (!configured)
         configure(data);
     else
@@ -857,6 +859,7 @@ MySql::visit(const VectorDistData &data)
 void
 MySql::visit(const Vector2dData &data)
 {
+    return;
     if (!configured)
         configure(data);
     else
