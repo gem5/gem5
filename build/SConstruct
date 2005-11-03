@@ -202,10 +202,8 @@ if have_mysql:
     mysql_minor = int(mysql_version[1])
     # This version check is probably overly conservative, but it deals
     # with the versions we have installed.
-    if mysql_major < 3 or \
-           mysql_major == 3 and mysql_minor < 23 or \
-           mysql_major == 4 and mysql_minor < 1:
-        print "Warning: MySQL v3.23 or v4.1 or newer required."
+    if mysql_major < 4 or (mysql_major == 4 and mysql_minor < 1):
+        print "Warning: MySQL v4.1 or newer required."
         have_mysql = False
 
 # Set up mysql_config commands.
