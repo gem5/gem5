@@ -99,7 +99,7 @@ class Shell(pexpect.spawn):
             self.expect('\$ ', options.qsub_timeout)
         except pexpect.TIMEOUT:
             print >>sys.stderr, "%s: qsub timed out." % progname
-            self.kill(15)
+            self.kill(9)
             self.close(wait=True)
             sys.exit(1)
         self.do_command('unset PROMPT_COMMAND; PS1="qdo$ "')
