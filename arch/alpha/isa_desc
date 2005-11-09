@@ -712,7 +712,7 @@ def template FloatingPointExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
 				  Trace::InstRecord *traceData) const
     {
-	if (trappingMode != Imprecise) {
+	if (trappingMode != Imprecise && !warnedOnTrapping) {
 	    warn("%s: non-standard trapping mode not supported",
 		 generateDisassembly(0, NULL));
 	    warnedOnTrapping = true;
@@ -755,7 +755,7 @@ def template FPFixedRoundingExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
 				  Trace::InstRecord *traceData) const
     {
-	if (trappingMode != Imprecise) {
+	if (trappingMode != Imprecise && !warnedOnTrapping) {
 	    warn("%s: non-standard trapping mode not supported",
 		 generateDisassembly(0, NULL));
 	    warnedOnTrapping = true;

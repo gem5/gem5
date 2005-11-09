@@ -233,6 +233,9 @@ sticky_opts.AddOptions(
     BoolOption('SS_COMPATIBLE_FP',
                'Make floating-point results compatible with SimpleScalar',
                False),
+    BoolOption('USE_SSE2',
+               'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
+               False),
     BoolOption('STATS_BINNING', 'Bin statistics by CPU mode', have_mysql),
     BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
@@ -375,6 +378,9 @@ for build_dir in build_dirs:
     if env['BATCH']:
         env['CC']  = env['BATCH_CMD'] + ' ' + env['CC']
         env['CXX'] = env['BATCH_CMD'] + ' ' + env['CXX']
+
+    if env['USE_SSE2']:
+        env.Append(CCFLAGS='-msse2')
 
     # The m5/SConscript file sets up the build rules in 'env' according
     # to the configured options.  It returns a list of environments,
