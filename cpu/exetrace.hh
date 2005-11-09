@@ -148,6 +148,7 @@ class InstRecord : public Record
     };
 
     static std::vector<bool> flags;
+    static std::string trace_system;
 
     static void setParams();
 

@@ -52,14 +52,17 @@ void
 Trace::InstRecord::dump(ostream &outs)
 {
     if (flags[INTEL_FORMAT]) {
-        ccprintf(outs, "%7d ) ", cycle);
-        outs << "0x" << hex << PC << ":\t";
-        if (staticInst->isLoad()) {
-            outs << "<RD 0x" << hex << addr;
-            outs << ">";
-        } else if (staticInst->isStore()) {
-            outs << "<WR 0x" << hex << addr;
-            outs << ">";
+        if (cpu->system->name() == trace_system) {
+            ccprintf(outs, "%7d ) ", cycle);
+            outs << "0x" << hex << PC << ":\t";
+            if (staticInst->isLoad()) {
+                outs << "<RD 0x" << hex << addr;
+                outs << ">";
+            } else if (staticInst->isStore()) {
+                outs << "<WR 0x" << hex << addr;
+                outs << ">";
+            }
+            outs << endl;
         }
     } else {
         if (flags[PRINT_CYCLE])
@@ -135,15 +138,17 @@ Trace::InstRecord::dump(ostream &outs)
 
         if (flags[PRINT_CP_SEQ] && cp_seq_valid)
             outs << "  CPSeq=" << dec << cp_seq;
+
+        //
+        //  End of line...
+        //
+        outs << endl;
     }
-    //
-    //  End of line...
-    //
-    outs << endl;
 }
 
 
 vector<bool> Trace::InstRecord::flags(NUM_BITS);
+string Trace::InstRecord::trace_system;
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -184,6 +189,9 @@ Param<bool> exe_trace_print_cp_seq(&exeTraceParams, "print_cpseq",
                                   "print correct-path sequence number", false);
 Param<bool> exe_trace_intel_format(&exeTraceParams, "intel_format",
                                    "print trace in intel compatible format", false);
+Param<string> exe_trace_system(&exeTraceParams, "trace_system",
+                                   "print trace of which system (client or server)",
+                                   "client");
 
 
 //
@@ -204,6 +212,7 @@ Trace::InstRecord::setParams()
     flags[PRINT_FETCH_SEQ]   = exe_trace_print_fetchseq;
     flags[PRINT_CP_SEQ]      = exe_trace_print_cp_seq;
     flags[INTEL_FORMAT]      = exe_trace_intel_format;
+    trace_system	     = exe_trace_system;
 }
 
 void
