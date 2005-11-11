@@ -63,18 +63,18 @@ getLong()
 }
 
 int64_t
-getUniform(int64_t maxmin)
+getUniform(int64_t min, int64_t max)
 {
     double r;
-    r = (drand48() - 0.500) * 2 * maxmin;
+    r = drand48() * (max-min) + min;
     return (int64_t)round(r);
 }
 
 uint64_t
-getUniformPos(uint64_t max)
+getUniformPos(uint64_t min, uint64_t max)
 {
     double r;
-    r = drand48() * 2 * max;
+    r = drand48() * (max-min) + min;
     return (uint64_t)round(r);
 }
 
