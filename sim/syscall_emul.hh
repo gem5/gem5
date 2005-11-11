@@ -272,7 +272,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
     int fd = xc->getSyscallArg(0);
     unsigned req = xc->getSyscallArg(1);
 
-    // DPRINTFR(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
+    DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
 
     if (fd < 0 || process->sim_fd(fd) < 0) {
         // doesn't map to any simulator fd: not a valid target fd
@@ -396,7 +396,7 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     int fd = process->sim_fd(xc->getSyscallArg(0));
 
-    // DPRINTFR(SyscallVerbose, "fstat(%d, ...)\n", fd);
+    DPRINTF(SyscallVerbose, "fstat(%d, ...)\n", fd);
 
     if (fd < 0)
         return -EBADF;
@@ -493,8 +493,8 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     }
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
-        DPRINTF(SyscallWarnings, "Warning: allowing mmap of file @ fd %d.  "
-                "This will break if not /dev/zero.", xc->getSyscallArg(4));
+        warn("allowing mmap of file @ fd %d. "
+             "This will break if not /dev/zero.", xc->getSyscallArg(4));
     }
 
     return start;
@@ -555,9 +555,8 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
     if (who != OS::RUSAGE_SELF) {
         // don't really handle THREAD or CHILDREN, but just warn and
         // plow ahead
-        DCOUT(SyscallWarnings)
-            << "Warning: getrusage() only supports RUSAGE_SELF."
-            << "  Parameter " << who << " ignored." << std::endl;
+        warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
+             who);
     }
 
     getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);

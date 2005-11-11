@@ -98,7 +98,7 @@ baseFlags = [
     'Serialize',
     'Event',
     'PCEvent',
-    'SyscallWarnings',
+    'Syscall',
     'SyscallVerbose',
     'DiskImage',
     'DiskImageRead',

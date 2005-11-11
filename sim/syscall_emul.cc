@@ -61,12 +61,7 @@ SyscallReturn
 unimplementedFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
 {
-    cerr << "Error: syscall " << desc->name
-         << " (#" << callnum << ") unimplemented.";
-    cerr << "  Args: " << xc->getSyscallArg(0) << ", " << xc->getSyscallArg(1)
-         << ", ..." << endl;
-
-    abort();
+    fatal("syscall %s (#%d) unimplemented.", desc->name, callnum);
 }
 
 
@@ -74,10 +69,8 @@ SyscallReturn
 ignoreFunc(SyscallDesc *desc, int callnum, Process *process,
            ExecContext *xc)
 {
-    DCOUT(SyscallWarnings) << "Warning: ignoring syscall " << desc->name
-                           << "(" << xc->getSyscallArg(0)
-                           << ", " << xc->getSyscallArg(1)
-                           << ", ...)" << endl;
+    warn("ignoring syscall %s(%d, %d, ...)", desc->name,
+         xc->getSyscallArg(0), xc->getSyscallArg(1));
 
     return 0;
 }

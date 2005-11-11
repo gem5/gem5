@@ -203,7 +203,7 @@ do { \
 #define DPRINTFR(x, args...) \
 do { \
     if (Trace::IsOn(Trace::x)) \
-        __dprintf((Tick)-1, string(), args, cp::ArgListNull()); \
+        __dprintf((Tick)-1, std::string(), args, cp::ArgListNull());	\
 } while (0)
 
 #define DPRINTFN(args...) \
