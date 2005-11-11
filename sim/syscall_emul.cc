@@ -110,8 +110,11 @@ obreakFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 SyscallReturn
 closeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    int fd = p->sim_fd(xc->getSyscallArg(0));
-    return close(fd);
+    int target_fd = xc->getSyscallArg(0);
+    int status = close(p->sim_fd(target_fd));
+    if (status >= 0)
+        p->free_fd(target_fd);
+    return status;
 }
 
 

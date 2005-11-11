@@ -191,23 +191,32 @@ Process::dup_fd(int sim_fd, int tgt_fd)
 
 // generate new target fd for sim_fd
 int
-Process::open_fd(int sim_fd)
+Process::alloc_fd(int sim_fd)
 {
-    int free_fd;
-
     // in case open() returns an error, don't allocate a new fd
     if (sim_fd == -1)
         return -1;
 
     // find first free target fd
-    for (free_fd = 0; fd_map[free_fd] >= 0; ++free_fd) {
-        if (free_fd == MAX_FD)
-            panic("Process::open_fd: out of file descriptors!");
+    for (int free_fd = 0; free_fd < MAX_FD; ++free_fd) {
+        if (fd_map[free_fd] == -1) {
+            fd_map[free_fd] = sim_fd;
+            return free_fd;
+        }
     }
 
-    fd_map[free_fd] = sim_fd;
+    panic("Process::alloc_fd: out of file descriptors!");
+}
 
-    return free_fd;
+
+// free target fd (e.g., after close)
+void
+Process::free_fd(int tgt_fd)
+{
+    if (fd_map[tgt_fd] == -1)
+        warn("Process::free_fd: request to free unused fd %d", tgt_fd);
+
+    fd_map[tgt_fd] = -1;
 }
 
 

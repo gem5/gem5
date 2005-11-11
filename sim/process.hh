@@ -124,7 +124,7 @@ class Process : public SimObject
 
   private:
     // file descriptor remapping support
-    static const int MAX_FD = 100;	// max legal fd value
+    static const int MAX_FD = 256;	// max legal fd value
     int fd_map[MAX_FD+1];
 
   public:
@@ -146,7 +146,10 @@ class Process : public SimObject
     void dup_fd(int sim_fd, int tgt_fd);
 
     // generate new target fd for sim_fd
-    int open_fd(int sim_fd);
+    int alloc_fd(int sim_fd);
+
+    // free target fd (e.g., after close)
+    void free_fd(int tgt_fd);
 
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);

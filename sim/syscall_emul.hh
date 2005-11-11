@@ -339,7 +339,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
     // open the file
     int fd = open(path.c_str(), hostFlags, mode);
 
-    return (fd == -1) ? -errno : process->open_fd(fd);
+    return (fd == -1) ? -errno : process->alloc_fd(fd);
 }
 
 
