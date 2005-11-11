@@ -52,7 +52,12 @@ void
 Trace::InstRecord::dump(ostream &outs)
 {
     if (flags[INTEL_FORMAT]) {
-        if (cpu->system->name() == trace_system) {
+#if FULL_SYSTEM
+        bool is_trace_system = (cpu->system->name() == trace_system);
+#else
+        bool is_trace_system = true;
+#endif
+        if (is_trace_system) {
             ccprintf(outs, "%7d ) ", cycle);
             outs << "0x" << hex << PC << ":\t";
             if (staticInst->isLoad()) {
