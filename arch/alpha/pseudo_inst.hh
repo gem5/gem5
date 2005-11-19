@@ -50,4 +50,5 @@ namespace AlphaPseudo
     void readfile(ExecContext *xc);
     void debugbreak(ExecContext *xc);
     void switchcpu(ExecContext *xc);
+    void addsymbol(ExecContext *xc);
 }

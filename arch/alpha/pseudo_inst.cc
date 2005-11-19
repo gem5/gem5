@@ -46,6 +46,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 #include "sim/debug.hh"
+#include "targetarch/vptr.hh"
 
 using namespace std;
 
@@ -130,6 +131,19 @@ namespace AlphaPseudo
 
         using namespace Stats;
         SetupEvent(Dump, when, repeat);
+    }
+
+    void
+    addsymbol(ExecContext *xc)
+    {
+        Addr addr = xc->regs.intRegFile[16];
+        char symb[100];
+        CopyString(xc, symb, xc->regs.intRegFile[17], 100);
+        std::string symbol(symb);
+
+        DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
+
+        xc->system->kernelSymtab->insert(addr,symbol);
     }
 
     void

@@ -2727,6 +2727,10 @@ decode OPCODE default Unknown::unknown() {
             0x52: m5switchcpu({{
 		AlphaPseudo::switchcpu(xc->xcBase());
 	    }}, IsNonSpeculative);
+            0x53: m5addsymbol({{
+		AlphaPseudo::addsymbol(xc->xcBase());
+	    }}, IsNonSpeculative);
+
 	}
     }
 #endif
