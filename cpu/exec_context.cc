@@ -63,7 +63,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     memset(&regs, 0, sizeof(RegFile));
 
     if (cpu->params->profile) {
-        profile = new FunctionProfile(system->allSymtab);
+        profile = new FunctionProfile(system->kernelSymtab);
         Callback *cb =
             new MakeCallback<ExecContext, &ExecContext::dumpFuncProfile>(this);
         registerExitCallback(cb);
