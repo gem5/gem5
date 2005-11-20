@@ -77,9 +77,6 @@ class System : public SimObject
     /** pal symbol table */
     SymbolTable *palSymtab;
 
-    /** all symbols table */
-    SymbolTable *allSymtab;
-
     /** Object pointer for the kernel code */
     ObjectFile *kernel;
 
