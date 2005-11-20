@@ -68,13 +68,11 @@ MySqlRun::connect(const string &host, const string &user, const string &passwd,
         panic("could not connect to database server\n%s\n", mysql.error);
 
     if (mysql.autocommit(false))
-        panic("could not set autocommit\n");
+        panic("could not set autocommit\n%s\n", mysql.error);
 
     remove(name);
     //cleanup();
     setup(name, sample, user, project);
-    if (mysql.commit())
-        panic("could not commit transaction\n");
 }
 
 void
@@ -96,6 +94,8 @@ MySqlRun::setup(const string &name, const string &sample, const string &user,
         panic("could not get a run\n%s\n", mysql.error);
 
     run_id = mysql.insert_id();
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -107,6 +107,8 @@ MySqlRun::remove(const string &name)
     mysql.query(sql);
     if (mysql.error)
         panic("could not delete run\n%s\n", mysql.error);
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -119,40 +121,64 @@ MySqlRun::cleanup()
                 "LEFT JOIN runs ON dt_run=rn_id "
                 "WHERE rn_id IS NULL");
 
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
+
     mysql.query("DELETE formula_ref "
                 "FROM formula_ref "
                 "LEFT JOIN runs ON fr_run=rn_id "
                 "WHERE rn_id IS NULL");
+
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 
     mysql.query("DELETE formulas "
                 "FROM formulas "
                 "LEFT JOIN formula_ref ON fm_stat=fr_stat "
                 "WHERE fr_stat IS NULL");
 
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
+
     mysql.query("DELETE stats "
                 "FROM stats "
                 "LEFT JOIN data ON st_id=dt_stat "
                 "WHERE dt_stat IS NULL");
+
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 
     mysql.query("DELETE subdata "
                 "FROM subdata "
                 "LEFT JOIN data ON sd_stat=dt_stat "
                 "WHERE dt_stat IS NULL");
 
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
+
     mysql.query("DELETE bins "
                 "FROM bins "
                 "LEFT JOIN data ON bn_id=dt_bin "
                 "WHERE dt_bin IS NULL");
+
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 
     mysql.query("DELETE events"
                 "FROM events"
                 "LEFT JOIN runs ON ev_run=rn_id"
                 "WHERE rn_id IS NULL");
 
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
+
     mysql.query("DELETE event_names"
                 "FROM event_names"
                 "LEFT JOIN events ON en_id=ev_event"
                 "WHERE ev_event IS NULL");
+
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -193,8 +219,12 @@ SetupStat::setup()
              min, max, bktsize, size);
 
     mysql.query(insert);
-    if (!mysql.error)
-        return mysql.insert_id();
+    if (!mysql.error) {
+        int id = mysql.insert_id();
+        if (mysql.commit())
+            panic("could not commit transaction\n%s\n", mysql.error);
+        return id;
+    }
 
     stringstream select;
     ccprintf(select, "SELECT * FROM stats WHERE st_name=\"%s\"", name);
@@ -203,9 +233,6 @@ SetupStat::setup()
     MySQL::Result result = mysql.store_result();
     if (!result)
         panic("could not find stat\n%s\n", mysql.error);
-
-    if (mysql.commit())
-        panic("could not commit transaction\n");
 
     assert(result.num_fields() == 16);
     MySQL::Row row = result.fetch_row();
@@ -293,9 +320,6 @@ SetupBin(const string &bin)
     Connection &mysql = MySqlDB.conn();
     assert(mysql.connected());
 
-    if (mysql.commit())
-        panic("could not commit transaction\n");
-
     uint16_t bin_id;
 
     stringstream select;
@@ -320,12 +344,12 @@ SetupBin(const string &bin)
         panic("could not get a bin\n%s\n", mysql.error);
 
     bin_id = mysql.insert_id();
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
+
     binmap.insert(make_pair(bin, bin_id));
 
   exit:
-    if (mysql.commit())
-        panic("could not commit transaction\n");
-
     return bin_id;
 }
 
@@ -351,7 +375,7 @@ InsertData::flush()
         if (mysql.error)
             panic("could not insert data\n%s\n", mysql.error);
         if (mysql.commit())
-            panic("could not commit transaction\n");
+            panic("could not commit transaction\n%s\n", mysql.error);
     }
 
     query[0] = '\0';
@@ -408,7 +432,7 @@ InsertSubData::setup()
 //	panic("could not insert subdata\n%s\n", mysql.error);
 
     if (mysql.commit())
-        panic("could not commit transaction\n");
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -435,7 +459,7 @@ InsertFormula(uint16_t stat, const string &formula)
 //	panic("could not insert formula reference\n%s\n", mysql.error);
 
     if (mysql.commit())
-        panic("could not commit transaction\n");
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -451,7 +475,7 @@ UpdatePrereq(uint16_t stat, uint16_t prereq)
         panic("could not update prereq\n%s\n", mysql.error);
 
     if (mysql.commit())
-        panic("could not commit transaction\n");
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -463,8 +487,6 @@ MySql::configure()
     using namespace Database;
 
     MySQL::Connection &mysql = MySqlDB.conn();
-    if (mysql.commit())
-        panic("could not commit transaction\n");
 
     stat_list_t::const_iterator i, end = stats().end();
     for (i = stats().begin(); i != end; ++i) {
@@ -483,7 +505,7 @@ MySql::configure()
     }
 
     if (mysql.commit())
-        panic("could not commit transaction\n");
+        panic("could not commit transaction\n%s\n", mysql.error);
 
     configured = true;
 }
@@ -650,7 +672,7 @@ MySql::output(MainBin *bin)
         if (bin && stat->binned() || !bin && !stat->binned()) {
             stat->visit(*this);
             if (mysql.commit())
-                panic("could not commit transaction\n");
+                panic("could not commit transaction\n%s\n", mysql.error);
         }
     }
 }
