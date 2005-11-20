@@ -764,7 +764,9 @@ SimpleCPU::tick()
         if (xc->profile) {
             bool usermode = (xc->regs.ipr[AlphaISA::IPR_DTB_CM] & 0x18) != 0;
             xc->profilePC = usermode ? 1 : xc->regs.pc;
-            xc->profileNode = xc->profile->consume(xc, inst);
+            ProfileNode *node = xc->profile->consume(xc, inst);
+            if (node)
+                xc->profileNode = node;
         }
 #endif
 
