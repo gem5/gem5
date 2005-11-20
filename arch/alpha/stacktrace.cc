@@ -103,25 +103,42 @@ ProcessInfo::name(Addr ksp) const
     return comm;
 }
 
-StackTrace::StackTrace(ExecContext *_xc, bool is_call)
-    : xc(_xc)
+StackTrace::StackTrace()
+    : xc(0), stack(64)
 {
+}
+
+StackTrace::StackTrace(ExecContext *_xc, StaticInstPtr<TheISA> inst)
+    : xc(0), stack(64)
+{
+    trace(_xc, inst);
+}
+
+StackTrace::~StackTrace()
+{
+}
+
+void
+StackTrace::trace(ExecContext *_xc, bool is_call)
+{
+    xc = _xc;
+
     bool usermode = (xc->regs.ipr[AlphaISA::IPR_DTB_CM] & 0x18) != 0;
 
     Addr pc = xc->regs.npc;
     bool kernel = xc->system->kernelStart <= pc && pc <= xc->system->kernelEnd;
 
     if (usermode) {
-        stack.push_back(1);
+        stack.push_back(user);
         return;
     }
 
     if (!kernel) {
-        stack.push_back(2);
+        stack.push_back(console);
         return;
     }
 
-    SymbolTable *symtab = xc->system->allSymtab;
+    SymbolTable *symtab = xc->system->kernelSymtab;
     Addr ksp = xc->regs.intRegFile[TheISA::StackPointerReg];
     Addr bottom = ksp & ~0x3fff;
     Addr addr;
@@ -151,10 +168,15 @@ StackTrace::StackTrace(ExecContext *_xc, bool is_call)
             if (!ra)
                 return;
 
+            if (size <= 0) {
+                stack.push_back(unknown);
+                return;
+            }
+
             pc = ra;
             ksp += size;
         } else {
-            stack.push_back(3);
+            stack.push_back(unknown);
             return;
         }
 
@@ -162,13 +184,12 @@ StackTrace::StackTrace(ExecContext *_xc, bool is_call)
             pc <= xc->system->kernelEnd;
         if (!kernel)
             return;
+
+        if (stack.size() >= 1000)
+            panic("unwinding too far");
     }
 
     panic("unwinding too far");
-}
-
-StackTrace::~StackTrace()
-{
 }
 
 bool
@@ -302,18 +323,18 @@ void
 StackTrace::dump()
 {
     StringWrap name(xc->cpu->name());
-    SymbolTable *symtab = xc->system->allSymtab;
+    SymbolTable *symtab = xc->system->kernelSymtab;
 
     DPRINTFN("------ Stack ------\n");
 
     string symbol;
     for (int i = 0, size = stack.size(); i < size; ++i) {
         Addr addr = stack[size - i - 1];
-        if (addr == 1)
+        if (addr == user)
             symbol = "user";
-        else if (addr == 2)
+        else if (addr == console)
             symbol = "console";
-        else if (addr == 3)
+        else if (addr == unknown)
             symbol = "unknown";
         else
             symtab->findSymbol(addr, symbol);

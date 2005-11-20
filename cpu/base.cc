@@ -36,6 +36,7 @@
 #include "base/output.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
 #include "sim/sim_events.hh"
@@ -254,7 +255,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     intstatus = oldCPU->intstatus;
 
     for (int i = 0; i < execContexts.size(); ++i)
-        execContexts[i]->profile->clear();
+        if (execContexts[i]->profile)
+            execContexts[i]->profile->clear();
 
     if (profileEvent)
         profileEvent->schedule(curTick);

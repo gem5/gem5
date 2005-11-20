@@ -40,7 +40,7 @@ class ProfileNode
   private:
     friend class FunctionProfile;
 
-    typedef std::map<Addr, ProfileNode> ChildList;
+    typedef std::map<Addr, ProfileNode *> ChildList;
     ChildList children;
 
   public:
@@ -60,15 +60,26 @@ class FunctionProfile
     const SymbolTable *symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;
+    StackTrace trace;
 
   public:
     FunctionProfile(const SymbolTable *symtab);
     ~FunctionProfile();
 
-    ProfileNode *consume(const StackTrace *trace);
+    ProfileNode *consume(ExecContext *xc, StaticInstPtr<TheISA> inst);
+    ProfileNode *consume(const std::vector<Addr> &stack);
     void clear();
     void dump(ExecContext *xc, std::ostream &out) const;
     void sample(ProfileNode *node, Addr pc);
 };
+
+inline ProfileNode *
+FunctionProfile::consume(ExecContext *xc, StaticInstPtr<TheISA> inst)
+{
+    if (!trace.trace(xc, inst))
+        return NULL;
+    trace.dprintf();
+    return consume(trace.getstack());
+}
 
 #endif // __CPU_PROFILE_HH__

@@ -34,7 +34,6 @@
 
 class ExecContext;
 class StackTrace;
-class SymbolTable;
 
 class ProcessInfo
 {
@@ -67,13 +66,28 @@ class StackTrace
     bool decodeSave(MachInst inst, int &reg, int &disp);
     bool decodeStack(MachInst inst, int &disp);
 
+    void trace(ExecContext *xc, bool is_call);
+
   public:
-    StackTrace(ExecContext *xc, bool is_call);
+    StackTrace();
+    StackTrace(ExecContext *xc, StaticInstPtr<TheISA> inst);
     ~StackTrace();
+
+    void clear()
+    {
+        xc = 0;
+        stack.clear();
+    }
+
+    bool valid() const { return xc != NULL; }
+    bool trace(ExecContext *xc, StaticInstPtr<TheISA> inst);
 
   public:
     const std::vector<Addr> &getstack() const { return stack; }
-    static StackTrace *create(ExecContext *xc, StaticInstPtr<TheISA> inst);
+
+    static const int user = 1;
+    static const int console = 2;
+    static const int unknown = 3;
 
 #if TRACING_ON
   private:
@@ -87,13 +101,17 @@ class StackTrace
 #endif
 };
 
-inline StackTrace *
-StackTrace::create(ExecContext *xc, StaticInstPtr<TheISA> inst)
+inline bool
+StackTrace::trace(ExecContext *xc, StaticInstPtr<TheISA> inst)
 {
     if (!inst->isCall() && !inst->isReturn())
-        return NULL;
+        return false;
 
-    return new StackTrace(xc, !inst->isReturn());
+    if (valid())
+        clear();
+
+    trace(xc, !inst->isReturn());
+    return true;
 }
 
 #endif // __ARCH_ALPHA_STACKTRACE_HH__

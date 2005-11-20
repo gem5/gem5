@@ -46,6 +46,7 @@
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/simple/cpu.hh"
 #include "cpu/smt.hh"
@@ -763,12 +764,7 @@ SimpleCPU::tick()
         if (xc->profile) {
             bool usermode = (xc->regs.ipr[AlphaISA::IPR_DTB_CM] & 0x18) != 0;
             xc->profilePC = usermode ? 1 : xc->regs.pc;
-            StackTrace *trace = StackTrace::create(xc, inst);
-            if (trace) {
-                xc->profileNode = xc->profile->consume(trace);
-                trace->dprintf();
-                delete trace;
-            }
+            xc->profileNode = xc->profile->consume(xc, inst);
         }
 #endif
 

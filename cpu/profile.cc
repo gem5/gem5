@@ -47,8 +47,8 @@ ProfileNode::dump(const string &symbol, uint64_t id, const SymbolTable *symtab,
     ccprintf(os, "%#x %s %d ", id, symbol, count);
     ChildList::const_iterator i, end = children.end();
     for (i = children.begin(); i != end; ++i) {
-        const ProfileNode &node = i->second;
-        ccprintf(os, "%#x ", (intptr_t)&node);
+        const ProfileNode *node = i->second;
+        ccprintf(os, "%#x ", (intptr_t)node);
     }
 
     ccprintf(os, "\n");
@@ -65,8 +65,8 @@ ProfileNode::dump(const string &symbol, uint64_t id, const SymbolTable *symtab,
         else if (!symtab->findSymbol(addr, symbol))
             panic("could not find symbol for address %#x\n", addr);
 
-        const ProfileNode &node = i->second;
-        node.dump(symbol, (intptr_t)&node, symtab, os);
+        const ProfileNode *node = i->second;
+        node->dump(symbol, (intptr_t)node, symtab, os);
     }
 }
 
@@ -75,11 +75,8 @@ ProfileNode::clear()
 {
     count = 0;
     ChildList::iterator i, end = children.end();
-    for (i = children.begin(); i != end; ++i) {
-        ProfileNode &node = i->second;
-        node.clear();
-    }
-
+    for (i = children.begin(); i != end; ++i)
+        i->second->clear();
 }
 
 FunctionProfile::FunctionProfile(const SymbolTable *_symtab)
@@ -92,12 +89,16 @@ FunctionProfile::~FunctionProfile()
 }
 
 ProfileNode *
-FunctionProfile::consume(const StackTrace *trace)
+FunctionProfile::consume(const vector<Addr> &stack)
 {
-    const vector<Addr> &stack = trace->getstack();
     ProfileNode *current = &top;
-    for (int i = 0, size = stack.size(); i < size; ++i)
-        current = &current->children[stack[size - i - 1]];
+    for (int i = 0, size = stack.size(); i < size; ++i) {
+        ProfileNode *&ptr = current->children[stack[size - i - 1]];
+        if (ptr == NULL)
+            ptr = new ProfileNode;
+
+        current = ptr;
+    }
 
     return current;
 }
