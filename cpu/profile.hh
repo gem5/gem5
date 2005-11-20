@@ -44,7 +44,7 @@ class ProfileNode
     ChildList children;
 
   public:
-    int count;
+    Counter count;
 
   public:
     ProfileNode();
