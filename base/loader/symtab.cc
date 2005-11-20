@@ -31,18 +31,29 @@
 #include <string>
 #include <vector>
 
-#include "sim/host.hh"
+#include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
-#include "base/loader/symtab.hh"
+#include "sim/host.hh"
+#include "sim/serialize.hh"
 
 using namespace std;
 
 SymbolTable *debugSymbolTable = NULL;
 
+void
+SymbolTable::clear()
+{
+    addrTable.clear();
+    symbolTable.clear();
+}
+
 bool
 SymbolTable::insert(Addr address, string symbol)
 {
+    if (symbol.empty())
+        return false;
+
     if (!addrTable.insert(make_pair(address, symbol)).second)
         return false;
 
@@ -59,10 +70,8 @@ SymbolTable::load(const string &filename)
     string buffer;
     ifstream file(filename.c_str());
 
-    if (!file) {
-        cerr << "Can't open symbol table file " << filename << endl;
-        fatal("file error");
-    }
+    if (!file)
+        fatal("file error: Can't open symbol table file %s\n", filename);
 
     while (!file.eof()) {
         getline(file, buffer);
@@ -94,4 +103,35 @@ SymbolTable::load(const string &filename)
     file.close();
 
     return true;
+}
+
+void
+SymbolTable::serialize(const string &base, ostream &os)
+{
+    paramOut(os, base + ".size", addrTable.size());
+
+    int i = 0;
+    ATable::const_iterator p, end = addrTable.end();
+    for (p = addrTable.begin(); p != end; ++p) {
+        paramOut(os, csprintf("%s.addr_%d", base, i), p->first);
+        paramOut(os, csprintf("%s.symbol_%d", base, i), p->second);
+        ++i;
+    }
+}
+
+void
+SymbolTable::unserialize(const string &base, Checkpoint *cp,
+                         const string &section)
+{
+    clear();
+    int size;
+    paramIn(cp, section, base + ".size", size);
+    for (int i = 0; i < size; ++i) {
+        Addr addr;
+        std::string symbol;
+
+        paramIn(cp, section, csprintf("%s.addr_%d", base, i), addr);
+        paramIn(cp, section, csprintf("%s.symbol_%d", base, i), symbol);
+        insert(addr, symbol);
+    }
 }

@@ -333,6 +333,10 @@ void
 System::serialize(ostream &os)
 {
     kernelBinning->serialize(os);
+
+    kernelSymtab->serialize("kernel_symtab", os);
+    consoleSymtab->serialize("console_symtab", os);
+    palSymtab->serialize("pal_symtab", os);
 }
 
 
@@ -340,6 +344,10 @@ void
 System::unserialize(Checkpoint *cp, const string &section)
 {
     kernelBinning->unserialize(cp, section);
+
+    kernelSymtab->unserialize("kernel_symtab", cp, section);
+    consoleSymtab->unserialize("console_symtab", cp, section);
+    palSymtab->unserialize("pal_symtab", cp, section);
 }
 
 void

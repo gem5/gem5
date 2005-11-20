@@ -29,9 +29,12 @@
 #ifndef __SYMTAB_HH__
 #define __SYMTAB_HH__
 
+#include <iosfwd>
 #include <map>
+
 #include "targetarch/isa_traits.hh"	// for Addr
 
+class Checkpoint;
 class SymbolTable
 {
   public:
@@ -61,11 +64,17 @@ class SymbolTable
     SymbolTable(const std::string &file) { load(file); }
     ~SymbolTable() {}
 
+    void clear();
     bool insert(Addr address, std::string symbol);
     bool load(const std::string &file);
 
     const ATable &getAddrTable() const { return addrTable; }
     const STable &getSymbolTable() const { return symbolTable; }
+
+  public:
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+                     const std::string &section);
 
   public:
     bool
