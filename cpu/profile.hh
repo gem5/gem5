@@ -54,9 +54,11 @@ class ProfileNode
     void clear();
 };
 
+class Callback;
 class FunctionProfile
 {
   private:
+    Callback *reset;
     const SymbolTable *symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;

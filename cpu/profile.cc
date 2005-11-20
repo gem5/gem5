@@ -29,6 +29,8 @@
 #include <string>
 
 #include "base/bitfield.hh"
+#include "base/callback.hh"
+#include "base/statistics.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
@@ -80,12 +82,16 @@ ProfileNode::clear()
 }
 
 FunctionProfile::FunctionProfile(const SymbolTable *_symtab)
-    : symtab(_symtab)
+    : reset(0), symtab(_symtab)
 {
+    reset = new MakeCallback<FunctionProfile, &FunctionProfile::clear>(this);
+    Stats::registerResetCallback(reset);
 }
 
 FunctionProfile::~FunctionProfile()
 {
+    if (reset)
+        delete reset;
 }
 
 ProfileNode *
