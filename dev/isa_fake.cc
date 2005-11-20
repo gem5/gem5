@@ -47,13 +47,13 @@
 using namespace std;
 
 IsaFake::IsaFake(const string &name, Addr a, MemoryController *mmu,
-                         HierParams *hier, Bus *bus, Addr size)
+                         HierParams *hier, Bus *pio_bus, Addr size)
     : PioDevice(name, NULL), addr(a)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
-    if (bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
+    if (pio_bus) {
+        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
                                       &IsaFake::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
     }
@@ -113,7 +113,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
 
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
     Param<Addr> size;
@@ -124,7 +124,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IsaFake)
 
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
     INIT_PARAM_DFLT(size, "Size of address range", 0x8)
@@ -133,7 +133,7 @@ END_INIT_SIM_OBJECT_PARAMS(IsaFake)
 
 CREATE_SIM_OBJECT(IsaFake)
 {
-    return new IsaFake(getInstanceName(), addr, mmu, hier, io_bus, size);
+    return new IsaFake(getInstanceName(), addr, mmu, hier, pio_bus, size);
 }
 
 REGISTER_SIM_OBJECT("IsaFake", IsaFake)

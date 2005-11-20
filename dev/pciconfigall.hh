@@ -74,7 +74,7 @@ class PciConfigAll : public PioDevice
      * @param bus The bus that this device is attached to
      */
     PciConfigAll(const std::string &name, Addr a, MemoryController *mmu,
-                 HierParams *hier, Bus *bus, Tick pio_latency);
+                 HierParams *hier, Bus *pio_bus, Tick pio_latency);
 
 
     /**

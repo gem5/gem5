@@ -90,20 +90,20 @@ IdeController::IdeController(Params *p)
     bm_enabled = false;
     memset(cmd_in_progress, 0, sizeof(cmd_in_progress));
 
+    pioInterface = NULL;
+    dmaInterface = NULL;
     // create the PIO and DMA interfaces
-    if (params()->host_bus) {
+    if (params()->pio_bus) {
         pioInterface = newPioInterface(name() + ".pio", params()->hier,
-                                       params()->host_bus, this,
+                                       params()->pio_bus, this,
                                        &IdeController::cacheAccess);
+        pioLatency = params()->pio_latency * params()->pio_bus->clockRate;
+    }
 
+    if (params()->dma_bus) {
         dmaInterface = new DMAInterface<Bus>(name() + ".dma",
-                                             params()->host_bus,
-                                             params()->host_bus, 1,
-                                             true);
-        pioLatency = params()->pio_latency * params()->host_bus->clockRate;
-    } else {
-        pioInterface = NULL;
-        dmaInterface = NULL;
+                                             params()->dma_bus,
+                                             params()->dma_bus, 1, true);
     }
 
     // setup the disks attached to controller
@@ -719,7 +719,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
-    SimObjectParam<Bus *> io_bus;
+    SimObjectParam<Bus *> pio_bus;
+    SimObjectParam<Bus *> dma_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
@@ -736,7 +737,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(io_bus, "Host bus to attach to", NULL),
+    INIT_PARAM(pio_bus, ""),
+    INIT_PARAM(dma_bus, ""),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
@@ -755,7 +757,8 @@ CREATE_SIM_OBJECT(IdeController)
     params->functionNum = pci_func;
 
     params->disks = disks;
-    params->host_bus = io_bus;
+    params->pio_bus = pio_bus;
+    params->dma_bus = dma_bus;
     params->pio_latency = pio_latency;
     params->hier = hier;
     return new IdeController(params);

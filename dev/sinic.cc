@@ -93,31 +93,25 @@ Device::Device(Params *p)
 {
     reset();
 
-    if (p->io_bus) {
-        pioInterface = newPioInterface(p->name + ".pio", p->hier, p->io_bus,
+    if (p->pio_bus) {
+        pioInterface = newPioInterface(p->name + ".pio", p->hier, p->pio_bus,
                                        this, &Device::cacheAccess);
+        pioLatency = p->pio_latency * p->pio_bus->clockRate;
+    }
 
-        pioLatency = p->pio_latency * p->io_bus->clockRate;
-
+    if (p->header_bus) {
         if (p->payload_bus)
-            dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->io_bus,
+            dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
+                                                 p->header_bus,
                                                  p->payload_bus, 1,
                                                  p->dma_no_allocate);
         else
-            dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->io_bus,
-                                                 p->io_bus, 1,
+            dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
+                                                 p->header_bus,
+                                                 p->header_bus, 1,
                                                  p->dma_no_allocate);
-    } else if (p->payload_bus) {
-        pioInterface = newPioInterface(p->name + ".pio", p->hier,
-                                       p->payload_bus, this,
-                                       &Device::cacheAccess);
-
-        pioLatency = p->pio_latency * p->payload_bus->clockRate;
-
-        dmaInterface = new DMAInterface<Bus>(p->name + ".dma", p->payload_bus,
-                                             p->payload_bus, 1,
-                                             p->dma_no_allocate);
-    }
+    } else if (p->payload_bus)
+        panic("must define a header bus if defining a payload bus");
 }
 
 Device::~Device()
@@ -1438,7 +1432,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<uint32_t> pci_func;
 
     SimObjectParam<HierParams *> hier;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
+    SimObjectParam<Bus*> dma_bus;
     SimObjectParam<Bus*> payload_bus;
     Param<Tick> dma_read_delay;
     Param<Tick> dma_read_factor;
@@ -1479,7 +1474,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(pci_func, "PCI function code"),
 
     INIT_PARAM(hier, "Hierarchy global variables"),
-    INIT_PARAM(io_bus, "The IO Bus to attach to for headers"),
+    INIT_PARAM(pio_bus, ""),
+    INIT_PARAM(dma_bus, ""),
     INIT_PARAM(payload_bus, "The IO Bus to attach to for payload"),
     INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
     INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
@@ -1524,7 +1520,8 @@ CREATE_SIM_OBJECT(Device)
     params->functionNum = pci_func;
 
     params->hier = hier;
-    params->io_bus = io_bus;
+    params->pio_bus = pio_bus;
+    params->header_bus = dma_bus;
     params->payload_bus = payload_bus;
     params->dma_read_delay = dma_read_delay;
     params->dma_read_factor = dma_read_factor;

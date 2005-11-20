@@ -58,7 +58,7 @@ class IsaFake : public PioDevice
       * @param size number of addresses to respond to
       */
     IsaFake(const std::string &name, Addr a, MemoryController *mmu,
-                HierParams *hier, Bus *bus, Addr size = 0x8);
+                HierParams *hier, Bus *pio_bus, Addr size = 0x8);
 
     /**
      * This read always returns -1.

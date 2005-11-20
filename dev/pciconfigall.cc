@@ -50,16 +50,16 @@ using namespace std;
 
 PciConfigAll::PciConfigAll(const string &name,
                            Addr a, MemoryController *mmu,
-                           HierParams *hier, Bus *bus, Tick pio_latency)
+                           HierParams *hier, Bus *pio_bus, Tick pio_latency)
     : PioDevice(name, NULL), addr(a)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
-    if (bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
+    if (pio_bus) {
+        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
                                       &PciConfigAll::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * bus->clockRate;
+        pioLatency = pio_latency * pio_bus->clockRate;
     }
 
     // Make all the pointers to devices null
@@ -200,7 +200,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     Param<Addr> mask;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
@@ -211,7 +211,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(mask, "Address Mask"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
@@ -219,7 +219,7 @@ END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
 CREATE_SIM_OBJECT(PciConfigAll)
 {
-    return new PciConfigAll(getInstanceName(), addr, mmu, hier, io_bus,
+    return new PciConfigAll(getInstanceName(), addr, mmu, hier, pio_bus,
                             pio_latency);
 }
 

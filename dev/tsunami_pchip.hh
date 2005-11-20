@@ -82,7 +82,7 @@ class TsunamiPChip : public PioDevice
      * @param bus The bus that this device is attached to
      */
     TsunamiPChip(const std::string &name, Tsunami *t, Addr a,
-                 MemoryController *mmu, HierParams *hier, Bus *bus,
+                 MemoryController *mmu, HierParams *hier, Bus *pio_bus,
                  Tick pio_latency);
 
     /**

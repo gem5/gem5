@@ -98,9 +98,10 @@ Uart8250::IntrEvent::scheduleIntr()
 }
 
 
-Uart8250::Uart8250(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
-           Addr s, HierParams *hier, Bus *bus, Tick pio_latency, Platform *p)
-    : Uart(name, c, mmu, a, s, hier, bus, pio_latency, p),
+Uart8250::Uart8250(const string &name, SimConsole *c, MemoryController *mmu,
+                   Addr a, Addr s, HierParams *hier, Bus *pio_bus,
+                   Tick pio_latency, Platform *p)
+    : Uart(name, c, mmu, a, s, hier, pio_bus, pio_latency, p),
       txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
 {
     IER = 0;
@@ -318,7 +319,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Uart8250)
     SimObjectParam<Platform *> platform;
     Param<Addr> addr;
     Param<Addr> size;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
@@ -332,7 +333,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Uart8250)
     INIT_PARAM(platform, "Pointer to platfrom"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(size, "Device size", 0x8),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM(pio_bus, ""),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
@@ -340,8 +341,8 @@ END_INIT_SIM_OBJECT_PARAMS(Uart8250)
 
 CREATE_SIM_OBJECT(Uart8250)
 {
-    return new Uart8250(getInstanceName(), console, mmu, addr, size, hier, io_bus,
-                    pio_latency, platform);
+    return new Uart8250(getInstanceName(), console, mmu, addr, size, hier,
+                        pio_bus, pio_latency, platform);
 }
 
 REGISTER_SIM_OBJECT("Uart8250", Uart8250)

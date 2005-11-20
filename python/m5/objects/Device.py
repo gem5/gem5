@@ -16,12 +16,13 @@ class FooPioDevice(FunctionalMemory):
     abstract = True
     addr = Param.Addr("Device Address")
     mmu = Param.MemoryController(Parent.any, "Memory Controller")
-    io_bus = Param.Bus(NULL, "The IO Bus to attach to")
+    pio_bus = Param.Bus(NULL, "Bus to attach to for PIO")
     pio_latency = Param.Tick(1, "Programmed IO latency in bus cycles")
 
 class FooDmaDevice(FooPioDevice):
     type = 'DmaDevice'
     abstract = True
+    dma_bus = Param.Bus(Self.pio_bus, "Bus to attach to for DMA")
 
 class PioDevice(FooPioDevice):
     type = 'PioDevice'
@@ -31,4 +32,4 @@ class PioDevice(FooPioDevice):
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
-
+    dma_bus = Param.Bus(Self.pio_bus, "Bus to attach to for DMA")

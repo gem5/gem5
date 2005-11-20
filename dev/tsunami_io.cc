@@ -415,18 +415,18 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
 }
 
 TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                     Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
-                     Tick pio_latency, Tick ci)
+                     Addr a, MemoryController *mmu, HierParams *hier,
+                     Bus *pio_bus, Tick pio_latency, Tick ci)
     : PioDevice(name, t), addr(a), clockInterval(ci), tsunami(t),
       pitimer(name + "pitimer"), rtc(name + ".rtc", t, ci)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
-    if (bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
+    if (pio_bus) {
+        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
                                        &TsunamiIO::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * bus->clockRate;
+        pioLatency = pio_latency * pio_bus->clockRate;
     }
 
     // set the back pointer from tsunami to myself
@@ -688,7 +688,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     Param<time_t> time;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
     Param<Tick> frequency;
@@ -701,7 +701,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
     INIT_PARAM(time, "System time to use (0 for actual time"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM(pio_bus, "The IO Bus to attach to"),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
     INIT_PARAM(frequency, "clock interrupt frequency")
@@ -711,7 +711,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 CREATE_SIM_OBJECT(TsunamiIO)
 {
     return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu, hier,
-                         io_bus, pio_latency, frequency);
+                         pio_bus, pio_latency, frequency);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

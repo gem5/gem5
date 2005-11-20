@@ -368,6 +368,7 @@ class NSGigE : public PciDev
     {
         PhysicalMemory *pmem;
         HierParams *hier;
+        Bus *pio_bus;
         Bus *header_bus;
         Bus *payload_bus;
         Tick clock;

@@ -50,7 +50,7 @@ using namespace std;
 
 TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
                            MemoryController *mmu, HierParams *hier,
-                           Bus *bus, Tick pio_latency)
+                           Bus *pio_bus, Tick pio_latency)
     : PioDevice(name, t), addr(a), tsunami(t)
 {
     mmu->add_child(this, RangeSize(addr, size));
@@ -61,11 +61,11 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
         tba[i] = 0;
     }
 
-    if (bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
+    if (pio_bus) {
+        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
                                       &TsunamiPChip::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * bus->clockRate;
+        pioLatency = pio_latency * pio_bus->clockRate;
     }
 
 
@@ -360,7 +360,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
     SimObjectParam<Tsunami *> tsunami;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
@@ -371,7 +371,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
     INIT_PARAM(tsunami, "Tsunami"),
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
@@ -380,7 +380,7 @@ END_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 CREATE_SIM_OBJECT(TsunamiPChip)
 {
     return new TsunamiPChip(getInstanceName(), tsunami, addr, mmu, hier,
-                            io_bus, pio_latency);
+                            pio_bus, pio_latency);
 }
 
 REGISTER_SIM_OBJECT("TsunamiPChip", TsunamiPChip)

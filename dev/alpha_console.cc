@@ -57,13 +57,13 @@ using namespace std;
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
                            System *s, BaseCPU *c, Platform *p,
                            MemoryController *mmu, Addr a,
-                           HierParams *hier, Bus *bus)
+                           HierParams *hier, Bus *pio_bus)
     : PioDevice(name, p), disk(d), console(cons), system(s), cpu(c), addr(a)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
-    if (bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, bus, this,
+    if (pio_bus) {
+        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
                                        &AlphaConsole::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
     }
@@ -335,7 +335,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
     SimObjectParam<System *> system;
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<Platform *> platform;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     SimObjectParam<HierParams *> hier;
 
@@ -350,7 +350,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu, "Processor"),
     INIT_PARAM(platform, "platform"),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM(pio_bus, "The IO Bus to attach to"),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
 
@@ -359,7 +359,7 @@ END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 CREATE_SIM_OBJECT(AlphaConsole)
 {
     return new AlphaConsole(getInstanceName(), sim_console, disk,
-                            system, cpu, platform, mmu, addr, hier, io_bus);
+                            system, cpu, platform, mmu, addr, hier, pio_bus);
 }
 
 REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

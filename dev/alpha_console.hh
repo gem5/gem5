@@ -103,7 +103,7 @@ class AlphaConsole : public PioDevice
     AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
                  System *s, BaseCPU *c, Platform *platform,
                  MemoryController *mmu, Addr addr,
-                 HierParams *hier, Bus *bus);
+                 HierParams *hier, Bus *pio_bus);
 
     virtual void startup();
 

@@ -48,13 +48,13 @@
 using namespace std;
 
 BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
-                     HierParams *hier, Bus *bus, const string &devicename)
+                     HierParams *hier, Bus *pio_bus, const string &devicename)
     : PioDevice(name, NULL), addr(a), devname(devicename)
 {
     mmu->add_child(this, RangeSize(addr, size));
 
-    if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
+    if (pio_bus) {
+        pioInterface = newPioInterface(name, hier, pio_bus, this,
                                       &BadDevice::cacheAccess);
         pioInterface->addAddrRange(RangeSize(addr, size));
     }
@@ -88,7 +88,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     SimObjectParam<HierParams *> hier;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
     Param<string> devicename;
 
@@ -100,7 +100,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BadDevice)
     INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM_DFLT(io_bus, "The IO Bus to attach to", NULL),
+    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
     INIT_PARAM(devicename, "Name of device to error on")
 
@@ -108,7 +108,7 @@ END_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
 CREATE_SIM_OBJECT(BadDevice)
 {
-    return new BadDevice(getInstanceName(), addr, mmu, hier, io_bus,
+    return new BadDevice(getInstanceName(), addr, mmu, hier, pio_bus,
                          devicename);
 }
 

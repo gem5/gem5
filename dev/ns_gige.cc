@@ -109,13 +109,14 @@ NSGigE::NSGigE(Params *p)
       physmem(p->pmem), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
-    if (p->header_bus) {
+    if (p->pio_bus) {
         pioInterface = newPioInterface(name() + ".pio", p->hier,
-                                       p->header_bus, this,
+                                       p->pio_bus, this,
                                        &NSGigE::cacheAccess);
+        pioLatency = p->pio_latency * p->pio_bus->clockRate;
+    }
 
-        pioLatency = p->pio_latency * p->header_bus->clockRate;
-
+    if (p->header_bus) {
         if (p->payload_bus)
             dmaInterface = new DMAInterface<Bus>(name() + ".dma",
                                                  p->header_bus,
@@ -126,18 +127,8 @@ NSGigE::NSGigE(Params *p)
                                                  p->header_bus,
                                                  p->header_bus, 1,
                                                  p->dma_no_allocate);
-    } else if (p->payload_bus) {
-        pioInterface = newPioInterface(name() + ".pio", p->hier,
-                                       p->payload_bus, this,
-                                       &NSGigE::cacheAccess);
-
-        pioLatency = p->pio_latency * p->payload_bus->clockRate;
-
-        dmaInterface = new DMAInterface<Bus>(name() + ".dma",
-                                             p->payload_bus,
-                                             p->payload_bus, 1,
-                                             p->dma_no_allocate);
-    }
+    } else if (p->payload_bus)
+        panic("Must define a header bus if defining a payload bus");
 
 
     intrDelay = p->intr_delay;
@@ -2993,7 +2984,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<uint32_t> pci_func;
 
     SimObjectParam<HierParams *> hier;
-    SimObjectParam<Bus*> io_bus;
+    SimObjectParam<Bus*> pio_bus;
+    SimObjectParam<Bus*> dma_bus;
     SimObjectParam<Bus*> payload_bus;
     Param<bool> dma_desc_free;
     Param<bool> dma_data_free;
@@ -3031,7 +3023,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(pci_func, "PCI function code"),
 
     INIT_PARAM(hier, "Hierarchy global variables"),
-    INIT_PARAM(io_bus, "The IO Bus to attach to for headers"),
+    INIT_PARAM(pio_bus, ""),
+    INIT_PARAM(dma_bus, ""),
     INIT_PARAM(payload_bus, "The IO Bus to attach to for payload"),
     INIT_PARAM(dma_desc_free, "DMA of Descriptors is free"),
     INIT_PARAM(dma_data_free, "DMA of Data is free"),
@@ -3073,7 +3066,8 @@ CREATE_SIM_OBJECT(NSGigE)
     params->functionNum = pci_func;
 
     params->hier = hier;
-    params->header_bus = io_bus;
+    params->pio_bus = pio_bus;
+    params->header_bus = dma_bus;
     params->payload_bus = payload_bus;
     params->dma_desc_free = dma_desc_free;
     params->dma_data_free = dma_data_free;

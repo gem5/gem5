@@ -191,7 +191,8 @@ class IdeController : public PciDev
     {
         /** Array of disk objects */
         std::vector<IdeDisk *> disks;
-        Bus *host_bus;
+        Bus *pio_bus;
+        Bus *dma_bus;
         Tick pio_latency;
         HierParams *hier;
     };

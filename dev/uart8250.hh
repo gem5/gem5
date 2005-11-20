@@ -79,7 +79,7 @@ class Uart8250 : public Uart
 
   public:
     Uart8250(const std::string &name, SimConsole *c, MemoryController *mmu,
-         Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
+         Addr a, Addr s, HierParams *hier, Bus *pio_bus, Tick pio_latency,
          Platform *p);
 
     virtual Fault read(MemReqPtr &req, uint8_t *data);

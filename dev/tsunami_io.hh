@@ -321,7 +321,7 @@ class TsunamiIO : public PioDevice
      * @param mmu pointer to the memory controller that sends us events.
      */
     TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
-              Addr a, MemoryController *mmu, HierParams *hier, Bus *bus,
+              Addr a, MemoryController *mmu, HierParams *hier, Bus *pio_bus,
               Tick pio_latency, Tick ci);
 
     /**
