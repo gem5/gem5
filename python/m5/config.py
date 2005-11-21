@@ -1231,7 +1231,7 @@ class RootClock(ParamValue):
 # A generic frequency and/or Latency value.  Value is stored as a latency,
 # but to avoid ambiguity this object does not support numeric ops (* or /).
 # An explicit conversion to a Latency or Frequency must be made first.
-class Clock(ParamValue):
+class Clock(NumericParamValue):
     def __init__(self, value):
         self.value = getLatency(value)
 
