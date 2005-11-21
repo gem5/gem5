@@ -132,6 +132,35 @@ class PciDev : public DmaDevice
     /** The current address mapping of the BARs */
     Addr BARAddrs[6];
 
+    bool
+    isBAR(Addr addr, int bar) const
+    {
+        assert(bar >= 0 && bar < 6);
+        return BARAddrs[bar] <= addr && addr < BARAddrs[bar] + BARSize[bar];
+    }
+
+    int
+    getBAR(Addr addr)
+    {
+        for (int i = 0; i <= 5; ++i)
+            if (isBAR(addr, i))
+                return i;
+
+        return -1;
+    }
+
+    bool
+    getBAR(Addr paddr, Addr &daddr, int &bar)
+    {
+        int b = getBAR(paddr);
+        if (b < 0)
+            return false;
+
+        daddr = paddr - BARAddrs[b];
+        bar = b;
+        return true;
+    }
+
   protected:
     Platform *plat;
     PciConfigData *configData;
@@ -160,13 +189,39 @@ class PciDev : public DmaDevice
      */
     PciDev(Params *params);
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data) {
-        return No_Fault;
-    }
-    virtual Fault write(MemReqPtr &req, const uint8_t *data) {
-        return No_Fault;
-    }
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
+  public:
+    /**
+     * Implement the read/write as BAR accesses
+     */
+    Fault readBar(MemReqPtr &req, uint8_t *data);
+    Fault writeBar(MemReqPtr &req, const uint8_t *data);
+
+  public:
+    /**
+     * Read from a specific BAR
+     */
+    virtual Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar1(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar2(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar3(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar4(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar5(MemReqPtr &req, Addr daddr, uint8_t *data);
+
+  public:
+    /**
+     * Write to a specific BAR
+     */
+    virtual Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar1(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar2(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar3(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar4(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar5(MemReqPtr &req, Addr daddr, const uint8_t *data);
+
+  public:
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
@@ -201,5 +256,41 @@ class PciDev : public DmaDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
+
+inline Fault
+PciDev::readBar(MemReqPtr &req, uint8_t *data)
+{
+    if (isBAR(req->paddr, 0))
+        return readBar0(req, req->paddr - BARAddrs[0], data);
+    if (isBAR(req->paddr, 1))
+        return readBar1(req, req->paddr - BARAddrs[1], data);
+    if (isBAR(req->paddr, 2))
+        return readBar2(req, req->paddr - BARAddrs[2], data);
+    if (isBAR(req->paddr, 3))
+        return readBar3(req, req->paddr - BARAddrs[3], data);
+    if (isBAR(req->paddr, 4))
+        return readBar4(req, req->paddr - BARAddrs[4], data);
+    if (isBAR(req->paddr, 5))
+        return readBar5(req, req->paddr - BARAddrs[5], data);
+    return Machine_Check_Fault;
+}
+
+inline Fault
+PciDev::writeBar(MemReqPtr &req, const uint8_t *data)
+{
+    if (isBAR(req->paddr, 0))
+        return writeBar0(req, req->paddr - BARAddrs[0], data);
+    if (isBAR(req->paddr, 1))
+        return writeBar1(req, req->paddr - BARAddrs[1], data);
+    if (isBAR(req->paddr, 2))
+        return writeBar2(req, req->paddr - BARAddrs[2], data);
+    if (isBAR(req->paddr, 3))
+        return writeBar3(req, req->paddr - BARAddrs[3], data);
+    if (isBAR(req->paddr, 4))
+        return writeBar4(req, req->paddr - BARAddrs[4], data);
+    if (isBAR(req->paddr, 5))
+        return writeBar5(req, req->paddr - BARAddrs[5], data);
+    return Machine_Check_Fault;
+}
 
 #endif // __DEV_PCIDEV_HH__
