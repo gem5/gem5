@@ -254,7 +254,10 @@ class BinaryProxy(ValueProxy):
         val1 = value(self.arg1, run)
         if val0 is None or val1 is None:
             return None
-        return self.op(val0, val1)
+        try:
+            return self.op(val0, val1)
+        except ZeroDivisionError:
+            return None
 
     def __vectorvalue__(self, run, index):
         if scalar(self.arg0):
@@ -269,7 +272,10 @@ class BinaryProxy(ValueProxy):
         if val0 is None or val1 is None:
             return None
 
-        return self.op(val0, val1)
+        try:
+            return self.op(val0, val1)
+        except ZeroDivisionError:
+            return None
 
     def __vectorlen__(self):
         if vector(self.arg0) and scalar(self.arg1):
