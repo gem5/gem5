@@ -145,6 +145,8 @@ class ScalarConstant(Scalar):
         self.constant = constant
     def __value__(self, run):
         return self.constant
+    def __str__(self):
+        return str(self.constant)
 
 class VectorConstant(Vector):
     def __init__(self, constant):
@@ -153,6 +155,8 @@ class VectorConstant(Vector):
         return self.constant[index]
     def __len__(self):
         return len(self.constant)
+    def __str__(self):
+        return str(self.constant)
 
 def WrapValue(value):
     if isinstance(value, (int, long, float)):
@@ -182,6 +186,9 @@ class Statistic(object):
                     delattr(self, 'data')
 
         super(Statistic, self).__setattr__(attr, value)
+
+    def __str__(self):
+        return self.name
 
 class ValueProxy(Value):
     def __getattr__(self, attr):
@@ -220,6 +227,14 @@ class UnaryProxy(ValueProxy):
 
     def __vectorlen__(self):
         return len(unproxy(self.arg))
+
+    def __str__(self):
+        if self.op == operator.__neg__:
+            return '-%s' % str(self.arg)
+        if self.op == operator.__pos__:
+            return '+%s' % str(self.arg)
+        if self.op == operator.__abs__:
+            return 'abs(%s)' % self.arg
 
 class BinaryProxy(ValueProxy):
     def __init__(self, op, arg0, arg1):
@@ -271,6 +286,16 @@ class BinaryProxy(ValueProxy):
 
         return len0
 
+    def __str__(self):
+        ops = { operator.__add__ : '+',
+                operator.__sub__ : '-',
+                operator.__mul__ : '*',
+                operator.__div__ : '/',
+                operator.__truediv__ : '/',
+                operator.__floordiv__ : '//' }
+
+        return '(%s %s %s)' % (str(self.arg0), ops[self.op], str(self.arg1))
+
 class Proxy(Value):
     def __init__(self, name, dict):
         self.name = name
@@ -285,6 +310,9 @@ class Proxy(Value):
     def __getattr__(self, attr):
         return AttrProxy(self, attr)
 
+    def __str__(self):
+        return str(self.dict[self.name])
+
 class ItemProxy(Proxy):
     def __init__(self, proxy, index):
         self.proxy = proxy
@@ -293,6 +321,9 @@ class ItemProxy(Proxy):
     def __unproxy__(self):
         return unproxy(unproxy(self.proxy)[self.index])
 
+    def __str__(self):
+        return '%s[%s]' % (self.proxy, self.index)
+
 class AttrProxy(Proxy):
     def __init__(self, proxy, attr):
         self.proxy = proxy
@@ -300,6 +331,9 @@ class AttrProxy(Proxy):
 
     def __unproxy__(self):
         return unproxy(getattr(unproxy(self.proxy), self.attr))
+
+    def __str__(self):
+        return '%s.%s' % (self.proxy, self.attr)
 
 class ProxyGroup(object):
     def __init__(self, dict=None, **kwargs):
@@ -361,6 +395,9 @@ class Formula(Value):
         formula = re.sub(':', '__', self.formula)
         value = eval(formula, self.source.stattop)
         return getattr(value, attr)
+
+    def __str__(self):
+        return self.name
 
 class SimpleDist(Statistic):
     def __init__(self, sums, squares, samples):
