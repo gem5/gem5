@@ -972,6 +972,15 @@ class MemorySize(CheckedInt):
             self.value = toMemorySize(value)
         self._check()
 
+class MemorySize32(CheckedInt):
+    size = 32
+    unsigned = True
+    def __init__(self, value):
+        if isinstance(value, MemorySize):
+            self.value = value.value
+        else:
+            self.value = toMemorySize(value)
+        self._check()
 
 class Addr(CheckedInt):
     size = 64
@@ -1305,7 +1314,8 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
            'TcpPort', 'UdpPort', 'EthernetAddr',
-           'MemorySize', 'Latency', 'Frequency', 'RootClock', 'Clock',
+           'MemorySize', 'MemorySize32',
+           'Latency', 'Frequency', 'RootClock', 'Clock',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',
