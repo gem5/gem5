@@ -519,7 +519,7 @@ class BaseProxy(object):
 
     # support multiplying proxies by constants
     def __mul__(self, other):
-        if not isinstance(other, (int, float)):
+        if not isinstance(other, (int, long, float)):
             raise TypeError, "Proxy multiplier must be integer"
         if self._multiplier == None:
             self._multiplier = other
