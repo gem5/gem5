@@ -259,10 +259,13 @@ class Device : public Base
  * Memory Interface
  */
   public:
-    void prepareRead();
-    Fault iprRead(Addr daddr, uint64_t &result);
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
+
+    void prepareRead();
+    Fault iprRead(Addr daddr, uint64_t &result);
+    Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
+    Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
     Tick cacheAccess(MemReqPtr &req);
 
 /**

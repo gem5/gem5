@@ -335,10 +335,21 @@ Fault
 Device::read(MemReqPtr &req, uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
+    Fault fault = readBar(req, data);
 
-    //The mask is to give you only the offset into the device register file
-    Addr daddr = req->paddr & 0xfff;
+    if (fault == Machine_Check_Fault) {
+        panic("address does not map to a BAR pa=%#x va=%#x size=%d",
+              req->paddr, req->vaddr, req->size);
 
+        return Machine_Check_Fault;
+    }
+
+    return fault;
+}
+
+Fault
+Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
+{
     if (!regValid(daddr))
         panic("invalid register: da=%#x pa=%#x va=%#x size=%d",
               daddr, req->paddr, req->vaddr, req->size);
@@ -414,10 +425,21 @@ Fault
 Device::write(MemReqPtr &req, const uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
+    Fault fault = writeBar(req, data);
 
-    //The mask is to give you only the offset into the device register file
-    Addr daddr = req->paddr & 0xfff;
+    if (fault == Machine_Check_Fault) {
+        panic("address does not map to a BAR pa=%#x va=%#x size=%d",
+              req->paddr, req->vaddr, req->size);
 
+        return Machine_Check_Fault;
+    }
+
+    return fault;
+}
+
+Fault
+Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
+{
     if (!regValid(daddr))
         panic("invalid address: da=%#x pa=%#x va=%#x size=%d",
               daddr, req->paddr, req->vaddr, req->size);
