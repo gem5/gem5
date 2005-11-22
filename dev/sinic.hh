@@ -235,13 +235,6 @@ class Device : public Base
     Tick dmaWriteFactor;
 
 /**
- * PIO parameters
- */
-  protected:
-    MemReqPtr rxPioRequest;
-    MemReqPtr txPioRequest;
-
-/**
  * Interrupt management
  */
   protected:
@@ -262,11 +255,25 @@ class Device : public Base
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
-    void prepareRead();
-    Fault iprRead(Addr daddr, uint64_t &result);
+    void prepareIO(int cpu);
+    void prepareRead(int cpu);
+    void prepareWrite(int cpu);
+    Fault iprRead(Addr daddr, int cpu, uint64_t &result);
     Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
     Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    void regWrite(Addr daddr, int cpu, const uint8_t *data);
     Tick cacheAccess(MemReqPtr &req);
+
+  protected:
+    struct RegWriteData {
+        Addr daddr;
+        uint64_t value;
+        RegWriteData(Addr da, uint64_t val) : daddr(da), value(val) {}
+    };
+
+    std::vector<std::list<RegWriteData> > writeQueue;
+
+    bool pioDelayWrite;
 
 /**
  * Statistics
@@ -323,6 +330,7 @@ class Device : public Base
         Bus *header_bus;
         Bus *payload_bus;
         Tick pio_latency;
+        bool pio_delay_write;
         PhysicalMemory *physmem;
         IntrControl *intctrl;
         bool rx_filter;

@@ -112,6 +112,8 @@ Device::Device(Params *p)
                                                  p->dma_no_allocate);
     } else if (p->payload_bus)
         panic("must define a header bus if defining a payload bus");
+
+    pioDelayWrite = p->pio_delay_write && pioInterface;
 }
 
 Device::~Device()
@@ -311,7 +313,14 @@ Device::writeConfig(int offset, int size, const uint8_t *data)
 }
 
 void
-Device::prepareRead()
+Device::prepareIO(int cpu)
+{
+    if (cpu >= writeQueue.size())
+        writeQueue.resize(cpu + 1);
+}
+
+void
+Device::prepareRead(int cpu)
 {
     using namespace Regs;
 
@@ -326,6 +335,12 @@ Device::prepareRead()
     regs.TxDone = set_TxDone_Low(regs.TxDone,
                                  txFifo.size() < regs.TxFifoMark);
     regs.TxWait = regs.TxDone;
+}
+
+void
+Device::prepareWrite(int cpu)
+{
+    prepareIO(cpu);
 }
 
 /**
@@ -350,6 +365,8 @@ Device::read(MemReqPtr &req, uint8_t *data)
 Fault
 Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 {
+    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+
     if (!regValid(daddr))
         panic("invalid register: da=%#x pa=%#x va=%#x size=%d",
               daddr, req->paddr, req->vaddr, req->size);
@@ -363,7 +380,7 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
         panic("invalid size for reg %s: da=%#x pa=%#x va=%#x size=%d",
               info.name, daddr, req->paddr, req->vaddr, req->size);
 
-    prepareRead();
+    prepareRead(cpu);
 
     uint64_t value = 0;
     if (req->size == 4) {
@@ -393,7 +410,7 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
  * IPR read of device register
  */
 Fault
-Device::iprRead(Addr daddr, uint64_t &result)
+Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 {
     if (!regValid(daddr))
         panic("invalid address: da=%#x", daddr);
@@ -404,7 +421,7 @@ Device::iprRead(Addr daddr, uint64_t &result)
 
     DPRINTF(EthernetPIO, "read reg=%s da=%#x\n", info.name, daddr);
 
-    prepareRead();
+    prepareRead(cpu);
 
     if (info.size == 4)
         result = regData32(daddr);
@@ -440,6 +457,8 @@ Device::write(MemReqPtr &req, const uint8_t *data)
 Fault
 Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 {
+    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+
     if (!regValid(daddr))
         panic("invalid address: da=%#x pa=%#x va=%#x size=%d",
               daddr, req->paddr, req->vaddr, req->size);
@@ -458,6 +477,21 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
     DPRINTF(EthernetPIO, "write reg=%s val=%#x da=%#x pa=%#x va=%#x size=%d\n",
             info.name, info.size == 4 ? reg32 : reg64, daddr, req->paddr,
             req->vaddr, req->size);
+
+    if (pioDelayWrite)
+        writeQueue[cpu].push_back(RegWriteData(daddr, reg64));
+
+    if (!pioDelayWrite || !info.delay_write)
+        regWrite(daddr, cpu, data);
+
+    return No_Fault;
+}
+
+void
+Device::regWrite(Addr daddr, int cpu, const uint8_t *data)
+{
+    uint32_t reg32 = *(uint32_t *)data;
+    uint64_t reg64 = *(uint64_t *)data;
 
     switch (daddr) {
       case Regs::Config:
@@ -502,8 +536,6 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
         }
         break;
     }
-
-    return No_Fault;
 }
 
 void
@@ -769,12 +801,6 @@ Device::rxKick()
   next:
     switch (rxState) {
       case rxIdle:
-        if (rxPioRequest) {
-            DPRINTF(EthernetPIO, "rxIdle: PIO waiting responding at %d\n",
-                    curTick + pioLatency);
-            pioInterface->respond(rxPioRequest, curTick);
-            rxPioRequest = 0;
-        }
         goto exit;
 
       case rxFifoBlock:
@@ -977,12 +1003,6 @@ Device::txKick()
   next:
     switch (txState) {
       case txIdle:
-        if (txPioRequest) {
-            DPRINTF(EthernetPIO, "txIdle: PIO waiting responding at %d\n",
-                    curTick + pioLatency);
-            pioInterface->respond(txPioRequest, curTick + pioLatency);
-            txPioRequest = 0;
-        }
         goto exit;
 
       case txFifoBlock:
@@ -1371,42 +1391,46 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * re-add addrRanges to bus bridges
      */
-    if (pioInterface)
+    if (pioInterface) {
         pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
+        pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
+    }
 }
 
 Tick
 Device::cacheAccess(MemReqPtr &req)
 {
-    //The mask is to give you only the offset into the device register file
-    Addr daddr = req->paddr - addr;
+    Addr daddr;
+    int bar;
+    if (!getBAR(req->paddr, daddr, bar))
+        panic("address does not map to a BAR pa=%#x va=%#x size=%d",
+              req->paddr, req->vaddr, req->size);
 
-    DPRINTF(EthernetPIO, "timing access to paddr=%#x (daddr=%#x)\n",
-            req->paddr, daddr);
+    DPRINTF(EthernetPIO, "timing %s to paddr=%#x bar=%d daddr=%#x\n",
+            req->cmd.toString(), req->paddr, bar, daddr);
 
-    Tick when = curTick + pioLatency;
+    if (!pioDelayWrite || !req->cmd.isWrite())
+        return curTick + pioLatency;
 
-    switch (daddr) {
-      case Regs::RxWait:
-        if (rxState != rxIdle) {
-            DPRINTF(EthernetPIO, "rxState=%s (not idle)... waiting\n",
-                    TxStateStrings[txState]);
-            rxPioRequest = req;
-            when = 0;
-        }
-        break;
+    if (bar == 0) {
+        int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+        std::list<RegWriteData> &wq = writeQueue[cpu];
+        if (wq.empty())
+            panic("WriteQueue for cpu %d empty timing daddr=%#x", cpu, daddr);
 
-      case Regs::TxWait:
-        if (txState != txIdle) {
-            DPRINTF(EthernetPIO, "txState=%s (not idle)... waiting\n",
-                    TxStateStrings[txState]);
-            txPioRequest = req;
-            when = 0;
-        }
-        break;
+        const RegWriteData &data = wq.front();
+        if (data.daddr != daddr)
+            panic("read mismatch on cpu %d, daddr functional=%#x timing=%#x",
+                  cpu, data.daddr, daddr);
+
+        const Regs::Info &info = regInfo(data.daddr);
+        if (info.delay_write)
+            regWrite(daddr, cpu, (uint8_t *)&data.value);
+
+        wq.pop_front();
     }
 
-    return when;
+    return curTick + pioLatency;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Interface)
@@ -1463,6 +1487,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<Tick> dma_write_factor;
     Param<bool> dma_no_allocate;
     Param<Tick> pio_latency;
+    Param<bool> pio_delay_write;
     Param<Tick> intr_delay;
 
     Param<Tick> rx_delay;
@@ -1505,6 +1530,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
     INIT_PARAM(dma_no_allocate, "Should we allocat on read in cache"),
     INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
+    INIT_PARAM(pio_delay_write, ""),
     INIT_PARAM(intr_delay, "Interrupt Delay"),
 
     INIT_PARAM(rx_delay, "Receive Delay"),
@@ -1551,6 +1577,7 @@ CREATE_SIM_OBJECT(Device)
     params->dma_write_factor = dma_write_factor;
     params->dma_no_allocate = dma_no_allocate;
     params->pio_latency = pio_latency;
+    params->pio_delay_write = pio_delay_write;
     params->intr_delay = intr_delay;
 
     params->tx_delay = tx_delay;
