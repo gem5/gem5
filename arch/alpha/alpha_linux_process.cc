@@ -117,6 +117,29 @@ class Linux {
         uint32_t	st_gen;		//!< unknown
     };
 
+    // same for stat64
+    struct tgt_stat64 {
+        uint64_t	st_dev;
+        uint64_t	st_ino;
+        uint64_t	st_rdev;
+        int64_t		st_size;
+        uint64_t	st_blocks;
+
+        uint32_t	st_mode;
+        uint32_t	st_uid;
+        uint32_t	st_gid;
+        uint32_t	st_blksize;
+        uint32_t	st_nlink;
+        uint32_t	__pad0;
+
+        uint64_t	tgt_st_atime;
+        uint64_t 	st_atime_nsec;
+        uint64_t	tgt_st_mtime;
+        uint64_t	st_mtime_nsec;
+        uint64_t	tgt_st_ctime;
+        uint64_t	st_ctime_nsec;
+        int64_t		__unused[3];
+    };
 
     /// Length of strings in struct utsname (plus 1 for null char).
     static const int _SYS_NMLN = 65;
@@ -176,6 +199,12 @@ class Linux {
         int64_t tv_usec;	//!< microseconds
     };
 
+    // For writev/readv
+    struct tgt_iovec {
+        uint64_t iov_base; // void *
+        uint64_t iov_len;
+    };
+
     //@{
     /// For getrusage().
     static const int RUSAGE_SELF = 0;
@@ -205,7 +234,7 @@ class Linux {
 
     /// Helper function to convert a host stat buffer to a target stat
     /// buffer.  Also copies the target buffer out to the simulated
-    /// memorty space.  Used by stat(), fstat(), and lstat().
+    /// memory space.  Used by stat(), fstat(), and lstat().
     static void
     copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
     {
@@ -225,6 +254,40 @@ class Linux {
         tgt->st_blksize = host->st_blksize;
         tgt->st_blocks = host->st_blocks;
 
+        tgt.copyOut(mem);
+    }
+
+    // Same for stat64
+    static void
+    copyOutStat64Buf(FunctionalMemory *mem, Addr addr, struct stat64 *host)
+    {
+        TypedBufferArg<Linux::tgt_stat64> tgt(addr);
+
+        // XXX byteswaps
+        tgt->st_dev = host->st_dev;
+        // XXX What about STAT64_HAS_BROKEN_ST_INO ???
+        tgt->st_ino = host->st_ino;
+        tgt->st_rdev = host->st_rdev;
+        tgt->st_size = host->st_size;
+        tgt->st_blocks = host->st_blocks;
+
+        tgt->st_mode = host->st_mode;
+        tgt->st_uid = host->st_uid;
+        tgt->st_gid = host->st_gid;
+        tgt->st_blksize = host->st_blksize;
+        tgt->st_nlink = host->st_nlink;
+        tgt->tgt_st_atime = host->st_atime;
+        tgt->tgt_st_mtime = host->st_mtime;
+        tgt->tgt_st_ctime = host->st_ctime;
+#ifdef STAT_HAVE_NSEC
+        tgt->st_atime_nsec = host->st_atime_nsec;
+        tgt->st_mtime_nsec = host->st_mtime_nsec;
+        tgt->st_ctime_nsec = host->st_ctime_nsec;
+#else
+        tgt->st_atime_nsec = 0;
+        tgt->st_mtime_nsec = 0;
+        tgt->st_ctime_nsec = 0;
+#endif
         tgt.copyOut(mem);
     }
 
@@ -297,7 +360,7 @@ class Linux {
           }
 
           default:
-            cerr << "osf_getsysinfo: unknown op " << op << endl;
+            cerr << "osf_setsysinfo: unknown op " << op << endl;
             abort();
             break;
         }
@@ -429,8 +492,8 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 12 */ SyscallDesc("chdir", unimplementedFunc),
     /* 13 */ SyscallDesc("fchdir", unimplementedFunc),
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
-    /* 15 */ SyscallDesc("chmod", unimplementedFunc),
-    /* 16 */ SyscallDesc("chown", unimplementedFunc),
+    /* 15 */ SyscallDesc("chmod", chmodFunc<Linux>),
+    /* 16 */ SyscallDesc("chown", chownFunc),
     /* 17 */ SyscallDesc("brk", obreakFunc),
     /* 18 */ SyscallDesc("osf_getfsstat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
@@ -535,10 +598,10 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 118 */ SyscallDesc("getsockopt", unimplementedFunc),
     /* 119 */ SyscallDesc("numa_syscalls", unimplementedFunc),
     /* 120 */ SyscallDesc("readv", unimplementedFunc),
-    /* 121 */ SyscallDesc("writev", unimplementedFunc),
+    /* 121 */ SyscallDesc("writev", writevFunc<Linux>),
     /* 122 */ SyscallDesc("osf_settimeofday", unimplementedFunc),
-    /* 123 */ SyscallDesc("fchown", unimplementedFunc),
-    /* 124 */ SyscallDesc("fchmod", unimplementedFunc),
+    /* 123 */ SyscallDesc("fchown", fchownFunc),
+    /* 124 */ SyscallDesc("fchmod", fchmodFunc<Linux>),
     /* 125 */ SyscallDesc("recvfrom", unimplementedFunc),
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 127 */ SyscallDesc("setregid", unimplementedFunc),
@@ -780,7 +843,7 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 360 */ SyscallDesc("settimeofday", unimplementedFunc),
     /* 361 */ SyscallDesc("getitimer", unimplementedFunc),
     /* 362 */ SyscallDesc("setitimer", unimplementedFunc),
-    /* 363 */ SyscallDesc("utimes", unimplementedFunc),
+    /* 363 */ SyscallDesc("utimes", utimesFunc<Linux>),
     /* 364 */ SyscallDesc("getrusage", getrusageFunc<Linux>),
     /* 365 */ SyscallDesc("wait4", unimplementedFunc),
     /* 366 */ SyscallDesc("adjtimex", unimplementedFunc),
@@ -841,7 +904,24 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 421 */ SyscallDesc("clock_getres", unimplementedFunc),
     /* 422 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
     /* 423 */ SyscallDesc("semtimedop", unimplementedFunc),
-    /* 424 */ SyscallDesc("tgkill", unimplementedFunc)
+    /* 424 */ SyscallDesc("tgkill", unimplementedFunc),
+    /* 425 */ SyscallDesc("stat64", unimplementedFunc),
+    /* 426 */ SyscallDesc("lstat64", lstat64Func<Linux>),
+    /* 427 */ SyscallDesc("fstat64", fstat64Func<Linux>),
+    /* 428 */ SyscallDesc("vserver", unimplementedFunc),
+    /* 429 */ SyscallDesc("mbind", unimplementedFunc),
+    /* 430 */ SyscallDesc("get_mempolicy", unimplementedFunc),
+    /* 431 */ SyscallDesc("set_mempolicy", unimplementedFunc),
+    /* 432 */ SyscallDesc("mq_open", unimplementedFunc),
+    /* 433 */ SyscallDesc("mq_unlink", unimplementedFunc),
+    /* 434 */ SyscallDesc("mq_timedsend", unimplementedFunc),
+    /* 435 */ SyscallDesc("mq_timedreceive", unimplementedFunc),
+    /* 436 */ SyscallDesc("mq_notify", unimplementedFunc),
+    /* 437 */ SyscallDesc("mq_getsetattr", unimplementedFunc),
+    /* 438 */ SyscallDesc("waitid", unimplementedFunc),
+    /* 439 */ SyscallDesc("add_key", unimplementedFunc),
+    /* 440 */ SyscallDesc("request_key", unimplementedFunc),
+    /* 441 */ SyscallDesc("keyctl", unimplementedFunc)
 };
 
 const int Linux::Num_Syscall_Descs =

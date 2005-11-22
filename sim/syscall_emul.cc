@@ -242,3 +242,39 @@ ftruncateFunc(SyscallDesc *desc, int num, Process *process, ExecContext *xc)
     int result = ftruncate(fd, length);
     return (result == -1) ? -errno : result;
 }
+
+SyscallReturn
+chownFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
+{
+    string path;
+
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+        return -EFAULT;
+
+    /* XXX endianess */
+    uint32_t owner = xc->getSyscallArg(1);
+    uid_t hostOwner = owner;
+    uint32_t group = xc->getSyscallArg(2);
+    gid_t hostGroup = group;
+
+    int result = chown(path.c_str(), hostOwner, hostGroup);
+    return (result == -1) ? -errno : result;
+}
+
+SyscallReturn
+fchownFunc(SyscallDesc *desc, int num, Process *process, ExecContext *xc)
+{
+    int fd = process->sim_fd(xc->getSyscallArg(0));
+
+    if (fd < 0)
+        return -EBADF;
+
+    /* XXX endianess */
+    uint32_t owner = xc->getSyscallArg(1);
+    uid_t hostOwner = owner;
+    uint32_t group = xc->getSyscallArg(2);
+    gid_t hostGroup = group;
+
+    int result = fchown(fd, hostOwner, hostGroup);
+    return (result == -1) ? -errno : result;
+}
