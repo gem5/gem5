@@ -368,17 +368,17 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
     int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
 
     if (!regValid(daddr))
-        panic("invalid register: da=%#x pa=%#x va=%#x size=%d",
-              daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid register: cpu=%d, da=%#x pa=%#x va=%#x size=%d",
+              cpu, daddr, req->paddr, req->vaddr, req->size);
 
     const Regs::Info &info = regInfo(daddr);
     if (!info.read)
-        panic("reading write only register: %s: da=%#x pa=%#x va=%#x size=%d",
-              info.name, daddr, req->paddr, req->vaddr, req->size);
+        panic("reading %s (write only): cpu=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
 
     if (req->size != info.size)
-        panic("invalid size for reg %s: da=%#x pa=%#x va=%#x size=%d",
-              info.name, daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid size for reg %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
 
     prepareRead(cpu);
 
@@ -395,8 +395,9 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
         value = reg;
     }
 
-    DPRINTF(EthernetPIO, "read reg=%s da=%#x pa=%#x va=%#x size=%d val=%#x\n",
-            info.name, daddr, req->paddr, req->vaddr, req->size, value);
+    DPRINTF(EthernetPIO,
+            "read %s cpu=%d da=%#x pa=%#x va=%#x size=%d val=%#x\n",
+            info.name, cpu, daddr, req->paddr, req->vaddr, req->size, value);
 
     // reading the interrupt status register has the side effect of
     // clearing it
@@ -417,9 +418,10 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 
     const Regs::Info &info = regInfo(daddr);
     if (!info.read)
-        panic("reading write only register %s: da=%#x", info.name, daddr);
+        panic("reading %s (write only): cpu=%d da=%#x", info.name, cpu, daddr);
 
-    DPRINTF(EthernetPIO, "read reg=%s da=%#x\n", info.name, daddr);
+    DPRINTF(EthernetPIO, "IPR read %s: cpu=%d da=%#x\n",
+            info.name, cpu, daddr);
 
     prepareRead(cpu);
 
@@ -429,8 +431,8 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
     if (info.size == 8)
         result = regData64(daddr);
 
-    DPRINTF(EthernetPIO, "IPR read reg=%s da=%#x val=%#x\n",
-            info.name, result);
+    DPRINTF(EthernetPIO, "IPR read %s: cpu=%s da=%#x val=%#x\n",
+            info.name, cpu, result);
 
     return No_Fault;
 }
@@ -460,23 +462,24 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
     int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
 
     if (!regValid(daddr))
-        panic("invalid address: da=%#x pa=%#x va=%#x size=%d",
-              daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid address: cpu=%d da=%#x pa=%#x va=%#x size=%d",
+              cpu, daddr, req->paddr, req->vaddr, req->size);
 
     const Regs::Info &info = regInfo(daddr);
     if (!info.write)
-        panic("writing read only register %s: da=%#x", info.name, daddr);
+        panic("writing %s (read only): cpu=%d da=%#x", info.name, cpu, daddr);
 
     if (req->size != info.size)
-        panic("invalid size for reg %s: da=%#x pa=%#x va=%#x size=%d",
-              info.name, daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid size for %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
 
     uint32_t reg32 = *(uint32_t *)data;
     uint64_t reg64 = *(uint64_t *)data;
+    DPRINTF(EthernetPIO,
+            "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
+            info.name, cpu, info.size == 4 ? reg32 : reg64, daddr,
+            req->paddr, req->vaddr, req->size);
 
-    DPRINTF(EthernetPIO, "write reg=%s val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, info.size == 4 ? reg32 : reg64, daddr, req->paddr,
-            req->vaddr, req->size);
 
     if (pioDelayWrite)
         writeQueue[cpu].push_back(RegWriteData(daddr, reg64));
