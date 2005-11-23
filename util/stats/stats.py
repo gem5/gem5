@@ -294,7 +294,6 @@ def commands(options, command, args):
 
     system = source.__dict__[options.system]
     from info import ProxyGroup
-    sim_ticks = source['sim_ticks']
     sim_seconds = source['sim_seconds']
     proxy = ProxyGroup(system = source[options.system])
     system = proxy.system
@@ -309,18 +308,18 @@ def commands(options, command, args):
 
     if command == 'usertime':
         import copy
-        user = copy.copy(system.full0.numCycles)
+        user = copy.copy(system.run0.numCycles)
         user.bins = 'user'
 
-        output.stat = user / system.full0.numCycles
+        output.stat = user / system.run0.numCycles
         output.label = 'User Fraction'
 
         display()
         return
 
     if command == 'ticks':
-        output.stat = system.full0.numCycles
-        output.binstats = [ system.full0.numCycles ]
+        output.stat = system.run0.numCycles
+        output.binstats = [ system.run0.numCycles ]
 
         display()
         return
@@ -336,7 +335,7 @@ def commands(options, command, args):
         return
 
     if command == 'ppt' or command == 'tpp':
-        output.stat = packets / sim_ticks
+        output.stat = packets / system.run0.numCycles
         output.invert = command == 'tpp'
         display()
         return
@@ -348,26 +347,20 @@ def commands(options, command, args):
         return
 
     if command == 'bpt' or command == 'tpb':
-        output.stat = bytes / sim_ticks * 8
+        output.stat = bytes / system.run0.numCycles * 8
         output.label = 'bps / Hz'
         output.invert = command == 'tpb'
         display()
         return
 
-    if command == 'rxbps':
-        output.stat = etherdev.rxBandwidth / 1e9
-        output.label = 'Bandwidth (Gbps)'
-        display()
-        return
+    if command in ('rxbps', 'txbps', 'bps'):
+        if command == 'rxbps':
+            output.stat = etherdev.rxBandwidth / 1e9
+        if command == 'txbps':
+            output.stat = etherdev.txBandwidth / 1e9
+        if command == 'bps':
+            output.stat = bps / 1e9
 
-    if command == 'txbps':
-        output.stat = etherdev.txBandwidth / 1e9
-        output.label = 'Bandwidth (Gbps)'
-        display()
-        return
-
-    if command == 'bps':
-        output.stat = bps / 1e9
         output.label = 'Bandwidth (Gbps)'
         display()
         return
@@ -418,7 +411,7 @@ def commands(options, command, args):
         return
 
     if command == 'ipkb':
-        interrupts = system.full0.kern.faults[4]
+        interrupts = system.run0.kern.faults[4]
         output.stat = interrupts / kbytes
         output.binstats = [ interrupts ]
         output.label = 'Interrupts / KB'
@@ -426,17 +419,17 @@ def commands(options, command, args):
         return
 
     if command == 'execute':
-        output.stat = system.full0.ISSUE__count
+        output.stat = system.run0.ISSUE__count
         display()
         return
 
     if command == 'commit':
-        output.stat = system.full0.COM__count
+        output.stat = system.run0.COM__count
         display()
         return
 
     if command == 'fetch':
-        output.stat = system.full0.FETCH__count
+        output.stat = system.run0.FETCH__count
         display()
         return
 
