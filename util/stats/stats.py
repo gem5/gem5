@@ -250,11 +250,7 @@ def commands(options, command, args):
         if len(args):
             raise CommandException
 
-        all = [ 'bps', 'rxbps', 'txbps', 'bpt',
-                'misses', 'mpkb',
-                'ipkb',
-                'pps', 'bpp', 'txbpp', 'rxbpp',
-                'rtp', 'rtb' ]
+        all = [ 'bps', 'misses', 'mpkb', 'ipkb', 'pps', 'bpt' ]
         for command in all:
             commands(options, command, args)
 
