@@ -285,7 +285,9 @@ class Profile(object):
         if job.system is None:
             raise AttributeError, 'The job must have a system set'
 
-        data = self.getdata(job.name, '%s.full%d' % (job.system, self.cpu))
+        run = job.name
+        cpu = '%s.run%d' % (job.system, self.cpu)
+        data = self.getdata(run, cpu)
         if not data:
             return [ 0.0 for c in self.categories ]
 
@@ -307,7 +309,7 @@ class Profile(object):
             jobs = [ job for job in jobfile.jobs() ]
 
         for job in jobs:
-            cpu =  '%s.full%d' % (job.system, self.cpu)
+            cpu =  '%s.run%d' % (job.system, self.cpu)
             symbols = self.getdata(job.name, cpu)
             if not symbols:
                 continue
@@ -321,7 +323,7 @@ class Profile(object):
             jobs = [ job for job in jobfile.jobs() ]
 
         for job in jobs:
-            cpu =  '%s.full%d' % (job.system, self.cpu)
+            cpu =  '%s.run%d' % (job.system, self.cpu)
             symbols = self.getdata(job.name, cpu)
             if not symbols:
                 continue
@@ -337,14 +339,14 @@ class Profile(object):
 
         thejobs = []
         for job in jobs:
-            cpu =  '%s.full%d' % (job.system, self.cpu)
+            cpu =  '%s.run%d' % (job.system, self.cpu)
             symbols = self.getdata(job.name, cpu)
             if symbols:
                 thejobs.append(job)
                 maxsymlen = max(maxsymlen, symbols.maxsymlen)
 
         for job in thejobs:
-            cpu =  '%s.full%d' % (job.system, self.cpu)
+            cpu =  '%s.run%d' % (job.system, self.cpu)
             symbols = self.getdata(job.name, cpu)
             print job.name
             symbols.display(limit=limit, maxsymlen=maxsymlen)
