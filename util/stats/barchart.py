@@ -28,28 +28,19 @@
 #          Lisa Hsu
 
 import matplotlib, pylab
+from matplotlib.font_manager import FontProperties
 from matplotlib.numerix import array, arange, reshape, shape, transpose, zeros
 from matplotlib.numerix import Float
 
 matplotlib.interactive(False)
 
-class BarChart(object):
-    def __init__(self, **kwargs):
-        self.init(**kwargs)
+from chart import ChartOptions
 
-    def init(self, **kwargs):
-        self.colormap = 'jet'
+class BarChart(ChartOptions):
+    def __init__(self, default=None, **kwargs):
+        super(BarChart, self).__init__(default, **kwargs)
         self.inputdata = None
         self.chartdata = None
-        self.xlabel = None
-        self.ylabel = None
-        self.legend = None
-        self.xticks = None
-        self.yticks = None
-        self.title = None
-
-        for key,value in kwargs.iteritems():
-            self.__setattr__(key, value)
 
     def gen_colors(self, count):
         cmap = matplotlib.cm.get_cmap(self.colormap)
@@ -129,8 +120,8 @@ class BarChart(object):
         if self.chartdata is None:
             raise AttributeError, "Data not set for bar chart!"
 
-        self.figure = pylab.figure()
-        self.axes = self.figure.add_subplot(111)
+        self.figure = pylab.figure(figsize=self.chart_size)
+        self.axes = self.figure.add_axes(self.figure_size)
 
         dim = len(shape(self.inputdata))
         cshape = shape(self.chartdata)
@@ -158,7 +149,7 @@ class BarChart(object):
 
         bars = []
         for i,stackdata in enumerate(self.chartdata):
-            bottom = array([0] * len(stackdata[0]))
+            bottom = array([0.0] * len(stackdata[0]), Float)
             stack = []
             for j,bardata in enumerate(stackdata):
                 bardata = array(bardata)
@@ -181,6 +172,8 @@ class BarChart(object):
             ticks = arange(nticks) / (nticks - 1) * (ymax - ymin)  + ymin
             self.axes.set_yticks(ticks)
             self.axes.set_yticklabels(self.yticks)
+        elif self.ylim is not None:
+            self.axes.set_ylim(self.ylim)
 
         if self.xticks is not None:
             self.axes.set_xticks(arange(cshape[2]) + .5)
@@ -195,7 +188,8 @@ class BarChart(object):
                 number = len(bars[0])
                 lbars = [ bars[0][number - j - 1][0] for j in xrange(number)]
 
-            self.axes.legend(lbars, self.legend, loc='best')
+            self.figure.legend(lbars, self.legend, self.legend_loc,
+                               prop=FontProperties(size=self.legend_size))
 
         if self.title is not None:
             self.axes.set_title(self.title)
@@ -203,7 +197,32 @@ class BarChart(object):
     def savefig(self, name):
         self.figure.savefig(name)
 
+    def savecsv(self, name):
+        f = file(name, 'w')
+        data = array(self.inputdata)
+        dim = len(data.shape)
+
+        if dim == 1:
+            #if self.xlabel:
+            #    f.write(', '.join(list(self.xlabel)) + '\n')
+            f.write(', '.join([ '%f' % val for val in data]) + '\n')
+        if dim == 2:
+            #if self.xlabel:
+            #    f.write(', '.join([''] + list(self.xlabel)) + '\n')
+            for i,row in enumerate(data):
+                ylabel = []
+                #if self.ylabel:
+                #    ylabel = [ self.ylabel[i] ]
+                f.write(', '.join(ylabel + [ '%f' % val for val in row]) + '\n')
+        if dim == 3:
+            f.write("don't do 3D csv files\n")
+            pass
+
+        f.close()
+
+
 if __name__ == '__main__':
+    from random import randrange
     import random, sys
 
     dim = 3
@@ -234,13 +253,17 @@ if __name__ == '__main__':
         chart1.xticks = [ 'xtick%d' % x for x in xrange(myshape[0]) ]
         chart1.title = 'this is the title'
         chart1.graph()
-        #chart1.savefig('/tmp/test1.png')
+        chart1.savefig('/tmp/test1.png')
+        chart1.savefig('/tmp/test1.ps')
+        chart1.savefig('/tmp/test1.eps')
+        chart1.savecsv('/tmp/test1.csv')
 
     if False:
         chart2 = BarChart()
         chart2.data = data
         chart2.colormap = 'gray'
         chart2.graph()
-        #chart2.savefig('/tmp/test2.png')
+        chart2.savefig('/tmp/test2.png')
+        chart2.savefig('/tmp/test2.ps')
 
-    pylab.show()
+    #pylab.show()

@@ -26,21 +26,22 @@
 #
 # Authors: Nathan Binkert
 
-class StatOutput(object):
-    def __init__(self, name, jobfile, info, stat=None, binstats=None):
-        self.name = name
+from chart import ChartOptions
+
+class StatOutput(ChartOptions):
+    def __init__(self, jobfile, info, stat=None, binstats=None):
+        super(StatOutput, self).__init__()
         self.jobfile = jobfile
         self.stat = stat
         self.binstats = None
-        self.label = self.name
         self.invert = False
         self.info = info
 
-    def printdata(self, bin = None, printmode = 'G'):
+    def printdata(self, name, bin = None, printmode = 'G'):
         import info
 
         if bin:
-            print '%s %s stats' % (self.name, bin)
+            print '%s %s stats' % (name, bin)
 
         if self.binstats:
             for stat in self.binstats:
@@ -69,70 +70,78 @@ class StatOutput(object):
             valstring = ', '.join([ valformat % val for val in value ])
             print '%-50s    %s' % (job.name + ':', valstring)
 
-    def display(self, binned = False, printmode = 'G'):
+    def display(self, name, binned = False, printmode = 'G'):
         if binned and self.binstats:
-            self.printdata('kernel', printmode)
-            self.printdata('idle', printmode)
-            self.printdata('user', printmode)
-            self.printdata('interrupt', printmode)
+            self.printdata(name, 'kernel', printmode)
+            self.printdata(name, 'idle', printmode)
+            self.printdata(name, 'user', printmode)
+            self.printdata(name, 'interrupt', printmode)
 
-            print '%s total stats' % self.name
-        self.printdata(printmode=printmode)
+            print '%s total stats' % name
+        self.printdata(name, printmode=printmode)
 
-    def graph(self, graphdir):
+    def graph(self, name, graphdir, proxy=None):
         from os.path import expanduser, isdir, join as joinpath
         from barchart import BarChart
         from matplotlib.numerix import Float, array, zeros
-        import os, re
+        import os, re, urllib
+        from jobfile import crossproduct
 
         confgroups = self.jobfile.groups()
         ngroups = len(confgroups)
         skiplist = [ False ] * ngroups
-        groupopts = None
-        baropts = None
+        groupopts = []
+        baropts = []
         groups = []
         for i,group in enumerate(confgroups):
             if group.flags.graph_group:
-                if groupopts is not None:
-                    raise AttributeError, \
-                          'Two groups selected for graph group'
-                groupopts = group.subopts()
+                groupopts.append(group.subopts())
                 skiplist[i] = True
             elif group.flags.graph_bars:
-                if baropts is not None:
-                    raise AttributeError, \
-                          'Two groups selected for graph bars'
-                baropts = group.subopts()
+                baropts.append(group.subopts())
                 skiplist[i] = True
             else:
                 groups.append(group)
 
-        if groupopts is None:
+        if not groupopts:
             raise AttributeError, 'No group selected for graph group'
 
-        if baropts is None:
+        if not baropts:
             raise AttributeError, 'No group selected for graph bars'
+
+        groupopts = [ group for group in crossproduct(groupopts) ]
+        baropts = [ bar for bar in crossproduct(baropts) ]
 
         directory = expanduser(graphdir)
         if not isdir(directory):
             os.mkdir(directory)
-        html = file(joinpath(directory, '%s.html' % self.name), 'w')
+        html = file(joinpath(directory, '%s.html' % name), 'w')
         print >>html, '<html>'
-        print >>html, '<title>Graphs for %s</title>' % self.name
+        print >>html, '<title>Graphs for %s</title>' % name
         print >>html, '<body>'
+        html.flush()
 
         for options in self.jobfile.options(groups):
+            chart = BarChart(self)
+
             data = zeros((len(groupopts), len(baropts)), Float)
             data = [ [ None ] * len(baropts) for i in xrange(len(groupopts)) ]
             enabled = False
             stacked = 0
             for g,gopt in enumerate(groupopts):
                 for b,bopt in enumerate(baropts):
-                    job = self.jobfile.job(options + [ gopt, bopt ])
+                    job = self.jobfile.job(options + gopt + bopt)
                     if not job:
                         continue
 
+                    if proxy:
+                        import db
+                        proxy.dict['system'] = self.info[job.system]
                     val = self.info.get(job, self.stat)
+                    if val is None:
+                        print 'stat "%s" for job "%s" not found' % \
+                              (self.stat, job)
+
                     if isinstance(val, (list, tuple)):
                         if len(val) == 1:
                             val = val[0]
@@ -151,7 +160,7 @@ class StatOutput(object):
                     for j in xrange(len(baropts)):
                         val = data[i][j]
                         if val is None:
-                            data[i][j] = [] * stacked
+                            data[i][j] = [ 0.0 ] * stacked
                         elif len(val) != stacked:
                             raise ValueError, "some stats stacked, some not"
 
@@ -159,29 +168,52 @@ class StatOutput(object):
             if data.sum() == 0:
                 continue
 
-            bar_descs = [ opt.desc for opt in baropts ]
-            group_descs = [ opt.desc for opt in groupopts ]
-            if stacked:
-                try:
-                    legend = self.info.rcategories
-                except:
-                    legend = [ str(i) for i in xrange(stacked) ]
-            else:
-                legend = bar_descs
+            x = data.shape[0]
+            y = data.shape[1]
+            xkeep = [ i for i in xrange(x) if data[i].sum() != 0 ]
+            ykeep = [ i for i in xrange(y) if data[:,i].sum() != 0 ]
+            data = data.take(xkeep, axis=0)
+            data = data.take(ykeep, axis=1)
+            chart.data = data
 
-            chart = BarChart(data=data, xlabel='Benchmark', ylabel=self.label,
-                             legend=legend, xticks=group_descs)
+            gopts = [ groupopts[i] for i in xkeep ]
+            bopts = [ baropts[i] for i in ykeep ]
+
+            bdescs = [ ' '.join([o.desc for o in opt]) for opt in bopts]
+            gdescs = [ ' '.join([o.desc for o in opt]) for opt in gopts]
+
+            if chart.legend is None:
+                if stacked:
+                    try:
+                        chart.legend = self.info.rcategories
+                    except:
+                        chart.legend = [ str(i) for i in xrange(stacked) ]
+                else:
+                    chart.legend = bdescs
+
+            if chart.xticks is None:
+                chart.xticks = gdescs
             chart.graph()
 
             names = [ opt.name for opt in options ]
             descs = [ opt.desc for opt in options ]
 
-            filename =  '%s-%s.png' % (self.name, ':'.join(names))
+            if names[0] == 'run':
+                names = names[1:]
+                descs = descs[1:]
+
+            basename = '%s-%s' % (name, ':'.join(names))
             desc = ' '.join(descs)
-            filepath = joinpath(directory, filename)
-            chart.savefig(filepath)
-            filename = re.sub(':', '%3A', filename)
-            print >>html, '''%s<br><img src="%s"><br>''' % (desc, filename)
+
+            pngname = '%s.png' % basename
+            psname = '%s.eps' % re.sub(':', '-', basename)
+            epsname = '%s.ps' % re.sub(':', '-', basename)
+            chart.savefig(joinpath(directory, pngname))
+            chart.savefig(joinpath(directory, epsname))
+            chart.savefig(joinpath(directory, psname))
+            html_name = urllib.quote(pngname)
+            print >>html, '''%s<br><img src="%s"><br>''' % (desc, html_name)
+            html.flush()
 
         print >>html, '</body>'
         print >>html, '</html>'

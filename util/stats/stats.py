@@ -259,14 +259,9 @@ def commands(options, command, args):
             print 'only displaying sample %s' % options.ticks
         source.ticks = [ int(x) for x in options.ticks.split() ]
 
-    import output
-
-    def display():
-        if options.graph:
-            output.graph(options.graphdir)
-        else:
-            output.display(options.binned, options.printmode)
-
+    from output import StatOutput
+    output = StatOutput(options.jobfile, source)
+    output.xlabel = 'System Configuration'
 
     if command == 'stat' or command == 'formula':
         if len(args) != 1:
@@ -278,17 +273,18 @@ def commands(options, command, args):
             stats = eval(args[0])
 
         for stat in stats:
-            output = output.StatOutput(stat.name, options.jobfile, source)
             output.stat = stat
-            output.label = stat.name
-            display()
+            output.ylabel = stat.name
+            if options.graph:
+                output.graph(stat.name, options.graphdir)
+            else:
+                output.display(stat.name, options.binned, options.printmode)
 
         return
 
     if len(args):
         raise CommandException
 
-    system = source.__dict__[options.system]
     from info import ProxyGroup
     sim_seconds = source['sim_seconds']
     proxy = ProxyGroup(system = source[options.system])
@@ -300,7 +296,11 @@ def commands(options, command, args):
     packets = etherdev.rxPackets + etherdev.txPackets
     bps = etherdev.rxBandwidth + etherdev.txBandwidth
 
-    output = output.StatOutput(command, options.jobfile, source)
+    def display():
+        if options.graph:
+            output.graph(command, options.graphdir, proxy)
+        else:
+            output.display(command, options.binned, options.printmode)
 
     if command == 'usertime':
         import copy
@@ -308,7 +308,7 @@ def commands(options, command, args):
         user.bins = 'user'
 
         output.stat = user / system.run0.numCycles
-        output.label = 'User Fraction'
+        output.ylabel = 'User Fraction'
 
         display()
         return
@@ -338,13 +338,13 @@ def commands(options, command, args):
 
     if command == 'pps':
         output.stat = packets / sim_seconds
-        output.label = 'Packets/s'
+        output.ylabel = 'Packets/s'
         display()
         return
 
     if command == 'bpt' or command == 'tpb':
         output.stat = bytes / system.run0.numCycles * 8
-        output.label = 'bps / Hz'
+        output.ylabel = 'bps / Hz'
         output.invert = command == 'tpb'
         display()
         return
@@ -357,37 +357,38 @@ def commands(options, command, args):
         if command == 'bps':
             output.stat = bps / 1e9
 
-        output.label = 'Bandwidth (Gbps)'
+        output.ylabel = 'Bandwidth (Gbps)'
+        output.ylim = [ 0.0, 10.0 ]
         display()
         return
 
     if command == 'bpp':
         output.stat = bytes / packets
-        output.label = 'Bytes / Packet'
+        output.ylabel = 'Bytes / Packet'
         display()
         return
 
     if command == 'rxbpp':
         output.stat = etherdev.rxBytes / etherdev.rxPackets
-        output.label = 'Receive Bytes / Packet'
+        output.ylabel = 'Receive Bytes / Packet'
         display()
         return
 
     if command == 'txbpp':
         output.stat = etherdev.txBytes / etherdev.txPackets
-        output.label = 'Transmit Bytes / Packet'
+        output.ylabel = 'Transmit Bytes / Packet'
         display()
         return
 
     if command == 'rtp':
         output.stat = etherdev.rxPackets / etherdev.txPackets
-        output.label = 'rxPackets / txPackets'
+        output.ylabel = 'rxPackets / txPackets'
         display()
         return
 
     if command == 'rtb':
         output.stat = etherdev.rxBytes / etherdev.txBytes
-        output.label = 'rxBytes / txBytes'
+        output.ylabel = 'rxBytes / txBytes'
         display()
         return
 
@@ -395,14 +396,14 @@ def commands(options, command, args):
 
     if command == 'misses':
         output.stat = misses
-        output.label = 'Overall MSHR Misses'
+        output.ylabel = 'Overall MSHR Misses'
         display()
         return
 
     if command == 'mpkb':
         output.stat = misses / (bytes / 1024)
         output.binstats = [ misses ]
-        output.label = 'Misses / KB'
+        output.ylabel = 'Misses / KB'
         display()
         return
 
@@ -410,7 +411,7 @@ def commands(options, command, args):
         interrupts = system.run0.kern.faults[4]
         output.stat = interrupts / kbytes
         output.binstats = [ interrupts ]
-        output.label = 'Interrupts / KB'
+        output.ylabel = 'Interrupts / KB'
         display()
         return
 

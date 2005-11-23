@@ -155,7 +155,6 @@ class Database(object):
     def get(self, job, stat):
         run = self.allRunNames.get(job.name, None)
         if run is None:
-            print 'run "%s" not found' % job
             return None
 
         from info import scalar, vector, value, values, total, len

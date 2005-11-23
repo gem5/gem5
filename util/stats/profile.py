@@ -27,18 +27,38 @@
 from orderdict import orderdict
 import output
 
+class FileData(dict):
+    def __init__(self, filename):
+        self.filename = filename
+        fd = file(filename)
+        current = []
+        for line in fd:
+            line = line.strip()
+            if line.startswith('>>>'):
+                current = []
+                self[line[3:]] = current
+            else:
+                current.append(line)
+        fd.close()
+
 class RunData(dict):
-    def __init__(self, filename=None):
+    def __init__(self, filename):
         self.filename = filename
 
-    def __getattr__(self, attr):
+    def __getattribute__(self, attr):
         if attr == 'total':
             total = 0.0
             for value in self.itervalues():
                 total += value
             return total
+
+        if attr == 'filedata':
+            return FileData(self.filename)
+
         if attr == 'maxsymlen':
             return max([ len(sym) for sym in self.iterkeys() ])
+
+        return super(RunData, self).__getattribute__(attr)
 
     def display(self, output=None, limit=None, maxsymlen=None):
         if not output:
@@ -62,24 +82,12 @@ class RunData(dict):
         for number,name in symbols:
             print >>output, symbolf % (name, 100.0 * (float(number) / total))
 
-
-
 class PCData(RunData):
     def __init__(self, filename=None, categorize=None, showidle=True):
         super(PCData, self).__init__(self, filename)
-        if filename is None:
-            return
 
-        fd = file(filename)
-
-        for line in fd:
-            if line.strip() == '>>>PC data':
-                break
-
-        for line in fd:
-            if line.startswith('>>>'):
-                break
-
+        filedata = self.filedata['PC data']
+        for line in filedata:
             (symbol, count) = line.split()
             if symbol == "0x0":
                 continue
@@ -94,30 +102,21 @@ class PCData(RunData):
 
                 self[category] = count
 
-        fd.close()
-
 class FuncNode(object):
-    def __new__(cls, filename = None):
-        if filename is None:
+    def __new__(cls, filedata=None):
+        if filedata is None:
             return super(FuncNode, cls).__new__(cls)
 
-        fd = file(filename, 'r')
-        fditer = iter(fd)
         nodes = {}
-        for line in fditer:
-            if line.strip() == '>>>function data':
-                break
-
-        for line in fditer:
-            if line.startswith('>>>'):
-                break
-
-            data = line.split()
-            node_id = int(data[0], 16)
+        for line in filedata['function data']:
+            data = line.split(' ')
+            node_id = long(data[0], 16)
             node = FuncNode()
             node.symbol = data[1]
-            node.count = int(data[2])
-            node.children = [ int(child, 16) for child in data[3:] ]
+            if node.symbol == '':
+                node.symbol = 'unknown'
+            node.count = long(data[2])
+            node.children = [ long(child, 16) for child in data[3:] ]
             nodes[node_id] = node
 
         for node in nodes.itervalues():
@@ -128,12 +127,9 @@ class FuncNode(object):
                 child.parent = node
             node.children = tuple(children)
         if not nodes:
-            print filename
+            print filedata.filename
             print nodes
         return nodes[0]
-
-    def __init__(self, filename=None):
-        pass
 
     def total(self):
         total = self.count
@@ -198,9 +194,14 @@ class FuncNode(object):
 class FuncData(RunData):
     def __init__(self, filename, categorize=None):
         super(FuncData, self).__init__(filename)
-        self.tree = FuncNode(filename)
-        self.tree.aggregate(self, categorize, incategory=False)
-        self.total = self.tree.total()
+        tree = self.tree
+        tree.aggregate(self, categorize, incategory=False)
+        self.total = tree.total()
+
+    def __getattribute__(self, attr):
+        if attr == 'tree':
+            return FuncNode(self.filedata)
+        return super(FuncData, self).__getattribute__(attr)
 
     def displayx(self, output=None, maxcount=None):
         if output is None:
@@ -274,6 +275,7 @@ class Profile(object):
         try:
             return self.data[run][cpu]
         except KeyError:
+            print run, cpu
             return None
 
     def alldata(self):
@@ -289,12 +291,16 @@ class Profile(object):
         cpu = '%s.run%d' % (job.system, self.cpu)
         data = self.getdata(run, cpu)
         if not data:
-            return [ 0.0 for c in self.categories ]
+            return None
 
         values = []
         for category in self.categories:
-            values.append(data.get(category, 0.0))
-        return values
+            val = float(data.get(category, 0.0))
+            if val < 0.0:
+                raise ValueError, 'value is %f' % val
+            values.append(val)
+        total = sum(values)
+        return [ v / total * 100.0 for v in values ]
 
     def dump(self):
         for run,cpu,data in self.alldata():
@@ -382,7 +388,6 @@ if __name__ == '__main__':
     import getopt, re, sys
     from os.path import expanduser
     from output import StatOutput
-    from jobfile import JobFile
 
     # default option values
     numsyms = 10
@@ -393,7 +398,7 @@ if __name__ == '__main__':
     funcdata = True
     jobfilename = 'Test.py'
     dodot = False
-    dotformat = 'raw'
+    dotfile = None
     textout = False
     threshold = 0.01
     inputfile = None
@@ -409,7 +414,7 @@ if __name__ == '__main__':
         elif o == '-c':
             categorize = True
         elif o == '-D':
-            dotformat = a
+            dotfile = a
         elif o == '-d':
             dodot = True
         elif o == '-f':
@@ -434,20 +439,24 @@ if __name__ == '__main__':
         usage(1)
 
     if inputfile:
-        data = FuncData(inputfile)
+        catfunc = None
+        if categorize:
+            catfunc = func_categorize
+        data = FuncData(inputfile, categorize=catfunc)
 
         if dodot:
             import pydot
             dot = pydot.Dot()
-            data.dot(dot, threshold=threshold)
+            data.tree.dot(dot, threshold=threshold)
             #dot.orientation = 'landscape'
             #dot.ranksep='equally'
             #dot.rank='samerank'
-            dot.write(dotfile, format=dotformat)
+            dot.write(dotfile, format='png')
         else:
             data.display(limit=numsyms)
 
     else:
+        from jobfile import JobFile
         jobfile = JobFile(jobfilename)
 
         if funcdata:
@@ -466,8 +475,11 @@ if __name__ == '__main__':
                     name = 'funcstacks%d' % cpu
                 else:
                     name = 'stacks%d' % cpu
-                output = StatOutput(name, jobfile, info=profile)
-                output.graph(graph)
+                output = StatOutput(jobfile, info=profile)
+                output.xlabel = 'System Configuration'
+                output.ylabel = '% CPU utilization'
+                output.stat = name
+                output.graph(name, graph)
 
         if dodot:
             for cpu in cpus:
