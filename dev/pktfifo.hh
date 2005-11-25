@@ -39,6 +39,10 @@
 class Checkpoint;
 class PacketFifo
 {
+  public:
+    typedef std::list<PacketPtr> fifo_list;
+    typedef fifo_list::iterator iterator;
+
   protected:
     std::list<PacketPtr> fifo;
     int _maxsize;
@@ -64,9 +68,16 @@ class PacketFifo
         return _reserved;
     }
 
+    iterator begin() { return fifo.begin(); }
+    iterator end() { return fifo.end(); }
+
+    PacketPtr front() { return fifo.front(); }
+
     bool push(PacketPtr ptr)
     {
+        assert(ptr->length);
         assert(_reserved <= ptr->length);
+        assert(ptr->slack == 0);
         if (avail() < ptr->length - _reserved)
             return false;
 
@@ -76,23 +87,42 @@ class PacketFifo
         return true;
     }
 
-    PacketPtr front() { return fifo.front(); }
-
     void pop()
     {
         if (empty())
             return;
 
-        _size -= fifo.front()->length;
-        fifo.front() = NULL;
+        PacketPtr &packet = fifo.front();
+        _size -= packet->length;
+        _size -= packet->slack;
+        packet->slack = 0;
+        packet = NULL;
         fifo.pop_front();
     }
 
     void clear()
     {
+        for (iterator i = begin(); i != end(); ++i)
+            (*i)->slack = 0;
         fifo.clear();
         _size = 0;
         _reserved = 0;
+    }
+
+    void remove(iterator i)
+    {
+        PacketPtr &packet = *i;
+        if (i != fifo.begin()) {
+            --i;
+            (*i)->slack += packet->length;
+        } else {
+            _size -= packet->length;
+            _size -= packet->slack;
+        }
+
+        packet->slack = 0;
+        packet = NULL;
+        fifo.erase(i);
     }
 
 /**

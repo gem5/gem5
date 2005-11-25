@@ -47,14 +47,30 @@ class Checkpoint;
 class PacketData : public RefCounted
 {
   public:
+    /*
+     * Pointer to packet data will be deleted
+     */
     uint8_t *data;
+
+    /*
+     * Length of the current packet
+     */
     int length;
 
+    /*
+     * Extra space taken up by the packet in whatever data structure
+     * it is in.
+     *
+     * NOTE: This can only be use by *one* data structure at a time!
+     */
+    int slack;
+
   public:
-    PacketData() : data(NULL), length(0) { }
-    explicit PacketData(size_t size) : data(new uint8_t[size]), length(0) { }
-    PacketData(std::auto_ptr<uint8_t> d, int l)
-        : data(d.release()), length(l) { }
+    PacketData() : data(NULL), length(0), slack(0) { }
+    explicit PacketData(size_t size)
+        : data(new uint8_t[size]), length(0), slack(0) { }
+    PacketData(std::auto_ptr<uint8_t> d, int l, int s = 0)
+        : data(d.release()), length(l), slack(s) { }
     ~PacketData() { if (data) delete [] data; }
 
   public:

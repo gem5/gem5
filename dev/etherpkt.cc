@@ -38,6 +38,7 @@ void
 PacketData::serialize(const string &base, ostream &os)
 {
     paramOut(os, base + ".length", length);
+    paramOut(os, base + ".slack", slack);
     arrayParamOut(os, base + ".data", data, length);
 }
 
@@ -46,6 +47,7 @@ PacketData::unserialize(const string &base, Checkpoint *cp,
                         const string &section)
 {
     paramIn(cp, section, base + ".length", length);
+    paramIn(cp, section, base + ".slack", slack);
     if (length)
         arrayParamIn(cp, section, base + ".data", data, length);
 }
