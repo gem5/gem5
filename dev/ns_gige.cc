@@ -764,8 +764,10 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
 
               case M5REG:
                 reg = 0;
-                if (params()->dedicated)
-                    reg |= M5REG_DEDICATED;
+                if (params()->rx_thread)
+                    reg |= M5REG_RX_THREAD;
+                if (params()->tx_thread)
+                    reg |= M5REG_TX_THREAD;
                 break;
 
               default:
@@ -3047,7 +3049,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     Param<bool> rx_filter;
     Param<string> hardware_address;
-    Param<bool> dedicated;
+    Param<bool> rx_thread;
+    Param<bool> tx_thread;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3087,7 +3090,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM(rx_filter, "Enable Receive Filter"),
     INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
-    INIT_PARAM(dedicated, "dedicate a kernel thread to the driver")
+    INIT_PARAM(rx_thread, ""),
+    INIT_PARAM(tx_thread, "")
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3131,7 +3135,8 @@ CREATE_SIM_OBJECT(NSGigE)
 
     params->rx_filter = rx_filter;
     params->eaddr = hardware_address;
-    params->dedicated = dedicated;
+    params->rx_thread = rx_thread;
+    params->tx_thread = tx_thread;
 
     return new NSGigE(params);
 }

@@ -305,8 +305,9 @@
 #define TANAR_UNUSED		0x00000E1F
 
 /* M5 control register */
-#define M5REG_RESERVED		0xfffffffe
-#define M5REG_DEDICATED		0x00000001
+#define M5REG_RESERVED		0xfffffffc
+#define M5REG_RX_THREAD		0x00000002
+#define M5REG_TX_THREAD		0x00000001
 
 struct ns_desc32 {
     uint32_t link;    /* link field to next descriptor in linked list */

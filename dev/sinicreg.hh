@@ -55,6 +55,9 @@
 namespace Sinic {
 namespace Regs {
 
+static const int VirtualMask = 0xff;
+static const int VirtualShift = 8;
+
 // Registers
 __SINIC_REG32(Config,      0x00); // 32: configuration register
 __SINIC_REG32(Command,     0x04); // 32: command register
@@ -78,20 +81,23 @@ __SINIC_REG32(HwAddr,      0x60); // 64: mac address
 __SINIC_REG32(Size,        0x68); // register addres space size
 
 // Config register bits
-__SINIC_VAL32(Config_Thread,  8, 1); // enable receive filter
-__SINIC_VAL32(Config_Filter,  7, 1); // enable receive filter
-__SINIC_VAL32(Config_Vlan,    6, 1); // enable vlan tagging
-__SINIC_VAL32(Config_Virtual, 5, 1); // enable virtual addressing
-__SINIC_VAL32(Config_Desc,    4, 1); // enable tx/rx descriptors
-__SINIC_VAL32(Config_Poll,    3, 1); // enable polling
-__SINIC_VAL32(Config_IntEn,   2, 1); // enable interrupts
-__SINIC_VAL32(Config_TxEn,    1, 1); // enable transmit
-__SINIC_VAL32(Config_RxEn,    0, 1); // enable receive
+__SINIC_VAL32(Config_RxThread,  9, 1); // enable receive threads
+__SINIC_VAL32(Config_TxThread,  8, 1); // enable transmit thread
+__SINIC_VAL32(Config_Filter,    7, 1); // enable receive filter
+__SINIC_VAL32(Config_Vlan,      6, 1); // enable vlan tagging
+__SINIC_VAL32(Config_Virtual,   5, 1); // enable virtual addressing
+__SINIC_VAL32(Config_Desc,      4, 1); // enable tx/rx descriptors
+__SINIC_VAL32(Config_Poll,      3, 1); // enable polling
+__SINIC_VAL32(Config_IntEn,     2, 1); // enable interrupts
+__SINIC_VAL32(Config_TxEn,      1, 1); // enable transmit
+__SINIC_VAL32(Config_RxEn,      0, 1); // enable receive
 
 // Command register bits
+__SINIC_VAL32(Command_Intr,  1, 1); // software interrupt
 __SINIC_VAL32(Command_Reset, 0, 1); // reset chip
 
 // Interrupt register bits
+__SINIC_VAL32(Intr_Soft,      8, 1); // software interrupt
 __SINIC_VAL32(Intr_TxLow,     7, 1); // tx fifo dropped below watermark
 __SINIC_VAL32(Intr_TxFull,    6, 1); // tx fifo full
 __SINIC_VAL32(Intr_TxDMA,     5, 1); // tx dma completed w/ interrupt
@@ -100,9 +106,9 @@ __SINIC_VAL32(Intr_RxHigh,    3, 1); // rx fifo above high watermark
 __SINIC_VAL32(Intr_RxEmpty,   2, 1); // rx fifo empty
 __SINIC_VAL32(Intr_RxDMA,     1, 1); // rx dma completed w/ interrupt
 __SINIC_VAL32(Intr_RxPacket,  0, 1); // packet received
-__SINIC_REG32(Intr_All,       0xff); // all valid interrupts
-__SINIC_REG32(Intr_NoDelay,   0xcc); // interrupts that shouldn't be coalesced
-__SINIC_REG32(Intr_Res,      ~0xff); // reserved interrupt bits
+__SINIC_REG32(Intr_All,       0x01ff); // all valid interrupts
+__SINIC_REG32(Intr_NoDelay,   0x01cc); // interrupts that aren't coalesced
+__SINIC_REG32(Intr_Res,      ~0x01ff); // reserved interrupt bits
 
 // RX Data Description
 __SINIC_VAL64(RxData_Len, 40, 20); // 0 - 1M
@@ -119,6 +125,9 @@ __SINIC_VAL64(RxDone_Packets,   32, 16); // number of packets in rx fifo
 __SINIC_VAL64(RxDone_Busy,      31,  1); // receive dma busy copying
 __SINIC_VAL64(RxDone_Complete,  30,  1); // valid data (packet complete)
 __SINIC_VAL64(RxDone_More,      29,  1); // Packet has more data (dma again)
+__SINIC_VAL64(RxDone_Res0,      28,  1); // reserved
+__SINIC_VAL64(RxDone_Res1,      27,  1); // reserved
+__SINIC_VAL64(RxDone_Res2,      26,  1); // reserved
 __SINIC_VAL64(RxDone_TcpError,  25,  1); // TCP packet error (bad checksum)
 __SINIC_VAL64(RxDone_UdpError,  24,  1); // UDP packet error (bad checksum)
 __SINIC_VAL64(RxDone_IpError,   23,  1); // IP packet error (bad checksum)
@@ -133,6 +142,14 @@ __SINIC_VAL64(TxDone_Busy,      31,  1); // transmit dma busy copying
 __SINIC_VAL64(TxDone_Complete,  30,  1); // valid data (packet complete)
 __SINIC_VAL64(TxDone_Full,      29,  1); // tx fifo is full
 __SINIC_VAL64(TxDone_Low,       28,  1); // tx fifo is below the watermark
+__SINIC_VAL64(TxDone_Res0,      27,  1); // reserved
+__SINIC_VAL64(TxDone_Res1,      26,  1); // reserved
+__SINIC_VAL64(TxDone_Res2,      25,  1); // reserved
+__SINIC_VAL64(TxDone_Res3,      24,  1); // reserved
+__SINIC_VAL64(TxDone_Res4,      23,  1); // reserved
+__SINIC_VAL64(TxDone_Res5,      22,  1); // reserved
+__SINIC_VAL64(TxDone_Res6,      21,  1); // reserved
+__SINIC_VAL64(TxDone_Res7,      20,  1); // reserved
 __SINIC_VAL64(TxDone_CopyLen,    0, 20); // up to 256k
 
 struct Info

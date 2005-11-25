@@ -84,8 +84,9 @@ class EtherDevBase(PciDevice):
     tx_fifo_size = Param.MemorySize('512kB', "max size of tx fifo")
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
-    intr_delay = Param.Latency('10us', "Interrupt Propagation Delay")
-    dedicated = Param.Bool(False, "dedicate a kernel thread to the driver")
+    intr_delay = Param.Latency('10us', "Interrupt propagation delay")
+    rx_thread = Param.Bool(False, "dedicated kernel thread for transmit")
+    tx_thread = Param.Bool(False, "dedicated kernel threads for receive")
 
 class NSGigE(EtherDevBase):
     type = 'NSGigE'

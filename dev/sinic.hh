@@ -136,6 +136,28 @@ class Device : public Base
         uint64_t HwAddr;       // 0x60
     } regs;
 
+    struct VirtualReg {
+        uint64_t RxData;
+        uint64_t RxDone;
+        uint64_t TxData;
+        uint64_t TxDone;
+
+        PacketFifo::iterator rxPacket;
+        int rxPacketOffset;
+        int rxPacketBytes;
+        uint64_t rxDoneData;
+
+        VirtualReg()
+            : RxData(0), RxDone(0), TxData(0), TxDone(0),
+              rxPacketOffset(0), rxPacketBytes(0), rxDoneData(0)
+        { }
+    };
+    typedef std::vector<VirtualReg> VirtualRegs;
+    typedef std::list<int> VirtualList;
+    VirtualRegs virtualRegs;
+    VirtualList rxList;
+    VirtualList txList;
+
     uint8_t  &regData8(Addr daddr) { return *((uint8_t *)&regs + daddr); }
     uint32_t &regData32(Addr daddr) { return *(uint32_t *)&regData8(daddr); }
     uint64_t &regData64(Addr daddr) { return *(uint64_t *)&regData8(daddr); }
@@ -147,11 +169,8 @@ class Device : public Base
   protected:
     RxState rxState;
     PacketFifo rxFifo;
+    PacketFifo::iterator rxFifoPtr;
     bool rxEmpty;
-    PacketPtr rxPacket;
-    uint8_t *rxPacketBufPtr;
-    int rxPktBytes;
-    uint64_t rxDoneData;
     Addr rxDmaAddr;
     uint8_t *rxDmaData;
     int rxDmaLen;
@@ -160,8 +179,8 @@ class Device : public Base
     PacketFifo txFifo;
     bool txFull;
     PacketPtr txPacket;
-    uint8_t *txPacketBufPtr;
-    int txPktBytes;
+    int txPacketOffset;
+    int txPacketBytes;
     Addr txDmaAddr;
     uint8_t *txDmaData;
     int txDmaLen;
@@ -255,9 +274,9 @@ class Device : public Base
     virtual Fault read(MemReqPtr &req, uint8_t *data);
     virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
-    void prepareIO(int cpu);
-    void prepareRead(int cpu);
-    void prepareWrite(int cpu);
+    void prepareIO(int cpu, int index);
+    void prepareRead(int cpu, int index);
+    void prepareWrite(int cpu, int index);
     Fault iprRead(Addr daddr, int cpu, uint64_t &result);
     Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
     Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
@@ -347,7 +366,8 @@ class Device : public Base
         Tick dma_write_delay;
         Tick dma_write_factor;
         bool dma_no_allocate;
-        bool dedicated;
+        bool rx_thread;
+        bool tx_thread;
     };
 
   protected:
