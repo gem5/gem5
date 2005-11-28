@@ -123,7 +123,7 @@ System::System(Params *p)
     DPRINTF(Loader, "Kernel loaded...\n");
 
     Addr addr = 0;
-#ifdef DEBUG
+#ifndef NDEBUG
     consolePanicEvent = addConsoleFuncEvent<BreakPCEvent>("panic");
 #endif
 

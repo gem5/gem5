@@ -133,7 +133,7 @@
 
 using namespace std;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 vector<RemoteGDB *> debuggers;
 int current_debugger = -1;
 
@@ -195,12 +195,12 @@ GDBListener::listen()
     event = new Event(this, listener.getfd(), POLLIN);
     pollQueue.schedule(event);
 
-#ifdef DEBUG
+#ifndef NDEBUG
     gdb->number = debuggers.size();
     debuggers.push_back(gdb);
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
     ccprintf(cerr, "%d: %s: listening for remote gdb #%d on port %d\n",
              curTick, name(), gdb->number, port);
 #else

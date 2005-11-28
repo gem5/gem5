@@ -97,7 +97,7 @@ class System : public SimObject
 
     Kernel::Binning *kernelBinning;
 
-#ifdef DEBUG
+#ifndef NDEBUG
     /** Event to halt the simulator if the console calls panic() */
     BreakPCEvent *consolePanicEvent;
 #endif
