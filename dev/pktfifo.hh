@@ -113,8 +113,10 @@ class PacketFifo
     {
         PacketPtr &packet = *i;
         if (i != fifo.begin()) {
-            --i;
-            (*i)->slack += packet->length;
+            iterator prev = i;
+            --prev;
+            assert(prev != fifo.end());
+            (*prev)->slack += packet->length;
         } else {
             _size -= packet->length;
             _size -= packet->slack;

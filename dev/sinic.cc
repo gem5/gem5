@@ -561,7 +561,7 @@ Device::regWrite(Addr daddr, int cpu, const uint8_t *data)
         vnic.TxData = reg64;
         if (txList.empty() || txList.front() != index)
             txList.push_back(index);
-        if (txEnable && txState == txIdle) {
+        if (txEnable && txState == txIdle && txList.front() == index) {
             txState = txFifoBlock;
             txKick();
         }
@@ -943,12 +943,17 @@ Device::rxKick()
         vnic->RxDone |= Regs::RxDone_Complete;
 
         if (vnic->rxPacketBytes == rxDmaLen) {
+            DPRINTF(EthernetSM, "rxKick: packet complete on vnic %d\n",
+                    rxList.front());
             rxFifo.remove(vnic->rxPacket);
             vnic->rxPacket = rxFifo.end();
         } else {
             vnic->RxDone |= Regs::RxDone_More;
             vnic->rxPacketBytes -= rxDmaLen;
             vnic->rxPacketOffset += rxDmaLen;
+            DPRINTF(EthernetSM,
+                    "rxKick: packet not complete on vnic %d: %d bytes left\n",
+                    rxList.front(), vnic->rxPacketBytes);
         }
 
         rxList.pop_front();
@@ -1074,6 +1079,7 @@ Device::txKick()
 
     switch (txState) {
       case txFifoBlock:
+        assert(Regs::get_TxDone_Busy(vnic->TxData));
         if (!txPacket) {
             // Grab a new packet from the fifo.
             txPacket = new PacketData(16384);
