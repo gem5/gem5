@@ -34,12 +34,24 @@ echo "starting test..."
 echo "netperf warmup"
 echo $SHORT
 eval $SHORT
+NUMCLNTS=`/sbin/m5 initparam`
+[ "$NUMCLNTS" -eq "0" ] && NUMCLNTS=1
 
-echo "netperf benchmark"
-echo $LONG
-/sbin/m5 ivlb 1
-/sbin/m5 resetstats
-/sbin/m5 dumpresetstats 200000000 2000000000
-/sbin/m5 checkpoint 200000000 2000000000
-eval $LONG
-/sbin/m5 exit
+echo "netperf benchmark... starting $NUMCLNTS..."
+lcv=0
+
+while [ "$lcv" -lt "$NUMCLNTS" ]
+do
+    echo $LONG
+    eval $LONG &
+    ((lcv += 1))
+done
+
+ckpt=200000000
+((ckpt = ckpt * 12/3 + 600000000))
+
+echo "configuring checkpointing at $ckpt..."
+/sbin/m5 checkpoint $ckpt 2000000000
+echo "done configuring checkpointing..."
+sleep 100000
+
