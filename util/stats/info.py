@@ -27,6 +27,9 @@
 from __future__ import division
 import operator, re, types
 
+class ProxyError(Exception):
+    pass
+
 def unproxy(proxy):
     if hasattr(proxy, '__unproxy__'):
         return proxy.__unproxy__()
@@ -336,7 +339,12 @@ class AttrProxy(Proxy):
         self.attr = attr
 
     def __unproxy__(self):
-        return unproxy(getattr(unproxy(self.proxy), self.attr))
+        proxy = unproxy(self.proxy)
+        try:
+            attr = getattr(proxy, self.attr)
+        except AttributeError, e:
+            raise ProxyError, e
+        return unproxy(attr)
 
     def __str__(self):
         return '%s.%s' % (self.proxy, self.attr)
