@@ -152,17 +152,24 @@ class Database(object):
         self.method = 'sum'
         self._method = type(self).sum
 
-    def get(self, job, stat):
-        run = self.allRunNames.get(job.name, None)
+    def get(self, job, stat, system=None):
+        run = self.allRunNames.get(str(job), None)
         if run is None:
             return None
 
-        from info import scalar, vector, value, values, total, len
-        stat.system = self[job.system]
-        if scalar(stat):
-            return value(stat, run.run)
-        if vector(stat):
-            return values(stat, run.run)
+        from info import ProxyError, scalar, vector, value, values, total, len
+        if system is None and hasattr('system', job):
+            system = job.system
+
+        if system is not None:
+            stat.system = self[system]
+        try:
+            if scalar(stat):
+                return value(stat, run.run)
+            if vector(stat):
+                return values(stat, run.run)
+        except ProxyError:
+            return None
 
         return None
 

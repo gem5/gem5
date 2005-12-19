@@ -283,13 +283,16 @@ class Profile(object):
             for cpu,data in cpus.iteritems():
                 yield run,cpu,data
 
-    def get(self, job, stat):
-        if job.system is None:
+    def get(self, job, stat, system=None):
+        if system is None and hasattr('system', job):
+            system = job.system
+
+        if system is None:
             raise AttributeError, 'The job must have a system set'
 
-        run = job.name
-        cpu = '%s.run%d' % (job.system, self.cpu)
-        data = self.getdata(run, cpu)
+        cpu = '%s.run%d' % (system, self.cpu)
+
+        data = self.getdata(str(job), cpu)
         if not data:
             return None
 
