@@ -194,9 +194,9 @@ divCeil(T a, T b)
 
 template <class T>
 inline T
-roundUp(T val, T align)
+roundUp(T val, int align)
 {
-    T mask = align - 1;
+    T mask = (T)align - 1;
     return (val + mask) & ~mask;
 }
 
