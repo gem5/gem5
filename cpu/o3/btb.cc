@@ -52,7 +52,7 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
 
     tagMask = (1 << tagBits) - 1;
 
-    tagShiftAmt = instShiftAmt + FloorLog2(numEntries);
+    tagShiftAmt = instShiftAmt + floorLog2(numEntries);
 }
 
 inline

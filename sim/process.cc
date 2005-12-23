@@ -274,7 +274,7 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
     text_size = objFile->textSize();
     data_base = objFile->dataBase();
     data_size = objFile->dataSize() + objFile->bssSize();
-    brk_point = RoundUp<uint64_t>(data_base + data_size, VMPageSize);
+    brk_point = roundUp<uint64_t>(data_base + data_size, VMPageSize);
 
     // load object file into target memory
     objFile->loadSections(memory);

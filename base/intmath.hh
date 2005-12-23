@@ -34,12 +34,12 @@
 #include "sim/host.hh"
 
 // Returns the prime number one less than n.
-int PrevPrime(int n);
+int prevPrime(int n);
 
 // Determine if a number is prime
 template <class T>
 inline bool
-IsPrime(T n)
+isPrime(T n)
 {
     T i;
 
@@ -60,20 +60,20 @@ IsPrime(T n)
 
 template <class T>
 inline T
-LeastSigBit(T n)
+leastSigBit(T n)
 {
     return n & ~(n - 1);
 }
 
 template <class T>
 inline bool
-IsPowerOf2(T n)
+isPowerOf2(T n)
 {
-    return n != 0 && LeastSigBit(n) == n;
+    return n != 0 && leastSigBit(n) == n;
 }
 
 inline int
-FloorLog2(unsigned x)
+floorLog2(unsigned x)
 {
     assert(x > 0);
 
@@ -89,7 +89,7 @@ FloorLog2(unsigned x)
 }
 
 inline int
-FloorLog2(unsigned long x)
+floorLog2(unsigned long x)
 {
     assert(x > 0);
 
@@ -108,7 +108,7 @@ FloorLog2(unsigned long x)
 }
 
 inline int
-FloorLog2(unsigned long long x)
+floorLog2(unsigned long long x)
 {
     assert(x > 0);
 
@@ -125,76 +125,76 @@ FloorLog2(unsigned long long x)
 }
 
 inline int
-FloorLog2(int x)
+floorLog2(int x)
 {
     assert(x > 0);
-    return FloorLog2((unsigned)x);
+    return floorLog2((unsigned)x);
 }
 
 inline int
-FloorLog2(long x)
+floorLog2(long x)
 {
     assert(x > 0);
-    return FloorLog2((unsigned long)x);
+    return floorLog2((unsigned long)x);
 }
 
 inline int
-FloorLog2(long long x)
+floorLog2(long long x)
 {
     assert(x > 0);
-    return FloorLog2((unsigned long long)x);
+    return floorLog2((unsigned long long)x);
 }
 
 #if defined(__APPLE__)
 inline int
-FloorLog2(size_t x)
+floorLog2(size_t x)
 {
     assert(x > 0);
     assert(sizeof(size_t) == 4 || sizeof(size_t) == 8);
 
     // It's my hope that this is optimized away?
     if (sizeof(size_t) == 4)
-        return FloorLog2((uint32_t)x);
+        return floorLog2((uint32_t)x);
      else if (sizeof(size_t) == 8)
-        return FloorLog2((uint64_t)x);
+        return floorLog2((uint64_t)x);
 
 }
 #endif
 
 template <class T>
 inline int
-CeilLog2(T n)
+ceilLog2(T n)
 {
     if (n == 1)
         return 0;
 
-    return FloorLog2(n - (T)1) + 1;
+    return floorLog2(n - (T)1) + 1;
 }
 
 template <class T>
 inline T
-FloorPow2(T n)
+floorPow2(T n)
 {
-    return (T)1 << FloorLog2(n);
+    return (T)1 << floorLog2(n);
 }
 
 template <class T>
 inline T
-CeilPow2(T n)
+ceilPow2(T n)
 {
-    return (T)1 << CeilLog2(n);
+    return (T)1 << ceilLog2(n);
 }
 
 template <class T>
 inline T
-DivCeil(T a, T b)
+divCeil(T a, T b)
 {
     return (a + b - 1) / b;
 }
 
 template <class T>
 inline T
-RoundUp(T val, T align)
+roundUp(T val, T align)
 {
     T mask = align - 1;
     return (val + mask) & ~mask;
@@ -202,14 +202,14 @@ RoundUp(T val, T align)
 
 template <class T>
 inline T
-RoundDown(T val, T align)
+roundDown(T val, T align)
 {
     T mask = align - 1;
     return val & ~mask;
 }
 
 inline bool
-IsHex(char c)
+isHex(char c)
 {
     return c >= '0' && c <= '9' ||
         c >= 'A' && c <= 'F' ||
@@ -217,19 +217,19 @@ IsHex(char c)
 }
 
 inline bool
-IsOct(char c)
+isOct(char c)
 {
     return c >= '0' && c <= '7';
 }
 
 inline bool
-IsDec(char c)
+isDec(char c)
 {
     return c >= '0' && c <= '9';
 }
 
 inline int
-Hex2Int(char c)
+hex2Int(char c)
 {
   if (c >= '0' && c <= '9')
     return (c - '0');
