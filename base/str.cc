@@ -142,7 +142,7 @@ __to_number(string value, T &retval)
     int i = 0;
 
     char c = value[i];
-    if (!IsDec(c)) {
+    if (!isDec(c)) {
         if (c == '-' && sign)
             negative = true;
         else
@@ -161,7 +161,7 @@ __to_number(string value, T &retval)
         if (sign && negative)
             return false;
 
-        if (!IsOct(c)) {
+        if (!isOct(c)) {
             if (c == 'X' || c == 'x') {
                 hex = true;
                 oct = false;
@@ -170,7 +170,7 @@ __to_number(string value, T &retval)
         }
         else
             retval += c - '0';
-    } else if (!IsDec(c))
+    } else if (!isDec(c))
         goto multiply;
     else {
         if (sign && negative && c == '0')
@@ -190,18 +190,18 @@ __to_number(string value, T &retval)
 
         for (i = 2; i <= last ; i++) {
             c = value[i];
-            if (!IsHex(c))
+            if (!isHex(c))
                 return false;
 
             if (retval > hexmax) return false;
             retval *= 16;
-            retval += Hex2Int(c);
+            retval += hex2Int(c);
         }
         return true;
     } else if (oct) {
         for (i = 2; i <= last ; i++) {
             c = value[i];
-            if (!IsOct(c))
+            if (!isOct(c))
                 return false;
 
             if (retval > octmax) return false;
@@ -213,7 +213,7 @@ __to_number(string value, T &retval)
 
     for (i = 2; i < last ; i++) {
         c = value[i];
-        if (!IsDec(c))
+        if (!isDec(c))
             goto multiply;
 
         if (retval > decmax) return false;
@@ -226,7 +226,7 @@ __to_number(string value, T &retval)
     }
 
     c = value[last];
-    if (IsDec(c)) {
+    if (isDec(c)) {
 
         if (retval > decmax) return false;
         bool atmax = retval == decmax;
@@ -274,7 +274,7 @@ __to_number(string value, T &retval)
         mult = 0;
         for (i++; i <= last; i++) {
             c = value[i];
-            if (!IsDec(c))
+            if (!isDec(c))
                 return false;
 
             mult *= 10;

@@ -29,30 +29,30 @@
 #include "base/intmath.hh"
 
 int
-PrevPrime(int n)
+prevPrime(int n)
 {
-  int decr;
+    int decr;
 
-  // If the number is even, let's start with the previous odd number.
-  if (!(n & 1))
-    --n;
+    // If the number is even, let's start with the previous odd number.
+    if (!(n & 1))
+        --n;
 
-  // Lets test for divisibility by 3.  Then we will be able to easily
-  // avoid numbers that are divisible by 3 in the future.
-  decr = n % 3;
-  if (decr == 0) {
-    n -= 2;
-    decr = 2;
-  }
-  else if (decr == 1)
-    decr = 4;
+    // Lets test for divisibility by 3.  Then we will be able to easily
+    // avoid numbers that are divisible by 3 in the future.
+    decr = n % 3;
+    if (decr == 0) {
+        n -= 2;
+        decr = 2;
+    }
+    else if (decr == 1)
+        decr = 4;
 
-  for (;;) {
-    if (IsPrime(n))
-      return n;
-    n -= decr;
-    // Toggle between 2 and 4 to prevent trying numbers that are known
-    // to be divisible by 3.
-    decr = 6 - decr;
-  }
+    for (;;) {
+        if (isPrime(n))
+            return n;
+        n -= decr;
+        // Toggle between 2 and 4 to prevent trying numbers that are known
+        // to be divisible by 3.
+        decr = 6 - decr;
+    }
 }

@@ -843,7 +843,7 @@ class Tru64 {
             // Actual size includes padded string rounded up for alignment.
             // Subtract 256 for dummy char array in Tru64::dirent definition.
             // Add 1 to namelen for terminating null char.
-            int tgt_bufsize = sizeof(Tru64::dirent) - 256 + RoundUp(namelen+1, 8);
+            int tgt_bufsize = sizeof(Tru64::dirent) - 256 + roundUp(namelen+1, 8);
             TypedBufferArg<Tru64::dirent> tgt_dp(tgt_buf_ptr, tgt_bufsize);
             tgt_dp->d_ino = host_dp->d_ino;
             tgt_dp->d_reclen = tgt_bufsize;

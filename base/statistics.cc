@@ -253,7 +253,7 @@ char *
 MainBin::memory(off_t off)
 {
     if (memsize == -1)
-        memsize = CeilPow2((size_t) offset());
+        memsize = ceilPow2((size_t) offset());
 
     if (!mem) {
         mem = new char[memsize];
