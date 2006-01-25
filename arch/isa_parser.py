@@ -91,6 +91,14 @@ tokens = reserved + (
 
     # C preprocessor directives
     'CPPDIRECTIVE'
+
+# The following are matched but never returned. commented out to
+# suppress PLY warning
+    # newfile directive
+#    'NEWFILE',
+
+    # endfile directive
+#    'ENDFILE'
 )
 
 # Regular expressions for token matching
@@ -149,9 +157,19 @@ def t_CODELIT(t):
     return t
 
 def t_CPPDIRECTIVE(t):
-    r'^\#.*\n'
+    r'^\#[^\#].*\n'
     t.lineno += t.value.count('\n')
     return t
+
+def t_NEWFILE(t):
+    r'^\#\#newfile[ /t]*\"[A-Za-z0-9\\/-_.]*\"'
+    global fileNameStack
+    fileNameStack.append((t.value[11:-1], t.lineno))
+    t.lineno = 0
+
+def t_ENDFILE(t):
+    r'^\#\#endfile'
+    (filename, t.lineno) = fileNameStack.pop()
 
 #
 # The functions t_NEWLINE, t_ignore, and t_error are
@@ -852,7 +870,12 @@ def fixPythonIndentation(s):
 # Error handler.  Just call exit.  Output formatted to work under
 # Emacs compile-mode.
 def error(lineno, string):
-    sys.exit("%s:%d: %s" % (input_filename, lineno, string))
+    global fileNameStack
+    spaces = ""
+    for (filename, line) in fileNameStack[0:-1]:
+        print spaces + "In file included from " + filename
+        spaces += "  "
+    sys.exit(spaces + "%s:%d: %s" % (fileNameStack[-1][0], lineno, string))
 
 # Like error(), but include a Python stack backtrace (for processing
 # Python exceptions).
@@ -1601,6 +1624,25 @@ def update_if_needed(file, contents):
         f.write(contents)
         f.close()
 
+# This regular expression matches include directives
+regExp = re.compile('(?P<include>^[ \t]*##include[ \t]*\"[ \t]*(?P<filename>[A-Za-z0-9\\/-_.]*)[ \t]*\"[ \t]*\n)', re.MULTILINE)
+
+def preprocess_isa_desc(isa_desc):
+    # Find any includes and include them
+
+    # Look for an include
+    m = re.search(regExp, isa_desc)
+    while m:
+        filename = m.group('filename')
+        print 'Including file "%s"' % filename
+        includeFile = open(filename)
+        includecontents = includeFile.read()
+        isa_desc = isa_desc[:m.start('include')] + '##newfile "' + filename + '"\n' + includecontents + '##endfile\n' + isa_desc[m.end('include'):]
+        # Look for the next include
+        m = re.search(regExp, isa_desc)
+    return isa_desc
+
+
 #
 # Read in and parse the ISA description.
 #
@@ -1608,11 +1650,16 @@ def parse_isa_desc(isa_desc_file, output_dir, include_path):
     # set a global var for the input filename... used in error messages
     global input_filename
     input_filename = isa_desc_file
+    global fileNameStack
+    fileNameStack = [(input_filename, 1)]
 
     # Suck the ISA description file in.
     input = open(isa_desc_file)
     isa_desc = input.read()
     input.close()
+
+    # Perform Preprocessing
+    isa_desc = preprocess_isa_desc(isa_desc)
 
     # Parse it.
     (isa_name, namespace, global_code, namespace_code) = yacc.parse(isa_desc)

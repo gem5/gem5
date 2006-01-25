@@ -223,7 +223,7 @@ env = conf.Finish()
 # value becomes sticky).
 sticky_opts = Options(args=ARGUMENTS)
 sticky_opts.AddOptions(
-    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha')),
+    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha', 'sparc')),
     BoolOption('FULL_SYSTEM', 'Full-system support', False),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),
@@ -320,6 +320,10 @@ base_env = env
 for build_dir in build_dirs:
     # Make a copy of the default environment to use for this config.
     env = base_env.Copy()
+
+    # Record what build_dir was in the environment
+    env.Append(BUILD_DIR=build_dir);
+
     # Set env according to the build directory config.
 
     sticky_opts.files = []
