@@ -7,14 +7,25 @@
 def bitfield OPCODE_HI  <31:29>;
 def bitfield OPCODE_LO  <28:26>;
 
-def bitfield SPECIAL_HI   < 5: 3>;
-def bitfield SPECIAL_HI   < 2: 0>;
+def bitfield FUNCTION_HI   < 5: 3>;
+def bitfield FUNCTION_LO   < 2: 0>;
 
-def bitfield REGIMM_HI     <20:19>;
-def bitfield REGIMM_LO     <18:16>;
+def bitfield RT	      <20:16>;
+def bitfield RT_HI    <20:19>;
+def bitfield RT_LO    <18:16>;
 
-def bitfield RS		<25:21>;
-def bitfield RT		<20:16>;
+def bitfield RS	      <25:21>;
+def bitfield RS_HI    <25:24>;
+def bitfield RS_LO    <23:21>;
+
+def bitfield MOVCI <>;
+def bitfield SRL   <>;
+def bitfield SRLV  <>;
+def bitfield SA    <>;
+
+def bitfield BSHFL    <>;
+def bitfield BSHFL_HI <>;
+def bitfield BSHFL_LO <>;
 
 // Integer operate format(s>;
 def bitfield INTIMM	<15: 0>; // integer immediate (literal)

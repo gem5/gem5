@@ -14,8 +14,8 @@ decode OPCODE_HI default FailUnimpl::unknown() {
     // Derived From ... Table A-2 MIPS32 ISA Manual
     0x0: decode OPCODE_LO default FailUnimpl::reserved(){
 
-        0x0: decode SPECIAL_HI {
-            0x0: decode SPECIAL_LO {
+        0x0: decode FUNCTION_HI {
+            0x0: decode FUNCTION_LO {
               0x1: decode MOVCI {
                 format Move {
                   0: movc({{ }});
@@ -46,7 +46,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
               }
             }
 
-            0x1: decode SPECIAL_LO {
+            0x1: decode FUNCTION_LO {
 
               //Table A-3 Note: "Specific encodings of the hint field are used
               //to distinguish JR from JR.HB and JALR from JALR.HB"
@@ -65,7 +65,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
               0x7: Synchronize::synch({{ }});
             }
 
-            0x2: decode SPECIAL_LO {
+            0x2: decode FUNCTION_LO {
               format MultDiv {
                 0x0: mfhi({{ }});
                 0x1: mthi({{ }});
@@ -74,7 +74,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
               }
             };
 
-            0x3: decode SPECIAL_LO {
+            0x3: decode FUNCTION_LO {
               format MultDiv {
                 0x0: mult({{ }});
                 0x1: multu({{ }});
@@ -83,7 +83,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
               }
             };
 
-            0x4: decode SPECIAL_LO {
+            0x4: decode FUNCTION_LO {
               format Arithmetic {
                 0x0: add({{ }});
                 0x1: addu({{ }});
@@ -99,14 +99,14 @@ decode OPCODE_HI default FailUnimpl::unknown() {
               }
             }
 
-            0x5: decode SPECIAL_LO {
+            0x5: decode FUNCTION_LO {
               format SetInstructions{
                 0x2: slt({{ }});
                 0x3: sltu({{ }});
               }
             };
 
-            0x6: decode SPECIAL_LO {
+            0x6: decode FUNCTION_LO {
               format Trap {
                  0x0: tge({{ }});
                  0x1: tgeu({{ }});
@@ -218,7 +218,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x6: reserved_inst_exception({{ }})
         };
 
-        4: decode SPECIAL2 {
+        0x4: decode FUNCTION_HI {
             0x0:;
             0x1:;
             0x2:;
@@ -228,14 +228,23 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x6:;
         }
 
-        7: decode SPECIAL3 {
-            0x0:;
-            0x1:;
-            0x2:;
-            0x3:;
-            0x4:;
-            0x5:;
-            0x6:;
+        0x7: decode FUNCTION_HI {
+          //Table A-6 MIPS32 SPECIAL31 Encoding of Function Field for Release 2 of the Architecture
+          0x0: decode FUNCTION_LO {
+            0x1: ext({{ }});
+            0x4: ins({{ }});
+          }
+
+          0x4: decode SA {
+            //Table A-10 MIPS32 BSHFL Encoding of sa Field
+            0x02: wsbh({{ }});
+            0x10: seb({{ }});
+            0x18: seh({{ }});
+          }
+
+          0x6: decode FUNCTION_LO {
+            0x7: rdhwr({{ }});
+          }
         }
     };
 
