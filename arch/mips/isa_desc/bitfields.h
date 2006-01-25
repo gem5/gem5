@@ -3,48 +3,70 @@
 // Bitfield definitions.
 //
 
-// Bitfields are shared liberally between instruction formats, so they are
-// simply defined alphabetically
+// Universal (format-independent) fields
+def bitfield OPCODE_HI  <31:29>;
+def bitfield OPCODE_LO  <28:26>;
 
-def bitfield A		<29>;
-def bitfield CC02	<20>;
-def bitfield CC03	<25>;
-def bitfield CC04	<11>;
-def bitfield CC12	<21>;
-def bitfield CC13	<26>;
-def bitfield CC14	<12>;
-def bitfield CC2	<18>;
-def bitfield CMASK	<6:4>;
-def bitfield COND2	<28:25>;
-def bitfield COND4	<17:14>;
-def bitfield D16HI	<21:20>;
-def bitfield D16LO	<13:0>;
-def bitfield DISP19	<18:0>;
-def bitfield DISP22	<21:0>;
-def bitfield DISP30	<29:0>;
-def bitfield FCN	<29:26>;
-def bitfield I		<13>;
-def bitfield IMM_ASI	<12:5>;
-def bitfield IMM22	<21:0>;
-def bitfield MMASK	<3:0>;
-def bitfield OP		<31:30>;
-def bitfield OP2	<24:22>;
-def bitfield OP3	<24:19>;
-def bitfield OPF	<13:5>;
-def bitfield OPF_CC	<13:11>;
-def bitfield OPF_LOW5	<9:5>;
-def bitfield OPF_LOW6	<10:5>;
-def bitfield P		<19>;
-def bitfield RCOND2	<27:25>;
-def bitfield RCOND3	<12:10>;
-def bitfield RCOND4	<12:10>;
-def bitfield RD		<29:25>;
-def bitfield RS1	<18:14>;
-def bitfield RS2	<4:0>;
-def bitfield SHCNT32	<4:0>;
-def bitfield SHCNT64	<5:0>;
-def bitfield SIMM10	<9:0>;
-def bitfield SIMM11	<10:0>;
-def bitfield SIMM13	<12:0>;
-def bitfield SW_TRAP	<6:0>;
-def bitfield X		<12>;
+def bitfield SPECIAL_HI   < 5: 3>;
+def bitfield SPECIAL_HI   < 2: 0>;
+
+def bitfield REGIMM_HI     <20:19>;
+def bitfield REGIMM_LO     <18:16>;
+
+def bitfield RS		<25:21>;
+def bitfield RT		<20:16>;
+
+// Integer operate format(s>;
+def bitfield INTIMM	<15: 0>; // integer immediate (literal)
+def bitfield IMM	<12:12>; // immediate flag
+def bitfield INTFUNC	<11: 5>; // function code
+def bitfield RD		<15:11>; // dest reg
+
+// Memory format
+def signed bitfield MEMDISP <15: 0>; // displacement
+def        bitfield MEMFUNC <15: 0>; // function code (same field, unsigned)
+
+// Memory-format jumps
+def bitfield JMPFUNC	<15:14>; // function code (disp<15:14>)
+def bitfield JMPHINT	<13: 0>; // tgt Icache idx hint (disp<13:0>)
+
+// Branch format
+def signed bitfield BRDISP <20: 0>; // displacement
+
+// Floating-point operate format
+def bitfield FMT	  <25:21>;
+def bitfield FT		  <20:16>;
+def bitfield FS		  <15:11>;
+def bitfield FD		  <10: 6>;
+
+def bitfield FP_FULLFUNC  <15: 5>; // complete function code
+    def bitfield FP_TRAPMODE  <15:13>; // trapping mode
+    def bitfield FP_ROUNDMODE <12:11>; // rounding mode
+    def bitfield FP_TYPEFUNC  <10: 5>; // type+func: handiest for decoding
+        def bitfield FP_SRCTYPE   <10: 9>; // source reg type
+        def bitfield FP_SHORTFUNC < 8: 5>; // short function code
+        def bitfield FP_SHORTFUNC_TOP2 <8:7>; // top 2 bits of short func code
+
+// PALcode format
+def bitfield PALFUNC	<25: 0>; // function code
+
+// EV5 PAL instructions:
+// HW_LD/HW_ST
+def bitfield HW_LDST_PHYS  <15>; // address is physical
+def bitfield HW_LDST_ALT   <14>; // use ALT_MODE IPR
+def bitfield HW_LDST_WRTCK <13>; // HW_LD only: fault if no write acc
+def bitfield HW_LDST_QUAD  <12>; // size: 0=32b, 1=64b
+def bitfield HW_LDST_VPTE  <11>; // HW_LD only: is PTE fetch
+def bitfield HW_LDST_LOCK  <10>; // HW_LD only: is load locked
+def bitfield HW_LDST_COND  <10>; // HW_ST only: is store conditional
+def signed bitfield HW_LDST_DISP  <9:0>; // signed displacement
+
+// HW_REI
+def bitfield HW_REI_TYP <15:14>; // type: stalling vs. non-stallingk
+def bitfield HW_REI_MBZ <13: 0>; // must be zero
+
+// HW_MTPR/MW_MFPR
+def bitfield HW_IPR_IDX <15:0>;	 // IPR index
+
+// M5 instructions
+def bitfield M5FUNC <7:0>;
