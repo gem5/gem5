@@ -7,12 +7,12 @@ output header {{
         /**
          * Base class for integer operations.
          */
-        class Branch : public SparcStaticInst
+        class Branch : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                Branch(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
+                Branch(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -41,7 +41,7 @@ def template BranchExecute {{
                 }
                 //If we have an exception for some reason,
                 //deal with it
-                catch(SparcException except)
+                catch(MipsException except)
                 {
                         //Deal with exception
                         return No_Fault;
@@ -58,7 +58,7 @@ def template BranchExecute {{
 def format Branch(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)

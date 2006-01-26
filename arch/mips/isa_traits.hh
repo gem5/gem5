@@ -26,18 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_ISA_TRAITS_HH__
-#define __ARCH_SPARC_ISA_TRAITS_HH__
+#ifndef __ARCH_MIPS_ISA_TRAITS_HH__
+#define __ARCH_MIPS_ISA_TRAITS_HH__
 
-#include "arch/sparc/faults.hh"
+#include "arch/mips/faults.hh"
 #include "base/misc.hh"
 #include "sim/host.hh"
 
 class FastCPU;
-//class FullCPU;
-//class Checkpoint;
+class FullCPU;
+class Checkpoint;
 
-#define TARGET_SPARC
+#define TARGET_MIPS
 
 template <class ISA> class StaticInst;
 template <class ISA> class StaticInstPtr;
@@ -48,7 +48,7 @@ template <class ISA> class StaticInstPtr;
 //	int ITB_ASN_ASN(uint64_t reg);
 //}
 
-class SPARCISA
+class MipsISA
 {
         public:
 
@@ -463,7 +463,7 @@ class SPARCISA
 };
 
 
-typedef SPARCISA TheISA;
+typedef MIPSISA TheISA;
 
 typedef TheISA::MachInst MachInst;
 typedef TheISA::Addr Addr;
@@ -525,4 +525,4 @@ class SyscallReturn {
 #include "arch/alpha/ev5.hh"
 #endif
 
-#endif // __ARCH_SPARC_ISA_TRAITS_HH__
+#endif // __ARCH_MIPS_ISA_TRAITS_HH__

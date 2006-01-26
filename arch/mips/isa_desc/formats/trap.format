@@ -7,12 +7,12 @@ output header {{
         /**
          * Base class for integer operations.
          */
-        class Trap : public SparcStaticInst
+        class Trap : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                Trap(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
+                Trap(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -45,7 +45,7 @@ def template TrapExecute {{
 def format Trap(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)

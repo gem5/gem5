@@ -7,12 +7,12 @@ output header {{
         /**
          * Base class for integer operations.
          */
-        class Mem : public SparcStaticInst
+        class Mem : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                Mem(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
+                Mem(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -41,7 +41,7 @@ def template MemExecute {{
                 }
                 //If we have an exception for some reason,
                 //deal with it
-                catch(SparcException except)
+                catch(MipsException except)
                 {
                         //Deal with exception
                         return No_Fault;
@@ -58,7 +58,7 @@ def template MemExecute {{
 def format Mem(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)
@@ -69,7 +69,7 @@ def format Mem(code, *opt_flags) {{
 def format Cas(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)

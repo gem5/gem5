@@ -26,15 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/sparc/isa_traits.hh"
+#include "arch/mips/isa_traits.hh"
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"
 
 // Alpha UNOP (ldq_u r31,0(r0))
-const MachInst SPARCISA::NoopMachInst = 0x2ffe0000;
+// @todo: fix to MIPS specific
+const MachInst MipsISA::NoopMachInst = 0x2ffe0000;
 
 void
-SPARCISA::RegFile::serialize(std::ostream &os)
+MipsISA::RegFile::serialize(std::ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
@@ -45,7 +46,7 @@ SPARCISA::RegFile::serialize(std::ostream &os)
 
 
 void
-AlphaISA::RegFile::unserialize(Checkpoint *cp, const std::string &section)
+MipsISA::RegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);

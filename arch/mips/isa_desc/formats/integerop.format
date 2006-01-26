@@ -7,12 +7,12 @@ output header {{
         /**
          * Base class for integer operations.
          */
-        class IntegerOp : public SparcStaticInst
+        class IntegerOp : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
+                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -46,7 +46,7 @@ def template IntegerExecute {{
                 }
                 //If we have an exception for some reason,
                 //deal with it
-                catch(SparcException except)
+                catch(MipsException except)
                 {
                         //Deal with exception
                         return No_Fault;
@@ -82,7 +82,7 @@ def format IntegerOp(code, *opt_flags) {{
         for (marker, value) in (('ivValue', '0'), ('icValue', '0'),
                        ('xvValue', '0'), ('xcValue', '0')):
                 code.replace(marker, value)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)
@@ -102,7 +102,7 @@ def format IntegerOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
         for (marker, value) in (('ivValue', ivValue), ('icValue', icValue),
                        ('xvValue', xvValue), ('xcValue', xcValue)):
                 code.replace(marker, value)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)
