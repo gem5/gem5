@@ -185,20 +185,291 @@ decode OPCODE_HI default FailUnimpl::unknown() {
 
     0x2: decode OPCODE_LO default FailUnimpl::reserved(){
 
-      0x0: decode RS {
-        //Table A-11 MIPS32 COP0 Encoding of rs Field
+      //Table A-11 MIPS32 COP0 Encoding of rs Field
+      0x0: decode RS_MSB {
+        0x0: decode RS {
+          0x0: mfc0({{ }});
+          0xC: mtc0({{ }});
+          0xA: rdpgpr({{ }});
+
+          0xB: decode SC {
+            0x0: di({{ }});
+            0x1: ei({{ }});
+          }
+
+          0xE: wrpgpr({{ }});
+        }
+
+        //Table A-12 MIPS32 COP0 Encoding of Function Field When rs=CO
+        0x1: decode FUNCTION {
+          0x01: tlbr({{ }});
+          0x02: tlbwi({{ }});
+          0x06: tlbwr({{ }});
+          0x08: tlbp({{ }});
+          0x18: eret({{ }});
+          0x1F: deret({{ }});
+          0x20: wait({{ }});
+        }
       }
 
-      0x1: decode RS {
-        //Table A-13 MIPS32 COP1 Encoding of rs Field
+      //Table A-13 MIPS32 COP1 Encoding of rs Field
+      0x1: decode RS_MSB {
+
+        0x0: decode RS_HI {
+          0x0: decode RS_LO {
+            0x0: mfc1({{ }});
+            0x2: cfc1({{ }});
+            0x3: mfhc1({{ }});
+            0x4: mtc1({{ }});
+            0x6: ctc1({{ }});
+            0x7: mftc1({{ }});
+          }
+
+          0x1: decode ND {
+            0x0: decode TF {
+              0x0: bc1f({{ }});
+              0x1: bc1t({{ }});
+            }
+
+            0x1: decode TF {
+              0x0: bc1fl({{ }});
+              0x1: bc1tl({{ }});
+            }
+          }
+        }
+
+        0x1: decode RS_HI {
+          0x2: decode RS_LO {
+
+            //Table A-14 MIPS32 COP1 Encoding of Function Field When rs=S
+            //(( single-word ))
+            0x0: decode RS_HI {
+              0x0: decode RS_LO {
+                0x0: add_fmt({{ }});
+                0x1: sub_fmt({{ }});
+                0x2: mul_fmt({{ }});
+                0x3: div_fmt({{ }});
+                0x4: sqrt_fmt({{ }});
+                0x5: abs_fmt({{ }});
+                0x6: mov_fmt({{ }});
+                0x7: neg_fmt({{ }});
+              }
+
+              0x1: decode RS_LO {
+                //only legal for 64 bit
+                format mode64 {
+                  0x0: round_l({{ }});
+                  0x1: trunc_l({{ }});
+                  0x2: ceil_l({{ }});
+                  0x3: floor_l({{ }});
+                }
+
+                0x4: round_w({{ }});
+                0x5: trunc_w({{ }});
+                0x6: ceil_w({{ }});
+                0x7: floor_w({{ }});
+              }
+
+              0x2: decode RS_LO {
+                0x1: decode MOVCF {
+                  0x0: movf_fmt({{ }});
+                  0x1: movt_fmt({{ }});
+                }
+
+                0x2: movz({{ }});
+                0x3: movn({{ }});
+
+                format mode64 {
+                  0x2: recip({{ }});
+                  0x3: rsqrt{{ }});
+                }
+              }
+
+              0x4: decode RS_LO {
+                0x1: cvt_d({{ }});
+                0x4: cvt_w({{ }});
+
+                //only legal for 64 bit
+                format mode64 {
+                  0x5: cvt_l({{ }});
+                  0x6: cvt_ps({{ }});
+                }
+              }
+            }
+
+            //Table A-15 MIPS32 COP1 Encoding of Function Field When rs=D
+            0x1: decode RS_HI {
+              0x0: decode RS_LO {
+                0x0: add_fmt({{ }});
+                0x1: sub_fmt({{ }});
+                0x2: mul_fmt({{ }});
+                0x3: div_fmt({{ }});
+                0x4: sqrt_fmt({{ }});
+                0x5: abs_fmt({{ }});
+                0x6: mov_fmt({{ }});
+                0x7: neg_fmt({{ }});
+              }
+
+              0x1: decode RS_LO {
+                //only legal for 64 bit
+                format mode64 {
+                  0x0: round_l({{ }});
+                  0x1: trunc_l({{ }});
+                  0x2: ceil_l({{ }});
+                  0x3: floor_l({{ }});
+                }
+
+                0x4: round_w({{ }});
+                0x5: trunc_w({{ }});
+                0x6: ceil_w({{ }});
+                0x7: floor_w({{ }});
+              }
+
+              0x2: decode RS_LO {
+                0x1: decode MOVCF {
+                  0x0: movf_fmt({{ }});
+                  0x1: movt_fmt({{ }});
+                }
+
+                0x2: movz({{ }});
+                0x3: movn({{ }});
+
+                format mode64 {
+                  0x5: recip({{ }});
+                  0x6: rsqrt{{ }});
+                }
+              }
+
+              0x4: decode RS_LO {
+                0x0: cvt_s({{ }});
+                0x4: cvt_w({{ }});
+
+                //only legal for 64 bit
+                format mode64 {
+                  0x5: cvt_l({{ }});
+                }
+              }
+            }
+
+            //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=W
+            0x4: decode FUNCTION {
+              0x10: cvt_s({{ }});
+              0x10: cvt_d({{ }});
+            }
+
+            //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=L1
+            //Note: "1. Format type L is legal only if 64-bit floating point operations
+            //are enabled."
+            0x5: decode FUNCTION_HI {
+              0x10: cvt_s({{ }});
+              0x11: cvt_d({{ }});
+            }
+
+            //Table A-17 MIPS64 COP1 Encoding of Function Field When rs=PS1
+            //Note: "1. Format type PS is legal only if 64-bit floating point operations
+            //are enabled. "
+            0x6: decode RS_HI {
+              0x0: decode RS_LO {
+                0x0: add_fmt({{ }});
+                0x1: sub_fmt({{ }});
+                0x2: mul_fmt({{ }});
+                0x5: abs_fmt({{ }});
+                0x6: mov_fmt({{ }});
+                0x7: neg_fmt({{ }});
+              }
+
+              0x2: decode RS_LO {
+                0x1: decode MOVCF {
+                  0x0: movf_fmt({{ }});
+                  0x1: movt_fmt({{ }});
+                }
+
+                0x2: movz({{ }});
+                0x3: movn({{ }});
+              }
+
+              0x4: decode RS_LO {
+                0x0: cvt_s_pu({{ }});
+              }
+
+              0x5: decode RS_LO {
+                0x0: cvt_s_pl({{ }});
+                0x4: pll_s_pl({{ }});
+                0x5: plu_s_pl({{ }});
+                0x6: pul_s_pl({{ }});
+                0x7: puu_s_pl({{ }});
+              }
+            }
       }
 
-      0x2: decode RS {
-        //Table A-19 MIPS32 COP2 Encoding of rs Field
+      //Table A-19 MIPS32 COP2 Encoding of rs Field
+      0x2: decode RS_MSB {
+        0x0: decode RS_HI {
+          0x0: decode RS_LO {
+            0x0: mfc2({{ }});
+            0x2: cfc2({{ }});
+            0x3: mfhc2({{ }});
+            0x4: mtc2({{ }});
+            0x6: ctc2({{ }});
+            0x7: mftc2({{ }});
+          }
+
+          0x1: decode ND {
+            0x0: decode TF {
+              0x0: bc2f({{ }});
+              0x1: bc2t({{ }});
+            }
+
+            0x1: decode TF {
+              0x0: bc2fl({{ }});
+              0x1: bc2tl({{ }});
+            }
+          }
+        }
       }
 
+      //Table A-20 MIPS64 COP1X Encoding of Function Field 1
+      //Note: "COP1X instructions are legal only if 64-bit floating point
+      //operations are enabled."
       0x3: decode FUNCTION_HI {
-        //Table A-20 MIPS64 COP1X Encoding of Function Field 1
+        0x0: decode FUNCTION_LO {
+          0x0: lwxc1({{ }});
+          0x1: ldxc1({{ }});
+          0x5: luxc1({{ }});
+        }
+
+        0x1: decode FUNCTION_LO {
+          0x0: swxc1({{ }});
+          0x1: sdxc1({{ }});
+          0x5: suxc1({{ }});
+          0x7: prefx({{ }});
+        }
+
+        0x3: alnv_ps({{ }});
+
+        0x4: decode FUNCTION_LO {
+          0x0: madd_s({{ }});
+          0x1: madd_d({{ }});
+          0x6: madd_ps({{ }});
+        }
+
+        0x5: decode FUNCTION_LO {
+          0x0: msub_s({{ }});
+          0x1: msub_d({{ }});
+          0x6: msub_ps({{ }});
+        }
+
+        0x6: decode FUNCTION_LO {
+          0x0: nmadd_s({{ }});
+          0x1: nmadd_d({{ }});
+          0x6: nmadd_ps({{ }});
+        }
+
+        0x7: decode FUNCTION_LO {
+          0x0: nmsub_s({{ }});
+          0x1: nmsub_d({{ }});
+          0x6: nmsub_ps({{ }});
+        }
       }
 
       //MIPS obsolete instructions
@@ -209,34 +480,38 @@ decode OPCODE_HI default FailUnimpl::unknown() {
     };
 
     0x3: decode OPCODE_LO default FailUnimpl::reserved(){
-        format FailUnimpl{
-            0x0: reserved_inst_exception({{ }})
-            0x1: reserved_inst_exception({{ }})
-            0x2: reserved_inst_exception({{ }})
-            0x3: reserved_inst_exception({{ }})
-            0x5: reserved_inst_exception({{ }})
-            0x6: reserved_inst_exception({{ }})
-        };
 
+        //Table A-5 MIPS32 SPECIAL2 Encoding of Function Field
         0x4: decode FUNCTION_HI {
-            0x0:;
-            0x1:;
-            0x2:;
-            0x3:;
-            0x4:;
-            0x5:;
-            0x6:;
+
+            0x0: decode FUNCTION_LO {
+              0x0: madd({{ }});
+              0x1: maddu({{ }});
+              0x2: mult({{ }});
+              0x4: msub({{ }});
+              0x5: msubu({{ }});
+            }
+
+            0x4: decode FUNCTION_LO {
+              0x0: clz({{ }});
+              0x1: clo({{ }});
+            }
+
+            0x7: decode FUNCTION_LO {
+              0x7: sdbbp({{ }});
+            }
         }
 
+        //Table A-6 MIPS32 SPECIAL3 Encoding of Function Field for Release 2 of the Architecture
         0x7: decode FUNCTION_HI {
-          //Table A-6 MIPS32 SPECIAL31 Encoding of Function Field for Release 2 of the Architecture
+
           0x0: decode FUNCTION_LO {
             0x1: ext({{ }});
             0x4: ins({{ }});
           }
 
+          //Table A-10 MIPS32 BSHFL Encoding of sa Field
           0x4: decode SA {
-            //Table A-10 MIPS32 BSHFL Encoding of sa Field
             0x02: wsbh({{ }});
             0x10: seb({{ }});
             0x18: seh({{ }});
@@ -259,7 +534,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x6: lhu({{ }});
         };
 
-        0x7: FailUnimpl::reserved_inst_exception({{ }});
+        0x7: FailUnimpl::reserved({{ }});
     };
 
     0x5: decode OPCODE_LO default FailUnimpl::reserved(){
@@ -272,9 +547,9 @@ decode OPCODE_HI default FailUnimpl::unknown() {
         };
 
         format FailUnimpl{
-            0x4: reserved_inst_exception({{ }});
-            0x5: reserved_inst_exception({{ }});
-            0x2: cache({{ }});
+            0x4: reserved({{ }});
+            0x5: reserved({{ }});
+            0x7: cache({{ }});
         };
 
     };
@@ -285,15 +560,6 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x1: lwc1({{ }});
             0x5: ldc1({{ }});
         };
-
-        format FailUnimpl{
-            0x2: lwc2({{ }});
-            0x3: pref({{ }});
-            0x4: reserved_inst_exception({{ }});
-            0x6: ldc2({{ }});
-            0x7: reserved_inst_exception({{ }});
-        };
-
     };
 
     0x7: decode OPCODE_LO default FailUnimpl::reserved(){
@@ -303,15 +569,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x5: sdc1({{ }});
         };
 
-        format FailUnimpl{
-            0x2: swc2({{ }});
-            0x3: reserved_inst_exception({{ }});
-            0x4: reserved_inst_exception({{ }});
-            0x6: sdc2({{ }});
-            0x7: reserved_inst_exception({{ }});
-        };
-
-    };
-
+    }
 }
+
 
