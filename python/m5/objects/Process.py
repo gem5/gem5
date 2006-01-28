@@ -3,6 +3,7 @@ class Process(SimObject):
     type = 'Process'
     abstract = True
     output = Param.String('cout', 'filename for stdout/stderr')
+    system = Param.System(Parent.any, "system process will run on")
 
 class LiveProcess(Process):
     type = 'LiveProcess'

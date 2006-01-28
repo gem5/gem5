@@ -39,6 +39,7 @@ class AlphaLinuxProcess : public LiveProcess
     /// Constructor.
     AlphaLinuxProcess(const std::string &name,
                       ObjectFile *objFile,
+                      System *system,
                       int stdin_fd, int stdout_fd, int stderr_fd,
                       std::vector<std::string> &argv,
                       std::vector<std::string> &envp);

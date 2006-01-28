@@ -41,11 +41,14 @@
 #include "cpu/smt.hh"
 #include "encumbered/cpu/full/thread.hh"
 #include "encumbered/eio/eio.hh"
-#include "encumbered/mem/functional/main.hh"
+#include "mem/page_table.hh"
+#include "mem/functional/physical.hh"
+#include "mem/functional/proxy.hh"
 #include "sim/builder.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 #ifdef TARGET_ALPHA
 #include "arch/alpha/alpha_tru64_process.hh"
@@ -67,18 +70,12 @@ using namespace std;
 int num_processes = 0;
 
 Process::Process(const string &nm,
+                 System *_system,
                  int stdin_fd, 	// initial I/O descriptors
                  int stdout_fd,
                  int stderr_fd)
-    : SimObject(nm)
+    : SimObject(nm), system(_system)
 {
-    // allocate memory space
-    memory = new MainMemory(nm + ".MainMem");
-
-    // allocate initial register file
-    init_regs = new RegFile;
-    memset(init_regs, 0, sizeof(RegFile));
-
     // initialize first 3 fds (stdin, stdout, stderr)
     fd_map[STDIN_FILENO] = stdin_fd;
     fd_map[STDOUT_FILENO] = stdout_fd;
@@ -91,8 +88,10 @@ Process::Process(const string &nm,
 
     mmap_start = mmap_end = 0;
     nxm_start = nxm_end = 0;
+    pTable = new PageTable(system);
     // other parameters will be initialized when the program is loaded
 }
+
 
 void
 Process::regStats()
@@ -145,12 +144,7 @@ Process::registerExecContext(ExecContext *xc)
     int myIndex = execContexts.size();
     execContexts.push_back(xc);
 
-    if (myIndex == 0) {
-        // copy process's initial regs struct
-        xc->regs = *init_regs;
-    }
-
-    // return CPU number to caller and increment available CPU count
+    // return CPU number to caller
     return myIndex;
 }
 
@@ -158,7 +152,9 @@ void
 Process::startup()
 {
     if (execContexts.empty())
-        return;
+        fatal("Process %s is not associated with any CPUs!\n", name());
+
+    initVirtMem = new ProxyMemory<FunctionalMemory>(system->physmem, pTable);
 
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
@@ -249,23 +245,26 @@ DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 
 static void
 copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
-                FunctionalMemory *memory)
+                FunctionalMemory *func)
 {
     for (int i = 0; i < strings.size(); ++i) {
-        memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
-        memory->writeString(data_ptr, strings[i].c_str());
+        func->prot_write(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
+        func->writeString(data_ptr, strings[i].c_str());
         array_ptr += sizeof(Addr);
         data_ptr += strings[i].size() + 1;
     }
     // add NULL terminator
     data_ptr = 0;
-    memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
+
+    func->prot_write(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
 }
 
-LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
+LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
+                         System *_system,
                          int stdin_fd, int stdout_fd, int stderr_fd,
-                         vector<string> &argv, vector<string> &envp)
-    : Process(nm, stdin_fd, stdout_fd, stderr_fd)
+                         vector<string> &_argv, vector<string> &_envp)
+    : Process(nm, _system, stdin_fd, stdout_fd, stderr_fd),
+      objFile(_objFile), argv(_argv), envp(_envp)
 {
     prog_fname = argv[0];
 
@@ -274,10 +273,18 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
     text_size = objFile->textSize();
     data_base = objFile->dataBase();
     data_size = objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(data_base + data_size, VMPageSize);
+    brk_point = = roundUp(data_base + data_size, VMPageSize);
 
-    // load object file into target memory
-    objFile->loadSections(memory);
+    // Set up stack.  On Alpha, stack goes below text section.  This
+    // code should get moved to some architecture-specific spot.
+    stack_base = text_base - (409600+4096);
+
+    // Set up region for mmaps.  Tru64 seems to start just above 0 and
+    // grow up from there.
+    mmap_start = mmap_end = 0x10000;
+
+    // Set pointer for next thread stack.  Reserve 8M for main stack.
+    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
     // load up symbols, if any... these may be used for debugging or
     // profiling.
@@ -290,17 +297,15 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
             debugSymbolTable = NULL;
         }
     }
+}
 
-    // Set up stack.  On Alpha, stack goes below text section.  This
-    // code should get moved to some architecture-specific spot.
-    stack_base = text_base - (409600+4096);
+void
+LiveProcess::startup()
+{
+    Process::startup();
 
-    // Set up region for mmaps.  Tru64 seems to start just above 0 and
-    // grow up from there.
-    mmap_start = mmap_end = 0x10000;
-
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+    // load object file into target memory
+    objFile->loadSections(initVirtMem);
 
     // Calculate how much space we need for arg & env arrays.
     int argv_array_size = sizeof(Addr) * (argv.size() + 1);
@@ -325,6 +330,8 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
     // align it
     stack_min &= ~7;
     stack_size = stack_base - stack_min;
+    // map memory
+    pTable->allocate(stack_min, stack_size);
 
     // map out initial stack contents
     Addr argv_array_base = stack_min + sizeof(uint64_t); // room for argc
@@ -334,10 +341,12 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
 
     // write contents to stack
     uint64_t argc = argv.size();
-    memory->access(Write, stack_min, &argc, sizeof(uint64_t));
+    initVirtMem->prot_write(stack_min, (uint8_t*)&argc, sizeof(uint64_t));
 
-    copyStringArray(argv, argv_array_base, arg_data_base, memory);
-    copyStringArray(envp, envp_array_base, env_data_base, memory);
+    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+
+    RegFile *init_regs = &(execContexts[0]->regs);
 
     init_regs->intRegFile[ArgumentReg0] = argc;
     init_regs->intRegFile[ArgumentReg1] = argv_array_base;
@@ -345,11 +354,13 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
     init_regs->intRegFile[GlobalPointerReg] = objFile->globalPointer();
     init_regs->pc = prog_entry;
     init_regs->npc = prog_entry + sizeof(MachInst);
+
+    num_processes++;
 }
 
 
 LiveProcess *
-LiveProcess::create(const string &nm,
+LiveProcess::create(const string &nm, System *system,
                     int stdin_fd, int stdout_fd, int stderr_fd,
                     string executable,
                     vector<string> &argv, vector<string> &envp)
@@ -362,17 +373,20 @@ LiveProcess::create(const string &nm,
 
     // check object type & set up syscall emulation pointer
     if (objFile->getArch() == ObjectFile::Alpha) {
+
         switch (objFile->getOpSys()) {
           case ObjectFile::Tru64:
-            process = new AlphaTru64Process(nm, objFile,
+            process = new AlphaTru64Process(nm, objFile, system,
                                             stdin_fd, stdout_fd, stderr_fd,
                                             argv, envp);
+
             break;
 
           case ObjectFile::Linux:
-            process = new AlphaLinuxProcess(nm, objFile,
+            process = new AlphaLinuxProcess(nm, objFile, system,
                                             stdin_fd, stdout_fd, stderr_fd,
                                             argv, envp);
+
             break;
 
           default:
@@ -398,6 +412,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
     Param<string> input;
     Param<string> output;
     VectorParam<string> env;
+    SimObjectParam<System *> system;
 
 END_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
 
@@ -408,7 +423,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LiveProcess)
     INIT_PARAM(executable, "executable (overrides cmd[0] if set)"),
     INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
     INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
-    INIT_PARAM(env, "environment settings")
+    INIT_PARAM(env, "environment settings"),
+    INIT_PARAM(system, "system")
 
 END_INIT_SIM_OBJECT_PARAMS(LiveProcess)
 
@@ -435,7 +451,7 @@ CREATE_SIM_OBJECT(LiveProcess)
 
     stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
 
-    return LiveProcess::create(getInstanceName(),
+    return LiveProcess::create(getInstanceName(), system,
                                stdin_fd, stdout_fd, stderr_fd,
                                (string)executable == "" ? cmd[0] : executable,
                                cmd, env);

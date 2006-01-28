@@ -76,19 +76,13 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 }
 #else
-ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid)
+ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
+                         FunctionalMemory *_mem, Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
-      process(_process), mem(process->getMemory()), asid(_asid),
-      func_exe_inst(0), storeCondFailures(0)
-{
-    memset(&regs, 0, sizeof(RegFile));
-}
-
-ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
-                         FunctionalMemory *_mem, int _asid)
-    : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
+      system(_system), mem(_mem),
+      process(_process),
+      asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));

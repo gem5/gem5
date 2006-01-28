@@ -28,15 +28,17 @@
 
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
-#include "base/remote_gdb.hh"
 #include "cpu/exec_context.hh"
-#include "kern/kernel_stats.hh"
-#include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
-#include "targetarch/vtophys.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 #include "base/trace.hh"
+#if FULL_SYSTEM
+#include "base/remote_gdb.hh"
+#include "kern/kernel_stats.hh"
+#include "mem/functional/memory_control.hh"
+#include "targetarch/vtophys.hh"
+#endif
 
 using namespace std;
 
@@ -45,12 +47,18 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p->name), memctrl(p->memctrl), physmem(p->physmem),
-      init_param(p->init_param), numcpus(0), params(p)
+    : SimObject(p->name), physmem(p->physmem), numcpus(0),
+#if FULL_SYSTEM
+      memctrl(p->memctrl), init_param(p->init_param),
+#else
+      page_ptr(0),
+#endif
+      params(p)
 {
     // add self to global system list
     systemList.push_back(this);
 
+#if FULL_SYSTEM
     kernelSymtab = new SymbolTable;
     consoleSymtab = new SymbolTable;
     palSymtab = new SymbolTable;
@@ -123,7 +131,7 @@ System::System(Params *p)
     DPRINTF(Loader, "Kernel loaded...\n");
 
     Addr addr = 0;
-#ifndef NDEBUG
+#ifdef DEBUG
     consolePanicEvent = addConsoleFuncEvent<BreakPCEvent>("panic");
 #endif
 
@@ -157,14 +165,17 @@ System::System(Params *p)
     } else
         panic("could not find hwrpb\n");
 
+    kernelBinning = new Kernel::Binning(this);
+
+#endif // FULL_SYSTEM
+
     // increment the number of running systms
     numSystemsRunning++;
-
-    kernelBinning = new Kernel::Binning(this);
 }
 
 System::~System()
 {
+#if FULL_SYSTEM
     delete kernelSymtab;
     delete consoleSymtab;
     delete kernel;
@@ -176,6 +187,8 @@ System::~System()
 #ifdef DEBUG
     delete consolePanicEvent;
 #endif
+
+#endif // FULL_SYSTEM
 }
 
 
@@ -213,6 +226,7 @@ System::~System()
 Addr
 System::fixFuncEventAddr(Addr addr)
 {
+#if FULL_SYSTEM
     // mask for just the opcode, Ra, and Rb fields (not the offset)
     const uint32_t inst_mask = 0xffff0000;
     // ldah gp,X(pv): opcode 9, Ra = 29, Rb = 27
@@ -234,9 +248,13 @@ System::fixFuncEventAddr(Addr addr)
     } else {
         return addr;
     }
+#else
+    panic("System::fixFuncEventAddr needs to be rewritten "
+          "to work with syscall emulation");
+#endif // FULL_SYSTEM}
 }
 
-
+#if FULL_SYSTEM
 void
 System::setAlphaAccess(Addr access)
 {
@@ -263,6 +281,8 @@ System::breakpoint()
 
 int rgdb_wait = -1;
 
+#endif // FULL_SYSTEM
+
 int
 System::registerExecContext(ExecContext *xc, int id)
 {
@@ -282,6 +302,7 @@ System::registerExecContext(ExecContext *xc, int id)
     execContexts[id] = xc;
     numcpus++;
 
+#if FULL_SYSTEM
     RemoteGDB *rgdb = new RemoteGDB(this, xc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
     gdbl->listen();
@@ -297,6 +318,7 @@ System::registerExecContext(ExecContext *xc, int id)
     }
 
     remoteGDB[id] = rgdb;
+#endif // FULL_SYSTEM
 
     return id;
 }
@@ -320,34 +342,52 @@ System::replaceExecContext(ExecContext *xc, int id)
     }
 
     execContexts[id] = xc;
+#if FULL_SYSTEM
     remoteGDB[id]->replaceExecContext(xc);
+#endif // FULL_SYSTEM
 }
+
+#if !FULL_SYSTEM
+Addr
+System::new_page()
+{
+    Addr return_addr = page_ptr << LogVMPageSize;
+    ++page_ptr;
+    return return_addr;
+}
+#endif
 
 void
 System::regStats()
 {
+#if FULL_SYSTEM
     kernelBinning->regStats(name() + ".kern");
+#endif // FULL_SYSTEM
 }
 
 void
 System::serialize(ostream &os)
 {
+#if FULL_SYSTEM
     kernelBinning->serialize(os);
 
     kernelSymtab->serialize("kernel_symtab", os);
     consoleSymtab->serialize("console_symtab", os);
     palSymtab->serialize("pal_symtab", os);
+#endif // FULL_SYSTEM
 }
 
 
 void
 System::unserialize(Checkpoint *cp, const string &section)
 {
+#if FULL_SYSTEM
     kernelBinning->unserialize(cp, section);
 
     kernelSymtab->unserialize("kernel_symtab", cp, section);
     consoleSymtab->unserialize("console_symtab", cp, section);
     palSymtab->unserialize("pal_symtab", cp, section);
+#endif // FULL_SYSTEM
 }
 
 void
@@ -370,9 +410,11 @@ printSystems()
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
 
+    SimObjectParam<PhysicalMemory *> physmem;
+
+#if FULL_SYSTEM
     Param<Tick> boot_cpu_frequency;
     SimObjectParam<MemoryController *> memctrl;
-    SimObjectParam<PhysicalMemory *> physmem;
 
     Param<string> kernel;
     Param<string> console;
@@ -388,14 +430,18 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
     Param<bool> bin;
     VectorParam<string> binned_fns;
     Param<bool> bin_int;
+#endif // FULL_SYSTEM
 
 END_DECLARE_SIM_OBJECT_PARAMS(System)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(System)
 
+    INIT_PARAM(physmem, "physical memory")
+
+#if FULL_SYSTEM
+    ,
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(memctrl, "memory controller"),
-    INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(console, "file that contains the console code"),
     INIT_PARAM(pal, "file that contains palcode"),
@@ -408,6 +454,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(System)
     INIT_PARAM_DFLT(bin, "is this system to be binned", false),
     INIT_PARAM(binned_fns, "functions to be broken down and binned"),
     INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
+#endif // FULL_SYSTEM
 
 END_INIT_SIM_OBJECT_PARAMS(System)
 
@@ -415,9 +462,10 @@ CREATE_SIM_OBJECT(System)
 {
     System::Params *p = new System::Params;
     p->name = getInstanceName();
+    p->physmem = physmem;
+#if FULL_SYSTEM
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->memctrl = memctrl;
-    p->physmem = physmem;
     p->kernel_path = kernel;
     p->console_path = console;
     p->palcode = pal;
@@ -429,6 +477,7 @@ CREATE_SIM_OBJECT(System)
     p->bin = bin;
     p->binned_fns = binned_fns;
     p->bin_int = bin_int;
+#endif // FULL_SYSTEM
     return new System(p);
 }
 

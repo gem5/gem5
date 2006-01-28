@@ -31,13 +31,12 @@
 
 #include "config/full_system.hh"
 #include "mem/functional/functional.hh"
+#include "mem/mem_interface.hh"
 #include "mem/mem_req.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 #include "targetarch/byte_swap.hh"
 
-// forward declaration: see functional_memory.hh
-class FunctionalMemory;
 class PhysicalMemory;
 class BaseCPU;
 
@@ -123,11 +122,12 @@ class ExecContext
     // it belongs.  For full-system mode, this is the system CPU ID.
     int cpu_id;
 
-#if FULL_SYSTEM
+    System *system;
     FunctionalMemory *mem;
+
+#if FULL_SYSTEM
     AlphaITB *itb;
     AlphaDTB *dtb;
-    System *system;
 
     // the following two fields are redundant, since we can always
     // look them up through the system pointer, but we'll leave them
@@ -147,8 +147,6 @@ class ExecContext
 
 #else
     Process *process;
-
-    FunctionalMemory *mem;	// functional storage for process address space
 
     // Address space ID.  Note that this is used for TIMING cache
     // simulation only; all functional memory accesses should use
@@ -186,9 +184,8 @@ class ExecContext
     ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
                 AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
 #else
-    ExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
-    ExecContext(BaseCPU *_cpu, int _thread_num, FunctionalMemory *_mem,
-                int _asid);
+    ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
+                FunctionalMemory *_mem, Process *_process, int _asid);
 #endif
     virtual ~ExecContext();
 
@@ -230,28 +227,19 @@ class ExecContext
     int getInstAsid() { return asid; }
     int getDataAsid() { return asid; }
 
-    Fault dummyTranslation(MemReqPtr &req)
-    {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return No_Fault;
-    }
     Fault translateInstReq(MemReqPtr &req)
     {
-        return dummyTranslation(req);
+        return process->pTable->translate(req);
     }
+
     Fault translateDataReadReq(MemReqPtr &req)
     {
-        return dummyTranslation(req);
+        return process->pTable->translate(req);
     }
+
     Fault translateDataWriteReq(MemReqPtr &req)
     {
-        return dummyTranslation(req);
+        return process->pTable->translate(req);
     }
 
 #endif
@@ -334,7 +322,9 @@ class ExecContext
 
     Fault instRead(MemReqPtr &req)
     {
-        return mem->read(req, inst);
+        panic("instRead not implemented");
+        // return funcPhysMem->read(req, inst);
+        return No_Fault;
     }
 
     //
