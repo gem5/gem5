@@ -636,9 +636,9 @@ CpuModel('SimpleCPU', 'simple_cpu_exec.cc',
 CpuModel('FastCPU', 'fast_cpu_exec.cc',
          '#include "cpu/fast/cpu.hh"',
          { 'CPU_exec_context': 'FastCPU' })
-CpuModel('FullCPU', 'full_cpu_exec.cc',
-         '#include "encumbered/cpu/full/dyn_inst.hh"',
-         { 'CPU_exec_context': 'DynInst' })
+#CpuModel('FullCPU', 'full_cpu_exec.cc',
+#         '#include "encumbered/cpu/full/dyn_inst.hh"',
+#         { 'CPU_exec_context': 'DynInst' })
 CpuModel('AlphaFullCPU', 'alpha_o3_exec.cc',
          '#include "cpu/o3/alpha_dyn_inst.hh"',
          { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })

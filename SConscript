@@ -48,7 +48,6 @@ base_sources = Split('''
         arch/alpha/alpha_o3_exec.cc
 	arch/alpha/fast_cpu_exec.cc
 	arch/alpha/simple_cpu_exec.cc
-	arch/alpha/full_cpu_exec.cc
 	arch/alpha/faults.cc
 	arch/alpha/isa_traits.cc
 
@@ -125,41 +124,6 @@ base_sources = Split('''
         cpu/trace/opt_cpu.cc
         cpu/trace/trace_cpu.cc
 
-	encumbered/cpu/full/bpred.cc
-	encumbered/cpu/full/commit.cc
-	encumbered/cpu/full/cpu.cc
-	encumbered/cpu/full/create_vector.cc
-	encumbered/cpu/full/cv_spec_state.cc
-	encumbered/cpu/full/dd_queue.cc
-	encumbered/cpu/full/dep_link.cc
-	encumbered/cpu/full/dispatch.cc
-	encumbered/cpu/full/dyn_inst.cc
-	encumbered/cpu/full/execute.cc
-	encumbered/cpu/full/fetch.cc
-	encumbered/cpu/full/floss_reasons.cc
-	encumbered/cpu/full/fu_pool.cc
-	encumbered/cpu/full/inst_fifo.cc
-	encumbered/cpu/full/instpipe.cc
-	encumbered/cpu/full/issue.cc
-	encumbered/cpu/full/ls_queue.cc
-	encumbered/cpu/full/machine_queue.cc
-        encumbered/cpu/full/pipetrace.cc
-        encumbered/cpu/full/readyq.cc
-        encumbered/cpu/full/reg_info.cc
-        encumbered/cpu/full/rob_station.cc
-        encumbered/cpu/full/spec_memory.cc
-        encumbered/cpu/full/spec_state.cc
-        encumbered/cpu/full/storebuffer.cc
-        encumbered/cpu/full/writeback.cc
-        encumbered/cpu/full/iq/iq_station.cc
-        encumbered/cpu/full/iq/iqueue.cc
-        encumbered/cpu/full/iq/segmented/chain_info.cc
-        encumbered/cpu/full/iq/segmented/chain_wire.cc
-        encumbered/cpu/full/iq/segmented/iq_seg.cc
-        encumbered/cpu/full/iq/segmented/iq_segmented.cc
-        encumbered/cpu/full/iq/segmented/seg_chain.cc
-        encumbered/cpu/full/iq/seznec/iq_seznec.cc
-        encumbered/cpu/full/iq/standard/iq_standard.cc
 	encumbered/mem/functional/main.cc
 
 	mem/base_hier.cc
@@ -232,6 +196,44 @@ base_sources = Split('''
 	sim/stat_control.cc
 	sim/system.cc
 	sim/trace_context.cc
+        ''')
+
+full_cpu_sources = Split('''
+	arch/alpha/full_cpu_exec.cc
+	encumbered/cpu/full/bpred.cc
+	encumbered/cpu/full/commit.cc
+	encumbered/cpu/full/cpu.cc
+	encumbered/cpu/full/create_vector.cc
+	encumbered/cpu/full/cv_spec_state.cc
+	encumbered/cpu/full/dd_queue.cc
+	encumbered/cpu/full/dep_link.cc
+	encumbered/cpu/full/dispatch.cc
+	encumbered/cpu/full/dyn_inst.cc
+	encumbered/cpu/full/execute.cc
+	encumbered/cpu/full/fetch.cc
+	encumbered/cpu/full/floss_reasons.cc
+	encumbered/cpu/full/inst_fifo.cc
+	encumbered/cpu/full/instpipe.cc
+	encumbered/cpu/full/issue.cc
+	encumbered/cpu/full/ls_queue.cc
+	encumbered/cpu/full/machine_queue.cc
+        encumbered/cpu/full/pipetrace.cc
+        encumbered/cpu/full/readyq.cc
+        encumbered/cpu/full/reg_info.cc
+        encumbered/cpu/full/rob_station.cc
+        encumbered/cpu/full/spec_memory.cc
+        encumbered/cpu/full/spec_state.cc
+        encumbered/cpu/full/storebuffer.cc
+        encumbered/cpu/full/writeback.cc
+        encumbered/cpu/full/iq/iq_station.cc
+        encumbered/cpu/full/iq/iqueue.cc
+        encumbered/cpu/full/iq/segmented/chain_info.cc
+        encumbered/cpu/full/iq/segmented/chain_wire.cc
+        encumbered/cpu/full/iq/segmented/iq_seg.cc
+        encumbered/cpu/full/iq/segmented/iq_segmented.cc
+        encumbered/cpu/full/iq/segmented/seg_chain.cc
+        encumbered/cpu/full/iq/seznec/iq_seznec.cc
+        encumbered/cpu/full/iq/standard/iq_standard.cc
         ''')
 
 # MySql sources
@@ -393,8 +395,7 @@ env.Command(Split('''arch/alpha/decoder.cc
 		     arch/alpha/decoder.hh
                      arch/alpha/alpha_o3_exec.cc
 		     arch/alpha/fast_cpu_exec.cc
-                     arch/alpha/simple_cpu_exec.cc
-                     arch/alpha/full_cpu_exec.cc'''),
+                     arch/alpha/simple_cpu_exec.cc'''),
             Split('''arch/alpha/isa_desc
 		     arch/isa_parser.py'''),
             '$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/alpha')

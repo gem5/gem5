@@ -30,9 +30,6 @@
 #include <iomanip>
 
 #include "sim/param.hh"
-#include "encumbered/cpu/full/dyn_inst.hh"
-#include "encumbered/cpu/full/spec_state.hh"
-#include "encumbered/cpu/full/issue.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/exec_context.hh"
 #include "base/loader/symtab.hh"
