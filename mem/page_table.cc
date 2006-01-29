@@ -1,0 +1,131 @@
+/*
+ * Copyright (c) 2003 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ * Definitions of page table.
+ */
+#include <string>
+#include <map>
+#include <fstream>
+
+#include "base/bitfield.hh"
+#include "base/intmath.hh"
+#include "base/trace.hh"
+#include "mem/mem_cmd.hh"
+#include "mem/mem_req.hh"
+#include "mem/page_table.hh"
+#include "sim/builder.hh"
+#include "sim/sim_object.hh"
+#include "sim/system.hh"
+
+using namespace std;
+
+PageTable::PageTable(System *_system, Addr _pageSize)
+    : pageSize(_pageSize), offsetMask(mask(FloorLog2(_pageSize))),
+      system(_system)
+{
+    assert(IsPowerOf2(pageSize));
+}
+
+PageTable::~PageTable()
+{
+}
+
+Fault
+PageTable::page_check(Addr addr, int size) const
+{
+    if (size < sizeof(uint64_t)) {
+        if (!IsPowerOf2(size)) {
+            panic("Invalid request size!\n");
+            return Machine_Check_Fault;
+        }
+
+        if ((size - 1) & addr)
+            return Alignment_Fault;
+    }
+    else {
+        if ((addr & (VMPageSize - 1)) + size > VMPageSize) {
+            panic("Invalid request size!\n");
+            return Machine_Check_Fault;
+        }
+
+        if ((sizeof(uint64_t) - 1) & addr)
+            return Alignment_Fault;
+    }
+
+    return No_Fault;
+}
+
+
+
+
+void
+PageTable::allocate(Addr vaddr, int size)
+{
+    // starting address must be page aligned
+    assert(pageOffset(vaddr) == 0);
+
+    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+        std::map<Addr,Addr>::iterator iter = pTable.find(vaddr);
+
+        if (iter != pTable.end()) {
+            // already mapped
+            fatal("PageTable::allocate: address 0x%x already mapped", vaddr);
+        }
+
+        pTable[vaddr] = system->new_page();
+    }
+}
+
+
+
+bool
+PageTable::translate(Addr vaddr, Addr &paddr)
+{
+    Addr page_addr = pageAlign(vaddr);
+    std::map<Addr,Addr>::iterator iter = pTable.find(page_addr);
+
+    if (iter == pTable.end()) {
+        return false;
+    }
+
+    paddr = iter->second + pageOffset(vaddr);
+    return true;
+}
+
+
+Fault
+PageTable::translate(MemReqPtr &req)
+{
+    assert(pageAlign(req->vaddr + req->size - 1) == pageAlign(req->vaddr));
+    if (!translate(req->vaddr, req->paddr)) {
+        return Machine_Check_Fault;
+    }
+    return page_check(req->paddr, req->size);
+}

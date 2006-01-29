@@ -169,6 +169,7 @@ base_sources = Split('''
 	mem/mem_debug.cc
 	mem/mem_req.cc
 	mem/memory_interface.cc
+	mem/page_table.cc
 	mem/bus/base_interface.cc
 	mem/bus/bus.cc
 	mem/bus/bus_bridge.cc
@@ -202,6 +203,8 @@ base_sources = Split('''
 	mem/cache/tags/split_lru.cc
 	mem/cache/tags/split_lifo.cc
 	mem/functional/functional.cc
+	mem/functional/physical.cc
+	mem/functional/proxy.cc
 	mem/timing/base_memory.cc
 	mem/timing/memory_builder.cc
 	mem/timing/simple_mem_bank.cc
@@ -227,6 +230,7 @@ base_sources = Split('''
 	sim/startup.cc
 	sim/stat_context.cc
 	sim/stat_control.cc
+	sim/system.cc
 	sim/trace_context.cc
         ''')
 
@@ -296,9 +300,6 @@ full_system_sources = Split('''
 	kern/tru64/tru64_system.cc
 
 	mem/functional/memory_control.cc
-	mem/functional/physical.cc
-
-	sim/system.cc
         ''')
 
 # turbolaser encumbered sources
