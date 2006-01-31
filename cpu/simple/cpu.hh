@@ -80,13 +80,13 @@ class SimpleCPU : public BaseCPU
       protected:
 
         virtual bool recvTiming(Packet &pkt)
-        { return cpu->recvTiming(pkt); }
+        { return cpu->processCacheCompletion(pkt); }
 
         virtual Tick recvAtomic(Packet &pkt)
-        { return cpu->recvAtomic(pkt); }
+        { return cpu->processCacheCompletion(pkt); }
 
         virtual void recvFunctional(Packet &pkt)
-        { cpu->recvFunctional(pkt); }
+        { cpu->processCacheCompletion(pkt); }
 
         virtual void recvStatusChange(Status status)
         { cpu->recvStatusChange(status); }
@@ -192,17 +192,11 @@ class SimpleCPU : public BaseCPU
     bool interval_stats;
 #endif
 
-    // L1 instruction cache
-    MemInterface *icacheInterface;
-
-    // L1 data cache
-    MemInterface *dcacheInterface;
-
     // current instruction
     MachInst inst;
 
-    // Refcounted pointer to the one memory request.
-    MemReqPtr memReq;
+    CpuRequest *req;
+    Packet *pkt;
 
     // Pointer to the sampler that is telling us to switchover.
     // Used to signal the completion of the pipe drain and schedule

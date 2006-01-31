@@ -115,7 +115,7 @@ SimpleCPU::CacheCompletionEvent::description()
 
 SimpleCPU::SimpleCPU(Params *p)
     : BaseCPU(p), tickEvent(this, p->width), xc(NULL),
-      cacheCompletionEvent(this)
+      cacheCompletionEvent(this), dcache_port(this), icache_port(this)
 {
     _status = Idle;
 #if FULL_SYSTEM
@@ -130,10 +130,12 @@ SimpleCPU::SimpleCPU(Params *p)
     icacheInterface = p->icache_interface;
     dcacheInterface = p->dcache_interface;
 
-    memReq = new MemReq();
-    memReq->xc = xc;
-    memReq->asid = 0;
-    memReq->data = new uint8_t[64];
+    req = new CpuRequest();
+    pkt = new Packet();
+
+    req->asid = 0;
+    pkt->req = req;
+    pkt->data = new uint8_t[64];
 
     numInst = 0;
     startNumInst = 0;
@@ -704,16 +706,20 @@ SimpleCPU::tick()
 #define IFETCH_FLAGS(pc)	0
 #endif
 
-        memReq->cmd = Read;
-        memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
-                     IFETCH_FLAGS(xc->regs.pc));
+        pkt->cmd = Read;
+        req->paddr = xc->regs.pc & ~3;
+        pkt->size = sizeof(uint32_t);
 
+/*	memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
+                     IFETCH_FLAGS(xc->regs.pc));
+*/
+//NEED NEW TRANSLATION HERE
         fault = xc->translateInstReq(memReq);
 
         if (fault == No_Fault)
             fault = xc->mem->read(memReq, inst);
 
-        if (icacheInterface && fault == No_Fault) {
+/*	if (icacheInterface && fault == No_Fault) {
             memReq->completionEvent = NULL;
 
             memReq->time = curTick;
@@ -723,13 +729,23 @@ SimpleCPU::tick()
             // Ugly hack to get an event scheduled *only* if the access is
             // a miss.  We really should add first-class support for this
             // at some point.
-            if (result != MA_HIT && icacheInterface->doEvents()) {
+                if (result != MA_HIT && icacheInterface->doEvents()) {
                 memReq->completionEvent = &cacheCompletionEvent;
                 lastIcacheStall = curTick;
                 unscheduleTickEvent();
                 _status = IcacheMissStall;
                 return;
             }
+        }
+*/
+        bool success = icache_port.sendTiming(pkt);
+        if (!success)
+        {
+            //Need to wait for retry
+            lastIcacheStall = curTick;
+            unscheduleTickEvent();
+            _status = IcacheMissStall;
+            return;
         }
     }
 
