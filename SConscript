@@ -386,6 +386,25 @@ for opt in env.ExportOptions:
 
 ###################################################
 #
+# Add an SCons scanner for ISA files
+#
+###################################################
+def ISAScan():
+   return SCons.Scanner.Classic("ISAScan",
+                                "$ISASUFFIXES",
+                                "SRCDIR",
+                                '^[ \t]*##[ \t]*include[ \t]*"([^>"]+)"')
+
+def ISAPath(env, dir, a=None):
+   return (Dir(env['SRCDIR']), Dir('.'))   
+
+iscan = Scanner(function = ISAScan().scan, skeys = [".isa", ".ISA"],
+                path_function = ISAPath)
+env.Append(SCANNERS = iscan)
+
+ 
+###################################################
+#
 # Special build rules.
 #
 ###################################################
