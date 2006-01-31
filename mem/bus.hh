@@ -45,15 +45,15 @@ class Bus : public MemObject
 {
     /** Function called by the port when the bus is recieving a Timing
         transaction.*/
-    SendResult recvTiming(Packet &pkt, int id);
+    bool recvTiming(Packet &pkt, int id);
 
     /** Function called by the port when the bus is recieving a Atomic
         transaction.*/
-    SendResult recvAtomic(Packet &pkt, int id);
+    Tick recvAtomic(Packet &pkt, int id);
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
-    SendResult recvFunctional(Packet &pkt, int id);
+    void recvFunctional(Packet &pkt, int id);
 
     /** Function called by the port when the bus is recieving a status change.*/
     void recvStatusChange(Port::Status status, int id);
@@ -79,17 +79,17 @@ class Bus : public MemObject
 
         /** When reciving a timing request from the peer port (at id),
             pass it to the bus. */
-        virtual SendResult recvTiming(Packet &pkt)
+        virtual bool recvTiming(Packet &pkt)
         { return bus->recvTiming(pkt, id); }
 
         /** When reciving a Atomic requestfrom the peer port (at id),
             pass it to the bus. */
-        virtual SendResult recvAtomic(Packet &pkt)
+        virtual Tick recvAtomic(Packet &pkt)
         { return bus->recvAtomic(pkt, id); }
 
         /** When reciving a Functional requestfrom the peer port (at id),
             pass it to the bus. */
-        virtual SendResult recvFunctional(Packet &pkt)
+        virtual void recvFunctional(Packet &pkt)
         { return bus->recvFunctional(pkt, id); }
 
         /** When reciving a status changefrom the peer port (at id),

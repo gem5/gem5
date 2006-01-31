@@ -87,25 +87,13 @@ class Port
   protected:
 
     /** Called to recive a timing call from the peer port. */
-    virtual SendResult recvTiming(Packet &pkt) = 0;
-
-    /** Virtual function that can be used to handle scheduling an event
-        to send the recvTiming at a given time.  This is for direct
-        connection without a interconnect.  The bus will override
-        this in it's port class because the bus does the timing.
-        This is used to insert timing when an interconnect doesn't
-        have it's own event queue.
-    */
-    virtual SendResult recvTiming(Packet &pkt, Tick t)
-    {
-        // schedule event to call recvTiming(pkt) @ tick t
-    }
+    virtual bool recvTiming(Packet &pkt) = 0;
 
     /** Called to recive a atomic call from the peer port. */
-    virtual SendResult recvAtomic(Packet &pkt) = 0;
+    virtual Tick recvAtomic(Packet &pkt) = 0;
 
     /** Called to recive a functional call from the peer port. */
-    virtual SendResult recvFunctional(Packet &pkt) = 0;
+    virtual void recvFunctional(Packet &pkt) = 0;
 
     /** Called to recieve a status change from the peer port. */
     virtual void recvStatusChange(Status status) = 0;
@@ -146,21 +134,13 @@ class Port
         case a cache has a higher priority request come in while waiting for
         the bus to arbitrate.
     */
-    SendResult sendTiming(Packet &pkt) { return peer->recvTiming(pkt); }
-
-    /** This function is identical to the sendTiming function, accept it
-        provides a time when the recvTiming should be called.  The
-        peer->recvTimimng will schedule the event, if it's device handles the
-        timing (bus) it will be overloaded by the bus type port to handle it
-        properly.
-    */
-    SendResult sendTiming(Packet &pkt, Tick t) { return peer->recvTiming(pkt, t); }
+    bool sendTiming(Packet &pkt) { return peer->recvTiming(pkt); }
 
     /** Function called by the associated device to send an atomic access,
         an access in which the data is moved and the state is updated in one
         cycle, without interleaving with other memory accesses.
     */
-    SendResult sendAtomic(Packet &pkt)
+    Tick sendAtomic(Packet &pkt)
         { return peer->recvAtomic(pkt); }
 
     /** Function called by the associated device to send a functional access,
@@ -168,7 +148,7 @@ class Port
         memory system, without affecting the current state of any block
         or moving the block.
     */
-    SendResult sendFunctional(Packet &pkt)
+    void sendFunctional(Packet &pkt)
         { return peer->recvFunctional(pkt); }
 
     /** Called by the associated device to send a status change to the device

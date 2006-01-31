@@ -37,34 +37,41 @@
 class Request
 {
 
-    /** The virtual address of the request. */
-    Addr vaddr;
     /** The physical address of the request. */
     Addr paddr;
 
-    /** whether this req came from the CPU or not */
-    bool nic_req;
-
-     /** The address space ID. */
-    int asid;
-    /** The related execution context. */
-    ExecContext *xc;
+    /** whether this req came from the CPU or not  **DO we need this??***/
+    bool nicReq;
 
     /** The size of the request. */
     int size;
 
-    /** The return value of store conditional. */
-    uint64_t result;
-
-    /** The cpu number for statistics. */
-    int cpu_num;
-    /** The requesting  thread id. */
-    int  thread_num;
     /** The time this request was started. Used to calculate latencies. */
     Tick time;
 
+    /** Destination address if this is a block copy. */
+    Addr copyDest;
+};
+
+class CpuRequest : public Request
+{
+    /** The virtual address of the request. */
+    Addr vaddr;
+
+    /** The address space ID. */
+    int asid;
+
+    /** The return value of store conditional. */
+    uint64_t scResult;
+
+    /** The cpu number for statistics. */
+    int cpuNum;
+
+    /** The requesting  thread id. */
+    int  threadNum;
+
     /** program counter of initiating access; for tracing/debugging */
     Addr pc;
-}
+};
 
 #endif // __MEM_REQUEST_HH__
