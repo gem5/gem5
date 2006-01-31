@@ -40,6 +40,8 @@
 #include "base/range.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
+#include "mem/request.hh"
 
 class Bus : public MemObject
 {

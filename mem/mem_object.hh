@@ -35,6 +35,7 @@
 #define __MEM_MEM_OBJECT_HH__
 
 #include "sim/sim_object.hh"
+#include "mem/port.hh"
 
 /**
  * The base MemoryObject class, allows for an accesor function to a
