@@ -92,7 +92,7 @@ class Bus : public MemObject
         /** When reciving a Functional requestfrom the peer port (at id),
             pass it to the bus. */
         virtual void recvFunctional(Packet &pkt)
-        { return bus->recvFunctional(pkt, id); }
+        { bus->recvFunctional(pkt, id); }
 
         /** When reciving a status changefrom the peer port (at id),
             pass it to the bus. */

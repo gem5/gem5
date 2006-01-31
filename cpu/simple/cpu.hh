@@ -63,6 +63,40 @@ namespace Trace {
 
 class SimpleCPU : public BaseCPU
 {
+    class CpuPort : public Port
+    {
+
+        SimpleCPU *cpu;
+
+      public:
+
+        CpuPort(SimpleCPU *_cpu)
+            : cpu(_cpu)
+        { }
+
+      protected:
+
+        virtual bool recvTiming(Packet &pkt)
+        { return cpu->recvTiming(pkt); }
+
+        virtual Tick recvAtomic(Packet &pkt)
+        { return cpu->recvAtomic(pkt); }
+
+        virtual void recvFunctional(Packet &pkt)
+        { cpu->recvFunctional(pkt); }
+
+        virtual void recvStatusChange(Status status)
+        { cpu->recvStatusChange(status); }
+
+    };
+
+    CpuPort icache_port;
+    CpuPort dcache_port;
+
+    bool recvTiming(Packet &pkt);
+    Tick recvAtomic(Packet &pkt);
+    void recvFunctional(Packet &pkt);
+
   public:
     // main simulation loop (one cycle)
     void tick();
