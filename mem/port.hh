@@ -46,6 +46,14 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+/** The immediate result of a Send call.  Can be used to determine if a fast path
+    access can occur, or if a retry may come. */
+enum SendResult
+{
+    Success,
+    Failure
+};
+
 /**
  * Ports are used to interface memory objects to
  * each other.  They will always come in pairs, and we refer to the other

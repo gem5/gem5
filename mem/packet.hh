@@ -35,6 +35,21 @@
 #ifndef __MEM_PACKET_HH__
 #define __MEM_PACKET_HH__
 
+
+/** List of all commands associated with a packet. */
+enum Command
+{
+    Read,
+    Write
+};
+
+/** The result of a particular pakets request. */
+enum PacketResult
+{
+    Success,
+    BadAddress
+};
+
 /**
  * A Packet is the structure to handle requests between two levels
  * of the memory system.  The Request is a global object that trancends
