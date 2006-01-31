@@ -41,6 +41,7 @@ class PciConfigAll;
 class IntrControl;
 class SimConsole;
 class Uart;
+class System;
 
 class Platform : public SimObject
 {
@@ -53,6 +54,9 @@ class Platform : public SimObject
 
     /** Pointer to the UART, set by the uart */
     Uart *uart;
+
+    /** Pointer to the system for info about the memory system. */
+    System *system;
 
   public:
     Platform(const std::string &name, IntrControl *intctrl, PciConfigAll *pci);
