@@ -36,6 +36,9 @@
 #include "cpu/pc_event.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/static_inst.hh"
+#include "mem/packet.hh"
+#include "mem/port.hh"
+#include "mem/request.hh"
 #include "sim/eventq.hh"
 
 // forward declarations
