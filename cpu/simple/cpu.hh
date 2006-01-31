@@ -80,10 +80,10 @@ class SimpleCPU : public BaseCPU
       protected:
 
         virtual bool recvTiming(Packet &pkt)
-        { return cpu->processCacheCompletion(pkt); }
+        { cpu->processCacheCompletion(pkt); return true; }
 
         virtual Tick recvAtomic(Packet &pkt)
-        { return cpu->processCacheCompletion(pkt); }
+        { cpu->processCacheCompletion(pkt); return CurTick; }
 
         virtual void recvFunctional(Packet &pkt)
         { cpu->processCacheCompletion(pkt); }
@@ -95,10 +95,6 @@ class SimpleCPU : public BaseCPU
 
     CpuPort icache_port;
     CpuPort dcache_port;
-
-    bool recvTiming(Packet &pkt);
-    Tick recvAtomic(Packet &pkt);
-    void recvFunctional(Packet &pkt);
 
   public:
     // main simulation loop (one cycle)
