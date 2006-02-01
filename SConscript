@@ -389,6 +389,8 @@ for opt in env.ExportOptions:
 # Add an SCons scanner for ISA files
 #
 ###################################################
+import SCons.Scanner
+
 def ISAScan():
    return SCons.Scanner.Classic("ISAScan",
                                 "$ISASUFFIXES",
