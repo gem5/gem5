@@ -1,4 +1,4 @@
-; Copyright (c) 2003-2004 The Regents of The University of Michigan
+; Copyright (c) 2003-2004, 2006 The Regents of The University of Michigan
 ; All rights reserved.
 ;
 ; Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 
 (c-add-style "m5"
 	     '((c-basic-offset . 4)
+               (indent-tabs-mode . nil)
 	       (c-offsets-alist . ((substatement-open . 0)
 				   (inline-open . 0)
 				   (block-open . -4)
