@@ -220,7 +220,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         Fault error;
         error = this->mem->read(req, data);
-        data = gtoh(data);
+        data = LittleEndianGuest::gtoh(data);
         return error;
     }
 
@@ -277,7 +277,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
 #endif
 
-        return this->mem->write(req, (T)htog(data));
+        return this->mem->write(req, (T)LittleEndianGuest::htog(data));
     }
 
     template <class T>

@@ -26,6 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+namespace LittleEndian {}
+using namespace LittleEndian;
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #if defined(__OpenBSD__)

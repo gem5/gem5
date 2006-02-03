@@ -39,6 +39,7 @@
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
+#include "sim/byteswap.hh"
 #include "targetarch/vtophys.hh"
 
 #define TIMER_FREQUENCY 1193180
@@ -82,8 +83,8 @@ FreebsdSystem::doCalibrateClocks(ExecContext *xc)
     uint8_t *ppc = physmem->dma_addr(ppc_paddr, sizeof(uint32_t));
     uint8_t *timer = physmem->dma_addr(timer_paddr, sizeof(uint32_t));
 
-    *(uint32_t *)ppc = htog((uint32_t)Clock::Frequency);
-    *(uint32_t *)timer = htog((uint32_t)TIMER_FREQUENCY);
+    *(uint32_t *)ppc = LittleEndianGuest::htog((uint32_t)Clock::Frequency);
+    *(uint32_t *)timer = LittleEndianGuest::htog((uint32_t)TIMER_FREQUENCY);
 }
 
 

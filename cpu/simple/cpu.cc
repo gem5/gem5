@@ -54,6 +54,7 @@
 #include "kern/kernel_stats.hh"
 #include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
+#include "sim/byteswap.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
@@ -74,6 +75,8 @@
 #endif // FULL_SYSTEM
 
 using namespace std;
+//The SimpleCPU does alpha only
+using namespace LittleEndianGuest;
 
 
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c, int w)

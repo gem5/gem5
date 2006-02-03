@@ -26,6 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+namespace LittleEndian {}
+using namespace LittleEndian;
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>	// for host open() flags

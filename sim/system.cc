@@ -152,8 +152,8 @@ System::System(Params *p)
         if (!hwrpb)
             panic("could not translate hwrpb addr\n");
 
-        *(uint64_t*)(hwrpb+0x50) = htog(params->system_type);
-        *(uint64_t*)(hwrpb+0x58) = htog(params->system_rev);
+        *(uint64_t*)(hwrpb+0x50) = LittleEndianGuest::htog(params->system_type);
+        *(uint64_t*)(hwrpb+0x58) = LittleEndianGuest::htog(params->system_rev);
     } else
         panic("could not find hwrpb\n");
 
@@ -249,7 +249,7 @@ System::setAlphaAccess(Addr access)
         if (!m5AlphaAccess)
             panic("could not translate m5AlphaAccess addr\n");
 
-        *m5AlphaAccess = htog(EV5::Phys2K0Seg(access));
+        *m5AlphaAccess = LittleEndianGuest::htog(EV5::Phys2K0Seg(access));
     } else
         panic("could not find m5AlphaAccess\n");
 }

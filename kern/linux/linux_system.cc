@@ -44,6 +44,7 @@
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
+#include "sim/byteswap.hh"
 #include "dev/platform.hh"
 #include "targetarch/arguments.hh"
 #include "targetarch/vtophys.hh"
@@ -100,7 +101,7 @@ LinuxSystem::LinuxSystem(Params *p)
         char *dp264_mv = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
 
         if (dp264_mv) {
-            *(uint32_t*)(dp264_mv+0x18) = htog((uint32_t)127);
+            *(uint32_t*)(dp264_mv+0x18) = LittleEndianGuest::htog((uint32_t)127);
         } else
             panic("could not translate dp264_mv addr\n");
 

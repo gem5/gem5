@@ -42,9 +42,6 @@
 #if FULL_SYSTEM
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/isa_traits.hh"
-//#include "arch/alpha/ev5.hh"
-
-//using namespace EV5;
 #endif
 
 template <class Impl>

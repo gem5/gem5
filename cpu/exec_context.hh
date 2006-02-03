@@ -34,7 +34,7 @@
 #include "mem/mem_req.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
-#include "targetarch/byte_swap.hh"
+#include "sim/byteswap.hh"
 
 // forward declaration: see functional_memory.hh
 class FunctionalMemory;
@@ -269,7 +269,7 @@ class ExecContext
 
         Fault error;
         error = mem->read(req, data);
-        data = gtoh(data);
+        data = LittleEndianGuest::gtoh(data);
         return error;
     }
 
@@ -319,7 +319,7 @@ class ExecContext
         }
 
 #endif
-        return mem->write(req, (T)htog(data));
+        return mem->write(req, (T)LittleEndianGuest::htog(data));
     }
 
     virtual bool misspeculating();
