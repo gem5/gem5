@@ -115,7 +115,7 @@ SimpleCPU::CacheCompletionEvent::description()
 
 SimpleCPU::SimpleCPU(Params *p)
     : BaseCPU(p), tickEvent(this, p->width), xc(NULL),
-      cacheCompletionEvent(this), dcache_port(this), icache_port(this)
+      cacheCompletionEvent(this), dcachePort(this), icachePort(this)
 {
     _status = Idle;
 #if FULL_SYSTEM
@@ -127,15 +127,9 @@ SimpleCPU::SimpleCPU(Params *p)
     xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
 #endif // !FULL_SYSTEM
 
-    icacheInterface = p->icache_interface;
-    dcacheInterface = p->dcache_interface;
-
-    req = new CpuRequest();
-    pkt = new Packet();
+    req = new CpuRequest;
 
     req->asid = 0;
-    pkt->req = req;
-    pkt->data = new uint8_t[64];
 
     numInst = 0;
     startNumInst = 0;
@@ -155,9 +149,9 @@ void
 SimpleCPU::switchOut(Sampler *s)
 {
     sampler = s;
-    if (status() == DcacheMissStall) {
+    if (status() == DcacheWaitResponse) {
         DPRINTF(Sampler,"Outstanding dcache access, waiting for completion\n");
-        _status = DcacheMissSwitch;
+        _status = DcacheWaitSwitch;
     }
     else {
         _status = SwitchedOut;
@@ -270,6 +264,18 @@ SimpleCPU::regStats()
         .prereq(dcacheStallCycles)
         ;
 
+    icacheRetryCycles
+        .name(name() + ".icache_retry_cycles")
+        .desc("ICache total retry cycles")
+        .prereq(icacheRetryCycles)
+        ;
+
+    dcacheRetryCycles
+        .name(name() + ".dcache_retry_cycles")
+        .desc("DCache total retry cycles")
+        .prereq(dcacheRetryCycles)
+        ;
+
     idleFraction = constant(1.0) - notIdleFraction;
 }
 
@@ -314,6 +320,7 @@ change_thread_state(int thread_number, int activate, int priority)
 Fault
 SimpleCPU::copySrcTranslate(Addr src)
 {
+#if 0
     static bool no_warn = true;
     int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
     // Only support block sizes of 64 atm.
@@ -343,11 +350,15 @@ SimpleCPU::copySrcTranslate(Addr src)
         xc->copySrcPhysAddr = 0;
     }
     return fault;
+#else
+    return No_Fault
+#endif
 }
 
 Fault
 SimpleCPU::copy(Addr dest)
 {
+#if 0
     static bool no_warn = true;
     int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
     // Only support block sizes of 64 atm.
@@ -389,6 +400,9 @@ SimpleCPU::copy(Addr dest)
         }
     }
     return fault;
+#else
+    return No_Fault;
+#endif
 }
 
 // precise architected memory state accessor macros
@@ -396,22 +410,38 @@ template <class T>
 Fault
 SimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    if (status() == DcacheMissStall || status() == DcacheMissSwitch) {
-        Fault fault = xc->read(memReq,data);
+    if (status() == DcacheWaitResponse || status() == DcacheWaitSwitch) {
+//	Fault fault = xc->read(memReq,data);
+        // Not sure what to check for no fault...
+        if (pkt->result == Success) {
+            memcpy(&data, pkt->data, sizeof(T));
+        }
 
         if (traceData) {
             traceData->setAddr(addr);
         }
-        return fault;
+
+        // @todo: Figure out a way to create a Fault from the packet result.
+        return No_Fault;
     }
 
-    memReq->reset(addr, sizeof(T), flags);
+//    memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
+    // NEED NEW TRANSLATION HERE
     Fault fault = xc->translateDataReadReq(memReq);
 
-    // if we have a cache, do cache access too
-    if (fault == No_Fault && dcacheInterface) {
+    // Now do the access.
+    if (fault == No_Fault) {
+        pkt = new Packet;
+        pkt->cmd = Read;
+        req->paddr = addr;
+        pkt->size = sizeof(T);
+        pkt->req = req;
+
+        sendDcacheRequest();
+    }
+/*
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
         memReq->time = curTick;
@@ -431,13 +461,15 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
             fault = xc->read(memReq, data);
 
         }
+
     } else if(fault == No_Fault) {
         // do functional access
         fault = xc->read(memReq, data);
 
     }
-
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+*/
+    // This will need a new way to tell if it has a dcache attached.
+    if (/*!dcacheInterface && */(memReq->flags & UNCACHEABLE))
         recordEvent("Uncached Read");
 
     return fault;
@@ -490,11 +522,30 @@ template <class T>
 Fault
 SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    memReq->reset(addr, sizeof(T), flags);
+//    memReq->reset(addr, sizeof(T), flags);
+    req->vaddr = addr;
+    req->time = curTick;
+    req->size = sizeof(T);
 
     // translate to physical address
+    // NEED NEW TRANSLATION HERE
     Fault fault = xc->translateDataWriteReq(memReq);
 
+    // Now do the access.
+    if (fault == No_Fault) {
+        pkt = new Packet;
+        pkt->cmd = Write;
+        pkt->size = sizeof(T);
+        pkt->req = req;
+
+        // Copy data into the packet.
+        pkt->data = new uint8_t[64];
+        memcpy(pkt->data, &data, sizeof(T));
+
+        sendDcacheRequest();
+    }
+
+/*
     // do functional access
     if (fault == No_Fault)
         fault = xc->write(memReq, data);
@@ -517,13 +568,16 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             _status = DcacheMissStall;
         }
     }
-
+*/
     if (res && (fault == No_Fault))
         *res = memReq->result;
 
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+    // This will need a new way to tell if it's hooked up to a cache or not.
+    if (/*!dcacheInterface && */(memReq->flags & UNCACHEABLE))
         recordEvent("Uncached Write");
 
+    // If the write needs to have a fault on the access, consider calling
+    // changeStatus() and changing it to "bad addr write" or something.
     return fault;
 }
 
@@ -579,39 +633,138 @@ SimpleCPU::dbg_vtophys(Addr addr)
 #endif // FULL_SYSTEM
 
 void
-SimpleCPU::processCacheCompletion()
+SimpleCPU::sendIcacheRequest()
 {
+#if 1
+    bool success = icachePort.sendTiming(pkt);
+
+    unscheduleTickEvent();
+
+    lastIcacheStall = curTick;
+
+    if (!success) {
+        // Need to wait for retry
+        _status = IcacheRetry;
+    } else {
+        // Need to wait for cache to respond
+        _status = IcacheWaitResponse;
+    }
+#else
+    Tick latency = icachePort.sendAtomic(pkt);
+
+    unscheduleTickEvent();
+    scheduleTickEvent(latency);
+
+    // Note that Icache miss cycles will be incorrect.  Unless
+    // we check the status of the packet sent (is this valid?),
+    // we won't know if the latency is a hit or a miss.
+    icacheStallCycles += latency;
+
+    _status = IcacheAccessComplete;
+#endif
+}
+
+void
+SimpleCPU::sendDcacheRequest()
+{
+    unscheduleTickEvent();
+
+#if 1
+    bool success = dcachePort.sendTiming(pkt);
+
+    lastDcacheStall = curTick;
+
+    if (!success) {
+        _status = DcacheRetry;
+    } else {
+        _status = DcacheWaitResponse;
+    }
+#else
+    Tick latency = dcachePort.sendAtomic(pkt);
+
+    scheduleTickEvent(latency);
+
+    // Note that Dcache miss cycles will be incorrect.  Unless
+    // we check the status of the packet sent (is this valid?),
+    // we won't know if the latency is a hit or a miss.
+    dcacheStallCycles += latency;
+
+    // Delete the packet right here?
+    delete pkt;
+#endif
+}
+
+void
+SimpleCPU::processResponse(Packet *response)
+{
+    // For what things is the CPU the consumer of the packet it sent out?
+    // This may create a memory leak if that's the case and it's expected of the
+    // SimpleCPU to delete its own packet.
+    pkt = response;
+
     switch (status()) {
-      case IcacheMissStall:
+      case IcacheWaitResponse:
         icacheStallCycles += curTick - lastIcacheStall;
-        _status = IcacheMissComplete;
+
+        _status = IcacheAccessComplete;
         scheduleTickEvent(1);
+
+        // Copy the icache data into the instruction itself.
+        memcpy(&inst, pkt->data, sizeof(inst));
+
+        delete pkt;
         break;
-      case DcacheMissStall:
-        if (memReq->cmd.isRead()) {
+      case DcacheWaitResponse:
+        if (req->cmd.isRead()) {
             curStaticInst->execute(this,traceData);
             if (traceData)
                 traceData->finalize();
         }
+
+        delete pkt;
+
         dcacheStallCycles += curTick - lastDcacheStall;
         _status = Running;
         scheduleTickEvent(1);
         break;
-      case DcacheMissSwitch:
+      case DcacheWaitSwitch:
         if (memReq->cmd.isRead()) {
             curStaticInst->execute(this,traceData);
             if (traceData)
                 traceData->finalize();
         }
+
+        delete pkt;
+
         _status = SwitchedOut;
         sampler->signalSwitched();
       case SwitchedOut:
         // If this CPU has been switched out due to sampling/warm-up,
         // ignore any further status changes (e.g., due to cache
         // misses outstanding at the time of the switch).
+        delete pkt;
+
         return;
       default:
         panic("SimpleCPU::processCacheCompletion: bad state");
+        break;
+    }
+}
+
+Packet *
+SimpleCPU::processRetry()
+{
+    switch(status()) {
+      case IcacheRetry:
+        icacheRetryCycles += curTick - lastIcacheStall;
+        return pkt;
+        break;
+      case DcacheRetry:
+        dcacheRetryCycles += curTick - lastDcacheStall;
+        return pkt;
+        break;
+      default:
+        panic("SimpleCPU::processRetry: bad state");
         break;
     }
 }
@@ -688,15 +841,14 @@ SimpleCPU::tick()
     xc->regs.floatRegFile.d[ZeroReg] = 0.0;
 #endif // TARGET_ALPHA
 
-    if (status() == IcacheMissComplete) {
+    if (status() == IcacheAccessComplete) {
         // We've already fetched an instruction and were stalled on an
         // I-cache miss.  No need to fetch it again.
 
         // Set status to running; tick event will get rescheduled if
         // necessary at end of tick() function.
         _status = Running;
-    }
-    else {
+    } else {
         // Try to fetch an instruction
 
         // set up memory request for instruction fetch
@@ -706,9 +858,9 @@ SimpleCPU::tick()
 #define IFETCH_FLAGS(pc)	0
 #endif
 
-        pkt->cmd = Read;
-        req->paddr = xc->regs.pc & ~3;
-        pkt->size = sizeof(uint32_t);
+        req->vaddr = xc->regs.pc & ~3;
+        req->time = curTick;
+        req->size = sizeof(MachInst);
 
 /*	memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
                      IFETCH_FLAGS(xc->regs.pc));
@@ -716,10 +868,17 @@ SimpleCPU::tick()
 //NEED NEW TRANSLATION HERE
         fault = xc->translateInstReq(memReq);
 
-        if (fault == No_Fault)
-            fault = xc->mem->read(memReq, inst);
+        if (fault == No_Fault) {
+            pkt = new Packet;
+            pkt->cmd = Read;
+            pkt->addr = req->paddr;
+            pkt->size = sizeof(MachInst);
+            pkt->req = req;
 
-/*	if (icacheInterface && fault == No_Fault) {
+            sendIcacheRequest();
+/*	    fault = xc->mem->read(memReq, inst);
+
+        if (icacheInterface && fault == No_Fault) {
             memReq->completionEvent = NULL;
 
             memReq->time = curTick;
@@ -738,14 +897,6 @@ SimpleCPU::tick()
             }
         }
 */
-        bool success = icache_port.sendTiming(pkt);
-        if (!success)
-        {
-            //Need to wait for retry
-            lastIcacheStall = curTick;
-            unscheduleTickEvent();
-            _status = IcacheMissStall;
-            return;
         }
     }
 
@@ -802,7 +953,7 @@ SimpleCPU::tick()
         // If we have a dcache miss, then we can't finialize the instruction
         // trace yet because we want to populate it with the data later
         if (traceData &&
-                !(status() == DcacheMissStall && memReq->cmd.isRead())) {
+                !(status() == DcacheWaitResponse && memReq->cmd.isRead())) {
             traceData->finalize();
         }
 
@@ -833,7 +984,7 @@ SimpleCPU::tick()
 
     assert(status() == Running ||
            status() == Idle ||
-           status() == DcacheMissStall);
+           status() == DcacheWaitResponse);
 
     if (status() == Running && !tickEvent.scheduled())
         tickEvent.schedule(curTick + cycles(1));
