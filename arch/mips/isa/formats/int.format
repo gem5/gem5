@@ -1,18 +1,33 @@
 ////////////////////////////////////////////////////////////////////
 //
-// Floating Point operate instructions
+// Integer operate instructions
 //
 
 output header {{
         /**
          * Base class for integer operations.
          */
-        class FPOp : public MipsStaticInst
+        class IntOp : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                FPOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
+                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
+        /**
+         * Derived class for integer immediate operations.
+         */
+        class IntImm : public IntOp
+        {
+                protected:
+
+                /// Constructor
+                IntegerImm(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -21,13 +36,18 @@ output header {{
 }};
 
 output decoder {{
-        std::string FPOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
                 return "Disassembly of integer instruction\n";
         }
+
+        std::string IntImm::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+                return "Disassembly of integer immediate instruction\n";
+        }
 }};
 
-def template IntegerExecute {{
+def template IntExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
                 //These are set to constants when the execute method
@@ -70,7 +90,7 @@ def template IntegerExecute {{
 }};
 
 // Primary format for integer operate instructions:
-def format FPOp(code, *opt_flags) {{
+def format IntegerOp(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         checkPriv = (code.find('checkPriv') != -1)
@@ -90,7 +110,7 @@ def format FPOp(code, *opt_flags) {{
 }};
 
 // Primary format for integer operate instructions:
-def format FPOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
+def format IntegerOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         checkPriv = (code.find('checkPriv') != -1)
