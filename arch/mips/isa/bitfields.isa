@@ -41,11 +41,11 @@ def bitfield SC       < 5: 5>;
 def bitfield OFFSET <15: 0>; // displacement
 
 // Memory-format jumps
-def bitfield JMPTARG	<25: 0>; 
-def bitfield JMPHINT	<10: 6>; 
+def bitfield JMPTARG	<25: 0>;
+def bitfield JMPHINT	<10: 6>;
 
-def bitfield SYSCALLCODE <25: 6>; 
-def bitfield TRAPCODE    <15:13>; 
+def bitfield SYSCALLCODE <25: 6>;
+def bitfield TRAPCODE    <15:13>;
 
 // M5 instructions
 def bitfield M5FUNC <7:0>;

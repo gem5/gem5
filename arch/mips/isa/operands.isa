@@ -17,8 +17,8 @@ def operands {{
     'Rs': IntRegOperandTraits('uw', 'RS', 'IsInteger', 2),
     'Rt': IntRegOperandTraits('uw', 'RT', 'IsInteger', 3),
 
-    'IntImm': IntRegOperandTraits('uw', 'INTIMM', 'IsInteger', 3),    
-    'Sa': IntRegOperandTraits('uw', 'SA', 'IsInteger', 4),    
+    'IntImm': IntRegOperandTraits('uw', 'INTIMM', 'IsInteger', 3),
+    'Sa': IntRegOperandTraits('uw', 'SA', 'IsInteger', 4),
 
     'Fd': FloatRegOperandTraits('sf', 'FD', 'IsFloating', 1),
     'Fs': FloatRegOperandTraits('sf', 'FS', 'IsFloating', 2),
