@@ -44,6 +44,11 @@ Import('env')
 
 # Base sources used by all configurations.
 base_sources = Split('''
+        mem/memory.cc
+        mem/page_table.cc
+        mem/physical.cc
+        mem/proxy.cc
+
 	arch/alpha/decoder.cc
         arch/alpha/alpha_o3_exec.cc
 	arch/alpha/fast_cpu_exec.cc
@@ -125,56 +130,6 @@ base_sources = Split('''
         cpu/trace/trace_cpu.cc
 
 	encumbered/mem/functional/main.cc
-
-	mem/base_hier.cc
-	mem/base_mem.cc
-	mem/hier_params.cc
-	mem/mem_cmd.cc
-	mem/mem_debug.cc
-	mem/mem_req.cc
-	mem/memory_interface.cc
-	mem/page_table.cc
-	mem/bus/base_interface.cc
-	mem/bus/bus.cc
-	mem/bus/bus_bridge.cc
-	mem/bus/bus_bridge_master.cc
-	mem/bus/bus_bridge_slave.cc
-	mem/bus/bus_interface.cc
-	mem/bus/dma_bus_interface.cc
-	mem/bus/dma_interface.cc
-	mem/bus/master_interface.cc
-	mem/bus/slave_interface.cc
-	mem/cache/base_cache.cc
-	mem/cache/cache.cc
-	mem/cache/cache_builder.cc
-	mem/cache/coherence/coherence_protocol.cc
-	mem/cache/coherence/uni_coherence.cc
-	mem/cache/miss/blocking_buffer.cc
-	mem/cache/miss/miss_queue.cc
-	mem/cache/miss/mshr.cc
-	mem/cache/miss/mshr_queue.cc
-        mem/cache/prefetch/base_prefetcher.cc
-        mem/cache/prefetch/prefetcher.cc
-        mem/cache/prefetch/tagged_prefetcher.cc
-	mem/cache/tags/base_tags.cc
-	mem/cache/tags/cache_tags.cc	
-	mem/cache/tags/fa_lru.cc
-	mem/cache/tags/iic.cc
-	mem/cache/tags/lru.cc
-	mem/cache/tags/repl/gen.cc
-	mem/cache/tags/repl/repl.cc
-	mem/cache/tags/split.cc
-	mem/cache/tags/split_lru.cc
-	mem/cache/tags/split_lifo.cc
-	mem/functional/functional.cc
-	mem/functional/physical.cc
-	mem/functional/proxy.cc
-	mem/timing/base_memory.cc
-	mem/timing/memory_builder.cc
-	mem/timing/simple_mem_bank.cc
-        mem/trace/itx_writer.cc
-	mem/trace/mem_trace_writer.cc
-	mem/trace/m5_writer.cc
 
         python/pyconfig.cc
         python/embedded_py.cc

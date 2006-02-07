@@ -53,6 +53,8 @@ class Request
     Addr copyDest;
 };
 
+typedef RequestPtr *Request;
+
 class CpuRequest : public Request
 {
     /** The virtual address of the request. */
