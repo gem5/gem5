@@ -83,18 +83,19 @@ class SimpleCPU : public BaseCPU
         { cpu->processCacheCompletion(pkt); return true; }
 
         virtual Tick recvAtomic(Packet &pkt)
-        { cpu->processCacheCompletion(pkt); return CurTick; }
+        { panic("CPU doesn't expect callback!"); return curTick; }
 
         virtual void recvFunctional(Packet &pkt)
-        { cpu->processCacheCompletion(pkt); }
+        { panic("CPU doesn't expect callback!"); }
 
         virtual void recvStatusChange(Status status)
         { cpu->recvStatusChange(status); }
 
+        virtual Packet *recvRetry() { return cpu->processRetry(); }
     };
 
-    CpuPort icache_port;
-    CpuPort dcache_port;
+    CpuPort icachePort;
+    CpuPort dcachePort;
 
   public:
     // main simulation loop (one cycle)
@@ -137,10 +138,12 @@ class SimpleCPU : public BaseCPU
     enum Status {
         Running,
         Idle,
-        IcacheMissStall,
-        IcacheMissComplete,
-        DcacheMissStall,
-        DcacheMissSwitch,
+        IcacheRetry,
+        IcacheWaitResponse,
+        IcacheAccessComplete,
+        DcacheRetry,
+        DcacheWaitResponse,
+        DcacheWaitSwitch,
         SwitchedOut
     };
 
@@ -161,8 +164,6 @@ class SimpleCPU : public BaseCPU
   public:
     struct Params : public BaseCPU::Params
     {
-        MemInterface *icache_interface;
-        MemInterface *dcache_interface;
         int width;
 #if FULL_SYSTEM
         AlphaITB *itb;
@@ -201,20 +202,6 @@ class SimpleCPU : public BaseCPU
 
     StaticInstPtr<TheISA> curStaticInst;
 
-    class CacheCompletionEvent : public Event
-    {
-      private:
-        SimpleCPU *cpu;
-
-      public:
-        CacheCompletionEvent(SimpleCPU *_cpu);
-
-        virtual void process();
-        virtual const char *description();
-    };
-
-    CacheCompletionEvent cacheCompletionEvent;
-
     Status status() const { return _status; }
 
     virtual void activateContext(int thread_num, int delay);
@@ -247,15 +234,25 @@ class SimpleCPU : public BaseCPU
     Stats::Average<> notIdleFraction;
     Stats::Formula idleFraction;
 
-    // number of cycles stalled for I-cache misses
+    // number of cycles stalled for I-cache responses
     Stats::Scalar<> icacheStallCycles;
     Counter lastIcacheStall;
 
-    // number of cycles stalled for D-cache misses
+    // number of cycles stalled for I-cache retries
+    Stats::Scalar<> icacheRetryCycles;
+    Counter lastIcacheRetry;
+
+    // number of cycles stalled for D-cache responses
     Stats::Scalar<> dcacheStallCycles;
     Counter lastDcacheStall;
 
-    void processCacheCompletion();
+    // number of cycles stalled for D-cache retries
+    Stats::Scalar<> dcacheRetryCycles;
+    Counter lastDcacheRetry;
+
+    void sendIcacheRequest();
+    void sendDcacheRequest();
+    void processResponse(Packet *response);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
