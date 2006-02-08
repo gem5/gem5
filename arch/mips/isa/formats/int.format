@@ -1,0 +1,70 @@
+////////////////////////////////////////////////////////////////////
+//
+// Integer operate instructions
+//
+
+output header {{
+        /**
+         * Base class for integer operations.
+         */
+        class IntOp : public MipsStaticInst
+        {
+                protected:
+
+                /// Constructor
+                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                MipsStaticInst(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
+        class IntImmOp : public MipsStaticInst
+        {
+                protected:
+                uint16_t imm;
+
+                /// Constructor
+                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
+}};
+
+output decoder {{
+        std::string IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+                return "Disassembly of integer instruction\n";
+        }
+
+        std::string IntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+                return "Disassembly of integer immediate instruction\n";
+        }
+}};
+
+// Primary format for integer operate instructions:
+def format IntOp(code, *opt_flags) {{
+        orig_code = code
+        cblk = CodeBlock(code)
+
+        //Figure out if we are creating a IntImmOp or a IntOp
+        strlen = len(name)
+        if ( name[strlen-1] = 'i' or ( name[strlen-2:] = 'iu'))
+                iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
+        else:
+                iop = InstObjParams(name, Name, 'IntImmOp', cblk, opt_flags)
+
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = OperateNopCheckDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+}};
+
+
+

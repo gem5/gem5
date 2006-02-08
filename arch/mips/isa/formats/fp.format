@@ -1,18 +1,18 @@
 ////////////////////////////////////////////////////////////////////
 //
-// Integer operate instructions
+// Floating Point operate instructions
 //
 
 output header {{
         /**
          * Base class for integer operations.
          */
-        class IntegerOp : public MipsStaticInst
+        class FPOp : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
+                FPOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -21,13 +21,13 @@ output header {{
 }};
 
 output decoder {{
-        std::string IntegerOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string FPOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
                 return "Disassembly of integer instruction\n";
         }
 }};
 
-def template IntegerExecute {{
+def template FPExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
                 //These are set to constants when the execute method
@@ -70,7 +70,7 @@ def template IntegerExecute {{
 }};
 
 // Primary format for integer operate instructions:
-def format IntegerOp(code, *opt_flags) {{
+def format FPOp(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         checkPriv = (code.find('checkPriv') != -1)
@@ -90,7 +90,7 @@ def format IntegerOp(code, *opt_flags) {{
 }};
 
 // Primary format for integer operate instructions:
-def format IntegerOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
+def format FPOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         checkPriv = (code.find('checkPriv') != -1)
