@@ -29,6 +29,10 @@
 #ifndef __ARCH_SPARC_ISA_TRAITS_HH__
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
+//This makes sure the big endian versions of certain functions are used.
+namespace BigEndianGuest {}
+using namespace BigEndianGuest;
+
 #include "arch/sparc/faults.hh"
 #include "base/misc.hh"
 #include "sim/host.hh"

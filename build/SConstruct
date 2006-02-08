@@ -223,7 +223,7 @@ env = conf.Finish()
 # value becomes sticky).
 sticky_opts = Options(args=ARGUMENTS)
 sticky_opts.AddOptions(
-    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha', 'sparc')),
+    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha', 'sparc', 'mips')),
     BoolOption('FULL_SYSTEM', 'Full-system support', False),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),

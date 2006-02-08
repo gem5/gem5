@@ -34,6 +34,7 @@
 #include "mem/mem_req.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
+#include "arch/isa_traits.hh"
 #include "sim/byteswap.hh"
 
 // forward declaration: see functional_memory.hh

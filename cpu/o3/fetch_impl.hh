@@ -29,7 +29,7 @@
 // Remove this later; used only for debugging.
 #define OPCODE(X)                       (X >> 26) & 0x3f
 
-
+#include "arch/isa_traits.hh"
 #include "sim/byteswap.hh"
 #include "cpu/exetrace.hh"
 #include "mem/base_mem.hh"
@@ -535,7 +535,7 @@ SimpleFetch<Impl>::fetch()
             assert(offset <= cacheBlkSize - instSize);
 
             // Get the instruction from the array of the cache line.
-            inst = LittleEndianGuest::gtoh(*reinterpret_cast<MachInst *>
+            inst = gtoh(*reinterpret_cast<MachInst *>
                         (&cacheData[offset]));
 
             // Create a new DynInst from the instruction fetched.

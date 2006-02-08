@@ -29,6 +29,10 @@
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
+//This makes sure the big endian versions of certain functions are used.
+namespace LittleEndianGuest {}
+using namespace LittleEndianGuest
+
 #include "arch/mips/faults.hh"
 #include "base/misc.hh"
 #include "sim/host.hh"

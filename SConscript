@@ -339,24 +339,24 @@ syscall_emulation_sources = Split('''
 #	arch/alpha/alpha_tru64_process.cc
 
 targetarch_files = Split('''
-        alpha_common_syscall_emul.hh
         alpha_linux_process.hh
         alpha_memory.hh
         alpha_tru64_process.hh
         aout_machdep.h
         arguments.hh
-        byte_swap.hh
         ecoff_machdep.h
         ev5.hh
         faults.hh
         isa_fullsys_traits.hh
         isa_traits.hh
-        osfpal.hh
         pseudo_inst.hh
         stacktrace.hh
         vptr.hh
         vtophys.hh
         ''')
+#        osfpal.hh
+#        byte_swap.hh
+#        alpha_common_syscall_emul.hh
 
 # Set up bridging headers to the architecture specific versions
 for f in targetarch_files:
@@ -367,6 +367,9 @@ for f in targetarch_files:
 arch_source = SConscript('arch/%s/SConscript' % env['TARGET_ISA'],
 	build_dir = 'build/%s/' % env['BUILD_DIR'],
 	exports = 'env', duplicate = False)
+
+# Add a flag defining what THE_ISA should be for all compilation
+env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
 # Set up complete list of sources based on configuration.
 sources = base_sources + arch_source
@@ -432,7 +435,7 @@ env.Command(Split('''
 	env['TARGET_ISA'],
 	env['TARGET_ISA'])),
 	Split('''
-	arch/%s/isa_desc
+	arch/%s/isa/main.isa
 	arch/isa_parser.py''' %
 	env['TARGET_ISA']),
 	'$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/%s' % env['TARGET_ISA'])

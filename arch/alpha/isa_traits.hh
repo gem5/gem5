@@ -29,6 +29,9 @@
 #ifndef __ARCH_ALPHA_ISA_TRAITS_HH__
 #define __ARCH_ALPHA_ISA_TRAITS_HH__
 
+namespace LittleEndianGuest {}
+using namespace LittleEndianGuest;
+
 #include "arch/alpha/faults.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
