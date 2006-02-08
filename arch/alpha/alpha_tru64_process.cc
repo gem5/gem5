@@ -26,9 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace LittleEndian {}
-using namespace LittleEndian;
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #if defined(__OpenBSD__)
@@ -44,6 +41,7 @@ using namespace LittleEndian;
 #include <string.h>	// for memset()
 #include <unistd.h>
 
+#include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/alpha_common_syscall_emul.hh"
 #include "arch/alpha/alpha_tru64_process.hh"
 #include "base/trace.hh"

@@ -26,9 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace LittleEndian {}
-using namespace LittleEndian;
-
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>	// for host open() flags
@@ -45,6 +42,7 @@ using namespace LittleEndian;
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
 
+#include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/alpha_common_syscall_emul.hh"
 #include "sim/syscall_emul.hh"
 #include "sim/root.hh"	// for curTick & ticksPerSecond
