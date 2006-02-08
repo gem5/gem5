@@ -17,7 +17,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
         0x0: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
               0x1: decode MOVCI {
-                format Move {
+                format BasicOp {
                   0: movf({{ if( xc->miscRegs.fpcr == 0) Rd = Rs}});
                   1: movt({{ if( xc->miscRegs.fpcr == 1) Rd = Rs}});
                 }
@@ -61,7 +61,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                 0x1: jalr(IsCall,IsReturn);
               }
 
-              format Move {
+              format BasicOp {
                 0x2: movz({{ if (Rt == 0) Rd = Rs; }});
                 0x3: movn({{ if (Rt != 0) Rd = Rs; }});
               }
@@ -75,10 +75,10 @@ decode OPCODE_HI default FailUnimpl::unknown() {
 
             0x2: decode FUNCTION_LO {
               format BasicOp {
-                0x0: mfhi({{ Rd = xc->miscRegs.Hi; }});
-                0x1: mthi({{ xc->miscRegs.Hi = Rs; }});
-                0x2: mflo({{ Rd = xc->miscRegs.Lo; }});
-                0x3: mtlo({{ xc->miscRegs.Lo = Rs; }});
+                0x0: mfhi({{ Rd = xc->miscRegs.hi; }});
+                0x1: mthi({{ xc->miscRegs.hi = Rs; }});
+                0x2: mflo({{ Rd = xc->miscRegs.lo; }});
+                0x3: mtlo({{ xc->miscRegs.lo = Rs; }});
               }
             };
 
@@ -86,25 +86,25 @@ decode OPCODE_HI default FailUnimpl::unknown() {
               format IntOp {
                 0x0: mult({{
                         INT64 temp1 = Rs.sw * Rt.sw;
-                        xc->miscRegs.Hi->temp1<63:32>;
-                        xc->miscRegs.Lo->temp1<31:0>
+                        xc->miscRegs.hi->temp1<63:32>;
+                        xc->miscRegs.lo->temp1<31:0>
                 }});
 
                 0x1: multu({{
                         INT64 temp1 = Rs.uw * Rt.uw;
-                        xc->miscRegs.Hi->temp1<63:32>;
-                        xc->miscRegs.Lo->temp1<31:0>
+                        xc->miscRegs.hi->temp1<63:32>;
+                        xc->miscRegs.lo->temp1<31:0>
                         Rd.sw = Rs.uw * Rt.uw;
                 }});
 
                 0x2: div({{
-                        xc->miscRegs.Hi = Rs.sw % Rt.sw;
-                        xc->miscRegs.Lo = Rs.sw / Rt.sw;
+                        xc->miscRegs.hi = Rs.sw % Rt.sw;
+                        xc->miscRegs.lo = Rs.sw / Rt.sw;
                         }});
 
                 0x3: divu({{
-                        xc->miscRegs.Hi = Rs.uw % Rt.uw;
-                        xc->miscRegs.Lo = Rs.uw / Rt.uw;
+                        xc->miscRegs.hi = Rs.uw % Rt.uw;
+                        xc->miscRegs.lo = Rs.uw / Rt.uw;
                         }});
               }
             };
@@ -213,9 +213,12 @@ decode OPCODE_HI default FailUnimpl::unknown() {
       //Table A-11 MIPS32 COP0 Encoding of rs Field
       0x0: decode RS_MSB {
         0x0: decode RS {
-          0x0: mfc0({{ }});
-          0xC: mtc0({{ }});
-          0xA: rdpgpr({{ }});
+
+           format BasicOp {
+                0x0: mfc0({{ }});
+                0xC: mtc0({{ }});
+                0xA: rdpgpr({{ }});
+            }
 
           0xB: decode SC {
             format BasicOp {
@@ -224,7 +227,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             }
           }
 
-          0xE: wrpgpr({{ }});
+          0xE: BasicOp::wrpgpr({{ }});
         }
 
         //Table A-12 MIPS32 COP0 Encoding of Function Field When rs=CO
@@ -281,43 +284,49 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             //(( single-word ))
             0x0: decode RS_HI {
               0x0: decode RS_LO {
-                0x0: add_fmt({{ }});
-                0x1: sub_fmt({{ }});
-                0x2: mul_fmt({{ }});
-                0x3: div_fmt({{ }});
-                0x4: sqrt_fmt({{ }});
-                0x5: abs_fmt({{ }});
-                0x6: mov_fmt({{ }});
-                0x7: neg_fmt({{ }});
+                format FloatOp {
+                  0x0: add_fmt({{ }});
+                  0x1: sub_fmt({{ }});
+                  0x2: mul_fmt({{ }});
+                  0x3: div_fmt({{ }});
+                  0x4: sqrt_fmt({{ }});
+                  0x5: abs_fmt({{ }});
+                  0x6: mov_fmt({{ }});
+                  0x7: neg_fmt({{ }});
+                }
               }
 
               0x1: decode RS_LO {
                 //only legal for 64 bit
-                format mode64 {
+                format Float64Op {
                   0x0: round_l({{ }});
                   0x1: trunc_l({{ }});
                   0x2: ceil_l({{ }});
                   0x3: floor_l({{ }});
                 }
 
-                0x4: round_w({{ }});
-                0x5: trunc_w({{ }});
-                0x6: ceil_w({{ }});
-                0x7: floor_w({{ }});
+                format FloatOp {
+                  0x4: round_w({{ }});
+                  0x5: trunc_w({{ }});
+                  0x6: ceil_w({{ }});
+                  0x7: floor_w({{ }});
+                }
               }
 
               0x2: decode RS_LO {
                 0x1: decode MOVCF {
-                  0x0: movf_fmt({{ }});
-                  0x1: movt_fmt({{ }});
+                  format BasicOp {
+                    0x0: movf_fmt({{ }});
+                    0x1: movt_fmt({{ }});
+                  }
                 }
 
-                format Move {
+                format BasicOp {
                   0x2: movz({{ if (Rt == 0) Rd = Rs; }});
                   0x3: movn({{ if (Rt != 0) Rd = Rs; }});
                 }
 
-                format mode64 {
+                format Float64Op {
                   0x2: recip({{ }});
                   0x3: rsqrt{{ }});
                 }
@@ -328,7 +337,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                 0x4: cvt_w({{ }});
 
                 //only legal for 64 bit
-                format mode64 {
+                format Float64Op {
                   0x5: cvt_l({{ }});
                   0x6: cvt_ps({{ }});
                 }
@@ -444,12 +453,14 @@ decode OPCODE_HI default FailUnimpl::unknown() {
       0x2: decode RS_MSB {
         0x0: decode RS_HI {
           0x0: decode RS_LO {
-            0x0: mfc2({{ }});
-            0x2: cfc2({{ }});
-            0x3: mfhc2({{ }});
-            0x4: mtc2({{ }});
-            0x6: ctc2({{ }});
-            0x7: mftc2({{ }});
+            format WarnUnimpl {
+                0x0: mfc2({{ }});
+                0x2: cfc2({{ }});
+                0x3: mfhc2({{ }});
+                0x4: mtc2({{ }});
+                0x6: ctc2({{ }});
+                0x7: mftc2({{ }});
+            }
           }
 
           0x1: decode ND {
@@ -475,50 +486,58 @@ decode OPCODE_HI default FailUnimpl::unknown() {
       //operations are enabled."
       0x3: decode FUNCTION_HI {
         0x0: decode FUNCTION_LO {
-          0x0: lwxc1({{ }});
-          0x1: ldxc1({{ }});
-          0x5: luxc1({{ }});
+                format Memory {
+                  0x0: lwxc1({{ }});
+                  0x1: ldxc1({{ }});
+                  0x5: luxc1({{ }});
+                }
         }
 
         0x1: decode FUNCTION_LO {
-          0x0: swxc1({{ }});
-          0x1: sdxc1({{ }});
-          0x5: suxc1({{ }});
-          0x7: prefx({{ }});
+                format Memory {
+                  0x0: swxc1({{ }});
+                  0x1: sdxc1({{ }});
+                  0x5: suxc1({{ }});
+                  0x7: prefx({{ }});
+                }
         }
 
-        0x3: alnv_ps({{ }});
+        format FloatOp {
+                0x3: alnv_ps({{ }});
 
-        0x4: decode FUNCTION_LO {
-          0x0: madd_s({{ }});
-          0x1: madd_d({{ }});
-          0x6: madd_ps({{ }});
-        }
+                0x4: decode FUNCTION_LO {
+                  0x0: madd_s({{ }});
+                  0x1: madd_d({{ }});
+                  0x6: madd_ps({{ }});
+                }
 
-        0x5: decode FUNCTION_LO {
-          0x0: msub_s({{ }});
-          0x1: msub_d({{ }});
-          0x6: msub_ps({{ }});
-        }
+                0x5: decode FUNCTION_LO {
+                  0x0: msub_s({{ }});
+                  0x1: msub_d({{ }});
+                  0x6: msub_ps({{ }});
+                }
 
-        0x6: decode FUNCTION_LO {
-          0x0: nmadd_s({{ }});
-          0x1: nmadd_d({{ }});
-          0x6: nmadd_ps({{ }});
-        }
+                0x6: decode FUNCTION_LO {
+                  0x0: nmadd_s({{ }});
+                  0x1: nmadd_d({{ }});
+                  0x6: nmadd_ps({{ }});
+                }
 
-        0x7: decode FUNCTION_LO {
-          0x0: nmsub_s({{ }});
-          0x1: nmsub_d({{ }});
-          0x6: nmsub_ps({{ }});
+                0x7: decode FUNCTION_LO {
+                  0x0: nmsub_s({{ }});
+                  0x1: nmsub_d({{ }});
+                  0x6: nmsub_ps({{ }});
+                }
         }
       }
 
       //MIPS obsolete instructions
-      0x4: beql({{ cond = (Rs.sq == 0); }});
-      0x5: bnel({{ cond = (Rs.sq != 0); }});
-      0x6: blezl({{ cond = (Rs.sq <= 0); }});
-      0x7: bgtzl({{ cond = (Rs.sq > 0); }});
+        format Branch {
+              0x4: beql({{ cond = (Rs.sq == 0); }});
+              0x5: bnel({{ cond = (Rs.sq != 0); }});
+              0x6: blezl({{ cond = (Rs.sq <= 0); }});
+              0x7: bgtzl({{ cond = (Rs.sq > 0); }});
+        }
     };
 
     0x3: decode OPCODE_LO default FailUnimpl::reserved() {
@@ -531,15 +550,15 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                    0x0: madd({{
                         INT64 temp1 = Hi.sw << 32 | Lo.sw >> 32;
                         temp1 = temp1 + (Rs.sw * Rt.sw);
-                        xc->miscRegs.Hi->temp1<63:32>;
-                        xc->miscRegs.Lo->temp1<31:0>
+                        xc->miscRegs.hi->temp1<63:32>;
+                        xc->miscRegs.lo->temp1<31:0>
                         }});
 
                    0x1: maddu({{
                         INT64 temp1 = Hi.uw << 32 | Lo.uw >> 32;
                         temp1 = temp1 + (Rs.uw * Rt.uw);
-                        xc->miscRegs.Hi->temp1<63:32>;
-                        xc->miscRegs.Lo->temp1<31:0>
+                        xc->miscRegs.hi->temp1<63:32>;
+                        xc->miscRegs.lo->temp1<31:0>
                         }});
 
                    0x2: mul({{ 	Rd.sw = Rs.sw * Rt.sw; 	}});
@@ -547,26 +566,28 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                    0x4: msub({{
                         INT64 temp1 = Hi.sw << 32 | Lo.sw >> 32;
                         temp1 = temp1 - (Rs.sw * Rt.sw);
-                        xc->miscRegs.Hi->temp1<63:32>;
-                        xc->miscRegs.Lo->temp1<31:0>
+                        xc->miscRegs.hi->temp1<63:32>;
+                        xc->miscRegs.lo->temp1<31:0>
                         }});
 
                    0x5: msubu({{
                         INT64 temp1 = Hi.uw << 32 | Lo.uw >> 32;
                         temp1 = temp1 - (Rs.uw * Rt.uw);
-                        xc->miscRegs.Hi->temp1<63:32>;
-                        xc->miscRegs.Lo->temp1<31:0>
+                        xc->miscRegs.hi->temp1<63:32>;
+                        xc->miscRegs.lo->temp1<31:0>
                         }});
                 }
             }
 
             0x4: decode FUNCTION_LO {
-              0x0: clz({{ }});
-              0x1: clo({{ }});
+                  format BasicOp {
+                      0x0: clz({{ }});
+                      0x1: clo({{ }});
+                  }
             }
 
             0x7: decode FUNCTION_LO {
-              0x7: sdbbp({{ }});
+              0x7: BasicOp::sdbbp({{ }});
             }
         }
 
@@ -574,19 +595,23 @@ decode OPCODE_HI default FailUnimpl::unknown() {
         0x7: decode FUNCTION_HI {
 
           0x0: decode FUNCTION_LO {
-            0x1: ext({{ }});
-            0x4: ins({{ }});
+                format Branch {
+                    0x1: ext({{ }});
+                    0x4: ins({{ }});
+                }
           }
 
           //Table A-10 MIPS32 BSHFL Encoding of sa Field
           0x4: decode SA {
-            0x02: wsbh({{ }});
-            0x10: seb({{ }});
-            0x18: seh({{ }});
+                format BasicOp {
+                    0x02: wsbh({{ }});
+                    0x10: seb({{ }});
+                    0x18: seh({{ }});
+                }
           }
 
           0x6: decode FUNCTION_LO {
-            0x7: rdhwr({{ }});
+            0x7: BasicOp::rdhwr({{ }});
           }
         }
     };
@@ -614,7 +639,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x6: swr({{ EA = Rs + disp; }},{{ Mem.ub = Rt<31:0>; }},WordAlign);
         };
 
-        format FailUnimpl {
+        format WarnUnimpl {
             0x4: reserved({{ }});
             0x5: reserved({{ }});
             0x7: cache({{ }});
