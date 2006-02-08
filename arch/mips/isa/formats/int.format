@@ -12,7 +12,22 @@ output header {{
                 protected:
 
                 /// Constructor
-                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
+                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                MipsStaticInst(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
+        class IntImmOp : public MipsStaticInst
+        {
+                protected:
+                uint16_t imm;
+
+                /// Constructor
+                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM)
                 {
                 }
 
@@ -33,39 +48,23 @@ output decoder {{
         }
 }};
 
-def template IntExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-        {
-                //Attempt to execute the instruction
-                try
-                {
-                        %(op_decl)s;
-                        %(op_rd)s;
-                        %(code)s;
-                }
-                //If we have an exception for some reason,
-                //deal with it
-                catch(MipsException except)
-                {
-                        //Deal with exception
-                        return No_Fault;
-                }
-
-                //Write the resulting state to the execution context
-                %(op_wb)s;
-
-                return No_Fault;
-        }
-}};
-
 // Primary format for integer operate instructions:
 def format IntOp(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
+
+        //Figure out if we are creating a IntImmOp or a IntOp
+        strlen = len(name)
+        if ( name[strlen-1] = 'i' or ( name[strlen-2:] = 'iu'))
+                iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
+        else:
+                iop = InstObjParams(name, Name, 'IntImmOp', cblk, opt_flags)
+
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
-        exec_output = IntegerExecute.subst(iop)
+        decode_block = OperateNopCheckDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
 }};
+
+
 
