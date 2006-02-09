@@ -1068,7 +1068,7 @@ class OperandTraits:
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
-        return type + ' ' + op_desc.munged_name + ' = 0;\n';
+        return type + ' ' + op_desc.base_name + ' = 0;\n';
 
 class IntRegOperandTraits(OperandTraits):
     def isReg(self):
@@ -1093,19 +1093,19 @@ class IntRegOperandTraits(OperandTraits):
             error(0, 'Attempt to read integer register as FP')
         if (size == self.dflt_size):
             return '%s = xc->readIntReg(this, %d);\n' % \
-                   (op_desc.munged_name, op_desc.src_reg_idx)
+                   (op_desc.base_name, op_desc.src_reg_idx)
         else:
             return '%s = bits(xc->readIntReg(this, %d), %d, 0);\n' % \
-                   (op_desc.munged_name, op_desc.src_reg_idx, size-1)
+                   (op_desc.base_name, op_desc.src_reg_idx, size-1)
 
     def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         if (type == 'float' or type == 'double'):
             error(0, 'Attempt to write integer register as FP')
         if (size != self.dflt_size and is_signed):
-            final_val = 'sext<%d>(%s)' % (size, op_desc.munged_name)
+            final_val = 'sext<%d>(%s)' % (size, op_desc.base_name)
         else:
-            final_val = op_desc.munged_name
+            final_val = op_desc.base_name
         wb = '''
         {
             %s final_val = %s;
@@ -1146,13 +1146,13 @@ class FloatRegOperandTraits(OperandTraits):
                (func, op_desc.src_reg_idx)
         if bit_select:
             return '%s = bits(%s, %d, 0);\n' % \
-                   (op_desc.munged_name, base, size-1)
+                   (op_desc.base_name, base, size-1)
         else:
-            return '%s = %s;\n' % (op_desc.munged_name, base)
+            return '%s = %s;\n' % (op_desc.base_name, base)
 
     def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        final_val = op_desc.munged_name
+        final_val = op_desc.base_name
         if (type == 'float'):
             func = 'setFloatRegSingle'
         elif (type == 'double'):
@@ -1161,7 +1161,7 @@ class FloatRegOperandTraits(OperandTraits):
             func = 'setFloatRegInt'
             type = 'uint%d_t' % self.dflt_size
             if (size != self.dflt_size and is_signed):
-                final_val = 'sext<%d>(%s)' % (size, op_desc.munged_name)
+                final_val = 'sext<%d>(%s)' % (size, op_desc.base_name)
         wb = '''
         {
             %s final_val = %s;
@@ -1194,18 +1194,18 @@ class ControlRegOperandTraits(OperandTraits):
             error(0, 'Attempt to read control register as FP')
         base = 'xc->read%s()' % self.reg_spec
         if size == self.dflt_size:
-            return '%s = %s;\n' % (op_desc.munged_name, base)
+            return '%s = %s;\n' % (op_desc.base_name, base)
         else:
             return '%s = bits(%s, %d, 0);\n' % \
-                   (op_desc.munged_name, base, size-1)
+                   (op_desc.base_name, base, size-1)
 
     def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         if (type == 'float' or type == 'double'):
             error(0, 'Attempt to write control register as FP')
-        wb = 'xc->set%s(%s);\n' % (self.reg_spec, op_desc.munged_name)
+        wb = 'xc->set%s(%s);\n' % (self.reg_spec, op_desc.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
-              op_desc.munged_name
+              op_desc.base_name
         return wb
 
 class MemOperandTraits(OperandTraits):
@@ -1220,7 +1220,7 @@ class MemOperandTraits(OperandTraits):
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
-        c = '%s %s = 0;\n' % (type, op_desc.munged_name)
+        c = '%s %s = 0;\n' % (type, op_desc.base_name)
         # Declare var to hold memory access flags.
         c += 'unsigned %s_flags = memAccessFlags;\n' % op_desc.base_name
         # If this operand is a dest (i.e., it's a store operation),
@@ -1234,16 +1234,16 @@ class MemOperandTraits(OperandTraits):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         eff_type = 'uint%d_t' % size
         return 'fault = xc->read(EA, (%s&)%s, %s_flags);\n' \
-               % (eff_type, op_desc.munged_name, op_desc.base_name)
+               % (eff_type, op_desc.base_name, op_desc.base_name)
 
     def makeWrite(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
         eff_type = 'uint%d_t' % size
         wb = 'fault = xc->write((%s&)%s, EA, %s_flags, &%s_write_result);\n' \
-               % (eff_type, op_desc.munged_name, op_desc.base_name,
+               % (eff_type, op_desc.base_name, op_desc.base_name,
                   op_desc.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
-              op_desc.munged_name
+              op_desc.base_name
         return wb
 
 class NPCOperandTraits(OperandTraits):
@@ -1251,10 +1251,10 @@ class NPCOperandTraits(OperandTraits):
         return ''
 
     def makeRead(self, op_desc):
-        return '%s = xc->readPC() + 4;\n' % op_desc.munged_name
+        return '%s = xc->readPC() + 4;\n' % op_desc.base_name
 
     def makeWrite(self, op_desc):
-        return 'xc->setNextPC(%s);\n' % op_desc.munged_name
+        return 'xc->setNextPC(%s);\n' % op_desc.base_name
 
 
 exportContextSymbols = ('IntRegOperandTraits', 'FloatRegOperandTraits',
@@ -1317,14 +1317,10 @@ class OperandDescriptor:
         self.traits = operandTraitsMap[base_name]
         # The 'effective extension' (eff_ext) is either the actual
         # extension, if one was explicitly provided, or the default.
-        # The 'munged name' replaces the '.' between the base and
-        # extension (if any) with a '_' to make a legal C++ variable name.
         if ext:
             self.eff_ext = ext
-            self.munged_name = base_name + '_' + ext
         else:
             self.eff_ext = self.traits.dflt_ext
-            self.munged_name = base_name
 
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
@@ -1467,9 +1463,10 @@ def findOperands(code):
     return operands
 
 # Munge operand names in code string to make legal C++ variable names.
-# (Will match munged_name attribute of OperandDescriptor object.)
+# This means getting rid of the type extension if any.
+# (Will match base_name attribute of OperandDescriptor object.)
 def substMungedOpNames(code):
-    return operandsWithExtRE.sub(r'\1_\2', code)
+    return operandsWithExtRE.sub(r'\1', code)
 
 def joinLists(t):
     return map(string.join, t)
