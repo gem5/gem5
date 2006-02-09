@@ -215,19 +215,66 @@ decode OPCODE_HI default FailUnimpl::unknown() {
         0x0: decode RS {
 
            format BasicOp {
-                0x0: mfc0({{ }});
-                0xC: mtc0({{ }});
-                0xA: rdpgpr({{ }});
+                0x0: mfc0({{
+                        //The contents of the coprocessor 0 register specified by the
+                        //combination of rd and sel are loaded into general register
+                        //rt. Note that not all coprocessor 0 registers support the
+                        //sel field. In those instances, the sel field must be zero.
+
+                        if (SEL > 0)
+                                panic("Can't Handle Cop0 with register select yet\n");
+
+                        uint64_t reg_num = Rd.uw;
+
+                        Rt = xc->miscRegs.cop0[reg_num];
+                        }});
+
+                0xC: mtc0({{
+                        //The contents of the coprocessor 0 register specified by the
+                        //combination of rd and sel are loaded into general register
+                        //rt. Note that not all coprocessor 0 registers support the
+                        //sel field. In those instances, the sel field must be zero.
+
+                        if (SEL > 0)
+                                panic("Can't Handle Cop0 with register select yet\n");
+
+                        uint64_t reg_num = Rd.uw;
+
+                        xc->miscRegs.cop0[reg_num] = Rt;
+                        }});
+
+                0xA: rdpgpr({{
+                        //Accessing Previous Shadow Set Register Number
+                        uint64_t prev = xc->miscRegs.cop0[SRSCtl][PSS];
+                        uint64_t reg_num = Rt.uw;
+
+                        Rd = xc->shadowIntRegFile[prev][reg_num];
+                        }});
             }
 
           0xB: decode SC {
             format BasicOp {
-                0x0: di({{ Rt.sw = xc->miscRegs.statusReg; statusReg[IE] = 0;}});
-                0x1: ei({{ Rt.sw = xc->miscRegs.statusReg; statusReg[IE] = 1;}});
+                0x0: di({{
+                        //Accessing Coprocessor 0 "Status" Register
+                        Rt.sw = xc->miscRegs.cop0[12];
+                        xc->miscRegs.cop0[12][INTERRUPT_ENABLE] = 0;
+                        }});
+
+                0x1: ei({{
+                        //Accessing Coprocessor 0 "Status" Register
+                        Rt.sw = xc->miscRegs.cop0[12];
+                        xc->miscRegs.cop0[12][INTERRUPT_ENABLE] = 1;
+                        }});
             }
           }
 
-          0xE: BasicOp::wrpgpr({{ }});
+          0xE: BasicOp::wrpgpr({{
+                        //Accessing Previous Shadow Set Register Number
+                        uint64_t prev = xc->miscRegs.cop0[SRSCtl][PSS];
+                        uint64_t reg_num = Rd.uw;
+
+                        xc->shadowIntRegFile[prev][reg_num] = Rt;
+                        }});
         }
 
         //Table A-12 MIPS32 COP0 Encoding of Function Field When rs=CO
@@ -253,12 +300,12 @@ decode OPCODE_HI default FailUnimpl::unknown() {
         0x0: decode RS_HI {
           0x0: decode RS_LO {
             format FloatOp {
-              0x0: mfc1({{ }});
-              0x2: cfc1({{ }});
-              0x3: mfhc1({{ }});
-              0x4: mtc1({{ }});
-              0x6: ctc1({{ }});
-              0x7: mftc1({{ }});
+              0x0: mfc1({{ Rt = Fs<31:0>; }});
+              0x2: cfc1({{ Rt = xc->miscRegs.fpcr[Fs];}});
+              0x3: mfhc1({{ Rt = Fs<63:32>;}});
+              0x4: mtc1({{ Fs<31:0> = Rt}});
+              0x6: ctc1({{ xc->miscRegs.fpcr[Fs] = Rt;}});
+              0x7: mftc1({{ Fs<63:32> = Rt}});
             }
           }
 
