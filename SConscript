@@ -400,7 +400,7 @@ def ISAScan():
                                 "SRCDIR",
                                 '^[ \t]*##[ \t]*include[ \t]*"([^>"]+)"')
 
-def ISAPath(env, dir, a=None):
+def ISAPath(env, dir, target=None, source=None, a=None):
    return (Dir(env['SRCDIR']), Dir('.'))   
 
 iscan = Scanner(function = ISAScan().scan, skeys = [".isa", ".ISA"],
