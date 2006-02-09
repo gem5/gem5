@@ -30,7 +30,9 @@
 #define SCHED_LIST_HH
 
 #include <list>
+#include "base/intmath.hh"
 #include "base/misc.hh"
+
 
 //  Any types you use this class for must be covered here...
 namespace {
@@ -80,7 +82,7 @@ SchedList<T>::SchedList(unsigned _size)
     size = _size;
 
     //  size must be a power of two
-    if (size & (size-1)) {
+    if (!isPowerOf2(size)) {
         panic("SchedList: size must be a power of two");
     }
 
