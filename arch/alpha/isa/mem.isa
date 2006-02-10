@@ -1,0 +1,441 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2003-2005 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+output header {{
+    /**
+     * Base class for general Alpha memory-format instructions.
+     */
+    class Memory : public AlphaStaticInst
+    {
+      protected:
+
+        /// Memory request flags.  See mem_req_base.hh.
+        unsigned memAccessFlags;
+        /// Pointer to EAComp object.
+        const StaticInstPtr<AlphaISA> eaCompPtr;
+        /// Pointer to MemAcc object.
+        const StaticInstPtr<AlphaISA> memAccPtr;
+
+        /// Constructor
+        Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
+               StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+               StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+            : AlphaStaticInst(mnem, _machInst, __opClass),
+              memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr)
+        {
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+      public:
+
+        const StaticInstPtr<AlphaISA> &eaCompInst() const { return eaCompPtr; }
+        const StaticInstPtr<AlphaISA> &memAccInst() const { return memAccPtr; }
+    };
+
+    /**
+     * Base class for memory-format instructions using a 32-bit
+     * displacement (i.e. most of them).
+     */
+    class MemoryDisp32 : public Memory
+    {
+      protected:
+        /// Displacement for EA calculation (signed).
+        int32_t disp;
+
+        /// Constructor.
+        MemoryDisp32(const char *mnem, MachInst _machInst, OpClass __opClass,
+                     StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+                     StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+            : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
+              disp(MEMDISP)
+        {
+        }
+    };
+
+
+    /**
+     * Base class for a few miscellaneous memory-format insts
+     * that don't interpret the disp field: wh64, fetch, fetch_m, ecb.
+     * None of these instructions has a destination register either.
+     */
+    class MemoryNoDisp : public Memory
+    {
+      protected:
+        /// Constructor
+        MemoryNoDisp(const char *mnem, MachInst _machInst, OpClass __opClass,
+                     StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
+                     StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+            : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
+        {
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+}};
+
+
+output decoder {{
+    std::string
+    Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
+                        flags[IsFloating] ? 'f' : 'r', RA, MEMDISP, RB);
+    }
+
+    std::string
+    MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s (r%d)", mnemonic, RB);
+    }
+}};
+
+def format LoadAddress(code) {{
+    iop = InstObjParams(name, Name, 'MemoryDisp32', CodeBlock(code))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+
+def template LoadStoreDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+
+        /**
+         * "Fake" effective address computation class for "%(mnemonic)s".
+         */
+        class EAComp : public %(base_class)s
+        {
+          public:
+            /// Constructor
+            EAComp(MachInst machInst);
+
+            %(BasicExecDeclare)s
+        };
+
+        /**
+         * "Fake" memory access instruction class for "%(mnemonic)s".
+         */
+        class MemAcc : public %(base_class)s
+        {
+          public:
+            /// Constructor
+            MemAcc(MachInst machInst);
+
+            %(BasicExecDeclare)s
+        };
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template LoadStoreConstructor {{
+    /** TODO: change op_class to AddrGenOp or something (requires
+     * creating new member of OpClass enum in op_class.hh, updating
+     * config files, etc.). */
+    inline %(class_name)s::EAComp::EAComp(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
+    {
+        %(ea_constructor)s;
+    }
+
+    inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
+    {
+        %(memacc_constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(MachInst machInst)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                          new EAComp(machInst), new MemAcc(machInst))
+    {
+        %(constructor)s;
+    }
+}};
+
+
+def template EACompExecute {{
+    Fault
+    %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == No_Fault) {
+            %(op_wb)s;
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+def template MemAccExecute {{
+    Fault
+    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_nonmem_rd)s;
+        EA = xc->getEA();
+
+        if (fault == No_Fault) {
+            %(op_mem_rd)s;
+            %(code)s;
+        }
+
+        if (fault == No_Fault) {
+            %(op_mem_wb)s;
+        }
+
+        if (fault == No_Fault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == No_Fault) {
+            %(op_nonmem_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template LoadStoreExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_nonmem_rd)s;
+        %(ea_code)s;
+
+        if (fault == No_Fault) {
+            %(op_mem_rd)s;
+            %(memacc_code)s;
+        }
+
+        if (fault == No_Fault) {
+            %(op_mem_wb)s;
+        }
+
+        if (fault == No_Fault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == No_Fault) {
+            %(op_nonmem_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template PrefetchExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_nonmem_rd)s;
+        %(ea_code)s;
+
+        if (fault == No_Fault) {
+            xc->prefetch(EA, memAccessFlags);
+        }
+
+        return No_Fault;
+    }
+}};
+
+// load instructions use Ra as dest, so check for
+// Ra == 31 to detect nops
+def template LoadNopCheckDecode {{
+ {
+     AlphaStaticInst *i = new %(class_name)s(machInst);
+     if (RA == 31) {
+         i = makeNop(i);
+     }
+     return i;
+ }
+}};
+
+
+// for some load instructions, Ra == 31 indicates a prefetch (not a nop)
+def template LoadPrefetchCheckDecode {{
+ {
+     if (RA != 31) {
+         return new %(class_name)s(machInst);
+     }
+     else {
+         return new %(class_name)sPrefetch(machInst);
+     }
+ }
+}};
+
+
+let {{
+def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
+                  base_class = 'MemoryDisp32', flags = [],
+                  decode_template = BasicDecode,
+                  exec_template = LoadStoreExecute):
+    # Segregate flags into instruction flags (handled by InstObjParams)
+    # and memory access flags (handled here).
+
+    # Would be nice to autogenerate this list, but oh well.
+    valid_mem_flags = ['LOCKED', 'NO_FAULT', 'EVICT_NEXT', 'PF_EXCLUSIVE']
+    mem_flags =  [f for f in flags if f in valid_mem_flags]
+    inst_flags = [f for f in flags if f not in valid_mem_flags]
+
+    # add hook to get effective addresses into execution trace output.
+    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
+
+    # generate code block objects
+    ea_cblk = CodeBlock(ea_code)
+    memacc_cblk = CodeBlock(memacc_code)
+    postacc_cblk = CodeBlock(postacc_code)
+
+    # Some CPU models execute the memory operation as an atomic unit,
+    # while others want to separate them into an effective address
+    # computation and a memory access operation.  As a result, we need
+    # to generate three StaticInst objects.  Note that the latter two
+    # are nested inside the larger "atomic" one.
+
+    # generate InstObjParams for EAComp object
+    ea_iop = InstObjParams(name, Name, base_class, ea_cblk, inst_flags)
+
+    # generate InstObjParams for MemAcc object
+    memacc_iop = InstObjParams(name, Name, base_class, memacc_cblk, inst_flags)
+    # in the split execution model, the MemAcc portion is responsible
+    # for the post-access code.
+    memacc_iop.postacc_code = postacc_cblk.code
+
+    # generate InstObjParams for unified execution
+    cblk = CodeBlock(ea_code + memacc_code + postacc_code)
+    iop = InstObjParams(name, Name, base_class, cblk, inst_flags)
+
+    iop.ea_constructor = ea_cblk.constructor
+    iop.ea_code = ea_cblk.code
+    iop.memacc_constructor = memacc_cblk.constructor
+    iop.memacc_code = memacc_cblk.code
+    iop.postacc_code = postacc_cblk.code
+
+    if mem_flags:
+        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
+        iop.constructor += s
+        memacc_iop.constructor += s
+
+    # (header_output, decoder_output, decode_block, exec_output)
+    return (LoadStoreDeclare.subst(iop), LoadStoreConstructor.subst(iop),
+            decode_template.subst(iop),
+            EACompExecute.subst(ea_iop)
+            + MemAccExecute.subst(memacc_iop)
+            + exec_template.subst(iop))
+}};
+
+
+def format LoadOrNop(ea_code, memacc_code, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
+                      decode_template = LoadNopCheckDecode)
+}};
+
+
+// Note that the flags passed in apply only to the prefetch version
+def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
+    # declare the load instruction object and generate the decode block
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code,
+                      decode_template = LoadPrefetchCheckDecode)
+
+    # Declare the prefetch instruction object.
+
+    # convert flags from tuple to list to make them mutable
+    pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'MemReadOp', 'NO_FAULT']
+
+    (pf_header_output, pf_decoder_output, _, pf_exec_output) = \
+        LoadStoreBase(name, Name + 'Prefetch', ea_code, '',
+                      flags = pf_flags, exec_template = PrefetchExecute)
+
+    header_output += pf_header_output
+    decoder_output += pf_decoder_output
+    exec_output += pf_exec_output
+}};
+
+
+def format Store(ea_code, memacc_code, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags)
+}};
+
+
+def format StoreCond(ea_code, memacc_code, postacc_code, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code,
+                      flags = flags)
+}};
+
+
+// Use 'MemoryNoDisp' as base: for wh64, fetch, ecb
+def format MiscPrefetch(ea_code, memacc_code, *flags) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
+                      base_class = 'MemoryNoDisp')
+}};
+
+
