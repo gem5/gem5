@@ -66,7 +66,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                 0x3: movn({{ if (Rt != 0) Rd = Rs; }});
               }
 
-              format Trap {
+              format WarnUnimpl {
                 0x4: syscall({{ xc->syscall()}},IsNonSpeculative);
                 0x5: break({{ }});
                 0x7: sync({{ }});
@@ -131,12 +131,12 @@ decode OPCODE_HI default FailUnimpl::unknown() {
 
             0x6: decode FUNCTION_LO {
               format Trap {
-                 0x0: tge({{ }});
-                 0x1: tgeu({{ }});
-                 0x2: tlt({{ }});
-                 0x3: tltu({{ }});
-                 0x4: teq({{ }});
-                 0x6: tne({{ }});
+                 0x0: tge({{ cond = (Rs.sw >= Rt.sw); }});
+                 0x1: tgeu({{ cond = (Rs.uw >= Rt.uw); }});
+                 0x2: tlt({{ cond = (Rs.sw < Rt.sw); }});
+                 0x3: tltu({{ cond = (Rs.uw >= Rt.uw); }});
+                 0x4: teq({{ cond = (Rs.sw == Rt.sw); }});
+                 0x6: tne({{ cond = (Rs.sw != Rt.sw); }});
               }
             }
         }
@@ -155,12 +155,12 @@ decode OPCODE_HI default FailUnimpl::unknown() {
 
             0x1: decode REGIMM_LO {
               format Trap {
-                 0x0: tgei({{ }});
-                 0x1: tgeiu({{ }});
-                 0x2: tlti({{ }});
-                 0x3: tltiu({{ }});
-                 0x4: teqi({{ }});
-                 0x6: tnei({{ }});
+                 0x0: tgei({{ cond = (Rs.sw >= INTIMM;  }});
+                 0x1: tgeiu({{ cond = (Rs.uw < INTIMM); }});
+                 0x2: tlti({{ cond = (Rs.sw < INTIMM);  }});
+                 0x3: tltiu({{ cond = (Rs.uw < INTIMM); }});
+                 0x4: teqi({{ cond = (Rs.sw == INTIMM); }});
+                 0x6: tnei({{ cond = (Rs.sw != INTIMM); }});
               }
             }
 
@@ -176,7 +176,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             }
 
             0x3: decode REGIMM_LO {
-              format Trap {
+              format WarnUnimpl {
                 0x7: synci({{ }});
               }
             }
@@ -334,61 +334,69 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x0: decode RS_HI {
               0x0: decode RS_LO {
                 format FloatOp {
-                  0x0: add_fmt({{ }});
-                  0x1: sub_fmt({{ }});
-                  0x2: mul_fmt({{ }});
-                  0x3: div_fmt({{ }});
-                  0x4: sqrt_fmt({{ }});
-                  0x5: abs_fmt({{ }});
-                  0x6: mov_fmt({{ }});
-                  0x7: neg_fmt({{ }});
+                  0x0: adds({{ Fd.sf = Fs.sf + Ft.sf;}});
+                  0x1: subs({{ Fd.sf = Fs.sf - Ft.sf;}});
+                  0x2: muls({{ Fd.sf = Fs.sf * Ft.sf;}});
+                  0x3: divs({{ Fd.sf = Fs.sf / Ft.sf;}});
+                  0x4: sqrts({{ Fd.sf = sqrt(Fs.sf);}});
+                  0x5: abss({{ Fd.sf = abs(Fs.sf);}});
+                  0x6: movs({{ Fd.sf = Fs.sf;}});
+                  0x7: negs({{ Fd.sf = -1 * Fs.sf;}});
                 }
               }
 
               0x1: decode RS_LO {
                 //only legal for 64 bit
                 format Float64Op {
-                  0x0: round_l({{ }});
-                  0x1: trunc_l({{ }});
-                  0x2: ceil_l({{ }});
-                  0x3: floor_l({{ }});
+                  0x0: round_l_s({{ Fd = convert_and_round(Fs.sf,RND_NEAREST,FP_LONG,FP_SINGLE);}});
+                  0x1: trunc_l_s({{ Fd = convert_and_round(Fs.sf,RND_ZERO,FP_LONG,FP_SINGLE);}});
+                  0x2: ceil_l_s({{ Fd = convert_and_round(Fs.sf,RND_UP,FP_LONG,FP_SINGLE);}});
+                  0x3: floor_l_s({{ Fd = convert_and_round(Fs.sf,RND_DOWN,FP_LONG,FP_SINGLE);}});
                 }
 
                 format FloatOp {
-                  0x4: round_w({{ }});
-                  0x5: trunc_w({{ }});
-                  0x6: ceil_w({{ }});
-                  0x7: floor_w({{ }});
+                  0x4: round_w_s({{ Fd = convert_and_round(Fs.sf,RND_NEAREST,FP_WORD,FP_SINGLE);}});
+                  0x5: trunc_w_s({{ Fd = convert_and_round(Fs.sf,RND_ZERO,FP_WORD,FP_SINGLE);}});
+                  0x6: ceil_w_s({{  Fd = convert_and_round(Fs.sf,RND_UP,FP_WORD,FP_SINGLE);}});
+                  0x7: floor_w_s({{ Fd = convert_and_round(Fs.sf,RND_DOWN,FP_WORD,FP_SINGLE);}});
                 }
               }
 
               0x2: decode RS_LO {
                 0x1: decode MOVCF {
                   format FloatOp {
-                    0x0: movf_fmt({{ }});
-                    0x1: movt_fmt({{ }});
+                    0x0: movfs({{ if ( FPConditionCode(CC) == 0 ) Fd = Fs; }});
+                    0x1: movts({{ if ( FPConditionCode(CC) == 1 ) Fd = Fs;}});
                   }
                 }
 
                 format BasicOp {
-                  0x2: movz({{ if (Rt == 0) Rd = Rs; }});
-                  0x3: movn({{ if (Rt != 0) Rd = Rs; }});
+                  0x2: movzs({{ if (Rt == 0) Fd = Fs; }});
+                  0x3: movns({{ if (Rt != 0) Fd = Fs; }});
                 }
 
                 format Float64Op {
-                  0x2: recip({{ }});
-                  0x3: rsqrt{{ }});
+                  0x2: recips({{ Fd = 1 / Fs; }});
+                  0x3: rsqrts{{  Fd = 1 / sqrt(Fs); }});
                 }
               }
 
               0x4: decode RS_LO {
-                0x1: cvt_d({{ }});
-                0x4: cvt_w({{ }});
+                0x1: cvt_d_s({{ int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.sf,rnd_mode,FP_DOUBLE,FP_SINGLE);
+                             }});
+
+                0x4: cvt_w_s({{ int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.sf,rnd_mode,FP_WORD,FP_SINGLE);
+                             }});
 
                 //only legal for 64 bit
                 format Float64Op {
-                  0x5: cvt_l({{ }});
-                  0x6: cvt_ps({{ }});
+                  0x5: cvt_l_s({{ int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.sf,rnd_mode,FP_LONG,FP_SINGLE);
+                               }});
+
+                  0x6: cvt_ps_s({{ Fd.df = Fs.df<31:0> | Ft.df<31:0>; }});
                 }
               }
             }
@@ -397,62 +405,72 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x1: decode RS_HI {
               0x0: decode RS_LO {
                 format FloatOp {
-                  0x0: add_fmt({{ }});
-                  0x1: sub_fmt({{ }});
-                  0x2: mul_fmt({{ }});
-                  0x3: div_fmt({{ }});
-                  0x4: sqrt_fmt({{ }});
-                  0x5: abs_fmt({{ }});
-                  0x6: mov_fmt({{ }});
-                  0x7: neg_fmt({{ }});
+                  0x0: addd({{ Fd.df = Fs.df + Ft.df;}});
+                  0x1: subd({{ Fd.df = Fs.df - Ft.df;}});
+                  0x2: muld({{ Fd.df = Fs.df * Ft.df;}});
+                  0x3: divd({{ Fd.df = Fs.df / Ft.df;}});
+                  0x4: sqrtd({{ Fd.df = sqrt(Fs.df);}});
+                  0x5: absd({{ Fd.df = abs(Fs.df);}});
+                  0x6: movd({{ Fd.df = Fs.df;}});
+                  0x7: negd({{ Fd.df = -1 * Fs.df;}});
                 }
               }
 
               0x1: decode RS_LO {
                 //only legal for 64 bit
                 format FloatOp64 {
-                  0x0: round_l({{ }});
-                  0x1: trunc_l({{ }});
-                  0x2: ceil_l({{ }});
-                  0x3: floor_l({{ }});
+                  0x0: round_l_d({{ Fd = convert_and_round(Fs.df,RND_NEAREST,FP_LONG,FP_DOUBLE); }});
+                  0x1: trunc_l_d({{ Fd = convert_and_round(Fs.df,RND_ZERO,FP_LONG,FP_DOUBLE);}});
+                  0x2: ceil_l_d({{ Fd = convert_and_round(Fs.df,RND_UP,FP_LONG,FP_DOUBLE);}});
+                  0x3: floor_l_d({{ Fd = convert_and_round(Fs.df,RND_DOWN,FP_LONG,FP_DOUBLE);}});
                 }
 
                 format FloatOp {
-                  0x4: round_w({{ }});
-                  0x5: trunc_w({{ }});
-                  0x6: ceil_w({{ }});
-                  0x7: floor_w({{ }});
+                  0x4: round_w_d({{ Fd = convert_and_round(Fs.df,RND_NEAREST,FP_LONG,FP_DOUBLE); }});
+                  0x5: trunc_w_d({{ Fd = convert_and_round(Fs.df,RND_ZERO,FP_LONG,FP_DOUBLE); }});
+                  0x6: ceil_w_d({{  Fd = convert_and_round(Fs.df,RND_UP,FP_LONG,FP_DOUBLE); }});
+                  0x7: floor_w_d({{ Fd = convert_and_round(Fs.df,RND_DOWN,FP_LONG,FP_DOUBLE); }});
                 }
               }
 
               0x2: decode RS_LO {
                 0x1: decode MOVCF {
                   format FloatOp {
-                    0x0: movf_fmt({{ }});
-                    0x1: movt_fmt({{ }});
+                    0x0: movfd({{ if (FPConditionCode(CC) == 0) Fd.df = Fs.df; }});
+                    0x1: movtd({{ if (FPConditionCode(CC) == 1) Fd.df = Fs.df; }});
                   }
                 }
 
                 format BasicOp {
-                  0x2: movz({{ if (Rt == 0) Rd = Rs; }});
-                  0x3: movn({{ if (Rt != 0) Rd = Rs; }});
+                  0x2: movz({{ if (Rt == 0) Fd.df = Fs.df; }});
+                  0x3: movn({{ if (Rt != 0) Fd.df = Fs.df; }});
                 }
 
                 format FloatOp64 {
-                  0x5: recip({{ }});
-                  0x6: rsqrt{{ }});
+                  0x5: recipd({{ Fd.df = 1 / Fs.df}});
+                  0x6: rsqrtd{{ Fd.df = 1 / sqrt(Fs.df) }});
                 }
               }
 
               0x4: decode RS_LO {
                 format FloatOp {
-                  0x0: cvt_s({{ }});
-                  0x4: cvt_w({{ }});
+                  0x0: cvt_s_d({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_DOUBLE);
+                              }});
+
+                  0x4: cvt_w_d({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_WORD,FP_DOUBLE);
+                              }});
                 }
 
                 //only legal for 64 bit
                 format FloatOp64 {
-                  0x5: cvt_l({{ }});
+                  0x5: cvt_l_d({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_LONG,FP_DOUBLE);
+                              }});
                 }
               }
             }
@@ -460,8 +478,15 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=W
             0x4: decode FUNCTION {
               format FloatOp {
-                0x10: cvt_s({{ }});
-                0x10: cvt_d({{ }});
+                0x10: cvt_s({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_WORD);
+                            }});
+
+                0x10: cvt_d({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_WORD);
+                            }});
               }
             }
 
@@ -470,8 +495,15 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             //are enabled."
             0x5: decode FUNCTION_HI {
               format FloatOp {
-                0x10: cvt_s({{ }});
-                0x11: cvt_d({{ }});
+                0x10: cvt_s_l({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_LONG);
+                            }});
+
+                0x11: cvt_d_l({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_LONG);
+                            }});
               }
             }
 
@@ -481,36 +513,65 @@ decode OPCODE_HI default FailUnimpl::unknown() {
             0x6: decode RS_HI {
               0x0: decode RS_LO {
                 format FloatOp64 {
-                  0x0: add_fmt({{ }});
-                  0x1: sub_fmt({{ }});
-                  0x2: mul_fmt({{ }});
-                  0x5: abs_fmt({{ }});
-                  0x6: mov_fmt({{ }});
-                  0x7: neg_fmt({{ }});
+                  0x0: addps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = Fs.df + Ft.df;
+                             }});
+
+                  0x1: subps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = Fs.df - Ft.df;
+                            }});
+
+                  0x2: mulps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = Fs.df * Ft.df;
+                            }});
+
+                  0x5: absps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = abs(Fs.df);
+                            }});
+
+                  0x6: movps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = Fs<31:0> |  Ft<31:0>;
+                            }});
+
+                  0x7: negps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = -1 * Fs.df;
+                            }});
                 }
               }
 
               0x2: decode RS_LO {
                 0x1: decode MOVCF {
                   format FloatOp64 {
-                    0x0: movf_fmt({{ }});
-                    0x1: movt_fmt({{ }});
+                    0x0: movfps({{ if ( FPConditionCode(CC) == 0) Fd = Fs;}})
+                    0x1: movtps({{ if ( FPConditionCode(CC) == 0) Fd = Fs;}})
                   }
                 }
 
               }
 
               0x4: decode RS_LO {
-                0x0: FloatOp64::cvt_s_pu({{ }});
+                0x0: FloatOp64::cvt_s_pu({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_PS_HI);
+                           }});
               }
 
               0x5: decode RS_LO {
                 format FloatOp64 {
-                  0x0: cvt_s_pl({{ }});
-                  0x4: pll_s_pl({{ }});
-                  0x5: plu_s_pl({{ }});
-                  0x6: pul_s_pl({{ }});
-                  0x7: puu_s_pl({{ }});
+                  0x0: cvt_s_pl({{
+                                int rnd_mode = xc->miscRegs.fcsr;
+                                Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_PS_LO);
+                           }});
+                  0x4: pll({{ Fd.df = Fs<31:0> | Ft<31:0>}});
+                  0x5: plu({{ Fd.df = Fs<31:0> | Ft<63:32>}});
+                  0x6: pul({{ Fd.df = Fs<63:32> | Ft<31:0>}});
+                  0x7: puu({{ Fd.df = Fs<63:32 | Ft<63:32>}});
                 }
               }
             }
@@ -532,14 +593,14 @@ decode OPCODE_HI default FailUnimpl::unknown() {
 
           0x1: decode ND {
             0x0: decode TF {
-              format Branch {
+              format WarnUnimpl {
                 0x0: bc2f({{ cond = (xc->miscRegs.cop2cc == 0); }}, COP2);
                 0x1: bc2t({{ cond = (xc->miscRegs.cop2cc == 1); }}, COP2}});
               }
             }
 
             0x1: decode TF {
-              format Branch {
+              format WarnUnimpl {
                 0x0: bc2fl({{ cond = (xc->miscRegs.cop2cc == 0); }}, COP2}});
                 0x1: bc2tl({{ cond = (xc->miscRegs.cop2cc == 1); }}, COP2}});
               }
@@ -554,46 +615,70 @@ decode OPCODE_HI default FailUnimpl::unknown() {
       0x3: decode FUNCTION_HI {
         0x0: decode FUNCTION_LO {
                 format Memory {
-                  0x0: lwxc1({{ }});
-                  0x1: ldxc1({{ }});
-                  0x5: luxc1({{ }});
+                  0x0: lwxc1({{ EA = Rs + Rt; }},{{ Ft<31:0> = Mem.uf; }});
+                  0x1: ldxc1({{ EA = Rs + Rt; }},{{ Ft<63:0> = Mem.df; }});
+                  0x5: luxc1({{ //Need to make EA<2:0> = 0
+                                EA = Rs + Rt;
+                             }},
+                             {{ Ft<31:0> = Mem.df; }});
                 }
         }
 
         0x1: decode FUNCTION_LO {
                 format Memory {
-                  0x0: swxc1({{ }});
-                  0x1: sdxc1({{ }});
-                  0x5: suxc1({{ }});
+                  0x0: swxc1({{ EA = Rs + Rt; }},{{ Mem.uf = Ft<31:0>; }});
+                  0x1: sdxc1({{ EA = Rs + Rt; }},{{ Mem.uf = Ft<63:0>}});
+                  0x5: suxc1({{ //Need to make EA<2:0> = 0
+                                EA = Rs + Rt;
+                             }},
+                             {{ Mem.df = Ft<63:0>;}});
                   0x7: prefx({{ }});
                 }
         }
 
         format FloatOp {
-                0x3: alnv_ps({{ }});
+                0x3: WarnUnimpl::alnv_ps({{ }});
 
-                0x4: decode FUNCTION_LO {
-                  0x0: madd_s({{ }});
-                  0x1: madd_d({{ }});
-                  0x6: madd_ps({{ }});
-                }
+                format BasicOp {
+                  0x4: decode FUNCTION_LO {
+                    0x0: madd_s({{ Fd.sf = (Fs.sf * Fs.sf) + Fr.sf; }});
+                    0x1: madd_d({{ Fd.df = (Fs.df * Fs.df) + Fr.df; }});
+                    0x6: madd_ps({{
+                                //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = (Fs.df * Fs.df) + Fr.df;
+                                }});
+                  }
 
-                0x5: decode FUNCTION_LO {
-                  0x0: msub_s({{ }});
-                  0x1: msub_d({{ }});
-                  0x6: msub_ps({{ }});
-                }
+                  0x5: decode FUNCTION_LO {
+                    0x0: msub_s({{ Fd.sf = (Fs.sf * Fs.sf) - Fr.sf; }});
+                    0x1: msub_d({{ Fd.df = (Fs.df * Fs.df) - Fr.df; }});
+                    0x6: msub_ps({{
+                                //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = (Fs.df * Fs.df) - Fr.df;
+                                }});
+                  }
 
-                0x6: decode FUNCTION_LO {
-                  0x0: nmadd_s({{ }});
-                  0x1: nmadd_d({{ }});
-                  0x6: nmadd_ps({{ }});
-                }
+                  0x6: decode FUNCTION_LO {
+                    0x0: nmadd_s({{ Fd.sf = (-1 * Fs.sf * Fs.sf) - Fr.sf; }});
+                    0x1: nmadd_d({{ Fd.df = (-1 * Fs.df * Fs.df) + Fr.df; }});
+                    0x6: nmadd_ps({{
+                                //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = (-1 * Fs.df * Fs.df) + Fr.df;
+                                }});
+                  }
 
-                0x7: decode FUNCTION_LO {
-                  0x0: nmsub_s({{ }});
-                  0x1: nmsub_d({{ }});
-                  0x6: nmsub_ps({{ }});
+                  0x7: decode FUNCTION_LO {
+                    0x0: nmsub_s({{ Fd.sf = (-1 * Fs.sf * Fs.sf) - Fr.sf; }});
+                    0x1: nmsub_d({{ Fd.df = (-1 * Fs.df * Fs.df) - Fr.df; }});
+                    0x6: nmsub_ps({{
+                                //Must Check for Exception Here... Supposed to Operate on Upper and
+                                //Lower Halves Independently but we take simulator shortcut
+                                Fd.df = (-1 * Fs.df * Fs.df) + Fr.df;
+                                }});
+                  }
                 }
         }
       }
@@ -689,15 +774,17 @@ decode OPCODE_HI default FailUnimpl::unknown() {
 
           //Table A-10 MIPS32 BSHFL Encoding of sa Field
           0x4: decode SA {
+
+                0x02: WarnUnimpl::wsbh({{ }});
+
                 format BasicOp {
-                    0x02: wsbh({{ }});
                     0x10: seb({{ Rd.sw = /* sext32(Rt<7>,24)  | */ Rt<7:0>}});
                     0x18: seh({{ Rd.sw = /* sext32(Rt<15>,16) | */ Rt<15:0>}});
                 }
           }
 
           0x6: decode FUNCTION_LO {
-            0x7: BasicOp::rdhwr({{ }});
+            0x7: BasicOp::rdhwr({{ Rt = xc->hwRegs[RD];}});
           }
         }
     };
@@ -726,24 +813,24 @@ decode OPCODE_HI default FailUnimpl::unknown() {
         };
 
         format WarnUnimpl {
-            0x4: reserved({{ }});
-            0x5: reserved({{ }});
             0x7: cache({{ }});
         };
 
     };
 
     0x6: decode OPCODE_LO default FailUnimpl::reserved() {
+            0x0: WarnUnimpl::ll({{ }});
+
         format Memory {
-            0x0: ll({{ }});
             0x1: lwc1({{ EA = Rs + disp; }},{{ Ft<31:0> = Mem.uf; }});
             0x5: ldc1({{ EA = Rs + disp; }},{{ Ft<63:0> = Mem.df; }});
         };
     };
 
     0x7: decode OPCODE_LO default FailUnimpl::reserved() {
+        0x0: WarnUnimpl::sc({{ }});
+
         format Memory {
-            0x0: sc({{ }});
             0x1: swc1({{ EA = Rs + disp; }},{{ Mem.uf = Ft<31:0>; }});
             0x5: sdc1({{ EA = Rs + disp; }},{{ Mem.df = Ft<63:0>; }});
         };
