@@ -444,7 +444,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
         return -EBADF;
     }
 
-#ifdef BSD_HOST
+#if BSD_HOST
     struct stat  hostBuf;
     int result = fstat(process->sim_fd(fd), &hostBuf);
 #else
@@ -494,7 +494,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
-#ifdef BSD_HOST
+#if BSD_HOST
     struct stat hostBuf;
     int result = lstat(path.c_str(), &hostBuf);
 #else
