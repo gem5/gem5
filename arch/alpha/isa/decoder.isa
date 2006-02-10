@@ -40,9 +40,9 @@ decode OPCODE default Unknown::unknown() {
         0x23: ldt({{ EA = Rb + disp; }}, {{ Fa = Mem.df; }});
         0x2a: ldl_l({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }}, LOCKED);
         0x2b: ldq_l({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, LOCKED);
-        0x20: copy_load({{EA = Ra;}},
-                        {{fault = xc->copySrcTranslate(EA);}},
-                        IsMemRef, IsLoad, IsCopy);
+        0x20: MiscPrefetch::copy_load({{ EA = Ra; }},
+                                      {{ fault = xc->copySrcTranslate(EA); }},
+                                      IsMemRef, IsLoad, IsCopy);
     }
 
     format LoadOrPrefetch {
@@ -62,21 +62,21 @@ decode OPCODE default Unknown::unknown() {
         0x0f: stq_u({{ EA = (Rb + disp) & ~7; }}, {{ Mem.uq = Ra.uq; }});
         0x26: sts({{ EA = Rb + disp; }}, {{ Mem.ul = t_to_s(Fa.uq); }});
         0x27: stt({{ EA = Rb + disp; }}, {{ Mem.df = Fa; }});
-        0x24: copy_store({{EA = Rb;}},
-                         {{fault = xc->copy(EA);}},
-                         IsMemRef, IsStore, IsCopy);
+        0x24: MiscPrefetch::copy_store({{ EA = Rb; }},
+                                       {{ fault = xc->copy(EA); }},
+                                       IsMemRef, IsStore, IsCopy);
     }
 
     format StoreCond {
         0x2e: stl_c({{ EA = Rb + disp; }}, {{ Mem.ul = Ra<31:0>; }},
                     {{
-                        uint64_t tmp = Mem_write_result;
+                        uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
                     }}, LOCKED);
         0x2f: stq_c({{ EA = Rb + disp; }}, {{ Mem.uq = Ra; }},
                     {{
-                        uint64_t tmp = Mem_write_result;
+                        uint64_t tmp = write_result;
                         // If the write operation returns 0 or 1, then
                         // this was a conventional store conditional,
                         // and the value indicates the success/failure
@@ -704,12 +704,14 @@ decode OPCODE default Unknown::unknown() {
 #endif
 
 #if FULL_SYSTEM
-    format HwLoadStore {
+    format HwLoad {
         0x1b: decode HW_LDST_QUAD {
             0: hw_ld({{ EA = (Rb + disp) & ~3; }}, {{ Ra = Mem.ul; }}, L);
             1: hw_ld({{ EA = (Rb + disp) & ~7; }}, {{ Ra = Mem.uq; }}, Q);
         }
+    }
 
+    format HwStore {
         0x1f: decode HW_LDST_COND {
             0: decode HW_LDST_QUAD {
                 0: hw_st({{ EA = (Rb + disp) & ~3; }},

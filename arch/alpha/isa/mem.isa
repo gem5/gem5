@@ -214,7 +214,7 @@ def template EACompExecute {{
     }
 }};
 
-def template MemAccExecute {{
+def template LoadMemAccExecute {{
     Fault
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
@@ -224,24 +224,16 @@ def template MemAccExecute {{
 
         %(fp_enable_check)s;
         %(op_decl)s;
-        %(op_nonmem_rd)s;
+        %(op_rd)s;
         EA = xc->getEA();
 
         if (fault == No_Fault) {
-            %(op_mem_rd)s;
+            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
             %(code)s;
         }
 
         if (fault == No_Fault) {
-            %(op_mem_wb)s;
-        }
-
-        if (fault == No_Fault) {
-            %(postacc_code)s;
-        }
-
-        if (fault == No_Fault) {
-            %(op_nonmem_wb)s;
+            %(op_wb)s;
         }
 
         return fault;
@@ -249,7 +241,7 @@ def template MemAccExecute {{
 }};
 
 
-def template LoadStoreExecute {{
+def template LoadExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
@@ -258,24 +250,16 @@ def template LoadStoreExecute {{
 
         %(fp_enable_check)s;
         %(op_decl)s;
-        %(op_nonmem_rd)s;
+        %(op_rd)s;
         %(ea_code)s;
 
         if (fault == No_Fault) {
-            %(op_mem_rd)s;
+            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
         if (fault == No_Fault) {
-            %(op_mem_wb)s;
-        }
-
-        if (fault == No_Fault) {
-            %(postacc_code)s;
-        }
-
-        if (fault == No_Fault) {
-            %(op_nonmem_wb)s;
+            %(op_wb)s;
         }
 
         return fault;
@@ -283,7 +267,100 @@ def template LoadStoreExecute {{
 }};
 
 
-def template PrefetchExecute {{
+def template StoreMemAccExecute {{
+    Fault
+    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+        uint64_t write_result = 0;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        EA = xc->getEA();
+
+        if (fault == No_Fault) {
+            %(code)s;
+        }
+
+        if (fault == No_Fault) {
+            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                              memAccessFlags, &write_result);
+            if (traceData) { traceData->setData(Mem); }
+        }
+
+        if (fault == No_Fault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == No_Fault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template StoreExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+        uint64_t write_result = 0;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == No_Fault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == No_Fault) {
+            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                              memAccessFlags, &write_result);
+            if (traceData) { traceData->setData(Mem); }
+        }
+
+        if (fault == No_Fault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == No_Fault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template MiscMemAccExecute {{
+    Fault %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+                                          Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = No_Fault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        EA = xc->getEA();
+
+        if (fault == No_Fault) {
+            %(code)s;
+        }
+
+        return No_Fault;
+    }
+}};
+
+def template MiscExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
@@ -292,11 +369,11 @@ def template PrefetchExecute {{
 
         %(fp_enable_check)s;
         %(op_decl)s;
-        %(op_nonmem_rd)s;
+        %(op_rd)s;
         %(ea_code)s;
 
         if (fault == No_Fault) {
-            xc->prefetch(EA, memAccessFlags);
+            %(memacc_code)s;
         }
 
         return No_Fault;
@@ -332,8 +409,7 @@ def template LoadPrefetchCheckDecode {{
 let {{
 def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
                   base_class = 'MemoryDisp32', flags = [],
-                  decode_template = BasicDecode,
-                  exec_template = LoadStoreExecute):
+                  decode_template = BasicDecode, exec_template_base = ''):
     # Segregate flags into instruction flags (handled by InstObjParams)
     # and memory access flags (handled here).
 
@@ -380,19 +456,24 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code = '',
         iop.constructor += s
         memacc_iop.constructor += s
 
+    # select templates
+    memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
+    fullExecTemplate = eval(exec_template_base + 'Execute')
+
     # (header_output, decoder_output, decode_block, exec_output)
     return (LoadStoreDeclare.subst(iop), LoadStoreConstructor.subst(iop),
             decode_template.subst(iop),
             EACompExecute.subst(ea_iop)
-            + MemAccExecute.subst(memacc_iop)
-            + exec_template.subst(iop))
+            + memAccExecTemplate.subst(memacc_iop)
+            + fullExecTemplate.subst(iop))
 }};
 
 
 def format LoadOrNop(ea_code, memacc_code, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
-                      decode_template = LoadNopCheckDecode)
+                      decode_template = LoadNopCheckDecode,
+                      exec_template_base = 'Load')
 }};
 
 
@@ -401,7 +482,8 @@ def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     # declare the load instruction object and generate the decode block
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code,
-                      decode_template = LoadPrefetchCheckDecode)
+                      decode_template = LoadPrefetchCheckDecode,
+                      exec_template_base = 'Load')
 
     # Declare the prefetch instruction object.
 
@@ -409,8 +491,9 @@ def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
     pf_flags = list(pf_flags) + ['IsMemRef', 'IsLoad', 'IsDataPrefetch', 'MemReadOp', 'NO_FAULT']
 
     (pf_header_output, pf_decoder_output, _, pf_exec_output) = \
-        LoadStoreBase(name, Name + 'Prefetch', ea_code, '',
-                      flags = pf_flags, exec_template = PrefetchExecute)
+        LoadStoreBase(name, Name + 'Prefetch', ea_code,
+                      'xc->prefetch(EA, memAccessFlags);',
+                      flags = pf_flags, exec_template_base = 'Misc')
 
     header_output += pf_header_output
     decoder_output += pf_decoder_output
@@ -420,14 +503,15 @@ def format LoadOrPrefetch(ea_code, memacc_code, *pf_flags) {{
 
 def format Store(ea_code, memacc_code, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags)
+        LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
+                      exec_template_base = 'Store')
 }};
 
 
 def format StoreCond(ea_code, memacc_code, postacc_code, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, postacc_code,
-                      flags = flags)
+                      flags = flags, exec_template_base = 'Store')
 }};
 
 
@@ -435,7 +519,7 @@ def format StoreCond(ea_code, memacc_code, postacc_code, *flags) {{
 def format MiscPrefetch(ea_code, memacc_code, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, flags = flags,
-                      base_class = 'MemoryNoDisp')
+                      base_class = 'MemoryNoDisp', exec_template_base = 'Misc')
 }};
 
 

@@ -868,16 +868,21 @@ def fixPythonIndentation(s):
     return s
 
 # Error handler.  Just call exit.  Output formatted to work under
-# Emacs compile-mode.
+# Emacs compile-mode.  This function should be called when errors due
+# to user input are detected (as opposed to parser bugs).
 def error(lineno, string):
     spaces = ""
     for (filename, line) in fileNameStack[0:-1]:
         print spaces + "In file included from " + filename
         spaces += "  "
+    # Uncomment the following line to get a Python stack backtrace for
+    # these errors too.  Can be handy when trying to debug the parser.
+    # traceback.print_exc()
     sys.exit(spaces + "%s:%d: %s" % (fileNameStack[-1][0], lineno, string))
 
 # Like error(), but include a Python stack backtrace (for processing
-# Python exceptions).
+# Python exceptions).  This function should be called for errors that
+# appear to be bugs in the parser itself.
 def error_bt(lineno, string):
     traceback.print_exc()
     print >> sys.stderr, "%s:%d: %s" % (input_filename, lineno, string)
@@ -1220,30 +1225,19 @@ class MemOperandTraits(OperandTraits):
         # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
         c = '%s %s = 0;\n' % (type, op_desc.base_name)
-        # Declare var to hold memory access flags.
-        c += 'unsigned %s_flags = memAccessFlags;\n' % op_desc.base_name
-        # If this operand is a dest (i.e., it's a store operation),
-        # then we need to declare a variable for the write result code
-        # as well.
-        if op_desc.is_dest:
-            c += 'uint64_t %s_write_result = 0;\n' % op_desc.base_name
         return c
 
     def makeRead(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        eff_type = 'uint%d_t' % size
-        return 'fault = xc->read(EA, (%s&)%s, %s_flags);\n' \
-               % (eff_type, op_desc.base_name, op_desc.base_name)
+        return ''
 
     def makeWrite(self, op_desc):
+        return ''
+
+    # Return the memory access size *in bits*, suitable for
+    # forming a type via "uint%d_t".  Divide by 8 if you want bytes.
+    def makeAccSize(self, op_desc):
         (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        eff_type = 'uint%d_t' % size
-        wb = 'fault = xc->write((%s&)%s, EA, %s_flags, &%s_write_result);\n' \
-               % (eff_type, op_desc.base_name, op_desc.base_name,
-                  op_desc.base_name)
-        wb += 'if (traceData) { traceData->setData(%s); }' % \
-              op_desc.base_name
-        return wb
+        return size
 
 class NPCOperandTraits(OperandTraits):
     def makeConstructor(self, op_desc):
@@ -1321,6 +1315,11 @@ class OperandDescriptor:
         else:
             self.eff_ext = self.traits.dflt_ext
 
+        # note that mem_acc_size is undefined for non-mem operands...
+        # template must be careful not to use it if it doesn't apply.
+        if self.traits.isMem():
+            self.mem_acc_size = self.traits.makeAccSize(self)
+
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
     # register index enumeration that hasn't been performed yet at the
@@ -1340,10 +1339,73 @@ class OperandDescriptor:
         else:
             self.op_wb = ''
 
+
 class OperandDescriptorList:
-    def __init__(self):
+
+    # Find all the operands in the given code block.  Returns an operand
+    # descriptor list (instance of class OperandDescriptorList).
+    def __init__(self, code):
         self.items = []
         self.bases = {}
+        # delete comments so we don't match on reg specifiers inside
+        code = commentRE.sub('', code)
+        # search for operands
+        next_pos = 0
+        while 1:
+            match = operandsRE.search(code, next_pos)
+            if not match:
+                # no more matches: we're done
+                break
+            op = match.groups()
+            # regexp groups are operand full name, base, and extension
+            (op_full, op_base, op_ext) = op
+            # if the token following the operand is an assignment, this is
+            # a destination (LHS), else it's a source (RHS)
+            is_dest = (assignRE.match(code, match.end()) != None)
+            is_src = not is_dest
+            # see if we've already seen this one
+            op_desc = self.find_base(op_base)
+            if op_desc:
+                if op_desc.ext != op_ext:
+                    error(0, 'Inconsistent extensions for operand %s' % \
+                          op_base)
+                op_desc.is_src = op_desc.is_src or is_src
+                op_desc.is_dest = op_desc.is_dest or is_dest
+            else:
+                # new operand: create new descriptor
+                op_desc = OperandDescriptor(op_full, op_base, op_ext,
+                                            is_src, is_dest)
+                self.append(op_desc)
+            # start next search after end of current match
+            next_pos = match.end()
+        self.sort()
+        # enumerate source & dest register operands... used in building
+        # constructor later
+        self.numSrcRegs = 0
+        self.numDestRegs = 0
+        self.numFPDestRegs = 0
+        self.numIntDestRegs = 0
+        self.memOperand = None
+        for op_desc in self.items:
+            if op_desc.traits.isReg():
+                if op_desc.is_src:
+                    op_desc.src_reg_idx = self.numSrcRegs
+                    self.numSrcRegs += 1
+                if op_desc.is_dest:
+                    op_desc.dest_reg_idx = self.numDestRegs
+                    self.numDestRegs += 1
+                    if op_desc.traits.isFloatReg():
+                        self.numFPDestRegs += 1
+                    elif op_desc.traits.isIntReg():
+                        self.numIntDestRegs += 1
+            elif op_desc.traits.isMem():
+                if self.memOperand:
+                    error(0, "Code block has more than one memory operand.")
+                self.memOperand = op_desc
+        # now make a final pass to finalize op_desc fields that may depend
+        # on the register enumeration
+        for op_desc in self.items:
+            op_desc.finalize()
 
     def __len__(self):
         return len(self.items)
@@ -1398,69 +1460,6 @@ commentRE = re.compile(r'//.*\n')
 # (used in findOperands())
 assignRE = re.compile(r'\s*=(?!=)', re.MULTILINE)
 
-#
-# Find all the operands in the given code block.  Returns an operand
-# descriptor list (instance of class OperandDescriptorList).
-#
-def findOperands(code):
-    operands = OperandDescriptorList()
-    # delete comments so we don't accidentally match on reg specifiers inside
-    code = commentRE.sub('', code)
-    # search for operands
-    next_pos = 0
-    while 1:
-        match = operandsRE.search(code, next_pos)
-        if not match:
-            # no more matches: we're done
-            break
-        op = match.groups()
-        # regexp groups are operand full name, base, and extension
-        (op_full, op_base, op_ext) = op
-        # if the token following the operand is an assignment, this is
-        # a destination (LHS), else it's a source (RHS)
-        is_dest = (assignRE.match(code, match.end()) != None)
-        is_src = not is_dest
-        # see if we've already seen this one
-        op_desc = operands.find_base(op_base)
-        if op_desc:
-            if op_desc.ext != op_ext:
-                error(0, 'Inconsistent extensions for operand %s' % op_base)
-            op_desc.is_src = op_desc.is_src or is_src
-            op_desc.is_dest = op_desc.is_dest or is_dest
-        else:
-            # new operand: create new descriptor
-            op_desc = OperandDescriptor(op_full, op_base, op_ext,
-                                        is_src, is_dest)
-            operands.append(op_desc)
-        # start next search after end of current match
-        next_pos = match.end()
-    operands.sort()
-    # enumerate source & dest register operands... used in building
-    # constructor later
-    srcRegs = 0
-    destRegs = 0
-    operands.numFPDestRegs = 0
-    operands.numIntDestRegs = 0
-    for op_desc in operands:
-        if op_desc.traits.isReg():
-            if op_desc.is_src:
-                op_desc.src_reg_idx = srcRegs
-                srcRegs += 1
-            if op_desc.is_dest:
-                op_desc.dest_reg_idx = destRegs
-                destRegs += 1
-                if op_desc.traits.isFloatReg():
-                    operands.numFPDestRegs += 1
-                elif op_desc.traits.isIntReg():
-                    operands.numIntDestRegs += 1
-    operands.numSrcRegs = srcRegs
-    operands.numDestRegs = destRegs
-    # now make a final pass to finalize op_desc fields that may depend
-    # on the register enumeration
-    for op_desc in operands:
-        op_desc.finalize()
-    return operands
-
 # Munge operand names in code string to make legal C++ variable names.
 # This means getting rid of the type extension if any.
 # (Will match base_name attribute of OperandDescriptor object.)
@@ -1489,7 +1488,7 @@ def makeFlagConstructor(flag_list):
 class CodeBlock:
     def __init__(self, code):
         self.orig_code = code
-        self.operands = findOperands(code)
+        self.operands = OperandDescriptorList(code)
         self.code = substMungedOpNames(substBitOps(code))
         self.constructor = self.operands.concatAttrStrings('constructor')
         self.constructor += \
@@ -1503,21 +1502,13 @@ class CodeBlock:
 
         self.op_decl = self.operands.concatAttrStrings('op_decl')
 
-        is_mem = lambda op: op.traits.isMem()
-        not_mem = lambda op: not op.traits.isMem()
-
         self.op_rd = self.operands.concatAttrStrings('op_rd')
         self.op_wb = self.operands.concatAttrStrings('op_wb')
-        self.op_mem_rd = \
-                 self.operands.concatSomeAttrStrings(is_mem, 'op_rd')
-        self.op_mem_wb = \
-                 self.operands.concatSomeAttrStrings(is_mem, 'op_wb')
-        self.op_nonmem_rd = \
-                 self.operands.concatSomeAttrStrings(not_mem, 'op_rd')
-        self.op_nonmem_wb = \
-                 self.operands.concatSomeAttrStrings(not_mem, 'op_wb')
 
         self.flags = self.operands.concatAttrLists('flags')
+
+        if self.operands.memOperand:
+            self.mem_acc_size = self.operands.memOperand.mem_acc_size
 
         # Make a basic guess on the operand class (function unit type).
         # These are good enough for most cases, and will be overridden
