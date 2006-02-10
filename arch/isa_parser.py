@@ -162,7 +162,7 @@ def t_CPPDIRECTIVE(t):
     return t
 
 def t_NEWFILE(t):
-    r'^\#\#newfile[ /t]*\"[A-Za-z0-9\\/-_.]*\"'
+    r'^\#\#newfile\s+"[\w/.-]*"'
     global fileNameStack
     fileNameStack.append((t.value[11:-1], t.lineno))
     t.lineno = 0
@@ -841,7 +841,7 @@ defaultStack = Stack( None )
 # Used to make nested code blocks look pretty.
 #
 def indent(s):
-    return re.sub(r'(?m)^(?!\#)', '  ', s)
+    return re.sub(r'(?m)^(?!#)', '  ', s)
 
 #
 # Munge a somewhat arbitrarily formatted piece of Python code
@@ -870,7 +870,6 @@ def fixPythonIndentation(s):
 # Error handler.  Just call exit.  Output formatted to work under
 # Emacs compile-mode.
 def error(lineno, string):
-    global fileNameStack
     spaces = ""
     for (filename, line) in fileNameStack[0:-1]:
         print spaces + "In file included from " + filename
@@ -1622,23 +1621,28 @@ def update_if_needed(file, contents):
         f.close()
 
 # This regular expression matches include directives
-regExp = re.compile('(?P<include>^[ \t]*##include[ \t]*\"[ \t]*(?P<filename>[A-Za-z0-9\\/-_.]*)[ \t]*\"[ \t]*\n)', re.MULTILINE)
+includeRE = re.compile(r'^\s*##include\s+"(?P<filename>[\w/.-]*)".*$',
+                       re.MULTILINE)
 
 def preprocess_isa_desc(isa_desc):
     # Find any includes and include them
-
-    # Look for an include
-    m = re.search(regExp, isa_desc)
-    while m:
+    pos = 0
+    while 1:
+        m = includeRE.search(isa_desc, pos)
+        if not m:
+            break
         filename = m.group('filename')
         print 'Including file "%s"' % filename
-        includeFile = open(filename)
-        includecontents = includeFile.read()
-        isa_desc = isa_desc[:m.start('include')] + '##newfile "' + filename + '"\n' + includecontents + '##endfile\n' + isa_desc[m.end('include'):]
-        # Look for the next include
-        m = re.search(regExp, isa_desc)
+        try:
+            isa_desc = isa_desc[:m.start()] + \
+                       '##newfile "' + filename + '"\n' + \
+                       open(filename).read() + \
+                       '##endfile\n' + \
+                       isa_desc[m.end():]
+        except IOError:
+            error(0, 'Error including file "%s"' % (filename))
+        pos = m.start()
     return isa_desc
-
 
 #
 # Read in and parse the ISA description.

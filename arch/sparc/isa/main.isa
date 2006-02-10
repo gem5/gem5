@@ -26,7 +26,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-##include "m5/arch/sparc/isa_desc/includes.isa"
+##include "m5/arch/sparc/isa/includes.isa"
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -37,16 +37,16 @@
 namespace SparcISA;
 
 //Include the bitfield definitions
-##include "m5/arch/sparc/isa_desc/bitfields.isa"
+##include "m5/arch/sparc/isa/bitfields.isa"
 
 //Include the operand_types and operand definitions
-##include "m5/arch/sparc/isa_desc/operands.isa"
+##include "m5/arch/sparc/isa/operands.isa"
 
 //Include the base class for sparc instructions, and some support code
-##include "m5/arch/sparc/isa_desc/base.isa"
+##include "m5/arch/sparc/isa/base.isa"
 
 //Include the definitions for the instruction formats
-##include "m5/arch/sparc/isa_desc/formats.isa"
+##include "m5/arch/sparc/isa/formats.isa"
 
 //Include the decoder definition
-##include "m5/arch/sparc/isa_desc/decoder.isa"
+##include "m5/arch/sparc/isa/decoder.isa"
