@@ -34,6 +34,7 @@
 // but probably is more flexible to actually add in a delay parameter than
 // just running it backwards.
 
+#include <limits>
 #include <vector>
 
 #include "sim/root.hh"
@@ -42,7 +43,7 @@
 
 // Either compile error or max int due to sign extension.
 // Hack to avoid compile warnings.
-const InstSeqNum MaxInstSeqNum = 0 - 1;
+const InstSeqNum MaxInstSeqNum = std::numeric_limits<InstSeqNum>::max();
 
 template <class Impl>
 InstructionQueue<Impl>::InstructionQueue(Params &params)

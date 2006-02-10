@@ -28,7 +28,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
 #else
@@ -260,15 +260,15 @@ class Tru64 {
 
     /// Resource enumeration for getrlimit().
     enum rlimit_resources {
-        RLIMIT_CPU = 0,
-        RLIMIT_FSIZE = 1,
-        RLIMIT_DATA = 2,
-        RLIMIT_STACK = 3,
-        RLIMIT_CORE = 4,
-        RLIMIT_RSS = 5,
-        RLIMIT_NOFILE = 6,
-        RLIMIT_AS = 7,
-        RLIMIT_VMEM = 7
+        TGT_RLIMIT_CPU = 0,
+        TGT_RLIMIT_FSIZE = 1,
+        TGT_RLIMIT_DATA = 2,
+        TGT_RLIMIT_STACK = 3,
+        TGT_RLIMIT_CORE = 4,
+        TGT_RLIMIT_RSS = 5,
+        TGT_RLIMIT_NOFILE = 6,
+        TGT_RLIMIT_AS = 7,
+        TGT_RLIMIT_VMEM = 7
     };
 
     /// Limit struct for getrlimit/setrlimit.
@@ -320,9 +320,9 @@ class Tru64 {
 
     //@{
     /// For getrusage().
-    static const int RUSAGE_THREAD = 1;
-    static const int RUSAGE_SELF = 0;
-    static const int RUSAGE_CHILDREN = -1;
+    static const int TGT_RUSAGE_THREAD = 1;
+    static const int TGT_RUSAGE_SELF = 0;
+    static const int TGT_RUSAGE_CHILDREN = -1;
     //@}
 
     /// For getrusage().
@@ -568,7 +568,7 @@ class Tru64 {
     {
         TypedBufferArg<T> tgt(addr);
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
         tgt->f_type = 0;
 #else
         tgt->f_type = host->f_type;
