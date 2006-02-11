@@ -316,7 +316,7 @@ class Linux {
         tgt->tgt_st_atime = htog(host->st_atime);
         tgt->tgt_st_mtime = htog(host->st_mtime);
         tgt->tgt_st_ctime = htog(host->st_ctime);
-#ifdef STAT_HAVE_NSEC || BSD_HOST == 1
+#if defined(STAT_HAVE_NSEC) || (BSD_HOST == 1)
         tgt->st_atime_nsec = htog(host->st_atime_nsec);
         tgt->st_mtime_nsec = htog(host->st_mtime_nsec);
         tgt->st_ctime_nsec = htog(host->st_ctime_nsec);
