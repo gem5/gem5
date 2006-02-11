@@ -82,10 +82,9 @@ tokens = reserved + (
 
     # ( ) [ ] { } < > , ; : :: *
     'LPAREN', 'RPAREN',
-# not used any more... commented out to suppress PLY warning
-#    'LBRACKET', 'RBRACKET',
+    'LBRACKET', 'RBRACKET',
     'LBRACE', 'RBRACE',
-    'LESS', 'GREATER',
+    'LESS', 'GREATER', 'EQUALS',
     'COMMA', 'SEMI', 'COLON', 'DBLCOLON',
     'ASTERISK',
 
@@ -104,13 +103,13 @@ tokens = reserved + (
 # Regular expressions for token matching
 t_LPAREN           = r'\('
 t_RPAREN           = r'\)'
-# not used any more... commented out to suppress PLY warning
-# t_LBRACKET         = r'\['
-# t_RBRACKET         = r'\]'
+t_LBRACKET         = r'\['
+t_RBRACKET         = r'\]'
 t_LBRACE           = r'\{'
 t_RBRACE           = r'\}'
 t_LESS             = r'\<'
 t_GREATER          = r'\>'
+t_EQUALS           = r'='
 t_COMMA            = r','
 t_SEMI             = r';'
 t_COLON            = r':'
@@ -387,32 +386,66 @@ def p_def_format(t):
     t[0] = GenCode()
 
 # The formal parameter list for an instruction format is a possibly
-# empty list of comma-separated parameters.
+# empty list of comma-separated parameters.  Positional (standard,
+# non-keyword) parameters must come first, followed by keyword
+# parameters, followed by a '*foo' parameter that gets excess
+# positional arguments (as in Python).  Each of these three parameter
+# categories is optional.
+#
+# Note that we do not support the '**foo' parameter for collecting
+# otherwise undefined keyword args.  Otherwise the parameter list is
+# (I believe) identical to what is supported in Python.
+#
+# The param list generates a tuple, where the first element is a list of
+# the positional params and the second element is a dict containing the
+# keyword params.
 def p_param_list_0(t):
-    'param_list : empty'
-    t[0] = [ ]
+    'param_list : positional_param_list COMMA nonpositional_param_list'
+    t[0] = t[1] + t[3]
 
 def p_param_list_1(t):
-    'param_list : param'
+    '''param_list : positional_param_list
+                  | nonpositional_param_list'''
+    t[0] = t[1]
+
+def p_positional_param_list_0(t):
+    'positional_param_list : empty'
+    t[0] = []
+
+def p_positional_param_list_1(t):
+    'positional_param_list : ID'
     t[0] = [t[1]]
 
-def p_param_list_2(t):
-    'param_list : param_list COMMA param'
-    t[0] = t[1]
-    t[0].append(t[3])
+def p_positional_param_list_2(t):
+    'positional_param_list : positional_param_list COMMA ID'
+    t[0] = t[1] + [t[3]]
 
-# Each formal parameter is either an identifier or an identifier
-# preceded by an asterisk.  As in Python, the latter (if present) gets
-# a tuple containing all the excess positional arguments, allowing
-# varargs functions.
-def p_param_0(t):
-    'param : ID'
+def p_nonpositional_param_list_0(t):
+    'nonpositional_param_list : keyword_param_list COMMA excess_args_param'
+    t[0] = t[1] + t[3]
+
+def p_nonpositional_param_list_1(t):
+    '''nonpositional_param_list : keyword_param_list
+                                | excess_args_param'''
     t[0] = t[1]
 
-def p_param_1(t):
-    'param : ASTERISK ID'
-    # just concatenate them: '*ID'
-    t[0] = t[1] + t[2]
+def p_keyword_param_list_0(t):
+    'keyword_param_list : keyword_param'
+    t[0] = [t[1]]
+
+def p_keyword_param_list_1(t):
+    'keyword_param_list : keyword_param_list COMMA keyword_param'
+    t[0] = t[1] + [t[3]]
+
+def p_keyword_param(t):
+    'keyword_param : ID EQUALS expr'
+    t[0] = t[1] + ' = ' + t[3].__repr__()
+
+def p_excess_args_param(t):
+    'excess_args_param : ASTERISK ID'
+    # Just concatenate them: '*ID'.  Wrap in list to be consistent
+    # with positional_param_list and keyword_param_list.
+    t[0] = [t[1] + t[2]]
 
 # End of format definition-related rules.
 ##############
@@ -577,25 +610,78 @@ def p_inst_1(t):
     codeObj.prepend_all(comment)
     t[0] = codeObj
 
+# The arg list generates a tuple, where the first element is a list of
+# the positional args and the second element is a dict containing the
+# keyword args.
 def p_arg_list_0(t):
-    'arg_list : empty'
-    t[0] = [ ]
+    'arg_list : positional_arg_list COMMA keyword_arg_list'
+    t[0] = ( t[1], t[3] )
 
 def p_arg_list_1(t):
-    'arg_list : arg'
-    t[0] = [t[1]]
+    'arg_list : positional_arg_list'
+    t[0] = ( t[1], {} )
 
 def p_arg_list_2(t):
-    'arg_list : arg_list COMMA arg'
-    t[0] = t[1]
-    t[0].append(t[3])
+    'arg_list : keyword_arg_list'
+    t[0] = ( [], t[1] )
 
-def p_arg(t):
-    '''arg : ID
-           | INTLIT
-           | STRLIT
-           | CODELIT'''
+def p_positional_arg_list_0(t):
+    'positional_arg_list : empty'
+    t[0] = []
+
+def p_positional_arg_list_1(t):
+    'positional_arg_list : expr'
+    t[0] = [t[1]]
+
+def p_positional_arg_list_2(t):
+    'positional_arg_list : positional_arg_list COMMA expr'
+    t[0] = t[1] + [t[3]]
+
+def p_keyword_arg_list_0(t):
+    'keyword_arg_list : keyword_arg'
     t[0] = t[1]
+
+def p_keyword_arg_list_1(t):
+    'keyword_arg_list : keyword_arg_list COMMA keyword_arg'
+    t[0] = t[1]
+    t[0].update(t[3])
+
+def p_keyword_arg(t):
+    'keyword_arg : ID EQUALS expr'
+    t[0] = { t[1] : t[3] }
+
+#
+# Basic expressions.  These constitute the argument values of
+# "function calls" (i.e. instruction definitions in the decode block)
+# and default values for formal parameters of format functions.
+#
+# Right now, these are either strings, integers, or (recursively)
+# lists of exprs (using Python square-bracket list syntax).  Note that
+# bare identifiers are trated as string constants here (since there
+# isn't really a variable namespace to refer to).
+#
+def p_expr_0(t):
+    '''expr : ID
+            | INTLIT
+            | STRLIT
+            | CODELIT'''
+    t[0] = t[1]
+
+def p_expr_1(t):
+    '''expr : LBRACKET list_expr RBRACKET'''
+    t[0] = t[2]
+
+def p_list_expr_0(t):
+    'list_expr : expr'
+    t[0] = [t[1]]
+
+def p_list_expr_1(t):
+    'list_expr : list_expr COMMA expr'
+    t[0] = t[1] + [t[3]]
+
+def p_list_expr_2(t):
+    'list_expr : empty'
+    t[0] = []
 
 #
 # Empty production... use in other rules for readability.
@@ -779,7 +865,7 @@ class Format:
         context.update(exportContext)
         context.update({ 'name': name, 'Name': string.capitalize(name) })
         try:
-            vars = self.func(self.user_code, context, *args)
+            vars = self.func(self.user_code, context, *args[0], **args[1])
         except Exception, exc:
             error(lineno, 'error defining "%s": %s.' % (name, exc))
         for k in vars.keys():
@@ -974,14 +1060,18 @@ class Template:
 #
 #####################################################################
 
-# Force the argument to be a list
-def makeList(list_or_item):
-    if not list_or_item:
+# Force the argument to be a list.  Useful for flags, where a caller
+# can specify a singleton flag or a list of flags.  Also usful for
+# converting tuples to lists so they can be modified.
+def makeList(arg):
+    if isinstance(arg, list):
+        return arg
+    elif isinstance(arg, tuple):
+        return list(arg)
+    elif not arg:
         return []
-    elif type(list_or_item) == ListType:
-        return list_or_item
     else:
-        return [ list_or_item ]
+        return [ arg ]
 
 # generate operandSizeMap based on provided operandTypeMap:
 # basically generate equiv. C++ type and make is_signed flag
@@ -1253,7 +1343,7 @@ class NPCOperandTraits(OperandTraits):
 exportContextSymbols = ('IntRegOperandTraits', 'FloatRegOperandTraits',
                         'ControlRegOperandTraits', 'MemOperandTraits',
                         'NPCOperandTraits', 'InstObjParams', 'CodeBlock',
-                        're', 'string')
+                        'makeList', 're', 'string')
 
 exportContext = {}
 

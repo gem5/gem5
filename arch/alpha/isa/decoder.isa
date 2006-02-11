@@ -34,47 +34,47 @@ decode OPCODE default Unknown::unknown() {
     }
 
     format LoadOrNop {
-        0x0a: ldbu({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.ub; }});
-        0x0c: ldwu({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uw; }});
-        0x0b: ldq_u({{ EA = (Rb + disp) & ~7; }}, {{ Ra = Mem.uq; }});
-        0x23: ldt({{ EA = Rb + disp; }}, {{ Fa = Mem.df; }});
-        0x2a: ldl_l({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }}, LOCKED);
-        0x2b: ldq_l({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, LOCKED);
+        0x0a: ldbu({{ Ra.uq = Mem.ub; }});
+        0x0c: ldwu({{ Ra.uq = Mem.uw; }});
+        0x0b: ldq_u({{ Ra = Mem.uq; }}, ea_code = {{ EA = (Rb + disp) & ~7; }});
+        0x23: ldt({{ Fa = Mem.df; }});
+        0x2a: ldl_l({{ Ra.sl = Mem.sl; }}, mem_flags = LOCKED);
+        0x2b: ldq_l({{ Ra.uq = Mem.uq; }}, mem_flags = LOCKED);
         0x20: MiscPrefetch::copy_load({{ EA = Ra; }},
                                       {{ fault = xc->copySrcTranslate(EA); }},
-                                      IsMemRef, IsLoad, IsCopy);
+                                      inst_flags = [IsMemRef, IsLoad, IsCopy]);
     }
 
     format LoadOrPrefetch {
-        0x28: ldl({{ EA = Rb + disp; }}, {{ Ra.sl = Mem.sl; }});
-        0x29: ldq({{ EA = Rb + disp; }}, {{ Ra.uq = Mem.uq; }}, EVICT_NEXT);
+        0x28: ldl({{ Ra.sl = Mem.sl; }});
+        0x29: ldq({{ Ra.uq = Mem.uq; }}, pf_flags = EVICT_NEXT);
         // IsFloating flag on lds gets the prefetch to disassemble
         // using f31 instead of r31... funcitonally it's unnecessary
-        0x22: lds({{ EA = Rb + disp; }}, {{ Fa.uq = s_to_t(Mem.ul); }},
-                  PF_EXCLUSIVE, IsFloating);
+        0x22: lds({{ Fa.uq = s_to_t(Mem.ul); }},
+                  pf_flags = PF_EXCLUSIVE, inst_flags = IsFloating);
     }
 
     format Store {
-        0x0e: stb({{ EA = Rb + disp; }}, {{ Mem.ub = Ra<7:0>; }});
-        0x0d: stw({{ EA = Rb + disp; }}, {{ Mem.uw = Ra<15:0>; }});
-        0x2c: stl({{ EA = Rb + disp; }}, {{ Mem.ul = Ra<31:0>; }});
-        0x2d: stq({{ EA = Rb + disp; }}, {{ Mem.uq = Ra.uq; }});
-        0x0f: stq_u({{ EA = (Rb + disp) & ~7; }}, {{ Mem.uq = Ra.uq; }});
-        0x26: sts({{ EA = Rb + disp; }}, {{ Mem.ul = t_to_s(Fa.uq); }});
-        0x27: stt({{ EA = Rb + disp; }}, {{ Mem.df = Fa; }});
+        0x0e: stb({{ Mem.ub = Ra<7:0>; }});
+        0x0d: stw({{ Mem.uw = Ra<15:0>; }});
+        0x2c: stl({{ Mem.ul = Ra<31:0>; }});
+        0x2d: stq({{ Mem.uq = Ra.uq; }});
+        0x0f: stq_u({{ Mem.uq = Ra.uq; }}, {{ EA = (Rb + disp) & ~7; }});
+        0x26: sts({{ Mem.ul = t_to_s(Fa.uq); }});
+        0x27: stt({{ Mem.df = Fa; }});
         0x24: MiscPrefetch::copy_store({{ EA = Rb; }},
                                        {{ fault = xc->copy(EA); }},
-                                       IsMemRef, IsStore, IsCopy);
+                                       inst_flags = [IsMemRef, IsStore, IsCopy]);
     }
 
     format StoreCond {
-        0x2e: stl_c({{ EA = Rb + disp; }}, {{ Mem.ul = Ra<31:0>; }},
+        0x2e: stl_c({{ Mem.ul = Ra<31:0>; }},
                     {{
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, LOCKED);
-        0x2f: stq_c({{ EA = Rb + disp; }}, {{ Mem.uq = Ra; }},
+                    }}, mem_flags = LOCKED);
+        0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
                         // If the write operation returns 0 or 1, then
@@ -85,7 +85,7 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, LOCKED);
+                    }}, mem_flags = LOCKED);
     }
 
     format IntegerOperate {
@@ -607,8 +607,9 @@ decode OPCODE default Unknown::unknown() {
         format MiscPrefetch {
             0xf800: wh64({{ EA = Rb & ~ULL(63); }},
                          {{ xc->writeHint(EA, 64, memAccessFlags); }},
-                         IsMemRef, IsDataPrefetch, IsStore, MemWriteOp,
-                         NO_FAULT);
+                         mem_flags = NO_FAULT,
+                         inst_flags = [IsMemRef, IsDataPrefetch,
+                                       IsStore, MemWriteOp]);
         }
 
         format BasicOperate {
