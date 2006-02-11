@@ -251,19 +251,19 @@ class Linux {
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
-        tgt->st_dev = host->st_dev;
-        tgt->st_ino = host->st_ino;
-        tgt->st_mode = host->st_mode;
-        tgt->st_nlink = host->st_nlink;
-        tgt->st_uid = host->st_uid;
-        tgt->st_gid = host->st_gid;
-        tgt->st_rdev = host->st_rdev;
-        tgt->st_size = host->st_size;
-        tgt->st_atimeX = host->st_atime;
-        tgt->st_mtimeX = host->st_mtime;
-        tgt->st_ctimeX = host->st_ctime;
-        tgt->st_blksize = host->st_blksize;
-        tgt->st_blocks = host->st_blocks;
+        tgt->st_dev = htog(host->st_dev);
+        tgt->st_ino = htog(host->st_ino);
+        tgt->st_mode = htog(host->st_mode);
+        tgt->st_nlink = htog(host->st_nlink);
+        tgt->st_uid = htog(host->st_uid);
+        tgt->st_gid = htog(host->st_gid);
+        tgt->st_rdev = htog(host->st_rdev);
+        tgt->st_size = htog(host->st_size);
+        tgt->st_atimeX = htog(host->st_atime);
+        tgt->st_mtimeX = htog(host->st_mtime);
+        tgt->st_ctimeX = htog(host->st_ctime);
+        tgt->st_blksize = htog(host->st_blksize);
+        tgt->st_blocks = htog(host->st_blocks);
 
         tgt.copyOut(mem);
     }
@@ -275,19 +275,19 @@ class Linux {
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
-        tgt->st_dev = host->st_dev;
-        tgt->st_ino = host->st_ino;
-        tgt->st_mode = host->st_mode;
-        tgt->st_nlink = host->st_nlink;
-        tgt->st_uid = host->st_uid;
-        tgt->st_gid = host->st_gid;
-        tgt->st_rdev = host->st_rdev;
-        tgt->st_size = host->st_size;
-        tgt->st_atimeX = host->st_atime;
-        tgt->st_mtimeX = host->st_mtime;
-        tgt->st_ctimeX = host->st_ctime;
-        tgt->st_blksize = host->st_blksize;
-        tgt->st_blocks = host->st_blocks;
+        tgt->st_dev = htog(host->st_dev);
+        tgt->st_ino = htog(host->st_ino);
+        tgt->st_mode = htog(host->st_mode);
+        tgt->st_nlink = htog(host->st_nlink);
+        tgt->st_uid = htog(host->st_uid);
+        tgt->st_gid = htog(host->st_gid);
+        tgt->st_rdev = htog(host->st_rdev);
+        tgt->st_size = htog(host->st_size);
+        tgt->st_atimeX = htog(host->st_atime);
+        tgt->st_mtimeX = htog(host->st_mtime);
+        tgt->st_ctimeX = htog(host->st_ctime);
+        tgt->st_blksize = htog(host->st_blksize);
+        tgt->st_blocks = htog(host->st_blocks);
 
         tgt.copyOut(mem);
     }
@@ -301,25 +301,25 @@ class Linux {
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
         // XXX byteswaps
-        tgt->st_dev = host->st_dev;
+        tgt->st_dev = htog(host->st_dev);
         // XXX What about STAT64_HAS_BROKEN_ST_INO ???
-        tgt->st_ino = host->st_ino;
-        tgt->st_rdev = host->st_rdev;
-        tgt->st_size = host->st_size;
-        tgt->st_blocks = host->st_blocks;
+        tgt->st_ino = htog(host->st_ino);
+        tgt->st_rdev = htog(host->st_rdev);
+        tgt->st_size = htog(host->st_size);
+        tgt->st_blocks = htog(host->st_blocks);
 
-        tgt->st_mode = host->st_mode;
-        tgt->st_uid = host->st_uid;
-        tgt->st_gid = host->st_gid;
-        tgt->st_blksize = host->st_blksize;
-        tgt->st_nlink = host->st_nlink;
-        tgt->tgt_st_atime = host->st_atime;
-        tgt->tgt_st_mtime = host->st_mtime;
-        tgt->tgt_st_ctime = host->st_ctime;
-#ifdef STAT_HAVE_NSEC
-        tgt->st_atime_nsec = host->st_atime_nsec;
-        tgt->st_mtime_nsec = host->st_mtime_nsec;
-        tgt->st_ctime_nsec = host->st_ctime_nsec;
+        tgt->st_mode = htog(host->st_mode);
+        tgt->st_uid = htog(host->st_uid);
+        tgt->st_gid = htog(host->st_gid);
+        tgt->st_blksize = htog(host->st_blksize);
+        tgt->st_nlink = htog(host->st_nlink);
+        tgt->tgt_st_atime = htog(host->st_atime);
+        tgt->tgt_st_mtime = htog(host->st_mtime);
+        tgt->tgt_st_ctime = htog(host->st_ctime);
+#ifdef STAT_HAVE_NSEC || BSD_HOST == 1
+        tgt->st_atime_nsec = htog(host->st_atime_nsec);
+        tgt->st_mtime_nsec = htog(host->st_mtime_nsec);
+        tgt->st_ctime_nsec = htog(host->st_ctime_nsec);
 #else
         tgt->st_atime_nsec = 0;
         tgt->st_mtime_nsec = 0;
@@ -392,7 +392,7 @@ class Linux {
               // I don't think this exactly matches the HW FPCR
               fpcr.copyIn(xc->mem);
               DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                       " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
+                       " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
               return 0;
           }
 

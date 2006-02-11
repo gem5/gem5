@@ -75,15 +75,16 @@ swap_byte16(uint16_t x)
 
 //This lets the compiler figure out how to call the swap_byte functions above
 //for different data types.
-static inline uint64_t swap_byte(uint64_t x) {return swap_byte64(x);} \
-static inline int64_t swap_byte(int64_t x) {return swap_byte64((uint64_t)x);} \
-static inline uint32_t swap_byte(uint32_t x) {return swap_byte32(x);} \
-static inline int32_t swap_byte(int32_t x) {return swap_byte32((uint32_t)x);} \
-static inline uint16_t swap_byte(uint16_t x) {return swap_byte32(x);} \
-static inline int16_t swap_byte(int16_t x) {return swap_byte16((uint16_t)x);} \
-static inline uint8_t swap_byte(uint8_t x) {return x;} \
-static inline int8_t swap_byte(int8_t x) {return x;} \
-static inline double swap_byte(double x) {return swap_byte64((uint64_t)x);} \
+static inline uint64_t swap_byte(uint64_t x) {return swap_byte64(x);}
+static inline int64_t swap_byte(int64_t x) {return swap_byte64((uint64_t)x);}
+static inline uint32_t swap_byte(uint32_t x) {return swap_byte32(x);}
+static inline int32_t swap_byte(int32_t x) {return swap_byte32((uint32_t)x);}
+static inline int32_t swap_byte(long x) {return swap_byte32((long)x);}
+static inline uint16_t swap_byte(uint16_t x) {return swap_byte32(x);}
+static inline int16_t swap_byte(int16_t x) {return swap_byte16((uint16_t)x);}
+static inline uint8_t swap_byte(uint8_t x) {return x;}
+static inline int8_t swap_byte(int8_t x) {return x;}
+static inline double swap_byte(double x) {return swap_byte64((uint64_t)x);}
 static inline float swap_byte(float x) {return swap_byte32((uint32_t)x);}
 
 //The conversion functions with fixed endianness on both ends don't need to
