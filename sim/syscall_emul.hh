@@ -29,6 +29,9 @@
 #ifndef __SIM_SYSCALL_EMUL_HH__
 #define __SIM_SYSCALL_EMUL_HH__
 
+#define BSD_HOST (defined(__APPLE__) || defined(__OpenBSD__) || \
+                  defined(__FreeBSD__))
+
 ///
 /// @file syscall_emul.hh
 ///
@@ -441,8 +444,13 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
         return -EBADF;
     }
 
-    struct stat64 hostBuf;
+#if BSD_HOST
+    struct stat  hostBuf;
+    int result = fstat(process->sim_fd(fd), &hostBuf);
+#else
+    struct stat64  hostBuf;
     int result = fstat64(process->sim_fd(fd), &hostBuf);
+#endif
 
     if (result < 0)
         return errno;
@@ -486,8 +494,13 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
+#if BSD_HOST
+    struct stat hostBuf;
+    int result = lstat(path.c_str(), &hostBuf);
+#else
     struct stat64 hostBuf;
     int result = lstat64(path.c_str(), &hostBuf);
+#endif
 
     if (result < 0)
         return -errno;
@@ -517,7 +530,6 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
         return -errno;
 
     OS::copyOutStatBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
-
     return 0;
 }
 
@@ -653,22 +665,22 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 template <class OS>
 SyscallReturn
 getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
-              ExecContext *xc)
+        ExecContext *xc)
 {
     unsigned resource = xc->getSyscallArg(0);
     TypedBufferArg<typename OS::rlimit> rlp(xc->getSyscallArg(1));
 
     switch (resource) {
-      case OS::RLIMIT_STACK:
-        // max stack size in bytes: make up a number (2MB for now)
-        rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
-        break;
+        case OS::TGT_RLIMIT_STACK:
+            // max stack size in bytes: make up a number (2MB for now)
+            rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
+            break;
 
-      default:
-        std::cerr << "getrlimitFunc: unimplemented resource " << resource
-                  << std::endl;
-        abort();
-        break;
+        default:
+            std::cerr << "getrlimitFunc: unimplemented resource " << resource
+                << std::endl;
+            abort();
+            break;
     }
 
     rlp.copyOut(xc->mem);
@@ -679,7 +691,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
 template <class OS>
 SyscallReturn
 gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
-                 ExecContext *xc)
+        ExecContext *xc)
 {
     TypedBufferArg<typename OS::timeval> tp(xc->getSyscallArg(0));
 
@@ -719,7 +731,6 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 
     return 0;
 }
-
 /// Target getrusage() function.
 template <class OS>
 SyscallReturn
@@ -729,7 +740,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
     int who = xc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN
     TypedBufferArg<typename OS::rusage> rup(xc->getSyscallArg(1));
 
-    if (who != OS::RUSAGE_SELF) {
+    if (who != OS::TGT_RUSAGE_SELF) {
         // don't really handle THREAD or CHILDREN, but just warn and
         // plow ahead
         warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
