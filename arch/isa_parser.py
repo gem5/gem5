@@ -326,12 +326,16 @@ def p_def_operand_types(t):
     except Exception, exc:
         error(t.lineno(1),
               'error: %s in def operand_types block "%s".' % (exc, t[3]))
+    buildOperandSizeMap()
     t[0] = GenCode() # contributes nothing to the output C++ file
 
 # Define the mapping from operand names to operand classes and other
 # traits.  Stored in operandTraitsMap.
 def p_def_operands(t):
     'def_operands : DEF OPERANDS CODELIT SEMI'
+    if not globals().has_key('operandSizeMap'):
+        error(t.lineno(1),
+              'error: operand types must be defined before operands')
     s = 'global operandTraitsMap; operandTraitsMap = {' + t[3] + '}'
     try:
         exec s
@@ -1081,20 +1085,20 @@ def buildOperandSizeMap():
     for ext in operandTypeMap.keys():
         (desc, size) = operandTypeMap[ext]
         if desc == 'signed int':
-            type = 'int%d_t' % size
+            ctype = 'int%d_t' % size
             is_signed = 1
         elif desc == 'unsigned int':
-            type = 'uint%d_t' % size
+            ctype = 'uint%d_t' % size
             is_signed = 0
         elif desc == 'float':
             is_signed = 1	# shouldn't really matter
             if size == 32:
-                type = 'float'
+                ctype = 'float'
             elif size == 64:
-                type = 'double'
-        if type == '':
+                ctype = 'double'
+        if ctype == '':
             error(0, 'Unrecognized type description "%s" in operandTypeMap')
-        operandSizeMap[ext] = (size, type, is_signed)
+        operandSizeMap[ext] = (size, ctype, is_signed)
 
 #
 # Base class for operand traits.  An instance of this class (or actually
@@ -1103,10 +1107,6 @@ def buildOperandSizeMap():
 #
 class OperandTraits:
     def __init__(self, dflt_ext, reg_spec, flags, sort_pri):
-        # Force construction of operandSizeMap from operandTypeMap
-        # if it hasn't happened yet
-        if not globals().has_key('operandSizeMap'):
-            buildOperandSizeMap()
         self.dflt_ext = dflt_ext
         (self.dflt_size, self.dflt_type, self.dflt_is_signed) = \
                          operandSizeMap[dflt_ext]
@@ -1119,13 +1119,13 @@ class OperandTraits:
         if not flags:
             # no flags specified (e.g., 'None')
             self.flags = ( [], [], [] )
-        elif type(flags) == StringType:
+        elif isinstance(flags, str):
             # a single flag: assumed to be unconditional
             self.flags = ( [ flags ], [], [] )
-        elif type(flags) == ListType:
+        elif isinstance(flags, list):
             # a list of flags: also assumed to be unconditional
             self.flags = ( flags, [], [] )
-        elif type(flags) == TupleType:
+        elif isinstance(flags, tuple):
             # it's a tuple: it should be a triple,
             # but each item could be a single string or a list
             (uncond_flags, src_flags, dest_flags) = flags
