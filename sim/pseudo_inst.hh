@@ -28,6 +28,11 @@
 
 class ExecContext;
 
+//We need the "Tick" data type from here
+#include "sim/host.hh"
+//We need the "Addr" data type from here
+#include "arch/isa_traits.hh"
+
 namespace AlphaPseudo
 {
     /**
@@ -41,14 +46,14 @@ namespace AlphaPseudo
     void quiesce(ExecContext *xc);
     void ivlb(ExecContext *xc);
     void ivle(ExecContext *xc);
-    void m5exit(ExecContext *xc);
+    void m5exit(ExecContext *xc, Tick delay);
     void m5exit_old(ExecContext *xc);
-    void resetstats(ExecContext *xc);
-    void dumpstats(ExecContext *xc);
-    void dumpresetstats(ExecContext *xc);
-    void m5checkpoint(ExecContext *xc);
-    void readfile(ExecContext *xc);
+    void resetstats(ExecContext *xc, Tick delay, Tick period);
+    void dumpstats(ExecContext *xc, Tick delay, Tick period);
+    void dumpresetstats(ExecContext *xc, Tick delay, Tick period);
+    void m5checkpoint(ExecContext *xc, Tick delay, Tick period);
+    uint64_t readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset);
     void debugbreak(ExecContext *xc);
     void switchcpu(ExecContext *xc);
-    void addsymbol(ExecContext *xc);
+    void addsymbol(ExecContext *xc, Addr addr, Addr symbolAddr);
 }

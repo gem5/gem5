@@ -33,8 +33,8 @@
 
 #include <string>
 
-#include "arch/alpha/pseudo_inst.hh"
-#include "arch/alpha/vtophys.hh"
+#include "sim/pseudo_inst.hh"
+#include "targetarch/vtophys.hh"
 #include "cpu/base.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/exec_context.hh"
@@ -94,21 +94,18 @@ namespace AlphaPseudo
     }
 
     void
-    m5exit(ExecContext *xc)
+    m5exit(ExecContext *xc, Tick delay)
     {
-        Tick delay = xc->regs.intRegFile[16];
         Tick when = curTick + delay * Clock::Int::ns;
         SimExit(when, "m5_exit instruction encountered");
     }
 
     void
-    resetstats(ExecContext *xc)
+    resetstats(ExecContext *xc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)
             return;
 
-        Tick delay = xc->regs.intRegFile[16];
-        Tick period = xc->regs.intRegFile[17];
 
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
@@ -118,13 +115,11 @@ namespace AlphaPseudo
     }
 
     void
-    dumpstats(ExecContext *xc)
+    dumpstats(ExecContext *xc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)
             return;
 
-        Tick delay = xc->regs.intRegFile[16];
-        Tick period = xc->regs.intRegFile[17];
 
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
@@ -134,11 +129,10 @@ namespace AlphaPseudo
     }
 
     void
-    addsymbol(ExecContext *xc)
+    addsymbol(ExecContext *xc, Addr addr, Addr symbolAddr)
     {
-        Addr addr = xc->regs.intRegFile[16];
         char symb[100];
-        CopyString(xc, symb, xc->regs.intRegFile[17], 100);
+        CopyString(xc, symb, symbolAddr, 100);
         std::string symbol(symb);
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
@@ -147,13 +141,11 @@ namespace AlphaPseudo
     }
 
     void
-    dumpresetstats(ExecContext *xc)
+    dumpresetstats(ExecContext *xc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)
             return;
 
-        Tick delay = xc->regs.intRegFile[16];
-        Tick period = xc->regs.intRegFile[17];
 
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
@@ -163,13 +155,11 @@ namespace AlphaPseudo
     }
 
     void
-    m5checkpoint(ExecContext *xc)
+    m5checkpoint(ExecContext *xc, Tick delay, Tick period)
     {
         if (!doCheckpointInsts)
             return;
 
-        Tick delay = xc->regs.intRegFile[16];
-        Tick period = xc->regs.intRegFile[17];
 
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
@@ -177,18 +167,14 @@ namespace AlphaPseudo
         Checkpoint::setup(when, repeat);
     }
 
-    void
-    readfile(ExecContext *xc)
+    uint64_t
+    readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset)
     {
         const string &file = xc->cpu->system->params->readfile;
         if (file.empty()) {
-            xc->regs.intRegFile[0] = ULL(0);
-            return;
+            return ULL(0);
         }
 
-        Addr vaddr = xc->regs.intRegFile[16];
-        uint64_t len = xc->regs.intRegFile[17];
-        uint64_t offset = xc->regs.intRegFile[18];
         uint64_t result = 0;
 
         int fd = ::open(file.c_str(), O_RDONLY, 0);
@@ -213,7 +199,7 @@ namespace AlphaPseudo
         close(fd);
         CopyIn(xc, vaddr, buf, result);
         delete [] buf;
-        xc->regs.intRegFile[0] = result;
+        return result;
     }
 
     class Context : public ParamContext

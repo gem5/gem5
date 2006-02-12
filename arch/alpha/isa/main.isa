@@ -160,7 +160,9 @@ def operands {{
     'FPCR':  (' ControlReg', 'uq', 'Fpcr', None, 1),
     # The next two are hacks for non-full-system call-pal emulation
     'R0':  ('IntReg', 'uq', '0', None, 1),
-    'R16': ('IntReg', 'uq', '16', None, 1)
+    'R16': ('IntReg', 'uq', '16', None, 1),
+    'R17': ('IntReg', 'uq', '17', None, 1),
+    'R18': ('IntReg', 'uq', '18', None, 1)
 }};
 
 ////////////////////////////////////////////////////////////////////

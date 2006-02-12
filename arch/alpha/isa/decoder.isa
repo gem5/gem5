@@ -768,23 +768,23 @@ decode OPCODE default Unknown::unknown() {
                 AlphaPseudo::m5exit_old(xc->xcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x21: m5exit({{
-                AlphaPseudo::m5exit(xc->xcBase());
+                AlphaPseudo::m5exit(xc->xcBase(), R16);
             }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{ Ra = xc->xcBase()->cpu->system->init_param; }});
             0x40: resetstats({{
-                AlphaPseudo::resetstats(xc->xcBase());
+                AlphaPseudo::resetstats(xc->xcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x41: dumpstats({{
-                AlphaPseudo::dumpstats(xc->xcBase());
+                AlphaPseudo::dumpstats(xc->xcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x42: dumpresetstats({{
-                AlphaPseudo::dumpresetstats(xc->xcBase());
+                AlphaPseudo::dumpresetstats(xc->xcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x43: m5checkpoint({{
-                AlphaPseudo::m5checkpoint(xc->xcBase());
+                AlphaPseudo::m5checkpoint(xc->xcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x50: m5readfile({{
-                AlphaPseudo::readfile(xc->xcBase());
+                R0 = AlphaPseudo::readfile(xc->xcBase(), R16, R17, R18);
             }}, IsNonSpeculative);
             0x51: m5break({{
                 AlphaPseudo::debugbreak(xc->xcBase());
@@ -793,7 +793,7 @@ decode OPCODE default Unknown::unknown() {
                 AlphaPseudo::switchcpu(xc->xcBase());
             }}, IsNonSpeculative);
             0x53: m5addsymbol({{
-                AlphaPseudo::addsymbol(xc->xcBase());
+                AlphaPseudo::addsymbol(xc->xcBase(), R16, R17);
             }}, IsNonSpeculative);
 
         }

@@ -244,7 +244,6 @@ arch_full_system_sources = Split('''
 	arch/alpha/arguments.cc
 	arch/alpha/ev5.cc
 	arch/alpha/osfpal.cc
-	arch/alpha/pseudo_inst.cc
 	arch/alpha/stacktrace.cc
 	arch/alpha/vtophys.cc
 	''')

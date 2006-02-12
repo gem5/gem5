@@ -292,6 +292,7 @@ full_system_sources = Split('''
 	mem/functional/physical.cc
 
 	sim/system.cc
+	sim/pseudo_inst.cc
         ''')
 
 # These are now included by the architecture specific SConscript
@@ -347,10 +348,10 @@ targetarch_files = Split('''
         ecoff_machdep.h
         ev5.hh
         faults.hh
-        pseudo_inst.hh
         stacktrace.hh
         vtophys.hh
         ''')
+#        pseudo_inst.hh
 #        isa_traits.hh
 #        osfpal.hh
 #        byte_swap.hh
