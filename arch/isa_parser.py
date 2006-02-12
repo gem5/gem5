@@ -320,29 +320,27 @@ def p_global_let(t):
 # widths (stored in operandTypeMap).
 def p_def_operand_types(t):
     'def_operand_types : DEF OPERAND_TYPES CODELIT SEMI'
-    s = 'global operandTypeMap; operandTypeMap = {' + t[3] + '}'
     try:
-        exec s
+        userDict = eval('{' + t[3] + '}')
     except Exception, exc:
         error(t.lineno(1),
               'error: %s in def operand_types block "%s".' % (exc, t[3]))
-    buildOperandSizeMap()
+    buildOperandTypeMap(userDict, t.lineno(1))
     t[0] = GenCode() # contributes nothing to the output C++ file
 
 # Define the mapping from operand names to operand classes and other
-# traits.  Stored in operandTraitsMap.
+# traits.  Stored in operandNameMap.
 def p_def_operands(t):
     'def_operands : DEF OPERANDS CODELIT SEMI'
-    if not globals().has_key('operandSizeMap'):
+    if not globals().has_key('operandTypeMap'):
         error(t.lineno(1),
               'error: operand types must be defined before operands')
-    s = 'global operandTraitsMap; operandTraitsMap = {' + t[3] + '}'
     try:
-        exec s
+        userDict = eval('{' + t[3] + '}')
     except Exception, exc:
         error(t.lineno(1),
               'error: %s in def operands block "%s".' % (exc, t[3]))
-    defineDerivedOperandVars()
+    buildOperandNameMap(userDict, t.lineno(1))
     t[0] = GenCode() # contributes nothing to the output C++ file
 
 # A bitfield definition looks like:
@@ -847,6 +845,19 @@ class GenCode:
 # a defineInst() method that generates the code for an instruction
 # definition.
 
+exportContextSymbols = ('InstObjParams', 'CodeBlock',
+                        'makeList', 're', 'string')
+
+exportContext = {}
+
+def updateExportContext():
+    exportContext.update(exportDict(*exportContextSymbols))
+    exportContext.update(templateMap)
+
+def exportDict(*symNames):
+    return dict([(s, eval(s)) for s in symNames])
+
+
 class Format:
     def __init__(self, id, params, code):
         # constructor: just save away arguments
@@ -1077,13 +1088,12 @@ def makeList(arg):
     else:
         return [ arg ]
 
-# generate operandSizeMap based on provided operandTypeMap:
-# basically generate equiv. C++ type and make is_signed flag
-def buildOperandSizeMap():
-    global operandSizeMap
-    operandSizeMap = {}
-    for ext in operandTypeMap.keys():
-        (desc, size) = operandTypeMap[ext]
+# Generate operandTypeMap from the user's 'def operand_types'
+# statement.
+def buildOperandTypeMap(userDict, lineno):
+    global operandTypeMap
+    operandTypeMap = {}
+    for (ext, (desc, size)) in userDict.iteritems():
         if desc == 'signed int':
             ctype = 'int%d_t' % size
             is_signed = 1
@@ -1097,20 +1107,262 @@ def buildOperandSizeMap():
             elif size == 64:
                 ctype = 'double'
         if ctype == '':
-            error(0, 'Unrecognized type description "%s" in operandTypeMap')
-        operandSizeMap[ext] = (size, ctype, is_signed)
+            error(0, 'Unrecognized type description "%s" in userDict')
+        operandTypeMap[ext] = (size, ctype, is_signed)
 
 #
-# Base class for operand traits.  An instance of this class (or actually
-# a class derived from this one) encapsulates the traits of a particular
-# operand type (e.g., "32-bit integer register").
 #
-class OperandTraits:
-    def __init__(self, dflt_ext, reg_spec, flags, sort_pri):
-        self.dflt_ext = dflt_ext
-        (self.dflt_size, self.dflt_type, self.dflt_is_signed) = \
-                         operandSizeMap[dflt_ext]
-        self.reg_spec = reg_spec
+#
+# Base class for operand descriptors.  An instance of this class (or
+# actually a class derived from this one) represents a specific
+# operand for a code block (e.g, "Rc.sq" as a dest). Intermediate
+# derived classes encapsulates the traits of a particular operand type
+# (e.g., "32-bit integer register").
+#
+class Operand(object):
+    def __init__(self, full_name, ext, is_src, is_dest):
+        self.full_name = full_name
+        self.ext = ext
+        self.is_src = is_src
+        self.is_dest = is_dest
+        # The 'effective extension' (eff_ext) is either the actual
+        # extension, if one was explicitly provided, or the default.
+        if ext:
+            self.eff_ext = ext
+        else:
+            self.eff_ext = self.dflt_ext
+
+        (self.size, self.ctype, self.is_signed) = operandTypeMap[self.eff_ext]
+
+        # note that mem_acc_size is undefined for non-mem operands...
+        # template must be careful not to use it if it doesn't apply.
+        if self.isMem():
+            self.mem_acc_size = self.makeAccSize()
+
+    # Finalize additional fields (primarily code fields).  This step
+    # is done separately since some of these fields may depend on the
+    # register index enumeration that hasn't been performed yet at the
+    # time of __init__().
+    def finalize(self):
+        self.flags = self.getFlags()
+        self.constructor = self.makeConstructor()
+        self.op_decl = self.makeDecl()
+
+        if self.is_src:
+            self.op_rd = self.makeRead()
+        else:
+            self.op_rd = ''
+
+        if self.is_dest:
+            self.op_wb = self.makeWrite()
+        else:
+            self.op_wb = ''
+
+    def isMem(self):
+        return 0
+
+    def isReg(self):
+        return 0
+
+    def isFloatReg(self):
+        return 0
+
+    def isIntReg(self):
+        return 0
+
+    def isControlReg(self):
+        return 0
+
+    def getFlags(self):
+        # note the empty slice '[:]' gives us a copy of self.flags[0]
+        # instead of a reference to it
+        my_flags = self.flags[0][:]
+        if self.is_src:
+            my_flags += self.flags[1]
+        if self.is_dest:
+            my_flags += self.flags[2]
+        return my_flags
+
+    def makeDecl(self):
+        # Note that initializations in the declarations are solely
+        # to avoid 'uninitialized variable' errors from the compiler.
+        return self.ctype + ' ' + self.base_name + ' = 0;\n';
+
+class IntRegOperand(Operand):
+    def isReg(self):
+        return 1
+
+    def isIntReg(self):
+        return 1
+
+    def makeConstructor(self):
+        c = ''
+        if self.is_src:
+            c += '\n\t_srcRegIdx[%d] = %s;' % \
+                 (self.src_reg_idx, self.reg_spec)
+        if self.is_dest:
+            c += '\n\t_destRegIdx[%d] = %s;' % \
+                 (self.dest_reg_idx, self.reg_spec)
+        return c
+
+    def makeRead(self):
+        if (self.ctype == 'float' or self.ctype == 'double'):
+            error(0, 'Attempt to read integer register as FP')
+        if (self.size == self.dflt_size):
+            return '%s = xc->readIntReg(this, %d);\n' % \
+                   (self.base_name, self.src_reg_idx)
+        else:
+            return '%s = bits(xc->readIntReg(this, %d), %d, 0);\n' % \
+                   (self.base_name, self.src_reg_idx, self.size-1)
+
+    def makeWrite(self):
+        if (self.ctype == 'float' or self.ctype == 'double'):
+            error(0, 'Attempt to write integer register as FP')
+        if (self.size != self.dflt_size and self.is_signed):
+            final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
+        else:
+            final_val = self.base_name
+        wb = '''
+        {
+            %s final_val = %s;
+            xc->setIntReg(this, %d, final_val);\n
+            if (traceData) { traceData->setData(final_val); }
+        }''' % (self.dflt_ctype, final_val, self.dest_reg_idx)
+        return wb
+
+class FloatRegOperand(Operand):
+    def isReg(self):
+        return 1
+
+    def isFloatReg(self):
+        return 1
+
+    def makeConstructor(self):
+        c = ''
+        if self.is_src:
+            c += '\n\t_srcRegIdx[%d] = %s + FP_Base_DepTag;' % \
+                 (self.src_reg_idx, self.reg_spec)
+        if self.is_dest:
+            c += '\n\t_destRegIdx[%d] = %s + FP_Base_DepTag;' % \
+                 (self.dest_reg_idx, self.reg_spec)
+        return c
+
+    def makeRead(self):
+        bit_select = 0
+        if (self.ctype == 'float'):
+            func = 'readFloatRegSingle'
+        elif (self.ctype == 'double'):
+            func = 'readFloatRegDouble'
+        else:
+            func = 'readFloatRegInt'
+            if (self.size != self.dflt_size):
+                bit_select = 1
+        base = 'xc->%s(this, %d)' % \
+               (func, self.src_reg_idx)
+        if bit_select:
+            return '%s = bits(%s, %d, 0);\n' % \
+                   (self.base_name, base, self.size-1)
+        else:
+            return '%s = %s;\n' % (self.base_name, base)
+
+    def makeWrite(self):
+        final_val = self.base_name
+        final_ctype = self.ctype
+        if (self.ctype == 'float'):
+            func = 'setFloatRegSingle'
+        elif (self.ctype == 'double'):
+            func = 'setFloatRegDouble'
+        else:
+            func = 'setFloatRegInt'
+            final_ctype = 'uint%d_t' % self.dflt_size
+            if (self.size != self.dflt_size and self.is_signed):
+                final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
+        wb = '''
+        {
+            %s final_val = %s;
+            xc->%s(this, %d, final_val);\n
+            if (traceData) { traceData->setData(final_val); }
+        }''' % (final_ctype, final_val, func, self.dest_reg_idx)
+        return wb
+
+class ControlRegOperand(Operand):
+    def isReg(self):
+        return 1
+
+    def isControlReg(self):
+        return 1
+
+    def makeConstructor(self):
+        c = ''
+        if self.is_src:
+            c += '\n\t_srcRegIdx[%d] = %s_DepTag;' % \
+                 (self.src_reg_idx, self.reg_spec)
+        if self.is_dest:
+            c += '\n\t_destRegIdx[%d] = %s_DepTag;' % \
+                 (self.dest_reg_idx, self.reg_spec)
+        return c
+
+    def makeRead(self):
+        bit_select = 0
+        if (self.ctype == 'float' or self.ctype == 'double'):
+            error(0, 'Attempt to read control register as FP')
+        base = 'xc->read%s()' % self.reg_spec
+        if self.size == self.dflt_size:
+            return '%s = %s;\n' % (self.base_name, base)
+        else:
+            return '%s = bits(%s, %d, 0);\n' % \
+                   (self.base_name, base, self.size-1)
+
+    def makeWrite(self):
+        if (self.ctype == 'float' or self.ctype == 'double'):
+            error(0, 'Attempt to write control register as FP')
+        wb = 'xc->set%s(%s);\n' % (self.reg_spec, self.base_name)
+        wb += 'if (traceData) { traceData->setData(%s); }' % \
+              self.base_name
+        return wb
+
+class MemOperand(Operand):
+    def isMem(self):
+        return 1
+
+    def makeConstructor(self):
+        return ''
+
+    def makeDecl(self):
+        # Note that initializations in the declarations are solely
+        # to avoid 'uninitialized variable' errors from the compiler.
+        # Declare memory data variable.
+        c = '%s %s = 0;\n' % (self.ctype, self.base_name)
+        return c
+
+    def makeRead(self):
+        return ''
+
+    def makeWrite(self):
+        return ''
+
+    # Return the memory access size *in bits*, suitable for
+    # forming a type via "uint%d_t".  Divide by 8 if you want bytes.
+    def makeAccSize(self):
+        return self.size
+
+class NPCOperand(Operand):
+    def makeConstructor(self):
+        return ''
+
+    def makeRead(self):
+        return '%s = xc->readPC() + 4;\n' % self.base_name
+
+    def makeWrite(self):
+        return 'xc->setNextPC(%s);\n' % self.base_name
+
+
+def buildOperandNameMap(userDict, lineno):
+    global operandNameMap
+    operandNameMap = {}
+    for (op_name, val) in userDict.iteritems():
+        (base_cls_name, dflt_ext, reg_spec, flags, sort_pri) = val
+        (dflt_size, dflt_ctype, dflt_is_signed) = operandTypeMap[dflt_ext]
         # Canonical flag structure is a triple of lists, where each list
         # indicates the set of flags implied by this operand always, when
         # used as a source, and when used as a dest, respectively.
@@ -1118,253 +1370,42 @@ class OperandTraits:
         # obvious shortcuts; we convert these to canonical form here.
         if not flags:
             # no flags specified (e.g., 'None')
-            self.flags = ( [], [], [] )
+            flags = ( [], [], [] )
         elif isinstance(flags, str):
             # a single flag: assumed to be unconditional
-            self.flags = ( [ flags ], [], [] )
+            flags = ( [ flags ], [], [] )
         elif isinstance(flags, list):
             # a list of flags: also assumed to be unconditional
-            self.flags = ( flags, [], [] )
+            flags = ( flags, [], [] )
         elif isinstance(flags, tuple):
             # it's a tuple: it should be a triple,
             # but each item could be a single string or a list
             (uncond_flags, src_flags, dest_flags) = flags
-            self.flags = (makeList(uncond_flags),
-                          makeList(src_flags), makeList(dest_flags))
-        self.sort_pri = sort_pri
+            flags = (makeList(uncond_flags),
+                     makeList(src_flags), makeList(dest_flags))
+        # Accumulate attributes of new operand class in tmp_dict
+        tmp_dict = {}
+        for attr in ('dflt_ext', 'reg_spec', 'flags', 'sort_pri',
+                     'dflt_size', 'dflt_ctype', 'dflt_is_signed'):
+            tmp_dict[attr] = eval(attr)
+        tmp_dict['base_name'] = op_name
+        # New class name will be e.g. "IntReg_Ra"
+        cls_name = base_cls_name + '_' + op_name
+        # Evaluate string arg to get class object.  Note that the
+        # actual base class for "IntReg" is "IntRegOperand", i.e. we
+        # have to append "Operand".
+        try:
+            base_cls = eval(base_cls_name + 'Operand')
+        except NameError:
+            error(lineno,
+                  'error: unknown operand base class "%s"' % base_cls_name)
+        # The following statement creates a new class called
+        # <cls_name> as a subclass of <base_cls> with the attributes
+        # in tmp_dict, just as if we evaluated a class declaration.
+        operandNameMap[op_name] = type(cls_name, (base_cls,), tmp_dict)
 
-    def isMem(self):
-        return 0
-
-    def isReg(self):
-        return 0
-
-    def isFloatReg(self):
-        return 0
-
-    def isIntReg(self):
-        return 0
-
-    def isControlReg(self):
-        return 0
-
-    def getFlags(self, op_desc):
-        # note the empty slice '[:]' gives us a copy of self.flags[0]
-        # instead of a reference to it
-        my_flags = self.flags[0][:]
-        if op_desc.is_src:
-            my_flags += self.flags[1]
-        if op_desc.is_dest:
-            my_flags += self.flags[2]
-        return my_flags
-
-    def makeDecl(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        # Note that initializations in the declarations are solely
-        # to avoid 'uninitialized variable' errors from the compiler.
-        return type + ' ' + op_desc.base_name + ' = 0;\n';
-
-class IntRegOperandTraits(OperandTraits):
-    def isReg(self):
-        return 1
-
-    def isIntReg(self):
-        return 1
-
-    def makeConstructor(self, op_desc):
-        c = ''
-        if op_desc.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s;' % \
-                 (op_desc.src_reg_idx, self.reg_spec)
-        if op_desc.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s;' % \
-                 (op_desc.dest_reg_idx, self.reg_spec)
-        return c
-
-    def makeRead(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        if (type == 'float' or type == 'double'):
-            error(0, 'Attempt to read integer register as FP')
-        if (size == self.dflt_size):
-            return '%s = xc->readIntReg(this, %d);\n' % \
-                   (op_desc.base_name, op_desc.src_reg_idx)
-        else:
-            return '%s = bits(xc->readIntReg(this, %d), %d, 0);\n' % \
-                   (op_desc.base_name, op_desc.src_reg_idx, size-1)
-
-    def makeWrite(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        if (type == 'float' or type == 'double'):
-            error(0, 'Attempt to write integer register as FP')
-        if (size != self.dflt_size and is_signed):
-            final_val = 'sext<%d>(%s)' % (size, op_desc.base_name)
-        else:
-            final_val = op_desc.base_name
-        wb = '''
-        {
-            %s final_val = %s;
-            xc->setIntReg(this, %d, final_val);\n
-            if (traceData) { traceData->setData(final_val); }
-        }''' % (self.dflt_type, final_val, op_desc.dest_reg_idx)
-        return wb
-
-class FloatRegOperandTraits(OperandTraits):
-    def isReg(self):
-        return 1
-
-    def isFloatReg(self):
-        return 1
-
-    def makeConstructor(self, op_desc):
-        c = ''
-        if op_desc.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s + FP_Base_DepTag;' % \
-                 (op_desc.src_reg_idx, self.reg_spec)
-        if op_desc.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s + FP_Base_DepTag;' % \
-                 (op_desc.dest_reg_idx, self.reg_spec)
-        return c
-
-    def makeRead(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        bit_select = 0
-        if (type == 'float'):
-            func = 'readFloatRegSingle'
-        elif (type == 'double'):
-            func = 'readFloatRegDouble'
-        else:
-            func = 'readFloatRegInt'
-            if (size != self.dflt_size):
-                bit_select = 1
-        base = 'xc->%s(this, %d)' % \
-               (func, op_desc.src_reg_idx)
-        if bit_select:
-            return '%s = bits(%s, %d, 0);\n' % \
-                   (op_desc.base_name, base, size-1)
-        else:
-            return '%s = %s;\n' % (op_desc.base_name, base)
-
-    def makeWrite(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        final_val = op_desc.base_name
-        if (type == 'float'):
-            func = 'setFloatRegSingle'
-        elif (type == 'double'):
-            func = 'setFloatRegDouble'
-        else:
-            func = 'setFloatRegInt'
-            type = 'uint%d_t' % self.dflt_size
-            if (size != self.dflt_size and is_signed):
-                final_val = 'sext<%d>(%s)' % (size, op_desc.base_name)
-        wb = '''
-        {
-            %s final_val = %s;
-            xc->%s(this, %d, final_val);\n
-            if (traceData) { traceData->setData(final_val); }
-        }''' % (type, final_val, func, op_desc.dest_reg_idx)
-        return wb
-
-class ControlRegOperandTraits(OperandTraits):
-    def isReg(self):
-        return 1
-
-    def isControlReg(self):
-        return 1
-
-    def makeConstructor(self, op_desc):
-        c = ''
-        if op_desc.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s_DepTag;' % \
-                 (op_desc.src_reg_idx, self.reg_spec)
-        if op_desc.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s_DepTag;' % \
-                 (op_desc.dest_reg_idx, self.reg_spec)
-        return c
-
-    def makeRead(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        bit_select = 0
-        if (type == 'float' or type == 'double'):
-            error(0, 'Attempt to read control register as FP')
-        base = 'xc->read%s()' % self.reg_spec
-        if size == self.dflt_size:
-            return '%s = %s;\n' % (op_desc.base_name, base)
-        else:
-            return '%s = bits(%s, %d, 0);\n' % \
-                   (op_desc.base_name, base, size-1)
-
-    def makeWrite(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        if (type == 'float' or type == 'double'):
-            error(0, 'Attempt to write control register as FP')
-        wb = 'xc->set%s(%s);\n' % (self.reg_spec, op_desc.base_name)
-        wb += 'if (traceData) { traceData->setData(%s); }' % \
-              op_desc.base_name
-        return wb
-
-class MemOperandTraits(OperandTraits):
-    def isMem(self):
-        return 1
-
-    def makeConstructor(self, op_desc):
-        return ''
-
-    def makeDecl(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        # Note that initializations in the declarations are solely
-        # to avoid 'uninitialized variable' errors from the compiler.
-        # Declare memory data variable.
-        c = '%s %s = 0;\n' % (type, op_desc.base_name)
-        return c
-
-    def makeRead(self, op_desc):
-        return ''
-
-    def makeWrite(self, op_desc):
-        return ''
-
-    # Return the memory access size *in bits*, suitable for
-    # forming a type via "uint%d_t".  Divide by 8 if you want bytes.
-    def makeAccSize(self, op_desc):
-        (size, type, is_signed) = operandSizeMap[op_desc.eff_ext]
-        return size
-
-class NPCOperandTraits(OperandTraits):
-    def makeConstructor(self, op_desc):
-        return ''
-
-    def makeRead(self, op_desc):
-        return '%s = xc->readPC() + 4;\n' % op_desc.base_name
-
-    def makeWrite(self, op_desc):
-        return 'xc->setNextPC(%s);\n' % op_desc.base_name
-
-
-exportContextSymbols = ('IntRegOperandTraits', 'FloatRegOperandTraits',
-                        'ControlRegOperandTraits', 'MemOperandTraits',
-                        'NPCOperandTraits', 'InstObjParams', 'CodeBlock',
-                        'makeList', 're', 'string')
-
-exportContext = {}
-
-def updateExportContext():
-    exportContext.update(exportDict(*exportContextSymbols))
-    exportContext.update(templateMap)
-
-
-def exportDict(*symNames):
-    return dict([(s, eval(s)) for s in symNames])
-
-
-#
-# Define operand variables that get derived from the basic declaration
-# of ISA-specific operands in operandTraitsMap.  This function must be
-# called by the ISA description file explicitly after defining
-# operandTraitsMap (in a 'let' block).
-#
-def defineDerivedOperandVars():
-    global operands
-    operands = operandTraitsMap.keys()
+    # Define operand variables.
+    operands = userDict.keys()
 
     operandsREString = (r'''
     (?<![\w\.])	     # neg. lookbehind assertion: prevent partial matches
@@ -1386,54 +1427,10 @@ def defineDerivedOperandVars():
     operandsWithExtRE = re.compile(operandsWithExtREString, re.MULTILINE)
 
 
-#
-# Operand descriptor class.  An instance of this class represents
-# a specific operand for a code block.
-#
-class OperandDescriptor:
-    def __init__(self, full_name, base_name, ext, is_src, is_dest):
-        self.full_name = full_name
-        self.base_name = base_name
-        self.ext = ext
-        self.is_src = is_src
-        self.is_dest = is_dest
-        self.traits = operandTraitsMap[base_name]
-        # The 'effective extension' (eff_ext) is either the actual
-        # extension, if one was explicitly provided, or the default.
-        if ext:
-            self.eff_ext = ext
-        else:
-            self.eff_ext = self.traits.dflt_ext
-
-        # note that mem_acc_size is undefined for non-mem operands...
-        # template must be careful not to use it if it doesn't apply.
-        if self.traits.isMem():
-            self.mem_acc_size = self.traits.makeAccSize(self)
-
-    # Finalize additional fields (primarily code fields).  This step
-    # is done separately since some of these fields may depend on the
-    # register index enumeration that hasn't been performed yet at the
-    # time of __init__().
-    def finalize(self):
-        self.flags = self.traits.getFlags(self)
-        self.constructor = self.traits.makeConstructor(self)
-        self.op_decl = self.traits.makeDecl(self)
-
-        if self.is_src:
-            self.op_rd = self.traits.makeRead(self)
-        else:
-            self.op_rd = ''
-
-        if self.is_dest:
-            self.op_wb = self.traits.makeWrite(self)
-        else:
-            self.op_wb = ''
-
-
-class OperandDescriptorList:
+class OperandList:
 
     # Find all the operands in the given code block.  Returns an operand
-    # descriptor list (instance of class OperandDescriptorList).
+    # descriptor list (instance of class OperandList).
     def __init__(self, code):
         self.items = []
         self.bases = {}
@@ -1463,8 +1460,8 @@ class OperandDescriptorList:
                 op_desc.is_dest = op_desc.is_dest or is_dest
             else:
                 # new operand: create new descriptor
-                op_desc = OperandDescriptor(op_full, op_base, op_ext,
-                                            is_src, is_dest)
+                op_desc = operandNameMap[op_base](op_full, op_ext,
+                                                  is_src, is_dest)
                 self.append(op_desc)
             # start next search after end of current match
             next_pos = match.end()
@@ -1477,18 +1474,18 @@ class OperandDescriptorList:
         self.numIntDestRegs = 0
         self.memOperand = None
         for op_desc in self.items:
-            if op_desc.traits.isReg():
+            if op_desc.isReg():
                 if op_desc.is_src:
                     op_desc.src_reg_idx = self.numSrcRegs
                     self.numSrcRegs += 1
                 if op_desc.is_dest:
                     op_desc.dest_reg_idx = self.numDestRegs
                     self.numDestRegs += 1
-                    if op_desc.traits.isFloatReg():
+                    if op_desc.isFloatReg():
                         self.numFPDestRegs += 1
-                    elif op_desc.traits.isIntReg():
+                    elif op_desc.isIntReg():
                         self.numIntDestRegs += 1
-            elif op_desc.traits.isMem():
+            elif op_desc.isMem():
                 if self.memOperand:
                     error(0, "Code block has more than one memory operand.")
                 self.memOperand = op_desc
@@ -1540,7 +1537,7 @@ class OperandDescriptorList:
         return self.__internalConcatAttrs(attr_name, filter, [])
 
     def sort(self):
-        self.items.sort(lambda a, b: a.traits.sort_pri - b.traits.sort_pri)
+        self.items.sort(lambda a, b: a.sort_pri - b.sort_pri)
 
 # Regular expression object to match C++ comments
 # (used in findOperands())
@@ -1552,7 +1549,7 @@ assignRE = re.compile(r'\s*=(?!=)', re.MULTILINE)
 
 # Munge operand names in code string to make legal C++ variable names.
 # This means getting rid of the type extension if any.
-# (Will match base_name attribute of OperandDescriptor object.)
+# (Will match base_name attribute of Operand object.)
 def substMungedOpNames(code):
     return operandsWithExtRE.sub(r'\1', code)
 
@@ -1578,7 +1575,7 @@ def makeFlagConstructor(flag_list):
 class CodeBlock:
     def __init__(self, code):
         self.orig_code = code
-        self.operands = OperandDescriptorList(code)
+        self.operands = OperandList(code)
         self.code = substMungedOpNames(substBitOps(code))
         self.constructor = self.operands.concatAttrStrings('constructor')
         self.constructor += \

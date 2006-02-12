@@ -148,20 +148,19 @@ def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
     # explicitly specify '.uq'.
-    'Ra': IntRegOperandTraits('uq', 'RA', 'IsInteger', 1),
-    'Rb': IntRegOperandTraits('uq', 'RB', 'IsInteger', 2),
-    'Rc': IntRegOperandTraits('uq', 'RC', 'IsInteger', 3),
-    'Fa': FloatRegOperandTraits('df', 'FA', 'IsFloating', 1),
-    'Fb': FloatRegOperandTraits('df', 'FB', 'IsFloating', 2),
-    'Fc': FloatRegOperandTraits('df', 'FC', 'IsFloating', 3),
-    'Mem': MemOperandTraits('uq', None,
-                            ('IsMemRef', 'IsLoad', 'IsStore'), 4),
-    'NPC': NPCOperandTraits('uq', None, ( None, None, 'IsControl' ), 4),
-    'Runiq': ControlRegOperandTraits('uq', 'Uniq', None, 1),
-    'FPCR':  ControlRegOperandTraits('uq', 'Fpcr', None, 1),
+    'Ra': ('IntReg', 'uq', 'RA', 'IsInteger', 1),
+    'Rb': ('IntReg', 'uq', 'RB', 'IsInteger', 2),
+    'Rc': ('IntReg', 'uq', 'RC', 'IsInteger', 3),
+    'Fa': ('FloatReg', 'df', 'FA', 'IsFloating', 1),
+    'Fb': ('FloatReg', 'df', 'FB', 'IsFloating', 2),
+    'Fc': ('FloatReg', 'df', 'FC', 'IsFloating', 3),
+    'Mem': ('Mem', 'uq', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
+    'NPC': ('NPC', 'uq', None, ( None, None, 'IsControl' ), 4),
+    'Runiq': ('ControlReg', 'uq', 'Uniq', None, 1),
+    'FPCR':  (' ControlReg', 'uq', 'Fpcr', None, 1),
     # The next two are hacks for non-full-system call-pal emulation
-    'R0':  IntRegOperandTraits('uq', '0', None, 1),
-    'R16': IntRegOperandTraits('uq', '16', None, 1)
+    'R0':  ('IntReg', 'uq', '0', None, 1),
+    'R16': ('IntReg', 'uq', '16', None, 1)
 }};
 
 ////////////////////////////////////////////////////////////////////
