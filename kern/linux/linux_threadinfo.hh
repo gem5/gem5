@@ -31,7 +31,7 @@
 
 #include "kern/linux/thread_info.hh"
 #include "kern/linux/sched.hh"
-#include "targetarch/vptr.hh"
+#include "sim/vptr.hh"
 
 namespace Linux {
 

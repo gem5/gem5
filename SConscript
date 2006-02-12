@@ -347,16 +347,16 @@ targetarch_files = Split('''
         ecoff_machdep.h
         ev5.hh
         faults.hh
-        isa_fullsys_traits.hh
-        isa_traits.hh
         pseudo_inst.hh
         stacktrace.hh
-        vptr.hh
         vtophys.hh
         ''')
+#        isa_traits.hh
 #        osfpal.hh
 #        byte_swap.hh
 #        alpha_common_syscall_emul.hh
+#        vptr.hh
+#        isa_fullsys_traits.hh
 
 # Set up bridging headers to the architecture specific versions
 for f in targetarch_files:

@@ -29,7 +29,8 @@
 #ifndef __ARCH_ALPHA_VPTR_HH__
 #define __ARCH_ALPHA_VPTR_HH__
 
-#include "arch/alpha/vtophys.hh"
+#include "targetarch/vtophys.hh"
+#include "arch/isa_traits.hh"
 
 class ExecContext;
 
@@ -69,15 +70,16 @@ class VPtr
     const VPtr<T> &operator+=(int offset)
     {
         ptr += offset;
-        assert((ptr & (AlphaISA::PageBytes - 1)) + sizeof(T)
-               < AlphaISA::PageBytes);
+        assert((ptr & (TheISA::PageBytes - 1)) + sizeof(T)
+               < TheISA::PageBytes);
 
         return *this;
     }
 
     const VPtr<T> &operator=(Addr p)
     {
-        assert((p & (AlphaISA::PageBytes)) + sizeof(T) < AlphaISA::PageBytes);
+        assert((p & (TheISA::PageBytes - 1)) + sizeof(T)
+               < TheISA::PageBytes);
         ptr = p;
 
         return *this;

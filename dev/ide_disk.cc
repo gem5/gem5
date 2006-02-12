@@ -50,7 +50,7 @@
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 using namespace std;
 

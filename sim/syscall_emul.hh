@@ -47,7 +47,7 @@
 
 #include "base/intmath.hh"	// for RoundUp
 #include "mem/functional/functional.hh"
-#include "targetarch/isa_traits.hh"	// for Addr
+#include "arch/isa_traits.hh"	// for Addr
 
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"

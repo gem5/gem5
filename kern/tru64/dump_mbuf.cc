@@ -35,7 +35,7 @@
 #include "kern/tru64/mbuf.hh"
 #include "sim/host.hh"
 #include "targetarch/arguments.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
 namespace tru64 {

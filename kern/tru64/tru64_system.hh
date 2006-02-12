@@ -30,7 +30,7 @@
 #define __KERN_TRU64_TRU64_SYSTEM_HH__
 
 #include "sim/system.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class ExecContext;
 

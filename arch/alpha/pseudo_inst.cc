@@ -46,7 +46,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 #include "sim/debug.hh"
-#include "targetarch/vptr.hh"
+#include "sim/vptr.hh"
 
 using namespace std;
 

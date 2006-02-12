@@ -34,7 +34,7 @@
 #include "kern/tru64/printf.hh"
 #include "mem/functional/memory_control.hh"
 #include "targetarch/arguments.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 //void SkipFuncEvent::process(ExecContext *xc);
 

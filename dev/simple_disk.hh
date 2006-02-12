@@ -34,7 +34,7 @@
 #define __DEV_SIMPLE_DISK_HH__
 
 #include "sim/sim_object.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class DiskImage;
 class PhysicalMemory;

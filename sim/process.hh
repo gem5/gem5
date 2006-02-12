@@ -40,7 +40,7 @@
 
 #include <vector>
 
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 #include "base/statistics.hh"
