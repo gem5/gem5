@@ -145,22 +145,6 @@ floorLog2(long long x)
     return floorLog2((unsigned long long)x);
 }
 
-#if defined(__APPLE__)
-inline int
-floorLog2(size_t x)
-{
-    assert(x > 0);
-    assert(sizeof(size_t) == 4 || sizeof(size_t) == 8);
-
-    // It's my hope that this is optimized away?
-    if (sizeof(size_t) == 4)
-        return floorLog2((uint32_t)x);
-     else if (sizeof(size_t) == 8)
-        return floorLog2((uint64_t)x);
-
-}
-#endif
-
 template <class T>
 inline int
 ceilLog2(T n)

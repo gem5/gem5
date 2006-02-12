@@ -198,23 +198,25 @@ output decoder {{
 def format HwLoad(ea_code, memacc_code, class_ext, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name + class_ext, ea_code, memacc_code,
-                      flags = flags, base_class = 'HwLoadStore',
-                      exec_template_base = 'Load')
+                      mem_flags = [], inst_flags = flags,
+                      base_class = 'HwLoadStore', exec_template_base = 'Load')
 }};
 
 
 def format HwStore(ea_code, memacc_code, class_ext, *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name + class_ext, ea_code, memacc_code,
-                      flags = flags, base_class = 'HwLoadStore',
-                      exec_template_base = 'Store')
+                      mem_flags = [], inst_flags = flags,
+                      base_class = 'HwLoadStore', exec_template_base = 'Store')
 }};
 
 
-def format HwStoreCond(ea_code, memacc_code, postacc_code, class_ext, *flags) {{
+def format HwStoreCond(ea_code, memacc_code, postacc_code, class_ext,
+                       *flags) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name + class_ext, ea_code, memacc_code,
-                      postacc_code, flags = flags, base_class = 'HwLoadStore')
+                      postacc_code, mem_flags = [], inst_flags = flags,
+                      base_class = 'HwLoadStore')
 }};
 
 

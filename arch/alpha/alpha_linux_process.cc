@@ -71,6 +71,15 @@ class Linux {
     typedef uint32_t gid_t;
     //@}
 
+#if BSD_HOST
+    typedef struct stat hst_stat;
+    typedef struct stat hst_stat64;
+#else
+    typedef struct stat hst_stat ;
+    typedef struct stat64 hst_stat64;
+#endif
+
+
     //@{
     /// open(2) flag values.
     static const int TGT_O_RDONLY	= 00000000;	//!< O_RDONLY
@@ -139,7 +148,7 @@ class Linux {
         uint64_t	st_mtime_nsec;
         uint64_t	tgt_st_ctime;
         uint64_t	st_ctime_nsec;
-        int64_t		__unused[3];
+        int64_t		___unused[3];
     };
 
     /// Length of strings in struct utsname (plus 1 for null char).
@@ -170,18 +179,18 @@ class Linux {
 
     /// Resource enumeration for getrlimit().
     enum rlimit_resources {
-        RLIMIT_CPU = 0,
-        RLIMIT_FSIZE = 1,
-        RLIMIT_DATA = 2,
-        RLIMIT_STACK = 3,
-        RLIMIT_CORE = 4,
-        RLIMIT_RSS = 5,
-        RLIMIT_NOFILE = 6,
-        RLIMIT_AS = 7,
-        RLIMIT_VMEM = 7,
-        RLIMIT_NPROC = 8,
-        RLIMIT_MEMLOCK = 9,
-        RLIMIT_LOCKS = 10
+        TGT_RLIMIT_CPU = 0,
+        TGT_RLIMIT_FSIZE = 1,
+        TGT_RLIMIT_DATA = 2,
+        TGT_RLIMIT_STACK = 3,
+        TGT_RLIMIT_CORE = 4,
+        TGT_RLIMIT_RSS = 5,
+        TGT_RLIMIT_NOFILE = 6,
+        TGT_RLIMIT_AS = 7,
+        TGT_RLIMIT_VMEM = 7,
+        TGT_RLIMIT_NPROC = 8,
+        TGT_RLIMIT_MEMLOCK = 9,
+        TGT_RLIMIT_LOCKS = 10
     };
 
     /// Limit struct for getrlimit/setrlimit.
@@ -208,9 +217,9 @@ class Linux {
 
     //@{
     /// For getrusage().
-    static const int RUSAGE_SELF = 0;
-    static const int RUSAGE_CHILDREN = -1;
-    static const int RUSAGE_BOTH = -2;
+    static const int TGT_RUSAGE_SELF = 0;
+    static const int TGT_RUSAGE_CHILDREN = -1;
+    static const int TGT_RUSAGE_BOTH = -2;
     //@}
 
     /// For getrusage().
@@ -236,54 +245,81 @@ class Linux {
     /// Helper function to convert a host stat buffer to a target stat
     /// buffer.  Also copies the target buffer out to the simulated
     /// memory space.  Used by stat(), fstat(), and lstat().
+#if !BSD_HOST
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    copyOutStatBuf(FunctionalMemory *mem, Addr addr, hst_stat *host)
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
-        tgt->st_dev = host->st_dev;
-        tgt->st_ino = host->st_ino;
-        tgt->st_mode = host->st_mode;
-        tgt->st_nlink = host->st_nlink;
-        tgt->st_uid = host->st_uid;
-        tgt->st_gid = host->st_gid;
-        tgt->st_rdev = host->st_rdev;
-        tgt->st_size = host->st_size;
-        tgt->st_atimeX = host->st_atime;
-        tgt->st_mtimeX = host->st_mtime;
-        tgt->st_ctimeX = host->st_ctime;
-        tgt->st_blksize = host->st_blksize;
-        tgt->st_blocks = host->st_blocks;
+        tgt->st_dev = htog(host->st_dev);
+        tgt->st_ino = htog(host->st_ino);
+        tgt->st_mode = htog(host->st_mode);
+        tgt->st_nlink = htog(host->st_nlink);
+        tgt->st_uid = htog(host->st_uid);
+        tgt->st_gid = htog(host->st_gid);
+        tgt->st_rdev = htog(host->st_rdev);
+        tgt->st_size = htog(host->st_size);
+        tgt->st_atimeX = htog(host->st_atime);
+        tgt->st_mtimeX = htog(host->st_mtime);
+        tgt->st_ctimeX = htog(host->st_ctime);
+        tgt->st_blksize = htog(host->st_blksize);
+        tgt->st_blocks = htog(host->st_blocks);
 
         tgt.copyOut(mem);
     }
+#else
+    // Third version for bsd systems which no longer have any support for
+    // the old stat() call and stat() is actually a stat64()
+    static void
+    copyOutStatBuf(FunctionalMemory *mem, Addr addr, hst_stat64 *host)
+    {
+        TypedBufferArg<Linux::tgt_stat> tgt(addr);
+
+        tgt->st_dev = htog(host->st_dev);
+        tgt->st_ino = htog(host->st_ino);
+        tgt->st_mode = htog(host->st_mode);
+        tgt->st_nlink = htog(host->st_nlink);
+        tgt->st_uid = htog(host->st_uid);
+        tgt->st_gid = htog(host->st_gid);
+        tgt->st_rdev = htog(host->st_rdev);
+        tgt->st_size = htog(host->st_size);
+        tgt->st_atimeX = htog(host->st_atime);
+        tgt->st_mtimeX = htog(host->st_mtime);
+        tgt->st_ctimeX = htog(host->st_ctime);
+        tgt->st_blksize = htog(host->st_blksize);
+        tgt->st_blocks = htog(host->st_blocks);
+
+        tgt.copyOut(mem);
+    }
+#endif
+
 
     // Same for stat64
     static void
-    copyOutStat64Buf(FunctionalMemory *mem, Addr addr, struct stat64 *host)
+    copyOutStat64Buf(FunctionalMemory *mem, Addr addr, hst_stat64 *host)
     {
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
         // XXX byteswaps
-        tgt->st_dev = host->st_dev;
+        tgt->st_dev = htog(host->st_dev);
         // XXX What about STAT64_HAS_BROKEN_ST_INO ???
-        tgt->st_ino = host->st_ino;
-        tgt->st_rdev = host->st_rdev;
-        tgt->st_size = host->st_size;
-        tgt->st_blocks = host->st_blocks;
+        tgt->st_ino = htog(host->st_ino);
+        tgt->st_rdev = htog(host->st_rdev);
+        tgt->st_size = htog(host->st_size);
+        tgt->st_blocks = htog(host->st_blocks);
 
-        tgt->st_mode = host->st_mode;
-        tgt->st_uid = host->st_uid;
-        tgt->st_gid = host->st_gid;
-        tgt->st_blksize = host->st_blksize;
-        tgt->st_nlink = host->st_nlink;
-        tgt->tgt_st_atime = host->st_atime;
-        tgt->tgt_st_mtime = host->st_mtime;
-        tgt->tgt_st_ctime = host->st_ctime;
-#ifdef STAT_HAVE_NSEC
-        tgt->st_atime_nsec = host->st_atime_nsec;
-        tgt->st_mtime_nsec = host->st_mtime_nsec;
-        tgt->st_ctime_nsec = host->st_ctime_nsec;
+        tgt->st_mode = htog(host->st_mode);
+        tgt->st_uid = htog(host->st_uid);
+        tgt->st_gid = htog(host->st_gid);
+        tgt->st_blksize = htog(host->st_blksize);
+        tgt->st_nlink = htog(host->st_nlink);
+        tgt->tgt_st_atime = htog(host->st_atime);
+        tgt->tgt_st_mtime = htog(host->st_mtime);
+        tgt->tgt_st_ctime = htog(host->st_ctime);
+#if defined(STAT_HAVE_NSEC) || (BSD_HOST == 1)
+        tgt->st_atime_nsec = htog(host->st_atime_nsec);
+        tgt->st_mtime_nsec = htog(host->st_mtime_nsec);
+        tgt->st_ctime_nsec = htog(host->st_ctime_nsec);
 #else
         tgt->st_atime_nsec = 0;
         tgt->st_mtime_nsec = 0;
@@ -356,7 +392,7 @@ class Linux {
               // I don't think this exactly matches the HW FPCR
               fpcr.copyIn(xc->mem);
               DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                       " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
+                       " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
               return 0;
           }
 
