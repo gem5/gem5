@@ -50,7 +50,7 @@ output exec {{
 #include <math.h>
 
 #if FULL_SYSTEM
-#include "arch/alpha/pseudo_inst.hh"
+#include "sim/pseudo_inst.hh"
 #endif
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"
