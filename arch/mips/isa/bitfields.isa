@@ -15,6 +15,7 @@ def bitfield RT_HI    <20:19>;
 def bitfield RT_LO    <18:16>;
 
 def bitfield RS	      <25:21>;
+def bitfield RS_MSB   <25:25>;
 def bitfield RS_HI    <25:24>;
 def bitfield RS_LO    <23:21>;
 
