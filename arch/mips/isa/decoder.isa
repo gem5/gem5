@@ -229,7 +229,7 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                         Rt = xc->miscRegs.cop0[reg_num];
                         }});
 
-                0xC: mtc0({{
+                0x4: mtc0({{
                         //The contents of the coprocessor 0 register specified by the
                         //combination of rd and sel are loaded into general register
                         //rt. Note that not all coprocessor 0 registers support the
@@ -243,6 +243,25 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                         xc->miscRegs.cop0[reg_num] = Rt;
                         }});
 
+                0x8: mftr({{
+                        //The contents of the coprocessor 0 register specified by the
+                        //combination of rd and sel are loaded into general register
+                        //rt. Note that not all coprocessor 0 registers support the
+                        //sel field. In those instances, the sel field must be zero.
+
+                        //MT Code Needed Here
+                        }});
+
+                0xC: mttr({{
+                        //The contents of the coprocessor 0 register specified by the
+                        //combination of rd and sel are loaded into general register
+                        //rt. Note that not all coprocessor 0 registers support the
+                        //sel field. In those instances, the sel field must be zero.
+
+                        //MT Code Needed Here
+                        }});
+
+
                 0xA: rdpgpr({{
                         //Accessing Previous Shadow Set Register Number
                         uint64_t prev = xc->miscRegs.cop0[SRSCtl][PSS];
@@ -252,23 +271,52 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                         }});
             }
 
-          0xB: decode SC {
-            format BasicOp {
-                0x0: di({{
-                        //Accessing Coprocessor 0 "Status" Register
-                        Rt.sw = xc->miscRegs.cop0[12];
-                        xc->miscRegs.cop0[12][INTERRUPT_ENABLE] = 0;
+            0xB: decode RD {
+
+                0x0: decode SC {
+                  format BasicOp {
+                    0x0: dvpe({{
+                        Rt.sw = xc->miscRegs.cop0.MVPControl;
+                        xc->miscRegs.cop0.MVPControl[EVP] = 0;
                         }});
 
-                0x1: ei({{
-                        //Accessing Coprocessor 0 "Status" Register
-                        Rt.sw = xc->miscRegs.cop0[12];
-                        xc->miscRegs.cop0[12][INTERRUPT_ENABLE] = 1;
+                    0x1: evpe({{
+                        Rt.sw = xc->miscRegs.cop0.MVPControl;
+                        xc->miscRegs.cop0.MVPControl[EVP] = 1;
                         }});
+                  }
+                }
+
+                0x1: decode SC {
+                  format BasicOp {
+                    0x0: dmt({{
+                        Rt.sw = xc->miscRegs.cop0.VPEControl;
+                        xc->miscRegs.cop0.VPEControl[THREAD_ENABLE] = 0;
+                        }});
+
+                    0x1: emt({{
+                        Rt.sw = xc->miscRegs.cop0.VPEControl;
+                        xc->miscRegs.cop0.VPEControl[THREAD_ENABLE] = 1;
+                        }});
+                  }
+                }
+
+                0xC: decode SC {
+                  format BasicOp {
+                    0x0: di({{
+                        Rt.sw = xc->miscRegs.cop0.Status;
+                        xc->miscRegs.cop0.Status[INTERRUPT_ENABLE] = 0;
+                        }});
+
+                    0x1: ei({{
+                        Rt.sw = xc->miscRegs.cop0.Status;
+                        xc->miscRegs.cop0.Status[INTERRUPT_ENABLE] = 1;
+                        }});
+                  }
+                }
             }
-          }
 
-          0xE: BasicOp::wrpgpr({{
+            0xE: BasicOp::wrpgpr({{
                         //Accessing Previous Shadow Set Register Number
                         uint64_t prev = xc->miscRegs.cop0[SRSCtl][PSS];
                         uint64_t reg_num = Rd.uw;
@@ -771,6 +819,14 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                     0x4: ins({{ }});
                 }
           }
+
+          0x1: decode FUNCTION_LO {
+                format WarnUnimpl {
+                    0x0: fork({{ }});
+                    0x1: yield({{ }});
+                }
+          }
+
 
           //Table A-10 MIPS32 BSHFL Encoding of sa Field
           0x4: decode SA {
