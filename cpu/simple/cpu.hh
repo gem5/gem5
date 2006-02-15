@@ -79,19 +79,15 @@ class SimpleCPU : public BaseCPU
 
       protected:
 
-        virtual bool recvTiming(Packet &pkt)
-        { cpu->processCacheCompletion(pkt); return true; }
+        virtual bool recvTiming(Packet &pkt);
 
-        virtual Tick recvAtomic(Packet &pkt)
-        { panic("CPU doesn't expect callback!"); return curTick; }
+        virtual Tick recvAtomic(Packet &pkt);
 
-        virtual void recvFunctional(Packet &pkt)
-        { panic("CPU doesn't expect callback!"); }
+        virtual void recvFunctional(Packet &pkt);
 
-        virtual void recvStatusChange(Status status)
-        { cpu->recvStatusChange(status); }
+        virtual void recvStatusChange(Status status);
 
-        virtual Packet *recvRetry() { return cpu->processRetry(); }
+        virtual Packet *recvRetry();
     };
 
     CpuPort icachePort;

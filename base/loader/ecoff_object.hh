@@ -50,8 +50,7 @@ class EcoffObject : public ObjectFile
   public:
     virtual ~EcoffObject() {}
 
-    virtual bool loadSections(FunctionalMemory *mem,
-                              bool loadPhys = false);
+    virtual bool loadSections(Memory *mem, bool loadPhys = false);
     virtual bool loadGlobalSymbols(SymbolTable *symtab);
     virtual bool loadLocalSymbols(SymbolTable *symtab);
 

@@ -121,7 +121,7 @@ class Port
         need to use two different ports.
     */
     virtual void recvAddressRangesQuery(std::list<Range<Addr> > &range_list,
-                                       bool &owner) = 0;
+                                        bool &owner) { panic("??"); }
 
   public:
 

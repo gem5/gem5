@@ -102,16 +102,41 @@ SimpleCPU::CacheCompletionEvent::CacheCompletionEvent(SimpleCPU *_cpu)
 {
 }
 
-void SimpleCPU::CacheCompletionEvent::process()
+
+bool
+SimpleCPU::CpuPort::recvTiming(Packet &pkt)
 {
-    cpu->processCacheCompletion();
+    cpu->processResponse(pkt);
+    return true;
 }
 
-const char *
-SimpleCPU::CacheCompletionEvent::description()
+Tick
+SimpleCPU::CpuPort::recvAtomic(Packet &pkt)
 {
-    return "SimpleCPU cache completion event";
+    panic("CPU doesn't expect callback!");
+    return curTick;
 }
+
+void
+SimpleCPU::CpuPort::recvFunctional(Packet &pkt)
+{
+    panic("CPU doesn't expect callback!");
+}
+
+void
+SimpleCPU::CpuPort::recvStatusChange(Status status)
+{
+    cpu->recvStatusChange(status);
+}
+
+Packet *
+SimpleCPU::CpuPort::recvRetry()
+{
+    return cpu->processRetry();
+}
+
+
+
 
 SimpleCPU::SimpleCPU(Params *p)
     : BaseCPU(p), tickEvent(this, p->width), xc(NULL),
@@ -697,9 +722,9 @@ SimpleCPU::sendDcacheRequest()
 void
 SimpleCPU::processResponse(Packet *response)
 {
-    // For what things is the CPU the consumer of the packet it sent out?
-    // This may create a memory leak if that's the case and it's expected of the
-    // SimpleCPU to delete its own packet.
+    // For what things is the CPU the consumer of the packet it sent
+    // out?  This may create a memory leak if that's the case and it's
+    // expected of the SimpleCPU to delete its own packet.
     pkt = response;
 
     switch (status()) {

@@ -45,9 +45,6 @@ Import('env')
 # Base sources used by all configurations.
 base_sources = Split('''
 	arch/alpha/decoder.cc
-        arch/alpha/alpha_o3_exec.cc
-	arch/alpha/fast_cpu_exec.cc
-	arch/alpha/simple_cpu_exec.cc
 	arch/alpha/faults.cc
 	arch/alpha/isa_traits.cc
 
@@ -87,44 +84,11 @@ base_sources = Split('''
 	base/stats/text.cc
 
 	cpu/base.cc
-        cpu/base_dyn_inst.cc
 	cpu/exec_context.cc
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
-        cpu/o3/2bit_local_pred.cc
-        cpu/o3/alpha_dyn_inst.cc
-        cpu/o3/alpha_cpu.cc
-        cpu/o3/alpha_cpu_builder.cc
-        cpu/o3/bpred_unit.cc
-        cpu/o3/btb.cc
-        cpu/o3/commit.cc
-        cpu/o3/decode.cc
-        cpu/o3/fetch.cc
-        cpu/o3/free_list.cc
-        cpu/o3/cpu.cc
-        cpu/o3/iew.cc
-        cpu/o3/inst_queue.cc
-        cpu/o3/ldstq.cc
-        cpu/o3/mem_dep_unit.cc
-        cpu/o3/ras.cc
-        cpu/o3/rename.cc
-        cpu/o3/rename_map.cc
-        cpu/o3/rob.cc
-        cpu/o3/sat_counter.cc
-        cpu/o3/store_set.cc
-        cpu/o3/tournament_pred.cc
-	cpu/fast/cpu.cc
         cpu/sampler/sampler.cc
-        cpu/simple/cpu.cc
-        cpu/trace/reader/mem_trace_reader.cc
-        cpu/trace/reader/ibm_reader.cc
-        cpu/trace/reader/itx_reader.cc
-        cpu/trace/reader/m5_reader.cc
-        cpu/trace/opt_cpu.cc
-        cpu/trace/trace_cpu.cc
-
-	encumbered/mem/functional/main.cc
 
         mem/memory.cc
         mem/page_table.cc
@@ -153,8 +117,28 @@ base_sources = Split('''
 	sim/trace_context.cc
         ''')
 
+fast_cpu_sources = Split('''
+	arch/alpha/fast_cpu_exec.cc
+	cpu/fast/cpu.cc
+        ''')
+
+simple_cpu_sources = Split('''
+	arch/alpha/simple_cpu_exec.cc
+        cpu/simple/cpu.cc
+        ''')
+
+trace_reader_sources = Split('''
+        cpu/trace/reader/mem_trace_reader.cc
+        cpu/trace/reader/ibm_reader.cc
+        cpu/trace/reader/itx_reader.cc
+        cpu/trace/reader/m5_reader.cc
+        cpu/trace/opt_cpu.cc
+        cpu/trace/trace_cpu.cc
+        ''')
+
 full_cpu_sources = Split('''
 	arch/alpha/full_cpu_exec.cc
+        cpu/base_dyn_inst.cc
 	encumbered/cpu/full/bpred.cc
 	encumbered/cpu/full/commit.cc
 	encumbered/cpu/full/cpu.cc
@@ -189,6 +173,32 @@ full_cpu_sources = Split('''
         encumbered/cpu/full/iq/segmented/seg_chain.cc
         encumbered/cpu/full/iq/seznec/iq_seznec.cc
         encumbered/cpu/full/iq/standard/iq_standard.cc
+        ''')
+
+o3_cpu_sources = Split('''
+        arch/alpha/alpha_o3_exec.cc
+        cpu/o3/2bit_local_pred.cc
+        cpu/o3/alpha_dyn_inst.cc
+        cpu/o3/alpha_cpu.cc
+        cpu/o3/alpha_cpu_builder.cc
+        cpu/o3/bpred_unit.cc
+        cpu/o3/btb.cc
+        cpu/o3/commit.cc
+        cpu/o3/decode.cc
+        cpu/o3/fetch.cc
+        cpu/o3/free_list.cc
+        cpu/o3/cpu.cc
+        cpu/o3/iew.cc
+        cpu/o3/inst_queue.cc
+        cpu/o3/ldstq.cc
+        cpu/o3/mem_dep_unit.cc
+        cpu/o3/ras.cc
+        cpu/o3/rename.cc
+        cpu/o3/rename_map.cc
+        cpu/o3/rob.cc
+        cpu/o3/sat_counter.cc
+        cpu/o3/store_set.cc
+        cpu/o3/tournament_pred.cc
         ''')
 
 # MySql sources

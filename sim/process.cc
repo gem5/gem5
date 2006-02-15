@@ -42,8 +42,8 @@
 #include "encumbered/cpu/full/thread.hh"
 #include "encumbered/eio/eio.hh"
 #include "mem/page_table.hh"
-#include "mem/functional/physical.hh"
-#include "mem/functional/proxy.hh"
+#include "mem/memory.hh"
+#include "mem/proxy.hh"
 #include "sim/builder.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
@@ -154,7 +154,7 @@ Process::startup()
     if (execContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    initVirtMem = new ProxyMemory<FunctionalMemory>(system->physmem, pTable);
+    initVirtMem = new ProxyMemory<Memory>(system->physmem, pTable);
 
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
@@ -245,7 +245,7 @@ DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 
 static void
 copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
-                FunctionalMemory *func)
+                Memory *func)
 {
     for (int i = 0; i < strings.size(); ++i) {
         func->prot_write(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));

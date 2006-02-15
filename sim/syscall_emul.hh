@@ -43,7 +43,7 @@
 #include <sys/uio.h>
 
 #include "base/intmath.hh"	// for RoundUp
-#include "mem/functional/functional.hh"
+#include "mem/port.hh"
 #include "targetarch/isa_traits.hh"	// for Addr
 
 #include "base/trace.hh"
@@ -103,18 +103,18 @@ class BaseBufferArg {
     //
     // copy data into simulator space (read from target memory)
     //
-    virtual bool copyIn(FunctionalMemory *mem)
+    virtual bool copyIn(Port *memport)
     {
-        mem->access(Read, addr, bufPtr, size);
+        memport->readBlobFunctional(addr, bufPtr, size);
         return true;	// no EFAULT detection for now
     }
 
     //
     // copy data out of simulator space (write to target memory)
     //
-    virtual bool copyOut(FunctionalMemory *mem)
+    virtual bool copyOut(Port *memport)
     {
-        mem->access(Write, addr, bufPtr, size);
+        memport->writeBlobFunctional(addr, bufPtr, size);
         return true;	// no EFAULT detection for now
     }
 
@@ -314,7 +314,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -361,7 +361,7 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     uint32_t mode = xc->getSyscallArg(1);
@@ -414,7 +414,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     struct stat hostBuf;
@@ -461,7 +461,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     struct stat hostBuf;
@@ -483,7 +483,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     struct stat64 hostBuf;
@@ -530,7 +530,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     struct statfs hostBuf;
@@ -700,7 +700,7 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     TypedBufferArg<typename OS::timeval [2]> tp(xc->getSyscallArg(1));

@@ -29,7 +29,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional/physical.hh"
+#include "mem/memory.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 #include "base/trace.hh"
@@ -410,7 +410,7 @@ printSystems()
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
 
-    SimObjectParam<PhysicalMemory *> physmem;
+    SimObjectParam<Memory *> physmem;
 
 #if FULL_SYSTEM
     Param<Tick> boot_cpu_frequency;

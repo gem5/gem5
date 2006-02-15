@@ -31,16 +31,11 @@
 
 #include <vector>
 
-#include "mem/mem_req.hh"
-
 class ExecContext;
 class PCEventQueue;
 
 class PCEvent
 {
-  protected:
-    static const Addr badpc = MemReq::inval_addr;
-
   protected:
     std::string description;
     PCEventQueue *queue;

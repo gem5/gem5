@@ -54,6 +54,10 @@ const unsigned ALTMODE		= 0x008;
 const unsigned UNCACHEABLE	= 0x010;
 /** The request should not cause a page fault. */
 const unsigned NO_FAULT         = 0x020;
+/** The request should be prefetched into the exclusive state. */
+const unsigned PF_EXCLUSIVE	= 0x100;
+/** The request should be marked as LRU. */
+const unsigned EVICT_NEXT	= 0x200;
 
 class Request
 {

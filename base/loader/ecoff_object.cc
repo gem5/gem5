@@ -30,7 +30,7 @@
 
 #include "base/loader/ecoff_object.hh"
 
-#include "mem/functional/functional.hh"
+#include "mem/memory.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -82,7 +82,7 @@ EcoffObject::EcoffObject(const string &_filename, int _fd,
 
 
 bool
-EcoffObject::loadSections(FunctionalMemory *mem, bool loadPhys)
+EcoffObject::loadSections(Memory *mem, bool loadPhys)
 {
     Addr textAddr = text.baseAddr;
     Addr dataAddr = data.baseAddr;

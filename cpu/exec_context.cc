@@ -51,7 +51,7 @@ using namespace std;
 #if FULL_SYSTEM
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaITB *_itb, AlphaDTB *_dtb,
-                         FunctionalMemory *_mem)
+                         Memory *_mem)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
       memctrl(_sys->memctrl), physmem(_sys->physmem),
@@ -77,7 +77,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                         FunctionalMemory *_mem, Process *_process, int _asid)
+                         Memory *_mem, Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
       system(_system), mem(_mem),

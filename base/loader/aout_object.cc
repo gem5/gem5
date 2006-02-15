@@ -30,7 +30,7 @@
 
 #include "base/loader/aout_object.hh"
 
-#include "mem/functional/functional.hh"
+#include "mem/memory.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -78,7 +78,7 @@ AoutObject::AoutObject(const string &_filename, int _fd,
 
 
 bool
-AoutObject::loadSections(FunctionalMemory *mem, bool loadPhys)
+AoutObject::loadSections(Memory *mem, bool loadPhys)
 {
     Addr textAddr = text.baseAddr;
     Addr dataAddr = data.baseAddr;

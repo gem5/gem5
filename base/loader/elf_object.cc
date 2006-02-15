@@ -43,7 +43,7 @@
 
 #include "base/loader/elf_object.hh"
 
-#include "mem/functional/functional.hh"
+#include "mem/memory.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -170,7 +170,7 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
 
 bool
-ElfObject::loadSections(FunctionalMemory *mem, bool loadPhys)
+ElfObject::loadSections(Memory *mem, bool loadPhys)
 {
     Addr textAddr = text.baseAddr;
     Addr dataAddr = data.baseAddr;
