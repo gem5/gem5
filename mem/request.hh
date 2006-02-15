@@ -34,9 +34,18 @@
 #ifndef __MEM_REQUEST_HH__
 #define __MEM_REQUEST_HH__
 
+#include "targetarch/isa_traits.hh"
+
+class Request;
+class CpuRequest;
+
+typedef Request* RequestPtr;
+typedef CpuRequest* CpuRequestPtr;
+
 class Request
 {
-
+    //@todo Make Accesor functions, make these private.
+  public:
     /** The physical address of the request. */
     Addr paddr;
 
@@ -53,10 +62,10 @@ class Request
     Addr copyDest;
 };
 
-typedef RequestPtr *Request;
-
 class CpuRequest : public Request
 {
+    //@todo Make Accesor functions, make these private.
+  public:
     /** The virtual address of the request. */
     Addr vaddr;
 

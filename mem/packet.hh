@@ -36,6 +36,12 @@
 #define __MEM_PACKET_HH__
 
 #include "mem/request.hh"
+#include "targetarch/isa_traits.hh"
+#include "sim/root.hh"
+
+struct Packet;
+typedef Packet* PacketPtr;
+typedef uint8_t* PacketDataPtr;
 
 /** List of all commands associated with a packet. */
 enum Command
@@ -53,8 +59,6 @@ enum PacketResult
 
 class SenderState{};
 class Coherence{};
-
-typedef PacketDataPtr *unit8_t;
 
 /**
  * A Packet is the structure to handle requests between two levels
@@ -117,7 +121,5 @@ struct Packet
         the packet. */
     short getDest() const { return dest; }
 };
-
-typedef PacketPtr *Packet;
 
 #endif //__MEM_PACKET_HH

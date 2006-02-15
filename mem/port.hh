@@ -120,7 +120,7 @@ class Port
         an object wants to own some ranges and snoop on others, it will
         need to use two different ports.
     */
-    virtual void recvAddressRangeQuery(std::list<Range<Addr> > &range_list,
+    virtual void recvAddressRangesQuery(std::list<Range<Addr> > &range_list,
                                        bool &owner) = 0;
 
   public:

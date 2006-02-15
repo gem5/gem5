@@ -43,10 +43,11 @@
 #if FULL_SYSTEM
 #include "mem/functional/memory_control.hh"
 #endif
-#include "mem/functional/physical.hh"
+#include "mem/physical.hh"
 #include "sim/host.hh"
 #include "sim/builder.hh"
 #include "targetarch/isa_traits.hh"
+
 
 using namespace std;
 
@@ -89,7 +90,7 @@ PhysicalMemory::PhysicalMemory(const string &n, Range<Addr> range,
 #endif
 
 PhysicalMemory::PhysicalMemory(const string &n)
-    : FunctionalMemory(n), base_addr(0), pmem_addr(NULL)
+    : Memory(n), base_addr(0), pmem_addr(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;

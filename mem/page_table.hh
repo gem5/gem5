@@ -38,50 +38,51 @@
 #include <map>
 
 #include "base/trace.hh"
-#include "mem/mem_req.hh"
-#include "mem/mem_cmd.hh"
+#include "mem/request.hh"
+#include "mem/packet.hh"
 #include "sim/sim_object.hh"
 
-class System;
+class PhysicalMemory;
 
 /**
  * Page Table Decleration.
  */
-class PageTable
+class PageTable : public SimObject
 {
   protected:
     std::map<Addr,Addr> pTable;
 
-    const Addr pageSize;
-    const Addr offsetMask;
-
-    System *system;
+    PhysicalMemory *mem;
 
   public:
 
-    PageTable(System *_system, Addr _pageSize = VMPageSize);
+    /**
+     * Construct this interface.
+     * @param name The name of this interface.
+     * @param hier Pointer to the hierarchy wide parameters.
+     * @param _mem the connected memory.
+     */
+    PageTable(const std::string &name);
 
     ~PageTable();
 
-    Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
-    Addr pageOffset(Addr a) { return (a &  offsetMask); }
+    void setPhysMem(PhysicalMemory *_mem) { mem = _mem; }
 
     Fault page_check(Addr addr, int size) const;
-
-    void allocate(Addr vaddr, int size);
 
     /**
      * Translate function
      * @param vaddr The virtual address.
+     * @param asid The address space id.
      * @return Physical address from translation.
      */
-    bool translate(Addr vaddr, Addr &paddr);
+    Addr translate(Addr vaddr, unsigned asid);
 
     /**
      * Perform a translation on the memory request, fills in paddr field of mem_req.
      * @param req The memory request.
      */
-    Fault translate(MemReqPtr &req);
+    Fault translate(CpuRequestPtr &req);
 
 };
 

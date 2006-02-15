@@ -41,8 +41,13 @@
  * The base MemoryObject class, allows for an accesor function to a
  * simobj that returns the Port.
  */
-class MemoryObject : public SimObject
+class MemObject : public SimObject
 {
+  public:
+    MemObject(const std::string &name)
+        : SimObject(name)
+    {};
+
   public:
     /** Additional function to return the Port of a memory object. */
     virtual Port *getPort(const char *if_name) = 0;
