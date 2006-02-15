@@ -251,8 +251,10 @@ static void
 copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
                 FunctionalMemory *memory)
 {
+    Addr data_ptr_swap;
     for (int i = 0; i < strings.size(); ++i) {
-        memory->access(Write, array_ptr, &data_ptr, sizeof(Addr));
+        data_ptr_swap = htog(data_ptr);
+        memory->access(Write, array_ptr, &data_ptr_swap, sizeof(Addr));
         memory->writeString(data_ptr, strings[i].c_str());
         array_ptr += sizeof(Addr);
         data_ptr += strings[i].size() + 1;
@@ -334,6 +336,7 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
 
     // write contents to stack
     uint64_t argc = argv.size();
+    argc = htog(argc);
     memory->access(Write, stack_min, &argc, sizeof(uint64_t));
 
     copyStringArray(argv, argv_array_base, arg_data_base, memory);

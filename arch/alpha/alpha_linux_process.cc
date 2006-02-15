@@ -296,27 +296,38 @@ class Linux {
 
     // Same for stat64
     static void
-    copyOutStat64Buf(FunctionalMemory *mem, Addr addr, hst_stat64 *host)
+    copyOutStat64Buf(FunctionalMemory *mem, int fd, Addr addr, hst_stat64 *host)
     {
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
-        // XXX byteswaps
-        tgt->st_dev = htog(host->st_dev);
+        // fd == 1 checks are because libc does some checks
+        // that the stdout is interactive vs. a file
+        // this makes it work on non-linux systems
+        if (fd == 1)
+            tgt->st_dev = htog((uint64_t)0xA);
+        else
+            tgt->st_dev = htog((uint64_t)host->st_dev);
         // XXX What about STAT64_HAS_BROKEN_ST_INO ???
-        tgt->st_ino = htog(host->st_ino);
-        tgt->st_rdev = htog(host->st_rdev);
-        tgt->st_size = htog(host->st_size);
-        tgt->st_blocks = htog(host->st_blocks);
+        tgt->st_ino = htog((uint64_t)host->st_ino);
+        if (fd == 1)
+            tgt->st_rdev = htog((uint64_t)0x880d);
+        else
+            tgt->st_rdev = htog((uint64_t)host->st_rdev);
+        tgt->st_size = htog((int64_t)host->st_size);
+        tgt->st_blocks = htog((uint64_t)host->st_blocks);
 
-        tgt->st_mode = htog(host->st_mode);
-        tgt->st_uid = htog(host->st_uid);
-        tgt->st_gid = htog(host->st_gid);
-        tgt->st_blksize = htog(host->st_blksize);
-        tgt->st_nlink = htog(host->st_nlink);
-        tgt->tgt_st_atime = htog(host->st_atime);
-        tgt->tgt_st_mtime = htog(host->st_mtime);
-        tgt->tgt_st_ctime = htog(host->st_ctime);
-#if defined(STAT_HAVE_NSEC) || (BSD_HOST == 1)
+        if (fd == 1)
+            tgt->st_mode = htog((uint32_t)0x2190);
+        else
+            tgt->st_mode = htog((uint32_t)host->st_mode);
+        tgt->st_uid = htog((uint32_t)host->st_uid);
+        tgt->st_gid = htog((uint32_t)host->st_gid);
+        tgt->st_blksize = htog((uint32_t)host->st_blksize);
+        tgt->st_nlink = htog((uint32_t)host->st_nlink);
+        tgt->tgt_st_atime = htog((uint64_t)host->st_atime);
+        tgt->tgt_st_mtime = htog((uint64_t)host->st_mtime);
+        tgt->tgt_st_ctime = htog((uint64_t)host->st_ctime);
+#if defined(STAT_HAVE_NSEC)
         tgt->st_atime_nsec = htog(host->st_atime_nsec);
         tgt->st_mtime_nsec = htog(host->st_mtime_nsec);
         tgt->st_ctime_nsec = htog(host->st_ctime_nsec);
@@ -325,6 +336,7 @@ class Linux {
         tgt->st_mtime_nsec = 0;
         tgt->st_ctime_nsec = 0;
 #endif
+
         tgt.copyOut(mem);
     }
 
