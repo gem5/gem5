@@ -9,7 +9,7 @@
 //
 //@todo: Distinguish "unknown/future" use insts from "reserved"
 // ones
-decode OPCODE_HI default FailUnimpl::unknown() {
+decode OPCODE_HI default Unknown::unknown() {
 
     // Derived From ... Table A-2 MIPS32 ISA Manual
     0x0: decode OPCODE_LO default FailUnimpl::reserved(){
@@ -66,10 +66,11 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                 0x3: movn({{ if (Rt != 0) Rd = Rs; }});
               }
 
+
               format WarnUnimpl {
-                0x4: syscall({{ xc->syscall()}},IsNonSpeculative);
-                0x5: break({{ }});
-                0x7: sync({{ }});
+                0x4: syscall();//{{ xc->syscall()}},IsNonSpeculative
+                0x5: break();
+                0x7: sync();
               }
             }
 
@@ -80,14 +81,14 @@ decode OPCODE_HI default FailUnimpl::unknown() {
                 0x2: mflo({{ Rd = xc->miscRegs.lo; }});
                 0x3: mtlo({{ xc->miscRegs.lo = Rs; }});
               }
-            };
+            }
 
             0x3: decode FUNCTION_LO {
               format IntOp {
                 0x0: mult({{
                         INT64 temp1 = Rs.sw * Rt.sw;
                         xc->miscRegs.hi->temp1<63:32>;
-                        xc->miscRegs.lo->temp1<31:0>
+                        xc->miscRegs.lo->temp1<31:0>;
                 }});
 
                 0x1: multu({{
