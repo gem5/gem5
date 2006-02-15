@@ -26,27 +26,27 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-##include "m5/arch/mips/isa/includes.isa"
+output decoder {{
+    std::string
+    Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s (inst 0x%x, opcode 0x%x)",
+                        "unknown", machInst, OPCODE);
+    }
+}};
 
-////////////////////////////////////////////////////////////////////
-//
-// Namespace statement.  Everything below this line will be in the
-// MipsISAInst namespace.
-//
+output exec {{
+    Fault
+    Unknown::execute(%(CPU_exec_context)s *xc,
+                     Trace::InstRecord *traceData) const
+    {
+        panic("attempt to execute unknown instruction "
+              "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
+        return Unimplemented_Opcode_Fault;
+    }
+}};
 
-namespace MipsISA;
+def format Unknown() {{
+    decode_block = 'return new Unknown(machInst);\n'
+}};
 
-//Include the bitfield definitions
-##include "m5/arch/mips/isa/bitfields.isa"
-
-//Include the operand_types and operand definitions
-##include "m5/arch/mips/isa/operands.isa"
-
-//Include the base class for mips instructions, and some support code
-##include "m5/arch/mips/isa/base.isa"
-
-//Include the definitions for the instruction formats
-##include "m5/arch/mips/isa/formats.isa"
-
-//Include the decoder definition
-##include "m5/arch/mips/isa/decoder.isa"

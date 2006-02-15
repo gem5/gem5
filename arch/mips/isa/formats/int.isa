@@ -53,9 +53,9 @@ def format IntOp(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
 
-        //Figure out if we are creating a IntImmOp or a IntOp
+        # Figure out if we are creating a IntImmOp or a IntOp
         strlen = len(name)
-        if ( name[strlen-1] = 'i' or ( name[strlen-2:] = 'iu'))
+        if name[strlen-1] == 'i' or name[strlen-2:] == 'iu':
                 iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
         else:
                 iop = InstObjParams(name, Name, 'IntImmOp', cblk, opt_flags)

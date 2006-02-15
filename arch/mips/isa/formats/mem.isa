@@ -55,7 +55,7 @@ def template MemExecute {{
 }};
 
 // Primary format for integer operate instructions:
-def format Mem(code, *opt_flags) {{
+def format Memory(code, ea_code = {{ EA = Rb + disp; }},*opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)

@@ -5,8 +5,8 @@ def operand_types {{
     'uhw' : ('unsigned int', 16),
     'sw' : ('signed int', 32),
     'uw' : ('unsigned int', 32),
-    'sdw' : ('signed int', 64),
-    'udw' : ('unsigned int', 64),
+    'sd' : ('signed int', 64),
+    'ud' : ('unsigned int', 64),
     'sf' : ('float', 32),
     'df' : ('float', 64),
     'qf' : ('float', 128)
@@ -24,7 +24,7 @@ def operands {{
     'Fs': ('FloatReg', 'sf', 'FS', 'IsFloating', 2),
     'Ft': ('FloatReg', 'sf', 'FT', 'IsFloating', 3),
 
-    'Mem': ('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4)
+    'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4)
 
     #'NPC': ('NPC', 'uq', None, ( None, None, 'IsControl' ), 4),
     #'Runiq': ('ControlReg', 'uq', 'Uniq', None, 1),
