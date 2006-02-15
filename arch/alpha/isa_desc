@@ -47,7 +47,7 @@ output header {{
 
 #include "config/ss_compatible_fp.hh"
 #include "cpu/static_inst.hh"
-#include "mem/mem_req.hh"  // some constructors use MemReq flags
+#include "mem/request.hh"  // some constructors use MemReq flags
 }};
 
 output decoder {{

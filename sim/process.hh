@@ -42,15 +42,15 @@
 
 #include "base/statistics.hh"
 #include "base/trace.hh"
-#include "mem/base_mem.hh"
-#include "mem/mem_interface.hh"
+#include "mem/memory.hh"
+//#include "mem/mem_interface.hh"
 #include "mem/page_table.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 #include "targetarch/isa_traits.hh"
 
 class ExecContext;
-class FunctionalMemory;
+class Memory;
 class System;
 
 class Process : public SimObject
@@ -128,7 +128,7 @@ class Process : public SimObject
 
   protected:
     /// Memory object for initialization (image loading)
-    FunctionalMemory *initVirtMem;
+    Memory *initVirtMem;
 
   public:
     PageTable *pTable;

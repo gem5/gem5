@@ -42,6 +42,19 @@ class CpuRequest;
 typedef Request* RequestPtr;
 typedef CpuRequest* CpuRequestPtr;
 
+/** The request is a Load locked/store conditional. */
+const unsigned LOCKED		= 0x001;
+/** The virtual address is also the physical address. */
+const unsigned PHYSICAL		= 0x002;
+/** The request is an ALPHA VPTE pal access (hw_ld). */
+const unsigned VPTE		= 0x004;
+/** Use the alternate mode bits in ALPHA. */
+const unsigned ALTMODE		= 0x008;
+/** The request is to an uncacheable address. */
+const unsigned UNCACHEABLE	= 0x010;
+/** The request should not cause a page fault. */
+const unsigned NO_FAULT         = 0x020;
+
 class Request
 {
     //@todo Make Accesor functions, make these private.
@@ -60,6 +73,8 @@ class Request
 
     /** Destination address if this is a block copy. */
     Addr copyDest;
+
+    uint32_t flags;
 };
 
 class CpuRequest : public Request

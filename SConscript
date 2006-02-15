@@ -44,11 +44,6 @@ Import('env')
 
 # Base sources used by all configurations.
 base_sources = Split('''
-        mem/memory.cc
-        mem/page_table.cc
-        mem/physical.cc
-        mem/proxy.cc
-
 	arch/alpha/decoder.cc
         arch/alpha/alpha_o3_exec.cc
 	arch/alpha/fast_cpu_exec.cc
@@ -130,6 +125,11 @@ base_sources = Split('''
         cpu/trace/trace_cpu.cc
 
 	encumbered/mem/functional/main.cc
+
+        mem/memory.cc
+        mem/page_table.cc
+        mem/physical.cc
+        mem/proxy.cc
 
         python/pyconfig.cc
         python/embedded_py.cc

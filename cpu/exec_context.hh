@@ -30,14 +30,13 @@
 #define __CPU_EXEC_CONTEXT_HH__
 
 #include "config/full_system.hh"
-#include "mem/functional/functional.hh"
-#include "mem/mem_interface.hh"
-#include "mem/mem_req.hh"
+#include "mem/physical.hh"
+#include "mem/request.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 #include "targetarch/byte_swap.hh"
 
-class PhysicalMemory;
+class Memory;
 class BaseCPU;
 
 #if FULL_SYSTEM
@@ -123,7 +122,7 @@ class ExecContext
     int cpu_id;
 
     System *system;
-    FunctionalMemory *mem;
+    Memory *mem;
 
 #if FULL_SYSTEM
     AlphaITB *itb;
@@ -133,7 +132,7 @@ class ExecContext
     // look them up through the system pointer, but we'll leave them
     // here for now for convenience
     MemoryController *memctrl;
-    PhysicalMemory *physmem;
+//    PhysicalMemory *physmem;
 
     Kernel::Binning *kernelBinning;
     Kernel::Statistics *kernelStats;
@@ -185,7 +184,7 @@ class ExecContext
                 AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
 #else
     ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                FunctionalMemory *_mem, Process *_process, int _asid);
+                Memory *_mem, Process *_process, int _asid);
 #endif
     virtual ~ExecContext();
 
@@ -202,17 +201,17 @@ class ExecContext
     int getInstAsid() { return regs.instAsid(); }
     int getDataAsid() { return regs.dataAsid(); }
 
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(CpuRequestPtr &req)
     {
         return itb->translate(req);
     }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(CpuRequestPtr &req)
     {
         return dtb->translate(req, false);
     }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(CpuRequestPtr &req)
     {
         return dtb->translate(req, true);
     }
@@ -227,17 +226,17 @@ class ExecContext
     int getInstAsid() { return asid; }
     int getDataAsid() { return asid; }
 
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(CpuRequestPtr &req)
     {
         return process->pTable->translate(req);
     }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(CpuRequestPtr &req)
     {
         return process->pTable->translate(req);
     }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(CpuRequestPtr &req)
     {
         return process->pTable->translate(req);
     }
@@ -245,7 +244,7 @@ class ExecContext
 #endif
 
     template <class T>
-    Fault read(MemReqPtr &req, T &data)
+    Fault read(CpuRequestPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
@@ -256,13 +255,13 @@ class ExecContext
 #endif
 
         Fault error;
-        error = mem->read(req, data);
+        error = mem->prot_read(req->paddr, data, req->size);
         data = gtoh(data);
         return error;
     }
 
     template <class T>
-    Fault write(MemReqPtr &req, T &data)
+    Fault write(CpuRequestPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
 
@@ -307,7 +306,7 @@ class ExecContext
         }
 
 #endif
-        return mem->write(req, (T)htog(data));
+        return mem->prot_write(req->paddr, (T)htog(data), req->size);
     }
 
     virtual bool misspeculating();
@@ -320,7 +319,7 @@ class ExecContext
         inst = new_inst;
     }
 
-    Fault instRead(MemReqPtr &req)
+    Fault instRead(CpuRequestPtr &req)
     {
         panic("instRead not implemented");
         // return funcPhysMem->read(req, inst);
