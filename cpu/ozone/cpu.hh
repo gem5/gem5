@@ -286,17 +286,17 @@ class OoOCPU : public BaseCPU
     int getInstAsid() { return xc->regs.instAsid(); }
     int getDataAsid() { return xc->regs.dataAsid(); }
 
-    Fault translateInstReq(MemReqPtr &req)
+    Fault * translateInstReq(MemReqPtr &req)
     {
         return itb->translate(req);
     }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault * translateDataReadReq(MemReqPtr &req)
     {
         return dtb->translate(req, false);
     }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault * translateDataWriteReq(MemReqPtr &req)
     {
         return dtb->translate(req, true);
     }
@@ -311,7 +311,7 @@ class OoOCPU : public BaseCPU
     int getInstAsid() { return xc->asid; }
     int getDataAsid() { return xc->asid; }
 
-    Fault dummyTranslation(MemReqPtr &req)
+    Fault * dummyTranslation(MemReqPtr &req)
     {
 #if 0
         assert((req->vaddr >> 48 & 0xffff) == 0);
@@ -320,17 +320,17 @@ class OoOCPU : public BaseCPU
         // put the asid in the upper 16 bits of the paddr
         req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
         req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return No_Fault;
+        return NoFault;
     }
-    Fault translateInstReq(MemReqPtr &req)
+    Fault * translateInstReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault * translateDataReadReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault * translateDataWriteReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
@@ -338,10 +338,10 @@ class OoOCPU : public BaseCPU
 #endif
 
     template <class T>
-    Fault read(Addr addr, T &data, unsigned flags, DynInstPtr inst);
+    Fault * read(Addr addr, T &data, unsigned flags, DynInstPtr inst);
 
     template <class T>
-    Fault write(T data, Addr addr, unsigned flags,
+    Fault * write(T data, Addr addr, unsigned flags,
                 uint64_t *res, DynInstPtr inst);
 
     void prefetch(Addr addr, unsigned flags)
@@ -354,9 +354,9 @@ class OoOCPU : public BaseCPU
         // need to do this...
     }
 
-    Fault copySrcTranslate(Addr src);
+    Fault * copySrcTranslate(Addr src);
 
-    Fault copy(Addr dest);
+    Fault * copy(Addr dest);
 
   private:
     bool executeInst(DynInstPtr &inst);
@@ -369,7 +369,7 @@ class OoOCPU : public BaseCPU
 
     bool getOneInst();
 
-    Fault fetchCacheLine();
+    Fault * fetchCacheLine();
 
     InstSeqNum getAndIncrementInstSeq();
 
@@ -512,13 +512,13 @@ class OoOCPU : public BaseCPU
     void setFpcr(uint64_t val) { xc->setFpcr(val); }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault) { return xc->readIpr(idx, fault); }
-    Fault setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
-    Fault hwrei() { return xc->hwrei(); }
+    uint64_t readIpr(int idx, Fault * &fault) { return xc->readIpr(idx, fault); }
+    Fault * setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
+    Fault * hwrei() { return xc->hwrei(); }
     int readIntrFlag() { return xc->readIntrFlag(); }
     void setIntrFlag(int val) { xc->setIntrFlag(val); }
     bool inPalMode() { return xc->inPalMode(); }
-    void ev5_trap(Fault fault) { xc->ev5_trap(fault); }
+    void ev5_trap(Fault * fault) { xc->ev5_trap(fault); }
     bool simPalCheck(int palFunc) { return xc->simPalCheck(palFunc); }
 #else
     void syscall() { xc->syscall(); }
@@ -531,7 +531,7 @@ class OoOCPU : public BaseCPU
 // precise architected memory state accessor macros
 template <class Impl>
 template <class T>
-Fault
+Fault *
 OoOCPU<Impl>::read(Addr addr, T &data, unsigned flags, DynInstPtr inst)
 {
     MemReqPtr readReq = new MemReq();
@@ -542,21 +542,21 @@ OoOCPU<Impl>::read(Addr addr, T &data, unsigned flags, DynInstPtr inst)
     readReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address - This might be an ISA impl call
-    Fault fault = translateDataReadReq(readReq);
+    Fault * fault = translateDataReadReq(readReq);
 
     // do functional access
-    if (fault == No_Fault)
+    if (fault == NoFault)
         fault = xc->mem->read(readReq, data);
 #if 0
     if (traceData) {
         traceData->setAddr(addr);
-        if (fault == No_Fault)
+        if (fault == NoFault)
             traceData->setData(data);
     }
 #endif
 
     // if we have a cache, do cache access too
-    if (fault == No_Fault && dcacheInterface) {
+    if (fault == NoFault && dcacheInterface) {
         readReq->cmd = Read;
         readReq->completionEvent = NULL;
         readReq->time = curTick;
@@ -576,7 +576,7 @@ OoOCPU<Impl>::read(Addr addr, T &data, unsigned flags, DynInstPtr inst)
 
 template <class Impl>
 template <class T>
-Fault
+Fault *
 OoOCPU<Impl>::write(T data, Addr addr, unsigned flags,
                     uint64_t *res, DynInstPtr inst)
 {
@@ -595,13 +595,13 @@ OoOCPU<Impl>::write(T data, Addr addr, unsigned flags,
     writeReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = translateDataWriteReq(writeReq);
+    Fault * fault = translateDataWriteReq(writeReq);
 
     // do functional access
-    if (fault == No_Fault)
+    if (fault == NoFault)
         fault = xc->write(writeReq, data);
 
-    if (fault == No_Fault && dcacheInterface) {
+    if (fault == NoFault && dcacheInterface) {
         writeReq->cmd = Write;
         memcpy(writeReq->data,(uint8_t *)&data,writeReq->size);
         writeReq->completionEvent = NULL;
@@ -614,7 +614,7 @@ OoOCPU<Impl>::write(T data, Addr addr, unsigned flags,
         }
     }
 
-    if (res && (fault == No_Fault))
+    if (res && (fault == NoFault))
         *res = writeReq->result;
 
     if (!dcacheInterface && (writeReq->flags & UNCACHEABLE))

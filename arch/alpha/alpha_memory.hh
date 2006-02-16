@@ -32,6 +32,7 @@
 #include <map>
 
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/faults.hh"
 #include "base/statistics.hh"
 #include "mem/mem_req.hh"
 #include "sim/sim_object.hh"
@@ -93,7 +94,7 @@ class AlphaITB : public AlphaTLB
     AlphaITB(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(MemReqPtr &req) const;
+    Fault * translate(MemReqPtr &req) const;
 };
 
 class AlphaDTB : public AlphaTLB
@@ -119,7 +120,7 @@ class AlphaDTB : public AlphaTLB
     AlphaDTB(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(MemReqPtr &req, bool write) const;
+    Fault * translate(MemReqPtr &req, bool write) const;
 };
 
 #endif // __ALPHA_MEMORY_HH__

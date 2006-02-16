@@ -95,7 +95,7 @@ PciConfigAll::startup()
 
 }
 
-Fault
+Fault *
 PciConfigAll::read(MemReqPtr &req, uint8_t *data)
 {
 
@@ -112,16 +112,16 @@ PciConfigAll::read(MemReqPtr &req, uint8_t *data)
         switch (req->size) {
            // case sizeof(uint64_t):
            //     *(uint64_t*)data = 0xFFFFFFFFFFFFFFFF;
-           //     return No_Fault;
+           //     return NoFault;
             case sizeof(uint32_t):
                 *(uint32_t*)data = 0xFFFFFFFF;
-                return No_Fault;
+                return NoFault;
             case sizeof(uint16_t):
                 *(uint16_t*)data = 0xFFFF;
-                return No_Fault;
+                return NoFault;
             case sizeof(uint8_t):
                 *(uint8_t*)data = 0xFF;
-                return No_Fault;
+                return NoFault;
             default:
                 panic("invalid access size(?) for PCI configspace!\n");
         }
@@ -131,7 +131,7 @@ PciConfigAll::read(MemReqPtr &req, uint8_t *data)
             case sizeof(uint16_t):
             case sizeof(uint8_t):
                 devices[device][func]->readConfig(reg, req->size, data);
-                return No_Fault;
+                return NoFault;
             default:
                 panic("invalid access size(?) for PCI configspace!\n");
         }
@@ -140,10 +140,10 @@ PciConfigAll::read(MemReqPtr &req, uint8_t *data)
     DPRINTFN("PCI Configspace  ERROR: read  daddr=%#x size=%d\n",
              daddr, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
-Fault
+Fault *
 PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
@@ -164,7 +164,7 @@ PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
 
     devices[device][func]->writeConfig(reg, req->size, data);
 
-    return No_Fault;
+    return NoFault;
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,59 +26,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** @file
- * Base class for UART
- */
+#ifndef __FAULTS_HH__
+#define __FAULTS_HH__
 
-#ifndef __UART_HH__
-#define __UART_HH__
-
-#include "base/range.hh"
-#include "dev/io_device.hh"
-
-class SimConsole;
-class Platform;
-
-const int RX_INT = 0x1;
-const int TX_INT = 0x2;
-
-
-class Uart : public PioDevice
+class Fault
 {
-
-  protected:
-    int status;
-    Addr addr;
-    Addr size;
-    SimConsole *cons;
-
-  public:
-    Uart(const std::string &name, SimConsole *c, MemoryController *mmu,
-         Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
-         Platform *p);
-
-    virtual Fault * read(MemReqPtr &req, uint8_t *data) = 0;
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data) = 0;
-
-
-    /**
-     * Inform the uart that there is data available.
-     */
-    virtual void dataAvailable() = 0;
-
-
-    /**
-     * Return if we have an interrupt pending
-     * @return interrupt status
-     */
-    bool intStatus() { return status ? true : false; }
-
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
+public:
+        Fault(char * newName, int newId = 0) : name(newName), id(newId) {;}
+        const char * name;
+        int id;
 };
 
-#endif // __UART_HH__
+extern class NoFaultType : public Fault
+{
+public:
+        NoFaultType(char * newName) : Fault(newName) {;}
+} * NoFault;
+
+extern class MachineCheckFaultType : public Fault
+{
+public:
+        MachineCheckFaultType(char * newName) : Fault(newName) {;}
+} * MachineCheckFault;
+
+extern class AlignmentFaultType : public Fault
+{
+public:
+        AlignmentFaultType(char * newName) : Fault(newName) {;}
+} * AlignmentFault;
+
+extern class FakeMemFaultType : public Fault
+{
+public:
+        FakeMemFaultType(char * newName) : Fault(newName) {;}
+} * FakeMemFault;
+
+
+#endif // __FAULTS_HH__

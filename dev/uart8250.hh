@@ -82,8 +82,8 @@ class Uart8250 : public Uart
          Addr a, Addr s, HierParams *hier, Bus *pio_bus, Tick pio_latency,
          Platform *p);
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault * read(MemReqPtr &req, uint8_t *data);
+    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
 
 
     /**

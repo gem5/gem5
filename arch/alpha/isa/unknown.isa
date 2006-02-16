@@ -36,13 +36,13 @@ output decoder {{
 }};
 
 output exec {{
-    Fault
+    Fault *
     Unknown::execute(%(CPU_exec_context)s *xc,
                      Trace::InstRecord *traceData) const
     {
         panic("attempt to execute unknown instruction "
               "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
-        return Unimplemented_Opcode_Fault;
+        return UnimplementedOpcodeFault;
     }
 }};
 

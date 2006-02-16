@@ -137,14 +137,14 @@ Statistics::regStats(const string &_name)
     }
 
     _faults
-        .init(Num_Faults)
+        .init(NumFaults)
         .name(name() + ".faults")
         .desc("number of faults")
         .flags(total | pdf | nozero | nonan)
         ;
 
-    for (int i = 1; i < Num_Faults; ++i) {
-        const char *str = FaultName(i);
+    for (int i = 1; i < NumFaults; ++i) {
+        const char *str = (*ListOfFaults[i])->name;
         if (str)
             _faults.subname(i, str);
     }

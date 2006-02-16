@@ -221,7 +221,7 @@ SimpleFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
 }
 
 template <class Impl>
-Fault
+Fault *
 SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
 {
     // Check if the instruction exists within the cache.
@@ -236,7 +236,7 @@ SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    Fault fault = No_Fault;
+    Fault * fault = NoFault;
 
     // Align the fetch PC so it's at the start of a cache block.
     fetch_PC = icacheBlockAlignPC(fetch_PC);
@@ -258,7 +258,7 @@ SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
 
     // If translation was successful, attempt to read the first
     // instruction.
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
         fault = cpu->mem->read(memReq, cacheData);
         // This read may change when the mem interface changes.
@@ -268,7 +268,7 @@ SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
 
     // Now do the timing access to see whether or not the instruction
     // exists within the cache.
-    if (icacheInterface && fault == No_Fault) {
+    if (icacheInterface && fault == NoFault) {
         DPRINTF(Fetch, "Fetch: Doing timing memory access.\n");
         memReq->completionEvent = NULL;
 
@@ -468,7 +468,7 @@ SimpleFetch<Impl>::fetch()
     Addr fetch_PC = cpu->readPC();
 
     // Fault code for memory access.
-    Fault fault = No_Fault;
+    Fault * fault = NoFault;
 
     // If returning from the delay of a cache miss, then update the status
     // to running, otherwise do the cache access.  Possibly move this up
@@ -506,7 +506,7 @@ SimpleFetch<Impl>::fetch()
     unsigned offset = fetch_PC & cacheBlkMask;
     unsigned fetched;
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         // If the read of the first instruction was successful, then grab the
         // instructions from the rest of the cache line and put them into the
         // queue heading to decode.
@@ -582,7 +582,7 @@ SimpleFetch<Impl>::fetch()
     // Or might want to leave setting the PC to the main CPU, with fetch
     // only changing the nextPC (will require correct determination of
     // next PC).
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         DPRINTF(Fetch, "Fetch: Setting PC to %08p.\n", next_PC);
         cpu->setPC(next_PC);
         cpu->setNextPC(next_PC + instSize);

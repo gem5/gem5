@@ -110,8 +110,8 @@ class AlphaConsole : public PioDevice
     /**
      * memory mapped reads and writes
      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault * read(MemReqPtr &req, uint8_t *data);
+    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
 
     /**
      * standard serialization routines for checkpointing

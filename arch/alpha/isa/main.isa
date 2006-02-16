@@ -33,6 +33,7 @@ output header {{
 
 #include "config/ss_compatible_fp.hh"
 #include "cpu/static_inst.hh"
+#include "arch/alpha/faults.hh"
 #include "mem/mem_req.hh"  // some constructors use MemReq flags
 }};
 
@@ -253,7 +254,7 @@ output decoder {{
 
 // Declarations for execute() methods.
 def template BasicExecDeclare {{
-    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault * execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
 // Basic instruction class declaration template.
@@ -282,17 +283,17 @@ def template BasicConstructor {{
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault * %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
-        Fault fault = No_Fault;
+        Fault * fault = NoFault;
 
         %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         %(code)s;
 
-        if (fault == No_Fault) {
+        if (fault == NoFault) {
             %(op_wb)s;
         }
 
@@ -377,10 +378,10 @@ output decoder {{
 }};
 
 output exec {{
-    Fault
+    Fault *
     Nop::execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
     {
-        return No_Fault;
+        return NoFault;
     }
 }};
 

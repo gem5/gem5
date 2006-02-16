@@ -41,7 +41,7 @@ class ExecContext;
 class FnEvent;
 // What does kernel stats expect is included?
 class System;
-enum Fault;
+class Fault;
 
 namespace Kernel {
 
@@ -176,7 +176,14 @@ class Statistics : public Serializable
     void ivlb() { _ivlb++; }
     void ivle() { _ivle++; }
     void hwrei() { _hwrei++; }
-    void fault(Fault fault) { _faults[fault]++; }
+    void fault(Fault * fault)
+    {
+            if(fault == NoFault) _faults[0]++;
+            else if(fault == MachineCheckFault) _faults[2]++;
+            else if(fault == AlignmentFault) _faults[7]++;
+            else if(fault == FakeMemFault) _faults[17]++;
+            else _faults[fault->id]++;
+    }// FIXME: When there are no generic system fault objects, this will go back to _faults[fault]++; }
     void swpipl(int ipl);
     void mode(cpu_mode newmode);
     void context(Addr oldpcbb, Addr newpcbb);
