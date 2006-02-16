@@ -34,94 +34,125 @@
 
 class AlphaFault : public Fault
 {
-public:
-        AlphaFault(char * newName, int newId, Addr newVect) : Fault(newName, newId), vect(newVect) {;}
-        TheISA::Addr vect;
+  public:
+    AlphaFault(char * newName, int newId, Addr newVect)
+        : Fault(newName, newId), vect(newVect)
+    {;}
+
+    TheISA::Addr vect;
 };
 
 extern class ResetFaultType : public AlphaFault
 {
-public:
-        ResetFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * ResetFault;
+  public:
+    ResetFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const ResetFault;
 
 extern class ArithmeticFaultType : public AlphaFault
 {
-public:
-        ArithmeticFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * ArithmeticFault;
+  public:
+    ArithmeticFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const ArithmeticFault;
 
 extern class InterruptFaultType : public AlphaFault
 {
-public:
-        InterruptFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * InterruptFault;
+  public:
+    InterruptFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const InterruptFault;
 
 extern class NDtbMissFaultType : public AlphaFault
 {
-public:
-        NDtbMissFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * NDtbMissFault;
+  public:
+    NDtbMissFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const NDtbMissFault;
 
 extern class PDtbMissFaultType : public AlphaFault
 {
-public:
-        PDtbMissFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * PDtbMissFault;
+  public:
+    PDtbMissFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const PDtbMissFault;
 
 extern class DtbPageFaultType : public AlphaFault
 {
-public:
-        DtbPageFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * DtbPageFault;
+  public:
+    DtbPageFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const DtbPageFault;
 
 extern class DtbAcvFaultType : public AlphaFault
 {
-public:
-        DtbAcvFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * DtbAcvFault;
+  public:
+    DtbAcvFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const DtbAcvFault;
 
 extern class ItbMissFaultType : public AlphaFault
 {
-public:
-        ItbMissFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * ItbMissFault;
+  public:
+    ItbMissFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const ItbMissFault;
 
 extern class ItbPageFaultType : public AlphaFault
 {
-public:
-        ItbPageFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * ItbPageFault;
+  public:
+    ItbPageFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const ItbPageFault;
 
 extern class ItbAcvFaultType : public AlphaFault
 {
-public:
-        ItbAcvFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * ItbAcvFault;
+  public:
+    ItbAcvFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const ItbAcvFault;
 
 extern class UnimplementedOpcodeFaultType : public AlphaFault
 {
-public:
-        UnimplementedOpcodeFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * UnimplementedOpcodeFault;
+  public:
+    UnimplementedOpcodeFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const UnimplementedOpcodeFault;
 
 extern class FloatEnableFaultType : public AlphaFault
 {
-public:
-        FloatEnableFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * FloatEnableFault;
+  public:
+    FloatEnableFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const FloatEnableFault;
 
 extern class PalFaultType : public AlphaFault
 {
-public:
-        PalFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * PalFault;
+  public:
+    PalFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const PalFault;
 
 extern class IntegerOverflowFaultType : public AlphaFault
 {
-public:
-        IntegerOverflowFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
-} * IntegerOverflowFault;
+  public:
+    IntegerOverflowFaultType(char * newName, int newId, Addr newVect)
+        : AlphaFault(newName, newId, newVect)
+    {;}
+} * const IntegerOverflowFault;
 
 extern Fault ** ListOfFaults[];
 extern int NumFaults;

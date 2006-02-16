@@ -28,9 +28,9 @@
 
 #include "sim/faults.hh"
 
-NoFaultType * NoFault = new NoFaultType("none");
-MachineCheckFaultType * MachineCheckFault = new MachineCheckFaultType("mchk");
-AlignmentFaultType * AlignmentFault = new AlignmentFaultType("unalign");
-//This needs to not exist
-FakeMemFaultType * FakeMemFault = new FakeMemFaultType("fakemem");
+NoFaultType * const NoFault = new NoFaultType("none");
+MachineCheckFaultType * const MachineCheckFault =
+    new MachineCheckFaultType("mchk");
+AlignmentFaultType * const AlignmentFault =
+    new AlignmentFaultType("unalign");
 
