@@ -1,18 +1,21 @@
+// -*- mode:c++ -*-
+
 ////////////////////////////////////////////////////////////////////
 //
-// Base class for sparc instructions, and some support functions
+// Base class for MIPS instructions, and some support functions
 //
 
+//Outputs to decoder.hh
 output header {{
         /**
          * Base class for all SPARC static instructions.
          */
-        class SparcStaticInst : public StaticInst<SPARCISA>
+        class MipsStaticInst : public StaticInst<MIPSISA>
         {
         protected:
 
                 // Constructor.
-                SparcStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
+                MipsStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
                     : StaticInst<SPARCISA>(mnem, _machInst, __opClass)
                 {
                 }
@@ -20,12 +23,12 @@ output header {{
                 std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
 
-        bool passesCondition(struct {uint8_t c:1; uint8_t v:1; uint8_t z:1; uint8_t n:1} codes, uint8_t condition);
 }};
 
+//Ouputs to decoder.cc
 output decoder {{
 
-        std::string SparcStaticInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string MipsStaticInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
                 std::stringstream ss;
 
@@ -56,27 +59,5 @@ output decoder {{
                 return ss.str();
         }
 
-        bool passesCondition(struct {uint8_t c:1; uint8_t v:1; uint8_t z:1; uint8_t n:1} codes, uint8_t condition)
-        {
-                switch(condition)
-                {
-                        case 0b1000: return true;
-                        case 0b0000: return false;
-                        case 0b1001: return !codes.z;
-                        case 0b0001: return codes.z;
-                        case 0b1010: return !(codes.z | (codes.n ^ codes.v));
-                        case 0b0010: return codes.z | (codes.n ^ codes.v);
-                        case 0b1011: return !(codes.n ^ codes.v);
-                        case 0b0011: return (codes.n ^ codes.v);
-                        case 0b1100: return !(codes.c | codes.z);
-                        case 0b0100: return (codes.c | codes.z);
-                        case 0b1101: return !codes.c;
-                        case 0b0101: return codes.c;
-                        case 0b1110: return !codes.n;
-                        case 0b0110: return codes.n;
-                        case 0b1111: return !codes.v;
-                        case 0b0111: return codes.v;
-                }
-        }
 }};
 

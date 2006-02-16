@@ -1,3 +1,4 @@
+// -*- mode:c++ -*-
 
 // Declarations for execute() methods.
 def template BasicExecDeclare {{

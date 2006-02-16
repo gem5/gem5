@@ -1,8 +1,11 @@
+// -*- mode:c++ -*-
+
 ////////////////////////////////////////////////////////////////////
 //
 // Integer operate instructions
 //
 
+//Outputs to decoder.hh
 output header {{
         /**
          * Base class for integer operations.
@@ -12,7 +15,7 @@ output header {{
                 protected:
 
                 /// Constructor
-                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                IntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
                                 MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
@@ -26,7 +29,7 @@ output header {{
                 uint16_t imm;
 
                 /// Constructor
-                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
                                 MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM)
                 {
                 }
@@ -36,6 +39,7 @@ output header {{
 
 }};
 
+//Outputs to decoder.cc
 output decoder {{
         std::string IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
@@ -48,17 +52,30 @@ output decoder {{
         }
 }};
 
-// Primary format for integer operate instructions:
+
+// integer & FP operate instructions use Rd as dest, so check for
+// Rd == 0 to detect nops
+def template OperateNopCheckDecode {{
+ {
+     MipsStaticInst *i = new %(class_name)s(machInst);
+     if (RD == 0) {
+         i = makeNop(i);
+     }
+     return i;
+ }
+}};
+
+//Used by decoder.isa
 def format IntOp(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
 
         # Figure out if we are creating a IntImmOp or a IntOp
+        # by looking at the instruction name
+        iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
         strlen = len(name)
         if name[strlen-1] == 'i' or name[strlen-2:] == 'iu':
-                iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
-        else:
-                iop = InstObjParams(name, Name, 'IntImmOp', cblk, opt_flags)
+            iop = InstObjParams(name, Name, 'IntImmOp', cblk, opt_flags)
 
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
