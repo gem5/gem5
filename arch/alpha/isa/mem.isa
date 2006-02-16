@@ -288,7 +288,6 @@ def template LoadInitiateAcc {{
     {
         Addr EA;
         Fault * fault = NoFault;
-        %(mem_acc_type)s Mem = 0;
 
         %(fp_enable_check)s;
         %(op_src_decl)s;
@@ -310,9 +309,9 @@ def template LoadCompleteAcc {{
                                       Trace::InstRecord *traceData) const
     {
         Fault * fault = NoFault;
-        %(mem_acc_type)s Mem = 0;
 
         %(fp_enable_check)s;
+        %(op_src_decl)s;
         %(op_dest_decl)s;
 
         memcpy(&Mem, data, sizeof(Mem));
@@ -409,10 +408,10 @@ def template StoreInitiateAcc {{
         Addr EA;
         Fault * fault = NoFault;
         uint64_t write_result = 0;
-        %(mem_acc_type)s Mem = 0;
 
         %(fp_enable_check)s;
         %(op_src_decl)s;
+        %(op_dest_decl)s;
         %(op_rd)s;
         %(ea_code)s;
 
@@ -501,18 +500,7 @@ def template MiscInitiateAcc {{
     Fault * %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Addr EA;
-        Fault * fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
+        panic("Misc instruction does not support split access method!");
         return NoFault;
     }
 }};
@@ -523,6 +511,8 @@ def template MiscCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
+        panic("Misc instruction does not support split access method!");
+
         return NoFault;
     }
 }};
@@ -584,6 +574,34 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # for the post-access code.
     memacc_iop.postacc_code = postacc_cblk.code
 
+    # generate InstObjParams for InitiateAcc, CompleteAcc object
+    # The code used depends on the template being used
+    if (exec_template_base == 'Load'):
+        initiateacc_cblk = CodeBlock(ea_code + memacc_code)
+        completeacc_cblk = CodeBlock(memacc_code + postacc_code)
+    elif (exec_template_base == 'Store'):
+        initiateacc_cblk = CodeBlock(ea_code + memacc_code)
+        completeacc_cblk = CodeBlock(postacc_code)
+    else:
+        initiateacc_cblk = ''
+        completeacc_cblk = ''
+
+    initiateacc_iop = InstObjParams(name, Name, base_class, initiateacc_cblk,
+                                    inst_flags)
+
+    completeacc_iop = InstObjParams(name, Name, base_class, completeacc_cblk,
+                                    inst_flags)
+
+    if (exec_template_base == 'Load'):
+        initiateacc_iop.ea_code = ea_cblk.code
+        initiateacc_iop.memacc_code = memacc_cblk.code
+        completeacc_iop.memacc_code = memacc_cblk.code
+        completeacc_iop.postacc_code = postacc_cblk.code
+    elif (exec_template_base == 'Store'):
+        initiateacc_iop.ea_code = ea_cblk.code
+        initiateacc_iop.memacc_code = memacc_cblk.code
+        completeacc_iop.postacc_code = postacc_cblk.code
+
     # generate InstObjParams for unified execution
     cblk = CodeBlock(ea_code + memacc_code + postacc_code)
     iop = InstObjParams(name, Name, base_class, cblk, inst_flags)
@@ -611,8 +629,8 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             EACompExecute.subst(ea_iop)
             + memAccExecTemplate.subst(memacc_iop)
             + fullExecTemplate.subst(iop)
-            + initiateAccTemplate.subst(iop)
-            + completeAccTemplate.subst(iop))
+            + initiateAccTemplate.subst(initiateacc_iop)
+            + completeAccTemplate.subst(completeacc_iop))
 }};
 
 
