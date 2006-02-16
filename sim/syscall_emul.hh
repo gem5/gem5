@@ -455,7 +455,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return errno;
 
-    OS::copyOutStat64Buf(xc->mem, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStat64Buf(xc->mem, fd, xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -505,7 +505,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStat64Buf(xc->mem, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStat64Buf(xc->mem, -1, xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -600,9 +600,9 @@ writevFunc(SyscallDesc *desc, int callnum, Process *process,
         typename OS::tgt_iovec tiov;
         xc->mem->access(Read, tiov_base + i*sizeof(typename OS::tgt_iovec),
                         &tiov, sizeof(typename OS::tgt_iovec));
-        hiov[i].iov_len = tiov.iov_len;
+        hiov[i].iov_len = gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        xc->mem->access(Read, tiov.iov_base,
+        xc->mem->access(Read, gtoh(tiov.iov_base),
                         hiov[i].iov_base, hiov[i].iov_len);
     }
 
@@ -674,6 +674,8 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
         case OS::TGT_RLIMIT_STACK:
             // max stack size in bytes: make up a number (2MB for now)
             rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
+            rlp->rlim_cur = htog(rlp->rlim_cur);
+            rlp->rlim_max = htog(rlp->rlim_max);
             break;
 
         default:
@@ -697,6 +699,8 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
 
     getElapsedTime(tp->tv_sec, tp->tv_usec);
     tp->tv_sec += seconds_since_epoch;
+    tp->tv_sec = htog(tp->tv_sec);
+    tp->tv_usec = htog(tp->tv_usec);
 
     tp.copyOut(xc->mem);
 
@@ -721,8 +725,8 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i)
     {
-        hostTimeval[i].tv_sec = (*tp)[i].tv_sec;
-        hostTimeval[i].tv_usec = (*tp)[i].tv_usec;
+        hostTimeval[i].tv_sec = gtoh((*tp)[i].tv_sec);
+        hostTimeval[i].tv_usec = gtoh((*tp)[i].tv_usec);
     }
     int result = utimes(path.c_str(), hostTimeval);
 
@@ -748,6 +752,9 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 
     getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
+    rup->ru_utime.tv_sec = htog(rup->ru_utime.tv_sec);
+    rup->ru_utime.tv_usec = htog(rup->ru_utime.tv_usec);
+
     rup->ru_stime.tv_sec = 0;
     rup->ru_stime.tv_usec = 0;
     rup->ru_maxrss = 0;
