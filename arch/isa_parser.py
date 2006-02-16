@@ -1149,10 +1149,6 @@ class Operand(object):
         self.constructor = self.makeConstructor()
         self.op_decl = self.makeDecl()
 
-        if self.isMem():
-            self.is_src = ''
-            self.is_dest = ''
-
         if self.is_src:
             self.op_rd = self.makeRead()
             self.op_src_decl = self.makeDecl()
