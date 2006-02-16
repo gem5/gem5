@@ -1138,6 +1138,7 @@ class Operand(object):
         # template must be careful not to use it if it doesn't apply.
         if self.isMem():
             self.mem_acc_size = self.makeAccSize()
+            self.mem_acc_type = self.ctype
 
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
@@ -1148,15 +1149,23 @@ class Operand(object):
         self.constructor = self.makeConstructor()
         self.op_decl = self.makeDecl()
 
+        if self.isMem():
+            self.is_src = ''
+            self.is_dest = ''
+
         if self.is_src:
             self.op_rd = self.makeRead()
+            self.op_src_decl = self.makeDecl()
         else:
             self.op_rd = ''
+            self.op_src_decl = ''
 
         if self.is_dest:
             self.op_wb = self.makeWrite()
+            self.op_dest_decl = self.makeDecl()
         else:
             self.op_wb = ''
+            self.op_dest_decl = ''
 
     def isMem(self):
         return 0
@@ -1589,6 +1598,14 @@ class CodeBlock:
 
         self.op_decl = self.operands.concatAttrStrings('op_decl')
 
+        is_src = lambda op: op.is_src
+        is_dest = lambda op: op.is_dest
+
+        self.op_src_decl = \
+                  self.operands.concatSomeAttrStrings(is_src, 'op_src_decl')
+        self.op_dest_decl = \
+                  self.operands.concatSomeAttrStrings(is_dest, 'op_dest_decl')
+
         self.op_rd = self.operands.concatAttrStrings('op_rd')
         self.op_wb = self.operands.concatAttrStrings('op_wb')
 
@@ -1596,6 +1613,7 @@ class CodeBlock:
 
         if self.operands.memOperand:
             self.mem_acc_size = self.operands.memOperand.mem_acc_size
+            self.mem_acc_type = self.operands.memOperand.mem_acc_type
 
         # Make a basic guess on the operand class (function unit type).
         # These are good enough for most cases, and will be overridden

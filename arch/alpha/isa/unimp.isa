@@ -105,16 +105,16 @@ output decoder {{
 }};
 
 output exec {{
-    Fault
+    Fault *
     FailUnimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
         panic("attempt to execute unimplemented instruction '%s' "
               "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
-        return Unimplemented_Opcode_Fault;
+        return UnimplementedOpcodeFault;
     }
 
-    Fault
+    Fault *
     WarnUnimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
@@ -123,7 +123,7 @@ output exec {{
             warned = true;
         }
 
-        return No_Fault;
+        return NoFault;
     }
 }};
 

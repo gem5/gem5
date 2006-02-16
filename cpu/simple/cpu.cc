@@ -312,7 +312,7 @@ change_thread_state(int thread_number, int activate, int priority)
 {
 }
 
-Fault
+Fault *
 SimpleCPU::copySrcTranslate(Addr src)
 {
     static bool no_warn = true;
@@ -332,11 +332,11 @@ SimpleCPU::copySrcTranslate(Addr src)
     memReq->reset(src & ~(blk_size - 1), blk_size);
 
     // translate to physical address
-    Fault fault = xc->translateDataReadReq(memReq);
+    Fault * fault = xc->translateDataReadReq(memReq);
 
-    assert(fault != Alignment_Fault);
+    assert(fault != AlignmentFault);
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         xc->copySrcAddr = src;
         xc->copySrcPhysAddr = memReq->paddr + offset;
     } else {
@@ -346,7 +346,7 @@ SimpleCPU::copySrcTranslate(Addr src)
     return fault;
 }
 
-Fault
+Fault *
 SimpleCPU::copy(Addr dest)
 {
     static bool no_warn = true;
@@ -367,11 +367,11 @@ SimpleCPU::copy(Addr dest)
 
     memReq->reset(dest & ~(blk_size -1), blk_size);
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(memReq);
+    Fault * fault = xc->translateDataWriteReq(memReq);
 
-    assert(fault != Alignment_Fault);
+    assert(fault != AlignmentFault);
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         Addr dest_addr = memReq->paddr + offset;
         // Need to read straight from memory since we have more than 8 bytes.
         memReq->paddr = xc->copySrcPhysAddr;
@@ -394,11 +394,11 @@ SimpleCPU::copy(Addr dest)
 
 // precise architected memory state accessor macros
 template <class T>
-Fault
+Fault *
 SimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     if (status() == DcacheMissStall || status() == DcacheMissSwitch) {
-        Fault fault = xc->read(memReq,data);
+        Fault * fault = xc->read(memReq,data);
 
         if (traceData) {
             traceData->setAddr(addr);
@@ -409,10 +409,10 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = xc->translateDataReadReq(memReq);
+    Fault * fault = xc->translateDataReadReq(memReq);
 
     // if we have a cache, do cache access too
-    if (fault == No_Fault && dcacheInterface) {
+    if (fault == NoFault && dcacheInterface) {
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
         memReq->time = curTick;
@@ -432,7 +432,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
             fault = xc->read(memReq, data);
 
         }
-    } else if(fault == No_Fault) {
+    } else if(fault == NoFault) {
         // do functional access
         fault = xc->read(memReq, data);
 
@@ -447,32 +447,32 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 template
-Fault
+Fault *
 SimpleCPU::read(Addr addr, uint64_t &data, unsigned flags);
 
 template
-Fault
+Fault *
 SimpleCPU::read(Addr addr, uint32_t &data, unsigned flags);
 
 template
-Fault
+Fault *
 SimpleCPU::read(Addr addr, uint16_t &data, unsigned flags);
 
 template
-Fault
+Fault *
 SimpleCPU::read(Addr addr, uint8_t &data, unsigned flags);
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS
 
 template<>
-Fault
+Fault *
 SimpleCPU::read(Addr addr, double &data, unsigned flags)
 {
     return read(addr, *(uint64_t*)&data, flags);
 }
 
 template<>
-Fault
+Fault *
 SimpleCPU::read(Addr addr, float &data, unsigned flags)
 {
     return read(addr, *(uint32_t*)&data, flags);
@@ -480,7 +480,7 @@ SimpleCPU::read(Addr addr, float &data, unsigned flags)
 
 
 template<>
-Fault
+Fault *
 SimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
 {
     return read(addr, (uint32_t&)data, flags);
@@ -488,19 +488,19 @@ SimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
 
 
 template <class T>
-Fault
+Fault *
 SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(memReq);
+    Fault * fault = xc->translateDataWriteReq(memReq);
 
     // do functional access
-    if (fault == No_Fault)
+    if (fault == NoFault)
         fault = xc->write(memReq, data);
 
-    if (fault == No_Fault && dcacheInterface) {
+    if (fault == NoFault && dcacheInterface) {
         memReq->cmd = Write;
         memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
@@ -519,7 +519,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         }
     }
 
-    if (res && (fault == No_Fault))
+    if (res && (fault == NoFault))
         *res = memReq->result;
 
     if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
@@ -531,32 +531,32 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template
-Fault
+Fault *
 SimpleCPU::write(uint64_t data, Addr addr, unsigned flags, uint64_t *res);
 
 template
-Fault
+Fault *
 SimpleCPU::write(uint32_t data, Addr addr, unsigned flags, uint64_t *res);
 
 template
-Fault
+Fault *
 SimpleCPU::write(uint16_t data, Addr addr, unsigned flags, uint64_t *res);
 
 template
-Fault
+Fault *
 SimpleCPU::write(uint8_t data, Addr addr, unsigned flags, uint64_t *res);
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS
 
 template<>
-Fault
+Fault *
 SimpleCPU::write(double data, Addr addr, unsigned flags, uint64_t *res)
 {
     return write(*(uint64_t*)&data, addr, flags, res);
 }
 
 template<>
-Fault
+Fault *
 SimpleCPU::write(float data, Addr addr, unsigned flags, uint64_t *res)
 {
     return write(*(uint32_t*)&data, addr, flags, res);
@@ -564,7 +564,7 @@ SimpleCPU::write(float data, Addr addr, unsigned flags, uint64_t *res)
 
 
 template<>
-Fault
+Fault *
 SimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 {
     return write((uint32_t)data, addr, flags, res);
@@ -638,7 +638,7 @@ SimpleCPU::tick()
 
     traceData = NULL;
 
-    Fault fault = No_Fault;
+    Fault * fault = NoFault;
 
 #if FULL_SYSTEM
     if (checkInterrupts && check_interrupts() && !xc->inPalMode() &&
@@ -675,7 +675,7 @@ SimpleCPU::tick()
         if (ipl && ipl > xc->regs.ipr[TheISA::IPR_IPLR]) {
             ipr[TheISA::IPR_ISR] = summary;
             ipr[TheISA::IPR_INTID] = ipl;
-            xc->ev5_trap(Interrupt_Fault);
+            xc->ev5_trap(InterruptFault);
 
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                     ipr[TheISA::IPR_IPLR], ipl, summary);
@@ -713,10 +713,10 @@ SimpleCPU::tick()
 
         fault = xc->translateInstReq(memReq);
 
-        if (fault == No_Fault)
+        if (fault == NoFault)
             fault = xc->mem->read(memReq, inst);
 
-        if (icacheInterface && fault == No_Fault) {
+        if (icacheInterface && fault == NoFault) {
             memReq->completionEvent = NULL;
 
             memReq->time = curTick;
@@ -738,7 +738,7 @@ SimpleCPU::tick()
 
     // If we've got a valid instruction (i.e., no fault on instruction
     // fetch), then execute it.
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
 
         // keep an instruction count
         numInst++;
@@ -795,9 +795,9 @@ SimpleCPU::tick()
 
         traceFunctions(xc->regs.pc);
 
-    }	// if (fault == No_Fault)
+    }	// if (fault == NoFault)
 
-    if (fault != No_Fault) {
+    if (fault != NoFault) {
 #if FULL_SYSTEM
         xc->ev5_trap(fault);
 #else // !FULL_SYSTEM

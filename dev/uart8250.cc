@@ -111,7 +111,7 @@ Uart8250::Uart8250(const string &name, SimConsole *c, MemoryController *mmu,
 
 }
 
-Fault
+Fault *
 Uart8250::read(MemReqPtr &req, uint8_t *data)
 {
     Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
@@ -183,11 +183,11 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             break;
     }
 
-    return No_Fault;
+    return NoFault;
 
 }
 
-Fault
+Fault *
 Uart8250::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
@@ -255,7 +255,7 @@ Uart8250::write(MemReqPtr &req, const uint8_t *data)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-    return No_Fault;
+    return NoFault;
 }
 
 void

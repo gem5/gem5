@@ -390,7 +390,7 @@ IdeController::writeConfig(int offset, int size, const uint8_t *data)
     }
 }
 
-Fault
+Fault *
 IdeController::read(MemReqPtr &req, uint8_t *data)
 {
     Addr offset;
@@ -401,7 +401,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     parseAddr(req->paddr, offset, channel, reg_type);
 
     if (!io_enabled)
-        return No_Fault;
+        return NoFault;
 
     switch (reg_type) {
       case BMI_BLOCK:
@@ -457,10 +457,10 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
             offset, req->size, *(uint32_t*)data);
 
-    return No_Fault;
+    return NoFault;
 }
 
-Fault
+Fault *
 IdeController::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr offset;
@@ -472,12 +472,12 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     parseAddr(req->paddr, offset, channel, reg_type);
 
     if (!io_enabled)
-        return No_Fault;
+        return NoFault;
 
     switch (reg_type) {
       case BMI_BLOCK:
         if (!bm_enabled)
-            return No_Fault;
+            return NoFault;
 
         switch (offset) {
             // Bus master IDE command register
@@ -627,7 +627,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
             offset, req->size, *(uint32_t*)data);
 
-    return No_Fault;
+    return NoFault;
 }
 
 ////

@@ -303,7 +303,7 @@ AlphaITB::fault(Addr pc, ExecContext *xc) const
 }
 
 
-Fault
+Fault *
 AlphaITB::translate(MemReqPtr &req) const
 {
     InternalProcReg *ipr = req->xc->regs.ipr;
@@ -312,7 +312,7 @@ AlphaITB::translate(MemReqPtr &req) const
         // strip off PAL PC marker (lsb is 1)
         req->paddr = (req->vaddr & ~3) & PAddrImplMask;
         hits++;
-        return No_Fault;
+        return NoFault;
     }
 
     if (req->flags & PHYSICAL) {
@@ -322,7 +322,7 @@ AlphaITB::translate(MemReqPtr &req) const
         if (!validVirtualAddress(req->vaddr)) {
             fault(req->vaddr, req->xc);
             acv++;
-            return ITB_Acv_Fault;
+            return ItbAcvFault;
         }
 
 
@@ -339,7 +339,7 @@ AlphaITB::translate(MemReqPtr &req) const
                 AlphaISA::mode_kernel) {
                 fault(req->vaddr, req->xc);
                 acv++;
-                return ITB_Acv_Fault;
+                return ItbAcvFault;
             }
 
             req->paddr = req->vaddr & PAddrImplMask;
@@ -360,7 +360,7 @@ AlphaITB::translate(MemReqPtr &req) const
             if (!pte) {
                 fault(req->vaddr, req->xc);
                 misses++;
-                return ITB_Fault_Fault;
+                return ItbPageFault;
             }
 
             req->paddr = (pte->ppn << AlphaISA::PageShift) +
@@ -371,7 +371,7 @@ AlphaITB::translate(MemReqPtr &req) const
                 // instruction access fault
                 fault(req->vaddr, req->xc);
                 acv++;
-                return ITB_Acv_Fault;
+                return ItbAcvFault;
             }
 
             hits++;
@@ -380,11 +380,11 @@ AlphaITB::translate(MemReqPtr &req) const
 
     // check that the physical address is ok (catch bad physical addresses)
     if (req->paddr & ~PAddrImplMask)
-        return Machine_Check_Fault;
+        return MachineCheckFault;
 
     checkCacheability(req);
 
-    return No_Fault;
+    return NoFault;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -493,7 +493,7 @@ AlphaDTB::fault(MemReqPtr &req, uint64_t flags) const
     }
 }
 
-Fault
+Fault *
 AlphaDTB::translate(MemReqPtr &req, bool write) const
 {
     RegFile *regs = &req->xc->regs;
@@ -511,7 +511,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
         fault(req, write ? MM_STAT_WR_MASK : 0);
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->vaddr,
                 req->size);
-        return Alignment_Fault;
+        return AlignmentFault;
     }
 
     if (pc & 0x1) {
@@ -530,7 +530,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                   MM_STAT_ACV_MASK);
 
             if (write) { write_acv++; } else { read_acv++; }
-            return DTB_Fault_Fault;
+            return DtbPageFault;
         }
 
         // Check for "superpage" mapping
@@ -547,7 +547,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                 fault(req, ((write ? MM_STAT_WR_MASK : 0) |
                             MM_STAT_ACV_MASK));
                 if (write) { write_acv++; } else { read_acv++; }
-                return DTB_Acv_Fault;
+                return DtbAcvFault;
             }
 
             req->paddr = req->vaddr & PAddrImplMask;
@@ -575,7 +575,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                 fault(req, (write ? MM_STAT_WR_MASK : 0) |
                       MM_STAT_DTB_MISS_MASK);
                 if (write) { write_misses++; } else { read_misses++; }
-                return (req->flags & VPTE) ? Pdtb_Miss_Fault : Ndtb_Miss_Fault;
+                return (req->flags & VPTE) ? (Fault *)PDtbMissFault : (Fault *)NDtbMissFault;
             }
 
             req->paddr = (pte->ppn << AlphaISA::PageShift) +
@@ -588,25 +588,25 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                           MM_STAT_ACV_MASK |
                           (pte->fonw ? MM_STAT_FONW_MASK : 0));
                     write_acv++;
-                    return DTB_Fault_Fault;
+                    return DtbPageFault;
                 }
                 if (pte->fonw) {
                     fault(req, MM_STAT_WR_MASK |
                           MM_STAT_FONW_MASK);
                     write_acv++;
-                    return DTB_Fault_Fault;
+                    return DtbPageFault;
                 }
             } else {
                 if (!(pte->xre & MODE2MASK(mode))) {
                     fault(req, MM_STAT_ACV_MASK |
                           (pte->fonr ? MM_STAT_FONR_MASK : 0));
                     read_acv++;
-                    return DTB_Acv_Fault;
+                    return DtbAcvFault;
                 }
                 if (pte->fonr) {
                     fault(req, MM_STAT_FONR_MASK);
                     read_acv++;
-                    return DTB_Fault_Fault;
+                    return DtbPageFault;
                 }
             }
         }
@@ -619,11 +619,11 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
     // check that the physical address is ok (catch bad physical addresses)
     if (req->paddr & ~PAddrImplMask)
-        return Machine_Check_Fault;
+        return MachineCheckFault;
 
     checkCacheability(req);
 
-    return No_Fault;
+    return NoFault;
 }
 
 AlphaISA::PTE &

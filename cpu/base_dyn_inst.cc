@@ -113,7 +113,7 @@ BaseDynInst<Impl>::initVars()
     asid = 0;
 
     // Initialize the fault to be unimplemented opcode.
-    fault = Unimplemented_Opcode_Fault;
+    fault = UnimplementedOpcodeFault;
 
     ++instcount;
 
@@ -142,12 +142,12 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     req->asid = asid;
 
     // Prefetches never cause faults.
-    fault = No_Fault;
+    fault = NoFault;
 
     // note this is a local, not BaseDynInst::fault
-    Fault trans_fault = xc->translateDataReadReq(req);
+    Fault * trans_fault = xc->translateDataReadReq(req);
 
-    if (trans_fault == No_Fault && !(req->flags & UNCACHEABLE)) {
+    if (trans_fault == NoFault && !(req->flags & UNCACHEABLE)) {
         // It's a valid address to cacheable space.  Record key MemReq
         // parameters so we can generate another one just like it for
         // the timing access without calling translate() again (which
@@ -188,7 +188,7 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
 
     fault = xc->translateDataWriteReq(req);
 
-    if (fault == No_Fault && !(req->flags & UNCACHEABLE)) {
+    if (fault == NoFault && !(req->flags & UNCACHEABLE)) {
         // Record key MemReq parameters so we can generate another one
         // just like it for the timing access without calling translate()
         // again (which might mess up the TLB).
@@ -208,16 +208,16 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
  * @todo Need to find a way to get the cache block size here.
  */
 template <class Impl>
-Fault
+Fault *
 BaseDynInst<Impl>::copySrcTranslate(Addr src)
 {
     MemReqPtr req = new MemReq(src, xc, 64);
     req->asid = asid;
 
     // translate to physical address
-    Fault fault = xc->translateDataReadReq(req);
+    Fault * fault = xc->translateDataReadReq(req);
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         xc->copySrcAddr = src;
         xc->copySrcPhysAddr = req->paddr;
     } else {
@@ -231,7 +231,7 @@ BaseDynInst<Impl>::copySrcTranslate(Addr src)
  * @todo Need to find a way to get the cache block size here.
  */
 template <class Impl>
-Fault
+Fault *
 BaseDynInst<Impl>::copy(Addr dest)
 {
     uint8_t data[64];
@@ -241,9 +241,9 @@ BaseDynInst<Impl>::copy(Addr dest)
     req->asid = asid;
 
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(req);
+    Fault * fault = xc->translateDataWriteReq(req);
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         Addr dest_addr = req->paddr;
         // Need to read straight from memory since we have more than 8 bytes.
         req->paddr = xc->copySrcPhysAddr;
@@ -277,10 +277,10 @@ BaseDynInst<Impl>::dump(std::string &outstring)
 
 #if 0
 template <class Impl>
-Fault
+Fault *
 BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
 {
-    Fault fault;
+    Fault * fault;
 
     // check alignments, even speculative this test should always pass
     if ((nbytes & nbytes - 1) != 0 || (addr & nbytes - 1) != 0) {
@@ -292,7 +292,7 @@ BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
 #if 0
         panic("unaligned access. Cycle = %n", curTick);
 #endif
-        return No_Fault;
+        return NoFault;
     }
 
     MemReqPtr req = new MemReq(addr, thread, nbytes);
@@ -303,7 +303,7 @@ BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
 
       case Write:
         fault = spec_mem->write(req, (uint8_t *)p);
-        if (fault != No_Fault)
+        if (fault != NoFault)
             break;
 
         specMemWrite = true;
@@ -325,7 +325,7 @@ BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
         break;
 
       default:
-        fault = Machine_Check_Fault;
+        fault = MachineCheckFault;
         break;
     }
 

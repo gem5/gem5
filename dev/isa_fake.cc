@@ -59,7 +59,7 @@ IsaFake::IsaFake(const string &name, Addr a, MemoryController *mmu,
     }
 }
 
-Fault
+Fault *
 IsaFake::read(MemReqPtr &req, uint8_t *data)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n",
@@ -73,26 +73,26 @@ IsaFake::read(MemReqPtr &req, uint8_t *data)
 
       case sizeof(uint64_t):
          *(uint64_t*)data = 0xFFFFFFFFFFFFFFFFULL;
-         return No_Fault;
+         return NoFault;
       case sizeof(uint32_t):
          *(uint32_t*)data = 0xFFFFFFFF;
-         return No_Fault;
+         return NoFault;
       case sizeof(uint16_t):
          *(uint16_t*)data = 0xFFFF;
-         return No_Fault;
+         return NoFault;
       case sizeof(uint8_t):
          *(uint8_t*)data = 0xFF;
-         return No_Fault;
+         return NoFault;
 
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
     DPRINTFN("Isa FakeSMC  ERROR: read  daddr=%#x size=%d\n", daddr, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
-Fault
+Fault *
 IsaFake::write(MemReqPtr &req, const uint8_t *data)
 {
     DPRINTF(Tsunami, "write - va=%#x size=%d \n",
@@ -100,7 +100,7 @@ IsaFake::write(MemReqPtr &req, const uint8_t *data)
 
     //:Addr daddr = (req->paddr & addr_mask) >> 6;
 
-    return No_Fault;
+    return NoFault;
 }
 
 Tick

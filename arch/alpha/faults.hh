@@ -26,32 +26,104 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FAULTS_HH__
-#define __FAULTS_HH__
+#ifndef __ALPHA_FAULTS_HH__
+#define __ALPHA_FAULTS_HH__
 
-enum Fault {
-    No_Fault,
-    Reset_Fault,		// processor reset
-    Machine_Check_Fault,	// machine check (also internal S/W fault)
-    Arithmetic_Fault,		// FP exception
-    Interrupt_Fault,		// external interrupt
-    Ndtb_Miss_Fault,		// DTB miss
-    Pdtb_Miss_Fault,		// nested DTB miss
-    Alignment_Fault,		// unaligned access
-    DTB_Fault_Fault,		// DTB page fault
-    DTB_Acv_Fault,		// DTB access violation
-    ITB_Miss_Fault,		// ITB miss
-    ITB_Fault_Fault,		// ITB page fault
-    ITB_Acv_Fault,		// ITB access violation
-    Unimplemented_Opcode_Fault,	// invalid/unimplemented instruction
-    Fen_Fault,			// FP not-enabled fault
-    Pal_Fault,			// call_pal S/W interrupt
-    Integer_Overflow_Fault,
-    Fake_Mem_Fault,
-    Num_Faults			// number of faults
+#include "sim/faults.hh"
+#include "arch/isa_traits.hh" //For the Addr type
+
+class AlphaFault : public Fault
+{
+public:
+        AlphaFault(char * newName, int newId, Addr newVect) : Fault(newName, newId), vect(newVect) {;}
+        TheISA::Addr vect;
 };
 
-const char *
-FaultName(int index);
+extern class ResetFaultType : public AlphaFault
+{
+public:
+        ResetFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * ResetFault;
+
+extern class ArithmeticFaultType : public AlphaFault
+{
+public:
+        ArithmeticFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * ArithmeticFault;
+
+extern class InterruptFaultType : public AlphaFault
+{
+public:
+        InterruptFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * InterruptFault;
+
+extern class NDtbMissFaultType : public AlphaFault
+{
+public:
+        NDtbMissFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * NDtbMissFault;
+
+extern class PDtbMissFaultType : public AlphaFault
+{
+public:
+        PDtbMissFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * PDtbMissFault;
+
+extern class DtbPageFaultType : public AlphaFault
+{
+public:
+        DtbPageFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * DtbPageFault;
+
+extern class DtbAcvFaultType : public AlphaFault
+{
+public:
+        DtbAcvFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * DtbAcvFault;
+
+extern class ItbMissFaultType : public AlphaFault
+{
+public:
+        ItbMissFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * ItbMissFault;
+
+extern class ItbPageFaultType : public AlphaFault
+{
+public:
+        ItbPageFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * ItbPageFault;
+
+extern class ItbAcvFaultType : public AlphaFault
+{
+public:
+        ItbAcvFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * ItbAcvFault;
+
+extern class UnimplementedOpcodeFaultType : public AlphaFault
+{
+public:
+        UnimplementedOpcodeFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * UnimplementedOpcodeFault;
+
+extern class FloatEnableFaultType : public AlphaFault
+{
+public:
+        FloatEnableFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * FloatEnableFault;
+
+extern class PalFaultType : public AlphaFault
+{
+public:
+        PalFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * PalFault;
+
+extern class IntegerOverflowFaultType : public AlphaFault
+{
+public:
+        IntegerOverflowFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+} * IntegerOverflowFault;
+
+extern Fault ** ListOfFaults[];
+extern int NumFaults;
 
 #endif // __FAULTS_HH__

@@ -89,16 +89,16 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Trace::InstRecord *traceData;
 
     template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
+    Fault * read(Addr addr, T &data, unsigned flags);
 
     template <class T>
-    Fault write(T data, Addr addr, unsigned flags,
+    Fault * write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
-    Fault copySrcTranslate(Addr src);
-    Fault copy(Addr dest);
+    Fault * copySrcTranslate(Addr src);
+    Fault * copy(Addr dest);
 
     /** @todo: Consider making this private. */
   public:
@@ -154,7 +154,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     ExecContext *xc;
 
     /** The kind of fault this instruction has generated. */
-    Fault fault;
+    Fault * fault;
 
     /** The effective virtual address (lds & stores only). */
     Addr effAddr;
@@ -225,7 +225,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
   public:
     void
-    trace_mem(Fault fault,      // last fault
+    trace_mem(Fault * fault,      // last fault
               MemCmd cmd,       // last command
               Addr addr,        // virtual address of access
               void *p,          // memory accessed
@@ -238,7 +238,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void dump(std::string &outstring);
 
     /** Returns the fault type. */
-    Fault getFault() { return fault; }
+    Fault * getFault() { return fault; }
 
     /** Checks whether or not this instruction has had its branch target
      *  calculated yet.  For now it is not utilized and is hacked to be
@@ -447,7 +447,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
 template<class Impl>
 template<class T>
-inline Fault
+inline Fault *
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
     MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
@@ -472,7 +472,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     req->paddr = req->vaddr;
 #endif
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         fault = cpu->read(req, data, lqIdx);
     } else {
         // Return a fixed value to keep simulation deterministic even
@@ -490,7 +490,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 
 template<class Impl>
 template<class T>
-inline Fault
+inline Fault *
 BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     if (traceData) {
@@ -520,14 +520,14 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     req->paddr = req->vaddr;
 #endif
 
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
         fault = cpu->write(req, data, sqIdx);
     }
 
     if (res) {
         // always return some result to keep misspeculated paths
         // (which will ignore faults) deterministic
-        *res = (fault == No_Fault) ? req->result : 0;
+        *res = (fault == NoFault) ? req->result : 0;
     }
 
     return fault;

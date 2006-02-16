@@ -221,7 +221,7 @@ ExecContext::regStats(const string &name)
 }
 
 void
-ExecContext::trap(Fault fault)
+ExecContext::trap(Fault * fault)
 {
     //TheISA::trap(fault);    //One possible way to do it...
 

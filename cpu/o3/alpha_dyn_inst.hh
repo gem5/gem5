@@ -74,7 +74,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     AlphaDynInst(StaticInstPtr<AlphaISA> &_staticInst);
 
     /** Executes the instruction.*/
-    Fault execute()
+    Fault * execute()
     {
         return this->fault = this->staticInst->execute(this, this->traceData);
     }
@@ -87,13 +87,13 @@ class AlphaDynInst : public BaseDynInst<Impl>
     void setFpcr(uint64_t val);
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault);
-    Fault setIpr(int idx, uint64_t val);
-    Fault hwrei();
+    uint64_t readIpr(int idx, Fault * &fault);
+    Fault * setIpr(int idx, uint64_t val);
+    Fault * hwrei();
     int readIntrFlag();
     void setIntrFlag(int val);
     bool inPalMode();
-    void trap(Fault fault);
+    void trap(Fault * fault);
     bool simPalCheck(int palFunc);
 #else
     void syscall();
@@ -220,12 +220,12 @@ class AlphaDynInst : public BaseDynInst<Impl>
     }
 
   public:
-    Fault calcEA()
+    Fault * calcEA()
     {
         return this->staticInst->eaCompInst()->execute(this, this->traceData);
     }
 
-    Fault memAccess()
+    Fault * memAccess()
     {
         return this->staticInst->memAccInst()->execute(this, this->traceData);
     }
