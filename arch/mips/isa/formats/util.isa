@@ -1,0 +1,26 @@
+// -*- mode:c++ -*-
+
+let {{
+def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
+    # Declare basic control transfer w/o link (i.e. link reg is R31)
+    nolink_code = 'NPC = %s;\n' % npc_expr
+    nolink_iop = InstObjParams(name, Name, base_class,
+                               CodeBlock(nolink_code), flags)
+    header_output = BasicDeclare.subst(nolink_iop)
+    decoder_output = BasicConstructor.subst(nolink_iop)
+    exec_output = BasicExecute.subst(nolink_iop)
+
+    # Generate declaration of '*AndLink' version, append to decls
+    link_code = 'Ra = NPC & ~3;\n' + nolink_code
+    link_iop = InstObjParams(name, Name + 'AndLink', base_class,
+                             CodeBlock(link_code), flags)
+    header_output += BasicDeclare.subst(link_iop)
+    decoder_output += BasicConstructor.subst(link_iop)
+    exec_output += BasicExecute.subst(link_iop)
+
+    # need to use link_iop for the decode template since it is expecting
+    # the shorter version of class_name (w/o "AndLink")
+
+    return (header_output, decoder_output,
+            JumpOrBranchDecode.subst(nolink_iop), exec_output)
+}};

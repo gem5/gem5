@@ -1,5 +1,7 @@
-//Include the basic format
 //Templates from this format are used later
+##include "m5/arch/mips/isa/formats/util.isa"
+
+//Include the basic format
 ##include "m5/arch/mips/isa/formats/basic.isa"
 
 //Include the integerOp and integerOpCc format

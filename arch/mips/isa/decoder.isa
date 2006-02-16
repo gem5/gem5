@@ -1,3 +1,5 @@
+// -*- mode:c++ -*-
+
 ////////////////////////////////////////////////////////////////////
 //
 // The actual MIPS32 ISA decoder
@@ -144,10 +146,13 @@ decode OPCODE_HI default Unknown::unknown() {
 
         0x1: decode REGIMM_HI {
             0x0: decode REGIMM_LO {
-              format CondBranch {
+              format Branch {
                 0x0: bltz({{ cond = (Rs.sw < 0); }});
                 0x1: bgez({{ cond = (Rs.sw >= 0); }});
 
+              }
+
+              format BranchLikely {
                 //MIPS obsolete instructions
                 0x2: bltzl({{ cond = (Rs.sw < 0); }});
                 0x3: bgezl({{ cond = (Rs.sw >= 0); }});
@@ -166,10 +171,12 @@ decode OPCODE_HI default Unknown::unknown() {
             }
 
             0x2: decode REGIMM_LO {
-              format CondBranch {
+              format Branch {
                 0x0: bltzal({{ cond = (Rs.sw < 0); }});
                 0x1: bgezal({{ cond = (Rs.sw >= 0); }});
+              }
 
+              format BranchLikely {
                 //MIPS obsolete instructions
                 0x2: bltzall({{ cond = (Rs.sw < 0); }});
                 0x3: bgezall({{ cond = (Rs.sw >= 0); }});
@@ -188,7 +195,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x3: jal(IsCall);
         }
 
-        format CondBranch {
+        format Branch {
             0x4: beq({{ cond = (Rs.sw == 0); }});
             0x5: bne({{ cond = (Rs.sw !=  0); }});
             0x6: blez({{ cond = (Rs.sw <= 0); }});
@@ -360,14 +367,14 @@ decode OPCODE_HI default Unknown::unknown() {
 
           0x1: decode ND {
             0x0: decode TF {
-              format CondBranch {
+              format Branch {
                 0x0: bc1f({{ cond = (xc->miscRegs.fpcr == 0); }});
                 0x1: bc1t({{ cond = (xc->miscRegs.fpcr == 1); }});
               }
             }
 
             0x1: decode TF {
-              format CondBranch {
+              format BranchLikely {
                 0x0: bc1fl({{ cond = (xc->miscRegs.fpcr == 0); }});
                 0x1: bc1tl({{ cond = (xc->miscRegs.fpcr == 1); }});
               }
@@ -737,7 +744,7 @@ decode OPCODE_HI default Unknown::unknown() {
       }
 
       //MIPS obsolete instructions
-        format CondBranch {
+        format BranchLikely {
               0x4: beql({{ cond = (Rs.sw == 0); }});
               0x5: bnel({{ cond = (Rs.sw != 0); }});
               0x6: blezl({{ cond = (Rs.sw <= 0); }});
