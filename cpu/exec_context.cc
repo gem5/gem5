@@ -80,7 +80,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
                          Memory *_mem, Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
-      system(_system), mem(_mem),
+      system(_system),
       process(_process),
       asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
@@ -109,7 +109,7 @@ void
 ExecContext::takeOverFrom(ExecContext *oldContext)
 {
     // some things should already be set up
-    assert(mem == oldContext->mem);
+//    assert(mem == oldContext->mem);
 #if FULL_SYSTEM
     assert(system == oldContext->system);
 #else

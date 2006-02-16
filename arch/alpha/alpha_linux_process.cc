@@ -36,7 +36,7 @@
 
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional/functional.hh"
+#include "mem/port.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/host.hh"
 #include "sim/process.hh"
@@ -236,7 +236,7 @@ class Linux {
     /// buffer.  Also copies the target buffer out to the simulated
     /// memory space.  Used by stat(), fstat(), and lstat().
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    copyOutStatBuf(Port *memPort, Addr addr, struct stat *host)
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
@@ -254,12 +254,12 @@ class Linux {
         tgt->st_blksize = host->st_blksize;
         tgt->st_blocks = host->st_blocks;
 
-        tgt.copyOut(mem);
+        tgt.copyOut(memPort);
     }
 
     // Same for stat64
     static void
-    copyOutStat64Buf(FunctionalMemory *mem, Addr addr, struct stat64 *host)
+    copyOutStat64Buf(Port *memPort, Addr addr, struct stat64 *host)
     {
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
@@ -288,7 +288,7 @@ class Linux {
         tgt->st_mtime_nsec = 0;
         tgt->st_ctime_nsec = 0;
 #endif
-        tgt.copyOut(mem);
+        tgt.copyOut(memPort);
     }
 
     /// The target system's hostname.
@@ -307,7 +307,7 @@ class Linux {
         strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
         strcpy(name->machine, "alpha");
 
-        name.copyOut(xc->mem);
+        name.copyOut(xc->cpu->memPort);
         return 0;
     }
 
@@ -327,7 +327,7 @@ class Linux {
               TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
               // I don't think this exactly matches the HW FPCR
               *fpcr = 0;
-              fpcr.copyOut(xc->mem);
+              fpcr.copyOut(xc->cpu->memPort);
               return 0;
           }
 
@@ -353,7 +353,7 @@ class Linux {
           case 14: { // SSI_IEEE_FP_CONTROL
               TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
               // I don't think this exactly matches the HW FPCR
-              fpcr.copyIn(xc->mem);
+              fpcr.copyIn(xc->cpu->memPort);
               DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                        " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
               return 0;

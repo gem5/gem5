@@ -41,6 +41,7 @@
 class System;
 class BranchPred;
 class ExecContext;
+class Port;
 
 class BaseCPU : public SimObject
 {
@@ -152,6 +153,14 @@ class BaseCPU : public SimObject
      * This is a constant for the duration of the simulation.
      */
     int number_of_threads;
+
+    /**
+     * A pointer to the port into the memory system to be used by syscall
+     * emulation.  This way the data being accessed via syscalls looks in
+     * the memory heirachy for any changes that haven't been written back
+     * to main memory yet.
+     */
+    Port* memPort;
 
     /**
      * Vector of per-thread instruction-based event queues.  Used for

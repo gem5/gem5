@@ -152,6 +152,8 @@ SimpleCPU::SimpleCPU(Params *p)
     xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
 #endif // !FULL_SYSTEM
 
+    xc->memPort = dcachePort;
+
     req = new CpuRequest;
 
     req->asid = 0;

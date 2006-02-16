@@ -122,7 +122,7 @@ class ExecContext
     int cpu_id;
 
     System *system;
-    Memory *mem;
+//    Memory *mem;
 
 #if FULL_SYSTEM
     AlphaITB *itb;
@@ -243,6 +243,7 @@ class ExecContext
 
 #endif
 
+/*
     template <class T>
     Fault read(CpuRequestPtr &req, T &data)
     {
@@ -308,7 +309,7 @@ class ExecContext
 #endif
         return mem->prot_write(req->paddr, (T)htog(data), req->size);
     }
-
+*/
     virtual bool misspeculating();
 
 
