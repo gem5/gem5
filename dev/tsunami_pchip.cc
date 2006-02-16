@@ -76,7 +76,7 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
     tsunami->pchip = this;
 }
 
-Fault
+Fault *
 TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n",
@@ -90,60 +90,60 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
           switch(daddr) {
               case TSDEV_PC_WSBA0:
                     *(uint64_t*)data = wsba[0];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSBA1:
                     *(uint64_t*)data = wsba[1];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSBA2:
                     *(uint64_t*)data = wsba[2];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSBA3:
                     *(uint64_t*)data = wsba[3];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM0:
                     *(uint64_t*)data = wsm[0];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM1:
                     *(uint64_t*)data = wsm[1];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM2:
                     *(uint64_t*)data = wsm[2];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM3:
                     *(uint64_t*)data = wsm[3];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA0:
                     *(uint64_t*)data = tba[0];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA1:
                     *(uint64_t*)data = tba[1];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA2:
                     *(uint64_t*)data = tba[2];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA3:
                     *(uint64_t*)data = tba[3];
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PCTL:
                     *(uint64_t*)data = pctl;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PLAT:
                     panic("PC_PLAT not implemented\n");
               case TSDEV_PC_RES:
                     panic("PC_RES not implemented\n");
               case TSDEV_PC_PERROR:
                     *(uint64_t*)data = 0x00;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PERRMASK:
                     *(uint64_t*)data = 0x00;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PERRSET:
                     panic("PC_PERRSET not implemented\n");
               case TSDEV_PC_TLBIV:
                     panic("PC_TLBIV not implemented\n");
               case TSDEV_PC_TLBIA:
                     *(uint64_t*)data = 0x00; // shouldn't be readable, but linux
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PMONCTL:
                     panic("PC_PMONCTL not implemented\n");
               case TSDEV_PC_PMONCNT:
@@ -162,10 +162,10 @@ TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
     }
     DPRINTFN("Tsunami PChip ERROR: read  daddr=%#x size=%d\n", daddr, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
-Fault
+Fault *
 TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
 {
     DPRINTF(Tsunami, "write - va=%#x size=%d \n",
@@ -179,49 +179,49 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
           switch(daddr) {
               case TSDEV_PC_WSBA0:
                     wsba[0] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSBA1:
                     wsba[1] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSBA2:
                     wsba[2] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSBA3:
                     wsba[3] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM0:
                     wsm[0] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM1:
                     wsm[1] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM2:
                     wsm[2] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_WSM3:
                     wsm[3] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA0:
                     tba[0] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA1:
                     tba[1] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA2:
                     tba[2] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_TBA3:
                     tba[3] = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PCTL:
                     pctl = *(uint64_t*)data;
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PLAT:
                     panic("PC_PLAT not implemented\n");
               case TSDEV_PC_RES:
                     panic("PC_RES not implemented\n");
               case TSDEV_PC_PERROR:
-                    return No_Fault;
+                    return NoFault;
               case TSDEV_PC_PERRMASK:
                     panic("PC_PERRMASK not implemented\n");
               case TSDEV_PC_PERRSET:
@@ -229,7 +229,7 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
               case TSDEV_PC_TLBIV:
                     panic("PC_TLBIV not implemented\n");
               case TSDEV_PC_TLBIA:
-                    return No_Fault; // value ignored, supposted to invalidate SG TLB
+                    return NoFault; // value ignored, supposted to invalidate SG TLB
               case TSDEV_PC_PMONCTL:
                     panic("PC_PMONCTL not implemented\n");
               case TSDEV_PC_PMONCNT:
@@ -249,7 +249,7 @@ TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
 
     DPRINTFN("Tsunami ERROR: write daddr=%#x size=%d\n", daddr, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
 #define DMA_ADDR_MASK ULL(0x3ffffffff)

@@ -558,7 +558,7 @@ NSGigE::writeConfig(int offset, int size, const uint8_t* data)
  * This reads the device registers, which are detailed in the NS83820
  * spec sheet
  */
-Fault
+Fault *
 NSGigE::read(MemReqPtr &req, uint8_t *data)
 {
     assert(ioEnable);
@@ -575,14 +575,14 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
         readConfig(daddr & 0xff, req->size, data);
-        return No_Fault;
+        return NoFault;
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
         // MIB are just hardware stats keepers
         uint32_t &reg = *(uint32_t *) data;
         reg = 0;
-        return No_Fault;
+        return NoFault;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
@@ -784,10 +784,10 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
               daddr, req->size);
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
-Fault
+Fault *
 NSGigE::write(MemReqPtr &req, const uint8_t *data)
 {
     assert(ioEnable);
@@ -800,7 +800,7 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
         writeConfig(daddr & 0xff, req->size, data);
-        return No_Fault;
+        return NoFault;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
@@ -1203,7 +1203,7 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
         panic("Invalid Request Size");
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 void

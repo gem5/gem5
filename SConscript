@@ -209,6 +209,7 @@ base_sources = Split('''
 	sim/configfile.cc
 	sim/debug.cc
 	sim/eventq.cc
+	sim/faults.cc
 	sim/main.cc
 	sim/param.cc
 	sim/profile.cc

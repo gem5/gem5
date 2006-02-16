@@ -234,10 +234,10 @@ class SimpleCPU : public BaseCPU
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
+    Fault * read(Addr addr, T &data, unsigned flags);
 
     template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
+    Fault * write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
@@ -254,9 +254,9 @@ class SimpleCPU : public BaseCPU
         // need to do this...
     }
 
-    Fault copySrcTranslate(Addr src);
+    Fault * copySrcTranslate(Addr src);
 
-    Fault copy(Addr dest);
+    Fault * copy(Addr dest);
 
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
@@ -325,13 +325,13 @@ class SimpleCPU : public BaseCPU
     void setFpcr(uint64_t val) { xc->setFpcr(val); }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault) { return xc->readIpr(idx, fault); }
-    Fault setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
-    Fault hwrei() { return xc->hwrei(); }
+    uint64_t readIpr(int idx, Fault * &fault) { return xc->readIpr(idx, fault); }
+    Fault * setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
+    Fault * hwrei() { return xc->hwrei(); }
     int readIntrFlag() { return xc->readIntrFlag(); }
     void setIntrFlag(int val) { xc->setIntrFlag(val); }
     bool inPalMode() { return xc->inPalMode(); }
-    void ev5_trap(Fault fault) { xc->ev5_trap(fault); }
+    void ev5_trap(Fault * fault) { xc->ev5_trap(fault); }
     bool simPalCheck(int palFunc) { return xc->simPalCheck(palFunc); }
 #else
     void syscall() { xc->syscall(); }

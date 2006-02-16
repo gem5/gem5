@@ -123,7 +123,7 @@ class SimpleFetch
      * @param fetch_PC The PC address that is being fetched from.
      * @return Any fault that occured.
      */
-    Fault fetchCacheLine(Addr fetch_PC);
+    Fault * fetchCacheLine(Addr fetch_PC);
 
     inline void doSquash(const Addr &new_PC);
 

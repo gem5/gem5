@@ -76,7 +76,7 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
     tsunami->cchip = this;
 }
 
-Fault
+Fault *
 TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", req->vaddr, req->size);
@@ -92,81 +92,81 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
           if (daddr & TSDEV_CC_BDIMS)
           {
               *(uint64_t*)data = dim[(daddr >> 4) & 0x3F];
-              return No_Fault;
+              return NoFault;
           }
 
           if (daddr & TSDEV_CC_BDIRS)
           {
               *(uint64_t*)data = dir[(daddr >> 4) & 0x3F];
-              return No_Fault;
+              return NoFault;
           }
 
           switch(regnum) {
               case TSDEV_CC_CSR:
                   *(uint64_t*)data = 0x0;
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_MTR:
                   panic("TSDEV_CC_MTR not implemeted\n");
-                   return No_Fault;
+                   return NoFault;
               case TSDEV_CC_MISC:
                   *(uint64_t*)data = (ipint << 8) & 0xF |
                                      (itint << 4) & 0xF |
                                      (xc->cpu_id & 0x3);
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
               case TSDEV_CC_AAR2:
               case TSDEV_CC_AAR3:
                   *(uint64_t*)data = 0;
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIM0:
                   *(uint64_t*)data = dim[0];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIM1:
                   *(uint64_t*)data = dim[1];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIM2:
                   *(uint64_t*)data = dim[2];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIM3:
                   *(uint64_t*)data = dim[3];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIR0:
                   *(uint64_t*)data = dir[0];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIR1:
                   *(uint64_t*)data = dir[1];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIR2:
                   *(uint64_t*)data = dir[2];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIR3:
                   *(uint64_t*)data = dir[3];
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DRIR:
                   *(uint64_t*)data = drir;
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_PRBEN:
                   panic("TSDEV_CC_PRBEN not implemented\n");
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_IIC0:
               case TSDEV_CC_IIC1:
               case TSDEV_CC_IIC2:
               case TSDEV_CC_IIC3:
                   panic("TSDEV_CC_IICx not implemented\n");
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_MPR0:
               case TSDEV_CC_MPR1:
               case TSDEV_CC_MPR2:
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx not implemented\n");
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_IPIR:
                   *(uint64_t*)data = ipint;
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_ITIR:
                   *(uint64_t*)data = itint;
-                  return No_Fault;
+                  return NoFault;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
            } // uint64_t
@@ -179,7 +179,7 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
               *(uint32_t*)data = drir;
           } else
               panic("invalid access size(?) for tsunami register!\n");
-          return No_Fault;
+          return NoFault;
       case sizeof(uint16_t):
       case sizeof(uint8_t):
       default:
@@ -187,10 +187,10 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
     }
     DPRINTFN("Tsunami CChip ERROR: read  regnum=%#x size=%d\n", regnum, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
-Fault
+Fault *
 TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 {
     DPRINTF(Tsunami, "write - va=%#x value=%#x size=%d \n",
@@ -243,16 +243,16 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 
                   }
               }
-              return No_Fault;
+              return NoFault;
           }
 
           switch(regnum) {
               case TSDEV_CC_CSR:
                   panic("TSDEV_CC_CSR write\n");
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_MTR:
                   panic("TSDEV_CC_MTR write not implemented\n");
-                   return No_Fault;
+                   return NoFault;
               case TSDEV_CC_MISC:
                 uint64_t ipreq;
                 ipreq = (*(uint64_t*)data >> 12) & 0xF;
@@ -285,13 +285,13 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                 if(!supportedWrite)
                     panic("TSDEV_CC_MISC write not implemented\n");
 
-                return No_Fault;
+                return NoFault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
               case TSDEV_CC_AAR2:
               case TSDEV_CC_AAR3:
                   panic("TSDEV_CC_AARx write not implemeted\n");
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIM0:
               case TSDEV_CC_DIM1:
               case TSDEV_CC_DIM2:
@@ -341,7 +341,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 
                       }
                   }
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_DIR0:
               case TSDEV_CC_DIR1:
               case TSDEV_CC_DIR2:
@@ -363,13 +363,13 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
                   panic("TSDEV_CC_MPRx write not implemented\n");
               case TSDEV_CC_IPIR:
                   clearIPI(*(uint64_t*)data);
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_ITIR:
                   clearITI(*(uint64_t*)data);
-                  return No_Fault;
+                  return NoFault;
               case TSDEV_CC_IPIQ:
                   reqIPI(*(uint64_t*)data);
-                  return No_Fault;
+                  return NoFault;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
           }
@@ -384,7 +384,7 @@ TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
 
     DPRINTFN("Tsunami ERROR: write daddr=%#x size=%d\n", daddr, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
 void

@@ -361,23 +361,23 @@ Device::prepareWrite(int cpu, int index)
 /**
  * I/O read of device register
  */
-Fault
+Fault *
 Device::read(MemReqPtr &req, uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
-    Fault fault = readBar(req, data);
+    Fault * fault = readBar(req, data);
 
-    if (fault == Machine_Check_Fault) {
+    if (fault == MachineCheckFault) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
-        return Machine_Check_Fault;
+        return MachineCheckFault;
     }
 
     return fault;
 }
 
-Fault
+Fault *
 Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 {
     int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
@@ -421,13 +421,13 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
     if (raddr == Regs::IntrStatus)
         devIntrClear();
 
-    return No_Fault;
+    return NoFault;
 }
 
 /**
  * IPR read of device register
  */
-Fault
+Fault *
 Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 {
     if (!regValid(daddr))
@@ -451,29 +451,29 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
     DPRINTF(EthernetPIO, "IPR read %s: cpu=%s da=%#x val=%#x\n",
             info.name, cpu, result);
 
-    return No_Fault;
+    return NoFault;
 }
 
 /**
  * I/O write of device register
  */
-Fault
+Fault *
 Device::write(MemReqPtr &req, const uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
-    Fault fault = writeBar(req, data);
+    Fault * fault = writeBar(req, data);
 
-    if (fault == Machine_Check_Fault) {
+    if (fault == MachineCheckFault) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
-        return Machine_Check_Fault;
+        return MachineCheckFault;
     }
 
     return fault;
 }
 
-Fault
+Fault *
 Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 {
     int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
@@ -508,7 +508,7 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
     if (!pioDelayWrite || !info.delay_write)
         regWrite(daddr, cpu, data);
 
-    return No_Fault;
+    return NoFault;
 }
 
 void

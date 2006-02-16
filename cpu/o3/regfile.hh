@@ -32,6 +32,7 @@
 // @todo: Destructor
 
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/faults.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
@@ -211,8 +212,8 @@ class PhysRegFile
     }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault);
-    Fault setIpr(int idx, uint64_t val);
+    uint64_t readIpr(int idx, Fault * &fault);
+    Fault * setIpr(int idx, uint64_t val);
     InternalProcReg *getIpr() { return ipr; }
     int readIntrFlag() { return intrflag; }
     void setIntrFlag(int val) { intrflag = val; }
@@ -275,7 +276,7 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
 //the DynInst level.
 template <class Impl>
 uint64_t
-PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
+PhysRegFile<Impl>::readIpr(int idx, Fault * &fault)
 {
     uint64_t retval = 0;    // return value, default 0
 
@@ -368,12 +369,12 @@ PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
       case ISA::IPR_DTB_IAP:
       case ISA::IPR_ITB_IA:
       case ISA::IPR_ITB_IAP:
-        fault = Unimplemented_Opcode_Fault;
+        fault = UnimplementedOpcodeFault;
         break;
 
       default:
         // invalid IPR
-        fault = Unimplemented_Opcode_Fault;
+        fault = UnimplementedOpcodeFault;
         break;
     }
 
@@ -383,7 +384,7 @@ PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
 extern int break_ipl;
 
 template <class Impl>
-Fault
+Fault *
 PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 {
     uint64_t old;
@@ -521,7 +522,7 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
       case ISA::IPR_ITB_PTE_TEMP:
       case ISA::IPR_DTB_PTE_TEMP:
         // read-only registers
-        return Unimplemented_Opcode_Fault;
+        return UnimplementedOpcodeFault;
 
       case ISA::IPR_HWINT_CLR:
       case ISA::IPR_SL_XMIT:
@@ -623,11 +624,11 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 
       default:
         // invalid IPR
-        return Unimplemented_Opcode_Fault;
+        return UnimplementedOpcodeFault;
     }
 
     // no error...
-    return No_Fault;
+    return NoFault;
 }
 
 #endif // #if FULL_SYSTEM

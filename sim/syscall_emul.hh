@@ -317,7 +317,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -364,7 +364,7 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     uint32_t mode = xc->getSyscallArg(1);
@@ -417,7 +417,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     struct stat hostBuf;
@@ -469,7 +469,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     struct stat hostBuf;
@@ -491,7 +491,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
 #if BSD_HOST
@@ -542,7 +542,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     struct statfs hostBuf;
@@ -712,7 +712,7 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->mem->readString(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->mem->readString(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     TypedBufferArg<typename OS::timeval [2]> tp(xc->getSyscallArg(1));

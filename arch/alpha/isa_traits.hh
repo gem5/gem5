@@ -32,10 +32,11 @@
 namespace LittleEndianGuest {}
 using namespace LittleEndianGuest;
 
-#include "arch/alpha/faults.hh"
+//#include "arch/alpha/faults.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
+#include "sim/faults.hh"
 
 class FastCPU;
 class FullCPU;

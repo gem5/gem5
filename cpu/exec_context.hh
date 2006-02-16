@@ -206,17 +206,17 @@ class ExecContext
     int getInstAsid() { return regs.instAsid(); }
     int getDataAsid() { return regs.dataAsid(); }
 
-    Fault translateInstReq(MemReqPtr &req)
+    Fault * translateInstReq(MemReqPtr &req)
     {
         return itb->translate(req);
     }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault * translateDataReadReq(MemReqPtr &req)
     {
         return dtb->translate(req, false);
     }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault * translateDataWriteReq(MemReqPtr &req)
     {
         return dtb->translate(req, true);
     }
@@ -231,7 +231,7 @@ class ExecContext
     int getInstAsid() { return asid; }
     int getDataAsid() { return asid; }
 
-    Fault dummyTranslation(MemReqPtr &req)
+    Fault * dummyTranslation(MemReqPtr &req)
     {
 #if 0
         assert((req->vaddr >> 48 & 0xffff) == 0);
@@ -240,17 +240,17 @@ class ExecContext
         // put the asid in the upper 16 bits of the paddr
         req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
         req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return No_Fault;
+        return NoFault;
     }
-    Fault translateInstReq(MemReqPtr &req)
+    Fault * translateInstReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault * translateDataReadReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault * translateDataWriteReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
@@ -258,7 +258,7 @@ class ExecContext
 #endif
 
     template <class T>
-    Fault read(MemReqPtr &req, T &data)
+    Fault * read(MemReqPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
@@ -268,14 +268,14 @@ class ExecContext
         }
 #endif
 
-        Fault error;
+        Fault * error;
         error = mem->read(req, data);
         data = LittleEndianGuest::gtoh(data);
         return error;
     }
 
     template <class T>
-    Fault write(MemReqPtr &req, T &data)
+    Fault * write(MemReqPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
 
@@ -301,7 +301,7 @@ class ExecContext
                                   << "on cpu " << req->xc->cpu_id
                                   << std::endl;
                     }
-                    return No_Fault;
+                    return NoFault;
                 }
                 else req->xc->storeCondFailures = 0;
             }
@@ -333,7 +333,7 @@ class ExecContext
         inst = new_inst;
     }
 
-    Fault instRead(MemReqPtr &req)
+    Fault * instRead(MemReqPtr &req)
     {
         return mem->read(req, inst);
     }
@@ -412,13 +412,13 @@ class ExecContext
     }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault);
-    Fault setIpr(int idx, uint64_t val);
+    uint64_t readIpr(int idx, Fault * &fault);
+    Fault * setIpr(int idx, uint64_t val);
     int readIntrFlag() { return regs.intrflag; }
     void setIntrFlag(int val) { regs.intrflag = val; }
-    Fault hwrei();
+    Fault * hwrei();
     bool inPalMode() { return AlphaISA::PcPAL(regs.pc); }
-    void ev5_trap(Fault fault);
+    void ev5_trap(Fault * fault);
     bool simPalCheck(int palFunc);
 #endif
 
@@ -428,7 +428,7 @@ class ExecContext
      *  @todo How to do this properly so it's dependent upon ISA only?
      */
 
-    void trap(Fault fault);
+    void trap(Fault * fault);
 
 #if !FULL_SYSTEM
     IntReg getSyscallArg(int i)
