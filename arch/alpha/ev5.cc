@@ -180,8 +180,8 @@ AlphaISA::zeroRegisters(CPU *cpu)
 void
 ExecContext::ev5_trap(Fault * fault)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", fault ? fault->name : "none", regs.pc);
-    cpu->recordEvent(csprintf("Fault %s", fault ? fault->name : "none"));
+    DPRINTF(Fault, "Fault %s at PC: %#x\n", fault->name, regs.pc);
+    cpu->recordEvent(csprintf("Fault %s", fault->name));
 
     assert(!misspeculating());
     kernelStats->fault(fault);
