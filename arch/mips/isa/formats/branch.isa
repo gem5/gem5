@@ -213,10 +213,11 @@ def template JumpOrBranchDecode {{
 }};
 
 def format Branch(code,*flags) {{
-    code = 'bool cond;\n' + code + '\n'
+    code = 'bool cond;\n\t' + code + '\n'
 
-    if flags == 'IsLink':
-        code += 'R31 = NPC + 8\n'
+    strlen = len(name)
+    if name[strlen-2:] == 'al':
+        code += 'R31 = NPC + 8;\n'
 
     code += '\nif (cond) NPC = NPC + disp;\n';
 
@@ -231,8 +232,9 @@ def format Branch(code,*flags) {{
 def format BranchLikely(code,*flags) {{
     code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
 
-    if flags == 'IsLink':
-        code += 'R31 = NPC + 8\n'
+    strlen = len(name)
+    if name[strlen-3:] == 'all':
+        code += 'R31 = NPC + 8;\n'
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl','IsCondDelaySlot'))

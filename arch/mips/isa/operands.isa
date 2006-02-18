@@ -26,10 +26,10 @@ def operands {{
 
     'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4)
 
-    #'NPC': ('NPC', 'uq', None, ( None, None, 'IsControl' ), 4),
+    #'NPC': ('NPC', 'uw', None, ( None, None, 'IsControl' ), 4),
     #'Runiq': ('ControlReg', 'uq', 'Uniq', None, 1),
     #'FPCR':  ('ControlReg', 'uq', 'Fpcr', None, 1),
     # The next two are hacks for non-full-system call-pal emulation
     #'R0':  ('IntReg', 'uq', '0', None, 1),
-    #'R16': ('IntReg', 'uq', '16', None, 1)
+    #'R31': ('IntReg', 'uw', '31', None, 1)
 }};
