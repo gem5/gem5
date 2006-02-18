@@ -116,6 +116,12 @@ output decoder {{
     }
 
     Addr
+    BranchLikely::branchTarget(Addr branchPC) const
+    {
+        return branchPC + 4 + disp;
+    }
+
+    Addr
     Jump::branchTarget(ExecContext *xc) const
     {
         Addr NPC = xc->readPC() + 4;
@@ -181,6 +187,44 @@ output decoder {{
     }
 
     std::string
+    BranchLikely::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        // There's only one register arg (RA), but it could be
+        // either a source (the condition for conditional
+        // branches) or a destination (the link reg for
+        // unconditional branches)
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+            ss << ",";
+        }
+        else if (_numDestRegs > 0) {
+            printReg(ss, _destRegIdx[0]);
+            ss << ",";
+        }
+
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+        if (_numSrcRegs == 0 && _numDestRegs == 0) {
+            printReg(ss, 31);
+            ss << ",";
+        }
+#endif
+
+        Addr target = pc + 4 + disp;
+
+        std::string str;
+        if (symtab && symtab->findSymbol(target, str))
+            ss << str;
+        else
+            ccprintf(ss, "0x%x", target);
+
+        return ss.str();
+    }
+
+    std::string
     Jump::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         std::stringstream ss;
@@ -205,16 +249,10 @@ output decoder {{
     }
 }};
 
-
-def template JumpOrBranchDecode {{
-    return (RD == 0)
-        ? (StaticInst<MipsISA> *)new %(class_name)s(machInst)
-        : (StaticInst<MipsISA> *)new %(class_name)sAndLink(machInst);
-}};
-
 def format Branch(code,*flags) {{
     code = 'bool cond;\n\t' + code + '\n'
 
+    #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-2:] == 'al':
         code += 'R31 = NPC + 8;\n'
@@ -230,11 +268,14 @@ def format Branch(code,*flags) {{
 }};
 
 def format BranchLikely(code,*flags) {{
-    code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
+    code = 'bool cond;\n\t\t\t' + code
 
+    #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-3:] == 'all':
         code += 'R31 = NPC + 8;\n'
+
+    code = '\t\t\tif (cond) NPC = NPC + disp;\n';
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl','IsCondDelaySlot'))

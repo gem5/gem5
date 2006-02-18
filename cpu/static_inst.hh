@@ -36,7 +36,7 @@
 #include "base/refcnt.hh"
 #include "encumbered/cpu/full/op_class.hh"
 #include "sim/host.hh"
-#include "arch/isa_traits.hh"
+#include "targetarch/isa_traits.hh"
 
 // forward declarations
 struct AlphaSimpleImpl;
@@ -113,6 +113,8 @@ class StaticInstBase : public RefCounted
 
         IsSerializing,	///< Serializes pipeline: won't execute until all
                         /// older instructions have committed.
+        IsSerializeBefore,
+        IsSerializeAfter,
         IsMemBarrier,	///< Is a memory barrier
         IsWriteBarrier,	///< Is a write barrier
 
@@ -196,7 +198,11 @@ class StaticInstBase : public RefCounted
     bool isUncondCtrl()	  const { return flags[IsUncondControl]; }
 
     bool isThreadSync()   const { return flags[IsThreadSync]; }
-    bool isSerializing()  const { return flags[IsSerializing]; }
+    bool isSerializing()  const { return flags[IsSerializing] ||
+                                      flags[IsSerializeBefore] ||
+                                      flags[IsSerializeAfter]; }
+    bool isSerializeBefore() const { return flags[IsSerializeBefore]; }
+    bool isSerializeAfter() const { return flags[IsSerializeAfter]; }
     bool isMemBarrier()   const { return flags[IsMemBarrier]; }
     bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }

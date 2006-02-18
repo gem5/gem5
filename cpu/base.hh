@@ -36,7 +36,7 @@
 #include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-#include "arch/isa_traits.hh"
+#include "targetarch/isa_traits.hh"
 
 #if FULL_SYSTEM
 class System;
@@ -139,6 +139,8 @@ class BaseCPU : public SimObject
     virtual void init();
     virtual void startup();
     virtual void regStats();
+
+    virtual void activateWhenReady(int tid) {};
 
     void registerExecContexts();
 
