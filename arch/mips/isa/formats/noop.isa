@@ -1,50 +1,4 @@
-////////////////////////////////////////////////////////////////////
-//
-// Noop instruction
-//
-
-output header {{
-        /**
-         * Base class for integer operations.
-         */
-        class Noop : public MipsStaticInst
-        {
-                protected:
-
-                /// Constructor
-                Noop(const char *mnem, MachInst _machInst, OpClass __opClass) : MipsStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-        };
-}};
-
-output decoder {{
-        std::string Noop::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-                return "Disassembly of integer instruction\n";
-        }
-}};
-
-def template NoopExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-        {
-                //Nothing to see here, move along
-                return No_Fault;
-        }
-}};
-
-// Primary format for integer operate instructions:
-def format Noop(code, *opt_flags) {{
-        orig_code = code
-        cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
-        exec_output = NoopExecute.subst(iop)
-}};
+// -*- mode:c++ -*-
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -55,7 +9,7 @@ output header {{
     /**
      * Static instruction class for no-ops.  This is a leaf class.
      */
-    class Nop : public AlphaStaticInst
+    class Nop : public MipsStaticInst
     {
         /// Disassembly of original instruction.
         const std::string originalDisassembly;
@@ -63,7 +17,7 @@ output header {{
       public:
         /// Constructor
         Nop(const std::string _originalDisassembly, MachInst _machInst)
-            : AlphaStaticInst("nop", _machInst, No_OpClass),
+            : MipsStaticInst("nop", _machInst, No_OpClass),
               originalDisassembly(_originalDisassembly)
         {
             flags[IsNop] = true;
@@ -92,10 +46,10 @@ output decoder {{
     /// Helper function for decoding nops.  Substitute Nop object
     /// for original inst passed in as arg (and delete latter).
     inline
-    AlphaStaticInst *
-    makeNop(AlphaStaticInst *inst)
+    MipsStaticInst *
+    makeNop(MipsStaticInst *inst)
     {
-        AlphaStaticInst *nop = new Nop(inst->disassemble(0), inst->machInst);
+        MipsStaticInst *nop = new Nop(inst->disassemble(0), inst->machInst);
         delete inst;
         return nop;
     }
@@ -113,7 +67,7 @@ output exec {{
 // Rc == 31 to detect nops
 def template OperateNopCheckDecode {{
  {
-     AlphaStaticInst *i = new %(class_name)s(machInst);
+     MipsStaticInst *i = new %(class_name)s(machInst);
      if (RC == 31) {
          i = makeNop(i);
      }
@@ -124,7 +78,7 @@ def template OperateNopCheckDecode {{
 
 // Like BasicOperate format, but generates NOP if RC/FC == 31
 def format BasicOperateWithNopCheck(code, *opt_args) {{
-    iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code),
+    iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code),
                         opt_args)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)

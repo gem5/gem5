@@ -53,18 +53,6 @@ output decoder {{
 }};
 
 
-// integer & FP operate instructions use Rd as dest, so check for
-// Rd == 0 to detect nops
-def template OperateNopCheckDecode {{
- {
-     MipsStaticInst *i = new %(class_name)s(machInst);
-     if (RD == 0) {
-         i = makeNop(i);
-     }
-     return i;
- }
-}};
-
 //Used by decoder.isa
 def format IntOp(code, *opt_flags) {{
         orig_code = code

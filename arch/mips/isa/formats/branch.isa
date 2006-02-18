@@ -61,8 +61,7 @@ output header {{
     };
 
     /**
-     * Base class for branches (PC-relative control transfers),
-     * conditional or unconditional.
+     * Base class for branch likely branches (PC-relative control transfers),
      */
     class BranchLikely : public PCDependentDisassembly
     {
@@ -206,14 +205,21 @@ output decoder {{
     }
 }};
 
+
 def template JumpOrBranchDecode {{
     return (RD == 0)
         ? (StaticInst<MipsISA> *)new %(class_name)s(machInst)
         : (StaticInst<MipsISA> *)new %(class_name)sAndLink(machInst);
 }};
 
-def format Branch(code) {{
-    code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
+def format Branch(code,*flags) {{
+    code = 'bool cond;\n' + code + '\n'
+
+    if flags == 'IsLink':
+        code += 'R31 = NPC + 8\n'
+
+    code += '\nif (cond) NPC = NPC + disp;\n';
+
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl'))
     header_output = BasicDeclare.subst(iop)
@@ -222,11 +228,23 @@ def format Branch(code) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-
-def format BranchLikely(code) {{
+def format BranchLikely(code,*flags) {{
     code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
+
+    if flags == 'IsLink':
+        code += 'R31 = NPC + 8\n'
+
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
-                        ('IsDirectControl', 'IsCondControl'))
+                        ('IsDirectControl', 'IsCondControl','IsCondDelaySlot'))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format Unconditional(code,*flags) {{
+    iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),
+                        ('IsIndirectControl', 'IsUncondControl'))
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -234,16 +252,5 @@ def format BranchLikely(code) {{
 }};
 
 
-def format UncondBranch(*flags) {{
-    flags += ('IsUncondControl', 'IsDirectControl')
-    (header_output, decoder_output, decode_block, exec_output) = \
-        UncondCtrlBase(name, Name, 'Branch', 'NPC + disp', flags)
-}};
-
-def format Jump(*flags) {{
-    flags += ('IsUncondControl', 'IsIndirectControl')
-    (header_output, decoder_output, decode_block, exec_output) = \
-        UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (NPC & 1)', flags)
-}};
 
 
