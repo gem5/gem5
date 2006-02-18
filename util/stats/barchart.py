@@ -281,7 +281,8 @@ if __name__ == '__main__':
         chart1.xticks = [ 'xtick%d' % x for x in xrange(myshape[0]) ]
         chart1.title = 'this is the title'
         chart1.figure_size = [0.1, 0.2, 0.7, 0.85 ]
-        chart1.xsubticks = [ '%d' % x for x in xrange(myshape[1]) ]
+        if len(myshape) > 1:
+            chart1.xsubticks = [ '%d' % x for x in xrange(myshape[1]) ]
         chart1.graph()
         chart1.savefig('/tmp/test1.png')
         chart1.savefig('/tmp/test1.ps')

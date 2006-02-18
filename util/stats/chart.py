@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@ class ChartOptions(object):
                  'xlabel' : None,
                  'ylabel' : None,
                  'xticks' : None,
+                 'xsubticks' : None,
                  'yticks' : None,
                  'ylim' : None,
                  }
