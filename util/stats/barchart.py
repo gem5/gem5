@@ -76,14 +76,12 @@ class BarChart(ChartOptions):
         # bars.
         if dim == 2:
             self.chartdata = transpose([data], axes=(2,0,1))
-            print shape(self.chartdata)
 
         # If the input data is a 3d matrix, then it describes an array
         # of groups of bars with each bar being an array of stacked
         # values.
         if dim == 3:
             self.chartdata = transpose(data, axes=(1,2,0))
-            print shape(self.chartdata)
 
     def get_data(self):
         return self.inputdata
@@ -207,7 +205,7 @@ class BarChart(ChartOptions):
         if self.xsubticks is not None:
             inner_axes.set_xticks(arange((cshape[0] + 1)*cshape[2])*width + 2*center)
             self.xsubticks.append('')
-            inner_axes.set_xticklabels(self.xsubticks * cshape[0], fontsize=8)
+            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=8)
         if self.legend is not None:
             if dim == 1:
                 lbars = bars[0][0]
