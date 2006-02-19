@@ -37,6 +37,8 @@ namespace Linux {
 
 class ThreadInfo
 {
+  protected:
+    typedef TheISA::Addr Addr;
   private:
     ExecContext *xc;
 
@@ -53,7 +55,7 @@ class ThreadInfo
          * thread_info struct. So we can get the address by masking off
          * the lower 14 bits.
          */
-        current = xc->regs.intRegFile[StackPointerReg] & ~0x3fff;
+        current = xc->regs.intRegFile[TheISA::StackPointerReg] & ~0x3fff;
         return VPtr<thread_info>(xc, current);
     }
 

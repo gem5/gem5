@@ -44,6 +44,8 @@ class Uart;
 
 class Platform : public SimObject
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     /** Pointer to the interrupt controller */
     IntrControl *intrctrl;

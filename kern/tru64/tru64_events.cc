@@ -36,6 +36,8 @@
 #include "targetarch/arguments.hh"
 #include "arch/isa_traits.hh"
 
+using namespace TheISA;
+
 //void SkipFuncEvent::process(ExecContext *xc);
 
 void

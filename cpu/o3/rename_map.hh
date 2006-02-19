@@ -38,9 +38,13 @@
 #include <vector>
 
 #include "cpu/o3/free_list.hh"
+//For RegIndex
+#include "arch/isa_traits.hh"
 
 class SimpleRenameMap
 {
+  protected:
+    typedef TheISA::RegIndex RegIndex;
   public:
     /**
      * Pair of a logical register and a physical register.  Tells the

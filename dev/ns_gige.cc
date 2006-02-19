@@ -84,6 +84,7 @@ const char *NsDmaState[] =
 
 using namespace std;
 using namespace Net;
+using namespace TheISA;
 
 ///////////////////////////////////////////////////////////////////////
 //

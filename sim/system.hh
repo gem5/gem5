@@ -50,6 +50,8 @@ namespace Kernel { class Binning; }
 
 class System : public SimObject
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     MemoryController *memctrl;
     PhysicalMemory *physmem;

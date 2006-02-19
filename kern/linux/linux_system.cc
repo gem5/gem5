@@ -50,6 +50,7 @@
 #include "targetarch/vtophys.hh"
 
 using namespace std;
+using namespace TheISA;
 
 LinuxSystem::LinuxSystem(Params *p)
     : System(p)

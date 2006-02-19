@@ -50,6 +50,8 @@ extern const char *modestr[];
 
 class Binning
 {
+  protected:
+    typedef TheISA::Addr Addr;
   private:
     std::string myname;
     System *system;
@@ -106,7 +108,7 @@ class Binning
 
     cpu_mode themode;
     void palSwapContext(ExecContext *xc);
-    void execute(ExecContext *xc, StaticInstPtr<TheISA> inst);
+    void execute(ExecContext *xc, StaticInstPtr inst);
     void call(ExecContext *xc, Stats::MainBin *myBin);
     void changeMode(cpu_mode mode);
 
@@ -124,6 +126,9 @@ class Binning
 
 class Statistics : public Serializable
 {
+  protected:
+    typedef TheISA::Addr Addr;
+  private:
     friend class Binning;
 
   private:

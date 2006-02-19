@@ -250,7 +250,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     }
 
 #if FULL_SYSTEM
-    for (int i = 0; i < NumInterruptLevels; ++i)
+    for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
 
@@ -285,7 +285,7 @@ BaseCPU::post_interrupt(int int_num, int index)
 {
     DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
 
-    if (int_num < 0 || int_num >= NumInterruptLevels)
+    if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
         panic("int_num out of bounds\n");
 
     if (index < 0 || index >= sizeof(uint64_t) * 8)
@@ -301,7 +301,7 @@ BaseCPU::clear_interrupt(int int_num, int index)
 {
     DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
 
-    if (int_num < 0 || int_num >= NumInterruptLevels)
+    if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
         panic("int_num out of bounds\n");
 
     if (index < 0 || index >= sizeof(uint64_t) * 8)
@@ -325,14 +325,14 @@ BaseCPU::clear_interrupts()
 void
 BaseCPU::serialize(std::ostream &os)
 {
-    SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+    SERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     SERIALIZE_SCALAR(intstatus);
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+    UNSERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     UNSERIALIZE_SCALAR(intstatus);
 }
 

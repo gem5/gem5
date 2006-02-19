@@ -34,6 +34,7 @@
 #include "mem/functional/physical.hh"
 
 using namespace std;
+using namespace AlphaISA;
 
 AlphaISA::PageTableEntry
 kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr)

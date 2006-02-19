@@ -38,6 +38,8 @@
 #include "arch/isa_traits.hh"
 #include "targetarch/vtophys.hh"
 
+using namespace TheISA;
+
 namespace tru64 {
 
 void

@@ -52,6 +52,7 @@
 #include "base/trace.hh"
 
 using namespace std;
+using namespace AlphaISA;
 
 ///
 /// This class encapsulates the types, structures, constants,

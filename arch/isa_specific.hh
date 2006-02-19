@@ -26,34 +26,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class ExecContext;
+#ifndef __ARCH_ISA_SPECIFIC_HH__
+#define __ARCH_ISA_SPECIFIC_HH__
 
-//We need the "Tick" data type from here
-#include "sim/host.hh"
-//We need the "Addr" data type from here
-#include "arch/isa_traits.hh"
+//This file provides a mechanism for other source code to bring in
+//files from the ISA being compiled with
 
-namespace AlphaPseudo
-{
-    /**
-     * @todo these externs are only here for a hack in fullCPU::takeOver...
-     */
-    extern bool doStatisticsInsts;
-    extern bool doCheckpointInsts;
-    extern bool doQuiesce;
+//These are constants so you can selective compile code based on the isa
+//To use them, do something like
+//
+//#if THE_ISA == YOUR_FAVORITE_ISA
+//	conditional_code
+//#endif
+//
+//Note that this is how this file sets up the other isa "hooks"
 
-    void arm(ExecContext *xc);
-    void quiesce(ExecContext *xc);
-    void ivlb(ExecContext *xc);
-    void ivle(ExecContext *xc);
-    void m5exit(ExecContext *xc, Tick delay);
-    void m5exit_old(ExecContext *xc);
-    void resetstats(ExecContext *xc, Tick delay, Tick period);
-    void dumpstats(ExecContext *xc, Tick delay, Tick period);
-    void dumpresetstats(ExecContext *xc, Tick delay, Tick period);
-    void m5checkpoint(ExecContext *xc, Tick delay, Tick period);
-    uint64_t readfile(ExecContext *xc, TheISA::Addr vaddr, uint64_t len, uint64_t offset);
-    void debugbreak(ExecContext *xc);
-    void switchcpu(ExecContext *xc);
-    void addsymbol(ExecContext *xc, TheISA::Addr addr, TheISA::Addr symbolAddr);
-}
+//These macros have numerical values because otherwise the preprocessor
+//would treat them as 0 in comparisons.
+#define ALPHA_ISA 21064
+#define SPARC_ISA 42
+#define MIPS_ISA 1337
+
+//These tell the preprocessor where to find the files of a particular
+//ISA, and set the "TheISA" macro for use elsewhere.
+#if THE_ISA == ALPHA_ISA
+    #define ISA_PATH arch/alpha/
+    #define TheISA AlphaISA
+#elif THE_ISA == SPARC_ISA
+    #define ISA_PATH arch/sparc/
+    #define TheISA SparcISA
+#elif THE_ISA == MIPS_ISA
+    #define ISA_PATH arch/mips/
+    #define TheISA MipsISA
+#else
+    #error "THE_ISA not set"
+#endif
+//The following is some preprocessor voodoo to allow redirectable includes
+//The end result is the ISA_INCLUDE() macro which is used inside stub
+//include files in arch and which redirect to the isa in use.
+#define STRINGIFY(token) #token
+#define EXPAND(token) token
+#define STICK_TOGETHER(firstpart, secondpart) \
+    EXPAND(firstpart)EXPAND(secondpart)
+#define EXPAND_AND_STRINGIFY(pathAndFile) \
+    STRINGIFY(pathAndFile)
+#define ISA_INCLUDE(filename) \
+    EXPAND_AND_STRINGIFY(STICK_TOGETHER(ISA_PATH, filename))
+
+#endif

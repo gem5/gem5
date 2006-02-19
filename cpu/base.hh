@@ -48,6 +48,7 @@ class ExecContext;
 class BaseCPU : public SimObject
 {
   protected:
+    typedef TheISA::Addr Addr;
     // CPU's clock period in terms of the number of ticks of curTime.
     Tick clock;
 
@@ -58,7 +59,7 @@ class BaseCPU : public SimObject
 
 #if FULL_SYSTEM
   protected:
-    uint64_t interrupts[NumInterruptLevels];
+    uint64_t interrupts[TheISA::NumInterruptLevels];
     uint64_t intstatus;
 
   public:
@@ -68,7 +69,7 @@ class BaseCPU : public SimObject
     bool checkInterrupts;
 
     bool check_interrupt(int int_num) const {
-        if (int_num > NumInterruptLevels)
+        if (int_num > TheISA::NumInterruptLevels)
             panic("int_num out of bounds\n");
 
         return interrupts[int_num] != 0;

@@ -34,15 +34,21 @@
 
 class AlphaFault : public Fault
 {
-public:
-        AlphaFault(char * newName, int newId, Addr newVect) : Fault(newName, newId), vect(newVect) {;}
-        TheISA::Addr vect;
+  protected:
+    typedef TheISA::Addr Addr;
+  public:
+    AlphaFault(char * newName, int newId, Addr newVect) :
+        Fault(newName, newId), vect(newVect)
+    {;}
+    Addr vect;
 };
 
 extern class ResetFaultType : public AlphaFault
 {
 public:
-        ResetFaultType(char * newName, int newId, Addr newVect) : AlphaFault(newName, newId, newVect) {;}
+        ResetFaultType(char * newName, int newId, Addr newVect) :
+            AlphaFault(newName, newId, newVect)
+        {;}
 } * ResetFault;
 
 extern class ArithmeticFaultType : public AlphaFault

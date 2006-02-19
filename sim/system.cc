@@ -41,6 +41,7 @@
 #include "base/trace.hh"
 
 using namespace std;
+using namespace TheISA;
 
 vector<System *> System::systemList;
 

@@ -50,6 +50,10 @@ class ExecContext;
 class FunctionalMemory;
 class Process : public SimObject
 {
+  protected:
+    typedef TheISA::Addr Addr;
+    typedef TheISA::RegFile RegFile;
+    typedef TheISA::MachInst MachInst;
   public:
 
     // have we initialized an execution context from this process?  If

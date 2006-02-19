@@ -51,11 +51,8 @@ class AlphaFullCPU;
  */
 struct AlphaSimpleImpl
 {
-    /** The ISA to be used. */
-    typedef AlphaISA ISA;
-
     /** The type of MachInst. */
-    typedef ISA::MachInst MachInst;
+    typedef TheISA::MachInst MachInst;
 
     /** The CPU policy to be used (ie fetch, decode, etc.). */
     typedef SimpleCPUPolicy<AlphaSimpleImpl> CPUPol;

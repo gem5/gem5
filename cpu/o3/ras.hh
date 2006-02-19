@@ -30,10 +30,12 @@
 #define __CPU_O3_CPU_RAS_HH__
 
 // For Addr type.
-#include "arch/alpha/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class ReturnAddrStack
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     ReturnAddrStack(unsigned numEntries);
 

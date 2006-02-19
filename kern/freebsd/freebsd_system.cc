@@ -46,6 +46,7 @@
 #define TIMER_FREQUENCY 1193180
 
 using namespace std;
+using namespace TheISA;
 
 FreebsdSystem::FreebsdSystem(Params *p)
     : System(p)

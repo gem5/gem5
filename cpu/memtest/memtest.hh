@@ -42,6 +42,8 @@
 class ExecContext;
 class MemTest : public SimObject
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
 
     MemTest(const std::string &name,

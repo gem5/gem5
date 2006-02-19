@@ -53,6 +53,7 @@
 #endif
 
 using namespace std;
+using namespace TheISA;
 
 //
 // The purpose of this code is to fake the loader & syscall mechanism

@@ -47,6 +47,7 @@
 #include "sim/system.hh"
 
 using namespace std;
+using namespace TheISA;
 
 PciConfigAll::PciConfigAll(const string &name,
                            Addr a, MemoryController *mmu,

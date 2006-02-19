@@ -63,6 +63,8 @@ namespace Trace {
 
 class SimpleCPU : public BaseCPU
 {
+  protected:
+    typedef TheISA::MachInst MachInst;
   public:
     // main simulation loop (one cycle)
     void tick();
@@ -172,7 +174,7 @@ class SimpleCPU : public BaseCPU
     // the next switchover
     Sampler *sampler;
 
-    StaticInstPtr<TheISA> curStaticInst;
+    StaticInstPtr curStaticInst;
 
     class CacheCompletionEvent : public Event
     {
@@ -269,47 +271,47 @@ class SimpleCPU : public BaseCPU
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntReg(const StaticInst<TheISA> *si, int idx)
+    uint64_t readIntReg(const StaticInst *si, int idx)
     {
         return xc->readIntReg(si->srcRegIdx(idx));
     }
 
-    float readFloatRegSingle(const StaticInst<TheISA> *si, int idx)
+    float readFloatRegSingle(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return xc->readFloatRegSingle(reg_idx);
     }
 
-    double readFloatRegDouble(const StaticInst<TheISA> *si, int idx)
+    double readFloatRegDouble(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return xc->readFloatRegDouble(reg_idx);
     }
 
-    uint64_t readFloatRegInt(const StaticInst<TheISA> *si, int idx)
+    uint64_t readFloatRegInt(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return xc->readFloatRegInt(reg_idx);
     }
 
-    void setIntReg(const StaticInst<TheISA> *si, int idx, uint64_t val)
+    void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
         xc->setIntReg(si->destRegIdx(idx), val);
     }
 
-    void setFloatRegSingle(const StaticInst<TheISA> *si, int idx, float val)
+    void setFloatRegSingle(const StaticInst *si, int idx, float val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         xc->setFloatRegSingle(reg_idx, val);
     }
 
-    void setFloatRegDouble(const StaticInst<TheISA> *si, int idx, double val)
+    void setFloatRegDouble(const StaticInst *si, int idx, double val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         xc->setFloatRegDouble(reg_idx, val);
     }
 
-    void setFloatRegInt(const StaticInst<TheISA> *si, int idx, uint64_t val)
+    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         xc->setFloatRegInt(reg_idx, val);

@@ -50,6 +50,7 @@
 #include "targetarch/vtophys.hh"
 
 using namespace Net;
+using namespace TheISA;
 
 namespace Sinic {
 

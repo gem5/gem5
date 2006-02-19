@@ -42,6 +42,7 @@ class ExecContext;
 class AlphaTLB : public SimObject
 {
   protected:
+    typedef TheISA::Addr Addr;
     typedef std::multimap<Addr, int> PageTable;
     PageTable lookupTable;	// Quick lookup into page table
 
@@ -82,6 +83,7 @@ class AlphaTLB : public SimObject
 class AlphaITB : public AlphaTLB
 {
   protected:
+    typedef TheISA::Addr Addr;
     mutable Stats::Scalar<> hits;
     mutable Stats::Scalar<> misses;
     mutable Stats::Scalar<> acv;

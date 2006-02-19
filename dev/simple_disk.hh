@@ -44,19 +44,21 @@ class PhysicalMemory;
  */
 class SimpleDisk : public SimObject
 {
-public:
-  typedef uint64_t baddr_t;
+  protected:
+    typedef TheISA::Addr Addr;
+  public:
+    typedef uint64_t baddr_t;
 
-protected:
-  PhysicalMemory  *physmem;
-  DiskImage *image;
+  protected:
+    PhysicalMemory  *physmem;
+    DiskImage *image;
 
-public:
-  SimpleDisk(const std::string &name, PhysicalMemory *pmem, DiskImage *img);
-  ~SimpleDisk();
+  public:
+    SimpleDisk(const std::string &name, PhysicalMemory *pmem, DiskImage *img);
+    ~SimpleDisk();
 
-  void read(Addr addr, baddr_t block, int count) const;
-  void write(Addr addr, baddr_t block, int count);
+    void read(Addr addr, baddr_t block, int count) const;
+    void write(Addr addr, baddr_t block, int count);
 };
 
 #endif // __DEV_SIMPLE_DISK_HH__

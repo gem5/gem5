@@ -40,6 +40,7 @@
 #include "sim/sim_events.hh"
 
 using namespace std;
+using namespace TheISA;
 
 void
 SyscallDesc::doSyscall(int callnum, Process *process, ExecContext *xc)
@@ -89,7 +90,7 @@ exitFunc(SyscallDesc *desc, int callnum, Process *process,
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    return VMPageSize;
+    return (int)VMPageSize;
 }
 
 

@@ -31,6 +31,8 @@
 #include "cpu/exec_context.hh"
 #include "mem/functional/physical.hh"
 
+using namespace AlphaISA;
+
 AlphaArguments::Data::~Data()
 {
     while (!data.empty()) {

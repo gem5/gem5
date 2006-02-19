@@ -45,6 +45,7 @@
 #include "sim/system.hh"
 
 using namespace std;
+using namespace TheISA;
 
 IsaFake::IsaFake(const string &name, Addr a, MemoryController *mmu,
                          HierParams *hier, Bus *pio_bus, Addr size)

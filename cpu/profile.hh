@@ -37,6 +37,8 @@
 
 class ProfileNode
 {
+  protected:
+    typedef TheISA::Addr Addr;
   private:
     friend class FunctionProfile;
 
@@ -57,6 +59,8 @@ class ProfileNode
 class Callback;
 class FunctionProfile
 {
+  public:
+    typedef TheISA::Addr Addr;
   private:
     Callback *reset;
     const SymbolTable *symtab;
@@ -68,7 +72,7 @@ class FunctionProfile
     FunctionProfile(const SymbolTable *symtab);
     ~FunctionProfile();
 
-    ProfileNode *consume(ExecContext *xc, StaticInstPtr<TheISA> inst);
+    ProfileNode *consume(ExecContext *xc, StaticInstPtr inst);
     ProfileNode *consume(const std::vector<Addr> &stack);
     void clear();
     void dump(ExecContext *xc, std::ostream &out) const;
@@ -76,7 +80,7 @@ class FunctionProfile
 };
 
 inline ProfileNode *
-FunctionProfile::consume(ExecContext *xc, StaticInstPtr<TheISA> inst)
+FunctionProfile::consume(ExecContext *xc, StaticInstPtr inst)
 {
     if (!trace.trace(xc, inst))
         return NULL;

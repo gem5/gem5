@@ -48,21 +48,18 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** Typedef for the CPU. */
     typedef typename Impl::FullCPU FullCPU;
 
-    /** Typedef to get the ISA. */
-    typedef typename Impl::ISA ISA;
-
     /** Binary machine instruction type. */
-    typedef typename ISA::MachInst MachInst;
+    typedef TheISA::MachInst MachInst;
     /** Memory address type. */
-    typedef typename ISA::Addr	   Addr;
+    typedef TheISA::Addr	   Addr;
     /** Logical register index type. */
-    typedef typename ISA::RegIndex RegIndex;
+    typedef TheISA::RegIndex RegIndex;
     /** Integer register index type. */
-    typedef typename ISA::IntReg   IntReg;
+    typedef TheISA::IntReg   IntReg;
 
     enum {
-        MaxInstSrcRegs = ISA::MaxInstSrcRegs,	//< Max source regs
-        MaxInstDestRegs = ISA::MaxInstDestRegs,	//< Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	//< Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,	//< Max dest regs
     };
 
   public:
@@ -71,7 +68,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
                  FullCPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
-    AlphaDynInst(StaticInstPtr<AlphaISA> &_staticInst);
+    AlphaDynInst(StaticInstPtr &_staticInst);
 
     /** Executes the instruction.*/
     Fault * execute()
@@ -130,22 +127,22 @@ class AlphaDynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntReg(const StaticInst<ISA> *si, int idx)
+    uint64_t readIntReg(const StaticInst *si, int idx)
     {
         return this->cpu->readIntReg(_srcRegIdx[idx]);
     }
 
-    float readFloatRegSingle(const StaticInst<ISA> *si, int idx)
+    float readFloatRegSingle(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatRegSingle(_srcRegIdx[idx]);
     }
 
-    double readFloatRegDouble(const StaticInst<ISA> *si, int idx)
+    double readFloatRegDouble(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatRegDouble(_srcRegIdx[idx]);
     }
 
-    uint64_t readFloatRegInt(const StaticInst<ISA> *si, int idx)
+    uint64_t readFloatRegInt(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatRegInt(_srcRegIdx[idx]);
     }
@@ -153,25 +150,25 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntReg(const StaticInst<ISA> *si, int idx, uint64_t val)
+    void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
         this->cpu->setIntReg(_destRegIdx[idx], val);
         this->instResult.integer = val;
     }
 
-    void setFloatRegSingle(const StaticInst<ISA> *si, int idx, float val)
+    void setFloatRegSingle(const StaticInst *si, int idx, float val)
     {
         this->cpu->setFloatRegSingle(_destRegIdx[idx], val);
         this->instResult.fp = val;
     }
 
-    void setFloatRegDouble(const StaticInst<ISA> *si, int idx, double val)
+    void setFloatRegDouble(const StaticInst *si, int idx, double val)
     {
         this->cpu->setFloatRegDouble(_destRegIdx[idx], val);
         this->instResult.dbl = val;
     }
 
-    void setFloatRegInt(const StaticInst<ISA> *si, int idx, uint64_t val)
+    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
     {
         this->cpu->setFloatRegInt(_destRegIdx[idx], val);
         this->instResult.integer = val;

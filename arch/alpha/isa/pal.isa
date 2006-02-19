@@ -149,8 +149,8 @@ output header {{
 
         /// Constructor
         HwLoadStore(const char *mnem, MachInst _machInst, OpClass __opClass,
-                    StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
-                    StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr);
+                    StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+                    StaticInstPtr _memAccPtr = nullStaticInstPtr);
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -162,8 +162,8 @@ output decoder {{
     inline
     HwLoadStore::HwLoadStore(const char *mnem, MachInst _machInst,
                              OpClass __opClass,
-                             StaticInstPtr<AlphaISA> _eaCompPtr,
-                             StaticInstPtr<AlphaISA> _memAccPtr)
+                             StaticInstPtr _eaCompPtr,
+                             StaticInstPtr _memAccPtr)
         : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
         disp(HW_LDST_DISP)
     {

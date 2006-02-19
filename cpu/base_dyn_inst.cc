@@ -79,7 +79,7 @@ BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
 }
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(StaticInstPtr<ISA> &_staticInst)
+BaseDynInst<Impl>::BaseDynInst(StaticInstPtr &_staticInst)
     : staticInst(_staticInst), traceData(NULL)
 {
     initVars();

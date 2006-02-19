@@ -48,6 +48,7 @@
 #include "sim/sim_object.hh"
 
 using namespace std;
+using namespace TheISA;
 
 ////
 // Initialization and destruction

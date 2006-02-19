@@ -214,7 +214,6 @@ class StaticInstBase : public RefCounted
 
 
 // forward declaration
-template <class ISA>
 class StaticInstPtr;
 
 /**
@@ -224,21 +223,20 @@ class StaticInstPtr;
  * that are generic across all ISAs but that differ in details
  * according to the specific ISA being used.
  */
-template <class ISA>
 class StaticInst : public StaticInstBase
 {
   public:
 
     /// Binary machine instruction type.
-    typedef typename ISA::MachInst MachInst;
+    typedef TheISA::MachInst MachInst;
     /// Memory address type.
-    typedef typename ISA::Addr	   Addr;
+    typedef TheISA::Addr	   Addr;
     /// Logical register index type.
-    typedef typename ISA::RegIndex RegIndex;
+    typedef TheISA::RegIndex RegIndex;
 
     enum {
-        MaxInstSrcRegs = ISA::MaxInstSrcRegs,	//< Max source regs
-        MaxInstDestRegs = ISA::MaxInstDestRegs,	//< Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	//< Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,	//< Max dest regs
     };
 
 
@@ -253,7 +251,7 @@ class StaticInst : public StaticInstBase
     /// Pointer to a statically allocated "null" instruction object.
     /// Used to give eaCompInst() and memAccInst() something to return
     /// when called on non-memory instructions.
-    static StaticInstPtr<ISA> nullStaticInstPtr;
+    static StaticInstPtr nullStaticInstPtr;
 
     /**
      * Memory references only: returns "fake" instruction representing
@@ -262,7 +260,7 @@ class StaticInst : public StaticInstBase
      * just the EA computation.
      */
     virtual const
-    StaticInstPtr<ISA> &eaCompInst() const { return nullStaticInstPtr; }
+    StaticInstPtr &eaCompInst() const { return nullStaticInstPtr; }
 
     /**
      * Memory references only: returns "fake" instruction representing
@@ -271,7 +269,7 @@ class StaticInst : public StaticInstBase
      * just the memory access (not the EA computation).
      */
     virtual const
-    StaticInstPtr<ISA> &memAccInst() const { return nullStaticInstPtr; }
+    StaticInstPtr &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.
     const MachInst machInst;
@@ -370,7 +368,7 @@ class StaticInst : public StaticInstBase
     /// Decoded instruction cache type.
     /// For now we're using a generic hash_map; this seems to work
     /// pretty well.
-    typedef m5::hash_map<MachInst, StaticInstPtr<ISA> > DecodeCache;
+    typedef m5::hash_map<MachInst, StaticInstPtr> DecodeCache;
 
     /// A cache of decoded instruction objects.
     static DecodeCache decodeCache;
@@ -384,63 +382,40 @@ class StaticInst : public StaticInstBase
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
-    static
-    StaticInstPtr<ISA> decode(MachInst mach_inst)
-    {
-#ifdef DECODE_CACHE_HASH_STATS
-        // Simple stats on decode hash_map.  Turns out the default
-        // hash function is as good as anything I could come up with.
-        const int dump_every_n = 10000000;
-        static int decodes_til_dump = dump_every_n;
-
-        if (--decodes_til_dump == 0) {
-            dumpDecodeCacheStats();
-            decodes_til_dump = dump_every_n;
-        }
-#endif
-
-        typename DecodeCache::iterator iter = decodeCache.find(mach_inst);
-        if (iter != decodeCache.end()) {
-            return iter->second;
-        }
-
-        StaticInstPtr<ISA> si = ISA::decodeInst(mach_inst);
-        decodeCache[mach_inst] = si;
-        return si;
-    }
+    //This is defined as inline below.
+    static StaticInstPtr decode(MachInst mach_inst);
 };
 
 typedef RefCountingPtr<StaticInstBase> StaticInstBasePtr;
 
 /// Reference-counted pointer to a StaticInst object.
-/// This type should be used instead of "StaticInst<ISA> *" so that
+/// This type should be used instead of "StaticInst *" so that
 /// StaticInst objects can be properly reference-counted.
-template <class ISA>
-class StaticInstPtr : public RefCountingPtr<StaticInst<ISA> >
+class StaticInstPtr : public RefCountingPtr<StaticInst>
 {
   public:
     /// Constructor.
     StaticInstPtr()
-        : RefCountingPtr<StaticInst<ISA> >()
+        : RefCountingPtr<StaticInst>()
     {
     }
 
-    /// Conversion from "StaticInst<ISA> *".
-    StaticInstPtr(StaticInst<ISA> *p)
-        : RefCountingPtr<StaticInst<ISA> >(p)
+    /// Conversion from "StaticInst *".
+    StaticInstPtr(StaticInst *p)
+        : RefCountingPtr<StaticInst>(p)
     {
     }
 
     /// Copy constructor.
     StaticInstPtr(const StaticInstPtr &r)
-        : RefCountingPtr<StaticInst<ISA> >(r)
+        : RefCountingPtr<StaticInst>(r)
     {
     }
 
     /// Construct directly from machine instruction.
-    /// Calls StaticInst<ISA>::decode().
-    StaticInstPtr(typename ISA::MachInst mach_inst)
-        : RefCountingPtr<StaticInst<ISA> >(StaticInst<ISA>::decode(mach_inst))
+    /// Calls StaticInst::decode().
+    StaticInstPtr(TheISA::MachInst mach_inst)
+        : RefCountingPtr<StaticInst>(StaticInst::decode(mach_inst))
     {
     }
 
@@ -450,5 +425,30 @@ class StaticInstPtr : public RefCountingPtr<StaticInst<ISA> >
         return this->get();
     }
 };
+
+inline StaticInstPtr
+StaticInst::decode(StaticInst::MachInst mach_inst)
+{
+#ifdef DECODE_CACHE_HASH_STATS
+    // Simple stats on decode hash_map.  Turns out the default
+    // hash function is as good as anything I could come up with.
+    const int dump_every_n = 10000000;
+    static int decodes_til_dump = dump_every_n;
+
+    if (--decodes_til_dump == 0) {
+        dumpDecodeCacheStats();
+        decodes_til_dump = dump_every_n;
+    }
+#endif
+
+    DecodeCache::iterator iter = decodeCache.find(mach_inst);
+    if (iter != decodeCache.end()) {
+        return iter->second;
+    }
+
+    StaticInstPtr si = TheISA::decodeInst(mach_inst);
+    decodeCache[mach_inst] = si;
+    return si;
+}
 
 #endif // __CPU_STATIC_INST_HH__
