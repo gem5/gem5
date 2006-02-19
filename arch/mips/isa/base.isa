@@ -16,7 +16,7 @@ output header {{
 
                 // Constructor.
                 MipsStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
-                    : StaticInst<SPARCISA>(mnem, _machInst, __opClass)
+                    : StaticInst<MIPSISA>(mnem, _machInst, __opClass)
                 {
                 }
 

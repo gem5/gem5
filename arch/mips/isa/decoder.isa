@@ -168,7 +168,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x1: decode REGIMM_LO {
                 format Trap {
                     0x0: tgei( {{ cond = (Rs.sw >= INTIMM); }});
-                    0x1: tgeiu({{ cond = (Rs.uw < INTIMM); }});
+                    0x1: tgeiu({{ cond = (Rs.uw >= INTIMM); }});
                     0x2: tlti( {{ cond = (Rs.sw < INTIMM); }});
                     0x3: tltiu({{ cond = (Rs.uw < INTIMM); }});
                     0x4: teqi( {{ cond = (Rs.sw == INTIMM);}});

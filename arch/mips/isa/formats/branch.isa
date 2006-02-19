@@ -45,12 +45,12 @@ output header {{
     {
       protected:
         /// target address (signed) Displacement .
-        int32_t targetOffset;
+        int32_t disp;
 
         /// Constructor.
         Branch(const char *mnem, MachInst _machInst, OpClass __opClass)
             : PCDependentDisassembly(mnem, _machInst, __opClass),
-              targetOffset(OFFSET << 2)
+              disp(OFFSET << 2)
         {
         }
 
@@ -67,12 +67,12 @@ output header {{
     {
       protected:
         /// target address (signed) Displacement .
-        int32_t targetOffset;
+        int32_t disp;
 
         /// Constructor.
         Branch(const char *mnem, MachInst _machInst, OpClass __opClass)
             : PCDependentDisassembly(mnem, _machInst, __opClass),
-              targetOffset(OFFSET << 2)
+              disp(OFFSET << 2)
         {
         }
 
@@ -255,9 +255,12 @@ def format Branch(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-2:] == 'al':
-        code += 'R31 = NPC + 8;\n'
+        code += 'R31 = NPC + 4;\n'
 
-    code += '\nif (cond) NPC = NPC + disp;\n';
+    # condition code
+    code += 'if (cond) {'
+    code += '  NPC = NPC + disp;\n'
+    code += '  NNPC = NNPC + disp;\n } \n'
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl'))
@@ -267,15 +270,20 @@ def format Branch(code,*flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
+
 def format BranchLikely(code,*flags) {{
     code = 'bool cond;\n\t\t\t' + code
 
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-3:] == 'all':
-        code += 'R31 = NPC + 8;\n'
+        code += 'R31 = NPC + 4;\n'
 
-    code = '\t\t\tif (cond) NPC = NPC + disp;\n';
+    #condition code
+    code += 'if (cond) {'
+    code += '  NPC = NPC + disp;\n'
+    code += '  NNPC = NNPC + disp;\n } \n'
+
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl','IsCondDelaySlot'))

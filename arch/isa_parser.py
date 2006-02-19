@@ -1355,6 +1355,7 @@ class MemOperand(Operand):
     def makeAccSize(self):
         return self.size
 
+
 class NPCOperand(Operand):
     def makeConstructor(self):
         return ''
@@ -1365,6 +1366,15 @@ class NPCOperand(Operand):
     def makeWrite(self):
         return 'xc->setNextPC(%s);\n' % self.base_name
 
+class NNPCOperand(Operand):
+    def makeConstructor(self):
+        return ''
+
+    def makeRead(self):
+        return '%s = xc->readPC() + 8;\n' % self.base_name
+
+    def makeWrite(self):
+        return 'xc->setNextNPC(%s);\n' % self.base_name
 
 def buildOperandNameMap(userDict, lineno):
     global operandNameMap

@@ -40,7 +40,7 @@ def template BasicExecute {{
 
                 if(fault == No_Fault)
                 {
-                        %(op_wb)s;
+                    %(op_wb)s;
                 }
                 return fault;
         }

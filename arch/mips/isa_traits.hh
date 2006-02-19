@@ -430,6 +430,8 @@ class MipsISA
 
                 Addr pc;		// Program Counter
                 Addr npc;		// Next Program Counter
+            Addr nnpc;                  // Next next program Counter
+
 
                 void serialize(std::ostream &os);
                 void unserialize(Checkpoint *cp, const std::string &section);
