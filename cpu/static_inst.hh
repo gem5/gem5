@@ -36,7 +36,7 @@
 #include "base/refcnt.hh"
 #include "encumbered/cpu/full/op_class.hh"
 #include "sim/host.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 // forward declarations
 struct AlphaSimpleImpl;

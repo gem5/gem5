@@ -36,7 +36,7 @@
 #include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 #if FULL_SYSTEM
 class System;
