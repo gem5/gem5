@@ -519,7 +519,7 @@ SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
 SyscallDesc*
 AlphaTru64Process::getDesc(int callnum)
 {
-    if (callnum < Num_Mach_Syscall_Descs || callnum > Num_Syscall_Descs)
+    if (callnum < -Num_Mach_Syscall_Descs || callnum > Num_Syscall_Descs)
         return NULL;
 
     if (callnum < 0)
