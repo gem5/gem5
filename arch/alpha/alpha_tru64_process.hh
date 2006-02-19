@@ -42,8 +42,16 @@ class AlphaTru64Process : public LiveProcess
                       std::vector<std::string> &argv,
                       std::vector<std::string> &envp);
 
-    /// Syscall emulation function.
-    virtual void syscall(ExecContext *xc);
+    /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
+
+    /// Array of mach syscall descriptors, indexed by call number.
+    static SyscallDesc machSyscallDescs[];
+
+    const int Num_Syscall_Descs;
+    const int Num_Mach_Syscall_Descs;
+
+    virtual SyscallDesc* getDesc(int callnum);
 };
 
 

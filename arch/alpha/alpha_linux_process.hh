@@ -43,8 +43,15 @@ class AlphaLinuxProcess : public LiveProcess
                       std::vector<std::string> &argv,
                       std::vector<std::string> &envp);
 
-    /// Syscall emulation function.
-    virtual void syscall(ExecContext *xc);
+    virtual SyscallDesc* getDesc(int callnum);
+
+    /// The target system's hostname.
+    static const char *hostname;
+
+     /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
+
+    const int Num_Syscall_Descs;
 };
 
 

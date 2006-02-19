@@ -46,6 +46,7 @@
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/stats.hh"
+#include "sim/syscall_emul.hh"
 
 #ifdef TARGET_ALPHA
 #include "arch/alpha/alpha_tru64_process.hh"
@@ -350,6 +351,19 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
     init_regs->npc = prog_entry + sizeof(MachInst);
 }
 
+void
+LiveProcess::syscall(ExecContext *xc)
+{
+    num_syscalls++;
+
+    int64_t callnum = xc->regs.intRegFile[ReturnValueReg];
+
+    SyscallDesc *desc = getDesc(callnum);
+    if (desc == NULL)
+        fatal("Syscall %d out of range", callnum);
+
+    desc->doSyscall(callnum, this, xc);
+}
 
 LiveProcess *
 LiveProcess::create(const string &nm,
@@ -392,6 +406,7 @@ LiveProcess::create(const string &nm,
 
     return process;
 }
+
 
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
