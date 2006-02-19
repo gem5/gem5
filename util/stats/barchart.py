@@ -31,6 +31,7 @@ import matplotlib, pylab
 from matplotlib.font_manager import FontProperties
 from matplotlib.numerix import array, arange, reshape, shape, transpose, zeros
 from matplotlib.numerix import Float
+from matplotlib.ticker import NullLocator
 
 matplotlib.interactive(False)
 
@@ -120,15 +121,11 @@ class BarChart(ChartOptions):
         if self.chartdata is None:
             raise AttributeError, "Data not set for bar chart!"
 
-        need_subticks = True
-
         dim = len(shape(self.inputdata))
         cshape = shape(self.chartdata)
-        print cshape
         if dim == 1:
             colors = self.gen_colors(cshape[2])
             colors = [ [ colors ] * cshape[1] ] * cshape[0]
-            need_subticks = False
 
         if dim == 2:
             colors = self.gen_colors(cshape[0])
@@ -144,15 +141,19 @@ class BarChart(ChartOptions):
 
         outer_axes = None
         inner_axes = None
-        if need_subticks:
-            self.metaaxes = self.figure.add_axes(self.figure_size)
+        if self.xsubticks is not None:
+            color = self.figure.get_facecolor()
+            self.metaaxes = self.figure.add_axes(self.figure_size, axisbg=color, frameon=False)
+            for tick in self.metaaxes.xaxis.majorTicks:
+                tick.tick1On = False
+                tick.tick2On = False
             self.metaaxes.set_yticklabels([])
             self.metaaxes.set_yticks([])
             size = [0] * 4
             size[0] = self.figure_size[0]
-            size[1] = self.figure_size[1] + .075
+            size[1] = self.figure_size[1] + .05
             size[2] = self.figure_size[2]
-            size[3] = self.figure_size[3] - .075
+            size[3] = self.figure_size[3] - .05
             self.axes = self.figure.add_axes(size)
             outer_axes = self.metaaxes
             inner_axes = self.axes
@@ -202,10 +203,12 @@ class BarChart(ChartOptions):
         if self.xticks is not None:
             outer_axes.set_xticks(arange(cshape[2]) + .5)
             outer_axes.set_xticklabels(self.xticks)
+
         if self.xsubticks is not None:
             inner_axes.set_xticks(arange((cshape[0] + 1)*cshape[2])*width + 2*center)
             self.xsubticks.append('')
             inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=8)
+
         if self.legend is not None:
             if dim == 1:
                 lbars = bars[0][0]
@@ -279,7 +282,7 @@ if __name__ == '__main__':
         chart1.xticks = [ 'xtick%d' % x for x in xrange(myshape[0]) ]
         chart1.title = 'this is the title'
         chart1.figure_size = [0.1, 0.2, 0.7, 0.85 ]
-        if len(myshape) > 1:
+        if len(myshape) > 2:
             chart1.xsubticks = [ '%d' % x for x in xrange(myshape[1]) ]
         chart1.graph()
         chart1.savefig('/tmp/test1.png')
