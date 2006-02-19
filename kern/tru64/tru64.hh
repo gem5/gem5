@@ -392,7 +392,7 @@ class Tru64 {
     /// For stack_create.
     struct vm_stack {
         // was void *
-        Addr	address;	//!< address hint
+        TheISA::Addr	address;	//!< address hint
         size_t	rsize;		//!< red zone size
         size_t	ysize;		//!< yellow zone size
         size_t	gsize;		//!< green zone size
@@ -401,7 +401,7 @@ class Tru64 {
         uint64_t	align;		//!< address alignment
         uint64_t	flags;		//!< MAP_FIXED etc.
         // was struct memalloc_attr *
-        Addr	attr;		//!< allocation policy
+        TheISA::Addr	attr;		//!< allocation policy
         uint64_t reserved;	//!< reserved
     };
 
@@ -433,7 +433,7 @@ class Tru64 {
         sigset_t        sigmask;        //!< thread signal mask
         sigset_t        sig;            //!< thread pending mask
         // struct nxm_pth_state *
-        Addr pth_id; //!< out-of-line state
+        TheISA::Addr pth_id; //!< out-of-line state
         int             flags;          //!< shared flags
 #define US_SIGSTACK     0x1             // thread called sigaltstack
 #define US_ONSTACK      0x2             // thread is running on altstack
@@ -469,12 +469,12 @@ class Tru64 {
         int             nxm_set_quantum;        //!< quantum reset value
         int             nxm_sysevent;           //!< syscall state
         // struct nxm_upcall *
-        Addr	    nxm_uc_ret; //!< stack ptr of null thread
+        TheISA::Addr	    nxm_uc_ret; //!< stack ptr of null thread
         // void *
-        Addr nxm_tid;               //!< scheduler's thread id
+        TheISA::Addr nxm_tid;               //!< scheduler's thread id
         int64_t            nxm_va;                 //!< page fault address
         // struct nxm_pth_state *
-        Addr nxm_pthid; //!< id of null thread
+        TheISA::Addr nxm_pthid; //!< id of null thread
         uint64_t   nxm_bound_pcs_count;    //!< bound PCS thread count
         int64_t            pad[2];	   //!< pad
     };
@@ -502,9 +502,9 @@ class Tru64 {
         int nxm_nslots_per_rad;         //!< max number of VP slots per RAD
         int nxm_nrads;                  //!< max number of RADs
         // nxm_slot_state_t *
-        Addr nxm_slot_state; //!< per-VP slot state
+        TheISA::Addr nxm_slot_state; //!< per-VP slot state
         // struct nxm_shared *
-        Addr nxm_rad[1];  //!< per-RAD shared areas
+        TheISA::Addr nxm_rad[1];  //!< per-RAD shared areas
     };
 
     /// For nxm_thread_create.
@@ -523,7 +523,7 @@ class Tru64 {
         int policy;	//!< policy
         int signal_type;	//!< signal_type
         // void *
-        Addr pthid;	//!< pthid
+        TheISA::Addr pthid;	//!< pthid
         sigset_t sigmask;	//!< sigmask
         /// Initial register values.
         struct {
@@ -539,7 +539,7 @@ class Tru64 {
     /// memory space.  Used by stat(), fstat(), and lstat().
     template <class T>
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, global_stat *host)
+    copyOutStatBuf(FunctionalMemory *mem, TheISA::Addr addr, global_stat *host)
     {
         TypedBufferArg<T> tgt(addr);
 
@@ -565,7 +565,7 @@ class Tru64 {
     /// memory space.  Used by statfs() and fstatfs().
     template <class T>
     static void
-    copyOutStatfsBuf(FunctionalMemory *mem, Addr addr, global_statfs *host)
+    copyOutStatfsBuf(FunctionalMemory *mem, TheISA::Addr addr, global_statfs *host)
     {
         TypedBufferArg<T> tgt(addr);
 
@@ -589,13 +589,13 @@ class Tru64 {
 
     class F64 {
       public:
-        static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatBuf(FunctionalMemory *mem, TheISA::Addr addr,
                                    global_stat *host)
         {
             Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
         }
 
-        static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatfsBuf(FunctionalMemory *mem, TheISA::Addr addr,
                                      global_statfs *host)
         {
             Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
@@ -604,13 +604,13 @@ class Tru64 {
 
     class PreF64 {
       public:
-        static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatBuf(FunctionalMemory *mem, TheISA::Addr addr,
                                    global_stat *host)
         {
             Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
         }
 
-        static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatfsBuf(FunctionalMemory *mem, TheISA::Addr addr,
                                      global_statfs *host)
         {
             Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
@@ -622,7 +622,7 @@ class Tru64 {
     /// the simulated memory space.  Used by pre_F64_stat(),
     /// pre_F64_fstat(), and pre_F64_lstat().
     static void
-    copyOutPreF64StatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    copyOutPreF64StatBuf(FunctionalMemory *mem, TheISA::Addr addr, struct stat *host)
     {
         TypedBufferArg<Tru64::pre_F64_stat> tgt(addr);
 
@@ -653,6 +653,7 @@ class Tru64 {
     getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+        using TheISA::Addr;
 #ifdef __CYGWIN__
         panic("getdirent not implemented on cygwin!");
 #else
@@ -712,6 +713,7 @@ class Tru64 {
     sigreturnFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
+        using TheISA::RegFile;
         RegFile *regs = &xc->regs;
         TypedBufferArg<Tru64::sigcontext> sc(xc->getSyscallArg(0));
 
@@ -807,6 +809,7 @@ class Tru64 {
     nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+        using TheISA::Addr;
         TypedBufferArg<Tru64::nxm_task_attr> attrp(xc->getSyscallArg(0));
         TypedBufferArg<Addr> configptr_ptr(xc->getSyscallArg(1));
 
@@ -920,13 +923,13 @@ class Tru64 {
     {
         memset(&ec->regs, 0, sizeof(ec->regs));
 
-        ec->regs.intRegFile[ArgumentReg0] = gtoh(attrp->registers.a0);
+        ec->regs.intRegFile[TheISA::ArgumentReg0] = gtoh(attrp->registers.a0);
         ec->regs.intRegFile[27/*t12*/] = gtoh(attrp->registers.pc);
-        ec->regs.intRegFile[StackPointerReg] = gtoh(attrp->registers.sp);
+        ec->regs.intRegFile[TheISA::StackPointerReg] = gtoh(attrp->registers.sp);
         ec->regs.miscRegs.uniq = uniq_val;
 
         ec->regs.pc = gtoh(attrp->registers.pc);
-        ec->regs.npc = gtoh(attrp->registers.pc) + sizeof(MachInst);
+        ec->regs.npc = gtoh(attrp->registers.pc) + sizeof(TheISA::MachInst);
 
         ec->activate();
     }
@@ -936,6 +939,7 @@ class Tru64 {
     nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
                           ExecContext *xc)
     {
+        using TheISA::Addr;
         TypedBufferArg<Tru64::nxm_thread_attr> attrp(xc->getSyscallArg(0));
         TypedBufferArg<uint64_t> kidp(xc->getSyscallArg(1));
         int thread_index = xc->getSyscallArg(2);
@@ -1075,6 +1079,7 @@ class Tru64 {
     nxm_blockFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr uaddr = xc->getSyscallArg(0);
         uint64_t val = xc->getSyscallArg(1);
         uint64_t secs = xc->getSyscallArg(2);
@@ -1096,6 +1101,7 @@ class Tru64 {
     nxm_unblockFunc(SyscallDesc *desc, int callnum, Process *process,
                     ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr uaddr = xc->getSyscallArg(0);
 
         cout << xc->cpu->name() << ": nxm_unblock "
@@ -1123,7 +1129,7 @@ class Tru64 {
     /// Activate exec context waiting on a channel.  Just activate one
     /// by default.
     static int
-    activate_waiting_context(Addr uaddr, Process *process,
+    activate_waiting_context(TheISA::Addr uaddr, Process *process,
                              bool activate_all = false)
     {
         int num_activated = 0;
@@ -1152,7 +1158,7 @@ class Tru64 {
 
     /// M5 hacked-up lock acquire.
     static void
-    m5_lock_mutex(Addr uaddr, Process *process, ExecContext *xc)
+    m5_lock_mutex(TheISA::Addr uaddr, Process *process, ExecContext *xc)
     {
         TypedBufferArg<uint64_t> lockp(uaddr);
 
@@ -1171,7 +1177,7 @@ class Tru64 {
 
     /// M5 unlock call.
     static void
-    m5_unlock_mutex(Addr uaddr, Process *process, ExecContext *xc)
+    m5_unlock_mutex(TheISA::Addr uaddr, Process *process, ExecContext *xc)
     {
         TypedBufferArg<uint64_t> lockp(uaddr);
 
@@ -1193,6 +1199,7 @@ class Tru64 {
     m5_mutex_lockFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr uaddr = xc->getSyscallArg(0);
 
         m5_lock_mutex(uaddr, process, xc);
@@ -1208,6 +1215,7 @@ class Tru64 {
     m5_mutex_trylockFunc(SyscallDesc *desc, int callnum, Process *process,
                          ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr uaddr = xc->getSyscallArg(0);
         TypedBufferArg<uint64_t> lockp(uaddr);
 
@@ -1228,6 +1236,7 @@ class Tru64 {
     m5_mutex_unlockFunc(SyscallDesc *desc, int callnum, Process *process,
                         ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr uaddr = xc->getSyscallArg(0);
 
         m5_unlock_mutex(uaddr, process, xc);
@@ -1240,6 +1249,7 @@ class Tru64 {
     m5_cond_signalFunc(SyscallDesc *desc, int callnum, Process *process,
                        ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr cond_addr = xc->getSyscallArg(0);
 
         // Wake up one process waiting on the condition variable.
@@ -1253,6 +1263,7 @@ class Tru64 {
     m5_cond_broadcastFunc(SyscallDesc *desc, int callnum, Process *process,
                           ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr cond_addr = xc->getSyscallArg(0);
 
         activate_waiting_context(cond_addr, process, true);
@@ -1265,6 +1276,7 @@ class Tru64 {
     m5_cond_waitFunc(SyscallDesc *desc, int callnum, Process *process,
                      ExecContext *xc)
     {
+        using TheISA::Addr;
         Addr cond_addr = xc->getSyscallArg(0);
         Addr lock_addr = xc->getSyscallArg(1);
         TypedBufferArg<uint64_t> condp(cond_addr);

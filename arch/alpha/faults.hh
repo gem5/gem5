@@ -34,6 +34,8 @@
 
 class AlphaFault : public Fault
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     AlphaFault(char * newName, int newId, Addr newVect)
         : Fault(newName, newId), vect(newVect)

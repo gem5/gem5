@@ -53,6 +53,9 @@ class Linux {};
 ///
 class Linux {
 
+  protected:
+    typedef TheISA::Addr Addr;
+
   public:
 
     //@{
