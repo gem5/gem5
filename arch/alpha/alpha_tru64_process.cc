@@ -55,6 +55,7 @@
 #include "sim/syscall_emul.hh"
 
 using namespace std;
+using namespace AlphaISA;
 
 typedef struct stat global_stat;
 typedef struct statfs global_statfs;

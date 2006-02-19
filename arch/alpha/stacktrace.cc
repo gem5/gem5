@@ -37,6 +37,7 @@
 #include "cpu/exec_context.hh"
 
 using namespace std;
+using namespace AlphaISA;
 
 ProcessInfo::ProcessInfo(ExecContext *_xc)
     : xc(_xc)
@@ -108,7 +109,7 @@ StackTrace::StackTrace()
 {
 }
 
-StackTrace::StackTrace(ExecContext *_xc, StaticInstPtr<TheISA> inst)
+StackTrace::StackTrace(ExecContext *_xc, StaticInstPtr inst)
     : xc(0), stack(64)
 {
     trace(_xc, inst);

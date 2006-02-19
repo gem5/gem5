@@ -76,7 +76,7 @@
 
 using namespace std;
 //The SimpleCPU does alpha only
-using namespace LittleEndianGuest;
+using namespace AlphaISA;
 
 
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c, int w)
@@ -125,7 +125,7 @@ SimpleCPU::SimpleCPU(Params *p)
     xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
 
     // initialize CPU, including PC
-    TheISA::initCPU(&xc->regs);
+    initCPU(&xc->regs);
 #else
     xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
 #endif // !FULL_SYSTEM
@@ -323,7 +323,7 @@ SimpleCPU::copySrcTranslate(Addr src)
 
     // Make sure block doesn't span page
     if (no_warn &&
-        (src & TheISA::PageMask) != ((src + blk_size) & TheISA::PageMask) &&
+        (src & PageMask) != ((src + blk_size) & PageMask) &&
         (src >> 40) != 0xfffffc) {
         warn("Copied block source spans pages %x.", src);
         no_warn = false;
@@ -359,7 +359,7 @@ SimpleCPU::copy(Addr dest)
 
     // Make sure block doesn't span page
     if (no_warn &&
-        (dest & TheISA::PageMask) != ((dest + blk_size) & TheISA::PageMask) &&
+        (dest & PageMask) != ((dest + blk_size) & PageMask) &&
         (dest >> 40) != 0xfffffc) {
         no_warn = false;
         warn("Copied block destination spans pages %x. ", dest);
@@ -648,20 +648,20 @@ SimpleCPU::tick()
         checkInterrupts = false;
         IntReg *ipr = xc->regs.ipr;
 
-        if (xc->regs.ipr[TheISA::IPR_SIRR]) {
-            for (int i = TheISA::INTLEVEL_SOFTWARE_MIN;
-                 i < TheISA::INTLEVEL_SOFTWARE_MAX; i++) {
-                if (ipr[TheISA::IPR_SIRR] & (ULL(1) << i)) {
+        if (xc->regs.ipr[IPR_SIRR]) {
+            for (int i = INTLEVEL_SOFTWARE_MIN;
+                 i < INTLEVEL_SOFTWARE_MAX; i++) {
+                if (ipr[IPR_SIRR] & (ULL(1) << i)) {
                     // See table 4-19 of 21164 hardware reference
-                    ipl = (i - TheISA::INTLEVEL_SOFTWARE_MIN) + 1;
+                    ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                     summary |= (ULL(1) << i);
                 }
             }
         }
 
         uint64_t interrupts = xc->cpu->intr_status();
-        for (int i = TheISA::INTLEVEL_EXTERNAL_MIN;
-            i < TheISA::INTLEVEL_EXTERNAL_MAX; i++) {
+        for (int i = INTLEVEL_EXTERNAL_MIN;
+            i < INTLEVEL_EXTERNAL_MAX; i++) {
             if (interrupts & (ULL(1) << i)) {
                 // See table 4-19 of 21164 hardware reference
                 ipl = i;
@@ -669,16 +669,16 @@ SimpleCPU::tick()
             }
         }
 
-        if (ipr[TheISA::IPR_ASTRR])
+        if (ipr[IPR_ASTRR])
             panic("asynchronous traps not implemented\n");
 
-        if (ipl && ipl > xc->regs.ipr[TheISA::IPR_IPLR]) {
-            ipr[TheISA::IPR_ISR] = summary;
-            ipr[TheISA::IPR_INTID] = ipl;
+        if (ipl && ipl > xc->regs.ipr[IPR_IPLR]) {
+            ipr[IPR_ISR] = summary;
+            ipr[IPR_INTID] = ipl;
             xc->ev5_trap(InterruptFault);
 
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                    ipr[TheISA::IPR_IPLR], ipl, summary);
+                    ipr[IPR_IPLR], ipl, summary);
         }
     }
 #endif
@@ -749,7 +749,7 @@ SimpleCPU::tick()
 
         // decode the instruction
         inst = gtoh(inst);
-        curStaticInst = StaticInst<TheISA>::decode(inst);
+        curStaticInst = StaticInst::decode(inst);
 
         traceData = Trace::getInstRecord(curTick, xc, this, curStaticInst,
                                          xc->regs.pc);

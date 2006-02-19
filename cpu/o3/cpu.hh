@@ -78,7 +78,6 @@ class FullO3CPU : public BaseFullCPU
 {
   public:
     //Put typedefs from the Impl here.
-    typedef typename Impl::ISA ISA;
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -153,11 +152,11 @@ class FullO3CPU : public BaseFullCPU
 
     /** Get instruction asid. */
     int getInstAsid()
-    { return ITB_ASN_ASN(regFile.getIpr()[ISA::IPR_ITB_ASN]); }
+    { return ITB_ASN_ASN(regFile.getIpr()[TheISA::IPR_ITB_ASN]); }
 
     /** Get data asid. */
     int getDataAsid()
-    { return DTB_ASN_ASN(regFile.getIpr()[ISA::IPR_DTB_ASN]); }
+    { return DTB_ASN_ASN(regFile.getIpr()[TheISA::IPR_DTB_ASN]); }
 #else
     bool validInstAddr(Addr addr)
     { return thread[0]->validInstAddr(addr); }

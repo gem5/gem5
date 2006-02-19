@@ -37,14 +37,14 @@ output header {{
         /// Memory request flags.  See mem_req_base.hh.
         unsigned memAccessFlags;
         /// Pointer to EAComp object.
-        const StaticInstPtr<AlphaISA> eaCompPtr;
+        const StaticInstPtr eaCompPtr;
         /// Pointer to MemAcc object.
-        const StaticInstPtr<AlphaISA> memAccPtr;
+        const StaticInstPtr memAccPtr;
 
         /// Constructor
         Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
-               StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
-               StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+               StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+               StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : AlphaStaticInst(mnem, _machInst, __opClass),
               memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr)
         {
@@ -55,8 +55,8 @@ output header {{
 
       public:
 
-        const StaticInstPtr<AlphaISA> &eaCompInst() const { return eaCompPtr; }
-        const StaticInstPtr<AlphaISA> &memAccInst() const { return memAccPtr; }
+        const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
+        const StaticInstPtr &memAccInst() const { return memAccPtr; }
     };
 
     /**
@@ -71,8 +71,8 @@ output header {{
 
         /// Constructor.
         MemoryDisp32(const char *mnem, MachInst _machInst, OpClass __opClass,
-                     StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
               disp(MEMDISP)
         {
@@ -90,8 +90,8 @@ output header {{
       protected:
         /// Constructor
         MemoryNoDisp(const char *mnem, MachInst _machInst, OpClass __opClass,
-                     StaticInstPtr<AlphaISA> _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr<AlphaISA> _memAccPtr = nullStaticInstPtr)
+                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
         {
         }

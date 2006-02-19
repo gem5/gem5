@@ -44,6 +44,7 @@
 #include "sim/stats.hh"
 
 using namespace std;
+using namespace TheISA;
 
 int TESTER_ALLOCATOR=0;
 

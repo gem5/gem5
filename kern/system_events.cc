@@ -29,6 +29,8 @@
 #include "encumbered/cpu/full/cpu.hh"
 #include "kern/kernel_stats.hh"
 
+using namespace TheISA;
+
 void
 SkipFuncEvent::process(ExecContext *xc)
 {

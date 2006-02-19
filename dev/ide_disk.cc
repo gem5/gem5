@@ -53,6 +53,7 @@
 #include "arch/isa_traits.hh"
 
 using namespace std;
+using namespace TheISA;
 
 IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
                  int id, Tick delay)

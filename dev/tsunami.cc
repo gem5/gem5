@@ -46,6 +46,8 @@
 #include "sim/system.hh"
 
 using namespace std;
+//Should this be AlphaISA?
+using namespace TheISA;
 
 Tsunami::Tsunami(const string &name, System *s, IntrControl *ic,
                  PciConfigAll *pci)

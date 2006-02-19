@@ -53,6 +53,7 @@ using namespace std;
 extern Sampler *SampCPU;
 
 using namespace Stats;
+using namespace TheISA;
 
 namespace AlphaPseudo
 {

@@ -53,6 +53,8 @@
 template<class Impl>
 class TwobitBPredUnit
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;

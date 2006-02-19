@@ -282,7 +282,7 @@ AlphaFullCPU<Impl>::hwrei()
     if (!inPalMode())
         return UnimplementedOpcodeFault;
 
-    setNextPC(ipr[AlphaISA::IPR_EXC_ADDR]);
+    this->setNextPC(ipr[AlphaISA::IPR_EXC_ADDR]);
 
 //    kernelStats.hwrei();
 
@@ -337,7 +337,7 @@ AlphaFullCPU<Impl>::trap(Fault * fault)
     if (fault == ArithmeticFault)
         panic("Arithmetic traps are unimplemented!");
 
-    typename AlphaISA::InternalProcReg *ipr = getIpr();
+    AlphaISA::InternalProcReg *ipr = getIpr();
 
     // exception restart address - Get the commit PC
     if (fault != InterruptFault || !inPalMode(PC))

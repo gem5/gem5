@@ -132,6 +132,7 @@
 #include "targetarch/vtophys.hh"
 
 using namespace std;
+using namespace TheISA;
 
 #ifndef NDEBUG
 vector<RemoteGDB *> debuggers;
@@ -494,7 +495,7 @@ RemoteGDB::setSingleStep()
     // User was stopped at pc, e.g. the instruction at pc was not
     // executed.
     MachInst inst = read<MachInst>(pc);
-    StaticInstPtr<TheISA> si(inst);
+    StaticInstPtr si(inst);
     if (si->hasBranchTarget(pc, context, bpc)) {
         // Don't bother setting a breakpoint on the taken branch if it
         // is the same as the next pc

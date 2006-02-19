@@ -84,14 +84,14 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
 
       regFile(params.numPhysIntRegs, params.numPhysFloatRegs),
 
-      freeList(Impl::ISA::NumIntRegs, params.numPhysIntRegs,
-               Impl::ISA::NumFloatRegs, params.numPhysFloatRegs),
+      freeList(TheISA::NumIntRegs, params.numPhysIntRegs,
+               TheISA::NumFloatRegs, params.numPhysFloatRegs),
 
-      renameMap(Impl::ISA::NumIntRegs, params.numPhysIntRegs,
-                Impl::ISA::NumFloatRegs, params.numPhysFloatRegs,
-                Impl::ISA::NumMiscRegs,
-                Impl::ISA::ZeroReg,
-                Impl::ISA::ZeroReg + Impl::ISA::NumIntRegs),
+      renameMap(TheISA::NumIntRegs, params.numPhysIntRegs,
+                TheISA::NumFloatRegs, params.numPhysFloatRegs,
+                TheISA::NumMiscRegs,
+                TheISA::ZeroReg,
+                TheISA::ZeroReg + TheISA::NumIntRegs),
 
       rob(params.numROBEntries, params.squashWidth),
 
@@ -254,13 +254,13 @@ FullO3CPU<Impl>::init()
         ExecContext *src_xc = thread[0];
 #endif
         // First loop through the integer registers.
-        for (int i = 0; i < Impl::ISA::NumIntRegs; ++i)
+        for (int i = 0; i < TheISA::NumIntRegs; ++i)
         {
             regFile.intRegFile[i] = src_xc->regs.intRegFile[i];
         }
 
         // Then loop through the floating point registers.
-        for (int i = 0; i < Impl::ISA::NumFloatRegs; ++i)
+        for (int i = 0; i < TheISA::NumFloatRegs; ++i)
         {
             regFile.floatRegFile[i].d = src_xc->regs.floatRegFile.d[i];
             regFile.floatRegFile[i].q = src_xc->regs.floatRegFile.q[i];

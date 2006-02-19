@@ -46,6 +46,7 @@
 #include "sim/builder.hh"
 
 using namespace std;
+using namespace TheISA;
 
 Uart8250::IntrEvent::IntrEvent(Uart8250 *u, int bit)
     : Event(&mainEventQueue), uart(u)

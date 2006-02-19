@@ -49,6 +49,8 @@ class MemTraceReader;
  */
 class OptCPU : public SimObject
 {
+  protected:
+    typedef TheISA::Addr Addr;
   private:
     typedef int RefIndex;
 

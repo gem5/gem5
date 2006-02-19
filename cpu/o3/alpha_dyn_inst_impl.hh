@@ -50,7 +50,7 @@ AlphaDynInst<Impl>::AlphaDynInst(MachInst inst, Addr PC, Addr Pred_PC,
 }
 
 template <class Impl>
-AlphaDynInst<Impl>::AlphaDynInst(StaticInstPtr<AlphaISA> &_staticInst)
+AlphaDynInst<Impl>::AlphaDynInst(StaticInstPtr &_staticInst)
     : BaseDynInst<Impl>(_staticInst)
 {
     // Make sure to have the renamed register entries set to the same

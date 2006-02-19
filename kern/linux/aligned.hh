@@ -37,7 +37,7 @@
 #if __GNUC__ == 3 && __GNUC_MINOR__  != 3
 typedef uint64_t uint64_ta __attribute__ ((aligned (8))) ;
 typedef int64_t int64_ta __attribute__ ((aligned (8))) ;
-typedef Addr Addr_a __attribute__ ((aligned (8))) ;
+typedef TheISA::Addr Addr_a __attribute__ ((aligned (8))) ;
 #else
 #define uint64_ta uint64_t __attribute__ ((aligned (8)))
 #define int64_ta int64_t __attribute__ ((aligned (8)))

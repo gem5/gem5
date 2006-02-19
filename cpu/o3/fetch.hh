@@ -49,7 +49,6 @@ class SimpleFetch
 {
   public:
     /** Typedefs from Impl. */
-    typedef typename Impl::ISA ISA;
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -61,7 +60,8 @@ class SimpleFetch
     typedef typename CPUPol::TimeStruct TimeStruct;
 
     /** Typedefs from ISA. */
-    typedef typename ISA::MachInst MachInst;
+    typedef TheISA::MachInst MachInst;
+    typedef TheISA::Addr Addr;
 
   public:
     enum Status {
@@ -141,7 +141,7 @@ class SimpleFetch
     // We fold in the PISA 64- to 32-bit conversion here as well.
     Addr icacheBlockAlignPC(Addr addr)
     {
-        addr = ISA::realPCToFetchPC(addr);
+        addr = TheISA::realPCToFetchPC(addr);
         return (addr & ~(cacheBlkMask));
     }
 

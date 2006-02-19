@@ -53,6 +53,7 @@
 #include "sim/system.hh"
 
 using namespace std;
+using namespace AlphaISA;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
                            System *s, BaseCPU *c, Platform *p,

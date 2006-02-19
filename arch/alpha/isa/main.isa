@@ -45,6 +45,8 @@ output decoder {{
 #include "cpu/exec_context.hh"  // for Jump::branchTarget()
 
 #include <math.h>
+
+using namespace AlphaISA;
 }};
 
 output exec {{
@@ -58,6 +60,8 @@ output exec {{
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
+
+using namespace AlphaISA;
 }};
 
 ////////////////////////////////////////////////////////////////////
@@ -179,7 +183,7 @@ output header {{
     /**
      * Base class for all Alpha static instructions.
      */
-    class AlphaStaticInst : public StaticInst<AlphaISA>
+    class AlphaStaticInst : public StaticInst
     {
       protected:
 
@@ -196,7 +200,7 @@ output header {{
         /// Constructor.
         AlphaStaticInst(const char *mnem, MachInst _machInst,
                         OpClass __opClass)
-            : StaticInst<AlphaISA>(mnem, _machInst, __opClass)
+            : StaticInst(mnem, _machInst, __opClass)
         {
         }
 
@@ -352,6 +356,17 @@ output header {{
 
         %(BasicExecDeclare)s
     };
+
+    /// Helper function for decoding nops.  Substitute Nop object
+    /// for original inst passed in as arg (and delete latter).
+    static inline
+    AlphaStaticInst *
+    makeNop(AlphaStaticInst *inst)
+    {
+        AlphaStaticInst *nop = new Nop(inst->disassemble(0), inst->machInst);
+        delete inst;
+        return nop;
+    }
 }};
 
 output decoder {{
@@ -363,17 +378,6 @@ output decoder {{
 #else
         return csprintf("%-10s (%s)", "nop", originalDisassembly);
 #endif
-    }
-
-    /// Helper function for decoding nops.  Substitute Nop object
-    /// for original inst passed in as arg (and delete latter).
-    inline
-    AlphaStaticInst *
-    makeNop(AlphaStaticInst *inst)
-    {
-        AlphaStaticInst *nop = new Nop(inst->disassemble(0), inst->machInst);
-        delete inst;
-        return nop;
     }
 }};
 

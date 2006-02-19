@@ -52,8 +52,8 @@ namespace AlphaPseudo
     void dumpstats(ExecContext *xc, Tick delay, Tick period);
     void dumpresetstats(ExecContext *xc, Tick delay, Tick period);
     void m5checkpoint(ExecContext *xc, Tick delay, Tick period);
-    uint64_t readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset);
+    uint64_t readfile(ExecContext *xc, TheISA::Addr vaddr, uint64_t len, uint64_t offset);
     void debugbreak(ExecContext *xc);
     void switchcpu(ExecContext *xc);
-    void addsymbol(ExecContext *xc, Addr addr, Addr symbolAddr);
+    void addsymbol(ExecContext *xc, TheISA::Addr addr, TheISA::Addr symbolAddr);
 }

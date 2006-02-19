@@ -40,6 +40,8 @@ output header {{
     class PCDependentDisassembly : public AlphaStaticInst
     {
       protected:
+        typedef TheISA::Addr Addr;
+      protected:
         /// Cached program counter from last disassembly
         mutable Addr cachedPC;
         /// Cached symbol table pointer from last disassembly
@@ -64,6 +66,7 @@ output header {{
     class Branch : public PCDependentDisassembly
     {
       protected:
+        typedef TheISA::Addr Addr;
         /// Displacement to target address (signed).
         int32_t disp;
 
@@ -87,6 +90,7 @@ output header {{
     class Jump : public PCDependentDisassembly
     {
       protected:
+        typedef TheISA::Addr Addr;
 
         /// Displacement to target address (signed).
         int32_t disp;
@@ -205,8 +209,8 @@ output decoder {{
 
 def template JumpOrBranchDecode {{
     return (RA == 31)
-        ? (StaticInst<AlphaISA> *)new %(class_name)s(machInst)
-        : (StaticInst<AlphaISA> *)new %(class_name)sAndLink(machInst);
+        ? (StaticInst *)new %(class_name)s(machInst)
+        : (StaticInst *)new %(class_name)sAndLink(machInst);
 }};
 
 def format CondBranch(code) {{

@@ -37,6 +37,8 @@ class ExecContext;
 template <class T>
 class VPtr
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     typedef T Type;
 

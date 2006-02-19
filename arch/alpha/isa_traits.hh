@@ -44,17 +44,16 @@ class Checkpoint;
 
 #define TARGET_ALPHA
 
-template <class ISA> class StaticInst;
-template <class ISA> class StaticInstPtr;
+class StaticInst;
+class StaticInstPtr;
 
 namespace EV5 {
 int DTB_ASN_ASN(uint64_t reg);
 int ITB_ASN_ASN(uint64_t reg);
 }
 
-class AlphaISA
+namespace AlphaISA
 {
-  public:
 
     typedef uint32_t MachInst;
     typedef uint64_t Addr;
@@ -133,10 +132,10 @@ class AlphaISA
         Addr		lock_addr;	// lock address for LL/SC
     } MiscRegFile;
 
-static const Addr PageShift = 13;
-static const Addr PageBytes = ULL(1) << PageShift;
-static const Addr PageMask = ~(PageBytes - 1);
-static const Addr PageOffset = PageBytes - 1;
+extern const Addr PageShift;
+extern const Addr PageBytes;
+extern const Addr PageMask;
+extern const Addr PageOffset;
 
 #if FULL_SYSTEM
 
@@ -184,10 +183,10 @@ static const Addr PageOffset = PageBytes - 1;
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
-    static StaticInstPtr<AlphaISA> decodeInst(MachInst);
+    StaticInstPtr decodeInst(MachInst);
 
     // return a no-op instruction... used for instruction fetch faults
-    static const MachInst NoopMachInst;
+    extern const MachInst NoopMachInst;
 
     enum annotes {
         ANNOTE_NONE = 0,
@@ -242,10 +241,10 @@ static const Addr PageOffset = PageBytes - 1;
 
     // Machine operations
 
-    static void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
+    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
                                int regnum);
 
-    static void restoreMachineReg(RegFile &regs, const AnyReg &reg,
+    void restoreMachineReg(RegFile &regs, const AnyReg &reg,
                                   int regnum);
 
 #if 0
@@ -263,40 +262,40 @@ static const Addr PageOffset = PageBytes - 1;
      * @param xc The execution context.
      */
     template <class XC>
-    static void zeroRegisters(XC *xc);
+    void zeroRegisters(XC *xc);
+
+
+//typedef AlphaISA TheISA;
+
+//typedef TheISA::MachInst MachInst;
+//typedef TheISA::Addr Addr;
+//typedef TheISA::RegIndex RegIndex;
+//typedef TheISA::IntReg IntReg;
+//typedef TheISA::IntRegFile IntRegFile;
+//typedef TheISA::FloatReg FloatReg;
+//typedef TheISA::FloatRegFile FloatRegFile;
+//typedef TheISA::MiscReg MiscReg;
+//typedef TheISA::MiscRegFile MiscRegFile;
+//typedef TheISA::AnyReg AnyReg;
+//typedef TheISA::RegFile RegFile;
+
+//const int NumIntRegs   = TheISA::NumIntRegs;
+//const int NumFloatRegs = TheISA::NumFloatRegs;
+//const int NumMiscRegs  = TheISA::NumMiscRegs;
+//const int TotalNumRegs = TheISA::TotalNumRegs;
+//const int VMPageSize   = TheISA::VMPageSize;
+//const int LogVMPageSize   = TheISA::LogVMPageSize;
+//const int ZeroReg = TheISA::ZeroReg;
+//const int StackPointerReg = TheISA::StackPointerReg;
+//const int GlobalPointerReg = TheISA::GlobalPointerReg;
+//const int ReturnAddressReg = TheISA::ReturnAddressReg;
+//const int ReturnValueReg = TheISA::ReturnValueReg;
+//const int ArgumentReg0 = TheISA::ArgumentReg0;
+//const int ArgumentReg1 = TheISA::ArgumentReg1;
+//const int ArgumentReg2 = TheISA::ArgumentReg2;
+//const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
+const Addr MaxAddr = (Addr)-1;
 };
-
-
-typedef AlphaISA TheISA;
-
-typedef TheISA::MachInst MachInst;
-typedef TheISA::Addr Addr;
-typedef TheISA::RegIndex RegIndex;
-typedef TheISA::IntReg IntReg;
-typedef TheISA::IntRegFile IntRegFile;
-typedef TheISA::FloatReg FloatReg;
-typedef TheISA::FloatRegFile FloatRegFile;
-typedef TheISA::MiscReg MiscReg;
-typedef TheISA::MiscRegFile MiscRegFile;
-typedef TheISA::AnyReg AnyReg;
-typedef TheISA::RegFile RegFile;
-
-const int NumIntRegs   = TheISA::NumIntRegs;
-const int NumFloatRegs = TheISA::NumFloatRegs;
-const int NumMiscRegs  = TheISA::NumMiscRegs;
-const int TotalNumRegs = TheISA::TotalNumRegs;
-const int VMPageSize   = TheISA::VMPageSize;
-const int LogVMPageSize   = TheISA::LogVMPageSize;
-const int ZeroReg = TheISA::ZeroReg;
-const int StackPointerReg = TheISA::StackPointerReg;
-const int GlobalPointerReg = TheISA::GlobalPointerReg;
-const int ReturnAddressReg = TheISA::ReturnAddressReg;
-const int ReturnValueReg = TheISA::ReturnValueReg;
-const int ArgumentReg0 = TheISA::ArgumentReg0;
-const int ArgumentReg1 = TheISA::ArgumentReg1;
-const int ArgumentReg2 = TheISA::ArgumentReg2;
-const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
-const int MaxAddr = (Addr)-1;
 
 #if !FULL_SYSTEM
 class SyscallReturn {
@@ -336,9 +335,9 @@ class SyscallReturn {
 
 
 #if FULL_SYSTEM
-typedef TheISA::InternalProcReg InternalProcReg;
-const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
-const int NumInterruptLevels = TheISA::NumInterruptLevels;
+//typedef TheISA::InternalProcReg InternalProcReg;
+//const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
+//const int NumInterruptLevels = TheISA::NumInterruptLevels;
 
 #include "arch/alpha/ev5.hh"
 #endif

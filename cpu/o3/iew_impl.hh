@@ -256,7 +256,7 @@ SimpleIEW<Impl>::squashDueToBranch(DynInstPtr &inst)
     toCommit->branchMispredict = true;
     // Prediction was incorrect, so send back inverse.
     toCommit->branchTaken = inst->readNextPC() !=
-        (inst->readPC() + sizeof(MachInst));
+        (inst->readPC() + sizeof(TheISA::MachInst));
 }
 
 template<class Impl>

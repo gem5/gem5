@@ -39,8 +39,10 @@
 template <class Impl>
 class AlphaFullCPU : public FullO3CPU<Impl>
 {
+  protected:
+    typedef AlphaISA::Addr Addr;
+    typedef TheISA::IntReg IntReg;
   public:
-    typedef typename Impl::ISA AlphaISA;
     typedef typename Impl::Params Params;
 
   public:

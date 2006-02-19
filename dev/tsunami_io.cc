@@ -50,6 +50,8 @@
 #include "mem/functional/memory_control.hh"
 
 using namespace std;
+//Should this be AlphaISA?
+using namespace TheISA;
 
 TsunamiIO::RTC::RTC(const string &name, Tsunami* t, Tick i)
     : _name(name), event(t, i), addr(0)

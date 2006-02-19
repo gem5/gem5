@@ -47,6 +47,8 @@
 #include "sim/system.hh"
 
 using namespace std;
+//Should this be AlphaISA?
+using namespace TheISA;
 
 TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
                            MemoryController *mmu, HierParams *hier,

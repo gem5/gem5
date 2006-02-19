@@ -31,11 +31,13 @@
 
 #include <vector>
 
-#include "arch/alpha/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 
 class StoreSet
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     typedef unsigned SSID;
 

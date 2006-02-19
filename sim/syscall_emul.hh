@@ -90,6 +90,9 @@ class SyscallDesc {
 
 class BaseBufferArg {
 
+  protected:
+    typedef TheISA::Addr Addr;
+
   public:
 
     BaseBufferArg(Addr _addr, int _size) : addr(_addr), size(_size)
@@ -636,7 +639,7 @@ template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    Addr start = xc->getSyscallArg(0);
+    TheISA::Addr start = xc->getSyscallArg(0);
     uint64_t length = xc->getSyscallArg(1);
     // int prot = xc->getSyscallArg(2);
     int flags = xc->getSyscallArg(3);
@@ -646,7 +649,7 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     if (start == 0) {
         // user didn't give an address... pick one from our "mmap region"
         start = p->mmap_end;
-        p->mmap_end += roundUp(length, VMPageSize);
+        p->mmap_end += roundUp(length, TheISA::VMPageSize);
         if (p->nxm_start != 0) {
             //If we have an nxm space, make sure we haven't colided
             assert(p->mmap_end < p->nxm_start);

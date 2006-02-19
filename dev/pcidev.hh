@@ -53,6 +53,8 @@ class MemoryController;
  */
 class PciConfigData : public SimObject
 {
+  protected:
+    typedef TheISA::Addr Addr;
   public:
     /**
      * Constructor to initialize the devices config space to 0.
