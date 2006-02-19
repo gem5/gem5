@@ -242,6 +242,10 @@ SyscallReturn chownFunc(SyscallDesc *desc, int num,
 SyscallReturn fchownFunc(SyscallDesc *desc, int num,
                          Process *p, ExecContext *xc);
 
+/// Target fnctl() handler.
+SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
+                        Process *process, ExecContext *xc);
+
 /// This struct is used to build an target-OS-dependent table that
 /// maps the target's open() flags to the host open() flags.
 struct OpenFlagTransTable {

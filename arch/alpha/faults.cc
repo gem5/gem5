@@ -28,20 +28,34 @@
 
 #include "arch/alpha/faults.hh"
 
-ResetFaultType * ResetFault = new ResetFaultType("reset", 1, 0x0001);
-ArithmeticFaultType * ArithmeticFault = new ArithmeticFaultType("arith", 3, 0x0501);
-InterruptFaultType * InterruptFault = new InterruptFaultType("interrupt", 4, 0x0101);
-NDtbMissFaultType * NDtbMissFault = new NDtbMissFaultType("dtb_miss_single", 5, 0x0201);
-PDtbMissFaultType * PDtbMissFault = new PDtbMissFaultType("dtb_miss_double", 6, 0x0281);
-DtbPageFaultType * DtbPageFault = new DtbPageFaultType("dfault", 8, 0x0381);
-DtbAcvFaultType * DtbAcvFault = new DtbAcvFaultType("dfault", 9, 0x0381);
-ItbMissFaultType * ItbMissFault = new ItbMissFaultType("itbmiss", 10, 0x0181);
-ItbPageFaultType * ItbPageFault = new ItbPageFaultType("itbmiss", 11, 0x0181);
-ItbAcvFaultType * ItbAcvFault = new ItbAcvFaultType("iaccvio", 12, 0x0081);
-UnimplementedOpcodeFaultType * UnimplementedOpcodeFault = new UnimplementedOpcodeFaultType("opdec", 13, 0x0481);
-FloatEnableFaultType * FloatEnableFault = new FloatEnableFaultType("fen", 14, 0x0581);
-PalFaultType * PalFault = new PalFaultType("pal", 15, 0x2001);
-IntegerOverflowFaultType * IntegerOverflowFault = new IntegerOverflowFaultType("intover", 16, 0x0501);
+ResetFaultType * const ResetFault =
+    new ResetFaultType("reset", 1, 0x0001);
+ArithmeticFaultType * const ArithmeticFault =
+    new ArithmeticFaultType("arith", 3, 0x0501);
+InterruptFaultType * const InterruptFault =
+    new InterruptFaultType("interrupt", 4, 0x0101);
+NDtbMissFaultType * const NDtbMissFault =
+    new NDtbMissFaultType("dtb_miss_single", 5, 0x0201);
+PDtbMissFaultType * const PDtbMissFault =
+    new PDtbMissFaultType("dtb_miss_double", 6, 0x0281);
+DtbPageFaultType * const DtbPageFault =
+    new DtbPageFaultType("dfault", 8, 0x0381);
+DtbAcvFaultType * const DtbAcvFault =
+    new DtbAcvFaultType("dfault", 9, 0x0381);
+ItbMissFaultType * const ItbMissFault =
+    new ItbMissFaultType("itbmiss", 10, 0x0181);
+ItbPageFaultType * const ItbPageFault =
+    new ItbPageFaultType("itbmiss", 11, 0x0181);
+ItbAcvFaultType * const ItbAcvFault =
+    new ItbAcvFaultType("iaccvio", 12, 0x0081);
+UnimplementedOpcodeFaultType * const UnimplementedOpcodeFault =
+    new UnimplementedOpcodeFaultType("opdec", 13, 0x0481);
+FloatEnableFaultType * const FloatEnableFault =
+    new FloatEnableFaultType("fen", 14, 0x0581);
+PalFaultType * const PalFault =
+    new PalFaultType("pal", 15, 0x2001);
+IntegerOverflowFaultType * const IntegerOverflowFault =
+    new IntegerOverflowFaultType("intover", 16, 0x0501);
 
 Fault ** ListOfFaults[] = {
         (Fault **)&NoFault,
@@ -61,7 +75,6 @@ Fault ** ListOfFaults[] = {
         (Fault **)&FloatEnableFault,
         (Fault **)&PalFault,
         (Fault **)&IntegerOverflowFault,
-        (Fault **)&FakeMemFault
         };
 
 int NumFaults = sizeof(ListOfFaults) / sizeof(Fault **);

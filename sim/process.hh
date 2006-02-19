@@ -48,6 +48,7 @@
 
 class ExecContext;
 class FunctionalMemory;
+class SyscallDesc;
 class Process : public SimObject
 {
   protected:
@@ -204,6 +205,11 @@ class LiveProcess : public Process
                                std::string executable,
                                std::vector<std::string> &argv,
                                std::vector<std::string> &envp);
+
+    virtual void syscall(ExecContext *xc);
+
+    virtual SyscallDesc* getDesc(int callnum) { panic("Must be implemented."); }
+
 };
 
 

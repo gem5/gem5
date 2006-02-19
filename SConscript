@@ -331,6 +331,8 @@ syscall_emulation_sources = Split('''
 	encumbered/eio/eio.cc
 	encumbered/eio/exolex.cc
 	encumbered/eio/libexo.cc
+        kern/linux/linux.cc
+        kern/tru64/tru64.cc
 	sim/process.cc
 	sim/syscall_emul.cc
         ''')

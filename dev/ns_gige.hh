@@ -170,9 +170,6 @@ class NSGigE : public PciDev
     static const Addr size = sizeof(dp_regs);
 
   protected:
-    typedef std::deque<PacketPtr> pktbuf_t;
-    typedef pktbuf_t::iterator pktiter_t;
-
     /** device register file */
     dp_regs regs;
     dp_rom rom;

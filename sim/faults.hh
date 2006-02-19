@@ -41,25 +41,19 @@ extern class NoFaultType : public Fault
 {
 public:
         NoFaultType(char * newName) : Fault(newName) {;}
-} * NoFault;
+} * const NoFault;
 
 extern class MachineCheckFaultType : public Fault
 {
 public:
         MachineCheckFaultType(char * newName) : Fault(newName) {;}
-} * MachineCheckFault;
+} * const MachineCheckFault;
 
 extern class AlignmentFaultType : public Fault
 {
 public:
         AlignmentFaultType(char * newName) : Fault(newName) {;}
-} * AlignmentFault;
-
-extern class FakeMemFaultType : public Fault
-{
-public:
-        FakeMemFaultType(char * newName) : Fault(newName) {;}
-} * FakeMemFault;
+} * const AlignmentFault;
 
 
 #endif // __FAULTS_HH__

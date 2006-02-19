@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ import matplotlib, pylab
 from matplotlib.font_manager import FontProperties
 from matplotlib.numerix import array, arange, reshape, shape, transpose, zeros
 from matplotlib.numerix import Float
+from matplotlib.ticker import NullLocator
 
 matplotlib.interactive(False)
 
@@ -120,9 +121,6 @@ class BarChart(ChartOptions):
         if self.chartdata is None:
             raise AttributeError, "Data not set for bar chart!"
 
-        self.figure = pylab.figure(figsize=self.chart_size)
-        self.axes = self.figure.add_axes(self.figure_size)
-
         dim = len(shape(self.inputdata))
         cshape = shape(self.chartdata)
         if dim == 1:
@@ -138,6 +136,31 @@ class BarChart(ChartOptions):
             colors = [ [ [ c ] * cshape[2] for c in colors ] ] * cshape[0]
 
         colors = array(colors)
+
+        self.figure = pylab.figure(figsize=self.chart_size)
+
+        outer_axes = None
+        inner_axes = None
+        if self.xsubticks is not None:
+            color = self.figure.get_facecolor()
+            self.metaaxes = self.figure.add_axes(self.figure_size, axisbg=color, frameon=False)
+            for tick in self.metaaxes.xaxis.majorTicks:
+                tick.tick1On = False
+                tick.tick2On = False
+            self.metaaxes.set_yticklabels([])
+            self.metaaxes.set_yticks([])
+            size = [0] * 4
+            size[0] = self.figure_size[0]
+            size[1] = self.figure_size[1] + .05
+            size[2] = self.figure_size[2]
+            size[3] = self.figure_size[3] - .05
+            self.axes = self.figure.add_axes(size)
+            outer_axes = self.metaaxes
+            inner_axes = self.axes
+        else:
+            self.axes = self.figure.add_axes(self.figure_size)
+            outer_axes = self.axes
+            inner_axes = self.axes
 
         bars_in_group = len(self.chartdata)
         if bars_in_group < 5:
@@ -156,28 +179,35 @@ class BarChart(ChartOptions):
                 ind = arange(len(bardata)) + i * width + center
                 bar = self.axes.bar(ind, bardata, width, bottom=bottom,
                                     color=colors[i][j])
+                if dim != 1:
+                    self.metaaxes.bar(ind, [0] * len(bardata), width)
                 stack.append(bar)
                 bottom += bardata
             bars.append(stack)
 
         if self.xlabel is not None:
-            self.axes.set_xlabel(self.xlabel)
+            outer_axes.set_xlabel(self.xlabel)
 
         if self.ylabel is not None:
-            self.axes.set_ylabel(self.ylabel)
+            inner_axes.set_ylabel(self.ylabel)
 
         if self.yticks is not None:
             ymin, ymax = self.axes.get_ylim()
             nticks = float(len(self.yticks))
             ticks = arange(nticks) / (nticks - 1) * (ymax - ymin)  + ymin
-            self.axes.set_yticks(ticks)
-            self.axes.set_yticklabels(self.yticks)
+            inner_axes.set_yticks(ticks)
+            inner_axes.set_yticklabels(self.yticks)
         elif self.ylim is not None:
-            self.axes.set_ylim(self.ylim)
+            self.inner_axes.set_ylim(self.ylim)
 
         if self.xticks is not None:
-            self.axes.set_xticks(arange(cshape[2]) + .5)
-            self.axes.set_xticklabels(self.xticks)
+            outer_axes.set_xticks(arange(cshape[2]) + .5)
+            outer_axes.set_xticklabels(self.xticks)
+
+        if self.xsubticks is not None:
+            inner_axes.set_xticks(arange((cshape[0] + 1)*cshape[2])*width + 2*center)
+            self.xsubticks.append('')
+            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=8)
 
         if self.legend is not None:
             if dim == 1:
@@ -220,7 +250,6 @@ class BarChart(ChartOptions):
 
         f.close()
 
-
 if __name__ == '__main__':
     from random import randrange
     import random, sys
@@ -252,6 +281,9 @@ if __name__ == '__main__':
         chart1.legend = [ 'x%d' % x for x in xrange(myshape[-1]) ]
         chart1.xticks = [ 'xtick%d' % x for x in xrange(myshape[0]) ]
         chart1.title = 'this is the title'
+        chart1.figure_size = [0.1, 0.2, 0.7, 0.85 ]
+        if len(myshape) > 2:
+            chart1.xsubticks = [ '%d' % x for x in xrange(myshape[1]) ]
         chart1.graph()
         chart1.savefig('/tmp/test1.png')
         chart1.savefig('/tmp/test1.ps')
@@ -266,4 +298,4 @@ if __name__ == '__main__':
         chart2.savefig('/tmp/test2.png')
         chart2.savefig('/tmp/test2.ps')
 
-    #pylab.show()
+    pylab.myshow()

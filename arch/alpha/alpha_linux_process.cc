@@ -26,507 +26,97 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>	// for host open() flags
-#include <string.h>	// for memset()
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "cpu/base.hh"
-#include "cpu/exec_context.hh"
-#include "mem/functional/functional.hh"
-#include "sim/fake_syscall.hh"
-#include "sim/host.hh"
-#include "sim/process.hh"
-#include "sim/sim_events.hh"
-
-#include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/alpha_common_syscall_emul.hh"
-#include "sim/syscall_emul.hh"
-#include "sim/root.hh"	// for curTick & ticksPerSecond
-
 #include "arch/alpha/alpha_linux_process.hh"
+#include "arch/alpha/isa_traits.hh"
 
 #include "base/trace.hh"
+#include "cpu/exec_context.hh"
+#include "kern/linux/linux.hh"
+#include "mem/functional/functional.hh"
+
+#include "sim/process.hh"
+#include "sim/syscall_emul.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
-///
-/// This class encapsulates the types, structures, constants,
-/// functions, and syscall-number mappings specific to the Alpha Linux
-/// syscall interface.
-///
-class Linux {
+/// Target uname() handler.
+static SyscallReturn
+unameFunc(SyscallDesc *desc, int callnum, Process *process,
+          ExecContext *xc)
+{
+    TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
 
-  public:
+    strcpy(name->sysname, "Linux");
+    strcpy(name->nodename, "m5.eecs.umich.edu");
+    strcpy(name->release, "2.4.20");
+    strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
+    strcpy(name->machine, "alpha");
 
-    //@{
-    /// Basic Linux types.
-    typedef uint64_t size_t;
-    typedef uint64_t off_t;
-    typedef int64_t time_t;
-    typedef uint32_t uid_t;
-    typedef uint32_t gid_t;
-    //@}
+    name.copyOut(xc->mem);
+    return 0;
+}
 
-#if BSD_HOST
-    typedef struct stat hst_stat;
-    typedef struct stat hst_stat64;
-#else
-    typedef struct stat hst_stat ;
-    typedef struct stat64 hst_stat64;
-#endif
+/// Target osf_getsysyinfo() handler.  Even though this call is
+/// borrowed from Tru64, the subcases that get used appear to be
+/// different in practice from those used by Tru64 processes.
+static SyscallReturn
+osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+                   ExecContext *xc)
+{
+    unsigned op = xc->getSyscallArg(0);
+    // unsigned nbytes = xc->getSyscallArg(2);
 
+    switch (op) {
 
-    //@{
-    /// open(2) flag values.
-    static const int TGT_O_RDONLY	= 00000000;	//!< O_RDONLY
-    static const int TGT_O_WRONLY	= 00000001;	//!< O_WRONLY
-    static const int TGT_O_RDWR	 	= 00000002;	//!< O_RDWR
-    static const int TGT_O_NONBLOCK  	= 00000004;	//!< O_NONBLOCK
-    static const int TGT_O_APPEND	= 00000010;	//!< O_APPEND
-    static const int TGT_O_CREAT	= 00001000;	//!< O_CREAT
-    static const int TGT_O_TRUNC	= 00002000;	//!< O_TRUNC
-    static const int TGT_O_EXCL	 	= 00004000;	//!< O_EXCL
-    static const int TGT_O_NOCTTY	= 00010000;	//!< O_NOCTTY
-    static const int TGT_O_SYNC	 	= 00040000;	//!< O_SYNC
-    static const int TGT_O_DRD	 	= 00100000;	//!< O_DRD
-    static const int TGT_O_DIRECTIO  	= 00200000;	//!< O_DIRECTIO
-    static const int TGT_O_CACHE	= 00400000;	//!< O_CACHE
-    static const int TGT_O_DSYNC	= 02000000;	//!< O_DSYNC
-    static const int TGT_O_RSYNC	= 04000000;	//!< O_RSYNC
-    //@}
+      case 45: { // GSI_IEEE_FP_CONTROL
+          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+          // I don't think this exactly matches the HW FPCR
+          *fpcr = 0;
+          fpcr.copyOut(xc->mem);
+          return 0;
+      }
 
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static OpenFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
-
-    /// Stat buffer.  Note that we can't call it 'stat' since that
-    /// gets #defined to something else on some systems.
-    struct tgt_stat {
-        uint32_t	st_dev;		//!< device
-        uint32_t	st_ino;		//!< inode
-        uint32_t	st_mode;	//!< mode
-        uint32_t	st_nlink;	//!< link count
-        uint32_t	st_uid;		//!< owner's user ID
-        uint32_t	st_gid;		//!< owner's group ID
-        uint32_t	st_rdev;	//!< device number
-        int32_t		_pad1;		//!< for alignment
-        int64_t		st_size;	//!< file size in bytes
-        uint64_t	st_atimeX;	//!< time of last access
-        uint64_t	st_mtimeX;	//!< time of last modification
-        uint64_t	st_ctimeX;	//!< time of last status change
-        uint32_t	st_blksize;	//!< optimal I/O block size
-        int32_t		st_blocks;	//!< number of blocks allocated
-        uint32_t	st_flags;	//!< flags
-        uint32_t	st_gen;		//!< unknown
-    };
-
-    // same for stat64
-    struct tgt_stat64 {
-        uint64_t	st_dev;
-        uint64_t	st_ino;
-        uint64_t	st_rdev;
-        int64_t		st_size;
-        uint64_t	st_blocks;
-
-        uint32_t	st_mode;
-        uint32_t	st_uid;
-        uint32_t	st_gid;
-        uint32_t	st_blksize;
-        uint32_t	st_nlink;
-        uint32_t	__pad0;
-
-        uint64_t	tgt_st_atime;
-        uint64_t 	st_atime_nsec;
-        uint64_t	tgt_st_mtime;
-        uint64_t	st_mtime_nsec;
-        uint64_t	tgt_st_ctime;
-        uint64_t	st_ctime_nsec;
-        int64_t		___unused[3];
-    };
-
-    /// Length of strings in struct utsname (plus 1 for null char).
-    static const int _SYS_NMLN = 65;
-
-    /// Interface struct for uname().
-    struct utsname {
-        char sysname[_SYS_NMLN];	//!< System name.
-        char nodename[_SYS_NMLN];	//!< Node name.
-        char release[_SYS_NMLN];	//!< OS release.
-        char version[_SYS_NMLN];	//!< OS version.
-        char machine[_SYS_NMLN];	//!< Machine type.
-    };
-
-
-    //@{
-    /// ioctl() command codes.
-    static const unsigned TIOCGETP   = 0x40067408;
-    static const unsigned TIOCSETP   = 0x80067409;
-    static const unsigned TIOCSETN   = 0x8006740a;
-    static const unsigned TIOCSETC   = 0x80067411;
-    static const unsigned TIOCGETC   = 0x40067412;
-    static const unsigned FIONREAD   = 0x4004667f;
-    static const unsigned TIOCISATTY = 0x2000745e;
-    static const unsigned TIOCGETS   = 0x402c7413;
-    static const unsigned TIOCGETA   = 0x40127417;
-    //@}
-
-    /// Resource enumeration for getrlimit().
-    enum rlimit_resources {
-        TGT_RLIMIT_CPU = 0,
-        TGT_RLIMIT_FSIZE = 1,
-        TGT_RLIMIT_DATA = 2,
-        TGT_RLIMIT_STACK = 3,
-        TGT_RLIMIT_CORE = 4,
-        TGT_RLIMIT_RSS = 5,
-        TGT_RLIMIT_NOFILE = 6,
-        TGT_RLIMIT_AS = 7,
-        TGT_RLIMIT_VMEM = 7,
-        TGT_RLIMIT_NPROC = 8,
-        TGT_RLIMIT_MEMLOCK = 9,
-        TGT_RLIMIT_LOCKS = 10
-    };
-
-    /// Limit struct for getrlimit/setrlimit.
-    struct rlimit {
-        uint64_t  rlim_cur;	//!< soft limit
-        uint64_t  rlim_max;	//!< hard limit
-    };
-
-
-    /// For mmap().
-    static const unsigned TGT_MAP_ANONYMOUS = 0x10;
-
-    /// For gettimeofday().
-    struct timeval {
-        int64_t tv_sec;		//!< seconds
-        int64_t tv_usec;	//!< microseconds
-    };
-
-    // For writev/readv
-    struct tgt_iovec {
-        uint64_t iov_base; // void *
-        uint64_t iov_len;
-    };
-
-    //@{
-    /// For getrusage().
-    static const int TGT_RUSAGE_SELF = 0;
-    static const int TGT_RUSAGE_CHILDREN = -1;
-    static const int TGT_RUSAGE_BOTH = -2;
-    //@}
-
-    /// For getrusage().
-    struct rusage {
-        struct timeval ru_utime;	//!< user time used
-        struct timeval ru_stime;	//!< system time used
-        int64_t ru_maxrss;		//!< max rss
-        int64_t ru_ixrss;		//!< integral shared memory size
-        int64_t ru_idrss;		//!< integral unshared data "
-        int64_t ru_isrss;		//!< integral unshared stack "
-        int64_t ru_minflt;		//!< page reclaims - total vmfaults
-        int64_t ru_majflt;		//!< page faults
-        int64_t ru_nswap;		//!< swaps
-        int64_t ru_inblock;		//!< block input operations
-        int64_t ru_oublock;		//!< block output operations
-        int64_t ru_msgsnd;		//!< messages sent
-        int64_t ru_msgrcv;		//!< messages received
-        int64_t ru_nsignals;		//!< signals received
-        int64_t ru_nvcsw;		//!< voluntary context switches
-        int64_t ru_nivcsw;		//!< involuntary "
-    };
-
-    /// Helper function to convert a host stat buffer to a target stat
-    /// buffer.  Also copies the target buffer out to the simulated
-    /// memory space.  Used by stat(), fstat(), and lstat().
-#if !BSD_HOST
-    static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, hst_stat *host)
-    {
-        TypedBufferArg<Linux::tgt_stat> tgt(addr);
-
-        tgt->st_dev = htog(host->st_dev);
-        tgt->st_ino = htog(host->st_ino);
-        tgt->st_mode = htog(host->st_mode);
-        tgt->st_nlink = htog(host->st_nlink);
-        tgt->st_uid = htog(host->st_uid);
-        tgt->st_gid = htog(host->st_gid);
-        tgt->st_rdev = htog(host->st_rdev);
-        tgt->st_size = htog(host->st_size);
-        tgt->st_atimeX = htog(host->st_atime);
-        tgt->st_mtimeX = htog(host->st_mtime);
-        tgt->st_ctimeX = htog(host->st_ctime);
-        tgt->st_blksize = htog(host->st_blksize);
-        tgt->st_blocks = htog(host->st_blocks);
-
-        tgt.copyOut(mem);
-    }
-#else
-    // Third version for bsd systems which no longer have any support for
-    // the old stat() call and stat() is actually a stat64()
-    static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, hst_stat64 *host)
-    {
-        TypedBufferArg<Linux::tgt_stat> tgt(addr);
-
-        tgt->st_dev = htog(host->st_dev);
-        tgt->st_ino = htog(host->st_ino);
-        tgt->st_mode = htog(host->st_mode);
-        tgt->st_nlink = htog(host->st_nlink);
-        tgt->st_uid = htog(host->st_uid);
-        tgt->st_gid = htog(host->st_gid);
-        tgt->st_rdev = htog(host->st_rdev);
-        tgt->st_size = htog(host->st_size);
-        tgt->st_atimeX = htog(host->st_atime);
-        tgt->st_mtimeX = htog(host->st_mtime);
-        tgt->st_ctimeX = htog(host->st_ctime);
-        tgt->st_blksize = htog(host->st_blksize);
-        tgt->st_blocks = htog(host->st_blocks);
-
-        tgt.copyOut(mem);
-    }
-#endif
-
-
-    // Same for stat64
-    static void
-    copyOutStat64Buf(FunctionalMemory *mem, int fd, Addr addr, hst_stat64 *host)
-    {
-        TypedBufferArg<Linux::tgt_stat64> tgt(addr);
-
-        // fd == 1 checks are because libc does some checks
-        // that the stdout is interactive vs. a file
-        // this makes it work on non-linux systems
-        if (fd == 1)
-            tgt->st_dev = htog((uint64_t)0xA);
-        else
-            tgt->st_dev = htog((uint64_t)host->st_dev);
-        // XXX What about STAT64_HAS_BROKEN_ST_INO ???
-        tgt->st_ino = htog((uint64_t)host->st_ino);
-        if (fd == 1)
-            tgt->st_rdev = htog((uint64_t)0x880d);
-        else
-            tgt->st_rdev = htog((uint64_t)host->st_rdev);
-        tgt->st_size = htog((int64_t)host->st_size);
-        tgt->st_blocks = htog((uint64_t)host->st_blocks);
-
-        if (fd == 1)
-            tgt->st_mode = htog((uint32_t)0x2190);
-        else
-            tgt->st_mode = htog((uint32_t)host->st_mode);
-        tgt->st_uid = htog((uint32_t)host->st_uid);
-        tgt->st_gid = htog((uint32_t)host->st_gid);
-        tgt->st_blksize = htog((uint32_t)host->st_blksize);
-        tgt->st_nlink = htog((uint32_t)host->st_nlink);
-        tgt->tgt_st_atime = htog((uint64_t)host->st_atime);
-        tgt->tgt_st_mtime = htog((uint64_t)host->st_mtime);
-        tgt->tgt_st_ctime = htog((uint64_t)host->st_ctime);
-#if defined(STAT_HAVE_NSEC)
-        tgt->st_atime_nsec = htog(host->st_atime_nsec);
-        tgt->st_mtime_nsec = htog(host->st_mtime_nsec);
-        tgt->st_ctime_nsec = htog(host->st_ctime_nsec);
-#else
-        tgt->st_atime_nsec = 0;
-        tgt->st_mtime_nsec = 0;
-        tgt->st_ctime_nsec = 0;
-#endif
-
-        tgt.copyOut(mem);
+      default:
+        cerr << "osf_getsysinfo: unknown op " << op << endl;
+        abort();
+        break;
     }
 
-    /// The target system's hostname.
-    static const char *hostname;
+    return 1;
+}
 
-    /// Target uname() handler.
-    static SyscallReturn
-    unameFunc(SyscallDesc *desc, int callnum, Process *process,
-              ExecContext *xc)
-    {
-        TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
+/// Target osf_setsysinfo() handler.
+static SyscallReturn
+osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+                   ExecContext *xc)
+{
+    unsigned op = xc->getSyscallArg(0);
+    // unsigned nbytes = xc->getSyscallArg(2);
 
-        strcpy(name->sysname, "Linux");
-        strcpy(name->nodename, hostname);
-        strcpy(name->release, "2.4.20");
-        strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
-        strcpy(name->machine, "alpha");
+    switch (op) {
 
-        name.copyOut(xc->mem);
-        return 0;
+      case 14: { // SSI_IEEE_FP_CONTROL
+          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+          // I don't think this exactly matches the HW FPCR
+          fpcr.copyIn(xc->mem);
+          DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
+                   " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
+          return 0;
+      }
+
+      default:
+        cerr << "osf_setsysinfo: unknown op " << op << endl;
+        abort();
+        break;
     }
 
-    /// Target osf_getsysyinfo() handler.  Even though this call is
-    /// borrowed from Tru64, the subcases that get used appear to be
-    /// different in practice from those used by Tru64 processes.
-    static SyscallReturn
-    osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                       ExecContext *xc)
-    {
-        unsigned op = xc->getSyscallArg(0);
-        // unsigned nbytes = xc->getSyscallArg(2);
-
-        switch (op) {
-
-          case 45: { // GSI_IEEE_FP_CONTROL
-              TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
-              // I don't think this exactly matches the HW FPCR
-              *fpcr = 0;
-              fpcr.copyOut(xc->mem);
-              return 0;
-          }
-
-          default:
-            cerr << "osf_getsysinfo: unknown op " << op << endl;
-            abort();
-            break;
-        }
-
-        return 1;
-    }
-
-    /// Target osf_setsysinfo() handler.
-    static SyscallReturn
-    osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                       ExecContext *xc)
-    {
-        unsigned op = xc->getSyscallArg(0);
-        // unsigned nbytes = xc->getSyscallArg(2);
-
-        switch (op) {
-
-          case 14: { // SSI_IEEE_FP_CONTROL
-              TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
-              // I don't think this exactly matches the HW FPCR
-              fpcr.copyIn(xc->mem);
-              DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                       " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
-              return 0;
-          }
-
-          default:
-            cerr << "osf_setsysinfo: unknown op " << op << endl;
-            abort();
-            break;
-        }
-
-        return 1;
-    }
-
-    /// Target fnctl() handler.
-    static SyscallReturn
-    fcntlFunc(SyscallDesc *desc, int callnum, Process *process,
-              ExecContext *xc)
-    {
-        int fd = xc->getSyscallArg(0);
-
-        if (fd < 0 || process->sim_fd(fd) < 0)
-            return -EBADF;
-
-        int cmd = xc->getSyscallArg(1);
-        switch (cmd) {
-          case 0: // F_DUPFD
-            // if we really wanted to support this, we'd need to do it
-            // in the target fd space.
-            warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
-            return -EMFILE;
-
-          case 1: // F_GETFD (get close-on-exec flag)
-          case 2: // F_SETFD (set close-on-exec flag)
-            return 0;
-
-          case 3: // F_GETFL (get file flags)
-          case 4: // F_SETFL (set file flags)
-            // not sure if this is totally valid, but we'll pass it through
-            // to the underlying OS
-            warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
-            return fcntl(process->sim_fd(fd), cmd);
-            // return 0;
-
-          case 7: // F_GETLK  (get lock)
-          case 8: // F_SETLK  (set lock)
-          case 9: // F_SETLKW (set lock and wait)
-            // don't mess with file locking... just act like it's OK
-            warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
-            return 0;
-
-          default:
-            warn("Unknown fcntl command %d\n", cmd);
-            return 0;
-        }
-    }
-
-    /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
-
-    /// Number of syscalls in syscallDescs[].
-    static const int Num_Syscall_Descs;
-
-    /// Max supported syscall number.
-    static const int Max_Syscall_Desc;
-
-    /// Do the specified syscall.  Just looks the call number up in
-    /// the table and invokes the appropriate handler.
-    static void
-    doSyscall(int callnum, Process *process, ExecContext *xc)
-    {
-        if (callnum < 0 || callnum > Max_Syscall_Desc) {
-            fatal("Syscall %d out of range", callnum);
-        }
-
-        SyscallDesc *desc = &syscallDescs[callnum];
-
-        desc->doSyscall(callnum, process, xc);
-    }
-};  // class Linux
+    return 1;
+}
 
 
-// open(2) flags translation table
-OpenFlagTransTable Linux::openFlagTable[] = {
-#ifdef _MSC_VER
-  { Linux::TGT_O_RDONLY,	_O_RDONLY },
-  { Linux::TGT_O_WRONLY,	_O_WRONLY },
-  { Linux::TGT_O_RDWR,		_O_RDWR },
-  { Linux::TGT_O_APPEND,	_O_APPEND },
-  { Linux::TGT_O_CREAT,		_O_CREAT },
-  { Linux::TGT_O_TRUNC,		_O_TRUNC },
-  { Linux::TGT_O_EXCL,		_O_EXCL },
-#ifdef _O_NONBLOCK
-  { Linux::TGT_O_NONBLOCK,	_O_NONBLOCK },
-#endif
-#ifdef _O_NOCTTY
-  { Linux::TGT_O_NOCTTY,	_O_NOCTTY },
-#endif
-#ifdef _O_SYNC
-  { Linux::TGT_O_SYNC,		_O_SYNC },
-#endif
-#else /* !_MSC_VER */
-  { Linux::TGT_O_RDONLY,	O_RDONLY },
-  { Linux::TGT_O_WRONLY,	O_WRONLY },
-  { Linux::TGT_O_RDWR,		O_RDWR },
-  { Linux::TGT_O_APPEND,	O_APPEND },
-  { Linux::TGT_O_CREAT,		O_CREAT },
-  { Linux::TGT_O_TRUNC,		O_TRUNC },
-  { Linux::TGT_O_EXCL,		O_EXCL },
-  { Linux::TGT_O_NONBLOCK,	O_NONBLOCK },
-  { Linux::TGT_O_NOCTTY,	O_NOCTTY },
-#ifdef O_SYNC
-  { Linux::TGT_O_SYNC,		O_SYNC },
-#endif
-#endif /* _MSC_VER */
-};
-
-const int Linux::NUM_OPEN_FLAGS =
-        (sizeof(Linux::openFlagTable)/sizeof(Linux::openFlagTable[0]));
-
-const char *Linux::hostname = "m5.eecs.umich.edu";
-
-SyscallDesc Linux::syscallDescs[] = {
+SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("osf_syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
     /*  2 */ SyscallDesc("fork", unimplementedFunc),
@@ -974,23 +564,6 @@ SyscallDesc Linux::syscallDescs[] = {
     /* 441 */ SyscallDesc("keyctl", unimplementedFunc)
 };
 
-const int Linux::Num_Syscall_Descs =
-        sizeof(Linux::syscallDescs) / sizeof(SyscallDesc);
-
-const int Linux::Max_Syscall_Desc = Linux::Num_Syscall_Descs - 1;
-
-
-void
-AlphaLinuxProcess::syscall(ExecContext *xc)
-{
-    num_syscalls++;
-
-    int64_t callnum = xc->regs.intRegFile[ReturnValueReg];
-
-    Linux::doSyscall(callnum, this, xc);
-}
-
-
 AlphaLinuxProcess::AlphaLinuxProcess(const std::string &name,
                                      ObjectFile *objFile,
                                      int stdin_fd,
@@ -998,7 +571,18 @@ AlphaLinuxProcess::AlphaLinuxProcess(const std::string &name,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
                                      std::vector<std::string> &envp)
-    : LiveProcess(name, objFile, stdin_fd, stdout_fd, stderr_fd, argv, envp)
+    : LiveProcess(name, objFile, stdin_fd, stdout_fd, stderr_fd, argv, envp),
+     Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     init_regs->intRegFile[0] = 0;
+}
+
+
+
+SyscallDesc*
+AlphaLinuxProcess::getDesc(int callnum)
+{
+    if (callnum < 0 || callnum > Num_Syscall_Descs)
+        return NULL;
+    return &syscallDescs[callnum];
 }

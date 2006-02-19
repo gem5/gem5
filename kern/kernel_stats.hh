@@ -186,7 +186,6 @@ class Statistics : public Serializable
             if(fault == NoFault) _faults[0]++;
             else if(fault == MachineCheckFault) _faults[2]++;
             else if(fault == AlignmentFault) _faults[7]++;
-            else if(fault == FakeMemFault) _faults[17]++;
             else _faults[fault->id]++;
     }// FIXME: When there are no generic system fault objects, this will go back to _faults[fault]++; }
     void swpipl(int ipl);
