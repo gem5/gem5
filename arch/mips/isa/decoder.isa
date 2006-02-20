@@ -58,15 +58,17 @@ decode OPCODE_HI default Unknown::unknown() {
 
                 //Table A-3 Note: "Specific encodings of the hint field are used
                 //to distinguish JR from JR.HB and JALR from JALR.HB"
-                format Unconditional {
+                format Jump {
                     0x0: decode HINT {
-                        0:jr({{ }},IsReturn,IsLink);
-                        1:jr_hb({{ }},IsReturn,IsLink);
+                        0:jr({{ NNPC = Rs; }},IsReturn);
+
+                        1:jr_hb({{ NNPC = Rs; clear_exe_inst_hazards(); }},IsReturn);
                     }
 
                     0x1: decode HINT {
-                        0: jalr({{ }},'IsCall','IsReturn','IsLink');
-                        1: jalr_hb({{ }},IsCall,IsReturn,IsLink);
+                        0: jalr({{ NNPC = Rs; }},IsCall,IsReturn);
+
+                        1: jalr_hb({{ NNPC = Rs; clear_exe_inst_hazards();}},IsCall,IsReturn);
                     }
                 }
 
@@ -74,7 +76,6 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x2: movz({{ if (Rt == 0) Rd = Rs; }});
                     0x3: movn({{ if (Rt != 0) Rd = Rs; }});
                 }
-
 
                 format WarnUnimpl {
                     0x4: syscall();//{{ xc->syscall()}},IsNonSpeculative
@@ -196,9 +197,10 @@ decode OPCODE_HI default Unknown::unknown() {
             }
         }
 
-        format Unconditional {
-            0x2: j({{ }});
-            0x3: jal({{ }},IsCall,IsLink);
+        format Jump {
+            0x2: j({{ NNPC = (NPC & 0xF0000000) & (0x00000000 & JMPTARG << 2);}});
+
+            0x3: jal({{ NNPC = (NPC & 0xF0000000) & (0x00000000 & JMPTARG << 2);}},IsCall,IsLink);
         }
 
         format Branch {

@@ -250,20 +250,22 @@ output decoder {{
 }};
 
 def format Branch(code,*flags) {{
-    code = 'bool cond;\n\t' + code + '\n'
-
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-2:] == 'al':
-        code += 'R31 = NPC + 4;\n'
+        code += 'R31 = NNPC;\n'
 
-    # condition code
-    code += 'if (cond) {'
-    code += '  NPC = NPC + disp;\n'
-    code += '  NNPC = NNPC + disp;\n } \n'
+    #Condition code
+    code = 'bool cond;\n' + code
+    code += 'if (cond) {\n'
+    #code += '//NPC=NPC: just placeholder to force parser to writeback NPC\n'
+    #code += '  NPC = NPC; \n'
+    code += '  NNPC = NPC + disp;\n'
+    code += '} \n'
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl'))
+
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -272,30 +274,38 @@ def format Branch(code,*flags) {{
 
 
 def format BranchLikely(code,*flags) {{
-    code = 'bool cond;\n\t\t\t' + code
-
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-3:] == 'all':
-        code += 'R31 = NPC + 4;\n'
+        code += 'R31 = NNPC;\n'
 
-    #condition code
+    #Condition code
+    code = 'bool cond;\n' + code
     code += 'if (cond) {'
-    code += '  NPC = NPC + disp;\n'
-    code += '  NNPC = NNPC + disp;\n } \n'
+    #code += '//NPC=NPC: just placeholder to force parser to writeback NPC\n'
+    #code += 'NPC = NPC; \n'
+    code += 'NNPC = NPC + disp;\n'
+    code += '} \n'
 
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl','IsCondDelaySlot'))
+
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = BasicExecute.subst(iop)
 }};
 
-def format Unconditional(code,*flags) {{
-    iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),
+def format Jump(code,*flags) {{
+    #Add Link Code if Link instruction
+    strlen = len(name)
+    if strlen >= 3 and name[2:3] == 'al':
+            code = 'R31 = NNPC;\n' + code
+
+    iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),\
                         ('IsIndirectControl', 'IsUncondControl'))
+
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

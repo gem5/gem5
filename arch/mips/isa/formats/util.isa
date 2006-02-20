@@ -24,3 +24,13 @@ def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     return (header_output, decoder_output,
             JumpOrBranchDecode.subst(nolink_iop), exec_output)
 }};
+
+output exec {{
+
+    /// CLEAR ALL CPU INST/EXE HAZARDS
+    inline void
+    clear_exe_inst_hazards()
+    {
+        //CODE HERE
+    }
+}
