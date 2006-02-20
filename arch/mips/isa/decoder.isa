@@ -200,7 +200,7 @@ decode OPCODE_HI default Unknown::unknown() {
         format Jump {
             0x2: j({{ NNPC = (NPC & 0xF0000000) & (0x00000000 & JMPTARG << 2);}});
 
-            0x3: jal({{ NNPC = (NPC & 0xF0000000) & (0x00000000 & JMPTARG << 2);}},IsCall,IsLink);
+            0x3: jal({{ NNPC = (NPC & 0xF0000000) & (0x00000000 & JMPTARG << 2);}},IsCall,IsReturn);
         }
 
         format Branch {
@@ -676,8 +676,8 @@ decode OPCODE_HI default Unknown::unknown() {
         //operations are enabled."
         0x3: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
-                format Memory {
-                    0x0: lwxc1({{ EA = Rs + Rt; }},{{ Ft<31:0> = Mem.uf; }});
+                format LoadMemory2 {
+                    0x0: lwxc1({{ EA = Rs + Rt; }},{{ Ft<31:0> = Mem.sf; }});
                     0x1: ldxc1({{ EA = Rs + Rt; }},{{ Ft<63:0> = Mem.df; }});
                     0x5: luxc1({{ //Need to make EA<2:0> = 0
                         EA = Rs + Rt;
@@ -687,9 +687,9 @@ decode OPCODE_HI default Unknown::unknown() {
             }
 
             0x1: decode FUNCTION_LO {
-                format Memory {
-                    0x0: swxc1({{ EA = Rs + Rt; }},{{ Mem.uf = Ft<31:0>; }});
-                    0x1: sdxc1({{ EA = Rs + Rt; }},{{ Mem.uf = Ft<63:0>}});
+                format StoreMemory2 {
+                    0x0: swxc1({{ EA = Rs + Rt; }},{{ Mem.sf = Ft<31:0>; }});
+                    0x1: sdxc1({{ EA = Rs + Rt; }},{{ Mem.df = Ft<63:0>}});
                     0x5: suxc1({{ //Need to make EA<2:0> = 0
                         EA = Rs + Rt;
                     }},
@@ -861,26 +861,26 @@ decode OPCODE_HI default Unknown::unknown() {
     }
 
     0x4: decode OPCODE_LO default FailUnimpl::reserved() {
-        format Memory {
-            0x0: lb({{ EA = Rs + disp; }}, {{ Rb.sw = Mem.sb; }});
-            0x1: lh({{ EA = Rs + disp; }}, {{ Rb.sw = Mem.sh; }});
-            0x2: lwl({{ EA = Rs + disp; }}, {{ Rb.sw = Mem.sw; }});//, WordAlign);
-            0x3: lw({{ EA = Rs + disp; }}, {{ Rb.uq = Mem.sb; }});
-            0x4: lbu({{ EA = Rs + disp; }}, {{ Rb.uw = Mem.ub; }});
-            0x5: lhu({{ EA = Rs + disp; }}, {{ Rb.uw = Mem.uh; }});
-            0x6: lwr({{ EA = Rs + disp; }}, {{ Rb.uw = Mem.uw; }});//, WordAlign);
+        format LoadMemory {
+            0x0: lb({{ Rb.sw = Mem.sb; }});
+            0x1: lh({{ Rb.sw = Mem.sh; }});
+            0x2: lwl({{ Rb.sw = Mem.sw; }});//, WordAlign);
+            0x3: lw({{ Rb.uq = Mem.sb; }});
+            0x4: lbu({{ Rb.uw = Mem.ub; }});
+            0x5: lhu({{ Rb.uw = Mem.uh; }});
+            0x6: lwr({{ Rb.uw = Mem.uw; }});//, WordAlign);
         }
 
         0x7: FailUnimpl::reserved();
     }
 
     0x5: decode OPCODE_LO default FailUnimpl::reserved() {
-        format Memory {
-            0x0: sb({{ EA = Rs + disp; }}, {{ Mem.ub = Rt<7:0>; }});
-            0x1: sh({{ EA = Rs + disp; }},{{ Mem.uh = Rt<15:0>; }});
-            0x2: swl({{ EA = Rs + disp; }},{{ Mem.ub = Rt<31:0>; }});//,WordAlign);
-            0x3: sw({{ EA = Rs + disp; }},{{ Mem.ub = Rt<31:0>; }});
-            0x6: swr({{ EA = Rs + disp; }},{{ Mem.ub = Rt<31:0>; }});//,WordAlign);
+        format StoreMemory {
+            0x0: sb({{ Mem.ub = Rt<7:0>; }});
+            0x1: sh({{ Mem.uh = Rt<15:0>; }});
+            0x2: swl({{ Mem.ub = Rt<31:0>; }});//,WordAlign);
+            0x3: sw({{ Mem.ub = Rt<31:0>; }});
+            0x6: swr({{ Mem.ub = Rt<31:0>; }});//,WordAlign);
         }
 
         format WarnUnimpl {
@@ -892,18 +892,18 @@ decode OPCODE_HI default Unknown::unknown() {
     0x6: decode OPCODE_LO default FailUnimpl::reserved() {
         0x0: WarnUnimpl::ll();
 
-        format Memory {
-            0x1: lwc1({{ EA = Rs + disp; }},{{ Ft<31:0> = Mem.uf; }});
-            0x5: ldc1({{ EA = Rs + disp; }},{{ Ft<63:0> = Mem.df; }});
+        format LoadMemory {
+            0x1: lwc1({{ Ft<31:0> = Mem.sf; }});
+            0x5: ldc1({{ Ft<63:0> = Mem.df; }});
         }
     }
 
     0x7: decode OPCODE_LO default FailUnimpl::reserved() {
         0x0: WarnUnimpl::sc();
 
-        format Memory {
-            0x1: swc1({{ EA = Rs + disp; }},{{ Mem.uf = Ft<31:0>; }});
-            0x5: sdc1({{ EA = Rs + disp; }},{{ Mem.df = Ft<63:0>; }});
+        format StoreMemory {
+            0x1: swc1({{ Mem.sf = Ft<31:0>; }});
+            0x5: sdc1({{ Mem.df = Ft<63:0>; }});
         }
 
     }

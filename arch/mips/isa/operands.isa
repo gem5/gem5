@@ -1,8 +1,8 @@
 def operand_types {{
     'sb' : ('signed int', 8),
     'ub' : ('unsigned int', 8),
-    'shw' : ('signed int', 16),
-    'uhw' : ('unsigned int', 16),
+    'sh' : ('signed int', 16),
+    'uh' : ('unsigned int', 16),
     'sw' : ('signed int', 32),
     'uw' : ('unsigned int', 32),
     'sd' : ('signed int', 64),
