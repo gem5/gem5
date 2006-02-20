@@ -34,12 +34,12 @@ output header {{
      * 'Unknown' class is used for unrecognized/illegal instructions.
      * This is a leaf class.
      */
-    class FailUnimplemented : public AlphaStaticInst
+    class FailUnimplemented : public MipsStaticInst
     {
       public:
         /// Constructor
         FailUnimplemented(const char *_mnemonic, MachInst _machInst)
-            : AlphaStaticInst(_mnemonic, _machInst, No_OpClass)
+            : MipsStaticInst(_mnemonic, _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path
@@ -61,7 +61,7 @@ output header {{
      * probably make the 'warned' flag a static member of the derived
      * class.
      */
-    class WarnUnimplemented : public AlphaStaticInst
+    class WarnUnimplemented : public MipsStaticInst
     {
       private:
         /// Have we warned on this instruction yet?
@@ -70,7 +70,7 @@ output header {{
       public:
         /// Constructor
         WarnUnimplemented(const char *_mnemonic, MachInst _machInst)
-            : AlphaStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+            : MipsStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path
@@ -144,12 +144,12 @@ output header {{
      * These cause simulator termination if they are executed in a
      * non-speculative mode.  This is a leaf class.
      */
-    class Unknown : public AlphaStaticInst
+    class Unknown : public MipsStaticInst
     {
       public:
         /// Constructor
         Unknown(MachInst _machInst)
-            : AlphaStaticInst("unknown", _machInst, No_OpClass)
+            : MipsStaticInst("unknown", _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path

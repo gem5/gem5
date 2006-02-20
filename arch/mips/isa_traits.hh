@@ -46,7 +46,7 @@ class Checkpoint;
 template <class ISA> class StaticInst;
 template <class ISA> class StaticInstPtr;
 
-//namespace EV5
+//namespace MIPS34K
 //{
 //	int DTB_ASN_ASN(uint64_t reg);
 //	int ITB_ASN_ASN(uint64_t reg);
@@ -437,7 +437,7 @@ class MipsISA
                 void unserialize(Checkpoint *cp, const std::string &section);
         };
 
-        static StaticInstPtr<AlphaISA> decodeInst(MachInst);
+        static StaticInstPtr<MipsISA> decodeInst(MachInst);
 
         // return a no-op instruction... used for instruction fetch faults
         static const MachInst NoopMachInst;
@@ -528,7 +528,7 @@ class SyscallReturn {
 
 #ifdef FULL_SYSTEM
 
-#include "arch/alpha/ev5.hh"
+#include "arch/mips/mips34k.hh"
 #endif
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

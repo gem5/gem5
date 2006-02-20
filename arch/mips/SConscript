@@ -42,7 +42,7 @@ Import('env')
 # Base sources used by all configurations.
 arch_base_sources = Split('''
 	arch/mips/decoder.cc
-        arch/mips/alpha_o3_exec.cc
+        arch/mips/mips_o3_exec.cc
 	arch/mips/fast_cpu_exec.cc
 	arch/mips/simple_cpu_exec.cc
 	arch/mips/full_cpu_exec.cc
@@ -52,9 +52,9 @@ arch_base_sources = Split('''
 
 # Full-system sources
 arch_full_system_sources = Split('''
-	arch/mips/alpha_memory.cc
+	arch/mips/memory.cc
 	arch/mips/arguments.cc
-	arch/mips/ev5.cc
+	arch/mips/mips34k.cc
 	arch/mips/osfpal.cc
 	arch/mips/stacktrace.cc
 	arch/mips/vtophys.cc
@@ -62,9 +62,9 @@ arch_full_system_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 arch_syscall_emulation_sources = Split('''
-	arch/mips/alpha_common_syscall_emul.cc
-	arch/mips/alpha_linux_process.cc
-	arch/mips/alpha_tru64_process.cc
+	arch/mips/common_syscall_emul.cc
+	arch/mips/linux_process.cc
+	arch/mips/tru64_process.cc
 	''')
 
 # Set up complete list of sources based on configuration.

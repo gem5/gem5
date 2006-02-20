@@ -8,7 +8,7 @@
 //Outputs to decoder.hh
 output header {{
         /**
-         * Base class for all SPARC static instructions.
+         * Base class for all MIPS static instructions.
          */
         class MipsStaticInst : public StaticInst<MIPSISA>
         {
