@@ -335,7 +335,7 @@ for f in targetarch_files:
 
 
 # Set up complete list of sources based on configuration.
-sources = base_sources
+sources = base_sources + simple_cpu_sources
 
 if env['FULL_SYSTEM']:
     sources += full_system_sources

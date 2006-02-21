@@ -31,7 +31,7 @@
 
 #include "targetarch/isa_traits.hh"	// for Addr
 
-class Memory;
+class TranslatingPort;
 class SymbolTable;
 
 class ObjectFile
@@ -67,7 +67,7 @@ class ObjectFile
 
     void close();
 
-    virtual bool loadSections(Memory *mem, bool loadPhys = false) = 0;
+    virtual bool loadSections(TranslatingPort *memPort, bool loadPhys = false) = 0;
     virtual bool loadGlobalSymbols(SymbolTable *symtab) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab) = 0;
 

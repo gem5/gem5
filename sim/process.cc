@@ -43,7 +43,7 @@
 #include "encumbered/eio/eio.hh"
 #include "mem/page_table.hh"
 #include "mem/memory.hh"
-#include "mem/proxy.hh"
+#include "mem/translating_port.hh"
 #include "sim/builder.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
@@ -154,7 +154,7 @@ Process::startup()
     if (execContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    initVirtMem = new ProxyMemory(system->physmem, pTable);
+    initVirtMem = new TranslatingPort(system->physmem->getPort("any"), pTable);
 
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
@@ -245,18 +245,18 @@ DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 
 static void
 copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
-                Memory *func)
+                TranslatingPort* memPort)
 {
     for (int i = 0; i < strings.size(); ++i) {
-        func->prot_write(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
-        func->writeStringFunctional(data_ptr, strings[i].c_str());
+        memPort->writeBlobFunctional(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
+        memPort->writeStringFunctional(data_ptr, strings[i].c_str());
         array_ptr += sizeof(Addr);
         data_ptr += strings[i].size() + 1;
     }
     // add NULL terminator
     data_ptr = 0;
 
-    func->prot_write(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
+    memPort->writeBlobFunctional(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
 }
 
 LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
@@ -273,7 +273,7 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
     text_size = objFile->textSize();
     data_base = objFile->dataBase();
     data_size = objFile->dataSize() + objFile->bssSize();
-    brk_point = = roundUp(data_base + data_size, VMPageSize);
+    brk_point = roundUp(data_base + data_size, VMPageSize);
 
     // Set up stack.  On Alpha, stack goes below text section.  This
     // code should get moved to some architecture-specific spot.
@@ -341,7 +341,7 @@ LiveProcess::startup()
 
     // write contents to stack
     uint64_t argc = argv.size();
-    initVirtMem->prot_write(stack_min, (uint8_t*)&argc, sizeof(uint64_t));
+    initVirtMem->writeBlobFunctional(stack_min, (uint8_t*)&argc, sizeof(uint64_t));
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);

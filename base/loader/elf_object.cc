@@ -43,7 +43,7 @@
 
 #include "base/loader/elf_object.hh"
 
-#include "mem/memory.hh"
+#include "mem/translating_port.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -170,7 +170,7 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
 
 bool
-ElfObject::loadSections(Memory *mem, bool loadPhys)
+ElfObject::loadSections(TranslatingPort *memPort, bool loadPhys)
 {
     Addr textAddr = text.baseAddr;
     Addr dataAddr = data.baseAddr;
@@ -183,9 +183,9 @@ ElfObject::loadSections(Memory *mem, bool loadPhys)
     // Since we don't really have an MMU and all memory is
     // zero-filled, there's no need to set up the BSS segment.
     if (text.size != 0)
-        mem->prot_write(textAddr, fileTextBits, text.size);
+        memPort->writeBlobFunctional(textAddr, fileTextBits, text.size);
     if (data.size != 0)
-        mem->prot_write(dataAddr, fileDataBits, data.size);
+        memPort->writeBlobFunctional(dataAddr, fileDataBits, data.size);
 
     return true;
 }

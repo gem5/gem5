@@ -30,7 +30,7 @@
 
 #include "base/loader/aout_object.hh"
 
-#include "mem/memory.hh"
+#include "mem/translating_port.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -78,7 +78,7 @@ AoutObject::AoutObject(const string &_filename, int _fd,
 
 
 bool
-AoutObject::loadSections(Memory *mem, bool loadPhys)
+AoutObject::loadSections(TranslatingPort *memPort, bool loadPhys)
 {
     Addr textAddr = text.baseAddr;
     Addr dataAddr = data.baseAddr;
@@ -91,9 +91,9 @@ AoutObject::loadSections(Memory *mem, bool loadPhys)
     // Since we don't really have an MMU and all memory is
     // zero-filled, there's no need to set up the BSS segment.
     if (text.size != 0)
-        mem->prot_write(textAddr, fileData + N_TXTOFF(*execHdr), text.size);
+        memPort->writeBlobFunctional(textAddr, fileData + N_TXTOFF(*execHdr), text.size);
     if (data.size != 0)
-        mem->prot_write(dataAddr, fileData + N_DATOFF(*execHdr), data.size);
+        memPort->writeBlobFunctional(dataAddr, fileData + N_DATOFF(*execHdr), data.size);
 
     return true;
 }

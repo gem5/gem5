@@ -50,7 +50,7 @@
 #include "targetarch/isa_traits.hh"
 
 class ExecContext;
-class Memory;
+class TranslatingPort;
 class System;
 
 class Process : public SimObject
@@ -128,7 +128,7 @@ class Process : public SimObject
 
   protected:
     /// Memory object for initialization (image loading)
-    Memory *initVirtMem;
+    TranslatingPort *initVirtMem;
 
   public:
     PageTable *pTable;

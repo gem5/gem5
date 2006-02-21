@@ -30,7 +30,7 @@
 
 #include "base/loader/ecoff_object.hh"
 
-#include "mem/memory.hh"
+#include "mem/translating_port.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -82,7 +82,7 @@ EcoffObject::EcoffObject(const string &_filename, int _fd,
 
 
 bool
-EcoffObject::loadSections(Memory *mem, bool loadPhys)
+EcoffObject::loadSections(TranslatingPort *memPort, bool loadPhys)
 {
     Addr textAddr = text.baseAddr;
     Addr dataAddr = data.baseAddr;
@@ -94,8 +94,8 @@ EcoffObject::loadSections(Memory *mem, bool loadPhys)
 
     // Since we don't really have an MMU and all memory is
     // zero-filled, there's no need to set up the BSS segment.
-    mem->prot_write(textAddr, fileData + ECOFF_TXTOFF(execHdr), text.size);
-    mem->prot_write(dataAddr, fileData + ECOFF_DATOFF(execHdr), data.size);
+    memPort->writeBlobFunctional(textAddr, fileData + ECOFF_TXTOFF(execHdr), text.size);
+    memPort->writeBlobFunctional(dataAddr, fileData + ECOFF_DATOFF(execHdr), data.size);
 
     return true;
 }
