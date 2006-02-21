@@ -248,7 +248,10 @@ class SimpleCPU : public BaseCPU
 
     void sendIcacheRequest();
     void sendDcacheRequest();
-    void processResponse(Packet *response);
+    void processResponse(Packet &response);
+
+    Packet * processRetry();
+    void recvStatusChange(Port::Status status) {}
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

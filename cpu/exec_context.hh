@@ -186,8 +186,8 @@ class ExecContext
     ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
                 AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
 #else
-    ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                Memory *_mem, Process *_process, int _asid);
+    ExecContext(BaseCPU *_cpu, int _thread_num,
+                Process *_process, int _asid);
 #endif
     virtual ~ExecContext();
 

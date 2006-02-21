@@ -77,11 +77,10 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 }
 #else
-ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                         Memory *_mem, Process *_process, int _asid)
+ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
+                         Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
-      system(_system),
       process(_process),
       asid(_asid),
       func_exe_inst(0), storeCondFailures(0)

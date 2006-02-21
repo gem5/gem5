@@ -52,8 +52,6 @@
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/base_mem.hh"
-#include "mem/mem_interface.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
@@ -70,7 +68,7 @@
 #include "targetarch/stacktrace.hh"
 #include "targetarch/vtophys.hh"
 #else // !FULL_SYSTEM
-#include "mem/functional/functional.hh"
+#include "mem/memory.hh"
 #endif // FULL_SYSTEM
 
 using namespace std;
@@ -94,12 +92,6 @@ const char *
 SimpleCPU::TickEvent::description()
 {
     return "SimpleCPU tick event";
-}
-
-
-SimpleCPU::CacheCompletionEvent::CacheCompletionEvent(SimpleCPU *_cpu)
-    : Event(&mainEventQueue), cpu(_cpu)
-{
 }
 
 
@@ -139,8 +131,8 @@ SimpleCPU::CpuPort::recvRetry()
 
 
 SimpleCPU::SimpleCPU(Params *p)
-    : BaseCPU(p), tickEvent(this, p->width), xc(NULL),
-      cacheCompletionEvent(this), dcachePort(this), icachePort(this)
+    : BaseCPU(p), icachePort(this),
+      dcachePort(this), tickEvent(this, p->width), xc(NULL)
 {
     _status = Idle;
 #if FULL_SYSTEM
@@ -152,7 +144,7 @@ SimpleCPU::SimpleCPU(Params *p)
     xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
 #endif // !FULL_SYSTEM
 
-    xc->memPort = dcachePort;
+    memPort = &dcachePort;
 
     req = new CpuRequest;
 
@@ -324,7 +316,6 @@ SimpleCPU::serialize(ostream &os)
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
     nameOut(os, csprintf("%s.cacheCompletionEvent", name()));
-    cacheCompletionEvent.serialize(os);
 }
 
 void
@@ -335,8 +326,6 @@ SimpleCPU::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(inst);
     xc->unserialize(cp, csprintf("%s.xc", section));
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
-    cacheCompletionEvent
-        .unserialize(cp, csprintf("%s.cacheCompletionEvent", section));
 }
 
 void
@@ -365,7 +354,7 @@ SimpleCPU::copySrcTranslate(Addr src)
     memReq->reset(src & ~(blk_size - 1), blk_size);
 
     // translate to physical address
-    Fault fault = xc->translateDataReadReq(memReq);
+    Fault fault = xc->translateDataReadReq(req);
 
     assert(fault != Alignment_Fault);
 
@@ -378,7 +367,7 @@ SimpleCPU::copySrcTranslate(Addr src)
     }
     return fault;
 #else
-    return No_Fault
+    return No_Fault;
 #endif
 }
 
@@ -404,7 +393,7 @@ SimpleCPU::copy(Addr dest)
 
     memReq->reset(dest & ~(blk_size -1), blk_size);
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(memReq);
+    Fault fault = xc->translateDataWriteReq(req);
 
     assert(fault != Alignment_Fault);
 
@@ -456,7 +445,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     // translate to physical address
     // NEED NEW TRANSLATION HERE
-    Fault fault = xc->translateDataReadReq(memReq);
+    Fault fault = xc->translateDataReadReq(req);
 
     // Now do the access.
     if (fault == No_Fault) {
@@ -496,7 +485,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     }
 */
     // This will need a new way to tell if it has a dcache attached.
-    if (/*!dcacheInterface && */(memReq->flags & UNCACHEABLE))
+    if (/*!dcacheInterface && */(req->flags & UNCACHEABLE))
         recordEvent("Uncached Read");
 
     return fault;
@@ -556,7 +545,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // translate to physical address
     // NEED NEW TRANSLATION HERE
-    Fault fault = xc->translateDataWriteReq(memReq);
+    Fault fault = xc->translateDataWriteReq(req);
 
     // Now do the access.
     if (fault == No_Fault) {
@@ -597,10 +586,10 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     }
 */
     if (res && (fault == No_Fault))
-        *res = memReq->result;
+        *res = pkt->result;
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (/*!dcacheInterface && */(memReq->flags & UNCACHEABLE))
+    if (/*!dcacheInterface && */(req->flags & UNCACHEABLE))
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
@@ -663,7 +652,7 @@ void
 SimpleCPU::sendIcacheRequest()
 {
 #if 1
-    bool success = icachePort.sendTiming(pkt);
+    bool success = icachePort.sendTiming(*pkt);
 
     unscheduleTickEvent();
 
@@ -697,7 +686,7 @@ SimpleCPU::sendDcacheRequest()
     unscheduleTickEvent();
 
 #if 1
-    bool success = dcachePort.sendTiming(pkt);
+    bool success = dcachePort.sendTiming(*pkt);
 
     lastDcacheStall = curTick;
 
@@ -722,12 +711,12 @@ SimpleCPU::sendDcacheRequest()
 }
 
 void
-SimpleCPU::processResponse(Packet *response)
+SimpleCPU::processResponse(Packet &response)
 {
     // For what things is the CPU the consumer of the packet it sent
     // out?  This may create a memory leak if that's the case and it's
     // expected of the SimpleCPU to delete its own packet.
-    pkt = response;
+    pkt = &response;
 
     switch (status()) {
       case IcacheWaitResponse:
@@ -742,7 +731,7 @@ SimpleCPU::processResponse(Packet *response)
         delete pkt;
         break;
       case DcacheWaitResponse:
-        if (req->cmd.isRead()) {
+        if (pkt->cmd == Read) {
             curStaticInst->execute(this,traceData);
             if (traceData)
                 traceData->finalize();
@@ -755,7 +744,7 @@ SimpleCPU::processResponse(Packet *response)
         scheduleTickEvent(1);
         break;
       case DcacheWaitSwitch:
-        if (memReq->cmd.isRead()) {
+        if (pkt->cmd == Read) {
             curStaticInst->execute(this,traceData);
             if (traceData)
                 traceData->finalize();
@@ -893,7 +882,7 @@ SimpleCPU::tick()
                      IFETCH_FLAGS(xc->regs.pc));
 */
 //NEED NEW TRANSLATION HERE
-        fault = xc->translateInstReq(memReq);
+        fault = xc->translateInstReq(req);
 
         if (fault == No_Fault) {
             pkt = new Packet;
@@ -980,7 +969,7 @@ SimpleCPU::tick()
         // If we have a dcache miss, then we can't finialize the instruction
         // trace yet because we want to populate it with the data later
         if (traceData &&
-                !(status() == DcacheWaitResponse && memReq->cmd.isRead())) {
+                !(status() == DcacheWaitResponse && pkt->cmd == Read)) {
             traceData->finalize();
         }
 
@@ -1040,8 +1029,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 #endif // FULL_SYSTEM
 
     Param<int> clock;
-    SimObjectParam<BaseMem *> icache;
-    SimObjectParam<BaseMem *> dcache;
 
     Param<bool> defer_registration;
     Param<int> width;
@@ -1073,8 +1060,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 #endif // FULL_SYSTEM
 
     INIT_PARAM(clock, "clock speed"),
-    INIT_PARAM(icache, "L1 instruction cache object"),
-    INIT_PARAM(dcache, "L1 data cache object"),
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(width, "cpu width"),
     INIT_PARAM(function_trace, "Enable function trace"),
@@ -1096,8 +1081,6 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->clock = clock;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
-    params->icache_interface = (icache) ? icache->getInterface() : NULL;
-    params->dcache_interface = (dcache) ? dcache->getInterface() : NULL;
     params->width = width;
 
 #if FULL_SYSTEM
