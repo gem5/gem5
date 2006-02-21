@@ -55,8 +55,6 @@ class System;
 
 class Tsunami : public Platform
 {
-  protected:
-    typedef TheISA::Addr Addr;
   public:
     /** Max number of CPUs in a Tsunami */
     static const int Max_CPUs = 64;

@@ -44,8 +44,6 @@ class PhysicalMemory;
  */
 class SimpleDisk : public SimObject
 {
-  protected:
-    typedef TheISA::Addr Addr;
   public:
     typedef uint64_t baddr_t;
 

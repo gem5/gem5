@@ -37,8 +37,6 @@ class StackTrace;
 
 class ProcessInfo
 {
-  protected:
-    typedef TheISA::Addr Addr;
   private:
     ExecContext *xc;
 
@@ -59,7 +57,6 @@ class ProcessInfo
 class StackTrace
 {
   protected:
-    typedef TheISA::Addr Addr;
     typedef TheISA::MachInst MachInst;
   private:
     ExecContext *xc;

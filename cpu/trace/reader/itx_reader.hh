@@ -46,8 +46,6 @@
  */
 class ITXReader : public MemTraceReader
 {
-  protected:
-    typedef TheISA::Addr Addr;
   private:
     /** Trace file. */
     FILE *trace;

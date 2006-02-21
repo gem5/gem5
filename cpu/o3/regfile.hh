@@ -53,7 +53,6 @@ template <class Impl>
 class PhysRegFile
 {
   protected:
-    typedef TheISA::Addr Addr;
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::MiscRegFile MiscRegFile;

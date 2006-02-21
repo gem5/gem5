@@ -48,7 +48,6 @@ class ExecContext;
 class BaseCPU : public SimObject
 {
   protected:
-    typedef TheISA::Addr Addr;
     // CPU's clock period in terms of the number of ticks of curTime.
     Tick clock;
 

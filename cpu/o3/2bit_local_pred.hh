@@ -35,8 +35,6 @@
 
 class DefaultBP
 {
-  protected:
-    typedef TheISA::Addr Addr;
   public:
     /**
      * Default branch predictor constructor.

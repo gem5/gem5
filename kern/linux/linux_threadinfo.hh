@@ -37,8 +37,6 @@ namespace Linux {
 
 class ThreadInfo
 {
-  protected:
-    typedef TheISA::Addr Addr;
   private:
     ExecContext *xc;
 

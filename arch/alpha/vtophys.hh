@@ -35,16 +35,16 @@ class ExecContext;
 class PhysicalMemory;
 
 AlphaISA::PageTableEntry
-kernel_pte_lookup(PhysicalMemory *pmem, AlphaISA::Addr ptbr, AlphaISA::VAddr vaddr);
+kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr);
 
-AlphaISA::Addr vtophys(PhysicalMemory *xc, AlphaISA::Addr vaddr);
-AlphaISA::Addr vtophys(ExecContext *xc, AlphaISA::Addr vaddr);
-uint8_t *vtomem(ExecContext *xc, AlphaISA::Addr vaddr, size_t len);
-uint8_t *ptomem(ExecContext *xc, AlphaISA::Addr paddr, size_t len);
+Addr vtophys(PhysicalMemory *xc, Addr vaddr);
+Addr vtophys(ExecContext *xc, Addr vaddr);
+uint8_t *vtomem(ExecContext *xc, Addr vaddr, size_t len);
+uint8_t *ptomem(ExecContext *xc, Addr paddr, size_t len);
 
-void CopyOut(ExecContext *xc, void *dst, AlphaISA::Addr src, size_t len);
-void CopyIn(ExecContext *xc, AlphaISA::Addr dst, void *src, size_t len);
-void CopyString(ExecContext *xc, char *dst, AlphaISA::Addr vaddr, size_t maxlen);
+void CopyOut(ExecContext *xc, void *dst, Addr src, size_t len);
+void CopyIn(ExecContext *xc, Addr dst, void *src, size_t len);
+void CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
 
 #endif // __ARCH_ALPHA_VTOPHYS_H__
 

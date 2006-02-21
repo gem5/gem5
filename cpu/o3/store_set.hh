@@ -36,8 +36,6 @@
 
 class StoreSet
 {
-  protected:
-    typedef TheISA::Addr Addr;
   public:
     typedef unsigned SSID;
 

@@ -69,7 +69,6 @@ class ExecContext
 {
   protected:
     typedef TheISA::RegFile RegFile;
-    typedef TheISA::Addr Addr;
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscRegFile MiscRegFile;
   public:

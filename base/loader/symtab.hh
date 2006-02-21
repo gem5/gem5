@@ -37,9 +37,8 @@
 class Checkpoint;
 class SymbolTable
 {
-    typedef TheISA::Addr Addr;
   public:
-    typedef std::map<TheISA::Addr, std::string> ATable;
+    typedef std::map<Addr, std::string> ATable;
     typedef std::map<std::string, Addr> STable;
 
   private:

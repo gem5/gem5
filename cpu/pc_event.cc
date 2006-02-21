@@ -136,14 +136,14 @@ BreakPCEvent::process(ExecContext *xc)
 #if FULL_SYSTEM
 extern "C"
 void
-sched_break_pc_sys(System *sys, TheISA::Addr addr)
+sched_break_pc_sys(System *sys, Addr addr)
 {
     new BreakPCEvent(&sys->pcEventQueue, "debug break", addr, true);
 }
 
 extern "C"
 void
-sched_break_pc(TheISA::Addr addr)
+sched_break_pc(Addr addr)
 {
      for (vector<System *>::iterator sysi = System::systemList.begin();
           sysi != System::systemList.end(); ++sysi) {

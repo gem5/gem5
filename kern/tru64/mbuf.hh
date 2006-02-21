@@ -35,35 +35,35 @@
 namespace tru64 {
 
 struct m_hdr {
-    TheISA::Addr	mh_next;	// 0x00
-    TheISA::Addr	mh_nextpkt;	// 0x08
-    TheISA::Addr	mh_data;	// 0x10
+    Addr	mh_next;	// 0x00
+    Addr	mh_nextpkt;	// 0x08
+    Addr	mh_data;	// 0x10
     int32_t	mh_len;		// 0x18
     int32_t	mh_type;	// 0x1C
     int32_t	mh_flags;	// 0x20
     int32_t	mh_pad0;	// 0x24
-    TheISA::Addr	mh_foo[4];	// 0x28, 0x30, 0x38, 0x40
+    Addr	mh_foo[4];	// 0x28, 0x30, 0x38, 0x40
 };
 
 struct	pkthdr {
     int32_t	len;
     int32_t	protocolSum;
-    TheISA::Addr	rcvif;
+    Addr	rcvif;
 };
 
 struct m_ext {
-    TheISA::Addr	ext_buf;	// 0x00
-    TheISA::Addr	ext_free;	// 0x08
+    Addr	ext_buf;	// 0x00
+    Addr	ext_free;	// 0x08
     uint32_t	ext_size;	// 0x10
     uint32_t	ext_pad0;	// 0x14
-    TheISA::Addr	ext_arg;	// 0x18
+    Addr	ext_arg;	// 0x18
     struct	ext_refq {
-        TheISA::Addr	forw, back;	// 0x20, 0x28
+        Addr	forw, back;	// 0x20, 0x28
     } ext_ref;
-    TheISA::Addr	uiomove_f;	// 0x30
+    Addr	uiomove_f;	// 0x30
     int32_t	protocolSum;	// 0x38
     int32_t	bytesSummed;	// 0x3C
-    TheISA::Addr	checksum;	// 0x40
+    Addr	checksum;	// 0x40
 };
 
 struct mbuf {

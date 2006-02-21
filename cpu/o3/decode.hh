@@ -49,9 +49,6 @@ class SimpleDecode
     typedef typename CPUPol::DecodeStruct DecodeStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
 
-    // Typedefs from the ISA.
-    typedef TheISA::Addr Addr;
-
   public:
     // The only time decode will become blocked is if dispatch becomes
     // blocked, which means IQ or ROB is probably full.

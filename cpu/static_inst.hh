@@ -229,8 +229,6 @@ class StaticInst : public StaticInstBase
 
     /// Binary machine instruction type.
     typedef TheISA::MachInst MachInst;
-    /// Memory address type.
-    typedef TheISA::Addr	   Addr;
     /// Logical register index type.
     typedef TheISA::RegIndex RegIndex;
 

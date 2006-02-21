@@ -188,8 +188,6 @@ class IdeController;
 class IdeDisk : public SimObject
 {
   protected:
-    typedef TheISA::Addr Addr;
-  protected:
     /** The IDE controller for this disk. */
     IdeController *ctrl;
     /** The DMA interface to use for transfers */

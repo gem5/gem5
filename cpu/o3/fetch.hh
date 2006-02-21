@@ -61,7 +61,6 @@ class SimpleFetch
 
     /** Typedefs from ISA. */
     typedef TheISA::MachInst MachInst;
-    typedef TheISA::Addr Addr;
 
   public:
     enum Status {

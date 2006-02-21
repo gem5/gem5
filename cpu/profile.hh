@@ -37,8 +37,6 @@
 
 class ProfileNode
 {
-  protected:
-    typedef TheISA::Addr Addr;
   private:
     friend class FunctionProfile;
 
@@ -59,8 +57,6 @@ class ProfileNode
 class Callback;
 class FunctionProfile
 {
-  public:
-    typedef TheISA::Addr Addr;
   private:
     Callback *reset;
     const SymbolTable *symtab;

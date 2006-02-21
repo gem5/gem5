@@ -62,8 +62,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /// Binary machine instruction type.
     typedef TheISA::MachInst MachInst;
-    /// Memory address type.
-    typedef TheISA::Addr Addr;
     /// Logical register index type.
     typedef TheISA::RegIndex RegIndex;
     /// Integer register index type.

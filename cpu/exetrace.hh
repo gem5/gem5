@@ -46,7 +46,6 @@ namespace Trace {
 class InstRecord : public Record
 {
   protected:
-    typedef TheISA::Addr Addr;
     typedef TheISA::IntRegFile IntRegFile;
 
     // The following fields are initialized by the constructor and
@@ -172,7 +171,7 @@ inline
 InstRecord *
 getInstRecord(Tick cycle, ExecContext *xc, BaseCPU *cpu,
               const StaticInstPtr staticInst,
-              TheISA::Addr pc, int thread = 0)
+              Addr pc, int thread = 0)
 {
     if (DTRACE(InstExec) &&
         (InstRecord::traceMisspec() || !xc->misspeculating())) {

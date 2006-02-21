@@ -163,7 +163,7 @@ struct Info
 /* namespace Regs */ }
 
 inline const Regs::Info&
-regInfo(TheISA::Addr daddr)
+regInfo(Addr daddr)
 {
     static Regs::Info invalid = { 0, false, false, "invalid" };
     static Regs::Info info [] = {
@@ -199,7 +199,7 @@ regInfo(TheISA::Addr daddr)
 }
 
 inline bool
-regValid(TheISA::Addr daddr)
+regValid(Addr daddr)
 {
     if (daddr > Regs::Size)
         return false;

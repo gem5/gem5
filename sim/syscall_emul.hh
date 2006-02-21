@@ -90,9 +90,6 @@ class SyscallDesc {
 
 class BaseBufferArg {
 
-  protected:
-    typedef TheISA::Addr Addr;
-
   public:
 
     BaseBufferArg(Addr _addr, int _size) : addr(_addr), size(_size)
@@ -643,7 +640,7 @@ template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    TheISA::Addr start = xc->getSyscallArg(0);
+    Addr start = xc->getSyscallArg(0);
     uint64_t length = xc->getSyscallArg(1);
     // int prot = xc->getSyscallArg(2);
     int flags = xc->getSyscallArg(3);

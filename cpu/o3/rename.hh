@@ -61,7 +61,6 @@ class SimpleRename
     typedef typename CPUPol::RenameMap RenameMap;
 
     // Typedefs from the ISA.
-    typedef TheISA::Addr Addr;
     typedef TheISA::RegIndex RegIndex;
 
   public:

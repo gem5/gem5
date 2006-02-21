@@ -34,8 +34,6 @@
 
 class ReturnAddrStack
 {
-  protected:
-    typedef TheISA::Addr Addr;
   public:
     ReturnAddrStack(unsigned numEntries);
 

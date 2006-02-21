@@ -44,7 +44,6 @@ class GDBListener;
 class RemoteGDB
 {
   protected:
-    typedef TheISA::Addr Addr;
     typedef TheISA::MachInst MachInst;
   private:
     friend void debugger();

@@ -37,7 +37,6 @@ class SymbolTable;
 class ObjectFile
 {
   public:
-    typedef TheISA::Addr Addr;
 
     enum Arch {
         UnknownArch,

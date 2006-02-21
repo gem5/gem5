@@ -35,8 +35,6 @@
 
 class TournamentBP
 {
-  protected:
-    typedef TheISA::Addr Addr;
   public:
     /**
      * Default branch predictor constructor.

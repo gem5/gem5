@@ -52,7 +52,6 @@ class SyscallDesc;
 class Process : public SimObject
 {
   protected:
-    typedef TheISA::Addr Addr;
     typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
   public:

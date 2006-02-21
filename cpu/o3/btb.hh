@@ -34,8 +34,6 @@
 
 class DefaultBTB
 {
-  protected:
-    typedef TheISA::Addr Addr;
   private:
     struct BTBEntry
     {

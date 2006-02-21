@@ -39,7 +39,6 @@ class PCEventQueue;
 class PCEvent
 {
   protected:
-    typedef TheISA::Addr Addr;
     static const Addr badpc = MemReq::inval_addr;
 
   protected:
@@ -65,7 +64,6 @@ class PCEvent
 class PCEventQueue
 {
   protected:
-    typedef TheISA::Addr Addr;
     typedef PCEvent * record_t;
     class MapCompare {
       public:
@@ -134,7 +132,6 @@ PCEvent::remove()
 class BreakPCEvent : public PCEvent
 {
   protected:
-    typedef TheISA::Addr Addr;
     bool remove;
 
   public:
