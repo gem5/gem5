@@ -494,11 +494,11 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
         panic("invalid size for %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
               info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
 
-    uint32_t reg32 = *(uint32_t *)data;
+    //uint32_t reg32 = *(uint32_t *)data;
     uint64_t reg64 = *(uint64_t *)data;
     DPRINTF(EthernetPIO,
             "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, cpu, info.size == 4 ? reg32 : reg64, daddr,
+            info.name, cpu, info.size == 4 ? (*(uint32_t *)data) : reg64, daddr,
             req->paddr, req->vaddr, req->size);
 
     prepareWrite(cpu, index);
