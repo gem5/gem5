@@ -103,8 +103,7 @@ class Bus : public MemObject
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
-        virtual void addressRanges(std::list<Range<Addr> > &range_list,
-                                   bool &owner);
+        virtual void addressRanges(AddrRangeList &range_list, bool &owner);
     };
 
     /** A count of the number of interfaces connected to this bus. */

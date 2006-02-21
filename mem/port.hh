@@ -46,6 +46,15 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
+/** This typedef is used to clean up the parameter list of
+ * getDeviceAddressRanges() and getPeerAddressRanges().  It's declared
+ * outside the Port object since it's also used by some mem objects.
+ * Eventually we should move this typedef to wherever Addr is
+ * defined.
+ */
+
+typedef std::list<Range<Addr> > AddrRangeList;
+
 /**
  * Ports are used to interface memory objects to
  * each other.  They will always come in pairs, and we refer to the other
@@ -123,8 +132,9 @@ class Port
         an object wants to own some ranges and snoop on others, it will
         need to use two different ports.
     */
-    virtual void recvAddressRangesQuery(std::list<Range<Addr> > &range_list,
-                                        bool &owner) { panic("??"); }
+    virtual void getDeviceAddressRanges(AddrRangeList &range_list,
+                                        bool &owner)
+    { panic("??"); }
 
   public:
 
@@ -172,9 +182,8 @@ class Port
     /** Called by the associated device if it wishes to find out the address
         ranges connected to the peer ports devices.
     */
-    void sendAddressRangesQuery(std::list<Range<Addr> > &range_list,
-                                bool &owner)
-    { peer->recvAddressRangesQuery(range_list, owner); }
+    void getPeerAddressRanges(AddrRangeList &range_list, bool &owner)
+    { peer->getDeviceAddressRanges(range_list, owner); }
 
     // Do we need similar wrappers for sendAtomic()?  If not, should
     // we drop the "Functional" from the names?

@@ -50,8 +50,7 @@ class PioPort : public Port
     virtual void recvFunctional(Packet &pkt)
     { device->recvAtomic(pkt) };
 
-    virtual void recvAddressRangeQuery(std::list<Range<Addr> > &range_list,
-                                                 bool &owner)
+    virtual void getDeviceAddressRanges(AddrRangeList &range_list, bool &owner)
     { device->addressRanges(range_list, owner); }
 
     void sendTiming(Packet &pkt, Tick time)
@@ -101,8 +100,7 @@ class DmaPort : public Port
     virtual Packet *recvRetry()
     { return transmitList.pop_front();  }
 
-    virtual void recvAddressRangeQuery(std::list<Range<Addr> > &range_list,
-                                                 bool &owner)
+    virtual void getDeviceAddressRanges(AddrRangeList &range_list, bool &owner)
     { range_list.clear(); owner = true; }
 
     void dmaAction(Memory::Command cmd, DmaPort port, Addr addr, int size,
@@ -146,8 +144,7 @@ class PioDevice : public SimObject
 
     PioPort *pioPort;
 
-    virtual void addressRanges(std::list<Range<Addr> > &range_list,
-                                   bool &owner) = 0;
+    virtual void addressRanges(AddrRangeList &range_list, bool &owner) = 0;
 
     virtual read(Packet &pkt) = 0;
 
