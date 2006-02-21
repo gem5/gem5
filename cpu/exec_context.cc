@@ -37,6 +37,7 @@
 #include "base/output.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/translating_port.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
@@ -85,6 +86,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
       asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
+    port = new TranslatingPort(cpu->memPort, process->pTable);
     memset(&regs, 0, sizeof(RegFile));
 }
 #endif

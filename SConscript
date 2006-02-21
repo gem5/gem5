@@ -93,7 +93,7 @@ base_sources = Split('''
         mem/memory.cc
         mem/page_table.cc
         mem/physical.cc
-        mem/proxy.cc
+        mem/translating_port.cc
 
         python/pyconfig.cc
         python/embedded_py.cc
@@ -294,12 +294,19 @@ syscall_emulation_sources = Split('''
 	arch/alpha/alpha_common_syscall_emul.cc
 	arch/alpha/alpha_linux_process.cc
 	arch/alpha/alpha_tru64_process.cc
-	cpu/memtest/memtest.cc
-	encumbered/eio/eio.cc
+
 	encumbered/eio/exolex.cc
 	encumbered/eio/libexo.cc
 	sim/process.cc
 	sim/syscall_emul.cc
+        ''')
+
+eio_sources = Split('''
+	encumbered/eio/eio.cc
+        ''')
+
+memtest_sources = Split('''
+	cpu/memtest/memtest.cc
         ''')
 
 targetarch_files = Split('''

@@ -128,7 +128,7 @@ readFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     int bytes_read = read(fd, bufArg.bufferPtr(), nbytes);
 
     if (bytes_read != -1)
-        bufArg.copyOut(xc->cpu->memPort);
+        bufArg.copyOut(xc->port);
 
     return bytes_read;
 }
@@ -140,7 +140,7 @@ writeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     int nbytes = xc->getSyscallArg(2);
     BufferArg bufArg(xc->getSyscallArg(1), nbytes);
 
-    bufArg.copyIn(xc->cpu->memPort);
+    bufArg.copyIn(xc->port);
 
     int bytes_written = write(fd, bufArg.bufferPtr(), nbytes);
 
@@ -181,7 +181,7 @@ gethostnameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 
     strncpy((char *)name.bufferPtr(), hostname, name_len);
 
-    name.copyOut(xc->cpu->memPort);
+    name.copyOut(xc->port);
 
     return 0;
 }
@@ -191,7 +191,7 @@ unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (xc->cpu->memPort->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return (TheISA::IntReg)-EFAULT;
 
     int result = unlink(path.c_str());
@@ -203,12 +203,12 @@ renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string old_name;
 
-    if (xc->cpu->memPort->readStringFunctional(old_name, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(old_name, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     string new_name;
 
-    if (xc->cpu->memPort->readStringFunctional(new_name, xc->getSyscallArg(1)) != No_Fault)
+    if (xc->port->readStringFunctional(new_name, xc->getSyscallArg(1)) != No_Fault)
         return -EFAULT;
 
     int64_t result = rename(old_name.c_str(), new_name.c_str());
@@ -220,7 +220,7 @@ truncateFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (xc->cpu->memPort->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     off_t length = xc->getSyscallArg(1);
@@ -248,7 +248,7 @@ chownFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (xc->cpu->memPort->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
         return -EFAULT;
 
     /* XXX endianess */

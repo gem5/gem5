@@ -154,7 +154,7 @@ Process::startup()
     if (execContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    initVirtMem = new ProxyMemory<Memory>(system->physmem, pTable);
+    initVirtMem = new ProxyMemory(system->physmem, pTable);
 
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
@@ -249,7 +249,7 @@ copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
 {
     for (int i = 0; i < strings.size(); ++i) {
         func->prot_write(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
-        func->writeString(data_ptr, strings[i].c_str());
+        func->writeStringFunctional(data_ptr, strings[i].c_str());
         array_ptr += sizeof(Addr);
         data_ptr += strings[i].size() + 1;
     }

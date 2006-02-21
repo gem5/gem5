@@ -36,7 +36,7 @@
 
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
-#include "mem/port.hh"
+#include "mem/translating_port.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/host.hh"
 #include "sim/process.hh"
@@ -236,7 +236,7 @@ class Linux {
     /// buffer.  Also copies the target buffer out to the simulated
     /// memory space.  Used by stat(), fstat(), and lstat().
     static void
-    copyOutStatBuf(Port *memPort, Addr addr, struct stat *host)
+    copyOutStatBuf(TranslatingPort *memPort, Addr addr, struct stat *host)
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
@@ -259,7 +259,7 @@ class Linux {
 
     // Same for stat64
     static void
-    copyOutStat64Buf(Port *memPort, Addr addr, struct stat64 *host)
+    copyOutStat64Buf(TranslatingPort *memPort, Addr addr, struct stat64 *host)
     {
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
@@ -307,7 +307,7 @@ class Linux {
         strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
         strcpy(name->machine, "alpha");
 
-        name.copyOut(xc->cpu->memPort);
+        name.copyOut(xc->port);
         return 0;
     }
 
@@ -327,7 +327,7 @@ class Linux {
               TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
               // I don't think this exactly matches the HW FPCR
               *fpcr = 0;
-              fpcr.copyOut(xc->cpu->memPort);
+              fpcr.copyOut(xc->port);
               return 0;
           }
 
@@ -353,7 +353,7 @@ class Linux {
           case 14: { // SSI_IEEE_FP_CONTROL
               TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
               // I don't think this exactly matches the HW FPCR
-              fpcr.copyIn(xc->cpu->memPort);
+              fpcr.copyIn(xc->port);
               DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                        " setting FPCR to 0x%x\n", *(uint64_t*)fpcr);
               return 0;

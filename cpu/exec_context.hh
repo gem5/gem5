@@ -35,8 +35,8 @@
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 #include "targetarch/byte_swap.hh"
+#include "mem/translating_port.hh"
 
-class Memory;
 class BaseCPU;
 
 #if FULL_SYSTEM
@@ -122,6 +122,9 @@ class ExecContext
     int cpu_id;
 
     System *system;
+
+    /// Port that syscalls can use to access memory (provides translation step).
+    TranslatingPort *port;
 //    Memory *mem;
 
 #if FULL_SYSTEM
