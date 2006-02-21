@@ -27,6 +27,7 @@
  */
 
 #include <string>
+#include "base/chunk_generator.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "mem/page_table.hh"
@@ -42,15 +43,17 @@ Fault
 TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
 {
     Addr paddr;
+    int prevSize = 0;
 
-    //@todo Break up things larger than a page size
-    pTable->page_check(addr, size);
+    for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
+       if (!pTable->translate(gen.addr(),paddr))
+           return Machine_Check_Fault;
 
-    if (!pTable->translate(addr,paddr))
-        return Machine_Check_Fault;
+       port->readBlobFunctional(paddr, p + prevSize, gen.size());
+       prevSize += gen.size();
+    }
 
-    port->readBlobFunctional(paddr, p, size);
     return No_Fault;
 }
 
@@ -58,14 +61,17 @@ Fault
 TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size)
 {
     Addr paddr;
+    int prevSize = 0;
 
-    //@todo Break up things larger than a page size
-    pTable->page_check(addr, size);
+    for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
-    if (!pTable->translate(addr,paddr))
-        return Machine_Check_Fault;
+       if (!pTable->translate(gen.addr(),paddr))
+           return Machine_Check_Fault;
 
-    port->writeBlobFunctional(paddr, p, size);
+       port->writeBlobFunctional(paddr, p + prevSize, gen.size());
+       prevSize += gen.size();
+    }
+
     return No_Fault;
 }
 
@@ -74,14 +80,14 @@ TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size)
 {
     Addr paddr;
 
-    //@todo Break up things larger than a page size
-    //Use the Stever breakup code
-    pTable->page_check(addr, size);
+    for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
-    if (!pTable->translate(addr,paddr))
-        return Machine_Check_Fault;
+       if (!pTable->translate(gen.addr(),paddr))
+           return Machine_Check_Fault;
 
-    port->memsetBlobFunctional(paddr, val, size);
+       port->memsetBlobFunctional(paddr, val, gen.size());
+    }
+
     return No_Fault;
 }
 
