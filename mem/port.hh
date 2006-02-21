@@ -186,14 +186,16 @@ class Port
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    virtual void readBlobFunctional(Addr addr, uint8_t *p, int size);
+    virtual void readBlobFunctional(Addr addr, uint8_t *p, int size)
+    { panic("Unimplemented"); }
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    virtual void writeBlobFunctional(Addr addr, const uint8_t *p, int size);
+    virtual void writeBlobFunctional(Addr addr, uint8_t *p, int size)
+    { panic("Unimplemented"); }
 
     /** Fill size bytes starting at addr with byte value val.  This
         should not need to be virtual, since it can be implemented in
@@ -203,17 +205,8 @@ class Port
         prot_memset on the old functional memory that's never used),
         but Nate claims it is.
     */
-    void memsetBlobFunctional(Addr addr, uint8_t val, int size);
-
-    // I believe these two string functions can be defined once and
-    // for all at the top level by implementing them in terms of
-    // readBlob and writeBlob.
-
-    /** Write null-terminated string 'str' into memory at 'addr'. */
-    void writeStringFunctional(Addr addr, const char *str);
-
-    /** Read null-terminated string from 'addr' into 'str'. */
-    void readStringFunctional(std::string &str, Addr addr);
+    void memsetBlobFunctional(Addr addr, uint8_t val, int size)
+    { panic("Unimplemented"); }
 };
 
 #endif //__MEM_PORT_HH__

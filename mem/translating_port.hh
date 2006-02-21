@@ -49,7 +49,7 @@ class TranslatingPort
 
   public:
     Fault readBlobFunctional(Addr addr, uint8_t *p, int size);
-    Fault writeBlobFunctional(Addr addr, const uint8_t *p, int size);
+    Fault writeBlobFunctional(Addr addr, uint8_t *p, int size);
     Fault memsetBlobFunctional(Addr addr, uint8_t val, int size);
     Fault writeStringFunctional(Addr addr, const char *str);
     Fault readStringFunctional(std::string &str, Addr addr);

@@ -127,8 +127,23 @@ SimpleCPU::CpuPort::recvRetry()
     return cpu->processRetry();
 }
 
+void
+SimpleCPU::CpuPort::writeBlobFunctional(Addr addr, uint8_t *p, int size)
+{
+    int blksize = sendBlockSizeQuery();
+    //Use Stever's break it inot block size chunk code
+    //then send functional
+    blksize |= blksize;
+}
 
-
+void
+SimpleCPU::CpuPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
+{
+    int blksize = sendBlockSizeQuery();
+    //Use Stever's break it inot block size chunk code
+    //then send functional
+    blksize |= blksize;
+}
 
 SimpleCPU::SimpleCPU(Params *p)
     : BaseCPU(p), icachePort(this),

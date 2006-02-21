@@ -88,6 +88,10 @@ class SimpleCPU : public BaseCPU
         virtual void recvStatusChange(Status status);
 
         virtual Packet *recvRetry();
+
+        virtual void readBlobFunctional(Addr addr, uint8_t *p, int size);
+
+        virtual void writeBlobFunctional(Addr addr, uint8_t *p, int size);
     };
 
     CpuPort icachePort;

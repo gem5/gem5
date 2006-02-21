@@ -78,14 +78,14 @@ class PhysicalMemory : public Memory
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-uint64_t
+/*uint64_t
 PhysicalMemory::phys_read_qword(Addr addr) const
 {
     if (addr + sizeof(uint64_t) > pmem_size)
         return 0;
 
     return *(uint64_t *)(pmem_addr + addr);
-}
+}*/
 
 
 #endif //__PHYSICAL_MEMORY_HH__

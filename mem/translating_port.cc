@@ -55,7 +55,7 @@ TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
 }
 
 Fault
-TranslatingPort::writeBlobFunctional(Addr addr, const uint8_t *p, int size)
+TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size)
 {
     Addr paddr;
 
@@ -75,6 +75,7 @@ TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size)
     Addr paddr;
 
     //@todo Break up things larger than a page size
+    //Use the Stever breakup code
     pTable->page_check(addr, size);
 
     if (!pTable->translate(addr,paddr))
@@ -87,33 +88,38 @@ TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size)
 Fault
 TranslatingPort::writeStringFunctional(Addr addr, const char *str)
 {
-    //@todo Break up things larger than a page size
-    //pTable->page_check(addr, size);
-    //Need to check string length???
+    Addr paddr,vaddr;
+    uint8_t c;
 
-    Addr paddr;
+    vaddr = addr;
 
-    if (!pTable->translate(addr,paddr))
-        return Machine_Check_Fault;
+    do {
+        c = *str++;
+        if (!pTable->translate(vaddr++,paddr))
+            return Machine_Check_Fault;
 
-    port->writeStringFunctional(paddr, str);
+        port->writeBlobFunctional(paddr, &c, 1);
+    } while (c);
+
     return No_Fault;
 }
 
 Fault
 TranslatingPort::readStringFunctional(std::string &str, Addr addr)
 {
-    //@todo Break up things larger than a page size
-    //pTable->page_check(addr, size);
-    //Need to check string length???
+    Addr paddr,vaddr;
+    uint8_t c;
 
-    Addr paddr;
+    vaddr = addr;
 
-    if (!pTable->translate(addr,paddr))
-        return Machine_Check_Fault;
+    do {
+        if (!pTable->translate(vaddr++,paddr))
+            return Machine_Check_Fault;
 
-    //@todo Break this up into readBlobs
-    port->readStringFunctional(str, paddr);
+        port->readBlobFunctional(paddr, &c, 1);
+        str += c;
+    } while (c);
+
     return No_Fault;
 }
 
