@@ -98,7 +98,8 @@ DmaPort::dmaAction(Memory::Command cmd, DmaPort port, Addr addr, int size,
 
     completionEvent = event;
 
-    for (ChunkGenerator gen(addr, size, sendBlockSizeQuery()); !gen.done(); gen.next()) {
+    for (ChunkGenerator gen(addr, size, peerBlockSize());
+         !gen.done(); gen.next()) {
             Packet *pkt = new Packet(basePkt);
             Request *req = new Request(baseReq);
             pkt->addr = gen.addr();

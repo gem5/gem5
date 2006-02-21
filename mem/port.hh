@@ -86,6 +86,9 @@ class Port
 
   protected:
 
+    /** These functions are protected because they should only be
+     * called by a peer port, never directly by any outside object. */
+
     /** Called to recive a timing call from the peer port. */
     virtual bool recvTiming(Packet &pkt) = 0;
 
@@ -109,7 +112,7 @@ class Port
         this function to be called, a DMA interface doesn't really have a
         block size, so it is defaulted to a panic.
     */
-    virtual int recvBlockSizeQuery() { panic("??"); }
+    virtual int deviceBlockSize() { panic("??"); }
 
     /** The peer port is requesting us to reply with a list of the ranges we
         are responsible for.
@@ -164,7 +167,7 @@ class Port
     /** Called by the associated device if it wishes to find out the blocksize
         of the device on attached to the peer port.
     */
-    int sendBlockSizeQuery() { return peer->recvBlockSizeQuery(); }
+    int peerBlockSize() { return peer->deviceBlockSize(); }
 
     /** Called by the associated device if it wishes to find out the address
         ranges connected to the peer ports devices.

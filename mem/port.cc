@@ -41,8 +41,8 @@ Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
     pkt.req = &rqst;
     pkt.cmd = cmd;
 
-    for (ChunkGenerator gen(addr, size, sendBlockSizeQuery()); !gen.done(); gen.next())
-    {
+    for (ChunkGenerator gen(addr, size, peerBlockSize());
+         !gen.done(); gen.next()) {
         pkt.addr = rqst.paddr = gen.addr();
         pkt.size = rqst.size = gen.size();
         pkt.data = p;
