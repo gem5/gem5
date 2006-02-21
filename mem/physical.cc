@@ -164,6 +164,13 @@ PhysicalMemory::prot_memset(Addr addr, uint8_t val, int size)
     memset(pmem_addr + addr - base_addr, val, size);
 }
 
+int
+PhysicalMemory::deviceBlockSize()
+{
+    //For now the largest accesses we can take are Page Sized
+    return VMPageSize;
+}
+
 void
 PhysicalMemory::serialize(ostream &os)
 {

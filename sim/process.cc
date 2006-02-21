@@ -154,7 +154,7 @@ Process::startup()
     if (execContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    initVirtMem = new TranslatingPort(system->physmem->getPort("any"), pTable);
+    initVirtMem = new TranslatingPort((system->physmem->getPort("any"))->getPeer(), pTable);
 
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
