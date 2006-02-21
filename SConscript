@@ -93,6 +93,7 @@ base_sources = Split('''
         mem/memory.cc
         mem/page_table.cc
         mem/physical.cc
+        mem/port.cc
         mem/translating_port.cc
 
         python/pyconfig.cc

@@ -36,7 +36,6 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "base/chunk_generator.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
@@ -126,50 +125,6 @@ Packet *
 SimpleCPU::CpuPort::recvRetry()
 {
     return cpu->processRetry();
-}
-
-void
-SimpleCPU::CpuPort::writeBlobFunctional(Addr addr, uint8_t *p, int size)
-{
-    int prevSize = 0;
-    //Base Packet
-   for (ChunkGenerator gen(addr, size, sendBlockSizeQuery()); !gen.done(); gen.next())
-    {
-        Packet *blobpkt = new Packet();
-        CpuRequest *blobreq = new CpuRequest();
-        blobpkt->addr = gen.addr();
-        blobpkt->size = gen.size();
-        blobpkt->cmd = Write;
-        blobpkt->req = blobreq;
-        blobpkt->req->paddr = blobpkt->addr;
-        blobpkt->req->size = blobpkt->size;
-        blobpkt->data = p + prevSize;
-        prevSize += blobpkt->size;
-
-        sendFunctional(*blobpkt);
-    }
-}
-
-void
-SimpleCPU::CpuPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
-{
-    int prevSize = 0;
-    //Base Packet
-   for (ChunkGenerator gen(addr, size, sendBlockSizeQuery()); !gen.done(); gen.next())
-    {
-        Packet *blobpkt = new Packet();
-        CpuRequest *blobreq = new CpuRequest();
-        blobpkt->addr = gen.addr();
-        blobpkt->size = gen.size();
-        blobpkt->cmd = Write;
-        blobpkt->req = blobreq;
-        blobpkt->req->paddr = blobpkt->addr;
-        blobpkt->req->size = blobpkt->size;
-        blobpkt->data = p + prevSize;
-        prevSize += blobpkt->size;
-
-        sendFunctional(*blobpkt);
-    }
 }
 
 SimpleCPU::SimpleCPU(Params *p)

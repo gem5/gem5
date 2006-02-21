@@ -173,29 +173,22 @@ class Port
                                 bool &owner)
     { peer->recvAddressRangesQuery(range_list, owner); }
 
-    // For the read/write blob functional
-    // This should be sufficient for everything except ProxyMemory
-    // which needs to slip a translation step in as well.  (Unless it
-    // does the translation underneath sendFunctional(), in which case
-    // maybe this doesn't need to be virtual at all.)  Do we need
-    // similar wrappers for sendAtomic()?  If not, should we drop the
-    // "Functional" from the names?
+    // Do we need similar wrappers for sendAtomic()?  If not, should
+    // we drop the "Functional" from the names?
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    virtual void readBlobFunctional(Addr addr, uint8_t *p, int size)
-    { panic("Unimplemented"); }
+    void readBlobFunctional(Addr addr, uint8_t *p, int size);
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    virtual void writeBlobFunctional(Addr addr, uint8_t *p, int size)
-    { panic("Unimplemented"); }
+    void writeBlobFunctional(Addr addr, uint8_t *p, int size);
 
     /** Fill size bytes starting at addr with byte value val.  This
         should not need to be virtual, since it can be implemented in
@@ -205,8 +198,13 @@ class Port
         prot_memset on the old functional memory that's never used),
         but Nate claims it is.
     */
-    void memsetBlobFunctional(Addr addr, uint8_t val, int size)
-    { panic("Unimplemented"); }
+    void memsetBlobFunctional(Addr addr, uint8_t val, int size);
+
+  private:
+
+    /** Internal helper function for read/writeBlob().
+     */
+    void blobHelper(Addr addr, uint8_t *p, int size, Command cmd);
 };
 
 #endif //__MEM_PORT_HH__
