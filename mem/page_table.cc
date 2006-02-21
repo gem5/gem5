@@ -34,33 +34,25 @@
 #include <map>
 #include <fstream>
 
-using namespace std;
-
+#include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/trace.hh"
-#include "mem/physical.hh"
 #include "mem/page_table.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
-PageTable::PageTable(const std::string &name)
-    : SimObject(name)
+using namespace std;
+
+PageTable::PageTable(System *_system, Addr _pageSize)
+    : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
+      system(_system)
 {
+    assert(isPowerOf2(pageSize));
 }
 
 PageTable::~PageTable()
 {
-    //Iterate the page table freeing the memoruy
-    //Addr addr;
-    //std::map<Addr,Addr>::iterator iter;
-
-    //iter = pTable.begin();
-    //while(iter != pTable.end())
-    //{
-    //delete [] (uint8_t *)iter->second;
-//	iter ++;
-    //  }
-
 }
 
 Fault
@@ -89,78 +81,49 @@ PageTable::page_check(Addr addr, int size) const
 }
 
 
+
+
+void
+PageTable::allocate(Addr vaddr, int size)
+{
+    // starting address must be page aligned
+    assert(pageOffset(vaddr) == 0);
+
+    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+        std::map<Addr,Addr>::iterator iter = pTable.find(vaddr);
+
+        if (iter != pTable.end()) {
+            // already mapped
+            fatal("PageTable::allocate: address 0x%x already mapped", vaddr);
+        }
+
+        pTable[vaddr] = system->new_page();
+    }
+}
+
+
+
+bool
+PageTable::translate(Addr vaddr, Addr &paddr)
+{
+    Addr page_addr = pageAlign(vaddr);
+    std::map<Addr,Addr>::iterator iter = pTable.find(page_addr);
+
+    if (iter == pTable.end()) {
+        return false;
+    }
+
+    paddr = iter->second + pageOffset(vaddr);
+    return true;
+}
+
+
 Fault
 PageTable::translate(CpuRequestPtr &req)
 {
-//Should I check here for accesses that are > VMPageSize?
-    req->paddr = translate(req->vaddr, req->asid);
+    assert(pageAlign(req->vaddr + req->size - 1) == pageAlign(req->vaddr));
+    if (!translate(req->vaddr, req->paddr)) {
+        return Machine_Check_Fault;
+    }
     return page_check(req->paddr, req->size);
 }
-
-
-Addr
-PageTable::translate(Addr vaddr, unsigned asid)
-{
-    Addr hash_addr;
-    std::map<Addr,Addr>::iterator iter;
-
-    //DPRINTF(PageTable,"PageTable: Virtual Address %#x Translating for ASID %i\n",
-    //    vaddr,asid);
-
-    //Create the hash_addr
-    //Combine vaddr and asid
-    hash_addr = vaddr & (~(VMPageSize - 1)) | asid;
-
-    //DPRINTF(PageTable,"PageTable: Hash Address %#x\n",hash_addr);
-
-    //Look into the page table
-    iter=pTable.find(hash_addr);
-
-    //bool page_fault = true;
-
-    //Store the translated address if found, and return
-    if (iter != pTable.end()) //Found??
-    {
-      Addr return_addr = iter->second + (vaddr & (VMPageSize - 1));
-
-      return return_addr;
-    }
-    else//Alocate a new page, register translation
-    {
-        Addr return_addr;
-
-        //DPRINTF(PageTable,"PageTable: Page Not Found. Allocating new page\n");
-
-        Addr new_page = mem->new_page();
-
-        pTable[hash_addr] = new_page;
-
-        return_addr = new_page + (vaddr & (VMPageSize - 1));
-
-        return return_addr;
-    }
-}
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(PageTable)
-
-    SimObjectParam<PhysicalMemory *> physmem;
-
-END_DECLARE_SIM_OBJECT_PARAMS(PageTable)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(PageTable)
-
-    INIT_PARAM_DFLT(physmem, "Pointer to functional memory", NULL)
-
-END_INIT_SIM_OBJECT_PARAMS(PageTable)
-
-CREATE_SIM_OBJECT(PageTable)
-{
-    PageTable *pTable = new PageTable(getInstanceName());
-
-    if (physmem)
-        pTable->setPhysMem(physmem);
-
-    return pTable;
-}
-
-REGISTER_SIM_OBJECT("PageTable", PageTable)

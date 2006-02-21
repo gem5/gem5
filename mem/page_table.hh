@@ -42,44 +42,44 @@
 #include "mem/packet.hh"
 #include "sim/sim_object.hh"
 
-class PhysicalMemory;
+class System;
 
 /**
  * Page Table Decleration.
  */
-class PageTable : public SimObject
+class PageTable
 {
   protected:
     std::map<Addr,Addr> pTable;
 
-    PhysicalMemory *mem;
+    const Addr pageSize;
+    const Addr offsetMask;
+
+    System *system;
 
   public:
 
-    /**
-     * Construct this interface.
-     * @param name The name of this interface.
-     * @param hier Pointer to the hierarchy wide parameters.
-     * @param _mem the connected memory.
-     */
-    PageTable(const std::string &name);
+    PageTable(System *_system, Addr _pageSize = VMPageSize);
 
     ~PageTable();
 
-    void setPhysMem(PhysicalMemory *_mem) { mem = _mem; }
+    Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
+    Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
     Fault page_check(Addr addr, int size) const;
+
+    void allocate(Addr vaddr, int size);
 
     /**
      * Translate function
      * @param vaddr The virtual address.
-     * @param asid The address space id.
      * @return Physical address from translation.
      */
-    Addr translate(Addr vaddr, unsigned asid);
+    bool translate(Addr vaddr, Addr &paddr);
 
     /**
-     * Perform a translation on the memory request, fills in paddr field of mem_req.
+     * Perform a translation on the memory request, fills in paddr
+     * field of mem_req.
      * @param req The memory request.
      */
     Fault translate(CpuRequestPtr &req);
