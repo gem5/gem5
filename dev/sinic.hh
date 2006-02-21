@@ -283,17 +283,6 @@ class Device : public Base
     void regWrite(Addr daddr, int cpu, const uint8_t *data);
     Tick cacheAccess(MemReqPtr &req);
 
-  protected:
-    struct RegWriteData {
-        Addr daddr;
-        uint64_t value;
-        RegWriteData(Addr da, uint64_t val) : daddr(da), value(val) {}
-    };
-
-    std::vector<std::list<RegWriteData> > writeQueue;
-
-    bool pioDelayWrite;
-
 /**
  * Statistics
  */
@@ -349,7 +338,6 @@ class Device : public Base
         Bus *header_bus;
         Bus *payload_bus;
         Tick pio_latency;
-        bool pio_delay_write;
         PhysicalMemory *physmem;
         IntrControl *intctrl;
         bool rx_filter;

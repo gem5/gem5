@@ -113,8 +113,6 @@ Device::Device(Params *p)
                                                  p->dma_no_allocate);
     } else if (p->payload_bus)
         panic("must define a header bus if defining a payload bus");
-
-    pioDelayWrite = p->pio_delay_write && pioInterface;
 }
 
 Device::~Device()
@@ -353,9 +351,6 @@ Device::prepareRead(int cpu, int index)
 void
 Device::prepareWrite(int cpu, int index)
 {
-    if (cpu >= writeQueue.size())
-        writeQueue.resize(cpu + 1);
-
     prepareIO(cpu, index);
 }
 
@@ -503,11 +498,7 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 
     prepareWrite(cpu, index);
 
-    if (pioDelayWrite)
-        writeQueue[cpu].push_back(RegWriteData(daddr, reg64));
-
-    if (!pioDelayWrite || !info.delay_write)
-        regWrite(daddr, cpu, data);
+    regWrite(daddr, cpu, data);
 
     return NoFault;
 }
@@ -1571,27 +1562,6 @@ Device::cacheAccess(MemReqPtr &req)
     DPRINTF(EthernetPIO, "timing %s to paddr=%#x bar=%d daddr=%#x\n",
             req->cmd.toString(), req->paddr, bar, daddr);
 
-    if (!pioDelayWrite || !req->cmd.isWrite())
-        return curTick + pioLatency;
-
-    if (bar == 0) {
-        int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
-        std::list<RegWriteData> &wq = writeQueue[cpu];
-        if (wq.empty())
-            panic("WriteQueue for cpu %d empty timing daddr=%#x", cpu, daddr);
-
-        const RegWriteData &data = wq.front();
-        if (data.daddr != daddr)
-            panic("read mismatch on cpu %d, daddr functional=%#x timing=%#x",
-                  cpu, data.daddr, daddr);
-
-        const Regs::Info &info = regInfo(data.daddr);
-        if (info.delay_write)
-            regWrite(daddr, cpu, (uint8_t *)&data.value);
-
-        wq.pop_front();
-    }
-
     return curTick + pioLatency;
 }
 
@@ -1649,7 +1619,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<Tick> dma_write_factor;
     Param<bool> dma_no_allocate;
     Param<Tick> pio_latency;
-    Param<bool> pio_delay_write;
     Param<Tick> intr_delay;
 
     Param<Tick> rx_delay;
@@ -1693,7 +1662,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
     INIT_PARAM(dma_no_allocate, "Should we allocat on read in cache"),
     INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
-    INIT_PARAM(pio_delay_write, ""),
     INIT_PARAM(intr_delay, "Interrupt Delay"),
 
     INIT_PARAM(rx_delay, "Receive Delay"),
@@ -1741,7 +1709,6 @@ CREATE_SIM_OBJECT(Device)
     params->dma_write_factor = dma_write_factor;
     params->dma_no_allocate = dma_no_allocate;
     params->pio_latency = pio_latency;
-    params->pio_delay_write = pio_delay_write;
     params->intr_delay = intr_delay;
 
     params->tx_delay = tx_delay;

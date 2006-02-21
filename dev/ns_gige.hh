@@ -236,15 +236,6 @@ class NSGigE : public PciDev
     uint32_t rxDescCnt;
     DmaState rxDmaState;
 
-    struct RegWriteData {
-        Addr daddr;
-        uint32_t value;
-        RegWriteData(Addr da, uint32_t val) : daddr(da), value(val) {}
-    };
-
-    std::vector<std::list<RegWriteData> > writeQueue;
-    bool pioDelayWrite;
-
     bool extstsEnable;
 
     /** EEPROM State Machine */
@@ -382,7 +373,6 @@ class NSGigE : public PciDev
         Tick tx_delay;
         Tick rx_delay;
         Tick pio_latency;
-        bool pio_delay_write;
         bool dma_desc_free;
         bool dma_data_free;
         Tick dma_read_delay;
