@@ -90,7 +90,7 @@ PhysicalMemory::PhysicalMemory(const string &n, Range<Addr> range,
 #endif
 
 PhysicalMemory::PhysicalMemory(const string &n)
-    : Memory(n), base_addr(0), pmem_addr(NULL)
+    : Memory(n), memoryPort(this), base_addr(0), pmem_addr(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;
@@ -170,6 +170,86 @@ PhysicalMemory::deviceBlockSize()
     //Can accept anysize request
     return 0;
 }
+
+bool
+PhysicalMemory::doTimingAccess (Packet &pkt)
+{
+    doFunctionalAccess(pkt);
+    //Schedule a response event at curTick + lat;
+    return true;
+}
+
+Tick
+PhysicalMemory::doAtomicAccess(Packet &pkt)
+{
+    doFunctionalAccess(pkt);
+    return curTick + lat;
+}
+
+void
+PhysicalMemory::doFunctionalAccess(Packet &pkt)
+{
+    switch (pkt.cmd) {
+      case Read:
+        prot_read(pkt.addr, (uint8_t *)pkt.data, pkt.size);
+
+      case Write:
+        prot_write(pkt.addr, (uint8_t *)pkt.data, pkt.size);
+
+      default:
+        panic("unimplemented");
+    }
+}
+
+Port *
+PhysicalMemory::getPort(const char *if_name)
+{
+    return &memoryPort;
+}
+
+void
+PhysicalMemory::recvStatusChange(Port::Status status)
+{
+    panic("??");
+}
+
+PhysicalMemory::MemoryPort::MemoryPort(PhysicalMemory *_memory)
+    : memory(_memory)
+{ }
+
+void
+PhysicalMemory::MemoryPort::recvStatusChange(Port::Status status)
+{
+    memory->recvStatusChange(status);
+}
+
+void
+PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &range_list,
+                                           bool &owner)
+{
+    panic("??");
+}
+
+
+bool
+PhysicalMemory::MemoryPort::recvTiming(Packet &pkt)
+{
+    return memory->doTimingAccess(pkt);
+}
+
+Tick
+PhysicalMemory::MemoryPort::recvAtomic(Packet &pkt)
+{
+    return memory->doAtomicAccess(pkt);
+}
+
+void
+PhysicalMemory::MemoryPort::recvFunctional(Packet &pkt)
+{
+    memory->doFunctionalAccess(pkt);
+}
+
+
 
 void
 PhysicalMemory::serialize(ostream &os)
@@ -277,6 +357,7 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
               filename);
 
 }
+
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 

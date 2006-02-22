@@ -40,6 +40,39 @@
 //
 class PhysicalMemory : public Memory
 {
+    class MemoryPort : public Port
+    {
+        PhysicalMemory *memory;
+
+      public:
+
+        MemoryPort(PhysicalMemory *_memory);
+
+      protected:
+
+        virtual bool recvTiming(Packet &pkt);
+
+        virtual Tick recvAtomic(Packet &pkt);
+
+        virtual void recvFunctional(Packet &pkt);
+
+        virtual void recvStatusChange(Status status);
+
+        virtual void getDeviceAddressRanges(AddrRangeList &range_list,
+                                            bool &owner);
+
+        virtual int deviceBlockSize();
+
+    };
+
+    MemoryPort memoryPort;
+
+    Port * PhysicalMemory::getPort(const char *if_name);
+
+    int lat;
+
+    //event to send response needs to be here
+
   private:
     // prevent copying of a MainMemory object
     PhysicalMemory(const PhysicalMemory &specmem);
@@ -67,12 +100,18 @@ class PhysicalMemory : public Memory
     virtual int deviceBlockSize();
 
     // Read/Write arbitrary amounts of data to simulated memory space
-    virtual void prot_read(Addr addr, uint8_t *p, int size);
-    virtual void prot_write(Addr addr, const uint8_t *p, int size);
-    virtual void prot_memset(Addr addr, uint8_t val, int size);
+    void prot_read(Addr addr, uint8_t *p, int size);
+    void prot_write(Addr addr, const uint8_t *p, int size);
+    void prot_memset(Addr addr, uint8_t val, int size);
 
     // fast back-door memory access for vtophys(), remote gdb, etc.
     uint64_t phys_read_qword(Addr addr) const;
+  private:
+    bool doTimingAccess(Packet &pkt);
+    Tick doAtomicAccess(Packet &pkt);
+    void doFunctionalAccess(Packet &pkt);
+
+    void recvStatusChange(Port::Status status);
 
   public:
     virtual void serialize(std::ostream &os);
