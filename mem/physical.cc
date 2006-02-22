@@ -130,36 +130,18 @@ PhysicalMemory::new_page()
 // little helper for better prot_* error messages
 //
 void
-PhysicalMemory::prot_access_error(Addr addr, int size, const string &func)
+PhysicalMemory::prot_access_error(Addr addr, int size, Command func)
 {
     panic("invalid physical memory access!\n"
-          "%s: %s(addr=%#x, size=%d) out of range (max=%#x)\n",
+          "%s: %i(addr=%#x, size=%d) out of range (max=%#x)\n",
           name(), func, addr, size, pmem_size - 1);
-}
-
-void
-PhysicalMemory::prot_read(Addr addr, uint8_t *p, int size)
-{
-    if (addr + size >= pmem_size)
-        prot_access_error(addr, size, "prot_read");
-
-    memcpy(p, pmem_addr + addr - base_addr, size);
-}
-
-void
-PhysicalMemory::prot_write(Addr addr, const uint8_t *p, int size)
-{
-    if (addr + size >= pmem_size)
-        prot_access_error(addr, size, "prot_write");
-
-    memcpy(pmem_addr + addr - base_addr, p, size);
 }
 
 void
 PhysicalMemory::prot_memset(Addr addr, uint8_t val, int size)
 {
     if (addr + size >= pmem_size)
-        prot_access_error(addr, size, "prot_memset");
+        prot_access_error(addr, size, Write);
 
     memset(pmem_addr + addr - base_addr, val, size);
 }
@@ -189,13 +171,14 @@ PhysicalMemory::doAtomicAccess(Packet &pkt)
 void
 PhysicalMemory::doFunctionalAccess(Packet &pkt)
 {
+    if (pkt.addr + pkt.size >= pmem_size)
+            prot_access_error(pkt.addr, pkt.size, pkt.cmd);
+
     switch (pkt.cmd) {
       case Read:
-        prot_read(pkt.addr, (uint8_t *)pkt.data, pkt.size);
-
+        memcpy(pkt.data, pmem_addr + pkt.addr - base_addr, pkt.size);
       case Write:
-        prot_write(pkt.addr, (uint8_t *)pkt.data, pkt.size);
-
+        memcpy(pmem_addr + pkt.addr - base_addr, pkt.data, pkt.size);
       default:
         panic("unimplemented");
     }

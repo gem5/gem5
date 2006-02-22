@@ -34,6 +34,7 @@
 
 #include "base/range.hh"
 #include "mem/memory.hh"
+#include "mem/packet.hh"
 
 //
 // Functional model for a contiguous block of physical memory. (i.e. RAM)
@@ -94,18 +95,15 @@ class PhysicalMemory : public Memory
 
   protected:
     // error handling for prot_* functions
-    void prot_access_error(Addr addr, int size, const std::string &func);
+    void prot_access_error(Addr addr, int size, Command func);
 
   public:
     virtual int deviceBlockSize();
 
-    // Read/Write arbitrary amounts of data to simulated memory space
-    void prot_read(Addr addr, uint8_t *p, int size);
-    void prot_write(Addr addr, const uint8_t *p, int size);
     void prot_memset(Addr addr, uint8_t val, int size);
 
     // fast back-door memory access for vtophys(), remote gdb, etc.
-    uint64_t phys_read_qword(Addr addr) const;
+    // uint64_t phys_read_qword(Addr addr) const;
   private:
     bool doTimingAccess(Packet &pkt);
     Tick doAtomicAccess(Packet &pkt);
