@@ -29,13 +29,14 @@
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
-//This makes sure the big endian versions of certain functions are used.
 namespace LittleEndianGuest {}
-using namespace LittleEndianGuest
+using namespace LittleEndianGuest;
 
-#include "arch/mips/faults.hh"
+//#include "arch/mips/faults.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
 #include "sim/host.hh"
+#include "sim/faults.hh"
 
 class FastCPU;
 class FullCPU;
@@ -43,453 +44,260 @@ class Checkpoint;
 
 #define TARGET_MIPS
 
-template <class ISA> class StaticInst;
-template <class ISA> class StaticInstPtr;
+class StaticInst;
+class StaticInstPtr;
 
-//namespace MIPS34K
-//{
-//	int DTB_ASN_ASN(uint64_t reg);
-//	int ITB_ASN_ASN(uint64_t reg);
-//}
+namespace MIPS34K {
+int DTB_ASN_ASN(uint64_t reg);
+int ITB_ASN_ASN(uint64_t reg);
+}
 
-class MipsISA
+namespace MipsISA
 {
-        public:
 
-        typedef uint32_t MachInst;
-        typedef uint64_t Addr;
-        typedef uint8_t  RegIndex;
+    typedef uint32_t MachInst;
+//    typedef uint64_t Addr;
+    typedef uint8_t  RegIndex;
 
-        enum
-        {
-                MemoryEnd = 0xffffffffffffffffULL,
+    enum {
+        MemoryEnd = 0xffffffffffffffffULL,
 
-                NumFloatRegs = 32,
-                NumMiscRegs = 32,
+        NumIntRegs = 32,
+        NumFloatRegs = 32,
+        NumMiscRegs = 32,
 
-                MaxRegsOfAnyType = 32,
-                // Static instruction parameters
-                MaxInstSrcRegs = 3,
-                MaxInstDestRegs = 2,
+        MaxRegsOfAnyType = 32,
+        // Static instruction parameters
+        MaxInstSrcRegs = 3,
+        MaxInstDestRegs = 2,
 
-                // Maximum trap level
-                MaxTL = 4
+        // semantically meaningful register indices
+        ZeroReg = 31,	// architecturally meaningful
+        // the rest of these depend on the ABI
+        StackPointerReg = 30,
+        GlobalPointerReg = 29,
+        ProcedureValueReg = 27,
+        ReturnAddressReg = 26,
+        ReturnValueReg = 0,
+        FramePointerReg = 15,
+        ArgumentReg0 = 16,
+        ArgumentReg1 = 17,
+        ArgumentReg2 = 18,
+        ArgumentReg3 = 19,
+        ArgumentReg4 = 20,
+        ArgumentReg5 = 21,
 
-                // semantically meaningful register indices
-                ZeroReg = 0,	// architecturally meaningful
-                // the rest of these depend on the ABI
-        }
-        typedef uint64_t IntReg;
+        LogVMPageSize = 13,	// 8K bytes
+        VMPageSize = (1 << LogVMPageSize),
 
-        class IntRegFile
-        {
-        private:
-                //For right now, let's pretend the register file is static
-                IntReg regs[32];
-        public:
-                IntReg & operator [] (RegIndex index)
-                {
-                        //Don't allow indexes outside of the 32 registers
-                        index &= 0x1F
-                        return regs[index];
-                }
-        };
+        BranchPredAddrShiftAmt = 2, // instructions are 4-byte aligned
 
-        void inline serialize(std::ostream & os)
-        {
-                SERIALIZE_ARRAY(regs, 32);
-        }
+        WordBytes = 4,
+        HalfwordBytes = 2,
+        ByteBytes = 1,
+        DepNA = 0,
+    };
 
-        void inline unserialize(Checkpoint &*cp, const std::string &section)
-        {
-                UNSERIALIZE_ARRAY(regs, 32);
-        }
+    // These enumerate all the registers for dependence tracking.
+    enum DependenceTags {
+        // 0..31 are the integer regs 0..31
+        // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
+        FP_Base_DepTag = 32,
+        Ctrl_Base_DepTag = 64,
+        Fpcr_DepTag = 64,		// floating point control register
+        Uniq_DepTag = 65,
+        IPR_Base_DepTag = 66
+    };
 
-        class FloatRegFile
-        {
-        private:
-                //By using the largest data type, we ensure everything
-                //is aligned correctly in memory
-                union
-                {
-                        double double rawRegs[16];
-                        uint64_t regDump[32];
-                };
-                class QuadRegs
-                {
-                        private:
-                                FloatRegFile * parent;
-                        public:
-                                QuadRegs(FloatRegFile * p) : parent(p) {;}
-                                double double & operator [] (RegIndex index)
-                                {
-                                        //Quad floats are index by the single
-                                        //precision register the start on,
-                                        //and only 16 should be accessed
-                                        index = (index >> 2) & 0xF;
-                                        return parent->rawRegs[index];
-                                }
-                };
-                class DoubleRegs
-                {
-                        private:
-                                FloatRegFile * parent;
-                        public:
-                                DoubleRegs(FloatRegFile * p) : parent(p) {;}
-                                double & operator [] (RegIndex index)
-                                {
-                                        //Double floats are index by the single
-                                        //precision register the start on,
-                                        //and only 32 should be accessed
-                                        index = (index >> 1) & 0x1F
-                                        return ((double [])parent->rawRegs)[index];
-                                }
-                }
-                class SingleRegs
-                {
-                        private:
-                                FloatRegFile * parent;
-                                public:
-                                SingleRegs(FloatRegFile * p) : parent(p) {;}
-                                double & operator [] (RegFile index)
-                                {
-                                        //Only 32 single floats should be accessed
-                                        index &= 0x1F
-                                        return ((float [])parent->rawRegs)[index];
-                                }
-                }
-        public:
-                void inline serialize(std::ostream & os)
-                {
-                        SERIALIZE_ARRAY(regDump, 32);
-                }
+    typedef uint64_t IntReg;
+    typedef IntReg IntRegFile[NumIntRegs];
 
-                void inline unserialize(Checkpoint &* cp, std::string & section)
-                {
-                        UNSERIALIZE_ARRAY(regDump, 32);
-                }
+    // floating point register file entry type
+    typedef union {
+        uint64_t q;
+        double d;
+    } FloatReg;
 
-                QuadRegs quadRegs;
-                DoubleRegs doubleRegs;
-                SingleRegs singleRegs;
-                FloatRegFile() : quadRegs(this), doubleRegs(this), singleRegs(this)
-                {;}
-        };
+    typedef union {
+        uint64_t q[NumFloatRegs];	// integer qword view
+        double d[NumFloatRegs];		// double-precision floating point view
+    } FloatRegFile;
 
-        // control register file contents
-        typedef uint64_t MiscReg;
-        // The control registers, broken out into fields
-        class MiscRegFile
-        {
-        public:
-                union
-                {
-                        uint16_t pstate;		// Process State Register
-                        struct
-                        {
-                                uint16_t ag:1;		// Alternate Globals
-                                uint16_t ie:1;		// Interrupt enable
-                                uint16_t priv:1;	// Privelege mode
-                                uint16_t am:1;		// Address mask
-                                uint16_t pef:1;		// PSTATE enable floating-point
-                                uint16_t red:1;		// RED (reset, error, debug) state
-                                uint16_t mm:2;		// Memory Model
-                                uint16_t tle:1;		// Trap little-endian
-                                uint16_t cle:1;		// Current little-endian
-                        } pstateFields;
-                }
-                uint64_t tba;		// Trap Base Address
-                union
-                {
-                        uint64_t y;		// Y (used in obsolete multiplication)
-                        struct
-                        {
-                                uint64_t value:32;	// The actual value stored in y
-                                const uint64_t :32;	// reserved bits
-                        } yFields;
-                }
-                uint8_t pil;		// Process Interrupt Register
-                uint8_t cwp;		// Current Window Pointer
-                uint16_t tt[MaxTL];	// Trap Type (Type of trap which occured on the previous level)
-                union
-                {
-                        uint8_t	ccr;		// Condition Code Register
-                        struct
-                        {
-                                union
-                                {
-                                        uint8_t icc:4;	// 32-bit condition codes
-                                        struct
-                                        {
-                                                uint8_t c:1;	// Carry
-                                                uint8_t v:1;	// Overflow
-                                                uint8_t z:1;	// Zero
-                                                uint8_t n:1;	// Negative
-                                        } iccFields:4;
-                                } :4;
-                                union
-                                {
-                                        uint8_t xcc:4;	// 64-bit condition codes
-                                        struct
-                                        {
-                                                uint8_t c:1;	// Carry
-                                                uint8_t v:1;	// Overflow
-                                                uint8_t z:1;	// Zero
-                                                uint8_t n:1;	// Negative
-                                        } xccFields:4;
-                                } :4;
-                        } ccrFields;
-                }
-                uint8_t asi;		// Address Space Identifier
-                uint8_t tl;		// Trap Level
-                uint64_t tpc[MaxTL];	// Trap Program Counter (value from previous trap level)
-                uint64_t tnpc[MaxTL];	// Trap Next Program Counter (value from previous trap level)
-                union
-                {
-                        uint64_t tstate[MaxTL];	// Trap State
-                        struct
-                        {
-                                //Values are from previous trap level
-                                uint64_t cwp:5;		// Current Window Pointer
-                                const uint64_t :2;	// Reserved bits
-                                uint64_t pstate:10;	// Process State
-                                const uint64_t :6;	// Reserved bits
-                                uint64_t asi:8;		// Address Space Identifier
-                                uint64_t ccr:8;		// Condition Code Register
-                        } tstateFields[MaxTL];
-                }
-                union
-                {
-                        uint64_t	tick;		// Hardware clock-tick counter
-                        struct
-                        {
-                                uint64_t counter:63;	// Clock-tick count
-                                uint64_t npt:1;		// Non-priveleged trap
-                        } tickFields;
-                }
-                uint8_t cansave;	// Savable windows
-                uint8_t canrestore;	// Restorable windows
-                uint8_t otherwin;	// Other windows
-                uint8_t cleanwin;	// Clean windows
-                union
-                {
-                        uint8_t wstate;		// Window State
-                        struct
-                        {
-                                uint8_t normal:3;	// Bits TT<4:2> are set to on a normal
-                                                        // register window trap
-                                uint8_t other:3;	// Bits TT<4:2> are set to on an "otherwin"
-                                                        // register window trap
-                        } wstateFields;
-                }
-                union
-                {
-                        uint64_t ver;		// Version
-                        struct
-                        {
-                                uint64_t maxwin:5;	// Max CWP value
-                                const uint64_t :2;	// Reserved bits
-                                uint64_t maxtl:8;	// Maximum trap level
-                                const uint64_t :8;	// Reserved bits
-                                uint64_t mask:8;	// Processor mask set revision number
-                                uint64_t impl:16;	// Implementation identification number
-                                uint64_t manuf:16;	// Manufacturer code
-                        } verFields;
-                }
-                union
-                {
-                        uint64_t	fsr;	// Floating-Point State Register
-                        struct
-                        {
-                                union
-                                {
-                                        uint64_t cexc:5;	// Current excpetion
-                                        struct
-                                        {
-                                                uint64_t nxc:1;		// Inexact
-                                                uint64_t dzc:1;		// Divide by zero
-                                                uint64_t ufc:1;		// Underflow
-                                                uint64_t ofc:1;		// Overflow
-                                                uint64_t nvc:1;		// Invalid operand
-                                        } cexecFields:5;
-                                } :5;
-                                union
-                                {
-                                        uint64_t aexc:5;		// Accrued exception
-                                        struct
-                                        {
-                                                uint64_t nxc:1;		// Inexact
-                                                uint64_t dzc:1;		// Divide by zero
-                                                uint64_t ufc:1;		// Underflow
-                                                uint64_t ofc:1;		// Overflow
-                                                uint64_t nvc:1;		// Invalid operand
-                                        } aexecFields:5;
-                                } :5;
-                                uint64_t fcc0:2;		// Floating-Point condtion codes
-                                const uint64_t :1;		// Reserved bits
-                                uint64_t qne:1;			// Deferred trap queue not empty
-                                                                // with no queue, it should read 0
-                                uint64_t ftt:3;			// Floating-Point trap type
-                                uint64_t ver:3;			// Version (of the FPU)
-                                const uint64_t :2;		// Reserved bits
-                                uint64_t ns:1;			// Nonstandard floating point
-                                union
-                                {
-                                        uint64_t tem:5;			// Trap Enable Mask
-                                        struct
-                                        {
-                                                uint64_t nxm:1;		// Inexact
-                                                uint64_t dzm:1;		// Divide by zero
-                                                uint64_t ufm:1;		// Underflow
-                                                uint64_t ofm:1;		// Overflow
-                                                uint64_t nvm:1;		// Invalid operand
-                                        } temFields:5;
-                                } :5;
-                                const uint64_t :2;		// Reserved bits
-                                uint64_t rd:2;			// Rounding direction
-                                uint64_t fcc1:2;		// Floating-Point condition codes
-                                uint64_t fcc2:2;		// Floating-Point condition codes
-                                uint64_t fcc3:2;		// Floating-Point condition codes
-                                const uint64_t :26;		// Reserved bits
-                        } fsrFields;
-                }
-                union
-                {
-                        uint8_t		fprs;	// Floating-Point Register State
-                        struct
-                        {
-                                dl:1;		// Dirty lower
-                                du:1;		// Dirty upper
-                                fef:1;		// FPRS enable floating-Point
-                        } fprsFields;
-                };
+    // control register file contents
+    typedef uint64_t MiscReg;
+    typedef struct {
+        uint64_t	fpcr;		// floating point condition codes
+        uint64_t	uniq;		// process-unique register
+        bool		lock_flag;	// lock flag for LL/SC
+        Addr		lock_addr;	// lock address for LL/SC
+    } MiscRegFile;
 
-                void serialize(std::ostream & os)
-                {
-                        SERIALIZE_SCALAR(pstate);
-                        SERIAlIZE_SCALAR(tba);
-                        SERIALIZE_SCALAR(y);
-                        SERIALIZE_SCALAR(pil);
-                        SERIALIZE_SCALAR(cwp);
-                        SERIALIZE_ARRAY(tt, MaxTL);
-                        SERIALIZE_SCALAR(ccr);
-                        SERIALIZE_SCALAR(asi);
-                        SERIALIZE_SCALAR(tl);
-                        SERIALIZE_SCALAR(tpc);
-                        SERIALIZE_SCALAR(tnpc);
-                        SERIALIZE_ARRAY(tstate, MaxTL);
-                        SERIALIZE_SCALAR(tick);
-                        SERIALIZE_SCALAR(cansave);
-                        SERIALIZE_SCALAR(canrestore);
-                        SERIALIZE_SCALAR(otherwin);
-                        SERIALIZE_SCALAR(cleanwin);
-                        SERIALIZE_SCALAR(wstate);
-                        SERIALIZE_SCALAR(ver);
-                        SERIALIZE_SCALAR(fsr);
-                        SERIALIZE_SCALAR(fprs);
-                }
+extern const Addr PageShift;
+extern const Addr PageBytes;
+extern const Addr PageMask;
+extern const Addr PageOffset;
 
-                void unserialize(Checkpoint &* cp, std::string & section)
-                {
-                        UNSERIALIZE_SCALAR(pstate);
-                        UNSERIAlIZE_SCALAR(tba);
-                        UNSERIALIZE_SCALAR(y);
-                        UNSERIALIZE_SCALAR(pil);
-                        UNSERIALIZE_SCALAR(cwp);
-                        UNSERIALIZE_ARRAY(tt, MaxTL);
-                        UNSERIALIZE_SCALAR(ccr);
-                        UNSERIALIZE_SCALAR(asi);
-                        UNSERIALIZE_SCALAR(tl);
-                        UNSERIALIZE_SCALAR(tpc);
-                        UNSERIALIZE_SCALAR(tnpc);
-                        UNSERIALIZE_ARRAY(tstate, MaxTL);
-                        UNSERIALIZE_SCALAR(tick);
-                        UNSERIALIZE_SCALAR(cansave);
-                        UNSERIALIZE_SCALAR(canrestore);
-                        UNSERIALIZE_SCALAR(otherwin);
-                        UNSERIALIZE_SCALAR(cleanwin);
-                        UNSERIALIZE_SCALAR(wstate);
-                        UNSERIALIZE_SCALAR(ver);
-                        UNSERIALIZE_SCALAR(fsr);
-                        UNSERIALIZE_SCALAR(fprs);
-                }
-        };
+#if FULL_SYSTEM
 
-        typedef union
-        {
-                IntReg  intreg;
-                FloatReg   fpreg;
-                MiscReg ctrlreg;
-        } AnyReg;
+    typedef uint64_t InternalProcReg;
 
-        struct RegFile
-        {
-                IntRegFile intRegFile;		// (signed) integer register file
-                FloatRegFile floatRegFile;	// floating point register file
-                MiscRegFile miscRegFile;	// control register file
+#include "arch/mips/isa_fullsys_traits.hh"
 
-                Addr pc;		// Program Counter
-                Addr npc;		// Next Program Counter
-            Addr nnpc;                  // Next next program Counter
+#else
+    enum {
+        NumInternalProcRegs = 0
+    };
+#endif
+
+    enum {
+        TotalNumRegs =
+        NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs
+    };
+
+    enum {
+        TotalDataRegs = NumIntRegs + NumFloatRegs
+    };
+
+    typedef union {
+        IntReg  intreg;
+        FloatReg   fpreg;
+        MiscReg ctrlreg;
+    } AnyReg;
+
+    struct RegFile {
+        IntRegFile intRegFile;		// (signed) integer register file
+        FloatRegFile floatRegFile;	// floating point register file
+        MiscRegFile miscRegs;		// control register file
+        Addr pc;			// program counter
+        Addr npc;			// next-cycle program counter
+#if FULL_SYSTEM
+        IntReg palregs[NumIntRegs];	// PAL shadow registers
+        InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
+        int intrflag;			// interrupt flag
+        bool pal_shadow;		// using pal_shadow registers
+        inline int instAsid() { return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]); }
+        inline int dataAsid() { return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]); }
+#endif // FULL_SYSTEM
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
+
+    StaticInstPtr decodeInst(MachInst);
+
+    // return a no-op instruction... used for instruction fetch faults
+    extern const MachInst NoopMachInst;
+
+    enum annotes {
+        ANNOTE_NONE = 0,
+        // An impossible number for instruction annotations
+        ITOUCH_ANNOTE = 0xffffffff,
+    };
+
+    static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
+    }
+
+    static inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return (reg >= 9 && reg <= 15);
+    }
+
+    static inline bool isCallerSaveFloatRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return false;
+    }
+
+    static inline bool isCalleeSaveFloatRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return false;
+    }
+
+    static inline Addr alignAddress(const Addr &addr,
+                                         unsigned int nbytes) {
+        return (addr & ~(nbytes - 1));
+    }
+
+    // Instruction address compression hooks
+    static inline Addr realPCToFetchPC(const Addr &addr) {
+        return addr;
+    }
+
+    static inline Addr fetchPCToRealPC(const Addr &addr) {
+        return addr;
+    }
+
+    // the size of "fetched" instructions (not necessarily the size
+    // of real instructions for PISA)
+    static inline size_t fetchInstSize() {
+        return sizeof(MachInst);
+    }
+
+    static inline MachInst makeRegisterCopy(int dest, int src) {
+        panic("makeRegisterCopy not implemented");
+        return 0;
+    }
+
+    // Machine operations
+
+    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
+                               int regnum);
+
+    void restoreMachineReg(RegFile &regs, const AnyReg &reg,
+                                  int regnum);
+
+#if 0
+    static void serializeSpecialRegs(const Serializable::Proxy &proxy,
+                                     const RegFile &regs);
+
+    static void unserializeSpecialRegs(const IniFile *db,
+                                       const std::string &category,
+                                       ConfigNode *node,
+                                       RegFile &regs);
+#endif
+
+    /**
+     * Function to insure ISA semantics about 0 registers.
+     * @param xc The execution context.
+     */
+    template <class XC>
+    void zeroRegisters(XC *xc);
 
 
-                void serialize(std::ostream &os);
-                void unserialize(Checkpoint *cp, const std::string &section);
-        };
+//typedef MipsISA TheISA;
 
-        static StaticInstPtr<MipsISA> decodeInst(MachInst);
+//typedef TheISA::MachInst MachInst;
+//typedef TheISA::Addr Addr;
+//typedef TheISA::RegIndex RegIndex;
+//typedef TheISA::IntReg IntReg;
+//typedef TheISA::IntRegFile IntRegFile;
+//typedef TheISA::FloatReg FloatReg;
+//typedef TheISA::FloatRegFile FloatRegFile;
+//typedef TheISA::MiscReg MiscReg;
+//typedef TheISA::MiscRegFile MiscRegFile;
+//typedef TheISA::AnyReg AnyReg;
+//typedef TheISA::RegFile RegFile;
 
-        // return a no-op instruction... used for instruction fetch faults
-        static const MachInst NoopMachInst;
-
-        // Instruction address compression hooks
-        static inline Addr realPCToFetchPC(const Addr &addr)
-        {
-                return addr;
-        }
-
-        static inline Addr fetchPCToRealPC(const Addr &addr)
-        {
-                return addr;
-        }
-
-        // the size of "fetched" instructions (not necessarily the size
-        // of real instructions for PISA)
-        static inline size_t fetchInstSize()
-        {
-                return sizeof(MachInst);
-        }
-
-        /**
-         * Function to insure ISA semantics about 0 registers.
-         * @param xc The execution context.
-         */
-        template <class XC>
-        static void zeroRegisters(XC *xc);
+//const int NumIntRegs   = TheISA::NumIntRegs;
+//const int NumFloatRegs = TheISA::NumFloatRegs;
+//const int NumMiscRegs  = TheISA::NumMiscRegs;
+//const int TotalNumRegs = TheISA::TotalNumRegs;
+//const int VMPageSize   = TheISA::VMPageSize;
+//const int LogVMPageSize   = TheISA::LogVMPageSize;
+//const int ZeroReg = TheISA::ZeroReg;
+//const int StackPointerReg = TheISA::StackPointerReg;
+//const int GlobalPointerReg = TheISA::GlobalPointerReg;
+//const int ReturnAddressReg = TheISA::ReturnAddressReg;
+//const int ReturnValueReg = TheISA::ReturnValueReg;
+//const int ArgumentReg0 = TheISA::ArgumentReg0;
+//const int ArgumentReg1 = TheISA::ArgumentReg1;
+//const int ArgumentReg2 = TheISA::ArgumentReg2;
+//const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
+const Addr MaxAddr = (Addr)-1;
 };
 
-
-typedef MIPSISA TheISA;
-
-typedef TheISA::MachInst MachInst;
-typedef TheISA::Addr Addr;
-typedef TheISA::RegIndex RegIndex;
-typedef TheISA::IntReg IntReg;
-typedef TheISA::IntRegFile IntRegFile;
-typedef TheISA::FloatReg FloatReg;
-typedef TheISA::FloatRegFile FloatRegFile;
-typedef TheISA::MiscReg MiscReg;
-typedef TheISA::MiscRegFile MiscRegFile;
-typedef TheISA::AnyReg AnyReg;
-typedef TheISA::RegFile RegFile;
-
-const int VMPageSize   = TheISA::VMPageSize;
-const int LogVMPageSize   = TheISA::LogVMPageSize;
-const int ZeroReg = TheISA::ZeroReg;
-const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
-const int MaxAddr = (Addr)-1;
-
-#ifndef FULL_SYSTEM
+#if !FULL_SYSTEM
 class SyscallReturn {
         public:
            template <class T>
@@ -526,7 +334,10 @@ class SyscallReturn {
 #endif
 
 
-#ifdef FULL_SYSTEM
+#if FULL_SYSTEM
+//typedef TheISA::InternalProcReg InternalProcReg;
+//const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
+//const int NumInterruptLevels = TheISA::NumInterruptLevels;
 
 #include "arch/mips/mips34k.hh"
 #endif
