@@ -10,7 +10,7 @@
 //Include utility formats/functions
 ##include "m5/arch/mips/isa/formats/util.isa"
 
-//Include the integerOp and integerOpCc format
+//Include the integer formats
 ##include "m5/arch/mips/isa/formats/int.isa"
 
 //Include the floatOp format
@@ -30,4 +30,3 @@
 
 //Include the noop format
 ##include "m5/arch/mips/isa/formats/unknown.isa"
-

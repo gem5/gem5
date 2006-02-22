@@ -70,7 +70,7 @@ output header {{
         int32_t disp;
 
         /// Constructor.
-        Branch(const char *mnem, MachInst _machInst, OpClass __opClass)
+        BranchLikely(const char *mnem, MachInst _machInst, OpClass __opClass)
             : PCDependentDisassembly(mnem, _machInst, __opClass),
               disp(OFFSET << 2)
         {
@@ -243,7 +243,7 @@ output decoder {{
             ss << ",";
         }
 
-        ccprintf(ss, "(r%d)", RB);
+        ccprintf(ss, "(r%d)", RT);
 
         return ss.str();
     }

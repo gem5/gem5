@@ -32,9 +32,6 @@
 #include "sim/faults.hh"
 #include "arch/isa_traits.hh" //For the Addr type
 
-class Garbage;
-class Fault;
-
 class AlphaFault : public Fault
 {
   public:

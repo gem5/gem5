@@ -109,6 +109,8 @@ class StaticInstBase : public RefCounted
         IsCall,			///< Subroutine call.
         IsReturn,		///< Subroutine return.
 
+        IsCondDelaySlot,///< Conditional Delay-Slot Instruction
+
         IsThreadSync,	///< Thread synchronization operation.
 
         IsSerializing,	///< Serializes pipeline: won't execute until all

@@ -70,7 +70,7 @@ output decoder {{
     Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
-                        flags[IsFloating] ? 'f' : 'r', RA, MEMDISP, RB);
+                        flags[IsFloating] ? 'f' : 'r', RS, JMPTARG, RT);
     }
 
 }};

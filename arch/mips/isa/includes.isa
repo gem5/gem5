@@ -9,7 +9,6 @@ output header {{
 #include <iomanip>
 
 #include "cpu/static_inst.hh"
-#include "traps.hh"
 #include "mem/mem_req.hh"  // some constructors use MemReq flags
 }};
 

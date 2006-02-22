@@ -7,6 +7,8 @@
 
 //Outputs to decoder.hh
 output header {{
+#define R31 31
+
     /**
      * Base class for all MIPS static instructions.
      */

@@ -63,12 +63,12 @@ output exec {{
     }
 }};
 
-// integer & FP operate instructions use Rc as dest, so check for
-// Rc == 31 to detect nops
+// integer & FP operate instructions use RT as dest, so check for
+// RT == 0 to detect nops
 def template OperateNopCheckDecode {{
  {
      MipsStaticInst *i = new %(class_name)s(machInst);
-     if (RC == 31) {
+     if (RD == 0) {
          i = makeNop(i);
      }
      return i;

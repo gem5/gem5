@@ -96,13 +96,13 @@ decode OPCODE_HI default Unknown::unknown() {
             0x3: decode FUNCTION_LO {
                 format IntOp {
                     0x0: mult({{
-                        INT64 temp1 = Rs.sw * Rt.sw;
+                        int64_t temp1 = Rs.sw * Rt.sw;
                         xc->miscRegs.hi->temp1<63:32>;
                         xc->miscRegs.lo->temp1<31:0>;
                     }});
 
                     0x1: multu({{
-                        INT64 temp1 = Rs.uw * Rt.uw;
+                        int64_t temp1 = Rs.uw * Rt.uw;
                         xc->miscRegs.hi->temp1<63:32>;
                         xc->miscRegs.lo->temp1<31:0>
                             Rd.sw = Rs.uw * Rt.uw;
@@ -141,7 +141,7 @@ decode OPCODE_HI default Unknown::unknown() {
             }
 
             0x6: decode FUNCTION_LO {
-                format Trap {
+                format BasicOp {
                     0x0: tge({{ cond = (Rs.sw >= Rt.sw); }});
                     0x1: tgeu({{ cond = (Rs.uw >= Rt.uw); }});
                     0x2: tlt({{ cond = (Rs.sw < Rt.sw); }});
@@ -167,7 +167,7 @@ decode OPCODE_HI default Unknown::unknown() {
             }
 
             0x1: decode REGIMM_LO {
-                format Trap {
+                format BasicOp {
                     0x0: tgei( {{ cond = (Rs.sw >= INTIMM); }});
                     0x1: tgeiu({{ cond = (Rs.uw >= INTIMM); }});
                     0x2: tlti( {{ cond = (Rs.sw < INTIMM); }});
@@ -179,14 +179,14 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x2: decode REGIMM_LO {
                 format Branch {
-                    0x0: bltzal({{ cond = (Rs.sw < 0); }}, IsLink);
-                    0x1: bgezal({{ cond = (Rs.sw >= 0); }}, IsLink);
+                    0x0: bltzal({{ cond = (Rs.sw < 0); }}, IsCall,IsReturn);
+                    0x1: bgezal({{ cond = (Rs.sw >= 0); }}, IsCall,IsReturn);
                 }
 
                 format BranchLikely {
                     //Will be removed in future MIPS releases
-                    0x2: bltzall({{ cond = (Rs.sw < 0); }}, IsLink);
-                    0x3: bgezall({{ cond = (Rs.sw >= 0); }}, IsLink);
+                    0x2: bltzall({{ cond = (Rs.sw < 0); }}, IsCall, IsReturn);
+                    0x3: bgezall({{ cond = (Rs.sw >= 0); }}, IsCall, IsReturn);
                 }
             }
 
@@ -336,7 +336,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
             //Table A-12 MIPS32 COP0 Encoding of Function Field When rs=CO
             0x1: decode FUNCTION {
-                format Trap {
+                format BasicOp {
                     0x01: tlbr({{ }});
                     0x02: tlbwi({{ }});
                     0x06: tlbwr({{ }});
@@ -433,8 +433,8 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
 
                             format Float64Op {
-                                0x2: recips({{ Fd = 1 / Fs; }});
-                                0x3: rsqrts({{ Fd = 1 / sqrt(Fs.ud);}});
+                                0x5: recips({{ Fd = 1 / Fs; }});
+                                0x6: rsqrts({{ Fd = 1 / sqrt(Fs.ud);}});
                             }
                         }
 
@@ -502,8 +502,8 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
 
                             format BasicOp {
-                                0x2: movz({{ if (Rt == 0) Fd.df = Fs.df; }});
-                                0x3: movn({{ if (Rt != 0) Fd.df = Fs.df; }});
+                                0x2: movzd({{ if (Rt == 0) Fd.df = Fs.df; }});
+                                0x3: movnd({{ if (Rt != 0) Fd.df = Fs.df; }});
                             }
 
                             format Float64Op {
@@ -538,12 +538,12 @@ decode OPCODE_HI default Unknown::unknown() {
                     //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=W
                     0x4: decode FUNCTION {
                         format FloatOp {
-                            0x10: cvt_s({{
+                            0x20: cvt_s({{
                                 int rnd_mode = xc->miscRegs.fcsr;
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_WORD);
                             }});
 
-                            0x10: cvt_d({{
+                            0x21: cvt_d({{
                                 int rnd_mode = xc->miscRegs.fcsr;
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_WORD);
                             }});
@@ -611,6 +611,11 @@ decode OPCODE_HI default Unknown::unknown() {
                                     0x0: movfps({{ if ( FPConditionCode(CC) == 0) Fd = Fs;}});
                                     0x1: movtps({{ if ( FPConditionCode(CC) == 0) Fd = Fs;}});
                                 }
+                            }
+
+                            format BasicOp {
+                                0x2: movzps({{ if ( FPConditionCode(CC) == 0) Fd = Fs; }});
+                                0x3: movnps({{ if ( FPConditionCode(CC) == 0) Fd = Fs; }});
                             }
 
                         }
@@ -763,14 +768,14 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode FUNCTION_LO {
                 format IntOp {
                     0x0: madd({{
-                        INT64 temp1 = Hi.sw << 32 | Lo.sw >> 32;
+                        int64_t temp1 = Hi.sw << 32 | Lo.sw >> 32;
                         temp1 = temp1 + (Rs.sw * Rt.sw);
                         xc->miscRegs.hi->temp1<63:32>;
                         xc->miscRegs.lo->temp1<31:0>
                             }});
 
                     0x1: maddu({{
-                        INT64 temp1 = Hi.uw << 32 | Lo.uw >> 32;
+                        int64_t temp1 = Hi.uw << 32 | Lo.uw >> 32;
                         temp1 = temp1 + (Rs.uw * Rt.uw);
                         xc->miscRegs.hi->temp1<63:32>;
                         xc->miscRegs.lo->temp1<31:0>
@@ -779,14 +784,14 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x2: mul({{ 	Rd.sw = Rs.sw * Rt.sw; 	}});
 
                     0x4: msub({{
-                        INT64 temp1 = Hi.sw << 32 | Lo.sw >> 32;
+                        int64_t temp1 = Hi.sw << 32 | Lo.sw >> 32;
                         temp1 = temp1 - (Rs.sw * Rt.sw);
                         xc->miscRegs.hi->temp1<63:32>;
                         xc->miscRegs.lo->temp1<31:0>
                             }});
 
                     0x5: msubu({{
-                        INT64 temp1 = Hi.uw << 32 | Lo.uw >> 32;
+                        int64_t temp1 = Hi.uw << 32 | Lo.uw >> 32;
                         temp1 = temp1 - (Rs.uw * Rt.uw);
                         xc->miscRegs.hi->temp1<63:32>;
                         xc->miscRegs.lo->temp1<31:0>
