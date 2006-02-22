@@ -34,7 +34,7 @@
 
 #include "base/hashmap.hh"
 #include "base/refcnt.hh"
-#include "encumbered/cpu/full/op_class.hh"
+#include "cpu/op_class.hh"
 #include "sim/host.hh"
 #include "targetarch/isa_traits.hh"
 

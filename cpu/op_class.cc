@@ -26,39 +26,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ENCUMBERED_CPU_FULL_OP_CLASS_HH__
-#define __ENCUMBERED_CPU_FULL_OP_CLASS_HH__
+#include "cpu/op_class.hh"
 
-/**
- * @file
- * Definition of operation classes.
- */
-
-/**
- * Instruction operation classes.  These classes are used for
- * assigning instructions to functional units.
- */
-enum OpClass {
-    No_OpClass = 0,	/* inst does not use a functional unit */
-    IntAluOp,		/* integer ALU */
-    IntMultOp,		/* integer multiplier */
-    IntDivOp,		/* integer divider */
-    FloatAddOp,		/* floating point adder/subtractor */
-    FloatCmpOp,		/* floating point comparator */
-    FloatCvtOp,		/* floating point<->integer converter */
-    FloatMultOp,	/* floating point multiplier */
-    FloatDivOp,		/* floating point divider */
-    FloatSqrtOp,	/* floating point square root */
-    MemReadOp,		/* memory read port */
-    MemWriteOp,		/* memory write port */
-    IprAccessOp,	/* Internal Processor Register read/write port */
-    InstPrefetchOp,	/* instruction prefetch port (on I-cache) */
-    Num_OpClasses	/* total functional unit classes */
+/** OpClass enum -> description string */
+const char *
+opClassStrings[Num_OpClasses] =
+{
+    "(null)",
+    "IntAlu",
+    "IntMult",
+    "IntDiv",
+    "FloatAdd",
+    "FloatCmp",
+    "FloatCvt",
+    "FloatMult",
+    "FloatDiv",
+    "FloatSqrt",
+    "MemRead",
+    "MemWrite",
+    "IprAccess",
+    "InstPrefetch"
 };
 
-/**
- * Array mapping OpClass enum values to strings.  Defined in fu_pool.cc.
- */
-extern const char *opClassStrings[];
-
-#endif // __ENCUMBERED_CPU_FULL_OP_CLASS_HH__
