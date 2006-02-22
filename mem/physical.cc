@@ -54,7 +54,7 @@ using namespace std;
 #if FULL_SYSTEM
 PhysicalMemory::PhysicalMemory(const string &n, Range<Addr> range,
                                MemoryController *mmu, const std::string &fname)
-    : FunctionalMemory(n), base_addr(range.start), pmem_size(range.size()),
+    : Memory(n), base_addr(range.start), pmem_size(range.size()),
       pmem_addr(NULL)
 {
     if (pmem_size % TheISA::PageBytes != 0)
@@ -167,8 +167,8 @@ PhysicalMemory::prot_memset(Addr addr, uint8_t val, int size)
 int
 PhysicalMemory::deviceBlockSize()
 {
-    //For now the largest accesses we can take are Page Sized
-    return VMPageSize;
+    //Can accept anysize request
+    return 0;
 }
 
 void

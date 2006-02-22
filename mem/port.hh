@@ -96,7 +96,7 @@ class Port
         /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
     */
-    Port *getPeer(Port *port) { return peer; }
+    Port *getPeer() { return peer; }
 
   protected:
 

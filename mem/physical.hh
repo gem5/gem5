@@ -64,6 +64,7 @@ class PhysicalMemory : public Memory
     void prot_access_error(Addr addr, int size, const std::string &func);
 
   public:
+    virtual int deviceBlockSize();
 
     // Read/Write arbitrary amounts of data to simulated memory space
     virtual void prot_read(Addr addr, uint8_t *p, int size);

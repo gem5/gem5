@@ -75,6 +75,7 @@ TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size)
     return No_Fault;
 }
 
+/*
 Fault
 TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size)
 {
@@ -90,6 +91,7 @@ TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size)
 
     return No_Fault;
 }
+*/
 
 Fault
 TranslatingPort::writeStringFunctional(Addr addr, const char *str)
