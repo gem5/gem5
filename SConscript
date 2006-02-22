@@ -344,7 +344,7 @@ syscall_emulation_sources = Split('''
 
 targetarch_files = Split('''
         alpha_linux_process.hh
-        alpha_memory.hh
+        memory.hh
         alpha_tru64_process.hh
         aout_machdep.h
         arguments.hh
