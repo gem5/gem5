@@ -213,7 +213,7 @@ class IdeController : public PciDev
      * @param data Return the field read.
      * @return The fault condition of the access.
      */
-    virtual Fault * read(MemReqPtr &req, uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
 
     /**
      * Write to the mmapped I/O control registers.
@@ -221,7 +221,7 @@ class IdeController : public PciDev
      * @param data The data to write.
      * @return The fault condition of the access.
      */
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     /**
      * Serialize this object to the given output stream.

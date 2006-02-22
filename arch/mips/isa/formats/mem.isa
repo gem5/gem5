@@ -131,12 +131,12 @@ def template LoadStoreDeclare {{
 
 
 def template InitiateAccDeclare {{
-    Fault * initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
 
 def template CompleteAccDeclare {{
-    Fault * completeAcc(uint8_t *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(uint8_t *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
 
@@ -166,12 +166,12 @@ def template LoadStoreConstructor {{
 
 
 def template EACompExecute {{
-    Fault *
+    Fault
     %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -188,12 +188,12 @@ def template EACompExecute {{
 }};
 
 def template LoadMemAccExecute {{
-    Fault *
+    Fault
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -215,11 +215,11 @@ def template LoadMemAccExecute {{
 
 
 def template LoadExecute {{
-    Fault * %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -241,11 +241,11 @@ def template LoadExecute {{
 
 
 def template LoadInitiateAcc {{
-    Fault * %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
 
         %(fp_enable_check)s;
         %(op_src_decl)s;
@@ -262,11 +262,11 @@ def template LoadInitiateAcc {{
 
 
 def template LoadCompleteAcc {{
-    Fault * %(class_name)s::completeAcc(uint8_t *data,
+    Fault %(class_name)s::completeAcc(uint8_t *data,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
 
         %(fp_enable_check)s;
         %(op_src_decl)s;
@@ -288,12 +288,12 @@ def template LoadCompleteAcc {{
 
 
 def template StoreMemAccExecute {{
-    Fault *
+    Fault
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
         uint64_t write_result = 0;
 
         %(fp_enable_check)s;
@@ -325,11 +325,11 @@ def template StoreMemAccExecute {{
 
 
 def template StoreExecute {{
-    Fault * %(class_name)s::execute(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
         uint64_t write_result = 0;
 
         %(fp_enable_check)s;
@@ -360,11 +360,11 @@ def template StoreExecute {{
 }};
 
 def template StoreInitiateAcc {{
-    Fault * %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
         uint64_t write_result = 0;
 
         %(fp_enable_check)s;
@@ -389,11 +389,11 @@ def template StoreInitiateAcc {{
 
 
 def template StoreCompleteAcc {{
-    Fault * %(class_name)s::completeAcc(uint8_t *data,
+    Fault %(class_name)s::completeAcc(uint8_t *data,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Fault * fault = NoFault;
+        Fault fault = NoFault;
         uint64_t write_result = 0;
 
         %(fp_enable_check)s;

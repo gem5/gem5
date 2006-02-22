@@ -246,13 +246,13 @@ AlphaFullCPU<Impl>::getIpr()
 
 template <class Impl>
 uint64_t
-AlphaFullCPU<Impl>::readIpr(int idx, Fault * &fault)
+AlphaFullCPU<Impl>::readIpr(int idx, Fault &fault)
 {
     return this->regFile.readIpr(idx, fault);
 }
 
 template <class Impl>
-Fault *
+Fault
 AlphaFullCPU<Impl>::setIpr(int idx, uint64_t val)
 {
     return this->regFile.setIpr(idx, val);
@@ -274,7 +274,7 @@ AlphaFullCPU<Impl>::setIntrFlag(int val)
 
 // Can force commit stage to squash and stuff.
 template <class Impl>
-Fault *
+Fault
 AlphaFullCPU<Impl>::hwrei()
 {
     uint64_t *ipr = getIpr();
@@ -323,7 +323,7 @@ AlphaFullCPU<Impl>::simPalCheck(int palFunc)
 // stage.
 template <class Impl>
 void
-AlphaFullCPU<Impl>::trap(Fault * fault)
+AlphaFullCPU<Impl>::trap(Fault fault)
 {
     // Keep in mind that a trap may be initiated by fetch if there's a TLB
     // miss

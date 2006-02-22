@@ -99,7 +99,7 @@ class TsunamiPChip : public PioDevice
       * @param data A pointer to write the read data to.
       * @return The fault condition of the access.
       */
-    virtual Fault * read(MemReqPtr &req, uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
 
     /**
       * Process a write to the PChip.
@@ -107,7 +107,7 @@ class TsunamiPChip : public PioDevice
       * @param data The data to write.
       * @return The fault condition of the access.
       */
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     /**
      * Serialize this object to the given output stream.

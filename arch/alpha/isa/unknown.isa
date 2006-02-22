@@ -36,7 +36,7 @@ output decoder {{
 }};
 
 output exec {{
-    Fault *
+    Fault
     Unknown::execute(%(CPU_exec_context)s *xc,
                      Trace::InstRecord *traceData) const
     {

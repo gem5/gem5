@@ -557,7 +557,7 @@ NSGigE::writeConfig(int offset, int size, const uint8_t* data)
  * This reads the device registers, which are detailed in the NS83820
  * spec sheet
  */
-Fault *
+Fault
 NSGigE::read(MemReqPtr &req, uint8_t *data)
 {
     assert(ioEnable);
@@ -786,7 +786,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
     return NoFault;
 }
 
-Fault *
+Fault
 NSGigE::write(MemReqPtr &req, const uint8_t *data)
 {
     assert(ioEnable);

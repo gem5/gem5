@@ -32,11 +32,11 @@
 #include "sim/faults.hh"
 #include "arch/isa_traits.hh" //For the Addr type
 
-class AlphaFault : public Fault
+class AlphaFault : public FaultBase
 {
   public:
     AlphaFault(char * newName, int newId, Addr newVect)
-        : Fault(newName, newId), vect(newVect)
+        : FaultBase(newName, newId), vect(newVect)
     {;}
 
     Addr vect;
@@ -154,7 +154,7 @@ extern class IntegerOverflowFaultType : public AlphaFault
     {;}
 } * const IntegerOverflowFault;
 
-extern Fault ** ListOfFaults[];
+extern Fault * ListOfFaults[];
 extern int NumFaults;
 
 #endif // __FAULTS_HH__

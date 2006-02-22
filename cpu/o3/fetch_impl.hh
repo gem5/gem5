@@ -221,7 +221,7 @@ SimpleFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
 }
 
 template <class Impl>
-Fault *
+Fault
 SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
 {
     // Check if the instruction exists within the cache.
@@ -236,7 +236,7 @@ SimpleFetch<Impl>::fetchCacheLine(Addr fetch_PC)
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    Fault * fault = NoFault;
+    Fault fault = NoFault;
 
     // Align the fetch PC so it's at the start of a cache block.
     fetch_PC = icacheBlockAlignPC(fetch_PC);
@@ -468,7 +468,7 @@ SimpleFetch<Impl>::fetch()
     Addr fetch_PC = cpu->readPC();
 
     // Fault code for memory access.
-    Fault * fault = NoFault;
+    Fault fault = NoFault;
 
     // If returning from the delay of a cache miss, then update the status
     // to running, otherwise do the cache access.  Possibly move this up

@@ -63,23 +63,23 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 //    void clear_interrupt(int int_num, int index);
 //    void clear_interrupts();
 
-    Fault * translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(MemReqPtr &req)
     {
         return itb->translate(req);
     }
 
-    Fault * translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(MemReqPtr &req)
     {
         return dtb->translate(req, false);
     }
 
-    Fault * translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dtb->translate(req, true);
     }
 
 #else
-    Fault * dummyTranslation(MemReqPtr &req)
+    Fault dummyTranslation(MemReqPtr &req)
     {
 #if 0
         assert((req->vaddr >> 48 & 0xffff) == 0);
@@ -91,17 +91,17 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         return NoFault;
     }
 
-    Fault * translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
 
-    Fault * translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
 
-    Fault * translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
@@ -136,16 +136,16 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     // look like.
 #if FULL_SYSTEM
     uint64_t *getIpr();
-    uint64_t readIpr(int idx, Fault * &fault);
-    Fault * setIpr(int idx, uint64_t val);
+    uint64_t readIpr(int idx, Fault &fault);
+    Fault setIpr(int idx, uint64_t val);
     int readIntrFlag();
     void setIntrFlag(int val);
-    Fault * hwrei();
+    Fault hwrei();
     bool inPalMode() { return AlphaISA::PcPAL(this->regFile.readPC()); }
     bool inPalMode(uint64_t PC)
     { return AlphaISA::PcPAL(PC); }
 
-    void trap(Fault * fault);
+    void trap(Fault fault);
     bool simPalCheck(int palFunc);
 
     void processInterrupts();
@@ -198,7 +198,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     bool palShadowEnabled;
 
     // Not sure this is used anywhere.
-    void intr_post(RegFile *regs, Fault * fault, Addr pc);
+    void intr_post(RegFile *regs, Fault fault, Addr pc);
     // Actually used within exec files.  Implement properly.
     void swapPALShadow(bool use_shadow);
     // Called by CPU constructor.  Can implement as I please.
@@ -211,7 +211,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
 
     template <class T>
-    Fault * read(MemReqPtr &req, T &data)
+    Fault read(MemReqPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
@@ -221,20 +221,20 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         }
 #endif
 
-        Fault * error;
+        Fault error;
         error = this->mem->read(req, data);
         data = gtoh(data);
         return error;
     }
 
     template <class T>
-    Fault * read(MemReqPtr &req, T &data, int load_idx)
+    Fault read(MemReqPtr &req, T &data, int load_idx)
     {
         return this->iew.ldstQueue.read(req, data, load_idx);
     }
 
     template <class T>
-    Fault * write(MemReqPtr &req, T &data)
+    Fault write(MemReqPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
 
@@ -284,7 +284,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     }
 
     template <class T>
-    Fault * write(MemReqPtr &req, T &data, int store_idx)
+    Fault write(MemReqPtr &req, T &data, int store_idx)
     {
         return this->iew.ldstQueue.write(req, data, store_idx);
     }

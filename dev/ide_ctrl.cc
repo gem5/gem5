@@ -391,7 +391,7 @@ IdeController::writeConfig(int offset, int size, const uint8_t *data)
     }
 }
 
-Fault *
+Fault
 IdeController::read(MemReqPtr &req, uint8_t *data)
 {
     Addr offset;
@@ -461,7 +461,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     return NoFault;
 }
 
-Fault *
+Fault
 IdeController::write(MemReqPtr &req, const uint8_t *data)
 {
     Addr offset;

@@ -393,7 +393,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     }
 
     // Check if the instruction caused a fault.  If so, trap.
-    Fault * inst_fault = head_inst->getFault();
+    Fault inst_fault = head_inst->getFault();
 
     if (inst_fault != NoFault) {
         if (!head_inst->isNop()) {

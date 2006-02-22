@@ -70,59 +70,59 @@ PciDev::PciDev(Params *p)
         p->configSpace->registerDevice(p->deviceNum, p->functionNum, this);
 }
 
-Fault *
+Fault
 PciDev::read(MemReqPtr &req, uint8_t *data)
 { return NoFault; }
 
-Fault *
+Fault
 PciDev::write(MemReqPtr &req, const uint8_t *data)
 { return NoFault; }
 
-Fault *
+Fault
 PciDev::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::readBar1(MemReqPtr &req, Addr daddr, uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::readBar2(MemReqPtr &req, Addr daddr, uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::readBar3(MemReqPtr &req, Addr daddr, uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::readBar4(MemReqPtr &req, Addr daddr, uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::readBar5(MemReqPtr &req, Addr daddr, uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::writeBar1(MemReqPtr &req, Addr daddr, const uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::writeBar2(MemReqPtr &req, Addr daddr, const uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::writeBar3(MemReqPtr &req, Addr daddr, const uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::writeBar4(MemReqPtr &req, Addr daddr, const uint8_t *data)
 { panic("not implemented"); }
 
-Fault *
+Fault
 PciDev::writeBar5(MemReqPtr &req, Addr daddr, const uint8_t *data)
 { panic("not implemented"); }
 

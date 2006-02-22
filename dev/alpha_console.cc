@@ -100,7 +100,7 @@ AlphaConsole::startup()
     alphaAccess->intrClockFrequency = platform->intrFrequency();
 }
 
-Fault *
+Fault
 AlphaConsole::read(MemReqPtr &req, uint8_t *data)
 {
     memset(data, 0, req->size);
@@ -190,7 +190,7 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
     return NoFault;
 }
 
-Fault *
+Fault
 AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
 {
     uint64_t val;

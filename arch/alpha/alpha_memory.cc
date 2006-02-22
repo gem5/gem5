@@ -303,7 +303,7 @@ AlphaITB::fault(Addr pc, ExecContext *xc) const
 }
 
 
-Fault *
+Fault
 AlphaITB::translate(MemReqPtr &req) const
 {
     InternalProcReg *ipr = req->xc->regs.ipr;
@@ -493,7 +493,7 @@ AlphaDTB::fault(MemReqPtr &req, uint64_t flags) const
     }
 }
 
-Fault *
+Fault
 AlphaDTB::translate(MemReqPtr &req, bool write) const
 {
     RegFile *regs = &req->xc->regs;
@@ -575,7 +575,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
                 fault(req, (write ? MM_STAT_WR_MASK : 0) |
                       MM_STAT_DTB_MISS_MASK);
                 if (write) { write_misses++; } else { read_misses++; }
-                return (req->flags & VPTE) ? (Fault *)PDtbMissFault : (Fault *)NDtbMissFault;
+                return (req->flags & VPTE) ? (Fault)PDtbMissFault : (Fault)NDtbMissFault;
             }
 
             req->paddr = (pte->ppn << AlphaISA::PageShift) +

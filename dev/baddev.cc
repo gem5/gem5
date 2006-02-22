@@ -62,7 +62,7 @@ BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
 
 }
 
-Fault *
+Fault
 BadDevice::read(MemReqPtr &req, uint8_t *data)
 {
 
@@ -70,7 +70,7 @@ BadDevice::read(MemReqPtr &req, uint8_t *data)
     return NoFault;
 }
 
-Fault *
+Fault
 BadDevice::write(MemReqPtr &req, const uint8_t *data)
 {
     panic("Device %s not imlpmented\n", devname);

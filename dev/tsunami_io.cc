@@ -446,7 +446,7 @@ TsunamiIO::frequency() const
     return Clock::Frequency / clockInterval;
 }
 
-Fault *
+Fault
 TsunamiIO::read(MemReqPtr &req, uint8_t *data)
 {
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
@@ -523,7 +523,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     return NoFault;
 }
 
-Fault *
+Fault
 TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
 {
 

@@ -57,8 +57,8 @@ class Uart : public PioDevice
          Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
          Platform *p);
 
-    virtual Fault * read(MemReqPtr &req, uint8_t *data) = 0;
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data) = 0;
+    virtual Fault read(MemReqPtr &req, uint8_t *data) = 0;
+    virtual Fault write(MemReqPtr &req, const uint8_t *data) = 0;
 
 
     /**

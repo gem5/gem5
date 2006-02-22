@@ -215,8 +215,8 @@ class PhysRegFile
     }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault * &fault);
-    Fault * setIpr(int idx, uint64_t val);
+    uint64_t readIpr(int idx, Fault &fault);
+    Fault setIpr(int idx, uint64_t val);
     InternalProcReg *getIpr() { return ipr; }
     int readIntrFlag() { return intrflag; }
     void setIntrFlag(int val) { intrflag = val; }
@@ -279,7 +279,7 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
 //the DynInst level.
 template <class Impl>
 uint64_t
-PhysRegFile<Impl>::readIpr(int idx, Fault * &fault)
+PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
 {
     uint64_t retval = 0;    // return value, default 0
 
@@ -387,7 +387,7 @@ PhysRegFile<Impl>::readIpr(int idx, Fault * &fault)
 extern int break_ipl;
 
 template <class Impl>
-Fault *
+Fault
 PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 {
     uint64_t old;

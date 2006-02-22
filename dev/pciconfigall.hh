@@ -103,7 +103,7 @@ class PciConfigAll : public PioDevice
      * @param data Return the field read.
      * @return The fault condition of the access.
      */
-    virtual Fault * read(MemReqPtr &req, uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
 
     /**
      * Write to PCI config spcae. If the device does not exit the simulator
@@ -114,7 +114,7 @@ class PciConfigAll : public PioDevice
      * @return The fault condition of the access.
      */
 
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     /**
      * Start up function to check if more than one person is using an interrupt line

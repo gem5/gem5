@@ -357,11 +357,11 @@ Device::prepareWrite(int cpu, int index)
 /**
  * I/O read of device register
  */
-Fault *
+Fault
 Device::read(MemReqPtr &req, uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
-    Fault * fault = readBar(req, data);
+    Fault fault = readBar(req, data);
 
     if (fault == MachineCheckFault) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
@@ -373,7 +373,7 @@ Device::read(MemReqPtr &req, uint8_t *data)
     return fault;
 }
 
-Fault *
+Fault
 Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 {
     int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
@@ -423,7 +423,7 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 /**
  * IPR read of device register
  */
-Fault *
+Fault
 Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 {
     if (!regValid(daddr))
@@ -453,11 +453,11 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 /**
  * I/O write of device register
  */
-Fault *
+Fault
 Device::write(MemReqPtr &req, const uint8_t *data)
 {
     assert(config.command & PCI_CMD_MSE);
-    Fault * fault = writeBar(req, data);
+    Fault fault = writeBar(req, data);
 
     if (fault == MachineCheckFault) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
@@ -469,7 +469,7 @@ Device::write(MemReqPtr &req, const uint8_t *data)
     return fault;
 }
 
-Fault *
+Fault
 Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 {
     int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;

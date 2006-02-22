@@ -41,7 +41,6 @@ class ExecContext;
 class FnEvent;
 // What does kernel stats expect is included?
 class System;
-class Fault;
 
 namespace Kernel {
 
@@ -177,7 +176,7 @@ class Statistics : public Serializable
     void ivlb() { _ivlb++; }
     void ivle() { _ivle++; }
     void hwrei() { _hwrei++; }
-    void fault(Fault * fault)
+    void fault(Fault fault)
     {
             if(fault == NoFault) _faults[0]++;
             else if(fault == MachineCheckFault) _faults[2]++;

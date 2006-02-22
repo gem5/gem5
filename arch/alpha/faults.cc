@@ -57,24 +57,24 @@ PalFaultType * const PalFault =
 IntegerOverflowFaultType * const IntegerOverflowFault =
     new IntegerOverflowFaultType("intover", 16, 0x0501);
 
-Fault ** ListOfFaults[] = {
-        (Fault **)&NoFault,
-        (Fault **)&ResetFault,
-        (Fault **)&MachineCheckFault,
-        (Fault **)&ArithmeticFault,
-        (Fault **)&InterruptFault,
-        (Fault **)&NDtbMissFault,
-        (Fault **)&PDtbMissFault,
-        (Fault **)&AlignmentFault,
-        (Fault **)&DtbPageFault,
-        (Fault **)&DtbAcvFault,
-        (Fault **)&ItbMissFault,
-        (Fault **)&ItbPageFault,
-        (Fault **)&ItbAcvFault,
-        (Fault **)&UnimplementedOpcodeFault,
-        (Fault **)&FloatEnableFault,
-        (Fault **)&PalFault,
-        (Fault **)&IntegerOverflowFault,
+Fault * ListOfFaults[] = {
+        (Fault *)&NoFault,
+        (Fault *)&ResetFault,
+        (Fault *)&MachineCheckFault,
+        (Fault *)&ArithmeticFault,
+        (Fault *)&InterruptFault,
+        (Fault *)&NDtbMissFault,
+        (Fault *)&PDtbMissFault,
+        (Fault *)&AlignmentFault,
+        (Fault *)&DtbPageFault,
+        (Fault *)&DtbAcvFault,
+        (Fault *)&ItbMissFault,
+        (Fault *)&ItbPageFault,
+        (Fault *)&ItbAcvFault,
+        (Fault *)&UnimplementedOpcodeFault,
+        (Fault *)&FloatEnableFault,
+        (Fault *)&PalFault,
+        (Fault *)&IntegerOverflowFault,
         };
 
-int NumFaults = sizeof(ListOfFaults) / sizeof(Fault **);
+int NumFaults = sizeof(ListOfFaults) / sizeof(Fault *);

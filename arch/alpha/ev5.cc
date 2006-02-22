@@ -85,7 +85,7 @@ AlphaISA::initCPU(RegFile *regs)
 // alpha exceptions - value equals trap address, update with MD_FAULT_TYPE
 //
 const Addr
-AlphaISA::fault_addr(Fault * fault)
+AlphaISA::fault_addr(Fault fault)
 {
         //Check for the system wide faults
         if(fault == NoFault) return 0x0000;
@@ -177,7 +177,7 @@ AlphaISA::zeroRegisters(CPU *cpu)
 }
 
 void
-ExecContext::ev5_trap(Fault * fault)
+ExecContext::ev5_trap(Fault fault)
 {
     DPRINTF(Fault, "Fault %s at PC: %#x\n", fault->name, regs.pc);
     cpu->recordEvent(csprintf("Fault %s", fault->name));
@@ -209,7 +209,7 @@ ExecContext::ev5_trap(Fault * fault)
 
 
 void
-AlphaISA::intr_post(RegFile *regs, Fault * fault, Addr pc)
+AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
 {
     InternalProcReg *ipr = regs->ipr;
     bool use_pc = (fault == NoFault);
@@ -235,7 +235,7 @@ AlphaISA::intr_post(RegFile *regs, Fault * fault, Addr pc)
     // that's it! (orders of magnitude less painful than x86)
 }
 
-Fault *
+Fault
 ExecContext::hwrei()
 {
     uint64_t *ipr = regs.ipr;
@@ -259,7 +259,7 @@ ExecContext::hwrei()
 }
 
 uint64_t
-ExecContext::readIpr(int idx, Fault * &fault)
+ExecContext::readIpr(int idx, Fault &fault)
 {
     uint64_t *ipr = regs.ipr;
     uint64_t retval = 0;	// return value, default 0
@@ -370,7 +370,7 @@ ExecContext::readIpr(int idx, Fault * &fault)
 int break_ipl = -1;
 #endif
 
-Fault *
+Fault
 ExecContext::setIpr(int idx, uint64_t val)
 {
     uint64_t *ipr = regs.ipr;

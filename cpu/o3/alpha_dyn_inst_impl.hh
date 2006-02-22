@@ -98,20 +98,20 @@ AlphaDynInst<Impl>::setFpcr(uint64_t val)
 #if FULL_SYSTEM
 template <class Impl>
 uint64_t
-AlphaDynInst<Impl>::readIpr(int idx, Fault * &fault)
+AlphaDynInst<Impl>::readIpr(int idx, Fault &fault)
 {
     return this->cpu->readIpr(idx, fault);
 }
 
 template <class Impl>
-Fault *
+Fault
 AlphaDynInst<Impl>::setIpr(int idx, uint64_t val)
 {
     return this->cpu->setIpr(idx, val);
 }
 
 template <class Impl>
-Fault *
+Fault
 AlphaDynInst<Impl>::hwrei()
 {
     return this->cpu->hwrei();
@@ -140,7 +140,7 @@ AlphaDynInst<Impl>::inPalMode()
 
 template <class Impl>
 void
-AlphaDynInst<Impl>::trap(Fault * fault)
+AlphaDynInst<Impl>::trap(Fault fault)
 {
     this->cpu->trap(fault);
 }

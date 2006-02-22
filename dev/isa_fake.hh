@@ -65,14 +65,14 @@ class IsaFake : public PioDevice
      * @param req The memory request.
      * @param data Where to put the data.
      */
-    virtual Fault * read(MemReqPtr &req, uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
 
     /**
      * All writes are simply ignored.
      * @param req The memory request.
      * @param data the data to not write.
      */
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
     /**
      * Return how long this access will take.

@@ -189,37 +189,37 @@ class PciDev : public DmaDevice
      */
     PciDev(Params *params);
 
-    virtual Fault * read(MemReqPtr &req, uint8_t *data);
-    virtual Fault * write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Fault write(MemReqPtr &req, const uint8_t *data);
 
   public:
     /**
      * Implement the read/write as BAR accesses
      */
-    Fault * readBar(MemReqPtr &req, uint8_t *data);
-    Fault * writeBar(MemReqPtr &req, const uint8_t *data);
+    Fault readBar(MemReqPtr &req, uint8_t *data);
+    Fault writeBar(MemReqPtr &req, const uint8_t *data);
 
   public:
     /**
      * Read from a specific BAR
      */
-    virtual Fault * readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault * readBar1(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault * readBar2(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault * readBar3(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault * readBar4(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault * readBar5(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar1(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar2(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar3(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar4(MemReqPtr &req, Addr daddr, uint8_t *data);
+    virtual Fault readBar5(MemReqPtr &req, Addr daddr, uint8_t *data);
 
   public:
     /**
      * Write to a specific BAR
      */
-    virtual Fault * writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault * writeBar1(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault * writeBar2(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault * writeBar3(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault * writeBar4(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault * writeBar5(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar1(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar2(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar3(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar4(MemReqPtr &req, Addr daddr, const uint8_t *data);
+    virtual Fault writeBar5(MemReqPtr &req, Addr daddr, const uint8_t *data);
 
   public:
     /**
@@ -257,7 +257,7 @@ class PciDev : public DmaDevice
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-inline Fault *
+inline Fault
 PciDev::readBar(MemReqPtr &req, uint8_t *data)
 {
     if (isBAR(req->paddr, 0))
@@ -275,7 +275,7 @@ PciDev::readBar(MemReqPtr &req, uint8_t *data)
     return MachineCheckFault;
 }
 
-inline Fault *
+inline Fault
 PciDev::writeBar(MemReqPtr &req, const uint8_t *data)
 {
     if (isBAR(req->paddr, 0))

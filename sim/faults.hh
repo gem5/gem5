@@ -29,30 +29,33 @@
 #ifndef __FAULTS_HH__
 #define __FAULTS_HH__
 
-class Fault
+class FaultBase;
+typedef FaultBase * Fault;
+
+class FaultBase
 {
 public:
-        Fault(char * newName, int newId = 0) : name(newName), id(newId) {;}
+        FaultBase(char * newName, int newId = 0) : name(newName), id(newId) {;}
         const char * name;
         int id;
 };
 
-extern class NoFaultType : public Fault
+extern class NoFaultType : public FaultBase
 {
 public:
-        NoFaultType(char * newName) : Fault(newName) {;}
+        NoFaultType(char * newName) : FaultBase(newName) {;}
 } * const NoFault;
 
-extern class MachineCheckFaultType : public Fault
+extern class MachineCheckFaultType : public FaultBase
 {
 public:
-        MachineCheckFaultType(char * newName) : Fault(newName) {;}
+        MachineCheckFaultType(char * newName) : FaultBase(newName) {;}
 } * const MachineCheckFault;
 
-extern class AlignmentFaultType : public Fault
+extern class AlignmentFaultType : public FaultBase
 {
 public:
-        AlignmentFaultType(char * newName) : Fault(newName) {;}
+        AlignmentFaultType(char * newName) : FaultBase(newName) {;}
 } * const AlignmentFault;
 
 

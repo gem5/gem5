@@ -145,7 +145,7 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     fault = NoFault;
 
     // note this is a local, not BaseDynInst::fault
-    Fault * trans_fault = xc->translateDataReadReq(req);
+    Fault trans_fault = xc->translateDataReadReq(req);
 
     if (trans_fault == NoFault && !(req->flags & UNCACHEABLE)) {
         // It's a valid address to cacheable space.  Record key MemReq
@@ -208,14 +208,14 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
  * @todo Need to find a way to get the cache block size here.
  */
 template <class Impl>
-Fault *
+Fault
 BaseDynInst<Impl>::copySrcTranslate(Addr src)
 {
     MemReqPtr req = new MemReq(src, xc, 64);
     req->asid = asid;
 
     // translate to physical address
-    Fault * fault = xc->translateDataReadReq(req);
+    Fault fault = xc->translateDataReadReq(req);
 
     if (fault == NoFault) {
         xc->copySrcAddr = src;
@@ -231,7 +231,7 @@ BaseDynInst<Impl>::copySrcTranslate(Addr src)
  * @todo Need to find a way to get the cache block size here.
  */
 template <class Impl>
-Fault *
+Fault
 BaseDynInst<Impl>::copy(Addr dest)
 {
     uint8_t data[64];
@@ -241,7 +241,7 @@ BaseDynInst<Impl>::copy(Addr dest)
     req->asid = asid;
 
     // translate to physical address
-    Fault * fault = xc->translateDataWriteReq(req);
+    Fault fault = xc->translateDataWriteReq(req);
 
     if (fault == NoFault) {
         Addr dest_addr = req->paddr;
@@ -277,10 +277,10 @@ BaseDynInst<Impl>::dump(std::string &outstring)
 
 #if 0
 template <class Impl>
-Fault *
+Fault
 BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
 {
-    Fault * fault;
+    Fault fault;
 
     // check alignments, even speculative this test should always pass
     if ((nbytes & nbytes - 1) != 0 || (addr & nbytes - 1) != 0) {
