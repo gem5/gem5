@@ -346,6 +346,8 @@ arch_source = SConscript('arch/%s/SConscript' % env['TARGET_ISA'],
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
+SConscript('arch/SConscript', exports = 'env', duplicate = False)
+
 # Set up complete list of sources based on configuration.
 sources = base_sources + arch_source
 
