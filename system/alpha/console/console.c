@@ -187,8 +187,6 @@ main(int argc, char **argv)
     m5Conf.diskOperation = m5AlphaAccess->diskOperation;
     m5Conf.outputChar = m5AlphaAccess->outputChar;
     m5Conf.inputChar = m5AlphaAccess->inputChar;
-    m5Conf.bootStrapImpure = m5AlphaAccess->bootStrapImpure;
-    m5Conf.bootStrapCPU = m5AlphaAccess->bootStrapCPU;
 
     if (m5Conf.version != ALPHA_ACCESS_VERSION)  {
         panic("Console version mismatch. Console expects %d. has %d \n",
@@ -743,8 +741,7 @@ unixBoot(int argc, char **argv)
     for (i = 1; i < m5Conf.numCPUs; i++) {
         ulong stack = (ulong)unix_boot_alloc(1);
         printf_lock("Bootstraping CPU %d with sp=0x%x\n", i, stack);
-        m5AlphaAccess->bootStrapImpure = stack;
-        m5AlphaAccess->bootStrapCPU = i;
+        m5AlphaAccess->cpuStack[i] = stack;
     }
 
     /*

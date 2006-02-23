@@ -56,6 +56,7 @@
  */
 #include "fromHudsonOsf.h"
 
+        .extern myAlphaAccess
         .text
 
 /* return address and padding to octaword align */
@@ -68,11 +69,24 @@ _entry:
         br      t0, 2f			# get the current PC
 2:	ldgp    gp, 0(t0)               # init gp
 
-        /*
-         * SimOS. Stack pointer is start of a valid phys or KSEG page
-         */
+/* Processor 0 start stack frame is begining of physical memory (0)
+   Other processors spin here waiting to get their stacks from
+   Processor 0, then they can progress as normal.
+*/
+        call_pal PAL_WHAMI_ENTRY
+        beq v0, cpuz
+        ldq  t3, m5AlphaAccess
+        addq t3,0x70,t3 # *** If offset in console alpha access struct changes
+                        # This must be changed as well!
+        bis  zero,8,t4
+        mulq t4,v0,t4
+        addq t3,t4,t3
+cpuwait:   ldq  t4, 0(t3)
+        beq  t4, cpuwait
+        bis  t4,t4,sp
 
-        bis	sp,sp,s0 /* save sp */
+
+cpuz:	bis	sp,sp,s0 /* save sp */
 
 slave:	lda	v0,(8*1024)(sp) /* end of page  */
 
@@ -96,6 +110,7 @@ slave:	lda	v0,(8*1024)(sp) /* end of page  */
  *	Every good C program has a main()
  */
 
+/* If stack pointer was 0, then this is CPU0*/
         beq	s0,master
 
         call_pal PAL_WHAMI_ENTRY
