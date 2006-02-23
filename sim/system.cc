@@ -306,11 +306,9 @@ System::registerExecContext(ExecContext *xc, int id)
 void
 System::startup()
 {
-    if (!execContexts.empty()) {
-        // activate with zero delay so that we start ticking right
-        // away on cycle 0
-        execContexts[0]->activate(0);
-    }
+    int i;
+    for (i = 0; i < execContexts.size(); i++)
+        execContexts[i]->activate(0);
 }
 
 void

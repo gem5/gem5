@@ -137,8 +137,6 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
         system->execContexts[i] =
             new ExecContext(this, i, system, itb, dtb, mem);
 
-        // initialize CPU, including PC
-        TheISA::initCPU(&system->execContexts[i]->regs);
         execContexts.push_back(system->execContexts[i]);
 #else
         if (i < params.workload.size()) {
@@ -250,6 +248,7 @@ FullO3CPU<Impl>::init()
         // that it can start properly.
 #if FULL_SYSTEM
         ExecContext *src_xc = system->execContexts[0];
+        TheISA::initCPU(&src_xc->regs, src_xc->cpu_id);
 #else
         ExecContext *src_xc = thread[0];
 #endif

@@ -80,9 +80,7 @@ AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
     alphaAccess->diskOperation = 0;
     alphaAccess->outputChar = 0;
     alphaAccess->inputChar = 0;
-    alphaAccess->bootStrapImpure = 0;
-    alphaAccess->bootStrapCPU = 0;
-    alphaAccess->align2 = 0;
+    bzero(alphaAccess->cpuStack, sizeof(alphaAccess->cpuStack));
 
     system->setAlphaAccess(addr);
 }
@@ -121,9 +119,6 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
                     break;
                 case offsetof(AlphaAccess, numCPUs):
                     *(uint32_t*)data = alphaAccess->numCPUs;
-                    break;
-                case offsetof(AlphaAccess, bootStrapCPU):
-                    *(uint32_t*)data = alphaAccess->bootStrapCPU;
                     break;
                 case offsetof(AlphaAccess, intrClockFrequency):
                     *(uint32_t*)data = alphaAccess->intrClockFrequency;
@@ -175,11 +170,14 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
                 case offsetof(AlphaAccess, outputChar):
                     *(uint64_t*)data = alphaAccess->outputChar;
                     break;
-                case offsetof(AlphaAccess, bootStrapImpure):
-                    *(uint64_t*)data = alphaAccess->bootStrapImpure;
-                    break;
                 default:
-                    panic("Unknown 64bit access, %#x\n", daddr);
+                    int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
+                                 sizeof(alphaAccess->cpuStack[0]);
+
+                    if (cpunum >= 0 && cpunum < 64)
+                        *(uint64_t*)data = alphaAccess->cpuStack[cpunum];
+                    else
+                        panic("Unknown 64bit access, %#x\n", daddr);
             }
             break;
         default:
@@ -239,24 +237,18 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         console->out((char)(val & 0xff));
         break;
 
-      case offsetof(AlphaAccess, bootStrapImpure):
-        alphaAccess->bootStrapImpure = val;
-        break;
-
-      case offsetof(AlphaAccess, bootStrapCPU):
-        warn("%d: Trying to launch another CPU!", curTick);
-        assert(val > 0 && "Must not access primary cpu");
-
-        other_xc = req->xc->system->execContexts[val];
-        other_xc->regs.intRegFile[16] = val;
-        other_xc->regs.ipr[TheISA::IPR_PALtemp16] = val;
-        other_xc->regs.intRegFile[0] = val;
-        other_xc->regs.intRegFile[30] = alphaAccess->bootStrapImpure;
         other_xc->activate(); //Start the cpu
         break;
 
       default:
-        return Machine_Check_Fault;
+        int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
+                     sizeof(alphaAccess->cpuStack[0]);
+        warn("%d: Trying to launch CPU number %d!", curTick, cpunum);
+        assert(val > 0 && "Must not access primary cpu");
+        if (cpunum >= 0 && cpunum < 64)
+            alphaAccess->cpuStack[cpunum] = val;
+        else
+            panic("Unknown 64bit access, %#x\n", daddr);
     }
 
     return No_Fault;
@@ -287,8 +279,7 @@ AlphaConsole::Access::serialize(ostream &os)
     SERIALIZE_SCALAR(diskOperation);
     SERIALIZE_SCALAR(outputChar);
     SERIALIZE_SCALAR(inputChar);
-    SERIALIZE_SCALAR(bootStrapImpure);
-    SERIALIZE_SCALAR(bootStrapCPU);
+    SERIALIZE_ARRAY(cpuStack,64);
 }
 
 void
@@ -310,8 +301,7 @@ AlphaConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(diskOperation);
     UNSERIALIZE_SCALAR(outputChar);
     UNSERIALIZE_SCALAR(inputChar);
-    UNSERIALIZE_SCALAR(bootStrapImpure);
-    UNSERIALIZE_SCALAR(bootStrapCPU);
+    UNSERIALIZE_ARRAY(cpuStack, 64);
 }
 
 void
