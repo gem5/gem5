@@ -399,18 +399,13 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
 
 # several files are generated from arch/$TARGET_ISA/isa_desc.
 env.Command(Split('''
-	arch/%s/decoder.cc
-	arch/%s/decoder.hh
-        arch/%s/alpha_o3_exec.cc
-	arch/%s/fast_cpu_exec.cc
-        arch/%s/simple_cpu_exec.cc
-        arch/%s/full_cpu_exec.cc''' %
-	(env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'])),
+	arch/%(targetisa)s/decoder.cc
+	arch/%(targetisa)s/decoder.hh
+        arch/%(targetisa)s/alpha_o3_exec.cc
+	arch/%(targetisa)s/fast_cpu_exec.cc
+        arch/%(targetisa)s/simple_cpu_exec.cc
+        arch/%(targetisa)s/full_cpu_exec.cc''' %
+	{'targetisa': env['TARGET_ISA']}),
 	Split('''
 	arch/%s/isa/main.isa
 	arch/isa_parser.py''' %
