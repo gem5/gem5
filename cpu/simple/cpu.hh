@@ -46,7 +46,7 @@
 class Processor;
 class AlphaITB;
 class AlphaDTB;
-class PhysicalMemory;
+class Memory;
 
 class RemoteGDB;
 class GDBListener;
@@ -164,8 +164,8 @@ class SimpleCPU : public BaseCPU
 #if FULL_SYSTEM
         AlphaITB *itb;
         AlphaDTB *dtb;
-        FunctionalMemory *mem;
 #else
+        Memory *mem;
         Process *process;
 #endif
     };

@@ -143,6 +143,17 @@ SimpleCPU::SimpleCPU(Params *p)
 
     memPort = &dcachePort;
 
+    //Create Memory Ports (conect them up)
+    p->mem->addPort("DCACHE");
+    dcachePort.setPeer(p->mem->getPort("DCACHE"));
+    (p->mem->getPort("DCACHE"))->setPeer(&dcachePort);
+
+    p->mem->addPort("ICACHE");
+    icachePort.setPeer(p->mem->getPort("ICACHE"));
+    (p->mem->getPort("ICACHE"))->setPeer(&icachePort);
+
+
+
     req = new CpuRequest;
 
     req->asid = 0;
@@ -1019,11 +1030,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    SimObjectParam<FunctionalMemory *> mem;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
 #else
+    SimObjectParam<Memory *> mem;
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
 
@@ -1050,11 +1061,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
+    INIT_PARAM(mem, "memory"),
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
 
@@ -1085,11 +1096,11 @@ CREATE_SIM_OBJECT(SimpleCPU)
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->mem = mem;
     params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
 #else
+    params->mem = mem;
     params->process = workload;
 #endif
 

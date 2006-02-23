@@ -40,9 +40,6 @@
 
 #include "base/misc.hh"
 #include "config/full_system.hh"
-#if FULL_SYSTEM
-#include "mem/functional/memory_control.hh"
-#endif
 #include "mem/physical.hh"
 #include "sim/host.hh"
 #include "sim/builder.hh"
@@ -71,46 +68,8 @@ PhysicalMemory::MemResponseEvent::description()
     return "Physical Memory Timing Access respnse event";
 }
 
-#if FULL_SYSTEM
-PhysicalMemory::PhysicalMemory(const string &n, Range<Addr> range,
-                               MemoryController *mmu, const std::string &fname)
-    : Memory(n), base_addr(range.start), pmem_size(range.size()),
-      pmem_addr(NULL)
-{
-    if (pmem_size % TheISA::PageBytes != 0)
-        panic("Memory Size not divisible by page size\n");
-
-    mmu->add_child(this, range);
-
-    int fd = -1;
-
-    if (!fname.empty()) {
-        fd = open(fname.c_str(), O_RDWR | O_CREAT, 0644);
-        if (fd == -1) {
-            perror("open");
-            fatal("Could not open physical memory file: %s\n", fname);
-        }
-        ftruncate(fd, pmem_size);
-    }
-
-    int map_flags = (fd == -1) ? (MAP_ANON | MAP_PRIVATE) : MAP_SHARED;
-    pmem_addr = (uint8_t *)mmap(NULL, pmem_size, PROT_READ | PROT_WRITE,
-                                map_flags, fd, 0);
-
-    if (fd != -1)
-        close(fd);
-
-    if (pmem_addr == (void *)MAP_FAILED) {
-        perror("mmap");
-        fatal("Could not mmap!\n");
-    }
-
-    page_ptr = 0;
-}
-#endif
-
 PhysicalMemory::PhysicalMemory(const string &n)
-    : Memory(n), memoryPort(this), base_addr(0), pmem_addr(NULL)
+    : Memory(n), base_addr(0), pmem_addr(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;
@@ -134,6 +93,7 @@ PhysicalMemory::~PhysicalMemory()
 {
     if (pmem_addr)
         munmap(pmem_addr, pmem_size);
+    //Remove memPorts?
 }
 
 Addr
@@ -144,6 +104,13 @@ PhysicalMemory::new_page()
 
     ++page_ptr;
     return return_addr;
+}
+
+Port *
+PhysicalMemory::addPort(std::string portName)
+{
+    memoryPortList[portName] = new MemoryPort(this);
+    return memoryPortList[portName];
 }
 
 //
@@ -174,11 +141,11 @@ PhysicalMemory::deviceBlockSize()
 }
 
 bool
-PhysicalMemory::doTimingAccess (Packet &pkt)
+PhysicalMemory::doTimingAccess (Packet &pkt, MemoryPort* memoryPort)
 {
     doFunctionalAccess(pkt);
 
-    MemResponseEvent* response = new MemResponseEvent(pkt, &memoryPort);
+    MemResponseEvent* response = new MemResponseEvent(pkt, memoryPort);
     response->schedule(curTick + lat);
 
     return true;
@@ -210,7 +177,10 @@ PhysicalMemory::doFunctionalAccess(Packet &pkt)
 Port *
 PhysicalMemory::getPort(const char *if_name)
 {
-    return &memoryPort;
+    if (memoryPortList.find(if_name) != memoryPortList.end())
+        return memoryPortList[if_name];
+    else
+        panic("Looking for a port that didn't exist\n");
 }
 
 void
@@ -245,7 +215,7 @@ PhysicalMemory::MemoryPort::deviceBlockSize()
 bool
 PhysicalMemory::MemoryPort::recvTiming(Packet &pkt)
 {
-    return memory->doTimingAccess(pkt);
+    return memory->doTimingAccess(pkt, this);
 }
 
 Tick

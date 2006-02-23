@@ -37,7 +37,8 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
-
+#include <map>
+#include <string>
 //
 // Functional model for a contiguous block of physical memory. (i.e. RAM)
 //
@@ -67,9 +68,13 @@ class PhysicalMemory : public Memory
         virtual int deviceBlockSize();
     };
 
-    MemoryPort memoryPort;
+    std::map<std::string, MemoryPort*> memoryPortList;
 
     Port * PhysicalMemory::getPort(const char *if_name);
+
+    Port * addPort(std::string portName);
+
+    int numPorts;
 
     int lat;
 
@@ -114,7 +119,7 @@ class PhysicalMemory : public Memory
     // fast back-door memory access for vtophys(), remote gdb, etc.
     // uint64_t phys_read_qword(Addr addr) const;
   private:
-    bool doTimingAccess(Packet &pkt);
+    bool doTimingAccess(Packet &pkt, MemoryPort *memoryPort);
     Tick doAtomicAccess(Packet &pkt);
     void doFunctionalAccess(Packet &pkt);
 
