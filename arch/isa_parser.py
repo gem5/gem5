@@ -1751,7 +1751,7 @@ def preprocess_isa_desc(isa_desc):
 #
 # Read in and parse the ISA description.
 #
-def parse_isa_desc(isa_desc_file, output_dir, include_path):
+def parse_isa_desc(isa_desc_file, output_dir):
     # set a global var for the input filename... used in error messages
     global input_filename
     input_filename = isa_desc_file
@@ -1781,7 +1781,7 @@ def parse_isa_desc(isa_desc_file, output_dir, include_path):
     update_if_needed(output_dir + '/decoder.hh', file_template % vars())
 
     # generate decoder.cc
-    includes = '#include "%s/decoder.hh"' % include_path
+    includes = '#include "decoder.hh"'
     global_output = global_code.decoder_output
     namespace_output = namespace_code.decoder_output
     # namespace_output += namespace_code.decode_block
@@ -1790,7 +1790,7 @@ def parse_isa_desc(isa_desc_file, output_dir, include_path):
 
     # generate per-cpu exec files
     for cpu in CpuModel.list:
-        includes = '#include "%s/decoder.hh"\n' % include_path
+        includes = '#include "decoder.hh"\n'
         includes += cpu.includes
         global_output = global_code.exec_output[cpu.name]
         namespace_output = namespace_code.exec_output[cpu.name]
@@ -1800,4 +1800,4 @@ def parse_isa_desc(isa_desc_file, output_dir, include_path):
 
 # Called as script: get args from command line.
 if __name__ == '__main__':
-    parse_isa_desc(sys.argv[1], sys.argv[2], sys.argv[3])
+    parse_isa_desc(sys.argv[1], sys.argv[2])

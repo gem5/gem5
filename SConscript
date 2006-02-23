@@ -320,6 +320,11 @@ syscall_emulation_sources = Split('''
 	sim/syscall_emul.cc
         ''')
 
+# The following stuff (targetarch code and global define of THE_ISA)
+# are legacy things that assume we're only compiling one ISA at a
+# time.  These will have to go away if we want to build a binary that
+# supports multiple ISAs.
+
 targetarch_files = Split('''
         alpha_linux_process.hh
         alpha_memory.hh
@@ -338,18 +343,14 @@ for f in targetarch_files:
     env.Command('targetarch/' + f, 'arch/%s/%s' % (env['TARGET_ISA'], f),
                 '''echo '#include "arch/%s/%s"' > $TARGET''' % (env['TARGET_ISA'], f))
 
-# Let the target architecture define what sources it needs
-arch_source = SConscript('arch/%s/SConscript' % env['TARGET_ISA'],
-	build_dir = 'build/%s/' % env['BUILD_DIR'],
-	exports = 'env', duplicate = False)
-
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
-SConscript('arch/SConscript', exports = 'env', duplicate = False)
+arch_sources = SConscript('arch/SConscript',
+                          exports = 'env', duplicate = False)
 
 # Set up complete list of sources based on configuration.
-sources = base_sources + arch_source
+sources = base_sources + arch_sources
 
 if env['FULL_SYSTEM']:
     sources += full_system_sources
@@ -366,27 +367,6 @@ for opt in env.ExportOptions:
 
 ###################################################
 #
-# Add an SCons scanner for ISA files
-#
-###################################################
-import SCons.Scanner
-
-def ISAScan():
-   return SCons.Scanner.Classic("ISAScan",
-                                "$ISASUFFIXES",
-                                "SRCDIR",
-                                '^[ \t]*##[ \t]*include[ \t]*"([^>"]+)"')
-
-def ISAPath(env, dir, target=None, source=None, a=None):
-   return (Dir(env['SRCDIR']), Dir('.'))   
-
-iscan = Scanner(function = ISAScan().scan, skeys = [".isa", ".ISA"],
-                path_function = ISAPath)
-env.Append(SCANNERS = iscan)
-
- 
-###################################################
-#
 # Special build rules.
 #
 ###################################################
@@ -396,27 +376,6 @@ env.Append(SCANNERS = iscan)
 env.Command(Split('base/traceflags.hh base/traceflags.cc'),
             'base/traceflags.py',
             'python $SOURCE $TARGET.base')
-
-# several files are generated from arch/$TARGET_ISA/isa_desc.
-env.Command(Split('''
-	arch/%s/decoder.cc
-	arch/%s/decoder.hh
-        arch/%s/alpha_o3_exec.cc
-	arch/%s/fast_cpu_exec.cc
-        arch/%s/simple_cpu_exec.cc
-        arch/%s/full_cpu_exec.cc''' %
-	(env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'],
-	env['TARGET_ISA'])),
-	Split('''
-	arch/%s/isa/main.isa
-	arch/isa_parser.py''' %
-	env['TARGET_ISA']),
-	'$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/%s' % env['TARGET_ISA'])
-
 
 # libelf build is described in its own SConscript file.
 # SConscript-local is the per-config build, which just copies some
