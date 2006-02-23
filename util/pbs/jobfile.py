@@ -277,10 +277,11 @@ class Option(Data):
             return name
 
         if attr == 'desc':
-            desc = self.__dict__[attr]
-            if self._suboption is not None:
-                desc = '%s, %s' % (desc, self._suboption.desc)
-            return desc
+            desc = [ self.__dict__[attr] ]
+            if self._suboption is not None and self._suboption.desc:
+                desc.append(self._suboption.desc)
+            return ', '.join(desc)
+
 
         return super(Option, self).__getattribute__(attr)
 
