@@ -96,7 +96,7 @@ class AlphaConsole : public PioDevice
     BaseCPU *cpu;
 
     Addr addr;
-    static const Addr size = 0x80; // equal to sizeof(alpha_access);
+    static const Addr size = sizeof(struct AlphaAccess);
 
   public:
     /** Standard Constructor */

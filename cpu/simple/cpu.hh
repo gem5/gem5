@@ -68,6 +68,7 @@ class SimpleCPU : public BaseCPU
   public:
     // main simulation loop (one cycle)
     void tick();
+    virtual void init();
 
   private:
     struct TickEvent : public Event
