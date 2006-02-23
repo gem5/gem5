@@ -50,27 +50,13 @@
 //These tell the preprocessor where to find the files of a particular
 //ISA, and set the "TheISA" macro for use elsewhere.
 #if THE_ISA == ALPHA_ISA
-    #define ISA_PATH arch/alpha/
     #define TheISA AlphaISA
 #elif THE_ISA == SPARC_ISA
-    #define ISA_PATH arch/sparc/
     #define TheISA SparcISA
 #elif THE_ISA == MIPS_ISA
-    #define ISA_PATH arch/mips/
     #define TheISA MipsISA
 #else
     #error "THE_ISA not set"
 #endif
-//The following is some preprocessor voodoo to allow redirectable includes
-//The end result is the ISA_INCLUDE() macro which is used inside stub
-//include files in arch and which redirect to the isa in use.
-#define STRINGIFY(token) #token
-#define EXPAND(token) token
-#define STICK_TOGETHER(firstpart, secondpart) \
-    EXPAND(firstpart)EXPAND(secondpart)
-#define EXPAND_AND_STRINGIFY(pathAndFile) \
-    STRINGIFY(pathAndFile)
-#define ISA_INCLUDE(filename) \
-    EXPAND_AND_STRINGIFY(STICK_TOGETHER(ISA_PATH, filename))
 
 #endif

@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,57 +26,49 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import sys
-from os.path import isdir
-
-# This file defines how to build a particular configuration of M5
-# based on variable settings in the 'env' build environment.
+import os.path
 
 # Import build environment variable from SConstruct.
 Import('env')
 
-###################################################
 #
-# Define needed sources.
+# ISA "switch header" generation.
 #
-###################################################
+# Auto-generate arch headers that include the right ISA-specific
+# header based on the setting of THE_ISA preprocessor variable.
 
-# Base sources used by all configurations.
-arch_base_sources = Split('''
-	arch/alpha/decoder.cc
-        arch/alpha/alpha_o3_exec.cc
-	arch/alpha/fast_cpu_exec.cc
-	arch/alpha/simple_cpu_exec.cc
-	arch/alpha/full_cpu_exec.cc
-	arch/alpha/faults.cc
-	arch/alpha/isa_traits.cc
-	''')
+# List of headers to generate
+isa_switch_hdrs = Split('''
+	isa_traits.hh
+        ''')
 
-# Full-system sources
-arch_full_system_sources = Split('''
-	arch/alpha/alpha_memory.cc
-	arch/alpha/arguments.cc
-	arch/alpha/ev5.cc
-	arch/alpha/osfpal.cc
-	arch/alpha/stacktrace.cc
-	arch/alpha/vtophys.cc
-	''')
+# Generate the header.  target[0] is the full path of the output
+# header to generate.  'source' is a dummy variable, since we get the
+# list of ISAs from env['ALL_ISA_LIST'].
+def gen_switch_hdr(target, source, env):
+    fname = str(target[0])
+    basename = os.path.basename(fname)
+    f = open(fname, 'w')
+    f.write('#include "arch/isa_specific.hh"\n')
+    cond = '#if'
+    for isa in env['ALL_ISA_LIST']:
+        f.write('%s THE_ISA == %s_ISA\n#include "arch/%s/%s"\n'
+                % (cond, isa.upper(), isa, basename))
+        cond = '#elif'
+    f.write('#else\n#error "THE_ISA not set"\n#endif\n')
+    f.close()
+    return 0
 
+# String to print when generating header
+def gen_switch_hdr_string(target, source, env):
+    return "Generating ISA switch header " + str(target[0])
 
-# Syscall emulation (non-full-system) sources
-arch_syscall_emulation_sources = Split('''
-	arch/alpha/alpha_common_syscall_emul.cc
-	arch/alpha/alpha_linux_process.cc
-	arch/alpha/alpha_tru64_process.cc
-	''')
+# Build SCons Action object. 'varlist' specifies env vars that this
+# action depdnds on; when env['ALL_ISA_LIST'] changes these actions
+# should get re-executed.
+switch_hdr_action = Action(gen_switch_hdr, gen_switch_hdr_string,
+                           varlist=['ALL_ISA_LIST'])
 
-# Set up complete list of sources based on configuration.
-sources = arch_base_sources
-
-if env['FULL_SYSTEM']:
-    sources += arch_full_system_sources
-else:
-    sources += arch_syscall_emulation_sources
-
-Return('sources')
+# Instantiate actions for each header
+for hdr in isa_switch_hdrs:
+    env.Command(hdr, [], switch_hdr_action)

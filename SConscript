@@ -223,14 +223,6 @@ base_sources = Split('''
 	sim/stat_control.cc
 	sim/trace_context.cc
         ''')
-# These are now included by the architecture specific SConscript
-#	arch/alpha/decoder.cc
-#	arch/alpha/alpha_o3_exec.cc
-#	arch/alpha/fast_cpu_exec.cc
-#	arch/alpha/simple_cpu_exec.cc
-#	arch/alpha/full_cpu_exec.cc
-#	arch/alpha/faults.cc
-#	arch/alpha/isa_traits.cc
 
 # MySql sources
 mysql_sources = Split('''
@@ -296,15 +288,6 @@ full_system_sources = Split('''
 	sim/pseudo_inst.cc
         ''')
 
-# These are now included by the architecture specific SConscript
-#	arch/alpha/alpha_memory.cc
-#	arch/alpha/arguments.cc
-#	arch/alpha/ev5.cc
-#	arch/alpha/osfpal.cc
-#	arch/alpha/pseudo_inst.cc
-#	arch/alpha/stacktrace.cc
-#	arch/alpha/vtophys.cc
-
 # turbolaser encumbered sources
 turbolaser_sources = Split('''
 	encumbered/dev/dma.cc
@@ -337,11 +320,6 @@ syscall_emulation_sources = Split('''
 	sim/syscall_emul.cc
         ''')
 
-# These are now included by the architecture specific SConscript
-#	arch/alpha/alpha_common_syscall_emul.cc
-#	arch/alpha/alpha_linux_process.cc
-#	arch/alpha/alpha_tru64_process.cc
-
 targetarch_files = Split('''
         alpha_linux_process.hh
         memory.hh
@@ -354,13 +332,6 @@ targetarch_files = Split('''
         stacktrace.hh
         vtophys.hh
         ''')
-#        pseudo_inst.hh
-#        isa_traits.hh
-#        osfpal.hh
-#        byte_swap.hh
-#        alpha_common_syscall_emul.hh
-#        vptr.hh
-#        isa_fullsys_traits.hh
 
 # Set up bridging headers to the architecture specific versions
 for f in targetarch_files:
@@ -374,6 +345,8 @@ arch_source = SConscript('arch/%s/SConscript' % env['TARGET_ISA'],
 
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
+
+SConscript('arch/SConscript', exports = 'env', duplicate = False)
 
 # Set up complete list of sources based on configuration.
 sources = base_sources + arch_source
