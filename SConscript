@@ -86,31 +86,7 @@ base_sources = Split('''
 	cpu/exetrace.cc
 	cpu/pc_event.cc
 	cpu/static_inst.cc
-        cpu/o3/2bit_local_pred.cc
-        cpu/o3/alpha_dyn_inst.cc
-        cpu/o3/alpha_cpu.cc
-        cpu/o3/alpha_cpu_builder.cc
-        cpu/o3/bpred_unit.cc
-        cpu/o3/btb.cc
-        cpu/o3/commit.cc
-        cpu/o3/decode.cc
-        cpu/o3/fetch.cc
-        cpu/o3/free_list.cc
-        cpu/o3/cpu.cc
-        cpu/o3/iew.cc
-        cpu/o3/inst_queue.cc
-        cpu/o3/ldstq.cc
-        cpu/o3/mem_dep_unit.cc
-        cpu/o3/ras.cc
-        cpu/o3/rename.cc
-        cpu/o3/rename_map.cc
-        cpu/o3/rob.cc
-        cpu/o3/sat_counter.cc
-        cpu/o3/store_set.cc
-        cpu/o3/tournament_pred.cc
-	cpu/fast/cpu.cc
         cpu/sampler/sampler.cc
-        cpu/simple/cpu.cc
         cpu/trace/reader/mem_trace_reader.cc
         cpu/trace/reader/ibm_reader.cc
         cpu/trace/reader/itx_reader.cc
@@ -118,41 +94,6 @@ base_sources = Split('''
         cpu/trace/opt_cpu.cc
         cpu/trace/trace_cpu.cc
 
-	encumbered/cpu/full/bpred.cc
-	encumbered/cpu/full/commit.cc
-	encumbered/cpu/full/cpu.cc
-	encumbered/cpu/full/create_vector.cc
-	encumbered/cpu/full/cv_spec_state.cc
-	encumbered/cpu/full/dd_queue.cc
-	encumbered/cpu/full/dep_link.cc
-	encumbered/cpu/full/dispatch.cc
-	encumbered/cpu/full/dyn_inst.cc
-	encumbered/cpu/full/execute.cc
-	encumbered/cpu/full/fetch.cc
-	encumbered/cpu/full/floss_reasons.cc
-	encumbered/cpu/full/fu_pool.cc
-	encumbered/cpu/full/inst_fifo.cc
-	encumbered/cpu/full/instpipe.cc
-	encumbered/cpu/full/issue.cc
-	encumbered/cpu/full/ls_queue.cc
-	encumbered/cpu/full/machine_queue.cc
-        encumbered/cpu/full/pipetrace.cc
-        encumbered/cpu/full/readyq.cc
-        encumbered/cpu/full/reg_info.cc
-        encumbered/cpu/full/rob_station.cc
-        encumbered/cpu/full/spec_memory.cc
-        encumbered/cpu/full/spec_state.cc
-        encumbered/cpu/full/storebuffer.cc
-        encumbered/cpu/full/writeback.cc
-        encumbered/cpu/full/iq/iq_station.cc
-        encumbered/cpu/full/iq/iqueue.cc
-        encumbered/cpu/full/iq/segmented/chain_info.cc
-        encumbered/cpu/full/iq/segmented/chain_wire.cc
-        encumbered/cpu/full/iq/segmented/iq_seg.cc
-        encumbered/cpu/full/iq/segmented/iq_segmented.cc
-        encumbered/cpu/full/iq/segmented/seg_chain.cc
-        encumbered/cpu/full/iq/seznec/iq_seznec.cc
-        encumbered/cpu/full/iq/standard/iq_standard.cc
 	encumbered/mem/functional/main.cc
 
 	mem/base_hier.cc
@@ -222,6 +163,45 @@ base_sources = Split('''
 	sim/stat_context.cc
 	sim/stat_control.cc
 	sim/trace_context.cc
+        ''')
+
+# Old FullCPU sources
+full_cpu_sources = Split('''
+	encumbered/cpu/full/bpred.cc
+	encumbered/cpu/full/commit.cc
+	encumbered/cpu/full/cpu.cc
+	encumbered/cpu/full/create_vector.cc
+	encumbered/cpu/full/cv_spec_state.cc
+	encumbered/cpu/full/dd_queue.cc
+	encumbered/cpu/full/dep_link.cc
+	encumbered/cpu/full/dispatch.cc
+	encumbered/cpu/full/dyn_inst.cc
+	encumbered/cpu/full/execute.cc
+	encumbered/cpu/full/fetch.cc
+	encumbered/cpu/full/floss_reasons.cc
+	encumbered/cpu/full/fu_pool.cc
+	encumbered/cpu/full/inst_fifo.cc
+	encumbered/cpu/full/instpipe.cc
+	encumbered/cpu/full/issue.cc
+	encumbered/cpu/full/ls_queue.cc
+	encumbered/cpu/full/machine_queue.cc
+        encumbered/cpu/full/pipetrace.cc
+        encumbered/cpu/full/readyq.cc
+        encumbered/cpu/full/reg_info.cc
+        encumbered/cpu/full/rob_station.cc
+        encumbered/cpu/full/spec_memory.cc
+        encumbered/cpu/full/spec_state.cc
+        encumbered/cpu/full/storebuffer.cc
+        encumbered/cpu/full/writeback.cc
+        encumbered/cpu/full/iq/iq_station.cc
+        encumbered/cpu/full/iq/iqueue.cc
+        encumbered/cpu/full/iq/segmented/chain_info.cc
+        encumbered/cpu/full/iq/segmented/chain_wire.cc
+        encumbered/cpu/full/iq/segmented/iq_seg.cc
+        encumbered/cpu/full/iq/segmented/iq_segmented.cc
+        encumbered/cpu/full/iq/segmented/seg_chain.cc
+        encumbered/cpu/full/iq/seznec/iq_seznec.cc
+        encumbered/cpu/full/iq/standard/iq_standard.cc
         ''')
 
 # MySql sources
@@ -349,8 +329,16 @@ env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 arch_sources = SConscript('arch/SConscript',
                           exports = 'env', duplicate = False)
 
+cpu_sources = SConscript('cpu/SConscript',
+                         exports = 'env', duplicate = False)
+
+# This is outside of cpu/SConscript since the source directory isn't
+# underneath 'cpu'.
+if 'FullCPU' in env['CPU_MODELS']:
+    cpu_sources += full_cpu_sources
+
 # Set up complete list of sources based on configuration.
-sources = base_sources + arch_sources
+sources = base_sources + arch_sources + cpu_sources
 
 if env['FULL_SYSTEM']:
     sources += full_system_sources
