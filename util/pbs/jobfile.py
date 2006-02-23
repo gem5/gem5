@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -356,6 +356,8 @@ class Configuration(Data):
     def __init__(self, name, desc, **kwargs):
         super(Configuration, self).__init__(name, desc, **kwargs)
         self._groups = []
+        self._posfilters = []
+        self._negfilters = []
 
     def group(self, name, desc, **kwargs):
         grp = Group(name, desc, **kwargs)
@@ -402,13 +404,39 @@ class Configuration(Data):
                 if checkpoint:
                     yield options
 
+    def addfilter(self, filt, pos=True):
+        import re
+        filt = re.compile(filt)
+        if pos:
+            self._posfilters.append(filt)
+        else:
+            self._negfilters.append(filt)
+
+    def jobfilter(self, job):
+        for filt in self._negfilters:
+            if filt.match(job.name):
+                return False
+
+        if not self._posfilters:
+            return True
+
+        for filt in self._posfilters:
+            if filt.match(job.name):
+                return True
+
+        return False
+
     def checkpoints(self, groups = None):
         for options in self.options(groups, True):
-            yield Job(options)
+            job = Job(options)
+            if self.jobfilter(job):
+                yield job
 
     def jobs(self, groups = None):
         for options in self.options(groups, False):
-            yield Job(options)
+            job = Job(options)
+            if self.jobfilter(job):
+                yield job
 
     def alljobs(self, groups = None):
         for options in self.options(groups, True):
