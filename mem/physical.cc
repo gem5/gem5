@@ -46,10 +46,30 @@
 #include "mem/physical.hh"
 #include "sim/host.hh"
 #include "sim/builder.hh"
+#include "sim/eventq.hh"
 #include "targetarch/isa_traits.hh"
 
 
 using namespace std;
+
+PhysicalMemory::MemResponseEvent::MemResponseEvent(Packet &pkt, MemoryPort* _m)
+    : Event(&mainEventQueue, CPU_Tick_Pri), pkt(pkt), memoryPort(_m)
+{
+
+    this->setFlags(AutoDelete);
+}
+
+void
+PhysicalMemory::MemResponseEvent::process()
+{
+    memoryPort->sendTiming(pkt);
+}
+
+const char *
+PhysicalMemory::MemResponseEvent::description()
+{
+    return "Physical Memory Timing Access respnse event";
+}
 
 #if FULL_SYSTEM
 PhysicalMemory::PhysicalMemory(const string &n, Range<Addr> range,
@@ -157,7 +177,10 @@ bool
 PhysicalMemory::doTimingAccess (Packet &pkt)
 {
     doFunctionalAccess(pkt);
-    //Schedule a response event at curTick + lat;
+
+    MemResponseEvent* response = new MemResponseEvent(pkt, &memoryPort);
+    response->schedule(curTick + lat);
+
     return true;
 }
 
@@ -213,6 +236,11 @@ PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &range_list,
     panic("??");
 }
 
+int
+PhysicalMemory::MemoryPort::deviceBlockSize()
+{
+    return memory->deviceBlockSize();
+}
 
 bool
 PhysicalMemory::MemoryPort::recvTiming(Packet &pkt)

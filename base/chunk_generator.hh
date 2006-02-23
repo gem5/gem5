@@ -82,11 +82,18 @@ class ChunkGenerator
         // set up initial chunk.
         curAddr = startAddr;
 
-        // nextAddr should be *next* chunk start
-        nextAddr = roundUp(startAddr, chunkSize);
-        if (curAddr == nextAddr) {
-            // ... even if startAddr is already chunk-aligned
-            nextAddr += chunkSize;
+        if (chunkSize == 0) //Special Case, if we see 0, assume no chuncking
+        {
+            nextAddr = startAddr + totalSize;
+        }
+        else
+        {
+            // nextAddr should be *next* chunk start
+            nextAddr = roundUp(startAddr, chunkSize);
+            if (curAddr == nextAddr) {
+                // ... even if startAddr is already chunk-aligned
+                nextAddr += chunkSize;
+            }
         }
 
         // how many bytes are left between curAddr and the end of this chunk?

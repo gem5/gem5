@@ -35,6 +35,8 @@
 #include "base/range.hh"
 #include "mem/memory.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
+#include "sim/eventq.hh"
 
 //
 // Functional model for a contiguous block of physical memory. (i.e. RAM)
@@ -63,7 +65,6 @@ class PhysicalMemory : public Memory
                                             bool &owner);
 
         virtual int deviceBlockSize();
-
     };
 
     MemoryPort memoryPort;
@@ -72,7 +73,15 @@ class PhysicalMemory : public Memory
 
     int lat;
 
-    //event to send response needs to be here
+    struct MemResponseEvent : public Event
+    {
+        Packet pkt;
+        MemoryPort *memoryPort;
+
+        MemResponseEvent(Packet &pkt, MemoryPort *memoryPort);
+        void process();
+        const char *description();
+    };
 
   private:
     // prevent copying of a MainMemory object
@@ -98,7 +107,7 @@ class PhysicalMemory : public Memory
     void prot_access_error(Addr addr, int size, Command func);
 
   public:
-    virtual int deviceBlockSize();
+    int deviceBlockSize();
 
     void prot_memset(Addr addr, uint8_t val, int size);
 

@@ -674,6 +674,8 @@ SimpleCPU::sendIcacheRequest()
     icacheStallCycles += latency;
 
     _status = IcacheAccessComplete;
+
+    delete pkt;
 #endif
 }
 

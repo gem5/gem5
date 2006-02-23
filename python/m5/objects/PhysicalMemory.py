@@ -1,7 +1,7 @@
 from m5 import *
-from FunctionalMemory import FunctionalMemory
+from Memory import Memory
 
-class PhysicalMemory(FunctionalMemory):
+class PhysicalMemory(Memory):
     type = 'PhysicalMemory'
     range = Param.AddrRange("Device Address")
     file = Param.String('', "memory mapped file")

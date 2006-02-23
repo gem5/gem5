@@ -36,15 +36,15 @@
 void
 Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
 {
-    Request rqst;
+    Request req;
     Packet pkt;
-    pkt.req = &rqst;
+    pkt.req = &req;
     pkt.cmd = cmd;
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-        pkt.addr = rqst.paddr = gen.addr();
-        pkt.size = rqst.size = gen.size();
+        pkt.addr = req.paddr = gen.addr();
+        pkt.size = req.size = gen.size();
         pkt.data = p;
         sendFunctional(pkt);
         p += gen.size();
