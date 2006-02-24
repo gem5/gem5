@@ -33,7 +33,7 @@
  * System Console Memory Mapped Register Definition
  */
 
-#define ALPHA_ACCESS_VERSION (1303)
+#define ALPHA_ACCESS_VERSION (1305)
 
 #ifdef CONSOLE
 typedef unsigned uint32_t;
@@ -67,9 +67,7 @@ struct AlphaAccess
     uint64_t	inputChar;		// 68: Placeholder for input
 
     // MP boot
-    uint64_t	bootStrapImpure;	// 70:
-    uint32_t	bootStrapCPU;		// 78:
-    uint32_t	align2;			// 7C: Dummy placeholder for alignment
+    uint64_t	cpuStack[64];	        // 70:
 };
 
 #endif // __ALPHA_ACCESS_H__
