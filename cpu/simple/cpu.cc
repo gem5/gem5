@@ -84,6 +84,21 @@ SimpleCPU::TickEvent::TickEvent(SimpleCPU *c, int w)
 {
 }
 
+
+void
+SimpleCPU::init()
+{
+    BaseCPU::init();
+#if FULL_SYSTEM
+    for (int i = 0; i < execContexts.size(); ++i) {
+        ExecContext *xc = execContexts[i];
+
+        // initialize CPU, including PC
+        TheISA::initCPU(&xc->regs, xc->cpu_id);
+    }
+#endif
+}
+
 void
 SimpleCPU::TickEvent::process()
 {
@@ -124,8 +139,6 @@ SimpleCPU::SimpleCPU(Params *p)
 #if FULL_SYSTEM
     xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
 
-    // initialize CPU, including PC
-    initCPU(&xc->regs);
 #else
     xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
 #endif // !FULL_SYSTEM

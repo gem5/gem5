@@ -221,6 +221,9 @@ env = conf.Finish()
 # Define the universe of supported ISAs
 env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 
+# Define the universe of supported CPU models
+env['ALL_CPU_LIST'] = ['SimpleCPU', 'FastCPU', 'FullCPU', 'AlphaFullCPU']
+
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
 # value becomes sticky).
@@ -251,6 +254,12 @@ sticky_opts.AddOptions(
 # Non-sticky options only apply to the current build.
 nonsticky_opts = Options(args=ARGUMENTS)
 nonsticky_opts.AddOptions(
+    # This really should be a sticky option, but there's a bug in
+    # scons 0.96.1 that causes ListOptions not to be able to be
+    # restored from a saved option file.  It looks like this is fixed
+    # in 0.96.9, but there's a different bug in that version that means we
+    # can't just upgrade.
+    ListOption('CPU_MODELS', 'CPU models', 'all', env['ALL_CPU_LIST']),
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 
