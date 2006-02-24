@@ -136,7 +136,7 @@ Statistics::regStats(const string &_name)
         }
     }
 
-    _faults
+/*    _faults
         .init(NumFaults)
         .name(name() + ".faults")
         .desc("number of faults")
@@ -147,7 +147,7 @@ Statistics::regStats(const string &_name)
         const char *str = (*ListOfFaults[i])->name;
         if (str)
             _faults.subname(i, str);
-    }
+    }*/
 
     _mode
         .init(cpu_mode_num)

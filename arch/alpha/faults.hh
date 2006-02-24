@@ -30,131 +30,192 @@
 #define __ALPHA_FAULTS_HH__
 
 #include "sim/faults.hh"
-#include "arch/isa_traits.hh" //For the Addr type
+
+// The reasoning behind the name and vect functions is in sim/faults.hh
+
+typedef const Addr FaultVect;
 
 class AlphaFault : public FaultBase
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    AlphaFault(char * newName, int newId, Addr newVect)
-        : FaultBase(newName, newId), vect(newVect)
-    {;}
-
-    Addr vect;
+    FaultName name() {return _name;}
+    virtual FaultVect vect() {return _vect;}
+    virtual FaultStat & stat() {return _stat;}
 };
 
-extern class ResetFaultType : public AlphaFault
+class ResetFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    ResetFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const ResetFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class ArithmeticFaultType : public AlphaFault
+class ArithmeticFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    ArithmeticFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const ArithmeticFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class InterruptFaultType : public AlphaFault
+class InterruptFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    InterruptFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const InterruptFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class NDtbMissFaultType : public AlphaFault
+class NDtbMissFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    NDtbMissFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const NDtbMissFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class PDtbMissFaultType : public AlphaFault
+class PDtbMissFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    PDtbMissFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const PDtbMissFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class DtbPageFaultType : public AlphaFault
+class DtbPageFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    DtbPageFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const DtbPageFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class DtbAcvFaultType : public AlphaFault
+class DtbAcvFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    DtbAcvFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const DtbAcvFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class ItbMissFaultType : public AlphaFault
+class ItbMissFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    ItbMissFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const ItbMissFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class ItbPageFaultType : public AlphaFault
+class ItbPageFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    ItbPageFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const ItbPageFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class ItbAcvFaultType : public AlphaFault
+class ItbAcvFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    ItbAcvFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const ItbAcvFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class UnimplementedOpcodeFaultType : public AlphaFault
+class UnimplementedOpcodeFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    UnimplementedOpcodeFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const UnimplementedOpcodeFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class FloatEnableFaultType : public AlphaFault
+class FloatEnableFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    FloatEnableFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const FloatEnableFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class PalFaultType : public AlphaFault
+class PalFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    PalFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const PalFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern class IntegerOverflowFaultType : public AlphaFault
+class IntegerOverflowFault : public AlphaFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _stat;
   public:
-    IntegerOverflowFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
-    {;}
-} * const IntegerOverflowFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
+};
 
-extern Fault * ListOfFaults[];
-extern int NumFaults;
+//Fault * ListOfFaults[];
+//int NumFaults;
 
 #endif // __FAULTS_HH__

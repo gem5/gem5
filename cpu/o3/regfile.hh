@@ -372,12 +372,12 @@ PhysRegFile<Impl>::readIpr(int idx, Fault &fault)
       case TheISA::IPR_DTB_IAP:
       case TheISA::IPR_ITB_IA:
       case TheISA::IPR_ITB_IAP:
-        fault = UnimplementedOpcodeFault;
+        fault = new UnimplementedOpcodeFault;
         break;
 
       default:
         // invalid IPR
-        fault = UnimplementedOpcodeFault;
+        fault = new UnimplementedOpcodeFault;
         break;
     }
 
@@ -525,7 +525,7 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
       case TheISA::IPR_ITB_PTE_TEMP:
       case TheISA::IPR_DTB_PTE_TEMP:
         // read-only registers
-        return UnimplementedOpcodeFault;
+        return new UnimplementedOpcodeFault;
 
       case TheISA::IPR_HWINT_CLR:
       case TheISA::IPR_SL_XMIT:
@@ -627,7 +627,7 @@ PhysRegFile<Impl>::setIpr(int idx, uint64_t val)
 
       default:
         // invalid IPR
-        return UnimplementedOpcodeFault;
+        return new UnimplementedOpcodeFault;
     }
 
     // no error...

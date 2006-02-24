@@ -113,7 +113,7 @@ BaseDynInst<Impl>::initVars()
     asid = 0;
 
     // Initialize the fault to be unimplemented opcode.
-    fault = UnimplementedOpcodeFault;
+    fault = new UnimplementedOpcodeFault;
 
     ++instcount;
 

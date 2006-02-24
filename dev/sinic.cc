@@ -363,11 +363,11 @@ Device::read(MemReqPtr &req, uint8_t *data)
     assert(config.command & PCI_CMD_MSE);
     Fault fault = readBar(req, data);
 
-    if (fault == MachineCheckFault) {
+    if (fault->isA<MachineCheckFault>()) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
-        return MachineCheckFault;
+        return new MachineCheckFault;
     }
 
     return fault;
@@ -459,11 +459,11 @@ Device::write(MemReqPtr &req, const uint8_t *data)
     assert(config.command & PCI_CMD_MSE);
     Fault fault = writeBar(req, data);
 
-    if (fault == MachineCheckFault) {
+    if (fault->isA<MachineCheckFault>()) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
-        return MachineCheckFault;
+        return new MachineCheckFault;
     }
 
     return fault;
@@ -489,12 +489,17 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
         panic("invalid size for %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
               info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
 
+    //These are commmented out because when the DPRINTF below isn't used,
+    //these values aren't used and gcc issues a warning. With -Werror,
+    //this prevents compilation.
     //uint32_t reg32 = *(uint32_t *)data;
-    uint64_t reg64 = *(uint64_t *)data;
+    //uint64_t reg64 = *(uint64_t *)data;
     DPRINTF(EthernetPIO,
             "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, cpu, info.size == 4 ? (*(uint32_t *)data) : reg64, daddr,
-            req->paddr, req->vaddr, req->size);
+            info.name, cpu, info.size == 4 ?
+            (*(uint32_t *)data) :
+            (*(uint32_t *)data),
+            daddr, req->paddr, req->vaddr, req->size);
 
     prepareWrite(cpu, index);
 

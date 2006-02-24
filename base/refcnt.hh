@@ -29,6 +29,8 @@
 #ifndef __REFCNT_HH__
 #define __REFCNT_HH__
 
+#include <stddef.h> //For the NULL macro definition
+
 class RefCounted
 {
   private:

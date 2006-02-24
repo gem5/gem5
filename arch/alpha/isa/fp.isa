@@ -36,7 +36,7 @@ output exec {{
     {
         Fault fault = NoFault;	// dummy... this ipr access should not fault
         if (!EV5::ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
-            fault = FloatEnableFault;
+            fault = new FloatEnableFault;
         }
         return fault;
     }

@@ -184,7 +184,7 @@ AlphaConsole::read(MemReqPtr &req, uint8_t *data)
             }
             break;
         default:
-            return MachineCheckFault;
+            return new MachineCheckFault;
     }
 
     return NoFault;
@@ -204,7 +204,7 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         val = *(uint64_t *)data;
         break;
       default:
-        return MachineCheckFault;
+        return new MachineCheckFault;
     }
 
     Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
@@ -257,7 +257,7 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         break;
 
       default:
-        return MachineCheckFault;
+        return new MachineCheckFault;
     }
 
     return NoFault;

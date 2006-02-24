@@ -151,7 +151,7 @@ class Statistics : public Serializable
 
     Stats::Vector<> _callpal;
     Stats::Vector<> _syscall;
-    Stats::Vector<> _faults;
+//    Stats::Vector<> _faults;
 
     Stats::Vector<> _mode;
     Stats::Vector<> _modeGood;
@@ -178,10 +178,8 @@ class Statistics : public Serializable
     void hwrei() { _hwrei++; }
     void fault(Fault fault)
     {
-            if(fault == NoFault) _faults[0]++;
-            else if(fault == MachineCheckFault) _faults[2]++;
-            else if(fault == AlignmentFault) _faults[7]++;
-            else _faults[fault->id]++;
+            if(fault != NoFault)
+                fault->stat()++;
     }// FIXME: When there are no generic system fault objects, this will go back to _faults[fault]++; }
     void swpipl(int ipl);
     void mode(cpu_mode newmode);

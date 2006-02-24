@@ -98,7 +98,7 @@ decode OPCODE default Unknown::unknown() {
                 // signed overflow occurs when operands have same sign
                 // and sign of result does not match.
                 if (Ra.sl<31:> == Rb_or_imm.sl<31:> && tmp<31:> != Ra.sl<31:>)
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Rc.sl = tmp;
             }});
             0x02: s4addl({{ Rc.sl = (Ra.sl << 2) + Rb_or_imm.sl; }});
@@ -110,7 +110,7 @@ decode OPCODE default Unknown::unknown() {
                 // signed overflow occurs when operands have same sign
                 // and sign of result does not match.
                 if (Ra<63:> == Rb_or_imm<63:> && tmp<63:> != Ra<63:>)
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Rc = tmp;
             }});
             0x22: s4addq({{ Rc = (Ra << 2) + Rb_or_imm; }});
@@ -124,7 +124,7 @@ decode OPCODE default Unknown::unknown() {
                 // sign bit of the subtrahend (Rb), i.e., if the initial
                 // signs are the *same* then no overflow can occur
                 if (Ra.sl<31:> != Rb_or_imm.sl<31:> && tmp<31:> != Ra.sl<31:>)
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Rc.sl = tmp;
             }});
             0x0b: s4subl({{ Rc.sl = (Ra.sl << 2) - Rb_or_imm.sl; }});
@@ -138,7 +138,7 @@ decode OPCODE default Unknown::unknown() {
                 // sign bit of the subtrahend (Rb), i.e., if the initial
                 // signs are the *same* then no overflow can occur
                 if (Ra<63:> != Rb_or_imm<63:> && tmp<63:> != Ra<63:>)
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Rc = tmp;
             }});
             0x2b: s4subq({{ Rc = (Ra << 2) - Rb_or_imm; }});
@@ -299,7 +299,7 @@ decode OPCODE default Unknown::unknown() {
                 // checking the upper 33 bits for all 0s or all 1s.
                 uint64_t sign_bits = tmp<63:31>;
                 if (sign_bits != 0 && sign_bits != mask(33))
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Rc.sl = tmp<31:0>;
             }}, IntMultOp);
             0x60: mulqv({{
@@ -310,7 +310,7 @@ decode OPCODE default Unknown::unknown() {
                 // the lower 64
                 if (!((hi == 0 && lo<63:> == 0) ||
                       (hi == mask(64) && lo<63:> == 1)))
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Rc = lo;
             }}, IntMultOp);
         }
@@ -427,19 +427,19 @@ decode OPCODE default Unknown::unknown() {
 #if SS_COMPATIBLE_FP
                     0x0b: sqrts({{
                         if (Fb < 0.0)
-                            fault = ArithmeticFault;
+                            fault = new ArithmeticFault;
                         Fc = sqrt(Fb);
                     }}, FloatSqrtOp);
 #else
                     0x0b: sqrts({{
                         if (Fb.sf < 0.0)
-                            fault = ArithmeticFault;
+                            fault = new ArithmeticFault;
                         Fc.sf = sqrt(Fb.sf);
                     }}, FloatSqrtOp);
 #endif
                     0x2b: sqrtt({{
                         if (Fb < 0.0)
-                            fault = ArithmeticFault;
+                            fault = new ArithmeticFault;
                         Fc = sqrt(Fb);
                     }}, FloatSqrtOp);
                 }
@@ -570,7 +570,7 @@ decode OPCODE default Unknown::unknown() {
                 // checking the upper 33 bits for all 0s or all 1s.
                 uint64_t sign_bits = Fb.uq<63:31>;
                 if (sign_bits != 0 && sign_bits != mask(33))
-                    fault = IntegerOverflowFault;
+                    fault = new IntegerOverflowFault;
                 Fc.uq = (Fb.uq<31:30> << 62) | (Fb.uq<29:0> << 29);
             }});
 
@@ -673,7 +673,7 @@ decode OPCODE default Unknown::unknown() {
              && xc->readIpr(AlphaISA::IPR_ICM, fault) != AlphaISA::mode_kernel)) {
             // invalid pal function code, or attempt to do privileged
             // PAL call in non-kernel mode
-            fault = UnimplementedOpcodeFault;
+            fault = new UnimplementedOpcodeFault;
         }
         else {
             // check to see if simulator wants to do something special
@@ -729,7 +729,7 @@ decode OPCODE default Unknown::unknown() {
         0x19: hw_mfpr({{
             // this instruction is only valid in PAL mode
             if (!xc->inPalMode()) {
-                fault = UnimplementedOpcodeFault;
+                fault = new UnimplementedOpcodeFault;
             }
             else {
                 Ra = xc->readIpr(ipr_index, fault);
@@ -738,7 +738,7 @@ decode OPCODE default Unknown::unknown() {
         0x1d: hw_mtpr({{
             // this instruction is only valid in PAL mode
             if (!xc->inPalMode()) {
-                fault = UnimplementedOpcodeFault;
+                fault = new UnimplementedOpcodeFault;
             }
             else {
                 xc->setIpr(ipr_index, Ra);
