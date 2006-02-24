@@ -151,9 +151,9 @@ class BarChart(ChartOptions):
             self.metaaxes.set_yticks([])
             size = [0] * 4
             size[0] = self.figure_size[0]
-            size[1] = self.figure_size[1] + .05
+            size[1] = self.figure_size[1] + .12
             size[2] = self.figure_size[2]
-            size[3] = self.figure_size[3] - .05
+            size[3] = self.figure_size[3] - .12
             self.axes = self.figure.add_axes(size)
             outer_axes = self.metaaxes
             inner_axes = self.axes
@@ -163,12 +163,9 @@ class BarChart(ChartOptions):
             inner_axes = self.axes
 
         bars_in_group = len(self.chartdata)
-        if bars_in_group < 5:
-            width = 1.0 / ( bars_in_group + 1)
-            center = width / 2
-        else:
-            width = .8 / bars_in_group
-            center = .1
+
+        width = 1.0 / ( bars_in_group + 1)
+        center = width / 2
 
         bars = []
         for i,stackdata in enumerate(self.chartdata):
@@ -179,7 +176,7 @@ class BarChart(ChartOptions):
                 ind = arange(len(bardata)) + i * width + center
                 bar = self.axes.bar(ind, bardata, width, bottom=bottom,
                                     color=colors[i][j])
-                if dim != 1:
+                if self.xsubticks is not None:
                     self.metaaxes.bar(ind, [0] * len(bardata), width)
                 stack.append(bar)
                 bottom += bardata
@@ -207,7 +204,7 @@ class BarChart(ChartOptions):
         if self.xsubticks is not None:
             inner_axes.set_xticks(arange((cshape[0] + 1)*cshape[2])*width + 2*center)
             self.xsubticks.append('')
-            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=8)
+            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=7, rotation=90)
 
         if self.legend is not None:
             if dim == 1:
@@ -281,7 +278,6 @@ if __name__ == '__main__':
         chart1.legend = [ 'x%d' % x for x in xrange(myshape[-1]) ]
         chart1.xticks = [ 'xtick%d' % x for x in xrange(myshape[0]) ]
         chart1.title = 'this is the title'
-        chart1.figure_size = [0.1, 0.2, 0.7, 0.85 ]
         if len(myshape) > 2:
             chart1.xsubticks = [ '%d' % x for x in xrange(myshape[1]) ]
         chart1.graph()
@@ -298,4 +294,4 @@ if __name__ == '__main__':
         chart2.savefig('/tmp/test2.png')
         chart2.savefig('/tmp/test2.ps')
 
-    pylab.myshow()
+#    pylab.show()
