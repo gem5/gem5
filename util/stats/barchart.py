@@ -47,8 +47,11 @@ class BarChart(ChartOptions):
         cmap = matplotlib.cm.get_cmap(self.colormap)
         if count == 1:
             return cmap([ 0.5 ])
-        else:
-            return cmap(arange(count) / float(count - 1))
+
+        if count < 5:
+            return cmap(arange(5) / float(4))[:count]
+
+        return cmap(arange(count) / float(count - 1))
 
     # The input data format does not match the data format that the
     # graph function takes because it is intuitive.  The conversion
