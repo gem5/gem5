@@ -177,7 +177,8 @@ class BarChart(ChartOptions):
         inner_axes = None
         if self.xsubticks is not None:
             color = self.figure.get_facecolor()
-            self.metaaxes = self.figure.add_axes(self.figure_size, axisbg=color, frameon=False)
+            self.metaaxes = self.figure.add_axes(self.figure_size,
+                                                 axisbg=color, frameon=False)
             for tick in self.metaaxes.xaxis.majorTicks:
                 tick.tick1On = False
                 tick.tick2On = False
@@ -239,9 +240,11 @@ class BarChart(ChartOptions):
             outer_axes.set_xticklabels(self.xticks)
 
         if self.xsubticks is not None:
-            inner_axes.set_xticks(arange((cshape[0] + 1)*cshape[2])*width + 2*center)
+            numticks = (cshape[0] + 1) * cshape[2]
+            inner_axes.set_xticks(arange(numticks) * width + 2 * center)
             self.xsubticks.append('')
-            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=7, rotation=90)
+            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=7,
+                                       rotation=90)
 
         if self.legend is not None:
             if dim == 1:
@@ -281,7 +284,7 @@ class BarChart(ChartOptions):
                 ylabel = []
                 #if self.ylabel:
                 #    ylabel = [ self.ylabel[i] ]
-                f.write(', '.join(ylabel + [ '%f' % val for val in row]) + '\n')
+                f.write(', '.join(ylabel + [ '%f' % v for v in row]) + '\n')
         if dim == 3:
             f.write("don't do 3D csv files\n")
             pass
