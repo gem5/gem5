@@ -34,9 +34,9 @@
 #include "cpu/exec_context.hh"
 #include "kern/tru64/mbuf.hh"
 #include "sim/host.hh"
-#include "targetarch/arguments.hh"
+#include "arch/arguments.hh"
 #include "arch/isa_traits.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 
 using namespace TheISA;
 

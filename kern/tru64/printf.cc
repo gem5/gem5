@@ -32,8 +32,8 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "sim/host.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/arguments.hh"
+#include "arch/vtophys.hh"
 
 using namespace std;
 

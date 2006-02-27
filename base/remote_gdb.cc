@@ -129,7 +129,7 @@
 #include "cpu/static_inst.hh"
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 
 using namespace std;
 using namespace TheISA;

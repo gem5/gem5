@@ -67,9 +67,9 @@
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
-#include "targetarch/alpha_memory.hh"
-#include "targetarch/stacktrace.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/alpha_memory.hh"
+#include "arch/stacktrace.hh"
+#include "arch/vtophys.hh"
 #else // !FULL_SYSTEM
 #include "mem/functional/functional.hh"
 #endif // FULL_SYSTEM

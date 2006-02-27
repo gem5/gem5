@@ -29,7 +29,7 @@
 #ifndef __ARCH_ALPHA_VPTR_HH__
 #define __ARCH_ALPHA_VPTR_HH__
 
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 #include "arch/isa_traits.hh"
 
 class ExecContext;

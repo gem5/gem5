@@ -50,7 +50,7 @@
 #include "sim/process.hh"
 
 #if FULL_SYSTEM
-#include "targetarch/ev5.hh"
+#include "arch/ev5.hh"
 using namespace EV5;
 #endif
 

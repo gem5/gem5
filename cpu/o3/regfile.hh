@@ -32,13 +32,13 @@
 // @todo: Destructor
 
 #include "arch/isa_traits.hh"
-#include "targetarch/faults.hh"
+#include "arch/faults.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
 
 #if FULL_SYSTEM
-#include "targetarch/ev5.hh"
+#include "arch/ev5.hh"
 #include "kern/kernel_stats.hh"
 
 using namespace EV5;

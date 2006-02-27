@@ -37,7 +37,7 @@
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "arch/isa_traits.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 
 using namespace std;
 

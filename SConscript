@@ -305,23 +305,23 @@ syscall_emulation_sources = Split('''
 # time.  These will have to go away if we want to build a binary that
 # supports multiple ISAs.
 
-targetarch_files = Split('''
-        alpha_linux_process.hh
-        alpha_memory.hh
-        alpha_tru64_process.hh
-        aout_machdep.h
-        arguments.hh
-        ecoff_machdep.h
-        ev5.hh
-        faults.hh
-        stacktrace.hh
-        vtophys.hh
-        ''')
+#targetarch_files = Split('''
+#        alpha_linux_process.hh
+#        alpha_memory.hh
+#        alpha_tru64_process.hh
+#        aout_machdep.h
+#        arguments.hh
+#        ecoff_machdep.h
+#        ev5.hh
+#        faults.hh
+#        stacktrace.hh
+#        vtophys.hh
+#        ''')
 
 # Set up bridging headers to the architecture specific versions
-for f in targetarch_files:
-    env.Command('targetarch/' + f, 'arch/%s/%s' % (env['TARGET_ISA'], f),
-                '''echo '#include "arch/%s/%s"' > $TARGET''' % (env['TARGET_ISA'], f))
+#for f in targetarch_files:
+#    env.Command('targetarch/' + f, 'arch/%s/%s' % (env['TARGET_ISA'], f),
+#                '''echo '#include "arch/%s/%s"' > $TARGET''' % (env['TARGET_ISA'], f))
 
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])

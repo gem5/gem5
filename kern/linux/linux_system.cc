@@ -46,8 +46,8 @@
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "dev/platform.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/arguments.hh"
+#include "arch/vtophys.hh"
 
 using namespace std;
 using namespace TheISA;

@@ -34,7 +34,7 @@
 #include <string>
 
 #include "sim/pseudo_inst.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 #include "cpu/base.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/exec_context.hh"

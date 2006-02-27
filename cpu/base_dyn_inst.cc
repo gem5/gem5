@@ -36,7 +36,7 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 
-#include "targetarch/faults.hh"
+#include "arch/faults.hh"
 #include "cpu/exetrace.hh"
 #include "mem/mem_req.hh"
 

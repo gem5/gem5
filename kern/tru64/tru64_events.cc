@@ -33,7 +33,7 @@
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
 #include "mem/functional/memory_control.hh"
-#include "targetarch/arguments.hh"
+#include "arch/arguments.hh"
 #include "arch/isa_traits.hh"
 
 using namespace TheISA;

@@ -33,7 +33,7 @@
 #include "kern/kernel_stats.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 #include "sim/builder.hh"
 #include "arch/isa_traits.hh"
 #include "sim/byteswap.hh"

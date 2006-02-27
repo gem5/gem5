@@ -30,7 +30,7 @@
 #include <algorithm>
 
 #include "base/trace.hh"
-#include "targetarch/arguments.hh"
+#include "arch/arguments.hh"
 
 using namespace std;
 

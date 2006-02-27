@@ -33,7 +33,7 @@
 
 #include "cpu/static_inst.hh"
 #include "sim/host.hh"
-#include "targetarch/stacktrace.hh"
+#include "arch/stacktrace.hh"
 
 class ProfileNode
 {

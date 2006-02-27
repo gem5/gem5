@@ -40,7 +40,7 @@
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
-#include "targetarch/stacktrace.hh"
+#include "arch/stacktrace.hh"
 #else
 #include "sim/process.hh"
 #endif
