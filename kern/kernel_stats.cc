@@ -30,7 +30,7 @@
 #include <stack>
 #include <string>
 
-#include "targetarch/osfpal.hh"
+#include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "kern/kernel_stats.hh"
