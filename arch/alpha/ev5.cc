@@ -83,21 +83,6 @@ AlphaISA::initCPU(RegFile *regs, int cpuId)
     regs->npc = regs->pc + sizeof(MachInst);
 }
 
-////////////////////////////////////////////////////////////////////////
-//
-// alpha exceptions - value equals trap address, update with MD_FAULT_TYPE
-//
-const Addr
-AlphaISA::fault_addr(Fault fault)
-{
-        //Check for the system wide faults
-        if(fault == NoFault) return 0x0000;
-        else if(fault->isMachineCheckFault()) return 0x0401;
-        else if(fault->isAlignmentFault()) return 0x0301;
-        //Deal with the alpha specific faults
-        return ((AlphaFault *)(fault.get()))->vect();
-};
-
 const int AlphaISA::reg_redir[AlphaISA::NumIntRegs] = {
     /*  0 */ 0, 0, 0, 0, 0, 0, 0, 0,
     /*  8 */ 1, 1, 1, 1, 1, 1, 1, 0,
@@ -200,14 +185,14 @@ ExecContext::ev5_trap(Fault fault)
 
     if (fault->isA<PalFault>() || fault->isA<ArithmeticFault>() /* ||
         fault == InterruptFault && !inPalMode() */) {
-        // traps...  skip faulting instruction
+        // traps...  skip faulting instruction.
         ipr[AlphaISA::IPR_EXC_ADDR] += 4;
     }
 
     if (!inPalMode())
         AlphaISA::swap_palshadow(&regs, true);
 
-    regs.pc = ipr[AlphaISA::IPR_PAL_BASE] + AlphaISA::fault_addr(fault);
+    regs.pc = ipr[AlphaISA::IPR_PAL_BASE] + ((AlphaFault *)(fault.get()))->vect();
     regs.npc = regs.pc + sizeof(MachInst);
 }
 
@@ -232,7 +217,7 @@ AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
 
     // jump to expection address (PAL PC bit set here as well...)
     if (!use_pc)
-        regs->npc = ipr[IPR_PAL_BASE] + fault_addr(fault);
+        regs->npc = ipr[IPR_PAL_BASE] + ((AlphaFault *)(fault.get()))->vect();
     else
         regs->npc = ipr[IPR_PAL_BASE] + pc;
 
