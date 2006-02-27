@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/alpha/alpha_memory.hh"
+#include "arch/alpha/tlb.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/osfpal.hh"
 #include "base/kgdb.h"

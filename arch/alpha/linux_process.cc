@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/alpha/alpha_common_syscall_emul.hh"
-#include "arch/alpha/alpha_linux_process.hh"
+#include "arch/alpha/common_syscall_emul.hh"
+#include "arch/alpha/linux_process.hh"
 #include "arch/alpha/isa_traits.hh"
 
 #include "base/trace.hh"

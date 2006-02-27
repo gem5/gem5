@@ -46,7 +46,7 @@ class BaseCPU;
 #if FULL_SYSTEM
 
 #include "sim/system.hh"
-#include "arch/alpha_memory.hh"
+#include "arch/tlb.hh"
 
 class FunctionProfile;
 class ProfileNode;

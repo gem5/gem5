@@ -50,7 +50,7 @@ base_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	alpha_memory.cc
+	tlb.cc
 	arguments.cc
 	ev5.cc
 	osfpal.cc
@@ -61,9 +61,9 @@ full_system_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
-	alpha_common_syscall_emul.cc
-	alpha_linux_process.cc
-	alpha_tru64_process.cc
+	common_syscall_emul.cc
+	linux_process.cc
+	tru64_process.cc
 	''')
 
 # Set up complete list of sources based on configuration.

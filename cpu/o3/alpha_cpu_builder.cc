@@ -50,7 +50,7 @@
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
-#include "arch/alpha_memory.hh"
+#include "arch/tlb.hh"
 #include "arch/vtophys.hh"
 #else // !FULL_SYSTEM
 #include "mem/functional/functional.hh"

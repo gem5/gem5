@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-#include "arch/alpha/alpha_memory.hh"
+#include "arch/alpha/tlb.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"

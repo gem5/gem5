@@ -46,9 +46,9 @@ sources = []
 # List of headers to generate
 isa_switch_hdrs = Split('''
 	isa_traits.hh
-	alpha_linux_process.hh
-	alpha_tru64_process.hh
-	alpha_memory.hh
+	linux_process.hh
+	tru64_process.hh
+	tlb.hh
 	aout_machdep.h
 	ecoff_machdep.h
 	arguments.hh
