@@ -55,9 +55,17 @@ class FaultBase : public RefCounted
     virtual FaultStat & stat() = 0;
     template<typename T>
     bool isA() {return dynamic_cast<T *>(this);}
+    virtual bool isMachineCheckFault() {return false;}
+    virtual bool isAlignmentFault() {return false;}
 };
 
-static FaultBase * const NoFault __attribute__ ((unused)) = 0;
+FaultBase * const NoFault = 0;
+
+//The ISAs are each responsible for providing a genMachineCheckFault and a
+//genAlignmentFault functions, which return faults to use in the case of a
+//machine check fault or an alignment fault, respectively. Base classes which
+//provide the name() function, and the isMachineCheckFault and isAlignmentFault
+//functions are provided below.
 
 class MachineCheckFault : public FaultBase
 {
@@ -67,6 +75,7 @@ class MachineCheckFault : public FaultBase
   public:
     FaultName name() {return _name;}
     FaultStat & stat() {return _stat;}
+    bool isMachineCheckFault() {return true;}
 };
 
 class AlignmentFault : public FaultBase
@@ -77,6 +86,7 @@ class AlignmentFault : public FaultBase
   public:
     FaultName name() {return _name;}
     FaultStat & stat() {return _stat;}
+    bool isAlignmentFault() {return true;}
 };
 
 

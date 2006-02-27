@@ -347,7 +347,7 @@ SimpleCPU::copySrcTranslate(Addr src)
     // translate to physical address
     Fault fault = xc->translateDataReadReq(memReq);
 
-    assert(!fault->isA<AlignmentFault>());
+    assert(!fault->isAlignmentFault());
 
     if (fault == NoFault) {
         xc->copySrcAddr = src;
@@ -382,7 +382,7 @@ SimpleCPU::copy(Addr dest)
     // translate to physical address
     Fault fault = xc->translateDataWriteReq(memReq);
 
-    assert(!fault->isA<AlignmentFault>());
+    assert(!fault->isAlignmentFault());
 
     if (fault == NoFault) {
         Addr dest_addr = memReq->paddr + offset;

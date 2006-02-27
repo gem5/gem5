@@ -92,8 +92,8 @@ AlphaISA::fault_addr(Fault fault)
 {
         //Check for the system wide faults
         if(fault == NoFault) return 0x0000;
-        else if(fault->isA<MachineCheckFault>()) return 0x0401;
-        else if(fault->isA<AlignmentFault>()) return 0x0301;
+        else if(fault->isMachineCheckFault()) return 0x0401;
+        else if(fault->isAlignmentFault()) return 0x0301;
         //Deal with the alpha specific faults
         return ((AlphaFault *)(fault.get()))->vect();
 };
