@@ -48,10 +48,8 @@
 #include "sim/stats.hh"
 #include "sim/syscall_emul.hh"
 
-#ifdef TARGET_ALPHA
-#include "arch/alpha/alpha_tru64_process.hh"
-#include "arch/alpha/alpha_linux_process.hh"
-#endif
+#include "targetarch/alpha_tru64_process.hh"
+#include "targetarch/alpha_linux_process.hh"
 
 using namespace std;
 using namespace TheISA;
