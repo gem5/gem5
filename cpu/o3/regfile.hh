@@ -31,7 +31,7 @@
 
 // @todo: Destructor
 
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "targetarch/faults.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"

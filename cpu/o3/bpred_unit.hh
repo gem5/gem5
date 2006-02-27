@@ -30,7 +30,7 @@
 #define __BPRED_UNIT_HH__
 
 // For Addr type.
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
 
