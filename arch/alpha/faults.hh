@@ -33,6 +33,9 @@
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
+namespace AlphaISA
+{
+
 typedef const Addr FaultVect;
 
 class AlphaFault : public FaultBase
@@ -240,5 +243,7 @@ class IntegerOverflowFault : public AlphaFault
     FaultVect vect() {return _vect;}
     FaultStat & stat() {return _stat;}
 };
+
+} // AlphaISA namespace
 
 #endif // __FAULTS_HH__

@@ -28,6 +28,9 @@
 
 #include "arch/alpha/faults.hh"
 
+namespace AlphaISA
+{
+
 FaultName AlphaFault::_name = "alphafault";
 FaultVect AlphaFault::_vect = 0x0000;
 FaultStat AlphaFault::_stat;
@@ -91,6 +94,8 @@ FaultStat PalFault::_stat;
 FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_stat;
+
+} // namespace AlphaISA
 
 /*Fault * ListOfFaults[] = {
         (Fault *)&NoFault,
