@@ -70,9 +70,9 @@ class PhysicalMemory : public Memory
 
     std::map<std::string, MemoryPort*> memoryPortList;
 
-    Port * PhysicalMemory::getPort(const char *if_name);
+    virtual Port * getPort(const char *if_name);
 
-    Port * addPort(std::string portName);
+    virtual Port * addPort(std::string portName);
 
     int numPorts;
 

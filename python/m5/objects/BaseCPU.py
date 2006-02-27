@@ -2,8 +2,6 @@ from m5 import *
 class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True
-    icache = Param.BaseMem(NULL, "L1 instruction cache object")
-    dcache = Param.BaseMem(NULL, "L1 data cache object")
 
     if build_env['FULL_SYSTEM']:
         dtb = Param.AlphaDTB("Data TLB")
