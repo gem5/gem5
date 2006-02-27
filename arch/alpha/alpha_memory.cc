@@ -380,7 +380,7 @@ AlphaITB::translate(MemReqPtr &req) const
 
     // check that the physical address is ok (catch bad physical addresses)
     if (req->paddr & ~PAddrImplMask)
-        return new MachineCheckFault;
+        return genMachineCheckFault();
 
     checkCacheability(req);
 
@@ -511,7 +511,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
         fault(req, write ? MM_STAT_WR_MASK : 0);
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->vaddr,
                 req->size);
-        return new AlignmentFault;
+        return genAlignmentFault();
     }
 
     if (pc & 0x1) {
@@ -621,7 +621,7 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
     // check that the physical address is ok (catch bad physical addresses)
     if (req->paddr & ~PAddrImplMask)
-        return new MachineCheckFault;
+        return genMachineCheckFault();
 
     checkCacheability(req);
 

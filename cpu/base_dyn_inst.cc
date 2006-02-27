@@ -45,6 +45,7 @@
 #include "cpu/o3/alpha_cpu.hh"
 
 using namespace std;
+using namespace TheISA;
 
 #define NOHASH
 #ifndef NOHASH
@@ -325,7 +326,7 @@ BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
         break;
 
       default:
-        fault = MachineCheckFault;
+        fault = genMachineCheckFault();
         break;
     }
 

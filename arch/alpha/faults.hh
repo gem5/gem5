@@ -31,7 +31,7 @@
 
 #include "sim/faults.hh"
 
-// The reasoning behind the name and vect functions is in sim/faults.hh
+// The design of the "name" and "vect" functions is in sim/faults.hh
 
 typedef const Addr FaultVect;
 
@@ -46,6 +46,32 @@ class AlphaFault : public FaultBase
     virtual FaultVect vect() {return _vect;}
     virtual FaultStat & stat() {return _stat;}
 };
+
+class AlphaMachineCheckFault : public MachineCheckFault
+{
+  private:
+    static FaultVect _vect;
+  public:
+    FaultVect vect() {return _vect;}
+};
+
+class AlphaAlignmentFault : public AlignmentFault
+{
+  private:
+    static FaultVect _vect;
+  public:
+    FaultVect vect() {return _vect;}
+};
+
+static inline Fault genMachineCheckFault()
+{
+    return new AlphaMachineCheckFault;
+}
+
+static inline Fault genAlignmentFault()
+{
+    return new AlphaAlignmentFault;
+}
 
 class ResetFault : public AlphaFault
 {
@@ -214,8 +240,5 @@ class IntegerOverflowFault : public AlphaFault
     FaultVect vect() {return _vect;}
     FaultStat & stat() {return _stat;}
 };
-
-//Fault * ListOfFaults[];
-//int NumFaults;
 
 #endif // __FAULTS_HH__
