@@ -240,7 +240,7 @@ Statistics::swpipl(int ipl)
 void
 Statistics::mode(cpu_mode newmode)
 {
-    Addr pcbb = xc->regs.ipr[AlphaISA::IPR_PALtemp23];
+    Addr pcbb = xc->readMiscReg(AlphaISA::IPR_PALtemp23);
 
     if ((newmode == kernel || newmode == interrupt) &&
             pcbb == idleProcess)

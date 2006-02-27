@@ -54,6 +54,8 @@ class AlphaDynInst : public BaseDynInst<Impl>
     typedef TheISA::RegIndex RegIndex;
     /** Integer register index type. */
     typedef TheISA::IntReg   IntReg;
+    /** Misc register index type. */
+    typedef TheISA::MiscReg  MiscReg;
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	//< Max source regs
@@ -75,15 +77,35 @@ class AlphaDynInst : public BaseDynInst<Impl>
     }
 
   public:
-    uint64_t readUniq();
-    void setUniq(uint64_t val);
+    MiscReg readMiscReg(int misc_reg)
+    {
+        // Dummy function for now.
+        // @todo: Fix this once reg file gets fixed.
+        return 0;
+    }
 
-    uint64_t readFpcr();
-    void setFpcr(uint64_t val);
+    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    {
+        // Dummy function for now.
+        // @todo: Fix this once reg file gets fixed.
+        return 0;
+    }
+
+    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    {
+        // Dummy function for now.
+        // @todo: Fix this once reg file gets fixed.
+        return NoFault;
+    }
+
+    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    {
+        // Dummy function for now.
+        // @todo: Fix this once reg file gets fixed.
+        return NoFault;
+    }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault);
-    Fault setIpr(int idx, uint64_t val);
     Fault hwrei();
     int readIntrFlag();
     void setIntrFlag(int val);

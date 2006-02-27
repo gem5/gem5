@@ -67,7 +67,7 @@ FnEvent::process(ExecContext *xc)
 void
 IdleStartEvent::process(ExecContext *xc)
 {
-    xc->kernelStats->setIdleProcess(xc->regs.ipr[AlphaISA::IPR_PALtemp23]);
+    xc->kernelStats->setIdleProcess(xc->readMiscReg(AlphaISA::IPR_PALtemp23));
     remove();
 }
 
