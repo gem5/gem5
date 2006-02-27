@@ -124,7 +124,7 @@ StackTrace::trace(ExecContext *_xc, bool is_call)
 {
     xc = _xc;
 
-    bool usermode = (xc->regs.ipr[AlphaISA::IPR_DTB_CM] & 0x18) != 0;
+    bool usermode = (xc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
 
     Addr pc = xc->regs.npc;
     bool kernel = xc->system->kernelStart <= pc && pc <= xc->system->kernelEnd;
@@ -196,22 +196,22 @@ StackTrace::trace(ExecContext *_xc, bool is_call)
 bool
 StackTrace::isEntry(Addr addr)
 {
-    if (addr == xc->regs.ipr[AlphaISA::IPR_PALtemp12])
+    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp12))
         return true;
 
-    if (addr == xc->regs.ipr[AlphaISA::IPR_PALtemp7])
+    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp7))
         return true;
 
-    if (addr == xc->regs.ipr[AlphaISA::IPR_PALtemp11])
+    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp11))
         return true;
 
-    if (addr == xc->regs.ipr[AlphaISA::IPR_PALtemp21])
+    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp21))
         return true;
 
-    if (addr == xc->regs.ipr[AlphaISA::IPR_PALtemp9])
+    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp9))
         return true;
 
-    if (addr == xc->regs.ipr[AlphaISA::IPR_PALtemp2])
+    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp2))
         return true;
 
     return false;

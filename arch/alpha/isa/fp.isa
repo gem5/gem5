@@ -35,7 +35,7 @@ output exec {{
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
         Fault fault = NoFault;	// dummy... this ipr access should not fault
-        if (!EV5::ICSR_FPE(xc->readIpr(AlphaISA::IPR_ICSR, fault))) {
+        if (!EV5::ICSR_FPE(xc->readMiscRegWithEffect(AlphaISA::IPR_ICSR, fault))) {
             fault = FloatEnableFault;
         }
         return fault;
@@ -217,7 +217,8 @@ def template FloatingPointExecute {{
         if (roundingMode == Normal) {
             %(code)s;
         } else {
-            fesetround(getC99RoundingMode(xc->readFpcr()));
+            fesetround(getC99RoundingMode(
+                           xc->readMiscReg(AlphaISA::Fpcr_DepTag)));
             %(code)s;
             fesetround(FE_TONEAREST);
         }

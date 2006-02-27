@@ -71,6 +71,7 @@ class ExecContext
     typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscRegFile MiscRegFile;
+    typedef TheISA::MiscReg MiscReg;
   public:
     enum Status
     {
@@ -270,8 +271,8 @@ class ExecContext
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
             MiscRegFile *cregs = &req->xc->regs.miscRegs;
-            cregs->lock_addr = req->paddr;
-            cregs->lock_flag = true;
+            cregs->setReg(TheISA::Lock_Addr_DepTag, req->paddr);
+            cregs->setReg(TheISA::Lock_Flag_DepTag, true);
         }
 #endif
 
@@ -297,10 +298,12 @@ class ExecContext
                 req->result = 2;
                 req->xc->storeCondFailures = 0;//Needed? [RGD]
             } else {
-                req->result = cregs->lock_flag;
-                if (!cregs->lock_flag ||
-                    ((cregs->lock_addr & ~0xf) != (req->paddr & ~0xf))) {
-                    cregs->lock_flag = false;
+                bool lock_flag = cregs->readReg(TheISA::Lock_Flag_DepTag);
+                Addr lock_addr = cregs->readReg(TheISA::Lock_Addr_DepTag);
+                req->result = lock_flag;
+                if (!lock_flag ||
+                    ((lock_addr & ~0xf) != (req->paddr & ~0xf))) {
+                    cregs->setReg(TheISA::Lock_Flag_DepTag, false);
                     if (((++req->xc->storeCondFailures) % 100000) == 0) {
                         std::cerr << "Warning: "
                                   << req->xc->storeCondFailures
@@ -321,8 +324,9 @@ class ExecContext
         // through.
         for (int i = 0; i < system->execContexts.size(); i++){
             cregs = &system->execContexts[i]->regs.miscRegs;
-            if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
-                cregs->lock_flag = false;
+            if ((cregs->readReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
+                (req->paddr & ~0xf)) {
+                cregs->setReg(TheISA::Lock_Flag_DepTag, false);
             }
         }
 
@@ -398,29 +402,27 @@ class ExecContext
         regs.npc = val;
     }
 
-    uint64_t readUniq()
+    MiscReg readMiscReg(int misc_reg)
     {
-        return regs.miscRegs.uniq;
+        return regs.miscRegs.readReg(misc_reg);
     }
 
-    void setUniq(uint64_t val)
+    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        regs.miscRegs.uniq = val;
+        return regs.miscRegs.readRegWithEffect(misc_reg, fault, this);
     }
 
-    uint64_t readFpcr()
+    Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return regs.miscRegs.fpcr;
+        return regs.miscRegs.setReg(misc_reg, val);
     }
 
-    void setFpcr(uint64_t val)
+    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        regs.miscRegs.fpcr = val;
+        return regs.miscRegs.setRegWithEffect(misc_reg, val, this);
     }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault);
-    Fault setIpr(int idx, uint64_t val);
     int readIntrFlag() { return regs.intrflag; }
     void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();

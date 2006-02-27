@@ -293,12 +293,11 @@ AlphaITB::regStats()
 void
 AlphaITB::fault(Addr pc, ExecContext *xc) const
 {
-    uint64_t *ipr = xc->regs.ipr;
-
     if (!xc->misspeculating()) {
-        ipr[AlphaISA::IPR_ITB_TAG] = pc;
-        ipr[AlphaISA::IPR_IFAULT_VA_FORM] =
-            ipr[AlphaISA::IPR_IVPTBR] | (AlphaISA::VAddr(pc).vpn() << 3);
+        xc->setMiscReg(AlphaISA::IPR_ITB_TAG, pc);
+        xc->setMiscReg(AlphaISA::IPR_IFAULT_VA_FORM,
+                       xc->readMiscReg(AlphaISA::IPR_IVPTBR) |
+                       (AlphaISA::VAddr(pc).vpn() << 3));
     }
 }
 
@@ -306,7 +305,7 @@ AlphaITB::fault(Addr pc, ExecContext *xc) const
 Fault
 AlphaITB::translate(MemReqPtr &req) const
 {
-    InternalProcReg *ipr = req->xc->regs.ipr;
+    ExecContext *xc = req->xc;
 
     if (AlphaISA::PcPAL(req->vaddr)) {
         // strip off PAL PC marker (lsb is 1)
@@ -329,13 +328,13 @@ AlphaITB::translate(MemReqPtr &req) const
         // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13> for EV5
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
 #if ALPHA_TLASER
-        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+        if ((MCSR_SP(xc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
             VAddrSpaceEV5(req->vaddr) == 2) {
 #else
         if (VAddrSpaceEV6(req->vaddr) == 0x7e) {
 #endif
             // only valid in kernel mode
-            if (ICM_CM(ipr[AlphaISA::IPR_ICM]) !=
+            if (ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM)) !=
                 AlphaISA::mode_kernel) {
                 fault(req->vaddr, req->xc);
                 acv++;
@@ -354,8 +353,9 @@ AlphaITB::translate(MemReqPtr &req) const
 
         } else {
             // not a physical address: need to look up pte
+            int asn = DTB_ASN_ASN(xc->readMiscReg(AlphaISA::IPR_DTB_ASN));
             AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->vaddr).vpn(),
-                                        DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+                                        asn);
 
             if (!pte) {
                 fault(req->vaddr, req->xc);
@@ -367,7 +367,8 @@ AlphaITB::translate(MemReqPtr &req) const
                 (AlphaISA::VAddr(req->vaddr).offset() & ~3);
 
             // check permissions for this access
-            if (!(pte->xre & (1 << ICM_CM(ipr[AlphaISA::IPR_ICM])))) {
+            if (!(pte->xre &
+                  (1 << ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM))))) {
                 // instruction access fault
                 fault(req->vaddr, req->xc);
                 acv++;
@@ -469,7 +470,6 @@ AlphaDTB::fault(MemReqPtr &req, uint64_t flags) const
 {
     ExecContext *xc = req->xc;
     AlphaISA::VAddr vaddr = req->vaddr;
-    uint64_t *ipr = xc->regs.ipr;
 
     // Set fault address and flags.  Even though we're modeling an
     // EV5, we use the EV6 technique of not latching fault registers
@@ -479,17 +479,17 @@ AlphaDTB::fault(MemReqPtr &req, uint64_t flags) const
     if (!xc->misspeculating()
         && !(req->flags & VPTE) && !(req->flags & NO_FAULT)) {
         // set VA register with faulting address
-        ipr[AlphaISA::IPR_VA] = req->vaddr;
+        xc->setMiscReg(AlphaISA::IPR_VA, req->vaddr);
 
         // set MM_STAT register flags
-        ipr[AlphaISA::IPR_MM_STAT] =
+        xc->setMiscReg(AlphaISA::IPR_MM_STAT,
             (((Opcode(xc->getInst()) & 0x3f) << 11)
              | ((Ra(xc->getInst()) & 0x1f) << 6)
-             | (flags & 0x3f));
+             | (flags & 0x3f)));
 
         // set VA_FORM register with faulting formatted address
-        ipr[AlphaISA::IPR_VA_FORM] =
-            ipr[AlphaISA::IPR_MVPTBR] | (vaddr.vpn() << 3);
+        xc->setMiscReg(AlphaISA::IPR_VA_FORM,
+            xc->readMiscReg(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
     }
 }
 
@@ -497,11 +497,11 @@ Fault
 AlphaDTB::translate(MemReqPtr &req, bool write) const
 {
     RegFile *regs = &req->xc->regs;
+    ExecContext *xc = req->xc;
     Addr pc = regs->pc;
-    InternalProcReg *ipr = regs->ipr;
 
     AlphaISA::mode_type mode =
-        (AlphaISA::mode_type)DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]);
+        (AlphaISA::mode_type)DTB_CM_CM(xc->readMiscReg(AlphaISA::IPR_DTB_CM));
 
 
     /**
@@ -516,7 +516,8 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
     if (pc & 0x1) {
         mode = (req->flags & ALTMODE) ?
-            (AlphaISA::mode_type)ALT_MODE_AM(ipr[AlphaISA::IPR_ALT_MODE])
+            (AlphaISA::mode_type)ALT_MODE_AM(
+                xc->readMiscReg(AlphaISA::IPR_ALT_MODE))
             : AlphaISA::mode_kernel;
     }
 
@@ -535,14 +536,14 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
         // Check for "superpage" mapping
 #if ALPHA_TLASER
-        if ((MCSR_SP(ipr[AlphaISA::IPR_MCSR]) & 2) &&
+        if ((MCSR_SP(xc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
             VAddrSpaceEV5(req->vaddr) == 2) {
 #else
         if (VAddrSpaceEV6(req->vaddr) == 0x7e) {
 #endif
 
             // only valid in kernel mode
-            if (DTB_CM_CM(ipr[AlphaISA::IPR_DTB_CM]) !=
+            if (DTB_CM_CM(xc->readMiscReg(AlphaISA::IPR_DTB_CM)) !=
                 AlphaISA::mode_kernel) {
                 fault(req, ((write ? MM_STAT_WR_MASK : 0) |
                             MM_STAT_ACV_MASK));
@@ -566,9 +567,11 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
             else
                 read_accesses++;
 
+            int asn = DTB_ASN_ASN(xc->readMiscReg(AlphaISA::IPR_DTB_ASN));
+
             // not a physical address: need to look up pte
             AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->vaddr).vpn(),
-                                        DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+                                        asn);
 
             if (!pte) {
                 // page fault

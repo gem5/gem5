@@ -371,7 +371,7 @@ RemoteGDB::acc(Addr va, size_t len)
         if (AlphaISA::PcPAL(va) || va < 0x10000)
             return true;
 
-        Addr ptbr = context->regs.ipr[AlphaISA::IPR_PALtemp20];
+        Addr ptbr = context->readMiscReg(AlphaISA::IPR_PALtemp20);
         TheISA::PageTableEntry pte = kernel_pte_lookup(pmem, ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
