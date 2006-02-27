@@ -36,8 +36,10 @@ FaultVect AlphaFault::_vect = 0x0000;
 FaultStat AlphaFault::_stat;
 
 FaultVect AlphaMachineCheckFault::_vect = 0x0401;
+FaultStat AlphaMachineCheckFault::_stat;
 
 FaultVect AlphaAlignmentFault::_vect = 0x0301;
+FaultStat AlphaAlignmentFault::_stat;
 
 FaultName ResetFault::_name = "reset";
 FaultVect ResetFault::_vect = 0x0001;

@@ -29,7 +29,5 @@
 #include "sim/faults.hh"
 
 FaultName MachineCheckFault::_name = "mchk";
-FaultStat MachineCheckFault::_stat;
 FaultName AlignmentFault::_name = "unalign";
-FaultStat AlignmentFault::_stat;
 

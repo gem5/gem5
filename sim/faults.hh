@@ -71,10 +71,8 @@ class MachineCheckFault : public FaultBase
 {
   private:
     static FaultName _name;
-    static FaultStat _stat;
   public:
     FaultName name() {return _name;}
-    FaultStat & stat() {return _stat;}
     bool isMachineCheckFault() {return true;}
 };
 
@@ -82,10 +80,8 @@ class AlignmentFault : public FaultBase
 {
   private:
     static FaultName _name;
-    static FaultStat _stat;
   public:
     FaultName name() {return _name;}
-    FaultStat & stat() {return _stat;}
     bool isAlignmentFault() {return true;}
 };
 

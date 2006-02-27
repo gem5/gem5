@@ -54,16 +54,20 @@ class AlphaMachineCheckFault : public MachineCheckFault
 {
   private:
     static FaultVect _vect;
+    static FaultStat _stat;
   public:
     FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
 };
 
 class AlphaAlignmentFault : public AlignmentFault
 {
   private:
     static FaultVect _vect;
+    static FaultStat _stat;
   public:
     FaultVect vect() {return _vect;}
+    FaultStat & stat() {return _stat;}
 };
 
 static inline Fault genMachineCheckFault()
