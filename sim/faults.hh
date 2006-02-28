@@ -50,10 +50,7 @@ typedef Stats::Scalar<> FaultStat;
 class FaultBase : public RefCounted
 {
   public:
-    virtual FaultName name()
-    {
-        return "none";
-    }
+    virtual FaultName name() = 0;
     virtual FaultStat & stat() = 0;
 #if FULL_SYSTEM
     virtual void ev5_trap(ExecContext * xc) = 0;
@@ -72,7 +69,7 @@ FaultBase * const NoFault = 0;
 //provide the name() function, and the isMachineCheckFault and isAlignmentFault
 //functions are provided below.
 
-class MachineCheckFault : public FaultBase
+class MachineCheckFault : public virtual FaultBase
 {
   private:
     static FaultName _name;
@@ -81,7 +78,7 @@ class MachineCheckFault : public FaultBase
     bool isMachineCheckFault() {return true;}
 };
 
-class AlignmentFault : public FaultBase
+class AlignmentFault : public virtual FaultBase
 {
   private:
     static FaultName _name;

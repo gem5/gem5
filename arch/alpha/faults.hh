@@ -38,22 +38,18 @@ namespace AlphaISA
 
 typedef const Addr FaultVect;
 
-class AlphaFault : public FaultBase
+class AlphaFault : public virtual FaultBase
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _stat;
   public:
 #if FULL_SYSTEM
     void ev5_trap(ExecContext * xc);
 #endif
-    FaultName name() {return _name;}
-    virtual FaultVect vect() {return _vect;}
-    virtual FaultStat & stat() {return _stat;}
+    virtual FaultVect vect() = 0;
 };
 
-class AlphaMachineCheckFault : public MachineCheckFault
+class AlphaMachineCheckFault :
+    public MachineCheckFault,
+    public AlphaFault
 {
   private:
     static FaultVect _vect;
@@ -66,7 +62,9 @@ class AlphaMachineCheckFault : public MachineCheckFault
     FaultStat & stat() {return _stat;}
 };
 
-class AlphaAlignmentFault : public AlignmentFault
+class AlphaAlignmentFault :
+    public AlignmentFault,
+    public AlphaFault
 {
   private:
     static FaultVect _vect;

@@ -353,7 +353,7 @@ AlphaFullCPU<Impl>::trap(Fault fault)
         swapPALShadow(true);
 
     this->regFile.setPC( ipr[AlphaISA::IPR_PAL_BASE] +
-                         ((AlphaFault *)(fault.get()))->vect());
+                         (dynamic_cast<AlphaFault *>(fault.get()))->vect());
     this->regFile.setNextPC(PC + sizeof(MachInst));
 }
 

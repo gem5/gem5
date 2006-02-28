@@ -192,7 +192,8 @@ ExecContext::ev5_temp_trap(Fault fault)
     if (!inPalMode())
         AlphaISA::swap_palshadow(&regs, true);
 
-    regs.pc = ipr[AlphaISA::IPR_PAL_BASE] + ((AlphaFault *)(fault.get()))->vect();
+    regs.pc = ipr[AlphaISA::IPR_PAL_BASE] +
+        (dynamic_cast<AlphaFault *>(fault.get()))->vect();
     regs.npc = regs.pc + sizeof(MachInst);
 }
 
@@ -217,7 +218,8 @@ AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
 
     // jump to expection address (PAL PC bit set here as well...)
     if (!use_pc)
-        regs->npc = ipr[IPR_PAL_BASE] + ((AlphaFault *)(fault.get()))->vect();
+        regs->npc = ipr[IPR_PAL_BASE] +
+            (dynamic_cast<AlphaFault *>(fault.get()))->vect();
     else
         regs->npc = ipr[IPR_PAL_BASE] + pc;
 

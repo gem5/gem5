@@ -32,10 +32,6 @@
 namespace AlphaISA
 {
 
-FaultName AlphaFault::_name = "alphafault";
-FaultVect AlphaFault::_vect = 0x0000;
-FaultStat AlphaFault::_stat;
-
 FaultVect AlphaMachineCheckFault::_vect = 0x0401;
 FaultStat AlphaMachineCheckFault::_stat;
 
