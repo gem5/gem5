@@ -42,13 +42,18 @@ class BarChart(ChartOptions):
         super(BarChart, self).__init__(default, **kwargs)
         self.inputdata = None
         self.chartdata = None
+        self.inputerr = None
+        self.charterr = None
 
     def gen_colors(self, count):
         cmap = matplotlib.cm.get_cmap(self.colormap)
         if count == 1:
             return cmap([ 0.5 ])
-        else:
-            return cmap(arange(count) / float(count - 1))
+
+        if count < 5:
+            return cmap(arange(5) / float(4))[:count]
+
+        return cmap(arange(count) / float(count - 1))
 
     # The input data format does not match the data format that the
     # graph function takes because it is intuitive.  The conversion
@@ -89,6 +94,32 @@ class BarChart(ChartOptions):
 
     data = property(get_data, set_data)
 
+    def set_err(self, err):
+        if err is None:
+            self.inputerr = None
+            self.charterr = None
+            return
+
+        err = array(err)
+        dim = len(shape(err))
+        if dim not in (1, 2, 3):
+            raise AttributeError, "Input err must be a 1, 2, or 3d matrix"
+        self.inputerr = err
+
+        if dim == 1:
+            self.charterr = array([[err]])
+
+        if dim == 2:
+            self.charterr = transpose([err], axes=(2,0,1))
+
+        if dim == 3:
+            self.charterr = transpose(err, axes=(1,2,0))
+
+    def get_err(self):
+        return self.inputerr
+
+    err = property(get_err, set_err)
+
     # Graph the chart data.
     # Input is a 3d matrix that describes a plot that has multiple
     # groups, multiple bars in each group, and multiple values stacked
@@ -123,6 +154,9 @@ class BarChart(ChartOptions):
 
         dim = len(shape(self.inputdata))
         cshape = shape(self.chartdata)
+        if self.charterr is not None and shape(self.charterr) != cshape:
+            raise AttributeError, 'Dimensions of error and data do not match'
+
         if dim == 1:
             colors = self.gen_colors(cshape[2])
             colors = [ [ colors ] * cshape[1] ] * cshape[0]
@@ -143,7 +177,8 @@ class BarChart(ChartOptions):
         inner_axes = None
         if self.xsubticks is not None:
             color = self.figure.get_facecolor()
-            self.metaaxes = self.figure.add_axes(self.figure_size, axisbg=color, frameon=False)
+            self.metaaxes = self.figure.add_axes(self.figure_size,
+                                                 axisbg=color, frameon=False)
             for tick in self.metaaxes.xaxis.majorTicks:
                 tick.tick1On = False
                 tick.tick2On = False
@@ -174,8 +209,11 @@ class BarChart(ChartOptions):
             for j,bardata in enumerate(stackdata):
                 bardata = array(bardata)
                 ind = arange(len(bardata)) + i * width + center
+                yerr = None
+                if self.charterr is not None:
+                    yerr = self.charterr[i][j]
                 bar = self.axes.bar(ind, bardata, width, bottom=bottom,
-                                    color=colors[i][j])
+                                    color=colors[i][j], yerr=yerr)
                 if self.xsubticks is not None:
                     self.metaaxes.bar(ind, [0] * len(bardata), width)
                 stack.append(bar)
@@ -202,9 +240,11 @@ class BarChart(ChartOptions):
             outer_axes.set_xticklabels(self.xticks)
 
         if self.xsubticks is not None:
-            inner_axes.set_xticks(arange((cshape[0] + 1)*cshape[2])*width + 2*center)
+            numticks = (cshape[0] + 1) * cshape[2]
+            inner_axes.set_xticks(arange(numticks) * width + 2 * center)
             self.xsubticks.append('')
-            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=7, rotation=90)
+            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=7,
+                                       rotation=90)
 
         if self.legend is not None:
             if dim == 1:
@@ -215,8 +255,12 @@ class BarChart(ChartOptions):
                 number = len(bars[0])
                 lbars = [ bars[0][number - j - 1][0] for j in xrange(number)]
 
-            self.figure.legend(lbars, self.legend, self.legend_loc,
-                               prop=FontProperties(size=self.legend_size))
+            if self.fig_legend:
+                self.figure.legend(lbars, self.legend, self.legend_loc,
+                                   prop=FontProperties(size=self.legend_size))
+            else:
+                self.axes.legend(lbars, self.legend, self.legend_loc,
+                                 prop=FontProperties(size=self.legend_size))
 
         if self.title is not None:
             self.axes.set_title(self.title)
@@ -240,7 +284,7 @@ class BarChart(ChartOptions):
                 ylabel = []
                 #if self.ylabel:
                 #    ylabel = [ self.ylabel[i] ]
-                f.write(', '.join(ylabel + [ '%f' % val for val in row]) + '\n')
+                f.write(', '.join(ylabel + [ '%f' % v for v in row]) + '\n')
         if dim == 3:
             f.write("don't do 3D csv files\n")
             pass

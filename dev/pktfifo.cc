@@ -31,6 +31,36 @@
 
 using namespace std;
 
+bool
+PacketFifo::copyout(void *dest, int offset, int len)
+{
+    char *data = (char *)dest;
+    if (offset + len >= size())
+        return false;
+
+    list<PacketPtr>::iterator p = fifo.begin();
+    list<PacketPtr>::iterator end = fifo.end();
+    while (len > 0) {
+        while (offset >= (*p)->length) {
+            offset -= (*p)->length;
+            ++p;
+        }
+
+        if (p == end)
+            panic("invalid fifo");
+
+        int size = min((*p)->length - offset, len);
+        memcpy(data, (*p)->data, size);
+        offset = 0;
+        len -= size;
+        data += size;
+        ++p;
+    }
+
+    return true;
+}
+
+
 void
 PacketFifo::serialize(const string &base, ostream &os)
 {
@@ -40,8 +70,8 @@ PacketFifo::serialize(const string &base, ostream &os)
     paramOut(os, base + ".packets", fifo.size());
 
     int i = 0;
-    std::list<PacketPtr>::iterator p = fifo.begin();
-    std::list<PacketPtr>::iterator end = fifo.end();
+    list<PacketPtr>::iterator p = fifo.begin();
+    list<PacketPtr>::iterator end = fifo.end();
     while (p != end) {
         (*p)->serialize(csprintf("%s.packet%d", base, i), os);
         ++p;

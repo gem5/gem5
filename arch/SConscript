@@ -70,7 +70,7 @@ def gen_switch_hdr_string(target, source, env):
     return "Generating ISA switch header " + str(target[0])
 
 # Build SCons Action object. 'varlist' specifies env vars that this
-# action depdnds on; when env['ALL_ISA_LIST'] changes these actions
+# action depends on; when env['ALL_ISA_LIST'] changes these actions
 # should get re-executed.
 switch_hdr_action = Action(gen_switch_hdr, gen_switch_hdr_string,
                            varlist=['ALL_ISA_LIST'])

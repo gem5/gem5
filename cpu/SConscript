@@ -32,13 +32,28 @@ import os.path
 # Import build environment variable from SConstruct.
 Import('env')
 
+#################################################################
+#
+# Generate StaticInst execute() method signatures.
+#
+# There must be one signature for each CPU model compiled in.
+# Since the set of compiled-in models is flexible, we generate a
+# header containing the appropriate set of signatures on the fly.
+#
+#################################################################
+
+# CPU model-specific data is contained in cpu_models.py
+# Convert to SCons File node to get path handling
 models_db = File('cpu_models.py')
+# slurp in contents of file
 execfile(models_db.srcnode().abspath)
 
+# Template for execute() signature.
 exec_sig_template = '''
 virtual Fault execute(%s *xc, Trace::InstRecord *traceData) const = 0;
 '''
 
+# Generate header.  
 def gen_cpu_exec_signatures(target, source, env):
     f = open(str(target[0]), 'w')
     print >> f, '''
@@ -52,7 +67,22 @@ def gen_cpu_exec_signatures(target, source, env):
 #endif  // __CPU_STATIC_INST_EXEC_SIGS_HH__
 '''
 
-env.Command('static_inst_exec_sigs.hh', models_db, gen_cpu_exec_signatures)
+# Generate string that gets printed when header is rebuilt
+def gen_sigs_string(target, source, env):
+    return "Generating static_inst_exec_sigs.hh: " \
+           + ', '.join(env['CPU_MODELS'])
+
+# Add command to generate header to environment.
+env.Command('static_inst_exec_sigs.hh', models_db,
+            Action(gen_cpu_exec_signatures, gen_sigs_string,
+                   varlist = ['CPU_MODELS']))
+
+#################################################################
+#
+# Include CPU-model-specific files based on set of models
+# specified in CPU_MODELS build option.
+#
+#################################################################
 
 sources = []
 
