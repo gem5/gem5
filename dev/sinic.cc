@@ -494,29 +494,16 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
     //this prevents compilation.
     //uint32_t reg32 = *(uint32_t *)data;
     //uint64_t reg64 = *(uint64_t *)data;
+    VirtualReg &vnic = virtualRegs[index];
+
     DPRINTF(EthernetPIO,
             "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
             info.name, cpu, info.size == 4 ?
             (*(uint32_t *)data) :
-            (*(uint32_t *)data),
+            (*(uint64_t *)data),
             daddr, req->paddr, req->vaddr, req->size);
 
     prepareWrite(cpu, index);
-
-    regWrite(daddr, cpu, data);
-
-    return NoFault;
-}
-
-void
-Device::regWrite(Addr daddr, int cpu, const uint8_t *data)
-{
-    Addr index = daddr >> Regs::VirtualShift;
-    Addr raddr = daddr & Regs::VirtualMask;
-
-    uint32_t reg32 = *(uint32_t *)data;
-    uint64_t reg64 = *(uint64_t *)data;
-    VirtualReg &vnic = virtualRegs[index];
 
     switch (raddr) {
       case Regs::Config:
@@ -564,6 +551,8 @@ Device::regWrite(Addr daddr, int cpu, const uint8_t *data)
         }
         break;
     }
+
+    return NoFault;
 }
 
 void
