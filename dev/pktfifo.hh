@@ -127,6 +127,35 @@ class PacketFifo
         fifo.erase(i);
     }
 
+    bool copyout(void *dest, int offset, int len);
+
+    int countPacketsBefore(iterator end)
+    {
+        iterator i = fifo.begin();
+        int count = 0;
+
+        while (i != end) {
+            ++count;
+            ++i;
+        }
+
+        return count;
+    }
+
+    int countPacketsAfter(iterator i)
+    {
+        iterator end = fifo.end();
+        int count = 0;
+
+        while (i != end) {
+            ++count;
+            ++i;
+        }
+
+        return count;
+    }
+
+
 /**
  * Serialization stuff
  */

@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,14 @@ func_categories = { \
     'skb_clone_fraglist' : 'buffer',
     'skb_seq_read' : 'buffer',
     'sock_alloc_send_skb' : 'buffer',
+    'sinic_rxskb_alloc' : 'buffer',
 
     # Copy functions
+    'sinic_copyfrom' : 'copy',
     '__copy_user' : 'copy',
     'skb_copy_bits' : 'copy',
+    'skb_copy_datagram_iovec' : 'copy',
+    'sinic_vcopy_iov' : 'idle',
 
     # Driver functions
     'do_tx_done' : 'driver',

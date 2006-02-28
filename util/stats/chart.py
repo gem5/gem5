@@ -31,6 +31,7 @@ class ChartOptions(object):
     defaults = { 'chart_size' : (8, 4),
                  'figure_size' : [0.1, 0.1, 0.6, 0.85],
                  'title' : None,
+                 'fig_legend' : True,
                  'legend' : None,
                  'legend_loc' : 'upper right',
                  'legend_size' : 6,
