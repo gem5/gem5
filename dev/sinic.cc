@@ -489,18 +489,13 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
         panic("invalid size for %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
               info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
 
-    //These are commmented out because when the DPRINTF below isn't used,
-    //these values aren't used and gcc issues a warning. With -Werror,
-    //this prevents compilation.
-    //uint32_t reg32 = *(uint32_t *)data;
-    //uint64_t reg64 = *(uint64_t *)data;
+    uint32_t reg32 = *(uint32_t *)data;
+    uint64_t reg64 = *(uint64_t *)data;
     VirtualReg &vnic = virtualRegs[index];
 
     DPRINTF(EthernetPIO,
             "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, cpu, info.size == 4 ?
-            (*(uint32_t *)data) :
-            (*(uint64_t *)data),
+            info.name, cpu, info.size == 4 ? reg32 : reg64,
             daddr, req->paddr, req->vaddr, req->size);
 
     prepareWrite(cpu, index);
