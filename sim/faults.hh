@@ -31,7 +31,9 @@
 
 #include "base/refcnt.hh"
 #include "sim/stats.hh"
+#include "config/full_system.hh"
 
+class ExecContext;
 class FaultBase;
 typedef RefCountingPtr<FaultBase> Fault;
 
@@ -53,6 +55,9 @@ class FaultBase : public RefCounted
         return "none";
     }
     virtual FaultStat & stat() = 0;
+#if FULL_SYSTEM
+    virtual void ev5_trap(ExecContext * xc) = 0;
+#endif
     template<typename T>
     bool isA() {return dynamic_cast<T *>(this);}
     virtual bool isMachineCheckFault() {return false;}

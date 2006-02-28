@@ -425,7 +425,7 @@ class ExecContext
     void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();
     bool inPalMode() { return AlphaISA::PcPAL(regs.pc); }
-    void ev5_trap(Fault fault);
+    void ev5_temp_trap(Fault fault);
     bool simPalCheck(int palFunc);
 #endif
 

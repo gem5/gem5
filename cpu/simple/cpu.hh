@@ -334,7 +334,7 @@ class SimpleCPU : public BaseCPU
     int readIntrFlag() { return xc->readIntrFlag(); }
     void setIntrFlag(int val) { xc->setIntrFlag(val); }
     bool inPalMode() { return xc->inPalMode(); }
-    void ev5_trap(Fault fault) { xc->ev5_trap(fault); }
+    void ev5_trap(Fault fault) { fault->ev5_trap(xc); }
     bool simPalCheck(int palFunc) { return xc->simPalCheck(palFunc); }
 #else
     void syscall() { xc->syscall(); }

@@ -166,7 +166,7 @@ AlphaISA::zeroRegisters(CPU *cpu)
 }
 
 void
-ExecContext::ev5_trap(Fault fault)
+ExecContext::ev5_temp_trap(Fault fault)
 {
     DPRINTF(Fault, "Fault %s at PC: %#x\n", fault->name(), regs.pc);
     cpu->recordEvent(csprintf("Fault %s", fault->name()));

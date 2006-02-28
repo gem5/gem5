@@ -27,6 +27,7 @@
  */
 
 #include "arch/alpha/faults.hh"
+#include "cpu/exec_context.hh"
 
 namespace AlphaISA
 {
@@ -96,6 +97,25 @@ FaultStat PalFault::_stat;
 FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_stat;
+
+#if FULL_SYSTEM
+
+void AlphaFault::ev5_trap(ExecContext * xc)
+{
+    xc->ev5_temp_trap(this);
+}
+
+void AlphaMachineCheckFault::ev5_trap(ExecContext * xc)
+{
+    xc->ev5_temp_trap(this);
+}
+
+void AlphaAlignmentFault::ev5_trap(ExecContext * xc)
+{
+    xc->ev5_temp_trap(this);
+}
+
+#endif
 
 } // namespace AlphaISA
 
