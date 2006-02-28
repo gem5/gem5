@@ -54,6 +54,8 @@
 
 #include <sys/types.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include "m5op.h"
 
 /* The string s is terminated by a '\0' */
 void
@@ -320,5 +322,5 @@ panic(const char *f, ...)
     }
 
     va_end(ap);         /* clean up */
-    while(1);
+    m5_panic();
 }

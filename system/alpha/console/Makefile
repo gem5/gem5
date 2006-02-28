@@ -35,8 +35,8 @@ AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
 DBMENTRY= fffffc0000010000
-CFLAGS=-I . -I ../h -I$(M5)/dev -fno-builtin -Wa,-m21164
-OBJS=dbmentry.o printf.o paljtokern.o paljtoslave.o console.o
+CFLAGS=-I . -I ../h -I$(M5)/dev -I$(M5)/util/m5/ -fno-builtin -Wa,-m21164
+OBJS=dbmentry.o printf.o paljtokern.o paljtoslave.o console.o m5op.o
 
 ### Make sure that the M5 variable is set ###
 ifndef M5
@@ -44,6 +44,9 @@ $(error The M5 variable must be set)
 endif
 
 all: console
+
+m5op.o: $(M5)/util/m5/m5op.S
+	$(CC) $(CFLAGS) -nostdinc -o $@ -c $<
 
 %.o: %.S
 	$(CC) $(CFLAGS) -nostdinc -o $@ -c $<

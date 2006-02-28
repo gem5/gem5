@@ -81,7 +81,9 @@ _entry:
         bis  zero,8,t4
         mulq t4,v0,t4
         addq t3,t4,t3
-cpuwait:   ldq  t4, 0(t3)
+        ldah a0, 3(zero)  # load arg0 with 65536*3
+cpuwait: .long 0x6000002  # jsr quiesceNs
+        ldq  t4, 0(t3)
         beq  t4, cpuwait
         bis  t4,t4,sp
 
@@ -220,8 +222,9 @@ SlaveSpin:                         # using any stack space
         mov a0, t0                 # cpu number
         mov a1, t1                 # cpu rpb pointer (virtual)
         mov a2, t2                 # what to spin on
-
-test:   ldl  t3, 0(t2)
+        ldah a0, 3(zero)  # load arg0 with 65536
+test:   .long 0x6000002  # jsr quiesceNs     # wait 65us*3
+        ldl  t3, 0(t2)
         beq  t3, test
         zapnot t1,0x1f,a0          # make rpb physical
         call_pal PAL_SWPCTX_ENTRY  # switch to pcb
