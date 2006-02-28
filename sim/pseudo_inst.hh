@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,9 @@ namespace AlphaPseudo
 
     void arm(ExecContext *xc);
     void quiesce(ExecContext *xc);
+    void quiesceNs(ExecContext *xc, uint64_t ns);
+    void quiesceCycles(ExecContext *xc, uint64_t cycles);
+    uint64_t quiesceTime(ExecContext *xc);
     void ivlb(ExecContext *xc);
     void ivle(ExecContext *xc);
     void m5exit(ExecContext *xc, Tick delay);
