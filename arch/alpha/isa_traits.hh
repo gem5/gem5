@@ -38,6 +38,7 @@ using namespace LittleEndianGuest;
 #include "sim/host.hh"
 #include "sim/faults.hh"
 
+class ExecContext;
 class FastCPU;
 class FullCPU;
 class Checkpoint;
@@ -64,6 +65,7 @@ namespace AlphaISA
 
         NumIntRegs = 32,
         NumFloatRegs = 32,
+        // @todo: Figure out what this number really should be.
         NumMiscRegs = 32,
 
         MaxRegsOfAnyType = 32,
@@ -106,7 +108,9 @@ namespace AlphaISA
         Ctrl_Base_DepTag = 64,
         Fpcr_DepTag = 64,		// floating point control register
         Uniq_DepTag = 65,
-        IPR_Base_DepTag = 66
+        Lock_Flag_DepTag = 66,
+        Lock_Addr_DepTag = 67,
+        IPR_Base_DepTag = 68
     };
 
     typedef uint64_t IntReg;
@@ -122,15 +126,6 @@ namespace AlphaISA
         uint64_t q[NumFloatRegs];	// integer qword view
         double d[NumFloatRegs];		// double-precision floating point view
     } FloatRegFile;
-
-    // control register file contents
-    typedef uint64_t MiscReg;
-    typedef struct {
-        uint64_t	fpcr;		// floating point condition codes
-        uint64_t	uniq;		// process-unique register
-        bool		lock_flag;	// lock flag for LL/SC
-        Addr		lock_addr;	// lock address for LL/SC
-    } MiscRegFile;
 
 extern const Addr PageShift;
 extern const Addr PageBytes;
@@ -148,6 +143,39 @@ extern const Addr PageOffset;
         NumInternalProcRegs = 0
     };
 #endif
+
+    // control register file contents
+    typedef uint64_t MiscReg;
+    class MiscRegFile {
+      protected:
+        uint64_t	fpcr;		// floating point condition codes
+        uint64_t	uniq;		// process-unique register
+        bool		lock_flag;	// lock flag for LL/SC
+        Addr		lock_addr;	// lock address for LL/SC
+
+      public:
+        MiscReg readReg(int misc_reg);
+
+        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc);
+
+        Fault setReg(int misc_reg, const MiscReg &val);
+
+        Fault setRegWithEffect(int misc_reg, const MiscReg &val,
+                               ExecContext *xc);
+
+#if FULL_SYSTEM
+        void clearIprs();
+
+      protected:
+        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
+
+      private:
+        MiscReg readIpr(int idx, Fault &fault, ExecContext *xc);
+
+        Fault setIpr(int idx, uint64_t val, ExecContext *xc);
+#endif
+        friend class RegFile;
+    };
 
     enum {
         TotalNumRegs =
@@ -172,11 +200,12 @@ extern const Addr PageOffset;
         Addr npc;			// next-cycle program counter
 #if FULL_SYSTEM
         IntReg palregs[NumIntRegs];	// PAL shadow registers
-        InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
         int intrflag;			// interrupt flag
         bool pal_shadow;		// using pal_shadow registers
-        inline int instAsid() { return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]); }
-        inline int dataAsid() { return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]); }
+        inline int instAsid()
+        { return EV5::ITB_ASN_ASN(miscRegs.ipr[IPR_ITB_ASN]); }
+        inline int dataAsid()
+        { return EV5::DTB_ASN_ASN(miscRegs.ipr[IPR_DTB_ASN]); }
 #endif // FULL_SYSTEM
 
         void serialize(std::ostream &os);

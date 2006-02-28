@@ -67,49 +67,7 @@ AlphaDynInst<Impl>::AlphaDynInst(StaticInstPtr &_staticInst)
     }
 }
 
-template <class Impl>
-uint64_t
-AlphaDynInst<Impl>::readUniq()
-{
-    return this->cpu->readUniq();
-}
-
-template <class Impl>
-void
-AlphaDynInst<Impl>::setUniq(uint64_t val)
-{
-    this->cpu->setUniq(val);
-}
-
-template <class Impl>
-uint64_t
-AlphaDynInst<Impl>::readFpcr()
-{
-    return this->cpu->readFpcr();
-}
-
-template <class Impl>
-void
-AlphaDynInst<Impl>::setFpcr(uint64_t val)
-{
-    this->cpu->setFpcr(val);
-}
-
 #if FULL_SYSTEM
-template <class Impl>
-uint64_t
-AlphaDynInst<Impl>::readIpr(int idx, Fault &fault)
-{
-    return this->cpu->readIpr(idx, fault);
-}
-
-template <class Impl>
-Fault
-AlphaDynInst<Impl>::setIpr(int idx, uint64_t val)
-{
-    return this->cpu->setIpr(idx, val);
-}
-
 template <class Impl>
 Fault
 AlphaDynInst<Impl>::hwrei()

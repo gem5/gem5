@@ -264,13 +264,13 @@ FullO3CPU<Impl>::init()
             regFile.floatRegFile[i].d = src_xc->regs.floatRegFile.d[i];
             regFile.floatRegFile[i].q = src_xc->regs.floatRegFile.q[i];
         }
-
+/*
         // Then loop through the misc registers.
         regFile.miscRegs.fpcr = src_xc->regs.miscRegs.fpcr;
         regFile.miscRegs.uniq = src_xc->regs.miscRegs.uniq;
         regFile.miscRegs.lock_flag = src_xc->regs.miscRegs.lock_flag;
         regFile.miscRegs.lock_addr = src_xc->regs.miscRegs.lock_addr;
-
+*/
         // Then finally set the PC and the next PC.
         regFile.pc = src_xc->regs.pc;
         regFile.npc = src_xc->regs.npc;

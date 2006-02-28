@@ -729,7 +729,7 @@ class Tru64 {
             regs->floatRegFile.q[i] = htog(sc->sc_fpregs[i]);
         }
 
-        regs->miscRegs.fpcr = htog(sc->sc_fpcr);
+        xc->setMiscReg(TheISA::Fpcr_DepTag, htog(sc->sc_fpcr));
 
         return 0;
     }
@@ -889,7 +889,7 @@ class Tru64 {
             ssp->nxm_sysevent = htog(0);
 
             if (i == 0) {
-                uint64_t uniq = xc->regs.miscRegs.uniq;
+                uint64_t uniq = xc->readMiscReg(TheISA::Uniq_DepTag);
                 ssp->nxm_u.pth_id = htog(uniq + gtoh(attrp->nxm_uniq_offset));
                 ssp->nxm_u.nxm_active = htog(uniq | 1);
             }
@@ -924,7 +924,7 @@ class Tru64 {
         ec->regs.intRegFile[TheISA::ArgumentReg0] = gtoh(attrp->registers.a0);
         ec->regs.intRegFile[27/*t12*/] = gtoh(attrp->registers.pc);
         ec->regs.intRegFile[TheISA::StackPointerReg] = gtoh(attrp->registers.sp);
-        ec->regs.miscRegs.uniq = uniq_val;
+        ec->setMiscReg(TheISA::Uniq_DepTag, uniq_val);
 
         ec->regs.pc = gtoh(attrp->registers.pc);
         ec->regs.npc = gtoh(attrp->registers.pc) + sizeof(TheISA::MachInst);

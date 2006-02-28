@@ -65,6 +65,7 @@ class SimpleCPU : public BaseCPU
 {
   protected:
     typedef TheISA::MachInst MachInst;
+    typedef TheISA::MiscReg MiscReg;
   public:
     // main simulation loop (one cycle)
     void tick();
@@ -321,15 +322,27 @@ class SimpleCPU : public BaseCPU
     uint64_t readPC() { return xc->readPC(); }
     void setNextPC(uint64_t val) { xc->setNextPC(val); }
 
-    uint64_t readUniq() { return xc->readUniq(); }
-    void setUniq(uint64_t val) { xc->setUniq(val); }
+    MiscReg readMiscReg(int misc_reg)
+    {
+        return xc->readMiscReg(misc_reg);
+    }
 
-    uint64_t readFpcr() { return xc->readFpcr(); }
-    void setFpcr(uint64_t val) { xc->setFpcr(val); }
+    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    {
+        return xc->readMiscRegWithEffect(misc_reg, fault);
+    }
+
+    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    {
+        return xc->setMiscReg(misc_reg, val);
+    }
+
+    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    {
+        return xc->setMiscRegWithEffect(misc_reg, val);
+    }
 
 #if FULL_SYSTEM
-    uint64_t readIpr(int idx, Fault &fault) { return xc->readIpr(idx, fault); }
-    Fault setIpr(int idx, uint64_t val) { return xc->setIpr(idx, val); }
     Fault hwrei() { return xc->hwrei(); }
     int readIntrFlag() { return xc->readIntrFlag(); }
     void setIntrFlag(int val) { xc->setIntrFlag(val); }

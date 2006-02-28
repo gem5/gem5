@@ -618,7 +618,7 @@ decode OPCODE default Unknown::unknown() {
         /* Rb is a fake dependency so here is a fun way to get
          * the parser to understand that.
          */
-                Ra = xc->readIpr(AlphaISA::IPR_CC, fault) + (Rb & 0);
+                Ra = xc->readMiscRegWithEffect(AlphaISA::IPR_CC, fault) + (Rb & 0);
 
 #else
                 Ra = curTick;
@@ -670,7 +670,7 @@ decode OPCODE default Unknown::unknown() {
     0x00: CallPal::call_pal({{
         if (!palValid ||
             (palPriv
-             && xc->readIpr(AlphaISA::IPR_ICM, fault) != AlphaISA::mode_kernel)) {
+             && xc->readMiscRegWithEffect(AlphaISA::IPR_ICM, fault) != AlphaISA::mode_kernel)) {
             // invalid pal function code, or attempt to do privileged
             // PAL call in non-kernel mode
             fault = new UnimplementedOpcodeFault;
@@ -682,8 +682,8 @@ decode OPCODE default Unknown::unknown() {
 
             if (dopal) {
                 AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
-                xc->setIpr(AlphaISA::IPR_EXC_ADDR, NPC);
-                NPC = xc->readIpr(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
+                xc->setMiscRegWithEffect(AlphaISA::IPR_EXC_ADDR, NPC);
+                NPC = xc->readMiscRegWithEffect(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
             }
         }
     }}, IsNonSpeculative);
@@ -732,7 +732,7 @@ decode OPCODE default Unknown::unknown() {
                 fault = new UnimplementedOpcodeFault;
             }
             else {
-                Ra = xc->readIpr(ipr_index, fault);
+                Ra = xc->readMiscRegWithEffect(ipr_index, fault);
             }
         }});
         0x1d: hw_mtpr({{
@@ -741,7 +741,7 @@ decode OPCODE default Unknown::unknown() {
                 fault = new UnimplementedOpcodeFault;
             }
             else {
-                xc->setIpr(ipr_index, Ra);
+                xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
             }
         }});

@@ -179,12 +179,12 @@ AlphaFullCPU<Impl>::copyToXC()
         this->xc->regs.floatRegFile.q[i] =
             this->regFile.readFloatRegInt(renamed_reg);
     }
-
+/*
     this->xc->regs.miscRegs.fpcr = this->regFile.miscRegs.fpcr;
     this->xc->regs.miscRegs.uniq = this->regFile.miscRegs.uniq;
     this->xc->regs.miscRegs.lock_flag = this->regFile.miscRegs.lock_flag;
     this->xc->regs.miscRegs.lock_addr = this->regFile.miscRegs.lock_addr;
-
+*/
     this->xc->regs.pc = this->rob.readHeadPC();
     this->xc->regs.npc = this->xc->regs.pc+4;
 
@@ -221,13 +221,13 @@ AlphaFullCPU<Impl>::copyFromXC()
         this->regFile.setFloatRegInt(renamed_reg,
                                      this->xc->regs.floatRegFile.q[i]);
     }
-
+    /*
     // Then loop through the misc registers.
     this->regFile.miscRegs.fpcr = this->xc->regs.miscRegs.fpcr;
     this->regFile.miscRegs.uniq = this->xc->regs.miscRegs.uniq;
     this->regFile.miscRegs.lock_flag = this->xc->regs.miscRegs.lock_flag;
     this->regFile.miscRegs.lock_addr = this->xc->regs.miscRegs.lock_addr;
-
+    */
     // Then finally set the PC and the next PC.
 //    regFile.pc = xc->regs.pc;
 //    regFile.npc = xc->regs.npc;
@@ -236,27 +236,6 @@ AlphaFullCPU<Impl>::copyFromXC()
 }
 
 #if FULL_SYSTEM
-
-template <class Impl>
-uint64_t *
-AlphaFullCPU<Impl>::getIpr()
-{
-    return this->regFile.getIpr();
-}
-
-template <class Impl>
-uint64_t
-AlphaFullCPU<Impl>::readIpr(int idx, Fault &fault)
-{
-    return this->regFile.readIpr(idx, fault);
-}
-
-template <class Impl>
-Fault
-AlphaFullCPU<Impl>::setIpr(int idx, uint64_t val)
-{
-    return this->regFile.setIpr(idx, val);
-}
 
 template <class Impl>
 int
@@ -277,16 +256,14 @@ template <class Impl>
 Fault
 AlphaFullCPU<Impl>::hwrei()
 {
-    uint64_t *ipr = getIpr();
-
     if (!inPalMode())
         return new UnimplementedOpcodeFault;
 
-    this->setNextPC(ipr[AlphaISA::IPR_EXC_ADDR]);
+    this->setNextPC(this->regFile.miscRegs.readReg(AlphaISA::IPR_EXC_ADDR));
 
 //    kernelStats.hwrei();
 
-    if ((ipr[AlphaISA::IPR_EXC_ADDR] & 1) == 0)
+    if ((this->regFile.miscRegs.readReg(AlphaISA::IPR_EXC_ADDR) & 1) == 0)
 //        AlphaISA::swap_palshadow(&regs, false);
 
     this->checkInterrupts = true;
@@ -337,22 +314,23 @@ AlphaFullCPU<Impl>::trap(Fault fault)
     if (fault->isA<ArithmeticFault>())
         panic("Arithmetic traps are unimplemented!");
 
-    AlphaISA::InternalProcReg *ipr = getIpr();
-
     // exception restart address - Get the commit PC
     if (!fault->isA<InterruptFault>() || !inPalMode(PC))
-        ipr[AlphaISA::IPR_EXC_ADDR] = PC;
+        this->regFile.miscRegs.setReg(AlphaISA::IPR_EXC_ADDR, PC);
 
     if (fault->isA<PalFault>() || fault->isA<ArithmeticFault>() /* ||
         fault == InterruptFault && !PC_PAL(regs.pc) */) {
         // traps...  skip faulting instruction
-        ipr[AlphaISA::IPR_EXC_ADDR] += 4;
+        AlphaISA::MiscReg ipr_exc_addr =
+            this->regFile.miscRegs.readReg(AlphaISA::IPR_EXC_ADDR);
+        this->regFile.miscRegs.setReg(AlphaISA::IPR_EXC_ADDR,
+                                      ipr_exc_addr + 4);
     }
 
     if (!inPalMode(PC))
         swapPALShadow(true);
 
-    this->regFile.setPC( ipr[AlphaISA::IPR_PAL_BASE] +
+    this->regFile.setPC(this->regFile.miscRegs.readReg(AlphaISA::IPR_PAL_BASE) +
                          (dynamic_cast<AlphaFault *>(fault.get()))->vect());
     this->regFile.setNextPC(PC + sizeof(MachInst));
 }

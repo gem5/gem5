@@ -376,7 +376,7 @@ Device::read(MemReqPtr &req, uint8_t *data)
 Fault
 Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 {
-    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+    int cpu = (req->xc->readMiscReg(TheISA::IPR_PALtemp16) >> 8) & 0xff;
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
@@ -472,7 +472,7 @@ Device::write(MemReqPtr &req, const uint8_t *data)
 Fault
 Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 {
-    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+    int cpu = (req->xc->readMiscReg(TheISA::IPR_PALtemp16) >> 8) & 0xff;
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 

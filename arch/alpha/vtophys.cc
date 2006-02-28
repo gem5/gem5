@@ -82,7 +82,7 @@ Addr
 vtophys(ExecContext *xc, Addr addr)
 {
     AlphaISA::VAddr vaddr = addr;
-    Addr ptbr = xc->regs.ipr[AlphaISA::IPR_PALtemp20];
+    Addr ptbr = xc->readMiscReg(AlphaISA::IPR_PALtemp20);
     Addr paddr = 0;
     //@todo Andrew couldn't remember why he commented some of this code
     //so I put it back in. Perhaps something to do with gdb debugging?
