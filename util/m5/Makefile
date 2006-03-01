@@ -1,26 +1,50 @@
-AS=as
-CC=cc
-LD=cc
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CCFLAGS=-O2
-#LDFLAGS=-non_shared
+### If we are not compiling on an alpha, we must use cross tools ###    
+ifneq ($(shell uname -m), alpha)
+CROSS_COMPILE?=alpha-unknown-linux-gnu-
+endif
+CC=$(CROSS_COMPILE)gcc
+AS=$(CROSS_COMPILE)as
+LD=$(CROSS_COMPILE)ld
+
+CFLAGS=-O2 
+OBJS=m5.o m5op.o
 
 all: m5
 
-m5: m5op.o m5.o
-	$(LD) $(LDFLAGS) -o $@ $>
-	strip $@
+%.o: %.S
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%.o: %.c
+	$(CC)  $(CFLAGS) -o $@ -c $<
+
+m5: $(OBJS)
+	$(CC) -o $@ $(OBJS)
 
 clean:
-	@rm -f m5 *.o *.d *~ .#*
-
-.SUFFIXES:
-.SUFFIXES:.o .c .s
-
-# C Compilation
-.c.o:
-	$(CC) $(CCFLAGS) -o $@ -c $<
-
-# Assembly
-.s.o:
-	$(AS) $(ASFLAGS) -o $@ $<
+	rm -f *.o m5

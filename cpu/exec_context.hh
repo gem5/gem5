@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2001-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #include "config/full_system.hh"
 #include "mem/functional/functional.hh"
 #include "mem/mem_req.hh"
+#include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 #include "arch/isa_traits.hh"
@@ -132,6 +133,9 @@ class ExecContext
     // it belongs.  For full-system mode, this is the system CPU ID.
     int cpu_id;
 
+    Tick lastActivate;
+    Tick lastSuspend;
+
 #if FULL_SYSTEM
     FunctionalMemory *mem;
     AlphaITB *itb;
@@ -153,6 +157,22 @@ class ExecContext
     ProfileNode *profileNode;
     Addr profilePC;
     void dumpFuncProfile();
+
+    /** Event for timing out quiesce instruction */
+    struct EndQuiesceEvent : public Event
+    {
+        /** A pointer to the execution context that is quiesced */
+        ExecContext *xc;
+
+        EndQuiesceEvent(ExecContext *_xc);
+
+        /** Event process to occur at interrupt*/
+        virtual void process();
+
+        /** Event description */
+        virtual const char *description();
+    };
+    EndQuiesceEvent quiesceEvent;
 
 #else
     Process *process;

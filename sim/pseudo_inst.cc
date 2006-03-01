@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,6 +75,42 @@ namespace AlphaPseudo
 
         xc->suspend();
         xc->kernelStats->quiesce();
+    }
+
+    void
+    quiesceNs(ExecContext *xc, uint64_t ns)
+    {
+        if (!doQuiesce || ns == 0)
+            return;
+
+        if (xc->quiesceEvent.scheduled())
+            xc->quiesceEvent.reschedule(curTick + Clock::Int::ns * ns);
+        else
+            xc->quiesceEvent.schedule(curTick + Clock::Int::ns * ns);
+
+        xc->suspend();
+        xc->kernelStats->quiesce();
+    }
+
+    void
+    quiesceCycles(ExecContext *xc, uint64_t cycles)
+    {
+        if (!doQuiesce || cycles == 0)
+            return;
+
+        if (xc->quiesceEvent.scheduled())
+            xc->quiesceEvent.reschedule(curTick + xc->cpu->cycles(cycles));
+        else
+            xc->quiesceEvent.schedule(curTick + xc->cpu->cycles(cycles));
+
+        xc->suspend();
+        xc->kernelStats->quiesce();
+    }
+
+    uint64_t
+    quiesceTime(ExecContext *xc)
+    {
+        return (xc->lastActivate - xc->lastSuspend) / Clock::Int::ns ;
     }
 
     void
