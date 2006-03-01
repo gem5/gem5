@@ -53,7 +53,7 @@ class FaultBase : public RefCounted
     virtual FaultName name() = 0;
     virtual FaultStat & stat() = 0;
 #if FULL_SYSTEM
-    virtual void ev5_trap(ExecContext * xc) = 0;
+    virtual void invoke(ExecContext * xc) = 0;
 #endif
     template<typename T>
     bool isA() {return dynamic_cast<T *>(this);}

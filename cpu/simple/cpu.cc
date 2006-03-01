@@ -687,7 +687,7 @@ SimpleCPU::tick()
         if (ipl && ipl > xc->readMiscReg(IPR_IPLR)) {
             xc->setMiscReg(IPR_ISR, summary);
             xc->setMiscReg(IPR_INTID, ipl);
-            Fault(new InterruptFault)->ev5_trap(xc);
+            Fault(new InterruptFault)->invoke(xc);
 
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                     xc->readMiscReg(IPR_IPLR), ipl, summary);
@@ -811,7 +811,7 @@ SimpleCPU::tick()
 
     if (fault != NoFault) {
 #if FULL_SYSTEM
-        fault->ev5_trap(xc);
+        fault->invoke(xc);
 #else // !FULL_SYSTEM
         fatal("fault (%d) detected @ PC 0x%08p", fault, xc->regs.pc);
 #endif // FULL_SYSTEM

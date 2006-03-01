@@ -42,7 +42,7 @@ class AlphaFault : public virtual FaultBase
 {
   public:
 #if FULL_SYSTEM
-    void ev5_trap(ExecContext * xc);
+    void invoke(ExecContext * xc);
 #endif
     virtual FaultVect vect() = 0;
 };

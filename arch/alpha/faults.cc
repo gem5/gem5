@@ -99,7 +99,7 @@ FaultStat IntegerOverflowFault::_stat;
 
 #if FULL_SYSTEM
 
-void AlphaFault::ev5_trap(ExecContext * xc)
+void AlphaFault::invoke(ExecContext * xc)
 {
     DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
     xc->cpu->recordEvent(csprintf("Fault %s", name()));
