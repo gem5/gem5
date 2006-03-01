@@ -687,7 +687,7 @@ SimpleCPU::tick()
         if (ipl && ipl > xc->readMiscReg(IPR_IPLR)) {
             xc->setMiscReg(IPR_ISR, summary);
             xc->setMiscReg(IPR_INTID, ipl);
-            (new InterruptFault)->ev5_trap(xc);
+            Fault(new InterruptFault)->ev5_trap(xc);
 
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                     xc->readMiscReg(IPR_IPLR), ipl, summary);
