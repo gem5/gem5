@@ -69,7 +69,6 @@ class EtherDevBase(PciDevice):
 
     physmem = Param.PhysicalMemory(Parent.any, "Physical Memory")
 
-    hier = Param.HierParams(Parent.any, "Hierarchy global variables")
     payload_bus = Param.Bus(NULL, "The IO Bus to attach to for payload")
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")

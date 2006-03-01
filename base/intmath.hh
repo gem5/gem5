@@ -202,9 +202,9 @@ roundUp(T val, int align)
 
 template <class T>
 inline T
-roundDown(T val, T align)
+roundDown(T val, int align)
 {
-    T mask = align - 1;
+    T mask = (T)align - 1;
     return val & ~mask;
 }
 

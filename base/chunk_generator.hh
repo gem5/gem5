@@ -77,7 +77,7 @@ class ChunkGenerator
         : chunkSize(_chunkSize)
     {
         // chunkSize must be a power of two
-        assert(isPowerOf2(chunkSize));
+        assert(chunkSize == 0 || isPowerOf2(chunkSize));
 
         // set up initial chunk.
         curAddr = startAddr;

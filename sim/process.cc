@@ -331,7 +331,8 @@ LiveProcess::startup()
     stack_min &= ~7;
     stack_size = stack_base - stack_min;
     // map memory
-    pTable->allocate(stack_min, stack_size);
+    pTable->allocate(roundDown(stack_min, VMPageSize),
+                     roundUp(stack_size, VMPageSize));
 
     // map out initial stack contents
     Addr argv_array_base = stack_min + sizeof(uint64_t); // room for argc
@@ -395,8 +396,6 @@ LiveProcess::create(const string &nm, System *system,
     } else {
         fatal("Unknown object file architecture.");
     }
-
-    delete objFile;
 
     if (process == NULL)
         fatal("Unknown error creating process object.");

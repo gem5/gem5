@@ -9,7 +9,7 @@ class BaseCPU(SimObject):
         system = Param.System(Parent.any, "system object")
         cpu_id = Param.Int(-1, "CPU identifier")
     else:
-        mem = Param.Memory("memory")
+        mem = Param.Memory(Parent.any, "memory")
         workload = VectorParam.Process("processes to run")
 
     max_insts_all_threads = Param.Counter(0,

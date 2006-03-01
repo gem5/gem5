@@ -167,8 +167,10 @@ PhysicalMemory::doFunctionalAccess(Packet &pkt)
     switch (pkt.cmd) {
       case Read:
         memcpy(pkt.data, pmem_addr + pkt.addr - base_addr, pkt.size);
+        break;
       case Write:
         memcpy(pmem_addr + pkt.addr - base_addr, pkt.data, pkt.size);
+        break;
       default:
         panic("unimplemented");
     }
