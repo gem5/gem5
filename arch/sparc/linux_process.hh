@@ -26,18 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ALPHA_LINUX_PROCESS_HH__
-#define __ALPHA_LINUX_PROCESS_HH__
+#ifndef __SPARC_LINUX_PROCESS_HH__
+#define __SPARC_LINUX_PROCESS_HH__
 
 #include "sim/process.hh"
 
 
-/// A process with emulated Alpha/Linux syscalls.
-class AlphaLinuxProcess : public LiveProcess
+/// A process with emulated SPARC/Linux syscalls.
+class SparcLinuxProcess : public LiveProcess
 {
   public:
     /// Constructor.
-    AlphaLinuxProcess(const std::string &name,
+    SparcLinuxProcess(const std::string &name,
                       ObjectFile *objFile,
                       int stdin_fd, int stdout_fd, int stderr_fd,
                       std::vector<std::string> &argv,
