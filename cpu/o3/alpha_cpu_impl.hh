@@ -302,7 +302,7 @@ template <class Impl>
 void
 AlphaFullCPU<Impl>::trap(Fault fault)
 {
-    // Keep in mind that a trap may be initiated by fetch if there's a TLB
+/*    // Keep in mind that a trap may be initiated by fetch if there's a TLB
     // miss
     uint64_t PC = this->commit.readCommitPC();
 
@@ -318,8 +318,9 @@ AlphaFullCPU<Impl>::trap(Fault fault)
     if (!fault->isA<InterruptFault>() || !inPalMode(PC))
         this->regFile.miscRegs.setReg(AlphaISA::IPR_EXC_ADDR, PC);
 
-    if (fault->isA<PalFault>() || fault->isA<ArithmeticFault>() /* ||
-        fault == InterruptFault && !PC_PAL(regs.pc) */) {
+    if (fault->isA<PalFault>() || fault->isA<ArithmeticFault>())
+    //    || fault == InterruptFault && !PC_PAL(regs.pc)
+        {
         // traps...  skip faulting instruction
         AlphaISA::MiscReg ipr_exc_addr =
             this->regFile.miscRegs.readReg(AlphaISA::IPR_EXC_ADDR);
@@ -332,7 +333,7 @@ AlphaFullCPU<Impl>::trap(Fault fault)
 
     this->regFile.setPC(this->regFile.miscRegs.readReg(AlphaISA::IPR_PAL_BASE) +
                          (dynamic_cast<AlphaFault *>(fault.get()))->vect());
-    this->regFile.setNextPC(PC + sizeof(MachInst));
+    this->regFile.setNextPC(PC + sizeof(MachInst));*/
 }
 
 template <class Impl>

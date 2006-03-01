@@ -55,9 +55,6 @@ class AlphaMachineCheckFault :
     static FaultVect _vect;
     static FaultStat _stat;
   public:
-#if FULL_SYSTEM
-    void ev5_trap(ExecContext * xc);
-#endif
     FaultVect vect() {return _vect;}
     FaultStat & stat() {return _stat;}
 };
@@ -70,9 +67,6 @@ class AlphaAlignmentFault :
     static FaultVect _vect;
     static FaultStat _stat;
   public:
-#if FULL_SYSTEM
-    void ev5_trap(ExecContext * xc);
-#endif
     FaultVect vect() {return _vect;}
     FaultStat & stat() {return _stat;}
 };

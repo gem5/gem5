@@ -28,6 +28,9 @@
 
 #include "arch/alpha/faults.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/base.hh"
+#include "base/trace.hh"
+#include "kern/kernel_stats.hh"
 
 namespace AlphaISA
 {
@@ -98,17 +101,30 @@ FaultStat IntegerOverflowFault::_stat;
 
 void AlphaFault::ev5_trap(ExecContext * xc)
 {
-    xc->ev5_temp_trap(this);
-}
+    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
+    xc->cpu->recordEvent(csprintf("Fault %s", name()));
 
-void AlphaMachineCheckFault::ev5_trap(ExecContext * xc)
-{
-    xc->ev5_temp_trap(this);
-}
+    assert(!xc->misspeculating());
+    xc->kernelStats->fault(this);
 
-void AlphaAlignmentFault::ev5_trap(ExecContext * xc)
-{
-    xc->ev5_temp_trap(this);
+    if (isA<ArithmeticFault>())
+        panic("Arithmetic traps are unimplemented!");
+
+    // exception restart address
+    if (!isA<InterruptFault>() || !xc->inPalMode())
+        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->regs.pc);
+
+    if (isA<PalFault>() || isA<ArithmeticFault>()) {
+        // traps...  skip faulting instruction.
+        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
+                   xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+    }
+
+    if (!xc->inPalMode())
+        AlphaISA::swap_palshadow(&(xc->regs), true);
+
+    xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
+    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
 }
 
 #endif
