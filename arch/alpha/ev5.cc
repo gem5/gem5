@@ -166,7 +166,7 @@ AlphaISA::zeroRegisters(CPU *cpu)
 void
 AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
 {
-    bool use_pc = (fault == NoFault);
+/*    bool use_pc = (fault == NoFault);
 
     if (fault->isA<ArithmeticFault>())
         panic("arithmetic faults NYI...");
@@ -186,7 +186,7 @@ AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
             (dynamic_cast<AlphaFault *>(fault.get()))->vect();
     else
         regs->npc = regs->miscRegs.readReg(IPR_PAL_BASE) + pc;
-
+*/
     // that's it! (orders of magnitude less painful than x86)
 }
 

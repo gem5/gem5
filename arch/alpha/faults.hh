@@ -40,6 +40,9 @@ typedef const Addr FaultVect;
 
 class AlphaFault : public virtual FaultBase
 {
+  protected:
+    virtual bool skipFaultingInstruction() {return false;}
+    virtual bool setRestartAddress() {return true;}
   public:
 #if FULL_SYSTEM
     void invoke(ExecContext * xc);
@@ -95,6 +98,8 @@ class ResetFault : public AlphaFault
 
 class ArithmeticFault : public AlphaFault
 {
+  protected:
+    bool skipFaultingInstruction() {return true;}
   private:
     static FaultName _name;
     static FaultVect _vect;
@@ -103,10 +108,13 @@ class ArithmeticFault : public AlphaFault
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & stat() {return _stat;}
+    void invoke(ExecContext * xc);
 };
 
 class InterruptFault : public AlphaFault
 {
+  protected:
+    bool setRestartAddress() {return false;}
   private:
     static FaultName _name;
     static FaultVect _vect;
@@ -227,6 +235,8 @@ class FloatEnableFault : public AlphaFault
 
 class PalFault : public AlphaFault
 {
+  protected:
+    bool skipFaultingInstruction() {return true;}
   private:
     static FaultName _name;
     static FaultVect _vect;

@@ -54,9 +54,11 @@ class FaultBase : public RefCounted
     virtual FaultStat & stat() = 0;
 #if FULL_SYSTEM
     virtual void invoke(ExecContext * xc) = 0;
+#else
+    virtual void invoke(ExecContext * xc);
 #endif
-    template<typename T>
-    bool isA() {return dynamic_cast<T *>(this);}
+//    template<typename T>
+//    bool isA() {return dynamic_cast<T *>(this);}
     virtual bool isMachineCheckFault() {return false;}
     virtual bool isAlignmentFault() {return false;}
 };

@@ -517,7 +517,7 @@ class OoOCPU : public BaseCPU
     int readIntrFlag() { return xc->readIntrFlag(); }
     void setIntrFlag(int val) { xc->setIntrFlag(val); }
     bool inPalMode() { return xc->inPalMode(); }
-    void ev5_trap(Fault fault) { xc->ev5_trap(fault); }
+    void trap(Fault fault) { fault->invoke(xc); }
     bool simPalCheck(int palFunc) { return xc->simPalCheck(palFunc); }
 #else
     void syscall() { xc->syscall(); }
