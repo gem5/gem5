@@ -35,9 +35,6 @@ class ElfObject : public ObjectFile
 {
   protected:
 
-    uint8_t *fileTextBits; //!< Pointer to file's text segment image
-    uint8_t *fileDataBits; //!< Pointer to file's data segment image
-
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding);
 
@@ -48,7 +45,6 @@ class ElfObject : public ObjectFile
   public:
     virtual ~ElfObject() {}
 
-    virtual bool loadSections(TranslatingPort *memPort, bool loadPhys = false);
     virtual bool loadGlobalSymbols(SymbolTable *symtab);
     virtual bool loadLocalSymbols(SymbolTable *symtab);
 

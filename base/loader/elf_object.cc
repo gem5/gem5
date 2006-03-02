@@ -43,7 +43,6 @@
 
 #include "base/loader/elf_object.hh"
 
-#include "mem/translating_port.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -131,20 +130,19 @@ ElfObject::ElfObject(const string &_filename, int _fd,
         if (text.size == 0) {  // haven't seen text segment yet
             text.baseAddr = phdr.p_vaddr;
             text.size = phdr.p_filesz;
-            // remember where the data is for loadSections()
-            fileTextBits = fileData + phdr.p_offset;
+            text.fileImage = fileData + phdr.p_offset;
             // if there's any padding at the end that's not in the
             // file, call it the bss.  This happens in the "text"
             // segment if there's only one loadable segment (as for
             // kernel images).
             bss.size = phdr.p_memsz - phdr.p_filesz;
             bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
+            bss.fileImage = NULL;
         }
         else if (data.size == 0) { // have text, this must be data
             data.baseAddr = phdr.p_vaddr;
             data.size = phdr.p_filesz;
-            // remember where the data is for loadSections()
-            fileDataBits = fileData + phdr.p_offset;
+            data.fileImage = fileData + phdr.p_offset;
             // if there's any padding at the end that's not in the
             // file, call it the bss.  Warn if this happens for both
             // the text & data segments (should only have one bss).
@@ -153,6 +151,7 @@ ElfObject::ElfObject(const string &_filename, int _fd,
             }
             bss.size = phdr.p_memsz - phdr.p_filesz;
             bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
+            bss.fileImage = NULL;
         }
     }
 
@@ -166,28 +165,6 @@ ElfObject::ElfObject(const string &_filename, int _fd,
     elf_end(elf);
 
     // We will actually read the sections when we need to load them
-}
-
-
-bool
-ElfObject::loadSections(TranslatingPort *memPort, bool loadPhys)
-{
-    Addr textAddr = text.baseAddr;
-    Addr dataAddr = data.baseAddr;
-
-    if (loadPhys) {
-        textAddr &= (ULL(1) << 40) - 1;
-        dataAddr &= (ULL(1) << 40) - 1;
-    }
-
-    // Since we don't really have an MMU and all memory is
-    // zero-filled, there's no need to set up the BSS segment.
-    if (text.size != 0)
-        memPort->writeBlobFunctional(textAddr, fileTextBits, text.size, true);
-    if (data.size != 0)
-        memPort->writeBlobFunctional(dataAddr, fileDataBits, data.size, true);
-
-    return true;
 }
 
 

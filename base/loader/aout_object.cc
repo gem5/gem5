@@ -30,7 +30,6 @@
 
 #include "base/loader/aout_object.hh"
 
-#include "mem/translating_port.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF
@@ -64,40 +63,19 @@ AoutObject::AoutObject(const string &_filename, int _fd,
 
     text.baseAddr = N_TXTADDR(*execHdr);
     text.size = execHdr->tsize;
+    text.fileImage = fileData + N_TXTOFF(*execHdr);
 
     data.baseAddr = N_DATADDR(*execHdr);
     data.size = execHdr->dsize;
+    data.fileImage = fileData + N_DATOFF(*execHdr);
 
     bss.baseAddr = N_BSSADDR(*execHdr);
     bss.size = execHdr->bsize;
+    bss.fileImage = NULL;
 
     DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
              text.baseAddr, text.size, data.baseAddr, data.size,
              bss.baseAddr, bss.size);
-}
-
-
-bool
-AoutObject::loadSections(TranslatingPort *memPort, bool loadPhys)
-{
-    Addr textAddr = text.baseAddr;
-    Addr dataAddr = data.baseAddr;
-
-    if (loadPhys) {
-        textAddr &= (ULL(1) << 40) - 1;
-        dataAddr &= (ULL(1) << 40) - 1;
-    }
-
-    // Since we don't really have an MMU and all memory is
-    // zero-filled, there's no need to set up the BSS segment.
-    if (text.size != 0)
-        memPort->writeBlobFunctional(textAddr, fileData + N_TXTOFF(*execHdr),
-                                     text.size, true);
-    if (data.size != 0)
-        memPort->writeBlobFunctional(dataAddr, fileData + N_DATOFF(*execHdr),
-                                     data.size, true);
-
-    return true;
 }
 
 

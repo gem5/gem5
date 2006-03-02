@@ -83,23 +83,31 @@ TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
     return No_Fault;
 }
 
-/*
+
 Fault
-TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size)
+TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size,
+                                      bool alloc)
 {
     Addr paddr;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
-       if (!pTable->translate(gen.addr(),paddr))
-           return Machine_Check_Fault;
+        if (!pTable->translate(gen.addr(), paddr)) {
+            if (alloc) {
+                pTable->allocate(roundDown(gen.addr(), VMPageSize),
+                                 VMPageSize);
+                pTable->translate(gen.addr(), paddr);
+            } else {
+                return Machine_Check_Fault;
+            }
+        }
 
-       port->memsetBlobFunctional(paddr, val, gen.size());
+        port->memsetBlobFunctional(paddr, val, gen.size());
     }
 
     return No_Fault;
 }
-*/
+
 
 Fault
 TranslatingPort::writeStringFunctional(Addr addr, const char *str)

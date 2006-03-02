@@ -64,6 +64,16 @@ namespace Trace {
     class InstRecord;
 }
 
+
+// Set exactly one of these symbols to 1 to set the memory access
+// model.  Probably should make these template parameters, or even
+// just fork the CPU models.
+//
+#define SIMPLE_CPU_MEM_TIMING    0
+#define SIMPLE_CPU_MEM_ATOMIC    0
+#define SIMPLE_CPU_MEM_IMMEDIATE 1
+
+
 class SimpleCPU : public BaseCPU
 {
     class CpuPort : public Port
@@ -188,8 +198,16 @@ class SimpleCPU : public BaseCPU
     // current instruction
     MachInst inst;
 
-    CpuRequest *req;
-    Packet *pkt;
+#if SIMPLE_CPU_MEM_TIMING
+    Packet *retry_pkt;
+#elif SIMPLE_CPU_MEM_ATOMIC || SIMPLE_CPU_MEM_IMMEDIATE
+    CpuRequest *ifetch_req;
+    Packet     *ifetch_pkt;
+    CpuRequest *data_read_req;
+    Packet     *data_read_pkt;
+    CpuRequest *data_write_req;
+    Packet     *data_write_pkt;
+#endif
 
     // Pointer to the sampler that is telling us to switchover.
     // Used to signal the completion of the pipe drain and schedule
@@ -246,8 +264,8 @@ class SimpleCPU : public BaseCPU
     Stats::Scalar<> dcacheRetryCycles;
     Counter lastDcacheRetry;
 
-    void sendIcacheRequest();
-    void sendDcacheRequest();
+    void sendIcacheRequest(Packet *pkt);
+    void sendDcacheRequest(Packet *pkt);
     void processResponse(Packet &response);
 
     Packet * processRetry();

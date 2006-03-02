@@ -51,7 +51,8 @@ class TranslatingPort
     Fault readBlobFunctional(Addr addr, uint8_t *p, int size);
     Fault writeBlobFunctional(Addr addr, uint8_t *p, int size,
                               bool alloc = false);
-    //   Fault memsetBlobFunctional(Addr addr, uint8_t val, int size);
+    Fault memsetBlobFunctional(Addr addr, uint8_t val, int size,
+                               bool alloc = false);
     Fault writeStringFunctional(Addr addr, const char *str);
     Fault readStringFunctional(std::string &str, Addr addr);
 

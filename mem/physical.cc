@@ -174,6 +174,8 @@ PhysicalMemory::doFunctionalAccess(Packet &pkt)
       default:
         panic("unimplemented");
     }
+
+    pkt.result = Success;
 }
 
 Port *

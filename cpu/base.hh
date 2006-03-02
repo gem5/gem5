@@ -155,14 +155,6 @@ class BaseCPU : public SimObject
     int number_of_threads;
 
     /**
-     * A pointer to the port into the memory system to be used by syscall
-     * emulation.  This way the data being accessed via syscalls looks in
-     * the memory heirachy for any changes that haven't been written back
-     * to main memory yet.
-     */
-    Port* memPort;
-
-    /**
      * Vector of per-thread instruction-based event queues.  Used for
      * scheduling events based on number of instructions committed by
      * a particular thread.

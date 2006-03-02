@@ -37,13 +37,13 @@
 #include "base/output.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/translating_port.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 #include "targetarch/stacktrace.hh"
 #else
 #include "sim/process.hh"
+#include "mem/translating_port.hh"
 #endif
 
 using namespace std;
@@ -78,14 +78,14 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid)
+                         Process *_process, int _asid, Port *mem_port)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
       process(_process),
       asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
-    port = new TranslatingPort(cpu->memPort, process->pTable);
+    port = new TranslatingPort(mem_port, process->pTable);
     memset(&regs, 0, sizeof(RegFile));
 }
 #endif

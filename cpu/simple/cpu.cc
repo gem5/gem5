@@ -132,16 +132,6 @@ SimpleCPU::SimpleCPU(Params *p)
       dcachePort(this), tickEvent(this, p->width), xc(NULL)
 {
     _status = Idle;
-#if FULL_SYSTEM
-    xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
-
-    // initialize CPU, including PC
-    TheISA::initCPU(&xc->regs);
-#else
-    xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0);
-#endif // !FULL_SYSTEM
-
-    memPort = &dcachePort;
 
     //Create Memory Ports (conect them up)
     p->mem->addPort("DCACHE");
@@ -152,11 +142,39 @@ SimpleCPU::SimpleCPU(Params *p)
     icachePort.setPeer(p->mem->getPort("ICACHE"));
     (p->mem->getPort("ICACHE"))->setPeer(&icachePort);
 
+#if FULL_SYSTEM
+    xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
 
+    // initialize CPU, including PC
+    TheISA::initCPU(&xc->regs);
+#else
+    xc = new ExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0,
+                         &dcachePort);
+#endif // !FULL_SYSTEM
 
-    req = new CpuRequest;
+#if SIMPLE_CPU_MEM_ATOMIC || SIMPLE_CPU_MEM_IMMEDIATE
+    ifetch_req = new CpuRequest;
+    ifetch_req->asid = 0;
+    ifetch_req->size = sizeof(MachInst);
+    ifetch_pkt = new Packet;
+    ifetch_pkt->cmd = Read;
+    ifetch_pkt->data = (uint8_t *)&inst;
+    ifetch_pkt->req = ifetch_req;
+    ifetch_pkt->size = sizeof(MachInst);
 
-    req->asid = 0;
+    data_read_req = new CpuRequest;
+    data_read_req->asid = 0;
+    data_read_pkt = new Packet;
+    data_read_pkt->cmd = Read;
+    data_read_pkt->data = new uint8_t[8];
+    data_read_pkt->req = data_read_req;
+
+    data_write_req = new CpuRequest;
+    data_write_req->asid = 0;
+    data_write_pkt = new Packet;
+    data_write_pkt->cmd = Write;
+    data_write_pkt->req = data_write_req;
+#endif
 
     numInst = 0;
     startNumInst = 0;
@@ -425,6 +443,7 @@ SimpleCPU::copy(Addr dest)
     }
     return fault;
 #else
+    panic("copy not implemented");
     return No_Fault;
 #endif
 }
@@ -437,8 +456,8 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     if (status() == DcacheWaitResponse || status() == DcacheWaitSwitch) {
 //	Fault fault = xc->read(memReq,data);
         // Not sure what to check for no fault...
-        if (pkt->result == Success) {
-            memcpy(&data, pkt->data, sizeof(T));
+        if (data_read_pkt->result == Success) {
+            memcpy(&data, data_read_pkt->data, sizeof(T));
         }
 
         if (traceData) {
@@ -451,19 +470,45 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 
 //    memReq->reset(addr, sizeof(T), flags);
 
+#if SIMPLE_CPU_MEM_TIMING
+    CpuRequest *data_read_req = new CpuRequest;
+#endif
+
+    data_read_req->vaddr = addr;
+    data_read_req->size = sizeof(T);
+    data_read_req->flags = flags;
+    data_read_req->time = curTick;
+
     // translate to physical address
-    // NEED NEW TRANSLATION HERE
-    Fault fault = xc->translateDataReadReq(req);
+    Fault fault = xc->translateDataReadReq(data_read_req);
 
     // Now do the access.
     if (fault == No_Fault) {
-        pkt = new Packet;
-        pkt->cmd = Read;
-        req->paddr = addr;
-        pkt->size = sizeof(T);
-        pkt->req = req;
+#if SIMPLE_CPU_MEM_TIMING
+        data_read_pkt = new Packet;
+        data_read_pkt->cmd = Read;
+        data_read_pkt->req = data_read_req;
+        data_read_pkt->data = new uint8_t[8];
+#endif
+        data_read_pkt->addr = data_read_req->paddr;
+        data_read_pkt->size = sizeof(T);
 
-        sendDcacheRequest();
+        sendDcacheRequest(data_read_pkt);
+
+#if SIMPLE_CPU_MEM_IMMEDIATE
+        // Need to find a way to not duplicate code above.
+
+        if (data_read_pkt->result == Success) {
+            memcpy(&data, data_read_pkt->data, sizeof(T));
+        }
+
+        if (traceData) {
+            traceData->setAddr(addr);
+        }
+
+        // @todo: Figure out a way to create a Fault from the packet result.
+        return No_Fault;
+#endif
     }
 /*
         memReq->cmd = Read;
@@ -493,7 +538,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     }
 */
     // This will need a new way to tell if it has a dcache attached.
-    if (/*!dcacheInterface && */(req->flags & UNCACHEABLE))
+    if (data_read_req->flags & UNCACHEABLE)
         recordEvent("Uncached Read");
 
     return fault;
@@ -546,27 +591,29 @@ template <class T>
 Fault
 SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-//    memReq->reset(addr, sizeof(T), flags);
-    req->vaddr = addr;
-    req->time = curTick;
-    req->size = sizeof(T);
+    data_write_req->vaddr = addr;
+    data_write_req->time = curTick;
+    data_write_req->size = sizeof(T);
+    data_write_req->flags = flags;
 
     // translate to physical address
-    // NEED NEW TRANSLATION HERE
-    Fault fault = xc->translateDataWriteReq(req);
+    Fault fault = xc->translateDataWriteReq(data_write_req);
 
     // Now do the access.
     if (fault == No_Fault) {
-        pkt = new Packet;
-        pkt->cmd = Write;
-        pkt->size = sizeof(T);
-        pkt->req = req;
+#if SIMPLE_CPU_MEM_TIMING
+        data_write_pkt = new Packet;
+        data_write_pkt->cmd = Write;
+        data_write_pkt->req = data_write_req;
+        data_write_pkt->data = new uint8_t[64];
+        memcpy(data_write_pkt->data, &data, sizeof(T));
+#else
+        data_write_pkt->data = (uint8_t *)&data;
+#endif
+        data_write_pkt->addr = data_write_req->paddr;
+        data_write_pkt->size = sizeof(T);
 
-        // Copy data into the packet.
-        pkt->data = new uint8_t[64];
-        memcpy(pkt->data, &data, sizeof(T));
-
-        sendDcacheRequest();
+        sendDcacheRequest(data_write_pkt);
     }
 
 /*
@@ -594,10 +641,10 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     }
 */
     if (res && (fault == No_Fault))
-        *res = pkt->result;
+        *res = data_write_pkt->result;
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (/*!dcacheInterface && */(req->flags & UNCACHEABLE))
+    if (data_write_req->flags & UNCACHEABLE)
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
@@ -657,9 +704,11 @@ SimpleCPU::dbg_vtophys(Addr addr)
 #endif // FULL_SYSTEM
 
 void
-SimpleCPU::sendIcacheRequest()
+SimpleCPU::sendIcacheRequest(Packet *pkt)
 {
-#if 0
+    assert(!tickEvent.scheduled());
+#if SIMPLE_CPU_MEM_TIMING
+    retry_pkt = pkt;
     bool success = icachePort.sendTiming(*pkt);
 
     unscheduleTickEvent();
@@ -673,7 +722,7 @@ SimpleCPU::sendIcacheRequest()
         // Need to wait for cache to respond
         _status = IcacheWaitResponse;
     }
-#else
+#elif SIMPLE_CPU_MEM_ATOMIC
     Tick latency = icachePort.sendAtomic(*pkt);
 
     unscheduleTickEvent();
@@ -685,17 +734,21 @@ SimpleCPU::sendIcacheRequest()
     icacheStallCycles += latency;
 
     _status = IcacheAccessComplete;
-
-    delete pkt;
+#elif SIMPLE_CPU_MEM_IMMEDIATE
+    icachePort.sendAtomic(*pkt);
+#else
+#error "SimpleCPU has no mem model set"
 #endif
 }
 
 void
-SimpleCPU::sendDcacheRequest()
+SimpleCPU::sendDcacheRequest(Packet *pkt)
 {
+    assert(!tickEvent.scheduled());
+#if SIMPLE_CPU_MEM_TIMING
     unscheduleTickEvent();
 
-#if 0
+    retry_pkt = pkt;
     bool success = dcachePort.sendTiming(*pkt);
 
     lastDcacheStall = curTick;
@@ -705,7 +758,9 @@ SimpleCPU::sendDcacheRequest()
     } else {
         _status = DcacheWaitResponse;
     }
-#else
+#elif SIMPLE_CPU_MEM_ATOMIC
+    unscheduleTickEvent();
+
     Tick latency = dcachePort.sendAtomic(*pkt);
 
     scheduleTickEvent(latency);
@@ -714,19 +769,22 @@ SimpleCPU::sendDcacheRequest()
     // we check the status of the packet sent (is this valid?),
     // we won't know if the latency is a hit or a miss.
     dcacheStallCycles += latency;
-
-    // Delete the packet right here?
-    delete pkt;
+#elif SIMPLE_CPU_MEM_IMMEDIATE
+    dcachePort.sendAtomic(*pkt);
+#else
+#error "SimpleCPU has no mem model set"
 #endif
 }
 
 void
 SimpleCPU::processResponse(Packet &response)
 {
+    assert(SIMPLE_CPU_MEM_TIMING);
+
     // For what things is the CPU the consumer of the packet it sent
     // out?  This may create a memory leak if that's the case and it's
     // expected of the SimpleCPU to delete its own packet.
-    pkt = &response;
+    Packet *pkt = &response;
 
     switch (status()) {
       case IcacheWaitResponse:
@@ -780,19 +838,23 @@ SimpleCPU::processResponse(Packet &response)
 Packet *
 SimpleCPU::processRetry()
 {
+#if SIMPLE_CPU_MEM_TIMING
     switch(status()) {
       case IcacheRetry:
         icacheRetryCycles += curTick - lastIcacheStall;
-        return pkt;
+        return retry_pkt;
         break;
       case DcacheRetry:
         dcacheRetryCycles += curTick - lastDcacheStall;
-        return pkt;
+        return retry_pkt;
         break;
       default:
         panic("SimpleCPU::processRetry: bad state");
         break;
     }
+#else
+    panic("shouldn't be here");
+#endif
 }
 
 #if FULL_SYSTEM
@@ -884,28 +946,35 @@ SimpleCPU::tick()
 #define IFETCH_FLAGS(pc)	0
 #endif
 
-        req->vaddr = xc->regs.pc & ~3;
-        req->time = curTick;
-        req->size = sizeof(MachInst);
+#if SIMPLE_CPU_MEM_TIMING
+        CpuRequest *ifetch_req = new CpuRequest();
+        ifetch_req->size = sizeof(MachInst);
+#endif
+
+        ifetch_req->vaddr = xc->regs.pc & ~3;
+        ifetch_req->time = curTick;
 
 /*	memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
                      IFETCH_FLAGS(xc->regs.pc));
 */
 
-        fault = xc->translateInstReq(req);
+        fault = xc->translateInstReq(ifetch_req);
 
         if (fault == No_Fault) {
-            pkt = new Packet;
-            pkt->cmd = Read;
-            pkt->addr = req->paddr;
-            pkt->size = sizeof(MachInst);
-            pkt->req = req;
-            pkt->data = (uint8_t *)&inst;
+#if SIMPLE_CPU_MEM_TIMING
+            Packet *ifetch_pkt = new Packet;
+            ifetch_pkt->cmd = Read;
+            ifetch_pkt->data = (uint8_t *)&inst;
+            ifetch_pkt->req = ifetch_req;
+            ifetch_pkt->size = sizeof(MachInst);
+#endif
+            ifetch_pkt->addr = ifetch_req->paddr;
 
-            sendIcacheRequest();
+            sendIcacheRequest(ifetch_pkt);
+#if SIMPLE_CPU_MEM_TIMING || SIMPLE_CPU_MEM_ATOMIC
             return;
-/*	    fault = xc->mem->read(memReq, inst);
-
+#endif
+/*
         if (icacheInterface && fault == No_Fault) {
             memReq->completionEvent = NULL;
 
@@ -980,8 +1049,7 @@ SimpleCPU::tick()
 
         // If we have a dcache miss, then we can't finialize the instruction
         // trace yet because we want to populate it with the data later
-        if (traceData &&
-                !(status() == DcacheWaitResponse && pkt->cmd == Read)) {
+        if (traceData && (status() != DcacheWaitResponse)) {
             traceData->finalize();
         }
 

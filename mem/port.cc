@@ -63,3 +63,12 @@ Port::readBlobFunctional(Addr addr, uint8_t *p, int size)
     blobHelper(addr, p, size, Read);
 }
 
+void
+Port::memsetBlobFunctional(Addr addr, uint8_t val, int size)
+{
+    // quick and dirty...
+    uint8_t *buf = new uint8_t[size];
+
+    memset(buf, val, size);
+    blobHelper(addr, buf, size, Write);
+}

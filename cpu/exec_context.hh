@@ -35,7 +35,6 @@
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 #include "targetarch/byte_swap.hh"
-#include "mem/translating_port.hh"
 
 class BaseCPU;
 
@@ -52,6 +51,7 @@ namespace Kernel { class Binning; class Statistics; }
 #else // !FULL_SYSTEM
 
 #include "sim/process.hh"
+class TranslatingPort;
 
 #endif // FULL_SYSTEM
 
@@ -187,7 +187,7 @@ class ExecContext
                 AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
 #else
     ExecContext(BaseCPU *_cpu, int _thread_num,
-                Process *_process, int _asid);
+                Process *_process, int _asid, Port *mem_port);
 #endif
     virtual ~ExecContext();
 

@@ -67,7 +67,7 @@ class ObjectFile
 
     void close();
 
-    virtual bool loadSections(TranslatingPort *memPort, bool loadPhys = false) = 0;
+    virtual bool loadSections(TranslatingPort *memPort, bool loadPhys = false);
     virtual bool loadGlobalSymbols(SymbolTable *symtab) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab) = 0;
 
@@ -77,8 +77,9 @@ class ObjectFile
   protected:
 
     struct Section {
-        Addr baseAddr;
-        size_t size;
+        Addr     baseAddr;
+        uint8_t *fileImage;
+        size_t   size;
     };
 
     Addr entry;
@@ -87,6 +88,8 @@ class ObjectFile
     Section text;
     Section data;
     Section bss;
+
+    bool loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys);
 
   public:
     Addr entryPoint() const { return entry; }

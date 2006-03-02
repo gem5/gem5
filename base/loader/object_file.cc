@@ -43,6 +43,8 @@
 #include "base/loader/aout_object.hh"
 #include "base/loader/elf_object.hh"
 
+#include "mem/translating_port.hh"
+
 using namespace std;
 
 ObjectFile::ObjectFile(const string &_filename, int _fd,
@@ -57,6 +59,38 @@ ObjectFile::ObjectFile(const string &_filename, int _fd,
 ObjectFile::~ObjectFile()
 {
     close();
+}
+
+
+bool
+ObjectFile::loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys)
+{
+    if (sec->size != 0) {
+        Addr addr = sec->baseAddr;
+        if (loadPhys) {
+            // this is Alpha-specific... going to have to fix this
+            // for other architectures
+            addr &= (ULL(1) << 40) - 1;
+        }
+
+        if (sec->fileImage) {
+            memPort->writeBlobFunctional(addr, sec->fileImage, sec->size, true);
+        }
+        else {
+            // no image: must be bss
+            memPort->memsetBlobFunctional(addr, 0, sec->size, true);
+        }
+    }
+    return true;
+}
+
+
+bool
+ObjectFile::loadSections(TranslatingPort *memPort, bool loadPhys)
+{
+    return (loadSection(&text, memPort, loadPhys)
+            && loadSection(&data, memPort, loadPhys)
+            && loadSection(&bss, memPort, loadPhys));
 }
 
 
