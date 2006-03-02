@@ -29,9 +29,6 @@
 #include "sim/faults.hh"
 #include "cpu/exec_context.hh"
 
-FaultName MachineCheckFault::_name = "mchk";
-FaultName AlignmentFault::_name = "unalign";
-
 #if !FULL_SYSTEM
 void FaultBase::invoke(ExecContext * xc)
 {

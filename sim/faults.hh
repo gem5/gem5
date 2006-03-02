@@ -65,29 +65,4 @@ class FaultBase : public RefCounted
 
 FaultBase * const NoFault = 0;
 
-//The ISAs are each responsible for providing a genMachineCheckFault and a
-//genAlignmentFault functions, which return faults to use in the case of a
-//machine check fault or an alignment fault, respectively. Base classes which
-//provide the name() function, and the isMachineCheckFault and isAlignmentFault
-//functions are provided below.
-
-class MachineCheckFault : public virtual FaultBase
-{
-  private:
-    static FaultName _name;
-  public:
-    FaultName name() {return _name;}
-    bool isMachineCheckFault() {return true;}
-};
-
-class AlignmentFault : public virtual FaultBase
-{
-  private:
-    static FaultName _name;
-  public:
-    FaultName name() {return _name;}
-    bool isAlignmentFault() {return true;}
-};
-
-
 #endif // __FAULTS_HH__

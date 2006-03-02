@@ -35,11 +35,13 @@
 namespace AlphaISA
 {
 
-FaultVect AlphaMachineCheckFault::_vect = 0x0401;
-FaultStat AlphaMachineCheckFault::_stat;
+FaultName MachineCheckFault::_name = "mchk";
+FaultVect MachineCheckFault::_vect = 0x0401;
+FaultStat MachineCheckFault::_stat;
 
-FaultVect AlphaAlignmentFault::_vect = 0x0301;
-FaultStat AlphaAlignmentFault::_stat;
+FaultName AlignmentFault::_name = "unalign";
+FaultVect AlignmentFault::_vect = 0x0301;
+FaultStat AlignmentFault::_stat;
 
 FaultName ResetFault::_name = "reset";
 FaultVect ResetFault::_vect = 0x0001;
