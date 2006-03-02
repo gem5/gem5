@@ -659,7 +659,7 @@ SimpleCPU::dbg_vtophys(Addr addr)
 void
 SimpleCPU::sendIcacheRequest()
 {
-#if 1
+#if 0
     bool success = icachePort.sendTiming(*pkt);
 
     unscheduleTickEvent();
@@ -674,7 +674,7 @@ SimpleCPU::sendIcacheRequest()
         _status = IcacheWaitResponse;
     }
 #else
-    Tick latency = icachePort.sendAtomic(pkt);
+    Tick latency = icachePort.sendAtomic(*pkt);
 
     unscheduleTickEvent();
     scheduleTickEvent(latency);
@@ -695,7 +695,7 @@ SimpleCPU::sendDcacheRequest()
 {
     unscheduleTickEvent();
 
-#if 1
+#if 0
     bool success = dcachePort.sendTiming(*pkt);
 
     lastDcacheStall = curTick;
@@ -706,7 +706,7 @@ SimpleCPU::sendDcacheRequest()
         _status = DcacheWaitResponse;
     }
 #else
-    Tick latency = dcachePort.sendAtomic(pkt);
+    Tick latency = dcachePort.sendAtomic(*pkt);
 
     scheduleTickEvent(latency);
 
@@ -891,7 +891,7 @@ SimpleCPU::tick()
 /*	memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
                      IFETCH_FLAGS(xc->regs.pc));
 */
-//NEED NEW TRANSLATION HERE
+
         fault = xc->translateInstReq(req);
 
         if (fault == No_Fault) {
@@ -900,8 +900,10 @@ SimpleCPU::tick()
             pkt->addr = req->paddr;
             pkt->size = sizeof(MachInst);
             pkt->req = req;
+            pkt->data = (uint8_t *)&inst;
 
             sendIcacheRequest();
+            return;
 /*	    fault = xc->mem->read(memReq, inst);
 
         if (icacheInterface && fault == No_Fault) {

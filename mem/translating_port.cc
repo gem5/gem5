@@ -47,29 +47,37 @@ TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
-       if (!pTable->translate(gen.addr(),paddr))
-           return Machine_Check_Fault;
+        if (!pTable->translate(gen.addr(),paddr))
+            return Machine_Check_Fault;
 
-       port->readBlobFunctional(paddr, p + prevSize, gen.size());
-       prevSize += gen.size();
+        port->readBlobFunctional(paddr, p + prevSize, gen.size());
+        prevSize += gen.size();
     }
 
     return No_Fault;
 }
 
 Fault
-TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size)
+TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
+                                     bool alloc)
 {
     Addr paddr;
     int prevSize = 0;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
-       if (!pTable->translate(gen.addr(),paddr))
-           return Machine_Check_Fault;
+        if (!pTable->translate(gen.addr(), paddr)) {
+            if (alloc) {
+                pTable->allocate(roundDown(gen.addr(), VMPageSize),
+                                 VMPageSize);
+                pTable->translate(gen.addr(), paddr);
+            } else {
+                return Machine_Check_Fault;
+            }
+        }
 
-       port->writeBlobFunctional(paddr, p + prevSize, gen.size());
-       prevSize += gen.size();
+        port->writeBlobFunctional(paddr, p + prevSize, gen.size());
+        prevSize += gen.size();
     }
 
     return No_Fault;

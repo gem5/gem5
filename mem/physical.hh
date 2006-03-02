@@ -80,7 +80,7 @@ class PhysicalMemory : public Memory
 
     struct MemResponseEvent : public Event
     {
-        Packet pkt;
+        Packet &pkt;
         MemoryPort *memoryPort;
 
         MemResponseEvent(Packet &pkt, MemoryPort *memoryPort);

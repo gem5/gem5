@@ -183,9 +183,9 @@ ElfObject::loadSections(TranslatingPort *memPort, bool loadPhys)
     // Since we don't really have an MMU and all memory is
     // zero-filled, there's no need to set up the BSS segment.
     if (text.size != 0)
-        memPort->writeBlobFunctional(textAddr, fileTextBits, text.size);
+        memPort->writeBlobFunctional(textAddr, fileTextBits, text.size, true);
     if (data.size != 0)
-        memPort->writeBlobFunctional(dataAddr, fileDataBits, data.size);
+        memPort->writeBlobFunctional(dataAddr, fileDataBits, data.size, true);
 
     return true;
 }

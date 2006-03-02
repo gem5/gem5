@@ -94,8 +94,10 @@ EcoffObject::loadSections(TranslatingPort *memPort, bool loadPhys)
 
     // Since we don't really have an MMU and all memory is
     // zero-filled, there's no need to set up the BSS segment.
-    memPort->writeBlobFunctional(textAddr, fileData + ECOFF_TXTOFF(execHdr), text.size);
-    memPort->writeBlobFunctional(dataAddr, fileData + ECOFF_DATOFF(execHdr), data.size);
+    memPort->writeBlobFunctional(textAddr, fileData + ECOFF_TXTOFF(execHdr),
+                                 text.size, true);
+    memPort->writeBlobFunctional(dataAddr, fileData + ECOFF_DATOFF(execHdr),
+                                 data.size, true);
 
     return true;
 }
