@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <string>
 
+#include "arch/alpha/system.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
@@ -50,13 +51,12 @@
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
-#include "sim/system.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
 AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
-                           System *s, BaseCPU *c, Platform *p,
+                           AlphaSystem *s, BaseCPU *c, Platform *p,
                            MemoryController *mmu, Addr a,
                            HierParams *hier, Bus *pio_bus)
     : PioDevice(name, p), disk(d), console(cons), system(s), cpu(c), addr(a)
@@ -323,7 +323,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
     SimObjectParam<SimpleDisk *> disk;
     SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
-    SimObjectParam<System *> system;
+    SimObjectParam<AlphaSystem *> system;
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<Platform *> platform;
     SimObjectParam<Bus*> pio_bus;

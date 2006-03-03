@@ -41,7 +41,7 @@
 
 class BaseCPU;
 class SimConsole;
-class System;
+class AlphaSystem;
 class SimpleDisk;
 
 /**
@@ -90,7 +90,7 @@ class AlphaConsole : public PioDevice
     SimConsole *console;
 
     /** a pointer to the system we are running in */
-    System *system;
+    AlphaSystem *system;
 
     /** a pointer to the CPU boot cpu */
     BaseCPU *cpu;
@@ -101,7 +101,7 @@ class AlphaConsole : public PioDevice
   public:
     /** Standard Constructor */
     AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
-                 System *s, BaseCPU *c, Platform *platform,
+                 AlphaSystem *s, BaseCPU *c, Platform *platform,
                  MemoryController *mmu, Addr addr,
                  HierParams *hier, Bus *pio_bus);
 

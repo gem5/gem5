@@ -42,7 +42,7 @@
 using namespace std;
 
 Tru64System::Tru64System(Tru64System::Params *p)
-    : System(p)
+    : AlphaSystem(p)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("enable_async_printf", addr)) {
@@ -136,7 +136,7 @@ END_INIT_SIM_OBJECT_PARAMS(Tru64System)
 
 CREATE_SIM_OBJECT(Tru64System)
 {
-    System::Params *p = new System::Params;
+    AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->memctrl = memctrl;

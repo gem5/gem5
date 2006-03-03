@@ -29,8 +29,9 @@
 #ifndef __KERN_TRU64_TRU64_SYSTEM_HH__
 #define __KERN_TRU64_TRU64_SYSTEM_HH__
 
-#include "sim/system.hh"
+#include "arch/alpha/system.hh"
 #include "arch/isa_traits.hh"
+#include "sim/system.hh"
 
 class ExecContext;
 
@@ -42,7 +43,7 @@ class DebugPrintfEvent;
 class DumpMbufEvent;
 class AlphaArguments;
 
-class Tru64System : public System
+class Tru64System : public AlphaSystem
 {
   private:
 #ifdef DEBUG

@@ -47,7 +47,7 @@ Statistics::Statistics(ExecContext *context)
     : xc(context), idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
       iplLast(0), iplLastTick(0)
 {
-    bin_int = xc->system->params->bin_int;
+    bin_int = xc->system->params()->bin_int;
 }
 
 void

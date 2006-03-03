@@ -31,7 +31,7 @@
 
 #include "kern/system_events.hh"
 
-class FreebsdSystem : public System
+class FreebsdSystem : public AlphaSystem
 {
   private:
     class SkipCalibrateClocksEvent : public SkipFuncEvent

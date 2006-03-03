@@ -40,7 +40,7 @@ class PrintThreadInfo;
  * It points to objects that are the system binaries to load and patches them
  * appropriately to work in simulator.
  */
-class LinuxSystem : public System
+class LinuxSystem : public AlphaSystem
 {
   private:
     class SkipDelayLoopEvent : public SkipFuncEvent
