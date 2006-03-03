@@ -37,7 +37,7 @@ output header {{
         uint8_t imm;
 
         /// Constructor
-        IntegerImm(const char *mnem, MachInst _machInst, OpClass __opClass)
+        IntegerImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : AlphaStaticInst(mnem, _machInst, __opClass), imm(INTIMM)
         {
         }

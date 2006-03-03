@@ -236,7 +236,7 @@ class PhysRegFile
 #if FULL_SYSTEM
   private:
     // This is ISA specifc stuff; remove it eventually once ISAImpl is used
-    IntReg palregs[NumIntRegs];	// PAL shadow registers
+//    IntReg palregs[NumIntRegs];	// PAL shadow registers
     InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
     int intrflag;			// interrupt flag
     bool pal_shadow;		// using pal_shadow registers
