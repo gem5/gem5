@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2001-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
+#include "base/trace.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
@@ -53,10 +54,10 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaITB *_itb, AlphaDTB *_dtb,
                          FunctionalMemory *_mem)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
-      cpu_id(-1), mem(_mem), itb(_itb), dtb(_dtb), system(_sys),
-      memctrl(_sys->memctrl), physmem(_sys->physmem),
+      cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
+      dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
       kernelBinning(system->kernelBinning), bin(kernelBinning->bin),
-      fnbin(kernelBinning->fnbin), profile(NULL),
+      fnbin(kernelBinning->fnbin), profile(NULL), quiesceEvent(this),
       func_exe_inst(0), storeCondFailures(0)
 {
     kernelStats = new Kernel::Statistics(this);
@@ -79,8 +80,8 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
-      cpu(_cpu), thread_num(_thread_num), cpu_id(-1),
-      process(_process), mem(process->getMemory()), asid(_asid),
+      cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
+      lastSuspend(0), process(_process), mem(process->getMemory()), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
@@ -108,6 +109,23 @@ ExecContext::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
     profile->dump(this, *os);
+}
+
+ExecContext::EndQuiesceEvent::EndQuiesceEvent(ExecContext *_xc)
+    : Event(&mainEventQueue), xc(_xc)
+{
+}
+
+void
+ExecContext::EndQuiesceEvent::process()
+{
+    xc->activate();
+}
+
+const char*
+ExecContext::EndQuiesceEvent::description()
+{
+    return "End Quiesce Event.";
 }
 #endif
 
@@ -143,7 +161,12 @@ ExecContext::serialize(ostream &os)
     SERIALIZE_SCALAR(inst);
 
 #if FULL_SYSTEM
+    Tick quiesceEndTick = 0;
+    if (quiesceEvent.scheduled())
+        quiesceEndTick = quiesceEvent.when();
+    SERIALIZE_SCALAR(quiesceEndTick);
     kernelStats->serialize(os);
+
 #endif
 }
 
@@ -158,6 +181,11 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(inst);
 
 #if FULL_SYSTEM
+    Tick quiesceEndTick;
+    UNSERIALIZE_SCALAR(quiesceEndTick);
+    if (quiesceEndTick)
+        quiesceEvent.schedule(quiesceEndTick);
+
     kernelStats->unserialize(cp, section);
 #endif
 }
@@ -169,6 +197,8 @@ ExecContext::activate(int delay)
     if (status() == Active)
         return;
 
+    lastActivate = curTick;
+
     _status = Active;
     cpu->activateContext(thread_num, delay);
 }
@@ -179,6 +209,9 @@ ExecContext::suspend()
     if (status() == Suspended)
         return;
 
+    lastActivate = curTick;
+    lastSuspend = curTick;
+/*
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
     if (cpu->check_interrupts()) {
@@ -186,7 +219,7 @@ ExecContext::suspend()
         return;
     }
 #endif
-
+*/
     _status = Suspended;
     cpu->suspendContext(thread_num);
 }

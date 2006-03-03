@@ -347,12 +347,12 @@ SimpleCPU::copySrcTranslate(Addr src)
     // translate to physical address
     Fault fault = xc->translateDataReadReq(memReq);
 
-    assert(!fault->isAlignmentFault());
-
     if (fault == NoFault) {
         xc->copySrcAddr = src;
         xc->copySrcPhysAddr = memReq->paddr + offset;
     } else {
+        assert(!fault->isAlignmentFault());
+
         xc->copySrcAddr = 0;
         xc->copySrcPhysAddr = 0;
     }
@@ -382,8 +382,6 @@ SimpleCPU::copy(Addr dest)
     // translate to physical address
     Fault fault = xc->translateDataWriteReq(memReq);
 
-    assert(!fault->isAlignmentFault());
-
     if (fault == NoFault) {
         Addr dest_addr = memReq->paddr + offset;
         // Need to read straight from memory since we have more than 8 bytes.
@@ -402,6 +400,9 @@ SimpleCPU::copy(Addr dest)
             dcacheInterface->access(memReq);
         }
     }
+    else
+        assert(!fault->isAlignmentFault());
+
     return fault;
 }
 

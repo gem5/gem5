@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2003-2005 The Regents of The University of Michigan
+// Copyright (c) 2003-2006 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -758,6 +758,15 @@ decode OPCODE default Unknown::unknown() {
             0x01: quiesce({{
                 AlphaPseudo::quiesce(xc->xcBase());
             }}, IsNonSpeculative);
+            0x02: quiesceNs({{
+                AlphaPseudo::quiesceNs(xc->xcBase(), R16);
+            }}, IsNonSpeculative);
+            0x03: quiesceCycles({{
+                AlphaPseudo::quiesceCycles(xc->xcBase(), R16);
+            }}, IsNonSpeculative);
+            0x04: quiesceTime({{
+                R0 = AlphaPseudo::quiesceTime(xc->xcBase());
+            }}, IsNonSpeculative);
             0x10: ivlb({{
                 AlphaPseudo::ivlb(xc->xcBase());
             }}, No_OpClass, IsNonSpeculative);
@@ -794,6 +803,9 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x53: m5addsymbol({{
                 AlphaPseudo::addsymbol(xc->xcBase(), R16, R17);
+            }}, IsNonSpeculative);
+            0x54: m5panic({{
+                panic("M5 panic instruction called.");
             }}, IsNonSpeculative);
 
         }
