@@ -163,33 +163,6 @@ ExecContext::ev5_temp_trap(Fault fault)
 }
 
 
-void
-AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
-{
-    bool use_pc = (fault == NoFault);
-
-    if (fault->isA<ArithmeticFault>())
-        panic("arithmetic faults NYI...");
-
-    // compute exception restart address
-    if (use_pc || fault->isA<PalFault>() || fault->isA<ArithmeticFault>()) {
-        // traps...  skip faulting instruction
-        regs->miscRegs.setReg(IPR_EXC_ADDR, regs->pc + 4);
-    } else {
-        // fault, post fault at excepting instruction
-        regs->miscRegs.setReg(IPR_EXC_ADDR, regs->pc);
-    }
-
-    // jump to expection address (PAL PC bit set here as well...)
-    if (!use_pc)
-        regs->npc = regs->miscRegs.readReg(IPR_PAL_BASE) +
-            (dynamic_cast<AlphaFault *>(fault.get()))->vect();
-    else
-        regs->npc = regs->miscRegs.readReg(IPR_PAL_BASE) + pc;
-
-    // that's it! (orders of magnitude less painful than x86)
-}
-
 Fault
 ExecContext::hwrei()
 {
