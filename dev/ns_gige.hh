@@ -385,6 +385,7 @@ class NSGigE : public PciDev
         uint32_t rx_fifo_size;
         bool rx_thread;
         bool tx_thread;
+        bool rss;
         bool dma_no_allocate;
     };
 

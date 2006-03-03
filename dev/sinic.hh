@@ -355,6 +355,7 @@ class Device : public Base
         bool dma_no_allocate;
         bool rx_thread;
         bool tx_thread;
+        bool rss;
     };
 
   protected:
