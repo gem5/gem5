@@ -231,6 +231,8 @@ class StaticInst : public StaticInstBase
 
     /// Binary machine instruction type.
     typedef TheISA::MachInst MachInst;
+    /// Binary extended machine instruction type.
+    typedef TheISA::ExtMachInst ExtMachInst;
     /// Logical register index type.
     typedef TheISA::RegIndex RegIndex;
 
@@ -272,7 +274,7 @@ class StaticInst : public StaticInstBase
     StaticInstPtr &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.
-    const MachInst machInst;
+    const ExtMachInst machInst;
 
   protected:
 
@@ -302,7 +304,7 @@ class StaticInst : public StaticInstBase
     generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
 
     /// Constructor.
-    StaticInst(const char *_mnemonic, MachInst _machInst, OpClass __opClass)
+    StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
         : StaticInstBase(__opClass),
           machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
     {
@@ -372,7 +374,7 @@ class StaticInst : public StaticInstBase
     /// Decoded instruction cache type.
     /// For now we're using a generic hash_map; this seems to work
     /// pretty well.
-    typedef m5::hash_map<MachInst, StaticInstPtr> DecodeCache;
+    typedef m5::hash_map<ExtMachInst, StaticInstPtr> DecodeCache;
 
     /// A cache of decoded instruction objects.
     static DecodeCache decodeCache;
@@ -387,7 +389,7 @@ class StaticInst : public StaticInstBase
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
     //This is defined as inline below.
-    static StaticInstPtr decode(MachInst mach_inst);
+    static StaticInstPtr decode(ExtMachInst mach_inst);
 };
 
 typedef RefCountingPtr<StaticInstBase> StaticInstBasePtr;
@@ -418,7 +420,7 @@ class StaticInstPtr : public RefCountingPtr<StaticInst>
 
     /// Construct directly from machine instruction.
     /// Calls StaticInst::decode().
-    StaticInstPtr(TheISA::MachInst mach_inst)
+    StaticInstPtr(TheISA::ExtMachInst mach_inst)
         : RefCountingPtr<StaticInst>(StaticInst::decode(mach_inst))
     {
     }
@@ -431,7 +433,7 @@ class StaticInstPtr : public RefCountingPtr<StaticInst>
 };
 
 inline StaticInstPtr
-StaticInst::decode(StaticInst::MachInst mach_inst)
+StaticInst::decode(StaticInst::ExtMachInst mach_inst)
 {
 #ifdef DECODE_CACHE_HASH_STATS
     // Simple stats on decode hash_map.  Turns out the default
