@@ -38,8 +38,8 @@
 #define __LIBELF_NEED_LINK_H    0
 #define __LIBELF_SYMBOL_VERSIONS 0
 
-#include <libelf/libelf.h>
-#include <libelf/gelf.h>
+#include "libelf/libelf.h"
+#include "libelf/gelf.h"
 
 #include "base/loader/elf_object.hh"
 

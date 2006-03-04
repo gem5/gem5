@@ -27,6 +27,7 @@
  */
 
 #include "arch/alpha/system.hh"
+#include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -35,7 +36,6 @@
 #include "mem/functional/physical.hh"
 #include "sim/byteswap.hh"
 #include "sim/builder.hh"
-#include "targetarch/vtophys.hh"
 
 using namespace LittleEndianGuest;
 
