@@ -113,7 +113,7 @@ TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
               case TSDEV_CC_MISC:
                   *(uint64_t*)data = (ipint << 8) & 0xF |
                                      (itint << 4) & 0xF |
-                                     (xc->cpu_id & 0x3);
+                                     (xc->readCpuId() & 0x3);
                   return NoFault;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:

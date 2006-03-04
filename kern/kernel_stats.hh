@@ -128,14 +128,13 @@ class Statistics : public Serializable
 
   private:
     std::string myname;
-    ExecContext *xc;
 
     Addr idleProcess;
     cpu_mode themode;
     Tick lastModeTick;
     bool bin_int;
 
-    void changeMode(cpu_mode newmode);
+    void changeMode(cpu_mode newmode, ExecContext *xc);
 
   private:
     Stats::Scalar<> _arm;
@@ -165,7 +164,7 @@ class Statistics : public Serializable
     Tick iplLastTick;
 
   public:
-    Statistics(ExecContext *context);
+    Statistics(System *system);
 
     const std::string name() const { return myname; }
     void regStats(const std::string &name);
@@ -184,11 +183,11 @@ class Statistics : public Serializable
             else _faults[fault->id]++;
     }// FIXME: When there are no generic system fault objects, this will go back to _faults[fault]++; }
     void swpipl(int ipl);
-    void mode(cpu_mode newmode);
-    void context(Addr oldpcbb, Addr newpcbb);
-    void callpal(int code);
+    void mode(cpu_mode newmode, ExecContext *xc);
+    void context(Addr oldpcbb, Addr newpcbb, ExecContext *xc);
+    void callpal(int code, ExecContext *xc);
 
-    void setIdleProcess(Addr idle);
+    void setIdleProcess(Addr idle, ExecContext *xc);
 
   public:
     virtual void serialize(std::ostream &os);

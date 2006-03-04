@@ -38,6 +38,7 @@
 #include "cpu/pc_event.hh"
 #include "sim/debug.hh"
 #include "sim/root.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -79,7 +80,7 @@ PCEventQueue::schedule(PCEvent *event)
 bool
 PCEventQueue::doService(ExecContext *xc)
 {
-    Addr pc = xc->regs.pc & ~0x3;
+    Addr pc = xc->readPC() & ~0x3;
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {
@@ -87,7 +88,7 @@ PCEventQueue::doService(ExecContext *xc)
         // another event.  This for example, prevents two invocations
         // of the SkipFuncEvent.  Maybe we should have separate PC
         // event queues for each processor?
-        if (pc != (xc->regs.pc & ~0x3))
+        if (pc != (xc->readPC() & ~0x3))
             continue;
 
         DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n",
@@ -126,7 +127,7 @@ BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
 void
 BreakPCEvent::process(ExecContext *xc)
 {
-    StringWrap name(xc->cpu->name() + ".break_event");
+    StringWrap name(xc->getCpuPtr()->name() + ".break_event");
     DPRINTFN("break event %s triggered\n", descr());
     debug_break();
     if (remove)

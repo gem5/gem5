@@ -40,6 +40,7 @@
 
 #if FULL_SYSTEM
 class System;
+namespace Kernel { class Statistics; }
 #endif
 
 class BranchPred;
@@ -234,6 +235,10 @@ class BaseCPU : public SimObject
   public:
     // Number of CPU cycles simulated
     Stats::Scalar<> numCycles;
+
+#if FULL_SYSTEM
+    Kernel::Statistics *kernelStats;
+#endif
 };
 
 #endif // __CPU_BASE_HH__

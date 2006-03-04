@@ -33,13 +33,13 @@
  *
  */
 
+#include "arch/isa_traits.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "kern/freebsd/freebsd_system.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
-#include "arch/isa_traits.hh"
 #include "sim/byteswap.hh"
 #include "targetarch/vtophys.hh"
 
@@ -76,8 +76,8 @@ FreebsdSystem::doCalibrateClocks(ExecContext *xc)
     Addr ppc_paddr = 0;
     Addr timer_paddr = 0;
 
-    ppc_vaddr = (Addr)xc->regs.intRegFile[ArgumentReg1];
-    timer_vaddr = (Addr)xc->regs.intRegFile[ArgumentReg2];
+    ppc_vaddr = (Addr)xc->readIntReg(ArgumentReg1);
+    timer_vaddr = (Addr)xc->readIntReg(ArgumentReg2);
 
     ppc_paddr = vtophys(physmem, ppc_vaddr);
     timer_paddr = vtophys(physmem, timer_vaddr);
@@ -94,7 +94,7 @@ void
 FreebsdSystem::SkipCalibrateClocksEvent::process(ExecContext *xc)
 {
     SkipFuncEvent::process(xc);
-    ((FreebsdSystem *)xc->system)->doCalibrateClocks(xc);
+    ((FreebsdSystem *)xc->getSystemPtr())->doCalibrateClocks(xc);
 }
 
 

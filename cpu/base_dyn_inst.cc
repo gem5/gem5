@@ -67,7 +67,7 @@ template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(MachInst machInst, Addr inst_PC,
                                Addr pred_PC, InstSeqNum seq_num,
                                FullCPU *cpu)
-    : staticInst(machInst), traceData(NULL), cpu(cpu), xc(cpu->xcBase())
+    : staticInst(machInst), traceData(NULL), cpu(cpu), cpuXC(cpu->cpuXCBase())
 {
     seqNum = seq_num;
 
@@ -138,14 +138,14 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     // state.
 
     // Generate a MemReq so we can translate the effective address.
-    MemReqPtr req = new MemReq(addr, xc, 1, flags);
+    MemReqPtr req = new MemReq(addr, cpuXC->getProxy(), 1, flags);
     req->asid = asid;
 
     // Prefetches never cause faults.
     fault = NoFault;
 
     // note this is a local, not BaseDynInst::fault
-    Fault trans_fault = xc->translateDataReadReq(req);
+    Fault trans_fault = cpuXC->translateDataReadReq(req);
 
     if (trans_fault == NoFault && !(req->flags & UNCACHEABLE)) {
         // It's a valid address to cacheable space.  Record key MemReq
@@ -183,10 +183,10 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
     // will casue a TLB miss trap if necessary... not sure whether
     // that's the best thing to do or not.  We don't really need the
     // MemReq otherwise, since wh64 has no functional effect.
-    MemReqPtr req = new MemReq(addr, xc, size, flags);
+    MemReqPtr req = new MemReq(addr, cpuXC->getProxy(), size, flags);
     req->asid = asid;
 
-    fault = xc->translateDataWriteReq(req);
+    fault = cpuXC->translateDataWriteReq(req);
 
     if (fault == NoFault && !(req->flags & UNCACHEABLE)) {
         // Record key MemReq parameters so we can generate another one
@@ -211,18 +211,18 @@ template <class Impl>
 Fault
 BaseDynInst<Impl>::copySrcTranslate(Addr src)
 {
-    MemReqPtr req = new MemReq(src, xc, 64);
+    MemReqPtr req = new MemReq(src, cpuXC->getProxy(), 64);
     req->asid = asid;
 
     // translate to physical address
-    Fault fault = xc->translateDataReadReq(req);
+    Fault fault = cpuXC->translateDataReadReq(req);
 
     if (fault == NoFault) {
-        xc->copySrcAddr = src;
-        xc->copySrcPhysAddr = req->paddr;
+        cpuXC->copySrcAddr = src;
+        cpuXC->copySrcPhysAddr = req->paddr;
     } else {
-        xc->copySrcAddr = 0;
-        xc->copySrcPhysAddr = 0;
+        cpuXC->copySrcAddr = 0;
+        cpuXC->copySrcPhysAddr = 0;
     }
     return fault;
 }
@@ -235,18 +235,18 @@ Fault
 BaseDynInst<Impl>::copy(Addr dest)
 {
     uint8_t data[64];
-    FunctionalMemory *mem = xc->mem;
-    assert(xc->copySrcPhysAddr || xc->misspeculating());
-    MemReqPtr req = new MemReq(dest, xc, 64);
+    FunctionalMemory *mem = cpuXC->mem;
+    assert(cpuXC->copySrcPhysAddr || cpuXC->misspeculating());
+    MemReqPtr req = new MemReq(dest, cpuXC->getProxy(), 64);
     req->asid = asid;
 
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(req);
+    Fault fault = cpuXC->translateDataWriteReq(req);
 
     if (fault == NoFault) {
         Addr dest_addr = req->paddr;
         // Need to read straight from memory since we have more than 8 bytes.
-        req->paddr = xc->copySrcPhysAddr;
+        req->paddr = cpuXC->copySrcPhysAddr;
         mem->read(req, data);
         req->paddr = dest_addr;
         mem->write(req, data);

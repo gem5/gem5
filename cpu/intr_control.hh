@@ -34,7 +34,6 @@
 #include "cpu/base.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
-#include "cpu/exec_context.hh"
 
 
 class IntrControl : public SimObject

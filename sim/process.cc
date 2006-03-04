@@ -37,6 +37,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/smt.hh"
 #include "encumbered/cpu/full/thread.hh"
@@ -80,6 +81,8 @@ Process::Process(const string &nm,
     // allocate initial register file
     init_regs = new RegFile;
     memset(init_regs, 0, sizeof(RegFile));
+
+    cpuXC = new CPUExecContext(init_regs);
 
     // initialize first 3 fds (stdin, stdout, stderr)
     fd_map[STDIN_FILENO] = stdin_fd;
@@ -149,7 +152,7 @@ Process::registerExecContext(ExecContext *xc)
 
     if (myIndex == 0) {
         // copy process's initial regs struct
-        xc->regs = *init_regs;
+        xc->copyArchRegs(cpuXC->getProxy());
     }
 
     // return CPU number to caller and increment available CPU count
@@ -357,7 +360,7 @@ LiveProcess::syscall(ExecContext *xc)
 {
     num_syscalls++;
 
-    int64_t callnum = xc->regs.intRegFile[ReturnValueReg];
+    int64_t callnum = xc->readIntReg(ReturnValueReg);
 
     SyscallDesc *desc = getDesc(callnum);
     if (desc == NULL)

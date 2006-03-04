@@ -32,7 +32,7 @@
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/static_inst.hh"
@@ -54,6 +54,7 @@ class Process;
 
 #endif // FULL_SYSTEM
 
+class ExecContext;
 class MemInterface;
 class Checkpoint;
 
@@ -148,7 +149,9 @@ class SimpleCPU : public BaseCPU
 
   public:
     // execution context
-    ExecContext *xc;
+    CPUExecContext *cpuXC;
+
+    ExecContext *xcProxy;
 
     void switchOut(Sampler *s);
     void takeOverFrom(BaseCPU *oldCPU);
@@ -275,86 +278,86 @@ class SimpleCPU : public BaseCPU
 
     uint64_t readIntReg(const StaticInst *si, int idx)
     {
-        return xc->readIntReg(si->srcRegIdx(idx));
+        return cpuXC->readIntReg(si->srcRegIdx(idx));
     }
 
     float readFloatRegSingle(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return xc->readFloatRegSingle(reg_idx);
+        return cpuXC->readFloatRegSingle(reg_idx);
     }
 
     double readFloatRegDouble(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return xc->readFloatRegDouble(reg_idx);
+        return cpuXC->readFloatRegDouble(reg_idx);
     }
 
     uint64_t readFloatRegInt(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return xc->readFloatRegInt(reg_idx);
+        return cpuXC->readFloatRegInt(reg_idx);
     }
 
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
-        xc->setIntReg(si->destRegIdx(idx), val);
+        cpuXC->setIntReg(si->destRegIdx(idx), val);
     }
 
     void setFloatRegSingle(const StaticInst *si, int idx, float val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        xc->setFloatRegSingle(reg_idx, val);
+        cpuXC->setFloatRegSingle(reg_idx, val);
     }
 
     void setFloatRegDouble(const StaticInst *si, int idx, double val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        xc->setFloatRegDouble(reg_idx, val);
+        cpuXC->setFloatRegDouble(reg_idx, val);
     }
 
     void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        xc->setFloatRegInt(reg_idx, val);
+        cpuXC->setFloatRegInt(reg_idx, val);
     }
 
-    uint64_t readPC() { return xc->readPC(); }
-    void setNextPC(uint64_t val) { xc->setNextPC(val); }
+    uint64_t readPC() { return cpuXC->readPC(); }
+    void setNextPC(uint64_t val) { cpuXC->setNextPC(val); }
 
     MiscReg readMiscReg(int misc_reg)
     {
-        return xc->readMiscReg(misc_reg);
+        return cpuXC->readMiscReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return xc->readMiscRegWithEffect(misc_reg, fault);
+        return cpuXC->readMiscRegWithEffect(misc_reg, fault);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return xc->setMiscReg(misc_reg, val);
+        return cpuXC->setMiscReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return xc->setMiscRegWithEffect(misc_reg, val);
+        return cpuXC->setMiscRegWithEffect(misc_reg, val);
     }
 
 #if FULL_SYSTEM
-    Fault hwrei() { return xc->hwrei(); }
-    int readIntrFlag() { return xc->readIntrFlag(); }
-    void setIntrFlag(int val) { xc->setIntrFlag(val); }
-    bool inPalMode() { return xc->inPalMode(); }
-    void ev5_trap(Fault fault) { xc->ev5_trap(fault); }
-    bool simPalCheck(int palFunc) { return xc->simPalCheck(palFunc); }
+    Fault hwrei() { return cpuXC->hwrei(); }
+    int readIntrFlag() { return cpuXC->readIntrFlag(); }
+    void setIntrFlag(int val) { cpuXC->setIntrFlag(val); }
+    bool inPalMode() { return cpuXC->inPalMode(); }
+    void ev5_trap(Fault fault) { cpuXC->ev5_trap(fault); }
+    bool simPalCheck(int palFunc) { return cpuXC->simPalCheck(palFunc); }
 #else
-    void syscall() { xc->syscall(); }
+    void syscall() { cpuXC->syscall(); }
 #endif
 
-    bool misspeculating() { return xc->misspeculating(); }
-    ExecContext *xcBase() { return xc; }
+    bool misspeculating() { return cpuXC->misspeculating(); }
+    ExecContext *xcBase() { return xcProxy; }
 };
 
 #endif // __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__

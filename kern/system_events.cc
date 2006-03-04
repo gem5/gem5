@@ -34,17 +34,17 @@ using namespace TheISA;
 void
 SkipFuncEvent::process(ExecContext *xc)
 {
-    Addr newpc = xc->regs.intRegFile[ReturnAddressReg];
+    Addr newpc = xc->readIntReg(ReturnAddressReg);
 
     DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            xc->regs.pc, newpc);
+            xc->readPC(), newpc);
 
-    xc->regs.pc = newpc;
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
+    xc->setPC(newpc);
+    xc->setNextPC(xc->readPC() + sizeof(TheISA::MachInst));
 
-    BranchPred *bp = xc->cpu->getBranchPred();
+    BranchPred *bp = xc->getCpuPtr()->getBranchPred();
     if (bp != NULL) {
-        bp->popRAS(xc->thread_num);
+        bp->popRAS(xc->getThreadNum());
     }
 }
 
@@ -61,20 +61,21 @@ FnEvent::process(ExecContext *xc)
     if (xc->misspeculating())
         return;
 
-    xc->system->kernelBinning->call(xc, mybin);
+    xc->getSystemPtr()->kernelBinning->call(xc, mybin);
 }
 
 void
 IdleStartEvent::process(ExecContext *xc)
 {
-    xc->kernelStats->setIdleProcess(xc->readMiscReg(AlphaISA::IPR_PALtemp23));
+    xc->getCpuPtr()->kernelStats->setIdleProcess(
+        xc->readMiscReg(AlphaISA::IPR_PALtemp23), xc);
     remove();
 }
 
 void
 InterruptStartEvent::process(ExecContext *xc)
 {
-    xc->kernelStats->mode(Kernel::interrupt);
+    xc->getCpuPtr()->kernelStats->mode(Kernel::interrupt, xc);
 }
 
 void
@@ -82,5 +83,5 @@ InterruptEndEvent::process(ExecContext *xc)
 {
     // We go back to kernel, if we are user, inside the rti
     // pal code we will get switched to user because of the ICM write
-    xc->kernelStats->mode(Kernel::kernel);
+    xc->getCpuPtr()->kernelStats->mode(Kernel::kernel, xc);
 }
