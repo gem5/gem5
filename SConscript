@@ -374,6 +374,7 @@ def make_objs(sources, env):
 # the corresponding build directory to pick up generated include
 # files.
 env.Append(CPPPATH='.')
+env.Append(CPPPATH='./libelf')
 
 # Debug binary
 debugEnv = env.Copy(OBJSUFFIX='.do')

@@ -56,6 +56,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 {
     Elf *elf;
     GElf_Ehdr ehdr;
+    Arch arch = UnknownArch;
+    OpSys opSys = UnknownOpSys;
 
     // check that header matches library version
     if (elf_version(EV_CURRENT) == EV_NONE)
@@ -73,8 +75,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         return NULL;
     }
     else {
-        if (ehdr.e_ident[EI_CLASS] == ELFCLASS32)
-            panic("32 bit ELF Binary, Not Supported");
+//        if (ehdr.e_ident[EI_CLASS] == ELFCLASS32)
+//            panic("32 bit ELF Binary, Not Supported");
         /* @todo this emachine value isn't offical yet.
          *       so we probably shouldn't check it. */
 //        if (ehdr.e_machine != EM_ALPHA)
@@ -82,8 +84,43 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 
         elf_end(elf);
 
-        return new ElfObject(fname, fd, len, data,
-                             ObjectFile::Alpha, ObjectFile::Linux);
+        //Detect the architecture
+        //Versioning issues in libelf need to be resolved to get the correct
+        //SPARC constants.
+        //If MIPS supports 32 bit executables, this may need to be changed.
+        //Also, there are other MIPS constants which may be used, like
+        //EM_MIPS_RS3_LE and EM_MIPS_X
+        //Since we don't know how to check for alpha right now, we'll
+        //just assume if it wasn't something else and it's 64 bit, that's
+        //what it must be.
+        if (ehdr.e_machine == EM_SPARC64 ||
+                ehdr.e_machine == EM_SPARC ||
+                ehdr.e_machine == EM_SPARCV9) {
+            arch = ObjectFile::SPARC;
+        } else if (ehdr.e_machine == EM_MIPS
+                && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+            arch = ObjectFile::MIPS;
+        } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
+            arch = ObjectFile::Alpha;
+        } else {
+            arch = ObjectFile::UnknownArch;
+        }
+
+        //Detect the operating system
+        switch (ehdr.e_ident[EI_OSABI])
+        {
+          case ELFOSABI_LINUX:
+            opSys = ObjectFile::Linux;
+            break;
+          case ELFOSABI_SOLARIS:
+            opSys = ObjectFile::Solaris;
+          case ELFOSABI_TRU64:
+            opSys = ObjectFile::Tru64;
+          default:
+            opSys = ObjectFile::UnknownOpSys;
+        }
+
+        return new ElfObject(fname, fd, len, data, arch, opSys);
     }
 }
 
