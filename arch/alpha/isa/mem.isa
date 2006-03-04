@@ -42,7 +42,7 @@ output header {{
         const StaticInstPtr memAccPtr;
 
         /// Constructor
-        Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
+        Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                StaticInstPtr _eaCompPtr = nullStaticInstPtr,
                StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : AlphaStaticInst(mnem, _machInst, __opClass),
@@ -70,7 +70,7 @@ output header {{
         int32_t disp;
 
         /// Constructor.
-        MemoryDisp32(const char *mnem, MachInst _machInst, OpClass __opClass,
+        MemoryDisp32(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                      StaticInstPtr _eaCompPtr = nullStaticInstPtr,
                      StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
@@ -89,7 +89,7 @@ output header {{
     {
       protected:
         /// Constructor
-        MemoryNoDisp(const char *mnem, MachInst _machInst, OpClass __opClass,
+        MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                      StaticInstPtr _eaCompPtr = nullStaticInstPtr,
                      StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
@@ -141,7 +141,7 @@ def template LoadStoreDeclare {{
         {
           public:
             /// Constructor
-            EAComp(MachInst machInst);
+            EAComp(ExtMachInst machInst);
 
             %(BasicExecDeclare)s
         };
@@ -153,7 +153,7 @@ def template LoadStoreDeclare {{
         {
           public:
             /// Constructor
-            MemAcc(MachInst machInst);
+            MemAcc(ExtMachInst machInst);
 
             %(BasicExecDeclare)s
         };
@@ -161,7 +161,7 @@ def template LoadStoreDeclare {{
       public:
 
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
 
         %(BasicExecDeclare)s
 
@@ -186,19 +186,19 @@ def template LoadStoreConstructor {{
     /** TODO: change op_class to AddrGenOp or something (requires
      * creating new member of OpClass enum in op_class.hh, updating
      * config files, etc.). */
-    inline %(class_name)s::EAComp::EAComp(MachInst machInst)
+    inline %(class_name)s::EAComp::EAComp(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
     {
         %(ea_constructor)s;
     }
 
-    inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
+    inline %(class_name)s::MemAcc::MemAcc(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
     {
         %(memacc_constructor)s;
     }
 
-    inline %(class_name)s::%(class_name)s(MachInst machInst)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                           new EAComp(machInst), new MemAcc(machInst))
     {

@@ -79,6 +79,7 @@ namespace AlphaISA;
 //
 
 // Universal (format-independent) fields
+def bitfield PALMODE    <32:32>;
 def bitfield OPCODE	<31:26>;
 def bitfield RA		<25:21>;
 def bitfield RB		<20:16>;
@@ -153,9 +154,12 @@ def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
     # explicitly specify '.uq'.
-    'Ra': ('IntReg', 'uq', 'RA', 'IsInteger', 1),
-    'Rb': ('IntReg', 'uq', 'RB', 'IsInteger', 2),
-    'Rc': ('IntReg', 'uq', 'RC', 'IsInteger', 3),
+    'Ra': ('IntReg', 'uq', 'PALMODE ? AlphaISA::reg_redir[RA] : RA',
+           'IsInteger', 1),
+    'Rb': ('IntReg', 'uq', 'PALMODE ? AlphaISA::reg_redir[RB] : RB',
+           'IsInteger', 2),
+    'Rc': ('IntReg', 'uq', 'PALMODE ? AlphaISA::reg_redir[RC] : RC',
+           'IsInteger', 3),
     'Fa': ('FloatReg', 'df', 'FA', 'IsFloating', 1),
     'Fb': ('FloatReg', 'df', 'FB', 'IsFloating', 2),
     'Fc': ('FloatReg', 'df', 'FC', 'IsFloating', 3),
@@ -200,7 +204,7 @@ output header {{
         };
 
         /// Constructor.
-        AlphaStaticInst(const char *mnem, MachInst _machInst,
+        AlphaStaticInst(const char *mnem, ExtMachInst _machInst,
                         OpClass __opClass)
             : StaticInst(mnem, _machInst, __opClass)
         {
@@ -272,7 +276,7 @@ def template BasicDeclare {{
     {
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
 
         %(BasicExecDeclare)s
     };
@@ -280,7 +284,7 @@ def template BasicDeclare {{
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-    inline %(class_name)s::%(class_name)s(MachInst machInst)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
@@ -344,7 +348,7 @@ output header {{
 
       public:
         /// Constructor
-        Nop(const std::string _originalDisassembly, MachInst _machInst)
+        Nop(const std::string _originalDisassembly, ExtMachInst _machInst)
             : AlphaStaticInst("nop", _machInst, No_OpClass),
               originalDisassembly(_originalDisassembly)
         {
@@ -427,6 +431,9 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
 
 // PAL instruction templates, formats, etc.
 ##include "m5/arch/alpha/isa/pal.isa"
+
+// Opcdec fault instruction templates, formats, etc.
+##include "m5/arch/alpha/isa/opcdec.isa"
 
 // Unimplemented instruction templates, formats, etc.
 ##include "m5/arch/alpha/isa/unimp.isa"

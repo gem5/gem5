@@ -106,7 +106,7 @@ output header {{
         mutable bool warnedOnTrapping;
 
         /// Constructor
-        AlphaFP(const char *mnem, MachInst _machInst, OpClass __opClass)
+        AlphaFP(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : AlphaStaticInst(mnem, _machInst, __opClass),
               roundingMode((enum RoundingMode)FP_ROUNDMODE),
               trappingMode((enum TrappingMode)FP_TRAPMODE),

@@ -38,7 +38,7 @@ output header {{
     {
       public:
         /// Constructor
-        FailUnimplemented(const char *_mnemonic, MachInst _machInst)
+        FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
             : AlphaStaticInst(_mnemonic, _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a
@@ -69,7 +69,7 @@ output header {{
 
       public:
         /// Constructor
-        WarnUnimplemented(const char *_mnemonic, MachInst _machInst)
+        WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
             : AlphaStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
         {
             // don't call execute() (which panics) if we're on a
@@ -148,7 +148,7 @@ output header {{
     {
       public:
         /// Constructor
-        Unknown(MachInst _machInst)
+        Unknown(ExtMachInst _machInst)
             : AlphaStaticInst("unknown", _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a

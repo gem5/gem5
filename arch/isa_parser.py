@@ -225,7 +225,7 @@ def p_specification(t):
     # wrap the decode block as a function definition
     t[4].wrap_decode_block('''
 StaticInstPtr
-%(isa_name)s::decodeInst(%(isa_name)s::MachInst machInst)
+%(isa_name)s::decodeInst(%(isa_name)s::ExtMachInst machInst)
 {
     using namespace %(namespace)s;
 ''' % vars(), '}')

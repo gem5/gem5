@@ -681,7 +681,6 @@ decode OPCODE default Unknown::unknown() {
             bool dopal = xc->simPalCheck(palFunc);
 
             if (dopal) {
-                AlphaISA::swap_palshadow(&xc->xcBase()->regs, true);
                 xc->setMiscRegWithEffect(AlphaISA::IPR_EXC_ADDR, NPC);
                 NPC = xc->readMiscRegWithEffect(AlphaISA::IPR_PAL_BASE, fault) + palOffset;
             }
@@ -705,50 +704,56 @@ decode OPCODE default Unknown::unknown() {
 #endif
 
 #if FULL_SYSTEM
-    format HwLoad {
-        0x1b: decode HW_LDST_QUAD {
-            0: hw_ld({{ EA = (Rb + disp) & ~3; }}, {{ Ra = Mem.ul; }}, L);
-            1: hw_ld({{ EA = (Rb + disp) & ~7; }}, {{ Ra = Mem.uq; }}, Q);
+    0x1b: decode PALMODE {
+        0: OpcdecFault::hw_st_quad();
+        1: decode HW_LDST_QUAD {
+            format HwLoad {
+                0: hw_ld({{ EA = (Rb + disp) & ~3; }}, {{ Ra = Mem.ul; }}, L);
+                1: hw_ld({{ EA = (Rb + disp) & ~7; }}, {{ Ra = Mem.uq; }}, Q);
+            }
         }
     }
 
-    format HwStore {
-        0x1f: decode HW_LDST_COND {
-            0: decode HW_LDST_QUAD {
-                0: hw_st({{ EA = (Rb + disp) & ~3; }},
-                         {{ Mem.ul = Ra<31:0>; }}, L);
-                1: hw_st({{ EA = (Rb + disp) & ~7; }},
-                         {{ Mem.uq = Ra.uq; }}, Q);
-            }
+    0x1f: decode PALMODE {
+        0: OpcdecFault::hw_st_cond();
+        format HwStore {
+            1: decode HW_LDST_COND {
+                0: decode HW_LDST_QUAD {
+                    0: hw_st({{ EA = (Rb + disp) & ~3; }},
+                {{ Mem.ul = Ra<31:0>; }}, L);
+                    1: hw_st({{ EA = (Rb + disp) & ~7; }},
+                {{ Mem.uq = Ra.uq; }}, Q);
+                }
 
-            1: FailUnimpl::hw_st_cond();
+                1: FailUnimpl::hw_st_cond();
+            }
         }
     }
 
-    format HwMoveIPR {
-        0x19: hw_mfpr({{
-            // this instruction is only valid in PAL mode
-            if (!xc->inPalMode()) {
-                fault = new UnimplementedOpcodeFault;
-            }
-            else {
+    0x19: decode PALMODE {
+        0: OpcdecFault::hw_mfpr();
+        format HwMoveIPR {
+            1: hw_mfpr({{
                 Ra = xc->readMiscRegWithEffect(ipr_index, fault);
-            }
-        }});
-        0x1d: hw_mtpr({{
-            // this instruction is only valid in PAL mode
-            if (!xc->inPalMode()) {
-                fault = new UnimplementedOpcodeFault;
-            }
-            else {
+            }});
+        }
+    }
+
+    0x1d: decode PALMODE {
+        0: OpcdecFault::hw_mtpr();
+        format HwMoveIPR {
+            1: hw_mtpr({{
                 xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
-            }
-        }});
+            }});
+        }
     }
 
     format BasicOperate {
-        0x1e: hw_rei({{ xc->hwrei(); }}, IsSerializing);
+        0x1e: decode PALMODE {
+            0: OpcdecFault::hw_rei();
+            1:hw_rei({{ xc->hwrei(); }}, IsSerializing);
+        }
 
         // M5 special opcodes use the reserved 0x01 opcode space
         0x01: decode M5FUNC {

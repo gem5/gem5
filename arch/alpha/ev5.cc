@@ -46,35 +46,12 @@ using namespace EV5;
 
 ////////////////////////////////////////////////////////////////////////
 //
-//
-//
-void
-AlphaISA::swap_palshadow(RegFile *regs, bool use_shadow)
-{
-    if (regs->pal_shadow == use_shadow)
-        panic("swap_palshadow: wrong PAL shadow state");
-
-    regs->pal_shadow = use_shadow;
-
-    for (int i = 0; i < NumIntRegs; i++) {
-        if (reg_redir[i]) {
-            IntReg temp = regs->intRegFile[i];
-            regs->intRegFile[i] = regs->palregs[i];
-            regs->palregs[i] = temp;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-//
 //  Machine dependent functions
 //
 void
 AlphaISA::initCPU(RegFile *regs, int cpuId)
 {
     initIPRs(&regs->miscRegs, cpuId);
-    // CPU comes up with PAL regs enabled
-    swap_palshadow(regs, true);
 
     regs->intRegFile[16] = cpuId;
     regs->intRegFile[0] = cpuId;
@@ -82,12 +59,6 @@ AlphaISA::initCPU(RegFile *regs, int cpuId)
     regs->pc = regs->miscRegs.readReg(IPR_PAL_BASE) + (new ResetFault)->vect();
     regs->npc = regs->pc + sizeof(MachInst);
 }
-
-const int AlphaISA::reg_redir[AlphaISA::NumIntRegs] = {
-    /*  0 */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /*  8 */ 1, 1, 1, 1, 1, 1, 1, 0,
-    /* 16 */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /* 24 */ 0, 1, 0, 0, 0, 0, 0, 0 };
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -163,33 +134,6 @@ AlphaISA::zeroRegisters(CPU *cpu)
     cpu->xc->setFloatRegDouble(ZeroReg, 0.0);
 }
 
-void
-AlphaISA::intr_post(RegFile *regs, Fault fault, Addr pc)
-{
-/*    bool use_pc = (fault == NoFault);
-
-    if (fault->isA<ArithmeticFault>())
-        panic("arithmetic faults NYI...");
-
-    // compute exception restart address
-    if (use_pc || fault->isA<PalFault>() || fault->isA<ArithmeticFault>()) {
-        // traps...  skip faulting instruction
-        regs->miscRegs.setReg(IPR_EXC_ADDR, regs->pc + 4);
-    } else {
-        // fault, post fault at excepting instruction
-        regs->miscRegs.setReg(IPR_EXC_ADDR, regs->pc);
-    }
-
-    // jump to expection address (PAL PC bit set here as well...)
-    if (!use_pc)
-        regs->npc = regs->miscRegs.readReg(IPR_PAL_BASE) +
-            (dynamic_cast<AlphaFault *>(fault.get()))->vect();
-    else
-        regs->npc = regs->miscRegs.readReg(IPR_PAL_BASE) + pc;
-*/
-    // that's it! (orders of magnitude less painful than x86)
-}
-
 Fault
 ExecContext::hwrei()
 {
@@ -200,9 +144,6 @@ ExecContext::hwrei()
 
     if (!misspeculating()) {
         kernelStats->hwrei();
-
-        if ((readMiscReg(AlphaISA::IPR_EXC_ADDR) & 1) == 0)
-            AlphaISA::swap_palshadow(&regs, false);
 
         cpu->checkInterrupts = true;
     }

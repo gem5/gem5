@@ -57,15 +57,17 @@ namespace AlphaISA
 {
 
     typedef uint32_t MachInst;
+    typedef uint64_t ExtMachInst;
     typedef uint8_t  RegIndex;
 
     enum {
         MemoryEnd = 0xffffffffffffffffULL,
 
-        NumIntRegs = 32,
-        NumFloatRegs = 32,
+        NumIntArchRegs = 32,
+        NumPALShadowRegs = 8,
+        NumFloatArchRegs = 32,
         // @todo: Figure out what this number really should be.
-        NumMiscRegs = 32,
+        NumMiscArchRegs = 32,
 
         MaxRegsOfAnyType = 32,
         // Static instruction parameters
@@ -99,17 +101,23 @@ namespace AlphaISA
         DepNA = 0,
     };
 
+    enum {
+        NumIntRegs = NumIntArchRegs + NumPALShadowRegs,
+        NumFloatRegs = NumFloatArchRegs,
+        NumMiscRegs = NumMiscArchRegs
+    };
+
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
         // 0..31 are the integer regs 0..31
         // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-        FP_Base_DepTag = 32,
-        Ctrl_Base_DepTag = 64,
-        Fpcr_DepTag = 64,		// floating point control register
-        Uniq_DepTag = 65,
-        Lock_Flag_DepTag = 66,
-        Lock_Addr_DepTag = 67,
-        IPR_Base_DepTag = 68
+        FP_Base_DepTag = 40,
+        Ctrl_Base_DepTag = 72,
+        Fpcr_DepTag = 72,		// floating point control register
+        Uniq_DepTag = 73,
+        Lock_Flag_DepTag = 74,
+        Lock_Addr_DepTag = 75,
+        IPR_Base_DepTag = 76
     };
 
     typedef uint64_t IntReg;
@@ -130,6 +138,9 @@ extern const Addr PageShift;
 extern const Addr PageBytes;
 extern const Addr PageMask;
 extern const Addr PageOffset;
+
+// redirected register map, really only used for the full system case.
+extern const int reg_redir[NumIntRegs];
 
 #if FULL_SYSTEM
 
@@ -198,9 +209,7 @@ extern const Addr PageOffset;
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
 #if FULL_SYSTEM
-        IntReg palregs[NumIntRegs];	// PAL shadow registers
         int intrflag;			// interrupt flag
-        bool pal_shadow;		// using pal_shadow registers
         inline int instAsid()
         { return EV5::ITB_ASN_ASN(miscRegs.ipr[IPR_ITB_ASN]); }
         inline int dataAsid()
@@ -211,10 +220,12 @@ extern const Addr PageOffset;
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
-    StaticInstPtr decodeInst(MachInst);
+    static inline ExtMachInst makeExtMI(MachInst inst, const uint64_t &pc);
+
+    StaticInstPtr decodeInst(ExtMachInst);
 
     // return a no-op instruction... used for instruction fetch faults
-    extern const MachInst NoopMachInst;
+    extern const ExtMachInst NoopMachInst;
 
     enum annotes {
         ANNOTE_NONE = 0,
@@ -361,6 +372,18 @@ class SyscallReturn {
 
 #endif
 
+static inline AlphaISA::ExtMachInst
+AlphaISA::makeExtMI(AlphaISA::MachInst inst, const uint64_t &pc) {
+#if FULL_SYSTEM
+    AlphaISA::ExtMachInst ext_inst = inst;
+    if (pc && 0x1)
+        return ext_inst|=(static_cast<AlphaISA::ExtMachInst>(pc & 0x1) << 32);
+    else
+        return ext_inst;
+#else
+    return AlphaISA::ExtMachInst(inst);
+#endif
+}
 
 #if FULL_SYSTEM
 //typedef TheISA::InternalProcReg InternalProcReg;

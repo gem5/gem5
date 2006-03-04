@@ -36,7 +36,7 @@ output header {{
       protected:
 
         /// Constructor.
-        EmulatedCallPal(const char *mnem, MachInst _machInst,
+        EmulatedCallPal(const char *mnem, ExtMachInst _machInst,
                         OpClass __opClass)
             : AlphaStaticInst(mnem, _machInst, __opClass)
         {
@@ -83,7 +83,7 @@ output header {{
         bool palPriv;	///< is this call privileged?
 
         /// Constructor.
-        CallPalBase(const char *mnem, MachInst _machInst,
+        CallPalBase(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass);
 
         std::string
@@ -93,7 +93,7 @@ output header {{
 
 output decoder {{
     inline
-    CallPalBase::CallPalBase(const char *mnem, MachInst _machInst,
+    CallPalBase::CallPalBase(const char *mnem, ExtMachInst _machInst,
                              OpClass __opClass)
         : AlphaStaticInst(mnem, _machInst, __opClass),
         palFunc(PALFUNC)
@@ -148,7 +148,7 @@ output header {{
         int16_t disp;
 
         /// Constructor
-        HwLoadStore(const char *mnem, MachInst _machInst, OpClass __opClass,
+        HwLoadStore(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
                     StaticInstPtr _memAccPtr = nullStaticInstPtr);
 
@@ -160,7 +160,7 @@ output header {{
 
 output decoder {{
     inline
-    HwLoadStore::HwLoadStore(const char *mnem, MachInst _machInst,
+    HwLoadStore::HwLoadStore(const char *mnem, ExtMachInst _machInst,
                              OpClass __opClass,
                              StaticInstPtr _eaCompPtr,
                              StaticInstPtr _memAccPtr)
@@ -231,7 +231,7 @@ output header {{
         int ipr_index;
 
         /// Constructor
-        HwMoveIPR(const char *mnem, MachInst _machInst, OpClass __opClass)
+        HwMoveIPR(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : AlphaStaticInst(mnem, _machInst, __opClass),
               ipr_index(HW_IPR_IDX)
         {

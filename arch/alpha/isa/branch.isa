@@ -46,7 +46,7 @@ output header {{
         mutable const SymbolTable *cachedSymtab;
 
         /// Constructor
-        PCDependentDisassembly(const char *mnem, MachInst _machInst,
+        PCDependentDisassembly(const char *mnem, ExtMachInst _machInst,
                                OpClass __opClass)
             : AlphaStaticInst(mnem, _machInst, __opClass),
               cachedPC(0), cachedSymtab(0)
@@ -68,7 +68,7 @@ output header {{
         int32_t disp;
 
         /// Constructor.
-        Branch(const char *mnem, MachInst _machInst, OpClass __opClass)
+        Branch(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : PCDependentDisassembly(mnem, _machInst, __opClass),
               disp(BRDISP << 2)
         {
@@ -93,7 +93,7 @@ output header {{
 
       public:
         /// Constructor
-        Jump(const char *mnem, MachInst _machInst, OpClass __opClass)
+        Jump(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : PCDependentDisassembly(mnem, _machInst, __opClass),
               disp(BRDISP)
         {
