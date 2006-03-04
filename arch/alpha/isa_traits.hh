@@ -57,7 +57,6 @@ namespace AlphaISA
 {
 
     typedef uint32_t MachInst;
-//    typedef uint64_t Addr;
     typedef uint8_t  RegIndex;
 
     enum {
