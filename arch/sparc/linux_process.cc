@@ -39,7 +39,7 @@
 #include "sim/syscall_emul.hh"
 
 using namespace std;
-using namespace SPARCISA;
+using namespace SparcISA;
 
 /// Target pipe() handler.  Even though this is a generic Posix call,
 /// the Alpha return convention is funky, so that makes it
@@ -139,7 +139,6 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
     return 1;
 }
-
 
 SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("restart_syscall", unimplimentedFunc);
