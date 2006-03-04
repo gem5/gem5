@@ -155,15 +155,16 @@ class Tru64 {
     /// implementing another set of stat functions using the old
     /// structure definition and binding them to the old syscall
     /// numbers.
+
     struct pre_F64_stat {
         dev_t   st_dev;
         ino_t   st_ino;
         mode_t  st_mode;
         nlink_t st_nlink;
-        uid_t   st_uid;
+        uid_t   st_uid __attribute__ ((aligned(sizeof(uid_t))));
         gid_t   st_gid;
         dev_t   st_rdev;
-        off_t   st_size;
+        off_t   st_size __attribute__ ((aligned(sizeof(off_t))));
         time_t  st_atimeX;
         int32_t st_uatime;
         time_t  st_mtimeX;
