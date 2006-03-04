@@ -86,6 +86,7 @@ class EtherDevBase(PciDevice):
     intr_delay = Param.Latency('10us', "Interrupt propagation delay")
     rx_thread = Param.Bool(False, "dedicated kernel thread for transmit")
     tx_thread = Param.Bool(False, "dedicated kernel threads for receive")
+    rss = Param.Bool(False, "Receive Side Scaling")
 
 class NSGigE(EtherDevBase):
     type = 'NSGigE'

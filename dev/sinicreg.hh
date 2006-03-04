@@ -81,6 +81,7 @@ __SINIC_REG32(HwAddr,      0x60); // 64: mac address
 __SINIC_REG32(Size,        0x68); // register addres space size
 
 // Config register bits
+__SINIC_VAL32(Config_RSS,      10, 1); // enable receive side scaling
 __SINIC_VAL32(Config_RxThread,  9, 1); // enable receive threads
 __SINIC_VAL32(Config_TxThread,  8, 1); // enable transmit thread
 __SINIC_VAL32(Config_Filter,    7, 1); // enable receive filter

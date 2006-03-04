@@ -33,6 +33,7 @@
  *
  */
 
+#include "arch/alpha/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "kern/freebsd/freebsd_system.hh"
@@ -49,7 +50,7 @@ using namespace std;
 using namespace TheISA;
 
 FreebsdSystem::FreebsdSystem(Params *p)
-    : System(p)
+    : AlphaSystem(p)
 {
     /**
      * Any time DELAY is called just skip the function.
@@ -143,7 +144,7 @@ END_INIT_SIM_OBJECT_PARAMS(FreebsdSystem)
 
 CREATE_SIM_OBJECT(FreebsdSystem)
 {
-    System::Params *p = new System::Params;
+    AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->memctrl = memctrl;

@@ -767,6 +767,8 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                     reg |= M5REG_RX_THREAD;
                 if (params()->tx_thread)
                     reg |= M5REG_TX_THREAD;
+                if (params()->rss)
+                    reg |= M5REG_RSS;
                 break;
 
               default:
@@ -3009,6 +3011,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<string> hardware_address;
     Param<bool> rx_thread;
     Param<bool> tx_thread;
+    Param<bool> rss;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3048,7 +3051,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(rx_filter, "Enable Receive Filter"),
     INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
     INIT_PARAM(rx_thread, ""),
-    INIT_PARAM(tx_thread, "")
+    INIT_PARAM(tx_thread, ""),
+    INIT_PARAM(rss, "")
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3093,6 +3097,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->eaddr = hardware_address;
     params->rx_thread = rx_thread;
     params->tx_thread = tx_thread;
+    params->rss = rss;
 
     return new NSGigE(params);
 }

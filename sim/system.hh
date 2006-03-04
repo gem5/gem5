@@ -71,20 +71,8 @@ class System : public SimObject
     /** kernel symbol table */
     SymbolTable *kernelSymtab;
 
-    /** console symbol table */
-    SymbolTable *consoleSymtab;
-
-    /** pal symbol table */
-    SymbolTable *palSymtab;
-
     /** Object pointer for the kernel code */
     ObjectFile *kernel;
-
-    /** Object pointer for the console code */
-    ObjectFile *console;
-
-    /** Object pointer for the PAL code */
-    ObjectFile *pal;
 
     /** Begining of kernel code */
     Addr kernelStart;
@@ -97,11 +85,6 @@ class System : public SimObject
 
     Kernel::Binning *kernelBinning;
 
-#ifndef NDEBUG
-    /** Event to halt the simulator if the console calls panic() */
-    BreakPCEvent *consolePanicEvent;
-#endif
-
   protected:
 
     /**
@@ -109,7 +92,7 @@ class System : public SimObject
      * events on to target function executions.  See comment in
      * system.cc for details.
      */
-    Addr fixFuncEventAddr(Addr addr);
+    virtual Addr fixFuncEventAddr(Addr addr) = 0;
 
     /**
      * Add a function-based event to the given function, to be looked
@@ -135,24 +118,10 @@ class System : public SimObject
         return addFuncEvent<T>(kernelSymtab, lbl);
     }
 
-    /** Add a function-based event to PALcode. */
-    template <class T>
-    T *System::addPalFuncEvent(const char *lbl)
-    {
-        return addFuncEvent<T>(palSymtab, lbl);
-    }
-
-    /** Add a function-based event to the console code. */
-    template <class T>
-    T *System::addConsoleFuncEvent(const char *lbl)
-    {
-        return addFuncEvent<T>(consoleSymtab, lbl);
-    }
-
   public:
     std::vector<RemoteGDB *> remoteGDB;
     std::vector<GDBListener *> gdbListen;
-    bool breakpoint();
+    virtual bool breakpoint() = 0;
 
   public:
     struct Params
@@ -167,27 +136,21 @@ class System : public SimObject
         bool bin_int;
 
         std::string kernel_path;
-        std::string console_path;
-        std::string palcode;
-        std::string boot_osflags;
-
         std::string readfile;
-        uint64_t system_type;
-        uint64_t system_rev;
     };
-    Params *params;
 
+  protected:
+    Params *_params;
+
+  public:
     System(Params *p);
     ~System();
 
     void startup();
 
-  public:
-    /**
-     * Set the m5AlphaAccess pointer in the console
-     */
-    void setAlphaAccess(Addr access);
+    const Params *params() const { return (const Params *)_params; }
 
+  public:
     /**
      * Returns the addess the kernel starts at.
      * @return address the kernel starts at
@@ -224,6 +187,8 @@ class System : public SimObject
     static int numSystemsRunning;
 
     static void printSystems();
+
+
 };
 
 #endif // __SYSTEM_HH__

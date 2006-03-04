@@ -306,6 +306,7 @@
 
 /* M5 control register */
 #define M5REG_RESERVED		0xfffffffc
+#define M5REG_RSS		0x00000004
 #define M5REG_RX_THREAD		0x00000002
 #define M5REG_TX_THREAD		0x00000001
 

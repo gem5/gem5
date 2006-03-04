@@ -35,6 +35,7 @@
  * up boot time.
  */
 
+#include "arch/alpha/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
@@ -53,7 +54,7 @@ using namespace std;
 using namespace TheISA;
 
 LinuxSystem::LinuxSystem(Params *p)
-    : System(p)
+    : AlphaSystem(p)
 {
     Addr addr = 0;
     Addr paddr = 0;
@@ -73,7 +74,7 @@ LinuxSystem::LinuxSystem(Params *p)
     paddr = vtophys(physmem, CommandLine());
     char *commandline = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
     if (commandline)
-        strncpy(commandline, params->boot_osflags.c_str(), CommandLineSize);
+        strncpy(commandline, params()->boot_osflags.c_str(), CommandLineSize);
 
     /**
      * find the address of the est_cycle_freq variable and insert it
@@ -146,7 +147,7 @@ LinuxSystem::LinuxSystem(Params *p)
         printThreadEvent = NULL;
     }
 
-    if (params->bin_int) {
+    if (params()->bin_int) {
         intStartEvent = addPalFuncEvent<InterruptStartEvent>("sys_int_21");
         if (!intStartEvent)
             panic("could not find symbol: sys_int_21\n");
@@ -277,7 +278,7 @@ END_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
 
 CREATE_SIM_OBJECT(LinuxSystem)
 {
-    System::Params *p = new System::Params;
+    AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->memctrl = memctrl;

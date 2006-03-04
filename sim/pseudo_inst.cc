@@ -207,7 +207,7 @@ namespace AlphaPseudo
     uint64_t
     readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset)
     {
-        const string &file = xc->cpu->system->params->readfile;
+        const string &file = xc->cpu->system->params()->readfile;
         if (file.empty()) {
             return ULL(0);
         }
