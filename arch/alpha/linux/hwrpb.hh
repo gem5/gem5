@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef __KERN_LINUX_HWRPB_HH__
-#define __KERN_LINUX_HWRPB_HH__
+#ifndef __ARCH_ALPHA_LINUX_HWRPB_HH__
+#define __ARCH_ALPHA_LINUX_HWRPB_HH__
 
-#include "kern/linux/aligned.hh"
+#include "arch/alpha/linux/aligned.hh"
 
 namespace Linux {
     struct pcb_struct {
@@ -39,4 +39,4 @@ namespace Linux {
         uint64_ta res1, res2;
     };
 }
-#endif // __KERN_LINUX_HWRPB_HH__
+#endif // __ARCH_ALPHA_LINUX_HWRPB_HH__

@@ -212,7 +212,10 @@ mysql_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
+	arch/alpha/freebsd/system.cc
+	arch/alpha/linux/system.cc
         arch/alpha/system.cc
+	arch/alpha/tru64/system.cc
 
 	base/crc.cc
 	base/inet.cc
@@ -253,15 +256,13 @@ full_system_sources = Split('''
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
 	kern/system_events.cc
-	kern/freebsd/freebsd_system.cc
+	kern/linux/events.cc
 	kern/linux/linux_syscalls.cc
-	kern/linux/linux_system.cc
 	kern/linux/printk.cc
 	kern/tru64/dump_mbuf.cc
 	kern/tru64/printf.cc
 	kern/tru64/tru64_events.cc
 	kern/tru64/tru64_syscalls.cc
-	kern/tru64/tru64_system.cc
 
 	mem/functional/memory_control.cc
 	mem/functional/physical.cc

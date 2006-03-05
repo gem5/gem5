@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __KERN_LINUX_THREAD_INFO_H__
-#define __KERN_LINUX_THREAD_INFO_H__
+#ifndef __KERN_LINUX_EVENTS_HH__
+#define __KERN_LINUX_EVENTS_HH__
 
-#include "kern/linux/hwrpb.hh"
+#include "kern/system_events.hh"
 
 namespace Linux {
-    struct thread_info {
-        struct pcb_struct       pcb;
-        Addr_a                  task;
-    };
+
+class DebugPrintkEvent : public SkipFuncEvent
+{
+  private:
+    bool raw;
+
+  public:
+    DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+                     bool r = false)
+        : SkipFuncEvent(q, desc, addr), raw(r) {}
+    virtual void process(ExecContext *xc);
+};
+
 }
 
-#endif // __KERN_LINUX_THREAD_INFO_H__
+#endif

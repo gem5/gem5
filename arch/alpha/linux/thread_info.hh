@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
+ * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,63 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __KERN_LINUX_LINUX_TREADNIFO_HH__
-#define __KERN_LINUX_LINUX_TREADNIFO_HH__
+#ifndef __ARCH_ALPHA_LINUX_THREAD_INFO_H__
+#define __ARCH_ALPHA_LINUX_THREAD_INFO_H__
 
-#include "kern/linux/thread_info.hh"
-#include "kern/linux/sched.hh"
-#include "sim/vptr.hh"
+#include "arch/alpha/linux/hwrpb.hh"
 
 namespace Linux {
+    struct thread_info {
+        struct pcb_struct       pcb;
+        Addr_a                  task;
+    };
+}
 
-class ThreadInfo
-{
-  private:
-    ExecContext *xc;
-
-  public:
-    ThreadInfo(ExecContext *exec) : xc(exec) {}
-    ~ThreadInfo() {}
-
-    inline VPtr<thread_info>
-    curThreadInfo()
-    {
-        Addr current;
-
-        /* Each kernel stack is only 2 pages, the start of which is the
-         * thread_info struct. So we can get the address by masking off
-         * the lower 14 bits.
-         */
-        current = xc->regs.intRegFile[TheISA::StackPointerReg] & ~0x3fff;
-        return VPtr<thread_info>(xc, current);
-    }
-
-    inline VPtr<task_struct>
-    curTaskInfo()
-    {
-        Addr task = curThreadInfo()->task;
-        return VPtr<task_struct>(xc, task);
-    }
-
-    std::string
-    curTaskName()
-    {
-        return curTaskInfo()->name;
-    }
-
-    int32_t
-    curTaskPID()
-    {
-        return curTaskInfo()->pid;
-    }
-
-    uint64_t
-    curTaskStart()
-    {
-        return curTaskInfo()->start;
-    }
-};
-
-/* namespace Linux */ }
-
-#endif // __KERN_LINUX_LINUX_THREADINFO_HH__
+#endif // __ARCH_ALPHA_LINUX_THREAD_INFO_H__

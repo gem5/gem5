@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __KERN_TRU64_TRU64_SYSTEM_HH__
-#define __KERN_TRU64_TRU64_SYSTEM_HH__
+#ifndef __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
+#define __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
 
-#include "arch/alpha/system.hh"
-#include "arch/isa_traits.hh"
-#include "sim/system.hh"
+#include "kern/system_events.hh"
 
-class ExecContext;
-
-class BreakPCEvent;
-class BadAddrEvent;
-class SkipFuncEvent;
-class PrintfEvent;
-class DebugPrintfEvent;
-class DumpMbufEvent;
-class AlphaArguments;
-
-class Tru64System : public AlphaSystem
+class FreebsdAlphaSystem : public AlphaSystem
 {
   private:
-#ifdef DEBUG
-    /** Event to halt the simulator if the kernel calls panic()  */
-    BreakPCEvent *kernelPanicEvent;
-#endif
+    class SkipCalibrateClocksEvent : public SkipFuncEvent
+    {
+      public:
+        SkipCalibrateClocksEvent(PCEventQueue *q, const std::string &desc,
+                                 Addr addr)
+            : SkipFuncEvent(q, desc, addr) {}
+        virtual void process(ExecContext *xc);
+    };
 
-    BadAddrEvent *badaddrEvent;
-    SkipFuncEvent *skipPowerStateEvent;
-    SkipFuncEvent *skipScavengeBootEvent;
-    PrintfEvent *printfEvent;
-    DebugPrintfEvent  *debugPrintfEvent;
-    DebugPrintfrEvent *debugPrintfrEvent;
-    DumpMbufEvent *dumpMbufEvent;
+    SkipFuncEvent *skipDelayEvent;
+    SkipCalibrateClocksEvent *skipCalibrateClocks;
 
   public:
-    Tru64System(Params *p);
-    ~Tru64System();
+    FreebsdAlphaSystem(Params *p);
+    ~FreebsdAlphaSystem();
+    void doCalibrateClocks(ExecContext *xc);
 
-    static void Printf(AlphaArguments args);
-    static void DumpMbuf(AlphaArguments args);
 };
 
-#endif // __KERN_TRU64_TRU64_SYSTEM_HH__
+#endif // __KERN_FREEBSD_FREEBSD_SYSTEM_HH__

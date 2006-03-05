@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
-#define __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
-
+#include "arch/arguments.hh"
+#include "base/trace.hh"
+#include "cpu/exec_context.hh"
+#include "kern/linux/events.hh"
+#include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 
-class FreebsdSystem : public AlphaSystem
+
+namespace Linux {
+
+void
+DebugPrintkEvent::process(ExecContext *xc)
 {
-  private:
-    class SkipCalibrateClocksEvent : public SkipFuncEvent
-    {
-      public:
-        SkipCalibrateClocksEvent(PCEventQueue *q, const std::string &desc,
-                                 Addr addr)
-            : SkipFuncEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
-    };
+    if (DTRACE(DebugPrintf)) {
+        if (!raw) {
+            StringWrap name(xc->system->name() + ".dprintk");
+            DPRINTFN("");
+        }
 
-    SkipFuncEvent *skipDelayEvent;
-    SkipCalibrateClocksEvent *skipCalibrateClocks;
+        AlphaArguments args(xc);
+        Printk(args);
+        SkipFuncEvent::process(xc);
+    }
+}
 
-  public:
-    FreebsdSystem(Params *p);
-    ~FreebsdSystem();
-    void doCalibrateClocks(ExecContext *xc);
-
-};
-
-#endif // __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
+} // namespace linux

@@ -35,25 +35,27 @@
  * up boot time.
  */
 
+#include "arch/arguments.hh"
+#include "arch/vtophys.hh"
+#include "arch/alpha/linux/system.hh"
+#include "arch/alpha/linux/threadinfo.hh"
 #include "arch/alpha/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
-#include "kern/linux/linux_system.hh"
-#include "kern/linux/linux_threadinfo.hh"
+#include "dev/platform.hh"
 #include "kern/linux/printk.hh"
+#include "kern/linux/events.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
-#include "dev/platform.hh"
-#include "arch/arguments.hh"
-#include "arch/vtophys.hh"
 
 using namespace std;
-using namespace TheISA;
+using namespace AlphaISA;
+using namespace Linux;
 
-LinuxSystem::LinuxSystem(Params *p)
+LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
     : AlphaSystem(p)
 {
     Addr addr = 0;
@@ -166,7 +168,7 @@ LinuxSystem::LinuxSystem(Params *p)
     }
 }
 
-LinuxSystem::~LinuxSystem()
+LinuxAlphaSystem::~LinuxAlphaSystem()
 {
 #ifndef NDEBUG
     delete kernelPanicEvent;
@@ -184,7 +186,7 @@ LinuxSystem::~LinuxSystem()
 
 
 void
-LinuxSystem::setDelayLoop(ExecContext *xc)
+LinuxAlphaSystem::setDelayLoop(ExecContext *xc)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
@@ -200,31 +202,17 @@ LinuxSystem::setDelayLoop(ExecContext *xc)
     }
 }
 
+
 void
-LinuxSystem::SkipDelayLoopEvent::process(ExecContext *xc)
+LinuxAlphaSystem::SkipDelayLoopEvent::process(ExecContext *xc)
 {
     SkipFuncEvent::process(xc);
     // calculate and set loops_per_jiffy
-    ((LinuxSystem *)xc->system)->setDelayLoop(xc);
+    ((LinuxAlphaSystem *)xc->system)->setDelayLoop(xc);
 }
 
 void
-LinuxSystem::DebugPrintkEvent::process(ExecContext *xc)
-{
-    if (DTRACE(DebugPrintf)) {
-        if (!raw) {
-            StringWrap name(xc->system->name() + ".dprintk");
-            DPRINTFN("");
-        }
-
-        AlphaArguments args(xc);
-        Printk(args);
-        SkipFuncEvent::process(xc);
-    }
-}
-
-void
-LinuxSystem::PrintThreadInfo::process(ExecContext *xc)
+LinuxAlphaSystem::PrintThreadInfo::process(ExecContext *xc)
 {
     Linux::ThreadInfo ti(xc);
 
@@ -233,7 +221,7 @@ LinuxSystem::PrintThreadInfo::process(ExecContext *xc)
 }
 
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
     SimObjectParam<MemoryController *> memctrl;
@@ -254,9 +242,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
     VectorParam<string> binned_fns;
     Param<bool> bin_int;
 
-END_DECLARE_SIM_OBJECT_PARAMS(LinuxSystem)
+END_DECLARE_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
+BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(memctrl, "memory controller"),
@@ -274,9 +262,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
     INIT_PARAM(binned_fns, "functions to be broken down and binned"),
     INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
 
-END_INIT_SIM_OBJECT_PARAMS(LinuxSystem)
+END_INIT_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
-CREATE_SIM_OBJECT(LinuxSystem)
+CREATE_SIM_OBJECT(LinuxAlphaSystem)
 {
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
@@ -294,8 +282,8 @@ CREATE_SIM_OBJECT(LinuxSystem)
     p->bin = bin;
     p->binned_fns = binned_fns;
     p->bin_int = bin_int;
-    return new LinuxSystem(p);
+    return new LinuxAlphaSystem(p);
 }
 
-REGISTER_SIM_OBJECT("LinuxSystem", LinuxSystem)
+REGISTER_SIM_OBJECT("LinuxAlphaSystem", LinuxAlphaSystem)
 
