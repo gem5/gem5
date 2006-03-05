@@ -29,6 +29,7 @@
 #include <string>
 
 #include "cpu/base.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
 
 #if FULL_SYSTEM
@@ -50,23 +51,24 @@ using namespace std;
 
 // constructor
 #if FULL_SYSTEM
-ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
+CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaITB *_itb, AlphaDTB *_dtb,
                          FunctionalMemory *_mem)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
       dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
-      kernelBinning(system->kernelBinning), bin(kernelBinning->bin),
       fnbin(kernelBinning->fnbin), profile(NULL), quiesceEvent(this),
       func_exe_inst(0), storeCondFailures(0)
 {
-    kernelStats = new Kernel::Statistics(this);
+    proxy = new ProxyExecContext<CPUExecContext>(this);
+
     memset(&regs, 0, sizeof(RegFile));
 
     if (cpu->params->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
         Callback *cb =
-            new MakeCallback<ExecContext, &ExecContext::dumpFuncProfile>(this);
+            new MakeCallback<CPUExecContext,
+            &CPUExecContext::dumpFuncProfile>(this);
         registerExitCallback(cb);
     }
 
@@ -77,7 +79,7 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 }
 #else
-ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
+CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
@@ -85,30 +87,38 @@ ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
+    proxy = new ProxyExecContext<CPUExecContext>(this);
 }
 
-ExecContext::ExecContext(BaseCPU *_cpu, int _thread_num,
+CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          FunctionalMemory *_mem, int _asid)
     : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
+    proxy = new ProxyExecContext<CPUExecContext>(this);
 }
+
+CPUExecContext::CPUExecContext(RegFile *regFile)
+    : cpu(NULL), thread_num(-1), process(NULL), mem(NULL), asid(-1),
+      func_exe_inst(0), storeCondFailures(0)
+{
+    regs = *regFile;
+    proxy = new ProxyExecContext<CPUExecContext>(this);
+}
+
 #endif
 
-ExecContext::~ExecContext()
+CPUExecContext::~CPUExecContext()
 {
-#if FULL_SYSTEM
-    delete kernelStats;
-#endif
+    delete proxy;
 }
 
 #if FULL_SYSTEM
 void
-ExecContext::dumpFuncProfile()
+CPUExecContext::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
-    profile->dump(this, *os);
 }
 
 ExecContext::EndQuiesceEvent::EndQuiesceEvent(ExecContext *_xc)
@@ -130,8 +140,9 @@ ExecContext::EndQuiesceEvent::description()
 #endif
 
 void
-ExecContext::takeOverFrom(ExecContext *oldContext)
+CPUExecContext::takeOverFrom(ExecContext *oldContext)
 {
+/*
     // some things should already be set up
     assert(mem == oldContext->mem);
 #if FULL_SYSTEM
@@ -148,11 +159,12 @@ ExecContext::takeOverFrom(ExecContext *oldContext)
 
     storeCondFailures = 0;
 
-    oldContext->_status = ExecContext::Unallocated;
+    oldContext->_status = CPUExecContext::Unallocated;
+*/
 }
 
 void
-ExecContext::serialize(ostream &os)
+CPUExecContext::serialize(ostream &os)
 {
     SERIALIZE_ENUM(_status);
     regs.serialize(os);
@@ -165,14 +177,13 @@ ExecContext::serialize(ostream &os)
     if (quiesceEvent.scheduled())
         quiesceEndTick = quiesceEvent.when();
     SERIALIZE_SCALAR(quiesceEndTick);
-    kernelStats->serialize(os);
 
 #endif
 }
 
 
 void
-ExecContext::unserialize(Checkpoint *cp, const std::string &section)
+CPUExecContext::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ENUM(_status);
     regs.unserialize(cp, section);
@@ -185,28 +196,26 @@ ExecContext::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(quiesceEndTick);
     if (quiesceEndTick)
         quiesceEvent.schedule(quiesceEndTick);
-
-    kernelStats->unserialize(cp, section);
 #endif
 }
 
 
 void
-ExecContext::activate(int delay)
+CPUExecContext::activate(int delay)
 {
-    if (status() == Active)
+    if (status() == ExecContext::Active)
         return;
 
     lastActivate = curTick;
 
-    _status = Active;
+    _status = ExecContext::Active;
     cpu->activateContext(thread_num, delay);
 }
 
 void
-ExecContext::suspend()
+CPUExecContext::suspend()
 {
-    if (status() == Suspended)
+    if (status() == ExecContext::Suspended)
         return;
 
     lastActivate = curTick;
@@ -215,41 +224,65 @@ ExecContext::suspend()
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
     if (cpu->check_interrupts()) {
-        assert(status() == Active);
+        assert(status() == ExecContext::Active);
         return;
     }
 #endif
 */
-    _status = Suspended;
+    _status = ExecContext::Suspended;
     cpu->suspendContext(thread_num);
 }
 
 void
-ExecContext::deallocate()
+CPUExecContext::deallocate()
 {
-    if (status() == Unallocated)
+    if (status() == ExecContext::Unallocated)
         return;
 
-    _status = Unallocated;
+    _status = ExecContext::Unallocated;
     cpu->deallocateContext(thread_num);
 }
 
 void
-ExecContext::halt()
+CPUExecContext::halt()
 {
-    if (status() == Halted)
+    if (status() == ExecContext::Halted)
         return;
 
-    _status = Halted;
+    _status = ExecContext::Halted;
     cpu->haltContext(thread_num);
 }
 
 
 void
-ExecContext::regStats(const string &name)
+CPUExecContext::regStats(const string &name)
 {
-#if FULL_SYSTEM
-    kernelStats->regStats(name + ".kern");
-#endif
+}
+
+void
+CPUExecContext::copyArchRegs(ExecContext *xc)
+{
+    // First loop through the integer registers.
+    for (int i = 0; i < AlphaISA::NumIntRegs; ++i) {
+        setIntReg(i, xc->readIntReg(i));
+    }
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
+        setFloatRegDouble(i, xc->readFloatRegDouble(i));
+        setFloatRegInt(i, xc->readFloatRegInt(i));
+    }
+
+    // Copy misc. registers
+    setMiscReg(AlphaISA::Fpcr_DepTag, xc->readMiscReg(AlphaISA::Fpcr_DepTag));
+    setMiscReg(AlphaISA::Uniq_DepTag, xc->readMiscReg(AlphaISA::Uniq_DepTag));
+    setMiscReg(AlphaISA::Lock_Flag_DepTag,
+               xc->readMiscReg(AlphaISA::Lock_Flag_DepTag));
+    setMiscReg(AlphaISA::Lock_Addr_DepTag,
+               xc->readMiscReg(AlphaISA::Lock_Addr_DepTag));
+
+    // Lastly copy PC/NPC
+    setPC(xc->readPC());
+    setNextPC(xc->readNextPC());
 }
 

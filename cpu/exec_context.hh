@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2006 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,47 +30,29 @@
 #define __CPU_EXEC_CONTEXT_HH__
 
 #include "config/full_system.hh"
-#include "mem/functional/functional.hh"
 #include "mem/mem_req.hh"
-#include "sim/eventq.hh"
+#include "sim/faults.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
-#include "arch/isa_traits.hh"
-//#include "arch/isa_registers.hh"
 #include "sim/byteswap.hh"
 
 // forward declaration: see functional_memory.hh
+// @todo: Figure out a more architecture independent way to obtain the ITB and
+// DTB pointers.
+class AlphaDTB;
+class AlphaITB;
+class BaseCPU;
 class FunctionalMemory;
 class PhysicalMemory;
-class BaseCPU;
-
-#if FULL_SYSTEM
-
-#include "sim/system.hh"
-#include "arch/tlb.hh"
-
-class FunctionProfile;
-class ProfileNode;
-class MemoryController;
-namespace Kernel { class Binning; class Statistics; }
-
-#else // !FULL_SYSTEM
-
-#include "sim/process.hh"
-
-#endif // FULL_SYSTEM
-
-//
-// The ExecContext object represents a functional context for
-// instruction execution.  It incorporates everything required for
-// architecture-level functional simulation of a single thread.
-//
+class Process;
+class System;
 
 class ExecContext
 {
   protected:
     typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
+    typedef TheISA::IntReg IntReg;
     typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
   public:
@@ -87,7 +69,7 @@ class ExecContext
         Active,
 
         /// Temporarily inactive.  Entered while waiting for
-        /// initialization,synchronization, etc.
+        /// synchronization, etc.
         Suspended,
 
         /// Permanently shut down.  Entered when target executes
@@ -96,402 +78,326 @@ class ExecContext
         Halted
     };
 
-  private:
-    Status _status;
+    virtual ~ExecContext() { };
 
-  public:
-    Status status() const { return _status; }
+    virtual BaseCPU *getCpuPtr() = 0;
 
-    void setStatus(Status newStatus) { _status = newStatus; }
+    virtual void setCpuId(int id) = 0;
+
+    virtual int readCpuId() = 0;
+
+    virtual FunctionalMemory *getMemPtr() = 0;
+
+#if FULL_SYSTEM
+    virtual System *getSystemPtr() = 0;
+
+    virtual PhysicalMemory *getPhysMemPtr() = 0;
+
+    virtual AlphaITB *getITBPtr() = 0;
+
+    virtual AlphaDTB * getDTBPtr() = 0;
+#else
+    virtual Process *getProcessPtr() = 0;
+#endif
+
+    virtual Status status() const = 0;
 
     /// Set the status to Active.  Optional delay indicates number of
     /// cycles to wait before beginning execution.
-    void activate(int delay = 1);
+    virtual void activate(int delay = 1) = 0;
 
     /// Set the status to Suspended.
-    void suspend();
+    virtual void suspend() = 0;
 
     /// Set the status to Unallocated.
-    void deallocate();
+    virtual void deallocate() = 0;
 
     /// Set the status to Halted.
-    void halt();
-
-  public:
-    RegFile regs;	// correct-path register context
-
-    // pointer to CPU associated with this context
-    BaseCPU *cpu;
-
-    // Current instruction
-    MachInst inst;
-
-    // Index of hardware thread context on the CPU that this represents.
-    int thread_num;
-
-    // ID of this context w.r.t. the System or Process object to which
-    // it belongs.  For full-system mode, this is the system CPU ID.
-    int cpu_id;
-
-    Tick lastActivate;
-    Tick lastSuspend;
+    virtual void halt() = 0;
 
 #if FULL_SYSTEM
-    FunctionalMemory *mem;
-    AlphaITB *itb;
-    AlphaDTB *dtb;
-    System *system;
-
-    // the following two fields are redundant, since we can always
-    // look them up through the system pointer, but we'll leave them
-    // here for now for convenience
-    MemoryController *memctrl;
-    PhysicalMemory *physmem;
-
-    Kernel::Binning *kernelBinning;
-    Kernel::Statistics *kernelStats;
-    bool bin;
-    bool fnbin;
-
-    FunctionProfile *profile;
-    ProfileNode *profileNode;
-    Addr profilePC;
-    void dumpFuncProfile();
-
-    /** Event for timing out quiesce instruction */
-    struct EndQuiesceEvent : public Event
-    {
-        /** A pointer to the execution context that is quiesced */
-        ExecContext *xc;
-
-        EndQuiesceEvent(ExecContext *_xc);
-
-        /** Event process to occur at interrupt*/
-        virtual void process();
-
-        /** Event description */
-        virtual const char *description();
-    };
-    EndQuiesceEvent quiesceEvent;
-
-#else
-    Process *process;
-
-    FunctionalMemory *mem;	// functional storage for process address space
-
-    // Address space ID.  Note that this is used for TIMING cache
-    // simulation only; all functional memory accesses should use
-    // one of the FunctionalMemory pointers above.
-    short asid;
-
+    virtual void dumpFuncProfile() = 0;
 #endif
 
-    /**
-     * Temporary storage to pass the source address from copy_load to
-     * copy_store.
-     * @todo Remove this temporary when we have a better way to do it.
-     */
-    Addr copySrcAddr;
-    /**
-     * Temp storage for the physical source address of a copy.
-     * @todo Remove this temporary when we have a better way to do it.
-     */
-    Addr copySrcPhysAddr;
+    virtual void takeOverFrom(ExecContext *oldContext) = 0;
 
+    virtual void regStats(const std::string &name) = 0;
 
-    /*
-     * number of executed instructions, for matching with syscall trace
-     * points in EIO files.
-     */
-    Counter func_exe_inst;
+    virtual void serialize(std::ostream &os) = 0;
+    virtual void unserialize(Checkpoint *cp, const std::string &section) = 0;
+
+    virtual int getThreadNum() = 0;
+
+    virtual bool validInstAddr(Addr addr) = 0;
+    virtual bool validDataAddr(Addr addr) = 0;
+    virtual int getInstAsid() = 0;
+    virtual int getDataAsid() = 0;
+
+    virtual Fault translateInstReq(MemReqPtr &req) = 0;
+
+    virtual Fault translateDataReadReq(MemReqPtr &req) = 0;
+
+    virtual Fault translateDataWriteReq(MemReqPtr &req) = 0;
+
+    virtual TheISA::MachInst getInst() = 0;
+
+    virtual void copyArchRegs(ExecContext *xc) = 0;
+
+    virtual void clearArchRegs() = 0;
 
     //
-    // Count failed store conditionals so we can warn of apparent
-    // application deadlock situations.
-    unsigned storeCondFailures;
+    // New accessors for new decoder.
+    //
+    virtual uint64_t readIntReg(int reg_idx) = 0;
 
-    // constructor: initialize context from given process structure
+    virtual float readFloatRegSingle(int reg_idx) = 0;
+
+    virtual double readFloatRegDouble(int reg_idx) = 0;
+
+    virtual uint64_t readFloatRegInt(int reg_idx) = 0;
+
+    virtual void setIntReg(int reg_idx, uint64_t val) = 0;
+
+    virtual void setFloatRegSingle(int reg_idx, float val) = 0;
+
+    virtual void setFloatRegDouble(int reg_idx, double val) = 0;
+
+    virtual void setFloatRegInt(int reg_idx, uint64_t val) = 0;
+
+    virtual uint64_t readPC() = 0;
+
+    virtual void setPC(uint64_t val) = 0;
+
+    virtual uint64_t readNextPC() = 0;
+
+    virtual void setNextPC(uint64_t val) = 0;
+
+    virtual MiscReg readMiscReg(int misc_reg) = 0;
+
+    virtual MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault) = 0;
+
+    virtual Fault setMiscReg(int misc_reg, const MiscReg &val) = 0;
+
+    virtual Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val) = 0;
+
+    virtual unsigned readStCondFailures() = 0;
+
+    virtual void setStCondFailures(unsigned sc_failures) = 0;
+
 #if FULL_SYSTEM
-    ExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
-#else
-    ExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
-    ExecContext(BaseCPU *_cpu, int _thread_num, FunctionalMemory *_mem,
-                int _asid);
+    virtual int readIntrFlag() = 0;
+    virtual void setIntrFlag(int val) = 0;
+    virtual Fault hwrei() = 0;
+    virtual bool inPalMode() = 0;
+    virtual void ev5_trap(Fault fault) = 0;
+    virtual bool simPalCheck(int palFunc) = 0;
 #endif
-    virtual ~ExecContext();
 
-    virtual void takeOverFrom(ExecContext *oldContext);
+    virtual bool misspeculating() = 0;
 
-    void regStats(const std::string &name);
+    /** Meant to be more generic trap function to be
+     *  called when an instruction faults.
+     *  @param fault The fault generated by executing the instruction.
+     *  @todo How to do this properly so it's dependent upon ISA only?
+     */
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    virtual void trap(Fault fault) = 0;
+
+#if !FULL_SYSTEM
+    virtual IntReg getSyscallArg(int i) = 0;
+
+    // used to shift args for indirect syscall
+    virtual void setSyscallArg(int i, IntReg val) = 0;
+
+    virtual void setSyscallReturn(SyscallReturn return_value) = 0;
+
+    virtual void syscall() = 0;
+
+    virtual Counter readFuncExeInst() = 0;
+
+    virtual void setFuncExeInst(Counter new_val) = 0;
+#endif
+};
+
+template <class XC>
+class ProxyExecContext : public ExecContext
+{
+  public:
+    ProxyExecContext(XC *actual_xc)
+    { actualXC = actual_xc; }
+
+  private:
+    XC *actualXC;
+
+  public:
+
+    BaseCPU *getCpuPtr() { return actualXC->getCpuPtr(); }
+
+    void setCpuId(int id) { actualXC->setCpuId(id); }
+
+    int readCpuId() { return actualXC->readCpuId(); }
+
+    FunctionalMemory *getMemPtr() { return actualXC->getMemPtr(); }
 
 #if FULL_SYSTEM
-    bool validInstAddr(Addr addr) { return true; }
-    bool validDataAddr(Addr addr) { return true; }
-    int getInstAsid() { return regs.instAsid(); }
-    int getDataAsid() { return regs.dataAsid(); }
+    System *getSystemPtr() { return actualXC->getSystemPtr(); }
+
+    PhysicalMemory *getPhysMemPtr() { return actualXC->getPhysMemPtr(); }
+
+    AlphaITB *getITBPtr() { return actualXC->getITBPtr(); }
+
+    AlphaDTB *getDTBPtr() { return actualXC->getDTBPtr(); }
+#else
+    Process *getProcessPtr() { return actualXC->getProcessPtr(); }
+#endif
+
+    Status status() const { return actualXC->status(); }
+
+    /// Set the status to Active.  Optional delay indicates number of
+    /// cycles to wait before beginning execution.
+    void activate(int delay = 1) { actualXC->activate(delay); }
+
+    /// Set the status to Suspended.
+    void suspend() { actualXC->suspend(); }
+
+    /// Set the status to Unallocated.
+    void deallocate() { actualXC->deallocate(); }
+
+    /// Set the status to Halted.
+    void halt() { actualXC->halt(); }
+
+#if FULL_SYSTEM
+    void dumpFuncProfile() { actualXC->dumpFuncProfile(); }
+#endif
+
+    void takeOverFrom(ExecContext *oldContext)
+    { actualXC->takeOverFrom(oldContext); }
+
+    void regStats(const std::string &name) { actualXC->regStats(name); }
+
+    void serialize(std::ostream &os) { actualXC->serialize(os); }
+    void unserialize(Checkpoint *cp, const std::string &section)
+    { actualXC->unserialize(cp, section); }
+
+    int getThreadNum() { return actualXC->getThreadNum(); }
+
+    bool validInstAddr(Addr addr) { return actualXC->validInstAddr(addr); }
+    bool validDataAddr(Addr addr) { return actualXC->validDataAddr(addr); }
+    int getInstAsid() { return actualXC->getInstAsid(); }
+    int getDataAsid() { return actualXC->getDataAsid(); }
 
     Fault translateInstReq(MemReqPtr &req)
-    {
-        return itb->translate(req);
-    }
+    { return actualXC->translateInstReq(req); }
 
     Fault translateDataReadReq(MemReqPtr &req)
-    {
-        return dtb->translate(req, false);
-    }
+    { return actualXC->translateDataReadReq(req); }
 
     Fault translateDataWriteReq(MemReqPtr &req)
-    {
-        return dtb->translate(req, true);
-    }
+    { return actualXC->translateDataWriteReq(req); }
 
-#else
-    bool validInstAddr(Addr addr)
-    { return process->validInstAddr(addr); }
+    // @todo: Do I need this?
+    MachInst getInst() { return actualXC->getInst(); }
 
-    bool validDataAddr(Addr addr)
-    { return process->validDataAddr(addr); }
+    // @todo: Do I need this?
+    void copyArchRegs(ExecContext *xc) { actualXC->copyArchRegs(xc); }
 
-    int getInstAsid() { return asid; }
-    int getDataAsid() { return asid; }
-
-    Fault dummyTranslation(MemReqPtr &req)
-    {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return NoFault;
-    }
-    Fault translateInstReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
-    }
-    Fault translateDataReadReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
-    }
-    Fault translateDataWriteReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
-    }
-
-#endif
-
-    template <class T>
-    Fault read(MemReqPtr &req, T &data)
-    {
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
-        if (req->flags & LOCKED) {
-            MiscRegFile *cregs = &req->xc->regs.miscRegs;
-            cregs->setReg(TheISA::Lock_Addr_DepTag, req->paddr);
-            cregs->setReg(TheISA::Lock_Flag_DepTag, true);
-        }
-#endif
-
-        Fault error;
-        error = mem->read(req, data);
-        data = LittleEndianGuest::gtoh(data);
-        return error;
-    }
-
-    template <class T>
-    Fault write(MemReqPtr &req, T &data)
-    {
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
-
-        MiscRegFile *cregs;
-
-        // If this is a store conditional, act appropriately
-        if (req->flags & LOCKED) {
-            cregs = &req->xc->regs.miscRegs;
-
-            if (req->flags & UNCACHEABLE) {
-                // Don't update result register (see stq_c in isa_desc)
-                req->result = 2;
-                req->xc->storeCondFailures = 0;//Needed? [RGD]
-            } else {
-                bool lock_flag = cregs->readReg(TheISA::Lock_Flag_DepTag);
-                Addr lock_addr = cregs->readReg(TheISA::Lock_Addr_DepTag);
-                req->result = lock_flag;
-                if (!lock_flag ||
-                    ((lock_addr & ~0xf) != (req->paddr & ~0xf))) {
-                    cregs->setReg(TheISA::Lock_Flag_DepTag, false);
-                    if (((++req->xc->storeCondFailures) % 100000) == 0) {
-                        std::cerr << "Warning: "
-                                  << req->xc->storeCondFailures
-                                  << " consecutive store conditional failures "
-                                  << "on cpu " << req->xc->cpu_id
-                                  << std::endl;
-                    }
-                    return NoFault;
-                }
-                else req->xc->storeCondFailures = 0;
-            }
-        }
-
-        // Need to clear any locked flags on other proccessors for
-        // this address.  Only do this for succsful Store Conditionals
-        // and all other stores (WH64?).  Unsuccessful Store
-        // Conditionals would have returned above, and wouldn't fall
-        // through.
-        for (int i = 0; i < system->execContexts.size(); i++){
-            cregs = &system->execContexts[i]->regs.miscRegs;
-            if ((cregs->readReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
-                (req->paddr & ~0xf)) {
-                cregs->setReg(TheISA::Lock_Flag_DepTag, false);
-            }
-        }
-
-#endif
-        return mem->write(req, (T)LittleEndianGuest::htog(data));
-    }
-
-    virtual bool misspeculating();
-
-
-    MachInst getInst() { return inst; }
-
-    void setInst(MachInst new_inst)
-    {
-        inst = new_inst;
-    }
-
-    Fault instRead(MemReqPtr &req)
-    {
-        return mem->read(req, inst);
-    }
+    void clearArchRegs() { actualXC->clearArchRegs(); }
 
     //
     // New accessors for new decoder.
     //
     uint64_t readIntReg(int reg_idx)
-    {
-        return regs.intRegFile[reg_idx];
-    }
+    { return actualXC->readIntReg(reg_idx); }
 
     float readFloatRegSingle(int reg_idx)
-    {
-        return (float)regs.floatRegFile.d[reg_idx];
-    }
+    { return actualXC->readFloatRegSingle(reg_idx); }
 
     double readFloatRegDouble(int reg_idx)
-    {
-        return regs.floatRegFile.d[reg_idx];
-    }
+    { return actualXC->readFloatRegDouble(reg_idx); }
 
     uint64_t readFloatRegInt(int reg_idx)
-    {
-        return regs.floatRegFile.q[reg_idx];
-    }
+    { return actualXC->readFloatRegInt(reg_idx); }
 
     void setIntReg(int reg_idx, uint64_t val)
-    {
-        regs.intRegFile[reg_idx] = val;
-    }
+    { actualXC->setIntReg(reg_idx, val); }
 
     void setFloatRegSingle(int reg_idx, float val)
-    {
-        regs.floatRegFile.d[reg_idx] = (double)val;
-    }
+    { actualXC->setFloatRegSingle(reg_idx, val); }
 
     void setFloatRegDouble(int reg_idx, double val)
-    {
-        regs.floatRegFile.d[reg_idx] = val;
-    }
+    { actualXC->setFloatRegDouble(reg_idx, val); }
 
     void setFloatRegInt(int reg_idx, uint64_t val)
-    {
-        regs.floatRegFile.q[reg_idx] = val;
-    }
+    { actualXC->setFloatRegInt(reg_idx, val); }
 
-    uint64_t readPC()
-    {
-        return regs.pc;
-    }
+    uint64_t readPC() { return actualXC->readPC(); }
 
-    void setNextPC(uint64_t val)
-    {
-        regs.npc = val;
-    }
+    void setPC(uint64_t val) { actualXC->setPC(val); }
+
+    uint64_t readNextPC() { return actualXC->readNextPC(); }
+
+    void setNextPC(uint64_t val) { actualXC->setNextPC(val); }
 
     MiscReg readMiscReg(int misc_reg)
-    {
-        return regs.miscRegs.readReg(misc_reg);
-    }
+    { return actualXC->readMiscReg(misc_reg); }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
-    {
-        return regs.miscRegs.readRegWithEffect(misc_reg, fault, this);
-    }
+    { return actualXC->readMiscRegWithEffect(misc_reg, fault); }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
-    {
-        return regs.miscRegs.setReg(misc_reg, val);
-    }
+    { return actualXC->setMiscReg(misc_reg, val); }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
-    {
-        return regs.miscRegs.setRegWithEffect(misc_reg, val, this);
-    }
+    { return actualXC->setMiscRegWithEffect(misc_reg, val); }
+
+    unsigned readStCondFailures()
+    { return actualXC->readStCondFailures(); }
+
+    void setStCondFailures(unsigned sc_failures)
+    { actualXC->setStCondFailures(sc_failures); }
 
 #if FULL_SYSTEM
-    int readIntrFlag() { return regs.intrflag; }
-    void setIntrFlag(int val) { regs.intrflag = val; }
-    Fault hwrei();
-    bool inPalMode() { return AlphaISA::PcPAL(regs.pc); }
-    bool simPalCheck(int palFunc);
+    int readIntrFlag() { return actualXC->readIntrFlag(); }
+
+    void setIntrFlag(int val) { actualXC->setIntrFlag(val); }
+
+    Fault hwrei() { return actualXC->hwrei(); }
+
+    bool inPalMode() { return actualXC->inPalMode(); }
+
+    void ev5_trap(Fault fault) { actualXC->ev5_trap(fault); }
+
+    bool simPalCheck(int palFunc) { return actualXC->simPalCheck(palFunc); }
 #endif
 
+    // @todo: Fix this!
+    bool misspeculating() { return false; }
+
+    /** Meant to be more generic trap function to be
+     *  called when an instruction faults.
+     *  @param fault The fault generated by executing the instruction.
+     *  @todo How to do this properly so it's dependent upon ISA only?
+     */
+
+    void trap(Fault fault) { actualXC->trap(fault); }
+
 #if !FULL_SYSTEM
-    TheISA::IntReg getSyscallArg(int i)
-    {
-        return regs.intRegFile[TheISA::ArgumentReg0 + i];
-    }
+    IntReg getSyscallArg(int i) { return actualXC->getSyscallArg(i); }
 
     // used to shift args for indirect syscall
-    void setSyscallArg(int i, TheISA::IntReg val)
-    {
-        regs.intRegFile[TheISA::ArgumentReg0 + i] = val;
-    }
+    void setSyscallArg(int i, IntReg val)
+    { actualXC->setSyscallArg(i, val); }
 
     void setSyscallReturn(SyscallReturn return_value)
-    {
-        // check for error condition.  Alpha syscall convention is to
-        // indicate success/failure in reg a3 (r19) and put the
-        // return value itself in the standard return value reg (v0).
-        const int RegA3 = 19;	// only place this is used
-        if (return_value.successful()) {
-            // no error
-            regs.intRegFile[RegA3] = 0;
-            regs.intRegFile[TheISA::ReturnValueReg] = return_value.value();
-        } else {
-            // got an error, return details
-            regs.intRegFile[RegA3] = (TheISA::IntReg) -1;
-            regs.intRegFile[TheISA::ReturnValueReg] = -return_value.value();
-        }
-    }
+    { actualXC->setSyscallReturn(return_value); }
 
-    void syscall()
-    {
-        process->syscall(this);
-    }
+    void syscall() { actualXC->syscall(); }
+
+    Counter readFuncExeInst() { return actualXC->readFuncExeInst(); }
+
+    void setFuncExeInst(Counter new_val)
+    { return actualXC->setFuncExeInst(new_val); }
 #endif
 };
 
-
-// for non-speculative execution context, spec_mode is always false
-inline bool
-ExecContext::misspeculating()
-{
-    return false;
-}
-
-#endif // __CPU_EXEC_CONTEXT_HH__
+#endif

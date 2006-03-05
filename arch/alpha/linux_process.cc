@@ -61,7 +61,7 @@ pipeFunc(SyscallDesc *desc, int callnum, Process *process,
 
     // Alpha Linux convention for pipe() is that fd[0] is returned as
     // the return value of the function, and fd[1] is returned in r20.
-    xc->regs.intRegFile[20] = sim_fds[1];
+    xc->setIntReg(20, sim_fds[1]);
     return sim_fds[0];
 }
 
@@ -79,7 +79,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(xc->mem);
+    name.copyOut(xc->getMemPtr());
     return 0;
 }
 
@@ -99,7 +99,7 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
-          fpcr.copyOut(xc->mem);
+          fpcr.copyOut(xc->getMemPtr());
           return 0;
       }
 
@@ -125,7 +125,7 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
       case 14: { // SSI_IEEE_FP_CONTROL
           TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->mem);
+          fpcr.copyIn(xc->getMemPtr());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
           return 0;

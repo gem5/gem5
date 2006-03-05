@@ -174,8 +174,6 @@ extern const int reg_redir[NumIntRegs];
                                ExecContext *xc);
 
 #if FULL_SYSTEM
-        void clearIprs();
-
       protected:
         InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
 

@@ -64,7 +64,7 @@ namespace AlphaPseudo
     void
     arm(ExecContext *xc)
     {
-        xc->kernelStats->arm();
+        xc->getCpuPtr()->kernelStats->arm();
     }
 
     void
@@ -74,7 +74,7 @@ namespace AlphaPseudo
             return;
 
         xc->suspend();
-        xc->kernelStats->quiesce();
+        xc->getCpuPtr()->kernelStats->quiesce();
     }
 
     void
@@ -116,7 +116,7 @@ namespace AlphaPseudo
     void
     ivlb(ExecContext *xc)
     {
-        xc->kernelStats->ivlb();
+        xc->getCpuPtr()->kernelStats->ivlb();
     }
 
     void
@@ -174,7 +174,7 @@ namespace AlphaPseudo
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
-        xc->system->kernelSymtab->insert(addr,symbol);
+        xc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
     }
 
     void
@@ -207,7 +207,7 @@ namespace AlphaPseudo
     uint64_t
     readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset)
     {
-        const string &file = xc->cpu->system->params()->readfile;
+        const string &file = xc->getCpuPtr()->system->params()->readfile;
         if (file.empty()) {
             return ULL(0);
         }

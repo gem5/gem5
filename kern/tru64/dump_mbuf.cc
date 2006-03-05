@@ -61,7 +61,7 @@ DumpMbuf(AlphaArguments args)
                  addr, m.m_data, m.m_len);
         char *buffer = new char[m.m_len];
         CopyOut(xc, buffer, m.m_data, m.m_len);
-        Trace::dataDump(curTick, xc->system->name(), (uint8_t *)buffer,
+        Trace::dataDump(curTick, xc->getSystemPtr()->name(), (uint8_t *)buffer,
                         m.m_len);
         delete [] buffer;
 

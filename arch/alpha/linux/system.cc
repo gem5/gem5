@@ -195,7 +195,7 @@ LinuxAlphaSystem::setDelayLoop(ExecContext *xc)
         uint8_t *loops_per_jiffy =
             physmem->dma_addr(paddr, sizeof(uint32_t));
 
-        Tick cpuFreq = xc->cpu->frequency();
+        Tick cpuFreq = xc->getCpuPtr()->frequency();
         Tick intrFreq = platform->intrFrequency();
         *(uint32_t *)loops_per_jiffy =
             (uint32_t)((cpuFreq / intrFreq) * 0.9988);
@@ -208,7 +208,7 @@ LinuxAlphaSystem::SkipDelayLoopEvent::process(ExecContext *xc)
 {
     SkipFuncEvent::process(xc);
     // calculate and set loops_per_jiffy
-    ((LinuxAlphaSystem *)xc->system)->setDelayLoop(xc);
+    ((LinuxAlphaSystem *)xc->getSystemPtr())->setDelayLoop(xc);
 }
 
 void

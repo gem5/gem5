@@ -470,7 +470,7 @@ RemoteGDB::setregs()
         context->setFloatRegInt(i, gdbregs[i + KGDB_REG_F0]);
     }
 #endif
-    context->regs.pc = gdbregs[KGDB_REG_PC];
+    context->setPC(gdbregs[KGDB_REG_PC]);
 }
 
 void
@@ -509,7 +509,7 @@ RemoteGDB::clearSingleStep()
 void
 RemoteGDB::setSingleStep()
 {
-    Addr pc = context->regs.pc;
+    Addr pc = context->readPC();
     Addr npc, bpc;
     bool set_bt = false;
 
@@ -858,7 +858,7 @@ RemoteGDB::trap(int type)
         return false;
 
     DPRINTF(GDBMisc, "trap: PC=%#x NPC=%#x\n",
-            context->regs.pc, context->regs.npc);
+            context->readPC(), context->readNextPC());
 
     clearSingleStep();
 
@@ -1013,8 +1013,8 @@ RemoteGDB::trap(int type)
             subcmd = hex2i(&p);
             if (*p++ == ';') {
                 val = hex2i(&p);
-                context->regs.pc = val;
-                context->regs.npc = val + sizeof(MachInst);
+                context->setPC(val);
+                context->setNextPC(val + sizeof(MachInst));
             }
             clearSingleStep();
             goto out;
@@ -1022,8 +1022,8 @@ RemoteGDB::trap(int type)
           case KGDB_CONT:
             if (p - data < datalen) {
                 val = hex2i(&p);
-                context->regs.pc = val;
-                context->regs.npc = val + sizeof(MachInst);
+                context->setPC(val);
+                context->setNextPC(val + sizeof(MachInst));
             }
             clearSingleStep();
             goto out;
@@ -1032,8 +1032,8 @@ RemoteGDB::trap(int type)
             subcmd = hex2i(&p);
             if (*p++ == ';') {
                 val = hex2i(&p);
-                context->regs.pc = val;
-                context->regs.npc = val + sizeof(MachInst);
+                context->setPC(val);
+                context->setNextPC(val + sizeof(MachInst));
             }
             setSingleStep();
             goto out;
@@ -1041,8 +1041,8 @@ RemoteGDB::trap(int type)
           case KGDB_STEP:
             if (p - data < datalen) {
                 val = hex2i(&p);
-                context->regs.pc = val;
-                context->regs.npc = val + sizeof(MachInst);
+                context->setPC(val);
+                context->setNextPC(val + sizeof(MachInst));
             }
             setSingleStep();
             goto out;

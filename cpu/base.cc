@@ -39,9 +39,15 @@
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
+#include "sim/process.hh"
 #include "sim/sim_events.hh"
+#include "sim/system.hh"
 
 #include "base/trace.hh"
+
+#if FULL_SYSTEM
+#include "kern/kernel_stats.hh"
+#endif
 
 using namespace std;
 
@@ -147,7 +153,10 @@ BaseCPU::BaseCPU(Params *p)
     profileEvent = NULL;
     if (params->profile)
         profileEvent = new ProfileEvent(this, params->profile);
+
+    kernelStats = new Kernel::Statistics(system);
 #endif
+
 }
 
 BaseCPU::Params::Params()
@@ -165,6 +174,10 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
+#if FULL_SYSTEM
+    if (kernelStats)
+        delete kernelStats;
+#endif
 }
 
 void
@@ -203,6 +216,11 @@ BaseCPU::regStats()
         }
     } else if (size == 1)
         execContexts[0]->regStats(name());
+
+#if FULL_SYSTEM
+    if (kernelStats)
+        kernelStats->regStats(name() + ".kern");
+#endif
 }
 
 
@@ -216,9 +234,9 @@ BaseCPU::registerExecContexts()
         if (id != -1)
             id += i;
 
-        xc->cpu_id = system->registerExecContext(xc, id);
+        xc->setCpuId(system->registerExecContext(xc, id));
 #else
-        xc->cpu_id = xc->process->registerExecContext(xc);
+        xc->setCpuId(xc->getProcessPtr()->registerExecContext(xc));
 #endif
     }
 }
@@ -240,12 +258,12 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         ExecContext *oldXC = oldCPU->execContexts[i];
 
         newXC->takeOverFrom(oldXC);
-        assert(newXC->cpu_id == oldXC->cpu_id);
+        assert(newXC->readCpuId() == oldXC->readCpuId());
 #if FULL_SYSTEM
-        system->replaceExecContext(newXC, newXC->cpu_id);
+        system->replaceExecContext(newXC, newXC->readCpuId());
 #else
-        assert(newXC->process == oldXC->process);
-        newXC->process->replaceExecContext(newXC, newXC->cpu_id);
+        assert(newXC->getProcessPtr() == oldXC->getProcessPtr());
+        newXC->getProcessPtr()->replaceExecContext(newXC, newXC->readCpuId());
 #endif
     }
 
@@ -253,11 +271,11 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
-
+/*
     for (int i = 0; i < execContexts.size(); ++i)
         if (execContexts[i]->profile)
             execContexts[i]->profile->clear();
-
+*/
     if (profileEvent)
         profileEvent->schedule(curTick);
 #endif
@@ -272,11 +290,11 @@ BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
 void
 BaseCPU::ProfileEvent::process()
 {
-    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
+/*    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
         ExecContext *xc = cpu->execContexts[i];
         xc->profile->sample(xc->profileNode, xc->profilePC);
     }
-
+*/
     schedule(curTick + interval);
 }
 
@@ -327,6 +345,12 @@ BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     SERIALIZE_SCALAR(intstatus);
+
+#if FULL_SYSTEM
+    if (kernelStats)
+        kernelStats->serialize(os);
+#endif
+
 }
 
 void
@@ -334,6 +358,11 @@ BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     UNSERIALIZE_SCALAR(intstatus);
+
+#if FULL_SYSTEM
+    if (kernelStats)
+        kernelStats->unserialize(cp, section);
+#endif
 }
 
 #endif // FULL_SYSTEM

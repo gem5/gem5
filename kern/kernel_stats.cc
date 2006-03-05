@@ -43,11 +43,11 @@ namespace Kernel {
 
 const char *modestr[] = { "kernel", "user", "idle", "interrupt" };
 
-Statistics::Statistics(ExecContext *context)
-    : xc(context), idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
+Statistics::Statistics(System *system)
+    : idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
       iplLast(0), iplLastTick(0)
 {
-    bin_int = xc->system->params()->bin_int;
+    bin_int = system->params()->bin_int;
 }
 
 void
@@ -193,16 +193,16 @@ Statistics::regStats(const string &_name)
 }
 
 void
-Statistics::setIdleProcess(Addr idlepcbb)
+Statistics::setIdleProcess(Addr idlepcbb, ExecContext *xc)
 {
     assert(themode == kernel || themode == interrupt);
     idleProcess = idlepcbb;
     themode = idle;
-    changeMode(themode);
+    changeMode(themode, xc);
 }
 
 void
-Statistics::changeMode(cpu_mode newmode)
+Statistics::changeMode(cpu_mode newmode, ExecContext *xc)
 {
     _mode[newmode]++;
 
@@ -215,7 +215,7 @@ Statistics::changeMode(cpu_mode newmode)
     _modeGood[newmode]++;
     _modeTicks[themode] += curTick - lastModeTick;
 
-    xc->system->kernelBinning->changeMode(newmode);
+    xc->getSystemPtr()->kernelBinning->changeMode(newmode);
 
     lastModeTick = curTick;
     themode = newmode;
@@ -238,7 +238,7 @@ Statistics::swpipl(int ipl)
 }
 
 void
-Statistics::mode(cpu_mode newmode)
+Statistics::mode(cpu_mode newmode, ExecContext *xc)
 {
     Addr pcbb = xc->readMiscReg(AlphaISA::IPR_PALtemp23);
 
@@ -249,20 +249,20 @@ Statistics::mode(cpu_mode newmode)
     if (bin_int == false && newmode == interrupt)
         newmode = kernel;
 
-    changeMode(newmode);
+    changeMode(newmode, xc);
 }
 
 void
-Statistics::context(Addr oldpcbb, Addr newpcbb)
+Statistics::context(Addr oldpcbb, Addr newpcbb, ExecContext *xc)
 {
     assert(themode != user);
 
     _swap_context++;
-    changeMode(newpcbb == idleProcess ? idle : kernel);
+    changeMode(newpcbb == idleProcess ? idle : kernel, xc);
 }
 
 void
-Statistics::callpal(int code)
+Statistics::callpal(int code, ExecContext *xc)
 {
     if (!PAL::name(code))
         return;
@@ -271,7 +271,7 @@ Statistics::callpal(int code)
 
     switch (code) {
       case PAL::callsys: {
-          int number = xc->regs.intRegFile[0];
+          int number = xc->readIntReg(0);
           if (SystemCalls<Tru64>::validSyscallNumber(number)) {
               int cvtnum = SystemCalls<Tru64>::convert(number);
               _syscall[cvtnum]++;
@@ -279,8 +279,8 @@ Statistics::callpal(int code)
       } break;
 
       case PAL::swpctx:
-        if (xc->system->kernelBinning)
-            xc->system->kernelBinning->palSwapContext(xc);
+        if (xc->getSystemPtr()->kernelBinning)
+            xc->getSystemPtr()->kernelBinning->palSwapContext(xc);
         break;
     }
 }

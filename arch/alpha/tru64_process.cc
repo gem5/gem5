@@ -52,7 +52,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "732");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(xc->mem);
+    name.copyOut(xc->getMemPtr());
     return 0;
 }
 
@@ -69,21 +69,21 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
       case Tru64::GSI_MAX_CPU: {
           TypedBufferArg<uint32_t> max_cpu(xc->getSyscallArg(1));
           *max_cpu = htog((uint32_t)process->numCpus());
-          max_cpu.copyOut(xc->mem);
+          max_cpu.copyOut(xc->getMemPtr());
           return 1;
       }
 
       case Tru64::GSI_CPUS_IN_BOX: {
           TypedBufferArg<uint32_t> cpus_in_box(xc->getSyscallArg(1));
           *cpus_in_box = htog((uint32_t)process->numCpus());
-          cpus_in_box.copyOut(xc->mem);
+          cpus_in_box.copyOut(xc->getMemPtr());
           return 1;
       }
 
       case Tru64::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(xc->getSyscallArg(1));
           *physmem = htog((uint64_t)1024 * 1024);	// physical memory in KB
-          physmem.copyOut(xc->mem);
+          physmem.copyOut(xc->getMemPtr());
           return 1;
       }
 
@@ -100,14 +100,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           infop->cpu_ex_binding = htog(0);
           infop->mhz = htog(667);
 
-          infop.copyOut(xc->mem);
+          infop.copyOut(xc->getMemPtr());
           return 1;
       }
 
       case Tru64::GSI_PROC_TYPE: {
           TypedBufferArg<uint64_t> proc_type(xc->getSyscallArg(1));
           *proc_type = htog((uint64_t)11);
-          proc_type.copyOut(xc->mem);
+          proc_type.copyOut(xc->getMemPtr());
           return 1;
       }
 
@@ -116,14 +116,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           strncpy((char *)bufArg.bufferPtr(),
                   "COMPAQ Professional Workstation XP1000",
                   nbytes);
-          bufArg.copyOut(xc->mem);
+          bufArg.copyOut(xc->getMemPtr());
           return 1;
       }
 
       case Tru64::GSI_CLK_TCK: {
           TypedBufferArg<uint64_t> clk_hz(xc->getSyscallArg(1));
           *clk_hz = htog((uint64_t)1024);
-          clk_hz.copyOut(xc->mem);
+          clk_hz.copyOut(xc->getMemPtr());
           return 1;
       }
 

@@ -496,9 +496,8 @@ AlphaDTB::fault(MemReqPtr &req, uint64_t flags) const
 Fault
 AlphaDTB::translate(MemReqPtr &req, bool write) const
 {
-    RegFile *regs = &req->xc->regs;
     ExecContext *xc = req->xc;
-    Addr pc = regs->pc;
+    Addr pc = xc->readPC();
 
     AlphaISA::mode_type mode =
         (AlphaISA::mode_type)DTB_CM_CM(xc->readMiscReg(AlphaISA::IPR_DTB_CM));

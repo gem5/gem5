@@ -145,7 +145,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     FullCPU *cpu;
 
     /** Pointer to the exec context.  Will not exist in the final version. */
-    ExecContext *xc;
+    CPUExecContext *cpuXC;
 
     /** The kind of fault this instruction has generated. */
     Fault fault;
@@ -406,7 +406,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the exec context.
      *  @todo: Remove this once the ExecContext is no longer used.
      */
-    ExecContext *xcBase() { return xc; }
+    ExecContext *xcBase() { return cpuXC->getProxy(); }
 
   private:
     /** Instruction effective address.
@@ -444,7 +444,7 @@ template<class T>
 inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
-    MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
+    MemReqPtr req = new MemReq(addr, cpuXC->getProxy(), sizeof(T), flags);
     req->asid = asid;
 
     fault = cpu->translateDataReadReq(req);
@@ -492,7 +492,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
 
-    MemReqPtr req = new MemReq(addr, xc, sizeof(T), flags);
+    MemReqPtr req = new MemReq(addr, cpuXC->getProxy(), sizeof(T), flags);
 
     req->asid = asid;
 

@@ -44,9 +44,9 @@
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
-#include "cpu/exec_context.hh"
 #include "sim/process.hh"
 
 #if FULL_SYSTEM
@@ -54,6 +54,7 @@
 using namespace EV5;
 #endif
 
+class ExecContext;
 class FunctionalMemory;
 class Process;
 
@@ -164,8 +165,8 @@ class FullO3CPU : public BaseFullCPU
     bool validDataAddr(Addr addr)
     { return thread[0]->validDataAddr(addr); }
 
-    int getInstAsid() { return thread[0]->asid; }
-    int getDataAsid() { return thread[0]->asid; }
+    int getInstAsid() { return thread[0]->getInstAsid(); }
+    int getDataAsid() { return thread[0]->getDataAsid(); }
 
 #endif
 
@@ -320,16 +321,17 @@ class FullO3CPU : public BaseFullCPU
 
   public:
     /** The temporary exec context to support older accessors. */
-    ExecContext *xc;
+    CPUExecContext *cpuXC;
 
     /** Temporary function to get pointer to exec context. */
     ExecContext *xcBase()
     {
-#if FULL_SYSTEM
-        return system->execContexts[0];
-#else
+        return thread[0]->getProxy();
+    }
+
+    CPUExecContext *cpuXCBase()
+    {
         return thread[0];
-#endif
     }
 
     InstSeqNum globalSeqNum;
@@ -344,9 +346,8 @@ class FullO3CPU : public BaseFullCPU
     AlphaDTB *dtb;
 
 //    SWContext *swCtx;
-#else
-    std::vector<ExecContext *> thread;
 #endif
+    std::vector<CPUExecContext *> thread;
 
     FunctionalMemory *mem;
 

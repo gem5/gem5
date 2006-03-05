@@ -34,6 +34,7 @@
 #include "base/stats/events.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/fast/cpu.hh"
 #include "kern/kernel_stats.hh"
@@ -49,15 +50,15 @@ using namespace EV5;
 //  Machine dependent functions
 //
 void
-AlphaISA::initCPU(RegFile *regs, int cpuId)
+AlphaISA::initCPU(ExecContext *xc, int cpuId)
 {
-    initIPRs(&regs->miscRegs, cpuId);
+    initIPRs(xc, cpuId);
 
-    regs->intRegFile[16] = cpuId;
-    regs->intRegFile[0] = cpuId;
+    xc->setIntReg(16, cpuId);
+    xc->setIntReg(0, cpuId);
 
-    regs->pc = regs->miscRegs.readReg(IPR_PAL_BASE) + (new ResetFault)->vect();
-    regs->npc = regs->pc + sizeof(MachInst);
+    xc->setPC(xc->readMiscReg(IPR_PAL_BASE) + (new ResetFault)->vect());
+    xc->setNextPC(xc->readPC() + sizeof(MachInst));
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -65,13 +66,15 @@ AlphaISA::initCPU(RegFile *regs, int cpuId)
 //
 //
 void
-AlphaISA::initIPRs(MiscRegFile *miscRegs, int cpuId)
+AlphaISA::initIPRs(ExecContext *xc, int cpuId)
 {
-    miscRegs->clearIprs();
+    for (int i = 0; i < NumInternalProcRegs; ++i) {
+        xc->setMiscReg(i, 0);
+    }
 
-    miscRegs->setReg(IPR_PAL_BASE, PalBase);
-    miscRegs->setReg(IPR_MCSR, 0x6);
-    miscRegs->setReg(IPR_PALtemp16, cpuId);
+    xc->setMiscReg(IPR_PAL_BASE, PalBase);
+    xc->setMiscReg(IPR_MCSR, 0x6);
+    xc->setMiscReg(IPR_PALtemp16, cpuId);
 }
 
 
@@ -130,12 +133,12 @@ AlphaISA::zeroRegisters(CPU *cpu)
     // Insure ISA semantics
     // (no longer very clean due to the change in setIntReg() in the
     // cpu model.  Consider changing later.)
-    cpu->xc->setIntReg(ZeroReg, 0);
-    cpu->xc->setFloatRegDouble(ZeroReg, 0.0);
+    cpu->cpuXC->setIntReg(ZeroReg, 0);
+    cpu->cpuXC->setFloatRegDouble(ZeroReg, 0.0);
 }
 
 Fault
-ExecContext::hwrei()
+CPUExecContext::hwrei()
 {
     if (!inPalMode())
         return new UnimplementedOpcodeFault;
@@ -143,19 +146,13 @@ ExecContext::hwrei()
     setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));
 
     if (!misspeculating()) {
-        kernelStats->hwrei();
+        cpu->kernelStats->hwrei();
 
         cpu->checkInterrupts = true;
     }
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
-}
-
-void
-AlphaISA::MiscRegFile::clearIprs()
-{
-    bzero((char *)ipr, NumInternalProcRegs * sizeof(InternalProcReg));
 }
 
 AlphaISA::MiscReg
@@ -213,7 +210,7 @@ AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ExecContext *xc)
 
       case AlphaISA::IPR_CC:
         retval |= ipr[idx] & ULL(0xffffffff00000000);
-        retval |= xc->cpu->curCycle()  & ULL(0x00000000ffffffff);
+        retval |= xc->getCpuPtr()->curCycle()  & ULL(0x00000000ffffffff);
         break;
 
       case AlphaISA::IPR_VA:
@@ -230,7 +227,7 @@ AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ExecContext *xc)
 
       case AlphaISA::IPR_DTB_PTE:
         {
-            AlphaISA::PTE &pte = xc->dtb->index(!xc->misspeculating());
+            AlphaISA::PTE &pte = xc->getDTBPtr()->index(!xc->misspeculating());
 
             retval |= ((u_int64_t)pte.ppn & ULL(0x7ffffff)) << 32;
             retval |= ((u_int64_t)pte.xre & ULL(0xf)) << 8;
@@ -327,7 +324,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
-        xc->kernelStats->context(old, val);
+        xc->getCpuPtr()->kernelStats->context(old, val, xc);
         break;
 
       case AlphaISA::IPR_DTB_PTE:
@@ -354,14 +351,14 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
 
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-        xc->kernelStats->swpipl(ipr[idx]);
+        xc->getCpuPtr()->kernelStats->swpipl(ipr[idx]);
         break;
 
       case AlphaISA::IPR_DTB_CM:
         if (val & 0x18)
-            xc->kernelStats->mode(Kernel::user);
+            xc->getCpuPtr()->kernelStats->mode(Kernel::user, xc);
         else
-            xc->kernelStats->mode(Kernel::kernel);
+            xc->getCpuPtr()->kernelStats->mode(Kernel::kernel, xc);
 
       case AlphaISA::IPR_ICM:
         // only write two mode bits - processor mode
@@ -435,21 +432,22 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
         // really a control write
         ipr[idx] = 0;
 
-        xc->dtb->flushAll();
+        xc->getDTBPtr()->flushAll();
         break;
 
       case AlphaISA::IPR_DTB_IAP:
         // really a control write
         ipr[idx] = 0;
 
-        xc->dtb->flushProcesses();
+        xc->getDTBPtr()->flushProcesses();
         break;
 
       case AlphaISA::IPR_DTB_IS:
         // really a control write
         ipr[idx] = val;
 
-        xc->dtb->flushAddr(val, DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+        xc->getDTBPtr()->flushAddr(val,
+                                   DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
         break;
 
       case AlphaISA::IPR_DTB_TAG: {
@@ -472,7 +470,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
           pte.asn = DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          xc->dtb->insert(val, pte);
+          xc->getDTBPtr()->insert(val, pte);
       }
         break;
 
@@ -496,7 +494,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
           pte.asn = ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          xc->itb->insert(ipr[AlphaISA::IPR_ITB_TAG], pte);
+          xc->getITBPtr()->insert(ipr[AlphaISA::IPR_ITB_TAG], pte);
       }
         break;
 
@@ -504,21 +502,22 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
         // really a control write
         ipr[idx] = 0;
 
-        xc->itb->flushAll();
+        xc->getITBPtr()->flushAll();
         break;
 
       case AlphaISA::IPR_ITB_IAP:
         // really a control write
         ipr[idx] = 0;
 
-        xc->itb->flushProcesses();
+        xc->getITBPtr()->flushProcesses();
         break;
 
       case AlphaISA::IPR_ITB_IS:
         // really a control write
         ipr[idx] = val;
 
-        xc->itb->flushAddr(val, ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
+        xc->getITBPtr()->flushAddr(val,
+                                   ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
         break;
 
       default:
@@ -535,9 +534,9 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
  * If return value is false, actual PAL call will be suppressed.
  */
 bool
-ExecContext::simPalCheck(int palFunc)
+CPUExecContext::simPalCheck(int palFunc)
 {
-    kernelStats->callpal(palFunc);
+    cpu->kernelStats->callpal(palFunc, proxy);
 
     switch (palFunc) {
       case PAL::halt:

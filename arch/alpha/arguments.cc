@@ -54,13 +54,13 @@ AlphaArguments::getArg(bool fp)
 {
     if (number < 6) {
         if (fp)
-            return xc->regs.floatRegFile.q[16 + number];
+            return xc->readFloatRegInt(16 + number);
         else
-            return xc->regs.intRegFile[16 + number];
+            return xc->readIntReg(16 + number);
     } else {
-        Addr sp = xc->regs.intRegFile[30];
+        Addr sp = xc->readIntReg(30);
         Addr paddr = vtophys(xc, sp + (number-6) * sizeof(uint64_t));
-        return xc->physmem->phys_read_qword(paddr);
+        return xc->getPhysMemPtr()->phys_read_qword(paddr);
     }
 }
 

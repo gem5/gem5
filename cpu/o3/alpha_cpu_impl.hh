@@ -165,7 +165,7 @@ AlphaFullCPU<Impl>::copyToXC()
     for (int i = 0; i < AlphaISA::NumIntRegs; ++i)
     {
         renamed_reg = this->renameMap.lookup(i);
-        this->xc->regs.intRegFile[i] = this->regFile.readIntReg(renamed_reg);
+        this->cpuXC->setIntReg(i, this->regFile.readIntReg(renamed_reg));
         DPRINTF(FullCPU, "FullCPU: Copying register %i, has data %lli.\n",
                 renamed_reg, this->regFile.intRegFile[renamed_reg]);
     }
@@ -174,21 +174,23 @@ AlphaFullCPU<Impl>::copyToXC()
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
         renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        this->xc->regs.floatRegFile.d[i] =
-            this->regFile.readFloatRegDouble(renamed_reg);
-        this->xc->regs.floatRegFile.q[i] =
-            this->regFile.readFloatRegInt(renamed_reg);
+        this->cpuXC->setFloatRegDouble(i,
+            this->regFile.readFloatRegDouble(renamed_reg));
+        this->cpuXC->setFloatRegInt(i,
+            this->regFile.readFloatRegInt(renamed_reg));
     }
 /*
-    this->xc->regs.miscRegs.fpcr = this->regFile.miscRegs.fpcr;
-    this->xc->regs.miscRegs.uniq = this->regFile.miscRegs.uniq;
-    this->xc->regs.miscRegs.lock_flag = this->regFile.miscRegs.lock_flag;
-    this->xc->regs.miscRegs.lock_addr = this->regFile.miscRegs.lock_addr;
+    this->cpuXC->regs.miscRegs.fpcr = this->regFile.miscRegs.fpcr;
+    this->cpuXC->regs.miscRegs.uniq = this->regFile.miscRegs.uniq;
+    this->cpuXC->regs.miscRegs.lock_flag = this->regFile.miscRegs.lock_flag;
+    this->cpuXC->regs.miscRegs.lock_addr = this->regFile.miscRegs.lock_addr;
 */
-    this->xc->regs.pc = this->rob.readHeadPC();
-    this->xc->regs.npc = this->xc->regs.pc+4;
+    this->cpuXC->setPC(this->rob.readHeadPC());
+    this->cpuXC->setNextPC(this->cpuXC->readPC()+4);
 
-    this->xc->func_exe_inst = this->funcExeInst;
+#if !FULL_SYSTEM
+    this->cpuXC->setFuncExeInst(this->funcExeInst);
+#endif
 }
 
 // This function will probably mess things up unless the ROB is empty and
@@ -207,9 +209,9 @@ AlphaFullCPU<Impl>::copyFromXC()
         DPRINTF(FullCPU, "FullCPU: Copying over register %i, had data %lli, "
                 "now has data %lli.\n",
                 renamed_reg, this->regFile.intRegFile[renamed_reg],
-                this->xc->regs.intRegFile[i]);
+                this->cpuXC->readIntReg(i));
 
-        this->regFile.setIntReg(renamed_reg, this->xc->regs.intRegFile[i]);
+        this->regFile.setIntReg(renamed_reg, this->cpuXC->readIntReg(i));
     }
 
     // Then loop through the floating point registers.
@@ -217,22 +219,23 @@ AlphaFullCPU<Impl>::copyFromXC()
     {
         renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
         this->regFile.setFloatRegDouble(renamed_reg,
-                                        this->xc->regs.floatRegFile.d[i]);
+                                        this->cpuXC->readFloatRegDouble(i));
         this->regFile.setFloatRegInt(renamed_reg,
-                                     this->xc->regs.floatRegFile.q[i]);
+                                     this->cpuXC->readFloatRegInt(i));
     }
     /*
     // Then loop through the misc registers.
-    this->regFile.miscRegs.fpcr = this->xc->regs.miscRegs.fpcr;
-    this->regFile.miscRegs.uniq = this->xc->regs.miscRegs.uniq;
-    this->regFile.miscRegs.lock_flag = this->xc->regs.miscRegs.lock_flag;
-    this->regFile.miscRegs.lock_addr = this->xc->regs.miscRegs.lock_addr;
+    this->regFile.miscRegs.fpcr = this->cpuXC->regs.miscRegs.fpcr;
+    this->regFile.miscRegs.uniq = this->cpuXC->regs.miscRegs.uniq;
+    this->regFile.miscRegs.lock_flag = this->cpuXC->regs.miscRegs.lock_flag;
+    this->regFile.miscRegs.lock_addr = this->cpuXC->regs.miscRegs.lock_addr;
     */
     // Then finally set the PC and the next PC.
-//    regFile.pc = xc->regs.pc;
-//    regFile.npc = xc->regs.npc;
-
-    this->funcExeInst = this->xc->func_exe_inst;
+//    regFile.pc = cpuXC->regs.pc;
+//    regFile.npc = cpuXC->regs.npc;
+#if !FULL_SYSTEM
+    this->funcExeInst = this->cpuXC->readFuncExeInst();
+#endif
 }
 
 #if FULL_SYSTEM

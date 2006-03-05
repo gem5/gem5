@@ -30,7 +30,6 @@
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/alpha_cpu.hh"
 #include "cpu/o3/alpha_impl.hh"

@@ -46,6 +46,7 @@
 #include "base/statistics.hh"
 #include "base/trace.hh"
 
+class CPUExecContext;
 class ExecContext;
 class FunctionalMemory;
 class SyscallDesc;
@@ -83,6 +84,7 @@ class Process : public SimObject
     std::list<WaitRec> waitList;
 
     RegFile *init_regs;		// initial register contents
+    CPUExecContext *cpuXC;      // XC to hold the init_regs
 
     Addr text_base;		// text (code) segment base
     unsigned text_size;		// text (code) size in bytes
