@@ -119,9 +119,6 @@ void AlphaFault::invoke(ExecContext * xc)
                    xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
     }
 
-    if (!xc->inPalMode())
-        AlphaISA::swap_palshadow(&(xc->regs), true);
-
     xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
     xc->regs.npc = xc->regs.pc + sizeof(MachInst);
 }
