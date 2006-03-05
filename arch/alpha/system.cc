@@ -35,7 +35,7 @@
 #include "mem/functional/physical.hh"
 #include "sim/byteswap.hh"
 #include "sim/builder.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 
 using namespace LittleEndianGuest;
 
