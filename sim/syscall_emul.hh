@@ -380,7 +380,7 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
     // do the chmod
     int result = chmod(path.c_str(), hostMode);
     if (result < 0)
-        return errno;
+        return -errno;
 
     return 0;
 }
@@ -407,7 +407,7 @@ fchmodFunc(SyscallDesc *desc, int callnum, Process *process,
     // do the fchmod
     int result = fchmod(process->sim_fd(fd), hostMode);
     if (result < 0)
-        return errno;
+        return -errno;
 
     return 0;
 }
@@ -428,7 +428,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
     int result = stat(path.c_str(), &hostBuf);
 
     if (result < 0)
-        return errno;
+        return -errno;
 
     OS::copyOutStatBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
 
@@ -457,7 +457,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
 #endif
 
     if (result < 0)
-        return errno;
+        return -errno;
 
     OS::copyOutStat64Buf(xc->mem, fd, xc->getSyscallArg(1), &hostBuf);
 
@@ -553,7 +553,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
     int result = statfs(path.c_str(), &hostBuf);
 
     if (result < 0)
-        return errno;
+        return -errno;
 
     OS::copyOutStatfsBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
 
@@ -576,7 +576,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
     int result = fstatfs(fd, &hostBuf);
 
     if (result < 0)
-        return errno;
+        return -errno;
 
     OS::copyOutStatfsBuf(xc->mem, xc->getSyscallArg(1), &hostBuf);
 
@@ -618,7 +618,7 @@ writevFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 
     if (result < 0)
-        return errno;
+        return -errno;
 
     return 0;
 }

@@ -26,22 +26,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/alpha/tru64/system.hh"
+#include "arch/isa_traits.hh"
+#include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64_events.hh"
-#include "kern/tru64/tru64_system.hh"
 #include "kern/system_events.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
-#include "arch/isa_traits.hh"
-#include "arch/vtophys.hh"
 
 using namespace std;
 
-Tru64System::Tru64System(Tru64System::Params *p)
+Tru64AlphaSystem::Tru64AlphaSystem(Tru64AlphaSystem::Params *p)
     : AlphaSystem(p)
 {
     Addr addr = 0;
@@ -77,7 +77,7 @@ Tru64System::Tru64System(Tru64System::Params *p)
 #endif
 }
 
-Tru64System::~Tru64System()
+Tru64AlphaSystem::~Tru64AlphaSystem()
 {
 #ifdef DEBUG
     delete kernelPanicEvent;
@@ -93,7 +93,7 @@ Tru64System::~Tru64System()
 #endif
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
     SimObjectParam<MemoryController *> memctrl;
@@ -113,9 +113,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
     Param<bool> bin;
     VectorParam<string> binned_fns;
 
-END_DECLARE_SIM_OBJECT_PARAMS(Tru64System)
+END_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64System)
+BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "frequency of the boot cpu"),
     INIT_PARAM(memctrl, "memory controller"),
@@ -132,9 +132,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64System)
     INIT_PARAM_DFLT(bin, "is this system to be binned", false),
     INIT_PARAM(binned_fns, "functions to be broken down and binned")
 
-END_INIT_SIM_OBJECT_PARAMS(Tru64System)
+END_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
-CREATE_SIM_OBJECT(Tru64System)
+CREATE_SIM_OBJECT(Tru64AlphaSystem)
 {
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
@@ -153,7 +153,7 @@ CREATE_SIM_OBJECT(Tru64System)
     p->binned_fns = binned_fns;
     p->bin_int = false;
 
-    return new Tru64System(p);
+    return new Tru64AlphaSystem(p);
 }
 
-REGISTER_SIM_OBJECT("Tru64System", Tru64System)
+REGISTER_SIM_OBJECT("Tru64AlphaSystem", Tru64AlphaSystem)

@@ -34,9 +34,9 @@
  */
 
 #include "arch/alpha/system.hh"
+#include "arch/alpha/freebsd/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
-#include "kern/freebsd/freebsd_system.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/builder.hh"
@@ -47,9 +47,9 @@
 #define TIMER_FREQUENCY 1193180
 
 using namespace std;
-using namespace TheISA;
+using namespace AlphaISA;
 
-FreebsdSystem::FreebsdSystem(Params *p)
+FreebsdAlphaSystem::FreebsdAlphaSystem(Params *p)
     : AlphaSystem(p)
 {
     /**
@@ -62,7 +62,7 @@ FreebsdSystem::FreebsdSystem(Params *p)
 }
 
 
-FreebsdSystem::~FreebsdSystem()
+FreebsdAlphaSystem::~FreebsdAlphaSystem()
 {
     delete skipDelayEvent;
     delete skipCalibrateClocks;
@@ -70,7 +70,7 @@ FreebsdSystem::~FreebsdSystem()
 
 
 void
-FreebsdSystem::doCalibrateClocks(ExecContext *xc)
+FreebsdAlphaSystem::doCalibrateClocks(ExecContext *xc)
 {
     Addr ppc_vaddr = 0;
     Addr timer_vaddr = 0;
@@ -92,14 +92,14 @@ FreebsdSystem::doCalibrateClocks(ExecContext *xc)
 
 
 void
-FreebsdSystem::SkipCalibrateClocksEvent::process(ExecContext *xc)
+FreebsdAlphaSystem::SkipCalibrateClocksEvent::process(ExecContext *xc)
 {
     SkipFuncEvent::process(xc);
-    ((FreebsdSystem *)xc->system)->doCalibrateClocks(xc);
+    ((FreebsdAlphaSystem *)xc->system)->doCalibrateClocks(xc);
 }
 
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(FreebsdSystem)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
     SimObjectParam<MemoryController *> memctrl;
@@ -120,9 +120,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(FreebsdSystem)
     VectorParam<string> binned_fns;
     Param<bool> bin_int;
 
-END_DECLARE_SIM_OBJECT_PARAMS(FreebsdSystem)
+END_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(FreebsdSystem)
+BEGIN_INIT_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(memctrl, "memory controller"),
@@ -140,9 +140,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(FreebsdSystem)
     INIT_PARAM(binned_fns, "functions to be broken down and binned"),
     INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
 
-END_INIT_SIM_OBJECT_PARAMS(FreebsdSystem)
+END_INIT_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
-CREATE_SIM_OBJECT(FreebsdSystem)
+CREATE_SIM_OBJECT(FreebsdAlphaSystem)
 {
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
@@ -160,8 +160,8 @@ CREATE_SIM_OBJECT(FreebsdSystem)
     p->bin = bin;
     p->binned_fns = binned_fns;
     p->bin_int = bin_int;
-    return new FreebsdSystem(p);
+    return new FreebsdAlphaSystem(p);
 }
 
-REGISTER_SIM_OBJECT("FreebsdSystem", FreebsdSystem)
+REGISTER_SIM_OBJECT("FreebsdAlphaSystem", FreebsdAlphaSystem)
 
