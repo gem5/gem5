@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __KERN_LINUX_ALIGNED_HH__
-#define __KERN_LINUX_ALIGNED_HH__
+#ifndef __ARCH_ALPHA_TRU64_SYSTEM_HH__
+#define __ARCH_ALPHA_TRU64_SYSTEM_HH__
 
+#include "arch/alpha/system.hh"
+#include "arch/isa_traits.hh"
+#include "sim/system.hh"
 
-/* GCC 3.3.X has a bug in which attributes+typedefs don't work. 3.2.X is fine
- * as in 3.4.X, but the bug is marked will not fix in 3.3.X so here is
- * the work around.
- */
-#if __GNUC__ == 3 && __GNUC_MINOR__  != 3
-typedef uint64_t uint64_ta __attribute__ ((aligned (8))) ;
-typedef int64_t int64_ta __attribute__ ((aligned (8))) ;
-typedef Addr Addr_a __attribute__ ((aligned (8))) ;
-#else
-#define uint64_ta uint64_t __attribute__ ((aligned (8)))
-#define int64_ta int64_t __attribute__ ((aligned (8)))
-#define Addr_a Addr __attribute__ ((aligned (8)))
-#endif /* __GNUC__ __GNUC_MINOR__ */
+class ExecContext;
 
-#endif /* __KERN_LINUX_ALIGNED_HH__ */
+class BreakPCEvent;
+class BadAddrEvent;
+class SkipFuncEvent;
+class PrintfEvent;
+class DebugPrintfEvent;
+class DebugPrintfrEvent;
+class DumpMbufEvent;
+class AlphaArguments;
+
+class Tru64AlphaSystem : public AlphaSystem
+{
+  private:
+#ifdef DEBUG
+    /** Event to halt the simulator if the kernel calls panic()  */
+    BreakPCEvent *kernelPanicEvent;
+#endif
+
+    BadAddrEvent *badaddrEvent;
+    SkipFuncEvent *skipPowerStateEvent;
+    SkipFuncEvent *skipScavengeBootEvent;
+    PrintfEvent *printfEvent;
+    DebugPrintfEvent  *debugPrintfEvent;
+    DebugPrintfrEvent *debugPrintfrEvent;
+    DumpMbufEvent *dumpMbufEvent;
+
+  public:
+    Tru64AlphaSystem(Params *p);
+    ~Tru64AlphaSystem();
+
+    static void Printf(AlphaArguments args);
+    static void DumpMbuf(AlphaArguments args);
+};
+
+#endif // __ARCH_ALPHA_TRU64_SYSTEM_HH__
