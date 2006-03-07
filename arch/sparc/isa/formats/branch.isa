@@ -9,48 +9,44 @@ output header {{
          */
         class Branch : public SparcStaticInst
         {
-                protected:
+          protected:
+            // Constructor
+            Branch(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
 
-                /// Constructor
-                Branch(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
         };
 }};
 
 output decoder {{
         std::string Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+                return "Branch instruction\n";
         }
 }};
 
 def template BranchExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
         {
-                //Attempt to execute the instruction
-                try
-                {
-                        checkPriv;
+            //Attempt to execute the instruction
+            Fault fault = NoFault;
+            checkPriv;
 
-                        %(op_decl)s;
-                        %(op_rd)s;
-                        %(code)s;
-                }
-                //If we have an exception for some reason,
-                //deal with it
-                catch(SparcException except)
-                {
-                        //Deal with exception
-                        return No_Fault;
-                }
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
 
+            if(fault == NoFault)
+            {
                 //Write the resulting state to the execution context
                 %(op_wb)s;
+            }
 
-                return No_Fault;
+            return fault;
         }
 }};
 

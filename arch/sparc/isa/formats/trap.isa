@@ -9,35 +9,33 @@ output header {{
          */
         class Trap : public SparcStaticInst
         {
-                protected:
+          protected:
 
-                /// Constructor
-                Trap(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
-                {
-                }
+            // Constructor
+            Trap(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
         };
 }};
 
 output decoder {{
-        std::string Trap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string Trap::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+            return "Trap instruction\n";
         }
 }};
 
 def template TrapExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
         {
-                //Call into the trap handler with the appropriate fault
-                return No_Fault;
-        }
-
-                //Write the resulting state to the execution context
-                %(op_wb)s;
-
-                return No_Fault;
+            //TODO: set up a software fault and return it.
+            return NoFault;
         }
 }};
 

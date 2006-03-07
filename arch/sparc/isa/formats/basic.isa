@@ -11,16 +11,17 @@ def template BasicDeclare {{
          */
         class %(class_name)s : public %(base_class)s
         {
-        public:
-                /// Constructor.
-                %(class_name)s(MachInst machInst);
-                %(BasicExecDeclare)s
-    };
+          public:
+            // Constructor.
+            %(class_name)s(MachInst machInst);
+            %(BasicExecDeclare)s
+        };
 }};
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-        inline %(class_name)s::%(class_name)s(MachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        inline %(class_name)s::%(class_name)s(MachInst machInst)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
                 %(constructor)s;
         }
@@ -28,20 +29,21 @@ def template BasicConstructor {{
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
         {
-                Fault fault = No_Fault;
+            Fault fault = NoFault;
 
-                %(fp_enable_check)s;
-                %(op_decl)s;
-                %(op_rd)s;
-                %(code)s;
+            %(fp_enable_check)s;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
 
-                if(fault == No_Fault)
-                {
-                        %(op_wb)s;
-                }
-                return fault;
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+            return fault;
         }
 }};
 
@@ -57,7 +59,8 @@ def template BasicDecodeWithMnemonic {{
 
 // The most basic instruction format... used only for a few misc. insts
 def format BasicOperate(code, *flags) {{
-        iop = InstObjParams(name, Name, 'SparcStaticInst', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'SparcStaticInst',
+                CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
