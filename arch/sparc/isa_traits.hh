@@ -76,8 +76,12 @@ namespace SparcISA
         MaxTL = 4,
 
         // semantically meaningful register indices
-        ZeroReg = 0	// architecturally meaningful
+        ZeroReg = 0,	// architecturally meaningful
         // the rest of these depend on the ABI
+        //8K. This value is implmentation specific, and should probably
+        //be somewhere else.
+        LogVMPageSize = 13,
+        VMPageSize = (1 << LogVMPageSize)
     };
     typedef uint64_t IntReg;
 
@@ -99,6 +103,12 @@ namespace SparcISA
 
     void unserialize(Checkpoint *cp, const std::string &section);
 
+    typedef float float32_t;
+    typedef double float64_t;
+    //FIXME This actually usually refers to a 10 byte float, rather than a
+    //16 byte float as required. This data type may have to be emulated.
+    typedef long double float128_t;
+
     class FloatRegFile
     {
       private:
@@ -106,7 +116,7 @@ namespace SparcISA
         //is aligned correctly in memory
         union
         {
-            long double rawRegs[16];
+            float128_t rawRegs[16];
             uint64_t regDump[32];
         };
         class QuadRegs
@@ -115,7 +125,7 @@ namespace SparcISA
             FloatRegFile * parent;
           public:
             QuadRegs(FloatRegFile * p) : parent(p) {;}
-            long double & operator [] (RegIndex index)
+            float128_t & operator [] (RegIndex index)
             {
                 //Quad floats are index by the single
                 //precision register the start on,
@@ -130,13 +140,13 @@ namespace SparcISA
             FloatRegFile * parent;
           public:
             DoubleRegs(FloatRegFile * p) : parent(p) {;}
-            double & operator [] (RegIndex index)
+            float64_t & operator [] (RegIndex index)
             {
                 //Double floats are index by the single
                 //precision register the start on,
                 //and only 32 should be accessed
                 index = (index >> 1) & 0x1F;
-                return ((double *)parent->rawRegs)[index];
+                return ((float64_t *)parent->rawRegs)[index];
             }
         };
         class SingleRegs
@@ -145,11 +155,11 @@ namespace SparcISA
             FloatRegFile * parent;
           public:
             SingleRegs(FloatRegFile * p) : parent(p) {;}
-            float & operator [] (RegIndex index)
+            float32_t & operator [] (RegIndex index)
             {
                 //Only 32 single floats should be accessed
                 index &= 0x1F;
-                return ((float *)parent->rawRegs)[index];
+                return ((float32_t *)parent->rawRegs)[index];
             }
         };
       public:
@@ -193,7 +203,7 @@ namespace SparcISA
             struct
             {
                 uint64_t value:32;	// The actual value stored in y
-                const uint64_t :32;	// reserved bits
+                uint64_t :32;	// reserved bits
             } yFields;
         };
         uint8_t pil;		// Process Interrupt Register
@@ -214,8 +224,8 @@ namespace SparcISA
                         uint8_t v:1;	// Overflow
                         uint8_t z:1;	// Zero
                         uint8_t n:1;	// Negative
-                    } iccFields:4;
-                } :4;
+                    } iccFields;
+                };
                 union
                 {
                     uint8_t xcc:4;	// 64-bit condition codes
@@ -225,8 +235,8 @@ namespace SparcISA
                         uint8_t v:1;	// Overflow
                         uint8_t z:1;	// Zero
                         uint8_t n:1;	// Negative
-                    } xccFields:4;
-                } :4;
+                    } xccFields;
+                };
             } ccrFields;
         };
         uint8_t asi;		// Address Space Identifier
@@ -242,9 +252,9 @@ namespace SparcISA
             {
                 //Values are from previous trap level
                 uint64_t cwp:5;		// Current Window Pointer
-                const uint64_t :2;	// Reserved bits
+                uint64_t :2;	// Reserved bits
                 uint64_t pstate:10;	// Process State
-                const uint64_t :6;	// Reserved bits
+                uint64_t :6;	// Reserved bits
                 uint64_t asi:8;		// Address Space Identifier
                 uint64_t ccr:8;		// Condition Code Register
             } tstateFields[MaxTL];
@@ -257,7 +267,7 @@ namespace SparcISA
                 uint64_t counter:63;	// Clock-tick count
                 uint64_t npt:1;		// Non-priveleged trap
             } tickFields;
-        }
+        };
         uint8_t cansave;	// Savable windows
         uint8_t canrestore;	// Restorable windows
         uint8_t otherwin;	// Other windows
@@ -279,9 +289,9 @@ namespace SparcISA
             struct
             {
                 uint64_t maxwin:5;	// Max CWP value
-                const uint64_t :2;	// Reserved bits
+                uint64_t :2;	// Reserved bits
                 uint64_t maxtl:8;	// Maximum trap level
-                const uint64_t :8;	// Reserved bits
+                uint64_t :8;	// Reserved bits
                 uint64_t mask:8;	// Processor mask set revision number
                 uint64_t impl:16;	// Implementation identification number
                 uint64_t manuf:16;	// Manufacturer code
@@ -302,8 +312,8 @@ namespace SparcISA
                         uint64_t ufc:1;		// Underflow
                         uint64_t ofc:1;		// Overflow
                         uint64_t nvc:1;		// Invalid operand
-                    } cexecFields:5;
-                } :5;
+                    } cexecFields;
+                };
                 union
                 {
                     uint64_t aexc:5;		// Accrued exception
@@ -314,15 +324,15 @@ namespace SparcISA
                         uint64_t ufc:1;		// Underflow
                         uint64_t ofc:1;		// Overflow
                         uint64_t nvc:1;		// Invalid operand
-                    } aexecFields:5;
-                } :5;
+                    } aexecFields;
+                };
                 uint64_t fcc0:2;		// Floating-Point condtion codes
-                const uint64_t :1;		// Reserved bits
+                uint64_t :1;		// Reserved bits
                 uint64_t qne:1;			// Deferred trap queue not empty
                                                 // with no queue, it should read 0
                 uint64_t ftt:3;			// Floating-Point trap type
                 uint64_t ver:3;			// Version (of the FPU)
-                const uint64_t :2;		// Reserved bits
+                uint64_t :2;		// Reserved bits
                 uint64_t ns:1;			// Nonstandard floating point
                 union
                 {
@@ -334,16 +344,16 @@ namespace SparcISA
                         uint64_t ufm:1;		// Underflow
                         uint64_t ofm:1;		// Overflow
                         uint64_t nvm:1;		// Invalid operand
-                    } temFields:5;
-                } :5;
-                const uint64_t :2;		// Reserved bits
+                    } temFields;
+                };
+                uint64_t :2;		// Reserved bits
                 uint64_t rd:2;			// Rounding direction
                 uint64_t fcc1:2;		// Floating-Point condition codes
                 uint64_t fcc2:2;		// Floating-Point condition codes
                 uint64_t fcc3:2;		// Floating-Point condition codes
-                const uint64_t :26;		// Reserved bits
+                uint64_t :26;		// Reserved bits
             } fsrFields;
-        }
+        };
         union
         {
             uint8_t		fprs;	// Floating-Point Register State
@@ -351,60 +361,21 @@ namespace SparcISA
             {
                 uint8_t dl:1;		// Dirty lower
                 uint8_t du:1;		// Dirty upper
-                fef:1;		// FPRS enable floating-Point
+                uint8_t fef:1;		// FPRS enable floating-Point
             } fprsFields;
         };
 
-        void serialize(std::ostream & os)
-        {
-            SERIALIZE_SCALAR(pstate);
-            SERIAlIZE_SCALAR(tba);
-            SERIALIZE_SCALAR(y);
-            SERIALIZE_SCALAR(pil);
-            SERIALIZE_SCALAR(cwp);
-            SERIALIZE_ARRAY(tt, MaxTL);
-            SERIALIZE_SCALAR(ccr);
-            SERIALIZE_SCALAR(asi);
-            SERIALIZE_SCALAR(tl);
-            SERIALIZE_SCALAR(tpc);
-            SERIALIZE_SCALAR(tnpc);
-            SERIALIZE_ARRAY(tstate, MaxTL);
-            SERIALIZE_SCALAR(tick);
-            SERIALIZE_SCALAR(cansave);
-            SERIALIZE_SCALAR(canrestore);
-            SERIALIZE_SCALAR(otherwin);
-            SERIALIZE_SCALAR(cleanwin);
-            SERIALIZE_SCALAR(wstate);
-            SERIALIZE_SCALAR(ver);
-            SERIALIZE_SCALAR(fsr);
-            SERIALIZE_SCALAR(fprs);
-        }
+        void serialize(std::ostream & os);
 
-        void unserialize(Checkpoint &* cp, std::string & section)
-        {
-            UNSERIALIZE_SCALAR(pstate);
-            UNSERIAlIZE_SCALAR(tba);
-            UNSERIALIZE_SCALAR(y);
-            UNSERIALIZE_SCALAR(pil);
-            UNSERIALIZE_SCALAR(cwp);
-            UNSERIALIZE_ARRAY(tt, MaxTL);
-            UNSERIALIZE_SCALAR(ccr);
-            UNSERIALIZE_SCALAR(asi);
-            UNSERIALIZE_SCALAR(tl);
-            UNSERIALIZE_SCALAR(tpc);
-            UNSERIALIZE_SCALAR(tnpc);
-            UNSERIALIZE_ARRAY(tstate, MaxTL);
-            UNSERIALIZE_SCALAR(tick);
-            UNSERIALIZE_SCALAR(cansave);
-            UNSERIALIZE_SCALAR(canrestore);
-            UNSERIALIZE_SCALAR(otherwin);
-            UNSERIALIZE_SCALAR(cleanwin);
-            UNSERIALIZE_SCALAR(wstate);
-            UNSERIALIZE_SCALAR(ver);
-            UNSERIALIZE_SCALAR(fsr);
-            UNSERIALIZE_SCALAR(fprs);
-        }
+        void unserialize(Checkpoint * cp, std::string & section);
     };
+
+    typedef union
+    {
+        float32_t singReg;
+        float64_t doubReg;
+        float128_t quadReg;
+    } FloatReg;
 
     typedef union
     {
@@ -426,25 +397,25 @@ namespace SparcISA
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
-    static StaticInstPtr decodeInst(MachInst);
+    StaticInstPtr decodeInst(MachInst);
 
     // return a no-op instruction... used for instruction fetch faults
-    static const MachInst NoopMachInst;
+    extern const MachInst NoopMachInst;
 
     // Instruction address compression hooks
-    static inline Addr realPCToFetchPC(const Addr &addr)
+    inline Addr realPCToFetchPC(const Addr &addr)
     {
         return addr;
     }
 
-    static inline Addr fetchPCToRealPC(const Addr &addr)
+    inline Addr fetchPCToRealPC(const Addr &addr)
     {
         return addr;
     }
 
     // the size of "fetched" instructions (not necessarily the size
     // of real instructions for PISA)
-    static inline size_t fetchInstSize()
+    inline size_t fetchInstSize()
     {
         return sizeof(MachInst);
     }
@@ -454,14 +425,8 @@ namespace SparcISA
      * @param xc The execution context.
      */
     template <class XC>
-    static void zeroRegisters(XC *xc);
+    void zeroRegisters(XC *xc);
 };
-
-const int VMPageSize   = TheISA::VMPageSize;
-const int LogVMPageSize   = TheISA::LogVMPageSize;
-const int ZeroReg = TheISA::ZeroReg;
-const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
-const int MaxAddr = (Addr)-1;
 
 #if !FULL_SYSTEM
 class SyscallReturn
