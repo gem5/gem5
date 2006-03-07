@@ -303,37 +303,7 @@ extern const int reg_redir[NumIntRegs];
     template <class XC>
     void zeroRegisters(XC *xc);
 
-
-//typedef AlphaISA TheISA;
-
-//typedef TheISA::MachInst MachInst;
-//typedef TheISA::Addr Addr;
-//typedef TheISA::RegIndex RegIndex;
-//typedef TheISA::IntReg IntReg;
-//typedef TheISA::IntRegFile IntRegFile;
-//typedef TheISA::FloatReg FloatReg;
-//typedef TheISA::FloatRegFile FloatRegFile;
-//typedef TheISA::MiscReg MiscReg;
-//typedef TheISA::MiscRegFile MiscRegFile;
-//typedef TheISA::AnyReg AnyReg;
-//typedef TheISA::RegFile RegFile;
-
-//const int NumIntRegs   = TheISA::NumIntRegs;
-//const int NumFloatRegs = TheISA::NumFloatRegs;
-//const int NumMiscRegs  = TheISA::NumMiscRegs;
-//const int TotalNumRegs = TheISA::TotalNumRegs;
-//const int VMPageSize   = TheISA::VMPageSize;
-//const int LogVMPageSize   = TheISA::LogVMPageSize;
-//const int ZeroReg = TheISA::ZeroReg;
-//const int StackPointerReg = TheISA::StackPointerReg;
-//const int GlobalPointerReg = TheISA::GlobalPointerReg;
-//const int ReturnAddressReg = TheISA::ReturnAddressReg;
-//const int ReturnValueReg = TheISA::ReturnValueReg;
-//const int ArgumentReg0 = TheISA::ArgumentReg0;
-//const int ArgumentReg1 = TheISA::ArgumentReg1;
-//const int ArgumentReg2 = TheISA::ArgumentReg2;
-//const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
-const Addr MaxAddr = (Addr)-1;
+    const Addr MaxAddr = (Addr)-1;
 };
 
 #if !FULL_SYSTEM
@@ -386,9 +356,6 @@ AlphaISA::makeExtMI(AlphaISA::MachInst inst, const uint64_t &pc) {
 }
 
 #if FULL_SYSTEM
-//typedef TheISA::InternalProcReg InternalProcReg;
-//const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
-//const int NumInterruptLevels = TheISA::NumInterruptLevels;
 
 #include "arch/alpha/ev5.hh"
 #endif
