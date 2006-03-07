@@ -52,7 +52,6 @@ isa_switch_hdrs = Split('''
 	stacktrace.hh
 	vtophys.hh
 	faults.hh
-	ev5.hh
         ''')
 
 # Generate the header.  target[0] is the full path of the output

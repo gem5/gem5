@@ -166,6 +166,11 @@ extern const int reg_redir[NumIntRegs];
       public:
         MiscReg readReg(int misc_reg);
 
+        //These functions should be removed once the simplescalar cpu model
+        //has been replaced.
+        int getInstAsid();
+        int getDataAsid();
+
         MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc);
 
         Fault setReg(int misc_reg, const MiscReg &val);

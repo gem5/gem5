@@ -152,6 +152,18 @@ ExecContext::hwrei()
     return NoFault;
 }
 
+int
+AlphaISA::MiscRegFile::getInstAsid()
+{
+    return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
+}
+
+int
+AlphaISA::MiscRegFile::getDataAsid()
+{
+    return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
+}
+
 void
 AlphaISA::MiscRegFile::clearIprs()
 {

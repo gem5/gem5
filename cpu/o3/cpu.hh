@@ -49,11 +49,6 @@
 #include "cpu/exec_context.hh"
 #include "sim/process.hh"
 
-#if FULL_SYSTEM
-#include "arch/ev5.hh"
-using namespace EV5;
-#endif
-
 class FunctionalMemory;
 class Process;
 
@@ -152,11 +147,11 @@ class FullO3CPU : public BaseFullCPU
 
     /** Get instruction asid. */
     int getInstAsid()
-    { return ITB_ASN_ASN(regFile.miscRegs.readReg(TheISA::IPR_ITB_ASN)); }
+    { return regFile.miscRegs.getInstAsid(); }
 
     /** Get data asid. */
     int getDataAsid()
-    { return DTB_ASN_ASN(regFile.miscRegs.readReg(TheISA::IPR_DTB_ASN)); }
+    { return regFile.miscRegs.getDataAsid(); }
 #else
     bool validInstAddr(Addr addr)
     { return thread[0]->validInstAddr(addr); }

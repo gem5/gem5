@@ -57,7 +57,7 @@ class StaticInstPtr;
 namespace SparcISA
 {
     typedef uint32_t MachInst;
-    typedef uint64_t Addr;
+    typedef uint64_t ExtMachInst;
     typedef uint8_t  RegIndex;
 
     enum
@@ -179,7 +179,7 @@ namespace SparcISA
     // The control registers, broken out into fields
     class MiscRegFile
     {
-      public:
+      private:
         union
         {
             uint16_t pstate;		// Process State Register
@@ -364,6 +364,16 @@ namespace SparcISA
                 uint8_t fef:1;		// FPRS enable floating-Point
             } fprsFields;
         };
+
+      public:
+        MiscReg readReg(int misc_reg);
+
+        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc);
+
+        Fault setReg(int misc_reg, const MiscReg &val);
+
+        Fault setRegWithEffect(int misc_reg, const MiscReg &val,
+                               ExecContext *xc);
 
         void serialize(std::ostream & os);
 
