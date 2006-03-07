@@ -3,55 +3,64 @@
 // The actual decoder specification
 //
 
-decode OP default Trap::unknown({{illegal_instruction}}) {
+decode OP default Trap::unknown({{IllegalInstruction}}) {
 
         0x0: decode OP2 {
-                0x0: Trap::illtrap({{illegal_instruction}});  //ILLTRAP
-                0x1: Branch::bpcc({{
-                        switch((CC12 << 1) | CC02)
-                        {
-                                case 1: case 3:
-                                        throw illegal_instruction;
-                                case 0:
-                                        if(passesCondition(xc->regs.MiscRegs.ccrFields.icc, COND2))
-                                                ;//branchHere
-                                break;
-                                case 2:
-                                        if(passesCondition(xc->regs.MiscRegs.ccrFields.xcc, COND2))
-                                                ;//branchHere
-                                break;
-                        }
-                }});//BPcc
-                0x2: Branch::bicc({{
-                        if(passesCondition(xc->regs.MiscRegs.ccrFields.icc, COND2))
-                                ;//branchHere
-                }});//Bicc
-                0x3: Branch::bpr({{
-                        switch(RCOND)
-                        {
-                                case 0: case 4:
-                                        throw illegal_instruction;
-                                case 1:
-                                        if(Rs1 == 0) ;//branchHere
-                                break;
-                                case 2:
-                                        if(Rs1 <= 0) ;//branchHere
-                                break;
-                                case 3:
-                                        if(Rs1 < 0) ;//branchHere
-                                break;
-                                case 5:
-                                        if(Rs1 != 0) ;//branchHere
-                                break;
-                                case 6:
-                                        if(Rs1 > 0) ;//branchHere
-                                break;
-                                case 7:
-                                        if(Rs1 >= 0) ;//branchHere
-                                break;
-                        }
+            0x0: Trap::illtrap({{illegal_instruction}});  //ILLTRAP
+            0x1: Branch::bpcc({{
+                switch((CC12 << 1) | CC02)
+                {
+                  case 1:
+                  case 3:
+                    fault = new IllegalInstruction;
+                  case 0:
+                    if(passesCondition(xc->regs.MiscRegs.ccrFields.icc, COND2))
+                        ;//branchHere
+                    break;
+                  case 2:
+                    if(passesCondition(xc->regs.MiscRegs.ccrFields.xcc, COND2))
+                        ;//branchHere
+                    break;
+                }
+            }});//BPcc
+            0x2: Branch::bicc({{
+                if(passesCondition(xc->regs.MiscRegs.ccrFields.icc, COND2))
+                    ;//branchHere
+            }});//Bicc
+            0x3: Branch::bpr({{
+                switch(RCOND)
+                {
+                  case 0:
+                  case 4:
+                    fault = new IllegalInstruction;
+                  case 1:
+                    if(Rs1 == 0)
+                        ;//branchHere
+                    break;
+                  case 2:
+                    if(Rs1 <= 0)
+                        ;//branchHere
+                    break;
+                  case 3:
+                    if(Rs1 < 0)
+                        ;//branchHere
+                    break;
+                  case 5:
+                    if(Rs1 != 0)
+                        ;//branchHere
+                    break;
+                  case 6:
+                    if(Rs1 > 0)
+                        ;//branchHere
+                    break;
+                  case 7:
+                    if(Rs1 >= 0)
+                        ;//branchHere
+                    break;
+                }
                 }});    //BPr
-                0x4: IntegerOp::sethi({{Rd = (IMM22 << 10) & 0xFFFFFC00;}});   //SETHI (or NOP if rd == 0 and imm == 0)
+                //SETHI (or NOP if rd == 0 and imm == 0)
+                0x4: IntegerOp::sethi({{Rd = (IMM22 << 10) & 0xFFFFFC00;}});
                 0x5: Trap::fbpfcc({{throw fp_disabled;}}); //FBPfcc
                 0x6: Trap::fbfcc({{throw fp_disabled;}});  //FBfcc
         }
@@ -60,150 +69,165 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                 Rd = xc->pc;
         }});
         0x2: decode OP3 {
-                format IntegerOp {
-                        0x00: add({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
-                                Rd = Rs1.sdw + val2;
-                        }});//ADD
-                        0x01: and({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = Rs1.udw & val2;
-                        }});//AND
-                        0x02: or({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = Rs1.udw | val2;
-                        }});//OR
-                        0x03: xor({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = Rs1.udw ^ val2;
-                        }});//XOR
-                        0x04: sub({{
-                                INT64 val2 = ~((UINT64)(I ? SIMM13.sdw : Rs2.udw))+1;
-                                Rd = Rs1.sdw + val2;
-                        }});//SUB
-                        0x05: andn({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = Rs1.udw & ~val2;
-                        }});//ANDN
-                        0x06: orn({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = Rs1.udw | ~val2;
-                        }});//ORN
-                        0x07: xnor({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = ~(Rs1.udw ^ val2);
-                        }});//XNOR
-                        0x08: addc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
-                                INT64 carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
-                                Rd = Rs1.sdw + val2 + carryin;
-                        }});//ADDC
-                        0x09: mulx({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = Rs1 * val2;
-                        }});//MULX
-                        0x0A: umul({{
-                                UINT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                Rd = resTemp = Rs1.udw<31:0> * val2<31:0>;
-                                xc->regs.MiscRegs.yFields.value = resTemp<63:32>;
-                        }});//UMUL
-                        0x0B: smul({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2.sdw);
-                                rd.sdw = resTemp = Rs1.sdw<31:0> * val2<31:0>;
-                                xc->regs.MiscRegs.yFields.value = resTemp<63:32>;
-                        }});//SMUL
-                        0x0C: subc({{
-                                INT64 val2 = ~((INT64)(I ? SIMM13.sdw : Rs2.sdw))+1;
-                                INT64 carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
-                                Rd.sdw = Rs1.sdw + val2 + carryin;
-                        }});//SUBC
-                        0x0D: udivx({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
-                                if(val2 == 0) throw division_by_zero;
-                                Rd.udw = Rs1.udw / val2;
-                        }});//UDIVX
-                        0x0E: udiv({{
-                                UINT32 resTemp, val2 = (I ? SIMM13.sw : Rs2.udw<31:0>);
-                                if(val2 == 0) throw division_by_zero;
-                                resTemp = (UINT64)((xc->regs.MiscRegs.yFields.value << 32) | Rs1.udw<31:0>) / val2;
-                                INT32 overflow = (resTemp<63:32> != 0);
-                                if(overflow) rd.udw = resTemp = 0xFFFFFFFF;
-                                else rd.udw = resTemp;
-                        }});   //UDIV
-                        0x0F: sdiv({{
-                                INT32 resTemp, val2 = (I ? SIMM13.sw : Rs2.sdw<31:0>);
-                                if(val2 == 0) throw division_by_zero;
-                                Rd.sdw = resTemp = (INT64)((xc->regs.MiscRegs.yFields.value << 32) | Rs1.sdw<31:0>) / val2;
-                                INT32 overflow = (resTemp<63:31> != 0);
-                                INT32 underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
-                                if(overflow) rd.udw = resTemp = 0x7FFFFFFF;
-                                else if(underflow) rd.udw = resTemp = 0xFFFFFFFF80000000;
-                                else rd.udw = resTemp;
-                        }});//SDIV
-                }
-                format IntegerOpCc {
-                        0x10: addcc({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = resTemp = Rs1 + val2;}},
-                                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
-                                {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                                {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
-                                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-                        );//ADDcc
-                        0x11: andcc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = Rs1 & val2;}}
-                        ,{{0}},{{0}},{{0}},{{0}});//ANDcc
-                        0x12: orcc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = Rs1 | val2;}}
-                        ,{{0}},{{0}},{{0}},{{0}});//ORcc
-                        0x13: xorcc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = Rs1 ^ val2;}}
-                        ,{{0}},{{0}},{{0}},{{0}});//XORcc
-                        0x14: subcc({{
-                                INT64 resTemp, val2 = (INT64)(I ? SIMM13.sdw : Rs2);
-                                Rd = resTemp = Rs1 - val2;}},
-                                {{((Rs1 & 0xFFFFFFFF + (~val2) & 0xFFFFFFFF + 1) >> 31)}},
-                                {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                                {{((Rs1 >> 1) + (~val2) >> 1) + ((Rs1 | ~val2) & 0x1))<63:>}},
-                                {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
-                        );//SUBcc
-                        0x15: andncc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = Rs1 & ~val2;}}
-                        ,{{0}},{{0}},{{0}},{{0}});//ANDNcc
-                        0x16: orncc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = Rs1 | ~val2;}}
-                        ,{{0}},{{0}},{{0}},{{0}});//ORNcc
-                        0x17: xnorcc({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = ~(Rs1 ^ val2);}}
-                        ,{{0}},{{0}},{{0}},{{0}});//XNORcc
-                        0x18: addccc({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
-                                INT64 carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
-                                Rd = resTemp = Rs1 + val2 + carryin;}},
-                                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31 + carryin)}},
-                                {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                                {{((Rs1 >> 1) + (val2 >> 1) + ((Rs1 & val2) | (carryin & (Rs1 | val2)) & 0x1))<63:>}},
-                                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-                        );//ADDCcc
-                        0x1A: umulcc({{
-                                UINT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
-                                Rd = resTemp = Rs1.udw<31:0> * val2<31:0>;
-                                xc->regs.MiscRegs.yFields.value = resTemp<63:32>;}}
-                        ,{{0}},{{0}},{{0}},{{0}});//UMULcc
+            format IntegerOp {
+                0x00: add({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                    Rd = Rs1.sdw + val2;
+                }});//ADD
+                0x01: and({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = Rs1.udw & val2;
+                }});//AND
+                0x02: or({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = Rs1.udw | val2;
+                }});//OR
+                0x03: xor({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = Rs1.udw ^ val2;
+                }});//XOR
+                0x04: sub({{
+                    int64_t val2 = ~((uint64_t)(I ? SIMM13.sdw : Rs2.udw))+1;
+                    Rd = Rs1.sdw + val2;
+                }});//SUB
+                0x05: andn({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = Rs1.udw & ~val2;
+                }});//ANDN
+                0x06: orn({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = Rs1.udw | ~val2;
+                }});//ORN
+                0x07: xnor({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = ~(Rs1.udw ^ val2);
+                }});//XNOR
+                0x08: addc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                    int64_t carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
+                    Rd = Rs1.sdw + val2 + carryin;
+                }});//ADDC
+                0x09: mulx({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = Rs1 * val2;
+                }});//MULX
+                0x0A: umul({{
+                    uint64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    Rd = resTemp = Rs1.udw<31:0> * val2<31:0>;
+                    xc->regs.MiscRegs.yFields.value = resTemp<63:32>;
+                }});//UMUL
+                0x0B: smul({{
+                    int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                    rd.sdw = resTemp = Rs1.sdw<31:0> * val2<31:0>;
+                    xc->regs.MiscRegs.yFields.value = resTemp<63:32>;
+                }});//SMUL
+                0x0C: subc({{
+                    int64_t val2 = ~((int64_t)(I ? SIMM13.sdw : Rs2.sdw))+1;
+                    int64_t carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
+                    Rd.sdw = Rs1.sdw + val2 + carryin;
+                }});//SUBC
+                0x0D: udivx({{
+                    uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
+                    if(val2 == 0) throw division_by_zero;
+                    Rd.udw = Rs1.udw / val2;
+                }});//UDIVX
+                0x0E: udiv({{
+                    uint32_t resTemp, val2 = (I ? SIMM13.sw : Rs2.udw<31:0>);
+                    if(val2 == 0)
+                        fault = new DivisionByZero;
+                    resTemp = (uint64_t)((xc->regs.MiscRegs.yFields.value << 32)
+                        | Rs1.udw<31:0>) / val2;
+                    int32_t overflow = (resTemp<63:32> != 0);
+                    if(overflow)
+                        rd.udw = resTemp = 0xFFFFFFFF;
+                    else
+                        rd.udw = resTemp;
+                }});   //UDIV
+                0x0F: sdiv({{
+                    int32_t resTemp, val2 = (I ? SIMM13.sw : Rs2.sdw<31:0>);
+                    if(val2 == 0)
+                        fault = new DivisionByZero;
+
+                    Rd.sdw = (int64_t)((xc->regs.MiscRegs.yFields.value << 32) |
+                        Rs1.sdw<31:0>) / val2;
+                    resTemp = Rd.sdw;
+                    int32_t overflow = (resTemp<63:31> != 0);
+                    int32_t underflow =
+                        (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
+                    if(overflow)
+                        rd.udw = resTemp = 0x7FFFFFFF;
+                    else if(underflow)
+                        rd.udw = resTemp = 0xFFFFFFFF80000000;
+                    else
+                        rd.udw = resTemp;
+                }});//SDIV
+            }
+            format IntegerOpCc {
+                0x10: addcc({{
+                    int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = resTemp = Rs1 + val2;}},
+                    {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
+                    {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
+                    {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
+                    {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
+                    );//ADDcc
+                0x11: andcc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = Rs1 & val2;}},
+                    {{0}},{{0}},{{0}},{{0}});//ANDcc
+                0x12: orcc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = Rs1 | val2;}},
+                    {{0}},{{0}},{{0}},{{0}});//ORcc
+                0x13: xorcc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = Rs1 ^ val2;}},
+                    {{0}},{{0}},{{0}},{{0}});//XORcc
+                0x14: subcc({{
+                    int64_t resTemp, val2 = (int64_t)(I ? SIMM13.sdw : Rs2);
+                    Rd = resTemp = Rs1 - val2;}},
+                    {{((Rs1 & 0xFFFFFFFF + (~val2) & 0xFFFFFFFF + 1) >> 31)}},
+                    {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
+                    {{((Rs1 >> 1) + (~val2) >> 1) +
+                        ((Rs1 | ~val2) & 0x1))<63:>}},
+                    {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
+                );//SUBcc
+                0x15: andncc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = Rs1 & ~val2;}},
+                    {{0}},{{0}},{{0}},{{0}});//ANDNcc
+                0x16: orncc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = Rs1 | ~val2;}},
+                    {{0}},{{0}},{{0}},{{0}});//ORNcc
+                0x17: xnorcc({{
+                    int64_t val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = ~(Rs1 ^ val2);}},
+                    {{0}},{{0}},{{0}},{{0}});//XNORcc
+                0x18: addccc({{
+                    int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                    int64_t carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
+                    Rd = resTemp = Rs1 + val2 + carryin;}},
+                    {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31
+                        + carryin)}},
+                    {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
+                    {{((Rs1 >> 1) + (val2 >> 1) +
+                        ((Rs1 & val2) | (carryin & (Rs1 | val2)) & 0x1))<63:>}},
+                    {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
+                );//ADDCcc
+                0x1A: umulcc({{
+                    uint64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                    Rd = resTemp = Rs1.udw<31:0> * val2<31:0>;
+                    xc->regs.MiscRegs.yFields.value = resTemp<63:32>;}},
+                    {{0}},{{0}},{{0}},{{0}});//UMULcc
                         0x1B: smulcc({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                                int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
                                 Rd = resTemp = Rs1.sdw<31:0> * val2<31:0>;
                                 xc->regs.MiscRegs.yFields.value = resTemp<63:32>;}}
                         ,{{0}},{{0}},{{0}},{{0}});//SMULcc
                         0x1C: subccc({{
-                                INT64 resTemp, val2 = (INT64)(I ? SIMM13.sdw : Rs2);
-                                INT64 carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
+                                int64_t resTemp, val2 = (int64_t)(I ? SIMM13.sdw : Rs2);
+                                int64_t carryin = xc->regs.MiscRegs.ccrfields.iccfields.c;
                                 Rd = resTemp = Rs1 + ~(val2 + carryin) + 1;}},
                                 {{((Rs1 & 0xFFFFFFFF + (~(val2 + carryin)) & 0xFFFFFFFF + 1) >> 31)}},
                                 {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
@@ -211,15 +235,15 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
                         );//SUBCcc
                         0x1D: udivxcc({{
-                                UINT64 val2 = (I ? SIMM13.sdw : Rs2.udw);
+                                uint64_t val2 = (I ? SIMM13.sdw : Rs2.udw);
                                 if(val2 == 0) throw division_by_zero;
                                 Rd.udw = Rs1.udw / val2;}}
                         ,{{0}},{{0}},{{0}},{{0}});//UDIVXcc
                         0x1E: udivcc({{
-                                UINT32 resTemp, val2 = (I ? SIMM13.sw : Rs2.udw<31:0>);
+                                uint32_t resTemp, val2 = (I ? SIMM13.sw : Rs2.udw<31:0>);
                                 if(val2 == 0) throw division_by_zero;
-                                resTemp = (UINT64)((xc->regs.MiscRegs.yFields.value << 32) | Rs1.udw<31:0>) / val2;
-                                INT32 overflow = (resTemp<63:32> != 0);
+                                resTemp = (uint64_t)((xc->regs.MiscRegs.yFields.value << 32) | Rs1.udw<31:0>) / val2;
+                                int32_t overflow = (resTemp<63:32> != 0);
                                 if(overflow) rd.udw = resTemp = 0xFFFFFFFF;
                                 else rd.udw = resTemp;}},
                                 {{0}},
@@ -228,11 +252,11 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 {{0}}
                         );//UDIVcc
                         0x1F: sdivcc({{
-                                INT32 resTemp, val2 = (I ? SIMM13.sw : Rs2.sdw<31:0>);
+                                int32_t resTemp, val2 = (I ? SIMM13.sw : Rs2.sdw<31:0>);
                                 if(val2 == 0) throw division_by_zero;
-                                Rd.sdw = resTemp = (INT64)((xc->regs.MiscRegs.yFields.value << 32) | Rs1.sdw<31:0>) / val2;
-                                INT32 overflow = (resTemp<63:31> != 0);
-                                INT32 underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
+                                Rd.sdw = resTemp = (int64_t)((xc->regs.MiscRegs.yFields.value << 32) | Rs1.sdw<31:0>) / val2;
+                                int32_t overflow = (resTemp<63:31> != 0);
+                                int32_t underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
                                 if(overflow) rd.udw = resTemp = 0x7FFFFFFF;
                                 else if(underflow) rd.udw = resTemp = 0xFFFFFFFF80000000;
                                 else rd.udw = resTemp;}},
@@ -242,27 +266,27 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 {{0}}
                         );//SDIVcc
                         0x20: taddcc({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                                int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
                                 Rd = resTemp = Rs1 + val2;
-                                INT32 overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
+                                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
                                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                                 {{overflow}},
                                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
                         );//TADDcc
                         0x21: tsubcc({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                                int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
                                 Rd = resTemp = Rs1 + val2;
-                                INT32 overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
+                                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
                                 {{(Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                                 {{overflow}},
                                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
                         );//TSUBcc
                         0x22: taddcctv({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                                int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
                                 Rd = resTemp = Rs1 + val2;
-                                INT32 overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
+                                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
                                 if(overflow) throw tag_overflow;}},
                                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                                 {{overflow}},
@@ -270,9 +294,9 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
                         );//TADDccTV
                         0x23: tsubcctv({{
-                                INT64 resTemp, val2 = (I ? SIMM13.sdw : Rs2);
+                                int64_t resTemp, val2 = (I ? SIMM13.sdw : Rs2);
                                 Rd = resTemp = Rs1 + val2;
-                                INT32 overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
+                                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
                                 if(overflow) throw tag_overflow;}},
                                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                                 {{overflow}},
@@ -280,9 +304,9 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
                         );//TSUBccTV
                         0x24: mulscc({{
-                                INT64 resTemp, multiplicand = (I ? SIMM13.sdw : Rs2);
-                                INT32 multiplier = Rs1<31:0>;
-                                INT32 savedLSB = Rs1<0:>;
+                                int64_t resTemp, multiplicand = (I ? SIMM13.sdw : Rs2);
+                                int32_t multiplier = Rs1<31:0>;
+                                int32_t savedLSB = Rs1<0:>;
                                 multiplier = multipler<31:1> |
                                         ((xc->regs.MiscRegs.ccrFields.iccFields.n
                                         ^ xc->regs.MiscRegs.ccrFields.iccFields.v) << 32);
@@ -368,14 +392,14 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 }
                         }});//MOVcc
                         0x2D: sdivx({{
-                                INT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                int64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                 if(val2 == 0) throw division_by_zero;
                                 Rd.sdw = Rs1.sdw / val2;
                         }});//SDIVX
                         0x2E: decode RS1 {
                                 0x0: IntegerOp::popc({{
-                                INT64 count = 0, val2 = (I ? SIMM13.sdw : Rs2.sdw);
-                                UINT8 oneBits[] = {0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4}
+                                int64_t count = 0, val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                uint8_t oneBits[] = {0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4}
                                 for(unsigned int x = 0; x < 16; x++)
                                 {
                                         count += oneBits[val2 & 0xF];
@@ -384,7 +408,7 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                                 }});//POPC
                         }
                         0x2F: movr({{
-                                UINT64 val2 = (I ? SIMM10.sdw : Rs2.sdw);
+                                uint64_t val2 = (I ? SIMM10.sdw : Rs2.sdw);
                                 switch(RCOND)
                                 {
                                         case 0: case 4:
@@ -412,19 +436,19 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                         }});//MOVR
                         0x30: decode RD {
                                 0x0: wry({{
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.y = Rs1 ^ val2;
                                 }});//WRY
                                 0x2: wrccr({{
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.ccr = Rs1 ^ val2;
                                 }});//WRCCR
                                 0x3: wrasi({{
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.asi = Rs1 ^ val2;
                                 }});//WRASI
                                 0x6: wrfprs({{
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.asi = Rs1 ^ val2;
                                 }});//WRFPRS
                                 0xF: Trap::sir({{software_initiated_reset}}); //SIR
@@ -435,63 +459,63 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                         }
                         0x32: decode RD {
                                 0x0: wrprtpc({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tpc[xc->regs.MiscRegs.tl] = Rs1 ^ val2;
                                 }});
                                 0x1: wrprtnpc({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tnpc[xc->regs.MiscRegs.tl] = Rs1 ^ val2;
                                 }});
                                 0x2: wrprtstate({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tstate[xc->regs.MiscRegs.tl] = Rs1 ^ val2;
                                 }});
                                 0x3: wrprtt({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tt[xc->regs.MiscRegs.tl] = Rs1 ^ val2;
                                 }});
                                 0x4: wrprtick({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tick = Rs1 ^ val2;
                                 }});
                                 0x5: wrprtba({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tba = Rs1 ^ val2;
                                 }});
                                 0x6: wrprpstate({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.pstate = Rs1 ^ val2;
                                 }});
                                 0x7: wrprtl({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.tl = Rs1 ^ val2;
                                 }});
                                 0x8: wrprpil({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.pil = Rs1 ^ val2;
                                 }});
                                 0x9: wrprcwp({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.cwp = Rs1 ^ val2;
                                 }});
                                 0xA: wrprcansave({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.cansave = Rs1 ^ val2;
                                 }});
                                 0xB: wrprcanrestore({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.canrestore = Rs1 ^ val2;
                                 }});
                                 0xC: wrprcleanwin({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.cleanwin = Rs1 ^ val2;
                                 }});
                                 0xD: wrprotherwin({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.otherwin = Rs1 ^ val2;
                                 }});
                                 0xE: wrprwstate({{checkPriv
-                                        UINT64 val2 = (I ? SIMM13.sdw : Rs2.sdw);
+                                        uint64_t val2 = (I ? SIMM13.sdw : Rs2.sdw);
                                         xc->regs.MiscRegs.wstate = Rs1 ^ val2;
                                 }});
                         }
@@ -532,7 +556,7 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                         0x01: ldub({{Rd.ub = Mem.ub;}}); //LDUB
                         0x02: lduh({{Rd.uhw = Mem.uhw;}}); //LDUH
                         0x03: ldd({{
-                                UINT64 val = Mem.udw;
+                                uint64_t val = Mem.udw;
                                 setIntReg(RD & (~1), val<31:0>);
                                 setIntReg(RD | 1, val<63:32>);
                         }});//LDD
@@ -553,7 +577,7 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                         }}); //LDSTUB
                         0x0E: stx({{Rd.udw = Mem.udw;}}); //STX
                         0x0F: swap({{
-                                UINT32 temp = Rd.uw;
+                                uint32_t temp = Rd.uw;
                                 Rd.uw = Mem.uw;
                                 Mem.uw = temp;
                         }}); //SWAP
@@ -561,7 +585,7 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                         0x11: lduba({{Rd.ub = Mem.ub;}}); //LDUBA
                         0x12: lduha({{Rd.uhw = Mem.uhw;}}); //LDUHA
                         0x13: ldda({{
-                                UINT64 val = Mem.udw;
+                                uint64_t val = Mem.udw;
                                 setIntReg(RD & (~1), val<31:0>);
                                 setIntReg(RD | 1, val<63:32>);
                         }}); //LDDA
@@ -582,7 +606,7 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
                         }}); //LDSTUBA
                         0x1E: stxa({{Mem.sdw = Rd.sdw}}); //STXA
                         0x1F: swapa({{
-                                UINT32 temp = Rd.uw;
+                                uint32_t temp = Rd.uw;
                                 Rd.uw = Mem.uw;
                                 Mem.uw = temp;
                         }}); //SWAPA
@@ -621,14 +645,14 @@ decode OP default Trap::unknown({{illegal_instruction}}) {
 
 
                         0x3C: Cas::casa(
-                                {{UINT64 val = Mem.uw;
+                                {{uint64_t val = Mem.uw;
                                 if(Rs2.uw == val)
                                         Mem.uw = Rd.uw;
                                 Rd.uw = val;
                         }}); //CASA
                         0x3D: Noop::prefetcha({{ }}); //PREFETCHA
                         0x3E: Cas::casxa(
-                                {{UINT64 val = Mem.udw;
+                                {{uint64_t val = Mem.udw;
                                 if(Rs2 == val)
                                         Mem.udw = Rd;
                                 Rd = val;

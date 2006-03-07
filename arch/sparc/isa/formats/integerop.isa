@@ -9,21 +9,23 @@ output header {{
          */
         class IntegerOp : public SparcStaticInst
         {
-                protected:
+          protected:
+            // Constructor
+            IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
 
-                /// Constructor
-                IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
         };
 }};
 
 output decoder {{
-        std::string IntegerOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string IntegerOp::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+                return "Integer instruction\n";
         }
 }};
 

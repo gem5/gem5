@@ -9,8 +9,9 @@ output header {{
 #include <iomanip>
 
 #include "cpu/static_inst.hh"
-#include "traps.hh"
+#include "arch/sparc/faults.hh"
 #include "mem/mem_req.hh"  // some constructors use MemReq flags
+#include "arch/sparc/isa_traits.hh"
 }};
 
 output decoder {{
@@ -22,6 +23,8 @@ output decoder {{
 #if defined(linux)
 #include <fenv.h>
 #endif
+
+using namespace SparcISA;
 }};
 
 output exec {{

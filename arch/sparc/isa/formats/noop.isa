@@ -5,33 +5,36 @@
 
 output header {{
         /**
-         * Base class for integer operations.
+         * Noop class.
          */
         class Noop : public SparcStaticInst
         {
-                protected:
+          protected:
+            // Constructor
+            Noop(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
 
-                /// Constructor
-                Noop(const char *mnem, MachInst _machInst, OpClass __opClass) : SparcStaticInst(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
         };
 }};
 
 output decoder {{
-        std::string Noop::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string Noop::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+            return "Noop\n";
         }
 }};
 
 def template NoopExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
         {
-                //Nothing to see here, move along
-                return No_Fault;
+            //Nothing to see here, move along
+            return NoFault;
         }
 }};
 

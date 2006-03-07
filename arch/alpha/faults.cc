@@ -30,84 +30,80 @@
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
-#include "kern/kernel_stats.hh"
 
 namespace AlphaISA
 {
 
 FaultName MachineCheckFault::_name = "mchk";
 FaultVect MachineCheckFault::_vect = 0x0401;
-FaultStat MachineCheckFault::_stat;
+FaultStat MachineCheckFault::_count;
 
 FaultName AlignmentFault::_name = "unalign";
 FaultVect AlignmentFault::_vect = 0x0301;
-FaultStat AlignmentFault::_stat;
+FaultStat AlignmentFault::_count;
 
 FaultName ResetFault::_name = "reset";
 FaultVect ResetFault::_vect = 0x0001;
-FaultStat ResetFault::_stat;
+FaultStat ResetFault::_count;
 
 FaultName ArithmeticFault::_name = "arith";
 FaultVect ArithmeticFault::_vect = 0x0501;
-FaultStat ArithmeticFault::_stat;
+FaultStat ArithmeticFault::_count;
 
 FaultName InterruptFault::_name = "interrupt";
 FaultVect InterruptFault::_vect = 0x0101;
-FaultStat InterruptFault::_stat;
+FaultStat InterruptFault::_count;
 
 FaultName NDtbMissFault::_name = "dtb_miss_single";
 FaultVect NDtbMissFault::_vect = 0x0201;
-FaultStat NDtbMissFault::_stat;
+FaultStat NDtbMissFault::_count;
 
 FaultName PDtbMissFault::_name = "dtb_miss_double";
 FaultVect PDtbMissFault::_vect = 0x0281;
-FaultStat PDtbMissFault::_stat;
+FaultStat PDtbMissFault::_count;
 
 FaultName DtbPageFault::_name = "dfault";
 FaultVect DtbPageFault::_vect = 0x0381;
-FaultStat DtbPageFault::_stat;
+FaultStat DtbPageFault::_count;
 
 FaultName DtbAcvFault::_name = "dfault";
 FaultVect DtbAcvFault::_vect = 0x0381;
-FaultStat DtbAcvFault::_stat;
+FaultStat DtbAcvFault::_count;
 
 FaultName ItbMissFault::_name = "itbmiss";
 FaultVect ItbMissFault::_vect = 0x0181;
-FaultStat ItbMissFault::_stat;
+FaultStat ItbMissFault::_count;
 
 FaultName ItbPageFault::_name = "itbmiss";
 FaultVect ItbPageFault::_vect = 0x0181;
-FaultStat ItbPageFault::_stat;
+FaultStat ItbPageFault::_count;
 
 FaultName ItbAcvFault::_name = "iaccvio";
 FaultVect ItbAcvFault::_vect = 0x0081;
-FaultStat ItbAcvFault::_stat;
+FaultStat ItbAcvFault::_count;
 
 FaultName UnimplementedOpcodeFault::_name = "opdec";
 FaultVect UnimplementedOpcodeFault::_vect = 0x0481;
-FaultStat UnimplementedOpcodeFault::_stat;
+FaultStat UnimplementedOpcodeFault::_count;
 
 FaultName FloatEnableFault::_name = "fen";
 FaultVect FloatEnableFault::_vect = 0x0581;
-FaultStat FloatEnableFault::_stat;
+FaultStat FloatEnableFault::_count;
 
 FaultName PalFault::_name = "pal";
 FaultVect PalFault::_vect = 0x2001;
-FaultStat PalFault::_stat;
+FaultStat PalFault::_count;
 
 FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
-FaultStat IntegerOverflowFault::_stat;
+FaultStat IntegerOverflowFault::_count;
 
 #if FULL_SYSTEM
 
 void AlphaFault::invoke(ExecContext * xc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
-
-    assert(!xc->misspeculating());
-    xc->kernelStats->fault(this);
+    FaultBase::invoke(xc);
+    countStat()++;
 
     // exception restart address
     if (setRestartAddress() || !xc->inPalMode())
@@ -125,43 +121,11 @@ void AlphaFault::invoke(ExecContext * xc)
 
 void ArithmeticFault::invoke(ExecContext * xc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
-
-    assert(!xc->misspeculating());
-    xc->kernelStats->fault(this);
-
+    FaultBase::invoke(xc);
     panic("Arithmetic traps are unimplemented!");
 }
-
-
-/*void ArithmeticFault::invoke(ExecContext * xc)
-{
-    panic("Arithmetic traps are unimplemented!");
-}*/
 
 #endif
 
 } // namespace AlphaISA
 
-/*Fault * ListOfFaults[] = {
-        (Fault *)&NoFault,
-        (Fault *)&ResetFault,
-        (Fault *)&MachineCheckFault,
-        (Fault *)&ArithmeticFault,
-        (Fault *)&InterruptFault,
-        (Fault *)&NDtbMissFault,
-        (Fault *)&PDtbMissFault,
-        (Fault *)&AlignmentFault,
-        (Fault *)&DtbPageFault,
-        (Fault *)&DtbAcvFault,
-        (Fault *)&ItbMissFault,
-        (Fault *)&ItbPageFault,
-        (Fault *)&ItbAcvFault,
-        (Fault *)&UnimplementedOpcodeFault,
-        (Fault *)&FloatEnableFault,
-        (Fault *)&PalFault,
-        (Fault *)&IntegerOverflowFault,
-        };
-
-int NumFaults = sizeof(ListOfFaults) / sizeof(Fault *);*/
