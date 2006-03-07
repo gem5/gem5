@@ -31,8 +31,8 @@
 
 #include <string>
 
-#include "arch/alpha/linux_process.hh"
-#include "arch/alpha/tru64_process.hh"
+#include "arch/alpha/linux/process.hh"
+#include "arch/alpha/tru64/process.hh"
 #include "base/loader/object_file.hh"
 
 namespace AlphaISA

@@ -29,7 +29,7 @@
 #ifndef __SPARC_PROCESS_HH__
 #define __SPARC_PROCESS_HH__
 
-#include "arch/sparc/linux_process.hh"
+#include "arch/sparc/linux/process.hh"
 #include "base/loader/object_file.hh"
 
 namespace SparcISA
