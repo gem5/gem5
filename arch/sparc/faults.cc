@@ -26,90 +26,206 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/alpha/faults.hh"
+#include "arch/sparc/faults.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
-#include "kern/kernel_stats.hh"
 
-namespace AlphaISA
+namespace SparcISA
 {
 
-FaultName MachineCheckFault::_name = "mchk";
-FaultVect MachineCheckFault::_vect = 0x0401;
-FaultStat MachineCheckFault::_stat;
+FaultName     InternalProcessorError::_name = "intprocerr";
+TrapType      InternalProcessorError::_trapType = 0x029;
+FaultPriority InternalProcessorError::_priority = 4;
+FaultStat     InternalProcessorError::_count;
 
-FaultName AlignmentFault::_name = "unalign";
-FaultVect AlignmentFault::_vect = 0x0301;
-FaultStat AlignmentFault::_stat;
+FaultName     MemAddressNotAligned::_name = "unalign";
+TrapType      MemAddressNotAligned::_trapType = 0x034;
+FaultPriority MemAddressNotAligned::_priority = 10;
+FaultStat     MemAddressNotAligned::_count;
 
-FaultName ResetFault::_name = "reset";
-FaultVect ResetFault::_vect = 0x0001;
-FaultStat ResetFault::_stat;
+FaultName     PowerOnReset::_name = "pow_reset";
+TrapType      PowerOnReset::_trapType = 0x001;
+FaultPriority PowerOnReset::_priority = 0;
+FaultStat     PowerOnReset::_count;
 
-FaultName ArithmeticFault::_name = "arith";
-FaultVect ArithmeticFault::_vect = 0x0501;
-FaultStat ArithmeticFault::_stat;
+FaultName     WatchDogReset::_name = "watch_dog_reset";
+TrapType      WatchDogReset::_trapType = 0x002;
+FaultPriority WatchDogReset::_priority = 1;
+FaultStat     WatchDogReset::_count;
 
-FaultName InterruptFault::_name = "interrupt";
-FaultVect InterruptFault::_vect = 0x0101;
-FaultStat InterruptFault::_stat;
+FaultName     ExternallyInitiatedReset::_name = "extern_reset";
+TrapType      ExternallyInitiatedReset::_trapType = 0x003;
+FaultPriority ExternallyInitiatedReset::_priority = 1;
+FaultStat     ExternallyInitiatedReset::_count;
 
-FaultName NDtbMissFault::_name = "dtb_miss_single";
-FaultVect NDtbMissFault::_vect = 0x0201;
-FaultStat NDtbMissFault::_stat;
+FaultName     SoftwareInitiatedReset::_name = "software_reset";
+TrapType      SoftwareInitiatedReset::_trapType = 0x004;
+FaultPriority SoftwareInitiatedReset::_priority = 1;
+FaultStat     SoftwareInitiatedReset::_count;
 
-FaultName PDtbMissFault::_name = "dtb_miss_double";
-FaultVect PDtbMissFault::_vect = 0x0281;
-FaultStat PDtbMissFault::_stat;
+FaultName     REDStateException::_name = "red_counte";
+TrapType      REDStateException::_trapType = 0x005;
+FaultPriority REDStateException::_priority = 1;
+FaultStat     REDStateException::_count;
 
-FaultName DtbPageFault::_name = "dfault";
-FaultVect DtbPageFault::_vect = 0x0381;
-FaultStat DtbPageFault::_stat;
+FaultName     InstructionAccessException::_name = "inst_access";
+TrapType      InstructionAccessException::_trapType = 0x008;
+FaultPriority InstructionAccessException::_priority = 5;
+FaultStat     InstructionAccessException::_count;
 
-FaultName DtbAcvFault::_name = "dfault";
-FaultVect DtbAcvFault::_vect = 0x0381;
-FaultStat DtbAcvFault::_stat;
+FaultName     InstructionAccessMMUMiss::_name = "inst_mmu";
+TrapType      InstructionAccessMMUMiss::_trapType = 0x009;
+FaultPriority InstructionAccessMMUMiss::_priority = 2;
+FaultStat     InstructionAccessMMUMiss::_count;
 
-FaultName ItbMissFault::_name = "itbmiss";
-FaultVect ItbMissFault::_vect = 0x0181;
-FaultStat ItbMissFault::_stat;
+FaultName     InstructionAccessError::_name = "inst_error";
+TrapType      InstructionAccessError::_trapType = 0x00A;
+FaultPriority InstructionAccessError::_priority = 3;
+FaultStat     InstructionAccessError::_count;
 
-FaultName ItbPageFault::_name = "itbmiss";
-FaultVect ItbPageFault::_vect = 0x0181;
-FaultStat ItbPageFault::_stat;
+FaultName     IllegalInstruction::_name = "illegal_inst";
+TrapType      IllegalInstruction::_trapType = 0x010;
+FaultPriority IllegalInstruction::_priority = 7;
+FaultStat     IllegalInstruction::_count;
 
-FaultName ItbAcvFault::_name = "iaccvio";
-FaultVect ItbAcvFault::_vect = 0x0081;
-FaultStat ItbAcvFault::_stat;
+FaultName     PrivelegedOpcode::_name = "priv_opcode";
+TrapType      PrivelegedOpcode::_trapType = 0x011;
+FaultPriority PrivelegedOpcode::_priority = 6;
+FaultStat     PrivelegedOpcode::_count;
 
-FaultName UnimplementedOpcodeFault::_name = "opdec";
-FaultVect UnimplementedOpcodeFault::_vect = 0x0481;
-FaultStat UnimplementedOpcodeFault::_stat;
+FaultName     UnimplementedLDD::_name = "unimp_ldd";
+TrapType      UnimplementedLDD::_trapType = 0x012;
+FaultPriority UnimplementedLDD::_priority = 6;
+FaultStat     UnimplementedLDD::_count;
 
-FaultName FloatEnableFault::_name = "fen";
-FaultVect FloatEnableFault::_vect = 0x0581;
-FaultStat FloatEnableFault::_stat;
+FaultName     UnimplementedSTD::_name = "unimp_std";
+TrapType      UnimplementedSTD::_trapType = 0x013;
+FaultPriority UnimplementedSTD::_priority = 6;
+FaultStat     UnimplementedSTD::_count;
 
-FaultName PalFault::_name = "pal";
-FaultVect PalFault::_vect = 0x2001;
-FaultStat PalFault::_stat;
+FaultName     FpDisabled::_name = "fp_disabled";
+TrapType      FpDisabled::_trapType = 0x020;
+FaultPriority FpDisabled::_priority = 8;
+FaultStat     FpDisabled::_count;
 
-FaultName IntegerOverflowFault::_name = "intover";
-FaultVect IntegerOverflowFault::_vect = 0x0501;
-FaultStat IntegerOverflowFault::_stat;
+FaultName     FpExceptionIEEE754::_name = "fp_754";
+TrapType      FpExceptionIEEE754::_trapType = 0x021;
+FaultPriority FpExceptionIEEE754::_priority = 11;
+FaultStat     FpExceptionIEEE754::_count;
+
+FaultName     FpExceptionOther::_name = "fp_other";
+TrapType      FpExceptionOther::_trapType = 0x022;
+FaultPriority FpExceptionOther::_priority = 11;
+FaultStat     FpExceptionOther::_count;
+
+FaultName     TagOverflow::_name = "tag_overflow";
+TrapType      TagOverflow::_trapType = 0x023;
+FaultPriority TagOverflow::_priority = 14;
+FaultStat     TagOverflow::_count;
+
+FaultName     DivisionByZero::_name = "div_by_zero";
+TrapType      DivisionByZero::_trapType = 0x028;
+FaultPriority DivisionByZero::_priority = 15;
+FaultStat     DivisionByZero::_count;
+
+FaultName     DataAccessException::_name = "data_access";
+TrapType      DataAccessException::_trapType = 0x030;
+FaultPriority DataAccessException::_priority = 12;
+FaultStat     DataAccessException::_count;
+
+FaultName     DataAccessMMUMiss::_name = "data_mmu";
+TrapType      DataAccessMMUMiss::_trapType = 0x031;
+FaultPriority DataAccessMMUMiss::_priority = 12;
+FaultStat     DataAccessMMUMiss::_count;
+
+FaultName     DataAccessError::_name = "data_error";
+TrapType      DataAccessError::_trapType = 0x032;
+FaultPriority DataAccessError::_priority = 12;
+FaultStat     DataAccessError::_count;
+
+FaultName     DataAccessProtection::_name = "data_protection";
+TrapType      DataAccessProtection::_trapType = 0x033;
+FaultPriority DataAccessProtection::_priority = 12;
+FaultStat     DataAccessProtection::_count;
+
+FaultName     LDDFMemAddressNotAligned::_name = "unalign_lddf";
+TrapType      LDDFMemAddressNotAligned::_trapType = 0x035;
+FaultPriority LDDFMemAddressNotAligned::_priority = 10;
+FaultStat     LDDFMemAddressNotAligned::_count;
+
+FaultName     STDFMemAddressNotAligned::_name = "unalign_stdf";
+TrapType      STDFMemAddressNotAligned::_trapType = 0x036;
+FaultPriority STDFMemAddressNotAligned::_priority = 10;
+FaultStat     STDFMemAddressNotAligned::_count;
+
+FaultName     PrivelegedAction::_name = "priv_action";
+TrapType      PrivelegedAction::_trapType = 0x037;
+FaultPriority PrivelegedAction::_priority = 11;
+FaultStat     PrivelegedAction::_count;
+
+FaultName     LDQFMemAddressNotAligned::_name = "unalign_ldqf";
+TrapType      LDQFMemAddressNotAligned::_trapType = 0x038;
+FaultPriority LDQFMemAddressNotAligned::_priority = 10;
+FaultStat     LDQFMemAddressNotAligned::_count;
+
+FaultName     STQFMemAddressNotAligned::_name = "unalign_stqf";
+TrapType      STQFMemAddressNotAligned::_trapType = 0x039;
+FaultPriority STQFMemAddressNotAligned::_priority = 10;
+FaultStat     STQFMemAddressNotAligned::_count;
+
+FaultName     AsyncDataError::_name = "async_data";
+TrapType      AsyncDataError::_trapType = 0x040;
+FaultPriority AsyncDataError::_priority = 2;
+FaultStat     AsyncDataError::_count;
+
+//The enumerated faults
+
+FaultName     CleanWindow::_name = "clean_win";
+TrapType      CleanWindow::_baseTrapType = 0x024;
+FaultPriority CleanWindow::_priority = 10;
+FaultStat     CleanWindow::_count;
+
+FaultName     InterruptLevelN::_name = "interrupt_n";
+TrapType      InterruptLevelN::_baseTrapType = 0x041;
+FaultStat     InterruptLevelN::_count;
+
+FaultName     SpillNNormal::_name = "spill_n_normal";
+TrapType      SpillNNormal::_baseTrapType = 0x080;
+FaultPriority SpillNNormal::_priority = 9;
+FaultStat     SpillNNormal::_count;
+
+FaultName     SpillNOther::_name = "spill_n_other";
+TrapType      SpillNOther::_baseTrapType = 0x0A0;
+FaultPriority SpillNOther::_priority = 9;
+FaultStat     SpillNOther::_count;
+
+FaultName     FillNNormal::_name = "fill_n_normal";
+TrapType      FillNNormal::_baseTrapType = 0x0C0;
+FaultPriority FillNNormal::_priority = 9;
+FaultStat     FillNNormal::_count;
+
+FaultName     FillNOther::_name = "fill_n_other";
+TrapType      FillNOther::_baseTrapType = 0x0E0;
+FaultPriority FillNOther::_priority = 9;
+FaultStat     FillNOther::_count;
+
+FaultName     TrapInstruction::_name = "trap_inst_n";
+TrapType      TrapInstruction::_baseTrapType = 0x100;
+FaultPriority TrapInstruction::_priority = 16;
+FaultStat     TrapInstruction::_count;
+
+
 
 #if FULL_SYSTEM
 
-void AlphaFault::invoke(ExecContext * xc)
+void SparcFault::invoke(ExecContext * xc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
+    FaultBase::invoke(xc);
+    countStat()++;
 
-    assert(!xc->misspeculating());
-    xc->kernelStats->fault(this);
-
-    // exception restart address
+    //Use the SPARC trap state machine
+    /*// exception restart address
     if (setRestartAddress() || !xc->inPalMode())
         xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->regs.pc);
 
@@ -123,48 +239,10 @@ void AlphaFault::invoke(ExecContext * xc)
         AlphaISA::swap_palshadow(&(xc->regs), true);
 
     xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
+    xc->regs.npc = xc->regs.pc + sizeof(MachInst);*/
 }
-
-void ArithmeticFault::invoke(ExecContext * xc)
-{
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
-
-    assert(!xc->misspeculating());
-    xc->kernelStats->fault(this);
-
-    panic("Arithmetic traps are unimplemented!");
-}
-
-
-/*void ArithmeticFault::invoke(ExecContext * xc)
-{
-    panic("Arithmetic traps are unimplemented!");
-}*/
 
 #endif
 
-} // namespace AlphaISA
+} // namespace SparcISA
 
-/*Fault * ListOfFaults[] = {
-        (Fault *)&NoFault,
-        (Fault *)&ResetFault,
-        (Fault *)&MachineCheckFault,
-        (Fault *)&ArithmeticFault,
-        (Fault *)&InterruptFault,
-        (Fault *)&NDtbMissFault,
-        (Fault *)&PDtbMissFault,
-        (Fault *)&AlignmentFault,
-        (Fault *)&DtbPageFault,
-        (Fault *)&DtbAcvFault,
-        (Fault *)&ItbMissFault,
-        (Fault *)&ItbPageFault,
-        (Fault *)&ItbAcvFault,
-        (Fault *)&UnimplementedOpcodeFault,
-        (Fault *)&FloatEnableFault,
-        (Fault *)&PalFault,
-        (Fault *)&IntegerOverflowFault,
-        };
-
-int NumFaults = sizeof(ListOfFaults) / sizeof(Fault *);*/
