@@ -27,7 +27,7 @@
  */
 
 #include "arch/sparc/common_syscall_emul.hh"
-#include "arch/sparc/linux_process.hh"
+#include "arch/sparc/linux/process.hh"
 #include "arch/sparc/isa_traits.hh"
 
 #include "base/trace.hh"
