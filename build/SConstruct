@@ -341,11 +341,11 @@ for build_dir in build_dirs:
     sticky_opts.files = []
     # Name of default options file is taken from 'default=' on command
     # line if set, otherwise name of build dir.
-    default_options_file = os.path.join('build_options', 'default',
+    default_options_file = os.path.join('default_options',
                                         ARGUMENTS.get('default', build_dir))
     if os.path.isfile(default_options_file):
         sticky_opts.files.append(default_options_file)
-    current_options_file = os.path.join('build_options', 'current', build_dir)
+    current_options_file = os.path.join('options', build_dir)
     if os.path.isfile(current_options_file):
         sticky_opts.files.append(current_options_file)
     else:
@@ -355,7 +355,7 @@ for build_dir in build_dirs:
         if not os.path.isdir(opt_dir):
             os.mkdir(opt_dir)
     if not sticky_opts.files:
-        print "%s: No options file found in build_options, using defaults." \
+        print "%s: No options file found in options, using defaults." \
               % build_dir
 
     # Apply current option settings to env
