@@ -127,10 +127,7 @@ namespace MipsISA
 
     // cop-0/cop-1 system control register file
     typedef uint64_t MiscReg;
-//typedef MiscReg MiscRegFile[NumMiscRegs];
-
-    typedef std::vector<MiscReg> MiscRegFile[NumMiscRegs];
-//    typedef MiscRegBank MiscRegBanks[NumMiscRegs];
+    typedef MiscReg MiscRegFile[NumMiscRegs];
 
 
     enum MiscRegTags {
@@ -138,97 +135,162 @@ namespace MipsISA
         //Reference MIPS32 Arch. for Programmers, Vol. III, Ch.8
         //(Register Number-Register Select) Summary of Register
         //------------------------------------------------------
-        Index,       //0-0 Index into the TLB array
+        Index = 0,       //0-0 Index into the TLB array
 
-        MVPControl,  //0-1 Per-processor register containing global
+        MVPControl = 1,  //0-1 Per-processor register containing global
                      //MIPS® MT configuration data
 
-        MVPConf0,    //0-2 Per-processor register containing global
+        MVPConf0 = 2,    //0-2 Per-processor register containing global
                      //MIPS® MT configuration data
 
-        MVPConf1,    //0-3 Per-processor register containing global
+        MVPConf1 = 3,    //0-3 Per-processor register containing global
                      //MIPS® MT configuration data
 
-        Random,      //1-0 Randomly generated index into the TLB array
+        Random = 8,      //1-0 Randomly generated index into the TLB array
 
-        VPEControl,  //1-1 Per-VPE register containing relatively volatile
+        VPEControl = 9,  //1-1 Per-VPE register containing relatively volatile
                      //thread configuration data
 
-        VPEConf0,    //1-2 Per-VPE multi-thread configuration
+        VPEConf0 = 10,    //1-2 Per-VPE multi-thread configuration
                      //information
 
 
-        VPEConf1,    //1-2 Per-VPE multi-thread configuration
+        VPEConf1 = 11,    //1-2 Per-VPE multi-thread configuration
                      //information
 
-        YQMask,      //Per-VPE register defining which YIELD
+        YQMask = 12,      //Per-VPE register defining which YIELD
                      //qualifier bits may be used without generating
                      //an exception
 
-        VPESchedule,
-        VPEScheFBack,
-        VPEOpt,
-        EntryLo0,
-        TCStatus,
-        TCBind,
-        TCRestart,
-        TCHalt,
-        TCContext,
-        TCSchedule,
-        TCScheFBack,
-        EntryLo1,
-        Context,
-        ContextConfig,
-        //PageMask,
-        PageGrain,
-        Wired,
-        SRSConf0,
-        SRSConf1,
-        SRSConf2,
-        SRSConf3,
-        SRSConf4,
-        BadVAddr,
-        Count,
-        EntryHi,
-        Compare,
-        Status,     //12-0 Processor status and control
-        IntCtl,     //12-1 Interrupt system status and control
-        SRSCtl,     //12-2 Shadow register set status and control
-        SRSMap,     //12-3 Shadow set IPL mapping
-        Cause,      //13-0 Cause of last general exception
-        EPC,        //14-0 Program counter at last exception
-        PRId,       //15-0 Processor identification and revision
-        EBase,      //15-1 Exception vector base register
-        Config,
-        Config1,
-        Config2,
-        Config3,
-        LLAddr,
-        WatchLo,
-        WatchHi,
-        Debug,
-        TraceControl1,
-        TraceControl2,
-        UserTraceData,
-        TraceBPC,
+        VPESchedule = 13,
+        VPEScheFBack =  14,
+        VPEOpt = 15,
+        EntryLo0 = 16, // Bank 3: 16 - 23
+        TCStatus = 17,
+        TCBind = 18,
+        TCRestart = 19,
+        TCHalt = 20,
+        TCContext = 21,
+        TCSchedule = 22,
+        TCScheFBack = 23,
 
-        DEPC,
+        EntryLo1 = 24,// Bank 4: 24 - 31
 
-        PerfCnt,
+        Context = 32, // Bank 5: 32 - 39
+        ContextConfig = 33,
 
-        ErrCtl,
+        //PageMask = 40, //Bank 6: 40 - 47
+        PageGrain = 41,
 
-        CacheErr0,
-        CacheErr1,
-        CacheErr2,
-        CacheErr3,
+        Wired = 48, //Bank 7:48 - 55
+        SRSConf0 = 49,
+        SRSConf1 = 50,
+        SRSConf2 = 51,
+        SRSConf3 = 52,
+        SRSConf4 = 53,
+        BadVAddr = 54,
 
-        TagLo,
-        DataLo,
-        TagHi,
-        DataHi,
-        ErrorEPC,
-        DESAVE,
+        HWRena = 56,//Bank 8:56 - 63
+
+        Count = 64, //Bank 9:64 - 71
+
+        EntryHi = 72,//Bank 10:72 - 79
+
+        Compare = 80,//Bank 11:80 - 87
+
+        Status = 88,//Bank 12:88 - 96     //12-0 Processor status and control
+        IntCtl = 89,                      //12-1 Interrupt system status and control
+        SRSCtl = 90,                      //12-2 Shadow register set status and control
+        SRSMap = 91,                      //12-3 Shadow set IPL mapping
+
+        Cause = 97,//97-104      //13-0 Cause of last general exception
+
+        EPC = 105,//105-112        //14-0 Program counter at last exception
+
+        PrId = 113//113-120,       //15-0 Processor identification and revision
+        EBase = 114,      //15-1 Exception vector base register
+
+        Config = 121,//121-128
+        Config1 = 122,
+        Config2 = 123,
+        Config3 = 124,
+        Config6 = 127,
+        Config7 = 128,
+
+
+        LLAddr = 129,//129-136
+
+        WatchLo0 = 137,//137-144
+        WatchLo1 = 138,
+        WatchLo2 = 139,
+        WatchLo3 = 140,
+        WatchLo4 = 141,
+        WatchLo5 = 142,
+        WatchLo6 = 143,
+        WatchLo7 = 144,
+
+        WatchHi0 = 145,//145-152
+        WatchHi1 = 146,
+        WatchHi2 = 147,
+        WatchHi3 = 148,
+        WatchHi4 = 149,
+        WatchHi5 = 150,
+        WatchHi6 = 151,
+        WatchHi7 = 152,
+
+        XCContext64 = 153,//153-160
+
+        //161-168
+
+        //169-176
+
+        Debug = 177, //177-184
+        TraceControl1 = 178,
+        TraceControl2 = 179,
+        UserTraceData = 180,
+        TraceBPC = 181,
+
+        DEPC = 185,//185-192
+
+        PerfCnt0 = 193,//193 - 200
+        PerfCnt1 = 194,
+        PerfCnt2 = 195,
+        PerfCnt3 = 196,
+        PerfCnt4 = 197,
+        PerfCnt5 = 198,
+        PerfCnt6 = 199,
+        PerfCnt7 = 200,
+
+        ErrCtl = 201, //201 - 208
+
+        CacheErr0 = 209, //209 - 216
+        CacheErr1 = 210,
+        CacheErr2 = 211,
+        CacheErr3 = 212,
+
+        TagLo0 = 217,//217 - 224
+        TagLo2 = 219,
+        TagLo4 = 221,
+        TagLo6 = 223,
+
+        DataLo1 = 226,//225 - 232
+        DataLo3 = 228,
+        DataLo5 = 220,
+        DataLo7 = 232,
+
+        TagHi0 = 233,//233 - 240
+        TagHi2 = 235,
+        TagHi4 = 237,
+        TagHi6 = 239,
+
+        DataHi0 = 241,//241 - 248
+        DataHi2 = 243,
+        DataHi4 = 245,
+        DataHi6 = 247,
+
+        ErrorEPC = 249,//249 - 256
+
+        DESAVE = 257,
 
         //More Misc. Regs
         Hi,

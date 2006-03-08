@@ -86,10 +86,10 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x2: decode FUNCTION_LO {
                 format BasicOp {
-                    0x0: mfhi({{ Rd = xc->readMiscReg(Hi,0); }});
-                    0x1: mthi({{ xc->setMiscReg(Hi,0,Rs); }});
-                    0x2: mflo({{ Rd = xc->readMiscReg(Lo,0); }});
-                    0x3: mtlo({{ xc->setMiscReg(Lo,0,Rs); }});
+                    0x0: mfhi({{ Rd = xc->readMiscReg(Hi); }});
+                    0x1: mthi({{ xc->setMiscReg(Hi,Rs); }});
+                    0x2: mflo({{ Rd = xc->readMiscReg(Lo); }});
+                    0x3: mtlo({{ xc->setMiscReg(Lo,Rs); }});
                 }
             }
 
@@ -97,24 +97,24 @@ decode OPCODE_HI default Unknown::unknown() {
                 format IntOp {
                     0x0: mult({{
                         int64_t temp1 = Rs.sw * Rt.sw;
-                        xc->setMiscReg(Hi,0,temp1<63:32>);
-                        xc->setMiscReg(Lo,0,temp1<31:0>);
+                        xc->setMiscReg(Hi,temp1<63:32>);
+                        xc->setMiscReg(Lo,temp1<31:0>);
                     }});
 
                     0x1: multu({{
                         int64_t temp1 = Rs.uw * Rt.uw;
-                        xc->setMiscReg(Hi,0,temp1<63:32>);
-                        xc->setMiscReg(Lo,0,temp1<31:0>);
+                        xc->setMiscReg(Hi,temp1<63:32>);
+                        xc->setMiscReg(Lo,temp1<31:0>);
                     }});
 
                     0x2: div({{
-                        xc->setMiscReg(Hi,0,Rs.sw % Rt.sw);
-                        xc->setMiscReg(Lo,0,Rs.sw / Rt.sw);
+                        xc->setMiscReg(Hi,Rs.sw % Rt.sw);
+                        xc->setMiscReg(Lo,Rs.sw / Rt.sw);
                     }});
 
                     0x3: divu({{
-                        xc->setMiscReg(Hi,0,Rs.uw % Rt.uw);
-                        xc->setMiscReg(Lo,0,Rs.uw / Rt.uw);
+                        xc->setMiscReg(Hi,Rs.uw % Rt.uw);
+                        xc->setMiscReg(Lo,Rs.uw / Rt.uw);
                     }});
                 }
             }
@@ -232,13 +232,13 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: mfc0({{
                         //uint64_t reg_num = Rd.uw;
 
-                        Rt = xc->readMiscReg(RD,SEL);
+                        Rt = xc->readMiscReg(RD << 5 | SEL);
                     }});
 
                     0x4: mtc0({{
                         //uint64_t reg_num = Rd.uw;
 
-                        xc->setMiscReg(RD,SEL,Rt);
+                        xc->setMiscReg(RD << 5 | SEL,Rt);
                     }});
 
                     0x8: mftr({{
@@ -277,7 +277,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 int sel;
                                 getMiscRegIdx(MVPControl,idx,sel);
                                 Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel,0);
+                                xc->setMiscReg(idx,sel);
                             }});
 
                             0x1: evpe({{
@@ -295,7 +295,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 int sel;
                                 getMiscRegIdx(VPEControl,idx,sel);
                                 Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel,0);
+                                xc->setMiscReg(idx,sel);
                             }});
 
                             0x1: emt({{
@@ -313,7 +313,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 int sel;
                                 getMiscRegIdx(Status,idx,sel);
                                 Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel,0);
+                                xc->setMiscReg(idx,sel);
                             }});
 
                             0x1: ei({{
@@ -372,15 +372,15 @@ decode OPCODE_HI default Unknown::unknown() {
                 0x1: decode ND {
                     0x0: decode TF {
                         format Branch {
-                            0x0: bc1f({{ cond = (xc->readMiscReg(FPCR,0) == 0); }});
-                            0x1: bc1t({{ cond = (xc->readMiscReg(FPCR,0) == 1); }});
+                            0x0: bc1f({{ cond = (xc->readMiscReg(FPCR) == 0); }});
+                            0x1: bc1t({{ cond = (xc->readMiscReg(FPCR) == 1); }});
                         }
                     }
 
                     0x1: decode TF {
                         format BranchLikely {
-                            0x0: bc1fl({{ cond = (xc->readMiscReg(FPCR,0) == 0); }});
-                            0x1: bc1tl({{ cond = (xc->readMiscReg(FPCR,0) == 1); }});
+                            0x0: bc1fl({{ cond = (xc->readMiscReg(FPCR) == 0); }});
+                            0x1: bc1tl({{ cond = (xc->readMiscReg(FPCR) == 1); }});
                         }
                     }
                 }
@@ -425,8 +425,8 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode RS_LO {
                             0x1: decode MOVCF {
                                 format FloatOp {
-                                    0x0: movfs({{if (xc->readMiscReg(FPCR,0) != CC) Fd = Fs; }});
-                                    0x1: movts({{if (xc->readMiscReg(FPCR,0) == CC) Fd = Fs;}});
+                                    0x0: movfs({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs; }});
+                                    0x1: movts({{if (xc->readMiscReg(FPCR) == CC) Fd = Fs;}});
                                 }
                             }
 
@@ -444,18 +444,18 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x4: decode RS_LO {
 
                             format FloatOp {
-                                0x1: cvt_d_s({{ int rnd_mode = xc->readMiscReg(FCSR,0);
+                                0x1: cvt_d_s({{ int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.sf,rnd_mode,FP_DOUBLE,FP_SINGLE);
                                 }});
 
-                                0x4: cvt_w_s({{ int rnd_mode = xc->readMiscReg(FCSR,0);
+                                0x4: cvt_w_s({{ int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.sf,rnd_mode,FP_WORD,FP_SINGLE);
                                 }});
                             }
 
                             //only legal for 64 bit
                             format Float64Op {
-                                0x5: cvt_l_s({{ int rnd_mode = xc->readMiscReg(FCSR,0);
+                                0x5: cvt_l_s({{ int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.sf,rnd_mode,FP_LONG,FP_SINGLE);
                                 }});
 
@@ -499,8 +499,8 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode RS_LO {
                             0x1: decode MOVCF {
                                 format FloatOp {
-                                    0x0: movfd({{if (xc->readMiscReg(FPCR,0) != CC) Fd.df = Fs.df; }});
-                                    0x1: movtd({{if (xc->readMiscReg(FPCR,0) == CC) Fd.df = Fs.df; }});
+                                    0x0: movfd({{if (xc->readMiscReg(FPCR) != CC) Fd.df = Fs.df; }});
+                                    0x1: movtd({{if (xc->readMiscReg(FPCR) == CC) Fd.df = Fs.df; }});
                                 }
                             }
 
@@ -518,12 +518,12 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x4: decode RS_LO {
                             format FloatOp {
                                 0x0: cvt_s_d({{
-                                    int rnd_mode = xc->readMiscReg(FCSR,0);
+                                    int rnd_mode = xc->readMiscReg(FCSR);
                                     Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_DOUBLE);
                                 }});
 
                                 0x4: cvt_w_d({{
-                                    int rnd_mode = xc->readMiscReg(FCSR,0);
+                                    int rnd_mode = xc->readMiscReg(FCSR);
                                     Fd = convert_and_round(Fs.df,rnd_mode,FP_WORD,FP_DOUBLE);
                                 }});
                             }
@@ -531,7 +531,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             //only legal for 64 bit
                             format Float64Op {
                                 0x5: cvt_l_d({{
-                                    int rnd_mode = xc->readMiscReg(FCSR,0);
+                                    int rnd_mode = xc->readMiscReg(FCSR);
                                     Fd = convert_and_round(Fs.df,rnd_mode,FP_LONG,FP_DOUBLE);
                                 }});
                             }
@@ -542,12 +542,12 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x4: decode FUNCTION {
                         format FloatOp {
                             0x20: cvt_s({{
-                                int rnd_mode = xc->readMiscReg(FCSR,0);
+                                int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_WORD);
                             }});
 
                             0x21: cvt_d({{
-                                int rnd_mode = xc->readMiscReg(FCSR,0);
+                                int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_WORD);
                             }});
                         }
@@ -559,12 +559,12 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x5: decode FUNCTION_HI {
                         format FloatOp {
                             0x10: cvt_s_l({{
-                                int rnd_mode = xc->readMiscReg(FCSR,0);
+                                int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_LONG);
                             }});
 
                             0x11: cvt_d_l({{
-                                int rnd_mode = xc->readMiscReg(FCSR,0);
+                                int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_LONG);
                             }});
                         }
@@ -611,21 +611,21 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode RS_LO {
                             0x1: decode MOVCF {
                                 format Float64Op {
-                                    0x0: movfps({{if (xc->readMiscReg(FPCR,0) != CC) Fd = Fs;}});
-                                    0x1: movtps({{if (xc->readMiscReg(FPCR,0) == CC) Fd = Fs;}});
+                                    0x0: movfps({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs;}});
+                                    0x1: movtps({{if (xc->readMiscReg(FPCR) == CC) Fd = Fs;}});
                                 }
                             }
 
                             format BasicOp {
-                                0x2: movzps({{if (xc->readMiscReg(FPCR,0) != CC) Fd = Fs; }});
-                                0x3: movnps({{if (xc->readMiscReg(FPCR,0) == CC) Fd = Fs; }});
+                                0x2: movzps({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs; }});
+                                0x3: movnps({{if (xc->readMiscReg(FPCR) == CC) Fd = Fs; }});
                             }
 
                         }
 
                         0x4: decode RS_LO {
                             0x0: Float64Op::cvt_s_pu({{
-                                int rnd_mode = xc->readMiscReg(FCSR,0);
+                                int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_PS_HI);
                             }});
                         }
@@ -633,7 +633,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x5: decode RS_LO {
                             format Float64Op {
                                 0x0: cvt_s_pl({{
-                                    int rnd_mode = xc->readMiscReg(FCSR,0);
+                                    int rnd_mode = xc->readMiscReg(FCSR);
                                     Fd = convert_and_round(Fs.df,rnd_mode,FP_SINGLE,FP_PS_LO);
                                 }});
                                 0x4: pll({{ /*Fd.df = Fs<31:0> | Ft<31:0>*/}});
@@ -771,33 +771,33 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode FUNCTION_LO {
                 format IntOp {
                     0x0: madd({{
-                        int64_t temp1 = xc->readMiscReg(Hi,0) << 32 | xc->readMiscReg(Lo,0) >> 32;
+                        int64_t temp1 = xc->readMiscReg(Hi) << 32 | xc->readMiscReg(Lo) >> 32;
                         temp1 = temp1 + (Rs.sw * Rt.sw);
-                        xc->setMiscReg(Hi,0,temp1<63:32>);
-                        xc->setMiscReg(Lo,0,temp1<31:0>);
+                        xc->setMiscReg(Hi,temp1<63:32>);
+                        xc->setMiscReg(Lo,temp1<31:0>);
                             }});
 
                     0x1: maddu({{
-                        int64_t temp1 = xc->readMiscReg(Hi,0) << 32 | xc->readMiscReg(Lo,0) >> 32;
+                        int64_t temp1 = xc->readMiscReg(Hi) << 32 | xc->readMiscReg(Lo) >> 32;
                         temp1 = temp1 + (Rs.uw * Rt.uw);
-                        xc->setMiscReg(Hi,0,temp1<63:32>);
-                        xc->setMiscReg(Lo,0,temp1<31:0>);
+                        xc->setMiscReg(Hi,temp1<63:32>);
+                        xc->setMiscReg(Lo,temp1<31:0>);
                             }});
 
                     0x2: mul({{ Rd.sw = Rs.sw * Rt.sw; 	}});
 
                     0x4: msub({{
-                        int64_t temp1 = xc->readMiscReg(Hi,0) << 32 | xc->readMiscReg(Lo,0) >> 32;
+                        int64_t temp1 = xc->readMiscReg(Hi) << 32 | xc->readMiscReg(Lo) >> 32;
                         temp1 = temp1 - (Rs.sw * Rt.sw);
-                        xc->setMiscReg(Hi,0,temp1<63:32>);
-                        xc->setMiscReg(Lo,0,temp1<31:0>);
+                        xc->setMiscReg(Hi,temp1<63:32>);
+                        xc->setMiscReg(Lo,temp1<31:0>);
                             }});
 
                     0x5: msubu({{
-                        int64_t temp1 = xc->readMiscReg(Hi,0) << 32 | xc->readMiscReg(Lo,0) >> 32;
+                        int64_t temp1 = xc->readMiscReg(Hi) << 32 | xc->readMiscReg(Lo) >> 32;
                         temp1 = temp1 - (Rs.uw * Rt.uw);
-                        xc->setMiscReg(Hi,0,temp1<63:32>);
-                        xc->setMiscReg(Lo,0,temp1<31:0>);
+                        xc->setMiscReg(Hi,temp1<63:32>);
+                        xc->setMiscReg(Lo,temp1<31:0>);
                             }});
                 }
             }

@@ -34,6 +34,9 @@
 using namespace MipsISA;
 
 
+//Function now Obsolete in current state.
+//If anyting this should return the correct miscreg index
+//but that is handled implicitly with enums anyway
 void
 MipsISA::getMiscRegIdx(int reg_name,int &idx, int &sel)
 {
@@ -85,7 +88,7 @@ MipsISA::getMiscRegIdx(int reg_name,int &idx, int &sel)
       case SRSMap:  idx = 12; sel = 3; break;      //12-3 Shadow set IPL mapping
       case Cause:  idx = 13; sel = 0; break;       //13-0 Cause of last general exception
       case EPC:  idx = 14; sel = 0; break;         //14-0 Program counter at last exception
-      case PRId:  idx = 15; sel = 0; break;        //15-0 Processor identification and revision
+      case PrId:  idx = 15; sel = 0; break;        //15-0 Processor identification and revision
       case EBase:  idx = 15; sel = 1; break;       //15-1 Exception vector base register
       case Config: panic("Accessing Unimplemented CP0 Register"); break;
       case Config1: panic("Accessing Unimplemented CP0 Register"); break;
@@ -121,58 +124,58 @@ void RegFile::coldReset()
 {
     //CP0 Random Reg:
     //Randomly generated index into the TLB array
-    miscRegs[1][0] = 0x0000003f;
+    miscRegs[Random] = 0x0000003f;
 
     //CP0 Wired Reg.
-    miscRegs[6][0] = 0x0000000;
+    miscRegs[Wired] = 0x0000000;
 
    //CP0 HWRENA
-    miscRegs[7][0] = 0x0000000;
+    miscRegs[HWRena] = 0x0000000;
 
     //CP0 Status Reg.
-    miscRegs[12][0] = 0x0400004;
+    miscRegs[Status] = 0x0400004;
 
    //CP0 INTCNTL
-    miscRegs[12][1] = 0xfc00000;
+    miscRegs[IntCtl] = 0xfc00000;
 
    //CP0 SRSCNTL
-    miscRegs[12][2] = 0x0c00000;
+    miscRegs[SRSCtl] = 0x0c00000;
 
    //CP0 SRSMAP
-    miscRegs[12][3] = 0x0000000;
+    miscRegs[SRSMap] = 0x0000000;
 
    //CP0 Cause
-    miscRegs[13][0] = 0x0000000;
+    miscRegs[Cause] = 0x0000000;
 
     //CP0 Processor ID
-    miscRegs[15][0] = 0x0019300;
+    miscRegs[PrId] = 0x0019300;
 
     //CP0 EBASE
-    miscRegs[15][1] = 0x8000000;
+    miscRegs[EBase] = 0x8000000;
 
     //CP0 Config Reg.
-    miscRegs[16][0] = 0x80040482;
+    miscRegs[Config] = 0x80040482;
 
     //CP0 Config 1 Reg.
-    miscRegs[16][1] = 0xfee3719e;
+    miscRegs[Config1] = 0xfee3719e;
 
     //CP0 Config 2 Reg.
-    miscRegs[16][2] = 0x8000000;
+    miscRegs[Config2] = 0x8000000;
 
     //CP0 Config 3 Reg.
-    miscRegs[16][3] = 0x0000020;
+    miscRegs[Config3] = 0x0000020;
 
     //CP0 Config 7 Reg.
-    miscRegs[16][7] = 0x0000000;
+    miscRegs[Config7] = 0x0000000;
 
    //CP0 Debug
-    miscRegs[23][0] = 0x0201800;
+    miscRegs[Debug] = 0x0201800;
 
    //CP0 PERFCNTL1
-    miscRegs[25][0] = 0x0000000;
+    miscRegs[PerfCnt0] = 0x0000000;
 
    //CP0 PERFCNTL2
-    miscRegs[25][1] = 0x0000000;
+    miscRegs[PerfCnt1] = 0x0000000;
 
 }
 
@@ -181,7 +184,7 @@ void RegFile::createCP0Regs()
 //Resize Coprocessor Register Banks to
 // the number specified in MIPS32K VOL.III
 // Chapter 8
-     //
+    /*
     //Cop-0 Regs. Bank 0: Index,
     miscRegs[0].resize(4);
 
@@ -278,7 +281,7 @@ void RegFile::createCP0Regs()
     miscRegs[30].resize(1);
 
     //Cop-0 Regs. Bank 31:
-    miscRegs[31].resize(1);
+    miscRegs[31].resize(1);*/
 
 }
 
