@@ -42,7 +42,7 @@ output exec {{
     {
         panic("attempt to execute unknown instruction "
               "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
-        return Unimplemented_Opcode_Fault;
+        return UnimplementedOpcodeFault;
     }
 }};
 

@@ -10,6 +10,9 @@
 //Include utility formats/functions
 ##include "m5/arch/mips/isa/formats/util.isa"
 
+//Include the cop0 formats
+##include "m5/arch/mips/isa/formats/cop0.isa"
+
 //Include the integer formats
 ##include "m5/arch/mips/isa/formats/int.isa"
 

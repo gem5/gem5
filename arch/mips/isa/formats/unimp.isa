@@ -111,7 +111,7 @@ output exec {{
     {
         panic("attempt to execute unimplemented instruction '%s' "
               "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
-        return Unimplemented_Opcode_Fault;
+        return UnimplementedOpcodeFault;
     }
 
     Fault
@@ -123,7 +123,7 @@ output exec {{
             warned = true;
         }
 
-        return No_Fault;
+        return NoFault;
     }
 }};
 

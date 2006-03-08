@@ -29,47 +29,6 @@ output decoder {{
         }
 }};
 
-def template FloatingPointExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-        {
-                //These are set to constants when the execute method
-                //is generated
-                bool useCc = ;
-                bool checkPriv = ;
-
-                //Attempt to execute the instruction
-                try
-                {
-                        checkPriv;
-
-                        %(op_decl)s;
-                        %(op_rd)s;
-                        %(code)s;
-                }
-                //If we have an exception for some reason,
-                //deal with it
-                catch(MipsException except)
-                {
-                        //Deal with exception
-                        return No_Fault;
-                }
-
-                //Write the resulting state to the execution context
-                %(op_wb)s;
-                if(useCc)
-                {
-                        xc->regs.miscRegFile.ccrFields.iccFields.n = Rd & (1 << 63);
-                        xc->regs.miscRegFile.ccrFields.iccFields.z = (Rd == 0);
-                        xc->regs.miscRegFile.ccrFields.iccFields.v = ivValue;
-                        xc->regs.miscRegFile.ccrFields.iccFields.c = icValue;
-                        xc->regs.miscRegFile.ccrFields.xccFields.n = Rd & (1 << 31);
-                        xc->regs.miscRegFile.ccrFields.xccFields.z = ((Rd & 0xFFFFFFFF) == 0);
-                        xc->regs.miscRegFile.ccrFields.xccFields.v = xvValue;
-                        xc->regs.miscRegFile.ccrFields.xccFields.c = xcValue;
-                }
-                return No_Fault;
-        }
-}};
 
 // Primary format for integer operate instructions:
 def format FloatOp(code, *flags) {{

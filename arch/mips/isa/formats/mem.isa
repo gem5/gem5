@@ -40,6 +40,7 @@ output header {{
         const StaticInstPtr eaCompPtr;
         /// Pointer to MemAcc object.
         const StaticInstPtr memAccPtr;
+
         /// Displacement for EA calculation (signed).
         int32_t disp;
 
@@ -51,6 +52,12 @@ output header {{
               memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
               disp(OFFSET)
         {
+            //If Bit 15 is 1 then Sign Extend
+            int32_t temp = disp & 0x00008000;
+
+            if (temp > 0) {
+                disp |= 0xFFFF0000;
+            }
         }
 
         std::string
@@ -70,7 +77,7 @@ output decoder {{
     Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
-                        flags[IsFloating] ? 'f' : 'r', RS, JMPTARG, RT);
+                        flags[IsFloating] ? 'f' : 'r', RT, disp, RS);
     }
 
 }};

@@ -7,6 +7,8 @@
 
 //Outputs to decoder.hh
 output header {{
+#include <iostream>
+    using namespace std;
         /**
          * Base class for integer operations.
          */
@@ -26,15 +28,24 @@ output header {{
         class IntImmOp : public MipsStaticInst
         {
                 protected:
-                uint16_t imm;
+
+                int32_t imm;
 
                 /// Constructor
                 IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
                                 MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM)
                 {
+                    //If Bit 15 is 1 then Sign Extend
+                    int32_t temp = imm & 0x00008000;
+
+                    if (temp > 0 && mnemonic != "lui") {
+                        imm |= 0xFFFF0000;
+                    }
                 }
 
                 std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+
         };
 
 }};
@@ -43,15 +54,59 @@ output header {{
 output decoder {{
         std::string IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            // just print the first dest... if there's a second one,
+            // it's generally implicit
+            if (_numDestRegs > 0) {
+                printReg(ss, _destRegIdx[0]);
+            }
+
+            ss << ",";
+
+            // just print the first two source regs... if there's
+            // a third one, it's a read-modify-write dest (Rc),
+            // e.g. for CMOVxx
+            if (_numSrcRegs > 0) {
+                printReg(ss, _srcRegIdx[0]);
+            }
+
+            if (_numSrcRegs > 1) {
+                ss << ",";
+                printReg(ss, _srcRegIdx[1]);
+            }
+
+            return ss.str();
         }
 
         std::string IntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
-                return "Disassembly of integer immediate instruction\n";
-        }
-}};
+            std::stringstream ss;
 
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            if (_numDestRegs > 0) {
+                printReg(ss, _destRegIdx[0]);
+            }
+
+            ss << ",";
+
+            if (_numSrcRegs > 0) {
+                printReg(ss, _srcRegIdx[0]);
+                ss << ",";
+            }
+
+            if( mnemonic == "lui")
+                ccprintf(ss, "%08p ", imm);
+            else
+                ss << (int) imm;
+
+            return ss.str();
+        }
+
+}};
 
 //Used by decoder.isa
 def format IntOp(code, *opt_flags) {{
