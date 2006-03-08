@@ -541,6 +541,14 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
     return NoFault;
 }
 
+void
+AlphaISA::MiscRegFile::copyIprs(ExecContext *xc)
+{
+    for (int i = IPR_Base_DepTag; i < NumInternalProcRegs; ++i) {
+        ipr[i] = xc->readMiscReg(i);
+    }
+}
+
 /**
  * Check for special simulator handling of specific PAL calls.
  * If return value is false, actual PAL call will be suppressed.

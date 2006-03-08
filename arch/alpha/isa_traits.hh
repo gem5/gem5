@@ -169,6 +169,8 @@ extern const int reg_redir[NumIntRegs];
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
                                ExecContext *xc);
 
+        void copyMiscRegs(ExecContext *xc);
+
 #if FULL_SYSTEM
       protected:
         InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
@@ -177,6 +179,8 @@ extern const int reg_redir[NumIntRegs];
         MiscReg readIpr(int idx, Fault &fault, ExecContext *xc);
 
         Fault setIpr(int idx, uint64_t val, ExecContext *xc);
+
+        void copyIprs(ExecContext *xc);
 #endif
         friend class RegFile;
     };

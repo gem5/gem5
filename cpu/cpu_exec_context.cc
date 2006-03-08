@@ -289,15 +289,7 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
     }
 
     // Copy misc. registers
-    setMiscReg(AlphaISA::Fpcr_DepTag, xc->readMiscReg(AlphaISA::Fpcr_DepTag));
-    setMiscReg(AlphaISA::Uniq_DepTag, xc->readMiscReg(AlphaISA::Uniq_DepTag));
-    setMiscReg(AlphaISA::Lock_Flag_DepTag,
-               xc->readMiscReg(AlphaISA::Lock_Flag_DepTag));
-    setMiscReg(AlphaISA::Lock_Addr_DepTag,
-               xc->readMiscReg(AlphaISA::Lock_Addr_DepTag));
-
-    // Also need to copy all the IPRs.  Probably should just have a copy misc
-    // regs function defined on the misc regs.
+    regs.miscRegs.copyMiscRegs(xc);
 
     // Lastly copy PC/NPC
     setPC(xc->readPC());
