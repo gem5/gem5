@@ -38,8 +38,8 @@ void FaultBase::invoke(ExecContext * xc)
 #else
 void FaultBase::invoke(ExecContext * xc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
+    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->readPC());
+    xc->getCpuPtr()->recordEvent(csprintf("Fault %s", name()));
 
     assert(!xc->misspeculating());
 }
