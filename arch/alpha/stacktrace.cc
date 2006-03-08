@@ -35,6 +35,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace AlphaISA;

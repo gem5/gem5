@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "cpu/base.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"

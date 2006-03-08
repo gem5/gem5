@@ -35,6 +35,7 @@
 #include "mem/functional/memory_control.hh"
 #include "arch/arguments.hh"
 #include "arch/isa_traits.hh"
+#include "sim/system.hh"
 
 using namespace TheISA;
 

@@ -103,15 +103,15 @@ FaultStat IntegerOverflowFault::_stat;
 
 void AlphaFault::invoke(ExecContext * xc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
+    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->readPC());
+    xc->getCpuPtr()->recordEvent(csprintf("Fault %s", name()));
 
     assert(!xc->misspeculating());
-    xc->kernelStats->fault(this);
+    xc->getCpuPtr()->kernelStats->fault(this);
 
     // exception restart address
     if (setRestartAddress() || !xc->inPalMode())
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->regs.pc);
+        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->readPC());
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
@@ -119,17 +119,17 @@ void AlphaFault::invoke(ExecContext * xc)
                    xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
     }
 
-    xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);
+    xc->setPC(xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect());
+    xc->setNextPC(xc->readPC() + sizeof(MachInst));
 }
 
 void ArithmeticFault::invoke(ExecContext * xc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->regs.pc);
-    xc->cpu->recordEvent(csprintf("Fault %s", name()));
+    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->readPC());
+    xc->getCpuPtr()->recordEvent(csprintf("Fault %s", name()));
 
     assert(!xc->misspeculating());
-    xc->kernelStats->fault(this);
+    xc->getCpuPtr()->kernelStats->fault(this);
 
     panic("Arithmetic traps are unimplemented!");
 }

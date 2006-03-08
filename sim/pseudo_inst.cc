@@ -83,13 +83,15 @@ namespace AlphaPseudo
         if (!doQuiesce || ns == 0)
             return;
 
-        if (xc->quiesceEvent.scheduled())
-            xc->quiesceEvent.reschedule(curTick + Clock::Int::ns * ns);
+        Event *quiesceEvent = xc->getQuiesceEvent();
+
+        if (quiesceEvent->scheduled())
+            quiesceEvent->reschedule(curTick + Clock::Int::ns * ns);
         else
-            xc->quiesceEvent.schedule(curTick + Clock::Int::ns * ns);
+            quiesceEvent->schedule(curTick + Clock::Int::ns * ns);
 
         xc->suspend();
-        xc->kernelStats->quiesce();
+        xc->getCpuPtr()->kernelStats->quiesce();
     }
 
     void
@@ -98,19 +100,23 @@ namespace AlphaPseudo
         if (!doQuiesce || cycles == 0)
             return;
 
-        if (xc->quiesceEvent.scheduled())
-            xc->quiesceEvent.reschedule(curTick + xc->cpu->cycles(cycles));
+        Event *quiesceEvent = xc->getQuiesceEvent();
+
+        if (quiesceEvent->scheduled())
+            quiesceEvent->reschedule(curTick +
+                                     xc->getCpuPtr()->cycles(cycles));
         else
-            xc->quiesceEvent.schedule(curTick + xc->cpu->cycles(cycles));
+            quiesceEvent->schedule(curTick +
+                                   xc->getCpuPtr()->cycles(cycles));
 
         xc->suspend();
-        xc->kernelStats->quiesce();
+        xc->getCpuPtr()->kernelStats->quiesce();
     }
 
     uint64_t
     quiesceTime(ExecContext *xc)
     {
-        return (xc->lastActivate - xc->lastSuspend) / Clock::Int::ns ;
+        return (xc->readLastActivate() - xc->readLastSuspend()) / Clock::Int::ns;
     }
 
     void

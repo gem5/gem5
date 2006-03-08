@@ -57,8 +57,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
       dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
-      fnbin(kernelBinning->fnbin), profile(NULL), quiesceEvent(this),
-      func_exe_inst(0), storeCondFailures(0)
+      profile(NULL), quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
 {
     proxy = new ProxyExecContext<CPUExecContext>(this);
 
@@ -119,21 +118,22 @@ void
 CPUExecContext::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+    profile->dump(proxy, *os);
 }
 
-ExecContext::EndQuiesceEvent::EndQuiesceEvent(ExecContext *_xc)
-    : Event(&mainEventQueue), xc(_xc)
+CPUExecContext::EndQuiesceEvent::EndQuiesceEvent(CPUExecContext *_cpuXC)
+    : Event(&mainEventQueue), cpuXC(_cpuXC)
 {
 }
 
 void
-ExecContext::EndQuiesceEvent::process()
+CPUExecContext::EndQuiesceEvent::process()
 {
-    xc->activate();
+    cpuXC->activate();
 }
 
 const char*
-ExecContext::EndQuiesceEvent::description()
+CPUExecContext::EndQuiesceEvent::description()
 {
     return "End Quiesce Event.";
 }
@@ -142,25 +142,25 @@ ExecContext::EndQuiesceEvent::description()
 void
 CPUExecContext::takeOverFrom(ExecContext *oldContext)
 {
-/*
     // some things should already be set up
-    assert(mem == oldContext->mem);
+    assert(mem == oldContext->getMemPtr());
 #if FULL_SYSTEM
-    assert(system == oldContext->system);
+    assert(system == oldContext->getSystemPtr());
 #else
-    assert(process == oldContext->process);
+    assert(process == oldContext->getProcessPtr());
 #endif
 
     // copy over functional state
-    _status = oldContext->_status;
-    regs = oldContext->regs;
-    cpu_id = oldContext->cpu_id;
-    func_exe_inst = oldContext->func_exe_inst;
+    _status = oldContext->status();
+    copyArchRegs(oldContext);
+    cpu_id = oldContext->readCpuId();
+#if !FULL_SYSTEM
+    func_exe_inst = oldContext->readFuncExeInst();
+#endif
 
     storeCondFailures = 0;
 
-    oldContext->_status = CPUExecContext::Unallocated;
-*/
+    oldContext->setStatus(ExecContext::Unallocated);
 }
 
 void
@@ -280,6 +280,9 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
                xc->readMiscReg(AlphaISA::Lock_Flag_DepTag));
     setMiscReg(AlphaISA::Lock_Addr_DepTag,
                xc->readMiscReg(AlphaISA::Lock_Addr_DepTag));
+
+    // Also need to copy all the IPRs.  Probably should just have a copy misc
+    // regs function defined on the misc regs.
 
     // Lastly copy PC/NPC
     setPC(xc->readPC());

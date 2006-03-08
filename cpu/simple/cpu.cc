@@ -766,7 +766,7 @@ SimpleCPU::tick()
 
         // decode the instruction
         inst = gtoh(inst);
-        curStaticInst = StaticInst::decode(makeExtMI(inst, xc->readPC()));
+        curStaticInst = StaticInst::decode(makeExtMI(inst, cpuXC->readPC()));
 
         traceData = Trace::getInstRecord(curTick, xcProxy, this, curStaticInst,
                                          cpuXC->readPC());

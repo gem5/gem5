@@ -32,6 +32,7 @@
 #include "base/callback.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/profile.hh"

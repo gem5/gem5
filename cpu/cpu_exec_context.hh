@@ -139,9 +139,9 @@ class CPUExecContext
     struct EndQuiesceEvent : public Event
     {
         /** A pointer to the execution context that is quiesced */
-        ExecContext *xc;
+        CPUExecContext *cpuXC;
 
-        EndQuiesceEvent(ExecContext *_xc);
+        EndQuiesceEvent(CPUExecContext *_cpuXC);
 
         /** Event process to occur at interrupt*/
         virtual void process();
@@ -150,6 +150,12 @@ class CPUExecContext
         virtual const char *description();
     };
     EndQuiesceEvent quiesceEvent;
+
+    Event *getQuiesceEvent() { return &quiesceEvent; }
+
+    Tick readLastActivate() { return lastActivate; }
+
+    Tick readLastSuspend() { return lastSuspend; }
 
 #else
     Process *process;

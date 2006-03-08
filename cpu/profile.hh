@@ -35,6 +35,8 @@
 #include "sim/host.hh"
 #include "arch/stacktrace.hh"
 
+class ExecContext;
+
 class ProfileNode
 {
   private:

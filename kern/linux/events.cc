@@ -32,6 +32,7 @@
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
+#include "sim/system.hh"
 
 
 namespace Linux {
@@ -41,7 +42,7 @@ DebugPrintkEvent::process(ExecContext *xc)
 {
     if (DTRACE(DebugPrintf)) {
         if (!raw) {
-            StringWrap name(xc->system->name() + ".dprintk");
+            StringWrap name(xc->getSystemPtr()->name() + ".dprintk");
             DPRINTFN("");
         }
 

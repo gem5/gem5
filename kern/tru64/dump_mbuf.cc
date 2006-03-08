@@ -31,9 +31,11 @@
 
 #include "base/cprintf.hh"
 #include "base/trace.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/mbuf.hh"
 #include "sim/host.hh"
+#include "sim/system.hh"
 #include "arch/arguments.hh"
 #include "arch/isa_traits.hh"
 #include "arch/vtophys.hh"

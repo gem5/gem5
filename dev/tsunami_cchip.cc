@@ -42,6 +42,7 @@
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
 #include "mem/functional/memory_control.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
