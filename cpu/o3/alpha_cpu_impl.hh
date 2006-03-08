@@ -179,12 +179,16 @@ AlphaFullCPU<Impl>::copyToXC()
         this->cpuXC->setFloatRegInt(i,
             this->regFile.readFloatRegInt(renamed_reg));
     }
-/*
-    this->cpuXC->regs.miscRegs.fpcr = this->regFile.miscRegs.fpcr;
-    this->cpuXC->regs.miscRegs.uniq = this->regFile.miscRegs.uniq;
-    this->cpuXC->regs.miscRegs.lock_flag = this->regFile.miscRegs.lock_flag;
-    this->cpuXC->regs.miscRegs.lock_addr = this->regFile.miscRegs.lock_addr;
-*/
+
+    this->cpuXC->setMiscReg(AlphaISA::Fpcr_DepTag,
+                            this->regFile.readMiscReg(AlphaISA::Fpcr_DepTag));
+    this->cpuXC->setMiscReg(AlphaISA::Uniq_DepTag,
+                            this->regFile.readMiscReg(AlphaISA::Uniq_DepTag));
+    this->cpuXC->setMiscReg(AlphaISA::Lock_Flag_DepTag,
+                            this->regFile.readMiscReg(AlphaISA::Lock_Flag_DepTag));
+    this->cpuXC->setMiscReg(AlphaISA::Lock_Addr_DepTag,
+                            this->regFile.readMiscReg(AlphaISA::Lock_Addr_DepTag));
+
     this->cpuXC->setPC(this->rob.readHeadPC());
     this->cpuXC->setNextPC(this->cpuXC->readPC()+4);
 
@@ -223,13 +227,17 @@ AlphaFullCPU<Impl>::copyFromXC()
         this->regFile.setFloatRegInt(renamed_reg,
                                      this->cpuXC->readFloatRegInt(i));
     }
-    /*
+
     // Then loop through the misc registers.
-    this->regFile.miscRegs.fpcr = this->cpuXC->regs.miscRegs.fpcr;
-    this->regFile.miscRegs.uniq = this->cpuXC->regs.miscRegs.uniq;
-    this->regFile.miscRegs.lock_flag = this->cpuXC->regs.miscRegs.lock_flag;
-    this->regFile.miscRegs.lock_addr = this->cpuXC->regs.miscRegs.lock_addr;
-    */
+    this->regFile.setMiscReg(AlphaISA::Fpcr_DepTag,
+                             this->cpuXC->readMiscReg(AlphaISA::Fpcr_DepTag));
+    this->regFile.setMiscReg(AlphaISA::Uniq_DepTag,
+                             this->cpuXC->readMiscReg(AlphaISA::Uniq_DepTag));
+    this->regFile.setMiscReg(AlphaISA::Lock_Flag_DepTag,
+                             this->cpuXC->readMiscReg(AlphaISA::Lock_Flag_DepTag));
+    this->regFile.setMiscReg(AlphaISA::Lock_Addr_DepTag,
+                             this->cpuXC->readMiscReg(AlphaISA::Lock_Addr_DepTag));
+
     // Then finally set the PC and the next PC.
 //    regFile.pc = cpuXC->regs.pc;
 //    regFile.npc = cpuXC->regs.npc;
