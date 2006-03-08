@@ -137,6 +137,21 @@ CPUExecContext::EndQuiesceEvent::description()
 {
     return "End Quiesce Event.";
 }
+
+void
+CPUExecContext::profileClear()
+{
+    if (profile)
+        profile->clear();
+}
+
+void
+CPUExecContext::profileSample()
+{
+    if (profile)
+        profile->sample(profileNode, profilePC);
+}
+
 #endif
 
 void

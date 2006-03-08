@@ -157,6 +157,10 @@ class CPUExecContext
 
     Tick readLastSuspend() { return lastSuspend; }
 
+    void profileClear();
+
+    void profileSample();
+
 #else
     Process *process;
 

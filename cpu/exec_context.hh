@@ -136,6 +136,9 @@ class ExecContext
     // Having an extra function just to read these is obnoxious
     virtual Tick readLastActivate() = 0;
     virtual Tick readLastSuspend() = 0;
+
+    virtual void profileClear() = 0;
+    virtual void profileSample() = 0;
 #endif
 
     virtual int getThreadNum() = 0;
@@ -152,6 +155,7 @@ class ExecContext
     virtual Fault translateDataWriteReq(MemReqPtr &req) = 0;
 
     // Also somewhat obnoxious.  Really only used for the TLB fault.
+    // However, may be quite useful in SPARC.
     virtual TheISA::MachInst getInst() = 0;
 
     virtual void copyArchRegs(ExecContext *xc) = 0;
@@ -294,6 +298,9 @@ class ProxyExecContext : public ExecContext
 
     Tick readLastActivate() { return actualXC->readLastActivate(); }
     Tick readLastSuspend() { return actualXC->readLastSuspend(); }
+
+    void profileClear() { return actualXC->profileClear(); }
+    void profileSample() { return actualXC->profileSample(); }
 #endif
 
     int getThreadNum() { return actualXC->getThreadNum(); }

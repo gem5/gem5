@@ -271,11 +271,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
-/*
+
     for (int i = 0; i < execContexts.size(); ++i)
-        if (execContexts[i]->profile)
-            execContexts[i]->profile->clear();
-*/
+        execContexts[i]->profileClear();
+
     if (profileEvent)
         profileEvent->schedule(curTick);
 #endif
@@ -290,11 +289,11 @@ BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
 void
 BaseCPU::ProfileEvent::process()
 {
-/*    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
+    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
         ExecContext *xc = cpu->execContexts[i];
-        xc->profile->sample(xc->profileNode, xc->profilePC);
+        xc->profileSample();
     }
-*/
+
     schedule(curTick + interval);
 }
 
