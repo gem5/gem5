@@ -60,29 +60,36 @@ namespace SparcISA
     typedef uint64_t ExtMachInst;
     typedef uint8_t  RegIndex;
 
-    enum
-    {
-        MemoryEnd = 0xffffffffffffffffULL,
+    const int NumFloatRegs = 32;
+    const int NumMiscRegs = 32;
 
-        NumFloatRegs = 32,
-        NumMiscRegs = 32,
+    const int MaxRegsOfAnyType = 32;
+    const int // Static instruction parameters
+    const int MaxInstSrcRegs = 3;
+    const int MaxInstDestRegs = 2;
 
-        MaxRegsOfAnyType = 32,
-        // Static instruction parameters
-        MaxInstSrcRegs = 3,
-        MaxInstDestRegs = 2,
+    const int // Maximum trap level
+    const int MaxTL = 4;
+    const int
+    const int // semantically meaningful register indices
+    const int ZeroReg = 0;	// architecturally meaningful
+    const int // the rest of these depend on the ABI
+    const int StackPointerReg = 14;
+    const int ReturnAddressReg = 31;
+    const int ReturnValueReg = 24;
+    const int FramePointerReg = 30;
+    const int ArgumentReg0 = 24;
+    const int ArgumentReg1 = 25;
+    const int ArgumentReg2 = 26;
+    const int ArgumentReg3 = 27;
+    const int ArgumentReg4 = 28;
+    const int ArgumentReg5 = 29;
+    const int
+    const int //8K. This value is implmentation specific; and should probably
+    const int //be somewhere else.
+    const int LogVMPageSize = 13;
+    const int VMPageSize = (1 << LogVMPageSize);
 
-        // Maximum trap level
-        MaxTL = 4,
-
-        // semantically meaningful register indices
-        ZeroReg = 0,	// architecturally meaningful
-        // the rest of these depend on the ABI
-        //8K. This value is implmentation specific, and should probably
-        //be somewhere else.
-        LogVMPageSize = 13,
-        VMPageSize = (1 << LogVMPageSize)
-    };
     typedef uint64_t IntReg;
 
     class IntRegFile
