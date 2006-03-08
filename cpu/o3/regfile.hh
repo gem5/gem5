@@ -38,10 +38,8 @@
 #include "cpu/o3/comm.hh"
 
 #if FULL_SYSTEM
-#include "arch/ev5.hh"
 #include "kern/kernel_stats.hh"
 
-using namespace EV5;
 #endif
 
 // This really only depends on the ISA, and not the Impl.  It might be nicer
@@ -237,7 +235,6 @@ class PhysRegFile
   private:
     // This is ISA specifc stuff; remove it eventually once ISAImpl is used
 //    IntReg palregs[NumIntRegs];	// PAL shadow registers
-    InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
     int intrflag;			// interrupt flag
     bool pal_shadow;		// using pal_shadow registers
 #endif

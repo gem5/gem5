@@ -60,52 +60,45 @@ namespace AlphaISA
     typedef uint64_t ExtMachInst;
     typedef uint8_t  RegIndex;
 
-    enum {
-        MemoryEnd = 0xffffffffffffffffULL,
+    const int NumIntArchRegs = 32;
+    const int NumPALShadowRegs = 8;
+    const int NumFloatArchRegs = 32;
+    // @todo: Figure out what this number really should be.
+    const int NumMiscArchRegs = 32;
 
-        NumIntArchRegs = 32,
-        NumPALShadowRegs = 8,
-        NumFloatArchRegs = 32,
-        // @todo: Figure out what this number really should be.
-        NumMiscArchRegs = 32,
+    // Static instruction parameters
+    const int MaxInstSrcRegs = 3;
+    const int MaxInstDestRegs = 2;
 
-        MaxRegsOfAnyType = 32,
-        // Static instruction parameters
-        MaxInstSrcRegs = 3,
-        MaxInstDestRegs = 2,
+    // semantically meaningful register indices
+    const int ZeroReg = 31;	// architecturally meaningful
+    // the rest of these depend on the ABI
+    const int StackPointerReg = 30;
+    const int GlobalPointerReg = 29;
+    const int ProcedureValueReg = 27;
+    const int ReturnAddressReg = 26;
+    const int ReturnValueReg = 0;
+    const int FramePointerReg = 15;
+    const int ArgumentReg0 = 16;
+    const int ArgumentReg1 = 17;
+    const int ArgumentReg2 = 18;
+    const int ArgumentReg3 = 19;
+    const int ArgumentReg4 = 20;
+    const int ArgumentReg5 = 21;
 
-        // semantically meaningful register indices
-        ZeroReg = 31,	// architecturally meaningful
-        // the rest of these depend on the ABI
-        StackPointerReg = 30,
-        GlobalPointerReg = 29,
-        ProcedureValueReg = 27,
-        ReturnAddressReg = 26,
-        ReturnValueReg = 0,
-        FramePointerReg = 15,
-        ArgumentReg0 = 16,
-        ArgumentReg1 = 17,
-        ArgumentReg2 = 18,
-        ArgumentReg3 = 19,
-        ArgumentReg4 = 20,
-        ArgumentReg5 = 21,
+    const int LogVMPageSize = 13;	// 8K bytes
+    const int VMPageSize = (1 << LogVMPageSize);
 
-        LogVMPageSize = 13,	// 8K bytes
-        VMPageSize = (1 << LogVMPageSize),
+    const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
 
-        BranchPredAddrShiftAmt = 2, // instructions are 4-byte aligned
+    const int WordBytes = 4;
+    const int HalfwordBytes = 2;
+    const int ByteBytes = 1;
 
-        WordBytes = 4,
-        HalfwordBytes = 2,
-        ByteBytes = 1,
-        DepNA = 0,
-    };
 
-    enum {
-        NumIntRegs = NumIntArchRegs + NumPALShadowRegs,
-        NumFloatRegs = NumFloatArchRegs,
-        NumMiscRegs = NumMiscArchRegs
-    };
+    const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
+    const int NumFloatRegs = NumFloatArchRegs;
+    const int NumMiscRegs = NumMiscArchRegs;
 
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
@@ -149,9 +142,7 @@ extern const int reg_redir[NumIntRegs];
 #include "arch/alpha/isa_fullsys_traits.hh"
 
 #else
-    enum {
-        NumInternalProcRegs = 0
-    };
+    const int NumInternalProcRegs = 0;
 #endif
 
     // control register file contents
@@ -165,6 +156,11 @@ extern const int reg_redir[NumIntRegs];
 
       public:
         MiscReg readReg(int misc_reg);
+
+        //These functions should be removed once the simplescalar cpu model
+        //has been replaced.
+        int getInstAsid();
+        int getDataAsid();
 
         MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc);
 
@@ -185,14 +181,10 @@ extern const int reg_redir[NumIntRegs];
         friend class RegFile;
     };
 
-    enum {
-        TotalNumRegs =
-        NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs
-    };
+    const int TotalNumRegs = NumIntRegs + NumFloatRegs +
+        NumMiscRegs + NumInternalProcRegs;
 
-    enum {
-        TotalDataRegs = NumIntRegs + NumFloatRegs
-    };
+    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
     typedef union {
         IntReg  intreg;
@@ -301,37 +293,7 @@ extern const int reg_redir[NumIntRegs];
     template <class XC>
     void zeroRegisters(XC *xc);
 
-
-//typedef AlphaISA TheISA;
-
-//typedef TheISA::MachInst MachInst;
-//typedef TheISA::Addr Addr;
-//typedef TheISA::RegIndex RegIndex;
-//typedef TheISA::IntReg IntReg;
-//typedef TheISA::IntRegFile IntRegFile;
-//typedef TheISA::FloatReg FloatReg;
-//typedef TheISA::FloatRegFile FloatRegFile;
-//typedef TheISA::MiscReg MiscReg;
-//typedef TheISA::MiscRegFile MiscRegFile;
-//typedef TheISA::AnyReg AnyReg;
-//typedef TheISA::RegFile RegFile;
-
-//const int NumIntRegs   = TheISA::NumIntRegs;
-//const int NumFloatRegs = TheISA::NumFloatRegs;
-//const int NumMiscRegs  = TheISA::NumMiscRegs;
-//const int TotalNumRegs = TheISA::TotalNumRegs;
-//const int VMPageSize   = TheISA::VMPageSize;
-//const int LogVMPageSize   = TheISA::LogVMPageSize;
-//const int ZeroReg = TheISA::ZeroReg;
-//const int StackPointerReg = TheISA::StackPointerReg;
-//const int GlobalPointerReg = TheISA::GlobalPointerReg;
-//const int ReturnAddressReg = TheISA::ReturnAddressReg;
-//const int ReturnValueReg = TheISA::ReturnValueReg;
-//const int ArgumentReg0 = TheISA::ArgumentReg0;
-//const int ArgumentReg1 = TheISA::ArgumentReg1;
-//const int ArgumentReg2 = TheISA::ArgumentReg2;
-//const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
-const Addr MaxAddr = (Addr)-1;
+    const Addr MaxAddr = (Addr)-1;
 };
 
 #if !FULL_SYSTEM
@@ -384,9 +346,6 @@ AlphaISA::makeExtMI(AlphaISA::MachInst inst, const uint64_t &pc) {
 }
 
 #if FULL_SYSTEM
-//typedef TheISA::InternalProcReg InternalProcReg;
-//const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
-//const int NumInterruptLevels = TheISA::NumInterruptLevels;
 
 #include "arch/alpha/ev5.hh"
 #endif

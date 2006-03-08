@@ -33,10 +33,12 @@ def bitfield INTIMM	<15: 0>; // integer immediate (literal)
 
 // Floating-point operate format
 def bitfield FMT      <25:21>;
+def bitfield FR       <25:21>;
 def bitfield FT	      <20:16>;
 def bitfield FS	      <15:11>;
 def bitfield FD	      <10:6>;
 
+def bitfield CC       <20:18>;
 def bitfield ND       <17:17>;
 def bitfield TF       <16:16>;
 def bitfield MOVCI    <16:16>;
@@ -44,6 +46,9 @@ def bitfield MOVCF    <16:16>;
 def bitfield SRL      <21:21>;
 def bitfield SRLV     < 6: 6>;
 def bitfield SA       <10: 6>;
+
+// CP0 Register Select
+def bitfield SEL       < 2: 0>;
 
 // Interrupts
 def bitfield SC       < 5: 5>;

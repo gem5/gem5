@@ -59,7 +59,7 @@ output exec {{
     Fault
     Nop::execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
     {
-        return No_Fault;
+        return NoFault;
     }
 }};
 
@@ -68,9 +68,11 @@ output exec {{
 def template OperateNopCheckDecode {{
  {
      MipsStaticInst *i = new %(class_name)s(machInst);
-     if (RD == 0) {
-         i = makeNop(i);
-     }
+
+     //if (RD == 0) {
+     //  i = makeNop(i);
+     //}
+
      return i;
  }
 }};

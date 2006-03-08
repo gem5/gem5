@@ -26,131 +26,131 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ALPHA_FAULTS_HH__
-#define __ALPHA_FAULTS_HH__
+#ifndef __MIPS_FAULTS_HH__
+#define __MIPS_FAULTS_HH__
 
 #include "sim/faults.hh"
 #include "arch/isa_traits.hh" //For the Addr type
 
-class AlphaFault : public Fault
+class MipsFault : public FaultBase
 {
   public:
-    AlphaFault(char * newName, int newId, Addr newVect)
-        : Fault(newName, newId), vect(newVect)
+    MipsFault(char * newName, int newId, Addr newVect)
+        : FaultBase(newName, newId), vect(newVect)
     {;}
 
     Addr vect;
 };
 
-extern class ResetFaultType : public AlphaFault
+extern class ResetFaultType : public MipsFault
 {
   public:
     ResetFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const ResetFault;
 
-extern class ArithmeticFaultType : public AlphaFault
+extern class ArithmeticFaultType : public MipsFault
 {
   public:
     ArithmeticFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const ArithmeticFault;
 
-extern class InterruptFaultType : public AlphaFault
+extern class InterruptFaultType : public MipsFault
 {
   public:
     InterruptFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const InterruptFault;
 
-extern class NDtbMissFaultType : public AlphaFault
+extern class NDtbMissFaultType : public MipsFault
 {
   public:
     NDtbMissFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const NDtbMissFault;
 
-extern class PDtbMissFaultType : public AlphaFault
+extern class PDtbMissFaultType : public MipsFault
 {
   public:
     PDtbMissFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const PDtbMissFault;
 
-extern class DtbPageFaultType : public AlphaFault
+extern class DtbPageFaultType : public MipsFault
 {
   public:
     DtbPageFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const DtbPageFault;
 
-extern class DtbAcvFaultType : public AlphaFault
+extern class DtbAcvFaultType : public MipsFault
 {
   public:
     DtbAcvFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const DtbAcvFault;
 
-extern class ItbMissFaultType : public AlphaFault
+extern class ItbMissFaultType : public MipsFault
 {
   public:
     ItbMissFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const ItbMissFault;
 
-extern class ItbPageFaultType : public AlphaFault
+extern class ItbPageFaultType : public MipsFault
 {
   public:
     ItbPageFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const ItbPageFault;
 
-extern class ItbAcvFaultType : public AlphaFault
+extern class ItbAcvFaultType : public MipsFault
 {
   public:
     ItbAcvFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const ItbAcvFault;
 
-extern class UnimplementedOpcodeFaultType : public AlphaFault
+extern class UnimplementedOpcodeFaultType : public MipsFault
 {
   public:
     UnimplementedOpcodeFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const UnimplementedOpcodeFault;
 
-extern class FloatEnableFaultType : public AlphaFault
+extern class FloatEnableFaultType : public MipsFault
 {
   public:
     FloatEnableFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const FloatEnableFault;
 
-extern class PalFaultType : public AlphaFault
+extern class PalFaultType : public MipsFault
 {
   public:
     PalFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const PalFault;
 
-extern class IntegerOverflowFaultType : public AlphaFault
+extern class IntegerOverflowFaultType : public MipsFault
 {
   public:
     IntegerOverflowFaultType(char * newName, int newId, Addr newVect)
-        : AlphaFault(newName, newId, newVect)
+        : MipsFault(newName, newId, newVect)
     {;}
 } * const IntegerOverflowFault;
 

@@ -48,13 +48,10 @@ isa_switch_hdrs = Split('''
 	isa_traits.hh
 	tlb.hh
 	process.hh
-	aout_machdep.h
-	ecoff_machdep.h
 	arguments.hh
 	stacktrace.hh
 	vtophys.hh
 	faults.hh
-	ev5.hh
         ''')
 
 # Generate the header.  target[0] is the full path of the output

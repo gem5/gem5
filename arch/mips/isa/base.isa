@@ -7,7 +7,13 @@
 
 //Outputs to decoder.hh
 output header {{
+
 #define R31 31
+#include "arch/mips/faults.hh"
+#include "arch/mips/isa_traits.hh"
+
+    using namespace MipsISA;
+
 
     /**
      * Base class for all MIPS static instructions.
@@ -19,12 +25,12 @@ output header {{
         /// Make MipsISA register dependence tags directly visible in
         /// this class and derived classes.  Maybe these should really
         /// live here and not in the MipsISA namespace.
-        enum DependenceTags {
+        /*enum DependenceTags {
             FP_Base_DepTag = MipsISA::FP_Base_DepTag,
             Fpcr_DepTag = MipsISA::Fpcr_DepTag,
             Uniq_DepTag = MipsISA::Uniq_DepTag,
             IPR_Base_DepTag = MipsISA::IPR_Base_DepTag
-        };
+            };*/
 
         // Constructor
         MipsStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
@@ -67,6 +73,7 @@ output decoder {{
         {
             printReg(ss, _srcRegIdx[0]);
         }
+
         if(_numSrcRegs > 1)
         {
             ss << ",";

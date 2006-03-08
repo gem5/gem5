@@ -16,21 +16,18 @@ def operands {{
     'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1),
     'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 2),
     'Rt': ('IntReg', 'uw', 'RT', 'IsInteger', 3),
-    'R31': ('IntReg', 'uw','R31','IsInteger', 4),
+    'r31': ('IntReg', 'uw','R31','IsInteger', 4),
+    'R0':  ('IntReg', 'uw','R0', 'IsInteger', 5),
 
     'IntImm': ('IntReg', 'uw', 'INTIMM', 'IsInteger', 3),
-    'Sa': ('IntReg', 'uw', 'SA', 'IsInteger', 4),
 
     'Fd': ('FloatReg', 'sf', 'FD', 'IsFloating', 1),
     'Fs': ('FloatReg', 'sf', 'FS', 'IsFloating', 2),
     'Ft': ('FloatReg', 'sf', 'FT', 'IsFloating', 3),
+    'Fr': ('FloatReg', 'sf', 'FR', 'IsFloating', 3),
 
     'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
 
     'NPC': ('NPC', 'uw', None, ( None, None, 'IsControl' ), 4),
-    'NNPC': ('NNPC', 'uw', None, ( None, None, 'IsControl' ), 4)
-    #'Runiq': ('ControlReg', 'uq', 'Uniq', None, 1),
-    #'FPCR':  ('ControlReg', 'uq', 'Fpcr', None, 1),
-    # The next two are hacks for non-full-system call-pal emulation
-    #'R0':  ('IntReg', 'uq', '0', None, 1),
+    'NNPC':('NNPC', 'uw', None, ( None, None, 'IsControl' ), 4)
 }};

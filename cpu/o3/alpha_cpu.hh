@@ -42,6 +42,8 @@ class AlphaFullCPU : public FullO3CPU<Impl>
   protected:
     typedef TheISA::IntReg IntReg;
     typedef TheISA::MiscReg MiscReg;
+    typedef TheISA::RegFile RegFile;
+    typedef TheISA::MiscRegFile MiscRegFile;
 
   public:
     typedef typename Impl::Params Params;

@@ -31,14 +31,14 @@ def template BasicConstructor {{
 def template BasicExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
-                Fault fault = No_Fault;
+                Fault fault = NoFault;
 
                 %(fp_enable_check)s;
                 %(op_decl)s;
                 %(op_rd)s;
                 %(code)s;
 
-                if(fault == No_Fault)
+                if(fault == NoFault)
                 {
                     %(op_wb)s;
                 }

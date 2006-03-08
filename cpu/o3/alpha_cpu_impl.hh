@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/alpha/faults.hh"
 #include "base/cprintf.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
@@ -268,7 +269,7 @@ Fault
 AlphaFullCPU<Impl>::hwrei()
 {
     if (!inPalMode())
-        return new UnimplementedOpcodeFault;
+        return new AlphaISA::UnimplementedOpcodeFault;
 
     this->setNextPC(this->regFile.miscRegs.readReg(AlphaISA::IPR_EXC_ADDR));
 
