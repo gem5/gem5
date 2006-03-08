@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/mips/mips_common_syscall_emul.hh"
-#include "arch/mips/mips_linux_process.hh"
+#include "arch/mips/common_syscall_emul.hh"
+#include "arch/mips/linux_process.hh"
 #include "arch/mips/isa_traits.hh"
 
 #include "base/trace.hh"

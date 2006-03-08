@@ -7,6 +7,9 @@
 
 output header {{
 
+#include <iostream>
+    using namespace std;
+
     /**
      * Base class for instructions whose disassembly is not purely a
      * function of the machine instruction (i.e., it depends on the
@@ -52,6 +55,10 @@ output header {{
             : PCDependentDisassembly(mnem, _machInst, __opClass),
               disp(OFFSET << 2)
         {
+            //If Bit 17 is 1 then Sign Extend
+            if ( (disp & 0x00020000) > 0  ) {
+                disp |= 0xFFFE0000;
+            }
         }
 
         Addr branchTarget(Addr branchPC) const;
@@ -74,6 +81,7 @@ output header {{
             : PCDependentDisassembly(mnem, _machInst, __opClass),
               disp(OFFSET << 2)
         {
+
         }
 
         Addr branchTarget(Addr branchPC) const;
@@ -93,11 +101,13 @@ output header {{
         /// Displacement to target address (signed).
         int32_t disp;
 
+        uint32_t target;
+
       public:
         /// Constructor
         Jump(const char *mnem, MachInst _machInst, OpClass __opClass)
             : PCDependentDisassembly(mnem, _machInst, __opClass),
-              disp(OFFSET)
+              disp(JMPTARG << 2)
         {
         }
 
@@ -159,23 +169,17 @@ output decoder {{
         // either a source (the condition for conditional
         // branches) or a destination (the link reg for
         // unconditional branches)
-        if (_numSrcRegs > 0) {
+        if (_numSrcRegs == 1) {
             printReg(ss, _srcRegIdx[0]);
             ss << ",";
-        }
-        else if (_numDestRegs > 0) {
-            printReg(ss, _destRegIdx[0]);
+        } else if(_numSrcRegs == 2) {
+            printReg(ss, _srcRegIdx[0]);
+            ss << ",";
+            printReg(ss, _srcRegIdx[1]);
             ss << ",";
         }
 
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        if (_numSrcRegs == 0 && _numDestRegs == 0) {
-            printReg(ss, 31);
-            ss << ",";
-        }
-#endif
-
-        Addr target = pc + 4 + disp;
+        Addr target = pc + 8 + disp;
 
         std::string str;
         if (symtab && symtab->findSymbol(target, str))
@@ -206,13 +210,6 @@ output decoder {{
             ss << ",";
         }
 
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        if (_numSrcRegs == 0 && _numDestRegs == 0) {
-            printReg(ss, 31);
-            ss << ",";
-        }
-#endif
-
         Addr target = pc + 4 + disp;
 
         std::string str;
@@ -231,19 +228,24 @@ output decoder {{
 
         ccprintf(ss, "%-10s ", mnemonic);
 
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        if (_numDestRegs == 0) {
-            printReg(ss, 31);
+        if ( mnemonic == "jal" ) {
+            Addr npc = pc + 4;
+            ccprintf(ss,"0x%x",(npc & 0xF0000000) | disp);
+        } else if (_numSrcRegs == 0) {
+            std::string str;
+            if (symtab && symtab->findSymbol(disp, str))
+                ss << str;
+            else
+                ccprintf(ss, "0x%x", disp);
+        } else if (_numSrcRegs == 1) {
+             printReg(ss, _srcRegIdx[0]);
+        } else if(_numSrcRegs == 2) {
+            printReg(ss, _srcRegIdx[0]);
             ss << ",";
+            printReg(ss, _srcRegIdx[1]);
+        } else {
+            panic(">= 3 Source Registers!!!");
         }
-#endif
-
-        if (_numDestRegs > 0) {
-            printReg(ss, _destRegIdx[0]);
-            ss << ",";
-        }
-
-        ccprintf(ss, "(r%d)", RT);
 
         return ss.str();
     }
@@ -253,15 +255,17 @@ def format Branch(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-2:] == 'al':
-        code += 'R31 = NNPC;\n'
+        code += 'r31 = NNPC;\n'
 
     #Condition code
     code = 'bool cond;\n' + code
     code += 'if (cond) {\n'
-    #code += '//NPC=NPC: just placeholder to force parser to writeback NPC\n'
-    #code += '  NPC = NPC; \n'
     code += '  NNPC = NPC + disp;\n'
+    code += '} else {\n'
+    code += '  NNPC = NNPC;\n'
     code += '} \n'
+
+    code += 'cout << hex << "NPC: " << NPC << " + " << disp << " = " << NNPC << endl;'
 
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl'))
@@ -277,13 +281,11 @@ def format BranchLikely(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-3:] == 'all':
-        code += 'R31 = NNPC;\n'
+        code += 'r31 = NNPC;\n'
 
     #Condition code
     code = 'bool cond;\n' + code
     code += 'if (cond) {'
-    #code += '//NPC=NPC: just placeholder to force parser to writeback NPC\n'
-    #code += 'NPC = NPC; \n'
     code += 'NNPC = NPC + disp;\n'
     code += '} \n'
 
@@ -300,8 +302,11 @@ def format BranchLikely(code,*flags) {{
 def format Jump(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
-    if strlen >= 3 and name[2:3] == 'al':
-            code = 'R31 = NNPC;\n' + code
+    if strlen > 1 and name[1:] == 'al':
+            code = 'r31 = NNPC;\n' + code
+
+    #code += 'if(NNPC == 0x80000638) { NNPC = r31; cout << "SKIPPING JUMP TO SIM_GET_MEM_CONF" << endl;}'
+    #code += 'target = NNPC;'
 
     iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),\
                         ('IsIndirectControl', 'IsUncondControl'))

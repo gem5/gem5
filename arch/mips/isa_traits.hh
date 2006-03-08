@@ -29,18 +29,20 @@
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
-namespace LittleEndianGuest {}
-using namespace LittleEndianGuest;
-
-//#include "arch/mips/faults.hh"
+//#include "arch/mips/misc_regfile.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
 #include "sim/faults.hh"
 
+#include <vector>
+
 class FastCPU;
 class FullCPU;
 class Checkpoint;
+
+namespace LittleEndianGuest {};
+using namespace LittleEndianGuest;
 
 #define TARGET_MIPS
 
@@ -50,11 +52,10 @@ class StaticInstPtr;
 namespace MIPS34K {
 int DTB_ASN_ASN(uint64_t reg);
 int ITB_ASN_ASN(uint64_t reg);
-}
+};
 
 namespace MipsISA
 {
-
     typedef uint32_t MachInst;
 //  typedef uint64_t Addr;
     typedef uint8_t  RegIndex;
@@ -64,7 +65,7 @@ namespace MipsISA
 
         NumIntRegs = 32,
         NumFloatRegs = 32,
-        NumMiscRegs = 32,
+        NumMiscRegs = 256,
 
         MaxRegsOfAnyType = 32,
         // Static instruction parameters
@@ -72,7 +73,7 @@ namespace MipsISA
         MaxInstDestRegs = 2,
 
         // semantically meaningful register indices
-        ZeroReg = 31,	// architecturally meaningful
+        ZeroReg = 0,	// architecturally meaningful
         // the rest of these depend on the ABI
         StackPointerReg = 30,
         GlobalPointerReg = 29,
@@ -106,7 +107,8 @@ namespace MipsISA
         Ctrl_Base_DepTag = 64,
         Fpcr_DepTag = 64,		// floating point control register
         Uniq_DepTag = 65,
-        IPR_Base_DepTag = 66
+        IPR_Base_DepTag = 66,
+        MiscReg_DepTag = 67
     };
 
     typedef uint64_t IntReg;
@@ -123,14 +125,123 @@ namespace MipsISA
         double d[NumFloatRegs];		// double-precision floating point view
     } FloatRegFile;
 
-    // control register file contents
+    // cop-0/cop-1 system control register file
     typedef uint64_t MiscReg;
-    typedef struct {
-        uint64_t	fpcr;		// floating point condition codes
-        uint64_t	uniq;		// process-unique register
-        bool		lock_flag;	// lock flag for LL/SC
-        Addr		lock_addr;	// lock address for LL/SC
-    } MiscRegFile;
+//typedef MiscReg MiscRegFile[NumMiscRegs];
+
+    typedef std::vector<MiscReg> MiscRegFile[NumMiscRegs];
+//    typedef MiscRegBank MiscRegBanks[NumMiscRegs];
+
+
+    enum MiscRegTags {
+        //Coprocessor 0 Registers
+        //Reference MIPS32 Arch. for Programmers, Vol. III, Ch.8
+        //(Register Number-Register Select) Summary of Register
+        //------------------------------------------------------
+        Index,       //0-0 Index into the TLB array
+
+        MVPControl,  //0-1 Per-processor register containing global
+                     //MIPS® MT configuration data
+
+        MVPConf0,    //0-2 Per-processor register containing global
+                     //MIPS® MT configuration data
+
+        MVPConf1,    //0-3 Per-processor register containing global
+                     //MIPS® MT configuration data
+
+        Random,      //1-0 Randomly generated index into the TLB array
+
+        VPEControl,  //1-1 Per-VPE register containing relatively volatile
+                     //thread configuration data
+
+        VPEConf0,    //1-2 Per-VPE multi-thread configuration
+                     //information
+
+
+        VPEConf1,    //1-2 Per-VPE multi-thread configuration
+                     //information
+
+        YQMask,      //Per-VPE register defining which YIELD
+                     //qualifier bits may be used without generating
+                     //an exception
+
+        VPESchedule,
+        VPEScheFBack,
+        VPEOpt,
+        EntryLo0,
+        TCStatus,
+        TCBind,
+        TCRestart,
+        TCHalt,
+        TCContext,
+        TCSchedule,
+        TCScheFBack,
+        EntryLo1,
+        Context,
+        ContextConfig,
+        //PageMask,
+        PageGrain,
+        Wired,
+        SRSConf0,
+        SRSConf1,
+        SRSConf2,
+        SRSConf3,
+        SRSConf4,
+        BadVAddr,
+        Count,
+        EntryHi,
+        Compare,
+        Status,     //12-0 Processor status and control
+        IntCtl,     //12-1 Interrupt system status and control
+        SRSCtl,     //12-2 Shadow register set status and control
+        SRSMap,     //12-3 Shadow set IPL mapping
+        Cause,      //13-0 Cause of last general exception
+        EPC,        //14-0 Program counter at last exception
+        PRId,       //15-0 Processor identification and revision
+        EBase,      //15-1 Exception vector base register
+        Config,
+        Config1,
+        Config2,
+        Config3,
+        LLAddr,
+        WatchLo,
+        WatchHi,
+        Debug,
+        TraceControl1,
+        TraceControl2,
+        UserTraceData,
+        TraceBPC,
+
+        DEPC,
+
+        PerfCnt,
+
+        ErrCtl,
+
+        CacheErr0,
+        CacheErr1,
+        CacheErr2,
+        CacheErr3,
+
+        TagLo,
+        DataLo,
+        TagHi,
+        DataHi,
+        ErrorEPC,
+        DESAVE,
+
+        //More Misc. Regs
+        Hi,
+        Lo,
+        FCSR,
+        FPCR,
+        LockAddr,
+        LockFlag,
+
+        //Alpha Regs, but here now, for
+        //compiling sake
+        UNIQ
+    };
 
 extern const Addr PageShift;
 extern const Addr PageBytes;
@@ -168,19 +279,33 @@ extern const Addr PageOffset;
         IntRegFile intRegFile;		// (signed) integer register file
         FloatRegFile floatRegFile;	// floating point register file
         MiscRegFile miscRegs;		// control register file
+
+
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
+        Addr nnpc;			// next-next-cycle program counter
+                                        // used to implement branch delay slot
+                                        // not real register
+
+        MiscReg hi;                     // MIPS HI Register
+        MiscReg lo;                     // MIPS LO Register
+
+
 #if FULL_SYSTEM
         IntReg palregs[NumIntRegs];	// PAL shadow registers
         InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
         int intrflag;			// interrupt flag
         bool pal_shadow;		// using pal_shadow registers
-        inline int instAsid() { return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]); }
-        inline int dataAsid() { return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]); }
+        inline int instAsid() { return MIPS34K::ITB_ASN_ASN(ipr[IPR_ITB_ASN]); }
+        inline int dataAsid() { return MIPS34K::DTB_ASN_ASN(ipr[IPR_DTB_ASN]); }
 #endif // FULL_SYSTEM
 
+        //void initCP0Regs();
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
+
+        void createCP0Regs();
+        void coldReset();
     };
 
     StaticInstPtr decodeInst(MachInst);
@@ -193,6 +318,9 @@ extern const Addr PageOffset;
         // An impossible number for instruction annotations
         ITOUCH_ANNOTE = 0xffffffff,
     };
+
+   void getMiscRegIdx(int reg_name,int &idx, int &sel);
+
 
     static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
@@ -264,37 +392,7 @@ extern const Addr PageOffset;
     template <class XC>
     void zeroRegisters(XC *xc);
 
-
-//typedef MipsISA TheISA;
-
-//typedef TheISA::MachInst MachInst;
-//typedef TheISA::Addr Addr;
-//typedef TheISA::RegIndex RegIndex;
-//typedef TheISA::IntReg IntReg;
-//typedef TheISA::IntRegFile IntRegFile;
-//typedef TheISA::FloatReg FloatReg;
-//typedef TheISA::FloatRegFile FloatRegFile;
-//typedef TheISA::MiscReg MiscReg;
-//typedef TheISA::MiscRegFile MiscRegFile;
-//typedef TheISA::AnyReg AnyReg;
-//typedef TheISA::RegFile RegFile;
-
-//const int NumIntRegs   = TheISA::NumIntRegs;
-//const int NumFloatRegs = TheISA::NumFloatRegs;
-//const int NumMiscRegs  = TheISA::NumMiscRegs;
-//const int TotalNumRegs = TheISA::TotalNumRegs;
-//const int VMPageSize   = TheISA::VMPageSize;
-//const int LogVMPageSize   = TheISA::LogVMPageSize;
-//const int ZeroReg = TheISA::ZeroReg;
-//const int StackPointerReg = TheISA::StackPointerReg;
-//const int GlobalPointerReg = TheISA::GlobalPointerReg;
-//const int ReturnAddressReg = TheISA::ReturnAddressReg;
-//const int ReturnValueReg = TheISA::ReturnValueReg;
-//const int ArgumentReg0 = TheISA::ArgumentReg0;
-//const int ArgumentReg1 = TheISA::ArgumentReg1;
-//const int ArgumentReg2 = TheISA::ArgumentReg2;
-//const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
-const Addr MaxAddr = (Addr)-1;
+    const Addr MaxAddr = (Addr)-1;
 };
 
 #if !FULL_SYSTEM

@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/alpha/faults.hh"
+#include "arch/mips/faults.hh"
 
 ResetFaultType * const ResetFault =
     new ResetFaultType("reset", 1, 0x0001);
