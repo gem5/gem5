@@ -43,6 +43,7 @@ class BaseCPU;
 class SimConsole;
 class AlphaSystem;
 class SimpleDisk;
+class MemoryController;
 
 /**
  * Memory mapped interface to the system console. This device
