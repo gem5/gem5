@@ -212,11 +212,6 @@ mysql_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	arch/alpha/freebsd/system.cc
-	arch/alpha/linux/system.cc
-        arch/alpha/system.cc
-	arch/alpha/tru64/system.cc
-
 	base/crc.cc
 	base/inet.cc
 	base/remote_gdb.cc

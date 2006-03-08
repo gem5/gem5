@@ -27,7 +27,7 @@
  */
 
 #include "arch/alpha/common_syscall_emul.hh"
-#include "arch/alpha/linux_process.hh"
+#include "arch/alpha/linux/process.hh"
 #include "arch/alpha/isa_traits.hh"
 
 #include "base/trace.hh"

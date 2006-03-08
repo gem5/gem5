@@ -175,11 +175,6 @@ class Statistics : public Serializable
     void ivlb() { _ivlb++; }
     void ivle() { _ivle++; }
     void hwrei() { _hwrei++; }
-    void fault(Fault fault)
-    {
-            if(fault != NoFault)
-                fault->stat()++;
-    }// FIXME: When there are no generic system fault objects, this will go back to _faults[fault]++; }
     void swpipl(int ipl);
     void mode(cpu_mode newmode, ExecContext *xc);
     void context(Addr oldpcbb, Addr newpcbb, ExecContext *xc);

@@ -28,7 +28,7 @@
 
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/common_syscall_emul.hh"
-#include "arch/alpha/tru64_process.hh"
+#include "arch/alpha/tru64/process.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64.hh"
 #include "mem/functional/functional.hh"

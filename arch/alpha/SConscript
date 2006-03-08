@@ -56,14 +56,18 @@ full_system_sources = Split('''
 	osfpal.cc
 	stacktrace.cc
 	vtophys.cc
+	system.cc
+	freebsd/system.cc
+	linux/system.cc
+	tru64/system.cc
 	''')
 
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
 	common_syscall_emul.cc
-	linux_process.cc
-	tru64_process.cc
+	linux/process.cc
+	tru64/process.cc
 	process.cc
 	''')
 

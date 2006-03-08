@@ -51,9 +51,8 @@ class FaultBase : public RefCounted
 {
   public:
     virtual FaultName name() = 0;
-    virtual FaultStat & stat() = 0;
 #if FULL_SYSTEM
-    virtual void invoke(ExecContext * xc) = 0;
+    virtual void invoke(ExecContext * xc);
 #else
     virtual void invoke(ExecContext * xc);
 #endif
