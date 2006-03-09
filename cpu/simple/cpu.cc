@@ -818,9 +818,17 @@ SimpleCPU::tick()
 #endif // FULL_SYSTEM
     }
     else {
+#if THE_ISA != MIPS_ISA
         // go to the next instruction
         xc->regs.pc = xc->regs.npc;
         xc->regs.npc += sizeof(MachInst);
+#else
+        // go to the next instruction
+        xc->regs.pc = xc->regs.npc;
+        xc->regs.npc = xc->regs.nnpc;
+        xc->regs.nnpc += sizeof(MachInst);
+#endif
+
     }
 
 #if FULL_SYSTEM

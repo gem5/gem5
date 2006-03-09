@@ -422,6 +422,12 @@ class ExecContext
         regs.npc = val;
     }
 
+    void setNextNPC(uint64_t val)
+    {
+        regs.nnpc = val;
+    }
+
+
     MiscReg readMiscReg(int misc_reg)
     {
         return regs.miscRegs.readReg(misc_reg);

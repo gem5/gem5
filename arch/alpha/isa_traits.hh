@@ -200,6 +200,8 @@ extern const int reg_redir[NumIntRegs];
         MiscRegFile miscRegs;		// control register file
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
+        Addr nnpc;
+
 #if FULL_SYSTEM
         int intrflag;			// interrupt flag
         inline int instAsid()
