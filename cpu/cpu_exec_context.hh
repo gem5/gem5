@@ -445,6 +445,17 @@ class CPUExecContext
         regs.npc = val;
     }
 
+    uint64_t readNextNPC()
+    {
+        return regs.nnpc;
+    }
+
+    void setNextNPC(uint64_t val)
+    {
+        regs.nnpc = val;
+    }
+
+
     MiscReg readMiscReg(int misc_reg)
     {
         return regs.miscRegs.readReg(misc_reg);

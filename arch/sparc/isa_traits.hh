@@ -409,6 +409,7 @@ namespace SparcISA
 
         Addr pc;		// Program Counter
         Addr npc;		// Next Program Counter
+        Addr nnpc;
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);

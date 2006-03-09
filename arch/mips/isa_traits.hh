@@ -65,7 +65,7 @@ namespace MipsISA
 
         NumIntRegs = 32,
         NumFloatRegs = 32,
-        NumMiscRegs = 256,
+        NumMiscRegs = 258, //account for hi,lo regs
 
         MaxRegsOfAnyType = 32,
         // Static instruction parameters
@@ -127,8 +127,50 @@ namespace MipsISA
 
     // cop-0/cop-1 system control register file
     typedef uint64_t MiscReg;
-    typedef MiscReg MiscRegFile[NumMiscRegs];
+//typedef MiscReg MiscRegFile[NumMiscRegs];
+    class MiscRegFile {
+      public:
+        MiscReg
+      protected:
+        uint64_t	fpcr;		// floating point condition codes
+        uint64_t	uniq;		// process-unique register
+        bool		lock_flag;	// lock flag for LL/SC
+        Addr		lock_addr;	// lock address for LL/SC
 
+        MiscReg miscRegFile[NumMiscRegs];
+
+      public:
+        //These functions should be removed once the simplescalar cpu model
+        //has been replaced.
+        int getInstAsid();
+        int getDataAsid();
+
+        MiscReg readReg(int misc_reg)
+        { return miscRegFile[misc_reg]; }
+
+        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc)
+        { return miscRegFile[misc_reg];}
+
+        Fault setReg(int misc_reg, const MiscReg &val)
+        { miscRegFile[misc_reg] = val; return NoFault; }
+
+        Fault setRegWithEffect(int misc_reg, const MiscReg &val,
+                               ExecContext *xc)
+        { miscRegFile[misc_reg] = val; return NoFault; }
+
+#if FULL_SYSTEM
+        void clearIprs() { };
+
+      protected:
+        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
+
+      private:
+        MiscReg readIpr(int idx, Fault &fault, ExecContext *xc) { }
+
+        Fault setIpr(int idx, uint64_t val, ExecContext *xc) { }
+#endif
+        friend class RegFile;
+    };
 
     enum MiscRegTags {
         //Coprocessor 0 Registers
@@ -207,10 +249,10 @@ namespace MipsISA
 
         EPC = 105,//105-112        //14-0 Program counter at last exception
 
-        PrId = 113//113-120,       //15-0 Processor identification and revision
+        PRId = 113//113-120,       //15-0 Processor identification and revision
         EBase = 114,      //15-1 Exception vector base register
 
-        Config = 121,//121-128
+        Config = 121,//Bank 16: 121-128
         Config1 = 122,
         Config2 = 123,
         Config3 = 124,
@@ -218,9 +260,9 @@ namespace MipsISA
         Config7 = 128,
 
 
-        LLAddr = 129,//129-136
+        LLAddr = 129,//Bank 17: 129-136
 
-        WatchLo0 = 137,//137-144
+        WatchLo0 = 137,//Bank 18: 137-144
         WatchLo1 = 138,
         WatchLo2 = 139,
         WatchLo3 = 140,
@@ -229,7 +271,7 @@ namespace MipsISA
         WatchLo6 = 143,
         WatchLo7 = 144,
 
-        WatchHi0 = 145,//145-152
+        WatchHi0 = 145,//Bank 19: 145-152
         WatchHi1 = 146,
         WatchHi2 = 147,
         WatchHi3 = 148,
@@ -238,21 +280,21 @@ namespace MipsISA
         WatchHi6 = 151,
         WatchHi7 = 152,
 
-        XCContext64 = 153,//153-160
+        XCContext64 = 153,//Bank 20: 153-160
 
-        //161-168
+        //Bank 21: 161-168
 
-        //169-176
+        //Bank 22: 169-176
 
-        Debug = 177, //177-184
+        Debug = 177, //Bank 23: 177-184
         TraceControl1 = 178,
         TraceControl2 = 179,
         UserTraceData = 180,
         TraceBPC = 181,
 
-        DEPC = 185,//185-192
+        DEPC = 185,//Bank 24: 185-192
 
-        PerfCnt0 = 193,//193 - 200
+        PerfCnt0 = 193,//Bank 25: 193 - 200
         PerfCnt1 = 194,
         PerfCnt2 = 195,
         PerfCnt3 = 196,
@@ -261,48 +303,47 @@ namespace MipsISA
         PerfCnt6 = 199,
         PerfCnt7 = 200,
 
-        ErrCtl = 201, //201 - 208
+        ErrCtl = 201, //Bank 26: 201 - 208
 
-        CacheErr0 = 209, //209 - 216
+        CacheErr0 = 209, //Bank 27: 209 - 216
         CacheErr1 = 210,
         CacheErr2 = 211,
         CacheErr3 = 212,
 
-        TagLo0 = 217,//217 - 224
+        TagLo0 = 217,//Bank 28: 217 - 224
+        DataLo1 = 218,
         TagLo2 = 219,
+        DataLo3 = 220,
         TagLo4 = 221,
+        DataLo5 = 222,
         TagLo6 = 223,
+        DataLo7 = 234,
 
-        DataLo1 = 226,//225 - 232
-        DataLo3 = 228,
-        DataLo5 = 220,
-        DataLo7 = 232,
-
-        TagHi0 = 233,//233 - 240
+        TagHi0 = 233,//Bank 29: 233 - 240
+        DataHi1 = 234,
         TagHi2 = 235,
+        DataHi3 = 236,
         TagHi4 = 237,
+        DataHi5 = 238,
         TagHi6 = 239,
+        DataHi7 = 240,
 
-        DataHi0 = 241,//241 - 248
-        DataHi2 = 243,
-        DataHi4 = 245,
-        DataHi6 = 247,
 
-        ErrorEPC = 249,//249 - 256
+        ErrorEPC = 249,//Bank 30: 241 - 248
 
-        DESAVE = 257,
+        DESAVE = 257,//Bank 31: 249-256
 
         //More Misc. Regs
         Hi,
         Lo,
         FCSR,
         FPCR,
-        LockAddr,
-        LockFlag,
 
         //Alpha Regs, but here now, for
         //compiling sake
-        UNIQ
+        UNIQ,
+        LockAddr,
+        LockFlag
     };
 
 extern const Addr PageShift;
