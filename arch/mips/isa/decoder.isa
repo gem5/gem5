@@ -34,9 +34,9 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: decode RT default BasicOp::sll({{ Rd = Rt.uw << SA; }}) {
                             0x0: decode RD{
                                 0x0: decode HINT {
-                                    0x0:nop({{}});
-                                    0x1:ssnop({{}});
-                                    0x3:ehb({{}});
+                                    0x0:nop({{}});  //really sll r0,r0,0
+                                    0x1:ssnop({{}});//really sll r0,r0,1
+                                    0x3:ehb({{}});  //really sll r0,r0,3
                                 }
                             }
                         }
