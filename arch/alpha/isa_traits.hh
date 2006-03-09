@@ -125,6 +125,7 @@ namespace AlphaISA
     const int ArgumentReg5 = 21;
     const int SyscallNumReg = ReturnValueReg;
     const int SyscallPseudoReturnReg = ArgumentReg4;
+    const int SyscallSuccessReg = 19;
 
 
 
@@ -341,6 +342,8 @@ extern const int reg_redir[NumIntRegs];
     template <class XC>
     void zeroRegisters(XC *xc);
 
+    const Addr MaxAddr = (Addr)-1;
+
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
         // check for error condition.  Alpha syscall convention is to
@@ -356,6 +359,7 @@ extern const int reg_redir[NumIntRegs];
             regs->intRegFile[ReturnValueReg] = -return_value.value();
         }
     }
+};
 
 static inline AlphaISA::ExtMachInst
 AlphaISA::makeExtMI(AlphaISA::MachInst inst, const uint64_t &pc) {

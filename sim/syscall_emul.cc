@@ -341,7 +341,7 @@ pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
 
     // Alpha Linux convention for pipe() is that fd[0] is returned as
     // the return value of the function, and fd[1] is returned in r20.
-    xc->regs.intRegFile[SyscallPseudoReturnReg] = sim_fds[1];
+    xc->setIntReg(SyscallPseudoReturnReg, sim_fds[1]);
     return sim_fds[0];
 }
 
@@ -354,7 +354,7 @@ getpidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
     // fake_syscall mode, so there's no way for a process to know it's
     // not getting a unique value.
 
-    xc->regs.intRegFile[SyscallPseudoReturnReg] = 99;
+    xc->setIntReg(SyscallPseudoReturnReg, 99);
     return 100;
 }
 
@@ -367,7 +367,7 @@ getuidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
     // simulation to be deterministic.
 
     // EUID goes in r20.
-    xc->regs.intRegFile[SyscallPseudoReturnReg] = 100;	// EUID
+    xc->setIntReg(SyscallPseudoReturnReg, 100); //EUID
     return 100;		// UID
 }
 
@@ -377,7 +377,7 @@ getgidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
            ExecContext *xc)
 {
     // Get current group ID.  EGID goes in r20.
-    xc->regs.intRegFile[SyscallPseudoReturnReg] = 100;
+    xc->setIntReg(SyscallPseudoReturnReg, 100); //EGID
     return 100;
 }
 
@@ -399,7 +399,7 @@ getpidFunc(SyscallDesc *desc, int callnum, Process *process,
     // fake_syscall mode, so there's no way for a process to know it's
     // not getting a unique value.
 
-    xc->regs.intRegFile[SyscallPseudoReturnReg] = 99;
+    xc->setIntReg(SyscallPseudoReturnReg, 99); //PID
     return 100;
 }
 
