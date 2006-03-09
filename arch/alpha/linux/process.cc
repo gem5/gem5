@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/alpha/common_syscall_emul.hh"
 #include "arch/alpha/linux/process.hh"
 #include "arch/alpha/isa_traits.hh"
 
@@ -41,29 +40,6 @@
 using namespace std;
 using namespace AlphaISA;
 
-/// Target pipe() handler.  Even though this is a generic Posix call,
-/// the Alpha return convention is funky, so that makes it
-/// Alpha-specific.
-SyscallReturn
-pipeFunc(SyscallDesc *desc, int callnum, Process *process,
-         ExecContext *xc)
-{
-    int fds[2], sim_fds[2];
-    int pipe_retval = pipe(fds);
-
-    if (pipe_retval < 0) {
-        // error
-        return pipe_retval;
-    }
-
-    sim_fds[0] = process->alloc_fd(fds[0]);
-    sim_fds[1] = process->alloc_fd(fds[1]);
-
-    // Alpha Linux convention for pipe() is that fd[0] is returned as
-    // the return value of the function, and fd[1] is returned in r20.
-    xc->setIntReg(20, sim_fds[1]);
-    return sim_fds[0];
-}
 
 
 /// Target uname() handler.
@@ -162,11 +138,11 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 17 */ SyscallDesc("brk", obreakFunc),
     /* 18 */ SyscallDesc("osf_getfsstat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
-    /* 20 */ SyscallDesc("getxpid", getpidFunc),
+    /* 20 */ SyscallDesc("getxpid", getpidPseudoFunc),
     /* 21 */ SyscallDesc("osf_mount", unimplementedFunc),
     /* 22 */ SyscallDesc("umount", unimplementedFunc),
     /* 23 */ SyscallDesc("setuid", setuidFunc),
-    /* 24 */ SyscallDesc("getxuid", getuidFunc),
+    /* 24 */ SyscallDesc("getxuid", getuidPseudoFunc),
     /* 25 */ SyscallDesc("exec_with_loader", unimplementedFunc),
     /* 26 */ SyscallDesc("osf_ptrace", unimplementedFunc),
     /* 27 */ SyscallDesc("osf_nrecvmsg", unimplementedFunc),
@@ -184,12 +160,12 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 39 */ SyscallDesc("setpgid", unimplementedFunc),
     /* 40 */ SyscallDesc("osf_old_lstat", unimplementedFunc),
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
-    /* 42 */ SyscallDesc("pipe", pipeFunc),
+    /* 42 */ SyscallDesc("pipe", pipePseudoFunc),
     /* 43 */ SyscallDesc("osf_set_program_attributes", unimplementedFunc),
     /* 44 */ SyscallDesc("osf_profil", unimplementedFunc),
     /* 45 */ SyscallDesc("open", openFunc<Linux>),
     /* 46 */ SyscallDesc("osf_old_sigaction", unimplementedFunc),
-    /* 47 */ SyscallDesc("getxgid", getgidFunc),
+    /* 47 */ SyscallDesc("getxgid", getgidPseudoFunc),
     /* 48 */ SyscallDesc("osf_sigprocmask", ignoreFunc),
     /* 49 */ SyscallDesc("osf_getlogin", unimplementedFunc),
     /* 50 */ SyscallDesc("osf_setlogin", unimplementedFunc),

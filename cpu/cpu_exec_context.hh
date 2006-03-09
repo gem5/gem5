@@ -505,19 +505,7 @@ class CPUExecContext
 
     void setSyscallReturn(SyscallReturn return_value)
     {
-        // check for error condition.  Alpha syscall convention is to
-        // indicate success/failure in reg a3 (r19) and put the
-        // return value itself in the standard return value reg (v0).
-        const int RegA3 = 19;	// only place this is used
-        if (return_value.successful()) {
-            // no error
-            regs.intRegFile[RegA3] = 0;
-            regs.intRegFile[TheISA::ReturnValueReg] = return_value.value();
-        } else {
-            // got an error, return details
-            regs.intRegFile[RegA3] = (TheISA::IntReg) -1;
-            regs.intRegFile[TheISA::ReturnValueReg] = -return_value.value();
-        }
+        TheISA::setSyscallReturn(return_value, &regs);
     }
 
     void syscall()

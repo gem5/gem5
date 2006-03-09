@@ -63,11 +63,6 @@ namespace SparcISA
     const int NumFloatRegs = 32;
     const int NumMiscRegs = 32;
 
-    const int MaxRegsOfAnyType = 32;
-    const int // Static instruction parameters
-    const int MaxInstSrcRegs = 3;
-    const int MaxInstDestRegs = 2;
-
     const int // Maximum trap level
     const int MaxTL = 4;
     const int
@@ -75,20 +70,45 @@ namespace SparcISA
     const int ZeroReg = 0;	// architecturally meaningful
     const int // the rest of these depend on the ABI
     const int StackPointerReg = 14;
-    const int ReturnAddressReg = 31;
-    const int ReturnValueReg = 24;
+    const int ReturnAddressReg = 31; // post call, precall is 15
+    const int ReturnValueReg = 8; // Post return, 24 is pre-return.
     const int FramePointerReg = 30;
-    const int ArgumentReg0 = 24;
-    const int ArgumentReg1 = 25;
-    const int ArgumentReg2 = 26;
-    const int ArgumentReg3 = 27;
-    const int ArgumentReg4 = 28;
-    const int ArgumentReg5 = 29;
-    const int
-    const int //8K. This value is implmentation specific; and should probably
-    const int //be somewhere else.
+    const int ArgumentReg0 = 8;
+    const int ArgumentReg1 = 9;
+    const int ArgumentReg2 = 10;
+    const int ArgumentReg3 = 11;
+    const int ArgumentReg4 = 12;
+    const int ArgumentReg5 = 13;
+    // Some OS syscall sue a second register (o1) to return a second value
+    const int SyscallPseudoReturnReg = ArgumentReg1;
+
+
+    //8K. This value is implmentation specific; and should probably
+    //be somewhere else.
     const int LogVMPageSize = 13;
     const int VMPageSize = (1 << LogVMPageSize);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     typedef uint64_t IntReg;
 
@@ -443,7 +463,22 @@ namespace SparcISA
      * @param xc The execution context.
      */
     template <class XC>
-    void zeroRegisters(XC *xc);
+
+    static inline setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+    {
+        // check for error condition.  SPARC syscall convention is to
+        // indicate success/failure in reg the carry bit of the ccr
+        // and put the return value itself in the standard return value reg ().
+        if (return_value.successful()) {
+            // no error
+            regs->miscRegFile.ccrFields.iccFields.c = 0;
+            regs->intRegFile[ReturnValueReg] = return_value.value();
+        } else {
+            // got an error, return details
+            regs->miscRegFile.ccrFields.iccFields.c = 1;
+            regs->intRegFile[ReturnValueReg] = -return_value.value();
+        }
+    }
 };
 
 #if !FULL_SYSTEM
