@@ -30,6 +30,8 @@
 #include "base/trace.hh"
 #include "cpu/o3/btb.hh"
 
+using namespace TheISA;
+
 DefaultBTB::DefaultBTB(unsigned _numEntries,
                        unsigned _tagBits,
                        unsigned _instShiftAmt)

@@ -35,10 +35,11 @@
 #endif
 #include "sim/root.hh"
 
+#include "cpu/cpu_exec_context.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/cpu.hh"
-#include "cpu/exec_context.hh"
 
 using namespace std;
 
@@ -84,14 +85,14 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
 
       regFile(params.numPhysIntRegs, params.numPhysFloatRegs),
 
-      freeList(Impl::ISA::NumIntRegs, params.numPhysIntRegs,
-               Impl::ISA::NumFloatRegs, params.numPhysFloatRegs),
+      freeList(TheISA::NumIntRegs, params.numPhysIntRegs,
+               TheISA::NumFloatRegs, params.numPhysFloatRegs),
 
-      renameMap(Impl::ISA::NumIntRegs, params.numPhysIntRegs,
-                Impl::ISA::NumFloatRegs, params.numPhysFloatRegs,
-                Impl::ISA::NumMiscRegs,
-                Impl::ISA::ZeroReg,
-                Impl::ISA::ZeroReg + Impl::ISA::NumIntRegs),
+      renameMap(TheISA::NumIntRegs, params.numPhysIntRegs,
+                TheISA::NumFloatRegs, params.numPhysFloatRegs,
+                TheISA::NumMiscRegs,
+                TheISA::ZeroReg,
+                TheISA::ZeroReg + TheISA::NumIntRegs),
 
       rob(params.numROBEntries, params.squashWidth),
 
@@ -103,7 +104,7 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
       renameQueue(5, 5),
       iewQueue(5, 5),
 
-      xc(NULL),
+      cpuXC(NULL),
 
       globalSeqNum(1),
 
@@ -134,32 +135,26 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
     for (int i = 0; i < this->number_of_threads; ++i) {
 #if FULL_SYSTEM
         assert(i == 0);
-        system->execContexts[i] =
-            new ExecContext(this, i, system, itb, dtb, mem);
+        thread[i] = new CPUExecContext(this, 0, system, itb, dtb, mem);
+        system->execContexts[i] = thread[i]->getProxy();
 
-        // initialize CPU, including PC
-        TheISA::initCPU(&system->execContexts[i]->regs);
         execContexts.push_back(system->execContexts[i]);
 #else
         if (i < params.workload.size()) {
             DPRINTF(FullCPU, "FullCPU: Workload[%i]'s starting PC is %#x, "
                     "process is %#x",
                     i, params.workload[i]->prog_entry, thread[i]);
-            thread[i] = new ExecContext(this, i, params.workload[i], i);
+            thread[i] = new CPUExecContext(this, i, params.workload[i], i);
         }
         assert(params.workload[i]->getMemory() != NULL);
         assert(mem != NULL);
-        execContexts.push_back(thread[i]);
+        execContexts.push_back(thread[i]->getProxy());
 #endif // !FULL_SYSTEM
     }
 
     // Note that this is a hack so that my code which still uses xc-> will
     // still work.  I should remove this eventually
-#if FULL_SYSTEM
-    xc = system->execContexts[0];
-#else
-    xc = thread[0];
-#endif
+    cpuXC = thread[0];
 
     // The stages also need their CPU pointer setup.  However this must be
     // done at the upper level CPU because they have pointers to the upper
@@ -250,31 +245,32 @@ FullO3CPU<Impl>::init()
         // that it can start properly.
 #if FULL_SYSTEM
         ExecContext *src_xc = system->execContexts[0];
+        TheISA::initCPU(src_xc, src_xc->readCpuId());
 #else
-        ExecContext *src_xc = thread[0];
+        ExecContext *src_xc = thread[0]->getProxy();
 #endif
         // First loop through the integer registers.
-        for (int i = 0; i < Impl::ISA::NumIntRegs; ++i)
+        for (int i = 0; i < TheISA::NumIntRegs; ++i)
         {
-            regFile.intRegFile[i] = src_xc->regs.intRegFile[i];
+            regFile.intRegFile[i] = src_xc->readIntReg(i);
         }
 
         // Then loop through the floating point registers.
-        for (int i = 0; i < Impl::ISA::NumFloatRegs; ++i)
+        for (int i = 0; i < TheISA::NumFloatRegs; ++i)
         {
-            regFile.floatRegFile[i].d = src_xc->regs.floatRegFile.d[i];
-            regFile.floatRegFile[i].q = src_xc->regs.floatRegFile.q[i];
+            regFile.floatRegFile[i].d = src_xc->readFloatRegDouble(i);
+            regFile.floatRegFile[i].q = src_xc->readFloatRegInt(i);
         }
-
+/*
         // Then loop through the misc registers.
         regFile.miscRegs.fpcr = src_xc->regs.miscRegs.fpcr;
         regFile.miscRegs.uniq = src_xc->regs.miscRegs.uniq;
         regFile.miscRegs.lock_flag = src_xc->regs.miscRegs.lock_flag;
         regFile.miscRegs.lock_addr = src_xc->regs.miscRegs.lock_addr;
-
+*/
         // Then finally set the PC and the next PC.
-        regFile.pc = src_xc->regs.pc;
-        regFile.npc = src_xc->regs.npc;
+        regFile.pc = src_xc->readPC();
+        regFile.npc = src_xc->readNextPC();
     }
 }
 

@@ -93,9 +93,6 @@ ListenSocket::listen(int port, bool reuse)
     return true;
 }
 
-#if defined(__APPLE__)
-typedef int socklen_t;
-#endif
 
 // Open a connection.  Accept will block, so if you don't want it to,
 // make sure a connection is ready before you call accept.

@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "cpu/base.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
@@ -48,7 +49,7 @@ void
 IntrControl::post(int int_num, int index)
 {
     std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[0]->cpu;
+    BaseCPU *temp = xcvec[0]->getCpuPtr();
     temp->post_interrupt(int_num, index);
 }
 
@@ -56,7 +57,7 @@ void
 IntrControl::post(int cpu_id, int int_num, int index)
 {
     std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[cpu_id]->cpu;
+    BaseCPU *temp = xcvec[cpu_id]->getCpuPtr();
     temp->post_interrupt(int_num, index);
 }
 
@@ -64,7 +65,7 @@ void
 IntrControl::clear(int int_num, int index)
 {
     std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[0]->cpu;
+    BaseCPU *temp = xcvec[0]->getCpuPtr();
     temp->clear_interrupt(int_num, index);
 }
 
@@ -72,7 +73,7 @@ void
 IntrControl::clear(int cpu_id, int int_num, int index)
 {
     std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[cpu_id]->cpu;
+    BaseCPU *temp = xcvec[cpu_id]->getCpuPtr();
     temp->clear_interrupt(int_num, index);
 }
 

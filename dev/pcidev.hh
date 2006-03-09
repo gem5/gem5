@@ -260,6 +260,7 @@ class PciDev : public DmaDevice
 inline Fault
 PciDev::readBar(MemReqPtr &req, uint8_t *data)
 {
+    using namespace TheISA;
     if (isBAR(req->paddr, 0))
         return readBar0(req, req->paddr - BARAddrs[0], data);
     if (isBAR(req->paddr, 1))
@@ -272,12 +273,13 @@ PciDev::readBar(MemReqPtr &req, uint8_t *data)
         return readBar4(req, req->paddr - BARAddrs[4], data);
     if (isBAR(req->paddr, 5))
         return readBar5(req, req->paddr - BARAddrs[5], data);
-    return Machine_Check_Fault;
+    return genMachineCheckFault();
 }
 
 inline Fault
 PciDev::writeBar(MemReqPtr &req, const uint8_t *data)
 {
+    using namespace TheISA;
     if (isBAR(req->paddr, 0))
         return writeBar0(req, req->paddr - BARAddrs[0], data);
     if (isBAR(req->paddr, 1))
@@ -290,7 +292,7 @@ PciDev::writeBar(MemReqPtr &req, const uint8_t *data)
         return writeBar4(req, req->paddr - BARAddrs[4], data);
     if (isBAR(req->paddr, 5))
         return writeBar5(req, req->paddr - BARAddrs[5], data);
-    return Machine_Check_Fault;
+    return genMachineCheckFault();
 }
 
 #endif // __DEV_PCIDEV_HH__

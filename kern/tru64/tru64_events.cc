@@ -33,8 +33,11 @@
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
 #include "mem/functional/memory_control.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/arguments.hh"
+#include "arch/isa_traits.hh"
+#include "sim/system.hh"
+
+using namespace TheISA;
 
 //void SkipFuncEvent::process(ExecContext *xc);
 
@@ -45,13 +48,14 @@ BadAddrEvent::process(ExecContext *xc)
     // annotation for vmunix::badaddr in:
     // simos/simulation/apps/tcl/osf/tlaser.tcl
 
-    uint64_t a0 = xc->regs.intRegFile[ArgumentReg0];
+    uint64_t a0 = xc->readIntReg(ArgumentReg0);
 
     if (!TheISA::IsK0Seg(a0) ||
-        xc->memctrl->badaddr(TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask)) {
+        xc->getSystemPtr()->memctrl->badaddr(
+            TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask)) {
 
         DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
-        xc->regs.intRegFile[ReturnValueReg] = 0x1;
+        xc->setIntReg(ReturnValueReg, 0x1);
         SkipFuncEvent::process(xc);
     }
     else
@@ -62,7 +66,7 @@ void
 PrintfEvent::process(ExecContext *xc)
 {
     if (DTRACE(Printf)) {
-        DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
+        DebugOut() << curTick << ": " << xc->getCpuPtr()->name() << ": ";
 
         AlphaArguments args(xc);
         tru64::Printf(args);
@@ -74,7 +78,7 @@ DebugPrintfEvent::process(ExecContext *xc)
 {
     if (DTRACE(DebugPrintf)) {
         if (!raw)
-            DebugOut() << curTick << ": " << xc->cpu->name() << ": ";
+            DebugOut() << curTick << ": " << xc->getCpuPtr()->name() << ": ";
 
         AlphaArguments args(xc);
         tru64::Printf(args);

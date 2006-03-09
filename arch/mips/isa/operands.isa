@@ -1,0 +1,33 @@
+def operand_types {{
+    'sb' : ('signed int', 8),
+    'ub' : ('unsigned int', 8),
+    'sh' : ('signed int', 16),
+    'uh' : ('unsigned int', 16),
+    'sw' : ('signed int', 32),
+    'uw' : ('unsigned int', 32),
+    'sd' : ('signed int', 64),
+    'ud' : ('unsigned int', 64),
+    'sf' : ('float', 32),
+    'df' : ('float', 64),
+    'qf' : ('float', 128)
+}};
+
+def operands {{
+    'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1),
+    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 2),
+    'Rt': ('IntReg', 'uw', 'RT', 'IsInteger', 3),
+    'r31': ('IntReg', 'uw','R31','IsInteger', 4),
+    'R0':  ('IntReg', 'uw','R0', 'IsInteger', 5),
+
+    'IntImm': ('IntReg', 'uw', 'INTIMM', 'IsInteger', 3),
+
+    'Fd': ('FloatReg', 'sf', 'FD', 'IsFloating', 1),
+    'Fs': ('FloatReg', 'sf', 'FS', 'IsFloating', 2),
+    'Ft': ('FloatReg', 'sf', 'FT', 'IsFloating', 3),
+    'Fr': ('FloatReg', 'sf', 'FR', 'IsFloating', 3),
+
+    'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
+
+    'NPC': ('NPC', 'uw', None, ( None, None, 'IsControl' ), 4),
+    'NNPC':('NNPC', 'uw', None, ( None, None, 'IsControl' ), 4)
+}};

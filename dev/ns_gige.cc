@@ -49,7 +49,7 @@
 #include "sim/debug.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 
 const char *NsRxStateStrings[] =
 {
@@ -84,6 +84,7 @@ const char *NsDmaState[] =
 
 using namespace std;
 using namespace Net;
+using namespace TheISA;
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -129,8 +130,6 @@ NSGigE::NSGigE(Params *p)
                                                  p->dma_no_allocate);
     } else if (p->payload_bus)
         panic("Must define a header bus if defining a payload bus");
-
-    pioDelayWrite = p->pio_delay_write && pioInterface;
 
     intrDelay = p->intr_delay;
     dmaReadDelay = p->dma_read_delay;
@@ -575,14 +574,14 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
         readConfig(daddr & 0xff, req->size, data);
-        return No_Fault;
+        return NoFault;
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
         // MIB are just hardware stats keepers
         uint32_t &reg = *(uint32_t *) data;
         reg = 0;
-        return No_Fault;
+        return NoFault;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
@@ -768,6 +767,8 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
                     reg |= M5REG_RX_THREAD;
                 if (params()->tx_thread)
                     reg |= M5REG_TX_THREAD;
+                if (params()->rss)
+                    reg |= M5REG_RSS;
                 break;
 
               default:
@@ -784,7 +785,7 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
               daddr, req->size);
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 Fault
@@ -800,16 +801,9 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
         writeConfig(daddr & 0xff, req->size, data);
-        return No_Fault;
+        return NoFault;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
-
-    if (pioDelayWrite) {
-        int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
-        if (cpu >= writeQueue.size())
-            writeQueue.resize(cpu + 1);
-        writeQueue[cpu].push_back(RegWriteData(daddr, *(uint32_t *)data));
-    }
 
     if (req->size == sizeof(uint32_t)) {
         uint32_t reg = *(uint32_t *)data;
@@ -823,24 +817,20 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
             if (reg & CR_TXD) {
                 txEnable = false;
             } else if (reg & CR_TXE) {
-                if (!pioDelayWrite) {
-                    txEnable = true;
+                txEnable = true;
 
-                    // the kernel is enabling the transmit machine
-                    if (txState == txIdle)
-                        txKick();
-                }
+                // the kernel is enabling the transmit machine
+                if (txState == txIdle)
+                    txKick();
             }
 
             if (reg & CR_RXD) {
                 rxEnable = false;
             } else if (reg & CR_RXE) {
-                if (!pioDelayWrite) {
-                    rxEnable = true;
+                rxEnable = true;
 
-                    if (rxState == rxIdle)
-                        rxKick();
-                }
+                if (rxState == rxIdle)
+                    rxKick();
             }
 
             if (reg & CR_TXR)
@@ -1203,7 +1193,7 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
         panic("Invalid Request Size");
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 void
@@ -2948,38 +2938,9 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
 Tick
 NSGigE::cacheAccess(MemReqPtr &req)
 {
-    Addr daddr = req->paddr & 0xfff;
     DPRINTF(EthernetPIO, "timing access to paddr=%#x (daddr=%#x)\n",
-            req->paddr, daddr);
+            req->paddr, req->paddr & 0xfff);
 
-    if (!pioDelayWrite || !req->cmd.isWrite())
-        return curTick + pioLatency;
-
-    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
-    std::list<RegWriteData> &wq = writeQueue[cpu];
-    if (wq.empty())
-        panic("WriteQueue for cpu %d empty timing daddr=%#x", cpu, daddr);
-
-    const RegWriteData &data = wq.front();
-    if (data.daddr != daddr)
-        panic("read mismatch on cpu %d, daddr functional=%#x timing=%#x",
-              cpu, data.daddr, daddr);
-
-    if (daddr == CR) {
-        if ((data.value & (CR_TXD | CR_TXE)) == CR_TXE) {
-            txEnable = true;
-            if (txState == txIdle)
-                txKick();
-        }
-
-        if ((data.value & (CR_RXD | CR_RXE)) == CR_RXE) {
-            rxEnable = true;
-            if (rxState == rxIdle)
-                rxKick();
-        }
-    }
-
-    wq.pop_front();
     return curTick + pioLatency;
 }
 
@@ -3039,7 +3000,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<Tick> dma_write_factor;
     Param<bool> dma_no_allocate;
     Param<Tick> pio_latency;
-    Param<bool> pio_delay_write;
     Param<Tick> intr_delay;
 
     Param<Tick> rx_delay;
@@ -3051,6 +3011,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<string> hardware_address;
     Param<bool> rx_thread;
     Param<bool> tx_thread;
+    Param<bool> rss;
 
 END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3080,7 +3041,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
     INIT_PARAM(dma_no_allocate, "Should DMA reads allocate cache lines"),
     INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
-    INIT_PARAM(pio_delay_write, ""),
     INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
 
     INIT_PARAM(rx_delay, "Receive Delay"),
@@ -3091,7 +3051,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(rx_filter, "Enable Receive Filter"),
     INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
     INIT_PARAM(rx_thread, ""),
-    INIT_PARAM(tx_thread, "")
+    INIT_PARAM(tx_thread, ""),
+    INIT_PARAM(rss, "")
 
 END_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
@@ -3125,7 +3086,6 @@ CREATE_SIM_OBJECT(NSGigE)
     params->dma_write_factor = dma_write_factor;
     params->dma_no_allocate = dma_no_allocate;
     params->pio_latency = pio_latency;
-    params->pio_delay_write = pio_delay_write;
     params->intr_delay = intr_delay;
 
     params->rx_delay = rx_delay;
@@ -3137,6 +3097,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->eaddr = hardware_address;
     params->rx_thread = rx_thread;
     params->tx_thread = tx_thread;
+    params->rss = rss;
 
     return new NSGigE(params);
 }

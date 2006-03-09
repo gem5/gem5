@@ -29,7 +29,9 @@
 #ifndef __OBJECT_FILE_HH__
 #define __OBJECT_FILE_HH__
 
-#include "targetarch/isa_traits.hh"	// for Addr
+#include <string>
+
+#include "sim/host.hh"	// for Addr
 
 class TranslatingPort;
 class SymbolTable;
@@ -40,13 +42,16 @@ class ObjectFile
 
     enum Arch {
         UnknownArch,
-        Alpha
+        Alpha,
+        SPARC,
+        MIPS
     };
 
     enum OpSys {
         UnknownOpSys,
         Tru64,
-        Linux
+        Linux,
+        Solaris
     };
 
   protected:

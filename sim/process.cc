@@ -37,6 +37,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/smt.hh"
 #include "encumbered/cpu/full/thread.hh"
@@ -48,14 +49,13 @@
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/stats.hh"
+#include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
-#ifdef TARGET_ALPHA
-#include "arch/alpha/alpha_tru64_process.hh"
-#include "arch/alpha/alpha_linux_process.hh"
-#endif
+#include "arch/process.hh"
 
 using namespace std;
+using namespace TheISA;
 
 //
 // The purpose of this code is to fake the loader & syscall mechanism
@@ -247,8 +247,10 @@ static void
 copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
                 TranslatingPort* memPort)
 {
+    Addr data_ptr_swap;
     for (int i = 0; i < strings.size(); ++i) {
-        memPort->writeBlobFunctional(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
+        data_ptr_swap = htog(data_ptr);
+        memPort->writeBlobFunctional(array_ptr, (uint8_t*)&data_ptr_swap, sizeof(Addr));
         memPort->writeStringFunctional(data_ptr, strings[i].c_str());
         array_ptr += sizeof(Addr);
         data_ptr += strings[i].size() + 1;
@@ -342,23 +344,35 @@ LiveProcess::startup()
 
     // write contents to stack
     uint64_t argc = argv.size();
+    argc = htog(argc);
     initVirtMem->writeBlobFunctional(stack_min, (uint8_t*)&argc, sizeof(uint64_t));
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
-    RegFile *init_regs = &(execContexts[0]->regs);
-
-    init_regs->intRegFile[ArgumentReg0] = argc;
-    init_regs->intRegFile[ArgumentReg1] = argv_array_base;
-    init_regs->intRegFile[StackPointerReg] = stack_min;
-    init_regs->intRegFile[GlobalPointerReg] = objFile->globalPointer();
-    init_regs->pc = prog_entry;
-    init_regs->npc = prog_entry + sizeof(MachInst);
+    execContexts[0]->setIntReg(ArgumentReg0, argc);
+    execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    execContexts[0]->setIntReg(StackPointerReg, stack_min);
+    execContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
+    execContexts[0]->setPC(prog_entry);
+    execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
 
     num_processes++;
 }
 
+void
+LiveProcess::syscall(ExecContext *xc)
+{
+    num_syscalls++;
+
+    int64_t callnum = xc->readIntReg(SyscallNumReg);
+
+    SyscallDesc *desc = getDesc(callnum);
+    if (desc == NULL)
+        fatal("Syscall %d out of range", callnum);
+
+    desc->doSyscall(callnum, this, xc);
+}
 
 LiveProcess *
 LiveProcess::create(const string &nm, System *system,
@@ -372,36 +386,17 @@ LiveProcess::create(const string &nm, System *system,
         fatal("Can't load object file %s", executable);
     }
 
-    // check object type & set up syscall emulation pointer
-    if (objFile->getArch() == ObjectFile::Alpha) {
-
-        switch (objFile->getOpSys()) {
-          case ObjectFile::Tru64:
-            process = new AlphaTru64Process(nm, objFile, system,
-                                            stdin_fd, stdout_fd, stderr_fd,
-                                            argv, envp);
-
-            break;
-
-          case ObjectFile::Linux:
-            process = new AlphaLinuxProcess(nm, objFile, system,
-                                            stdin_fd, stdout_fd, stderr_fd,
-                                            argv, envp);
-
-            break;
-
-          default:
-            fatal("Unknown/unsupported operating system.");
-        }
-    } else {
-        fatal("Unknown object file architecture.");
-    }
+    // set up syscall emulation pointer for the current ISA
+    process = createProcess(nm, objFile, system,
+                            stdin_fd, stdout_fd, stderr_fd,
+                            argv, envp);
 
     if (process == NULL)
         fatal("Unknown error creating process object.");
 
     return process;
 }
+
 
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)

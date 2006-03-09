@@ -158,7 +158,7 @@ class Database(object):
             return None
 
         from info import ProxyError, scalar, vector, value, values, total, len
-        if system is None and hasattr('system', job):
+        if system is None and hasattr(job, 'system'):
             system = job.system
 
         if system is not None:

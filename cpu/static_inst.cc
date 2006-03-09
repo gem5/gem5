@@ -30,19 +30,13 @@
 #include "cpu/static_inst.hh"
 #include "sim/root.hh"
 
-template <class ISA>
-StaticInstPtr<ISA> StaticInst<ISA>::nullStaticInstPtr;
-
-template <class ISA>
-typename StaticInst<ISA>::DecodeCache StaticInst<ISA>::decodeCache;
+StaticInstPtr StaticInst::nullStaticInstPtr;
 
 // Define the decode cache hash map.
-template StaticInst<AlphaISA>::DecodeCache
-StaticInst<AlphaISA>::decodeCache;
+StaticInst::DecodeCache StaticInst::decodeCache;
 
-template <class ISA>
 void
-StaticInst<ISA>::dumpDecodeCacheStats()
+StaticInst::dumpDecodeCacheStats()
 {
     using namespace std;
 
@@ -62,13 +56,8 @@ StaticInst<ISA>::dumpDecodeCacheStats()
     }
 }
 
-
-template StaticInstPtr<AlphaISA>
-StaticInst<AlphaISA>::nullStaticInstPtr;
-
-template <class ISA>
 bool
-StaticInst<ISA>::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
+StaticInst::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
 {
     if (isDirectCtrl()) {
         tgt = branchTarget(pc);
@@ -83,6 +72,3 @@ StaticInst<ISA>::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
     return false;
 }
 
-
-// force instantiation of template function(s) above
-template class StaticInst<AlphaISA>;

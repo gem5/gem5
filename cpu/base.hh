@@ -36,9 +36,10 @@
 #include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class System;
+namespace Kernel { class Statistics; }
 class BranchPred;
 class ExecContext;
 class Port;
@@ -56,7 +57,7 @@ class BaseCPU : public SimObject
 
 #if FULL_SYSTEM
   protected:
-    uint64_t interrupts[NumInterruptLevels];
+    uint64_t interrupts[TheISA::NumInterruptLevels];
     uint64_t intstatus;
 
   public:
@@ -66,7 +67,7 @@ class BaseCPU : public SimObject
     bool checkInterrupts;
 
     bool check_interrupt(int int_num) const {
-        if (int_num > NumInterruptLevels)
+        if (int_num > TheISA::NumInterruptLevels)
             panic("int_num out of bounds\n");
 
         return interrupts[int_num] != 0;
@@ -137,6 +138,8 @@ class BaseCPU : public SimObject
     virtual void init();
     virtual void startup();
     virtual void regStats();
+
+    virtual void activateWhenReady(int tid) {};
 
     void registerExecContexts();
 
@@ -230,6 +233,10 @@ class BaseCPU : public SimObject
   public:
     // Number of CPU cycles simulated
     Stats::Scalar<> numCycles;
+
+#if FULL_SYSTEM
+    Kernel::Statistics *kernelStats;
+#endif
 };
 
 #endif // __CPU_BASE_HH__

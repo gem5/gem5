@@ -33,12 +33,19 @@
 #define __CPU_O3_CPU_ALPHA_FULL_CPU_HH__
 
 #include "cpu/o3/cpu.hh"
+#include "arch/isa_traits.hh"
+#include "sim/byteswap.hh"
 
 template <class Impl>
 class AlphaFullCPU : public FullO3CPU<Impl>
 {
+  protected:
+    typedef TheISA::IntReg IntReg;
+    typedef TheISA::MiscReg MiscReg;
+    typedef TheISA::RegFile RegFile;
+    typedef TheISA::MiscRegFile MiscRegFile;
+
   public:
-    typedef typename Impl::ISA AlphaISA;
     typedef typename Impl::Params Params;
 
   public:
@@ -85,7 +92,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         // put the asid in the upper 16 bits of the paddr
         req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
         req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return No_Fault;
+        return NoFault;
     }
 
     Fault translateInstReq(MemReqPtr &req)
@@ -108,33 +115,24 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     // Later on may want to remove this misc stuff from the regfile and
     // have it handled at this level.  Might prove to be an issue when
     // trying to rename source/destination registers...
-    uint64_t readUniq()
+    MiscReg readMiscReg(int misc_reg)
     {
-        return this->regFile.readUniq();
+        // Dummy function for now.
+        // @todo: Fix this once reg file gets fixed.
+        return 0;
     }
 
-    void setUniq(uint64_t val)
+    Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        this->regFile.setUniq(val);
-    }
-
-    uint64_t readFpcr()
-    {
-        return this->regFile.readFpcr();
-    }
-
-    void setFpcr(uint64_t val)
-    {
-        this->regFile.setFpcr(val);
+        // Dummy function for now.
+        // @todo: Fix this once reg file gets fixed.
+        return NoFault;
     }
 
     // Most of the full system code and syscall emulation is not yet
     // implemented.  These functions do show what the final interface will
     // look like.
 #if FULL_SYSTEM
-    uint64_t *getIpr();
-    uint64_t readIpr(int idx, Fault &fault);
-    Fault setIpr(int idx, uint64_t val);
     int readIntrFlag();
     void setIntrFlag(int val);
     Fault hwrei();
@@ -156,13 +154,13 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     // set the register.
     IntReg getSyscallArg(int i)
     {
-        return this->xc->regs.intRegFile[AlphaISA::ArgumentReg0 + i];
+        return this->cpuXC->readIntReg(AlphaISA::ArgumentReg0 + i);
     }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, IntReg val)
     {
-        this->xc->regs.intRegFile[AlphaISA::ArgumentReg0 + i] = val;
+        this->cpuXC->setIntReg(AlphaISA::ArgumentReg0 + i, val);
     }
 
     void setSyscallReturn(int64_t return_value)
@@ -173,12 +171,12 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         const int RegA3 = 19;	// only place this is used
         if (return_value >= 0) {
             // no error
-            this->xc->regs.intRegFile[RegA3] = 0;
-            this->xc->regs.intRegFile[AlphaISA::ReturnValueReg] = return_value;
+            this->cpuXC->setIntReg(RegA3, 0);
+            this->cpuXC->setIntReg(AlphaISA::ReturnValueReg, return_value);
         } else {
             // got an error, return details
-            this->xc->regs.intRegFile[RegA3] = (IntReg) -1;
-            this->xc->regs.intRegFile[AlphaISA::ReturnValueReg] = -return_value;
+            this->cpuXC->setIntReg(RegA3, (IntReg) -1);
+            this->cpuXC->setIntReg(AlphaISA::ReturnValueReg, -return_value);
         }
     }
 
@@ -212,9 +210,8 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
-            MiscRegFile *cregs = &req->xc->regs.miscRegs;
-            cregs->lock_addr = req->paddr;
-            cregs->lock_flag = true;
+            req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
+            req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
         }
 #endif
 
@@ -234,32 +231,34 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     Fault write(MemReqPtr &req, T &data)
     {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
-
-        MiscRegFile *cregs;
+        ExecContext *xc;
 
         // If this is a store conditional, act appropriately
         if (req->flags & LOCKED) {
-            cregs = &this->xc->regs.miscRegs;
+            xc = req->xc;
 
             if (req->flags & UNCACHEABLE) {
                 // Don't update result register (see stq_c in isa_desc)
                 req->result = 2;
-                req->xc->storeCondFailures = 0;//Needed? [RGD]
+                xc->setStCondFailures(0);//Needed? [RGD]
             } else {
-                req->result = cregs->lock_flag;
-                if (!cregs->lock_flag ||
-                    ((cregs->lock_addr & ~0xf) != (req->paddr & ~0xf))) {
-                    cregs->lock_flag = false;
-                    if (((++req->xc->storeCondFailures) % 100000) == 0) {
+                bool lock_flag = xc->readMiscReg(TheISA::Lock_Flag_DepTag);
+                Addr lock_addr = xc->readMiscReg(TheISA::Lock_Addr_DepTag);
+                req->result = lock_flag;
+                if (!lock_flag ||
+                    ((lock_addr & ~0xf) != (req->paddr & ~0xf))) {
+                    xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
+                    xc->setStCondFailures(xc->readStCondFailures() + 1);
+                    if (((xc->readStCondFailures()) % 100000) == 0) {
                         std::cerr << "Warning: "
-                                  << req->xc->storeCondFailures
+                                  << xc->readStCondFailures()
                                   << " consecutive store conditional failures "
-                                  << "on cpu " << this->cpu_id
+                                  << "on cpu " << req->xc->readCpuId()
                                   << std::endl;
                     }
-                    return No_Fault;
+                    return NoFault;
                 }
-                else req->xc->storeCondFailures = 0;
+                else xc->setStCondFailures(0);
             }
         }
 
@@ -269,9 +268,10 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         // Conditionals would have returned above, and wouldn't fall
         // through.
         for (int i = 0; i < this->system->execContexts.size(); i++){
-            cregs = &this->system->execContexts[i]->regs.miscRegs;
-            if ((cregs->lock_addr & ~0xf) == (req->paddr & ~0xf)) {
-                cregs->lock_flag = false;
+            xc = this->system->execContexts[i];
+            if ((xc->readMiscReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
+                (req->paddr & ~0xf)) {
+                xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
             }
         }
 

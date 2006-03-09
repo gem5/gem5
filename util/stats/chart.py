@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ class ChartOptions(object):
     defaults = { 'chart_size' : (8, 4),
                  'figure_size' : [0.1, 0.1, 0.6, 0.85],
                  'title' : None,
+                 'fig_legend' : True,
                  'legend' : None,
                  'legend_loc' : 'upper right',
                  'legend_size' : 6,
@@ -38,6 +39,7 @@ class ChartOptions(object):
                  'xlabel' : None,
                  'ylabel' : None,
                  'xticks' : None,
+                 'xsubticks' : None,
                  'yticks' : None,
                  'ylim' : None,
                  }

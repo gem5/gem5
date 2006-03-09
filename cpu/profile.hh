@@ -33,7 +33,9 @@
 
 #include "cpu/static_inst.hh"
 #include "sim/host.hh"
-#include "targetarch/stacktrace.hh"
+#include "arch/stacktrace.hh"
+
+class ExecContext;
 
 class ProfileNode
 {
@@ -68,7 +70,7 @@ class FunctionProfile
     FunctionProfile(const SymbolTable *symtab);
     ~FunctionProfile();
 
-    ProfileNode *consume(ExecContext *xc, StaticInstPtr<TheISA> inst);
+    ProfileNode *consume(ExecContext *xc, StaticInstPtr inst);
     ProfileNode *consume(const std::vector<Addr> &stack);
     void clear();
     void dump(ExecContext *xc, std::ostream &out) const;
@@ -76,7 +78,7 @@ class FunctionProfile
 };
 
 inline ProfileNode *
-FunctionProfile::consume(ExecContext *xc, StaticInstPtr<TheISA> inst)
+FunctionProfile::consume(ExecContext *xc, StaticInstPtr inst)
 {
     if (!trace.trace(xc, inst))
         return NULL;

@@ -45,7 +45,6 @@ class SimpleIEW
 {
   private:
     //Typedefs from Impl
-    typedef typename Impl::ISA ISA;
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::FullCPU FullCPU;

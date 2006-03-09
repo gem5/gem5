@@ -75,7 +75,6 @@ class EtherDevBase(PciDevice):
     dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
     dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
     dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
-    pio_delay_write = Param.Bool(False, "Delay pio writes until timing occurs")
 
     rx_delay = Param.Latency('1us', "Receive Delay")
     tx_delay = Param.Latency('1us', "Transmit Delay")
@@ -86,6 +85,7 @@ class EtherDevBase(PciDevice):
     intr_delay = Param.Latency('10us', "Interrupt propagation delay")
     rx_thread = Param.Bool(False, "dedicated kernel thread for transmit")
     tx_thread = Param.Bool(False, "dedicated kernel threads for receive")
+    rss = Param.Bool(False, "Receive Side Scaling")
 
 class NSGigE(EtherDevBase):
     type = 'NSGigE'

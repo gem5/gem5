@@ -50,9 +50,10 @@
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 using namespace std;
+using namespace TheISA;
 
 IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
                  int id, Tick delay)

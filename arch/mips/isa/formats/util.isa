@@ -1,0 +1,148 @@
+// -*- mode:c++ -*-
+
+let {{
+def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                  postacc_code = '', base_class = 'Memory',
+                  decode_template = BasicDecode, exec_template_base = ''):
+    # Make sure flags are in lists (convert to lists if not).
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags)
+
+    # add hook to get effective addresses into execution trace output.
+    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
+
+    # generate code block objects
+    ea_cblk = CodeBlock(ea_code)
+    memacc_cblk = CodeBlock(memacc_code)
+    postacc_cblk = CodeBlock(postacc_code)
+
+    # Some CPU models execute the memory operation as an atomic unit,
+    # while others want to separate them into an effective address
+    # computation and a memory access operation.  As a result, we need
+    # to generate three StaticInst objects.  Note that the latter two
+    # are nested inside the larger "atomic" one.
+
+    # generate InstObjParams for EAComp object
+    ea_iop = InstObjParams(name, Name, base_class, ea_cblk, inst_flags)
+
+    # generate InstObjParams for MemAcc object
+    memacc_iop = InstObjParams(name, Name, base_class, memacc_cblk, inst_flags)
+    # in the split execution model, the MemAcc portion is responsible
+    # for the post-access code.
+    memacc_iop.postacc_code = postacc_cblk.code
+
+    # generate InstObjParams for InitiateAcc, CompleteAcc object
+    # The code used depends on the template being used
+    if (exec_template_base == 'Load'):
+        initiateacc_cblk = CodeBlock(ea_code + memacc_code)
+        completeacc_cblk = CodeBlock(memacc_code + postacc_code)
+    elif (exec_template_base == 'Store'):
+        initiateacc_cblk = CodeBlock(ea_code + memacc_code)
+        completeacc_cblk = CodeBlock(postacc_code)
+    else:
+        initiateacc_cblk = ''
+        completeacc_cblk = ''
+
+    initiateacc_iop = InstObjParams(name, Name, base_class, initiateacc_cblk,
+                                    inst_flags)
+
+    completeacc_iop = InstObjParams(name, Name, base_class, completeacc_cblk,
+                                    inst_flags)
+
+    if (exec_template_base == 'Load'):
+        initiateacc_iop.ea_code = ea_cblk.code
+        initiateacc_iop.memacc_code = memacc_cblk.code
+        completeacc_iop.memacc_code = memacc_cblk.code
+        completeacc_iop.postacc_code = postacc_cblk.code
+    elif (exec_template_base == 'Store'):
+        initiateacc_iop.ea_code = ea_cblk.code
+        initiateacc_iop.memacc_code = memacc_cblk.code
+        completeacc_iop.postacc_code = postacc_cblk.code
+
+    # generate InstObjParams for unified execution
+    cblk = CodeBlock(ea_code + memacc_code + postacc_code)
+    iop = InstObjParams(name, Name, base_class, cblk, inst_flags)
+
+    iop.ea_constructor = ea_cblk.constructor
+    iop.ea_code = ea_cblk.code
+    iop.memacc_constructor = memacc_cblk.constructor
+    iop.memacc_code = memacc_cblk.code
+    iop.postacc_code = postacc_cblk.code
+
+    if mem_flags:
+        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
+        iop.constructor += s
+        memacc_iop.constructor += s
+
+    # select templates
+    memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
+    fullExecTemplate = eval(exec_template_base + 'Execute')
+    initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
+    completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
+
+    # (header_output, decoder_output, decode_block, exec_output)
+    return (LoadStoreDeclare.subst(iop), LoadStoreConstructor.subst(iop),
+            decode_template.subst(iop),
+            EACompExecute.subst(ea_iop)
+            + memAccExecTemplate.subst(memacc_iop)
+            + fullExecTemplate.subst(iop)
+            + initiateAccTemplate.subst(initiateacc_iop)
+            + completeAccTemplate.subst(completeacc_iop))
+}};
+
+
+output exec {{
+
+using namespace MipsISA;
+
+
+    /// CLEAR ALL CPU INST/EXE HAZARDS
+    inline void
+    clear_exe_inst_hazards()
+    {
+        //CODE HERE
+    }
+
+
+    /// Check "FP enabled" machine status bit.  Called when executing any FP
+    /// instruction in full-system mode.
+    /// @retval Full-system mode: NoFault if FP is enabled, FenFault
+    /// if not.  Non-full-system mode: always returns NoFault.
+#if FULL_SYSTEM
+    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    {
+        Fault fault = NoFault;	// dummy... this ipr access should not fault
+        if (!Mips34k::ICSR_FPE(xc->readIpr(MipsISA::IPR_ICSR, fault))) {
+            fault = FloatEnableFault;
+        }
+        return fault;
+    }
+#else
+    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    {
+        return NoFault;
+    }
+#endif
+
+    double convert_and_round(float w, int x, int y, int z)
+    {
+        double temp = .34000;
+
+        return temp;
+    }
+
+    enum FPTypes{
+        FP_SINGLE,
+        FP_DOUBLE,
+        FP_LONG,
+        FP_PS_LO,
+        FP_PS_HI,
+        FP_WORD,
+        RND_NEAREST,
+        RND_ZERO,
+        RND_UP,
+        RND_DOWN
+    };
+}};
+
+

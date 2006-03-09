@@ -73,7 +73,7 @@ main(int argc, char *argv[])
             usage();
 
         arg1 = strtoul(argv[2], NULL, 0);
-        ivlb(arg1);
+        m5_ivlb(arg1);
         return 0;
     }
 
@@ -82,7 +82,7 @@ main(int argc, char *argv[])
             usage();
 
         arg1 = strtoul(argv[2], NULL, 0);
-        ivle(arg1);
+        m5_ivle(arg1);
         return 0;
     }
 
@@ -90,7 +90,7 @@ main(int argc, char *argv[])
         if (argc != 2)
             usage();
 
-        printf("%ld", initparam());
+        printf("%ld", m5_initparam());
         return 0;
     }
 
@@ -98,7 +98,7 @@ main(int argc, char *argv[])
         if (argc != 2)
             usage();
 
-        param = initparam();
+        param = m5_initparam();
         // run-time, rampup-time, rampdown-time, warmup-time, connections
         printf("%d %d %d %d %d", (param >> 48) & 0xfff,
                (param >> 36) & 0xfff, (param >> 24) & 0xfff,
@@ -112,7 +112,7 @@ main(int argc, char *argv[])
           case 3:
             arg1 = strtoul(argv[2], NULL, 0);
           case 2:
-            m5exit(arg1);
+            m5_exit(arg1);
             return 0;
 
           default:
@@ -127,7 +127,7 @@ main(int argc, char *argv[])
           case 3:
             arg1 = strtoul(argv[2], NULL, 0);
           case 2:
-            reset_stats(arg1, arg2);
+            m5_reset_stats(arg1, arg2);
             return 0;
 
           default:
@@ -142,7 +142,7 @@ main(int argc, char *argv[])
           case 3:
             arg1 = strtoul(argv[2], NULL, 0);
           case 2:
-            dump_stats(arg1, arg2);
+            m5_dump_stats(arg1, arg2);
             return 0;
 
           default:
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
           case 3:
             arg1 = strtoul(argv[2], NULL, 0);
           case 2:
-            dumpreset_stats(arg1, arg2);
+            m5_dumpreset_stats(arg1, arg2);
             return 0;
 
           default:
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
           case 3:
             arg1 = strtoul(argv[2], NULL, 0);
           case 2:
-            checkpoint(arg1, arg2);
+            m5_checkpoint(arg1, arg2);
             return 0;
 
           default:

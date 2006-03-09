@@ -30,8 +30,12 @@
 #define __ARCH_ALPHA_EV5_HH__
 
 #include "config/alpha_tlaser.hh"
+#include "arch/alpha/isa_traits.hh"
 
 namespace EV5 {
+
+//It seems like a safe assumption EV5 only applies to alpha
+using namespace AlphaISA;
 
 #if ALPHA_TLASER
 const uint64_t AsnMask = ULL(0x7f);

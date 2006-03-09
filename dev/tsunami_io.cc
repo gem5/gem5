@@ -50,6 +50,8 @@
 #include "mem/functional/memory_control.hh"
 
 using namespace std;
+//Should this be AlphaISA?
+using namespace TheISA;
 
 TsunamiIO::RTC::RTC(const string &name, Tsunami* t, Tick i)
     : _name(name), event(t, i), addr(0)
@@ -459,38 +461,38 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
           // PIC1 mask read
           case TSDEV_PIC1_MASK:
             *(uint8_t*)data = ~mask1;
-            return No_Fault;
+            return NoFault;
           case TSDEV_PIC2_MASK:
             *(uint8_t*)data = ~mask2;
-            return No_Fault;
+            return NoFault;
           case TSDEV_PIC1_ISR:
               // !!! If this is modified 64bit case needs to be too
               // Pal code has to do a 64 bit physical read because there is
               // no load physical byte instruction
               *(uint8_t*)data = picr;
-              return No_Fault;
+              return NoFault;
           case TSDEV_PIC2_ISR:
               // PIC2 not implemnted... just return 0
               *(uint8_t*)data = 0x00;
-              return No_Fault;
+              return NoFault;
           case TSDEV_TMR0_DATA:
             pitimer.counter0.read(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_TMR1_DATA:
             pitimer.counter1.read(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_TMR2_DATA:
             pitimer.counter2.read(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_RTC_DATA:
             rtc.readData(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_CTRL_PORTB:
             if (pitimer.counter2.outputHigh())
                 *data = PORTB_SPKR_HIGH;
             else
                 *data = 0x00;
-            return No_Fault;
+            return NoFault;
           default:
             panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
         }
@@ -506,7 +508,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
               // Pal code has to do a 64 bit physical read because there is
               // no load physical byte instruction
               *(uint64_t*)data = (uint64_t)picr;
-              return No_Fault;
+              return NoFault;
           default:
               panic("I/O Read - invalid size - va %#x size %d\n",
                     req->vaddr, req->size);
@@ -518,7 +520,7 @@ TsunamiIO::read(MemReqPtr &req, uint8_t *data)
     }
     panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
 
-    return No_Fault;
+    return NoFault;
 }
 
 Fault
@@ -550,63 +552,63 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
                 tsunami->cchip->clearDRIR(55);
                 DPRINTF(Tsunami, "clearing pic interrupt\n");
             }
-            return No_Fault;
+            return NoFault;
           case TSDEV_PIC2_MASK:
             mask2 = *(uint8_t*)data;
             //PIC2 Not implemented to interrupt
-            return No_Fault;
+            return NoFault;
           case TSDEV_PIC1_ACK:
             // clear the interrupt on the PIC
             picr &= ~(1 << (*(uint8_t*)data & 0xF));
             if (!(picr & mask1))
                 tsunami->cchip->clearDRIR(55);
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA1_CMND:
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA2_CMND:
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA1_MMASK:
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA2_MMASK:
-            return No_Fault;
+            return NoFault;
           case TSDEV_PIC2_ACK:
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA1_RESET:
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA2_RESET:
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA1_MODE:
             mode1 = *(uint8_t*)data;
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA2_MODE:
             mode2 = *(uint8_t*)data;
-            return No_Fault;
+            return NoFault;
           case TSDEV_DMA1_MASK:
           case TSDEV_DMA2_MASK:
-            return No_Fault;
+            return NoFault;
           case TSDEV_TMR0_DATA:
             pitimer.counter0.write(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_TMR1_DATA:
             pitimer.counter1.write(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_TMR2_DATA:
             pitimer.counter2.write(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_TMR_CTRL:
             pitimer.writeControl(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_RTC_ADDR:
             rtc.writeAddr(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_KBD:
-            return No_Fault;
+            return NoFault;
           case TSDEV_RTC_DATA:
             rtc.writeData(data);
-            return No_Fault;
+            return NoFault;
           case TSDEV_CTRL_PORTB:
             // System Control Port B not implemented
-            return No_Fault;
+            return NoFault;
           default:
             panic("I/O Write - va%#x size %d data %#x\n", req->vaddr, req->size, (int)*data);
         }
@@ -619,7 +621,7 @@ TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
     }
 
 
-    return No_Fault;
+    return NoFault;
 }
 
 void

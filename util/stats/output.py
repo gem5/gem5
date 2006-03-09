@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -103,14 +103,16 @@ class StatOutput(ChartOptions):
             else:
                 groups.append(group)
 
-        if not groupopts:
-            raise AttributeError, 'No group selected for graph group'
+        has_group = bool(groupopts)
+        if has_group:
+            groupopts = [ group for group in crossproduct(groupopts) ]
+        else:
+            groupopts = [ None ]
 
-        if not baropts:
+        if baropts:
+            baropts = [ bar for bar in crossproduct(baropts) ]
+        else:
             raise AttributeError, 'No group selected for graph bars'
-
-        groupopts = [ group for group in crossproduct(groupopts) ]
-        baropts = [ bar for bar in crossproduct(baropts) ]
 
         directory = expanduser(graphdir)
         if not isdir(directory):
@@ -124,12 +126,13 @@ class StatOutput(ChartOptions):
         for options in self.jobfile.options(groups):
             chart = BarChart(self)
 
-            data = zeros((len(groupopts), len(baropts)), Float)
             data = [ [ None ] * len(baropts) for i in xrange(len(groupopts)) ]
             enabled = False
             stacked = 0
             for g,gopt in enumerate(groupopts):
                 for b,bopt in enumerate(baropts):
+                    if gopt is None:
+                        gopt = []
                     job = self.jobfile.job(options + gopt + bopt)
                     if not job:
                         continue
@@ -168,19 +171,24 @@ class StatOutput(ChartOptions):
             if data.sum() == 0:
                 continue
 
+            dim = len(data.shape)
             x = data.shape[0]
-            y = data.shape[1]
             xkeep = [ i for i in xrange(x) if data[i].sum() != 0 ]
+            y = data.shape[1]
             ykeep = [ i for i in xrange(y) if data[:,i].sum() != 0 ]
             data = data.take(xkeep, axis=0)
             data = data.take(ykeep, axis=1)
+            if not has_group:
+                data = data.take([ 0 ], axis=0)
             chart.data = data
 
-            gopts = [ groupopts[i] for i in xkeep ]
-            bopts = [ baropts[i] for i in ykeep ]
 
+            bopts = [ baropts[i] for i in ykeep ]
             bdescs = [ ' '.join([o.desc for o in opt]) for opt in bopts]
-            gdescs = [ ' '.join([o.desc for o in opt]) for opt in gopts]
+
+            if has_group:
+                gopts = [ groupopts[i] for i in xkeep ]
+                gdescs = [ ' '.join([o.desc for o in opt]) for opt in gopts]
 
             if chart.legend is None:
                 if stacked:
@@ -192,7 +200,10 @@ class StatOutput(ChartOptions):
                     chart.legend = bdescs
 
             if chart.xticks is None:
-                chart.xticks = gdescs
+                if has_group:
+                    chart.xticks = gdescs
+                else:
+                    chart.xticks = []
             chart.graph()
 
             names = [ opt.name for opt in options ]

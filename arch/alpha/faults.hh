@@ -26,32 +26,244 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FAULTS_HH__
-#define __FAULTS_HH__
+#ifndef __ALPHA_FAULTS_HH__
+#define __ALPHA_FAULTS_HH__
 
-enum Fault {
-    No_Fault,
-    Reset_Fault,		// processor reset
-    Machine_Check_Fault,	// machine check (also internal S/W fault)
-    Arithmetic_Fault,		// FP exception
-    Interrupt_Fault,		// external interrupt
-    Ndtb_Miss_Fault,		// DTB miss
-    Pdtb_Miss_Fault,		// nested DTB miss
-    Alignment_Fault,		// unaligned access
-    DTB_Fault_Fault,		// DTB page fault
-    DTB_Acv_Fault,		// DTB access violation
-    ITB_Miss_Fault,		// ITB miss
-    ITB_Fault_Fault,		// ITB page fault
-    ITB_Acv_Fault,		// ITB access violation
-    Unimplemented_Opcode_Fault,	// invalid/unimplemented instruction
-    Fen_Fault,			// FP not-enabled fault
-    Pal_Fault,			// call_pal S/W interrupt
-    Integer_Overflow_Fault,
-    Fake_Mem_Fault,
-    Num_Faults			// number of faults
+#include "sim/faults.hh"
+
+// The design of the "name" and "vect" functions is in sim/faults.hh
+
+namespace AlphaISA
+{
+
+typedef const Addr FaultVect;
+
+class AlphaFault : public FaultBase
+{
+  protected:
+    virtual bool skipFaultingInstruction() {return false;}
+    virtual bool setRestartAddress() {return true;}
+  public:
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+    virtual FaultVect vect() = 0;
+    virtual FaultStat & countStat() = 0;
 };
 
-const char *
-FaultName(int index);
+class MachineCheckFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    bool isMachineCheckFault() {return true;}
+};
+
+class AlignmentFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    bool isAlignmentFault() {return true;}
+};
+
+static inline Fault genMachineCheckFault()
+{
+    return new MachineCheckFault;
+}
+
+static inline Fault genAlignmentFault()
+{
+    return new AlignmentFault;
+}
+
+class ResetFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class ArithmeticFault : public AlphaFault
+{
+  protected:
+    bool skipFaultingInstruction() {return true;}
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+};
+
+class InterruptFault : public AlphaFault
+{
+  protected:
+    bool setRestartAddress() {return false;}
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class NDtbMissFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class PDtbMissFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class DtbPageFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class DtbAcvFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class ItbMissFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class ItbPageFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class ItbAcvFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class UnimplementedOpcodeFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class FloatEnableFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class PalFault : public AlphaFault
+{
+  protected:
+    bool skipFaultingInstruction() {return true;}
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class IntegerOverflowFault : public AlphaFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+} // AlphaISA namespace
 
 #endif // __FAULTS_HH__

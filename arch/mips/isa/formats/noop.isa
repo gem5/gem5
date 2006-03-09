@@ -1,0 +1,90 @@
+// -*- mode:c++ -*-
+
+////////////////////////////////////////////////////////////////////
+//
+// Nop
+//
+
+output header {{
+    /**
+     * Static instruction class for no-ops.  This is a leaf class.
+     */
+    class Nop : public MipsStaticInst
+    {
+        /// Disassembly of original instruction.
+        const std::string originalDisassembly;
+
+      public:
+        /// Constructor
+        Nop(const std::string _originalDisassembly, MachInst _machInst)
+            : MipsStaticInst("nop", _machInst, No_OpClass),
+              originalDisassembly(_originalDisassembly)
+        {
+            flags[IsNop] = true;
+        }
+
+        ~Nop() { }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+output decoder {{
+    std::string Nop::generateDisassembly(Addr pc,
+                                         const SymbolTable *symtab) const
+    {
+#ifdef SS_COMPATIBLE_DISASSEMBLY
+        return originalDisassembly;
+#else
+        return csprintf("%-10s (%s)", "nop", originalDisassembly);
+#endif
+    }
+
+    /// Helper function for decoding nops.  Substitute Nop object
+    /// for original inst passed in as arg (and delete latter).
+    inline
+    MipsStaticInst *
+    makeNop(MipsStaticInst *inst)
+    {
+        MipsStaticInst *nop = new Nop(inst->disassemble(0), inst->machInst);
+        delete inst;
+        return nop;
+    }
+}};
+
+output exec {{
+    Fault
+    Nop::execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+    {
+        return NoFault;
+    }
+}};
+
+// integer & FP operate instructions use RT as dest, so check for
+// RT == 0 to detect nops
+def template OperateNopCheckDecode {{
+ {
+     MipsStaticInst *i = new %(class_name)s(machInst);
+
+     //if (RD == 0) {
+     //  i = makeNop(i);
+     //}
+
+     return i;
+ }
+}};
+
+
+// Like BasicOperate format, but generates NOP if RC/FC == 31
+def format BasicOperateWithNopCheck(code, *opt_args) {{
+    iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code),
+                        opt_args)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = OperateNopCheckDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+

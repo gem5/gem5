@@ -262,6 +262,7 @@ def commands(options, command, args):
     from output import StatOutput
     output = StatOutput(options.jobfile, source)
     output.xlabel = 'System Configuration'
+    output.colormap = 'RdYlGn'
 
     if command == 'stat' or command == 'formula':
         if len(args) != 1:
@@ -286,7 +287,6 @@ def commands(options, command, args):
         raise CommandException
 
     from info import ProxyGroup
-    sim_seconds = source['sim_seconds']
     proxy = ProxyGroup(system = source[options.system])
     system = proxy.system
 
@@ -294,7 +294,6 @@ def commands(options, command, args):
     bytes = etherdev.rxBytes + etherdev.txBytes
     kbytes = bytes / 1024
     packets = etherdev.rxPackets + etherdev.txPackets
-    bps = etherdev.rxBandwidth + etherdev.txBandwidth
 
     def display():
         if options.graph:
@@ -337,7 +336,7 @@ def commands(options, command, args):
         return
 
     if command == 'pps':
-        output.stat = packets / sim_seconds
+        output.stat = packets / source['sim_seconds']
         output.ylabel = 'Packets/s'
         display()
         return
@@ -355,7 +354,7 @@ def commands(options, command, args):
         if command == 'txbps':
             output.stat = etherdev.txBandwidth / 1e9
         if command == 'bps':
-            output.stat = bps / 1e9
+            output.stat = (etherdev.rxBandwidth + etherdev.txBandwidth) / 1e9
 
         output.ylabel = 'Bandwidth (Gbps)'
         output.ylim = [ 0.0, 10.0 ]

@@ -30,7 +30,7 @@
 #define __MBUF_HH__
 
 #include "sim/host.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 namespace tru64 {
 

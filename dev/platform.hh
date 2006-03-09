@@ -35,7 +35,7 @@
 #define __DEV_PLATFORM_HH__
 
 #include "sim/sim_object.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class PciConfigAll;
 class IntrControl;

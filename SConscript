@@ -43,11 +43,8 @@ Import('env')
 ###################################################
 
 # Base sources used by all configurations.
-base_sources = Split('''
-	arch/alpha/decoder.cc
-	arch/alpha/faults.cc
-	arch/alpha/isa_traits.cc
 
+base_sources = Split('''
 	base/circlebuf.cc
 	base/copyright.cc
 	base/cprintf.cc
@@ -84,7 +81,7 @@ base_sources = Split('''
 	base/stats/text.cc
 
 	cpu/base.cc
-	cpu/exec_context.cc
+	cpu/cpu_exec_context.cc
 	cpu/exetrace.cc
         cpu/op_class.cc
 	cpu/pc_event.cc
@@ -104,6 +101,7 @@ base_sources = Split('''
 	sim/configfile.cc
 	sim/debug.cc
 	sim/eventq.cc
+	sim/faults.cc
 	sim/main.cc
 	sim/param.cc
 	sim/profile.cc
@@ -119,28 +117,8 @@ base_sources = Split('''
 	sim/trace_context.cc
         ''')
 
-fast_cpu_sources = Split('''
-	arch/alpha/fast_cpu_exec.cc
-	cpu/fast/cpu.cc
-        ''')
-
-simple_cpu_sources = Split('''
-	arch/alpha/simple_cpu_exec.cc
-        cpu/simple/cpu.cc
-        ''')
-
-trace_reader_sources = Split('''
-        cpu/trace/reader/mem_trace_reader.cc
-        cpu/trace/reader/ibm_reader.cc
-        cpu/trace/reader/itx_reader.cc
-        cpu/trace/reader/m5_reader.cc
-        cpu/trace/opt_cpu.cc
-        cpu/trace/trace_cpu.cc
-        ''')
-
+# Old FullCPU sources
 full_cpu_sources = Split('''
-	arch/alpha/full_cpu_exec.cc
-        cpu/base_dyn_inst.cc
 	encumbered/cpu/full/bpred.cc
 	encumbered/cpu/full/commit.cc
 	encumbered/cpu/full/cpu.cc
@@ -153,6 +131,7 @@ full_cpu_sources = Split('''
 	encumbered/cpu/full/execute.cc
 	encumbered/cpu/full/fetch.cc
 	encumbered/cpu/full/floss_reasons.cc
+	encumbered/cpu/full/fu_pool.cc
 	encumbered/cpu/full/inst_fifo.cc
 	encumbered/cpu/full/instpipe.cc
 	encumbered/cpu/full/issue.cc
@@ -177,31 +156,16 @@ full_cpu_sources = Split('''
         encumbered/cpu/full/iq/standard/iq_standard.cc
         ''')
 
-o3_cpu_sources = Split('''
-        arch/alpha/alpha_o3_exec.cc
-        cpu/o3/2bit_local_pred.cc
-        cpu/o3/alpha_dyn_inst.cc
-        cpu/o3/alpha_cpu.cc
-        cpu/o3/alpha_cpu_builder.cc
-        cpu/o3/bpred_unit.cc
-        cpu/o3/btb.cc
-        cpu/o3/commit.cc
-        cpu/o3/decode.cc
-        cpu/o3/fetch.cc
-        cpu/o3/free_list.cc
-        cpu/o3/cpu.cc
-        cpu/o3/iew.cc
-        cpu/o3/inst_queue.cc
-        cpu/o3/ldstq.cc
-        cpu/o3/mem_dep_unit.cc
-        cpu/o3/ras.cc
-        cpu/o3/rename.cc
-        cpu/o3/rename_map.cc
-        cpu/o3/rob.cc
-        cpu/o3/sat_counter.cc
-        cpu/o3/store_set.cc
-        cpu/o3/tournament_pred.cc
+trace_reader_sources = Split('''
+        cpu/trace/reader/mem_trace_reader.cc
+        cpu/trace/reader/ibm_reader.cc
+        cpu/trace/reader/itx_reader.cc
+        cpu/trace/reader/m5_reader.cc
+        cpu/trace/opt_cpu.cc
+        cpu/trace/trace_cpu.cc
         ''')
+
+
 
 # MySql sources
 mysql_sources = Split('''
@@ -211,14 +175,6 @@ mysql_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	arch/alpha/alpha_memory.cc
-	arch/alpha/arguments.cc
-	arch/alpha/ev5.cc
-	arch/alpha/osfpal.cc
-	arch/alpha/pseudo_inst.cc
-	arch/alpha/stacktrace.cc
-	arch/alpha/vtophys.cc
-
 	base/crc.cc
 	base/inet.cc
 	base/remote_gdb.cc
@@ -258,17 +214,16 @@ full_system_sources = Split('''
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
 	kern/system_events.cc
-	kern/freebsd/freebsd_system.cc
+	kern/linux/events.cc
 	kern/linux/linux_syscalls.cc
-	kern/linux/linux_system.cc
 	kern/linux/printk.cc
 	kern/tru64/dump_mbuf.cc
 	kern/tru64/printf.cc
 	kern/tru64/tru64_events.cc
 	kern/tru64/tru64_syscalls.cc
-	kern/tru64/tru64_system.cc
 
 	mem/functional/memory_control.cc
+	sim/pseudo_inst.cc
         ''')
 
 # turbolaser encumbered sources
@@ -293,12 +248,11 @@ turbolaser_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
-	arch/alpha/alpha_common_syscall_emul.cc
-	arch/alpha/alpha_linux_process.cc
-	arch/alpha/alpha_tru64_process.cc
 
 	encumbered/eio/exolex.cc
 	encumbered/eio/libexo.cc
+        kern/linux/linux.cc
+        kern/tru64/tru64.cc
 	sim/process.cc
 	sim/syscall_emul.cc
         ''')
@@ -311,33 +265,22 @@ memtest_sources = Split('''
 	cpu/memtest/memtest.cc
         ''')
 
-targetarch_files = Split('''
-        alpha_common_syscall_emul.hh
-        alpha_linux_process.hh
-        alpha_memory.hh
-        alpha_tru64_process.hh
-        aout_machdep.h
-        arguments.hh
-        byte_swap.hh
-        ecoff_machdep.h
-        ev5.hh
-        faults.hh
-        isa_fullsys_traits.hh
-        isa_traits.hh
-        osfpal.hh
-        pseudo_inst.hh
-        stacktrace.hh
-        vptr.hh
-        vtophys.hh
-        ''')
+# Add a flag defining what THE_ISA should be for all compilation
+env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
-for f in targetarch_files:
-    env.Command('targetarch/' + f, 'arch/alpha/' + f,
-                '''echo '#include "arch/alpha/%s"' > $TARGET''' % f)
+arch_sources = SConscript('arch/SConscript',
+                          exports = 'env', duplicate = False)
 
+cpu_sources = SConscript('cpu/SConscript',
+                         exports = 'env', duplicate = False)
+
+# This is outside of cpu/SConscript since the source directory isn't
+# underneath 'cpu'.
+if 'FullCPU' in env['CPU_MODELS']:
+    cpu_sources += full_cpu_sources
 
 # Set up complete list of sources based on configuration.
-sources = base_sources + simple_cpu_sources
+sources = base_sources + arch_sources + cpu_sources
 
 if env['FULL_SYSTEM']:
     sources += full_system_sources
@@ -363,17 +306,6 @@ for opt in env.ExportOptions:
 env.Command(Split('base/traceflags.hh base/traceflags.cc'),
             'base/traceflags.py',
             'python $SOURCE $TARGET.base')
-
-# several files are generated from arch/$TARGET_ISA/isa_desc.
-env.Command(Split('''arch/alpha/decoder.cc
-		     arch/alpha/decoder.hh
-                     arch/alpha/alpha_o3_exec.cc
-		     arch/alpha/fast_cpu_exec.cc
-                     arch/alpha/simple_cpu_exec.cc'''),
-            Split('''arch/alpha/isa_desc
-		     arch/isa_parser.py'''),
-            '$SRCDIR/arch/isa_parser.py $SOURCE $TARGET.dir arch/alpha')
-
 
 # libelf build is described in its own SConscript file.
 # SConscript-local is the per-config build, which just copies some
@@ -407,6 +339,7 @@ def make_objs(sources, env):
 # the corresponding build directory to pick up generated include
 # files.
 env.Append(CPPPATH='.')
+env.Append(CPPPATH='./libelf')
 
 # Debug binary
 debugEnv = env.Copy(OBJSUFFIX='.do')

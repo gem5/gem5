@@ -46,6 +46,7 @@
 #include "sim/builder.hh"
 
 using namespace std;
+using namespace TheISA;
 
 Uart8250::IntrEvent::IntrEvent(Uart8250 *u, int bit)
     : Event(&mainEventQueue), uart(u)
@@ -183,7 +184,7 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             break;
     }
 
-    return No_Fault;
+    return NoFault;
 
 }
 
@@ -255,7 +256,7 @@ Uart8250::write(MemReqPtr &req, const uint8_t *data)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-    return No_Fault;
+    return NoFault;
 }
 
 void

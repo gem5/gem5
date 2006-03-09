@@ -39,9 +39,15 @@
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
+#include "sim/process.hh"
 #include "sim/sim_events.hh"
+#include "sim/system.hh"
 
 #include "base/trace.hh"
+
+#if FULL_SYSTEM
+#include "kern/kernel_stats.hh"
+#endif
 
 using namespace std;
 
@@ -147,7 +153,10 @@ BaseCPU::BaseCPU(Params *p)
     profileEvent = NULL;
     if (params->profile)
         profileEvent = new ProfileEvent(this, params->profile);
+
+    kernelStats = new Kernel::Statistics(system);
 #endif
+
 }
 
 BaseCPU::Params::Params()
@@ -165,6 +174,10 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
+#if FULL_SYSTEM
+    if (kernelStats)
+        delete kernelStats;
+#endif
 }
 
 void
@@ -203,6 +216,11 @@ BaseCPU::regStats()
         }
     } else if (size == 1)
         execContexts[0]->regStats(name());
+
+#if FULL_SYSTEM
+    if (kernelStats)
+        kernelStats->regStats(name() + ".kern");
+#endif
 }
 
 
@@ -217,9 +235,9 @@ BaseCPU::registerExecContexts()
         if (id != -1)
             id += i;
 
-        xc->cpu_id = system->registerExecContext(xc, id);
+        xc->setCpuId(system->registerExecContext(xc, id));
 #else
-        xc->cpu_id = xc->process->registerExecContext(xc);
+        xc->setCpuId(xc->getProcessPtr()->registerExecContext(xc));
 #endif
     }
 }
@@ -241,23 +259,22 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         ExecContext *oldXC = oldCPU->execContexts[i];
 
         newXC->takeOverFrom(oldXC);
-        assert(newXC->cpu_id == oldXC->cpu_id);
+        assert(newXC->readCpuId() == oldXC->readCpuId());
 #if FULL_SYSTEM
-        system->replaceExecContext(newXC, newXC->cpu_id);
+        system->replaceExecContext(newXC, newXC->readCpuId());
 #else
-        assert(newXC->process == oldXC->process);
-        newXC->process->replaceExecContext(newXC, newXC->cpu_id);
+        assert(newXC->getProcessPtr() == oldXC->getProcessPtr());
+        newXC->getProcessPtr()->replaceExecContext(newXC, newXC->readCpuId());
 #endif
     }
 
 #if FULL_SYSTEM
-    for (int i = 0; i < NumInterruptLevels; ++i)
+    for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
 
     for (int i = 0; i < execContexts.size(); ++i)
-        if (execContexts[i]->profile)
-            execContexts[i]->profile->clear();
+        execContexts[i]->profileClear();
 
     if (profileEvent)
         profileEvent->schedule(curTick);
@@ -275,7 +292,7 @@ BaseCPU::ProfileEvent::process()
 {
     for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
         ExecContext *xc = cpu->execContexts[i];
-        xc->profile->sample(xc->profileNode, xc->profilePC);
+        xc->profileSample();
     }
 
     schedule(curTick + interval);
@@ -286,7 +303,7 @@ BaseCPU::post_interrupt(int int_num, int index)
 {
     DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
 
-    if (int_num < 0 || int_num >= NumInterruptLevels)
+    if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
         panic("int_num out of bounds\n");
 
     if (index < 0 || index >= sizeof(uint64_t) * 8)
@@ -302,7 +319,7 @@ BaseCPU::clear_interrupt(int int_num, int index)
 {
     DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
 
-    if (int_num < 0 || int_num >= NumInterruptLevels)
+    if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
         panic("int_num out of bounds\n");
 
     if (index < 0 || index >= sizeof(uint64_t) * 8)
@@ -326,15 +343,26 @@ BaseCPU::clear_interrupts()
 void
 BaseCPU::serialize(std::ostream &os)
 {
-    SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+    SERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     SERIALIZE_SCALAR(intstatus);
+
+#if FULL_SYSTEM
+    if (kernelStats)
+        kernelStats->serialize(os);
+#endif
+
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+    UNSERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     UNSERIALIZE_SCALAR(intstatus);
+
+#if FULL_SYSTEM
+    if (kernelStats)
+        kernelStats->unserialize(cp, section);
+#endif
 }
 
 #endif // FULL_SYSTEM

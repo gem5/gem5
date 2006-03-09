@@ -46,7 +46,7 @@
 #include "dev/disk_image.hh"
 #include "sim/builder.hh"
 #include "sim/sim_exit.hh"
-#include "targetarch/byte_swap.hh"
+#include "sim/byteswap.hh"
 
 using namespace std;
 

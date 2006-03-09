@@ -81,6 +81,7 @@ __SINIC_REG32(HwAddr,      0x60); // 64: mac address
 __SINIC_REG32(Size,        0x68); // register addres space size
 
 // Config register bits
+__SINIC_VAL32(Config_RSS,      10, 1); // enable receive side scaling
 __SINIC_VAL32(Config_RxThread,  9, 1); // enable receive threads
 __SINIC_VAL32(Config_TxThread,  8, 1); // enable transmit thread
 __SINIC_VAL32(Config_Filter,    7, 1); // enable receive filter
@@ -157,8 +158,6 @@ struct Info
     uint8_t size;
     bool read;
     bool write;
-    bool delay_read;
-    bool delay_write;
     const char *name;
 };
 
@@ -167,33 +166,33 @@ struct Info
 inline const Regs::Info&
 regInfo(Addr daddr)
 {
-    static Regs::Info invalid = { 0, false, false, false, false, "invalid" };
+    static Regs::Info invalid = { 0, false, false, "invalid" };
     static Regs::Info info [] = {
-        { 4, true,  true,  false, false, "Config"     },
-        { 4, false, true,  false, false, "Command"    },
-        { 4, true,  true,  false, false, "IntrStatus" },
-        { 4, true,  true,  false, false, "IntrMask"   },
-        { 4, true,  false, false, false, "RxMaxCopy"  },
-        { 4, true,  false, false, false, "TxMaxCopy"  },
-        { 4, true,  false, false, false, "RxMaxIntr"  },
+        { 4, true,  true,  "Config"     },
+        { 4, false, true,  "Command"    },
+        { 4, true,  true,  "IntrStatus" },
+        { 4, true,  true,  "IntrMask"   },
+        { 4, true,  false, "RxMaxCopy"  },
+        { 4, true,  false, "TxMaxCopy"  },
+        { 4, true,  false, "RxMaxIntr"  },
         invalid,
-        { 4, true,  false, false, false, "RxFifoSize" },
-        { 4, true,  false, false, false, "TxFifoSize" },
-        { 4, true,  false, false, false, "RxFifoMark" },
-        { 4, true,  false, false, false, "TxFifoMark" },
-        { 8, true,  true,  false, true,  "RxData"     },
+        { 4, true,  false, "RxFifoSize" },
+        { 4, true,  false, "TxFifoSize" },
+        { 4, true,  false, "RxFifoMark" },
+        { 4, true,  false, "TxFifoMark" },
+        { 8, true,  true,  "RxData"     },
         invalid,
-        { 8, true,  false, false, false, "RxDone"     },
+        { 8, true,  false, "RxDone"     },
         invalid,
-        { 8, true,  false, false, false, "RxWait"     },
+        { 8, true,  false, "RxWait"     },
         invalid,
-        { 8, true,  true,  false, true,  "TxData"     },
+        { 8, true,  true,  "TxData"     },
         invalid,
-        { 8, true,  false, false, false, "TxDone"     },
+        { 8, true,  false, "TxDone"     },
         invalid,
-        { 8, true,  false, false, false, "TxWait"     },
+        { 8, true,  false, "TxWait"     },
         invalid,
-        { 8, true,  false, false, false, "HwAddr"     },
+        { 8, true,  false, "HwAddr"     },
         invalid,
     };
 

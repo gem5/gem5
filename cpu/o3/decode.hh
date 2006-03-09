@@ -39,7 +39,6 @@ class SimpleDecode
 {
   private:
     // Typedefs from the Impl.
-    typedef typename Impl::ISA ISA;
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
@@ -49,9 +48,6 @@ class SimpleDecode
     typedef typename CPUPol::FetchStruct FetchStruct;
     typedef typename CPUPol::DecodeStruct DecodeStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
-
-    // Typedefs from the ISA.
-    typedef typename ISA::Addr Addr;
 
   public:
     // The only time decode will become blocked is if dispatch becomes

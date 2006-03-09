@@ -40,6 +40,7 @@
 
 #include <vector>
 
+#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "mem/memory.hh"
@@ -49,12 +50,17 @@
 #include "sim/stats.hh"
 #include "targetarch/isa_traits.hh"
 
+class CPUExecContext;
 class ExecContext;
+class SyscallDesc;
 class TranslatingPort;
 class System;
 
 class Process : public SimObject
 {
+  protected:
+    typedef TheISA::RegFile RegFile;
+    typedef TheISA::MachInst MachInst;
   public:
 
     /// Pointer to object representing the system this process is
@@ -216,6 +222,11 @@ class LiveProcess : public Process
                                std::string executable,
                                std::vector<std::string> &argv,
                                std::vector<std::string> &envp);
+
+    virtual void syscall(ExecContext *xc);
+
+    virtual SyscallDesc* getDesc(int callnum) { panic("Must be implemented."); }
+
 };
 
 

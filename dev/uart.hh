@@ -37,6 +37,7 @@
 #include "dev/io_device.hh"
 
 class SimConsole;
+class MemoryController;
 class Platform;
 
 const int RX_INT = 0x1;

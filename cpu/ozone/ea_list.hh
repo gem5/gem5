@@ -32,7 +32,7 @@
 #include <list>
 #include <utility>
 
-#include "arch/alpha/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 
 /**

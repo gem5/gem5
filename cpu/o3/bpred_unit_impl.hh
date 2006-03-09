@@ -98,6 +98,8 @@ TwobitBPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC)
     // Save off record of branch stuff so the RAS can be fixed
     // up once it's done.
 
+    using TheISA::MachInst;
+
     bool pred_taken = false;
     Addr target;
 

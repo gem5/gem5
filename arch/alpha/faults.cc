@@ -27,35 +27,105 @@
  */
 
 #include "arch/alpha/faults.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/base.hh"
+#include "base/trace.hh"
 
-namespace {
-    const char *
-    fault_name[Num_Faults] = {
-        "none",
-        "reset",
-        "mchk",
-        "arith",
-        "interrupt",
-        "dtb_miss_single",
-        "dtb_miss_double",
-        "unalign",
-        "dfault",
-        "dfault",
-        "itbmiss",
-        "itbmiss",
-        "iaccvio",
-        "opdec",
-        "fen",
-        "pal",
-    };
-}
-
-const char *
-FaultName(int index)
+namespace AlphaISA
 {
-    if (index < 0 || index >= Num_Faults)
-        return 0;
 
-    return fault_name[index];
+FaultName MachineCheckFault::_name = "mchk";
+FaultVect MachineCheckFault::_vect = 0x0401;
+FaultStat MachineCheckFault::_count;
+
+FaultName AlignmentFault::_name = "unalign";
+FaultVect AlignmentFault::_vect = 0x0301;
+FaultStat AlignmentFault::_count;
+
+FaultName ResetFault::_name = "reset";
+FaultVect ResetFault::_vect = 0x0001;
+FaultStat ResetFault::_count;
+
+FaultName ArithmeticFault::_name = "arith";
+FaultVect ArithmeticFault::_vect = 0x0501;
+FaultStat ArithmeticFault::_count;
+
+FaultName InterruptFault::_name = "interrupt";
+FaultVect InterruptFault::_vect = 0x0101;
+FaultStat InterruptFault::_count;
+
+FaultName NDtbMissFault::_name = "dtb_miss_single";
+FaultVect NDtbMissFault::_vect = 0x0201;
+FaultStat NDtbMissFault::_count;
+
+FaultName PDtbMissFault::_name = "dtb_miss_double";
+FaultVect PDtbMissFault::_vect = 0x0281;
+FaultStat PDtbMissFault::_count;
+
+FaultName DtbPageFault::_name = "dfault";
+FaultVect DtbPageFault::_vect = 0x0381;
+FaultStat DtbPageFault::_count;
+
+FaultName DtbAcvFault::_name = "dfault";
+FaultVect DtbAcvFault::_vect = 0x0381;
+FaultStat DtbAcvFault::_count;
+
+FaultName ItbMissFault::_name = "itbmiss";
+FaultVect ItbMissFault::_vect = 0x0181;
+FaultStat ItbMissFault::_count;
+
+FaultName ItbPageFault::_name = "itbmiss";
+FaultVect ItbPageFault::_vect = 0x0181;
+FaultStat ItbPageFault::_count;
+
+FaultName ItbAcvFault::_name = "iaccvio";
+FaultVect ItbAcvFault::_vect = 0x0081;
+FaultStat ItbAcvFault::_count;
+
+FaultName UnimplementedOpcodeFault::_name = "opdec";
+FaultVect UnimplementedOpcodeFault::_vect = 0x0481;
+FaultStat UnimplementedOpcodeFault::_count;
+
+FaultName FloatEnableFault::_name = "fen";
+FaultVect FloatEnableFault::_vect = 0x0581;
+FaultStat FloatEnableFault::_count;
+
+FaultName PalFault::_name = "pal";
+FaultVect PalFault::_vect = 0x2001;
+FaultStat PalFault::_count;
+
+FaultName IntegerOverflowFault::_name = "intover";
+FaultVect IntegerOverflowFault::_vect = 0x0501;
+FaultStat IntegerOverflowFault::_count;
+
+#if FULL_SYSTEM
+
+void AlphaFault::invoke(ExecContext * xc)
+{
+    FaultBase::invoke(xc);
+    countStat()++;
+
+    // exception restart address
+    if (setRestartAddress() || !xc->inPalMode())
+        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->readPC());
+
+    if (skipFaultingInstruction()) {
+        // traps...  skip faulting instruction.
+        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
+                   xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+    }
+
+    xc->setPC(xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect());
+    xc->setNextPC(xc->readPC() + sizeof(MachInst));
 }
+
+void ArithmeticFault::invoke(ExecContext * xc)
+{
+    FaultBase::invoke(xc);
+    panic("Arithmetic traps are unimplemented!");
+}
+
+#endif
+
+} // namespace AlphaISA
 

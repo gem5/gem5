@@ -30,7 +30,6 @@
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/alpha_cpu.hh"
 #include "cpu/o3/alpha_impl.hh"
@@ -50,8 +49,8 @@
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
-#include "targetarch/alpha_memory.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/tlb.hh"
+#include "arch/vtophys.hh"
 #else // !FULL_SYSTEM
 #include "mem/functional/functional.hh"
 #endif // FULL_SYSTEM

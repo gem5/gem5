@@ -54,4 +54,12 @@ typedef int64_t Counter;
  */
 typedef int64_t Tick;
 
+/**
+ * Address type
+ * This will probably be moved somewhere else in the near future.
+ * This should be at least as big as the biggest address width in use
+ * in the system, which will probably be 64 bits.
+ */
+typedef uint64_t Addr;
+
 #endif // __HOST_H__

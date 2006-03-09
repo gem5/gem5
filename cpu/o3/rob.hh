@@ -47,6 +47,8 @@
 template <class Impl>
 class ROB
 {
+  protected:
+    typedef TheISA::RegIndex RegIndex;
   public:
     //Typedefs from the Impl.
     typedef typename Impl::FullCPU FullCPU;

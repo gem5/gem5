@@ -29,7 +29,7 @@
 #ifndef __CPU_OOO_CPU_OOO_IMPL_HH__
 #define __CPU_OOO_CPU_OOO_IMPL_HH__
 
-#include "arch/alpha/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 template <class Impl>
 class OoOCPU;

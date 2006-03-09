@@ -48,6 +48,7 @@
 #include "sim/sim_object.hh"
 
 using namespace std;
+using namespace TheISA;
 
 ////
 // Initialization and destruction
@@ -401,7 +402,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     parseAddr(req->paddr, offset, channel, reg_type);
 
     if (!io_enabled)
-        return No_Fault;
+        return NoFault;
 
     switch (reg_type) {
       case BMI_BLOCK:
@@ -457,7 +458,7 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
             offset, req->size, *(uint32_t*)data);
 
-    return No_Fault;
+    return NoFault;
 }
 
 Fault
@@ -472,12 +473,12 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     parseAddr(req->paddr, offset, channel, reg_type);
 
     if (!io_enabled)
-        return No_Fault;
+        return NoFault;
 
     switch (reg_type) {
       case BMI_BLOCK:
         if (!bm_enabled)
-            return No_Fault;
+            return NoFault;
 
         switch (offset) {
             // Bus master IDE command register
@@ -627,7 +628,7 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
             offset, req->size, *(uint32_t*)data);
 
-    return No_Fault;
+    return NoFault;
 }
 
 ////

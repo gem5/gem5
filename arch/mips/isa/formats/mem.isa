@@ -1,0 +1,469 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2003-2005 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+output header {{
+    /**
+     * Base class for general Mips memory-format instructions.
+     */
+    class Memory : public MipsStaticInst
+    {
+      protected:
+
+        /// Memory request flags.  See mem_req_base.hh.
+        unsigned memAccessFlags;
+        /// Pointer to EAComp object.
+        const StaticInstPtr eaCompPtr;
+        /// Pointer to MemAcc object.
+        const StaticInstPtr memAccPtr;
+
+        /// Displacement for EA calculation (signed).
+        int32_t disp;
+
+        /// Constructor
+        Memory(const char *mnem, MachInst _machInst, OpClass __opClass,
+               StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+               StaticInstPtr _memAccPtr = nullStaticInstPtr)
+            : MipsStaticInst(mnem, _machInst, __opClass),
+              memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
+              disp(OFFSET)
+        {
+            //If Bit 15 is 1 then Sign Extend
+            int32_t temp = disp & 0x00008000;
+
+            if (temp > 0) {
+                disp |= 0xFFFF0000;
+            }
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+      public:
+
+        const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
+        const StaticInstPtr &memAccInst() const { return memAccPtr; }
+    };
+
+}};
+
+
+output decoder {{
+    std::string
+    Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
+                        flags[IsFloating] ? 'f' : 'r', RT, disp, RS);
+    }
+
+}};
+
+def format LoadAddress(code) {{
+    iop = InstObjParams(name, Name, 'MemoryDisp32', CodeBlock(code))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+
+def template LoadStoreDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+
+        /**
+         * "Fake" effective address computation class for "%(mnemonic)s".
+         */
+        class EAComp : public %(base_class)s
+        {
+          public:
+            /// Constructor
+            EAComp(MachInst machInst);
+
+            %(BasicExecDeclare)s
+        };
+
+        /**
+         * "Fake" memory access instruction class for "%(mnemonic)s".
+         */
+        class MemAcc : public %(base_class)s
+        {
+          public:
+            /// Constructor
+            MemAcc(MachInst machInst);
+
+            %(BasicExecDeclare)s
+        };
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
+
+def template InitiateAccDeclare {{
+    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+
+def template CompleteAccDeclare {{
+    Fault completeAcc(uint8_t *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+
+def template LoadStoreConstructor {{
+    /** TODO: change op_class to AddrGenOp or something (requires
+     * creating new member of OpClass enum in op_class.hh, updating
+     * config files, etc.). */
+    inline %(class_name)s::EAComp::EAComp(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
+    {
+        %(ea_constructor)s;
+    }
+
+    inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
+    {
+        %(memacc_constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(MachInst machInst)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                          new EAComp(machInst), new MemAcc(machInst))
+    {
+        %(constructor)s;
+    }
+}};
+
+
+def template EACompExecute {{
+    Fault
+    %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+def template LoadMemAccExecute {{
+    Fault
+    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        EA = xc->getEA();
+
+        if (fault == NoFault) {
+            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
+            %(code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template LoadExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template LoadInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
+        }
+
+        return fault;
+    }
+}};
+
+
+def template LoadCompleteAcc {{
+    Fault %(class_name)s::completeAcc(uint8_t *data,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_src_decl)s;
+        %(op_dest_decl)s;
+
+        memcpy(&Mem, data, sizeof(Mem));
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template StoreMemAccExecute {{
+    Fault
+    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        uint64_t write_result = 0;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        EA = xc->getEA();
+
+        if (fault == NoFault) {
+            %(code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                              memAccessFlags, &write_result);
+            if (traceData) { traceData->setData(Mem); }
+        }
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template StoreExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        uint64_t write_result = 0;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                              memAccessFlags, &write_result);
+            if (traceData) { traceData->setData(Mem); }
+        }
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template StoreInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        uint64_t write_result = 0;
+
+        %(fp_enable_check)s;
+        %(op_src_decl)s;
+        %(op_dest_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                              memAccessFlags, &write_result);
+            if (traceData) { traceData->setData(Mem); }
+        }
+
+        return fault;
+    }
+}};
+
+
+def template StoreCompleteAcc {{
+    Fault %(class_name)s::completeAcc(uint8_t *data,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        uint64_t write_result = 0;
+
+        %(fp_enable_check)s;
+        %(op_dest_decl)s;
+
+        memcpy(&write_result, data, sizeof(write_result));
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+// load instructions use Rt as dest, so check for
+// Rt == 31 to detect nops
+def template LoadNopCheckDecode {{
+ {
+     MipsStaticInst *i = new %(class_name)s(machInst);
+     if (RT == 0) {
+         i = makeNop(i);
+     }
+     return i;
+ }
+}};
+
+def format LoadMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
+                     mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = LoadNopCheckDecode,
+                      exec_template_base = 'Load')
+}};
+
+
+def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
+                     mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      exec_template_base = 'Store')
+}};
+
+//FP loads are offloaded to these formats for now ...
+def format LoadMemory2(ea_code = {{ EA = Rs + disp; }}, memacc_code = {{ }},
+                      mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = LoadNopCheckDecode,
+                      exec_template_base = 'Load')
+}};
+
+
+//FP stores are offloaded to these formats for now ...
+def format StoreMemory2(ea_code = {{ EA = Rs + disp; }},memacc_code = {{ }},
+                      mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = LoadNopCheckDecode,
+                      exec_template_base = 'Store')
+}};
+

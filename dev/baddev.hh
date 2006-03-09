@@ -37,6 +37,8 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
+class MemoryController;
+
 /**
  * BadDevice
  * This device just panics when accessed. It is supposed to warn

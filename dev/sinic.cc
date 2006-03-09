@@ -47,9 +47,10 @@
 #include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 
 using namespace Net;
+using namespace TheISA;
 
 namespace Sinic {
 
@@ -112,8 +113,6 @@ Device::Device(Params *p)
                                                  p->dma_no_allocate);
     } else if (p->payload_bus)
         panic("must define a header bus if defining a payload bus");
-
-    pioDelayWrite = p->pio_delay_write && pioInterface;
 }
 
 Device::~Device()
@@ -352,9 +351,6 @@ Device::prepareRead(int cpu, int index)
 void
 Device::prepareWrite(int cpu, int index)
 {
-    if (cpu >= writeQueue.size())
-        writeQueue.resize(cpu + 1);
-
     prepareIO(cpu, index);
 }
 
@@ -367,11 +363,11 @@ Device::read(MemReqPtr &req, uint8_t *data)
     assert(config.command & PCI_CMD_MSE);
     Fault fault = readBar(req, data);
 
-    if (fault == Machine_Check_Fault) {
+    if (fault->isMachineCheckFault()) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
-        return Machine_Check_Fault;
+        return genMachineCheckFault();
     }
 
     return fault;
@@ -380,7 +376,7 @@ Device::read(MemReqPtr &req, uint8_t *data)
 Fault
 Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
 {
-    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+    int cpu = (req->xc->readMiscReg(TheISA::IPR_PALtemp16) >> 8) & 0xff;
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
@@ -421,7 +417,7 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
     if (raddr == Regs::IntrStatus)
         devIntrClear();
 
-    return No_Fault;
+    return NoFault;
 }
 
 /**
@@ -451,7 +447,7 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
     DPRINTF(EthernetPIO, "IPR read %s: cpu=%s da=%#x val=%#x\n",
             info.name, cpu, result);
 
-    return No_Fault;
+    return NoFault;
 }
 
 /**
@@ -463,11 +459,11 @@ Device::write(MemReqPtr &req, const uint8_t *data)
     assert(config.command & PCI_CMD_MSE);
     Fault fault = writeBar(req, data);
 
-    if (fault == Machine_Check_Fault) {
+    if (fault->isMachineCheckFault()) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
-        return Machine_Check_Fault;
+        return genMachineCheckFault();
     }
 
     return fault;
@@ -476,7 +472,7 @@ Device::write(MemReqPtr &req, const uint8_t *data)
 Fault
 Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 {
-    int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
+    int cpu = (req->xc->readMiscReg(TheISA::IPR_PALtemp16) >> 8) & 0xff;
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
@@ -495,31 +491,14 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 
     uint32_t reg32 = *(uint32_t *)data;
     uint64_t reg64 = *(uint64_t *)data;
+    VirtualReg &vnic = virtualRegs[index];
+
     DPRINTF(EthernetPIO,
             "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, cpu, info.size == 4 ? reg32 : reg64, daddr,
-            req->paddr, req->vaddr, req->size);
+            info.name, cpu, info.size == 4 ? reg32 : reg64,
+            daddr, req->paddr, req->vaddr, req->size);
 
     prepareWrite(cpu, index);
-
-    if (pioDelayWrite)
-        writeQueue[cpu].push_back(RegWriteData(daddr, reg64));
-
-    if (!pioDelayWrite || !info.delay_write)
-        regWrite(daddr, cpu, data);
-
-    return No_Fault;
-}
-
-void
-Device::regWrite(Addr daddr, int cpu, const uint8_t *data)
-{
-    Addr index = daddr >> Regs::VirtualShift;
-    Addr raddr = daddr & Regs::VirtualMask;
-
-    uint32_t reg32 = *(uint32_t *)data;
-    uint64_t reg64 = *(uint64_t *)data;
-    VirtualReg &vnic = virtualRegs[index];
 
     switch (raddr) {
       case Regs::Config:
@@ -567,6 +546,8 @@ Device::regWrite(Addr daddr, int cpu, const uint8_t *data)
         }
         break;
     }
+
+    return NoFault;
 }
 
 void
@@ -780,6 +761,8 @@ Device::reset()
         regs.Config |= Config_RxThread;
     if (params()->tx_thread)
         regs.Config |= Config_TxThread;
+    if (params()->rss)
+        regs.Config |= Config_RSS;
     regs.IntrMask = Intr_Soft | Intr_RxHigh | Intr_RxPacket | Intr_TxLow;
     regs.RxMaxCopy = params()->rx_max_copy;
     regs.TxMaxCopy = params()->tx_max_copy;
@@ -1570,27 +1553,6 @@ Device::cacheAccess(MemReqPtr &req)
     DPRINTF(EthernetPIO, "timing %s to paddr=%#x bar=%d daddr=%#x\n",
             req->cmd.toString(), req->paddr, bar, daddr);
 
-    if (!pioDelayWrite || !req->cmd.isWrite())
-        return curTick + pioLatency;
-
-    if (bar == 0) {
-        int cpu = (req->xc->regs.ipr[TheISA::IPR_PALtemp16] >> 8) & 0xff;
-        std::list<RegWriteData> &wq = writeQueue[cpu];
-        if (wq.empty())
-            panic("WriteQueue for cpu %d empty timing daddr=%#x", cpu, daddr);
-
-        const RegWriteData &data = wq.front();
-        if (data.daddr != daddr)
-            panic("read mismatch on cpu %d, daddr functional=%#x timing=%#x",
-                  cpu, data.daddr, daddr);
-
-        const Regs::Info &info = regInfo(data.daddr);
-        if (info.delay_write)
-            regWrite(daddr, cpu, (uint8_t *)&data.value);
-
-        wq.pop_front();
-    }
-
     return curTick + pioLatency;
 }
 
@@ -1648,7 +1610,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<Tick> dma_write_factor;
     Param<bool> dma_no_allocate;
     Param<Tick> pio_latency;
-    Param<bool> pio_delay_write;
     Param<Tick> intr_delay;
 
     Param<Tick> rx_delay;
@@ -1665,6 +1626,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<string> hardware_address;
     Param<bool> rx_thread;
     Param<bool> tx_thread;
+    Param<bool> rss;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
@@ -1692,7 +1654,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
     INIT_PARAM(dma_no_allocate, "Should we allocat on read in cache"),
     INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
-    INIT_PARAM(pio_delay_write, ""),
     INIT_PARAM(intr_delay, "Interrupt Delay"),
 
     INIT_PARAM(rx_delay, "Receive Delay"),
@@ -1708,7 +1669,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(rx_filter, "Enable Receive Filter"),
     INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
     INIT_PARAM(rx_thread, ""),
-    INIT_PARAM(tx_thread, "")
+    INIT_PARAM(tx_thread, ""),
+    INIT_PARAM(rss, "")
 
 END_INIT_SIM_OBJECT_PARAMS(Device)
 
@@ -1740,7 +1702,6 @@ CREATE_SIM_OBJECT(Device)
     params->dma_write_factor = dma_write_factor;
     params->dma_no_allocate = dma_no_allocate;
     params->pio_latency = pio_latency;
-    params->pio_delay_write = pio_delay_write;
     params->intr_delay = intr_delay;
 
     params->tx_delay = tx_delay;
@@ -1757,6 +1718,7 @@ CREATE_SIM_OBJECT(Device)
     params->eaddr = hardware_address;
     params->rx_thread = rx_thread;
     params->tx_thread = tx_thread;
+    params->rss = rss;
 
     return new Device(params);
 }

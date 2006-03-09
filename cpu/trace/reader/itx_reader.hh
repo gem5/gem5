@@ -46,6 +46,7 @@
  */
 class ITXReader : public MemTraceReader
 {
+  private:
     /** Trace file. */
     FILE *trace;
 

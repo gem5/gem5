@@ -37,6 +37,8 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
+class MemoryController;
+
 /**
  * IsaFake is a device that returns -1 on all reads and
  * accepts all writes. It is meant to be placed at an address range

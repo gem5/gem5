@@ -395,7 +395,7 @@ SimpleCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
-    if (inst_fault != No_Fault && inst_fault != Fake_Mem_Fault) {
+    if (inst_fault != NoFault) {
         if (!head_inst->isNop()) {
 #if FULL_SYSTEM
             cpu->trap(inst_fault);

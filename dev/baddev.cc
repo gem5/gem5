@@ -46,6 +46,7 @@
 #include "sim/system.hh"
 
 using namespace std;
+using namespace TheISA;
 
 BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
                      HierParams *hier, Bus *pio_bus, const string &devicename)
@@ -66,14 +67,14 @@ BadDevice::read(MemReqPtr &req, uint8_t *data)
 {
 
     panic("Device %s not imlpmented\n", devname);
-    return No_Fault;
+    return NoFault;
 }
 
 Fault
 BadDevice::write(MemReqPtr &req, const uint8_t *data)
 {
     panic("Device %s not imlpmented\n", devname);
-    return No_Fault;
+    return NoFault;
 }
 
 Tick

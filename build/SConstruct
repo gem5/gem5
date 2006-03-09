@@ -218,12 +218,18 @@ if have_mysql:
 
 env = conf.Finish()
 
+# Define the universe of supported ISAs
+env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
+
+# Define the universe of supported CPU models
+env['ALL_CPU_LIST'] = ['SimpleCPU', 'FastCPU', 'FullCPU', 'AlphaFullCPU']
+
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
 # value becomes sticky).
 sticky_opts = Options(args=ARGUMENTS)
 sticky_opts.AddOptions(
-    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', ('alpha')),
+    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', env['ALL_ISA_LIST']),
     BoolOption('FULL_SYSTEM', 'Full-system support', False),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),
@@ -248,6 +254,12 @@ sticky_opts.AddOptions(
 # Non-sticky options only apply to the current build.
 nonsticky_opts = Options(args=ARGUMENTS)
 nonsticky_opts.AddOptions(
+    # This really should be a sticky option, but there's a bug in
+    # scons 0.96.1 that causes ListOptions not to be able to be
+    # restored from a saved option file.  It looks like this is fixed
+    # in 0.96.9, but there's a different bug in that version that means we
+    # can't just upgrade.
+    ListOption('CPU_MODELS', 'CPU models', 'all', env['ALL_CPU_LIST']),
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 
@@ -320,16 +332,20 @@ base_env = env
 for build_dir in build_dirs:
     # Make a copy of the default environment to use for this config.
     env = base_env.Copy()
+
+    # Record what build_dir was in the environment
+    env.Append(BUILD_DIR=build_dir);
+
     # Set env according to the build directory config.
 
     sticky_opts.files = []
     # Name of default options file is taken from 'default=' on command
     # line if set, otherwise name of build dir.
-    default_options_file = os.path.join('build_options', 'default',
+    default_options_file = os.path.join('default_options',
                                         ARGUMENTS.get('default', build_dir))
     if os.path.isfile(default_options_file):
         sticky_opts.files.append(default_options_file)
-    current_options_file = os.path.join('build_options', 'current', build_dir)
+    current_options_file = os.path.join('options', build_dir)
     if os.path.isfile(current_options_file):
         sticky_opts.files.append(current_options_file)
     else:
@@ -339,7 +355,7 @@ for build_dir in build_dirs:
         if not os.path.isdir(opt_dir):
             os.mkdir(opt_dir)
     if not sticky_opts.files:
-        print "%s: No options file found in build_options, using defaults." \
+        print "%s: No options file found in options, using defaults." \
               % build_dir
 
     # Apply current option settings to env

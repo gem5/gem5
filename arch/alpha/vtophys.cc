@@ -34,6 +34,7 @@
 #include "mem/functional/physical.hh"
 
 using namespace std;
+using namespace AlphaISA;
 
 AlphaISA::PageTableEntry
 kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr)
@@ -81,7 +82,7 @@ Addr
 vtophys(ExecContext *xc, Addr addr)
 {
     AlphaISA::VAddr vaddr = addr;
-    Addr ptbr = xc->regs.ipr[AlphaISA::IPR_PALtemp20];
+    Addr ptbr = xc->readMiscReg(AlphaISA::IPR_PALtemp20);
     Addr paddr = 0;
     //@todo Andrew couldn't remember why he commented some of this code
     //so I put it back in. Perhaps something to do with gdb debugging?
@@ -94,7 +95,7 @@ vtophys(ExecContext *xc, Addr addr)
             paddr = vaddr;
         } else {
             AlphaISA::PageTableEntry pte =
-                kernel_pte_lookup(xc->physmem, ptbr, vaddr);
+                kernel_pte_lookup(xc->getPhysMemPtr(), ptbr, vaddr);
             if (pte.valid())
                 paddr = pte.paddr() | vaddr.offset();
         }
@@ -109,14 +110,14 @@ vtophys(ExecContext *xc, Addr addr)
 uint8_t *
 ptomem(ExecContext *xc, Addr paddr, size_t len)
 {
-    return xc->physmem->dma_addr(paddr, len);
+    return xc->getPhysMemPtr()->dma_addr(paddr, len);
 }
 
 uint8_t *
 vtomem(ExecContext *xc, Addr vaddr, size_t len)
 {
     Addr paddr = vtophys(xc, vaddr);
-    return xc->physmem->dma_addr(paddr, len);
+    return xc->getPhysMemPtr()->dma_addr(paddr, len);
 }
 
 void
@@ -130,7 +131,7 @@ CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
     paddr = vtophys(xc, src);
     len = min((int)(AlphaISA::PageBytes - (paddr & AlphaISA::PageOffset)),
               (int)cplen);
-    dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
+    dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, len);
     assert(dmaaddr);
 
     memcpy(dst, dmaaddr, len);
@@ -143,7 +144,8 @@ CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
 
     while (cplen > AlphaISA::PageBytes) {
         paddr = vtophys(xc, src);
-        dmaaddr = (char *)xc->physmem->dma_addr(paddr, AlphaISA::PageBytes);
+        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr,
+                                                        AlphaISA::PageBytes);
         assert(dmaaddr);
 
         memcpy(dst, dmaaddr, AlphaISA::PageBytes);
@@ -154,7 +156,7 @@ CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
 
     if (cplen > 0) {
         paddr = vtophys(xc, src);
-        dmaaddr = (char *)xc->physmem->dma_addr(paddr, cplen);
+        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, cplen);
         assert(dmaaddr);
 
         memcpy(dst, dmaaddr, cplen);
@@ -172,7 +174,7 @@ CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
     paddr = vtophys(xc, dest);
     len = min((int)(AlphaISA::PageBytes - (paddr & AlphaISA::PageOffset)),
               (int)cplen);
-    dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
+    dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, len);
     assert(dmaaddr);
 
     memcpy(dmaaddr, src, len);
@@ -185,7 +187,8 @@ CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
 
     while (cplen > AlphaISA::PageBytes) {
         paddr = vtophys(xc, dest);
-        dmaaddr = (char *)xc->physmem->dma_addr(paddr, AlphaISA::PageBytes);
+        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr,
+                                                        AlphaISA::PageBytes);
         assert(dmaaddr);
 
         memcpy(dmaaddr, src, AlphaISA::PageBytes);
@@ -196,7 +199,7 @@ CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
 
     if (cplen > 0) {
         paddr = vtophys(xc, dest);
-        dmaaddr = (char *)xc->physmem->dma_addr(paddr, cplen);
+        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, cplen);
         assert(dmaaddr);
 
         memcpy(dmaaddr, src, cplen);
@@ -213,7 +216,7 @@ CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
     paddr = vtophys(xc, vaddr);
     len = min((int)(AlphaISA::PageBytes - (paddr & AlphaISA::PageOffset)),
               (int)maxlen);
-    dmaaddr = (char *)xc->physmem->dma_addr(paddr, len);
+    dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, len);
     assert(dmaaddr);
 
     char *term = (char *)memchr(dmaaddr, 0, len);
@@ -231,7 +234,8 @@ CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
 
     while (maxlen > AlphaISA::PageBytes) {
         paddr = vtophys(xc, vaddr);
-        dmaaddr = (char *)xc->physmem->dma_addr(paddr, AlphaISA::PageBytes);
+        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr,
+                                                        AlphaISA::PageBytes);
         assert(dmaaddr);
 
         char *term = (char *)memchr(dmaaddr, 0, AlphaISA::PageBytes);
@@ -248,7 +252,7 @@ CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
 
     if (maxlen > 0) {
         paddr = vtophys(xc, vaddr);
-        dmaaddr = (char *)xc->physmem->dma_addr(paddr, maxlen);
+        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, maxlen);
         assert(dmaaddr);
 
         char *term = (char *)memchr(dmaaddr, 0, maxlen);

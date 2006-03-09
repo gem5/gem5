@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <string>
@@ -40,17 +41,18 @@
 #include "sim/sim_events.hh"
 
 using namespace std;
+using namespace TheISA;
 
 void
 SyscallDesc::doSyscall(int callnum, Process *process, ExecContext *xc)
 {
     DPRINTFR(SyscallVerbose, "%s: syscall %s called\n",
-             xc->cpu->name(), name);
+             xc->getCpuPtr()->name(), name);
 
     SyscallReturn retval = (*funcPtr)(this, callnum, process, xc);
 
     DPRINTFR(SyscallVerbose, "%s: syscall %s returns %d\n",
-             xc->cpu->name(), name, retval.value());
+             xc->getCpuPtr()->name(), name, retval.value());
 
     if (!(flags & SyscallDesc::SuppressReturnValue))
         xc->setSyscallReturn(retval);
@@ -89,7 +91,7 @@ exitFunc(SyscallDesc *desc, int callnum, Process *process,
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
-    return VMPageSize;
+    return (int)VMPageSize;
 }
 
 
@@ -191,7 +193,7 @@ unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
         return (TheISA::IntReg)-EFAULT;
 
     int result = unlink(path.c_str());
@@ -203,12 +205,12 @@ renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string old_name;
 
-    if (xc->port->readStringFunctional(old_name, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(old_name, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     string new_name;
 
-    if (xc->port->readStringFunctional(new_name, xc->getSyscallArg(1)) != No_Fault)
+    if (xc->port->readStringFunctional(new_name, xc->getSyscallArg(1)) != NoFault)
         return -EFAULT;
 
     int64_t result = rename(old_name.c_str(), new_name.c_str());
@@ -220,7 +222,7 @@ truncateFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     off_t length = xc->getSyscallArg(1);
@@ -248,7 +250,7 @@ chownFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != No_Fault)
+    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     /* XXX endianess */
@@ -278,3 +280,162 @@ fchownFunc(SyscallDesc *desc, int num, Process *process, ExecContext *xc)
     int result = fchown(fd, hostOwner, hostGroup);
     return (result == -1) ? -errno : result;
 }
+
+
+SyscallReturn
+fcntlFunc(SyscallDesc *desc, int num, Process *process,
+          ExecContext *xc)
+{
+    int fd = xc->getSyscallArg(0);
+
+    if (fd < 0 || process->sim_fd(fd) < 0)
+        return -EBADF;
+
+    int cmd = xc->getSyscallArg(1);
+    switch (cmd) {
+      case 0: // F_DUPFD
+        // if we really wanted to support this, we'd need to do it
+        // in the target fd space.
+        warn("fcntl(%d, F_DUPFD) not supported, error returned\n", fd);
+        return -EMFILE;
+
+      case 1: // F_GETFD (get close-on-exec flag)
+      case 2: // F_SETFD (set close-on-exec flag)
+        return 0;
+
+      case 3: // F_GETFL (get file flags)
+      case 4: // F_SETFL (set file flags)
+        // not sure if this is totally valid, but we'll pass it through
+        // to the underlying OS
+        warn("fcntl(%d, %d) passed through to host\n", fd, cmd);
+        return fcntl(process->sim_fd(fd), cmd);
+        // return 0;
+
+      case 7: // F_GETLK  (get lock)
+      case 8: // F_SETLK  (set lock)
+      case 9: // F_SETLKW (set lock and wait)
+        // don't mess with file locking... just act like it's OK
+        warn("File lock call (fcntl(%d, %d)) ignored.\n", fd, cmd);
+        return 0;
+
+      default:
+        warn("Unknown fcntl command %d\n", cmd);
+        return 0;
+    }
+}
+
+SyscallReturn
+pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+         ExecContext *xc)
+{
+    int fds[2], sim_fds[2];
+    int pipe_retval = pipe(fds);
+
+    if (pipe_retval < 0) {
+        // error
+        return pipe_retval;
+    }
+
+    sim_fds[0] = process->alloc_fd(fds[0]);
+    sim_fds[1] = process->alloc_fd(fds[1]);
+
+    // Alpha Linux convention for pipe() is that fd[0] is returned as
+    // the return value of the function, and fd[1] is returned in r20.
+    xc->setIntReg(SyscallPseudoReturnReg, sim_fds[1]);
+    return sim_fds[0];
+}
+
+
+SyscallReturn
+getpidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Make up a PID.  There's no interprocess communication in
+    // fake_syscall mode, so there's no way for a process to know it's
+    // not getting a unique value.
+
+    xc->setIntReg(SyscallPseudoReturnReg, 99);
+    return 100;
+}
+
+
+SyscallReturn
+getuidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Make up a UID and EUID... it shouldn't matter, and we want the
+    // simulation to be deterministic.
+
+    // EUID goes in r20.
+    xc->setIntReg(SyscallPseudoReturnReg, 100); //EUID
+    return 100;		// UID
+}
+
+
+SyscallReturn
+getgidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Get current group ID.  EGID goes in r20.
+    xc->setIntReg(SyscallPseudoReturnReg, 100); //EGID
+    return 100;
+}
+
+
+SyscallReturn
+setuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // can't fathom why a benchmark would call this.
+    warn("Ignoring call to setuid(%d)\n", xc->getSyscallArg(0));
+    return 0;
+}
+
+SyscallReturn
+getpidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Make up a PID.  There's no interprocess communication in
+    // fake_syscall mode, so there's no way for a process to know it's
+    // not getting a unique value.
+
+    xc->setIntReg(SyscallPseudoReturnReg, 99); //PID
+    return 100;
+}
+
+SyscallReturn
+getppidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 99;
+}
+
+SyscallReturn
+getuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;		// UID
+}
+
+SyscallReturn
+geteuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;		// UID
+}
+
+SyscallReturn
+getgidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;
+}
+
+SyscallReturn
+getegidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;
+}
+
+

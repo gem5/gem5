@@ -1,0 +1,129 @@
+////////////////////////////////////////////////////////////////////
+//
+// Base class for sparc instructions, and some support functions
+//
+
+output header {{
+
+        struct condCodes
+        {
+            uint8_t c:1;
+            uint8_t v:1;
+            uint8_t z:1;
+            uint8_t n:1;
+        }
+
+        enum condTest
+        {
+            Always=0x8,
+            Never=0x0,
+            NotEqual=0x9,
+            Equal=0x1,
+            Greater=0xA,
+            LessOrEqual=0x2,
+            GreaterOrEqual=0xB,
+            Less=0x3,
+            GreaterUnsigned=0xC,
+            LessOrEqualUnsigned=0x4,
+            CarryClear=0xD,
+            CarrySet=0x5,
+            Positive=0xE,
+            Negative=0x6,
+            OverflowClear=0xF,
+            OverflowSet=0x7
+        }
+
+        /**
+         * Base class for all SPARC static instructions.
+         */
+        class SparcStaticInst : public StaticInst
+        {
+          protected:
+            // Constructor.
+            SparcStaticInst(const char *mnem,
+                 MachInst _machInst, OpClass __opClass)
+                    : StaticInst(mnem, _machInst, __opClass)
+                {
+                }
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+        };
+
+        bool passesCondition(condCodes codes, condTest condition);
+}};
+
+output decoder {{
+
+        std::string SparcStaticInst::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            // just print the first two source regs... if there's
+            // a third one, it's a read-modify-write dest (Rc),
+            // e.g. for CMOVxx
+            if(_numSrcRegs > 0)
+            {
+                printReg(ss, _srcRegIdx[0]);
+            }
+            if(_numSrcRegs > 1)
+            {
+                ss << ",";
+                printReg(ss, _srcRegIdx[1]);
+            }
+
+            // just print the first dest... if there's a second one,
+            // it's generally implicit
+            if(_numDestRegs > 0)
+            {
+                if(_numSrcRegs > 0)
+                    ss << ",";
+                    printReg(ss, _destRegIdx[0]);
+            }
+
+            return ss.str();
+        }
+
+        bool passesCondition(condCodes codes, condTest condition)
+        {
+            switch(condition)
+            {
+              case Always:
+                return true;
+              case Never:
+                return false;
+              case NotEqual:
+                return !codes.z;
+              case Equal:
+                return codes.z;
+              case Greater:
+                return !(codes.z | (codes.n ^ codes.v));
+              case LessOrEqual:
+                return codes.z | (codes.n ^ codes.v);
+              case GreaterOrEqual:
+                return !(codes.n ^ codes.v);
+              case Less:
+                return (codes.n ^ codes.v);
+              case GreaterUnsigned:
+                return !(codes.c | codes.z);
+              case LessOrEqualUnsigned:
+                return (codes.c | codes.z);
+              case CarryClear:
+                return !codes.c;
+              case CarrySet:
+                return codes.c;
+              case Positive:
+                return !codes.n;
+              case Negative:
+                return codes.n;
+              case OverflowClear:
+                return !codes.v;
+              case OverflowSet:
+                return codes.v;
+            }
+        }
+}};
+

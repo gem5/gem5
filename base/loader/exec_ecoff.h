@@ -37,7 +37,8 @@
 #ifndef	_SYS_EXEC_ECOFF_H_
 #define	_SYS_EXEC_ECOFF_H_
 
-#include "targetarch/ecoff_machdep.h"
+//Only alpha will be able to load ecoff files for now
+#include "arch/alpha/ecoff_machdep.h"
 
 struct ecoff_filehdr {
         coff_ushort f_magic;	/* magic number */

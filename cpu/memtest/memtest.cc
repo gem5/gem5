@@ -36,7 +36,7 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "cpu/memtest/memtest.hh"
 #include "mem/cache/base_cache.hh"
 #include "sim/builder.hh"
@@ -44,6 +44,7 @@
 #include "sim/stats.hh"
 
 using namespace std;
+using namespace TheISA;
 
 int TESTER_ALLOCATOR=0;
 
@@ -78,7 +79,7 @@ MemTest::MemTest(const string &name,
     vector<string> cmd;
     cmd.push_back("/bin/ls");
     vector<string> null_vec;
-    xc = new ExecContext(NULL, 0, mainMem, 0);
+    cpuXC = new CPUExecContext(NULL, 0, mainMem, 0);
 
     blockSize = cacheInterface->getBlockSize();
     blockAddrMask = blockSize - 1;
@@ -268,7 +269,7 @@ MemTest::tick()
     req->data = new uint8_t[req->size];
     req->paddr &= ~(req->size - 1);
     req->time = curTick;
-    req->xc = xc;
+    req->xc = cpuXC->getProxy();
 
     if (cmd < percentReads) {
         // read

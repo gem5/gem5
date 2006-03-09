@@ -43,6 +43,8 @@ class PhysicalMemory;
 class GDBListener;
 class RemoteGDB
 {
+  protected:
+    typedef TheISA::MachInst MachInst;
   private:
     friend void debugger();
     friend class GDBListener;

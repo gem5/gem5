@@ -46,7 +46,6 @@ class SimpleRename
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::ISA ISA;
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::FullCPU FullCPU;
@@ -62,7 +61,7 @@ class SimpleRename
     typedef typename CPUPol::RenameMap RenameMap;
 
     // Typedefs from the ISA.
-    typedef typename ISA::Addr Addr;
+    typedef TheISA::RegIndex RegIndex;
 
   public:
     // Rename will block if ROB becomes full or issue queue becomes full,

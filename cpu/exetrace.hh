@@ -46,13 +46,14 @@ namespace Trace {
 class InstRecord : public Record
 {
   protected:
+    typedef TheISA::IntRegFile IntRegFile;
 
     // The following fields are initialized by the constructor and
     // thus guaranteed to be valid.
     BaseCPU *cpu;
     // need to make this ref-counted so it doesn't go away before we
     // dump the record
-    StaticInstPtr<TheISA> staticInst;
+    StaticInstPtr staticInst;
     Addr PC;
     bool misspeculating;
     unsigned thread;
@@ -92,7 +93,7 @@ class InstRecord : public Record
 
   public:
     InstRecord(Tick _cycle, BaseCPU *_cpu,
-               const StaticInstPtr<TheISA> &_staticInst,
+               const StaticInstPtr &_staticInst,
                Addr _pc, bool spec, int _thread)
         : Record(_cycle), cpu(_cpu), staticInst(_staticInst), PC(_pc),
           misspeculating(spec), thread(_thread)
@@ -169,7 +170,7 @@ InstRecord::setRegs(const IntRegFile &regs)
 inline
 InstRecord *
 getInstRecord(Tick cycle, ExecContext *xc, BaseCPU *cpu,
-              const StaticInstPtr<TheISA> staticInst,
+              const StaticInstPtr staticInst,
               Addr pc, int thread = 0)
 {
     if (DTRACE(InstExec) &&

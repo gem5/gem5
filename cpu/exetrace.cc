@@ -31,7 +31,6 @@
 
 #include "sim/param.hh"
 #include "cpu/exetrace.hh"
-#include "cpu/exec_context.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/static_inst.hh"

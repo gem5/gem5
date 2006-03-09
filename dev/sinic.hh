@@ -280,19 +280,7 @@ class Device : public Base
     Fault iprRead(Addr daddr, int cpu, uint64_t &result);
     Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
     Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    void regWrite(Addr daddr, int cpu, const uint8_t *data);
     Tick cacheAccess(MemReqPtr &req);
-
-  protected:
-    struct RegWriteData {
-        Addr daddr;
-        uint64_t value;
-        RegWriteData(Addr da, uint64_t val) : daddr(da), value(val) {}
-    };
-
-    std::vector<std::list<RegWriteData> > writeQueue;
-
-    bool pioDelayWrite;
 
 /**
  * Statistics
@@ -349,7 +337,6 @@ class Device : public Base
         Bus *header_bus;
         Bus *payload_bus;
         Tick pio_latency;
-        bool pio_delay_write;
         PhysicalMemory *physmem;
         IntrControl *intctrl;
         bool rx_filter;
@@ -368,6 +355,7 @@ class Device : public Base
         bool dma_no_allocate;
         bool rx_thread;
         bool tx_thread;
+        bool rss;
     };
 
   protected:

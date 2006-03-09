@@ -1,0 +1,62 @@
+////////////////////////////////////////////////////////////////////
+//
+// Branch instructions
+//
+
+output header {{
+        /**
+         * Base class for integer operations.
+         */
+        class Branch : public SparcStaticInst
+        {
+          protected:
+            // Constructor
+            Branch(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+}};
+
+output decoder {{
+        std::string Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+                return "Branch instruction\n";
+        }
+}};
+
+def template BranchExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            //Attempt to execute the instruction
+            Fault fault = NoFault;
+            checkPriv;
+
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
+
+            if(fault == NoFault)
+            {
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
+        }
+}};
+
+// Primary format for integer operate instructions:
+def format Branch(code, *opt_flags) {{
+        orig_code = code
+        cblk = CodeBlock(code)
+        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecodeWithMnemonic.subst(iop)
+        exec_output = BranchExecute.subst(iop)
+}};

@@ -55,6 +55,7 @@
         (N_GETMAGIC(ex) != NMAGIC && N_GETMAGIC(ex) != OMAGIC && \
         N_GETMAGIC(ex) != ZMAGIC)
 
-#include "targetarch/aout_machdep.h"
+//Only alpha will be able to load aout for now
+#include "arch/alpha/aout_machdep.h"
 
 #endif /* !_SYS_EXEC_AOUT_H_ */

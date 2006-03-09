@@ -170,9 +170,6 @@ class NSGigE : public PciDev
     static const Addr size = sizeof(dp_regs);
 
   protected:
-    typedef std::deque<PacketPtr> pktbuf_t;
-    typedef pktbuf_t::iterator pktiter_t;
-
     /** device register file */
     dp_regs regs;
     dp_rom rom;
@@ -238,15 +235,6 @@ class NSGigE : public PciDev
     /** count of bytes remaining in the current descriptor */
     uint32_t rxDescCnt;
     DmaState rxDmaState;
-
-    struct RegWriteData {
-        Addr daddr;
-        uint32_t value;
-        RegWriteData(Addr da, uint32_t val) : daddr(da), value(val) {}
-    };
-
-    std::vector<std::list<RegWriteData> > writeQueue;
-    bool pioDelayWrite;
 
     bool extstsEnable;
 
@@ -385,7 +373,6 @@ class NSGigE : public PciDev
         Tick tx_delay;
         Tick rx_delay;
         Tick pio_latency;
-        bool pio_delay_write;
         bool dma_desc_free;
         bool dma_data_free;
         Tick dma_read_delay;
@@ -398,6 +385,7 @@ class NSGigE : public PciDev
         uint32_t rx_fifo_size;
         bool rx_thread;
         bool tx_thread;
+        bool rss;
         bool dma_no_allocate;
     };
 

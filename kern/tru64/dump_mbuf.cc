@@ -31,12 +31,16 @@
 
 #include "base/cprintf.hh"
 #include "base/trace.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/mbuf.hh"
 #include "sim/host.hh"
-#include "targetarch/arguments.hh"
-#include "targetarch/isa_traits.hh"
-#include "targetarch/vtophys.hh"
+#include "sim/system.hh"
+#include "arch/arguments.hh"
+#include "arch/isa_traits.hh"
+#include "arch/vtophys.hh"
+
+using namespace TheISA;
 
 namespace tru64 {
 
@@ -59,7 +63,7 @@ DumpMbuf(AlphaArguments args)
                  addr, m.m_data, m.m_len);
         char *buffer = new char[m.m_len];
         CopyOut(xc, buffer, m.m_data, m.m_len);
-        Trace::dataDump(curTick, xc->system->name(), (uint8_t *)buffer,
+        Trace::dataDump(curTick, xc->getSystemPtr()->name(), (uint8_t *)buffer,
                         m.m_len);
         delete [] buffer;
 

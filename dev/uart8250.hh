@@ -53,6 +53,7 @@
 #define IIR_LINE  0x06 /* Rx Line Status (highest priority)*/
 
 class SimConsole;
+class MemoryController;
 class Platform;
 
 class Uart8250 : public Uart

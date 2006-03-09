@@ -72,11 +72,11 @@ PciDev::PciDev(Params *p)
 
 Fault
 PciDev::read(MemReqPtr &req, uint8_t *data)
-{ return No_Fault; }
+{ return NoFault; }
 
 Fault
 PciDev::write(MemReqPtr &req, const uint8_t *data)
-{ return No_Fault; }
+{ return NoFault; }
 
 Fault
 PciDev::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)

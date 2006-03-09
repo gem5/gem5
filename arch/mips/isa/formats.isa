@@ -1,0 +1,35 @@
+// -*- mode:c++ -*-
+
+//Templates from this format are used later
+//Include the basic format
+##include "m5/arch/mips/isa/formats/basic.isa"
+
+//Include the basic format
+##include "m5/arch/mips/isa/formats/noop.isa"
+
+//Include utility formats/functions
+##include "m5/arch/mips/isa/formats/util.isa"
+
+//Include the cop0 formats
+##include "m5/arch/mips/isa/formats/cop0.isa"
+
+//Include the integer formats
+##include "m5/arch/mips/isa/formats/int.isa"
+
+//Include the floatOp format
+##include "m5/arch/mips/isa/formats/fp.isa"
+
+//Include the mem format
+##include "m5/arch/mips/isa/formats/mem.isa"
+
+//Include the trap format
+##include "m5/arch/mips/isa/formats/trap.isa"
+
+//Include the branch format
+##include "m5/arch/mips/isa/formats/branch.isa"
+
+//Include the noop format
+##include "m5/arch/mips/isa/formats/unimp.isa"
+
+//Include the noop format
+##include "m5/arch/mips/isa/formats/unknown.isa"

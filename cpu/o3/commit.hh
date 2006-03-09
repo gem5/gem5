@@ -52,7 +52,6 @@ class SimpleCommit
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::ISA ISA;
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;

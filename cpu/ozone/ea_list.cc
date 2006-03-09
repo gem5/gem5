@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/alpha/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/ooo_cpu/ea_list.hh"
 
