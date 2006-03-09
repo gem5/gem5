@@ -825,8 +825,8 @@ SimpleCPU::tick()
 #else
         // go to the next instruction
         xc->regs.pc = xc->regs.npc;
-        xc->regs.npc = xc->regs.nnpc;
-        xc->regs.nnpc += sizeof(MachInst);
+        xc->setNextPC(xc->readNextNPC());
+        xc->setNextNPC(xc->readNextNPC() + sizeof(MachInst));
 #endif
 
     }

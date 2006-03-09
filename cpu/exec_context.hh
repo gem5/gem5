@@ -422,6 +422,11 @@ class ExecContext
         regs.npc = val;
     }
 
+    uint64_t readNextNPC()
+    {
+        return regs.nnpc;
+    }
+
     void setNextNPC(uint64_t val)
     {
         regs.nnpc = val;
