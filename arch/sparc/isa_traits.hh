@@ -78,7 +78,21 @@ namespace SparcISA
         // semantically meaningful register indices
         ZeroReg = 0	// architecturally meaningful
         // the rest of these depend on the ABI
-    };
+        SyscallNumReg = 1,
+        ArgumentReg0 = 8,
+        ArgumentReg1 = 9,
+        ArgumentReg2 = 10,
+        ArgumentReg3 = 11,
+        ArgumentReg4 = 12,
+        ArgumentReg5 = 13,
+        StackPoniterReg = 14,
+        ReturnAddressReg = 31, // Post Call, precall, 15
+        ReturnValueReg = 8, // Post return, 24 is pre-return.
+        // Some OS use a second register (o1) to return a second value
+        // for some syscalls
+        SyscallPseudoReturnReg = 9,
+        FramePointerReg = 30
+};
     typedef uint64_t IntReg;
 
     class IntRegFile
@@ -455,6 +469,22 @@ namespace SparcISA
      */
     template <class XC>
     static void zeroRegisters(XC *xc);
+
+    static inline setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+    {
+        // check for error condition.  SPARC syscall convention is to
+        // indicate success/failure in reg the carry bit of the ccr
+        // and put the return value itself in the standard return value reg ().
+        if (return_value.successful()) {
+            // no error
+            regs->miscRegFile.ccrFields.iccFields.c = 0;
+            regs->intRegFile[ReturnValueReg] = return_value.value();
+        } else {
+            // got an error, return details
+            regs->miscRegFile.ccrFields.iccFields.c = 1;
+            regs->intRegFile[ReturnValueReg] = -return_value.value();
+        }
+    }
 };
 
 const int VMPageSize   = TheISA::VMPageSize;

@@ -75,15 +75,6 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         return NULL;
     }
     else {
-//        if (ehdr.e_ident[EI_CLASS] == ELFCLASS32)
-//            panic("32 bit ELF Binary, Not Supported");
-        /* @todo this emachine value isn't offical yet.
-         *       so we probably shouldn't check it. */
-//        if (ehdr.e_machine != EM_ALPHA)
-//            panic("Non Alpha Binary, Not Supported");
-
-        elf_end(elf);
-
         //Detect the architecture
         //Versioning issues in libelf need to be resolved to get the correct
         //SPARC constants.
@@ -109,17 +100,61 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         //Detect the operating system
         switch (ehdr.e_ident[EI_OSABI])
         {
+
           case ELFOSABI_LINUX:
             opSys = ObjectFile::Linux;
             break;
           case ELFOSABI_SOLARIS:
             opSys = ObjectFile::Solaris;
+            break;
           case ELFOSABI_TRU64:
             opSys = ObjectFile::Tru64;
+            break;
           default:
             opSys = ObjectFile::UnknownOpSys;
         }
 
+        //take a look at the .note.ABI section
+        //It can let us know what's what.
+        if (opSys == ObjectFile::UnknownOpSys)
+        {
+            Elf_Scn *section;
+            GElf_Shdr shdr;
+            Elf_Data *data;
+            uint32_t osAbi;;
+            int secIdx = 1;
+
+            // Get the first section
+            section = elf_getscn(elf, secIdx);
+
+            // While there are no more sections
+            while (section != NULL) {
+                gelf_getshdr(section, &shdr);
+                if (shdr.sh_type == SHT_NOTE && !strcmp(".note.ABI-tag",
+                            elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name))) {
+                    // we have found a ABI note section
+                    // Check the 5th 32bit word for OS  0 == linux, 1 == hurd,
+                    // 2 == solaris, 3 == freebsd
+                    data = elf_rawdata(section, NULL);
+                    assert(data->d_buf);
+                    if(ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
+                        osAbi = htole(((uint32_t*)data->d_buf)[4]);
+                    else
+                        osAbi = htobe(((uint32_t*)data->d_buf)[4]);
+
+                    switch(osAbi) {
+                      case 0:
+                        opSys = ObjectFile::Linux;
+                        break;
+                      case 2:
+                        opSys = ObjectFile::Solaris;
+                        break;
+                    }
+                } // if section found
+            section = elf_getscn(elf, ++secIdx);
+            } // while sections
+        }
+        elf_end(elf);
         return new ElfObject(fname, fd, len, data, arch, opSys);
     }
 }

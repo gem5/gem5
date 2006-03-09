@@ -324,4 +324,118 @@ fcntlFunc(SyscallDesc *desc, int num, Process *process,
     }
 }
 
+SyscallReturn
+pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+         ExecContext *xc)
+{
+    int fds[2], sim_fds[2];
+    int pipe_retval = pipe(fds);
+
+    if (pipe_retval < 0) {
+        // error
+        return pipe_retval;
+    }
+
+    sim_fds[0] = process->alloc_fd(fds[0]);
+    sim_fds[1] = process->alloc_fd(fds[1]);
+
+    // Alpha Linux convention for pipe() is that fd[0] is returned as
+    // the return value of the function, and fd[1] is returned in r20.
+    xc->regs.intRegFile[SyscallPseudoReturnReg] = sim_fds[1];
+    return sim_fds[0];
+}
+
+
+SyscallReturn
+getpidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Make up a PID.  There's no interprocess communication in
+    // fake_syscall mode, so there's no way for a process to know it's
+    // not getting a unique value.
+
+    xc->regs.intRegFile[SyscallPseudoReturnReg] = 99;
+    return 100;
+}
+
+
+SyscallReturn
+getuidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Make up a UID and EUID... it shouldn't matter, and we want the
+    // simulation to be deterministic.
+
+    // EUID goes in r20.
+    xc->regs.intRegFile[SyscallPseudoReturnReg] = 100;	// EUID
+    return 100;		// UID
+}
+
+
+SyscallReturn
+getgidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Get current group ID.  EGID goes in r20.
+    xc->regs.intRegFile[SyscallPseudoReturnReg] = 100;
+    return 100;
+}
+
+
+SyscallReturn
+setuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // can't fathom why a benchmark would call this.
+    warn("Ignoring call to setuid(%d)\n", xc->getSyscallArg(0));
+    return 0;
+}
+
+SyscallReturn
+getpidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    // Make up a PID.  There's no interprocess communication in
+    // fake_syscall mode, so there's no way for a process to know it's
+    // not getting a unique value.
+
+    xc->regs.intRegFile[SyscallPseudoReturnReg] = 99;
+    return 100;
+}
+
+SyscallReturn
+getppidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 99;
+}
+
+SyscallReturn
+getuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;		// UID
+}
+
+SyscallReturn
+geteuidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;		// UID
+}
+
+SyscallReturn
+getgidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;
+}
+
+SyscallReturn
+getegidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ExecContext *xc)
+{
+    return 100;
+}
+
 

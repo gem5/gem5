@@ -53,6 +53,44 @@ int DTB_ASN_ASN(uint64_t reg);
 int ITB_ASN_ASN(uint64_t reg);
 }
 
+#if !FULL_SYSTEM
+class SyscallReturn {
+        public:
+           template <class T>
+           SyscallReturn(T v, bool s)
+           {
+               retval = (uint64_t)v;
+               success = s;
+           }
+
+           template <class T>
+           SyscallReturn(T v)
+           {
+               success = (v >= 0);
+               retval = (uint64_t)v;
+           }
+
+           ~SyscallReturn() {}
+
+           SyscallReturn& operator=(const SyscallReturn& s) {
+               retval = s.retval;
+               success = s.success;
+               return *this;
+           }
+
+           bool successful() { return success; }
+           uint64_t value() { return retval; }
+
+
+       private:
+           uint64_t retval;
+           bool success;
+};
+
+#endif
+
+
+
 namespace AlphaISA
 {
 
@@ -82,6 +120,7 @@ namespace AlphaISA
         ProcedureValueReg = 27,
         ReturnAddressReg = 26,
         ReturnValueReg = 0,
+        SyscallNumReg = 0,
         FramePointerReg = 15,
         ArgumentReg0 = 16,
         ArgumentReg1 = 17,
@@ -89,6 +128,10 @@ namespace AlphaISA
         ArgumentReg3 = 19,
         ArgumentReg4 = 20,
         ArgumentReg5 = 21,
+        SyscallSuccessReg = 19,
+        // Some OS use a second register (o1) to return a second value
+        // for some syscalls
+        SyscallPseudoReturnReg = ArgumentReg4,
 
         LogVMPageSize = 13,	// 8K bytes
         VMPageSize = (1 << LogVMPageSize),
@@ -303,6 +346,21 @@ extern const int reg_redir[NumIntRegs];
     template <class XC>
     void zeroRegisters(XC *xc);
 
+    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+    {
+        // check for error condition.  Alpha syscall convention is to
+        // indicate success/failure in reg a3 (r19) and put the
+        // return value itself in the standard return value reg (v0).
+        if (return_value.successful()) {
+            // no error
+            regs->intRegFile[SyscallSuccessReg] = 0;
+            regs->intRegFile[ReturnValueReg] = return_value.value();
+        } else {
+            // got an error, return details
+            regs->intRegFile[SyscallSuccessReg] = (IntReg) -1;
+            regs->intRegFile[ReturnValueReg] = -return_value.value();
+        }
+    }
 
 //typedef AlphaISA TheISA;
 
@@ -335,42 +393,6 @@ extern const int reg_redir[NumIntRegs];
 //const int BranchPredAddrShiftAmt = TheISA::BranchPredAddrShiftAmt;
 const Addr MaxAddr = (Addr)-1;
 };
-
-#if !FULL_SYSTEM
-class SyscallReturn {
-        public:
-           template <class T>
-           SyscallReturn(T v, bool s)
-           {
-               retval = (uint64_t)v;
-               success = s;
-           }
-
-           template <class T>
-           SyscallReturn(T v)
-           {
-               success = (v >= 0);
-               retval = (uint64_t)v;
-           }
-
-           ~SyscallReturn() {}
-
-           SyscallReturn& operator=(const SyscallReturn& s) {
-               retval = s.retval;
-               success = s.success;
-               return *this;
-           }
-
-           bool successful() { return success; }
-           uint64_t value() { return retval; }
-
-
-       private:
-           uint64_t retval;
-           bool success;
-};
-
-#endif
 
 static inline AlphaISA::ExtMachInst
 AlphaISA::makeExtMI(AlphaISA::MachInst inst, const uint64_t &pc) {

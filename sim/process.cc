@@ -354,7 +354,7 @@ LiveProcess::syscall(ExecContext *xc)
 {
     num_syscalls++;
 
-    int64_t callnum = xc->regs.intRegFile[ReturnValueReg];
+    int64_t callnum = xc->regs.intRegFile[SyscallNumReg];
 
     SyscallDesc *desc = getDesc(callnum);
     if (desc == NULL)

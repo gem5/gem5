@@ -27,7 +27,6 @@
  */
 
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/common_syscall_emul.hh"
 #include "arch/alpha/tru64/process.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64.hh"
@@ -179,11 +178,11 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 17 */ SyscallDesc("obreak", obreakFunc),
     /* 18 */ SyscallDesc("pre_F64_getfsstat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
-    /* 20 */ SyscallDesc("getpid", getpidFunc),
+    /* 20 */ SyscallDesc("getpid", getpidPseudoFunc),
     /* 21 */ SyscallDesc("mount", unimplementedFunc),
     /* 22 */ SyscallDesc("unmount", unimplementedFunc),
     /* 23 */ SyscallDesc("setuid", setuidFunc),
-    /* 24 */ SyscallDesc("getuid", getuidFunc),
+    /* 24 */ SyscallDesc("getuid", getuidPseudoFunc),
     /* 25 */ SyscallDesc("exec_with_loader", unimplementedFunc),
     /* 26 */ SyscallDesc("ptrace", unimplementedFunc),
     /* 27 */ SyscallDesc("recvmsg", unimplementedFunc),
@@ -206,7 +205,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 44 */ SyscallDesc("profil", unimplementedFunc),
     /* 45 */ SyscallDesc("open", openFunc<Tru64>),
     /* 46 */ SyscallDesc("obsolete osigaction", unimplementedFunc),
-    /* 47 */ SyscallDesc("getgid", getgidFunc),
+    /* 47 */ SyscallDesc("getgid", getgidPseudoFunc),
     /* 48 */ SyscallDesc("sigprocmask", ignoreFunc),
     /* 49 */ SyscallDesc("getlogin", unimplementedFunc),
     /* 50 */ SyscallDesc("setlogin", unimplementedFunc),

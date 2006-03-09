@@ -243,6 +243,54 @@ SyscallReturn fchownFunc(SyscallDesc *desc, int num,
 SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
                         Process *process, ExecContext *xc);
 
+/// Target setuid() handler.
+SyscallReturn setuidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getpid() handler.
+SyscallReturn getpidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getuid() handler.
+SyscallReturn getuidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getgid() handler.
+SyscallReturn getgidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getppid() handler.
+SyscallReturn getppidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target geteuid() handler.
+SyscallReturn geteuidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getegid() handler.
+SyscallReturn getegidFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+
+
+/// Pseudo Funcs  - These functions use a different return convension,
+/// returning a second value in a register other than the normal return register
+SyscallReturn pipePseudoFunc(SyscallDesc *desc, int num,
+                             Process *process, ExecContext *xc);
+
+/// Target getpidPseudo() handler.
+SyscallReturn getpidPseudoFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getuidPseudo() handler.
+SyscallReturn getuidPseudoFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+/// Target getgidPseudo() handler.
+SyscallReturn getgidPseudoFunc(SyscallDesc *desc, int num,
+                               Process *p, ExecContext *xc);
+
+
 /// This struct is used to build an target-OS-dependent table that
 /// maps the target's open() flags to the host open() flags.
 struct OpenFlagTransTable {

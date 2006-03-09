@@ -65,7 +65,6 @@ full_system_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
-	common_syscall_emul.cc
 	linux/process.cc
 	tru64/process.cc
 	process.cc

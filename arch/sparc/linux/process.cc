@@ -41,30 +41,6 @@
 using namespace std;
 using namespace SparcISA;
 
-/// Target pipe() handler.  Even though this is a generic Posix call,
-/// the Alpha return convention is funky, so that makes it
-/// Alpha-specific.
-SyscallReturn
-pipeFunc(SyscallDesc *desc, int callnum, Process *process,
-         ExecContext *xc)
-{
-    int fds[2], sim_fds[2];
-    int pipe_retval = pipe(fds);
-
-    if (pipe_retval < 0) {
-        // error
-        return pipe_retval;
-    }
-
-    sim_fds[0] = process->alloc_fd(fds[0]);
-    sim_fds[1] = process->alloc_fd(fds[1]);
-
-    // Alpha Linux convention for pipe() is that fd[0] is returned as
-    // the return value of the function, and fd[1] is returned in r20.
-    xc->regs.intRegFile[20] = sim_fds[1];
-    return sim_fds[0];
-}
-
 
 /// Target uname() handler.
 static SyscallReturn
@@ -77,95 +53,38 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->nodename, "m5.eecs.umich.edu");
     strcpy(name->release, "2.4.20");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
-    strcpy(name->machine, "alpha");
+    strcpy(name->machine, "sparc");
 
     name.copyOut(xc->mem);
     return 0;
 }
 
-/// Target osf_getsysyinfo() handler.  Even though this call is
-/// borrowed from Tru64, the subcases that get used appear to be
-/// different in practice from those used by Tru64 processes.
-static SyscallReturn
-osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
-{
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
-
-    switch (op) {
-
-      case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
-          // I don't think this exactly matches the HW FPCR
-          *fpcr = 0;
-          fpcr.copyOut(xc->mem);
-          return 0;
-      }
-
-      default:
-        cerr << "osf_getsysinfo: unknown op " << op << endl;
-        abort();
-        break;
-    }
-
-    return 1;
-}
-
-/// Target osf_setsysinfo() handler.
-static SyscallReturn
-osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
-{
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
-
-    switch (op) {
-
-      case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
-          // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->mem);
-          DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                   " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
-          return 0;
-      }
-
-      default:
-        cerr << "osf_setsysinfo: unknown op " << op << endl;
-        abort();
-        break;
-    }
-
-    return 1;
-}
-
 SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("restart_syscall", unimplimentedFunc);
-    /*  1 */ SyscallDesc("exit", unimplimentedFunc);
+    /*  1 */ SyscallDesc("exit", exitFunc);
     /*  2 */ SyscallDesc("fork", unimplimentedFunc);
-    /*  3 */ SyscallDesc("read", unimplimentedFunc);
-    /*  4 */ SyscallDesc("write", unimplimentedFunc);
-    /*  5 */ SyscallDesc("open", unimplimentedFunc);
-    /*  6 */ SyscallDesc("close", unimplimentedFunc);
+    /*  3 */ SyscallDesc("read", readFunc);
+    /*  4 */ SyscallDesc("write", writeFunc);
+    /*  5 */ SyscallDesc("open", openFunc<Linux>);
+    /*  6 */ SyscallDesc("close", closeFinc);
     /*  7 */ SyscallDesc("wait4", unimplimentedFunc);
     /*  8 */ SyscallDesc("creat", unimplimentedFunc);
     /*  9 */ SyscallDesc("link", unimplimentedFunc);
-    /* 10 */ SyscallDesc("unlink", unimplimentedFunc);
+    /* 10 */ SyscallDesc("unlink", unlinkFunc);
     /* 11 */ SyscallDesc("execv", unimplimentedFunc);
     /* 12 */ SyscallDesc("chdir", unimplimentedFunc);
-    /* 13 */ SyscallDesc("chown", unimplimentedFunc);
+    /* 13 */ SyscallDesc("chown", chownFunc);
     /* 14 */ SyscallDesc("mknod", unimplimentedFunc);
-    /* 15 */ SyscallDesc("chmod", unimplimentedFunc);
+    /* 15 */ SyscallDesc("chmod", chmodFunc<Linux>);
     /* 16 */ SyscallDesc("lchown", unimplimentedFunc);
-    /* 17 */ SyscallDesc("brk", unimplimentedFunc);
+    /* 17 */ SyscallDesc("brk", obreakFunc);
     /* 18 */ SyscallDesc("perfctr", unimplimentedFunc);
-    /* 19 */ SyscallDesc("lseek", unimplimentedFunc);
-    /* 20 */ SyscallDesc("getpid", unimplimentedFunc);
+    /* 19 */ SyscallDesc("lseek", lseekFunc);
+    /* 20 */ SyscallDesc("getpid", getpidFunc);
     /* 21 */ SyscallDesc("capget", unimplimentedFunc);
     /* 22 */ SyscallDesc("capset", unimplimentedFunc);
-    /* 23 */ SyscallDesc("setuid", unimplimentedFunc);
-    /* 24 */ SyscallDesc("getuid", unimplimentedFunc);
+    /* 23 */ SyscallDesc("setuid", setuidFunc);
+    /* 24 */ SyscallDesc("getuid", getuidFunc);
     /* 25 */ SyscallDesc("time", unimplimentedFunc);
     /* 26 */ SyscallDesc("ptrace", unimplimentedFunc);
     /* 27 */ SyscallDesc("alarm", unimplimentedFunc);
@@ -183,15 +102,15 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 39 */ SyscallDesc("sendfile", unimplimentedFunc);
     /* 40 */ SyscallDesc("lstat", unimplimentedFunc);
     /* 41 */ SyscallDesc("dup", unimplimentedFunc);
-    /* 42 */ SyscallDesc("pipe", unimplimentedFunc);
+    /* 42 */ SyscallDesc("pipe", pipePseudoFunc);
     /* 43 */ SyscallDesc("times", unimplimentedFunc);
     /* 44 */ SyscallDesc("getuid32", unimplimentedFunc);
     /* 45 */ SyscallDesc("umount2", unimplimentedFunc);
     /* 46 */ SyscallDesc("setgid", unimplimentedFunc);
-    /* 47 */ SyscallDesc("getgid", unimplimentedFunc);
+    /* 47 */ SyscallDesc("getgid", getgidFunc);
     /* 48 */ SyscallDesc("signal", unimplimentedFunc);
-    /* 49 */ SyscallDesc("geteuid", unimplimentedFunc);
-    /* 50 */ SyscallDesc("getegid", unimplimentedFunc);
+    /* 49 */ SyscallDesc("geteuid", geteuidFunc);
+    /* 50 */ SyscallDesc("getegid", getegidFunc);
     /* 51 */ SyscallDesc("acct", unimplimentedFunc);
     /* 52 */ SyscallDesc("memory_ordering", unimplimentedFunc);
     /* 53 */ SyscallDesc("getgid32", unimplimentedFunc);
@@ -330,7 +249,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 186 */ SyscallDesc("fremovexattr", unimplimentedFunc);
     /* 187 */ SyscallDesc("tkill", unimplimentedFunc);
     /* 188 */ SyscallDesc("exit_group", unimplimentedFunc);
-    /* 189 */ SyscallDesc("uname", unimplimentedFunc);
+    /* 189 */ SyscallDesc("uname", unameFunc);
     /* 190 */ SyscallDesc("init_module", unimplimentedFunc);
     /* 191 */ SyscallDesc("personality", unimplimentedFunc);
     /* 192 */ SyscallDesc("remap_file_pages", unimplimentedFunc);
@@ -338,7 +257,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 194 */ SyscallDesc("epoll_ctl", unimplimentedFunc);
     /* 195 */ SyscallDesc("epoll_wait", unimplimentedFunc);
     /* 196 */ SyscallDesc("ioprio_set", unimplimentedFunc);
-    /* 197 */ SyscallDesc("getppid", unimplimentedFunc);
+    /* 197 */ SyscallDesc("getppid", getppidFunc);
     /* 198 */ SyscallDesc("sigaction", unimplimentedFunc);
     /* 199 */ SyscallDesc("sgetmask", unimplimentedFunc);
     /* 200 */ SyscallDesc("ssetmask", unimplimentedFunc);
@@ -437,6 +356,10 @@ SparcLinuxProcess::SparcLinuxProcess(const std::string &name,
     : LiveProcess(name, objFile, stdin_fd, stdout_fd, stderr_fd, argv, envp),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
+    // The sparc syscall table must be <= 283 entries because that is all there
+    // is space for.
+    assert(Num_Syscall_Descs <= 283);
+
     init_regs->intRegFile[0] = 0;
 }
 
