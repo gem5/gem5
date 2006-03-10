@@ -32,7 +32,7 @@
 namespace LittleEndianGuest {}
 using namespace LittleEndianGuest;
 
-//#include "arch/alpha/faults.hh"
+#include "arch/alpha/types.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
@@ -92,10 +92,6 @@ class SyscallReturn {
 namespace AlphaISA
 {
 
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
-    typedef uint8_t  RegIndex;
-
     const int NumIntArchRegs = 32;
     const int NumPALShadowRegs = 8;
     const int NumFloatArchRegs = 32;
@@ -141,27 +137,7 @@ namespace AlphaISA
     const int NumFloatRegs = NumFloatArchRegs;
     const int NumMiscRegs = NumMiscArchRegs;
 
-    // These enumerate all the registers for dependence tracking.
-    enum DependenceTags {
-        // 0..31 are the integer regs 0..31
-        // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-        FP_Base_DepTag = 40,
-        Ctrl_Base_DepTag = 72,
-        Fpcr_DepTag = 72,		// floating point control register
-        Uniq_DepTag = 73,
-        Lock_Flag_DepTag = 74,
-        Lock_Addr_DepTag = 75,
-        IPR_Base_DepTag = 76
-    };
-
-    typedef uint64_t IntReg;
     typedef IntReg IntRegFile[NumIntRegs];
-
-    // floating point register file entry type
-    typedef union {
-        uint64_t q;
-        double d;
-    } FloatReg;
 
     typedef union {
         uint64_t q[NumFloatRegs];	// integer qword view
@@ -178,16 +154,11 @@ extern const int reg_redir[NumIntRegs];
 
 #if FULL_SYSTEM
 
-    typedef uint64_t InternalProcReg;
-
 #include "arch/alpha/isa_fullsys_traits.hh"
 
 #else
     const int NumInternalProcRegs = 0;
 #endif
-
-    // control register file contents
-    typedef uint64_t MiscReg;
     class MiscRegFile {
       protected:
         uint64_t	fpcr;		// floating point condition codes
@@ -231,12 +202,6 @@ extern const int reg_redir[NumIntRegs];
 
     const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
-    typedef union {
-        IntReg  intreg;
-        FloatReg   fpreg;
-        MiscReg ctrlreg;
-    } AnyReg;
-
     struct RegFile {
         IntRegFile intRegFile;		// (signed) integer register file
         FloatRegFile floatRegFile;	// floating point register file
@@ -263,12 +228,6 @@ extern const int reg_redir[NumIntRegs];
 
     // return a no-op instruction... used for instruction fetch faults
     extern const ExtMachInst NoopMachInst;
-
-    enum annotes {
-        ANNOTE_NONE = 0,
-        // An impossible number for instruction annotations
-        ITOUCH_ANNOTE = 0xffffffff,
-    };
 
     static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
