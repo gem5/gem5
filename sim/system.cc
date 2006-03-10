@@ -217,5 +217,35 @@ printSystems()
     System::printSystems();
 }
 
+#if FULL_SYSTEM
+
+// In full system mode, only derived classes (e.g. AlphaLinuxSystem)
+// can be created directly.
+
 DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 
+#else
+
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
+
+    SimObjectParam<Memory *> physmem;
+
+END_DECLARE_SIM_OBJECT_PARAMS(System)
+
+BEGIN_INIT_SIM_OBJECT_PARAMS(System)
+
+    INIT_PARAM(physmem, "physical memory")
+
+END_INIT_SIM_OBJECT_PARAMS(System)
+
+CREATE_SIM_OBJECT(System)
+{
+    System::Params *p = new System::Params;
+    p->name = getInstanceName();
+    p->physmem = physmem;
+    return new System(p);
+}
+
+REGISTER_SIM_OBJECT("System", System)
+
+#endif

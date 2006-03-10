@@ -101,6 +101,7 @@ class System : public SimObject
 
   protected:
 
+#if FULL_SYSTEM
     /**
      * Fix up an address used to match PCs for hooking simulator
      * events on to target function executions.  See comment in
@@ -125,7 +126,6 @@ class System : public SimObject
         return NULL;
     }
 
-#if FULL_SYSTEM
     /** Add a function-based event to kernel code. */
     template <class T>
     T *System::addKernelFuncEvent(const char *lbl)
