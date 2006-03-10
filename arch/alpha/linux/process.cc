@@ -54,7 +54,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(xc->port);
+    name.copyOut(xc->getMemPort());
     return 0;
 }
 
@@ -74,7 +74,7 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
-          fpcr.copyOut(xc->port);
+          fpcr.copyOut(xc->getMemPort());
           return 0;
       }
 
@@ -100,7 +100,7 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
       case 14: { // SSI_IEEE_FP_CONTROL
           TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->port);
+          fpcr.copyIn(xc->getMemPort());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
           return 0;

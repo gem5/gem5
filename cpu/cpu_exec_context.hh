@@ -216,6 +216,8 @@ class CPUExecContext
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 
+    TranslatingPort *getMemPort() { return port; }
+
     BaseCPU *getCpuPtr() { return cpu; }
 
     ExecContext *getProxy() { return proxy; }
