@@ -37,6 +37,7 @@
 #include <string>
 #include <map>
 
+#include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "mem/request.hh"
 #include "mem/packet.hh"
@@ -59,7 +60,7 @@ class PageTable
 
   public:
 
-    PageTable(System *_system, Addr _pageSize = VMPageSize);
+    PageTable(System *_system, Addr _pageSize = TheISA::VMPageSize);
 
     ~PageTable();
 

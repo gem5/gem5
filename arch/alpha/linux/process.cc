@@ -32,7 +32,6 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "kern/linux/linux.hh"
-#include "mem/functional/functional.hh"
 
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
@@ -55,7 +54,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(xc->getMemPtr());
+    name.copyOut(xc->port);
     return 0;
 }
 
@@ -75,7 +74,7 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
-          fpcr.copyOut(xc->getMemPtr());
+          fpcr.copyOut(xc->port);
           return 0;
       }
 
@@ -101,7 +100,7 @@ osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
       case 14: { // SSI_IEEE_FP_CONTROL
           TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->getMemPtr());
+          fpcr.copyIn(xc->port);
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
           return 0;
@@ -567,15 +566,17 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
 
 AlphaLinuxProcess::AlphaLinuxProcess(const std::string &name,
                                      ObjectFile *objFile,
+                                     System *system,
                                      int stdin_fd,
                                      int stdout_fd,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
                                      std::vector<std::string> &envp)
-    : LiveProcess(name, objFile, stdin_fd, stdout_fd, stderr_fd, argv, envp),
+    : LiveProcess(name, objFile, system, stdin_fd, stdout_fd,
+            stderr_fd, argv, envp),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
-    init_regs->intRegFile[0] = 0;
+    //init_regs->intRegFile[0] = 0;
 }
 
 

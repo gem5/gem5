@@ -410,7 +410,7 @@ SimpleCPU::copySrcTranslate(Addr src)
     }
     return fault;
 #else
-    return No_Fault;
+    return NoFault;
 #endif
 }
 
@@ -462,7 +462,7 @@ SimpleCPU::copy(Addr dest)
     return fault;
 #else
     panic("copy not implemented");
-    return No_Fault;
+    return NoFault;
 #endif
 }
 
@@ -483,7 +483,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         }
 
         // @todo: Figure out a way to create a Fault from the packet result.
-        return No_Fault;
+        return NoFault;
     }
 
 //    memReq->reset(addr, sizeof(T), flags);
@@ -501,7 +501,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     Fault fault = cpuXC->translateDataReadReq(data_read_req);
 
     // Now do the access.
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
 #if SIMPLE_CPU_MEM_TIMING
         data_read_pkt = new Packet;
         data_read_pkt->cmd = Read;
@@ -525,7 +525,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         }
 
         // @todo: Figure out a way to create a Fault from the packet result.
-        return No_Fault;
+        return NoFault;
 #endif
     }
 /*
@@ -616,7 +616,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // translate to physical address
     Fault fault = cpuXC->translateDataWriteReq(data_write_req);
     // Now do the access.
-    if (fault == No_Fault) {
+    if (fault == NoFault) {
 #if SIMPLE_CPU_MEM_TIMING
         data_write_pkt = new Packet;
         data_write_pkt->cmd = Write;
@@ -974,7 +974,7 @@ SimpleCPU::tick()
                      IFETCH_FLAGS(xc->regs.pc));
 */
 
-        fault = xc->translateInstReq(ifetch_req);
+        fault = cpuXC->translateInstReq(ifetch_req);
 
         if (fault == NoFault) {
 #if SIMPLE_CPU_MEM_TIMING

@@ -61,6 +61,8 @@ typedef struct stat global_stat;
 typedef struct statfs global_statfs;
 typedef struct dirent global_dirent;
 
+class TranslatingPort;
+
 ///
 /// This class encapsulates the types, structures, constants,
 /// functions, and syscall-number mappings specific to the Alpha Tru64
@@ -540,7 +542,7 @@ class Tru64 {
     /// memory space.  Used by stat(), fstat(), and lstat().
     template <class T>
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, global_stat *host)
+    copyOutStatBuf(TranslatingPort *mem, Addr addr, global_stat *host)
     {
         TypedBufferArg<T> tgt(addr);
 
@@ -566,7 +568,7 @@ class Tru64 {
     /// memory space.  Used by statfs() and fstatfs().
     template <class T>
     static void
-    copyOutStatfsBuf(FunctionalMemory *mem, Addr addr, global_statfs *host)
+    copyOutStatfsBuf(TranslatingPort *mem, Addr addr, global_statfs *host)
     {
         TypedBufferArg<T> tgt(addr);
 
@@ -590,13 +592,13 @@ class Tru64 {
 
     class F64 {
       public:
-        static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatBuf(TranslatingPort *mem, Addr addr,
                                    global_stat *host)
         {
             Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
         }
 
-        static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatfsBuf(TranslatingPort *mem, Addr addr,
                                      global_statfs *host)
         {
             Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
@@ -605,13 +607,13 @@ class Tru64 {
 
     class PreF64 {
       public:
-        static void copyOutStatBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatBuf(TranslatingPort *mem, Addr addr,
                                    global_stat *host)
         {
             Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
         }
 
-        static void copyOutStatfsBuf(FunctionalMemory *mem, Addr addr,
+        static void copyOutStatfsBuf(TranslatingPort *mem, Addr addr,
                                      global_statfs *host)
         {
             Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
@@ -623,7 +625,7 @@ class Tru64 {
     /// the simulated memory space.  Used by pre_F64_stat(),
     /// pre_F64_fstat(), and pre_F64_lstat().
     static void
-    copyOutPreF64StatBuf(FunctionalMemory *mem, Addr addr, struct stat *host)
+    copyOutPreF64StatBuf(TranslatingPort *mem, Addr addr, struct stat *host)
     {
         TypedBufferArg<Tru64::pre_F64_stat> tgt(addr);
 
@@ -666,7 +668,7 @@ class Tru64 {
 
         // just pass basep through uninterpreted.
         TypedBufferArg<int64_t> basep(tgt_basep);
-        basep.copyIn(xc->getMemPtr());
+        basep.copyIn(xc->port);
         long host_basep = (off_t)htog((int64_t)*basep);
         int host_result = getdirentries(fd, host_buf, tgt_nbytes, &host_basep);
 
@@ -693,7 +695,7 @@ class Tru64 {
             tgt_dp->d_reclen = tgt_bufsize;
             tgt_dp->d_namlen = namelen;
             strcpy(tgt_dp->d_name, host_dp->d_name);
-            tgt_dp.copyOut(xc->getMemPtr());
+            tgt_dp.copyOut(xc->port);
 
             tgt_buf_ptr += tgt_bufsize;
             host_buf_ptr += host_dp->d_reclen;
@@ -702,7 +704,7 @@ class Tru64 {
         delete [] host_buf;
 
         *basep = htog((int64_t)host_basep);
-        basep.copyOut(xc->getMemPtr());
+        basep.copyOut(xc->port);
 
         return tgt_buf_ptr - tgt_buf;
 #endif
@@ -716,7 +718,7 @@ class Tru64 {
         using TheISA::RegFile;
         TypedBufferArg<Tru64::sigcontext> sc(xc->getSyscallArg(0));
 
-        sc.copyIn(xc->getMemPtr());
+        sc.copyIn(xc->port);
 
         // Restore state from sigcontext structure.
         // Note that we'll advance PC <- NPC before the end of the cycle,
@@ -761,7 +763,7 @@ class Tru64 {
               elp->si_phz = htog(clk_hz);
               elp->si_boottime = htog(seconds_since_epoch); // seconds since epoch?
               elp->si_max_procs = htog(process->numCpus());
-              elp.copyOut(xc->getMemPtr());
+              elp.copyOut(xc->port);
               return 0;
           }
 
@@ -782,7 +784,7 @@ class Tru64 {
     {
         TypedBufferArg<Tru64::vm_stack> argp(xc->getSyscallArg(0));
 
-        argp.copyIn(xc->getMemPtr());
+        argp.copyIn(xc->port);
 
         // if the user chose an address, just let them have it.  Otherwise
         // pick one for them.
@@ -791,7 +793,7 @@ class Tru64 {
             int stack_size = (htog(argp->rsize) + htog(argp->ysize) +
                     htog(argp->gsize));
             process->next_thread_stack_base -= stack_size;
-            argp.copyOut(xc->getMemPtr());
+            argp.copyOut(xc->port);
         }
 
         return 0;
@@ -811,7 +813,7 @@ class Tru64 {
         TypedBufferArg<Tru64::nxm_task_attr> attrp(xc->getSyscallArg(0));
         TypedBufferArg<Addr> configptr_ptr(xc->getSyscallArg(1));
 
-        attrp.copyIn(xc->getMemPtr());
+        attrp.copyIn(xc->port);
 
         if (gtoh(attrp->nxm_version) != NXM_LIB_VERSION) {
             cerr << "nxm_task_init: thread library version mismatch! "
@@ -852,7 +854,7 @@ class Tru64 {
         config->nxm_slot_state = htog(slot_state_addr);
         config->nxm_rad[0] = htog(rad_state_addr);
 
-        config.copyOut(xc->getMemPtr());
+        config.copyOut(xc->port);
 
         // initialize the slot_state array and copy it out
         TypedBufferArg<Tru64::nxm_slot_state_t> slot_state(slot_state_addr,
@@ -865,7 +867,7 @@ class Tru64 {
                 (i == 0) ? Tru64::NXM_SLOT_BOUND : Tru64::NXM_SLOT_AVAIL;
         }
 
-        slot_state.copyOut(xc->getMemPtr());
+        slot_state.copyOut(xc->port);
 
         // same for the per-RAD "shared" struct.  Note that we need to
         // allocate extra bytes for the per-VP array which is embedded at
@@ -899,13 +901,13 @@ class Tru64 {
             }
         }
 
-        rad_state.copyOut(xc->getMemPtr());
+        rad_state.copyOut(xc->port);
 
         //
         // copy pointer to shared config area out to user
         //
         *configptr_ptr = htog(config_addr);
-        configptr_ptr.copyOut(xc->getMemPtr());
+        configptr_ptr.copyOut(xc->port);
 
         // Register this as a valid address range with the process
         process->nxm_start = base_addr;
@@ -942,7 +944,7 @@ class Tru64 {
         int thread_index = xc->getSyscallArg(2);
 
         // get attribute args
-        attrp.copyIn(xc->getMemPtr());
+        attrp.copyIn(xc->port);
 
         if (gtoh(attrp->version) != NXM_LIB_VERSION) {
             cerr << "nxm_thread_create: thread library version mismatch! "
@@ -967,7 +969,7 @@ class Tru64 {
 
         TypedBufferArg<Tru64::nxm_shared> rad_state(0x14000,
                                                     rad_state_size);
-        rad_state.copyIn(xc->getMemPtr());
+        rad_state.copyIn(xc->port);
 
         uint64_t uniq_val = gtoh(attrp->pthid) - gtoh(rad_state->nxm_uniq_offset);
 
@@ -978,7 +980,7 @@ class Tru64 {
 
             // This is supposed to be a port number.  Make something up.
             *kidp = htog(99);
-            kidp.copyOut(xc->getMemPtr());
+            kidp.copyOut(xc->port);
 
             return 0;
         } else if (gtoh(attrp->type) == Tru64::NXM_TYPE_VP) {
@@ -992,7 +994,7 @@ class Tru64 {
             ssp->nxm_u.pth_id = attrp->pthid;
             ssp->nxm_u.nxm_active = htog(uniq_val | 1);
 
-            rad_state.copyOut(xc->getMemPtr());
+            rad_state.copyOut(xc->port);
 
             Addr slot_state_addr = 0x12000 + sizeof(Tru64::nxm_config_info);
             int slot_state_size =
@@ -1002,7 +1004,7 @@ class Tru64 {
                 slot_state(slot_state_addr,
                            slot_state_size);
 
-            slot_state.copyIn(xc->getMemPtr());
+            slot_state.copyIn(xc->port);
 
             if (slot_state[thread_index] != Tru64::NXM_SLOT_AVAIL) {
                 cerr << "nxm_thread_createFunc: requested VP slot "
@@ -1014,7 +1016,7 @@ class Tru64 {
             // doesn't work anyway
             slot_state[thread_index] = Tru64::NXM_SLOT_BOUND;
 
-            slot_state.copyOut(xc->getMemPtr());
+            slot_state.copyOut(xc->port);
 
             // Find a free simulator execution context.
             for (int i = 0; i < process->numCpus(); ++i) {
@@ -1028,7 +1030,7 @@ class Tru64 {
                     // and get away with just sticking the thread index
                     // here.
                     *kidp = htog(thread_index);
-                    kidp.copyOut(xc->getMemPtr());
+                    kidp.copyOut(xc->port);
 
                     return 0;
                 }
@@ -1157,12 +1159,12 @@ class Tru64 {
     {
         TypedBufferArg<uint64_t> lockp(uaddr);
 
-        lockp.copyIn(xc->getMemPtr());
+        lockp.copyIn(xc->port);
 
         if (gtoh(*lockp) == 0) {
             // lock is free: grab it
             *lockp = htog(1);
-            lockp.copyOut(xc->getMemPtr());
+            lockp.copyOut(xc->port);
         } else {
             // lock is busy: disable until free
             process->waitList.push_back(Process::WaitRec(uaddr, xc));
@@ -1176,7 +1178,7 @@ class Tru64 {
     {
         TypedBufferArg<uint64_t> lockp(uaddr);
 
-        lockp.copyIn(xc->getMemPtr());
+        lockp.copyIn(xc->port);
         assert(*lockp != 0);
 
         // Check for a process waiting on the lock.
@@ -1185,7 +1187,7 @@ class Tru64 {
         // clear lock field if no waiting context is taking over the lock
         if (num_waiting == 0) {
             *lockp = 0;
-            lockp.copyOut(xc->getMemPtr());
+            lockp.copyOut(xc->port);
         }
     }
 
@@ -1212,12 +1214,12 @@ class Tru64 {
         Addr uaddr = xc->getSyscallArg(0);
         TypedBufferArg<uint64_t> lockp(uaddr);
 
-        lockp.copyIn(xc->getMemPtr());
+        lockp.copyIn(xc->port);
 
         if (gtoh(*lockp) == 0) {
             // lock is free: grab it
             *lockp = htog(1);
-            lockp.copyOut(xc->getMemPtr());
+            lockp.copyOut(xc->port);
             return 0;
         } else {
             return 1;
@@ -1272,7 +1274,7 @@ class Tru64 {
         TypedBufferArg<uint64_t> lockp(lock_addr);
 
         // user is supposed to acquire lock before entering
-        lockp.copyIn(xc->getMemPtr());
+        lockp.copyIn(xc->port);
         assert(gtoh(*lockp) != 0);
 
         m5_unlock_mutex(lock_addr, process, xc);

@@ -47,6 +47,8 @@
 
 #include "base/trace.hh"	// for DPRINTF
 
+#include "sim/byteswap.hh"
+
 
 using namespace std;
 

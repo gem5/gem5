@@ -32,7 +32,7 @@ namespace AlphaISA
 {
 
 LiveProcess *
-createProcess(const std::string &nm, ObjectFile * objFile,
+createProcess(const std::string &nm, ObjectFile * objFile, System *system,
         int stdin_fd, int stdout_fd, int stderr_fd,
         std::vector<std::string> &argv, std::vector<std::string> &envp)
 {
@@ -41,13 +41,13 @@ createProcess(const std::string &nm, ObjectFile * objFile,
         fatal("Object file does not match architecture.");
     switch (objFile->getOpSys()) {
       case ObjectFile::Tru64:
-        process = new AlphaTru64Process(nm, objFile,
+        process = new AlphaTru64Process(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
                                         argv, envp);
         break;
 
       case ObjectFile::Linux:
-        process = new AlphaLinuxProcess(nm, objFile,
+        process = new AlphaLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
                                         argv, envp);
         break;

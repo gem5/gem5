@@ -1,7 +1,6 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
-#include "arch/vtophys.hh"
 #include "mem/memory.hh"
 #include "sim/builder.hh"
 #include "arch/isa_traits.hh"
@@ -12,7 +11,7 @@
 #include "base/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
 #include "mem/functional/memory_control.hh"
-#include "targetarch/vtophys.hh"
+#include "arch/vtophys.hh"
 #endif
 
 using namespace std;
@@ -72,7 +71,6 @@ System::System(Params *p)
     DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
     DPRINTF(Loader, "Kernel loaded...\n");
 
-#if FULL_SYSTEM
     kernelBinning = new Kernel::Binning(this);
 #endif // FULL_SYSTEM
 

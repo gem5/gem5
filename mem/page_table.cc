@@ -34,6 +34,7 @@
 #include <map>
 #include <fstream>
 
+#include "arch/faults.hh"
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/trace.hh"
@@ -43,6 +44,7 @@
 #include "sim/system.hh"
 
 using namespace std;
+using namespace TheISA;
 
 PageTable::PageTable(System *_system, Addr _pageSize)
     : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
@@ -61,23 +63,23 @@ PageTable::page_check(Addr addr, int size) const
     if (size < sizeof(uint64_t)) {
         if (!isPowerOf2(size)) {
             panic("Invalid request size!\n");
-            return Machine_Check_Fault;
+            return genMachineCheckFault();
         }
 
         if ((size - 1) & addr)
-            return Alignment_Fault;
+            return genAlignmentFault();
     }
     else {
         if ((addr & (VMPageSize - 1)) + size > VMPageSize) {
             panic("Invalid request size!\n");
-            return Machine_Check_Fault;
+            return genMachineCheckFault();
         }
 
         if ((sizeof(uint64_t) - 1) & addr)
-            return Alignment_Fault;
+            return genAlignmentFault();
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 
@@ -123,7 +125,7 @@ PageTable::translate(CpuRequestPtr &req)
 {
     assert(pageAlign(req->vaddr + req->size - 1) == pageAlign(req->vaddr));
     if (!translate(req->vaddr, req->paddr)) {
-        return Machine_Check_Fault;
+        return genMachineCheckFault();
     }
     return page_check(req->paddr, req->size);
 }

@@ -48,7 +48,7 @@
 #include "mem/page_table.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class CPUExecContext;
 class ExecContext;

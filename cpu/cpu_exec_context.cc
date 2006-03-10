@@ -92,7 +92,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
 }
 
 CPUExecContext::CPUExecContext(RegFile *regFile)
-    : cpu(NULL), thread_num(-1), process(NULL), mem(NULL), asid(-1),
+    : cpu(NULL), thread_num(-1), process(NULL), asid(-1),
       func_exe_inst(0), storeCondFailures(0)
 {
     regs = *regFile;

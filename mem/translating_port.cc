@@ -27,10 +27,13 @@
  */
 
 #include <string>
+#include "arch/faults.hh"
 #include "base/chunk_generator.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "mem/page_table.hh"
+
+using namespace TheISA;
 
 TranslatingPort::TranslatingPort(Port *_port, PageTable *p_table)
     : port(_port), pTable(p_table)
@@ -48,13 +51,13 @@ TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
         if (!pTable->translate(gen.addr(),paddr))
-            return Machine_Check_Fault;
+            return genMachineCheckFault();
 
         port->readBlobFunctional(paddr, p + prevSize, gen.size());
         prevSize += gen.size();
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 Fault
@@ -72,7 +75,7 @@ TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);
             } else {
-                return Machine_Check_Fault;
+                return genMachineCheckFault();
             }
         }
 
@@ -80,7 +83,7 @@ TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
         prevSize += gen.size();
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 
@@ -98,14 +101,14 @@ TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size,
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);
             } else {
-                return Machine_Check_Fault;
+                return genMachineCheckFault();
             }
         }
 
         port->memsetBlobFunctional(paddr, val, gen.size());
     }
 
-    return No_Fault;
+    return NoFault;
 }
 
 
@@ -120,12 +123,12 @@ TranslatingPort::writeStringFunctional(Addr addr, const char *str)
     do {
         c = *str++;
         if (!pTable->translate(vaddr++,paddr))
-            return Machine_Check_Fault;
+            return genMachineCheckFault();
 
         port->writeBlobFunctional(paddr, &c, 1);
     } while (c);
 
-    return No_Fault;
+    return NoFault;
 }
 
 Fault
@@ -138,12 +141,12 @@ TranslatingPort::readStringFunctional(std::string &str, Addr addr)
 
     do {
         if (!pTable->translate(vaddr++,paddr))
-            return Machine_Check_Fault;
+            return genMachineCheckFault();
 
         port->readBlobFunctional(paddr, &c, 1);
         str += c;
     } while (c);
 
-    return No_Fault;
+    return NoFault;
 }
 

@@ -30,7 +30,7 @@
 #define __CPU_EXEC_CONTEXT_HH__
 
 #include "config/full_system.hh"
-#include "mem/mem_req.hh"
+#include "mem/request.hh"
 #include "sim/faults.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
@@ -43,8 +43,8 @@ class AlphaDTB;
 class AlphaITB;
 class BaseCPU;
 class Event;
-class FunctionalMemory;
 class PhysicalMemory;
+class TranslatingPort;
 class Process;
 class System;
 
@@ -79,6 +79,8 @@ class ExecContext
         Halted
     };
 
+    TranslatingPort * port;
+
     virtual ~ExecContext() { };
 
     virtual BaseCPU *getCpuPtr() = 0;
@@ -86,8 +88,6 @@ class ExecContext
     virtual void setCpuId(int id) = 0;
 
     virtual int readCpuId() = 0;
-
-    virtual FunctionalMemory *getMemPtr() = 0;
 
 #if FULL_SYSTEM
     virtual System *getSystemPtr() = 0;
@@ -148,11 +148,11 @@ class ExecContext
     virtual int getInstAsid() = 0;
     virtual int getDataAsid() = 0;
 
-    virtual Fault translateInstReq(MemReqPtr &req) = 0;
+    virtual Fault translateInstReq(CpuRequestPtr &req) = 0;
 
-    virtual Fault translateDataReadReq(MemReqPtr &req) = 0;
+    virtual Fault translateDataReadReq(CpuRequestPtr &req) = 0;
 
-    virtual Fault translateDataWriteReq(MemReqPtr &req) = 0;
+    virtual Fault translateDataWriteReq(CpuRequestPtr &req) = 0;
 
     // Also somewhat obnoxious.  Really only used for the TLB fault.
     // However, may be quite useful in SPARC.
@@ -249,8 +249,6 @@ class ProxyExecContext : public ExecContext
 
     int readCpuId() { return actualXC->readCpuId(); }
 
-    FunctionalMemory *getMemPtr() { return actualXC->getMemPtr(); }
-
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualXC->getSystemPtr(); }
 
@@ -310,13 +308,13 @@ class ProxyExecContext : public ExecContext
     int getInstAsid() { return actualXC->getInstAsid(); }
     int getDataAsid() { return actualXC->getDataAsid(); }
 
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(CpuRequestPtr &req)
     { return actualXC->translateInstReq(req); }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(CpuRequestPtr &req)
     { return actualXC->translateDataReadReq(req); }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(CpuRequestPtr &req)
     { return actualXC->translateDataWriteReq(req); }
 
     // @todo: Do I need this?

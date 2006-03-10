@@ -34,7 +34,7 @@
 #ifndef __MEM_REQUEST_HH__
 #define __MEM_REQUEST_HH__
 
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 class Request;
 class CpuRequest;

@@ -363,14 +363,12 @@ class CPUExecContext
     {
         panic("instRead not implemented");
         // return funcPhysMem->read(req, inst);
-        return No_Fault;
+        return NoFault;
     }
 
     void setCpuId(int id) { cpu_id = id; }
 
     int readCpuId() { return cpu_id; }
-
-    FunctionalMemory *getMemPtr() { return mem; }
 
     void copyArchRegs(ExecContext *xc);
 

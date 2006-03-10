@@ -44,10 +44,11 @@
 #include "sim/host.hh"
 #include "sim/builder.hh"
 #include "sim/eventq.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 
 
 using namespace std;
+using namespace TheISA;
 
 PhysicalMemory::MemResponseEvent::MemResponseEvent(Packet &pkt, MemoryPort* _m)
     : Event(&mainEventQueue, CPU_Tick_Pri), pkt(pkt), memoryPort(_m)

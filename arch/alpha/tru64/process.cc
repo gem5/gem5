@@ -30,7 +30,6 @@
 #include "arch/alpha/tru64/process.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64.hh"
-#include "mem/functional/functional.hh"
 #include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
@@ -51,7 +50,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "732");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(xc->getMemPtr());
+    name.copyOut(xc->port);
     return 0;
 }
 
@@ -68,21 +67,21 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
       case Tru64::GSI_MAX_CPU: {
           TypedBufferArg<uint32_t> max_cpu(xc->getSyscallArg(1));
           *max_cpu = htog((uint32_t)process->numCpus());
-          max_cpu.copyOut(xc->getMemPtr());
+          max_cpu.copyOut(xc->port);
           return 1;
       }
 
       case Tru64::GSI_CPUS_IN_BOX: {
           TypedBufferArg<uint32_t> cpus_in_box(xc->getSyscallArg(1));
           *cpus_in_box = htog((uint32_t)process->numCpus());
-          cpus_in_box.copyOut(xc->getMemPtr());
+          cpus_in_box.copyOut(xc->port);
           return 1;
       }
 
       case Tru64::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(xc->getSyscallArg(1));
           *physmem = htog((uint64_t)1024 * 1024);	// physical memory in KB
-          physmem.copyOut(xc->getMemPtr());
+          physmem.copyOut(xc->port);
           return 1;
       }
 
@@ -99,14 +98,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           infop->cpu_ex_binding = htog(0);
           infop->mhz = htog(667);
 
-          infop.copyOut(xc->getMemPtr());
+          infop.copyOut(xc->port);
           return 1;
       }
 
       case Tru64::GSI_PROC_TYPE: {
           TypedBufferArg<uint64_t> proc_type(xc->getSyscallArg(1));
           *proc_type = htog((uint64_t)11);
-          proc_type.copyOut(xc->getMemPtr());
+          proc_type.copyOut(xc->port);
           return 1;
       }
 
@@ -115,14 +114,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           strncpy((char *)bufArg.bufferPtr(),
                   "COMPAQ Professional Workstation XP1000",
                   nbytes);
-          bufArg.copyOut(xc->getMemPtr());
+          bufArg.copyOut(xc->port);
           return 1;
       }
 
       case Tru64::GSI_CLK_TCK: {
           TypedBufferArg<uint64_t> clk_hz(xc->getSyscallArg(1));
           *clk_hz = htog((uint64_t)1024);
-          clk_hz.copyOut(xc->getMemPtr());
+          clk_hz.copyOut(xc->port);
           return 1;
       }
 
@@ -531,12 +530,14 @@ AlphaTru64Process::getDesc(int callnum)
 
 AlphaTru64Process::AlphaTru64Process(const std::string &name,
                                      ObjectFile *objFile,
+                                     System *system,
                                      int stdin_fd,
                                      int stdout_fd,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
                                      std::vector<std::string> &envp)
-    : LiveProcess(name, objFile, stdin_fd, stdout_fd, stderr_fd, argv, envp),
+    : LiveProcess(name, objFile, system, stdin_fd, stdout_fd,
+            stderr_fd, argv, envp),
       Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
       Num_Mach_Syscall_Descs(sizeof(machSyscallDescs) / sizeof(SyscallDesc))
 {

@@ -36,7 +36,7 @@
 
 #include <algorithm>
 #include "base/intmath.hh"
-#include "targetarch/isa_traits.hh" // for Addr
+#include "arch/isa_traits.hh" // for Addr
 
 /**
  * This class takes an arbitrary memory region (address/length pair)

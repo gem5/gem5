@@ -36,7 +36,7 @@
 #define __MEM_PACKET_HH__
 
 #include "mem/request.hh"
-#include "targetarch/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "sim/root.hh"
 
 struct Packet;

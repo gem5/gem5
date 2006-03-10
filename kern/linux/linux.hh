@@ -46,6 +46,8 @@ class Linux {};
 
 #include "sim/syscall_emul.hh"
 
+class TranslatingPort;
+
 ///
 /// This class encapsulates the types, structures, constants,
 /// functions, and syscall-number mappings specific to the Alpha Linux
@@ -240,7 +242,7 @@ class Linux {
     /// memory space.  Used by stat(), fstat(), and lstat().
 #if !BSD_HOST
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, hst_stat *host)
+    copyOutStatBuf(TranslatingPort *mem, Addr addr, hst_stat *host)
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
@@ -264,7 +266,7 @@ class Linux {
     // Third version for bsd systems which no longer have any support for
     // the old stat() call and stat() is actually a stat64()
     static void
-    copyOutStatBuf(FunctionalMemory *mem, Addr addr, hst_stat64 *host)
+    copyOutStatBuf(TranslatingPort *mem, Addr addr, hst_stat64 *host)
     {
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
@@ -289,7 +291,7 @@ class Linux {
 
     // Same for stat64
     static void
-    copyOutStat64Buf(FunctionalMemory *mem, int fd, Addr addr, hst_stat64 *host)
+    copyOutStat64Buf(TranslatingPort *mem, int fd, Addr addr, hst_stat64 *host)
     {
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
