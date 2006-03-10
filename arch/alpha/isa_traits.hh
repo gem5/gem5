@@ -185,12 +185,14 @@ extern const int reg_redir[NumIntRegs];
 
 #if FULL_SYSTEM
       protected:
+        typedef uint64_t InternalProcReg;
+
         InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
 
       private:
-        MiscReg readIpr(int idx, Fault &fault, ExecContext *xc);
+        InternalProcReg readIpr(int idx, Fault &fault, ExecContext *xc);
 
-        Fault setIpr(int idx, uint64_t val, ExecContext *xc);
+        Fault setIpr(int idx, InternalProcReg val, ExecContext *xc);
 
         void copyIprs(ExecContext *xc);
 #endif
