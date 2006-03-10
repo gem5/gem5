@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/system.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"

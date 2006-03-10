@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <string>
 
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/system.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"

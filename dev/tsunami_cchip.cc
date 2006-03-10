@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"

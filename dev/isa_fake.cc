@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "dev/isa_fake.hh"

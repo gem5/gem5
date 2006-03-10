@@ -31,6 +31,7 @@
 
 #include <map>
 
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/faults.hh"
 #include "base/statistics.hh"

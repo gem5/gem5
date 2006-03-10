@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "dev/ide_ctrl.hh"

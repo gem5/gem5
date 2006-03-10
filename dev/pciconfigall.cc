@@ -35,6 +35,7 @@
 #include <vector>
 #include <bitset>
 
+#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
