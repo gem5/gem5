@@ -370,7 +370,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -417,7 +417,7 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
         return -EFAULT;
 
     uint32_t mode = xc->getSyscallArg(1);
@@ -470,7 +470,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
     return -EFAULT;
 
     struct stat hostBuf;
@@ -479,7 +479,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatBuf(xc->port, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatBuf(xc->getMemPort(), xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -508,7 +508,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStat64Buf(xc->port, fd, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStat64Buf(xc->getMemPort(), fd, xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -522,7 +522,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
       return -EFAULT;
 
     struct stat hostBuf;
@@ -531,7 +531,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatBuf(xc->port, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatBuf(xc->getMemPort(), xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -544,7 +544,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
       return -EFAULT;
 
 #if BSD_HOST
@@ -558,7 +558,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStat64Buf(xc->port, -1, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStat64Buf(xc->getMemPort(), -1, xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -582,7 +582,7 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatBuf(xc->port, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatBuf(xc->getMemPort(), xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -596,7 +596,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
       return -EFAULT;
 
     struct statfs hostBuf;
@@ -605,7 +605,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(xc->port, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatfsBuf(xc->getMemPort(), xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -628,7 +628,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(xc->port, xc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatfsBuf(xc->getMemPort(), xc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -652,11 +652,11 @@ writevFunc(SyscallDesc *desc, int callnum, Process *process,
     for (int i = 0; i < count; ++i)
     {
         typename OS::tgt_iovec tiov;
-        xc->port->readBlobFunctional(tiov_base + i*sizeof(typename OS::tgt_iovec),(uint8_t*)
+        xc->getMemPort()->readBlobFunctional(tiov_base + i*sizeof(typename OS::tgt_iovec),(uint8_t*)
                         &tiov, sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        xc->port->readBlobFunctional(gtoh(tiov.iov_base),
+        xc->getMemPort()->readBlobFunctional(gtoh(tiov.iov_base),
                         (uint8_t *)hiov[i].iov_base, hiov[i].iov_len);
     }
 
@@ -739,7 +739,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
             break;
     }
 
-    rlp.copyOut(xc->port);
+    rlp.copyOut(xc->getMemPort());
     return 0;
 }
 
@@ -756,7 +756,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
     tp->tv_sec = htog(tp->tv_sec);
     tp->tv_usec = htog(tp->tv_usec);
 
-    tp.copyOut(xc->port);
+    tp.copyOut(xc->getMemPort());
 
     return 0;
 }
@@ -770,11 +770,11 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (xc->port->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
+    if (xc->getMemPort()->readStringFunctional(path, xc->getSyscallArg(0)) != NoFault)
       return -EFAULT;
 
     TypedBufferArg<typename OS::timeval [2]> tp(xc->getSyscallArg(1));
-    tp.copyIn(xc->port);
+    tp.copyIn(xc->getMemPort());
 
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i)
@@ -826,7 +826,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
     rup->ru_nvcsw = 0;
     rup->ru_nivcsw = 0;
 
-    rup.copyOut(xc->port);
+    rup.copyOut(xc->getMemPort());
 
     return 0;
 }
