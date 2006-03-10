@@ -79,9 +79,9 @@ class ExecContext
         Halted
     };
 
-    TranslatingPort * port;
-
     virtual ~ExecContext() { };
+
+    virtual TranslatingPort *getMemPort() = 0;
 
     virtual BaseCPU *getCpuPtr() = 0;
 
@@ -242,6 +242,8 @@ class ProxyExecContext : public ExecContext
     XC *actualXC;
 
   public:
+
+    TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
 
     BaseCPU *getCpuPtr() { return actualXC->getCpuPtr(); }
 
