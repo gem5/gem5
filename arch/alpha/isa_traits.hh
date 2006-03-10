@@ -218,16 +218,6 @@ extern const int reg_redir[NumIntRegs];
     void restoreMachineReg(RegFile &regs, const AnyReg &reg,
                                   int regnum);
 
-#if 0
-    static void serializeSpecialRegs(const Serializable::Proxy &proxy,
-                                     const RegFile &regs);
-
-    static void unserializeSpecialRegs(const IniFile *db,
-                                       const std::string &category,
-                                       ConfigNode *node,
-                                       RegFile &regs);
-#endif
-
     /**
      * Function to insure ISA semantics about 0 registers.
      * @param xc The execution context.
