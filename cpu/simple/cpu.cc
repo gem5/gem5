@@ -941,9 +941,9 @@ SimpleCPU::tick()
 
     // maintain $r0 semantics
     cpuXC->setIntReg(ZeroReg, 0);
-#ifdef TARGET_ALPHA
+#if THE_ISA == ALPHA_ISA
     cpuXC->setFloatRegDouble(ZeroReg, 0.0);
-#endif // TARGET_ALPHA
+#endif // ALPHA_ISA
 
     if (status() == IcacheAccessComplete) {
         // We've already fetched an instruction and were stalled on an

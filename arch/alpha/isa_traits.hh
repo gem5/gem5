@@ -43,8 +43,6 @@ class FastCPU;
 class FullCPU;
 class Checkpoint;
 
-#define TARGET_ALPHA
-
 class StaticInst;
 class StaticInstPtr;
 

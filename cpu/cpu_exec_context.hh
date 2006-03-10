@@ -284,7 +284,7 @@ class CPUExecContext
     template <class T>
     Fault read(CpuRequestPtr &req, T &data)
     {
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
+#if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         if (req->flags & LOCKED) {
             req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
             req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
@@ -300,7 +300,7 @@ class CPUExecContext
     template <class T>
     Fault write(CpuRequestPtr &req, T &data)
     {
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
+#if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         ExecContext *xc;
 
         // If this is a store conditional, act appropriately

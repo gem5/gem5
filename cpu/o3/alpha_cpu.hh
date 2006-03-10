@@ -208,7 +208,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     template <class T>
     Fault read(MemReqPtr &req, T &data)
     {
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
+#if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         if (req->flags & LOCKED) {
             req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
             req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
@@ -230,7 +230,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     template <class T>
     Fault write(MemReqPtr &req, T &data)
     {
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
+#if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         ExecContext *xc;
 
         // If this is a store conditional, act appropriately
