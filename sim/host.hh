@@ -62,4 +62,6 @@ typedef int64_t Tick;
  */
 typedef uint64_t Addr;
 
+const Addr MaxAddr = (Addr)-1;
+
 #endif // __HOST_H__
