@@ -29,7 +29,6 @@
 #ifndef __ARCH_ALPHA_TYPES_HH__
 #define __ARCH_ALPHA_TYPES_HH__
 
-#include "config/full_system.hh"
 #include "sim/host.hh"
 
 namespace AlphaISA
@@ -59,10 +58,6 @@ namespace AlphaISA
         uint64_t q;
         double d;
     } FloatReg;
-
-#if FULL_SYSTEM
-    typedef uint64_t InternalProcReg;
-#endif
 
     // control register file contents
     typedef uint64_t MiscReg;
