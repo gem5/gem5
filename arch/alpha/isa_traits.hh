@@ -33,6 +33,7 @@ namespace LittleEndianGuest {}
 using namespace LittleEndianGuest;
 
 #include "arch/alpha/types.hh"
+#include "arch/alpha/constants.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
@@ -45,11 +46,6 @@ class Checkpoint;
 
 class StaticInst;
 class StaticInstPtr;
-
-namespace EV5 {
-int DTB_ASN_ASN(uint64_t reg);
-int ITB_ASN_ASN(uint64_t reg);
-}
 
 #if !FULL_SYSTEM
 class SyscallReturn {
@@ -87,55 +83,8 @@ class SyscallReturn {
 
 #endif
 
-
-
 namespace AlphaISA
 {
-
-    const int NumIntArchRegs = 32;
-    const int NumPALShadowRegs = 8;
-    const int NumFloatArchRegs = 32;
-    // @todo: Figure out what this number really should be.
-    const int NumMiscArchRegs = 32;
-
-    // Static instruction parameters
-    const int MaxInstSrcRegs = 3;
-    const int MaxInstDestRegs = 2;
-
-    // semantically meaningful register indices
-    const int ZeroReg = 31;	// architecturally meaningful
-    // the rest of these depend on the ABI
-    const int StackPointerReg = 30;
-    const int GlobalPointerReg = 29;
-    const int ProcedureValueReg = 27;
-    const int ReturnAddressReg = 26;
-    const int ReturnValueReg = 0;
-    const int FramePointerReg = 15;
-    const int ArgumentReg0 = 16;
-    const int ArgumentReg1 = 17;
-    const int ArgumentReg2 = 18;
-    const int ArgumentReg3 = 19;
-    const int ArgumentReg4 = 20;
-    const int ArgumentReg5 = 21;
-    const int SyscallNumReg = ReturnValueReg;
-    const int SyscallPseudoReturnReg = ArgumentReg4;
-    const int SyscallSuccessReg = 19;
-
-
-
-    const int LogVMPageSize = 13;	// 8K bytes
-    const int VMPageSize = (1 << LogVMPageSize);
-
-    const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
-
-    const int WordBytes = 4;
-    const int HalfwordBytes = 2;
-    const int ByteBytes = 1;
-
-
-    const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
-    const int NumFloatRegs = NumFloatArchRegs;
-    const int NumMiscRegs = NumMiscArchRegs;
 
     typedef IntReg IntRegFile[NumIntRegs];
 
@@ -144,11 +93,6 @@ namespace AlphaISA
         double d[NumFloatRegs];		// double-precision floating point view
     } FloatRegFile;
 
-extern const Addr PageShift;
-extern const Addr PageBytes;
-extern const Addr PageMask;
-extern const Addr PageOffset;
-
 // redirected register map, really only used for the full system case.
 extern const int reg_redir[NumIntRegs];
 
@@ -156,8 +100,6 @@ extern const int reg_redir[NumIntRegs];
 
 #include "arch/alpha/isa_fullsys_traits.hh"
 
-#else
-    const int NumInternalProcRegs = 0;
 #endif
     class MiscRegFile {
       protected:
@@ -199,11 +141,6 @@ extern const int reg_redir[NumIntRegs];
         friend class RegFile;
     };
 
-    const int TotalNumRegs = NumIntRegs + NumFloatRegs +
-        NumMiscRegs + NumInternalProcRegs;
-
-    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
-
     struct RegFile {
         IntRegFile intRegFile;		// (signed) integer register file
         FloatRegFile floatRegFile;	// floating point register file
@@ -215,9 +152,9 @@ extern const int reg_redir[NumIntRegs];
 #if FULL_SYSTEM
         int intrflag;			// interrupt flag
         inline int instAsid()
-        { return EV5::ITB_ASN_ASN(miscRegs.ipr[IPR_ITB_ASN]); }
+        { return miscRegs.getInstAsid(); }
         inline int dataAsid()
-        { return EV5::DTB_ASN_ASN(miscRegs.ipr[IPR_DTB_ASN]); }
+        { return miscRegs.getDataAsid(); }
 #endif // FULL_SYSTEM
 
         void serialize(std::ostream &os);
@@ -227,9 +164,6 @@ extern const int reg_redir[NumIntRegs];
     static inline ExtMachInst makeExtMI(MachInst inst, const uint64_t &pc);
 
     StaticInstPtr decodeInst(ExtMachInst);
-
-    // return a no-op instruction... used for instruction fetch faults
-    extern const ExtMachInst NoopMachInst;
 
     static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
@@ -301,8 +235,6 @@ extern const int reg_redir[NumIntRegs];
     template <class XC>
     void zeroRegisters(XC *xc);
 
-    const Addr MaxAddr = (Addr)-1;
-
 #if !FULL_SYSTEM
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
@@ -334,10 +266,5 @@ AlphaISA::makeExtMI(AlphaISA::MachInst inst, const uint64_t &pc) {
     return AlphaISA::ExtMachInst(inst);
 #endif
 }
-
-#if FULL_SYSTEM
-
-#include "arch/alpha/ev5.hh"
-#endif
 
 #endif // __ARCH_ALPHA_ISA_TRAITS_HH__
