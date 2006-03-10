@@ -344,6 +344,7 @@ extern const int reg_redir[NumIntRegs];
 
     const Addr MaxAddr = (Addr)-1;
 
+#if !FULL_SYSTEM
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
         // check for error condition.  Alpha syscall convention is to
@@ -359,6 +360,7 @@ extern const int reg_redir[NumIntRegs];
             regs->intRegFile[ReturnValueReg] = -return_value.value();
         }
     }
+#endif
 };
 
 static inline AlphaISA::ExtMachInst
