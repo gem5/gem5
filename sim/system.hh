@@ -32,8 +32,9 @@
 #include <string>
 #include <vector>
 
-#include "base/statistics.hh"
 #include "base/loader/symtab.hh"
+#include "base/misc.hh"
+#include "base/statistics.hh"
 #include "cpu/pc_event.hh"
 #include "sim/sim_object.hh"
 #if FULL_SYSTEM

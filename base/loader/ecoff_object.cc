@@ -29,6 +29,7 @@
 #include <string>
 
 #include "base/loader/ecoff_object.hh"
+#include "base/misc.hh"
 #include "base/loader/symtab.hh"
 
 #include "base/trace.hh"	// for DPRINTF

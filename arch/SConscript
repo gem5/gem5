@@ -45,13 +45,17 @@ sources = []
 
 # List of headers to generate
 isa_switch_hdrs = Split('''
-	isa_traits.hh
-	tlb.hh
-	process.hh
 	arguments.hh
-	stacktrace.hh
-	vtophys.hh
+	constants.hh
 	faults.hh
+	isa_traits.hh
+	process.hh
+	registerfile.hh
+	stacktrace.hh
+	tlb.hh
+	types.hh
+	utility.hh
+	vtophys.hh
         ''')
 
 # Generate the header.  target[0] is the full path of the output

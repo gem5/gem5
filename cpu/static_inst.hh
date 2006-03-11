@@ -33,6 +33,7 @@
 #include <string>
 
 #include "base/hashmap.hh"
+#include "base/misc.hh"
 #include "base/refcnt.hh"
 #include "cpu/op_class.hh"
 #include "sim/host.hh"

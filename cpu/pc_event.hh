@@ -31,6 +31,8 @@
 
 #include <vector>
 
+#include "base/misc.hh"
+
 class ExecContext;
 class PCEventQueue;
 

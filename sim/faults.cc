@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/misc.hh"
 #include "sim/faults.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"

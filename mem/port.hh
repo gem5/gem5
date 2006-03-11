@@ -42,6 +42,7 @@
 #include <list>
 #include <inttypes.h>
 
+#include "base/misc.hh"
 #include "base/range.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"

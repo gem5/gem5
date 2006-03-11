@@ -42,6 +42,7 @@
 #include "libelf/gelf.h"
 
 #include "base/loader/elf_object.hh"
+#include "base/misc.hh"
 
 #include "base/loader/symtab.hh"
 
