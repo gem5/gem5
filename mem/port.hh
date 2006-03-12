@@ -191,29 +191,26 @@ class Port
     void getPeerAddressRanges(AddrRangeList &range_list, bool &owner)
     { peer->getDeviceAddressRanges(range_list, owner); }
 
-    // Do we need similar wrappers for sendAtomic()?  If not, should
-    // we drop the "Functional" from the names?
+    /** This function is a wrapper around sendFunctional()
+        that breaks a larger, arbitrarily aligned access into
+        appropriate chunks.  The default implementation can use
+        getBlockSize() to determine the block size and go from there.
+    */
+    void readBlob(Addr addr, uint8_t *p, int size);
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    void readBlobFunctional(Addr addr, uint8_t *p, int size);
-
-    /** This function is a wrapper around sendFunctional()
-        that breaks a larger, arbitrarily aligned access into
-        appropriate chunks.  The default implementation can use
-        getBlockSize() to determine the block size and go from there.
-    */
-    void writeBlobFunctional(Addr addr, uint8_t *p, int size);
+    void writeBlob(Addr addr, uint8_t *p, int size);
 
     /** Fill size bytes starting at addr with byte value val.  This
         should not need to be virtual, since it can be implemented in
-        terms of writeBlobFunctional().  However, it shouldn't be
+        terms of writeBlob().  However, it shouldn't be
         performance-critical either, so it could be if we wanted to.
     */
-    void memsetBlobFunctional(Addr addr, uint8_t val, int size);
+    void memsetBlob(Addr addr, uint8_t val, int size);
 
   private:
 

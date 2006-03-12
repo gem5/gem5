@@ -74,11 +74,11 @@ ObjectFile::loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys)
         }
 
         if (sec->fileImage) {
-            memPort->writeBlobFunctional(addr, sec->fileImage, sec->size, true);
+            memPort->writeBlob(addr, sec->fileImage, sec->size, true);
         }
         else {
             // no image: must be bss
-            memPort->memsetBlobFunctional(addr, 0, sec->size, true);
+            memPort->memsetBlob(addr, 0, sec->size, true);
         }
     }
     return true;

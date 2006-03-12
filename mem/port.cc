@@ -52,19 +52,19 @@ Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
 }
 
 void
-Port::writeBlobFunctional(Addr addr, uint8_t *p, int size)
+Port::writeBlob(Addr addr, uint8_t *p, int size)
 {
     blobHelper(addr, p, size, Write);
 }
 
 void
-Port::readBlobFunctional(Addr addr, uint8_t *p, int size)
+Port::readBlob(Addr addr, uint8_t *p, int size)
 {
     blobHelper(addr, p, size, Read);
 }
 
 void
-Port::memsetBlobFunctional(Addr addr, uint8_t val, int size)
+Port::memsetBlob(Addr addr, uint8_t val, int size)
 {
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];

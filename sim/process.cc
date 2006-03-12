@@ -245,15 +245,15 @@ copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
     Addr data_ptr_swap;
     for (int i = 0; i < strings.size(); ++i) {
         data_ptr_swap = htog(data_ptr);
-        memPort->writeBlobFunctional(array_ptr, (uint8_t*)&data_ptr_swap, sizeof(Addr));
-        memPort->writeStringFunctional(data_ptr, strings[i].c_str());
+        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap, sizeof(Addr));
+        memPort->writeString(data_ptr, strings[i].c_str());
         array_ptr += sizeof(Addr);
         data_ptr += strings[i].size() + 1;
     }
     // add NULL terminator
     data_ptr = 0;
 
-    memPort->writeBlobFunctional(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
+    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(Addr));
 }
 
 LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
@@ -336,7 +336,7 @@ LiveProcess::startup()
     // write contents to stack
     uint64_t argc = argv.size();
     argc = htog(argc);
-    initVirtMem->writeBlobFunctional(stack_min, (uint8_t*)&argc, sizeof(uint64_t));
+    initVirtMem->writeBlob(stack_min, (uint8_t*)&argc, sizeof(uint64_t));
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);

@@ -193,7 +193,7 @@ unlinkFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
         return (TheISA::IntReg)-EFAULT;
 
     int result = unlink(path.c_str());
@@ -205,12 +205,12 @@ renameFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string old_name;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(old_name, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(old_name, xc->getSyscallArg(0)))
         return -EFAULT;
 
     string new_name;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(new_name, xc->getSyscallArg(1)))
+    if (!xc->getMemPort()->tryReadString(new_name, xc->getSyscallArg(1)))
         return -EFAULT;
 
     int64_t result = rename(old_name.c_str(), new_name.c_str());
@@ -222,7 +222,7 @@ truncateFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
         return -EFAULT;
 
     off_t length = xc->getSyscallArg(1);
@@ -250,7 +250,7 @@ chownFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
     string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
         return -EFAULT;
 
     /* XXX endianess */

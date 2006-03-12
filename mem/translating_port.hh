@@ -48,21 +48,17 @@ class TranslatingPort
     virtual ~TranslatingPort();
 
   public:
-    bool tryReadBlobFunctional(Addr addr, uint8_t *p, int size);
-    bool tryWriteBlobFunctional(Addr addr, uint8_t *p, int size,
-                                bool alloc = false);
-    bool tryMemsetBlobFunctional(Addr addr, uint8_t val, int size,
-                                 bool alloc = false);
-    bool tryWriteStringFunctional(Addr addr, const char *str);
-    bool tryReadStringFunctional(std::string &str, Addr addr);
+    bool tryReadBlob(Addr addr, uint8_t *p, int size);
+    bool tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc = false);
+    bool tryMemsetBlob(Addr addr, uint8_t val, int size, bool alloc = false);
+    bool tryWriteString(Addr addr, const char *str);
+    bool tryReadString(std::string &str, Addr addr);
 
-    void readBlobFunctional(Addr addr, uint8_t *p, int size);
-    void writeBlobFunctional(Addr addr, uint8_t *p, int size,
-                             bool alloc = false);
-    void memsetBlobFunctional(Addr addr, uint8_t val, int size,
-                              bool alloc = false);
-    void writeStringFunctional(Addr addr, const char *str);
-    void readStringFunctional(std::string &str, Addr addr);
+    void readBlob(Addr addr, uint8_t *p, int size);
+    void writeBlob(Addr addr, uint8_t *p, int size, bool alloc = false);
+    void memsetBlob(Addr addr, uint8_t val, int size, bool alloc = false);
+    void writeString(Addr addr, const char *str);
+    void readString(std::string &str, Addr addr);
 };
 
 #endif

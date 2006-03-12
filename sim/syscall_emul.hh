@@ -109,7 +109,7 @@ class BaseBufferArg {
     //
     virtual bool copyIn(TranslatingPort *memport)
     {
-        memport->readBlobFunctional(addr, bufPtr, size);
+        memport->readBlob(addr, bufPtr, size);
         return true;	// no EFAULT detection for now
     }
 
@@ -118,7 +118,7 @@ class BaseBufferArg {
     //
     virtual bool copyOut(TranslatingPort *memport)
     {
-        memport->writeBlobFunctional(addr, bufPtr, size);
+        memport->writeBlob(addr, bufPtr, size);
         return true;	// no EFAULT detection for now
     }
 
@@ -370,7 +370,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -417,7 +417,7 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
         return -EFAULT;
 
     uint32_t mode = xc->getSyscallArg(1);
@@ -470,7 +470,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
     return -EFAULT;
 
     struct stat hostBuf;
@@ -522,7 +522,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
       return -EFAULT;
 
     struct stat hostBuf;
@@ -544,7 +544,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
       return -EFAULT;
 
 #if BSD_HOST
@@ -596,7 +596,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
       return -EFAULT;
 
     struct statfs hostBuf;
@@ -646,18 +646,20 @@ writevFunc(SyscallDesc *desc, int callnum, Process *process,
         return -EBADF;
     }
 
+    TranslatingPort *p = xc->getMemPort();
     uint64_t tiov_base = xc->getSyscallArg(1);
     size_t count = xc->getSyscallArg(2);
     struct iovec hiov[count];
     for (int i = 0; i < count; ++i)
     {
         typename OS::tgt_iovec tiov;
-        xc->getMemPort()->readBlobFunctional(tiov_base + i*sizeof(typename OS::tgt_iovec),(uint8_t*)
-                        &tiov, sizeof(typename OS::tgt_iovec));
+
+        p->readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
+                    (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        xc->getMemPort()->readBlobFunctional(gtoh(tiov.iov_base),
-                        (uint8_t *)hiov[i].iov_base, hiov[i].iov_len);
+        p->readBlob(gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
+                    hiov[i].iov_len);
     }
 
     int result = writev(process->sim_fd(fd), hiov, count);
@@ -770,7 +772,7 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 {
     std::string path;
 
-    if (!xc->getMemPort()->tryReadStringFunctional(path, xc->getSyscallArg(0)))
+    if (!xc->getMemPort()->tryReadString(path, xc->getSyscallArg(0)))
       return -EFAULT;
 
     TypedBufferArg<typename OS::timeval [2]> tp(xc->getSyscallArg(1));
