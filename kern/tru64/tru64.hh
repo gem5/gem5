@@ -544,6 +544,8 @@ class Tru64 {
     static void
     copyOutStatBuf(TranslatingPort *mem, Addr addr, global_stat *host)
     {
+        using namespace TheISA;
+
         TypedBufferArg<T> tgt(addr);
 
         tgt->st_dev = htog(host->st_dev);
@@ -570,6 +572,8 @@ class Tru64 {
     static void
     copyOutStatfsBuf(TranslatingPort *mem, Addr addr, global_statfs *host)
     {
+        using namespace TheISA;
+
         TypedBufferArg<T> tgt(addr);
 
 #if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
@@ -627,6 +631,8 @@ class Tru64 {
     static void
     copyOutPreF64StatBuf(TranslatingPort *mem, Addr addr, struct stat *host)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Tru64::pre_F64_stat> tgt(addr);
 
         tgt->st_dev = htog(host->st_dev);
@@ -656,6 +662,8 @@ class Tru64 {
     getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+        using namespace TheISA;
+
 #ifdef __CYGWIN__
         panic("getdirent not implemented on cygwin!");
 #else
@@ -715,6 +723,8 @@ class Tru64 {
     sigreturnFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
+        using namespace TheISA;
+
         using TheISA::RegFile;
         TypedBufferArg<Tru64::sigcontext> sc(xc->getSyscallArg(0));
 
@@ -741,6 +751,8 @@ class Tru64 {
     tableFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
+        using namespace TheISA;
+
         int id = xc->getSyscallArg(0);		// table ID
         int index = xc->getSyscallArg(1);	// index into table
         // arg 2 is buffer pointer; type depends on table ID
@@ -782,6 +794,8 @@ class Tru64 {
     stack_createFunc(SyscallDesc *desc, int callnum, Process *process,
                      ExecContext *xc)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Tru64::vm_stack> argp(xc->getSyscallArg(0));
 
         argp.copyIn(xc->getMemPort());
@@ -810,6 +824,8 @@ class Tru64 {
     nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Tru64::nxm_task_attr> attrp(xc->getSyscallArg(0));
         TypedBufferArg<Addr> configptr_ptr(xc->getSyscallArg(1));
 
@@ -921,6 +937,8 @@ class Tru64 {
     init_exec_context(ExecContext *ec,
                       Tru64::nxm_thread_attr *attrp, uint64_t uniq_val)
     {
+        using namespace TheISA;
+
         ec->clearArchRegs();
 
         ec->setIntReg(TheISA::ArgumentReg0, gtoh(attrp->registers.a0));
@@ -939,6 +957,8 @@ class Tru64 {
     nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
                           ExecContext *xc)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Tru64::nxm_thread_attr> attrp(xc->getSyscallArg(0));
         TypedBufferArg<uint64_t> kidp(xc->getSyscallArg(1));
         int thread_index = xc->getSyscallArg(2);
@@ -1157,6 +1177,8 @@ class Tru64 {
     static void
     m5_lock_mutex(Addr uaddr, Process *process, ExecContext *xc)
     {
+        using namespace TheISA;
+
         TypedBufferArg<uint64_t> lockp(uaddr);
 
         lockp.copyIn(xc->getMemPort());
@@ -1211,6 +1233,8 @@ class Tru64 {
     m5_mutex_trylockFunc(SyscallDesc *desc, int callnum, Process *process,
                          ExecContext *xc)
     {
+        using namespace TheISA;
+
         Addr uaddr = xc->getSyscallArg(0);
         TypedBufferArg<uint64_t> lockp(uaddr);
 
@@ -1268,6 +1292,8 @@ class Tru64 {
     m5_cond_waitFunc(SyscallDesc *desc, int callnum, Process *process,
                      ExecContext *xc)
     {
+        using namespace TheISA;
+
         Addr cond_addr = xc->getSyscallArg(0);
         Addr lock_addr = xc->getSyscallArg(1);
         TypedBufferArg<uint64_t> condp(cond_addr);

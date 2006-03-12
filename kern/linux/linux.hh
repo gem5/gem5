@@ -244,6 +244,8 @@ class Linux {
     static void
     copyOutStatBuf(TranslatingPort *mem, Addr addr, hst_stat *host)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
         tgt->st_dev = htog(host->st_dev);
@@ -268,6 +270,8 @@ class Linux {
     static void
     copyOutStatBuf(TranslatingPort *mem, Addr addr, hst_stat64 *host)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Linux::tgt_stat> tgt(addr);
 
         tgt->st_dev = htog(host->st_dev);
@@ -293,6 +297,8 @@ class Linux {
     static void
     copyOutStat64Buf(TranslatingPort *mem, int fd, Addr addr, hst_stat64 *host)
     {
+        using namespace TheISA;
+
         TypedBufferArg<Linux::tgt_stat64> tgt(addr);
 
         // fd == 1 checks are because libc does some checks
