@@ -1079,7 +1079,7 @@ SimpleCPU::tick()
 #if FULL_SYSTEM
         fault->invoke(xcProxy);
 #else // !FULL_SYSTEM
-        fatal("fault (%d) detected @ PC 0x%08p", fault, cpuXC->readPC());
+        fatal("fault (%d) detected @ PC %08p", fault, cpuXC->readPC());
 #endif // FULL_SYSTEM
     }
     else {
