@@ -46,7 +46,7 @@
 class Processor;
 class AlphaITB;
 class AlphaDTB;
-class Memory;
+class MemObject;
 
 class RemoteGDB;
 class GDBListener;
@@ -58,7 +58,6 @@ class Process;
 #endif // FULL_SYSTEM
 
 class ExecContext;
-class MemInterface;
 class Checkpoint;
 
 namespace Trace {
@@ -180,7 +179,7 @@ class SimpleCPU : public BaseCPU
         AlphaITB *itb;
         AlphaDTB *dtb;
 #else
-        Memory *mem;
+        MemObject *mem;
         Process *process;
 #endif
     };

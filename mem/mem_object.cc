@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_TRANSLATING_PROT_HH__
-#define __MEM_TRANSLATING_PROT_HH__
+#include "mem/mem_object.hh"
+#include "sim/param.hh"
 
-class Port;
-class PageTable;
-
-class TranslatingPort
+MemObject::MemObject(const std::string &name)
+    : SimObject(name)
 {
-  private:
-    Port *port;
-    PageTable *pTable;
+}
 
-    TranslatingPort(const TranslatingPort &specmem);
-    const TranslatingPort &operator=(const TranslatingPort &specmem);
-
-  public:
-    TranslatingPort(Port *_port, PageTable *p_table);
-    virtual ~TranslatingPort();
-
-  public:
-    bool tryReadBlob(Addr addr, uint8_t *p, int size);
-    bool tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc = false);
-    bool tryMemsetBlob(Addr addr, uint8_t val, int size, bool alloc = false);
-    bool tryWriteString(Addr addr, const char *str);
-    bool tryReadString(std::string &str, Addr addr);
-
-    void readBlob(Addr addr, uint8_t *p, int size);
-    void writeBlob(Addr addr, uint8_t *p, int size, bool alloc = false);
-    void memsetBlob(Addr addr, uint8_t val, int size, bool alloc = false);
-    void writeString(Addr addr, const char *str);
-    void readString(std::string &str, Addr addr);
-};
-
-#endif
+DEFINE_SIM_OBJECT_CLASS_NAME("MemObject", MemObject)

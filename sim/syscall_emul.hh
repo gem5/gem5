@@ -48,7 +48,7 @@
 #include "base/intmath.hh"	// for RoundUp
 #include "mem/translating_port.hh"
 #include "arch/isa_traits.hh"	// for Addr
-
+#include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"

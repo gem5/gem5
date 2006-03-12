@@ -42,7 +42,6 @@ class System;
 namespace Kernel { class Statistics; }
 class BranchPred;
 class ExecContext;
-class Port;
 
 class BaseCPU : public SimObject
 {

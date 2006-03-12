@@ -33,16 +33,17 @@
 #define __PHYSICAL_MEMORY_HH__
 
 #include "base/range.hh"
-#include "mem/memory.hh"
+#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 #include <map>
 #include <string>
+
 //
 // Functional model for a contiguous block of physical memory. (i.e. RAM)
 //
-class PhysicalMemory : public Memory
+class PhysicalMemory : public MemObject
 {
     class MemoryPort : public Port
     {
@@ -68,11 +69,7 @@ class PhysicalMemory : public Memory
         virtual int deviceBlockSize();
     };
 
-    std::map<std::string, MemoryPort*> memoryPortList;
-
     virtual Port * getPort(const char *if_name);
-
-    virtual Port * addPort(std::string portName);
 
     int numPorts;
 

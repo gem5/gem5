@@ -1,12 +1,12 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
-#include "mem/memory.hh"
 #include "sim/builder.hh"
 #include "arch/isa_traits.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 #include "base/trace.hh"
+#include "mem/mem_object.hh"
 #if FULL_SYSTEM
 #include "base/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
@@ -228,7 +228,7 @@ DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
 
-    SimObjectParam<Memory *> physmem;
+    SimObjectParam<MemObject *> physmem;
 
 END_DECLARE_SIM_OBJECT_PARAMS(System)
 

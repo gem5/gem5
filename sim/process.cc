@@ -39,7 +39,7 @@
 #include "config/full_system.hh"
 #include "cpu/exec_context.hh"
 #include "mem/page_table.hh"
-#include "mem/memory.hh"
+#include "mem/mem_object.hh"
 #include "mem/translating_port.hh"
 #include "sim/builder.hh"
 #include "sim/process.hh"
@@ -149,13 +149,27 @@ Process::startup()
     if (execContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    initVirtMem = new TranslatingPort((system->physmem->getPort("DCACHE"))->getPeer(), pTable);
-
     // first exec context for this process... initialize & enable
     ExecContext *xc = execContexts[0];
 
     // mark this context as active so it will start ticking.
     xc->activate(0);
+
+    // Here we are grabbing the memory port of the CPU hosting the
+    // initial execution context for initialization.  In the long run
+    // this is not what we want, since it means that all
+    // initialization accesses (e.g., loading object file sections)
+    // will be done a cache block at a time through the CPU's cache.
+    // We really want something more like:
+    //
+    // memport = system->physmem->getPort();
+    // myPort.setPeer(memport);
+    // memport->setPeer(&myPort);
+    // initVirtMem = new TranslatingPort(myPort, pTable);
+    //
+    // but we need our own dummy port "myPort" that doesn't exist.
+    // In the short term it works just fine though.
+    initVirtMem = xc->getMemPort();
 }
 
 void
@@ -366,6 +380,7 @@ LiveProcess::syscall(ExecContext *xc)
 
     desc->doSyscall(callnum, this, xc);
 }
+
 
 LiveProcess *
 LiveProcess::create(const string &nm, System *system,

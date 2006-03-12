@@ -70,7 +70,7 @@ PhysicalMemory::MemResponseEvent::description()
 }
 
 PhysicalMemory::PhysicalMemory(const string &n)
-    : Memory(n), base_addr(0), pmem_addr(NULL)
+    : MemObject(n), base_addr(0), pmem_addr(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;
@@ -105,13 +105,6 @@ PhysicalMemory::new_page()
 
     ++page_ptr;
     return return_addr;
-}
-
-Port *
-PhysicalMemory::addPort(std::string portName)
-{
-    memoryPortList[portName] = new MemoryPort(this);
-    return memoryPortList[portName];
 }
 
 int
@@ -161,10 +154,11 @@ PhysicalMemory::doFunctionalAccess(Packet &pkt)
 Port *
 PhysicalMemory::getPort(const char *if_name)
 {
-    if (memoryPortList.find(if_name) != memoryPortList.end())
-        return memoryPortList[if_name];
-    else
-        panic("Looking for a port that didn't exist\n");
+    if (if_name == NULL) {
+        return new MemoryPort(this);
+    } else {
+        panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
+    }
 }
 
 void

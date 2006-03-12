@@ -53,6 +53,7 @@ class MemoryController;
 #else // !FULL_SYSTEM
 
 #include "sim/process.hh"
+#include "mem/page_table.hh"
 class TranslatingPort;
 
 #endif // FULL_SYSTEM

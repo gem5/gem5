@@ -71,7 +71,7 @@
 #include "arch/stacktrace.hh"
 #include "arch/vtophys.hh"
 #else // !FULL_SYSTEM
-#include "mem/memory.hh"
+#include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
 
 using namespace std;
@@ -152,13 +152,13 @@ SimpleCPU::SimpleCPU(Params *p)
     _status = Idle;
 
     //Create Memory Ports (conect them up)
-    p->mem->addPort("DCACHE");
-    dcachePort.setPeer(p->mem->getPort("DCACHE"));
-    (p->mem->getPort("DCACHE"))->setPeer(&dcachePort);
+    Port *mem_dport = p->mem->getPort();
+    dcachePort.setPeer(mem_dport);
+    mem_dport->setPeer(&dcachePort);
 
-    p->mem->addPort("ICACHE");
-    icachePort.setPeer(p->mem->getPort("ICACHE"));
-    (p->mem->getPort("ICACHE"))->setPeer(&icachePort);
+    Port *mem_iport = p->mem->getPort();
+    icachePort.setPeer(mem_iport);
+    mem_iport->setPeer(&icachePort);
 
 #if FULL_SYSTEM
     cpuXC = new CPUExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
@@ -1128,7 +1128,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     Param<int> cpu_id;
     Param<Tick> profile;
 #else
-    SimObjectParam<Memory *> mem;
+    SimObjectParam<MemObject *> mem;
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
 

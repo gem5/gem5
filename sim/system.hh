@@ -45,7 +45,7 @@ class BaseCPU;
 class ExecContext;
 class MemoryController;
 class ObjectFile;
-class Memory;
+class MemObject;
 
 #if FULL_SYSTEM
 class Platform;
@@ -57,7 +57,7 @@ namespace Kernel { class Binning; }
 class System : public SimObject
 {
   public:
-    Memory *physmem;
+    MemObject *physmem;
     PCEventQueue pcEventQueue;
 
     std::vector<ExecContext *> execContexts;
@@ -146,7 +146,7 @@ class System : public SimObject
     struct Params
     {
         std::string name;
-        Memory *physmem;
+        MemObject *physmem;
 
 #if FULL_SYSTEM
         Tick boot_cpu_frequency;
