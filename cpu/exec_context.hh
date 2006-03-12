@@ -143,8 +143,6 @@ class ExecContext
 
     virtual int getThreadNum() = 0;
 
-    virtual bool validInstAddr(Addr addr) = 0;
-    virtual bool validDataAddr(Addr addr) = 0;
     virtual int getInstAsid() = 0;
     virtual int getDataAsid() = 0;
 
@@ -309,8 +307,6 @@ class ProxyExecContext : public ExecContext
 
     int getThreadNum() { return actualXC->getThreadNum(); }
 
-    bool validInstAddr(Addr addr) { return actualXC->validInstAddr(addr); }
-    bool validDataAddr(Addr addr) { return actualXC->validDataAddr(addr); }
     int getInstAsid() { return actualXC->getInstAsid(); }
     int getDataAsid() { return actualXC->getDataAsid(); }
 

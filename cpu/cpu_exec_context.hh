@@ -233,8 +233,6 @@ class CPUExecContext
 
     AlphaDTB *getDTBPtr() { return dtb; }
 
-    bool validInstAddr(Addr addr) { return true; }
-    bool validDataAddr(Addr addr) { return true; }
     int getInstAsid() { return regs.instAsid(); }
     int getDataAsid() { return regs.dataAsid(); }
 
@@ -255,12 +253,6 @@ class CPUExecContext
 
 #else
     Process *getProcessPtr() { return process; }
-
-    bool validInstAddr(Addr addr)
-    { return process->validInstAddr(addr); }
-
-    bool validDataAddr(Addr addr)
-    { return process->validDataAddr(addr); }
 
     int getInstAsid() { return asid; }
     int getDataAsid() { return asid; }

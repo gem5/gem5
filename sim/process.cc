@@ -37,11 +37,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
-#include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
-#include "cpu/smt.hh"
-#include "encumbered/cpu/full/thread.hh"
-#include "encumbered/eio/eio.hh"
 #include "mem/page_table.hh"
 #include "mem/memory.hh"
 #include "mem/translating_port.hh"
@@ -269,16 +265,12 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
 {
     prog_fname = argv[0];
 
-    prog_entry = objFile->entryPoint();
-    text_base = objFile->textBase();
-    text_size = objFile->textSize();
-    data_base = objFile->dataBase();
-    data_size = objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(data_base + data_size, VMPageSize);
+    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
+    brk_point = roundUp(brk_point, VMPageSize);
 
     // Set up stack.  On Alpha, stack goes below text section.  This
     // code should get moved to some architecture-specific spot.
-    stack_base = text_base - (409600+4096);
+    stack_base = objFile->textBase() - (409600+4096);
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
@@ -353,6 +345,8 @@ LiveProcess::startup()
     execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
     execContexts[0]->setIntReg(StackPointerReg, stack_min);
     execContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
+
+    Addr prog_entry = objFile->entryPoint();
     execContexts[0]->setPC(prog_entry);
     execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
 

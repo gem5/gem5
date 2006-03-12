@@ -92,12 +92,6 @@ class Process : public SimObject
     // list of all blocked contexts
     std::list<WaitRec> waitList;
 
-    Addr text_base;		// text (code) segment base
-    unsigned text_size;		// text (code) size in bytes
-
-    Addr data_base;		// initialized data segment base
-    unsigned data_size;		// initialized data + bss size in bytes
-
     Addr brk_point;		// top of the data segment
 
     Addr stack_base;		// stack segment base (highest address)
@@ -116,7 +110,6 @@ class Process : public SimObject
     Addr nxm_end;
 
     std::string prog_fname;	// file name
-    Addr prog_entry;		// entry point (initial PC)
 
     Stats::Scalar<> num_syscalls;	// number of syscalls executed
 
@@ -170,26 +163,6 @@ class Process : public SimObject
 
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);
-
-    // is this a valid instruction fetch address?
-    bool validInstAddr(Addr addr)
-    {
-        return (text_base <= addr &&
-                addr < text_base + text_size &&
-                !(addr & (sizeof(MachInst)-1)));
-    }
-
-    // is this a valid address? (used to filter data fetches)
-    // note that we just assume stack size <= 16MB
-    // this may be alpha-specific
-    bool validDataAddr(Addr addr)
-    {
-        return ((data_base <= addr && addr < brk_point) ||
-                (next_thread_stack_base <= addr && addr < stack_base) ||
-                (text_base <= addr && addr < (text_base + text_size)) ||
-                (mmap_start <= addr && addr < mmap_end) ||
-                (nxm_start <= addr && addr < nxm_end));
-    }
 
     virtual void syscall(ExecContext *xc) = 0;
 };
