@@ -364,7 +364,12 @@ class SimpleCPU : public BaseCPU
     }
 
     uint64_t readPC() { return cpuXC->readPC(); }
+    uint64_t readNextPC() { return cpuXC->readNextPC(); }
+    uint64_t readNextNPC() { return cpuXC->readNextNPC(); }
+
+    void setPC(uint64_t val) { cpuXC->setPC(val); }
     void setNextPC(uint64_t val) { cpuXC->setNextPC(val); }
+    void setNextNPC(uint64_t val) { cpuXC->setNextNPC(val); }
 
     MiscReg readMiscReg(int misc_reg)
     {

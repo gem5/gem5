@@ -20,8 +20,8 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode FUNCTION_LO {
                 0x1: decode MOVCI {
                     format BasicOp {
-                        0: movf({{ if (xc->readMiscReg(FPCR,0) != CC) Rd = Rs}});
-                        1: movt({{ if (xc->readMiscReg(FPCR,0) == CC) Rd = Rs}});
+                        0: movf({{ if (xc->readMiscReg(FPCR) != CC) Rd = Rs}});
+                        1: movt({{ if (xc->readMiscReg(FPCR) == CC) Rd = Rs}});
                     }
                 }
 
@@ -31,15 +31,10 @@ decode OPCODE_HI default Unknown::unknown() {
                     //are used to distinguish among the SLL, NOP, SSNOP and EHB functions."
 
                     0x0: decode RS {
-                        0x0: decode RT default BasicOp::sll({{ Rd = Rt.uw << SA; }}) {
-                            0x0: decode RD{
-                                0x0: decode HINT {
-                                    0x0:nop({{}});  //really sll r0,r0,0
-                                    0x1:ssnop({{}});//really sll r0,r0,1
-                                    0x3:ehb({{}});  //really sll r0,r0,3
-                                }
-                            }
-                        }
+                        0x0: sll({{ Rd = Rt.uw << SA; }});
+                        //0x0:nop({{ ; }});  //really sll r0,r0,0
+                        //	    0x1:ssnop({{ ; }});//really sll r0,r0,1
+                        //    0x3:ehb({{ ; }});  //really sll r0,r0,3
                     }
 
                     0x2: decode SRL {
@@ -283,55 +278,37 @@ decode OPCODE_HI default Unknown::unknown() {
 
                         0x0: decode SC {
                             0x0: dvpe({{
-                                int idx;
-                                int sel;
-                                getMiscRegIdx(MVPControl,idx,sel);
-                                Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel);
+                                Rt.sw = xc->readMiscReg(MVPControl);
+                                xc->setMiscReg(MVPControl,0);
                             }});
 
                             0x1: evpe({{
-                                int idx;
-                                int sel;
-                                getMiscRegIdx(MVPControl,idx,sel);
-                                Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel,1);
+                                Rt.sw = xc->readMiscReg(MVPControl);
+                                xc->setMiscReg(MVPControl,1);
                             }});
                         }
 
                         0x1: decode SC {
                             0x0: dmt({{
-                                int idx;
-                                int sel;
-                                getMiscRegIdx(VPEControl,idx,sel);
-                                Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel);
+                                Rt.sw = xc->readMiscReg(VPEControl);
+                                xc->setMiscReg(VPEControl,0);
                             }});
 
                             0x1: emt({{
-                                int idx;
-                                int sel;
-                                getMiscRegIdx(VPEControl,idx,sel);
-                                Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel,1);
+                                Rt.sw = xc->readMiscReg(VPEControl);
+                                xc->setMiscReg(VPEControl,1);
                             }});
                         }
 
                         0xC: decode SC {
                             0x0: di({{
-                                int idx;
-                                int sel;
-                                getMiscRegIdx(Status,idx,sel);
-                                Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel);
+                                Rt.sw = xc->readMiscReg(Status);
+                                xc->setMiscReg(Status,0);
                             }});
 
                             0x1: ei({{
-                                int idx;
-                                int sel;
-                                getMiscRegIdx(Status,idx,sel);
-                                Rt.sw = xc->readMiscReg(idx,sel);
-                                xc->setMiscReg(idx,sel,1);
+                                Rt.sw = xc->readMiscReg(Status);
+                                xc->setMiscReg(Status,1);
                             }});
                         }
                     }

@@ -189,6 +189,10 @@ class ExecContext
 
     virtual void setNextPC(uint64_t val) = 0;
 
+    virtual uint64_t readNextNPC() = 0;
+
+    virtual void setNextNPC(uint64_t val) = 0;
+
     virtual MiscReg readMiscReg(int misc_reg) = 0;
 
     virtual MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault) = 0;
@@ -361,6 +365,10 @@ class ProxyExecContext : public ExecContext
     uint64_t readNextPC() { return actualXC->readNextPC(); }
 
     void setNextPC(uint64_t val) { actualXC->setNextPC(val); }
+
+    uint64_t readNextNPC() { return actualXC->readNextNPC(); }
+
+    void setNextNPC(uint64_t val) { actualXC->setNextNPC(val); }
 
     MiscReg readMiscReg(int misc_reg)
     { return actualXC->readMiscReg(misc_reg); }

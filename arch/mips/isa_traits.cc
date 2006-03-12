@@ -34,97 +34,25 @@
 using namespace MipsISA;
 
 
-//Function now Obsolete in current state.
-//If anyting this should return the correct miscreg index
-//but that is handled implicitly with enums anyway
 void
-MipsISA::getMiscRegIdx(int reg_name,int &idx, int &sel)
+MipsISA::MiscRegFile::copyMiscRegs(ExecContext *xc)
 {
-    switch(reg_name)
-    {
-      case Index: idx = 0; sel = 0; break;           //0-0 Index into the TLB array
-      case MVPControl:    idx = 0; sel = 1; break;   //0-1 Per-processor register containing global
-      case MVPConf0:     idx = 0; sel = 2; break;    //0-2 Per-processor register containing global
-      case MVPConf1:     idx = 0; sel = 3; break;    //0-3 Per-processor register containing global
-      case Random:       idx = 1; sel = 3; break;    //1-0 Randomly generated index into the TLB array
-      case VPEControl:  idx = 1; sel = 1; break;     //1-1 Per-VPE register containing relatively volatile
-        //thread configuration data
-      case VPEConf0:     idx = 1; sel = 2; break;    //1-2 Per-VPE multi-thread configuration
-        //information
-      case VPEConf1:     idx = 1; sel = 3; break;    //1-3 Per-VPE multi-thread configuration
-        //information
-      case YQMask:       idx = 1; sel = 4; break;    //Per-VPE register defining which YIELD
-        //qualifier bits may be used without generating
-        //an exception
-      case VPESchedule:   idx = 1; sel = 5; break;
-      case VPEScheFBack:  idx = 1; sel = 6; break;
-      case VPEOpt:        idx = 1; sel = 7; break;
-      case EntryLo0:  idx = 1; sel = 5; break;
-      case TCStatus:  idx = 1; sel = 5; break;
-      case TCBind:  idx = 1; sel = 5; break;
-      case TCRestart:  idx = 1; sel = 5; break;
-      case TCHalt:  idx = 1; sel = 5; break;
-      case TCContext:  idx = 1; sel = 5; break;
-      case TCSchedule:  idx = 1; sel = 5; break;
-      case TCScheFBack: panic("Accessing Unimplemented CP0 Register"); break;
-      case EntryLo1: panic("Accessing Unimplemented CP0 Register"); break;
-      case Context: panic("Accessing Unimplemented CP0 Register"); break;
-      case ContextConfig: panic("Accessing Unimplemented CP0 Register"); break;
-        //case PageMask: panic("Accessing Unimplemented CP0 Register"); break;
-      case PageGrain: panic("Accessing Unimplemented CP0 Register"); break;
-      case Wired: panic("Accessing Unimplemented CP0 Register"); break;
-      case SRSConf0: panic("Accessing Unimplemented CP0 Register"); break;
-      case SRSConf1: panic("Accessing Unimplemented CP0 Register"); break;
-      case SRSConf2: panic("Accessing Unimplemented CP0 Register"); break;
-      case SRSConf3: panic("Accessing Unimplemented CP0 Register"); break;
-      case SRSConf4: panic("Accessing Unimplemented CP0 Register"); break;
-      case BadVAddr: panic("Accessing Unimplemented CP0 Register"); break;
-      case Count: panic("Accessing Unimplemented CP0 Register"); break;
-      case EntryHi: panic("Accessing Unimplemented CP0 Register"); break;
-      case Compare: panic("Accessing Unimplemented CP0 Register"); break;
-      case Status:  idx = 12; sel = 0; break;      //12-0 Processor status and control
-      case IntCtl:  idx = 12; sel = 1; break;      //12-1 Interrupt system status and control
-      case SRSCtl:  idx = 12; sel = 2; break;      //12-2 Shadow register set status and control
-      case SRSMap:  idx = 12; sel = 3; break;      //12-3 Shadow set IPL mapping
-      case Cause:  idx = 13; sel = 0; break;       //13-0 Cause of last general exception
-      case EPC:  idx = 14; sel = 0; break;         //14-0 Program counter at last exception
-      case PrId:  idx = 15; sel = 0; break;        //15-0 Processor identification and revision
-      case EBase:  idx = 15; sel = 1; break;       //15-1 Exception vector base register
-      case Config: panic("Accessing Unimplemented CP0 Register"); break;
-      case Config1: panic("Accessing Unimplemented CP0 Register"); break;
-      case Config2: panic("Accessing Unimplemented CP0 Register"); break;
-      case Config3: panic("Accessing Unimplemented CP0 Register"); break;
-      case LLAddr: panic("Accessing Unimplemented CP0 Register"); break;
-      case WatchLo: panic("Accessing Unimplemented CP0 Register"); break;
-      case WatchHi: panic("Accessing Unimplemented CP0 Register"); break;
-      case Debug: panic("Accessing Unimplemented CP0 Register"); break;
-      case TraceControl1: panic("Accessing Unimplemented CP0 Register"); break;
-      case TraceControl2: panic("Accessing Unimplemented CP0 Register"); break;
-      case UserTraceData: panic("Accessing Unimplemented CP0 Register"); break;
-      case TraceBPC: panic("Accessing Unimplemented CP0 Register"); break;
-      case DEPC: panic("Accessing Unimplemented CP0 Register"); break;
-      case PerfCnt: panic("Accessing Unimplemented CP0 Register"); break;
-      case ErrCtl: panic("Accessing Unimplemented CP0 Register"); break;
-      case CacheErr0: panic("Accessing Unimplemented CP0 Register"); break;
-      case CacheErr1: panic("Accessing Unimplemented CP0 Register"); break;
-      case CacheErr2: panic("Accessing Unimplemented CP0 Register"); break;
-      case CacheErr3: panic("Accessing Unimplemented CP0 Register"); break;
-      case TagLo: panic("Accessing Unimplemented CP0 Register"); break;
-      case DataLo: panic("Accessing Unimplemented CP0 Register"); break;
-      case TagHi: panic("Accessing Unimplemented CP0 Register"); break;
-      case DataHi: panic("Accessing Unimplemented CP0 Register"); break;
-      case ErrorEPC: panic("Accessing Unimplemented CP0 Register"); break;
+    /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
+    uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
+    lock_flag = xc->readMiscReg(MipsISA::Lock_Flag_DepTag);
+    lock_addr = xc->readMiscReg(MipsISA::Lock_Addr_DepTag);
 
-      default:
-        panic("Accessing Unimplemented Misc. Register");
-    }
+#if FULL_SYSTEM
+    copyIprs(xc);
+    #endif*/
 }
 
-void RegFile::coldReset()
+
+void MipsISA::RegFile::coldReset()
 {
     //CP0 Random Reg:
     //Randomly generated index into the TLB array
-    miscRegs[Random] = 0x0000003f;
+    /*miscRegs[Random] = 0x0000003f;
 
     //CP0 Wired Reg.
     miscRegs[Wired] = 0x0000000;
@@ -175,7 +103,7 @@ void RegFile::coldReset()
     miscRegs[PerfCnt0] = 0x0000000;
 
    //CP0 PERFCNTL2
-    miscRegs[PerfCnt1] = 0x0000000;
+   miscRegs[PerfCnt1] = 0x0000000;*/
 
 }
 
@@ -247,6 +175,10 @@ void RegFile::createCP0Regs()
 
     //Cop-0 Regs. Bank 20:
     miscRegs[20].resize(1);
+      case PerfCnt0: panic("Accessing Unimplemented CP0 Register"); break;
+      case PerfCnt1: panic("Accessing Unimplemented CP0 Register"); break;
+      case PerfCnt2: panic("Accessing Unimplemented CP0 Register"); break;
+      case PerfCnt3: panic("Accessing Unimplemented CP0 Register"); break;
 
     //Cop-0 Regs. Bank 21:
     //miscRegs[21].resize(1);

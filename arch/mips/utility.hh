@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/mips/process.hh"
+#ifndef __ARCH_MIPS_UTILITY_HH__
+#define __ARCH_MIPS_UTILITY_HH__
 
-using namespace std;
+//Placeholder file for now
 
-namespace MipsISA
-{
-
-LiveProcess *
-createProcess(const string &nm, ObjectFile * objFile, System * system,
-        int stdin_fd, int stdout_fd, int stderr_fd,
-        vector<string> &argv, vector<string> &envp)
-{
-    LiveProcess * process = NULL;
-    if (objFile->getArch() != ObjectFile::MIPS)
-        fatal("Object file does not match architecture.");
-    switch (objFile->getOpSys()) {
-      case ObjectFile::Linux:
-        process = new MipsLinuxProcess(nm, objFile,system,
-                                        stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
-        break;
-
-      default:
-        fatal("Unknown/unsupported operating system.");
-    }
-    return process;
-}
-
-} // namespace MipsISA
-
+#endif

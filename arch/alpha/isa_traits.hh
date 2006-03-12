@@ -109,4 +109,6 @@ extern const int reg_redir[NumIntRegs];
 #endif
 };
 
+using namespace AlphaISA;
+
 #endif // __ARCH_ALPHA_ISA_TRAITS_HH__

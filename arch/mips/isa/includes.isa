@@ -9,10 +9,11 @@ output header {{
 #include <iomanip>
 
 #include "cpu/static_inst.hh"
-#include "mem/mem_req.hh"  // some constructors use MemReq flags
+#include "arch/mips/isa_traits.hh"
 }};
 
 output decoder {{
+#include "arch/mips/isa_traits.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"  // for Jump::branchTarget()
@@ -21,9 +22,12 @@ output decoder {{
 #if defined(linux)
 #include <fenv.h>
 #endif
+
+using namespace MipsISA;
 }};
 
 output exec {{
+#include "arch/mips/isa_traits.hh"
 #include <math.h>
 #if defined(linux)
 #include <fenv.h>
@@ -35,5 +39,7 @@ output exec {{
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
+
+using namespace MipsISA;
 }};
 
