@@ -212,9 +212,6 @@ class Port
         should not need to be virtual, since it can be implemented in
         terms of writeBlobFunctional().  However, it shouldn't be
         performance-critical either, so it could be if we wanted to.
-        Not even sure if this is actually needed anywhere (there's a
-        prot_memset on the old functional memory that's never used),
-        but Nate claims it is.
     */
     void memsetBlobFunctional(Addr addr, uint8_t val, int size);
 

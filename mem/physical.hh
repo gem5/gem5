@@ -107,14 +107,8 @@ class PhysicalMemory : public Memory
     PhysicalMemory(const std::string &n);
     virtual ~PhysicalMemory();
 
-  protected:
-    // error handling for prot_* functions
-    void prot_access_error(Addr addr, int size, Command func);
-
   public:
     int deviceBlockSize();
-
-    void prot_memset(Addr addr, uint8_t val, int size);
 
     // fast back-door memory access for vtophys(), remote gdb, etc.
     // uint64_t phys_read_qword(Addr addr) const;

@@ -114,26 +114,6 @@ PhysicalMemory::addPort(std::string portName)
     return memoryPortList[portName];
 }
 
-//
-// little helper for better prot_* error messages
-//
-void
-PhysicalMemory::prot_access_error(Addr addr, int size, Command func)
-{
-    panic("invalid physical memory access!\n"
-          "%s: %i(addr=%#x, size=%d) out of range (max=%#x)\n",
-          name(), func, addr, size, pmem_size - 1);
-}
-
-void
-PhysicalMemory::prot_memset(Addr addr, uint8_t val, int size)
-{
-    if (addr + size >= pmem_size)
-        prot_access_error(addr, size, Write);
-
-    memset(pmem_addr + addr - base_addr, val, size);
-}
-
 int
 PhysicalMemory::deviceBlockSize()
 {
@@ -162,8 +142,7 @@ PhysicalMemory::doAtomicAccess(Packet &pkt)
 void
 PhysicalMemory::doFunctionalAccess(Packet &pkt)
 {
-    if (pkt.addr + pkt.size >= pmem_size)
-            prot_access_error(pkt.addr, pkt.size, pkt.cmd);
+    assert(pkt.addr + pkt.size < pmem_size);
 
     switch (pkt.cmd) {
       case Read:
