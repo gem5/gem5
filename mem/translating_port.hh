@@ -48,14 +48,21 @@ class TranslatingPort
     virtual ~TranslatingPort();
 
   public:
-    Fault readBlobFunctional(Addr addr, uint8_t *p, int size);
-    Fault writeBlobFunctional(Addr addr, uint8_t *p, int size,
-                              bool alloc = false);
-    Fault memsetBlobFunctional(Addr addr, uint8_t val, int size,
-                               bool alloc = false);
-    Fault writeStringFunctional(Addr addr, const char *str);
-    Fault readStringFunctional(std::string &str, Addr addr);
+    bool tryReadBlobFunctional(Addr addr, uint8_t *p, int size);
+    bool tryWriteBlobFunctional(Addr addr, uint8_t *p, int size,
+                                bool alloc = false);
+    bool tryMemsetBlobFunctional(Addr addr, uint8_t val, int size,
+                                 bool alloc = false);
+    bool tryWriteStringFunctional(Addr addr, const char *str);
+    bool tryReadStringFunctional(std::string &str, Addr addr);
 
+    void readBlobFunctional(Addr addr, uint8_t *p, int size);
+    void writeBlobFunctional(Addr addr, uint8_t *p, int size,
+                             bool alloc = false);
+    void memsetBlobFunctional(Addr addr, uint8_t val, int size,
+                              bool alloc = false);
+    void writeStringFunctional(Addr addr, const char *str);
+    void readStringFunctional(std::string &str, Addr addr);
 };
 
 #endif

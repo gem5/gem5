@@ -27,7 +27,6 @@
  */
 
 #include <string>
-#include "arch/faults.hh"
 #include "base/chunk_generator.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
@@ -42,8 +41,8 @@ TranslatingPort::TranslatingPort(Port *_port, PageTable *p_table)
 TranslatingPort::~TranslatingPort()
 { }
 
-Fault
-TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
+bool
+TranslatingPort::tryReadBlobFunctional(Addr addr, uint8_t *p, int size)
 {
     Addr paddr;
     int prevSize = 0;
@@ -51,19 +50,28 @@ TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
         if (!pTable->translate(gen.addr(),paddr))
-            return genMachineCheckFault();
+            return false;
 
         port->readBlobFunctional(paddr, p + prevSize, gen.size());
         prevSize += gen.size();
     }
 
-    return NoFault;
+    return true;
 }
 
-Fault
-TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
-                                     bool alloc)
+void
+TranslatingPort::readBlobFunctional(Addr addr, uint8_t *p, int size)
 {
+    if (!tryReadBlobFunctional(addr, p, size))
+        fatal("readBlobFunctional(0x%x, ...) failed", addr);
+}
+
+
+bool
+TranslatingPort::tryWriteBlobFunctional(Addr addr, uint8_t *p, int size,
+                                        bool alloc)
+{
+
     Addr paddr;
     int prevSize = 0;
 
@@ -75,7 +83,7 @@ TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);
             } else {
-                return genMachineCheckFault();
+                return false;
             }
         }
 
@@ -83,13 +91,21 @@ TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
         prevSize += gen.size();
     }
 
-    return NoFault;
+    return true;
 }
 
 
-Fault
-TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size,
-                                      bool alloc)
+void
+TranslatingPort::writeBlobFunctional(Addr addr, uint8_t *p, int size,
+                                     bool alloc)
+{
+    if (!tryWriteBlobFunctional(addr, p, size, alloc))
+        fatal("writeBlobFunctional(0x%x, ...) failed", addr);
+}
+
+bool
+TranslatingPort::tryMemsetBlobFunctional(Addr addr, uint8_t val, int size,
+                                         bool alloc)
 {
     Addr paddr;
 
@@ -101,19 +117,27 @@ TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size,
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);
             } else {
-                return genMachineCheckFault();
+                return false;
             }
         }
 
         port->memsetBlobFunctional(paddr, val, gen.size());
     }
 
-    return NoFault;
+    return true;
+}
+
+void
+TranslatingPort::memsetBlobFunctional(Addr addr, uint8_t val, int size,
+                                      bool alloc)
+{
+    if (!tryMemsetBlobFunctional(addr, val, size, alloc))
+        fatal("memsetBlobFunctional(0x%x, ...) failed", addr);
 }
 
 
-Fault
-TranslatingPort::writeStringFunctional(Addr addr, const char *str)
+bool
+TranslatingPort::tryWriteStringFunctional(Addr addr, const char *str)
 {
     Addr paddr,vaddr;
     uint8_t c;
@@ -123,16 +147,23 @@ TranslatingPort::writeStringFunctional(Addr addr, const char *str)
     do {
         c = *str++;
         if (!pTable->translate(vaddr++,paddr))
-            return genMachineCheckFault();
+            return false;
 
         port->writeBlobFunctional(paddr, &c, 1);
     } while (c);
 
-    return NoFault;
+    return true;
 }
 
-Fault
-TranslatingPort::readStringFunctional(std::string &str, Addr addr)
+void
+TranslatingPort::writeStringFunctional(Addr addr, const char *str)
+{
+    if (!tryWriteStringFunctional(addr, str))
+        fatal("writeStringFunctional(0x%x, ...) failed", addr);
+}
+
+bool
+TranslatingPort::tryReadStringFunctional(std::string &str, Addr addr)
 {
     Addr paddr,vaddr;
     uint8_t c;
@@ -141,12 +172,19 @@ TranslatingPort::readStringFunctional(std::string &str, Addr addr)
 
     do {
         if (!pTable->translate(vaddr++,paddr))
-            return genMachineCheckFault();
+            return false;
 
         port->readBlobFunctional(paddr, &c, 1);
         str += c;
     } while (c);
 
-    return NoFault;
+    return true;
+}
+
+void
+TranslatingPort::readStringFunctional(std::string &str, Addr addr)
+{
+    if (!tryReadStringFunctional(str, addr))
+        fatal("readStringFunctional(0x%x, ...) failed", addr);
 }
 
