@@ -251,14 +251,11 @@ syscall_emulation_sources = Split('''
 
 	encumbered/eio/exolex.cc
 	encumbered/eio/libexo.cc
+	encumbered/eio/eio.cc
         kern/linux/linux.cc
         kern/tru64/tru64.cc
 	sim/process.cc
 	sim/syscall_emul.cc
-        ''')
-
-eio_sources = Split('''
-	encumbered/eio/eio.cc
         ''')
 
 memtest_sources = Split('''
