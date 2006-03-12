@@ -30,18 +30,19 @@
 #define __ALPHA_PROCESS_HH__
 
 #include <string>
+#include <vector>
 
-#include "arch/alpha/linux/process.hh"
-#include "arch/alpha/tru64/process.hh"
-#include "base/loader/object_file.hh"
+class LiveProcess;
+class ObjectFile;
+class System;
 
 namespace AlphaISA
 {
 
 LiveProcess *
 createProcess(const std::string &nm, ObjectFile * objFile, System * system,
-        int stdin_fd, int stdout_fd, int stderr_fd,
-        std::vector<std::string> &argv, std::vector<std::string> &envp);
+              int stdin_fd, int stdout_fd, int stderr_fd,
+              std::vector<std::string> &argv, std::vector<std::string> &envp);
 
 } // namespace AlphaISA
 

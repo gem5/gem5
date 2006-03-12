@@ -27,6 +27,9 @@
  */
 
 #include "arch/mips/process.hh"
+#include "arch/mips/linux/process.hh"
+#include "base/loader/object_file.hh"
+#include "base/misc.hh"
 
 using namespace std;
 

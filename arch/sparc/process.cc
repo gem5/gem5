@@ -27,6 +27,9 @@
  */
 
 #include "arch/sparc/process.hh"
+#include "arch/sparc/linux/process.hh"
+#include "base/loader/object_file.hh"
+#include "base/misc.hh"
 
 namespace SparcISA
 {

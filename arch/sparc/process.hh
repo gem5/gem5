@@ -29,16 +29,20 @@
 #ifndef __SPARC_PROCESS_HH__
 #define __SPARC_PROCESS_HH__
 
-#include "arch/sparc/linux/process.hh"
-#include "base/loader/object_file.hh"
+#include <string>
+#include <vector>
+
+class LiveProcess;
+class ObjectFile;
+class System;
 
 namespace SparcISA
 {
 
 LiveProcess *
-createProcess(const string &nm, ObjectFile * objFile,
-        int stdin_fd, int stdout_fd, int stderr_fd,
-        vector<string> &argv, vector<string> &envp);
+createProcess(const std::string &nm, ObjectFile * objFile,
+              int stdin_fd, int stdout_fd, int stderr_fd,
+              std::vector<std::string> &argv, std::vector<std::string> &envp);
 
 } // namespace SparcISA
 

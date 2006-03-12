@@ -27,6 +27,10 @@
  */
 
 #include "arch/alpha/process.hh"
+#include "arch/alpha/linux/process.hh"
+#include "arch/alpha/tru64/process.hh"
+#include "base/loader/object_file.hh"
+#include "base/misc.hh"
 
 namespace AlphaISA
 {
