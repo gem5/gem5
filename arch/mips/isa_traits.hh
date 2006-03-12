@@ -54,12 +54,48 @@ int DTB_ASN_ASN(uint64_t reg);
 int ITB_ASN_ASN(uint64_t reg);
 };
 
+#if !FULL_SYSTEM
+class SyscallReturn {
+        public:
+           template <class T>
+           SyscallReturn(T v, bool s)
+           {
+               retval = (uint64_t)v;
+               success = s;
+           }
+
+           template <class T>
+           SyscallReturn(T v)
+           {
+               success = (v >= 0);
+               retval = (uint64_t)v;
+           }
+
+           ~SyscallReturn() {}
+
+           SyscallReturn& operator=(const SyscallReturn& s) {
+               retval = s.retval;
+               success = s.success;
+               return *this;
+           }
+
+           bool successful() { return success; }
+           uint64_t value() { return retval; }
+
+
+       private:
+           uint64_t retval;
+           bool success;
+};
+#endif
+
 namespace MipsISA
 {
     typedef uint32_t MachInst;
-//  typedef uint64_t Addr;
+    typedef uint32_t MachInst;
+    typedef uint64_t ExtMachInst;
     typedef uint8_t  RegIndex;
-
+//  typedef uint64_t Addr;
     enum {
         MemoryEnd = 0xffffffffffffffffULL,
 
@@ -87,7 +123,9 @@ namespace MipsISA
         ArgumentReg3 = 19,
         ArgumentReg4 = 20,
         ArgumentReg5 = 21,
-
+        SyscallNumReg = ReturnValueReg,
+        SyscallPseudoReturnReg = ArgumentReg4,
+        SyscallSuccessReg = 19,
         LogVMPageSize = 13,	// 8K bytes
         VMPageSize = (1 << LogVMPageSize),
 
@@ -129,8 +167,7 @@ namespace MipsISA
     typedef uint64_t MiscReg;
 //typedef MiscReg MiscRegFile[NumMiscRegs];
     class MiscRegFile {
-      public:
-        MiscReg
+
       protected:
         uint64_t	fpcr;		// floating point condition codes
         uint64_t	uniq;		// process-unique register
@@ -144,6 +181,8 @@ namespace MipsISA
         //has been replaced.
         int getInstAsid();
         int getDataAsid();
+
+        void copyMiscRegs(ExecContext *xc);
 
         MiscReg readReg(int misc_reg)
         { return miscRegFile[misc_reg]; }
@@ -159,7 +198,7 @@ namespace MipsISA
         { miscRegFile[misc_reg] = val; return NoFault; }
 
 #if FULL_SYSTEM
-        void clearIprs() { };
+        void clearIprs() { }
 
       protected:
         InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
@@ -249,7 +288,7 @@ namespace MipsISA
 
         EPC = 105,//105-112        //14-0 Program counter at last exception
 
-        PRId = 113//113-120,       //15-0 Processor identification and revision
+        PRId = 113,//113-120,       //15-0 Processor identification and revision
         EBase = 114,      //15-1 Exception vector base register
 
         Config = 121,//Bank 16: 121-128
@@ -411,7 +450,7 @@ extern const Addr PageOffset;
         void coldReset();
     };
 
-    StaticInstPtr decodeInst(MachInst);
+    StaticInstPtr decodeInst(ExtMachInst);
 
     // return a no-op instruction... used for instruction fetch faults
     extern const MachInst NoopMachInst;
@@ -422,8 +461,20 @@ extern const Addr PageOffset;
         ITOUCH_ANNOTE = 0xffffffff,
     };
 
-   void getMiscRegIdx(int reg_name,int &idx, int &sel);
+//void getMiscRegIdx(int reg_name,int &idx, int &sel);
 
+    static inline ExtMachInst
+    makeExtMI(MachInst inst, const uint64_t &pc) {
+#if FULL_SYSTEM
+        ExtMachInst ext_inst = inst;
+        if (pc && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
+        else
+            return ext_inst;
+#else
+        return ExtMachInst(inst);
+#endif
+    }
 
     static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
@@ -470,6 +521,22 @@ extern const Addr PageOffset;
         return 0;
     }
 
+    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+    {
+        // check for error condition.  SPARC syscall convention is to
+        // indicate success/failure in reg the carry bit of the ccr
+        // and put the return value itself in the standard return value reg ().
+        if (return_value.successful()) {
+            // no error
+            //regs->miscRegFile.ccrFields.iccFields.c = 0;
+            regs->intRegFile[ReturnValueReg] = return_value.value();
+        } else {
+            // got an error, return details
+            //regs->miscRegFile.ccrFields.iccFields.c = 1;
+            regs->intRegFile[ReturnValueReg] = -return_value.value();
+        }
+    }
+
     // Machine operations
 
     void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
@@ -498,43 +565,6 @@ extern const Addr PageOffset;
     const Addr MaxAddr = (Addr)-1;
 };
 
-#if !FULL_SYSTEM
-class SyscallReturn {
-        public:
-           template <class T>
-           SyscallReturn(T v, bool s)
-           {
-               retval = (uint64_t)v;
-               success = s;
-           }
-
-           template <class T>
-           SyscallReturn(T v)
-           {
-               success = (v >= 0);
-               retval = (uint64_t)v;
-           }
-
-           ~SyscallReturn() {}
-
-           SyscallReturn& operator=(const SyscallReturn& s) {
-               retval = s.retval;
-               success = s.success;
-               return *this;
-           }
-
-           bool successful() { return success; }
-           uint64_t value() { return retval; }
-
-
-       private:
-           uint64_t retval;
-           bool success;
-};
-
-#endif
-
-
 #if FULL_SYSTEM
 //typedef TheISA::InternalProcReg InternalProcReg;
 //const int NumInternalProcRegs  = TheISA::NumInternalProcRegs;
@@ -542,5 +572,7 @@ class SyscallReturn {
 
 #include "arch/mips/mips34k.hh"
 #endif
+
+using namespace MipsISA;
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

@@ -270,12 +270,12 @@ void
 CPUExecContext::copyArchRegs(ExecContext *xc)
 {
     // First loop through the integer registers.
-    for (int i = 0; i < AlphaISA::NumIntRegs; ++i) {
+    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
         setIntReg(i, xc->readIntReg(i));
     }
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
+    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
         setFloatRegDouble(i, xc->readFloatRegDouble(i));
         setFloatRegInt(i, xc->readFloatRegInt(i));
     }
@@ -286,5 +286,6 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
     // Lastly copy PC/NPC
     setPC(xc->readPC());
     setNextPC(xc->readNextPC());
+    setNextNPC(xc->readNextNPC());
 }
 

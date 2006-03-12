@@ -30,131 +30,240 @@
 #define __MIPS_FAULTS_HH__
 
 #include "sim/faults.hh"
-#include "arch/isa_traits.hh" //For the Addr type
+
+// The design of the "name" and "vect" functions is in sim/faults.hh
+
+namespace MipsISA
+{
+
+typedef const Addr FaultVect;
 
 class MipsFault : public FaultBase
 {
+  protected:
+    virtual bool skipFaultingInstruction() {return false;}
+    virtual bool setRestartAddress() {return true;}
   public:
-    MipsFault(char * newName, int newId, Addr newVect)
-        : FaultBase(newName, newId), vect(newVect)
-    {;}
-
-    Addr vect;
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+    virtual FaultVect vect() = 0;
+    virtual FaultStat & countStat() = 0;
 };
 
-extern class ResetFaultType : public MipsFault
+class MachineCheckFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    ResetFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const ResetFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    bool isMachineCheckFault() {return true;}
+};
 
-extern class ArithmeticFaultType : public MipsFault
+class AlignmentFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    ArithmeticFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const ArithmeticFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    bool isAlignmentFault() {return true;}
+};
 
-extern class InterruptFaultType : public MipsFault
+static inline Fault genMachineCheckFault()
 {
-  public:
-    InterruptFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const InterruptFault;
+    return new MachineCheckFault;
+}
 
-extern class NDtbMissFaultType : public MipsFault
+static inline Fault genAlignmentFault()
 {
-  public:
-    NDtbMissFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const NDtbMissFault;
+    return new AlignmentFault;
+}
 
-extern class PDtbMissFaultType : public MipsFault
+class ResetFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    PDtbMissFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const PDtbMissFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class DtbPageFaultType : public MipsFault
+class ArithmeticFault : public MipsFault
 {
+  protected:
+    bool skipFaultingInstruction() {return true;}
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    DtbPageFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const DtbPageFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+};
 
-extern class DtbAcvFaultType : public MipsFault
+class InterruptFault : public MipsFault
 {
+  protected:
+    bool setRestartAddress() {return false;}
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    DtbAcvFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const DtbAcvFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class ItbMissFaultType : public MipsFault
+class NDtbMissFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    ItbMissFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const ItbMissFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class ItbPageFaultType : public MipsFault
+class PDtbMissFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    ItbPageFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const ItbPageFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class ItbAcvFaultType : public MipsFault
+class DtbPageFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    ItbAcvFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const ItbAcvFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class UnimplementedOpcodeFaultType : public MipsFault
+class DtbAcvFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    UnimplementedOpcodeFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const UnimplementedOpcodeFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class FloatEnableFaultType : public MipsFault
+class ItbMissFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    FloatEnableFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const FloatEnableFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class PalFaultType : public MipsFault
+class ItbPageFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    PalFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const PalFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern class IntegerOverflowFaultType : public MipsFault
+class ItbAcvFault : public MipsFault
 {
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
   public:
-    IntegerOverflowFaultType(char * newName, int newId, Addr newVect)
-        : MipsFault(newName, newId, newVect)
-    {;}
-} * const IntegerOverflowFault;
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
 
-extern Fault ** ListOfFaults[];
-extern int NumFaults;
+class UnimplementedOpcodeFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class FloatEnableFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class PalFault : public MipsFault
+{
+  protected:
+    bool skipFaultingInstruction() {return true;}
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class IntegerOverflowFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+} // MipsISA namespace
 
 #endif // __FAULTS_HH__

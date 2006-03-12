@@ -32,11 +32,13 @@
 #include "arch/mips/linux_process.hh"
 #include "base/loader/object_file.hh"
 
+using namespace std;
+
 namespace MipsISA
 {
 
 LiveProcess *
-createProcess(const string &nm, ObjectFile * objFile,
+createProcess(const string &nm, ObjectFile * objFile,System * system,
         int stdin_fd, int stdout_fd, int stderr_fd,
         vector<string> &argv, vector<string> &envp);
 
