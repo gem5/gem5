@@ -46,7 +46,6 @@
 #include "mem/memory.hh"
 #include "mem/translating_port.hh"
 #include "sim/builder.hh"
-#include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/stats.hh"
 #include "sim/syscall_emul.hh"

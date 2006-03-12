@@ -30,7 +30,6 @@
 #include "arch/alpha/tru64/process.hh"
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64.hh"
-#include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
 
