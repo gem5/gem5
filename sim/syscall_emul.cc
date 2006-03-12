@@ -82,7 +82,7 @@ SyscallReturn
 exitFunc(SyscallDesc *desc, int callnum, Process *process,
          ExecContext *xc)
 {
-    new SimExitEvent("syscall caused exit", xc->getSyscallArg(0) & 0xff);
+    new SimExitEvent("target called exit()", xc->getSyscallArg(0) & 0xff);
 
     return 1;
 }
