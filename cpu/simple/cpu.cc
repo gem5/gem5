@@ -75,11 +75,7 @@
 #endif // FULL_SYSTEM
 
 using namespace std;
-
-//The SimpleCPU does alpha only
-//Change this to include arch/isa_traits.hh?
-//using namespace AlphaISA;
-#include "arch/isa_traits.hh"
+using namespace TheISA;
 
 SimpleCPU::TickEvent::TickEvent(SimpleCPU *c, int w)
     : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c), width(w)

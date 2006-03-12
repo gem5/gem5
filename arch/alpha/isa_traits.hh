@@ -30,7 +30,6 @@
 #define __ARCH_ALPHA_ISA_TRAITS_HH__
 
 namespace LittleEndianGuest {}
-using namespace LittleEndianGuest;
 
 #include "arch/alpha/types.hh"
 #include "arch/alpha/constants.hh"
@@ -79,6 +78,8 @@ class SyscallReturn {
 namespace AlphaISA
 {
 
+using namespace LittleEndianGuest;
+
 // redirected register map, really only used for the full system case.
 extern const int reg_redir[NumIntRegs];
 
@@ -108,7 +109,5 @@ extern const int reg_redir[NumIntRegs];
     }
 #endif
 };
-
-using namespace AlphaISA;
 
 #endif // __ARCH_ALPHA_ISA_TRAITS_HH__
