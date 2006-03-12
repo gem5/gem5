@@ -44,7 +44,6 @@
 #include "encumbered/eio/eio.hh"
 #include "encumbered/mem/functional/main.hh"
 #include "sim/builder.hh"
-#include "sim/fake_syscall.hh"
 #include "sim/process.hh"
 #include "sim/stats.hh"
 #include "sim/syscall_emul.hh"
