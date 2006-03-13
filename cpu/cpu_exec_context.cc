@@ -28,6 +28,7 @@
 
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "cpu/base.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
@@ -269,23 +270,6 @@ CPUExecContext::regStats(const string &name)
 void
 CPUExecContext::copyArchRegs(ExecContext *xc)
 {
-    // First loop through the integer registers.
-    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
-        setIntReg(i, xc->readIntReg(i));
-    }
-
-    // Then loop through the floating point registers.
-    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        setFloatRegDouble(i, xc->readFloatRegDouble(i));
-        setFloatRegInt(i, xc->readFloatRegInt(i));
-    }
-
-    // Copy misc. registers
-    regs.miscRegs.copyMiscRegs(xc);
-
-    // Lastly copy PC/NPC
-    setPC(xc->readPC());
-    setNextPC(xc->readNextPC());
-    setNextNPC(xc->readNextNPC());
+    TheISA::copyRegs(xc, proxy);
 }
 

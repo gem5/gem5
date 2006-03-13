@@ -34,6 +34,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
+class ExecContext;
 
 namespace AlphaISA
 {
@@ -67,8 +68,6 @@ namespace AlphaISA
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
                                ExecContext *xc);
 
-        void copyMiscRegs(ExecContext *xc);
-
 #if FULL_SYSTEM
       protected:
         typedef uint64_t InternalProcReg;
@@ -79,8 +78,6 @@ namespace AlphaISA
         InternalProcReg readIpr(int idx, Fault &fault, ExecContext *xc);
 
         Fault setIpr(int idx, InternalProcReg val, ExecContext *xc);
-
-        void copyIprs(ExecContext *xc);
 #endif
         friend class RegFile;
     };
@@ -105,6 +102,13 @@ namespace AlphaISA
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
+    void copyRegs(ExecContext *src, ExecContext *dest);
+
+    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+
+#if FULL_SYSTEM
+    void copyIprs(ExecContext *src, ExecContext *dest);
+#endif
 } // namespace AlphaISA
 
 #endif

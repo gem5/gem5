@@ -542,10 +542,10 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
 }
 
 void
-AlphaISA::MiscRegFile::copyIprs(ExecContext *xc)
+AlphaISA::copyIprs(ExecContext *src, ExecContext *dest)
 {
     for (int i = IPR_Base_DepTag; i < NumInternalProcRegs; ++i) {
-        ipr[i] = xc->readMiscReg(i);
+        dest->setMiscReg(i, src->readMiscReg(i));
     }
 }
 
