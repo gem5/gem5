@@ -11,7 +11,7 @@ output header {{
             uint8_t v:1;
             uint8_t z:1;
             uint8_t n:1;
-        }
+        };
 
         enum condTest
         {
@@ -31,7 +31,7 @@ output header {{
             Negative=0x6,
             OverflowClear=0xF,
             OverflowSet=0x7
-        }
+        };
 
         /**
          * Base class for all SPARC static instructions.

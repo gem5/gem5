@@ -31,11 +31,13 @@
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 
+using namespace std;
+
 namespace SparcISA
 {
 
 LiveProcess *
-createProcess(const string &nm, ObjectFile * objFile,
+createProcess(const string &nm, ObjectFile * objFile, System * system,
         int stdin_fd, int stdout_fd, int stderr_fd,
         vector<string> &argv, vector<string> &envp)
 {
@@ -44,7 +46,7 @@ createProcess(const string &nm, ObjectFile * objFile,
         fatal("Object file does not match architecture.");
     switch (objFile->getOpSys()) {
       case ObjectFile::Linux:
-        process = new SparcLinuxProcess(nm, objFile,
+        process = new SparcLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
                                         argv, envp);
         break;
