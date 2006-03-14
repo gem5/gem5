@@ -96,46 +96,56 @@ namespace MipsISA
     typedef uint64_t ExtMachInst;
     typedef uint8_t  RegIndex;
 //  typedef uint64_t Addr;
-    enum {
-        MemoryEnd = 0xffffffffffffffffULL,
 
-        NumIntRegs = 32,
-        NumFloatRegs = 32,
-        NumMiscRegs = 258, //account for hi,lo regs
+       // Constants Related to the number of registers
 
-        MaxRegsOfAnyType = 32,
-        // Static instruction parameters
-        MaxInstSrcRegs = 3,
-        MaxInstDestRegs = 2,
+    const int NumIntArchRegs = 32;
+    const int NumPALShadowRegs = 8;
+    const int NumFloatArchRegs = 32;
+    // @todo: Figure out what this number really should be.
+    const int NumMiscArchRegs = 32;
 
-        // semantically meaningful register indices
-        ZeroReg = 0,	// architecturally meaningful
-        // the rest of these depend on the ABI
-        StackPointerReg = 30,
-        GlobalPointerReg = 29,
-        ProcedureValueReg = 27,
-        ReturnAddressReg = 26,
-        ReturnValueReg = 0,
-        FramePointerReg = 15,
-        ArgumentReg0 = 16,
-        ArgumentReg1 = 17,
-        ArgumentReg2 = 18,
-        ArgumentReg3 = 19,
-        ArgumentReg4 = 20,
-        ArgumentReg5 = 21,
-        SyscallNumReg = ReturnValueReg,
-        SyscallPseudoReturnReg = ArgumentReg4,
-        SyscallSuccessReg = 19,
-        LogVMPageSize = 13,	// 8K bytes
-        VMPageSize = (1 << LogVMPageSize),
+    const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
+    const int NumFloatRegs = NumFloatArchRegs;
+    const int NumMiscRegs = NumMiscArchRegs;
 
-        BranchPredAddrShiftAmt = 2, // instructions are 4-byte aligned
+    const int TotalNumRegs = NumIntRegs + NumFloatRegs +
+    NumMiscRegs + 0/*NumInternalProcRegs*/;
 
-        WordBytes = 4,
-        HalfwordBytes = 2,
-        ByteBytes = 1,
-        DepNA = 0,
-    };
+    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
+
+    // Static instruction parameters
+    const int MaxInstSrcRegs = 3;
+    const int MaxInstDestRegs = 2;
+
+    // semantically meaningful register indices
+    const int ZeroReg = 31;	// architecturally meaningful
+    // the rest of these depend on the ABI
+    const int StackPointerReg = 30;
+    const int GlobalPointerReg = 29;
+    const int ProcedureValueReg = 27;
+    const int ReturnAddressReg = 26;
+    const int ReturnValueReg = 0;
+    const int FramePointerReg = 15;
+    const int ArgumentReg0 = 16;
+    const int ArgumentReg1 = 17;
+    const int ArgumentReg2 = 18;
+    const int ArgumentReg3 = 19;
+    const int ArgumentReg4 = 20;
+    const int ArgumentReg5 = 21;
+    const int SyscallNumReg = ReturnValueReg;
+    const int SyscallPseudoReturnReg = ArgumentReg4;
+    const int SyscallSuccessReg = 19;
+
+    const int LogVMPageSize = 13;	// 8K bytes
+    const int VMPageSize = (1 << LogVMPageSize);
+
+    const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
+
+    const int WordBytes = 4;
+    const int HalfwordBytes = 2;
+    const int ByteBytes = 1;
+
 
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
@@ -401,15 +411,6 @@ extern const Addr PageOffset;
         NumInternalProcRegs = 0
     };
 #endif
-
-    enum {
-        TotalNumRegs =
-        NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs
-    };
-
-    enum {
-        TotalDataRegs = NumIntRegs + NumFloatRegs
-    };
 
     typedef union {
         IntReg  intreg;

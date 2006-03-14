@@ -248,16 +248,21 @@ turbolaser_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
-
-	encumbered/eio/exolex.cc
-	encumbered/eio/libexo.cc
-	encumbered/eio/eio.cc
         kern/linux/linux.cc
         kern/tru64/tru64.cc
 	sim/process.cc
 	sim/syscall_emul.cc
         ''')
 
+alpha_eio_sources = Split('''
+	encumbered/eio/exolex.cc
+	encumbered/eio/libexo.cc
+	encumbered/eio/eio.cc
+        ''')
+
+if env['TARGET_ISA'] == 'ALPHA_ISA':
+    syscall_emulation_sources += alpha_eio_sources
+    
 memtest_sources = Split('''
 	cpu/memtest/memtest.cc
         ''')

@@ -45,7 +45,7 @@
 //would treat them as 0 in comparisons.
 #define ALPHA_ISA 21064
 #define SPARC_ISA 42
-#define MIPS_ISA 1337
+#define MIPS_ISA 34000
 
 //These tell the preprocessor where to find the files of a particular
 //ISA, and set the "TheISA" macro for use elsewhere.

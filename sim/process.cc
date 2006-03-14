@@ -363,6 +363,7 @@ LiveProcess::startup()
     Addr prog_entry = objFile->entryPoint();
     execContexts[0]->setPC(prog_entry);
     execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    execContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 
     num_processes++;
 }

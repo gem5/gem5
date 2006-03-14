@@ -88,3 +88,7 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
+def format Nop() {{
+        decode_block = 'return new Nop(\"sll r0,r0,0\",machInst);\n'
+}};
+
