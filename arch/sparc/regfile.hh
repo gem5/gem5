@@ -511,6 +511,10 @@ namespace SparcISA
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
+    void copyRegs(ExecContext *src, ExecContext *dest);
+
+    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+
 } // namespace SparcISA
 
 #endif

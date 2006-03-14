@@ -51,47 +51,47 @@ namespace AlphaISA
 #endif
     }
 
-    static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
+    inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
         return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
     }
 
-    static inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
+    inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
         return (reg >= 9 && reg <= 15);
     }
 
-    static inline bool isCallerSaveFloatRegister(unsigned int reg) {
+    inline bool isCallerSaveFloatRegister(unsigned int reg) {
         panic("register classification not implemented");
         return false;
     }
 
-    static inline bool isCalleeSaveFloatRegister(unsigned int reg) {
+    inline bool isCalleeSaveFloatRegister(unsigned int reg) {
         panic("register classification not implemented");
         return false;
     }
 
-    static inline Addr alignAddress(const Addr &addr,
+    inline Addr alignAddress(const Addr &addr,
                                          unsigned int nbytes) {
         return (addr & ~(nbytes - 1));
     }
 
     // Instruction address compression hooks
-    static inline Addr realPCToFetchPC(const Addr &addr) {
+    inline Addr realPCToFetchPC(const Addr &addr) {
         return addr;
     }
 
-    static inline Addr fetchPCToRealPC(const Addr &addr) {
+    inline Addr fetchPCToRealPC(const Addr &addr) {
         return addr;
     }
 
     // the size of "fetched" instructions (not necessarily the size
     // of real instructions for PISA)
-    static inline size_t fetchInstSize() {
+    inline size_t fetchInstSize() {
         return sizeof(MachInst);
     }
 
-    static inline MachInst makeRegisterCopy(int dest, int src) {
+    inline MachInst makeRegisterCopy(int dest, int src) {
         panic("makeRegisterCopy not implemented");
         return 0;
     }
@@ -113,30 +113,30 @@ namespace AlphaISA
 
 #if FULL_SYSTEM
     // Alpha IPR register accessors
-    static inline bool PcPAL(Addr addr) { return addr & 0x1; }
+    inline bool PcPAL(Addr addr) { return addr & 0x1; }
 
     ////////////////////////////////////////////////////////////////////////
     //
     //  Translation stuff
     //
 
-    static inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
+    inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
 
     // User Virtual
-    static inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
+    inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
 
     // Kernel Direct Mapped
-    extern inline bool IsK0Seg(Addr a) { return K0SegBase <= a && a <= K0SegEnd; }
-    static inline Addr K0Seg2Phys(Addr addr) { return addr & ~K0SegBase; }
+    inline bool IsK0Seg(Addr a) { return K0SegBase <= a && a <= K0SegEnd; }
+    inline Addr K0Seg2Phys(Addr addr) { return addr & ~K0SegBase; }
 
     // Kernel Virtual
-    static inline bool IsK1Seg(Addr a) { return K1SegBase <= a && a <= K1SegEnd; }
+    inline bool IsK1Seg(Addr a) { return K1SegBase <= a && a <= K1SegEnd; }
 
-    static inline Addr
+    inline Addr
     TruncPage(Addr addr)
     { return addr & ~(PageBytes - 1); }
 
-    static inline Addr
+    inline Addr
     RoundPage(Addr addr)
     { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
