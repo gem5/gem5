@@ -170,19 +170,23 @@ class FullO3CPU : public BaseFullCPU
     //
     uint64_t readIntReg(int reg_idx);
 
-    float readFloatRegSingle(int reg_idx);
+    FloatReg readFloatReg(int reg_idx);
 
-    double readFloatRegDouble(int reg_idx);
+    FloatReg readFloatReg(int reg_idx, int width);
 
-    uint64_t readFloatRegInt(int reg_idx);
+    FloatRegBits readFloatRegBits(int reg_idx);
+
+    FloatRegBits readFloatRegBits(int reg_idx, int width);
 
     void setIntReg(int reg_idx, uint64_t val);
 
-    void setFloatRegSingle(int reg_idx, float val);
+    void setFloatReg(int reg_idx, FloatReg val, int width);
 
-    void setFloatRegDouble(int reg_idx, double val);
+    void setFloatReg(int reg_idx, FloatReg val, int width);
 
-    void setFloatRegInt(int reg_idx, uint64_t val);
+    void setFloatRegBits(int reg_idx, FloatRegBits val);
+
+    void setFloatRegBits(int reg_idx, FloatRegBits val);
 
     uint64_t readPC();
 

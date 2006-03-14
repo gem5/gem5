@@ -1217,16 +1217,23 @@ class FloatRegOperand(Operand):
 
     def makeRead(self):
         bit_select = 0
+        width = 0;
         if (self.ctype == 'float'):
-            func = 'readFloatRegSingle'
+            func = 'readFloatReg'
+            width = 32;
         elif (self.ctype == 'double'):
-            func = 'readFloatRegDouble'
+            func = 'readFloatReg'
+            width = 64;
         else:
-            func = 'readFloatRegInt'
+            func = 'readFloatRegBits'
             if (self.size != self.dflt_size):
                 bit_select = 1
-        base = 'xc->%s(this, %d)' % \
-               (func, self.src_reg_idx)
+        if width:
+            base = 'xc->%s(this, %d, %d)' % \
+                   (func, self.src_reg_idx, width)
+        else:
+            base = 'xc->%s(this, %d)' % \
+                   (func, self.src_reg_idx)
         if bit_select:
             return '%s = bits(%s, %d, 0);\n' % \
                    (self.base_name, base, self.size-1)
@@ -1236,21 +1243,28 @@ class FloatRegOperand(Operand):
     def makeWrite(self):
         final_val = self.base_name
         final_ctype = self.ctype
+        widthSpecifier = ''
+        width = 0
         if (self.ctype == 'float'):
-            func = 'setFloatRegSingle'
+            width = 32
+            func = 'setFloatReg'
         elif (self.ctype == 'double'):
-            func = 'setFloatRegDouble'
+            width = 64
+            func = 'setFloatReg'
         else:
-            func = 'setFloatRegInt'
+            func = 'setFloatRegBits'
             final_ctype = 'uint%d_t' % self.dflt_size
             if (self.size != self.dflt_size and self.is_signed):
                 final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
+        if width:
+            widthSpecifier = ', %d' % width
         wb = '''
         {
             %s final_val = %s;
-            xc->%s(this, %d, final_val);\n
+            xc->%s(this, %d, final_val%s);\n
             if (traceData) { traceData->setData(final_val); }
-        }''' % (final_ctype, final_val, func, self.dest_reg_idx)
+        }''' % (final_ctype, final_val, func, self.dest_reg_idx,
+                widthSpecifier)
         return wb
 
 class ControlRegOperand(Operand):

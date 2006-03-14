@@ -152,19 +152,24 @@ class AlphaDynInst : public BaseDynInst<Impl>
         return this->cpu->readIntReg(_srcRegIdx[idx]);
     }
 
-    float readFloatRegSingle(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
-        return this->cpu->readFloatRegSingle(_srcRegIdx[idx]);
+        return this->cpu->readFloatReg(_srcRegIdx[idx], width);
     }
 
-    double readFloatRegDouble(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx)
     {
-        return this->cpu->readFloatRegDouble(_srcRegIdx[idx]);
+        return this->cpu->readFloatReg(_srcRegIdx[idx]);
     }
 
-    uint64_t readFloatRegInt(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
-        return this->cpu->readFloatRegInt(_srcRegIdx[idx]);
+        return this->cpu->readFloatRegBits(_srcRegIdx[idx], width);
+    }
+
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
+    {
+        return this->cpu->readFloatRegBits(_srcRegIdx[idx]);
     }
 
     /** @todo: Make results into arrays so they can handle multiple dest
@@ -176,21 +181,28 @@ class AlphaDynInst : public BaseDynInst<Impl>
         this->instResult.integer = val;
     }
 
-    void setFloatRegSingle(const StaticInst *si, int idx, float val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
-        this->cpu->setFloatRegSingle(_destRegIdx[idx], val);
+        this->cpu->setFloatReg(_destRegIdx[idx], val, width);
         this->instResult.fp = val;
     }
 
-    void setFloatRegDouble(const StaticInst *si, int idx, double val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
-        this->cpu->setFloatRegDouble(_destRegIdx[idx], val);
+        this->cpu->setFloatReg(_destRegIdx[idx], val);
         this->instResult.dbl = val;
     }
 
-    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
+    void setFloatRegBits(const StaticInst *si, int idx,
+            FloatRegBits val, int width)
     {
-        this->cpu->setFloatRegInt(_destRegIdx[idx], val);
+        this->cpu->setFloatRegBits(_destRegIdx[idx], val, width);
+        this->instResult.integer = val;
+    }
+
+    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
+    {
+        this->cpu->setFloatRegBits(_destRegIdx[idx], val);
         this->instResult.integer = val;
     }
 

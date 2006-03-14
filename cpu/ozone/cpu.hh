@@ -406,22 +406,28 @@ class OoOCPU : public BaseCPU
         return xc->readIntReg(si->srcRegIdx(idx));
     }
 
-    float readFloatRegSingle(StaticInst *si, int idx)
+    FloatReg readFloatReg(StaticInst *si, int idx, width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return xc->readFloatRegSingle(reg_idx);
+        return xc->readFloatReg(reg_idx, width);
     }
 
-    double readFloatRegDouble(StaticInst *si, int idx)
+    FloatReg readFloatReg(StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return xc->readFloatRegDouble(reg_idx);
+        return xc->readFloatReg(reg_idx);
     }
 
-    uint64_t readFloatRegInt(StaticInst *si, int idx)
+    FloatRegBits readFloatRegBits(StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return xc->readFloatRegInt(reg_idx);
+        return xc->readFloatRegBits(reg_idx, width);
+    }
+
+    FloatRegBits readFloatRegBits(StaticInst *si, int idx)
+    {
+        int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
+        return xc->readFloatRegBits(reg_idx);
     }
 
     void setIntReg(StaticInst *si, int idx, uint64_t val)
@@ -429,22 +435,28 @@ class OoOCPU : public BaseCPU
         xc->setIntReg(si->destRegIdx(idx), val);
     }
 
-    void setFloatRegSingle(StaticInst *si, int idx, float val)
+    void setFloatReg(StaticInst *si, int idx, FloatReg val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        xc->setFloatRegSingle(reg_idx, val);
+        xc->setFloatReg(reg_idx, val, width);
     }
 
-    void setFloatRegDouble(StaticInst *si, int idx, double val)
+    void setFloatReg(StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        xc->setFloatRegDouble(reg_idx, val);
+        xc->setFloatReg(reg_idx, val);
     }
 
-    void setFloatRegInt(StaticInst *si, int idx, uint64_t val)
+    void setFloatRegBits(StaticInst *si, int idx, FloatRegBits val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        xc->setFloatRegInt(reg_idx, val);
+        xc->setFloatRegBits(reg_idx, val, width);
+    }
+
+    void setFloatRegBits(StaticInst *si, int idx, FloatRegBits val)
+    {
+        int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
+        xc->setFloatRegBits(reg_idx, val);
     }
 
     uint64_t readPC() { return PC; }

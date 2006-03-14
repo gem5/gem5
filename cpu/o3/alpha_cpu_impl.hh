@@ -175,10 +175,8 @@ AlphaFullCPU<Impl>::copyToXC()
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
         renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        this->cpuXC->setFloatRegDouble(i,
-            this->regFile.readFloatRegDouble(renamed_reg));
-        this->cpuXC->setFloatRegInt(i,
-            this->regFile.readFloatRegInt(renamed_reg));
+        this->cpuXC->setFloatRegBits(i,
+            this->regFile.readFloatRegBits(renamed_reg));
     }
 
     this->cpuXC->setMiscReg(AlphaISA::Fpcr_DepTag,
@@ -223,10 +221,8 @@ AlphaFullCPU<Impl>::copyFromXC()
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
     {
         renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        this->regFile.setFloatRegDouble(renamed_reg,
-                                        this->cpuXC->readFloatRegDouble(i));
-        this->regFile.setFloatRegInt(renamed_reg,
-                                     this->cpuXC->readFloatRegInt(i));
+        this->regFile.setFloatRegBits(renamed_reg,
+                                      this->cpuXC->readFloatRegBits(i));
     }
 
     // Then loop through the misc registers.

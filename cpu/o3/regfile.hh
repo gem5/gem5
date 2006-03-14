@@ -89,43 +89,64 @@ class PhysRegFile
         return intRegFile[reg_idx];
     }
 
-    float readFloatRegSingle(PhysRegIndex reg_idx)
+    FloatReg readFloatReg(PhysRegIndex reg_idx, int width)
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Access to float register %i as single, has "
-                "data %8.8f\n", int(reg_idx), (float)floatRegFile[reg_idx].d);
+        FloatReg floatReg = floatRegFile.readReg(reg_idx, width);
 
-        return (float)floatRegFile[reg_idx].d;
+        DPRINTF(IEW, "RegFile: Access to %d byte float register %i, has "
+                "data %8.8d\n", int(reg_idx), (double)floatReg);
+
+        return floatReg;
     }
 
-    double readFloatRegDouble(PhysRegIndex reg_idx)
+    FloatReg readFloatReg(PhysRegIndex reg_idx)
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Access to float register %i as double, has "
-                " data %8.8f\n", int(reg_idx), floatRegFile[reg_idx].d);
+        FloatReg floatReg = floatRegFile.readReg(reg_idx);
 
-        return floatRegFile[reg_idx].d;
+        DPRINTF(IEW, "RegFile: Access to float register %i, has "
+                "data %8.8d\n", int(reg_idx), (double)floatReg);
+
+        return floatReg;
     }
 
-    uint64_t readFloatRegInt(PhysRegIndex reg_idx)
+    FloatRegBits readFloatRegBits(PhysRegIndex reg_idx, int width)
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Access to float register %i as int, has data "
-                "%lli\n", int(reg_idx), floatRegFile[reg_idx].q);
+        FloatRegBits floatRegBits = floatRegFile.readRegBits(reg_idx, width);
 
-        return floatRegFile[reg_idx].q;
+        DPRINTF(IEW, "RegFile: Access to %d byte float register %i as int, "
+                "has data %lli\n", int(reg_idx), (uint64_t)floatRegBits);
+
+        return floatRegBits;
+    }
+
+    FloatRegBits readFloatRegBits(PhysRegIndex reg_idx)
+    {
+        // Remove the base Float reg dependency.
+        reg_idx = reg_idx - numPhysicalIntRegs;
+
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
+
+        FloatRegBits floatRegBits = floatRegFile.readRegBits(reg_idx);
+
+        DPRINTF(IEW, "RegFile: Access to float register %i as int, "
+                "has data %lli\n", int(reg_idx), (uint64_t)floatRegBits);
+
+        return floatRegBits;
     }
 
     void setIntReg(PhysRegIndex reg_idx, uint64_t val)
@@ -138,33 +159,33 @@ class PhysRegFile
         intRegFile[reg_idx] = val;
     }
 
-    void setFloatRegSingle(PhysRegIndex reg_idx, float val)
+    void setFloatReg(PhysRegIndex reg_idx, FloatReg val, int width)
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
-                int(reg_idx), val);
+        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8d\n",
+                int(reg_idx), (double)val);
 
-        floatRegFile[reg_idx].d = (double)val;
+        floatRegFile.setReg(reg_idx, val, width);
     }
 
-    void setFloatRegDouble(PhysRegIndex reg_idx, double val)
+    void setFloatReg(PhysRegIndex reg_idx, FloatReg val)
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
-                int(reg_idx), val);
+        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8d\n",
+                int(reg_idx), (double)val);
 
-        floatRegFile[reg_idx].d = val;
+        floatRegFile.setReg(reg_idx, val);
     }
 
-    void setFloatRegInt(PhysRegIndex reg_idx, uint64_t val)
+    void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val, int width)
     {
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
@@ -172,9 +193,22 @@ class PhysRegFile
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
-                int(reg_idx), val);
+                int(reg_idx), (uint64_t)val);
 
-        floatRegFile[reg_idx].q = val;
+        floatRegFile.setRegBits(reg_idx, val, width);
+    }
+
+    void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val)
+    {
+        // Remove the base Float reg dependency.
+        reg_idx = reg_idx - numPhysicalIntRegs;
+
+        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
+
+        DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
+                int(reg_idx), (uint64_t)val);
+
+        floatRegFile.setRegBits(reg_idx, val);
     }
 
     uint64_t readPC()

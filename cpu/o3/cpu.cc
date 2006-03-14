@@ -258,8 +258,7 @@ FullO3CPU<Impl>::init()
         // Then loop through the floating point registers.
         for (int i = 0; i < TheISA::NumFloatRegs; ++i)
         {
-            regFile.floatRegFile[i].d = src_xc->readFloatRegDouble(i);
-            regFile.floatRegFile[i].q = src_xc->readFloatRegInt(i);
+            regFile.floatRegFile.setRegBits(i, src_xc->readRegBits(i))
         }
 /*
         // Then loop through the misc registers.
@@ -348,24 +347,31 @@ FullO3CPU<Impl>::readIntReg(int reg_idx)
 }
 
 template <class Impl>
-float
-FullO3CPU<Impl>::readFloatRegSingle(int reg_idx)
+FloatReg
+FullO3CPU<Impl>::readFloatReg(int reg_idx, int width)
 {
-    return regFile.readFloatRegSingle(reg_idx);
+    return regFile.readFloatReg(reg_idx, width);
 }
 
 template <class Impl>
-double
-FullO3CPU<Impl>::readFloatRegDouble(int reg_idx)
+FloatReg
+FullO3CPU<Impl>::readFloatReg(int reg_idx)
 {
-    return regFile.readFloatRegDouble(reg_idx);
+    return regFile.readFloatReg(reg_idx);
 }
 
 template <class Impl>
-uint64_t
-FullO3CPU<Impl>::readFloatRegInt(int reg_idx)
+FloatRegBits
+FullO3CPU<Impl>::readFloatRegBits(int reg_idx, int width)
 {
-    return regFile.readFloatRegInt(reg_idx);
+    return regFile.readFloatRegBits(reg_idx, width);
+}
+
+template <class Impl>
+FloatRegBits
+FullO3CPU<Impl>::readFloatRegBits(int reg_idx)
+{
+    return regFile.readFloatRegBits(reg_idx);
 }
 
 template <class Impl>
@@ -377,23 +383,30 @@ FullO3CPU<Impl>::setIntReg(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setFloatRegSingle(int reg_idx, float val)
+FullO3CPU<Impl>::setFloatReg(int reg_idx, FloatReg val, int width)
 {
-    regFile.setFloatRegSingle(reg_idx, val);
+    regFile.setFloatReg(reg_idx, val, width);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setFloatRegDouble(int reg_idx, double val)
+FullO3CPU<Impl>::setFloatReg(int reg_idx, FloatReg val)
 {
-    regFile.setFloatRegDouble(reg_idx, val);
+    regFile.setFloatReg(reg_idx, val);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setFloatRegInt(int reg_idx, uint64_t val)
+FullO3CPU<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val, int width)
 {
-    regFile.setFloatRegInt(reg_idx, val);
+    regFile.setFloatRegBits(reg_idx, val, width);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
+{
+    regFile.setFloatRegBits(reg_idx, val);
 }
 
 template <class Impl>

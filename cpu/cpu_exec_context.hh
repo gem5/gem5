@@ -70,6 +70,8 @@ class CPUExecContext
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
   public:
     typedef ExecContext::Status Status;
 
@@ -374,19 +376,24 @@ class CPUExecContext
         return regs.intRegFile[reg_idx];
     }
 
-    float readFloatRegSingle(int reg_idx)
+    FloatReg readFloatReg(int reg_idx, int width)
     {
-        return (float)regs.floatRegFile.d[reg_idx];
+        return regs.floatRegFile.readReg(reg_idx, width);
     }
 
-    double readFloatRegDouble(int reg_idx)
+    FloatReg readFloatReg(int reg_idx)
     {
-        return regs.floatRegFile.d[reg_idx];
+        return regs.floatRegFile.readReg(reg_idx);
     }
 
-    uint64_t readFloatRegInt(int reg_idx)
+    FloatRegBits readFloatRegBits(int reg_idx, int width)
     {
-        return regs.floatRegFile.q[reg_idx];
+        return regs.floatRegFile.readRegBits(reg_idx, width);
+    }
+
+    FloatRegBits readFloatRegBits(int reg_idx)
+    {
+        return regs.floatRegFile.readRegBits(reg_idx);
     }
 
     void setIntReg(int reg_idx, uint64_t val)
@@ -394,19 +401,24 @@ class CPUExecContext
         regs.intRegFile[reg_idx] = val;
     }
 
-    void setFloatRegSingle(int reg_idx, float val)
+    void setFloatReg(int reg_idx, FloatReg val, int width)
     {
-        regs.floatRegFile.d[reg_idx] = (double)val;
+        regs.floatRegFile.setReg(reg_idx, val, width);
     }
 
-    void setFloatRegDouble(int reg_idx, double val)
+    void setFloatReg(int reg_idx, FloatReg val)
     {
-        regs.floatRegFile.d[reg_idx] = val;
+        regs.floatRegFile.setReg(reg_idx, val);
     }
 
-    void setFloatRegInt(int reg_idx, uint64_t val)
+    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
     {
-        regs.floatRegFile.q[reg_idx] = val;
+        regs.floatRegFile.setRegBits(reg_idx, val, width);
+    }
+
+    void setFloatRegBits(int reg_idx, FloatRegBits val)
+    {
+        regs.floatRegFile.setRegBits(reg_idx, val);
     }
 
     uint64_t readPC()

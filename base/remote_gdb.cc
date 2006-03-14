@@ -440,7 +440,7 @@ RemoteGDB::getregs()
 
 #ifdef KGDB_FP_REGS
     for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
-        gdbregs[i + KGDB_REG_F0] = context->readFloatRegInt(i);
+        gdbregs[i + KGDB_REG_F0] = context->readFloatRegBits(i);
     }
 #endif
 }
@@ -467,7 +467,7 @@ RemoteGDB::setregs()
 
 #ifdef KGDB_FP_REGS
     for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
-        context->setFloatRegInt(i, gdbregs[i + KGDB_REG_F0]);
+        context->setFloatRegBits(i, gdbregs[i + KGDB_REG_F0]);
     }
 #endif
     context->setPC(gdbregs[KGDB_REG_PC]);

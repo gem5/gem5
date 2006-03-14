@@ -276,8 +276,7 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        setFloatRegDouble(i, xc->readFloatRegDouble(i));
-        setFloatRegInt(i, xc->readFloatRegInt(i));
+        setFloatRegBits(i, xc->readFloatRegBits(i));
     }
 
     // Copy misc. registers

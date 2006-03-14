@@ -54,10 +54,8 @@ namespace AlphaISA
     typedef uint64_t IntReg;
 
     // floating point register file entry type
-    typedef union {
-        uint64_t q;
-        double d;
-    } FloatReg;
+    typedef double FloatReg;
+    typedef uint64_t FloatRegBits;
 
     // control register file contents
     typedef uint64_t MiscReg;
