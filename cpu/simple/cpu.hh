@@ -79,6 +79,8 @@ class SimpleCPU : public BaseCPU
   protected:
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscReg MiscReg;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     class CpuPort : public Port
     {
 
@@ -321,22 +323,28 @@ class SimpleCPU : public BaseCPU
         return cpuXC->readIntReg(si->srcRegIdx(idx));
     }
 
-    float readFloatRegSingle(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegSingle(reg_idx);
+        return cpuXC->readFloatReg(reg_idx, width);
     }
 
-    double readFloatRegDouble(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegDouble(reg_idx);
+        return cpuXC->readFloatReg(reg_idx);
     }
 
-    uint64_t readFloatRegInt(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegInt(reg_idx);
+        return cpuXC->readFloatRegBits(reg_idx, width);
+    }
+
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
+    {
+        int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
+        return cpuXC->readFloatRegBits(reg_idx);
     }
 
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
@@ -344,22 +352,29 @@ class SimpleCPU : public BaseCPU
         cpuXC->setIntReg(si->destRegIdx(idx), val);
     }
 
-    void setFloatRegSingle(const StaticInst *si, int idx, float val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegSingle(reg_idx, val);
+        cpuXC->setFloatReg(reg_idx, val, width);
     }
 
-    void setFloatRegDouble(const StaticInst *si, int idx, double val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegDouble(reg_idx, val);
+        cpuXC->setFloatReg(reg_idx, val);
     }
 
-    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
+    void setFloatRegBits(const StaticInst *si, int idx,
+            FloatRegBits val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegInt(reg_idx, val);
+        cpuXC->setFloatRegBits(reg_idx, val, width);
+    }
+
+    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
+    {
+        int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
+        cpuXC->setFloatRegBits(reg_idx, val);
     }
 
     uint64_t readPC() { return cpuXC->readPC(); }

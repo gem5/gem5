@@ -50,7 +50,7 @@ isa_switch_hdrs = Split('''
 	faults.hh
 	isa_traits.hh
 	process.hh
-	registerfile.hh
+	regfile.hh
 	stacktrace.hh
 	tlb.hh
 	types.hh

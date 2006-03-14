@@ -738,7 +738,7 @@ class Tru64 {
 
         for (int i = 0; i < 31; ++i) {
             xc->setIntReg(i, htog(sc->sc_regs[i]));
-            xc->setFloatRegInt(i, htog(sc->sc_fpregs[i]));
+            xc->setFloatRegBits(i, htog(sc->sc_fpregs[i]));
         }
 
         xc->setMiscReg(TheISA::Fpcr_DepTag, htog(sc->sc_fpcr));

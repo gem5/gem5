@@ -941,7 +941,7 @@ SimpleCPU::tick()
     // maintain $r0 semantics
     cpuXC->setIntReg(ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-    cpuXC->setFloatRegDouble(ZeroReg, 0.0);
+    cpuXC->setFloatReg(ZeroReg, 0.0);
 #endif // ALPHA_ISA
 
     if (status() == IcacheAccessComplete) {

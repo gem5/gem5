@@ -54,7 +54,7 @@ AlphaArguments::getArg(bool fp)
 {
     if (number < 6) {
         if (fp)
-            return xc->readFloatRegInt(16 + number);
+            return xc->readFloatRegBits(16 + number);
         else
             return xc->readIntReg(16 + number);
     } else {

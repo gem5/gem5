@@ -10,7 +10,7 @@ output header {{
 
 #include "cpu/static_inst.hh"
 #include "arch/sparc/faults.hh"
-#include "mem/mem_req.hh"  // some constructors use MemReq flags
+#include "mem/request.hh"  // some constructors use MemReq flags
 #include "arch/sparc/isa_traits.hh"
 }};
 
@@ -34,7 +34,7 @@ output exec {{
 #endif
 
 #ifdef FULL_SYSTEM
-//#include "arch/alpha/pseudo_inst.hh"
+//#include "sim/pseudo_inst.hh"
 #endif
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

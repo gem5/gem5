@@ -134,7 +134,7 @@ AlphaISA::zeroRegisters(CPU *cpu)
     // (no longer very clean due to the change in setIntReg() in the
     // cpu model.  Consider changing later.)
     cpu->cpuXC->setIntReg(ZeroReg, 0);
-    cpu->cpuXC->setFloatRegDouble(ZeroReg, 0.0);
+    cpu->cpuXC->setFloatReg(ZeroReg, 0.0);
 }
 
 Fault

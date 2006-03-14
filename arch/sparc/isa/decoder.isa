@@ -6,7 +6,7 @@
 decode OP default Trap::unknown({{IllegalInstruction}}) {
 
         0x0: decode OP2 {
-            0x0: Trap::illtrap({{illegal_instruction}});  //ILLTRAP
+            //0x0: Trap::illtrap({{IllegalInstruction}});  //ILLTRAP
             0x1: Branch::bpcc({{
                 switch((CC12 << 1) | CC02)
                 {

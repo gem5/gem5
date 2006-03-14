@@ -54,6 +54,8 @@ class ExecContext
     typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
     typedef TheISA::IntReg IntReg;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
   public:
@@ -165,19 +167,23 @@ class ExecContext
     //
     virtual uint64_t readIntReg(int reg_idx) = 0;
 
-    virtual float readFloatRegSingle(int reg_idx) = 0;
+    virtual FloatReg readFloatReg(int reg_idx, int width) = 0;
 
-    virtual double readFloatRegDouble(int reg_idx) = 0;
+    virtual FloatReg readFloatReg(int reg_idx) = 0;
 
-    virtual uint64_t readFloatRegInt(int reg_idx) = 0;
+    virtual FloatRegBits readFloatRegBits(int reg_idx, int width) = 0;
+
+    virtual FloatRegBits readFloatRegBits(int reg_idx) = 0;
 
     virtual void setIntReg(int reg_idx, uint64_t val) = 0;
 
-    virtual void setFloatRegSingle(int reg_idx, float val) = 0;
+    virtual void setFloatReg(int reg_idx, FloatReg val, int width) = 0;
 
-    virtual void setFloatRegDouble(int reg_idx, double val) = 0;
+    virtual void setFloatReg(int reg_idx, FloatReg val) = 0;
 
-    virtual void setFloatRegInt(int reg_idx, uint64_t val) = 0;
+    virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
+
+    virtual void setFloatRegBits(int reg_idx, FloatRegBits val, int width) = 0;
 
     virtual uint64_t readPC() = 0;
 
@@ -333,26 +339,32 @@ class ProxyExecContext : public ExecContext
     uint64_t readIntReg(int reg_idx)
     { return actualXC->readIntReg(reg_idx); }
 
-    float readFloatRegSingle(int reg_idx)
-    { return actualXC->readFloatRegSingle(reg_idx); }
+    FloatReg readFloatReg(int reg_idx, int width)
+    { return actualXC->readFloatReg(reg_idx, width); }
 
-    double readFloatRegDouble(int reg_idx)
-    { return actualXC->readFloatRegDouble(reg_idx); }
+    FloatReg readFloatReg(int reg_idx)
+    { return actualXC->readFloatReg(reg_idx); }
 
-    uint64_t readFloatRegInt(int reg_idx)
-    { return actualXC->readFloatRegInt(reg_idx); }
+    FloatRegBits readFloatRegBits(int reg_idx, int width)
+    { return actualXC->readFloatRegBits(reg_idx, width); }
+
+    FloatRegBits readFloatRegBits(int reg_idx)
+    { return actualXC->readFloatRegBits(reg_idx); }
 
     void setIntReg(int reg_idx, uint64_t val)
     { actualXC->setIntReg(reg_idx, val); }
 
-    void setFloatRegSingle(int reg_idx, float val)
-    { actualXC->setFloatRegSingle(reg_idx, val); }
+    void setFloatReg(int reg_idx, FloatReg val, int width)
+    { actualXC->setFloatReg(reg_idx, val, width); }
 
-    void setFloatRegDouble(int reg_idx, double val)
-    { actualXC->setFloatRegDouble(reg_idx, val); }
+    void setFloatReg(int reg_idx, FloatReg val)
+    { actualXC->setFloatReg(reg_idx, val); }
 
-    void setFloatRegInt(int reg_idx, uint64_t val)
-    { actualXC->setFloatRegInt(reg_idx, val); }
+    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
+    { actualXC->setFloatRegBits(reg_idx, val, width); }
+
+    void setFloatRegBits(int reg_idx, FloatRegBits val)
+    { actualXC->setFloatRegBits(reg_idx, val); }
 
     uint64_t readPC() { return actualXC->readPC(); }
 

@@ -33,7 +33,7 @@ namespace LittleEndianGuest {}
 
 #include "arch/alpha/types.hh"
 #include "arch/alpha/constants.hh"
-#include "arch/alpha/registerfile.hh"
+#include "arch/alpha/regfile.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
 
