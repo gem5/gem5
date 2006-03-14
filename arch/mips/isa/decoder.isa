@@ -30,11 +30,17 @@ decode OPCODE_HI default Unknown::unknown() {
                     //Table A-3 Note: "1. Specific encodings of the rt, rd, and sa fields
                     //are used to distinguish among the SLL, NOP, SSNOP and EHB functions."
 
-                    0x0: decode RS {
-                        0x0: sll({{ Rd = Rt.uw << SA; }});
-                        //0x0:nop({{ ; }});  //really sll r0,r0,0
-                        //	    0x1:ssnop({{ ; }});//really sll r0,r0,1
-                        //    0x3:ehb({{ ; }});  //really sll r0,r0,3
+                    0x0: decode RS  {
+                        0x0: decode RT {
+                                 0x0: decode RD default Nop::nop() {
+                                  0x0: decode SA {
+                                      0x1: ssnop({{ ; }});  //really sll r0,r0,1
+                                      0x3: ehb({{ ; }});  //really sll r0,r0,3
+                                  }
+                             }
+                        }
+
+                      default: sll({{ Rd = Rt.uw << SA; }});
                     }
 
                     0x2: decode SRL {

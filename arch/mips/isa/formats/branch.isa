@@ -265,8 +265,6 @@ def format Branch(code,*flags) {{
     code += '  NNPC = NNPC;\n'
     code += '} \n'
 
-    code += 'cout << hex << "NPC: " << NPC << " + " << disp << " = " << NNPC << endl;'
-
     iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
                         ('IsDirectControl', 'IsCondControl'))
 
@@ -305,8 +303,6 @@ def format Jump(code,*flags) {{
     if strlen > 1 and name[1:] == 'al':
             code = 'r31 = NNPC;\n' + code
 
-    #code += 'if(NNPC == 0x80000638) { NNPC = r31; cout << "SKIPPING JUMP TO SIM_GET_MEM_CONF" << endl;}'
-    #code += 'target = NNPC;'
 
     iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),\
                         ('IsIndirectControl', 'IsUncondControl'))

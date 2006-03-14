@@ -961,6 +961,9 @@ SimpleCPU::tick()
 #define IFETCH_FLAGS(pc)	0
 #endif
 
+        DPRINTF(Fetch,"Fetching PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
+                cpuXC->readNextPC(),cpuXC->readNextNPC());
+
 #if SIMPLE_CPU_MEM_TIMING
         CpuRequest *ifetch_req = new CpuRequest();
         ifetch_req->size = sizeof(MachInst);
@@ -1077,7 +1080,7 @@ SimpleCPU::tick()
 #if FULL_SYSTEM
         fault->invoke(xcProxy);
 #else // !FULL_SYSTEM
-        fatal("fault (%d) detected @ PC %08p", fault, cpuXC->readPC());
+        fatal("fault (%s) detected @ PC %08p", fault->name(), cpuXC->readPC());
 #endif // FULL_SYSTEM
     }
     else {
