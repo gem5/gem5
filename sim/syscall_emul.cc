@@ -33,9 +33,11 @@
 #include <iostream>
 
 #include "sim/syscall_emul.hh"
+#include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
+#include "mem/page_table.hh"
 #include "sim/process.hh"
 
 #include "sim/sim_events.hh"
@@ -98,11 +100,18 @@ getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 SyscallReturn
 obreakFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
 {
+    Addr junk;
+
     // change brk addr to first arg
     Addr new_brk = xc->getSyscallArg(0);
-    if (new_brk != 0)
-    {
-        p->brk_point = xc->getSyscallArg(0);
+    if (new_brk != 0) {
+        for (ChunkGenerator gen(p->brk_point, new_brk - p->brk_point,
+                                VMPageSize); !gen.done(); gen.next()) {
+            if (!p->pTable->translate(gen.addr(), junk))
+                p->pTable->allocate(roundDown(gen.addr(), VMPageSize),
+                                    VMPageSize);
+        }
+        p->brk_point = new_brk;
     }
     DPRINTF(SyscallVerbose, "Break Point changed to: %#X\n", p->brk_point);
     return p->brk_point;

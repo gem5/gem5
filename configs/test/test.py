@@ -1,6 +1,6 @@
 from m5 import *
 
-class HelloWorld(LiveProcess):
+class HelloWorld(AlphaLiveProcess):
     executable = '../configs/test/hello'
     cmd = 'hello'
 

@@ -132,6 +132,7 @@ namespace SparcISA
 
     const int BranchPredAddrShiftAmt = 2;
 
+    const int MachineBytes = 8;
     const int WordBytes = 4;
     const int HalfwordBytes = 2;
     const int ByteBytes = 1;

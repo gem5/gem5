@@ -45,13 +45,15 @@
 #endif
 #include <sys/uio.h>
 
-#include "base/intmath.hh"	// for RoundUp
-#include "mem/translating_port.hh"
 #include "arch/isa_traits.hh"	// for Addr
+#include "base/chunk_generator.hh"
+#include "base/intmath.hh"	// for RoundUp
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
 #include "cpu/base.hh"
+#include "cpu/exec_context.hh"
+#include "mem/translating_port.hh"
+#include "mem/page_table.hh"
 #include "sim/process.hh"
 
 ///
@@ -698,10 +700,15 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     int flags = xc->getSyscallArg(3);
     // int fd = p->sim_fd(xc->getSyscallArg(4));
     // int offset = xc->getSyscallArg(5);
+    Addr junk;
 
     if (start == 0) {
         // user didn't give an address... pick one from our "mmap region"
         start = p->mmap_end;
+        for (ChunkGenerator gen(start, roundUp(length, TheISA::VMPageSize), TheISA::VMPageSize); !gen.done(); gen.next()) {
+            if (!p->pTable->translate(gen.addr(), junk))
+                p->pTable->allocate(roundDown(gen.addr(), TheISA::VMPageSize), TheISA::VMPageSize);
+        }
         p->mmap_end += roundUp(length, TheISA::VMPageSize);
         if (p->nxm_start != 0) {
             //If we have an nxm space, make sure we haven't colided

@@ -29,10 +29,11 @@
 #ifndef __ALPHA_TRU64_PROCESS_HH__
 #define __ALPHA_TRU64_PROCESS_HH__
 
-#include "sim/process.hh"
+#include "arch/alpha/process.hh"
 
+namespace AlphaISA {
 /// A process with emulated Alpha Tru64 syscalls.
-class AlphaTru64Process : public LiveProcess
+class AlphaTru64Process : public AlphaLiveProcess
 {
   public:
     /// Constructor.
@@ -55,5 +56,6 @@ class AlphaTru64Process : public LiveProcess
     virtual SyscallDesc* getDesc(int callnum);
 };
 
+} // namespace AlphaISA
 
 #endif // __ALPHA_TRU64_PROCESS_HH__

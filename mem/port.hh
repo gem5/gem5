@@ -71,6 +71,7 @@ class Port
 {
   public:
 
+    virtual ~Port() {};
     // mey be better to use subclasses & RTTI?
     /** Holds the ports status.  Keeps track if it is blocked, or has
         calculated a range change. */
