@@ -42,7 +42,7 @@ createProcess(const string &nm, ObjectFile * objFile, System * system,
         vector<string> &argv, vector<string> &envp)
 {
     LiveProcess * process = NULL;
-    if (objFile->getArch() != ObjectFile::MIPS)
+    if (objFile->getArch() != ObjectFile::Mips)
         fatal("Object file does not match architecture.");
     switch (objFile->getOpSys()) {
       case ObjectFile::Linux:

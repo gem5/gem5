@@ -34,6 +34,20 @@
 using namespace MipsISA;
 
 
+
+void
+MipsISA::copyRegs(ExecContext *src, ExecContext *dest)
+{
+    /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
+    uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
+    lock_flag = xc->readMiscReg(MipsISA::Lock_Flag_DepTag);
+    lock_addr = xc->readMiscReg(MipsISA::Lock_Addr_DepTag);
+
+#if FULL_SYSTEM
+    copyIprs(xc);
+    #endif*/
+}
+
 void
 MipsISA::MiscRegFile::copyMiscRegs(ExecContext *xc)
 {
@@ -264,7 +278,7 @@ void
 RegFile::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(intRegFile, NumIntRegs);
-    SERIALIZE_ARRAY(floatRegFile.q, NumFloatRegs);
+    //SERIALIZE_ARRAY(floatRegFile.q, NumFloatRegs);
     //SERIALIZE_SCALAR(miscRegs.fpcr);
     //SERIALIZE_SCALAR(miscRegs.uniq);
     //SERIALIZE_SCALAR(miscRegs.lock_flag);
@@ -285,7 +299,7 @@ void
 RegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(intRegFile, NumIntRegs);
-    UNSERIALIZE_ARRAY(floatRegFile.q, NumFloatRegs);
+    //UNSERIALIZE_ARRAY(floatRegFile.q, NumFloatRegs);
     //UNSERIALIZE_SCALAR(miscRegs.fpcr);
     //UNSERIALIZE_SCALAR(miscRegs.uniq);
     //UNSERIALIZE_SCALAR(miscRegs.lock_flag);

@@ -187,6 +187,12 @@ output decoder {{
         else
             ccprintf(ss, "0x%x", target);
 
+        string inst_name = mnemonic;
+
+        if (inst_name.substr(inst_name.length()-2,inst_name.length()) == "al"){
+            ccprintf(ss, " (r31=0x%x)",pc+8);
+        }
+
         return ss.str();
     }
 

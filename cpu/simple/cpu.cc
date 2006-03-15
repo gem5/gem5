@@ -889,6 +889,8 @@ SimpleCPU::post_interrupt(int int_num, int index)
 void
 SimpleCPU::tick()
 {
+    DPRINTF(SimpleCPU,"\n\n");
+
     numCycles++;
 
     traceData = NULL;
@@ -961,7 +963,7 @@ SimpleCPU::tick()
 #define IFETCH_FLAGS(pc)	0
 #endif
 
-        DPRINTF(Fetch,"Fetching PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
+        DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
                 cpuXC->readNextPC(),cpuXC->readNextNPC());
 
 #if SIMPLE_CPU_MEM_TIMING
@@ -1032,6 +1034,9 @@ SimpleCPU::tick()
 
         traceData = Trace::getInstRecord(curTick, xcProxy, this, curStaticInst,
                                          cpuXC->readPC());
+
+        DPRINTF(Decode,"Decode: Decoded %s instruction (opcode: 0x%x): 0x%x\n",
+                curStaticInst->getName(),curStaticInst->getOpcode(), curStaticInst->machInst);
 
 #if FULL_SYSTEM
         cpuXC->setInst(inst);

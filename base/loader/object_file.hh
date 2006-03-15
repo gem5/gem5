@@ -44,7 +44,7 @@ class ObjectFile
         UnknownArch,
         Alpha,
         SPARC,
-        MIPS
+        Mips
     };
 
     enum OpSys {
@@ -95,9 +95,11 @@ class ObjectFile
     Section bss;
 
     bool loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys);
+    void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
 
   public:
     Addr entryPoint() const { return entry; }
+
     Addr globalPointer() const { return globalPtr; }
 
     Addr textBase() const { return text.baseAddr; }

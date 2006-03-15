@@ -40,6 +40,7 @@
 class FastCPU;
 class FullCPU;
 class Checkpoint;
+class ExecContext;
 
 namespace LittleEndianGuest {};
 using namespace LittleEndianGuest;
@@ -119,22 +120,23 @@ namespace MipsISA
     const int MaxInstDestRegs = 2;
 
     // semantically meaningful register indices
-    const int ZeroReg = 31;	// architecturally meaningful
-    // the rest of these depend on the ABI
-    const int StackPointerReg = 30;
-    const int GlobalPointerReg = 29;
-    const int ProcedureValueReg = 27;
-    const int ReturnAddressReg = 26;
-    const int ReturnValueReg = 0;
-    const int FramePointerReg = 15;
-    const int ArgumentReg0 = 16;
-    const int ArgumentReg1 = 17;
-    const int ArgumentReg2 = 18;
-    const int ArgumentReg3 = 19;
-    const int ArgumentReg4 = 20;
-    const int ArgumentReg5 = 21;
-    const int SyscallNumReg = ReturnValueReg;
-    const int SyscallPseudoReturnReg = ArgumentReg4;
+    const int ZeroReg = 0;
+    const int AssemblerReg = 1;
+    const int ReturnValueReg1 = 2;
+    const int ReturnValueReg2 = 3;
+    const int ArgumentReg0 = 4;
+    const int ArgumentReg1 = 5;
+    const int ArgumentReg2 = 6;
+    const int ArgumentReg3 = 7;
+    const int KernelReg0 = 26;
+    const int KernelReg1 = 27;
+    const int GlobalPointerReg = 28;
+    const int StackPointerReg = 29;
+    const int FramePointerReg = 30;
+    const int ReturnAddressReg = 31;
+
+    const int SyscallNumReg = ReturnValueReg1;
+    const int SyscallPseudoReturnReg = ArgumentReg3;
     const int SyscallSuccessReg = 19;
 
     const int LogVMPageSize = 13;	// 8K bytes
@@ -162,16 +164,78 @@ namespace MipsISA
     typedef uint64_t IntReg;
     typedef IntReg IntRegFile[NumIntRegs];
 
-    // floating point register file entry type
+/* floating point register file entry type
     typedef union {
         uint64_t q;
         double d;
-    } FloatReg;
+    } FloatReg;*/
 
-    typedef union {
+    typedef double FloatReg;
+    typedef uint64_t FloatRegBits;
+
+/*typedef union {
         uint64_t q[NumFloatRegs];	// integer qword view
         double d[NumFloatRegs];		// double-precision floating point view
-    } FloatRegFile;
+    } FloatRegFile;*/
+
+   class FloatRegFile
+    {
+      protected:
+
+        FloatRegBits q[NumFloatRegs];	// integer qword view
+        double d[NumFloatRegs];	// double-precision floating point view
+
+      public:
+
+        FloatReg readReg(int floatReg)
+        {
+            return d[floatReg];
+        }
+
+        FloatReg readReg(int floatReg, int width)
+        {
+            return readReg(floatReg);
+        }
+
+        FloatRegBits readRegBits(int floatReg)
+        {
+            return q[floatReg];
+        }
+
+        FloatRegBits readRegBits(int floatReg, int width)
+        {
+            return readRegBits(floatReg);
+        }
+
+        Fault setReg(int floatReg, const FloatReg &val)
+        {
+            d[floatReg] = val;
+            return NoFault;
+        }
+
+        Fault setReg(int floatReg, const FloatReg &val, int width)
+        {
+            return setReg(floatReg, val);
+        }
+
+        Fault setRegBits(int floatReg, const FloatRegBits &val)
+        {
+            q[floatReg] = val;
+            return NoFault;
+        }
+
+        Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
+        {
+            return setRegBits(floatReg, val);
+        }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+    };
+
+        void copyRegs(ExecContext *src, ExecContext *dest);
 
     // cop-0/cop-1 system control register file
     typedef uint64_t MiscReg;
@@ -524,18 +588,7 @@ extern const Addr PageOffset;
 
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
-        // check for error condition.  SPARC syscall convention is to
-        // indicate success/failure in reg the carry bit of the ccr
-        // and put the return value itself in the standard return value reg ().
-        if (return_value.successful()) {
-            // no error
-            //regs->miscRegFile.ccrFields.iccFields.c = 0;
-            regs->intRegFile[ReturnValueReg] = return_value.value();
-        } else {
-            // got an error, return details
-            //regs->miscRegFile.ccrFields.iccFields.c = 1;
-            regs->intRegFile[ReturnValueReg] = -return_value.value();
-        }
+        panic("Returning from syscall\n");
     }
 
     // Machine operations
