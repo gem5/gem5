@@ -148,6 +148,7 @@ Process::registerExecContext(ExecContext *xc)
 
     if (myIndex == 0) {
         // copy process's initial regs struct
+        // Hack for now to copy init regs
         xc->copyArchRegs(cpuXC->getProxy());
     }
 
@@ -343,12 +344,12 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *objFile,
     copyStringArray(argv, argv_array_base, arg_data_base, memory);
     copyStringArray(envp, envp_array_base, env_data_base, memory);
 
-    init_regs->intRegFile[ArgumentReg0] = argc;
-    init_regs->intRegFile[ArgumentReg1] = argv_array_base;
-    init_regs->intRegFile[StackPointerReg] = stack_min;
-    init_regs->intRegFile[GlobalPointerReg] = objFile->globalPointer();
-    init_regs->pc = prog_entry;
-    init_regs->npc = prog_entry + sizeof(MachInst);
+    cpuXC->setIntReg(ArgumentReg0, argc);
+    cpuXC->setIntReg(ArgumentReg1, argv_array_base);
+    cpuXC->setIntReg(StackPointerReg, stack_min);
+    cpuXC->setIntReg(GlobalPointerReg, objFile->globalPointer());
+    cpuXC->setPC(prog_entry);
+    cpuXC->setNextPC(prog_entry + sizeof(MachInst));
 }
 
 void
