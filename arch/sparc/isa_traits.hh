@@ -83,6 +83,15 @@ class SyscallReturn
 
 namespace SparcISA
 {
+
+    // These enumerate all the registers for dependence tracking.
+    enum DependenceTags {
+        // 0..31 are the integer regs 0..31
+        // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
+        FP_Base_DepTag = 32,
+        Ctrl_Base_DepTag = 96,
+    };
+
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;
 
@@ -140,7 +149,7 @@ namespace SparcISA
 
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    StaticInstPtr decodeInst(MachInst);
+    StaticInstPtr decodeInst(ExtMachInst);
 
     // return a no-op instruction... used for instruction fetch faults
     extern const MachInst NoopMachInst;

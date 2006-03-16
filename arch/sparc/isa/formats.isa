@@ -5,11 +5,20 @@
 //Include the integerOp and integerOpCc format
 ##include "m5/arch/sparc/isa/formats/integerop.isa"
 
-//Include the mem format
+//Include the memory format
 ##include "m5/arch/sparc/isa/formats/mem.isa"
+
+//Include the compare and swap format
+##include "m5/arch/sparc/isa/formats/cas.isa"
 
 //Include the trap format
 ##include "m5/arch/sparc/isa/formats/trap.isa"
+
+//Include the "unknown" format
+##include "m5/arch/sparc/isa/formats/unknown.isa"
+
+//Include the priveleged mode format
+##include "m5/arch/sparc/isa/formats/priv.isa"
 
 //Include the branch format
 ##include "m5/arch/sparc/isa/formats/branch.isa"
