@@ -5,14 +5,15 @@
 
 output header {{
         /**
-         * Base class for integer operations.
+         * Base class for trap instructions,
+         * or instructions that always fault.
          */
         class Trap : public SparcStaticInst
         {
           protected:
 
             // Constructor
-            Trap(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            Trap(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 SparcStaticInst(mnem, _machInst, __opClass)
             {
             }
@@ -34,18 +35,18 @@ def template TrapExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
-            //TODO: set up a software fault and return it.
-            return NoFault;
+            Fault fault = NoFault;
+            %(code)s
+            return fault;
         }
 }};
 
-// Primary format for integer operate instructions:
 def format Trap(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
+        decode_block = BasicDecode.subst(iop)
         exec_output = TrapExecute.subst(iop)
 }};

@@ -89,10 +89,10 @@ TrapType      IllegalInstruction::_trapType = 0x010;
 FaultPriority IllegalInstruction::_priority = 7;
 FaultStat     IllegalInstruction::_count;
 
-FaultName     PrivelegedOpcode::_name = "priv_opcode";
-TrapType      PrivelegedOpcode::_trapType = 0x011;
-FaultPriority PrivelegedOpcode::_priority = 6;
-FaultStat     PrivelegedOpcode::_count;
+FaultName     PrivilegedOpcode::_name = "priv_opcode";
+TrapType      PrivilegedOpcode::_trapType = 0x011;
+FaultPriority PrivilegedOpcode::_priority = 6;
+FaultStat     PrivilegedOpcode::_count;
 
 FaultName     UnimplementedLDD::_name = "unimp_ldd";
 TrapType      UnimplementedLDD::_trapType = 0x012;
@@ -159,10 +159,10 @@ TrapType      STDFMemAddressNotAligned::_trapType = 0x036;
 FaultPriority STDFMemAddressNotAligned::_priority = 10;
 FaultStat     STDFMemAddressNotAligned::_count;
 
-FaultName     PrivelegedAction::_name = "priv_action";
-TrapType      PrivelegedAction::_trapType = 0x037;
-FaultPriority PrivelegedAction::_priority = 11;
-FaultStat     PrivelegedAction::_count;
+FaultName     PrivilegedAction::_name = "priv_action";
+TrapType      PrivilegedAction::_trapType = 0x037;
+FaultPriority PrivilegedAction::_priority = 11;
+FaultStat     PrivilegedAction::_count;
 
 FaultName     LDQFMemAddressNotAligned::_name = "unalign_ldqf";
 TrapType      LDQFMemAddressNotAligned::_trapType = 0x038;
