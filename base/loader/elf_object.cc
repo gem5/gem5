@@ -75,8 +75,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         DPRINTFR(Loader, "Not ELF\n");
         elf_end(elf);
         return NULL;
-    }
-    else {
+    } else {
         //Detect the architecture
         //Versioning issues in libelf need to be resolved to get the correct
         //SPARC constants.
@@ -213,8 +212,7 @@ ElfObject::ElfObject(const string &_filename, int _fd,
             bss.size = phdr.p_memsz - phdr.p_filesz;
             bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
             bss.fileImage = NULL;
-        }
-        else if (data.size == 0) { // have text, this must be data
+        } else if (data.size == 0) { // have text, this must be data
             data.baseAddr = phdr.p_vaddr;
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
@@ -227,6 +225,10 @@ ElfObject::ElfObject(const string &_filename, int _fd,
             bss.size = phdr.p_memsz - phdr.p_filesz;
             bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
             bss.fileImage = NULL;
+        } else {
+            warn("More than two loadable segments in ELF object.");
+            warn("Ignoring segment @ 0x%x length 0x%x.",
+                 phdr.p_vaddr, phdr.p_filesz);
         }
     }
 
