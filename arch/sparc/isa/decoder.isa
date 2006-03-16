@@ -532,12 +532,26 @@ decode OP default Trap::unknown({{IllegalInstruction}}) {
                                         case 1: case 3:
                                                 throw illegal_instruction;
                                         case 0:
+#if FULL_SYSTEM
+                                                throw trap_instruction;
+#else
                                                 if(passesCondition(xc->regs.MiscRegs.ccrFields.icc, machInst<25:28>))
-                                                        throw trap_instruction;
+                                                    // At least glibc only uses trap 0,
+                                                    // solaris/sunos may use others
+                                                    assert((I ? Rs1 + Rs2 : Rs1 + SW_TRAP) == 0);
+                                                    xc->syscall();
+#endif
                                         break;
                                         case 2:
+#if FULL_SYSTEM
+                                                throw trap_instruction;
+#else
                                                 if(passesCondition(xc->regs.MiscRegs.ccrFields.xcc, machInst<25:28>))
-                                                        throw trap_instruction;
+                                                    // At least glibc only uses trap 0,
+                                                    // solaris/sunos may use others
+                                                    assert((I ? Rs1 + Rs2 : Rs1 + SW_TRAP) == 0);
+                                                    xc->syscall();
+#endif
                                         break;
                                 }
                         }}); //Tcc

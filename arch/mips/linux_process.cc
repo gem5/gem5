@@ -571,7 +571,8 @@ MipsLinuxProcess::MipsLinuxProcess(const std::string &name,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
                                      std::vector<std::string> &envp)
-    : LiveProcess(name, objFile, system, stdin_fd, stdout_fd, stderr_fd, argv, envp),
+    : MipsLiveProcess(name, objFile, system, stdin_fd, stdout_fd, stderr_fd,
+                      argv, envp),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     //init_regs->intRegFile[0] = 0;

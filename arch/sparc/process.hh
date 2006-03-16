@@ -31,19 +31,32 @@
 
 #include <string>
 #include <vector>
+#include "sim/process.hh"
 
-class LiveProcess;
 class ObjectFile;
 class System;
 
-namespace SparcISA
+class SparcLiveProcess : public LiveProcess
 {
+  protected:
+    SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
+                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
+                std::vector<std::string> &argv,
+                std::vector<std::string> &envp);
 
-LiveProcess *
-createProcess(const std::string &nm, ObjectFile * objFile, System * system,
-              int stdin_fd, int stdout_fd, int stderr_fd,
-              std::vector<std::string> &argv, std::vector<std::string> &envp);
+    void startup();
 
-} // namespace SparcISA
+  public:
+    // this function is used to create the LiveProcess object, since
+    // we can't tell which subclass of LiveProcess to use until we
+    // open and look at the object file.
+    static SparcLiveProcess *create(const std::string &nm,
+                               System *_system,
+                               int stdin_fd, int stdout_fd, int stderr_fd,
+                               std::string executable,
+                               std::vector<std::string> &argv,
+                               std::vector<std::string> &envp);
+
+};
 
 #endif // __SPARC_PROCESS_HH__

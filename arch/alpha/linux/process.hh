@@ -29,11 +29,12 @@
 #ifndef __ALPHA_LINUX_PROCESS_HH__
 #define __ALPHA_LINUX_PROCESS_HH__
 
-#include "sim/process.hh"
+#include "arch/alpha/process.hh"
 
+namespace AlphaISA  {
 
 /// A process with emulated Alpha/Linux syscalls.
-class AlphaLinuxProcess : public LiveProcess
+class AlphaLinuxProcess : public AlphaLiveProcess
 {
   public:
     /// Constructor.
@@ -55,5 +56,5 @@ class AlphaLinuxProcess : public LiveProcess
     const int Num_Syscall_Descs;
 };
 
-
+} // namespace AlphaISA
 #endif // __ALPHA_LINUX_PROCESS_HH__

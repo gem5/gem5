@@ -144,6 +144,7 @@ namespace MipsISA
 
     const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
 
+    const int MachineBytes = 4;
     const int WordBytes = 4;
     const int HalfwordBytes = 2;
     const int ByteBytes = 1;

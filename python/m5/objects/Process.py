@@ -12,6 +12,15 @@ class LiveProcess(Process):
     env = VectorParam.String('', "environment settings")
     input = Param.String('cin', "filename for stdin")
 
+class AlphaLiveProcess(LiveProcess):
+    type = 'AlphaLiveProcess'
+
+class SparcLiveProcess(LiveProcess):
+    type = 'SparcLiveProcess'
+
+class MipsLiveProcess(LiveProcess):
+    type = 'MipsLiveProcess'
+
 class EioProcess(Process):
     type = 'EioProcess'
     chkpt = Param.String('', "EIO checkpoint file name (optional)")

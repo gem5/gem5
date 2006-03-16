@@ -46,5 +46,5 @@ def bitfield SHCNT64	<5:0>;
 def bitfield SIMM10	<9:0>;
 def bitfield SIMM11	<10:0>;
 def bitfield SIMM13	<12:0>;
-def bitfield SW_TRAP	<6:0>;
+def bitfield SW_TRAP	<7:0>;
 def bitfield X		<12>;

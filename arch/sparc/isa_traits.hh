@@ -106,6 +106,7 @@ namespace SparcISA
     const int ArgumentReg3 = 11;
     const int ArgumentReg4 = 12;
     const int ArgumentReg5 = 13;
+    const int SyscallNumReg = 1;
     // Some OS syscall sue a second register (o1) to return a second value
     const int SyscallPseudoReturnReg = ArgumentReg1;
 
@@ -132,6 +133,7 @@ namespace SparcISA
 
     const int BranchPredAddrShiftAmt = 2;
 
+    const int MachineBytes = 8;
     const int WordBytes = 4;
     const int HalfwordBytes = 2;
     const int ByteBytes = 1;
