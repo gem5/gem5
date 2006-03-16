@@ -1,0 +1,172 @@
+////////////////////////////////////////////////////////////////////
+//
+// Privelege mode instructions
+//
+
+output header {{
+        /**
+         * Base class for privelege mode operations.
+         */
+        class Priv : public SparcStaticInst
+        {
+          protected:
+            // Constructor
+            Priv(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+
+        /**
+         * Base class for user mode "tick" access.
+         */
+        class PrivTick : public SparcStaticInst
+        {
+          protected:
+            // Constructor
+            PrivTick(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+
+        /**
+         * Base class for privelege mode operations with immediates.
+         */
+        class PrivImm : public Priv
+        {
+          protected:
+            // Constructor
+            PrivImm(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                Priv(mnem, _machInst, __opClass), imm(SIMM13)
+            {
+            }
+
+            uint32_t imm;
+        };
+
+        /**
+         * Base class for user mode "tick" access with immediates.
+         */
+        class PrivTickImm : public PrivTick
+        {
+          protected:
+            // Constructor
+            PrivTickImm(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                PrivTick(mnem, _machInst, __opClass), imm(SIMM13)
+            {
+            }
+
+            uint32_t imm;
+        };
+}};
+
+output decoder {{
+        std::string Priv::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+                return "Privileged Instruction";
+        }
+
+        std::string PrivTick::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+                return "Regular access to Tick";
+        }
+}};
+
+def template PrivExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+
+        //If the processor isn't in privileged mode, fault out right away
+        if(!pstate_priv)
+            return new PrivilegedOpCode
+
+        %(code)s;
+        %(op_wb)s;
+    }
+}};
+
+def template PrivTickExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+
+        //If the processor isn't in privileged mode, fault out right away
+        if(!pstate_priv && tick_npt)
+            return new PrivilegedAction
+
+        %(code)s;
+        %(op_wb)s;
+    }
+}};
+
+def template Rb2OrImm13Decode {{
+    {
+        return (I ? (SparcStaticInst *)(new %(class_name)sImm(machInst))
+                  : (SparcStaticInst *)(new %(class_name)s(machInst)));
+    }
+}};
+
+// Primary format for integer operate instructions:
+def format Priv(code, *opt_flags) {{
+        uses_imm = (code.find('Rs2_or_imm13') != -1)
+        if uses_imm:
+            orig_code = code
+            code = re.sub(r'Rs2_or_imm', 'Rs2', orig_code)
+            imm_code = re.sub(r'Rs2_or_imm(\.\w+)?', 'imm', orig_code)
+        cblk = CodeBlock(code)
+        iop = InstObjParams(name, Name, 'Priv', cblk, opt_flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        exec_output = PrivExecute.subst(iop)
+        if uses_imm:
+            imm_cblk = CodeBlock(imm_code)
+            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivImm', imm_cblk,
+                                    opt_flags)
+            header_output += BasicDeclare.subst(imm_iop)
+            decoder_output += BasicConstructor.subst(imm_iop)
+            exec_output += PrivExecute.subst(imm_iop)
+            decode_block = Rb2OrImm13Decode.subst(iop)
+        else:
+            decode_block = BasicDecode.subst(iop)
+}};
+
+// Primary format for integer operate instructions:
+def format PrivTick(code, *opt_flags) {{
+        uses_imm = (code.find('Rs2_or_imm13') != -1)
+        if uses_imm:
+            orig_code = code
+            code = re.sub(r'Rs2_or_imm', 'Rs2', orig_code)
+            imm_code = re.sub(r'Rs2_or_imm(\.\w+)?', 'imm', orig_code)
+        cblk = CodeBlock(code)
+        iop = InstObjParams(name, Name, 'PrivTick', cblk, opt_flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        exec_output = PrivTickExecute.subst(iop)
+        if uses_imm:
+            imm_cblk = CodeBlock(imm_code)
+            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivTickImm', imm_cblk,
+                                    opt_flags)
+            header_output += BasicDeclare.subst(imm_iop)
+            decoder_output += BasicConstructor.subst(imm_iop)
+            exec_output += PrivTickExecute.subst(imm_iop)
+            decode_block = Rb2OrImm13Decode.subst(iop)
+        else:
+            decode_block = BasicDecode.subst(iop)
+}};

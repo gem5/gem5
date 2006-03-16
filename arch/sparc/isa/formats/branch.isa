@@ -34,7 +34,6 @@ def template BranchExecute {{
         {
             //Attempt to execute the instruction
             Fault fault = NoFault;
-            checkPriv;
 
             %(op_decl)s;
             %(op_rd)s;
@@ -57,6 +56,6 @@ def format Branch(code, *opt_flags) {{
         iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
+        decode_block = BasicDecode.subst(iop)
         exec_output = BranchExecute.subst(iop)
 }};

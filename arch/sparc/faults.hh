@@ -216,7 +216,7 @@ class IllegalInstruction : public SparcFault
     FaultStat & countStat() {return _count;}
 };
 
-class PrivelegedOpcode : public SparcFault
+class PrivilegedOpcode : public SparcFault
 {
   private:
     static FaultName _name;
@@ -412,7 +412,7 @@ class STDFMemAddressNotAligned : public SparcFault
     FaultStat & countStat() {return _count;}
 };
 
-class PrivelegedAction : public SparcFault
+class PrivilegedAction : public SparcFault
 {
   private:
     static FaultName _name;

@@ -48,12 +48,25 @@ output header {{
 
             std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
+
+            void printReg(std::ostream &os, int reg) const;
         };
 
         bool passesCondition(condCodes codes, condTest condition);
 }};
 
 output decoder {{
+
+        void
+        SparcStaticInst::printReg(std::ostream &os, int reg) const
+        {
+            if (reg < FP_Base_DepTag) {
+                ccprintf(os, "r%d", reg);
+            }
+            else {
+                ccprintf(os, "f%d", reg - FP_Base_DepTag);
+            }
+        }
 
         std::string SparcStaticInst::generateDisassembly(Addr pc,
             const SymbolTable *symtab) const
@@ -124,6 +137,8 @@ output decoder {{
               case OverflowSet:
                 return codes.v;
             }
+            panic("Tried testing condition nonexistant "
+                    "condition code %d", condition);
         }
 }};
 

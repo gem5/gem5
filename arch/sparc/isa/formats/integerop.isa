@@ -11,13 +11,13 @@ output header {{
         {
           protected:
             // Constructor
-            IntegerOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            IntegerOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 SparcStaticInst(mnem, _machInst, __opClass)
             {
             }
 
             std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
+                const SymbolTable *symtab) const;
         };
 }};
 
@@ -25,49 +25,40 @@ output decoder {{
         std::string IntegerOp::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
-                return "Integer instruction\n";
+            return "Integer instruction\n";
         }
 }};
 
 def template IntegerExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
         {
-                //These are set to constants when the execute method
-                //is generated
-                bool useCc = ;
-                bool checkPriv = ;
+            Fault fault;
+            //These are set to constants when the execute method
+            //is generated
+            bool useCc = ;
 
-                //Attempt to execute the instruction
-                try
-                {
-                        checkPriv;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
 
-                        %(op_decl)s;
-                        %(op_rd)s;
-                        %(code)s;
-                }
-                //If we have an exception for some reason,
-                //deal with it
-                catch(SparcException except)
-                {
-                        //Deal with exception
-                        return No_Fault;
-                }
-
-                //Write the resulting state to the execution context
+            //Write the resulting state to the execution context
+            if(fault == NoFault)
+            {
                 %(op_wb)s;
                 if(useCc)
                 {
-                        xc->regs.miscRegFile.ccrFields.iccFields.n = Rd & (1 << 63);
-                        xc->regs.miscRegFile.ccrFields.iccFields.z = (Rd == 0);
-                        xc->regs.miscRegFile.ccrFields.iccFields.v = ivValue;
-                        xc->regs.miscRegFile.ccrFields.iccFields.c = icValue;
-                        xc->regs.miscRegFile.ccrFields.xccFields.n = Rd & (1 << 31);
-                        xc->regs.miscRegFile.ccrFields.xccFields.z = ((Rd & 0xFFFFFFFF) == 0);
-                        xc->regs.miscRegFile.ccrFields.xccFields.v = xvValue;
-                        xc->regs.miscRegFile.ccrFields.xccFields.c = xcValue;
+                    CcrIccN = Rd & (1 << 63);
+                    CcrIccZ = (Rd == 0);
+                    CcrIccV = ivValue;
+                    CcrIccC = icValue;
+                    CcrXccN = Rd & (1 << 31);
+                    CcrXccZ = ((Rd & 0xFFFFFFFF) == 0);
+                    CcrXccV = xvValue;
+                    CcrXccC = xcValue;
                 }
-                return No_Fault;
+            }
+            return fault;
         }
 }};
 
@@ -75,19 +66,13 @@ def template IntegerExecute {{
 def format IntegerOp(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        checkPriv = (code.find('checkPriv') != -1)
-        code.replace('checkPriv', '')
-        if checkPriv:
-                code.replace('checkPriv;', 'if(!xc->regs.miscRegFile.pstateFields.priv) throw privileged_opcode;')
-        else:
-                code.replace('checkPriv;', '')
         for (marker, value) in (('ivValue', '0'), ('icValue', '0'),
                        ('xvValue', '0'), ('xcValue', '0')):
                 code.replace(marker, value)
         iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
+        decode_block = BasicDecode.subst(iop)
         exec_output = IntegerExecute.subst(iop)
 }};
 
@@ -95,18 +80,12 @@ def format IntegerOp(code, *opt_flags) {{
 def format IntegerOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        checkPriv = (code.find('checkPriv') != -1)
-        code.replace('checkPriv', '')
-        if checkPriv:
-                code.replace('checkPriv;', 'if(!xc->regs.miscRegFile.pstateFields.priv) throw privileged_opcode;')
-        else:
-                code.replace('checkPriv;', '')
         for (marker, value) in (('ivValue', ivValue), ('icValue', icValue),
                        ('xvValue', xvValue), ('xcValue', xcValue)):
                 code.replace(marker, value)
         iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecodeWithMnemonic.subst(iop)
+        decode_block = BasicDecode.subst(iop)
         exec_output = IntegerExecute.subst(iop)
 }};
