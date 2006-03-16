@@ -157,48 +157,14 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             } // while sections
         }
 
-        int32_t global_ptr;
-        if (arch == ObjectFile::Mips) {
-            Elf_Scn *section;
-            GElf_Shdr shdr;
-            Elf_Data *rdata;
-            int secIdx = 1;
-
-            // Get the first section
-            section = elf_getscn(elf, secIdx);
-
-            // While there are no more sections
-            while (section != NULL) {
-                gelf_getshdr(section, &shdr);
-                /*shdr.sh_type == SHT_MIPS_REGINFO && */
-                if (!strcmp(".reginfo",elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name))) {
-                    // We have found MIPS reginfo section:
-                    // -------------------------------
-                    // Check the 6th 32bit word for the initialized global pointer value
-                    // -------------------------------
-                    rdata = elf_rawdata(section, NULL);
-                    assert(rdata->d_buf);
-
-                    if(ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
-                        global_ptr = htole(((int32_t*)rdata->d_buf)[5]);
-                    else
-                        global_ptr = htobe(((int32_t*)rdata->d_buf)[5]);
-                    break;
-                }
-
-                section = elf_getscn(elf, ++secIdx);
-            } // if section found
-
-        }
-
         elf_end(elf);
-        return new ElfObject(fname, fd, len, data, global_ptr,arch, opSys);
+        return new ElfObject(fname, fd, len, data, arch, opSys);
     }
 }
 
 
 ElfObject::ElfObject(const string &_filename, int _fd,
-                     size_t _len, uint8_t *_data,Addr global_ptr,
+                     size_t _len, uint8_t *_data,
                      Arch _arch, OpSys _opSys)
     : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
 
@@ -222,7 +188,6 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
     entry = ehdr.e_entry;
 
-    globalPtr = global_ptr;
 
     // initialize segment sizes to 0 in case they're not present
     text.size = data.size = bss.size = 0;

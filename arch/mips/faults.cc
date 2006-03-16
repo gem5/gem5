@@ -34,11 +34,11 @@
 namespace MipsISA
 {
 
-FaultName MachineCheckFault::_name = "mchk";
+FaultName MachineCheckFault::_name = "Machine Check";
 FaultVect MachineCheckFault::_vect = 0x0401;
 FaultStat MachineCheckFault::_count;
 
-FaultName AlignmentFault::_name = "unalign";
+FaultName AlignmentFault::_name = "Alignment";
 FaultVect AlignmentFault::_vect = 0x0301;
 FaultStat AlignmentFault::_count;
 

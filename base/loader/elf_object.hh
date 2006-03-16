@@ -39,7 +39,7 @@ class ElfObject : public ObjectFile
     bool loadSomeSymbols(SymbolTable *symtab, int binding);
 
     ElfObject(const std::string &_filename, int _fd,
-              size_t _len, uint8_t *_data,Addr global_ptr,
+              size_t _len, uint8_t *_data,
               Arch _arch, OpSys _opSys);
 
   public:

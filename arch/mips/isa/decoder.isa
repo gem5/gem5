@@ -28,19 +28,19 @@ decode OPCODE_HI default Unknown::unknown() {
                 format BasicOp {
 
                     //Table A-3 Note: "1. Specific encodings of the rt, rd, and sa fields
-                    //are used to distinguish among the SLL, NOP, SSNOP and EHB functions."
-
+                    //are used to distinguish among the SLL, NOP, SSNOP and EHB functions.
                     0x0: decode RS  {
-                        0x0: decode RT {
-                                 0x0: decode RD default Nop::nop() {
+                        0x0: decode RT {     //fix Nop traditional vs. Nop converted disassembly later
+                             0x0: decode RD  default Nop::nop(){
                                   0x0: decode SA {
-                                      0x1: ssnop({{ ; }});  //really sll r0,r0,1
-                                      0x3: ehb({{ ; }});  //really sll r0,r0,3
+                                      0x1: ssnop({{ ; }}); //really sll r0,r0,1
+                                      0x3: ehb({{ ; }});   //really sll r0,r0,3
                                   }
                              }
+
+                             default: sll({{ Rd = Rt.uw << SA; }});
                         }
 
-                      default: sll({{ Rd = Rt.uw << SA; }});
                     }
 
                     0x2: decode SRL {
@@ -77,9 +77,9 @@ decode OPCODE_HI default Unknown::unknown() {
                     }
 
                     0x1: decode HINT {
-                        0: jalr({{ NNPC = Rs; }},IsCall,IsReturn);
+                        0: jalr({{ Rd = NNPC; NNPC = Rs; }},IsCall,IsReturn);
 
-                        1: jalr_hb({{ NNPC = Rs; clear_exe_inst_hazards();}},IsCall,IsReturn);
+                        1: jalr_hb({{ Rd = NNPC; NNPC = Rs; clear_exe_inst_hazards();}},IsCall,IsReturn);
                     }
                 }
 
@@ -866,7 +866,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: lb({{ Rt.sw = Mem.sb; }});
             0x1: lh({{ Rt.sw = Mem.sh; }});
             0x2: lwl({{ Rt.sw = Mem.sw; }});//, WordAlign);
-            0x3: lw({{ Rt.sw = Mem.sb; }});
+            0x3: lw({{ Rt.sw = Mem.sw; }});
             0x4: lbu({{ Rt.uw = Mem.ub; }});
             0x5: lhu({{ Rt.uw = Mem.uh; }});
             0x6: lwr({{ Rt.uw = Mem.uw; }});//, WordAlign);
@@ -879,9 +879,9 @@ decode OPCODE_HI default Unknown::unknown() {
         format StoreMemory {
             0x0: sb({{ Mem.ub = Rt<7:0>; }});
             0x1: sh({{ Mem.uh = Rt<15:0>; }});
-            0x2: swl({{ Mem.ub = Rt<31:0>; }});//,WordAlign);
-            0x3: sw({{ Mem.ub = Rt<31:0>; }});
-            0x6: swr({{ Mem.ub = Rt<31:0>; }});//,WordAlign);
+            0x2: swl({{ Mem.uw = Rt<31:0>; }});//,WordAlign);
+            0x3: sw({{ Mem.uw = Rt<31:0>; }});
+            0x6: swr({{ Mem.uw = Rt<31:0>; }});//,WordAlign);
         }
 
         format WarnUnimpl {
