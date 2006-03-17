@@ -5,15 +5,19 @@
 
 output header {{
 
-        struct condCodes
+        union CondCodes
         {
-            uint8_t c:1;
-            uint8_t v:1;
-            uint8_t z:1;
-            uint8_t n:1;
+            struct
+            {
+                uint8_t c:1;
+                uint8_t v:1;
+                uint8_t z:1;
+                uint8_t n:1;
+            };
+            uint32_t bits;
         };
 
-        enum condTest
+        enum CondTest
         {
             Always=0x8,
             Never=0x0,
@@ -52,7 +56,28 @@ output header {{
             void printReg(std::ostream &os, int reg) const;
         };
 
-        bool passesCondition(condCodes codes, condTest condition);
+        bool passesCondition(uint32_t codes, uint32_t condition);
+}};
+
+def template ROrImmDecode {{
+    {
+        return (I ? (SparcStaticInst *)(new %(class_name)sImm(machInst))
+                  : (SparcStaticInst *)(new %(class_name)s(machInst)));
+    }
+}};
+
+let {{
+    def splitOutImm(code):
+        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>d{0,2})')
+        rOrImmMatch = matcher.search(code)
+        if (rOrImmMatch == None):
+            return (False, CodeBlock(code), None, '', '')
+        rString = matcher.sub(r'(?P=rNum)', rOrImmMatch.string)
+        iString = matcher.sub(r'(?P=iNum)', rOrImmMatch.string)
+        orig_code = code
+        code = matcher.sub(r'Rs(?P<rNum>)', orig_code)
+        imm_code = matcher.sub('imm', orig_code)
+        return (True, CodeBlock(code), CodeBlock(imm_code), rString, iString)
 }};
 
 output decoder {{
@@ -100,8 +125,10 @@ output decoder {{
             return ss.str();
         }
 
-        bool passesCondition(condCodes codes, condTest condition)
+        bool passesCondition(uint32_t codes, uint32_t condition)
         {
+            CondCodes condCodes;
+            condCodes.bits = codes;
             switch(condition)
             {
               case Always:
@@ -109,33 +136,33 @@ output decoder {{
               case Never:
                 return false;
               case NotEqual:
-                return !codes.z;
+                return !condCodes.z;
               case Equal:
-                return codes.z;
+                return condCodes.z;
               case Greater:
-                return !(codes.z | (codes.n ^ codes.v));
+                return !(condCodes.z | (condCodes.n ^ condCodes.v));
               case LessOrEqual:
-                return codes.z | (codes.n ^ codes.v);
+                return condCodes.z | (condCodes.n ^ condCodes.v);
               case GreaterOrEqual:
-                return !(codes.n ^ codes.v);
+                return !(condCodes.n ^ condCodes.v);
               case Less:
-                return (codes.n ^ codes.v);
+                return (condCodes.n ^ condCodes.v);
               case GreaterUnsigned:
-                return !(codes.c | codes.z);
+                return !(condCodes.c | condCodes.z);
               case LessOrEqualUnsigned:
-                return (codes.c | codes.z);
+                return (condCodes.c | condCodes.z);
               case CarryClear:
-                return !codes.c;
+                return !condCodes.c;
               case CarrySet:
-                return codes.c;
+                return condCodes.c;
               case Positive:
-                return !codes.n;
+                return !condCodes.n;
               case Negative:
-                return codes.n;
+                return condCodes.n;
               case OverflowClear:
-                return !codes.v;
+                return !condCodes.v;
               case OverflowSet:
-                return codes.v;
+                return condCodes.v;
             }
             panic("Tried testing condition nonexistant "
                     "condition code %d", condition);

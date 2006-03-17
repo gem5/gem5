@@ -98,6 +98,11 @@ namespace SparcISA
     typedef uint32_t MachInst;
     typedef uint64_t ExtMachInst;
 
+    inline ExtMachInst
+    makeExtMI(MachInst inst, const Addr &pc) {
+        return ExtMachInst(inst);
+    }
+
     const int NumIntRegs = 32;
     const int NumFloatRegs = 64;
     const int NumMiscRegs = 32;
