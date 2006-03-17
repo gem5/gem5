@@ -7,11 +7,11 @@ output header {{
         /**
          * Base class for integer operations.
          */
-        class IntegerOp : public SparcStaticInst
+        class IntOp : public SparcStaticInst
         {
           protected:
             // Constructor
-            IntegerOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+            IntOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 SparcStaticInst(mnem, _machInst, __opClass)
             {
             }
@@ -19,24 +19,68 @@ output header {{
             std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
         };
+
+        /**
+         * Base class for 10 bit immediate integer operations.
+         */
+        class IntOpImm10 : public IntOp
+        {
+          protected:
+            // Constructor
+            IntOpImm10(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                IntOp(mnem, _machInst, __opClass), imm(SIMM10)
+            {
+            }
+
+            uint32_t imm;
+        };
+
+        /**
+         * Base class for 13 bit immediate integer operations.
+         */
+        class IntOpImm13 : public IntOp
+        {
+          protected:
+            // Constructor
+            IntOpImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                IntOp(mnem, _machInst, __opClass), imm(SIMM13)
+            {
+            }
+
+            uint32_t imm;
+        };
 }};
 
 output decoder {{
-        std::string IntegerOp::generateDisassembly(Addr pc,
+        std::string IntOp::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
             return "Integer instruction\n";
         }
 }};
 
-def template IntegerExecute {{
+def template IntOpExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
+
+            //Write the resulting state to the execution context
+            if(fault == NoFault)
+                %(op_wb)s;
+            return fault;
+        }
+}};
+
+def template IntOpCcExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault;
-            //These are set to constants when the execute method
-            //is generated
-            bool useCc = ;
 
             %(op_decl)s;
             %(op_rd)s;
@@ -46,46 +90,76 @@ def template IntegerExecute {{
             if(fault == NoFault)
             {
                 %(op_wb)s;
-                if(useCc)
-                {
-                    CcrIccN = Rd & (1 << 63);
-                    CcrIccZ = (Rd == 0);
-                    CcrIccV = ivValue;
-                    CcrIccC = icValue;
-                    CcrXccN = Rd & (1 << 31);
-                    CcrXccZ = ((Rd & 0xFFFFFFFF) == 0);
-                    CcrXccV = xvValue;
-                    CcrXccC = xcValue;
-                }
+                CcrIccN = Rd & (1 << 63);
+                CcrIccZ = (Rd == 0);
+                CcrIccV = ivValue;
+                CcrIccC = icValue;
+                CcrXccN = Rd & (1 << 31);
+                CcrXccZ = ((Rd & 0xFFFFFFFF) == 0);
+                CcrXccV = xvValue;
+                CcrXccC = xcValue;
             }
             return fault;
         }
 }};
 
-// Primary format for integer operate instructions:
-def format IntegerOp(code, *opt_flags) {{
-        orig_code = code
-        cblk = CodeBlock(code)
-        for (marker, value) in (('ivValue', '0'), ('icValue', '0'),
-                       ('xvValue', '0'), ('xcValue', '0')):
-                code.replace(marker, value)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+def template IntOpCcResExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault;
+
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
+
+            //Write the resulting state to the execution context
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+                CcrIccN = Rd & (1 << 63);
+                CcrIccZ = (Rd == 0);
+                CcrXccN = Rd & (1 << 31);
+                CcrXccZ = ((Rd & 0xFFFFFFFF) == 0);
+                CcrIccV = CcrIccC = CcrXccV = CcrXccC = 0;
+            }
+            return fault;
+        }
+}};
+
+let {{
+    def doIntFormat(code, execTemplate, name, Name, opt_flags):
+        (usesImm, cblk, immCblk, rString, iString) = splitOutImm(code)
+        iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = IntegerExecute.subst(iop)
+        exec_output = execTemplate.subst(iop)
+        if usesImm:
+            imm_iop = InstObjParams(name, Name + 'Imm', 'IntOpImm' + iString,
+                    immCblk, opt_flags)
+            header_output += BasicDeclare.subst(imm_iop)
+            decoder_output += BasicConstructor.subst(imm_iop)
+            exec_output += execTemplate.subst(imm_iop)
+            decode_block = ROrImmDecode.subst(iop)
+        else:
+            decode_block = BasicDecode.subst(iop)
 }};
 
 // Primary format for integer operate instructions:
-def format IntegerOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
-        orig_code = code
-        cblk = CodeBlock(code)
-        for (marker, value) in (('ivValue', ivValue), ('icValue', icValue),
-                       ('xvValue', xvValue), ('xcValue', xcValue)):
-                code.replace(marker, value)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = IntegerExecute.subst(iop)
+def format IntOp(code, *opt_flags) {{
+    doIntFormat(code, IntOpExecute, name, Name, opt_flags)
 }};
+
+// Primary format for integer operate instructions:
+def format IntOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
+    for (marker, value) in (('ivValue', ivValue), ('icValue', icValue),
+                   ('xvValue', xvValue), ('xcValue', xcValue)):
+            code.replace(marker, value)
+    doIntFormat(code, IntOpCcExecute, name, Name, opt_flags)
+}};
+
+// Primary format for integer operate instructions:
+def format IntOpCcRes(code, *opt_flags) {{
+    doIntFormat(code, IntOpCcResExecute, name, Name, opt_flags)
+}};
+

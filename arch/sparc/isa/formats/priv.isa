@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////
 //
-// Privelege mode instructions
+// Privilege mode instructions
 //
 
 output header {{
@@ -92,8 +92,8 @@ def template PrivExecute {{
         %(op_rd)s;
 
         //If the processor isn't in privileged mode, fault out right away
-        if(!pstate_priv)
-            return new PrivilegedOpCode
+        if(!PstatePriv)
+            return new PrivilegedOpcode
 
         %(code)s;
         %(op_wb)s;
@@ -108,18 +108,11 @@ def template PrivTickExecute {{
         %(op_rd)s;
 
         //If the processor isn't in privileged mode, fault out right away
-        if(!pstate_priv && tick_npt)
+        if(!PstatePriv && TickNpt)
             return new PrivilegedAction
 
         %(code)s;
         %(op_wb)s;
-    }
-}};
-
-def template Rb2OrImm13Decode {{
-    {
-        return (I ? (SparcStaticInst *)(new %(class_name)sImm(machInst))
-                  : (SparcStaticInst *)(new %(class_name)s(machInst)));
     }
 }};
 
@@ -128,8 +121,8 @@ def format Priv(code, *opt_flags) {{
         uses_imm = (code.find('Rs2_or_imm13') != -1)
         if uses_imm:
             orig_code = code
-            code = re.sub(r'Rs2_or_imm', 'Rs2', orig_code)
-            imm_code = re.sub(r'Rs2_or_imm(\.\w+)?', 'imm', orig_code)
+            code = re.sub(r'Rs2_or_imm13', 'Rs2', orig_code)
+            imm_code = re.sub(r'Rs2_or_imm13(\.\w+)?', 'imm', orig_code)
         cblk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'Priv', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
@@ -142,7 +135,7 @@ def format Priv(code, *opt_flags) {{
             header_output += BasicDeclare.subst(imm_iop)
             decoder_output += BasicConstructor.subst(imm_iop)
             exec_output += PrivExecute.subst(imm_iop)
-            decode_block = Rb2OrImm13Decode.subst(iop)
+            decode_block = ROrImmDecode.subst(iop)
         else:
             decode_block = BasicDecode.subst(iop)
 }};
@@ -152,8 +145,8 @@ def format PrivTick(code, *opt_flags) {{
         uses_imm = (code.find('Rs2_or_imm13') != -1)
         if uses_imm:
             orig_code = code
-            code = re.sub(r'Rs2_or_imm', 'Rs2', orig_code)
-            imm_code = re.sub(r'Rs2_or_imm(\.\w+)?', 'imm', orig_code)
+            code = re.sub(r'Rs2_or_imm13', 'Rs2', orig_code)
+            imm_code = re.sub(r'Rs2_or_imm13(\.\w+)?', 'imm', orig_code)
         cblk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'PrivTick', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
@@ -166,7 +159,7 @@ def format PrivTick(code, *opt_flags) {{
             header_output += BasicDeclare.subst(imm_iop)
             decoder_output += BasicConstructor.subst(imm_iop)
             exec_output += PrivTickExecute.subst(imm_iop)
-            decode_block = Rb2OrImm13Decode.subst(iop)
+            decode_block = Rb2OrImmDecode.subst(iop)
         else:
             decode_block = BasicDecode.subst(iop)
 }};
