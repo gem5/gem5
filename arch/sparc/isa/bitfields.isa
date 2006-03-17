@@ -9,9 +9,9 @@
 def bitfield A		<29>;
 def bitfield BPCC       <21:20>; // for BPcc & FBPcc
 def bitfield FCMPCC     <26:56>; // for FCMP & FCMPEa
-def bitflied FMOVCC     <13:11>; // for FMOVcc
+def bitfield FMOVCC     <13:11>; // for FMOVcc
 def bitfield CC         <12:11>; // for MOVcc & Tcc
-def bitfierd MOVCC3     <18>; // also for MOVcc
+def bitfield MOVCC3     <18>; // also for MOVcc
 def bitfield CMASK	<6:4>;
 def bitfield COND2	<28:25>;
 def bitfield COND4	<17:14>;
