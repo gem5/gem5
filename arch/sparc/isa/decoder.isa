@@ -10,7 +10,7 @@ decode OP default Unknown::unknown()
         //Throw an illegal instruction acception
         0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
         0x1: Branch::bpcc({{
-            switch((CC12 << 1) | CC02)
+            switch(BPCC)
             {
               case 1:
               case 3:
@@ -387,7 +387,7 @@ decode OP default Unknown::unknown()
                 }
                 0x2B: BasicOperate::flushw({{\\window toilet}}); //FLUSHW
                 0x2C: movcc({{
-                        ccBank = (CC24 << 2) | (CC14 << 1) | (CC04 << 0);
+                        ccBank = (MOVCC3 << 2) | CC;
                         switch(ccBank)
                         {
                                 case 0: case 1: case 2: case 3:
@@ -511,20 +511,30 @@ decode OP default Unknown::unknown()
 
                 0x38: Branch::jmpl({{//Stuff}}); //JMPL
                 0x39: Branch::return({{//Other Stuff}}); //RETURN
-                0x3A: decode CC04
+                0x3A: decode CC
                 {
-                    // If CC04 == 1, it's an illegal instruction
-                    0x0: decode CC14
-                    {
-                        0x0: Trap::tcci({{
-                            if(passesCondition(ccr_icc, machInst<25:28>))
-                                fault = new TrapInstruction;
-                        }});
-                        0x1: Trap::tccx({{
-                            if(passesCondition(ccr_xcc, machInst<25:28>))
-                                fault = new TrapInstruction;
-                        }});
-                    }
+                    0x0: Trap::tcci({{
+#if FULL_SYSTEM
+                         fault = new TrapInstruction;
+#else
+                         if(passesCondition(ccr_icc, machInst<25:28>))
+                              // At least glibc only uses trap 0,
+                              // solaris/sunos may use others
+                              assert((I ? Rs1 + Rs2 : Rs1 + SW_TRAP) == 0);
+                              xc->syscall();
+#endif
+                    }});
+                    0x2: Trap::tccx({{
+#if FULL_SYSTEM
+                         fault = new TrapInstruction;
+#else
+                         if(passesCondition(ccr_xcc, machInst<25:28>))
+                              // At least glibc only uses trap 0,
+                              // solaris/sunos may use others
+                              assert((I ? Rs1 + Rs2 : Rs1 + SW_TRAP) == 0);
+                              xc->syscall();
+#endif
+                    }});
                 }
                 0x3B: BasicOperate::flush({{//Lala}}); //FLUSH
                 0x3C: BasicOperate::save({{//leprechauns); //SAVE
