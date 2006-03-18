@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/mips/common_syscall_emul.hh"
 #include "arch/mips/linux_process.hh"
 #include "arch/mips/isa_traits.hh"
 
@@ -162,11 +161,11 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 43 */ SyscallDesc("times", unimplementedFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
     /* 45 */ SyscallDesc("brk", unimplementedFunc),/*openFunc<Linux>*/
-    /* 46 */ SyscallDesc("setgid", setgidFunc),
+    /* 46 */ SyscallDesc("setgid", unimplementedFunc),
     /* 47 */ SyscallDesc("getgid", getgidFunc),
     /* 48 */ SyscallDesc("signal", ignoreFunc),
-    /* 49 */ SyscallDesc("geteuid", unimplementedFunc),
-    /* 50 */ SyscallDesc("getegid", unimplementedFunc),
+    /* 49 */ SyscallDesc("geteuid", geteuidFunc),
+    /* 50 */ SyscallDesc("getegid", getegidFunc),
     /* 51 */ SyscallDesc("acct", unimplementedFunc),
     /* 52 */ SyscallDesc("umount2", unimplementedFunc),
     /* 53 */ SyscallDesc("lock", unimplementedFunc),
@@ -207,7 +206,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 88 */ SyscallDesc("reboot", unimplementedFunc),
     /* 89 */ SyscallDesc("readdir", unimplementedFunc),
     /* 90 */ SyscallDesc("mmap", mmapFunc<Linux>),
-    /* 91 */ SyscallDesc("munmap", ),/*fstatFunc<Linux>*/
+    /* 91 */ SyscallDesc("munmap",unimplementedFunc),/*fstatFunc<Linux>*/
     /* 92 */ SyscallDesc("truncate", fcntlFunc),
     /* 93 */ SyscallDesc("ftruncate", unimplementedFunc),
     /* 94 */ SyscallDesc("fchmod", unimplementedFunc),
@@ -238,9 +237,9 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
     /* 120 */ SyscallDesc("clone", unimplementedFunc),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
-    /* 122 */ SyscallDesc("uname", unameFunc)/*,writevFunc<Linux>*/
-    /* 123 */ SyscallDesc("modify_ldt", fchownFunc),
-    /* 124 */ SyscallDesc("adjtimex", fchmodFunc<Linux>),
+    /* 122 */ SyscallDesc("uname", unameFunc),/*,writevFunc<Linux>*/
+    /* 123 */ SyscallDesc("modify_ldt", unimplementedFunc),
+    /* 124 */ SyscallDesc("adjtimex", unimplementedFunc),
     /* 125 */ SyscallDesc("mprotect", unimplementedFunc),
     /* 126 */ SyscallDesc("sigprocmask", unimplementedFunc),
     /* 127 */ SyscallDesc("create_module", unimplementedFunc),

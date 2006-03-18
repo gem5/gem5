@@ -589,7 +589,20 @@ extern const Addr PageOffset;
 
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
-        regs->intRegFile[ReturnValueReg1] = 1;
+        // check for error condition.  Alpha syscall convention is to
+        // indicate success/failure in reg a3 (r19) and put the
+        // return value itself in the standard return value reg (v0).
+        if (return_value.successful()) {
+            // no error
+            regs->intRegFile[ReturnValueReg1] = 0;
+            regs->intRegFile[ReturnValueReg2] = return_value.value();
+        } else {
+            // got an error, return details
+            regs->intRegFile[ReturnValueReg1] = (IntReg) -1;
+            regs->intRegFile[ReturnValueReg2] = -return_value.value();
+        }
+
+        //regs->intRegFile[ReturnValueReg1] = (IntReg)return_value;
         //panic("Returning from syscall\n");
     }
 
