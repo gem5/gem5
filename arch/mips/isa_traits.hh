@@ -589,7 +589,8 @@ extern const Addr PageOffset;
 
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
-        panic("Returning from syscall\n");
+        regs->intRegFile[ReturnValueReg1] = 1;
+        //panic("Returning from syscall\n");
     }
 
     // Machine operations
