@@ -65,7 +65,11 @@ SyscallReturn
 unimplementedFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
 {
+    //warn("ignoring syscall %s(%d, %d, ...)", desc->name,
+    // xc->getSyscallArg(0), xc->getSyscallArg(1));
     fatal("syscall %s (#%d) unimplemented.", desc->name, callnum);
+
+    return 1;
 }
 
 

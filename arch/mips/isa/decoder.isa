@@ -88,10 +88,10 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x3: movn({{ if (Rt != 0) Rd = Rs; }});
                 }
 
-                format WarnUnimpl {
-                    0x4: syscall();//{{ xc->syscall()}},IsNonSpeculative
-                    0x5: break();
-                    0x7: sync();
+                format BasicOp {
+                    0x4: syscall({{ xc->syscall(); }},IsNonSpeculative);
+                    0x5: break({{ panic("Not implemented break yet"); }},IsNonSpeculative);
+                    0x7: sync({{  panic("Not implemented sync yet"); }},IsNonSpeculative);
                 }
             }
 
