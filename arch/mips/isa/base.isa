@@ -67,12 +67,11 @@ output decoder {{
         ccprintf(ss, "%-10s ", mnemonic);
 
         if(_numDestRegs > 0){
-            if(_numSrcRegs > 0)
-                ss << ",";
             printReg(ss, _destRegIdx[0]);
         }
 
         if(_numSrcRegs > 0) {
+            ss << ",";
             printReg(ss, _srcRegIdx[0]);
         }
 
@@ -82,8 +81,8 @@ output decoder {{
         }
 
 
-        if(mnemonic == "sll"){
-            ccprintf(ss," %d",SA);
+        if(mnemonic == "sll" || mnemonic == "sra"){
+            ccprintf(ss,", %d",SA);
         }
 
         return ss.str();

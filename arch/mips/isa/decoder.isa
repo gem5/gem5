@@ -865,11 +865,11 @@ decode OPCODE_HI default Unknown::unknown() {
         format LoadMemory {
             0x0: lb({{ Rt.sw = Mem.sb; }});
             0x1: lh({{ Rt.sw = Mem.sh; }});
-            0x2: lwl({{ Rt.sw = Mem.sw; }});//, WordAlign);
+            0x2: lwl({{ uint32_t temp = Mem.uw<31:16> << 16; Rt.uw &= 0x00FF; Rt.uw |= temp;}}, {{ EA = (Rs + disp) & ~3; }});
             0x3: lw({{ Rt.sw = Mem.sw; }});
             0x4: lbu({{ Rt.uw = Mem.ub; }});
             0x5: lhu({{ Rt.uw = Mem.uh; }});
-            0x6: lwr({{ Rt.uw = Mem.uw; }});//, WordAlign);
+            0x6: lwr({{ uint32_t temp = 0x00FF & Mem.uw<15:0>; Rt.uw &= 0xFF00; Rt.uw |= temp; }}, {{ EA = (Rs + disp) & ~3; }});
         }
 
         0x7: FailUnimpl::reserved();
@@ -879,9 +879,9 @@ decode OPCODE_HI default Unknown::unknown() {
         format StoreMemory {
             0x0: sb({{ Mem.ub = Rt<7:0>; }});
             0x1: sh({{ Mem.uh = Rt<15:0>; }});
-            0x2: swl({{ Mem.uw = Rt<31:0>; }});//,WordAlign);
+            0x2: swl({{ Mem.uh = Rt<31:16>; }}, {{ EA = (Rs + disp) & ~3; }});
             0x3: sw({{ Mem.uw = Rt<31:0>; }});
-            0x6: swr({{ Mem.uw = Rt<31:0>; }});//,WordAlign);
+            0x6: swr({{ Mem.uh = Rt<15:0>; }},{{ EA = ((Rs + disp) & ~3) + 4;}});
         }
 
         format WarnUnimpl {

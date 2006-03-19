@@ -237,7 +237,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
     /* 120 */ SyscallDesc("clone", unimplementedFunc),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
-    /* 122 */ SyscallDesc("uname", unameFunc),/*,writevFunc<Linux>*/
+    /* 122 */ SyscallDesc("uname", unameFunc),
     /* 123 */ SyscallDesc("modify_ldt", unimplementedFunc),
     /* 124 */ SyscallDesc("adjtimex", unimplementedFunc),
     /* 125 */ SyscallDesc("mprotect", unimplementedFunc),
@@ -261,7 +261,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 143 */ SyscallDesc("flock", unimplementedFunc),
     /* 144 */ SyscallDesc("msync", unimplementedFunc),/*getrlimitFunc<Linux>*/
     /* 145 */ SyscallDesc("readv", unimplementedFunc),
-    /* 146 */ SyscallDesc("writev", unimplementedFunc/*writeFunc*/),
+    /* 146 */ SyscallDesc("writev", writevFunc<Linux>),
     /* 147 */ SyscallDesc("cacheflush", unimplementedFunc),
     /* 148 */ SyscallDesc("cachectl", unimplementedFunc),
     /* 149 */ SyscallDesc("sysmips", unimplementedFunc),
