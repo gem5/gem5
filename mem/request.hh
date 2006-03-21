@@ -73,7 +73,11 @@ class Request
     int size;
 
     /** The time this request was started. Used to calculate latencies. */
-    Tick time;
+    Tick requestTime;
+
+    /** The time this request was responded to in the memory hierachy. Used by
+     * deviced to inform ports how long a request should be delayed. */
+    Tick responseTime;
 
     /** Destination address if this is a block copy. */
     Addr copyDest;
