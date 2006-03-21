@@ -29,10 +29,44 @@
 #include "dev/io_device.hh"
 #include "sim/builder.hh"
 
+
+PioPort::PioPort(PioDevice *dev)
+        : device(dev)
+{ }
+
+
+Tick
+PioPort::recvAtomic(Packet &pkt)
+{
+    return device->recvAtomic(pkt);
+}
+
+void
+PioPort::recvFunctional(Packet &pkt)
+{
+    device->recvAtomic(pkt);
+}
+
+void
+PioPort::getDeviceAddressRanges(AddrRangeList &range_list, bool &owner)
+{
+    device->addressRanges(range_list, owner);
+}
+
+
+Packet *
+PioPort::recvRetry()
+{
+    Packet* pkt = transmitList.front();
+    transmitList.pop_front();
+    return pkt;
+}
+
+
 void
 PioPort::SendEvent::process()
 {
-    if (port->sendTiming(packet) == Success)
+    if (port->Port::sendTiming(packet) == Success)
         return;
 
     port->transmitList.push_back(&packet);
@@ -46,37 +80,57 @@ PioDevice::PioDevice(const std::string &name, Platform *p)
 
 
 bool
-PioDevice::recvTiming(Packet &pkt)
+PioPort::recvTiming(Packet &pkt)
 {
     device->recvAtomic(pkt);
-    sendTiming(pkt, pkt.responseTime-pkt.requestTime);
+    sendTiming(pkt, pkt.req->responseTime-pkt.req->requestTime);
     return Success;
 }
 
 PioDevice::~PioDevice()
 {
     if (pioPort)
-        delete pioInterface;
+        delete pioPort;
 }
 
-void
-DmaPort::sendDma(Packet &pkt)
+
+DmaPort::DmaPort(DmaDevice *dev)
+        : device(dev)
+{ }
+
+bool
+DmaPort::recvTiming(Packet &pkt)
 {
-    device->platform->system->memoryMode()
-    {
-        case MemAtomic:
-    }
+    completionEvent->schedule(curTick+1);
+    completionEvent = NULL;
+    return Success;
 }
 
 DmaDevice::DmaDevice(const std::string &name, Platform *p)
     : PioDevice(name, p)
 {
-    dmaPort = new dmaPort(this);
+    dmaPort = new DmaPort(this);
 }
 
 void
-DmaPort::dmaAction(Memory::Command cmd, DmaPort port, Addr addr, int size,
-                     Event *event, uint8_t *data = NULL)
+DmaPort::SendEvent::process()
+{
+    if (port->Port::sendTiming(packet) == Success)
+        return;
+
+    port->transmitList.push_back(&packet);
+}
+
+Packet *
+DmaPort::recvRetry()
+{
+    Packet* pkt = transmitList.front();
+    transmitList.pop_front();
+    return pkt;
+}
+void
+DmaPort::dmaAction(Command cmd, DmaPort port, Addr addr, int size,
+                     Event *event, uint8_t *data)
 {
 
     assert(event);
@@ -92,9 +146,9 @@ DmaPort::dmaAction(Memory::Command cmd, DmaPort port, Addr addr, int size,
     basePkt.dest = 0;
     basePkt.cmd = cmd;
     basePkt.result = Unknown;
-    basePkt.request = NULL;
+    basePkt.req = NULL;
     baseReq.nicReq = true;
-    baseReq.time = curTick;
+    baseReq.requestTime = curTick;
 
     completionEvent = event;
 
@@ -109,7 +163,7 @@ DmaPort::dmaAction(Memory::Command cmd, DmaPort port, Addr addr, int size,
             pkt->req->size = pkt->size;
             // Increment the data pointer on a write
             pkt->data = data ? data + prevSize : NULL ;
-            prevSize = pkt->size;
+            prevSize += pkt->size;
 
             sendDma(*pkt);
     }
@@ -122,29 +176,29 @@ DmaPort::sendDma(Packet &pkt)
    // some kind of selction between access methods
    // more work is going to have to be done to make
    // switching actually work
-   MemState state = device->platform->system->memState;
+  /* MemState state = device->platform->system->memState;
 
    if (state == Timing) {
        if (sendTiming(pkt) == Failure)
            transmitList.push_back(&packet);
-   } else if (state == Atomic) {
+   } else if (state == Atomic) {*/
        sendAtomic(pkt);
-       completionEvent->schedule(pkt.responseTime - pkt.requestTime);
-       completionEvent == NULL;
-   } else if (state == Functional) {
+       completionEvent->schedule(pkt.req->responseTime - pkt.req->requestTime);
+       completionEvent = NULL;
+/*   } else if (state == Functional) {
        sendFunctional(pkt);
        // Is this correct???
-       completionEvent->schedule(pkt.responseTime - pkt.requestTime);
+       completionEvent->schedule(pkt.req->responseTime - pkt.req->requestTime);
        completionEvent == NULL;
    } else
        panic("Unknown memory command state.");
-
+  */
 }
 
 DmaDevice::~DmaDevice()
 {
-    if (dmaInterface)
-        delete dmaInterface;
+    if (dmaPort)
+        delete dmaPort;
 }
 
 

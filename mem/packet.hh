@@ -54,7 +54,8 @@ enum Command
 enum PacketResult
 {
     Success,
-    BadAddress
+    BadAddress,
+    Unknown
 };
 
 class SenderState{};
