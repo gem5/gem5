@@ -30,8 +30,8 @@
 #include "sim/builder.hh"
 
 
-PioPort::PioPort(PioDevice *dev)
-        : device(dev)
+PioPort::PioPort(PioDevice *dev, Platform *p)
+        : device(dev), platform(p)
 { }
 
 
@@ -75,7 +75,7 @@ PioPort::SendEvent::process()
 PioDevice::PioDevice(const std::string &name, Platform *p)
     : SimObject(name), platform(p)
 {
-    pioPort = new PioPort(this);
+    pioPort = new PioPort(this, p);
 }
 
 
@@ -83,7 +83,7 @@ bool
 PioPort::recvTiming(Packet &pkt)
 {
     device->recvAtomic(pkt);
-    sendTiming(pkt, pkt.req->responseTime-pkt.req->requestTime);
+    sendTiming(pkt, pkt.time-pkt.req->time);
     return Success;
 }
 
@@ -148,7 +148,7 @@ DmaPort::dmaAction(Command cmd, DmaPort port, Addr addr, int size,
     basePkt.result = Unknown;
     basePkt.req = NULL;
     baseReq.nicReq = true;
-    baseReq.requestTime = curTick;
+    baseReq.time = curTick;
 
     completionEvent = event;
 
@@ -183,7 +183,7 @@ DmaPort::sendDma(Packet &pkt)
            transmitList.push_back(&packet);
    } else if (state == Atomic) {*/
        sendAtomic(pkt);
-       completionEvent->schedule(pkt.req->responseTime - pkt.req->requestTime);
+       completionEvent->schedule(pkt.time - pkt.req->time);
        completionEvent = NULL;
 /*   } else if (state == Functional) {
        sendFunctional(pkt);

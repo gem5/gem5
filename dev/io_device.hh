@@ -57,7 +57,7 @@ class PioPort : public Port
 
     /** The platform that device/port are in. This is used to select which mode
      * we are currently operating in. */
-    Platfrom *platform;
+    Platform *platform;
 
     /** A list of outgoing timing response packets that haven't been serviced
      * yet. */

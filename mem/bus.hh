@@ -45,6 +45,13 @@
 
 class Bus : public MemObject
 {
+    struct DevMap {
+        int portId;
+        Range<Addr> range;
+    };
+    std::vector<DevMap> portList;
+
+
     /** Function called by the port when the bus is recieving a Timing
         transaction.*/
     bool recvTiming(Packet &pkt, int id);
@@ -59,6 +66,16 @@ class Bus : public MemObject
 
     /** Function called by the port when the bus is recieving a status change.*/
     void recvStatusChange(Port::Status status, int id);
+
+    /** Find which port connected to this bus (if any) should be given a packet
+     * with this address.
+     * @param addr Address to find port for.
+     * @param id Id of the port this packet was received from (to prevent
+     *             loops)
+     * @return pointer to port that the packet should be sent out of.
+     */
+    Port *
+    Bus::findPort(Addr addr, int id);
 
     /** Decleration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
@@ -104,6 +121,10 @@ class Bus : public MemObject
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
         virtual void addressRanges(AddrRangeList &range_list, bool &owner);
+
+        // Hack to make translating port work without changes
+        virtual int deviceBlockSize() { return 32; }
+
     };
 
     /** A count of the number of interfaces connected to this bus. */
@@ -123,6 +144,9 @@ class Bus : public MemObject
         interfaces[id] = new BusPort(this, id);
         return interfaces[id];
     }
+    Bus(const std::string &n)
+        : MemObject(n) {}
+
 };
 
 #endif //__MEM_BUS_HH__

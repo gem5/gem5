@@ -1,7 +1,6 @@
 from m5 import *
-from BaseHier import BaseHier
+from MemObject import MemObject
 
-class Bus(BaseHier):
+class Bus(MemObject):
     type = 'Bus'
-    clock = Param.Clock("bus frequency")
-    width = Param.Int("bus width in bytes")
+    bus_id = Param.Int(0, "blah")

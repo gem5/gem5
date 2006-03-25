@@ -69,8 +69,8 @@ PhysicalMemory::MemResponseEvent::description()
     return "Physical Memory Timing Access respnse event";
 }
 
-PhysicalMemory::PhysicalMemory(const string &n)
-    : MemObject(n), base_addr(0), pmem_addr(NULL)
+PhysicalMemory::PhysicalMemory(const string &n, MemObject *bus)
+    : MemObject(n), memPort(this), base_addr(0), pmem_addr(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;
@@ -88,6 +88,14 @@ PhysicalMemory::PhysicalMemory(const string &n)
     }
 
     page_ptr = 0;
+
+    Port *peer_port;
+    peer_port = bus->getPort();
+    memPort.setPeer(peer_port);
+    peer_port->setPeer(&memPort);
+
+
+
 }
 
 PhysicalMemory::~PhysicalMemory()
@@ -181,7 +189,15 @@ void
 PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &range_list,
                                            bool &owner)
 {
-    panic("??");
+    memory->getAddressRanges(range_list, owner);
+}
+
+void
+PhysicalMemory::getAddressRanges(AddrRangeList &range_list, bool &owner)
+{
+    owner = true;
+    range_list.clear();
+    range_list.push_back(RangeSize(base_addr, pmem_size));
 }
 
 int
@@ -325,6 +341,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
     SimObjectParam<MemoryController *> mmu;
 #endif
     Param<Range<Addr> > range;
+    SimObjectParam<MemObject*> bus;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 
@@ -334,7 +351,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 #if FULL_SYSTEM
     INIT_PARAM(mmu, "Memory Controller"),
 #endif
-    INIT_PARAM(range, "Device Address Range")
+    INIT_PARAM(range, "Device Address Range"),
+    INIT_PARAM(bus, "bus object memory connects to")
 
 END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
@@ -346,7 +364,7 @@ CREATE_SIM_OBJECT(PhysicalMemory)
     }
 #endif
 
-    return new PhysicalMemory(getInstanceName());
+    return new PhysicalMemory(getInstanceName(), bus);
 }
 
 REGISTER_SIM_OBJECT("PhysicalMemory", PhysicalMemory)
