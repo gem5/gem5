@@ -4,7 +4,8 @@ class HelloWorld(AlphaLiveProcess):
     executable = '../configs/test/hello'
     cmd = 'hello'
 
-mem = PhysicalMemory()
-cpu = SimpleCPU(workload=HelloWorld(), mem=mem)
+magicbus = Bus()
+mem = PhysicalMemory(bus=magicbus)
+cpu = SimpleCPU(workload=HelloWorld(), mem=magicbus)
 system = System(physmem=mem, cpu=cpu)
 root = Root(system=system)
