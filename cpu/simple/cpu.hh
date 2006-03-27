@@ -105,6 +105,7 @@ class SimpleCPU : public BaseCPU
         virtual Packet *recvRetry();
     };
 
+    MemObject *mem;
     CpuPort icachePort;
     CpuPort dcachePort;
 

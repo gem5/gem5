@@ -78,7 +78,9 @@ class SimObject : public Serializable, protected StartupCallback
     // initialization pass of all objects.
     // Gets invoked after construction, before unserialize.
     virtual void init();
+    virtual void connect();
     static void initAll();
+    static void connectAll();
 
     // register statistics for this object
     virtual void regStats();

@@ -69,8 +69,8 @@ PhysicalMemory::MemResponseEvent::description()
     return "Physical Memory Timing Access respnse event";
 }
 
-PhysicalMemory::PhysicalMemory(const string &n, MemObject *bus)
-    : MemObject(n), memPort(this), base_addr(0), pmem_addr(NULL)
+PhysicalMemory::PhysicalMemory(const string &n)
+    : MemObject(n), base_addr(0), pmem_addr(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;
@@ -88,14 +88,6 @@ PhysicalMemory::PhysicalMemory(const string &n, MemObject *bus)
     }
 
     page_ptr = 0;
-
-    Port *peer_port;
-    peer_port = bus->getPort();
-    memPort.setPeer(peer_port);
-    peer_port->setPeer(&memPort);
-
-
-
 }
 
 PhysicalMemory::~PhysicalMemory()
@@ -160,10 +152,13 @@ PhysicalMemory::doFunctionalAccess(Packet &pkt)
 }
 
 Port *
-PhysicalMemory::getPort(const char *if_name)
+PhysicalMemory::getPort(const std::string &if_name)
 {
-    if (if_name == NULL) {
-        return new MemoryPort(this);
+    if (if_name == "") {
+        if (port != NULL)
+           panic("PhysicalMemory::getPort: additional port requested to memory!");
+        port = new MemoryPort(this);
+        return port;
     } else {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
@@ -341,7 +336,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
     SimObjectParam<MemoryController *> mmu;
 #endif
     Param<Range<Addr> > range;
-    SimObjectParam<MemObject*> bus;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 
@@ -351,8 +345,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 #if FULL_SYSTEM
     INIT_PARAM(mmu, "Memory Controller"),
 #endif
-    INIT_PARAM(range, "Device Address Range"),
-    INIT_PARAM(bus, "bus object memory connects to")
+    INIT_PARAM(range, "Device Address Range")
 
 END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
@@ -364,7 +357,7 @@ CREATE_SIM_OBJECT(PhysicalMemory)
     }
 #endif
 
-    return new PhysicalMemory(getInstanceName(), bus);
+    return new PhysicalMemory(getInstanceName());
 }
 
 REGISTER_SIM_OBJECT("PhysicalMemory", PhysicalMemory)

@@ -86,6 +86,15 @@ SimpleCPU::TickEvent::TickEvent(SimpleCPU *c, int w)
 void
 SimpleCPU::init()
 {
+    //Create Memory Ports (conect them up)
+    Port *mem_dport = mem->getPort("");
+    dcachePort.setPeer(mem_dport);
+    mem_dport->setPeer(&dcachePort);
+
+    Port *mem_iport = mem->getPort("");
+    icachePort.setPeer(mem_iport);
+    mem_iport->setPeer(&icachePort);
+
     BaseCPU::init();
 #if FULL_SYSTEM
     for (int i = 0; i < execContexts.size(); ++i) {
@@ -146,19 +155,10 @@ SimpleCPU::CpuPort::recvRetry()
 }
 
 SimpleCPU::SimpleCPU(Params *p)
-    : BaseCPU(p), icachePort(this),
+    : BaseCPU(p), mem(p->mem), icachePort(this),
       dcachePort(this), tickEvent(this, p->width), cpuXC(NULL)
 {
     _status = Idle;
-
-    //Create Memory Ports (conect them up)
-    Port *mem_dport = p->mem->getPort();
-    dcachePort.setPeer(mem_dport);
-    mem_dport->setPeer(&dcachePort);
-
-    Port *mem_iport = p->mem->getPort();
-    icachePort.setPeer(mem_iport);
-    mem_iport->setPeer(&icachePort);
 
 #if FULL_SYSTEM
     cpuXC = new CPUExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);

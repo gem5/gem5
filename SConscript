@@ -88,11 +88,13 @@ base_sources = Split('''
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
 
+        mem/connector.cc
         mem/mem_object.cc
         mem/page_table.cc
         mem/physical.cc
         mem/port.cc
         mem/translating_port.cc
+        mem/bus.cc
 
         python/pyconfig.cc
         python/embedded_py.cc

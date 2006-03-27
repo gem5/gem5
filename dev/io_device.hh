@@ -203,7 +203,7 @@ class PioDevice : public SimObject
 
     virtual ~PioDevice();
 
-    virtual Port *getPort(std::string if_name)
+    virtual Port *getPort(const std::string &if_name)
     {
         if (if_name == "pio")
             return pioPort;
@@ -223,7 +223,7 @@ class DmaDevice : public PioDevice
     DmaDevice(const std::string &name, Platform *p);
     virtual ~DmaDevice();
 
-    virtual Port *getPort(std::string if_name)
+    virtual Port *getPort(const std::string &if_name)
     {
         if (if_name == "pio")
             return pioPort;

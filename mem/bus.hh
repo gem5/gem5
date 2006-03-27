@@ -137,7 +137,7 @@ class Bus : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const char *if_name)
+    virtual Port *getPort(const std::string &if_name)
     {
         // if_name ignored?  forced to be empty?
         int id = num_interfaces++;
@@ -145,7 +145,7 @@ class Bus : public MemObject
         return interfaces[id];
     }
     Bus(const std::string &n)
-        : MemObject(n) {}
+        : MemObject(n), num_interfaces(0) {}
 
 };
 

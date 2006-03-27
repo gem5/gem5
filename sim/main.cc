@@ -355,6 +355,10 @@ main(int argc, char **argv)
     echoCommandLine(argc, argv, *outputStream);
     ParamContext::showAllContexts(*configStream);
 
+    // Any objects that can't connect themselves until after construction should
+    // do so now
+    SimObject::connectAll();
+
     // Do a second pass to finish initializing the sim objects
     SimObject::initAll();
 

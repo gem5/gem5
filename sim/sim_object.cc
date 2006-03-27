@@ -88,6 +88,11 @@ SimObject::SimObject(const string &_name)
 }
 
 void
+SimObject::connect()
+{
+}
+
+void
 SimObject::init()
 {
 }
@@ -148,6 +153,21 @@ SimObject::regAllStats()
     }
 
     Stats::registerResetCallback(&StatResetCB);
+}
+
+//
+// static function: call connect() on all SimObjects.
+//
+void
+SimObject::connectAll()
+{
+    SimObjectList::iterator i = simObjectList.begin();
+    SimObjectList::iterator end = simObjectList.end();
+
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        obj->connect();
+    }
 }
 
 //

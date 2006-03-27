@@ -69,9 +69,7 @@ class PhysicalMemory : public MemObject
         virtual int deviceBlockSize();
     };
 
-    MemoryPort memPort;
-
-    virtual Port * getPort(const char *if_name);
+    virtual Port *getPort(const std::string &if_name);
 
     int numPorts;
 
@@ -96,6 +94,7 @@ class PhysicalMemory : public MemObject
     Addr base_addr;
     Addr pmem_size;
     uint8_t *pmem_addr;
+    MemoryPort *port;
     int page_ptr;
 
   public:
@@ -103,13 +102,13 @@ class PhysicalMemory : public MemObject
     uint64_t size() { return pmem_size; }
 
   public:
-    PhysicalMemory(const std::string &n, MemObject *bus);
+    PhysicalMemory(const std::string &n);
     virtual ~PhysicalMemory();
 
   public:
     int deviceBlockSize();
     void getAddressRanges(AddrRangeList &rangeList, bool &owner);
-    void virtual init() { memPort.sendStatusChange(Port::RangeChange); }
+    void virtual init() { port->sendStatusChange(Port::RangeChange); }
 
     // fast back-door memory access for vtophys(), remote gdb, etc.
     // uint64_t phys_read_qword(Addr addr) const;
