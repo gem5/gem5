@@ -137,6 +137,9 @@ base_sources = Split('''
 	mem/cache/tags/split_lifo.cc
 	mem/functional/functional.cc
 	mem/timing/base_memory.cc
+        mem/timing/dram_memory.cc
+        mem/timing/dram_mem_bank.cc
+        mem/timing/dram_memory_builder.cc
 	mem/timing/memory_builder.cc
 	mem/timing/simple_mem_bank.cc
         mem/trace/itx_writer.cc
