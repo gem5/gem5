@@ -88,9 +88,6 @@ class AlphaITB : public AlphaTLB
     mutable Stats::Scalar<> acv;
     mutable Stats::Formula accesses;
 
-  protected:
-    void fault(Addr pc, ExecContext *xc) const;
-
   public:
     AlphaITB(const std::string &name, int size);
     virtual void regStats();
@@ -113,9 +110,6 @@ class AlphaDTB : public AlphaTLB
     Stats::Formula misses;
     Stats::Formula acv;
     Stats::Formula accesses;
-
-  protected:
-    void fault(MemReqPtr &req, uint64_t flags) const;
 
   public:
     AlphaDTB(const std::string &name, int size);
