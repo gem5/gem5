@@ -36,6 +36,8 @@ def template TrapExecute {{
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
+            %(op_decl)s;
+            %(op_rd)s;
             %(code)s
             return fault;
         }

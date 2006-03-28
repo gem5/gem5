@@ -279,8 +279,8 @@ decode OP default Unknown::unknown()
                     0x5: rdpc({{Rd = xc->regs.pc;}}); //RDPC
                     0x6: rdfprs({{Rd = Fprs;}}); //RDFPRS
                     0xF: decode I {
-                        0x0: Noop::membar({{//Membar isn't needed yet}});
-                        0x1: Noop::stbar({{//Stbar isn't needed yet}});
+                        0x0: Noop::membar({{/*Membar isn't needed yet*/}});
+                        0x1: Noop::stbar({{/*Stbar isn't needed yet*/}});
                     }
                 }
                 0x2A: decode RS1 {
@@ -305,19 +305,19 @@ decode OP default Unknown::unknown()
                         0x8: rdprpil({{Rd = Pil;}});
                         0x9: rdprcwp({{Rd = Cwp;}});
                         0xA: rdprcansave({{Rd = Cansave;}});
-                        0xB: rdprcanrestore({{Rd = CanRestore;}});
+                        0xB: rdprcanrestore({{Rd = Canrestore;}});
                         0xC: rdprcleanwin({{Rd = Cleanwin;}});
                         0xD: rdprotherwin({{Rd = Otherwin;}});
                         0xE: rdprwstate({{Rd = Wstate;}});
                     }
                     //The floating point queue isn't implemented right now.
-                    0xF: Trap::rdprfq({{fault = IllegalInstruction;}});
+                    0xF: Trap::rdprfq({{fault = new IllegalInstruction;}});
                     0x1F: Priv::rdprver({{Rd = Ver;}});
                 }
-                0x2B: BasicOperate::flushw({{//window toilet}}); //FLUSHW
+                0x2B: BasicOperate::flushw({{/*window toilet*/}});
                 0x2C: decode MOVCC3
                 {
-                    0x0: Trap::movccfcc({{fault = new FpDisabled}});
+                    0x0: Trap::movccfcc({{fault = new FpDisabled;}});
                     0x1: decode CC
                     {
                         0x0: movcci({{
@@ -362,8 +362,8 @@ decode OP default Unknown::unknown()
                         0xF: Trap::sir({{fault = new SoftwareInitiatedReset;}});
                 }
                 0x31: decode FCN {
-                        0x0: BasicOperate::saved({{//Boogy Boogy}}); //SAVED
-                        0x1: BasicOperate::restored({{//Boogy Boogy}}); //RESTORED
+                        0x0: BasicOperate::saved({{/*Boogy Boogy*/}});
+                        0x1: BasicOperate::restored({{/*Boogy Boogy*/}});
                 }
                 0x32: decode RD {
                     format Priv
@@ -401,8 +401,8 @@ decode OP default Unknown::unknown()
                 0x34: Trap::fpop1({{fault = new FpDisabled;}});
                 0x35: Trap::fpop2({{fault = new FpDisabled;}});
 
-                0x38: Branch::jmpl({{//Stuff}}); //JMPL
-                0x39: Branch::return({{//Other Stuff}}); //RETURN
+                0x38: Branch::jmpl({{/*Stuff*/}});
+                0x39: Branch::return({{/*Other Stuff*/}});
                 0x3A: decode CC
                 {
                     0x0: Trap::tcci({{
@@ -428,12 +428,12 @@ decode OP default Unknown::unknown()
 #endif
                     }});
                 }
-                0x3B: BasicOperate::flush({{//Lala}}); //FLUSH
-                0x3C: BasicOperate::save({{//leprechauns); //SAVE
-                0x3D: BasicOperate::restore({{//Eat my short int}}); //RESTORE
+                0x3B: BasicOperate::flush({{/*Lala*/}});
+                0x3C: BasicOperate::save({{/*leprechauns*/}});
+                0x3D: BasicOperate::restore({{/*Eat my short int*/}});
                 0x3E: decode FCN {
-                    0x1: BasicOperate::done({{//Done thing}}); //DONE
-                    0x2: BasicOperate::retry({{//Retry thing}}); //RETRY
+                    0x1: BasicOperate::done({{/*Done thing*/}});
+                    0x2: BasicOperate::retry({{/*Retry thing*/}});
                 }
             }
     }

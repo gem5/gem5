@@ -34,9 +34,10 @@ def template MemExecute {{
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
+            Addr EA;
             %(op_decl)s;
             %(op_rd)s;
-            ea_code
+            %(ea_code)s;
             %(code)s;
 
             if(fault == NoFault)
@@ -54,9 +55,9 @@ def format Mem(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop.ea_code = CodeBlock('EA = I ? (R1 + SIMM13) : R1 + R2;').code
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
         exec_output = MemExecute.subst(iop)
-        exec_output.replace('ea_code', 'EA = I ? (R1 + SIMM13) : R1 + R2;');
 }};

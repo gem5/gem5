@@ -91,12 +91,18 @@ def template PrivExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
+        //Since these are processed inside templates and not in codeblocks,
+        //They aren't translated by the isa_parser. Their names begin with
+        //underscores so they don't cause conflicts.
+        uint32_t _PstatePriv = xc->readMiscReg(MISCREG_PSTATE_PRIV);
+
         //If the processor isn't in privileged mode, fault out right away
-        if(!PstatePriv)
-            return new PrivilegedOpcode
+        if(!_PstatePriv)
+            return new PrivilegedOpcode;
 
         %(code)s;
         %(op_wb)s;
+        return NoFault;
     }
 }};
 
@@ -107,12 +113,18 @@ def template PrivTickExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
+        //Since these are processed inside templates and not in codeblocks,
+        //They aren't translated by the isa_parser. Their names begin with
+        //underscores so they don't cause conflicts.
+        uint32_t _PstatePriv = xc->readMiscReg(MISCREG_PSTATE_PRIV);
+        uint32_t _TickNpt = xc->readMiscReg(MISCREG_TICK_NPT);
         //If the processor isn't in privileged mode, fault out right away
-        if(!PstatePriv && TickNpt)
-            return new PrivilegedAction
+        if(!_PstatePriv && _TickNpt)
+            return new PrivilegedAction;
 
         %(code)s;
         %(op_wb)s;
+        return NoFault;
     }
 }};
 
