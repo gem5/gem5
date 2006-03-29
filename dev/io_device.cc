@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,12 +70,6 @@ PioPort::SendEvent::process()
         return;
 
     port->transmitList.push_back(&packet);
-}
-
-PioDevice::PioDevice(const std::string &name, Platform *p)
-    : SimObject(name), platform(p)
-{
-    pioPort = new PioPort(this, p);
 }
 
 
@@ -199,6 +193,15 @@ DmaDevice::~DmaDevice()
 {
     if (dmaPort)
         delete dmaPort;
+}
+
+void
+BasePioDevice::addressRanges(AddrRangeList &range_list, bool &owner)
+{
+    assert(pioSize != 0);
+    owner = true;
+    range_list.clear();
+    range_list.push_back(RangeSize(pio_addr, sizeof(struct alphaAccess)));
 }
 
 

@@ -192,26 +192,73 @@ class PioDevice : public SimObject
 
     /** Pure virtual function that the device must implement. Called when a read
      * command is recieved by the port. */
-    virtual bool read(Packet &pkt) = 0;
+    virtual Tick read(Packet &pkt) = 0;
 
     /** Pure virtual function that the device must implement. Called when a
      * write command is recieved by the port. */
-    virtual bool write(Packet &pkt) = 0;
+    virtual Tick write(Packet &pkt) = 0;
 
   public:
-    PioDevice(const std::string &name, Platform *p);
+    /** Params struct which is extended through each device based on the
+     * parameters it needs. Since we are re-writing everything, we might as well
+     * start from the bottom this time. */
+
+    struct Params
+    {
+        std::string name;
+        Platform *platform;
+    };
+  protected:
+    Params *_params;
+
+  public:
+    const Params *params() const { return _params; }
+
+    PioDevice(Params *params)
+              : SimObject(params()->name), platform(params()->platform)
+              {}
 
     virtual ~PioDevice();
 
     virtual Port *getPort(const std::string &if_name)
     {
         if (if_name == "pio")
+            if (pioPort != NULL)
+                panic("pio port already connected to.");
+            pioPort = new PioPort(this, params()->platform);
             return pioPort;
         else
             return NULL;
     }
     friend class PioPort;
 
+};
+
+class BasicPioDevice : public PioDevice
+{
+  public:
+    struct Params
+    {
+        Addr pio_addr;
+        Tick pio_delay;
+    };
+
+  protected:
+    /** Address that the device listens to. */
+    Addr pioAddr;
+
+    /** Size that the device's address range. */
+    Addr pioSize = 0;
+
+    /** Delay that the device experinces on an access. */
+    Tick pioDelay;
+
+  public:
+    BasePioDevice(Params *p)
+        : PioDevice(p), pioAddr(p->pio_addr), pioDelay(p->pioDelay)
+    {}
+
+    virtual void addressRanges(AddrRangeList &range_list, bool &owner);
 };
 
 class DmaDevice : public PioDevice
