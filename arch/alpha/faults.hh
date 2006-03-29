@@ -244,9 +244,9 @@ class ItbFault : public AlphaFault
     ItbFault(Addr _pc)
         : pc(_pc)
     { }
-    FaultName name() { panic("Dtb Fault is a base class"); }
-    FaultVect vect() { panic("Dtb Fault is a base class"); }
-    FaultStat & countStat() { panic("Dtb Fault is a base class"); }
+    FaultName name() = 0;
+    FaultVect vect() = 0;
+    FaultStat & countStat() = 0;
 #if FULL_SYSTEM
     void invoke(ExecContext * xc);
 #endif
