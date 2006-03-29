@@ -231,6 +231,11 @@ sticky_opts = Options(args=ARGUMENTS)
 sticky_opts.AddOptions(
     EnumOption('TARGET_ISA', 'Target ISA', 'alpha', env['ALL_ISA_LIST']),
     BoolOption('FULL_SYSTEM', 'Full-system support', False),
+    # There's a bug in scons 0.96.1 that causes ListOptions with list
+    # values (more than one value) not to be able to be restored from
+    # a saved option file.  If this causes trouble then upgrade to
+    # scons 0.96.90 or later.
+    ListOption('CPU_MODELS', 'CPU models', 'all', env['ALL_CPU_LIST']),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),
     BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
@@ -254,12 +259,6 @@ sticky_opts.AddOptions(
 # Non-sticky options only apply to the current build.
 nonsticky_opts = Options(args=ARGUMENTS)
 nonsticky_opts.AddOptions(
-    # This really should be a sticky option, but there's a bug in
-    # scons 0.96.1 that causes ListOptions not to be able to be
-    # restored from a saved option file.  It looks like this is fixed
-    # in 0.96.9, but there's a different bug in that version that means we
-    # can't just upgrade.
-    ListOption('CPU_MODELS', 'CPU models', 'all', env['ALL_CPU_LIST']),
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 

@@ -31,8 +31,6 @@
 
 #include <vector>
 
-using namespace std;
-
 template <class T>
 class TimeBuffer
 {
@@ -42,7 +40,7 @@ class TimeBuffer
     int size;
 
     char *data;
-    vector<char *> index;
+    std::vector<char *> index;
     int base;
 
     void valid(int idx)

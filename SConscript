@@ -219,13 +219,17 @@ full_system_sources = Split('''
 	kern/linux/events.cc
 	kern/linux/linux_syscalls.cc
 	kern/linux/printk.cc
+
+	mem/functional/memory_control.cc
+	sim/pseudo_inst.cc
+        ''')
+
+if env['TARGET_ISA'] == 'alpha':
+    full_system_sources += Split('''
 	kern/tru64/dump_mbuf.cc
 	kern/tru64/printf.cc
 	kern/tru64/tru64_events.cc
 	kern/tru64/tru64_syscalls.cc
-
-	mem/functional/memory_control.cc
-	sim/pseudo_inst.cc
         ''')
 
 # turbolaser encumbered sources
@@ -251,9 +255,13 @@ turbolaser_sources = Split('''
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
         kern/linux/linux.cc
-        kern/tru64/tru64.cc
 	sim/process.cc
 	sim/syscall_emul.cc
+        ''')
+
+if env['TARGET_ISA'] == 'alpha':
+    syscall_emulation_sources += Split('''
+        kern/tru64/tru64.cc
         ''')
 
 alpha_eio_sources = Split('''

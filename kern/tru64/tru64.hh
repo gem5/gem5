@@ -55,8 +55,6 @@ class Tru64 {};
 #include "sim/root.hh"
 #include "sim/syscall_emul.hh"
 
-using namespace std;
-
 typedef struct stat global_stat;
 typedef struct statfs global_statfs;
 typedef struct dirent global_dirent;
@@ -751,6 +749,7 @@ class Tru64 {
     tableFunc(SyscallDesc *desc, int callnum, Process *process,
               ExecContext *xc)
     {
+        using namespace std;
         using namespace TheISA;
 
         int id = xc->getSyscallArg(0);		// table ID
@@ -824,6 +823,7 @@ class Tru64 {
     nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
                       ExecContext *xc)
     {
+        using namespace std;
         using namespace TheISA;
 
         TypedBufferArg<Tru64::nxm_task_attr> attrp(xc->getSyscallArg(0));
@@ -957,6 +957,7 @@ class Tru64 {
     nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
                           ExecContext *xc)
     {
+        using namespace std;
         using namespace TheISA;
 
         TypedBufferArg<Tru64::nxm_thread_attr> attrp(xc->getSyscallArg(0));
@@ -1081,6 +1082,8 @@ class Tru64 {
     nxm_thread_blockFunc(SyscallDesc *desc, int callnum, Process *process,
                          ExecContext *xc)
     {
+        using namespace std;
+
         uint64_t tid = xc->getSyscallArg(0);
         uint64_t secs = xc->getSyscallArg(1);
         uint64_t flags = xc->getSyscallArg(2);
@@ -1098,6 +1101,8 @@ class Tru64 {
     nxm_blockFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
     {
+        using namespace std;
+
         Addr uaddr = xc->getSyscallArg(0);
         uint64_t val = xc->getSyscallArg(1);
         uint64_t secs = xc->getSyscallArg(2);
@@ -1119,6 +1124,8 @@ class Tru64 {
     nxm_unblockFunc(SyscallDesc *desc, int callnum, Process *process,
                     ExecContext *xc)
     {
+        using namespace std;
+
         Addr uaddr = xc->getSyscallArg(0);
 
         cout << xc->getCpuPtr()->name() << ": nxm_unblock "
@@ -1149,6 +1156,8 @@ class Tru64 {
     activate_waiting_context(Addr uaddr, Process *process,
                              bool activate_all = false)
     {
+        using namespace std;
+
         int num_activated = 0;
 
         list<Process::WaitRec>::iterator i = process->waitList.begin();

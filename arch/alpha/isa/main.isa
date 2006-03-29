@@ -418,31 +418,31 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
 }};
 
 // Integer instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/int.isa"
+##include "int.isa"
 
 // Floating-point instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/fp.isa"
+##include "fp.isa"
 
 // Memory instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/mem.isa"
+##include "mem.isa"
 
 // Branch/jump instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/branch.isa"
+##include "branch.isa"
 
 // PAL instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/pal.isa"
+##include "pal.isa"
 
 // Opcdec fault instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/opcdec.isa"
+##include "opcdec.isa"
 
 // Unimplemented instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/unimp.isa"
+##include "unimp.isa"
 
 // Unknown instruction templates, formats, etc.
-##include "m5/arch/alpha/isa/unknown.isa"
+##include "unknown.isa"
 
 // Execution utility functions
-##include "m5/arch/alpha/isa/util.isa"
+##include "util.isa"
 
 // The actual decoder
-##include "m5/arch/alpha/isa/decoder.isa"
+##include "decoder.isa"
