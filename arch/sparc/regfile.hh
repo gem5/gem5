@@ -55,14 +55,14 @@ namespace SparcISA
     class FloatRegFile
     {
       protected:
-        //Since the floating point registers overlap each other,
-        //A generic storage space is used. The float to be returned is
-        //pulled from the appropriate section of this region.
-        char regSpace[32 * 64];
-
         static const int SingleWidth = 32;
         static const int DoubleWidth = 64;
         static const int QuadWidth = 128;
+
+        //Since the floating point registers overlap each other,
+        //A generic storage space is used. The float to be returned is
+        //pulled from the appropriate section of this region.
+        char regSpace[SingleWidth / 8 * NumFloatRegs];
 
       public:
 

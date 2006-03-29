@@ -52,10 +52,15 @@ def template MemExecute {{
 
 // Primary format for integer operate instructions:
 def format Mem(code, *opt_flags) {{
-        orig_code = code
-        cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
-        iop.ea_code = CodeBlock('EA = I ? (R1 + SIMM13) : R1 + R2;').code
+        addrCalc = 'EA = I ? (Rs1 + SIMM13) : Rs1 + Rs2;'
+        composite = code + '\n' + addrCalc
+        origCodeBlk = CodeBlock(code)
+        compositeBlk = CodeBlock(composite)
+        addrCalcBlk = CodeBlock(addrCalc)
+        iop = InstObjParams(name, Name, 'SparcStaticInst', compositeBlk, opt_flags)
+        iop.code = origCodeBlk.code
+        iop.orig_code = origCodeBlk.orig_code
+        iop.ea_code = addrCalcBlk.code
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)

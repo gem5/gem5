@@ -444,14 +444,14 @@ decode OP default Unknown::unknown()
                     0x02: lduh({{Rd.uhw = Mem.uhw;}}); //LDUH
                     0x03: ldd({{
                         uint64_t val = Mem.udw;
-                        setIntReg(RD & (~1), val<31:0>);
-                        setIntReg(RD | 1, val<63:32>);
+                        RdLow = val<31:0>;
+                        RdHigh = val<63:32>;
                     }});//LDD
                     0x04: stw({{Mem.sw = Rd.sw;}}); //STW
                     0x05: stb({{Mem.sb = Rd.sb;}}); //STB
                     0x06: sth({{Mem.shw = Rd.shw;}}); //STH
                     0x07: std({{
-                            Mem.udw = readIntReg(RD & (~1))<31:0> | (readIntReg(RD | 1)<31:0> << 32);
+                            Mem.udw = RdLow<31:0> | RdHigh<31:0> << 32;
                     }});//STD
                     0x08: ldsw({{Rd.sw = Mem.sw;}}); //LDSW
                     0x09: ldsb({{Rd.sb = Mem.sb;}}); //LDSB
@@ -473,14 +473,14 @@ decode OP default Unknown::unknown()
                     0x12: lduha({{Rd.uhw = Mem.uhw;}}); //LDUHA
                     0x13: ldda({{
                             uint64_t val = Mem.udw;
-                            setIntReg(RD & (~1), val<31:0>);
-                            setIntReg(RD | 1, val<63:32>);
+                            RdLow = val<31:0>;
+                            RdHigh = val<63:32>;
                     }}); //LDDA
                     0x14: stwa({{Mem.uw = Rd.uw;}}); //STWA
                     0x15: stba({{Mem.ub = Rd.ub;}}); //STBA
                     0x16: stha({{Mem.uhw = Rd.uhw;}}); //STHA
                     0x17: stda({{
-                            Mem.udw = readIntReg(RD & (~1))<31:0> | (readIntReg(RD | 1)<31:0> << 32);
+                            Mem.udw = RdLow<31:0> | RdHigh<31:0> << 32;
                     }}); //STDA
                     0x18: ldswa({{Rd.sw = Mem.sw;}}); //LDSWA
                     0x19: ldsba({{Rd.sb = Mem.sb;}}); //LDSBA
