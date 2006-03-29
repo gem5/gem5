@@ -97,7 +97,11 @@ struct Packet
 
     /** A pointer to the data being transfered.  It can be differnt sizes
         at each level of the heirarchy so it belongs in the packet,
-        not request*/
+        not request.
+        This pointer may be NULL! If it isn't null when received by the producer
+        of data it refers to memory that has not been dynamically allocated.
+        Otherwise the producer should simply allocate dynamic memory to use.
+        */
     PacketDataPtr data;
 
     /** Indicates the size of the request. */

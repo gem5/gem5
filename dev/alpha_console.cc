@@ -34,7 +34,6 @@
 #include <cstdio>
 #include <string>
 
-#include "arch/alpha/ev5.hh"
 #include "arch/alpha/system.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
@@ -45,30 +44,17 @@
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
 #include "dev/tsunami_io.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
-AlphaConsole::AlphaConsole(const string &name, SimConsole *cons, SimpleDisk *d,
-                           AlphaSystem *s, BaseCPU *c, Platform *p,
-                           MemoryController *mmu, Addr a,
-                           HierParams *hier, Bus *pio_bus)
-    : PioDevice(name, p), disk(d), console(cons), system(s), cpu(c), addr(a)
+AlphaConsole::AlphaConsole(Params *p)
+    : PioDevice(p->name, p->platform), disk(p->disk),
+      console(params()->cons), system(params()->sys), cpu(params()->cpu),
+      pioSize(sizeof(struct alphaAccess))
 {
-    mmu->add_child(this, RangeSize(addr, size));
-
-    if (pio_bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
-                                       &AlphaConsole::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-    }
 
     alphaAccess = new Access;
     alphaAccess->last_offset = size - 1;
@@ -99,115 +85,117 @@ AlphaConsole::startup()
     alphaAccess->intrClockFrequency = platform->intrFrequency();
 }
 
-Fault
-AlphaConsole::read(MemReqPtr &req, uint8_t *data)
+Tick
+AlphaConsole::read(Packet &pkt)
 {
-    memset(data, 0, req->size);
+    pkt.time = curTick + pioDelay;
 
-    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
+    /** XXX Do we want to push the addr munging to a bus brige or something? So
+     * the device has it's physical address and then the bridge adds on whatever
+     * machine dependent address swizzle is required?
+     */
 
-    switch (req->size)
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    Addr daddr = req.addr - pioAddr;
+
+    switch (req.size)
     {
         case sizeof(uint32_t):
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
-                    *(uint32_t*)data);
+            if (!pkt.data) pkt.pkt.data = new uint32_t;
             switch (daddr)
             {
                 case offsetof(AlphaAccess, last_offset):
-                    *(uint32_t*)data = alphaAccess->last_offset;
+                    *(uint32_t*)pkt.data = alphaAccess->last_offset;
                     break;
                 case offsetof(AlphaAccess, version):
-                    *(uint32_t*)data = alphaAccess->version;
+                    *(uint32_t*)pkt.data = alphaAccess->version;
                     break;
                 case offsetof(AlphaAccess, numCPUs):
-                    *(uint32_t*)data = alphaAccess->numCPUs;
+                    *(uint32_t*)pkt.data = alphaAccess->numCPUs;
                     break;
                 case offsetof(AlphaAccess, intrClockFrequency):
-                    *(uint32_t*)data = alphaAccess->intrClockFrequency;
+                    *(uint32_t*)pkt.data = alphaAccess->intrClockFrequency;
                     break;
                 default:
-                    // Old console code read in everyting as a 32bit int
-                    *(uint32_t*)data = *(uint32_t*)(consoleData + daddr);
-
+                    /* Old console code read in everyting as a 32bit int
+                     * we now break that for better error checking.
+                     */
+                    pkt.result = BadAddress;
             }
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    *(uint32_t*)pkt.data);
             break;
         case sizeof(uint64_t):
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
-                    *(uint64_t*)data);
+            if (!pkt.data) pkt.pkt.data = new uint64_t;
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):
-                    *(uint64_t*)data = console->console_in();
+                    *(uint64_t*)pkt.data = console->console_in();
                     break;
                 case offsetof(AlphaAccess, cpuClock):
-                    *(uint64_t*)data = alphaAccess->cpuClock;
+                    *(uint64_t*)pkt.data = alphaAccess->cpuClock;
                     break;
                 case offsetof(AlphaAccess, mem_size):
-                    *(uint64_t*)data = alphaAccess->mem_size;
+                    *(uint64_t*)pkt.data = alphaAccess->mem_size;
                     break;
                 case offsetof(AlphaAccess, kernStart):
-                    *(uint64_t*)data = alphaAccess->kernStart;
+                    *(uint64_t*)pkt.data = alphaAccess->kernStart;
                     break;
                 case offsetof(AlphaAccess, kernEnd):
-                    *(uint64_t*)data = alphaAccess->kernEnd;
+                    *(uint64_t*)pkt.data = alphaAccess->kernEnd;
                     break;
                 case offsetof(AlphaAccess, entryPoint):
-                    *(uint64_t*)data = alphaAccess->entryPoint;
+                    *(uint64_t*)pkt.data = alphaAccess->entryPoint;
                     break;
                 case offsetof(AlphaAccess, diskUnit):
-                    *(uint64_t*)data = alphaAccess->diskUnit;
+                    *(uint64_t*)pkt.data = alphaAccess->diskUnit;
                     break;
                 case offsetof(AlphaAccess, diskCount):
-                    *(uint64_t*)data = alphaAccess->diskCount;
+                    *(uint64_t*)pkt.data = alphaAccess->diskCount;
                     break;
                 case offsetof(AlphaAccess, diskPAddr):
-                    *(uint64_t*)data = alphaAccess->diskPAddr;
+                    *(uint64_t*)pkt.data = alphaAccess->diskPAddr;
                     break;
                 case offsetof(AlphaAccess, diskBlock):
-                    *(uint64_t*)data = alphaAccess->diskBlock;
+                    *(uint64_t*)pkt.data = alphaAccess->diskBlock;
                     break;
                 case offsetof(AlphaAccess, diskOperation):
-                    *(uint64_t*)data = alphaAccess->diskOperation;
+                    *(uint64_t*)pkt.data = alphaAccess->diskOperation;
                     break;
                 case offsetof(AlphaAccess, outputChar):
-                    *(uint64_t*)data = alphaAccess->outputChar;
+                    *(uint64_t*)pkt.data = alphaAccess->outputChar;
                     break;
                 default:
                     int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
                                  sizeof(alphaAccess->cpuStack[0]);
 
                     if (cpunum >= 0 && cpunum < 64)
-                        *(uint64_t*)data = alphaAccess->cpuStack[cpunum];
+                        *(uint64_t*)pkt.data = alphaAccess->cpuStack[cpunum];
                     else
                         panic("Unknown 64bit access, %#x\n", daddr);
             }
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    *(uint64_t*)data);
             break;
         default:
-            return genMachineCheckFault();
+            pkt.result = BadAddress;
     }
-
-    return NoFault;
+    if (pkt.result == Unknown) pkt.result = Success;
+    return pioDelay;
 }
 
-Fault
+Tick
 AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
 {
-    uint64_t val;
+    pkt.time = curTick + pioDelay;
 
-    switch (req->size) {
-      case sizeof(uint32_t):
-        val = *(uint32_t *)data;
-        break;
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    Addr daddr = req.addr - pioAddr;
 
-      case sizeof(uint64_t):
-        val = *(uint64_t *)data;
-        break;
-      default:
-        return genMachineCheckFault();
-    }
-
-    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
-    ExecContext *other_xc;
+    uint64_t val = *(uint64_t *)data;
+    assert(pkt.size == sizeof(uint64_t));
 
     switch (daddr) {
       case offsetof(AlphaAccess, diskUnit):
@@ -239,9 +227,6 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
         console->out((char)(val & 0xff));
         break;
 
-        other_xc->activate(); //Start the cpu
-        break;
-
       default:
         int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
                      sizeof(alphaAccess->cpuStack[0]);
@@ -253,13 +238,9 @@ AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
             panic("Unknown 64bit access, %#x\n", daddr);
     }
 
-    return NoFault;
-}
+    pkt.result = Success;
 
-Tick
-AlphaConsole::cacheAccess(MemReqPtr &req)
-{
-    return curTick + 1000;
+    return pioDelay;
 }
 
 void

@@ -70,7 +70,7 @@ class MemoryController;
  * primarily used doing boot before the kernel has loaded its device
  * drivers.
  */
-class AlphaConsole : public PioDevice
+class AlphaConsole : public BasePioDevice
 {
   protected:
     struct Access : public AlphaAccess
@@ -96,23 +96,29 @@ class AlphaConsole : public PioDevice
     /** a pointer to the CPU boot cpu */
     BaseCPU *cpu;
 
-    Addr addr;
-    static const Addr size = sizeof(struct AlphaAccess);
+  public:
+    struct Params : public BasePioDevice::Params
+    {
+        SimConsole *cons;
+        SimpleDisk *disk;
+        AlphaSystem *sys;
+        BaseCpu *cpu;
+    };
+  protected:
+    const Params *params() const {return (const Params *)_params; }
 
   public:
+
     /** Standard Constructor */
-    AlphaConsole(const std::string &name, SimConsole *cons, SimpleDisk *d,
-                 AlphaSystem *s, BaseCPU *c, Platform *platform,
-                 MemoryController *mmu, Addr addr,
-                 HierParams *hier, Bus *pio_bus);
+    AlphaConsole(Params *p);
 
     virtual void startup();
 
     /**
      * memory mapped reads and writes
      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Tick read(Packet &pkt);
+    virtual Tick write(Packet &pkt);
 
     /**
      * standard serialization routines for checkpointing
