@@ -16,18 +16,20 @@ def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
     # explicitly specify '.uq'.
-    'Rd': ('IntReg', 'udw', 'RD', 'IsInteger', 1),
-    'Rs1': ('IntReg', 'udw', 'RS1', 'IsInteger', 2),
-    'Rs2': ('IntReg', 'udw', 'RS2', 'IsInteger', 3),
+    'Rd': 		('IntReg', 'udw', 'RD', 'IsInteger', 1),
+    'RdLow': 		('IntReg', 'udw', 'RD & (~1)', 'IsInteger', 2),
+    'RdHigh':		('IntReg', 'udw', 'RD | 1', 'IsInteger', 3),
+    'Rs1': 		('IntReg', 'udw', 'RS1', 'IsInteger', 4),
+    'Rs2': 		('IntReg', 'udw', 'RS2', 'IsInteger', 5),
     #'Fa': ('FloatReg', 'df', 'FA', 'IsFloating', 1),
     #'Fb': ('FloatReg', 'df', 'FB', 'IsFloating', 2),
     #'Fc': ('FloatReg', 'df', 'FC', 'IsFloating', 3),
-    'Mem': ('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
+    'Mem': 		('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
     #'NPC': ('NPC', 'uq', None, ( None, None, 'IsControl' ), 4),
     #'Runiq': ('ControlReg', 'uq', 'Uniq', None, 1),
     #'FPCR':  ('ControlReg', 'uq', 'Fpcr', None, 1),
-    'R0':  ('IntReg', 'udw', '0', None, 1),
-    'R16': ('IntReg', 'udw', '16', None, 1),
+    'R0':  		('IntReg', 'udw', '0', None, 1),
+    'R16': 		('IntReg', 'udw', '16', None, 1),
     # Control registers
     'Pstate':		('ControlReg', 'udw', 'MISCREG_PSTATE', None, 1),
     'PstateAg':		('ControlReg', 'udw', 'MISCREG_PSTATE_AG', None, 2),

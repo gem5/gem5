@@ -90,6 +90,9 @@ namespace SparcISA
         // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
         FP_Base_DepTag = 32,
         Ctrl_Base_DepTag = 96,
+        //XXX These are here solely to get compilation and won't work
+        Fpcr_DepTag = 0,
+        Uniq_DepTag = 0
     };
 
     //This makes sure the big endian versions of certain functions are used.
@@ -97,11 +100,6 @@ namespace SparcISA
 
     typedef uint32_t MachInst;
     typedef uint64_t ExtMachInst;
-
-    inline ExtMachInst
-    makeExtMI(MachInst inst, const Addr &pc) {
-        return ExtMachInst(inst);
-    }
 
     const int NumIntRegs = 32;
     const int NumFloatRegs = 64;
@@ -160,31 +158,6 @@ namespace SparcISA
 
     // return a no-op instruction... used for instruction fetch faults
     extern const MachInst NoopMachInst;
-
-    // Instruction address compression hooks
-    inline Addr realPCToFetchPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    inline Addr fetchPCToRealPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    inline size_t fetchInstSize()
-    {
-        return sizeof(MachInst);
-    }
-
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param xc The execution context.
-     */
-    template <class XC>
-    void zeroRegisters(XC *xc);
 }
 
 #include "arch/sparc/regfile.hh"
