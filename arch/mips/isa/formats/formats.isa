@@ -1,0 +1,35 @@
+// -*- mode:c++ -*-
+
+//Templates from this format are used later
+//Include the basic format
+##include "basic.isa"
+
+//Include the basic format
+##include "noop.isa"
+
+//Include utility functions
+##include "util.isa"
+
+//Include the cop0 formats
+##include "cop0.isa"
+
+//Include the integer formats
+##include "int.isa"
+
+//Include the floatOp format
+##include "fp.isa"
+
+//Include the mem format
+##include "mem.isa"
+
+//Include the trap format
+##include "trap.isa"
+
+//Include the branch format
+##include "branch.isa"
+
+//Include the noop format
+##include "unimp.isa"
+
+//Include the noop format
+##include "unknown.isa"
