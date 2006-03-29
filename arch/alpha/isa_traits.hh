@@ -75,6 +75,11 @@ class SyscallReturn {
 
 #endif
 
+#if FULL_SYSTEM
+#include "arch/alpha/isa_fullsys_traits.hh"
+#endif
+
+
 namespace AlphaISA
 {
 
@@ -82,12 +87,6 @@ using namespace LittleEndianGuest;
 
 // redirected register map, really only used for the full system case.
 extern const int reg_redir[NumIntRegs];
-
-#if FULL_SYSTEM
-
-#include "arch/alpha/isa_fullsys_traits.hh"
-
-#endif
 
     StaticInstPtr decodeInst(ExtMachInst);
 
