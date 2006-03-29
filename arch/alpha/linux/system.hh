@@ -39,7 +39,6 @@ class IdleStartEvent;
 
 using namespace AlphaISA;
 using namespace Linux;
-using namespace std;
 
 /**
  * This class contains linux specific system code (Loading, Events, Binning).
