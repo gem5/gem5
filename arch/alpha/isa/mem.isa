@@ -311,8 +311,7 @@ def template LoadCompleteAcc {{
         Fault fault = NoFault;
 
         %(fp_enable_check)s;
-        %(op_src_decl)s;
-        %(op_dest_decl)s;
+        %(op_decl)s;
 
         memcpy(&Mem, data, sizeof(Mem));
 
@@ -410,8 +409,7 @@ def template StoreInitiateAcc {{
         uint64_t write_result = 0;
 
         %(fp_enable_check)s;
-        %(op_src_decl)s;
-        %(op_dest_decl)s;
+        %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
 
