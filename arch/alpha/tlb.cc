@@ -94,7 +94,7 @@ AlphaTLB::lookup(Addr vpn, uint8_t asn) const
 
 
 void
-AlphaTLB::checkCacheability(MemReqPtr &req)
+AlphaTLB::checkCacheability(CpuRequestPtr &req)
 {
     // in Alpha, cacheability is controlled by upper-level bits of the
     // physical address
@@ -292,7 +292,7 @@ AlphaITB::regStats()
 
 
 Fault
-AlphaITB::translate(MemReqPtr &req) const
+AlphaITB::translate(CpuRequestPtr &req) const
 {
     ExecContext *xc = req->xc;
 
@@ -451,7 +451,7 @@ AlphaDTB::regStats()
 }
 
 Fault
-AlphaDTB::translate(MemReqPtr &req, bool write) const
+AlphaDTB::translate(CpuRequestPtr &req, bool write) const
 {
     ExecContext *xc = req->xc;
     Addr pc = xc->readPC();
