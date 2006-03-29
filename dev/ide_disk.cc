@@ -378,6 +378,37 @@ IdeDisk::dmaPrdReadDone()
 }
 
 void
+IdeDisk::regStats()
+{
+    using namespace Stats;
+    dmaReadFullPages
+        .name(name() + ".dma_read_full_pages")
+        .desc("Number of full page size DMA reads (not PRD).")
+        ;
+    dmaReadBytes
+        .name(name() + ".dma_read_bytes")
+        .desc("Number of bytes transfered via DMA reads (not PRD).")
+        ;
+    dmaReadTxs
+        .name(name() + ".dma_read_txs")
+        .desc("Number of DMA read transactions (not PRD).")
+        ;
+
+    dmaWriteFullPages
+        .name(name() + ".dma_write_full_pages")
+        .desc("Number of full page size DMA writes.")
+        ;
+    dmaWriteBytes
+        .name(name() + ".dma_write_bytes")
+        .desc("Number of bytes transfered via DMA writes.")
+        ;
+    dmaWriteTxs
+        .name(name() + ".dma_write_txs")
+        .desc("Number of DMA write transactions.")
+        ;
+}
+
+void
 IdeDisk::doDmaRead()
 {
     /** @todo we need to figure out what the delay actually will be */
@@ -399,6 +430,10 @@ IdeDisk::doDmaRead()
 
         dmaInterfaceBytes = bytesInPage;
 
+        if (bytesInPage == TheISA::VMPageSize)
+            dmaReadFullPages++;
+        dmaReadBytes += bytesInPage;
+        dmaReadTxs++;
         dmaInterface->doDMA(Read, dmaAddr, bytesInPage,
                             curTick + totalDiskDelay, &dmaReadEvent);
     } else {
@@ -429,6 +464,11 @@ IdeDisk::dmaReadDone()
 
         bytesInPage = bytesInDmaPage(curAddr, bytesLeft);
         dmaInterfaceBytes += bytesInPage;
+
+        if (bytesInPage == TheISA::VMPageSize)
+            dmaReadFullPages++;
+        dmaReadBytes += bytesInPage;
+        dmaReadTxs++;
 
         dmaInterface->doDMA(Read, dmaAddr, bytesInPage,
                             curTick, &dmaReadEvent);
@@ -504,6 +544,11 @@ IdeDisk::doDmaWrite()
 
         dmaInterfaceBytes = bytesInPage;
 
+        if (bytesInPage == TheISA::VMPageSize)
+            dmaWriteFullPages++;
+        dmaWriteBytes += bytesInPage;
+        dmaWriteTxs++;
+
         dmaInterface->doDMA(WriteInvalidate, dmaAddr,
                             bytesInPage, curTick + totalDiskDelay,
                             &dmaWriteEvent);
@@ -534,6 +579,11 @@ IdeDisk::dmaWriteDone()
 
         bytesInPage = bytesInDmaPage(curAddr, bytesLeft);
         dmaInterfaceBytes += bytesInPage;
+
+        if (bytesInPage == TheISA::VMPageSize)
+            dmaWriteFullPages++;
+        dmaWriteBytes += bytesInPage;
+        dmaWriteTxs++;
 
         dmaInterface->doDMA(WriteInvalidate, dmaAddr,
                             bytesInPage, curTick,
