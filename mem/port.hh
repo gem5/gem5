@@ -197,21 +197,21 @@ class Port
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    void readBlob(Addr addr, uint8_t *p, int size);
+    virtual void readBlob(Addr addr, uint8_t *p, int size);
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into
         appropriate chunks.  The default implementation can use
         getBlockSize() to determine the block size and go from there.
     */
-    void writeBlob(Addr addr, uint8_t *p, int size);
+    virtual void writeBlob(Addr addr, uint8_t *p, int size);
 
     /** Fill size bytes starting at addr with byte value val.  This
         should not need to be virtual, since it can be implemented in
         terms of writeBlob().  However, it shouldn't be
         performance-critical either, so it could be if we wanted to.
     */
-    void memsetBlob(Addr addr, uint8_t val, int size);
+    virtual void memsetBlob(Addr addr, uint8_t val, int size);
 
   private:
 

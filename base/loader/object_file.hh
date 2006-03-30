@@ -33,7 +33,7 @@
 
 #include "sim/host.hh"	// for Addr
 
-class TranslatingPort;
+class Port;
 class SymbolTable;
 
 class ObjectFile
@@ -72,7 +72,7 @@ class ObjectFile
 
     void close();
 
-    virtual bool loadSections(TranslatingPort *memPort, bool loadPhys = false);
+    virtual bool loadSections(Port *memPort, bool loadPhys = false);
     virtual bool loadGlobalSymbols(SymbolTable *symtab) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab) = 0;
 
@@ -94,7 +94,7 @@ class ObjectFile
     Section data;
     Section bss;
 
-    bool loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys);
+    bool loadSection(Section *sec, Port *memPort, bool loadPhys);
     void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
 
   public:

@@ -159,6 +159,9 @@ PhysicalMemory::getPort(const std::string &if_name)
            panic("PhysicalMemory::getPort: additional port requested to memory!");
         port = new MemoryPort(this);
         return port;
+    } else if (if_name == "functional") {
+        /* special port for functional writes at startup. */
+        return new MemoryPort(this);
     } else {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
@@ -332,9 +335,6 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 
     Param<string> file;
-#if FULL_SYSTEM
-    SimObjectParam<MemoryController *> mmu;
-#endif
     Param<Range<Addr> > range;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
@@ -342,20 +342,12 @@ END_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 BEGIN_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
     INIT_PARAM_DFLT(file, "memory mapped file", ""),
-#if FULL_SYSTEM
-    INIT_PARAM(mmu, "Memory Controller"),
-#endif
     INIT_PARAM(range, "Device Address Range")
 
 END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
 CREATE_SIM_OBJECT(PhysicalMemory)
 {
-#if FULL_SYSTEM
-    if (mmu) {
-        return new PhysicalMemory(getInstanceName(), range, mmu, file);
-    }
-#endif
 
     return new PhysicalMemory(getInstanceName());
 }

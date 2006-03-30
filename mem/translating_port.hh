@@ -29,34 +29,41 @@
 #ifndef __MEM_TRANSLATING_PROT_HH__
 #define __MEM_TRANSLATING_PROT_HH__
 
-class Port;
+#include "mem/port.hh"
+
 class PageTable;
 
-class TranslatingPort
+class TranslatingPort : public Port
 {
   private:
-    Port *port;
     PageTable *pTable;
+    bool allocating;
 
     TranslatingPort(const TranslatingPort &specmem);
     const TranslatingPort &operator=(const TranslatingPort &specmem);
 
   public:
-    TranslatingPort(Port *_port, PageTable *p_table);
+    TranslatingPort(PageTable *p_table, bool alloc = false);
     virtual ~TranslatingPort();
 
   public:
     bool tryReadBlob(Addr addr, uint8_t *p, int size);
-    bool tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc = false);
-    bool tryMemsetBlob(Addr addr, uint8_t val, int size, bool alloc = false);
+    bool tryWriteBlob(Addr addr, uint8_t *p, int size);
+    bool tryMemsetBlob(Addr addr, uint8_t val, int size);
     bool tryWriteString(Addr addr, const char *str);
     bool tryReadString(std::string &str, Addr addr);
 
-    void readBlob(Addr addr, uint8_t *p, int size);
-    void writeBlob(Addr addr, uint8_t *p, int size, bool alloc = false);
-    void memsetBlob(Addr addr, uint8_t val, int size, bool alloc = false);
+    virtual void readBlob(Addr addr, uint8_t *p, int size);
+    virtual void writeBlob(Addr addr, uint8_t *p, int size);
+    virtual void memsetBlob(Addr addr, uint8_t val, int size);
     void writeString(Addr addr, const char *str);
     void readString(std::string &str, Addr addr);
+
+    virtual bool recvTiming(Packet &pkt) { panic("TransPort is UniDir"); }
+    virtual Tick recvAtomic(Packet &pkt) { panic("TransPort is UniDir"); }
+    virtual void recvFunctional(Packet &pkt) { panic("TransPort is UniDir"); }
+    virtual void recvStatusChange(Status status) {panic("TransPort is UniDir");}
+
 };
 
 #endif

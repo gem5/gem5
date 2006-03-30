@@ -206,7 +206,7 @@ class CPUExecContext
                    AlphaITB *_itb, AlphaDTB *_dtb);
 #else
     CPUExecContext(BaseCPU *_cpu, int _thread_num, Process *_process,
-                   int _asid, Port *mem_port);
+                   int _asid);
     // Constructor to use XC to pass reg file around.  Not used for anything
     // else.
     CPUExecContext(RegFile *regFile);

@@ -153,21 +153,11 @@ Process::startup()
     // mark this context as active so it will start ticking.
     xc->activate(0);
 
-    // Here we are grabbing the memory port of the CPU hosting the
-    // initial execution context for initialization.  In the long run
-    // this is not what we want, since it means that all
-    // initialization accesses (e.g., loading object file sections)
-    // will be done a cache block at a time through the CPU's cache.
-    // We really want something more like:
-    //
-    // memport = system->physmem->getPort();
-    // myPort.setPeer(memport);
-    // memport->setPeer(&myPort);
-    // initVirtMem = new TranslatingPort(myPort, pTable);
-    //
-    // but we need our own dummy port "myPort" that doesn't exist.
-    // In the short term it works just fine though.
-    initVirtMem = xc->getMemPort();
+    Port *mem_port;
+    mem_port = system->physmem->getPort("functional");
+    initVirtMem = new TranslatingPort(pTable, true);
+    mem_port->setPeer(initVirtMem);
+    initVirtMem->setPeer(mem_port);
 }
 
 void

@@ -10,7 +10,6 @@
 #if FULL_SYSTEM
 #include "base/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/functional/memory_control.hh"
 #include "arch/vtophys.hh"
 #endif
 

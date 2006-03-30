@@ -63,7 +63,7 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys)
+ObjectFile::loadSection(Section *sec, Port *memPort, bool loadPhys)
 {
     if (sec->size != 0) {
         Addr addr = sec->baseAddr;
@@ -74,11 +74,11 @@ ObjectFile::loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys)
         }
 
         if (sec->fileImage) {
-            memPort->writeBlob(addr, sec->fileImage, sec->size, true);
+            memPort->writeBlob(addr, sec->fileImage, sec->size);
         }
         else {
             // no image: must be bss
-            memPort->memsetBlob(addr, 0, sec->size, true);
+            memPort->memsetBlob(addr, 0, sec->size);
         }
     }
     return true;
@@ -86,7 +86,7 @@ ObjectFile::loadSection(Section *sec, TranslatingPort *memPort, bool loadPhys)
 
 
 bool
-ObjectFile::loadSections(TranslatingPort *memPort, bool loadPhys)
+ObjectFile::loadSections(Port *memPort, bool loadPhys)
 {
     return (loadSection(&text, memPort, loadPhys)
             && loadSection(&data, memPort, loadPhys)
