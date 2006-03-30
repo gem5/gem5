@@ -36,7 +36,6 @@
 #include "cpu/base.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
-#include "cpu/fast/cpu.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/debug.hh"
 #include "sim/sim_events.hh"
@@ -574,13 +573,5 @@ CPUExecContext::simPalCheck(int palFunc)
 
     return true;
 }
-
-//Forward instantiation for FastCPU object
-template
-void AlphaISA::processInterrupts(FastCPU *xc);
-
-//Forward instantiation for FastCPU object
-template
-void AlphaISA::zeroRegisters(FastCPU *xc);
 
 #endif // FULL_SYSTEM

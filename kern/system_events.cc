@@ -26,8 +26,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "encumbered/cpu/full/cpu.hh"
+#include "cpu/base.hh"
+#include "cpu/cpu_exec_context.hh"
 #include "kern/kernel_stats.hh"
+#include "kern/system_events.hh"
+#include "sim/system.hh"
 
 using namespace TheISA;
 
@@ -41,11 +44,12 @@ SkipFuncEvent::process(ExecContext *xc)
 
     xc->setPC(newpc);
     xc->setNextPC(xc->readPC() + sizeof(TheISA::MachInst));
-
+/*
     BranchPred *bp = xc->getCpuPtr()->getBranchPred();
     if (bp != NULL) {
         bp->popRAS(xc->getThreadNum());
     }
+*/
 }
 
 

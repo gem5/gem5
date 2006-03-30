@@ -64,8 +64,8 @@
 
 #if FULL_SYSTEM
 #include "base/remote_gdb.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+//#include "mem/functional/memory_control.hh"
+//#include "mem/functional/physical.hh"
 #include "sim/system.hh"
 #include "arch/tlb.hh"
 #include "arch/stacktrace.hh"
@@ -155,13 +155,18 @@ SimpleCPU::CpuPort::recvRetry()
 }
 
 SimpleCPU::SimpleCPU(Params *p)
+#if !FULL_SYSTEM
     : BaseCPU(p), mem(p->mem), icachePort(this),
       dcachePort(this), tickEvent(this, p->width), cpuXC(NULL)
+#else
+    : BaseCPU(p), icachePort(this), dcachePort(this),
+      tickEvent(this, p->width), cpuXC(NULL)
+#endif
 {
     _status = Idle;
 
 #if FULL_SYSTEM
-    cpuXC = new CPUExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
+    cpuXC = new CPUExecContext(this, 0, p->system, p->itb, p->dtb);
 #else
     cpuXC = new CPUExecContext(this, /* thread_num */ 0, p->process, /* asid */ 0,
                          &dcachePort);
@@ -899,7 +904,7 @@ SimpleCPU::tick()
 
 #if FULL_SYSTEM
     if (checkInterrupts && check_interrupts() && !cpuXC->inPalMode() &&
-        status() != IcacheMissComplete) {
+        status() != IcacheAccessComplete) {
         int ipl = 0;
         int summary = 0;
         checkInterrupts = false;

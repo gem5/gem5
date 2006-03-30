@@ -36,14 +36,12 @@
 #include "sim/serialize.hh"
 #include "sim/byteswap.hh"
 
-// forward declaration: see functional_memory.hh
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
 class AlphaDTB;
 class AlphaITB;
 class BaseCPU;
 class Event;
-class PhysicalMemory;
 class TranslatingPort;
 class Process;
 class System;
@@ -83,8 +81,6 @@ class ExecContext
 
     virtual ~ExecContext() { };
 
-    virtual TranslatingPort *getMemPort() = 0;
-
     virtual BaseCPU *getCpuPtr() = 0;
 
     virtual void setCpuId(int id) = 0;
@@ -94,12 +90,12 @@ class ExecContext
 #if FULL_SYSTEM
     virtual System *getSystemPtr() = 0;
 
-    virtual PhysicalMemory *getPhysMemPtr() = 0;
-
     virtual AlphaITB *getITBPtr() = 0;
 
     virtual AlphaDTB * getDTBPtr() = 0;
 #else
+    virtual TranslatingPort *getMemPort() = 0;
+
     virtual Process *getProcessPtr() = 0;
 #endif
 
@@ -251,8 +247,6 @@ class ProxyExecContext : public ExecContext
 
   public:
 
-    TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
-
     BaseCPU *getCpuPtr() { return actualXC->getCpuPtr(); }
 
     void setCpuId(int id) { actualXC->setCpuId(id); }
@@ -262,12 +256,12 @@ class ProxyExecContext : public ExecContext
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualXC->getSystemPtr(); }
 
-    PhysicalMemory *getPhysMemPtr() { return actualXC->getPhysMemPtr(); }
-
     AlphaITB *getITBPtr() { return actualXC->getITBPtr(); }
 
     AlphaDTB *getDTBPtr() { return actualXC->getDTBPtr(); }
 #else
+    TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
+
     Process *getProcessPtr() { return actualXC->getProcessPtr(); }
 #endif
 

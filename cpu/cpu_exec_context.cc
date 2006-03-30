@@ -54,12 +54,11 @@ using namespace std;
 // constructor
 #if FULL_SYSTEM
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
-                         AlphaITB *_itb, AlphaDTB *_dtb,
-                         Memory *_mem)
+                         AlphaITB *_itb, AlphaDTB *_dtb)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
-      cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
-      dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
-      profile(NULL), quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
+      cpu_id(-1), lastActivate(0), lastSuspend(0), system(_sys), itb(_itb),
+      dtb(_dtb), memctrl(_sys->memctrl), profile(NULL),
+      quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
 {
     proxy = new ProxyExecContext<CPUExecContext>(this);
 
