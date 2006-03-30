@@ -169,7 +169,7 @@ SimpleCPU::SimpleCPU(Params *p)
     cpuXC = new CPUExecContext(this, 0, p->system, p->itb, p->dtb);
 #else
     cpuXC = new CPUExecContext(this, /* thread_num */ 0, p->process,
-            /* asid */ 0);
+            /* asid */ 0, mem);
 #endif // !FULL_SYSTEM
 
     xcProxy = cpuXC->getProxy();

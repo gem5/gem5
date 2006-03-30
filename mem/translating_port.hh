@@ -33,7 +33,7 @@
 
 class PageTable;
 
-class TranslatingPort : public Port
+class TranslatingPort : public FunctionalPort
 {
   private:
     PageTable *pTable;
@@ -58,11 +58,6 @@ class TranslatingPort : public Port
     virtual void memsetBlob(Addr addr, uint8_t val, int size);
     void writeString(Addr addr, const char *str);
     void readString(std::string &str, Addr addr);
-
-    virtual bool recvTiming(Packet &pkt) { panic("TransPort is UniDir"); }
-    virtual Tick recvAtomic(Packet &pkt) { panic("TransPort is UniDir"); }
-    virtual void recvFunctional(Packet &pkt) { panic("TransPort is UniDir"); }
-    virtual void recvStatusChange(Status status) {panic("TransPort is UniDir");}
 
 };
 

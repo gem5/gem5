@@ -92,7 +92,6 @@ base_sources = Split('''
         mem/mem_object.cc
         mem/physical.cc
         mem/port.cc
-        mem/translating_port.cc
         mem/bus.cc
 
         python/pyconfig.cc
@@ -254,6 +253,7 @@ turbolaser_sources = Split('''
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
         kern/linux/linux.cc
+        mem/translating_port.cc
         mem/page_table.cc
 	sim/process.cc
 	sim/syscall_emul.cc

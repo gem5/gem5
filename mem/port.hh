@@ -165,8 +165,8 @@ class Port
 
     /** Function called by the associated device to send a functional access,
         an access in which the data is instantly updated everywhere in the
-        memory system, without affecting the current state of any block
-        or moving the block.
+        memory system, without affecting the current state of any block or
+        moving the block.
     */
     void sendFunctional(Packet &pkt)
         { return peer->recvFunctional(pkt); }
@@ -219,5 +219,20 @@ class Port
      */
     void blobHelper(Addr addr, uint8_t *p, int size, Command cmd);
 };
+
+/** A simple functional port that is only meant for one way communication to
+ * physical memory. It is only meant to be used to load data into memory before
+ * the simulation begins.
+ */
+
+class FunctionalPort : public Port
+{
+  public:
+    virtual bool recvTiming(Packet &pkt) { panic("FuncPort is UniDir"); }
+    virtual Tick recvAtomic(Packet &pkt) { panic("FuncPort is UniDir"); }
+    virtual void recvFunctional(Packet &pkt) { panic("FuncPort is UniDir"); }
+    virtual void recvStatusChange(Status status) {panic("FuncPort is UniDir");}
+};
+
 
 #endif //__MEM_PORT_HH__

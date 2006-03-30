@@ -63,16 +63,10 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSection(Section *sec, Port *memPort, bool loadPhys)
+ObjectFile::loadSection(Section *sec, Port *memPort, Addr addrMask)
 {
     if (sec->size != 0) {
-        Addr addr = sec->baseAddr;
-        if (loadPhys) {
-            // this is Alpha-specific... going to have to fix this
-            // for other architectures
-            addr &= (ULL(1) << 40) - 1;
-        }
-
+        Addr addr = sec->baseAddr & addrMask;
         if (sec->fileImage) {
             memPort->writeBlob(addr, sec->fileImage, sec->size);
         }
@@ -86,11 +80,11 @@ ObjectFile::loadSection(Section *sec, Port *memPort, bool loadPhys)
 
 
 bool
-ObjectFile::loadSections(Port *memPort, bool loadPhys)
+ObjectFile::loadSections(Port *memPort, Addr addrMask)
 {
-    return (loadSection(&text, memPort, loadPhys)
-            && loadSection(&data, memPort, loadPhys)
-            && loadSection(&bss, memPort, loadPhys));
+    return (loadSection(&text, memPort, addrMask)
+            && loadSection(&data, memPort, addrMask)
+            && loadSection(&bss, memPort, addrMask));
 }
 
 

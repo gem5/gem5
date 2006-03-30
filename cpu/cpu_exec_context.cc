@@ -80,7 +80,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid)
+                         Process *_process, int _asid, MemObject* memobj)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
       lastSuspend(0), process(_process), asid(_asid),
@@ -89,7 +89,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
     /* Use this port to for syscall emulation writes to memory. */
     Port *mem_port;
     port = new TranslatingPort(process->pTable, false);
-    mem_port = process->system->physmem->getPort("functional");
+    mem_port = memobj->getPort("functional");
     mem_port->setPeer(port);
     port->setPeer(mem_port);
 

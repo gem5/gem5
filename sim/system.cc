@@ -36,6 +36,16 @@ System::System(Params *p)
     kernelSymtab = new SymbolTable;
     debugSymbolTable = new SymbolTable;
 
+
+    /**
+     * Get a functional port to memory
+     */
+    Port *mem_port;
+    mem_port = physmem->getPort("functional");
+    functionalPort.setPeer(mem_port);
+    mem_port->setPeer(&functionalPort);
+
+
     /**
      * Load the kernel code into memory
      */
@@ -45,7 +55,7 @@ System::System(Params *p)
         fatal("Could not load kernel file %s", params()->kernel_path);
 
     // Load program sections into memory
-    kernel->loadSections(physmem, true);
+    kernel->loadSections(&functionalPort, LoadAddrMask);
 
     // setup entry points
     kernelStart = kernel->textBase();

@@ -29,6 +29,7 @@
 #ifndef __OBJECT_FILE_HH__
 #define __OBJECT_FILE_HH__
 
+#include <limits>
 #include <string>
 
 #include "sim/host.hh"	// for Addr
@@ -72,7 +73,8 @@ class ObjectFile
 
     void close();
 
-    virtual bool loadSections(Port *memPort, bool loadPhys = false);
+    virtual bool loadSections(Port *memPort, Addr addrMask =
+            std::numeric_limits<Addr>::max());
     virtual bool loadGlobalSymbols(SymbolTable *symtab) = 0;
     virtual bool loadLocalSymbols(SymbolTable *symtab) = 0;
 
@@ -94,7 +96,7 @@ class ObjectFile
     Section data;
     Section bss;
 
-    bool loadSection(Section *sec, Port *memPort, bool loadPhys);
+    bool loadSection(Section *sec, Port *memPort, Addr addrMask);
     void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
 
   public:
