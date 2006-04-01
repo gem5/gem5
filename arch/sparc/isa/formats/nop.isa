@@ -1,19 +1,29 @@
 ////////////////////////////////////////////////////////////////////
 //
-// Noop instruction
+// Nop instruction
 //
 
 output header {{
         /**
-         * Noop class.
+         * Nop class.
          */
-        class Noop : public SparcStaticInst
+        class Nop : public SparcStaticInst
         {
-          protected:
+          public:
             // Constructor
-            Noop(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+            Nop(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 SparcStaticInst(mnem, _machInst, __opClass)
             {
+            }
+
+            // All Nop instructions do the same thing, so this can be
+            // defined here. Nops can be defined directly, so there needs
+            // to be a default implementation
+            Fault execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+            {
+                //Nothing to see here, move along
+                return NoFault;
             }
 
             std::string generateDisassembly(Addr pc,
@@ -22,14 +32,16 @@ output header {{
 }};
 
 output decoder {{
-        std::string Noop::generateDisassembly(Addr pc,
+        std::string Nop::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
-            return "Noop\n";
+            std::stringstream response;
+            printMnemonic(response, mnemonic);
+            return response.str();
         }
 }};
 
-def template NoopExecute {{
+def template NopExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
@@ -39,12 +51,12 @@ def template NoopExecute {{
 }};
 
 // Primary format for integer operate instructions:
-def format Noop(code, *opt_flags) {{
+def format Nop(code, *opt_flags) {{
         orig_code = code
         cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'Nop', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
-        exec_output = NoopExecute.subst(iop)
+        exec_output = NopExecute.subst(iop)
 }};

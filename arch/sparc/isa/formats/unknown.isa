@@ -29,7 +29,7 @@ output decoder {{
         std::string Unknown::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
-            return "Unknown instruction\n";
+            return "Unknown instruction";
         }
 }};
 

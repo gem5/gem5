@@ -57,6 +57,12 @@ output header {{
         };
 
         bool passesCondition(uint32_t codes, uint32_t condition);
+
+        inline int64_t sign_ext(uint64_t data, int origWidth)
+        {
+            int shiftAmount = sizeof(uint64_t) - origWidth;
+            return (((int64_t)data) << shiftAmount) >> shiftAmount;
+        }
 }};
 
 def template ROrImmDecode {{
@@ -68,28 +74,59 @@ def template ROrImmDecode {{
 
 let {{
     def splitOutImm(code):
-        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>d{0,2})')
+        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)')
         rOrImmMatch = matcher.search(code)
         if (rOrImmMatch == None):
-            return (False, CodeBlock(code), None, '', '')
-        rString = matcher.sub(r'(?P=rNum)', rOrImmMatch.string)
-        iString = matcher.sub(r'(?P=iNum)', rOrImmMatch.string)
+            return (False, code, '', '', '')
+        rString = rOrImmMatch.group("rNum")
+        iString = rOrImmMatch.group("iNum")
         orig_code = code
-        code = matcher.sub(r'Rs(?P<rNum>)', orig_code)
+        code = matcher.sub('Rs' + rOrImmMatch.group("rNum"), orig_code)
         imm_code = matcher.sub('imm', orig_code)
-        return (True, CodeBlock(code), CodeBlock(imm_code), rString, iString)
+        return (True, code, imm_code, rString, iString)
+
+    def genCompositeIop(code, name, Name, parent, opt_flags, **extras):
+        origBlock = CodeBlock(code)
+        composite = code
+        for snippet in extras.values():
+            composite += ('\n' + snippet)
+        compositeBlock = CodeBlock(composite)
+        iop = InstObjParams(name, Name, parent, compositeBlock, opt_flags)
+        iop.code = origBlock.code
+        iop.orig_code = origBlock.orig_code
+        for (name, snippet) in extras.items():
+            exec "iop.%s = CodeBlock(snippet).code" % name
+        return iop
 }};
 
 output decoder {{
 
+        inline void printMnemonic(std::ostream &os, const char * mnemonic)
+        {
+            ccprintf(os, "\t%s   ", mnemonic);
+        }
+
         void
         SparcStaticInst::printReg(std::ostream &os, int reg) const
         {
-            if (reg < FP_Base_DepTag) {
-                ccprintf(os, "r%d", reg);
-            }
+            const int MaxGlobal = 8;
+            const int MaxOutput = 16;
+            const int MaxLocal = 24;
+            const int MaxInput = 32;
+            if (reg == FramePointerReg)
+                ccprintf(os, "%%fp");
+            else if (reg == StackPointerReg)
+                ccprintf(os, "%%sp");
+            else if(reg < MaxGlobal)
+                ccprintf(os, "%%g%d", reg);
+            else if(reg < MaxOutput)
+                ccprintf(os, "%%o%d", reg - MaxGlobal);
+            else if(reg < MaxLocal)
+                ccprintf(os, "%%l%d", reg - MaxOutput);
+            else if(reg < MaxInput)
+                ccprintf(os, "%%i%d", reg - MaxLocal);
             else {
-                ccprintf(os, "f%d", reg - FP_Base_DepTag);
+                ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
             }
         }
 
@@ -98,7 +135,7 @@ output decoder {{
         {
             std::stringstream ss;
 
-            ccprintf(ss, "%-10s ", mnemonic);
+            printMnemonic(ss, mnemonic);
 
             // just print the first two source regs... if there's
             // a third one, it's a read-modify-write dest (Rc),

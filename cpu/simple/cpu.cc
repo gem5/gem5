@@ -1089,7 +1089,7 @@ SimpleCPU::tick()
 #endif // FULL_SYSTEM
     }
     else {
-#if THE_ISA != MIPS_ISA
+#if THE_ISA == ALPHA_ISA
         // go to the next instruction
         cpuXC->setPC(cpuXC->readNextPC());
         cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));

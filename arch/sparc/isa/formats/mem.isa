@@ -5,7 +5,7 @@
 
 output header {{
         /**
-         * Base class for integer operations.
+         * Base class for memory operations.
          */
         class Mem : public SparcStaticInst
         {
@@ -20,12 +20,76 @@ output header {{
             std::string generateDisassembly(Addr pc,
                     const SymbolTable *symtab) const;
         };
+
+        /**
+         * Class for memory operations which use an immediate offset.
+         */
+        class MemImm : public Mem
+        {
+          protected:
+
+            // Constructor
+            MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                Mem(mnem, _machInst, __opClass), imm(SIMM13)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+
+            int imm;
+        };
 }};
 
 output decoder {{
-        std::string Mem::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string Mem::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
         {
-            return "Memory instruction\n";
+            std::stringstream response;
+            bool load = (_numDestRegs == 1);
+
+            printMnemonic(response, mnemonic);
+            if(!load)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[load ? 0 : 1]);
+            ccprintf(response, " + ");
+            printReg(response, _srcRegIdx[load ? 1 : 2]);
+            ccprintf(response, " ]");
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+
+        std::string MemImm::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = (_numDestRegs == 1);
+
+            printMnemonic(response, mnemonic);
+            if(!load)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[load ? 0 : 1]);
+            ccprintf(response, " + 0x%x ]", imm);
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
         }
 }};
 
@@ -50,19 +114,16 @@ def template MemExecute {{
         }
 }};
 
-// Primary format for integer operate instructions:
+// Primary format for memory instructions:
 def format Mem(code, *opt_flags) {{
-        addrCalc = 'EA = I ? (Rs1 + SIMM13) : Rs1 + Rs2;'
-        composite = code + '\n' + addrCalc
-        origCodeBlk = CodeBlock(code)
-        compositeBlk = CodeBlock(composite)
-        addrCalcBlk = CodeBlock(addrCalc)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', compositeBlk, opt_flags)
-        iop.code = origCodeBlk.code
-        iop.orig_code = origCodeBlk.orig_code
-        iop.ea_code = addrCalcBlk.code
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = MemExecute.subst(iop)
+        addrCalcReg = 'EA = Rs1 + Rs2;'
+        addrCalcImm = 'EA = Rs1 + SIMM13;'
+        iop = genCompositeIop(code, name, Name, 'Mem',
+                opt_flags, ea_code=addrCalcReg)
+        iop_imm = genCompositeIop(code, name, Name + 'Imm', 'MemImm',
+                opt_flags, ea_code=addrCalcImm)
+        header_output = BasicDeclare.subst(iop) + BasicDeclare.subst(iop_imm)
+        decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
+        decode_block = ROrImmDecode.subst(iop)
+        exec_output = MemExecute.subst(iop) + MemExecute.subst(iop_imm)
 }};

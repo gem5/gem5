@@ -2,6 +2,9 @@
 //Templates from this format are used later
 ##include "formats/basic.isa"
 
+//Include the noop format
+##include "formats/nop.isa"
+
 //Include the integerOp and integerOpCc format
 ##include "formats/integerop.isa"
 
@@ -22,7 +25,4 @@
 
 //Include the branch format
 ##include "formats/branch.isa"
-
-//Include the noop format
-##include "formats/noop.isa"
 

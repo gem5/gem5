@@ -77,11 +77,6 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         return NULL;
     } else {
         //Detect the architecture
-        //Versioning issues in libelf need to be resolved to get the correct
-        //SPARC constants.
-        //If MIPS supports 32 bit executables, this may need to be changed.
-        //Also, there are other MIPS constants which may be used, like
-        //EM_MIPS_RS3_LE and EM_MIPS_X
         //Since we don't know how to check for alpha right now, we'll
         //just assume if it wasn't something else and it's 64 bit, that's
         //what it must be.

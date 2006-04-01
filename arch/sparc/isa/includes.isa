@@ -12,6 +12,7 @@ output header {{
 #include "arch/sparc/faults.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/regfile.hh"
 }};
 
 output decoder {{

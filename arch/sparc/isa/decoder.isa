@@ -7,61 +7,66 @@ decode OP default Unknown::unknown()
 {
     0x0: decode OP2
     {
-        format Branch
+        //Throw an illegal instruction acception
+        0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
+        0x1: decode BPCC
         {
-            //Throw an illegal instruction acception
-            0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
-            0x1: decode BPCC
+            format Branch19
             {
                 0x0: bpcci({{
+                    NNPC = xc->readNextNPC();
                     if(passesCondition(CcrIcc, COND2))
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
                 0x2: bpccx({{
                     if(passesCondition(CcrXcc, COND2))
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
             }
-            0x2: bicc({{
-                if(passesCondition(CcrIcc, COND2))
-                    ;//branchHere
-            }});
-            0x3: decode RCOND2
+        }
+        0x2: Branch22::bicc({{
+            if(passesCondition(CcrIcc, COND2))
+                NNPC = xc->readPC() + disp;
+        }});
+        0x3: decode RCOND2
+        {
+            format BranchSplit
             {
                 0x1: bpreq({{
                     if(Rs1 == 0)
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
                 0x2: bprle({{
                     if(Rs1 <= 0)
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
                 0x3: bprl({{
                     if(Rs1 < 0)
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
                 0x5: bprne({{
                     if(Rs1 != 0)
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
                 0x6: bprg({{
                     if(Rs1 > 0)
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
                 0x7: bprge({{
                     if(Rs1 >= 0)
-                        ;//branchHere
+                        NNPC = xc->readPC() + disp;
                 }});
             }
-            //SETHI (or NOP if rd == 0 and imm == 0)
-            0x4: IntOp::sethi({{Rd = (IMM22 << 10) & 0xFFFFFC00;}});
-            0x5: Trap::fbpfcc({{fault = new FpDisabled;}});
-            0x6: Trap::fbfcc({{fault = new FpDisabled;}});
         }
+        //SETHI (or NOP if rd == 0 and imm == 0)
+        0x4: SetHi::sethi({{Rd = imm;}});
+        0x5: Trap::fbpfcc({{fault = new FpDisabled;}});
+        0x6: Trap::fbfcc({{fault = new FpDisabled;}});
     }
-    0x1: Branch::call({{
+    0x1: Branch30::call({{
             //branch here
-            Rd = xc->readPC();
+            R15 = xc->readPC();
+            NNPC = R15 + disp;
     }});
     0x2: decode OP3 {
         format IntOp {
@@ -69,41 +74,40 @@ decode OP default Unknown::unknown()
             0x01: and({{Rd = Rs1.udw & Rs2_or_imm13;}});
             0x02: or({{Rd = Rs1.udw | Rs2_or_imm13;}});
             0x03: xor({{Rd = Rs1.udw ^ Rs2_or_imm13;}});
-            0x04: sub({{Rd = Rs1.sdw + (~Rs2_or_imm)+1;}});
-            0x05: andn({{Rd = Rs1.udw & ~Rs2_or_imm;}});
-            0x06: orn({{Rd = Rs1.udw | ~Rs2_or_imm;}});
-            0x07: xnor({{Rd = ~(Rs1.udw ^ Rs2_or_imm);}});
-            0x08: addc({{Rd = Rs1.sdw + Rs2_or_imm + CcrIccC;}});
-            0x09: mulx({{Rd = Rs1 * Rs2_or_imm;}});
+            0x04: sub({{Rd = Rs1.sdw + (~Rs2_or_imm13)+1;}});
+            0x05: andn({{Rd = Rs1.udw & ~Rs2_or_imm13;}});
+            0x06: orn({{Rd = Rs1.udw | ~Rs2_or_imm13;}});
+            0x07: xnor({{Rd = ~(Rs1.udw ^ Rs2_or_imm13);}});
+            0x08: addc({{Rd = Rs1.sdw + Rs2_or_imm13 + CcrIccC;}});
+            0x09: mulx({{Rd = Rs1 * Rs2_or_imm13;}});
             0x0A: umul({{
-                Rd = Rs1.udw<31:0> * Rs2_or_imm<31:0>;
+                Rd = Rs1.udw<31:0> * Rs2_or_imm13<31:0>;
                 YValue = Rd<63:32>;
             }});
             0x0B: smul({{
-                Rd.sdw = Rs1.sdw<31:0> * Rs2_or_imm<31:0>;
+                Rd.sdw = Rs1.sdw<31:0> * Rs2_or_imm13<31:0>;
                 YValue = Rd.sdw;
             }});
-            0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm) + 1 + CcrIccC;}});
+            0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 + CcrIccC;}});
             0x0D: udivx({{
-                if(val2 == 0) fault = new DivisionByZero;
-                else Rd.udw = Rs1.udw / Rs2_or_imm;
+                if(Rs2_or_imm13 == 0) fault = new DivisionByZero;
+                else Rd.udw = Rs1.udw / Rs2_or_imm13;
             }});
             0x0E: udiv({{
-                uint32_t resTemp, val2 = (I ? SIMM13 : Rs2.udw<31:0>);
-                if(Rs2_or_imm.udw == 0) fault = new DivisionByZero;
+                if(Rs2_or_imm13 == 0) fault = new DivisionByZero;
                 else
                 {
-                    Rd.udw = ((YValue << 32) | Rs1.udw<31:0>) / Rs2_or_imm.udw;
+                    Rd.udw = ((YValue << 32) | Rs1.udw<31:0>) / Rs2_or_imm13;
                     if(Rd.udw >> 32 != 0)
                         Rd.udw = 0xFFFFFFFF;
                 }
             }});
             0x0F: sdiv({{
-                if(val2 == 0)
+                if(Rs2_or_imm13 == 0)
                     fault = new DivisionByZero;
                 else
                 {
-                    Rd.udw = ((YValue << 32) | Rs1.sdw<31:0>) / Rs2_or_imm;
+                    Rd.udw = ((YValue << 32) | Rs1.sdw<31:0>) / Rs2_or_imm13;
                     if(Rd.udw<63:31> != 0)
                         Rd.udw = 0x7FFFFFFF;
                     else if(Rd.udw<63:> && Rd.udw<62:31> != 0xFFFFFFFF)
@@ -113,7 +117,7 @@ decode OP default Unknown::unknown()
         }
         format IntOpCc {
             0x10: addcc({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;}},
                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                 {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
@@ -124,11 +128,11 @@ decode OP default Unknown::unknown()
             0x12: IntOpCcRes::orcc({{Rd = Rs1 | Rs2_or_imm13;}});
             0x13: IntOpCcRes::xorcc({{Rd = Rs1 ^ Rs2_or_imm13;}});
             0x14: subcc({{
-                int64_t resTemp, val2 = (int64_t)(I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 - val2;}},
                 {{((Rs1 & 0xFFFFFFFF + (~val2) & 0xFFFFFFFF + 1) >> 31)}},
                 {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                {{((Rs1 >> 1) + (~val2) >> 1) +
+                {{(((Rs1 >> 1) + (~val2) >> 1) +
                     ((Rs1 | ~val2) & 0x1))<63:>}},
                 {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
             );//SUBcc
@@ -136,7 +140,7 @@ decode OP default Unknown::unknown()
             0x16: IntOpCcRes::orncc({{Rd = Rs1 | ~Rs2_or_imm13;}});
             0x17: IntOpCcRes::xnorcc({{Rd = ~(Rs1 ^ Rs2_or_imm13);}});
             0x18: addccc({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = CcrIccC;
                 Rd = resTemp = Rs1 + val2 + carryin;}},
                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31
@@ -147,38 +151,38 @@ decode OP default Unknown::unknown()
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );//ADDCcc
             0x1A: umulcc({{
-                uint64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                uint64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1.udw<31:0> * val2<31:0>;
                 YValue = resTemp<63:32>;}},
                 {{0}},{{0}},{{0}},{{0}});//UMULcc
             0x1B: smulcc({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1.sdw<31:0> * val2<31:0>;
                 YValue = resTemp<63:32>;}}
                 ,{{0}},{{0}},{{0}},{{0}});//SMULcc
             0x1C: subccc({{
-                int64_t resTemp, val2 = (int64_t)(I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = CcrIccC;
                 Rd = resTemp = Rs1 + ~(val2 + carryin) + 1;}},
                 {{((Rs1 & 0xFFFFFFFF + (~(val2 + carryin)) & 0xFFFFFFFF + 1) >> 31)}},
                 {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                {{((Rs1 >> 1) + (~(val2 + carryin)) >> 1) + ((Rs1 | ~(val2+carryin)) & 0x1))<63:>}},
+                {{(((Rs1 >> 1) + (~(val2 + carryin)) >> 1) + ((Rs1 | ~(val2+carryin)) & 0x1))<63:>}},
                 {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
             );//SUBCcc
             0x1D: udivxcc({{
-                uint64_t val2 = (I ? SIMM13 : Rs2.udw);
-                if(val2 == 0) fault = new DivisionByZero;
-                else Rd.udw = Rs1.udw / val2;}}
+                if(Rs2_or_imm13 == 0) fault = new DivisionByZero;
+                else Rd = Rs1.udw / Rs2_or_imm13;}}
                 ,{{0}},{{0}},{{0}},{{0}});//UDIVXcc
             0x1E: udivcc({{
-                uint32_t resTemp, val2 = (I ? SIMM13 : Rs2.udw<31:0>);
+                uint32_t resTemp, val2 = Rs2_or_imm13;
+                int32_t overflow;
                 if(val2 == 0) fault = new DivisionByZero;
                 else
                 {
                     resTemp = (uint64_t)((YValue << 32) | Rs1.udw<31:0>) / val2;
-                    int32_t overflow = (resTemp<63:32> != 0);
-                    if(overflow) rd.udw = resTemp = 0xFFFFFFFF;
-                    else rd.udw = resTemp;
+                    overflow = (resTemp<63:32> != 0);
+                    if(overflow) Rd = resTemp = 0xFFFFFFFF;
+                    else Rd = resTemp;
                 } }},
                 {{0}},
                 {{overflow}},
@@ -186,16 +190,17 @@ decode OP default Unknown::unknown()
                 {{0}}
             );//UDIVcc
             0x1F: sdivcc({{
-                int32_t resTemp, val2 = (I ? SIMM13 : Rs2.sdw<31:0>);
+                int32_t resTemp, val2 = Rs2_or_imm13;
+                int32_t overflow, underflow;
                 if(val2 == 0) fault = new DivisionByZero;
                 else
                 {
-                    Rd.sdw = resTemp = (int64_t)((YValue << 32) | Rs1.sdw<31:0>) / val2;
-                    int32_t overflow = (resTemp<63:31> != 0);
-                    int32_t underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
-                    if(overflow) rd.udw = resTemp = 0x7FFFFFFF;
-                    else if(underflow) rd.udw = resTemp = 0xFFFFFFFF80000000;
-                    else rd.udw = resTemp;
+                    Rd = resTemp = (int64_t)((YValue << 32) | Rs1.sdw<31:0>) / val2;
+                    overflow = (resTemp<63:31> != 0);
+                    underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
+                    if(overflow) Rd = resTemp = 0x7FFFFFFF;
+                    else if(underflow) Rd = resTemp = 0xFFFFFFFF80000000;
+                    else Rd = resTemp;
                 } }},
                 {{0}},
                 {{overflow || underflow}},
@@ -203,7 +208,7 @@ decode OP default Unknown::unknown()
                 {{0}}
             );//SDIVcc
             0x20: taddcc({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
@@ -212,16 +217,16 @@ decode OP default Unknown::unknown()
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );//TADDcc
             0x21: tsubcc({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
-                {{(Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
+                {{(Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31}},
                 {{overflow}},
                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );//TSUBcc
             0x22: taddcctv({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
                 if(overflow) fault = new TagOverflow;}},
@@ -231,7 +236,7 @@ decode OP default Unknown::unknown()
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );//TADDccTV
             0x23: tsubcctv({{
-                int64_t resTemp, val2 = (I ? SIMM13 : Rs2);
+                int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
                 if(overflow) fault = new TagOverflow;}},
@@ -241,10 +246,10 @@ decode OP default Unknown::unknown()
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );//TSUBccTV
             0x24: mulscc({{
-                int64_t resTemp, multiplicand = (I ? SIMM13 : Rs2);
+                int64_t resTemp, multiplicand = Rs2_or_imm13;
                 int32_t multiplier = Rs1<31:0>;
                 int32_t savedLSB = Rs1<0:>;
-                multiplier = multipler<31:1> |
+                multiplier = multiplier<31:1> |
                     ((CcrIccN
                     ^ CcrIccV) << 32);
                 if(!YValue<0:>)
@@ -276,11 +281,11 @@ decode OP default Unknown::unknown()
                     0x2: rdccr({{Rd = Ccr;}}); //RDCCR
                     0x3: rdasi({{Rd = Asi;}}); //RDASI
                     0x4: PrivTick::rdtick({{Rd = Tick;}});
-                    0x5: rdpc({{Rd = xc->regs.pc;}}); //RDPC
+                    0x5: rdpc({{Rd = xc->readPC();}}); //RDPC
                     0x6: rdfprs({{Rd = Fprs;}}); //RDFPRS
                     0xF: decode I {
-                        0x0: Noop::membar({{/*Membar isn't needed yet*/}});
-                        0x1: Noop::stbar({{/*Stbar isn't needed yet*/}});
+                        0x0: Nop::membar({{/*Membar isn't needed yet*/}});
+                        0x1: Nop::stbar({{/*Stbar isn't needed yet*/}});
                     }
                 }
                 0x2A: decode RS1 {
@@ -336,12 +341,14 @@ decode OP default Unknown::unknown()
                 }});//SDIVX
                 0x2E: decode RS1 {
                         0x0: IntOp::popc({{
-                        int64_t count = 0, val2 = Rs2_or_imm;
+                        int64_t count = 0;
+                        uint64_t temp = Rs2_or_imm13;
+                        //Count the 1s in the front 4bits until none are left
                         uint8_t oneBits[] = {0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4};
-                        for(unsigned int x = 0; x < 16; x++)
+                        while(temp)
                         {
-                                count += oneBits[Rs2_or_imm13 & 0xF];
-                                val2 >> 4;
+                                count += oneBits[temp & 0xF];
+                                temp = temp >> 4;
                         }
                         }});//POPC
                 }
@@ -401,8 +408,25 @@ decode OP default Unknown::unknown()
                 0x34: Trap::fpop1({{fault = new FpDisabled;}});
                 0x35: Trap::fpop2({{fault = new FpDisabled;}});
 
-                0x38: Branch::jmpl({{/*Stuff*/}});
-                0x39: Branch::return({{/*Other Stuff*/}});
+                0x38: Branch::jmpl({{
+                    Addr target = Rs1 + Rs2_or_imm13;
+                    if(target && 0x3)
+                        fault = new MemAddressNotAligned;
+                    else
+                    {
+                        Rd = xc->readPC();
+                        NNPC = target;
+                    }
+                }});
+                0x39: Branch::return({{
+                    Addr target = Rs1 + Rs2_or_imm13;
+                    if(target && 0x3)
+                        fault = new MemAddressNotAligned;
+                    else
+                        NNPC = target;
+                    //This needs to change the register window
+                    //like restore does
+                }});
                 0x3A: decode CC
                 {
                     0x0: Trap::tcci({{
@@ -512,7 +536,7 @@ decode OP default Unknown::unknown()
                     0x26: Trap::stqf({{fault = new FpDisabled;}});
                     0x27: Trap::stdf({{fault = new FpDisabled;}});
 
-                    0x2D: Noop::prefetch({{ }}); //PREFETCH
+                    0x2D: Nop::prefetch({{ }}); //PREFETCH
 
                     0x30: Trap::ldfa({{return new FpDisabled;}});
 
@@ -528,7 +552,7 @@ decode OP default Unknown::unknown()
                                     Mem.uw = Rd.uw;
                             Rd.uw = val;
                     }}); //CASA
-                    0x3D: Noop::prefetcha({{ }}); //PREFETCHA
+                    0x3D: Nop::prefetcha({{ }}); //PREFETCHA
                     0x3E: Cas::casxa({{
                             uint64_t val = Mem.udw;
                             if(Rs2 == val)

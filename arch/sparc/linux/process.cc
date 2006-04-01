@@ -356,9 +356,9 @@ SparcLinuxProcess::SparcLinuxProcess(const std::string &name,
             stdin_fd, stdout_fd, stderr_fd, argv, envp),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
-    // The sparc syscall table must be <= 283 entries because that is all there
+    // The sparc syscall table must be <= 284 entries because that is all there
     // is space for.
-    assert(Num_Syscall_Descs <= 283);
+    assert(Num_Syscall_Descs <= 284);
 }
 
 
