@@ -42,10 +42,10 @@
 #include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
-#include "sim/system.hh"
 #include "arch/stacktrace.hh"
 #else
 #include "sim/process.hh"
+#include "sim/system.hh"
 #include "mem/translating_port.hh"
 #endif
 
@@ -54,12 +54,11 @@ using namespace std;
 // constructor
 #if FULL_SYSTEM
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
-                         AlphaITB *_itb, AlphaDTB *_dtb,
-                         Memory *_mem)
+                         AlphaITB *_itb, AlphaDTB *_dtb)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
-      cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
-      dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
-      profile(NULL), quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
+      cpu_id(-1), lastActivate(0), lastSuspend(0), system(_sys), itb(_itb),
+      dtb(_dtb), memctrl(_sys->memctrl), profile(NULL),
+      quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
 {
     proxy = new ProxyExecContext<CPUExecContext>(this);
 
@@ -81,13 +80,19 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid, Port *mem_port)
+                         Process *_process, int _asid, MemObject* memobj)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
       lastSuspend(0), process(_process), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
-    port = new TranslatingPort(mem_port, process->pTable);
+    /* Use this port to for syscall emulation writes to memory. */
+    Port *mem_port;
+    port = new TranslatingPort(process->pTable, false);
+    mem_port = memobj->getPort("functional");
+    mem_port->setPeer(port);
+    port->setPeer(mem_port);
+
     memset(&regs, 0, sizeof(RegFile));
     proxy = new ProxyExecContext<CPUExecContext>(this);
 }

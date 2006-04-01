@@ -36,6 +36,7 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "cpu/pc_event.hh"
+#include "mem/port.hh"
 #include "sim/sim_object.hh"
 #if FULL_SYSTEM
 #include "kern/system_events.hh"
@@ -75,6 +76,10 @@ class System : public SimObject
     MemoryController *memctrl;
     Platform *platform;
     uint64_t init_param;
+
+    /** Port to physical memory used for writing object files into ram at
+     * boot.*/
+    FunctionalPort functionalPort;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;

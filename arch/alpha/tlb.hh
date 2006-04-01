@@ -35,7 +35,7 @@
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/faults.hh"
 #include "base/statistics.hh"
-#include "mem/mem_req.hh"
+#include "mem/request.hh"
 #include "sim/sim_object.hh"
 
 class ExecContext;
@@ -73,7 +73,7 @@ class AlphaTLB : public SimObject
         return (unimplBits == 0) || (unimplBits == EV5::VAddrUnImplMask);
     }
 
-    static void checkCacheability(MemReqPtr &req);
+    static void checkCacheability(CpuRequestPtr &req);
 
     // Checkpointing
     virtual void serialize(std::ostream &os);
@@ -92,7 +92,7 @@ class AlphaITB : public AlphaTLB
     AlphaITB(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(MemReqPtr &req) const;
+    Fault translate(CpuRequestPtr &req) const;
 };
 
 class AlphaDTB : public AlphaTLB
@@ -115,7 +115,7 @@ class AlphaDTB : public AlphaTLB
     AlphaDTB(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(MemReqPtr &req, bool write) const;
+    Fault translate(CpuRequestPtr &req, bool write) const;
 };
 
 #endif // __ALPHA_MEMORY_HH__

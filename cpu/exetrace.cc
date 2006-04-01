@@ -29,11 +29,12 @@
 #include <fstream>
 #include <iomanip>
 
-#include "sim/param.hh"
-#include "cpu/exetrace.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
+#include "sim/param.hh"
+#include "sim/system.hh"
 
 using namespace std;
 

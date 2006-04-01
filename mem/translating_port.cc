@@ -34,8 +34,8 @@
 
 using namespace TheISA;
 
-TranslatingPort::TranslatingPort(Port *_port, PageTable *p_table)
-    : port(_port), pTable(p_table)
+TranslatingPort::TranslatingPort(PageTable *p_table, bool alloc)
+    : pTable(p_table), allocating(alloc)
 { }
 
 TranslatingPort::~TranslatingPort()
@@ -52,7 +52,7 @@ TranslatingPort::tryReadBlob(Addr addr, uint8_t *p, int size)
         if (!pTable->translate(gen.addr(),paddr))
             return false;
 
-        port->readBlob(paddr, p + prevSize, gen.size());
+        Port::readBlob(paddr, p + prevSize, gen.size());
         prevSize += gen.size();
     }
 
@@ -68,7 +68,7 @@ TranslatingPort::readBlob(Addr addr, uint8_t *p, int size)
 
 
 bool
-TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc)
+TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
 {
 
     Addr paddr;
@@ -77,7 +77,7 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc)
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
         if (!pTable->translate(gen.addr(), paddr)) {
-            if (alloc) {
+            if (allocating) {
                 pTable->allocate(roundDown(gen.addr(), VMPageSize),
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);
@@ -86,7 +86,7 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc)
             }
         }
 
-        port->writeBlob(paddr, p + prevSize, gen.size());
+        Port::writeBlob(paddr, p + prevSize, gen.size());
         prevSize += gen.size();
     }
 
@@ -95,21 +95,21 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size, bool alloc)
 
 
 void
-TranslatingPort::writeBlob(Addr addr, uint8_t *p, int size, bool alloc)
+TranslatingPort::writeBlob(Addr addr, uint8_t *p, int size)
 {
-    if (!tryWriteBlob(addr, p, size, alloc))
+    if (!tryWriteBlob(addr, p, size))
         fatal("writeBlob(0x%x, ...) failed", addr);
 }
 
 bool
-TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size, bool alloc)
+TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
 {
     Addr paddr;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
         if (!pTable->translate(gen.addr(), paddr)) {
-            if (alloc) {
+            if (allocating) {
                 pTable->allocate(roundDown(gen.addr(), VMPageSize),
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);
@@ -118,16 +118,16 @@ TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size, bool alloc)
             }
         }
 
-        port->memsetBlob(paddr, val, gen.size());
+        Port::memsetBlob(paddr, val, gen.size());
     }
 
     return true;
 }
 
 void
-TranslatingPort::memsetBlob(Addr addr, uint8_t val, int size, bool alloc)
+TranslatingPort::memsetBlob(Addr addr, uint8_t val, int size)
 {
-    if (!tryMemsetBlob(addr, val, size, alloc))
+    if (!tryMemsetBlob(addr, val, size))
         fatal("memsetBlob(0x%x, ...) failed", addr);
 }
 
@@ -145,7 +145,7 @@ TranslatingPort::tryWriteString(Addr addr, const char *str)
         if (!pTable->translate(vaddr++,paddr))
             return false;
 
-        port->writeBlob(paddr, &c, 1);
+        Port::writeBlob(paddr, &c, 1);
     } while (c);
 
     return true;
@@ -170,7 +170,7 @@ TranslatingPort::tryReadString(std::string &str, Addr addr)
         if (!pTable->translate(vaddr++,paddr))
             return false;
 
-        port->readBlob(paddr, &c, 1);
+        Port::readBlob(paddr, &c, 1);
         str += c;
     } while (c);
 

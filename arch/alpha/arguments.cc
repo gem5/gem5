@@ -60,7 +60,10 @@ AlphaArguments::getArg(bool fp)
     } else {
         Addr sp = xc->readIntReg(30);
         Addr paddr = vtophys(xc, sp + (number-6) * sizeof(uint64_t));
-        return xc->getPhysMemPtr()->phys_read_qword(paddr);
+        // @todo: This read must go through the system or something else.
+//	return xc->getPhysMemPtr()->phys_read_qword(paddr);
+        panic("Need to fix alpha arguments\n");
+        return 0;
     }
 }
 

@@ -121,9 +121,6 @@ class CPUExecContext
 
     System *system;
 
-    /// Port that syscalls can use to access memory (provides translation step).
-    TranslatingPort *port;
-//    Memory *mem;
 
 #if FULL_SYSTEM
     AlphaITB *itb;
@@ -167,6 +164,9 @@ class CPUExecContext
     void profileSample();
 
 #else
+    /// Port that syscalls can use to access memory (provides translation step).
+    TranslatingPort *port;
+
     Process *process;
 
     // Address space ID.  Note that this is used for TIMING cache
@@ -203,9 +203,10 @@ class CPUExecContext
     // constructor: initialize context from given process structure
 #if FULL_SYSTEM
     CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                   AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
+                   AlphaITB *_itb, AlphaDTB *_dtb);
 #else
-    CPUExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid, Port *mem_port);
+    CPUExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
+            MemObject *memobj);
     // Constructor to use XC to pass reg file around.  Not used for anything
     // else.
     CPUExecContext(RegFile *regFile);
@@ -219,8 +220,6 @@ class CPUExecContext
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    TranslatingPort *getMemPort() { return port; }
-
     BaseCPU *getCpuPtr() { return cpu; }
 
     ExecContext *getProxy() { return proxy; }
@@ -229,8 +228,6 @@ class CPUExecContext
 
 #if FULL_SYSTEM
     System *getSystemPtr() { return system; }
-
-    PhysicalMemory *getPhysMemPtr() { return physmem; }
 
     AlphaITB *getITBPtr() { return itb; }
 
@@ -255,6 +252,8 @@ class CPUExecContext
     }
 
 #else
+    TranslatingPort *getMemPort() { return port; }
+
     Process *getProcessPtr() { return process; }
 
     int getInstAsid() { return asid; }
