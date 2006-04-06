@@ -38,61 +38,38 @@ class ExecContext;
 
 namespace AlphaISA
 {
+    class IntRegFile
+    {
+      protected:
+        IntReg regs[NumIntRegs];
 
-    typedef IntReg IntRegFile[NumIntRegs];
+      public:
+
+        IntReg readReg(int intReg)
+        {
+            return regs[intReg];
+        }
+
+        Fault setReg(int intReg, const IntReg &val)
+        {
+            regs[intReg] = val;
+            return NoFault;
+        }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+    };
 
     class FloatRegFile
     {
-      protected:
+      public:
 
         union {
             uint64_t q[NumFloatRegs];	// integer qword view
             double d[NumFloatRegs];	// double-precision floating point view
         };
-
-      public:
-
-        FloatReg readReg(int floatReg)
-        {
-            return d[floatReg];
-        }
-
-        FloatReg readReg(int floatReg, int width)
-        {
-            return readReg(floatReg);
-        }
-
-        FloatRegBits readRegBits(int floatReg)
-        {
-            return q[floatReg];
-        }
-
-        FloatRegBits readRegBits(int floatReg, int width)
-        {
-            return readRegBits(floatReg);
-        }
-
-        Fault setReg(int floatReg, const FloatReg &val)
-        {
-            d[floatReg] = val;
-            return NoFault;
-        }
-
-        Fault setReg(int floatReg, const FloatReg &val, int width)
-        {
-            return setReg(floatReg, val);
-        }
-
-        Fault setRegBits(int floatReg, const FloatRegBits &val)
-        {
-            q[floatReg] = val;
-            return NoFault;
-        }
-
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
-        {
-            return setRegBits(floatReg, val);
-        }
 
         void serialize(std::ostream &os);
 
@@ -110,17 +87,18 @@ namespace AlphaISA
       public:
         MiscReg readReg(int misc_reg);
 
+        MiscReg readRegWithEffect(int misc_reg, Fault &fault,
+                ExecContext *xc);
+
         //These functions should be removed once the simplescalar cpu model
         //has been replaced.
         int getInstAsid();
         int getDataAsid();
 
-        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc);
-
         Fault setReg(int misc_reg, const MiscReg &val);
 
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
-                               ExecContext *xc);
+                ExecContext *xc);
 
 #if FULL_SYSTEM
       protected:
@@ -136,13 +114,50 @@ namespace AlphaISA
         friend class RegFile;
     };
 
-    struct RegFile {
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegs;		// control register file
+    class RegFile {
+
+      protected:
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
         Addr nnpc;
+
+      public:
+        Addr readPC()
+        {
+            return pc;
+        }
+
+        void setPC(Addr val)
+        {
+            pc = val;
+        }
+
+        Addr readNextPC()
+        {
+            return npc;
+        }
+
+        void setNextPC(Addr val)
+        {
+            npc = val;
+        }
+
+        Addr readNextNPC()
+        {
+            return nnpc;
+        }
+
+        void setNextNPC(Addr val)
+        {
+            nnpc = val;
+        }
+
+      protected:
+        IntRegFile intRegFile;		// (signed) integer register file
+        FloatRegFile floatRegFile;	// floating point register file
+        MiscRegFile miscRegFile;	// control register file
+
+      public:
 
 #if FULL_SYSTEM
         int intrflag;			// interrupt flag
@@ -152,8 +167,103 @@ namespace AlphaISA
         { return miscRegs.getDataAsid(); }
 #endif // FULL_SYSTEM
 
+        void clear()
+        {
+            bzero(&intRegFile, sizeof(intRegFile));
+            bzero(&floatRegFile, sizeof(floatRegFile));
+            bzero(&miscRegFile, sizeof(miscRegFile));
+        }
+
+        MiscReg readMiscReg(int miscReg)
+        {
+            return miscRegFile.readReg(miscReg);
+        }
+
+        MiscReg readMiscRegWithEffect(int miscReg,
+                Fault &fault, ExecContext *xc)
+        {
+            fault = NoFault;
+            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+        }
+
+        Fault setMiscReg(int miscReg, const MiscReg &val)
+        {
+            return miscRegFile.setReg(miscReg, val);
+        }
+
+        Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
+                ExecContext * xc)
+        {
+            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+        }
+
+        FloatReg readFloatReg(int floatReg)
+        {
+            return floatRegFile.d[floatReg];
+        }
+
+        FloatReg readFloatReg(int floatReg, int width)
+        {
+            return readFloatReg(floatReg);
+        }
+
+        FloatRegBits readFloatRegBits(int floatReg)
+        {
+            return floatRegFile.q[floatReg];
+        }
+
+        FloatRegBits readFloatRegBits(int floatReg, int width)
+        {
+            return readFloatRegBits(floatReg);
+        }
+
+        Fault setFloatReg(int floatReg, const FloatReg &val)
+        {
+            floatRegFile.d[floatReg] = val;
+            return NoFault;
+        }
+
+        Fault setFloatReg(int floatReg, const FloatReg &val, int width)
+        {
+            return setFloatReg(floatReg, val);
+        }
+
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
+        {
+            floatRegFile.q[floatReg] = val;
+            return NoFault;
+        }
+
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+        {
+            return setFloatRegBits(floatReg, val);
+        }
+
+        IntReg readIntReg(int intReg)
+        {
+            return intRegFile.readReg(intReg);
+        }
+
+        Fault setIntReg(int intReg, const IntReg &val)
+        {
+            return intRegFile.setReg(intReg, val);
+        }
+
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
+
+        enum ContextParam
+        {
+            CONTEXT_PALMODE
+        };
+
+        typedef bool ContextVal;
+
+        void changeContext(ContextParam param, ContextVal val)
+        {
+            //This would be an alternative place to call/implement
+            //the swapPALShadow function
+        }
     };
 
     void copyRegs(ExecContext *src, ExecContext *dest);

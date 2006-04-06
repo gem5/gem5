@@ -128,10 +128,11 @@ Trace::InstRecord::dump(ostream &outs)
             outs << " A=0x" << hex << addr;
 
         if (flags[PRINT_INT_REGS] && regs_valid) {
-            for (int i = 0; i < 32;)
+            for (int i = 0; i < TheISA::NumIntRegs;)
                 for (int j = i + 1; i <= j; i++)
-                    ccprintf(outs, "r%02d = %#018x%s", i, iregs->regs[i],
-                             ((i == j) ? "\n" : "    "));
+                    ccprintf(outs, "r%02d = %#018x%s", i,
+                            iregs->regs.readReg(i),
+                            ((i == j) ? "\n" : "    "));
             outs << "\n";
         }
 

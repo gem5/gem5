@@ -163,7 +163,7 @@ InstRecord::setRegs(const IntRegFile &regs)
     if (!iregs)
       iregs = new iRegFile;
 
-    memcpy(&iregs->regs, regs, sizeof(IntRegFile));
+    memcpy(&iregs->regs, &regs, sizeof(IntRegFile));
     regs_valid = true;
 }
 

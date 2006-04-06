@@ -30,6 +30,7 @@
 #define __ARCH_SPARC_REGFILE_HH__
 
 #include "arch/sparc/faults.hh"
+#include "base/trace.hh"
 #include "sim/byteswap.hh"
 #include "sim/host.hh"
 
@@ -40,11 +41,110 @@ namespace SparcISA
 
     typedef uint8_t  RegIndex;
 
-    // Maximum trap level
+    // MAXTL - maximum trap level
     const int MaxTL = 4;
 
-    //For right now, let's pretend the register file is flat
-    typedef IntReg IntRegFile[NumIntRegs];
+    // NWINDOWS - number of register windows, can be 3 to 32
+    const int NWindows = 6;
+
+    class IntRegFile
+    {
+      protected:
+        static const int FrameOffsetBits = 3;
+        static const int FrameNumBits = 2;
+
+        static const int RegsPerFrame = 1 << FrameOffsetBits;
+        static const int FrameNumMask =
+                (FrameNumBits == sizeof(int)) ?
+                (unsigned int)(-1) :
+                (1 << FrameNumBits) - 1;
+        static const int FrameOffsetMask =
+                (FrameOffsetBits == sizeof(int)) ?
+                (unsigned int)(-1) :
+                (1 << FrameOffsetBits) - 1;
+
+        IntReg regGlobals[RegsPerFrame];
+        IntReg altGlobals[RegsPerFrame];
+        IntReg regSegments[2 * NWindows][RegsPerFrame];
+
+        enum regFrame {Globals, Outputs, Locals, Inputs, NumFrames};
+
+        IntReg * regView[NumFrames];
+
+        static const int RegGlobalOffset = 0;
+        static const int AltGlobalOffset = 8;
+        static const int FrameOffset = 16;
+        int offset[NumFrames];
+
+      public:
+
+        int flattenIndex(int reg)
+        {
+            int flatIndex = offset[reg >> FrameOffsetBits]
+                | (reg & FrameOffsetMask);
+            DPRINTF(Sparc, "Flattened index %d into %d.\n", reg, flatIndex);
+            return flatIndex;
+        }
+
+        void clear()
+        {
+            bzero(regGlobals, sizeof(regGlobals));
+            bzero(altGlobals, sizeof(altGlobals));
+            for(int x = 0; x < 2 * NWindows; x++)
+                bzero(regSegments[x], sizeof(regSegments[x]));
+        }
+
+        IntRegFile()
+        {
+            offset[Globals] = 0;
+            regView[Globals] = regGlobals;
+            setCWP(0);
+            clear();
+        }
+
+        IntReg readReg(int intReg)
+        {
+            IntReg val =
+                regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask];
+            DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
+            return val;
+        }
+
+        Fault setReg(int intReg, const IntReg &val)
+        {
+            if(intReg)
+                DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
+            regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
+            return NoFault;
+        }
+
+        //This doesn't effect the actual CWP register.
+        //It's purpose is to adjust the view of the register file
+        //to what it would be if CWP = cwp.
+        void setCWP(int cwp)
+        {
+            int index = ((NWindows - cwp) % NWindows) * 2;
+            offset[Outputs] = FrameOffset + (index * RegsPerFrame);
+            offset[Locals] = FrameOffset + ((index+1) * RegsPerFrame);
+            offset[Inputs] = FrameOffset +
+                (((index+2) % (NWindows * 2)) * RegsPerFrame);
+            regView[Outputs] = regSegments[index];
+            regView[Locals] = regSegments[index+1];
+            regView[Inputs] = regSegments[(index+2) % (NWindows * 2)];
+
+            DPRINTF(Sparc, "Changed the CWP value to %d\n", cwp);
+        }
+
+        void setAltGlobals(bool useAlt)
+        {
+            regView[Globals] = useAlt ? altGlobals : regGlobals;
+            offset[Globals] = useAlt ? AltGlobalOffset : RegGlobalOffset;
+        }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
 
     typedef float float32_t;
     typedef double float64_t;
@@ -54,10 +154,12 @@ namespace SparcISA
 
     class FloatRegFile
     {
-      protected:
+      public:
         static const int SingleWidth = 32;
         static const int DoubleWidth = 64;
         static const int QuadWidth = 128;
+
+      protected:
 
         //Since the floating point registers overlap each other,
         //A generic storage space is used. The float to be returned is
@@ -65,6 +167,11 @@ namespace SparcISA
         char regSpace[SingleWidth / 8 * NumFloatRegs];
 
       public:
+
+        void clear()
+        {
+            bzero(regSpace, sizeof(regSpace));
+        }
 
         FloatReg readReg(int floatReg, int width)
         {
@@ -88,12 +195,6 @@ namespace SparcISA
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
-        }
-
-        FloatReg readReg(int floatReg)
-        {
-            //Use the "natural" width of a single float
-            return readReg(floatReg, SingleWidth);
         }
 
         FloatRegBits readRegBits(int floatReg, int width)
@@ -120,12 +221,6 @@ namespace SparcISA
             }
         }
 
-        FloatRegBits readRegBits(int floatReg)
-        {
-            //Use the "natural" width of a single float
-            return readRegBits(floatReg, SingleWidth);
-        }
-
         Fault setReg(int floatReg, const FloatReg &val, int width)
         {
             //In each of these cases, we have to copy the value into a temporary
@@ -148,12 +243,6 @@ namespace SparcISA
             return NoFault;
         }
 
-        Fault setReg(int floatReg, const FloatReg &val)
-        {
-            //Use the "natural" width of a single float
-            return setReg(floatReg, val, SingleWidth);
-        }
-
         Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
         {
             //In each of these cases, we have to copy the value into a temporary
@@ -174,12 +263,6 @@ namespace SparcISA
                 panic("Attempted to read a %d bit floating point register!", width);
             }
             return NoFault;
-        }
-
-        Fault setRegBits(int floatReg, const FloatRegBits &val)
-        {
-            //Use the "natural" width of a single float
-            return setReg(floatReg, val, SingleWidth);
         }
 
         void serialize(std::ostream &os);
@@ -474,14 +557,59 @@ namespace SparcISA
         };
 
       public:
+
+        void reset()
+        {
+            pstateFields.pef = 0; //No FPU
+            //pstateFields.pef = 1; //FPU
+#if FULL_SYSTEM
+            //For SPARC, when a system is first started, there is a power
+            //on reset Trap which sets the processor into the following state.
+            //Bits that aren't set aren't defined on startup.
+            tl = MaxTL;
+            tt[tl] = PowerOnReset.trapType();
+            pstateFields.mm = 0; //Total Store Order
+            pstateFields.red = 1; //Enter RED_State
+            pstateFields.am = 0; //Address Masking is turned off
+            pstateFields.priv = 1; //Processor enters privileged mode
+            pstateFields.ie = 0; //Interrupts are disabled
+            pstateFields.ag = 1; //Globals are replaced with alternate globals
+            pstateFields.tle = 0; //Big Endian mode for traps
+            pstateFields.cle = 0; //Big Endian mode for non-traps
+            tickFields.npt = 1; //The TICK register is unreadable by
+                                //non-priveleged software
+#else
+            //This sets up the initial state of the processor for usermode processes
+            pstateFields.priv = 0; //Process runs in user mode
+            pstateFields.ie = 1; //Interrupts are enabled
+            fsrFields.rd = 0; //Round to nearest
+            fsrFields.tem = 0; //Floating point traps not enabled
+            fsrFields.ns = 0; //Non standard mode off
+            fsrFields.qne = 0; //Floating point queue is empty
+            fsrFields.aexc = 0; //No accrued exceptions
+            fsrFields.cexc = 0; //No current exceptions
+
+            //Register window management registers
+            otherwin = 0; //No windows contain info from other programs
+            canrestore = 0; //There are no windows to pop
+            cansave = MaxTL - 2; //All windows are available to save into
+            cleanwin = MaxTL;
+#endif
+        }
+
+        MiscRegFile()
+        {
+            reset();
+        }
+
         MiscReg readReg(int miscReg);
 
         MiscReg readRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
 
         Fault setReg(int miscReg, const MiscReg &val);
 
-        Fault setRegWithEffect(int miscReg, const MiscReg &val,
-                               ExecContext *xc);
+        Fault setRegWithEffect(int miscReg,
+                const MiscReg &val, ExecContext * xc);
 
         void serialize(std::ostream & os);
 
@@ -497,18 +625,169 @@ namespace SparcISA
         MiscReg ctrlreg;
     } AnyReg;
 
-    struct RegFile
+    class RegFile
     {
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegs;	// control register file
-
+      protected:
         Addr pc;		// Program Counter
         Addr npc;		// Next Program Counter
         Addr nnpc;
 
+      public:
+        Addr readPC()
+        {
+            return pc;
+        }
+
+        void setPC(Addr val)
+        {
+            pc = val;
+        }
+
+        Addr readNextPC()
+        {
+            return npc;
+        }
+
+        void setNextPC(Addr val)
+        {
+            npc = val;
+        }
+
+        Addr readNextNPC()
+        {
+            return nnpc;
+        }
+
+        void setNextNPC(Addr val)
+        {
+            nnpc = val;
+        }
+
+      protected:
+        IntRegFile intRegFile;		// integer register file
+        FloatRegFile floatRegFile;	// floating point register file
+        MiscRegFile miscRegFile;	// control register file
+
+      public:
+
+        void clear()
+        {
+            intRegFile.clear();
+            floatRegFile.clear();
+        }
+
+        int flattenIntIndex(int reg)
+        {
+            return intRegFile.flattenIndex(reg);
+        }
+
+        MiscReg readMiscReg(int miscReg)
+        {
+            return miscRegFile.readReg(miscReg);
+        }
+
+        MiscReg readMiscRegWithEffect(int miscReg,
+                Fault &fault, ExecContext *xc)
+        {
+            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+        }
+
+        Fault setMiscReg(int miscReg, const MiscReg &val)
+        {
+            return miscRegFile.setReg(miscReg, val);
+        }
+
+        Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
+                ExecContext * xc)
+        {
+            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+        }
+
+        FloatReg readFloatReg(int floatReg, int width)
+        {
+            return floatRegFile.readReg(floatReg, width);
+        }
+
+        FloatReg readFloatReg(int floatReg)
+        {
+            //Use the "natural" width of a single float
+            return floatRegFile.readReg(floatReg, FloatRegFile::SingleWidth);
+        }
+
+        FloatRegBits readFloatRegBits(int floatReg, int width)
+        {
+            return floatRegFile.readRegBits(floatReg, width);
+        }
+
+        FloatRegBits readFloatRegBits(int floatReg)
+        {
+            //Use the "natural" width of a single float
+            return floatRegFile.readRegBits(floatReg,
+                    FloatRegFile::SingleWidth);
+        }
+
+        Fault setFloatReg(int floatReg, const FloatReg &val, int width)
+        {
+            return floatRegFile.setReg(floatReg, val, width);
+        }
+
+        Fault setFloatReg(int floatReg, const FloatReg &val)
+        {
+            //Use the "natural" width of a single float
+            return setFloatReg(floatReg, val, FloatRegFile::SingleWidth);
+        }
+
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+        {
+            return floatRegFile.setRegBits(floatReg, val, width);
+        }
+
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
+        {
+            //Use the "natural" width of a single float
+            return floatRegFile.setRegBits(floatReg, val,
+                    FloatRegFile::SingleWidth);
+        }
+
+        IntReg readIntReg(int intReg)
+        {
+            return intRegFile.readReg(intReg);
+        }
+
+        Fault setIntReg(int intReg, const IntReg &val)
+        {
+            return intRegFile.setReg(intReg, val);
+        }
+
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
+
+      public:
+
+        enum ContextParam
+        {
+            CONTEXT_CWP,
+            CONTEXT_GLOBALS
+        };
+
+        union ContextVal
+        {
+            MiscReg reg;
+            bool altGlobals;
+        };
+
+        void changeContext(ContextParam param, ContextVal val)
+        {
+            switch(param)
+            {
+              case CONTEXT_CWP:
+                intRegFile.setCWP(val.reg);
+              case CONTEXT_GLOBALS:
+                intRegFile.setAltGlobals(val.altGlobals);
+              default:
+                panic("Tried to set illegal context parameter in the SPARC regfile.\n");
+            }
+        }
     };
 
     void copyRegs(ExecContext *src, ExecContext *dest);

@@ -373,103 +373,103 @@ class CPUExecContext
     //
     uint64_t readIntReg(int reg_idx)
     {
-        return regs.intRegFile[reg_idx];
+        return regs.readIntReg(reg_idx);
     }
 
     FloatReg readFloatReg(int reg_idx, int width)
     {
-        return regs.floatRegFile.readReg(reg_idx, width);
+        return regs.readFloatReg(reg_idx, width);
     }
 
     FloatReg readFloatReg(int reg_idx)
     {
-        return regs.floatRegFile.readReg(reg_idx);
+        return regs.readFloatReg(reg_idx);
     }
 
     FloatRegBits readFloatRegBits(int reg_idx, int width)
     {
-        return regs.floatRegFile.readRegBits(reg_idx, width);
+        return regs.readFloatRegBits(reg_idx, width);
     }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     {
-        return regs.floatRegFile.readRegBits(reg_idx);
+        return regs.readFloatRegBits(reg_idx);
     }
 
     void setIntReg(int reg_idx, uint64_t val)
     {
-        regs.intRegFile[reg_idx] = val;
+        regs.setIntReg(reg_idx, val);
     }
 
     void setFloatReg(int reg_idx, FloatReg val, int width)
     {
-        regs.floatRegFile.setReg(reg_idx, val, width);
+        regs.setFloatReg(reg_idx, val, width);
     }
 
     void setFloatReg(int reg_idx, FloatReg val)
     {
-        regs.floatRegFile.setReg(reg_idx, val);
+        regs.setFloatReg(reg_idx, val);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
     {
-        regs.floatRegFile.setRegBits(reg_idx, val, width);
+        regs.setFloatRegBits(reg_idx, val, width);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     {
-        regs.floatRegFile.setRegBits(reg_idx, val);
+        regs.setFloatRegBits(reg_idx, val);
     }
 
     uint64_t readPC()
     {
-        return regs.pc;
+        return regs.readPC();
     }
 
     void setPC(uint64_t val)
     {
-        regs.pc = val;
+        regs.setPC(val);
     }
 
     uint64_t readNextPC()
     {
-        return regs.npc;
+        return regs.readNextPC();
     }
 
     void setNextPC(uint64_t val)
     {
-        regs.npc = val;
+        regs.setNextPC(val);
     }
 
     uint64_t readNextNPC()
     {
-        return regs.nnpc;
+        return regs.readNextNPC();
     }
 
     void setNextNPC(uint64_t val)
     {
-        regs.nnpc = val;
+        regs.setNextNPC(val);
     }
 
 
     MiscReg readMiscReg(int misc_reg)
     {
-        return regs.miscRegs.readReg(misc_reg);
+        return regs.readMiscReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return regs.miscRegs.readRegWithEffect(misc_reg, fault, proxy);
+        return regs.readMiscRegWithEffect(misc_reg, fault, proxy);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return regs.miscRegs.setReg(misc_reg, val);
+        return regs.setMiscReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return regs.miscRegs.setRegWithEffect(misc_reg, val, proxy);
+        return regs.setMiscRegWithEffect(misc_reg, val, proxy);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }
@@ -477,7 +477,7 @@ class CPUExecContext
     void setStCondFailures(unsigned sc_failures)
     { storeCondFailures = sc_failures; }
 
-    void clearArchRegs() { memset(&regs, 0, sizeof(regs)); }
+    void clearArchRegs() { regs.clear(); }
 
 #if FULL_SYSTEM
     int readIntrFlag() { return regs.intrflag; }
@@ -490,13 +490,13 @@ class CPUExecContext
 #if !FULL_SYSTEM
     TheISA::IntReg getSyscallArg(int i)
     {
-        return regs.intRegFile[TheISA::ArgumentReg0 + i];
+        return regs.readIntReg(TheISA::ArgumentReg0 + i);
     }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, TheISA::IntReg val)
     {
-        regs.intRegFile[TheISA::ArgumentReg0 + i] = val;
+        regs.setIntReg(TheISA::ArgumentReg0 + i, val);
     }
 
     void setSyscallReturn(SyscallReturn return_value)
@@ -513,6 +513,12 @@ class CPUExecContext
 
     void setFuncExeInst(Counter new_val) { func_exe_inst = new_val; }
 #endif
+
+    void changeRegFileContext(RegFile::ContextParam param,
+            RegFile::ContextVal val)
+    {
+        regs.changeContext(param, val);
+    }
 };
 
 

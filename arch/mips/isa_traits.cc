@@ -275,9 +275,21 @@ RoundPage(Addr addr)
 { return (addr + MipsISA::PageBytes - 1) & ~(MipsISA::PageBytes - 1); }
 
 void
+IntRegFile::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(regs, NumIntRegs);
+}
+
+void
+IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(regs, NumIntRegs);
+}
+
+void
 RegFile::serialize(std::ostream &os)
 {
-    SERIALIZE_ARRAY(intRegFile, NumIntRegs);
+    intRegFile.serialize(os);
     //SERIALIZE_ARRAY(floatRegFile.q, NumFloatRegs);
     //SERIALIZE_SCALAR(miscRegs.fpcr);
     //SERIALIZE_SCALAR(miscRegs.uniq);
@@ -298,7 +310,7 @@ RegFile::serialize(std::ostream &os)
 void
 RegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(intRegFile, NumIntRegs);
+    intRegFile.unserialize(cp, section);
     //UNSERIALIZE_ARRAY(floatRegFile.q, NumFloatRegs);
     //UNSERIALIZE_SCALAR(miscRegs.fpcr);
     //UNSERIALIZE_SCALAR(miscRegs.uniq);

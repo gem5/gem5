@@ -98,12 +98,12 @@ extern const int reg_redir[NumIntRegs];
         // return value itself in the standard return value reg (v0).
         if (return_value.successful()) {
             // no error
-            regs->intRegFile[SyscallSuccessReg] = 0;
-            regs->intRegFile[ReturnValueReg] = return_value.value();
+            regs->setIntReg(SyscallSuccessReg, 0);
+            regs->setIntReg(ReturnValueReg, return_value.value());
         } else {
             // got an error, return details
-            regs->intRegFile[SyscallSuccessReg] = (IntReg) -1;
-            regs->intRegFile[ReturnValueReg] = -return_value.value();
+            regs->setIntReg(SyscallSuccessReg, (IntReg)-1);
+            regs->setIntReg(ReturnValueReg, -return_value.value());
         }
     }
 #endif

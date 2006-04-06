@@ -233,6 +233,9 @@ class ExecContext
 
     virtual void setFuncExeInst(Counter new_val) = 0;
 #endif
+
+    virtual void changeRegFileContext(RegFile::ContextParam param,
+            RegFile::ContextVal val) = 0;
 };
 
 template <class XC>
@@ -422,6 +425,12 @@ class ProxyExecContext : public ExecContext
     void setFuncExeInst(Counter new_val)
     { return actualXC->setFuncExeInst(new_val); }
 #endif
+
+    void changeRegFileContext(RegFile::ContextParam param,
+            RegFile::ContextVal val)
+    {
+        actualXC->changeRegFileContext(param, val);
+    }
 };
 
 #endif
