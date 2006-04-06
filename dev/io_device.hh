@@ -37,6 +37,7 @@
 class Platform;
 class PioDevice;
 class DmaDevice;
+class System;
 
 /**
  * The PioPort class is a programmed i/o port that all devices that are
@@ -207,6 +208,7 @@ class PioDevice : public SimObject
     {
         std::string name;
         Platform *platform;
+        System *system;
     };
 
   protected:

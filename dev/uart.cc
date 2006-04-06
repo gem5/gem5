@@ -27,51 +27,25 @@
  */
 
 /** @file
- * Implements a 8250 UART
+ * Implements a base class for UARTs
  */
 
-#include <string>
-#include <vector>
-
-#include "base/inifile.hh"
-#include "base/str.hh"        // for to_number
-#include "base/trace.hh"
 #include "dev/simconsole.hh"
 #include "dev/uart.hh"
 #include "dev/platform.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
 #include "sim/builder.hh"
 
 using namespace std;
 
-Uart::Uart(const string &name, SimConsole *c, MemoryController *mmu, Addr a,
-           Addr s, HierParams *hier, Bus *bus, Tick pio_latency, Platform *p)
-    : PioDevice(name, p), addr(a), size(s), cons(c)
+Uart::Uart(Params *p)
+    : BasicPioDevice(p), platform(p->platform), cons(p->cons)
 {
-    mmu->add_child(this, RangeSize(addr, size));
-
-
-    if (bus) {
-        pioInterface = newPioInterface(name, hier, bus, this,
-                                      &Uart::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * bus->clockRate;
-    }
 
     status = 0;
 
     // set back pointers
     cons->uart = this;
     platform->uart = this;
-}
-
-Tick
-Uart::cacheAccess(MemReqPtr &req)
-{
-    return curTick + pioLatency;
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("Uart", Uart)

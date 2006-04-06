@@ -37,7 +37,7 @@
 #include "arch/isa_traits.hh"
 
 class DiskImage;
-class PhysicalMemory;
+class System;
 
 /*
  * Trivial interface to a disk image used by the System Console
@@ -48,11 +48,11 @@ class SimpleDisk : public SimObject
     typedef uint64_t baddr_t;
 
   protected:
-    PhysicalMemory  *physmem;
+    System  *system;
     DiskImage *image;
 
   public:
-    SimpleDisk(const std::string &name, PhysicalMemory *pmem, DiskImage *img);
+    SimpleDisk(const std::string &name, System *sys, DiskImage *img);
     ~SimpleDisk();
 
     void read(Addr addr, baddr_t block, int count) const;

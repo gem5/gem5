@@ -100,7 +100,7 @@ class AlphaConsole : public BasicPioDevice
     {
         SimConsole *cons;
         SimpleDisk *disk;
-        AlphaSystem *sys;
+        AlphaSystem *alpha_sys;
         BaseCPU *cpu;
     };
   protected:

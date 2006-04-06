@@ -42,14 +42,14 @@
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
 #include "dev/simple_disk.hh"
-#include "mem/functional/physical.hh"
+#include "mem/port.hh"
 #include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
-SimpleDisk::SimpleDisk(const string &name, PhysicalMemory *pmem,
-                       DiskImage *img)
-    : SimObject(name), physmem(pmem), image(img)
+SimpleDisk::SimpleDisk(const string &name, System *sys, DiskImage *img)
+    : SimObject(name), system(sys), image(img)
 {}
 
 SimpleDisk::~SimpleDisk()
@@ -59,9 +59,7 @@ SimpleDisk::~SimpleDisk()
 void
 SimpleDisk::read(Addr addr, baddr_t block, int count) const
 {
-    uint8_t *data = physmem->dma_addr(addr, count);
-    if (!data)
-        panic("dma out of range! read addr=%#x count=%d\n", addr, count);
+    uint8_t *data = new uint8_t[SectorSize * count];
 
     if (count & (SectorSize - 1))
         panic("Not reading a multiple of a sector (count = %d)", count);
@@ -69,8 +67,12 @@ SimpleDisk::read(Addr addr, baddr_t block, int count) const
     for (int i = 0, j = 0; i < count; i += SectorSize, j++)
         image->read(data + i, block + j);
 
+    system->functionalPort.writeBlob(addr, data, count);
+
     DPRINTF(SimpleDisk, "read  block=%#x len=%d\n", (uint64_t)block, count);
     DDUMP(SimpleDiskData, data, count);
+
+    delete data;
 }
 
 void
@@ -89,21 +91,21 @@ SimpleDisk::write(Addr addr, baddr_t block, int count)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleDisk)
 
-    SimObjectParam<PhysicalMemory *> physmem;
+    SimObjectParam<System *> system;
     SimObjectParam<DiskImage *> disk;
 
 END_DECLARE_SIM_OBJECT_PARAMS(SimpleDisk)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleDisk)
 
-    INIT_PARAM(physmem, "Physical Memory"),
+    INIT_PARAM(system, "System pointer"),
     INIT_PARAM(disk, "Disk Image")
 
 END_INIT_SIM_OBJECT_PARAMS(SimpleDisk)
 
 CREATE_SIM_OBJECT(SimpleDisk)
 {
-    return new SimpleDisk(getInstanceName(), physmem, disk);
+    return new SimpleDisk(getInstanceName(), system, disk);
 }
 
 REGISTER_SIM_OBJECT("SimpleDisk", SimpleDisk)

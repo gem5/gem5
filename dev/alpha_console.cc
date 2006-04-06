@@ -53,7 +53,7 @@ using namespace AlphaISA;
 
 AlphaConsole::AlphaConsole(Params *p)
     : BasicPioDevice(p), disk(p->disk),
-      console(params()->cons), system(params()->sys), cpu(params()->cpu)
+      console(params()->cons), system(params()->alpha_sys), cpu(params()->cpu)
 {
 
     pioSize = sizeof(struct AlphaAccess);
@@ -99,7 +99,6 @@ AlphaConsole::addressRanges(AddrRangeList &range_list)
 Tick
 AlphaConsole::read(Packet &pkt)
 {
-    pkt.time = curTick + pioDelay;
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
      * the device has it's physical address and then the bridge adds on whatever
@@ -108,6 +107,8 @@ AlphaConsole::read(Packet &pkt)
 
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+
+    pkt.time = curTick + pioDelay;
     Addr daddr = pkt.addr - pioAddr;
 
     uint32_t *data32;
@@ -355,7 +356,8 @@ CREATE_SIM_OBJECT(AlphaConsole)
     p->pio_delay = pio_latency;
     p->cons = sim_console;
     p->disk = disk;
-    p->sys = system;
+    p->alpha_sys = system;
+    p->system = system;
     p->cpu = cpu;
     return new AlphaConsole(p);
 }

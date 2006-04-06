@@ -183,7 +183,13 @@ full_system_sources = Split('''
         cpu/profile.cc
 
 	dev/alpha_console.cc
+	dev/disk_image.cc
 	dev/io_device.cc
+	dev/platform.cc
+        dev/simconsole.cc
+	dev/simple_disk.cc
+	dev/uart.cc
+	dev/uart8250.cc
 
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
@@ -198,8 +204,6 @@ full_system_sources = Split('''
         ''')
 
 #	dev/baddev.cc
-#       dev/simconsole.cc
-#	dev/disk_image.cc
 #	dev/etherbus.cc
 #	dev/etherdump.cc
 #	dev/etherint.cc
@@ -213,16 +217,12 @@ full_system_sources = Split('''
 #	dev/pcidev.cc
 #	dev/pcifake.cc
 #	dev/pktfifo.cc
-#	dev/platform.cc
 #	dev/sinic.cc
-#	dev/simple_disk.cc
 #	dev/tsunami.cc
 #	dev/tsunami_cchip.cc
 #	dev/isa_fake.cc
 #	dev/tsunami_io.cc
 #	dev/tsunami_pchip.cc
-#	dev/uart.cc
-#	dev/uart8250.cc
 
 if env['TARGET_ISA'] == 'alpha':
     full_system_sources += Split('''

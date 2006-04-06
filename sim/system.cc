@@ -4,6 +4,7 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "mem/mem_object.hh"
+#include "mem/physical.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
@@ -11,7 +12,6 @@
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/physical.hh"
 #endif
 
 using namespace std;
@@ -242,7 +242,7 @@ DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
 
-    SimObjectParam<MemObject *> physmem;
+    SimObjectParam<PhysicalMemory *> physmem;
 
 END_DECLARE_SIM_OBJECT_PARAMS(System)
 

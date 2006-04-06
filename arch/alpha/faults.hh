@@ -349,7 +349,6 @@ class IntegerOverflowFault : public AlphaFault
 
 class UnimpFault : public AlphaFault
 {
-#if FULL_SYSTEM
   private:
     std::string panicStr;
     static FaultName _name;
@@ -359,7 +358,7 @@ class UnimpFault : public AlphaFault
     UnimpFault(std::string _str)
         : panicStr(_str)
     { }
-#endif
+
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
