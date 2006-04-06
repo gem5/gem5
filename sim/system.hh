@@ -40,13 +40,13 @@
 #include "sim/sim_object.hh"
 #if FULL_SYSTEM
 #include "kern/system_events.hh"
+#include "mem/vport.hh"
 #endif
 
 class BaseCPU;
 class ExecContext;
-class MemoryController;
 class ObjectFile;
-class MemObject;
+class PhysicalMemory;
 
 #if FULL_SYSTEM
 class Platform;
@@ -58,7 +58,7 @@ namespace Kernel { class Binning; }
 class System : public SimObject
 {
   public:
-    MemObject *physmem;
+    PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
 
     std::vector<ExecContext *> execContexts;
@@ -73,13 +73,13 @@ class System : public SimObject
     }
 
 #if FULL_SYSTEM
-    MemoryController *memctrl;
     Platform *platform;
     uint64_t init_param;
 
     /** Port to physical memory used for writing object files into ram at
      * boot.*/
     FunctionalPort functionalPort;
+    VirtualPort virtPort;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;
@@ -151,11 +151,10 @@ class System : public SimObject
     struct Params
     {
         std::string name;
-        MemObject *physmem;
+        PhysicalMemory *physmem;
 
 #if FULL_SYSTEM
         Tick boot_cpu_frequency;
-        MemoryController *memctrl;
         uint64_t init_param;
         bool bin;
         std::vector<std::string> binned_fns;

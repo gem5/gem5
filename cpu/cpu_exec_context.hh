@@ -48,13 +48,16 @@ class BaseCPU;
 
 class FunctionProfile;
 class ProfileNode;
-class MemoryController;
+class FunctionalPort;
+class PhysicalPort;
+
 
 #else // !FULL_SYSTEM
 
 #include "sim/process.hh"
 #include "mem/page_table.hh"
 class TranslatingPort;
+
 
 #endif // FULL_SYSTEM
 
@@ -126,11 +129,13 @@ class CPUExecContext
     AlphaITB *itb;
     AlphaDTB *dtb;
 
-    // the following two fields are redundant, since we can always
-    // look them up through the system pointer, but we'll leave them
-    // here for now for convenience
-    MemoryController *memctrl;
-//    PhysicalMemory *physmem;
+    /** A functional port outgoing only for functional accesses to physical
+     * addresses.*/
+    FunctionalPort *physPort;
+
+    /** A functional port, outgoing only, for functional accesse to virtual
+     * addresses. That doen't require execution context information */
+    VirtualPort *virtPort;
 
     FunctionProfile *profile;
     ProfileNode *profileNode;
@@ -238,18 +243,27 @@ class CPUExecContext
 
     Fault translateInstReq(CpuRequestPtr &req)
     {
-        return itb->translate(req);
+        return itb->translate(req, proxy);
     }
 
     Fault translateDataReadReq(CpuRequestPtr &req)
     {
-        return dtb->translate(req, false);
+        return dtb->translate(req, proxy, false);
     }
 
     Fault translateDataWriteReq(CpuRequestPtr &req)
     {
-        return dtb->translate(req, true);
+        return dtb->translate(req, proxy, true);
     }
+
+    FunctionalPort *getPhysPort() { return physPort; }
+
+    /** Return a virtual port. If no exec context is specified then a static
+     * port is returned. Otherwise a port is created and returned. It must be
+     * deleted by deleteVirtPort(). */
+    VirtualPort *getVirtPort(ExecContext *xc);
+
+    void delVirtPort(VirtualPort *vp);
 
 #else
     TranslatingPort *getMemPort() { return port; }

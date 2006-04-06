@@ -347,6 +347,26 @@ class IntegerOverflowFault : public AlphaFault
     FaultStat & countStat() {return _count;}
 };
 
+class UnimpFault : public AlphaFault
+{
+  private:
+    std::string panicStr;
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    UnimpFault(std::string _str)
+        : panicStr(_str)
+    { }
+
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+};
+
 } // AlphaISA namespace
 
 #endif // __FAULTS_HH__

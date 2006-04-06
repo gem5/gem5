@@ -29,10 +29,10 @@
 #ifndef __PRINTF_HH__
 #define __PRINTF_HH__
 
-class AlphaArguments;
+#include "arch/arguments.hh"
 
 namespace tru64 {
-    void Printf(AlphaArguments args);
+    void Printf(AlphaISA::AlphaArguments args);
 }
 
 #endif // __PRINTF_HH__

@@ -41,9 +41,10 @@
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "dev/alpha_console.hh"
+#include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
-#include "dev/tsunami_io.hh"
+#include "mem/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 
@@ -51,13 +52,14 @@ using namespace std;
 using namespace AlphaISA;
 
 AlphaConsole::AlphaConsole(Params *p)
-    : PioDevice(p->name, p->platform), disk(p->disk),
-      console(params()->cons), system(params()->sys), cpu(params()->cpu),
-      pioSize(sizeof(struct alphaAccess))
+    : BasicPioDevice(p), disk(p->disk),
+      console(params()->cons), system(params()->alpha_sys), cpu(params()->cpu)
 {
 
-    alphaAccess = new Access;
-    alphaAccess->last_offset = size - 1;
+    pioSize = sizeof(struct AlphaAccess);
+
+    alphaAccess = new Access();
+    alphaAccess->last_offset = pioSize - 1;
 
     alphaAccess->version = ALPHA_ACCESS_VERSION;
     alphaAccess->diskUnit = 1;
@@ -70,7 +72,7 @@ AlphaConsole::AlphaConsole(Params *p)
     alphaAccess->inputChar = 0;
     bzero(alphaAccess->cpuStack, sizeof(alphaAccess->cpuStack));
 
-    system->setAlphaAccess(addr);
+    system->setAlphaAccess(pioAddr);
 }
 
 void
@@ -82,13 +84,21 @@ AlphaConsole::startup()
     alphaAccess->entryPoint = system->getKernelEntry();
     alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->frequency() / 1000000; // In MHz
-    alphaAccess->intrClockFrequency = platform->intrFrequency();
+    alphaAccess->intrClockFrequency = params()->platform->intrFrequency();
 }
+
+void
+AlphaConsole::addressRanges(AddrRangeList &range_list)
+{
+    assert(pioSize != 0);
+    range_list.clear();
+    range_list.push_back(RangeSize(pioAddr, sizeof(struct AlphaAccess)));
+}
+
 
 Tick
 AlphaConsole::read(Packet &pkt)
 {
-    pkt.time = curTick + pioDelay;
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
      * the device has it's physical address and then the bridge adds on whatever
@@ -97,25 +107,36 @@ AlphaConsole::read(Packet &pkt)
 
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    Addr daddr = req.addr - pioAddr;
 
-    switch (req.size)
+    pkt.time = curTick + pioDelay;
+    Addr daddr = pkt.addr - pioAddr;
+
+    uint32_t *data32;
+    uint64_t *data64;
+
+    switch (pkt.size)
     {
         case sizeof(uint32_t):
-            if (!pkt.data) pkt.pkt.data = new uint32_t;
+            if (!pkt.data) {
+                data32 = new uint32_t;
+                pkt.data = (uint8_t*)data32;
+            }
+            else
+                data32 = (uint32_t*)pkt.data;
+
             switch (daddr)
             {
                 case offsetof(AlphaAccess, last_offset):
-                    *(uint32_t*)pkt.data = alphaAccess->last_offset;
+                    *data32 = alphaAccess->last_offset;
                     break;
                 case offsetof(AlphaAccess, version):
-                    *(uint32_t*)pkt.data = alphaAccess->version;
+                    *data32 = alphaAccess->version;
                     break;
                 case offsetof(AlphaAccess, numCPUs):
-                    *(uint32_t*)pkt.data = alphaAccess->numCPUs;
+                    *data32 = alphaAccess->numCPUs;
                     break;
                 case offsetof(AlphaAccess, intrClockFrequency):
-                    *(uint32_t*)pkt.data = alphaAccess->intrClockFrequency;
+                    *data32 = alphaAccess->intrClockFrequency;
                     break;
                 default:
                     /* Old console code read in everyting as a 32bit int
@@ -123,60 +144,63 @@ AlphaConsole::read(Packet &pkt)
                      */
                     pkt.result = BadAddress;
             }
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
-                    *(uint32_t*)pkt.data);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *data32);
             break;
         case sizeof(uint64_t):
-            if (!pkt.data) pkt.pkt.data = new uint64_t;
+            if (!pkt.data) {
+                data64 = new uint64_t;
+                pkt.data = (uint8_t*)data64;
+            }
+            else
+                data64 = (uint64_t*)pkt.data;
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):
-                    *(uint64_t*)pkt.data = console->console_in();
+                    *data64 = console->console_in();
                     break;
                 case offsetof(AlphaAccess, cpuClock):
-                    *(uint64_t*)pkt.data = alphaAccess->cpuClock;
+                    *data64 = alphaAccess->cpuClock;
                     break;
                 case offsetof(AlphaAccess, mem_size):
-                    *(uint64_t*)pkt.data = alphaAccess->mem_size;
+                    *data64 = alphaAccess->mem_size;
                     break;
                 case offsetof(AlphaAccess, kernStart):
-                    *(uint64_t*)pkt.data = alphaAccess->kernStart;
+                    *data64 = alphaAccess->kernStart;
                     break;
                 case offsetof(AlphaAccess, kernEnd):
-                    *(uint64_t*)pkt.data = alphaAccess->kernEnd;
+                    *data64 = alphaAccess->kernEnd;
                     break;
                 case offsetof(AlphaAccess, entryPoint):
-                    *(uint64_t*)pkt.data = alphaAccess->entryPoint;
+                    *data64 = alphaAccess->entryPoint;
                     break;
                 case offsetof(AlphaAccess, diskUnit):
-                    *(uint64_t*)pkt.data = alphaAccess->diskUnit;
+                    *data64 = alphaAccess->diskUnit;
                     break;
                 case offsetof(AlphaAccess, diskCount):
-                    *(uint64_t*)pkt.data = alphaAccess->diskCount;
+                    *data64 = alphaAccess->diskCount;
                     break;
                 case offsetof(AlphaAccess, diskPAddr):
-                    *(uint64_t*)pkt.data = alphaAccess->diskPAddr;
+                    *data64 = alphaAccess->diskPAddr;
                     break;
                 case offsetof(AlphaAccess, diskBlock):
-                    *(uint64_t*)pkt.data = alphaAccess->diskBlock;
+                    *data64 = alphaAccess->diskBlock;
                     break;
                 case offsetof(AlphaAccess, diskOperation):
-                    *(uint64_t*)pkt.data = alphaAccess->diskOperation;
+                    *data64 = alphaAccess->diskOperation;
                     break;
                 case offsetof(AlphaAccess, outputChar):
-                    *(uint64_t*)pkt.data = alphaAccess->outputChar;
+                    *data64 = alphaAccess->outputChar;
                     break;
                 default:
                     int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
                                  sizeof(alphaAccess->cpuStack[0]);
 
                     if (cpunum >= 0 && cpunum < 64)
-                        *(uint64_t*)pkt.data = alphaAccess->cpuStack[cpunum];
+                        *data64 = alphaAccess->cpuStack[cpunum];
                     else
                         panic("Unknown 64bit access, %#x\n", daddr);
             }
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
-                    *(uint64_t*)data);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *data64);
             break;
         default:
             pkt.result = BadAddress;
@@ -186,15 +210,15 @@ AlphaConsole::read(Packet &pkt)
 }
 
 Tick
-AlphaConsole::write(MemReqPtr &req, const uint8_t *data)
+AlphaConsole::write(Packet &pkt)
 {
     pkt.time = curTick + pioDelay;
 
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    Addr daddr = req.addr - pioAddr;
+    Addr daddr = pkt.addr - pioAddr;
 
-    uint64_t val = *(uint64_t *)data;
+    uint64_t val = *(uint64_t *)pkt.data;
     assert(pkt.size == sizeof(uint64_t));
 
     switch (daddr) {
@@ -303,14 +327,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 
     SimObjectParam<SimConsole *> sim_console;
     SimObjectParam<SimpleDisk *> disk;
-    SimObjectParam<MemoryController *> mmu;
     Param<Addr> addr;
     SimObjectParam<AlphaSystem *> system;
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<Platform *> platform;
-    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
 
 END_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 
@@ -318,21 +339,27 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
     INIT_PARAM(sim_console, "The Simulator Console"),
     INIT_PARAM(disk, "Simple Disk"),
-    INIT_PARAM(mmu, "Memory Controller"),
     INIT_PARAM(addr, "Device Address"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu, "Processor"),
     INIT_PARAM(platform, "platform"),
-    INIT_PARAM(pio_bus, "The IO Bus to attach to"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000)
 
 END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
 CREATE_SIM_OBJECT(AlphaConsole)
 {
-    return new AlphaConsole(getInstanceName(), sim_console, disk,
-                            system, cpu, platform, mmu, addr, hier, pio_bus);
+    AlphaConsole::Params *p = new AlphaConsole::Params;
+    p->name = getInstanceName();
+    p->platform = platform;
+    p->pio_addr = addr;
+    p->pio_delay = pio_latency;
+    p->cons = sim_console;
+    p->disk = disk;
+    p->alpha_sys = system;
+    p->system = system;
+    p->cpu = cpu;
+    return new AlphaConsole(p);
 }
 
 REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

@@ -49,7 +49,6 @@
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/uart.hh"
-#include "mem/functional/memory_control.hh"
 #include "sim/builder.hh"
 
 using namespace std;

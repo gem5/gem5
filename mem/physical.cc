@@ -184,18 +184,18 @@ PhysicalMemory::MemoryPort::recvStatusChange(Port::Status status)
 }
 
 void
-PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &range_list,
-                                           bool &owner)
+PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
 {
-    memory->getAddressRanges(range_list, owner);
+    memory->getAddressRanges(resp, snoop);
 }
 
 void
-PhysicalMemory::getAddressRanges(AddrRangeList &range_list, bool &owner)
+PhysicalMemory::getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 {
-    owner = true;
-    range_list.clear();
-    range_list.push_back(RangeSize(base_addr, pmem_size));
+    snoop.clear();
+    resp.clear();
+    resp.push_back(RangeSize(base_addr, pmem_size));
 }
 
 int

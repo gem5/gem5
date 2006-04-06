@@ -46,7 +46,7 @@ DebugPrintkEvent::process(ExecContext *xc)
             DPRINTFN("");
         }
 
-        AlphaArguments args(xc);
+        AlphaISA::AlphaArguments args(xc);
         Printk(args);
         SkipFuncEvent::process(xc);
     }

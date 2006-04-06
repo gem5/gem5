@@ -39,7 +39,7 @@
 #include "config/full_system.hh"
 #include "cpu/exec_context.hh"
 #include "mem/page_table.hh"
-#include "mem/mem_object.hh"
+#include "mem/physical.hh"
 #include "mem/translating_port.hh"
 #include "sim/builder.hh"
 #include "sim/process.hh"

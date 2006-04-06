@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* @file
- * Simple disk interface for the system console
+/**
+ * @file Port object definitions.
  */
 
-#ifndef __DEV_SIMPLE_DISK_HH__
-#define __DEV_SIMPLE_DISK_HH__
+#include "base/chunk_generator.hh"
+#include "mem/vport.hh"
 
-#include "sim/sim_object.hh"
-#include "arch/isa_traits.hh"
-
-class DiskImage;
-class System;
-
-/*
- * Trivial interface to a disk image used by the System Console
- */
-class SimpleDisk : public SimObject
+void
+VirtualPort::readBlob(Addr addr, uint8_t *p, int size)
 {
-  public:
-    typedef uint64_t baddr_t;
+    Addr paddr;
+    for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
+            gen.next())
+    {
+        if (xc)
+            paddr = TheISA::vtophys(xc,gen.addr());
+        else
+            paddr = TheISA::vtophys(gen.addr());
 
-  protected:
-    System  *system;
-    DiskImage *image;
+        FunctionalPort::readBlob(paddr, p, gen.size());
+        p += gen.size();
+    }
+}
 
-  public:
-    SimpleDisk(const std::string &name, System *sys, DiskImage *img);
-    ~SimpleDisk();
+void
+VirtualPort::writeBlob(Addr addr, uint8_t *p, int size)
+{
+    Addr paddr;
+    for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
+            gen.next())
+    {
+        if (xc)
+            paddr = TheISA::vtophys(xc,gen.addr());
+        else
+            paddr = TheISA::vtophys(gen.addr());
 
-    void read(Addr addr, baddr_t block, int count) const;
-    void write(Addr addr, baddr_t block, int count);
-};
+        FunctionalPort::writeBlob(paddr, p, gen.size());
+        p += gen.size();
+    }
+}
 
-#endif // __DEV_SIMPLE_DISK_HH__

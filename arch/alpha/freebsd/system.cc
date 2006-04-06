@@ -37,8 +37,8 @@
 #include "arch/alpha/freebsd/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/physical.hh"
+#include "mem/port.hh"
 #include "arch/isa_traits.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
@@ -74,20 +74,12 @@ FreebsdAlphaSystem::doCalibrateClocks(ExecContext *xc)
 {
     Addr ppc_vaddr = 0;
     Addr timer_vaddr = 0;
-    Addr ppc_paddr = 0;
-    Addr timer_paddr = 0;
 
     ppc_vaddr = (Addr)xc->readIntReg(ArgumentReg1);
     timer_vaddr = (Addr)xc->readIntReg(ArgumentReg2);
 
-    ppc_paddr = vtophys(physmem, ppc_vaddr);
-    timer_paddr = vtophys(physmem, timer_vaddr);
-
-    uint8_t *ppc = physmem->dma_addr(ppc_paddr, sizeof(uint32_t));
-    uint8_t *timer = physmem->dma_addr(timer_paddr, sizeof(uint32_t));
-
-    *(uint32_t *)ppc = htog((uint32_t)Clock::Frequency);
-    *(uint32_t *)timer = htog((uint32_t)TIMER_FREQUENCY);
+    virtPort.write(ppc_vaddr, (uint32_t)Clock::Frequency);
+    virtPort.write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
 }
 
 
@@ -102,7 +94,6 @@ FreebsdAlphaSystem::SkipCalibrateClocksEvent::process(ExecContext *xc)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
-    SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
     Param<string> kernel;
@@ -125,7 +116,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 BEGIN_INIT_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
-    INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(console, "file that contains the console code"),
@@ -147,7 +137,6 @@ CREATE_SIM_OBJECT(FreebsdAlphaSystem)
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
-    p->memctrl = memctrl;
     p->physmem = physmem;
     p->kernel_path = kernel;
     p->console_path = console;

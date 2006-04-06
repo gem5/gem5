@@ -30,8 +30,8 @@
  * Defines a 8250 UART
  */
 
-#ifndef __TSUNAMI_UART_HH__
-#define __TSUNAMI_UART_HH__
+#ifndef __DEV_UART8250_HH__
+#define __DEV_UART8250_HH__
 
 #include "dev/tsunamireg.h"
 #include "base/range.hh"
@@ -53,7 +53,6 @@
 #define IIR_LINE  0x06 /* Rx Line Status (highest priority)*/
 
 class SimConsole;
-class MemoryController;
 class Platform;
 
 class Uart8250 : public Uart
@@ -79,12 +78,11 @@ class Uart8250 : public Uart
     IntrEvent rxIntrEvent;
 
   public:
-    Uart8250(const std::string &name, SimConsole *c, MemoryController *mmu,
-         Addr a, Addr s, HierParams *hier, Bus *pio_bus, Tick pio_latency,
-         Platform *p);
+    Uart8250(Params *p);
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Tick read(Packet &pkt);
+    virtual Tick write(Packet &pkt);
+    virtual void addressRanges(AddrRangeList &range_list);
 
 
     /**

@@ -35,8 +35,8 @@
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/system_events.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/physical.hh"
+#include "mem/port.hh"
 #include "sim/builder.hh"
 
 using namespace std;
@@ -46,12 +46,7 @@ Tru64AlphaSystem::Tru64AlphaSystem(Tru64AlphaSystem::Params *p)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("enable_async_printf", addr)) {
-        Addr paddr = vtophys(physmem, addr);
-        uint8_t *enable_async_printf =
-            physmem->dma_addr(paddr, sizeof(uint32_t));
-
-        if (enable_async_printf)
-            *(uint32_t *)enable_async_printf = 0;
+        virtPort.write(addr, (uint32_t)0);
     }
 
 #ifdef DEBUG
@@ -96,7 +91,6 @@ Tru64AlphaSystem::~Tru64AlphaSystem()
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
-    SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
     Param<string> kernel;
@@ -118,7 +112,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "frequency of the boot cpu"),
-    INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(console, "file that contains the console code"),
@@ -139,7 +132,6 @@ CREATE_SIM_OBJECT(Tru64AlphaSystem)
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
-    p->memctrl = memctrl;
     p->physmem = physmem;
     p->kernel_path = kernel;
     p->console_path = console;

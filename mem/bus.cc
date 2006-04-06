@@ -89,11 +89,12 @@ Bus::recvStatusChange(Port::Status status, int id)
            "The other statuses need to be implemented.");
     Port *port = interfaces[id];
     AddrRangeList ranges;
-    bool owner;
+    AddrRangeList snoops;
 
-    port->getPeerAddressRanges(ranges, owner);
+    port->getPeerAddressRanges(ranges, snoops);
+
     // not dealing with snooping yet either
-    assert(owner == true);
+    assert(snoops.size() == 0);
     // or multiple ranges
     assert(ranges.size() == 1);
     DevMap dm;
@@ -104,7 +105,7 @@ Bus::recvStatusChange(Port::Status status, int id)
 }
 
 void
-Bus::BusPort::addressRanges(AddrRangeList &range_list, bool &owner)
+Bus::BusPort::addressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 {
     panic("I'm not implemented.\n");
 }

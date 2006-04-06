@@ -120,7 +120,7 @@ class Bus : public MemObject
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
-        virtual void addressRanges(AddrRangeList &range_list, bool &owner);
+        virtual void addressRanges(AddrRangeList &resp, AddrRangeList &snoop);
 
         // Hack to make translating port work without changes
         virtual int deviceBlockSize() { return 32; }

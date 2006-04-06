@@ -93,7 +93,7 @@ AlphaTLB::lookup(Addr vpn, uint8_t asn) const
 }
 
 
-void
+Fault
 AlphaTLB::checkCacheability(CpuRequestPtr &req)
 {
     // in Alpha, cacheability is controlled by upper-level bits of the
@@ -115,17 +115,7 @@ AlphaTLB::checkCacheability(CpuRequestPtr &req)
 #endif
         // IPR memory space not implemented
         if (PAddrIprSpace(req->paddr)) {
-            if (!req->xc->misspeculating()) {
-                switch (req->paddr) {
-                  case ULL(0xFFFFF00188):
-                    req->data = 0;
-                    break;
-
-                  default:
-                    panic("IPR memory space not implemented! PA=%x\n",
-                          req->paddr);
-                }
-            }
+            return new UnimpFault("IPR memory space not implemented!");
         } else {
             // mark request as uncacheable
             req->flags |= UNCACHEABLE;
@@ -136,6 +126,7 @@ AlphaTLB::checkCacheability(CpuRequestPtr &req)
 #endif
         }
     }
+    return NoFault;
 }
 
 
@@ -292,10 +283,8 @@ AlphaITB::regStats()
 
 
 Fault
-AlphaITB::translate(CpuRequestPtr &req) const
+AlphaITB::translate(CpuRequestPtr &req, ExecContext *xc) const
 {
-    ExecContext *xc = req->xc;
-
     if (AlphaISA::PcPAL(req->vaddr)) {
         // strip off PAL PC marker (lsb is 1)
         req->paddr = (req->vaddr & ~3) & PAddrImplMask;
@@ -368,9 +357,8 @@ AlphaITB::translate(CpuRequestPtr &req) const
     if (req->paddr & ~PAddrImplMask)
         return genMachineCheckFault();
 
-    checkCacheability(req);
+    return checkCacheability(req);
 
-    return NoFault;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -451,9 +439,8 @@ AlphaDTB::regStats()
 }
 
 Fault
-AlphaDTB::translate(CpuRequestPtr &req, bool write) const
+AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
 {
-    ExecContext *xc = req->xc;
     Addr pc = xc->readPC();
 
     AlphaISA::mode_type mode =
@@ -583,9 +570,7 @@ AlphaDTB::translate(CpuRequestPtr &req, bool write) const
     if (req->paddr & ~PAddrImplMask)
         return genMachineCheckFault();
 
-    checkCacheability(req);
-
-    return NoFault;
+    return checkCacheability(req);
 }
 
 AlphaISA::PTE &

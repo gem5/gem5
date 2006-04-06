@@ -32,7 +32,6 @@
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
-#include "mem/functional/memory_control.hh"
 #include "arch/alpha/ev5.hh"
 #include "arch/arguments.hh"
 #include "arch/isa_traits.hh"
@@ -51,9 +50,19 @@ BadAddrEvent::process(ExecContext *xc)
 
     uint64_t a0 = xc->readIntReg(ArgumentReg0);
 
-    if (!TheISA::IsK0Seg(a0) ||
-        xc->getSystemPtr()->memctrl->badaddr(
-            TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask)) {
+    AddrRangeList resp;
+    AddrRangeList snoop;
+    AddrRangeIter iter;
+    bool found = false;
+
+    xc->getPhysPort()->getPeerAddressRanges(resp, snoop);
+    for(iter = resp.begin(); iter != resp.end(); iter++)
+    {
+        if (*iter == (TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask))
+            found = true;
+    }
+
+    if (!TheISA::IsK0Seg(a0) || found ) {
 
         DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
         xc->setIntReg(ReturnValueReg, 0x1);

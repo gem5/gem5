@@ -175,7 +175,7 @@ namespace AlphaPseudo
     addsymbol(ExecContext *xc, Addr addr, Addr symbolAddr)
     {
         char symb[100];
-        CopyString(xc, symb, symbolAddr, 100);
+        CopyStringOut(xc, symb, symbolAddr, 100);
         std::string symbol(symb);
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);

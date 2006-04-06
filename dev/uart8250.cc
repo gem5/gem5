@@ -40,10 +40,6 @@
 #include "dev/simconsole.hh"
 #include "dev/uart8250.hh"
 #include "dev/platform.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
 #include "sim/builder.hh"
 
 using namespace std;
@@ -100,26 +96,35 @@ Uart8250::IntrEvent::scheduleIntr()
 }
 
 
-Uart8250::Uart8250(const string &name, SimConsole *c, MemoryController *mmu,
-                   Addr a, Addr s, HierParams *hier, Bus *pio_bus,
-                   Tick pio_latency, Platform *p)
-    : Uart(name, c, mmu, a, s, hier, pio_bus, pio_latency, p),
-      txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
+Uart8250::Uart8250(Params *p)
+    : Uart(p), txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
 {
+    pioSize = 8;
+
     IER = 0;
     DLAB = 0;
     LCR = 0;
     MCR = 0;
-
 }
 
-Fault
-Uart8250::read(MemReqPtr &req, uint8_t *data)
+Tick
+Uart8250::read(Packet &pkt)
 {
-    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
+    assert(pkt.result == Unknown);
+    assert(pkt.addr > pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt.size == 1);
+
+    pkt.time = curTick + pioDelay;
+    Addr daddr = pkt.addr - pioAddr;
+    uint8_t *data;
+
     DPRINTF(Uart, " read register %#x\n", daddr);
 
-    assert(req->size == 1);
+    if (!pkt.data) {
+        data = new uint8_t;
+        pkt.data = data;
+    } else
+        data = pkt.data;
 
     switch (daddr) {
         case 0x0:
@@ -127,7 +132,7 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
                 if (cons->dataAvailable())
                     cons->in(*data);
                 else {
-                    *(uint8_t*)data = 0;
+                    *data = 0;
                     // A limited amount of these are ok.
                     DPRINTF(Uart, "empty read of RX register\n");
                 }
@@ -142,7 +147,7 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             break;
         case 0x1:
             if (!(LCR & 0x80)) { // Intr Enable Register(IER)
-                *(uint8_t*)data = IER;
+                *data = IER;
             } else { // DLM divisor latch MSB
                 ;
             }
@@ -151,17 +156,17 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
 
             if (status & RX_INT) /* Rx data interrupt has a higher priority */
-                *(uint8_t*)data = IIR_RXID;
+                *data = IIR_RXID;
             else if (status & TX_INT)
-                *(uint8_t*)data = IIR_TXID;
+                *data = IIR_TXID;
             else
-                *(uint8_t*)data = IIR_NOPEND;
+                *data = IIR_NOPEND;
 
             //Tx interrupts are cleared on IIR reads
             status &= ~TX_INT;
             break;
         case 0x3: // Line Control Register (LCR)
-            *(uint8_t*)data = LCR;
+            *data = LCR;
             break;
         case 0x4: // Modem Control Register (MCR)
             break;
@@ -172,34 +177,41 @@ Uart8250::read(MemReqPtr &req, uint8_t *data)
             if (cons->dataAvailable())
                 lsr = UART_LSR_DR;
             lsr |= UART_LSR_TEMT | UART_LSR_THRE;
-            *(uint8_t*)data = lsr;
+            *data = lsr;
             break;
         case 0x6: // Modem Status Register (MSR)
-            *(uint8_t*)data = 0;
+            *data = 0;
             break;
         case 0x7: // Scratch Register (SCR)
-            *(uint8_t*)data = 0; // doesn't exist with at 8250.
+            *data = 0; // doesn't exist with at 8250.
             break;
         default:
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
 
-    return NoFault;
-
+    return pioDelay;
 }
 
-Fault
-Uart8250::write(MemReqPtr &req, const uint8_t *data)
+Tick
+Uart8250::write(Packet &pkt)
 {
-    Addr daddr = req->paddr - (addr & EV5::PAddrImplMask);
 
-    DPRINTF(Uart, " write register %#x value %#x\n", daddr, *(uint8_t*)data);
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt.size == 1);
+
+    pkt.time = curTick + pioDelay;
+    Addr daddr = pkt.addr - pioAddr;
+
+    uint8_t *data = pkt.data;
+
+    DPRINTF(Uart, " write register %#x value %#x\n", daddr, *data);
 
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // write byte
-                cons->out(*(uint8_t *)data);
+                cons->out(*data);
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)
@@ -210,7 +222,7 @@ Uart8250::write(MemReqPtr &req, const uint8_t *data)
             break;
         case 0x1:
             if (!(LCR & 0x80)) { // Intr Enable Register(IER)
-                IER = *(uint8_t*)data;
+                IER = *data;
                 if (UART_IER_THRI & IER)
                 {
                     DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
@@ -244,10 +256,10 @@ Uart8250::write(MemReqPtr &req, const uint8_t *data)
         case 0x2: // FIFO Control Register (FCR)
             break;
         case 0x3: // Line Control Register (LCR)
-            LCR = *(uint8_t*)data;
+            LCR = *data;
             break;
         case 0x4: // Modem Control Register (MCR)
-            if (*(uint8_t*)data == (UART_MCR_LOOP | 0x0A))
+            if (*data == (UART_MCR_LOOP | 0x0A))
                     MCR = 0x9A;
             break;
         case 0x7: // Scratch Register (SCR)
@@ -257,7 +269,7 @@ Uart8250::write(MemReqPtr &req, const uint8_t *data)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-    return NoFault;
+    return pioDelay;
 }
 
 void
@@ -270,6 +282,14 @@ Uart8250::dataAvailable()
         status |= RX_INT;
     }
 
+}
+
+void
+Uart8250::addressRanges(AddrRangeList &range_list)
+{
+    assert(pioSize != 0);
+    range_list.clear();
+    range_list.push_back(RangeSize(pioAddr, pioSize));
 }
 
 
@@ -316,35 +336,35 @@ Uart8250::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Uart8250)
 
-    SimObjectParam<SimConsole *> console;
-    SimObjectParam<MemoryController *> mmu;
-    SimObjectParam<Platform *> platform;
     Param<Addr> addr;
-    Param<Addr> size;
-    SimObjectParam<Bus*> pio_bus;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
-
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<SimConsole *> sim_console;
+    SimObjectParam<System *> system;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Uart8250)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Uart8250)
 
-    INIT_PARAM(console, "The console"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(platform, "Pointer to platfrom"),
     INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(size, "Device size", 0x8),
-    INIT_PARAM(pio_bus, ""),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(sim_console, "The Simulator Console"),
+    INIT_PARAM(system, "system object")
 
 END_INIT_SIM_OBJECT_PARAMS(Uart8250)
 
 CREATE_SIM_OBJECT(Uart8250)
 {
-    return new Uart8250(getInstanceName(), console, mmu, addr, size, hier,
-                        pio_bus, pio_latency, platform);
+    Uart8250::Params *p = new Uart8250::Params;
+    p->name = getInstanceName();
+    p->pio_addr = addr;
+    p->pio_delay = pio_latency;
+    p->platform = platform;
+    p->cons = sim_console;
+    p->system = system;
+    return new Uart8250(p);
 }
 
 REGISTER_SIM_OBJECT("Uart8250", Uart8250)
+

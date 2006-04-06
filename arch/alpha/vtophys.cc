@@ -28,33 +28,35 @@
 
 #include <string>
 
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/vtophys.hh"
+#include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional/physical.hh"
+#include "mem/vport.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
 AlphaISA::PageTableEntry
-kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr)
+AlphaISA::kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, AlphaISA::VAddr vaddr)
 {
     Addr level1_pte = ptbr + vaddr.level1();
-    AlphaISA::PageTableEntry level1 = pmem->phys_read_qword(level1_pte);
+    AlphaISA::PageTableEntry level1 = mem->read<uint64_t>(level1_pte);
     if (!level1.valid()) {
         DPRINTF(VtoPhys, "level 1 PTE not valid, va = %#\n", vaddr);
         return 0;
     }
 
     Addr level2_pte = level1.paddr() + vaddr.level2();
-    AlphaISA::PageTableEntry level2 = pmem->phys_read_qword(level2_pte);
+    AlphaISA::PageTableEntry level2 = mem->read<uint64_t>(level2_pte);
     if (!level2.valid()) {
         DPRINTF(VtoPhys, "level 2 PTE not valid, va = %#x\n", vaddr);
         return 0;
     }
 
     Addr level3_pte = level2.paddr() + vaddr.level3();
-    AlphaISA::PageTableEntry level3 = pmem->phys_read_qword(level3_pte);
+    AlphaISA::PageTableEntry level3 = mem->read<uint64_t>(level3_pte);
     if (!level3.valid()) {
         DPRINTF(VtoPhys, "level 3 PTE not valid, va = %#x\n", vaddr);
         return 0;
@@ -63,7 +65,7 @@ kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr)
 }
 
 Addr
-vtophys(PhysicalMemory *xc, Addr vaddr)
+AlphaISA::vtophys(Addr vaddr)
 {
     Addr paddr = 0;
     if (AlphaISA::IsUSeg(vaddr))
@@ -79,7 +81,7 @@ vtophys(PhysicalMemory *xc, Addr vaddr)
 }
 
 Addr
-vtophys(ExecContext *xc, Addr addr)
+AlphaISA::vtophys(ExecContext *xc, Addr addr)
 {
     AlphaISA::VAddr vaddr = addr;
     Addr ptbr = xc->readMiscReg(AlphaISA::IPR_PALtemp20);
@@ -95,7 +97,7 @@ vtophys(ExecContext *xc, Addr addr)
             paddr = vaddr;
         } else {
             AlphaISA::PageTableEntry pte =
-                kernel_pte_lookup(xc->getPhysMemPtr(), ptbr, vaddr);
+                kernel_pte_lookup(xc->getPhysPort(), ptbr, vaddr);
             if (pte.valid())
                 paddr = pte.paddr() | vaddr.offset();
         }
@@ -107,162 +109,54 @@ vtophys(ExecContext *xc, Addr addr)
     return paddr;
 }
 
-uint8_t *
-ptomem(ExecContext *xc, Addr paddr, size_t len)
-{
-    return xc->getPhysMemPtr()->dma_addr(paddr, len);
-}
 
-uint8_t *
-vtomem(ExecContext *xc, Addr vaddr, size_t len)
+void
+AlphaISA::CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
 {
-    Addr paddr = vtophys(xc, vaddr);
-    return xc->getPhysMemPtr()->dma_addr(paddr, len);
+    uint8_t *dst = (uint8_t *)dest;
+    VirtualPort *vp = xc->getVirtPort(xc);
+
+    vp->readBlob(src, dst, cplen);
+
+    xc->delVirtPort(vp);
+
 }
 
 void
-CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
+AlphaISA::CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
 {
-    Addr paddr;
-    char *dmaaddr;
-    char *dst = (char *)dest;
-    int len;
+    uint8_t *src = (uint8_t *)source;
+    VirtualPort *vp = xc->getVirtPort(xc);
 
-    paddr = vtophys(xc, src);
-    len = min((int)(AlphaISA::PageBytes - (paddr & AlphaISA::PageOffset)),
-              (int)cplen);
-    dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, len);
-    assert(dmaaddr);
+    vp->writeBlob(dest, src, cplen);
 
-    memcpy(dst, dmaaddr, len);
-    if (len == cplen)
-        return;
-
-    cplen -= len;
-    dst += len;
-    src += len;
-
-    while (cplen > AlphaISA::PageBytes) {
-        paddr = vtophys(xc, src);
-        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr,
-                                                        AlphaISA::PageBytes);
-        assert(dmaaddr);
-
-        memcpy(dst, dmaaddr, AlphaISA::PageBytes);
-        cplen -= AlphaISA::PageBytes;
-        dst += AlphaISA::PageBytes;
-        src += AlphaISA::PageBytes;
-    }
-
-    if (cplen > 0) {
-        paddr = vtophys(xc, src);
-        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, cplen);
-        assert(dmaaddr);
-
-        memcpy(dst, dmaaddr, cplen);
-    }
+    xc->delVirtPort(vp);
 }
 
 void
-CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
+AlphaISA::CopyStringOut(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
 {
-    Addr paddr;
-    char *dmaaddr;
-    char *src = (char *)source;
-    int len;
+    int len = 0;
+    VirtualPort *vp = xc->getVirtPort(xc);
 
-    paddr = vtophys(xc, dest);
-    len = min((int)(AlphaISA::PageBytes - (paddr & AlphaISA::PageOffset)),
-              (int)cplen);
-    dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, len);
-    assert(dmaaddr);
+    do {
+        vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
+        len++;
+    } while (len < maxlen && dst[len] != 0 );
 
-    memcpy(dmaaddr, src, len);
-    if (len == cplen)
-        return;
-
-    cplen -= len;
-    src += len;
-    dest += len;
-
-    while (cplen > AlphaISA::PageBytes) {
-        paddr = vtophys(xc, dest);
-        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr,
-                                                        AlphaISA::PageBytes);
-        assert(dmaaddr);
-
-        memcpy(dmaaddr, src, AlphaISA::PageBytes);
-        cplen -= AlphaISA::PageBytes;
-        src += AlphaISA::PageBytes;
-        dest += AlphaISA::PageBytes;
-    }
-
-    if (cplen > 0) {
-        paddr = vtophys(xc, dest);
-        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, cplen);
-        assert(dmaaddr);
-
-        memcpy(dmaaddr, src, cplen);
-    }
+    xc->delVirtPort(vp);
+    dst[len] = 0;
 }
 
 void
-CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
+AlphaISA::CopyStringIn(ExecContext *xc, char *src, Addr vaddr)
 {
-    Addr paddr;
-    char *dmaaddr;
-    int len;
-
-    paddr = vtophys(xc, vaddr);
-    len = min((int)(AlphaISA::PageBytes - (paddr & AlphaISA::PageOffset)),
-              (int)maxlen);
-    dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, len);
-    assert(dmaaddr);
-
-    char *term = (char *)memchr(dmaaddr, 0, len);
-    if (term)
-        len = term - dmaaddr + 1;
-
-    memcpy(dst, dmaaddr, len);
-
-    if (term || len == maxlen)
-        return;
-
-    maxlen -= len;
-    dst += len;
-    vaddr += len;
-
-    while (maxlen > AlphaISA::PageBytes) {
-        paddr = vtophys(xc, vaddr);
-        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr,
-                                                        AlphaISA::PageBytes);
-        assert(dmaaddr);
-
-        char *term = (char *)memchr(dmaaddr, 0, AlphaISA::PageBytes);
-        len = term ? (term - dmaaddr + 1) : AlphaISA::PageBytes;
-
-        memcpy(dst, dmaaddr, len);
-        if (term)
-            return;
-
-        maxlen -= AlphaISA::PageBytes;
-        dst += AlphaISA::PageBytes;
-        vaddr += AlphaISA::PageBytes;
+    VirtualPort *vp = xc->getVirtPort(xc);
+    for (ChunkGenerator gen(vaddr, strlen(src), AlphaISA::PageBytes); !gen.done();
+            gen.next())
+    {
+        vp->writeBlob(gen.addr(), (uint8_t*)src, gen.size());
+        src += gen.size();
     }
-
-    if (maxlen > 0) {
-        paddr = vtophys(xc, vaddr);
-        dmaaddr = (char *)xc->getPhysMemPtr()->dma_addr(paddr, maxlen);
-        assert(dmaaddr);
-
-        char *term = (char *)memchr(dmaaddr, 0, maxlen);
-        len = term ? (term - dmaaddr + 1) : maxlen;
-
-        memcpy(dst, dmaaddr, len);
-
-        maxlen -= len;
-    }
-
-    if (maxlen == 0)
-        dst[maxlen] = '\0';
+    xc->delVirtPort(vp);
 }

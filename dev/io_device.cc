@@ -48,9 +48,10 @@ PioPort::recvFunctional(Packet &pkt)
 }
 
 void
-PioPort::getDeviceAddressRanges(AddrRangeList &range_list, bool &owner)
+PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 {
-    device->addressRanges(range_list, owner);
+    snoop.clear();
+    device->addressRanges(resp);
 }
 
 
@@ -100,8 +101,8 @@ DmaPort::recvTiming(Packet &pkt)
     return Success;
 }
 
-DmaDevice::DmaDevice(const std::string &name, Platform *p)
-    : PioDevice(name, p)
+DmaDevice::DmaDevice(Params *p)
+    : PioDevice(p)
 {
     dmaPort = new DmaPort(this);
 }
@@ -193,15 +194,6 @@ DmaDevice::~DmaDevice()
 {
     if (dmaPort)
         delete dmaPort;
-}
-
-void
-BasePioDevice::addressRanges(AddrRangeList &range_list, bool &owner)
-{
-    assert(pioSize != 0);
-    owner = true;
-    range_list.clear();
-    range_list.push_back(RangeSize(pio_addr, sizeof(struct alphaAccess)));
 }
 
 

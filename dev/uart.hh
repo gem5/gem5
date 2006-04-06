@@ -37,30 +37,27 @@
 #include "dev/io_device.hh"
 
 class SimConsole;
-class MemoryController;
 class Platform;
 
 const int RX_INT = 0x1;
 const int TX_INT = 0x2;
 
 
-class Uart : public PioDevice
+class Uart : public BasicPioDevice
 {
 
   protected:
     int status;
-    Addr addr;
-    Addr size;
+    Platform *platform;
     SimConsole *cons;
 
   public:
-    Uart(const std::string &name, SimConsole *c, MemoryController *mmu,
-         Addr a, Addr s, HierParams *hier, Bus *bus, Tick pio_latency,
-         Platform *p);
+    struct Params : public BasicPioDevice::Params
+    {
+        SimConsole *cons;
+    };
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data) = 0;
-    virtual Fault write(MemReqPtr &req, const uint8_t *data) = 0;
-
+    Uart(Params *p);
 
     /**
      * Inform the uart that there is data available.
@@ -74,12 +71,9 @@ class Uart : public PioDevice
      */
     bool intStatus() { return status ? true : false; }
 
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
+  protected:
+    const Params *params() const {return (const Params *)_params; }
+
 };
 
 #endif // __UART_HH__

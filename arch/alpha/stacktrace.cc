@@ -47,23 +47,23 @@ ProcessInfo::ProcessInfo(ExecContext *_xc)
 
     if (!xc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
         panic("thread info not compiled into kernel\n");
-    thread_info_size = *(int32_t *)vtomem(xc, addr, sizeof(int32_t));
+    thread_info_size = gtoh(xc->getVirtPort()->read<int32_t>(addr));
 
     if (!xc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
         panic("thread info not compiled into kernel\n");
-    task_struct_size = *(int32_t *)vtomem(xc, addr, sizeof(int32_t));
+    task_struct_size = gtoh(xc->getVirtPort()->read<int32_t>(addr));
 
     if (!xc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
         panic("thread info not compiled into kernel\n");
-    task_off = *(int32_t *)vtomem(xc, addr, sizeof(int32_t));
+    task_off = gtoh(xc->getVirtPort()->read<int32_t>(addr));
 
     if (!xc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
         panic("thread info not compiled into kernel\n");
-    pid_off = *(int32_t *)vtomem(xc, addr, sizeof(int32_t));
+    pid_off = gtoh(xc->getVirtPort()->read<int32_t>(addr));
 
     if (!xc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
         panic("thread info not compiled into kernel\n");
-    name_off = *(int32_t *)vtomem(xc, addr, sizeof(int32_t));
+    name_off = gtoh(xc->getVirtPort()->read<int32_t>(addr));
 }
 
 Addr
@@ -73,9 +73,7 @@ ProcessInfo::task(Addr ksp) const
     if (base == ULL(0xfffffc0000000000))
         return 0;
 
-    Addr task;
-    CopyOut(xc, &task, base + task_off, sizeof(task));
-    return task;
+    return gtoh(xc->getVirtPort()->read<Addr>(base + task_off));
 }
 
 int
@@ -85,9 +83,7 @@ ProcessInfo::pid(Addr ksp) const
     if (!task)
         return -1;
 
-    uint16_t pid;
-    CopyOut(xc, &pid, task + pid_off, sizeof(pid));
-    return pid;
+    return gtoh(xc->getVirtPort()->read<uint16_t>(task + pid_off));
 }
 
 string
@@ -98,7 +94,7 @@ ProcessInfo::name(Addr ksp) const
         return "console";
 
     char comm[256];
-    CopyString(xc, comm, task + name_off, sizeof(comm));
+    CopyStringOut(xc, comm, task + name_off, sizeof(comm));
     if (!comm[0])
         return "startup";
 

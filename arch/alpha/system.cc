@@ -33,8 +33,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/physical.hh"
 #include "sim/byteswap.hh"
 #include "sim/builder.hh"
 
@@ -63,8 +62,8 @@ AlphaSystem::AlphaSystem(Params *p)
 
 
     // Load program sections into memory
-    pal->loadSections(&functionalPort, LoadAddrMask);
-    console->loadSections(&functionalPort, LoadAddrMask);
+    pal->loadSections(&functionalPort, AlphaISA::LoadAddrMask);
+    console->loadSections(&functionalPort, AlphaISA::LoadAddrMask);
 
     // load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))
@@ -97,11 +96,8 @@ AlphaSystem::AlphaSystem(Params *p)
      * others do.)
      */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
-        Addr paddr = vtophys(physmem, addr);
-        char *osflags = (char *)physmem->dma_addr(paddr, sizeof(uint32_t));
-
-        if (osflags)
-              strcpy(osflags, params()->boot_osflags.c_str());
+        virtPort.writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
+                strlen(params()->boot_osflags.c_str()));
     }
 
     /**
@@ -109,14 +105,11 @@ AlphaSystem::AlphaSystem(Params *p)
      * information to Tsunami.
      */
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
-        Addr paddr = vtophys(physmem, addr);
-        char *hwrpb = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
-
-        if (!hwrpb)
-            panic("could not translate hwrpb addr\n");
-
-        *(uint64_t*)(hwrpb+0x50) = htog(params()->system_type);
-        *(uint64_t*)(hwrpb+0x58) = htog(params()->system_rev);
+        uint64_t data;
+        data = htog(params()->system_type);
+        virtPort.write(addr, data);
+        data = htog(params()->system_rev);
+        virtPort.write(addr, data);
     } else
         panic("could not find hwrpb\n");
 
@@ -172,16 +165,13 @@ AlphaSystem::fixFuncEventAddr(Addr addr)
     const uint32_t gp_ldah_pattern = (9 << 26) | (29 << 21) | (27 << 16);
     // lda  gp,Y(gp): opcode 8, Ra = 29, rb = 29
     const uint32_t gp_lda_pattern  = (8 << 26) | (29 << 21) | (29 << 16);
-    // instruction size
-    const int sz = sizeof(uint32_t);
 
-    Addr paddr = vtophys(physmem, addr);
-    uint32_t i1 = *(uint32_t *)physmem->dma_addr(paddr, sz);
-    uint32_t i2 = *(uint32_t *)physmem->dma_addr(paddr+sz, sz);
+    uint32_t i1 = virtPort.read<uint32_t>(addr);
+    uint32_t i2 = virtPort.read<uint32_t>(addr + sizeof(AlphaISA::MachInst));
 
     if ((i1 & inst_mask) == gp_ldah_pattern &&
         (i2 & inst_mask) == gp_lda_pattern) {
-        Addr new_addr = addr + 2*sz;
+        Addr new_addr = addr + 2* sizeof(AlphaISA::MachInst);
         DPRINTF(Loader, "fixFuncEventAddr: %p -> %p", addr, new_addr);
         return new_addr;
     } else {
@@ -195,14 +185,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
-        Addr paddr = vtophys(physmem, addr);
-        uint64_t *m5AlphaAccess =
-            (uint64_t *)physmem->dma_addr(paddr, sizeof(uint64_t));
-
-        if (!m5AlphaAccess)
-            panic("could not translate m5AlphaAccess addr\n");
-
-        *m5AlphaAccess = htog(EV5::Phys2K0Seg(access));
+        virtPort.write(addr, htog(EV5::Phys2K0Seg(access)));
     } else
         panic("could not find m5AlphaAccess\n");
 }
@@ -234,7 +217,6 @@ AlphaSystem::unserialize(Checkpoint *cp, const std::string &section)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
-    SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
     Param<std::string> kernel;
@@ -257,7 +239,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(AlphaSystem)
 BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
-    INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(console, "file that contains the console code"),
@@ -279,7 +260,6 @@ CREATE_SIM_OBJECT(AlphaSystem)
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
-    p->memctrl = memctrl;
     p->physmem = physmem;
     p->kernel_path = kernel;
     p->console_path = console;

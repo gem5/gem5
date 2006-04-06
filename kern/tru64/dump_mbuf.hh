@@ -29,10 +29,10 @@
 #ifndef __DUMP_MBUF_HH__
 #define __DUMP_MBUF_HH__
 
-class AlphaArguments;
+#include "arch/arguments.hh"
 
 namespace tru64 {
-    void DumpMbuf(AlphaArguments args);
+    void DumpMbuf(AlphaISA::AlphaArguments args);
 }
 
 #endif // __DUMP_MBUF_HH__

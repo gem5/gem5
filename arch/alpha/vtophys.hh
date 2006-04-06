@@ -32,19 +32,21 @@
 #include "arch/alpha/isa_traits.hh"
 
 class ExecContext;
-class PhysicalMemory;
+class FunctionalPort;
 
-AlphaISA::PageTableEntry
-kernel_pte_lookup(PhysicalMemory *pmem, Addr ptbr, AlphaISA::VAddr vaddr);
+namespace AlphaISA {
 
-Addr vtophys(PhysicalMemory *xc, Addr vaddr);
+PageTableEntry
+kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, AlphaISA::VAddr vaddr);
+
+Addr vtophys(Addr vaddr);
 Addr vtophys(ExecContext *xc, Addr vaddr);
-uint8_t *vtomem(ExecContext *xc, Addr vaddr, size_t len);
-uint8_t *ptomem(ExecContext *xc, Addr paddr, size_t len);
 
 void CopyOut(ExecContext *xc, void *dst, Addr src, size_t len);
 void CopyIn(ExecContext *xc, Addr dst, void *src, size_t len);
-void CopyString(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
+void CopyStringOut(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
+void CopyStringIn(ExecContext *xc, char *src, Addr vaddr);
 
+};
 #endif // __ARCH_ALPHA_VTOPHYS_H__
 

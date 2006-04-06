@@ -63,13 +63,11 @@ class PhysicalMemory : public MemObject
 
         virtual void recvStatusChange(Status status);
 
-        virtual void getDeviceAddressRanges(AddrRangeList &range_list,
-                                            bool &owner);
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop);
 
         virtual int deviceBlockSize();
     };
-
-    virtual Port *getPort(const std::string &if_name);
 
     int numPorts;
 
@@ -107,7 +105,8 @@ class PhysicalMemory : public MemObject
 
   public:
     int deviceBlockSize();
-    void getAddressRanges(AddrRangeList &rangeList, bool &owner);
+    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+    virtual Port *getPort(const std::string &if_name);
     void virtual init() { port->sendStatusChange(Port::RangeChange); }
 
     // fast back-door memory access for vtophys(), remote gdb, etc.
@@ -124,15 +123,5 @@ class PhysicalMemory : public MemObject
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
 };
-
-/*uint64_t
-PhysicalMemory::phys_read_qword(Addr addr) const
-{
-    if (addr + sizeof(uint64_t) > pmem_size)
-        return 0;
-
-    return *(uint64_t *)(pmem_addr + addr);
-}*/
-
 
 #endif //__PHYSICAL_MEMORY_HH__

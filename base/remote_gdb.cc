@@ -120,16 +120,18 @@
 #include <string>
 #include <unistd.h>
 
+#include "arch/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
-#include "mem/functional/physical.hh"
+#include "mem/physical.hh"
+#include "mem/port.hh"
 #include "sim/system.hh"
-#include "arch/vtophys.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -372,7 +374,7 @@ RemoteGDB::acc(Addr va, size_t len)
             return true;
 
         Addr ptbr = context->readMiscReg(AlphaISA::IPR_PALtemp20);
-        TheISA::PageTableEntry pte = kernel_pte_lookup(pmem, ptbr, va);
+        TheISA::PageTableEntry pte = TheISA::kernel_pte_lookup(context->getPhysPort(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
@@ -632,51 +634,20 @@ RemoteGDB::read(Addr vaddr, size_t size, char *data)
     static Addr lastaddr = 0;
     static size_t lastsize = 0;
 
-    uint8_t *maddr;
-
     if (vaddr < 10) {
       DPRINTF(GDBRead, "read:  reading memory location zero!\n");
       vaddr = lastaddr + lastsize;
     }
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
-#if TRACING_ON
-    char *d = data;
-    size_t s = size;
-#endif
 
-    lastaddr = vaddr;
-    lastsize = size;
-
-    size_t count = min((Addr)size,
-                       VMPageSize - (vaddr & (VMPageSize - 1)));
-
-    maddr = vtomem(context, vaddr, count);
-    memcpy(data, maddr, count);
-
-    vaddr += count;
-    data += count;
-    size -= count;
-
-    while (size >= VMPageSize) {
-        maddr = vtomem(context, vaddr, count);
-        memcpy(data, maddr, VMPageSize);
-
-        vaddr += VMPageSize;
-        data += VMPageSize;
-        size -= VMPageSize;
-    }
-
-    if (size > 0) {
-        maddr = vtomem(context, vaddr, count);
-        memcpy(data, maddr, size);
-    }
+    context->getVirtPort(context)->readBlob(vaddr, (uint8_t*)data, size);
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
         if (DTRACE(GDBExtra)) {
             char buf[1024];
-            mem2hex(buf, d, s);
+            mem2hex(buf, data, size);
             DPRINTFNR(": %s\n", buf);
         } else
             DPRINTFNR("\n");
@@ -693,8 +664,6 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
     static Addr lastaddr = 0;
     static size_t lastsize = 0;
 
-    uint8_t *maddr;
-
     if (vaddr < 10) {
       DPRINTF(GDBWrite, "write: writing memory location zero!\n");
       vaddr = lastaddr + lastsize;
@@ -710,32 +679,7 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
             DPRINTFNR("\n");
     }
 
-    lastaddr = vaddr;
-    lastsize = size;
-
-    size_t count = min((Addr)size,
-                       VMPageSize - (vaddr & (VMPageSize - 1)));
-
-    maddr = vtomem(context, vaddr, count);
-    memcpy(maddr, data, count);
-
-    vaddr += count;
-    data += count;
-    size -= count;
-
-    while (size >= VMPageSize) {
-        maddr = vtomem(context, vaddr, count);
-        memcpy(maddr, data, VMPageSize);
-
-        vaddr += VMPageSize;
-        data += VMPageSize;
-        size -= VMPageSize;
-    }
-
-    if (size > 0) {
-        maddr = vtomem(context, vaddr, count);
-        memcpy(maddr, data, size);
-    }
+    context->getVirtPort(context)->writeBlob(vaddr, (uint8_t*)data, size);
 
 #ifdef IMB
     alpha_pal_imb();

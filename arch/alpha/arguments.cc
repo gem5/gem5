@@ -29,7 +29,7 @@
 #include "arch/alpha/arguments.hh"
 #include "arch/alpha/vtophys.hh"
 #include "cpu/exec_context.hh"
-#include "mem/functional/physical.hh"
+#include "mem/vport.hh"
 
 using namespace AlphaISA;
 
@@ -59,11 +59,10 @@ AlphaArguments::getArg(bool fp)
             return xc->readIntReg(16 + number);
     } else {
         Addr sp = xc->readIntReg(30);
-        Addr paddr = vtophys(xc, sp + (number-6) * sizeof(uint64_t));
-        // @todo: This read must go through the system or something else.
-//	return xc->getPhysMemPtr()->phys_read_qword(paddr);
-        panic("Need to fix alpha arguments\n");
-        return 0;
+        VirtualPort *vp = xc->getVirtPort(xc);
+        uint64_t arg = vp->read<uint64_t>(sp + (number-6) * sizeof(uint64_t));
+        xc->delVirtPort(vp);
+        return arg;
     }
 }
 
