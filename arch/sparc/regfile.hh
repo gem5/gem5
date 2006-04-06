@@ -137,6 +137,8 @@ namespace SparcISA
 
         void setAltGlobals(bool useAlt)
         {
+            DPRINTF(Sparc, "Now using %s globals",
+                    useAlt ? "alternate" : "regular");
             regView[Globals] = useAlt ? altGlobals : regGlobals;
             offset[Globals] = useAlt ? AltGlobalOffset : RegGlobalOffset;
         }
@@ -782,8 +784,10 @@ namespace SparcISA
             {
               case CONTEXT_CWP:
                 intRegFile.setCWP(val.reg);
+                break;
               case CONTEXT_GLOBALS:
                 intRegFile.setAltGlobals(val.altGlobals);
+                break;
               default:
                 panic("Tried to set illegal context parameter in the SPARC regfile.\n");
             }
