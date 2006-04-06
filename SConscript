@@ -183,33 +183,7 @@ full_system_sources = Split('''
         cpu/profile.cc
 
 	dev/alpha_console.cc
-	dev/baddev.cc
-        dev/simconsole.cc
-	dev/disk_image.cc
-	dev/etherbus.cc
-	dev/etherdump.cc
-	dev/etherint.cc
-	dev/etherlink.cc
-	dev/etherpkt.cc
-	dev/ethertap.cc
-	dev/ide_ctrl.cc
-	dev/ide_disk.cc
 	dev/io_device.cc
-	dev/ns_gige.cc
-	dev/pciconfigall.cc
-	dev/pcidev.cc
-	dev/pcifake.cc
-	dev/pktfifo.cc
-	dev/platform.cc
-	dev/sinic.cc
-	dev/simple_disk.cc
-	dev/tsunami.cc
-	dev/tsunami_cchip.cc
-	dev/isa_fake.cc
-	dev/tsunami_io.cc
-	dev/tsunami_pchip.cc
-	dev/uart.cc
-	dev/uart8250.cc
 
 	kern/kernel_binning.cc
 	kern/kernel_stats.cc
@@ -218,9 +192,37 @@ full_system_sources = Split('''
 	kern/linux/linux_syscalls.cc
 	kern/linux/printk.cc
 
-	mem/functional/memory_control.cc
+        mem/vport.cc
+
 	sim/pseudo_inst.cc
         ''')
+
+#	dev/baddev.cc
+#       dev/simconsole.cc
+#	dev/disk_image.cc
+#	dev/etherbus.cc
+#	dev/etherdump.cc
+#	dev/etherint.cc
+#	dev/etherlink.cc
+#	dev/etherpkt.cc
+#	dev/ethertap.cc
+#	dev/ide_ctrl.cc
+#	dev/ide_disk.cc
+#	dev/ns_gige.cc
+#	dev/pciconfigall.cc
+#	dev/pcidev.cc
+#	dev/pcifake.cc
+#	dev/pktfifo.cc
+#	dev/platform.cc
+#	dev/sinic.cc
+#	dev/simple_disk.cc
+#	dev/tsunami.cc
+#	dev/tsunami_cchip.cc
+#	dev/isa_fake.cc
+#	dev/tsunami_io.cc
+#	dev/tsunami_pchip.cc
+#	dev/uart.cc
+#	dev/uart8250.cc
 
 if env['TARGET_ISA'] == 'alpha':
     full_system_sources += Split('''

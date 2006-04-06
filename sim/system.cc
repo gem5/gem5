@@ -1,16 +1,17 @@
+#include "arch/isa_traits.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/trace.hh"
 #include "cpu/exec_context.hh"
+#include "mem/mem_object.hh"
 #include "sim/builder.hh"
-#include "arch/isa_traits.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
-#include "base/trace.hh"
-#include "mem/mem_object.hh"
 #if FULL_SYSTEM
+#include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
-#include "arch/vtophys.hh"
+#include "mem/physical.hh"
 #endif
 
 using namespace std;
@@ -23,7 +24,7 @@ int System::numSystemsRunning = 0;
 System::System(Params *p)
     : SimObject(p->name), physmem(p->physmem), numcpus(0),
 #if FULL_SYSTEM
-      memctrl(p->memctrl), init_param(p->init_param),
+      init_param(p->init_param),
 #else
       page_ptr(0),
 #endif
@@ -44,6 +45,10 @@ System::System(Params *p)
     mem_port = physmem->getPort("functional");
     functionalPort.setPeer(mem_port);
     mem_port->setPeer(&functionalPort);
+
+    mem_port = physmem->getPort("functional");
+    virtPort.setPeer(mem_port);
+    mem_port->setPeer(&virtPort);
 
 
     /**

@@ -46,8 +46,8 @@
 #include "dev/platform.hh"
 #include "kern/linux/printk.hh"
 #include "kern/linux/events.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/physical.hh"
+#include "mem/port.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
 
@@ -59,7 +59,6 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
     : AlphaSystem(p)
 {
     Addr addr = 0;
-    Addr paddr = 0;
 
     /**
      * The symbol swapper_pg_dir marks the beginning of the kernel and
@@ -73,25 +72,17 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
      * Since we aren't using a bootloader, we have to copy the
      * kernel arguments directly into the kernel's memory.
      */
-    paddr = vtophys(physmem, CommandLine());
-    char *commandline = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
-    if (commandline)
-        strncpy(commandline, params()->boot_osflags.c_str(), CommandLineSize);
+    virtPort.writeBlob(CommandLine(), (uint8_t*)params()->boot_osflags.c_str(),
+                CommandLineSize);
 
     /**
      * find the address of the est_cycle_freq variable and insert it
      * so we don't through the lengthly process of trying to
      * calculated it by using the PIT, RTC, etc.
      */
-    if (kernelSymtab->findAddress("est_cycle_freq", addr)) {
-        paddr = vtophys(physmem, addr);
-        uint8_t *est_cycle_frequency =
-            physmem->dma_addr(paddr, sizeof(uint64_t));
-
-        if (est_cycle_frequency)
-            *(uint64_t *)est_cycle_frequency =
-                Clock::Frequency / p->boot_cpu_frequency;
-    }
+    if (kernelSymtab->findAddress("est_cycle_freq", addr))
+        virtPort.write(addr, (uint64_t)(Clock::Frequency /
+                    p->boot_cpu_frequency));
 
 
     /**
@@ -100,16 +91,9 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
      * @todo At some point we should change ev5.hh and the palcode to support
      * 255 ASNs.
      */
-    if (kernelSymtab->findAddress("dp264_mv", addr)) {
-        paddr = vtophys(physmem, addr);
-        char *dp264_mv = (char *)physmem->dma_addr(paddr, sizeof(uint64_t));
-
-        if (dp264_mv) {
-            *(uint32_t*)(dp264_mv+0x18) = LittleEndianGuest::htog((uint32_t)127);
-        } else
-            panic("could not translate dp264_mv addr\n");
-
-    } else
+    if (kernelSymtab->findAddress("dp264_mv", addr))
+        virtPort.write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
+    else
         panic("could not find dp264_mv\n");
 
 #ifndef NDEBUG
@@ -190,15 +174,10 @@ LinuxAlphaSystem::setDelayLoop(ExecContext *xc)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
-        Addr paddr = vtophys(physmem, addr);
-
-        uint8_t *loops_per_jiffy =
-            physmem->dma_addr(paddr, sizeof(uint32_t));
-
         Tick cpuFreq = xc->getCpuPtr()->frequency();
         Tick intrFreq = platform->intrFrequency();
-        *(uint32_t *)loops_per_jiffy =
-            (uint32_t)((cpuFreq / intrFreq) * 0.9988);
+        xc->getVirtPort(xc)->write(addr,
+                (uint32_t)((cpuFreq / intrFreq) * 0.9988));
     }
 }
 
@@ -224,7 +203,6 @@ LinuxAlphaSystem::PrintThreadInfo::process(ExecContext *xc)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
-    SimObjectParam<MemoryController *> memctrl;
     SimObjectParam<PhysicalMemory *> physmem;
 
     Param<string> kernel;
@@ -247,7 +225,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
-    INIT_PARAM(memctrl, "memory controller"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(console, "file that contains the console code"),
@@ -269,7 +246,6 @@ CREATE_SIM_OBJECT(LinuxAlphaSystem)
     AlphaSystem::Params *p = new AlphaSystem::Params;
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
-    p->memctrl = memctrl;
     p->physmem = physmem;
     p->kernel_path = kernel;
     p->console_path = console;

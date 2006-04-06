@@ -43,6 +43,8 @@ class AlphaITB;
 class BaseCPU;
 class Event;
 class TranslatingPort;
+class FunctionalPort;
+class VirtualPort;
 class Process;
 class System;
 
@@ -93,6 +95,12 @@ class ExecContext
     virtual AlphaITB *getITBPtr() = 0;
 
     virtual AlphaDTB * getDTBPtr() = 0;
+
+    virtual FunctionalPort *getPhysPort() = 0;
+
+    virtual VirtualPort *getVirtPort(ExecContext *xc = NULL) = 0;
+
+    virtual void delVirtPort(VirtualPort *vp) = 0;
 #else
     virtual TranslatingPort *getMemPort() = 0;
 
@@ -259,6 +267,12 @@ class ProxyExecContext : public ExecContext
     AlphaITB *getITBPtr() { return actualXC->getITBPtr(); }
 
     AlphaDTB *getDTBPtr() { return actualXC->getDTBPtr(); }
+
+    FunctionalPort *getPhysPort() { return actualXC->getPhysPort(); }
+
+    VirtualPort *getVirtPort(ExecContext *xc = NULL) { return actualXC->getVirtPort(xc); }
+
+    void delVirtPort(VirtualPort *vp) { return actualXC->delVirtPort(vp); }
 #else
     TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
 

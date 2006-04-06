@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARGUMENTS_HH__
-#define __ARGUMENTS_HH__
+#ifndef __ARCH_ALPHA_ARGUMENTS_HH__
+#define __ARCH_ALPHA_ARGUMENTS_HH__
 
 #include <assert.h>
 
@@ -36,6 +36,8 @@
 #include "sim/host.hh"
 
 class ExecContext;
+
+namespace AlphaISA {
 
 class AlphaArguments
 {
@@ -135,9 +137,11 @@ class AlphaArguments
 
     operator char *() {
         char *buf = data->alloc(2048);
-        CopyString(xc, buf, getArg(), 2048);
+        CopyStringOut(xc, buf, getArg(), 2048);
         return buf;
     }
 };
 
-#endif // __ARGUMENTS_HH__
+}; // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_ARGUMENTS_HH__

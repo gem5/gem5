@@ -38,7 +38,6 @@
 #ifndef __MEM_PORT_HH__
 #define __MEM_PORT_HH__
 
-#include <string>
 #include <list>
 #include <inttypes.h>
 
@@ -55,6 +54,7 @@
  */
 
 typedef std::list<Range<Addr> > AddrRangeList;
+typedef std::list<Range<Addr> >::iterator AddrRangeIter;
 
 /**
  * Ports are used to interface memory objects to
@@ -132,15 +132,11 @@ class Port
 
     /** The peer port is requesting us to reply with a list of the ranges we
         are responsible for.
-        @param owner is an output param that, if set, indicates that the
-        port is the owner of the specified ranges (i.e., slave, default
-        responder, etc.).  If 'owner' is false, the interface is
-        interested in the specified ranges for snooping purposes.  If
-        an object wants to own some ranges and snoop on others, it will
-        need to use two different ports.
+        @param resp is a list of ranges responded to
+        @param snoop is a list of ranges snooped
     */
-    virtual void getDeviceAddressRanges(AddrRangeList &range_list,
-                                        bool &owner)
+    virtual void getDeviceAddressRanges(AddrRangeList &resp,
+            AddrRangeList &snoop)
     { panic("??"); }
 
   public:
@@ -189,8 +185,8 @@ class Port
     /** Called by the associated device if it wishes to find out the address
         ranges connected to the peer ports devices.
     */
-    void getPeerAddressRanges(AddrRangeList &range_list, bool &owner)
-    { peer->getDeviceAddressRanges(range_list, owner); }
+    void getPeerAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    { peer->getDeviceAddressRanges(resp, snoop); }
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into
@@ -232,7 +228,20 @@ class FunctionalPort : public Port
     virtual Tick recvAtomic(Packet &pkt) { panic("FuncPort is UniDir"); }
     virtual void recvFunctional(Packet &pkt) { panic("FuncPort is UniDir"); }
     virtual void recvStatusChange(Status status) {panic("FuncPort is UniDir");}
-};
 
+    template <typename T>
+    inline void write(Addr addr, T d)
+    {
+        writeBlob(addr, (uint8_t*)&d, sizeof(T));
+    }
+
+    template <typename T>
+    inline T read(Addr addr)
+    {
+        T d;
+        readBlob(addr, (uint8_t*)&d, sizeof(T));
+        return d;
+    }
+};
 
 #endif //__MEM_PORT_HH__

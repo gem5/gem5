@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PRINTF_HH__
-#define __PRINTF_HH__
+/**
+ * @file Port object definitions.
+ */
 
-#include "arch/arguments.hh"
+#include "base/chunk_generator.hh"
+#include "mem/vport.hh"
 
-namespace tru64 {
-    void Printf(AlphaISA::AlphaArguments args);
+void
+VirtualPort::readBlob(Addr addr, uint8_t *p, int size)
+{
+    Addr paddr;
+    for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
+            gen.next())
+    {
+        if (xc)
+            paddr = TheISA::vtophys(xc,gen.addr());
+        else
+            paddr = TheISA::vtophys(gen.addr());
+
+        FunctionalPort::readBlob(paddr, p, gen.size());
+        p += gen.size();
+    }
 }
 
-#endif // __PRINTF_HH__
+void
+VirtualPort::writeBlob(Addr addr, uint8_t *p, int size)
+{
+    Addr paddr;
+    for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
+            gen.next())
+    {
+        if (xc)
+            paddr = TheISA::vtophys(xc,gen.addr());
+        else
+            paddr = TheISA::vtophys(gen.addr());
+
+        FunctionalPort::writeBlob(paddr, p, gen.size());
+        p += gen.size();
+    }
+}
+

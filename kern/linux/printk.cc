@@ -36,7 +36,7 @@ using namespace std;
 
 
 void
-Printk(AlphaArguments args)
+Printk(AlphaISA::AlphaArguments args)
 {
     char *p = (char *)args++;
 

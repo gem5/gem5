@@ -57,8 +57,9 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                          AlphaITB *_itb, AlphaDTB *_dtb)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), lastActivate(0), lastSuspend(0), system(_sys), itb(_itb),
-      dtb(_dtb), memctrl(_sys->memctrl), profile(NULL),
-      quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
+      dtb(_dtb), profile(NULL), quiesceEvent(this), func_exe_inst(0),
+      storeCondFailures(0)
+
 {
     proxy = new ProxyExecContext<CPUExecContext>(this);
 
@@ -77,6 +78,17 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     static ProfileNode dummyNode;
     profileNode = &dummyNode;
     profilePC = 3;
+
+    Port *mem_port;
+    physPort = new FunctionalPort();
+    mem_port = system->physmem->getPort("functional");
+    mem_port->setPeer(physPort);
+    physPort->setPeer(mem_port);
+
+    virtPort = new VirtualPort();
+    mem_port = system->physmem->getPort("functional");
+    mem_port->setPeer(virtPort);
+    virtPort->setPeer(mem_port);
 }
 #else
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
@@ -277,4 +289,32 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
 {
     TheISA::copyRegs(xc, proxy);
 }
+
+#if FULL_SYSTEM
+VirtualPort*
+CPUExecContext::getVirtPort(ExecContext *xc)
+{
+    if (!xc)
+        return virtPort;
+
+    VirtualPort *vp;
+    Port *mem_port;
+
+    vp = new VirtualPort(xc);
+    mem_port = system->physmem->getPort("functional");
+    mem_port->setPeer(vp);
+    vp->setPeer(mem_port);
+    return vp;
+}
+
+void
+CPUExecContext::delVirtPort(VirtualPort *vp)
+{
+    assert(!vp->nullExecContext());
+    delete vp->getPeer();
+    delete vp;
+}
+
+
+#endif
 

@@ -29,8 +29,8 @@
 #ifndef __PRINTK_HH__
 #define __PRINTK_HH__
 
-class AlphaArguments;
+class AlphaISA::AlphaArguments;
 
-void Printk(AlphaArguments args);
+void Printk(AlphaISA::AlphaArguments args);
 
 #endif // __PRINTK_HH__

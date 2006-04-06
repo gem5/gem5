@@ -43,7 +43,6 @@ class BaseCPU;
 class SimConsole;
 class AlphaSystem;
 class SimpleDisk;
-class MemoryController;
 
 /**
  * Memory mapped interface to the system console. This device
@@ -70,7 +69,7 @@ class MemoryController;
  * primarily used doing boot before the kernel has loaded its device
  * drivers.
  */
-class AlphaConsole : public BasePioDevice
+class AlphaConsole : public BasicPioDevice
 {
   protected:
     struct Access : public AlphaAccess
@@ -97,12 +96,12 @@ class AlphaConsole : public BasePioDevice
     BaseCPU *cpu;
 
   public:
-    struct Params : public BasePioDevice::Params
+    struct Params : public BasicPioDevice::Params
     {
         SimConsole *cons;
         SimpleDisk *disk;
         AlphaSystem *sys;
-        BaseCpu *cpu;
+        BaseCPU *cpu;
     };
   protected:
     const Params *params() const {return (const Params *)_params; }
@@ -120,14 +119,14 @@ class AlphaConsole : public BasePioDevice
     virtual Tick read(Packet &pkt);
     virtual Tick write(Packet &pkt);
 
+    /** Address ranges this device is sensitive to. */
+    virtual void addressRanges(AddrRangeList &range_list);
+
     /**
      * standard serialization routines for checkpointing
      */
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-  public:
-    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __ALPHA_CONSOLE_HH__

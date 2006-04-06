@@ -96,20 +96,26 @@ class VPtr
 
     operator T *()
     {
-        void *addr = vtomem(xc, ptr, sizeof(T));
+        panic("Needs to be rewritten\n");
+/*	void *addr = vtomem(xc, ptr, sizeof(T));
         return (T *)addr;
+        */
     }
 
     T *operator->()
     {
-        void *addr = vtomem(xc, ptr, sizeof(T));
+        panic("Needs to be rewritten\n");
+/*	void *addr = vtomem(xc, ptr, sizeof(T));
         return (T *)addr;
+        */
     }
 
     T &operator*()
     {
-        void *addr = vtomem(xc, ptr, sizeof(T));
+        panic("Needs to be rewritten\n");
+/*	void *addr = vtomem(xc, ptr, sizeof(T));
         return *(T *)addr;
+        */
     }
 };
 

@@ -75,7 +75,7 @@ class PioPort : public Port
     virtual void recvStatusChange(Status status)
     { peerStatus = status; }
 
-    virtual void getDeviceAddressRanges(AddrRangeList &range_list, bool &owner);
+    virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
 
     /**
      * This class is used to implemented sendTiming() with a delay. When a delay
@@ -131,8 +131,8 @@ class DmaPort : public Port
 
     virtual Packet *recvRetry() ;
 
-    virtual void getDeviceAddressRanges(AddrRangeList &range_list, bool &owner)
-    { range_list.clear(); owner = true; }
+    virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    { resp.clear(); snoop.clear(); }
 
     class SendEvent : public Event
     {
@@ -183,7 +183,7 @@ class PioDevice : public SimObject
      * that it sees. */
     PioPort *pioPort;
 
-    virtual void addressRanges(AddrRangeList &range_list, bool &owner) = 0;
+    virtual void addressRanges(AddrRangeList &range_list) = 0;
 
     /** As far as the devices are concerned they only accept atomic transactions
      * which are converted to either a write or a read. */
@@ -208,26 +208,27 @@ class PioDevice : public SimObject
         std::string name;
         Platform *platform;
     };
+
   protected:
     Params *_params;
 
   public:
     const Params *params() const { return _params; }
 
-    PioDevice(Params *params)
-              : SimObject(params()->name), platform(params()->platform)
+    PioDevice(Params *p)
+              : SimObject(params()->name), platform(p->platform), _params(p)
               {}
 
     virtual ~PioDevice();
 
     virtual Port *getPort(const std::string &if_name)
     {
-        if (if_name == "pio")
+        if (if_name == "pio") {
             if (pioPort != NULL)
                 panic("pio port already connected to.");
             pioPort = new PioPort(this, params()->platform);
             return pioPort;
-        else
+        } else
             return NULL;
     }
     friend class PioPort;
@@ -237,7 +238,7 @@ class PioDevice : public SimObject
 class BasicPioDevice : public PioDevice
 {
   public:
-    struct Params
+    struct Params :  public PioDevice::Params
     {
         Addr pio_addr;
         Tick pio_delay;
@@ -248,17 +249,16 @@ class BasicPioDevice : public PioDevice
     Addr pioAddr;
 
     /** Size that the device's address range. */
-    Addr pioSize = 0;
+    Addr pioSize;
 
     /** Delay that the device experinces on an access. */
     Tick pioDelay;
 
   public:
-    BasePioDevice(Params *p)
-        : PioDevice(p), pioAddr(p->pio_addr), pioDelay(p->pioDelay)
+    BasicPioDevice(Params *p)
+        : PioDevice(p), pioAddr(p->pio_addr), pioSize(0), pioDelay(p->pio_delay)
     {}
 
-    virtual void addressRanges(AddrRangeList &range_list, bool &owner);
 };
 
 class DmaDevice : public PioDevice
@@ -267,7 +267,7 @@ class DmaDevice : public PioDevice
     DmaPort *dmaPort;
 
   public:
-    DmaDevice(const std::string &name, Platform *p);
+    DmaDevice(Params *p);
     virtual ~DmaDevice();
 
     virtual Port *getPort(const std::string &if_name)

@@ -40,7 +40,7 @@ using namespace std;
 namespace tru64 {
 
 void
-Printf(AlphaArguments args)
+Printf(AlphaISA::AlphaArguments args)
 {
     char *p = (char *)args++;
 
