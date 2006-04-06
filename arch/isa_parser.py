@@ -1618,13 +1618,27 @@ opClassRE = re.compile(r'.*Op|No_OpClass')
 
 class InstObjParams:
     def __init__(self, mnem, class_name, base_class = '',
-                 code_block = None, opt_args = []):
+                 code = None, opt_args = [], *extras):
         self.mnemonic = mnem
         self.class_name = class_name
         self.base_class = base_class
-        if code_block:
-            for code_attr in code_block.__dict__.keys():
-                setattr(self, code_attr, getattr(code_block, code_attr))
+        if code:
+            #If the user already made a CodeBlock, pick the parts from it
+            if isinstance(code, CodeBlock):
+                origCode = code.orig_code
+                codeBlock = code
+            else:
+                origCode = code
+                codeBlock = CodeBlock(code)
+            compositeCode = '\n'.join([origCode] +
+                    [pair[1] for pair in extras])
+            compositeBlock = CodeBlock(compositeCode)
+            for code_attr in compositeBlock.__dict__.keys():
+                setattr(self, code_attr, getattr(compositeBlock, code_attr))
+            for (key, snippet) in extras:
+                setattr(self, key, CodeBlock(snippet).code)
+            self.code = codeBlock.code
+            self.orig_code = origCode
         else:
             self.constructor = ''
             self.flags = []

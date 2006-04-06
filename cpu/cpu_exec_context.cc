@@ -62,7 +62,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 {
     proxy = new ProxyExecContext<CPUExecContext>(this);
 
-    memset(&regs, 0, sizeof(RegFile));
+    regs.clear();
 
     if (cpu->params->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
@@ -93,7 +93,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
     mem_port->setPeer(port);
     port->setPeer(mem_port);
 
-    memset(&regs, 0, sizeof(RegFile));
+    regs.clear();
     proxy = new ProxyExecContext<CPUExecContext>(this);
 }
 

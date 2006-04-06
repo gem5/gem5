@@ -37,7 +37,7 @@ output header {{
             std::string generateDisassembly(Addr pc,
                     const SymbolTable *symtab) const;
 
-            int imm;
+            int32_t imm;
         };
 }};
 
@@ -46,7 +46,7 @@ output decoder {{
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
-            bool load = (_numDestRegs == 1);
+            bool load = flags[IsLoad];
 
             printMnemonic(response, mnemonic);
             if(!load)
@@ -72,7 +72,7 @@ output decoder {{
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
-            bool load = (_numDestRegs == 1);
+            bool load = flags[IsLoad];
 
             printMnemonic(response, mnemonic);
             if(!load)
@@ -102,7 +102,9 @@ def template MemExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
+            %(load)s;
             %(code)s;
+            %(store)s;
 
             if(fault == NoFault)
             {
@@ -114,16 +116,49 @@ def template MemExecute {{
         }
 }};
 
-// Primary format for memory instructions:
-def format Mem(code, *opt_flags) {{
+let {{
+    # Leave memAccessFlags at 0 for now
+    loadString = "xc->read(EA, (uint%(width)s_t&)Mem, 0);"
+    storeString = "uint64_t write_result = 0; \
+    xc->write((uint%(width)s_t)Mem, EA, 0, &write_result);"
+
+    def doMemFormat(code, load, store, name, Name, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2;'
         addrCalcImm = 'EA = Rs1 + SIMM13;'
-        iop = genCompositeIop(code, name, Name, 'Mem',
-                opt_flags, ea_code=addrCalcReg)
-        iop_imm = genCompositeIop(code, name, Name + 'Imm', 'MemImm',
-                opt_flags, ea_code=addrCalcImm)
+        iop = InstObjParams(name, Name, 'Mem', code,
+                opt_flags, ("ea_code", addrCalcReg),
+                ("load", load), ("store", store))
+        iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', code,
+                opt_flags, ("ea_code", addrCalcImm),
+                ("load", load), ("store", store))
         header_output = BasicDeclare.subst(iop) + BasicDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
         exec_output = MemExecute.subst(iop) + MemExecute.subst(iop_imm)
+        return (header_output, decoder_output, exec_output, decode_block)
+}};
+
+def format Load(code, width, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code,
+             loadString % {"width":width}, '', name, Name, opt_flags)
+}};
+
+def format Store(code, width, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code, '',
+             storeString % {"width":width}, name, Name, opt_flags)
+}};
+
+def format LoadStore(code, width, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code,
+             loadString % {"width":width}, storeString % {"width":width},
+             name, Name, opt_flags)
 }};

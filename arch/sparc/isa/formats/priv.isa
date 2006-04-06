@@ -50,7 +50,7 @@ output header {{
             {
             }
 
-            uint32_t imm;
+            int32_t imm;
         };
 
         /**
@@ -66,7 +66,7 @@ output header {{
             {
             }
 
-            uint32_t imm;
+            int32_t imm;
         };
 }};
 
@@ -91,35 +91,8 @@ def template PrivExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        //Since these are processed inside templates and not in codeblocks,
-        //They aren't translated by the isa_parser. Their names begin with
-        //underscores so they don't cause conflicts.
-        uint32_t _PstatePriv = xc->readMiscReg(MISCREG_PSTATE_PRIV);
-
         //If the processor isn't in privileged mode, fault out right away
-        if(!_PstatePriv)
-            return new PrivilegedOpcode;
-
-        %(code)s;
-        %(op_wb)s;
-        return NoFault;
-    }
-}};
-
-def template PrivTickExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
-            Trace::InstRecord *traceData) const
-    {
-        %(op_decl)s;
-        %(op_rd)s;
-
-        //Since these are processed inside templates and not in codeblocks,
-        //They aren't translated by the isa_parser. Their names begin with
-        //underscores so they don't cause conflicts.
-        uint32_t _PstatePriv = xc->readMiscReg(MISCREG_PSTATE_PRIV);
-        uint32_t _TickNpt = xc->readMiscReg(MISCREG_TICK_NPT);
-        //If the processor isn't in privileged mode, fault out right away
-        if(!_PstatePriv && _TickNpt)
+        if(%(check)s)
             return new PrivilegedAction;
 
         %(code)s;
@@ -128,50 +101,39 @@ def template PrivTickExecute {{
     }
 }};
 
-// Primary format for integer operate instructions:
-def format Priv(code, *opt_flags) {{
-        uses_imm = (code.find('Rs2_or_imm13') != -1)
-        if uses_imm:
-            orig_code = code
-            code = re.sub(r'Rs2_or_imm13', 'Rs2', orig_code)
-            imm_code = re.sub(r'Rs2_or_imm13(\.\w+)?', 'imm', orig_code)
-        cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'Priv', cblk, opt_flags)
+let {{
+    def doPrivFormat(code, checkCode, name, Name, opt_flags):
+        (usesImm, code, immCode,
+         rString, iString) = splitOutImm(code)
+        iop = InstObjParams(name, Name, 'Priv', code,
+                opt_flags, ("check", checkCode))
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = PrivExecute.subst(iop)
-        if uses_imm:
-            imm_cblk = CodeBlock(imm_code)
-            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivImm', imm_cblk,
-                                    opt_flags)
+        if usesImm:
+            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivImm',
+                    immCode, opt_flags, ("check", checkCode))
             header_output += BasicDeclare.subst(imm_iop)
             decoder_output += BasicConstructor.subst(imm_iop)
             exec_output += PrivExecute.subst(imm_iop)
             decode_block = ROrImmDecode.subst(iop)
         else:
             decode_block = BasicDecode.subst(iop)
+        return (header_output, decoder_output, exec_output, decode_block)
+}};
+
+// Primary format for integer operate instructions:
+def format Priv(code, *opt_flags) {{
+        checkCode = "(!PstatePriv)"
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
 }};
 
 // Primary format for integer operate instructions:
 def format PrivTick(code, *opt_flags) {{
-        uses_imm = (code.find('Rs2_or_imm13') != -1)
-        if uses_imm:
-            orig_code = code
-            code = re.sub(r'Rs2_or_imm13', 'Rs2', orig_code)
-            imm_code = re.sub(r'Rs2_or_imm13(\.\w+)?', 'imm', orig_code)
-        cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'PrivTick', cblk, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        exec_output = PrivTickExecute.subst(iop)
-        if uses_imm:
-            imm_cblk = CodeBlock(imm_code)
-            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivTickImm', imm_cblk,
-                                    opt_flags)
-            header_output += BasicDeclare.subst(imm_iop)
-            decoder_output += BasicConstructor.subst(imm_iop)
-            exec_output += PrivTickExecute.subst(imm_iop)
-            decode_block = Rb2OrImmDecode.subst(iop)
-        else:
-            decode_block = BasicDecode.subst(iop)
+        checkCode = "(!PstatePriv && TickNpt)"
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
 }};

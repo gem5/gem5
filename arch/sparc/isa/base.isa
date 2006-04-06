@@ -60,7 +60,7 @@ output header {{
 
         inline int64_t sign_ext(uint64_t data, int origWidth)
         {
-            int shiftAmount = sizeof(uint64_t) - origWidth;
+            int shiftAmount = 64 - origWidth;
             return (((int64_t)data) << shiftAmount) >> shiftAmount;
         }
 }};
@@ -84,19 +84,6 @@ let {{
         code = matcher.sub('Rs' + rOrImmMatch.group("rNum"), orig_code)
         imm_code = matcher.sub('imm', orig_code)
         return (True, code, imm_code, rString, iString)
-
-    def genCompositeIop(code, name, Name, parent, opt_flags, **extras):
-        origBlock = CodeBlock(code)
-        composite = code
-        for snippet in extras.values():
-            composite += ('\n' + snippet)
-        compositeBlock = CodeBlock(composite)
-        iop = InstObjParams(name, Name, parent, compositeBlock, opt_flags)
-        iop.code = origBlock.code
-        iop.orig_code = origBlock.orig_code
-        for (name, snippet) in extras.items():
-            exec "iop.%s = CodeBlock(snippet).code" % name
-        return iop
 }};
 
 output decoder {{

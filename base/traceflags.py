@@ -143,6 +143,7 @@ baseFlags = [
     'HWPrefetch',
     'Stack',
     'SimpleCPU',
+    'Sparc',
     ]
 
 #
