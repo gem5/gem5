@@ -179,12 +179,12 @@ TrapType      AsyncDataError::_trapType = 0x040;
 FaultPriority AsyncDataError::_priority = 2;
 FaultStat     AsyncDataError::_count;
 
-//The enumerated faults
-
 FaultName     CleanWindow::_name = "clean_win";
-TrapType      CleanWindow::_baseTrapType = 0x024;
+TrapType      CleanWindow::_trapType = 0x024;
 FaultPriority CleanWindow::_priority = 10;
 FaultStat     CleanWindow::_count;
+
+//The enumerated faults
 
 FaultName     InterruptLevelN::_name = "interrupt_n";
 TrapType      InterruptLevelN::_baseTrapType = 0x041;
