@@ -17,6 +17,8 @@ output decoder {{
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/exec_context.hh"  // for Jump::branchTarget()
+#include "arch/mips/faults.hh"
+#include "arch/mips/isa_traits.hh"
 
 #include <math.h>
 #if defined(linux)
@@ -27,6 +29,7 @@ using namespace MipsISA;
 }};
 
 output exec {{
+#include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
 #include <math.h>
 #if defined(linux)

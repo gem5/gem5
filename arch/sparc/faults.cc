@@ -215,7 +215,10 @@ TrapType      TrapInstruction::_baseTrapType = 0x100;
 FaultPriority TrapInstruction::_priority = 16;
 FaultStat     TrapInstruction::_count;
 
-
+FaultName     UnimpFault::_name = "Unimplemented Simulator feature";
+TrapType      UnimpFault::_trapType = 0x000;
+FaultPriority UnimpFault::_priority = 0;
+FaultStat     UnimpFault::_count;
 
 #if FULL_SYSTEM
 
@@ -241,6 +244,12 @@ void SparcFault::invoke(ExecContext * xc)
     xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
     xc->regs.npc = xc->regs.pc + sizeof(MachInst);*/
 }
+
+void UnimpFault::invoke(ExecContext * xc)
+{
+    panic("Unimpfault: %s\n", panicStr.c_str());
+}
+
 
 #endif
 

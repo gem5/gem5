@@ -39,10 +39,7 @@
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
+#include "mem/port.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
@@ -52,19 +49,10 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
-                           MemoryController *mmu, HierParams *hier,
-                           Bus* pio_bus, Tick pio_latency)
-    : PioDevice(name, t), addr(a), tsunami(t)
+TsunamiCChip::TsunamiCChip(Params *p)
+    : BasicPioDevice(p), tsunami(p->tsunami)
 {
-    mmu->add_child(this, RangeSize(addr, size));
-
-    if (pio_bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
-                                      &TsunamiCChip::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * pio_bus->clockRate;
-    }
+    pioSize = 0xfffffff;
 
     drir = 0;
     ipint = 0;
@@ -80,123 +68,137 @@ TsunamiCChip::TsunamiCChip(const string &name, Tsunami *t, Addr a,
     tsunami->cchip = this;
 }
 
-Fault
-TsunamiCChip::read(MemReqPtr &req, uint8_t *data)
+Tick
+TsunamiCChip::read(Packet &pkt)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", req->vaddr, req->size);
 
-    Addr regnum = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    assert(pkt.result == Unknown);
+    assert(pkt.addr > pioAddr && pkt.addr < pioAddr + pioSize);
 
-    ExecContext *xc = req->xc;
+    pkt.time = curTick + pioDelay;
+    Addr regnum = (req->paddr - pioAddr) >> 6;
+    Addr daddr = (req->paddr - pioAddr);
 
-    switch (req->size) {
+    uint32_t *data32;
+    uint64_t *data64;
+
+    switch (pkt.size) {
 
       case sizeof(uint64_t):
+          if (!pkt.data) {
+              data64 = new uint64_t;
+              pkt.data = (uint8_t*)data64;
+          } else
+              data64 = (uint64_t*)pkt.data;
+
           if (daddr & TSDEV_CC_BDIMS)
           {
-              *(uint64_t*)data = dim[(daddr >> 4) & 0x3F];
-              return NoFault;
+              *data64 = dim[(daddr >> 4) & 0x3F];
+              break;
           }
 
           if (daddr & TSDEV_CC_BDIRS)
           {
-              *(uint64_t*)data = dir[(daddr >> 4) & 0x3F];
-              return NoFault;
+              *data64 = dir[(daddr >> 4) & 0x3F];
+              break;
           }
 
           switch(regnum) {
               case TSDEV_CC_CSR:
-                  *(uint64_t*)data = 0x0;
-                  return NoFault;
+                  *data64 = 0x0;
+                  break;
               case TSDEV_CC_MTR:
                   panic("TSDEV_CC_MTR not implemeted\n");
-                   return NoFault;
+                   break;
               case TSDEV_CC_MISC:
-                  *(uint64_t*)data = (ipint << 8) & 0xF |
-                                     (itint << 4) & 0xF |
-                                     (xc->readCpuId() & 0x3);
-                  return NoFault;
+                  *data64 = (ipint << 8) & 0xF | (itint << 4) & 0xF |
+                                     (pkt.req->cpuId & 0x3);
+                  break;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
               case TSDEV_CC_AAR2:
               case TSDEV_CC_AAR3:
-                  *(uint64_t*)data = 0;
-                  return NoFault;
+                  *data64 = 0;
+                  break;
               case TSDEV_CC_DIM0:
-                  *(uint64_t*)data = dim[0];
-                  return NoFault;
+                  *data64 = dim[0];
+                  break;
               case TSDEV_CC_DIM1:
-                  *(uint64_t*)data = dim[1];
-                  return NoFault;
+                  *data64 = dim[1];
+                  break;
               case TSDEV_CC_DIM2:
-                  *(uint64_t*)data = dim[2];
-                  return NoFault;
+                  *data64 = dim[2];
+                  break;
               case TSDEV_CC_DIM3:
-                  *(uint64_t*)data = dim[3];
-                  return NoFault;
+                  *data64 = dim[3];
+                  break;
               case TSDEV_CC_DIR0:
-                  *(uint64_t*)data = dir[0];
-                  return NoFault;
+                  *data64 = dir[0];
+                  break;
               case TSDEV_CC_DIR1:
-                  *(uint64_t*)data = dir[1];
-                  return NoFault;
+                  *data64 = dir[1];
+                  break;
               case TSDEV_CC_DIR2:
-                  *(uint64_t*)data = dir[2];
-                  return NoFault;
+                  *data64 = dir[2];
+                  break;
               case TSDEV_CC_DIR3:
-                  *(uint64_t*)data = dir[3];
-                  return NoFault;
+                  *data64 = dir[3];
+                  break;
               case TSDEV_CC_DRIR:
-                  *(uint64_t*)data = drir;
-                  return NoFault;
+                  *data64 = drir;
+                  break;
               case TSDEV_CC_PRBEN:
                   panic("TSDEV_CC_PRBEN not implemented\n");
-                  return NoFault;
+                  break;
               case TSDEV_CC_IIC0:
               case TSDEV_CC_IIC1:
               case TSDEV_CC_IIC2:
               case TSDEV_CC_IIC3:
                   panic("TSDEV_CC_IICx not implemented\n");
-                  return NoFault;
+                  break;
               case TSDEV_CC_MPR0:
               case TSDEV_CC_MPR1:
               case TSDEV_CC_MPR2:
               case TSDEV_CC_MPR3:
                   panic("TSDEV_CC_MPRx not implemented\n");
-                  return NoFault;
+                  break;
               case TSDEV_CC_IPIR:
-                  *(uint64_t*)data = ipint;
-                  return NoFault;
+                  *data64 = ipint;
+                  break;
               case TSDEV_CC_ITIR:
-                  *(uint64_t*)data = itint;
-                  return NoFault;
+                  *data64 = itint;
+                  break;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
            } // uint64_t
 
       break;
       case sizeof(uint32_t):
-          if (regnum == TSDEV_CC_DRIR) {
-              warn("accessing DRIR with 32 bit read, "
-                   "hopefully your just reading this for timing");
-              *(uint32_t*)data = drir;
-          } else
-              panic("invalid access size(?) for tsunami register!\n");
-          return NoFault;
       case sizeof(uint16_t):
       case sizeof(uint8_t):
       default:
         panic("invalid access size(?) for tsunami register!\n");
     }
-    DPRINTFN("Tsunami CChip ERROR: read  regnum=%#x size=%d\n", regnum, req->size);
+    DPRINTFN("Tsunami CChip: read  regnum=%#x size=%d data=%lld\n", regnum,
+            req->size, *data);
 
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
-Fault
-TsunamiCChip::write(MemReqPtr &req, const uint8_t *data)
+Tick
+TsunamiCChip::write(Packet &pkt)
 {
+    pkt.time = curTick + pioDelay;
+
+
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    Addr daddr = pkt.addr - pioAddr;
+
+    uint64_t val = *(uint64_t *)pkt.data;
+    assert(pkt.size == sizeof(uint64_t));
+
     DPRINTF(Tsunami, "write - va=%#x value=%#x size=%d \n",
             req->vaddr, *(uint64_t*)data, req->size);
 
