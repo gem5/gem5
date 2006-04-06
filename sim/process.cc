@@ -316,7 +316,7 @@ LiveProcess::argsInit(int intSize, int pageSize)
                      roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    Addr argv_array_base = stack_min + sizeof(uint64_t); // room for argc
+    Addr argv_array_base = stack_min + intSize; // room for argc
     Addr envp_array_base = argv_array_base + argv_array_size;
     Addr arg_data_base = envp_array_base + envp_array_size;
     Addr env_data_base = arg_data_base + arg_data_size;

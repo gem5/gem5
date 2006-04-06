@@ -120,8 +120,7 @@ AlphaConsole::read(Packet &pkt)
             if (!pkt.data) {
                 data32 = new uint32_t;
                 pkt.data = (uint8_t*)data32;
-            }
-            else
+            } else
                 data32 = (uint32_t*)pkt.data;
 
             switch (daddr)
@@ -150,8 +149,7 @@ AlphaConsole::read(Packet &pkt)
             if (!pkt.data) {
                 data64 = new uint64_t;
                 pkt.data = (uint8_t*)data64;
-            }
-            else
+            } else
                 data64 = (uint64_t*)pkt.data;
             switch (daddr)
             {

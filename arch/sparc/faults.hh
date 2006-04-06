@@ -581,6 +581,29 @@ class TrapInstruction : public EnumeratedFault
     FaultStat & countStat() {return _count;}
 };
 
+class UnimpFault : public SparcFault
+{
+  private:
+    static FaultName _name;
+    static TrapType _trapType;
+    static FaultPriority _priority;
+    static FaultStat _count;
+    std::string panicStr;
+  public:
+    UnimpFault(std::string _str)
+        : panicStr(_str)
+    { }
+
+    FaultName name() {return _name;}
+    TrapType trapType() {return _trapType;}
+    FaultPriority priority() {return _priority;}
+    FaultStat & countStat() {return _count;}
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+};
+
+
 } // SparcISA namespace
 
 #endif // __FAULTS_HH__

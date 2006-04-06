@@ -192,11 +192,17 @@ class PioDevice : public SimObject
     { return pkt.cmd == Read ? this->read(pkt) : this->write(pkt); }
 
     /** Pure virtual function that the device must implement. Called when a read
-     * command is recieved by the port. */
+     * command is recieved by the port.
+     * @param pkt Packet describing this request
+     * @return number of ticks it took to complete
+     */
     virtual Tick read(Packet &pkt) = 0;
 
     /** Pure virtual function that the device must implement. Called when a
-     * write command is recieved by the port. */
+     * write command is recieved by the port.
+     * @param pkt Packet describing this request
+     * @return number of ticks it took to complete
+     */
     virtual Tick write(Packet &pkt) = 0;
 
   public:

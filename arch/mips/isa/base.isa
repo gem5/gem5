@@ -9,8 +9,6 @@
 output header {{
 
 #define R31 31
-#include "arch/mips/faults.hh"
-#include "arch/mips/isa_traits.hh"
 
     using namespace MipsISA;
 

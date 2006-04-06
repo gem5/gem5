@@ -37,21 +37,13 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
-class MemoryController;
 
 /**
  * Tsunami CChip CSR Emulation. This device includes all the interrupt
  * handling code for the chipset.
  */
-class TsunamiCChip : public PioDevice
+class TsunamiCChip : public BasicPioDevice
 {
-  private:
-    /** The base address of this device */
-    Addr addr;
-
-    /** The size of mappad from the above address */
-    static const Addr size = 0xfffffff;
-
   protected:
     /**
      * pointer to the tsunami object.
@@ -85,36 +77,24 @@ class TsunamiCChip : public PioDevice
     uint64_t itint;
 
   public:
+    struct Params : public BasicPioDevice::Params
+    {
+        Tsunami *tsunami;
+    };
+  protected:
+    const Params *params() const {return (const Params *)_params; }
+
+  public:
     /**
      * Initialize the Tsunami CChip by setting all of the
      * device register to 0.
-     * @param name name of this device.
-     * @param t pointer back to the Tsunami object that we belong to.
-     * @param a address we are mapped at.
-     * @param mmu pointer to the memory controller that sends us events.
-     * @param hier object to store parameters universal the device hierarchy
-     * @param bus The bus that this device is attached to
+     * @param p params struct
      */
-    TsunamiCChip(const std::string &name, Tsunami *t, Addr a,
-                 MemoryController *mmu, HierParams *hier, Bus *pio_bus,
-                 Tick pio_latency);
+    TsunamiCChip(Params *p);
 
-    /**
-      * Process a read to the CChip.
-      * @param req Contains the address to read from.
-      * @param data A pointer to write the read data to.
-      * @return The fault condition of the access.
-      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Tick read(Packet &pkt);
 
-
-    /**
-      * Process a write to the CChip.
-      * @param req Contains the address to write to.
-      * @param data The data to write.
-      * @return The fault condition of the access.
-      */
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Tick write(Packet &pkt);
 
     /**
      * post an RTC interrupt to the CPU
@@ -165,12 +145,6 @@ class TsunamiCChip : public PioDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __TSUNAMI_CCHIP_HH__
