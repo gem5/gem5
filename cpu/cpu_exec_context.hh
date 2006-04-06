@@ -497,7 +497,7 @@ class CPUExecContext
     int readIntrFlag() { return regs.intrflag; }
     void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();
-    bool inPalMode() { return AlphaISA::PcPAL(regs.pc); }
+    bool inPalMode() { return AlphaISA::PcPAL(regs.readPC()); }
     bool simPalCheck(int palFunc);
 #endif
 

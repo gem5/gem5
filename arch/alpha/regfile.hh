@@ -162,9 +162,9 @@ namespace AlphaISA
 #if FULL_SYSTEM
         int intrflag;			// interrupt flag
         inline int instAsid()
-        { return miscRegs.getInstAsid(); }
+        { return miscRegFile.getInstAsid(); }
         inline int dataAsid()
-        { return miscRegs.getDataAsid(); }
+        { return miscRegFile.getDataAsid(); }
 #endif // FULL_SYSTEM
 
         void clear()
