@@ -121,11 +121,14 @@ PageTable::translate(Addr vaddr, Addr &paddr)
 
 
 Fault
-PageTable::translate(CpuRequestPtr &req)
+PageTable::translate(RequestPtr &req)
 {
-    assert(pageAlign(req->vaddr + req->size - 1) == pageAlign(req->vaddr));
-    if (!translate(req->vaddr, req->paddr)) {
+    Addr paddr;
+    assert(pageAlign(req->getVaddr() + req->getSize() - 1)
+           == pageAlign(req->getVaddr()));
+    if (!translate(req->getVaddr(), paddr)) {
         return genMachineCheckFault();
     }
-    return page_check(req->paddr, req->size);
+    req->setPaddr(paddr);
+    return page_check(req->getPaddr(), req->getSize());
 }

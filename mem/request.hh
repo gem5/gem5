@@ -37,10 +37,8 @@
 #include "arch/isa_traits.hh"
 
 class Request;
-class CpuRequest;
 
 typedef Request* RequestPtr;
-typedef CpuRequest* CpuRequestPtr;
 
 /** The request is a Load locked/store conditional. */
 const unsigned LOCKED		= 0x001;
@@ -63,45 +61,133 @@ class Request
 {
     //@todo Make Accesor functions, make these private.
   public:
+    /** Cunstructor, needs a bool to signify if it is/isn't Cpu Request. */
+    Request(bool isCpu);
+
+//First non-cpu request fields
+  private:
     /** The physical address of the request. */
     Addr paddr;
-
-    /** whether this req came from the CPU or not  **DO we need this??***/
-    bool nicReq;
+    /** Wether or not paddr is valid (has been written yet). */
+    bool validPaddr;
 
     /** The size of the request. */
     int size;
+    /** Wether or not size is valid (has been written yet). */
+    bool validSize;
 
     /** The time this request was started. Used to calculate latencies. */
     Tick time;
+    /** Wether or not time is valid (has been written yet). */
+    bool validTime;
 
     /** Destination address if this is a block copy. */
     Addr copyDest;
+    /** Wether or not copyDest is valid (has been written yet). */
+    bool validCopyDest;
 
+    /** Flag structure for the request. */
     uint32_t flags;
-};
+    /** Wether or not flags is valid (has been written yet). */
+    bool validFlags;
 
-class CpuRequest : public Request
-{
-    //@todo Make Accesor functions, make these private.
+//Accsesors for non-cpu request fields
   public:
+    /** Accesor for paddr. */
+    Addr getPaddr();
+    /** Accesor for paddr. */
+    void setPaddr(Addr _paddr);
+
+    /** Accesor for size. */
+    int getSize();
+    /** Accesor for size. */
+    void setSize(int _size);
+
+    /** Accesor for time. */
+    Tick getTime();
+    /** Accesor for time. */
+    void setTime(Tick _time);
+
+    /** Accesor for copy dest. */
+    Addr getCopyDest();
+    /** Accesor for copy dest. */
+    void setCopyDest(Addr _copyDest);
+
+    /** Accesor for flags. */
+    uint32_t getFlags();
+    /** Accesor for paddr. */
+    void setFlags(uint32_t _flags);
+
+//Now cpu-request fields
+  private:
+    /** Bool to signify if this is a cpuRequest. */
+    bool cpuReq;
+
     /** The virtual address of the request. */
     Addr vaddr;
+    /** Wether or not the vaddr is valid. */
+    bool validVaddr;
 
     /** The address space ID. */
     int asid;
+    /** Wether or not the asid is valid. */
+    bool validAsid;
 
     /** The return value of store conditional. */
     uint64_t scResult;
+    /** Wether or not the sc result is valid. */
+    bool validScResult;
 
     /** The cpu number for statistics. */
     int cpuNum;
+    /** Wether or not the cpu number is valid. */
+    bool validCpuNum;
 
     /** The requesting  thread id. */
     int  threadNum;
+    /** Wether or not the thread id is valid. */
+    bool validThreadNum;
 
     /** program counter of initiating access; for tracing/debugging */
     Addr pc;
+    /** Wether or not the pc is valid. */
+    bool validPC;
+
+//Accessor Functions for cpu request fields
+  public:
+    /** Accesor function to determine if this is a cpu request or not.*/
+    bool isCpuRequest();
+
+    /** Accesor function for vaddr.*/
+    Addr getVaddr();
+    /** Accesor function for vaddr.*/
+    void setVaddr(Addr _vaddr);
+
+    /** Accesor function for asid.*/
+    int getAsid();
+    /** Accesor function for asid.*/
+    void setAsid(int _asid);
+
+    /** Accesor function for store conditional return value.*/
+    uint64_t getScResult();
+    /** Accesor function for store conditional return value.*/
+    void setScResult(uint64_t _scResult);
+
+    /** Accesor function for cpu number.*/
+    int getCpuNum();
+    /** Accesor function for cpu number.*/
+    void setCpuNum(int _cpuNum);
+
+    /** Accesor function for thread number.*/
+    int getThreadNum();
+    /** Accesor function for thread number.*/
+    void setThreadNum(int _threadNum);
+
+    /** Accesor function for pc.*/
+    Addr getPC();
+    /** Accesor function for pc.*/
+    void setPC(Addr _pc);
+
 };
 
 #endif // __MEM_REQUEST_HH__

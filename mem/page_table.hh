@@ -83,7 +83,7 @@ class PageTable
      * field of mem_req.
      * @param req The memory request.
      */
-    Fault translate(CpuRequestPtr &req);
+    Fault translate(RequestPtr &req);
 
 };
 

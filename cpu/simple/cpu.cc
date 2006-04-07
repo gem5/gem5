@@ -175,24 +175,24 @@ SimpleCPU::SimpleCPU(Params *p)
     xcProxy = cpuXC->getProxy();
 
 #if SIMPLE_CPU_MEM_ATOMIC || SIMPLE_CPU_MEM_IMMEDIATE
-    ifetch_req = new CpuRequest;
-    ifetch_req->asid = 0;
-    ifetch_req->size = sizeof(MachInst);
+    ifetch_req = new Request(true);
+    ifetch_req->setAsid(0);
+    ifetch_req->setSize(sizeof(MachInst));
     ifetch_pkt = new Packet;
     ifetch_pkt->cmd = Read;
     ifetch_pkt->data = (uint8_t *)&inst;
     ifetch_pkt->req = ifetch_req;
     ifetch_pkt->size = sizeof(MachInst);
 
-    data_read_req = new CpuRequest;
-    data_read_req->asid = 0;
+    data_read_req = new Request(true);
+    data_read_req->setAsid(0);
     data_read_pkt = new Packet;
     data_read_pkt->cmd = Read;
     data_read_pkt->data = new uint8_t[8];
     data_read_pkt->req = data_read_req;
 
-    data_write_req = new CpuRequest;
-    data_write_req->asid = 0;
+    data_write_req = new Request(true);
+    data_write_req->setAsid(0);
     data_write_pkt = new Packet;
     data_write_pkt->cmd = Write;
     data_write_pkt->req = data_write_req;
@@ -493,13 +493,13 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 //    memReq->reset(addr, sizeof(T), flags);
 
 #if SIMPLE_CPU_MEM_TIMING
-    CpuRequest *data_read_req = new CpuRequest;
+    CpuRequest *data_read_req = new Request(true);
 #endif
 
-    data_read_req->vaddr = addr;
-    data_read_req->size = sizeof(T);
-    data_read_req->flags = flags;
-    data_read_req->time = curTick;
+    data_read_req->setVaddr(addr);
+    data_read_req->setSize(sizeof(T));
+    data_read_req->setFlags(flags);
+    data_read_req->setTime(curTick);
 
     // translate to physical address
     Fault fault = cpuXC->translateDataReadReq(data_read_req);
@@ -512,7 +512,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         data_read_pkt->req = data_read_req;
         data_read_pkt->data = new uint8_t[8];
 #endif
-        data_read_pkt->addr = data_read_req->paddr;
+        data_read_pkt->addr = data_read_req->getPaddr();
         data_read_pkt->size = sizeof(T);
 
         sendDcacheRequest(data_read_pkt);
@@ -559,7 +559,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
     }
 */
     // This will need a new way to tell if it has a dcache attached.
-    if (data_read_req->flags & UNCACHEABLE)
+    if (data_read_req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Read");
 
     return fault;
@@ -612,10 +612,10 @@ template <class T>
 Fault
 SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    data_write_req->vaddr = addr;
-    data_write_req->time = curTick;
-    data_write_req->size = sizeof(T);
-    data_write_req->flags = flags;
+    data_write_req->setVaddr(addr);
+    data_write_req->setTime(curTick);
+    data_write_req->setSize(sizeof(T));
+    data_write_req->setFlags(flags);
 
     // translate to physical address
     Fault fault = cpuXC->translateDataWriteReq(data_write_req);
@@ -630,7 +630,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 #else
         data_write_pkt->data = (uint8_t *)&data;
 #endif
-        data_write_pkt->addr = data_write_req->paddr;
+        data_write_pkt->addr = data_write_req->getPaddr();
         data_write_pkt->size = sizeof(T);
 
         sendDcacheRequest(data_write_pkt);
@@ -664,7 +664,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         *res = data_write_pkt->result;
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (data_write_req->flags & UNCACHEABLE)
+    if (data_write_req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
@@ -973,11 +973,11 @@ SimpleCPU::tick()
 
 #if SIMPLE_CPU_MEM_TIMING
         CpuRequest *ifetch_req = new CpuRequest();
-        ifetch_req->size = sizeof(MachInst);
+        ifetch_req->setSize(sizeof(MachInst));
 #endif
 
-        ifetch_req->vaddr = cpuXC->readPC() & ~3;
-        ifetch_req->time = curTick;
+        ifetch_req->setVaddr(cpuXC->readPC() & ~3);
+        ifetch_req->setTime(curTick);
 
 /*	memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
                      IFETCH_FLAGS(xc->regs.pc));
@@ -993,7 +993,7 @@ SimpleCPU::tick()
             ifetch_pkt->req = ifetch_req;
             ifetch_pkt->size = sizeof(MachInst);
 #endif
-            ifetch_pkt->addr = ifetch_req->paddr;
+            ifetch_pkt->addr = ifetch_req->getPaddr();
 
             sendIcacheRequest(ifetch_pkt);
 #if SIMPLE_CPU_MEM_TIMING || SIMPLE_CPU_MEM_ATOMIC

@@ -94,7 +94,7 @@ AlphaTLB::lookup(Addr vpn, uint8_t asn) const
 
 
 Fault
-AlphaTLB::checkCacheability(CpuRequestPtr &req)
+AlphaTLB::checkCacheability(RequestPtr &req)
 {
     // in Alpha, cacheability is controlled by upper-level bits of the
     // physical address
@@ -109,20 +109,20 @@ AlphaTLB::checkCacheability(CpuRequestPtr &req)
 
 
 #if ALPHA_TLASER
-    if (req->paddr & PAddrUncachedBit39) {
+    if (req->getPaddr() & PAddrUncachedBit39) {
 #else
-    if (req->paddr & PAddrUncachedBit43) {
+    if (req->getPaddr() & PAddrUncachedBit43) {
 #endif
         // IPR memory space not implemented
-        if (PAddrIprSpace(req->paddr)) {
+        if (PAddrIprSpace(req->getPaddr())) {
             return new UnimpFault("IPR memory space not implemented!");
         } else {
             // mark request as uncacheable
-            req->flags |= UNCACHEABLE;
+            req->setFlags(req->getFlags() | UNCACHEABLE);
 
 #if !ALPHA_TLASER
             // Clear bits 42:35 of the physical address (10-2 in Tsunami manual)
-            req->paddr &= PAddrUncachedMask;
+            req->setPaddr(req->getPaddr() & PAddrUncachedMask);
 #endif
         }
     }
@@ -283,22 +283,22 @@ AlphaITB::regStats()
 
 
 Fault
-AlphaITB::translate(CpuRequestPtr &req, ExecContext *xc) const
+AlphaITB::translate(RequestPtr &req, ExecContext *xc) const
 {
-    if (AlphaISA::PcPAL(req->vaddr)) {
+    if (AlphaISA::PcPAL(req->getVaddr())) {
         // strip off PAL PC marker (lsb is 1)
-        req->paddr = (req->vaddr & ~3) & PAddrImplMask;
+        req->setPaddr((req->getVaddr() & ~3) & PAddrImplMask);
         hits++;
         return NoFault;
     }
 
-    if (req->flags & PHYSICAL) {
-        req->paddr = req->vaddr;
+    if (req->getFlags() & PHYSICAL) {
+        req->setPaddr(req->getVaddr());
     } else {
         // verify that this is a good virtual address
-        if (!validVirtualAddress(req->vaddr)) {
+        if (!validVirtualAddress(req->getVaddr())) {
             acv++;
-            return new ItbAcvFault(req->vaddr);
+            return new ItbAcvFault(req->getVaddr());
         }
 
 
@@ -306,47 +306,48 @@ AlphaITB::translate(CpuRequestPtr &req, ExecContext *xc) const
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
 #if ALPHA_TLASER
         if ((MCSR_SP(xc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
-            VAddrSpaceEV5(req->vaddr) == 2) {
+            VAddrSpaceEV5(req->getVaddr()) == 2) {
 #else
-        if (VAddrSpaceEV6(req->vaddr) == 0x7e) {
+        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
 #endif
             // only valid in kernel mode
             if (ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM)) !=
                 AlphaISA::mode_kernel) {
                 acv++;
-                return new ItbAcvFault(req->vaddr);
+                return new ItbAcvFault(req->getVaddr());
             }
 
-            req->paddr = req->vaddr & PAddrImplMask;
+            req->setPaddr(req->getVaddr() & PAddrImplMask);
 
 #if !ALPHA_TLASER
             // sign extend the physical address properly
-            if (req->paddr & PAddrUncachedBit40)
-                req->paddr |= ULL(0xf0000000000);
+            if (req->getPaddr() & PAddrUncachedBit40)
+                req->setPaddr(req->getPaddr() | ULL(0xf0000000000));
             else
-                req->paddr &= ULL(0xffffffffff);
+                req->setPaddr(req->getPaddr() & ULL(0xffffffffff));
 #endif
 
         } else {
             // not a physical address: need to look up pte
             int asn = DTB_ASN_ASN(xc->readMiscReg(AlphaISA::IPR_DTB_ASN));
-            AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->vaddr).vpn(),
+            AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->getVaddr()).vpn(),
                                         asn);
 
             if (!pte) {
                 misses++;
-                return new ItbPageFault(req->vaddr);
+                return new ItbPageFault(req->getVaddr());
             }
 
-            req->paddr = (pte->ppn << AlphaISA::PageShift) +
-                (AlphaISA::VAddr(req->vaddr).offset() & ~3);
+            req->setPaddr((pte->ppn << AlphaISA::PageShift) +
+                          (AlphaISA::VAddr(req->getVaddr()).offset()
+                           & ~3));
 
             // check permissions for this access
             if (!(pte->xre &
                   (1 << ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM))))) {
                 // instruction access fault
                 acv++;
-                return new ItbAcvFault(req->vaddr);
+                return new ItbAcvFault(req->getVaddr());
             }
 
             hits++;
@@ -354,7 +355,7 @@ AlphaITB::translate(CpuRequestPtr &req, ExecContext *xc) const
     }
 
     // check that the physical address is ok (catch bad physical addresses)
-    if (req->paddr & ~PAddrImplMask)
+    if (req->getPaddr() & ~PAddrImplMask)
         return genMachineCheckFault();
 
     return checkCacheability(req);
@@ -439,7 +440,7 @@ AlphaDTB::regStats()
 }
 
 Fault
-AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
+AlphaDTB::translate(RequestPtr &req, ExecContext *xc, bool write) const
 {
     Addr pc = xc->readPC();
 
@@ -450,38 +451,38 @@ AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
     /**
      * Check for alignment faults
      */
-    if (req->vaddr & (req->size - 1)) {
-        DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->vaddr,
-                req->size);
+    if (req->getVaddr() & (req->getSize() - 1)) {
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->getVaddr(),
+                req->getSize());
         uint64_t flags = write ? MM_STAT_WR_MASK : 0;
-        return new DtbAlignmentFault(req->vaddr, req->flags, flags);
+        return new DtbAlignmentFault(req->getVaddr(), req->getFlags(), flags);
     }
 
     if (pc & 0x1) {
-        mode = (req->flags & ALTMODE) ?
+        mode = (req->getFlags() & ALTMODE) ?
             (AlphaISA::mode_type)ALT_MODE_AM(
                 xc->readMiscReg(AlphaISA::IPR_ALT_MODE))
             : AlphaISA::mode_kernel;
     }
 
-    if (req->flags & PHYSICAL) {
-        req->paddr = req->vaddr;
+    if (req->getFlags() & PHYSICAL) {
+        req->setPaddr(req->getVaddr());
     } else {
         // verify that this is a good virtual address
-        if (!validVirtualAddress(req->vaddr)) {
+        if (!validVirtualAddress(req->getVaddr())) {
             if (write) { write_acv++; } else { read_acv++; }
             uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                 MM_STAT_BAD_VA_MASK |
                 MM_STAT_ACV_MASK;
-            return new DtbPageFault(req->vaddr, req->flags, flags);
+            return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
         }
 
         // Check for "superpage" mapping
 #if ALPHA_TLASER
         if ((MCSR_SP(xc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
-            VAddrSpaceEV5(req->vaddr) == 2) {
+            VAddrSpaceEV5(req->getVaddr()) == 2) {
 #else
-        if (VAddrSpaceEV6(req->vaddr) == 0x7e) {
+        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
 #endif
 
             // only valid in kernel mode
@@ -490,17 +491,17 @@ AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
                 if (write) { write_acv++; } else { read_acv++; }
                 uint64_t flags = ((write ? MM_STAT_WR_MASK : 0) |
                                   MM_STAT_ACV_MASK);
-                return new DtbAcvFault(req->vaddr, req->flags, flags);
+                return new DtbAcvFault(req->getVaddr(), req->getFlags(), flags);
             }
 
-            req->paddr = req->vaddr & PAddrImplMask;
+            req->setPaddr(req->getVaddr() & PAddrImplMask);
 
 #if !ALPHA_TLASER
             // sign extend the physical address properly
-            if (req->paddr & PAddrUncachedBit40)
-                req->paddr |= ULL(0xf0000000000);
+            if (req->getPaddr() & PAddrUncachedBit40)
+                req->setPaddr(req->getPaddr() | ULL(0xf0000000000));
             else
-                req->paddr &= ULL(0xffffffffff);
+                req->setPaddr(req->getPaddr() & ULL(0xffffffffff));
 #endif
 
         } else {
@@ -512,7 +513,7 @@ AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
             int asn = DTB_ASN_ASN(xc->readMiscReg(AlphaISA::IPR_DTB_ASN));
 
             // not a physical address: need to look up pte
-            AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->vaddr).vpn(),
+            AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->getVaddr()).vpn(),
                                         asn);
 
             if (!pte) {
@@ -520,15 +521,15 @@ AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
                 if (write) { write_misses++; } else { read_misses++; }
                 uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                     MM_STAT_DTB_MISS_MASK;
-                return (req->flags & VPTE) ?
-                    (Fault)(new PDtbMissFault(req->vaddr, req->flags,
+                return (req->getFlags() & VPTE) ?
+                    (Fault)(new PDtbMissFault(req->getVaddr(), req->getFlags(),
                                               flags)) :
-                    (Fault)(new NDtbMissFault(req->vaddr, req->flags,
+                    (Fault)(new NDtbMissFault(req->getVaddr(), req->getFlags(),
                                               flags));
             }
 
-            req->paddr = (pte->ppn << AlphaISA::PageShift) +
-                AlphaISA::VAddr(req->vaddr).offset();
+            req->setPaddr((pte->ppn << AlphaISA::PageShift) +
+                AlphaISA::VAddr(req->getVaddr()).offset());
 
             if (write) {
                 if (!(pte->xwe & MODE2MASK(mode))) {
@@ -537,25 +538,25 @@ AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
                     uint64_t flags = MM_STAT_WR_MASK |
                         MM_STAT_ACV_MASK |
                         (pte->fonw ? MM_STAT_FONW_MASK : 0);
-                    return new DtbPageFault(req->vaddr, req->flags, flags);
+                    return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
                 }
                 if (pte->fonw) {
                     write_acv++;
                     uint64_t flags = MM_STAT_WR_MASK |
                         MM_STAT_FONW_MASK;
-                    return new DtbPageFault(req->vaddr, req->flags, flags);
+                    return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
                 }
             } else {
                 if (!(pte->xre & MODE2MASK(mode))) {
                     read_acv++;
                     uint64_t flags = MM_STAT_ACV_MASK |
                         (pte->fonr ? MM_STAT_FONR_MASK : 0);
-                    return new DtbAcvFault(req->vaddr, req->flags, flags);
+                    return new DtbAcvFault(req->getVaddr(), req->getFlags(), flags);
                 }
                 if (pte->fonr) {
                     read_acv++;
                     uint64_t flags = MM_STAT_FONR_MASK;
-                    return new DtbPageFault(req->vaddr, req->flags, flags);
+                    return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
                 }
             }
         }
@@ -567,7 +568,7 @@ AlphaDTB::translate(CpuRequestPtr &req, ExecContext *xc, bool write) const
     }
 
     // check that the physical address is ok (catch bad physical addresses)
-    if (req->paddr & ~PAddrImplMask)
+    if (req->getPaddr() & ~PAddrImplMask)
         return genMachineCheckFault();
 
     return checkCacheability(req);

@@ -152,11 +152,11 @@ class ExecContext
     virtual int getInstAsid() = 0;
     virtual int getDataAsid() = 0;
 
-    virtual Fault translateInstReq(CpuRequestPtr &req) = 0;
+    virtual Fault translateInstReq(RequestPtr &req) = 0;
 
-    virtual Fault translateDataReadReq(CpuRequestPtr &req) = 0;
+    virtual Fault translateDataReadReq(RequestPtr &req) = 0;
 
-    virtual Fault translateDataWriteReq(CpuRequestPtr &req) = 0;
+    virtual Fault translateDataWriteReq(RequestPtr &req) = 0;
 
     // Also somewhat obnoxious.  Really only used for the TLB fault.
     // However, may be quite useful in SPARC.
@@ -327,13 +327,13 @@ class ProxyExecContext : public ExecContext
     int getInstAsid() { return actualXC->getInstAsid(); }
     int getDataAsid() { return actualXC->getDataAsid(); }
 
-    Fault translateInstReq(CpuRequestPtr &req)
+    Fault translateInstReq(RequestPtr &req)
     { return actualXC->translateInstReq(req); }
 
-    Fault translateDataReadReq(CpuRequestPtr &req)
+    Fault translateDataReadReq(RequestPtr &req)
     { return actualXC->translateDataReadReq(req); }
 
-    Fault translateDataWriteReq(CpuRequestPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req)
     { return actualXC->translateDataWriteReq(req); }
 
     // @todo: Do I need this?
