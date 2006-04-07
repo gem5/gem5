@@ -85,8 +85,10 @@ Bus::recvFunctional(Packet &pkt, int id)
 void
 Bus::recvStatusChange(Port::Status status, int id)
 {
-    assert(status == Port:: RangeChange &&
+    assert(status == Port::RangeChange &&
            "The other statuses need to be implemented.");
+
+    assert(id < interfaces.size() && id >= 0);
     Port *port = interfaces[id];
     AddrRangeList ranges;
     AddrRangeList snoops;

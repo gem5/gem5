@@ -70,7 +70,7 @@ PhysicalMemory::MemResponseEvent::description()
 }
 
 PhysicalMemory::PhysicalMemory(const string &n)
-    : MemObject(n), base_addr(0), pmem_addr(NULL)
+    : MemObject(n), base_addr(0), pmem_addr(NULL), port(NULL)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;

@@ -127,12 +127,9 @@ class Bus : public MemObject
 
     };
 
-    /** A count of the number of interfaces connected to this bus. */
-    int num_interfaces;
-
     /** An array of pointers to the peer port interfaces
         connected to this bus.*/
-    Port *interfaces[];
+    std::vector<Port*> interfaces;
 
   public:
 
@@ -140,12 +137,12 @@ class Bus : public MemObject
     virtual Port *getPort(const std::string &if_name)
     {
         // if_name ignored?  forced to be empty?
-        int id = num_interfaces++;
-        interfaces[id] = new BusPort(this, id);
-        return interfaces[id];
+        int id = interfaces.size();
+        interfaces.push_back(new BusPort(this, id));
+        return interfaces.back();
     }
     Bus(const std::string &n)
-        : MemObject(n), num_interfaces(0) {}
+        : MemObject(n)  {}
 
 };
 
