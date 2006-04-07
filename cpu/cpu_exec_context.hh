@@ -241,17 +241,17 @@ class CPUExecContext
     int getInstAsid() { return regs.instAsid(); }
     int getDataAsid() { return regs.dataAsid(); }
 
-    Fault translateInstReq(CpuRequestPtr &req)
+    Fault translateInstReq(RequestPtr &req)
     {
         return itb->translate(req, proxy);
     }
 
-    Fault translateDataReadReq(CpuRequestPtr &req)
+    Fault translateDataReadReq(RequestPtr &req)
     {
         return dtb->translate(req, proxy, false);
     }
 
-    Fault translateDataWriteReq(CpuRequestPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req)
     {
         return dtb->translate(req, proxy, true);
     }
@@ -273,17 +273,17 @@ class CPUExecContext
     int getInstAsid() { return asid; }
     int getDataAsid() { return asid; }
 
-    Fault translateInstReq(CpuRequestPtr &req)
+    Fault translateInstReq(RequestPtr &req)
     {
         return process->pTable->translate(req);
     }
 
-    Fault translateDataReadReq(CpuRequestPtr &req)
+    Fault translateDataReadReq(RequestPtr &req)
     {
         return process->pTable->translate(req);
     }
 
-    Fault translateDataWriteReq(CpuRequestPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req)
     {
         return process->pTable->translate(req);
     }
@@ -292,7 +292,7 @@ class CPUExecContext
 
 /*
     template <class T>
-    Fault read(CpuRequestPtr &req, T &data)
+    Fault read(RequestPtr &req, T &data)
     {
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         if (req->flags & LOCKED) {
@@ -308,7 +308,7 @@ class CPUExecContext
     }
 
     template <class T>
-    Fault write(CpuRequestPtr &req, T &data)
+    Fault write(RequestPtr &req, T &data)
     {
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         ExecContext *xc;
@@ -369,7 +369,7 @@ class CPUExecContext
         inst = new_inst;
     }
 
-    Fault instRead(CpuRequestPtr &req)
+    Fault instRead(RequestPtr &req)
     {
         panic("instRead not implemented");
         // return funcPhysMem->read(req, inst);

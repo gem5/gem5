@@ -88,6 +88,7 @@ base_sources = Split('''
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
 
+        mem/request.cc
         mem/connector.cc
         mem/mem_object.cc
         mem/physical.cc
