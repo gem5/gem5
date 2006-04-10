@@ -87,15 +87,6 @@ AlphaConsole::startup()
     alphaAccess->intrClockFrequency = params()->platform->intrFrequency();
 }
 
-void
-AlphaConsole::addressRanges(AddrRangeList &range_list)
-{
-    assert(pioSize != 0);
-    range_list.clear();
-    range_list.push_back(RangeSize(pioAddr, sizeof(struct AlphaAccess)));
-}
-
-
 Tick
 AlphaConsole::read(Packet &pkt)
 {
@@ -325,7 +316,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
 
     SimObjectParam<SimConsole *> sim_console;
     SimObjectParam<SimpleDisk *> disk;
-    Param<Addr> addr;
+    Param<Addr> pio_addr;
     SimObjectParam<AlphaSystem *> system;
     SimObjectParam<BaseCPU *> cpu;
     SimObjectParam<Platform *> platform;
@@ -337,7 +328,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
 
     INIT_PARAM(sim_console, "The Simulator Console"),
     INIT_PARAM(disk, "Simple Disk"),
-    INIT_PARAM(addr, "Device Address"),
+    INIT_PARAM(pio_addr, "Device Address"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu, "Processor"),
     INIT_PARAM(platform, "platform"),
@@ -350,7 +341,7 @@ CREATE_SIM_OBJECT(AlphaConsole)
     AlphaConsole::Params *p = new AlphaConsole::Params;
     p->name = getInstanceName();
     p->platform = platform;
-    p->pio_addr = addr;
+    p->pio_addr = pio_addr;
     p->pio_delay = pio_latency;
     p->cons = sim_console;
     p->disk = disk;

@@ -48,69 +48,54 @@
 using namespace std;
 using namespace TheISA;
 
-BadDevice::BadDevice(const string &name, Addr a, MemoryController *mmu,
-                     HierParams *hier, Bus *pio_bus, const string &devicename)
-    : PioDevice(name, NULL), addr(a), devname(devicename)
+BadDevice::BadDevice(Params *p)
+    : BasicPioDevice(p), devname(p->devic_ename)
 {
-    mmu->add_child(this, RangeSize(addr, size));
-
-    if (pio_bus) {
-        pioInterface = newPioInterface(name, hier, pio_bus, this,
-                                      &BadDevice::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-    }
-
-}
-
-Fault
-BadDevice::read(MemReqPtr &req, uint8_t *data)
-{
-
-    panic("Device %s not imlpmented\n", devname);
-    return NoFault;
-}
-
-Fault
-BadDevice::write(MemReqPtr &req, const uint8_t *data)
-{
-    panic("Device %s not imlpmented\n", devname);
-    return NoFault;
+    pioSize = 0xf;
 }
 
 Tick
-BadDevice::cacheAccess(MemReqPtr &req)
+BadDevice::read(Packet &pkt)
 {
-    return curTick;
+    panic("Device %s not imlpmented\n", devname);
+}
+
+Tick
+BadDevice::write(Packet &pkt)
+{
+    panic("Device %s not imlpmented\n", devname);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<MemoryController *> mmu;
-    Param<Addr> addr;
-    SimObjectParam<HierParams *> hier;
-    SimObjectParam<Bus*> pio_bus;
-    Param<Tick> pio_latency;
     Param<string> devicename;
+    Param<Addr> pio_addr;
+    SimObjectParam<AlphaSystem *> system;
+    SimObjectParam<Platform *> platform;
+    Param<Tick> pio_latency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
-    INIT_PARAM(platform, "Platform"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
-    INIT_PARAM(devicename, "Name of device to error on")
+    INIT_PARAM(devicename, "Name of device to error on"),
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(system, "system object"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000)
 
 END_INIT_SIM_OBJECT_PARAMS(BadDevice)
 
 CREATE_SIM_OBJECT(BadDevice)
 {
-    return new BadDevice(getInstanceName(), addr, mmu, hier, pio_bus,
-                         devicename);
+    BadDevice::Params *p = new BadDevice::Params;
+    p->name =getInstanceName();
+    p->platform = platform;
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->system = system;
+    p->devicename = devicename;
+    return new BadDevice(p);
 }
 
 REGISTER_SIM_OBJECT("BadDevice", BadDevice)

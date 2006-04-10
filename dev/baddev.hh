@@ -37,7 +37,6 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
-class MemoryController;
 
 /**
  * BadDevice
@@ -45,51 +44,29 @@ class MemoryController;
  * the user that the kernel they are running has unsupported
  * options (i.e. frame buffer)
  */
-class BadDevice : public PioDevice
+class BadDevice : public BasicPioDevice
 {
   private:
-    Addr addr;
-    static const Addr size = 0xf;
-
     std::string devname;
+
+  public:
+    struct Params : public BasicPioDevice::Params
+    {
+        std::string device_name;
+    };
+  protected:
+    const Params *params() const { return (const Params *)_params; }
 
   public:
      /**
       * Constructor for the Baddev Class.
-      * @param name name of the object
+      * @param p object parameters
       * @param a base address of the write
-      * @param mmu the memory controller
-      * @param hier object to store parameters universal the device hierarchy
-      * @param bus The bus that this device is attached to
-      * @param devicename device that is not implemented
       */
-    BadDevice(const std::string &name, Addr a, MemoryController *mmu,
-              HierParams *hier, Bus *bus, const std::string &devicename);
+    BadDevice(Params *p);
 
-    /**
-      * On a read event we just panic aand hopefully print a
-      * meaningful error message.
-      * @param req Contains the address to read from.
-      * @param data A pointer to write the read data to.
-      * @return The fault condition of the access.
-      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-
-    /**
-      * On a write event we just panic aand hopefully print a
-      * meaningful error message.
-      * @param req Contains the address to write to.
-      * @param data The data to write.
-      * @return The fault condition of the access.
-      */
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
-
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
+    virtual Tick read(Packet &pkt);
+    virtual Tick write(Packet &pkt);
 };
 
 #endif // __DEV_BADDEV_HH__

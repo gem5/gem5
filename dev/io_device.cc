@@ -88,6 +88,14 @@ PioDevice::~PioDevice()
         delete pioPort;
 }
 
+void
+BasicPioDevice::addressRanges(AddrRangeList &range_list)
+{
+    assert(pioSize != 0);
+    range_list.clear();
+    range_list.push_back(RangeSize(pioAddr, pioSize));
+}
+
 
 DmaPort::DmaPort(DmaDevice *dev)
         : device(dev)

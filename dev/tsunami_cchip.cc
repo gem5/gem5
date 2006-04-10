@@ -195,202 +195,185 @@ TsunamiCChip::write(Packet &pkt)
 
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     Addr daddr = pkt.addr - pioAddr;
+    Addr regnum = (pkt.addr - pioAddr) >> 6 ;
+
 
     uint64_t val = *(uint64_t *)pkt.data;
     assert(pkt.size == sizeof(uint64_t));
 
-    DPRINTF(Tsunami, "write - va=%#x value=%#x size=%d \n",
-            req->vaddr, *(uint64_t*)data, req->size);
-
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
-    Addr regnum = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
+    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", req->addr, val);
 
     bool supportedWrite = false;
 
-    switch (req->size) {
 
-      case sizeof(uint64_t):
-          if (daddr & TSDEV_CC_BDIMS)
-          {
-              int number = (daddr >> 4) & 0x3F;
+    if (daddr & TSDEV_CC_BDIMS)
+    {
+        int number = (daddr >> 4) & 0x3F;
 
-              uint64_t bitvector;
-              uint64_t olddim;
-              uint64_t olddir;
+        uint64_t bitvector;
+        uint64_t olddim;
+        uint64_t olddir;
 
-              olddim = dim[number];
-              olddir = dir[number];
-              dim[number] = *(uint64_t*)data;
-              dir[number] = dim[number] & drir;
-              for(int x = 0; x < Tsunami::Max_CPUs; x++)
-              {
-                  bitvector = ULL(1) << x;
-                  // Figure out which bits have changed
-                  if ((dim[number] & bitvector) != (olddim & bitvector))
-                  {
-                      // The bit is now set and it wasn't before (set)
-                      if((dim[number] & bitvector) && (dir[number] & bitvector))
-                      {
-                          tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
-                          DPRINTF(Tsunami, "dim write resulting in posting dir"
-                                  " interrupt to cpu %d\n", number);
-                      }
-                      else if ((olddir & bitvector) &&
-                              !(dir[number] & bitvector))
-                      {
-                          // The bit was set and now its now clear and
-                          // we were interrupting on that bit before
-                          tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
-                          DPRINTF(Tsunami, "dim write resulting in clear"
-                                  " dir interrupt to cpu %d\n", number);
+        olddim = dim[number];
+        olddir = dir[number];
+        dim[number] = val;
+        dir[number] = dim[number] & drir;
+        for(int x = 0; x < Tsunami::Max_CPUs; x++)
+        {
+            bitvector = ULL(1) << x;
+            // Figure out which bits have changed
+            if ((dim[number] & bitvector) != (olddim & bitvector))
+            {
+                // The bit is now set and it wasn't before (set)
+                if((dim[number] & bitvector) && (dir[number] & bitvector))
+                {
+                    tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
+                    DPRINTF(Tsunami, "dim write resulting in posting dir"
+                            " interrupt to cpu %d\n", number);
+                }
+                else if ((olddir & bitvector) &&
+                        !(dir[number] & bitvector))
+                {
+                    // The bit was set and now its now clear and
+                    // we were interrupting on that bit before
+                    tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
+                    DPRINTF(Tsunami, "dim write resulting in clear"
+                            " dir interrupt to cpu %d\n", number);
 
-                      }
-
-
-                  }
-              }
-              return NoFault;
-          }
-
-          switch(regnum) {
-              case TSDEV_CC_CSR:
-                  panic("TSDEV_CC_CSR write\n");
-                  return NoFault;
-              case TSDEV_CC_MTR:
-                  panic("TSDEV_CC_MTR write not implemented\n");
-                   return NoFault;
-              case TSDEV_CC_MISC:
-                uint64_t ipreq;
-                ipreq = (*(uint64_t*)data >> 12) & 0xF;
-                //If it is bit 12-15, this is an IPI post
-                if (ipreq) {
-                    reqIPI(ipreq);
-                    supportedWrite = true;
                 }
 
-                //If it is bit 8-11, this is an IPI clear
-                uint64_t ipintr;
-                ipintr = (*(uint64_t*)data >> 8) & 0xF;
-                if (ipintr) {
-                    clearIPI(ipintr);
-                    supportedWrite = true;
-                }
 
-                //If it is the 4-7th bit, clear the RTC interrupt
-                uint64_t itintr;
-                itintr = (*(uint64_t*)data >> 4) & 0xF;
-                if (itintr) {
-                    clearITI(itintr);
-                    supportedWrite = true;
-                }
+            }
+        }
+    } else {
+        switch(regnum) {
+          case TSDEV_CC_CSR:
+              panic("TSDEV_CC_CSR write\n");
+          case TSDEV_CC_MTR:
+              panic("TSDEV_CC_MTR write not implemented\n");
+          case TSDEV_CC_MISC:
+            uint64_t ipreq;
+            ipreq = (val >> 12) & 0xF;
+            //If it is bit 12-15, this is an IPI post
+            if (ipreq) {
+                reqIPI(ipreq);
+                supportedWrite = true;
+            }
 
-                // ignore NXMs
-                if (*(uint64_t*)data & 0x10000000)
-                    supportedWrite = true;
+            //If it is bit 8-11, this is an IPI clear
+            uint64_t ipintr;
+            ipintr = (val >> 8) & 0xF;
+            if (ipintr) {
+                clearIPI(ipintr);
+                supportedWrite = true;
+            }
 
-                if(!supportedWrite)
-                    panic("TSDEV_CC_MISC write not implemented\n");
+            //If it is the 4-7th bit, clear the RTC interrupt
+            uint64_t itintr;
+              itintr = (val >> 4) & 0xF;
+            if (itintr) {
+                  clearITI(itintr);
+                supportedWrite = true;
+            }
 
+              // ignore NXMs
+              if (val & 0x10000000)
+                  supportedWrite = true;
+
+            if(!supportedWrite)
+                  panic("TSDEV_CC_MISC write not implemented\n");
+
+
+            case TSDEV_CC_AAR0:
+            case TSDEV_CC_AAR1:
+            case TSDEV_CC_AAR2:
+            case TSDEV_CC_AAR3:
+                panic("TSDEV_CC_AARx write not implemeted\n");
                 return NoFault;
-              case TSDEV_CC_AAR0:
-              case TSDEV_CC_AAR1:
-              case TSDEV_CC_AAR2:
-              case TSDEV_CC_AAR3:
-                  panic("TSDEV_CC_AARx write not implemeted\n");
-                  return NoFault;
-              case TSDEV_CC_DIM0:
-              case TSDEV_CC_DIM1:
-              case TSDEV_CC_DIM2:
-              case TSDEV_CC_DIM3:
-                  int number;
-                  if(regnum == TSDEV_CC_DIM0)
-                      number = 0;
-                  else if(regnum == TSDEV_CC_DIM1)
-                      number = 1;
-                  else if(regnum == TSDEV_CC_DIM2)
-                      number = 2;
-                  else
-                      number = 3;
+            case TSDEV_CC_DIM0:
+            case TSDEV_CC_DIM1:
+            case TSDEV_CC_DIM2:
+            case TSDEV_CC_DIM3:
+                int number;
+                if(regnum == TSDEV_CC_DIM0)
+                    number = 0;
+                else if(regnum == TSDEV_CC_DIM1)
+                    number = 1;
+                else if(regnum == TSDEV_CC_DIM2)
+                    number = 2;
+                else
+                    number = 3;
 
-                  uint64_t bitvector;
-                  uint64_t olddim;
-                  uint64_t olddir;
+                uint64_t bitvector;
+                uint64_t olddim;
+                uint64_t olddir;
 
-                  olddim = dim[number];
-                  olddir = dir[number];
-                  dim[number] = *(uint64_t*)data;
-                  dir[number] = dim[number] & drir;
-                  for(int x = 0; x < 64; x++)
-                  {
-                      bitvector = ULL(1) << x;
-                      // Figure out which bits have changed
-                      if ((dim[number] & bitvector) != (olddim & bitvector))
-                      {
-                          // The bit is now set and it wasn't before (set)
-                          if((dim[number] & bitvector) && (dir[number] & bitvector))
-                          {
-                              tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
-                              DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
-                          }
-                          else if ((olddir & bitvector) &&
-                                  !(dir[number] & bitvector))
-                          {
-                              // The bit was set and now its now clear and
-                              // we were interrupting on that bit before
-                              tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
-                              DPRINTF(Tsunami, "dim write resulting in clear"
-                                      " dir interrupt to cpu %d\n",
-                                      x);
+                olddim = dim[number];
+                olddir = dir[number];
+                dim[number] = val;
+                dir[number] = dim[number] & drir;
+                for(int x = 0; x < 64; x++)
+                {
+                    bitvector = ULL(1) << x;
+                    // Figure out which bits have changed
+                    if ((dim[number] & bitvector) != (olddim & bitvector))
+                    {
+                        // The bit is now set and it wasn't before (set)
+                        if((dim[number] & bitvector) && (dir[number] & bitvector))
+                        {
+                          tsunami->intrctrl->post(number, TheISA::INTLEVEL_IRQ1, x);
+                          DPRINTF(Tsunami, "posting dir interrupt to cpu 0\n");
+                        }
+                        else if ((olddir & bitvector) &&
+                                !(dir[number] & bitvector))
+                        {
+                            // The bit was set and now its now clear and
+                            // we were interrupting on that bit before
+                            tsunami->intrctrl->clear(number, TheISA::INTLEVEL_IRQ1, x);
+                          DPRINTF(Tsunami, "dim write resulting in clear"
+                                    " dir interrupt to cpu %d\n",
+                                    x);
 
-                          }
+                        }
 
 
-                      }
-                  }
-                  return NoFault;
-              case TSDEV_CC_DIR0:
-              case TSDEV_CC_DIR1:
-              case TSDEV_CC_DIR2:
-              case TSDEV_CC_DIR3:
-                  panic("TSDEV_CC_DIR write not implemented\n");
-              case TSDEV_CC_DRIR:
-                  panic("TSDEV_CC_DRIR write not implemented\n");
-              case TSDEV_CC_PRBEN:
-                  panic("TSDEV_CC_PRBEN write not implemented\n");
-              case TSDEV_CC_IIC0:
-              case TSDEV_CC_IIC1:
-              case TSDEV_CC_IIC2:
-              case TSDEV_CC_IIC3:
-                  panic("TSDEV_CC_IICx write not implemented\n");
-              case TSDEV_CC_MPR0:
-              case TSDEV_CC_MPR1:
-              case TSDEV_CC_MPR2:
-              case TSDEV_CC_MPR3:
-                  panic("TSDEV_CC_MPRx write not implemented\n");
-              case TSDEV_CC_IPIR:
-                  clearIPI(*(uint64_t*)data);
-                  return NoFault;
-              case TSDEV_CC_ITIR:
-                  clearITI(*(uint64_t*)data);
-                  return NoFault;
-              case TSDEV_CC_IPIQ:
-                  reqIPI(*(uint64_t*)data);
-                  return NoFault;
-              default:
-                  panic("default in cchip read reached, accessing 0x%x\n");
-          }
-
-      break;
-      case sizeof(uint32_t):
-      case sizeof(uint16_t):
-      case sizeof(uint8_t):
-      default:
-        panic("invalid access size(?) for tsunami register!\n");
-    }
-
-    DPRINTFN("Tsunami ERROR: write daddr=%#x size=%d\n", daddr, req->size);
-
-    return NoFault;
+                    }
+                }
+                break;
+            case TSDEV_CC_DIR0:
+            case TSDEV_CC_DIR1:
+            case TSDEV_CC_DIR2:
+            case TSDEV_CC_DIR3:
+                panic("TSDEV_CC_DIR write not implemented\n");
+            case TSDEV_CC_DRIR:
+                panic("TSDEV_CC_DRIR write not implemented\n");
+            case TSDEV_CC_PRBEN:
+                panic("TSDEV_CC_PRBEN write not implemented\n");
+            case TSDEV_CC_IIC0:
+            case TSDEV_CC_IIC1:
+            case TSDEV_CC_IIC2:
+            case TSDEV_CC_IIC3:
+                panic("TSDEV_CC_IICx write not implemented\n");
+            case TSDEV_CC_MPR0:
+            case TSDEV_CC_MPR1:
+            case TSDEV_CC_MPR2:
+            case TSDEV_CC_MPR3:
+                panic("TSDEV_CC_MPRx write not implemented\n");
+            case TSDEV_CC_IPIR:
+                clearIPI(val);
+                break;
+            case TSDEV_CC_ITIR:
+                clearITI(val);
+                break;
+            case TSDEV_CC_IPIQ:
+                reqIPI(val);
+                break;
+            default:
+              panic("default in cchip read reached, accessing 0x%x\n");
+        }  // swtich(regnum)
+    } // not BIG_TSUNAMI write
+    pkt.result = Success;
+    return pioDelay;
 }
 
 void
@@ -474,11 +457,11 @@ TsunamiCChip::postRTC()
 
     for (int i = 0; i < size; i++) {
         uint64_t cpumask = ULL(1) << i;
-        if (!(cpumask & itint)) {
-            itint |= cpumask;
-            tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
-            DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d", i);
-        }
+       if (!(cpumask & itint)) {
+           itint |= cpumask;
+           tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
+           DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d", i);
+       }
     }
 
 }
@@ -493,11 +476,11 @@ TsunamiCChip::postDRIR(uint32_t interrupt)
 
     for(int i=0; i < size; i++) {
         dir[i] = dim[i] & drir;
-        if (dim[i] & bitvector) {
-                tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
-                DPRINTF(Tsunami, "posting dir interrupt to cpu %d,"
+       if (dim[i] & bitvector) {
+              tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ1, interrupt);
+              DPRINTF(Tsunami, "posting dir interrupt to cpu %d,"
                         "interrupt %d\n",i, interrupt);
-        }
+       }
     }
 }
 
@@ -512,13 +495,13 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
     {
         drir &= ~bitvector;
         for(int i=0; i < size; i++) {
-            if (dir[i] & bitvector) {
-                tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
-                DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"
+           if (dir[i] & bitvector) {
+               tsunami->intrctrl->clear(i, TheISA::INTLEVEL_IRQ1, interrupt);
+               DPRINTF(Tsunami, "clearing dir interrupt to cpu %d,"
                     "interrupt %d\n",i, interrupt);
 
-            }
-            dir[i] = dim[i] & drir;
+           }
+           dir[i] = dim[i] & drir;
         }
     }
     else
@@ -554,30 +537,34 @@ TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
-    SimObjectParam<Tsunami *> tsunami;
-    SimObjectParam<MemoryController *> mmu;
-    Param<Addr> addr;
-    SimObjectParam<Bus*> pio_bus;
+    Param<Addr> pio_addr;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<System *> system;
+    SimObjectParam<Tsunami *> tsunami;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
-    INIT_PARAM(tsunami, "Tsunami"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(system, "system object"),
+    INIT_PARAM(tsunami, "Tsunami")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
 
 CREATE_SIM_OBJECT(TsunamiCChip)
 {
-    return new TsunamiCChip(getInstanceName(), tsunami, addr, mmu, hier,
-                            pio_bus, pio_latency);
+    TsunamiCChip::Params *p = new TsunamiCChip::Params;
+    p->name = getInstanceName();
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->platform = platform;
+    p->system = system;
+    p->tsunami = tsunami;
+    return new TsunamiCChip(p);
 }
 
 REGISTER_SIM_OBJECT("TsunamiCChip", TsunamiCChip)

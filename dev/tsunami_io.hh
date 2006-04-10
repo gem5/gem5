@@ -38,8 +38,6 @@
 #include "dev/tsunami.hh"
 #include "sim/eventq.hh"
 
-class MemoryController;
-
 /**
  * Tsunami I/O device is a catch all for all the south bridge stuff we care
  * to implement.
@@ -47,12 +45,6 @@ class MemoryController;
 class TsunamiIO : public PioDevice
 {
   private:
-    /** The base address of this device */
-    Addr addr;
-
-    /** The size of mappad from the above address */
-    static const Addr size = 0xff;
-
     struct tm tm;
 
   protected:
@@ -120,10 +112,10 @@ class TsunamiIO : public PioDevice
         void set_time(time_t t);
 
         /** RTC address port: write address of RTC RAM data to access */
-        void writeAddr(const uint8_t *data);
+        void writeAddr(const uint8_t data);
 
         /** RTC write data */
-        void writeData(const uint8_t *data);
+        void writeData(const uint8_t data);
 
         /** RTC read data */
         void readData(uint8_t *data);
@@ -218,7 +210,7 @@ class TsunamiIO : public PioDevice
             void read(uint8_t *data);
 
             /** Write a count byte */
-            void write(const uint8_t *data);
+            void write(const uint8_t data);
 
             /** Is the output high? */
             bool outputHigh();
@@ -254,7 +246,7 @@ class TsunamiIO : public PioDevice
         PITimer(const std::string &name);
 
         /** Write control word */
-        void writeControl(const uint8_t* data);
+        void writeControl(const uint8_t data);
 
         /**
          * Serialize this object to the given output stream.
@@ -289,8 +281,6 @@ class TsunamiIO : public PioDevice
     /** Is the pic interrupting right now or not. */
     bool picInterrupting;
 
-    Tick clockInterval;
-
     /** A pointer to the Tsunami device which be belong to */
     Tsunami *tsunami;
 
@@ -312,33 +302,24 @@ class TsunamiIO : public PioDevice
      */
     Tick frequency() const;
 
+    struct Params : public BasicPioDevice::Params
+    {
+        Tick frequency;
+        Tsunami *tsunami;
+        time_t init_time;
+    };
+  protected:
+    const Params *params() const { return (const Params*)_params; }
+
+  public:
     /**
      * Initialize all the data for devices supported by Tsunami I/O.
-     * @param name name of this device.
-     * @param t pointer back to the Tsunami object that we belong to.
-     * @param init_time Time (as in seconds since 1970) to set RTC to.
-     * @param a address we are mapped at.
-     * @param mmu pointer to the memory controller that sends us events.
+     * @param p pointer to Params struct
      */
-    TsunamiIO(const std::string &name, Tsunami *t, time_t init_time,
-              Addr a, MemoryController *mmu, HierParams *hier, Bus *pio_bus,
-              Tick pio_latency, Tick ci);
+    TsunamiIO(Params *p);
 
-    /**
-      * Process a read to one of the devices we are emulating.
-      * @param req Contains the address to read from.
-      * @param data A pointer to write the read data to.
-      * @return The fault condition of the access.
-      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-
-    /**
-      * Process a write to one of the devices we emulate.
-      * @param req Contains the address to write to.
-      * @param data The data to write.
-      * @return The fault condition of the access.
-      */
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault read(Packet &pkt);
+    virtual Fault write(Packet &pkt);
 
     /**
      * Post an PIC interrupt to the CPU via the CChip
@@ -365,7 +346,6 @@ class TsunamiIO : public PioDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __DEV_TSUNAMI_IO_HH__

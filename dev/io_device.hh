@@ -267,6 +267,11 @@ class BasicPioDevice : public PioDevice
         : PioDevice(p), pioAddr(p->pio_addr), pioSize(0), pioDelay(p->pio_delay)
     {}
 
+    /** return the address ranges that this device responds to.
+     * @params range_list range list to populate with ranges
+     */
+    addressRanges(AddrRangeList &range_list);
+
 };
 
 class DmaDevice : public PioDevice

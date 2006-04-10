@@ -37,7 +37,7 @@
 #include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
-#include "dev/isa_fake.hh"
+#include "dev/tsunami_fake.hh"
 #include "mem/bus/bus.hh"
 #include "mem/bus/pio_interface.hh"
 #include "mem/bus/pio_interface_impl.hh"
@@ -46,96 +46,112 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
 
-IsaFake::IsaFake(const string &name, Addr a, MemoryController *mmu,
-                         HierParams *hier, Bus *pio_bus, Addr size)
-    : PioDevice(name, NULL), addr(a)
+IsaFake::IsaFake(Params *p)
+    : BasicPioDevice(p)
 {
-    mmu->add_child(this, RangeSize(addr, size));
-
-    if (pio_bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
-                                      &IsaFake::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-    }
-}
-
-Fault
-IsaFake::read(MemReqPtr &req, uint8_t *data)
-{
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n",
-            req->vaddr, req->size);
-
-#if TRACING_ON
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
-#endif
-
-    switch (req->size) {
-
-      case sizeof(uint64_t):
-         *(uint64_t*)data = 0xFFFFFFFFFFFFFFFFULL;
-         return NoFault;
-      case sizeof(uint32_t):
-         *(uint32_t*)data = 0xFFFFFFFF;
-         return NoFault;
-      case sizeof(uint16_t):
-         *(uint16_t*)data = 0xFFFF;
-         return NoFault;
-      case sizeof(uint8_t):
-         *(uint8_t*)data = 0xFF;
-         return NoFault;
-
-      default:
-        panic("invalid access size(?) for PCI configspace!\n");
-    }
-    DPRINTFN("Isa FakeSMC  ERROR: read  daddr=%#x size=%d\n", daddr, req->size);
-
-    return NoFault;
-}
-
-Fault
-IsaFake::write(MemReqPtr &req, const uint8_t *data)
-{
-    DPRINTF(Tsunami, "write - va=%#x size=%d \n",
-            req->vaddr, req->size);
-
-    //:Addr daddr = (req->paddr & addr_mask) >> 6;
-
-    return NoFault;
+    pioSize = p->pio_size;
 }
 
 Tick
-IsaFake::cacheAccess(MemReqPtr &req)
+IsaFake::read(Packet &pkt)
 {
-    return curTick;
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+
+    pkt.time = curTick + pioDelay;
+    Addr daddr = pkt.addr - pioAddr;
+
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
+
+    uint8_t *data8;
+    uint16_t *data16;
+    uint32_t *data32;
+    uint64_t *data64;
+
+    switch (req->size) {
+      case sizeof(uint64_t):
+         if (!pkt.data) {
+             data64 = new uint64_t;
+             pkt.data = (uint8_t*)data64;
+         } else {
+             data64 = (uint64_t*)pkt.data;
+         }
+         *data64 = 0xFFFFFFFFFFFFFFFFULL;
+         break;
+      case sizeof(uint32_t):
+         if (!pkt.data) {
+             data32 = new uint32_t;
+             pkt.data = (uint8_t*)data32;
+         } else {
+             data32 = (uint64_t*)pkt.data;
+         }
+         *data32 = 0xFFFFFFFF;
+         break;
+      case sizeof(uint16_t):
+         if (!pkt.data) {
+             data16 = new uint16_t;
+             pkt.data = (uint8_t*)data16;
+         } else {
+             data16 = (uint64_t*)pkt.data;
+         }
+         *data16 = 0xFFFF;
+         break;
+      case sizeof(uint8_t):
+         if (!pkt.data) {
+             data8 = new uint8_t;
+             pkt.data = data8;
+         } else {
+             data8 = (uint8_t*)pkt.data;
+         }
+         *data8 = 0xFF;
+         break;
+      default:
+        panic("invalid access size(?) for PCI configspace!\n");
+    }
+    pkt.result = Success;
+    return pioDelay;
+}
+
+Fault
+IsaFake::write(Packet &pkt)
+{
+    pkt.time = curTick + pioDelay;
+    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt.addr, pkt.size);
+    pkt.result = Success;
+    return pioDelay;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
 
-    SimObjectParam<MemoryController *> mmu;
-    Param<Addr> addr;
-    SimObjectParam<Bus*> pio_bus;
+    Param<Addr> pio_addr;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
-    Param<Addr> size;
+    Param<Addr> pio_size;
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<System *> system;
 
 END_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(IsaFake)
 
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM_DFLT(size, "Size of address range", 0x8)
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(pio_size, "Size of address range"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(system, "system object")
 
 END_INIT_SIM_OBJECT_PARAMS(IsaFake)
 
 CREATE_SIM_OBJECT(IsaFake)
 {
-    return new IsaFake(getInstanceName(), addr, mmu, hier, pio_bus, size);
+    IsaFake::Params *p = new IsaFake::Params;
+    p->name = getInstanceName();
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->pio_size = pio_size;
+    p->platform = platform;
+    p->system = system;
+    return new IsaFake(p);
 }
 
 REGISTER_SIM_OBJECT("IsaFake", IsaFake)
