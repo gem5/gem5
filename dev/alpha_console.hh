@@ -119,9 +119,6 @@ class AlphaConsole : public BasicPioDevice
     virtual Tick read(Packet &pkt);
     virtual Tick write(Packet &pkt);
 
-    /** Address ranges this device is sensitive to. */
-    virtual void addressRanges(AddrRangeList &range_list);
-
     /**
      * standard serialization routines for checkpointing
      */

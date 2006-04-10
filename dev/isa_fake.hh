@@ -37,51 +37,42 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
-class MemoryController;
-
 /**
  * IsaFake is a device that returns -1 on all reads and
  * accepts all writes. It is meant to be placed at an address range
  * so that an mcheck doesn't occur when an os probes a piece of hw
  * that doesn't exist (e.g. UARTs1-3).
  */
-class IsaFake : public PioDevice
+class IsaFake : public BasicPioDevice
 {
-  private:
-    /** The address in memory that we respond to */
-    Addr addr;
+  public:
+    struct Params : public BasicPioDevice::Params
+    {
+        Addr pio_size;
+    };
+  protected:
+    const Params *params() const { return (const Params*)_params; }
 
   public:
     /**
       * The constructor for Tsunmami Fake just registers itself with the MMU.
-      * @param name name of this device.
-      * @param a address to respond to.
-      * @param mmu the mmu we register with.
-      * @param size number of addresses to respond to
+      * @param p params structure
       */
-    IsaFake(const std::string &name, Addr a, MemoryController *mmu,
-                HierParams *hier, Bus *pio_bus, Addr size = 0x8);
+    IsaFake(Params *p);
 
     /**
      * This read always returns -1.
      * @param req The memory request.
      * @param data Where to put the data.
      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Tick read(Packet &pkt);
 
     /**
      * All writes are simply ignored.
      * @param req The memory request.
      * @param data the data to not write.
      */
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
-
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
+    virtual Tick write(Packet &pkt);
 };
 
-#endif // __ISA_FAKE_HH__
+#endif // __TSUNAMI_FAKE_HH__

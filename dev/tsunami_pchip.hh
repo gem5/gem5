@@ -37,28 +37,12 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
-class MemoryController;
-
 /**
  * A very simple implementation of the Tsunami PCI interface chips.
  */
-class TsunamiPChip : public PioDevice
+class TsunamiPChip : public BasicPioDevice
 {
-  private:
-    /** The base address of this device */
-    Addr addr;
-
-    /** The size of mappad from the above address */
-    static const Addr size = 0xfff;
-
   protected:
-    /**
-     * pointer to the tsunami object.
-     * This is our access to all the other tsunami
-     * devices.
-     */
-    Tsunami *tsunami;
-
     /** Pchip control register */
     uint64_t pctl;
 
@@ -72,18 +56,19 @@ class TsunamiPChip : public PioDevice
     uint64_t tba[4];
 
   public:
+    struct Params : public BasicPioDevice::Params
+    {
+        Tsunami *tsunami;
+    };
+  protected:
+    const Params *params() const { return (const Params*)_params; }
+
+  public:
     /**
      * Register the PChip with the mmu and init all wsba, wsm, and tba to 0
-     * @param name the name of thes device
-     * @param t a pointer to the tsunami device
-     * @param a the address which we respond to
-     * @param mmu the mmu we are to register with
-     * @param hier object to store parameters universal the device hierarchy
-     * @param bus The bus that this device is attached to
+     * @param p pointer to the parameters struct
      */
-    TsunamiPChip(const std::string &name, Tsunami *t, Addr a,
-                 MemoryController *mmu, HierParams *hier, Bus *pio_bus,
-                 Tick pio_latency);
+    TsunamiPChip(Params *p);
 
     /**
      * Translate a PCI bus address to a memory address for DMA.
@@ -93,21 +78,8 @@ class TsunamiPChip : public PioDevice
      */
     Addr translatePciToDma(Addr busAddr);
 
-     /**
-      * Process a read to the PChip.
-      * @param req Contains the address to read from.
-      * @param data A pointer to write the read data to.
-      * @return The fault condition of the access.
-      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-
-    /**
-      * Process a write to the PChip.
-      * @param req Contains the address to write to.
-      * @param data The data to write.
-      * @return The fault condition of the access.
-      */
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Fault read(Packet &pkt);
+    virtual Fault write(Packet &pkt);
 
     /**
      * Serialize this object to the given output stream.
@@ -121,13 +93,6 @@ class TsunamiPChip : public PioDevice
      * @param section The section name of this object
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
 };
 
 #endif // __TSUNAMI_PCHIP_HH__

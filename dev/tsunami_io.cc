@@ -41,14 +41,11 @@
 #include "dev/tsunami_io.hh"
 #include "dev/tsunami.hh"
 #include "dev/pitreg.h"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
+#include "mem/bus/port.hh"
 #include "sim/builder.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
 #include "dev/rtcreg.h"
-#include "mem/functional/memory_control.hh"
 
 using namespace std;
 //Should this be AlphaISA?
@@ -80,28 +77,28 @@ TsunamiIO::RTC::set_time(time_t t)
 }
 
 void
-TsunamiIO::RTC::writeAddr(const uint8_t *data)
+TsunamiIO::RTC::writeAddr(const uint8_t data)
 {
     if (*data <= RTC_STAT_REGD)
-        addr = *data;
+        addr = data;
     else
         panic("RTC addresses over 0xD are not implemented.\n");
 }
 
 void
-TsunamiIO::RTC::writeData(const uint8_t *data)
+TsunamiIO::RTC::writeData(const uint8_t data)
 {
     if (addr < RTC_STAT_REGA)
-        clock_data[addr] = *data;
+        clock_data[addr] = data;
     else {
         switch (addr) {
           case RTC_STAT_REGA:
-            if (*data != (RTCA_32768HZ | RTCA_1024HZ))
+            if (data != (RTCA_32768HZ | RTCA_1024HZ))
                 panic("Unimplemented RTC register A value write!\n");
             stat_regA = *data;
             break;
           case RTC_STAT_REGB:
-            if ((*data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
+            if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
                 panic("Write to RTC reg B bits that are not implemented!\n");
 
             if (*data & RTCB_PRDC_IE) {
@@ -111,7 +108,7 @@ TsunamiIO::RTC::writeData(const uint8_t *data)
                 if (event.scheduled())
                     event.deschedule();
             }
-            stat_regB = *data;
+            stat_regB = data;
             break;
           case RTC_STAT_REGC:
           case RTC_STAT_REGD:
@@ -207,12 +204,12 @@ TsunamiIO::PITimer::PITimer(const string &name)
 }
 
 void
-TsunamiIO::PITimer::writeControl(const uint8_t *data)
+TsunamiIO::PITimer::writeControl(const uint8_t data)
 {
     int rw;
     int sel;
 
-    sel = GET_CTRL_SEL(*data);
+    sel = GET_CTRL_SEL(data);
 
     if (sel == PIT_READ_BACK)
        panic("PITimer Read-Back Command is not implemented.\n");
@@ -223,8 +220,8 @@ TsunamiIO::PITimer::writeControl(const uint8_t *data)
         counter[sel]->latchCount();
     else {
         counter[sel]->setRW(rw);
-        counter[sel]->setMode(GET_CTRL_MODE(*data));
-        counter[sel]->setBCD(GET_CTRL_BCD(*data));
+        counter[sel]->setMode(GET_CTRL_MODE(data));
+        counter[sel]->setBCD(GET_CTRL_BCD(data));
     }
 }
 
@@ -296,11 +293,11 @@ TsunamiIO::PITimer::Counter::read(uint8_t *data)
 }
 
 void
-TsunamiIO::PITimer::Counter::write(const uint8_t *data)
+TsunamiIO::PITimer::Counter::write(const uint8_t data)
 {
     switch (write_byte) {
       case LSB:
-        count = (count & 0xFF00) | *data;
+        count = (count & 0xFF00) | data;
 
         if (event.scheduled())
           event.deschedule();
@@ -309,7 +306,7 @@ TsunamiIO::PITimer::Counter::write(const uint8_t *data)
         break;
 
       case MSB:
-        count = (count & 0x00FF) | (*data << 8);
+        count = (count & 0x00FF) | (data << 8);
         period = count;
 
         if (period > 0) {
@@ -417,26 +414,17 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
     return "tsunami 8254 Interval timer";
 }
 
-TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
-                     Addr a, MemoryController *mmu, HierParams *hier,
-                     Bus *pio_bus, Tick pio_latency, Tick ci)
-    : PioDevice(name, t), addr(a), clockInterval(ci), tsunami(t),
-      pitimer(name + "pitimer"), rtc(name + ".rtc", t, ci)
+TsunamiIO::TsunamiIO(Params *p)
+    : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
+      rtc(name + ".rtc", p->tsunami, p->frequency)
 {
-    mmu->add_child(this, RangeSize(addr, size));
-
-    if (pio_bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
-                                       &TsunamiIO::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * pio_bus->clockRate;
-    }
+    pioSize = 0xff;
 
     // set the back pointer from tsunami to myself
     tsunami->io = this;
 
     timerData = 0;
-    rtc.set_time(init_time == 0 ? time(NULL) : init_time);
+    rtc.set_time(p->init_time == 0 ? time(NULL) : init_time);
     picr = 0;
     picInterrupting = false;
 }
@@ -444,185 +432,175 @@ TsunamiIO::TsunamiIO(const string &name, Tsunami *t, time_t init_time,
 Tick
 TsunamiIO::frequency() const
 {
-    return Clock::Frequency / clockInterval;
+    return Clock::Frequency / params()->frequency;
 }
 
 Fault
-TsunamiIO::read(MemReqPtr &req, uint8_t *data)
+TsunamiIO::read(Packet &pkt)
 {
-    DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n",
-            req->vaddr, req->size, req->vaddr & 0xfff);
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    pkt.time = curTick + pioDelay;
+    Addr daddr = pkt.addr - pioAddr;
+
+    DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n", pkt.addr,
+            pkt.size, daddr);
 
 
-    switch(req->size) {
-      case sizeof(uint8_t):
+    uint8_t *data8;
+    uint64_t *data64;
+
+    if (pkt.size == sizeof(uint8_t)) {
+
+        if (!pkt.data) {
+            data8 = new uint8_t;
+            pkt.data = data8;
+        } else
+            data8 = pkt.data;
         switch(daddr) {
           // PIC1 mask read
           case TSDEV_PIC1_MASK:
-            *(uint8_t*)data = ~mask1;
-            return NoFault;
+            *data8 = ~mask1;
+            break;
           case TSDEV_PIC2_MASK:
-            *(uint8_t*)data = ~mask2;
-            return NoFault;
+            *data8 = ~mask2;
+            break;
           case TSDEV_PIC1_ISR:
               // !!! If this is modified 64bit case needs to be too
               // Pal code has to do a 64 bit physical read because there is
               // no load physical byte instruction
-              *(uint8_t*)data = picr;
-              return NoFault;
+              *data8 = picr;
+              break;
           case TSDEV_PIC2_ISR:
               // PIC2 not implemnted... just return 0
-              *(uint8_t*)data = 0x00;
-              return NoFault;
+              *data8 = 0x00;
+              break;
           case TSDEV_TMR0_DATA:
-            pitimer.counter0.read(data);
+            pitimer.counter0.read(data8);
             return NoFault;
           case TSDEV_TMR1_DATA:
-            pitimer.counter1.read(data);
+            pitimer.counter1.read(data8);
             return NoFault;
           case TSDEV_TMR2_DATA:
-            pitimer.counter2.read(data);
-            return NoFault;
+            pitimer.counter2.read(data8);
+            break;
           case TSDEV_RTC_DATA:
-            rtc.readData(data);
-            return NoFault;
+            rtc.readData(data8);
+            break;
           case TSDEV_CTRL_PORTB:
             if (pitimer.counter2.outputHigh())
-                *data = PORTB_SPKR_HIGH;
+                *data8 = PORTB_SPKR_HIGH;
             else
-                *data = 0x00;
-            return NoFault;
+                *data8 = 0x00;
+            break;
           default:
-            panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
+            panic("I/O Read - va%#x size %d\n", pkt.addr, pkt.size);
         }
-      case sizeof(uint16_t):
-      case sizeof(uint32_t):
-        panic("I/O Read - invalid size - va %#x size %d\n",
-              req->vaddr, req->size);
+    } else if (pkt.size == sizeof(uint64_t)) {
+        if (!pkt.data) {
+            data64 = new uint64_t;
+            pkt.data = (uint8_t*)data64;
+        } else
+            data8 = (uint64_t*)pkt.data;
 
-      case sizeof(uint64_t):
-       switch(daddr) {
-          case TSDEV_PIC1_ISR:
-              // !!! If this is modified 8bit case needs to be too
-              // Pal code has to do a 64 bit physical read because there is
-              // no load physical byte instruction
-              *(uint64_t*)data = (uint64_t)picr;
-              return NoFault;
-          default:
-              panic("I/O Read - invalid size - va %#x size %d\n",
-                    req->vaddr, req->size);
-       }
-
-      default:
-        panic("I/O Read - invalid size - va %#x size %d\n",
-              req->vaddr, req->size);
+        if (daddr == TSDEV_PIC1_ISR)
+            data64 = (uint64_t)picr;
+        else
+           panic("I/O Read - invalid addr - va %#x size %d\n",
+                   req.addr, req.size);
+    } else {
+       panic("I/O Read - invalid size - va %#x size %d\n", req.addr, req.size);
     }
-    panic("I/O Read - va%#x size %d\n", req->vaddr, req->size);
-
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
-Fault
-TsunamiIO::write(MemReqPtr &req, const uint8_t *data)
+Tick
+TsunamiIO::write(Packet &pkt)
 {
+    pkt.time = curTick + pioDelay;
+
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    Addr daddr = pkt.addr - pioAddr;
+    uint8_t val = *pkt.data;
 
 #if TRACING_ON
-    uint8_t dt = *(uint8_t*)data;
-    uint64_t dt64 = dt;
+    uint64_t dt64 = val;
 #endif
 
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
             req->vaddr, req->size, req->vaddr & 0xfff, dt64);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    assert(pkt.size == sizeof(uint8_t));
 
-    switch(req->size) {
-      case sizeof(uint8_t):
-        switch(daddr) {
-          case TSDEV_PIC1_MASK:
-            mask1 = ~(*(uint8_t*)data);
-            if ((picr & mask1) && !picInterrupting) {
-                picInterrupting = true;
-                tsunami->cchip->postDRIR(55);
-                DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
-            }
-            if ((!(picr & mask1)) && picInterrupting) {
-                picInterrupting = false;
-                tsunami->cchip->clearDRIR(55);
-                DPRINTF(Tsunami, "clearing pic interrupt\n");
-            }
-            return NoFault;
-          case TSDEV_PIC2_MASK:
-            mask2 = *(uint8_t*)data;
-            //PIC2 Not implemented to interrupt
-            return NoFault;
-          case TSDEV_PIC1_ACK:
-            // clear the interrupt on the PIC
-            picr &= ~(1 << (*(uint8_t*)data & 0xF));
-            if (!(picr & mask1))
-                tsunami->cchip->clearDRIR(55);
-            return NoFault;
-          case TSDEV_DMA1_CMND:
-            return NoFault;
-          case TSDEV_DMA2_CMND:
-            return NoFault;
-          case TSDEV_DMA1_MMASK:
-            return NoFault;
-          case TSDEV_DMA2_MMASK:
-            return NoFault;
-          case TSDEV_PIC2_ACK:
-            return NoFault;
-          case TSDEV_DMA1_RESET:
-            return NoFault;
-          case TSDEV_DMA2_RESET:
-            return NoFault;
-          case TSDEV_DMA1_MODE:
-            mode1 = *(uint8_t*)data;
-            return NoFault;
-          case TSDEV_DMA2_MODE:
-            mode2 = *(uint8_t*)data;
-            return NoFault;
-          case TSDEV_DMA1_MASK:
-          case TSDEV_DMA2_MASK:
-            return NoFault;
-          case TSDEV_TMR0_DATA:
-            pitimer.counter0.write(data);
-            return NoFault;
-          case TSDEV_TMR1_DATA:
-            pitimer.counter1.write(data);
-            return NoFault;
-          case TSDEV_TMR2_DATA:
-            pitimer.counter2.write(data);
-            return NoFault;
-          case TSDEV_TMR_CTRL:
-            pitimer.writeControl(data);
-            return NoFault;
-          case TSDEV_RTC_ADDR:
-            rtc.writeAddr(data);
-            return NoFault;
-          case TSDEV_KBD:
-            return NoFault;
-          case TSDEV_RTC_DATA:
-            rtc.writeData(data);
-            return NoFault;
-          case TSDEV_CTRL_PORTB:
-            // System Control Port B not implemented
-            return NoFault;
-          default:
-            panic("I/O Write - va%#x size %d data %#x\n", req->vaddr, req->size, (int)*data);
+    switch(daddr) {
+      case TSDEV_PIC1_MASK:
+        mask1 = ~(val);
+        if ((picr & mask1) && !picInterrupting) {
+            picInterrupting = true;
+            tsunami->cchip->postDRIR(55);
+            DPRINTF(Tsunami, "posting pic interrupt to cchip\n");
         }
-      case sizeof(uint16_t):
-      case sizeof(uint32_t):
-      case sizeof(uint64_t):
+        if ((!(picr & mask1)) && picInterrupting) {
+            picInterrupting = false;
+            tsunami->cchip->clearDRIR(55);
+            DPRINTF(Tsunami, "clearing pic interrupt\n");
+        }
+        break;
+      case TSDEV_PIC2_MASK:
+        mask2 = val;
+        //PIC2 Not implemented to interrupt
+        break;
+      case TSDEV_PIC1_ACK:
+        // clear the interrupt on the PIC
+        picr &= ~(1 << (val & 0xF));
+        if (!(picr & mask1))
+            tsunami->cchip->clearDRIR(55);
+        break;
+      case TSDEV_DMA1_MODE:
+        mode1 = val;
+        break;
+      case TSDEV_DMA2_MODE:
+        mode2 = val;
+        break;
+      case TSDEV_TMR0_DATA:
+        pitimer.counter0.write(val);
+        break;
+      case TSDEV_TMR1_DATA:
+        pitimer.counter1.write(val);
+        break;
+      case TSDEV_TMR2_DATA:
+        pitimer.counter2.write(val);
+        break;
+      case TSDEV_TMR_CTRL:
+        pitimer.writeControl(val);
+        break;
+      case TSDEV_RTC_ADDR:
+        rtc.writeAddr(val);
+        break;
+      case TSDEV_RTC_DATA:
+        rtc.writeData(val);
+        break;
+      case TSDEV_KBD:
+      case TSDEV_DMA1_CMND:
+      case TSDEV_DMA2_CMND:
+      case TSDEV_DMA1_MMASK:
+      case TSDEV_DMA2_MMASK:
+      case TSDEV_PIC2_ACK:
+      case TSDEV_DMA1_RESET:
+      case TSDEV_DMA2_RESET:
+      case TSDEV_DMA1_MASK:
+      case TSDEV_DMA2_MASK:
+      case TSDEV_CTRL_PORTB:
+        break;
       default:
-        panic("I/O Write - invalid size - va %#x size %d\n",
-              req->vaddr, req->size);
+        panic("I/O Write - va%#x size %d data %#x\n", pkt.addr, pkt.size, val);
     }
 
-
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
 void
@@ -645,12 +623,6 @@ TsunamiIO::clearPIC(uint8_t bitvector)
         tsunami->cchip->clearDRIR(55);
         DPRINTF(Tsunami, "clearing pic interrupt to cchip\n");
     }
-}
-
-Tick
-TsunamiIO::cacheAccess(MemReqPtr &req)
-{
-    return curTick + pioLatency;
 }
 
 void
@@ -687,34 +659,41 @@ TsunamiIO::unserialize(Checkpoint *cp, const string &section)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
-    SimObjectParam<Tsunami *> tsunami;
-    Param<time_t> time;
-    SimObjectParam<MemoryController *> mmu;
-    Param<Addr> addr;
-    SimObjectParam<Bus*> pio_bus;
+    Param<Addr> pio_addr;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
     Param<Tick> frequency;
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<System *> system;
+    Param<time_t> time;
+    SimObjectParam<Tsunami *> tsunami;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
-    INIT_PARAM(tsunami, "Tsunami"),
+    INIT_PARAM(frequency, "clock interrupt frequency"),
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(pio_size, "Size of address range"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(system, "system object"),
     INIT_PARAM(time, "System time to use (0 for actual time"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(pio_bus, "The IO Bus to attach to"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams),
-    INIT_PARAM(frequency, "clock interrupt frequency")
+    INIT_PARAM(tsunami, "Tsunami")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
 CREATE_SIM_OBJECT(TsunamiIO)
 {
-    return new TsunamiIO(getInstanceName(), tsunami, time,  addr, mmu, hier,
-                         pio_bus, pio_latency, frequency);
+    TsunamiIO::Params *p = new TsunamiIO::Params;
+    p->frequency = frequency;
+    p->name = getInstanceName();
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->platform = platform;
+    p->system = system;
+    p->init_time = time;
+    p->tsunami = tsunami;
+    return new TsunamiIO(p);
 }
 
 REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

@@ -51,12 +51,10 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
-                           MemoryController *mmu, HierParams *hier,
-                           Bus *pio_bus, Tick pio_latency)
-    : PioDevice(name, t), addr(a), tsunami(t)
+TsunamiPChip::TsunamiPChip(Params *p)
+: BasicPioDevice(p),
 {
-    mmu->add_child(this, RangeSize(addr, size));
+    pioSize = 0xfff;
 
     for (int i = 0; i < 4; i++) {
         wsba[i] = 0;
@@ -64,195 +62,180 @@ TsunamiPChip::TsunamiPChip(const string &name, Tsunami *t, Addr a,
         tba[i] = 0;
     }
 
-    if (pio_bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
-                                      &TsunamiPChip::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * pio_bus->clockRate;
-    }
-
-
     // initialize pchip control register
     pctl = (ULL(0x1) << 20) | (ULL(0x1) << 32) | (ULL(0x2) << 36);
 
     //Set back pointer in tsunami
-    tsunami->pchip = this;
+    p->tsunami->pchip = this;
+}
+
+Tick
+TsunamiPChip::read(Packet &pkt)
+{
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+
+    pkt.time = curTick + pioDelay;
+    Addr daddr = pkt.addr - pioAddr;
+
+    uint64_t *data64;
+
+    if (!pkt.data) {
+        data64 = new uint64_t;
+        pkt.data = (uint8_t*)data64;
+    } else
+        data64 = (uint64_t*)pkt.data;
+
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
+
+    switch(daddr) {
+      case TSDEV_PC_WSBA0:
+            *data64 = wsba[0];
+            break;
+      case TSDEV_PC_WSBA1:
+            *data64 = wsba[1];
+            break;
+      case TSDEV_PC_WSBA2:
+            *data64 = wsba[2];
+            break;
+      case TSDEV_PC_WSBA3:
+            *data64 = wsba[3];
+            break;
+      case TSDEV_PC_WSM0:
+            *data64 = wsm[0];
+            break;
+      case TSDEV_PC_WSM1:
+            *data64 = wsm[1];
+            break;
+      case TSDEV_PC_WSM2:
+            *data64 = wsm[2];
+            break;
+      case TSDEV_PC_WSM3:
+            *data64 = wsm[3];
+            break;
+      case TSDEV_PC_TBA0:
+            *data64 = tba[0];
+            break;
+      case TSDEV_PC_TBA1:
+            *data64 = tba[1];
+            break;
+      case TSDEV_PC_TBA2:
+            *data64 = tba[2];
+            break;
+      case Tbreak;
+            *data64 = tba[3];
+            break;
+      case TSDEV_PC_PCTL:
+            *data64 = pctl;
+            break;
+      case TSDEV_PC_PLAT:
+            panic("PC_PLAT not implemented\n");
+      case TSDEV_PC_RES:
+            panic("PC_RES not implemented\n");
+      case TSDEV_PC_PERROR:
+            *data64 = 0x00;
+            break;
+      case TSDEV_PC_PERRMASK:
+            *data64 = 0x00;
+            break;
+      case TSDEV_PC_PERRSET:
+            panic("PC_PERRSET not implemented\n");
+      case TSDEV_PC_TLBIV:
+            panic("PC_TLBIV not implemented\n");
+      case TSDEV_PC_TLBIA:
+            *data64 = 0x00; // shouldn't be readable, but linux
+            break;
+      case TSDEV_PC_PMONCTL:
+            panic("PC_PMONCTL not implemented\n");
+      case TSDEV_PC_PMONCNT:
+            panic("PC_PMONCTN not implemented\n");
+      default:
+          panic("Default in PChip Read reached reading 0x%x\n", daddr);
+    }
+    pkt.result = Success;
+    return pioDelay;
+
 }
 
 Fault
-TsunamiPChip::read(MemReqPtr &req, uint8_t *data)
+TsunamiPChip::write(Packet &pkt)
 {
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n",
-            req->vaddr, req->size);
+    pkt.time = curTick + pioDelay;
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    Addr daddr = pkt.addr - pioAddr;
 
-    switch (req->size) {
+    uint64_t val = *(uint64_t *)pkt.data;
+    assert(pkt.size == sizeof(uint64_t));
 
-      case sizeof(uint64_t):
-          switch(daddr) {
-              case TSDEV_PC_WSBA0:
-                    *(uint64_t*)data = wsba[0];
-                    return NoFault;
-              case TSDEV_PC_WSBA1:
-                    *(uint64_t*)data = wsba[1];
-                    return NoFault;
-              case TSDEV_PC_WSBA2:
-                    *(uint64_t*)data = wsba[2];
-                    return NoFault;
-              case TSDEV_PC_WSBA3:
-                    *(uint64_t*)data = wsba[3];
-                    return NoFault;
-              case TSDEV_PC_WSM0:
-                    *(uint64_t*)data = wsm[0];
-                    return NoFault;
-              case TSDEV_PC_WSM1:
-                    *(uint64_t*)data = wsm[1];
-                    return NoFault;
-              case TSDEV_PC_WSM2:
-                    *(uint64_t*)data = wsm[2];
-                    return NoFault;
-              case TSDEV_PC_WSM3:
-                    *(uint64_t*)data = wsm[3];
-                    return NoFault;
-              case TSDEV_PC_TBA0:
-                    *(uint64_t*)data = tba[0];
-                    return NoFault;
-              case TSDEV_PC_TBA1:
-                    *(uint64_t*)data = tba[1];
-                    return NoFault;
-              case TSDEV_PC_TBA2:
-                    *(uint64_t*)data = tba[2];
-                    return NoFault;
-              case TSDEV_PC_TBA3:
-                    *(uint64_t*)data = tba[3];
-                    return NoFault;
-              case TSDEV_PC_PCTL:
-                    *(uint64_t*)data = pctl;
-                    return NoFault;
-              case TSDEV_PC_PLAT:
-                    panic("PC_PLAT not implemented\n");
-              case TSDEV_PC_RES:
-                    panic("PC_RES not implemented\n");
-              case TSDEV_PC_PERROR:
-                    *(uint64_t*)data = 0x00;
-                    return NoFault;
-              case TSDEV_PC_PERRMASK:
-                    *(uint64_t*)data = 0x00;
-                    return NoFault;
-              case TSDEV_PC_PERRSET:
-                    panic("PC_PERRSET not implemented\n");
-              case TSDEV_PC_TLBIV:
-                    panic("PC_TLBIV not implemented\n");
-              case TSDEV_PC_TLBIA:
-                    *(uint64_t*)data = 0x00; // shouldn't be readable, but linux
-                    return NoFault;
-              case TSDEV_PC_PMONCTL:
-                    panic("PC_PMONCTL not implemented\n");
-              case TSDEV_PC_PMONCNT:
-                    panic("PC_PMONCTN not implemented\n");
-              default:
-                  panic("Default in PChip Read reached reading 0x%x\n", daddr);
+    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt.addr, pkt.size);
 
-           } // uint64_t
+    switch(daddr) {
+        case TSDEV_PC_WSBA0:
+              wsba[0] = data64;
+              break;
+        case TSDEV_PC_WSBA1:
+              wsba[1] = data64;
+              break;
+        case TSDEV_PC_WSBA2:
+              wsba[2] = data64;
+              break;
+        case TSDEV_PC_WSBA3:
+              wsba[3] = data64;
+              break;
+        case TSDEV_PC_WSM0:
+              wsm[0] = data64;
+              break;
+        case TSDEV_PC_WSM1:
+              wsm[1] = data64;
+              break;
+        case TSDEV_PC_WSM2:
+              wsm[2] = data64;
+              break;
+        case TSDEV_PC_WSM3:
+              wsm[3] = data64;
+              break;
+        case TSDEV_PC_TBA0:
+              tba[0] = data64;
+              break;
+        case TSDEV_PC_TBA1:
+              tba[1] = data64;
+              break;
+        case TSDEV_PC_TBA2:
+              tba[2] = data64;
+              break;
+        case TSDEV_PC_TBA3:
+              tba[3] = data64;
+              break;
+        case TSDEV_PC_PCTL:
+              pctl = data64;
+              break;
+        case TSDEV_PC_PLAT:
+              panic("PC_PLAT not implemented\n");
+        case TSDEV_PC_RES:
+              panic("PC_RES not implemented\n");
+        case TSDEV_PC_PERROR:
+              break;
+        case TSDEV_PC_PERRMASK:
+              panic("PC_PERRMASK not implemented\n");
+        case TSDEV_PC_PERRSET:
+              panic("PC_PERRSET not implemented\n");
+        case TSDEV_PC_TLBIV:
+              panic("PC_TLBIV not implemented\n");
+        case TSDEV_PC_TLBIA:
+              break; // value ignored, supposted to invalidate SG TLB
+        case TSDEV_PC_PMONCTL:
+              panic("PC_PMONCTL not implemented\n");
+        case TSDEV_PC_PMONCNT:
+              panic("PC_PMONCTN not implemented\n");
+        default:
+            panic("Default in PChip Read reached reading 0x%x\n", daddr);
 
-      break;
-      case sizeof(uint32_t):
-      case sizeof(uint16_t):
-      case sizeof(uint8_t):
-      default:
-        panic("invalid access size(?) for tsunami register!\n\n");
-    }
-    DPRINTFN("Tsunami PChip ERROR: read  daddr=%#x size=%d\n", daddr, req->size);
+    } // uint64_t
 
-    return NoFault;
-}
-
-Fault
-TsunamiPChip::write(MemReqPtr &req, const uint8_t *data)
-{
-    DPRINTF(Tsunami, "write - va=%#x size=%d \n",
-            req->vaddr, req->size);
-
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask)) >> 6;
-
-    switch (req->size) {
-
-      case sizeof(uint64_t):
-          switch(daddr) {
-              case TSDEV_PC_WSBA0:
-                    wsba[0] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSBA1:
-                    wsba[1] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSBA2:
-                    wsba[2] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSBA3:
-                    wsba[3] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSM0:
-                    wsm[0] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSM1:
-                    wsm[1] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSM2:
-                    wsm[2] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_WSM3:
-                    wsm[3] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_TBA0:
-                    tba[0] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_TBA1:
-                    tba[1] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_TBA2:
-                    tba[2] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_TBA3:
-                    tba[3] = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_PCTL:
-                    pctl = *(uint64_t*)data;
-                    return NoFault;
-              case TSDEV_PC_PLAT:
-                    panic("PC_PLAT not implemented\n");
-              case TSDEV_PC_RES:
-                    panic("PC_RES not implemented\n");
-              case TSDEV_PC_PERROR:
-                    return NoFault;
-              case TSDEV_PC_PERRMASK:
-                    panic("PC_PERRMASK not implemented\n");
-              case TSDEV_PC_PERRSET:
-                    panic("PC_PERRSET not implemented\n");
-              case TSDEV_PC_TLBIV:
-                    panic("PC_TLBIV not implemented\n");
-              case TSDEV_PC_TLBIA:
-                    return NoFault; // value ignored, supposted to invalidate SG TLB
-              case TSDEV_PC_PMONCTL:
-                    panic("PC_PMONCTL not implemented\n");
-              case TSDEV_PC_PMONCNT:
-                    panic("PC_PMONCTN not implemented\n");
-              default:
-                  panic("Default in PChip Read reached reading 0x%x\n", daddr);
-
-           } // uint64_t
-
-      break;
-      case sizeof(uint32_t):
-      case sizeof(uint16_t):
-      case sizeof(uint8_t):
-      default:
-        panic("invalid access size(?) for tsunami register!\n\n");
-    }
-
-    DPRINTFN("Tsunami ERROR: write daddr=%#x size=%d\n", daddr, req->size);
-
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
 #define DMA_ADDR_MASK ULL(0x3ffffffff)
@@ -312,10 +295,7 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | (ULL(0x7f) << 13);
                     pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
 
-                    memcpy((void *)&pteEntry,
-                           tsunami->system->
-                           physmem->dma_addr(pteAddr, sizeof(uint64_t)),
-                           sizeof(uint64_t));
+                    pioPort->readBlob(&pteEntry, pteAddr, sizeof(uint64_t));
 
                     dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) | (busAddr & ULL(0x1fff));
 
@@ -360,30 +340,34 @@ TsunamiPChip::cacheAccess(MemReqPtr &req)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
 
-    SimObjectParam<Tsunami *> tsunami;
-    SimObjectParam<MemoryController *> mmu;
-    Param<Addr> addr;
-    SimObjectParam<Bus*> pio_bus;
+    Param<Addr> pio_addr;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<System *> system;
+    SimObjectParam<Tsunami *> tsunami;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
-    INIT_PARAM(tsunami, "Tsunami"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(system, "system object"),
+    INIT_PARAM(tsunami, "Tsunami")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiPChip)
 
 CREATE_SIM_OBJECT(TsunamiPChip)
 {
-    return new TsunamiPChip(getInstanceName(), tsunami, addr, mmu, hier,
-                            pio_bus, pio_latency);
+    TsunamiPChip::Params *p = new TsunamiPChip::Params;
+    p->name = getInstanceName();
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->platform = platform;
+    p->system = system;
+    p->tsunami = tsunami;
+    return new TsunamiPChip(p);
 }
 
 REGISTER_SIM_OBJECT("TsunamiPChip", TsunamiPChip)
