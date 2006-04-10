@@ -48,13 +48,15 @@ using namespace TheISA;
 void
 SyscallDesc::doSyscall(int callnum, Process *process, ExecContext *xc)
 {
-    DPRINTFR(SyscallVerbose, "%s: syscall %s called\n",
-             xc->getCpuPtr()->name(), name);
+    DPRINTFR(SyscallVerbose, "%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
+             curTick,xc->getCpuPtr()->name(), name,
+             xc->getSyscallArg(0),xc->getSyscallArg(1),
+             xc->getSyscallArg(2),xc->getSyscallArg(3));
 
     SyscallReturn retval = (*funcPtr)(this, callnum, process, xc);
 
-    DPRINTFR(SyscallVerbose, "%s: syscall %s returns %d\n",
-             xc->getCpuPtr()->name(), name, retval.value());
+    DPRINTFR(SyscallVerbose, "%d: %s: syscall %s returns %d\n",
+             curTick,xc->getCpuPtr()->name(), name, retval.value());
 
     if (!(flags & SyscallDesc::SuppressReturnValue))
         xc->setSyscallReturn(retval);
@@ -65,8 +67,6 @@ SyscallReturn
 unimplementedFunc(SyscallDesc *desc, int callnum, Process *process,
                   ExecContext *xc)
 {
-    //warn("ignoring syscall %s(%d, %d, ...)", desc->name,
-    // xc->getSyscallArg(0), xc->getSyscallArg(1));
     fatal("syscall %s (#%d) unimplemented.", desc->name, callnum);
 
     return 1;

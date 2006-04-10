@@ -110,7 +110,8 @@ output exec {{
                                Trace::InstRecord *traceData) const
     {
         panic("attempt to execute unimplemented instruction '%s' "
-              "(inst 0x%08x, opcode 0x%x)", mnemonic, machInst, OPCODE);
+              "(inst 0x%08x, opcode 0x%x, binary:%s)", mnemonic, machInst, OPCODE,
+              inst2string(machInst));
         return new UnimplementedOpcodeFault;
     }
 

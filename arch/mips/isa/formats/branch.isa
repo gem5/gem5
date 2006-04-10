@@ -179,7 +179,7 @@ output decoder {{
             ss << ",";
         }
 
-        Addr target = pc + 8 + disp;
+        Addr target = pc + 4 + disp;
 
         std::string str;
         if (symtab && symtab->findSymbol(target, str))
