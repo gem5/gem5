@@ -229,6 +229,8 @@ class PioDevice : public SimObject
 
     virtual ~PioDevice();
 
+    virtual void init();
+
     virtual Port *getPort(const std::string &if_name)
     {
         if (if_name == "pio") {

@@ -107,7 +107,7 @@ class PhysicalMemory : public MemObject
     int deviceBlockSize();
     void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
     virtual Port *getPort(const std::string &if_name);
-    void virtual init() { port->sendStatusChange(Port::RangeChange); }
+    void virtual init();
 
     // fast back-door memory access for vtophys(), remote gdb, etc.
     // uint64_t phys_read_qword(Addr addr) const;

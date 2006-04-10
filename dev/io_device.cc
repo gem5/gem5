@@ -88,6 +88,13 @@ PioDevice::~PioDevice()
         delete pioPort;
 }
 
+PioDevice::init()
+{
+    if (!pioPort)
+        panic("Pio port not connected to anything!");
+    pioPort->sendStatusChange(Port::RangeChange);
+}
+
 void
 BasicPioDevice::addressRanges(AddrRangeList &range_list)
 {

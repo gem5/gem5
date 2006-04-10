@@ -90,6 +90,14 @@ PhysicalMemory::PhysicalMemory(const string &n)
     page_ptr = 0;
 }
 
+void
+PhysicalMemory::init()
+{
+    if (!port)
+        panic("PhysicalMemory not connected to anything!");
+    port->sendStatusChange(Port::RangeChange);
+}
+
 PhysicalMemory::~PhysicalMemory()
 {
     if (pmem_addr)
