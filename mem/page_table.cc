@@ -58,7 +58,7 @@ PageTable::~PageTable()
 }
 
 Fault
-PageTable::page_check(Addr addr, int size) const
+PageTable::page_check(Addr addr, int size, uint32_t flags) const
 {
     if (size < sizeof(uint64_t)) {
         if (!isPowerOf2(size)) {
@@ -66,7 +66,7 @@ PageTable::page_check(Addr addr, int size) const
             return genMachineCheckFault();
         }
 
-        if ((size - 1) & addr)
+        if (((size - 1) & addr) && (flags & NO_ALIGN_FAULT == 0))
             return genAlignmentFault();
     }
     else {
@@ -75,7 +75,7 @@ PageTable::page_check(Addr addr, int size) const
             return genMachineCheckFault();
         }
 
-        if ((sizeof(uint64_t) - 1) & addr)
+        if (((sizeof(uint64_t) - 1) & addr) && (flags & NO_ALIGN_FAULT == 0))
             return genAlignmentFault();
     }
 
@@ -127,5 +127,5 @@ PageTable::translate(CpuRequestPtr &req)
     if (!translate(req->vaddr, req->paddr)) {
         return genMachineCheckFault();
     }
-    return page_check(req->paddr, req->size);
+    return page_check(req->paddr, req->size, req->flags);
 }

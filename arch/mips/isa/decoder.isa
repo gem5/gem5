@@ -43,14 +43,30 @@ decode OPCODE_HI default Unknown::unknown() {
 
                     }
 
-                    0x2: decode SRL {
-                        0: srl({{ Rd = Rt.uw >> SA; }});
+                    0x2: decode RS_SRL {
+                        0x0:decode SRL {
+                            0: srl({{ Rd = Rt.uw >> SA; }});
 
-                        //Hardcoded assuming 32-bit ISA, probably need parameter here
-                        1: rotr({{ Rd = (Rt.uw << (32 - SA)) | (Rt.uw >> SA);}});
+                            //Hardcoded assuming 32-bit ISA, probably need parameter here
+                            1: rotr({{ Rd = (Rt.uw << (32 - SA)) | (Rt.uw >> SA);}});
+                        }
                     }
 
-                    0x3: sra({{ Rd = Rt.sw >> SA; }});
+                    0x3: decode RS {
+                        0x0: sra({{
+                            uint32_t temp = Rt >> SA;
+
+                            if ( (Rt & 0x80000000) > 0 ) {
+                                uint32_t mask = 0x80000000;
+                                for(int i=0; i < SA; i++) {
+                                    temp |= mask;
+                                    mask = mask >> 1;
+                                }
+                            }
+
+                            Rd = temp;
+                        }});
+                    }
 
                     0x4: sllv({{ Rd = Rt.uw << Rs<4:0>; }});
 
@@ -61,7 +77,21 @@ decode OPCODE_HI default Unknown::unknown() {
                         1: rotrv({{ Rd = (Rt.uw << (32 - Rs<4:0>)) | (Rt.uw >> Rs<4:0>);}});
                     }
 
-                    0x7: srav({{ Rd = Rt.sw >> Rs<4:0>; }});
+                    0x7: srav({{
+                        int shift_amt = Rs<4:0>;
+
+                        uint32_t temp = Rt >> shift_amt;
+
+                        if ( (Rt & 0x80000000) > 0 ) {
+                                uint32_t mask = 0x80000000;
+                                for(int i=0; i < shift_amt; i++) {
+                                    temp |= mask;
+                                    mask = mask >> 1;
+                                }
+                            }
+
+                        Rd = temp;
+                    }});
                 }
             }
 
@@ -130,23 +160,27 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
             }
 
-            0x4: decode FUNCTION_LO {
-                format IntOp {
-                    0x0: add({{  Rd.sw = Rs.sw + Rt.sw;/*Trap on Overflow*/}});
-                    0x1: addu({{ Rd.sw = Rs.sw + Rt.sw;}});
-                    0x2: sub({{ Rd.sw = Rs.sw - Rt.sw; /*Trap on Overflow*/}});
-                    0x3: subu({{ Rd.sw = Rs.sw - Rt.uw;}});
-                    0x4: and({{ Rd = Rs & Rt;}});
-                    0x5: or({{ Rd = Rs | Rt;}});
-                    0x6: xor({{ Rd = Rs ^ Rt;}});
-                    0x7: nor({{ Rd = ~(Rs | Rt);}});
+            0x4: decode HINT {
+                0x0: decode FUNCTION_LO {
+                    format IntOp {
+                        0x0: add({{  Rd.sw = Rs.sw + Rt.sw;/*Trap on Overflow*/}});
+                        0x1: addu({{ Rd.sw = Rs.sw + Rt.sw;}});
+                        0x2: sub({{ Rd.sw = Rs.sw - Rt.sw; /*Trap on Overflow*/}});
+                        0x3: subu({{ Rd.sw = Rs.sw - Rt.sw;}});
+                        0x4: and({{ Rd = Rs & Rt;}});
+                        0x5: or({{ Rd = Rs | Rt;}});
+                        0x6: xor({{ Rd = Rs ^ Rt;}});
+                        0x7: nor({{ Rd = ~(Rs | Rt);}});
+                    }
                 }
             }
 
-            0x5: decode FUNCTION_LO {
-                format IntOp{
-                    0x2: slt({{  Rd.sw = ( Rs.sw < Rt.sw ) ? 1 : 0}});
-                    0x3: sltu({{ Rd.uw = ( Rs.uw < Rt.uw ) ? 1 : 0}});
+            0x5: decode HINT {
+                0x0: decode FUNCTION_LO {
+                    format IntOp{
+                        0x2: slt({{  Rd.sw = ( Rs.sw < Rt.sw ) ? 1 : 0}});
+                        0x3: sltu({{ Rd.uw = ( Rs.uw < Rt.uw ) ? 1 : 0}});
+                    }
                 }
             }
 
@@ -216,8 +250,13 @@ decode OPCODE_HI default Unknown::unknown() {
         format Branch {
             0x4: beq({{ cond = (Rs.sw == Rt.sw); }});
             0x5: bne({{ cond = (Rs.sw != Rt.sw); }});
-            0x6: blez({{ cond = (Rs.sw <= 0); }});
-            0x7: bgtz({{ cond = (Rs.sw > 0); }});
+            0x6: decode RT {
+                0x0: blez({{ cond = (Rs.sw <= 0); }});
+            }
+
+            0x7: decode RT {
+                0x0: bgtz({{ cond = (Rs.sw > 0); }});
+            }
         }
     }
 
@@ -226,11 +265,14 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: addi({{ Rt.sw = Rs.sw + imm; /*Trap If Overflow*/}});
             0x1: addiu({{ Rt.sw = Rs.sw + imm;}});
             0x2: slti({{ Rt.sw = ( Rs.sw < imm) ? 1 : 0 }});
-            0x3: sltiu({{ Rt.sw = ( Rs.sw < imm ) ? 1 : 0 }});
-            0x4: andi({{ Rt.sw = Rs.sw & INTIMM;}});
-            0x5: ori({{ Rt.sw = Rs.sw | INTIMM;}});
-            0x6: xori({{ Rt.sw = Rs.sw ^ INTIMM;}});
-            0x7: lui({{ Rt = INTIMM << 16}});
+            0x3: sltiu({{ Rt.uw = ( Rs.uw < (uint32_t)sextImm ) ? 1 : 0 }});
+            0x4: andi({{ Rt.sw = Rs.sw & zextImm;}});
+            0x5: ori({{ Rt.sw = Rs.sw | zextImm;}});
+            0x6: xori({{ Rt.sw = Rs.sw ^ zextImm;}});
+
+            0x7: decode RS {
+                0x0: lui({{ Rt = imm << 16}});
+            }
         }
     }
 
@@ -352,13 +394,37 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x0: decode RS_HI {
                 0x0: decode RS_LO {
-                    format FloatOp {
-                        0x0: mfc1({{ /*Rt.uw = Fs.ud<31:0>;*/ }});
-                        0x2: cfc1({{ /*Rt.uw = xc->readMiscReg(FPCR[Fs]);*/}});
-                        0x3: mfhc1({{ /*Rt.uw = Fs.ud<63:32>*/;}});
-                        0x4: mtc1({{ /*Fs = Rt.uw*/}});
-                        0x6: ctc1({{ /*xc->setMiscReg(FPCR[Fs],Rt);*/}});
-                        0x7: mthc1({{ /*Fs<63:32> = Rt.uw*/}});
+                    format WarnUnimpl {
+                        0x0: mfc1();//{{ /*Rt.uw = Fs.ud<31:0>;*/ }}
+                        0x3: mfhc1();// /*Rt.uw = Fs.ud<63:32>*/;
+                        0x4: mtc1();// /*Fs = Rt.uw*/
+                        0x7: mthc1();//{{/*Fs<63:32> = Rt.uw*/}}
+                    }
+
+                    format System {
+                        0x2: cfc1({{
+                            uint32_t fcsr_reg = xc->readMiscReg(FCSR);
+
+                            if (Fs == 0){
+                                Rt = xc->readMiscReg(FIR);
+                            } else if (Fs == 25) {
+                                Rt = 0 | (fcsr_reg & 0xFE000000) >> 24 | (fcsr_reg & 0x00800000) >> 23;
+                            } else if (Fs == 26) {
+                                Rt = 0 | (fcsr_reg & 0x0003F07C);
+                            } else if (Fs == 28) {
+                                Rt = 0 | (fcsr_reg);
+                            } else if (Fs == 31) {
+                                Rt = fcsr_reg;
+                            } else {
+                                panic("FP Control Value (%d) Not Available. Ignoring Access to"
+                                      "Floating Control Status Register",fcsr_reg);
+                            }
+
+                        }});
+
+                        0x6: ctc1({{
+                            /*xc->setMiscReg(FPCR[Fs],Rt);*/
+                        }});
                     }
                 }
 
@@ -830,14 +896,14 @@ decode OPCODE_HI default Unknown::unknown() {
         0x7: decode FUNCTION_HI {
 
             0x0: decode FUNCTION_LO {
-                format WarnUnimpl {
+                format FailUnimpl {
                     0x1: ext();
                     0x4: ins();
                 }
             }
 
             0x1: decode FUNCTION_LO {
-                format WarnUnimpl {
+                format FailUnimpl {
                     0x0: fork();
                     0x1: yield();
                 }
@@ -847,16 +913,16 @@ decode OPCODE_HI default Unknown::unknown() {
             //Table A-10 MIPS32 BSHFL Encoding of sa Field
             0x4: decode SA {
 
-                0x02: WarnUnimpl::wsbh();
+                0x02: FailUnimpl::wsbh();
 
                 format BasicOp {
-                    0x10: seb({{ Rd.sw = /* sext32(Rt<7>,24)  | */ Rt<7:0>}});
-                    0x18: seh({{ Rd.sw = /* sext32(Rt<15>,16) | */ Rt<15:0>}});
+                    0x10: seb({{ Rd.sw = Rt<7:0>}});
+                    0x18: seh({{ Rd.sw = Rt<15:0>}});
                 }
             }
 
             0x6: decode FUNCTION_LO {
-                0x7: BasicOp::rdhwr({{ /*Rt = xc->hwRegs[RD];*/ }});
+                0x7: FailUnimpl::rdhwr();//{{ /*Rt = xc->hwRegs[RD];*/ }}
             }
         }
     }
@@ -865,11 +931,97 @@ decode OPCODE_HI default Unknown::unknown() {
         format LoadMemory {
             0x0: lb({{ Rt.sw = Mem.sb; }});
             0x1: lh({{ Rt.sw = Mem.sh; }});
-            0x2: lwl({{ uint32_t temp = Mem.uw<31:16> << 16; Rt.uw &= 0x00FF; Rt.uw |= temp;}}, {{ EA = (Rs + disp) & ~3; }});
+
+            0x2: lwl({{
+                uint32_t mem_word = Mem.uw;
+                uint32_t unalign_addr = Rs + disp;
+                uint32_t offset = unalign_addr & 0x00000003;
+#if BYTE_ORDER == BIG_ENDIAN
+                std::cout << "Big Endian Byte Order\n";
+
+                switch(offset)
+                {
+                  case 0:
+                    Rt = mem_word;
+                    break;
+
+                  case 1:
+                    Rt &= 0x000F;
+                    Rt |= (mem_word << 4);
+                    break;
+
+                  case 2:
+                    Rt &= 0x00FF;
+                    Rt |= (mem_word << 8);
+                    break;
+
+                  case 3:
+                    Rt &= 0x0FFF;
+                    Rt |= (mem_word << 12);
+                    break;
+
+                  default:
+                    panic("lwl: bad offset");
+                }
+#elif BYTE_ORDER == LITTLE_ENDIAN
+                std::cout << "Little Endian Byte Order\n";
+
+                switch(offset)
+                {
+                  case 0:
+                    Rt &= 0x0FFF;
+                    Rt |= (mem_word << 12);
+                    break;
+
+                  case 1:
+                    Rt &= 0x00FF;
+                    Rt |= (mem_word << 8);
+                    break;
+
+                  case 2:
+                    Rt &= 0x000F;
+                    Rt |= (mem_word << 4);
+                    break;
+
+                  case 3:
+                    Rt = mem_word;
+                    break;
+
+                  default:
+                    panic("lwl: bad offset");
+                }
+#endif
+            }}, {{ EA = (Rs + disp) & ~3; }});
+
             0x3: lw({{ Rt.sw = Mem.sw; }});
             0x4: lbu({{ Rt.uw = Mem.ub; }});
             0x5: lhu({{ Rt.uw = Mem.uh; }});
-            0x6: lwr({{ uint32_t temp = 0x00FF & Mem.uw<15:0>; Rt.uw &= 0xFF00; Rt.uw |= temp; }}, {{ EA = (Rs + disp) & ~3; }});
+            0x6: lwr({{
+                uint32_t mem_word = Mem.uw;
+                uint32_t unalign_addr = Rs + disp;
+                uint32_t offset = unalign_addr & 0x00000003;
+
+#if BYTE_ORDER == BIG_ENDIAN
+                switch(offset)
+                {
+                  case 0: Rt &= 0xFFF0;  Rt |= (mem_word >> 12); break;
+                  case 1: Rt &= 0xFF00;  Rt |= (mem_word >> 8);  break;
+                  case 2: Rt &= 0xF000;  Rt |= (mem_word >> 4);  break;
+                  case 3: Rt = mem_word; break;
+                  default: panic("lwr: bad offset");
+                }
+#elif BYTE_ORDER == LITTLE_ENDIAN
+                switch(offset)
+                {
+                  case 0: Rt = mem_word; break;
+                  case 1: Rt &= 0xF000;  Rt |= (mem_word >> 4);  break;
+                  case 2: Rt &= 0xFF00;  Rt |= (mem_word >> 8);  break;
+                  case 3: Rt &= 0xFFF0;  Rt |= (mem_word >> 12); break;
+                  default: panic("lwr: bad offset");
+                }
+#endif
+            }},
+            {{ EA = (Rs + disp) & ~3; }});
         }
 
         0x7: FailUnimpl::reserved();
@@ -879,9 +1031,144 @@ decode OPCODE_HI default Unknown::unknown() {
         format StoreMemory {
             0x0: sb({{ Mem.ub = Rt<7:0>; }});
             0x1: sh({{ Mem.uh = Rt<15:0>; }});
-            0x2: swl({{ Mem.uh = Rt<31:16>; }}, {{ EA = (Rs + disp) & ~3; }});
+            0x2: swl({{
+                uint32_t mem_word = 0;
+                uint32_t aligned_addr = (Rs + disp) & ~3;
+                uint32_t unalign_addr = Rs + disp;
+                uint32_t offset = unalign_addr & 0x00000003;
+
+                DPRINTF(IEW,"Execute: aligned=0x%x unaligned=0x%x\n offset=0x%x",
+                        aligned_addr,unalign_addr,offset);
+
+                fault = xc->read(aligned_addr, (uint32_t&)mem_word, memAccessFlags);
+
+#if BYTE_ORDER == BIG_ENDIAN
+                switch(offset)
+                {
+                  case 0:
+                    Mem = Rt;
+                    break;
+
+                  case 1:
+                    mem_word &= 0xF000;
+                    mem_word |= (Rt >> 4);
+                    Mem = mem_word;
+                    break;
+
+                  case 2:
+                    mem_word &= 0xFF00;
+                    mem_word |= (Rt >> 8);
+                    Mem = mem_word;
+                    break;
+
+                  case 3:
+                    mem_word &= 0xFFF0;
+                    mem_word |= (Rt >> 12);
+                    Mem = mem_word;
+                   break;
+
+                  default:
+                    panic("swl: bad offset");
+                }
+#elif BYTE_ORDER == LITTLE_ENDIAN
+                switch(offset)
+                {
+                  case 0:
+                    mem_word &= 0xFFF0;
+                    mem_word |= (Rt >> 12);
+                    Mem = mem_word;
+                    break;
+
+                  case 1:
+                    mem_word &= 0xFF00;
+                    mem_word |= (Rt >> 8);
+                    Mem = mem_word;
+                    break;
+
+                  case 2:
+                    mem_word &= 0xF000;
+                    mem_word |= (Rt >> 4);
+                    Mem = mem_word;
+                    break;
+
+                  case 3:
+                    Mem = Rt;
+                   break;
+
+                  default:
+                    panic("swl: bad offset");
+                }
+#endif
+            }},{{ EA = (Rs + disp) & ~3; }},mem_flags = NO_ALIGN_FAULT);
+
             0x3: sw({{ Mem.uw = Rt<31:0>; }});
-            0x6: swr({{ Mem.uh = Rt<15:0>; }},{{ EA = ((Rs + disp) & ~3) + 4;}});
+
+            0x6: swr({{
+                uint32_t mem_word = 0;
+                uint32_t aligned_addr = (Rs + disp) & ~3;
+                uint32_t unalign_addr = Rs + disp;
+                uint32_t offset = unalign_addr & 0x00000003;
+
+                fault = xc->read(aligned_addr, (uint32_t&)mem_word, memAccessFlags);
+
+#if BYTE_ORDER == BIG_ENDIAN
+                switch(offset)
+                {
+                  case 0:
+                    mem_word &= 0x0FFF;
+                    mem_word |= (Rt << 12);
+                    Mem = mem_word;
+                    break;
+
+                  case 1:
+                    mem_word &= 0x00FF;
+                    mem_word |= (Rt << 8);
+                    Mem = mem_word;
+                    break;
+
+                  case 2:
+                    mem_word &= 0x000F;
+                    mem_word |= (Rt << 4);
+                    Mem = mem_word;
+                    break;
+
+                  case 3:
+                    Mem = Rt;
+                    break;
+
+                  default:
+                    panic("swr: bad offset");
+                }
+#elif BYTE_ORDER == LITTLE_ENDIAN
+                switch(offset)
+                {
+                  case 0:
+                    Mem = Rt;
+                    break;
+
+                  case 1:
+                    mem_word &= 0x000F;
+                    mem_word |= (Rt << 4);
+                    Mem = mem_word;
+                    break;
+
+                  case 2:
+                    mem_word &= 0x00FF;
+                    mem_word |= (Rt << 8);
+                    Mem = mem_word;
+                    break;
+
+                  case 3:
+                    mem_word &= 0x0FFF;
+                    mem_word |= (Rt << 12);
+                    Mem = mem_word;
+                    break;
+
+                  default:
+                    panic("swr: bad offset");
+                }
+#endif
+            }},{{ EA = (Rs + disp) & ~3;}},mem_flags = NO_ALIGN_FAULT);
         }
 
         format WarnUnimpl {
@@ -891,7 +1178,7 @@ decode OPCODE_HI default Unknown::unknown() {
     }
 
     0x6: decode OPCODE_LO default FailUnimpl::reserved() {
-        0x0: WarnUnimpl::ll();
+        0x0: FailUnimpl::ll();
 
         format LoadMemory {
             0x1: lwc1({{ /*F_t<31:0> = Mem.sf; */}});
@@ -901,7 +1188,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
 
     0x7: decode OPCODE_LO default FailUnimpl::reserved() {
-        0x0: WarnUnimpl::sc();
+        0x0: FailUnimpl::sc();
 
         format StoreMemory {
             0x1: swc1({{ //Mem.sf = Ft<31:0>; }});

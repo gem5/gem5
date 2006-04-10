@@ -26,12 +26,34 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+output header {{
+        std::string inst2string(MachInst machInst);
+}};
 output decoder {{
+
+std::string inst2string(MachInst machInst)
+{
+    string str = "";
+    uint32_t mask = 0x80000000;
+
+    for(int i=0; i < 32; i++) {
+        if ((machInst & mask) == 0) {
+            str += "0";
+        } else {
+            str += "1";
+        }
+
+        mask = mask >> 1;
+    }
+
+    return str;
+}
+
     std::string
     Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
-        return csprintf("%-10s (inst 0x%x, opcode 0x%x)",
-                        "unknown", machInst, OPCODE);
+        return csprintf("%-10s (inst 0x%x, opcode 0x%x, binary:%s)",
+                        "unknown", machInst, OPCODE, inst2string(machInst));
     }
 }};
 
@@ -41,7 +63,7 @@ output exec {{
                      Trace::InstRecord *traceData) const
     {
         panic("attempt to execute unknown instruction "
-              "(inst 0x%08x, opcode 0x%x)", machInst, OPCODE);
+              "(inst 0x%08x, opcode 0x%x, binary: %s)", machInst, OPCODE, inst2string(machInst));
         return new UnimplementedOpcodeFault;
     }
 }};

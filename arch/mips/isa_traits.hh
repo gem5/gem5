@@ -61,7 +61,7 @@ class SyscallReturn {
            template <class T>
            SyscallReturn(T v, bool s)
            {
-               retval = (uint64_t)v;
+               retval = (uint32_t)v;
                success = s;
            }
 
@@ -69,7 +69,7 @@ class SyscallReturn {
            SyscallReturn(T v)
            {
                success = (v >= 0);
-               retval = (uint64_t)v;
+               retval = (uint32_t)v;
            }
 
            ~SyscallReturn() {}
@@ -137,7 +137,7 @@ namespace MipsISA
 
     const int SyscallNumReg = ReturnValueReg1;
     const int SyscallPseudoReturnReg = ReturnValueReg1;
-    const int SyscallSuccessReg = ReturnValueReg1;
+    const int SyscallSuccessReg = ArgumentReg3;
 
     const int LogVMPageSize = 13;	// 8K bytes
     const int VMPageSize = (1 << LogVMPageSize);
@@ -162,7 +162,7 @@ namespace MipsISA
         MiscReg_DepTag = 67
     };
 
-    typedef uint64_t IntReg;
+    typedef uint32_t IntReg;
     typedef IntReg IntRegFile[NumIntRegs];
 
 /* floating point register file entry type
@@ -240,7 +240,7 @@ namespace MipsISA
 
     // cop-0/cop-1 system control register file
     typedef uint64_t MiscReg;
-//typedef MiscReg MiscRegFile[NumMiscRegs];
+    //typedef MiscReg MiscRegFile[NumMiscRegs];
     class MiscRegFile {
 
       protected:
@@ -451,6 +451,7 @@ namespace MipsISA
         Hi,
         Lo,
         FCSR,
+        FIR,
         FPCR,
 
         //Alpha Regs, but here now, for
@@ -589,21 +590,15 @@ extern const Addr PageOffset;
 
     static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
     {
-        // check for error condition.  Alpha syscall convention is to
-        // indicate success/failure in reg a3 (r19) and put the
-        // return value itself in the standard return value reg (v0).
         if (return_value.successful()) {
             // no error
-            regs->intRegFile[ReturnValueReg1] = 0;
-            regs->intRegFile[ReturnValueReg2] = return_value.value();
+            regs->intRegFile[SyscallSuccessReg] = 0;
+            regs->intRegFile[ReturnValueReg1] = return_value.value();
         } else {
             // got an error, return details
-            regs->intRegFile[ReturnValueReg1] = (IntReg) -1;
-            regs->intRegFile[ReturnValueReg2] = -return_value.value();
+            regs->intRegFile[SyscallSuccessReg] = (IntReg) -1;
+            regs->intRegFile[ReturnValueReg1] = -return_value.value();
         }
-
-        //regs->intRegFile[ReturnValueReg1] = (IntReg)return_value;
-        //panic("Returning from syscall\n");
     }
 
     // Machine operations

@@ -199,23 +199,8 @@ def template LoadMemAccExecute {{
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
     {
-        Addr EA;
         Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
-            %(code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
+        //Fill in Code for Out-of-Order CPUs
         return fault;
     }
 }};
@@ -251,18 +236,8 @@ def template LoadInitiateAcc {{
     Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Addr EA;
         Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_src_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
-        }
-
+        //Fill in Code for Out-of-Order CPUs
         return fault;
     }
 }};
@@ -274,21 +249,7 @@ def template LoadCompleteAcc {{
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_src_decl)s;
-        %(op_dest_decl)s;
-
-        memcpy(&Mem, data, sizeof(Mem));
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
+        //Fill in Code for Out-of-Order CPUs
         return fault;
     }
 }};
@@ -299,33 +260,8 @@ def template StoreMemAccExecute {{
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
     {
-        Addr EA;
         Fault fault = NoFault;
-        uint64_t write_result = 0;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (fault == NoFault) {
-            %(code)s;
-        }
-
-        if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
-            if (traceData) { traceData->setData(Mem); }
-        }
-
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
+        //Fill in Code for Out-of-Order CPUs
         return fault;
     }
 }};
@@ -370,26 +306,8 @@ def template StoreInitiateAcc {{
     Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Addr EA;
         Fault fault = NoFault;
-        uint64_t write_result = 0;
-
-        %(fp_enable_check)s;
-        %(op_src_decl)s;
-        %(op_dest_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
-            if (traceData) { traceData->setData(Mem); }
-        }
-
+        //Fill in Code for Out-of-Order CPUs
         return fault;
     }
 }};
@@ -401,21 +319,7 @@ def template StoreCompleteAcc {{
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        uint64_t write_result = 0;
-
-        %(fp_enable_check)s;
-        %(op_dest_decl)s;
-
-        memcpy(&write_result, data, sizeof(write_result));
-
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
+        //Fill in Code for Out-of-Order CPUs
         return fault;
     }
 }};
@@ -446,6 +350,14 @@ def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       exec_template_base = 'Store')
+}};
+
+def format UnalignedStore(memacc_code, postacc_code,
+                     ea_code = {{ EA = Rb + disp; }},
+                     mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      postacc_code, exec_template_base = 'Store')
 }};
 
 //FP loads are offloaded to these formats for now ...

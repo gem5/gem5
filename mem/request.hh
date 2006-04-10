@@ -58,6 +58,8 @@ const unsigned NO_FAULT         = 0x020;
 const unsigned PF_EXCLUSIVE	= 0x100;
 /** The request should be marked as LRU. */
 const unsigned EVICT_NEXT	= 0x200;
+/** The request should ignore unaligned access faults */
+const unsigned NO_ALIGN_FAULT   = 0x400;
 
 class Request
 {

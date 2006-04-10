@@ -26,7 +26,7 @@ def operands {{
     'Ft': ('FloatReg', 'sf', 'FT', 'IsFloating', 3),
     'Fr': ('FloatReg', 'sf', 'FR', 'IsFloating', 3),
 
-    'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
+    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
 
     'NPC': ('NPC', 'uw', None, ( None, None, 'IsControl' ), 4),
     'NNPC':('NNPC', 'uw', None, ( None, None, 'IsControl' ), 4)

@@ -29,17 +29,19 @@ output header {{
         {
                 protected:
 
-                int32_t imm;
+                int16_t imm;
+                int32_t sextImm;
+                uint32_t zextImm;
 
                 /// Constructor
                 IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                                MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM)
+                    MipsStaticInst(mnem, _machInst, __opClass),imm(INTIMM),
+                    sextImm(INTIMM),zextImm(0x0000FFFF & INTIMM)
                 {
                     //If Bit 15 is 1 then Sign Extend
-                    int32_t temp = imm & 0x00008000;
-
+                    int32_t temp = sextImm & 0x00008000;
                     if (temp > 0 && mnemonic != "lui") {
-                        imm |= 0xFFFF0000;
+                        sextImm |= 0xFFFF0000;
                     }
                 }
 
@@ -99,9 +101,9 @@ output decoder {{
             }
 
             if( mnemonic == "lui")
-                ccprintf(ss, "%08p ", imm);
+                ccprintf(ss, "%08p ", sextImm);
             else
-                ss << (int) imm;
+                ss << (int) sextImm;
 
             return ss.str();
         }
