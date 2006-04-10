@@ -163,8 +163,30 @@ namespace MipsISA
         MiscReg_DepTag = 67
     };
 
-    typedef uint32_t IntReg;
-    typedef IntReg IntRegFile[NumIntRegs];
+    typedef uint64_t IntReg;
+
+    class IntRegFile
+    {
+      protected:
+        IntReg regs[NumIntRegs];
+
+      public:
+        IntReg readReg(int intReg)
+        {
+            return regs[intReg];
+        }
+
+        Fault setReg(int intReg, const IntReg &val)
+        {
+            regs[intReg] = val;
+            return NoFault;
+        }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+    };
 
 /* floating point register file entry type
     typedef union {
@@ -241,7 +263,7 @@ namespace MipsISA
 
     // cop-0/cop-1 system control register file
     typedef uint64_t MiscReg;
-    //typedef MiscReg MiscRegFile[NumMiscRegs];
+//typedef MiscReg MiscRegFile[NumMiscRegs];
     class MiscRegFile {
 
       protected:
@@ -452,7 +474,6 @@ namespace MipsISA
         Hi,
         Lo,
         FCSR,
-        FIR,
         FPCR,
 
         //Alpha Regs, but here now, for
@@ -485,17 +506,130 @@ extern const Addr PageOffset;
         MiscReg ctrlreg;
     } AnyReg;
 
-    struct RegFile {
+    class RegFile {
+      protected:
         IntRegFile intRegFile;		// (signed) integer register file
         FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegs;		// control register file
+        MiscRegFile miscRegFile;	// control register file
 
+      public:
+
+        void clear()
+        {
+            bzero(&intRegFile, sizeof(intRegFile));
+            bzero(&floatRegFile, sizeof(floatRegFile));
+            bzero(&miscRegFile, sizeof(miscRegFile));
+        }
+
+        MiscReg readMiscReg(int miscReg)
+        {
+            return miscRegFile.readReg(miscReg);
+        }
+
+        MiscReg readMiscRegWithEffect(int miscReg,
+                Fault &fault, ExecContext *xc)
+        {
+            fault = NoFault;
+            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+        }
+
+        Fault setMiscReg(int miscReg, const MiscReg &val)
+        {
+            return miscRegFile.setReg(miscReg, val);
+        }
+
+        Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
+                ExecContext * xc)
+        {
+            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+        }
+
+        FloatReg readFloatReg(int floatReg)
+        {
+            return floatRegFile.readReg(floatReg);
+        }
+
+        FloatReg readFloatReg(int floatReg, int width)
+        {
+            return readFloatReg(floatReg);
+        }
+
+        FloatRegBits readFloatRegBits(int floatReg)
+        {
+            return floatRegFile.readRegBits(floatReg);
+        }
+
+        FloatRegBits readFloatRegBits(int floatReg, int width)
+        {
+            return readFloatRegBits(floatReg);
+        }
+
+        Fault setFloatReg(int floatReg, const FloatReg &val)
+        {
+            return floatRegFile.setReg(floatReg, val);
+        }
+
+        Fault setFloatReg(int floatReg, const FloatReg &val, int width)
+        {
+            return setFloatReg(floatReg, val);
+        }
+
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
+        {
+            return floatRegFile.setRegBits(floatReg, val);
+        }
+
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+        {
+            return setFloatRegBits(floatReg, val);
+        }
+
+        IntReg readIntReg(int intReg)
+        {
+            return intRegFile.readReg(intReg);
+        }
+
+        Fault setIntReg(int intReg, const IntReg &val)
+        {
+            return intRegFile.setReg(intReg, val);
+        }
+      protected:
 
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
         Addr nnpc;			// next-next-cycle program counter
                                         // used to implement branch delay slot
                                         // not real register
+      public:
+        Addr readPC()
+        {
+            return pc;
+        }
+
+        void setPC(Addr val)
+        {
+            pc = val;
+        }
+
+        Addr readNextPC()
+        {
+            return npc;
+        }
+
+        void setNextPC(Addr val)
+        {
+            npc = val;
+        }
+
+        Addr readNextNPC()
+        {
+            return nnpc;
+        }
+
+        void setNextNPC(Addr val)
+        {
+            nnpc = val;
+        }
 
         MiscReg hi;                     // MIPS HI Register
         MiscReg lo;                     // MIPS LO Register
@@ -600,12 +734,12 @@ extern const Addr PageOffset;
     {
         if (return_value.successful()) {
             // no error
-            regs->intRegFile[SyscallSuccessReg] = 0;
-            regs->intRegFile[ReturnValueReg1] = return_value.value();
+            regs->setIntReg(SyscallSuccessReg, 0);
+            regs->setIntReg(ReturnValueReg1, return_value.value());
         } else {
             // got an error, return details
-            regs->intRegFile[SyscallSuccessReg] = (IntReg) -1;
-            regs->intRegFile[ReturnValueReg1] = -return_value.value();
+            regs->setIntReg(SyscallSuccessReg, (IntReg) -1);
+            regs->setIntReg(ReturnValueReg1, -return_value.value());
         }
     }
 
