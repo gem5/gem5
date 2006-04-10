@@ -473,6 +473,7 @@ namespace MipsISA
         //More Misc. Regs
         Hi,
         Lo,
+        FIR,
         FCSR,
         FPCR,
 
