@@ -34,16 +34,11 @@
 #include <string>
 #include <vector>
 
-#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "dev/tsunami_pchip.hh"
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -52,7 +47,7 @@ using namespace std;
 using namespace TheISA;
 
 TsunamiPChip::TsunamiPChip(Params *p)
-: BasicPioDevice(p),
+: BasicPioDevice(p)
 {
     pioSize = 0xfff;
 
@@ -122,7 +117,7 @@ TsunamiPChip::read(Packet &pkt)
       case TSDEV_PC_TBA2:
             *data64 = tba[2];
             break;
-      case Tbreak;
+      case TSDEV_PC_TBA3:
             *data64 = tba[3];
             break;
       case TSDEV_PC_PCTL:
@@ -157,7 +152,7 @@ TsunamiPChip::read(Packet &pkt)
 
 }
 
-Fault
+Tick
 TsunamiPChip::write(Packet &pkt)
 {
     pkt.time = curTick + pioDelay;
@@ -166,7 +161,7 @@ TsunamiPChip::write(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     Addr daddr = pkt.addr - pioAddr;
 
-    uint64_t val = *(uint64_t *)pkt.data;
+    uint64_t data64 = *(uint64_t *)pkt.data;
     assert(pkt.size == sizeof(uint64_t));
 
     DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt.addr, pkt.size);
@@ -295,7 +290,7 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | (ULL(0x7f) << 13);
                     pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
 
-                    pioPort->readBlob(&pteEntry, pteAddr, sizeof(uint64_t));
+                    pioPort->readBlob(pteAddr, (uint8_t*)&pteEntry, sizeof(uint64_t));
 
                     dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) | (busAddr & ULL(0x1fff));
 
@@ -332,11 +327,6 @@ TsunamiPChip::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(tba, 4);
 }
 
-Tick
-TsunamiPChip::cacheAccess(MemReqPtr &req)
-{
-    return curTick + pioLatency;
-}
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiPChip)
 

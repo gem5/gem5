@@ -35,34 +35,25 @@
 #include <vector>
 #include <bitset>
 
-#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
-#include "dev/pcidev.hh"
+//#include "dev/pcidev.hh"
 #include "dev/pcireg.h"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
+#include "dev/platform.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
 
-PciConfigAll::PciConfigAll(const string &name,
-                           Addr a, MemoryController *mmu,
-                           HierParams *hier, Bus *pio_bus, Tick pio_latency)
-    : PioDevice(name, NULL), addr(a)
+PciConfigAll::PciConfigAll(Params *p)
+    : BasicPioDevice(p)
 {
-    mmu->add_child(this, RangeSize(addr, size));
+    pioSize = 0xffffff;
 
-    if (pio_bus) {
-        pioInterface = newPioInterface(name + ".pio", hier, pio_bus, this,
-                                      &PciConfigAll::cacheAccess);
-        pioInterface->addAddrRange(RangeSize(addr, size));
-        pioLatency = pio_latency * pio_bus->clockRate;
-    }
+    // Set backpointer for pci config. Really the config stuff should be able to
+    // automagically do this
+    p->platform->pciconfig = this;
 
     // Make all the pointers to devices null
     for(int x=0; x < MAX_PCI_DEV; x++)
@@ -77,7 +68,7 @@ PciConfigAll::PciConfigAll(const string &name,
 void
 PciConfigAll::startup()
 {
-    bitset<256> intLines;
+/*    bitset<256> intLines;
     PciDev *tempDev;
     uint8_t intline;
 
@@ -94,79 +85,109 @@ PciConfigAll::startup()
            } // devices != NULL
         } // PCI_FUNC
     } // PCI_DEV
-
+  */
 }
 
-Fault
-PciConfigAll::read(MemReqPtr &req, uint8_t *data)
+Tick
+PciConfigAll::read(Packet &pkt)
 {
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
-
-    DPRINTF(PciConfigAll, "read  va=%#x da=%#x size=%d\n",
-            req->vaddr, daddr, req->size);
-
+    Addr daddr = pkt.addr - pioAddr;
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
-    int reg = daddr & 0xFF;
+    //int reg = daddr & 0xFF;
 
-    if (devices[device][func] == NULL) {
-        switch (req->size) {
-           // case sizeof(uint64_t):
-           //     *(uint64_t*)data = 0xFFFFFFFFFFFFFFFF;
-           //     return NoFault;
-            case sizeof(uint32_t):
-                *(uint32_t*)data = 0xFFFFFFFF;
-                return NoFault;
-            case sizeof(uint16_t):
-                *(uint16_t*)data = 0xFFFF;
-                return NoFault;
-            case sizeof(uint8_t):
-                *(uint8_t*)data = 0xFF;
-                return NoFault;
-            default:
-                panic("invalid access size(?) for PCI configspace!\n");
-        }
-    } else {
-        switch (req->size) {
-            case sizeof(uint32_t):
-            case sizeof(uint16_t):
-            case sizeof(uint8_t):
-                devices[device][func]->readConfig(reg, req->size, data);
-                return NoFault;
-            default:
-                panic("invalid access size(?) for PCI configspace!\n");
-        }
+    pkt.time = curTick + pioDelay;
+
+    DPRINTF(PciConfigAll, "read  va=%#x da=%#x size=%d\n", pkt.addr, daddr,
+            pkt.size);
+
+    uint8_t *data8;
+    uint16_t *data16;
+    uint32_t *data32;
+
+    switch (pkt.size) {
+/*      case sizeof(uint64_t):
+         if (!pkt.data) {
+             data64 = new uint64_t;
+             pkt.data = (uint8_t*)data64;
+         } else {
+             data64 = (uint64_t*)pkt.data;
+         }
+         if (devices[device][func] == NULL)
+             *data64 = 0xFFFFFFFFFFFFFFFFULL;
+         else
+             devices[device][func]->readConfig(reg, req.size, data64);
+         break;*/
+      case sizeof(uint32_t):
+         if (!pkt.data) {
+             data32 = new uint32_t;
+             pkt.data = (uint8_t*)data32;
+         } else {
+             data32 = (uint32_t*)pkt.data;
+         }
+         if (devices[device][func] == NULL)
+             *data32 = 0xFFFFFFFF;
+         else
+             ;//devices[device][func]->readConfig(reg, req.size, data32);
+         break;
+      case sizeof(uint16_t):
+         if (!pkt.data) {
+             data16 = new uint16_t;
+             pkt.data = (uint8_t*)data16;
+         } else {
+             data16 = (uint16_t*)pkt.data;
+         }
+         if (devices[device][func] == NULL)
+             *data16 = 0xFFFF;
+         else
+             ;//devices[device][func]->readConfig(reg, req.size, data16);
+         break;
+      case sizeof(uint8_t):
+         if (!pkt.data) {
+             data8 = new uint8_t;
+             pkt.data = data8;
+         } else {
+             data8 = (uint8_t*)pkt.data;
+         }
+         if (devices[device][func] == NULL)
+             *data8 = 0xFF;
+         else
+             ;//devices[device][func]->readConfig(reg, req.size, data8);
+         break;
+      default:
+        panic("invalid access size(?) for PCI configspace!\n");
     }
-
-    DPRINTFN("PCI Configspace  ERROR: read  daddr=%#x size=%d\n",
-             daddr, req->size);
-
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
-Fault
-PciConfigAll::write(MemReqPtr &req, const uint8_t *data)
+Tick
+PciConfigAll::write(Packet &pkt)
 {
-    Addr daddr = (req->paddr - (addr & EV5::PAddrImplMask));
+    pkt.time = curTick + pioDelay;
+
+    assert(pkt.result == Unknown);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt.size == sizeof(uint8_t) || pkt.size == sizeof(uint16_t) ||
+            pkt.size == sizeof(uint32_t));
+    Addr daddr = pkt.addr - pioAddr;
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
-    int reg = daddr & 0xFF;
+//    int reg = daddr & 0xFF;
 
     if (devices[device][func] == NULL)
         panic("Attempting to write to config space on non-existant device\n");
-    else if (req->size != sizeof(uint8_t) &&
-             req->size != sizeof(uint16_t) &&
-             req->size != sizeof(uint32_t))
-        panic("invalid access size(?) for PCI configspace!\n");
 
     DPRINTF(PciConfigAll, "write - va=%#x size=%d data=%#x\n",
-            req->vaddr, req->size, *(uint32_t*)data);
+            pkt.addr, pkt.size, *(uint32_t*)pkt.data);
 
-    devices[device][func]->writeConfig(reg, req->size, data);
+//    devices[device][func]->writeConfig(reg, req->size, data);
 
-    return NoFault;
+    return pioDelay;
 }
 
 void
@@ -189,40 +210,34 @@ PciConfigAll::unserialize(Checkpoint *cp, const std::string &section)
      */
 }
 
-Tick
-PciConfigAll::cacheAccess(MemReqPtr &req)
-{
-    return curTick + pioLatency;
-}
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
-    SimObjectParam<MemoryController *> mmu;
-    Param<Addr> addr;
-    Param<Addr> mask;
-    SimObjectParam<Bus*> pio_bus;
+    Param<Addr> pio_addr;
     Param<Tick> pio_latency;
-    SimObjectParam<HierParams *> hier;
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<System *> system;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mask, "Address Mask"),
-    INIT_PARAM_DFLT(pio_bus, "The IO Bus to attach to", NULL),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM_DFLT(hier, "Hierarchy global variables", &defaultHierParams)
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(system, "system object")
 
 END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
 CREATE_SIM_OBJECT(PciConfigAll)
 {
-    return new PciConfigAll(getInstanceName(), addr, mmu, hier, pio_bus,
-                            pio_latency);
+    BasicPioDevice::Params *p = new BasicPioDevice::Params;
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->platform = platform;
+    p->system = system;
+    return new PciConfigAll(p);
 }
 
 REGISTER_SIM_OBJECT("PciConfigAll", PciConfigAll)

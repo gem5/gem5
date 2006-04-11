@@ -59,8 +59,9 @@ class Platform : public SimObject
     System *system;
 
   public:
-    Platform(const std::string &name, IntrControl *intctrl, PciConfigAll *pci);
+    Platform(const std::string &name, IntrControl *intctrl);
     virtual ~Platform();
+    virtual void init() { if (pciconfig == NULL) panic("PCI Config not set"); }
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
     virtual Tick intrFrequency() = 0;

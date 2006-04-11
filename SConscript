@@ -188,6 +188,7 @@ full_system_sources = Split('''
 	dev/disk_image.cc
 	dev/io_device.cc
 	dev/isa_fake.cc
+	dev/pciconfigall.cc
 	dev/platform.cc
         dev/simconsole.cc
 	dev/simple_disk.cc
@@ -221,7 +222,6 @@ full_system_sources = Split('''
 #	dev/ide_ctrl.cc
 #	dev/ide_disk.cc
 #	dev/ns_gige.cc
-#	dev/pciconfigall.cc
 #	dev/pcidev.cc
 #	dev/pcifake.cc
 #	dev/pktfifo.cc

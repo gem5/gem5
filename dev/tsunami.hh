@@ -38,12 +38,9 @@
 #include "dev/platform.hh"
 
 class IdeController;
-class TlaserClock;
-class NSGigE;
 class TsunamiCChip;
 class TsunamiPChip;
 class TsunamiIO;
-class PciConfigAll;
 class System;
 
 /**
@@ -86,8 +83,7 @@ class Tsunami : public Platform
      * @param name name of the object
      * @param intrctrl pointer to the interrupt controller
      */
-    Tsunami(const std::string &name, System *s, IntrControl *intctrl,
-            PciConfigAll *pci);
+    Tsunami(const std::string &name, System *s, IntrControl *intctrl);
 
     /**
      * Return the interrupting frequency to AlphaAccess

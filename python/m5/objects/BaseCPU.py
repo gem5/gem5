@@ -2,6 +2,7 @@ from m5 import *
 class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True
+    mem = Param.MemObject("memory")
 
     if build_env['FULL_SYSTEM']:
         dtb = Param.AlphaDTB("Data TLB")
@@ -9,7 +10,6 @@ class BaseCPU(SimObject):
         system = Param.System(Parent.any, "system object")
         cpu_id = Param.Int(-1, "CPU identifier")
     else:
-        mem = Param.MemObject("memory")
         workload = VectorParam.Process("processes to run")
 
     max_insts_all_threads = Param.Counter(0,

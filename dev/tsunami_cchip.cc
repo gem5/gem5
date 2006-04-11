@@ -71,16 +71,15 @@ TsunamiCChip::TsunamiCChip(Params *p)
 Tick
 TsunamiCChip::read(Packet &pkt)
 {
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", req->vaddr, req->size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
 
     assert(pkt.result == Unknown);
     assert(pkt.addr > pioAddr && pkt.addr < pioAddr + pioSize);
 
     pkt.time = curTick + pioDelay;
-    Addr regnum = (req->paddr - pioAddr) >> 6;
-    Addr daddr = (req->paddr - pioAddr);
+    Addr regnum = (pkt.addr - pioAddr) >> 6;
+    Addr daddr = (pkt.addr - pioAddr);
 
-    uint32_t *data32;
     uint64_t *data64;
 
     switch (pkt.size) {
@@ -113,7 +112,7 @@ TsunamiCChip::read(Packet &pkt)
                    break;
               case TSDEV_CC_MISC:
                   *data64 = (ipint << 8) & 0xF | (itint << 4) & 0xF |
-                                     (pkt.req->cpuId & 0x3);
+                                     (pkt.req->getCpuNum() & 0x3);
                   break;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
@@ -181,7 +180,7 @@ TsunamiCChip::read(Packet &pkt)
         panic("invalid access size(?) for tsunami register!\n");
     }
     DPRINTFN("Tsunami CChip: read  regnum=%#x size=%d data=%lld\n", regnum,
-            req->size, *data);
+            pkt.size, *data64);
 
     pkt.result = Success;
     return pioDelay;
@@ -201,7 +200,7 @@ TsunamiCChip::write(Packet &pkt)
     uint64_t val = *(uint64_t *)pkt.data;
     assert(pkt.size == sizeof(uint64_t));
 
-    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", req->addr, val);
+    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", pkt.addr, val);
 
     bool supportedWrite = false;
 
@@ -289,7 +288,6 @@ TsunamiCChip::write(Packet &pkt)
             case TSDEV_CC_AAR2:
             case TSDEV_CC_AAR3:
                 panic("TSDEV_CC_AARx write not implemeted\n");
-                return NoFault;
             case TSDEV_CC_DIM0:
             case TSDEV_CC_DIM1:
             case TSDEV_CC_DIM2:
@@ -506,12 +504,6 @@ TsunamiCChip::clearDRIR(uint32_t interrupt)
     }
     else
         DPRINTF(Tsunami, "Spurrious clear? interrupt %d\n", interrupt);
-}
-
-Tick
-TsunamiCChip::cacheAccess(MemReqPtr &req)
-{
-    return curTick + pioLatency;
 }
 
 

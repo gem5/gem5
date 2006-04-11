@@ -33,8 +33,8 @@
 using namespace std;
 using namespace TheISA;
 
-Platform::Platform(const string &name, IntrControl *intctrl, PciConfigAll *pci)
-    : SimObject(name), intrctrl(intctrl), pciconfig(pci)
+Platform::Platform(const string &name, IntrControl *intctrl)
+    : SimObject(name), intrctrl(intctrl)
 {
 }
 
