@@ -662,6 +662,11 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     if (data_write_req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Write");
 
+    // @todo this is a hack and only works on uniprocessor systems some one else
+    // can implement LL/SC.
+    if (data_write_req->getFlags() & LOCKED)
+        *res = 1;
+
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
     return fault;
@@ -957,11 +962,6 @@ SimpleCPU::tick()
         // Try to fetch an instruction
 
         // set up memory request for instruction fetch
-#if FULL_SYSTEM
-#define IFETCH_FLAGS(pc)	((pc) & 1) ? PHYSICAL : 0
-#else
-#define IFETCH_FLAGS(pc)	0
-#endif
 
         DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
                 cpuXC->readNextPC(),cpuXC->readNextNPC());
@@ -971,12 +971,14 @@ SimpleCPU::tick()
         ifetch_req->setSize(sizeof(MachInst));
 #endif
 
+        ifetch_req->reset(true);
         ifetch_req->setVaddr(cpuXC->readPC() & ~3);
         ifetch_req->setTime(curTick);
-
-/*	memReq->reset(xc->regs.pc & ~3, sizeof(uint32_t),
-                     IFETCH_FLAGS(xc->regs.pc));
-*/
+#if FULL_SYSTEM
+        ifetch_req->setFlags((cpuXC->readPC() & 1) ? PHYSICAL : 0);
+#else
+        ifetch_req->setFlags(0);
+#endif
 
         fault = cpuXC->translateInstReq(ifetch_req);
 

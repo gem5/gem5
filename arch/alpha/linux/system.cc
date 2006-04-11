@@ -73,7 +73,7 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
      * kernel arguments directly into the kernel's memory.
      */
     virtPort.writeBlob(CommandLine(), (uint8_t*)params()->boot_osflags.c_str(),
-                CommandLineSize);
+                params()->boot_osflags.length()+1);
 
     /**
      * find the address of the est_cycle_freq variable and insert it

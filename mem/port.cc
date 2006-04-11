@@ -72,5 +72,5 @@ Port::memsetBlob(Addr addr, uint8_t val, int size)
     memset(buf, val, size);
     blobHelper(addr, buf, size, Write);
 
-    delete buf;
+    delete [] buf;
 }

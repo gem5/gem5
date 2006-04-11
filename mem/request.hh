@@ -63,8 +63,12 @@ class Request
 {
     //@todo Make Accesor functions, make these private.
   public:
-    /** Cunstructor, needs a bool to signify if it is/isn't Cpu Request. */
+    /** Constructor, needs a bool to signify if it is/isn't Cpu Request. */
     Request(bool isCpu);
+
+    /** reset the request to it's initial state so it can be reused by the
+     * CPU.*/
+    void reset(bool isCpu);
 
 //First non-cpu request fields
   private:
