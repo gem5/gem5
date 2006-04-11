@@ -34,14 +34,9 @@
 #include <string>
 #include <vector>
 
-#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
-#include "dev/tsunami_fake.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
+#include "dev/isa_fake.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -60,7 +55,6 @@ IsaFake::read(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
     pkt.time = curTick + pioDelay;
-    Addr daddr = pkt.addr - pioAddr;
 
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
 
@@ -69,7 +63,7 @@ IsaFake::read(Packet &pkt)
     uint32_t *data32;
     uint64_t *data64;
 
-    switch (req->size) {
+    switch (pkt.size) {
       case sizeof(uint64_t):
          if (!pkt.data) {
              data64 = new uint64_t;
@@ -84,7 +78,7 @@ IsaFake::read(Packet &pkt)
              data32 = new uint32_t;
              pkt.data = (uint8_t*)data32;
          } else {
-             data32 = (uint64_t*)pkt.data;
+             data32 = (uint32_t*)pkt.data;
          }
          *data32 = 0xFFFFFFFF;
          break;
@@ -93,7 +87,7 @@ IsaFake::read(Packet &pkt)
              data16 = new uint16_t;
              pkt.data = (uint8_t*)data16;
          } else {
-             data16 = (uint64_t*)pkt.data;
+             data16 = (uint16_t*)pkt.data;
          }
          *data16 = 0xFFFF;
          break;
@@ -113,7 +107,7 @@ IsaFake::read(Packet &pkt)
     return pioDelay;
 }
 
-Fault
+Tick
 IsaFake::write(Packet &pkt)
 {
     pkt.time = curTick + pioDelay;

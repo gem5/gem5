@@ -78,8 +78,8 @@ class TsunamiPChip : public BasicPioDevice
      */
     Addr translatePciToDma(Addr busAddr);
 
-    virtual Fault read(Packet &pkt);
-    virtual Fault write(Packet &pkt);
+    virtual Tick read(Packet &pkt);
+    virtual Tick write(Packet &pkt);
 
     /**
      * Serialize this object to the given output stream.

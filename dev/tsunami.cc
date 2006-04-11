@@ -36,12 +36,10 @@
 
 #include "cpu/intr_control.hh"
 #include "dev/simconsole.hh"
-#include "dev/ide_ctrl.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunami_pchip.hh"
 #include "dev/tsunami_io.hh"
 #include "dev/tsunami.hh"
-#include "dev/pciconfigall.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -49,9 +47,8 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-Tsunami::Tsunami(const string &name, System *s, IntrControl *ic,
-                 PciConfigAll *pci)
-    : Platform(name, ic, pci), system(s)
+Tsunami::Tsunami(const string &name, System *s, IntrControl *ic)
+    : Platform(name, ic), system(s)
 {
     // set the back pointer from the system to myself
     system->platform = this;
@@ -112,21 +109,19 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
     SimObjectParam<System *> system;
     SimObjectParam<IntrControl *> intrctrl;
-    SimObjectParam<PciConfigAll *> pciconfig;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
     INIT_PARAM(system, "system"),
-    INIT_PARAM(intrctrl, "interrupt controller"),
-    INIT_PARAM(pciconfig, "PCI configuration")
+    INIT_PARAM(intrctrl, "interrupt controller")
 
 END_INIT_SIM_OBJECT_PARAMS(Tsunami)
 
 CREATE_SIM_OBJECT(Tsunami)
 {
-    return new Tsunami(getInstanceName(), system, intrctrl, pciconfig);
+    return new Tsunami(getInstanceName(), system, intrctrl);
 }
 
 REGISTER_SIM_OBJECT("Tsunami", Tsunami)

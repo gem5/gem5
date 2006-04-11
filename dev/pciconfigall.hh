@@ -43,7 +43,6 @@ static const uint32_t MAX_PCI_DEV = 32;
 static const uint32_t MAX_PCI_FUNC = 8;
 
 class PciDev;
-class MemoryController;
 
 /**
  * PCI Config Space
@@ -52,10 +51,9 @@ class MemoryController;
  * space and passes the requests on to TsunamiPCIDev devices as
  * appropriate.
  */
-class PciConfigAll : public PioDevice
+class PciConfigAll : public BasicPioDevice
 {
   private:
-    Addr addr;
     static const Addr size = 0xffffff;
 
     /**
@@ -67,15 +65,9 @@ class PciConfigAll : public PioDevice
   public:
     /**
      * Constructor for PCIConfigAll
-     * @param name name of the object
-     * @param a base address of the write
-     * @param mmu the memory controller
-     * @param hier object to store parameters universal the device hierarchy
-     * @param bus The bus that this device is attached to
+     * @param p parameters structure
      */
-    PciConfigAll(const std::string &name, Addr a, MemoryController *mmu,
-                 HierParams *hier, Bus *pio_bus, Tick pio_latency);
-
+    PciConfigAll(Params *p);
 
     /**
      * Check if a device exists.
@@ -99,11 +91,10 @@ class PciConfigAll : public PioDevice
      * Read something in PCI config space. If the device does not exist
      * -1 is returned, if the device does exist its PciDev::ReadConfig (or the
      * virtual function that overrides) it is called.
-     * @param req Contains the address of the field to read.
-     * @param data Return the field read.
-     * @return The fault condition of the access.
+     * @param pkt Contains the address of the field to read.
+     * @return Amount of time to do the read
      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Tick read(Packet &pkt);
 
     /**
      * Write to PCI config spcae. If the device does not exit the simulator
@@ -114,7 +105,7 @@ class PciConfigAll : public PioDevice
      * @return The fault condition of the access.
      */
 
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Tick write(Packet &pkt);
 
     /**
      * Start up function to check if more than one person is using an interrupt line
@@ -134,14 +125,6 @@ class PciConfigAll : public PioDevice
      * @param section The section name of this object
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
-
 };
 
 #endif // __PCICONFIGALL_HH__

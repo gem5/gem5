@@ -178,11 +178,11 @@ class SimpleCPU : public BaseCPU
     struct Params : public BaseCPU::Params
     {
         int width;
+        MemObject *mem;
 #if FULL_SYSTEM
         AlphaITB *itb;
         AlphaDTB *dtb;
 #else
-        MemObject *mem;
         Process *process;
 #endif
     };

@@ -42,7 +42,7 @@
  * Tsunami I/O device is a catch all for all the south bridge stuff we care
  * to implement.
  */
-class TsunamiIO : public PioDevice
+class TsunamiIO : public BasicPioDevice
 {
   private:
     struct tm tm;
@@ -318,8 +318,8 @@ class TsunamiIO : public PioDevice
      */
     TsunamiIO(Params *p);
 
-    virtual Fault read(Packet &pkt);
-    virtual Fault write(Packet &pkt);
+    virtual Tick read(Packet &pkt);
+    virtual Tick write(Packet &pkt);
 
     /**
      * Post an PIC interrupt to the CPU via the CChip

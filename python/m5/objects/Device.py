@@ -1,35 +1,14 @@
 from m5 import *
-from FunctionalMemory import FunctionalMemory
+from MemObject import MemObject
 
-# This device exists only because there are some devices that I don't
-# want to have a Platform parameter because it would cause a cycle in
-# the C++ that cannot be easily solved.
-#
-# The real solution to this problem is to pass the ParamXXX structure
-# to the constructor, but with the express condition that SimObject
-# parameter values are not to be available at construction time.  If
-# some further configuration must be done, it must be done during the
-# initialization phase at which point all SimObject pointers will be
-# valid.
-class FooPioDevice(FunctionalMemory):
+class PioDevice(MemObject):
     type = 'PioDevice'
     abstract = True
-    addr = Param.Addr("Device Address")
-    mmu = Param.MemoryController(Parent.any, "Memory Controller")
-    pio_bus = Param.Bus(NULL, "Bus to attach to for PIO")
-    pio_latency = Param.Tick(1, "Programmed IO latency in bus cycles")
+    platform = Param.Platform(Parent.any, "Platform this device is part of")
+    system = Param.System(Parent.any, "System this device is part of")
 
-class FooDmaDevice(FooPioDevice):
-    type = 'DmaDevice'
+class BasicPioDevice(PioDevice):
+    type = 'BasicPioDevice'
     abstract = True
-    dma_bus = Param.Bus(Self.pio_bus, "Bus to attach to for DMA")
-
-class PioDevice(FooPioDevice):
-    type = 'PioDevice'
-    abstract = True
-    platform = Param.Platform(Parent.any, "Platform")
-
-class DmaDevice(PioDevice):
-    type = 'DmaDevice'
-    abstract = True
-    dma_bus = Param.Bus(Self.pio_bus, "Bus to attach to for DMA")
+    pio_addr = Param.Addr("Device Address")
+    pio_latency = Param.Tick(1, "Programmed IO latency in simticks")

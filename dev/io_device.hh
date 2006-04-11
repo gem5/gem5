@@ -30,7 +30,7 @@
 #define __DEV_IO_DEVICE_HH__
 
 #include "base/chunk_generator.hh"
-#include "mem/port.hh"
+#include "mem/mem_object.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
@@ -172,7 +172,7 @@ class DmaPort : public Port
  * bother.
  */
 
-class PioDevice : public SimObject
+class PioDevice : public MemObject
 {
   protected:
 
@@ -224,7 +224,8 @@ class PioDevice : public SimObject
     const Params *params() const { return _params; }
 
     PioDevice(Params *p)
-              : SimObject(params()->name), platform(p->platform), _params(p)
+              : MemObject(p->name),  platform(p->platform), pioPort(NULL),
+                _params(p)
               {}
 
     virtual ~PioDevice();
@@ -272,7 +273,7 @@ class BasicPioDevice : public PioDevice
     /** return the address ranges that this device responds to.
      * @params range_list range list to populate with ranges
      */
-    addressRanges(AddrRangeList &range_list);
+    void addressRanges(AddrRangeList &range_list);
 
 };
 

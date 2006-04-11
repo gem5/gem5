@@ -36,16 +36,16 @@
 #include <string>
 #include <vector>
 
-#include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
-#include "dev/tsunami_io.hh"
-#include "dev/tsunami.hh"
 #include "dev/pitreg.h"
-#include "mem/bus/port.hh"
-#include "sim/builder.hh"
-#include "dev/tsunami_cchip.hh"
-#include "dev/tsunamireg.h"
 #include "dev/rtcreg.h"
+#include "dev/tsunami_cchip.hh"
+#include "dev/tsunami.hh"
+#include "dev/tsunami_io.hh"
+#include "dev/tsunamireg.h"
+#include "mem/port.hh"
+#include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 //Should this be AlphaISA?
@@ -79,7 +79,7 @@ TsunamiIO::RTC::set_time(time_t t)
 void
 TsunamiIO::RTC::writeAddr(const uint8_t data)
 {
-    if (*data <= RTC_STAT_REGD)
+    if (data <= RTC_STAT_REGD)
         addr = data;
     else
         panic("RTC addresses over 0xD are not implemented.\n");
@@ -95,13 +95,13 @@ TsunamiIO::RTC::writeData(const uint8_t data)
           case RTC_STAT_REGA:
             if (data != (RTCA_32768HZ | RTCA_1024HZ))
                 panic("Unimplemented RTC register A value write!\n");
-            stat_regA = *data;
+            stat_regA = data;
             break;
           case RTC_STAT_REGB:
             if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
                 panic("Write to RTC reg B bits that are not implemented!\n");
 
-            if (*data & RTCB_PRDC_IE) {
+            if (data & RTCB_PRDC_IE) {
                 if (!event.scheduled())
                     event.scheduleIntr();
             } else {
@@ -214,7 +214,7 @@ TsunamiIO::PITimer::writeControl(const uint8_t data)
     if (sel == PIT_READ_BACK)
        panic("PITimer Read-Back Command is not implemented.\n");
 
-    rw = GET_CTRL_RW(*data);
+    rw = GET_CTRL_RW(data);
 
     if (rw == PIT_RW_LATCH_COMMAND)
         counter[sel]->latchCount();
@@ -416,7 +416,7 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
 
 TsunamiIO::TsunamiIO(Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
-      rtc(name + ".rtc", p->tsunami, p->frequency)
+      rtc(p->name + ".rtc", p->tsunami, p->frequency)
 {
     pioSize = 0xff;
 
@@ -424,7 +424,7 @@ TsunamiIO::TsunamiIO(Params *p)
     tsunami->io = this;
 
     timerData = 0;
-    rtc.set_time(p->init_time == 0 ? time(NULL) : init_time);
+    rtc.set_time(p->init_time == 0 ? time(NULL) : p->init_time);
     picr = 0;
     picInterrupting = false;
 }
@@ -435,7 +435,7 @@ TsunamiIO::frequency() const
     return Clock::Frequency / params()->frequency;
 }
 
-Fault
+Tick
 TsunamiIO::read(Packet &pkt)
 {
     assert(pkt.result == Unknown);
@@ -478,10 +478,10 @@ TsunamiIO::read(Packet &pkt)
               break;
           case TSDEV_TMR0_DATA:
             pitimer.counter0.read(data8);
-            return NoFault;
+            break;
           case TSDEV_TMR1_DATA:
             pitimer.counter1.read(data8);
-            return NoFault;
+            break;
           case TSDEV_TMR2_DATA:
             pitimer.counter2.read(data8);
             break;
@@ -502,15 +502,15 @@ TsunamiIO::read(Packet &pkt)
             data64 = new uint64_t;
             pkt.data = (uint8_t*)data64;
         } else
-            data8 = (uint64_t*)pkt.data;
+            data64 = (uint64_t*)pkt.data;
 
         if (daddr == TSDEV_PIC1_ISR)
-            data64 = (uint64_t)picr;
+            *data64 = picr;
         else
            panic("I/O Read - invalid addr - va %#x size %d\n",
-                   req.addr, req.size);
+                   pkt.addr, pkt.size);
     } else {
-       panic("I/O Read - invalid size - va %#x size %d\n", req.addr, req.size);
+       panic("I/O Read - invalid size - va %#x size %d\n", pkt.addr, pkt.size);
     }
     pkt.result = Success;
     return pioDelay;
@@ -531,7 +531,7 @@ TsunamiIO::write(Packet &pkt)
 #endif
 
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
-            req->vaddr, req->size, req->vaddr & 0xfff, dt64);
+            pkt.addr, pkt.size, pkt.addr & 0xfff, dt64);
 
     assert(pkt.size == sizeof(uint8_t));
 
@@ -671,10 +671,9 @@ END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
 
-    INIT_PARAM(frequency, "clock interrupt frequency"),
     INIT_PARAM(pio_addr, "Device Address"),
     INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(pio_size, "Size of address range"),
+    INIT_PARAM(frequency, "clock interrupt frequency"),
     INIT_PARAM(platform, "platform"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(time, "System time to use (0 for actual time"),

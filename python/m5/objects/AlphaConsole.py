@@ -1,9 +1,9 @@
 from m5 import *
-from Device import PioDevice
+from Device import BasicPioDevice
 
-class AlphaConsole(PioDevice):
+class AlphaConsole(BasicPioDevice):
     type = 'AlphaConsole'
     cpu = Param.BaseCPU(Parent.any, "Processor")
     disk = Param.SimpleDisk("Simple Disk")
     sim_console = Param.SimConsole(Parent.any, "The Simulator Console")
-    system = Param.System(Parent.any, "system object")
+    system = Param.AlphaSystem(Parent.any, "system object")

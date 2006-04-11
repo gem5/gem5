@@ -1,11 +1,10 @@
 from m5 import *
-from Device import PioDevice
+from Device import BasicPioDevice
 
-class Uart(PioDevice):
+class Uart(BasicPioDevice):
     type = 'Uart'
     abstract = True
-    console = Param.SimConsole(Parent.any, "The console")
-    size = Param.Addr(0x8, "Device size")
+    sim_console = Param.SimConsole(Parent.any, "The console")
 
 class Uart8250(Uart):
     type = 'Uart8250'

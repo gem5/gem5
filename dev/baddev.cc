@@ -35,13 +35,9 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
 #include "dev/baddev.hh"
 #include "dev/platform.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
+#include "mem/port.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -49,7 +45,7 @@ using namespace std;
 using namespace TheISA;
 
 BadDevice::BadDevice(Params *p)
-    : BasicPioDevice(p), devname(p->devic_ename)
+    : BasicPioDevice(p), devname(p->device_name)
 {
     pioSize = 0xf;
 }
@@ -70,7 +66,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
 
     Param<string> devicename;
     Param<Addr> pio_addr;
-    SimObjectParam<AlphaSystem *> system;
+    SimObjectParam<System *> system;
     SimObjectParam<Platform *> platform;
     Param<Tick> pio_latency;
 
@@ -94,7 +90,7 @@ CREATE_SIM_OBJECT(BadDevice)
     p->pio_addr = pio_addr;
     p->pio_delay = pio_latency;
     p->system = system;
-    p->devicename = devicename;
+    p->device_name = devicename;
     return new BadDevice(p);
 }
 

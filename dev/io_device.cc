@@ -88,6 +88,7 @@ PioDevice::~PioDevice()
         delete pioPort;
 }
 
+void
 PioDevice::init()
 {
     if (!pioPort)
