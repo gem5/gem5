@@ -700,21 +700,24 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     int flags = xc->getSyscallArg(3);
     // int fd = p->sim_fd(xc->getSyscallArg(4));
     // int offset = xc->getSyscallArg(5);
-    Addr junk;
 
-    if (start == 0) {
-        // user didn't give an address... pick one from our "mmap region"
-        start = p->mmap_end;
-        for (ChunkGenerator gen(start, roundUp(length, TheISA::VMPageSize), TheISA::VMPageSize); !gen.done(); gen.next()) {
-            if (!p->pTable->translate(gen.addr(), junk))
-                p->pTable->allocate(roundDown(gen.addr(), TheISA::VMPageSize), TheISA::VMPageSize);
-        }
-        p->mmap_end += roundUp(length, TheISA::VMPageSize);
-        if (p->nxm_start != 0) {
-            //If we have an nxm space, make sure we haven't colided
-            assert(p->mmap_end < p->nxm_start);
-        }
+    if ((start  % TheISA::VMPageSize) != 0 ||
+        (length % TheISA::VMPageSize) != 0) {
+        warn("mmap failing: arguments not page-aligned: "
+             "start 0x%x length 0x%x",
+             start, length);
+        return -EINVAL;
     }
+
+    if (start != 0) {
+        warn("mmap: ignoring suggested map address 0x%x, using 0x%x",
+             start, p->mmap_end);
+    }
+
+    // pick next address from our "mmap region"
+    start = p->mmap_end;
+    p->pTable->allocate(start, length);
+    p->mmap_end += length;
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
         warn("allowing mmap of file @ fd %d. "
