@@ -128,6 +128,12 @@ struct Packet
     /** Accessor function that returns the destination index of
         the packet. */
     short getDest() const { return dest; }
+
+    Packet()
+        : result(Unknown)
+        {}
+
+    void reset() { result = Unknown; }
 };
 
 #endif //__MEM_PACKET_HH

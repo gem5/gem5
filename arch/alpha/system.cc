@@ -107,9 +107,9 @@ AlphaSystem::AlphaSystem(Params *p)
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
         uint64_t data;
         data = htog(params()->system_type);
-        virtPort.write(addr, data);
+        virtPort.write(addr+0x50, data);
         data = htog(params()->system_rev);
-        virtPort.write(addr, data);
+        virtPort.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
 

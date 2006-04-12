@@ -72,12 +72,12 @@ AlphaConsole::AlphaConsole(Params *p)
     alphaAccess->inputChar = 0;
     bzero(alphaAccess->cpuStack, sizeof(alphaAccess->cpuStack));
 
-    system->setAlphaAccess(pioAddr);
 }
 
 void
 AlphaConsole::startup()
 {
+    system->setAlphaAccess(pioAddr);
     alphaAccess->numCPUs = system->getNumCPUs();
     alphaAccess->kernStart = system->getKernelStart();
     alphaAccess->kernEnd = system->getKernelEnd();
