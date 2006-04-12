@@ -93,7 +93,9 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
 
 output exec {{
 
-using namespace MipsISA;
+    using namespace MipsISA;
+
+
 
 
     /// CLEAR ALL CPU INST/EXE HAZARDS

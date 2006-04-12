@@ -70,6 +70,8 @@ class Tru64 {
 
   public:
 
+    typedef TheISA::OSFlags OSFlags;
+
     //@{
     /// Basic Tru64 types.
     typedef uint64_t size_t;
@@ -83,25 +85,6 @@ class Tru64 {
     typedef uint32_t ino_t;
     typedef struct { int val[2]; } quad;
     typedef quad fsid_t;
-    //@}
-
-    //@{
-    /// open(2) flag values.
-    static const int TGT_O_RDONLY	= 00000000;
-    static const int TGT_O_WRONLY	= 00000001;
-    static const int TGT_O_RDWR	 	= 00000002;
-    static const int TGT_O_NONBLOCK 	= 00000004;
-    static const int TGT_O_APPEND	= 00000010;
-    static const int TGT_O_CREAT	= 00001000;
-    static const int TGT_O_TRUNC	= 00002000;
-    static const int TGT_O_EXCL	 	= 00004000;
-    static const int TGT_O_NOCTTY	= 00010000;
-    static const int TGT_O_SYNC	 	= 00040000;
-    static const int TGT_O_DRD	 	= 00100000;
-    static const int TGT_O_DIRECTIO  	= 00200000;
-    static const int TGT_O_CACHE	= 00400000;
-    static const int TGT_O_DSYNC	= 02000000;
-    static const int TGT_O_RSYNC	= 04000000;
     //@}
 
     /// This table maps the target open() flags to the corresponding
@@ -246,20 +229,6 @@ class Tru64 {
         char machine[_SYS_NMLN];        //!< Machine type.
     };
 
-    //@{
-    /// ioctl() command codes.
-    static const unsigned TIOCGETP   = 0x40067408;
-    static const unsigned TIOCSETP   = 0x80067409;
-    static const unsigned TIOCSETN   = 0x8006740a;
-    static const unsigned TIOCSETC   = 0x80067411;
-    static const unsigned TIOCGETC   = 0x40067412;
-    static const unsigned FIONREAD   = 0x4004667f;
-    static const unsigned TIOCISATTY = 0x2000745e;
-    // TIOCGETS not defined in tru64, so I made up a number
-    static const unsigned TIOCGETS   = 0x40000000;
-    static const unsigned TIOCGETA   = 0x402c7413;
-    //@}
-
     /// Resource enumeration for getrlimit().
     enum rlimit_resources {
         TGT_RLIMIT_CPU = 0,
@@ -280,21 +249,6 @@ class Tru64 {
     };
 
 
-    /// For mmap().
-    static const unsigned TGT_MAP_ANONYMOUS = 0x10;
-
-
-    //@{
-    /// For getsysinfo().
-    static const unsigned GSI_PLATFORM_NAME = 103; //!< platform name as string
-    static const unsigned GSI_CPU_INFO = 59;	//!< CPU information
-    static const unsigned GSI_PROC_TYPE = 60;	//!< get proc_type
-    static const unsigned GSI_MAX_CPU = 30;   //!< max # cpu's on this machine
-    static const unsigned GSI_CPUS_IN_BOX = 55;	//!< number of CPUs in system
-    static const unsigned GSI_PHYSMEM = 19;	//!< Physical memory in KB
-    static const unsigned GSI_CLK_TCK = 42;	//!< clock freq in Hz
-    //@}
-
     /// For getsysinfo() GSI_CPU_INFO option.
     struct cpu_info {
         uint32_t     current_cpu;	//!< current_cpu
@@ -309,23 +263,11 @@ class Tru64 {
         uint32_t     unused[3];		//!< future expansion
     };
 
-    //@{
-    /// For setsysinfo().
-    static const unsigned SSI_IEEE_FP_CONTROL = 14; //!< ieee_set_fp_control()
-    //@}
-
     /// For gettimeofday.
     struct timeval {
         uint32_t tv_sec;	//!< seconds
         uint32_t tv_usec;	//!< microseconds
     };
-
-    //@{
-    /// For getrusage().
-    static const int TGT_RUSAGE_THREAD = 1;
-    static const int TGT_RUSAGE_SELF = 0;
-    static const int TGT_RUSAGE_CHILDREN = -1;
-    //@}
 
     /// For getrusage().
     struct rusage {
@@ -372,8 +314,6 @@ class Tru64 {
     };
 
 
-    /// For table().
-    static const int TBL_SYSINFO = 12;
 
     /// For table().
     struct tbl_sysinfo {
@@ -759,7 +699,7 @@ class Tru64 {
         int lel = xc->getSyscallArg(4);		// expected element size
 
         switch (id) {
-          case Tru64::TBL_SYSINFO: {
+          case Tru64::OSFlags::TBL_SYSINFO: {
               if (index != 0 || nel != 1 || lel != sizeof(Tru64::tbl_sysinfo))
                   return -EINVAL;
               TypedBufferArg<Tru64::tbl_sysinfo> elp(xc->getSyscallArg(2));

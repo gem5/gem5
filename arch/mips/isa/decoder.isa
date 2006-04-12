@@ -143,9 +143,11 @@ decode OPCODE_HI default Unknown::unknown() {
                     }});
 
                     0x1: multu({{
-                        int64_t temp1 = Rs.uw * Rt.uw;
-                        xc->setMiscReg(Hi,temp1<63:32>);
-                        xc->setMiscReg(Lo,temp1<31:0>);
+                        uint64_t temp1 = Rs.uw * Rt.uw;
+                        uint32_t hi_val = temp1<63:32>;
+                        uint32_t lo_val = temp1<31:0>;
+                        xc->setMiscReg(Hi,hi_val);
+                        xc->setMiscReg(Lo,lo_val);
                     }});
 
                     0x2: div({{
@@ -154,8 +156,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     }});
 
                     0x3: divu({{
-                        xc->setMiscReg(Hi,Rs.uw % Rt.uw);
-                        xc->setMiscReg(Lo,Rs.uw / Rt.uw);
+                      xc->setMiscReg(Hi,Rs.uw % Rt.uw);
+                      xc->setMiscReg(Lo,Rs.uw / Rt.uw);
                     }});
                 }
             }
