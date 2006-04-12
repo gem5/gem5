@@ -63,28 +63,28 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
     switch (op) {
 
-      case Tru64::GSI_MAX_CPU: {
+      case Tru64::OSFlags::GSI_MAX_CPU: {
           TypedBufferArg<uint32_t> max_cpu(xc->getSyscallArg(1));
           *max_cpu = htog((uint32_t)process->numCpus());
           max_cpu.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::GSI_CPUS_IN_BOX: {
+      case Tru64::OSFlags::GSI_CPUS_IN_BOX: {
           TypedBufferArg<uint32_t> cpus_in_box(xc->getSyscallArg(1));
           *cpus_in_box = htog((uint32_t)process->numCpus());
           cpus_in_box.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::GSI_PHYSMEM: {
+      case Tru64::OSFlags::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(xc->getSyscallArg(1));
           *physmem = htog((uint64_t)1024 * 1024);	// physical memory in KB
           physmem.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::GSI_CPU_INFO: {
+      case Tru64::OSFlags::GSI_CPU_INFO: {
           TypedBufferArg<Tru64::cpu_info> infop(xc->getSyscallArg(1));
 
           infop->current_cpu = htog(0);
@@ -101,14 +101,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           return 1;
       }
 
-      case Tru64::GSI_PROC_TYPE: {
+      case Tru64::OSFlags::GSI_PROC_TYPE: {
           TypedBufferArg<uint64_t> proc_type(xc->getSyscallArg(1));
           *proc_type = htog((uint64_t)11);
           proc_type.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::GSI_PLATFORM_NAME: {
+      case Tru64::OSFlags::GSI_PLATFORM_NAME: {
           BufferArg bufArg(xc->getSyscallArg(1), nbytes);
           strncpy((char *)bufArg.bufferPtr(),
                   "COMPAQ Professional Workstation XP1000",
@@ -117,7 +117,7 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           return 1;
       }
 
-      case Tru64::GSI_CLK_TCK: {
+      case Tru64::OSFlags::GSI_CLK_TCK: {
           TypedBufferArg<uint64_t> clk_hz(xc->getSyscallArg(1));
           *clk_hz = htog((uint64_t)1024);
           clk_hz.copyOut(xc->getMemPort());
@@ -140,7 +140,7 @@ setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
     unsigned op = xc->getSyscallArg(0);
 
     switch (op) {
-      case Tru64::SSI_IEEE_FP_CONTROL:
+      case Tru64::OSFlags::SSI_IEEE_FP_CONTROL:
         warn("setsysinfo: ignoring ieee_set_fp_control() arg 0x%x\n",
              xc->getSyscallArg(1));
         break;
