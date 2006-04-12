@@ -507,6 +507,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         data_read_pkt->req = data_read_req;
         data_read_pkt->data = new uint8_t[8];
 #endif
+        data_read_pkt->reset();
         data_read_pkt->addr = data_read_req->getPaddr();
         data_read_pkt->size = sizeof(T);
 
@@ -623,6 +624,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt->data = new uint8_t[64];
         memcpy(data_write_pkt->data, &data, sizeof(T));
 #else
+        data_write_pkt->reset();
         data_write_pkt->data = (uint8_t *)&data;
 #endif
         data_write_pkt->addr = data_write_req->getPaddr();
@@ -990,6 +992,7 @@ SimpleCPU::tick()
             ifetch_pkt->req = ifetch_req;
             ifetch_pkt->size = sizeof(MachInst);
 #endif
+            ifetch_pkt->reset();
             ifetch_pkt->addr = ifetch_req->getPaddr();
 
             sendIcacheRequest(ifetch_pkt);

@@ -74,7 +74,7 @@ TsunamiCChip::read(Packet &pkt)
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
 
     assert(pkt.result == Unknown);
-    assert(pkt.addr > pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
     pkt.time = curTick + pioDelay;
     Addr regnum = (pkt.addr - pioAddr) >> 6;
@@ -179,8 +179,8 @@ TsunamiCChip::read(Packet &pkt)
       default:
         panic("invalid access size(?) for tsunami register!\n");
     }
-    DPRINTFN("Tsunami CChip: read  regnum=%#x size=%d data=%lld\n", regnum,
-            pkt.size, *data64);
+    DPRINTF(Tsunami, "Tsunami CChip: read  regnum=%#x size=%d data=%lld\n",
+            regnum, pkt.size, *data64);
 
     pkt.result = Success;
     return pioDelay;
@@ -282,7 +282,7 @@ TsunamiCChip::write(Packet &pkt)
             if(!supportedWrite)
                   panic("TSDEV_CC_MISC write not implemented\n");
 
-
+            break;
             case TSDEV_CC_AAR0:
             case TSDEV_CC_AAR1:
             case TSDEV_CC_AAR2:

@@ -111,7 +111,7 @@ Tick
 Uart8250::read(Packet &pkt)
 {
     assert(pkt.result == Unknown);
-    assert(pkt.addr > pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     assert(pkt.size == 1);
 
     pkt.time = curTick + pioDelay;
@@ -189,7 +189,10 @@ Uart8250::read(Packet &pkt)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-
+/*    uint32_t d32 = *data;
+    DPRINTF(Uart, "Register read to register %#x returned %#x\n", daddr, d32);
+*/
+    pkt.result = Success;
     return pioDelay;
 }
 
@@ -269,6 +272,7 @@ Uart8250::write(Packet &pkt)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
+    pkt.result = Success;
     return pioDelay;
 }
 

@@ -63,39 +63,6 @@ class VirtualPort  : public FunctionalPort
      */
     bool nullExecContext() { return xc != NULL; }
 
-    /** Write a piece of data into a virtual address.
-     * @param vaddr virtual address to write to
-     * @param data data to write
-     */
-    template <typename T>
-    inline void write(Addr vaddr, T data)
-    {
-        Addr paddr;
-        if (xc)
-            paddr = TheISA::vtophys(xc,vaddr);
-        else
-            paddr = TheISA::vtophys(vaddr);
-
-        FunctionalPort::write(paddr, data);
-    }
-
-    /** Read data from a virtual address and return it.
-     * @param vaddr address to read
-     * @return data read
-     */
-
-    template <typename T>
-    inline T read(Addr vaddr)
-    {
-        Addr paddr;
-        if (xc)
-            paddr = TheISA::vtophys(xc,vaddr);
-        else
-            paddr = TheISA::vtophys(vaddr);
-
-        return FunctionalPort::read<T>(paddr);
-    }
-
     /** Version of readblob that translates virt->phys and deals
       * with page boundries. */
     virtual void readBlob(Addr addr, uint8_t *p, int size);

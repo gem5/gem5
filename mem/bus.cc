@@ -57,6 +57,7 @@ Bus::findPort(Addr addr, int id)
         if (portList[i].range == addr) {
             dest_id = portList[i].portId;
             found = true;
+            DPRINTF(Bus, "Found Addr: %llx on device %d\n", addr, dest_id);
         }
         i++;
     }

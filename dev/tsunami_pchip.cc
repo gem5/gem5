@@ -71,7 +71,7 @@ TsunamiPChip::read(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
     pkt.time = curTick + pioDelay;
-    Addr daddr = pkt.addr - pioAddr;
+    Addr daddr = (pkt.addr - pioAddr) >> 6;;
 
     uint64_t *data64;
 
@@ -159,7 +159,7 @@ TsunamiPChip::write(Packet &pkt)
 
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    Addr daddr = pkt.addr - pioAddr;
+    Addr daddr = (pkt.addr - pioAddr) >> 6;
 
     uint64_t data64 = *(uint64_t *)pkt.data;
     assert(pkt.size == sizeof(uint64_t));
@@ -225,7 +225,7 @@ TsunamiPChip::write(Packet &pkt)
         case TSDEV_PC_PMONCNT:
               panic("PC_PMONCTN not implemented\n");
         default:
-            panic("Default in PChip Read reached reading 0x%x\n", daddr);
+            panic("Default in PChip write reached reading 0x%x\n", daddr);
 
     } // uint64_t
 
