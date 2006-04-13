@@ -220,19 +220,6 @@ class Tru64 {
         char machine[_SYS_NMLN];        //!< Machine type.
     };
 
-    /// Resource enumeration for getrlimit().
-    enum rlimit_resources {
-        TGT_RLIMIT_CPU = 0,
-        TGT_RLIMIT_FSIZE = 1,
-        TGT_RLIMIT_DATA = 2,
-        TGT_RLIMIT_STACK = 3,
-        TGT_RLIMIT_CORE = 4,
-        TGT_RLIMIT_RSS = 5,
-        TGT_RLIMIT_NOFILE = 6,
-        TGT_RLIMIT_AS = 7,
-        TGT_RLIMIT_VMEM = 7
-    };
-
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit {
         uint64_t  rlim_cur;	//!< soft limit

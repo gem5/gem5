@@ -44,25 +44,25 @@ class MipsLinux : public Linux
 
     //@{
     /// open(2) flag values.
-    static const int TGT_O_RDONLY	= 00000000;	//!< O_RDONLY
-    static const int TGT_O_WRONLY	= 00000001;	//!< O_WRONLY
-    static const int TGT_O_RDWR	= 00000002;	//!< O_RDWR
-    static const int TGT_O_NONBLOCK = 00000004;	//!< O_NONBLOCK
-    static const int TGT_O_APPEND	= 00000010;	//!< O_APPEND
-    static const int TGT_O_CREAT	= 00001000;	//!< O_CREAT
-    static const int TGT_O_TRUNC	= 00002000;	//!< O_TRUNC
-    static const int TGT_O_EXCL	= 00004000;	//!< O_EXCL
-    static const int TGT_O_NOCTTY	= 00010000;	//!< O_NOCTTY
-    static const int TGT_O_SYNC	= 00040000;	//!< O_SYNC
-    static const int TGT_O_DRD	= 00100000;	//!< O_DRD
-    static const int TGT_O_DIRECTIO = 00200000;	//!< O_DIRECTIO
-    static const int TGT_O_CACHE	= 00400000;	//!< O_CACHE
-    static const int TGT_O_DSYNC	= 02000000;	//!< O_DSYNC
-    static const int TGT_O_RSYNC	= 04000000;	//!< O_RSYNC
+    static const int TGT_O_RDONLY	= 0x00000000;	//!< O_RDONLY
+    static const int TGT_O_WRONLY	= 0x00000001;	//!< O_WRONLY
+    static const int TGT_O_RDWR	        = 0x00000002;	//!< O_RDWR
+    static const int TGT_O_NONBLOCK     = 0x00000080;	//!< O_NONBLOCK
+    static const int TGT_O_APPEND	= 0x00000008;	//!< O_APPEND
+    static const int TGT_O_CREAT	= 0x00000100;	//!< O_CREAT
+    static const int TGT_O_TRUNC	= 0x00000200;	//!< O_TRUNC
+    static const int TGT_O_EXCL	        = 0x00000400;	//!< O_EXCL
+    static const int TGT_O_NOCTTY	= 0x00000800;	//!< O_NOCTTY
+    static const int TGT_O_SYNC	        = 0x00000010;	//!< O_SYNC
+    static const int TGT_O_DRD	        = 0x00010000;	//!< O_DRD
+    static const int TGT_O_DIRECTIO     = 0x00020000;	//!< O_DIRECTIO
+    static const int TGT_O_CACHE	= 0x00002000;	//!< O_CACHE
+    static const int TGT_O_DSYNC	= 0x00008000;	//!< O_DSYNC
+    static const int TGT_O_RSYNC	= 0x00040000;	//!< O_RSYNC
     //@}
 
     /// For mmap().
-    static const unsigned TGT_MAP_ANONYMOUS = 0x10;
+    static const unsigned TGT_MAP_ANONYMOUS = 0x800;
 
     //@{
     /// For getsysinfo().
@@ -89,19 +89,36 @@ class MipsLinux : public Linux
 
     //@{
     /// ioctl() command codes.
-    static const unsigned TIOCGETP   = 0x40067408;
-    static const unsigned TIOCSETP   = 0x80067409;
-    static const unsigned TIOCSETN   = 0x8006740a;
-    static const unsigned TIOCSETC   = 0x80067411;
-    static const unsigned TIOCGETC   = 0x40067412;
-    static const unsigned FIONREAD   = 0x4004667f;
-    static const unsigned TIOCISATTY = 0x2000745e;
-    static const unsigned TIOCGETS   = 0x402c7413;
-    static const unsigned TIOCGETA   = 0x40127417;
+    static const unsigned TIOCGETP   = 0x7408;
+    static const unsigned TIOCSETP   = 0x7409;
+    static const unsigned TIOCSETN   = 0x740a;
+    static const unsigned TIOCSETC   = 0x7411;
+    static const unsigned TIOCGETC   = 0x7412;
+    static const unsigned FIONREAD   = 0x467f;
+    static const unsigned TIOCISATTY = 0x5480;
+    static const unsigned TIOCGETS   = 0x7413;
+    static const unsigned TIOCGETA   = 0x7417;
     //@}
 
     /// For table().
     static const int TBL_SYSINFO = 12;
+
+    /// Resource enumeration for getrlimit().
+    enum rlimit_resources {
+        TGT_RLIMIT_CPU = 0,
+        TGT_RLIMIT_FSIZE = 1,
+        TGT_RLIMIT_DATA = 2,
+        TGT_RLIMIT_STACK = 3,
+        TGT_RLIMIT_CORE = 4,
+        TGT_RLIMIT_NOFILE = 5,
+        TGT_RLIMIT_AS = 6,
+        TGT_RLIMIT_RSS = 7,
+        TGT_RLIMIT_VMEM = 7,
+        TGT_RLIMIT_NPROC = 8,
+        TGT_RLIMIT_MEMLOCK = 9,
+        TGT_RLIMIT_LOCKS = 10
+    };
+
 };
 
 #endif
