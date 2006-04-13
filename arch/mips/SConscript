@@ -57,6 +57,7 @@ full_system_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
+        mips_linux.cc
 	linux_process.cc
         process.cc
 	''')

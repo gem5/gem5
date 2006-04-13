@@ -70,8 +70,6 @@ class Tru64 {
 
   public:
 
-    typedef TheISA::OSFlags OSFlags;
-
     //@{
     /// Basic Tru64 types.
     typedef uint64_t size_t;
@@ -86,13 +84,6 @@ class Tru64 {
     typedef struct { int val[2]; } quad;
     typedef quad fsid_t;
     //@}
-
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static OpenFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
 
     /// Stat buffer.  Note that Tru64 v5.0+ use a new "F64" stat
     /// structure, and a new set of syscall numbers for stat calls.
@@ -684,45 +675,6 @@ class Tru64 {
         return 0;
     }
 
-    /// Target table() handler.
-    static SyscallReturn
-    tableFunc(SyscallDesc *desc, int callnum, Process *process,
-              ExecContext *xc)
-    {
-        using namespace std;
-        using namespace TheISA;
-
-        int id = xc->getSyscallArg(0);		// table ID
-        int index = xc->getSyscallArg(1);	// index into table
-        // arg 2 is buffer pointer; type depends on table ID
-        int nel = xc->getSyscallArg(3);		// number of elements
-        int lel = xc->getSyscallArg(4);		// expected element size
-
-        switch (id) {
-          case Tru64::OSFlags::TBL_SYSINFO: {
-              if (index != 0 || nel != 1 || lel != sizeof(Tru64::tbl_sysinfo))
-                  return -EINVAL;
-              TypedBufferArg<Tru64::tbl_sysinfo> elp(xc->getSyscallArg(2));
-
-              const int clk_hz = one_million;
-              elp->si_user = htog(curTick / (Clock::Frequency / clk_hz));
-              elp->si_nice = htog(0);
-              elp->si_sys = htog(0);
-              elp->si_idle = htog(0);
-              elp->wait = htog(0);
-              elp->si_hz = htog(clk_hz);
-              elp->si_phz = htog(clk_hz);
-              elp->si_boottime = htog(seconds_since_epoch); // seconds since epoch?
-              elp->si_max_procs = htog(process->numCpus());
-              elp.copyOut(xc->getMemPort());
-              return 0;
-          }
-
-          default:
-            cerr << "table(): id " << id << " unknown." << endl;
-            return -EINVAL;
-        }
-    }
 
     //
     // Mach syscalls -- identified by negated syscall numbers

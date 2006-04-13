@@ -26,10 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/alpha/tru64/tru64.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/tru64/process.hh"
+
 #include "cpu/exec_context.hh"
 #include "kern/tru64/tru64.hh"
+
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
 
@@ -41,7 +44,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, Process *process,
           ExecContext *xc)
 {
-    TypedBufferArg<Tru64::utsname> name(xc->getSyscallArg(0));
+    TypedBufferArg<AlphaTru64::utsname> name(xc->getSyscallArg(0));
 
     strcpy(name->sysname, "OSF1");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -63,29 +66,29 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
     switch (op) {
 
-      case Tru64::OSFlags::GSI_MAX_CPU: {
+      case AlphaTru64::GSI_MAX_CPU: {
           TypedBufferArg<uint32_t> max_cpu(xc->getSyscallArg(1));
           *max_cpu = htog((uint32_t)process->numCpus());
           max_cpu.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::OSFlags::GSI_CPUS_IN_BOX: {
+      case AlphaTru64::GSI_CPUS_IN_BOX: {
           TypedBufferArg<uint32_t> cpus_in_box(xc->getSyscallArg(1));
           *cpus_in_box = htog((uint32_t)process->numCpus());
           cpus_in_box.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::OSFlags::GSI_PHYSMEM: {
+      case AlphaTru64::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(xc->getSyscallArg(1));
           *physmem = htog((uint64_t)1024 * 1024);	// physical memory in KB
           physmem.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::OSFlags::GSI_CPU_INFO: {
-          TypedBufferArg<Tru64::cpu_info> infop(xc->getSyscallArg(1));
+      case AlphaTru64::GSI_CPU_INFO: {
+          TypedBufferArg<AlphaTru64::cpu_info> infop(xc->getSyscallArg(1));
 
           infop->current_cpu = htog(0);
           infop->cpus_in_box = htog(process->numCpus());
@@ -101,14 +104,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           return 1;
       }
 
-      case Tru64::OSFlags::GSI_PROC_TYPE: {
+      case AlphaTru64::GSI_PROC_TYPE: {
           TypedBufferArg<uint64_t> proc_type(xc->getSyscallArg(1));
           *proc_type = htog((uint64_t)11);
           proc_type.copyOut(xc->getMemPort());
           return 1;
       }
 
-      case Tru64::OSFlags::GSI_PLATFORM_NAME: {
+      case AlphaTru64::GSI_PLATFORM_NAME: {
           BufferArg bufArg(xc->getSyscallArg(1), nbytes);
           strncpy((char *)bufArg.bufferPtr(),
                   "COMPAQ Professional Workstation XP1000",
@@ -117,7 +120,7 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
           return 1;
       }
 
-      case Tru64::OSFlags::GSI_CLK_TCK: {
+      case AlphaTru64::GSI_CLK_TCK: {
           TypedBufferArg<uint64_t> clk_hz(xc->getSyscallArg(1));
           *clk_hz = htog((uint64_t)1024);
           clk_hz.copyOut(xc->getMemPort());
@@ -140,7 +143,7 @@ setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
     unsigned op = xc->getSyscallArg(0);
 
     switch (op) {
-      case Tru64::OSFlags::SSI_IEEE_FP_CONTROL:
+      case AlphaTru64::SSI_IEEE_FP_CONTROL:
         warn("setsysinfo: ignoring ieee_set_fp_control() arg 0x%x\n",
              xc->getSyscallArg(1));
         break;
@@ -154,8 +157,48 @@ setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 
+/// Target table() handler.
+static
+SyscallReturn tableFunc(SyscallDesc *desc, int callnum,Process *process,
+                        ExecContext *xc)
+{
+    using namespace std;
+    using namespace TheISA;
+
+    int id = xc->getSyscallArg(0);		// table ID
+    int index = xc->getSyscallArg(1);	// index into table
+    // arg 2 is buffer pointer; type depends on table ID
+    int nel = xc->getSyscallArg(3);		// number of elements
+    int lel = xc->getSyscallArg(4);		// expected element size
+
+    switch (id) {
+      case AlphaTru64::TBL_SYSINFO: {
+          if (index != 0 || nel != 1 || lel != sizeof(Tru64::tbl_sysinfo))
+              return -EINVAL;
+          TypedBufferArg<Tru64::tbl_sysinfo> elp(xc->getSyscallArg(2));
+
+          const int clk_hz = one_million;
+          elp->si_user = htog(curTick / (Clock::Frequency / clk_hz));
+          elp->si_nice = htog(0);
+          elp->si_sys = htog(0);
+          elp->si_idle = htog(0);
+          elp->wait = htog(0);
+          elp->si_hz = htog(clk_hz);
+          elp->si_phz = htog(clk_hz);
+          elp->si_boottime = htog(seconds_since_epoch); // seconds since epoch?
+          elp->si_max_procs = htog(process->numCpus());
+          elp.copyOut(xc->getMemPort());
+          return 0;
+      }
+
+      default:
+        cerr << "table(): id " << id << " unknown." << endl;
+        return -EINVAL;
+    }
+}
+
 SyscallDesc AlphaTru64Process::syscallDescs[] = {
-    /* 0 */ SyscallDesc("syscall (#0)", Tru64::indirectSyscallFunc,
+    /* 0 */ SyscallDesc("syscall (#0)", AlphaTru64::indirectSyscallFunc,
                         SyscallDesc::SuppressReturnValue),
     /* 1 */ SyscallDesc("exit", exitFunc),
     /* 2 */ SyscallDesc("fork", unimplementedFunc),
@@ -201,7 +244,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 42 */ SyscallDesc("pipe", unimplementedFunc),
     /* 43 */ SyscallDesc("set_program_attributes", unimplementedFunc),
     /* 44 */ SyscallDesc("profil", unimplementedFunc),
-    /* 45 */ SyscallDesc("open", openFunc<Tru64>),
+    /* 45 */ SyscallDesc("open", openFunc<AlphaTru64>),
     /* 46 */ SyscallDesc("obsolete osigaction", unimplementedFunc),
     /* 47 */ SyscallDesc("getgid", getgidPseudoFunc),
     /* 48 */ SyscallDesc("sigprocmask", ignoreFunc),
@@ -210,7 +253,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 51 */ SyscallDesc("acct", unimplementedFunc),
     /* 52 */ SyscallDesc("sigpending", unimplementedFunc),
     /* 53 */ SyscallDesc("classcntl", unimplementedFunc),
-    /* 54 */ SyscallDesc("ioctl", ioctlFunc<Tru64>),
+    /* 54 */ SyscallDesc("ioctl", ioctlFunc<AlphaTru64>),
     /* 55 */ SyscallDesc("reboot", unimplementedFunc),
     /* 56 */ SyscallDesc("revoke", unimplementedFunc),
     /* 57 */ SyscallDesc("symlink", unimplementedFunc),
@@ -223,11 +266,11 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 64 */ SyscallDesc("getpagesize", getpagesizeFunc),
     /* 65 */ SyscallDesc("mremap", unimplementedFunc),
     /* 66 */ SyscallDesc("vfork", unimplementedFunc),
-    /* 67 */ SyscallDesc("pre_F64_stat", statFunc<Tru64::PreF64>),
-    /* 68 */ SyscallDesc("pre_F64_lstat", lstatFunc<Tru64::PreF64>),
+    /* 67 */ SyscallDesc("pre_F64_stat", statFunc<AlphaTru64::PreF64>),
+    /* 68 */ SyscallDesc("pre_F64_lstat", lstatFunc<AlphaTru64::PreF64>),
     /* 69 */ SyscallDesc("sbrk", unimplementedFunc),
     /* 70 */ SyscallDesc("sstk", unimplementedFunc),
-    /* 71 */ SyscallDesc("mmap", mmapFunc<Tru64>),
+    /* 71 */ SyscallDesc("mmap", mmapFunc<AlphaTru64>),
     /* 72 */ SyscallDesc("ovadvise", unimplementedFunc),
     /* 73 */ SyscallDesc("munmap", munmapFunc),
     /* 74 */ SyscallDesc("mprotect", ignoreFunc),
@@ -241,13 +284,13 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 82 */ SyscallDesc("setpgrp", unimplementedFunc),
     /* 83 */ SyscallDesc("setitimer", unimplementedFunc),
     /* 84 */ SyscallDesc("old_wait", unimplementedFunc),
-    /* 85 */ SyscallDesc("table", Tru64::tableFunc),
+    /* 85 */ SyscallDesc("table", tableFunc),
     /* 86 */ SyscallDesc("getitimer", unimplementedFunc),
     /* 87 */ SyscallDesc("gethostname", gethostnameFunc),
     /* 88 */ SyscallDesc("sethostname", unimplementedFunc),
     /* 89 */ SyscallDesc("getdtablesize", unimplementedFunc),
     /* 90 */ SyscallDesc("dup2", unimplementedFunc),
-    /* 91 */ SyscallDesc("pre_F64_fstat", fstatFunc<Tru64::PreF64>),
+    /* 91 */ SyscallDesc("pre_F64_fstat", fstatFunc<AlphaTru64::PreF64>),
     /* 92 */ SyscallDesc("fcntl", fcntlFunc),
     /* 93 */ SyscallDesc("select", unimplementedFunc),
     /* 94 */ SyscallDesc("poll", unimplementedFunc),
@@ -259,7 +302,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 100 */ SyscallDesc("getpriority", unimplementedFunc),
     /* 101 */ SyscallDesc("old_send", unimplementedFunc),
     /* 102 */ SyscallDesc("old_recv", unimplementedFunc),
-    /* 103 */ SyscallDesc("sigreturn", Tru64::sigreturnFunc,
+    /* 103 */ SyscallDesc("sigreturn", AlphaTru64::sigreturnFunc,
                           SyscallDesc::SuppressReturnValue),
     /* 104 */ SyscallDesc("bind", unimplementedFunc),
     /* 105 */ SyscallDesc("setsockopt", unimplementedFunc),
@@ -273,8 +316,8 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 113 */ SyscallDesc("old_recvmsg", unimplementedFunc),
     /* 114 */ SyscallDesc("old_sendmsg", unimplementedFunc),
     /* 115 */ SyscallDesc("obsolete vtrace", unimplementedFunc),
-    /* 116 */ SyscallDesc("gettimeofday", gettimeofdayFunc<Tru64>),
-    /* 117 */ SyscallDesc("getrusage", getrusageFunc<Tru64>),
+    /* 116 */ SyscallDesc("gettimeofday", gettimeofdayFunc<AlphaTru64>),
+    /* 117 */ SyscallDesc("getrusage", getrusageFunc<AlphaTru64>),
     /* 118 */ SyscallDesc("getsockopt", unimplementedFunc),
     /* 119 */ SyscallDesc("numa_syscalls", unimplementedFunc),
     /* 120 */ SyscallDesc("readv", unimplementedFunc),
@@ -301,7 +344,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 141 */ SyscallDesc("old_getpeername", unimplementedFunc),
     /* 142 */ SyscallDesc("gethostid", unimplementedFunc),
     /* 143 */ SyscallDesc("sethostid", unimplementedFunc),
-    /* 144 */ SyscallDesc("getrlimit", getrlimitFunc<Tru64>),
+    /* 144 */ SyscallDesc("getrlimit", getrlimitFunc<AlphaTru64>),
     /* 145 */ SyscallDesc("setrlimit", ignoreFunc),
     /* 146 */ SyscallDesc("old_killpg", unimplementedFunc),
     /* 147 */ SyscallDesc("setsid", unimplementedFunc),
@@ -316,9 +359,9 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 156 */ SyscallDesc("sigaction", ignoreFunc),
     /* 157 */ SyscallDesc("sigwaitprim", unimplementedFunc),
     /* 158 */ SyscallDesc("nfssvc", unimplementedFunc),
-    /* 159 */ SyscallDesc("getdirentries", Tru64::getdirentriesFunc),
-    /* 160 */ SyscallDesc("pre_F64_statfs", statfsFunc<Tru64::PreF64>),
-    /* 161 */ SyscallDesc("pre_F64_fstatfs", fstatfsFunc<Tru64::PreF64>),
+    /* 159 */ SyscallDesc("getdirentries", AlphaTru64::getdirentriesFunc),
+    /* 160 */ SyscallDesc("pre_F64_statfs", statfsFunc<AlphaTru64::PreF64>),
+    /* 161 */ SyscallDesc("pre_F64_fstatfs", fstatfsFunc<AlphaTru64::PreF64>),
     /* 162 */ SyscallDesc("unknown #162", unimplementedFunc),
     /* 163 */ SyscallDesc("async_daemon", unimplementedFunc),
     /* 164 */ SyscallDesc("getfh", unimplementedFunc),
@@ -381,11 +424,11 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 221 */ SyscallDesc("unknown #221", unimplementedFunc),
     /* 222 */ SyscallDesc("security", unimplementedFunc),
     /* 223 */ SyscallDesc("kloadcall", unimplementedFunc),
-    /* 224 */ SyscallDesc("stat", statFunc<Tru64::F64>),
-    /* 225 */ SyscallDesc("lstat", lstatFunc<Tru64::F64>),
-    /* 226 */ SyscallDesc("fstat", fstatFunc<Tru64::F64>),
-    /* 227 */ SyscallDesc("statfs", statfsFunc<Tru64::F64>),
-    /* 228 */ SyscallDesc("fstatfs", fstatfsFunc<Tru64::F64>),
+    /* 224 */ SyscallDesc("stat", statFunc<AlphaTru64::F64>),
+    /* 225 */ SyscallDesc("lstat", lstatFunc<AlphaTru64::F64>),
+    /* 226 */ SyscallDesc("fstat", fstatFunc<AlphaTru64::F64>),
+    /* 227 */ SyscallDesc("statfs", statfsFunc<AlphaTru64::F64>),
+    /* 228 */ SyscallDesc("fstatfs", fstatfsFunc<AlphaTru64::F64>),
     /* 229 */ SyscallDesc("getfsstat", unimplementedFunc),
     /* 230 */ SyscallDesc("gettimeofday64", unimplementedFunc),
     /* 231 */ SyscallDesc("settimeofday64", unimplementedFunc),
@@ -430,13 +473,13 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
 
 SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 0 */  SyscallDesc("kern_invalid", unimplementedFunc),
-    /* 1 */  SyscallDesc("m5_mutex_lock", Tru64::m5_mutex_lockFunc),
-    /* 2 */  SyscallDesc("m5_mutex_trylock", Tru64::m5_mutex_trylockFunc),
-    /* 3 */  SyscallDesc("m5_mutex_unlock", Tru64::m5_mutex_unlockFunc),
-    /* 4 */  SyscallDesc("m5_cond_signal", Tru64::m5_cond_signalFunc),
-    /* 5 */  SyscallDesc("m5_cond_broadcast", Tru64::m5_cond_broadcastFunc),
-    /* 6 */  SyscallDesc("m5_cond_wait", Tru64::m5_cond_waitFunc),
-    /* 7 */  SyscallDesc("m5_thread_exit", Tru64::m5_thread_exitFunc),
+    /* 1 */  SyscallDesc("m5_mutex_lock", AlphaTru64::m5_mutex_lockFunc),
+    /* 2 */  SyscallDesc("m5_mutex_trylock", AlphaTru64::m5_mutex_trylockFunc),
+    /* 3 */  SyscallDesc("m5_mutex_unlock", AlphaTru64::m5_mutex_unlockFunc),
+    /* 4 */  SyscallDesc("m5_cond_signal", AlphaTru64::m5_cond_signalFunc),
+    /* 5 */  SyscallDesc("m5_cond_broadcast", AlphaTru64::m5_cond_broadcastFunc),
+    /* 6 */  SyscallDesc("m5_cond_wait", AlphaTru64::m5_cond_waitFunc),
+    /* 7 */  SyscallDesc("m5_thread_exit", AlphaTru64::m5_thread_exitFunc),
     /* 8 */  SyscallDesc("kern_invalid", unimplementedFunc),
     /* 9 */  SyscallDesc("kern_invalid", unimplementedFunc),
     /* 10 */ SyscallDesc("task_self", unimplementedFunc),
@@ -453,22 +496,22 @@ SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 21 */ SyscallDesc("msg_receive_trap", unimplementedFunc),
     /* 22 */ SyscallDesc("msg_rpc_trap", unimplementedFunc),
     /* 23 */ SyscallDesc("kern_invalid", unimplementedFunc),
-    /* 24 */ SyscallDesc("nxm_block", Tru64::nxm_blockFunc),
-    /* 25 */ SyscallDesc("nxm_unblock", Tru64::nxm_unblockFunc),
+    /* 24 */ SyscallDesc("nxm_block", AlphaTru64::nxm_blockFunc),
+    /* 25 */ SyscallDesc("nxm_unblock", AlphaTru64::nxm_unblockFunc),
     /* 26 */ SyscallDesc("kern_invalid", unimplementedFunc),
     /* 27 */ SyscallDesc("kern_invalid", unimplementedFunc),
     /* 28 */ SyscallDesc("kern_invalid", unimplementedFunc),
     /* 29 */ SyscallDesc("nxm_thread_destroy", unimplementedFunc),
     /* 30 */ SyscallDesc("lw_wire", unimplementedFunc),
     /* 31 */ SyscallDesc("lw_unwire", unimplementedFunc),
-    /* 32 */ SyscallDesc("nxm_thread_create", Tru64::nxm_thread_createFunc),
-    /* 33 */ SyscallDesc("nxm_task_init", Tru64::nxm_task_initFunc),
+    /* 32 */ SyscallDesc("nxm_thread_create", AlphaTru64::nxm_thread_createFunc),
+    /* 33 */ SyscallDesc("nxm_task_init", AlphaTru64::nxm_task_initFunc),
     /* 34 */ SyscallDesc("kern_invalid", unimplementedFunc),
-    /* 35 */ SyscallDesc("nxm_idle", Tru64::nxm_idleFunc),
+    /* 35 */ SyscallDesc("nxm_idle", AlphaTru64::nxm_idleFunc),
     /* 36 */ SyscallDesc("nxm_wakeup_idle", unimplementedFunc),
     /* 37 */ SyscallDesc("nxm_set_pthid", unimplementedFunc),
     /* 38 */ SyscallDesc("nxm_thread_kill", unimplementedFunc),
-    /* 39 */ SyscallDesc("nxm_thread_block", Tru64::nxm_thread_blockFunc),
+    /* 39 */ SyscallDesc("nxm_thread_block", AlphaTru64::nxm_thread_blockFunc),
     /* 40 */ SyscallDesc("nxm_thread_wakeup", unimplementedFunc),
     /* 41 */ SyscallDesc("init_process", unimplementedFunc),
     /* 42 */ SyscallDesc("nxm_get_binding", unimplementedFunc),
@@ -476,7 +519,7 @@ SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 44 */ SyscallDesc("nxm_resched", unimplementedFunc),
     /* 45 */ SyscallDesc("nxm_set_cancel", unimplementedFunc),
     /* 46 */ SyscallDesc("nxm_set_binding", unimplementedFunc),
-    /* 47 */ SyscallDesc("stack_create", Tru64::stack_createFunc),
+    /* 47 */ SyscallDesc("stack_create", AlphaTru64::stack_createFunc),
     /* 48 */ SyscallDesc("nxm_get_state", unimplementedFunc),
     /* 49 */ SyscallDesc("nxm_thread_suspend", unimplementedFunc),
     /* 50 */ SyscallDesc("nxm_thread_resume", unimplementedFunc),
@@ -488,7 +531,7 @@ SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 56 */ SyscallDesc("host_priv_self", unimplementedFunc),
     /* 57 */ SyscallDesc("kern_invalid", unimplementedFunc),
     /* 58 */ SyscallDesc("kern_invalid", unimplementedFunc),
-    /* 59 */ SyscallDesc("swtch_pri", Tru64::swtch_priFunc),
+    /* 59 */ SyscallDesc("swtch_pri", AlphaTru64::swtch_priFunc),
     /* 60 */ SyscallDesc("swtch", unimplementedFunc),
     /* 61 */ SyscallDesc("thread_switch", unimplementedFunc),
     /* 62 */ SyscallDesc("semop_fast", unimplementedFunc),
@@ -496,7 +539,7 @@ SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 64 */ SyscallDesc("nxm_pshared_block", unimplementedFunc),
     /* 65 */ SyscallDesc("nxm_pshared_unblock", unimplementedFunc),
     /* 66 */ SyscallDesc("nxm_pshared_destroy", unimplementedFunc),
-    /* 67 */ SyscallDesc("nxm_swtch_pri", Tru64::swtch_priFunc),
+    /* 67 */ SyscallDesc("nxm_swtch_pri", AlphaTru64::swtch_priFunc),
     /* 68 */ SyscallDesc("lw_syscall", unimplementedFunc),
     /* 69 */ SyscallDesc("kern_invalid", unimplementedFunc),
     /* 70 */ SyscallDesc("mach_sctimes_0", unimplementedFunc),

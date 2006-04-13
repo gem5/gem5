@@ -163,45 +163,6 @@ namespace MipsISA
         MiscReg_DepTag = 67
     };
 
-    struct OSFlags
-    {
-        //@{
-        /// open(2) flag values.
-        static const int TGT_O_RDONLY	= 00000000;	//!< O_RDONLY
-        static const int TGT_O_WRONLY	= 00000001;	//!< O_WRONLY
-        static const int TGT_O_RDWR	= 00000002;	//!< O_RDWR
-        static const int TGT_O_NONBLOCK = 00000004;	//!< O_NONBLOCK
-        static const int TGT_O_APPEND	= 00000010;	//!< O_APPEND
-        static const int TGT_O_CREAT	= 00001000;	//!< O_CREAT
-        static const int TGT_O_TRUNC	= 00002000;	//!< O_TRUNC
-        static const int TGT_O_EXCL	= 00004000;	//!< O_EXCL
-        static const int TGT_O_NOCTTY	= 00010000;	//!< O_NOCTTY
-        static const int TGT_O_SYNC	= 00040000;	//!< O_SYNC
-        static const int TGT_O_DRD	= 00100000;	//!< O_DRD
-        static const int TGT_O_DIRECTIO = 00200000;	//!< O_DIRECTIO
-        static const int TGT_O_CACHE	= 00400000;	//!< O_CACHE
-        static const int TGT_O_DSYNC	= 02000000;	//!< O_DSYNC
-        static const int TGT_O_RSYNC	= 04000000;	//!< O_RSYNC
-        //@}
-
-        /// For mmap().
-        static const unsigned TGT_MAP_ANONYMOUS = 0x800;
-
-        //@{
-        /// ioctl() command codes.
-        static const unsigned TIOCGETP   = 0x40067408;
-        static const unsigned TIOCSETP   = 0x80067409;
-        static const unsigned TIOCSETN   = 0x8006740a;
-        static const unsigned TIOCSETC   = 0x80067411;
-        static const unsigned TIOCGETC   = 0x40067412;
-        static const unsigned FIONREAD   = 0x4004667f;
-        static const unsigned TIOCISATTY = 0x2000745e;
-        static const unsigned TIOCGETS   = 0x402c7413;
-        static const unsigned TIOCGETA   = 0x40127417;
-        //@}
-
-    };
-
     typedef uint64_t IntReg;
     class IntRegFile
     {

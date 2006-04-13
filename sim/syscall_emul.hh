@@ -348,14 +348,14 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
     }
 
     switch (req) {
-      case OS::OSFlags::TIOCISATTY:
-      case OS::OSFlags::TIOCGETP:
-      case OS::OSFlags::TIOCSETP:
-      case OS::OSFlags::TIOCSETN:
-      case OS::OSFlags::TIOCSETC:
-      case OS::OSFlags::TIOCGETC:
-      case OS::OSFlags::TIOCGETS:
-      case OS::OSFlags::TIOCGETA:
+      case OS::TIOCISATTY:
+      case OS::TIOCGETP:
+      case OS::TIOCSETP:
+      case OS::TIOCSETN:
+      case OS::TIOCSETC:
+      case OS::TIOCGETC:
+      case OS::TIOCGETS:
+      case OS::TIOCGETA:
         return -ENOTTY;
 
       default:
@@ -719,7 +719,7 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ExecContext *xc)
     p->pTable->allocate(start, length);
     p->mmap_end += length;
 
-    if (!(flags & OS::OSFlags::TGT_MAP_ANONYMOUS)) {
+    if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
         warn("allowing mmap of file @ fd %d. "
              "This will break if not /dev/zero.", xc->getSyscallArg(4));
     }
@@ -810,7 +810,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
     int who = xc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN
     TypedBufferArg<typename OS::rusage> rup(xc->getSyscallArg(1));
 
-    if (who != OS::OSFlags::TGT_RUSAGE_SELF) {
+    if (who != OS::TGT_RUSAGE_SELF) {
         // don't really handle THREAD or CHILDREN, but just warn and
         // plow ahead
         warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
@@ -842,5 +842,8 @@ getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
 
     return 0;
 }
+
+
+
 
 #endif // __SIM_SYSCALL_EMUL_HH__

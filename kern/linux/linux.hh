@@ -44,8 +44,8 @@ class Linux {};
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "sim/syscall_emul.hh"
 #include "arch/isa_traits.hh"
+#include "sim/syscall_emul.hh"
 
 class TranslatingPort;
 
@@ -67,8 +67,6 @@ class Linux {
     typedef uint32_t gid_t;
     //@}
 
-    typedef TheISA::OSFlags OSFlags;
-
 #if BSD_HOST
     typedef struct stat hst_stat;
     typedef struct stat hst_stat64;
@@ -76,14 +74,6 @@ class Linux {
     typedef struct stat hst_stat ;
     typedef struct stat64 hst_stat64;
 #endif
-
-
-    /// This table maps the target open() flags to the corresponding
-    /// host open() flags.
-    static OpenFlagTransTable openFlagTable[];
-
-    /// Number of entries in openFlagTable[].
-    static const int NUM_OPEN_FLAGS;
 
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems.
