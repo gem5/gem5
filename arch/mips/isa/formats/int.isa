@@ -64,9 +64,8 @@ output decoder {{
             // it's generally implicit
             if (_numDestRegs > 0) {
                 printReg(ss, _destRegIdx[0]);
+                ss << ",";
             }
-
-            ss << ",";
 
             // just print the first two source regs... if there's
             // a third one, it's a read-modify-write dest (Rc),
