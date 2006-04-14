@@ -478,7 +478,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         }
 
         if (traceData) {
-            traceData->setAddr(addr);
+            traceData->setAddr(data_read_req->getVaddr());
         }
 
         // @todo: Figure out a way to create a Fault from the packet result.
