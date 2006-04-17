@@ -973,7 +973,7 @@ SimpleCPU::tick()
         ifetch_req->setSize(sizeof(MachInst));
 #endif
 
-        ifetch_req->reset(true);
+        ifetch_req->resetMin();
         ifetch_req->setVaddr(cpuXC->readPC() & ~3);
         ifetch_req->setTime(curTick);
 #if FULL_SYSTEM

@@ -66,9 +66,12 @@ class Request
     /** Constructor, needs a bool to signify if it is/isn't Cpu Request. */
     Request(bool isCpu);
 
-    /** reset the request to it's initial state so it can be reused by the
-     * CPU.*/
-    void reset(bool isCpu);
+    /** reset the request to it's initial state so it can be reused.*/
+    void resetAll(bool isCpu);
+
+    /** reset the request's addrs times, etc, so but not everything to same
+     * time. */
+    void resetMin();
 
 //First non-cpu request fields
   private:
