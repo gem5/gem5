@@ -119,7 +119,7 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
 
                 format BasicOp {
-                    0x4: syscall({{ xc->syscall(); }},IsNonSpeculative);
+                    0x4: syscall({{ xc->syscall(R2); }},IsNonSpeculative);
                     0x5: break({{ panic("Not implemented break yet"); }},IsNonSpeculative);
                     0x7: sync({{  panic("Not implemented sync yet"); }},IsNonSpeculative);
                 }

@@ -693,7 +693,7 @@ decode OPCODE default Unknown::unknown() {
                 SimExit(curTick, "halt instruction encountered");
             }}, IsNonSpeculative);
             0x83: callsys({{
-                xc->syscall();
+                xc->syscall(R0);
             }}, IsNonSpeculative);
             // Read uniq reg into ABI return value register (r0)
             0x9e: rduniq({{ R0 = Runiq; }});

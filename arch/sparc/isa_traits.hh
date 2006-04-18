@@ -118,13 +118,12 @@ namespace SparcISA
     const int ArgumentReg3 = 11;
     const int ArgumentReg4 = 12;
     const int ArgumentReg5 = 13;
-    const int SyscallNumReg = 1;
     // Some OS syscall use a second register (o1) to return a second value
     const int SyscallPseudoReturnReg = ArgumentReg1;
 
     //XXX These numbers are bogus
     const int MaxInstSrcRegs = 8;
-    const int MaxInstDestRegs = 3;
+    const int MaxInstDestRegs = 9;
 
     typedef uint64_t IntReg;
 
@@ -174,11 +173,11 @@ namespace SparcISA
         // and put the return value itself in the standard return value reg ().
         if (return_value.successful()) {
             // no error
-            regs->setMiscReg(MISCREG_CCR_ICC_C, 0);
+            regs->setMiscReg(MISCREG_CCR_XCC_C, 0);
             regs->setIntReg(ReturnValueReg, return_value.value());
         } else {
             // got an error, return details
-            regs->setMiscReg(MISCREG_CCR_ICC_C, 1);
+            regs->setMiscReg(MISCREG_CCR_XCC_C, 1);
             regs->setIntReg(ReturnValueReg, return_value.value());
         }
     }

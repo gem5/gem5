@@ -240,7 +240,7 @@ DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 ////////////////////////////////////////////////////////////////////////
 
 
-static void
+void
 copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
                 TranslatingPort* memPort)
 {
@@ -348,11 +348,9 @@ LiveProcess::argsInit(int intSize, int pageSize)
 }
 
 void
-LiveProcess::syscall(ExecContext *xc)
+LiveProcess::syscall(int64_t callnum, ExecContext *xc)
 {
     num_syscalls++;
-
-    int64_t callnum = xc->readIntReg(SyscallNumReg);
 
     SyscallDesc *desc = getDesc(callnum);
     if (desc == NULL)

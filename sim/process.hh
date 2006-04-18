@@ -50,6 +50,10 @@ class PageTable;
 class TranslatingPort;
 class System;
 
+void
+copyStringArray(std::vector<std::string> &strings, Addr array_ptr,
+        Addr data_ptr, TranslatingPort* memPort);
+
 class Process : public SimObject
 {
   public:
@@ -155,7 +159,7 @@ class Process : public SimObject
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);
 
-    virtual void syscall(ExecContext *xc) = 0;
+    virtual void syscall(int64_t callnum, ExecContext *xc) = 0;
 };
 
 //
@@ -174,10 +178,10 @@ class LiveProcess : public Process
                 std::vector<std::string> &argv,
                 std::vector<std::string> &envp);
 
-    void argsInit(int intSize, int pageSize);
+    virtual void argsInit(int intSize, int pageSize);
 
   public:
-    virtual void syscall(ExecContext *xc);
+    virtual void syscall(int64_t callnum, ExecContext *xc);
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
 };

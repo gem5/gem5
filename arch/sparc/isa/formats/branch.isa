@@ -230,14 +230,13 @@ def template BranchExecute {{
 def format Branch(code, *opt_flags) {{
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
-        codeBlk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'Branch', codeBlk, opt_flags)
+        iop = InstObjParams(name, Name, 'Branch', code, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = BranchExecute.subst(iop)
         if usesImm:
             imm_iop = InstObjParams(name, Name + 'Imm', 'BranchImm' + iString,
-                    codeBlk, opt_flags)
+                    immCode, opt_flags)
             header_output += BasicDeclare.subst(imm_iop)
             decoder_output += BasicConstructor.subst(imm_iop)
             exec_output += BranchExecute.subst(imm_iop)

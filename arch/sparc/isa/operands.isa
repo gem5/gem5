@@ -30,8 +30,9 @@ def operands {{
     #'Runiq': ('ControlReg', 'uq', 'Uniq', None, 1),
     #'FPCR':  ('ControlReg', 'uq', 'Fpcr', None, 1),
     'R0':  		('IntReg', 'udw', '0', None, 6),
-    'R15': 		('IntReg', 'udw', '15', 'IsInteger', 7),
-    'R16': 		('IntReg', 'udw', '16', None, 8),
+    'R1':  		('IntReg', 'udw', '1', None, 7),
+    'R15': 		('IntReg', 'udw', '15', 'IsInteger', 8),
+    'R16': 		('IntReg', 'udw', '16', None, 9),
     # Control registers
     'Pstate':		('ControlReg', 'udw', 'MISCREG_PSTATE', None, 1),
     'PstateAg':		('ControlReg', 'udw', 'MISCREG_PSTATE_AG', None, 2),

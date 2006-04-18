@@ -18,6 +18,7 @@ def operands {{
     'Rt': ('IntReg', 'uw', 'RT', 'IsInteger', 3),
     'r31': ('IntReg', 'uw','R31','IsInteger', 4),
     'R0':  ('IntReg', 'uw','R0', 'IsInteger', 5),
+    'R2':  ('IntReg', 'uw','2', 'IsInteger', 5),
 
     'IntImm': ('IntReg', 'uw', 'INTIMM', 'IsInteger', 3),
 

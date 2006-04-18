@@ -414,7 +414,7 @@ class SimpleCPU : public BaseCPU
     void ev5_trap(Fault fault) { fault->invoke(xcProxy); }
     bool simPalCheck(int palFunc) { return cpuXC->simPalCheck(palFunc); }
 #else
-    void syscall() { cpuXC->syscall(); }
+    void syscall(int64_t callnum) { cpuXC->syscall(callnum); }
 #endif
 
     bool misspeculating() { return cpuXC->misspeculating(); }
