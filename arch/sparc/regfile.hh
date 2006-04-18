@@ -45,7 +45,7 @@ namespace SparcISA
     const int MaxTL = 4;
 
     // NWINDOWS - number of register windows, can be 3 to 32
-    const int NWindows = 6;
+    const int NWindows = 32;
 
     class IntRegFile
     {
@@ -581,7 +581,7 @@ namespace SparcISA
             tickFields.npt = 1; //The TICK register is unreadable by
                                 //non-priveleged software
 #else
-            //This sets up the initial state of the processor for usermode processes
+/*	    //This sets up the initial state of the processor for usermode processes
             pstateFields.priv = 0; //Process runs in user mode
             pstateFields.ie = 1; //Interrupts are enabled
             fsrFields.rd = 0; //Round to nearest
@@ -595,7 +595,7 @@ namespace SparcISA
             otherwin = 0; //No windows contain info from other programs
             canrestore = 0; //There are no windows to pop
             cansave = MaxTL - 2; //All windows are available to save into
-            cleanwin = MaxTL;
+            cleanwin = MaxTL;*/
 #endif
         }
 

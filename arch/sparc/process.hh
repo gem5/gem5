@@ -39,6 +39,20 @@ class System;
 class SparcLiveProcess : public LiveProcess
 {
   protected:
+    typedef struct
+    {
+        int64_t a_type;
+        union {
+            int64_t a_val;
+            Addr    a_ptr;
+            Addr    a_fcn;
+        };
+    } m5_auxv_t;
+
+    static const Addr StackBias = 2047;
+
+    std::vector<m5_auxv_t> auxv;
+
     SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
                 System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
@@ -56,6 +70,8 @@ class SparcLiveProcess : public LiveProcess
                                std::string executable,
                                std::vector<std::string> &argv,
                                std::vector<std::string> &envp);
+
+    void argsInit(int intSize, int pageSize);
 
 };
 

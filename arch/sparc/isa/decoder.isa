@@ -423,41 +423,70 @@ decode OP default Unknown::unknown()
                 }
             }});
             0x39: Branch::return({{
+                //If both MemAddressNotAligned and
+                //a fill trap happen, it's not clear
+                //which one should be returned.
                 Addr target = Rs1 + Rs2_or_imm13;
                 if(target & 0x3)
                     fault = new MemAddressNotAligned;
                 else
                     NNPC = target;
-                //This needs to change the register window
-                //like restore does
+                if(fault == NoFault)
+                {
+                    //CWP should be set directly so that it always happens
+                    //Also, this will allow writing to the new window and
+                    //reading from the old one
+                    Cwp = (Cwp - 1 + NWindows) % NWindows;
+                    if(Canrestore == 0)
+                    {
+                        if(Otherwin)
+                            fault = new FillNOther(WstateOther);
+                        else
+                            fault = new FillNNormal(WstateNormal);
+                    }
+                    else
+                    {
+                        Rd = Rs1 + Rs2_or_imm13;
+                        Cansave = Cansave + 1;
+                        Canrestore = Canrestore - 1;
+                    }
+                    //This is here to make sure the CWP is written
+                    //no matter what. This ensures that the results
+                    //are written in the new window as well.
+                    xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
+                }
             }});
             0x3A: decode CC
             {
                 0x0: Trap::tcci({{
-#if FULL_SYSTEM
-                    fault = new TrapInstruction;
-#else
-                    if(passesCondition(CcrIcc, machInst<25:28>))
+                    if(passesCondition(CcrIcc, COND2))
                     {
-                        // At least glibc only uses trap 0,
-                        // solaris/sunos may use others
-                        assert((I ? Rs1 + Rs2 : Rs1 + SW_TRAP) == 0);
-                        xc->syscall();
-                    }
+                        int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
+                        DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
+#if FULL_SYSTEM
+                        fault = new TrapInstruction(lTrapNum);
+#else
+                        DPRINTF(Sparc, "The syscall number is %d\n", R1);
+                        xc->syscall(R1);
 #endif
+                    }
+                    else
+                    {
+                        DPRINTF(Sparc, "Didn't fire on %s\n", CondTestAbbrev[machInst<25:28>]);
+                    }
                 }});
                 0x2: Trap::tccx({{
-#if FULL_SYSTEM
-                    fault = new TrapInstruction;
-#else
-                    if(passesCondition(CcrXcc, machInst<25:28>))
+                    if(passesCondition(CcrXcc, COND2))
                     {
-                        // At least glibc only uses trap 0,
-                        // solaris/sunos may use others
-                        assert((I ? Rs1 + Rs2 : Rs1 + SW_TRAP) == 0);
-                        xc->syscall();
-                    }
+                        int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
+                        DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
+#if FULL_SYSTEM
+                        fault = new TrapInstruction(lTrapNum);
+#else
+                        DPRINTF(Sparc, "The syscall number is %d\n", R1);
+                        xc->syscall(R1);
 #endif
+                    }
                 }});
             }
             0x3B: Nop::flush({{/*Instruction memory flush*/}});
@@ -482,8 +511,8 @@ decode OP default Unknown::unknown()
                 {
                     Cwp = (Cwp + 1) % NWindows;
                     Rd = Rs1 + Rs2_or_imm13;
-                    Cansave--;
-                    Canrestore++;
+                    Cansave = Cansave - 1;
+                    Canrestore = Canrestore + 1;
                 }
                 //This is here to make sure the CWP is written
                 //no matter what. This ensures that the results
@@ -505,8 +534,8 @@ decode OP default Unknown::unknown()
                 else
                 {
                     Rd = Rs1 + Rs2_or_imm13;
-                    Cansave++;
-                    Canrestore--;
+                    Cansave = Cansave + 1;
+                    Canrestore = Canrestore - 1;
                 }
                 //This is here to make sure the CWP is written
                 //no matter what. This ensures that the results
@@ -607,15 +636,15 @@ decode OP default Unknown::unknown()
         format Trap {
             0x20: ldf({{fault = new FpDisabled;}});
             0x21: decode X {
-                0x0: ldfsr({{fault = new FpDisabled;}});
-                0x1: ldxfsr({{fault = new FpDisabled;}});
+                0x0: Load::ldfsr({{Fsr = Mem<31:0> | Fsr<63:32>;}}, {{32}});
+                0x1: Load::ldxfsr({{Fsr = Mem;}}, {{64}});
             }
             0x22: ldqf({{fault = new FpDisabled;}});
             0x23: lddf({{fault = new FpDisabled;}});
             0x24: stf({{fault = new FpDisabled;}});
             0x25: decode X {
-                0x0: stfsr({{fault = new FpDisabled;}});
-                0x1: stxfsr({{fault = new FpDisabled;}});
+                0x0: Store::stfsr({{Mem = Fsr<31:0>;}}, {{32}});
+                0x1: Store::stxfsr({{Mem = Fsr;}}, {{64}});
             }
             0x26: stqf({{fault = new FpDisabled;}});
             0x27: stdf({{fault = new FpDisabled;}});

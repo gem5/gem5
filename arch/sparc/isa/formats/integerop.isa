@@ -243,8 +243,8 @@ def template IntOpExecute {{
             //Write the resulting state to the execution context
             if(fault == NoFault)
             {
-                %(op_wb)s;
                 %(cc_code)s;
+                %(op_wb)s;
             }
             return fault;
         }

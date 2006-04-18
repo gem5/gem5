@@ -37,6 +37,8 @@ output header {{
             OverflowSet=0x7
         };
 
+        extern char * CondTestAbbrev[];
+
         /**
          * Base class for all SPARC static instructions.
          */
@@ -63,6 +65,29 @@ output header {{
             int shiftAmount = 64 - origWidth;
             return (((int64_t)data) << shiftAmount) >> shiftAmount;
         }
+}};
+
+output decoder {{
+
+        char * CondTestAbbrev[] =
+        {
+            "nev", //Never
+            "e", //Equal
+            "le", //Less or Equal
+            "l", //Less
+            "leu", //Less or Equal Unsigned
+            "c", //Carry set
+            "n", //Negative
+            "o", //Overflow set
+            "a", //Always
+            "ne", //Not Equal
+            "g", //Greater
+            "ge", //Greater or Equal
+            "gu", //Greater Unsigned
+            "cc", //Carry clear
+            "p", //Positive
+            "oc" //Overflow Clear
+        };
 }};
 
 def template ROrImmDecode {{

@@ -518,9 +518,9 @@ class CPUExecContext
         TheISA::setSyscallReturn(return_value, &regs);
     }
 
-    void syscall()
+    void syscall(int64_t callnum)
     {
-        process->syscall(proxy);
+        process->syscall(callnum, proxy);
     }
 
     Counter readFuncExeInst() { return func_exe_inst; }

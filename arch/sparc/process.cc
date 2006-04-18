@@ -32,6 +32,8 @@
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "cpu/exec_context.hh"
+#include "mem/page_table.hh"
+#include "mem/translating_port.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -81,9 +83,9 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
     brk_point = roundUp(brk_point, VMPageSize);
 
-    // Set up stack.  On Alpha, stack goes below text section.  This
-    // code should get moved to some architecture-specific spot.
-    stack_base = objFile->textBase() - (409600+4096);
+    // Set up stack. On SPARC Linux, stack goes from the top of memory
+    // downward, less the hole for the kernel address space.
+    stack_base = ((Addr)0x80000000000);
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
@@ -91,16 +93,151 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
-
 }
 
 void
 SparcLiveProcess::startup()
 {
     argsInit(MachineBytes, VMPageSize);
+
+    //From the SPARC ABI
+
+    //The process runs in user mode
+    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE_PRIV, 0);
+    //Interrupts are enabled
+    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE_IE, 1);
+    //Round to nearest
+    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_RD, 0);
+    //Floating point traps are not enabled
+    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_TEM, 0);
+    //Turn non standard mode off
+    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_NS, 0);
+    //The floating point queue is empty
+    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_QNE, 0);
+    //There are no accrued eexecContext[0]eptions
+    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_AEXC, 0);
+    //There are no current eexecContext[0]eptions
+    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_CEXC, 0);
+
+    /*
+     * Register window management registers
+     */
+
+    //No windows contain info from other programs
+    execContexts[0]->setMiscRegWithEffect(MISCREG_OTHERWIN, 0);
+    //There are no windows to pop
+    execContexts[0]->setMiscRegWithEffect(MISCREG_CANRESTORE, 0);
+    //All windows are available to save into
+    execContexts[0]->setMiscRegWithEffect(MISCREG_CANSAVE, NWindows - 2);
+    //All windows are "clean"
+    execContexts[0]->setMiscRegWithEffect(MISCREG_CLEANWIN, NWindows);
+    //Start with register window 0
+    execContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
 }
 
+void
+SparcLiveProcess::argsInit(int intSize, int pageSize)
+{
+    Process::startup();
 
+    Addr alignmentMask = ~(intSize - 1);
+
+    // load object file into target memory
+    objFile->loadSections(initVirtMem);
+
+    //Figure out how big the initial stack needs to be
+
+    int aux_data_size = 0;
+    //Figure out the aux_data_size?
+    int env_data_size = 0;
+    for (int i = 0; i < envp.size(); ++i) {
+        env_data_size += envp[i].size() + 1;
+    }
+    int arg_data_size = 0;
+    for (int i = 0; i < argv.size(); ++i) {
+        arg_data_size += argv[i].size() + 1;
+    }
+
+    int aux_array_size = intSize * 2 * (auxv.size() + 1);
+
+    int argv_array_size = intSize * (argv.size() + 1);
+    int envp_array_size = intSize * (envp.size() + 1);
+
+    int argc_size = intSize;
+    int window_save_size = intSize * 16;
+
+    int info_block_size =
+        (aux_data_size +
+        env_data_size +
+        arg_data_size +
+        ~alignmentMask) & alignmentMask;
+
+    int info_block_padding =
+        info_block_size -
+        aux_data_size -
+        env_data_size -
+        arg_data_size;
+
+    int space_needed =
+        info_block_size +
+        aux_array_size +
+        envp_array_size +
+        argv_array_size +
+        argc_size +
+        window_save_size;
+
+    stack_min = stack_base - space_needed;
+    stack_min &= alignmentMask;
+    stack_size = stack_base - stack_min;
+
+    // map memory
+    pTable->allocate(roundDown(stack_min, pageSize),
+                     roundUp(stack_size, pageSize));
+
+    // map out initial stack contents
+    Addr aux_data_base = stack_base - aux_data_size - info_block_padding;
+    Addr env_data_base = aux_data_base - env_data_size;
+    Addr arg_data_base = env_data_base - arg_data_size;
+    Addr aux_array_base = arg_data_base - aux_array_size;
+    Addr envp_array_base = aux_array_base - envp_array_size;
+    Addr argv_array_base = envp_array_base - argv_array_size;
+    Addr argc_base = argv_array_base - argc_size;
+    Addr window_save_base = argc_base - window_save_size;
+
+    DPRINTF(Sparc, "The addresses of items on the initial stack:\n");
+    DPRINTF(Sparc, "0x%x - aux data\n", aux_data_base);
+    DPRINTF(Sparc, "0x%x - env data\n", env_data_base);
+    DPRINTF(Sparc, "0x%x - arg data\n", arg_data_base);
+    DPRINTF(Sparc, "0x%x - aux array\n", aux_array_base);
+    DPRINTF(Sparc, "0x%x - env array\n", envp_array_base);
+    DPRINTF(Sparc, "0x%x - arg array\n", argv_array_base);
+    DPRINTF(Sparc, "0x%x - argc \n", argc_base);
+    DPRINTF(Sparc, "0x%x - window save\n", window_save_base);
+    DPRINTF(Sparc, "0x%x - stack min\n", stack_min);
+
+    // write contents to stack
+    uint64_t argc = argv.size();
+
+    //Copy the aux stuff? For now just put in the null vect
+    const uint64_t zero = 0;
+    initVirtMem->writeBlob(aux_array_base, (uint8_t*)&zero, 2 * intSize);
+
+    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+
+    initVirtMem->writeBlob(argc_base, (uint8_t*)&argc, intSize);
+
+    execContexts[0]->setIntReg(ArgumentReg0, argc);
+    execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    execContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
+
+    Addr prog_entry = objFile->entryPoint();
+    execContexts[0]->setPC(prog_entry);
+    execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    execContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+
+//    num_processes++;
+}
 
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcLiveProcess)

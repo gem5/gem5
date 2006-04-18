@@ -47,17 +47,18 @@ output decoder {{
         {
             std::stringstream response;
             bool load = flags[IsLoad];
+            bool save = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(!load)
+            if(save)
             {
                 printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[ ");
-            printReg(response, _srcRegIdx[load ? 0 : 1]);
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
             ccprintf(response, " + ");
-            printReg(response, _srcRegIdx[load ? 1 : 2]);
+            printReg(response, _srcRegIdx[!save ? 1 : 2]);
             ccprintf(response, " ]");
             if(load)
             {
@@ -73,15 +74,16 @@ output decoder {{
         {
             std::stringstream response;
             bool load = flags[IsLoad];
+            bool save = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(!load)
+            if(save)
             {
                 printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[ ");
-            printReg(response, _srcRegIdx[load ? 0 : 1]);
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
             ccprintf(response, " + 0x%x ]", imm);
             if(load)
             {

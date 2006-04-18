@@ -26,8 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/sparc/linux/process.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/linux/process.hh"
+#include "arch/sparc/regfile.hh"
 
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
@@ -54,6 +55,40 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->machine, "sparc");
 
     name.copyOut(xc->getMemPort());
+
+    return 0;
+}
+
+
+SyscallReturn SparcISA::getresuidFunc(SyscallDesc *desc, int num,
+                                         Process *p, ExecContext *xc)
+{
+    const IntReg id = htog(100);
+    Addr ruid = xc->getSyscallArg(0);
+    Addr euid = xc->getSyscallArg(1);
+    Addr suid = xc->getSyscallArg(2);
+    //Handle the EFAULT case
+    //Set the ruid
+    if(ruid)
+    {
+        BufferArg ruidBuff(ruid, sizeof(IntReg));
+        memcpy(ruidBuff.bufferPtr(), &id, sizeof(IntReg));
+        ruidBuff.copyOut(xc->getMemPort());
+    }
+    //Set the euid
+    if(euid)
+    {
+        BufferArg euidBuff(euid, sizeof(IntReg));
+        memcpy(euidBuff.bufferPtr(), &id, sizeof(IntReg));
+        euidBuff.copyOut(xc->getMemPort());
+    }
+    //Set the suid
+    if(suid)
+    {
+        BufferArg suidBuff(suid, sizeof(IntReg));
+        memcpy(suidBuff.bufferPtr(), &id, sizeof(IntReg));
+        suidBuff.copyOut(xc->getMemPort());
+    }
     return 0;
 }
 
@@ -167,7 +202,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 106 */ SyscallDesc("rt_sigqueueinfo", unimplementedFunc),
     /* 107 */ SyscallDesc("rt_sigsuspend", unimplementedFunc),
     /* 108 */ SyscallDesc("setresuid", unimplementedFunc),
-    /* 109 */ SyscallDesc("getresuid", unimplementedFunc),
+    /* 109 */ SyscallDesc("getresuid", getresuidFunc),
     /* 110 */ SyscallDesc("setresgid", unimplementedFunc),
     /* 111 */ SyscallDesc("getresgid", unimplementedFunc),
     /* 112 */ SyscallDesc("setregid32", unimplementedFunc),

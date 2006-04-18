@@ -14,12 +14,14 @@ output header {{
 
             // Constructor
             Trap(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                SparcStaticInst(mnem, _machInst, __opClass)
+                SparcStaticInst(mnem, _machInst, __opClass), trapNum(SW_TRAP)
             {
             }
 
             std::string generateDisassembly(Addr pc,
                     const SymbolTable *symtab) const;
+
+            int trapNum;
         };
 }};
 
@@ -27,7 +29,15 @@ output decoder {{
         std::string Trap::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
-            return "Trap instruction";
+            std::stringstream response;
+
+            printMnemonic(response, mnemonic);
+            ccprintf(response, " ");
+            printReg(response, _srcRegIdx[0]);
+            ccprintf(response, ", 0x%x", trapNum);
+            ccprintf(response, ", or ");
+            printReg(response, _srcRegIdx[1]);
+            return response.str();
         }
 }};
 
