@@ -12,3 +12,7 @@ class BasicPioDevice(PioDevice):
     abstract = True
     pio_addr = Param.Addr("Device Address")
     pio_latency = Param.Tick(1, "Programmed IO latency in simticks")
+
+class DmaDevice(PioDevice):
+    type = 'DmaDevice'
+    abstract = True

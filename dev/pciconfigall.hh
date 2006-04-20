@@ -54,8 +54,6 @@ class PciDev;
 class PciConfigAll : public BasicPioDevice
 {
   private:
-    static const Addr size = 0xffffff;
-
     /**
       * Pointers to all the devices that are registered with this
       * particular config space.

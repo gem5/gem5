@@ -70,6 +70,13 @@
 #define IDE_CTRL_CONF_START 0x40
 #define IDE_CTRL_CONF_END ((IDE_CTRL_CONF_START) + sizeof(config_regs))
 
+#define IDE_CTRL_CONF_PRIM_TIMING   0x40
+#define IDE_CTRL_CONF_SEC_TIMING    0x42
+#define IDE_CTRL_CONF_DEV_TIMING    0x44
+#define IDE_CTRL_CONF_UDMA_CNTRL    0x48
+#define IDE_CTRL_CONF_UDMA_TIMING   0x4A
+#define IDE_CTRL_CONF_IDE_CONFIG    0x54
+
 
 enum IdeRegType {
     COMMAND_BLOCK,
@@ -77,13 +84,9 @@ enum IdeRegType {
     BMI_BLOCK
 };
 
-class BaseInterface;
-class Bus;
-class HierParams;
 class IdeDisk;
 class IntrControl;
 class PciConfigAll;
-class PhysicalMemory;
 class Platform;
 
 /**
@@ -191,10 +194,6 @@ class IdeController : public PciDev
     {
         /** Array of disk objects */
         std::vector<IdeDisk *> disks;
-        Bus *pio_bus;
-        Bus *dma_bus;
-        Tick pio_latency;
-        HierParams *hier;
     };
     const Params *params() const { return (const Params *)_params; }
 
@@ -202,26 +201,28 @@ class IdeController : public PciDev
     IdeController(Params *p);
     ~IdeController();
 
-    virtual void writeConfig(int offset, int size, const uint8_t *data);
-    virtual void readConfig(int offset, int size, uint8_t *data);
+    virtual void writeConfig(int offset, const uint8_t data);
+    virtual void writeConfig(int offset, const uint16_t data);
+    virtual void writeConfig(int offset, const uint32_t data);
+    virtual void readConfig(int offset, uint8_t *data);
+    virtual void readConfig(int offset, uint16_t *data);
+    virtual void readConfig(int offset, uint32_t *data);
 
     void setDmaComplete(IdeDisk *disk);
 
     /**
      * Read a done field for a given target.
-     * @param req Contains the address of the field to read.
-     * @param data Return the field read.
-     * @return The fault condition of the access.
+     * @param pkt Packet describing what is to be read
+     * @return The amount of time to complete this request
      */
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
+    virtual Tick read(Packet &pkt);
 
     /**
-     * Write to the mmapped I/O control registers.
-     * @param req Contains the address to write to.
-     * @param data The data to write.
-     * @return The fault condition of the access.
+     * Write a done field for a given target.
+     * @param pkt Packet describing what is to be written
+     * @return The amount of time to complete this request
      */
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Tick write(Packet &pkt);
 
     /**
      * Serialize this object to the given output stream.
@@ -236,11 +237,5 @@ class IdeController : public PciDev
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    /**
-     * Return how long this access will take.
-     * @param req the memory request to calcuate
-     * @return Tick when the request is done
-     */
-    Tick cacheAccess(MemReqPtr &req);
 };
 #endif // __IDE_CTRL_HH_

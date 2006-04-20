@@ -62,6 +62,8 @@ class ChunkGenerator
     int  curSize;
     /** The number of bytes remaining in the region after the current chunk. */
     int  sizeLeft;
+    /** The start address so we can calculate offset in writing block. */
+    const Addr startAddr;
     /** The maximum chunk size, e.g., the cache block size or page size. */
     const int chunkSize;
 
@@ -73,8 +75,8 @@ class ChunkGenerator
      * @param _chunkSize The size/alignment of chunks into which
      *    the region should be decomposed.
      */
-    ChunkGenerator(Addr startAddr, int totalSize, int _chunkSize)
-        : chunkSize(_chunkSize)
+    ChunkGenerator(Addr _startAddr, int totalSize, int _chunkSize)
+        : startAddr(_startAddr), chunkSize(_chunkSize)
     {
         // chunkSize must be a power of two
         assert(chunkSize == 0 || isPowerOf2(chunkSize));
@@ -107,6 +109,8 @@ class ChunkGenerator
     /** Return size in bytes of current chunk. */
     int  size() { return curSize; }
 
+    /** Number of bytes we have already chunked up. */
+    int complete() { return curAddr - startAddr; }
     /**
      * Are we done?  That is, did the last call to next() advance
      * past the end of the region?

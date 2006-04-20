@@ -35,6 +35,7 @@
 #include <deque>
 #include <string>
 
+#include "base/chunk_generator.hh"
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
@@ -42,11 +43,7 @@
 #include "dev/ide_ctrl.hh"
 #include "dev/tsunami.hh"
 #include "dev/tsunami_pchip.hh"
-#include "mem/functional/physical.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/dma_interface.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
@@ -55,11 +52,11 @@
 using namespace std;
 using namespace TheISA;
 
-IdeDisk::IdeDisk(const string &name, DiskImage *img, PhysicalMemory *phys,
+IdeDisk::IdeDisk(const string &name, DiskImage *img,
                  int id, Tick delay)
-    : SimObject(name), ctrl(NULL), image(img), physmem(phys), diskDelay(delay),
-      dmaTransferEvent(this), dmaReadWaitEvent(this),
-      dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
+    : SimObject(name), ctrl(NULL), image(img), diskDelay(delay),
+      dmaTransferEvent(this), dmaReadCG(NULL), dmaReadWaitEvent(this),
+      dmaWriteCG(NULL), dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
       dmaReadEvent(this), dmaWriteEvent(this)
 {
     // Reset the device state
@@ -139,7 +136,6 @@ IdeDisk::reset(int id)
     memset(&cmdReg, 0, sizeof(CommandReg_t));
     memset(&curPrd.entry, 0, sizeof(PrdEntry_t));
 
-    dmaInterfaceBytes = 0;
     curPrdAddr = 0;
     curSector = 0;
     cmdBytes = 0;
@@ -186,29 +182,6 @@ IdeDisk::pciToDma(Addr pciAddr)
         return ctrl->plat->pciToDma(pciAddr);
     else
         panic("Access to unset controller!\n");
-}
-
-uint32_t
-IdeDisk::bytesInDmaPage(Addr curAddr, uint32_t bytesLeft)
-{
-    uint32_t bytesInPage = 0;
-
-    // First calculate how many bytes could be in the page
-    if (bytesLeft > TheISA::PageBytes)
-        bytesInPage = TheISA::PageBytes;
-    else
-        bytesInPage = bytesLeft;
-
-    // Next, see if we have crossed a page boundary, and adjust
-    Addr upperBound = curAddr + bytesInPage;
-    Addr pageBound = TheISA::TruncPage(curAddr) + TheISA::PageBytes;
-
-    assert(upperBound >= curAddr && "DMA read wraps around address space!\n");
-
-    if (upperBound >= pageBound)
-        bytesInPage = pageBound - curAddr;
-
-    return bytesInPage;
 }
 
 ////
@@ -339,29 +312,17 @@ IdeDisk::doDmaTransfer()
         panic("Inconsistent DMA transfer state: dmaState = %d devState = %d\n",
               dmaState, devState);
 
-    // first read the current PRD
-    if (dmaInterface) {
-        if (dmaInterface->busy()) {
-            // reschedule after waiting period
-            dmaTransferEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
-            return;
-        }
-
-        dmaInterface->doDMA(Read, curPrdAddr, sizeof(PrdEntry_t), curTick,
-                            &dmaPrdReadEvent);
-    } else {
-        dmaPrdReadDone();
-    }
+    if (ctrl->dmaPending()) {
+        dmaTransferEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
+        return;
+    } else
+        ctrl->dmaRead(curPrdAddr, sizeof(PrdEntry_t), &dmaPrdReadEvent,
+                (uint8_t*)&curPrd.entry);
 }
 
 void
 IdeDisk::dmaPrdReadDone()
 {
-    // actually copy the PRD from physical memory
-    memcpy((void *)&curPrd.entry,
-           physmem->dma_addr(curPrdAddr, sizeof(PrdEntry_t)),
-           sizeof(PrdEntry_t));
-
     DPRINTF(IdeDisk,
             "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
             curPrd.getBaseAddr(), pciToDma(curPrd.getBaseAddr()),
@@ -372,38 +333,49 @@ IdeDisk::dmaPrdReadDone()
     curPrdAddr = curPrdAddr + sizeof(PrdEntry_t);
 
     if (dmaRead)
-        doDmaRead();
+        doDmaDataRead();
     else
-        doDmaWrite();
+        doDmaDataWrite();
 }
 
 void
-IdeDisk::doDmaRead()
+IdeDisk::doDmaDataRead()
 {
     /** @todo we need to figure out what the delay actually will be */
     Tick totalDiskDelay = diskDelay + (curPrd.getByteCount() / SectorSize);
 
     DPRINTF(IdeDisk, "doDmaRead, diskDelay: %d totalDiskDelay: %d\n",
             diskDelay, totalDiskDelay);
-    if (dmaInterface) {
-        if (dmaInterface->busy()) {
-            // reschedule after waiting period
-            dmaReadWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
-            return;
-        }
 
-        Addr dmaAddr = pciToDma(curPrd.getBaseAddr());
+    dmaReadWaitEvent.schedule(curTick + totalDiskDelay);
+}
 
-        uint32_t bytesInPage = bytesInDmaPage(curPrd.getBaseAddr(),
-                                              (uint32_t)curPrd.getByteCount());
 
-        dmaInterfaceBytes = bytesInPage;
+void
+IdeDisk::doDmaRead()
+{
 
-        dmaInterface->doDMA(Read, dmaAddr, bytesInPage,
-                            curTick + totalDiskDelay, &dmaReadEvent);
+    if (!dmaReadCG) {
+        // clear out the data buffer
+        memset(dataBuffer, 0, MAX_DMA_SIZE);
+        dmaReadCG = new ChunkGenerator(curPrd.getBaseAddr(),
+                curPrd.getByteCount(), TheISA::PageBytes);
+
+    }
+    if (ctrl->dmaPending()) {
+        panic("shouldn't be reentant??");
+        dmaReadWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
+        return;
+    } else if (!dmaReadCG->done()) {
+        assert(dmaReadCG->complete() < MAX_DMA_SIZE);
+        ctrl->dmaRead(pciToDma(dmaReadCG->addr()), dmaReadCG->size(),
+                &dmaReadWaitEvent, dataBuffer + dmaReadCG->complete());
+        dmaReadCG->next();
     } else {
-        // schedule dmaReadEvent with sectorDelay (dmaReadDone)
-        dmaReadEvent.schedule(curTick + totalDiskDelay);
+        assert(dmaReadCG->done());
+        delete dmaReadCG;
+        dmaReadCG = NULL;
+        dmaReadDone();
     }
 }
 
@@ -411,63 +383,14 @@ void
 IdeDisk::dmaReadDone()
 {
 
-    Addr curAddr = 0, dmaAddr = 0;
-    uint32_t bytesWritten = 0, bytesInPage = 0, bytesLeft = 0;
+    uint32_t bytesWritten = 0;
 
-    // continue to use the DMA interface until all pages are read
-    if (dmaInterface && (dmaInterfaceBytes < curPrd.getByteCount())) {
-        // see if the interface is busy
-        if (dmaInterface->busy()) {
-            // reschedule after waiting period
-            dmaReadEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
-            return;
-        }
-
-        uint32_t bytesLeft = curPrd.getByteCount() - dmaInterfaceBytes;
-        curAddr = curPrd.getBaseAddr() + dmaInterfaceBytes;
-        dmaAddr = pciToDma(curAddr);
-
-        bytesInPage = bytesInDmaPage(curAddr, bytesLeft);
-        dmaInterfaceBytes += bytesInPage;
-
-        dmaInterface->doDMA(Read, dmaAddr, bytesInPage,
-                            curTick, &dmaReadEvent);
-
-        return;
-    }
-
-    // set initial address
-    curAddr = curPrd.getBaseAddr();
-
-    // clear out the data buffer
-    memset(dataBuffer, 0, MAX_DMA_SIZE);
-
-    // read the data from memory via DMA into a data buffer
-    while (bytesWritten < curPrd.getByteCount()) {
-        if (cmdBytesLeft <= 0)
-            panic("DMA data is larger than # of sectors specified\n");
-
-        dmaAddr = pciToDma(curAddr);
-
-        // calculate how many bytes are in the current page
-        bytesLeft = curPrd.getByteCount() - bytesWritten;
-        bytesInPage = bytesInDmaPage(curAddr, bytesLeft);
-
-        // copy the data from memory into the data buffer
-        memcpy((void *)(dataBuffer + bytesWritten),
-               physmem->dma_addr(dmaAddr, bytesInPage),
-               bytesInPage);
-
-        curAddr += bytesInPage;
-        bytesWritten += bytesInPage;
-        cmdBytesLeft -= bytesInPage;
-    }
 
     // write the data to the disk image
-    for (bytesWritten = 0;
-         bytesWritten < curPrd.getByteCount();
+    for (bytesWritten = 0; bytesWritten < curPrd.getByteCount();
          bytesWritten += SectorSize) {
 
+        cmdBytesLeft -= SectorSize;
         writeDisk(curSector++, (uint8_t *)(dataBuffer + bytesWritten));
     }
 
@@ -482,107 +405,55 @@ IdeDisk::dmaReadDone()
 }
 
 void
-IdeDisk::doDmaWrite()
+IdeDisk::doDmaDataWrite()
 {
     /** @todo we need to figure out what the delay actually will be */
     Tick totalDiskDelay = diskDelay + (curPrd.getByteCount() / SectorSize);
+    uint32_t bytesRead = 0;
 
     DPRINTF(IdeDisk, "doDmaWrite, diskDelay: %d totalDiskDelay: %d\n",
             diskDelay, totalDiskDelay);
 
-    if (dmaInterface) {
-        if (dmaInterface->busy()) {
-            // reschedule after waiting period
-            dmaWriteWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
-            return;
-        }
+    memset(dataBuffer, 0, MAX_DMA_SIZE);
+    assert(cmdBytesLeft <= MAX_DMA_SIZE);
+    while (bytesRead < curPrd.getByteCount()) {
+        readDisk(curSector++, (uint8_t *)(dataBuffer + bytesRead));
+        bytesRead += SectorSize;
+        cmdBytesLeft -= SectorSize;
+    }
 
-        Addr dmaAddr = pciToDma(curPrd.getBaseAddr());
+    dmaWriteWaitEvent.schedule(curTick + totalDiskDelay);
+}
 
-        uint32_t bytesInPage = bytesInDmaPage(curPrd.getBaseAddr(),
-                                              (uint32_t)curPrd.getByteCount());
+void
+IdeDisk::doDmaWrite()
+{
 
-        dmaInterfaceBytes = bytesInPage;
-
-        dmaInterface->doDMA(WriteInvalidate, dmaAddr,
-                            bytesInPage, curTick + totalDiskDelay,
-                            &dmaWriteEvent);
+    if (!dmaWriteCG) {
+        // clear out the data buffer
+        dmaWriteCG = new ChunkGenerator(curPrd.getBaseAddr(),
+                curPrd.getByteCount(), TheISA::PageBytes);
+    }
+    if (ctrl->dmaPending()) {
+        panic("shouldn't be reentant??");
+        dmaWriteWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
+        return;
+    } else if (!dmaWriteCG->done()) {
+        assert(dmaWriteCG->complete() < MAX_DMA_SIZE);
+        ctrl->dmaWrite(pciToDma(dmaWriteCG->addr()), dmaWriteCG->size(),
+                &dmaWriteWaitEvent, dataBuffer + dmaWriteCG->complete());
+        dmaWriteCG->next();
     } else {
-        // schedule event with disk delay (dmaWriteDone)
-        dmaWriteEvent.schedule(curTick + totalDiskDelay);
+        assert(dmaWriteCG->done());
+        delete dmaWriteCG;
+        dmaWriteCG = NULL;
+        dmaWriteDone();
     }
 }
 
 void
 IdeDisk::dmaWriteDone()
 {
-    Addr curAddr = 0, pageAddr = 0, dmaAddr = 0;
-    uint32_t bytesRead = 0, bytesInPage = 0;
-
-    // continue to use the DMA interface until all pages are read
-    if (dmaInterface && (dmaInterfaceBytes < curPrd.getByteCount())) {
-        // see if the interface is busy
-        if (dmaInterface->busy()) {
-            // reschedule after waiting period
-            dmaWriteEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
-            return;
-        }
-
-        uint32_t bytesLeft = curPrd.getByteCount() - dmaInterfaceBytes;
-        curAddr = curPrd.getBaseAddr() + dmaInterfaceBytes;
-        dmaAddr = pciToDma(curAddr);
-
-        bytesInPage = bytesInDmaPage(curAddr, bytesLeft);
-        dmaInterfaceBytes += bytesInPage;
-
-        dmaInterface->doDMA(WriteInvalidate, dmaAddr,
-                            bytesInPage, curTick,
-                            &dmaWriteEvent);
-
-        return;
-    }
-
-    // setup the initial page and DMA address
-    curAddr = curPrd.getBaseAddr();
-    pageAddr = TheISA::TruncPage(curAddr);
-    dmaAddr = pciToDma(curAddr);
-
-    // clear out the data buffer
-    memset(dataBuffer, 0, MAX_DMA_SIZE);
-
-    while (bytesRead < curPrd.getByteCount()) {
-        // see if we have crossed into a new page
-        if (pageAddr != TheISA::TruncPage(curAddr)) {
-            // write the data to memory
-            memcpy(physmem->dma_addr(dmaAddr, bytesInPage),
-                   (void *)(dataBuffer + (bytesRead - bytesInPage)),
-                   bytesInPage);
-
-            // update the DMA address and page address
-            pageAddr = TheISA::TruncPage(curAddr);
-            dmaAddr = pciToDma(curAddr);
-
-            bytesInPage = 0;
-        }
-
-        if (cmdBytesLeft <= 0)
-            panic("DMA requested data is larger than # sectors specified\n");
-
-        readDisk(curSector++, (uint8_t *)(dataBuffer + bytesRead));
-
-        curAddr += SectorSize;
-        bytesRead += SectorSize;
-        bytesInPage += SectorSize;
-        cmdBytesLeft -= SectorSize;
-    }
-
-    // write the last page worth read to memory
-    if (bytesInPage != 0) {
-        memcpy(physmem->dma_addr(dmaAddr, bytesInPage),
-               (void *)(dataBuffer + (bytesRead - bytesInPage)),
-               bytesInPage);
-    }
-
     // check for the EOT
     if (curPrd.getEOT()) {
         assert(cmdBytesLeft == 0);
@@ -1138,13 +1009,13 @@ IdeDisk::serialize(ostream &os)
     SERIALIZE_SCALAR(curPrd.entry.endOfTable);
     SERIALIZE_SCALAR(curPrdAddr);
 
+    /** @todo need to serialized chunk generator stuff!! */
     // Serialize current transfer related information
     SERIALIZE_SCALAR(cmdBytesLeft);
     SERIALIZE_SCALAR(cmdBytes);
     SERIALIZE_SCALAR(drqBytesLeft);
     SERIALIZE_SCALAR(curSector);
     SERIALIZE_SCALAR(dmaRead);
-    SERIALIZE_SCALAR(dmaInterfaceBytes);
     SERIALIZE_SCALAR(intrPending);
     SERIALIZE_ENUM(devState);
     SERIALIZE_ENUM(dmaState);
@@ -1190,13 +1061,13 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(curPrd.entry.endOfTable);
     UNSERIALIZE_SCALAR(curPrdAddr);
 
+    /** @todo need to serialized chunk generator stuff!! */
     // Unserialize current transfer related information
     UNSERIALIZE_SCALAR(cmdBytes);
     UNSERIALIZE_SCALAR(cmdBytesLeft);
     UNSERIALIZE_SCALAR(drqBytesLeft);
     UNSERIALIZE_SCALAR(curSector);
     UNSERIALIZE_SCALAR(dmaRead);
-    UNSERIALIZE_SCALAR(dmaInterfaceBytes);
     UNSERIALIZE_SCALAR(intrPending);
     UNSERIALIZE_ENUM(devState);
     UNSERIALIZE_ENUM(dmaState);
@@ -1210,7 +1081,6 @@ static const char *DriveID_strings[] = { "master", "slave" };
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
 
     SimObjectParam<DiskImage *> image;
-    SimObjectParam<PhysicalMemory *> physmem;
     SimpleEnumParam<DriveID> driveID;
     Param<int> delay;
 
@@ -1219,7 +1089,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
 BEGIN_INIT_SIM_OBJECT_PARAMS(IdeDisk)
 
     INIT_PARAM(image, "Disk image"),
-    INIT_PARAM(physmem, "Physical memory"),
     INIT_ENUM_PARAM(driveID, "Drive ID (0=master 1=slave)", DriveID_strings),
     INIT_PARAM_DFLT(delay, "Fixed disk delay in microseconds", 1)
 
@@ -1228,7 +1097,7 @@ END_INIT_SIM_OBJECT_PARAMS(IdeDisk)
 
 CREATE_SIM_OBJECT(IdeDisk)
 {
-    return new IdeDisk(getInstanceName(), image, physmem, driveID, delay);
+    return new IdeDisk(getInstanceName(), image, driveID, delay);
 }
 
 REGISTER_SIM_OBJECT("IdeDisk", IdeDisk)

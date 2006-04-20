@@ -1,8 +1,49 @@
+from m5 import *
 import os
 from SysPaths import *
 
 # Base for tests is directory containing this file.
 test_base = os.path.dirname(__file__)
+
+linux_image = env.get('LINUX_IMAGE', disk('linux-latest.img'))
+
+class IdeControllerPciData(PciConfigData):
+    VendorID = 0x8086
+    DeviceID = 0x7111
+    Command = 0x0
+    Status = 0x280
+    Revision = 0x0
+    ClassCode = 0x01
+    SubClassCode = 0x01
+    ProgIF = 0x85
+    BAR0 = 0x00000001
+    BAR1 = 0x00000001
+    BAR2 = 0x00000001
+    BAR3 = 0x00000001
+    BAR4 = 0x00000001
+    BAR5 = 0x00000001
+    InterruptLine = 0x1f
+    InterruptPin = 0x01
+    BAR0Size = '8B'
+    BAR1Size = '4B'
+    BAR2Size = '8B'
+    BAR3Size = '4B'
+    BAR4Size = '16B'
+
+
+class LinuxRootDisk(IdeDisk):
+    raw_image = RawDiskImage(image_file=linux_image, read_only=True)
+    image = CowDiskImage(child=Parent.raw_image, read_only=False)
+
+class LinuxSwapDisk(IdeDisk):
+    raw_image = RawDiskImage(image_file = disk('linux-bigswap2.img'),
+                                  read_only=True)
+    image = CowDiskImage(child = Parent.raw_image, read_only=False)
+
+class SpecwebFilesetDisk(IdeDisk):
+    raw_image = RawDiskImage(image_file = disk('specweb-fileset.img'),
+                                  read_only=True)
+    image = CowDiskImage(child = Parent.raw_image, read_only=False)
 
 class BaseTsunami(Tsunami):
     cchip = TsunamiCChip(pio_addr=0x801a0000000)
@@ -48,17 +89,19 @@ class BaseTsunami(Tsunami):
 #                        configdata=IdeControllerPciData(),
 #                        pci_func=0, pci_dev=0, pci_bus=0)
 
-#class LinuxTsunami(BaseTsunami):
-#    disk0 = LinuxRootDisk(delay='0us', driveID='master')
-#    ide = IdeController(disks=[Parent.disk0],
-#                        configdata=IdeControllerPciData(),
-#                        pci_func=0, pci_dev=0, pci_bus=0)
+class LinuxTsunami(BaseTsunami):
+    disk0 = LinuxRootDisk(driveID='master')
+    disk1 = SpecwebFilesetDisk(driveID='slave')
+    disk2 = LinuxSwapDisk(driveID='master')
+    ide = IdeController(disks=[Parent.disk0, Parent.disk1, Parent.disk2],
+                        configdata=IdeControllerPciData(),
+                        pci_func=0, pci_dev=0, pci_bus=0)
 
 class LinuxAlphaSystem(LinuxAlphaSystem):
     magicbus = Bus()
     physmem = PhysicalMemory(range = AddrRange('128MB'))
     c1 = Connector(side_a=Parent.physmem, side_b=Parent.magicbus)
-    tsunami = BaseTsunami()
+    tsunami = LinuxTsunami()
     c2 = Connector(side_a=Parent.tsunami.cchip, side_a_name='pio', side_b=Parent.magicbus)
     c3 = Connector(side_a=Parent.tsunami.pchip, side_a_name='pio', side_b=Parent.magicbus)
     c4 = Connector(side_a=Parent.tsunami.pciconfig, side_a_name='pio', side_b=Parent.magicbus)
@@ -67,6 +110,8 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
     c8 = Connector(side_a=Parent.tsunami.fake_uart2, side_a_name='pio', side_b=Parent.magicbus)
     c9 = Connector(side_a=Parent.tsunami.fake_uart3, side_a_name='pio', side_b=Parent.magicbus)
     c10 = Connector(side_a=Parent.tsunami.fake_uart4, side_a_name='pio', side_b=Parent.magicbus)
+    c11 = Connector(side_a=Parent.tsunami.ide, side_a_name='pio', side_b=Parent.magicbus)
+    c13 = Connector(side_a=Parent.tsunami.ide, side_a_name='dma', side_b=Parent.magicbus)
     c12 = Connector(side_a=Parent.tsunami.fake_ppc, side_a_name='pio', side_b=Parent.magicbus)
     c14 = Connector(side_a=Parent.tsunami.fake_OROM, side_a_name='pio', side_b=Parent.magicbus)
     c16 = Connector(side_a=Parent.tsunami.fake_pnp_addr, side_a_name='pio', side_b=Parent.magicbus)
@@ -85,7 +130,7 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
     c31 = Connector(side_a=Parent.tsunami.io, side_a_name='pio', side_b=Parent.magicbus)
     c32 = Connector(side_a=Parent.tsunami.uart, side_a_name='pio', side_b=Parent.magicbus)
     c33 = Connector(side_a=Parent.tsunami.console, side_a_name='pio', side_b=Parent.magicbus)
-    raw_image = RawDiskImage(image_file=disk('linux.img'),
+    raw_image = RawDiskImage(image_file=disk('linux-latest.img'),
                              read_only=True)
     simple_disk = SimpleDisk(disk=Parent.raw_image)
     intrctrl = IntrControl()

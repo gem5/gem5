@@ -71,7 +71,6 @@ class PhysicalMemory : public MemObject
 
     int numPorts;
 
-    int lat;
 
     struct MemResponseEvent : public Event
     {
@@ -94,13 +93,14 @@ class PhysicalMemory : public MemObject
     uint8_t *pmem_addr;
     MemoryPort *port;
     int page_ptr;
+    Tick lat;
 
   public:
     Addr new_page();
     uint64_t size() { return pmem_size; }
 
   public:
-    PhysicalMemory(const std::string &n);
+    PhysicalMemory(const std::string &n, Tick latency);
     virtual ~PhysicalMemory();
 
   public:

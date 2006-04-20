@@ -97,21 +97,30 @@ Bus::recvStatusChange(Port::Status status, int id)
     Port *port = interfaces[id];
     AddrRangeList ranges;
     AddrRangeList snoops;
+    AddrRangeIter iter;
+    std::vector<DevMap>::iterator portIter;
+
+    // Clean out any previously existent ids
+    for (portIter = portList.begin(); portIter != portList.end(); ) {
+        if (portIter->portId == id)
+            portIter = portList.erase(portIter);
+        else
+            portIter++;
+    }
 
     port->getPeerAddressRanges(ranges, snoops);
 
     // not dealing with snooping yet either
     assert(snoops.size() == 0);
-    // or multiple ranges
-    assert(ranges.size() == 1);
+    for(iter = ranges.begin(); iter != ranges.end(); iter++) {
+        DevMap dm;
+        dm.portId = id;
+        dm.range = *iter;
 
-    DevMap dm;
-    dm.portId = id;
-    dm.range = ranges.front();
-
-    DPRINTF(MMU, "Adding range %llx - %llx for id %d\n", dm.range.start,
-            dm.range.end, id);
-    portList.push_back(dm);
+        DPRINTF(MMU, "Adding range %llx - %llx for id %d\n", dm.range.start,
+                dm.range.end, id);
+        portList.push_back(dm);
+    }
     DPRINTF(MMU, "port list has %d entries\n", portList.size());
 }
 

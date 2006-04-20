@@ -37,7 +37,7 @@
 
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
-//#include "dev/pcidev.hh"
+#include "dev/pcidev.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
 #include "mem/packet.hh"
@@ -68,7 +68,7 @@ PciConfigAll::PciConfigAll(Params *p)
 void
 PciConfigAll::startup()
 {
-/*    bitset<256> intLines;
+    bitset<256> intLines;
     PciDev *tempDev;
     uint8_t intline;
 
@@ -85,7 +85,7 @@ PciConfigAll::startup()
            } // devices != NULL
         } // PCI_FUNC
     } // PCI_DEV
-  */
+
 }
 
 Tick
@@ -97,7 +97,7 @@ PciConfigAll::read(Packet &pkt)
     Addr daddr = pkt.addr - pioAddr;
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
-    //int reg = daddr & 0xFF;
+    int reg = daddr & 0xFF;
 
     pkt.time = curTick + pioDelay;
 
@@ -131,7 +131,7 @@ PciConfigAll::read(Packet &pkt)
          if (devices[device][func] == NULL)
              *data32 = 0xFFFFFFFF;
          else
-             ;//devices[device][func]->readConfig(reg, req.size, data32);
+             devices[device][func]->readConfig(reg, data32);
          break;
       case sizeof(uint16_t):
          if (!pkt.data) {
@@ -143,7 +143,7 @@ PciConfigAll::read(Packet &pkt)
          if (devices[device][func] == NULL)
              *data16 = 0xFFFF;
          else
-             ;//devices[device][func]->readConfig(reg, req.size, data16);
+             devices[device][func]->readConfig(reg, data16);
          break;
       case sizeof(uint8_t):
          if (!pkt.data) {
@@ -155,7 +155,7 @@ PciConfigAll::read(Packet &pkt)
          if (devices[device][func] == NULL)
              *data8 = 0xFF;
          else
-             ;//devices[device][func]->readConfig(reg, req.size, data8);
+             devices[device][func]->readConfig(reg, data8);
          break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
@@ -177,7 +177,7 @@ PciConfigAll::write(Packet &pkt)
 
     int device = (daddr >> 11) & 0x1F;
     int func = (daddr >> 8) & 0x7;
-//    int reg = daddr & 0xFF;
+    int reg = daddr & 0xFF;
 
     if (devices[device][func] == NULL)
         panic("Attempting to write to config space on non-existant device\n");
@@ -185,8 +185,19 @@ PciConfigAll::write(Packet &pkt)
     DPRINTF(PciConfigAll, "write - va=%#x size=%d data=%#x\n",
             pkt.addr, pkt.size, *(uint32_t*)pkt.data);
 
-//    devices[device][func]->writeConfig(reg, req->size, data);
-
+    switch (pkt.size) {
+      case sizeof(uint8_t):
+        devices[device][func]->writeConfig(reg, *pkt.data);
+        break;
+      case sizeof(uint16_t):
+        devices[device][func]->writeConfig(reg, *(uint16_t*)pkt.data);
+        break;
+      case sizeof(uint32_t):
+        devices[device][func]->writeConfig(reg, *(uint32_t*)pkt.data);
+        break;
+      default:
+        panic("invalid pci config write size\n");
+    }
     return pioDelay;
 }
 

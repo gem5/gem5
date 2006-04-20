@@ -44,7 +44,6 @@
 #define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
 
 class PciConfigAll;
-class MemoryController;
 
 
 /**
@@ -85,12 +84,8 @@ class PciConfigData : public SimObject
 class PciDev : public DmaDevice
 {
   public:
-    struct Params
+    struct Params : public ::PioDevice::Params
     {
-        std::string name;
-        Platform *plat;
-        MemoryController *mmu;
-
         /**
          * A pointer to the configspace all object that calls us when
          * a read comes to this particular device/function.
@@ -111,13 +106,13 @@ class PciDev : public DmaDevice
 
         /** The function number */
         uint32_t functionNum;
+
+        /** The latency for pio accesses. */
+        Tick pio_delay;
     };
 
-  protected:
-    Params *_params;
-
   public:
-    const Params *params() const { return _params; }
+    const Params *params() const { return (const Params *)_params; }
 
   protected:
     /** The current config space. Unlike the PciConfigData this is
@@ -164,6 +159,7 @@ class PciDev : public DmaDevice
   protected:
     Platform *plat;
     PciConfigData *configData;
+    Tick pioDelay;
 
   public:
     Addr pciToDma(Addr pciAddr) const
@@ -181,7 +177,11 @@ class PciDev : public DmaDevice
     interruptLine()
     { return configData->config.interruptLine; }
 
-  public:
+    /** return the address ranges that this device responds to.
+     * @params range_list range list to populate with ranges
+     */
+    void addressRanges(AddrRangeList &range_list);
+
     /**
      * Constructor for PCI Dev. This function copies data from the
      * config file object PCIConfigData and registers the device with
@@ -189,39 +189,6 @@ class PciDev : public DmaDevice
      */
     PciDev(Params *params);
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
-
-  public:
-    /**
-     * Implement the read/write as BAR accesses
-     */
-    Fault readBar(MemReqPtr &req, uint8_t *data);
-    Fault writeBar(MemReqPtr &req, const uint8_t *data);
-
-  public:
-    /**
-     * Read from a specific BAR
-     */
-    virtual Fault readBar0(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault readBar1(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault readBar2(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault readBar3(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault readBar4(MemReqPtr &req, Addr daddr, uint8_t *data);
-    virtual Fault readBar5(MemReqPtr &req, Addr daddr, uint8_t *data);
-
-  public:
-    /**
-     * Write to a specific BAR
-     */
-    virtual Fault writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault writeBar1(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault writeBar2(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault writeBar3(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault writeBar4(MemReqPtr &req, Addr daddr, const uint8_t *data);
-    virtual Fault writeBar5(MemReqPtr &req, Addr daddr, const uint8_t *data);
-
-  public:
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
@@ -230,7 +197,9 @@ class PciDev : public DmaDevice
      * @param size the size of the write
      * @param data the data to write
      */
-    virtual void writeConfig(int offset, int size, const uint8_t* data);
+    virtual void writeConfig(int offset, const uint8_t data);
+    virtual void writeConfig(int offset, const uint16_t data);
+    virtual void writeConfig(int offset, const uint32_t data);
 
 
     /**
@@ -241,7 +210,9 @@ class PciDev : public DmaDevice
      * @param size the size of the read
      * @param data pointer to the location where the read value should be stored
      */
-    virtual void readConfig(int offset, int size, uint8_t *data);
+    virtual void readConfig(int offset, uint8_t *data);
+    virtual void readConfig(int offset, uint16_t *data);
+    virtual void readConfig(int offset, uint32_t *data);
 
     /**
      * Serialize this object to the given output stream.
@@ -256,43 +227,4 @@ class PciDev : public DmaDevice
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
-
-inline Fault
-PciDev::readBar(MemReqPtr &req, uint8_t *data)
-{
-    using namespace TheISA;
-    if (isBAR(req->paddr, 0))
-        return readBar0(req, req->paddr - BARAddrs[0], data);
-    if (isBAR(req->paddr, 1))
-        return readBar1(req, req->paddr - BARAddrs[1], data);
-    if (isBAR(req->paddr, 2))
-        return readBar2(req, req->paddr - BARAddrs[2], data);
-    if (isBAR(req->paddr, 3))
-        return readBar3(req, req->paddr - BARAddrs[3], data);
-    if (isBAR(req->paddr, 4))
-        return readBar4(req, req->paddr - BARAddrs[4], data);
-    if (isBAR(req->paddr, 5))
-        return readBar5(req, req->paddr - BARAddrs[5], data);
-    return genMachineCheckFault();
-}
-
-inline Fault
-PciDev::writeBar(MemReqPtr &req, const uint8_t *data)
-{
-    using namespace TheISA;
-    if (isBAR(req->paddr, 0))
-        return writeBar0(req, req->paddr - BARAddrs[0], data);
-    if (isBAR(req->paddr, 1))
-        return writeBar1(req, req->paddr - BARAddrs[1], data);
-    if (isBAR(req->paddr, 2))
-        return writeBar2(req, req->paddr - BARAddrs[2], data);
-    if (isBAR(req->paddr, 3))
-        return writeBar3(req, req->paddr - BARAddrs[3], data);
-    if (isBAR(req->paddr, 4))
-        return writeBar4(req, req->paddr - BARAddrs[4], data);
-    if (isBAR(req->paddr, 5))
-        return writeBar5(req, req->paddr - BARAddrs[5], data);
-    return genMachineCheckFault();
-}
-
 #endif // __DEV_PCIDEV_HH__

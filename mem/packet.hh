@@ -92,7 +92,7 @@ struct Packet
                            // assert(dynamic_cast<Foo>) etc.
 
     /** A virtual base opaque structure used to hold the senders state. */
-    SenderState *senderState; // virtual base opaque,
+    void *senderState; // virtual base opaque,
                            // assert(dynamic_cast<Foo>) etc.
 
     /** A pointer to the data being transfered.  It can be differnt sizes

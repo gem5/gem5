@@ -8,7 +8,6 @@ class IdeDisk(SimObject):
     delay = Param.Latency('1us', "Fixed disk delay in microseconds")
     driveID = Param.IdeID('master', "Drive ID")
     image = Param.DiskImage("Disk image")
-    physmem = Param.PhysicalMemory(Parent.any, "Physical memory")
 
 class IdeController(PciDevice):
     type = 'IdeController'

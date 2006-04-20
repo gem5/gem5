@@ -69,8 +69,8 @@ PhysicalMemory::MemResponseEvent::description()
     return "Physical Memory Timing Access respnse event";
 }
 
-PhysicalMemory::PhysicalMemory(const string &n)
-    : MemObject(n), base_addr(0), pmem_addr(NULL), port(NULL)
+PhysicalMemory::PhysicalMemory(const string &n, Tick latency)
+    : MemObject(n),base_addr(0), pmem_addr(NULL), port(NULL), lat(latency)
 {
     // Hardcoded to 128 MB for now.
     pmem_size = 1 << 27;
@@ -137,6 +137,7 @@ Tick
 PhysicalMemory::doAtomicAccess(Packet &pkt)
 {
     doFunctionalAccess(pkt);
+    pkt.time = curTick + lat;
     return curTick + lat;
 }
 
@@ -344,20 +345,22 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 
     Param<string> file;
     Param<Range<Addr> > range;
+    Param<Tick> latency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
     INIT_PARAM_DFLT(file, "memory mapped file", ""),
-    INIT_PARAM(range, "Device Address Range")
+    INIT_PARAM(range, "Device Address Range"),
+    INIT_PARAM(latency, "Memory access latency")
 
 END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
 CREATE_SIM_OBJECT(PhysicalMemory)
 {
 
-    return new PhysicalMemory(getInstanceName());
+    return new PhysicalMemory(getInstanceName(), latency);
 }
 
 REGISTER_SIM_OBJECT("PhysicalMemory", PhysicalMemory)

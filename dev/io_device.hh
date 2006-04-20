@@ -113,13 +113,28 @@ class PioPort : public Port
   friend class PioPort::SendEvent;
 };
 
+
+struct DmaReqState
+{
+    Event *completionEvent;
+    bool final;
+    DmaReqState(Event *ce, bool f)
+        : completionEvent(ce), final(f)
+    {}
+};
+
 class DmaPort : public Port
 {
   protected:
-    PioDevice *device;
+    DmaDevice *device;
     std::list<Packet*> transmitList;
-    Event *completionEvent;
 
+    /** The platform that device/port are in. This is used to select which mode
+     * we are currently operating in. */
+    Platform *platform;
+
+    /** Number of outstanding packets the dma port has. */
+    int pendingCount;
 
     virtual bool recvTiming(Packet &pkt);
     virtual Tick recvAtomic(Packet &pkt)
@@ -152,13 +167,15 @@ class DmaPort : public Port
         friend class DmaPort;
     };
 
-    void dmaAction(Command cmd, DmaPort port, Addr addr, int size,
-              Event *event, uint8_t *data = NULL);
-
     void sendDma(Packet &pkt);
 
   public:
-    DmaPort(DmaDevice *dev);
+    DmaPort(DmaDevice *dev, Platform *p);
+
+    void dmaAction(Command cmd, Addr addr, int size, Event *event,
+            uint8_t *data = NULL);
+
+    bool dmaPending() { return pendingCount > 0; }
 
   friend class DmaPort::SendEvent;
 
@@ -286,13 +303,27 @@ class DmaDevice : public PioDevice
     DmaDevice(Params *p);
     virtual ~DmaDevice();
 
+    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data)
+    { dmaPort->dmaAction(Write, addr, size, event, data) ; }
+
+    void dmaRead(Addr addr, int size, Event *event, uint8_t *data = NULL)
+    { dmaPort->dmaAction(Read, addr, size, event, data); }
+
+    bool dmaPending() { return dmaPort->dmaPending(); }
+
     virtual Port *getPort(const std::string &if_name)
     {
-        if (if_name == "pio")
+        if (if_name == "pio") {
+            if (pioPort != NULL)
+                panic("pio port already connected to.");
+            pioPort = new PioPort(this, params()->platform);
             return pioPort;
-        else if (if_name == "dma")
+        } else if (if_name == "dma") {
+            if (dmaPort != NULL)
+                panic("dma port already connected to.");
+            dmaPort = new DmaPort(this, params()->platform);
             return dmaPort;
-        else
+        } else
             return NULL;
     }
 

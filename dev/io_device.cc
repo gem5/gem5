@@ -105,23 +105,24 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 }
 
 
-DmaPort::DmaPort(DmaDevice *dev)
-        : device(dev)
+DmaPort::DmaPort(DmaDevice *dev, Platform *p)
+        : device(dev), platform(p), pendingCount(0)
 { }
 
 bool
 DmaPort::recvTiming(Packet &pkt)
 {
-    completionEvent->schedule(curTick+1);
-    completionEvent = NULL;
+    if (pkt.senderState) {
+        DmaReqState *state;
+        state = (DmaReqState*)pkt.senderState;
+        state->completionEvent->schedule(pkt.time - pkt.req->getTime());
+    }
     return Success;
 }
 
 DmaDevice::DmaDevice(Params *p)
-    : PioDevice(p)
-{
-    dmaPort = new DmaPort(this);
-}
+    : PioDevice(p), dmaPort(NULL)
+{ }
 
 void
 DmaPort::SendEvent::process()
@@ -140,8 +141,8 @@ DmaPort::recvRetry()
     return pkt;
 }
 void
-DmaPort::dmaAction(Command cmd, DmaPort port, Addr addr, int size,
-                     Event *event, uint8_t *data)
+DmaPort::dmaAction(Command cmd, Addr addr, int size, Event *event,
+        uint8_t *data)
 {
 
     assert(event);
@@ -161,8 +162,6 @@ DmaPort::dmaAction(Command cmd, DmaPort port, Addr addr, int size,
 //    baseReq.nicReq = true;
     baseReq.setTime(curTick);
 
-    completionEvent = event;
-
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
             Packet *pkt = new Packet(basePkt);
@@ -175,7 +174,15 @@ DmaPort::dmaAction(Command cmd, DmaPort port, Addr addr, int size,
             // Increment the data pointer on a write
             pkt->data = data ? data + prevSize : NULL ;
             prevSize += pkt->size;
+            // Set the last bit of the dma as the final packet for this dma
+            // and set it's completion event.
+            if (prevSize == size) {
+                DmaReqState *state = new DmaReqState(event, true);
 
+                pkt->senderState = (void*)state;
+            }
+            assert(pendingCount >= 0);
+            pendingCount++;
             sendDma(*pkt);
     }
 }
@@ -194,8 +201,12 @@ DmaPort::sendDma(Packet &pkt)
            transmitList.push_back(&packet);
    } else if (state == Atomic) {*/
        sendAtomic(pkt);
-       completionEvent->schedule(pkt.time - pkt.req->getTime());
-       completionEvent = NULL;
+       if (pkt.senderState) {
+           DmaReqState *state = (DmaReqState*)pkt.senderState;
+           state->completionEvent->schedule(curTick + (pkt.time - pkt.req->getTime()) +1);
+       }
+        pendingCount--;
+        assert(pendingCount >= 0);
 /*   } else if (state == Functional) {
        sendFunctional(pkt);
        // Is this correct???

@@ -186,9 +186,12 @@ full_system_sources = Split('''
 	dev/alpha_console.cc
 	dev/baddev.cc
 	dev/disk_image.cc
+	dev/ide_ctrl.cc
+	dev/ide_disk.cc
 	dev/io_device.cc
 	dev/isa_fake.cc
 	dev/pciconfigall.cc
+	dev/pcidev.cc
 	dev/platform.cc
         dev/simconsole.cc
 	dev/simple_disk.cc
@@ -219,10 +222,7 @@ full_system_sources = Split('''
 #	dev/etherlink.cc
 #	dev/etherpkt.cc
 #	dev/ethertap.cc
-#	dev/ide_ctrl.cc
-#	dev/ide_disk.cc
 #	dev/ns_gige.cc
-#	dev/pcidev.cc
 #	dev/pcifake.cc
 #	dev/pktfifo.cc
 #	dev/sinic.cc
