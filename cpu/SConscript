@@ -146,6 +146,8 @@ if 'OzoneCPU' in env['CPU_MODELS']:
     sources += Split('''
         ozone/back_end.cc
         ozone/lsq_unit.cc
+        ozone/lw_back_end.cc
+        ozone/lw_lsq.cc
         ''')
 
 # FullCPU sources are included from m5/SConscript since they're not
