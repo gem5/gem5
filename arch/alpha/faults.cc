@@ -30,6 +30,9 @@
 #include "cpu/exec_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+#if FULL_SYSTEM
+#include "arch/alpha/ev5.hh"
+#endif
 
 namespace AlphaISA
 {
@@ -69,6 +72,10 @@ FaultStat DtbPageFault::_count;
 FaultName DtbAcvFault::_name = "dfault";
 FaultVect DtbAcvFault::_vect = 0x0381;
 FaultStat DtbAcvFault::_count;
+
+FaultName DtbAlignmentFault::_name = "unalign";
+FaultVect DtbAlignmentFault::_vect = 0x0301;
+FaultStat DtbAlignmentFault::_count;
 
 FaultName ItbMissFault::_name = "itbmiss";
 FaultVect ItbMissFault::_vect = 0x0181;
@@ -123,6 +130,44 @@ void ArithmeticFault::invoke(ExecContext * xc)
 {
     FaultBase::invoke(xc);
     panic("Arithmetic traps are unimplemented!");
+}
+
+void DtbFault::invoke(ExecContext * xc)
+{
+    // Set fault address and flags.  Even though we're modeling an
+    // EV5, we use the EV6 technique of not latching fault registers
+    // on VPTE loads (instead of locking the registers until IPR_VA is
+    // read, like the EV5).  The EV6 approach is cleaner and seems to
+    // work with EV5 PAL code, but not the other way around.
+    if (!xc->misspeculating()
+        && !(reqFlags & VPTE) && !(reqFlags & NO_FAULT)) {
+        // set VA register with faulting address
+        xc->setMiscReg(AlphaISA::IPR_VA, vaddr);
+
+        // set MM_STAT register flags
+        xc->setMiscReg(AlphaISA::IPR_MM_STAT,
+            (((EV5::Opcode(xc->getInst()) & 0x3f) << 11)
+             | ((EV5::Ra(xc->getInst()) & 0x1f) << 6)
+             | (flags & 0x3f)));
+
+        // set VA_FORM register with faulting formatted address
+        xc->setMiscReg(AlphaISA::IPR_VA_FORM,
+            xc->readMiscReg(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
+    }
+
+    AlphaFault::invoke(xc);
+}
+
+void ItbFault::invoke(ExecContext * xc)
+{
+    if (!xc->misspeculating()) {
+        xc->setMiscReg(AlphaISA::IPR_ITB_TAG, pc);
+        xc->setMiscReg(AlphaISA::IPR_IFAULT_VA_FORM,
+                       xc->readMiscReg(AlphaISA::IPR_IVPTBR) |
+                       (AlphaISA::VAddr(pc).vpn() << 3));
+    }
+
+    AlphaFault::invoke(xc);
 }
 
 #endif

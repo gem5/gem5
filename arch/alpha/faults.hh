@@ -29,6 +29,7 @@
 #ifndef __ALPHA_FAULTS_HH__
 #define __ALPHA_FAULTS_HH__
 
+#include "arch/alpha/isa_traits.hh"
 #include "sim/faults.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
@@ -130,85 +131,167 @@ class InterruptFault : public AlphaFault
     FaultStat & countStat() {return _count;}
 };
 
-class NDtbMissFault : public AlphaFault
+class DtbFault : public AlphaFault
+{
+#if FULL_SYSTEM
+  private:
+    AlphaISA::VAddr vaddr;
+    uint32_t reqFlags;
+    uint64_t flags;
+  public:
+    DtbFault(AlphaISA::VAddr _vaddr, uint32_t _reqFlags, uint64_t _flags)
+        : vaddr(_vaddr), reqFlags(_reqFlags), flags(_flags)
+    { }
+#endif
+    FaultName name() = 0;
+    FaultVect vect() = 0;
+    FaultStat & countStat() = 0;
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+};
+
+class NDtbMissFault : public DtbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+#if FULL_SYSTEM
+    NDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+        : DtbFault(vaddr, reqFlags, flags)
+    { }
+#endif
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-class PDtbMissFault : public AlphaFault
+class PDtbMissFault : public DtbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+#if FULL_SYSTEM
+    PDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+        : DtbFault(vaddr, reqFlags, flags)
+    { }
+#endif
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-class DtbPageFault : public AlphaFault
+class DtbPageFault : public DtbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+#if FULL_SYSTEM
+    DtbPageFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+        : DtbFault(vaddr, reqFlags, flags)
+    { }
+#endif
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-class DtbAcvFault : public AlphaFault
+class DtbAcvFault : public DtbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+#if FULL_SYSTEM
+    DtbAcvFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+        : DtbFault(vaddr, reqFlags, flags)
+    { }
+#endif
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-class ItbMissFault : public AlphaFault
+class DtbAlignmentFault : public DtbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+#if FULL_SYSTEM
+    DtbAlignmentFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+        : DtbFault(vaddr, reqFlags, flags)
+    { }
+#endif
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-class ItbPageFault : public AlphaFault
+class ItbFault : public AlphaFault
+{
+  private:
+    Addr pc;
+  public:
+    ItbFault(Addr _pc)
+        : pc(_pc)
+    { }
+    FaultName name() = 0;
+    FaultVect vect() = 0;
+    FaultStat & countStat() = 0;
+#if FULL_SYSTEM
+    void invoke(ExecContext * xc);
+#endif
+};
+
+class ItbMissFault : public ItbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+    ItbMissFault(Addr pc)
+        : ItbFault(pc)
+    { }
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-class ItbAcvFault : public AlphaFault
+class ItbPageFault : public ItbFault
 {
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
   public:
+    ItbPageFault(Addr pc)
+        : ItbFault(pc)
+    { }
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+class ItbAcvFault : public ItbFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    ItbAcvFault(Addr pc)
+        : ItbFault(pc)
+    { }
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}

@@ -290,17 +290,6 @@ AlphaITB::regStats()
     accesses = hits + misses;
 }
 
-void
-AlphaITB::fault(Addr pc, ExecContext *xc) const
-{
-    if (!xc->misspeculating()) {
-        xc->setMiscReg(AlphaISA::IPR_ITB_TAG, pc);
-        xc->setMiscReg(AlphaISA::IPR_IFAULT_VA_FORM,
-                       xc->readMiscReg(AlphaISA::IPR_IVPTBR) |
-                       (AlphaISA::VAddr(pc).vpn() << 3));
-    }
-}
-
 
 Fault
 AlphaITB::translate(MemReqPtr &req) const
@@ -319,9 +308,8 @@ AlphaITB::translate(MemReqPtr &req) const
     } else {
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->vaddr)) {
-            fault(req->vaddr, req->xc);
             acv++;
-            return new ItbAcvFault;
+            return new ItbAcvFault(req->vaddr);
         }
 
 
@@ -336,9 +324,8 @@ AlphaITB::translate(MemReqPtr &req) const
             // only valid in kernel mode
             if (ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM)) !=
                 AlphaISA::mode_kernel) {
-                fault(req->vaddr, req->xc);
                 acv++;
-                return new ItbAcvFault;
+                return new ItbAcvFault(req->vaddr);
             }
 
             req->paddr = req->vaddr & PAddrImplMask;
@@ -358,9 +345,8 @@ AlphaITB::translate(MemReqPtr &req) const
                                         asn);
 
             if (!pte) {
-                fault(req->vaddr, req->xc);
                 misses++;
-                return new ItbPageFault;
+                return new ItbPageFault(req->vaddr);
             }
 
             req->paddr = (pte->ppn << AlphaISA::PageShift) +
@@ -370,9 +356,8 @@ AlphaITB::translate(MemReqPtr &req) const
             if (!(pte->xre &
                   (1 << ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM))))) {
                 // instruction access fault
-                fault(req->vaddr, req->xc);
                 acv++;
-                return new ItbAcvFault;
+                return new ItbAcvFault(req->vaddr);
             }
 
             hits++;
@@ -465,34 +450,6 @@ AlphaDTB::regStats()
     accesses = read_accesses + write_accesses;
 }
 
-void
-AlphaDTB::fault(MemReqPtr &req, uint64_t flags) const
-{
-    ExecContext *xc = req->xc;
-    AlphaISA::VAddr vaddr = req->vaddr;
-
-    // Set fault address and flags.  Even though we're modeling an
-    // EV5, we use the EV6 technique of not latching fault registers
-    // on VPTE loads (instead of locking the registers until IPR_VA is
-    // read, like the EV5).  The EV6 approach is cleaner and seems to
-    // work with EV5 PAL code, but not the other way around.
-    if (!xc->misspeculating()
-        && !(req->flags & VPTE) && !(req->flags & NO_FAULT)) {
-        // set VA register with faulting address
-        xc->setMiscReg(AlphaISA::IPR_VA, req->vaddr);
-
-        // set MM_STAT register flags
-        xc->setMiscReg(AlphaISA::IPR_MM_STAT,
-            (((Opcode(xc->getInst()) & 0x3f) << 11)
-             | ((Ra(xc->getInst()) & 0x1f) << 6)
-             | (flags & 0x3f)));
-
-        // set VA_FORM register with faulting formatted address
-        xc->setMiscReg(AlphaISA::IPR_VA_FORM,
-            xc->readMiscReg(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
-    }
-}
-
 Fault
 AlphaDTB::translate(MemReqPtr &req, bool write) const
 {
@@ -507,10 +464,10 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
      * Check for alignment faults
      */
     if (req->vaddr & (req->size - 1)) {
-        fault(req, write ? MM_STAT_WR_MASK : 0);
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->vaddr,
                 req->size);
-        return genAlignmentFault();
+        uint64_t flags = write ? MM_STAT_WR_MASK : 0;
+        return new DtbAlignmentFault(req->vaddr, req->flags, flags);
     }
 
     if (pc & 0x1) {
@@ -525,12 +482,11 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
     } else {
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->vaddr)) {
-            fault(req, (write ? MM_STAT_WR_MASK : 0) |
-                  MM_STAT_BAD_VA_MASK |
-                  MM_STAT_ACV_MASK);
-
             if (write) { write_acv++; } else { read_acv++; }
-            return new DtbPageFault;
+            uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
+                MM_STAT_BAD_VA_MASK |
+                MM_STAT_ACV_MASK;
+            return new DtbPageFault(req->vaddr, req->flags, flags);
         }
 
         // Check for "superpage" mapping
@@ -544,10 +500,10 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
             // only valid in kernel mode
             if (DTB_CM_CM(xc->readMiscReg(AlphaISA::IPR_DTB_CM)) !=
                 AlphaISA::mode_kernel) {
-                fault(req, ((write ? MM_STAT_WR_MASK : 0) |
-                            MM_STAT_ACV_MASK));
                 if (write) { write_acv++; } else { read_acv++; }
-                return new DtbAcvFault;
+                uint64_t flags = ((write ? MM_STAT_WR_MASK : 0) |
+                                  MM_STAT_ACV_MASK);
+                return new DtbAcvFault(req->vaddr, req->flags, flags);
             }
 
             req->paddr = req->vaddr & PAddrImplMask;
@@ -574,12 +530,14 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
 
             if (!pte) {
                 // page fault
-                fault(req, (write ? MM_STAT_WR_MASK : 0) |
-                      MM_STAT_DTB_MISS_MASK);
                 if (write) { write_misses++; } else { read_misses++; }
+                uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
+                    MM_STAT_DTB_MISS_MASK;
                 return (req->flags & VPTE) ?
-                    (Fault)(new PDtbMissFault) :
-                    (Fault)(new NDtbMissFault);
+                    (Fault)(new PDtbMissFault(req->vaddr, req->flags,
+                                              flags)) :
+                    (Fault)(new NDtbMissFault(req->vaddr, req->flags,
+                                              flags));
             }
 
             req->paddr = (pte->ppn << AlphaISA::PageShift) +
@@ -588,29 +546,29 @@ AlphaDTB::translate(MemReqPtr &req, bool write) const
             if (write) {
                 if (!(pte->xwe & MODE2MASK(mode))) {
                     // declare the instruction access fault
-                    fault(req, MM_STAT_WR_MASK |
-                          MM_STAT_ACV_MASK |
-                          (pte->fonw ? MM_STAT_FONW_MASK : 0));
                     write_acv++;
-                    return new DtbPageFault;
+                    uint64_t flags = MM_STAT_WR_MASK |
+                        MM_STAT_ACV_MASK |
+                        (pte->fonw ? MM_STAT_FONW_MASK : 0);
+                    return new DtbPageFault(req->vaddr, req->flags, flags);
                 }
                 if (pte->fonw) {
-                    fault(req, MM_STAT_WR_MASK |
-                          MM_STAT_FONW_MASK);
                     write_acv++;
-                    return new DtbPageFault;
+                    uint64_t flags = MM_STAT_WR_MASK |
+                        MM_STAT_FONW_MASK;
+                    return new DtbPageFault(req->vaddr, req->flags, flags);
                 }
             } else {
                 if (!(pte->xre & MODE2MASK(mode))) {
-                    fault(req, MM_STAT_ACV_MASK |
-                          (pte->fonr ? MM_STAT_FONR_MASK : 0));
                     read_acv++;
-                    return new DtbAcvFault;
+                    uint64_t flags = MM_STAT_ACV_MASK |
+                        (pte->fonr ? MM_STAT_FONR_MASK : 0);
+                    return new DtbAcvFault(req->vaddr, req->flags, flags);
                 }
                 if (pte->fonr) {
-                    fault(req, MM_STAT_FONR_MASK);
                     read_acv++;
-                    return new DtbPageFault;
+                    uint64_t flags = MM_STAT_FONR_MASK;
+                    return new DtbPageFault(req->vaddr, req->flags, flags);
                 }
             }
         }
