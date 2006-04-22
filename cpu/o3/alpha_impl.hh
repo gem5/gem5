@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_ALPHA_IMPL_HH__
-#define __CPU_O3_CPU_ALPHA_IMPL_HH__
+#ifndef __CPU_O3_ALPHA_IMPL_HH__
+#define __CPU_O3_ALPHA_IMPL_HH__
 
 #include "arch/alpha/isa_traits.hh"
 
@@ -41,7 +41,7 @@ class AlphaDynInst;
 template <class Impl>
 class AlphaFullCPU;
 
-/** Implementation specific struct that defines several key things to the
+/** Implementation specific struct that defines several key types to the
  *  CPU, the stages within the CPU, the time buffers, and the DynInst.
  *  The struct defines the ISA, the CPU policy, the specific DynInst, the
  *  specific FullCPU, and all of the structs from the time buffers to do
@@ -54,10 +54,10 @@ struct AlphaSimpleImpl
     /** The type of MachInst. */
     typedef TheISA::MachInst MachInst;
 
-    /** The CPU policy to be used (ie fetch, decode, etc.). */
+    /** The CPU policy to be used, which defines all of the CPU stages. */
     typedef SimpleCPUPolicy<AlphaSimpleImpl> CPUPol;
 
-    /** The DynInst to be used. */
+    /** The DynInst type to be used. */
     typedef AlphaDynInst<AlphaSimpleImpl> DynInst;
 
     /** The refcounted DynInst pointer to be used.  In most cases this is
@@ -65,15 +65,16 @@ struct AlphaSimpleImpl
      */
     typedef RefCountingPtr<DynInst> DynInstPtr;
 
-    /** The FullCPU to be used. */
+    /** The FullCPU type to be used. */
     typedef AlphaFullCPU<AlphaSimpleImpl> FullCPU;
 
     /** The Params to be passed to each stage. */
     typedef AlphaSimpleParams Params;
 
     enum {
-        MaxWidth = 8
+      MaxWidth = 8,
+      MaxThreads = 4
     };
 };
 
-#endif // __CPU_O3_CPU_ALPHA_IMPL_HH__
+#endif // __CPU_O3_ALPHA_IMPL_HH__

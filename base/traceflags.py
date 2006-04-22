@@ -133,15 +133,24 @@ baseFlags = [
     'ROB',
     'FreeList',
     'RenameMap',
-    'LDSTQ',
+    'LSQ',
+    'LSQUnit',
     'StoreSet',
     'MemDepUnit',
     'DynInst',
     'FullCPU',
     'CommitRate',
-    'OoOCPU',
+    'OzoneCPU',
+    'FE',
+    'IBE',
+    'BE',
+    'OzoneLSQ',
     'HWPrefetch',
     'Stack',
+    'DependGraph',
+    'Activity',
+    'Scoreboard',
+    'Writeback'
     ]
 
 #
@@ -159,7 +168,8 @@ compoundFlagMap = {
     'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'EthernetNoData' : [ 'Ethernet', 'EthernetPIO', 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
-    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LDSTQ', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU']
+    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU', 'Activity','Scoreboard','Writeback'],
+    'OzoneCPUAll' : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU']
 }
 
 #############################################################

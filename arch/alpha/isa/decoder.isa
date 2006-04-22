@@ -73,7 +73,7 @@ decode OPCODE default Unknown::unknown() {
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED);
+                    }}, mem_flags = LOCKED, inst_flags = IsNonSpeculative);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
@@ -85,7 +85,7 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED);
+                    }}, mem_flags = LOCKED, inst_flags = IsNonSpeculative);
     }
 
     format IntegerOperate {
@@ -591,8 +591,8 @@ decode OPCODE default Unknown::unknown() {
             0x02e: fcmovle({{ Fc = (Fa <= 0) ? Fb : Fc; }});
             0x02f: fcmovgt({{ Fc = (Fa >  0) ? Fb : Fc; }});
 
-            0x024: mt_fpcr({{ FPCR = Fa.uq; }});
-            0x025: mf_fpcr({{ Fa.uq = FPCR; }});
+            0x024: mt_fpcr({{ FPCR = Fa.uq; }}, IsSerializing, IsSerializeBefore);
+            0x025: mf_fpcr({{ Fa.uq = FPCR; }}, IsSerializing, IsSerializeBefore);
         }
     }
 
@@ -623,7 +623,7 @@ decode OPCODE default Unknown::unknown() {
 #else
                 Ra = curTick;
 #endif
-            }});
+            }}, IsNonSpeculative);
 
             // All of the barrier instructions below do nothing in
             // their execute() methods (hence the empty code blocks).
@@ -641,8 +641,8 @@ decode OPCODE default Unknown::unknown() {
             // a barrier on integer and FP traps.  "EXCB is thus a
             // superset of TRAPB." (Alpha ARM, Sec 4.11.4) We treat
             // them the same though.
-            0x0000: trapb({{ }}, IsSerializing, No_OpClass);
-            0x0400: excb({{ }}, IsSerializing, No_OpClass);
+            0x0000: trapb({{ }}, IsSerializing, IsSerializeBefore, No_OpClass);
+            0x0400: excb({{ }}, IsSerializing, IsSerializeBefore, No_OpClass);
             0x4000: mb({{ }}, IsMemBarrier, MemReadOp);
             0x4400: wmb({{ }}, IsWriteBarrier, MemWriteOp);
         }
@@ -694,11 +694,11 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall();
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsSerializeAfter);
             // Read uniq reg into ABI return value register (r0)
-            0x9e: rduniq({{ R0 = Runiq; }});
+            0x9e: rduniq({{ R0 = Runiq; }}, IsSerializing, IsSerializeBefore);
             // Write uniq reg with value from ABI arg register (r16)
-            0x9f: wruniq({{ Runiq = R16; }});
+            0x9f: wruniq({{ Runiq = R16; }}, IsSerializing, IsSerializeBefore);
         }
     }
 #endif
@@ -735,7 +735,7 @@ decode OPCODE default Unknown::unknown() {
         format HwMoveIPR {
             1: hw_mfpr({{
                 Ra = xc->readMiscRegWithEffect(ipr_index, fault);
-            }});
+            }}, IsSerializing, IsSerializeBefore);
         }
     }
 
@@ -745,14 +745,14 @@ decode OPCODE default Unknown::unknown() {
             1: hw_mtpr({{
                 xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
-            }});
+            }}, IsSerializing, IsSerializeBefore);
         }
     }
 
     format BasicOperate {
         0x1e: decode PALMODE {
             0: OpcdecFault::hw_rei();
-            1:hw_rei({{ xc->hwrei(); }}, IsSerializing);
+            1:hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
         }
 
         // M5 special opcodes use the reserved 0x01 opcode space
@@ -762,13 +762,13 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x01: quiesce({{
                 AlphaPseudo::quiesce(xc->xcBase());
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsQuiesce);
             0x02: quiesceNs({{
                 AlphaPseudo::quiesceNs(xc->xcBase(), R16);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsQuiesce);
             0x03: quiesceCycles({{
                 AlphaPseudo::quiesceCycles(xc->xcBase(), R16);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsQuiesce);
             0x04: quiesceTime({{
                 R0 = AlphaPseudo::quiesceTime(xc->xcBase());
             }}, IsNonSpeculative);

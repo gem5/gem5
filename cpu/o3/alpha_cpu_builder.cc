@@ -26,39 +26,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/inifile.hh"
-#include "base/loader/symtab.hh"
-#include "base/misc.hh"
+#include <string>
+
 #include "cpu/base.hh"
-#include "cpu/exetrace.hh"
 #include "cpu/o3/alpha_cpu.hh"
 #include "cpu/o3/alpha_impl.hh"
-#include "mem/base_mem.hh"
+#include "cpu/o3/alpha_params.hh"
+#include "cpu/o3/fu_pool.hh"
 #include "mem/cache/base_cache.hh"
-#include "mem/mem_interface.hh"
 #include "sim/builder.hh"
-#include "sim/debug.hh"
-#include "sim/host.hh"
-#include "sim/process.hh"
-#include "sim/sim_events.hh"
-#include "sim/sim_object.hh"
-#include "sim/stats.hh"
-
-#if FULL_SYSTEM
-#include "base/remote_gdb.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
-#include "sim/system.hh"
-#include "arch/tlb.hh"
-#include "arch/vtophys.hh"
-#else // !FULL_SYSTEM
-#include "mem/functional/functional.hh"
-#endif // FULL_SYSTEM
 
 class DerivAlphaFullCPU : public AlphaFullCPU<AlphaSimpleImpl>
 {
   public:
-    DerivAlphaFullCPU(AlphaSimpleParams p)
+    DerivAlphaFullCPU(AlphaSimpleParams *p)
         : AlphaFullCPU<AlphaSimpleImpl>(p)
     { }
 };
@@ -75,7 +56,9 @@ SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
 #else
 SimObjectVectorParam<Process *> workload;
+//SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
+
 SimObjectParam<FunctionalMemory *> mem;
 
 Param<Counter> max_insts_any_thread;
@@ -85,6 +68,8 @@ Param<Counter> max_loads_all_threads;
 
 SimObjectParam<BaseCache *> icache;
 SimObjectParam<BaseCache *> dcache;
+
+Param<unsigned> cachePorts;
 
 Param<unsigned> decodeToFetchDelay;
 Param<unsigned> renameToFetchDelay;
@@ -112,25 +97,22 @@ Param<unsigned> executeIntWidth;
 Param<unsigned> executeFloatWidth;
 Param<unsigned> executeBranchWidth;
 Param<unsigned> executeMemoryWidth;
+SimObjectParam<FUPool *> fuPool;
 
 Param<unsigned> iewToCommitDelay;
 Param<unsigned> renameToROBDelay;
 Param<unsigned> commitWidth;
 Param<unsigned> squashWidth;
 
-#if 0
 Param<unsigned> localPredictorSize;
-Param<unsigned> localPredictorCtrBits;
-#endif
-Param<unsigned> local_predictor_size;
-Param<unsigned> local_ctr_bits;
-Param<unsigned> local_history_table_size;
-Param<unsigned> local_history_bits;
-Param<unsigned> global_predictor_size;
-Param<unsigned> global_ctr_bits;
-Param<unsigned> global_history_bits;
-Param<unsigned> choice_predictor_size;
-Param<unsigned> choice_ctr_bits;
+Param<unsigned> localCtrBits;
+Param<unsigned> localHistoryTableSize;
+Param<unsigned> localHistoryBits;
+Param<unsigned> globalPredictorSize;
+Param<unsigned> globalCtrBits;
+Param<unsigned> globalHistoryBits;
+Param<unsigned> choicePredictorSize;
+Param<unsigned> choiceCtrBits;
 
 Param<unsigned> BTBEntries;
 Param<unsigned> BTBTagSize;
@@ -146,6 +128,16 @@ Param<unsigned> numPhysIntRegs;
 Param<unsigned> numPhysFloatRegs;
 Param<unsigned> numIQEntries;
 Param<unsigned> numROBEntries;
+
+Param<unsigned> smtNumFetchingThreads;
+Param<std::string>   smtFetchPolicy;
+Param<std::string>   smtLSQPolicy;
+Param<unsigned> smtLSQThreshold;
+Param<std::string>   smtIQPolicy;
+Param<unsigned> smtIQThreshold;
+Param<std::string>   smtROBPolicy;
+Param<unsigned> smtROBThreshold;
+Param<std::string>   smtCommitPolicy;
 
 Param<unsigned> instShiftAmt;
 
@@ -168,6 +160,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(dtb, "Data translation buffer"),
 #else
     INIT_PARAM(workload, "Processes to run"),
+//    INIT_PARAM(page_table, "Page table"),
 #endif // FULL_SYSTEM
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
@@ -190,13 +183,14 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM_DFLT(icache, "L1 instruction cache", NULL),
     INIT_PARAM_DFLT(dcache, "L1 data cache", NULL),
 
+    INIT_PARAM_DFLT(cachePorts, "Cache Ports", 200),
+
     INIT_PARAM(decodeToFetchDelay, "Decode to fetch delay"),
     INIT_PARAM(renameToFetchDelay, "Rename to fetch delay"),
     INIT_PARAM(iewToFetchDelay, "Issue/Execute/Writeback to fetch"
                "delay"),
     INIT_PARAM(commitToFetchDelay, "Commit to fetch delay"),
     INIT_PARAM(fetchWidth, "Fetch width"),
-
     INIT_PARAM(renameToDecodeDelay, "Rename to decode delay"),
     INIT_PARAM(iewToDecodeDelay, "Issue/Execute/Writeback to decode"
                "delay"),
@@ -222,6 +216,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(executeFloatWidth, "Floating point execute width"),
     INIT_PARAM(executeBranchWidth, "Branch execute width"),
     INIT_PARAM(executeMemoryWidth, "Memory execute width"),
+    INIT_PARAM_DFLT(fuPool, "Functional unit pool", NULL),
 
     INIT_PARAM(iewToCommitDelay, "Issue/Execute/Writeback to commit "
                "delay"),
@@ -229,20 +224,15 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(commitWidth, "Commit width"),
     INIT_PARAM(squashWidth, "Squash width"),
 
-#if 0
-    INIT_PARAM(localPredictorSize, "Size of the local predictor in entries. "
-               "Must be a power of 2."),
-    INIT_PARAM(localPredictorCtrBits, "Number of bits per counter for bpred"),
-#endif
-    INIT_PARAM(local_predictor_size, "Size of local predictor"),
-    INIT_PARAM(local_ctr_bits, "Bits per counter"),
-    INIT_PARAM(local_history_table_size, "Size of local history table"),
-    INIT_PARAM(local_history_bits, "Bits for the local history"),
-    INIT_PARAM(global_predictor_size, "Size of global predictor"),
-    INIT_PARAM(global_ctr_bits, "Bits per counter"),
-    INIT_PARAM(global_history_bits, "Bits of history"),
-    INIT_PARAM(choice_predictor_size, "Size of choice predictor"),
-    INIT_PARAM(choice_ctr_bits, "Bits of choice counters"),
+    INIT_PARAM(localPredictorSize, "Size of local predictor"),
+    INIT_PARAM(localCtrBits, "Bits per counter"),
+    INIT_PARAM(localHistoryTableSize, "Size of local history table"),
+    INIT_PARAM(localHistoryBits, "Bits for the local history"),
+    INIT_PARAM(globalPredictorSize, "Size of global predictor"),
+    INIT_PARAM(globalCtrBits, "Bits per counter"),
+    INIT_PARAM(globalHistoryBits, "Bits of history"),
+    INIT_PARAM(choicePredictorSize, "Size of choice predictor"),
+    INIT_PARAM(choiceCtrBits, "Bits of choice counters"),
 
     INIT_PARAM(BTBEntries, "Number of BTB entries"),
     INIT_PARAM(BTBTagSize, "Size of the BTB tags, in bits"),
@@ -259,6 +249,16 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
                "registers"),
     INIT_PARAM(numIQEntries, "Number of instruction queue entries"),
     INIT_PARAM(numROBEntries, "Number of reorder buffer entries"),
+
+    INIT_PARAM_DFLT(smtNumFetchingThreads, "SMT Number of Fetching Threads", 1),
+    INIT_PARAM_DFLT(smtFetchPolicy, "SMT Fetch Policy", "SingleThread"),
+    INIT_PARAM_DFLT(smtLSQPolicy,   "SMT LSQ Sharing Policy",    "Partitioned"),
+    INIT_PARAM_DFLT(smtLSQThreshold,"SMT LSQ Threshold", 100),
+    INIT_PARAM_DFLT(smtIQPolicy,    "SMT IQ Policy",    "Partitioned"),
+    INIT_PARAM_DFLT(smtIQThreshold, "SMT IQ Threshold", 100),
+    INIT_PARAM_DFLT(smtROBPolicy,   "SMT ROB Sharing Policy", "Partitioned"),
+    INIT_PARAM_DFLT(smtROBThreshold,"SMT ROB Threshold", 100),
+    INIT_PARAM_DFLT(smtCommitPolicy,"SMT Commit Fetch Policy", "RoundRobin"),
 
     INIT_PARAM(instShiftAmt, "Number of bits to shift instructions by"),
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
@@ -287,101 +287,113 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
 
 #endif
 
-    AlphaSimpleParams params;
+    AlphaSimpleParams *params = new AlphaSimpleParams;
 
-    params.clock = clock;
+    params->clock = clock;
 
-    params.name = getInstanceName();
-    params.numberOfThreads = actual_num_threads;
+    params->name = getInstanceName();
+    params->numberOfThreads = actual_num_threads;
 
 #if FULL_SYSTEM
-    params.system = system;
-    params.cpu_id = cpu_id;
-    params.itb = itb;
-    params.dtb = dtb;
+    params->system = system;
+    params->cpu_id = cpu_id;
+    params->itb = itb;
+    params->dtb = dtb;
 #else
-    params.workload = workload;
+    params->workload = workload;
+    //@todo: change to pageTable
+//    params->pTable = page_table;
 #endif // FULL_SYSTEM
 
-    params.mem = mem;
+    params->mem = mem;
 
-    params.max_insts_any_thread = max_insts_any_thread;
-    params.max_insts_all_threads = max_insts_all_threads;
-    params.max_loads_any_thread = max_loads_any_thread;
-    params.max_loads_all_threads = max_loads_all_threads;
+    params->max_insts_any_thread = max_insts_any_thread;
+    params->max_insts_all_threads = max_insts_all_threads;
+    params->max_loads_any_thread = max_loads_any_thread;
+    params->max_loads_all_threads = max_loads_all_threads;
 
     //
     // Caches
     //
-    params.icacheInterface = icache ? icache->getInterface() : NULL;
-    params.dcacheInterface = dcache ? dcache->getInterface() : NULL;
+    params->icacheInterface = icache ? icache->getInterface() : NULL;
+    params->dcacheInterface = dcache ? dcache->getInterface() : NULL;
+    params->cachePorts = cachePorts;
 
-    params.decodeToFetchDelay = decodeToFetchDelay;
-    params.renameToFetchDelay = renameToFetchDelay;
-    params.iewToFetchDelay = iewToFetchDelay;
-    params.commitToFetchDelay = commitToFetchDelay;
-    params.fetchWidth = fetchWidth;
+    params->decodeToFetchDelay = decodeToFetchDelay;
+    params->renameToFetchDelay = renameToFetchDelay;
+    params->iewToFetchDelay = iewToFetchDelay;
+    params->commitToFetchDelay = commitToFetchDelay;
+    params->fetchWidth = fetchWidth;
 
-    params.renameToDecodeDelay = renameToDecodeDelay;
-    params.iewToDecodeDelay = iewToDecodeDelay;
-    params.commitToDecodeDelay = commitToDecodeDelay;
-    params.fetchToDecodeDelay = fetchToDecodeDelay;
-    params.decodeWidth = decodeWidth;
+    params->renameToDecodeDelay = renameToDecodeDelay;
+    params->iewToDecodeDelay = iewToDecodeDelay;
+    params->commitToDecodeDelay = commitToDecodeDelay;
+    params->fetchToDecodeDelay = fetchToDecodeDelay;
+    params->decodeWidth = decodeWidth;
 
-    params.iewToRenameDelay = iewToRenameDelay;
-    params.commitToRenameDelay = commitToRenameDelay;
-    params.decodeToRenameDelay = decodeToRenameDelay;
-    params.renameWidth = renameWidth;
+    params->iewToRenameDelay = iewToRenameDelay;
+    params->commitToRenameDelay = commitToRenameDelay;
+    params->decodeToRenameDelay = decodeToRenameDelay;
+    params->renameWidth = renameWidth;
 
-    params.commitToIEWDelay = commitToIEWDelay;
-    params.renameToIEWDelay = renameToIEWDelay;
-    params.issueToExecuteDelay = issueToExecuteDelay;
-    params.issueWidth = issueWidth;
-    params.executeWidth = executeWidth;
-    params.executeIntWidth = executeIntWidth;
-    params.executeFloatWidth = executeFloatWidth;
-    params.executeBranchWidth = executeBranchWidth;
-    params.executeMemoryWidth = executeMemoryWidth;
+    params->commitToIEWDelay = commitToIEWDelay;
+    params->renameToIEWDelay = renameToIEWDelay;
+    params->issueToExecuteDelay = issueToExecuteDelay;
+    params->issueWidth = issueWidth;
+    params->executeWidth = executeWidth;
+    params->executeIntWidth = executeIntWidth;
+    params->executeFloatWidth = executeFloatWidth;
+    params->executeBranchWidth = executeBranchWidth;
+    params->executeMemoryWidth = executeMemoryWidth;
+    params->fuPool = fuPool;
 
-    params.iewToCommitDelay = iewToCommitDelay;
-    params.renameToROBDelay = renameToROBDelay;
-    params.commitWidth = commitWidth;
-    params.squashWidth = squashWidth;
-#if 0
-    params.localPredictorSize = localPredictorSize;
-    params.localPredictorCtrBits = localPredictorCtrBits;
-#endif
-    params.local_predictor_size = local_predictor_size;
-    params.local_ctr_bits = local_ctr_bits;
-    params.local_history_table_size = local_history_table_size;
-    params.local_history_bits = local_history_bits;
-    params.global_predictor_size = global_predictor_size;
-    params.global_ctr_bits = global_ctr_bits;
-    params.global_history_bits = global_history_bits;
-    params.choice_predictor_size = choice_predictor_size;
-    params.choice_ctr_bits = choice_ctr_bits;
+    params->iewToCommitDelay = iewToCommitDelay;
+    params->renameToROBDelay = renameToROBDelay;
+    params->commitWidth = commitWidth;
+    params->squashWidth = squashWidth;
 
-    params.BTBEntries = BTBEntries;
-    params.BTBTagSize = BTBTagSize;
 
-    params.RASSize = RASSize;
+    params->localPredictorSize = localPredictorSize;
+    params->localCtrBits = localCtrBits;
+    params->localHistoryTableSize = localHistoryTableSize;
+    params->localHistoryBits = localHistoryBits;
+    params->globalPredictorSize = globalPredictorSize;
+    params->globalCtrBits = globalCtrBits;
+    params->globalHistoryBits = globalHistoryBits;
+    params->choicePredictorSize = choicePredictorSize;
+    params->choiceCtrBits = choiceCtrBits;
 
-    params.LQEntries = LQEntries;
-    params.SQEntries = SQEntries;
-    params.SSITSize = SSITSize;
-    params.LFSTSize = LFSTSize;
+    params->BTBEntries = BTBEntries;
+    params->BTBTagSize = BTBTagSize;
 
-    params.numPhysIntRegs = numPhysIntRegs;
-    params.numPhysFloatRegs = numPhysFloatRegs;
-    params.numIQEntries = numIQEntries;
-    params.numROBEntries = numROBEntries;
+    params->RASSize = RASSize;
 
-    params.instShiftAmt = 2;
+    params->LQEntries = LQEntries;
+    params->SQEntries = SQEntries;
 
-    params.defReg = defer_registration;
+    params->SSITSize = SSITSize;
+    params->LFSTSize = LFSTSize;
 
-    params.functionTrace = function_trace;
-    params.functionTraceStart = function_trace_start;
+    params->numPhysIntRegs = numPhysIntRegs;
+    params->numPhysFloatRegs = numPhysFloatRegs;
+    params->numIQEntries = numIQEntries;
+    params->numROBEntries = numROBEntries;
+
+    params->smtNumFetchingThreads = smtNumFetchingThreads;
+    params->smtFetchPolicy = smtFetchPolicy;
+    params->smtIQPolicy    = smtIQPolicy;
+    params->smtLSQPolicy    = smtLSQPolicy;
+    params->smtLSQThreshold = smtLSQThreshold;
+    params->smtROBPolicy   = smtROBPolicy;
+    params->smtROBThreshold = smtROBThreshold;
+    params->smtCommitPolicy = smtCommitPolicy;
+
+    params->instShiftAmt = 2;
+
+    params->deferRegistration = defer_registration;
+
+    params->functionTrace = function_trace;
+    params->functionTraceStart = function_trace_start;
 
     cpu = new DerivAlphaFullCPU(params);
 

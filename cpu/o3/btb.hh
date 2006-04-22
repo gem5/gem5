@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_BTB_HH__
-#define __CPU_O3_CPU_BTB_HH__
+#ifndef __CPU_O3_BTB_HH__
+#define __CPU_O3_BTB_HH__
 
 // For Addr type.
 #include "arch/isa_traits.hh"
@@ -42,39 +42,84 @@ class DefaultBTB
         {
         }
 
+        /** The entry's tag. */
         Addr tag;
+
+        /** The entry's target. */
         Addr target;
+
+        /** The entry's thread id. */
+        unsigned tid;
+
+        /** Whether or not the entry is valid. */
         bool valid;
     };
 
   public:
+    /** Creates a BTB with the given number of entries, number of bits per
+     *  tag, and instruction offset amount.
+     *  @param numEntries Number of entries for the BTB.
+     *  @param tagBits Number of bits for each tag in the BTB.
+     *  @param instShiftAmt Offset amount for instructions to ignore alignment.
+     */
     DefaultBTB(unsigned numEntries, unsigned tagBits,
                unsigned instShiftAmt);
 
-    Addr lookup(const Addr &inst_PC);
+    /** Looks up an address in the BTB. Must call valid() first on the address.
+     *  @param inst_PC The address of the branch to look up.
+     *  @param tid The thread id.
+     *  @return Returns the target of the branch.
+     */
+    Addr lookup(const Addr &inst_PC, unsigned tid);
 
-    bool valid(const Addr &inst_PC);
+    /** Checks if a branch is in the BTB.
+     *  @param inst_PC The address of the branch to look up.
+     *  @param tid The thread id.
+     *  @return Whether or not the branch exists in the BTB.
+     */
+    bool valid(const Addr &inst_PC, unsigned tid);
 
-    void update(const Addr &inst_PC, const Addr &target_PC);
+    /** Updates the BTB with the target of a branch.
+     *  @param inst_PC The address of the branch being updated.
+     *  @param target_PC The target address of the branch.
+     *  @param tid The thread id.
+     */
+    void update(const Addr &inst_PC, const Addr &target_PC,
+                unsigned tid);
 
   private:
+    /** Returns the index into the BTB, based on the branch's PC.
+     *  @param inst_PC The branch to look up.
+     *  @return Returns the index into the BTB.
+     */
     inline unsigned getIndex(const Addr &inst_PC);
 
+    /** Returns the tag bits of a given address.
+     *  @param inst_PC The branch's address.
+     *  @return Returns the tag bits.
+     */
     inline Addr getTag(const Addr &inst_PC);
 
-    BTBEntry *btb;
+    /** The actual BTB. */
+    std::vector<BTBEntry> btb;
 
+    /** The number of entries in the BTB. */
     unsigned numEntries;
 
+    /** The index mask. */
     unsigned idxMask;
 
+    /** The number of tag bits per entry. */
     unsigned tagBits;
 
+    /** The tag mask. */
     unsigned tagMask;
 
+    /** Number of bits to shift PC when calculating index. */
     unsigned instShiftAmt;
 
+    /** Number of bits to shift PC when calculating tag. */
     unsigned tagShiftAmt;
 };
 
-#endif // __CPU_O3_CPU_BTB_HH__
+#endif // __CPU_O3_BTB_HH__

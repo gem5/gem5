@@ -26,10 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_REGFILE_HH__
-#define __CPU_O3_CPU_REGFILE_HH__
-
-// @todo: Destructor
+#ifndef __CPU_O3_REGFILE_HH__
+#define __CPU_O3_REGFILE_HH__
 
 #include "arch/isa_traits.hh"
 #include "arch/faults.hh"
@@ -42,11 +40,14 @@
 
 #endif
 
-// This really only depends on the ISA, and not the Impl.  It might be nicer
-// to see if I can make it depend on nothing...
-// Things that are in the ifdef FULL_SYSTEM are pretty dependent on the ISA,
-// and should go in the AlphaFullCPU.
+#include <vector>
 
+/**
+ * Simple physical register file class.
+ * This really only depends on the ISA, and not the Impl. Things that are
+ * in the ifdef FULL_SYSTEM are pretty dependent on the ISA, and probably
+ * should go in the AlphaFullCPU.
+ */
 template <class Impl>
 class PhysRegFile
 {
@@ -55,19 +56,18 @@ class PhysRegFile
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
+    // Note that most of the definitions of the IntReg, FloatReg, etc. exist
+    // within the Impl/ISA class and not within this PhysRegFile class.
 
-    //Note that most of the definitions of the IntReg, FloatReg, etc. exist
-    //within the Impl/ISA class and not within this PhysRegFile class.
-
-    //Will need some way to allow stuff like swap_palshadow to access the
-    //correct registers.  Might require code changes to swap_palshadow and
-    //other execution contexts.
-
-    //Will make these registers public for now, but they probably should
-    //be private eventually with some accessor functions.
+    // Will make these registers public for now, but they probably should
+    // be private eventually with some accessor functions.
   public:
     typedef typename Impl::FullCPU FullCPU;
 
+    /**
+     * Constructs a physical register file with the specified amount of
+     * integer and floating point registers.
+     */
     PhysRegFile(unsigned _numPhysicalIntRegs,
                 unsigned _numPhysicalFloatRegs);
 
@@ -80,6 +80,7 @@ class PhysRegFile
 //    void serialize(std::ostream &os);
 //    void unserialize(Checkpoint *cp, const std::string &section);
 
+    /** Reads an integer register. */
     uint64_t readIntReg(PhysRegIndex reg_idx)
     {
         assert(reg_idx < numPhysicalIntRegs);
@@ -89,6 +90,7 @@ class PhysRegFile
         return intRegFile[reg_idx];
     }
 
+    /** Reads a floating point register (single precision). */
     float readFloatRegSingle(PhysRegIndex reg_idx)
     {
         // Remove the base Float reg dependency.
@@ -102,6 +104,7 @@ class PhysRegFile
         return (float)floatRegFile[reg_idx].d;
     }
 
+    /** Reads a floating point register (double precision). */
     double readFloatRegDouble(PhysRegIndex reg_idx)
     {
         // Remove the base Float reg dependency.
@@ -115,6 +118,7 @@ class PhysRegFile
         return floatRegFile[reg_idx].d;
     }
 
+    /** Reads a floating point register as an integer. */
     uint64_t readFloatRegInt(PhysRegIndex reg_idx)
     {
         // Remove the base Float reg dependency.
@@ -128,6 +132,7 @@ class PhysRegFile
         return floatRegFile[reg_idx].q;
     }
 
+    /** Sets an integer register to the given value. */
     void setIntReg(PhysRegIndex reg_idx, uint64_t val)
     {
         assert(reg_idx < numPhysicalIntRegs);
@@ -135,9 +140,11 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting int register %i to %lli\n",
                 int(reg_idx), val);
 
-        intRegFile[reg_idx] = val;
+        if (reg_idx != TheISA::ZeroReg)
+            intRegFile[reg_idx] = val;
     }
 
+    /** Sets a single precision floating point register to the given value. */
     void setFloatRegSingle(PhysRegIndex reg_idx, float val)
     {
         // Remove the base Float reg dependency.
@@ -148,9 +155,11 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
                 int(reg_idx), val);
 
-        floatRegFile[reg_idx].d = (double)val;
+        if (reg_idx != TheISA::ZeroReg)
+            floatRegFile[reg_idx].d = (double)val;
     }
 
+    /** Sets a double precision floating point register to the given value. */
     void setFloatRegDouble(PhysRegIndex reg_idx, double val)
     {
         // Remove the base Float reg dependency.
@@ -161,9 +170,11 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %8.8f\n",
                 int(reg_idx), val);
 
-        floatRegFile[reg_idx].d = val;
+        if (reg_idx != TheISA::ZeroReg)
+            floatRegFile[reg_idx].d = val;
     }
 
+    /** Sets a floating point register to the given integer value. */
     void setFloatRegInt(PhysRegIndex reg_idx, uint64_t val)
     {
         // Remove the base Float reg dependency.
@@ -174,78 +185,68 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
                 int(reg_idx), val);
 
-        floatRegFile[reg_idx].q = val;
-    }
-
-    uint64_t readPC()
-    {
-        return pc;
-    }
-
-    void setPC(uint64_t val)
-    {
-        pc = val;
-    }
-
-    void setNextPC(uint64_t val)
-    {
-        npc = val;
+        if (reg_idx != TheISA::ZeroReg)
+            floatRegFile[reg_idx].q = val;
     }
 
     //Consider leaving this stuff and below in some implementation specific
     //file as opposed to the general register file.  Or have a derived class.
-    MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscReg(int misc_reg, unsigned thread_id)
     {
-        // Dummy function for now.
-        // @todo: Fix this once proxy XC is used.
-        return 0;
+        return miscRegs[thread_id].readReg(misc_reg);
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault,
+                                  unsigned thread_id)
     {
-        // Dummy function for now.
-        // @todo: Fix this once proxy XC is used.
-        return NoFault;
+        return miscRegs[thread_id].readRegWithEffect(misc_reg, fault,
+                                                     cpu->xcProxies[thread_id]);
+    }
+
+    Fault setMiscReg(int misc_reg, const MiscReg &val, unsigned thread_id)
+    {
+        return miscRegs[thread_id].setReg(misc_reg, val);
+    }
+
+    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val,
+                               unsigned thread_id)
+    {
+        return miscRegs[thread_id].setRegWithEffect(misc_reg, val,
+                                                    cpu->xcProxies[thread_id]);
     }
 
 #if FULL_SYSTEM
     int readIntrFlag() { return intrflag; }
+    /** Sets an interrupt flag. */
     void setIntrFlag(int val) { intrflag = val; }
 #endif
 
-    // These should be private eventually, but will be public for now
-    // so that I can hack around the initregs issue.
   public:
     /** (signed) integer register file. */
-    IntReg *intRegFile;
+    std::vector<IntReg> intRegFile;
 
     /** Floating point register file. */
-    FloatReg *floatRegFile;
+    std::vector<FloatReg> floatRegFile;
 
     /** Miscellaneous register file. */
-    MiscRegFile miscRegs;
-
-    /** Program counter. */
-    Addr pc;
-
-    /** Next-cycle program counter. */
-    Addr npc;
+    MiscRegFile miscRegs[Impl::MaxThreads];
 
 #if FULL_SYSTEM
   private:
-    // This is ISA specifc stuff; remove it eventually once ISAImpl is used
-//    IntReg palregs[NumIntRegs];	// PAL shadow registers
     int intrflag;			// interrupt flag
-    bool pal_shadow;		// using pal_shadow registers
 #endif
 
   private:
+    /** CPU pointer. */
     FullCPU *cpu;
 
   public:
+    /** Sets the CPU pointer. */
     void setCPU(FullCPU *cpu_ptr) { cpu = cpu_ptr; }
 
+    /** Number of physical integer registers. */
     unsigned numPhysicalIntRegs;
+    /** Number of physical floating point registers. */
     unsigned numPhysicalFloatRegs;
 };
 
@@ -255,11 +256,11 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
     : numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs)
 {
-    intRegFile = new IntReg[numPhysicalIntRegs];
-    floatRegFile = new FloatReg[numPhysicalFloatRegs];
+    intRegFile.resize(numPhysicalIntRegs);
+    floatRegFile.resize(numPhysicalFloatRegs);
 
-    memset(intRegFile, 0, sizeof(*intRegFile));
-    memset(floatRegFile, 0, sizeof(*floatRegFile));
+    //memset(intRegFile, 0, sizeof(*intRegFile));
+    //memset(floatRegFile, 0, sizeof(*floatRegFile));
 }
 
-#endif // __CPU_O3_CPU_REGFILE_HH__
+#endif

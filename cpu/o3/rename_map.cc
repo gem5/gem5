@@ -39,98 +39,94 @@ using namespace std;
 // determine if the register is a logical int, logical fp, physical int,
 // physical fp, etc.
 
-SimpleRenameMap::SimpleRenameMap(unsigned _numLogicalIntRegs,
-                                 unsigned _numPhysicalIntRegs,
-                                 unsigned _numLogicalFloatRegs,
-                                 unsigned _numPhysicalFloatRegs,
-                                 unsigned _numMiscRegs,
-                                 RegIndex _intZeroReg,
-                                 RegIndex _floatZeroReg)
-    : numLogicalIntRegs(_numLogicalIntRegs),
-      numPhysicalIntRegs(_numPhysicalIntRegs),
-      numLogicalFloatRegs(_numLogicalFloatRegs),
-      numPhysicalFloatRegs(_numPhysicalFloatRegs),
-      numMiscRegs(_numMiscRegs),
-      intZeroReg(_intZeroReg),
-      floatZeroReg(_floatZeroReg)
+SimpleRenameMap::~SimpleRenameMap()
 {
-    DPRINTF(Rename, "Rename: Creating rename map.  Phys: %i / %i, Float: "
-            "%i / %i.\n", numLogicalIntRegs, numPhysicalIntRegs,
+    // Delete the rename maps as they were allocated with new.
+    //delete [] intRenameMap;
+    //delete [] floatRenameMap;
+}
+
+void
+SimpleRenameMap::init(unsigned _numLogicalIntRegs,
+                      unsigned _numPhysicalIntRegs,
+                      PhysRegIndex &ireg_idx,
+
+                      unsigned _numLogicalFloatRegs,
+                      unsigned _numPhysicalFloatRegs,
+                      PhysRegIndex &freg_idx,
+
+                      unsigned _numMiscRegs,
+
+                      RegIndex _intZeroReg,
+                      RegIndex _floatZeroReg,
+
+                      int map_id,
+                      bool bindRegs)
+{
+    id = map_id;
+
+    numLogicalIntRegs = _numLogicalIntRegs;
+
+    numLogicalFloatRegs = _numLogicalFloatRegs;
+
+    numPhysicalIntRegs = _numPhysicalIntRegs;
+
+    numPhysicalFloatRegs = _numPhysicalFloatRegs;
+
+    numMiscRegs = _numMiscRegs;
+
+    intZeroReg = _intZeroReg;
+    floatZeroReg = _floatZeroReg;
+
+    DPRINTF(Rename, "Creating rename map %i.  Phys: %i / %i, Float: "
+            "%i / %i.\n", id, numLogicalIntRegs, numPhysicalIntRegs,
             numLogicalFloatRegs, numPhysicalFloatRegs);
 
     numLogicalRegs = numLogicalIntRegs + numLogicalFloatRegs;
 
     numPhysicalRegs = numPhysicalIntRegs + numPhysicalFloatRegs;
 
-    //Create the rename maps, and their scoreboards.
-    intRenameMap = new RenameEntry[numLogicalIntRegs];
-    floatRenameMap = new RenameEntry[numLogicalRegs];
+    //Create the rename maps
+    intRenameMap.resize(numLogicalIntRegs);
+    floatRenameMap.resize(numLogicalRegs);
 
-    // Should combine this into one scoreboard.
-    intScoreboard.resize(numPhysicalIntRegs);
-    floatScoreboard.resize(numPhysicalRegs);
-    miscScoreboard.resize(numPhysicalRegs + numMiscRegs);
+    if (bindRegs) {
+        DPRINTF(Rename, "Binding registers into rename map %i",id);
 
-    // Initialize the entries in the integer rename map to point to the
-    // physical registers of the same index, and consider each register
-    // ready until the first rename occurs.
-    for (RegIndex index = 0; index < numLogicalIntRegs; ++index)
-    {
-        intRenameMap[index].physical_reg = index;
-        intScoreboard[index] = 1;
+        // Initialize the entries in the integer rename map to point to the
+        // physical registers of the same index
+        for (RegIndex index = 0; index < numLogicalIntRegs; ++index)
+        {
+            intRenameMap[index].physical_reg = ireg_idx++;
+        }
+
+        // Initialize the entries in the floating point rename map to point to
+        // the physical registers of the same index
+        // Although the index refers purely to architected registers, because
+        // the floating reg indices come after the integer reg indices, they
+        // may exceed the size of a normal RegIndex (short).
+        for (PhysRegIndex index = numLogicalIntRegs; index < numLogicalRegs; ++index)
+        {
+            floatRenameMap[index].physical_reg = freg_idx++;
+        }
+    } else {
+        DPRINTF(Rename, "Binding registers into rename map %i",id);
+
+        PhysRegIndex temp_ireg = ireg_idx;
+
+        for (RegIndex index = 0; index < numLogicalIntRegs; ++index)
+        {
+            intRenameMap[index].physical_reg = temp_ireg++;
+        }
+
+        PhysRegIndex temp_freg = freg_idx;
+
+        for (PhysRegIndex index = numLogicalIntRegs;
+             index < numLogicalRegs; ++index)
+        {
+            floatRenameMap[index].physical_reg = temp_freg++;
+        }
     }
-
-    // Initialize the rest of the physical registers (the ones that don't
-    // directly map to a logical register) as unready.
-    for (PhysRegIndex index = numLogicalIntRegs;
-         index < numPhysicalIntRegs;
-         ++index)
-    {
-        intScoreboard[index] = 0;
-    }
-
-    int float_reg_idx = numPhysicalIntRegs;
-
-    // Initialize the entries in the floating point rename map to point to
-    // the physical registers of the same index, and consider each register
-    // ready until the first rename occurs.
-    // Although the index refers purely to architected registers, because
-    // the floating reg indices come after the integer reg indices, they
-    // may exceed the size of a normal RegIndex (short).
-    for (PhysRegIndex index = numLogicalIntRegs;
-         index < numLogicalRegs; ++index)
-    {
-        floatRenameMap[index].physical_reg = float_reg_idx++;
-    }
-
-    for (PhysRegIndex index = numPhysicalIntRegs;
-         index < numPhysicalIntRegs + numLogicalFloatRegs; ++index)
-    {
-        floatScoreboard[index] = 1;
-    }
-
-    // Initialize the rest of the physical registers (the ones that don't
-    // directly map to a logical register) as unready.
-    for (PhysRegIndex index = numPhysicalIntRegs + numLogicalFloatRegs;
-         index < numPhysicalRegs;
-         ++index)
-    {
-        floatScoreboard[index] = 0;
-    }
-
-    // Initialize the entries in the misc register scoreboard to be ready.
-    for (PhysRegIndex index = numPhysicalRegs;
-         index < numPhysicalRegs + numMiscRegs; ++index)
-    {
-        miscScoreboard[index] = 1;
-    }
-}
-
-SimpleRenameMap::~SimpleRenameMap()
-{
-    // Delete the rename maps as they were allocated with new.
-    delete [] intRenameMap;
-    delete [] floatRenameMap;
 }
 
 void
@@ -167,8 +163,6 @@ SimpleRenameMap::rename(RegIndex arch_reg)
 
             assert(renamed_reg >= 0 && renamed_reg < numPhysicalIntRegs);
 
-            // Mark register as not ready.
-            intScoreboard[renamed_reg] = false;
         } else {
             // Otherwise return the zero register so nothing bad happens.
             renamed_reg = intZeroReg;
@@ -192,9 +186,6 @@ SimpleRenameMap::rename(RegIndex arch_reg)
 
             assert(renamed_reg < numPhysicalRegs &&
                    renamed_reg >= numPhysicalIntRegs);
-
-            // Mark register as not ready.
-            floatScoreboard[renamed_reg] = false;
         } else {
             // Otherwise return the zero register so nothing bad happens.
             renamed_reg = floatZeroReg;
@@ -215,8 +206,6 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         prev_reg = renamed_reg;
 
         assert(renamed_reg < numPhysicalRegs + numMiscRegs);
-
-        miscScoreboard[renamed_reg] = false;
     }
 
     return RenameInfo(renamed_reg, prev_reg);
@@ -244,25 +233,6 @@ SimpleRenameMap::lookup(RegIndex arch_reg)
     }
 }
 
-bool
-SimpleRenameMap::isReady(PhysRegIndex phys_reg)
-{
-    if (phys_reg < numPhysicalIntRegs) {
-        return intScoreboard[phys_reg];
-    } else if (phys_reg < numPhysicalRegs) {
-
-        // Subtract off the base FP offset.
-//        phys_reg = phys_reg - numPhysicalIntRegs;
-
-        return floatScoreboard[phys_reg];
-    } else {
-        // Subtract off the misc registers offset.
-//        phys_reg = phys_reg - numPhysicalRegs;
-
-        return miscScoreboard[phys_reg];
-    }
-}
-
 // In this implementation the miscellaneous registers do not actually rename,
 // so this function does not allow you to try to change their mappings.
 void
@@ -273,14 +243,16 @@ SimpleRenameMap::setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg)
                 (int)arch_reg, renamed_reg);
 
         intRenameMap[arch_reg].physical_reg = renamed_reg;
-    } else {
-        assert(arch_reg < (numLogicalIntRegs + numLogicalFloatRegs));
+    } else if (arch_reg < numLogicalIntRegs + numLogicalFloatRegs) {
+
 
         DPRINTF(Rename, "Rename Map: Float register %i being set to %i.\n",
                 (int)arch_reg - numLogicalIntRegs, renamed_reg);
 
         floatRenameMap[arch_reg].physical_reg = renamed_reg;
     }
+
+    //assert(arch_reg < (numLogicalIntRegs + numLogicalFloatRegs));
 }
 
 void
@@ -306,30 +278,6 @@ SimpleRenameMap::squash(vector<RegIndex> freed_regs,
     }
 
     // Take unmap info and roll back the rename map.
-}
-
-void
-SimpleRenameMap::markAsReady(PhysRegIndex ready_reg)
-{
-    DPRINTF(Rename, "Rename map: Marking register %i as ready.\n",
-            (int)ready_reg);
-
-    if (ready_reg < numPhysicalIntRegs) {
-        assert(ready_reg >= 0);
-
-        intScoreboard[ready_reg] = 1;
-    } else if (ready_reg < numPhysicalRegs) {
-
-        // Subtract off the base FP offset.
-//        ready_reg = ready_reg - numPhysicalIntRegs;
-
-        floatScoreboard[ready_reg] = 1;
-    } else {
-        //Subtract off the misc registers offset.
-//        ready_reg = ready_reg - numPhysicalRegs;
-
-        miscScoreboard[ready_reg] = 1;
-    }
 }
 
 int

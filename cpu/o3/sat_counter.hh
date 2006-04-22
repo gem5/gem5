@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_SAT_COUNTER_HH__
-#define __CPU_O3_CPU_SAT_COUNTER_HH__
+#ifndef __CPU_O3_SAT_COUNTER_HH__
+#define __CPU_O3_SAT_COUNTER_HH__
 
 #include "sim/host.hh"
 
@@ -78,13 +78,11 @@ class SatCounter
      * Read the counter's value.
      */
     const uint8_t read() const
-    {
-        return counter;
-    }
+    { return counter; }
 
   private:
     uint8_t maxVal;
     uint8_t counter;
 };
 
-#endif // __CPU_O3_CPU_SAT_COUNTER_HH__
+#endif // __CPU_O3_SAT_COUNTER_HH__

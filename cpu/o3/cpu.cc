@@ -41,11 +41,19 @@
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/cpu.hh"
 
+#include "sim/stat_control.hh"
+
 using namespace std;
 
-BaseFullCPU::BaseFullCPU(Params &params)
-    : BaseCPU(&params), cpu_id(0)
+BaseFullCPU::BaseFullCPU(Params *params)
+    : BaseCPU(params), cpu_id(0)
 {
+}
+
+void
+BaseFullCPU::regStats()
+{
+    BaseCPU::regStats();
 }
 
 template <class Impl>
@@ -70,95 +78,75 @@ FullO3CPU<Impl>::TickEvent::description()
 
 //Call constructor to all the pipeline stages here
 template <class Impl>
-FullO3CPU<Impl>::FullO3CPU(Params &params)
-#if FULL_SYSTEM
+FullO3CPU<Impl>::FullO3CPU(Params *params)
     : BaseFullCPU(params),
-#else
-    : BaseFullCPU(params),
-#endif // FULL_SYSTEM
       tickEvent(this),
+      removeInstsThisCycle(false),
       fetch(params),
       decode(params),
       rename(params),
       iew(params),
       commit(params),
 
-      regFile(params.numPhysIntRegs, params.numPhysFloatRegs),
+      regFile(params->numPhysIntRegs, params->numPhysFloatRegs),
 
-      freeList(TheISA::NumIntRegs, params.numPhysIntRegs,
-               TheISA::NumFloatRegs, params.numPhysFloatRegs),
+      freeList(params->numberOfThreads,//number of activeThreads
+               TheISA::NumIntRegs, params->numPhysIntRegs,
+               TheISA::NumFloatRegs, params->numPhysFloatRegs),
 
-      renameMap(TheISA::NumIntRegs, params.numPhysIntRegs,
-                TheISA::NumFloatRegs, params.numPhysFloatRegs,
-                TheISA::NumMiscRegs,
-                TheISA::ZeroReg,
-                TheISA::ZeroReg + TheISA::NumIntRegs),
+      rob(params->numROBEntries, params->squashWidth,
+          params->smtROBPolicy, params->smtROBThreshold,
+          params->numberOfThreads),
 
-      rob(params.numROBEntries, params.squashWidth),
+      scoreboard(params->numberOfThreads,//number of activeThreads
+                 TheISA::NumIntRegs, params->numPhysIntRegs,
+                 TheISA::NumFloatRegs, params->numPhysFloatRegs,
+                 TheISA::NumMiscRegs * number_of_threads,
+                 TheISA::ZeroReg),
 
       // What to pass to these time buffers?
       // For now just have these time buffers be pretty big.
+      // @todo: Make these time buffer sizes parameters.
       timeBuffer(5, 5),
       fetchQueue(5, 5),
       decodeQueue(5, 5),
       renameQueue(5, 5),
       iewQueue(5, 5),
-
-      cpuXC(NULL),
+      activityBuffer(5, 0),
+      activityCount(0),
 
       globalSeqNum(1),
 
 #if FULL_SYSTEM
-      system(params.system),
+      system(params->system),
       memCtrl(system->memctrl),
       physmem(system->physmem),
-      itb(params.itb),
-      dtb(params.dtb),
-      mem(params.mem),
+      mem(params->mem),
 #else
-      // Hardcoded for a single thread!!
-      mem(params.workload[0]->getMemory()),
+      pTable(params->pTable),
 #endif // FULL_SYSTEM
 
-      icacheInterface(params.icacheInterface),
-      dcacheInterface(params.dcacheInterface),
-      deferRegistration(params.defReg),
-      numInsts(0),
-      funcExeInst(0)
+      icacheInterface(params->icacheInterface),
+      dcacheInterface(params->dcacheInterface),
+      deferRegistration(params->deferRegistration)
 {
     _status = Idle;
 
 #if !FULL_SYSTEM
-    thread.resize(this->number_of_threads);
+    thread.resize(number_of_threads);
+    tids.resize(number_of_threads);
 #endif
-
-    for (int i = 0; i < this->number_of_threads; ++i) {
-#if FULL_SYSTEM
-        assert(i == 0);
-        thread[i] = new CPUExecContext(this, 0, system, itb, dtb, mem);
-        system->execContexts[i] = thread[i]->getProxy();
-
-        execContexts.push_back(system->execContexts[i]);
-#else
-        if (i < params.workload.size()) {
-            DPRINTF(FullCPU, "FullCPU: Workload[%i]'s starting PC is %#x, "
-                    "process is %#x",
-                    i, params.workload[i]->prog_entry, thread[i]);
-            thread[i] = new CPUExecContext(this, i, params.workload[i], i);
-        }
-        assert(params.workload[i]->getMemory() != NULL);
-        assert(mem != NULL);
-        execContexts.push_back(thread[i]->getProxy());
-#endif // !FULL_SYSTEM
-    }
-
-    // Note that this is a hack so that my code which still uses xc-> will
-    // still work.  I should remove this eventually
-    cpuXC = thread[0];
 
     // The stages also need their CPU pointer setup.  However this must be
     // done at the upper level CPU because they have pointers to the upper
     // level CPU, and not this FullO3CPU.
+
+    // Set up Pointers to the activeThreads list for each stage
+    fetch.setActiveThreads(&activeThreads);
+    decode.setActiveThreads(&activeThreads);
+    rename.setActiveThreads(&activeThreads);
+    iew.setActiveThreads(&activeThreads);
+    commit.setActiveThreads(&activeThreads);
 
     // Give each of the stages the time buffer they will use.
     fetch.setTimeBuffer(&timeBuffer);
@@ -170,6 +158,7 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
     // Also setup each of the stages' queues.
     fetch.setFetchQueue(&fetchQueue);
     decode.setFetchQueue(&fetchQueue);
+    commit.setFetchQueue(&fetchQueue);
     decode.setDecodeQueue(&decodeQueue);
     rename.setDecodeQueue(&decodeQueue);
     rename.setRenameQueue(&renameQueue);
@@ -178,16 +167,91 @@ FullO3CPU<Impl>::FullO3CPU(Params &params)
     commit.setIEWQueue(&iewQueue);
     commit.setRenameQueue(&renameQueue);
 
-    // Setup the rename map for whichever stages need it.
-    rename.setRenameMap(&renameMap);
-    iew.setRenameMap(&renameMap);
+    commit.setIEWStage(&iew);
+    rename.setIEWStage(&iew);
+    rename.setCommitStage(&commit);
 
-    // Setup the free list for whichever stages need it.
+    //Make Sure That this a Valid Architeture
+    //@todo: move this up in constructor
+    numThreads = number_of_threads;
+
+#if !FULL_SYSTEM
+    int activeThreads = params->workload.size();
+#else
+    int activeThreads = 1;
+#endif
+
+    assert(params->numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
+    assert(params->numPhysFloatRegs >= numThreads * TheISA::NumFloatRegs);
+
+    rename.setScoreboard(&scoreboard);
+    iew.setScoreboard(&scoreboard);
+
+    // Setup the rename map for whichever stages need it.
+    PhysRegIndex lreg_idx = 0;
+    PhysRegIndex freg_idx = params->numPhysIntRegs; //Index to 1 after int regs
+
+    for (int tid=0; tid < numThreads; tid++) {
+        bool bindRegs = (tid <= activeThreads - 1);
+
+        commitRenameMap[tid].init(TheISA::NumIntRegs,
+                                  params->numPhysIntRegs,
+                                  lreg_idx,                   //Index for Logical. Regs
+
+                                  TheISA::NumFloatRegs,
+                                  params->numPhysFloatRegs,
+                                  freg_idx,                   //Index for Float Regs
+
+                                  TheISA::NumMiscRegs,
+
+                                  TheISA::ZeroReg,
+                                  TheISA::ZeroReg,
+
+                                  tid,
+                                  false);
+
+        renameMap[tid].init(TheISA::NumIntRegs,
+                            params->numPhysIntRegs,
+                            lreg_idx,                   //Index for Logical. Regs
+
+                            TheISA::NumFloatRegs,
+                            params->numPhysFloatRegs,
+                            freg_idx,                   //Index for Float Regs
+
+                            TheISA::NumMiscRegs,
+
+                            TheISA::ZeroReg,
+                            TheISA::ZeroReg,
+
+                            tid,
+                            bindRegs);
+    }
+
+    rename.setRenameMap(renameMap);
+    commit.setRenameMap(commitRenameMap);
+
+    // Give renameMap & rename stage access to the freeList;
+    for (int i=0; i < numThreads; i++) {
+        renameMap[i].setFreeList(&freeList);
+    }
     rename.setFreeList(&freeList);
-    renameMap.setFreeList(&freeList);
+
+    // Setup the page table for whichever stages need it.
+#if !FULL_SYSTEM
+    fetch.setPageTable(pTable);
+    iew.setPageTable(pTable);
+#endif
 
     // Setup the ROB for whichever stages need it.
     commit.setROB(&rob);
+
+    lastRunningCycle = curTick;
+
+    for (int i = 0; i < NumStages; ++i) {
+        stageActive[i] = false;
+    }
+
+    contextSwitch = false;
 }
 
 template <class Impl>
@@ -199,7 +263,58 @@ template <class Impl>
 void
 FullO3CPU<Impl>::fullCPURegStats()
 {
+    BaseFullCPU::regStats();
+
     // Register any of the FullCPU's stats here.
+    timesIdled
+        .name(name() + ".timesIdled")
+        .desc("Number of times that the entire CPU went into an idle state and"
+              " unscheduled itself")
+        .prereq(timesIdled);
+
+    idleCycles
+        .name(name() + ".idleCycles")
+        .desc("Total number of cycles that the CPU has spent unscheduled due "
+              "to idling")
+        .prereq(idleCycles);
+
+    // Number of Instructions simulated
+    // --------------------------------
+    // Should probably be in Base CPU but need templated
+    // MaxThreads so put in here instead
+    committedInsts
+        .init(numThreads)
+        .name(name() + ".committedInsts")
+        .desc("Number of Instructions Simulated");
+
+    totalCommittedInsts
+        .name(name() + ".committedInsts_total")
+        .desc("Number of Instructions Simulated");
+
+    cpi
+        .name(name() + ".cpi")
+        .desc("CPI: Cycles Per Instruction")
+        .precision(6);
+    cpi = simTicks / committedInsts;
+
+    totalCpi
+        .name(name() + ".cpi_total")
+        .desc("CPI: Total CPI of All Threads")
+        .precision(6);
+    totalCpi = simTicks / totalCommittedInsts;
+
+    ipc
+        .name(name() + ".ipc")
+        .desc("IPC: Instructions Per Cycle")
+        .precision(6);
+    ipc =  committedInsts / simTicks;
+
+    totalIpc
+        .name(name() + ".ipc_total")
+        .desc("IPC: Total IPC of All Threads")
+        .precision(6);
+    totalIpc =  totalCommittedInsts / simTicks;
+
 }
 
 template <class Impl>
@@ -208,9 +323,11 @@ FullO3CPU<Impl>::tick()
 {
     DPRINTF(FullCPU, "\n\nFullCPU: Ticking main, FullO3CPU.\n");
 
-    //Tick each of the stages if they're actually running.
-    //Will want to figure out a way to unschedule itself if they're all
-    //going to be idle for a long time.
+    ++numCycles;
+
+    activity = false;
+
+    //Tick each of the stages
     fetch.tick();
 
     decode.tick();
@@ -221,7 +338,11 @@ FullO3CPU<Impl>::tick()
 
     commit.tick();
 
-    // Now advance the time buffers, unless the stage is stalled.
+#if !FULL_SYSTEM
+    doContextSwitch();
+#endif
+
+    // Now advance the time buffers
     timeBuffer.advance();
 
     fetchQueue.advance();
@@ -229,81 +350,310 @@ FullO3CPU<Impl>::tick()
     renameQueue.advance();
     iewQueue.advance();
 
-    if (_status == Running && !tickEvent.scheduled())
+    advanceActivityBuffer();
+
+    if (removeInstsThisCycle) {
+        cleanUpRemovedInsts();
+    }
+
+    if (activityCount && !tickEvent.scheduled()) {
         tickEvent.schedule(curTick + 1);
+    }
+
+#if !FULL_SYSTEM
+    updateThreadPriority();
+#endif
+
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::init()
 {
-    if(!deferRegistration)
-    {
-        this->registerExecContexts();
+    if (deferRegistration) {
+        return;
+    }
 
+    // Set inSyscall so that the CPU doesn't squash when initially
+    // setting up registers.
+    for (int i = 0; i < number_of_threads; ++i)
+        thread[i]->inSyscall = true;
+
+    registerExecContexts();
+
+    // Need to do a copy of the xc->regs into the CPU's regfile so
+    // that it can start properly.
+
+    for (int tid=0; tid < number_of_threads; tid++) {
         // Need to do a copy of the xc->regs into the CPU's regfile so
         // that it can start properly.
 #if FULL_SYSTEM
-        ExecContext *src_xc = system->execContexts[0];
-        TheISA::initCPU(src_xc, src_xc->readCpuId());
+        ExecContext *src_xc = system->execContexts[tid];
 #else
-        ExecContext *src_xc = thread[0]->getProxy();
+        ExecContext *src_xc = thread[tid]->getXCProxy();
 #endif
-        // First loop through the integer registers.
-        for (int i = 0; i < TheISA::NumIntRegs; ++i)
-        {
-            regFile.intRegFile[i] = src_xc->readIntReg(i);
+        // Threads start in the Suspended State
+        if (src_xc->status() != ExecContext::Suspended) {
+            continue;
         }
 
-        // Then loop through the floating point registers.
-        for (int i = 0; i < TheISA::NumFloatRegs; ++i)
-        {
-            regFile.floatRegFile[i].d = src_xc->readFloatRegDouble(i);
-            regFile.floatRegFile[i].q = src_xc->readFloatRegInt(i);
-        }
-/*
-        // Then loop through the misc registers.
-        regFile.miscRegs.fpcr = src_xc->regs.miscRegs.fpcr;
-        regFile.miscRegs.uniq = src_xc->regs.miscRegs.uniq;
-        regFile.miscRegs.lock_flag = src_xc->regs.miscRegs.lock_flag;
-        regFile.miscRegs.lock_addr = src_xc->regs.miscRegs.lock_addr;
-*/
-        // Then finally set the PC and the next PC.
-        regFile.pc = src_xc->readPC();
-        regFile.npc = src_xc->readNextPC();
+#if FULL_SYSTEM
+        TheISA::initCPU(src_xc, src_xc->readCpuId());
+#endif
+    }
+
+    // Clear inSyscall.
+    for (int i = 0; i < number_of_threads; ++i)
+        thread[i]->inSyscall = false;
+
+    // Probably should just make a call to all the stages to init stage,
+    // regardless of whether or not they need it.  Keeps it more independent.
+    fetch.initStage();
+    iew.initStage();
+    rename.initStage();
+    commit.initStage();
+
+    commit.setThreads(thread);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::insertThread(unsigned tid)
+{
+    DPRINTF(FullCPU,"[tid:%i] Initializing thread data");
+    // Will change now that the PC and thread state is internal to the CPU
+    // and not in the CPUExecContext.
+#if 0
+#if FULL_SYSTEM
+    ExecContext *src_xc = system->execContexts[tid];
+#else
+    CPUExecContext *src_xc = thread[tid];
+#endif
+
+    //Bind Int Regs to Rename Map
+    for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
+        PhysRegIndex phys_reg = freeList.getIntReg();
+
+        renameMap[tid].setEntry(ireg,phys_reg);
+        scoreboard.setReg(phys_reg);
+    }
+
+    //Bind Float Regs to Rename Map
+    for (int freg = 0; freg < TheISA::NumFloatRegs; freg++) {
+        PhysRegIndex phys_reg = freeList.getFloatReg();
+
+        renameMap[tid].setEntry(freg,phys_reg);
+        scoreboard.setReg(phys_reg);
+    }
+
+    //Copy Thread Data Into RegFile
+    this->copyFromXC(tid);
+
+    //Set PC/NPC
+    regFile.pc[tid]  = src_xc->readPC();
+    regFile.npc[tid] = src_xc->readNextPC();
+
+    src_xc->setStatus(ExecContext::Active);
+
+    activateContext(tid,1);
+
+    //Reset ROB/IQ/LSQ Entries
+    commit.rob->resetEntries();
+    iew.resetEntries();
+#endif
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::removeThread(unsigned tid)
+{
+    DPRINTF(FullCPU,"[tid:%i] Removing thread data");
+#if 0
+    //Unbind Int Regs from Rename Map
+    for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
+        PhysRegIndex phys_reg = renameMap[tid].lookup(ireg);
+
+        scoreboard.unsetReg(phys_reg);
+        freeList.addReg(phys_reg);
+    }
+
+    //Unbind Float Regs from Rename Map
+    for (int freg = 0; freg < TheISA::NumFloatRegs; freg++) {
+        PhysRegIndex phys_reg = renameMap[tid].lookup(freg);
+
+        scoreboard.unsetReg(phys_reg);
+        freeList.addReg(phys_reg);
+    }
+
+    //Copy Thread Data From RegFile
+    /* Fix Me:
+     * Do we really need to do this if we are removing a thread
+     * in the sense that it's finished (exiting)? If the thread is just
+     * being suspended we might...
+     */
+//    this->copyToXC(tid);
+
+    //Squash Throughout Pipeline
+    fetch.squash(0,tid);
+    decode.squash(tid);
+    rename.squash(tid);
+
+    assert(iew.ldstQueue.getCount(tid) == 0);
+
+    //Reset ROB/IQ/LSQ Entries
+    if (activeThreads.size() >= 1) {
+        commit.rob->resetEntries();
+        iew.resetEntries();
+    }
+#endif
+}
+
+
+template <class Impl>
+void
+FullO3CPU<Impl>::activateWhenReady(int tid)
+{
+    DPRINTF(FullCPU,"[tid:%i]: Checking if resources are available for incoming"
+            "(e.g. PhysRegs/ROB/IQ/LSQ) \n",
+            tid);
+
+    bool ready = true;
+
+    if (freeList.numFreeIntRegs() >= TheISA::NumIntRegs) {
+        DPRINTF(FullCPU,"[tid:%i] Suspending thread due to not enough "
+                "Phys. Int. Regs.\n",
+                tid);
+        ready = false;
+    } else if (freeList.numFreeFloatRegs() >= TheISA::NumFloatRegs) {
+        DPRINTF(FullCPU,"[tid:%i] Suspending thread due to not enough "
+                "Phys. Float. Regs.\n",
+                tid);
+        ready = false;
+    } else if (commit.rob->numFreeEntries() >=
+               commit.rob->entryAmount(activeThreads.size() + 1)) {
+        DPRINTF(FullCPU,"[tid:%i] Suspending thread due to not enough "
+                "ROB entries.\n",
+                tid);
+        ready = false;
+    } else if (iew.instQueue.numFreeEntries() >=
+               iew.instQueue.entryAmount(activeThreads.size() + 1)) {
+        DPRINTF(FullCPU,"[tid:%i] Suspending thread due to not enough "
+                "IQ entries.\n",
+                tid);
+        ready = false;
+    } else if (iew.ldstQueue.numFreeEntries() >=
+               iew.ldstQueue.entryAmount(activeThreads.size() + 1)) {
+        DPRINTF(FullCPU,"[tid:%i] Suspending thread due to not enough "
+                "LSQ entries.\n",
+                tid);
+        ready = false;
+    }
+
+    if (ready) {
+        insertThread(tid);
+
+        contextSwitch = false;
+
+        cpuWaitList.remove(tid);
+    } else {
+        suspendContext(tid);
+
+        //blocks fetch
+        contextSwitch = true;
+
+        //do waitlist
+        cpuWaitList.push_back(tid);
     }
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::activateContext(int thread_num, int delay)
+FullO3CPU<Impl>::activateContext(int tid, int delay)
 {
+
     // Needs to set each stage to running as well.
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive == activeThreads.end()) {
+        //May Need to Re-code this if the delay variable is the
+        //delay needed for thread to activate
+        DPRINTF(FullCPU, "Adding Thread %i to active threads list\n",
+                tid);
+
+        activeThreads.push_back(tid);
+    }
+
+    assert(_status == Idle);
 
     scheduleTickEvent(delay);
+
+    // Be sure to signal that there's some activity so the CPU doesn't
+    // deschedule itself.
+    activityThisCycle();
+    fetch.wakeFromQuiesce();
 
     _status = Running;
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::suspendContext(int thread_num)
+FullO3CPU<Impl>::suspendContext(int tid)
 {
-    panic("suspendContext unimplemented!");
+    DPRINTF(FullCPU,"[tid: %i]: Suspended ...\n", tid);
+    unscheduleTickEvent();
+    _status = Idle;
+/*
+    //Remove From Active List, if Active
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive != activeThreads.end()) {
+        DPRINTF(FullCPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        activeThreads.erase(isActive);
+    }
+*/
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::deallocateContext(int thread_num)
+FullO3CPU<Impl>::deallocateContext(int tid)
 {
-    panic("deallocateContext unimplemented!");
+    DPRINTF(FullCPU,"[tid:%i]: Deallocating ...", tid);
+/*
+    //Remove From Active List, if Active
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive != activeThreads.end()) {
+        DPRINTF(FullCPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        activeThreads.erase(isActive);
+
+        removeThread(tid);
+    }
+*/
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::haltContext(int thread_num)
+FullO3CPU<Impl>::haltContext(int tid)
 {
-    panic("haltContext unimplemented!");
+    DPRINTF(FullCPU,"[tid:%i]: Halted ...", tid);
+/*
+    //Remove From Active List, if Active
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive != activeThreads.end()) {
+        DPRINTF(FullCPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        activeThreads.erase(isActive);
+
+        removeThread(tid);
+    }
+*/
 }
 
 template <class Impl>
@@ -336,7 +686,6 @@ template <class Impl>
 InstSeqNum
 FullO3CPU<Impl>::getAndIncrementInstSeq()
 {
-    // Hopefully this works right.
     return globalSeqNum++;
 }
 
@@ -398,124 +747,274 @@ FullO3CPU<Impl>::setFloatRegInt(int reg_idx, uint64_t val)
 
 template <class Impl>
 uint64_t
-FullO3CPU<Impl>::readPC()
+FullO3CPU<Impl>::readArchIntReg(int reg_idx, unsigned tid)
 {
-    return regFile.readPC();
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    return regFile.readIntReg(phys_reg);
+}
+
+template <class Impl>
+float
+FullO3CPU<Impl>::readArchFloatRegSingle(int reg_idx, unsigned tid)
+{
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    return regFile.readFloatRegSingle(phys_reg);
+}
+
+template <class Impl>
+double
+FullO3CPU<Impl>::readArchFloatRegDouble(int reg_idx, unsigned tid)
+{
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    return regFile.readFloatRegDouble(phys_reg);
+}
+
+template <class Impl>
+uint64_t
+FullO3CPU<Impl>::readArchFloatRegInt(int reg_idx, unsigned tid)
+{
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    return regFile.readFloatRegInt(phys_reg);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setNextPC(uint64_t val)
+FullO3CPU<Impl>::setArchIntReg(int reg_idx, uint64_t val, unsigned tid)
 {
-    regFile.setNextPC(val);
+    if (reg_idx == TheISA::ZeroReg) {
+        warn("Setting r31 through ArchIntReg in CPU, cycle %i\n", curTick);
+    }
+
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    regFile.setIntReg(phys_reg, val);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setPC(Addr new_PC)
+FullO3CPU<Impl>::setArchFloatRegSingle(int reg_idx, float val, unsigned tid)
 {
-    regFile.setPC(new_PC);
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    regFile.setFloatRegSingle(phys_reg, val);
 }
 
 template <class Impl>
 void
+FullO3CPU<Impl>::setArchFloatRegDouble(int reg_idx, double val, unsigned tid)
+{
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    regFile.setFloatRegDouble(phys_reg, val);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid)
+{
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+
+    regFile.setFloatRegInt(phys_reg, val);
+}
+
+template <class Impl>
+uint64_t
+FullO3CPU<Impl>::readPC(unsigned tid)
+{
+    return commit.readPC(tid);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setPC(Addr new_PC,unsigned tid)
+{
+    commit.setPC(new_PC, tid);
+}
+
+template <class Impl>
+uint64_t
+FullO3CPU<Impl>::readNextPC(unsigned tid)
+{
+    return commit.readNextPC(tid);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setNextPC(uint64_t val,unsigned tid)
+{
+    commit.setNextPC(val, tid);
+}
+
+template <class Impl>
+typename FullO3CPU<Impl>::ListIt
 FullO3CPU<Impl>::addInst(DynInstPtr &inst)
 {
     instList.push_back(inst);
+
+    return --(instList.end());
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::instDone()
+FullO3CPU<Impl>::instDone(unsigned tid)
 {
     // Keep an instruction count.
-    numInsts++;
+    thread[tid]->numInst++;
+    thread[tid]->numInsts++;
+    committedInsts[tid]++;
+    totalCommittedInsts++;
 
     // Check for instruction-count-based events.
-    comInstEventQueue[0]->serviceEvents(numInsts);
+    comInstEventQueue[tid]->serviceEvents(thread[tid]->numInst);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::removeBackInst(DynInstPtr &inst)
+FullO3CPU<Impl>::addToRemoveList(DynInstPtr &inst)
 {
-    DynInstPtr inst_to_delete;
+    removeInstsThisCycle = true;
 
-    // Walk through the instruction list, removing any instructions
-    // that were inserted after the given instruction, inst.
-    while (instList.back() != inst)
-    {
-        assert(!instList.empty());
-
-        // Obtain the pointer to the instruction.
-        inst_to_delete = instList.back();
-
-        DPRINTF(FullCPU, "FullCPU: Removing instruction %i, PC %#x\n",
-                inst_to_delete->seqNum, inst_to_delete->readPC());
-
-        // Remove the instruction from the list.
-        instList.pop_back();
-
-        // Mark it as squashed.
-        inst_to_delete->setSquashed();
-    }
+    removeList.push(inst->getInstListIt());
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
-    DynInstPtr inst_to_remove;
+    unsigned tid = inst->threadNumber;
 
-    // The front instruction should be the same one being asked to be removed.
-    assert(instList.front() == inst);
+    DPRINTF(FullCPU, "FullCPU: Removing committed instruction [tid:%i] PC %#x "
+            "[sn:%lli]\n",
+            tid, inst->readPC(), inst->seqNum);
+
+    removeInstsThisCycle = true;
 
     // Remove the front instruction.
-    inst_to_remove = inst;
-    instList.pop_front();
-
-    DPRINTF(FullCPU, "FullCPU: Removing committed instruction %#x, PC %#x\n",
-            inst_to_remove, inst_to_remove->readPC());
+    removeList.push(inst->getInstListIt());
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::removeInstsNotInROB()
+FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid)
 {
-    DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
-            "list.\n");
+    DPRINTF(FullCPU, "FullCPU: Thread %i: Deleting instructions from instruction"
+            " list.\n", tid);
 
-    DynInstPtr rob_tail = rob.readTailInst();
+    ListIt end_it;
 
-    removeBackInst(rob_tail);
-}
+    bool rob_empty = false;
 
-template <class Impl>
-void
-FullO3CPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num)
-{
-    DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
-            "list.\n");
-
-    DynInstPtr inst_to_delete;
-
-    while (instList.back()->seqNum > seq_num) {
-        assert(!instList.empty());
-
-        // Obtain the pointer to the instruction.
-        inst_to_delete = instList.back();
-
-        DPRINTF(FullCPU, "FullCPU: Removing instruction %i, PC %#x\n",
-                inst_to_delete->seqNum, inst_to_delete->readPC());
-
-        // Remove the instruction from the list.
-        instList.back() = NULL;
-        instList.pop_back();
-
-        // Mark it as squashed.
-        inst_to_delete->setSquashed();
+    if (instList.empty()) {
+        return;
+    } else if (rob.isEmpty(/*tid*/)) {
+        DPRINTF(FullCPU, "FullCPU: ROB is empty, squashing all insts.\n");
+        end_it = instList.begin();
+        rob_empty = true;
+    } else {
+        end_it = (rob.readTailInst(tid))->getInstListIt();
+        DPRINTF(FullCPU, "FullCPU: ROB is not empty, squashing insts not in ROB.\n");
     }
 
+    removeInstsThisCycle = true;
+
+    ListIt inst_it = instList.end();
+
+    inst_it--;
+
+    // Walk through the instruction list, removing any instructions
+    // that were inserted after the given instruction iterator, end_it.
+    while (inst_it != end_it) {
+        assert(!instList.empty());
+
+        bool break_loop = (inst_it == instList.begin());
+
+        squashInstIt(inst_it, tid);
+
+        inst_it--;
+
+        if (break_loop)
+            break;
+    }
+
+    // If the ROB was empty, then we actually need to remove the first
+    // instruction as well.
+    if (rob_empty) {
+        squashInstIt(inst_it, tid);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::removeInstsUntil(const InstSeqNum &seq_num,
+                                  unsigned tid)
+{
+    assert(!instList.empty());
+
+    removeInstsThisCycle = true;
+
+    ListIt inst_iter = instList.end();
+
+    inst_iter--;
+
+    DPRINTF(FullCPU, "FullCPU: Deleting instructions from instruction "
+            "list that are from [tid:%i] and above [sn:%lli] (end=%lli).\n",
+            tid, seq_num, (*inst_iter)->seqNum);
+
+    while ((*inst_iter)->seqNum > seq_num) {
+
+        bool break_loop = (inst_iter == instList.begin());
+
+        squashInstIt(inst_iter, tid);
+
+        inst_iter--;
+
+        if (break_loop)
+            break;
+    }
+}
+
+template <class Impl>
+inline void
+FullO3CPU<Impl>::squashInstIt(const ListIt &instIt, const unsigned &tid)
+{
+    if ((*instIt)->threadNumber == tid) {
+        DPRINTF(FullCPU, "FullCPU: Squashing instruction, "
+                "[tid:%i] [sn:%lli] PC %#x\n",
+                (*instIt)->threadNumber,
+                (*instIt)->seqNum,
+                (*instIt)->readPC());
+
+        // Mark it as squashed.
+        (*instIt)->setSquashed();
+
+        //@todo: Formulate a consistent method for deleting
+        //instructions from the instruction list
+        // Remove the instruction from the list.
+        removeList.push(instIt);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::cleanUpRemovedInsts()
+{
+    while (!removeList.empty()) {
+        DPRINTF(FullCPU, "FullCPU: Removing instruction, "
+                "[tid:%i] [sn:%lli] PC %#x\n",
+                (*removeList.front())->threadNumber,
+                (*removeList.front())->seqNum,
+                (*removeList.front())->readPC());
+
+        instList.erase(removeList.front());
+
+        removeList.pop();
+    }
+
+    removeInstsThisCycle = false;
 }
 
 template <class Impl>
@@ -530,16 +1029,22 @@ void
 FullO3CPU<Impl>::dumpInsts()
 {
     int num = 0;
-    typename list<DynInstPtr>::iterator inst_list_it = instList.begin();
 
-    while (inst_list_it != instList.end())
-    {
-        cprintf("Instruction:%i\nPC:%#x\nSN:%lli\nIssued:%i\nSquashed:%i\n\n",
-                num, (*inst_list_it)->readPC(), (*inst_list_it)->seqNum,
-                (*inst_list_it)->isIssued(), (*inst_list_it)->isSquashed());
+    ListIt inst_list_it = instList.begin();
+
+    cprintf("Dumping Instruction List\n");
+
+    while (inst_list_it != instList.end()) {
+        cprintf("Instruction:%i\nPC:%#x\n[tid:%i]\n[sn:%lli]\nIssued:%i\n"
+                "Squashed:%i\n\n",
+                num, (*inst_list_it)->readPC(), (*inst_list_it)->threadNumber,
+                (*inst_list_it)->seqNum, (*inst_list_it)->isIssued(),
+                (*inst_list_it)->isSquashed());
         inst_list_it++;
         ++num;
     }
+
+
 }
 
 template <class Impl>
@@ -547,6 +1052,140 @@ void
 FullO3CPU<Impl>::wakeDependents(DynInstPtr &inst)
 {
     iew.wakeDependents(inst);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::wakeCPU()
+{
+    if (activityCount || tickEvent.scheduled()) {
+        return;
+    }
+
+    idleCycles += curTick - lastRunningCycle;
+
+    tickEvent.schedule(curTick);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::activityThisCycle()
+{
+    if (activityBuffer[0]) {
+        return;
+    }
+
+    activityBuffer[0] = true;
+    activity = true;
+    ++activityCount;
+
+    DPRINTF(Activity, "Activity: %i\n", activityCount);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::advanceActivityBuffer()
+{
+    if (activityBuffer[-5]) {
+        --activityCount;
+
+        assert(activityCount >= 0);
+
+        DPRINTF(Activity, "Activity: %i\n", activityCount);
+
+        if (activityCount == 0) {
+            DPRINTF(FullCPU, "No activity left, going to idle!\n");
+            lastRunningCycle = curTick;
+            timesIdled++;
+        }
+    }
+
+    activityBuffer.advance();
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::activateStage(const StageIdx idx)
+{
+    if (!stageActive[idx]) {
+        ++activityCount;
+
+        stageActive[idx] = true;
+
+        DPRINTF(Activity, "Activity: %i\n", activityCount);
+    } else {
+        DPRINTF(Activity, "Stage %i already active.\n", idx);
+    }
+
+    // @todo: Number is hardcoded for now.  Replace with parameter.
+    assert(activityCount < 15);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::deactivateStage(const StageIdx idx)
+{
+    if (stageActive[idx]) {
+        --activityCount;
+
+        stageActive[idx] = false;
+
+        DPRINTF(Activity, "Activity: %i\n", activityCount);
+    } else {
+        DPRINTF(Activity, "Stage %i already inactive.\n", idx);
+    }
+
+    assert(activityCount >= 0);
+}
+
+template <class Impl>
+int
+FullO3CPU<Impl>::getFreeTid()
+{
+    for (int i=0; i < numThreads; i++) {
+        if (!tids[i]) {
+            tids[i] = true;
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::doContextSwitch()
+{
+    if (contextSwitch) {
+
+        //ADD CODE TO DEACTIVE THREAD HERE (???)
+
+        for (int tid=0; tid < cpuWaitList.size(); tid++) {
+            activateWhenReady(tid);
+        }
+
+        if (cpuWaitList.size() == 0)
+            contextSwitch = true;
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::updateThreadPriority()
+{
+    if (activeThreads.size() > 1)
+    {
+        //DEFAULT TO ROUND ROBIN SCHEME
+        //e.g. Move highest priority to end of thread list
+        list<unsigned>::iterator list_begin = activeThreads.begin();
+        list<unsigned>::iterator list_end   = activeThreads.end();
+
+        unsigned high_thread = *list_begin;
+
+        activeThreads.erase(list_begin);
+
+        activeThreads.push_back(high_thread);
+    }
 }
 
 // Forward declaration of FullO3CPU.

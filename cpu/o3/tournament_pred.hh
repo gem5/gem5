@@ -26,12 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_TOURNAMENT_PRED_HH__
-#define __CPU_O3_CPU_TOURNAMENT_PRED_HH__
+#ifndef __CPU_O3_TOURNAMENT_PRED_HH__
+#define __CPU_O3_TOURNAMENT_PRED_HH__
 
 // For Addr type.
 #include "arch/isa_traits.hh"
 #include "cpu/o3/sat_counter.hh"
+#include <vector>
 
 class TournamentBP
 {
@@ -39,15 +40,15 @@ class TournamentBP
     /**
      * Default branch predictor constructor.
      */
-    TournamentBP(unsigned local_predictor_size,
-                 unsigned local_ctr_bits,
-                 unsigned local_history_table_size,
-                 unsigned local_history_bits,
-                 unsigned global_predictor_size,
-                 unsigned global_history_bits,
-                 unsigned global_ctr_bits,
-                 unsigned choice_predictor_size,
-                 unsigned choice_ctr_bits,
+    TournamentBP(unsigned localPredictorSize,
+                 unsigned localCtrBits,
+                 unsigned localHistoryTableSize,
+                 unsigned localHistoryBits,
+                 unsigned globalPredictorSize,
+                 unsigned globalHistoryBits,
+                 unsigned globalCtrBits,
+                 unsigned choicePredictorSize,
+                 unsigned choiceCtrBits,
                  unsigned instShiftAmt);
 
     /**
@@ -78,7 +79,7 @@ class TournamentBP
     inline void updateHistoriesNotTaken(unsigned local_history_idx);
 
     /** Local counters. */
-    SatCounter *localCtrs;
+    std::vector<SatCounter> localCtrs;
 
     /** Size of the local predictor. */
     unsigned localPredictorSize;
@@ -87,7 +88,7 @@ class TournamentBP
     unsigned localCtrBits;
 
     /** Array of local history table entries. */
-    unsigned *localHistoryTable;
+    std::vector<unsigned> localHistoryTable;
 
     /** Size of the local history table. */
     unsigned localHistoryTableSize;
@@ -102,7 +103,7 @@ class TournamentBP
 
 
     /** Array of counters that make up the global predictor. */
-    SatCounter *globalCtrs;
+    std::vector<SatCounter> globalCtrs;
 
     /** Size of the global predictor. */
     unsigned globalPredictorSize;
@@ -121,7 +122,7 @@ class TournamentBP
 
 
     /** Array of counters that make up the choice predictor. */
-    SatCounter *choiceCtrs;
+    std::vector<SatCounter> choiceCtrs;
 
     /** Size of the choice predictor (identical to the global predictor). */
     unsigned choicePredictorSize;
@@ -140,4 +141,4 @@ class TournamentBP
     unsigned threshold;
 };
 
-#endif // __CPU_O3_CPU_TOURNAMENT_PRED_HH__
+#endif // __CPU_O3_TOURNAMENT_PRED_HH__

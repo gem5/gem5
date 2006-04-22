@@ -53,6 +53,14 @@ exec_sig_template = '''
 virtual Fault execute(%s *xc, Trace::InstRecord *traceData) const = 0;
 '''
 
+mem_ini_sig_template = '''
+virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); };
+'''
+
+mem_comp_sig_template = '''
+virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); return NoFault; };
+'''
+
 # Generate header.  
 def gen_cpu_exec_signatures(target, source, env):
     f = open(str(target[0]), 'w')
@@ -63,6 +71,8 @@ def gen_cpu_exec_signatures(target, source, env):
     for cpu in env['CPU_MODELS']:
         xc_type = CpuModel.dict[cpu].strings['CPU_exec_context']
         print >> f, exec_sig_template % xc_type
+        print >> f, mem_ini_sig_template % xc_type
+        print >> f, mem_comp_sig_template % xc_type
     print >> f, '''
 #endif  // __CPU_STATIC_INST_EXEC_SIGS_HH__
 '''
@@ -104,18 +114,38 @@ if 'AlphaFullCPU' in env['CPU_MODELS']:
         o3/decode.cc
         o3/fetch.cc
         o3/free_list.cc
+        o3/fu_pool.cc
         o3/cpu.cc
         o3/iew.cc
         o3/inst_queue.cc
-        o3/ldstq.cc
+        o3/lsq_unit.cc
+        o3/lsq.cc
         o3/mem_dep_unit.cc
         o3/ras.cc
         o3/rename.cc
         o3/rename_map.cc
         o3/rob.cc
         o3/sat_counter.cc
+        o3/scoreboard.cc
         o3/store_set.cc
         o3/tournament_pred.cc
+        ''')
+
+if 'OzoneSimpleCPU' in env['CPU_MODELS']:
+    sources += Split('''
+        ozone/cpu.cc
+        ozone/cpu_builder.cc
+        ozone/dyn_inst.cc
+        ozone/front_end.cc
+        ozone/inorder_back_end.cc
+        ozone/inst_queue.cc
+        ozone/rename_table.cc
+        ''')
+
+if 'OzoneCPU' in env['CPU_MODELS']:
+    sources += Split('''
+        ozone/back_end.cc
+        ozone/lsq_unit.cc
         ''')
 
 # FullCPU sources are included from m5/SConscript since they're not

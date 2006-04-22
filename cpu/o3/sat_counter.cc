@@ -44,7 +44,7 @@ SatCounter::SatCounter(unsigned bits, unsigned initial_val)
 {
     // Check to make sure initial value doesn't exceed the max counter value.
     if (initial_val > maxVal) {
-        panic("BP: Initial counter value exceeds max size.");
+        fatal("BP: Initial counter value exceeds max size.");
     }
 }
 
@@ -57,7 +57,7 @@ SatCounter::setBits(unsigned bits)
 void
 SatCounter::increment()
 {
-    if(counter < maxVal) {
+    if (counter < maxVal) {
         ++counter;
     }
 }
@@ -65,7 +65,7 @@ SatCounter::increment()
 void
 SatCounter::decrement()
 {
-    if(counter > 0) {
+    if (counter > 0) {
         --counter;
     }
 }

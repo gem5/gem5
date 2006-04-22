@@ -28,37 +28,37 @@
 
 #include "cpu/o3/tournament_pred.hh"
 
-TournamentBP::TournamentBP(unsigned _local_predictor_size,
-                           unsigned _local_ctr_bits,
-                           unsigned _local_history_table_size,
-                           unsigned _local_history_bits,
-                           unsigned _global_predictor_size,
-                           unsigned _global_ctr_bits,
-                           unsigned _global_history_bits,
-                           unsigned _choice_predictor_size,
-                           unsigned _choice_ctr_bits,
+TournamentBP::TournamentBP(unsigned _localPredictorSize,
+                           unsigned _localCtrBits,
+                           unsigned _localHistoryTableSize,
+                           unsigned _localHistoryBits,
+                           unsigned _globalPredictorSize,
+                           unsigned _globalCtrBits,
+                           unsigned _globalHistoryBits,
+                           unsigned _choicePredictorSize,
+                           unsigned _choiceCtrBits,
                            unsigned _instShiftAmt)
-    : localPredictorSize(_local_predictor_size),
-      localCtrBits(_local_ctr_bits),
-      localHistoryTableSize(_local_history_table_size),
-      localHistoryBits(_local_history_bits),
-      globalPredictorSize(_global_predictor_size),
-      globalCtrBits(_global_ctr_bits),
-      globalHistoryBits(_global_history_bits),
-      choicePredictorSize(_global_predictor_size),
-      choiceCtrBits(_choice_ctr_bits),
+    : localPredictorSize(_localPredictorSize),
+      localCtrBits(_localCtrBits),
+      localHistoryTableSize(_localHistoryTableSize),
+      localHistoryBits(_localHistoryBits),
+      globalPredictorSize(_globalPredictorSize),
+      globalCtrBits(_globalCtrBits),
+      globalHistoryBits(_globalHistoryBits),
+      choicePredictorSize(_globalPredictorSize),
+      choiceCtrBits(_choiceCtrBits),
       instShiftAmt(_instShiftAmt)
 {
     //Should do checks here to make sure sizes are correct (powers of 2)
 
     //Setup the array of counters for the local predictor
-    localCtrs = new SatCounter[localPredictorSize];
+    localCtrs.resize(localPredictorSize);
 
     for (int i = 0; i < localPredictorSize; ++i)
         localCtrs[i].setBits(localCtrBits);
 
     //Setup the history table for the local table
-    localHistoryTable = new unsigned[localHistoryTableSize];
+    localHistoryTable.resize(localHistoryTableSize);
 
     for (int i = 0; i < localHistoryTableSize; ++i)
         localHistoryTable[i] = 0;
@@ -67,7 +67,7 @@ TournamentBP::TournamentBP(unsigned _local_predictor_size,
     localHistoryMask = (1 << localHistoryBits) - 1;
 
     //Setup the array of counters for the global predictor
-    globalCtrs = new SatCounter[globalPredictorSize];
+    globalCtrs.resize(globalPredictorSize);
 
     for (int i = 0; i < globalPredictorSize; ++i)
         globalCtrs[i].setBits(globalCtrBits);
@@ -78,7 +78,7 @@ TournamentBP::TournamentBP(unsigned _local_predictor_size,
     globalHistoryMask = (1 << globalHistoryBits) - 1;
 
     //Setup the array of counters for the choice predictor
-    choiceCtrs = new SatCounter[choicePredictorSize];
+    choiceCtrs.resize(choicePredictorSize);
 
     for (int i = 0; i < choicePredictorSize; ++i)
         choiceCtrs[i].setBits(choiceCtrBits);
@@ -240,8 +240,7 @@ TournamentBP::update(Addr &branch_addr, unsigned correct_gh, bool taken)
         globalHistory = globalHistory & globalHistoryMask;
 
         localHistoryTable[local_history_idx] |= 1;
-    }
-    else {
+    } else {
         assert(globalHistory < globalPredictorSize &&
                local_predictor_idx < localPredictorSize);
 

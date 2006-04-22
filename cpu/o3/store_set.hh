@@ -26,13 +26,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_STORE_SET_HH__
-#define __CPU_O3_CPU_STORE_SET_HH__
+#ifndef __CPU_O3_STORE_SET_HH__
+#define __CPU_O3_STORE_SET_HH__
 
+#include <list>
+#include <map>
+#include <utility>
 #include <vector>
 
 #include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
+
+struct ltseqnum {
+    bool operator()(const InstSeqNum &lhs, const InstSeqNum &rhs) const
+    {
+        return lhs > rhs;
+    }
+};
 
 class StoreSet
 {
@@ -40,47 +50,56 @@ class StoreSet
     typedef unsigned SSID;
 
   public:
+    StoreSet() { };
+
     StoreSet(int SSIT_size, int LFST_size);
+
+    ~StoreSet();
+
+    void init(int SSIT_size, int LFST_size);
 
     void violation(Addr store_PC, Addr load_PC);
 
     void insertLoad(Addr load_PC, InstSeqNum load_seq_num);
 
-    void insertStore(Addr store_PC, InstSeqNum store_seq_num);
+    void insertStore(Addr store_PC, InstSeqNum store_seq_num,
+                     unsigned tid);
 
     InstSeqNum checkInst(Addr PC);
 
     void issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store);
 
-    void squash(InstSeqNum squashed_num);
+    void squash(InstSeqNum squashed_num, unsigned tid);
 
     void clear();
 
   private:
     inline int calcIndex(Addr PC)
-    { return (PC >> offset_bits) & index_mask; }
+    { return (PC >> offsetBits) & indexMask; }
 
     inline SSID calcSSID(Addr PC)
-    { return ((PC ^ (PC >> 10)) % LFST_size); }
+    { return ((PC ^ (PC >> 10)) % LFSTSize); }
 
-    SSID *SSIT;
+    std::vector<SSID> SSIT;
 
     std::vector<bool> validSSIT;
 
-    InstSeqNum *LFST;
+    std::vector<InstSeqNum> LFST;
 
     std::vector<bool> validLFST;
 
-    int *SSCounters;
+    std::map<InstSeqNum, int, ltseqnum> storeList;
 
-    int SSIT_size;
+    typedef std::map<InstSeqNum, int, ltseqnum>::iterator SeqNumMapIt;
 
-    int LFST_size;
+    int SSITSize;
 
-    int index_mask;
+    int LFSTSize;
+
+    int indexMask;
 
     // HACK: Hardcoded for now.
-    int offset_bits;
+    int offsetBits;
 };
 
-#endif // __CPU_O3_CPU_STORE_SET_HH__
+#endif // __CPU_O3_STORE_SET_HH__
