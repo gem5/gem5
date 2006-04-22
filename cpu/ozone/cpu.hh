@@ -42,6 +42,7 @@
 #include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
 #include "mem/mem_interface.hh"
+#include "mem/page_table.hh"
 #include "sim/eventq.hh"
 
 // forward declarations
@@ -427,34 +428,22 @@ class OzoneCPU : public BaseCPU
     int getInstAsid() { return thread.asid; }
     int getDataAsid() { return thread.asid; }
 
-    Fault dummyTranslation(MemReqPtr &req)
-    {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return NoFault;
-    }
-
     /** Translates instruction requestion in syscall emulation mode. */
     Fault translateInstReq(MemReqPtr &req)
     {
-        return dummyTranslation(req);
+        return this->pTable->translate(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
     Fault translateDataReadReq(MemReqPtr &req)
     {
-        return dummyTranslation(req);
+        return this->pTable->translate(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
     Fault translateDataWriteReq(MemReqPtr &req)
     {
-        return dummyTranslation(req);
+        return this->pTable->translate(req);
     }
 #endif
     /** CPU read function, forwards read to LSQ. */
@@ -500,6 +489,7 @@ class OzoneCPU : public BaseCPU
     bool inPalMode() { return AlphaISA::PcPAL(thread.PC); }
     bool inPalMode(Addr pc) { return AlphaISA::PcPAL(pc); }
     bool simPalCheck(int palFunc);
+    void processInterrupts();
 #else
     void syscall();
     void setSyscallReturn(SyscallReturn return_value, int tid);

@@ -48,6 +48,7 @@ FrontEnd<Impl>::FrontEnd(Params *params)
 #if !FULL_SYSTEM
     pTable = params->pTable;
 #endif
+    fetchFault = NoFault;
 }
 
 template <class Impl>
@@ -273,6 +274,7 @@ FrontEnd<Impl>::tick()
             Fault fault = fetchCacheLine();
             if (fault != NoFault) {
                 handleFault(fault);
+                fetchFault = fault;
                 return;
             }
             fetchCacheLineNextCycle = false;
@@ -349,7 +351,7 @@ FrontEnd<Impl>::fetchCacheLine()
     // Read a cache line, based on the current PC.
 #if FULL_SYSTEM
     // Flag to say whether or not address is physical addr.
-    unsigned flags = cpu->inPalMode() ? PHYSICAL : 0;
+    unsigned flags = cpu->inPalMode(PC) ? PHYSICAL : 0;
 #else
     unsigned flags = 0;
 #endif // FULL_SYSTEM
@@ -503,6 +505,9 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
     DPRINTF(FE, "Squashing from [sn:%lli], setting PC to %#x\n",
             squash_num, next_PC);
 
+    if (fetchFault != NoFault)
+        fetchFault = NoFault;
+
     while (!instBuffer.empty() &&
            instBuffer.back()->seqNum > squash_num) {
         DynInstPtr inst = instBuffer.back();
@@ -604,9 +609,13 @@ FrontEnd<Impl>::addFreeRegs(int num_freed)
         status = Running;
     }
 
+    DPRINTF(FE, "Adding %i freed registers\n", num_freed);
+
     freeRegs+= num_freed;
 
-    assert(freeRegs <= numPhysRegs);
+//    assert(freeRegs <= numPhysRegs);
+    if (freeRegs > numPhysRegs)
+        freeRegs = numPhysRegs;
 }
 
 template <class Impl>

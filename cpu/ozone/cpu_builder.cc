@@ -45,7 +45,7 @@ SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
 #else
 SimObjectVectorParam<Process *> workload;
-//SimObjectParam<PageTable *> page_table;
+SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
 
 SimObjectParam<FunctionalMemory *> mem;
@@ -159,7 +159,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM(dtb, "Data translation buffer"),
 #else
     INIT_PARAM(workload, "Processes to run"),
-//    INIT_PARAM(page_table, "Page table"),
+    INIT_PARAM(page_table, "Page table"),
 #endif // FULL_SYSTEM
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
@@ -310,7 +310,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->dtb = dtb;
 #else
     params->workload = workload;
-//    params->pTable = page_table;
+    params->pTable = page_table;
 #endif // FULL_SYSTEM
 
     params->mem = mem;
@@ -440,7 +440,7 @@ SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
 #else
 SimObjectVectorParam<Process *> workload;
-//SimObjectParam<PageTable *> page_table;
+SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
 
 SimObjectParam<FunctionalMemory *> mem;
@@ -554,7 +554,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
     INIT_PARAM(dtb, "Data translation buffer"),
 #else
     INIT_PARAM(workload, "Processes to run"),
-//    INIT_PARAM(page_table, "Page table"),
+    INIT_PARAM(page_table, "Page table"),
 #endif // FULL_SYSTEM
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
@@ -705,7 +705,7 @@ CREATE_SIM_OBJECT(SimpleOzoneCPU)
     params->dtb = dtb;
 #else
     params->workload = workload;
-//    params->pTable = page_table;
+    params->pTable = page_table;
 #endif // FULL_SYSTEM
 
     params->mem = mem;

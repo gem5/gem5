@@ -1,9 +1,10 @@
 
-#ifndef __CPU_OZONE_BACK_END_HH__
-#define __CPU_OZONE_BACK_END_HH__
+#ifndef __CPU_OZONE_LW_BACK_END_HH__
+#define __CPU_OZONE_LW_BACK_END_HH__
 
 #include <list>
 #include <queue>
+#include <set>
 #include <string>
 
 #include "arch/faults.hh"
@@ -22,7 +23,7 @@ template <class Impl>
 class OzoneThreadState;
 
 template <class Impl>
-class BackEnd
+class LWBackEnd
 {
   public:
     typedef OzoneThreadState<Impl> Thread;
@@ -54,94 +55,15 @@ class BackEnd
     typename TimeBuffer<CommStruct>::wire toIEW;
     typename TimeBuffer<CommStruct>::wire fromCommit;
 
-    class InstQueue {
-        enum queue {
-            NonSpec,
-            IQ,
-            ToBeScheduled,
-            ReadyList,
-            ReplayList
-        };
-        struct pqCompare {
-            bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
-            {
-                return lhs->seqNum > rhs->seqNum;
-            }
-        };
-      public:
-        InstQueue(Params *params);
-
-        std::string name() const;
-
-        void regStats();
-
-        void setIssueExecQueue(TimeBuffer<IssueToExec> *i2e_queue);
-
-        void setBE(BackEnd *_be) { be = _be; }
-
-        void insert(DynInstPtr &inst);
-
-        void scheduleReadyInsts();
-
-        void scheduleNonSpec(const InstSeqNum &sn);
-
-        DynInstPtr getReadyInst();
-
-        void commit(const InstSeqNum &sn) {}
-
-        void squash(const InstSeqNum &sn);
-
-        int wakeDependents(DynInstPtr &inst);
-
-        /** Tells memory dependence unit that a memory instruction needs to be
-         * rescheduled. It will re-execute once replayMemInst() is called.
-         */
-        void rescheduleMemInst(DynInstPtr &inst);
-
-        /** Re-executes all rescheduled memory instructions. */
-        void replayMemInst(DynInstPtr &inst);
-
-        /** Completes memory instruction. */
-        void completeMemInst(DynInstPtr &inst);
-
-        void violation(DynInstPtr &inst, DynInstPtr &violation) { }
-
-        bool isFull() { return numInsts >= size; }
-
-        void dumpInsts();
-
+    class TrapEvent : public Event {
       private:
-        bool find(queue q, typename std::list<DynInstPtr>::iterator it);
-        BackEnd *be;
-        TimeBuffer<IssueToExec> *i2e;
-        typename TimeBuffer<IssueToExec>::wire numIssued;
-        typedef typename std::list<DynInstPtr> InstList;
-        typedef typename std::list<DynInstPtr>::iterator InstListIt;
-        typedef typename std::priority_queue<DynInstPtr, std::vector<DynInstPtr>, pqCompare> ReadyInstQueue;
-        // Not sure I need the IQ list; it just needs to be a count.
-        InstList iq;
-        InstList toBeScheduled;
-        InstList readyList;
-        InstList nonSpec;
-        InstList replayList;
-        ReadyInstQueue readyQueue;
+        LWBackEnd<Impl> *be;
+
       public:
-        int size;
-        int numInsts;
-        int width;
+        TrapEvent(LWBackEnd<Impl> *_be);
 
-        Stats::VectorDistribution<> occ_dist;
-
-        Stats::Vector<> inst_count;
-        Stats::Vector<> peak_inst_count;
-        Stats::Scalar<> empty_count;
-        Stats::Scalar<> current_count;
-        Stats::Scalar<> fullCount;
-
-        Stats::Formula occ_rate;
-        Stats::Formula avg_residency;
-        Stats::Formula empty_rate;
-        Stats::Formula full_rate;
+        void process();
+        const char *description();
     };
 
     /** LdWriteback event for a load completion. */
@@ -150,19 +72,23 @@ class BackEnd
         /** Instruction that is writing back data to the register file. */
         DynInstPtr inst;
         /** Pointer to IEW stage. */
-        BackEnd *be;
+        LWBackEnd *be;
+
+        bool dcacheMiss;
 
       public:
         /** Constructs a load writeback event. */
-        LdWritebackEvent(DynInstPtr &_inst, BackEnd *be);
+        LdWritebackEvent(DynInstPtr &_inst, LWBackEnd *be);
 
         /** Processes writeback event. */
         virtual void process();
         /** Returns the description of the writeback event. */
         virtual const char *description();
+
+        void setDcacheMiss() { dcacheMiss = true; be->addDcacheMiss(inst); }
     };
 
-    BackEnd(Params *params);
+    LWBackEnd(Params *params);
 
     std::string name() const;
 
@@ -184,7 +110,11 @@ class BackEnd
 
     void tick();
     void squash();
+    void generateXCEvent() { xcSquash = true; }
     void squashFromXC();
+    void squashFromTrap();
+    void checkInterrupts();
+    bool trapSquash;
     bool xcSquash;
 
     template <class T>
@@ -202,37 +132,72 @@ class BackEnd
     bool isFull() { return numInsts >= numROBEntries; }
     bool isBlocked() { return status == Blocked || dispatchStatus == Blocked; }
 
+    void fetchFault(Fault &fault);
+
+    int wakeDependents(DynInstPtr &inst);
+
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
      */
-    void rescheduleMemInst(DynInstPtr &inst)
-    { IQ.rescheduleMemInst(inst); }
+    void rescheduleMemInst(DynInstPtr &inst);
 
     /** Re-executes all rescheduled memory instructions. */
-    void replayMemInst(DynInstPtr &inst)
-    { IQ.replayMemInst(inst); }
+    void replayMemInst(DynInstPtr &inst);
 
     /** Completes memory instruction. */
-    void completeMemInst(DynInstPtr &inst)
-    { IQ.completeMemInst(inst); }
+    void completeMemInst(DynInstPtr &inst) { }
 
-    void fetchFault(Fault &fault);
+    void addDcacheMiss(DynInstPtr &inst)
+    {
+        waitingMemOps.insert(inst->seqNum);
+        numWaitingMemOps++;
+        DPRINTF(BE, "Adding a Dcache miss mem op [sn:%lli], total %i\n",
+                inst->seqNum, numWaitingMemOps);
+    }
+
+    void removeDcacheMiss(DynInstPtr &inst)
+    {
+        assert(waitingMemOps.find(inst->seqNum) != waitingMemOps.end());
+        waitingMemOps.erase(inst->seqNum);
+        numWaitingMemOps--;
+        DPRINTF(BE, "Removing a Dcache miss mem op [sn:%lli], total %i\n",
+                inst->seqNum, numWaitingMemOps);
+    }
+
+    void addWaitingMemOp(DynInstPtr &inst)
+    {
+        waitingMemOps.insert(inst->seqNum);
+        numWaitingMemOps++;
+        DPRINTF(BE, "Adding a waiting mem op [sn:%lli], total %i\n",
+                inst->seqNum, numWaitingMemOps);
+    }
+
+    void removeWaitingMemOp(DynInstPtr &inst)
+    {
+        assert(waitingMemOps.find(inst->seqNum) != waitingMemOps.end());
+        waitingMemOps.erase(inst->seqNum);
+        numWaitingMemOps--;
+        DPRINTF(BE, "Removing a waiting mem op [sn:%lli], total %i\n",
+                inst->seqNum, numWaitingMemOps);
+    }
+
+    void instToCommit(DynInstPtr &inst);
 
   private:
+    void generateTrapEvent(Tick latency = 0);
+    void handleFault(Fault &fault, Tick latency = 0);
     void updateStructures();
     void dispatchInsts();
     void dispatchStall();
     void checkDispatchStatus();
-    void scheduleReadyInsts();
     void executeInsts();
     void commitInsts();
-    void addToIQ(DynInstPtr &inst);
     void addToLSQ(DynInstPtr &inst);
-    void instToCommit(DynInstPtr &inst);
     void writebackInsts();
     bool commitInst(int inst_num);
     void squash(const InstSeqNum &sn);
     void squashDueToBranch(DynInstPtr &inst);
+    void squashDueToMemViolation(DynInstPtr &inst);
     void squashDueToMemBlocked(DynInstPtr &inst);
     void updateExeInstStats(DynInstPtr &inst);
     void updateComInstStats(DynInstPtr &inst);
@@ -251,19 +216,22 @@ class BackEnd
         Idle,
         DcacheMissStall,
         DcacheMissComplete,
-        Blocked
+        Blocked,
+        TrapPending
     };
 
     Status status;
 
     Status dispatchStatus;
 
+    Status commitStatus;
+
     Counter funcExeInst;
 
   private:
 //    typedef typename Impl::InstQueue InstQueue;
 
-    InstQueue IQ;
+//    InstQueue IQ;
 
     typedef typename Impl::LdstQueue LdstQueue;
 
@@ -276,10 +244,10 @@ class BackEnd
     class DCacheCompletionEvent : public Event
     {
       private:
-        BackEnd *be;
+        LWBackEnd *be;
 
       public:
-        DCacheCompletionEvent(BackEnd *_be);
+        DCacheCompletionEvent(LWBackEnd *_be);
 
         virtual void process();
         virtual const char *description();
@@ -300,6 +268,8 @@ class BackEnd
     int dispatchWidth;
     int numDispatchEntries;
     int dispatchSize;
+
+    int waitingInsts;
 
     int issueWidth;
 
@@ -322,17 +292,34 @@ class BackEnd
     int numROBEntries;
     int numInsts;
 
+    std::set<InstSeqNum> waitingMemOps;
+    typedef std::set<InstSeqNum>::iterator MemIt;
+    int numWaitingMemOps;
+    unsigned maxOutstandingMemOps;
+
     bool squashPending;
     InstSeqNum squashSeqNum;
     Addr squashNextPC;
 
     Fault faultFromFetch;
+    bool fetchHasFault;
 
   private:
+    struct pqCompare {
+        bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
+        {
+            return lhs->seqNum > rhs->seqNum;
+        }
+    };
+
+    typedef typename std::priority_queue<DynInstPtr, std::vector<DynInstPtr>, pqCompare> ReadyInstQueue;
+    ReadyInstQueue exeList;
+
     typedef typename std::list<DynInstPtr>::iterator InstListIt;
 
     std::list<DynInstPtr> instList;
-    std::list<DynInstPtr> dispatch;
+    std::list<DynInstPtr> waitingList;
+    std::list<DynInstPtr> replayList;
     std::list<DynInstPtr> writeback;
 
     int latency;
@@ -430,7 +417,7 @@ class BackEnd
 template <class Impl>
 template <class T>
 Fault
-BackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
+LWBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 {
 /*    memReq->reset(addr, sizeof(T), flags);
 
@@ -475,7 +462,7 @@ BackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 template <class Impl>
 template <class T>
 Fault
-BackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
+LWBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
 {
 /*
     memReq->reset(addr, sizeof(T), flags);
@@ -513,4 +500,4 @@ BackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
     return LSQ.write(req, data, store_idx);
 }
 
-#endif // __CPU_OZONE_BACK_END_HH__
+#endif // __CPU_OZONE_LW_BACK_END_HH__

@@ -54,6 +54,7 @@ class InorderBackEnd
     void squash(const InstSeqNum &squash_num, const Addr &next_PC);
 
     void squashFromXC();
+    void generateXCEvent() { }
 
     bool robEmpty() { return instList.empty(); }
 

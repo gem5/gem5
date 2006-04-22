@@ -76,6 +76,10 @@ class FrontEnd
     bool processBarriers(DynInstPtr &inst);
 
     void handleFault(Fault &fault);
+  public:
+    Fault getFault() { return fetchFault; }
+  private:
+    Fault fetchFault;
 
     // Align an address (typically a PC) to the start of an I-cache block.
     // We fold in the PISA 64- to 32-bit conversion here as well.

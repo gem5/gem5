@@ -26,9 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_OZONE_LSQ_UNIT_HH__
-#define __CPU_OZONE_LSQ_UNIT_HH__
+#ifndef __CPU_OZONE_LW_LSQ_HH__
+#define __CPU_OZONE_LW_LSQ_HH__
 
+#include <list>
 #include <map>
 #include <queue>
 #include <algorithm>
@@ -56,7 +57,7 @@ class PageTable;
  * point the load is replayed.
  */
 template <class Impl>
-class OzoneLSQ {
+class OzoneLWLSQ {
   public:
     typedef typename Impl::Params Params;
     typedef typename Impl::FullCPU FullCPU;
@@ -72,7 +73,8 @@ class OzoneLSQ {
     class StoreCompletionEvent : public Event {
       public:
         /** Constructs a store completion event. */
-        StoreCompletionEvent(int store_idx, Event *wb_event, OzoneLSQ *lsq_ptr);
+        StoreCompletionEvent(DynInstPtr &inst, BackEnd *be,
+                             Event *wb_event, OzoneLWLSQ *lsq_ptr);
 
         /** Processes the store completion event. */
         void process();
@@ -82,20 +84,20 @@ class OzoneLSQ {
 
       private:
         /** The store index of the store being written back. */
-        int storeIdx;
+        DynInstPtr inst;
+
+        BackEnd *be;
         /** The writeback event for the store.  Needed for store
          * conditionals.
          */
         Event *wbEvent;
         /** The pointer to the LSQ unit that issued the store. */
-        OzoneLSQ<Impl> *lsqPtr;
+        OzoneLWLSQ<Impl> *lsqPtr;
     };
-
-    friend class StoreCompletionEvent;
 
   public:
     /** Constructs an LSQ unit. init() must be called prior to use. */
-    OzoneLSQ();
+    OzoneLWLSQ();
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(Params *params, unsigned maxLQEntries,
@@ -132,14 +134,12 @@ class OzoneLSQ {
     /** Executes a load instruction. */
     Fault executeLoad(DynInstPtr &inst);
 
-    Fault executeLoad(int lq_idx);
+//    Fault executeLoad(int lq_idx);
     /** Executes a store instruction. */
     Fault executeStore(DynInstPtr &inst);
 
     /** Commits the head load. */
     void commitLoad();
-    /** Commits a specific load, given by the sequence number. */
-    void commitLoad(InstSeqNum &inst);
     /** Commits loads older than a specific sequence number. */
     void commitLoads(InstSeqNum &youngest_inst);
 
@@ -178,7 +178,17 @@ class OzoneLSQ {
     /** Returns if a load became blocked due to the memory system.  It clears
      *  the bool's value upon this being called.
      */
-    inline bool loadBlocked();
+    bool loadBlocked()
+    { return isLoadBlocked; }
+
+    void clearLoadBlocked()
+    { isLoadBlocked = false; }
+
+    bool isLoadBlockedHandled()
+    { return loadBlockedHandled; }
+
+    void setLoadBlockedHandled()
+    { loadBlockedHandled = true; }
 
     /** Returns the number of free entries (min of free LQ and SQ entries). */
     unsigned numFreeEntries();
@@ -214,22 +224,13 @@ class OzoneLSQ {
     int numStoresToWB() { return storesToWB; }
 
     /** Returns if the LSQ unit will writeback on this cycle. */
-    bool willWB() { return storeQueue[storeWBIdx].canWB &&
-                        !storeQueue[storeWBIdx].completed &&
+    bool willWB() { return storeQueue.back().canWB &&
+                        !storeQueue.back().completed &&
                         !dcacheInterface->isBlocked(); }
 
   private:
     /** Completes the store at the specified index. */
     void completeStore(int store_idx);
-
-    /** Increments the given store index (circular queue). */
-    inline void incrStIdx(int &store_idx);
-    /** Decrements the given store index (circular queue). */
-    inline void decrStIdx(int &store_idx);
-    /** Increments the given load index (circular queue). */
-    inline void incrLdIdx(int &load_idx);
-    /** Decrements the given load index (circular queue). */
-    inline void decrLdIdx(int &load_idx);
 
   private:
     /** Pointer to the CPU. */
@@ -249,13 +250,13 @@ class OzoneLSQ {
         /** Constructs an empty store queue entry. */
         SQEntry()
             : inst(NULL), req(NULL), size(0), data(0),
-              canWB(0), committed(0), completed(0)
+              canWB(0), committed(0), completed(0), lqIt(NULL)
         { }
 
         /** Constructs a store queue entry for a given instruction. */
         SQEntry(DynInstPtr &_inst)
             : inst(_inst), req(NULL), size(0), data(0),
-              canWB(0), committed(0), completed(0)
+              canWB(0), committed(0), completed(0), lqIt(NULL)
         { }
 
         /** The store instruction. */
@@ -272,6 +273,8 @@ class OzoneLSQ {
         bool committed;
         /** Whether or not the store is completed. */
         bool completed;
+
+        typename std::list<DynInstPtr>::iterator lqIt;
     };
 
     enum Status {
@@ -282,18 +285,39 @@ class OzoneLSQ {
     };
 
   private:
-    /** The OzoneLSQ thread id. */
+    /** The OzoneLWLSQ thread id. */
     unsigned lsqID;
 
     /** The status of the LSQ unit. */
     Status _status;
 
     /** The store queue. */
-    std::vector<SQEntry> storeQueue;
-
+//    std::vector<SQEntry> storeQueue;
+    std::list<SQEntry> storeQueue;
     /** The load queue. */
-    std::vector<DynInstPtr> loadQueue;
+//    std::vector<DynInstPtr> loadQueue;
+    std::list<DynInstPtr> loadQueue;
 
+    typedef typename std::list<SQEntry>::iterator SQIt;
+    typedef typename std::list<DynInstPtr>::iterator LQIt;
+
+
+    struct HashFn {
+    size_t operator() (const int a) const
+    {
+        unsigned hash = (((a >> 14) ^ ((a >> 2) & 0xffff))) & 0x7FFFFFFF;
+
+        return hash;
+    }
+    };
+
+    m5::hash_map<int, SQIt, HashFn> SQItHash;
+    std::queue<int> SQIndices;
+    m5::hash_map<int, LQIt, HashFn> LQItHash;
+    std::queue<int> LQIndices;
+
+    typedef typename m5::hash_map<int, LQIt, HashFn>::iterator LQHashIt;
+    typedef typename m5::hash_map<int, SQIt, HashFn>::iterator SQHashIt;
     // Consider making these 16 bits
     /** The number of LQ entries. */
     unsigned LQEntries;
@@ -306,22 +330,8 @@ class OzoneLSQ {
      * writeback).
      */
     int stores;
-    /** The number of store instructions in the SQ waiting to writeback. */
+
     int storesToWB;
-
-    /** The index of the head instruction in the LQ. */
-    int loadHead;
-    /** The index of the tail instruction in the LQ. */
-    int loadTail;
-
-    /** The index of the head instruction in the SQ. */
-    int storeHead;
-    /** The index of the first instruction that is ready to be written back,
-     * and has not yet been written back.
-     */
-    int storeWBIdx;
-    /** The index of the tail instruction in the SQ. */
-    int storeTail;
 
     /// @todo Consider moving to a more advanced model with write vs read ports
     /** The number of cache ports available each cycle. */
@@ -335,9 +345,6 @@ class OzoneLSQ {
      //Stats::Scalar<> dcacheStallCycles;
     Counter lastDcacheStall;
 
-    /** Wire to read information from the issue stage time queue. */
-    typename TimeBuffer<IssueStruct>::wire fromIssue;
-
     // Make these per thread?
     /** Whether or not the LSQ is stalled. */
     bool stalled;
@@ -346,12 +353,17 @@ class OzoneLSQ {
      */
     InstSeqNum stallingStoreIsn;
     /** The index of the above store. */
-    int stallingLoadIdx;
+//    int stallingLoadIdx;
+    LQIt stallingLoad;
 
     /** Whether or not a load is blocked due to the memory system.  It is
      *  cleared when this value is checked via loadBlocked().
      */
     bool isLoadBlocked;
+
+    bool loadBlockedHandled;
+
+    InstSeqNum blockedLoadSeqNum;
 
     /** The oldest faulting load instruction. */
     DynInstPtr loadFaultInst;
@@ -375,12 +387,12 @@ class OzoneLSQ {
     Fault write(MemReqPtr &req, T &data, int store_idx);
 
     /** Returns the index of the head load instruction. */
-    int getLoadHead() { return loadHead; }
+//    int getLoadHead() { return loadHead; }
     /** Returns the sequence number of the head load instruction. */
     InstSeqNum getLoadHeadSeqNum()
     {
-        if (loadQueue[loadHead]) {
-            return loadQueue[loadHead]->seqNum;
+        if (!loadQueue.empty()) {
+            return loadQueue.back()->seqNum;
         } else {
             return 0;
         }
@@ -388,12 +400,12 @@ class OzoneLSQ {
     }
 
     /** Returns the index of the head store instruction. */
-    int getStoreHead() { return storeHead; }
+//    int getStoreHead() { return storeHead; }
     /** Returns the sequence number of the head store instruction. */
     InstSeqNum getStoreHeadSeqNum()
     {
-        if (storeQueue[storeHead].inst) {
-            return storeQueue[storeHead].inst->seqNum;
+        if (!storeQueue.empty()) {
+            return storeQueue.back().inst->seqNum;
         } else {
             return 0;
         }
@@ -407,14 +419,17 @@ class OzoneLSQ {
 template <class Impl>
 template <class T>
 Fault
-OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
+OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 {
     //Depending on issue2execute delay a squashed load could
     //execute if it is found to be squashed in the same
     //cycle it is scheduled to execute
-    assert(loadQueue[load_idx]);
+    typename m5::hash_map<int, LQIt, HashFn>::iterator
+        lq_hash_it = LQItHash.find(load_idx);
+    assert(lq_hash_it != LQItHash.end());
+    DynInstPtr inst = (*(*lq_hash_it).second);
 
-    if (loadQueue[load_idx]->isExecuted()) {
+    if (inst->isExecuted()) {
         panic("Should not reach this point with split ops!");
 
         memcpy(&data,req->data,req->size);
@@ -428,49 +443,51 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     // too).
     // @todo: Fix uncached accesses.
     if (req->flags & UNCACHEABLE &&
-        (load_idx != loadHead || !loadQueue[load_idx]->readyToCommit())) {
-
+        (inst != loadQueue.back() || !inst->reachedCommit)) {
+        DPRINTF(OzoneLSQ, "[sn:%lli] Uncached load and not head of "
+                "commit/LSQ!\n",
+                inst->seqNum);
+        be->rescheduleMemInst(inst);
         return TheISA::genMachineCheckFault();
     }
 
     // Check the SQ for any previous stores that might lead to forwarding
-    int store_idx = loadQueue[load_idx]->sqIdx;
-
+    SQIt sq_it = storeQueue.begin();
     int store_size = 0;
 
-    DPRINTF(OzoneLSQ, "Read called, load idx: %i, store idx: %i, "
-            "storeHead: %i addr: %#x\n",
-            load_idx, store_idx, storeHead, req->paddr);
+    DPRINTF(OzoneLSQ, "Read called, load idx: %i addr: %#x\n",
+            load_idx, req->paddr);
 
-    while (store_idx != -1) {
+    while (sq_it != storeQueue.end() && (*sq_it).inst->seqNum > inst->seqNum)
+        ++sq_it;
+
+    while (1) {
         // End once we've reached the top of the LSQ
-        if (store_idx == storeWBIdx) {
+        if (sq_it == storeQueue.end()) {
             break;
         }
 
-        // Move the index to one younger
-        if (--store_idx < 0)
-            store_idx += SQEntries;
+        assert((*sq_it).inst);
 
-        assert(storeQueue[store_idx].inst);
+        store_size = (*sq_it).size;
 
-        store_size = storeQueue[store_idx].size;
-
-        if (store_size == 0)
+        if (store_size == 0) {
+            sq_it++;
             continue;
+        }
 
         // Check if the store data is within the lower and upper bounds of
         // addresses that the request needs.
         bool store_has_lower_limit =
-            req->vaddr >= storeQueue[store_idx].inst->effAddr;
+            req->vaddr >= (*sq_it).inst->effAddr;
         bool store_has_upper_limit =
-            (req->vaddr + req->size) <= (storeQueue[store_idx].inst->effAddr +
+            (req->vaddr + req->size) <= ((*sq_it).inst->effAddr +
                                          store_size);
         bool lower_load_has_store_part =
-            req->vaddr < (storeQueue[store_idx].inst->effAddr +
+            req->vaddr < ((*sq_it).inst->effAddr +
                            store_size);
         bool upper_load_has_store_part =
-            (req->vaddr + req->size) > storeQueue[store_idx].inst->effAddr;
+            (req->vaddr + req->size) > (*sq_it).inst->effAddr;
 
         // If the store's data has all of the data needed, we can forward.
         if (store_has_lower_limit && store_has_upper_limit) {
@@ -480,7 +497,7 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             shift_amt = shift_amt << 3;
 
             // Cast this to type T?
-            data = storeQueue[store_idx].data >> shift_amt;
+            data = (*sq_it).data >> shift_amt;
 
             req->cmd = Read;
             assert(!req->completionEvent);
@@ -491,12 +508,12 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
             memcpy(req->data, &data, req->size);
 
-            DPRINTF(OzoneLSQ, "Forwarding from store idx %i to load to "
-                    "addr %#x, data %#x\n",
-                    store_idx, req->vaddr, *(req->data));
+            DPRINTF(OzoneLSQ, "Forwarding from store [sn:%lli] to load to "
+                    "[sn:%lli] addr %#x, data %#x\n",
+                    (*sq_it).inst->seqNum, inst->seqNum, req->vaddr, *(req->data));
 
             typename BackEnd::LdWritebackEvent *wb =
-                new typename BackEnd::LdWritebackEvent(loadQueue[load_idx],
+                new typename BackEnd::LdWritebackEvent(inst,
                                                        be);
 
             // We'll say this has a 1 cycle load-store forwarding latency
@@ -514,43 +531,49 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
             // If it's already been written back, then don't worry about
             // stalling on it.
-            if (storeQueue[store_idx].completed) {
-                continue;
+            if ((*sq_it).completed) {
+                sq_it++;
+                break;
             }
 
             // Must stall load and force it to retry, so long as it's the oldest
             // load that needs to do so.
             if (!stalled ||
                 (stalled &&
-                 loadQueue[load_idx]->seqNum <
-                 loadQueue[stallingLoadIdx]->seqNum)) {
+                 inst->seqNum <
+                 (*stallingLoad)->seqNum)) {
                 stalled = true;
-                stallingStoreIsn = storeQueue[store_idx].inst->seqNum;
-                stallingLoadIdx = load_idx;
+                stallingStoreIsn = (*sq_it).inst->seqNum;
+                stallingLoad = (*lq_hash_it).second;
             }
 
             // Tell IQ/mem dep unit that this instruction will need to be
             // rescheduled eventually
-            be->rescheduleMemInst(loadQueue[load_idx]);
+            be->rescheduleMemInst(inst);
 
             DPRINTF(OzoneLSQ, "Load-store forwarding mis-match. "
-                    "Store idx %i to load addr %#x\n",
-                    store_idx, req->vaddr);
+                    "Store [sn:%lli] to load addr %#x\n",
+                    (*sq_it).inst->seqNum, req->vaddr);
 
             return NoFault;
         }
+        sq_it++;
     }
 
 
     // If there's no forwarding case, then go access memory
-    DynInstPtr inst = loadQueue[load_idx];
-
     ++usedPorts;
 
     // if we have a cache, do cache access too
     if (dcacheInterface) {
         if (dcacheInterface->isBlocked()) {
+            // There's an older load that's already going to squash.
+            if (isLoadBlocked && blockedLoadSeqNum < inst->seqNum)
+                return NoFault;
+
             isLoadBlocked = true;
+            loadBlockedHandled = false;
+            blockedLoadSeqNum = inst->seqNum;
             // No fault occurred, even though the interface is blocked.
             return NoFault;
         }
@@ -567,11 +590,8 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         req->data = new uint8_t[64];
 
         assert(!req->completionEvent);
-        typedef typename BackEnd::LdWritebackEvent LdWritebackEvent;
-
-        LdWritebackEvent *wb = new LdWritebackEvent(loadQueue[load_idx], be);
-
-        req->completionEvent = wb;
+        req->completionEvent =
+            new typename BackEnd::LdWritebackEvent(inst, be);
 
         // Do Cache Access
         MemAccessResult result = dcacheInterface->access(req);
@@ -589,8 +609,6 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
             _status = DcacheMissStall;
 
-            wb->setDcacheMiss();
-
         } else {
 //            DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
 //                    inst->seqNum);
@@ -607,31 +625,25 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 template <class Impl>
 template <class T>
 Fault
-OzoneLSQ<Impl>::write(MemReqPtr &req, T &data, int store_idx)
+OzoneLWLSQ<Impl>::write(MemReqPtr &req, T &data, int store_idx)
 {
-    assert(storeQueue[store_idx].inst);
+    SQHashIt sq_hash_it = SQItHash.find(store_idx);
+    assert(sq_hash_it != SQItHash.end());
+
+    SQIt sq_it = (*sq_hash_it).second;
+    assert((*sq_it).inst);
 
     DPRINTF(OzoneLSQ, "Doing write to store idx %i, addr %#x data %#x"
-            " | storeHead:%i [sn:%i]\n",
-            store_idx, req->paddr, data, storeHead,
-            storeQueue[store_idx].inst->seqNum);
+            " | [sn:%lli]\n",
+            store_idx, req->paddr, data, (*sq_it).inst->seqNum);
 
-    storeQueue[store_idx].req = req;
-    storeQueue[store_idx].size = sizeof(T);
-    storeQueue[store_idx].data = data;
+    (*sq_it).req = req;
+    (*sq_it).size = sizeof(T);
+    (*sq_it).data = data;
 
     // This function only writes the data to the store queue, so no fault
     // can happen here.
     return NoFault;
 }
 
-template <class Impl>
-inline bool
-OzoneLSQ<Impl>::loadBlocked()
-{
-    bool ret_val = isLoadBlocked;
-    isLoadBlocked = false;
-    return ret_val;
-}
-
-#endif // __CPU_OZONE_LSQ_UNIT_HH__
+#endif // __CPU_OZONE_LW_LSQ_HH__

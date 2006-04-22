@@ -100,6 +100,7 @@ BackEnd<Impl>::InstQueue::insert(DynInstPtr &inst)
     numInsts++;
     inst_count[0]++;
     if (!inst->isNonSpeculative()) {
+        DPRINTF(BE, "Instruction [sn:%lli] added to IQ\n", inst->seqNum);
         if (inst->readyToIssue()) {
             toBeScheduled.push_front(inst);
             inst->iqIt = toBeScheduled.begin();
@@ -110,6 +111,7 @@ BackEnd<Impl>::InstQueue::insert(DynInstPtr &inst)
             inst->iqItValid = true;
         }
     } else {
+        DPRINTF(BE, "Nonspeculative instruction [sn:%lli] added to IQ\n", inst->seqNum);
         nonSpec.push_front(inst);
         inst->iqIt = nonSpec.begin();
         inst->iqItValid = true;
@@ -159,6 +161,8 @@ BackEnd<Impl>::InstQueue::scheduleNonSpec(const InstSeqNum &sn)
 */
     DynInstPtr inst = nonSpec.back();
 
+    DPRINTF(BE, "Nonspeculative instruction [sn:%lli] scheduled\n", inst->seqNum);
+
     assert(inst->seqNum == sn);
 
     assert(find(NonSpec, inst->iqIt));
@@ -193,6 +197,7 @@ BackEnd<Impl>::InstQueue::squash(const InstSeqNum &sn)
     InstListIt iq_end_it = iq.end();
 
     while (iq_it != iq_end_it && (*iq_it)->seqNum > sn) {
+        DPRINTF(BE, "Instruction [sn:%lli] removed from IQ\n", (*iq_it)->seqNum);
         (*iq_it)->iqItValid = false;
         iq.erase(iq_it++);
         --numInsts;
@@ -202,6 +207,7 @@ BackEnd<Impl>::InstQueue::squash(const InstSeqNum &sn)
     iq_end_it = nonSpec.end();
 
     while (iq_it != iq_end_it && (*iq_it)->seqNum > sn) {
+        DPRINTF(BE, "Instruction [sn:%lli] removed from IQ\n", (*iq_it)->seqNum);
         (*iq_it)->iqItValid = false;
         nonSpec.erase(iq_it++);
         --numInsts;
@@ -212,6 +218,7 @@ BackEnd<Impl>::InstQueue::squash(const InstSeqNum &sn)
 
     while (iq_it != iq_end_it) {
         if ((*iq_it)->seqNum > sn) {
+            DPRINTF(BE, "Instruction [sn:%lli] removed from IQ\n", (*iq_it)->seqNum);
             (*iq_it)->iqItValid = false;
             replayList.erase(iq_it++);
             --numInsts;
@@ -243,20 +250,24 @@ BackEnd<Impl>::InstQueue::wakeDependents(DynInstPtr &inst)
     std::vector<DynInstPtr> &dependents = inst->getDependents();
     int num_outputs = dependents.size();
 
+    DPRINTF(BE, "Waking instruction [sn:%lli] dependents in IQ\n", inst->seqNum);
+
     for (int i = 0; i < num_outputs; i++) {
-        DynInstPtr inst = dependents[i];
-        inst->markSrcRegReady();
-        if (inst->readyToIssue() && inst->iqItValid) {
-            if (inst->isNonSpeculative()) {
-                assert(find(NonSpec, inst->iqIt));
-                nonSpec.erase(inst->iqIt);
+        DynInstPtr dep_inst = dependents[i];
+        dep_inst->markSrcRegReady();
+        DPRINTF(BE, "Marking source reg ready [sn:%lli] in IQ\n", dep_inst->seqNum);
+
+        if (dep_inst->readyToIssue() && dep_inst->iqItValid) {
+            if (dep_inst->isNonSpeculative()) {
+                assert(find(NonSpec, dep_inst->iqIt));
+                nonSpec.erase(dep_inst->iqIt);
             } else {
-                assert(find(IQ, inst->iqIt));
-                iq.erase(inst->iqIt);
+                assert(find(IQ, dep_inst->iqIt));
+                iq.erase(dep_inst->iqIt);
             }
 
-            toBeScheduled.push_front(inst);
-            inst->iqIt = toBeScheduled.begin();
+            toBeScheduled.push_front(dep_inst);
+            dep_inst->iqIt = toBeScheduled.begin();
         }
     }
     return num_outputs;
@@ -266,6 +277,7 @@ template <class Impl>
 void
 BackEnd<Impl>::InstQueue::rescheduleMemInst(DynInstPtr &inst)
 {
+    DPRINTF(BE, "Rescheduling memory instruction [sn:%lli]\n", inst->seqNum);
     assert(!inst->iqItValid);
     replayList.push_front(inst);
     inst->iqIt = replayList.begin();
@@ -277,11 +289,14 @@ template <class Impl>
 void
 BackEnd<Impl>::InstQueue::replayMemInst(DynInstPtr &inst)
 {
+    DPRINTF(BE, "Replaying memory instruction [sn:%lli]\n", inst->seqNum);
     assert(find(ReplayList, inst->iqIt));
     InstListIt iq_it = --replayList.end();
     InstListIt iq_end_it = replayList.end();
     while (iq_it != iq_end_it) {
         DynInstPtr rescheduled_inst = (*iq_it);
+
+        DPRINTF(BE, "Memory instruction [sn:%lli] also replayed\n", inst->seqNum);
         replayList.erase(iq_it--);
         toBeScheduled.push_front(rescheduled_inst);
         rescheduled_inst->iqIt = toBeScheduled.begin();
@@ -952,6 +967,9 @@ BackEnd<Impl>::tick()
 
     commitInsts();
 
+    DPRINTF(BE, "IQ entries in use: %i, ROB entries in use: %i, LSQ loads: %i, LSQ stores: %i\n",
+            IQ.numInsts, numInsts, LSQ.numLoads(), LSQ.numStores());
+
     assert(numInsts == instList.size());
 }
 
@@ -1034,11 +1052,11 @@ BackEnd<Impl>::dispatchInsts()
         // Get instruction from front of time buffer
         DynInstPtr inst = dispatch.front();
         dispatch.pop_front();
+        --dispatchSize;
 
         if (inst->isSquashed())
             continue;
 
-        --dispatchSize;
         ++numInsts;
         instList.push_back(inst);
 
@@ -1118,6 +1136,7 @@ template <class Impl>
 void
 BackEnd<Impl>::checkDispatchStatus()
 {
+    DPRINTF(BE, "Checking dispatch status\n");
     assert(dispatchStatus == Blocked);
     if (!IQ.isFull() && !LSQ.isFull() && !isFull()) {
         DPRINTF(BE, "Dispatch no longer blocked\n");
@@ -1526,6 +1545,24 @@ BackEnd<Impl>::commitInst(int inst_num)
     // Write the done sequence number here.
     toIEW->doneSeqNum = inst->seqNum;
 
+#if FULL_SYSTEM
+    int count = 0;
+    Addr oldpc;
+    do {
+        if (count == 0)
+            assert(!thread->inSyscall && !thread->trapPending);
+        oldpc = thread->readPC();
+        cpu->system->pcEventQueue.service(
+            thread->getXCProxy());
+        count++;
+    } while (oldpc != thread->readPC());
+    if (count > 1) {
+        DPRINTF(BE, "PC skip function event, stopping commit\n");
+//        completed_last_inst = false;
+//        squashPending = true;
+        return false;
+    }
+#endif
     return true;
 }
 
@@ -1566,7 +1603,11 @@ BackEnd<Impl>::squash(const InstSeqNum &sn)
 
     while (insts_it != dispatch_end && (*insts_it)->seqNum > sn)
     {
-        DPRINTF(BE, "Squashing instruction PC %#x, [sn:%lli].\n",
+        if ((*insts_it)->isSquashed()) {
+            --insts_it;
+            continue;
+        }
+        DPRINTF(BE, "Squashing instruction on dispatch list PC %#x, [sn:%lli].\n",
                 (*insts_it)->readPC(),
                 (*insts_it)->seqNum);
 
@@ -1576,9 +1617,12 @@ BackEnd<Impl>::squash(const InstSeqNum &sn)
 
         (*insts_it)->setCanCommit();
 
+        // Be careful with IPRs and such here
         for (int i = 0; i < (*insts_it)->numDestRegs(); ++i) {
-            renameTable[(*insts_it)->destRegIdx(i)] =
-                (*insts_it)->getPrevDestInst(i);
+            DynInstPtr prev_dest = (*insts_it)->getPrevDestInst(i);
+            DPRINTF(BE, "Commit rename map setting register %i to [sn:%lli]\n",
+                    (int)(*insts_it)->destRegIdx(i), prev_dest);
+            renameTable[(*insts_it)->destRegIdx(i)] = prev_dest;
             ++freed_regs;
         }
 
@@ -1592,7 +1636,11 @@ BackEnd<Impl>::squash(const InstSeqNum &sn)
 
     while (!instList.empty() && (*insts_it)->seqNum > sn)
     {
-        DPRINTF(BE, "Squashing instruction PC %#x, [sn:%lli].\n",
+        if ((*insts_it)->isSquashed()) {
+            --insts_it;
+            continue;
+        }
+        DPRINTF(BE, "Squashing instruction on inst list PC %#x, [sn:%lli].\n",
                 (*insts_it)->readPC(),
                 (*insts_it)->seqNum);
 
@@ -1603,8 +1651,10 @@ BackEnd<Impl>::squash(const InstSeqNum &sn)
         (*insts_it)->setCanCommit();
 
         for (int i = 0; i < (*insts_it)->numDestRegs(); ++i) {
-            renameTable[(*insts_it)->destRegIdx(i)] =
-                (*insts_it)->getPrevDestInst(i);
+            DynInstPtr prev_dest = (*insts_it)->getPrevDestInst(i);
+            DPRINTF(BE, "Commit rename map setting register %i to [sn:%lli]\n",
+                    (int)(*insts_it)->destRegIdx(i), prev_dest);
+            renameTable[(*insts_it)->destRegIdx(i)] = prev_dest;
             ++freed_regs;
         }
 
@@ -1649,6 +1699,7 @@ template <class Impl>
 void
 BackEnd<Impl>::fetchFault(Fault &fault)
 {
+    faultFromFetch = fault;
 }
 
 template <class Impl>

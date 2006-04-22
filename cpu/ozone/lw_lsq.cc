@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,50 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_OZONE_OZONE_IMPL_HH__
-#define __CPU_OZONE_OZONE_IMPL_HH__
+#include "cpu/ozone/ozone_impl.hh"
+#include "cpu/ozone/lw_lsq_impl.hh"
 
-#include "arch/alpha/isa_traits.hh"
-#include "cpu/o3/bpred_unit.hh"
-#include "cpu/ozone/back_end.hh"
-#include "cpu/ozone/front_end.hh"
-#include "cpu/ozone/inst_queue.hh"
-#include "cpu/ozone/lsq_unit.hh"
-#include "cpu/ozone/lw_lsq.hh"
-#include "cpu/ozone/lw_back_end.hh"
-#include "cpu/ozone/null_predictor.hh"
-#include "cpu/ozone/dyn_inst.hh"
-#include "cpu/ozone/simple_params.hh"
+// Force the instantiation of LDSTQ for all the implementations we care about.
+template class OzoneLWLSQ<OzoneImpl>;
 
-template <class Impl>
-class OzoneCPU;
-
-template <class Impl>
-class OzoneDynInst;
-
-struct OzoneImpl {
-    typedef SimpleParams Params;
-    typedef OzoneCPU<OzoneImpl> OzoneCPU;
-    typedef OzoneCPU FullCPU;
-
-    // Would like to put these into their own area.
-//    typedef NullPredictor BranchPred;
-    typedef TwobitBPredUnit<OzoneImpl> BranchPred;
-    typedef FrontEnd<OzoneImpl> FrontEnd;
-    // Will need IQ, LSQ eventually
-    typedef LWBackEnd<OzoneImpl> BackEnd;
-
-    typedef InstQueue<OzoneImpl> InstQueue;
-    typedef OzoneLWLSQ<OzoneImpl> LdstQueue;
-
-    typedef OzoneDynInst<OzoneImpl> DynInst;
-    typedef RefCountingPtr<DynInst> DynInstPtr;
-
-    typedef uint64_t IssueStruct;
-
-    enum {
-        MaxThreads = 1
-    };
-};
-
-#endif // __CPU_OZONE_OZONE_IMPL_HH__

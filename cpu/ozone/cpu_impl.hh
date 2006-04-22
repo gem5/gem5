@@ -765,7 +765,7 @@ void
 OzoneCPU<Impl>::squashFromXC()
 {
     thread.inSyscall = true;
-    backEnd->squashFromXC();
+    backEnd->generateXCEvent();
 }
 
 #if !FULL_SYSTEM
@@ -830,6 +830,58 @@ OzoneCPU<Impl>::hwrei()
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
+}
+
+template <class Impl>
+void
+OzoneCPU<Impl>::processInterrupts()
+{
+    // Check for interrupts here.  For now can copy the code that
+    // exists within isa_fullsys_traits.hh.  Also assume that thread 0
+    // is the one that handles the interrupts.
+
+    // Check if there are any outstanding interrupts
+    //Handle the interrupts
+    int ipl = 0;
+    int summary = 0;
+
+    checkInterrupts = false;
+
+    if (thread.readMiscReg(IPR_ASTRR))
+        panic("asynchronous traps not implemented\n");
+
+    if (thread.readMiscReg(IPR_SIRR)) {
+        for (int i = INTLEVEL_SOFTWARE_MIN;
+             i < INTLEVEL_SOFTWARE_MAX; i++) {
+            if (thread.readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
+                // See table 4-19 of the 21164 hardware reference
+                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
+                summary |= (ULL(1) << i);
+            }
+        }
+    }
+
+    uint64_t interrupts = intr_status();
+
+    if (interrupts) {
+        for (int i = INTLEVEL_EXTERNAL_MIN;
+             i < INTLEVEL_EXTERNAL_MAX; i++) {
+            if (interrupts & (ULL(1) << i)) {
+                // See table 4-19 of the 21164 hardware reference
+                ipl = i;
+                summary |= (ULL(1) << i);
+            }
+        }
+    }
+
+    if (ipl && ipl > thread.readMiscReg(IPR_IPLR)) {
+        thread.setMiscReg(IPR_ISR, summary);
+        thread.setMiscReg(IPR_INTID, ipl);
+        Fault fault = new InterruptFault;
+        fault->invoke(thread.getXCProxy());
+        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
+                thread.readMiscReg(IPR_IPLR), ipl, summary);
+    }
 }
 
 template <class Impl>
