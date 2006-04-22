@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/ozone/cpu_impl.hh"
-#include "cpu/ozone/ozone_impl.hh"
-#include "cpu/ozone/simple_impl.hh"
+#ifndef __CPU_OZONE_SIMPLE_IMPL_HH__
+#define __CPU_OZONE_SIMPLE_IMPL_HH__
 
-template class OzoneCPU<SimpleImpl>;
-template class OzoneCPU<OzoneImpl>;
+#include "arch/isa_traits.hh"
+#include "cpu/o3/bpred_unit.hh"
+#include "cpu/ozone/cpu.hh"
+#include "cpu/ozone/front_end.hh"
+#include "cpu/ozone/inorder_back_end.hh"
+#include "cpu/ozone/null_predictor.hh"
+#include "cpu/ozone/dyn_inst.hh"
+#include "cpu/ozone/simple_params.hh"
+
+//template <class Impl>
+//class OzoneCPU;
+
+template <class Impl>
+class OzoneDynInst;
+
+struct SimpleImpl {
+    typedef SimpleParams Params;
+    typedef OzoneCPU<SimpleImpl> OzoneCPU;
+    typedef OzoneCPU FullCPU;
+
+    // Would like to put these into their own area.
+//    typedef NullPredictor BranchPred;
+    typedef TwobitBPredUnit<SimpleImpl> BranchPred;
+    typedef FrontEnd<SimpleImpl> FrontEnd;
+    // Will need IQ, LSQ eventually
+    typedef InorderBackEnd<SimpleImpl> BackEnd;
+
+    typedef OzoneDynInst<SimpleImpl> DynInst;
+    typedef RefCountingPtr<DynInst> DynInstPtr;
+
+    typedef uint64_t IssueStruct;
+
+    enum {
+        MaxThreads = 1
+    };
+};
+
+#endif // __CPU_OZONE_SIMPLE_IMPL_HH__

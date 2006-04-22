@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/ozone/cpu_impl.hh"
+#include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/ozone_impl.hh"
 #include "cpu/ozone/simple_impl.hh"
+#include "cpu/ozone/inst_queue_impl.hh"
 
-template class OzoneCPU<SimpleImpl>;
-template class OzoneCPU<OzoneImpl>;
+// Force instantiation of InstructionQueue.
+template class InstQueue<SimpleImpl>;
+template class InstQueue<OzoneImpl>;

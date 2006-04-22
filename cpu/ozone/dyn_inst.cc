@@ -26,9 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/ozone/cpu_impl.hh"
+#include "cpu/ozone/dyn_inst_impl.hh"
 #include "cpu/ozone/ozone_impl.hh"
 #include "cpu/ozone/simple_impl.hh"
 
-template class OzoneCPU<SimpleImpl>;
-template class OzoneCPU<OzoneImpl>;
+template class OzoneDynInst<OzoneImpl>;
+template class OzoneDynInst<SimpleImpl>;
+
