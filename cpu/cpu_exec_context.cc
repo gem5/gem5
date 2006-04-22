@@ -38,6 +38,7 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/profile.hh"
+#include "cpu/quiesce_event.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -57,9 +58,11 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
       dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
-      profile(NULL), quiesceEvent(this), func_exe_inst(0), storeCondFailures(0)
+      profile(NULL), func_exe_inst(0), storeCondFailures(0)
 {
     proxy = new ProxyExecContext<CPUExecContext>(this);
+
+    quiesceEvent = new EndQuiesceEvent(proxy);
 
     memset(&regs, 0, sizeof(RegFile));
 
@@ -82,7 +85,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
-      lastSuspend(0), process(_process), mem(process->getMemory()), asid(_asid),
+      lastSuspend(0), process(_process), mem(NULL), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
@@ -91,7 +94,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
 
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          FunctionalMemory *_mem, int _asid)
-    : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
+    : cpu(_cpu), thread_num(_thread_num), process(0), mem(NULL), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
@@ -119,23 +122,6 @@ CPUExecContext::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
     profile->dump(proxy, *os);
-}
-
-CPUExecContext::EndQuiesceEvent::EndQuiesceEvent(CPUExecContext *_cpuXC)
-    : Event(&mainEventQueue), cpuXC(_cpuXC)
-{
-}
-
-void
-CPUExecContext::EndQuiesceEvent::process()
-{
-    cpuXC->activate();
-}
-
-const char*
-CPUExecContext::EndQuiesceEvent::description()
-{
-    return "End Quiesce Event.";
 }
 
 void
@@ -189,8 +175,8 @@ CPUExecContext::serialize(ostream &os)
 
 #if FULL_SYSTEM
     Tick quiesceEndTick = 0;
-    if (quiesceEvent.scheduled())
-        quiesceEndTick = quiesceEvent.when();
+    if (quiesceEvent->scheduled())
+        quiesceEndTick = quiesceEvent->when();
     SERIALIZE_SCALAR(quiesceEndTick);
 
 #endif
@@ -210,7 +196,7 @@ CPUExecContext::unserialize(Checkpoint *cp, const std::string &section)
     Tick quiesceEndTick;
     UNSERIALIZE_SCALAR(quiesceEndTick);
     if (quiesceEndTick)
-        quiesceEvent.schedule(quiesceEndTick);
+        quiesceEvent->schedule(quiesceEndTick);
 #endif
 }
 
@@ -223,7 +209,14 @@ CPUExecContext::activate(int delay)
 
     lastActivate = curTick;
 
+    if (status() == ExecContext::Unallocated) {
+        cpu->activateWhenReady(thread_num);
+        return;
+    }
+
     _status = ExecContext::Active;
+
+    // status() == Suspended
     cpu->activateContext(thread_num, delay);
 }
 

@@ -85,6 +85,7 @@ base_sources = Split('''
 	cpu/cpu_exec_context.cc
 	cpu/exetrace.cc
 	cpu/pc_event.cc
+        cpu/quiesce_event.cc
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
         cpu/trace/reader/mem_trace_reader.cc

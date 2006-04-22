@@ -135,23 +135,9 @@ class CPUExecContext
     Addr profilePC;
     void dumpFuncProfile();
 
-    /** Event for timing out quiesce instruction */
-    struct EndQuiesceEvent : public Event
-    {
-        /** A pointer to the execution context that is quiesced */
-        CPUExecContext *cpuXC;
+    Event *quiesceEvent;
 
-        EndQuiesceEvent(CPUExecContext *_cpuXC);
-
-        /** Event process to occur at interrupt*/
-        virtual void process();
-
-        /** Event description */
-        virtual const char *description();
-    };
-    EndQuiesceEvent quiesceEvent;
-
-    Event *getQuiesceEvent() { return &quiesceEvent; }
+    Event *getQuiesceEvent() { return quiesceEvent; }
 
     Tick readLastActivate() { return lastActivate; }
 
