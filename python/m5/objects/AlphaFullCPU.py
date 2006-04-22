@@ -9,6 +9,8 @@ class DerivAlphaFullCPU(BaseCPU):
     if not build_env['FULL_SYSTEM']:
         mem = Param.FunctionalMemory(NULL, "memory")
 
+    cachePorts = Param.Unsigned("Cache Ports")
+
     decodeToFetchDelay = Param.Unsigned("Decode to fetch delay")
     renameToFetchDelay = Param.Unsigned("Rename to fetch delay")
     iewToFetchDelay = Param.Unsigned("Issue/Execute/Writeback to fetch "
@@ -41,6 +43,7 @@ class DerivAlphaFullCPU(BaseCPU):
     executeFloatWidth = Param.Unsigned("Floating point execute width")
     executeBranchWidth = Param.Unsigned("Branch execute width")
     executeMemoryWidth = Param.Unsigned("Memory execute width")
+    fuPool = Param.FUPool(NULL, "Functional Unit pool")
 
     iewToCommitDelay = Param.Unsigned("Issue/Execute/Writeback to commit "
                "delay")
@@ -48,15 +51,15 @@ class DerivAlphaFullCPU(BaseCPU):
     commitWidth = Param.Unsigned("Commit width")
     squashWidth = Param.Unsigned("Squash width")
 
-    local_predictor_size = Param.Unsigned("Size of local predictor")
-    local_ctr_bits = Param.Unsigned("Bits per counter")
-    local_history_table_size = Param.Unsigned("Size of local history table")
-    local_history_bits = Param.Unsigned("Bits for the local history")
-    global_predictor_size = Param.Unsigned("Size of global predictor")
-    global_ctr_bits = Param.Unsigned("Bits per counter")
-    global_history_bits = Param.Unsigned("Bits of history")
-    choice_predictor_size = Param.Unsigned("Size of choice predictor")
-    choice_ctr_bits = Param.Unsigned("Bits of choice counters")
+    localPredictorSize = Param.Unsigned("Size of local predictor")
+    localCtrBits = Param.Unsigned("Bits per counter")
+    localHistoryTableSize = Param.Unsigned("Size of local history table")
+    localHistoryBits = Param.Unsigned("Bits for the local history")
+    globalPredictorSize = Param.Unsigned("Size of global predictor")
+    globalCtrBits = Param.Unsigned("Bits per counter")
+    globalHistoryBits = Param.Unsigned("Bits of history")
+    choicePredictorSize = Param.Unsigned("Size of choice predictor")
+    choiceCtrBits = Param.Unsigned("Bits of choice counters")
 
     BTBEntries = Param.Unsigned("Number of BTB entries")
     BTBTagSize = Param.Unsigned("Size of the BTB tags, in bits")
@@ -68,6 +71,8 @@ class DerivAlphaFullCPU(BaseCPU):
     LFSTSize = Param.Unsigned("Last fetched store table size")
     SSITSize = Param.Unsigned("Store set ID table size")
 
+    numRobs = Param.Unsigned("Number of Reorder Buffers");
+
     numPhysIntRegs = Param.Unsigned("Number of physical integer registers")
     numPhysFloatRegs = Param.Unsigned("Number of physical floating point "
                "registers")
@@ -78,3 +83,13 @@ class DerivAlphaFullCPU(BaseCPU):
 
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")
+
+    smtNumFetchingThreads = Param.Unsigned("SMT Number of Fetching Threads")
+    smtFetchPolicy = Param.String("SMT Fetch policy")
+    smtLSQPolicy    = Param.String("SMT LSQ Sharing Policy")
+    smtLSQThreshold = Param.String("SMT LSQ Threshold Sharing Parameter")
+    smtIQPolicy    = Param.String("SMT IQ Sharing Policy")
+    smtIQThreshold = Param.String("SMT IQ Threshold Sharing Parameter")
+    smtROBPolicy   = Param.String("SMT ROB Sharing Policy")
+    smtROBThreshold = Param.String("SMT ROB Threshold Sharing Parameter")
+    smtCommitPolicy = Param.String("SMT Commit Policy")
