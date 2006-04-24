@@ -425,9 +425,10 @@ class AlphaFullCPU : public FullO3CPU<Impl>
                 req->result = 2;
             } else {
                 if (this->lockFlag/* && this->lockAddr == req->paddr*/) {
-                    req->result=1;
+                    req->result = 1;
                 } else {
                     req->result = 0;
+                    return NoFault;
                 }
             }
         }

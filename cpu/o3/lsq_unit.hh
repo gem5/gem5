@@ -566,6 +566,9 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     DPRINTF(LSQUnit, "Doing functional access for inst PC %#x\n",
             loadQueue[load_idx]->readPC());
     assert(!req->data);
+    req->cmd = Read;
+    req->completionEvent = NULL;
+    req->time = curTick;
     req->data = new uint8_t[64];
     Fault fault = cpu->read(req, data);
     memcpy(req->data, &data, sizeof(T));
@@ -587,9 +590,6 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         }
         DPRINTF(LSQUnit, "Doing timing access for inst PC %#x\n",
                 loadQueue[load_idx]->readPC());
-        req->cmd = Read;
-        req->completionEvent = NULL;
-        req->time = curTick;
 
         assert(!req->completionEvent);
         req->completionEvent =
