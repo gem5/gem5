@@ -90,7 +90,7 @@ class DefaultRename
         Squashing,
         Blocked,
         Unblocking,
-        BarrierStall
+        SerializeStall
     };
 
   private:
@@ -359,8 +359,8 @@ class DefaultRename
     /** Tracks which stages are telling decode to stall. */
     Stalls stalls[Impl::MaxThreads];
 
-    /** The barrier instruction that rename has stalled on. */
-    DynInstPtr barrierInst[Impl::MaxThreads];
+    /** The serialize instruction that rename has stalled on. */
+    DynInstPtr serializeInst[Impl::MaxThreads];
 
     /** Records if rename needs to serialize on the next instruction for any
      * thread.
@@ -419,8 +419,8 @@ class DefaultRename
     Stats::Scalar<> renameIdleCycles;
     /** Stat for total number of cycles spent blocking. */
     Stats::Scalar<> renameBlockCycles;
-    /** Stat for total number of cycles spent stalling for a barrier. */
-    Stats::Scalar<> renameBarrierCycles;
+    /** Stat for total number of cycles spent stalling for a serializing inst. */
+    Stats::Scalar<> renameSerializeStallCycles;
     /** Stat for total number of cycles spent running normally. */
     Stats::Scalar<> renameRunCycles;
     /** Stat for total number of cycles spent unblocking. */
@@ -446,6 +446,8 @@ class DefaultRename
     Stats::Scalar<> renameCommittedMaps;
     /** Stat for total number of mappings that were undone due to a squash. */
     Stats::Scalar<> renameUndoneMaps;
+    Stats::Scalar<> renamedSerializing;
+    Stats::Scalar<> renamedTempSerializing;
 };
 
 #endif // __CPU_O3_RENAME_HH__

@@ -185,7 +185,7 @@ class InstructionQueue
     void commit(const InstSeqNum &inst, unsigned tid = 0);
 
     /** Wakes all dependents of a completed instruction. */
-    void wakeDependents(DynInstPtr &completed_inst);
+    int wakeDependents(DynInstPtr &completed_inst);
 
     /** Adds a ready memory instruction to the ready list. */
     void addReadyMemInst(DynInstPtr &ready_inst);
@@ -479,6 +479,7 @@ class InstructionQueue
     /** Stat for number of non-speculative instructions added. */
     Stats::Scalar<> iqNonSpecInstsAdded;
 //    Stats::Scalar<> iqIntInstsAdded;
+    Stats::Scalar<> iqInstsIssued;
     /** Stat for number of integer instructions issued. */
     Stats::Scalar<> iqIntInstsIssued;
 //    Stats::Scalar<> iqFloatInstsAdded;
@@ -505,6 +506,20 @@ class InstructionQueue
      */
     Stats::Scalar<> iqSquashedNonSpecRemoved;
 
+    Stats::VectorDistribution<> queue_res_dist;
+    Stats::Vector<> n_issued_dist;
+    Stats::VectorDistribution<> issue_delay_dist;
+
+    Stats::Vector<> stat_fu_busy;
+//    Stats::Vector<> dist_unissued;
+    Stats::Vector2d<> stat_issued_inst_type;
+
+    Stats::Formula issue_rate;
+//    Stats::Formula issue_stores;
+//    Stats::Formula issue_op_rate;
+    Stats::Vector<> fu_busy;  //cumulative fu busy
+
+    Stats::Formula fu_busy_rate;
 };
 
 #endif //__CPU_O3_INST_QUEUE_HH__

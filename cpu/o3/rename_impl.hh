@@ -53,7 +53,7 @@ DefaultRename<Impl>::DefaultRename(Params *params)
 
         stalls[i].iew = false;
         stalls[i].commit = false;
-        barrierInst[i] = NULL;
+        serializeInst[i] = NULL;
 
         instsInProgress[i] = 0;
 
@@ -78,69 +78,79 @@ void
 DefaultRename<Impl>::regStats()
 {
     renameSquashCycles
-        .name(name() + ".renameSquashCycles")
+        .name(name() + ".RENAME:SquashCycles")
         .desc("Number of cycles rename is squashing")
         .prereq(renameSquashCycles);
     renameIdleCycles
-        .name(name() + ".renameIdleCycles")
+        .name(name() + ".RENAME:IdleCycles")
         .desc("Number of cycles rename is idle")
         .prereq(renameIdleCycles);
     renameBlockCycles
-        .name(name() + ".renameBlockCycles")
+        .name(name() + ".RENAME:BlockCycles")
         .desc("Number of cycles rename is blocking")
         .prereq(renameBlockCycles);
-    renameBarrierCycles
-        .name(name() + ".renameBarrierCycles")
-        .desc("Number of cycles rename is blocking due to a barrier stall")
-        .prereq(renameBarrierCycles);
+    renameSerializeStallCycles
+        .name(name() + ".RENAME:serializeStallCycles")
+        .desc("count of cycles rename stalled for serializing inst")
+        .flags(Stats::total);
     renameRunCycles
-        .name(name() + ".renameRunCycles")
+        .name(name() + ".RENAME:RunCycles")
         .desc("Number of cycles rename is running")
         .prereq(renameIdleCycles);
     renameUnblockCycles
-        .name(name() + ".renameUnblockCycles")
+        .name(name() + ".RENAME:UnblockCycles")
         .desc("Number of cycles rename is unblocking")
         .prereq(renameUnblockCycles);
     renameRenamedInsts
-        .name(name() + ".renameRenamedInsts")
+        .name(name() + ".RENAME:RenamedInsts")
         .desc("Number of instructions processed by rename")
         .prereq(renameRenamedInsts);
     renameSquashedInsts
-        .name(name() + ".renameSquashedInsts")
+        .name(name() + ".RENAME:SquashedInsts")
         .desc("Number of squashed instructions processed by rename")
         .prereq(renameSquashedInsts);
     renameROBFullEvents
-        .name(name() + ".renameROBFullEvents")
+        .name(name() + ".RENAME:ROBFullEvents")
         .desc("Number of times rename has blocked due to ROB full")
         .prereq(renameROBFullEvents);
     renameIQFullEvents
-        .name(name() + ".renameIQFullEvents")
+        .name(name() + ".RENAME:IQFullEvents")
         .desc("Number of times rename has blocked due to IQ full")
         .prereq(renameIQFullEvents);
     renameLSQFullEvents
-        .name(name() + ".renameLSQFullEvents")
+        .name(name() + ".RENAME:LSQFullEvents")
         .desc("Number of times rename has blocked due to LSQ full")
         .prereq(renameLSQFullEvents);
     renameFullRegistersEvents
-        .name(name() + ".renameFullRegisterEvents")
+        .name(name() + ".RENAME:FullRegisterEvents")
         .desc("Number of times there has been no free registers")
         .prereq(renameFullRegistersEvents);
     renameRenamedOperands
-        .name(name() + ".renameRenamedOperands")
+        .name(name() + ".RENAME:RenamedOperands")
         .desc("Number of destination operands rename has renamed")
         .prereq(renameRenamedOperands);
     renameRenameLookups
-        .name(name() + ".renameRenameLookups")
+        .name(name() + ".RENAME:RenameLookups")
         .desc("Number of register rename lookups that rename has made")
         .prereq(renameRenameLookups);
     renameCommittedMaps
-        .name(name() + ".renameCommittedMaps")
+        .name(name() + ".RENAME:CommittedMaps")
         .desc("Number of HB maps that are committed")
         .prereq(renameCommittedMaps);
     renameUndoneMaps
-        .name(name() + ".renameUndoneMaps")
+        .name(name() + ".RENAME:UndoneMaps")
         .desc("Number of HB maps that are undone due to squashing")
         .prereq(renameUndoneMaps);
+    renamedSerializing
+        .name(name() + ".RENAME:serializingInsts")
+        .desc("count of serializing insts renamed")
+        .flags(Stats::total)
+        ;
+    renamedTempSerializing
+        .name(name() + ".RENAME:tempSerializingInsts")
+        .desc("count of temporary serializing insts renamed")
+        .flags(Stats::total)
+        ;
 }
 
 template <class Impl>
@@ -254,7 +264,7 @@ DefaultRename<Impl>::squash(unsigned tid)
     // cycle and there should be space to hold everything due to the squash.
     if (renameStatus[tid] == Blocked ||
         renameStatus[tid] == Unblocking ||
-        renameStatus[tid] == BarrierStall) {
+        renameStatus[tid] == SerializeStall) {
 #if !FULL_SYSTEM
         // In syscall emulation, we can have both a block and a squash due
         // to a syscall in the same cycle.  This would cause both signals to
@@ -267,7 +277,7 @@ DefaultRename<Impl>::squash(unsigned tid)
 #else
         toDecode->renameUnblock[tid] = 1;
 #endif
-        barrierInst[tid] = NULL;
+        serializeInst[tid] = NULL;
     }
 
     // Set the status to Squashing.
@@ -370,8 +380,8 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
         ++renameBlockCycles;
     } else if (renameStatus[tid] == Squashing) {
         ++renameSquashCycles;
-    } else if (renameStatus[tid] == BarrierStall) {
-        ++renameBarrierCycles;
+    } else if (renameStatus[tid] == SerializeStall) {
+        ++renameSerializeStallCycles;
     }
 
     if (renameStatus[tid] == Running ||
@@ -535,14 +545,18 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
         if (inst->isSerializeBefore() && !inst->isSerializeHandled()) {
             DPRINTF(Rename, "Serialize before instruction encountered.\n");
 
-            if (!inst->isTempSerializeBefore())
+            if (!inst->isTempSerializeBefore()) {
+                renamedSerializing++;
                 inst->setSerializeHandled();
+            } else {
+                renamedTempSerializing++;
+            }
 
-            // Change status over to BarrierStall so that other stages know
+            // Change status over to SerializeStall so that other stages know
             // what this is blocked on.
-            renameStatus[tid] = BarrierStall;
+            renameStatus[tid] = SerializeStall;
 
-            barrierInst[tid] = inst;
+            serializeInst[tid] = inst;
 
             blockThisCycle = true;
 
@@ -716,9 +730,9 @@ DefaultRename<Impl>::block(unsigned tid)
             wroteToTimeBuffer = true;
         }
 
-        // Rename can not go from BarrierStall to Blocked, otherwise it would
-        // not know to complete the barrier stall.
-        if (renameStatus[tid] != BarrierStall) {
+        // Rename can not go from SerializeStall to Blocked, otherwise it would
+        // not know to complete the serialize stall.
+        if (renameStatus[tid] != SerializeStall) {
             // Set status to Blocked.
             renameStatus[tid] = Blocked;
             return true;
@@ -735,7 +749,7 @@ DefaultRename<Impl>::unblock(unsigned tid)
     DPRINTF(Rename, "[tid:%u]: Trying to unblock.\n", tid);
 
     // Rename is done unblocking if the skid buffer is empty.
-    if (skidBuffer[tid].empty() && renameStatus[tid] != BarrierStall) {
+    if (skidBuffer[tid].empty() && renameStatus[tid] != SerializeStall) {
 
         DPRINTF(Rename, "[tid:%u]: Done unblocking.\n", tid);
 
@@ -1008,9 +1022,9 @@ DefaultRename<Impl>::checkStall(unsigned tid)
     } else if (renameMap[tid]->numFreeEntries() <= 0) {
         DPRINTF(Rename,"[tid:%i]: Stall: RenameMap has 0 free entries.\n", tid);
         ret_val = true;
-    } else if (renameStatus[tid] == BarrierStall &&
+    } else if (renameStatus[tid] == SerializeStall &&
                (!emptyROB[tid] || instsInProgress[tid])) {
-        DPRINTF(Rename,"[tid:%i]: Stall: Barrier stall and ROB is not "
+        DPRINTF(Rename,"[tid:%i]: Stall: Serialize stall and ROB is not "
                 "empty.\n",
                 tid);
         ret_val = true;
@@ -1064,7 +1078,7 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
     //         if so then go to unblocking
     // If status was Squashing
     //     check if squashing is not high.  Switch to running this cycle.
-    // If status was barrier stall
+    // If status was serialize stall
     //     check if ROB is empty and no insts are in flight to the ROB
 
     readFreeEntries(tid);
@@ -1113,12 +1127,12 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
         return false;
     }
 
-    if (renameStatus[tid] == BarrierStall) {
+    if (renameStatus[tid] == SerializeStall) {
         // Stall ends once the ROB is free.
-        DPRINTF(Rename, "[tid:%u]: Done with barrier stall, switching to "
+        DPRINTF(Rename, "[tid:%u]: Done with serialize stall, switching to "
                 "unblocking.\n", tid);
 
-        DynInstPtr barr_inst = barrierInst[tid];
+        DynInstPtr serial_inst = serializeInst[tid];
 
         renameStatus[tid] = Unblocking;
 
@@ -1126,21 +1140,21 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
 
         DPRINTF(Rename, "[tid:%u]: Processing instruction [%lli] with "
                 "PC %#x.\n",
-                tid, barr_inst->seqNum, barr_inst->readPC());
+                tid, serial_inst->seqNum, serial_inst->readPC());
 
         // Put instruction into queue here.
-        barr_inst->clearSerializeBefore();
+        serial_inst->clearSerializeBefore();
 
         if (!skidBuffer[tid].empty()) {
-            skidBuffer[tid].push_front(barr_inst);
+            skidBuffer[tid].push_front(serial_inst);
         } else {
-            insts[tid].push_front(barr_inst);
+            insts[tid].push_front(serial_inst);
         }
 
         DPRINTF(Rename, "[tid:%u]: Instruction must be processed by rename."
                 " Adding to front of list.", tid);
 
-        barrierInst[tid] = NULL;
+        serializeInst[tid] = NULL;
 
         return true;
     }

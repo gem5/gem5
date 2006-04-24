@@ -278,6 +278,8 @@ class DefaultIEW
     void tick();
 
   private:
+    void updateExeInstStats(DynInstPtr &inst);
+
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;
 
@@ -443,9 +445,9 @@ class DefaultIEW
     /** Stat for total number of executed instructions. */
     Stats::Scalar<> iewExecutedInsts;
     /** Stat for total number of executed load instructions. */
-    Stats::Scalar<> iewExecLoadInsts;
+    Stats::Vector<> iewExecLoadInsts;
     /** Stat for total number of executed store instructions. */
-    Stats::Scalar<> iewExecStoreInsts;
+//    Stats::Scalar<> iewExecStoreInsts;
     /** Stat for total number of squashed instructions skipped at execute. */
     Stats::Scalar<> iewExecSquashedInsts;
     /** Stat for total number of memory ordering violation events. */
@@ -456,6 +458,33 @@ class DefaultIEW
     Stats::Scalar<> predictedNotTakenIncorrect;
     /** Stat for total number of mispredicted branches detected at execute. */
     Stats::Formula branchMispredicts;
+
+    Stats::Vector<> exe_swp;
+    Stats::Vector<> exe_nop;
+    Stats::Vector<> exe_refs;
+    Stats::Vector<> exe_branches;
+
+//    Stats::Vector<> issued_ops;
+/*
+    Stats::Vector<> stat_fu_busy;
+    Stats::Vector2d<> stat_fuBusy;
+    Stats::Vector<> dist_unissued;
+    Stats::Vector2d<> stat_issued_inst_type;
+*/
+    Stats::Formula issue_rate;
+    Stats::Formula iewExecStoreInsts;
+//    Stats::Formula issue_op_rate;
+//    Stats::Formula fu_busy_rate;
+
+    Stats::Vector<> iewInstsToCommit;
+    Stats::Vector<> writeback_count;
+    Stats::Vector<> producer_inst;
+    Stats::Vector<> consumer_inst;
+    Stats::Vector<> wb_penalized;
+
+    Stats::Formula wb_rate;
+    Stats::Formula wb_fanout;
+    Stats::Formula wb_penalized_rate;
 };
 
 #endif // __CPU_O3_IEW_HH__

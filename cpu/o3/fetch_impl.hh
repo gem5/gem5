@@ -178,6 +178,11 @@ DefaultFetch<Impl>::regStats()
         .desc("Number of instructions fetch has processed")
         .prereq(fetchedInsts);
 
+    fetchedBranches
+        .name(name() + ".fetchedBranches")
+        .desc("Number of branches that fetch encountered")
+        .prereq(fetchedBranches);
+
     predictedBranches
         .name(name() + ".predictedBranches")
         .desc("Number of branches that fetch has predicted taken")
@@ -208,6 +213,11 @@ DefaultFetch<Impl>::regStats()
         .name(name() + ".fetchedCacheLines")
         .desc("Number of cache lines fetched")
         .prereq(fetchedCacheLines);
+
+    fetchIcacheSquashes
+        .name(name() + ".fetchIcacheSquashes")
+        .desc("Number of outstanding Icache misses that were squashed")
+        .prereq(fetchIcacheSquashes);
 
     fetchNisnDist
         .init(/* base value */ 0,
@@ -322,8 +332,10 @@ DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
     // Can keep track of how many cache accesses go unused due to
     // misspeculation here.
     if (fetchStatus[tid] != IcacheMissStall ||
-        req != memReq[tid])
+        req != memReq[tid]) {
+        ++fetchIcacheSquashes;
         return;
+    }
 
     // Wake up the CPU (if it went to sleep and was waiting on this completion
     // event).
@@ -400,6 +412,8 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
 
     predict_taken = branchPred.predict(inst, next_PC, inst->threadNumber);
 
+    ++fetchedBranches;
+
     if (predict_taken) {
         ++predictedBranches;
     }
@@ -457,6 +471,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // If translation was successful, attempt to read the first
     // instruction.
     if (fault == NoFault) {
+#if FULL_SYSTEM
         if (cpu->system->memctrl->badaddr(memReq[tid]->paddr)) {
             DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path!",
@@ -464,6 +479,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
             ret_fault = TheISA::genMachineCheckFault();
             return false;
         }
+#endif
 
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
         fault = cpu->mem->read(memReq[tid], cacheData[tid]);
@@ -479,6 +495,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
             memReq[tid]->time = curTick;
 
             MemAccessResult result = icacheInterface->access(memReq[tid]);
+
+            fetchedCacheLines++;
 
             // If the cache missed, then schedule an event to wake
             // up this stage once the cache miss completes.
@@ -499,8 +517,6 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
                         "read.\n", tid);
 
 //                memcpy(cacheData[tid], memReq[tid]->data, memReq[tid]->size);
-
-                fetchedCacheLines++;
             }
         } else {
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
@@ -889,10 +905,14 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         if (!fetch_success)
             return;
     } else {
-        if (fetchStatus[tid] == Blocked) {
+        if (fetchStatus[tid] == Idle) {
+            ++fetchIdleCycles;
+        } else if (fetchStatus[tid] == Blocked) {
             ++fetchBlockedCycles;
         } else if (fetchStatus[tid] == Squashing) {
             ++fetchSquashCycles;
+        } else if (fetchStatus[tid] == IcacheMissStall) {
+            ++icacheStallCycles;
         }
 
         // Status is Idle, Squashing, Blocked, or IcacheMissStall, so
@@ -904,6 +924,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
     // If we had a stall due to an icache miss, then return.
     if (fetchStatus[tid] == IcacheMissStall) {
+        ++icacheStallCycles;
         status_change = true;
         return;
     }

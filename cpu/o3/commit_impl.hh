@@ -133,6 +133,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::regStats()
 {
+    using namespace Stats;
     commitCommittedInsts
         .name(name() + ".commitCommittedInsts")
         .desc("The number of committed instructions")
@@ -150,6 +151,7 @@ DefaultCommit<Impl>::regStats()
         .desc("The number of times commit has been forced to stall to "
               "communicate backwards")
         .prereq(commitNonSpecStalls);
+/*
     commitCommittedBranches
         .name(name() + ".commitCommittedBranches")
         .desc("The number of committed branches")
@@ -162,6 +164,7 @@ DefaultCommit<Impl>::regStats()
         .name(name() + ".commitCommittedMemRefs")
         .desc("The number of committed memory references")
         .prereq(commitCommittedMemRefs);
+*/
     branchMispredicts
         .name(name() + ".branchMispredicts")
         .desc("The number of times a branch was mispredicted")
@@ -171,6 +174,73 @@ DefaultCommit<Impl>::regStats()
         .name(name() + ".COM:committed_per_cycle")
         .desc("Number of insts commited each cycle")
         .flags(Stats::pdf)
+        ;
+
+    stat_com_inst
+        .init(cpu->number_of_threads)
+        .name(name() + ".COM:count")
+        .desc("Number of instructions committed")
+        .flags(total)
+        ;
+
+    stat_com_swp
+        .init(cpu->number_of_threads)
+        .name(name() + ".COM:swp_count")
+        .desc("Number of s/w prefetches committed")
+        .flags(total)
+        ;
+
+    stat_com_refs
+        .init(cpu->number_of_threads)
+        .name(name() +  ".COM:refs")
+        .desc("Number of memory references committed")
+        .flags(total)
+        ;
+
+    stat_com_loads
+        .init(cpu->number_of_threads)
+        .name(name() +  ".COM:loads")
+        .desc("Number of loads committed")
+        .flags(total)
+        ;
+
+    stat_com_membars
+        .init(cpu->number_of_threads)
+        .name(name() +  ".COM:membars")
+        .desc("Number of memory barriers committed")
+        .flags(total)
+        ;
+
+    stat_com_branches
+        .init(cpu->number_of_threads)
+        .name(name() + ".COM:branches")
+        .desc("Number of branches committed")
+        .flags(total)
+        ;
+
+    //
+    //  Commit-Eligible instructions...
+    //
+    //  -> The number of instructions eligible to commit in those
+    //  cycles where we reached our commit BW limit (less the number
+    //  actually committed)
+    //
+    //  -> The average value is computed over ALL CYCLES... not just
+    //  the BW limited cycles
+    //
+    //  -> The standard deviation is computed only over cycles where
+    //  we reached the BW limit
+    //
+    commit_eligible
+        .init(cpu->number_of_threads)
+        .name(name() + ".COM:bw_limited")
+        .desc("number of insts not committed due to BW limits")
+        .flags(total)
+        ;
+
+    commit_eligible_samples
+        .name(name() + ".COM:bw_lim_events")
+        .desc("number cycles where commit BW limit reached")
         ;
 }
 
@@ -1060,9 +1130,7 @@ head_inst->isWriteBarrier())*/
         return false;
     }
 
-    if (head_inst->isControl()) {
-        ++commitCommittedBranches;
-    }
+    updateComInstStats(head_inst);
 
     // Now that the instruction is going to be committed, finalize its
     // trace data.
@@ -1184,6 +1252,47 @@ DefaultCommit<Impl>::robDoneSquashing()
     }
 
     return true;
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
+{
+    unsigned thread = inst->threadNumber;
+
+    //
+    //  Pick off the software prefetches
+    //
+#ifdef TARGET_ALPHA
+    if (inst->isDataPrefetch()) {
+        stat_com_swp[thread]++;
+    } else {
+        stat_com_inst[thread]++;
+    }
+#else
+    stat_com_inst[thread]++;
+#endif
+
+    //
+    //  Control Instructions
+    //
+    if (inst->isControl())
+        stat_com_branches[thread]++;
+
+    //
+    //  Memory references
+    //
+    if (inst->isMemRef()) {
+        stat_com_refs[thread]++;
+
+        if (inst->isLoad()) {
+            stat_com_loads[thread]++;
+        }
+    }
+
+    if (inst->isMemBarrier()) {
+        stat_com_membars[thread]++;
+    }
 }
 
 ////////////////////////////////////////

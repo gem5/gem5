@@ -370,6 +370,7 @@ class DefaultFetch
     Stats::Scalar<> icacheStallCycles;
     /** Stat for total number of fetched instructions. */
     Stats::Scalar<> fetchedInsts;
+    Stats::Scalar<> fetchedBranches;
     /** Stat for total number of predicted branches. */
     Stats::Scalar<> predictedBranches;
     /** Stat for total number of cycles spent fetching. */
@@ -383,6 +384,8 @@ class DefaultFetch
     Stats::Scalar<> fetchBlockedCycles;
     /** Stat for total number of fetched cache lines. */
     Stats::Scalar<> fetchedCacheLines;
+
+    Stats::Scalar<> fetchIcacheSquashes;
     /** Distribution of number of instructions fetched each cycle. */
     Stats::Distribution<> fetchNisnDist;
     Stats::Formula idleRate;

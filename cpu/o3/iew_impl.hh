@@ -140,6 +140,8 @@ template <class Impl>
 void
 DefaultIEW<Impl>::regStats()
 {
+    using namespace Stats;
+
     instQueue.regStats();
 
     //ldstQueue.regStats();
@@ -195,13 +197,15 @@ DefaultIEW<Impl>::regStats()
         .desc("Number of executed instructions");
 
     iewExecLoadInsts
+        .init(cpu->number_of_threads)
         .name(name() + ".iewExecLoadInsts")
-        .desc("Number of load instructions executed");
-
+        .desc("Number of load instructions executed")
+        .flags(total);
+/*
     iewExecStoreInsts
         .name(name() + ".iewExecStoreInsts")
         .desc("Number of store instructions executed");
-
+*/
     iewExecSquashedInsts
         .name(name() + ".iewExecSquashedInsts")
         .desc("Number of squashed instructions skipped in execute");
@@ -223,6 +227,116 @@ DefaultIEW<Impl>::regStats()
         .desc("Number of branch mispredicts detected at execute");
 
     branchMispredicts = predictedTakenIncorrect + predictedNotTakenIncorrect;
+
+    exe_swp
+        .init(cpu->number_of_threads)
+        .name(name() + ".EXEC:swp")
+        .desc("number of swp insts executed")
+        .flags(total)
+        ;
+
+    exe_nop
+        .init(cpu->number_of_threads)
+        .name(name() + ".EXEC:nop")
+        .desc("number of nop insts executed")
+        .flags(total)
+        ;
+
+    exe_refs
+        .init(cpu->number_of_threads)
+        .name(name() + ".EXEC:refs")
+        .desc("number of memory reference insts executed")
+        .flags(total)
+        ;
+
+    exe_branches
+        .init(cpu->number_of_threads)
+        .name(name() + ".EXEC:branches")
+        .desc("Number of branches executed")
+        .flags(total)
+        ;
+
+    issue_rate
+        .name(name() + ".EXEC:rate")
+        .desc("Inst execution rate")
+        .flags(total)
+        ;
+    issue_rate = iewExecutedInsts / cpu->numCycles;
+
+    iewExecStoreInsts
+        .name(name() + ".EXEC:stores")
+        .desc("Number of stores executed")
+        .flags(total)
+        ;
+    iewExecStoreInsts = exe_refs - iewExecLoadInsts;
+/*
+    for (int i=0; i<Num_OpClasses; ++i) {
+        stringstream subname;
+        subname << opClassStrings[i] << "_delay";
+        issue_delay_dist.subname(i, subname.str());
+    }
+*/
+    //
+    //  Other stats
+    //
+
+    iewInstsToCommit
+        .init(cpu->number_of_threads)
+        .name(name() + ".WB:sent")
+        .desc("cumulative count of insts sent to commit")
+        .flags(total)
+        ;
+
+    writeback_count
+        .init(cpu->number_of_threads)
+        .name(name() + ".WB:count")
+        .desc("cumulative count of insts written-back")
+        .flags(total)
+        ;
+
+    producer_inst
+        .init(cpu->number_of_threads)
+        .name(name() + ".WB:producers")
+        .desc("num instructions producing a value")
+        .flags(total)
+        ;
+
+    consumer_inst
+        .init(cpu->number_of_threads)
+        .name(name() + ".WB:consumers")
+        .desc("num instructions consuming a value")
+        .flags(total)
+        ;
+
+    wb_penalized
+        .init(cpu->number_of_threads)
+        .name(name() + ".WB:penalized")
+        .desc("number of instrctions required to write to 'other' IQ")
+        .flags(total)
+        ;
+
+    wb_penalized_rate
+        .name(name() + ".WB:penalized_rate")
+        .desc ("fraction of instructions written-back that wrote to 'other' IQ")
+        .flags(total)
+        ;
+
+    wb_penalized_rate = wb_penalized / writeback_count;
+
+    wb_fanout
+        .name(name() + ".WB:fanout")
+        .desc("average fanout of values written-back")
+        .flags(total)
+        ;
+
+    wb_fanout = producer_inst / consumer_inst;
+
+    wb_rate
+        .name(name() + ".WB:rate")
+        .desc("insts written-back per cycle")
+        .flags(total)
+        ;
+    wb_rate = writeback_count / cpu->numCycles;
 }
 
 template<class Impl>
@@ -990,6 +1104,8 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
 
             instQueue.advanceTail(inst);
 
+            exe_nop[tid]++;
+
             add_to_iq = false;
         } else if (inst->isExecuted()) {
             assert(0 && "Instruction shouldn't be executed.\n");
@@ -1124,11 +1240,11 @@ DefaultIEW<Impl>::executeInsts()
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
 
-                ++iewExecLoadInsts;
+//                ++iewExecLoadInsts;
             } else if (inst->isStore()) {
                 ldstQueue.executeStore(inst);
 
-                ++iewExecStoreInsts;
+//                ++iewExecStoreInsts;
 
                 // If the store had a fault then it may not have a mem req
                 if (inst->req && !(inst->req->flags & LOCKED)) {
@@ -1146,12 +1262,12 @@ DefaultIEW<Impl>::executeInsts()
         } else {
             inst->execute();
 
-            ++iewExecutedInsts;
-
             inst->setExecuted();
 
             instToCommit(inst);
         }
+
+        updateExeInstStats(inst);
 
         // Check if branch was correct.  This check happens after the
         // instruction is added to the queue because even if the branch
@@ -1243,9 +1359,12 @@ DefaultIEW<Impl>::writebackInsts()
     for (int inst_num = 0; inst_num < issueWidth &&
              toCommit->insts[inst_num]; inst_num++) {
         DynInstPtr inst = toCommit->insts[inst_num];
+        int tid = inst->threadNumber;
 
         DPRINTF(IEW, "Sending instructions to commit, PC %#x.\n",
                 inst->readPC());
+
+        iewInstsToCommit[tid]++;
 
         // Some instructions will be sent to commit without having
         // executed because they need commit to handle them.
@@ -1253,7 +1372,7 @@ DefaultIEW<Impl>::writebackInsts()
         // are first sent to commit.  Instead commit must tell the LSQ
         // when it's ready to execute the uncached load.
         if (!inst->isSquashed() && inst->isExecuted()) {
-            instQueue.wakeDependents(inst);
+            int dependents = instQueue.wakeDependents(inst);
 
             for (int i = 0; i < inst->numDestRegs(); i++) {
                 //mark as Ready
@@ -1261,6 +1380,10 @@ DefaultIEW<Impl>::writebackInsts()
                         inst->renamedDestRegIdx(i));
                 scoreboard->setReg(inst->renamedDestRegIdx(i));
             }
+
+            producer_inst[tid]++;
+            consumer_inst[tid]+= dependents;
+            writeback_count[tid]++;
         }
     }
 }
@@ -1388,5 +1511,41 @@ DefaultIEW<Impl>::tick()
     if (wroteToTimeBuffer) {
         DPRINTF(Activity, "Activity this cycle.\n");
         cpu->activityThisCycle();
+    }
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
+{
+    int thread_number = inst->threadNumber;
+
+    //
+    //  Pick off the software prefetches
+    //
+#ifdef TARGET_ALPHA
+    if (inst->isDataPrefetch())
+        exe_swp[thread_number]++;
+    else
+        iewExecutedInsts++;
+#else
+    iewExecutedInsts[thread_number]++;
+#endif
+
+    //
+    //  Control operations
+    //
+    if (inst->isControl())
+        exe_branches[thread_number]++;
+
+    //
+    //  Memory operations
+    //
+    if (inst->isMemRef()) {
+        exe_refs[thread_number]++;
+
+        if (inst->isLoad()) {
+            iewExecLoadInsts[thread_number]++;
+        }
     }
 }

@@ -369,6 +369,8 @@ class DefaultCommit
     /** Rename map interface. */
     RenameMap *renameMap[Impl::MaxThreads];
 
+    void updateComInstStats(DynInstPtr &inst);
+
     /** Stat for the total number of committed instructions. */
     Stats::Scalar<> commitCommittedInsts;
     /** Stat for the total number of squashed instructions discarded by commit.
@@ -383,15 +385,26 @@ class DefaultCommit
      */
     Stats::Scalar<> commitNonSpecStalls;
     /** Stat for the total number of committed branches. */
-    Stats::Scalar<> commitCommittedBranches;
+//    Stats::Scalar<> commitCommittedBranches;
     /** Stat for the total number of committed loads. */
-    Stats::Scalar<> commitCommittedLoads;
+//    Stats::Scalar<> commitCommittedLoads;
     /** Stat for the total number of committed memory references. */
-    Stats::Scalar<> commitCommittedMemRefs;
+//    Stats::Scalar<> commitCommittedMemRefs;
     /** Stat for the total number of branch mispredicts that caused a squash. */
     Stats::Scalar<> branchMispredicts;
     /** Distribution of the number of committed instructions each cycle. */
     Stats::Distribution<> numCommittedDist;
+
+    // total number of instructions committed
+    Stats::Vector<> stat_com_inst;
+    Stats::Vector<> stat_com_swp;
+    Stats::Vector<> stat_com_refs;
+    Stats::Vector<> stat_com_loads;
+    Stats::Vector<> stat_com_membars;
+    Stats::Vector<> stat_com_branches;
+
+    Stats::Scalar<> commit_eligible_samples;
+    Stats::Vector<> commit_eligible;
 };
 
 #endif // __CPU_O3_COMMIT_HH__

@@ -224,6 +224,7 @@ template <class Impl>
 void
 InstructionQueue<Impl>::regStats()
 {
+    using namespace Stats;
     iqInstsAdded
         .name(name() + ".iqInstsAdded")
         .desc("Number of instructions added to the IQ (excludes non-spec)")
@@ -235,6 +236,11 @@ InstructionQueue<Impl>::regStats()
         .prereq(iqNonSpecInstsAdded);
 
 //    iqIntInstsAdded;
+
+    iqInstsIssued
+        .name(name() + ".iqInstsIssued")
+        .desc("Number of instructions issued")
+        .prereq(iqInstsIssued);
 
     iqIntInstsIssued
         .name(name() + ".iqIntInstsIssued")
@@ -290,6 +296,103 @@ InstructionQueue<Impl>::regStats()
         .name(name() + ".iqSquashedNonSpecRemoved")
         .desc("Number of squashed non-spec instructions that were removed")
         .prereq(iqSquashedNonSpecRemoved);
+
+    queue_res_dist
+        .init(Num_OpClasses, 0, 99, 2)
+        .name(name() + ".IQ:residence:")
+        .desc("cycles from dispatch to issue")
+        .flags(total | pdf | cdf )
+        ;
+    for (int i = 0; i < Num_OpClasses; ++i) {
+        queue_res_dist.subname(i, opClassStrings[i]);
+    }
+    n_issued_dist
+        .init(totalWidth + 1)
+        .name(name() + ".ISSUE:issued_per_cycle")
+        .desc("Number of insts issued each cycle")
+        .flags(total | pdf | dist)
+        ;
+/*
+    dist_unissued
+        .init(Num_OpClasses+2)
+        .name(name() + ".ISSUE:unissued_cause")
+        .desc("Reason ready instruction not issued")
+        .flags(pdf | dist)
+        ;
+    for (int i=0; i < (Num_OpClasses + 2); ++i) {
+        dist_unissued.subname(i, unissued_names[i]);
+    }
+*/
+    stat_issued_inst_type
+        .init(numThreads,Num_OpClasses)
+        .name(name() + ".ISSUE:FU_type")
+        .desc("Type of FU issued")
+        .flags(total | pdf | dist)
+        ;
+    stat_issued_inst_type.ysubnames(opClassStrings);
+
+    //
+    //  How long did instructions for a particular FU type wait prior to issue
+    //
+
+    issue_delay_dist
+        .init(Num_OpClasses,0,99,2)
+        .name(name() + ".ISSUE:")
+        .desc("cycles from operands ready to issue")
+        .flags(pdf | cdf)
+        ;
+
+    for (int i=0; i<Num_OpClasses; ++i) {
+        stringstream subname;
+        subname << opClassStrings[i] << "_delay";
+        issue_delay_dist.subname(i, subname.str());
+    }
+
+    issue_rate
+        .name(name() + ".ISSUE:rate")
+        .desc("Inst issue rate")
+        .flags(total)
+        ;
+    issue_rate = iqInstsIssued / cpu->numCycles;
+/*
+    issue_stores
+        .name(name() + ".ISSUE:stores")
+        .desc("Number of stores issued")
+        .flags(total)
+        ;
+    issue_stores = exe_refs - exe_loads;
+*/
+/*
+    issue_op_rate
+        .name(name() + ".ISSUE:op_rate")
+        .desc("Operation issue rate")
+        .flags(total)
+        ;
+    issue_op_rate = issued_ops / numCycles;
+*/
+    stat_fu_busy
+        .init(Num_OpClasses)
+        .name(name() + ".ISSUE:fu_full")
+        .desc("attempts to use FU when none available")
+        .flags(pdf | dist)
+        ;
+    for (int i=0; i < Num_OpClasses; ++i) {
+        stat_fu_busy.subname(i, opClassStrings[i]);
+    }
+
+    fu_busy
+        .init(numThreads)
+        .name(name() + ".ISSUE:fu_busy_cnt")
+        .desc("FU busy when requested")
+        .flags(total)
+        ;
+
+    fu_busy_rate
+        .name(name() + ".ISSUE:fu_busy_rate")
+        .desc("FU busy rate (busy events/executed inst)")
+        .flags(total)
+        ;
+    fu_busy_rate = fu_busy / iqInstsIssued;
 
     for ( int i=0; i < numThreads; i++) {
         // Tell mem dependence unit to reg stats as well.
@@ -658,6 +761,8 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         int idx = fuPool->getUnit(op_class);
 
+        int tid = issuing_inst->threadNumber;
+
         if (idx == -2) {
             assert(op_class == No_OpClass);
 
@@ -666,7 +771,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             DPRINTF(IQ, "Thread %i: Issuing instruction PC that needs no FU"
                     " %#x [sn:%lli]\n",
-                    issuing_inst->threadNumber, issuing_inst->readPC(),
+                    tid, issuing_inst->readPC(),
                     issuing_inst->seqNum);
 
             readyInsts[op_class].pop();
@@ -685,14 +790,15 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 // Memory instructions can not be freed from the IQ until they
                 // complete.
                 ++freeEntries;
-                count[issuing_inst->threadNumber]--;
+                count[tid]--;
                 issuing_inst->removeInIQ();
             } else {
-                memDepUnit[issuing_inst->threadNumber].issue(issuing_inst);
+                memDepUnit[tid].issue(issuing_inst);
             }
 
             listOrder.erase(order_it++);
 
+            stat_issued_inst_type[tid][op_class]++;
         } else if (idx != -1) {
             int op_latency = fuPool->getOpLatency(op_class);
 
@@ -722,7 +828,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
             DPRINTF(IQ, "Thread %i: Issuing instruction PC %#x "
                     "[sn:%lli]\n",
-                    issuing_inst->threadNumber, issuing_inst->readPC(),
+                    tid, issuing_inst->readPC(),
                     issuing_inst->seqNum);
 
             readyInsts[op_class].pop();
@@ -741,14 +847,17 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 // Memory instructions can not be freed from the IQ until they
                 // complete.
                 ++freeEntries;
-                count[issuing_inst->threadNumber]--;
+                count[tid]--;
                 issuing_inst->removeInIQ();
             } else {
-                memDepUnit[issuing_inst->threadNumber].issue(issuing_inst);
+                memDepUnit[tid].issue(issuing_inst);
             }
 
             listOrder.erase(order_it++);
+            stat_issued_inst_type[tid][op_class]++;
         } else {
+            stat_fu_busy[op_class]++;
+            fu_busy[tid]++;
             ++order_it;
         }
     }
@@ -808,9 +917,11 @@ InstructionQueue<Impl>::commit(const InstSeqNum &inst, unsigned tid)
 }
 
 template <class Impl>
-void
+int
 InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 {
+    int dependents = 0;
+
     DPRINTF(IQ, "Waking dependents of completed instruction.\n");
 
     assert(!completed_inst->isSquashed());
@@ -875,6 +986,8 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
             curr = prev->next;
             prev->inst = NULL;
 
+            ++dependents;
+
             delete prev;
         }
 
@@ -886,6 +999,7 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
         // Mark the scoreboard as having that register ready.
         regScoreboard[dest_reg] = true;
     }
+    return dependents;
 }
 
 template <class Impl>
