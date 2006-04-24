@@ -131,7 +131,7 @@ OzoneLWLSQ<Impl>::clearSQ()
 {
     storeQueue.clear();
 }
-
+/*
 template<class Impl>
 void
 OzoneLWLSQ<Impl>::setPageTable(PageTable *pt_ptr)
@@ -139,7 +139,7 @@ OzoneLWLSQ<Impl>::setPageTable(PageTable *pt_ptr)
     DPRINTF(OzoneLSQ, "Setting the page table pointer.\n");
     pTable = pt_ptr;
 }
-
+*/
 template<class Impl>
 void
 OzoneLWLSQ<Impl>::resizeLQ(unsigned size)
@@ -519,6 +519,23 @@ OzoneLWLSQ<Impl>::writebackStores()
                 req->paddr, *(req->data),
                 inst->seqNum);
 
+        switch((*sq_it).size) {
+          case 1:
+            cpu->write(req, (uint8_t &)(*sq_it).data);
+            break;
+          case 2:
+            cpu->write(req, (uint16_t &)(*sq_it).data);
+            break;
+          case 4:
+            cpu->write(req, (uint32_t &)(*sq_it).data);
+            break;
+          case 8:
+            cpu->write(req, (uint64_t &)(*sq_it).data);
+            break;
+          default:
+            panic("Unexpected store size!\n");
+        }
+
         if (dcacheInterface) {
             MemAccessResult result = dcacheInterface->access(req);
 
@@ -538,7 +555,7 @@ OzoneLWLSQ<Impl>::writebackStores()
                 typename BackEnd::LdWritebackEvent *wb = NULL;
                 if (req->flags & LOCKED) {
                     // Stx_C does not generate a system port transaction.
-                    req->result=1;
+//                    req->result=1;
                     wb = new typename BackEnd::LdWritebackEvent(inst,
                                                             be);
                 }
@@ -571,12 +588,12 @@ OzoneLWLSQ<Impl>::writebackStores()
 
                 if (req->flags & LOCKED) {
                     // Stx_C does not generate a system port transaction.
-                    if (req->flags & UNCACHEABLE) {
+/*                    if (req->flags & UNCACHEABLE) {
                         req->result = 2;
                     } else {
                         req->result = 1;
                     }
-
+*/
                     typename BackEnd::LdWritebackEvent *wb =
                         new typename BackEnd::LdWritebackEvent(inst,
                                                                be);
@@ -642,6 +659,11 @@ OzoneLWLSQ<Impl>::squash(const InstSeqNum &squashed_num)
 
     while (stores != 0 && (*sq_it).inst->seqNum > squashed_num) {
         assert(!storeQueue.empty());
+
+        if ((*sq_it).canWB) {
+            break;
+        }
+
         // Clear the smart pointer to make sure it is decremented.
         DPRINTF(OzoneLSQ,"Store Instruction PC %#x idx:%i squashed [sn:%lli]\n",
                 (*sq_it).inst->readPC(), (*sq_it).inst->sqIdx,

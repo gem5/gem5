@@ -60,7 +60,7 @@ class FrontEnd
                 const bool is_branch = false, const bool branch_taken = false);
     DynInstPtr getInst();
 
-    void processCacheCompletion();
+    void processCacheCompletion(MemReqPtr &req);
 
     void addFreeRegs(int num_freed);
 
@@ -109,6 +109,7 @@ class FrontEnd
         SerializeBlocked,
         SerializeComplete,
         RenameBlocked,
+        QuiescePending,
         BEBlocked
     };
 
@@ -130,16 +131,15 @@ class FrontEnd
     class ICacheCompletionEvent : public Event
     {
       private:
+        MemReqPtr req;
         FrontEnd *frontEnd;
 
       public:
-        ICacheCompletionEvent(FrontEnd *_fe);
+        ICacheCompletionEvent(MemReqPtr &_req, FrontEnd *_fe);
 
         virtual void process();
         virtual const char *description();
     };
-
-    ICacheCompletionEvent cacheCompletionEvent;
 
     MemInterface *icacheInterface;
 
@@ -173,6 +173,8 @@ class FrontEnd
   public:
     void setPC(Addr val) { PC = val; }
     void setNextPC(Addr val) { nextPC = val; }
+
+    void wakeFromQuiesce();
 
     void dumpInsts();
 

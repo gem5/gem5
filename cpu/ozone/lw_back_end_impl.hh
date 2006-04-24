@@ -480,6 +480,18 @@ LWBackEnd<Impl>::regStats()
         .desc("number cycles where commit BW limit reached")
         ;
 
+    squashedInsts
+        .init(cpu->number_of_threads)
+        .name(name() + ".COM:squashed_insts")
+        .desc("Number of instructions removed from inst list")
+        ;
+
+    ROBSquashedInsts
+        .init(cpu->number_of_threads)
+        .name(name() + ".COM:rob_squashed_insts")
+        .desc("Number of instructions removed from inst list when they reached the head of the ROB")
+        ;
+
     ROB_fcount
         .name(name() + ".ROB:full_count")
         .desc("number of cycles where ROB was full")
@@ -513,6 +525,14 @@ LWBackEnd<Impl>::regStats()
         ;
 
 //    IQ.regStats();
+}
+
+template <class Impl>
+void
+LWBackEnd<Impl>::setCPU(FullCPU *cpu_ptr)
+{
+    cpu = cpu_ptr;
+    LSQ.setCPU(cpu_ptr);
 }
 
 template <class Impl>
@@ -1044,35 +1064,24 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         }
     }
 
-    // Now check if it's one of the special trap or barrier or
-    // serializing instructions.
-    if (inst->isThreadSync())
-    {
-        // Not handled for now.
-        panic("Thread sync instructions are not handled yet.\n");
-    }
+    // Not handled for now.
+    assert(!inst->isThreadSync());
 
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = inst->getFault();
 
     if (inst_fault != NoFault) {
-        if (!inst->isNop()) {
-            DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
-                    inst->seqNum, inst->readPC());
-            thread->setInst(
-                static_cast<TheISA::MachInst>(inst->staticInst->machInst));
+        DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
+                inst->seqNum, inst->readPC());
+        thread->setInst(
+            static_cast<TheISA::MachInst>(inst->staticInst->machInst));
 #if FULL_SYSTEM
-            handleFault(inst_fault);
-            return false;
+        handleFault(inst_fault);
+        return false;
 #else // !FULL_SYSTEM
-            panic("fault (%d) detected @ PC %08p", inst_fault,
-                  inst->PC);
+        panic("fault (%d) detected @ PC %08p", inst_fault,
+              inst->PC);
 #endif // FULL_SYSTEM
-        }
-    }
-
-    if (inst->isControl()) {
-//        ++commitCommittedBranches;
     }
 
     int freed_regs = 0;
@@ -1096,7 +1105,6 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     instList.pop_back();
 
     --numInsts;
-    cpu->numInst++;
     thread->numInsts++;
     ++thread->funcExeInst;
     // Maybe move this to where teh fault is handled; if the fault is handled,
@@ -1134,15 +1142,14 @@ template <class Impl>
 void
 LWBackEnd<Impl>::commitInsts()
 {
-    int commit_width = commitWidth ? commitWidth : width;
-
     // Not sure this should be a loop or not.
     int inst_num = 0;
-    while (!instList.empty() && inst_num < commit_width) {
+    while (!instList.empty() && inst_num < commitWidth) {
         if (instList.back()->isSquashed()) {
             instList.back()->clearDependents();
             instList.pop_back();
             --numInsts;
+            ROBSquashedInsts[instList.back()->threadNumber]++;
             continue;
         }
 
@@ -1150,6 +1157,7 @@ LWBackEnd<Impl>::commitInsts()
             DPRINTF(BE, "Can't commit, Instruction [sn:%lli] PC "
                     "%#x is head of ROB and not ready\n",
                     instList.back()->seqNum, instList.back()->readPC());
+            --inst_num;
             break;
         }
     }
@@ -1216,6 +1224,8 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
         }
 
         (*insts_it)->clearDependents();
+
+        squashedInsts[(*insts_it)->threadNumber]++;
 
         instList.erase(insts_it++);
         --numInsts;
@@ -1350,6 +1360,7 @@ LWBackEnd<Impl>::updateComInstStats(DynInstPtr &inst)
 {
     unsigned thread = inst->threadNumber;
 
+    cpu->numInst++;
     //
     //  Pick off the software prefetches
     //

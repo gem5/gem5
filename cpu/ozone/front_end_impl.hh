@@ -1,4 +1,5 @@
 
+#include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "cpu/exec_context.hh"
@@ -12,7 +13,6 @@ using namespace TheISA;
 template <class Impl>
 FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
-      cacheCompletionEvent(this),
       icacheInterface(params->icacheInterface),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
@@ -26,10 +26,12 @@ FrontEnd<Impl>::FrontEnd(Params *params)
     // Setup branch predictor.
 
     // Setup Memory Request
+/*
     memReq = new MemReq();
     memReq->asid = 0;
     memReq->data = new uint8_t[64];
-
+*/
+    memReq = NULL;
     // Size of cache block.
     cacheBlkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
 
@@ -46,7 +48,7 @@ FrontEnd<Impl>::FrontEnd(Params *params)
     cacheBlkValid = false;
 
 #if !FULL_SYSTEM
-    pTable = params->pTable;
+//    pTable = params->pTable;
 #endif
     fetchFault = NoFault;
 }
@@ -72,7 +74,7 @@ void
 FrontEnd<Impl>::setXC(ExecContext *xc_ptr)
 {
     xc = xc_ptr;
-    memReq->xc = xc;
+//    memReq->xc = xc;
 }
 
 template <class Impl>
@@ -269,6 +271,9 @@ FrontEnd<Impl>::tick()
         }
         updateStatus();
         return;
+    } else if (status == QuiescePending) {
+        DPRINTF(FE, "Waiting for quiesce to execute or get squashed.\n");
+        return;
     } else if (status != IcacheMissComplete) {
         if (fetchCacheLineNextCycle) {
             Fault fault = fetchCacheLine();
@@ -325,6 +330,14 @@ FrontEnd<Impl>::tick()
         // rename(num_inst);
         // }
 
+#if FULL_SYSTEM
+        if (inst->isQuiesce()) {
+            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
+            status = QuiescePending;
+            break;
+        }
+#endif
+
         if (inst->predTaken()) {
             // Start over with tick?
             break;
@@ -364,6 +377,12 @@ FrontEnd<Impl>::fetchCacheLine()
 
     // Setup the memReq to do a read of the first isntruction's address.
     // Set the appropriate read size and flags as well.
+    memReq = new MemReq();
+
+    memReq->asid = 0;
+    memReq->thread_num = 0;
+    memReq->data = new uint8_t[64];
+    memReq->xc = xc;
     memReq->cmd = Read;
     memReq->reset(fetch_PC, cacheBlkSize, flags);
 
@@ -377,16 +396,26 @@ FrontEnd<Impl>::fetchCacheLine()
     // Now do the timing access to see whether or not the instruction
     // exists within the cache.
     if (icacheInterface && fault == NoFault) {
+#if FULL_SYSTEM
+        if (cpu->system->memctrl->badaddr(memReq->paddr)) {
+            DPRINTF(FE, "Fetch: Bad address %#x (hopefully on a "
+                    "misspeculating path!",
+                    memReq->paddr);
+            return TheISA::genMachineCheckFault();
+        }
+#endif
+
         memReq->completionEvent = NULL;
 
         memReq->time = curTick;
+        fault = cpu->mem->read(memReq, cacheData);
 
         MemAccessResult res = icacheInterface->access(memReq);
 
         // If the cache missed then schedule an event to wake
         // up this stage once the cache miss completes.
         if (icacheInterface->doEvents() && res != MA_HIT) {
-            memReq->completionEvent = new ICacheCompletionEvent(this);
+            memReq->completionEvent = new ICacheCompletionEvent(memReq, this);
 
             status = IcacheMissStall;
 
@@ -398,7 +427,7 @@ FrontEnd<Impl>::fetchCacheLine()
 
             cacheBlkValid = true;
 
-            memcpy(cacheData, memReq->data, memReq->size);
+//            memcpy(cacheData, memReq->data, memReq->size);
         }
     }
 
@@ -541,7 +570,8 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
     // Clear the icache miss if it's outstanding.
     if (status == IcacheMissStall && icacheInterface) {
         DPRINTF(FE, "Squashing outstanding Icache miss.\n");
-        icacheInterface->squash(0);
+//        icacheInterface->squash(0);
+        memReq = NULL;
     }
 
     if (status == SerializeBlocked) {
@@ -577,12 +607,13 @@ FrontEnd<Impl>::getInst()
 
 template <class Impl>
 void
-FrontEnd<Impl>::processCacheCompletion()
+FrontEnd<Impl>::processCacheCompletion(MemReqPtr &req)
 {
     DPRINTF(FE, "Processing cache completion\n");
 
     // Do something here.
-    if (status != IcacheMissStall) {
+    if (status != IcacheMissStall ||
+        req != memReq) {
         DPRINTF(FE, "Previous fetch was squashed.\n");
         return;
     }
@@ -595,10 +626,11 @@ FrontEnd<Impl>::processCacheCompletion()
         fetchStatus[tid] = IcacheMissComplete;
     }
 */
-    memcpy(cacheData, memReq->data, memReq->size);
+//    memcpy(cacheData, memReq->data, memReq->size);
 
     // Reset the completion event to NULL.
-    memReq->completionEvent = NULL;
+//    memReq->completionEvent = NULL;
+    memReq = NULL;
 }
 
 template <class Impl>
@@ -768,6 +800,15 @@ FrontEnd<Impl>::renameInst(DynInstPtr &inst)
 
 template <class Impl>
 void
+FrontEnd<Impl>::wakeFromQuiesce()
+{
+    DPRINTF(FE, "Waking up from quiesce\n");
+    // Hopefully this is safe
+    status = Running;
+}
+
+template <class Impl>
+void
 FrontEnd<Impl>::dumpInsts()
 {
     cprintf("instBuffer size: %i\n", instBuffer.size());
@@ -786,8 +827,8 @@ FrontEnd<Impl>::dumpInsts()
 }
 
 template <class Impl>
-FrontEnd<Impl>::ICacheCompletionEvent::ICacheCompletionEvent(FrontEnd *fe)
-    : Event(&mainEventQueue, Delayed_Writeback_Pri), frontEnd(fe)
+FrontEnd<Impl>::ICacheCompletionEvent::ICacheCompletionEvent(MemReqPtr &_req, FrontEnd *fe)
+    : Event(&mainEventQueue, Delayed_Writeback_Pri), req(_req), frontEnd(fe)
 {
     this->setFlags(Event::AutoDelete);
 }
@@ -796,7 +837,7 @@ template <class Impl>
 void
 FrontEnd<Impl>::ICacheCompletionEvent::process()
 {
-    frontEnd->processCacheCompletion();
+    frontEnd->processCacheCompletion(req);
 }
 
 template <class Impl>

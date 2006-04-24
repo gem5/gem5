@@ -43,7 +43,7 @@
 //#include "mem/page_table.hh"
 #include "sim/sim_object.hh"
 
-class PageTable;
+//class PageTable;
 
 /**
  * Class that implements the actual LQ and SQ for each specific thread.
@@ -115,7 +115,7 @@ class OzoneLWLSQ {
     { be = be_ptr; }
 
     /** Sets the page table pointer. */
-    void setPageTable(PageTable *pt_ptr);
+//    void setPageTable(PageTable *pt_ptr);
 
     /** Ticks the LSQ unit, which in this case only resets the number of
      * used cache ports.
@@ -243,7 +243,7 @@ class OzoneLWLSQ {
     MemInterface *dcacheInterface;
 
     /** Pointer to the page table. */
-    PageTable *pTable;
+//    PageTable *pTable;
 
   public:
     struct SQEntry {
@@ -562,6 +562,19 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
 
     // If there's no forwarding case, then go access memory
+    DPRINTF(OzoneLSQ, "Doing functional access for inst PC %#x\n",
+            inst->readPC());
+
+
+    // Setup MemReq pointer
+    req->cmd = Read;
+    req->completionEvent = NULL;
+    req->time = curTick;
+    assert(!req->data);
+    req->data = new uint8_t[64];
+    Fault fault = cpu->read(req, data);
+    memcpy(req->data, &data, sizeof(T));
+
     ++usedPorts;
 
     // if we have a cache, do cache access too
@@ -582,12 +595,6 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
                 "vaddr:%#x flags:%i\n",
                 inst->readPC(), req->paddr, req->vaddr, req->flags);
 
-        // Setup MemReq pointer
-        req->cmd = Read;
-        req->completionEvent = NULL;
-        req->time = curTick;
-        assert(!req->data);
-        req->data = new uint8_t[64];
 
         assert(!req->completionEvent);
         req->completionEvent =

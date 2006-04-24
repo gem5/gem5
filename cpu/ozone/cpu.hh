@@ -42,7 +42,6 @@
 #include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
 #include "mem/mem_interface.hh"
-#include "mem/page_table.hh"
 #include "sim/eventq.hh"
 
 // forward declarations
@@ -59,7 +58,6 @@ class GDBListener;
 
 #else
 
-class PageTable;
 class Process;
 
 #endif // FULL_SYSTEM
@@ -349,9 +347,8 @@ class OzoneCPU : public BaseCPU
     // L1 data cache
     MemInterface *dcacheInterface;
 
-#if !FULL_SYSTEM
-    PageTable *pTable;
-#endif
+    /** Pointer to memory. */
+    FunctionalMemory *mem;
 
     FrontEnd *frontEnd;
 
@@ -428,29 +425,136 @@ class OzoneCPU : public BaseCPU
     int getInstAsid() { return thread.asid; }
     int getDataAsid() { return thread.asid; }
 
+    Fault dummyTranslation(MemReqPtr &req)
+    {
+#if 0
+        assert((req->vaddr >> 48 & 0xffff) == 0);
+#endif
+
+        // put the asid in the upper 16 bits of the paddr
+        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
+        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
+        return NoFault;
+    }
+
     /** Translates instruction requestion in syscall emulation mode. */
     Fault translateInstReq(MemReqPtr &req)
     {
-        return this->pTable->translate(req);
+        return dummyTranslation(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
     Fault translateDataReadReq(MemReqPtr &req)
     {
-        return this->pTable->translate(req);
+        return dummyTranslation(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
     Fault translateDataWriteReq(MemReqPtr &req)
     {
-        return this->pTable->translate(req);
+        return dummyTranslation(req);
     }
 #endif
+
+    /** Old CPU read from memory function. No longer used. */
+    template <class T>
+    Fault read(MemReqPtr &req, T &data)
+    {
+//	panic("CPU READ NOT IMPLEMENTED W/NEW MEMORY\n");
+#if 0
+#if FULL_SYSTEM && defined(TARGET_ALPHA)
+        if (req->flags & LOCKED) {
+            req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
+            req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
+        }
+#endif
+#endif
+        Fault error;
+        if (req->flags & LOCKED) {
+//            lockAddr = req->paddr;
+            lockFlag = true;
+        }
+
+        error = this->mem->read(req, data);
+        data = gtoh(data);
+        return error;
+    }
+
+
     /** CPU read function, forwards read to LSQ. */
     template <class T>
     Fault read(MemReqPtr &req, T &data, int load_idx)
     {
         return backEnd->read(req, data, load_idx);
+    }
+
+    /** Old CPU write to memory function. No longer used. */
+    template <class T>
+    Fault write(MemReqPtr &req, T &data)
+    {
+#if 0
+#if FULL_SYSTEM && defined(TARGET_ALPHA)
+        ExecContext *xc;
+
+        // If this is a store conditional, act appropriately
+        if (req->flags & LOCKED) {
+            xc = req->xc;
+
+            if (req->flags & UNCACHEABLE) {
+                // Don't update result register (see stq_c in isa_desc)
+                req->result = 2;
+                xc->setStCondFailures(0);//Needed? [RGD]
+            } else {
+                bool lock_flag = xc->readMiscReg(TheISA::Lock_Flag_DepTag);
+                Addr lock_addr = xc->readMiscReg(TheISA::Lock_Addr_DepTag);
+                req->result = lock_flag;
+                if (!lock_flag ||
+                    ((lock_addr & ~0xf) != (req->paddr & ~0xf))) {
+                    xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
+                    xc->setStCondFailures(xc->readStCondFailures() + 1);
+                    if (((xc->readStCondFailures()) % 100000) == 0) {
+                        std::cerr << "Warning: "
+                                  << xc->readStCondFailures()
+                                  << " consecutive store conditional failures "
+                                  << "on cpu " << req->xc->readCpuId()
+                                  << std::endl;
+                    }
+                    return NoFault;
+                }
+                else xc->setStCondFailures(0);
+            }
+        }
+
+        // Need to clear any locked flags on other proccessors for
+        // this address.  Only do this for succsful Store Conditionals
+        // and all other stores (WH64?).  Unsuccessful Store
+        // Conditionals would have returned above, and wouldn't fall
+        // through.
+        for (int i = 0; i < this->system->execContexts.size(); i++){
+            xc = this->system->execContexts[i];
+            if ((xc->readMiscReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
+                (req->paddr & ~0xf)) {
+                xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
+            }
+        }
+
+#endif
+#endif
+
+        if (req->flags & LOCKED) {
+            if (req->flags & UNCACHEABLE) {
+                req->result = 2;
+            } else {
+                if (this->lockFlag/* && this->lockAddr == req->paddr*/) {
+                    req->result = 1;
+                } else {
+                    req->result = 0;
+                    return NoFault;
+                }
+            }
+        }
+
+        return this->mem->write(req, (T)htog(data));
     }
 
     /** CPU write function, forwards write to LSQ. */
@@ -507,6 +611,8 @@ class OzoneCPU : public BaseCPU
         bool stall;
     };
     TimeBuffer<CommStruct> comm;
+
+    bool lockFlag;
 };
 
 #endif // __CPU_OZONE_CPU_HH__

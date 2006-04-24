@@ -149,12 +149,14 @@ OzoneCPU<Impl>::DCacheCompletionEvent::description()
 template <class Impl>
 OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
-    : BaseCPU(p), thread(this, 0, p->mem), tickEvent(this, p->width),
+    : BaseCPU(p), thread(this, 0, p->mem), tickEvent(this, p->width), mem(p->mem),
 #else
     : BaseCPU(p), thread(this, 0, p->workload[0], 0), tickEvent(this, p->width),
+      mem(p->workload[0]->getMemory()),
 #endif
       comm(5, 5)
 {
+
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
 
@@ -245,51 +247,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     globalSeqNum = 1;
 
     checkInterrupts = false;
-/*
-    fetchRedirBranch = true;
-    fetchRedirExcp = true;
 
-    // Need to initialize the rename maps, and the head and tail pointers.
-    robHeadPtr = new DynInst(this);
-    robTailPtr = new DynInst(this);
-
-    robHeadPtr->setNextInst(robTailPtr);
-//    robHeadPtr->setPrevInst(NULL);
-//    robTailPtr->setNextInst(NULL);
-    robTailPtr->setPrevInst(robHeadPtr);
-
-    robHeadPtr->setCompleted();
-    robTailPtr->setCompleted();
-
-    for (int i = 0; i < ISA::TotalNumRegs; ++i) {
-        renameTable[i] = new DynInst(this);
-        commitTable[i] = new DynInst(this);
-
-        renameTable[i]->setCompleted();
-        commitTable[i]->setCompleted();
-    }
-
-#if FULL_SYSTEM
-    for (int i = 0; i < ISA::NumIntRegs; ++i) {
-        palShadowTable[i] = new DynInst(this);
-        palShadowTable[i]->setCompleted();
-    }
-#endif
-
-    // Size of cache block.
-    cacheBlkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
-
-    // Create mask to get rid of offset bits.
-    cacheBlkMask = (cacheBlkSize - 1);
-
-    // Get the size of an instruction.
-    instSize = sizeof(MachInst);
-
-    // Create space to store a cache line.
-    cacheData = new uint8_t[cacheBlkSize];
-
-    cacheBlkValid = false;
-*/
     for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
         thread.renameTable[i] = new DynInst(this);
         thread.renameTable[i]->setCompleted();
@@ -299,8 +257,10 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     backEnd->renameTable.copyFrom(thread.renameTable);
 
 #if !FULL_SYSTEM
-    pTable = p->pTable;
+//    pTable = p->pTable;
 #endif
+
+    lockFlag = 0;
 
     DPRINTF(OzoneCPU, "OzoneCPU: Created Ozone cpu object.\n");
 }
@@ -392,6 +352,7 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     scheduleTickEvent(delay);
     _status = Running;
     thread._status = ExecContext::Active;
+    frontEnd->wakeFromQuiesce();
 }
 
 template <class Impl>
@@ -401,8 +362,8 @@ OzoneCPU<Impl>::suspendContext(int thread_num)
     // Eventually change this in SMT.
     assert(thread_num == 0);
 //    assert(xcProxy);
-
-    assert(_status == Running);
+    // @todo: Figure out how to initially set the status properly so this is running.
+//    assert(_status == Running);
     notIdleFraction--;
     unscheduleTickEvent();
     _status = Idle;
@@ -665,6 +626,7 @@ OzoneCPU<Impl>::tick()
 {
     DPRINTF(OzoneCPU, "\n\nOzoneCPU: Ticking cpu.\n");
 
+    _status = Running;
     thread.renameTable[ZeroReg]->setIntResult(0);
     thread.renameTable[ZeroReg+TheISA::FP_Base_DepTag]->
         setDoubleResult(0.0);
@@ -756,7 +718,7 @@ OzoneCPU<Impl>::tick()
     // check for instruction-count-based events
     comInstEventQueue[0]->serviceEvents(numInst);
 
-    if (!tickEvent.scheduled())
+    if (!tickEvent.scheduled() && _status == Running)
         tickEvent.schedule(curTick + 1);
 }
 
@@ -820,6 +782,8 @@ OzoneCPU<Impl>::hwrei()
         return new UnimplementedOpcodeFault;
 
     thread.setNextPC(thread.readMiscReg(AlphaISA::IPR_EXC_ADDR));
+
+    lockFlag = false;
 
     // Not sure how to make a similar check in the Ozone model
 //    if (!misspeculating()) {

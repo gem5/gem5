@@ -94,8 +94,7 @@ class LWBackEnd
 
     void regStats();
 
-    void setCPU(FullCPU *cpu_ptr)
-    { cpu = cpu_ptr; }
+    void setCPU(FullCPU *cpu_ptr);
 
     void setFrontEnd(FrontEnd *front_end_ptr)
     { frontEnd = front_end_ptr; }
@@ -403,6 +402,9 @@ class LWBackEnd
 
     Stats::Scalar<> commit_eligible_samples;
     Stats::Vector<> commit_eligible;
+
+    Stats::Vector<> squashedInsts;
+    Stats::Vector<> ROBSquashedInsts;
 
     Stats::Scalar<> ROB_fcount;
     Stats::Formula ROB_full_rate;

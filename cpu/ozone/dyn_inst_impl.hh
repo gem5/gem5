@@ -237,6 +237,7 @@ OzoneDynInst<Impl>::hwrei()
     this->cpu->kernelStats->hwrei();
 
     this->cpu->checkInterrupts = true;
+    this->cpu->lockFlag = false;
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
