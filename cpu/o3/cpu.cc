@@ -123,7 +123,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
       physmem(system->physmem),
       mem(params->mem),
 #else
-      pTable(params->pTable),
+//      pTable(params->pTable),
 #endif // FULL_SYSTEM
 
       icacheInterface(params->icacheInterface),
@@ -238,8 +238,8 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
     // Setup the page table for whichever stages need it.
 #if !FULL_SYSTEM
-    fetch.setPageTable(pTable);
-    iew.setPageTable(pTable);
+//    fetch.setPageTable(pTable);
+//    iew.setPageTable(pTable);
 #endif
 
     // Setup the ROB for whichever stages need it.
@@ -885,11 +885,9 @@ template <class Impl>
 void
 FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
-    unsigned tid = inst->threadNumber;
-
     DPRINTF(FullCPU, "FullCPU: Removing committed instruction [tid:%i] PC %#x "
             "[sn:%lli]\n",
-            tid, inst->readPC(), inst->seqNum);
+            inst->threadNumber, inst->readPC(), inst->seqNum);
 
     removeInstsThisCycle = true;
 

@@ -6,9 +6,10 @@
 #include "arch/isa_traits.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/thread_state.hh"
+#include "sim/process.hh"
 
 class Event;
-class Process;
+//class Process;
 
 #if FULL_SYSTEM
 class EndQuiesceEvent;
@@ -40,7 +41,7 @@ struct OzoneThreadState : public ThreadState {
     }
 #else
     OzoneThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(-1, _thread_num, NULL, _process, _asid),
+        : ThreadState(-1, _thread_num, _process->getMemory(), _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
         memset(&regs, 0, sizeof(TheISA::RegFile));
