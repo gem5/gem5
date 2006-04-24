@@ -613,6 +613,8 @@ class OzoneCPU : public BaseCPU
     TimeBuffer<CommStruct> comm;
 
     bool lockFlag;
+
+    Stats::Scalar<> quiesceCycles;
 };
 
 #endif // __CPU_OZONE_CPU_HH__

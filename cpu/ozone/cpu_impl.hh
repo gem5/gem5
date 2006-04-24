@@ -413,6 +413,11 @@ OzoneCPU<Impl>::regStats()
         .desc("Percentage of idle cycles")
         ;
 
+    quiesceCycles
+        .name(name() + ".quiesce_cycles")
+        .desc("Number of cycles spent in quiesce")
+        ;
+
     idleFraction = constant(1.0) - notIdleFraction;
 
     frontEnd->regStats();
@@ -609,7 +614,8 @@ OzoneCPU<Impl>::post_interrupt(int int_num, int index)
 {
     BaseCPU::post_interrupt(int_num, index);
 
-    if (thread._status == ExecContext::Suspended) {
+//    if (thread._status == ExecContext::Suspended) {
+    if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
 //	thread.activate();
         // Hack for now.  Otherwise might have to go through the xcProxy, or
