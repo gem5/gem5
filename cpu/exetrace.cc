@@ -84,7 +84,8 @@ Trace::InstRecord::dump(ostream &outs)
         std::string sym_str;
         Addr sym_addr;
         if (debugSymbolTable
-            && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
+            && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)
+            && flags[PC_SYMBOL]) {
             if (PC != sym_addr)
                 sym_str += csprintf("+%d", PC - sym_addr);
             outs << "@" << sym_str << " : ";
@@ -191,6 +192,8 @@ Param<bool> exe_trace_print_fetchseq(&exeTraceParams, "print_fetchseq",
                                   "print fetch sequence number", false);
 Param<bool> exe_trace_print_cp_seq(&exeTraceParams, "print_cpseq",
                                   "print correct-path sequence number", false);
+Param<bool> exe_trace_pc_symbol(&exeTraceParams, "pc_symbol",
+                                  "Use symbols for the PC if available", true);
 Param<bool> exe_trace_intel_format(&exeTraceParams, "intel_format",
                                    "print trace in intel compatible format", false);
 Param<string> exe_trace_system(&exeTraceParams, "trace_system",
@@ -215,6 +218,7 @@ Trace::InstRecord::setParams()
     flags[PRINT_INT_REGS]    = exe_trace_print_iregs;
     flags[PRINT_FETCH_SEQ]   = exe_trace_print_fetchseq;
     flags[PRINT_CP_SEQ]      = exe_trace_print_cp_seq;
+    flags[PC_SYMBOL]         = exe_trace_pc_symbol;
     flags[INTEL_FORMAT]      = exe_trace_intel_format;
     trace_system	     = exe_trace_system;
 }
