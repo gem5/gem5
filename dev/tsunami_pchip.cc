@@ -70,75 +70,71 @@ TsunamiPChip::read(Packet &pkt)
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
+
     pkt.time = curTick + pioDelay;
+    pkt.allocate();
     Addr daddr = (pkt.addr - pioAddr) >> 6;;
+    assert(pkt.size == sizeof(uint64_t));
 
-    uint64_t *data64;
-
-    if (!pkt.data) {
-        data64 = new uint64_t;
-        pkt.data = (uint8_t*)data64;
-    } else
-        data64 = (uint64_t*)pkt.data;
 
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
 
     switch(daddr) {
       case TSDEV_PC_WSBA0:
-            *data64 = wsba[0];
+            pkt.set(wsba[0]);
             break;
       case TSDEV_PC_WSBA1:
-            *data64 = wsba[1];
+            pkt.set(wsba[1]);
             break;
       case TSDEV_PC_WSBA2:
-            *data64 = wsba[2];
+            pkt.set(wsba[2]);
             break;
       case TSDEV_PC_WSBA3:
-            *data64 = wsba[3];
+            pkt.set(wsba[3]);
             break;
       case TSDEV_PC_WSM0:
-            *data64 = wsm[0];
+            pkt.set(wsm[0]);
             break;
       case TSDEV_PC_WSM1:
-            *data64 = wsm[1];
+            pkt.set(wsm[1]);
             break;
       case TSDEV_PC_WSM2:
-            *data64 = wsm[2];
+            pkt.set(wsm[2]);
             break;
       case TSDEV_PC_WSM3:
-            *data64 = wsm[3];
+            pkt.set(wsm[3]);
             break;
       case TSDEV_PC_TBA0:
-            *data64 = tba[0];
+            pkt.set(tba[0]);
             break;
       case TSDEV_PC_TBA1:
-            *data64 = tba[1];
+            pkt.set(tba[1]);
             break;
       case TSDEV_PC_TBA2:
-            *data64 = tba[2];
+            pkt.set(tba[2]);
             break;
       case TSDEV_PC_TBA3:
-            *data64 = tba[3];
+            pkt.set(tba[3]);
             break;
       case TSDEV_PC_PCTL:
-            *data64 = pctl;
+            pkt.set(pctl);
             break;
       case TSDEV_PC_PLAT:
             panic("PC_PLAT not implemented\n");
       case TSDEV_PC_RES:
             panic("PC_RES not implemented\n");
       case TSDEV_PC_PERROR:
-            *data64 = 0x00;
+            pkt.set((uint64_t)0x00);
             break;
       case TSDEV_PC_PERRMASK:
-            *data64 = 0x00;
+            pkt.set((uint64_t)0x00);
             break;
       case TSDEV_PC_PERRSET:
             panic("PC_PERRSET not implemented\n");
       case TSDEV_PC_TLBIV:
             panic("PC_TLBIV not implemented\n");
       case TSDEV_PC_TLBIA:
-            *data64 = 0x00; // shouldn't be readable, but linux
+            pkt.set((uint64_t)0x00); // shouldn't be readable, but linux
             break;
       case TSDEV_PC_PMONCTL:
             panic("PC_PMONCTL not implemented\n");
@@ -161,50 +157,49 @@ TsunamiPChip::write(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     Addr daddr = (pkt.addr - pioAddr) >> 6;
 
-    uint64_t data64 = *(uint64_t *)pkt.data;
     assert(pkt.size == sizeof(uint64_t));
 
     DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt.addr, pkt.size);
 
     switch(daddr) {
         case TSDEV_PC_WSBA0:
-              wsba[0] = data64;
+              wsba[0] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSBA1:
-              wsba[1] = data64;
+              wsba[1] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSBA2:
-              wsba[2] = data64;
+              wsba[2] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSBA3:
-              wsba[3] = data64;
+              wsba[3] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSM0:
-              wsm[0] = data64;
+              wsm[0] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSM1:
-              wsm[1] = data64;
+              wsm[1] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSM2:
-              wsm[2] = data64;
+              wsm[2] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_WSM3:
-              wsm[3] = data64;
+              wsm[3] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_TBA0:
-              tba[0] = data64;
+              tba[0] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_TBA1:
-              tba[1] = data64;
+              tba[1] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_TBA2:
-              tba[2] = data64;
+              tba[2] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_TBA3:
-              tba[3] = data64;
+              tba[3] = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_PCTL:
-              pctl = data64;
+              pctl = pkt.get<uint64_t>();
               break;
         case TSDEV_PC_PLAT:
               panic("PC_PLAT not implemented\n");

@@ -40,11 +40,11 @@ class Checkpoint;
 class PacketFifo
 {
   public:
-    typedef std::list<PacketPtr> fifo_list;
+    typedef std::list<EthPacketPtr> fifo_list;
     typedef fifo_list::iterator iterator;
 
   protected:
-    std::list<PacketPtr> fifo;
+    std::list<EthPacketPtr> fifo;
     int _maxsize;
     int _size;
     int _reserved;
@@ -71,9 +71,9 @@ class PacketFifo
     iterator begin() { return fifo.begin(); }
     iterator end() { return fifo.end(); }
 
-    PacketPtr front() { return fifo.front(); }
+    EthPacketPtr front() { return fifo.front(); }
 
-    bool push(PacketPtr ptr)
+    bool push(EthPacketPtr ptr)
     {
         assert(ptr->length);
         assert(_reserved <= ptr->length);
@@ -92,7 +92,7 @@ class PacketFifo
         if (empty())
             return;
 
-        PacketPtr &packet = fifo.front();
+        EthPacketPtr &packet = fifo.front();
         _size -= packet->length;
         _size -= packet->slack;
         packet->slack = 0;
@@ -111,7 +111,7 @@ class PacketFifo
 
     void remove(iterator i)
     {
-        PacketPtr &packet = *i;
+        EthPacketPtr &packet = *i;
         if (i != fifo.begin()) {
             iterator prev = i;
             --prev;

@@ -310,7 +310,7 @@ CPUExecContext::getVirtPort(ExecContext *xc)
 void
 CPUExecContext::delVirtPort(VirtualPort *vp)
 {
-    assert(!vp->nullExecContext());
+//    assert(!vp->nullExecContext());
     delete vp->getPeer();
     delete vp;
 }

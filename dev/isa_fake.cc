@@ -58,47 +58,17 @@ IsaFake::read(Packet &pkt)
 
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
 
-    uint8_t *data8;
-    uint16_t *data16;
-    uint32_t *data32;
-    uint64_t *data64;
-
     switch (pkt.size) {
-      case sizeof(uint64_t):
-         if (!pkt.data) {
-             data64 = new uint64_t;
-             pkt.data = (uint8_t*)data64;
-         } else {
-             data64 = (uint64_t*)pkt.data;
-         }
-         *data64 = 0xFFFFFFFFFFFFFFFFULL;
+         pkt.set(0xFFFFFFFFFFFFFFFFULL);
          break;
       case sizeof(uint32_t):
-         if (!pkt.data) {
-             data32 = new uint32_t;
-             pkt.data = (uint8_t*)data32;
-         } else {
-             data32 = (uint32_t*)pkt.data;
-         }
-         *data32 = 0xFFFFFFFF;
+         pkt.set((uint32_t)0xFFFFFFFF);
          break;
       case sizeof(uint16_t):
-         if (!pkt.data) {
-             data16 = new uint16_t;
-             pkt.data = (uint8_t*)data16;
-         } else {
-             data16 = (uint16_t*)pkt.data;
-         }
-         *data16 = 0xFFFF;
+         pkt.set((uint16_t)0xFFFF);
          break;
       case sizeof(uint8_t):
-         if (!pkt.data) {
-             data8 = new uint8_t;
-             pkt.data = data8;
-         } else {
-             data8 = (uint8_t*)pkt.data;
-         }
-         *data8 = 0xFF;
+         pkt.set((uint8_t)0xFF);
          break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");

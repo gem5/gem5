@@ -40,17 +40,12 @@
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/dma_interface.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
-#include "arch/vtophys.hh"
+#include "sim/system.hh"
 
 const char *NsRxStateStrings[] =
 {
@@ -108,29 +103,9 @@ NSGigE::NSGigE(Params *p)
       txEvent(this), rxFilterEnable(p->rx_filter), acceptBroadcast(false),
       acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false), multicastHashEnable(false),
-      physmem(p->pmem), intrTick(0), cpuPendingIntr(false),
+      intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
-    if (p->pio_bus) {
-        pioInterface = newPioInterface(name() + ".pio", p->hier,
-                                       p->pio_bus, this,
-                                       &NSGigE::cacheAccess);
-        pioLatency = p->pio_latency * p->pio_bus->clockRate;
-    }
-
-    if (p->header_bus) {
-        if (p->payload_bus)
-            dmaInterface = new DMAInterface<Bus>(name() + ".dma",
-                                                 p->header_bus,
-                                                 p->payload_bus, 1,
-                                                 p->dma_no_allocate);
-        else
-            dmaInterface = new DMAInterface<Bus>(name() + ".dma",
-                                                 p->header_bus,
-                                                 p->header_bus, 1,
-                                                 p->dma_no_allocate);
-    } else if (p->payload_bus)
-        panic("Must define a header bus if defining a payload bus");
 
     intrDelay = p->intr_delay;
     dmaReadDelay = p->dma_read_delay;
@@ -484,30 +459,18 @@ NSGigE::regStats()
     rxPacketRate = rxPackets / simSeconds;
 }
 
-/**
- * This is to read the PCI general configuration registers
- */
-void
-NSGigE::readConfig(int offset, int size, uint8_t *data)
-{
-    if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::readConfig(offset, size, data);
-    else
-        panic("Device specific PCI config space not implemented!\n");
-}
 
 /**
  * This is to write to the PCI general configuration registers
  */
 void
-NSGigE::writeConfig(int offset, int size, const uint8_t* data)
+NSGigE::writeConfig(int offset, const uint16_t data)
 {
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::writeConfig(offset, size, data);
+        PciDev::writeConfig(offset,  data);
     else
         panic("Device specific PCI config space not implemented!\n");
 
-    // Need to catch writes to BARs to update the PIO interface
     switch (offset) {
         // seems to work fine without all these PCI settings, but i
         // put in the IO to double check, an assertion will fail if we
@@ -517,39 +480,6 @@ NSGigE::writeConfig(int offset, int size, const uint8_t* data)
             ioEnable = true;
         else
             ioEnable = false;
-
-#if 0
-        if (config.data[offset] & PCI_CMD_BME) {
-            bmEnabled = true;
-        }
-        else {
-            bmEnabled = false;
-        }
-
-        if (config.data[offset] & PCI_CMD_MSE) {
-            memEnable = true;
-        }
-        else {
-            memEnable = false;
-        }
-#endif
-        break;
-
-      case PCI0_BASE_ADDR0:
-        if (BARAddrs[0] != 0) {
-            if (pioInterface)
-                pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
-
-            BARAddrs[0] &= EV5::PAddrUncachedMask;
-        }
-        break;
-      case PCI0_BASE_ADDR1:
-        if (BARAddrs[1] != 0) {
-            if (pioInterface)
-                pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
-
-            BARAddrs[1] &= EV5::PAddrUncachedMask;
-        }
         break;
     }
 }
@@ -558,15 +488,18 @@ NSGigE::writeConfig(int offset, int size, const uint8_t* data)
  * This reads the device registers, which are detailed in the NS83820
  * spec sheet
  */
-Fault
-NSGigE::read(MemReqPtr &req, uint8_t *data)
+Tick
+NSGigE::read(Packet &pkt)
 {
     assert(ioEnable);
 
+    pkt.time = curTick + pioDelay;
+    pkt.allocate();
+
     //The mask is to give you only the offset into the device register file
-    Addr daddr = req->paddr & 0xfff;
-    DPRINTF(EthernetPIO, "read  da=%#x pa=%#x va=%#x size=%d\n",
-            daddr, req->paddr, req->vaddr, req->size);
+    Addr daddr = pkt.addr & 0xfff;
+    DPRINTF(EthernetPIO, "read  da=%#x pa=%#x size=%d\n",
+            daddr, pkt.addr, pkt.size);
 
 
     // there are some reserved registers, you can see ns_gige_reg.h and
@@ -574,240 +507,246 @@ NSGigE::read(MemReqPtr &req, uint8_t *data)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        readConfig(daddr & 0xff, req->size, data);
-        return NoFault;
+        if (pkt.size == sizeof(uint8_t))
+            readConfig(daddr & 0xff, pkt.getPtr<uint8_t>());
+        if (pkt.size == sizeof(uint16_t))
+            readConfig(daddr & 0xff, pkt.getPtr<uint16_t>());
+        if (pkt.size == sizeof(uint32_t))
+            readConfig(daddr & 0xff, pkt.getPtr<uint32_t>());
+        pkt.result = Success;
+        return pioDelay;
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
         // MIB are just hardware stats keepers
-        uint32_t &reg = *(uint32_t *) data;
-        reg = 0;
-        return NoFault;
+        pkt.set<uint32_t>(0);
+        pkt.result = Success;
+        return pioDelay;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
-    switch (req->size) {
-      case sizeof(uint32_t):
-        {
-            uint32_t &reg = *(uint32_t *)data;
-            uint16_t rfaddr;
+    assert(pkt.size == sizeof(uint32_t));
+        uint32_t &reg = *pkt.getPtr<uint32_t>();
+        uint16_t rfaddr;
 
-            switch (daddr) {
-              case CR:
-                reg = regs.command;
-                //these are supposed to be cleared on a read
-                reg &= ~(CR_RXD | CR_TXD | CR_TXR | CR_RXR);
+        switch (daddr) {
+          case CR:
+            reg = regs.command;
+            //these are supposed to be cleared on a read
+            reg &= ~(CR_RXD | CR_TXD | CR_TXR | CR_RXR);
+            break;
+
+          case CFGR:
+            reg = regs.config;
+            break;
+
+          case MEAR:
+            reg = regs.mear;
+            break;
+
+          case PTSCR:
+            reg = regs.ptscr;
+            break;
+
+          case ISR:
+            reg = regs.isr;
+            devIntrClear(ISR_ALL);
+            break;
+
+          case IMR:
+            reg = regs.imr;
+            break;
+
+          case IER:
+            reg = regs.ier;
+            break;
+
+          case IHR:
+            reg = regs.ihr;
+            break;
+
+          case TXDP:
+            reg = regs.txdp;
+            break;
+
+          case TXDP_HI:
+            reg = regs.txdp_hi;
+            break;
+
+          case TX_CFG:
+            reg = regs.txcfg;
+            break;
+
+          case GPIOR:
+            reg = regs.gpior;
+            break;
+
+          case RXDP:
+            reg = regs.rxdp;
+            break;
+
+          case RXDP_HI:
+            reg = regs.rxdp_hi;
+            break;
+
+          case RX_CFG:
+            reg = regs.rxcfg;
+            break;
+
+          case PQCR:
+            reg = regs.pqcr;
+            break;
+
+          case WCSR:
+            reg = regs.wcsr;
+            break;
+
+          case PCR:
+            reg = regs.pcr;
+            break;
+
+            // see the spec sheet for how RFCR and RFDR work
+            // basically, you write to RFCR to tell the machine
+            // what you want to do next, then you act upon RFDR,
+            // and the device will be prepared b/c of what you
+            // wrote to RFCR
+          case RFCR:
+            reg = regs.rfcr;
+            break;
+
+          case RFDR:
+            rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
+            switch (rfaddr) {
+              // Read from perfect match ROM octets
+              case 0x000:
+                reg = rom.perfectMatch[1];
+                reg = reg << 8;
+                reg += rom.perfectMatch[0];
                 break;
-
-              case CFGR:
-                reg = regs.config;
+              case 0x002:
+                reg = rom.perfectMatch[3] << 8;
+                reg += rom.perfectMatch[2];
                 break;
-
-              case MEAR:
-                reg = regs.mear;
+              case 0x004:
+                reg = rom.perfectMatch[5] << 8;
+                reg += rom.perfectMatch[4];
                 break;
-
-              case PTSCR:
-                reg = regs.ptscr;
-                break;
-
-              case ISR:
-                reg = regs.isr;
-                devIntrClear(ISR_ALL);
-                break;
-
-              case IMR:
-                reg = regs.imr;
-                break;
-
-              case IER:
-                reg = regs.ier;
-                break;
-
-              case IHR:
-                reg = regs.ihr;
-                break;
-
-              case TXDP:
-                reg = regs.txdp;
-                break;
-
-              case TXDP_HI:
-                reg = regs.txdp_hi;
-                break;
-
-              case TX_CFG:
-                reg = regs.txcfg;
-                break;
-
-              case GPIOR:
-                reg = regs.gpior;
-                break;
-
-              case RXDP:
-                reg = regs.rxdp;
-                break;
-
-              case RXDP_HI:
-                reg = regs.rxdp_hi;
-                break;
-
-              case RX_CFG:
-                reg = regs.rxcfg;
-                break;
-
-              case PQCR:
-                reg = regs.pqcr;
-                break;
-
-              case WCSR:
-                reg = regs.wcsr;
-                break;
-
-              case PCR:
-                reg = regs.pcr;
-                break;
-
-                // see the spec sheet for how RFCR and RFDR work
-                // basically, you write to RFCR to tell the machine
-                // what you want to do next, then you act upon RFDR,
-                // and the device will be prepared b/c of what you
-                // wrote to RFCR
-              case RFCR:
-                reg = regs.rfcr;
-                break;
-
-              case RFDR:
-                rfaddr = (uint16_t)(regs.rfcr & RFCR_RFADDR);
-                switch (rfaddr) {
-                  // Read from perfect match ROM octets
-                  case 0x000:
-                    reg = rom.perfectMatch[1];
-                    reg = reg << 8;
-                    reg += rom.perfectMatch[0];
-                    break;
-                  case 0x002:
-                    reg = rom.perfectMatch[3] << 8;
-                    reg += rom.perfectMatch[2];
-                    break;
-                  case 0x004:
-                    reg = rom.perfectMatch[5] << 8;
-                    reg += rom.perfectMatch[4];
-                    break;
-                  default:
-                    // Read filter hash table
-                    if (rfaddr >= FHASH_ADDR &&
-                        rfaddr < FHASH_ADDR + FHASH_SIZE) {
-
-                        // Only word-aligned reads supported
-                        if (rfaddr % 2)
-                            panic("unaligned read from filter hash table!");
-
-                        reg = rom.filterHash[rfaddr - FHASH_ADDR + 1] << 8;
-                        reg += rom.filterHash[rfaddr - FHASH_ADDR];
-                        break;
-                    }
-
-                    panic("reading RFDR for something other than pattern"
-                          " matching or hashing! %#x\n", rfaddr);
-                }
-                break;
-
-              case SRR:
-                reg = regs.srr;
-                break;
-
-              case MIBC:
-                reg = regs.mibc;
-                reg &= ~(MIBC_MIBS | MIBC_ACLR);
-                break;
-
-              case VRCR:
-                reg = regs.vrcr;
-                break;
-
-              case VTCR:
-                reg = regs.vtcr;
-                break;
-
-              case VDR:
-                reg = regs.vdr;
-                break;
-
-              case CCSR:
-                reg = regs.ccsr;
-                break;
-
-              case TBICR:
-                reg = regs.tbicr;
-                break;
-
-              case TBISR:
-                reg = regs.tbisr;
-                break;
-
-              case TANAR:
-                reg = regs.tanar;
-                break;
-
-              case TANLPAR:
-                reg = regs.tanlpar;
-                break;
-
-              case TANER:
-                reg = regs.taner;
-                break;
-
-              case TESR:
-                reg = regs.tesr;
-                break;
-
-              case M5REG:
-                reg = 0;
-                if (params()->rx_thread)
-                    reg |= M5REG_RX_THREAD;
-                if (params()->tx_thread)
-                    reg |= M5REG_TX_THREAD;
-                if (params()->rss)
-                    reg |= M5REG_RSS;
-                break;
-
               default:
-                panic("reading unimplemented register: addr=%#x", daddr);
+                // Read filter hash table
+                if (rfaddr >= FHASH_ADDR &&
+                    rfaddr < FHASH_ADDR + FHASH_SIZE) {
+
+                    // Only word-aligned reads supported
+                    if (rfaddr % 2)
+                        panic("unaligned read from filter hash table!");
+
+                    reg = rom.filterHash[rfaddr - FHASH_ADDR + 1] << 8;
+                    reg += rom.filterHash[rfaddr - FHASH_ADDR];
+                    break;
+                }
+
+                panic("reading RFDR for something other than pattern"
+                      " matching or hashing! %#x\n", rfaddr);
             }
+            break;
 
-            DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n",
-                    daddr, reg, reg);
+          case SRR:
+            reg = regs.srr;
+            break;
+
+          case MIBC:
+            reg = regs.mibc;
+            reg &= ~(MIBC_MIBS | MIBC_ACLR);
+            break;
+
+          case VRCR:
+            reg = regs.vrcr;
+            break;
+
+          case VTCR:
+            reg = regs.vtcr;
+            break;
+
+          case VDR:
+            reg = regs.vdr;
+            break;
+
+          case CCSR:
+            reg = regs.ccsr;
+            break;
+
+          case TBICR:
+            reg = regs.tbicr;
+            break;
+
+          case TBISR:
+            reg = regs.tbisr;
+            break;
+
+          case TANAR:
+            reg = regs.tanar;
+            break;
+
+          case TANLPAR:
+            reg = regs.tanlpar;
+            break;
+
+          case TANER:
+            reg = regs.taner;
+            break;
+
+          case TESR:
+            reg = regs.tesr;
+            break;
+
+          case M5REG:
+            reg = 0;
+            if (params()->rx_thread)
+                reg |= M5REG_RX_THREAD;
+            if (params()->tx_thread)
+                reg |= M5REG_TX_THREAD;
+            if (params()->rss)
+                reg |= M5REG_RSS;
+            break;
+
+          default:
+            panic("reading unimplemented register: addr=%#x", daddr);
         }
-        break;
 
-      default:
-        panic("accessing register with invalid size: addr=%#x, size=%d",
-              daddr, req->size);
-    }
+        DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n",
+                daddr, reg, reg);
 
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
-Fault
-NSGigE::write(MemReqPtr &req, const uint8_t *data)
+Tick
+NSGigE::write(Packet &pkt)
 {
     assert(ioEnable);
 
-    Addr daddr = req->paddr & 0xfff;
-    DPRINTF(EthernetPIO, "write da=%#x pa=%#x va=%#x size=%d\n",
-            daddr, req->paddr, req->vaddr, req->size);
+    Addr daddr = pkt.addr & 0xfff;
+    DPRINTF(EthernetPIO, "write da=%#x pa=%#x size=%d\n",
+            daddr, pkt.addr, pkt.size);
+
+    pkt.time = curTick + pioDelay;
 
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        writeConfig(daddr & 0xff, req->size, data);
-        return NoFault;
+        if (pkt.size == sizeof(uint8_t))
+            writeConfig(daddr & 0xff, pkt.get<uint8_t>());
+        if (pkt.size == sizeof(uint16_t))
+            writeConfig(daddr & 0xff, pkt.get<uint16_t>());
+        if (pkt.size == sizeof(uint32_t))
+            writeConfig(daddr & 0xff, pkt.get<uint32_t>());
+        pkt.result = Success;
+        return pioDelay;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
-    if (req->size == sizeof(uint32_t)) {
-        uint32_t reg = *(uint32_t *)data;
+    if (pkt.size == sizeof(uint32_t)) {
+        uint32_t reg = pkt.get<uint32_t>();
         uint16_t rfaddr;
 
         DPRINTF(EthernetPIO, "write data=%d data=%#x\n", reg, reg);
@@ -1193,8 +1132,8 @@ NSGigE::write(MemReqPtr &req, const uint8_t *data)
     } else {
         panic("Invalid Request Size");
     }
-
-    return NoFault;
+    pkt.result = Success;
+    return pioDelay;
 }
 
 void
@@ -1444,42 +1383,17 @@ NSGigE::regsReset()
     acceptArp = false;
 }
 
-void
-NSGigE::rxDmaReadCopy()
-{
-    assert(rxDmaState == dmaReading);
-
-    physmem->dma_read((uint8_t *)rxDmaData, rxDmaAddr, rxDmaLen);
-    rxDmaState = dmaIdle;
-
-    DPRINTF(EthernetDMA, "rx dma read  paddr=%#x len=%d\n",
-            rxDmaAddr, rxDmaLen);
-    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
-}
-
 bool
 NSGigE::doRxDmaRead()
 {
     assert(rxDmaState == dmaIdle || rxDmaState == dmaReadWaiting);
     rxDmaState = dmaReading;
 
-    if (dmaInterface && !rxDmaFree) {
-        if (dmaInterface->busy())
-            rxDmaState = dmaReadWaiting;
-        else
-            dmaInterface->doDMA(Read, rxDmaAddr, rxDmaLen, curTick,
-                                &rxDmaReadEvent, true);
-        return true;
-    }
+    if (dmaPending())
+        rxDmaState = dmaReadWaiting;
+    else
+        dmaRead(rxDmaAddr, rxDmaLen, &rxDmaReadEvent, (uint8_t*)rxDmaData);
 
-    if (dmaReadDelay == 0 && dmaReadFactor == 0) {
-        rxDmaReadCopy();
-        return false;
-    }
-
-    Tick factor = ((rxDmaLen + ULL(63)) >> ULL(6)) * dmaReadFactor;
-    Tick start = curTick + dmaReadDelay + factor;
-    rxDmaReadEvent.schedule(start);
     return true;
 }
 
@@ -1487,7 +1401,11 @@ void
 NSGigE::rxDmaReadDone()
 {
     assert(rxDmaState == dmaReading);
-    rxDmaReadCopy();
+    rxDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "rx dma read  paddr=%#x len=%d\n",
+            rxDmaAddr, rxDmaLen);
+    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
 
     // If the transmit state machine has a pending DMA, let it go first
     if (txDmaState == dmaReadWaiting || txDmaState == dmaWriteWaiting)
@@ -1496,42 +1414,16 @@ NSGigE::rxDmaReadDone()
     rxKick();
 }
 
-void
-NSGigE::rxDmaWriteCopy()
-{
-    assert(rxDmaState == dmaWriting);
-
-    physmem->dma_write(rxDmaAddr, (uint8_t *)rxDmaData, rxDmaLen);
-    rxDmaState = dmaIdle;
-
-    DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n",
-            rxDmaAddr, rxDmaLen);
-    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
-}
-
 bool
 NSGigE::doRxDmaWrite()
 {
     assert(rxDmaState == dmaIdle || rxDmaState == dmaWriteWaiting);
     rxDmaState = dmaWriting;
 
-    if (dmaInterface && !rxDmaFree) {
-        if (dmaInterface->busy())
-            rxDmaState = dmaWriteWaiting;
-        else
-            dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen, curTick,
-                                &rxDmaWriteEvent, true);
-        return true;
-    }
-
-    if (dmaWriteDelay == 0 && dmaWriteFactor == 0) {
-        rxDmaWriteCopy();
-        return false;
-    }
-
-    Tick factor = ((rxDmaLen + ULL(63)) >> ULL(6)) * dmaWriteFactor;
-    Tick start = curTick + dmaWriteDelay + factor;
-    rxDmaWriteEvent.schedule(start);
+    if (dmaPending())
+        rxDmaState = dmaWriteWaiting;
+    else
+        dmaWrite(rxDmaAddr, rxDmaLen, &rxDmaWriteEvent, (uint8_t*)rxDmaData);
     return true;
 }
 
@@ -1539,7 +1431,11 @@ void
 NSGigE::rxDmaWriteDone()
 {
     assert(rxDmaState == dmaWriting);
-    rxDmaWriteCopy();
+    rxDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n",
+            rxDmaAddr, rxDmaLen);
+    DDUMP(EthernetDMA, rxDmaData, rxDmaLen);
 
     // If the transmit state machine has a pending DMA, let it go first
     if (txDmaState == dmaReadWaiting || txDmaState == dmaWriteWaiting)
@@ -1936,42 +1832,17 @@ NSGigE::transmit()
    }
 }
 
-void
-NSGigE::txDmaReadCopy()
-{
-    assert(txDmaState == dmaReading);
-
-    physmem->dma_read((uint8_t *)txDmaData, txDmaAddr, txDmaLen);
-    txDmaState = dmaIdle;
-
-    DPRINTF(EthernetDMA, "tx dma read  paddr=%#x len=%d\n",
-            txDmaAddr, txDmaLen);
-    DDUMP(EthernetDMA, txDmaData, txDmaLen);
-}
-
 bool
 NSGigE::doTxDmaRead()
 {
     assert(txDmaState == dmaIdle || txDmaState == dmaReadWaiting);
     txDmaState = dmaReading;
 
-    if (dmaInterface && !txDmaFree) {
-        if (dmaInterface->busy())
-            txDmaState = dmaReadWaiting;
-        else
-            dmaInterface->doDMA(Read, txDmaAddr, txDmaLen, curTick,
-                                &txDmaReadEvent, true);
-        return true;
-    }
+    if (dmaPending())
+        txDmaState = dmaReadWaiting;
+    else
+        dmaRead(txDmaAddr, txDmaLen, &txDmaReadEvent, (uint8_t*)txDmaData);
 
-    if (dmaReadDelay == 0 && dmaReadFactor == 0.0) {
-        txDmaReadCopy();
-        return false;
-    }
-
-    Tick factor = ((txDmaLen + ULL(63)) >> ULL(6)) * dmaReadFactor;
-    Tick start = curTick + dmaReadDelay + factor;
-    txDmaReadEvent.schedule(start);
     return true;
 }
 
@@ -1979,7 +1850,11 @@ void
 NSGigE::txDmaReadDone()
 {
     assert(txDmaState == dmaReading);
-    txDmaReadCopy();
+    txDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "tx dma read  paddr=%#x len=%d\n",
+            txDmaAddr, txDmaLen);
+    DDUMP(EthernetDMA, txDmaData, txDmaLen);
 
     // If the receive state machine  has a pending DMA, let it go first
     if (rxDmaState == dmaReadWaiting || rxDmaState == dmaWriteWaiting)
@@ -1988,42 +1863,16 @@ NSGigE::txDmaReadDone()
     txKick();
 }
 
-void
-NSGigE::txDmaWriteCopy()
-{
-    assert(txDmaState == dmaWriting);
-
-    physmem->dma_write(txDmaAddr, (uint8_t *)txDmaData, txDmaLen);
-    txDmaState = dmaIdle;
-
-    DPRINTF(EthernetDMA, "tx dma write paddr=%#x len=%d\n",
-            txDmaAddr, txDmaLen);
-    DDUMP(EthernetDMA, txDmaData, txDmaLen);
-}
-
 bool
 NSGigE::doTxDmaWrite()
 {
     assert(txDmaState == dmaIdle || txDmaState == dmaWriteWaiting);
     txDmaState = dmaWriting;
 
-    if (dmaInterface && !txDmaFree) {
-        if (dmaInterface->busy())
-            txDmaState = dmaWriteWaiting;
-        else
-            dmaInterface->doDMA(WriteInvalidate, txDmaAddr, txDmaLen, curTick,
-                                &txDmaWriteEvent, true);
-        return true;
-    }
-
-    if (dmaWriteDelay == 0 && dmaWriteFactor == 0.0) {
-        txDmaWriteCopy();
-        return false;
-    }
-
-    Tick factor = ((txDmaLen + ULL(63)) >> ULL(6)) * dmaWriteFactor;
-    Tick start = curTick + dmaWriteDelay + factor;
-    txDmaWriteEvent.schedule(start);
+    if (dmaPending())
+        txDmaState = dmaWriteWaiting;
+    else
+        dmaWrite(txDmaAddr, txDmaLen, &txDmaWriteEvent, (uint8_t*)txDmaData);
     return true;
 }
 
@@ -2031,7 +1880,11 @@ void
 NSGigE::txDmaWriteDone()
 {
     assert(txDmaState == dmaWriting);
-    txDmaWriteCopy();
+    txDmaState = dmaIdle;
+
+    DPRINTF(EthernetDMA, "tx dma write paddr=%#x len=%d\n",
+            txDmaAddr, txDmaLen);
+    DDUMP(EthernetDMA, txDmaData, txDmaLen);
 
     // If the receive state machine  has a pending DMA, let it go first
     if (rxDmaState == dmaReadWaiting || rxDmaState == dmaWriteWaiting)
@@ -2148,7 +2001,7 @@ NSGigE::txKick()
       case txFifoBlock:
         if (!txPacket) {
             DPRINTF(EthernetSM, "****starting the tx of a new packet****\n");
-            txPacket = new PacketData(16384);
+            txPacket = new EthPacketData(16384);
             txPacketBufPtr = txPacket->data;
         }
 
@@ -2474,7 +2327,7 @@ NSGigE::transferDone()
 }
 
 bool
-NSGigE::rxFilter(const PacketPtr &packet)
+NSGigE::rxFilter(const EthPacketPtr &packet)
 {
     EthPtr eth = packet;
     bool drop = true;
@@ -2517,7 +2370,7 @@ NSGigE::rxFilter(const PacketPtr &packet)
 }
 
 bool
-NSGigE::recvPacket(PacketPtr packet)
+NSGigE::recvPacket(EthPacketPtr packet)
 {
     rxBytes += packet->length;
     rxPackets++;
@@ -2577,14 +2430,7 @@ NSGigE::serialize(ostream &os)
     /*
      * Finalize any DMA events now.
      */
-    if (rxDmaReadEvent.scheduled())
-        rxDmaReadCopy();
-    if (rxDmaWriteEvent.scheduled())
-        rxDmaWriteCopy();
-    if (txDmaReadEvent.scheduled())
-        txDmaReadCopy();
-    if (txDmaWriteEvent.scheduled())
-        txDmaWriteCopy();
+    // @todo will mem system save pending dma?
 
     /*
      * Serialize the device registers
@@ -2805,7 +2651,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
     if (txPacketExists) {
-        txPacket = new PacketData(16384);
+        txPacket = new EthPacketData(16384);
         txPacket->unserialize("txPacket", cp, section);
         uint32_t txPktBufPtr;
         UNSERIALIZE_SCALAR(txPktBufPtr);
@@ -2817,7 +2663,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxPacketExists);
     rxPacket = 0;
     if (rxPacketExists) {
-        rxPacket = new PacketData(16384);
+        rxPacket = new EthPacketData(16384);
         rxPacket->unserialize("rxPacket", cp, section);
         uint32_t rxPktBufPtr;
         UNSERIALIZE_SCALAR(rxPktBufPtr);
@@ -2926,23 +2772,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
         intrEvent = new IntrEvent(this, true);
         intrEvent->schedule(intrEventTick);
     }
-
-    /*
-     * re-add addrRanges to bus bridges
-     */
-    if (pioInterface) {
-        pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
-        pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
-    }
-}
-
-Tick
-NSGigE::cacheAccess(MemReqPtr &req)
-{
-    DPRINTF(EthernetPIO, "timing access to paddr=%#x (daddr=%#x)\n",
-            req->paddr, req->paddr & 0xfff);
-
-    return curTick + pioLatency;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
@@ -2977,22 +2806,16 @@ REGISTER_SIM_OBJECT("NSGigEInt", NSGigEInt)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
-    Param<Tick> clock;
-
-    Param<Addr> addr;
-    SimObjectParam<MemoryController *> mmu;
-    SimObjectParam<PhysicalMemory *> physmem;
+    SimObjectParam<System *> system;
+    SimObjectParam<Platform *> platform;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
-    SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
+    Param<Tick> pio_latency;
 
-    SimObjectParam<HierParams *> hier;
-    SimObjectParam<Bus*> pio_bus;
-    SimObjectParam<Bus*> dma_bus;
-    SimObjectParam<Bus*> payload_bus;
+    Param<Tick> clock;
     Param<bool> dma_desc_free;
     Param<bool> dma_data_free;
     Param<Tick> dma_read_delay;
@@ -3000,7 +2823,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
     Param<Tick> dma_read_factor;
     Param<Tick> dma_write_factor;
     Param<bool> dma_no_allocate;
-    Param<Tick> pio_latency;
     Param<Tick> intr_delay;
 
     Param<Tick> rx_delay;
@@ -3018,22 +2840,16 @@ END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
-    INIT_PARAM(clock, "State machine processor frequency"),
-
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(physmem, "Physical Memory"),
+    INIT_PARAM(system, "System pointer"),
+    INIT_PARAM(platform, "Platform pointer"),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(platform, "Platform"),
-    INIT_PARAM(pci_bus, "PCI bus"),
+    INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
+    INIT_PARAM(clock, "State machine cycle time"),
 
-    INIT_PARAM(hier, "Hierarchy global variables"),
-    INIT_PARAM(pio_bus, ""),
-    INIT_PARAM(dma_bus, ""),
-    INIT_PARAM(payload_bus, "The IO Bus to attach to for payload"),
     INIT_PARAM(dma_desc_free, "DMA of Descriptors is free"),
     INIT_PARAM(dma_data_free, "DMA of Data is free"),
     INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
@@ -3041,7 +2857,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
     INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
     INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
     INIT_PARAM(dma_no_allocate, "Should DMA reads allocate cache lines"),
-    INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
     INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
 
     INIT_PARAM(rx_delay, "Receive Delay"),
@@ -3063,22 +2878,16 @@ CREATE_SIM_OBJECT(NSGigE)
     NSGigE::Params *params = new NSGigE::Params;
 
     params->name = getInstanceName();
-
-    params->clock = clock;
-
-    params->mmu = mmu;
-    params->pmem = physmem;
+    params->platform = platform;
+    params->system = system;
     params->configSpace = configspace;
     params->configData = configdata;
-    params->plat = platform;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
+    params->pio_delay = pio_latency;
 
-    params->hier = hier;
-    params->pio_bus = pio_bus;
-    params->header_bus = dma_bus;
-    params->payload_bus = payload_bus;
+    params->clock = clock;
     params->dma_desc_free = dma_desc_free;
     params->dma_data_free = dma_data_free;
     params->dma_read_delay = dma_read_delay;
@@ -3086,7 +2895,7 @@ CREATE_SIM_OBJECT(NSGigE)
     params->dma_read_factor = dma_read_factor;
     params->dma_write_factor = dma_write_factor;
     params->dma_no_allocate = dma_no_allocate;
-    params->pio_latency = pio_latency;
+    params->pio_delay = pio_latency;
     params->intr_delay = intr_delay;
 
     params->rx_delay = rx_delay;

@@ -102,31 +102,24 @@ AlphaConsole::read(Packet &pkt)
     pkt.time = curTick + pioDelay;
     Addr daddr = pkt.addr - pioAddr;
 
-    uint32_t *data32;
-    uint64_t *data64;
+    pkt.allocate();
 
     switch (pkt.size)
     {
         case sizeof(uint32_t):
-            if (!pkt.data) {
-                data32 = new uint32_t;
-                pkt.data = (uint8_t*)data32;
-            } else
-                data32 = (uint32_t*)pkt.data;
-
             switch (daddr)
             {
                 case offsetof(AlphaAccess, last_offset):
-                    *data32 = alphaAccess->last_offset;
+                    pkt.set(alphaAccess->last_offset);
                     break;
                 case offsetof(AlphaAccess, version):
-                    *data32 = alphaAccess->version;
+                    pkt.set(alphaAccess->version);
                     break;
                 case offsetof(AlphaAccess, numCPUs):
-                    *data32 = alphaAccess->numCPUs;
+                    pkt.set(alphaAccess->numCPUs);
                     break;
                 case offsetof(AlphaAccess, intrClockFrequency):
-                    *data32 = alphaAccess->intrClockFrequency;
+                    pkt.set(alphaAccess->intrClockFrequency);
                     break;
                 default:
                     /* Old console code read in everyting as a 32bit int
@@ -134,62 +127,59 @@ AlphaConsole::read(Packet &pkt)
                      */
                     pkt.result = BadAddress;
             }
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *data32);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    pkt.get<uint32_t>());
             break;
         case sizeof(uint64_t):
-            if (!pkt.data) {
-                data64 = new uint64_t;
-                pkt.data = (uint8_t*)data64;
-            } else
-                data64 = (uint64_t*)pkt.data;
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):
-                    *data64 = console->console_in();
+                    pkt.set(console->console_in());
                     break;
                 case offsetof(AlphaAccess, cpuClock):
-                    *data64 = alphaAccess->cpuClock;
+                    pkt.set(alphaAccess->cpuClock);
                     break;
                 case offsetof(AlphaAccess, mem_size):
-                    *data64 = alphaAccess->mem_size;
+                    pkt.set(alphaAccess->mem_size);
                     break;
                 case offsetof(AlphaAccess, kernStart):
-                    *data64 = alphaAccess->kernStart;
+                    pkt.set(alphaAccess->kernStart);
                     break;
                 case offsetof(AlphaAccess, kernEnd):
-                    *data64 = alphaAccess->kernEnd;
+                    pkt.set(alphaAccess->kernEnd);
                     break;
                 case offsetof(AlphaAccess, entryPoint):
-                    *data64 = alphaAccess->entryPoint;
+                    pkt.set(alphaAccess->entryPoint);
                     break;
                 case offsetof(AlphaAccess, diskUnit):
-                    *data64 = alphaAccess->diskUnit;
+                    pkt.set(alphaAccess->diskUnit);
                     break;
                 case offsetof(AlphaAccess, diskCount):
-                    *data64 = alphaAccess->diskCount;
+                    pkt.set(alphaAccess->diskCount);
                     break;
                 case offsetof(AlphaAccess, diskPAddr):
-                    *data64 = alphaAccess->diskPAddr;
+                    pkt.set(alphaAccess->diskPAddr);
                     break;
                 case offsetof(AlphaAccess, diskBlock):
-                    *data64 = alphaAccess->diskBlock;
+                    pkt.set(alphaAccess->diskBlock);
                     break;
                 case offsetof(AlphaAccess, diskOperation):
-                    *data64 = alphaAccess->diskOperation;
+                    pkt.set(alphaAccess->diskOperation);
                     break;
                 case offsetof(AlphaAccess, outputChar):
-                    *data64 = alphaAccess->outputChar;
+                    pkt.set(alphaAccess->outputChar);
                     break;
                 default:
                     int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
                                  sizeof(alphaAccess->cpuStack[0]);
 
                     if (cpunum >= 0 && cpunum < 64)
-                        *data64 = alphaAccess->cpuStack[cpunum];
+                        pkt.set(alphaAccess->cpuStack[cpunum]);
                     else
                         panic("Unknown 64bit access, %#x\n", daddr);
             }
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr, *data64);
+            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+                    pkt.get<uint64_t>());
             break;
         default:
             pkt.result = BadAddress;
@@ -207,7 +197,7 @@ AlphaConsole::write(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     Addr daddr = pkt.addr - pioAddr;
 
-    uint64_t val = *(uint64_t *)pkt.data;
+    uint64_t val = pkt.get<uint64_t>();
     assert(pkt.size == sizeof(uint64_t));
 
     switch (daddr) {

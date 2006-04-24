@@ -43,7 +43,6 @@
 #include "dev/ide_ctrl.hh"
 #include "dev/tsunami.hh"
 #include "dev/tsunami_pchip.hh"
-#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
@@ -236,6 +235,8 @@ IdeDisk::read(const Addr &offset, IdeRegType reg_type, uint8_t *data)
       default:
         panic("Unknown register block!\n");
     }
+    DPRINTF(IdeDisk, "Read to disk at offset: %#x data %#x\n", offset,
+            (uint32_t)*data);
 
     if (action != ACT_NONE)
         updateState(action);
@@ -297,6 +298,8 @@ IdeDisk::write(const Addr &offset, IdeRegType reg_type, const uint8_t *data)
         panic("Unknown register block!\n");
     }
 
+    DPRINTF(IdeDisk, "Write to disk at offset: %#x data %#x\n", offset,
+            (uint32_t)*data);
     if (action != ACT_NONE)
         updateState(action);
 }

@@ -44,7 +44,7 @@
  * Reference counted class containing ethernet packet data
  */
 class Checkpoint;
-class PacketData : public RefCounted
+class EthPacketData : public RefCounted
 {
   public:
     /*
@@ -66,12 +66,12 @@ class PacketData : public RefCounted
     int slack;
 
   public:
-    PacketData() : data(NULL), length(0), slack(0) { }
-    explicit PacketData(size_t size)
+    EthPacketData() : data(NULL), length(0), slack(0) { }
+    explicit EthPacketData(size_t size)
         : data(new uint8_t[size]), length(0), slack(0) { }
-    PacketData(std::auto_ptr<uint8_t> d, int l, int s = 0)
+    EthPacketData(std::auto_ptr<uint8_t> d, int l, int s = 0)
         : data(d.release()), length(l), slack(s) { }
-    ~PacketData() { if (data) delete [] data; }
+    ~EthPacketData() { if (data) delete [] data; }
 
   public:
     void serialize(const std::string &base, std::ostream &os);
@@ -79,6 +79,6 @@ class PacketData : public RefCounted
                      const std::string &section);
 };
 
-typedef RefCountingPtr<PacketData> PacketPtr;
+typedef RefCountingPtr<EthPacketData> EthPacketPtr;
 
 #endif // __ETHERPKT_HH__

@@ -35,7 +35,7 @@
 using namespace std;
 
 void
-PacketData::serialize(const string &base, ostream &os)
+EthPacketData::serialize(const string &base, ostream &os)
 {
     paramOut(os, base + ".length", length);
     paramOut(os, base + ".slack", slack);
@@ -43,7 +43,7 @@ PacketData::serialize(const string &base, ostream &os)
 }
 
 void
-PacketData::unserialize(const string &base, Checkpoint *cp,
+EthPacketData::unserialize(const string &base, Checkpoint *cp,
                         const string &section)
 {
     paramIn(cp, section, base + ".length", length);

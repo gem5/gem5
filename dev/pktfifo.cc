@@ -38,8 +38,8 @@ PacketFifo::copyout(void *dest, int offset, int len)
     if (offset + len >= size())
         return false;
 
-    list<PacketPtr>::iterator p = fifo.begin();
-    list<PacketPtr>::iterator end = fifo.end();
+    list<EthPacketPtr>::iterator p = fifo.begin();
+    list<EthPacketPtr>::iterator end = fifo.end();
     while (len > 0) {
         while (offset >= (*p)->length) {
             offset -= (*p)->length;
@@ -70,8 +70,8 @@ PacketFifo::serialize(const string &base, ostream &os)
     paramOut(os, base + ".packets", fifo.size());
 
     int i = 0;
-    list<PacketPtr>::iterator p = fifo.begin();
-    list<PacketPtr>::iterator end = fifo.end();
+    list<EthPacketPtr>::iterator p = fifo.begin();
+    list<EthPacketPtr>::iterator end = fifo.end();
     while (p != end) {
         (*p)->serialize(csprintf("%s.packet%d", base, i), os);
         ++p;
@@ -92,7 +92,7 @@ PacketFifo::unserialize(const string &base, Checkpoint *cp,
     fifo.clear();
 
     for (int i = 0; i < fifosize; ++i) {
-        PacketPtr p = new PacketData(16384);
+        EthPacketPtr p = new EthPacketData(16384);
         p->unserialize(csprintf("%s.packet%d", base, i), cp, section);
         fifo.push_back(p);
     }

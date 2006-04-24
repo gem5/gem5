@@ -169,7 +169,7 @@ EtherTap::detach()
 }
 
 bool
-EtherTap::recvPacket(PacketPtr packet)
+EtherTap::recvPacket(EthPacketPtr packet)
 {
     if (dump)
         dump->dump(packet);
@@ -218,8 +218,8 @@ EtherTap::process(int revent)
     }
 
     while (data_len != 0 && buffer_offset >= data_len + sizeof(u_int32_t)) {
-        PacketPtr packet;
-        packet = new PacketData(data_len);
+        EthPacketPtr packet;
+        packet = new EthPacketData(data_len);
         packet->length = data_len;
         memcpy(packet->data, data, data_len);
 
@@ -250,7 +250,7 @@ EtherTap::retransmit()
     if (packetBuffer.empty())
         return;
 
-    PacketPtr packet = packetBuffer.front();
+    EthPacketPtr packet = packetBuffer.front();
     if (sendPacket(packet)) {
         if (dump)
             dump->dump(packet);

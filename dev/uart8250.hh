@@ -44,13 +44,13 @@
  *  bit 2:1  ID of highest priority interrupt
  *  bit 7:3  zeroes
  */
-#define IIR_NOPEND 0x1
+const uint8_t IIR_NOPEND = 0x1;
 
 // Interrupt IDs
-#define IIR_MODEM 0x00 /* Modem Status (lowest priority) */
-#define IIR_TXID  0x02 /* Tx Data */
-#define IIR_RXID  0x04 /* Rx Data */
-#define IIR_LINE  0x06 /* Rx Line Status (highest priority)*/
+const uint8_t IIR_MODEM = 0x00; /* Modem Status (lowest priority) */
+const uint8_t IIR_TXID  = 0x02; /* Tx Data */
+const uint8_t IIR_RXID  = 0x04; /* Rx Data */
+const uint8_t IIR_LINE  = 0x06; /* Rx Line Status (highest priority)*/
 
 class SimConsole;
 class Platform;

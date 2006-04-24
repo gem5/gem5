@@ -42,7 +42,6 @@
 #include "dev/ns_gige_reg.h"
 #include "dev/pcidev.hh"
 #include "dev/pktfifo.hh"
-#include "mem/bus/bus.hh"
 #include "sim/eventq.hh"
 
 // Hash filtering constants
@@ -111,10 +110,7 @@ struct dp_rom {
 };
 
 class NSGigEInt;
-class PhysicalMemory;
-class BaseInterface;
-class HierParams;
-class Bus;
+class Packet;
 class PciConfigAll;
 
 /**
@@ -165,10 +161,6 @@ class NSGigE : public PciDev
         eepromRead
     };
 
-  private:
-    Addr addr;
-    static const Addr size = sizeof(dp_regs);
-
   protected:
     /** device register file */
     dp_regs regs;
@@ -187,8 +179,8 @@ class NSGigE : public PciDev
     PacketFifo rxFifo;
 
     /** various helper vars */
-    PacketPtr txPacket;
-    PacketPtr rxPacket;
+    EthPacketPtr txPacket;
+    EthPacketPtr rxPacket;
     uint8_t *txPacketBufPtr;
     uint8_t *rxPacketBufPtr;
     uint32_t txXferLen;
@@ -258,16 +250,12 @@ class NSGigE : public PciDev
     int   rxDmaLen;
     bool  doRxDmaRead();
     bool  doRxDmaWrite();
-    void  rxDmaReadCopy();
-    void  rxDmaWriteCopy();
 
     void *txDmaData;
     Addr  txDmaAddr;
     int   txDmaLen;
     bool  doTxDmaRead();
     bool  doTxDmaWrite();
-    void  txDmaReadCopy();
-    void  txDmaWriteCopy();
 
     void rxDmaReadDone();
     friend class EventWrapper<NSGigE, &NSGigE::rxDmaReadDone>;
@@ -331,15 +319,13 @@ class NSGigE : public PciDev
      * receive address filter
      */
     bool rxFilterEnable;
-    bool rxFilter(const PacketPtr &packet);
+    bool rxFilter(const EthPacketPtr &packet);
     bool acceptBroadcast;
     bool acceptMulticast;
     bool acceptUnicast;
     bool acceptPerfect;
     bool acceptArp;
     bool multicastHashEnable;
-
-    PhysicalMemory *physmem;
 
     /**
      * Interrupt management
@@ -363,16 +349,10 @@ class NSGigE : public PciDev
   public:
     struct Params : public PciDev::Params
     {
-        PhysicalMemory *pmem;
-        HierParams *hier;
-        Bus *pio_bus;
-        Bus *header_bus;
-        Bus *payload_bus;
         Tick clock;
         Tick intr_delay;
         Tick tx_delay;
         Tick rx_delay;
-        Tick pio_latency;
         bool dma_desc_free;
         bool dma_data_free;
         Tick dma_read_delay;
@@ -393,16 +373,15 @@ class NSGigE : public PciDev
     ~NSGigE();
     const Params *params() const { return (const Params *)_params; }
 
-    virtual void writeConfig(int offset, int size, const uint8_t *data);
-    virtual void readConfig(int offset, int size, uint8_t *data);
+    virtual void writeConfig(int offset, const uint16_t data);
 
-    virtual Fault read(MemReqPtr &req, uint8_t *data);
-    virtual Fault write(MemReqPtr &req, const uint8_t *data);
+    virtual Tick read(Packet &pkt);
+    virtual Tick write(Packet &pkt);
 
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }
 
-    bool recvPacket(PacketPtr packet);
+    bool recvPacket(EthPacketPtr packet);
     void transferDone();
 
     void setInterface(NSGigEInt *i) { assert(!interface); interface = i; }
@@ -463,9 +442,6 @@ class NSGigE : public PciDev
     Stats::Formula coalescedTotal;
     Stats::Scalar<> postedInterrupts;
     Stats::Scalar<> droppedPackets;
-
-  public:
-    Tick cacheAccess(MemReqPtr &req);
 };
 
 /*
@@ -480,7 +456,7 @@ class NSGigEInt : public EtherInt
     NSGigEInt(const std::string &name, NSGigE *d)
         : EtherInt(name), dev(d) { dev->setInterface(this); }
 
-    virtual bool recvPacket(PacketPtr pkt) { return dev->recvPacket(pkt); }
+    virtual bool recvPacket(EthPacketPtr pkt) { return dev->recvPacket(pkt); }
     virtual void sendDone() { dev->transferDone(); }
 };
 

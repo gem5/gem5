@@ -172,21 +172,27 @@ SimpleCPU::SimpleCPU(Params *p)
 #if SIMPLE_CPU_MEM_ATOMIC || SIMPLE_CPU_MEM_IMMEDIATE
     ifetch_req = new Request(true);
     ifetch_req->setAsid(0);
+    // @todo fix me and get the real cpu iD!!!
+    ifetch_req->setCpuNum(0);
     ifetch_req->setSize(sizeof(MachInst));
     ifetch_pkt = new Packet;
     ifetch_pkt->cmd = Read;
-    ifetch_pkt->data = (uint8_t *)&inst;
+    ifetch_pkt->dataStatic(&inst);
     ifetch_pkt->req = ifetch_req;
     ifetch_pkt->size = sizeof(MachInst);
 
     data_read_req = new Request(true);
+    // @todo fix me and get the real cpu iD!!!
+    data_read_req->setCpuNum(0);
     data_read_req->setAsid(0);
     data_read_pkt = new Packet;
     data_read_pkt->cmd = Read;
-    data_read_pkt->data = new uint8_t[8];
+    data_read_pkt->dataStatic(&dataReg);
     data_read_pkt->req = data_read_req;
 
     data_write_req = new Request(true);
+    // @todo fix me and get the real cpu iD!!!
+    data_write_req->setCpuNum(0);
     data_write_req->setAsid(0);
     data_write_pkt = new Packet;
     data_write_pkt->cmd = Write;
@@ -474,7 +480,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 //	Fault fault = xc->read(memReq,data);
         // Not sure what to check for no fault...
         if (data_read_pkt->result == Success) {
-            memcpy(&data, data_read_pkt->data, sizeof(T));
+            data = data_read_pkt->get<T>();
         }
 
         if (traceData) {
@@ -517,7 +523,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         // Need to find a way to not duplicate code above.
 
         if (data_read_pkt->result == Success) {
-            memcpy(&data, data_read_pkt->data, sizeof(T));
+            data = data_read_pkt->get<T>();
         }
 
         if (traceData) {
@@ -621,11 +627,11 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt = new Packet;
         data_write_pkt->cmd = Write;
         data_write_pkt->req = data_write_req;
-        data_write_pkt->data = new uint8_t[64];
-        memcpy(data_write_pkt->data, &data, sizeof(T));
+        data_write_pkt->allocate();
+        data_write_pkt->set(data);
 #else
         data_write_pkt->reset();
-        data_write_pkt->data = (uint8_t *)&data;
+        data_write_pkt->dataStatic(&data);
 #endif
         data_write_pkt->addr = data_write_req->getPaddr();
         data_write_pkt->size = sizeof(T);
@@ -816,7 +822,7 @@ SimpleCPU::processResponse(Packet &response)
         scheduleTickEvent(1);
 
         // Copy the icache data into the instruction itself.
-        memcpy(&inst, pkt->data, sizeof(inst));
+        inst = pkt->get<MachInst>();
 
         delete pkt;
         break;

@@ -73,14 +73,14 @@ class EtherLink : public SimObject
         /*
          * Transfer is complete
          */
-        PacketPtr packet;
+        EthPacketPtr packet;
         void txDone();
         typedef EventWrapper<Link, &Link::txDone> DoneEvent;
         friend void DoneEvent::process();
         DoneEvent doneEvent;
 
         friend class LinkDelayEvent;
-        void txComplete(PacketPtr packet);
+        void txComplete(EthPacketPtr packet);
 
       public:
         Link(const std::string &name, EtherLink *p, int num,
@@ -90,7 +90,7 @@ class EtherLink : public SimObject
         const std::string name() const { return objName; }
 
         bool busy() const { return (bool)packet; }
-        bool transmit(PacketPtr packet);
+        bool transmit(EthPacketPtr packet);
 
         void setTxInt(Interface *i) { assert(!txint); txint = i; }
         void setRxInt(Interface *i) { assert(!rxint); rxint = i; }
@@ -110,7 +110,7 @@ class EtherLink : public SimObject
 
       public:
         Interface(const std::string &name, Link *txlink, Link *rxlink);
-        bool recvPacket(PacketPtr packet) { return txlink->transmit(packet); }
+        bool recvPacket(EthPacketPtr packet) { return txlink->transmit(packet); }
         void sendDone() { peer->sendDone(); }
     };
 

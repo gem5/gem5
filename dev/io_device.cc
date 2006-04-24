@@ -172,7 +172,8 @@ DmaPort::dmaAction(Command cmd, Addr addr, int size, Event *event,
             pkt->req->setPaddr(pkt->addr);
             pkt->req->setSize(pkt->size);
             // Increment the data pointer on a write
-            pkt->data = data ? data + prevSize : NULL ;
+            if (data)
+                pkt->dataStatic(data + prevSize) ;
             prevSize += pkt->size;
             // Set the last bit of the dma as the final packet for this dma
             // and set it's completion event.
@@ -183,13 +184,16 @@ DmaPort::dmaAction(Command cmd, Addr addr, int size, Event *event,
             }
             assert(pendingCount >= 0);
             pendingCount++;
-            sendDma(*pkt);
+            sendDma(pkt);
     }
+    // since this isn't getting used and we want a check to make sure that all
+    // packets had data in them at some point.
+    basePkt.dataStatic((uint8_t*)NULL);
 }
 
 
 void
-DmaPort::sendDma(Packet &pkt)
+DmaPort::sendDma(Packet *pkt)
 {
    // some kind of selction between access methods
    // more work is going to have to be done to make
@@ -200,13 +204,16 @@ DmaPort::sendDma(Packet &pkt)
        if (sendTiming(pkt) == Failure)
            transmitList.push_back(&packet);
    } else if (state == Atomic) {*/
-       sendAtomic(pkt);
-       if (pkt.senderState) {
-           DmaReqState *state = (DmaReqState*)pkt.senderState;
-           state->completionEvent->schedule(curTick + (pkt.time - pkt.req->getTime()) +1);
+       sendAtomic(*pkt);
+       if (pkt->senderState) {
+           DmaReqState *state = (DmaReqState*)pkt->senderState;
+           state->completionEvent->schedule(curTick + (pkt->time - pkt->req->getTime()) +1);
        }
-        pendingCount--;
-        assert(pendingCount >= 0);
+       pendingCount--;
+       assert(pendingCount >= 0);
+       delete pkt->req;
+       delete pkt;
+
 /*   } else if (state == Functional) {
        sendFunctional(pkt);
        // Is this correct???

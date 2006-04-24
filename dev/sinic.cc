@@ -28,6 +28,7 @@
 
 #include <cstdio>
 #include <deque>
+#include <limits>
 #include <string>
 
 #include "base/inet.hh"
@@ -36,12 +37,7 @@
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"
 #include "dev/pciconfigall.hh"
-#include "mem/bus/bus.hh"
-#include "mem/bus/dma_interface.hh"
-#include "mem/bus/pio_interface.hh"
-#include "mem/bus/pio_interface_impl.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
@@ -85,8 +81,7 @@ Base::Base(Params *p)
 }
 
 Device::Device(Params *p)
-    : Base(p), plat(p->plat), physmem(p->physmem),
-      rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
+    : Base(p), rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
       rxKickTick(0), txKickTick(0),
       txEvent(this), rxDmaEvent(this), txDmaEvent(this),
       dmaReadDelay(p->dma_read_delay), dmaReadFactor(p->dma_read_factor),
@@ -94,25 +89,6 @@ Device::Device(Params *p)
 {
     reset();
 
-    if (p->pio_bus) {
-        pioInterface = newPioInterface(p->name + ".pio", p->hier, p->pio_bus,
-                                       this, &Device::cacheAccess);
-        pioLatency = p->pio_latency * p->pio_bus->clockRate;
-    }
-
-    if (p->header_bus) {
-        if (p->payload_bus)
-            dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
-                                                 p->header_bus,
-                                                 p->payload_bus, 1,
-                                                 p->dma_no_allocate);
-        else
-            dmaInterface = new DMAInterface<Bus>(p->name + ".dma",
-                                                 p->header_bus,
-                                                 p->header_bus, 1,
-                                                 p->dma_no_allocate);
-    } else if (p->payload_bus)
-        panic("must define a header bus if defining a payload bus");
 }
 
 Device::~Device()
@@ -288,29 +264,6 @@ Device::regStats()
     rxPacketRate = rxPackets / simSeconds;
 }
 
-/**
- * This is to write to the PCI general configuration registers
- */
-void
-Device::writeConfig(int offset, int size, const uint8_t *data)
-{
-    switch (offset) {
-      case PCI0_BASE_ADDR0:
-        // Need to catch writes to BARs to update the PIO interface
-        PciDev::writeConfig(offset, size, data);
-        if (BARAddrs[0] != 0) {
-            if (pioInterface)
-                pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
-
-            BARAddrs[0] &= EV5::PAddrUncachedMask;
-        }
-        break;
-
-      default:
-        PciDev::writeConfig(offset, size, data);
-    }
-}
-
 void
 Device::prepareIO(int cpu, int index)
 {
@@ -357,73 +310,64 @@ Device::prepareWrite(int cpu, int index)
 /**
  * I/O read of device register
  */
-Fault
-Device::read(MemReqPtr &req, uint8_t *data)
+Tick
+Device::read(Packet &pkt)
 {
     assert(config.command & PCI_CMD_MSE);
-    Fault fault = readBar(req, data);
+    assert(pkt.addr >= BARAddrs[0] && pkt.size < BARSize[0]);
 
-    if (fault->isMachineCheckFault()) {
-        panic("address does not map to a BAR pa=%#x va=%#x size=%d",
-              req->paddr, req->vaddr, req->size);
-
-        return genMachineCheckFault();
-    }
-
-    return fault;
-}
-
-Fault
-Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
-{
-    int cpu = (req->xc->readMiscReg(TheISA::IPR_PALtemp16) >> 8) & 0xff;
+    int cpu = pkt.req->getCpuNum();
+    Addr daddr = pkt.addr - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
+    pkt.time = curTick + pioDelay;
+    pkt.allocate();
+
     if (!regValid(raddr))
-        panic("invalid register: cpu=%d, da=%#x pa=%#x va=%#x size=%d",
-              cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d",
+                cpu, daddr, pkt.addr, pkt.size);
 
     const Regs::Info &info = regInfo(raddr);
     if (!info.read)
-        panic("reading %s (write only): cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("reading %s (write only): cpu=%d da=%#x pa=%#x size=%d",
+                info.name, cpu, daddr, pkt.addr, pkt.size);
 
-    if (req->size != info.size)
-        panic("invalid size for reg %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
+    if (pkt.size != info.size)
+        panic("invalid size for reg %s: cpu=%d da=%#x pa=%#x size=%d",
+                info.name, cpu, daddr, pkt.addr, pkt.size);
 
     prepareRead(cpu, index);
 
     uint64_t value = 0;
-    if (req->size == 4) {
-        uint32_t &reg = *(uint32_t *)data;
-        reg = regData32(raddr);
+    if (pkt.size == 4) {
+        uint32_t reg = regData32(raddr);
+        pkt.set(reg);
         value = reg;
     }
 
-    if (req->size == 8) {
-        uint64_t &reg = *(uint64_t *)data;
-        reg = regData64(raddr);
+    if (pkt.size == 8) {
+        uint64_t reg = regData64(raddr);
+        pkt.set(reg);
         value = reg;
     }
 
     DPRINTF(EthernetPIO,
-            "read %s cpu=%d da=%#x pa=%#x va=%#x size=%d val=%#x\n",
-            info.name, cpu, daddr, req->paddr, req->vaddr, req->size, value);
+            "read %s cpu=%d da=%#x pa=%#x size=%d val=%#x\n",
+            info.name, cpu, daddr, pkt.addr, pkt.size, value);
 
     // reading the interrupt status register has the side effect of
     // clearing it
     if (raddr == Regs::IntrStatus)
         devIntrClear();
 
-    return NoFault;
+    return pioDelay;
 }
 
 /**
  * IPR read of device register
- */
-Fault
+
+    Fault
 Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 {
     if (!regValid(daddr))
@@ -449,72 +393,60 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
 
     return NoFault;
 }
-
+*/
 /**
  * I/O write of device register
  */
-Fault
-Device::write(MemReqPtr &req, const uint8_t *data)
+Tick
+Device::write(Packet &pkt)
 {
     assert(config.command & PCI_CMD_MSE);
-    Fault fault = writeBar(req, data);
+    assert(pkt.addr >= BARAddrs[0] && pkt.size < BARSize[0]);
 
-    if (fault->isMachineCheckFault()) {
-        panic("address does not map to a BAR pa=%#x va=%#x size=%d",
-              req->paddr, req->vaddr, req->size);
-
-        return genMachineCheckFault();
-    }
-
-    return fault;
-}
-
-Fault
-Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
-{
-    int cpu = (req->xc->readMiscReg(TheISA::IPR_PALtemp16) >> 8) & 0xff;
+    int cpu = pkt.req->getCpuNum();
+    Addr daddr = pkt.addr - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
+    pkt.time = curTick + pioDelay;
+
     if (!regValid(raddr))
-        panic("invalid address: cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d",
+                cpu, daddr, pkt.addr, pkt.size);
 
     const Regs::Info &info = regInfo(raddr);
     if (!info.write)
-        panic("writing %s (read only): cpu=%d da=%#x",
-              info.name, cpu, daddr);
+        panic("write %s (read only): cpu=%d da=%#x pa=%#x size=%d",
+                info.name, cpu, daddr, pkt.addr, pkt.size);
 
-    if (req->size != info.size)
-        panic("invalid size for %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
+    if (pkt.size != info.size)
+        panic("invalid size for reg %s: cpu=%d da=%#x pa=%#x size=%d",
+                info.name, cpu, daddr, pkt.addr, pkt.size);
 
-    uint32_t reg32 = *(uint32_t *)data;
-    uint64_t reg64 = *(uint64_t *)data;
     VirtualReg &vnic = virtualRegs[index];
 
     DPRINTF(EthernetPIO,
-            "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, cpu, info.size == 4 ? reg32 : reg64,
-            daddr, req->paddr, req->vaddr, req->size);
+            "write %s: cpu=%d val=%#x da=%#x pa=%#x size=%d\n",
+            info.name, cpu, info.size == 4 ? pkt.get<uint32_t>() :
+            pkt.get<uint64_t>(), daddr, pkt.addr, pkt.size);
 
     prepareWrite(cpu, index);
 
     switch (raddr) {
       case Regs::Config:
-        changeConfig(reg32);
+        changeConfig(pkt.get<uint32_t>());
         break;
 
       case Regs::Command:
-        command(reg32);
+        command(pkt.get<uint32_t>());
         break;
 
       case Regs::IntrStatus:
-        devIntrClear(regs.IntrStatus & reg32);
+        devIntrClear(regs.IntrStatus & pkt.get<uint32_t>());
         break;
 
       case Regs::IntrMask:
-        devIntrChangeMask(reg32);
+        devIntrChangeMask(pkt.get<uint32_t>());
         break;
 
       case Regs::RxData:
@@ -523,7 +455,7 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
                   RxStateStrings[rxState]);
 
         vnic.RxDone = Regs::RxDone_Busy;
-        vnic.RxData = reg64;
+        vnic.RxData = pkt.get<uint64_t>();
         rxList.push_back(index);
         if (rxEnable && rxState == rxIdle) {
             rxState = rxFifoBlock;
@@ -537,7 +469,7 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
                   TxStateStrings[txState]);
 
         vnic.TxDone = Regs::TxDone_Busy;
-        vnic.TxData = reg64;
+        vnic.TxData = pkt.get<uint64_t>();
         if (txList.empty() || txList.front() != index)
             txList.push_back(index);
         if (txEnable && txState == txIdle && txList.front() == index) {
@@ -547,7 +479,7 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
         break;
     }
 
-    return NoFault;
+    return pioDelay;
 }
 
 void
@@ -793,20 +725,13 @@ Device::reset()
 }
 
 void
-Device::rxDmaCopy()
+Device::rxDmaDone()
 {
     assert(rxState == rxCopy);
     rxState = rxCopyDone;
-    physmem->dma_write(rxDmaAddr, (uint8_t *)rxDmaData, rxDmaLen);
     DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n",
             rxDmaAddr, rxDmaLen);
     DDUMP(EthernetData, rxDmaData, rxDmaLen);
-}
-
-void
-Device::rxDmaDone()
-{
-    rxDmaCopy();
 
     // If the transmit state machine  has a pending DMA, let it go first
     if (txState == txBeginCopy)
@@ -892,29 +817,17 @@ Device::rxKick()
         break;
 
       case rxBeginCopy:
-        if (dmaInterface && dmaInterface->busy())
+        if (dmaPending())
             goto exit;
 
-        rxDmaAddr = plat->pciToDma(Regs::get_RxData_Addr(vnic->RxData));
-        rxDmaLen = min<int>(Regs::get_RxData_Len(vnic->RxData),
+        rxDmaAddr = params()->platform->pciToDma(
+                Regs::get_RxData_Addr(vnic->RxData));
+        rxDmaLen = std::min<int>(Regs::get_RxData_Len(vnic->RxData),
                             vnic->rxPacketBytes);
         rxDmaData = (*vnic->rxPacket)->data + vnic->rxPacketOffset;
         rxState = rxCopy;
 
-        if (dmaInterface) {
-            dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen,
-                                curTick, &rxDmaEvent, true);
-            goto exit;
-        }
-
-        if (dmaWriteDelay != 0 || dmaWriteFactor != 0) {
-            Tick factor = ((rxDmaLen + ULL(63)) >> ULL(6)) * dmaWriteFactor;
-            Tick start = curTick + dmaWriteDelay + factor;
-            rxDmaEvent.schedule(start);
-            goto exit;
-        }
-
-        rxDmaCopy();
+        dmaWrite(rxDmaAddr, rxDmaLen, &rxDmaEvent, rxDmaData);
         break;
 
       case rxCopy:
@@ -968,20 +881,13 @@ Device::rxKick()
 }
 
 void
-Device::txDmaCopy()
+Device::txDmaDone()
 {
     assert(txState == txCopy);
     txState = txCopyDone;
-    physmem->dma_read((uint8_t *)txDmaData, txDmaAddr, txDmaLen);
     DPRINTF(EthernetDMA, "tx dma read paddr=%#x len=%d\n",
             txDmaAddr, txDmaLen);
     DDUMP(EthernetData, txDmaData, txDmaLen);
-}
-
-void
-Device::txDmaDone()
-{
-    txDmaCopy();
 
     // If the receive state machine  has a pending DMA, let it go first
     if (rxState == rxBeginCopy)
@@ -999,7 +905,7 @@ Device::transmit()
     }
 
     uint32_t interrupts;
-    PacketPtr packet = txFifo.front();
+    EthPacketPtr packet = txFifo.front();
     if (!interface->sendPacket(packet)) {
         DPRINTF(Ethernet, "Packet Transmit: failed txFifo available %d\n",
                 txFifo.avail());
@@ -1065,7 +971,7 @@ Device::txKick()
         assert(Regs::get_TxDone_Busy(vnic->TxData));
         if (!txPacket) {
             // Grab a new packet from the fifo.
-            txPacket = new PacketData(16384);
+            txPacket = new EthPacketData(16384);
             txPacketOffset = 0;
         }
 
@@ -1079,28 +985,16 @@ Device::txKick()
         break;
 
       case txBeginCopy:
-        if (dmaInterface && dmaInterface->busy())
+        if (dmaPending())
             goto exit;
 
-        txDmaAddr = plat->pciToDma(Regs::get_TxData_Addr(vnic->TxData));
+        txDmaAddr = params()->platform->pciToDma(
+                Regs::get_TxData_Addr(vnic->TxData));
         txDmaLen = Regs::get_TxData_Len(vnic->TxData);
         txDmaData = txPacket->data + txPacketOffset;
         txState = txCopy;
 
-        if (dmaInterface) {
-            dmaInterface->doDMA(Read, txDmaAddr, txDmaLen,
-                                curTick, &txDmaEvent, true);
-            goto exit;
-        }
-
-        if (dmaReadDelay != 0 || dmaReadFactor != 0) {
-            Tick factor = ((txDmaLen + ULL(63)) >> ULL(6)) * dmaReadFactor;
-            Tick start = curTick + dmaReadDelay + factor;
-            txDmaEvent.schedule(start);
-            goto exit;
-        }
-
-        txDmaCopy();
+        dmaRead(txDmaAddr, txDmaLen, &txDmaEvent, txDmaData);
         break;
 
       case txCopy:
@@ -1187,7 +1081,7 @@ Device::transferDone()
 }
 
 bool
-Device::rxFilter(const PacketPtr &packet)
+Device::rxFilter(const EthPacketPtr &packet)
 {
     if (!Regs::get_Config_Filter(regs.Config))
         return false;
@@ -1232,7 +1126,7 @@ Device::rxFilter(const PacketPtr &packet)
 }
 
 bool
-Device::recvPacket(PacketPtr packet)
+Device::recvPacket(EthPacketPtr packet)
 {
     rxBytes += packet->length;
     rxPackets++;
@@ -1273,7 +1167,7 @@ Device::recvPacket(PacketPtr packet)
 //
 //
 void
-Base::serialize(ostream &os)
+Base::serialize(std::ostream &os)
 {
     // Serialize the PciDev base class
     PciDev::serialize(os);
@@ -1317,7 +1211,7 @@ Base::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-Device::serialize(ostream &os)
+Device::serialize(std::ostream &os)
 {
     // Serialize the PciDev base class
     Base::serialize(os);
@@ -1352,7 +1246,7 @@ Device::serialize(ostream &os)
     for (int i = 0; i < virtualRegsSize; ++i) {
         VirtualReg *vnic = &virtualRegs[i];
 
-        string reg = csprintf("vnic%d", i);
+        std::string reg = csprintf("vnic%d", i);
         paramOut(os, reg + ".RxData", vnic->RxData);
         paramOut(os, reg + ".RxDone", vnic->RxDone);
         paramOut(os, reg + ".TxData", vnic->TxData);
@@ -1481,7 +1375,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(txPacketExists);
     txPacket = 0;
     if (txPacketExists) {
-        txPacket = new PacketData(16384);
+        txPacket = new EthPacketData(16384);
         txPacket->unserialize("txPacket", cp, section);
         UNSERIALIZE_SCALAR(txPacketOffset);
         UNSERIALIZE_SCALAR(txPacketBytes);
@@ -1499,7 +1393,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     virtualRegs.resize(virtualRegsSize);
     for (int i = 0; i < virtualRegsSize; ++i) {
         VirtualReg *vnic = &virtualRegs[i];
-        string reg = csprintf("vnic%d", i);
+        std::string reg = csprintf("vnic%d", i);
 
         paramIn(cp, section, reg + ".RxData", vnic->RxData);
         paramIn(cp, section, reg + ".RxDone", vnic->RxDone);
@@ -1532,29 +1426,10 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     if (transmitTick)
         txEvent.schedule(curTick + transmitTick);
 
-    /*
-     * re-add addrRanges to bus bridges
-     */
-    if (pioInterface) {
-        pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
-        pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
-    }
+    pioPort->sendStatusChange(Port::RangeChange);
+
 }
 
-Tick
-Device::cacheAccess(MemReqPtr &req)
-{
-    Addr daddr;
-    int bar;
-    if (!getBAR(req->paddr, daddr, bar))
-        panic("address does not map to a BAR pa=%#x va=%#x size=%d",
-              req->paddr, req->vaddr, req->size);
-
-    DPRINTF(EthernetPIO, "timing %s to paddr=%#x bar=%d daddr=%#x\n",
-            req->cmd.toString(), req->paddr, bar, daddr);
-
-    return curTick + pioLatency;
-}
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Interface)
 
@@ -1588,29 +1463,22 @@ REGISTER_SIM_OBJECT("SinicInt", Interface)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
 
-    Param<Tick> clock;
 
-    Param<Addr> addr;
-    SimObjectParam<MemoryController *> mmu;
-    SimObjectParam<PhysicalMemory *> physmem;
+    SimObjectParam<System *> system;
+    SimObjectParam<Platform *> platform;
     SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
-    SimObjectParam<Platform *> platform;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
+    Param<Tick> pio_latency;
+    Param<Tick> intr_delay;
 
-    SimObjectParam<HierParams *> hier;
-    SimObjectParam<Bus*> pio_bus;
-    SimObjectParam<Bus*> dma_bus;
-    SimObjectParam<Bus*> payload_bus;
+    Param<Tick> clock;
     Param<Tick> dma_read_delay;
     Param<Tick> dma_read_factor;
     Param<Tick> dma_write_delay;
     Param<Tick> dma_write_factor;
-    Param<bool> dma_no_allocate;
-    Param<Tick> pio_latency;
-    Param<Tick> intr_delay;
 
     Param<Tick> rx_delay;
     Param<Tick> tx_delay;
@@ -1623,7 +1491,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<uint32_t> tx_fifo_threshold;
 
     Param<bool> rx_filter;
-    Param<string> hardware_address;
+    Param<std::string> hardware_address;
     Param<bool> rx_thread;
     Param<bool> tx_thread;
     Param<bool> rss;
@@ -1632,29 +1500,22 @@ END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
 
-    INIT_PARAM(clock, "State machine cycle time"),
 
-    INIT_PARAM(addr, "Device Address"),
-    INIT_PARAM(mmu, "Memory Controller"),
-    INIT_PARAM(physmem, "Physical Memory"),
+    INIT_PARAM(system, "System pointer"),
+    INIT_PARAM(platform, "Platform pointer"),
     INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(platform, "Platform"),
-    INIT_PARAM(pci_bus, "PCI bus"),
+    INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
+    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
+    INIT_PARAM(intr_delay, "Interrupt Delay"),
+    INIT_PARAM(clock, "State machine cycle time"),
 
-    INIT_PARAM(hier, "Hierarchy global variables"),
-    INIT_PARAM(pio_bus, ""),
-    INIT_PARAM(dma_bus, ""),
-    INIT_PARAM(payload_bus, "The IO Bus to attach to for payload"),
     INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
     INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
     INIT_PARAM(dma_write_delay, "fixed delay for dma writes"),
     INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
-    INIT_PARAM(dma_no_allocate, "Should we allocat on read in cache"),
-    INIT_PARAM(pio_latency, "Programmed IO latency in bus cycles"),
-    INIT_PARAM(intr_delay, "Interrupt Delay"),
 
     INIT_PARAM(rx_delay, "Receive Delay"),
     INIT_PARAM(tx_delay, "Transmit Delay"),
@@ -1678,31 +1539,22 @@ END_INIT_SIM_OBJECT_PARAMS(Device)
 CREATE_SIM_OBJECT(Device)
 {
     Device::Params *params = new Device::Params;
-
     params->name = getInstanceName();
-
-    params->clock = clock;
-
-    params->mmu = mmu;
-    params->physmem = physmem;
+    params->platform = platform;
+    params->system = system;
     params->configSpace = configspace;
     params->configData = configdata;
-    params->plat = platform;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
+    params->pio_delay = pio_latency;
+    params->intr_delay = intr_delay;
+    params->clock = clock;
 
-    params->hier = hier;
-    params->pio_bus = pio_bus;
-    params->header_bus = dma_bus;
-    params->payload_bus = payload_bus;
     params->dma_read_delay = dma_read_delay;
     params->dma_read_factor = dma_read_factor;
     params->dma_write_delay = dma_write_delay;
     params->dma_write_factor = dma_write_factor;
-    params->dma_no_allocate = dma_no_allocate;
-    params->pio_latency = pio_latency;
-    params->intr_delay = intr_delay;
 
     params->tx_delay = tx_delay;
     params->rx_delay = rx_delay;

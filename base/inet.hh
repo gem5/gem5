@@ -117,11 +117,11 @@ class EthPtr
 {
   protected:
     friend class IpPtr;
-    PacketPtr p;
+    EthPacketPtr p;
 
   public:
     EthPtr() {}
-    EthPtr(const PacketPtr &ptr) : p(ptr) { }
+    EthPtr(const EthPacketPtr &ptr) : p(ptr) { }
 
     EthHdr *operator->() { return (EthHdr *)p->data; }
     EthHdr &operator*() { return *(EthHdr *)p->data; }
@@ -131,10 +131,10 @@ class EthPtr
     const EthHdr &operator*() const { return *(const EthHdr *)p->data; }
     operator const EthHdr *() const { return (const EthHdr *)p->data; }
 
-    const EthPtr &operator=(const PacketPtr &ptr) { p = ptr; return *this; }
+    const EthPtr &operator=(const EthPacketPtr &ptr) { p = ptr; return *this; }
 
-    const PacketPtr packet() const { return p; }
-    PacketPtr packet() { return p; }
+    const EthPacketPtr packet() const { return p; }
+    EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
 };
@@ -174,13 +174,13 @@ class IpPtr
   protected:
     friend class TcpPtr;
     friend class UdpPtr;
-    PacketPtr p;
+    EthPacketPtr p;
 
     const IpHdr *h() const
     { return (const IpHdr *)(p->data + sizeof(eth_hdr)); }
     IpHdr *h() { return (IpHdr *)(p->data + sizeof(eth_hdr)); }
 
-    void set(const PacketPtr &ptr)
+    void set(const EthPacketPtr &ptr)
     {
         EthHdr *eth = (EthHdr *)ptr->data;
         if (eth->type() == ETH_TYPE_IP)
@@ -191,7 +191,7 @@ class IpPtr
 
   public:
     IpPtr() {}
-    IpPtr(const PacketPtr &ptr) { set(ptr); }
+    IpPtr(const EthPacketPtr &ptr) { set(ptr); }
     IpPtr(const EthPtr &ptr) { set(ptr.p); }
     IpPtr(const IpPtr &ptr) : p(ptr.p) { }
 
@@ -203,12 +203,12 @@ class IpPtr
     const IpHdr &operator*() const { return *h(); }
     operator const IpHdr *() const { return h(); }
 
-    const IpPtr &operator=(const PacketPtr &ptr) { set(ptr); return *this; }
+    const IpPtr &operator=(const EthPacketPtr &ptr) { set(ptr); return *this; }
     const IpPtr &operator=(const EthPtr &ptr) { set(ptr.p); return *this; }
     const IpPtr &operator=(const IpPtr &ptr) { p = ptr.p; return *this; }
 
-    const PacketPtr packet() const { return p; }
-    PacketPtr packet() { return p; }
+    const EthPacketPtr packet() const { return p; }
+    EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
     operator bool() { return p; }
@@ -272,13 +272,13 @@ struct TcpHdr : public tcp_hdr
 class TcpPtr
 {
   protected:
-    PacketPtr p;
+    EthPacketPtr p;
     int off;
 
     const TcpHdr *h() const { return (const TcpHdr *)(p->data + off); }
     TcpHdr *h() { return (TcpHdr *)(p->data + off); }
 
-    void set(const PacketPtr &ptr, int offset) { p = ptr; off = offset; }
+    void set(const EthPacketPtr &ptr, int offset) { p = ptr; off = offset; }
     void set(const IpPtr &ptr)
     {
         if (ptr->proto() == IP_PROTO_TCP)
@@ -303,8 +303,8 @@ class TcpPtr
     const TcpPtr &operator=(const IpPtr &i) { set(i); return *this; }
     const TcpPtr &operator=(const TcpPtr &t) { set(t.p, t.off); return *this; }
 
-    const PacketPtr packet() const { return p; }
-    PacketPtr packet() { return p; }
+    const EthPacketPtr packet() const { return p; }
+    EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
     operator bool() { return p; }
@@ -362,13 +362,13 @@ struct UdpHdr : public udp_hdr
 class UdpPtr
 {
   protected:
-    PacketPtr p;
+    EthPacketPtr p;
     int off;
 
     const UdpHdr *h() const { return (const UdpHdr *)(p->data + off); }
     UdpHdr *h() { return (UdpHdr *)(p->data + off); }
 
-    void set(const PacketPtr &ptr, int offset) { p = ptr; off = offset; }
+    void set(const EthPacketPtr &ptr, int offset) { p = ptr; off = offset; }
     void set(const IpPtr &ptr)
     {
         if (ptr->proto() == IP_PROTO_UDP)
@@ -393,8 +393,8 @@ class UdpPtr
     const UdpPtr &operator=(const IpPtr &i) { set(i); return *this; }
     const UdpPtr &operator=(const UdpPtr &t) { set(t.p, t.off); return *this; }
 
-    const PacketPtr packet() const { return p; }
-    PacketPtr packet() { return p; }
+    const EthPacketPtr packet() const { return p; }
+    EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
     operator bool() { return p; }

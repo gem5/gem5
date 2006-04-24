@@ -207,6 +207,9 @@ class SimpleCPU : public BaseCPU
     // current instruction
     MachInst inst;
 
+    // Static data storage
+    TheISA::IntReg dataReg;
+
 #if SIMPLE_CPU_MEM_TIMING
     Packet *retry_pkt;
 #elif SIMPLE_CPU_MEM_ATOMIC || SIMPLE_CPU_MEM_IMMEDIATE

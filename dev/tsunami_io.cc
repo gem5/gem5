@@ -447,65 +447,51 @@ TsunamiIO::read(Packet &pkt)
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n", pkt.addr,
             pkt.size, daddr);
 
-
-    uint8_t *data8;
-    uint64_t *data64;
+    pkt.allocate();
 
     if (pkt.size == sizeof(uint8_t)) {
-
-        if (!pkt.data) {
-            data8 = new uint8_t;
-            pkt.data = data8;
-        } else
-            data8 = pkt.data;
         switch(daddr) {
           // PIC1 mask read
           case TSDEV_PIC1_MASK:
-            *data8 = ~mask1;
+            pkt.set(~mask1);
             break;
           case TSDEV_PIC2_MASK:
-            *data8 = ~mask2;
+            pkt.set(~mask2);
             break;
           case TSDEV_PIC1_ISR:
               // !!! If this is modified 64bit case needs to be too
               // Pal code has to do a 64 bit physical read because there is
               // no load physical byte instruction
-              *data8 = picr;
+              pkt.set(picr);
               break;
           case TSDEV_PIC2_ISR:
               // PIC2 not implemnted... just return 0
-              *data8 = 0x00;
+              pkt.set(0x00);
               break;
           case TSDEV_TMR0_DATA:
-            pitimer.counter0.read(data8);
+            pitimer.counter0.read(pkt.getPtr<uint8_t>());
             break;
           case TSDEV_TMR1_DATA:
-            pitimer.counter1.read(data8);
+            pitimer.counter1.read(pkt.getPtr<uint8_t>());
             break;
           case TSDEV_TMR2_DATA:
-            pitimer.counter2.read(data8);
+            pitimer.counter2.read(pkt.getPtr<uint8_t>());
             break;
           case TSDEV_RTC_DATA:
-            rtc.readData(data8);
+            rtc.readData(pkt.getPtr<uint8_t>());
             break;
           case TSDEV_CTRL_PORTB:
             if (pitimer.counter2.outputHigh())
-                *data8 = PORTB_SPKR_HIGH;
+                pkt.set(PORTB_SPKR_HIGH);
             else
-                *data8 = 0x00;
+                pkt.set(0x00);
             break;
           default:
             panic("I/O Read - va%#x size %d\n", pkt.addr, pkt.size);
         }
     } else if (pkt.size == sizeof(uint64_t)) {
-        if (!pkt.data) {
-            data64 = new uint64_t;
-            pkt.data = (uint8_t*)data64;
-        } else
-            data64 = (uint64_t*)pkt.data;
-
         if (daddr == TSDEV_PIC1_ISR)
-            *data64 = picr;
+            pkt.set<uint64_t>(picr);
         else
            panic("I/O Read - invalid addr - va %#x size %d\n",
                    pkt.addr, pkt.size);
@@ -524,20 +510,15 @@ TsunamiIO::write(Packet &pkt)
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     Addr daddr = pkt.addr - pioAddr;
-    uint8_t val = *pkt.data;
-
-#if TRACING_ON
-    uint64_t dt64 = val;
-#endif
 
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
-            pkt.addr, pkt.size, pkt.addr & 0xfff, dt64);
+            pkt.addr, pkt.size, pkt.addr & 0xfff, (uint32_t)pkt.get<uint8_t>());
 
     assert(pkt.size == sizeof(uint8_t));
 
     switch(daddr) {
       case TSDEV_PIC1_MASK:
-        mask1 = ~(val);
+        mask1 = ~(pkt.get<uint8_t>());
         if ((picr & mask1) && !picInterrupting) {
             picInterrupting = true;
             tsunami->cchip->postDRIR(55);
@@ -550,38 +531,38 @@ TsunamiIO::write(Packet &pkt)
         }
         break;
       case TSDEV_PIC2_MASK:
-        mask2 = val;
+        mask2 = pkt.get<uint8_t>();
         //PIC2 Not implemented to interrupt
         break;
       case TSDEV_PIC1_ACK:
         // clear the interrupt on the PIC
-        picr &= ~(1 << (val & 0xF));
+        picr &= ~(1 << (pkt.get<uint8_t>() & 0xF));
         if (!(picr & mask1))
             tsunami->cchip->clearDRIR(55);
         break;
       case TSDEV_DMA1_MODE:
-        mode1 = val;
+        mode1 = pkt.get<uint8_t>();
         break;
       case TSDEV_DMA2_MODE:
-        mode2 = val;
+        mode2 = pkt.get<uint8_t>();
         break;
       case TSDEV_TMR0_DATA:
-        pitimer.counter0.write(val);
+        pitimer.counter0.write(pkt.get<uint8_t>());
         break;
       case TSDEV_TMR1_DATA:
-        pitimer.counter1.write(val);
+        pitimer.counter1.write(pkt.get<uint8_t>());
         break;
       case TSDEV_TMR2_DATA:
-        pitimer.counter2.write(val);
+        pitimer.counter2.write(pkt.get<uint8_t>());
         break;
       case TSDEV_TMR_CTRL:
-        pitimer.writeControl(val);
+        pitimer.writeControl(pkt.get<uint8_t>());
         break;
       case TSDEV_RTC_ADDR:
-        rtc.writeAddr(val);
+        rtc.writeAddr(pkt.get<uint8_t>());
         break;
       case TSDEV_RTC_DATA:
-        rtc.writeData(val);
+        rtc.writeData(pkt.get<uint8_t>());
         break;
       case TSDEV_KBD:
       case TSDEV_DMA1_CMND:
@@ -596,7 +577,7 @@ TsunamiIO::write(Packet &pkt)
       case TSDEV_CTRL_PORTB:
         break;
       default:
-        panic("I/O Write - va%#x size %d data %#x\n", pkt.addr, pkt.size, val);
+        panic("I/O Write - va%#x size %d data %#x\n", pkt.addr, pkt.size, pkt.get<uint8_t>());
     }
 
     pkt.result = Success;

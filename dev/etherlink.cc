@@ -102,7 +102,7 @@ EtherLink::unserialize(Checkpoint *cp, const string &section)
 }
 
 void
-EtherLink::Link::txComplete(PacketPtr packet)
+EtherLink::Link::txComplete(EthPacketPtr packet)
 {
     DPRINTF(Ethernet, "packet received: len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
@@ -113,12 +113,12 @@ class LinkDelayEvent : public Event
 {
   protected:
     EtherLink::Link *link;
-    PacketPtr packet;
+    EthPacketPtr packet;
 
   public:
     // non-scheduling version for createForUnserialize()
     LinkDelayEvent();
-    LinkDelayEvent(EtherLink::Link *link, PacketPtr pkt, Tick when);
+    LinkDelayEvent(EtherLink::Link *link, EthPacketPtr pkt, Tick when);
 
     void process();
 
@@ -148,7 +148,7 @@ EtherLink::Link::txDone()
 }
 
 bool
-EtherLink::Link::transmit(PacketPtr pkt)
+EtherLink::Link::transmit(EthPacketPtr pkt)
 {
     if (busy()) {
         DPRINTF(Ethernet, "packet not sent, link busy\n");
@@ -195,7 +195,7 @@ EtherLink::Link::unserialize(const string &base, Checkpoint *cp,
     bool packet_exists;
     paramIn(cp, section, base + ".packet_exists", packet_exists);
     if (packet_exists) {
-        packet = new PacketData(16384);
+        packet = new EthPacketData(16384);
         packet->unserialize(base + ".packet", cp, section);
     }
 
@@ -215,7 +215,7 @@ LinkDelayEvent::LinkDelayEvent()
     setFlags(AutoDelete);
 }
 
-LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, PacketPtr p, Tick when)
+LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, EthPacketPtr p, Tick when)
     : Event(&mainEventQueue), link(l), packet(p)
 {
     setFlags(AutoSerialize);
@@ -256,7 +256,7 @@ LinkDelayEvent::unserialize(Checkpoint *cp, const string &section)
 
     link = parent->link[number];
 
-    packet = new PacketData(16384);
+    packet = new EthPacketData(16384);
     packet->unserialize("packet", cp, section);
 }
 

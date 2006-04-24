@@ -76,6 +76,26 @@ class Coherence{};
  */
 struct Packet
 {
+  private:
+   /** A pointer to the data being transfered.  It can be differnt sizes
+        at each level of the heirarchy so it belongs in the packet,
+        not request. This may or may not be populated when a responder recieves
+        the packet. If not populated it memory should be allocated.
+    */
+    PacketDataPtr data;
+
+    /** Is the data pointer set to a value that shouldn't be freed when the
+     * packet is destroyed? */
+    bool staticData;
+    /** The data pointer points to a value that should be freed when the packet
+     * is destroyed. */
+    bool dynamicData;
+    /** the data pointer points to an array (thus delete [] ) needs to be called
+     * on it rather than simply delete.*/
+    bool arrayData;
+
+
+  public:
     /** The address of the request, could be virtual or physical (depending on
         cache configurations). */
     Addr addr;
@@ -95,16 +115,7 @@ struct Packet
     void *senderState; // virtual base opaque,
                            // assert(dynamic_cast<Foo>) etc.
 
-    /** A pointer to the data being transfered.  It can be differnt sizes
-        at each level of the heirarchy so it belongs in the packet,
-        not request.
-        This pointer may be NULL! If it isn't null when received by the producer
-        of data it refers to memory that has not been dynamically allocated.
-        Otherwise the producer should simply allocate dynamic memory to use.
-        */
-    PacketDataPtr data;
-
-    /** Indicates the size of the request. */
+     /** Indicates the size of the request. */
     int size;
 
     /** A index of the source of the transaction. */
@@ -130,10 +141,96 @@ struct Packet
     short getDest() const { return dest; }
 
     Packet()
-        : result(Unknown)
+        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           result(Unknown)
         {}
 
-    void reset() { result = Unknown; }
+    ~Packet()
+    { deleteData(); }
+
+
+    /** Minimally reset a packet so something like simple cpu can reuse it. */
+    void reset() {
+        result = Unknown;
+        if (dynamicData) {
+           deleteData();
+           dynamicData = false;
+           arrayData = false;
+        }
+    }
+
+    /** Set the data pointer to the following value that should not be freed. */
+    template <typename T>
+    void dataStatic(T *p) {
+        assert(!dynamicData);
+        data = (PacketDataPtr)p;
+        staticData = true;
+    }
+
+    /** Set the data pointer to a value that should have delete [] called on it.
+     */
+    template <typename T>
+    void dataDynamicArray(T *p) {
+        assert(!staticData && !dynamicData);
+        data = (PacketDataPtr)p;
+        dynamicData = true;
+        arrayData = true;
+    }
+
+    /** set the data pointer to a value that should have delete called on it. */
+    template <typename T>
+    void dataDynamic(T *p) {
+        assert(!staticData && !dynamicData);
+        data = (PacketDataPtr)p;
+        dynamicData = true;
+        arrayData = false;
+    }
+
+    /** return the value of what is pointed to in the packet. */
+    template <typename T>
+    T get() {
+        assert(staticData || dynamicData);
+        assert(sizeof(T) <= size);
+        return *(T*)data;
+    }
+
+    /** get a pointer to the data ptr. */
+    template <typename T>
+    T* getPtr() {
+        assert(staticData || dynamicData);
+        return (T*)data;
+    }
+
+
+    /** set the value in the data pointer to v. */
+    template <typename T>
+    void set(T v) {
+        assert(sizeof(T) <= size);
+        *(T*)data = v;
+    }
+
+    /** delete the data pointed to in the data pointer. Ok to call to matter how
+     * data was allocted. */
+    void deleteData() {
+        assert(staticData || dynamicData);
+        if (staticData)
+            return;
+
+        if (arrayData)
+            delete [] data;
+        else
+            delete data;
+    }
+
+    /** If there isn't data in the packet, allocate some. */
+    void allocate() {
+        if (data)
+            return;
+        assert(!staticData);
+        dynamicData = true;
+        arrayData = true;
+        data = new uint8_t[size];
+    }
 };
 
 #endif //__MEM_PACKET_HH

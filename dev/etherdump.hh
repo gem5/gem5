@@ -45,7 +45,7 @@ class EtherDump : public SimObject
   private:
     std::ofstream stream;
     const int maxlen;
-    void dumpPacket(PacketPtr &packet);
+    void dumpPacket(EthPacketPtr &packet);
     void init();
 
     Tick curtime;
@@ -53,7 +53,7 @@ class EtherDump : public SimObject
   public:
     EtherDump(const std::string &name, const std::string &file, int max);
 
-    inline void dump(PacketPtr &pkt) { dumpPacket(pkt); }
+    inline void dump(EthPacketPtr &pkt) { dumpPacket(pkt); }
 };
 
 #endif // __ETHERDUMP_H__

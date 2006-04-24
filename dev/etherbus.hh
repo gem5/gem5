@@ -61,7 +61,7 @@ class EtherBus : public SimObject
     };
 
     DoneEvent event;
-    PacketPtr packet;
+    EthPacketPtr packet;
     EtherInt *sender;
     EtherDump *dump;
 
@@ -73,7 +73,7 @@ class EtherBus : public SimObject
     void txDone();
     void reg(EtherInt *dev);
     bool busy() const { return (bool)packet; }
-    bool send(EtherInt *sender, PacketPtr &packet);
+    bool send(EtherInt *sender, EthPacketPtr &packet);
 };
 
 #endif // __ETHERBUS_H__

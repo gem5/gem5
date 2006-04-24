@@ -58,9 +58,9 @@ class EtherInt : public SimObject
     void recvDone() { peer->sendDone(); }
     virtual void sendDone() = 0;
 
-    bool sendPacket(PacketPtr packet)
+    bool sendPacket(EthPacketPtr packet)
     { return peer ? peer->recvPacket(packet) : true; }
-    virtual bool recvPacket(PacketPtr packet) = 0;
+    virtual bool recvPacket(EthPacketPtr packet) = 0;
 };
 
 #endif // __DEV_ETHERINT_HH__

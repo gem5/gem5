@@ -70,10 +70,10 @@ class EtherTap : public EtherInt
 
   protected:
     std::string device;
-    std::queue<PacketPtr> packetBuffer;
+    std::queue<EthPacketPtr> packetBuffer;
 
     void process(int revent);
-    void enqueue(PacketData *packet);
+    void enqueue(EthPacketData *packet);
     void retransmit();
 
     /*
@@ -97,7 +97,7 @@ class EtherTap : public EtherInt
     EtherTap(const std::string &name, EtherDump *dump, int port, int bufsz);
     virtual ~EtherTap();
 
-    virtual bool recvPacket(PacketPtr packet);
+    virtual bool recvPacket(EthPacketPtr packet);
     virtual void sendDone();
 
     virtual void serialize(std::ostream &os);

@@ -81,7 +81,7 @@ EtherBus::reg(EtherInt *dev)
 { devlist.push_back(dev); }
 
 bool
-EtherBus::send(EtherInt *sndr, PacketPtr &pkt)
+EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 {
     if (busy()) {
         DPRINTF(Ethernet, "ethernet packet not sent, bus busy\n", curTick);
