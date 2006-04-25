@@ -802,8 +802,10 @@ Device::rxDmaCopy()
 {
     assert(rxState == rxCopy);
     rxState = rxCopyDone;
+    DPRINTF(EthernetDMA, "begin rx dma write paddr=%#x len=%d\n",
+            rxDmaAddr, rxDmaLen);
     physmem->dma_write(rxDmaAddr, (uint8_t *)rxDmaData, rxDmaLen);
-    DPRINTF(EthernetDMA, "rx dma write paddr=%#x len=%d\n",
+    DPRINTF(EthernetDMA, "end rx dma write paddr=%#x len=%d\n",
             rxDmaAddr, rxDmaLen);
     DDUMP(EthernetData, rxDmaData, rxDmaLen);
 }
@@ -868,6 +870,7 @@ Device::rxKick()
         /* scope for variables */ {
             IpPtr ip(*vnic->rxPacket);
             if (ip) {
+                DPRINTF(Ethernet, "ID is %d\n", ip->id());
                 vnic->rxDoneData |= Regs::RxDone_IpPacket;
                 rxIpChecksums++;
                 if (cksum(ip) != 0) {
@@ -1023,8 +1026,10 @@ Device::transmit()
             DPRINTF(Ethernet, "ID is %d\n", ip->id());
             TcpPtr tcp(ip);
             if (tcp) {
-                DPRINTF(Ethernet, "Src Port=%d, Dest Port=%d\n",
-                        tcp->sport(), tcp->dport());
+                DPRINTF(Ethernet,
+                        "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                        tcp->sport(), tcp->dport(), tcp->seq(),
+                        tcp->ack());
             }
         }
     }
@@ -1071,7 +1076,7 @@ Device::txKick()
 
     switch (txState) {
       case txFifoBlock:
-        assert(Regs::get_TxDone_Busy(vnic->TxData));
+        assert(Regs::get_TxDone_Busy(vnic->TxDone));
         if (!txPacket) {
             // Grab a new packet from the fifo.
             txPacket = new PacketData(16384);
