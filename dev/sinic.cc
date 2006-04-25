@@ -363,7 +363,7 @@ Device::read(MemReqPtr &req, uint8_t *data)
     assert(config.command & PCI_CMD_MSE);
     Fault fault = readBar(req, data);
 
-    if (fault->isMachineCheckFault()) {
+    if (fault && fault->isMachineCheckFault()) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
@@ -459,7 +459,7 @@ Device::write(MemReqPtr &req, const uint8_t *data)
     assert(config.command & PCI_CMD_MSE);
     Fault fault = writeBar(req, data);
 
-    if (fault->isMachineCheckFault()) {
+    if (fault && fault->isMachineCheckFault()) {
         panic("address does not map to a BAR pa=%#x va=%#x size=%d",
               req->paddr, req->vaddr, req->size);
 
