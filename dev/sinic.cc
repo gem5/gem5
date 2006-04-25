@@ -381,17 +381,19 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
     Addr raddr = daddr & Regs::VirtualMask;
 
     if (!regValid(raddr))
-        panic("invalid register: cpu=%d, da=%#x pa=%#x va=%#x size=%d",
-              cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("invalid register: cpu=%d vnic=%d da=%#x pa=%#x va=%#x size=%d",
+              cpu, index, daddr, req->paddr, req->vaddr, req->size);
 
     const Regs::Info &info = regInfo(raddr);
     if (!info.read)
-        panic("reading %s (write only): cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("read %s (write only): "
+              "cpu=%d vnic=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, index, daddr, req->paddr, req->vaddr, req->size);
 
     if (req->size != info.size)
-        panic("invalid size for reg %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("read %s (invalid size): "
+              "cpu=%d vnic=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, index, daddr, req->paddr, req->vaddr, req->size);
 
     prepareRead(cpu, index);
 
@@ -409,8 +411,9 @@ Device::readBar0(MemReqPtr &req, Addr daddr, uint8_t *data)
     }
 
     DPRINTF(EthernetPIO,
-            "read %s cpu=%d da=%#x pa=%#x va=%#x size=%d val=%#x\n",
-            info.name, cpu, daddr, req->paddr, req->vaddr, req->size, value);
+            "read %s: cpu=%d vnic=%d da=%#x pa=%#x va=%#x size=%d val=%#x\n",
+            info.name, cpu, index, daddr, req->paddr, req->vaddr, req->size,
+            value);
 
     // reading the interrupt status register has the side effect of
     // clearing it
@@ -482,21 +485,23 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
 
     const Regs::Info &info = regInfo(raddr);
     if (!info.write)
-        panic("writing %s (read only): cpu=%d da=%#x",
-              info.name, cpu, daddr);
+        panic("write %s (read only): "
+              "cpu=%d vnic=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, index, daddr, req->paddr, req->vaddr, req->size);
 
     if (req->size != info.size)
-        panic("invalid size for %s: cpu=%d da=%#x pa=%#x va=%#x size=%d",
-              info.name, cpu, daddr, req->paddr, req->vaddr, req->size);
+        panic("write %s (invalid size): "
+              "cpu=%d vnic=%d da=%#x pa=%#x va=%#x size=%d",
+              info.name, cpu, index, daddr, req->paddr, req->vaddr, req->size);
 
     uint32_t reg32 = *(uint32_t *)data;
     uint64_t reg64 = *(uint64_t *)data;
     VirtualReg &vnic = virtualRegs[index];
 
     DPRINTF(EthernetPIO,
-            "write %s: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
-            info.name, cpu, info.size == 4 ? reg32 : reg64,
-            daddr, req->paddr, req->vaddr, req->size);
+            "write %s vnic %d: cpu=%d val=%#x da=%#x pa=%#x va=%#x size=%d\n",
+            info.name, index, cpu, info.size == 4 ? reg32 : reg64, daddr,
+            req->paddr, req->vaddr, req->size);
 
     prepareWrite(cpu, index);
 
@@ -820,11 +825,11 @@ Device::rxKick()
 {
     VirtualReg *vnic;
 
-    DPRINTF(EthernetSM, "receive kick rxState=%s (rxFifo.size=%d)\n",
+    DPRINTF(EthernetSM, "rxKick: rxState=%s (rxFifo.size=%d)\n",
             RxStateStrings[rxState], rxFifo.size());
 
     if (rxKickTick > curTick) {
-        DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
+        DPRINTF(EthernetSM, "rxKick: exiting, can't run till %d\n",
                 rxKickTick);
         return;
     }
@@ -872,6 +877,10 @@ Device::rxKick()
                 TcpPtr tcp(ip);
                 UdpPtr udp(ip);
                 if (tcp) {
+                    DPRINTF(Ethernet,
+                            "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                            tcp->sport(), tcp->dport(), tcp->seq(),
+                            tcp->ack());
                     vnic->rxDoneData |= Regs::RxDone_TcpPacket;
                     rxTcpChecksums++;
                     if (cksum(tcp) != 0) {
@@ -1044,11 +1053,11 @@ void
 Device::txKick()
 {
     VirtualReg *vnic;
-    DPRINTF(EthernetSM, "transmit kick txState=%s (txFifo.size=%d)\n",
+    DPRINTF(EthernetSM, "txKick: txState=%s (txFifo.size=%d)\n",
             TxStateStrings[txState], txFifo.size());
 
     if (txKickTick > curTick) {
-        DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
+        DPRINTF(EthernetSM, "txKick: exiting, can't run till %d\n",
                 txKickTick);
         return;
     }
