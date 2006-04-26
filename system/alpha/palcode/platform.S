@@ -1620,7 +1620,8 @@ EXPORT(sys_machine_check)
         // Also, due to possible 2nd Cbox register file write for
         // uncorrectable errors, no register file read or write for 7 cycles.
 
-        nop
+        //nop
+        .long 0x4000054 // call M5 Panic
         mtpr	r0, pt0		// Stash for scratch -- OK if Cbox overwrites
                                 //    r0 later
         nop
@@ -1717,7 +1718,8 @@ EXPORT(sys_machine_check)
         //
 
 EXPORT(sys_mchk_collect_iprs)
-        mb						// MB before reading Scache IPRs
+        .long 0x4000054 // call M5 Panic
+        //mb						// MB before reading Scache IPRs
         mfpr	r1, icperr_stat
 
         mfpr	r8, dcperr_stat
