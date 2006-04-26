@@ -59,26 +59,26 @@ static const int VirtualMask = 0xff;
 static const int VirtualShift = 8;
 
 // Registers
-__SINIC_REG32(Config,      0x00); // 32: configuration register
-__SINIC_REG32(Command,     0x04); // 32: command register
-__SINIC_REG32(IntrStatus,  0x08); // 32: interrupt status
-__SINIC_REG32(IntrMask,    0x0c); // 32: interrupt mask
-__SINIC_REG32(RxMaxCopy,   0x10); // 32: max bytes per rx copy
-__SINIC_REG32(TxMaxCopy,   0x14); // 32: max bytes per tx copy
-__SINIC_REG32(RxMaxIntr,   0x18); // 32: max receives per interrupt
-__SINIC_REG32(Reserved0,   0x1c); // 32: reserved
-__SINIC_REG32(RxFifoSize,  0x20); // 32: rx fifo capacity in bytes
-__SINIC_REG32(TxFifoSize,  0x24); // 32: tx fifo capacity in bytes
-__SINIC_REG32(RxFifoMark,  0x28); // 32: rx fifo high watermark
-__SINIC_REG32(TxFifoMark,  0x2c); // 32: tx fifo low watermark
-__SINIC_REG32(RxData,      0x30); // 64: receive data
-__SINIC_REG32(RxDone,      0x38); // 64: receive done
-__SINIC_REG32(RxWait,      0x40); // 64: receive done (busy wait)
-__SINIC_REG32(TxData,      0x48); // 64: transmit data
-__SINIC_REG32(TxDone,      0x50); // 64: transmit done
-__SINIC_REG32(TxWait,      0x58); // 64: transmit done (busy wait)
-__SINIC_REG32(HwAddr,      0x60); // 64: mac address
-__SINIC_REG32(Size,        0x68); // register addres space size
+__SINIC_REG32(Config,        0x00); // 32: configuration register
+__SINIC_REG32(Command,       0x04); // 32: command register
+__SINIC_REG32(IntrStatus,    0x08); // 32: interrupt status
+__SINIC_REG32(IntrMask,      0x0c); // 32: interrupt mask
+__SINIC_REG32(RxMaxCopy,     0x10); // 32: max bytes per rx copy
+__SINIC_REG32(TxMaxCopy,     0x14); // 32: max bytes per tx copy
+__SINIC_REG32(RxMaxIntr,     0x18); // 32: max receives per interrupt
+__SINIC_REG32(Reserved0,     0x1c); // 32: reserved
+__SINIC_REG32(RxFifoSize,    0x20); // 32: rx fifo capacity in bytes
+__SINIC_REG32(TxFifoSize,    0x24); // 32: tx fifo capacity in bytes
+__SINIC_REG32(RxFifoMark,    0x28); // 32: rx fifo high watermark
+__SINIC_REG32(TxFifoMark,    0x2c); // 32: tx fifo low watermark
+__SINIC_REG32(RxData,        0x30); // 64: receive data
+__SINIC_REG32(RxDone,        0x38); // 64: receive done
+__SINIC_REG32(RxWait,        0x40); // 64: receive done (busy wait)
+__SINIC_REG32(TxData,        0x48); // 64: transmit data
+__SINIC_REG32(TxDone,        0x50); // 64: transmit done
+__SINIC_REG32(TxWait,        0x58); // 64: transmit done (busy wait)
+__SINIC_REG32(HwAddr,        0x60); // 64: mac address
+__SINIC_REG32(Size,          0x68); // register addres space size
 
 // Config register bits
 __SINIC_VAL32(Config_RSS,      10, 1); // enable receive side scaling
