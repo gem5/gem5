@@ -85,7 +85,8 @@ Base::Base(Params *p)
 }
 
 Device::Device(Params *p)
-    : Base(p), plat(p->plat), physmem(p->physmem),
+    : Base(p), plat(p->plat), physmem(p->physmem), rxUnique(0), txUnique(0),
+      virtualRegs(p->virtual_count < 1 ? 1 : p->virtual_count),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
       rxKickTick(0), txKickTick(0),
       txEvent(this), rxDmaEvent(this), txDmaEvent(this),
@@ -315,12 +316,9 @@ void
 Device::prepareIO(int cpu, int index)
 {
     int size = virtualRegs.size();
-    if (index < size)
-        return;
-
-    virtualRegs.resize(index + 1);
-    for (int i = size; i <= index; ++i)
-        virtualRegs[i].rxPacket = rxFifo.end();
+    if (index > size)
+        panic("Trying to access a vnic that doesn't exist %d > %d\n",
+              index, size);
 }
 
 void
@@ -333,7 +331,10 @@ Device::prepareRead(int cpu, int index)
 
     // update rx registers
     uint64_t rxdone = vnic.RxDone;
-    rxdone = set_RxDone_Packets(rxdone, rxFifo.packets());
+    rxdone = set_RxDone_Packets(rxdone, rxFifo.countPacketsAfter(rxFifoPtr));
+    rxdone = set_RxDone_Empty(rxdone, rxFifo.empty());
+    rxdone = set_RxDone_High(rxdone, rxFifo.size() > regs.RxFifoMark);
+    rxdone = set_RxDone_NotHigh(rxdone, rxLow);
     regs.RxData = vnic.RxData;
     regs.RxDone = rxdone;
     regs.RxWait = rxdone;
@@ -527,10 +528,32 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
             panic("receive machine busy with another request! rxState=%s",
                   RxStateStrings[rxState]);
 
+        vnic.rxUnique = rxUnique++;
         vnic.RxDone = Regs::RxDone_Busy;
         vnic.RxData = reg64;
-        rxList.push_back(index);
-        if (rxEnable && rxState == rxIdle) {
+
+        if (Regs::get_RxData_Vaddr(reg64)) {
+            Addr vaddr = Regs::get_RxData_Addr(reg64);
+            Addr paddr = vtophys(req->xc, vaddr);
+            DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d): "
+                    "vaddr=%#x, paddr=%#x\n",
+                    index, vnic.rxUnique, vaddr, paddr);
+
+            vnic.RxData = Regs::set_RxData_Addr(vnic.RxData, paddr);
+        } else {
+            DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d)\n",
+                    index, vnic.rxUnique);
+        }
+
+        if (vnic.rxPacket == rxFifo.end()) {
+            DPRINTF(EthernetPIO, "request new packet...appending to rxList\n");
+            rxList.push_back(index);
+        } else {
+            DPRINTF(EthernetPIO, "packet exists...appending to rxBusy\n");
+            rxBusy.push_back(index);
+        }
+
+        if (rxEnable && (rxState == rxIdle || rxState == rxFifoBlock)) {
             rxState = rxFifoBlock;
             rxKick();
         }
@@ -541,8 +564,23 @@ Device::writeBar0(MemReqPtr &req, Addr daddr, const uint8_t *data)
             panic("transmit machine busy with another request! txState=%s",
                   TxStateStrings[txState]);
 
+        vnic.txUnique = txUnique++;
         vnic.TxDone = Regs::TxDone_Busy;
         vnic.TxData = reg64;
+
+        if (Regs::get_TxData_Vaddr(reg64)) {
+            Addr vaddr = Regs::get_TxData_Addr(reg64);
+            Addr paddr = vtophys(req->xc, vaddr);
+            DPRINTF(EthernetPIO, "write TxData vnic %d (rxunique %d): "
+                    "vaddr=%#x, paddr=%#x\n",
+                    index, vnic.txUnique, vaddr, paddr);
+
+            vnic.TxData = Regs::set_TxData_Addr(vnic.TxData, paddr);
+        } else {
+            DPRINTF(EthernetPIO, "write TxData vnic %d (rxunique %d)\n",
+                    index, vnic.txUnique);
+        }
+
         if (txList.empty() || txList.front() != index)
             txList.push_back(index);
         if (txEnable && txState == txIdle && txList.front() == index) {
@@ -768,10 +806,21 @@ Device::reset()
         regs.Config |= Config_TxThread;
     if (params()->rss)
         regs.Config |= Config_RSS;
+    if (params()->zero_copy)
+        regs.Config |= Config_ZeroCopy;
+    if (params()->delay_copy)
+        regs.Config |= Config_DelayCopy;
+    if (params()->virtual_addr)
+        regs.Config |= Config_Vaddr;
+
+    if (params()->delay_copy && params()->zero_copy)
+        panic("Can't delay copy and zero copy");
+
     regs.IntrMask = Intr_Soft | Intr_RxHigh | Intr_RxPacket | Intr_TxLow;
     regs.RxMaxCopy = params()->rx_max_copy;
     regs.TxMaxCopy = params()->tx_max_copy;
     regs.RxMaxIntr = params()->rx_max_intr;
+    regs.VirtualCount = params()->virtual_count;
     regs.RxFifoSize = params()->rx_fifo_size;
     regs.TxFifoSize = params()->tx_fifo_size;
     regs.RxFifoMark = params()->rx_fifo_threshold;
@@ -779,6 +828,8 @@ Device::reset()
     regs.HwAddr = params()->eaddr;
 
     rxList.clear();
+    rxBusy.clear();
+    rxActive = -1;
     txList.clear();
 
     rxState = rxIdle;
@@ -788,6 +839,7 @@ Device::reset()
     rxFifoPtr = rxFifo.end();
     txFifo.clear();
     rxEmpty = false;
+    rxLow = true;
     txFull = false;
 
     int size = virtualRegs.size();
@@ -825,7 +877,7 @@ Device::rxDmaDone()
 void
 Device::rxKick()
 {
-    VirtualReg *vnic;
+    VirtualReg *vnic = NULL;
 
     DPRINTF(EthernetSM, "rxKick: rxState=%s (rxFifo.size=%d)\n",
             RxStateStrings[rxState], rxFifo.size());
@@ -840,16 +892,50 @@ Device::rxKick()
     if (rxState == rxIdle)
         goto exit;
 
-    assert(!rxList.empty());
-    vnic = &virtualRegs[rxList.front()];
+    if (rxActive == -1) {
+        if (rxState != rxFifoBlock)
+            panic("no active vnic while in state %s", RxStateStrings[rxState]);
 
-    DPRINTF(EthernetSM, "processing rxState=%s for virtual nic %d\n",
-            RxStateStrings[rxState], rxList.front());
+        DPRINTF(EthernetSM, "processing rxState=%s\n",
+                RxStateStrings[rxState]);
+    } else {
+        vnic = &virtualRegs[rxActive];
+        DPRINTF(EthernetSM,
+                "processing rxState=%s for vnic %d (rxunique %d)\n",
+                RxStateStrings[rxState], rxActive, vnic->rxUnique);
+    }
 
     switch (rxState) {
       case rxFifoBlock:
-        if (vnic->rxPacket != rxFifo.end()) {
+        if (DTRACE(EthernetSM)) {
+            PacketFifo::iterator end = rxFifo.end();
+            int size = virtualRegs.size();
+            for (int i = 0; i < size; ++i) {
+                VirtualReg *vn = &virtualRegs[i];
+                if (vn->rxPacket != end &&
+                    !Regs::get_RxDone_Busy(vn->RxDone)) {
+                    DPRINTF(EthernetSM,
+                            "vnic %d (rxunique %d), has outstanding packet %d\n",
+                            i, vn->rxUnique,
+                            rxFifo.countPacketsBefore(vn->rxPacket));
+                }
+            }
+        }
+
+        if (!rxBusy.empty()) {
+            rxActive = rxBusy.front();
+            rxBusy.pop_front();
+            vnic = &virtualRegs[rxActive];
+
+            if (vnic->rxPacket == rxFifo.end())
+                panic("continuing vnic without packet\n");
+
+            DPRINTF(EthernetSM,
+                    "continue processing for vnic %d (rxunique %d)\n",
+                    rxActive, vnic->rxUnique);
+
             rxState = rxBeginCopy;
+
             break;
         }
 
@@ -858,7 +944,18 @@ Device::rxKick()
             goto exit;
         }
 
+        if (rxList.empty())
+            panic("Not idle, but nothing to do!");
+
         assert(!rxFifo.empty());
+
+        rxActive = rxList.front();
+        rxList.pop_front();
+        vnic = &virtualRegs[rxActive];
+
+        DPRINTF(EthernetSM,
+                "processing new packet for vnic %d (rxunique %d)\n",
+                rxActive, vnic->rxUnique);
 
         // Grab a new packet from the fifo.
         vnic->rxPacket = rxFifoPtr++;
@@ -913,6 +1010,11 @@ Device::rxKick()
         rxDmaData = (*vnic->rxPacket)->data + vnic->rxPacketOffset;
         rxState = rxCopy;
 
+        if (rxDmaAddr == 1LL) {
+            rxState = rxCopyDone;
+            break;
+        }
+
         if (dmaInterface) {
             dmaInterface->doDMA(WriteInvalidate, rxDmaAddr, rxDmaLen,
                                 curTick, &rxDmaEvent, true);
@@ -934,30 +1036,43 @@ Device::rxKick()
         goto exit;
 
       case rxCopyDone:
-        vnic->RxDone = vnic->rxDoneData | rxDmaLen;
+        vnic->RxDone = vnic->rxDoneData;
         vnic->RxDone |= Regs::RxDone_Complete;
 
         if (vnic->rxPacketBytes == rxDmaLen) {
-            DPRINTF(EthernetSM, "rxKick: packet complete on vnic %d\n",
-                    rxList.front());
+            // Packet is complete.  Indicate how many bytes were copied
+            vnic->RxDone = Regs::set_RxDone_CopyLen(vnic->RxDone, rxDmaLen);
+
+            DPRINTF(EthernetSM,
+                    "rxKick: packet complete on vnic %d (rxunique %d)\n",
+                    rxActive, vnic->rxUnique);
             rxFifo.remove(vnic->rxPacket);
             vnic->rxPacket = rxFifo.end();
         } else {
-            vnic->RxDone |= Regs::RxDone_More;
             vnic->rxPacketBytes -= rxDmaLen;
             vnic->rxPacketOffset += rxDmaLen;
+            vnic->RxDone |= Regs::RxDone_More;
+            vnic->RxDone = Regs::set_RxDone_CopyLen(vnic->RxDone,
+                                                    vnic->rxPacketBytes);
             DPRINTF(EthernetSM,
-                    "rxKick: packet not complete on vnic %d: %d bytes left\n",
-                    rxList.front(), vnic->rxPacketBytes);
+                    "rxKick: packet not complete on vnic %d (rxunique %d): "
+                    "%d bytes left\n",
+                    rxActive, vnic->rxUnique, vnic->rxPacketBytes);
         }
 
-        rxList.pop_front();
-        rxState = rxList.empty() ? rxIdle : rxFifoBlock;
+        rxActive = -1;
+        rxState = rxBusy.empty() && rxList.empty() ? rxIdle : rxFifoBlock;
 
         if (rxFifo.empty()) {
             devIntrPost(Regs::Intr_RxEmpty);
             rxEmpty = true;
         }
+
+        if (rxFifo.size() < params()->rx_fifo_low_mark)
+            rxLow = true;
+
+        if (rxFifo.size() > params()->rx_fifo_threshold)
+            rxLow = false;
 
         devIntrPost(Regs::Intr_RxDMA);
         break;
@@ -1353,6 +1468,7 @@ Device::serialize(ostream &os)
     SERIALIZE_SCALAR(regs.RxMaxCopy);
     SERIALIZE_SCALAR(regs.TxMaxCopy);
     SERIALIZE_SCALAR(regs.RxMaxIntr);
+    SERIALIZE_SCALAR(regs.VirtualCount);
     SERIALIZE_SCALAR(regs.RxData);
     SERIALIZE_SCALAR(regs.RxDone);
     SERIALIZE_SCALAR(regs.TxData);
@@ -1372,8 +1488,6 @@ Device::serialize(ostream &os)
         paramOut(os, reg + ".TxData", vnic->TxData);
         paramOut(os, reg + ".TxDone", vnic->TxDone);
 
-        PacketFifo::iterator rxFifoPtr;
-
         bool rxPacketExists = vnic->rxPacket != rxFifo.end();
         paramOut(os, reg + ".rxPacketExists", rxPacketExists);
         if (rxPacketExists) {
@@ -1392,18 +1506,26 @@ Device::serialize(ostream &os)
         paramOut(os, reg + ".rxDoneData", vnic->rxDoneData);
     }
 
-    VirtualList::iterator i, end;
-    int count;
+    int rxFifoPtr = rxFifo.countPacketsBefore(this->rxFifoPtr);
+    SERIALIZE_SCALAR(rxFifoPtr);
 
-    int rxListSize = rxList.size();
-    SERIALIZE_SCALAR(rxListSize);
+    SERIALIZE_SCALAR(rxActive);
+
+    VirtualList::iterator i, end;
     for (count = 0, i = rxList.begin(), end = rxList.end(); i != end; ++i)
         paramOut(os, csprintf("rxList%d", count++), *i);
+    int rxListSize = count;
+    SERIALIZE_SCALAR(rxListSize);
 
-    int txListSize = txList.size();
-    SERIALIZE_SCALAR(txListSize);
+    for (count = 0, i = rxBusy.begin(), end = rxBusy.end(); i != end; ++i)
+        paramOut(os, csprintf("rxBusy%d", count++), *i);
+    int rxBusySize = count;
+    SERIALIZE_SCALAR(rxBusySize);
+
     for (count = 0, i = txList.begin(), end = txList.end(); i != end; ++i)
         paramOut(os, csprintf("txList%d", count++), *i);
+    int txListSize = count;
+    SERIALIZE_SCALAR(txListSize);
 
     /*
      * Serialize rx state machine
@@ -1411,6 +1533,7 @@ Device::serialize(ostream &os)
     int rxState = this->rxState;
     SERIALIZE_SCALAR(rxState);
     SERIALIZE_SCALAR(rxEmpty);
+    SERIALIZE_SCALAR(rxLow);
     rxFifo.serialize("rxFifo", os);
 
     /*
@@ -1451,10 +1574,13 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(regs.RxMaxCopy);
     UNSERIALIZE_SCALAR(regs.TxMaxCopy);
     UNSERIALIZE_SCALAR(regs.RxMaxIntr);
+    UNSERIALIZE_SCALAR(regs.VirtualCount);
     UNSERIALIZE_SCALAR(regs.RxData);
     UNSERIALIZE_SCALAR(regs.RxDone);
     UNSERIALIZE_SCALAR(regs.TxData);
     UNSERIALIZE_SCALAR(regs.TxDone);
+
+    UNSERIALIZE_SCALAR(rxActive);
 
     int rxListSize;
     UNSERIALIZE_SCALAR(rxListSize);
@@ -1463,6 +1589,15 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
         int value;
         paramIn(cp, section, csprintf("rxList%d", i), value);
         rxList.push_back(value);
+    }
+
+    int rxBusySize;
+    UNSERIALIZE_SCALAR(rxBusySize);
+    rxBusy.clear();
+    for (int i = 0; i < rxBusySize; ++i) {
+        int value;
+        paramIn(cp, section, csprintf("rxBusy%d", i), value);
+        rxBusy.push_back(value);
     }
 
     int txListSize;
@@ -1480,8 +1615,15 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     int rxState;
     UNSERIALIZE_SCALAR(rxState);
     UNSERIALIZE_SCALAR(rxEmpty);
+    UNSERIALIZE_SCALAR(rxLow);
     this->rxState = (RxState) rxState;
     rxFifo.unserialize("rxFifo", cp, section);
+
+    int rxFifoPtr;
+    UNSERIALIZE_SCALAR(rxFifoPtr);
+    this->rxFifoPtr = rxFifo.begin();
+    for (int i = 0; i < rxFifoPtr; ++i)
+        ++this->rxFifoPtr;
 
     /*
      * Unserialize tx state machine
@@ -1520,6 +1662,9 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
         paramIn(cp, section, reg + ".TxData", vnic->TxData);
         paramIn(cp, section, reg + ".TxDone", vnic->TxDone);
 
+        vnic->rxUnique = rxUnique++;
+        vnic->txUnique = txUnique++;
+
         bool rxPacketExists;
         paramIn(cp, section, reg + ".rxPacketExists", rxPacketExists);
         if (rxPacketExists) {
@@ -1549,10 +1694,8 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     /*
      * re-add addrRanges to bus bridges
      */
-    if (pioInterface) {
+    if (pioInterface)
         pioInterface->addAddrRange(RangeSize(BARAddrs[0], BARSize[0]));
-        pioInterface->addAddrRange(RangeSize(BARAddrs[1], BARSize[1]));
-    }
 }
 
 Tick
@@ -1634,6 +1777,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<uint32_t> rx_fifo_size;
     Param<uint32_t> tx_fifo_size;
     Param<uint32_t> rx_fifo_threshold;
+    Param<uint32_t> rx_fifo_low_mark;
+    Param<uint32_t> tx_fifo_high_mark;
     Param<uint32_t> tx_fifo_threshold;
 
     Param<bool> rx_filter;
@@ -1641,6 +1786,10 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<bool> rx_thread;
     Param<bool> tx_thread;
     Param<bool> rss;
+    Param<uint32_t> virtual_count;
+    Param<bool> zero_copy;
+    Param<bool> delay_copy;
+    Param<bool> virtual_addr;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Device)
 
@@ -1678,13 +1827,19 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(rx_fifo_size, "max size in bytes of rxFifo"),
     INIT_PARAM(tx_fifo_size, "max size in bytes of txFifo"),
     INIT_PARAM(rx_fifo_threshold, "max size in bytes of rxFifo"),
+    INIT_PARAM(rx_fifo_low_mark, "max size in bytes of rxFifo"),
+    INIT_PARAM(tx_fifo_high_mark, "max size in bytes of txFifo"),
     INIT_PARAM(tx_fifo_threshold, "max size in bytes of txFifo"),
 
     INIT_PARAM(rx_filter, "Enable Receive Filter"),
     INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
     INIT_PARAM(rx_thread, ""),
     INIT_PARAM(tx_thread, ""),
-    INIT_PARAM(rss, "")
+    INIT_PARAM(rss, ""),
+    INIT_PARAM(virtual_count, ""),
+    INIT_PARAM(zero_copy, ""),
+    INIT_PARAM(delay_copy, ""),
+    INIT_PARAM(virtual_addr, "")
 
 END_INIT_SIM_OBJECT_PARAMS(Device)
 
@@ -1726,6 +1881,8 @@ CREATE_SIM_OBJECT(Device)
     params->rx_fifo_size = rx_fifo_size;
     params->tx_fifo_size = tx_fifo_size;
     params->rx_fifo_threshold = rx_fifo_threshold;
+    params->rx_fifo_low_mark = rx_fifo_low_mark;
+    params->tx_fifo_high_mark = tx_fifo_high_mark;
     params->tx_fifo_threshold = tx_fifo_threshold;
 
     params->rx_filter = rx_filter;
@@ -1733,6 +1890,10 @@ CREATE_SIM_OBJECT(Device)
     params->rx_thread = rx_thread;
     params->tx_thread = tx_thread;
     params->rss = rss;
+    params->virtual_count = virtual_count;
+    params->zero_copy = zero_copy;
+    params->delay_copy = delay_copy;
+    params->virtual_addr = virtual_addr;
 
     return new Device(params);
 }

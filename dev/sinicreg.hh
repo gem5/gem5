@@ -55,8 +55,8 @@
 namespace Sinic {
 namespace Regs {
 
-static const int VirtualMask = 0xff;
 static const int VirtualShift = 8;
+static const int VirtualMask = 0xff;
 
 // Registers
 __SINIC_REG32(Config,        0x00); // 32: configuration register
@@ -66,7 +66,7 @@ __SINIC_REG32(IntrMask,      0x0c); // 32: interrupt mask
 __SINIC_REG32(RxMaxCopy,     0x10); // 32: max bytes per rx copy
 __SINIC_REG32(TxMaxCopy,     0x14); // 32: max bytes per tx copy
 __SINIC_REG32(RxMaxIntr,     0x18); // 32: max receives per interrupt
-__SINIC_REG32(Reserved0,     0x1c); // 32: reserved
+__SINIC_REG32(VirtualCount,  0x1c); // 32: number of virutal NICs
 __SINIC_REG32(RxFifoSize,    0x20); // 32: rx fifo capacity in bytes
 __SINIC_REG32(TxFifoSize,    0x24); // 32: tx fifo capacity in bytes
 __SINIC_REG32(RxFifoMark,    0x28); // 32: rx fifo high watermark
@@ -81,12 +81,14 @@ __SINIC_REG32(HwAddr,        0x60); // 64: mac address
 __SINIC_REG32(Size,          0x68); // register addres space size
 
 // Config register bits
+__SINIC_VAL32(Config_ZeroCopy, 12, 1); // enable zero copy
+__SINIC_VAL32(Config_DelayCopy,11, 1); // enable delayed copy
 __SINIC_VAL32(Config_RSS,      10, 1); // enable receive side scaling
 __SINIC_VAL32(Config_RxThread,  9, 1); // enable receive threads
 __SINIC_VAL32(Config_TxThread,  8, 1); // enable transmit thread
 __SINIC_VAL32(Config_Filter,    7, 1); // enable receive filter
 __SINIC_VAL32(Config_Vlan,      6, 1); // enable vlan tagging
-__SINIC_VAL32(Config_Virtual,   5, 1); // enable virtual addressing
+__SINIC_VAL32(Config_Vaddr,     5, 1); // enable virtual addressing
 __SINIC_VAL32(Config_Desc,      4, 1); // enable tx/rx descriptors
 __SINIC_VAL32(Config_Poll,      3, 1); // enable polling
 __SINIC_VAL32(Config_IntEn,     2, 1); // enable interrupts
@@ -112,13 +114,15 @@ __SINIC_REG32(Intr_NoDelay,   0x01cc); // interrupts that aren't coalesced
 __SINIC_REG32(Intr_Res,      ~0x01ff); // reserved interrupt bits
 
 // RX Data Description
-__SINIC_VAL64(RxData_Len, 40, 20); // 0 - 1M
-__SINIC_VAL64(RxData_Addr, 0, 40); // Address 1TB
+__SINIC_VAL64(RxData_Vaddr, 60,  1); // Addr is virtual
+__SINIC_VAL64(RxData_Len,   40, 20); // 0 - 256k
+__SINIC_VAL64(RxData_Addr,   0, 40); // Address 1TB
 
 // TX Data Description
 __SINIC_VAL64(TxData_More,     63,  1); // Packet not complete (will dma more)
 __SINIC_VAL64(TxData_Checksum, 62,  1); // do checksum
-__SINIC_VAL64(TxData_Len,      40, 20); // 0 - 1M
+__SINIC_VAL64(TxData_Vaddr,    60,  1); // Addr is virtual
+__SINIC_VAL64(TxData_Len,      40, 20); // 0 - 256k
 __SINIC_VAL64(TxData_Addr,      0, 40); // Address 1TB
 
 // RX Done/Busy Information
@@ -126,9 +130,9 @@ __SINIC_VAL64(RxDone_Packets,   32, 16); // number of packets in rx fifo
 __SINIC_VAL64(RxDone_Busy,      31,  1); // receive dma busy copying
 __SINIC_VAL64(RxDone_Complete,  30,  1); // valid data (packet complete)
 __SINIC_VAL64(RxDone_More,      29,  1); // Packet has more data (dma again)
-__SINIC_VAL64(RxDone_Res0,      28,  1); // reserved
-__SINIC_VAL64(RxDone_Res1,      27,  1); // reserved
-__SINIC_VAL64(RxDone_Res2,      26,  1); // reserved
+__SINIC_VAL64(RxDone_Empty,     28,  1); // rx fifo is empty
+__SINIC_VAL64(RxDone_High,      27,  1); // rx fifo is above the watermark
+__SINIC_VAL64(RxDone_NotHigh,   26,  1); // rxfifo never hit the high watermark
 __SINIC_VAL64(RxDone_TcpError,  25,  1); // TCP packet error (bad checksum)
 __SINIC_VAL64(RxDone_UdpError,  24,  1); // UDP packet error (bad checksum)
 __SINIC_VAL64(RxDone_IpError,   23,  1); // IP packet error (bad checksum)
@@ -175,7 +179,7 @@ regInfo(Addr daddr)
         { 4, true,  false, "RxMaxCopy"  },
         { 4, true,  false, "TxMaxCopy"  },
         { 4, true,  false, "RxMaxIntr"  },
-        invalid,
+        { 4, true,  false, "VirtualCount"  },
         { 4, true,  false, "RxFifoSize" },
         { 4, true,  false, "TxFifoSize" },
         { 4, true,  false, "RxFifoMark" },
