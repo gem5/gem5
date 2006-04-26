@@ -30,8 +30,10 @@
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
 //#include "arch/mips/misc_regfile.hh"
+#include "arch/mips/faults.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
+#include "sim/byteswap.hh"
 #include "sim/host.hh"
 #include "sim/faults.hh"
 
@@ -105,7 +107,7 @@ namespace MipsISA
     const int NumPALShadowRegs = 8;
     const int NumFloatArchRegs = 32;
     // @todo: Figure out what this number really should be.
-    const int NumMiscArchRegs = 32;
+    const int NumMiscArchRegs = 265;
 
     const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
     const int NumFloatRegs = NumFloatArchRegs;
@@ -189,62 +191,134 @@ namespace MipsISA
 
     typedef double FloatReg;
     typedef uint64_t FloatRegBits;
+
+    const int SingleWidth = 32;
+    const int SingleBytes = SingleWidth / 4;
+
+    const int DoubleWidth = 64;
+    const int DoubleBytes = DoubleWidth / 4;
+
+    const int QuadWidth = 128;
+    const int QuadBytes = QuadWidth / 4;
+
+    const int FloatRegSize = SingleWidth / SingleBytes;
+    const int DoubleRegSize = FloatRegSize * 2;
+
     class FloatRegFile
     {
       protected:
 
-        FloatRegBits q[NumFloatRegs];	// integer qword view
-        double d[NumFloatRegs];	// double-precision floating point view
+        //Since the floating point registers overlap each other,
+        //A generic storage space is used. The float to be returned is
+        //pulled from the appropriate section of this region.
+        char regSpace[FloatRegSize * NumFloatRegs];
 
       public:
 
-        FloatReg readReg(int floatReg)
+        void clear()
         {
-            return d[floatReg];
+            bzero(regSpace, sizeof(regSpace));
         }
 
         FloatReg readReg(int floatReg, int width)
         {
-            return readReg(floatReg);
-        }
+            //In each of these cases, we have to copy the value into a temporary
+            //variable. This is because we may otherwise try to access an
+            //unaligned portion of memory.
+            switch(width)
+            {
+              case SingleWidth:
+                float result32;
+                memcpy(&result32, regSpace + 4 * floatReg, FloatRegSize);
+                return htog(result32);
 
-        FloatRegBits readRegBits(int floatReg)
-        {
-            return q[floatReg];
+              case DoubleWidth:
+                double result64;
+                memcpy(&result64, regSpace + 4 * floatReg, DoubleRegSize);
+                return htog(result64);
+
+              default:
+                panic("Attempted to read a %d bit floating point register!", width);
+            }
         }
 
         FloatRegBits readRegBits(int floatReg, int width)
         {
-            return readRegBits(floatReg);
-        }
+            //In each of these cases, we have to copy the value into a temporary
+            //variable. This is because we may otherwise try to access an
+            //unaligned portion of memory.
+            switch(width)
+            {
+              case SingleWidth:
+                uint32_t result32;
+                memcpy(&result32, regSpace + 4 * floatReg, FloatRegSize);
+                return htog(result32);
+              case DoubleWidth:
+                uint64_t result64;
+                memcpy(&result64, regSpace + 4 * floatReg, DoubleRegSize);
+                return htog(result64);
 
-        Fault setReg(int floatReg, const FloatReg &val)
-        {
-            d[floatReg] = val;
-            return NoFault;
+              default:
+                panic("Attempted to read a %d bit floating point register!", width);
+            }
         }
 
         Fault setReg(int floatReg, const FloatReg &val, int width)
         {
-            return setReg(floatReg, val);
-        }
+            //In each of these cases, we have to copy the value into a temporary
+            //variable. This is because we may otherwise try to access an
+            //unaligned portion of memory.
+            switch(width)
+            {
+              case SingleWidth:
+                uint32_t result32;
+                result32 = gtoh((uint32_t)val);
+                memcpy(regSpace + 4 * floatReg, &result32, FloatRegSize);
+                break;
 
-        Fault setRegBits(int floatReg, const FloatRegBits &val)
-        {
-            q[floatReg] = val;
+              case DoubleWidth:
+                uint64_t result64;
+                result64 = gtoh((uint64_t)val);
+                memcpy(regSpace + 4 * floatReg, &result64, DoubleRegSize);
+                break;
+
+
+              default:
+                panic("Attempted to read a %d bit floating point register!", width);
+            }
             return NoFault;
         }
 
         Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
         {
-            return setRegBits(floatReg, val);
+            //In each of these cases, we have to copy the value into a temporary
+            //variable. This is because we may otherwise try to access an
+            //unaligned portion of memory.
+            switch(width)
+            {
+              case SingleWidth:
+                uint32_t result32;
+                result32 = gtoh((uint32_t)val);
+                memcpy(regSpace + 4 * floatReg, &result32, FloatRegSize);
+                break;
+
+              case DoubleWidth:
+                uint64_t result64;
+                result64 = gtoh((uint64_t)val);
+                memcpy(regSpace + 4 * floatReg, &result64, DoubleRegSize);
+                break;
+
+              default:
+                panic("Attempted to read a %d bit floating point register!", width);
+            }
+            return NoFault;
         }
 
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
-
     };
+
 
         void copyRegs(ExecContext *src, ExecContext *dest);
 
@@ -532,44 +606,45 @@ extern const Addr PageOffset;
             return miscRegFile.setRegWithEffect(miscReg, val, xc);
         }
 
+
         FloatReg readFloatReg(int floatReg)
         {
-            return floatRegFile.readReg(floatReg);
+            return floatRegFile.readReg(floatReg,SingleWidth);
         }
 
         FloatReg readFloatReg(int floatReg, int width)
         {
-            return readFloatReg(floatReg);
+            return floatRegFile.readReg(floatReg,width);
         }
 
         FloatRegBits readFloatRegBits(int floatReg)
         {
-            return floatRegFile.readRegBits(floatReg);
+            return floatRegFile.readRegBits(floatReg,SingleWidth);
         }
 
         FloatRegBits readFloatRegBits(int floatReg, int width)
         {
-            return readFloatRegBits(floatReg);
+            return floatRegFile.readRegBits(floatReg,width);
         }
 
         Fault setFloatReg(int floatReg, const FloatReg &val)
         {
-            return floatRegFile.setReg(floatReg, val);
+            return floatRegFile.setReg(floatReg, val, SingleWidth);
         }
 
         Fault setFloatReg(int floatReg, const FloatReg &val, int width)
         {
-            return setFloatReg(floatReg, val);
+            return floatRegFile.setReg(floatReg, val, width);
         }
 
         Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
         {
-            return floatRegFile.setRegBits(floatReg, val);
+            return floatRegFile.setRegBits(floatReg, val, SingleWidth);
         }
 
         Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
         {
-            return setFloatRegBits(floatReg, val);
+            return floatRegFile.setRegBits(floatReg, val, width);
         }
 
         IntReg readIntReg(int intReg)

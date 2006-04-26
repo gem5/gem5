@@ -450,8 +450,8 @@ decode OPCODE_HI default Unknown::unknown() {
 
                     //Table A-14 MIPS32 COP1 Encoding of Function Field When rs=S
                     //(( single-word ))
-                    0x0: decode RS_HI {
-                        0x0: decode RS_LO {
+                    0x0: decode FUNCTION_HI {
+                        0x0: decode FUNCTION_LO {
                             format FloatOp {
                                 0x0: adds({{ Fd.sf = Fs.sf + Ft.sf;}});
                                 0x1: subs({{ Fd.sf = Fs.sf - Ft.sf;}});
@@ -464,7 +464,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x1: decode RS_LO {
+                        0x1: decode FUNCTION_LO {
                             //only legal for 64 bit-FP
                             format Float64Op {
                                 0x0: round_l_s({{ Fd = convert_and_round(Fs.sf,RND_NEAREST,FP_LONG,FP_SINGLE);}});
@@ -481,7 +481,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x2: decode RS_LO {
+                        0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format FloatOp {
                                     0x0: movfs({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs; }});
@@ -500,7 +500,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x4: decode RS_LO {
+                        0x4: decode FUNCTION_LO {
 
                             format FloatOp {
                                 0x1: cvt_d_s({{ int rnd_mode = xc->readMiscReg(FCSR);
@@ -524,8 +524,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     }
 
                     //Table A-15 MIPS32 COP1 Encoding of Function Field When rs=D
-                    0x1: decode RS_HI {
-                        0x0: decode RS_LO {
+                    0x1: decode FUNCTION_HI {
+                        0x0: decode FUNCTION_LO {
                             format FloatOp {
                                 0x0: addd({{ Fd.df = Fs.df + Ft.df;}});
                                 0x1: subd({{ Fd.df = Fs.df - Ft.df;}});
@@ -538,7 +538,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x1: decode RS_LO {
+                        0x1: decode FUNCTION_LO {
                             //only legal for 64 bit
                             format Float64Op {
                                 0x0: round_l_d({{ Fd = convert_and_round(Fs.df,RND_NEAREST,FP_LONG,FP_DOUBLE); }});
@@ -555,7 +555,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x2: decode RS_LO {
+                        0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format FloatOp {
                                     0x0: movfd({{if (xc->readMiscReg(FPCR) != CC) Fd.df = Fs.df; }});
@@ -574,7 +574,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x4: decode RS_LO {
+                        0x4: decode FUNCTION_LO {
                             format FloatOp {
                                 0x0: cvt_s_d({{
                                     int rnd_mode = xc->readMiscReg(FCSR);
@@ -632,8 +632,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     //Table A-17 MIPS64 COP1 Encoding of Function Field When rs=PS1
                     //Note: "1. Format type PS is legal only if 64-bit floating point operations
                     //are enabled. "
-                    0x6: decode RS_HI {
-                        0x0: decode RS_LO {
+                    0x6: decode FUNCTION_HI {
+                        0x0: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: addps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
                                     //Lower Halves Independently but we take simulator shortcut
@@ -667,7 +667,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }
 
-                        0x2: decode RS_LO {
+                        0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format Float64Op {
                                     0x0: movfps({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs;}});
@@ -682,14 +682,14 @@ decode OPCODE_HI default Unknown::unknown() {
 
                         }
 
-                        0x4: decode RS_LO {
+                        0x4: decode FUNCTION_LO {
                             0x0: Float64Op::cvt_s_pu({{
                                 int rnd_mode = xc->readMiscReg(FCSR);
                                 Fd = convert_and_round(Fs.df,rnd_mode,FP_DOUBLE,FP_PS_HI);
                             }});
                         }
 
-                        0x5: decode RS_LO {
+                        0x5: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: cvt_s_pl({{
                                     int rnd_mode = xc->readMiscReg(FCSR);
