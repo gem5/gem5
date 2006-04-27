@@ -1334,7 +1334,7 @@ class NPCOperand(Operand):
         return ''
 
     def makeRead(self):
-        return '%s = xc->readPC() + 4;\n' % self.base_name
+        return '%s = xc->readNextPC();\n' % self.base_name
 
     def makeWrite(self):
         return 'xc->setNextPC(%s);\n' % self.base_name
@@ -1344,7 +1344,7 @@ class NNPCOperand(Operand):
         return ''
 
     def makeRead(self):
-        return '%s = xc->readPC() + 8;\n' % self.base_name
+        return '%s = xc->readNextNPC();\n' % self.base_name
 
     def makeWrite(self):
         return 'xc->setNextNPC(%s);\n' % self.base_name

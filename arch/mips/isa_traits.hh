@@ -253,6 +253,7 @@ namespace MipsISA
                 uint32_t result32;
                 memcpy(&result32, regSpace + 4 * floatReg, FloatRegSize);
                 return htog(result32);
+
               case DoubleWidth:
                 uint64_t result64;
                 memcpy(&result64, regSpace + 4 * floatReg, DoubleRegSize);
@@ -313,6 +314,8 @@ namespace MipsISA
             }
             return NoFault;
         }
+
+
 
         void serialize(std::ostream &os);
 

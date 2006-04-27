@@ -407,7 +407,6 @@ decode OPCODE_HI default Unknown::unknown() {
 
                     format System {
                         0x2: cfc1({{
-                            std::cout << "FP Control Reg " << FS << "accessed." << std::endl;
                             uint32_t fcsr_reg = xc->readMiscReg(FCSR);
 
                             switch (FS)
@@ -434,8 +433,6 @@ decode OPCODE_HI default Unknown::unknown() {
                         }});
 
                         0x6: ctc1({{
-                            std::cout << "FP Control Reg " << FS << "accessed." << std::endl;
-
                             uint32_t fcsr_reg = xc->readMiscReg(FCSR);
                             uint32_t temp;
                             switch (FS)
@@ -553,22 +550,27 @@ decode OPCODE_HI default Unknown::unknown() {
 
                             format FloatOp {
                                 0x1: cvt_d_s({{
-                                    int rnd_mode = xc->readMiscReg(FCSR);
-                                    Fd = convert_and_round(Fs.sf,rnd_mode,FP_DOUBLE,FP_SINGLE);
+                                    //int rnd_mode = xc->readMiscReg(FCSR);
+                                    Fd = convert_and_round(,DOUBLE_TO_SINGLE);
                                 }});
 
-                                0x4: cvt_w_s({{ int rnd_mode = xc->readMiscReg(FCSR);
-                                Fd = convert_and_round(Fs.sf,rnd_mode,FP_WORD,FP_SINGLE);
+                                0x4: cvt_w_s({{
+                                    //int rnd_mode = xc->readMiscReg(FCSR);
+                                    Fd = convert_and_round(Fs.sf,rnd_mode,FP_WORD,FP_SINGLE);
                                 }});
                             }
 
                             //only legal for 64 bit
                             format Float64Op {
-                                0x5: cvt_l_s({{ int rnd_mode = xc->readMiscReg(FCSR);
-                                Fd = convert_and_round(Fs.sf,rnd_mode,FP_LONG,FP_SINGLE);
+                                0x5: cvt_l_s({{
+                                    //int rnd_mode = xc->readMiscReg(FCSR);
+                                    Fd = convert_and_round(Fs.sf,rnd_mode,FP_LONG,FP_SINGLE);
                                 }});
 
-                                0x6: cvt_ps_s({{ /*Fd.df = Fs.df<31:0> | Ft.df<31:0>;*/ }});
+                                0x6: cvt_ps_s({{
+                                    //int rnd_mode = xc->readMiscReg(FCSR);
+                                    /*Fd.df = Fs.df<31:0> | Ft.df<31:0>;*/
+                                }});
                             }
                         }
                     }
