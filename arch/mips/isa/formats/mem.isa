@@ -446,6 +446,24 @@ def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                       exec_template_base = 'Store')
 }};
 
+//FP loads are offloaded to these formats for now ...
+def format LoadFloatMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
+                     mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = BasicDecode,
+                      exec_template_base = 'Load')
+}};
+
+
+def format StoreFloatMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
+                     mem_flags = [], inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      exec_template_base = 'Store')
+}};
+
+
 def format UnalignedStore(memacc_code, postacc_code,
                      ea_code = {{ EA = Rb + disp; }},
                      mem_flags = [], inst_flags = []) {{
@@ -453,23 +471,3 @@ def format UnalignedStore(memacc_code, postacc_code,
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       postacc_code, exec_template_base = 'Store')
 }};
-
-//FP loads are offloaded to these formats for now ...
-def format LoadMemory2(ea_code = {{ EA = Rs + disp; }}, memacc_code = {{ }},
-                      mem_flags = [], inst_flags = []) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
-                      exec_template_base = 'Load')
-}};
-
-
-//FP stores are offloaded to these formats for now ...
-def format StoreMemory2(ea_code = {{ EA = Rs + disp; }},memacc_code = {{ }},
-                      mem_flags = [], inst_flags = []) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
-                      exec_template_base = 'Store')
-}};
-

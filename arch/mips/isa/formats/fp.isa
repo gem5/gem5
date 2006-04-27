@@ -30,7 +30,7 @@ output decoder {{
 }};
 
 
-// Primary format for integer operate instructions:
+// Primary format for float operate instructions:
 def format FloatOp(code, *flags) {{
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
@@ -39,7 +39,7 @@ def format FloatOp(code, *flags) {{
         exec_output = BasicExecute.subst(iop)
 }};
 
-// Primary format for integer operate instructions:
+// Primary format for float64 operate instructions:
 def format Float64Op(code, *flags) {{
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)

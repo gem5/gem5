@@ -394,36 +394,85 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x0: decode RS_HI {
                 0x0: decode RS_LO {
-                    format WarnUnimpl {
-                        0x0: mfc1();//{{ /*Rt.uw = Fs.ud<31:0>;*/ }}
-                        0x3: mfhc1();// /*Rt.uw = Fs.ud<63:32>*/;
-                        0x4: mtc1();// /*Fs = Rt.uw*/
-                        0x7: mthc1();//{{/*Fs<63:32> = Rt.uw*/}}
+                    format FloatOp {
+                        0x0: mfc1 ({{ Rt.uw = Fs.uw<31:0>; }});
+                        0x3: mfhc1({{ Rt.uw = Fs.ud<63:32>;}});
+                        0x4: mtc1 ({{ Fs.uw = Rt.uw;           }});
+                        0x7: mthc1({{
+                             uint64_t fs_hi = Rt.ud << 32;
+                             uint64_t fs_lo = Fs.ud & 0x0000FFFF;
+                             Fs.ud = fs_hi & fs_lo;
+                        }});
                     }
 
                     format System {
                         0x2: cfc1({{
+                            std::cout << "FP Control Reg " << FS << "accessed." << std::endl;
                             uint32_t fcsr_reg = xc->readMiscReg(FCSR);
 
-                            if (Fs == 0){
+                            switch (FS)
+                            {
+                              case 0:
                                 Rt = xc->readMiscReg(FIR);
-                            } else if (Fs == 25) {
+                                break;
+                              case 25:
                                 Rt = 0 | (fcsr_reg & 0xFE000000) >> 24 | (fcsr_reg & 0x00800000) >> 23;
-                            } else if (Fs == 26) {
+                                break;
+                              case 26:
                                 Rt = 0 | (fcsr_reg & 0x0003F07C);
-                            } else if (Fs == 28) {
+                                break;
+                              case 28:
                                 Rt = 0 | (fcsr_reg);
-                            } else if (Fs == 31) {
+                                break;
+                              case 31:
                                 Rt = fcsr_reg;
-                            } else {
+                                break;
+                              default:
+                                panic("FP Control Value (%d) Not Available. Ignoring Access to"
+                                      "Floating Control Status Register",fcsr_reg);
+                            }
+                        }});
+
+                        0x6: ctc1({{
+                            std::cout << "FP Control Reg " << FS << "accessed." << std::endl;
+
+                            uint32_t fcsr_reg = xc->readMiscReg(FCSR);
+                            uint32_t temp;
+                            switch (FS)
+                            {
+                              case 25:
+                                temp = 0 | (Rt.uw<7:1> << 25) // move 31...25
+                                    | (fcsr_reg & 0x01000000) // bit 24
+                                    | (fcsr_reg & 0x004FFFFF);// bit 22...0
+                                break;
+
+                              case 26:
+                                temp = 0 | (fcsr_reg & 0xFFFC0000) // move 31...18
+                                    | Rt.uw<17:12> << 12           // bit 17...12
+                                    | (fcsr_reg & 0x00000F80) << 7// bit 11...7
+                                    | Rt.uw<6:2> << 2              // bit 6...2
+                                    | (fcsr_reg & 0x00000002);     // bit 1...0
+                                break;
+
+                              case 28:
+                                temp = 0 | (fcsr_reg & 0xFE000000) // move 31...25
+                                    | Rt.uw<2:2> << 24       // bit 24
+                                    | (fcsr_reg & 0x00FFF000) << 23// bit 23...12
+                                    | Rt.uw<11:7> << 7       // bit 24
+                                    | (fcsr_reg & 0x000007E)
+                                    | Rt.uw<1:0>;// bit 22...0
+                                break;
+
+                              case 31:
+                                temp  = Rt.uw;
+                                break;
+
+                              default:
                                 panic("FP Control Value (%d) Not Available. Ignoring Access to"
                                       "Floating Control Status Register",fcsr_reg);
                             }
 
-                        }});
-
-                        0x6: ctc1({{
-                            /*xc->setMiscReg(FPCR[Fs],Rt);*/
+                            xc->setMiscReg(FCSR,temp);
                         }});
                     }
                 }
@@ -503,8 +552,9 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x4: decode FUNCTION_LO {
 
                             format FloatOp {
-                                0x1: cvt_d_s({{ int rnd_mode = xc->readMiscReg(FCSR);
-                                Fd = convert_and_round(Fs.sf,rnd_mode,FP_DOUBLE,FP_SINGLE);
+                                0x1: cvt_d_s({{
+                                    int rnd_mode = xc->readMiscReg(FCSR);
+                                    Fd = convert_and_round(Fs.sf,rnd_mode,FP_DOUBLE,FP_SINGLE);
                                 }});
 
                                 0x4: cvt_w_s({{ int rnd_mode = xc->readMiscReg(FCSR);
@@ -743,24 +793,24 @@ decode OPCODE_HI default Unknown::unknown() {
         //operations are enabled."
         0x3: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
-                format LoadMemory2 {
-                    0x0: lwxc1({{ EA = Rs + Rt; }},{{ /*F_t<31:0> = Mem.sf; */}});
-                    0x1: ldxc1({{ EA = Rs + Rt; }},{{ /*F_t<63:0> = Mem.df;*/ }});
-                    0x5: luxc1({{ //Need to make EA<2:0> = 0
-                        EA = Rs + Rt;
-                    }},
-                {{ /*F_t<31:0> = Mem.df; */}});
+                format LoadFloatMemory {
+                    0x0: lwxc1({{ /*F_t<31:0> = Mem.sf; */}}, {{ EA = Rs + Rt; }});
+                    0x1: ldxc1({{ /*F_t<63:0> = Mem.df;*/ }}, {{ EA = Rs + Rt; }});
+                    0x5: luxc1({{ /*F_t<31:0> = Mem.df; */}},
+                               {{ //Need to make EA<2:0> = 0
+                                   EA = Rs + Rt;
+                               }});
                 }
             }
 
             0x1: decode FUNCTION_LO {
-                format StoreMemory2 {
-                    0x0: swxc1({{ EA = Rs + Rt; }},{{ /*Mem.sf = Ft<31:0>; */}});
-                    0x1: sdxc1({{ EA = Rs + Rt; }},{{ /*Mem.df = Ft<63:0> */}});
-                    0x5: suxc1({{ //Need to make EA<2:0> = 0
-                        EA = Rs + Rt;
-                    }},
-                {{ /*Mem.df = F_t<63:0>;*/}});
+                format StoreFloatMemory {
+                    0x0: swxc1({{ /*Mem.sf = Ft<31:0>; */}},{{ EA = Rs + Rt; }});
+                    0x1: sdxc1({{ /*Mem.df = Ft<63:0> */}}, {{ EA = Rs + Rt; }});
+                    0x5: suxc1({{ /*Mem.df = F_t<63:0>;*/}},
+                               {{ //Need to make sure EA<2:0> = 0
+                                   EA = Rs + Rt;
+                               }});
                 }
 
                 0x7: WarnUnimpl::prefx();
@@ -1180,9 +1230,9 @@ decode OPCODE_HI default Unknown::unknown() {
     0x6: decode OPCODE_LO default FailUnimpl::reserved() {
         0x0: FailUnimpl::ll();
 
-        format LoadMemory {
-            0x1: lwc1({{ /*F_t<31:0> = Mem.sf; */}});
-            0x5: ldc1({{ /*F_t<63:0> = Mem.df; */}});
+        format LoadFloatMemory {
+            0x1: lwc1({{ Ft.uw = Mem.uw;    }});
+            0x5: ldc1({{ Ft.ud = Mem.ud; }});
         }
     }
 
@@ -1190,9 +1240,9 @@ decode OPCODE_HI default Unknown::unknown() {
     0x7: decode OPCODE_LO default FailUnimpl::reserved() {
         0x0: FailUnimpl::sc();
 
-        format StoreMemory {
-            0x1: swc1({{ //Mem.sf = Ft<31:0>; }});
-            0x5: sdc1({{ //Mem.df = Ft<63:0>; }});
+        format StoreFloatMemory {
+            0x1: swc1({{ Mem.uw = Ft.uw; }});
+            0x5: sdc1({{ Mem.ud = Ft.ud; }});
         }
     }
 }
