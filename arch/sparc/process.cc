@@ -85,7 +85,7 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
 
     // Set up stack. On SPARC Linux, stack goes from the top of memory
     // downward, less the hole for the kernel address space.
-    stack_base = ((Addr)0x80000000000);
+    stack_base = ((Addr)0x80000000000ULL);
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.

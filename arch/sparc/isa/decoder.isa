@@ -127,7 +127,7 @@ decode OP default Unknown::unknown()
                     if(Rd.udw<63:31> != 0)
                         Rd.udw = 0x7FFFFFFF;
                     else if(Rd.udw<63:> && Rd.udw<62:31> != 0xFFFFFFFF)
-                        Rd.udw = 0xFFFFFFFF80000000;
+                        Rd.udw = 0xFFFFFFFF80000000ULL;
                 }
             }});
         }
@@ -214,7 +214,7 @@ decode OP default Unknown::unknown()
                     overflow = (resTemp<63:31> != 0);
                     underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
                     if(overflow) Rd = resTemp = 0x7FFFFFFF;
-                    else if(underflow) Rd = resTemp = 0xFFFFFFFF80000000;
+                    else if(underflow) Rd = resTemp = 0xFFFFFFFF80000000ULL;
                     else Rd = resTemp;
                 } }},
                 {{0}},
