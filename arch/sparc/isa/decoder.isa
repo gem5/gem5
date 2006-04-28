@@ -16,16 +16,22 @@ decode OP default Unknown::unknown()
                 0x0: bpcci({{
                     if(passesCondition(CcrIcc, COND2))
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
                 0x2: bpccx({{
                     if(passesCondition(CcrXcc, COND2))
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
             }
         }
         0x2: Branch22::bicc({{
             if(passesCondition(CcrIcc, COND2))
                 NNPC = xc->readPC() + disp;
+            else
+                handle_annul
         }});
         0x3: decode RCOND2
         {
@@ -34,26 +40,38 @@ decode OP default Unknown::unknown()
                 0x1: bpreq({{
                     if(Rs1 == 0)
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
                 0x2: bprle({{
                     if(Rs1 <= 0)
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
                 0x3: bprl({{
                     if(Rs1 < 0)
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
                 0x5: bprne({{
                     if(Rs1 != 0)
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
                 0x6: bprg({{
                     if(Rs1 > 0)
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
                 0x7: bprge({{
                     if(Rs1 >= 0)
                         NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
                 }});
             }
         }
@@ -117,22 +135,22 @@ decode OP default Unknown::unknown()
             0x10: addcc({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;}},
-                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
+                {{(Rs1<31:0> + val2<31:0>)<32:>}},
                 {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
+                {{(Rs1<63:1> + val2<63:1> + (Rs1 & val2)<0:>)<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );
             0x11: IntOpCcRes::andcc({{Rd = Rs1 & Rs2_or_imm13;}});
             0x12: IntOpCcRes::orcc({{Rd = Rs1 | Rs2_or_imm13;}});
             0x13: IntOpCcRes::xorcc({{Rd = Rs1 ^ Rs2_or_imm13;}});
             0x14: subcc({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 - val2;}},
-                {{((Rs1 & 0xFFFFFFFF - val2 & 0xFFFFFFFF) >> 31)}},
-                {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                {{(((Rs1 >> 1) + (~val2) >> 1) +
-                    ((Rs1 | ~val2) & 0x1))<63:>}},
-                {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
+                int64_t val2 = Rs2_or_imm13;
+                Rd = Rs1 - val2;}},
+                {{(~(Rs1<31:0> + (~val2)<31:0> + 1))<32:>}},
+                {{(Rs1<31:> != val2<31:>) && (Rs1<31:> != Rd<31:>)}},
+                {{(~(Rs1<63:1> + (~val2)<63:1> +
+                    (Rs1 | ~val2)<0:>))<63:>}},
+                {{Rs1<63:> != val2<63:> && Rs1<63:> != Rd<63:>}}
             );
             0x15: IntOpCcRes::andncc({{Rd = Rs1 & ~Rs2_or_imm13;}});
             0x16: IntOpCcRes::orncc({{Rd = Rs1 | ~Rs2_or_imm13;}});
@@ -141,11 +159,10 @@ decode OP default Unknown::unknown()
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = CcrIccC;
                 Rd = resTemp = Rs1 + val2 + carryin;}},
-                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31
-                    + carryin)}},
+                {{(Rs1<31:0> + val2<31:0> + carryin)<32:>}},
                 {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                {{((Rs1 >> 1) + (val2 >> 1) +
-                    ((Rs1 & val2) | (carryin & (Rs1 | val2)) & 0x1))<63:>}},
+                {{(Rs1<63:1> + val2<63:1> +
+                    ((Rs1 & val2) | (carryin & (Rs1 | val2)))<0:>)<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );
             0x1A: umulcc({{
@@ -162,9 +179,9 @@ decode OP default Unknown::unknown()
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = CcrIccC;
                 Rd = resTemp = Rs1 + ~(val2 + carryin) + 1;}},
-                {{((Rs1 & 0xFFFFFFFF + (~(val2 + carryin)) & 0xFFFFFFFF + 1) >> 31)}},
+                {{(~((Rs1<31:0> + (~(val2 + carryin))<31:0> + 1))<32:>)}},
                 {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                {{(((Rs1 >> 1) + (~(val2 + carryin)) >> 1) + ((Rs1 | ~(val2+carryin)) & 0x1))<63:>}},
+                {{(~((Rs1<63:1> + (~(val2 + carryin))<63:1>) + (Rs1<0:> + (~(val2+carryin))<0:> + 1)<63:1>))<63:>}},
                 {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
             );
             0x1D: udivxcc({{
