@@ -475,6 +475,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         // Not sure what to check for no fault...
         if (data_read_pkt->result == Success) {
             memcpy(&data, data_read_pkt->data, sizeof(T));
+            data = gtoh(data);
         }
 
         if (traceData) {
@@ -518,6 +519,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 
         if (data_read_pkt->result == Success) {
             memcpy(&data, data_read_pkt->data, sizeof(T));
+            data = gtoh(data);
         }
 
         if (traceData) {
@@ -622,9 +624,11 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt->cmd = Write;
         data_write_pkt->req = data_write_req;
         data_write_pkt->data = new uint8_t[64];
-        memcpy(data_write_pkt->data, &data, sizeof(T));
+        T hostData = htog(data);
+        memcpy(data_write_pkt->data, &hostData, sizeof(T));
 #else
         data_write_pkt->reset();
+        data = htog(data);
         data_write_pkt->data = (uint8_t *)&data;
 #endif
         data_write_pkt->addr = data_write_req->getPaddr();
