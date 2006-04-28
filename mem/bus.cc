@@ -35,13 +35,22 @@
 #include "mem/bus.hh"
 #include "sim/builder.hh"
 
+/** Get the ranges of anyone that we are connected to. */
+void
+Bus::init()
+{
+    std::vector<Port*>::iterator intIter;
+    for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
+        (*intIter)->sendStatusChange(Port::RangeChange);
+}
+
+
 /** Function called by the port when the bus is recieving a Timing
  * transaction.*/
 bool
 Bus::recvTiming(Packet &pkt, int id)
 {
-
-    panic("I need to be implemented, but not right now.");
+    return findPort(pkt.addr, id)->sendTiming(pkt);
 }
 
 Port *
@@ -90,10 +99,13 @@ Bus::recvFunctional(Packet &pkt, int id)
 void
 Bus::recvStatusChange(Port::Status status, int id)
 {
+    DPRINTF(Bus, "Bus %d recieved status change from device id %d\n",
+            busId, id);
     assert(status == Port::RangeChange &&
            "The other statuses need to be implemented.");
 
     assert(id < interfaces.size() && id >= 0);
+    int x;
     Port *port = interfaces[id];
     AddrRangeList ranges;
     AddrRangeList snoops;
@@ -122,12 +134,31 @@ Bus::recvStatusChange(Port::Status status, int id)
         portList.push_back(dm);
     }
     DPRINTF(MMU, "port list has %d entries\n", portList.size());
+
+    // tell all our peers that our address range has changed.
+    // Don't tell the device that caused this change, it already knows
+    for (x = 0; x < interfaces.size(); x++)
+        if (x != id)
+            interfaces[x]->sendStatusChange(Port::RangeChange);
 }
 
 void
-Bus::BusPort::addressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
 {
-    panic("I'm not implemented.\n");
+    std::vector<DevMap>::iterator portIter;
+
+    resp.clear();
+    snoop.clear();
+
+    DPRINTF(Bus, "Bus id %d recieved address range request returning\n",
+            busId);
+    for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
+        if (portIter->portId != id) {
+            resp.push_back(portIter->range);
+            DPRINTF(Bus, "-- %#llX : %#llX\n", portIter->range.start,
+                    portIter->range.end);
+        }
+    }
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
@@ -137,12 +168,12 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
 END_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
-    INIT_PARAM(bus_id, "junk bus id")
-END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
+    INIT_PARAM(bus_id, "a globally unique bus id")
+END_INIT_SIM_OBJECT_PARAMS(Bus)
 
 CREATE_SIM_OBJECT(Bus)
 {
-    return new Bus(getInstanceName());
+    return new Bus(getInstanceName(), bus_id);
 }
 
 REGISTER_SIM_OBJECT("Bus", Bus)

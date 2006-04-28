@@ -430,7 +430,7 @@ IdeController::read(Packet &pkt)
     IdeRegType reg_type;
     int disk;
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     pkt.allocate();
     if (pkt.size != 1 && pkt.size != 2 && pkt.size !=4)
          panic("Bad IDE read size: %d\n", pkt.size);
@@ -518,7 +518,7 @@ IdeController::write(Packet &pkt)
     int disk;
     uint8_t oldVal, newVal;
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
 
     parseAddr(pkt.addr, offset, channel, reg_type);
 

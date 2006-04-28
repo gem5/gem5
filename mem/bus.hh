@@ -45,6 +45,9 @@
 
 class Bus : public MemObject
 {
+    /** a globally unique id for this bus. */
+    int busId;
+
     struct DevMap {
         int portId;
         Range<Addr> range;
@@ -76,6 +79,14 @@ class Bus : public MemObject
      */
     Port *
     Bus::findPort(Addr addr, int id);
+
+    /** Process address range request.
+     * @param resp addresses that we can respond to
+     * @param snoop addresses that we would like to snoop
+     * @param id ide of the busport that made the request.
+     */
+    void addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id);
+
 
     /** Decleration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
@@ -120,7 +131,8 @@ class Bus : public MemObject
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
-        virtual void addressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+        virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+        { bus->addressRanges(resp, snoop, id); }
 
         // Hack to make translating port work without changes
         virtual int deviceBlockSize() { return 32; }
@@ -141,8 +153,11 @@ class Bus : public MemObject
         interfaces.push_back(new BusPort(this, id));
         return interfaces.back();
     }
-    Bus(const std::string &n)
-        : MemObject(n)  {}
+
+    virtual void init();
+
+    Bus(const std::string &n, int bus_id)
+        : MemObject(n), busId(bus_id)  {}
 
 };
 

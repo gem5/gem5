@@ -142,7 +142,7 @@ struct Packet
 
     Packet()
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
-           result(Unknown)
+           time(curTick), result(Unknown)
         {}
 
     ~Packet()
@@ -156,6 +156,7 @@ struct Packet
            deleteData();
            dynamicData = false;
            arrayData = false;
+           time = curTick;
         }
     }
 
@@ -231,6 +232,21 @@ struct Packet
         arrayData = true;
         data = new uint8_t[size];
     }
+
+    /** Do the packet modify the same addresses. */
+    bool intersect(Packet *p) {
+        Addr s1 = addr;
+        Addr e1 = addr + size;
+        Addr s2 = p->addr;
+        Addr e2 = p->addr + p->size;
+
+        if (s1 >= s2 && s1 < e2)
+            return true;
+        if (e1 >= s2 && e1 < e2)
+            return true;
+        return false;
+    }
 };
 
+bool fixPacket(Packet &func, Packet &timing);
 #endif //__MEM_PACKET_HH

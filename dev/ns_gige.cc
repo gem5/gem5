@@ -493,7 +493,7 @@ NSGigE::read(Packet &pkt)
 {
     assert(ioEnable);
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     pkt.allocate();
 
     //The mask is to give you only the offset into the device register file
@@ -729,7 +729,7 @@ NSGigE::write(Packet &pkt)
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x size=%d\n",
             daddr, pkt.addr, pkt.size);
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
 
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");

@@ -99,7 +99,7 @@ PciConfigAll::read(Packet &pkt)
     int func = (daddr >> 8) & 0x7;
     int reg = daddr & 0xFF;
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     pkt.allocate();
 
     DPRINTF(PciConfigAll, "read  va=%#x da=%#x size=%d\n", pkt.addr, daddr,
@@ -134,7 +134,7 @@ PciConfigAll::read(Packet &pkt)
 Tick
 PciConfigAll::write(Packet &pkt)
 {
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
 
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);

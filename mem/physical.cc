@@ -181,7 +181,6 @@ PhysicalMemory::getPort(const std::string &if_name)
 void
 PhysicalMemory::recvStatusChange(Port::Status status)
 {
-    panic("??");
 }
 
 PhysicalMemory::MemoryPort::MemoryPort(PhysicalMemory *_memory)

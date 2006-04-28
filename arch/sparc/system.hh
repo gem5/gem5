@@ -26,32 +26,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_ALPHA_SYSTEM_HH__
-#define __ARCH_ALPHA_SYSTEM_HH__
+#ifndef __ARCH_SPARC_SYSTEM_HH__
+#define __ARCH_SPARC_SYSTEM_HH__
 
 #include <string>
 #include <vector>
 
-#include "sim/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
-class AlphaSystem : public System
+class SparcSystem : public System
 {
   public:
     struct Params : public System::Params
     {
-        std::string console_path;
-        std::string palcode;
+        std::string reset_bin;
+        std::string hypervison_bin;
+        std::string openboot_bin;
+        std::string boot_osflags;
         uint64_t system_type;
         uint64_t system_rev;
     };
 
-    AlphaSystem(Params *p);
+    SparcSystem(Params *p);
 
-    ~AlphaSystem();
+    ~SparcaSystem();
 
     virtual bool breakpoint();
 
@@ -62,42 +64,46 @@ class AlphaSystem : public System
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    /**
-     * Set the m5AlphaAccess pointer in the console
-     */
-    void setAlphaAccess(Addr access);
+    /** reset binary symbol table */
+    SymbolTable *resetSymtab;
 
-    /** console symbol table */
-    SymbolTable *consoleSymtab;
+    /** hypervison binary symbol table */
+    SymbolTable *hypervisorSymtab;
 
-    /** pal symbol table */
-    SymbolTable *palSymtab;
+    /** openboot symbol table */
+    SymbolTable *openbootSymtab;
 
-    /** Object pointer for the console code */
-    ObjectFile *console;
+    /** Object pointer for the reset binary */
+    ObjectFile *reset;
 
-    /** Object pointer for the PAL code */
-    ObjectFile *pal;
+    /** Object pointer for the hypervisor code */
+    ObjectFile *hypervisor;
 
-#ifndef NDEBUG
-    /** Event to halt the simulator if the console calls panic() */
-    BreakPCEvent *consolePanicEvent;
-#endif
+    /** Object pointer for the openboot code */
+    ObjectFile *openboot;
+
   protected:
     const Params *params() const { return (const Params *)_params; }
 
-    /** Add a function-based event to PALcode. */
+    /** Add a function-based event to reset binary. */
     template <class T>
-    T *AlphaSystem::addPalFuncEvent(const char *lbl)
+    T *SparcSystem::addResetFuncEvent(const char *lbl)
     {
-        return addFuncEvent<T>(palSymtab, lbl);
+        return addFuncEvent<T>(resetSymtab, lbl);
     }
 
-    /** Add a function-based event to the console code. */
+    /** Add a function-based event to the hypervisor. */
     template <class T>
-    T *AlphaSystem::addConsoleFuncEvent(const char *lbl)
+    T *SparcSystem::addHypervisorFuncEvent(const char *lbl)
     {
-        return addFuncEvent<T>(consoleSymtab, lbl);
+        return addFuncEvent<T>(hypervisorSymtab, lbl);
+    }
+
+    /** Add a function-based event to the openboot. */
+    template <class T>
+    T *SparcSystem::addOpenbootFuncEvent(const char *lbl)
+    {
+        return addFuncEvent<T>(openbootSymtab, lbl);
     }
 
     virtual Addr fixFuncEventAddr(Addr addr);

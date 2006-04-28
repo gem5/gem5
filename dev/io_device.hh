@@ -167,7 +167,7 @@ class DmaPort : public Port
         friend class DmaPort;
     };
 
-    void sendDma(Packet &pkt);
+    void sendDma(Packet *pkt);
 
   public:
     DmaPort(DmaDevice *dev, Platform *p);
