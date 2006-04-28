@@ -29,6 +29,7 @@
 #ifndef __SPARC_LINUX_PROCESS_HH__
 #define __SPARC_LINUX_PROCESS_HH__
 
+#include "arch/sparc/linux/linux.hh"
 #include "arch/sparc/process.hh"
 #include "sim/process.hh"
 
