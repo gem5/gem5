@@ -104,6 +104,7 @@ def template MemExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
             %(load)s;
             %(code)s;
             %(store)s;

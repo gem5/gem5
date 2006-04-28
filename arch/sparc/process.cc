@@ -54,7 +54,7 @@ SparcLiveProcess::create(const std::string &nm, System *system, int stdin_fd,
 
 
     if (objFile->getArch() != ObjectFile::SPARC)
-        fatal("Object file does not match architecture.");
+        fatal("Object file with arch %x does not match architecture %x.", objFile->getArch(), ObjectFile::SPARC);
     switch (objFile->getOpSys()) {
       case ObjectFile::Linux:
         process = new SparcLinuxProcess(nm, objFile, system,
@@ -89,7 +89,7 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
-    mmap_start = mmap_end = 0x10000;
+    mmap_start = mmap_end = 0x800000;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
@@ -135,6 +135,14 @@ SparcLiveProcess::startup()
     execContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
 }
 
+m5_auxv_t buildAuxVect(int64_t type, int64_t val)
+{
+    m5_auxv_t result;
+    result.a_type = TheISA::htog(type);
+    result.a_val = TheISA::htog(val);
+    return result;
+}
+
 void
 SparcLiveProcess::argsInit(int intSize, int pageSize)
 {
@@ -145,10 +153,75 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
+    //These are the auxilliary vector types
+    enum auxTypes
+    {
+        SPARC_AT_HWCAP = 16,
+        SPARC_AT_PAGESZ = 6,
+        SPARC_AT_CLKTCK = 17,
+        SPARC_AT_PHDR = 3,
+        SPARC_AT_PHENT = 4,
+        SPARC_AT_PHNUM = 5,
+        SPARC_AT_BASE = 7,
+        SPARC_AT_FLAGS = 8,
+        SPARC_AT_ENTRY = 9,
+        SPARC_AT_UID = 11,
+        SPARC_AT_EUID = 12,
+        SPARC_AT_GID = 13,
+        SPARC_AT_EGID = 14
+    };
+
+    enum hardwareCaps
+    {
+        M5_HWCAP_SPARC_FLUSH = 1,
+        M5_HWCAP_SPARC_STBAR = 2,
+        M5_HWCAP_SPARC_SWAP = 4,
+        M5_HWCAP_SPARC_MULDIV = 8,
+        M5_HWCAP_SPARC_V9 = 16,
+        //This one should technically only be set
+        //if there is a cheetah or cheetah_plus tlb,
+        //but we'll use it all the time
+        M5_HWCAP_SPARC_ULTRA3 = 32
+    };
+
+    const int64_t hwcap =
+        M5_HWCAP_SPARC_FLUSH |
+        M5_HWCAP_SPARC_STBAR |
+        M5_HWCAP_SPARC_SWAP |
+        M5_HWCAP_SPARC_MULDIV |
+        M5_HWCAP_SPARC_V9 |
+        M5_HWCAP_SPARC_ULTRA3;
+
+    //Setup the auxilliary vectors. These will already have
+    //endian conversion.
+    auxv.push_back(buildAuxVect(SPARC_AT_EGID, 100));
+    auxv.push_back(buildAuxVect(SPARC_AT_GID, 100));
+    auxv.push_back(buildAuxVect(SPARC_AT_EUID, 100));
+    auxv.push_back(buildAuxVect(SPARC_AT_UID, 100));
+    //This would work, but the entry point is a protected member
+    //auxv.push_back(buildAuxVect(SPARC_AT_ENTRY, objFile->entry));
+    auxv.push_back(buildAuxVect(SPARC_AT_FLAGS, 0));
+    //This is the address of the elf "interpreter", which I don't
+    //think we currently set up. It should be set to 0 (I think)
+    //auxv.push_back(buildAuxVect(SPARC_AT_BASE, 0));
+    //This is the number of headers which were in the original elf
+    //file. This information isn't avaibale by this point.
+    //auxv.push_back(buildAuxVect(SPARC_AT_PHNUM, 3));
+    //This is the size of a program header entry. This isn't easy
+    //to compute here.
+    //auxv.push_back(buildAuxVect(SPARC_AT_PHENT, blah));
+    //This is should be set to load_addr (whatever that is) +
+    //e_phoff. I think it's a pointer to the program headers.
+    //auxv.push_back(buildAuxVect(SPARC_AT_PHDR, blah));
+    //This should be easy to get right, but I won't set it for now
+    //auxv.push_back(buildAuxVect(SPARC_AT_CLKTCK, blah));
+    auxv.push_back(buildAuxVect(SPARC_AT_PAGESZ, SparcISA::VMPageSize));
+    auxv.push_back(buildAuxVect(SPARC_AT_HWCAP, hwcap));
+
     //Figure out how big the initial stack needs to be
 
-    int aux_data_size = 0;
-    //Figure out the aux_data_size?
+    //Each auxilliary vector is two 8 byte words
+    int aux_data_size = 2 * intSize * auxv.size();
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
@@ -198,8 +271,8 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
     Addr aux_data_base = stack_base - aux_data_size - info_block_padding;
     Addr env_data_base = aux_data_base - env_data_size;
     Addr arg_data_base = env_data_base - arg_data_size;
-    Addr aux_array_base = arg_data_base - aux_array_size;
-    Addr envp_array_base = aux_array_base - envp_array_size;
+    Addr auxv_array_base = arg_data_base - aux_array_size;
+    Addr envp_array_base = auxv_array_base - envp_array_size;
     Addr argv_array_base = envp_array_base - argv_array_size;
     Addr argc_base = argv_array_base - argc_size;
     Addr window_save_base = argc_base - window_save_size;
@@ -208,24 +281,34 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
     DPRINTF(Sparc, "0x%x - aux data\n", aux_data_base);
     DPRINTF(Sparc, "0x%x - env data\n", env_data_base);
     DPRINTF(Sparc, "0x%x - arg data\n", arg_data_base);
-    DPRINTF(Sparc, "0x%x - aux array\n", aux_array_base);
-    DPRINTF(Sparc, "0x%x - env array\n", envp_array_base);
-    DPRINTF(Sparc, "0x%x - arg array\n", argv_array_base);
+    DPRINTF(Sparc, "0x%x - auxv array\n", auxv_array_base);
+    DPRINTF(Sparc, "0x%x - envp array\n", envp_array_base);
+    DPRINTF(Sparc, "0x%x - argv array\n", argv_array_base);
     DPRINTF(Sparc, "0x%x - argc \n", argc_base);
     DPRINTF(Sparc, "0x%x - window save\n", window_save_base);
     DPRINTF(Sparc, "0x%x - stack min\n", stack_min);
 
     // write contents to stack
     uint64_t argc = argv.size();
+    uint64_t guestArgc = TheISA::htog(argc);
 
-    //Copy the aux stuff? For now just put in the null vect
+    //Copy the aux stuff
+    for(int x = 0; x < auxv.size(); x++)
+    {
+        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+                (uint8_t*)&(auxv[x].a_type), intSize);
+        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+                (uint8_t*)&(auxv[x].a_val), intSize);
+    }
+    //Write out the terminating zeroed auxilliary vector
     const uint64_t zero = 0;
-    initVirtMem->writeBlob(aux_array_base, (uint8_t*)&zero, 2 * intSize);
+    initVirtMem->writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
+            (uint8_t*)&zero, 2 * intSize);
 
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem->writeBlob(argc_base, (uint8_t*)&argc, intSize);
+    initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     execContexts[0]->setIntReg(ArgumentReg0, argc);
     execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);

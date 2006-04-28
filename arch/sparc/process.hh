@@ -36,18 +36,19 @@
 class ObjectFile;
 class System;
 
+typedef struct
+{
+    int64_t a_type;
+    union {
+        int64_t a_val;
+        Addr    a_ptr;
+        Addr    a_fcn;
+    };
+} m5_auxv_t;
+
 class SparcLiveProcess : public LiveProcess
 {
   protected:
-    typedef struct
-    {
-        int64_t a_type;
-        union {
-            int64_t a_val;
-            Addr    a_ptr;
-            Addr    a_fcn;
-        };
-    } m5_auxv_t;
 
     static const Addr StackBias = 2047;
 
