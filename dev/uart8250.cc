@@ -114,7 +114,7 @@ Uart8250::read(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     assert(pkt.size == 1);
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     Addr daddr = pkt.addr - pioAddr;
     pkt.allocate();
 
@@ -198,7 +198,7 @@ Uart8250::write(Packet &pkt)
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
     assert(pkt.size == 1);
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     Addr daddr = pkt.addr - pioAddr;
 
     DPRINTF(Uart, " write register %#x value %#x\n", daddr, pkt.get<uint8_t>());

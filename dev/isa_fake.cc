@@ -54,7 +54,7 @@ IsaFake::read(Packet &pkt)
     assert(pkt.result == Unknown);
     assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
 
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
 
@@ -80,7 +80,7 @@ IsaFake::read(Packet &pkt)
 Tick
 IsaFake::write(Packet &pkt)
 {
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt.addr, pkt.size);
     pkt.result = Success;
     return pioDelay;

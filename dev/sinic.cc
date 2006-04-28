@@ -321,7 +321,7 @@ Device::read(Packet &pkt)
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
     pkt.allocate();
 
     if (!regValid(raddr))
@@ -408,7 +408,7 @@ Device::write(Packet &pkt)
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
-    pkt.time = curTick + pioDelay;
+    pkt.time += pioDelay;
 
     if (!regValid(raddr))
         panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d",
