@@ -103,6 +103,10 @@ class SimpleCPU : public BaseCPU
         virtual void recvStatusChange(Status status);
 
         virtual Packet *recvRetry();
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); }
     };
 
     MemObject *mem;
