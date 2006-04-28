@@ -480,7 +480,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
 //	Fault fault = xc->read(memReq,data);
         // Not sure what to check for no fault...
         if (data_read_pkt->result == Success) {
-            data = data_read_pkt->get<T>();
+            data = gtoh(data_read_pkt->get<T>());
         }
 
         if (traceData) {
@@ -523,7 +523,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         // Need to find a way to not duplicate code above.
 
         if (data_read_pkt->result == Success) {
-            data = data_read_pkt->get<T>();
+            data = gtoh(data_read_pkt->get<T>());
         }
 
         if (traceData) {
@@ -627,10 +627,12 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt = new Packet;
         data_write_pkt->cmd = Write;
         data_write_pkt->req = data_write_req;
+        T hostData = htog(data);
         data_write_pkt->allocate();
-        data_write_pkt->set(data);
+        data_write_pkt->set(hostData);
 #else
         data_write_pkt->reset();
+        data = htog(data);
         data_write_pkt->dataStatic(&data);
 #endif
         data_write_pkt->addr = data_write_req->getPaddr();
