@@ -41,26 +41,11 @@ MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
     switch (cvt_type)
     {
       case SINGLE_TO_DOUBLE:
-        break;
 
-      case SINGLE_TO_WORD:
-        break;
-
-      case SINGLE_TO_LONG:
-        break;
-
-      case DOUBLE_TO_SINGLE:
-
-        break;
-
-      case LONG_TO_SINGLE:
-        break;
-
-      case WORD_TO_SINGLE:
         break;
 
       default:
-        panic("Invalid Floating Point Conversion type being used.\n");
+        panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
     }
 
     return ret_val;

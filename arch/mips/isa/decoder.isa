@@ -572,7 +572,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             format FloatOp {
                                 0x1: cvt_d_s({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.uw = convert_and_round(Fs.ud, SINGLE_TO_DOUBLE, rnd_mode);
+                                    Fd.ud = convert_and_round(Fs.uw, SINGLE_TO_DOUBLE, rnd_mode);
                                 }});
 
                                 0x4: cvt_w_s({{
@@ -585,7 +585,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             format Float64Op {
                                 0x5: cvt_l_s({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.uw = convert_and_round(Fs.ud, SINGLE_TO_LONG, rnd_mode);
+                                    Fd.ud = convert_and_round(Fs.uw, SINGLE_TO_LONG, rnd_mode);
                                 }});
 
                                 0x6: cvt_ps_st({{
@@ -613,37 +613,37 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x1: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: round_l_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_NEAREST);
+                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_NEAREST);
                                 }});
 
                                 0x1: trunc_l_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_ZERO);
+                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_ZERO);
                                 }});
 
                                 0x2: ceil_l_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_UP);
+                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_UP);
                                 }});
 
                                 0x3: floor_l_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_DOWN);
+                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_DOWN);
                                 }});
                             }
 
                             format FloatOp {
                                 0x4: round_w_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_NEAREST);
+                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_NEAREST);
                                 }});
 
                                 0x5: trunc_w_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_ZERO);
+                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_ZERO);
                                 }});
 
                                 0x6: ceil_w_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_UP);
+                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_UP);
                                 }});
 
                                 0x7: floor_w_d({{
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_DOWN);
+                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_DOWN);
                                 }});
                             }
                         }
@@ -671,12 +671,12 @@ decode OPCODE_HI default Unknown::unknown() {
                             format FloatOp {
                                 0x0: cvt_s_d({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_SINGLE, rnd_mode);
+                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_SINGLE, rnd_mode);
                                 }});
 
                                 0x4: cvt_w_d({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_WORD, rnd_mode);
+                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, rnd_mode);
                                 }});
                             }
 
@@ -684,7 +684,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             format Float64Op {
                                 0x5: cvt_l_d({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd = convert_and_round(Fs.ud, DOUBLE_TO_LONG, rnd_mode);
+                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, rnd_mode);
                                 }});
                             }
                         }
@@ -695,12 +695,12 @@ decode OPCODE_HI default Unknown::unknown() {
                         format FloatOp {
                             0x20: cvt_s_w({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd = convert_and_round(Fs.uw, WORD_TO_SINGLE, rnd_mode);
+                                Fd.uw = convert_and_round(Fs.uw, WORD_TO_SINGLE, rnd_mode);
                             }});
 
                             0x21: cvt_d_w({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd = convert_and_round(Fs.uw, WORD_TO_DOUBLE, rnd_mode);
+                                Fd.ud = convert_and_round(Fs.uw, WORD_TO_DOUBLE, rnd_mode);
                             }});
                         }
                     }
@@ -712,12 +712,12 @@ decode OPCODE_HI default Unknown::unknown() {
                         format Float64Op {
                             0x10: cvt_s_l({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd = convert_and_round(Fs.ud, LONG_TO_SINGLE, rnd_mode);
+                                Fd.uw = convert_and_round(Fs.ud, LONG_TO_SINGLE, rnd_mode);
                             }});
 
                             0x11: cvt_d_l({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd = convert_and_round(Fs.ud, LONG_TO_DOUBLE, rnd_mode);
+                                Fd.ud = convert_and_round(Fs.ud, LONG_TO_DOUBLE, rnd_mode);
                             }});
                         }
                     }
@@ -778,7 +778,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x4: decode FUNCTION_LO {
                             0x0: Float64Op::cvt_s_pu({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd = convert_and_round(Fs.ud, PUPPER_TO_SINGLE, rnd_mode);
+                                Fd.uw = convert_and_round(Fs.ud, PUPPER_TO_SINGLE, rnd_mode);
                             }});
                         }
 
@@ -786,7 +786,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             format Float64Op {
                                 0x0: cvt_s_pl({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd = convert_and_round(Fs.ud, PLOWER_TO_SINGLE,
+                                    Fd.uw = convert_and_round(Fs.ud, PLOWER_TO_SINGLE,
                                                            rnd_mode);
                                 }});
 
