@@ -95,9 +95,6 @@ output exec {{
 
     using namespace MipsISA;
 
-
-
-
     /// CLEAR ALL CPU INST/EXE HAZARDS
     inline void
     clear_exe_inst_hazards()
@@ -126,25 +123,7 @@ output exec {{
     }
 #endif
 
-    double convert_and_round(float w, int x, int y, int z)
-    {
-        double temp = .34000;
 
-        return temp;
-    }
-
-    enum FPTypes{
-        FP_SINGLE,
-        FP_DOUBLE,
-        FP_LONG,
-        FP_PS_LO,
-        FP_PS_HI,
-        FP_WORD,
-        RND_NEAREST,
-        RND_ZERO,
-        RND_UP,
-        RND_DOWN
-    };
 }};
 
 

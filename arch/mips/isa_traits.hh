@@ -315,12 +315,40 @@ namespace MipsISA
             return NoFault;
         }
 
-
-
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
     };
+
+        enum ConvertType{
+            SINGLE_TO_DOUBLE,
+            SINGLE_TO_WORD,
+            SINGLE_TO_LONG,
+
+            DOUBLE_TO_SINGLE,
+            DOUBLE_TO_WORD,
+            DOUBLE_TO_LONG,
+
+            LONG_TO_SINGLE,
+            LONG_TO_DOUBLE,
+            LONG_TO_WORD,
+
+            WORD_TO_SINGLE,
+            WORD_TO_DOUBLE,
+            WORD_TO_LONG,
+
+            PLOWER_TO_SINGLE,
+            PUPPER_TO_SINGLE
+        };
+
+        enum RoundMode{
+            RND_ZERO,
+            RND_DOWN,
+            RND_UP,
+            RND_NEAREST
+        };
+
+        uint64_t convert_and_round(uint64_t fp_val,ConvertType cvt_type, int rnd_mode = 0);
 
 
         void copyRegs(ExecContext *src, ExecContext *dest);

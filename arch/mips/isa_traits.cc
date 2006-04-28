@@ -33,7 +33,38 @@
 
 using namespace MipsISA;
 
+uint64_t
+MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
+{
+    uint64_t ret_val = 0;
 
+    switch (cvt_type)
+    {
+      case SINGLE_TO_DOUBLE:
+        break;
+
+      case SINGLE_TO_WORD:
+        break;
+
+      case SINGLE_TO_LONG:
+        break;
+
+      case DOUBLE_TO_SINGLE:
+
+        break;
+
+      case LONG_TO_SINGLE:
+        break;
+
+      case WORD_TO_SINGLE:
+        break;
+
+      default:
+        panic("Invalid Floating Point Conversion type being used.\n");
+    }
+
+    return ret_val;
+}
 
 void
 MipsISA::copyRegs(ExecContext *src, ExecContext *dest)
