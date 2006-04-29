@@ -31,6 +31,7 @@
  * Definition of the Packet Class, a packet is a transaction occuring
  * between a single level of the memory heirarchy (ie L1->L2).
  */
+#include "base/misc.hh"
 #include "mem/packet.hh"
 
 bool fixPacket(Packet &func, Packet &timing)

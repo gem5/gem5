@@ -227,7 +227,7 @@ class FunctionalPort : public Port
     virtual bool recvTiming(Packet &pkt) { panic("FuncPort is UniDir"); }
     virtual Tick recvAtomic(Packet &pkt) { panic("FuncPort is UniDir"); }
     virtual void recvFunctional(Packet &pkt) { panic("FuncPort is UniDir"); }
-    virtual void recvStatusChange(Status status) {panic("FuncPort is UniDir");}
+    virtual void recvStatusChange(Status status) {}
 
     template <typename T>
     inline void write(Addr addr, T d)
