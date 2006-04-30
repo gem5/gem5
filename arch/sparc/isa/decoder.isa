@@ -38,37 +38,37 @@ decode OP default Unknown::unknown()
             format BranchSplit
             {
                 0x1: bpreq({{
-                    if(Rs1 == 0)
+                    if(Rs1.sdw == 0)
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
                 0x2: bprle({{
-                    if(Rs1 <= 0)
+                    if(Rs1.sdw <= 0)
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
                 0x3: bprl({{
-                    if(Rs1 < 0)
+                    if(Rs1.sdw < 0)
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
                 0x5: bprne({{
-                    if(Rs1 != 0)
+                    if(Rs1.sdw != 0)
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
                 0x6: bprg({{
-                    if(Rs1 > 0)
+                    if(Rs1.sdw > 0)
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
                 0x7: bprge({{
-                    if(Rs1 >= 0)
+                    if(Rs1.sdw >= 0)
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
@@ -350,11 +350,15 @@ decode OP default Unknown::unknown()
                 {
                     0x0: movcci({{
                         if(passesCondition(CcrIcc, COND4))
-                            Rd = (I ? SIMM11 : RS2);
+                            Rd = Rs2_or_imm11;
+                        else
+                            Rd = Rd;
                     }});
                     0x2: movccx({{
                         if(passesCondition(CcrXcc, COND4))
-                            Rd = (I ? SIMM11 : RS2);
+                            Rd = Rs2_or_imm11;
+                        else
+                            Rd = Rd;
                     }});
                 }
             }
@@ -373,16 +377,17 @@ decode OP default Unknown::unknown()
                             count += oneBits[temp & 0xF];
                             temp = temp >> 4;
                     }
+                    Rd = count;
                 }});
             }
             0x2F: decode RCOND3
             {
-                0x1: movreq({{if(Rs1 == 0) Rd = Rs2_or_imm10;}});
-                0x2: movrle({{if(Rs1 <= 0) Rd = Rs2_or_imm10;}});
-                0x3: movrl({{if(Rs1 < 0) Rd = Rs2_or_imm10;}});
-                0x5: movrne({{if(Rs1 != 0) Rd = Rs2_or_imm10;}});
-                0x6: movrg({{if(Rs1 > 0) Rd = Rs2_or_imm10;}});
-                0x7: movrge({{if(Rs1 >= 0) Rd = Rs2_or_imm10;}});
+                0x1: movreq({{Rd = (Rs1 == 0) ? Rs2_or_imm10 : Rd;}});
+                0x2: movrle({{Rd = (Rs1 <= 0) ? Rs2_or_imm10 : Rd;}});
+                0x3: movrl({{Rd = (Rs1 < 0) ? Rs2_or_imm10 : Rd;}});
+                0x5: movrne({{Rd = (Rs1 != 0) ? Rs2_or_imm10 : Rd;}});
+                0x6: movrg({{Rd = (Rs1 > 0) ? Rs2_or_imm10 : Rd;}});
+                0x7: movrge({{Rd = (Rs1 >= 0) ? Rs2_or_imm10 : Rd;}});
             }
             0x30: decode RD {
                 0x0: wry({{Y = Rs1 ^ Rs2_or_imm13;}});
