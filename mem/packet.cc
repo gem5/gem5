@@ -34,5 +34,61 @@
 #include "base/misc.hh"
 #include "mem/packet.hh"
 
+
+/** delete the data pointed to in the data pointer. Ok to call to matter how
+ * data was allocted. */
+void
+Packet::deleteData() {
+    assert(staticData || dynamicData);
+    if (staticData)
+        return;
+
+    if (arrayData)
+        delete [] data;
+    else
+        delete data;
+}
+
+/** If there isn't data in the packet, allocate some. */
+void
+Packet::allocate() {
+    if (data)
+        return;
+    assert(!staticData);
+    dynamicData = true;
+    arrayData = true;
+    data = new uint8_t[size];
+}
+
+/** Do the packet modify the same addresses. */
+bool
+Packet::intersect(Packet *p) {
+    Addr s1 = addr;
+    Addr e1 = addr + size;
+    Addr s2 = p->addr;
+    Addr e2 = p->addr + p->size;
+
+    if (s1 >= s2 && s1 < e2)
+        return true;
+    if (e1 >= s2 && e1 < e2)
+        return true;
+    return false;
+}
+
+/** Minimally reset a packet so something like simple cpu can reuse it. */
+void
+Packet::reset() {
+    result = Unknown;
+    if (dynamicData) {
+       deleteData();
+       dynamicData = false;
+       arrayData = false;
+       time = curTick;
+    }
+}
+
+
+
+
 bool fixPacket(Packet &func, Packet &timing)
 { panic("Need to implement!"); }

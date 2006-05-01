@@ -40,6 +40,7 @@
 
 #include "base/misc.hh"
 #include "config/full_system.hh"
+#include "mem/packet_impl.hh"
 #include "mem/physical.hh"
 #include "sim/host.hh"
 #include "sim/builder.hh"
