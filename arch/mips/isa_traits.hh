@@ -189,20 +189,23 @@ namespace MipsISA
 
     };
 
-    typedef double FloatReg;
+    typedef float FloatReg;
+
+    typedef uint32_t FloatReg32;
+    typedef uint64_t FloatReg64;
     typedef uint64_t FloatRegBits;
 
+//  const uint64_t hi_mask64 = 0xFFFFFFFF00000000;
+//const uint64_t lo_mask64 = 0x00000000FFFFFFFF;
+
     const int SingleWidth = 32;
-    const int SingleBytes = SingleWidth / 4;
+    const int SingleBytes = 4;
 
     const int DoubleWidth = 64;
-    const int DoubleBytes = DoubleWidth / 4;
+    const int DoubleBytes = 8;
 
     const int QuadWidth = 128;
     const int QuadBytes = QuadWidth / 4;
-
-    const int FloatRegSize = SingleWidth / SingleBytes;
-    const int DoubleRegSize = FloatRegSize * 2;
 
     class FloatRegFile
     {
@@ -211,31 +214,27 @@ namespace MipsISA
         //Since the floating point registers overlap each other,
         //A generic storage space is used. The float to be returned is
         //pulled from the appropriate section of this region.
-        char regSpace[FloatRegSize * NumFloatRegs];
+        //char regSpace[SingleBytes * NumFloatRegs];
+        FloatReg32 regs[NumFloatRegs];
 
       public:
 
         void clear()
         {
-            bzero(regSpace, sizeof(regSpace));
+            bzero(regs, sizeof(regs));
         }
 
-        FloatReg readReg(int floatReg, int width)
+        double readReg(int floatReg, int width)
         {
-            //In each of these cases, we have to copy the value into a temporary
-            //variable. This is because we may otherwise try to access an
-            //unaligned portion of memory.
             switch(width)
             {
               case SingleWidth:
-                float result32;
-                memcpy(&result32, regSpace + 4 * floatReg, FloatRegSize);
-                return htog(result32);
+                void *float_ptr = &regs[floatReg];
+                return *(float *) float_ptr;
 
               case DoubleWidth:
-                double result64;
-                memcpy(&result64, regSpace + 4 * floatReg, DoubleRegSize);
-                return htog(result64);
+                void *double_ptr = &regs[floatReg];
+                return *(double *) double_ptr;
 
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
@@ -244,20 +243,17 @@ namespace MipsISA
 
         FloatRegBits readRegBits(int floatReg, int width)
         {
-            //In each of these cases, we have to copy the value into a temporary
-            //variable. This is because we may otherwise try to access an
-            //unaligned portion of memory.
+            using namespace std;
+
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32;
-                memcpy(&result32, regSpace + 4 * floatReg, FloatRegSize);
-                return htog(result32);
+                return regs[floatReg];
 
               case DoubleWidth:
-                uint64_t result64;
-                memcpy(&result64, regSpace + 4 * floatReg, DoubleRegSize);
-                return htog(result64);
+                cout << hex << "Combining " << regs[floatReg + 1] << " & " << regs[floatReg + 1] << endl;
+                cout << hex << "Returning " << ((FloatReg64)regs[floatReg] << 32 | regs[floatReg + 1]) << endl;
+                return (FloatReg64)regs[floatReg] << 32 | regs[floatReg + 1];
 
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
@@ -266,47 +262,45 @@ namespace MipsISA
 
         Fault setReg(int floatReg, const FloatReg &val, int width)
         {
-            //In each of these cases, we have to copy the value into a temporary
-            //variable. This is because we may otherwise try to access an
-            //unaligned portion of memory.
+
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32;
-                result32 = gtoh((uint32_t)val);
-                memcpy(regSpace + 4 * floatReg, &result32, FloatRegSize);
+                float temp = val;
+                void *float_ptr = &temp;
+                regs[floatReg] = *(FloatReg32 *) float_ptr;
                 break;
 
               case DoubleWidth:
-                uint64_t result64;
-                result64 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result64, DoubleRegSize);
+                const void *double_ptr = &val;
+                FloatReg64 temp_double = *(FloatReg64 *) double_ptr;
+                regs[floatReg] = temp_double >> 32;
+                regs[floatReg + 1] = temp_double;
                 break;
-
 
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
+
             return NoFault;
         }
 
         Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
         {
-            //In each of these cases, we have to copy the value into a temporary
-            //variable. This is because we may otherwise try to access an
-            //unaligned portion of memory.
+            using namespace std;
+
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32;
-                result32 = gtoh((uint32_t)val);
-                memcpy(regSpace + 4 * floatReg, &result32, FloatRegSize);
+                regs[floatReg] = val;
                 break;
 
               case DoubleWidth:
-                uint64_t result64;
-                result64 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result64, DoubleRegSize);
+                cout << hex << "Setting val: " << val << endl;
+                regs[floatReg] = val >> 32;
+                regs[floatReg + 1] = val;
+                cout << dec << "f" << floatReg << ": " << hex<< readRegBits(floatReg,32) << endl;
+                cout << dec << "f" << floatReg + 1 << ": " << hex << readRegBits(floatReg+1,32) << endl;
                 break;
 
               default:
@@ -348,8 +342,9 @@ namespace MipsISA
             RND_NEAREST
         };
 
+        uint64_t convert_and_round(uint32_t fp_val,ConvertType cvt_type, int rnd_mode = 0);
         uint64_t convert_and_round(uint64_t fp_val,ConvertType cvt_type, int rnd_mode = 0);
-
+        uint64_t convert_and_round(float fp_val,ConvertType cvt_type, int rnd_mode = 0);
 
         void copyRegs(ExecContext *src, ExecContext *dest);
 
@@ -636,7 +631,6 @@ extern const Addr PageOffset;
         {
             return miscRegFile.setRegWithEffect(miscReg, val, xc);
         }
-
 
         FloatReg readFloatReg(int floatReg)
         {

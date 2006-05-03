@@ -397,7 +397,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     format FloatOp {
                         0x0: mfc1 ({{ Rt.uw = Fs.uw<31:0>; }});
                         0x3: mfhc1({{ Rt.uw = Fs.ud<63:32>;}});
-                        0x4: mtc1 ({{ Fs.uw = Rt.uw;           }});
+                        0x4: mtc1 ({{ Fs.uw = Rt.uw;       }});
                         0x7: mthc1({{
                              uint64_t fs_hi = Rt.ud << 32;
                              uint64_t fs_lo = Fs.ud & 0x0000FFFF;
@@ -572,7 +572,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             format FloatOp {
                                 0x1: cvt_d_s({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.ud = convert_and_round(Fs.uw, SINGLE_TO_DOUBLE, rnd_mode);
+                                    Fd.ud = convert_and_round(Fs.sf, SINGLE_TO_DOUBLE, rnd_mode);
                                 }});
 
                                 0x4: cvt_w_s({{
@@ -605,7 +605,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x3: divd({{ Fd.df = Fs.df / Ft.df;}});
                                 0x4: sqrtd({{ Fd.df = sqrt(Fs.df);}});
                                 0x5: absd({{ Fd.df = fabs(Fs.df);}});
-                                0x6: movd({{ Fd.df = Fs.df;}});
+                                0x6: movd({{ Fd.ud = Fs.ud;}});
                                 0x7: negd({{ Fd.df = -1 * Fs.df;}});
                             }
                         }

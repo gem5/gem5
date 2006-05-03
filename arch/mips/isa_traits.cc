@@ -30,25 +30,95 @@
 #include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"
+#include "base/bitfield.hh"
 
 using namespace MipsISA;
+using namespace std;
 
 uint64_t
-MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
+MipsISA::convert_and_round(uint32_t fp_val, ConvertType cvt_type, int rnd_mode)
 {
+
     uint64_t ret_val = 0;
 
     switch (cvt_type)
     {
       case SINGLE_TO_DOUBLE:
+        uint64_t single_sign     = fp_val & 0x80000000;
 
-        break;
+        uint64_t single_exp      = (fp_val & 0x7F800000) >> 22;
+        single_exp -= 127;
+
+        uint64_t single_mantissa = fp_val & 0x007FFFFF;
+
+        uint64_t double_exp = single_exp + 1023;
+        double_exp = double_exp << 51;
+
+        uint64_t double_val =  single_sign << 63 | double_exp | single_mantissa;
+
+        return double_val;
 
       default:
         panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
+        return ret_val;
     }
+}
 
-    return ret_val;
+uint64_t
+MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
+{
+
+    uint64_t ret_val = 0;
+
+    switch (cvt_type)
+    {
+      case SINGLE_TO_DOUBLE:
+        uint64_t single_sign     = fp_val & 0x80000000;
+
+        uint64_t single_exp      = (fp_val & 0x7F800000) >> 22;
+        single_exp -= 127;
+
+        uint64_t single_mantissa = fp_val & 0x007FFFFF;
+
+        uint64_t double_exp = single_exp + 1023;
+        double_exp = double_exp << 51;
+
+        uint64_t double_val =  single_sign << 63 | double_exp | single_mantissa;
+
+        return double_val;
+
+      default:
+        panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
+        return ret_val;
+    }
+}
+
+
+uint64_t
+MipsISA::convert_and_round(float fp_val, ConvertType cvt_type, int rnd_mode)
+{
+    void * ptr = &fp_val;
+    uint32_t fp_bits = * (uint32_t *) ptr;
+
+    cout << "Converting " << fp_val << " (" << hex << fp_bits << ") " << endl;
+
+    uint64_t ret_val = 0;
+
+    switch (cvt_type)
+    {
+      case SINGLE_TO_DOUBLE:
+        double double_val = fp_val;
+        void *double_ptr = &double_val;
+        uint64_t dp_bits =  *(uint64_t *) double_ptr ;
+        cout << "To " << double_val << " (" << hex << dp_bits << ") " << endl;
+        double_ptr = &dp_bits;
+        cout << "Testing: " << *(double *) double_ptr << endl;
+        return dp_bits;
+
+      default:
+        panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
+        return ret_val;
+    }
 }
 
 void

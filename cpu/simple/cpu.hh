@@ -369,7 +369,7 @@ class SimpleCPU : public BaseCPU
     }
 
     void setFloatRegBits(const StaticInst *si, int idx,
-            FloatRegBits val, int width)
+                         FloatRegBits val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         cpuXC->setFloatRegBits(reg_idx, val, width);
