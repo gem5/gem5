@@ -85,7 +85,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid)
     : _status(ExecContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
-      lastSuspend(0), process(_process), mem(NULL), asid(_asid),
+      lastSuspend(0), process(_process), mem(process->getMemory()), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
