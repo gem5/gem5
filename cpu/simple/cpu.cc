@@ -144,6 +144,7 @@ SimpleCPU::SimpleCPU(Params *p)
     cpuXC = new CPUExecContext(this, /* thread_num */ 0, p->process,
                                /* asid */ 0);
 #endif // !FULL_SYSTEM
+    cpuXC->setStatus(ExecContext::Suspended);
     xcProxy = cpuXC->getProxy();
 
     icacheInterface = p->icache_interface;
@@ -212,7 +213,7 @@ SimpleCPU::activateContext(int thread_num, int delay)
     assert(thread_num == 0);
     assert(cpuXC);
 
-    assert(_status == Idle);
+    assert(_status == Idle || _status == SwitchedOut);
     notIdleFraction++;
     scheduleTickEvent(delay);
     _status = Running;
@@ -225,7 +226,7 @@ SimpleCPU::suspendContext(int thread_num)
     assert(thread_num == 0);
     assert(cpuXC);
 
-    assert(_status == Running);
+    assert(_status == Running || _status == SwitchedOut);
     notIdleFraction--;
     unscheduleTickEvent();
     _status = Idle;
@@ -418,7 +419,7 @@ SimpleCPU::read(Addr addr, T &data, unsigned flags)
         Fault fault = cpuXC->read(memReq,data);
 
         if (traceData) {
-            traceData->setAddr(addr);
+            traceData->setAddr(memReq->vaddr);
         }
         return fault;
     }
