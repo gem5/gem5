@@ -97,6 +97,10 @@ class ROB
      */
     void setActiveThreads(std::list<unsigned>* at_ptr);
 
+    void switchOut();
+
+    void takeOverFrom();
+
     /** Function to insert an instruction into the ROB. Note that whatever
      *  calls this function must ensure that there is enough space within the
      *  ROB for the new instruction.

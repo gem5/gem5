@@ -112,6 +112,10 @@ class InstructionQueue
     /** Registers statistics. */
     void regStats();
 
+    void resetState();
+
+    void resetDependencyGraph();
+
     /** Sets CPU pointer. */
     void setCPU(FullCPU *_cpu) { cpu = _cpu; }
 
@@ -126,6 +130,12 @@ class InstructionQueue
 
     /** Sets the global time buffer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
+
+    void switchOut();
+
+    void takeOverFrom();
+
+    bool isSwitchedOut() { return switchedOut; }
 
     /** Number of entries needed for given amount of threads. */
     int entryAmount(int num_threads);
@@ -385,6 +395,8 @@ class InstructionQueue
      */
     unsigned commitToIEWDelay;
 
+    bool switchedOut;
+
     //////////////////////////////////
     // Variables needed for squashing
     //////////////////////////////////
@@ -507,7 +519,7 @@ class InstructionQueue
     Stats::Scalar<> iqSquashedNonSpecRemoved;
 
     Stats::VectorDistribution<> queue_res_dist;
-    Stats::Vector<> n_issued_dist;
+    Stats::Distribution<> n_issued_dist;
     Stats::VectorDistribution<> issue_delay_dist;
 
     Stats::Vector<> stat_fu_busy;

@@ -124,6 +124,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
       mem(params->mem),
 #else
 //      pTable(params->pTable),
+      mem(params->workload[0]->getMemory()),
 #endif // FULL_SYSTEM
 
       icacheInterface(params->icacheInterface),
@@ -176,9 +177,9 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     numThreads = number_of_threads;
 
 #if !FULL_SYSTEM
-    int activeThreads = params->workload.size();
+    int active_threads = params->workload.size();
 #else
-    int activeThreads = 1;
+    int active_threads = 1;
 #endif
 
     assert(params->numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
@@ -192,7 +193,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     PhysRegIndex freg_idx = params->numPhysIntRegs; //Index to 1 after int regs
 
     for (int tid=0; tid < numThreads; tid++) {
-        bool bindRegs = (tid <= activeThreads - 1);
+        bool bindRegs = (tid <= active_threads - 1);
 
         commitRenameMap[tid].init(TheISA::NumIntRegs,
                                   params->numPhysIntRegs,
@@ -357,7 +358,7 @@ FullO3CPU<Impl>::tick()
     }
 
     if (activityCount && !tickEvent.scheduled()) {
-        tickEvent.schedule(curTick + 1);
+        tickEvent.schedule(curTick + cycles(1));
     }
 
 #if !FULL_SYSTEM
@@ -370,8 +371,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::init()
 {
-    if (deferRegistration) {
-        return;
+    if (!deferRegistration) {
+        registerExecContexts();
     }
 
     // Set inSyscall so that the CPU doesn't squash when initially
@@ -379,7 +380,6 @@ FullO3CPU<Impl>::init()
     for (int i = 0; i < number_of_threads; ++i)
         thread[i]->inSyscall = true;
 
-    registerExecContexts();
 
     // Need to do a copy of the xc->regs into the CPU's regfile so
     // that it can start properly.
@@ -388,7 +388,7 @@ FullO3CPU<Impl>::init()
         // Need to do a copy of the xc->regs into the CPU's regfile so
         // that it can start properly.
 #if FULL_SYSTEM
-        ExecContext *src_xc = system->execContexts[tid];
+        ExecContext *src_xc = execContexts[tid];
 #else
         ExecContext *src_xc = thread[tid]->getXCProxy();
 #endif
@@ -584,7 +584,7 @@ FullO3CPU<Impl>::activateContext(int tid, int delay)
         activeThreads.push_back(tid);
     }
 
-    assert(_status == Idle);
+    assert(_status == Idle || _status == SwitchedOut);
 
     scheduleTickEvent(delay);
 
@@ -658,21 +658,64 @@ FullO3CPU<Impl>::haltContext(int tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::switchOut()
+FullO3CPU<Impl>::switchOut(Sampler *sampler)
 {
-    panic("FullO3CPU does not have a switch out function.\n");
+//    panic("FullO3CPU does not have a switch out function.\n");
+    fetch.switchOut();
+    decode.switchOut();
+    rename.switchOut();
+    iew.switchOut();
+    commit.switchOut();
+    if (tickEvent.scheduled())
+        tickEvent.squash();
+    sampler->signalSwitched();
+    _status = SwitchedOut;
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
+    for (int i = 0; i < 6; ++i) {
+        timeBuffer.advance();
+        fetchQueue.advance();
+        decodeQueue.advance();
+        renameQueue.advance();
+        iewQueue.advance();
+        activityBuffer.advance();
+    }
+
+    activityCount = 0;
+    bzero(&stageActive, sizeof(stageActive));
+
     BaseCPU::takeOverFrom(oldCPU);
+
+    fetch.takeOverFrom();
+    decode.takeOverFrom();
+    rename.takeOverFrom();
+    iew.takeOverFrom();
+    commit.takeOverFrom();
 
     assert(!tickEvent.scheduled());
 
+    // @todo: Figure out how to properly select the tid to put onto the active threads list.
+    int tid = 0;
+
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive == activeThreads.end()) {
+        //May Need to Re-code this if the delay variable is the
+        //delay needed for thread to activate
+        DPRINTF(FullCPU, "Adding Thread %i to active threads list\n",
+                tid);
+
+        activeThreads.push_back(tid);
+    }
+
     // Set all status's to active, schedule the
     // CPU's tick event.
+    // @todo: Fix up statuses so this is handled properly
     for (int i = 0; i < execContexts.size(); ++i) {
         ExecContext *xc = execContexts[i];
         if (xc->status() == ExecContext::Active && _status != Running) {
@@ -680,6 +723,8 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
             tickEvent.schedule(curTick);
         }
     }
+    if (!tickEvent.scheduled())
+        tickEvent.schedule(curTick);
 }
 
 template <class Impl>
@@ -758,7 +803,8 @@ template <class Impl>
 float
 FullO3CPU<Impl>::readArchFloatRegSingle(int reg_idx, unsigned tid)
 {
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     return regFile.readFloatRegSingle(phys_reg);
 }
@@ -767,7 +813,8 @@ template <class Impl>
 double
 FullO3CPU<Impl>::readArchFloatRegDouble(int reg_idx, unsigned tid)
 {
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     return regFile.readFloatRegDouble(phys_reg);
 }
@@ -776,7 +823,8 @@ template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readArchFloatRegInt(int reg_idx, unsigned tid)
 {
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     return regFile.readFloatRegInt(phys_reg);
 }

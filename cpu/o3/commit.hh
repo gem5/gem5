@@ -175,6 +175,10 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void initStage();
 
+    void switchOut();
+
+    void takeOverFrom();
+
     /** Ticks the commit stage, which tries to commit instructions. */
     void tick();
 
@@ -350,6 +354,8 @@ class DefaultCommit
 
     /** Number of Active Threads */
     unsigned numThreads;
+
+    bool switchedOut;
 
     Tick trapLatency;
 

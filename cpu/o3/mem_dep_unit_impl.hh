@@ -103,6 +103,26 @@ MemDepUnit<MemDepPred, Impl>::regStats()
 
 template <class MemDepPred, class Impl>
 void
+MemDepUnit<MemDepPred, Impl>::switchOut()
+{
+    for (int i = 0; i < Impl::MaxThreads; ++i) {
+        instList[i].clear();
+    }
+    instsToReplay.clear();
+    memDepHash.clear();
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::takeOverFrom()
+{
+    loadBarrier = storeBarrier = false;
+    loadBarrierSN = storeBarrierSN = 0;
+    depPred.clear();
+}
+
+template <class MemDepPred, class Impl>
+void
 MemDepUnit<MemDepPred, Impl>::setIQ(InstructionQueue<Impl> *iq_ptr)
 {
     iqPtr = iq_ptr;

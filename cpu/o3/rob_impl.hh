@@ -121,6 +121,31 @@ ROB<Impl>::setActiveThreads(list<unsigned> *at_ptr)
     activeThreads = at_ptr;
 }
 
+template <class Impl>
+void
+ROB<Impl>::switchOut()
+{
+    for (int tid = 0; tid < numThreads; tid++) {
+        instList[tid].clear();
+    }
+}
+
+template <class Impl>
+void
+ROB<Impl>::takeOverFrom()
+{
+    for (int tid=0; tid  < numThreads; tid++) {
+        doneSquashing[tid] = true;
+        threadEntries[tid] = 0;
+        squashIt[tid] = instList[tid].end();
+    }
+    numInstsInROB = 0;
+
+    // Initialize the "universal" ROB head & tail point to invalid
+    // pointers
+    head = instList[0].end();
+    tail = instList[0].end();
+}
 
 template <class Impl>
 void

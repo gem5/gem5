@@ -42,6 +42,15 @@ ReturnAddrStack::init(unsigned _numEntries)
 }
 
 void
+ReturnAddrStack::reset()
+{
+    usedEntries = 0;
+    tos = 0;
+    for (int i = 0; i < numEntries; ++i)
+        addrStack[i] = 0;
+}
+
+void
 ReturnAddrStack::push(const Addr &return_addr)
 {
     incrTos();

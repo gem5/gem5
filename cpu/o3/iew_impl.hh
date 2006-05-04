@@ -55,12 +55,12 @@ DefaultIEW<Impl>::LdWritebackEvent::process()
 
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
-    iewStage->wakeCPU();
-
-    if (inst->isSquashed()) {
+    if (inst->isSquashed() || iewStage->isSwitchedOut()) {
         inst = NULL;
         return;
     }
+
+    iewStage->wakeCPU();
 
     if (!inst->isExecuted()) {
         inst->setExecuted();
@@ -101,7 +101,8 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
       issueReadWidth(params->issueWidth),
       issueWidth(params->issueWidth),
       executeWidth(params->executeWidth),
-      numThreads(params->numberOfThreads)
+      numThreads(params->numberOfThreads),
+      switchedOut(false)
 {
     DPRINTF(IEW, "executeIntWidth: %i.\n", params->executeIntWidth);
     _status = Active;
@@ -435,6 +436,53 @@ DefaultIEW<Impl>::setPageTable(PageTable *pt_ptr)
     ldstQueue.setPageTable(pt_ptr);
 }
 #endif
+
+template <class Impl>
+void
+DefaultIEW<Impl>::switchOut()
+{
+    switchedOut = true;
+    instQueue.switchOut();
+    ldstQueue.switchOut();
+    fuPool->switchOut();
+
+    for (int i = 0; i < numThreads; i++) {
+        while (!insts[i].empty())
+            insts[i].pop();
+        while (!skidBuffer[i].empty())
+            skidBuffer[i].pop();
+    }
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::takeOverFrom()
+{
+    _status = Active;
+    exeStatus = Running;
+    wbStatus = Idle;
+    switchedOut = false;
+
+    instQueue.takeOverFrom();
+    ldstQueue.takeOverFrom();
+    fuPool->takeOverFrom();
+
+    initStage();
+    cpu->activityThisCycle();
+
+    for (int i=0; i < numThreads; i++) {
+        dispatchStatus[i] = Running;
+        stalls[i].commit = false;
+        fetchRedirect[i] = false;
+    }
+
+    updateLSQNextCycle = false;
+
+    // @todo: Fix hardcoded number
+    for (int i = 0; i < 6; ++i) {
+        issueToExecQueue.advance();
+    }
+}
 
 template<class Impl>
 void

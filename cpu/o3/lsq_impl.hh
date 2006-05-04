@@ -33,7 +33,6 @@ using namespace std;
 template <class Impl>
 LSQ<Impl>::LSQ(Params *params)
     : LQEntries(params->LQEntries), SQEntries(params->SQEntries),
-      loads(0), stores(0), storesToWB(0),
       numThreads(params->numberOfThreads)
 {
     DPRINTF(LSQ, "Creating LSQ object.\n");
@@ -142,6 +141,24 @@ LSQ<Impl>::setPageTable(PageTable *pt_ptr)
     }
 }
 #endif
+
+template <class Impl>
+void
+LSQ<Impl>::switchOut()
+{
+    for (int tid = 0; tid < numThreads; tid++) {
+        thread[tid].switchOut();
+    }
+}
+
+template <class Impl>
+void
+LSQ<Impl>::takeOverFrom()
+{
+    for (int tid = 0; tid < numThreads; tid++) {
+        thread[tid].takeOverFrom();
+    }
+}
 
 template <class Impl>
 int

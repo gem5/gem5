@@ -58,6 +58,14 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
     tagShiftAmt = instShiftAmt + floorLog2(numEntries);
 }
 
+void
+DefaultBTB::reset()
+{
+    for (int i = 0; i < numEntries; ++i) {
+        btb[i].valid = false;
+    }
+}
+
 inline
 unsigned
 DefaultBTB::getIndex(const Addr &inst_PC)

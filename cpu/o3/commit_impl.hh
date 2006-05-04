@@ -54,6 +54,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::TrapEvent::process()
 {
+    // This will get reset if it was switched out.
     commit->trapSquash[tid] = true;
 }
 
@@ -75,7 +76,8 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       renameWidth(params->renameWidth),
       iewWidth(params->executeWidth),
       commitWidth(params->commitWidth),
-      numThreads(params->numberOfThreads)
+      numThreads(params->numberOfThreads),
+      switchedOut(false)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -254,6 +256,9 @@ DefaultCommit<Impl>::setCPU(FullCPU *cpu_ptr)
     // Commit must broadcast the number of free entries it has at the start of
     // the simulation, so it starts as active.
     cpu->activateStage(FullCPU::CommitIdx);
+
+    trapLatency = cpu->cycles(6);
+    fetchTrapLatency = cpu->cycles(12);
 }
 
 template <class Impl>
@@ -358,6 +363,29 @@ DefaultCommit<Impl>::initStage()
     }
 
     cpu->activityThisCycle();
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::switchOut()
+{
+    rob->switchOut();
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::takeOverFrom()
+{
+    _status = Active;
+    _nextStatus = Inactive;
+    for (int i=0; i < numThreads; i++) {
+        commitStatus[i] = Idle;
+        changedROBNumEntries[i] = false;
+        trapSquash[i] = false;
+        xcSquash[i] = false;
+    }
+    squashCounter = 0;
+    rob->takeOverFrom();
 }
 
 template <class Impl>
@@ -719,8 +747,9 @@ DefaultCommit<Impl>::commit()
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
 
-        if (fromFetch->fetchFault) {
+        if (fromFetch->fetchFault && commitStatus[0] != TrapPending) {
             // Record the fault.  Wait until it's empty in the ROB.  Then handle the trap.
+            // Ignore it if there's already a trap pending as fetch will be redirected.
             fetchFault = fromFetch->fetchFault;
             fetchFaultSN = fromFetch->fetchFaultSN;
             fetchFaultTick = curTick + fetchTrapLatency;
@@ -975,6 +1004,7 @@ DefaultCommit<Impl>::commitInsts()
                 }
 
                 PC[tid] = nextPC[tid];
+                nextPC[tid] = nextPC[tid] + sizeof(TheISA::MachInst);
 #if FULL_SYSTEM
                 int count = 0;
                 Addr oldpc;
@@ -1002,6 +1032,10 @@ DefaultCommit<Impl>::commitInsts()
 
     DPRINTF(CommitRate, "%i\n", num_committed);
     numCommittedDist.sample(num_committed);
+
+    if (num_committed == commitWidth) {
+        commit_eligible[0]++;
+    }
 }
 
 template <class Impl>

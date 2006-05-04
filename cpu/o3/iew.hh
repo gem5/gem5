@@ -157,6 +157,12 @@ class DefaultIEW
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
 
+    void switchOut();
+
+    void takeOverFrom();
+
+    bool isSwitchedOut() { return switchedOut; }
+
     /** Sets page table pointer within LSQ. */
 //    void setPageTable(PageTable *pt_ptr);
 
@@ -419,6 +425,8 @@ class DefaultIEW
 
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;
+
+    bool switchedOut;
 
     /** Stat for total number of idle cycles. */
     Stats::Scalar<> iewIdleCycles;

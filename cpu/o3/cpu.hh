@@ -82,7 +82,8 @@ class FullO3CPU : public BaseFullCPU
         Running,
         Idle,
         Halted,
-        Blocked
+        Blocked,
+        SwitchedOut
     };
 
     /** Overall CPU status. */
@@ -112,9 +113,9 @@ class FullO3CPU : public BaseFullCPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + delay);
+            tickEvent.reschedule(curTick + cycles(delay));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + delay);
+            tickEvent.schedule(curTick + cycles(delay));
     }
 
     /** Unschedule tick event, regardless of its current state. */
@@ -196,7 +197,7 @@ class FullO3CPU : public BaseFullCPU
     /** Switches out this CPU.
      *  @todo: Implement this.
      */
-    void switchOut();
+    void switchOut(Sampler *sampler);
 
     /** Takes over from another CPU.
      *  @todo: Implement this.

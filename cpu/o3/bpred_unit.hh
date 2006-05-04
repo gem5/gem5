@@ -67,6 +67,10 @@ class TwobitBPredUnit
      */
     void regStats();
 
+    void switchOut();
+
+    void takeOverFrom();
+
     /**
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.

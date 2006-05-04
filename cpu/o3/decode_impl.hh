@@ -66,40 +66,44 @@ void
 DefaultDecode<Impl>::regStats()
 {
     decodeIdleCycles
-        .name(name() + ".decodeIdleCycles")
+        .name(name() + ".DECODE:IdleCycles")
         .desc("Number of cycles decode is idle")
         .prereq(decodeIdleCycles);
     decodeBlockedCycles
-        .name(name() + ".decodeBlockedCycles")
+        .name(name() + ".DECODE:BlockedCycles")
         .desc("Number of cycles decode is blocked")
         .prereq(decodeBlockedCycles);
     decodeRunCycles
-        .name(name() + ".decodeRunCycles")
+        .name(name() + ".DECODE:RunCycles")
         .desc("Number of cycles decode is running")
         .prereq(decodeRunCycles);
     decodeUnblockCycles
-        .name(name() + ".decodeUnblockCycles")
+        .name(name() + ".DECODE:UnblockCycles")
         .desc("Number of cycles decode is unblocking")
         .prereq(decodeUnblockCycles);
     decodeSquashCycles
-        .name(name() + ".decodeSquashCycles")
+        .name(name() + ".DECODE:SquashCycles")
         .desc("Number of cycles decode is squashing")
         .prereq(decodeSquashCycles);
+    decodeBranchResolved
+        .name(name() + ".DECODE:BranchResolved")
+        .desc("Number of times decode resolved a branch")
+        .prereq(decodeBranchResolved);
     decodeBranchMispred
-        .name(name() + ".decodeBranchMispred")
+        .name(name() + ".DECODE:BranchMispred")
         .desc("Number of times decode detected a branch misprediction")
         .prereq(decodeBranchMispred);
     decodeControlMispred
-        .name(name() + ".decodeControlMispred")
+        .name(name() + ".DECODE:ControlMispred")
         .desc("Number of times decode detected an instruction incorrectly"
               " predicted as a control")
         .prereq(decodeControlMispred);
     decodeDecodedInsts
-        .name(name() + ".decodeDecodedInsts")
+        .name(name() + ".DECODE:DecodedInsts")
         .desc("Number of instructions handled by decode")
         .prereq(decodeDecodedInsts);
     decodeSquashedInsts
-        .name(name() + ".decodeSquashedInsts")
+        .name(name() + ".DECODE:SquashedInsts")
         .desc("Number of squashed instructions handled by decode")
         .prereq(decodeSquashedInsts);
 }
@@ -156,6 +160,33 @@ DefaultDecode<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 {
     DPRINTF(Decode, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
+}
+
+template <class Impl>
+void
+DefaultDecode<Impl>::switchOut()
+{
+}
+
+template <class Impl>
+void
+DefaultDecode<Impl>::takeOverFrom()
+{
+    _status = Inactive;
+
+    for (int i = 0; i < numThreads; ++i) {
+        decodeStatus[i] = Idle;
+
+        stalls[i].rename = false;
+        stalls[i].iew = false;
+        stalls[i].commit = false;
+        while (!insts[i].empty())
+            insts[i].pop();
+        while (!skidBuffer[i].empty())
+            skidBuffer[i].pop();
+        branchCount[i] = 0;
+    }
+    wroteToTimeBuffer = false;
 }
 
 template<class Impl>
@@ -680,6 +711,7 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
 
         // Go ahead and compute any PC-relative branches.
         if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
+            ++decodeBranchResolved;
             inst->setNextPC(inst->branchTarget());
 
             if (inst->mispredicted()) {

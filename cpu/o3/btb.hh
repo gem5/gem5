@@ -65,6 +65,8 @@ class DefaultBTB
     DefaultBTB(unsigned numEntries, unsigned tagBits,
                unsigned instShiftAmt);
 
+    void reset();
+
     /** Looks up an address in the BTB. Must call valid() first on the address.
      *  @param inst_PC The address of the branch to look up.
      *  @param tid The thread id.

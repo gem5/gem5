@@ -154,6 +154,9 @@ class FUPool : public SimObject
     unsigned getIssueLatency(OpClass capability) {
         return maxIssueLatencies[capability];
     }
+
+    void switchOut();
+    void takeOverFrom();
 };
 
 #endif // __CPU_O3_FU_POOL_HH__

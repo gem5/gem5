@@ -38,6 +38,7 @@
 #include "cpu/inst_seq.hh"
 #include "mem/mem_interface.hh"
 //#include "mem/page_table.hh"
+#include "sim/debug.hh"
 #include "sim/sim_object.hh"
 #include "arch/faults.hh"
 
@@ -109,6 +110,12 @@ class LSQUnit {
 
     /** Sets the page table pointer. */
 //    void setPageTable(PageTable *pt_ptr);
+
+    void switchOut();
+
+    void takeOverFrom();
+
+    bool isSwitchedOut() { return switchedOut; }
 
     /** Ticks the LSQ unit, which in this case only resets the number of
      * used cache ports.
@@ -278,20 +285,20 @@ class LSQUnit {
         /** Whether or not the store is completed. */
         bool completed;
     };
-
+/*
     enum Status {
         Running,
         Idle,
         DcacheMissStall,
         DcacheMissSwitch
     };
-
+*/
   private:
     /** The LSQUnit thread id. */
     unsigned lsqID;
 
     /** The status of the LSQ unit. */
-    Status _status;
+//    Status _status;
 
     /** The store queue. */
     std::vector<SQEntry> storeQueue;
@@ -335,6 +342,8 @@ class LSQUnit {
     /** The number of used cache ports in this cycle. */
     int usedPorts;
 
+    bool switchedOut;
+
     //list<InstSeqNum> mshrSeqNums;
 
      //Stats::Scalar<> dcacheStallCycles;
@@ -373,7 +382,25 @@ class LSQUnit {
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
+/*
+    // total number of loads forwaded from LSQ stores
+    Stats::Vector<> lsq_forw_loads;
 
+    // total number of loads ignored due to invalid addresses
+    Stats::Vector<> inv_addr_loads;
+
+    // total number of software prefetches ignored due to invalid addresses
+    Stats::Vector<> inv_addr_swpfs;
+
+    // total non-speculative bogus addresses seen (debug var)
+    Counter sim_invalid_addrs;
+    Stats::Vector<> fu_busy;  //cumulative fu busy
+
+    // ready loads blocked due to memory disambiguation
+    Stats::Vector<> lsq_blocked_loads;
+
+    Stats::Scalar<> lsqInversion;
+*/
   public:
     /** Executes the load at the given index. */
     template <class T>
@@ -590,7 +617,12 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         }
         DPRINTF(LSQUnit, "Doing timing access for inst PC %#x\n",
                 loadQueue[load_idx]->readPC());
-
+/*
+        Addr debug_addr = ULL(0xfffffc0000be81a8);
+        if (req->vaddr == debug_addr) {
+            debug_break();
+        }
+*/
         assert(!req->completionEvent);
         req->completionEvent =
             new typename IEW::LdWritebackEvent(loadQueue[load_idx], iewStage);
@@ -608,7 +640,7 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
             lastDcacheStall = curTick;
 
-            _status = DcacheMissStall;
+//            _status = DcacheMissStall;
 
         } else {
             DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
@@ -694,7 +726,12 @@ LSQUnit<Impl>::write(MemReqPtr &req, T &data, int store_idx)
     storeQueue[store_idx].req = req;
     storeQueue[store_idx].size = sizeof(T);
     storeQueue[store_idx].data = data;
-
+/*
+    Addr debug_addr = ULL(0xfffffc0000be81a8);
+    if (req->vaddr == debug_addr) {
+        debug_break();
+    }
+*/
     // This function only writes the data to the store queue, so no fault
     // can happen here.
     return NoFault;

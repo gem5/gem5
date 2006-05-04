@@ -62,6 +62,8 @@ class DefaultBP
      */
     void update(Addr &branch_addr, bool taken);
 
+    void reset();
+
   private:
 
     /**

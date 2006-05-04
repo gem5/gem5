@@ -71,6 +71,9 @@ class LSQ {
     /** Sets the page table pointer. */
 //    void setPageTable(PageTable *pt_ptr);
 
+    void switchOut();
+    void takeOverFrom();
+
     /** Number of entries needed for the given amount of threads.*/
     int entryAmount(int num_threads);
     void removeEntries(unsigned tid);
@@ -270,15 +273,6 @@ class LSQ {
 
     /** Max SQ Size - Used to Enforce Sharing Policies. */
     unsigned maxSQEntries;
-
-    /** Global Load Count. */
-    int loads;
-
-    /** Global Store Count */
-    int stores;
-
-    /** Global Store To WB Count */
-    int storesToWB;
 
     /** Number of Threads. */
     unsigned numThreads;

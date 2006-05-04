@@ -151,6 +151,26 @@ template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
 {
+    // some things should already be set up
+    assert(getMemPtr() == old_context->getMemPtr());
+#if FULL_SYSTEM
+    assert(getSystemPtr() == old_context->getSystemPtr());
+#else
+    assert(getProcessPtr() == old_context->getProcessPtr());
+#endif
+
+    // copy over functional state
+    setStatus(old_context->status());
+    copyArchRegs(old_context);
+    setCpuId(old_context->readCpuId());
+#if !FULL_SYSTEM
+    thread->funcExeInst = old_context->readFuncExeInst();
+#endif
+
+    old_context->setStatus(ExecContext::Unallocated);
+
+    thread->inSyscall = false;
+    thread->trapPending = false;
 }
 
 template <class Impl>

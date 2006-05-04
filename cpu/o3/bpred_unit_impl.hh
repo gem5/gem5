@@ -95,6 +95,26 @@ TwobitBPredUnit<Impl>::regStats()
 }
 
 template <class Impl>
+void
+TwobitBPredUnit<Impl>::switchOut()
+{
+    for (int i = 0; i < Impl::MaxThreads; ++i) {
+        predHist[i].clear();
+    }
+}
+
+template <class Impl>
+void
+TwobitBPredUnit<Impl>::takeOverFrom()
+{
+    for (int i = 0; i < Impl::MaxThreads; ++i)
+        RAS[i].reset();
+
+    BP.reset();
+    BTB.reset();
+}
+
+template <class Impl>
 bool
 TwobitBPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
 {
@@ -297,5 +317,6 @@ TwobitBPredUnit<Impl>::squash(const InstSeqNum &squashed_sn,
         BP.update(pred_hist.front().PC, actually_taken);
 
         BTB.update(pred_hist.front().PC, corr_target, tid);
+        pred_hist.pop_front();
     }
 }

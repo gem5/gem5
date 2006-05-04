@@ -50,6 +50,9 @@ LSQUnit<Impl>::StoreCompletionEvent::process()
 
     //lsqPtr->removeMSHR(lsqPtr->storeQueue[storeIdx].inst->seqNum);
 
+    if (lsqPtr->isSwitchedOut())
+        return;
+
     lsqPtr->cpu->wakeCPU();
     if (wbEvent)
         wbEvent->process();
@@ -77,6 +80,8 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
 
 {
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
+
+    switchedOut = false;
 
     lsqID = id;
 
@@ -137,6 +142,89 @@ LSQUnit<Impl>::setPageTable(PageTable *pt_ptr)
     pTable = pt_ptr;
 }
 #endif
+
+template<class Impl>
+void
+LSQUnit<Impl>::switchOut()
+{
+    switchedOut = true;
+    for (int i = 0; i < loadQueue.size(); ++i)
+        loadQueue[i] = NULL;
+
+    while (storesToWB > 0 &&
+           storeWBIdx != storeTail &&
+           storeQueue[storeWBIdx].inst &&
+           storeQueue[storeWBIdx].canWB) {
+
+        if (storeQueue[storeWBIdx].size == 0 ||
+            storeQueue[storeWBIdx].inst->isDataPrefetch() ||
+            storeQueue[storeWBIdx].committed ||
+            storeQueue[storeWBIdx].req->flags & LOCKED) {
+            incrStIdx(storeWBIdx);
+
+            continue;
+        }
+
+        assert(storeQueue[storeWBIdx].req);
+        assert(!storeQueue[storeWBIdx].committed);
+
+        MemReqPtr req = storeQueue[storeWBIdx].req;
+        storeQueue[storeWBIdx].committed = true;
+
+        req->cmd = Write;
+        req->completionEvent = NULL;
+        req->time = curTick;
+        assert(!req->data);
+        req->data = new uint8_t[64];
+        memcpy(req->data, (uint8_t *)&storeQueue[storeWBIdx].data, req->size);
+
+        DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
+                "to Addr:%#x, data:%#x [sn:%lli]\n",
+                storeWBIdx,storeQueue[storeWBIdx].inst->readPC(),
+                req->paddr, *(req->data),
+                storeQueue[storeWBIdx].inst->seqNum);
+
+        switch(storeQueue[storeWBIdx].size) {
+          case 1:
+            cpu->write(req, (uint8_t &)storeQueue[storeWBIdx].data);
+            break;
+          case 2:
+            cpu->write(req, (uint16_t &)storeQueue[storeWBIdx].data);
+            break;
+          case 4:
+            cpu->write(req, (uint32_t &)storeQueue[storeWBIdx].data);
+            break;
+          case 8:
+            cpu->write(req, (uint64_t &)storeQueue[storeWBIdx].data);
+            break;
+          default:
+            panic("Unexpected store size!\n");
+        }
+        incrStIdx(storeWBIdx);
+    }
+}
+
+template<class Impl>
+void
+LSQUnit<Impl>::takeOverFrom()
+{
+    switchedOut = false;
+    loads = stores = storesToWB = 0;
+
+    loadHead = loadTail = 0;
+
+    storeHead = storeWBIdx = storeTail = 0;
+
+    usedPorts = 0;
+
+    loadFaultInst = storeFaultInst = memDepViolator = NULL;
+
+    blockedLoadSeqNum = 0;
+
+    stalled = false;
+    isLoadBlocked = false;
+    loadBlockedHandled = false;
+}
 
 template<class Impl>
 void
@@ -647,7 +735,7 @@ LSQUnit<Impl>::writebackStores()
 
                 lastDcacheStall = curTick;
 
-                _status = DcacheMissStall;
+//                _status = DcacheMissStall;
 
                 //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
 

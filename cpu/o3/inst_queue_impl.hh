@@ -82,15 +82,9 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
 {
     assert(fuPool);
 
+    switchedOut = false;
+
     numThreads = params->numberOfThreads;
-
-    //Initialize thread IQ counts
-    for (int i = 0; i <numThreads; i++) {
-        count[i] = 0;
-    }
-
-    // Initialize the number of free IQ entries.
-    freeEntries = numEntries;
 
     // Set the number of physical registers as the number of int + float
     numPhysRegs = numPhysIntRegs + numPhysFloatRegs;
@@ -101,6 +95,13 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
     //dependency graph.
     dependGraph = new DependencyEntry[numPhysRegs];
 
+    // Initialize all the head pointers to point to NULL, and all the
+    // entries as unready.
+    for (int i = 0; i < numPhysRegs; ++i) {
+        dependGraph[i].next = NULL;
+        dependGraph[i].inst = NULL;
+    }
+
     // Resize the register scoreboard.
     regScoreboard.resize(numPhysRegs);
 
@@ -110,27 +111,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
         memDepUnit[i].setIQ(this);
     }
 
-    // Initialize all the head pointers to point to NULL, and all the
-    // entries as unready.
-    // Note that in actuality, the registers corresponding to the logical
-    // registers start off as ready.  However this doesn't matter for the
-    // IQ as the instruction should have been correctly told if those
-    // registers are ready in rename.  Thus it can all be initialized as
-    // unready.
-    for (int i = 0; i < numPhysRegs; ++i) {
-        dependGraph[i].next = NULL;
-        dependGraph[i].inst = NULL;
-        regScoreboard[i] = false;
-    }
-
-    for (int i = 0; i < numThreads; ++i) {
-        squashedSeqNum[i] = 0;
-    }
-
-    for (int i = 0; i < Num_OpClasses; ++i) {
-        queueOnList[i] = false;
-        readyIt[i] = listOrder.end();
-    }
+    resetState();
 
     string policy = params->smtIQPolicy;
 
@@ -184,30 +165,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
 template <class Impl>
 InstructionQueue<Impl>::~InstructionQueue()
 {
-    // Clear the dependency graph
-    DependencyEntry *curr;
-    DependencyEntry *prev;
-
-    for (int i = 0; i < numPhysRegs; ++i) {
-        curr = dependGraph[i].next;
-
-        while (curr) {
-            DependencyEntry::mem_alloc_counter--;
-
-            prev = curr;
-            curr = prev->next;
-            prev->inst = NULL;
-
-            delete prev;
-        }
-
-        if (dependGraph[i].inst) {
-            dependGraph[i].inst = NULL;
-        }
-
-        dependGraph[i].next = NULL;
-    }
-
+    resetDependencyGraph();
     assert(DependencyEntry::mem_alloc_counter == 0);
 
     delete [] dependGraph;
@@ -307,10 +265,10 @@ InstructionQueue<Impl>::regStats()
         queue_res_dist.subname(i, opClassStrings[i]);
     }
     n_issued_dist
-        .init(totalWidth + 1)
+        .init(0,totalWidth,1)
         .name(name() + ".ISSUE:issued_per_cycle")
         .desc("Number of insts issued each cycle")
-        .flags(total | pdf | dist)
+        .flags(pdf)
         ;
 /*
     dist_unissued
@@ -402,6 +360,71 @@ InstructionQueue<Impl>::regStats()
 
 template <class Impl>
 void
+InstructionQueue<Impl>::resetState()
+{
+    //Initialize thread IQ counts
+    for (int i = 0; i <numThreads; i++) {
+        count[i] = 0;
+        instList[i].clear();
+    }
+
+    // Initialize the number of free IQ entries.
+    freeEntries = numEntries;
+
+    // Note that in actuality, the registers corresponding to the logical
+    // registers start off as ready.  However this doesn't matter for the
+    // IQ as the instruction should have been correctly told if those
+    // registers are ready in rename.  Thus it can all be initialized as
+    // unready.
+    for (int i = 0; i < numPhysRegs; ++i) {
+        regScoreboard[i] = false;
+    }
+
+    for (int i = 0; i < numThreads; ++i) {
+        squashedSeqNum[i] = 0;
+    }
+
+    for (int i = 0; i < Num_OpClasses; ++i) {
+        while (!readyInsts[i].empty())
+            readyInsts[i].pop();
+        queueOnList[i] = false;
+        readyIt[i] = listOrder.end();
+    }
+    nonSpecInsts.clear();
+    listOrder.clear();
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::resetDependencyGraph()
+{
+    // Clear the dependency graph
+    DependencyEntry *curr;
+    DependencyEntry *prev;
+
+    for (int i = 0; i < numPhysRegs; ++i) {
+        curr = dependGraph[i].next;
+
+        while (curr) {
+            DependencyEntry::mem_alloc_counter--;
+
+            prev = curr;
+            curr = prev->next;
+            prev->inst = NULL;
+
+            delete prev;
+        }
+
+        if (dependGraph[i].inst) {
+            dependGraph[i].inst = NULL;
+        }
+
+        dependGraph[i].next = NULL;
+    }
+}
+
+template <class Impl>
+void
 InstructionQueue<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 {
     DPRINTF(IQ, "Setting active threads list pointer.\n");
@@ -424,6 +447,25 @@ InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
     timeBuffer = tb_ptr;
 
     fromCommit = timeBuffer->getWire(-commitToIEWDelay);
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::switchOut()
+{
+    resetState();
+    resetDependencyGraph();
+    switchedOut = true;
+    for (int i = 0; i < numThreads; ++i) {
+        memDepUnit[i].switchOut();
+    }
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::takeOverFrom()
+{
+    switchedOut = false;
 }
 
 template <class Impl>
@@ -685,6 +727,10 @@ InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
 {
     // The CPU could have been sleeping until this op completed (*extremely*
     // long latency op).  Wake it if it was.  This may be overkill.
+    if (isSwitchedOut()) {
+        return;
+    }
+
     iewStage->wakeCPU();
 
     fuPool->freeUnit(fu_idx);
@@ -816,7 +862,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                     FUCompletion *execution = new FUCompletion(issuing_inst,
                                                                idx, this);
 
-                    execution->schedule(curTick + issue_latency - 1);
+                    execution->schedule(curTick + cpu->cycles(issue_latency - 1));
                 } else {
                     i2e_info->insts[exec_queue_slot++] = issuing_inst;
                     i2e_info->size++;
@@ -861,6 +907,8 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             ++order_it;
         }
     }
+
+    n_issued_dist.sample(total_issued);
 
     if (total_issued) {
         cpu->activityThisCycle();

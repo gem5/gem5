@@ -153,6 +153,10 @@ class DefaultRename
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
 
+    void switchOut();
+
+    void takeOverFrom();
+
     /** Squashes all instructions in a thread. */
     void squash(unsigned tid);
 
@@ -448,6 +452,7 @@ class DefaultRename
     Stats::Scalar<> renameUndoneMaps;
     Stats::Scalar<> renamedSerializing;
     Stats::Scalar<> renamedTempSerializing;
+    Stats::Scalar<> renameSkidInsts;
 };
 
 #endif // __CPU_O3_RENAME_HH__

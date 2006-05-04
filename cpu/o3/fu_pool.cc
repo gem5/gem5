@@ -242,6 +242,20 @@ FUPool::dump()
     }
 }
 
+void
+FUPool::switchOut()
+{
+}
+
+void
+FUPool::takeOverFrom()
+{
+    for (int i = 0; i < numFU; i++) {
+        unitBusy[i] = false;
+    }
+    unitsToBeFreed.clear();
+}
+
 //
 
 ////////////////////////////////////////////////////////////////////////////

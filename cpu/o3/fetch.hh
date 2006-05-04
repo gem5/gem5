@@ -35,6 +35,8 @@
 #include "mem/mem_interface.hh"
 #include "sim/eventq.hh"
 
+class Sampler;
+
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its width is
  * specified by the parameters; each cycle it tries to fetch that many
@@ -81,6 +83,7 @@ class DefaultFetch
         Fetching,
         TrapPending,
         QuiescePending,
+        SwitchOut,
         IcacheMissStall,
         IcacheMissComplete
     };
@@ -159,6 +162,12 @@ class DefaultFetch
 
     /** Processes cache completion event. */
     void processCacheCompletion(MemReqPtr &req);
+
+    void switchOut();
+
+    void takeOverFrom();
+
+    bool isSwitchedOut() { return switchedOut; }
 
     void wakeFromQuiesce();
 
@@ -360,6 +369,8 @@ class DefaultFetch
 
     bool interruptPending;
 
+    bool switchedOut;
+
 #if !FULL_SYSTEM
     /** Page table pointer. */
 //    PageTable *pTable;
@@ -382,6 +393,8 @@ class DefaultFetch
      */
     Stats::Scalar<> fetchIdleCycles;
     Stats::Scalar<> fetchBlockedCycles;
+
+    Stats::Scalar<> fetchMiscStallCycles;
     /** Stat for total number of fetched cache lines. */
     Stats::Scalar<> fetchedCacheLines;
 

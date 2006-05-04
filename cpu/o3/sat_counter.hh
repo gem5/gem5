@@ -57,22 +57,34 @@ class SatCounter
      * @param bits How many bits the counter will have.
      * @param initial_val Starting value for each counter.
      */
-    SatCounter(unsigned bits, unsigned initial_val);
+    SatCounter(unsigned bits, uint8_t initial_val);
 
     /**
      * Sets the number of bits.
      */
     void setBits(unsigned bits);
 
+    void reset() { counter = initialVal; }
+
     /**
      * Increments the counter's current value.
      */
-    void increment();
+    void increment()
+    {
+        if (counter < maxVal) {
+            ++counter;
+        }
+    }
 
     /**
      * Decrements the counter's current value.
      */
-    void decrement();
+    void decrement()
+    {
+        if (counter > 0) {
+            --counter;
+        }
+    }
 
     /**
      * Read the counter's value.
@@ -81,6 +93,7 @@ class SatCounter
     { return counter; }
 
   private:
+    uint8_t initialVal;
     uint8_t maxVal;
     uint8_t counter;
 };

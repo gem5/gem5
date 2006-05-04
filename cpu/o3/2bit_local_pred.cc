@@ -67,6 +67,14 @@ DefaultBP::DefaultBP(unsigned _localPredictorSize,
             instShiftAmt);
 }
 
+void
+DefaultBP::reset()
+{
+    for (int i = 0; i < localPredictorSets; ++i) {
+        localCtrs[i].reset();
+    }
+}
+
 bool
 DefaultBP::lookup(Addr &branch_addr)
 {

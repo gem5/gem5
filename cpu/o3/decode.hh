@@ -107,6 +107,9 @@ class DefaultDecode
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
 
+    void switchOut();
+
+    void takeOverFrom();
     /** Ticks decode, processing all input signals and decoding as many
      * instructions as possible.
      */
@@ -272,6 +275,8 @@ class DefaultDecode
     Stats::Scalar<> decodeUnblockCycles;
     /** Stat for total number of squashing cycles. */
     Stats::Scalar<> decodeSquashCycles;
+    /** Stat for number of times a branch is resolved at decode. */
+    Stats::Scalar<> decodeBranchResolved;
     /** Stat for number of times a branch mispredict is detected. */
     Stats::Scalar<> decodeBranchMispred;
     /** Stat for number of times decode detected a non-control instruction

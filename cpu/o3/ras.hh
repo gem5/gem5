@@ -47,6 +47,8 @@ class ReturnAddrStack
      */
     void init(unsigned numEntries);
 
+    void reset();
+
     /** Returns the top address on the RAS. */
     Addr top()
     { return addrStack[tos]; }

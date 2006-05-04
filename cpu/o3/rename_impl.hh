@@ -151,6 +151,11 @@ DefaultRename<Impl>::regStats()
         .desc("count of temporary serializing insts renamed")
         .flags(Stats::total)
         ;
+    renameSkidInsts
+        .name(name() + ".RENAME:skidInsts")
+        .desc("count of insts added to the skid buffer")
+        .flags(Stats::total)
+        ;
 }
 
 template <class Impl>
@@ -213,8 +218,8 @@ DefaultRename<Impl>::initStage()
 
     // Clear these pointers so they are not accidentally used in
     // non-initialization code.
-    iew_ptr = NULL;
-    commit_ptr = NULL;
+//    iew_ptr = NULL;
+//    commit_ptr = NULL;
 }
 
 template<class Impl>
@@ -251,6 +256,55 @@ DefaultRename<Impl>::setScoreboard(Scoreboard *_scoreboard)
 {
     DPRINTF(Rename, "Setting scoreboard pointer.\n");
     scoreboard = _scoreboard;
+}
+
+template <class Impl>
+void
+DefaultRename<Impl>::switchOut()
+{
+    for (int i = 0; i < numThreads; i++) {
+        typename list<RenameHistory>::iterator hb_it = historyBuffer[i].begin();
+
+        while (!historyBuffer[i].empty()) {
+            assert(hb_it != historyBuffer[i].end());
+
+            DPRINTF(Rename, "[tid:%u]: Removing history entry with sequence "
+                    "number %i.\n", i, (*hb_it).instSeqNum);
+
+            // Tell the rename map to set the architected register to the
+            // previous physical register that it was renamed to.
+            renameMap[i]->setEntry(hb_it->archReg, hb_it->prevPhysReg);
+
+            // Put the renamed physical register back on the free list.
+            freeList->addReg(hb_it->newPhysReg);
+
+            historyBuffer[i].erase(hb_it++);
+        }
+        insts[i].clear();
+        skidBuffer[i].clear();
+    }
+}
+
+template <class Impl>
+void
+DefaultRename<Impl>::takeOverFrom()
+{
+    _status = Inactive;
+    initStage();
+
+    for (int i=0; i< numThreads; i++) {
+        renameStatus[i] = Idle;
+
+        stalls[i].iew = false;
+        stalls[i].commit = false;
+        serializeInst[i] = NULL;
+
+        instsInProgress[i] = 0;
+
+        emptyROB[i] = true;
+
+        serializeOnNextInst[i] = false;
+    }
 }
 
 template <class Impl>
@@ -393,7 +447,7 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
     } else if (renameStatus[tid] == Unblocking) {
         renameInsts(tid);
 
-        ++renameUnblockCycles;
+//        ++renameUnblockCycles;
 
         if (validInsts()) {
             // Add the current inputs to the skid buffer so they can be
@@ -564,6 +618,8 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
         } else if (inst->isSerializeAfter() && !inst->isSerializeHandled()) {
             DPRINTF(Rename, "Serialize after instruction encountered.\n");
 
+            renamedSerializing++;
+
             inst->setSerializeHandled();
 
             serializeAfter(insts_to_rename, tid);
@@ -594,13 +650,12 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
         // Increment which instruction we're on.
         ++toIEWIndex;
 
-        ++renameRenamedInsts;
-
         // Decrement how many instructions are available.
         --insts_available;
     }
 
     instsInProgress[tid] += renamed_insts;
+    renameRenamedInsts += renamed_insts;
 
     // If we wrote to the time buffer, record this.
     if (toIEWIndex) {
@@ -634,6 +689,8 @@ DefaultRename<Impl>::skidInsert(unsigned tid)
 
         DPRINTF(Rename, "[tid:%u]: Inserting [sn:%lli] PC:%#x into Rename "
                 "skidBuffer\n", tid, inst->seqNum, inst->readPC());
+
+        ++renameSkidInsts;
 
         skidBuffer[tid].push_back(inst);
     }

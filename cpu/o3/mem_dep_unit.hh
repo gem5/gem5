@@ -84,6 +84,10 @@ class MemDepUnit {
     /** Registers statistics. */
     void regStats();
 
+    void switchOut();
+
+    void takeOverFrom();
+
     /** Sets the pointer to the IQ. */
     void setIQ(InstructionQueue<Impl> *iq_ptr);
 
