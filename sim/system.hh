@@ -155,6 +155,7 @@ class System : public SimObject
 
 #if FULL_SYSTEM
         Tick boot_cpu_frequency;
+        std::string boot_osflags;
         uint64_t init_param;
         bool bin;
         std::vector<std::string> binned_fns;

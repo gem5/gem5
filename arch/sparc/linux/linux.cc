@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SPARC_LINUX_PROCESS_HH__
-#define __SPARC_LINUX_PROCESS_HH__
-
 #include "arch/sparc/linux/linux.hh"
-#include "arch/sparc/process.hh"
-#include "sim/process.hh"
 
-namespace SparcISA {
-
-/// A process with emulated SPARC/Linux syscalls.
-class SparcLinuxProcess : public SparcLiveProcess
-{
-  public:
-    /// Constructor.
-    SparcLinuxProcess(const std::string &name,
-                      ObjectFile *objFile,
-                      System * system,
-                      int stdin_fd, int stdout_fd, int stderr_fd,
-                      std::vector<std::string> &argv,
-                      std::vector<std::string> &envp);
-
-    virtual SyscallDesc* getDesc(int callnum);
-
-    /// The target system's hostname.
-    static const char *hostname;
-
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
-
-    const int Num_Syscall_Descs;
+// open(2) flags translation table
+OpenFlagTransTable SparcLinux::openFlagTable[] = {
+#ifdef _MSC_VER
+  { SparcLinux::TGT_O_RDONLY,	_O_RDONLY },
+  { SparcLinux::TGT_O_WRONLY,	_O_WRONLY },
+  { SparcLinux::TGT_O_RDWR,	_O_RDWR },
+  { SparcLinux::TGT_O_APPEND,	_O_APPEND },
+  { SparcLinux::TGT_O_CREAT,	_O_CREAT },
+  { SparcLinux::TGT_O_TRUNC,	_O_TRUNC },
+  { SparcLinux::TGT_O_EXCL,	_O_EXCL },
+#ifdef _O_NONBLOCK
+  { SparcLinux::TGT_O_NONBLOCK,	_O_NONBLOCK },
+#endif
+#ifdef _O_NOCTTY
+  { SparcLinux::TGT_O_NOCTTY,	_O_NOCTTY },
+#endif
+#ifdef _O_SYNC
+  { SparcLinux::TGT_O_SYNC,	_O_SYNC },
+#endif
+#else /* !_MSC_VER */
+  { SparcLinux::TGT_O_RDONLY,	O_RDONLY },
+  { SparcLinux::TGT_O_WRONLY,	O_WRONLY },
+  { SparcLinux::TGT_O_RDWR,	O_RDWR },
+  { SparcLinux::TGT_O_APPEND,	O_APPEND },
+  { SparcLinux::TGT_O_CREAT,	O_CREAT },
+  { SparcLinux::TGT_O_TRUNC,	O_TRUNC },
+  { SparcLinux::TGT_O_EXCL,	O_EXCL },
+  { SparcLinux::TGT_O_NONBLOCK,	O_NONBLOCK },
+  { SparcLinux::TGT_O_NOCTTY,	O_NOCTTY },
+#ifdef O_SYNC
+  { SparcLinux::TGT_O_SYNC,	O_SYNC },
+#endif
+#endif /* _MSC_VER */
 };
 
-SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
-                                 Process *p, ExecContext *xc);
+const int SparcLinux::NUM_OPEN_FLAGS =
+        (sizeof(SparcLinux::openFlagTable)/sizeof(SparcLinux::openFlagTable[0]));
 
-} // namespace SparcISA
-#endif // __ALPHA_LINUX_PROCESS_HH__

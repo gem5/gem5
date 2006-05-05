@@ -194,7 +194,7 @@ output decoder {{
             {
                 ccprintf(response, " <%s", symbol);
                 if(symbolAddr != target)
-                    ccprintf(response, "+0x%x>", target - symbolAddr);
+                    ccprintf(response, "+%d>", target - symbolAddr);
                 else
                     ccprintf(response, ">");
             }
@@ -226,8 +226,25 @@ def template BranchExecute {{
         }
 }};
 
+let {{
+    handle_annul = '''
+    {
+        if(A)
+        {
+            NPC = xc->readNextNPC();
+            NNPC = NPC + 4;
+        }
+        else
+        {
+            NPC = xc->readNextPC();
+            NNPC = xc->readNextNPC();
+        }
+    }'''
+}};
+
 // Primary format for branch instructions:
 def format Branch(code, *opt_flags) {{
+        code = re.sub(r'handle_annul', handle_annul, code)
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
         iop = InstObjParams(name, Name, 'Branch', code, opt_flags)
@@ -247,6 +264,7 @@ def format Branch(code, *opt_flags) {{
 
 // Primary format for branch instructions:
 def format Branch19(code, *opt_flags) {{
+        code = re.sub(r'handle_annul', handle_annul, code)
         codeBlk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'Branch19', codeBlk, opt_flags)
         header_output = BasicDeclare.subst(iop)
@@ -257,6 +275,7 @@ def format Branch19(code, *opt_flags) {{
 
 // Primary format for branch instructions:
 def format Branch22(code, *opt_flags) {{
+        code = re.sub(r'handle_annul', handle_annul, code)
         codeBlk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'Branch22', codeBlk, opt_flags)
         header_output = BasicDeclare.subst(iop)
@@ -267,6 +286,7 @@ def format Branch22(code, *opt_flags) {{
 
 // Primary format for branch instructions:
 def format Branch30(code, *opt_flags) {{
+        code = re.sub(r'handle_annul', handle_annul, code)
         codeBlk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'Branch30', codeBlk, opt_flags)
         header_output = BasicDeclare.subst(iop)
@@ -277,6 +297,7 @@ def format Branch30(code, *opt_flags) {{
 
 // Primary format for branch instructions:
 def format BranchSplit(code, *opt_flags) {{
+        code = re.sub(r'handle_annul', handle_annul, code)
         codeBlk = CodeBlock(code)
         iop = InstObjParams(name, Name, 'BranchSplit', codeBlk, opt_flags)
         header_output = BasicDeclare.subst(iop)

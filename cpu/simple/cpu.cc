@@ -54,6 +54,7 @@
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/packet_impl.hh"
 #include "sim/byteswap.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
@@ -631,6 +632,7 @@ SimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt->set(data);
 #else
         data_write_pkt->reset();
+        data = htog(data);
         data_write_pkt->dataStatic(&data);
 #endif
         data_write_pkt->addr = data_write_req->getPaddr();

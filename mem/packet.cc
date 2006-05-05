@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SPARC_LINUX_PROCESS_HH__
-#define __SPARC_LINUX_PROCESS_HH__
+/**
+ * @file
+ * Definition of the Packet Class, a packet is a transaction occuring
+ * between a single level of the memory heirarchy (ie L1->L2).
+ */
+#include "base/misc.hh"
+#include "mem/packet.hh"
 
-#include "arch/sparc/linux/linux.hh"
-#include "arch/sparc/process.hh"
-#include "sim/process.hh"
 
-namespace SparcISA {
+/** delete the data pointed to in the data pointer. Ok to call to matter how
+ * data was allocted. */
+void
+Packet::deleteData() {
+    assert(staticData || dynamicData);
+    if (staticData)
+        return;
 
-/// A process with emulated SPARC/Linux syscalls.
-class SparcLinuxProcess : public SparcLiveProcess
-{
-  public:
-    /// Constructor.
-    SparcLinuxProcess(const std::string &name,
-                      ObjectFile *objFile,
-                      System * system,
-                      int stdin_fd, int stdout_fd, int stderr_fd,
-                      std::vector<std::string> &argv,
-                      std::vector<std::string> &envp);
+    if (arrayData)
+        delete [] data;
+    else
+        delete data;
+}
 
-    virtual SyscallDesc* getDesc(int callnum);
+/** If there isn't data in the packet, allocate some. */
+void
+Packet::allocate() {
+    if (data)
+        return;
+    assert(!staticData);
+    dynamicData = true;
+    arrayData = true;
+    data = new uint8_t[size];
+}
 
-    /// The target system's hostname.
-    static const char *hostname;
+/** Do the packet modify the same addresses. */
+bool
+Packet::intersect(Packet *p) {
+    Addr s1 = addr;
+    Addr e1 = addr + size;
+    Addr s2 = p->addr;
+    Addr e2 = p->addr + p->size;
 
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+    if (s1 >= s2 && s1 < e2)
+        return true;
+    if (e1 >= s2 && e1 < e2)
+        return true;
+    return false;
+}
 
-    const int Num_Syscall_Descs;
-};
+/** Minimally reset a packet so something like simple cpu can reuse it. */
+void
+Packet::reset() {
+    result = Unknown;
+    if (dynamicData) {
+       deleteData();
+       dynamicData = false;
+       arrayData = false;
+       time = curTick;
+    }
+}
 
-SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
-                                 Process *p, ExecContext *xc);
 
-} // namespace SparcISA
-#endif // __ALPHA_LINUX_PROCESS_HH__
+
+
+bool fixPacket(Packet &func, Packet &timing)
+{ panic("Need to implement!"); }

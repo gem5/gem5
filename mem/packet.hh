@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -142,7 +142,7 @@ struct Packet
 
     Packet()
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
-           result(Unknown)
+           time(curTick), result(Unknown)
         {}
 
     ~Packet()
@@ -150,87 +150,43 @@ struct Packet
 
 
     /** Minimally reset a packet so something like simple cpu can reuse it. */
-    void reset() {
-        result = Unknown;
-        if (dynamicData) {
-           deleteData();
-           dynamicData = false;
-           arrayData = false;
-        }
-    }
+    void reset();
 
     /** Set the data pointer to the following value that should not be freed. */
     template <typename T>
-    void dataStatic(T *p) {
-        assert(!dynamicData);
-        data = (PacketDataPtr)p;
-        staticData = true;
-    }
+    void dataStatic(T *p);
 
     /** Set the data pointer to a value that should have delete [] called on it.
      */
     template <typename T>
-    void dataDynamicArray(T *p) {
-        assert(!staticData && !dynamicData);
-        data = (PacketDataPtr)p;
-        dynamicData = true;
-        arrayData = true;
-    }
+    void dataDynamicArray(T *p);
 
     /** set the data pointer to a value that should have delete called on it. */
     template <typename T>
-    void dataDynamic(T *p) {
-        assert(!staticData && !dynamicData);
-        data = (PacketDataPtr)p;
-        dynamicData = true;
-        arrayData = false;
-    }
+    void dataDynamic(T *p);
 
     /** return the value of what is pointed to in the packet. */
     template <typename T>
-    T get() {
-        assert(staticData || dynamicData);
-        assert(sizeof(T) <= size);
-        return *(T*)data;
-    }
+    T get();
 
     /** get a pointer to the data ptr. */
     template <typename T>
-    T* getPtr() {
-        assert(staticData || dynamicData);
-        return (T*)data;
-    }
-
+    T* getPtr();
 
     /** set the value in the data pointer to v. */
     template <typename T>
-    void set(T v) {
-        assert(sizeof(T) <= size);
-        *(T*)data = v;
-    }
+    void set(T v);
 
     /** delete the data pointed to in the data pointer. Ok to call to matter how
      * data was allocted. */
-    void deleteData() {
-        assert(staticData || dynamicData);
-        if (staticData)
-            return;
-
-        if (arrayData)
-            delete [] data;
-        else
-            delete data;
-    }
+    void deleteData();
 
     /** If there isn't data in the packet, allocate some. */
-    void allocate() {
-        if (data)
-            return;
-        assert(!staticData);
-        dynamicData = true;
-        arrayData = true;
-        data = new uint8_t[size];
-    }
+    void allocate();
+
+    /** Do the packet modify the same addresses. */
+    bool intersect(Packet *p);
 };
 
+bool fixPacket(Packet &func, Packet &timing);
 #endif //__MEM_PACKET_HH

@@ -87,13 +87,15 @@ base_sources = Split('''
 	cpu/pc_event.cc
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
-
-        mem/request.cc
+    
+        mem/bridge.cc
+        mem/bus.cc
         mem/connector.cc
         mem/mem_object.cc
+        mem/packet.cc
         mem/physical.cc
         mem/port.cc
-        mem/bus.cc
+        mem/request.cc
 
         python/pyconfig.cc
         python/embedded_py.cc

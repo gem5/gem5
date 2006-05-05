@@ -139,9 +139,13 @@ class LinuxTsunami(BaseTsunami):
                         pci_func=0, pci_dev=0, pci_bus=0)
 
 class LinuxAlphaSystem(LinuxAlphaSystem):
-    magicbus = Bus()
+    magicbus = Bus(bus_id=0)
+    magicbus2 = Bus(bus_id=1)
+    bridge = Bridge()
     physmem = PhysicalMemory(range = AddrRange('128MB'))
-    c1 = Connector(side_a=Parent.physmem, side_b=Parent.magicbus)
+    c0a = Connector(side_a=Parent.magicbus, side_b=Parent.bridge, side_b_name="side_a")
+    c0b = Connector(side_a=Parent.magicbus2, side_b=Parent.bridge, side_b_name="side_b")
+    c1 = Connector(side_a=Parent.physmem, side_b=Parent.magicbus2)
     tsunami = LinuxTsunami()
     c2 = Connector(side_a=Parent.tsunami.cchip, side_a_name='pio', side_b=Parent.magicbus)
     c3 = Connector(side_a=Parent.tsunami.pchip, side_a_name='pio', side_b=Parent.magicbus)
@@ -177,7 +181,7 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
                              read_only=True)
     simple_disk = SimpleDisk(disk=Parent.raw_image)
     intrctrl = IntrControl()
-    cpu = SimpleCPU(mem=Parent.magicbus)
+    cpu = SimpleCPU(mem=Parent.magicbus2)
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
     kernel = '/z/saidi/work/m5.newmem/build/vmlinux'
     pal = binary('ts_osfpal')

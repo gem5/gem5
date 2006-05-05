@@ -116,7 +116,13 @@ DmaPort::recvTiming(Packet &pkt)
         DmaReqState *state;
         state = (DmaReqState*)pkt.senderState;
         state->completionEvent->schedule(pkt.time - pkt.req->getTime());
+        delete pkt.req;
+        delete &pkt;
+    }  else {
+        delete pkt.req;
+        delete &pkt;
     }
+
     return Success;
 }
 
@@ -203,7 +209,7 @@ DmaPort::sendDma(Packet *pkt)
    if (state == Timing) {
        if (sendTiming(pkt) == Failure)
            transmitList.push_back(&packet);
-   } else if (state == Atomic) {*/
+    } else if (state == Atomic) {*/
        sendAtomic(*pkt);
        if (pkt->senderState) {
            DmaReqState *state = (DmaReqState*)pkt->senderState;

@@ -31,6 +31,7 @@
 
 #include "base/chunk_generator.hh"
 #include "mem/mem_object.hh"
+#include "mem/packet_impl.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
@@ -167,7 +168,7 @@ class DmaPort : public Port
         friend class DmaPort;
     };
 
-    void sendDma(Packet &pkt);
+    void sendDma(Packet *pkt);
 
   public:
     DmaPort(DmaDevice *dev, Platform *p);

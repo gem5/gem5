@@ -140,7 +140,16 @@ namespace SparcISA
             DPRINTF(Sparc, "Now using %s globals",
                     useAlt ? "alternate" : "regular");
             regView[Globals] = useAlt ? altGlobals : regGlobals;
-            offset[Globals] = useAlt ? AltGlobalOffset : RegGlobalOffset;
+
+            // You have not included an out-of-class definition of your static
+            // members. See [9.4.2]/4 and about a billion gcc bug reports. If
+            // statements get around the problem through some magic, and than
+            // seems nicer that putting a definition of them in a c file
+            // somewhere.
+            if (useAlt)
+                offset[Globals] = AltGlobalOffset;
+            else
+                offset[Globals] = RegGlobalOffset;
         }
 
         void serialize(std::ostream &os);

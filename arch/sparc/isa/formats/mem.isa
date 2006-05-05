@@ -30,8 +30,9 @@ output header {{
 
             // Constructor
             MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                Mem(mnem, _machInst, __opClass), imm(SIMM13)
+                Mem(mnem, _machInst, __opClass)
             {
+                imm = sign_ext(SIMM13, 13);
             }
 
             std::string generateDisassembly(Addr pc,
@@ -84,7 +85,10 @@ output decoder {{
             }
             ccprintf(response, "[ ");
             printReg(response, _srcRegIdx[!save ? 0 : 1]);
-            ccprintf(response, " + 0x%x ]", imm);
+            if(imm >= 0)
+                ccprintf(response, " + 0x%x ]", imm);
+            else
+                ccprintf(response, " + -0x%x ]", -imm);
             if(load)
             {
                 ccprintf(response, ", ");
@@ -104,6 +108,7 @@ def template MemExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
             %(load)s;
             %(code)s;
             %(store)s;
@@ -126,7 +131,7 @@ let {{
 
     def doMemFormat(code, load, store, name, Name, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2;'
-        addrCalcImm = 'EA = Rs1 + SIMM13;'
+        addrCalcImm = 'EA = Rs1 + imm;'
         iop = InstObjParams(name, Name, 'Mem', code,
                 opt_flags, ("ea_code", addrCalcReg),
                 ("load", load), ("store", store))

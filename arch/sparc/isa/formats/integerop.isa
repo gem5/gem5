@@ -62,6 +62,21 @@ output header {{
         };
 
         /**
+         * Base class for 11 bit immediate integer operations.
+         */
+        class IntOpImm11 : public IntOpImm
+        {
+          protected:
+            // Constructor
+            IntOpImm11(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                IntOpImm(mnem, _machInst, __opClass)
+            {
+                imm = sign_ext(SIMM11, 11);
+            }
+        };
+
+        /**
          * Base class for 13 bit immediate integer operations.
          */
         class IntOpImm13 : public IntOpImm
@@ -271,14 +286,22 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 
     calcCcCode = '''
-        CcrIccN = (Rd >> 63) & 1;
-        CcrIccZ = (Rd == 0);
-        CcrXccN = (Rd >> 31) & 1;
-        CcrXccZ = ((Rd & 0xFFFFFFFF) == 0);
+        CcrIccN = (Rd >> 31) & 1;
+        CcrIccZ = ((Rd & 0xFFFFFFFF) == 0);
+        CcrXccN = (Rd >> 63) & 1;
+        CcrXccZ = (Rd == 0);
         CcrIccV = %(ivValue)s;
         CcrIccC = %(icValue)s;
         CcrXccV = %(xvValue)s;
         CcrXccC = %(xcValue)s;
+        DPRINTF(Sparc, "in = %%d\\n", CcrIccN);
+        DPRINTF(Sparc, "iz = %%d\\n", CcrIccZ);
+        DPRINTF(Sparc, "xn = %%d\\n", CcrXccN);
+        DPRINTF(Sparc, "xz = %%d\\n", CcrXccZ);
+        DPRINTF(Sparc, "iv = %%d\\n", CcrIccV);
+        DPRINTF(Sparc, "ic = %%d\\n", CcrIccC);
+        DPRINTF(Sparc, "xv = %%d\\n", CcrXccV);
+        DPRINTF(Sparc, "xc = %%d\\n", CcrXccC);
         '''
 }};
 

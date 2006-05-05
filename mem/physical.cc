@@ -40,6 +40,7 @@
 
 #include "base/misc.hh"
 #include "config/full_system.hh"
+#include "mem/packet_impl.hh"
 #include "mem/physical.hh"
 #include "sim/host.hh"
 #include "sim/builder.hh"
@@ -181,7 +182,6 @@ PhysicalMemory::getPort(const std::string &if_name)
 void
 PhysicalMemory::recvStatusChange(Port::Status status)
 {
-    panic("??");
 }
 
 PhysicalMemory::MemoryPort::MemoryPort(PhysicalMemory *_memory)
