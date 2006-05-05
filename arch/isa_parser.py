@@ -1226,6 +1226,10 @@ class FloatRegOperand(Operand):
             width = 64;
         else:
             func = 'readFloatRegBits'
+            if (self.ctype == 'uint32_t'):
+                width = 32;
+            elif (self.ctype == 'uint64_t'):
+                width = 64;
             if (self.size != self.dflt_size):
                 bit_select = 1
         if width:
@@ -1251,6 +1255,9 @@ class FloatRegOperand(Operand):
         elif (self.ctype == 'double'):
             width = 64
             func = 'setFloatReg'
+        elif (self.ctype == 'uint32_t'):
+            func = 'setFloatRegBits'
+            width = 32
         elif (self.ctype == 'uint64_t'):
             func = 'setFloatRegBits'
             width = 64

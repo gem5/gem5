@@ -226,14 +226,20 @@ namespace MipsISA
 
         double readReg(int floatReg, int width)
         {
+            using namespace std;
+
             switch(width)
             {
               case SingleWidth:
                 void *float_ptr = &regs[floatReg];
+                cout << "reading as float, reg." << floatReg << ": " << *(float *) float_ptr << endl;
+                cout << "reading as uint32_t, reg." << floatReg << ": " << *(uint32_t *) float_ptr << endl;
                 return *(float *) float_ptr;
 
               case DoubleWidth:
                 void *double_ptr = &regs[floatReg];
+                cout << "reading as double, reg." << floatReg <<": " << *(double *) double_ptr << endl;
+                cout << "reading as uint64_t, reg." << floatReg << hex << ": 0x" << *(uint64_t *) float_ptr << endl;
                 return *(double *) double_ptr;
 
               default:
