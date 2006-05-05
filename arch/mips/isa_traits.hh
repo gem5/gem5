@@ -210,11 +210,6 @@ namespace MipsISA
     class FloatRegFile
     {
       protected:
-
-        //Since the floating point registers overlap each other,
-        //A generic storage space is used. The float to be returned is
-        //pulled from the appropriate section of this region.
-        //char regSpace[SingleBytes * NumFloatRegs];
         FloatReg32 regs[NumFloatRegs];
 
       public:
@@ -232,14 +227,10 @@ namespace MipsISA
             {
               case SingleWidth:
                 void *float_ptr = &regs[floatReg];
-                cout << "reading as float, reg." << floatReg << ": " << *(float *) float_ptr << endl;
-                cout << "reading as uint32_t, reg." << floatReg << ": " << *(uint32_t *) float_ptr << endl;
                 return *(float *) float_ptr;
 
               case DoubleWidth:
                 void *double_ptr = &regs[floatReg];
-                cout << "reading as double, reg." << floatReg <<": " << *(double *) double_ptr << endl;
-                cout << "reading as uint64_t, reg." << floatReg << hex << ": 0x" << *(uint64_t *) float_ptr << endl;
                 return *(double *) double_ptr;
 
               default:
@@ -257,8 +248,6 @@ namespace MipsISA
                 return regs[floatReg];
 
               case DoubleWidth:
-                cout << hex << "Combining " << regs[floatReg + 1] << " & " << regs[floatReg + 1] << endl;
-                cout << hex << "Returning " << ((FloatReg64)regs[floatReg] << 32 | regs[floatReg + 1]) << endl;
                 return (FloatReg64)regs[floatReg] << 32 | regs[floatReg + 1];
 
               default:
@@ -302,11 +291,8 @@ namespace MipsISA
                 break;
 
               case DoubleWidth:
-                cout << hex << "Setting val: " << val << endl;
                 regs[floatReg] = val >> 32;
                 regs[floatReg + 1] = val;
-                cout << dec << "f" << floatReg << ": " << hex<< readRegBits(floatReg,32) << endl;
-                cout << dec << "f" << floatReg + 1 << ": " << hex << readRegBits(floatReg+1,32) << endl;
                 break;
 
               default:

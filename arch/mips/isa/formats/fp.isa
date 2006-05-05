@@ -32,7 +32,6 @@ output decoder {{
 
 // Primary format for float operate instructions:
 def format FloatOp(code, *flags) {{
-        code = 'std::cout << "Floating Point Op" << std::endl;\n' + code
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
@@ -42,7 +41,6 @@ def format FloatOp(code, *flags) {{
 
 // Primary format for float64 operate instructions:
 def format Float64Op(code, *flags) {{
-        code = 'std::cout << "Floating Point 64" << std::endl;\n' + code
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
