@@ -28,7 +28,7 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/process.hh"
-#include "arch/mips/linux_process.hh"
+#include "arch/mips/linux/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "cpu/exec_context.hh"

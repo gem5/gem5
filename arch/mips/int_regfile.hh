@@ -26,16 +26,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_UTILITY_HH__
-#define __ARCH_MIPS_UTILITY_HH__
+#ifndef __ARCH_MIPS_INT_REGFILE_HH__
+#define __ARCH_MIPS_INT_REGFILE_HH__
 
 #include "arch/mips/types.hh"
 #include "arch/mips/constants.hh"
-#include "base/misc.hh"
-#include "sim/host.hh"
+#include "sim/faults.hh"
 
-namespace MipsISA {
+class Checkpoint;
+class ExecContext;
+class Regfile;
 
-};
+namespace MipsISA
+{
+    class IntRegFile
+    {
+      protected:
+        IntReg regs[NumIntRegs];
+        IntReg hi;
+        IntReg lo;
+
+      public:
+        IntReg readReg(int intReg)
+        {
+            return regs[intReg];
+        }
+
+        Fault setReg(int intReg, const IntReg &val)
+        {
+            regs[intReg] = val;
+            return NoFault;
+        }
+
+        IntReg readHi()
+        {
+            return hi;
+        }
+
+        Fault setHi(const IntReg &val)
+        {
+            hi = val;
+            return NoFault;
+        }
+
+        IntReg readLo()
+        {
+            return lo;
+        }
+
+        Fault setLo(const IntReg &val)
+        {
+            lo = val;
+            return NoFault;
+        }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+    };
+} // namespace MipsISA
 
 #endif

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/mips/mips_linux.hh"
-#include "arch/mips/linux_process.hh"
+#include "arch/mips/linux/linux.hh"
+#include "arch/mips/linux/process.hh"
 #include "arch/mips/isa_traits.hh"
 
 #include "base/trace.hh"

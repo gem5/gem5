@@ -26,16 +26,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_UTILITY_HH__
-#define __ARCH_MIPS_UTILITY_HH__
+#include "arch/mips/linux/linux.hh"
 
-#include "arch/mips/types.hh"
-#include "arch/mips/constants.hh"
-#include "base/misc.hh"
-#include "sim/host.hh"
-
-namespace MipsISA {
-
+// open(2) flags translation table
+OpenFlagTransTable MipsLinux::openFlagTable[] = {
+#ifdef _MSC_VER
+  { MipsLinux::TGT_O_RDONLY,	_O_RDONLY },
+  { MipsLinux::TGT_O_WRONLY,	_O_WRONLY },
+  { MipsLinux::TGT_O_RDWR,	_O_RDWR },
+  { MipsLinux::TGT_O_APPEND,	_O_APPEND },
+  { MipsLinux::TGT_O_CREAT,	_O_CREAT },
+  { MipsLinux::TGT_O_TRUNC,	_O_TRUNC },
+  { MipsLinux::TGT_O_EXCL,	_O_EXCL },
+#ifdef _O_NONBLOCK
+  { MipsLinux::TGT_O_NONBLOCK,	_O_NONBLOCK },
+#endif
+#ifdef _O_NOCTTY
+  { MipsLinux::TGT_O_NOCTTY,	_O_NOCTTY },
+#endif
+#ifdef _O_SYNC
+  { MipsLinux::TGT_O_SYNC,	_O_SYNC },
+#endif
+#else /* !_MSC_VER */
+  { MipsLinux::TGT_O_RDONLY,	O_RDONLY },
+  { MipsLinux::TGT_O_WRONLY,	O_WRONLY },
+  { MipsLinux::TGT_O_RDWR,	O_RDWR },
+  { MipsLinux::TGT_O_APPEND,	O_APPEND },
+  { MipsLinux::TGT_O_CREAT,	O_CREAT },
+  { MipsLinux::TGT_O_TRUNC,	O_TRUNC },
+  { MipsLinux::TGT_O_EXCL,	O_EXCL },
+  { MipsLinux::TGT_O_NONBLOCK,	O_NONBLOCK },
+  { MipsLinux::TGT_O_NOCTTY,	O_NOCTTY },
+#ifdef O_SYNC
+  { MipsLinux::TGT_O_SYNC,	O_SYNC },
+#endif
+#endif /* _MSC_VER */
 };
 
-#endif
+const int MipsLinux::NUM_OPEN_FLAGS =
+        (sizeof(MipsLinux::openFlagTable)/sizeof(MipsLinux::openFlagTable[0]));
+
+
+

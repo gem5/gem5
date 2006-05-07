@@ -26,45 +26,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/mips/mips_linux.hh"
+#ifndef __ARCH_MIPS_TYPES_HH__
+#define __ARCH_MIPS_TYPES_HH__
 
-// open(2) flags translation table
-OpenFlagTransTable MipsLinux::openFlagTable[] = {
-#ifdef _MSC_VER
-  { MipsLinux::TGT_O_RDONLY,	_O_RDONLY },
-  { MipsLinux::TGT_O_WRONLY,	_O_WRONLY },
-  { MipsLinux::TGT_O_RDWR,	_O_RDWR },
-  { MipsLinux::TGT_O_APPEND,	_O_APPEND },
-  { MipsLinux::TGT_O_CREAT,	_O_CREAT },
-  { MipsLinux::TGT_O_TRUNC,	_O_TRUNC },
-  { MipsLinux::TGT_O_EXCL,	_O_EXCL },
-#ifdef _O_NONBLOCK
-  { MipsLinux::TGT_O_NONBLOCK,	_O_NONBLOCK },
+#include "sim/host.hh"
+
+namespace MipsISA
+{
+    typedef uint32_t MachInst;
+    typedef uint64_t ExtMachInst;
+    typedef uint8_t  RegIndex;
+
+    typedef uint32_t IntReg;
+
+    // floating point register file entry type
+    typedef double FloatReg;
+    typedef uint32_t FloatReg32;
+    typedef uint64_t FloatReg64;
+    typedef uint64_t FloatRegBits;
+
+    // cop-0/cop-1 system control register
+    typedef uint64_t MiscReg;
+    typedef uint64_t InternalProcReg;
+
+    typedef union {
+        IntReg   intreg;
+        FloatReg fpreg;
+        MiscReg  ctrlreg;
+    } AnyReg;
+
+    //used in FP convert & round function
+    enum ConvertType{
+        SINGLE_TO_DOUBLE,
+        SINGLE_TO_WORD,
+        SINGLE_TO_LONG,
+
+        DOUBLE_TO_SINGLE,
+        DOUBLE_TO_WORD,
+        DOUBLE_TO_LONG,
+
+        LONG_TO_SINGLE,
+        LONG_TO_DOUBLE,
+        LONG_TO_WORD,
+
+        WORD_TO_SINGLE,
+        WORD_TO_DOUBLE,
+        WORD_TO_LONG,
+
+        PLOWER_TO_SINGLE,
+        PUPPER_TO_SINGLE
+    };
+
+    //used in FP convert & round function
+    enum RoundMode{
+        RND_ZERO,
+        RND_DOWN,
+        RND_UP,
+        RND_NEAREST
+   };
+
+} // namespace MipsISA
+
 #endif
-#ifdef _O_NOCTTY
-  { MipsLinux::TGT_O_NOCTTY,	_O_NOCTTY },
-#endif
-#ifdef _O_SYNC
-  { MipsLinux::TGT_O_SYNC,	_O_SYNC },
-#endif
-#else /* !_MSC_VER */
-  { MipsLinux::TGT_O_RDONLY,	O_RDONLY },
-  { MipsLinux::TGT_O_WRONLY,	O_WRONLY },
-  { MipsLinux::TGT_O_RDWR,	O_RDWR },
-  { MipsLinux::TGT_O_APPEND,	O_APPEND },
-  { MipsLinux::TGT_O_CREAT,	O_CREAT },
-  { MipsLinux::TGT_O_TRUNC,	O_TRUNC },
-  { MipsLinux::TGT_O_EXCL,	O_EXCL },
-  { MipsLinux::TGT_O_NONBLOCK,	O_NONBLOCK },
-  { MipsLinux::TGT_O_NOCTTY,	O_NOCTTY },
-#ifdef O_SYNC
-  { MipsLinux::TGT_O_SYNC,	O_SYNC },
-#endif
-#endif /* _MSC_VER */
-};
-
-const int MipsLinux::NUM_OPEN_FLAGS =
-        (sizeof(MipsLinux::openFlagTable)/sizeof(MipsLinux::openFlagTable[0]));
-
-
-
