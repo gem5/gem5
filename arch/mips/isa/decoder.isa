@@ -149,13 +149,13 @@ decode OPCODE_HI default Unknown::unknown() {
                     }});
 
                     0x2: div({{
-                        xc->setMiscReg(Hi,Rs.sw % Rt.sw);
-                        xc->setMiscReg(Lo,Rs.sw / Rt.sw);
+                        xc->setMiscReg(Hi,Rs.sd % Rt.sd);
+                        xc->setMiscReg(Lo,Rs.sd / Rt.sd);
                     }});
 
                     0x3: divu({{
-                        xc->setMiscReg(Hi,Rs.uw % Rt.uw);
-                        xc->setMiscReg(Lo,Rs.uw / Rt.uw);
+                        xc->setMiscReg(Hi,Rs.ud % Rt.ud);
+                        xc->setMiscReg(Lo,Rs.ud / Rt.ud);
                     }});
                 }
             }
@@ -435,6 +435,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x6: ctc1({{
                             uint32_t fcsr_reg = xc->readMiscReg(FCSR);
                             uint32_t temp;
+
                             switch (FS)
                             {
                               case 25:

@@ -248,7 +248,7 @@ namespace MipsISA
                 return regs[floatReg];
 
               case DoubleWidth:
-                return (FloatReg64)regs[floatReg] << 32 | regs[floatReg + 1];
+                return (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
 
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
@@ -269,8 +269,8 @@ namespace MipsISA
               case DoubleWidth:
                 const void *double_ptr = &val;
                 FloatReg64 temp_double = *(FloatReg64 *) double_ptr;
-                regs[floatReg] = temp_double >> 32;
-                regs[floatReg + 1] = temp_double;
+                regs[floatReg + 1] = temp_double >> 32;
+                regs[floatReg] = temp_double;
                 break;
 
               default:
@@ -291,8 +291,8 @@ namespace MipsISA
                 break;
 
               case DoubleWidth:
-                regs[floatReg] = val >> 32;
-                regs[floatReg + 1] = val;
+                regs[floatReg + 1] = val >> 32;
+                regs[floatReg] = val;
                 break;
 
               default:
@@ -336,7 +336,7 @@ namespace MipsISA
 
         uint64_t convert_and_round(uint32_t fp_val,ConvertType cvt_type, int rnd_mode = 0);
         uint64_t convert_and_round(uint64_t fp_val,ConvertType cvt_type, int rnd_mode = 0);
-        uint64_t convert_and_round(float fp_val,ConvertType cvt_type, int rnd_mode = 0);
+        uint64_t convert_and_round(double fp_val,ConvertType cvt_type, int rnd_mode = 0);
 
         void copyRegs(ExecContext *src, ExecContext *dest);
 

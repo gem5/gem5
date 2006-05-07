@@ -95,29 +95,19 @@ MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
 
 
 uint64_t
-MipsISA::convert_and_round(float fp_val, ConvertType cvt_type, int rnd_mode)
+MipsISA::convert_and_round(double fp_val, ConvertType cvt_type, int rnd_mode)
 {
-    void * ptr = &fp_val;
-    uint32_t fp_bits = * (uint32_t *) ptr;
-
-    cout << "Converting " << fp_val << " (" << hex << fp_bits << ") " << endl;
-
-    uint64_t ret_val = 0;
-
     switch (cvt_type)
     {
       case SINGLE_TO_DOUBLE:
         double double_val = fp_val;
-        void *double_ptr = &double_val;
-        uint64_t dp_bits =  *(uint64_t *) double_ptr ;
-        cout << "To " << double_val << " (" << hex << dp_bits << ") " << endl;
-        double_ptr = &dp_bits;
-        cout << "Testing: " << *(double *) double_ptr << endl;
+        void  *double_ptr = &double_val;
+        uint64_t dp_bits  = *(uint64_t *) double_ptr ;
         return dp_bits;
 
       default:
         panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
-        return ret_val;
+        return 0;
     }
 }
 
