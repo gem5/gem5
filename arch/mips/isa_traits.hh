@@ -190,6 +190,7 @@ namespace MipsISA
     };
 
     typedef float FloatReg;
+    typedef double FPVal;
 
     typedef uint32_t FloatReg32;
     typedef uint64_t FloatReg64;
@@ -230,7 +231,8 @@ namespace MipsISA
                 return *(float *) float_ptr;
 
               case DoubleWidth:
-                void *double_ptr = &regs[floatReg];
+                uint64_t double_val = (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
+                void *double_ptr = &double_val;
                 return *(double *) double_ptr;
 
               default:
@@ -255,7 +257,7 @@ namespace MipsISA
             }
         }
 
-        Fault setReg(int floatReg, const FloatReg &val, int width)
+        Fault setReg(int floatReg, const FPVal &val, int width)
         {
 
             switch(width)
