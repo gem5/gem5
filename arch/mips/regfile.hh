@@ -31,9 +31,9 @@
 
 #include "arch/mips/types.hh"
 #include "arch/mips/constants.hh"
-#include "arch/mips/int_regfile.hh"
-#include "arch/mips/float_regfile.hh"
-#include "arch/mips/misc_regfile.hh"
+#include "arch/mips/regfile/int_regfile.hh"
+#include "arch/mips/regfile/float_regfile.hh"
+#include "arch/mips/regfile/misc_regfile.hh"
 #include "sim/faults.hh"
 
 class Checkpoint;

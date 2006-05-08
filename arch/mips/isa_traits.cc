@@ -122,16 +122,35 @@ MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
 uint64_t
 MipsISA::convert_and_round(double fp_val, ConvertType cvt_type, int rnd_mode)
 {
+
     switch (cvt_type)
     {
       case SINGLE_TO_DOUBLE:
-        double double_val = fp_val;
-        void  *double_ptr = &double_val;
-        uint64_t dp_bits  = *(uint64_t *) double_ptr ;
-        return dp_bits;
+        double sdouble_val = fp_val;
+        void  *sdouble_ptr = &sdouble_val;
+        uint64_t sdp_bits  = *(uint64_t *) sdouble_ptr ;
+        return sdp_bits;
+
+      case SINGLE_TO_WORD:
+        int32_t sword_val  = (int32_t) fp_val;
+        void  *sword_ptr   = &sword_val;
+        uint64_t sword_bits= *(uint32_t *) sword_ptr ;
+        return sword_bits;
+
+      case WORD_TO_SINGLE:
+        float wfloat_val  = fp_val;
+        void  *wfloat_ptr = &wfloat_val;
+        uint64_t wfloat_bits = *(uint32_t *) wfloat_ptr ;
+        return wfloat_bits;
+
+      case WORD_TO_DOUBLE:
+        double wdouble_val = fp_val;
+        void  *wdouble_ptr = &wdouble_val;
+        uint64_t wdp_bits  = *(uint64_t *) wdouble_ptr ;
+        return wdp_bits;
 
       default:
-        panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
+        panic("Invalid Floating Point Conversion Type (%d). See types.hh for Conversion List\n",cvt_type);
         return 0;
     }
 }

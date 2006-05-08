@@ -500,51 +500,51 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode FUNCTION_HI {
                         0x0: decode FUNCTION_LO {
                             format FloatOp {
-                                0x0: adds({{ Fd.sf = Fs.sf + Ft.sf;}});
-                                0x1: subs({{ Fd.sf = Fs.sf - Ft.sf;}});
-                                0x2: muls({{ Fd.sf = Fs.sf * Ft.sf;}});
-                                0x3: divs({{ Fd.sf = Fs.sf / Ft.sf;}});
-                                0x4: sqrts({{ Fd.sf = sqrt(Fs.sf);}});
-                                0x5: abss({{ Fd.sf = fabs(Fs.sf);}});
-                                0x6: movs({{ Fd.sf = Fs.sf;}});
-                                0x7: negs({{ Fd.sf = -1 * Fs.sf;}});
+                                0x0: add_s({{ Fd.sf = Fs.sf + Ft.sf;}});
+                                0x1: sub_s({{ Fd.sf = Fs.sf - Ft.sf;}});
+                                0x2: mul_s({{ Fd.sf = Fs.sf * Ft.sf;}});
+                                0x3: div_s({{ Fd.sf = Fs.sf / Ft.sf;}});
+                                0x4: sqrt_s({{ Fd.sf = sqrt(Fs.sf);}});
+                                0x5: abs_s({{ Fd.sf = fabs(Fs.sf);}});
+                                0x6: mov_s({{ Fd.sf = Fs.sf;}});
+                                0x7: neg_s({{ Fd.sf = -1 * Fs.sf;}});
                             }
                         }
 
                         0x1: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: round_l_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_LONG, RND_NEAREST);
+                                    Fd.ud = convert_and_round(Fs.sf, SINGLE_TO_LONG, RND_NEAREST);
                                 }});
 
                                 0x1: trunc_l_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_LONG, RND_ZERO);
+                                    Fd.ud = convert_and_round(Fs.sf, SINGLE_TO_LONG, RND_ZERO);
                                 }});
 
                                 0x2: ceil_l_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_LONG, RND_UP);
+                                    Fd.ud = convert_and_round(Fs.sf, SINGLE_TO_LONG, RND_UP);
                                 }});
 
                                 0x3: floor_l_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_LONG, RND_DOWN);
+                                    Fd.ud = convert_and_round(Fs.sf, SINGLE_TO_LONG, RND_DOWN);
                                 }});
                             }
 
                             format FloatOp {
                                 0x4: round_w_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_WORD, RND_NEAREST);
+                                    Fd.uw = convert_and_round(Fs.sf, SINGLE_TO_WORD, RND_NEAREST);
                                 }});
 
                                 0x5: trunc_w_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_WORD, RND_ZERO);
+                                    Fd.uw = convert_and_round(Fs.sf, SINGLE_TO_WORD, RND_ZERO);
                                 }});
 
                                 0x6: ceil_w_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_WORD, RND_UP);
+                                    Fd.uw = convert_and_round(Fs.sf, SINGLE_TO_WORD, RND_UP);
                                 }});
 
                                 0x7: floor_w_s({{
-                                    Fd = convert_and_round(Fs.uw, SINGLE_TO_WORD, RND_DOWN);
+                                    Fd.uw = convert_and_round(Fs.sf, SINGLE_TO_WORD, RND_DOWN);
                                 }});
                             }
                         }
@@ -578,7 +578,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
                                 0x4: cvt_w_s({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.uw = convert_and_round(Fs.uw, SINGLE_TO_WORD, rnd_mode);
+                                    Fd.uw = convert_and_round(Fs.sf, SINGLE_TO_WORD, rnd_mode);
                                 }});
                             }
 
@@ -586,7 +586,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             format Float64Op {
                                 0x5: cvt_l_s({{
                                     int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.ud = convert_and_round(Fs.uw, SINGLE_TO_LONG, rnd_mode);
+                                    Fd.ud = convert_and_round(Fs.sf, SINGLE_TO_LONG, rnd_mode);
                                 }});
 
                                 0x6: cvt_ps_st({{
@@ -696,12 +696,12 @@ decode OPCODE_HI default Unknown::unknown() {
                         format FloatOp {
                             0x20: cvt_s_w({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.uw = convert_and_round(Fs.uw, WORD_TO_SINGLE, rnd_mode);
+                                Fd.uw = convert_and_round(Fs.sf, WORD_TO_SINGLE, rnd_mode);
                             }});
 
                             0x21: cvt_d_w({{
                                 int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.ud = convert_and_round(Fs.uw, WORD_TO_DOUBLE, rnd_mode);
+                                Fd.ud = convert_and_round(Fs.sf, WORD_TO_DOUBLE, rnd_mode);
                             }});
                         }
                     }
@@ -1033,8 +1033,6 @@ decode OPCODE_HI default Unknown::unknown() {
                 uint32_t unalign_addr = Rs + disp;
                 uint32_t offset = unalign_addr & 0x00000003;
 #if BYTE_ORDER == BIG_ENDIAN
-                std::cout << "Big Endian Byte Order\n";
-
                 switch(offset)
                 {
                   case 0:
@@ -1060,8 +1058,6 @@ decode OPCODE_HI default Unknown::unknown() {
                     panic("lwl: bad offset");
                 }
 #elif BYTE_ORDER == LITTLE_ENDIAN
-                std::cout << "Little Endian Byte Order\n";
-
                 switch(offset)
                 {
                   case 0:
@@ -1274,7 +1270,7 @@ decode OPCODE_HI default Unknown::unknown() {
     }
 
     0x6: decode OPCODE_LO default FailUnimpl::reserved() {
-        0x0: FailUnimpl::ll();
+        0x0: LoadMemory::ll({{Rt.uw = Mem.uw}},mem_flags=LOCKED);
 
         format LoadFloatMemory {
             0x1: lwc1({{ Ft.uw = Mem.uw;    }});
@@ -1284,7 +1280,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
 
     0x7: decode OPCODE_LO default FailUnimpl::reserved() {
-        0x0: FailUnimpl::sc();
+        0x0: StoreMemory::sc({{ Mem.uw = Rt.uw; Rt.uw = 1; }});
 
         format StoreFloatMemory {
             0x1: swc1({{ Mem.uw = Ft.uw; }});
