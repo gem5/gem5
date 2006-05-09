@@ -204,7 +204,6 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
 
                 format BranchLikely {
-                    //MIPS obsolete instructions
                     0x2: bltzl({{ cond = (Rs.sw < 0); }});
                     0x3: bgezl({{ cond = (Rs.sw >= 0); }});
                 }
@@ -228,7 +227,6 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
 
                 format BranchLikely {
-                    //Will be removed in future MIPS releases
                     0x2: bltzall({{ cond = (Rs.sw < 0); }}, IsCall, IsReturn);
                     0x3: bgezall({{ cond = (Rs.sw >= 0); }}, IsCall, IsReturn);
                 }
@@ -552,8 +550,8 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format FloatOp {
-                                    0x0: movf_s({{if (FPConditionCode(CC) == 0) Fd = Fs;}});
-                                    0x1: movt_s({{if (FPConditionCode(CC) == 1) Fd = Fs;}});
+                                    0x0: movf_s({{if (getFPConditionCode(CC) == 0) Fd = Fs;}});
+                                    0x1: movt_s({{if (getFPConditionCode(CC) == 1) Fd = Fs;}});
                                 }
                             }
 
@@ -567,7 +565,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
                         0x4: decode FUNCTION_LO {
 
-                            format FloatOp {
+                            format FloatConvertOp {
                                 0x1: cvt_d_s({{
                                     Fd.ud = fpConvert(Fs.sf, SINGLE_TO_DOUBLE);
                                 }});
@@ -577,7 +575,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 }});
                             }
 
-                            format Float64Op {
+                            format FloatConvertOp {
                                 0x5: cvt_l_s({{
                                     Fd.ud = fpConvert(Fs.sf, SINGLE_TO_LONG);
                                 }});
@@ -589,28 +587,100 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
 
                         0x6: decode FUNCTION_LO {
-                            format FloatOp {
-                                0x0: c_f_s({{ ; }});
-                                0x1: c_un_s({{ ; }});
-                                0x2: c_eq_s({{ ; }});
-                                0x3: c_ueq_s({{ ; }});
-                                0x4: c_olt_s({{ ; }});
-                                0x5: c_ult_s({{ ; }});
-                                0x6: c_ole_s({{ ; }});
-                                0x7: c_ule_s({{ ; }});
+                            format FloatCompareOp {
+                                0x0: c_f_s({{ cond = 0; }});
+                                0x1: c_un_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = 0;
+                                }});
+                                0x2: c_eq_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs == Ft);
+                                }});
+                                0x3: c_ueq_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs == Ft);
+                                }});
+                                0x4: c_olt_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 0;
+                                    else
+                                        cond = ;
+                                     ;
+                                }});
+                                0x5: c_ult_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                    ;
+                                }});
+                                0x6: c_ole_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 0;
+                                    else
+                                        cond = ;
+                                }});
+                                0x7: c_ule_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                }});
                             }
                         }
 
                         0x7: decode FUNCTION_LO {
-                            format FloatOp {
-                                0x0: c_sf_s({{ ; }});
-                                0x1: c_ngle_s({{ ; }});
-                                0x2: c_seq_s({{ ; }});
-                                0x3: c_ngl_s({{ ; }});
-                                0x4: c_lt_s({{ ; }});
-                                0x5: c_nge_s({{ ; }});
-                                0x6: c_le_s({{ ; }});
-                                0x7: c_ngt_s({{ ; }});
+                            format FloatCompareWithXcptOp {
+                                0x0: c_sf_s({{ cond = 0; }});
+                                0x1: c_ngle_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
+                                0x2: c_seq_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
+                                0x3: c_ngl_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
+                                0x4: c_lt_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
+                                0x5: c_nge_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
+                                0x6: c_le_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
+                                0x7: c_ngt_s({{
+                                    if (unordered(Rs) || unordered(Rt))
+                                        cond = 1;
+                                    else
+                                        cond = ;
+                                  }});
                             }
                         }
                     }
@@ -912,23 +982,17 @@ decode OPCODE_HI default Unknown::unknown() {
         0x3: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
                 format LoadFloatMemory {
-                    0x0: lwxc1({{ /*F_t<31:0> = Mem.sf; */}}, {{ EA = Rs + Rt; }});
-                    0x1: ldxc1({{ /*F_t<63:0> = Mem.df;*/ }}, {{ EA = Rs + Rt; }});
-                    0x5: luxc1({{ /*F_t<31:0> = Mem.df; */}},
-                               {{ //Need to make EA<2:0> = 0
-                                   EA = Rs + Rt;
-                               }});
+                    0x0: lwxc1({{ Ft.uw = Mem.uw;}}, {{ EA = Rs + Rt; }});
+                    0x1: ldxc1({{ Ft.ud = Mem.ud;}}, {{ EA = Rs + Rt; }});
+                    0x5: luxc1({{ Ft.uw = Mem.ud;}}, {{ EA = Rs + Rt; }});
                 }
             }
 
             0x1: decode FUNCTION_LO {
                 format StoreFloatMemory {
-                    0x0: swxc1({{ /*Mem.sf = Ft<31:0>; */}},{{ EA = Rs + Rt; }});
-                    0x1: sdxc1({{ /*Mem.df = Ft<63:0> */}}, {{ EA = Rs + Rt; }});
-                    0x5: suxc1({{ /*Mem.df = F_t<63:0>;*/}},
-                               {{ //Need to make sure EA<2:0> = 0
-                                   EA = Rs + Rt;
-                               }});
+                    0x0: swxc1({{ Mem.uw = Ft.uw;}}, {{ EA = Rs + Rt; }});
+                    0x1: sdxc1({{ Mem.ud = Ft.ud;}}, {{ EA = Rs + Rt; }});
+                    0x5: suxc1({{ Mem.ud = Ft.ud;}}, {{ EA = Rs + Rt; }});
                 }
 
                 0x7: WarnUnimpl::prefx();
@@ -1032,25 +1096,29 @@ decode OPCODE_HI default Unknown::unknown() {
             0x4: decode FUNCTION_LO {
                 format BasicOp {
                     0x0: clz({{
-                        /*int cnt = 0;
-                        int idx = 0;
-                        while ( Rs.uw<idx> != 1) {
-                            cnt++;
-                            idx--;
+                        int cnt = 0;
+                        uint32_t mask = 0x80000000;
+                        for (int i=0; i < 32; i++)
+                            if( (Rs & mask) == 0) {
+                                cnt++;
+                            } else {
+                                break;
+                            }
                         }
-
-                        Rd.uw = cnt;*/
+                        Rd.uw = cnt;
                     }});
 
                     0x1: clo({{
-                        /*int cnt = 0;
-                        int idx = 0;
-                        while ( Rs.uw<idx> != 0) {
-                            cnt++;
-                            idx--;
+                        int cnt = 0;
+                        uint32_t mask = 0x80000000;
+                        for (int i=0; i < 32; i++)
+                            if( (Rs & mask) != 0) {
+                                cnt++;
+                            } else {
+                                break;
+                            }
                         }
-
-                        Rd.uw = cnt;*/
+                        Rd.uw = cnt;
                     }});
                 }
             }
