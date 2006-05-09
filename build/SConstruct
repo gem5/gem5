@@ -328,6 +328,11 @@ env.Append(BUILDERS = { 'ConfigFile' : config_builder })
 # rename base env
 base_env = env
 
+help_text = '''
+Usage: scons [scons options] [build options] [target(s)]
+
+'''
+
 for build_dir in build_dirs:
     # Make a copy of the default environment to use for this config.
     env = base_env.Copy()
@@ -360,6 +365,11 @@ for build_dir in build_dirs:
     # Apply current option settings to env
     sticky_opts.Update(env)
     nonsticky_opts.Update(env)
+
+    help_text += "Sticky options for %s:\n" % build_dir \
+                 + sticky_opts.GenerateHelpText(env) \
+                 + "\nNon-sticky options for %s:\n" % build_dir \
+                 + nonsticky_opts.GenerateHelpText(env)
 
     # Process option settings.
 
@@ -408,6 +418,8 @@ for build_dir in build_dirs:
         SConscript('m5-test/SConscript',
                    build_dir = os.path.join(build_dir, 'test', e.Label),
                    exports = { 'env' : e }, duplicate = False)
+
+Help(help_text)
 
 ###################################################
 #
