@@ -589,49 +589,54 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x6: decode FUNCTION_LO {
                             format FloatCompareOp {
                                 0x0: c_f_s({{ cond = 0; }});
+
                                 0x1: c_un_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
                                         cond = 0;
                                 }});
+
                                 0x2: c_eq_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 0;
                                     else
-                                        cond = (Fs == Ft);
+                                        cond = (Fs.sf == Ft.sf);
                                 }});
+
                                 0x3: c_ueq_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = (Fs == Ft);
+                                        cond = (Fs.sf == Ft.sf);
                                 }});
+
                                 0x4: c_olt_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 0;
                                     else
-                                        cond = ;
-                                     ;
+                                        cond = (Fs.sf < Ft.sf);
                                 }});
+
                                 0x5: c_ult_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = ;
-                                    ;
+                                        cond = (Fs.sf < Ft.sf);
                                 }});
+
                                 0x6: c_ole_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 0;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf <= Ft.sf);
                                 }});
+
                                 0x7: c_ule_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf <= Ft.sf);
                                 }});
                             }
                         }
@@ -639,47 +644,54 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x7: decode FUNCTION_LO {
                             format FloatCompareWithXcptOp {
                                 0x0: c_sf_s({{ cond = 0; }});
+
                                 0x1: c_ngle_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = ;
+                                        cond = 0;
                                   }});
+
                                 0x2: c_seq_s({{
-                                    if (unordered(Rs) || unordered(Rt))
-                                        cond = 1;
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                        cond = 0;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf == Ft.sf);
                                   }});
+
                                 0x3: c_ngl_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf == Ft.sf);
                                   }});
+
                                 0x4: c_lt_s({{
-                                    if (unordered(Rs) || unordered(Rt))
-                                        cond = 1;
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                        cond = 0;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf < Ft.sf);
                                   }});
+
                                 0x5: c_nge_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf < Ft.sf);
                                   }});
+
                                 0x6: c_le_s({{
-                                    if (unordered(Rs) || unordered(Rt))
-                                        cond = 1;
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                        cond = 0;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf <= Ft.sf);
                                   }});
+
                                 0x7: c_ngt_s({{
-                                    if (unordered(Rs) || unordered(Rt))
+                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
                                         cond = 1;
                                     else
-                                        cond = ;
+                                        cond = (Fs.sf <= Ft.sf);
                                   }});
                             }
                         }
@@ -780,28 +792,112 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
 
                         0x6: decode FUNCTION_LO {
-                            format FloatOp {
-                                0x0: c_f_d({{ ; }});
-                                0x1: c_un_d({{ ; }});
-                                0x2: c_eq_d({{ ; }});
-                                0x3: c_ueq_d({{ ; }});
-                                0x4: c_olt_d({{ ; }});
-                                0x5: c_ult_d({{ ; }});
-                                0x6: c_ole_d({{ ; }});
-                                0x7: c_ule_d({{ ; }});
+                            format FloatCompareOp {
+                                0x0: c_f_d({{ cond = 0; }});
+
+                                0x1: c_un_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = 0;
+                                }});
+
+                                0x2: c_eq_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs.df == Ft.df);
+                                }});
+
+                                0x3: c_ueq_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs.df == Ft.df);
+                                }});
+
+                                0x4: c_olt_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs.df < Ft.df);
+                                }});
+
+                                0x5: c_ult_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs.df < Ft.df);
+                                }});
+
+                                0x6: c_ole_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs.df <= Ft.df);
+                                }});
+
+                                0x7: c_ule_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs.df <= Ft.df);
+                                }});
                             }
                         }
 
                         0x7: decode FUNCTION_LO {
-                            format FloatOp {
-                                0x0: c_sf_d({{ ; }});
-                                0x1: c_ngle_d({{ ; }});
-                                0x2: c_seq_d({{ ; }});
-                                0x3: c_ngl_d({{ ; }});
-                                0x4: c_lt_d({{ ; }});
-                                0x5: c_nge_d({{ ; }});
-                                0x6: c_le_d({{ ; }});
-                                0x7: c_ngt_d({{ ; }});
+                            format FloatCompareWithXcptOp {
+                                0x0: c_sf_d({{ cond = 0; }});
+
+                                0x1: c_ngle_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = 0;
+                                  }});
+
+                                0x2: c_seq_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs.df == Ft.df);
+                                  }});
+
+                                0x3: c_ngl_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs.df == Ft.df);
+                                  }});
+
+                                0x4: c_lt_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs.df < Ft.df);
+                                  }});
+
+                                0x5: c_nge_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs.df < Ft.df);
+                                  }});
+
+                                0x6: c_le_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 0;
+                                    else
+                                        cond = (Fs.df <= Ft.df);
+                                  }});
+
+                                0x7: c_ngt_d({{
+                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                        cond = 1;
+                                    else
+                                        cond = (Fs.df <= Ft.df);
+                                  }});
                             }
                         }
                     }
