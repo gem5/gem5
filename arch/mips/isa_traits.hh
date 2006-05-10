@@ -137,9 +137,13 @@ namespace MipsISA
 
     void copyRegs(ExecContext *src, ExecContext *dest);
 
-    uint64_t convert_and_round(uint32_t fp_val, ConvertType cvt_type, int rnd_mode = 0);
-    uint64_t convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode = 0);
-    uint64_t convert_and_round(double fp_val, ConvertType cvt_type, int rnd_mode = 0);
+    uint64_t fpConvert(double fp_val, ConvertType cvt_type);
+    double roundFP(double val);
+    inline double truncFP(double val);
+    bool unorderedFP(uint32_t val);
+    bool unorderedFP(uint64_t val);
+    bool getConditionCode(int cc);
+    void setConditionCode(int num, bool val);
 
     // Machine operations
 

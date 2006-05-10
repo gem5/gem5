@@ -155,6 +155,80 @@ MipsISA::convert_and_round(double fp_val, ConvertType cvt_type, int rnd_mode)
     }
 }
 
+uint64_t
+MipsISA::fpConvert(double fp_val, ConvertType cvt_type)
+{
+
+    switch (cvt_type)
+    {
+      case SINGLE_TO_DOUBLE:
+        double sdouble_val = fp_val;
+        void  *sdouble_ptr = &sdouble_val;
+        uint64_t sdp_bits  = *(uint64_t *) sdouble_ptr;
+        return sdp_bits;
+
+      case SINGLE_TO_WORD:
+        int32_t sword_val  = (int32_t) fp_val;
+        void  *sword_ptr   = &sword_val;
+        uint64_t sword_bits= *(uint32_t *) sword_ptr;
+        return sword_bits;
+
+      case WORD_TO_SINGLE:
+        float wfloat_val   = fp_val;
+        void  *wfloat_ptr  = &wfloat_val;
+        uint64_t wfloat_bits = *(uint32_t *) wfloat_ptr;
+        return wfloat_bits;
+
+      case WORD_TO_DOUBLE:
+        double wdouble_val = fp_val;
+        void  *wdouble_ptr = &wdouble_val;
+        uint64_t wdp_bits  = *(uint64_t *) wdouble_ptr;
+        return wdp_bits;
+
+      default:
+        panic("Invalid Floating Point Conversion Type (%d). See \"types.hh\" for List of Conversions\n",cvt_type);
+        return 0;
+    }
+}
+
+double
+MipsISA::roundFP(double val)
+{
+    double trunc_val = trunc(val);
+    double fraction = val - trunc_val;
+
+    if (fraction < 0.5)
+        return val;
+    else
+        return val + 1;
+}
+
+inline double
+MipsISA::truncFP(double val)
+{
+    int trunc_val = (int) val;
+    return (double) trunc_val;
+}
+
+bool
+MipsISA::unorderedFP(uint32_t val)
+{
+}
+
+bool
+MipsISA::unorderedFP(uint64_t val)
+{
+}
+
+bool
+MipsISA::getConditionCode(int cc)
+{
+}
+
+void
+MipsISA::setConditionCode(int num, bool val)
+{
+}
 
 #if FULL_SYSTEM
 

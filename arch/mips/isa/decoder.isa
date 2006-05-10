@@ -1,4 +1,4 @@
-// -*- mode:c++ -*-
+ // -*- mode:c++ -*-
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -20,8 +20,8 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode FUNCTION_LO {
                 0x1: decode MOVCI {
                     format BasicOp {
-                        0: movf({{ if (xc->readMiscReg(FPCR) != CC) Rd = Rs}});
-                        1: movt({{ if (xc->readMiscReg(FPCR) == CC) Rd = Rs}});
+                        0: movf({{ if (getFPConditionCode(CC) == 0) Rd = Rs}});
+                        1: movt({{ if (getFPConditionCode(CC) == 1) Rd = Rs}});
                     }
                 }
 
@@ -476,15 +476,15 @@ decode OPCODE_HI default Unknown::unknown() {
                 0x1: decode ND {
                     0x0: decode TF {
                         format Branch {
-                            0x0: bc1f({{ cond = (xc->readMiscReg(FPCR) == 0); }});
-                            0x1: bc1t({{ cond = (xc->readMiscReg(FPCR) == 1); }});
+                            0x0: bc1f({{ cond = (getFPConditionCode(CC) == 0); }});
+                            0x1: bc1t({{ cond = (getFPConditionCode(CC) == 1); }});
                         }
                     }
 
                     0x1: decode TF {
                         format BranchLikely {
-                            0x0: bc1fl({{ cond = (xc->readMiscReg(FPCR) == 0); }});
-                            0x1: bc1tl({{ cond = (xc->readMiscReg(FPCR) == 1); }});
+                            0x0: bc1fl({{ cond = (getFPConditionCode(CC) == 0); }});
+                            0x1: bc1tl({{ cond = (getFPConditionCode(CC) == 1); }});
                         }
                     }
                 }
@@ -701,51 +701,51 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x1: decode FUNCTION_HI {
                         0x0: decode FUNCTION_LO {
                             format FloatOp {
-                                0x0: addd({{ Fd.df = Fs.df + Ft.df;}});
-                                0x1: subd({{ Fd.df = Fs.df - Ft.df;}});
-                                0x2: muld({{ Fd.df = Fs.df * Ft.df;}});
-                                0x3: divd({{ Fd.df = Fs.df / Ft.df;}});
-                                0x4: sqrtd({{ Fd.df = sqrt(Fs.df);}});
-                                0x5: absd({{ Fd.df = fabs(Fs.df);}});
-                                0x6: movd({{ Fd.ud = Fs.ud;}});
-                                0x7: negd({{ Fd.df = -1 * Fs.df;}});
+                                0x0: add_d({{ Fd.df = Fs.df + Ft.df;}});
+                                0x1: sub_d({{ Fd.df = Fs.df - Ft.df;}});
+                                0x2: mul_d({{ Fd.df = Fs.df * Ft.df;}});
+                                0x3: div_d({{ Fd.df = Fs.df / Ft.df;}});
+                                0x4: sqrt_d({{ Fd.df = sqrt(Fs.df);}});
+                                0x5: abs_d({{ Fd.df = fabs(Fs.df);}});
+                                0x6: mov_d({{ Fd.ud = Fs.ud;}});
+                                0x7: neg_d({{ Fd.df = -1 * Fs.df;}});
                             }
                         }
 
                         0x1: decode FUNCTION_LO {
-                            format Float64Op {
+                            format FloatOp {
                                 0x0: round_l_d({{
-                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_NEAREST);
+                                    Fd.ud = fpConvert(roundFP(Fs.ud), DOUBLE_TO_LONG);
                                 }});
 
                                 0x1: trunc_l_d({{
-                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_ZERO);
+                                    Fd.ud = fpConvert(truncFP(Fs.ud), DOUBLE_TO_LONG);
                                 }});
 
                                 0x2: ceil_l_d({{
-                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_UP);
+                                    Fd.ud = fpConvert(ceil(Fs.ud), DOUBLE_TO_LONG);
                                 }});
 
                                 0x3: floor_l_d({{
-                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, RND_DOWN);
+                                    Fd.ud = fpConvert(floor(Fs.ud), DOUBLE_TO_LONG);
                                 }});
                             }
 
                             format FloatOp {
                                 0x4: round_w_d({{
-                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_NEAREST);
+                                    Fd.uw = fpConvert(roundFP(Fs.ud), DOUBLE_TO_WORD);
                                 }});
 
                                 0x5: trunc_w_d({{
-                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_ZERO);
+                                    Fd.uw = fpConvert(truncFP(Fs.ud), DOUBLE_TO_WORD);
                                 }});
 
                                 0x6: ceil_w_d({{
-                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_UP);
+                                    Fd.uw = fpConvert(ceil(Fs.ud), DOUBLE_TO_WORD);
                                 }});
 
                                 0x7: floor_w_d({{
-                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, RND_DOWN);
+                                    Fd.uw = fpConvert(floor(Fs.ud), DOUBLE_TO_WORD);
                                 }});
                             }
                         }
@@ -753,40 +753,34 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format FloatOp {
-                                    0x0: movfd({{if (xc->readMiscReg(FPCR) != CC) Fd.df = Fs.df; }});
-                                    0x1: movtd({{if (xc->readMiscReg(FPCR) == CC) Fd.df = Fs.df; }});
+                                    0x0: movf_d({{if (getFPConditionCode(CC) == 0) Fd.df = Fs.df; }});
+                                    0x1: movt_d({{if (getFPConditionCode(CC) == 1) Fd.df = Fs.df; }});
                                 }
                             }
 
                             format BasicOp {
-                                0x2: movzd({{ if (Rt == 0) Fd.df = Fs.df; }});
-                                0x3: movnd({{ if (Rt != 0) Fd.df = Fs.df; }});
+                                0x2: movz_d({{ if (Rt == 0) Fd.df = Fs.df; }});
+                                0x3: movn_d({{ if (Rt != 0) Fd.df = Fs.df; }});
                             }
 
-                            format Float64Op {
-                                0x5: recipd({{ Fd.df = 1 / Fs.df}});
-                                0x6: rsqrtd({{ Fd.df = 1 / sqrt(Fs.df) }});
+                            format FloatOp {
+                                0x5: recip_d({{ Fd.df = 1 / Fs.df}});
+                                0x6: rsqrt_d({{ Fd.df = 1 / sqrt(Fs.df) }});
                             }
                         }
 
                         0x4: decode FUNCTION_LO {
                             format FloatOp {
                                 0x0: cvt_s_d({{
-                                    int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_SINGLE, rnd_mode);
+                                    Fd.uw = fpConvert(Fs.ud, DOUBLE_TO_SINGLE);
                                 }});
 
                                 0x4: cvt_w_d({{
-                                    int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.uw = convert_and_round(Fs.ud, DOUBLE_TO_WORD, rnd_mode);
+                                    Fd.uw = fpConvert(Fs.ud, DOUBLE_TO_WORD);
                                 }});
-                            }
 
-                            //only legal for 64 bit
-                            format Float64Op {
                                 0x5: cvt_l_d({{
-                                    int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.ud = convert_and_round(Fs.ud, DOUBLE_TO_LONG, rnd_mode);
+                                    Fd.ud = fpConvert(Fs.ud, DOUBLE_TO_LONG);
                                 }});
                             }
                         }
@@ -904,15 +898,19 @@ decode OPCODE_HI default Unknown::unknown() {
 
                     //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=W
                     0x4: decode FUNCTION {
-                        format FloatOp {
+                        format FloatConvertOp {
                             0x20: cvt_s_w({{
-                                int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.uw = convert_and_round(Fs.sf, WORD_TO_SINGLE, rnd_mode);
+                                Fd.uw = fpConvert(Fs.sf, WORD_TO_SINGLE);
                             }});
 
                             0x21: cvt_d_w({{
-                                int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.ud = convert_and_round(Fs.sf, WORD_TO_DOUBLE, rnd_mode);
+                                Fd.ud = fpConvert(Fs.sf, WORD_TO_DOUBLE);
+                            }});
+                        }
+
+                        format Float64ConvertOp {
+                            0x26: cvt_ps_pw({{
+                                Fd.ud = fpConvert(Fs.ud, WORD_TO_PS);
                             }});
                         }
                     }
@@ -921,15 +919,17 @@ decode OPCODE_HI default Unknown::unknown() {
                     //Note: "1. Format type L is legal only if 64-bit floating point operations
                     //are enabled."
                     0x5: decode FUNCTION_HI {
-                        format Float64Op {
-                            0x10: cvt_s_l({{
-                                int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.uw = convert_and_round(Fs.ud, LONG_TO_SINGLE, rnd_mode);
+                        format Float64ConvertOp {
+                            0x20: cvt_s_l({{
+                                Fd.uw = fpConvert(Fs.ud, LONG_TO_SINGLE);
                             }});
 
-                            0x11: cvt_d_l({{
-                                int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.ud = convert_and_round(Fs.ud, LONG_TO_DOUBLE, rnd_mode);
+                            0x21: cvt_d_l({{
+                                Fd.ud = fpConvert(Fs.ud, LONG_TO_DOUBLE);
+                            }});
+
+                            0x26: cvt_ps_l({{
+                                Fd.ud = fpConvert(Fs.ud, LONG_TO_PS);
                             }});
                         }
                     }
@@ -940,33 +940,27 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x6: decode FUNCTION_HI {
                         0x0: decode FUNCTION_LO {
                             format Float64Op {
-                                0x0: addps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
-                                    //Lower Halves Independently but we take simulator shortcut
+                                0x0: add_ps({{
                                     Fd.df = Fs.df + Ft.df;
                                 }});
 
-                                0x1: subps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
-                                    //Lower Halves Independently but we take simulator shortcut
+                                0x1: sub_ps({{
                                     Fd.df = Fs.df - Ft.df;
                                 }});
 
-                                0x2: mulps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
-                                    //Lower Halves Independently but we take simulator shortcut
+                                0x2: mul_ps({{
                                     Fd.df = Fs.df * Ft.df;
                                 }});
 
-                                0x5: absps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
-                                    //Lower Halves Independently but we take simulator shortcut
+                                0x5: abs_ps({{
                                     Fd.df = fabs(Fs.df);
                                 }});
 
-                                0x6: movps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
-                                    //Lower Halves Independently but we take simulator shortcut
-                                    //Fd.df = Fs<31:0> |  Ft<31:0>;
+                                0x6: mov_ps({{
+                                    Fd.df = Fs |  Ft;
                                 }});
 
-                                0x7: negps({{ //Must Check for Exception Here... Supposed to Operate on Upper and
-                                    //Lower Halves Independently but we take simulator shortcut
+                                0x7: neg_ps({{
                                     Fd.df = -1 * Fs.df;
                                 }});
                             }
@@ -975,31 +969,28 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format Float64Op {
-                                    0x0: movfps({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs;}});
-                                    0x1: movtps({{if (xc->readMiscReg(FPCR) == CC) Fd = Fs;}});
+                                    0x0: movf_ps({{if (getFPConditionCode(CC) == 0) Fd = Fs;}});
+                                    0x1: movt_ps({{if (getFPConditionCode(CC) == 1) Fd = Fs;}});
                                 }
                             }
 
-                            format BasicOp {
-                                0x2: movzps({{if (xc->readMiscReg(FPCR) != CC) Fd = Fs; }});
-                                0x3: movnps({{if (xc->readMiscReg(FPCR) == CC) Fd = Fs; }});
+                            format Float64Op {
+                                0x2: movz_ps({{if (getFPConditionCode(CC) == 0) Fd = Fs; }});
+                                0x3: movn_ps({{if (getFPConditionCode(CC) == 1) Fd = Fs; }});
                             }
 
                         }
 
                         0x4: decode FUNCTION_LO {
                             0x0: Float64Op::cvt_s_pu({{
-                                int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                Fd.uw = convert_and_round(Fs.ud, PUPPER_TO_SINGLE, rnd_mode);
+                                Fd.uw = fpConvert(Fs.ud, PU_TO_SINGLE);
                             }});
                         }
 
                         0x5: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: cvt_s_pl({{
-                                    int rnd_mode = xc->readMiscReg(FCSR) & 0x03;
-                                    Fd.uw = convert_and_round(Fs.ud, PLOWER_TO_SINGLE,
-                                                           rnd_mode);
+                                    Fd.uw = fpConvert(Fs.ud, PL_TO_SINGLE);
                                 }});
 
                                 0x4: pll({{ Fd.ud = Fs.ud<31:0>  << 32 | Ft.ud<31:0>; }});
@@ -1102,8 +1093,6 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: madd_s({{ Fd.sf = (Fs.sf * Fs.sf) + Fr.sf; }});
                         0x1: madd_d({{ Fd.df = (Fs.df * Fs.df) + Fr.df; }});
                         0x6: madd_ps({{
-                            //Must Check for Exception Here... Supposed to Operate on Upper and
-                            //Lower Halves Independently but we take simulator shortcut
                             Fd.df = (Fs.df * Fs.df) + Fr.df;
                         }});
                     }
@@ -1112,8 +1101,6 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: msub_s({{ Fd.sf = (Fs.sf * Fs.sf) - Fr.sf; }});
                         0x1: msub_d({{ Fd.df = (Fs.df * Fs.df) - Fr.df; }});
                         0x6: msub_ps({{
-                            //Must Check for Exception Here... Supposed to Operate on Upper and
-                            //Lower Halves Independently but we take simulator shortcut
                             Fd.df = (Fs.df * Fs.df) - Fr.df;
                         }});
                     }
@@ -1122,8 +1109,6 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: nmadd_s({{ Fd.sf = (-1 * Fs.sf * Fs.sf) - Fr.sf; }});
                         0x1: nmadd_d({{ Fd.df = (-1 * Fs.df * Fs.df) + Fr.df; }});
                         0x6: nmadd_ps({{
-                            //Must Check for Exception Here... Supposed to Operate on Upper and
-                            //Lower Halves Independently but we take simulator shortcut
                             Fd.df = (-1 * Fs.df * Fs.df) + Fr.df;
                         }});
                     }
@@ -1132,8 +1117,6 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: nmsub_s({{ Fd.sf = (-1 * Fs.sf * Fs.sf) - Fr.sf; }});
                         0x1: nmsub_d({{ Fd.df = (-1 * Fs.df * Fs.df) - Fr.df; }});
                         0x6: nmsub_ps({{
-                            //Must Check for Exception Here... Supposed to Operate on Upper and
-                            //Lower Halves Independently but we take simulator shortcut
                             Fd.df = (-1 * Fs.df * Fs.df) + Fr.df;
                         }});
                     }
@@ -1141,7 +1124,6 @@ decode OPCODE_HI default Unknown::unknown() {
             }
         }
 
-        //MIPS obsolete instructions
         format BranchLikely {
             0x4: beql({{ cond = (Rs.sw == 0); }});
             0x5: bnel({{ cond = (Rs.sw != 0); }});
