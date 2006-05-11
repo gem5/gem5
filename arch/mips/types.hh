@@ -68,13 +68,15 @@ namespace MipsISA
         LONG_TO_SINGLE,
         LONG_TO_DOUBLE,
         LONG_TO_WORD,
+        LONG_TO_PS,
 
         WORD_TO_SINGLE,
         WORD_TO_DOUBLE,
         WORD_TO_LONG,
+        WORD_TO_PS,
 
-        PLOWER_TO_SINGLE,
-        PUPPER_TO_SINGLE
+        PL_TO_SINGLE,
+        PU_TO_SINGLE
     };
 
     //used in FP convert & round function

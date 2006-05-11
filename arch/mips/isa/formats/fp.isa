@@ -39,8 +39,42 @@ def format FloatOp(code, *flags) {{
         exec_output = BasicExecute.subst(iop)
 }};
 
+def format FloatCompareOp(code, *flags) {{
+        code = 'bool cond;\n' + code
+        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+}};
+
+def format FloatCompareWithXcptOp(code, *flags) {{
+        code = 'bool cond;\n' + code
+        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+}};
+
+def format FloatConvertOp(code, *flags) {{
+        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+}};
+
 // Primary format for float64 operate instructions:
 def format Float64Op(code, *flags) {{
+        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+}};
+
+def format Float64ConvertOp(code, *flags) {{
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)

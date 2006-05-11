@@ -61,101 +61,6 @@ MipsISA::MiscRegFile::copyMiscRegs(ExecContext *xc)
 }
 
 uint64_t
-MipsISA::convert_and_round(uint32_t fp_val, ConvertType cvt_type, int rnd_mode)
-{
-
-    uint64_t ret_val = 0;
-
-    switch (cvt_type)
-    {
-      case SINGLE_TO_DOUBLE:
-        uint64_t single_sign     = fp_val & 0x80000000;
-
-        uint64_t single_exp      = (fp_val & 0x7F800000) >> 22;
-        single_exp -= 127;
-
-        uint64_t single_mantissa = fp_val & 0x007FFFFF;
-
-        uint64_t double_exp = single_exp + 1023;
-        double_exp = double_exp << 51;
-
-        uint64_t double_val =  single_sign << 63 | double_exp | single_mantissa;
-
-        return double_val;
-
-      default:
-        panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
-        return ret_val;
-    }
-}
-
-uint64_t
-MipsISA::convert_and_round(uint64_t fp_val, ConvertType cvt_type, int rnd_mode)
-{
-
-    uint64_t ret_val = 0;
-
-    switch (cvt_type)
-    {
-      case SINGLE_TO_DOUBLE:
-        uint64_t single_sign     = fp_val & 0x80000000;
-
-        uint64_t single_exp      = (fp_val & 0x7F800000) >> 22;
-        single_exp -= 127;
-
-        uint64_t single_mantissa = fp_val & 0x007FFFFF;
-
-        uint64_t double_exp = single_exp + 1023;
-        double_exp = double_exp << 51;
-
-        uint64_t double_val =  single_sign << 63 | double_exp | single_mantissa;
-
-        return double_val;
-
-      default:
-        panic("Invalid Floating Point Conversion Type (%d) being used.\n",cvt_type);
-        return ret_val;
-    }
-}
-
-
-uint64_t
-MipsISA::convert_and_round(double fp_val, ConvertType cvt_type, int rnd_mode)
-{
-
-    switch (cvt_type)
-    {
-      case SINGLE_TO_DOUBLE:
-        double sdouble_val = fp_val;
-        void  *sdouble_ptr = &sdouble_val;
-        uint64_t sdp_bits  = *(uint64_t *) sdouble_ptr ;
-        return sdp_bits;
-
-      case SINGLE_TO_WORD:
-        int32_t sword_val  = (int32_t) fp_val;
-        void  *sword_ptr   = &sword_val;
-        uint64_t sword_bits= *(uint32_t *) sword_ptr ;
-        return sword_bits;
-
-      case WORD_TO_SINGLE:
-        float wfloat_val  = fp_val;
-        void  *wfloat_ptr = &wfloat_val;
-        uint64_t wfloat_bits = *(uint32_t *) wfloat_ptr ;
-        return wfloat_bits;
-
-      case WORD_TO_DOUBLE:
-        double wdouble_val = fp_val;
-        void  *wdouble_ptr = &wdouble_val;
-        uint64_t wdp_bits  = *(uint64_t *) wdouble_ptr ;
-        return wdp_bits;
-
-      default:
-        panic("Invalid Floating Point Conversion Type (%d). See types.hh for Conversion List\n",cvt_type);
-        return 0;
-    }
-}
-
-uint64_t
 MipsISA::fpConvert(double fp_val, ConvertType cvt_type)
 {
 
@@ -191,6 +96,12 @@ MipsISA::fpConvert(double fp_val, ConvertType cvt_type)
     }
 }
 
+float
+MipsISA::roundFP(float val)
+{
+    return 1.5;
+}
+
 double
 MipsISA::roundFP(double val)
 {
@@ -203,7 +114,13 @@ MipsISA::roundFP(double val)
         return val + 1;
 }
 
-inline double
+float
+MipsISA::truncFP(float val)
+{
+    return 1.0;
+}
+
+double
 MipsISA::truncFP(double val)
 {
     int trunc_val = (int) val;
@@ -211,22 +128,25 @@ MipsISA::truncFP(double val)
 }
 
 bool
-MipsISA::unorderedFP(uint32_t val)
+MipsISA::unorderedFP(float val)
 {
+    return false;
 }
 
 bool
-MipsISA::unorderedFP(uint64_t val)
+MipsISA::unorderedFP(double val)
 {
+    return false;
 }
 
 bool
-MipsISA::getConditionCode(int cc)
+MipsISA::getFPConditionCode(int cc)
 {
+    return false;
 }
 
 void
-MipsISA::setConditionCode(int num, bool val)
+MipsISA::setFPConditionCode(int num, bool val)
 {
 }
 

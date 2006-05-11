@@ -27,6 +27,17 @@ def operands {{
     'Ft': ('FloatReg', 'sf', 'FT', 'IsFloating', 3),
     'Fr': ('FloatReg', 'sf', 'FR', 'IsFloating', 3),
 
+     #Operands For Paired Singles FP Operations
+    'Fd1': ('FloatReg', 'sf', 'FD', 'IsFloating', 4),
+    'Fd2': ('FloatReg', 'sf', 'FD+1', 'IsFloating', 4),
+    'Fs1': ('FloatReg', 'sf', 'FS', 'IsFloating', 5),
+    'Fs2': ('FloatReg', 'sf', 'FS+1', 'IsFloating', 5),
+    'Ft1': ('FloatReg', 'sf', 'FT', 'IsFloating', 6),
+    'Ft2': ('FloatReg', 'sf', 'FT+1', 'IsFloating', 6),
+    'Fr1': ('FloatReg', 'sf', 'FR', 'IsFloating', 7),
+    'Fr2': ('FloatReg', 'sf', 'FR+1', 'IsFloating', 7),
+
+
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
 
     'NPC': ('NPC', 'uw', None, ( None, None, 'IsControl' ), 4),

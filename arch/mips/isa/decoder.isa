@@ -591,49 +591,49 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x0: c_f_s({{ cond = 0; }});
 
                                 0x1: c_un_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = 0;
                                 }});
 
                                 0x2: c_eq_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 0;
                                     else
                                         cond = (Fs.sf == Ft.sf);
                                 }});
 
                                 0x3: c_ueq_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = (Fs.sf == Ft.sf);
                                 }});
 
                                 0x4: c_olt_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 0;
                                     else
                                         cond = (Fs.sf < Ft.sf);
                                 }});
 
                                 0x5: c_ult_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = (Fs.sf < Ft.sf);
                                 }});
 
                                 0x6: c_ole_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 0;
                                     else
                                         cond = (Fs.sf <= Ft.sf);
                                 }});
 
                                 0x7: c_ule_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = (Fs.sf <= Ft.sf);
@@ -646,49 +646,49 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x0: c_sf_s({{ cond = 0; }});
 
                                 0x1: c_ngle_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = 0;
                                   }});
 
                                 0x2: c_seq_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 0;
                                     else
                                         cond = (Fs.sf == Ft.sf);
                                   }});
 
                                 0x3: c_ngl_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = (Fs.sf == Ft.sf);
                                   }});
 
                                 0x4: c_lt_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 0;
                                     else
                                         cond = (Fs.sf < Ft.sf);
                                   }});
 
                                 0x5: c_nge_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = (Fs.sf < Ft.sf);
                                   }});
 
                                 0x6: c_le_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 0;
                                     else
                                         cond = (Fs.sf <= Ft.sf);
                                   }});
 
                                 0x7: c_ngt_s({{
-                                    if (unorderedFP(Fs.uw) || unorderedFP(Ft.uw))
+                                    if (unorderedFP(Fs.sf) || unorderedFP(Ft.sf))
                                         cond = 1;
                                     else
                                         cond = (Fs.sf <= Ft.sf);
@@ -790,49 +790,49 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x0: c_f_d({{ cond = 0; }});
 
                                 0x1: c_un_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = 0;
                                 }});
 
                                 0x2: c_eq_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 0;
                                     else
                                         cond = (Fs.df == Ft.df);
                                 }});
 
                                 0x3: c_ueq_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = (Fs.df == Ft.df);
                                 }});
 
                                 0x4: c_olt_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 0;
                                     else
                                         cond = (Fs.df < Ft.df);
                                 }});
 
                                 0x5: c_ult_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = (Fs.df < Ft.df);
                                 }});
 
                                 0x6: c_ole_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 0;
                                     else
                                         cond = (Fs.df <= Ft.df);
                                 }});
 
                                 0x7: c_ule_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = (Fs.df <= Ft.df);
@@ -845,49 +845,49 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x0: c_sf_d({{ cond = 0; }});
 
                                 0x1: c_ngle_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = 0;
                                   }});
 
                                 0x2: c_seq_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 0;
                                     else
                                         cond = (Fs.df == Ft.df);
                                   }});
 
                                 0x3: c_ngl_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = (Fs.df == Ft.df);
                                   }});
 
                                 0x4: c_lt_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 0;
                                     else
                                         cond = (Fs.df < Ft.df);
                                   }});
 
                                 0x5: c_nge_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = (Fs.df < Ft.df);
                                   }});
 
                                 0x6: c_le_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 0;
                                     else
                                         cond = (Fs.df <= Ft.df);
                                   }});
 
                                 0x7: c_ngt_d({{
-                                    if (unorderedFP(Fs.ud) || unorderedFP(Ft.ud))
+                                    if (unorderedFP(Fs.df) || unorderedFP(Ft.df))
                                         cond = 1;
                                     else
                                         cond = (Fs.df <= Ft.df);
@@ -941,27 +941,33 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: add_ps({{
-                                    Fd.df = Fs.df + Ft.df;
+                                    Fd1.sf = Fs1.sf + Ft2.sf;
+                                    Fd2.sf = Fs2.sf + Ft2.sf;
                                 }});
 
                                 0x1: sub_ps({{
-                                    Fd.df = Fs.df - Ft.df;
+                                    Fd1.sf = Fs1.sf - Ft2.sf;
+                                    Fd2.sf = Fs2.sf - Ft2.sf;
                                 }});
 
                                 0x2: mul_ps({{
-                                    Fd.df = Fs.df * Ft.df;
+                                    Fd1.sf = Fs1.sf * Ft2.sf;
+                                    Fd2.sf = Fs2.sf * Ft2.sf;
                                 }});
 
                                 0x5: abs_ps({{
-                                    Fd.df = fabs(Fs.df);
+                                    Fd1.sf = fabs(Fs1.sf);
+                                    Fd2.sf = fabs(Fs2.sf);
                                 }});
 
                                 0x6: mov_ps({{
-                                    Fd.df = Fs |  Ft;
+                                    Fd1.sf = Fs1.sf;
+                                    Fd2.sf = Fs2.sf;
                                 }});
 
                                 0x7: neg_ps({{
-                                    Fd.df = -1 * Fs.df;
+                                    Fd1.sf = -1 * Fs1.sf;
+                                    Fd2.sf = -1 * Fs2.sf;
                                 }});
                             }
                         }
@@ -969,28 +975,50 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format Float64Op {
-                                    0x0: movf_ps({{if (getFPConditionCode(CC) == 0) Fd = Fs;}});
-                                    0x1: movt_ps({{if (getFPConditionCode(CC) == 1) Fd = Fs;}});
+                                    0x0: movf_ps({{
+                                        if (getFPConditionCode(CC) == 0)
+                                            Fd1 = Fs1;
+                                        if (getFPConditionCode(CC+1) == 0)
+                                            Fd2 = Fs2;
+                                    }});
+
+                                    0x1: movt_ps({{
+                                        if (getFPConditionCode(CC) == 1)
+                                            Fd1 = Fs1;
+                                        if (getFPConditionCode(CC+1) == 1)
+                                            Fd2 = Fs2;
+                                    }});
                                 }
                             }
 
                             format Float64Op {
-                                0x2: movz_ps({{if (getFPConditionCode(CC) == 0) Fd = Fs; }});
-                                0x3: movn_ps({{if (getFPConditionCode(CC) == 1) Fd = Fs; }});
+                                0x2: movz_ps({{
+                                    if (getFPConditionCode(CC) == 0)
+                                        Fd1 = Fs1;
+                                    if (getFPConditionCode(CC) == 0)
+                                        Fd2 = Fs2;
+                                }});
+
+                                0x3: movn_ps({{
+                                    if (getFPConditionCode(CC) == 1)
+                                        Fd1 = Fs1;
+                                    if (getFPConditionCode(CC) == 1)
+                                        Fd2 = Fs2;
+                                }});
                             }
 
                         }
 
                         0x4: decode FUNCTION_LO {
                             0x0: Float64Op::cvt_s_pu({{
-                                Fd.uw = fpConvert(Fs.ud, PU_TO_SINGLE);
+                                Fd.uw = fpConvert(Fs2.uw, PU_TO_SINGLE);
                             }});
                         }
 
                         0x5: decode FUNCTION_LO {
                             format Float64Op {
                                 0x0: cvt_s_pl({{
-                                    Fd.uw = fpConvert(Fs.ud, PL_TO_SINGLE);
+                                    Fd.uw = fpConvert(Fs1.uw, PL_TO_SINGLE);
                                 }});
 
                                 0x4: pll({{ Fd.ud = Fs.ud<31:0>  << 32 | Ft.ud<31:0>; }});
@@ -1090,34 +1118,39 @@ decode OPCODE_HI default Unknown::unknown() {
 
                 format BasicOp {
                     0x4: decode FUNCTION_LO {
-                        0x0: madd_s({{ Fd.sf = (Fs.sf * Fs.sf) + Fr.sf; }});
-                        0x1: madd_d({{ Fd.df = (Fs.df * Fs.df) + Fr.df; }});
+                        0x0: madd_s({{ Fd.sf = (Fs.sf * Ft.sf) + Fr.sf; }});
+                        0x1: madd_d({{ Fd.df = (Fs.df * Ft.df) + Fr.df; }});
                         0x6: madd_ps({{
-                            Fd.df = (Fs.df * Fs.df) + Fr.df;
+                            Fd1.sf = (Fs1.df * Ft1.df) + Fr1.df;
+                            Fd2.sf = (Fs2.df * Ft2.df) + Fr2.df;
                         }});
                     }
 
                     0x5: decode FUNCTION_LO {
-                        0x0: msub_s({{ Fd.sf = (Fs.sf * Fs.sf) - Fr.sf; }});
-                        0x1: msub_d({{ Fd.df = (Fs.df * Fs.df) - Fr.df; }});
+                        0x0: msub_s({{ Fd.sf = (Fs.sf * Ft.sf) - Fr.sf; }});
+                        0x1: msub_d({{ Fd.df = (Fs.df * Ft.df) - Fr.df; }});
                         0x6: msub_ps({{
-                            Fd.df = (Fs.df * Fs.df) - Fr.df;
+                            Fd1.sf = (Fs1.df * Ft1.df) - Fr1.df;
+                            Fd2.sf = (Fs2.df * Ft2.df) - Fr2.df;
                         }});
                     }
 
                     0x6: decode FUNCTION_LO {
-                        0x0: nmadd_s({{ Fd.sf = (-1 * Fs.sf * Fs.sf) - Fr.sf; }});
-                        0x1: nmadd_d({{ Fd.df = (-1 * Fs.df * Fs.df) + Fr.df; }});
+                        0x0: nmadd_s({{ Fd.sf = (-1 * Fs.sf * Ft.sf) - Fr.sf; }});
+                        0x1: nmadd_d({{ Fd.df = (-1 * Fs.df * Ft.df) + Fr.df; }});
                         0x6: nmadd_ps({{
-                            Fd.df = (-1 * Fs.df * Fs.df) + Fr.df;
+                            Fd1.sf = -1 * ((Fs1.df * Ft1.df) + Fr1.df);
+                            Fd2.sf = -1 * ((Fs2.df * Ft2.df) + Fr2.df);
                         }});
                     }
 
                     0x7: decode FUNCTION_LO {
-                        0x0: nmsub_s({{ Fd.sf = (-1 * Fs.sf * Fs.sf) - Fr.sf; }});
-                        0x1: nmsub_d({{ Fd.df = (-1 * Fs.df * Fs.df) - Fr.df; }});
+                        0x0: nmsub_s({{ Fd.sf = (-1 * Fs.sf * Ft.sf) - Fr.sf; }});
+                        0x1: nmsub_d({{ Fd.df = (-1 * Fs.df * Ft.df) - Fr.df; }});
                         0x6: nmsub_ps({{
-                            Fd.df = (-1 * Fs.df * Fs.df) + Fr.df;
+                        0x6: msub_ps({{
+                            Fd1.sf = -1 * ((Fs1.df * Ft1.df) - Fr1.df);
+                            Fd2.sf = -1 * ((Fs2.df * Ft2.df) - Fr2.df);
                         }});
                     }
                 }
@@ -1176,7 +1209,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: clz({{
                         int cnt = 0;
                         uint32_t mask = 0x80000000;
-                        for (int i=0; i < 32; i++)
+                        for (int i=0; i < 32; i++) {
                             if( (Rs & mask) == 0) {
                                 cnt++;
                             } else {
@@ -1189,7 +1222,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x1: clo({{
                         int cnt = 0;
                         uint32_t mask = 0x80000000;
-                        for (int i=0; i < 32; i++)
+                        for (int i=0; i < 32; i++) {
                             if( (Rs & mask) != 0) {
                                 cnt++;
                             } else {
