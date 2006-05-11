@@ -138,10 +138,15 @@ namespace MipsISA
     void copyRegs(ExecContext *src, ExecContext *dest);
 
     uint64_t fpConvert(double fp_val, ConvertType cvt_type);
+
     float roundFP(float val);
     double roundFP(double val);
+    float roundFP(uint64_t val);
+
     float truncFP(float val);
-    float truncFP(float val);
+    double truncFP(uint64_t val);
+    double truncFP(double val);
+
     bool unorderedFP(float val);
     bool unorderedFP(double val);
     bool getFPConditionCode(int cc);

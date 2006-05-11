@@ -102,6 +102,12 @@ MipsISA::roundFP(float val)
     return 1.5;
 }
 
+float
+MipsISA::roundFP(uint64_t val)
+{
+    return 1.5;
+}
+
 double
 MipsISA::roundFP(double val)
 {
@@ -118,6 +124,13 @@ float
 MipsISA::truncFP(float val)
 {
     return 1.0;
+}
+
+double
+MipsISA::truncFP(uint64_t val)
+{
+    int trunc_val = (int) val;
+    return (double) trunc_val;
 }
 
 double
