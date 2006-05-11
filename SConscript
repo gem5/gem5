@@ -62,6 +62,7 @@ base_sources = Split('''
 	base/range.cc
 	base/random.cc
 	base/sat_counter.cc
+        base/serializer.cc
 	base/socket.cc
 	base/statistics.cc
 	base/str.cc

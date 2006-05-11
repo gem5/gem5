@@ -34,6 +34,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/stats/events.hh"
+#include "base/serializer.hh"
 #include "sim/configfile.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
@@ -246,6 +247,12 @@ SimObject::recordEvent(const std::string &stat)
 {
     if (doRecordEvent)
         Stats::recordEvent(stat);
+}
+
+void
+SimObject::drain(Serializer *serializer)
+{
+    serializer->signalDrained();
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("SimObject", SimObject)
