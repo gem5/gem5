@@ -101,6 +101,7 @@ BaseDynInst<Impl>::initVars()
     readyRegs = 0;
 
     completed = false;
+    resultReady = false;
     canIssue = false;
     issued = false;
     executed = false;

@@ -117,6 +117,11 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
+    // @todo: Probably should not have this function in the DynInst.
+    template <class T>
+    bool snoop(MemReqPtr &req, T &data)
+    { return cpu->snoop(req, data); }
+
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
     Fault copySrcTranslate(Addr src);
@@ -138,6 +143,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Is the instruction completed. */
     bool completed;
+
+    /** Is the instruction's result ready. */
+    bool resultReady;
 
     /** Can this instruction issue. */
     bool canIssue;
@@ -187,7 +195,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Pointer to the FullCPU object. */
     FullCPU *cpu;
 
-    /** Pointer to the exec context.  Will not exist in the final version. */
+    /** Pointer to the exec context. */
     ImplState *thread;
 
     /** The kind of fault this instruction has generated. */
@@ -353,6 +361,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }
     bool isQuiesce() const { return staticInst->isQuiesce(); }
+    bool isUnverifiable() const { return staticInst->isUnverifiable(); }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
     void setSerializeBefore() { serializeBefore = true; }
@@ -423,6 +432,26 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the result of a floating point (double) instruction. */
     double readDoubleResult() { return instResult.dbl; }
 
+    void setIntReg(const StaticInst *si, int idx, uint64_t val)
+    {
+        instResult.integer = val;
+    }
+
+    void setFloatRegSingle(const StaticInst *si, int idx, float val)
+    {
+        instResult.fp = val;
+    }
+
+    void setFloatRegDouble(const StaticInst *si, int idx, double val)
+    {
+        instResult.dbl = val;
+    }
+
+    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
+    {
+        instResult.integer = val;
+    }
+
     //Push to .cc file.
     /** Records that one of the source registers is ready. */
     void markSrcRegReady();
@@ -443,6 +472,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Returns whether or not this instruction is completed. */
     bool isCompleted() const { return completed; }
+
+    void setResultReady() { resultReady = true; }
+
+    bool isResultReady() const { return resultReady; }
 
     /** Sets this instruction as ready to issue. */
     void setCanIssue() { canIssue = true; }
@@ -540,7 +573,11 @@ class BaseDynInst : public FastAlloc, public RefCounted
     const Addr readPC() const { return PC; }
 
     /** Set the next PC of this instruction (its actual target). */
-    void setNextPC(uint64_t val) { nextPC = val; }
+    void setNextPC(uint64_t val)
+    {
+        nextPC = val;
+//        instResult.integer = val;
+    }
 
     void setASID(short addr_space_id) { asid = addr_space_id; }
 
