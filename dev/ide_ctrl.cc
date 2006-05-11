@@ -280,12 +280,28 @@ IdeController::readConfig(int offset, int size, uint8_t *data)
             panic("Invalid PCI configuration read size!\n");
         }
 
-        DPRINTF(IdeCtrl, "PCI read offset: %#x size: %#x data: %#x\n",
-                offset, size, *(uint32_t*)data);
+
 
     } else {
         panic("Read of unimplemented PCI config. register: %x\n", offset);
     }
+        switch (size) {
+          case sizeof(uint8_t):
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: %d data: %#x\n",
+                offset, size, (uint32_t)*data);
+            break;
+          case sizeof(uint16_t):
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: %d data: %#x\n",
+                offset, size, *(uint16_t*)data);
+            break;
+          case sizeof(uint32_t):
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: %d data: %#x\n",
+                offset, size, *(uint32_t*)data);
+            break;
+          default:
+            panic("Invalid PCI configuration read size!\n");
+        }
+
 }
 
 void
@@ -317,8 +333,22 @@ IdeController::writeConfig(int offset, int size, const uint8_t *data)
         panic("Write of unimplemented PCI config. register: %x\n", offset);
     }
 
-    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %#x data: %#x\n",
-            offset, size, data);
+        switch(size) {
+          case sizeof(uint8_t):
+    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n",
+            offset, size, (uint32_t)*data);
+            break;
+          case sizeof(uint16_t):
+    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n",
+            offset, size, *(uint16_t*)data);
+            break;
+          case sizeof(uint32_t):
+    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n",
+            offset, size, *(uint32_t*)data);
+            break;
+          default:
+            panic("Invalid PCI configuration write size!\n");
+        }
 
     // Catch the writes to specific PCI registers that have side affects
     // (like updating the PIO ranges)
@@ -455,6 +485,13 @@ IdeController::read(MemReqPtr &req, uint8_t *data)
         panic("IDE controller read of unknown register block type!\n");
     }
 
+    if (req->size == 1)
+    DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
+            offset, req->size, (uint32_t)*data);
+    else if (req->size == 2)
+    DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
+            offset, req->size, *(uint16_t*)data);
+    else
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
             offset, req->size, *(uint32_t*)data);
 
@@ -624,7 +661,13 @@ IdeController::write(MemReqPtr &req, const uint8_t *data)
       default:
         panic("IDE controller write of unknown register block type!\n");
     }
-
+    if (req->size == 1)
+    DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
+            offset, req->size, (uint32_t)*data);
+    else if (req->size == 2)
+    DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
+            offset, req->size, *(uint16_t*)data);
+    else
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
             offset, req->size, *(uint32_t*)data);
 
