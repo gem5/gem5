@@ -107,11 +107,13 @@ template <class Impl>
 void
 TwobitBPredUnit<Impl>::takeOverFrom()
 {
+/*
     for (int i = 0; i < Impl::MaxThreads; ++i)
         RAS[i].reset();
 
     BP.reset();
     BTB.reset();
+*/
 }
 
 template <class Impl>

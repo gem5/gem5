@@ -672,11 +672,6 @@ LSQUnit<Impl>::writebackStores()
                 req->paddr, *(req->data),
                 storeQueue[storeWBIdx].inst->seqNum);
 
-//        if (fault != NoFault) {
-            //What should we do if there is a fault???
-            //for now panic
-//            panic("Page Table Fault!!!!!\n");
-//        }
         switch(storeQueue[storeWBIdx].size) {
           case 1:
             cpu->write(req, (uint8_t &)storeQueue[storeWBIdx].data);
@@ -693,8 +688,16 @@ LSQUnit<Impl>::writebackStores()
           default:
             panic("Unexpected store size!\n");
         }
+        if (!(req->flags & LOCKED)) {
+            storeQueue[storeWBIdx].inst->setCompleted();
+        }
 
         if (dcacheInterface) {
+            assert(!req->completionEvent);
+            StoreCompletionEvent *store_event = new
+                StoreCompletionEvent(storeWBIdx, NULL, this);
+            req->completionEvent = store_event;
+
             MemAccessResult result = dcacheInterface->access(req);
 
             if (isStalled() &&
@@ -710,28 +713,18 @@ LSQUnit<Impl>::writebackStores()
             if (result != MA_HIT && dcacheInterface->doEvents()) {
                 typename IEW::LdWritebackEvent *wb = NULL;
                 if (req->flags & LOCKED) {
-                    // Stx_C does not generate a system port transaction.
-/*
-                    if (cpu->lockFlag && cpu->lockAddr == req->paddr) {
-                        req->result=1;
-                    } else {
-                        req->result = 0;
-                    }
-*/
-                    wb = new typename IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
-                                                            iewStage);
+                    // Stx_C should not generate a system port transaction,
+                    // but that might be hard to accomplish.
+                    wb = new typename
+                        IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
+                                              iewStage);
+                    store_event->wbEvent = wb;
                 }
 
                 DPRINTF(LSQUnit,"D-Cache Write Miss!\n");
 
                 DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
                         storeQueue[storeWBIdx].inst->seqNum);
-
-                // Will stores need their own kind of writeback events?
-                // Do stores even need writeback events?
-                assert(!req->completionEvent);
-                req->completionEvent = new
-                    StoreCompletionEvent(storeWBIdx, wb, this);
 
                 lastDcacheStall = curTick;
 
@@ -766,10 +759,8 @@ LSQUnit<Impl>::writebackStores()
                     typename IEW::LdWritebackEvent *wb =
                         new typename IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
                                                            iewStage);
-                    wb->schedule(curTick);
+                    store_event->wbEvent = wb;
                 }
-
-                completeStore(storeWBIdx);
             }
 
             incrStIdx(storeWBIdx);

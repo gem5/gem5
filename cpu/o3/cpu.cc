@@ -666,6 +666,12 @@ FullO3CPU<Impl>::switchOut(Sampler *sampler)
     rename.switchOut();
     iew.switchOut();
     commit.switchOut();
+
+    instList.clear();
+    while (!removeList.empty()) {
+        removeList.pop();
+    }
+
     if (tickEvent.scheduled())
         tickEvent.squash();
     sampler->signalSwitched();

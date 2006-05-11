@@ -1117,6 +1117,10 @@ head_inst->isWriteBarrier())*/
         panic("Barrier instructions are not handled yet.\n");
     }
 
+    if (!head_inst->isStore()) {
+        head_inst->setCompleted();
+    }
+
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
@@ -1125,6 +1129,11 @@ head_inst->isWriteBarrier())*/
 #if FULL_SYSTEM
             DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
                     head_inst->seqNum, head_inst->readPC());
+
+            if (iewStage->hasStoresToWB()) {
+                DPRINTF(Commit, "Stores outstanding, fault must wait.\n");
+                return false;
+            }
 
             assert(!thread[tid]->inSyscall);
 

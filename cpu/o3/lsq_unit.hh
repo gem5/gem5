@@ -82,7 +82,9 @@ class LSQUnit {
         /** The writeback event for the store.  Needed for store
          * conditionals.
          */
+      public:
         Event *wbEvent;
+      private:
         /** The pointer to the LSQ unit that issued the store. */
         LSQUnit<Impl> *lsqPtr;
     };
