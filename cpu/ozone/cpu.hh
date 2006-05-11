@@ -53,6 +53,7 @@ class AlphaDTB;
 class PhysicalMemory;
 class MemoryController;
 
+class Sampler;
 class RemoteGDB;
 class GDBListener;
 
@@ -68,6 +69,9 @@ class MemInterface;
 namespace Trace {
     class InstRecord;
 }
+
+template <class>
+class Checker;
 
 /**
  * Declaration of Out-of-Order CPU class.  Basically it is a SimpleCPU with
@@ -226,7 +230,9 @@ class OzoneCPU : public BaseCPU
     };
 
     // execution context proxy
-    OzoneXC xcProxy;
+    OzoneXC ozoneXC;
+    ExecContext *xcProxy;
+    ExecContext *checkerXC;
 
     typedef OzoneThreadState<Impl> ImplState;
 
@@ -245,6 +251,7 @@ class OzoneCPU : public BaseCPU
     void tick();
 
     std::set<InstSeqNum> snList;
+    std::set<Addr> lockAddrList;
   private:
     struct TickEvent : public Event
     {
@@ -262,9 +269,9 @@ class OzoneCPU : public BaseCPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + delay);
+            tickEvent.reschedule(curTick + cycles(delay));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + delay);
+            tickEvent.schedule(curTick + cycles(delay));
     }
 
     /// Unschedule tick event, regardless of its current state.
@@ -322,7 +329,7 @@ class OzoneCPU : public BaseCPU
 
     int cpuId;
 
-    void switchOut();
+    void switchOut(Sampler *sampler);
     void takeOverFrom(BaseCPU *oldCPU);
 
 #if FULL_SYSTEM
@@ -472,6 +479,7 @@ class OzoneCPU : public BaseCPU
         Fault error;
         if (req->flags & LOCKED) {
 //            lockAddr = req->paddr;
+            lockAddrList.insert(req->paddr);
             lockFlag = true;
         }
 
@@ -546,7 +554,13 @@ class OzoneCPU : public BaseCPU
                 req->result = 2;
             } else {
                 if (this->lockFlag/* && this->lockAddr == req->paddr*/) {
-                    req->result = 1;
+                    if (lockAddrList.find(req->paddr) !=
+                        lockAddrList.end()) {
+                        req->result = 1;
+                    } else {
+                        req->result = 0;
+                        return NoFault;
+                    }
                 } else {
                     req->result = 0;
                     return NoFault;
@@ -599,7 +613,7 @@ class OzoneCPU : public BaseCPU
     void setSyscallReturn(SyscallReturn return_value, int tid);
 #endif
 
-    ExecContext *xcBase() { return &xcProxy; }
+    ExecContext *xcBase() { return xcProxy; }
 
     bool decoupledFrontEnd;
     struct CommStruct {
@@ -615,6 +629,8 @@ class OzoneCPU : public BaseCPU
     bool lockFlag;
 
     Stats::Scalar<> quiesceCycles;
+
+    Checker<DynInstPtr> *checker;
 };
 
 #endif // __CPU_OZONE_CPU_HH__

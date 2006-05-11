@@ -51,6 +51,7 @@ class SimpleParams : public BaseCPU::Params
     unsigned backEndLatency;
     unsigned maxInstBufferSize;
     unsigned numPhysicalRegs;
+    unsigned maxOutstandingMemOps;
     //
     // Fetch
     //

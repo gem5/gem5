@@ -1385,7 +1385,7 @@ BackEnd<Impl>::writebackInsts()
                     inst->seqNum, inst->readPC());
 
             inst->setCanCommit();
-            inst->setCompleted();
+            inst->setResultReady();
 
             if (inst->isExecuted()) {
                 int dependents = IQ.wakeDependents(inst);

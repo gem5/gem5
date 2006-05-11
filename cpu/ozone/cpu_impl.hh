@@ -33,6 +33,7 @@
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
+#include "cpu/checker/exec_context.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/cpu.hh"
@@ -156,17 +157,33 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #endif
       comm(5, 5)
 {
-
+    if (p->checker) {
+        BaseCPU *temp_checker = p->checker;
+        checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
+    } else {
+        checker = NULL;
+    }
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
 
     _status = Idle;
-    thread.xcProxy = &xcProxy;
+    if (checker) {
+        checker->setMemory(mem);
+#if FULL_SYSTEM
+        checker->setSystem(p->system);
+#endif
+        checkerXC = new CheckerExecContext<OzoneXC>(&ozoneXC, checker);
+        thread.xcProxy = checkerXC;
+        xcProxy = checkerXC;
+    } else {
+        thread.xcProxy = &ozoneXC;
+        xcProxy = &ozoneXC;
+    }
 
     thread.inSyscall = false;
 
-    xcProxy.cpu = this;
-    xcProxy.thread = &thread;
+    ozoneXC.cpu = this;
+    ozoneXC.thread = &thread;
 
     thread.setStatus(ExecContext::Suspended);
 #if FULL_SYSTEM
@@ -177,7 +194,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     thread.tid = 0;
     thread.mem = p->mem;
 
-    thread.quiesceEvent = new EndQuiesceEvent(&xcProxy);
+    thread.quiesceEvent = new EndQuiesceEvent(xcProxy);
 
     system = p->system;
     itb = p->itb;
@@ -187,9 +204,10 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     if (p->profile) {
         thread.profile = new FunctionProfile(p->system->kernelSymtab);
+        // @todo: This might be better as an ExecContext instead of OzoneXC
         Callback *cb =
             new MakeCallback<OzoneXC,
-            &OzoneXC::dumpFuncProfile>(&xcProxy);
+            &OzoneXC::dumpFuncProfile>(&ozoneXC);
         registerExitCallback(cb);
     }
 
@@ -198,7 +216,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     static ProfileNode dummyNode;
     thread.profileNode = &dummyNode;
     thread.profilePC = 3;
-
 #else
 //    xc = new ExecContext(this, /* thread_num */ 0, p->workload[0], /* asid */ 0);
     thread.cpu = this;
@@ -225,13 +242,13 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     issueWidth = p->issueWidth;
 */
-    execContexts.push_back(&xcProxy);
+    execContexts.push_back(xcProxy);
 
     frontEnd->setCPU(this);
     backEnd->setCPU(this);
 
-    frontEnd->setXC(&xcProxy);
-    backEnd->setXC(&xcProxy);
+    frontEnd->setXC(xcProxy);
+    backEnd->setXC(xcProxy);
 
     frontEnd->setThreadState(&thread);
     backEnd->setThreadState(&thread);
@@ -250,7 +267,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
         thread.renameTable[i] = new DynInst(this);
-        thread.renameTable[i]->setCompleted();
+        thread.renameTable[i]->setResultReady();
     }
 
     frontEnd->renameTable.copyFrom(thread.renameTable);
@@ -312,11 +329,15 @@ OzoneCPU<Impl>::copyToXC()
 */
 template <class Impl>
 void
-OzoneCPU<Impl>::switchOut()
+OzoneCPU<Impl>::switchOut(Sampler *sampler)
 {
+    // Front end needs state from back end, so switch out the back end first.
+    backEnd->switchOut();
+    frontEnd->switchOut();
     _status = SwitchedOut;
     if (tickEvent.scheduled())
         tickEvent.squash();
+    sampler->signalSwitched();
 }
 
 template <class Impl>
@@ -325,7 +346,15 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
+    backEnd->takeOverFrom();
+    frontEnd->takeOverFrom();
     assert(!tickEvent.scheduled());
+
+    // @todo: Fix hardcoded number
+    // Clear out any old information in time buffer.
+    for (int i = 0; i < 6; ++i) {
+        comm.advance();
+    }
 
     // if any of this CPU's ExecContexts are active, mark the CPU as
     // running and schedule its tick event.
@@ -470,7 +499,7 @@ OzoneCPU<Impl>::serialize(std::ostream &os)
     BaseCPU::serialize(os);
     SERIALIZE_ENUM(_status);
     nameOut(os, csprintf("%s.xc", name()));
-    xcProxy.serialize(os);
+    ozoneXC.serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
 }
@@ -481,7 +510,7 @@ OzoneCPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 {
     BaseCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
-    xcProxy.unserialize(cp, csprintf("%s.xc", section));
+    ozoneXC.unserialize(cp, csprintf("%s.xc", section));
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
 
@@ -579,7 +608,7 @@ template <class Impl>
 Addr
 OzoneCPU<Impl>::dbg_vtophys(Addr addr)
 {
-    return vtophys(&xcProxy, addr);
+    return vtophys(xcProxy, addr);
 }
 #endif // FULL_SYSTEM
 /*
@@ -725,7 +754,7 @@ OzoneCPU<Impl>::tick()
     comInstEventQueue[0]->serviceEvents(numInst);
 
     if (!tickEvent.scheduled() && _status == Running)
-        tickEvent.schedule(curTick + 1);
+        tickEvent.schedule(curTick + cycles(1));
 }
 
 template <class Impl>
@@ -750,7 +779,7 @@ OzoneCPU<Impl>::syscall()
 
     DPRINTF(OzoneCPU, "FuncExeInst: %i\n", thread.funcExeInst);
 
-    thread.process->syscall(&xcProxy);
+    thread.process->syscall(xcProxy);
 
     thread.funcExeInst--;
 
@@ -784,19 +813,17 @@ OzoneCPU<Impl>::hwrei()
 {
     // Need to move this to ISA code
     // May also need to make this per thread
+/*
     if (!inPalMode())
         return new UnimplementedOpcodeFault;
 
     thread.setNextPC(thread.readMiscReg(AlphaISA::IPR_EXC_ADDR));
-
+*/
     lockFlag = false;
+    lockAddrList.clear();
+    kernelStats->hwrei();
 
-    // Not sure how to make a similar check in the Ozone model
-//    if (!misspeculating()) {
-        kernelStats->hwrei();
-
-        checkInterrupts = true;
-//    }
+    checkInterrupts = true;
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
@@ -847,6 +874,11 @@ OzoneCPU<Impl>::processInterrupts()
     if (ipl && ipl > thread.readMiscReg(IPR_IPLR)) {
         thread.setMiscReg(IPR_ISR, summary);
         thread.setMiscReg(IPR_INTID, ipl);
+        // @todo: Make this more transparent
+        if (checker) {
+            checkerXC->setMiscReg(IPR_ISR, summary);
+            checkerXC->setMiscReg(IPR_INTID, ipl);
+        }
         Fault fault = new InterruptFault;
         fault->invoke(thread.getXCProxy());
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
@@ -860,7 +892,7 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 {
     // Need to move this to ISA code
     // May also need to make this per thread
-    this->kernelStats->callpal(palFunc, &xcProxy);
+    this->kernelStats->callpal(palFunc, xcProxy);
 
     switch (palFunc) {
       case PAL::halt:
@@ -944,7 +976,28 @@ OzoneCPU<Impl>::OzoneXC::dumpFuncProfile()
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
-{ }
+{
+    // some things should already be set up
+    assert(getMemPtr() == old_context->getMemPtr());
+#if FULL_SYSTEM
+    assert(getSystemPtr() == old_context->getSystemPtr());
+#else
+    assert(getProcessPtr() == old_context->getProcessPtr());
+#endif
+
+    // copy over functional state
+    setStatus(old_context->status());
+    copyArchRegs(old_context);
+    setCpuId(old_context->readCpuId());
+#if !FULL_SYSTEM
+    setFuncExeInst(old_context->readFuncExeInst());
+#endif
+
+//    storeCondFailures = 0;
+    cpu->lockFlag = false;
+
+    old_context->setStatus(ExecContext::Unallocated);
+}
 
 template <class Impl>
 void
@@ -1062,21 +1115,24 @@ template <class Impl>
 float
 OzoneCPU<Impl>::OzoneXC::readFloatRegSingle(int reg_idx)
 {
-    return thread->renameTable[reg_idx]->readFloatResult();
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    return thread->renameTable[idx]->readFloatResult();
 }
 
 template <class Impl>
 double
 OzoneCPU<Impl>::OzoneXC::readFloatRegDouble(int reg_idx)
 {
-    return thread->renameTable[reg_idx]->readDoubleResult();
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    return thread->renameTable[idx]->readDoubleResult();
 }
 
 template <class Impl>
 uint64_t
 OzoneCPU<Impl>::OzoneXC::readFloatRegInt(int reg_idx)
 {
-    return thread->renameTable[reg_idx]->readIntResult();
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    return thread->renameTable[idx]->readIntResult();
 }
 
 template <class Impl>
@@ -1101,7 +1157,9 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::setFloatRegDouble(int reg_idx, double val)
 {
-    thread->renameTable[reg_idx]->setDoubleResult(val);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+
+    thread->renameTable[idx]->setDoubleResult(val);
 
     if (!thread->inSyscall) {
         cpu->squashFromXC();

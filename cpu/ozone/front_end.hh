@@ -66,6 +66,14 @@ class FrontEnd
 
     bool isEmpty() { return instBuffer.empty(); }
 
+    void switchOut();
+
+    void takeOverFrom(ExecContext *old_xc = NULL);
+
+    bool isSwitchedOut() { return switchedOut; }
+
+    bool switchedOut;
+
   private:
     bool updateStatus();
 
@@ -198,6 +206,9 @@ class FrontEnd
 
     DynInstPtr barrierInst;
 
+  public:
+    bool interruptPending;
+  private:
     // number of idle cycles
 /*
     Stats::Average<> notIdleFraction;
@@ -223,6 +234,8 @@ class FrontEnd
     Stats::Scalar<> fetchBlockedCycles;
     /** Stat for total number of fetched cache lines. */
     Stats::Scalar<> fetchedCacheLines;
+
+    Stats::Scalar<> fetchIcacheSquashes;
     /** Distribution of number of instructions fetched each cycle. */
     Stats::Distribution<> fetchNisnDist;
 //    Stats::Vector<> qfull_iq_occupancy;

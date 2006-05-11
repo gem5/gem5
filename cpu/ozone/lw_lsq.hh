@@ -41,6 +41,7 @@
 #include "cpu/inst_seq.hh"
 #include "mem/mem_interface.hh"
 //#include "mem/page_table.hh"
+#include "sim/debug.hh"
 #include "sim/sim_object.hh"
 
 //class PageTable;
@@ -90,7 +91,10 @@ class OzoneLWLSQ {
         /** The writeback event for the store.  Needed for store
          * conditionals.
          */
+      public:
         Event *wbEvent;
+        bool miss;
+      private:
         /** The pointer to the LSQ unit that issued the store. */
         OzoneLWLSQ<Impl> *lsqPtr;
     };
@@ -227,6 +231,14 @@ class OzoneLWLSQ {
     bool willWB() { return storeQueue.back().canWB &&
                         !storeQueue.back().completed &&
                         !dcacheInterface->isBlocked(); }
+
+    void switchOut();
+
+    void takeOverFrom(ExecContext *old_xc = NULL);
+
+    bool isSwitchedOut() { return switchedOut; }
+
+    bool switchedOut;
 
   private:
     /** Completes the store at the specified index. */
@@ -560,11 +572,9 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         sq_it++;
     }
 
-
     // If there's no forwarding case, then go access memory
     DPRINTF(OzoneLSQ, "Doing functional access for inst PC %#x\n",
             inst->readPC());
-
 
     // Setup MemReq pointer
     req->cmd = Read;
@@ -594,8 +604,12 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         DPRINTF(OzoneLSQ, "D-cache: PC:%#x reading from paddr:%#x "
                 "vaddr:%#x flags:%i\n",
                 inst->readPC(), req->paddr, req->vaddr, req->flags);
-
-
+/*
+        Addr debug_addr = ULL(0xfffffc0000be81a8);
+        if (req->vaddr == debug_addr) {
+            debug_break();
+        }
+*/
         assert(!req->completionEvent);
         req->completionEvent =
             new typename BackEnd::LdWritebackEvent(inst, be);
@@ -647,7 +661,15 @@ OzoneLWLSQ<Impl>::write(MemReqPtr &req, T &data, int store_idx)
     (*sq_it).req = req;
     (*sq_it).size = sizeof(T);
     (*sq_it).data = data;
-
+    assert(!req->data);
+    req->data = new uint8_t[64];
+    memcpy(req->data, (uint8_t *)&(*sq_it).data, req->size);
+/*
+    Addr debug_addr = ULL(0xfffffc0000be81a8);
+    if (req->vaddr == debug_addr) {
+        debug_break();
+    }
+*/
     // This function only writes the data to the store queue, so no fault
     // can happen here.
     return NoFault;

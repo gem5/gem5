@@ -1,6 +1,7 @@
 
 #include <string>
 
+#include "cpu/checker/cpu.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/cpu.hh"
 #include "cpu/ozone/ozone_impl.hh"
@@ -50,6 +51,8 @@ SimObjectVectorParam<Process *> workload;
 
 SimObjectParam<FunctionalMemory *> mem;
 
+SimObjectParam<BaseCPU *> checker;
+
 Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
@@ -66,6 +69,7 @@ Param<unsigned> backEndSquashLatency;
 Param<unsigned> backEndLatency;
 Param<unsigned> maxInstBufferSize;
 Param<unsigned> numPhysicalRegs;
+Param<unsigned> maxOutstandingMemOps;
 
 Param<unsigned> decodeToFetchDelay;
 Param<unsigned> renameToFetchDelay;
@@ -164,6 +168,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
 
+    INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
+
     INIT_PARAM_DFLT(max_insts_any_thread,
                     "Terminate when any thread reaches this inst count",
                     0),
@@ -190,6 +196,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM_DFLT(backEndLatency, "Back end latency", 1),
     INIT_PARAM_DFLT(maxInstBufferSize, "Maximum instruction buffer size", 16),
     INIT_PARAM(numPhysicalRegs, "Number of physical registers"),
+    INIT_PARAM_DFLT(maxOutstandingMemOps, "Maximum outstanding memory operations", 4),
 
     INIT_PARAM(decodeToFetchDelay, "Decode to fetch delay"),
     INIT_PARAM(renameToFetchDelay, "Rename to fetch delay"),
@@ -314,7 +321,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
 #endif // FULL_SYSTEM
 
     params->mem = mem;
-
+    params->checker = checker;
     params->max_insts_any_thread = max_insts_any_thread;
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
@@ -334,6 +341,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->backEndLatency = backEndLatency;
     params->maxInstBufferSize = maxInstBufferSize;
     params->numPhysicalRegs = numPhysIntRegs + numPhysFloatRegs;
+    params->maxOutstandingMemOps = maxOutstandingMemOps;
 
     params->decodeToFetchDelay = decodeToFetchDelay;
     params->renameToFetchDelay = renameToFetchDelay;
@@ -444,6 +452,8 @@ SimObjectVectorParam<Process *> workload;
 #endif // FULL_SYSTEM
 
 SimObjectParam<FunctionalMemory *> mem;
+
+SimObjectParam<BaseCPU *> checker;
 
 Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
@@ -558,6 +568,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
 #endif // FULL_SYSTEM
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
+
+    INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
 
     INIT_PARAM_DFLT(max_insts_any_thread,
                     "Terminate when any thread reaches this inst count",
@@ -709,7 +721,7 @@ CREATE_SIM_OBJECT(SimpleOzoneCPU)
 #endif // FULL_SYSTEM
 
     params->mem = mem;
-
+    params->checker = checker;
     params->max_insts_any_thread = max_insts_any_thread;
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;

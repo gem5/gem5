@@ -1,5 +1,6 @@
 
 #include "encumbered/cpu/full/op_class.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/ozone/lw_back_end.hh"
 
 template <class Impl>
@@ -10,28 +11,36 @@ LWBackEnd<Impl>::generateTrapEvent(Tick latency)
 
     TrapEvent *trap = new TrapEvent(this);
 
-    trap->schedule(curTick + latency);
+    trap->schedule(curTick + cpu->cycles(latency));
 
     thread->trapPending = true;
 }
 
 template <class Impl>
 int
-LWBackEnd<Impl>::wakeDependents(DynInstPtr &inst)
+LWBackEnd<Impl>::wakeDependents(DynInstPtr &inst, bool memory_deps)
 {
     assert(!inst->isSquashed());
-    std::vector<DynInstPtr> &dependents = inst->getDependents();
+    std::vector<DynInstPtr> &dependents = memory_deps ? inst->getMemDeps() :
+        inst->getDependents();
     int num_outputs = dependents.size();
 
     DPRINTF(BE, "Waking instruction [sn:%lli] dependents in IQ\n", inst->seqNum);
 
     for (int i = 0; i < num_outputs; i++) {
         DynInstPtr dep_inst = dependents[i];
-        dep_inst->markSrcRegReady();
+        if (!memory_deps) {
+            dep_inst->markSrcRegReady();
+        } else {
+            if (!dep_inst->isSquashed())
+                dep_inst->markMemInstReady(inst.get());
+        }
+
         DPRINTF(BE, "Marking source reg ready [sn:%lli] in IQ\n", dep_inst->seqNum);
 
         if (dep_inst->readyToIssue() && dep_inst->isInROB() &&
-            !dep_inst->isNonSpeculative()) {
+            !dep_inst->isNonSpeculative() &&
+            dep_inst->memDepReady() && !dep_inst->isMemBarrier() && !dep_inst->isWriteBarrier()) {
             DPRINTF(BE, "Adding instruction to exeList [sn:%lli]\n",
                     dep_inst->seqNum);
             exeList.push(dep_inst);
@@ -114,6 +123,9 @@ LWBackEnd<Impl>::LdWritebackEvent::process()
 
 //    iewStage->wakeCPU();
 
+    if (be->isSwitchedOut())
+        return;
+
     if (dcacheMiss) {
         be->removeDcacheMiss(inst);
     }
@@ -169,16 +181,18 @@ LWBackEnd<Impl>::DCacheCompletionEvent::description()
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
     : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
-      xcSquash(false), cacheCompletionEvent(this),
+      trapSquash(false), xcSquash(false), cacheCompletionEvent(this),
       dcacheInterface(params->dcacheInterface), width(params->backEndWidth),
       exactFullStall(true)
 {
     numROBEntries = params->numROBEntries;
     numInsts = 0;
     numDispatchEntries = 32;
-    maxOutstandingMemOps = 4;
+    maxOutstandingMemOps = params->maxOutstandingMemOps;
     numWaitingMemOps = 0;
     waitingInsts = 0;
+    switchedOut = false;
+
 //    IQ.setBE(this);
     LSQ.setBE(this);
 
@@ -533,6 +547,7 @@ LWBackEnd<Impl>::setCPU(FullCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
     LSQ.setCPU(cpu_ptr);
+    checker = cpu->checker;
 }
 
 template <class Impl>
@@ -554,30 +569,35 @@ LWBackEnd<Impl>::checkInterrupts()
         !cpu->inPalMode(thread->readPC()) &&
         !trapSquash &&
         !xcSquash) {
-        // Will need to squash all instructions currently in flight and have
-        // the interrupt handler restart at the last non-committed inst.
-        // Most of that can be handled through the trap() function.  The
-        // processInterrupts() function really just checks for interrupts
-        // and then calls trap() if there is an interrupt present.
+        frontEnd->interruptPending = true;
+        if (robEmpty() && !LSQ.hasStoresToWB()) {
+            // Will need to squash all instructions currently in flight and have
+            // the interrupt handler restart at the last non-committed inst.
+            // Most of that can be handled through the trap() function.  The
+            // processInterrupts() function really just checks for interrupts
+            // and then calls trap() if there is an interrupt present.
 
-        // Not sure which thread should be the one to interrupt.  For now
-        // always do thread 0.
-        assert(!thread->inSyscall);
-        thread->inSyscall = true;
+            // Not sure which thread should be the one to interrupt.  For now
+            // always do thread 0.
+            assert(!thread->inSyscall);
+            thread->inSyscall = true;
 
-        // CPU will handle implementation of the interrupt.
-        cpu->processInterrupts();
+            // CPU will handle implementation of the interrupt.
+            cpu->processInterrupts();
 
-        // Now squash or record that I need to squash this cycle.
-        commitStatus = TrapPending;
+            // Now squash or record that I need to squash this cycle.
+            commitStatus = TrapPending;
 
-        // Exit state update mode to avoid accidental updating.
-        thread->inSyscall = false;
+            // Exit state update mode to avoid accidental updating.
+            thread->inSyscall = false;
 
-        // Generate trap squash event.
-        generateTrapEvent();
+            // Generate trap squash event.
+            generateTrapEvent();
 
-        DPRINTF(BE, "Interrupt detected.\n");
+            DPRINTF(BE, "Interrupt detected.\n");
+        } else {
+            DPRINTF(BE, "Interrupt must wait for ROB to drain.\n");
+        }
     }
 }
 
@@ -585,7 +605,7 @@ template <class Impl>
 void
 LWBackEnd<Impl>::handleFault(Fault &fault, Tick latency)
 {
-    DPRINTF(BE, "Handling fault!");
+    DPRINTF(BE, "Handling fault!\n");
 
     assert(!thread->inSyscall);
 
@@ -615,6 +635,9 @@ LWBackEnd<Impl>::tick()
 
     wbCycle = 0;
 
+    // Read in any done instruction information and update the IQ or LSQ.
+    updateStructures();
+
 #if FULL_SYSTEM
     checkInterrupts();
 
@@ -623,7 +646,7 @@ LWBackEnd<Impl>::tick()
         squashFromTrap();
     } else if (xcSquash) {
         squashFromXC();
-    } else if (fetchHasFault && robEmpty() && frontEnd->isEmpty()) {
+    } else if (fetchHasFault && robEmpty() && frontEnd->isEmpty() && !LSQ.hasStoresToWB()) {
         DPRINTF(BE, "ROB and front end empty, handling fetch fault\n");
         Fault fetch_fault = frontEnd->getFault();
         if (fetch_fault == NoFault) {
@@ -635,9 +658,6 @@ LWBackEnd<Impl>::tick()
         }
     }
 #endif
-
-    // Read in any done instruction information and update the IQ or LSQ.
-    updateStructures();
 
     if (dispatchStatus != Blocked) {
         dispatchInsts();
@@ -719,12 +739,41 @@ LWBackEnd<Impl>::dispatchInsts()
         for (int i = 0; i < inst->numDestRegs(); ++i)
             renameTable[inst->destRegIdx(i)] = inst;
 
-        if (inst->readyToIssue() && !inst->isNonSpeculative()) {
-            DPRINTF(BE, "Instruction [sn:%lli] ready, addding to exeList.\n",
-                    inst->seqNum);
-            exeList.push(inst);
+        if (inst->isMemBarrier() || inst->isWriteBarrier()) {
+            if (memBarrier) {
+                DPRINTF(BE, "Instruction [sn:%lli] is waiting on "
+                        "barrier [sn:%lli].\n",
+                        inst->seqNum, memBarrier->seqNum);
+                memBarrier->addMemDependent(inst);
+                inst->addSrcMemInst(memBarrier);
+            }
+            memBarrier = inst;
+            inst->setCanCommit();
+        } else if (inst->readyToIssue() && !inst->isNonSpeculative()) {
             if (inst->isMemRef()) {
+
                 LSQ.insert(inst);
+                if (memBarrier) {
+                    DPRINTF(BE, "Instruction [sn:%lli] is waiting on "
+                            "barrier [sn:%lli].\n",
+                            inst->seqNum, memBarrier->seqNum);
+                    memBarrier->addMemDependent(inst);
+                    inst->addSrcMemInst(memBarrier);
+                    addWaitingMemOp(inst);
+
+                    waitingList.push_front(inst);
+                    inst->iqIt = waitingList.begin();
+                    inst->iqItValid = true;
+                    waitingInsts++;
+                } else {
+                    DPRINTF(BE, "Instruction [sn:%lli] ready, addding to exeList.\n",
+                            inst->seqNum);
+                    exeList.push(inst);
+                }
+            } else {
+                DPRINTF(BE, "Instruction [sn:%lli] ready, addding to exeList.\n",
+                        inst->seqNum);
+                exeList.push(inst);
             }
         } else {
             if (inst->isNonSpeculative()) {
@@ -735,6 +784,14 @@ LWBackEnd<Impl>::dispatchInsts()
             if (inst->isMemRef()) {
                 addWaitingMemOp(inst);
                 LSQ.insert(inst);
+                if (memBarrier) {
+                    memBarrier->addMemDependent(inst);
+                    inst->addSrcMemInst(memBarrier);
+
+                    DPRINTF(BE, "Instruction [sn:%lli] is waiting on "
+                            "barrier [sn:%lli].\n",
+                            inst->seqNum, memBarrier->seqNum);
+                }
             }
 
             DPRINTF(BE, "Instruction [sn:%lli] not ready, addding to "
@@ -872,9 +929,6 @@ LWBackEnd<Impl>::executeInsts()
 
         ++funcExeInst;
         ++num_executed;
-        // keep an instruction count
-        thread->numInst++;
-        thread->numInsts++;
 
         exeList.pop();
 
@@ -915,7 +969,7 @@ LWBackEnd<Impl>::instToCommit(DynInstPtr &inst)
         inst->setCanCommit();
 
         if (inst->isExecuted()) {
-            inst->setCompleted();
+            inst->setResultReady();
             int dependents = wakeDependents(inst);
             if (dependents) {
                 producer_inst[0]++;
@@ -956,7 +1010,7 @@ LWBackEnd<Impl>::writebackInsts()
                     inst->seqNum, inst->readPC());
 
             inst->setCanCommit();
-            inst->setCompleted();
+            inst->setResultReady();
 
             if (inst->isExecuted()) {
                 int dependents = wakeDependents(inst);
@@ -997,7 +1051,9 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     // If the instruction is not executed yet, then it is a non-speculative
     // or store inst.  Signal backwards that it should be executed.
     if (!inst->isExecuted()) {
-        if (inst->isNonSpeculative()) {
+        if (inst->isNonSpeculative() ||
+            inst->isMemBarrier() ||
+            inst->isWriteBarrier()) {
 #if !FULL_SYSTEM
             // Hack to make sure syscalls aren't executed until all stores
             // write back their data.  This direct communication shouldn't
@@ -1016,6 +1072,16 @@ LWBackEnd<Impl>::commitInst(int inst_num)
             DPRINTF(BE, "Encountered a store or non-speculative "
                     "instruction at the head of the ROB, PC %#x.\n",
                     inst->readPC());
+
+            if (inst->isMemBarrier() || inst->isWriteBarrier()) {
+                DPRINTF(BE, "Waking dependents on barrier [sn:%lli]\n",
+                        inst->seqNum);
+                assert(memBarrier);
+                wakeDependents(inst, true);
+                if (memBarrier == inst)
+                    memBarrier = NULL;
+                inst->clearMemDependents();
+            }
 
             // Send back the non-speculative instruction's sequence number.
             if (inst->iqItValid) {
@@ -1066,13 +1132,45 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
     // Not handled for now.
     assert(!inst->isThreadSync());
-
+    assert(inst->memDepReady());
+    // Stores will mark themselves as totally completed as they need
+    // to wait to writeback to memory.  @todo: Hack...attempt to fix
+    // having the checker be forced to wait until a store completes in
+    // order to check all of the instructions.  If the store at the
+    // head of the check list misses, but a later store hits, then
+    // loads in the checker may see the younger store values instead
+    // of the store they should see.  Either the checker needs its own
+    // memory (annoying to update), its own store buffer (how to tell
+    // which value is correct?), or something else...
+    if (!inst->isStore()) {
+        inst->setCompleted();
+    }
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = inst->getFault();
+
+    // Use checker prior to updating anything due to traps or PC
+    // based events.
+    if (checker) {
+        checker->tick(inst);
+    }
 
     if (inst_fault != NoFault) {
         DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
                 inst->seqNum, inst->readPC());
+
+        // Instruction is completed as it has a fault.
+        inst->setCompleted();
+
+        if (LSQ.hasStoresToWB()) {
+            DPRINTF(BE, "Stores still in flight, will wait until drained.\n");
+            return false;
+        } else if (inst_num != 0) {
+            DPRINTF(BE, "Will wait until instruction is head of commit group.\n");
+            return false;
+        } else if (checker && inst->isStore()) {
+            checker->tick(inst);
+        }
+
         thread->setInst(
             static_cast<TheISA::MachInst>(inst->staticInst->machInst));
 #if FULL_SYSTEM
@@ -1094,6 +1192,8 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     }
 
     if (inst->traceData) {
+        inst->traceData->setFetchSeq(inst->seqNum);
+        inst->traceData->setCPSeq(thread->numInst);
         inst->traceData->finalize();
         inst->traceData = NULL;
     }
@@ -1105,18 +1205,18 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     instList.pop_back();
 
     --numInsts;
-    thread->numInsts++;
     ++thread->funcExeInst;
-    // Maybe move this to where teh fault is handled; if the fault is handled,
+    // Maybe move this to where the fault is handled; if the fault is handled,
     // don't try to set this myself as the fault will set it.  If not, then
     // I set thread->PC = thread->nextPC and thread->nextPC = thread->nextPC + 4.
     thread->setPC(thread->readNextPC());
+    thread->setNextPC(thread->readNextPC() + sizeof(TheISA::MachInst));
     updateComInstStats(inst);
 
     // Write the done sequence number here.
 //    LSQ.commitLoads(inst->seqNum);
-//    LSQ.commitStores(inst->seqNum);
     toIEW->doneSeqNum = inst->seqNum;
+    lastCommitCycle = curTick;
 
 #if FULL_SYSTEM
     int count = 0;
@@ -1243,6 +1343,22 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
         waitingInsts--;
     }
 
+    while (memBarrier && memBarrier->seqNum > sn) {
+        DPRINTF(BE, "[sn:%lli] Memory barrier squashed (or previously squashed)\n", memBarrier->seqNum);
+        memBarrier->clearMemDependents();
+        if (memBarrier->memDepReady()) {
+            DPRINTF(BE, "No previous barrier\n");
+            memBarrier = NULL;
+        } else {
+            std::list<DynInstPtr> &srcs = memBarrier->getMemSrcs();
+            memBarrier = srcs.front();
+            srcs.pop_front();
+            assert(srcs.empty());
+            DPRINTF(BE, "Previous barrier: [sn:%lli]\n",
+                    memBarrier->seqNum);
+        }
+    }
+
     frontEnd->addFreeRegs(freed_regs);
 }
 
@@ -1254,6 +1370,7 @@ LWBackEnd<Impl>::squashFromXC()
     squash(squashed_inst);
     frontEnd->squash(squashed_inst, thread->readPC(),
                      false, false);
+    frontEnd->interruptPending = false;
 
     thread->trapPending = false;
     thread->inSyscall = false;
@@ -1269,6 +1386,7 @@ LWBackEnd<Impl>::squashFromTrap()
     squash(squashed_inst);
     frontEnd->squash(squashed_inst, thread->readPC(),
                      false, false);
+    frontEnd->interruptPending = false;
 
     thread->trapPending = false;
     thread->inSyscall = false;
@@ -1321,6 +1439,36 @@ LWBackEnd<Impl>::fetchFault(Fault &fault)
 
 template <class Impl>
 void
+LWBackEnd<Impl>::switchOut()
+{
+    switchedOut = true;
+    // Need to get rid of all committed, non-speculative state and write it
+    // to memory/XC.  In this case this is stores that have committed and not
+    // yet written back.
+    LSQ.switchOut();
+    squash(0);
+}
+
+template <class Impl>
+void
+LWBackEnd<Impl>::takeOverFrom(ExecContext *old_xc)
+{
+    switchedOut = false;
+    xcSquash = false;
+    trapSquash = false;
+
+    numInsts = 0;
+    numWaitingMemOps = 0;
+    waitingMemOps.clear();
+    waitingInsts = 0;
+    switchedOut = false;
+    dispatchStatus = Running;
+    commitStatus = Running;
+    LSQ.takeOverFrom(old_xc);
+}
+
+template <class Impl>
+void
 LWBackEnd<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
     int thread_number = inst->threadNumber;
@@ -1358,7 +1506,11 @@ template <class Impl>
 void
 LWBackEnd<Impl>::updateComInstStats(DynInstPtr &inst)
 {
-    unsigned thread = inst->threadNumber;
+    unsigned tid = inst->threadNumber;
+
+    // keep an instruction count
+    thread->numInst++;
+    thread->numInsts++;
 
     cpu->numInst++;
     //
@@ -1366,33 +1518,33 @@ LWBackEnd<Impl>::updateComInstStats(DynInstPtr &inst)
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch()) {
-        stat_com_swp[thread]++;
+        stat_com_swp[tid]++;
     } else {
-        stat_com_inst[thread]++;
+        stat_com_inst[tid]++;
     }
 #else
-    stat_com_inst[thread]++;
+    stat_com_inst[tid]++;
 #endif
 
     //
     //  Control Instructions
     //
     if (inst->isControl())
-        stat_com_branches[thread]++;
+        stat_com_branches[tid]++;
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        stat_com_refs[thread]++;
+        stat_com_refs[tid]++;
 
         if (inst->isLoad()) {
-            stat_com_loads[thread]++;
+            stat_com_loads[tid]++;
         }
     }
 
     if (inst->isMemBarrier()) {
-        stat_com_membars[thread]++;
+        stat_com_membars[tid]++;
     }
 }
 

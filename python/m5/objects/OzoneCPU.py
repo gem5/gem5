@@ -9,12 +9,15 @@ class DerivOzoneCPU(BaseCPU):
     if not build_env['FULL_SYSTEM']:
         mem = Param.FunctionalMemory(NULL, "memory")
 
+    checker = Param.BaseCPU("Checker CPU")
+
     width = Param.Unsigned("Width")
     frontEndWidth = Param.Unsigned("Front end width")
     backEndWidth = Param.Unsigned("Back end width")
     backEndSquashLatency = Param.Unsigned("Back end squash latency")
     backEndLatency = Param.Unsigned("Back end latency")
     maxInstBufferSize = Param.Unsigned("Maximum instruction buffer size")
+    maxOutstandingMemOps = Param.Unsigned("Maximum number of outstanding memory operations")
     decodeToFetchDelay = Param.Unsigned("Decode to fetch delay")
     renameToFetchDelay = Param.Unsigned("Rename to fetch delay")
     iewToFetchDelay = Param.Unsigned("Issue/Execute/Writeback to fetch "

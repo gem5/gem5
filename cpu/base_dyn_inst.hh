@@ -117,11 +117,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
-    // @todo: Probably should not have this function in the DynInst.
-    template <class T>
-    bool snoop(MemReqPtr &req, T &data)
-    { return cpu->snoop(req, data); }
-
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
     Fault copySrcTranslate(Addr src);

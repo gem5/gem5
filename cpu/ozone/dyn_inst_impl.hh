@@ -38,7 +38,7 @@ template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(FullCPU *cpu)
     : BaseDynInst<Impl>(0, 0, 0, 0, cpu)
 {
-    this->setCompleted();
+    this->setResultReady();
 
     initInstPtrs();
 }
@@ -130,7 +130,7 @@ template <class Impl>
 bool
 OzoneDynInst<Impl>::srcInstReady(int regIdx)
 {
-    return srcInsts[regIdx]->isCompleted();
+    return srcInsts[regIdx]->isResultReady();
 }
 
 template <class Impl>
@@ -151,6 +151,28 @@ OzoneDynInst<Impl>::wakeDependents()
 
 template <class Impl>
 void
+OzoneDynInst<Impl>::wakeMemDependents()
+{
+    for (int i = 0; i < memDependents.size(); ++i) {
+        memDependents[i]->markMemInstReady(this);
+    }
+}
+
+template <class Impl>
+void
+OzoneDynInst<Impl>::markMemInstReady(OzoneDynInst<Impl> *inst)
+{
+    ListIt mem_it = srcMemInsts.begin();
+    while ((*mem_it) != inst && mem_it != srcMemInsts.end()) {
+        mem_it++;
+    }
+    assert(mem_it != srcMemInsts.end());
+
+    srcMemInsts.erase(mem_it);
+}
+
+template <class Impl>
+void
 OzoneDynInst<Impl>::initInstPtrs()
 {
     for (int i = 0; i < MaxInstSrcRegs; ++i) {
@@ -164,7 +186,7 @@ bool
 OzoneDynInst<Impl>::srcsReady()
 {
     for (int i = 0; i < this->numSrcRegs(); ++i) {
-        if (!srcInsts[i]->isCompleted())
+        if (!srcInsts[i]->isResultReady())
             return false;
     }
 
@@ -176,7 +198,7 @@ bool
 OzoneDynInst<Impl>::eaSrcsReady()
 {
     for (int i = 1; i < this->numSrcRegs(); ++i) {
-        if (!srcInsts[i]->isCompleted())
+        if (!srcInsts[i]->isResultReady())
             return false;
     }
 
@@ -195,6 +217,14 @@ OzoneDynInst<Impl>::clearDependents()
         prevDestInst[i] = NULL;
     }
 }
+
+template <class Impl>
+void
+OzoneDynInst<Impl>::clearMemDependents()
+{
+    memDependents.clear();
+}
+
 template <class Impl>
 MiscReg
 OzoneDynInst<Impl>::readMiscReg(int misc_reg)
@@ -213,6 +243,7 @@ template <class Impl>
 Fault
 OzoneDynInst<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 {
+    this->setIntResult(val);
     return this->thread->setMiscReg(misc_reg, val);
 }
 
@@ -234,11 +265,13 @@ OzoneDynInst<Impl>::hwrei()
 
     this->setNextPC(this->thread->readMiscReg(AlphaISA::IPR_EXC_ADDR));
 
+    this->cpu->hwrei();
+/*
     this->cpu->kernelStats->hwrei();
 
     this->cpu->checkInterrupts = true;
     this->cpu->lockFlag = false;
-
+*/
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
 }

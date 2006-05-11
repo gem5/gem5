@@ -19,8 +19,11 @@ FrontEnd<Impl>::FrontEnd(Params *params)
       width(params->frontEndWidth),
       freeRegs(params->numPhysicalRegs),
       numPhysRegs(params->numPhysicalRegs),
-      serializeNext(false)
+      serializeNext(false),
+      interruptPending(false)
 {
+    switchedOut = false;
+
     status = Idle;
 
     // Setup branch predictor.
@@ -126,6 +129,11 @@ FrontEnd<Impl>::regStats()
         .name(name() + ".fetchedCacheLines")
         .desc("Number of cache lines fetched")
         .prereq(fetchedCacheLines);
+
+    fetchIcacheSquashes
+        .name(name() + ".fetchIcacheSquashes")
+        .desc("Number of outstanding Icache misses that were squashed")
+        .prereq(fetchIcacheSquashes);
 
     fetchNisnDist
         .init(/* base value */ 0,
@@ -370,6 +378,10 @@ FrontEnd<Impl>::fetchCacheLine()
 #endif // FULL_SYSTEM
     Fault fault = NoFault;
 
+    if (interruptPending && flags == 0) {
+        return fault;
+    }
+
     // Align the fetch PC so it's at the start of a cache block.
     Addr fetch_PC = icacheBlockAlignPC(PC);
 
@@ -397,7 +409,8 @@ FrontEnd<Impl>::fetchCacheLine()
     // exists within the cache.
     if (icacheInterface && fault == NoFault) {
 #if FULL_SYSTEM
-        if (cpu->system->memctrl->badaddr(memReq->paddr)) {
+        if (cpu->system->memctrl->badaddr(memReq->paddr) ||
+            memReq->flags & UNCACHEABLE) {
             DPRINTF(FE, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path!",
                     memReq->paddr);
@@ -497,7 +510,7 @@ FrontEnd<Impl>::processBarriers(DynInstPtr &inst)
             dispatchedTempSerializing++;
         }
 
-        // Change status over to BarrierStall so that other stages know
+        // Change status over to SerializeBlocked so that other stages know
         // what this is blocked on.
         status = SerializeBlocked;
 
@@ -613,8 +626,10 @@ FrontEnd<Impl>::processCacheCompletion(MemReqPtr &req)
 
     // Do something here.
     if (status != IcacheMissStall ||
-        req != memReq) {
+        req != memReq ||
+        switchedOut) {
         DPRINTF(FE, "Previous fetch was squashed.\n");
+        fetchIcacheSquashes++;
         return;
     }
 
@@ -702,6 +717,7 @@ FrontEnd<Impl>::getInstFromCacheline()
         DynInstPtr inst = barrierInst;
         status = Running;
         barrierInst = NULL;
+        inst->clearSerializeBefore();
         return inst;
     }
 
@@ -773,7 +789,7 @@ FrontEnd<Impl>::renameInst(DynInstPtr &inst)
             DPRINTF(FE, "[sn:%lli]: Src reg %i is inst [sn:%lli]\n",
                     inst->seqNum, (int)inst->srcRegIdx(i), src_inst->seqNum);
 
-            if (src_inst->isCompleted()) {
+            if (src_inst->isResultReady()) {
                 DPRINTF(FE, "Reg ready.\n");
                 inst->markSrcRegReady(i);
             } else {
@@ -805,6 +821,38 @@ FrontEnd<Impl>::wakeFromQuiesce()
     DPRINTF(FE, "Waking up from quiesce\n");
     // Hopefully this is safe
     status = Running;
+}
+
+template <class Impl>
+void
+FrontEnd<Impl>::switchOut()
+{
+    switchedOut = true;
+    memReq = NULL;
+    squash(0, 0);
+    instBuffer.clear();
+    instBufferSize = 0;
+    status = Idle;
+}
+
+template <class Impl>
+void
+FrontEnd<Impl>::takeOverFrom(ExecContext *old_xc)
+{
+    assert(freeRegs == numPhysRegs);
+    fetchCacheLineNextCycle = true;
+
+    cacheBlkValid = false;
+
+#if !FULL_SYSTEM
+//    pTable = params->pTable;
+#endif
+    fetchFault = NoFault;
+    serializeNext = false;
+    barrierInst = NULL;
+    status = Running;
+    switchedOut = false;
+    interruptPending = false;
 }
 
 template <class Impl>

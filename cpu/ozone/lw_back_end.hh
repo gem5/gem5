@@ -17,6 +17,8 @@
 #include "mem/mem_req.hh"
 #include "sim/eventq.hh"
 
+template <class>
+class Checker;
 class ExecContext;
 
 template <class Impl>
@@ -126,6 +128,8 @@ class LWBackEnd
 
     Addr commitPC;
 
+    Tick lastCommitCycle;
+
     bool robEmpty() { return instList.empty(); }
 
     bool isFull() { return numInsts >= numROBEntries; }
@@ -133,7 +137,7 @@ class LWBackEnd
 
     void fetchFault(Fault &fault);
 
-    int wakeDependents(DynInstPtr &inst);
+    int wakeDependents(DynInstPtr &inst, bool memory_deps = false);
 
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
@@ -181,6 +185,12 @@ class LWBackEnd
     }
 
     void instToCommit(DynInstPtr &inst);
+
+    void switchOut();
+
+    void takeOverFrom(ExecContext *old_xc = NULL);
+
+    bool isSwitchedOut() { return switchedOut; }
 
   private:
     void generateTrapEvent(Tick latency = 0);
@@ -303,6 +313,10 @@ class LWBackEnd
     Fault faultFromFetch;
     bool fetchHasFault;
 
+    bool switchedOut;
+
+    DynInstPtr memBarrier;
+
   private:
     struct pqCompare {
         bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
@@ -327,7 +341,7 @@ class LWBackEnd
 
     bool exactFullStall;
 
-    bool fetchRedirect[Impl::MaxThreads];
+//    bool fetchRedirect[Impl::MaxThreads];
 
     // number of cycles stalled for D-cache misses
 /*    Stats::Scalar<> dcacheStallCycles;
@@ -414,6 +428,8 @@ class LWBackEnd
     Stats::VectorDistribution<> ROB_occ_dist;
   public:
     void dumpInsts();
+
+    Checker<DynInstPtr> *checker;
 };
 
 template <class Impl>

@@ -59,9 +59,9 @@ class OzoneDynInst : public BaseDynInst<Impl>
     typedef TheISA::MiscReg MiscReg;
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
-    // Note that this is duplicated from the BaseDynInst class; I'm simply not
-    // sure the enum would carry through so I could use it in array
-    // declarations in this class.
+    // Note that this is duplicated from the BaseDynInst class; I'm
+    // simply not sure the enum would carry through so I could use it
+    // in array declarations in this class.
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,
         MaxInstDestRegs = TheISA::MaxInstDestRegs
@@ -90,8 +90,22 @@ class OzoneDynInst : public BaseDynInst<Impl>
     void addDependent(DynInstPtr &dependent_inst);
 
     std::vector<DynInstPtr> &getDependents() { return dependents; }
+    std::vector<DynInstPtr> &getMemDeps() { return memDependents; }
+    std::list<DynInstPtr> &getMemSrcs() { return srcMemInsts; }
 
     void wakeDependents();
+
+    void wakeMemDependents();
+
+    void addMemDependent(DynInstPtr &inst) { memDependents.push_back(inst); }
+
+    void addSrcMemInst(DynInstPtr &inst) { srcMemInsts.push_back(inst); }
+
+    void markMemInstReady(OzoneDynInst<Impl> *inst);
+
+    // For now I will remove instructions from the list when they wake
+    // up.  In the future, you only really need a counter.
+    bool memDepReady() { return srcMemInsts.empty(); }
 
 //    void setBPredInfo(const BPredInfo &bp_info) { bpInfo = bp_info; }
 
@@ -104,9 +118,13 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
     std::vector<DynInstPtr> dependents;
 
-    /** The instruction that produces the value of the source registers.  These
-     *  may be NULL if the value has already been read from the source
-     *  instruction.
+    std::vector<DynInstPtr> memDependents;
+
+    std::list<DynInstPtr> srcMemInsts;
+
+    /** The instruction that produces the value of the source
+     *  registers.  These may be NULL if the value has already been
+     *  read from the source instruction.
      */
     DynInstPtr srcInsts[MaxInstSrcRegs];
 
@@ -165,22 +183,22 @@ class OzoneDynInst : public BaseDynInst<Impl>
      */
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
-        this->instResult.integer = val;
+        BaseDynInst<Impl>::setIntReg(si, idx, val);
     }
 
     void setFloatRegSingle(const StaticInst *si, int idx, float val)
     {
-        this->instResult.fp = val;
+        BaseDynInst<Impl>::setFloatRegSingle(si, idx, val);
     }
 
     void setFloatRegDouble(const StaticInst *si, int idx, double val)
     {
-        this->instResult.dbl = val;
+        BaseDynInst<Impl>::setFloatRegDouble(si, idx, val);
     }
 
     void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
     {
-        this->instResult.integer = val;
+        BaseDynInst<Impl>::setFloatRegInt(si, idx, val);
     }
 
     void setIntResult(uint64_t result) { this->instResult.integer = result; }
@@ -198,6 +216,8 @@ class OzoneDynInst : public BaseDynInst<Impl>
     { return this->staticInst->memAccInst()->execute(this, this->traceData); }
 
     void clearDependents();
+
+    void clearMemDependents();
 
   public:
     // ISA stuff
