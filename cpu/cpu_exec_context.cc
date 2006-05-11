@@ -94,7 +94,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
 
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          FunctionalMemory *_mem, int _asid)
-    : cpu(_cpu), thread_num(_thread_num), process(0), mem(NULL), asid(_asid),
+    : cpu(_cpu), thread_num(_thread_num), process(0), mem(_mem), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
 {
     memset(&regs, 0, sizeof(RegFile));
