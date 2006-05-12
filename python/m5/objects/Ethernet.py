@@ -101,8 +101,14 @@ class Sinic(EtherDevBase):
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")
     tx_max_copy = Param.MemorySize('16kB', "tx max copy")
     rx_max_intr = Param.UInt32(10, "max rx packets per interrupt")
-    rx_fifo_threshold = Param.MemorySize('48kB', "rx fifo high threshold")
-    tx_fifo_threshold = Param.MemorySize('16kB', "tx fifo low threshold")
+    rx_fifo_threshold = Param.MemorySize('384kB', "rx fifo high threshold")
+    rx_fifo_low_mark = Param.MemorySize('128kB', "rx fifo low threshold")
+    tx_fifo_high_mark = Param.MemorySize('384kB', "tx fifo high threshold")
+    tx_fifo_threshold = Param.MemorySize('128kB', "tx fifo low threshold")
+    virtual_count = Param.UInt32(1, "Virtualized SINIC")
+    zero_copy = Param.Bool(False, "Zero copy receive")
+    delay_copy = Param.Bool(False, "Delayed copy transmit")
+    virtual_addr = Param.Bool(False, "Virtual addressing")
 
 class SinicInt(EtherInt):
     type = 'SinicInt'

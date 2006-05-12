@@ -117,7 +117,7 @@ class Device : public Base
         uint32_t RxMaxCopy;    // 0x10
         uint32_t TxMaxCopy;    // 0x14
         uint32_t RxMaxIntr;    // 0x18
-        uint32_t Reserved0;    // 0x1c
+        uint32_t VirtualCount; // 0x1c
         uint32_t RxFifoSize;   // 0x20
         uint32_t TxFifoSize;   // 0x24
         uint32_t RxFifoMark;   // 0x28
@@ -142,6 +142,9 @@ class Device : public Base
         int rxPacketBytes;
         uint64_t rxDoneData;
 
+        Counter rxUnique;
+        Counter txUnique;
+
         VirtualReg()
             : RxData(0), RxDone(0), TxData(0), TxDone(0),
               rxPacketOffset(0), rxPacketBytes(0), rxDoneData(0)
@@ -149,8 +152,12 @@ class Device : public Base
     };
     typedef std::vector<VirtualReg> VirtualRegs;
     typedef std::list<int> VirtualList;
+    Counter rxUnique;
+    Counter txUnique;
     VirtualRegs virtualRegs;
     VirtualList rxList;
+    VirtualList rxBusy;
+    int rxActive;
     VirtualList txList;
 
     uint8_t  &regData8(Addr daddr) { return *((uint8_t *)&regs + daddr); }
@@ -162,6 +169,7 @@ class Device : public Base
     PacketFifo rxFifo;
     PacketFifo::iterator rxFifoPtr;
     bool rxEmpty;
+    bool rxLow;
     Addr rxDmaAddr;
     uint8_t *rxDmaData;
     int rxDmaLen;
@@ -318,6 +326,8 @@ class Device : public Base
         uint32_t rx_fifo_size;
         uint32_t tx_fifo_size;
         uint32_t rx_fifo_threshold;
+        uint32_t rx_fifo_low_mark;
+        uint32_t tx_fifo_high_mark;
         uint32_t tx_fifo_threshold;
         Tick dma_read_delay;
         Tick dma_read_factor;
@@ -326,6 +336,10 @@ class Device : public Base
         bool rx_thread;
         bool tx_thread;
         bool rss;
+        uint32_t virtual_count;
+        bool zero_copy;
+        bool delay_copy;
+        bool virtual_addr;
     };
 
   protected:

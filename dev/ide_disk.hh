@@ -33,6 +33,7 @@
 #ifndef __IDE_DISK_HH__
 #define __IDE_DISK_HH__
 
+#include "base/statistics.hh"
 #include "dev/disk_image.hh"
 #include "dev/ide_atareg.h"
 #include "dev/ide_ctrl.hh"
@@ -231,6 +232,13 @@ class IdeDisk : public SimObject
     /** Interrupt pending */
     bool intrPending;
 
+    Stats::Scalar<> dmaReadFullPages;
+    Stats::Scalar<> dmaReadBytes;
+    Stats::Scalar<> dmaReadTxs;
+    Stats::Scalar<> dmaWriteFullPages;
+    Stats::Scalar<> dmaWriteBytes;
+    Stats::Scalar<> dmaWriteTxs;
+
   public:
     /**
      * Create and initialize this Disk.
@@ -250,6 +258,12 @@ class IdeDisk : public SimObject
      * Reset the device state
      */
     void reset(int id);
+
+    /**
+     * Register statistics.
+     */
+    void regStats();
+
 
     /**
      * Set the controller for this device
