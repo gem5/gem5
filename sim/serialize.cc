@@ -51,8 +51,9 @@
 
 using namespace std;
 
-int Serializable::maxCount = 0;
-int Serializable::count = 0;
+int Serializable::ckptMaxCount = 0;
+int Serializable::ckptCount = 0;
+int Serializable::ckptPrevCount = -1;
 
 void
 Serializable::nameOut(ostream &os)
@@ -241,8 +242,11 @@ Serializable::serializeAll()
     globals.serialize(outstream);
     SimObject::serializeAll(outstream);
 
-    if (maxCount && ++count >= maxCount)
+    assert(Serializable::ckptPrevCount + 1 == Serializable::ckptCount);
+    Serializable::ckptPrevCount++;
+    if (ckptMaxCount && ++ckptCount >= ckptMaxCount)
         SimExit(curTick + 1, "Maximum number of checkpoints dropped");
+
 }
 
 
@@ -352,7 +356,7 @@ SerializeParamContext::checkParams()
     if (serialize_cycle > 0)
         Checkpoint::setup(serialize_cycle, serialize_period);
 
-    Serializable::maxCount = serialize_count;
+    Serializable::ckptMaxCount = serialize_count;
 }
 
 void

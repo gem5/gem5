@@ -1448,6 +1448,8 @@ Base::unserialize(Checkpoint *cp, const std::string &section)
 void
 Device::serialize(ostream &os)
 {
+    int count;
+
     // Serialize the PciDev base class
     Base::serialize(os);
 
