@@ -31,7 +31,7 @@
 
 #include "arch/mips/constants.hh"
 #include "arch/mips/types.hh"
-#include "arch/mips/regfile.hh"
+#include "arch/mips/regfile/regfile.hh"
 #include "arch/mips/faults.hh"
 #include "arch/mips/utility.hh"
 #include "base/misc.hh"
@@ -138,19 +138,10 @@ namespace MipsISA
     void copyRegs(ExecContext *src, ExecContext *dest);
 
     uint64_t fpConvert(double fp_val, ConvertType cvt_type);
-
-    float roundFP(float val);
-    double roundFP(double val);
-    float roundFP(uint64_t val);
-
-    float truncFP(float val);
-    double truncFP(uint64_t val);
+    double roundFP(double val, int digits);
     double truncFP(double val);
-
-    bool unorderedFP(float val);
-    bool unorderedFP(double val);
-    bool getFPConditionCode(int cc);
-    void setFPConditionCode(int num, bool val);
+    bool getFPConditionCode(uint32_t fcsr_reg, int cc);
+    uint32_t makeCCVector(uint32_t fcsr, int num, bool val);
 
     // Machine operations
 

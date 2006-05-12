@@ -96,41 +96,15 @@ MipsISA::fpConvert(double fp_val, ConvertType cvt_type)
     }
 }
 
-float
-MipsISA::roundFP(float val)
-{
-    return 1.5;
-}
-
-float
-MipsISA::roundFP(uint64_t val)
-{
-    return 1.5;
-}
-
 double
-MipsISA::roundFP(double val)
+MipsISA::roundFP(double val, int digits)
 {
-    double trunc_val = trunc(val);
-    double fraction = val - trunc_val;
-
-    if (fraction < 0.5)
-        return val;
-    else
-        return val + 1;
-}
-
-float
-MipsISA::truncFP(float val)
-{
-    return 1.0;
-}
-
-double
-MipsISA::truncFP(uint64_t val)
-{
-    int trunc_val = (int) val;
-    return (double) trunc_val;
+    double digit_offset = pow(10.0,digits);
+    val = val * digit_offset;
+    val = val + 0.5;
+    val = floor(val);
+    val = val / digit_offset;
+    return val;
 }
 
 double
@@ -141,26 +115,20 @@ MipsISA::truncFP(double val)
 }
 
 bool
-MipsISA::unorderedFP(float val)
+MipsISA::getFPConditionCode(uint32_t fcsr_reg, int cc)
 {
-    return false;
+    //uint32_t cc_bits = xc->readFloatReg(35);
+    return false;//regFile.floatRegfile.getConditionCode(cc);
 }
 
-bool
-MipsISA::unorderedFP(double val)
+uint32_t
+MipsISA::makeCCVector(uint32_t fcsr, int num, bool val)
 {
-    return false;
-}
+    int shift = (num == 0) ? 22 : num + 23;
 
-bool
-MipsISA::getFPConditionCode(int cc)
-{
-    return false;
-}
+    fcsr = fcsr | (val << shift);
 
-void
-MipsISA::setFPConditionCode(int num, bool val)
-{
+    return fcsr;
 }
 
 #if FULL_SYSTEM

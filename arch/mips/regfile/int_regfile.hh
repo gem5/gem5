@@ -31,6 +31,7 @@
 
 #include "arch/mips/types.hh"
 #include "arch/mips/constants.hh"
+#include "base/misc.hh"
 #include "sim/faults.hh"
 
 class Checkpoint;
@@ -43,8 +44,6 @@ namespace MipsISA
     {
       protected:
         IntReg regs[NumIntRegs];
-        IntReg hi;
-        IntReg lo;
 
       public:
         IntReg readReg(int intReg)
@@ -58,33 +57,17 @@ namespace MipsISA
             return NoFault;
         }
 
-        IntReg readHi()
-        {
-            return hi;
-        }
-
-        Fault setHi(const IntReg &val)
-        {
-            hi = val;
-            return NoFault;
-        }
-
-        IntReg readLo()
-        {
-            return lo;
-        }
-
-        Fault setLo(const IntReg &val)
-        {
-            lo = val;
-            return NoFault;
-        }
-
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
 
     };
+
+    enum MiscIntRegNums {
+       HI = NumIntArchRegs,
+       LO
+    };
+
 } // namespace MipsISA
 
 #endif

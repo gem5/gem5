@@ -261,7 +261,7 @@ def format Branch(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-2:] == 'al':
-        code += 'r31 = NNPC;\n'
+        code += 'R31 = NNPC;\n'
 
     #Condition code
     code = 'bool cond;\n' + code
@@ -285,7 +285,7 @@ def format BranchLikely(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
     if name[strlen-3:] == 'all':
-        code += 'r31 = NNPC;\n'
+        code += 'R31 = NNPC;\n'
 
     #Condition code
     code = 'bool cond;\n' + code
@@ -307,7 +307,7 @@ def format Jump(code,*flags) {{
     #Add Link Code if Link instruction
     strlen = len(name)
     if strlen > 1 and name[1:] == 'al':
-            code = 'r31 = NNPC;\n' + code
+            code = 'R31 = NNPC;\n' + code
 
 
     iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),\

@@ -8,8 +8,6 @@
 //Outputs to decoder.hh
 output header {{
 
-#define R31 31
-
     using namespace MipsISA;
 
 

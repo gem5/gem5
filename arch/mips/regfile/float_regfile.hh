@@ -47,14 +47,6 @@ namespace MipsISA
     {
       protected:
         FloatReg32 regs[NumFloatRegs];
-        FloatReg32 fir;
-        FloatReg32 fcsr;
-
-        FloatReg32 fpcr;
-
-        FloatReg32 fccr;
-        FloatReg32 fexr;
-        FloatReg32 fenr;
 
       public:
 
@@ -65,8 +57,6 @@ namespace MipsISA
 
         double readReg(int floatReg, int width)
         {
-            using namespace std;
-
             switch(width)
             {
               case SingleWidth:
@@ -85,16 +75,23 @@ namespace MipsISA
 
         FloatRegBits readRegBits(int floatReg, int width)
         {
-            switch(width)
-            {
-              case SingleWidth:
+            if (floatReg < NumFloatArchRegs - 1) {
+                switch(width)
+                {
+                  case SingleWidth:
+                    return regs[floatReg];
+
+                  case DoubleWidth:
+                    return (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
+
+                  default:
+                    panic("Attempted to read a %d bit floating point register!", width);
+                }
+            } else {
+                if (width > SingleWidth)
+                    assert("Control Regs are only 32 bits wide");
+
                 return regs[floatReg];
-
-              case DoubleWidth:
-                return (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
-
-              default:
-                panic("Attempted to read a %d bit floating point register!", width);
             }
         }
 
@@ -144,42 +141,17 @@ namespace MipsISA
             return NoFault;
         }
 
-        MiscReg readFIR()
-        {
-            return fir;
-        }
-
-        Fault setFIR(const MiscReg &val)
-        {
-            fir = val;
-            return NoFault;
-        }
-
-        MiscReg readFCSR()
-        {
-            return fcsr;
-        }
-
-        Fault setFCSR(const MiscReg &val)
-        {
-            fcsr = val;
-            return NoFault;
-        }
-
-        MiscReg readFPCR()
-        {
-            return fpcr;
-        }
-
-        Fault setFPCR(const MiscReg &val)
-        {
-            fpcr = val;
-            return NoFault;
-        }
-
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
+    };
+
+    enum MiscFloatRegNums {
+       FIR = NumFloatArchRegs,
+       FCCR,
+       FEXR,
+       FENR,
+       FCSR
     };
 
 } // namespace MipsISA

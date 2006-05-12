@@ -58,31 +58,7 @@ namespace MipsISA
 
         MiscReg readMiscReg(int miscReg)
         {
-            if (miscReg < CtrlReg_DepTag)
-                return miscRegFile.readReg(miscReg);
-            else {
-                switch (miscReg)
-                {
-                  case Hi:
-                    return intRegFile.readHi();
-
-                  case Lo:
-                    return intRegFile.readLo();
-
-                  case FIR:
-                    return floatRegFile.readFIR();
-
-                  case FCSR:
-                    return floatRegFile.readFCSR();
-
-                  case FPCR:
-                    return floatRegFile.readFPCR();
-
-                  default:
-                    panic("Invalid Misc. Reg. Access\n");
-                    return 0;
-                }
-            }
+            return miscRegFile.readReg(miscReg);
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
@@ -94,31 +70,7 @@ namespace MipsISA
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
         {
-            if (miscReg < CtrlReg_DepTag)
-                return miscRegFile.setReg(miscReg, val);
-            else {
-                switch (miscReg)
-                {
-                  case Hi:
-                    return intRegFile.setHi(val);
-
-                  case Lo:
-                    return intRegFile.setLo(val);
-
-                  case FIR:
-                    return floatRegFile.setFIR(val);
-
-                  case FCSR:
-                    return floatRegFile.setFCSR(val);
-
-                  case FPCR:
-                    return floatRegFile.setFPCR(val);
-
-                  default:
-                    panic("Invalid Misc. Reg. Access\n");
-                    return 0;
-                }
-            }
+            return miscRegFile.setReg(miscReg, val);
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,

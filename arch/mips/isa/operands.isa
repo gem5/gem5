@@ -13,19 +13,34 @@ def operand_types {{
 }};
 
 def operands {{
+    #General Purpose Integer Reg Operands
     'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1),
     'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 2),
     'Rt': ('IntReg', 'uw', 'RT', 'IsInteger', 3),
-    'r31': ('IntReg', 'uw','R31','IsInteger', 4),
-    'R0':  ('IntReg', 'uw','R0', 'IsInteger', 5),
+
+    #Operands used for Link or Syscall Insts
+    'R31': ('IntReg', 'uw','31','IsInteger', 4),
     'R2':  ('IntReg', 'uw','2', 'IsInteger', 5),
 
+    #Special Integer Reg operands
+    'HI':  ('IntReg', 'uw','32', 'IsInteger', 6),
+    'LO':  ('IntReg', 'uw','33', 'IsInteger', 7),
+
+    #Immediate Value operand
     'IntImm': ('IntReg', 'uw', 'INTIMM', 'IsInteger', 3),
 
+    #Floating Point Reg Operands
     'Fd': ('FloatReg', 'sf', 'FD', 'IsFloating', 1),
     'Fs': ('FloatReg', 'sf', 'FS', 'IsFloating', 2),
     'Ft': ('FloatReg', 'sf', 'FT', 'IsFloating', 3),
     'Fr': ('FloatReg', 'sf', 'FR', 'IsFloating', 3),
+
+    #Special Floating Point Control Reg Operands
+    'FIR':  ('FloatReg', 'uw', '32', 'IsFloating', 1),
+    'FCCR': ('FloatReg', 'uw', '33', 'IsFloating', 2),
+    'FEXR': ('FloatReg', 'uw', '34', 'IsFloating', 3),
+    'FENR': ('FloatReg', 'uw', '35', 'IsFloating', 3),
+    'FCSR': ('FloatReg', 'uw', '36', 'IsFloating', 3),
 
      #Operands For Paired Singles FP Operations
     'Fd1': ('FloatReg', 'sf', 'FD', 'IsFloating', 4),
@@ -37,9 +52,10 @@ def operands {{
     'Fr1': ('FloatReg', 'sf', 'FR', 'IsFloating', 7),
     'Fr2': ('FloatReg', 'sf', 'FR+1', 'IsFloating', 7),
 
-
+    #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
 
+    #Program Counter Operands
     'NPC': ('NPC', 'uw', None, ( None, None, 'IsControl' ), 4),
     'NNPC':('NNPC', 'uw', None, ( None, None, 'IsControl' ), 4)
 }};

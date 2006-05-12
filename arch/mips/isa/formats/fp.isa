@@ -41,6 +41,7 @@ def format FloatOp(code, *flags) {{
 
 def format FloatCompareOp(code, *flags) {{
         code = 'bool cond;\n' + code
+        code += 'FCSR = makeCCVector(FCSR, CC,cond);\n'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
@@ -50,6 +51,7 @@ def format FloatCompareOp(code, *flags) {{
 
 def format FloatCompareWithXcptOp(code, *flags) {{
         code = 'bool cond;\n' + code
+        code += 'FCSR = makeCCVector(FCSR, CC,cond);\n'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
@@ -75,6 +77,8 @@ def format Float64Op(code, *flags) {{
 }};
 
 def format Float64ConvertOp(code, *flags) {{
+        code = 'bool cond;\n' + code
+        code += 'FCSR = makeCCVector(FCSR, CC,cond);\n'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
@@ -84,6 +88,8 @@ def format Float64ConvertOp(code, *flags) {{
 
 def format FloatPSCompareOp(code, *flags) {{
         code = 'bool cond1;\nbool cond2;\n' + code
+        code += 'FCSR = makeCCVector(FCSR, CC+1, cond1);\n'
+        code += 'FCSR = makeCCVector(FCSR, CC, cond2);\n'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
@@ -93,6 +99,8 @@ def format FloatPSCompareOp(code, *flags) {{
 
 def format FloatPSCompareWithXcptOp(code, *flags) {{
         code = 'bool cond1;\nbool cond2;\n' + code
+        code += 'FCSR = makeCCVector(FCSR, CC+1, cond1);\n'
+        code += 'FCSR = makeCCVector(FCSR, CC, cond2);\n'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
