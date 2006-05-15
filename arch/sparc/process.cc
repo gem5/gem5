@@ -29,6 +29,7 @@
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
 #include "arch/sparc/linux/process.hh"
+#include "arch/sparc/solaris/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "cpu/exec_context.hh"
@@ -54,7 +55,8 @@ SparcLiveProcess::create(const std::string &nm, System *system, int stdin_fd,
 
 
     if (objFile->getArch() != ObjectFile::SPARC)
-        fatal("Object file with arch %x does not match architecture %x.", objFile->getArch(), ObjectFile::SPARC);
+        fatal("Object file with arch %x does not match architecture %x.",
+                objFile->getArch(), ObjectFile::SPARC);
     switch (objFile->getOpSys()) {
       case ObjectFile::Linux:
         process = new SparcLinuxProcess(nm, objFile, system,
@@ -62,7 +64,12 @@ SparcLiveProcess::create(const std::string &nm, System *system, int stdin_fd,
                                         argv, envp);
         break;
 
+
       case ObjectFile::Solaris:
+        process = new SparcSolarisProcess(nm, objFile, system,
+                                        stdin_fd, stdout_fd, stderr_fd,
+                                        argv, envp);
+        break;
       default:
         fatal("Unknown/unsupported operating system.");
     }

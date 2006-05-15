@@ -59,6 +59,8 @@ full_system_sources = Split('''
 syscall_emulation_sources = Split('''
 	linux/linux.cc
 	linux/process.cc
+	solaris/solaris.cc
+	solaris/process.cc
 	process.cc
 	''')
 
