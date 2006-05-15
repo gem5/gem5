@@ -99,14 +99,16 @@ def template ROrImmDecode {{
 
 let {{
     def splitOutImm(code):
-        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)')
+        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)(?P<typeQual>\.\w+)?')
         rOrImmMatch = matcher.search(code)
         if (rOrImmMatch == None):
             return (False, code, '', '', '')
         rString = rOrImmMatch.group("rNum")
+        if (rOrImmMatch.group("typeQual") != None):
+            rString += rOrImmMatch.group("typeQual")
         iString = rOrImmMatch.group("iNum")
         orig_code = code
-        code = matcher.sub('Rs' + rOrImmMatch.group("rNum"), orig_code)
+        code = matcher.sub('Rs' + rString, orig_code)
         imm_code = matcher.sub('imm', orig_code)
         return (True, code, imm_code, rString, iString)
 }};

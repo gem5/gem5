@@ -98,10 +98,6 @@ FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_count;
 
-FaultName UnimpFault::_name = "Unimplemented Simulator feature";
-FaultVect UnimpFault::_vect = 0x0001;
-FaultStat UnimpFault::_count;
-
 #if FULL_SYSTEM
 
 void MipsFault::invoke(ExecContext * xc)
@@ -127,12 +123,6 @@ void ArithmeticFault::invoke(ExecContext * xc)
 {
     FaultBase::invoke(xc);
     panic("Arithmetic traps are unimplemented!");
-}
-
-void UnimpFault::invoke(ExecContext * xc)
-{
-    FaultBase::invoke(xc);
-    panic("Unimpfault: %s\n", panicStr.c_str());
 }
 
 #endif

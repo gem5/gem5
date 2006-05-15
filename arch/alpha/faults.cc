@@ -105,10 +105,6 @@ FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_count;
 
-FaultName UnimpFault::_name = "Unimplemented Simulator feature";
-FaultVect UnimpFault::_vect = 0x0001;
-FaultStat UnimpFault::_count;
-
 #if FULL_SYSTEM
 
 void AlphaFault::invoke(ExecContext * xc)
@@ -172,12 +168,6 @@ void ItbFault::invoke(ExecContext * xc)
     }
 
     AlphaFault::invoke(xc);
-}
-
-void UnimpFault::invoke(ExecContext * xc)
-{
-    FaultBase::invoke(xc);
-    panic("Unimpfault: %s\n", panicStr.c_str());
 }
 
 #endif

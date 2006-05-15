@@ -82,7 +82,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         //what it must be.
         if (ehdr.e_machine == EM_SPARC64 ||
                 ehdr.e_machine == EM_SPARC ||
-                ehdr.e_machine == EM_SPARCV9) {
+                ehdr.e_machine == EM_SPARCV9 ||
+                ehdr.e_machine == EM_SPARC32PLUS) {
             arch = ObjectFile::SPARC;
         } else if (ehdr.e_machine == EM_MIPS
                 && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
