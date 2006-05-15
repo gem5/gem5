@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MIPS_MIPS_LINUX_HH
-#define __MIPS_MIPS_LINUX_HH
+#ifndef __ARCH_MIPS_LINUX_LINUX_HH__
+#define __ARCH_MIPS_LINUX_LINUX_HH__
 
 #include "kern/linux/linux.hh"
 

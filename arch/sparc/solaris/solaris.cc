@@ -26,36 +26,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_SPARC_LINUX_LINUX_HH__
-#define __ARCH_SPARC_LINUX_LINUX_HH__
+#include "arch/sparc/solaris/solaris.hh"
 
-#include "kern/linux/linux.hh"
-
-class SparcLinux : public Linux
-{
-  public:
-
-    static OpenFlagTransTable openFlagTable[];
-
-    static const int TGT_O_RDONLY	= 0x00000000;	//!< O_RDONLY
-    static const int TGT_O_WRONLY	= 0x00000001;	//!< O_WRONLY
-    static const int TGT_O_RDWR	        = 0x00000002;	//!< O_RDWR
-    static const int TGT_O_NONBLOCK     = 0x00004000;	//!< O_NONBLOCK
-    static const int TGT_O_APPEND	= 0x00000008;	//!< O_APPEND
-    static const int TGT_O_CREAT	= 0x00000200;	//!< O_CREAT
-    static const int TGT_O_TRUNC	= 0x00000400;	//!< O_TRUNC
-    static const int TGT_O_EXCL	        = 0x00000800;	//!< O_EXCL
-    static const int TGT_O_NOCTTY	= 0x00008000;	//!< O_NOCTTY
-    static const int TGT_O_SYNC	        = 0x00002000;	//!< O_SYNC
-//    static const int TGT_O_DRD	        = 0x00010000;	//!< O_DRD
-//    static const int TGT_O_DIRECTIO     = 0x00020000;	//!< O_DIRECTIO
-//    static const int TGT_O_CACHE	= 0x00002000;	//!< O_CACHE
-//    static const int TGT_O_DSYNC	= 0x00008000;	//!< O_DSYNC
-//    static const int TGT_O_RSYNC	= 0x00040000;	//!< O_RSYNC
-
-    static const int NUM_OPEN_FLAGS;
-
-    static const unsigned TGT_MAP_ANONYMOUS = 0x20;
+// open(2) flags translation table
+OpenFlagTransTable SparcSolaris::openFlagTable[] = {
+#ifdef _MSC_VER
+  { SparcSolaris::TGT_O_RDONLY,	_O_RDONLY },
+  { SparcSolaris::TGT_O_WRONLY,	_O_WRONLY },
+  { SparcSolaris::TGT_O_RDWR,	_O_RDWR },
+  { SparcSolaris::TGT_O_APPEND,	_O_APPEND },
+  { SparcSolaris::TGT_O_CREAT,	_O_CREAT },
+  { SparcSolaris::TGT_O_TRUNC,	_O_TRUNC },
+  { SparcSolaris::TGT_O_EXCL,	_O_EXCL },
+#ifdef _O_NONBLOCK
+  { SparcSolaris::TGT_O_NONBLOCK,	_O_NONBLOCK },
+  { SparcSolaris::TGT_O_NDELAY  ,	_O_NONBLOCK },
+#endif
+#ifdef _O_NOCTTY
+  { SparcSolaris::TGT_O_NOCTTY,	_O_NOCTTY },
+#endif
+#ifdef _O_SYNC
+  { SparcSolaris::TGT_O_SYNC,	_O_SYNC },
+  { SparcSolaris::TGT_O_DSYNC,	_O_SYNC },
+  { SparcSolaris::TGT_O_RSYNC,	_O_SYNC },
+#endif
+#else /* !_MSC_VER */
+  { SparcSolaris::TGT_O_RDONLY,	O_RDONLY },
+  { SparcSolaris::TGT_O_WRONLY,	O_WRONLY },
+  { SparcSolaris::TGT_O_RDWR,	O_RDWR },
+  { SparcSolaris::TGT_O_APPEND,	O_APPEND },
+  { SparcSolaris::TGT_O_CREAT,	O_CREAT },
+  { SparcSolaris::TGT_O_TRUNC,	O_TRUNC },
+  { SparcSolaris::TGT_O_EXCL,	O_EXCL },
+  { SparcSolaris::TGT_O_NONBLOCK,	O_NONBLOCK },
+  { SparcSolaris::TGT_O_NDELAY  ,	O_NONBLOCK },
+  { SparcSolaris::TGT_O_NOCTTY,	O_NOCTTY },
+#ifdef O_SYNC
+  { SparcSolaris::TGT_O_SYNC,	O_SYNC },
+  { SparcSolaris::TGT_O_DSYNC,	O_SYNC },
+  { SparcSolaris::TGT_O_RSYNC,	O_SYNC },
+#endif
+#endif /* _MSC_VER */
 };
 
-#endif
+const int SparcSolaris::NUM_OPEN_FLAGS =
+        (sizeof(SparcSolaris::openFlagTable)/sizeof(SparcSolaris::openFlagTable[0]));
+

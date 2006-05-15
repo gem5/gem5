@@ -82,8 +82,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         //what it must be.
         if (ehdr.e_machine == EM_SPARC64 ||
                 ehdr.e_machine == EM_SPARC ||
-                ehdr.e_machine == EM_SPARCV9 ||
-                ehdr.e_machine == EM_SPARC32PLUS) {
+                ehdr.e_machine == EM_SPARCV9) {
             arch = ObjectFile::SPARC;
         } else if (ehdr.e_machine == EM_MIPS
                 && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
@@ -91,6 +90,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
             arch = ObjectFile::Alpha;
         } else {
+            warn("Unknown architecture: %d\n", ehdr.e_machine);
             arch = ObjectFile::UnknownArch;
         }
 
@@ -113,8 +113,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
 
         //take a look at the .note.ABI section
         //It can let us know what's what.
-        if (opSys == ObjectFile::UnknownOpSys)
-        {
+        if (opSys == ObjectFile::UnknownOpSys) {
             Elf_Scn *section;
             GElf_Shdr shdr;
             Elf_Data *data;
@@ -125,7 +124,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             section = elf_getscn(elf, secIdx);
 
             // While there are no more sections
-            while (section != NULL) {
+            while (section != NULL && opSys == ObjectFile::UnknownOpSys) {
                 gelf_getshdr(section, &shdr);
                 if (shdr.sh_type == SHT_NOTE && !strcmp(".note.ABI-tag",
                             elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name))) {
@@ -148,6 +147,11 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
                         break;
                     }
                 } // if section found
+                if (!strcmp(".SUNW_version", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
+                        opSys = ObjectFile::Solaris;
+                if (!strcmp(".stab.index", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
+                        opSys = ObjectFile::Solaris;
+
             section = elf_getscn(elf, ++secIdx);
             } // while sections
         }
