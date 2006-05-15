@@ -64,4 +64,17 @@ class FaultBase : public RefCounted
 
 FaultBase * const NoFault = 0;
 
+class UnimpFault : public FaultBase
+{
+  private:
+    std::string panicStr;
+  public:
+    UnimpFault(std::string _str)
+        : panicStr(_str)
+    { }
+
+    FaultName name() {return "Unimplemented simulator feature";}
+    void invoke(ExecContext * xc);
+};
+
 #endif // __FAULTS_HH__

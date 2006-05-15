@@ -573,36 +573,18 @@ class TrapInstruction : public EnumeratedFault
     static TrapType _baseTrapType;
     static FaultPriority _priority;
     static FaultStat _count;
+    uint64_t syscall_num;
     TrapType baseTrapType() {return _baseTrapType;}
   public:
-    TrapInstruction(uint32_t n) : EnumeratedFault(n) {;}
+    TrapInstruction(uint32_t n, uint64_t syscall) :
+        EnumeratedFault(n), syscall_num(syscall) {;}
     FaultName name() {return _name;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
-};
-
-class UnimpFault : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-    std::string panicStr;
-  public:
-    UnimpFault(std::string _str)
-        : panicStr(_str)
-    { }
-
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
+#if !FULL_SYSTEM
     void invoke(ExecContext * xc);
 #endif
 };
-
 
 } // SparcISA namespace
 

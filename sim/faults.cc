@@ -45,3 +45,8 @@ void FaultBase::invoke(ExecContext * xc)
     assert(!xc->misspeculating());
 }
 #endif
+
+void UnimpFault::invoke(ExecContext * xc)
+{
+    panic("Unimpfault: %s\n", panicStr.c_str());
+}
