@@ -233,7 +233,7 @@ class BarChart(ChartOptions):
             inner_axes.set_yticks(ticks)
             inner_axes.set_yticklabels(self.yticks)
         elif self.ylim is not None:
-            self.inner_axes.set_ylim(self.ylim)
+            inner_axes.set_ylim(self.ylim)
 
         if self.xticks is not None:
             outer_axes.set_xticks(arange(cshape[2]) + .5)
@@ -242,9 +242,9 @@ class BarChart(ChartOptions):
         if self.xsubticks is not None:
             numticks = (cshape[0] + 1) * cshape[2]
             inner_axes.set_xticks(arange(numticks) * width + 2 * center)
-            self.xsubticks.append('')
-            inner_axes.set_xticklabels(self.xsubticks * cshape[2], fontsize=7,
-                                       rotation=90)
+            xsubticks = list(self.xsubticks) + [ '' ]
+            inner_axes.set_xticklabels(xsubticks * cshape[2], fontsize=7,
+                                       rotation=30)
 
         if self.legend is not None:
             if dim == 1:

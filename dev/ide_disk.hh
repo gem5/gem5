@@ -43,7 +43,7 @@
 
 #define DMA_BACKOFF_PERIOD 200
 
-#define MAX_DMA_SIZE    (65536)  // 64K
+#define MAX_DMA_SIZE    (131072)  // 128K
 #define MAX_MULTSECT    (128)
 
 #define PRD_BASE_MASK  0xfffffffe
