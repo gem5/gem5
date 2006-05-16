@@ -31,12 +31,11 @@
 
 #include <iostream>
 #include <list>
-#include <sstream>
 #include <string>
 
-namespace cp {
-
 #include "base/cprintf_formats.hh"
+
+namespace cp {
 
 class ArgList
 {

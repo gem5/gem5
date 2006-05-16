@@ -31,7 +31,6 @@
  * SUCH DAMAGE.
  */
 
-#include <sstream>
 #include <string>
 
 #include "sim/host.hh"

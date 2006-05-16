@@ -32,7 +32,6 @@
 #include <iostream>
 #include <iomanip>
 #include <list>
-#include <sstream>
 #include <string>
 
 #include "arch/utility.hh"

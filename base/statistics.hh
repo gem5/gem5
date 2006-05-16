@@ -50,7 +50,6 @@
 #include <cmath>
 #include <functional>
 #include <iosfwd>
-#include <sstream>
 #include <string>
 #include <vector>
 
