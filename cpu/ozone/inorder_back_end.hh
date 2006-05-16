@@ -97,6 +97,10 @@ class InorderBackEnd
 
     Addr commitPC;
 
+    void switchOut() { panic("Not implemented!"); }
+    void doSwitchOut() { panic("Not implemented!"); }
+    void takeOverFrom(ExecContext *old_xc = NULL) { panic("Not implemented!"); }
+
   public:
     FullCPU *cpu;
 
@@ -330,14 +334,17 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
     // translate to physical address
 //    Fault fault = cpu->translateDataReadReq(req);
+    req->cmd = Read;
+    req->completionEvent = NULL;
+    req->time = curTick;
+    assert(!req->data);
+    req->data = new uint8_t[64];
+    req->flags &= ~INST_READ;
+    Fault fault = cpu->read(req, data);
+    memcpy(req->data, &data, sizeof(T));
 
     // if we have a cache, do cache access too
     if (dcacheInterface) {
-        req->cmd = Read;
-        req->completionEvent = NULL;
-        req->data = new uint8_t[64];
-        req->time = curTick;
-        req->flags &= ~INST_READ;
         MemAccessResult result = dcacheInterface->access(req);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -372,6 +379,30 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
     // translate to physical address
 //    Fault fault = cpu->translateDataWriteReq(req);
 
+    req->cmd = Write;
+    req->completionEvent = NULL;
+    req->time = curTick;
+    assert(!req->data);
+    req->data = new uint8_t[64];
+    memcpy(req->data, (uint8_t *)&data, req->size);
+
+    switch(req->size) {
+      case 1:
+        cpu->write(req, (uint8_t &)data);
+        break;
+      case 2:
+        cpu->write(req, (uint16_t &)data);
+        break;
+      case 4:
+        cpu->write(req, (uint32_t &)data);
+        break;
+      case 8:
+        cpu->write(req, (uint64_t &)data);
+        break;
+      default:
+        panic("Unexpected store size!\n");
+    }
+
     if (dcacheInterface) {
         req->cmd = Write;
         req->data = new uint8_t[64];
@@ -395,7 +426,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
 
         }
     }
-
+/*
     if (req->flags & LOCKED) {
         if (req->flags & UNCACHEABLE) {
             // Don't update result register (see stq_c in isa_desc)
@@ -404,6 +435,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
             req->result = 1;
         }
     }
+*/
 /*
     if (res && (fault == NoFault))
         *res = req->result;

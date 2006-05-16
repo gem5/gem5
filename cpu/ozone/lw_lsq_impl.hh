@@ -791,6 +791,8 @@ template <class Impl>
 void
 OzoneLWLSQ<Impl>::switchOut()
 {
+//    assert(loads == 0);
+    assert(storesToWB == 0);
     switchedOut = true;
     SQIt sq_it = --(storeQueue.end());
     while (storesToWB > 0 &&
@@ -810,9 +812,12 @@ OzoneLWLSQ<Impl>::switchOut()
         // Store conditionals don't complete until *after* they have written
         // back.  If it's here and not yet sent to memory, then don't bother
         // as it's not part of committed state.
-        if (inst->isDataPrefetch() || (*sq_it).committed ||
-            (*sq_it).req->flags & LOCKED) {
+        if (inst->isDataPrefetch() || (*sq_it).committed) {
             sq_it--;
+            continue;
+        } else if ((*sq_it).req->flags & LOCKED) {
+            sq_it--;
+            assert(!(*sq_it).canWB || ((*sq_it).canWB && (*sq_it).req->flags & LOCKED));
             continue;
         }
 

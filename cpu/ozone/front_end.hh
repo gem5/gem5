@@ -68,6 +68,8 @@ class FrontEnd
 
     void switchOut();
 
+    void doSwitchOut();
+
     void takeOverFrom(ExecContext *old_xc = NULL);
 
     bool isSwitchedOut() { return switchedOut; }

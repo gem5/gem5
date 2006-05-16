@@ -329,15 +329,30 @@ OzoneCPU<Impl>::copyToXC()
 */
 template <class Impl>
 void
-OzoneCPU<Impl>::switchOut(Sampler *sampler)
+OzoneCPU<Impl>::switchOut(Sampler *_sampler)
 {
+    sampler = _sampler;
+    switchCount = 0;
     // Front end needs state from back end, so switch out the back end first.
     backEnd->switchOut();
     frontEnd->switchOut();
-    _status = SwitchedOut;
-    if (tickEvent.scheduled())
-        tickEvent.squash();
-    sampler->signalSwitched();
+}
+
+template <class Impl>
+void
+OzoneCPU<Impl>::signalSwitched()
+{
+    if (++switchCount == 2) {
+        backEnd->doSwitchOut();
+        frontEnd->doSwitchOut();
+        if (checker)
+            checker->switchOut(sampler);
+        _status = SwitchedOut;
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+        sampler->signalSwitched();
+    }
+    assert(switchCount <= 2);
 }
 
 template <class Impl>
@@ -365,6 +380,11 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
             _status = Running;
             tickEvent.schedule(curTick);
         }
+    }
+    // Nothing running, change status to reflect that we're no longer
+    // switched out.
+    if (_status == SwitchedOut) {
+        _status = Idle;
     }
 }
 
@@ -666,83 +686,6 @@ OzoneCPU<Impl>::tick()
     thread.renameTable[ZeroReg+TheISA::FP_Base_DepTag]->
         setDoubleResult(0.0);
 
-    // General code flow:
-    // Check for any interrupts.  Handle them if I do have one.
-    // Check if I have a need to fetch a new cache block.  Either a bit could be
-    // set by functions indicating that I need to fetch a new block, or I could
-    // hang onto the last PC of the last cache block I fetched and compare the
-    // current PC to that.  Setting a bit seems nicer but may be more error
-    // prone.
-    // Scan through the IQ to figure out if there's anything I can issue/execute
-    // Might need something close to the FU Pools to tell what instructions
-    // I can issue.  How to handle loads and stores vs other insts?
-    // Extremely slow way: find first inst that can possibly issue; if it's a
-    // load or a store, then iterate through load/store queue.
-    // If I can't find instructions to execute and I've got room in the IQ
-    // (which is just a counter), then grab a few instructions out of the cache
-    // line buffer until I either run out or can execute up until my limit.
-
-    numCycles++;
-
-    traceData = NULL;
-
-//    Fault fault = NoFault;
-
-#if 0 // FULL_SYSTEM
-    if (checkInterrupts && check_interrupts() && !inPalMode() &&
-        status() != IcacheMissComplete) {
-        int ipl = 0;
-        int summary = 0;
-        checkInterrupts = false;
-
-        if (readMiscReg(IPR_SIRR)) {
-            for (int i = INTLEVEL_SOFTWARE_MIN;
-                 i < INTLEVEL_SOFTWARE_MAX; i++) {
-                if (readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
-                    // See table 4-19 of 21164 hardware reference
-                    ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                    summary |= (ULL(1) << i);
-                }
-            }
-        }
-
-        // Is this method so that if the interrupts are switched over from
-        // another CPU they'll still be handled?
-//	uint64_t interrupts = cpuXC->cpu->intr_status();
-        uint64_t interrupts = intr_status();
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-            i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-
-        if (readMiscReg(IPR_ASTRR))
-            panic("asynchronous traps not implemented\n");
-
-        if (ipl && ipl > readMiscReg(IPR_IPLR)) {
-            setMiscReg(IPR_ISR, summary);
-            setMiscReg(IPR_INTID, ipl);
-
-            Fault(new InterruptFault)->invoke(xc);
-
-            DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                    readMiscReg(IPR_IPLR), ipl, summary);
-        }
-    }
-#endif
-
-    // Make call to ISA to ensure 0 register semantics...actually because the
-    // DynInsts will generally be the register file, this should only have to
-    // happen when the xc is actually written to (during a syscall or something)
-    // maintain $r0 semantics
-//    assert(renameTable[ZeroReg]->readIntResult() == 0);
-#ifdef TARGET_ALPHA
-//    assert(renameTable[ZeroReg]->readDoubleResult() == 0);
-#endif // TARGET_ALPHA
-
     comm.advance();
     frontEnd->tick();
     backEnd->tick();
@@ -876,8 +819,8 @@ OzoneCPU<Impl>::processInterrupts()
         thread.setMiscReg(IPR_INTID, ipl);
         // @todo: Make this more transparent
         if (checker) {
-            checkerXC->setMiscReg(IPR_ISR, summary);
-            checkerXC->setMiscReg(IPR_INTID, ipl);
+            checker->cpuXCBase()->setMiscReg(IPR_ISR, summary);
+            checker->cpuXCBase()->setMiscReg(IPR_INTID, ipl);
         }
         Fault fault = new InterruptFault;
         fault->invoke(thread.getXCProxy());
@@ -993,6 +936,15 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
     setFuncExeInst(old_context->readFuncExeInst());
 #endif
 
+    EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
+    if (other_quiesce) {
+        // Point the quiesce event's XC at this XC so that it wakes up
+        // the proper CPU.
+        other_quiesce->xc = this;
+    }
+    if (thread->quiesceEvent) {
+        thread->quiesceEvent->xc = this;
+    }
 //    storeCondFailures = 0;
     cpu->lockFlag = false;
 
@@ -1016,7 +968,7 @@ OzoneCPU<Impl>::OzoneXC::unserialize(Checkpoint *cp, const std::string &section)
 
 #if FULL_SYSTEM
 template <class Impl>
-Event *
+EndQuiesceEvent *
 OzoneCPU<Impl>::OzoneXC::getQuiesceEvent()
 {
     return thread->quiesceEvent;

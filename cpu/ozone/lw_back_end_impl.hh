@@ -192,6 +192,7 @@ LWBackEnd<Impl>::LWBackEnd(Params *params)
     numWaitingMemOps = 0;
     waitingInsts = 0;
     switchedOut = false;
+    switchPending = false;
 
 //    IQ.setBE(this);
     LSQ.setBE(this);
@@ -631,6 +632,11 @@ LWBackEnd<Impl>::tick()
 {
     DPRINTF(BE, "Ticking back end\n");
 
+    if (switchPending && robEmpty() && !LSQ.hasStoresToWB()) {
+        cpu->signalSwitched();
+        return;
+    }
+
     ROB_count[0]+= numInsts;
 
     wbCycle = 0;
@@ -682,6 +688,7 @@ LWBackEnd<Impl>::tick()
     assert(numInsts == instList.size());
     assert(waitingInsts == waitingList.size());
     assert(numWaitingMemOps == waitingMemOps.size());
+    assert(!switchedOut);
 #endif
 }
 
@@ -1441,11 +1448,23 @@ template <class Impl>
 void
 LWBackEnd<Impl>::switchOut()
 {
+    switchPending = true;
+}
+
+template <class Impl>
+void
+LWBackEnd<Impl>::doSwitchOut()
+{
     switchedOut = true;
+    switchPending = false;
     // Need to get rid of all committed, non-speculative state and write it
     // to memory/XC.  In this case this is stores that have committed and not
     // yet written back.
+    assert(robEmpty());
+    assert(!LSQ.hasStoresToWB());
+
     LSQ.switchOut();
+
     squash(0);
 }
 

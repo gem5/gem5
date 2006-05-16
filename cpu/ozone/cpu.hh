@@ -64,6 +64,7 @@ class Process;
 #endif // FULL_SYSTEM
 
 class Checkpoint;
+class EndQuiesceEvent;
 class MemInterface;
 
 namespace Trace {
@@ -149,7 +150,7 @@ class OzoneCPU : public BaseCPU
         void unserialize(Checkpoint *cp, const std::string &section);
 
 #if FULL_SYSTEM
-        Event *getQuiesceEvent();
+        EndQuiesceEvent *getQuiesceEvent();
 
         Tick readLastActivate();
         Tick readLastSuspend();
@@ -330,7 +331,12 @@ class OzoneCPU : public BaseCPU
     int cpuId;
 
     void switchOut(Sampler *sampler);
+    void signalSwitched();
     void takeOverFrom(BaseCPU *oldCPU);
+
+    Sampler *sampler;
+
+    int switchCount;
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);

@@ -240,6 +240,9 @@ template <class Impl>
 void
 FrontEnd<Impl>::tick()
 {
+    if (switchedOut)
+        return;
+
     // @todo: Maybe I want to just have direct communication...
     if (fromCommit->doneSeqNum) {
         branchPred.update(fromCommit->doneSeqNum, 0);
@@ -828,6 +831,13 @@ void
 FrontEnd<Impl>::switchOut()
 {
     switchedOut = true;
+    cpu->signalSwitched();
+}
+
+template <class Impl>
+void
+FrontEnd<Impl>::doSwitchOut()
+{
     memReq = NULL;
     squash(0, 0);
     instBuffer.clear();

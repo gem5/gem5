@@ -187,7 +187,7 @@ class LWBackEnd
     void instToCommit(DynInstPtr &inst);
 
     void switchOut();
-
+    void doSwitchOut();
     void takeOverFrom(ExecContext *old_xc = NULL);
 
     bool isSwitchedOut() { return switchedOut; }
@@ -314,6 +314,7 @@ class LWBackEnd
     bool fetchHasFault;
 
     bool switchedOut;
+    bool switchPending;
 
     DynInstPtr memBarrier;
 
