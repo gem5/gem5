@@ -9,6 +9,8 @@ class DerivAlphaFullCPU(BaseCPU):
     if not build_env['FULL_SYSTEM']:
         mem = Param.FunctionalMemory(NULL, "memory")
 
+    checker = Param.BaseCPU(NULL, "checker")
+
     cachePorts = Param.Unsigned("Cache Ports")
 
     decodeToFetchDelay = Param.Unsigned("Decode to fetch delay")
@@ -50,6 +52,8 @@ class DerivAlphaFullCPU(BaseCPU):
     renameToROBDelay = Param.Unsigned("Rename to reorder buffer delay")
     commitWidth = Param.Unsigned("Commit width")
     squashWidth = Param.Unsigned("Squash width")
+    trapLatency = Param.Tick("Trap latency")
+    fetchTrapLatency = Param.Tick("Fetch trap latency")
 
     localPredictorSize = Param.Unsigned("Size of local predictor")
     localCtrBits = Param.Unsigned("Bits per counter")
