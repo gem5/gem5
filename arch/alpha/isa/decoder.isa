@@ -73,7 +73,9 @@ decode OPCODE default Unknown::unknown() {
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED, inst_flags = IsNonSpeculative);
+                    }}, mem_flags = LOCKED, inst_flags = [IsNonSpeculative,
+                                                          IsSerializing,
+                                                          IsSerializeAfter]);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
@@ -85,7 +87,9 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED, inst_flags = IsNonSpeculative);
+                    }}, mem_flags = LOCKED, inst_flags = [IsNonSpeculative,
+                                                          IsSerializing,
+                                                          IsSerializeAfter]);
     }
 
     format IntegerOperate {
@@ -623,7 +627,7 @@ decode OPCODE default Unknown::unknown() {
 #else
                 Ra = curTick;
 #endif
-            }}, IsNonSpeculative);
+            }}, IsUnverifiable);
 
             // All of the barrier instructions below do nothing in
             // their execute() methods (hence the empty code blocks).
