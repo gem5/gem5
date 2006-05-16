@@ -178,7 +178,8 @@ def template InitiateAccDeclare {{
 
 
 def template CompleteAccDeclare {{
-    Fault completeAcc(uint8_t *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(Packet *, %(CPU_exec_context)s *,
+                      Trace::InstRecord *) const;
 }};
 
 
@@ -304,7 +305,7 @@ def template LoadInitiateAcc {{
 
 
 def template LoadCompleteAcc {{
-    Fault %(class_name)s::completeAcc(uint8_t *data,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -313,7 +314,7 @@ def template LoadCompleteAcc {{
         %(fp_enable_check)s;
         %(op_decl)s;
 
-        memcpy(&Mem, data, sizeof(Mem));
+        Mem = pkt->get<typeof(Mem)>();
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -406,7 +407,6 @@ def template StoreInitiateAcc {{
     {
         Addr EA;
         Fault fault = NoFault;
-        uint64_t write_result = 0;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -419,7 +419,7 @@ def template StoreInitiateAcc {{
 
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
+                              memAccessFlags, NULL);
             if (traceData) { traceData->setData(Mem); }
         }
 
@@ -429,17 +429,39 @@ def template StoreInitiateAcc {{
 
 
 def template StoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(uint8_t *data,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        uint64_t write_result = 0;
 
         %(fp_enable_check)s;
         %(op_dest_decl)s;
 
-        memcpy(&write_result, data, sizeof(write_result));
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+
+def template StoreCondCompleteAcc {{
+    Fault %(class_name)s::completeAcc(Packet *pkt,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_dest_decl)s;
+
+        uint64_t write_result = pkt->req->getScResult();
 
         if (fault == NoFault) {
             %(postacc_code)s;
@@ -505,7 +527,7 @@ def template MiscInitiateAcc {{
 
 
 def template MiscCompleteAcc {{
-    Fault %(class_name)s::completeAcc(uint8_t *data,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -577,7 +599,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     if (exec_template_base == 'Load'):
         initiateacc_cblk = CodeBlock(ea_code + memacc_code)
         completeacc_cblk = CodeBlock(memacc_code + postacc_code)
-    elif (exec_template_base == 'Store'):
+    elif (exec_template_base.startswith('Store')):
         initiateacc_cblk = CodeBlock(ea_code + memacc_code)
         completeacc_cblk = CodeBlock(postacc_code)
     else:
@@ -595,7 +617,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
         initiateacc_iop.memacc_code = memacc_cblk.code
         completeacc_iop.memacc_code = memacc_cblk.code
         completeacc_iop.postacc_code = postacc_cblk.code
-    elif (exec_template_base == 'Store'):
+    elif (exec_template_base.startswith('Store')):
         initiateacc_iop.ea_code = ea_cblk.code
         initiateacc_iop.memacc_code = memacc_cblk.code
         completeacc_iop.postacc_code = postacc_cblk.code
@@ -616,6 +638,13 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
         memacc_iop.constructor += s
 
     # select templates
+
+    # define aliases... most StoreCond templates are the same as the
+    # corresponding Store templates (only CompleteAcc is different).
+    StoreCondMemAccExecute = StoreMemAccExecute
+    StoreCondExecute = StoreExecute
+    StoreCondInitiateAcc = StoreInitiateAcc
+
     memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
     fullExecTemplate = eval(exec_template_base + 'Execute')
     initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
@@ -685,7 +714,7 @@ def format StoreCond(memacc_code, postacc_code,
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      postacc_code, exec_template_base = 'Store')
+                      postacc_code, exec_template_base = 'StoreCond')
 }};
 
 

@@ -51,6 +51,11 @@ execfile(models_db.srcnode().abspath)
 # Template for execute() signature.
 exec_sig_template = '''
 virtual Fault execute(%s *xc, Trace::InstRecord *traceData) const = 0;
+virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const
+{ panic("initiateAcc not defined!"); };
+virtual Fault completeAcc(Packet *pkt, %s *xc,
+                          Trace::InstRecord *traceData) const
+{ panic("completeAcc not defined!"); };
 '''
 
 # Generate header.  
@@ -62,7 +67,7 @@ def gen_cpu_exec_signatures(target, source, env):
 '''
     for cpu in env['CPU_MODELS']:
         xc_type = CpuModel.dict[cpu].strings['CPU_exec_context']
-        print >> f, exec_sig_template % xc_type
+        print >> f, exec_sig_template % (xc_type, xc_type, xc_type)
     print >> f, '''
 #endif  // __CPU_STATIC_INST_EXEC_SIGS_HH__
 '''
@@ -86,8 +91,17 @@ env.Command('static_inst_exec_sigs.hh', models_db,
 
 sources = []
 
-if 'SimpleCPU' in env['CPU_MODELS']:
-    sources += Split('simple/cpu.cc')
+need_simple_base = False
+if 'AtomicSimpleCPU' in env['CPU_MODELS']:
+    need_simple_base = True
+    sources += Split('simple/atomic.cc')
+
+if 'TimingSimpleCPU' in env['CPU_MODELS']:
+    need_simple_base = True
+    sources += Split('simple/timing.cc')
+
+if need_simple_base:
+    sources += Split('simple/base.cc')
 
 if 'FastCPU' in env['CPU_MODELS']:
     sources += Split('fast/cpu.cc')

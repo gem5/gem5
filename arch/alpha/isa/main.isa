@@ -60,6 +60,7 @@ output exec {{
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
+#include "mem/packet_impl.hh"
 
 using namespace AlphaISA;
 }};

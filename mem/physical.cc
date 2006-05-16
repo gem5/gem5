@@ -127,6 +127,7 @@ PhysicalMemory::doTimingAccess (Packet &pkt, MemoryPort* memoryPort)
 {
     doFunctionalAccess(pkt);
 
+    pkt.dest = pkt.src;
     MemResponseEvent* response = new MemResponseEvent(pkt, memoryPort);
     response->schedule(curTick + lat);
 

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
-#define __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
+#ifndef __CPU_SIMPLE_BASE_HH__
+#define __CPU_SIMPLE_BASE_HH__
 
 #include "base/statistics.hh"
 #include "config/full_system.hh"
@@ -65,107 +65,18 @@ namespace Trace {
 }
 
 
-// Set exactly one of these symbols to 1 to set the memory access
-// model.  Probably should make these template parameters, or even
-// just fork the CPU models.
-//
-#define SIMPLE_CPU_MEM_TIMING    0
-#define SIMPLE_CPU_MEM_ATOMIC    0
-#define SIMPLE_CPU_MEM_IMMEDIATE 1
-
-
-class SimpleCPU : public BaseCPU
+class BaseSimpleCPU : public BaseCPU
 {
   protected:
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    class CpuPort : public Port
-    {
-
-        SimpleCPU *cpu;
-
-      public:
-
-        CpuPort(SimpleCPU *_cpu)
-            : cpu(_cpu)
-        { }
-
-      protected:
-
-        virtual bool recvTiming(Packet &pkt);
-
-        virtual Tick recvAtomic(Packet &pkt);
-
-        virtual void recvFunctional(Packet &pkt);
-
-        virtual void recvStatusChange(Status status);
-
-        virtual Packet *recvRetry();
-
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-            AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
-    };
 
     MemObject *mem;
-    CpuPort icachePort;
-    CpuPort dcachePort;
 
-  public:
-    // main simulation loop (one cycle)
-    void tick();
-    virtual void init();
-
-  private:
-    struct TickEvent : public Event
-    {
-        SimpleCPU *cpu;
-        int width;
-
-        TickEvent(SimpleCPU *c, int w);
-        void process();
-        const char *description();
-    };
-
-    TickEvent tickEvent;
-
-    /// Schedule tick event, regardless of its current state.
-    void scheduleTickEvent(int numCycles)
-    {
-        if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + cycles(numCycles));
-        else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + cycles(numCycles));
-    }
-
-    /// Unschedule tick event, regardless of its current state.
-    void unscheduleTickEvent()
-    {
-        if (tickEvent.scheduled())
-            tickEvent.squash();
-    }
-
-  private:
+  protected:
     Trace::InstRecord *traceData;
-
-  public:
-    //
-    enum Status {
-        Running,
-        Idle,
-        IcacheRetry,
-        IcacheWaitResponse,
-        IcacheAccessComplete,
-        DcacheRetry,
-        DcacheWaitResponse,
-        DcacheWaitSwitch,
-        SwitchedOut
-    };
-
-  private:
-    Status _status;
 
   public:
     void post_interrupt(int int_num, int index);
@@ -181,7 +92,6 @@ class SimpleCPU : public BaseCPU
   public:
     struct Params : public BaseCPU::Params
     {
-        int width;
         MemObject *mem;
 #if FULL_SYSTEM
         AlphaITB *itb;
@@ -190,17 +100,14 @@ class SimpleCPU : public BaseCPU
         Process *process;
 #endif
     };
-    SimpleCPU(Params *params);
-    virtual ~SimpleCPU();
+    BaseSimpleCPU(Params *params);
+    virtual ~BaseSimpleCPU();
 
   public:
     // execution context
     CPUExecContext *cpuXC;
 
     ExecContext *xcProxy;
-
-    void switchOut(Sampler *s);
-    void takeOverFrom(BaseCPU *oldCPU);
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
@@ -214,17 +121,6 @@ class SimpleCPU : public BaseCPU
     // Static data storage
     TheISA::IntReg dataReg;
 
-#if SIMPLE_CPU_MEM_TIMING
-    Packet *retry_pkt;
-#elif SIMPLE_CPU_MEM_ATOMIC || SIMPLE_CPU_MEM_IMMEDIATE
-    Request *ifetch_req;
-    Packet  *ifetch_pkt;
-    Request *data_read_req;
-    Packet  *data_read_pkt;
-    Request *data_write_req;
-    Packet  *data_write_pkt;
-#endif
-
     // Pointer to the sampler that is telling us to switchover.
     // Used to signal the completion of the pipe drain and schedule
     // the next switchover
@@ -232,10 +128,12 @@ class SimpleCPU : public BaseCPU
 
     StaticInstPtr curStaticInst;
 
-    Status status() const { return _status; }
+    void checkForInterrupts();
+    Fault setupFetchPacket(Packet *ifetch_pkt);
+    void preExecute();
+    void postExecute();
+    void advancePC(Fault fault);
 
-    virtual void activateContext(int thread_num, int delay);
-    virtual void suspendContext(int thread_num);
     virtual void deallocateContext(int thread_num);
     virtual void haltContext(int thread_num);
 
@@ -280,26 +178,13 @@ class SimpleCPU : public BaseCPU
     Stats::Scalar<> dcacheRetryCycles;
     Counter lastDcacheRetry;
 
-    void sendIcacheRequest(Packet *pkt);
-    void sendDcacheRequest(Packet *pkt);
-    void processResponse(Packet &response);
-
-    Packet * processRetry();
-    void recvStatusChange(Port::Status status) {}
-
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
-
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
-
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
-    void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
-    Addr getEA() 	{ panic("SimpleCPU::getEA() not implemented\n"); }
+    void setEA(Addr EA) { panic("BaseSimpleCPU::setEA() not implemented\n"); }
+    Addr getEA() 	{ panic("BaseSimpleCPU::getEA() not implemented\n"); }
 
     void prefetch(Addr addr, unsigned flags)
     {
@@ -428,4 +313,4 @@ class SimpleCPU : public BaseCPU
     ExecContext *xcBase() { return xcProxy; }
 };
 
-#endif // __CPU_SIMPLE_CPU_SIMPLE_CPU_HH__
+#endif // __CPU_SIMPLE_BASE_HH__

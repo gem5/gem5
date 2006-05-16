@@ -121,6 +121,8 @@ struct Packet
     /** A index of the source of the transaction. */
     short src;
 
+    static const short Broadcast = -1;
+
     /** A index to the destination of the transaction. */
     short dest;
 

@@ -6,7 +6,7 @@ class HelloWorld(AlphaLiveProcess):
 
 magicbus = Bus()
 mem = PhysicalMemory()
-cpu = SimpleCPU(workload=HelloWorld(), mem=magicbus)
+cpu = AtomicSimpleCPU(workload=HelloWorld(), mem=magicbus)
 system = System(physmem=mem, cpu=cpu)
 system.c1 =  Connector(side_a=mem, side_b=magicbus)
 root = Root(system=system)

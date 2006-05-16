@@ -56,9 +56,12 @@ class CpuModel:
 #   - substitution strings for ISA description templates
 #
 
-CpuModel('SimpleCPU', 'simple_cpu_exec.cc',
-         '#include "cpu/simple/cpu.hh"',
-         { 'CPU_exec_context': 'SimpleCPU' })
+CpuModel('AtomicSimpleCPU', 'atomic_simple_cpu_exec.cc',
+         '#include "cpu/simple/atomic.hh"',
+         { 'CPU_exec_context': 'AtomicSimpleCPU' })
+CpuModel('TimingSimpleCPU', 'timing_simple_cpu_exec.cc',
+         '#include "cpu/simple/timing.hh"',
+         { 'CPU_exec_context': 'TimingSimpleCPU' })
 CpuModel('FastCPU', 'fast_cpu_exec.cc',
          '#include "cpu/fast/cpu.hh"',
          { 'CPU_exec_context': 'FastCPU' })

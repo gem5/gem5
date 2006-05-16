@@ -57,15 +57,15 @@ class Bus : public MemObject
 
     /** Function called by the port when the bus is recieving a Timing
         transaction.*/
-    bool recvTiming(Packet &pkt, int id);
+    bool recvTiming(Packet &pkt);
 
     /** Function called by the port when the bus is recieving a Atomic
         transaction.*/
-    Tick recvAtomic(Packet &pkt, int id);
+    Tick recvAtomic(Packet &pkt);
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
-    void recvFunctional(Packet &pkt, int id);
+    void recvFunctional(Packet &pkt);
 
     /** Function called by the port when the bus is recieving a status change.*/
     void recvStatusChange(Port::Status status, int id);
@@ -77,8 +77,7 @@ class Bus : public MemObject
      *             loops)
      * @return pointer to port that the packet should be sent out of.
      */
-    Port *
-    Bus::findPort(Addr addr, int id);
+    Port *findPort(Addr addr, int id);
 
     /** Process address range request.
      * @param resp addresses that we can respond to
@@ -110,17 +109,17 @@ class Bus : public MemObject
         /** When reciving a timing request from the peer port (at id),
             pass it to the bus. */
         virtual bool recvTiming(Packet &pkt)
-        { return bus->recvTiming(pkt, id); }
+        { pkt.src = id; return bus->recvTiming(pkt); }
 
         /** When reciving a Atomic requestfrom the peer port (at id),
             pass it to the bus. */
         virtual Tick recvAtomic(Packet &pkt)
-        { return bus->recvAtomic(pkt, id); }
+        { pkt.src = id; return bus->recvAtomic(pkt); }
 
         /** When reciving a Functional requestfrom the peer port (at id),
             pass it to the bus. */
         virtual void recvFunctional(Packet &pkt)
-        { bus->recvFunctional(pkt, id); }
+        { pkt.src = id; bus->recvFunctional(pkt); }
 
         /** When reciving a status changefrom the peer port (at id),
             pass it to the bus. */
@@ -131,7 +130,8 @@ class Bus : public MemObject
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
-        virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
         { bus->addressRanges(resp, snoop, id); }
 
         // Hack to make translating port work without changes

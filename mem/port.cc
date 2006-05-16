@@ -31,6 +31,7 @@
  */
 
 #include "base/chunk_generator.hh"
+#include "mem/packet_impl.hh"
 #include "mem/port.hh"
 
 void
@@ -40,6 +41,7 @@ Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
     Packet pkt;
     pkt.req = &req;
     pkt.cmd = cmd;
+    pkt.dest = Packet::Broadcast;
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {

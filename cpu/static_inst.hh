@@ -43,12 +43,14 @@
 struct AlphaSimpleImpl;
 class ExecContext;
 class DynInst;
+class Packet;
 
 template <class Impl>
 class AlphaDynInst;
 
 class FastCPU;
-class SimpleCPU;
+class AtomicSimpleCPU;
+class TimingSimpleCPU;
 class InorderCPU;
 class SymbolTable;
 
