@@ -135,9 +135,9 @@ class CPUExecContext
     Addr profilePC;
     void dumpFuncProfile();
 
-    Event *quiesceEvent;
+    EndQuiesceEvent *quiesceEvent;
 
-    Event *getQuiesceEvent() { return quiesceEvent; }
+    EndQuiesceEvent *getQuiesceEvent() { return quiesceEvent; }
 
     Tick readLastActivate() { return lastActivate; }
 

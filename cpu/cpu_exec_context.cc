@@ -159,6 +159,16 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
     func_exe_inst = oldContext->readFuncExeInst();
 #endif
 
+    EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
+    if (quiesce) {
+        // Point the quiesce event's XC at this XC so that it wakes up
+        // the proper CPU.
+        quiesce->xc = proxy;
+    }
+    if (quiesceEvent) {
+        quiesceEvent->xc = proxy;
+    }
+
     storeCondFailures = 0;
 
     oldContext->setStatus(ExecContext::Unallocated);

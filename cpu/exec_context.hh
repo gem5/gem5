@@ -42,6 +42,7 @@
 class AlphaDTB;
 class AlphaITB;
 class BaseCPU;
+class EndQuiesceEvent;
 class Event;
 class FunctionalMemory;
 class PhysicalMemory;
@@ -130,7 +131,7 @@ class ExecContext
     virtual void unserialize(Checkpoint *cp, const std::string &section) = 0;
 
 #if FULL_SYSTEM
-    virtual Event *getQuiesceEvent() = 0;
+    virtual EndQuiesceEvent *getQuiesceEvent() = 0;
 
     // Not necessarily the best location for these...
     // Having an extra function just to read these is obnoxious
@@ -277,7 +278,7 @@ class ProxyExecContext : public ExecContext
     { actualXC->unserialize(cp, section); }
 
 #if FULL_SYSTEM
-    Event *getQuiesceEvent() { return actualXC->getQuiesceEvent(); }
+    EndQuiesceEvent *getQuiesceEvent() { return actualXC->getQuiesceEvent(); }
 
     Tick readLastActivate() { return actualXC->readLastActivate(); }
     Tick readLastSuspend() { return actualXC->readLastSuspend(); }

@@ -38,6 +38,7 @@
 #include "cpu/base.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/quiesce_event.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
@@ -83,7 +84,7 @@ namespace AlphaPseudo
         if (!doQuiesce || ns == 0)
             return;
 
-        Event *quiesceEvent = xc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = xc->getQuiesceEvent();
 
         if (quiesceEvent->scheduled())
             quiesceEvent->reschedule(curTick + Clock::Int::ns * ns);
@@ -100,7 +101,7 @@ namespace AlphaPseudo
         if (!doQuiesce || cycles == 0)
             return;
 
-        Event *quiesceEvent = xc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = xc->getQuiesceEvent();
 
         if (quiesceEvent->scheduled())
             quiesceEvent->reschedule(curTick +
