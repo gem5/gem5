@@ -74,4 +74,7 @@ CpuModel('OzoneSimpleCPU', 'ozone_simple_exec.cc',
 CpuModel('OzoneCPU', 'ozone_exec.cc',
          '#include "cpu/ozone/dyn_inst.hh"',
          { 'CPU_exec_context': 'OzoneDynInst<OzoneImpl>' })
+CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
+         '#include "cpu/checker/cpu.hh"',
+         { 'CPU_exec_context': 'CheckerCPU' })
 

@@ -150,6 +150,13 @@ if 'OzoneCPU' in env['CPU_MODELS']:
         ozone/lw_lsq.cc
         ''')
 
+if 'CheckerCPU' in env['CPU_MODELS']:
+    sources += Split('''
+        checker/cpu.cc
+        checker/cpu_builder.cc
+        checker/o3_cpu_builder.cc
+        ''')
+
 # FullCPU sources are included from m5/SConscript since they're not
 # below this point in the file hierarchy.
 

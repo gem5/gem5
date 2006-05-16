@@ -164,6 +164,7 @@ BaseCPU::Params::Params()
 #if FULL_SYSTEM
     profile = false;
 #endif
+    checker = NULL;
 }
 
 void
@@ -229,15 +230,18 @@ BaseCPU::registerExecContexts()
 {
     for (int i = 0; i < execContexts.size(); ++i) {
         ExecContext *xc = execContexts[i];
+
+        if (xc->status() == ExecContext::Suspended) {
 #if FULL_SYSTEM
-        int id = params->cpu_id;
-        if (id != -1)
-            id += i;
+            int id = params->cpu_id;
+            if (id != -1)
+                id += i;
 
         xc->setCpuId(system->registerExecContext(xc, id));
 #else
         xc->setCpuId(xc->getProcessPtr()->registerExecContext(xc));
 #endif
+        }
     }
 }
 

@@ -150,7 +150,8 @@ baseFlags = [
     'DependGraph',
     'Activity',
     'Scoreboard',
-    'Writeback'
+    'Writeback',
+    'Checker'
     ]
 
 #

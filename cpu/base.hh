@@ -44,6 +44,7 @@ namespace Kernel { class Statistics; }
 #endif
 
 class BranchPred;
+class CheckerCPU;
 class ExecContext;
 
 class BaseCPU : public SimObject
@@ -128,6 +129,7 @@ class BaseCPU : public SimObject
         int cpu_id;
         Tick profile;
 #endif
+        BaseCPU *checker;
 
         Params();
     };

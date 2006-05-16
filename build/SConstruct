@@ -223,7 +223,7 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 
 # Define the universe of supported CPU models
 env['ALL_CPU_LIST'] = ['SimpleCPU', 'FastCPU', 'FullCPU', 'AlphaFullCPU',
-                       'OzoneSimpleCPU', 'OzoneCPU']
+                       'OzoneSimpleCPU', 'OzoneCPU', 'CheckerCPU']
 
 
 # Sticky options get saved in the options file so they persist from
