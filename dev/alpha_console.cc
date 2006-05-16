@@ -31,7 +31,6 @@
  */
 
 #include <cstddef>
-#include <cstdio>
 #include <string>
 
 #include "arch/alpha/system.hh"

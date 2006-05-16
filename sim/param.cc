@@ -28,7 +28,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdio>
 #include <list>
 #include <string>
 #include <vector>

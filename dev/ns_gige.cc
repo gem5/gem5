@@ -30,7 +30,6 @@
  * Device module for modelling the National Semiconductor
  * DP83820 ethernet controller.  Does not support priority queueing
  */
-#include <cstdio>
 #include <deque>
 #include <string>
 

@@ -26,14 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
-#include <list>
-#include <string>
-
 #include "arch/utility.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"

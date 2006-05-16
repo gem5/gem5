@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <cstdio>
 #include <string>
 
 #include "base/intmath.hh"
