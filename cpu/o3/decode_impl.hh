@@ -166,6 +166,7 @@ template <class Impl>
 void
 DefaultDecode<Impl>::switchOut()
 {
+    cpu->signalSwitched();
 }
 
 template <class Impl>

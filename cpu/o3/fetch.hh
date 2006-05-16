@@ -165,6 +165,8 @@ class DefaultFetch
 
     void switchOut();
 
+    void doSwitchOut();
+
     void takeOverFrom();
 
     bool isSwitchedOut() { return switchedOut; }
@@ -370,6 +372,11 @@ class DefaultFetch
     bool interruptPending;
 
     bool switchedOut;
+
+  public:
+    InstSeqNum &getYoungestSN() { return youngestSN; }
+  private:
+    InstSeqNum youngestSN;
 
 #if !FULL_SYSTEM
     /** Page table pointer. */

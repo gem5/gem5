@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
@@ -54,7 +55,8 @@ template <class Impl>
 void
 DefaultCommit<Impl>::TrapEvent::process()
 {
-    // This will get reset if it was switched out.
+    // This will get reset by commit if it was switched out at the
+    // time of this event processing.
     commit->trapSquash[tid] = true;
 }
 
@@ -77,7 +79,9 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       iewWidth(params->executeWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numberOfThreads),
-      switchedOut(false)
+      switchedOut(false),
+      trapLatency(params->trapLatency),
+      fetchTrapLatency(params->fetchTrapLatency)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -117,9 +121,6 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         xcSquash[i] = false;
     }
 
-    // Hardcoded trap latency.
-    trapLatency = 6;
-    fetchTrapLatency = 12;
     fetchFaultTick = 0;
     fetchTrapWait = 0;
 }
@@ -153,20 +154,6 @@ DefaultCommit<Impl>::regStats()
         .desc("The number of times commit has been forced to stall to "
               "communicate backwards")
         .prereq(commitNonSpecStalls);
-/*
-    commitCommittedBranches
-        .name(name() + ".commitCommittedBranches")
-        .desc("The number of committed branches")
-        .prereq(commitCommittedBranches);
-    commitCommittedLoads
-        .name(name() + ".commitCommittedLoads")
-        .desc("The number of committed loads")
-        .prereq(commitCommittedLoads);
-    commitCommittedMemRefs
-        .name(name() + ".commitCommittedMemRefs")
-        .desc("The number of committed memory references")
-        .prereq(commitCommittedMemRefs);
-*/
     branchMispredicts
         .name(name() + ".branchMispredicts")
         .desc("The number of times a branch was mispredicted")
@@ -178,42 +165,42 @@ DefaultCommit<Impl>::regStats()
         .flags(Stats::pdf)
         ;
 
-    stat_com_inst
+    statComInst
         .init(cpu->number_of_threads)
         .name(name() + ".COM:count")
         .desc("Number of instructions committed")
         .flags(total)
         ;
 
-    stat_com_swp
+    statComSwp
         .init(cpu->number_of_threads)
         .name(name() + ".COM:swp_count")
         .desc("Number of s/w prefetches committed")
         .flags(total)
         ;
 
-    stat_com_refs
+    statComRefs
         .init(cpu->number_of_threads)
         .name(name() +  ".COM:refs")
         .desc("Number of memory references committed")
         .flags(total)
         ;
 
-    stat_com_loads
+    statComLoads
         .init(cpu->number_of_threads)
         .name(name() +  ".COM:loads")
         .desc("Number of loads committed")
         .flags(total)
         ;
 
-    stat_com_membars
+    statComMembars
         .init(cpu->number_of_threads)
         .name(name() +  ".COM:membars")
         .desc("Number of memory barriers committed")
         .flags(total)
         ;
 
-    stat_com_branches
+    statComBranches
         .init(cpu->number_of_threads)
         .name(name() + ".COM:branches")
         .desc("Number of branches committed")
@@ -233,14 +220,14 @@ DefaultCommit<Impl>::regStats()
     //  -> The standard deviation is computed only over cycles where
     //  we reached the BW limit
     //
-    commit_eligible
+    commitEligible
         .init(cpu->number_of_threads)
         .name(name() + ".COM:bw_limited")
         .desc("number of insts not committed due to BW limits")
         .flags(total)
         ;
 
-    commit_eligible_samples
+    commitEligibleSamples
         .name(name() + ".COM:bw_lim_events")
         .desc("number cycles where commit BW limit reached")
         ;
@@ -257,8 +244,8 @@ DefaultCommit<Impl>::setCPU(FullCPU *cpu_ptr)
     // the simulation, so it starts as active.
     cpu->activateStage(FullCPU::CommitIdx);
 
-    trapLatency = cpu->cycles(6);
-    fetchTrapLatency = cpu->cycles(12);
+    trapLatency = cpu->cycles(trapLatency);
+    fetchTrapLatency = cpu->cycles(fetchTrapLatency);
 }
 
 template <class Impl>
@@ -317,6 +304,13 @@ DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
 template <class Impl>
 void
+DefaultCommit<Impl>::setFetchStage(Fetch *fetch_stage)
+{
+    fetchStage = fetch_stage;
+}
+
+template <class Impl>
+void
 DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
 {
     iewStage = iew_stage;
@@ -369,6 +363,15 @@ template <class Impl>
 void
 DefaultCommit<Impl>::switchOut()
 {
+    switchPending = true;
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::doSwitchOut()
+{
+    switchedOut = true;
+    switchPending = false;
     rob->switchOut();
 }
 
@@ -376,6 +379,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::takeOverFrom()
 {
+    switchedOut = false;
     _status = Active;
     _nextStatus = Inactive;
     for (int i=0; i < numThreads; i++) {
@@ -392,9 +396,17 @@ template <class Impl>
 void
 DefaultCommit<Impl>::updateStatus()
 {
-    if (commitStatus[0] == TrapPending ||
-        commitStatus[0] == FetchTrapPending) {
-        _nextStatus = Active;
+    // reset ROB changed variable
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+    while (threads != (*activeThreads).end()) {
+        unsigned tid = *threads++;
+        changedROBNumEntries[tid] = false;
+
+        // Also check if any of the threads has a trap pending
+        if (commitStatus[tid] == TrapPending ||
+            commitStatus[tid] == FetchTrapPending) {
+            _nextStatus = Active;
+        }
     }
 
     if (_nextStatus == Inactive && _status == Active) {
@@ -406,13 +418,6 @@ DefaultCommit<Impl>::updateStatus()
     }
 
     _status = _nextStatus;
-
-    // reset ROB changed variable
-    list<unsigned>::iterator threads = (*activeThreads).begin();
-    while (threads != (*activeThreads).end()) {
-        unsigned tid = *threads++;
-        changedROBNumEntries[tid] = false;
-    }
 }
 
 template <class Impl>
@@ -488,64 +493,8 @@ DefaultCommit<Impl>::generateXCEvent(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashFromTrap(unsigned tid)
+DefaultCommit<Impl>::squashAll(unsigned tid)
 {
-    // If we want to include the squashing instruction in the squash,
-    // then use one older sequence number.
-    // Hopefully this doesn't mess things up.  Basically I want to squash
-    // all instructions of this thread.
-    InstSeqNum squashed_inst = rob->isEmpty() ?
-        0 : rob->readHeadInst(tid)->seqNum - 1;
-
-    // All younger instructions will be squashed. Set the sequence
-    // number as the youngest instruction in the ROB (0 in this case.
-    // Hopefully nothing breaks.)
-    youngestSeqNum[tid] = 0;
-
-    rob->squash(squashed_inst, tid);
-    changedROBNumEntries[tid] = true;
-
-    // Send back the sequence number of the squashed instruction.
-    toIEW->commitInfo[tid].doneSeqNum = squashed_inst;
-
-    // Send back the squash signal to tell stages that they should
-    // squash.
-    toIEW->commitInfo[tid].squash = true;
-
-    // Send back the rob squashing signal so other stages know that
-    // the ROB is in the process of squashing.
-    toIEW->commitInfo[tid].robSquashing = true;
-
-    toIEW->commitInfo[tid].branchMispredict = false;
-
-//    toIEW->commitInfo[tid].branchTaken = fromIEW->branchTaken[tid];
-
-    toIEW->commitInfo[tid].nextPC = PC[tid];
-
-    DPRINTF(Commit, "Squashing from trap, restarting at PC %#x\n", PC[tid]);
-    // Hopefully nobody tries to use the mispredPC becuase I said there
-    // wasn't a branch mispredict.
-//    toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
-
-    thread[tid]->trapPending = false;
-    thread[tid]->inSyscall = false;
-
-    trapSquash[tid] = false;
-
-    // Not sure what to set this to...
-    commitStatus[tid] = ROBSquashing;
-    cpu->activityThisCycle();
-
-    ++squashCounter;
-}
-
-template <class Impl>
-void
-DefaultCommit<Impl>::squashFromXC(unsigned tid)
-{
-    // For now these are identical.  In the future, the squash from trap
-    // might execute the trap prior to the squash.
-
     // If we want to include the squashing instruction in the squash,
     // then use one older sequence number.
     // Hopefully this doesn't mess things up.  Basically I want to squash
@@ -574,18 +523,39 @@ DefaultCommit<Impl>::squashFromXC(unsigned tid)
 
     toIEW->commitInfo[tid].branchMispredict = false;
 
-//    toIEW->commitInfo[tid].branchTaken = fromIEW->branchTaken[tid];
-
     toIEW->commitInfo[tid].nextPC = PC[tid];
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::squashFromTrap(unsigned tid)
+{
+    squashAll(tid);
+
+    DPRINTF(Commit, "Squashing from trap, restarting at PC %#x\n", PC[tid]);
+
+    thread[tid]->trapPending = false;
+    thread[tid]->inSyscall = false;
+
+    trapSquash[tid] = false;
+
+    commitStatus[tid] = ROBSquashing;
+    cpu->activityThisCycle();
+
+    ++squashCounter;
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::squashFromXC(unsigned tid)
+{
+    squashAll(tid);
 
     DPRINTF(Commit, "Squashing from XC, restarting at PC %#x\n", PC[tid]);
-    // Hopefully nobody tries to use the mispredPC becuase I said there
-    // wasn't a branch mispredict.
-//    toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 
     thread[tid]->inSyscall = false;
     assert(!thread[tid]->trapPending);
-    // Not sure what to set this to...
+
     commitStatus[tid] = ROBSquashing;
     cpu->activityThisCycle();
 
@@ -596,34 +566,20 @@ DefaultCommit<Impl>::squashFromXC(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashInFlightInsts(unsigned tid)
-{
-    // @todo: Fix this hardcoded number.
-    for (int i = 0; i < -5; ++i) {
-        for (int j = 0; j < (*iewQueue)[i].size; ++j) {
-            DynInstPtr inst = (*iewQueue)[i].insts[j];
-            if (inst->threadNumber == tid &&
-                !inst->isSquashed()) {
-                inst->setSquashed();
-            }
-        }
-    }
-}
-
-template <class Impl>
-void
 DefaultCommit<Impl>::tick()
 {
     wroteToTimeBuffer = false;
     _nextStatus = Inactive;
 
-    // If the ROB is currently in its squash sequence, then continue
-    // to squash.  In this case, commit does not do anything.  Otherwise
-    // run commit.
+    if (switchPending && rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        cpu->signalSwitched();
+        return;
+    }
+
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
-    // Maybe this should be dependent upon any of the commits actually
-    // squashing.
+    // Check if any of the threads are done squashing.  Change the
+    // status if they are done.
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
 
@@ -673,7 +629,7 @@ DefaultCommit<Impl>::tick()
 
 
     if (wroteToTimeBuffer) {
-        DPRINTF(Activity,"Activity This Cycle.\n");
+        DPRINTF(Activity, "Activity This Cycle.\n");
         cpu->activityThisCycle();
     }
 
@@ -689,28 +645,23 @@ DefaultCommit<Impl>::commit()
     // Check for interrupts
     //////////////////////////////////////
 
-    // Process interrupts if interrupts are enabled and not in PAL mode.
-    // Take the PC from commit and write it to the IPR, then squash.  The
-    // interrupt completing will take care of restoring the PC from that value
-    // in the IPR.  Look at IPR[EXC_ADDR];
-    // hwrei() is what resets the PC to the place where instruction execution
-    // beings again.
 #if FULL_SYSTEM
-//#if 0
+    // Process interrupts if interrupts are enabled, not in PAL mode,
+    // and no other traps or external squashes are currently pending.
+    // @todo: Allow other threads to handle interrupts.
     if (cpu->checkInterrupts &&
         cpu->check_interrupts() &&
         !cpu->inPalMode(readPC()) &&
         !trapSquash[0] &&
         !xcSquash[0]) {
-//        commitStatus[0] = TrapPending;
+        // Tell fetch that there is an interrupt pending.  This will
+        // make fetch wait until it sees a non PAL-mode PC, at which
+        // point it stops fetching instructions.
         toIEW->commitInfo[0].interruptPending = true;
-        if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
-            // Will need to squash all instructions currently in flight and have
-            // the interrupt handler restart at the last non-committed inst.
-            // Most of that can be handled through the trap() function.  The
-            // processInterrupts() function really just checks for interrupts
-            // and then calls trap() if there is an interrupt present.
 
+        // Wait until the ROB is empty and all stores have drained in
+        // order to enter the interrupt.
+        if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
             // Not sure which thread should be the one to interrupt.  For now
             // always do thread 0.
             assert(!thread[0]->inSyscall);
@@ -738,26 +689,27 @@ DefaultCommit<Impl>::commit()
 #endif // FULL_SYSTEM
 
     ////////////////////////////////////
-    // Check for squash signal, handle that first
+    // Check for any possible squashes, handle them first
     ////////////////////////////////////
 
-    // Check if the IEW stage is telling the ROB to squash.
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
 
         if (fromFetch->fetchFault && commitStatus[0] != TrapPending) {
-            // Record the fault.  Wait until it's empty in the ROB.  Then handle the trap.
-            // Ignore it if there's already a trap pending as fetch will be redirected.
+            // Record the fault.  Wait until it's empty in the ROB.
+            // Then handle the trap.  Ignore it if there's already a
+            // trap pending as fetch will be redirected.
             fetchFault = fromFetch->fetchFault;
-            fetchFaultSN = fromFetch->fetchFaultSN;
             fetchFaultTick = curTick + fetchTrapLatency;
             commitStatus[0] = FetchTrapPending;
             DPRINTF(Commit, "Fault from fetch recorded.  Will trap if the "
                     "ROB empties without squashing the fault.\n");
             fetchTrapWait = 0;
         }
+
+        // Fetch may tell commit to clear the trap if it's been squashed.
         if (fromFetch->clearFetchFault) {
             DPRINTF(Commit, "Received clear fetch fault signal\n");
             fetchTrapWait = 0;
@@ -782,10 +734,6 @@ DefaultCommit<Impl>::commit()
         if (fromIEW->squash[tid] &&
             commitStatus[tid] != TrapPending &&
             fromIEW->squashedSeqNum[tid] <= youngestSeqNum[tid]) {
-
-            DPRINTF(Commit, "[tid:%u]: Squashing instructions in the "
-                    "ROB.\n",
-                    tid);
 
             DPRINTF(Commit, "[tid:%i]: Squashing due to PC %#x [sn:%i]\n",
                     tid,
@@ -814,11 +762,8 @@ DefaultCommit<Impl>::commit()
             rob->squash(squashed_inst, tid);
             changedROBNumEntries[tid] = true;
 
-            // Send back the sequence number of the squashed instruction.
             toIEW->commitInfo[tid].doneSeqNum = squashed_inst;
 
-            // Send back the squash signal to tell stages that they should
-            // squash.
             toIEW->commitInfo[tid].squash = true;
 
             // Send back the rob squashing signal so other stages know that
@@ -833,11 +778,7 @@ DefaultCommit<Impl>::commit()
 
             toIEW->commitInfo[tid].nextPC = fromIEW->nextPC[tid];
 
-            DPRINTF(Commit, "Squashing from IEW, restarting at PC %#x\n",
-                    fromIEW->nextPC[tid]);
-
-            toIEW->commitInfo[tid].mispredPC =
-                fromIEW->mispredPC[tid];
+            toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 
             if (toIEW->commitInfo[tid].branchMispredict) {
                 ++branchMispredicts;
@@ -882,10 +823,11 @@ DefaultCommit<Impl>::commitInsts()
 {
     ////////////////////////////////////
     // Handle commit
-    // Note that commit will be handled prior to the ROB so that the ROB
-    // only tries to commit instructions it has in this current cycle, and
-    // not instructions it is writing in during this cycle.
-    // Can't commit and squash things at the same time...
+    // Note that commit will be handled prior to putting new
+    // instructions in the ROB so that the ROB only tries to commit
+    // instructions it has in this current cycle, and not instructions
+    // it is writing in during this cycle.  Can't commit and squash
+    // things at the same time...
     ////////////////////////////////////
 
     DPRINTF(Commit, "Trying to commit instructions in the ROB.\n");
@@ -894,51 +836,58 @@ DefaultCommit<Impl>::commitInsts()
 
     DynInstPtr head_inst;
 #if FULL_SYSTEM
-    if (commitStatus[0] == FetchTrapPending) {
+    // Not the best way to check if the front end is empty, but it should
+    // work.
+    // @todo: Try to avoid directly accessing fetch.
+    if (commitStatus[0] == FetchTrapPending && rob->isEmpty()) {
         DPRINTF(Commit, "Fault from fetch is pending.\n");
-        if (rob->isEmpty()) {
-            fetchTrapWait++;
-            if (fetchTrapWait > 10000000) {
-                panic("Fetch trap has been pending for a long time!");
-            }
-            if (fetchFaultTick > curTick) {
-                DPRINTF(Commit, "Not enough cycles since fault, fault will "
-                        "happen on %lli\n",
-                        fetchFaultTick);
-                cpu->activityThisCycle();
-                return;
-            } else if (iewStage->hasStoresToWB()) {
-                DPRINTF(Commit, "IEW still has stores to WB.  Waiting until "
-                        "they are completed. fetchTrapWait:%i\n",
-                        fetchTrapWait);
-                cpu->activityThisCycle();
-                return;
-            } else if (cpu->inPalMode(readPC())) {
-                DPRINTF(Commit, "In pal mode right now. fetchTrapWait:%i\n",
-                        fetchTrapWait);
-                return;
-            }
-            fetchTrapWait = 0;
-            DPRINTF(Commit, "ROB is empty, handling fetch trap.\n");
 
-            assert(!thread[0]->inSyscall);
-
-            thread[0]->inSyscall = true;
-
-            // Consider holding onto the trap and waiting until the trap event
-            // happens for this to be executed.
-            cpu->trap(fetchFault, 0);
-
-            // Exit state update mode to avoid accidental updating.
-            thread[0]->inSyscall = false;
-
-            commitStatus[0] = TrapPending;
-            // Set it up so that we squash next cycle
-            trapSquash[0] = true;
+        fetchTrapWait++;
+        if (fetchTrapWait > 10000000) {
+            panic("Fetch trap has been pending for a long time!");
+        }
+        if (fetchFaultTick > curTick) {
+            DPRINTF(Commit, "Not enough cycles since fault, fault will "
+                    "happen on %lli\n",
+                    fetchFaultTick);
+            cpu->activityThisCycle();
+            return;
+        } else if (iewStage->hasStoresToWB()) {
+            DPRINTF(Commit, "IEW still has stores to WB.  Waiting until "
+                    "they are completed. fetchTrapWait:%i\n",
+                    fetchTrapWait);
+            cpu->activityThisCycle();
+            return;
+        } else if (cpu->inPalMode(readPC())) {
+            DPRINTF(Commit, "In pal mode right now. fetchTrapWait:%i\n",
+                    fetchTrapWait);
+            return;
+        } else if (fetchStage->getYoungestSN() > youngestSeqNum[0]) {
+            DPRINTF(Commit, "Waiting for front end to drain. fetchTrapWait:%i\n",
+                    fetchTrapWait);
             return;
         }
+        fetchTrapWait = 0;
+        DPRINTF(Commit, "ROB is empty, handling fetch trap.\n");
+
+        assert(!thread[0]->inSyscall);
+
+        thread[0]->inSyscall = true;
+
+        // Consider holding onto the trap and waiting until the trap event
+        // happens for this to be executed.
+        cpu->trap(fetchFault, 0);
+
+        // Exit state update mode to avoid accidental updating.
+        thread[0]->inSyscall = false;
+
+        commitStatus[0] = TrapPending;
+        // Set it up so that we squash next cycle
+        trapSquash[0] = true;
+        return;
     }
 #endif
+
     // Commit as many instructions as possible until the commit bandwidth
     // limit is reached, or it becomes impossible to commit any more.
     while (num_committed < commitWidth) {
@@ -956,16 +905,13 @@ DefaultCommit<Impl>::commitInsts()
         DPRINTF(Commit, "Trying to commit head instruction, [sn:%i] [tid:%i]\n",
                 head_inst->seqNum, tid);
 
-        // If the head instruction is squashed, it is ready to retire at any
-        // time.  However, we need to avoid updating any other state
-        // incorrectly if it's already been squashed.
+        // If the head instruction is squashed, it is ready to retire
+        // (be removed from the ROB) at any time.
         if (head_inst->isSquashed()) {
 
             DPRINTF(Commit, "Retiring squashed instruction from "
                     "ROB.\n");
 
-            // Tell ROB to retire head instruction.  This retires the head
-            // inst in the ROB without affecting any other stages.
             rob->retireHead(commit_thread);
 
             ++commitSquashedInsts;
@@ -989,7 +935,6 @@ DefaultCommit<Impl>::commitInsts()
             if (commit_success) {
                 ++num_committed;
 
-                // Record that the number of ROB entries has changed.
                 changedROBNumEntries[tid] = true;
 
                 // Set the doneSeqNum to the youngest committed instruction.
@@ -1009,8 +954,11 @@ DefaultCommit<Impl>::commitInsts()
                 int count = 0;
                 Addr oldpc;
                 do {
+                    // Debug statement.  Checks to make sure we're not
+                    // currently updating state while handling PC events.
                     if (count == 0)
-                        assert(!thread[tid]->inSyscall && !thread[tid]->trapPending);
+                        assert(!thread[tid]->inSyscall &&
+                               !thread[tid]->trapPending);
                     oldpc = PC[tid];
                     cpu->system->pcEventQueue.service(
                         thread[tid]->getXCProxy());
@@ -1034,7 +982,7 @@ DefaultCommit<Impl>::commitInsts()
     numCommittedDist.sample(num_committed);
 
     if (num_committed == commitWidth) {
-        commit_eligible[0]++;
+        commitEligible[0]++;
     }
 }
 
@@ -1042,13 +990,12 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 {
-    // Make sure instruction is valid
     assert(head_inst);
 
     int tid = head_inst->threadNumber;
 
-    // If the instruction is not executed yet, then it is a non-speculative
-    // or store inst.  Signal backwards that it should be executed.
+    // If the instruction is not executed yet, then it will need extra
+    // handling.  Signal backwards that it should be executed.
     if (!head_inst->isExecuted()) {
         // Keep this number correct.  We have not yet actually executed
         // and committed this instruction.
@@ -1059,10 +1006,16 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         if (head_inst->isNonSpeculative() ||
             head_inst->isMemBarrier() ||
             head_inst->isWriteBarrier()) {
+
+            DPRINTF(Commit, "Encountered a barrier or non-speculative "
+                    "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
+                    head_inst->seqNum, head_inst->readPC());
+
 #if !FULL_SYSTEM
-            // Hack to make sure syscalls aren't executed until all stores
-            // write back their data.  This direct communication shouldn't
-            // be used for anything other than this.
+            // Hack to make sure syscalls/memory barriers/quiesces
+            // aren't executed until all stores write back their data.
+            // This direct communication shouldn't be used for
+            // anything other than this.
             if (inst_num > 0 || iewStage->hasStoresToWB())
 #else
             if ((head_inst->isMemBarrier() || head_inst->isWriteBarrier() ||
@@ -1074,11 +1027,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                 return false;
             }
 
-            DPRINTF(Commit, "Encountered a barrier or non-speculative "
-                    "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
-                    head_inst->seqNum, head_inst->readPC());
-
-            // Send back the non-speculative instruction's sequence number.
             toIEW->commitInfo[tid].nonSpecSeqNum = head_inst->seqNum;
 
             // Change the instruction so it won't try to commit again until
@@ -1093,7 +1041,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                     head_inst->seqNum, head_inst->readPC());
 
             // Send back the non-speculative instruction's sequence
-            // number.  Maybe just tell the lsq to re-execute the load.
+            // number.  Tell the lsq to re-execute the load.
             toIEW->commitInfo[tid].nonSpecSeqNum = head_inst->seqNum;
             toIEW->commitInfo[tid].uncached = true;
             toIEW->commitInfo[tid].uncachedLoad = head_inst;
@@ -1107,76 +1055,77 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         }
     }
 
-    // Now check if it's one of the special trap or barrier or
-    // serializing instructions.
-    if (head_inst->isThreadSync())/*  ||
-//        head_inst->isMemBarrier()  ||
-head_inst->isWriteBarrier())*/
-    {
+    if (head_inst->isThreadSync()) {
         // Not handled for now.
-        panic("Barrier instructions are not handled yet.\n");
+        panic("Thread sync instructions are not handled yet.\n");
     }
 
+    // Stores mark themselves as completed.
     if (!head_inst->isStore()) {
         head_inst->setCompleted();
+    }
+
+    // Use checker prior to updating anything due to traps or PC
+    // based events.
+    if (cpu->checker) {
+        cpu->checker->tick(head_inst);
     }
 
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
     if (inst_fault != NoFault) {
-        if (!head_inst->isNop()) {
+        head_inst->setCompleted();
 #if FULL_SYSTEM
-            DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
-                    head_inst->seqNum, head_inst->readPC());
+        DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
+                head_inst->seqNum, head_inst->readPC());
 
-            if (iewStage->hasStoresToWB()) {
-                DPRINTF(Commit, "Stores outstanding, fault must wait.\n");
-                return false;
-            }
-
-            assert(!thread[tid]->inSyscall);
-
-            thread[tid]->inSyscall = true;
-
-            // Hack for now; DTB will sometimes need the machine instruction
-            // for when faults happen.  So we will set it here, prior to the
-            // DTB possibly needing it for this translation.
-            thread[tid]->setInst(
-                static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
-
-            // Consider holding onto the trap and waiting until the trap event
-            // happens for this to be executed.
-            cpu->trap(inst_fault, tid);
-
-            // Exit state update mode to avoid accidental updating.
-            thread[tid]->inSyscall = false;
-
-            commitStatus[tid] = TrapPending;
-
-            // Generate trap squash event.
-            generateTrapEvent(tid);
-
+        if (iewStage->hasStoresToWB() || inst_num > 0) {
+            DPRINTF(Commit, "Stores outstanding, fault must wait.\n");
             return false;
-#else // !FULL_SYSTEM
-            panic("fault (%d) detected @ PC %08p", inst_fault,
-                  head_inst->PC);
-#endif // FULL_SYSTEM
         }
-    }
 
-    // Check if we're really ready to commit.  If not then return false.
-    // I'm pretty sure all instructions should be able to commit if they've
-    // reached this far.  For now leave this in as a check.
-    if (!rob->isHeadReady(tid)) {
-        panic("Unable to commit head instruction!\n");
+        if (cpu->checker && head_inst->isStore()) {
+            cpu->checker->tick(head_inst);
+        }
+
+        assert(!thread[tid]->inSyscall);
+
+        // Mark that we're in state update mode so that the trap's
+        // execution doesn't generate extra squashes.
+        thread[tid]->inSyscall = true;
+
+        // DTB will sometimes need the machine instruction for when
+        // faults happen.  So we will set it here, prior to the DTB
+        // possibly needing it for its fault.
+        thread[tid]->setInst(
+            static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
+
+        // Execute the trap.  Although it's slightly unrealistic in
+        // terms of timing (as it doesn't wait for the full timing of
+        // the trap event to complete before updating state), it's
+        // needed to update the state as soon as possible.  This
+        // prevents external agents from changing any specific state
+        // that the trap need.
+        cpu->trap(inst_fault, tid);
+
+        // Exit state update mode to avoid accidental updating.
+        thread[tid]->inSyscall = false;
+
+        commitStatus[tid] = TrapPending;
+
+        // Generate trap squash event.
+        generateTrapEvent(tid);
+
         return false;
+#else // !FULL_SYSTEM
+        panic("fault (%d) detected @ PC %08p", inst_fault,
+              head_inst->PC);
+#endif // FULL_SYSTEM
     }
 
     updateComInstStats(head_inst);
 
-    // Now that the instruction is going to be committed, finalize its
-    // trace data.
     if (head_inst->traceData) {
         head_inst->traceData->setFetchSeq(head_inst->seqNum);
         head_inst->traceData->setCPSeq(thread[tid]->numInst);
@@ -1201,13 +1150,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::getInsts()
 {
-    //////////////////////////////////////
-    // Handle ROB functions
-    //////////////////////////////////////
-
-    // Read any renamed instructions and place them into the ROB.  Do this
-    // prior to squashing to avoid having instructions in the ROB that
-    // don't get squashed properly.
+    // Read any renamed instructions and place them into the ROB.
     int insts_to_process = min((int)renameWidth, fromRename->size);
 
     for (int inst_num = 0; inst_num < insts_to_process; ++inst_num)
@@ -1246,7 +1189,8 @@ DefaultCommit<Impl>::markCompletedInsts()
          ++inst_num)
     {
         if (!fromIEW->insts[inst_num]->isSquashed()) {
-            DPRINTF(Commit, "[tid:%i]: Marking PC %#x, SN %i ready within ROB.\n",
+            DPRINTF(Commit, "[tid:%i]: Marking PC %#x, [sn:%lli] ready "
+                    "within ROB.\n",
                     fromIEW->insts[inst_num]->threadNumber,
                     fromIEW->insts[inst_num]->readPC(),
                     fromIEW->insts[inst_num]->seqNum);
@@ -1254,30 +1198,6 @@ DefaultCommit<Impl>::markCompletedInsts()
             // Mark the instruction as ready to commit.
             fromIEW->insts[inst_num]->setCanCommit();
         }
-    }
-}
-
-template <class Impl>
-uint64_t
-DefaultCommit<Impl>::readPC()
-{
-    // @todo: Fix this single thread hack.
-    return PC[0];
-}
-
-template <class Impl>
-void
-DefaultCommit<Impl>::setSquashing(unsigned tid)
-{
-    if (_status == Inactive) {
-        DPRINTF(Activity, "Activating stage.\n");
-        _status = Active;
-        cpu->activateStage(FullCPU::CommitIdx);
-    }
-
-    if (commitStatus[tid] != ROBSquashing) {
-        commitStatus[tid] = ROBSquashing;
-        ++squashCounter;
     }
 }
 
@@ -1308,39 +1228,39 @@ DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch()) {
-        stat_com_swp[thread]++;
+        statComSwp[thread]++;
     } else {
-        stat_com_inst[thread]++;
+        statComInst[thread]++;
     }
 #else
-    stat_com_inst[thread]++;
+    statComInst[thread]++;
 #endif
 
     //
     //  Control Instructions
     //
     if (inst->isControl())
-        stat_com_branches[thread]++;
+        statComBranches[thread]++;
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        stat_com_refs[thread]++;
+        statComRefs[thread]++;
 
         if (inst->isLoad()) {
-            stat_com_loads[thread]++;
+            statComLoads[thread]++;
         }
     }
 
     if (inst->isMemBarrier()) {
-        stat_com_membars[thread]++;
+        statComMembars[thread]++;
     }
 }
 
 ////////////////////////////////////////
 //                                    //
-//   SMT COMMIT POLICY MAITAINED HERE //
+//  SMT COMMIT POLICY MAINTAINED HERE //
 //                                    //
 ////////////////////////////////////////
 template <class Impl>

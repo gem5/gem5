@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,6 +61,8 @@ SimObjectVectorParam<Process *> workload;
 
 SimObjectParam<FunctionalMemory *> mem;
 
+SimObjectParam<BaseCPU *> checker;
+
 Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
@@ -103,6 +105,8 @@ Param<unsigned> iewToCommitDelay;
 Param<unsigned> renameToROBDelay;
 Param<unsigned> commitWidth;
 Param<unsigned> squashWidth;
+Param<Tick> trapLatency;
+Param<Tick> fetchTrapLatency;
 
 Param<unsigned> localPredictorSize;
 Param<unsigned> localCtrBits;
@@ -165,6 +169,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
     INIT_PARAM_DFLT(mem, "Memory", NULL),
 
+    INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
+
     INIT_PARAM_DFLT(max_insts_any_thread,
                     "Terminate when any thread reaches this inst count",
                     0),
@@ -223,6 +229,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(renameToROBDelay, "Rename to reorder buffer delay"),
     INIT_PARAM(commitWidth, "Commit width"),
     INIT_PARAM(squashWidth, "Squash width"),
+    INIT_PARAM_DFLT(trapLatency, "Number of cycles before the trap is handled", 6),
+    INIT_PARAM_DFLT(fetchTrapLatency, "Number of cycles before the fetch trap is handled", 12),
 
     INIT_PARAM(localPredictorSize, "Size of local predictor"),
     INIT_PARAM(localCtrBits, "Bits per counter"),
@@ -301,11 +309,12 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->dtb = dtb;
 #else
     params->workload = workload;
-    //@todo: change to pageTable
 //    params->pTable = page_table;
 #endif // FULL_SYSTEM
 
     params->mem = mem;
+
+    params->checker = checker;
 
     params->max_insts_any_thread = max_insts_any_thread;
     params->max_insts_all_threads = max_insts_all_threads;
@@ -351,7 +360,8 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->renameToROBDelay = renameToROBDelay;
     params->commitWidth = commitWidth;
     params->squashWidth = squashWidth;
-
+    params->trapLatency = trapLatency;
+    params->fetchTrapLatency = fetchTrapLatency;
 
     params->localPredictorSize = localPredictorSize;
     params->localCtrBits = localCtrBits;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,9 @@
 #include "base/cprintf.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
+#include "cpu/checker/exec_context.hh"
 #include "cpu/quiesce_event.hh"
-#include "mem/cache/cache.hh" // for dynamic cast
 #include "mem/mem_interface.hh"
-#include "sim/builder.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
 
@@ -63,11 +62,9 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
 
     for (int i = 0; i < this->numThreads; ++i) {
 #if FULL_SYSTEM
-        assert(i == 0);
+        assert(this->numThreads == 1);
         this->thread[i] = new Thread(this, 0, params->mem);
-//        this->system->execContexts[i] = this->thread[i]->getXCProxy();
         this->thread[i]->setStatus(ExecContext::Suspended);
-
 #else
         if (i < params->workload.size()) {
             DPRINTF(FullCPU, "FullCPU: Workload[%i]'s starting PC is %#x, "
@@ -91,19 +88,27 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
 
         this->thread[i]->numInst = 0;
 
-        xcProxies.push_back(new AlphaXC);
+        ExecContext *xc_proxy;
 
-        xcProxies[i]->cpu = this;
-        xcProxies[i]->thread = this->thread[i];
+        AlphaXC *alpha_xc_proxy = new AlphaXC;
 
-        xcProxies[i]->quiesceEvent = new EndQuiesceEvent(xcProxies[i]);
-        xcProxies[i]->lastActivate = 0;
-        xcProxies[i]->lastSuspend = 0;
+        if (params->checker) {
+            xc_proxy = new CheckerExecContext<AlphaXC>(alpha_xc_proxy, this->checker);
+        } else {
+            xc_proxy = alpha_xc_proxy;
+        }
 
+        alpha_xc_proxy->cpu = this;
+        alpha_xc_proxy->thread = this->thread[i];
 
-        this->thread[i]->xcProxy = xcProxies[i];
+        alpha_xc_proxy->quiesceEvent =
+            new EndQuiesceEvent(xc_proxy);
+        alpha_xc_proxy->lastActivate = 0;
+        alpha_xc_proxy->lastSuspend = 0;
 
-        this->execContexts.push_back(this->thread[i]->getXCProxy());
+        this->thread[i]->xcProxy = xc_proxy;
+
+        this->execContexts.push_back(xc_proxy);
     }
 
 
@@ -144,6 +149,7 @@ template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::dumpFuncProfile()
 {
+    // Currently not supported
 }
 #endif
 
@@ -167,6 +173,18 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
     thread->funcExeInst = old_context->readFuncExeInst();
 #endif
 
+    EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
+    if (other_quiesce) {
+        // Point the quiesce event's XC at this XC so that it wakes up
+        // the proper CPU.
+        other_quiesce->xc = this;
+    }
+    if (thread->quiesceEvent) {
+        thread->quiesceEvent->xc = this;
+    }
+//    storeCondFailures = 0;
+    cpu->lockFlag = false;
+
     old_context->setStatus(ExecContext::Unallocated);
 
     thread->inSyscall = false;
@@ -178,7 +196,7 @@ void
 AlphaFullCPU<Impl>::AlphaXC::activate(int delay)
 {
     DPRINTF(FullCPU, "Calling activate on AlphaXC\n");
-//    warn("Calling activate on AlphaXC");
+
     if (thread->status() == ExecContext::Active)
         return;
 
@@ -200,7 +218,7 @@ void
 AlphaFullCPU<Impl>::AlphaXC::suspend()
 {
     DPRINTF(FullCPU, "Calling suspend on AlphaXC\n");
-//    warn("Calling suspend on AlphaXC");
+
     if (thread->status() == ExecContext::Suspended)
         return;
 
@@ -224,7 +242,7 @@ void
 AlphaFullCPU<Impl>::AlphaXC::deallocate()
 {
     DPRINTF(FullCPU, "Calling deallocate on AlphaXC\n");
-//    warn("Calling deallocate on AlphaXC");
+
     if (thread->status() == ExecContext::Unallocated)
         return;
 
@@ -237,7 +255,7 @@ void
 AlphaFullCPU<Impl>::AlphaXC::halt()
 {
     DPRINTF(FullCPU, "Calling halt on AlphaXC\n");
-//    warn("Calling halt on AlphaXC");
+
     if (thread->status() == ExecContext::Halted)
         return;
 
@@ -254,6 +272,7 @@ template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::serialize(std::ostream &os)
 {}
+
 template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::unserialize(Checkpoint *cp, const std::string &section)
@@ -261,7 +280,7 @@ AlphaFullCPU<Impl>::AlphaXC::unserialize(Checkpoint *cp, const std::string &sect
 
 #if FULL_SYSTEM
 template <class Impl>
-Event *
+EndQuiesceEvent *
 AlphaFullCPU<Impl>::AlphaXC::getQuiesceEvent()
 {
     return quiesceEvent;
@@ -345,9 +364,6 @@ void
 AlphaFullCPU<Impl>::AlphaXC::clearArchRegs()
 {}
 
-//
-// New accessors for new decoder.
-//
 template <class Impl>
 uint64_t
 AlphaFullCPU<Impl>::AlphaXC::readIntReg(int reg_idx)
@@ -503,26 +519,6 @@ AlphaFullCPU<Impl>::AlphaXC::setSyscallReturn(SyscallReturn return_value)
     cpu->setSyscallReturn(return_value, thread->tid);
 }
 
-template <class Impl>
-void
-AlphaFullCPU<Impl>::syscall(int tid)
-{
-    DPRINTF(FullCPU, "AlphaFullCPU: [tid:%i] Executing syscall().\n\n", tid);
-
-    DPRINTF(Activity,"Activity: syscall() called.\n");
-
-    // Temporarily increase this by one to account for the syscall
-    // instruction.
-    ++(this->thread[tid]->funcExeInst);
-
-    // Execute the actual syscall.
-    this->thread[tid]->syscall();
-
-    // Decrease funcExeInst by one as the normal commit will handle
-    // incrementing it.
-    --(this->thread[tid]->funcExeInst);
-}
-
 #endif // FULL_SYSTEM
 
 template <class Impl>
@@ -544,14 +540,7 @@ template <class Impl>
 Fault
 AlphaFullCPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
 {
-    // I think that these registers should always be set, regardless of what
-    // mode the thread is in.  The main difference is if the thread needs to
-    // squash as a result of the write, which is controlled by the AlphaXC.
-//    if (!this->thread[tid]->trapPending) {
-        return this->regFile.setMiscReg(misc_reg, val, tid);
-//    } else {
-//        return NoFault;
-//    }
+    return this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
@@ -559,18 +548,13 @@ Fault
 AlphaFullCPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
                                          unsigned tid)
 {
-//    if (!this->thread[tid]->trapPending) {
-        return this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
-//    } else {
-//        return NoFault;
-//    }
+    return this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
 
 template <class Impl>
 void
 AlphaFullCPU<Impl>::squashFromXC(unsigned tid)
 {
-//    this->thread[tid]->trapPending = true;
     this->thread[tid]->inSyscall = true;
     this->commit.generateXCEvent(tid);
 }
@@ -585,7 +569,8 @@ AlphaFullCPU<Impl>::post_interrupt(int int_num, int index)
 
     if (this->thread[0]->status() == ExecContext::Suspended) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
-        xcProxies[0]->activate();
+//	xcProxies[0]->activate();
+        this->execContexts[0]->activate();
     }
 }
 
@@ -607,31 +592,24 @@ template <class Impl>
 Fault
 AlphaFullCPU<Impl>::hwrei(unsigned tid)
 {
-#if 0
-    if (!inPalMode(this->readPC(tid)))
-        return new AlphaISA::UnimplementedOpcodeFault;
-
-    setNextPC(cpu->readMiscReg(AlphaISA::IPR_EXC_ADDR, tid), tid);
-
-    cpu->kernelStats->hwrei();
-
-//    if ((this->regFile.miscRegs[tid].readReg(AlphaISA::IPR_EXC_ADDR) & 1) == 0)
-//        AlphaISA::swap_palshadow(&regs, false);
-
-    cpu->checkInterrupts = true;
-#endif
-//    panic("Do not call this function!");
     // Need to clear the lock flag upon returning from an interrupt.
     this->lockFlag = false;
+
+    this->kernelStats->hwrei();
+
+    this->checkInterrupts = true;
+
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
 }
 
 template <class Impl>
 bool
-AlphaFullCPU<Impl>::simPalCheck(int palFunc)
+AlphaFullCPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 {
-//    kernelStats.callpal(palFunc);
+    if (this->kernelStats)
+        this->kernelStats->callpal(palFunc,
+                                   this->execContexts[tid]);
 
     switch (palFunc) {
       case PAL::halt:
@@ -650,47 +628,11 @@ AlphaFullCPU<Impl>::simPalCheck(int palFunc)
     return true;
 }
 
-// Probably shouldn't be able to switch to the trap handler as quickly as
-// this.  Also needs to get the exception restart address from the commit
-// stage.
 template <class Impl>
 void
 AlphaFullCPU<Impl>::trap(Fault fault, unsigned tid)
 {
-
-    fault->invoke(this->xcProxies[tid]);
-/*    // Keep in mind that a trap may be initiated by fetch if there's a TLB
-    // miss
-    uint64_t PC = this->commit.readCommitPC();
-
-    DPRINTF(Fault, "Fault %s\n", fault->name());
-    this->recordEvent(csprintf("Fault %s", fault->name()));
-
-    //kernelStats.fault(fault);
-
-    if (fault->isA<ArithmeticFault>())
-        panic("Arithmetic traps are unimplemented!");
-
-    // exception restart address - Get the commit PC
-    if (!fault->isA<InterruptFault>() || !inPalMode(PC))
-        this->regFile.miscRegs.setReg(AlphaISA::IPR_EXC_ADDR, PC);
-
-    if (fault->isA<PalFault>() || fault->isA<ArithmeticFault>())
-    //    || fault == InterruptFault && !PC_PAL(regs.pc)
-        {
-        // traps...  skip faulting instruction
-        AlphaISA::MiscReg ipr_exc_addr =
-            this->regFile.miscRegs.readReg(AlphaISA::IPR_EXC_ADDR);
-        this->regFile.miscRegs.setReg(AlphaISA::IPR_EXC_ADDR,
-                                      ipr_exc_addr + 4);
-    }
-
-    if (!inPalMode(PC))
-        swapPALShadow(true);
-
-    this->regFile.setPC(this->regFile.miscRegs.readReg(AlphaISA::IPR_PAL_BASE) +
-                         (dynamic_cast<AlphaFault *>(fault.get()))->vect(), 0);
-    this->regFile.setNextPC(PC + sizeof(MachInst), 0);*/
+    fault->invoke(this->execContexts[tid]);
 }
 
 template <class Impl>
@@ -700,6 +642,8 @@ AlphaFullCPU<Impl>::processInterrupts()
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
     // is the one that handles the interrupts.
+    // @todo: Possibly consolidate the interrupt checking code.
+    // @todo: Allow other threads to handle interrupts.
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
@@ -738,6 +682,10 @@ AlphaFullCPU<Impl>::processInterrupts()
     if (ipl && ipl > this->readMiscReg(IPR_IPLR, 0)) {
         this->setMiscReg(IPR_ISR, summary, 0);
         this->setMiscReg(IPR_INTID, ipl, 0);
+        if (this->checker) {
+            this->checker->cpuXCBase()->setMiscReg(IPR_ISR, summary);
+            this->checker->cpuXCBase()->setMiscReg(IPR_INTID, ipl);
+        }
         this->trap(Fault(new InterruptFault), 0);
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                 this->readMiscReg(IPR_IPLR, 0), ipl, summary);
@@ -747,6 +695,27 @@ AlphaFullCPU<Impl>::processInterrupts()
 #endif // FULL_SYSTEM
 
 #if !FULL_SYSTEM
+
+template <class Impl>
+void
+AlphaFullCPU<Impl>::syscall(int tid)
+{
+    DPRINTF(FullCPU, "AlphaFullCPU: [tid:%i] Executing syscall().\n\n", tid);
+
+    DPRINTF(Activity,"Activity: syscall() called.\n");
+
+    // Temporarily increase this by one to account for the syscall
+    // instruction.
+    ++(this->thread[tid]->funcExeInst);
+
+    // Execute the actual syscall.
+    this->thread[tid]->syscall();
+
+    // Decrease funcExeInst by one as the normal commit will handle
+    // incrementing it.
+    --(this->thread[tid]->funcExeInst);
+}
+
 template <class Impl>
 TheISA::IntReg
 AlphaFullCPU<Impl>::getSyscallArg(int i, int tid)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,12 +124,8 @@ AlphaDynInst<Impl>::hwrei()
     this->setNextPC(this->cpu->readMiscReg(AlphaISA::IPR_EXC_ADDR,
                                            this->threadNumber));
 
-    this->cpu->kernelStats->hwrei();
-
     // Tell CPU to clear any state it needs to if a hwrei is taken.
     this->cpu->hwrei(this->threadNumber);
-
-    this->cpu->checkInterrupts = true;
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
@@ -167,7 +163,7 @@ template <class Impl>
 bool
 AlphaDynInst<Impl>::simPalCheck(int palFunc)
 {
-    return this->cpu->simPalCheck(palFunc);
+    return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
 #else
 template <class Impl>

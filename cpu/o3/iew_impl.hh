@@ -55,7 +55,11 @@ DefaultIEW<Impl>::LdWritebackEvent::process()
 
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
-    if (inst->isSquashed() || iewStage->isSwitchedOut()) {
+    if (iewStage->isSwitchedOut()) {
+        inst = NULL;
+        return;
+    } else if (inst->isSquashed()) {
+        iewStage->wakeCPU();
         inst = NULL;
         return;
     }
@@ -441,7 +445,15 @@ template <class Impl>
 void
 DefaultIEW<Impl>::switchOut()
 {
+    cpu->signalSwitched();
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::doSwitchOut()
+{
     switchedOut = true;
+
     instQueue.switchOut();
     ldstQueue.switchOut();
     fuPool->switchOut();

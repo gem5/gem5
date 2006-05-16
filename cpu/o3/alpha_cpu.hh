@@ -34,6 +34,8 @@
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
 
+class EndQuiesceEvent;
+
 template <class Impl>
 class AlphaFullCPU : public FullO3CPU<Impl>
 {
@@ -61,7 +63,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         Tick lastActivate;
         Tick lastSuspend;
 
-        Event *quiesceEvent;
+        EndQuiesceEvent *quiesceEvent;
 
         virtual BaseCPU *getCpuPtr() { return cpu; }
 
@@ -112,10 +114,8 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual void unserialize(Checkpoint *cp, const std::string &section);
 
 #if FULL_SYSTEM
-        virtual Event *getQuiesceEvent();
+        virtual EndQuiesceEvent *getQuiesceEvent();
 
-        // Not necessarily the best location for these...
-        // Having an extra function just to read these is obnoxious
         virtual Tick readLastActivate();
         virtual Tick readLastSuspend();
 
@@ -125,17 +125,12 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         virtual int getThreadNum() { return thread->tid; }
 
-        // Also somewhat obnoxious.  Really only used for the TLB fault.
-        // However, may be quite useful in SPARC.
         virtual TheISA::MachInst getInst();
 
         virtual void copyArchRegs(ExecContext *xc);
 
         virtual void clearArchRegs();
 
-        //
-        // New accessors for new decoder.
-        //
         virtual uint64_t readIntReg(int reg_idx);
 
         virtual float readFloatRegSingle(int reg_idx);
@@ -172,9 +167,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         virtual Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val);
 
-        // Also not necessarily the best location for these two.
-        // Hopefully will go away once we decide upon where st cond
-        // failures goes.
+        // @todo: Figure out where these store cond failures should go.
         virtual unsigned readStCondFailures() { return thread->storeCondFailures; }
 
         virtual void setStCondFailures(unsigned sc_failures) { thread->storeCondFailures = sc_failures; }
@@ -183,27 +176,27 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual bool inPalMode() { return TheISA::PcPAL(cpu->readPC(thread->tid)); }
 #endif
 
-        // Only really makes sense for old CPU model.  Still could be useful though.
+        // Only really makes sense for old CPU model.  Lots of code
+        // outside the CPU still checks this function, so it will
+        // always return false to keep everything working.
         virtual bool misspeculating() { return false; }
 
 #if !FULL_SYSTEM
         virtual IntReg getSyscallArg(int i);
 
-        // used to shift args for indirect syscall
         virtual void setSyscallArg(int i, IntReg val);
 
         virtual void setSyscallReturn(SyscallReturn return_value);
 
         virtual void syscall() { return cpu->syscall(thread->tid); }
 
-        // Same with st cond failures.
         virtual Counter readFuncExeInst() { return thread->funcExeInst; }
 #endif
     };
 
-    friend class AlphaXC;
+//    friend class AlphaXC;
 
-    std::vector<AlphaXC *> xcProxies;
+//    std::vector<ExecContext *> xcProxies;
 
 #if FULL_SYSTEM
     /** ITB pointer. */
@@ -216,13 +209,6 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     void regStats();
 
 #if FULL_SYSTEM
-    //Note that the interrupt stuff from the base CPU might be somewhat
-    //ISA specific (ie NumInterruptLevels).  These functions might not
-    //be needed in FullCPU though.
-//    void post_interrupt(int int_num, int index);
-//    void clear_interrupt(int int_num, int index);
-//    void clear_interrupts();
-
     /** Translates instruction requestion. */
     Fault translateInstReq(MemReqPtr &req)
     {
@@ -273,11 +259,6 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     }
 
 #endif
-
-    // Later on may want to remove this misc stuff from the regfile and
-    // have it handled at this level.  This would be similar to moving certain
-    // IPRs into the devices themselves.  Might prove to be an issue when
-    // trying to rename source/destination registers...
     MiscReg readMiscReg(int misc_reg, unsigned tid);
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault, unsigned tid);
@@ -302,18 +283,21 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
     /** Traps to handle given fault. */
     void trap(Fault fault, unsigned tid);
-    bool simPalCheck(int palFunc);
+    bool simPalCheck(int palFunc, unsigned tid);
 
     /** Processes any interrupts. */
     void processInterrupts();
+
+    /** Halts the CPU. */
+    void halt() { panic("Halt not implemented!\n"); }
 #endif
 
 
 #if !FULL_SYSTEM
-    // Need to change these into regfile calls that directly set a certain
-    // register.  Actually, these functions should handle most of this
-    // functionality by themselves; should look up the rename and then
-    // set the register.
+    /** Executes a syscall.
+     * @todo: Determine if this needs to be virtual.
+     */
+    void syscall(int thread_num);
     /** Gets a syscall argument. */
     IntReg getSyscallArg(int i, int tid);
 
@@ -322,25 +306,12 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
     /** Sets the return value of a syscall. */
     void setSyscallReturn(SyscallReturn return_value, int tid);
-
-    /** Executes a syscall.
-     * @todo: Determine if this needs to be virtual.
-     */
-    virtual void syscall(int thread_num);
-
 #endif
 
-  public:
-#if FULL_SYSTEM
-    /** Halts the CPU. */
-    void halt() { panic("Halt not implemented!\n"); }
-#endif
-
-    /** Old CPU read from memory function. No longer used. */
+    /** Read from memory function. */
     template <class T>
     Fault read(MemReqPtr &req, T &data)
     {
-//	panic("CPU READ NOT IMPLEMENTED W/NEW MEMORY\n");
 #if 0
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
@@ -350,10 +321,14 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 #endif
 #endif
         Fault error;
+
+#if FULL_SYSTEM
+        // @todo: Fix this LL/SC hack.
         if (req->flags & LOCKED) {
             lockAddr = req->paddr;
             lockFlag = true;
         }
+#endif
 
         error = this->mem->read(req, data);
         data = gtoh(data);
@@ -367,7 +342,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         return this->iew.ldstQueue.read(req, data, load_idx);
     }
 
-    /** Old CPU write to memory function. No longer used. */
+    /** Write to memory function. */
     template <class T>
     Fault write(MemReqPtr &req, T &data)
     {
@@ -420,11 +395,13 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 #endif
 #endif
 
+#if FULL_SYSTEM
+        // @todo: Fix this LL/SC hack.
         if (req->flags & LOCKED) {
             if (req->flags & UNCACHEABLE) {
                 req->result = 2;
             } else {
-                if (this->lockFlag/* && this->lockAddr == req->paddr*/) {
+                if (this->lockFlag) {
                     req->result = 1;
                 } else {
                     req->result = 0;
@@ -432,6 +409,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
                 }
             }
         }
+#endif
 
         return this->mem->write(req, (T)htog(data));
     }
@@ -444,6 +422,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     }
 
     Addr lockAddr;
+
     bool lockFlag;
 };
 

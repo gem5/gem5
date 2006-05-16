@@ -46,6 +46,8 @@
 #include "cpu/o3/thread_state.hh"
 #include "sim/process.hh"
 
+template <class>
+class Checker;
 class ExecContext;
 class MemInterface;
 class Process;
@@ -199,13 +201,16 @@ class FullO3CPU : public BaseFullCPU
      */
     void switchOut(Sampler *sampler);
 
+    void signalSwitched();
+
     /** Takes over from another CPU.
      *  @todo: Implement this.
      */
     void takeOverFrom(BaseCPU *oldCPU);
 
     /** Get the current instruction sequence number, and increment it. */
-    InstSeqNum getAndIncrementInstSeq();
+    InstSeqNum getAndIncrementInstSeq()
+    { return globalSeqNum++; }
 
 #if FULL_SYSTEM
     /** Check if this address is a valid instruction address. */
@@ -333,9 +338,9 @@ class FullO3CPU : public BaseFullCPU
      */
     std::queue<ListIt> removeList;
 
-#ifdef DEBUG
+//#ifdef DEBUG
     std::set<InstSeqNum> snList;
-#endif
+//#endif
 
     /** Records if instructions need to be removed this cycle due to being
      *  retired or squashed.
@@ -474,6 +479,8 @@ class FullO3CPU : public BaseFullCPU
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum;
 
+    Checker<DynInstPtr> *checker;
+
 #if FULL_SYSTEM
     /** Pointer to the system. */
     System *system;
@@ -484,11 +491,15 @@ class FullO3CPU : public BaseFullCPU
     PhysicalMemory *physmem;
 #endif
 
-    // List of all ExecContexts.
-    std::vector<Thread *> thread;
-
     /** Pointer to memory. */
     FunctionalMemory *mem;
+
+    Sampler *sampler;
+
+    int switchCount;
+
+    // List of all ExecContexts.
+    std::vector<Thread *> thread;
 
 #if 0
     /** Page table pointer. */

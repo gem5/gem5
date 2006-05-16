@@ -35,6 +35,7 @@
 #endif
 #include "sim/root.hh"
 
+#include "cpu/checker/cpu.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
@@ -76,7 +77,6 @@ FullO3CPU<Impl>::TickEvent::description()
     return "FullO3CPU tick event";
 }
 
-//Call constructor to all the pipeline stages here
 template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(Params *params)
     : BaseFullCPU(params),
@@ -126,12 +126,24 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 //      pTable(params->pTable),
       mem(params->workload[0]->getMemory()),
 #endif // FULL_SYSTEM
-
+      switchCount(0),
       icacheInterface(params->icacheInterface),
       dcacheInterface(params->dcacheInterface),
-      deferRegistration(params->deferRegistration)
+      deferRegistration(params->deferRegistration),
+      numThreads(number_of_threads)
 {
     _status = Idle;
+
+    if (params->checker) {
+        BaseCPU *temp_checker = params->checker;
+        checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
+        checker->setMemory(mem);
+#if FULL_SYSTEM
+        checker->setSystem(params->system);
+#endif
+    } else {
+        checker = NULL;
+    }
 
 #if !FULL_SYSTEM
     thread.resize(number_of_threads);
@@ -168,13 +180,10 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     commit.setIEWQueue(&iewQueue);
     commit.setRenameQueue(&renameQueue);
 
+    commit.setFetchStage(&fetch);
     commit.setIEWStage(&iew);
     rename.setIEWStage(&iew);
     rename.setCommitStage(&commit);
-
-    //Make Sure That this a Valid Architeture
-    //@todo: move this up in constructor
-    numThreads = number_of_threads;
 
 #if !FULL_SYSTEM
     int active_threads = params->workload.size();
@@ -182,6 +191,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     int active_threads = 1;
 #endif
 
+    //Make Sure That this a Valid Architeture
     assert(params->numPhysIntRegs   >= numThreads * TheISA::NumIntRegs);
     assert(params->numPhysFloatRegs >= numThreads * TheISA::NumFloatRegs);
 
@@ -357,7 +367,7 @@ FullO3CPU<Impl>::tick()
         cleanUpRemovedInsts();
     }
 
-    if (activityCount && !tickEvent.scheduled()) {
+    if (_status != SwitchedOut && activityCount && !tickEvent.scheduled()) {
         tickEvent.schedule(curTick + cycles(1));
     }
 
@@ -380,13 +390,7 @@ FullO3CPU<Impl>::init()
     for (int i = 0; i < number_of_threads; ++i)
         thread[i]->inSyscall = true;
 
-
-    // Need to do a copy of the xc->regs into the CPU's regfile so
-    // that it can start properly.
-
     for (int tid=0; tid < number_of_threads; tid++) {
-        // Need to do a copy of the xc->regs into the CPU's regfile so
-        // that it can start properly.
 #if FULL_SYSTEM
         ExecContext *src_xc = execContexts[tid];
 #else
@@ -406,8 +410,7 @@ FullO3CPU<Impl>::init()
     for (int i = 0; i < number_of_threads; ++i)
         thread[i]->inSyscall = false;
 
-    // Probably should just make a call to all the stages to init stage,
-    // regardless of whether or not they need it.  Keeps it more independent.
+    // Initialize stages.
     fetch.initStage();
     iew.initStage();
     rename.initStage();
@@ -570,7 +573,6 @@ template <class Impl>
 void
 FullO3CPU<Impl>::activateContext(int tid, int delay)
 {
-
     // Needs to set each stage to running as well.
     list<unsigned>::iterator isActive = find(
         activeThreads.begin(), activeThreads.end(), tid);
@@ -658,30 +660,46 @@ FullO3CPU<Impl>::haltContext(int tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::switchOut(Sampler *sampler)
+FullO3CPU<Impl>::switchOut(Sampler *_sampler)
 {
-//    panic("FullO3CPU does not have a switch out function.\n");
+    sampler = _sampler;
+    switchCount = 0;
     fetch.switchOut();
     decode.switchOut();
     rename.switchOut();
     iew.switchOut();
     commit.switchOut();
+}
 
-    instList.clear();
-    while (!removeList.empty()) {
-        removeList.pop();
+template <class Impl>
+void
+FullO3CPU<Impl>::signalSwitched()
+{
+    if (++switchCount == 5) {
+        fetch.doSwitchOut();
+        rename.doSwitchOut();
+        commit.doSwitchOut();
+        instList.clear();
+        while (!removeList.empty()) {
+            removeList.pop();
+        }
+
+        if (checker)
+            checker->switchOut(sampler);
+
+        if (tickEvent.scheduled())
+            tickEvent.squash();
+        sampler->signalSwitched();
+        _status = SwitchedOut;
     }
-
-    if (tickEvent.scheduled())
-        tickEvent.squash();
-    sampler->signalSwitched();
-    _status = SwitchedOut;
+    assert(switchCount <= 5);
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
+    // Flush out any old data from the activity buffers.
     for (int i = 0; i < 6; ++i) {
         timeBuffer.advance();
         fetchQueue.advance();
@@ -731,13 +749,6 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     }
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
-}
-
-template <class Impl>
-InstSeqNum
-FullO3CPU<Impl>::getAndIncrementInstSeq()
-{
-    return globalSeqNum++;
 }
 
 template <class Impl>
@@ -982,14 +993,9 @@ FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid)
     while (inst_it != end_it) {
         assert(!instList.empty());
 
-        bool break_loop = (inst_it == instList.begin());
-
         squashInstIt(inst_it, tid);
 
         inst_it--;
-
-        if (break_loop)
-            break;
     }
 
     // If the ROB was empty, then we actually need to remove the first
@@ -1095,8 +1101,6 @@ FullO3CPU<Impl>::dumpInsts()
         inst_list_it++;
         ++num;
     }
-
-
 }
 
 template <class Impl>

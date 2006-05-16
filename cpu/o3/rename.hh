@@ -155,6 +155,8 @@ class DefaultRename
 
     void switchOut();
 
+    void doSwitchOut();
+
     void takeOverFrom();
 
     /** Squashes all instructions in a thread. */

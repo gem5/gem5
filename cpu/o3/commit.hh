@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,25 +40,27 @@ template <class>
 class O3ThreadState;
 
 /**
- * DefaultCommit handles single threaded and SMT commit. Its width is specified
- * by the parameters; each cycle it tries to commit that many instructions. The
- * SMT policy decides which thread it tries to commit instructions from. Non-
- * speculative instructions must reach the head of the ROB before they are
- * ready to execute; once they reach the head, commit will broadcast the
- * instruction's sequence number to the previous stages so that they can issue/
- * execute the instruction. Only one non-speculative instruction is handled per
- * cycle. Commit is responsible for handling all back-end initiated redirects.
- * It receives the redirect, and then broadcasts it to all stages, indicating
- * the sequence number they should squash until, and any necessary branch mis-
- * prediction information as well. It priortizes redirects by instruction's age,
- * only broadcasting a redirect if it corresponds to an instruction that should
- * currently be in the ROB. This is done by tracking the sequence number of the
- * youngest instruction in the ROB, which gets updated to any squashing
- * instruction's sequence number, and only broadcasting a redirect if it
- * corresponds to an older instruction. Commit also supports multiple cycle
- * squashing, to model a ROB that can only remove a certain number of
- * instructions per cycle. Eventually traps and interrupts will most likely
- * be handled here as well.
+ * DefaultCommit handles single threaded and SMT commit. Its width is
+ * specified by the parameters; each cycle it tries to commit that
+ * many instructions. The SMT policy decides which thread it tries to
+ * commit instructions from. Non- speculative instructions must reach
+ * the head of the ROB before they are ready to execute; once they
+ * reach the head, commit will broadcast the instruction's sequence
+ * number to the previous stages so that they can issue/ execute the
+ * instruction. Only one non-speculative instruction is handled per
+ * cycle. Commit is responsible for handling all back-end initiated
+ * redirects.  It receives the redirect, and then broadcasts it to all
+ * stages, indicating the sequence number they should squash until,
+ * and any necessary branch misprediction information as well. It
+ * priortizes redirects by instruction's age, only broadcasting a
+ * redirect if it corresponds to an instruction that should currently
+ * be in the ROB. This is done by tracking the sequence number of the
+ * youngest instruction in the ROB, which gets updated to any
+ * squashing instruction's sequence number, and only broadcasting a
+ * redirect if it corresponds to an older instruction. Commit also
+ * supports multiple cycle squashing, to model a ROB that can only
+ * remove a certain number of instructions per cycle. Eventually traps
+ * and interrupts will most likely be handled here as well.
  */
 template<class Impl>
 class DefaultCommit
@@ -78,6 +80,7 @@ class DefaultCommit
     typedef typename CPUPol::IEWStruct IEWStruct;
     typedef typename CPUPol::RenameStruct RenameStruct;
 
+    typedef typename CPUPol::Fetch Fetch;
     typedef typename CPUPol::IEW IEW;
 
     typedef O3ThreadState<Impl> Thread;
@@ -155,11 +158,16 @@ class DefaultCommit
     /** Sets the pointer to the queue coming from IEW. */
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
+    void setFetchStage(Fetch *fetch_stage);
+
+    Fetch *fetchStage;
+
     /** Sets the poitner to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
 
-    /** The pointer to the IEW stage. Used solely to ensure that syscalls do
-     * not execute until all stores have written back.
+    /** The pointer to the IEW stage. Used solely to ensure that
+     * various events (traps, interrupts, syscalls) do not occur until
+     * all stores have written back.
      */
     IEW *iewStage;
 
@@ -176,6 +184,8 @@ class DefaultCommit
     void initStage();
 
     void switchOut();
+
+    void doSwitchOut();
 
     void takeOverFrom();
 
@@ -213,13 +223,12 @@ class DefaultCommit
      */
     bool changedROBEntries();
 
+    void squashAll(unsigned tid);
+
     void squashFromTrap(unsigned tid);
 
     void squashFromXC(unsigned tid);
 
-    void squashInFlightInsts(unsigned tid);
-
-  private:
     /** Commits as many instructions as possible. */
     void commitInsts();
 
@@ -246,8 +255,10 @@ class DefaultCommit
     int oldestReady();
 
   public:
-    /** Returns the PC of the head instruction of the ROB. */
-    uint64_t readPC();
+    /** Returns the PC of the head instruction of the ROB.
+     * @todo: Probably remove this function as it returns only thread 0.
+     */
+    uint64_t readPC() { return PC[0]; }
 
     uint64_t readPC(unsigned tid) { return PC[tid]; }
 
@@ -256,9 +267,6 @@ class DefaultCommit
     uint64_t readNextPC(unsigned tid) { return nextPC[tid]; }
 
     void setNextPC(uint64_t val, unsigned tid) { nextPC[tid] = val; }
-
-    /** Sets that the ROB is currently squashing. */
-    void setSquashing(unsigned tid);
 
   private:
     /** Time buffer interface. */
@@ -299,10 +307,10 @@ class DefaultCommit
 
     std::vector<Thread *> thread;
 
-  private:
     Fault fetchFault;
-    InstSeqNum fetchFaultSN;
+
     int fetchTrapWait;
+
     /** Records that commit has written to the time buffer this cycle. Used for
      * the CPU to determine if it can deschedule itself if there is no activity.
      */
@@ -355,11 +363,13 @@ class DefaultCommit
     /** Number of Active Threads */
     unsigned numThreads;
 
+    bool switchPending;
     bool switchedOut;
 
     Tick trapLatency;
 
     Tick fetchTrapLatency;
+
     Tick fetchFaultTick;
 
     Addr PC[Impl::MaxThreads];
@@ -390,27 +400,26 @@ class DefaultCommit
      * speculative instruction reaching the head of the ROB.
      */
     Stats::Scalar<> commitNonSpecStalls;
-    /** Stat for the total number of committed branches. */
-//    Stats::Scalar<> commitCommittedBranches;
-    /** Stat for the total number of committed loads. */
-//    Stats::Scalar<> commitCommittedLoads;
-    /** Stat for the total number of committed memory references. */
-//    Stats::Scalar<> commitCommittedMemRefs;
     /** Stat for the total number of branch mispredicts that caused a squash. */
     Stats::Scalar<> branchMispredicts;
     /** Distribution of the number of committed instructions each cycle. */
     Stats::Distribution<> numCommittedDist;
 
-    // total number of instructions committed
-    Stats::Vector<> stat_com_inst;
-    Stats::Vector<> stat_com_swp;
-    Stats::Vector<> stat_com_refs;
-    Stats::Vector<> stat_com_loads;
-    Stats::Vector<> stat_com_membars;
-    Stats::Vector<> stat_com_branches;
+    /** Total number of instructions committed. */
+    Stats::Vector<> statComInst;
+    /** Total number of software prefetches committed. */
+    Stats::Vector<> statComSwp;
+    /** Stat for the total number of committed memory references. */
+    Stats::Vector<> statComRefs;
+    /** Stat for the total number of committed loads. */
+    Stats::Vector<> statComLoads;
+    /** Total number of committed memory barriers. */
+    Stats::Vector<> statComMembars;
+    /** Total number of committed branches. */
+    Stats::Vector<> statComBranches;
 
-    Stats::Scalar<> commit_eligible_samples;
-    Stats::Vector<> commit_eligible;
+    Stats::Scalar<> commitEligibleSamples;
+    Stats::Vector<> commitEligible;
 };
 
 #endif // __CPU_O3_COMMIT_HH__

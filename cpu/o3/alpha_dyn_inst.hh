@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,14 +35,11 @@
 #include "cpu/o3/alpha_impl.hh"
 
 /**
- * Mostly implementation & ISA specific AlphaDynInst. As with most other classes
- * in the new CPU model, it is templated on the Impl to allow for passing in of
- * all types, such as the CPU type and the ISA type. The AlphaDynInst serves
- * as the primary interface to the CPU; it plays the role that the ExecContext
- * does for the old CPU and the SimpleCPU. The goal is to abstract ExecContext
- * purely into an interface, and have it forward calls to the appropriate
- * CPU interface, which in the new CPU model's case would be this AlphaDynInst,
- * or any other high level implementation specific DynInst.
+ * Mostly implementation & ISA specific AlphaDynInst. As with most
+ * other classes in the new CPU model, it is templated on the Impl to
+ * allow for passing in of all types, such as the CPU type and the ISA
+ * type. The AlphaDynInst serves as the primary interface to the CPU
+ * for instructions that are executing.
  */
 template <class Impl>
 class AlphaDynInst : public BaseDynInst<Impl>
@@ -78,8 +75,10 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** Executes the instruction.*/
     Fault execute();
 
+    /** Initiates the access.  Only valid for memory operations. */
     Fault initiateAcc();
 
+    /** Completes the access.  Only valid for memory operations. */
     Fault completeAcc();
 
   private:
@@ -100,6 +99,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
+        this->instResult.integer = val;
         return this->cpu->setMiscReg(misc_reg, val, this->threadNumber);
     }
 
@@ -125,8 +125,6 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** Calls a syscall. */
     void syscall();
 #endif
-
-
 
   private:
     /** Physical register index of the destination registers of this
@@ -247,9 +245,9 @@ class AlphaDynInst : public BaseDynInst<Impl>
     }
 
   public:
-    /** Calculates EA part of a memory instruction. Currently unused, though
-     * it may be useful in the future when memory instructions aren't
-     * executed with the EA calculation and the memory access being atomic.
+    /** Calculates EA part of a memory instruction. Currently unused,
+     * though it may be useful in the future if we want to split
+     * memory operations into EA calculation and memory access parts.
      */
     Fault calcEA()
     {
@@ -257,8 +255,8 @@ class AlphaDynInst : public BaseDynInst<Impl>
     }
 
     /** Does the memory access part of a memory instruction. Currently unused,
-     * though it may be useful in the future when memory instructions aren't
-     * executed with the EA calculation and the memory access being atomic.
+     * though it may be useful in the future if we want to split
+     * memory operations into EA calculation and memory access parts.
      */
     Fault memAccess()
     {

@@ -262,6 +262,13 @@ template <class Impl>
 void
 DefaultRename<Impl>::switchOut()
 {
+    cpu->signalSwitched();
+}
+
+template <class Impl>
+void
+DefaultRename<Impl>::doSwitchOut()
+{
     for (int i = 0; i < numThreads; i++) {
         typename list<RenameHistory>::iterator hb_it = historyBuffer[i].begin();
 

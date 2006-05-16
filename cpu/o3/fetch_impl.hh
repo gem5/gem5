@@ -372,6 +372,13 @@ void
 DefaultFetch<Impl>::switchOut()
 {
     switchedOut = true;
+    cpu->signalSwitched();
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::doSwitchOut()
+{
     branchPred.switchOut();
 }
 
@@ -474,7 +481,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (interruptPending && flags == 0) {
+    if (interruptPending && flags == 0 || switchedOut) {
         // Hold off fetch from getting new instructions while an interrupt
         // is pending.
         return false;
@@ -508,7 +515,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // instruction.
     if (fault == NoFault) {
 #if FULL_SYSTEM
-        if (cpu->system->memctrl->badaddr(memReq[tid]->paddr)) {
+        if (cpu->system->memctrl->badaddr(memReq[tid]->paddr) ||
+            memReq[tid]->flags & UNCACHEABLE) {
             DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path!",
                     memReq[tid]->paddr);
@@ -625,8 +633,8 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
 template<class Impl>
 void
 DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC,
-                                    const InstSeqNum &seq_num,
-                                    unsigned tid)
+                                     const InstSeqNum &seq_num,
+                                     unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%i]: Squashing from decode.\n",tid);
 
@@ -635,6 +643,7 @@ DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC,
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
     cpu->removeInstsUntil(seq_num, tid);
+    youngestSN = seq_num;
 }
 
 template<class Impl>
@@ -820,6 +829,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].nextPC,tid);
+        youngestSN = fromCommit->commitInfo[tid].doneSeqNum;
 
         // Also check if there's a mispredict that happened.
         if (fromCommit->commitInfo[tid].branchMispredict) {
@@ -998,6 +1008,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             // Get a sequence number.
             inst_seq = cpu->getAndIncrementInstSeq();
+
+            youngestSN = inst_seq;
 
             // Make sure this is a valid index.
             assert(offset <= cacheBlkSize - instSize);

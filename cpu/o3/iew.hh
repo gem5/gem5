@@ -159,6 +159,8 @@ class DefaultIEW
 
     void switchOut();
 
+    void doSwitchOut();
+
     void takeOverFrom();
 
     bool isSwitchedOut() { return switchedOut; }

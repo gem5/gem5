@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "cpu/checker/cpu.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
 
@@ -690,6 +691,9 @@ LSQUnit<Impl>::writebackStores()
         }
         if (!(req->flags & LOCKED)) {
             storeQueue[storeWBIdx].inst->setCompleted();
+            if (cpu->checker) {
+                cpu->checker->tick(storeQueue[storeWBIdx].inst);
+            }
         }
 
         if (dcacheInterface) {
@@ -936,6 +940,11 @@ LSQUnit<Impl>::completeStore(int store_idx)
         stalled = false;
         stallingStoreIsn = 0;
         iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
+    }
+
+    storeQueue[store_idx].inst->setCompleted();
+    if (cpu->checker) {
+        cpu->checker->tick(storeQueue[store_idx].inst);
     }
 }
 
