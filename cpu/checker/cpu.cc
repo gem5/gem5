@@ -607,41 +607,46 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         bool succeeded = translateInstReq(memReq);
 
         if (!succeeded) {
-            warn("Instruction PC %#x was not found in the ITB!",
-                 cpuXC->readPC());
-            handleError();
+            if (inst->getFault() == NoFault) {
+                warn("Instruction PC %#x was not found in the ITB!",
+                     cpuXC->readPC());
+                handleError();
 
-            // go to the next instruction
-            cpuXC->setPC(cpuXC->readNextPC());
-            cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
+                // go to the next instruction
+                cpuXC->setPC(cpuXC->readNextPC());
+                cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
 
-            return;
+                return;
+            } else {
+                fault = inst->getFault();
+            }
         }
 
-//    if (fault == NoFault)
+        if (fault == NoFault) {
 //        fault = cpuXC->mem->read(memReq, machInst);
-        cpuXC->mem->read(memReq, machInst);
+            cpuXC->mem->read(memReq, machInst);
 
-        // If we've got a valid instruction (i.e., no fault on instruction
-        // fetch), then execute it.
+            // If we've got a valid instruction (i.e., no fault on instruction
+            // fetch), then execute it.
 
         // keep an instruction count
-        numInst++;
+            numInst++;
 //	numInsts++;
 
-        // decode the instruction
-        machInst = gtoh(machInst);
-        // Checks that the instruction matches what we expected it to be.
-        // Checks both the machine instruction and the PC.
-        validateInst(inst);
+            // decode the instruction
+            machInst = gtoh(machInst);
+            // Checks that the instruction matches what we expected it to be.
+            // Checks both the machine instruction and the PC.
+            validateInst(inst);
 
-        curStaticInst = StaticInst::decode(makeExtMI(machInst, cpuXC->readPC()));
+            curStaticInst = StaticInst::decode(makeExtMI(machInst, cpuXC->readPC()));
 
 #if FULL_SYSTEM
-        cpuXC->setInst(machInst);
+            cpuXC->setInst(machInst);
 #endif // FULL_SYSTEM
 
-        fault = inst->getFault();
+            fault = inst->getFault();
+        }
 
         // Either the instruction was a fault and we should process the fault,
         // or we should just go ahead execute the instruction.  This assumes

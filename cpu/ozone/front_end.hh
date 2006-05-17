@@ -120,6 +120,7 @@ class FrontEnd
         SerializeComplete,
         RenameBlocked,
         QuiescePending,
+        TrapPending,
         BEBlocked
     };
 

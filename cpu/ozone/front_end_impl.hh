@@ -268,11 +268,9 @@ FrontEnd<Impl>::tick()
     }
 
     if (status == RenameBlocked || status == SerializeBlocked ||
-        status == BEBlocked) {
-        // This might cause the front end to run even though it
-        // shouldn't, but this should only be a problem for one cycle.
-        // Also will cause a one cycle bubble between changing state
-        // and restarting.
+        status == TrapPending || status == BEBlocked) {
+        // Will cause a one cycle bubble between changing state and
+        // restarting.
         DPRINTF(FE, "In blocked status.\n");
 
         fetchBlockedCycles++;
@@ -537,9 +535,32 @@ void
 FrontEnd<Impl>::handleFault(Fault &fault)
 {
     DPRINTF(FE, "Fault at fetch, telling commit\n");
-    backEnd->fetchFault(fault);
+//    backEnd->fetchFault(fault);
     // We're blocked on the back end until it handles this fault.
-    status = BEBlocked;
+    status = TrapPending;
+
+    // Get a sequence number.
+    InstSeqNum inst_seq = getAndIncrementInstSeq();
+    // We will use a nop in order to carry the fault.
+    ExtMachInst ext_inst = TheISA::NoopMachInst;
+
+    // Create a new DynInst from the dummy nop.
+    DynInstPtr instruction = new DynInst(ext_inst, PC,
+                                         PC+sizeof(MachInst),
+                                         inst_seq, cpu);
+    instruction->setPredTarg(instruction->readNextPC());
+//    instruction->setThread(tid);
+
+//    instruction->setASID(tid);
+
+    instruction->setState(thread);
+
+    instruction->traceData = NULL;
+
+    instruction->fault = fault;
+    instruction->setCanIssue();
+    instBuffer.push_back(instruction);
+    ++instBufferSize;
 }
 
 template <class Impl>
@@ -881,7 +902,6 @@ FrontEnd<Impl>::dumpInsts()
                 (*buff_it)->isSquashed());
         buff_it++;
     }
-
 }
 
 template <class Impl>

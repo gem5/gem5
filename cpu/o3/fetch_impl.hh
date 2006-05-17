@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,22 +27,21 @@
  */
 
 #include "arch/isa_traits.hh"
-#include "sim/byteswap.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/fetch.hh"
 #include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
 #include "mem/mem_req.hh"
-
+#include "sim/byteswap.hh"
 #include "sim/root.hh"
 
 #if FULL_SYSTEM
+#include "arch/tlb.hh"
+#include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
-#include "arch/tlb.hh"
-#include "arch/vtophys.hh"
 #else // !FULL_SYSTEM
 #include "mem/functional/functional.hh"
 #endif // FULL_SYSTEM
@@ -136,14 +135,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         // Create a new memory request.
         memReq[tid] = NULL;
-//        memReq[tid] = new MemReq();
-/*
-        // Need a way of setting this correctly for parallel programs
-        // @todo: Figure out how to properly set asid vs thread_num.
-        memReq[tid]->asid = tid;
-        memReq[tid]->thread_num = tid;
-        memReq[tid]->data = new uint8_t[64];
-*/
+
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
 
@@ -261,10 +253,6 @@ DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
     DPRINTF(Fetch, "Setting the CPU pointer.\n");
     cpu = cpu_ptr;
 
-    // Set ExecContexts for Memory Requests
-//    for (int tid=0; tid < numThreads; tid++)
-//        memReq[tid]->xc = cpu->xcBase(tid);
-
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
     switchToActive();
@@ -362,9 +350,8 @@ DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
 
 //    memcpy(cacheData[tid], memReq[tid]->data, memReq[tid]->size);
 
-    // Reset the completion event to NULL.
+    // Reset the mem req to NULL.
     memReq[tid] = NULL;
-//    memReq[tid]->completionEvent = NULL;
 }
 
 template <class Impl>
@@ -468,10 +455,6 @@ template <class Impl>
 bool
 DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid)
 {
-    // Check if the instruction exists within the cache.
-    // If it does, then proceed on to read the instruction and the rest
-    // of the instructions in the cache line until either the end of the
-    // cache line or a predicted taken branch is encountered.
     Fault fault = NoFault;
 
 #if FULL_SYSTEM
@@ -509,7 +492,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 //#endif
 
     // In the case of faults, the fetch stage may need to stall and wait
-    // on what caused the fetch (ITB or Icache miss).
+    // for the ITB miss to be handled.
 
     // If translation was successful, attempt to read the first
     // instruction.
@@ -518,7 +501,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         if (cpu->system->memctrl->badaddr(memReq[tid]->paddr) ||
             memReq[tid]->flags & UNCACHEABLE) {
             DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "
-                    "misspeculating path!",
+                    "misspeculating path)!",
                     memReq[tid]->paddr);
             ret_fault = TheISA::genMachineCheckFault();
             return false;
@@ -587,42 +570,7 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
     if (fetchStatus[tid] == IcacheMissStall && icacheInterface) {
         DPRINTF(Fetch, "[tid:%i]: Squashing outstanding Icache miss.\n",
                 tid);
-//        icacheInterface->squash(tid);
-/*
-        if (memReq[tid]->completionEvent) {
-            if (memReq[tid]->completionEvent->scheduled()) {
-                memReq[tid]->completionEvent->squash();
-            } else {
-                delete memReq[tid]->completionEvent;
-                memReq[tid]->completionEvent = NULL;
-            }
-        }
-*/
         memReq[tid] = NULL;
-    }
-
-    if (fetchStatus[tid] == TrapPending) {
-        // @todo: Hardcoded number here
-
-        // This is only effective if communication to and from commit
-        // is identical.  If it's faster to commit than it is from
-        // commit to here, then it causes problems.
-
-        bool found_fault = false;
-        for (int i = 0; i > -5; --i) {
-            if (fetchQueue->access(i)->fetchFault) {
-                DPRINTF(Fetch, "[tid:%i]: Fetch used to be in a trap, "
-                        "clearing it.\n",
-                        tid);
-                fetchQueue->access(i)->fetchFault = NoFault;
-                found_fault = true;
-            }
-        }
-        if (!found_fault) {
-            warn("%lli Fault from fetch not found in time buffer!",
-                 curTick);
-        }
-        toDecode->clearFetchFault = true;
     }
 
     fetchStatus[tid] = Squashing;
@@ -643,7 +591,6 @@ DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC,
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
     cpu->removeInstsUntil(seq_num, tid);
-    youngestSN = seq_num;
 }
 
 template<class Impl>
@@ -829,7 +776,6 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].nextPC,tid);
-        youngestSN = fromCommit->commitInfo[tid].doneSeqNum;
 
         // Also check if there's a mispredict that happened.
         if (fromCommit->commitInfo[tid].branchMispredict) {
@@ -1009,8 +955,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             // Get a sequence number.
             inst_seq = cpu->getAndIncrementInstSeq();
 
-            youngestSN = inst_seq;
-
             // Make sure this is a valid index.
             assert(offset <= cacheBlkSize - instSize);
 
@@ -1095,14 +1039,37 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // This stage will not be able to continue until all the ROB
         // slots are empty, at which point the fault can be handled.
         // The only other way it can wake up is if a squash comes along
-        // and changes the PC.  Not sure how to handle that case...perhaps
-        // have it handled by the upper level CPU class which peeks into the
-        // time buffer and sees if a squash comes along, in which case it
-        // changes the status.
+        // and changes the PC.
 #if FULL_SYSTEM
+        assert(numInst != fetchWidth);
+        // Get a sequence number.
+        inst_seq = cpu->getAndIncrementInstSeq();
+        // We will use a nop in order to carry the fault.
+        ext_inst = TheISA::NoopMachInst;
+
+        // Create a new DynInst from the dummy nop.
+        DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,
+                                             next_PC,
+                                             inst_seq, cpu);
+        instruction->setPredTarg(next_PC + instSize);
+        instruction->setThread(tid);
+
+        instruction->setASID(tid);
+
+        instruction->setState(cpu->thread[tid]);
+
+        instruction->traceData = NULL;
+
+        instruction->setInstListIt(cpu->addInst(instruction));
+
+        instruction->fault = fault;
+
+        toDecode->insts[numInst] = instruction;
+        toDecode->size++;
+
         // Tell the commit stage the fault we had.
-        toDecode->fetchFault = fault;
-        toDecode->fetchFaultSN = cpu->globalSeqNum;
+//        toDecode->fetchFault = fault;
+//        toDecode->fetchFaultSN = cpu->globalSeqNum;
 
         DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n",tid);
 

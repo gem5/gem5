@@ -652,7 +652,7 @@ LWBackEnd<Impl>::tick()
         squashFromTrap();
     } else if (xcSquash) {
         squashFromXC();
-    } else if (fetchHasFault && robEmpty() && frontEnd->isEmpty() && !LSQ.hasStoresToWB()) {
+    } /*else if (fetchHasFault && robEmpty() && frontEnd->isEmpty() && !LSQ.hasStoresToWB()) {
         DPRINTF(BE, "ROB and front end empty, handling fetch fault\n");
         Fault fetch_fault = frontEnd->getFault();
         if (fetch_fault == NoFault) {
@@ -662,7 +662,7 @@ LWBackEnd<Impl>::tick()
             handleFault(fetch_fault);
             fetchHasFault = false;
         }
-    }
+        }*/
 #endif
 
     if (dispatchStatus != Blocked) {
@@ -777,6 +777,12 @@ LWBackEnd<Impl>::dispatchInsts()
                             inst->seqNum);
                     exeList.push(inst);
                 }
+            } else if (inst->isNop()) {
+                DPRINTF(BE, "Nop encountered [sn:%lli], skipping exeList.\n",
+                        inst->seqNum);
+                inst->setIssued();
+                inst->setExecuted();
+                inst->setCanCommit();
             } else {
                 DPRINTF(BE, "Instruction [sn:%lli] ready, addding to exeList.\n",
                         inst->seqNum);
