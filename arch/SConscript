@@ -96,18 +96,12 @@ for hdr in isa_switch_hdrs:
 #
 import SCons.Scanner
 
-def ISAScan():
-   return SCons.Scanner.Classic("ISAScan",
-                                "$ISASUFFIXES",
-                                "SRCDIR",
-                                '^[ \t]*##[ \t]*include[ \t]*"([^>"]+)"')
+isa_scanner = SCons.Scanner.Classic("ISAScan",
+                                    [".isa", ".ISA"],
+                                    "SRCDIR",
+                                    r'^\s*##include\s+"([\w/.-]*)"')
 
-def ISAPath(env, dir, target=None, source=None, a=None):
-   return (Dir(env['SRCDIR']), Dir('.'))   
-
-iscan = Scanner(function = ISAScan().scan, skeys = [".isa", ".ISA"],
-                path_function = ISAPath)
-env.Append(SCANNERS = iscan)
+env.Append(SCANNERS = isa_scanner)
 
 #
 # Now create a Builder object that uses isa_parser.py to generate C++
@@ -134,8 +128,7 @@ def isa_desc_emitter(target, source, env):
     return (isa_desc_gen_files, [isa_parser, cpu_models_file] + source)
 
 # Pieces are in place, so create the builder.
-isa_desc_builder = Builder(action='$SOURCES $TARGET.dir $CPU_MODELS',
-                           source_scanner = iscan,
+isa_desc_builder = Builder(action='python $SOURCES $TARGET.dir $CPU_MODELS',
                            emitter = isa_desc_emitter)
 
 env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
