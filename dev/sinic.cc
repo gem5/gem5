@@ -80,8 +80,9 @@ Base::Base(Params *p)
 }
 
 Device::Device(Params *p)
-    : Base(p), plat(p->plat), physmem(p->physmem), rxUnique(0), txUnique(0),
+    : Base(p), rxUnique(0), txUnique(0),
       virtualRegs(p->virtual_count < 1 ? 1 : p->virtual_count),
+      rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
       rxKickTick(0), txKickTick(0),
       txEvent(this), rxDmaEvent(this), txDmaEvent(this),
       dmaReadDelay(p->dma_read_delay), dmaReadFactor(p->dma_read_factor),
@@ -461,14 +462,15 @@ Device::write(Packet &pkt)
         vnic.RxDone = Regs::RxDone_Busy;
         vnic.RxData = pkt.get<uint64_t>();
 
-        if (Regs::get_RxData_Vaddr(reg64)) {
-            Addr vaddr = Regs::get_RxData_Addr(reg64);
+        if (Regs::get_RxData_Vaddr(pkt.get<uint64_t>())) {
+            panic("vtophys not implemented in newmem");
+/*            Addr vaddr = Regs::get_RxData_Addr(reg64);
             Addr paddr = vtophys(req->xc, vaddr);
             DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d): "
                     "vaddr=%#x, paddr=%#x\n",
                     index, vnic.rxUnique, vaddr, paddr);
 
-            vnic.RxData = Regs::set_RxData_Addr(vnic.RxData, paddr);
+            vnic.RxData = Regs::set_RxData_Addr(vnic.RxData, paddr);*/
         } else {
             DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d)\n",
                     index, vnic.rxUnique);
