@@ -207,6 +207,7 @@ full_system_sources = Split('''
 	dev/platform.cc
         dev/simconsole.cc
 	dev/simple_disk.cc
+	dev/sinic.cc
 	dev/tsunami.cc
 	dev/tsunami_cchip.cc
 	dev/tsunami_io.cc
@@ -227,7 +228,6 @@ full_system_sources = Split('''
 
 	sim/pseudo_inst.cc
         ''')
-#	dev/sinic.cc
 
 
 if env['TARGET_ISA'] == 'alpha':
