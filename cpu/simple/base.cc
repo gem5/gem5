@@ -307,8 +307,7 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (checkInterrupts && check_interrupts() && !cpuXC->inPalMode() &&
-        status() != IcacheAccessComplete) {
+    if (checkInterrupts && check_interrupts() && !cpuXC->inPalMode()) {
         int ipl = 0;
         int summary = 0;
         checkInterrupts = false;

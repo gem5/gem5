@@ -260,12 +260,6 @@ class IdeDisk : public SimObject
     void reset(int id);
 
     /**
-     * Register statistics.
-     */
-    void regStats();
-
-
-    /**
      * Set the controller for this device
      * @param c The IDE controller
      */

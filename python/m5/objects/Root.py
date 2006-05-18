@@ -3,6 +3,7 @@ from Serialize import Serialize
 from Statistics import Statistics
 from Trace import Trace
 from ExeTrace import ExecutionTrace
+from Debug import Debug
 
 class Root(SimObject):
     type = 'Root'
@@ -19,3 +20,4 @@ class Root(SimObject):
     trace = Trace()
     exetrace = ExecutionTrace()
     serialize = Serialize()
+    debug = Debug()

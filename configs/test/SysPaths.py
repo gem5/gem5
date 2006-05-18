@@ -22,11 +22,11 @@ BINDIR = SYSTEMDIR + '/binaries'
 DISKDIR = SYSTEMDIR + '/disks'
 
 def disk(file):
-    return '%s/%s' % (DISKDIR, file)
+    return os.path.join(DISKDIR, file)
 
 def binary(file):
-    return '%s/%s' % (BINDIR, file)
+    return os.path.join(BINDIR, file)
 
 def script(file):
-    return '%s/%s' % ('/z/saidi/work/m5.newmem/configs/boot', file)
+    return os.path.join(SYSTEMDIR, 'boot', file)
 

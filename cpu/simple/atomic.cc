@@ -100,6 +100,9 @@ AtomicSimpleCPU::CpuPort::recvFunctional(Packet &pkt)
 void
 AtomicSimpleCPU::CpuPort::recvStatusChange(Status status)
 {
+    if (status == RangeChange)
+        return;
+
     panic("AtomicSimpleCPU doesn't expect recvStatusChange callback!");
 }
 
@@ -227,10 +230,13 @@ AtomicSimpleCPU::suspendContext(int thread_num)
     assert(cpuXC);
 
     assert(_status == Running);
-    assert(tickEvent.scheduled());
+
+    // tick event may not be scheduled if this gets called from inside
+    // an instruction's execution, e.g. "quiesce"
+    if (tickEvent.scheduled())
+        tickEvent.deschedule();
 
     notIdleFraction--;
-    tickEvent.deschedule();
     _status = Idle;
 }
 
@@ -417,6 +423,8 @@ AtomicSimpleCPU::tick()
     for (int i = 0; i < width; ++i) {
         numCycles++;
 
+        checkForInterrupts();
+
         ifetch_req->resetMin();
         ifetch_pkt->reset();
         Fault fault = setupFetchPacket(ifetch_pkt);
@@ -452,7 +460,8 @@ AtomicSimpleCPU::tick()
         advancePC(fault);
     }
 
-    tickEvent.schedule(curTick + latency);
+    if (_status != Idle)
+        tickEvent.schedule(curTick + latency);
 }
 
 

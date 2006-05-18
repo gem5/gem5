@@ -165,6 +165,7 @@ PciConfigAll::write(Packet &pkt)
       default:
         panic("invalid pci config write size\n");
     }
+    pkt.result = Success;
     return pioDelay;
 }
 

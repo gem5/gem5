@@ -160,8 +160,7 @@ DmaPort::dmaAction(Command cmd, Addr addr, int size, Event *event,
     basePkt.flags = 0;
     basePkt.coherence = NULL;
     basePkt.senderState = NULL;
-    basePkt.src = 0;
-    basePkt.dest = 0;
+    basePkt.dest = Packet::Broadcast;
     basePkt.cmd = cmd;
     basePkt.result = Unknown;
     basePkt.req = NULL;

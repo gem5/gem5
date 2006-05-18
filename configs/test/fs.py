@@ -181,9 +181,9 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
                              read_only=True)
     simple_disk = SimpleDisk(disk=Parent.raw_image)
     intrctrl = IntrControl()
-    cpu = SimpleCPU(mem=Parent.magicbus2)
+    cpu = AtomicSimpleCPU(mem=Parent.magicbus2)
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
-    kernel = '/z/saidi/work/m5.newmem/build/vmlinux'
+    kernel = binary('vmlinux')
     pal = binary('ts_osfpal')
     console = binary('console')
     boot_osflags = 'root=/dev/hda1 console=ttyS0'
