@@ -189,7 +189,7 @@ FUPool::getUnit(OpClass capability)
 }
 
 void
-FUPool::freeUnit(int fu_idx)
+FUPool::freeUnitNextCycle(int fu_idx)
 {
     assert(unitBusy[fu_idx]);
     unitsToBeFreed.push_back(fu_idx);

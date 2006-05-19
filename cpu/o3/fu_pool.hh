@@ -134,7 +134,7 @@ class FUPool : public SimObject
     int getUnit(OpClass capability);
 
     /** Frees a FU at the end of this cycle. */
-    void freeUnit(int fu_idx);
+    void freeUnitNextCycle(int fu_idx);
 
     /** Frees all FUs on the list. */
     void processFreeUnits();
