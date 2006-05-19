@@ -89,7 +89,6 @@ class OzoneCPU : public BaseCPU
     typedef typename Impl::FrontEnd FrontEnd;
     typedef typename Impl::BackEnd BackEnd;
     typedef typename Impl::DynInst DynInst;
-    typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     typedef TheISA::MiscReg MiscReg;

@@ -157,8 +157,7 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
     cpu_id = oldContext->readCpuId();
 #if !FULL_SYSTEM
     func_exe_inst = oldContext->readFuncExeInst();
-#endif
-
+#else
     EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
     if (quiesce) {
         // Point the quiesce event's XC at this XC so that it wakes up
@@ -168,6 +167,7 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
     if (quiesceEvent) {
         quiesceEvent->xc = proxy;
     }
+#endif
 
     storeCondFailures = 0;
 

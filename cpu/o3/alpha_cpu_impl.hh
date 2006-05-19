@@ -171,8 +171,7 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
     setCpuId(old_context->readCpuId());
 #if !FULL_SYSTEM
     thread->funcExeInst = old_context->readFuncExeInst();
-#endif
-
+#else
     EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
     if (other_quiesce) {
         // Point the quiesce event's XC at this XC so that it wakes up
@@ -184,6 +183,7 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
     }
 //    storeCondFailures = 0;
     cpu->lockFlag = false;
+#endif
 
     old_context->setStatus(ExecContext::Unallocated);
 
