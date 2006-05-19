@@ -65,14 +65,14 @@ class IsaFake : public BasicPioDevice
      * @param req The memory request.
      * @param data Where to put the data.
      */
-    virtual Tick read(Packet &pkt);
+    virtual Tick read(Packet *pkt);
 
     /**
      * All writes are simply ignored.
      * @param req The memory request.
      * @param data the data to not write.
      */
-    virtual Tick write(Packet &pkt);
+    virtual Tick write(Packet *pkt);
 };
 
 #endif // __TSUNAMI_FAKE_HH__

@@ -375,8 +375,8 @@ class NSGigE : public PciDev
 
     virtual void writeConfig(int offset, const uint16_t data);
 
-    virtual Tick read(Packet &pkt);
-    virtual Tick write(Packet &pkt);
+    virtual Tick read(Packet *pkt);
+    virtual Tick write(Packet *pkt);
 
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }

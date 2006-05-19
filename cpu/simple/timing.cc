@@ -60,14 +60,14 @@ TimingSimpleCPU::init()
 }
 
 Tick
-TimingSimpleCPU::CpuPort::recvAtomic(Packet &pkt)
+TimingSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 {
     panic("TimingSimpleCPU doesn't expect recvAtomic callback!");
     return curTick;
 }
 
 void
-TimingSimpleCPU::CpuPort::recvFunctional(Packet &pkt)
+TimingSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
     panic("TimingSimpleCPU doesn't expect recvFunctional callback!");
 }
@@ -192,7 +192,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         data_read_pkt->size = sizeof(T);
         data_read_pkt->dest = Packet::Broadcast;
 
-        if (!dcachePort.sendTiming(*data_read_pkt)) {
+        if (!dcachePort.sendTiming(data_read_pkt)) {
             _status = DcacheRetry;
             dcache_pkt = data_read_pkt;
         } else {
@@ -274,7 +274,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt->addr = data_write_req->getPaddr();
         data_write_pkt->dest = Packet::Broadcast;
 
-        if (!dcachePort.sendTiming(*data_write_pkt)) {
+        if (!dcachePort.sendTiming(data_write_pkt)) {
             _status = DcacheRetry;
             dcache_pkt = data_write_pkt;
         } else {
@@ -354,7 +354,7 @@ TimingSimpleCPU::fetch()
 
     Fault fault = setupFetchPacket(ifetch_pkt);
     if (fault == NoFault) {
-        if (!icachePort.sendTiming(*ifetch_pkt)) {
+        if (!icachePort.sendTiming(ifetch_pkt)) {
             // Need to wait for retry
             _status = IcacheRetry;
         } else {
@@ -406,7 +406,7 @@ TimingSimpleCPU::completeIfetch()
 
 
 bool
-TimingSimpleCPU::IcachePort::recvTiming(Packet &pkt)
+TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
     cpu->completeIfetch();
     return true;
@@ -442,9 +442,9 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 
 
 bool
-TimingSimpleCPU::DcachePort::recvTiming(Packet &pkt)
+TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
 {
-    cpu->completeDataAccess(&pkt);
+    cpu->completeDataAccess(pkt);
     return true;
 }
 

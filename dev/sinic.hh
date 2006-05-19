@@ -262,8 +262,8 @@ class Device : public Base
  * Memory Interface
  */
   public:
-    virtual Tick read(Packet &pkt);
-    virtual Tick write(Packet &pkt);
+    virtual Tick read(Packet *pkt);
+    virtual Tick write(Packet *pkt);
 
     void prepareIO(int cpu, int index);
     void prepareRead(int cpu, int index);

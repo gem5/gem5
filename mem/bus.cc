@@ -48,14 +48,14 @@ Bus::init()
 /** Function called by the port when the bus is recieving a Timing
  * transaction.*/
 bool
-Bus::recvTiming(Packet &pkt)
+Bus::recvTiming(Packet *pkt)
 {
     Port *port;
-    if (pkt.dest == Packet::Broadcast) {
-        port = findPort(pkt.addr, pkt.src);
+    if (pkt->dest == Packet::Broadcast) {
+        port = findPort(pkt->addr, pkt->src);
     } else {
-        assert(pkt.dest > 0 && pkt.dest < interfaces.size());
-        port = interfaces[pkt.dest];
+        assert(pkt->dest > 0 && pkt->dest < interfaces.size());
+        port = interfaces[pkt->dest];
     }
     return port->sendTiming(pkt);
 }
@@ -89,19 +89,19 @@ Bus::findPort(Addr addr, int id)
 /** Function called by the port when the bus is recieving a Atomic
  * transaction.*/
 Tick
-Bus::recvAtomic(Packet &pkt)
+Bus::recvAtomic(Packet *pkt)
 {
-    assert(pkt.dest == Packet::Broadcast);
-    return findPort(pkt.addr, pkt.src)->sendAtomic(pkt);
+    assert(pkt->dest == Packet::Broadcast);
+    return findPort(pkt->addr, pkt->src)->sendAtomic(pkt);
 }
 
 /** Function called by the port when the bus is recieving a Functional
  * transaction.*/
 void
-Bus::recvFunctional(Packet &pkt)
+Bus::recvFunctional(Packet *pkt)
 {
-    assert(pkt.dest == Packet::Broadcast);
-    findPort(pkt.addr, pkt.src)->sendFunctional(pkt);
+    assert(pkt->dest == Packet::Broadcast);
+    findPort(pkt->addr, pkt->src)->sendFunctional(pkt);
 }
 
 /** Function called by the port when the bus is recieving a status change.*/

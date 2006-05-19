@@ -92,7 +92,7 @@ class PciConfigAll : public BasicPioDevice
      * @param pkt Contains the address of the field to read.
      * @return Amount of time to do the read
      */
-    virtual Tick read(Packet &pkt);
+    virtual Tick read(Packet *pkt);
 
     /**
      * Write to PCI config spcae. If the device does not exit the simulator
@@ -103,7 +103,7 @@ class PciConfigAll : public BasicPioDevice
      * @return The fault condition of the access.
      */
 
-    virtual Tick write(Packet &pkt);
+    virtual Tick write(Packet *pkt);
 
     /**
      * Start up function to check if more than one person is using an interrupt line

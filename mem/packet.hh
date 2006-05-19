@@ -190,5 +190,5 @@ struct Packet
     bool intersect(Packet *p);
 };
 
-bool fixPacket(Packet &func, Packet &timing);
+bool fixPacket(Packet *func, Packet *timing);
 #endif //__MEM_PACKET_HH

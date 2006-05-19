@@ -69,76 +69,76 @@ TsunamiCChip::TsunamiCChip(Params *p)
 }
 
 Tick
-TsunamiCChip::read(Packet &pkt)
+TsunamiCChip::read(Packet *pkt)
 {
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->addr, pkt->size);
 
-    assert(pkt.result == Unknown);
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt->result == Unknown);
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
 
-    pkt.time += pioDelay;
-    Addr regnum = (pkt.addr - pioAddr) >> 6;
-    Addr daddr = (pkt.addr - pioAddr);
+    pkt->time += pioDelay;
+    Addr regnum = (pkt->addr - pioAddr) >> 6;
+    Addr daddr = (pkt->addr - pioAddr);
 
-    pkt.allocate();
-    switch (pkt.size) {
+    pkt->allocate();
+    switch (pkt->size) {
 
       case sizeof(uint64_t):
           if (daddr & TSDEV_CC_BDIMS)
           {
-              pkt.set(dim[(daddr >> 4) & 0x3F]);
+              pkt->set(dim[(daddr >> 4) & 0x3F]);
               break;
           }
 
           if (daddr & TSDEV_CC_BDIRS)
           {
-              pkt.set(dir[(daddr >> 4) & 0x3F]);
+              pkt->set(dir[(daddr >> 4) & 0x3F]);
               break;
           }
 
           switch(regnum) {
               case TSDEV_CC_CSR:
-                  pkt.set(0x0);
+                  pkt->set(0x0);
                   break;
               case TSDEV_CC_MTR:
                   panic("TSDEV_CC_MTR not implemeted\n");
                    break;
               case TSDEV_CC_MISC:
-                  pkt.set((ipint << 8) & 0xF | (itint << 4) & 0xF |
-                                     (pkt.req->getCpuNum() & 0x3));
+                  pkt->set((ipint << 8) & 0xF | (itint << 4) & 0xF |
+                                     (pkt->req->getCpuNum() & 0x3));
                   break;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:
               case TSDEV_CC_AAR2:
               case TSDEV_CC_AAR3:
-                  pkt.set(0);
+                  pkt->set(0);
                   break;
               case TSDEV_CC_DIM0:
-                  pkt.set(dim[0]);
+                  pkt->set(dim[0]);
                   break;
               case TSDEV_CC_DIM1:
-                  pkt.set(dim[1]);
+                  pkt->set(dim[1]);
                   break;
               case TSDEV_CC_DIM2:
-                  pkt.set(dim[2]);
+                  pkt->set(dim[2]);
                   break;
               case TSDEV_CC_DIM3:
-                  pkt.set(dim[3]);
+                  pkt->set(dim[3]);
                   break;
               case TSDEV_CC_DIR0:
-                  pkt.set(dir[0]);
+                  pkt->set(dir[0]);
                   break;
               case TSDEV_CC_DIR1:
-                  pkt.set(dir[1]);
+                  pkt->set(dir[1]);
                   break;
               case TSDEV_CC_DIR2:
-                  pkt.set(dir[2]);
+                  pkt->set(dir[2]);
                   break;
               case TSDEV_CC_DIR3:
-                  pkt.set(dir[3]);
+                  pkt->set(dir[3]);
                   break;
               case TSDEV_CC_DRIR:
-                  pkt.set(drir);
+                  pkt->set(drir);
                   break;
               case TSDEV_CC_PRBEN:
                   panic("TSDEV_CC_PRBEN not implemented\n");
@@ -156,10 +156,10 @@ TsunamiCChip::read(Packet &pkt)
                   panic("TSDEV_CC_MPRx not implemented\n");
                   break;
               case TSDEV_CC_IPIR:
-                  pkt.set(ipint);
+                  pkt->set(ipint);
                   break;
               case TSDEV_CC_ITIR:
-                  pkt.set(itint);
+                  pkt->set(itint);
                   break;
               default:
                   panic("default in cchip read reached, accessing 0x%x\n");
@@ -173,26 +173,26 @@ TsunamiCChip::read(Packet &pkt)
         panic("invalid access size(?) for tsunami register!\n");
     }
     DPRINTF(Tsunami, "Tsunami CChip: read  regnum=%#x size=%d data=%lld\n",
-            regnum, pkt.size, pkt.get<uint64_t>());
+            regnum, pkt->size, pkt->get<uint64_t>());
 
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 
 Tick
-TsunamiCChip::write(Packet &pkt)
+TsunamiCChip::write(Packet *pkt)
 {
-    pkt.time += pioDelay;
+    pkt->time += pioDelay;
 
 
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    Addr daddr = pkt.addr - pioAddr;
-    Addr regnum = (pkt.addr - pioAddr) >> 6 ;
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    Addr daddr = pkt->addr - pioAddr;
+    Addr regnum = (pkt->addr - pioAddr) >> 6 ;
 
 
-    assert(pkt.size == sizeof(uint64_t));
+    assert(pkt->size == sizeof(uint64_t));
 
-    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", pkt.addr, pkt.get<uint64_t>());
+    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", pkt->addr, pkt->get<uint64_t>());
 
     bool supportedWrite = false;
 
@@ -207,7 +207,7 @@ TsunamiCChip::write(Packet &pkt)
 
         olddim = dim[number];
         olddir = dir[number];
-        dim[number] = pkt.get<uint64_t>();
+        dim[number] = pkt->get<uint64_t>();
         dir[number] = dim[number] & drir;
         for(int x = 0; x < Tsunami::Max_CPUs; x++)
         {
@@ -244,7 +244,7 @@ TsunamiCChip::write(Packet &pkt)
               panic("TSDEV_CC_MTR write not implemented\n");
           case TSDEV_CC_MISC:
             uint64_t ipreq;
-            ipreq = (pkt.get<uint64_t>() >> 12) & 0xF;
+            ipreq = (pkt->get<uint64_t>() >> 12) & 0xF;
             //If it is bit 12-15, this is an IPI post
             if (ipreq) {
                 reqIPI(ipreq);
@@ -253,7 +253,7 @@ TsunamiCChip::write(Packet &pkt)
 
             //If it is bit 8-11, this is an IPI clear
             uint64_t ipintr;
-            ipintr = (pkt.get<uint64_t>() >> 8) & 0xF;
+            ipintr = (pkt->get<uint64_t>() >> 8) & 0xF;
             if (ipintr) {
                 clearIPI(ipintr);
                 supportedWrite = true;
@@ -261,14 +261,14 @@ TsunamiCChip::write(Packet &pkt)
 
             //If it is the 4-7th bit, clear the RTC interrupt
             uint64_t itintr;
-              itintr = (pkt.get<uint64_t>() >> 4) & 0xF;
+              itintr = (pkt->get<uint64_t>() >> 4) & 0xF;
             if (itintr) {
                   clearITI(itintr);
                 supportedWrite = true;
             }
 
               // ignore NXMs
-              if (pkt.get<uint64_t>() & 0x10000000)
+              if (pkt->get<uint64_t>() & 0x10000000)
                   supportedWrite = true;
 
             if(!supportedWrite)
@@ -300,7 +300,7 @@ TsunamiCChip::write(Packet &pkt)
 
                 olddim = dim[number];
                 olddir = dir[number];
-                dim[number] = pkt.get<uint64_t>();
+                dim[number] = pkt->get<uint64_t>();
                 dir[number] = dim[number] & drir;
                 for(int x = 0; x < 64; x++)
                 {
@@ -350,19 +350,19 @@ TsunamiCChip::write(Packet &pkt)
             case TSDEV_CC_MPR3:
                 panic("TSDEV_CC_MPRx write not implemented\n");
             case TSDEV_CC_IPIR:
-                clearIPI(pkt.get<uint64_t>());
+                clearIPI(pkt->get<uint64_t>());
                 break;
             case TSDEV_CC_ITIR:
-                clearITI(pkt.get<uint64_t>());
+                clearITI(pkt->get<uint64_t>());
                 break;
             case TSDEV_CC_IPIQ:
-                reqIPI(pkt.get<uint64_t>());
+                reqIPI(pkt->get<uint64_t>());
                 break;
             default:
               panic("default in cchip read reached, accessing 0x%x\n");
         }  // swtich(regnum)
     } // not BIG_TSUNAMI write
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 

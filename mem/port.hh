@@ -106,13 +106,13 @@ class Port
      * called by a peer port, never directly by any outside object. */
 
     /** Called to recive a timing call from the peer port. */
-    virtual bool recvTiming(Packet &pkt) = 0;
+    virtual bool recvTiming(Packet *pkt) = 0;
 
     /** Called to recive a atomic call from the peer port. */
-    virtual Tick recvAtomic(Packet &pkt) = 0;
+    virtual Tick recvAtomic(Packet *pkt) = 0;
 
     /** Called to recive a functional call from the peer port. */
-    virtual void recvFunctional(Packet &pkt) = 0;
+    virtual void recvFunctional(Packet *pkt) = 0;
 
     /** Called to recieve a status change from the peer port. */
     virtual void recvStatusChange(Status status) = 0;
@@ -150,13 +150,13 @@ class Port
         case a cache has a higher priority request come in while waiting for
         the bus to arbitrate.
     */
-    bool sendTiming(Packet &pkt) { return peer->recvTiming(pkt); }
+    bool sendTiming(Packet *pkt) { return peer->recvTiming(pkt); }
 
     /** Function called by the associated device to send an atomic access,
         an access in which the data is moved and the state is updated in one
         cycle, without interleaving with other memory accesses.
     */
-    Tick sendAtomic(Packet &pkt)
+    Tick sendAtomic(Packet *pkt)
         { return peer->recvAtomic(pkt); }
 
     /** Function called by the associated device to send a functional access,
@@ -164,7 +164,7 @@ class Port
         memory system, without affecting the current state of any block or
         moving the block.
     */
-    void sendFunctional(Packet &pkt)
+    void sendFunctional(Packet *pkt)
         { return peer->recvFunctional(pkt); }
 
     /** Called by the associated device to send a status change to the device
@@ -224,9 +224,9 @@ class Port
 class FunctionalPort : public Port
 {
   public:
-    virtual bool recvTiming(Packet &pkt) { panic("FuncPort is UniDir"); }
-    virtual Tick recvAtomic(Packet &pkt) { panic("FuncPort is UniDir"); }
-    virtual void recvFunctional(Packet &pkt) { panic("FuncPort is UniDir"); }
+    virtual bool recvTiming(Packet *pkt) { panic("FuncPort is UniDir"); }
+    virtual Tick recvAtomic(Packet *pkt) { panic("FuncPort is UniDir"); }
+    virtual void recvFunctional(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvStatusChange(Status status) {}
 
     template <typename T>

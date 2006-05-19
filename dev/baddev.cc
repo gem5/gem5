@@ -51,13 +51,13 @@ BadDevice::BadDevice(Params *p)
 }
 
 Tick
-BadDevice::read(Packet &pkt)
+BadDevice::read(Packet *pkt)
 {
     panic("Device %s not imlpmented\n", devname);
 }
 
 Tick
-BadDevice::write(Packet &pkt)
+BadDevice::write(Packet *pkt)
 {
     panic("Device %s not imlpmented\n", devname);
 }

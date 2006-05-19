@@ -215,14 +215,14 @@ class IdeController : public PciDev
      * @param pkt Packet describing what is to be read
      * @return The amount of time to complete this request
      */
-    virtual Tick read(Packet &pkt);
+    virtual Tick read(Packet *pkt);
 
     /**
      * Write a done field for a given target.
      * @param pkt Packet describing what is to be written
      * @return The amount of time to complete this request
      */
-    virtual Tick write(Packet &pkt);
+    virtual Tick write(Packet *pkt);
 
     /**
      * Serialize this object to the given output stream.

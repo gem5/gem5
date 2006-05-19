@@ -48,7 +48,7 @@ Bridge::init()
 /** Function called by the port when the bus is recieving a Timing
  * transaction.*/
 bool
-Bridge::recvTiming(Packet &pkt, Side id)
+Bridge::recvTiming(Packet *pkt, Side id)
 {
     if (blockedA && id == SideA)
         return false;
@@ -59,10 +59,10 @@ Bridge::recvTiming(Packet &pkt, Side id)
         if (!sendEvent.scheduled())
             sendEvent.schedule(curTick + delay);
         if (id == SideA) {
-            inboundA.push_back(std::make_pair<Packet*, Tick>(&pkt, curTick));
+            inboundA.push_back(std::make_pair<Packet*, Tick>(pkt, curTick));
             blockCheck(SideA);
         } else {
-            inboundB.push_back(std::make_pair<Packet*, Tick>(&pkt, curTick));
+            inboundB.push_back(std::make_pair<Packet*, Tick>(pkt, curTick));
             blockCheck(SideB);
         }
     } else {
@@ -134,16 +134,16 @@ void Bridge::timerEvent()
 
 
 void
-Bridge::BridgePort::sendPkt(Packet &pkt)
+Bridge::BridgePort::sendPkt(Packet *pkt)
 {
     if (!sendTiming(pkt))
-        outbound.push_back(std::make_pair<Packet*,Tick>(&pkt, curTick));
+        outbound.push_back(std::make_pair<Packet*,Tick>(pkt, curTick));
 }
 
 void
 Bridge::BridgePort::sendPkt(std::pair<Packet*, Tick> p)
 {
-    if (!sendTiming(*p.first))
+    if (!sendTiming(p.first))
         outbound.push_back(p);
 }
 
@@ -163,9 +163,9 @@ Bridge::BridgePort::recvRetry()
 /** Function called by the port when the bus is recieving a Atomic
  * transaction.*/
 Tick
-Bridge::recvAtomic(Packet &pkt, Side id)
+Bridge::recvAtomic(Packet *pkt, Side id)
 {
-    pkt.time += delay;
+    pkt->time += delay;
 
     if (id == SideA)
         return sideB->sendAtomic(pkt);
@@ -176,33 +176,33 @@ Bridge::recvAtomic(Packet &pkt, Side id)
 /** Function called by the port when the bus is recieving a Functional
  * transaction.*/
 void
-Bridge::recvFunctional(Packet &pkt, Side id)
+Bridge::recvFunctional(Packet *pkt, Side id)
 {
-    pkt.time += delay;
+    pkt->time += delay;
     std::list<std::pair<Packet*, Tick> >::iterator i;
     bool pktContinue = true;
 
     for(i = inboundA.begin();  i != inboundA.end(); ++i) {
-        if (pkt.intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, *i->first);
+        if (pkt->intersect(i->first)) {
+            pktContinue &= fixPacket(pkt, i->first);
         }
     }
 
     for(i = inboundB.begin();  i != inboundB.end(); ++i) {
-        if (pkt.intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, *i->first);
+        if (pkt->intersect(i->first)) {
+            pktContinue &= fixPacket(pkt, i->first);
         }
     }
 
     for(i = sideA->outbound.begin();  i != sideA->outbound.end(); ++i) {
-        if (pkt.intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, *i->first);
+        if (pkt->intersect(i->first)) {
+            pktContinue &= fixPacket(pkt, i->first);
         }
     }
 
     for(i = sideB->outbound.begin();  i != sideB->outbound.end(); ++i) {
-        if (pkt.intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, *i->first);
+        if (pkt->intersect(i->first)) {
+            pktContinue &= fixPacket(pkt, i->first);
         }
     }
 

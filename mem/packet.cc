@@ -90,5 +90,5 @@ Packet::reset() {
 
 
 
-bool fixPacket(Packet &func, Packet &timing)
+bool fixPacket(Packet *func, Packet *timing)
 { panic("Need to implement!"); }

@@ -68,11 +68,11 @@ class PioPort : public Port
     /** The current status of the peer(bus) that we are connected to. */
     Status peerStatus;
 
-    virtual bool recvTiming(Packet &pkt);
+    virtual bool recvTiming(Packet *pkt);
 
-    virtual Tick recvAtomic(Packet &pkt);
+    virtual Tick recvAtomic(Packet *pkt);
 
-    virtual void recvFunctional(Packet &pkt) ;
+    virtual void recvFunctional(Packet *pkt) ;
 
     virtual void recvStatusChange(Status status)
     { peerStatus = status; }
@@ -87,9 +87,9 @@ class PioPort : public Port
     class SendEvent : public Event
     {
         PioPort *port;
-        Packet packet;
+        Packet *packet;
 
-        SendEvent(PioPort *p, Packet &pkt, Tick t)
+        SendEvent(PioPort *p, Packet *pkt, Tick t)
             : Event(&mainEventQueue), packet(pkt)
         { schedule(curTick + t); }
 
@@ -102,7 +102,7 @@ class PioPort : public Port
     };
 
     /** Schedule a sendTiming() event to be called in the future. */
-    void sendTiming(Packet &pkt, Tick time)
+    void sendTiming(Packet *pkt, Tick time)
     { new PioPort::SendEvent(this, pkt, time); }
 
     /** This function pops the last element off the transmit list and sends it.*/
@@ -137,10 +137,10 @@ class DmaPort : public Port
     /** Number of outstanding packets the dma port has. */
     int pendingCount;
 
-    virtual bool recvTiming(Packet &pkt);
-    virtual Tick recvAtomic(Packet &pkt)
+    virtual bool recvTiming(Packet *pkt);
+    virtual Tick recvAtomic(Packet *pkt)
     { panic("dma port shouldn't be used for pio access."); }
-    virtual void recvFunctional(Packet &pkt)
+    virtual void recvFunctional(Packet *pkt)
     { panic("dma port shouldn't be used for pio access."); }
 
     virtual void recvStatusChange(Status status)
@@ -154,9 +154,9 @@ class DmaPort : public Port
     class SendEvent : public Event
     {
         DmaPort *port;
-        Packet packet;
+        Packet *packet;
 
-        SendEvent(PioPort *p, Packet &pkt, Tick t)
+        SendEvent(PioPort *p, Packet *pkt, Tick t)
             : Event(&mainEventQueue), packet(pkt)
         { schedule(curTick + t); }
 
@@ -206,22 +206,22 @@ class PioDevice : public MemObject
 
     /** As far as the devices are concerned they only accept atomic transactions
      * which are converted to either a write or a read. */
-    Tick recvAtomic(Packet &pkt)
-    { return pkt.cmd == Read ? this->read(pkt) : this->write(pkt); }
+    Tick recvAtomic(Packet *pkt)
+    { return pkt->cmd == Read ? this->read(pkt) : this->write(pkt); }
 
     /** Pure virtual function that the device must implement. Called when a read
      * command is recieved by the port.
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
-    virtual Tick read(Packet &pkt) = 0;
+    virtual Tick read(Packet *pkt) = 0;
 
     /** Pure virtual function that the device must implement. Called when a
      * write command is recieved by the port.
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
-    virtual Tick write(Packet &pkt) = 0;
+    virtual Tick write(Packet *pkt) = 0;
 
   public:
     /** Params struct which is extended through each device based on the

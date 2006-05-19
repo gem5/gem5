@@ -80,8 +80,8 @@ class Uart8250 : public Uart
   public:
     Uart8250(Params *p);
 
-    virtual Tick read(Packet &pkt);
-    virtual Tick write(Packet &pkt);
+    virtual Tick read(Packet *pkt);
+    virtual Tick write(Packet *pkt);
     virtual void addressRanges(AddrRangeList &range_list);
 
 

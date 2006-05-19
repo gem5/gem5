@@ -50,7 +50,7 @@
 using namespace std;
 using namespace TheISA;
 
-PhysicalMemory::MemResponseEvent::MemResponseEvent(Packet &pkt, MemoryPort* _m)
+PhysicalMemory::MemResponseEvent::MemResponseEvent(Packet *pkt, MemoryPort* _m)
     : Event(&mainEventQueue, CPU_Tick_Pri), pkt(pkt), memoryPort(_m)
 {
 
@@ -123,11 +123,11 @@ PhysicalMemory::deviceBlockSize()
 }
 
 bool
-PhysicalMemory::doTimingAccess (Packet &pkt, MemoryPort* memoryPort)
+PhysicalMemory::doTimingAccess (Packet *pkt, MemoryPort* memoryPort)
 {
     doFunctionalAccess(pkt);
 
-    pkt.dest = pkt.src;
+    pkt->dest = pkt->src;
     MemResponseEvent* response = new MemResponseEvent(pkt, memoryPort);
     response->schedule(curTick + lat);
 
@@ -135,32 +135,32 @@ PhysicalMemory::doTimingAccess (Packet &pkt, MemoryPort* memoryPort)
 }
 
 Tick
-PhysicalMemory::doAtomicAccess(Packet &pkt)
+PhysicalMemory::doAtomicAccess(Packet *pkt)
 {
     doFunctionalAccess(pkt);
-    pkt.time = curTick + lat;
+    pkt->time = curTick + lat;
     return curTick + lat;
 }
 
 void
-PhysicalMemory::doFunctionalAccess(Packet &pkt)
+PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
-    assert(pkt.addr + pkt.size < pmem_size);
+    assert(pkt->addr + pkt->size < pmem_size);
 
-    switch (pkt.cmd) {
+    switch (pkt->cmd) {
       case Read:
-        memcpy(pkt.getPtr<uint8_t>(), pmem_addr + pkt.addr - base_addr,
-                pkt.size);
+        memcpy(pkt->getPtr<uint8_t>(), pmem_addr + pkt->addr - base_addr,
+                pkt->size);
         break;
       case Write:
-        memcpy(pmem_addr + pkt.addr - base_addr, pkt.getPtr<uint8_t>(),
-                pkt.size);
+        memcpy(pmem_addr + pkt->addr - base_addr, pkt->getPtr<uint8_t>(),
+                pkt->size);
         break;
       default:
         panic("unimplemented");
     }
 
-    pkt.result = Success;
+    pkt->result = Success;
 }
 
 Port *
@@ -216,19 +216,19 @@ PhysicalMemory::MemoryPort::deviceBlockSize()
 }
 
 bool
-PhysicalMemory::MemoryPort::recvTiming(Packet &pkt)
+PhysicalMemory::MemoryPort::recvTiming(Packet *pkt)
 {
     return memory->doTimingAccess(pkt, this);
 }
 
 Tick
-PhysicalMemory::MemoryPort::recvAtomic(Packet &pkt)
+PhysicalMemory::MemoryPort::recvAtomic(Packet *pkt)
 {
     return memory->doAtomicAccess(pkt);
 }
 
 void
-PhysicalMemory::MemoryPort::recvFunctional(Packet &pkt)
+PhysicalMemory::MemoryPort::recvFunctional(Packet *pkt)
 {
     memory->doFunctionalAccess(pkt);
 }

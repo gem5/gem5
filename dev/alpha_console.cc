@@ -87,7 +87,7 @@ AlphaConsole::startup()
 }
 
 Tick
-AlphaConsole::read(Packet &pkt)
+AlphaConsole::read(Packet *pkt)
 {
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
@@ -95,109 +95,109 @@ AlphaConsole::read(Packet &pkt)
      * machine dependent address swizzle is required?
      */
 
-    assert(pkt.result == Unknown);
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt->result == Unknown);
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
 
-    pkt.time += pioDelay;
-    Addr daddr = pkt.addr - pioAddr;
+    pkt->time += pioDelay;
+    Addr daddr = pkt->addr - pioAddr;
 
-    pkt.allocate();
+    pkt->allocate();
 
-    switch (pkt.size)
+    switch (pkt->size)
     {
         case sizeof(uint32_t):
             switch (daddr)
             {
                 case offsetof(AlphaAccess, last_offset):
-                    pkt.set(alphaAccess->last_offset);
+                    pkt->set(alphaAccess->last_offset);
                     break;
                 case offsetof(AlphaAccess, version):
-                    pkt.set(alphaAccess->version);
+                    pkt->set(alphaAccess->version);
                     break;
                 case offsetof(AlphaAccess, numCPUs):
-                    pkt.set(alphaAccess->numCPUs);
+                    pkt->set(alphaAccess->numCPUs);
                     break;
                 case offsetof(AlphaAccess, intrClockFrequency):
-                    pkt.set(alphaAccess->intrClockFrequency);
+                    pkt->set(alphaAccess->intrClockFrequency);
                     break;
                 default:
                     /* Old console code read in everyting as a 32bit int
                      * we now break that for better error checking.
                      */
-                    pkt.result = BadAddress;
+                    pkt->result = BadAddress;
             }
             DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
-                    pkt.get<uint32_t>());
+                    pkt->get<uint32_t>());
             break;
         case sizeof(uint64_t):
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):
-                    pkt.set(console->console_in());
+                    pkt->set(console->console_in());
                     break;
                 case offsetof(AlphaAccess, cpuClock):
-                    pkt.set(alphaAccess->cpuClock);
+                    pkt->set(alphaAccess->cpuClock);
                     break;
                 case offsetof(AlphaAccess, mem_size):
-                    pkt.set(alphaAccess->mem_size);
+                    pkt->set(alphaAccess->mem_size);
                     break;
                 case offsetof(AlphaAccess, kernStart):
-                    pkt.set(alphaAccess->kernStart);
+                    pkt->set(alphaAccess->kernStart);
                     break;
                 case offsetof(AlphaAccess, kernEnd):
-                    pkt.set(alphaAccess->kernEnd);
+                    pkt->set(alphaAccess->kernEnd);
                     break;
                 case offsetof(AlphaAccess, entryPoint):
-                    pkt.set(alphaAccess->entryPoint);
+                    pkt->set(alphaAccess->entryPoint);
                     break;
                 case offsetof(AlphaAccess, diskUnit):
-                    pkt.set(alphaAccess->diskUnit);
+                    pkt->set(alphaAccess->diskUnit);
                     break;
                 case offsetof(AlphaAccess, diskCount):
-                    pkt.set(alphaAccess->diskCount);
+                    pkt->set(alphaAccess->diskCount);
                     break;
                 case offsetof(AlphaAccess, diskPAddr):
-                    pkt.set(alphaAccess->diskPAddr);
+                    pkt->set(alphaAccess->diskPAddr);
                     break;
                 case offsetof(AlphaAccess, diskBlock):
-                    pkt.set(alphaAccess->diskBlock);
+                    pkt->set(alphaAccess->diskBlock);
                     break;
                 case offsetof(AlphaAccess, diskOperation):
-                    pkt.set(alphaAccess->diskOperation);
+                    pkt->set(alphaAccess->diskOperation);
                     break;
                 case offsetof(AlphaAccess, outputChar):
-                    pkt.set(alphaAccess->outputChar);
+                    pkt->set(alphaAccess->outputChar);
                     break;
                 default:
                     int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
                                  sizeof(alphaAccess->cpuStack[0]);
 
                     if (cpunum >= 0 && cpunum < 64)
-                        pkt.set(alphaAccess->cpuStack[cpunum]);
+                        pkt->set(alphaAccess->cpuStack[cpunum]);
                     else
                         panic("Unknown 64bit access, %#x\n", daddr);
             }
             DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
-                    pkt.get<uint64_t>());
+                    pkt->get<uint64_t>());
             break;
         default:
-            pkt.result = BadAddress;
+            pkt->result = BadAddress;
     }
-    if (pkt.result == Unknown) pkt.result = Success;
+    if (pkt->result == Unknown) pkt->result = Success;
     return pioDelay;
 }
 
 Tick
-AlphaConsole::write(Packet &pkt)
+AlphaConsole::write(Packet *pkt)
 {
-    pkt.time += pioDelay;
+    pkt->time += pioDelay;
 
-    assert(pkt.result == Unknown);
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    Addr daddr = pkt.addr - pioAddr;
+    assert(pkt->result == Unknown);
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    Addr daddr = pkt->addr - pioAddr;
 
-    uint64_t val = pkt.get<uint64_t>();
-    assert(pkt.size == sizeof(uint64_t));
+    uint64_t val = pkt->get<uint64_t>();
+    assert(pkt->size == sizeof(uint64_t));
 
     switch (daddr) {
       case offsetof(AlphaAccess, diskUnit):
@@ -240,7 +240,7 @@ AlphaConsole::write(Packet &pkt)
             panic("Unknown 64bit access, %#x\n", daddr);
     }
 
-    pkt.result = Success;
+    pkt->result = Success;
 
     return pioDelay;
 }

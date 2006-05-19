@@ -108,15 +108,15 @@ Uart8250::Uart8250(Params *p)
 }
 
 Tick
-Uart8250::read(Packet &pkt)
+Uart8250::read(Packet *pkt)
 {
-    assert(pkt.result == Unknown);
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    assert(pkt.size == 1);
+    assert(pkt->result == Unknown);
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->size == 1);
 
-    pkt.time += pioDelay;
-    Addr daddr = pkt.addr - pioAddr;
-    pkt.allocate();
+    pkt->time += pioDelay;
+    Addr daddr = pkt->addr - pioAddr;
+    pkt->allocate();
 
     DPRINTF(Uart, " read register %#x\n", daddr);
 
@@ -124,9 +124,9 @@ Uart8250::read(Packet &pkt)
         case 0x0:
             if (!(LCR & 0x80)) { // read byte
                 if (cons->dataAvailable())
-                    cons->in(*pkt.getPtr<uint8_t>());
+                    cons->in(*pkt->getPtr<uint8_t>());
                 else {
-                    pkt.set((uint8_t)0);
+                    pkt->set((uint8_t)0);
                     // A limited amount of these are ok.
                     DPRINTF(Uart, "empty read of RX register\n");
                 }
@@ -141,7 +141,7 @@ Uart8250::read(Packet &pkt)
             break;
         case 0x1:
             if (!(LCR & 0x80)) { // Intr Enable Register(IER)
-                pkt.set(IER);
+                pkt->set(IER);
             } else { // DLM divisor latch MSB
                 ;
             }
@@ -150,17 +150,17 @@ Uart8250::read(Packet &pkt)
             DPRINTF(Uart, "IIR Read, status = %#x\n", (uint32_t)status);
 
             if (status & RX_INT) /* Rx data interrupt has a higher priority */
-                pkt.set(IIR_RXID);
+                pkt->set(IIR_RXID);
             else if (status & TX_INT)
-                pkt.set(IIR_TXID);
+                pkt->set(IIR_TXID);
             else
-                pkt.set(IIR_NOPEND);
+                pkt->set(IIR_NOPEND);
 
             //Tx interrupts are cleared on IIR reads
             status &= ~TX_INT;
             break;
         case 0x3: // Line Control Register (LCR)
-            pkt.set(LCR);
+            pkt->set(LCR);
             break;
         case 0x4: // Modem Control Register (MCR)
             break;
@@ -171,13 +171,13 @@ Uart8250::read(Packet &pkt)
             if (cons->dataAvailable())
                 lsr = UART_LSR_DR;
             lsr |= UART_LSR_TEMT | UART_LSR_THRE;
-            pkt.set(lsr);
+            pkt->set(lsr);
             break;
         case 0x6: // Modem Status Register (MSR)
-            pkt.set((uint8_t)0);
+            pkt->set((uint8_t)0);
             break;
         case 0x7: // Scratch Register (SCR)
-            pkt.set((uint8_t)0); // doesn't exist with at 8250.
+            pkt->set((uint8_t)0); // doesn't exist with at 8250.
             break;
         default:
             panic("Tried to access a UART port that doesn't exist\n");
@@ -186,27 +186,27 @@ Uart8250::read(Packet &pkt)
 /*    uint32_t d32 = *data;
     DPRINTF(Uart, "Register read to register %#x returned %#x\n", daddr, d32);
 */
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 
 Tick
-Uart8250::write(Packet &pkt)
+Uart8250::write(Packet *pkt)
 {
 
-    assert(pkt.result == Unknown);
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
-    assert(pkt.size == 1);
+    assert(pkt->result == Unknown);
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->size == 1);
 
-    pkt.time += pioDelay;
-    Addr daddr = pkt.addr - pioAddr;
+    pkt->time += pioDelay;
+    Addr daddr = pkt->addr - pioAddr;
 
-    DPRINTF(Uart, " write register %#x value %#x\n", daddr, pkt.get<uint8_t>());
+    DPRINTF(Uart, " write register %#x value %#x\n", daddr, pkt->get<uint8_t>());
 
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // write byte
-                cons->out(pkt.get<uint8_t>());
+                cons->out(pkt->get<uint8_t>());
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)
@@ -217,7 +217,7 @@ Uart8250::write(Packet &pkt)
             break;
         case 0x1:
             if (!(LCR & 0x80)) { // Intr Enable Register(IER)
-                IER = pkt.get<uint8_t>();
+                IER = pkt->get<uint8_t>();
                 if (UART_IER_THRI & IER)
                 {
                     DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
@@ -251,10 +251,10 @@ Uart8250::write(Packet &pkt)
         case 0x2: // FIFO Control Register (FCR)
             break;
         case 0x3: // Line Control Register (LCR)
-            LCR = pkt.get<uint8_t>();
+            LCR = pkt->get<uint8_t>();
             break;
         case 0x4: // Modem Control Register (MCR)
-            if (pkt.get<uint8_t>() == (UART_MCR_LOOP | 0x0A))
+            if (pkt->get<uint8_t>() == (UART_MCR_LOOP | 0x0A))
                     MCR = 0x9A;
             break;
         case 0x7: // Scratch Register (SCR)
@@ -264,7 +264,7 @@ Uart8250::write(Packet &pkt)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 

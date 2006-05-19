@@ -48,7 +48,7 @@ Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
         req.setPaddr(pkt.addr = gen.addr());
         req.setSize(pkt.size = gen.size());
         pkt.dataStatic(p);
-        sendFunctional(pkt);
+        sendFunctional(&pkt);
         p += gen.size();
     }
 }

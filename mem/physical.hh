@@ -55,11 +55,11 @@ class PhysicalMemory : public MemObject
 
       protected:
 
-        virtual bool recvTiming(Packet &pkt);
+        virtual bool recvTiming(Packet *pkt);
 
-        virtual Tick recvAtomic(Packet &pkt);
+        virtual Tick recvAtomic(Packet *pkt);
 
-        virtual void recvFunctional(Packet &pkt);
+        virtual void recvFunctional(Packet *pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -74,10 +74,10 @@ class PhysicalMemory : public MemObject
 
     struct MemResponseEvent : public Event
     {
-        Packet &pkt;
+        Packet *pkt;
         MemoryPort *memoryPort;
 
-        MemResponseEvent(Packet &pkt, MemoryPort *memoryPort);
+        MemResponseEvent(Packet *pkt, MemoryPort *memoryPort);
         void process();
         const char *description();
     };
@@ -112,9 +112,9 @@ class PhysicalMemory : public MemObject
     // fast back-door memory access for vtophys(), remote gdb, etc.
     // uint64_t phys_read_qword(Addr addr) const;
   private:
-    bool doTimingAccess(Packet &pkt, MemoryPort *memoryPort);
-    Tick doAtomicAccess(Packet &pkt);
-    void doFunctionalAccess(Packet &pkt);
+    bool doTimingAccess(Packet *pkt, MemoryPort *memoryPort);
+    Tick doAtomicAccess(Packet *pkt);
+    void doFunctionalAccess(Packet *pkt);
 
     void recvStatusChange(Port::Status status);
 

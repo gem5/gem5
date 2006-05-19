@@ -77,9 +77,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual Tick recvAtomic(Packet &pkt);
+        virtual Tick recvAtomic(Packet *pkt);
 
-        virtual void recvFunctional(Packet &pkt);
+        virtual void recvFunctional(Packet *pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -98,7 +98,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(Packet &pkt);
+        virtual bool recvTiming(Packet *pkt);
 
         virtual Packet *recvRetry();
     };
@@ -113,7 +113,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(Packet &pkt);
+        virtual bool recvTiming(Packet *pkt);
 
         virtual Packet *recvRetry();
     };

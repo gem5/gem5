@@ -49,40 +49,40 @@ IsaFake::IsaFake(Params *p)
 }
 
 Tick
-IsaFake::read(Packet &pkt)
+IsaFake::read(Packet *pkt)
 {
-    assert(pkt.result == Unknown);
-    assert(pkt.addr >= pioAddr && pkt.addr < pioAddr + pioSize);
+    assert(pkt->result == Unknown);
+    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
 
-    pkt.time += pioDelay;
+    pkt->time += pioDelay;
 
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt.addr, pkt.size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->addr, pkt->size);
 
-    switch (pkt.size) {
-         pkt.set(0xFFFFFFFFFFFFFFFFULL);
+    switch (pkt->size) {
+         pkt->set(0xFFFFFFFFFFFFFFFFULL);
          break;
       case sizeof(uint32_t):
-         pkt.set((uint32_t)0xFFFFFFFF);
+         pkt->set((uint32_t)0xFFFFFFFF);
          break;
       case sizeof(uint16_t):
-         pkt.set((uint16_t)0xFFFF);
+         pkt->set((uint16_t)0xFFFF);
          break;
       case sizeof(uint8_t):
-         pkt.set((uint8_t)0xFF);
+         pkt->set((uint8_t)0xFF);
          break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 
 Tick
-IsaFake::write(Packet &pkt)
+IsaFake::write(Packet *pkt)
 {
-    pkt.time += pioDelay;
-    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt.addr, pkt.size);
-    pkt.result = Success;
+    pkt->time += pioDelay;
+    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->addr, pkt->size);
+    pkt->result = Success;
     return pioDelay;
 }
 

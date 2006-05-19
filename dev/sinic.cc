@@ -312,51 +312,51 @@ Device::prepareWrite(int cpu, int index)
  * I/O read of device register
  */
 Tick
-Device::read(Packet &pkt)
+Device::read(Packet *pkt)
 {
     assert(config.command & PCI_CMD_MSE);
-    assert(pkt.addr >= BARAddrs[0] && pkt.size < BARSize[0]);
+    assert(pkt->addr >= BARAddrs[0] && pkt->size < BARSize[0]);
 
-    int cpu = pkt.req->getCpuNum();
-    Addr daddr = pkt.addr - BARAddrs[0];
+    int cpu = pkt->req->getCpuNum();
+    Addr daddr = pkt->addr - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
-    pkt.time += pioDelay;
-    pkt.allocate();
+    pkt->time += pioDelay;
+    pkt->allocate();
 
     if (!regValid(raddr))
         panic("invalid register: cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              cpu, index, daddr, pkt.addr, pkt.size);
+              cpu, index, daddr, pkt->addr, pkt->size);
 
     const Regs::Info &info = regInfo(raddr);
     if (!info.read)
         panic("read %s (write only): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt.addr, pkt.size);
+              info.name, cpu, index, daddr, pkt->addr, pkt->size);
 
         panic("read %s (invalid size): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt.addr, pkt.size);
+              info.name, cpu, index, daddr, pkt->addr, pkt->size);
 
     prepareRead(cpu, index);
 
     uint64_t value = 0;
-    if (pkt.size == 4) {
+    if (pkt->size == 4) {
         uint32_t reg = regData32(raddr);
-        pkt.set(reg);
+        pkt->set(reg);
         value = reg;
     }
 
-    if (pkt.size == 8) {
+    if (pkt->size == 8) {
         uint64_t reg = regData64(raddr);
-        pkt.set(reg);
+        pkt->set(reg);
         value = reg;
     }
 
     DPRINTF(EthernetPIO,
             "read %s: cpu=%d vnic=%d da=%#x pa=%#x size=%d val=%#x\n",
-            info.name, cpu, index, daddr, pkt.addr, pkt.size, value);
+            info.name, cpu, index, daddr, pkt->addr, pkt->size, value);
 
     // reading the interrupt status register has the side effect of
     // clearing it
@@ -400,57 +400,57 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
  * I/O write of device register
  */
 Tick
-Device::write(Packet &pkt)
+Device::write(Packet *pkt)
 {
     assert(config.command & PCI_CMD_MSE);
-    assert(pkt.addr >= BARAddrs[0] && pkt.size < BARSize[0]);
+    assert(pkt->addr >= BARAddrs[0] && pkt->size < BARSize[0]);
 
-    int cpu = pkt.req->getCpuNum();
-    Addr daddr = pkt.addr - BARAddrs[0];
+    int cpu = pkt->req->getCpuNum();
+    Addr daddr = pkt->addr - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
-    pkt.time += pioDelay;
+    pkt->time += pioDelay;
 
     if (!regValid(raddr))
         panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d",
-                cpu, daddr, pkt.addr, pkt.size);
+                cpu, daddr, pkt->addr, pkt->size);
 
     const Regs::Info &info = regInfo(raddr);
     if (!info.write)
         panic("write %s (read only): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt.addr, pkt.size);
+              info.name, cpu, index, daddr, pkt->addr, pkt->size);
 
-    if (pkt.size != info.size)
+    if (pkt->size != info.size)
         panic("write %s (invalid size): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt.addr, pkt.size);
+              info.name, cpu, index, daddr, pkt->addr, pkt->size);
 
     VirtualReg &vnic = virtualRegs[index];
 
     DPRINTF(EthernetPIO,
             "write %s vnic %d: cpu=%d val=%#x da=%#x pa=%#x size=%d\n",
-            info.name, index, cpu, info.size == 4 ? pkt.get<uint32_t>() :
-            pkt.get<uint64_t>(), daddr, pkt.addr, pkt.size);
+            info.name, index, cpu, info.size == 4 ? pkt->get<uint32_t>() :
+            pkt->get<uint64_t>(), daddr, pkt->addr, pkt->size);
 
     prepareWrite(cpu, index);
 
     switch (raddr) {
       case Regs::Config:
-        changeConfig(pkt.get<uint32_t>());
+        changeConfig(pkt->get<uint32_t>());
         break;
 
       case Regs::Command:
-        command(pkt.get<uint32_t>());
+        command(pkt->get<uint32_t>());
         break;
 
       case Regs::IntrStatus:
-        devIntrClear(regs.IntrStatus & pkt.get<uint32_t>());
+        devIntrClear(regs.IntrStatus & pkt->get<uint32_t>());
         break;
 
       case Regs::IntrMask:
-        devIntrChangeMask(pkt.get<uint32_t>());
+        devIntrChangeMask(pkt->get<uint32_t>());
         break;
 
       case Regs::RxData:
@@ -460,9 +460,9 @@ Device::write(Packet &pkt)
 
         vnic.rxUnique = rxUnique++;
         vnic.RxDone = Regs::RxDone_Busy;
-        vnic.RxData = pkt.get<uint64_t>();
+        vnic.RxData = pkt->get<uint64_t>();
 
-        if (Regs::get_RxData_Vaddr(pkt.get<uint64_t>())) {
+        if (Regs::get_RxData_Vaddr(pkt->get<uint64_t>())) {
             panic("vtophys not implemented in newmem");
 /*            Addr vaddr = Regs::get_RxData_Addr(reg64);
             Addr paddr = vtophys(req->xc, vaddr);
@@ -498,7 +498,7 @@ Device::write(Packet &pkt)
         vnic.txUnique = txUnique++;
         vnic.TxDone = Regs::TxDone_Busy;
 
-        if (Regs::get_TxData_Vaddr(pkt.get<uint64_t>())) {
+        if (Regs::get_TxData_Vaddr(pkt->get<uint64_t>())) {
             panic("vtophys won't work here in newmem.\n");
             /*Addr vaddr = Regs::get_TxData_Addr(reg64);
             Addr paddr = vtophys(req->xc, vaddr);

@@ -423,39 +423,39 @@ IdeController::writeConfig(int offset, const uint32_t data)
 }
 
 Tick
-IdeController::read(Packet &pkt)
+IdeController::read(Packet *pkt)
 {
     Addr offset;
     IdeChannel channel;
     IdeRegType reg_type;
     int disk;
 
-    pkt.time += pioDelay;
-    pkt.allocate();
-    if (pkt.size != 1 && pkt.size != 2 && pkt.size !=4)
-         panic("Bad IDE read size: %d\n", pkt.size);
+    pkt->time += pioDelay;
+    pkt->allocate();
+    if (pkt->size != 1 && pkt->size != 2 && pkt->size !=4)
+         panic("Bad IDE read size: %d\n", pkt->size);
 
-    parseAddr(pkt.addr, offset, channel, reg_type);
+    parseAddr(pkt->addr, offset, channel, reg_type);
 
     if (!io_enabled) {
-        pkt.result = Success;
+        pkt->result = Success;
         return pioDelay;
     }
 
     switch (reg_type) {
       case BMI_BLOCK:
-        switch (pkt.size) {
+        switch (pkt->size) {
           case sizeof(uint8_t):
-            pkt.set(bmi_regs.data[offset]);
+            pkt->set(bmi_regs.data[offset]);
             break;
           case sizeof(uint16_t):
-            pkt.set(*(uint16_t*)&bmi_regs.data[offset]);
+            pkt->set(*(uint16_t*)&bmi_regs.data[offset]);
             break;
           case sizeof(uint32_t):
-            pkt.set(*(uint32_t*)&bmi_regs.data[offset]);
+            pkt->set(*(uint32_t*)&bmi_regs.data[offset]);
             break;
           default:
-            panic("IDE read of BMI reg invalid size: %#x\n", pkt.size);
+            panic("IDE read of BMI reg invalid size: %#x\n", pkt->size);
         }
         break;
 
@@ -464,53 +464,53 @@ IdeController::read(Packet &pkt)
         disk = getDisk(channel);
 
         if (disks[disk] == NULL) {
-            pkt.set<uint8_t>(0);
+            pkt->set<uint8_t>(0);
             break;
         }
 
         switch (offset) {
           case DATA_OFFSET:
-            switch (pkt.size) {
+            switch (pkt->size) {
               case sizeof(uint16_t):
-                disks[disk]->read(offset, reg_type, pkt.getPtr<uint8_t>());
+                disks[disk]->read(offset, reg_type, pkt->getPtr<uint8_t>());
                 break;
 
               case sizeof(uint32_t):
-                disks[disk]->read(offset, reg_type, pkt.getPtr<uint8_t>());
+                disks[disk]->read(offset, reg_type, pkt->getPtr<uint8_t>());
                 disks[disk]->read(offset, reg_type,
-                        pkt.getPtr<uint8_t>() + sizeof(uint16_t));
+                        pkt->getPtr<uint8_t>() + sizeof(uint16_t));
                 break;
 
               default:
-                panic("IDE read of data reg invalid size: %#x\n", pkt.size);
+                panic("IDE read of data reg invalid size: %#x\n", pkt->size);
             }
             break;
           default:
-            if (pkt.size == sizeof(uint8_t)) {
-                disks[disk]->read(offset, reg_type, pkt.getPtr<uint8_t>());
+            if (pkt->size == sizeof(uint8_t)) {
+                disks[disk]->read(offset, reg_type, pkt->getPtr<uint8_t>());
             } else
-                panic("IDE read of command reg of invalid size: %#x\n", pkt.size);
+                panic("IDE read of command reg of invalid size: %#x\n", pkt->size);
         }
         break;
       default:
         panic("IDE controller read of unknown register block type!\n");
     }
-    if (pkt.size == 1)
+    if (pkt->size == 1)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, pkt.size, (uint32_t)pkt.get<uint8_t>());
-    else if (pkt.size == 2)
+            offset, pkt->size, (uint32_t)pkt->get<uint8_t>());
+    else if (pkt->size == 2)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, pkt.size, pkt.get<uint16_t>());
+            offset, pkt->size, pkt->get<uint16_t>());
     else
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, pkt.size, pkt.get<uint32_t>());
+            offset, pkt->size, pkt->get<uint32_t>());
 
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 
 Tick
-IdeController::write(Packet &pkt)
+IdeController::write(Packet *pkt)
 {
     Addr offset;
     IdeChannel channel;
@@ -518,12 +518,12 @@ IdeController::write(Packet &pkt)
     int disk;
     uint8_t oldVal, newVal;
 
-    pkt.time += pioDelay;
+    pkt->time += pioDelay;
 
-    parseAddr(pkt.addr, offset, channel, reg_type);
+    parseAddr(pkt->addr, offset, channel, reg_type);
 
     if (!io_enabled) {
-        pkt.result = Success;
+        pkt->result = Success;
         DPRINTF(IdeCtrl, "io not enabled\n");
         return pioDelay;
     }
@@ -531,7 +531,7 @@ IdeController::write(Packet &pkt)
     switch (reg_type) {
       case BMI_BLOCK:
         if (!bm_enabled) {
-            pkt.result = Success;
+            pkt->result = Success;
             return pioDelay;
         }
 
@@ -539,14 +539,14 @@ IdeController::write(Packet &pkt)
             // Bus master IDE command register
           case BMIC1:
           case BMIC0:
-            if (pkt.size != sizeof(uint8_t))
-                panic("Invalid BMIC write size: %x\n", pkt.size);
+            if (pkt->size != sizeof(uint8_t))
+                panic("Invalid BMIC write size: %x\n", pkt->size);
 
             // select the current disk based on DEV bit
             disk = getDisk(channel);
 
             oldVal = bmi_regs.chan[channel].bmic;
-            newVal = pkt.get<uint8_t>();
+            newVal = pkt->get<uint8_t>();
 
             // if a DMA transfer is in progress, R/W control cannot change
             if (oldVal & SSBM) {
@@ -595,11 +595,11 @@ IdeController::write(Packet &pkt)
             // Bus master IDE status register
           case BMIS0:
           case BMIS1:
-            if (pkt.size != sizeof(uint8_t))
-                panic("Invalid BMIS write size: %x\n", pkt.size);
+            if (pkt->size != sizeof(uint8_t))
+                panic("Invalid BMIS write size: %x\n", pkt->size);
 
             oldVal = bmi_regs.chan[channel].bmis;
-            newVal = pkt.get<uint8_t>();
+            newVal = pkt->get<uint8_t>();
 
             // the BMIDEA bit is RO
             newVal |= (oldVal & BMIDEA);
@@ -622,28 +622,28 @@ IdeController::write(Packet &pkt)
           case BMIDTP0:
           case BMIDTP1:
             {
-                if (pkt.size != sizeof(uint32_t))
-                    panic("Invalid BMIDTP write size: %x\n", pkt.size);
+                if (pkt->size != sizeof(uint32_t))
+                    panic("Invalid BMIDTP write size: %x\n", pkt->size);
 
-                bmi_regs.chan[channel].bmidtp = htole(pkt.get<uint32_t>() & ~0x3);
+                bmi_regs.chan[channel].bmidtp = htole(pkt->get<uint32_t>() & ~0x3);
             }
             break;
 
           default:
-            if (pkt.size != sizeof(uint8_t) &&
-                pkt.size != sizeof(uint16_t) &&
-                pkt.size != sizeof(uint32_t))
+            if (pkt->size != sizeof(uint8_t) &&
+                pkt->size != sizeof(uint16_t) &&
+                pkt->size != sizeof(uint32_t))
                 panic("IDE controller write of invalid write size: %x\n",
-                      pkt.size);
+                      pkt->size);
 
             // do a default copy of data into the registers
-            memcpy(&bmi_regs.data[offset], pkt.getPtr<uint8_t>(), pkt.size);
+            memcpy(&bmi_regs.data[offset], pkt->getPtr<uint8_t>(), pkt->size);
         }
         break;
       case COMMAND_BLOCK:
         if (offset == IDE_SELECT_OFFSET) {
             uint8_t *devBit = &dev[channel];
-            *devBit = (letoh(pkt.get<uint8_t>()) & IDE_SELECT_DEV_BIT) ? 1 : 0;
+            *devBit = (letoh(pkt->get<uint8_t>()) & IDE_SELECT_DEV_BIT) ? 1 : 0;
         }
         // fall-through ok!
       case CONTROL_BLOCK:
@@ -654,43 +654,43 @@ IdeController::write(Packet &pkt)
 
         switch (offset) {
           case DATA_OFFSET:
-            switch (pkt.size) {
+            switch (pkt->size) {
               case sizeof(uint16_t):
-                disks[disk]->write(offset, reg_type, pkt.getPtr<uint8_t>());
+                disks[disk]->write(offset, reg_type, pkt->getPtr<uint8_t>());
                 break;
 
               case sizeof(uint32_t):
-                disks[disk]->write(offset, reg_type, pkt.getPtr<uint8_t>());
-                disks[disk]->write(offset, reg_type, pkt.getPtr<uint8_t>() +
+                disks[disk]->write(offset, reg_type, pkt->getPtr<uint8_t>());
+                disks[disk]->write(offset, reg_type, pkt->getPtr<uint8_t>() +
                         sizeof(uint16_t));
                 break;
               default:
-                panic("IDE write of data reg invalid size: %#x\n", pkt.size);
+                panic("IDE write of data reg invalid size: %#x\n", pkt->size);
             }
             break;
           default:
-            if (pkt.size == sizeof(uint8_t)) {
-                disks[disk]->write(offset, reg_type, pkt.getPtr<uint8_t>());
+            if (pkt->size == sizeof(uint8_t)) {
+                disks[disk]->write(offset, reg_type, pkt->getPtr<uint8_t>());
             } else
-                panic("IDE write of command reg of invalid size: %#x\n", pkt.size);
+                panic("IDE write of command reg of invalid size: %#x\n", pkt->size);
         }
         break;
       default:
         panic("IDE controller write of unknown register block type!\n");
     }
 
-    if (pkt.size == 1)
+    if (pkt->size == 1)
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, pkt.size, (uint32_t)pkt.get<uint8_t>());
-    else if (pkt.size == 2)
+            offset, pkt->size, (uint32_t)pkt->get<uint8_t>());
+    else if (pkt->size == 2)
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, pkt.size, pkt.get<uint16_t>());
+            offset, pkt->size, pkt->get<uint16_t>());
     else
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, pkt.size, pkt.get<uint32_t>());
+            offset, pkt->size, pkt->get<uint32_t>());
 
 
-    pkt.result = Success;
+    pkt->result = Success;
     return pioDelay;
 }
 

@@ -56,15 +56,15 @@ class Bridge : public MemObject
   protected:
     /** Function called by the port when the bus is recieving a Timing
         transaction.*/
-    bool recvTiming(Packet &pkt, Side id);
+    bool recvTiming(Packet *pkt, Side id);
 
     /** Function called by the port when the bus is recieving a Atomic
         transaction.*/
-    Tick recvAtomic(Packet &pkt, Side id);
+    Tick recvAtomic(Packet *pkt, Side id);
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
-    void recvFunctional(Packet &pkt, Side id);
+    void recvFunctional(Packet *pkt, Side id);
 
     /** Function called by the port when the bus is recieving a status change.*/
     void recvStatusChange(Port::Status status, Side id);
@@ -104,12 +104,12 @@ class Bridge : public MemObject
         /** Data this is waiting to be transmitted. */
         std::list<std::pair<Packet*, Tick> > outbound;
 
-        void sendPkt(Packet &pkt);
+        void sendPkt(Packet *pkt);
         void sendPkt(std::pair<Packet*, Tick> p);
 
         /** When reciving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTiming(Packet &pkt)
+        virtual bool recvTiming(Packet *pkt)
         { return bridge->recvTiming(pkt, side); }
 
         /** When reciving a retry request from the peer port,
@@ -118,12 +118,12 @@ class Bridge : public MemObject
 
         /** When reciving a Atomic requestfrom the peer port,
             pass it to the bridge. */
-        virtual Tick recvAtomic(Packet &pkt)
+        virtual Tick recvAtomic(Packet *pkt)
         { return bridge->recvAtomic(pkt, side); }
 
         /** When reciving a Functional request from the peer port,
             pass it to the bridge. */
-        virtual void recvFunctional(Packet &pkt)
+        virtual void recvFunctional(Packet *pkt)
         { bridge->recvFunctional(pkt, side); }
 
         /** When reciving a status changefrom the peer port,

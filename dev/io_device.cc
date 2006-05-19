@@ -36,13 +36,13 @@ PioPort::PioPort(PioDevice *dev, Platform *p)
 
 
 Tick
-PioPort::recvAtomic(Packet &pkt)
+PioPort::recvAtomic(Packet *pkt)
 {
     return device->recvAtomic(pkt);
 }
 
 void
-PioPort::recvFunctional(Packet &pkt)
+PioPort::recvFunctional(Packet *pkt)
 {
     device->recvAtomic(pkt);
 }
@@ -70,15 +70,15 @@ PioPort::SendEvent::process()
     if (port->Port::sendTiming(packet) == Success)
         return;
 
-    port->transmitList.push_back(&packet);
+    port->transmitList.push_back(packet);
 }
 
 
 bool
-PioPort::recvTiming(Packet &pkt)
+PioPort::recvTiming(Packet *pkt)
 {
     device->recvAtomic(pkt);
-    sendTiming(pkt, pkt.time-pkt.req->getTime());
+    sendTiming(pkt, pkt->time - pkt->req->getTime());
     return Success;
 }
 
@@ -110,17 +110,17 @@ DmaPort::DmaPort(DmaDevice *dev, Platform *p)
 { }
 
 bool
-DmaPort::recvTiming(Packet &pkt)
+DmaPort::recvTiming(Packet *pkt)
 {
-    if (pkt.senderState) {
+    if (pkt->senderState) {
         DmaReqState *state;
-        state = (DmaReqState*)pkt.senderState;
-        state->completionEvent->schedule(pkt.time - pkt.req->getTime());
-        delete pkt.req;
-        delete &pkt;
+        state = (DmaReqState*)pkt->senderState;
+        state->completionEvent->schedule(pkt->time - pkt->req->getTime());
+        delete pkt->req;
+        delete pkt;
     }  else {
-        delete pkt.req;
-        delete &pkt;
+        delete pkt->req;
+        delete pkt;
     }
 
     return Success;
@@ -136,7 +136,7 @@ DmaPort::SendEvent::process()
     if (port->Port::sendTiming(packet) == Success)
         return;
 
-    port->transmitList.push_back(&packet);
+    port->transmitList.push_back(packet);
 }
 
 Packet *
@@ -209,7 +209,7 @@ DmaPort::sendDma(Packet *pkt)
        if (sendTiming(pkt) == Failure)
            transmitList.push_back(&packet);
     } else if (state == Atomic) {*/
-       sendAtomic(*pkt);
+       sendAtomic(pkt);
        if (pkt->senderState) {
            DmaReqState *state = (DmaReqState*)pkt->senderState;
            state->completionEvent->schedule(curTick + (pkt->time - pkt->req->getTime()) +1);
@@ -222,7 +222,7 @@ DmaPort::sendDma(Packet *pkt)
 /*   } else if (state == Functional) {
        sendFunctional(pkt);
        // Is this correct???
-       completionEvent->schedule(pkt.req->responseTime - pkt.req->requestTime);
+       completionEvent->schedule(pkt->req->responseTime - pkt->req->requestTime);
        completionEvent == NULL;
    } else
        panic("Unknown memory command state.");

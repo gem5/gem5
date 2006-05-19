@@ -65,8 +65,8 @@ class BadDevice : public BasicPioDevice
       */
     BadDevice(Params *p);
 
-    virtual Tick read(Packet &pkt);
-    virtual Tick write(Packet &pkt);
+    virtual Tick read(Packet *pkt);
+    virtual Tick write(Packet *pkt);
 };
 
 #endif // __DEV_BADDEV_HH__

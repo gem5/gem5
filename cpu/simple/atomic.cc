@@ -78,21 +78,21 @@ AtomicSimpleCPU::init()
 }
 
 bool
-AtomicSimpleCPU::CpuPort::recvTiming(Packet &pkt)
+AtomicSimpleCPU::CpuPort::recvTiming(Packet *pkt)
 {
     panic("AtomicSimpleCPU doesn't expect recvAtomic callback!");
     return true;
 }
 
 Tick
-AtomicSimpleCPU::CpuPort::recvAtomic(Packet &pkt)
+AtomicSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 {
     panic("AtomicSimpleCPU doesn't expect recvAtomic callback!");
     return curTick;
 }
 
 void
-AtomicSimpleCPU::CpuPort::recvFunctional(Packet &pkt)
+AtomicSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
     panic("AtomicSimpleCPU doesn't expect recvFunctional callback!");
 }
@@ -263,7 +263,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         data_read_pkt->addr = data_read_req->getPaddr();
         data_read_pkt->size = sizeof(T);
 
-        dcache_complete = dcachePort.sendAtomic(*data_read_pkt);
+        dcache_complete = dcachePort.sendAtomic(data_read_pkt);
         dcache_access = true;
 
         assert(data_read_pkt->result == Success);
@@ -345,7 +345,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt->addr = data_write_req->getPaddr();
         data_write_pkt->size = sizeof(T);
 
-        dcache_complete = dcachePort.sendAtomic(*data_write_pkt);
+        dcache_complete = dcachePort.sendAtomic(data_write_pkt);
         dcache_access = true;
 
         assert(data_write_pkt->result == Success);
@@ -430,7 +430,7 @@ AtomicSimpleCPU::tick()
         Fault fault = setupFetchPacket(ifetch_pkt);
 
         if (fault == NoFault) {
-            Tick icache_complete = icachePort.sendAtomic(*ifetch_pkt);
+            Tick icache_complete = icachePort.sendAtomic(ifetch_pkt);
             // ifetch_req is initialized to read the instruction directly
             // into the CPU object's inst field.
 
