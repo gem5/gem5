@@ -90,7 +90,7 @@ class PioPort : public Port
         Packet *packet;
 
         SendEvent(PioPort *p, Packet *pkt, Tick t)
-            : Event(&mainEventQueue), packet(pkt)
+            : Event(&mainEventQueue), port(p), packet(pkt)
         { schedule(curTick + t); }
 
         virtual void process();

@@ -97,8 +97,6 @@ class Request
 
     /** Flag structure for the request. */
     uint32_t flags;
-    /** Wether or not flags is valid (has been written yet). */
-    bool validFlags;
 
 //Accsesors for non-cpu request fields
   public:

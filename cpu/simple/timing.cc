@@ -75,6 +75,9 @@ TimingSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 void
 TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
 {
+    if (status == RangeChange)
+        return;
+
     panic("TimingSimpleCPU doesn't expect recvStatusChange callback!");
 }
 
@@ -342,6 +345,8 @@ TimingSimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 void
 TimingSimpleCPU::fetch()
 {
+    checkForInterrupts();
+
     Request *ifetch_req = new Request(true);
     ifetch_req->setSize(sizeof(MachInst));
 
@@ -380,7 +385,12 @@ TimingSimpleCPU::completeInst(Fault fault)
 
     advancePC(fault);
 
-    fetch();
+    if (_status == Running) {
+        // kick off fetch of next instruction... callback from icache
+        // response will cause that instruction to be executed,
+        // keeping the CPU running.
+        fetch();
+    }
 }
 
 
@@ -397,6 +407,7 @@ TimingSimpleCPU::completeIfetch()
         Fault fault = curStaticInst->initiateAcc(this, traceData);
         assert(fault == NoFault);
         assert(_status == DcacheWaitResponse);
+        // instruction will complete in dcache response callback
     } else {
         // non-memory instruction: execute completely now
         Fault fault = curStaticInst->execute(this, traceData);

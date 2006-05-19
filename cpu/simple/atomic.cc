@@ -349,19 +349,15 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         dcache_access = true;
 
         assert(data_write_pkt->result == Success);
-    }
 
-    if (res && (fault == NoFault))
-        *res = data_write_pkt->result;
+        if (res && data_write_req->getFlags() & LOCKED) {
+            *res = data_write_req->getScResult();
+        }
+    }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
     if (data_write_req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Write");
-
-    // @todo this is a hack and only works on uniprocessor systems
-    // some one else can implement LL/SC.
-    if (data_write_req->getFlags() & LOCKED)
-        *res = 1;
 
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.

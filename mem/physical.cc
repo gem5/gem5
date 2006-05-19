@@ -155,6 +155,11 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
       case Write:
         memcpy(pmem_addr + pkt->addr - base_addr, pkt->getPtr<uint8_t>(),
                 pkt->size);
+        // temporary hack: will need to add real LL/SC implementation
+        // for cacheless systems later.
+        if (pkt->req->getFlags() & LOCKED) {
+            pkt->req->setScResult(1);
+        }
         break;
       default:
         panic("unimplemented");
