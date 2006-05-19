@@ -26,12 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <list>
+#include <vector>
+
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "cpu/o3/bpred_unit.hh"
-
-#include <vector>
-#include <list>
 
 using namespace std;
 

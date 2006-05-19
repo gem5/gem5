@@ -938,10 +938,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         DPRINTF(Fetch, "[tid:%i]: Adding instructions to queue to "
                 "decode.\n",tid);
 
-        //////////////////////////
-        // Fetch first instruction
-        //////////////////////////
-
         // Need to keep track of whether or not a predicted branch
         // ended this fetch block.
         bool predicted_branch = false;
@@ -1004,7 +1000,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             fetch_PC = next_PC;
 
             if (instruction->isQuiesce()) {
-                warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
+                warn("%lli: Quiesce instruction encountered, halting fetch!",
+                     curTick);
                 fetchStatus[tid] = QuiescePending;
                 ++numInst;
                 status_change = true;
@@ -1022,24 +1019,20 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // Now that fetching is completed, update the PC to signify what the next
     // cycle will be.
     if (fault == NoFault) {
-
         DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n",tid, next_PC);
-
 
         PC[tid] = next_PC;
         nextPC[tid] = next_PC + instSize;
     } else {
-        // If the issue was an icache miss, then we can just return and
-        // wait until it is handled.
+        // We shouldn't be in an icache miss and also have a fault (an ITB
+        // miss)
         if (fetchStatus[tid] == IcacheMissStall) {
             panic("Fetch should have exited prior to this!");
         }
 
-        // Handle the fault.
-        // This stage will not be able to continue until all the ROB
-        // slots are empty, at which point the fault can be handled.
-        // The only other way it can wake up is if a squash comes along
-        // and changes the PC.
+        // Send the fault to commit.  This thread will not do anything
+        // until commit handles the fault.  The only other way it can
+        // wake up is if a squash comes along and changes the PC.
 #if FULL_SYSTEM
         assert(numInst != fetchWidth);
         // Get a sequence number.
@@ -1067,20 +1060,12 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         toDecode->insts[numInst] = instruction;
         toDecode->size++;
 
-        // Tell the commit stage the fault we had.
-//        toDecode->fetchFault = fault;
-//        toDecode->fetchFaultSN = cpu->globalSeqNum;
-
         DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n",tid);
 
         fetchStatus[tid] = TrapPending;
         status_change = true;
 
         warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
-//        cpu->trap(fault);
-        // Send a signal to the ROB indicating that there's a trap from the
-        // fetch stage that needs to be handled.  Need to indicate that
-        // there's a fault, and the fault type.
 #else // !FULL_SYSTEM
         fatal("fault (%d) detected @ PC %08p", fault, PC[tid]);
 #endif // FULL_SYSTEM

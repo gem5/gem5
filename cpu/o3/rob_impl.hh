@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -201,20 +201,15 @@ template <class Impl>
 void
 ROB<Impl>::insertInst(DynInstPtr &inst)
 {
-    // Make sure we have the right number of instructions.
     //assert(numInstsInROB == countInsts());
-
-    // Make sure the instruction is valid.
     assert(inst);
 
     DPRINTF(ROB, "Adding inst PC %#x to the ROB.\n", inst->readPC());
 
-    // If the ROB is full then exit.
     assert(numInstsInROB != numEntries);
 
     int tid = inst->threadNumber;
 
-    // Place into ROB
     instList[tid].push_back(inst);
 
     //Set Up head iterator if this is the 1st instruction in the ROB
@@ -228,10 +223,8 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
     tail = instList[tid].end();
     tail--;
 
-    // Mark as set in ROB
     inst->setInROB();
 
-    // Increment ROB count
     ++numInstsInROB;
     ++threadEntries[tid];
 
@@ -242,6 +235,7 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
 
 // Whatever calls this function needs to ensure that it properly frees up
 // registers prior to this function.
+/*
 template <class Impl>
 void
 ROB<Impl>::retireHead()
@@ -249,7 +243,6 @@ ROB<Impl>::retireHead()
     //assert(numInstsInROB == countInsts());
     assert(numInstsInROB > 0);
 
-    // Get the head ROB instruction's TID.
     int tid = (*head)->threadNumber;
 
     retireHead(tid);
@@ -258,6 +251,7 @@ ROB<Impl>::retireHead()
         tail = instList[tid].end();
     }
 }
+*/
 
 template <class Impl>
 void
@@ -271,18 +265,15 @@ ROB<Impl>::retireHead(unsigned tid)
 
     DynInstPtr head_inst = (*head_it);
 
-    // Make certain this can retire.
     assert(head_inst->readyToCommit());
 
     DPRINTF(ROB, "[tid:%u]: Retiring head instruction, "
             "instruction PC %#x,[sn:%lli]\n", tid, head_inst->readPC(),
             head_inst->seqNum);
 
-    // Keep track of how many instructions are in the ROB.
     --numInstsInROB;
     --threadEntries[tid];
 
-    //Mark DynInstFlags
     head_inst->removeInROB();
     head_inst->setCommitted();
 
@@ -291,12 +282,12 @@ ROB<Impl>::retireHead(unsigned tid)
     //Update "Global" Head of ROB
     updateHead();
 
-    // A special case is needed if the instruction being retired is the
-    // only instruction in the ROB; otherwise the tail iterator will become
-    // invalidated.
+    // @todo: A special case is needed if the instruction being
+    // retired is the only instruction in the ROB; otherwise the tail
+    // iterator will become invalidated.
     cpu->removeFrontInst(head_inst);
 }
-
+/*
 template <class Impl>
 bool
 ROB<Impl>::isHeadReady()
@@ -307,7 +298,7 @@ ROB<Impl>::isHeadReady()
 
     return false;
 }
-
+*/
 template <class Impl>
 bool
 ROB<Impl>::isHeadReady(unsigned tid)
@@ -537,7 +528,7 @@ ROB<Impl>::squash(InstSeqNum squash_num,unsigned tid)
         doSquash(tid);
     }
 }
-
+/*
 template <class Impl>
 typename Impl::DynInstPtr
 ROB<Impl>::readHeadInst()
@@ -549,7 +540,7 @@ ROB<Impl>::readHeadInst()
         return dummyInst;
     }
 }
-
+*/
 template <class Impl>
 typename Impl::DynInstPtr
 ROB<Impl>::readHeadInst(unsigned tid)
@@ -564,7 +555,7 @@ ROB<Impl>::readHeadInst(unsigned tid)
         return dummyInst;
     }
 }
-
+/*
 template <class Impl>
 uint64_t
 ROB<Impl>::readHeadPC()
@@ -608,7 +599,6 @@ ROB<Impl>::readHeadNextPC(unsigned tid)
     return (*head_thread)->readNextPC();
 }
 
-
 template <class Impl>
 InstSeqNum
 ROB<Impl>::readHeadSeqNum()
@@ -637,7 +627,7 @@ ROB<Impl>::readTailInst()
 
     return (*tail);
 }
-
+*/
 template <class Impl>
 typename Impl::DynInstPtr
 ROB<Impl>::readTailInst(unsigned tid)
@@ -650,7 +640,7 @@ ROB<Impl>::readTailInst(unsigned tid)
     return *tail_thread;
 }
 
-
+/*
 template <class Impl>
 uint64_t
 ROB<Impl>::readTailPC()
@@ -698,4 +688,4 @@ ROB<Impl>::readTailSeqNum(unsigned tid)
 
     return (*tail_thread)->seqNum;
 }
-
+*/

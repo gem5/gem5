@@ -32,18 +32,12 @@
 
 using namespace std;
 
-// Todo: Consider making functions inline.  Avoid having things that are
-// using the zero register or misc registers from adding on the registers
-// to the free list.  Possibly remove the direct communication between
-// this and the freelist.  Considering making inline bool functions that
-// determine if the register is a logical int, logical fp, physical int,
-// physical fp, etc.
+// @todo: Consider making inline bool functions that determine if the
+// register is a logical int, logical fp, physical int, physical fp,
+// etc.
 
 SimpleRenameMap::~SimpleRenameMap()
 {
-    // Delete the rename maps as they were allocated with new.
-    //delete [] intRenameMap;
-    //delete [] floatRenameMap;
 }
 
 void
@@ -105,7 +99,8 @@ SimpleRenameMap::init(unsigned _numLogicalIntRegs,
         // Although the index refers purely to architected registers, because
         // the floating reg indices come after the integer reg indices, they
         // may exceed the size of a normal RegIndex (short).
-        for (PhysRegIndex index = numLogicalIntRegs; index < numLogicalRegs; ++index)
+        for (PhysRegIndex index = numLogicalIntRegs;
+             index < numLogicalRegs; ++index)
         {
             floatRenameMap[index].physical_reg = freg_idx++;
         }
@@ -132,14 +127,10 @@ SimpleRenameMap::init(unsigned _numLogicalIntRegs,
 void
 SimpleRenameMap::setFreeList(SimpleFreeList *fl_ptr)
 {
-    //Setup the interface to the freelist.
     freeList = fl_ptr;
 }
 
 
-// Don't allow this stage to fault; force that check to the rename stage.
-// Simply ask to rename a logical register and get back a new physical
-// register index.
 SimpleRenameMap::RenameInfo
 SimpleRenameMap::rename(RegIndex arch_reg)
 {
@@ -152,13 +143,11 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         // requested architected register.
         prev_reg = intRenameMap[arch_reg].physical_reg;
 
-        // If it's not referencing the zero register, then mark the register
-        // as not ready.
+        // If it's not referencing the zero register, then rename the
+        // register.
         if (arch_reg != intZeroReg) {
-            // Get a free physical register to rename to.
             renamed_reg = freeList->getIntReg();
 
-            // Update the integer rename map.
             intRenameMap[arch_reg].physical_reg = renamed_reg;
 
             assert(renamed_reg >= 0 && renamed_reg < numPhysicalIntRegs);
@@ -168,20 +157,15 @@ SimpleRenameMap::rename(RegIndex arch_reg)
             renamed_reg = intZeroReg;
         }
     } else if (arch_reg < numLogicalRegs) {
-        // Subtract off the base offset for floating point registers.
-//        arch_reg = arch_reg - numLogicalIntRegs;
-
         // Record the current physical register that is renamed to the
         // requested architected register.
         prev_reg = floatRenameMap[arch_reg].physical_reg;
 
-        // If it's not referencing the zero register, then mark the register
-        // as not ready.
+        // If it's not referencing the zero register, then rename the
+        // register.
         if (arch_reg != floatZeroReg) {
-            // Get a free floating point register to rename to.
             renamed_reg = freeList->getFloatReg();
 
-            // Update the floating point rename map.
             floatRenameMap[arch_reg].physical_reg = renamed_reg;
 
             assert(renamed_reg < numPhysicalRegs &&
@@ -194,10 +178,10 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         // Subtract off the base offset for miscellaneous registers.
         arch_reg = arch_reg - numLogicalRegs;
 
-        // No renaming happens to the misc. registers.  They are simply the
-        // registers that come after all the  physical registers; thus
-        // take the base architected register and add the physical registers
-        // to it.
+        // No renaming happens to the misc. registers.  They are
+        // simply the registers that come after all the physical
+        // registers; thus take the base architected register and add
+        // the physical registers to it.
         renamed_reg = arch_reg + numPhysicalRegs;
 
         // Set the previous register to the same register; mainly it must be
@@ -211,17 +195,12 @@ SimpleRenameMap::rename(RegIndex arch_reg)
     return RenameInfo(renamed_reg, prev_reg);
 }
 
-//Perhaps give this a pair as a return value, of the physical register
-//and whether or not it's ready.
 PhysRegIndex
 SimpleRenameMap::lookup(RegIndex arch_reg)
 {
     if (arch_reg < numLogicalIntRegs) {
         return intRenameMap[arch_reg].physical_reg;
     } else if (arch_reg < numLogicalRegs) {
-        // Subtract off the base FP offset.
-//        arch_reg = arch_reg - numLogicalIntRegs;
-
         return floatRenameMap[arch_reg].physical_reg;
     } else {
         // Subtract off the misc registers offset.
@@ -233,51 +212,23 @@ SimpleRenameMap::lookup(RegIndex arch_reg)
     }
 }
 
-// In this implementation the miscellaneous registers do not actually rename,
-// so this function does not allow you to try to change their mappings.
 void
 SimpleRenameMap::setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg)
 {
+    // In this implementation the miscellaneous registers do not
+    // actually rename, so this function does not allow you to try to
+    // change their mappings.
     if (arch_reg < numLogicalIntRegs) {
         DPRINTF(Rename, "Rename Map: Integer register %i being set to %i.\n",
                 (int)arch_reg, renamed_reg);
 
         intRenameMap[arch_reg].physical_reg = renamed_reg;
     } else if (arch_reg < numLogicalIntRegs + numLogicalFloatRegs) {
-
-
         DPRINTF(Rename, "Rename Map: Float register %i being set to %i.\n",
                 (int)arch_reg - numLogicalIntRegs, renamed_reg);
 
         floatRenameMap[arch_reg].physical_reg = renamed_reg;
     }
-
-    //assert(arch_reg < (numLogicalIntRegs + numLogicalFloatRegs));
-}
-
-void
-SimpleRenameMap::squash(vector<RegIndex> freed_regs,
-                        vector<UnmapInfo> unmaps)
-{
-    panic("Not sure this function should be called.");
-
-    // Not sure the rename map should be able to access the free list
-    // like this.
-    while (!freed_regs.empty()) {
-        RegIndex free_register = freed_regs.back();
-
-        if (free_register < numPhysicalIntRegs) {
-            freeList->addIntReg(free_register);
-        } else {
-            // Subtract off the base FP dependence tag.
-            free_register = free_register - numPhysicalIntRegs;
-            freeList->addFloatReg(free_register);
-        }
-
-        freed_regs.pop_back();
-    }
-
-    // Take unmap info and roll back the rename map.
 }
 
 int

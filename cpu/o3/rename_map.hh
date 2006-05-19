@@ -101,9 +101,6 @@ class SimpleRenameMap
      */
     void setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg);
 
-    void squash(std::vector<RegIndex> freed_regs,
-                std::vector<UnmapInfo> unmaps);
-
     int numFreeEntries();
 
   private:
@@ -153,7 +150,7 @@ class SimpleRenameMap
     };
 
     //Change this to private
-  public:
+  private:
     /** Integer rename map. */
     std::vector<RenameEntry> intRenameMap;
 

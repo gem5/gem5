@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,11 +35,11 @@
 #include "base/timebuf.hh"
 
 /**
- * DefaultDecode class handles both single threaded and SMT decode. Its width is
- * specified by the parameters; each cycles it tries to decode that many
- * instructions. Because instructions are actually decoded when the StaticInst
- * is created, this stage does not do much other than check any PC-relative
- * branches.
+ * DefaultDecode class handles both single threaded and SMT
+ * decode. Its width is specified by the parameters; each cycles it
+ * tries to decode that many instructions. Because instructions are
+ * actually decoded when the StaticInst is created, this stage does
+ * not do much other than check any PC-relative branches.
  */
 template<class Impl>
 class DefaultDecode

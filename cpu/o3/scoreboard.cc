@@ -99,6 +99,7 @@ Scoreboard::unsetReg(PhysRegIndex ready_reg)
     if (ready_reg == zeroRegIdx ||
         ready_reg == (zeroRegIdx + numPhysicalIntRegs)) {
         // Don't do anything if int or fp zero reg.
+        return;
     }
 
     regScoreBoard[ready_reg] = 0;

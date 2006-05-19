@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,12 +38,12 @@
 class Sampler;
 
 /**
- * DefaultFetch class handles both single threaded and SMT fetch. Its width is
- * specified by the parameters; each cycle it tries to fetch that many
- * instructions. It supports using a branch predictor to predict direction and
- * targets.
- * It supports the idling functionalitiy of the CPU by indicating to the CPU
- * when it is active and inactive.
+ * DefaultFetch class handles both single threaded and SMT fetch. Its
+ * width is specified by the parameters; each cycle it tries to fetch
+ * that many instructions. It supports using a branch predictor to
+ * predict direction and targets.
+ * It supports the idling functionalitiy of the CPU by indicating to
+ * the CPU when it is active and inactive.
  */
 template <class Impl>
 class DefaultFetch
@@ -66,8 +66,8 @@ class DefaultFetch
     typedef TheISA::ExtMachInst ExtMachInst;
 
   public:
-    /** Overall fetch status. Used to determine if the CPU can deschedule itsef
-     * due to a lack of activity.
+    /** Overall fetch status. Used to determine if the CPU can
+     * deschedule itsef due to a lack of activity.
      */
     enum FetchStatus {
         Active,
@@ -174,13 +174,13 @@ class DefaultFetch
     void wakeFromQuiesce();
 
   private:
-    /** Changes the status of this stage to active, and indicates this to the
-     * CPU.
+    /** Changes the status of this stage to active, and indicates this
+     * to the CPU.
      */
     inline void switchToActive();
 
-    /** Changes the status of this stage to inactive, and indicates this to the
-     * CPU.
+    /** Changes the status of this stage to inactive, and indicates
+     * this to the CPU.
      */
     inline void switchToInactive();
 
@@ -372,11 +372,6 @@ class DefaultFetch
     bool interruptPending;
 
     bool switchedOut;
-
-  public:
-    InstSeqNum &getYoungestSN() { return youngestSN; }
-  private:
-    InstSeqNum youngestSN;
 
 #if !FULL_SYSTEM
     /** Page table pointer. */

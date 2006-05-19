@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -278,11 +278,6 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
 void
 StoreSet::squash(InstSeqNum squashed_num, unsigned tid)
 {
-    // Not really sure how to do this well.
-    // Generally this is small enough that it should be okay; short circuit
-    // evaluation should take care of invalid entries.
-    // Maybe keep a list of valid LFST's?  Really ugly either way...
-
     DPRINTF(StoreSet, "StoreSet: Squashing until inum %i\n",
             squashed_num);
 

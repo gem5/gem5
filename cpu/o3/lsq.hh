@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,9 @@
 #include <map>
 #include <queue>
 
-#include "base/hashmap.hh"
 #include "config/full_system.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/cpu_policy.hh"
+//#include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "mem/mem_interface.hh"
 //#include "mem/page_table.hh"
@@ -85,7 +84,8 @@ class LSQ {
     /** Ticks the LSQ. */
     void tick();
     /** Ticks a specific LSQ Unit. */
-    void tick(unsigned tid);
+    void tick(unsigned tid)
+    { thread[tid].tick(); }
 
     /** Inserts a load into the LSQ. */
     void insertLoad(DynInstPtr &load_inst);
@@ -95,18 +95,23 @@ class LSQ {
     /** Executes a load. */
     Fault executeLoad(DynInstPtr &inst);
 
-    Fault executeLoad(int lq_idx, unsigned tid);
+    Fault executeLoad(int lq_idx, unsigned tid)
+    { return thread[tid].executeLoad(lq_idx); }
+
     /** Executes a store. */
     Fault executeStore(DynInstPtr &inst);
 
     /**
      * Commits loads up until the given sequence number for a specific thread.
      */
-    void commitLoads(InstSeqNum &youngest_inst, unsigned tid);
+    void commitLoads(InstSeqNum &youngest_inst, unsigned tid)
+    { thread[tid].commitLoads(youngest_inst); }
+
     /**
      * Commits stores up until the given sequence number for a specific thread.
      */
-    void commitStores(InstSeqNum &youngest_inst, unsigned tid);
+    void commitStores(InstSeqNum &youngest_inst, unsigned tid)
+    { thread[tid].commitStores(youngest_inst); }
 
     /**
      * Attempts to write back stores until all cache ports are used or the
@@ -119,7 +124,8 @@ class LSQ {
     /**
      * Squash instructions from a thread until the specified sequence number.
      */
-    void squash(const InstSeqNum &squashed_num, unsigned tid);
+    void squash(const InstSeqNum &squashed_num, unsigned tid)
+    { thread[tid].squash(squashed_num); }
 
     /** Returns whether or not there was a memory ordering violation. */
     bool violation();
@@ -127,12 +133,14 @@ class LSQ {
      * Returns whether or not there was a memory ordering violation for a
      * specific thread.
      */
-    bool violation(unsigned tid);
+    bool violation(unsigned tid)
+    { return thread[tid].violation(); }
 
     /** Returns if a load is blocked due to the memory system for a specific
      *  thread.
      */
-    bool loadBlocked(unsigned tid);
+    bool loadBlocked(unsigned tid)
+    { return thread[tid].loadBlocked(); }
 
     bool isLoadBlockedHandled(unsigned tid)
     { return thread[tid].isLoadBlockedHandled(); }
@@ -141,10 +149,13 @@ class LSQ {
     { thread[tid].setLoadBlockedHandled(); }
 
     /** Gets the instruction that caused the memory ordering violation. */
-    DynInstPtr getMemDepViolator(unsigned tid);
+    DynInstPtr getMemDepViolator(unsigned tid)
+    { return thread[tid].getMemDepViolator(); }
 
     /** Returns the head index of the load queue for a specific thread. */
-    int getLoadHead(unsigned tid);
+    int getLoadHead(unsigned tid)
+    { return thread[tid].getLoadHead(); }
+
     /** Returns the sequence number of the head of the load queue. */
     InstSeqNum getLoadHeadSeqNum(unsigned tid)
     {
@@ -152,7 +163,9 @@ class LSQ {
     }
 
     /** Returns the head index of the store queue. */
-    int getStoreHead(unsigned tid);
+    int getStoreHead(unsigned tid)
+    { return thread[tid].getStoreHead(); }
+
     /** Returns the sequence number of the head of the store queue. */
     InstSeqNum getStoreHeadSeqNum(unsigned tid)
     {
@@ -162,22 +175,26 @@ class LSQ {
     /** Returns the number of instructions in all of the queues. */
     int getCount();
     /** Returns the number of instructions in the queues of one thread. */
-    int getCount(unsigned tid);
+    int getCount(unsigned tid)
+    { return thread[tid].getCount(); }
 
     /** Returns the total number of loads in the load queue. */
     int numLoads();
     /** Returns the total number of loads for a single thread. */
-    int numLoads(unsigned tid);
+    int numLoads(unsigned tid)
+    { return thread[tid].numLoads(); }
 
     /** Returns the total number of stores in the store queue. */
     int numStores();
     /** Returns the total number of stores for a single thread. */
-    int numStores(unsigned tid);
+    int numStores(unsigned tid)
+    { return thread[tid].numStores(); }
 
     /** Returns the total number of loads that are ready. */
     int numLoadsReady();
     /** Returns the number of loads that are ready for a single thread. */
-    int numLoadsReady(unsigned tid);
+    int numLoadsReady(unsigned tid)
+    { return thread[tid].numLoadsReady(); }
 
     /** Returns the number of free entries. */
     unsigned numFreeEntries();
@@ -215,24 +232,30 @@ class LSQ {
 
     /** Returns whether or not there are any stores to write back to memory. */
     bool hasStoresToWB();
+
     /** Returns whether or not a specific thread has any stores to write back
      * to memory.
      */
-    bool hasStoresToWB(unsigned tid);
+    bool hasStoresToWB(unsigned tid)
+    { return thread[tid].hasStoresToWB(); }
+
     /** Returns the number of stores a specific thread has to write back. */
-    int  numStoresToWB(unsigned tid);
+    int  numStoresToWB(unsigned tid)
+    { return thread[tid].numStoresToWB(); }
 
     /** Returns if the LSQ will write back to memory this cycle. */
     bool willWB();
     /** Returns if the LSQ of a specific thread will write back to memory this
      * cycle.
      */
-    bool willWB(unsigned tid);
+    bool willWB(unsigned tid)
+    { return thread[tid].willWB(); }
 
     /** Debugging function to print out all instructions. */
     void dumpInsts();
     /** Debugging function to print out instructions from a specific thread. */
-    void dumpInsts(unsigned tid);
+    void dumpInsts(unsigned tid)
+    { thread[tid].dumpInsts(); }
 
     /** Executes a read operation, using the load specified at the load index. */
     template <class T>

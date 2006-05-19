@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <algorithm>
+#include <string>
 
 #include "cpu/o3/lsq.hh"
 
@@ -89,7 +92,7 @@ LSQ<Impl>::LSQ(Params *params)
 
     //Initialize LSQs
     for (int tid=0; tid < numThreads; tid++) {
-        thread[tid].init(params, maxLQEntries+1, maxSQEntries+1, tid);
+        thread[tid].init(params, maxLQEntries, maxSQEntries, tid);
     }
 }
 
@@ -228,13 +231,6 @@ LSQ<Impl>::tick()
 
 template<class Impl>
 void
-LSQ<Impl>::tick(unsigned tid)
-{
-    thread[tid].tick();
-}
-
-template<class Impl>
-void
 LSQ<Impl>::insertLoad(DynInstPtr &load_inst)
 {
     unsigned tid = load_inst->threadNumber;
@@ -262,32 +258,11 @@ LSQ<Impl>::executeLoad(DynInstPtr &inst)
 
 template<class Impl>
 Fault
-LSQ<Impl>::executeLoad(int lq_idx, unsigned tid)
-{
-    return thread[tid].executeLoad(lq_idx);
-}
-
-template<class Impl>
-Fault
 LSQ<Impl>::executeStore(DynInstPtr &inst)
 {
     unsigned tid = inst->threadNumber;
 
     return thread[tid].executeStore(inst);
-}
-
-template<class Impl>
-void
-LSQ<Impl>::commitLoads(InstSeqNum &youngest_inst,unsigned tid)
-{
-    thread[tid].commitLoads(youngest_inst);
-}
-
-template<class Impl>
-void
-LSQ<Impl>::commitStores(InstSeqNum &youngest_inst,unsigned tid)
-{
-    thread[tid].commitStores(youngest_inst);
 }
 
 template<class Impl>
@@ -300,26 +275,12 @@ LSQ<Impl>::writebackStores()
         unsigned tid = *active_threads++;
 
         if (numStoresToWB(tid) > 0) {
-            DPRINTF(Writeback,"[tid:%i] Writing back stores. %i stores available"
-                " for Writeback.\n", tid, numStoresToWB(tid));
+            DPRINTF(Writeback,"[tid:%i] Writing back stores. %i stores "
+                "available for Writeback.\n", tid, numStoresToWB(tid));
         }
 
         thread[tid].writebackStores();
     }
-}
-
-template<class Impl>
-int
-LSQ<Impl>::numStoresToWB(unsigned tid)
-{
-    return thread[tid].numStoresToWB();
-}
-
-template<class Impl>
-void
-LSQ<Impl>::squash(const InstSeqNum &squashed_num, unsigned tid)
-{
-        thread[tid].squash(squashed_num);
 }
 
 template<class Impl>
@@ -336,41 +297,6 @@ LSQ<Impl>::violation()
     }
 
     return false;
-}
-
-template<class Impl>
-bool
-LSQ<Impl>::violation(unsigned tid)
-{
-    return thread[tid].violation();
-}
-
-template<class Impl>
-bool
-LSQ<Impl>::loadBlocked(unsigned tid)
-{
-    return thread[tid].loadBlocked();
-}
-
-template<class Impl>
-typename Impl::DynInstPtr
-LSQ<Impl>::getMemDepViolator(unsigned tid)
-{
-    return thread[tid].getMemDepViolator();
-}
-
-template<class Impl>
-int
-LSQ<Impl>::getLoadHead(unsigned tid)
-{
-    return thread[tid].getLoadHead();
-}
-
-template<class Impl>
-int
-LSQ<Impl>::getStoreHead(unsigned tid)
-{
-    return thread[tid].getStoreHead();
 }
 
 template<class Impl>
@@ -391,13 +317,6 @@ LSQ<Impl>::getCount()
 
 template<class Impl>
 int
-LSQ<Impl>::getCount(unsigned tid)
-{
-    return thread[tid].getCount();
-}
-
-template<class Impl>
-int
 LSQ<Impl>::numLoads()
 {
     unsigned total = 0;
@@ -410,13 +329,6 @@ LSQ<Impl>::numLoads()
     }
 
     return total;
-}
-
-template<class Impl>
-int
-LSQ<Impl>::numLoads(unsigned tid)
-{
-    return thread[tid].numLoads();
 }
 
 template<class Impl>
@@ -437,13 +349,6 @@ LSQ<Impl>::numStores()
 
 template<class Impl>
 int
-LSQ<Impl>::numStores(unsigned tid)
-{
-    return thread[tid].numStores();
-}
-
-template<class Impl>
-int
 LSQ<Impl>::numLoadsReady()
 {
     unsigned total = 0;
@@ -456,13 +361,6 @@ LSQ<Impl>::numLoadsReady()
     }
 
     return total;
-}
-
-template<class Impl>
-int
-LSQ<Impl>::numLoadsReady(unsigned tid)
-{
-    return thread[tid].numLoadsReady();
 }
 
 template<class Impl>
@@ -612,14 +510,6 @@ LSQ<Impl>::hasStoresToWB()
     return true;
 }
 
-
-template<class Impl>
-bool
-LSQ<Impl>::hasStoresToWB(unsigned tid)
-{
-    return thread[tid].hasStoresToWB();
-}
-
 template<class Impl>
 bool
 LSQ<Impl>::willWB()
@@ -636,13 +526,6 @@ LSQ<Impl>::willWB()
 }
 
 template<class Impl>
-bool
-LSQ<Impl>::willWB(unsigned tid)
-{
-    return thread[tid].willWB();
-}
-
-template<class Impl>
 void
 LSQ<Impl>::dumpInsts()
 {
@@ -652,11 +535,4 @@ LSQ<Impl>::dumpInsts()
         unsigned tid = *active_threads++;
         thread[tid].dumpInsts();
     }
-}
-
-template<class Impl>
-void
-LSQ<Impl>::dumpInsts(unsigned tid)
-{
-    thread[tid].dumpInsts();
 }

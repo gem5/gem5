@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,9 +53,7 @@ class ROB
     enum Status {
         Running,
         Idle,
-        ROBSquashing,
-        DcacheMissStall,
-        DcacheMissComplete
+        ROBSquashing
     };
 
     /** SMT ROB Sharing Policy */
@@ -112,7 +110,7 @@ class ROB
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the head of the ROB.
      */
-    DynInstPtr readHeadInst();
+//    DynInstPtr readHeadInst();
 
     /** Returns a pointer to the head instruction of a specific thread within
      *  the ROB.
@@ -124,7 +122,7 @@ class ROB
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the tail of the ROB.
      */
-    DynInstPtr readTailInst();
+//    DynInstPtr readTailInst();
 
     /** Returns a pointer to the tail instruction of a specific thread within
      *  the ROB.
@@ -133,7 +131,7 @@ class ROB
     DynInstPtr readTailInst(unsigned tid);
 
     /** Retires the head instruction, removing it from the ROB. */
-    void retireHead();
+//    void retireHead();
 
     /** Retires the head instruction of a specific thread, removing it from the
      *  ROB.
@@ -141,7 +139,7 @@ class ROB
     void retireHead(unsigned tid);
 
     /** Is the oldest instruction across all threads ready. */
-    bool isHeadReady();
+//    bool isHeadReady();
 
     /** Is the oldest instruction across a particular thread ready. */
     bool isHeadReady(unsigned tid);
@@ -200,35 +198,35 @@ class ROB
     void updateTail();
 
     /** Reads the PC of the oldest head instruction. */
-    uint64_t readHeadPC();
+//    uint64_t readHeadPC();
 
     /** Reads the PC of the head instruction of a specific thread. */
-    uint64_t readHeadPC(unsigned tid);
+//    uint64_t readHeadPC(unsigned tid);
 
     /** Reads the next PC of the oldest head instruction. */
-    uint64_t readHeadNextPC();
+//    uint64_t readHeadNextPC();
 
     /** Reads the next PC of the head instruction of a specific thread. */
-    uint64_t readHeadNextPC(unsigned tid);
+//    uint64_t readHeadNextPC(unsigned tid);
 
     /** Reads the sequence number of the oldest head instruction. */
-    InstSeqNum readHeadSeqNum();
+//    InstSeqNum readHeadSeqNum();
 
     /** Reads the sequence number of the head instruction of a specific thread.
      */
-    InstSeqNum readHeadSeqNum(unsigned tid);
+//    InstSeqNum readHeadSeqNum(unsigned tid);
 
     /** Reads the PC of the youngest tail instruction. */
-    uint64_t readTailPC();
+//    uint64_t readTailPC();
 
     /** Reads the PC of the tail instruction of a specific thread. */
-    uint64_t readTailPC(unsigned tid);
+//    uint64_t readTailPC(unsigned tid);
 
     /** Reads the sequence number of the youngest tail instruction. */
-    InstSeqNum readTailSeqNum();
+//    InstSeqNum readTailSeqNum();
 
     /** Reads the sequence number of tail instruction of a specific thread. */
-    InstSeqNum readTailSeqNum(unsigned tid);
+//    InstSeqNum readTailSeqNum(unsigned tid);
 
     /** Checks if the ROB is still in the process of squashing instructions.
      *  @retval Whether or not the ROB is done squashing.

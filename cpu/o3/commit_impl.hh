@@ -27,12 +27,7 @@
  */
 
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
-#include <stdio.h>
-#include <string.h>
+#include <string>
 
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
@@ -835,58 +830,6 @@ DefaultCommit<Impl>::commitInsts()
     unsigned num_committed = 0;
 
     DynInstPtr head_inst;
-#if FULL_SYSTEM
-    // Not the best way to check if the front end is empty, but it should
-    // work.
-    // @todo: Try to avoid directly accessing fetch.
-    if (commitStatus[0] == FetchTrapPending && rob->isEmpty()) {
-        DPRINTF(Commit, "Fault from fetch is pending.\n");
-
-        fetchTrapWait++;
-        if (fetchTrapWait > 10000000) {
-            panic("Fetch trap has been pending for a long time!");
-        }
-        if (fetchFaultTick > curTick) {
-            DPRINTF(Commit, "Not enough cycles since fault, fault will "
-                    "happen on %lli\n",
-                    fetchFaultTick);
-            cpu->activityThisCycle();
-            return;
-        } else if (iewStage->hasStoresToWB()) {
-            DPRINTF(Commit, "IEW still has stores to WB.  Waiting until "
-                    "they are completed. fetchTrapWait:%i\n",
-                    fetchTrapWait);
-            cpu->activityThisCycle();
-            return;
-        } else if (cpu->inPalMode(readPC())) {
-            DPRINTF(Commit, "In pal mode right now. fetchTrapWait:%i\n",
-                    fetchTrapWait);
-            return;
-        } else if (fetchStage->getYoungestSN() > youngestSeqNum[0]) {
-            DPRINTF(Commit, "Waiting for front end to drain. fetchTrapWait:%i\n",
-                    fetchTrapWait);
-            return;
-        }
-        fetchTrapWait = 0;
-        DPRINTF(Commit, "ROB is empty, handling fetch trap.\n");
-
-        assert(!thread[0]->inSyscall);
-
-        thread[0]->inSyscall = true;
-
-        // Consider holding onto the trap and waiting until the trap event
-        // happens for this to be executed.
-        cpu->trap(fetchFault, 0);
-
-        // Exit state update mode to avoid accidental updating.
-        thread[0]->inSyscall = false;
-
-        commitStatus[0] = TrapPending;
-        // Set it up so that we squash next cycle
-        trapSquash[0] = true;
-        return;
-    }
-#endif
 
     // Commit as many instructions as possible until the commit bandwidth
     // limit is reached, or it becomes impossible to commit any more.

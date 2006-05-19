@@ -35,8 +35,8 @@ LSQUnit<Impl>::StoreCompletionEvent::StoreCompletionEvent(int store_idx,
                                                           Event *wb_event,
                                                           LSQUnit<Impl> *lsq_ptr)
     : Event(&mainEventQueue),
-      storeIdx(store_idx),
       wbEvent(wb_event),
+      storeIdx(store_idx),
       lsqPtr(lsq_ptr)
 {
     this->setFlags(Event::AutoDelete);
@@ -86,14 +86,12 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
 
     lsqID = id;
 
-    LQEntries = maxLQEntries;
-    SQEntries = maxSQEntries;
+    // Add 1 for the sentinel entry (they are circular queues).
+    LQEntries = maxLQEntries + 1;
+    SQEntries = maxSQEntries + 1;
 
     loadQueue.resize(LQEntries);
     storeQueue.resize(SQEntries);
-
-
-    // May want to initialize these entries to NULL
 
     loadHead = loadTail = 0;
 
@@ -104,7 +102,7 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
 
     dcacheInterface = params->dcacheInterface;
 
-    loadFaultInst = storeFaultInst = memDepViolator = NULL;
+    memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
 }
@@ -151,6 +149,8 @@ LSQUnit<Impl>::switchOut()
     switchedOut = true;
     for (int i = 0; i < loadQueue.size(); ++i)
         loadQueue[i] = NULL;
+
+    assert(storesToWB == 0);
 
     while (storesToWB > 0 &&
            storeWBIdx != storeTail &&
@@ -218,7 +218,7 @@ LSQUnit<Impl>::takeOverFrom()
 
     usedPorts = 0;
 
-    loadFaultInst = storeFaultInst = memDepViolator = NULL;
+    memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
 
@@ -231,16 +231,17 @@ template<class Impl>
 void
 LSQUnit<Impl>::resizeLQ(unsigned size)
 {
-    assert( size >= LQEntries);
+    unsigned size_plus_sentinel = size + 1;
+    assert(size_plus_sentinel >= LQEntries);
 
-    if (size > LQEntries) {
-        while (size > loadQueue.size()) {
+    if (size_plus_sentinel > LQEntries) {
+        while (size_plus_sentinel > loadQueue.size()) {
             DynInstPtr dummy;
             loadQueue.push_back(dummy);
             LQEntries++;
         }
     } else {
-        LQEntries = size;
+        LQEntries = size_plus_sentinel;
     }
 
 }
@@ -249,14 +250,15 @@ template<class Impl>
 void
 LSQUnit<Impl>::resizeSQ(unsigned size)
 {
-    if (size > SQEntries) {
-        while (size > storeQueue.size()) {
+    unsigned size_plus_sentinel = size + 1;
+    if (size_plus_sentinel > SQEntries) {
+        while (size_plus_sentinel > storeQueue.size()) {
             SQEntry dummy;
             storeQueue.push_back(dummy);
             SQEntries++;
         }
     } else {
-        SQEntries = size;
+        SQEntries = size_plus_sentinel;
     }
 }
 
@@ -264,10 +266,8 @@ template <class Impl>
 void
 LSQUnit<Impl>::insert(DynInstPtr &inst)
 {
-    // Make sure we really have a memory reference.
     assert(inst->isMemRef());
 
-    // Make sure it's one of the two classes of memory references.
     assert(inst->isLoad() || inst->isStore());
 
     if (inst->isLoad()) {
@@ -283,7 +283,8 @@ template <class Impl>
 void
 LSQUnit<Impl>::insertLoad(DynInstPtr &load_inst)
 {
-    assert((loadTail + 1) % LQEntries != loadHead && loads < LQEntries);
+    assert((loadTail + 1) % LQEntries != loadHead);
+    assert(loads < LQEntries);
 
     DPRINTF(LSQUnit, "Inserting load PC %#x, idx:%i [sn:%lli]\n",
             load_inst->readPC(), loadTail, load_inst->seqNum);
@@ -322,7 +323,6 @@ LSQUnit<Impl>::insertStore(DynInstPtr &store_inst)
     incrStIdx(storeTail);
 
     ++stores;
-
 }
 
 template <class Impl>
@@ -370,39 +370,6 @@ LSQUnit<Impl>::numLoadsReady()
     return retval;
 }
 
-#if 0
-template <class Impl>
-Fault
-LSQUnit<Impl>::executeLoad()
-{
-    Fault load_fault = NoFault;
-    DynInstPtr load_inst;
-
-    assert(readyLoads.size() != 0);
-
-    // Execute a ready load.
-    LdMapIt ready_it = readyLoads.begin();
-
-    load_inst = (*ready_it).second;
-
-    // Execute the instruction, which is held in the data portion of the
-    // iterator.
-    load_fault = load_inst->execute();
-
-    // If it executed successfully, then switch it over to the executed
-    // loads list.
-    if (load_fault == NoFault) {
-        executedLoads[load_inst->seqNum] = load_inst;
-
-        readyLoads.erase(ready_it);
-    } else {
-        loadFaultInst = load_inst;
-    }
-
-    return load_fault;
-}
-#endif
-
 template <class Impl>
 Fault
 LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
@@ -413,52 +380,19 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     DPRINTF(LSQUnit, "Executing load PC %#x, [sn:%lli]\n",
             inst->readPC(),inst->seqNum);
 
-    // Make sure it's really in the list.
-    // Normally it should always be in the list.  However,
-    /* due to a syscall it may not be the list.
-#ifdef DEBUG
-    int i = loadHead;
-    while (1) {
-        if (i == loadTail && !find(inst)) {
-            assert(0 && "Load not in the queue!");
-        } else if (loadQueue[i] == inst) {
-            break;
-        }
-
-        i = i + 1;
-        if (i >= LQEntries) {
-            i = 0;
-        }
-    }
-#endif // DEBUG*/
-
 //    load_fault = inst->initiateAcc();
     load_fault = inst->execute();
 
     // If the instruction faulted, then we need to send it along to commit
     // without the instruction completing.
     if (load_fault != NoFault) {
-        // Maybe just set it as can commit here, although that might cause
-        // some other problems with sending traps to the ROB too quickly.
+        // Send this instruction to commit, also make sure iew stage
+        // realizes there is activity.
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     }
 
     return load_fault;
-}
-
-template <class Impl>
-Fault
-LSQUnit<Impl>::executeLoad(int lq_idx)
-{
-    // Very hackish.  Not sure the best way to check that this
-    // instruction is at the head of the ROB.  I should have some sort
-    // of extra information here so that I'm not overloading the
-    // canCommit signal for 15 different things.
-    loadQueue[lq_idx]->setCanCommit();
-    Fault ret_fault = executeLoad(loadQueue[lq_idx]);
-    loadQueue[lq_idx]->clearCanCommit();
-    return ret_fault;
 }
 
 template <class Impl>
@@ -481,11 +415,7 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
     Fault store_fault = store_inst->initiateAcc();
 //    Fault store_fault = store_inst->execute();
 
-    // Store size should now be available.  Use it to get proper offset for
-    // addr comparisons.
-    int size = storeQueue[store_idx].size;
-
-    if (size == 0) {
+    if (storeQueue[store_idx].size == 0) {
         DPRINTF(LSQUnit,"Fault on Store PC %#x, [sn:%lli],Size = 0\n",
                 store_inst->readPC(),store_inst->seqNum);
 
@@ -494,30 +424,25 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
 
     assert(store_fault == NoFault);
 
-    if (!storeFaultInst) {
-        if (store_fault != NoFault) {
-            panic("Fault in a store instruction!");
-            storeFaultInst = store_inst;
-        } else if (store_inst->isNonSpeculative()) {
-            // Nonspeculative accesses (namely store conditionals)
-            // need to set themselves as able to writeback if we
-            // haven't had a fault by here.
-            storeQueue[store_idx].canWB = true;
+    if (store_inst->isNonSpeculative()) {
+        // Nonspeculative accesses (namely store conditionals)
+        // need to set themselves as able to writeback if we
+        // haven't had a fault by here.
+        storeQueue[store_idx].canWB = true;
 
-            ++storesToWB;
-        }
+        ++storesToWB;
     }
 
     if (!memDepViolator) {
         while (load_idx != loadTail) {
-            // Actually should only check loads that have actually executed
-            // Might be safe because effAddr is set to InvalAddr when the
-            // dyn inst is created.
+            // Really only need to check loads that have actually executed
+            // It's safe to check all loads because effAddr is set to
+            // InvalAddr when the dyn inst is created.
 
-            // Must actually check all addrs in the proper size range
-            // Which is more correct than needs to be.  What if for now we just
-            // assume all loads are quad-word loads, and do the addr based
-            // on that.
+            // @todo: For now this is extra conservative, detecting a
+            // violation if the addresses match assuming all accesses
+            // are quad word accesses.
+
             // @todo: Fix this, magic number being used here
             if ((loadQueue[load_idx]->effAddr >> 8) ==
                 (store_inst->effAddr >> 8)) {
@@ -557,32 +482,6 @@ LSQUnit<Impl>::commitLoad()
 
 template <class Impl>
 void
-LSQUnit<Impl>::commitLoad(InstSeqNum &inst)
-{
-    // Hopefully I don't use this function too much
-    panic("Don't use this function!");
-
-    int i = loadHead;
-    while (1) {
-        if (i == loadTail) {
-            assert(0 && "Load not in the queue!");
-        } else if (loadQueue[i]->seqNum == inst) {
-            break;
-        }
-
-        ++i;
-        if (i >= LQEntries) {
-            i = 0;
-        }
-    }
-
-    loadQueue[i]->removeInLSQ();
-    loadQueue[i] = NULL;
-    --loads;
-}
-
-template <class Impl>
-void
 LSQUnit<Impl>::commitLoads(InstSeqNum &youngest_inst)
 {
     assert(loads == 0 || loadQueue[loadHead]);
@@ -602,6 +501,8 @@ LSQUnit<Impl>::commitStores(InstSeqNum &youngest_inst)
 
     while (store_idx != storeTail) {
         assert(storeQueue[store_idx].inst);
+        // Mark any stores that are now committed and have not yet
+        // been marked as able to write back.
         if (!storeQueue[store_idx].canWB) {
             if (storeQueue[store_idx].inst->seqNum > youngest_inst) {
                 break;
@@ -613,7 +514,6 @@ LSQUnit<Impl>::commitStores(InstSeqNum &youngest_inst)
 
             storeQueue[store_idx].canWB = true;
 
-//            --stores;
             ++storesToWB;
         }
 
@@ -631,6 +531,8 @@ LSQUnit<Impl>::writebackStores()
            storeQueue[storeWBIdx].canWB &&
            usedPorts < cachePorts) {
 
+        // Store didn't write any data so no need to write it back to
+        // memory.
         if (storeQueue[storeWBIdx].size == 0) {
             completeStore(storeWBIdx);
 
@@ -659,7 +561,6 @@ LSQUnit<Impl>::writebackStores()
         MemReqPtr req = storeQueue[storeWBIdx].req;
         storeQueue[storeWBIdx].committed = true;
 
-//	Fault fault = cpu->translateDataWriteReq(req);
         req->cmd = Write;
         req->completionEvent = NULL;
         req->time = curTick;
@@ -689,6 +590,12 @@ LSQUnit<Impl>::writebackStores()
           default:
             panic("Unexpected store size!\n");
         }
+
+        // Stores other than store conditionals are completed at this
+        // time.  Mark them as completed and, if we have a checker,
+        // tell it that the instruction is completed.
+        // @todo: Figure out what time I can say stores are complete in
+        // the timing memory.
         if (!(req->flags & LOCKED)) {
             storeQueue[storeWBIdx].inst->setCompleted();
             if (cpu->checker) {
@@ -714,57 +621,35 @@ LSQUnit<Impl>::writebackStores()
                 iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
             }
 
-            if (result != MA_HIT && dcacheInterface->doEvents()) {
-                typename IEW::LdWritebackEvent *wb = NULL;
-                if (req->flags & LOCKED) {
-                    // Stx_C should not generate a system port transaction,
-                    // but that might be hard to accomplish.
-                    wb = new typename
-                        IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
+            typename IEW::LdWritebackEvent *wb = NULL;
+            if (req->flags & LOCKED) {
+                // Stx_C should not generate a system port transaction
+                // if it misses in the cache, but that might be hard
+                // to accomplish without explicit cache support.
+                wb = new typename
+                    IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
                                               iewStage);
-                    store_event->wbEvent = wb;
-                }
+                store_event->wbEvent = wb;
+            }
 
-                DPRINTF(LSQUnit,"D-Cache Write Miss!\n");
+            if (result != MA_HIT && dcacheInterface->doEvents()) {
+                DPRINTF(LSQUnit,"D-Cache Write Miss on idx:%i!\n",
+                        storeWBIdx);
 
                 DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
                         storeQueue[storeWBIdx].inst->seqNum);
-
-                lastDcacheStall = curTick;
-
-//                _status = DcacheMissStall;
 
                 //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
 
                 //DPRINTF(LSQUnit, "Added MSHR. count = %i\n",mshrSeqNums.size());
 
-                // Increment stat here or something
+                // @todo: Increment stat here.
             } else {
                 DPRINTF(LSQUnit,"D-Cache: Write Hit on idx:%i !\n",
                         storeWBIdx);
 
                 DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
                         storeQueue[storeWBIdx].inst->seqNum);
-
-
-                if (req->flags & LOCKED) {
-                    // Stx_C does not generate a system port transaction.
-/*
-                    if (req->flags & UNCACHEABLE) {
-                        req->result = 2;
-                    } else {
-                        if (cpu->lockFlag && cpu->lockAddr == req->paddr) {
-                            req->result=1;
-                        } else {
-                            req->result = 0;
-                        }
-                    }
-*/
-                    typename IEW::LdWritebackEvent *wb =
-                        new typename IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
-                                                           iewStage);
-                    store_event->wbEvent = wb;
-                }
             }
 
             incrStIdx(storeWBIdx);
@@ -798,14 +683,12 @@ void
 LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
 {
     DPRINTF(LSQUnit, "Squashing until [sn:%lli]!"
-            "(Loads:%i Stores:%i)\n",squashed_num,loads,stores);
+            "(Loads:%i Stores:%i)\n", squashed_num, loads, stores);
 
     int load_idx = loadTail;
     decrLdIdx(load_idx);
 
     while (loads != 0 && loadQueue[load_idx]->seqNum > squashed_num) {
-
-        // Clear the smart pointer to make sure it is decremented.
         DPRINTF(LSQUnit,"Load Instruction PC %#x squashed, "
                 "[sn:%lli]\n",
                 loadQueue[load_idx]->readPC(),
@@ -817,6 +700,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
             stallingLoadIdx = 0;
         }
 
+        // Clear the smart pointer to make sure it is decremented.
         loadQueue[load_idx]->squashed = true;
         loadQueue[load_idx] = NULL;
         --loads;
@@ -840,19 +724,18 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
 
     while (stores != 0 &&
            storeQueue[store_idx].inst->seqNum > squashed_num) {
-
+        // Instructions marked as can WB are already committed.
         if (storeQueue[store_idx].canWB) {
             break;
         }
 
-        // Clear the smart pointer to make sure it is decremented.
         DPRINTF(LSQUnit,"Store Instruction PC %#x squashed, "
                 "idx:%i [sn:%lli]\n",
                 storeQueue[store_idx].inst->readPC(),
                 store_idx, storeQueue[store_idx].inst->seqNum);
 
-        // I don't think this can happen.  It should have been cleared by the
-        // stalling load.
+        // I don't think this can happen.  It should have been cleared
+        // by the stalling load.
         if (isStalled() &&
             storeQueue[store_idx].inst->seqNum == stallingStoreIsn) {
             panic("Is stalled should have been cleared by stalling load!\n");
@@ -860,13 +743,17 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
             stallingStoreIsn = 0;
         }
 
+        // Clear the smart pointer to make sure it is decremented.
         storeQueue[store_idx].inst->squashed = true;
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
 
         if (storeQueue[store_idx].req) {
+            // There should not be a completion event if the store has
+            // not yet committed.
             assert(!storeQueue[store_idx].req->completionEvent);
         }
+
         storeQueue[store_idx].req = NULL;
         --stores;
 
@@ -875,36 +762,6 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
 
         decrStIdx(store_idx);
     }
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::dumpInsts()
-{
-    cprintf("Load store queue: Dumping instructions.\n");
-    cprintf("Load queue size: %i\n", loads);
-    cprintf("Load queue: ");
-
-    int load_idx = loadHead;
-
-    while (load_idx != loadTail && loadQueue[load_idx]) {
-        cprintf("%#x ", loadQueue[load_idx]->readPC());
-
-        incrLdIdx(load_idx);
-    }
-
-    cprintf("Store queue size: %i\n", stores);
-    cprintf("Store queue: ");
-
-    int store_idx = storeHead;
-
-    while (store_idx != storeTail && storeQueue[store_idx].inst) {
-        cprintf("%#x ", storeQueue[store_idx].inst->readPC());
-
-        incrStIdx(store_idx);
-    }
-
-    cprintf("\n");
 }
 
 template <class Impl>
@@ -930,7 +787,9 @@ LSQUnit<Impl>::completeStore(int store_idx)
         iewStage->updateLSQNextCycle = true;
     }
 
-    DPRINTF(LSQUnit, "Store head idx:%i\n", storeHead);
+    DPRINTF(LSQUnit, "Completing store [sn:%lli], idx:%i, store head "
+            "idx:%i\n",
+            storeQueue[store_idx].inst->seqNum, store_idx, storeHead);
 
     if (isStalled() &&
         storeQueue[store_idx].inst->seqNum == stallingStoreIsn) {
@@ -943,6 +802,10 @@ LSQUnit<Impl>::completeStore(int store_idx)
     }
 
     storeQueue[store_idx].inst->setCompleted();
+
+    // Tell the checker we've completed this instruction.  Some stores
+    // may get reported twice to the checker, but the checker can
+    // handle that case.
     if (cpu->checker) {
         cpu->checker->tick(storeQueue[store_idx].inst);
     }
@@ -978,4 +841,34 @@ LSQUnit<Impl>::decrLdIdx(int &load_idx)
 {
     if (--load_idx < 0)
         load_idx += LQEntries;
+}
+
+template <class Impl>
+void
+LSQUnit<Impl>::dumpInsts()
+{
+    cprintf("Load store queue: Dumping instructions.\n");
+    cprintf("Load queue size: %i\n", loads);
+    cprintf("Load queue: ");
+
+    int load_idx = loadHead;
+
+    while (load_idx != loadTail && loadQueue[load_idx]) {
+        cprintf("%#x ", loadQueue[load_idx]->readPC());
+
+        incrLdIdx(load_idx);
+    }
+
+    cprintf("Store queue size: %i\n", stores);
+    cprintf("Store queue: ");
+
+    int store_idx = storeHead;
+
+    while (store_idx != storeTail && storeQueue[store_idx].inst) {
+        cprintf("%#x ", storeQueue[store_idx].inst->readPC());
+
+        incrStIdx(store_idx);
+    }
+
+    cprintf("\n");
 }

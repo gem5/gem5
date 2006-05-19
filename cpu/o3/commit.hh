@@ -30,10 +30,10 @@
 #define __CPU_O3_COMMIT_HH__
 
 #include "arch/faults.hh"
-#include "cpu/inst_seq.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/inst_seq.hh"
 #include "mem/memory_interface.hh"
 
 template <class>
@@ -59,8 +59,7 @@ class O3ThreadState;
  * squashing instruction's sequence number, and only broadcasting a
  * redirect if it corresponds to an older instruction. Commit also
  * supports multiple cycle squashing, to model a ROB that can only
- * remove a certain number of instructions per cycle. Eventually traps
- * and interrupts will most likely be handled here as well.
+ * remove a certain number of instructions per cycle.
  */
 template<class Impl>
 class DefaultCommit

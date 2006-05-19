@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,8 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         virtual Status status() const { return thread->status(); }
 
-        virtual void setStatus(Status new_status) { thread->setStatus(new_status); }
+        virtual void setStatus(Status new_status)
+        { thread->setStatus(new_status); }
 
         /// Set the status to Active.  Optional delay indicates number of
         /// cycles to wait before beginning execution.
@@ -168,12 +169,15 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val);
 
         // @todo: Figure out where these store cond failures should go.
-        virtual unsigned readStCondFailures() { return thread->storeCondFailures; }
+        virtual unsigned readStCondFailures()
+        { return thread->storeCondFailures; }
 
-        virtual void setStCondFailures(unsigned sc_failures) { thread->storeCondFailures = sc_failures; }
+        virtual void setStCondFailures(unsigned sc_failures)
+        { thread->storeCondFailures = sc_failures; }
 
 #if FULL_SYSTEM
-        virtual bool inPalMode() { return TheISA::PcPAL(cpu->readPC(thread->tid)); }
+        virtual bool inPalMode()
+        { return TheISA::PcPAL(cpu->readPC(thread->tid)); }
 #endif
 
         // Only really makes sense for old CPU model.  Lots of code
@@ -193,10 +197,6 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual Counter readFuncExeInst() { return thread->funcExeInst; }
 #endif
     };
-
-//    friend class AlphaXC;
-
-//    std::vector<ExecContext *> xcProxies;
 
 #if FULL_SYSTEM
     /** ITB pointer. */

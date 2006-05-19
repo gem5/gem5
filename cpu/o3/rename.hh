@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,15 +35,16 @@
 #include "base/timebuf.hh"
 
 /**
- * DefaultRename handles both single threaded and SMT rename. Its width is
- * specified by the parameters; each cycle it tries to rename that many
- * instructions. It holds onto the rename history of all instructions with
- * destination registers, storing the arch. register, the new physical
- * register, and the old physical register, to allow for undoing of mappings
- * if squashing happens, or freeing up registers upon commit. Rename handles
- * blocking if the ROB, IQ, or LSQ is going to be full. Rename also handles
- * barriers, and does so by stalling on the instruction until the ROB is
- * empty and there are no instructions in flight to the ROB.
+ * DefaultRename handles both single threaded and SMT rename. Its
+ * width is specified by the parameters; each cycle it tries to rename
+ * that many instructions. It holds onto the rename history of all
+ * instructions with destination registers, storing the
+ * arch. register, the new physical register, and the old physical
+ * register, to allow for undoing of mappings if squashing happens, or
+ * freeing up registers upon commit. Rename handles blocking if the
+ * ROB, IQ, or LSQ is going to be full. Rename also handles barriers,
+ * and does so by stalling on the instruction until the ROB is empty
+ * and there are no instructions in flight to the ROB.
  */
 template<class Impl>
 class DefaultRename
@@ -68,14 +69,15 @@ class DefaultRename
     // Typedefs from the ISA.
     typedef TheISA::RegIndex RegIndex;
 
-    // A deque is used to queue the instructions.  Barrier insts must be
-    // added to the front of the deque, which is the only reason for using
-    // a deque instead of a queue. (Most other stages use a queue)
+    // A list is used to queue the instructions.  Barrier insts must
+    // be added to the front of the list, which is the only reason for
+    // using a list instead of a queue. (Most other stages use a
+    // queue)
     typedef std::list<DynInstPtr> InstQueue;
 
   public:
-    /** Overall rename status. Used to determine if the CPU can deschedule
-     * itself due to a lack of activity.
+    /** Overall rename status. Used to determine if the CPU can
+     * deschedule itself due to a lack of activity.
      */
     enum RenameStatus {
         Active,

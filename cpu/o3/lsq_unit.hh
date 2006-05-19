@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,29 +29,30 @@
 #ifndef __CPU_O3_LSQ_UNIT_HH__
 #define __CPU_O3_LSQ_UNIT_HH__
 
+#include <algorithm>
 #include <map>
 #include <queue>
-#include <algorithm>
 
+#include "arch/faults.hh"
 #include "config/full_system.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/mem_interface.hh"
 //#include "mem/page_table.hh"
-#include "sim/debug.hh"
-#include "sim/sim_object.hh"
-#include "arch/faults.hh"
+//#include "sim/debug.hh"
+//#include "sim/sim_object.hh"
 
 /**
- * Class that implements the actual LQ and SQ for each specific thread.
- * Both are circular queues; load entries are freed upon committing, while
- * store entries are freed once they writeback. The LSQUnit tracks if there
- * are memory ordering violations, and also detects partial load to store
- * forwarding cases (a store only has part of a load's data) that requires
- * the load to wait until the store writes back. In the former case it
- * holds onto the instruction until the dependence unit looks at it, and
- * in the latter it stalls the LSQ until the store writes back. At that
- * point the load is replayed.
+ * Class that implements the actual LQ and SQ for each specific
+ * thread.  Both are circular queues; load entries are freed upon
+ * committing, while store entries are freed once they writeback. The
+ * LSQUnit tracks if there are memory ordering violations, and also
+ * detects partial load to store forwarding cases (a store only has
+ * part of a load's data) that requires the load to wait until the
+ * store writes back. In the former case it holds onto the instruction
+ * until the dependence unit looks at it, and in the latter it stalls
+ * the LSQ until the store writes back. At that point the load is
+ * replayed.
  */
 template <class Impl>
 class LSQUnit {
@@ -76,20 +77,18 @@ class LSQUnit {
         /** Returns the description of this event. */
         const char *description();
 
-      private:
-        /** The store index of the store being written back. */
-        int storeIdx;
         /** The writeback event for the store.  Needed for store
          * conditionals.
          */
-      public:
         Event *wbEvent;
+
+      private:
+        /** The store index of the store being written back. */
+        int storeIdx;
       private:
         /** The pointer to the LSQ unit that issued the store. */
         LSQUnit<Impl> *lsqPtr;
     };
-
-    friend class StoreCompletionEvent;
 
   public:
     /** Constructs an LSQ unit. init() must be called prior to use. */
@@ -136,14 +135,12 @@ class LSQUnit {
     /** Executes a load instruction. */
     Fault executeLoad(DynInstPtr &inst);
 
-    Fault executeLoad(int lq_idx);
+    Fault executeLoad(int lq_idx) { panic("Not implemented"); return NoFault; }
     /** Executes a store instruction. */
     Fault executeStore(DynInstPtr &inst);
 
     /** Commits the head load. */
     void commitLoad();
-    /** Commits a specific load, given by the sequence number. */
-    void commitLoad(InstSeqNum &inst);
     /** Commits loads older than a specific sequence number. */
     void commitLoads(InstSeqNum &youngest_inst);
 
@@ -179,9 +176,7 @@ class LSQUnit {
     /** Returns the memory ordering violator. */
     DynInstPtr getMemDepViolator();
 
-    /** Returns if a load became blocked due to the memory system.  It clears
-     *  the bool's value upon this being called.
-     */
+    /** Returns if a load became blocked due to the memory system. */
     bool loadBlocked()
     { return isLoadBlocked; }
 
@@ -215,9 +210,6 @@ class LSQUnit {
     /** Returns if the SQ is full. */
     bool sqFull() { return stores >= (SQEntries - 1); }
 
-    /** Debugging function to dump instructions in the LSQ. */
-    void dumpInsts();
-
     /** Returns the number of instructions in the LSQ. */
     unsigned getCount() { return loads + stores; }
 
@@ -244,6 +236,10 @@ class LSQUnit {
     inline void incrLdIdx(int &load_idx);
     /** Decrements the given load index (circular queue). */
     inline void decrLdIdx(int &load_idx);
+
+  public:
+    /** Debugging function to dump instructions in the LSQ. */
+    void dumpInsts();
 
   private:
     /** Pointer to the CPU. */
@@ -287,20 +283,10 @@ class LSQUnit {
         /** Whether or not the store is completed. */
         bool completed;
     };
-/*
-    enum Status {
-        Running,
-        Idle,
-        DcacheMissStall,
-        DcacheMissSwitch
-    };
-*/
+
   private:
     /** The LSQUnit thread id. */
     unsigned lsqID;
-
-    /** The status of the LSQ unit. */
-//    Status _status;
 
     /** The store queue. */
     std::vector<SQEntry> storeQueue;
@@ -308,17 +294,18 @@ class LSQUnit {
     /** The load queue. */
     std::vector<DynInstPtr> loadQueue;
 
-    // Consider making these 16 bits
-    /** The number of LQ entries. */
+    /** The number of LQ entries, plus a sentinel entry (circular queue).
+     *  @todo: Consider having var that records the true number of LQ entries.
+     */
     unsigned LQEntries;
-    /** The number of SQ entries. */
+    /** The number of SQ entries, plus a sentinel entry (circular queue).
+     *  @todo: Consider having var that records the true number of SQ entries.
+     */
     unsigned SQEntries;
 
     /** The number of load instructions in the LQ. */
     int loads;
-    /** The number of store instructions in the SQ (excludes those waiting to
-     * writeback).
-     */
+    /** The number of store instructions in the SQ. */
     int stores;
     /** The number of store instructions in the SQ waiting to writeback. */
     int storesToWB;
@@ -330,8 +317,8 @@ class LSQUnit {
 
     /** The index of the head instruction in the SQ. */
     int storeHead;
-    /** The index of the first instruction that is ready to be written back,
-     * and has not yet been written back.
+    /** The index of the first instruction that may be ready to be
+     * written back, and has not yet been written back.
      */
     int storeWBIdx;
     /** The index of the tail instruction in the SQ. */
@@ -348,13 +335,9 @@ class LSQUnit {
 
     //list<InstSeqNum> mshrSeqNums;
 
-     //Stats::Scalar<> dcacheStallCycles;
-    Counter lastDcacheStall;
-
     /** Wire to read information from the issue stage time queue. */
     typename TimeBuffer<IssueStruct>::wire fromIssue;
 
-    // Make these per thread?
     /** Whether or not the LSQ is stalled. */
     bool stalled;
     /** The store that causes the stall due to partial store to load
@@ -364,19 +347,12 @@ class LSQUnit {
     /** The index of the above store. */
     int stallingLoadIdx;
 
-    /** Whether or not a load is blocked due to the memory system.  It is
-     *  cleared when this value is checked via loadBlocked().
-     */
+    /** Whether or not a load is blocked due to the memory system. */
     bool isLoadBlocked;
 
     bool loadBlockedHandled;
 
     InstSeqNum blockedLoadSeqNum;
-
-    /** The oldest faulting load instruction. */
-    DynInstPtr loadFaultInst;
-    /** The oldest faulting store instruction. */
-    DynInstPtr storeFaultInst;
 
     /** The oldest load that caused a memory ordering violation. */
     DynInstPtr memDepViolator;
@@ -447,23 +423,14 @@ template <class T>
 Fault
 LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 {
-    //Depending on issue2execute delay a squashed load could
-    //execute if it is found to be squashed in the same
-    //cycle it is scheduled to execute
     assert(loadQueue[load_idx]);
 
-    if (loadQueue[load_idx]->isExecuted()) {
-        panic("Should not reach this point with split ops!");
-        memcpy(&data,req->data,req->size);
-
-        return NoFault;
-    }
+    assert(!loadQueue[load_idx]->isExecuted());
 
     // Make sure this isn't an uncacheable access
     // A bit of a hackish way to get uncached accesses to work only if they're
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
-    // @todo: Fix uncached accesses.
     if (req->flags & UNCACHEABLE &&
         (load_idx != loadHead || !loadQueue[load_idx]->reachedCommit)) {
         iewStage->rescheduleMemInst(loadQueue[load_idx]);
@@ -479,12 +446,16 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             "storeHead: %i addr: %#x\n",
             load_idx, store_idx, storeHead, req->paddr);
 
-#ifdef FULL_SYSTEM
+#if 0
     if (req->flags & LOCKED) {
         cpu->lockAddr = req->paddr;
         cpu->lockFlag = true;
     }
 #endif
+            req->cmd = Read;
+            assert(!req->completionEvent);
+            req->completionEvent = NULL;
+            req->time = curTick;
 
     while (store_idx != -1) {
         // End once we've reached the top of the LSQ
@@ -518,18 +489,14 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
         // If the store's data has all of the data needed, we can forward.
         if (store_has_lower_limit && store_has_upper_limit) {
-
+            // Get shift amount for offset into the store's data.
             int shift_amt = req->vaddr & (store_size - 1);
-            // Assumes byte addressing
+            // @todo: Magic number, assumes byte addressing
             shift_amt = shift_amt << 3;
 
             // Cast this to type T?
             data = storeQueue[store_idx].data >> shift_amt;
 
-            req->cmd = Read;
-            assert(!req->completionEvent);
-            req->completionEvent = NULL;
-            req->time = curTick;
             assert(!req->data);
             req->data = new uint8_t[64];
 
@@ -579,7 +546,6 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
             // Do not generate a writeback event as this instruction is not
             // complete.
-
             DPRINTF(LSQUnit, "Load-store forwarding mis-match. "
                     "Store idx %i to load addr %#x\n",
                     store_idx, req->vaddr);
@@ -588,16 +554,13 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         }
     }
 
-
     // If there's no forwarding case, then go access memory
     DynInstPtr inst = loadQueue[load_idx];
 
-    DPRINTF(LSQUnit, "Doing functional access for inst PC %#x\n",
-            loadQueue[load_idx]->readPC());
+    DPRINTF(LSQUnit, "Doing functional access for inst [sn:%lli] PC %#x\n",
+            loadQueue[load_idx]->seqNum, loadQueue[load_idx]->readPC());
+
     assert(!req->data);
-    req->cmd = Read;
-    req->completionEvent = NULL;
-    req->time = curTick;
     req->data = new uint8_t[64];
     Fault fault = cpu->read(req, data);
     memcpy(req->data, &data, sizeof(T));
@@ -611,20 +574,19 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             if (isLoadBlocked && blockedLoadSeqNum < inst->seqNum)
                 return NoFault;
 
+            // Record that the load was blocked due to memory.  This
+            // load will squash all instructions after it, be
+            // refetched, and re-executed.
             isLoadBlocked = true;
             loadBlockedHandled = false;
             blockedLoadSeqNum = inst->seqNum;
             // No fault occurred, even though the interface is blocked.
             return NoFault;
         }
+
         DPRINTF(LSQUnit, "Doing timing access for inst PC %#x\n",
                 loadQueue[load_idx]->readPC());
-/*
-        Addr debug_addr = ULL(0xfffffc0000be81a8);
-        if (req->vaddr == debug_addr) {
-            debug_break();
-        }
-*/
+
         assert(!req->completionEvent);
         req->completionEvent =
             new typename IEW::LdWritebackEvent(loadQueue[load_idx], iewStage);
@@ -632,75 +594,16 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
         assert(dcacheInterface->doEvents());
 
-        // Ugly hack to get an event scheduled *only* if the access is
-        // a miss.  We really should add first-class support for this
-        // at some point.
         if (result != MA_HIT) {
             DPRINTF(LSQUnit, "LSQUnit: D-cache miss!\n");
             DPRINTF(Activity, "Activity: ld accessing mem miss [sn:%lli]\n",
                     inst->seqNum);
-
-            lastDcacheStall = curTick;
-
-//            _status = DcacheMissStall;
-
         } else {
+            DPRINTF(LSQUnit, "LSQUnit: D-cache hit!\n");
             DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
                     inst->seqNum);
-
-            DPRINTF(LSQUnit, "LSQUnit: D-cache hit!\n");
         }
     }
-#if 0
-    // if we have a cache, do cache access too
-    if (dcacheInterface) {
-        if (dcacheInterface->isBlocked()) {
-            isLoadBlocked = true;
-            // No fault occurred, even though the interface is blocked.
-            return NoFault;
-        }
-
-        DPRINTF(LSQUnit, "LSQUnit: D-cache: PC:%#x reading from paddr:%#x "
-                "vaddr:%#x flags:%i\n",
-                inst->readPC(), req->paddr, req->vaddr, req->flags);
-
-        // Setup MemReq pointer
-        req->cmd = Read;
-        req->completionEvent = NULL;
-        req->time = curTick;
-        assert(!req->data);
-        req->data = new uint8_t[64];
-
-        assert(!req->completionEvent);
-        req->completionEvent =
-            new typename IEW::LdWritebackEvent(loadQueue[load_idx], iewStage);
-
-        // Do Cache Access
-        MemAccessResult result = dcacheInterface->access(req);
-
-        // Ugly hack to get an event scheduled *only* if the access is
-        // a miss.  We really should add first-class support for this
-        // at some point.
-        // @todo: Probably should support having no events
-        if (result != MA_HIT) {
-            DPRINTF(LSQUnit, "LSQUnit: D-cache miss!\n");
-            DPRINTF(Activity, "Activity: ld accessing mem miss [sn:%lli]\n",
-                    inst->seqNum);
-
-            lastDcacheStall = curTick;
-
-            _status = DcacheMissStall;
-
-        } else {
-            DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
-                    inst->seqNum);
-
-            DPRINTF(LSQUnit, "LSQUnit: D-cache hit!\n");
-        }
-    } else {
-        fatal("Must use D-cache with new memory system");
-    }
-#endif
 
     return fault;
 }
@@ -716,24 +619,11 @@ LSQUnit<Impl>::write(MemReqPtr &req, T &data, int store_idx)
             " | storeHead:%i [sn:%i]\n",
             store_idx, req->paddr, data, storeHead,
             storeQueue[store_idx].inst->seqNum);
-/*
-    if (req->flags & LOCKED) {
-        if (req->flags & UNCACHEABLE) {
-            req->result = 2;
-        } else {
-            req->result = 1;
-        }
-    }
-*/
+
     storeQueue[store_idx].req = req;
     storeQueue[store_idx].size = sizeof(T);
     storeQueue[store_idx].data = data;
-/*
-    Addr debug_addr = ULL(0xfffffc0000be81a8);
-    if (req->vaddr == debug_addr) {
-        debug_break();
-    }
-*/
+
     // This function only writes the data to the store queue, so no fault
     // can happen here.
     return NoFault;

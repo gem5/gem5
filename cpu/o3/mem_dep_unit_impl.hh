@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,12 +141,12 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
         std::pair<InstSeqNum, MemDepEntryPtr>(inst->seqNum, inst_entry));
     MemDepEntry::memdep_insert++;
 
-    // Add the instruction to the instruction list.
     instList[tid].push_back(inst);
 
     inst_entry->listIt = --(instList[tid].end());
 
-    // Check the dependence predictor for any producing stores.
+    // Check any barriers and the dependence predictor for any
+    // producing stores.
     InstSeqNum producing_store;
     if (inst->isLoad() && loadBarrier) {
         producing_store = loadBarrierSN;
@@ -181,7 +181,7 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
             moveToReady(inst_entry);
         }
     } else {
-        // Otherwise make the instruction dependent on the store.
+        // Otherwise make the instruction dependent on the store/barrier.
         DPRINTF(MemDepUnit, "Adding to dependency list; "
                 "inst PC %#x is dependent on [sn:%lli].\n",
                 inst->readPC(), producing_store);
@@ -192,8 +192,6 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 
         // Add this instruction to the list of dependents.
         store_entry->dependInsts.push_back(inst_entry);
-
-//        inst_entry->producingStore = store_entry;
 
         if (inst->isLoad()) {
             ++conflictingLoads;
@@ -370,8 +368,6 @@ MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
 
     instList[tid].erase((*hash_it).second->listIt);
 
-//    (*hash_it).second->inst = NULL;
-
     (*hash_it).second = NULL;
 
     memDepHash.erase(hash_it);
@@ -416,7 +412,6 @@ MemDepUnit<MemDepPred, Impl>::wakeDependents(DynInstPtr &inst)
 
         if (!woken_inst->inst) {
             // Potentially removed mem dep entries could be on this list
-//            inst_entry->dependInsts[i] = NULL;
             continue;
         }
 
@@ -429,7 +424,6 @@ MemDepUnit<MemDepPred, Impl>::wakeDependents(DynInstPtr &inst)
         } else {
             woken_inst->memDepReady = true;
         }
-//        inst_entry->dependInsts[i] = NULL;
     }
 
     inst_entry->dependInsts.clear();
@@ -468,13 +462,7 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
         assert(hash_it != memDepHash.end());
 
         (*hash_it).second->squashed = true;
-/*
-        for (int i = 0; i < (*hash_it).second->dependInsts.size(); ++i) {
-            (*hash_it).second->dependInsts[i] = NULL;
-        }
 
-        (*hash_it).second->inst = NULL;
-*/
         (*hash_it).second = NULL;
 
         memDepHash.erase(hash_it);

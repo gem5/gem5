@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -199,13 +199,6 @@ class MemDepUnit {
         static int memdep_count;
         static int memdep_insert;
         static int memdep_erase;
-    };
-
-    struct ltMemDepEntry {
-        bool operator() (const MemDepEntryPtr &lhs, const MemDepEntryPtr &rhs)
-        {
-            return lhs->inst->seqNum < rhs->inst->seqNum;
-        }
     };
 
     /** Finds the memory dependence entry in the hash map. */

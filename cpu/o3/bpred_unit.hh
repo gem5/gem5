@@ -43,12 +43,7 @@
 
 /**
  * Basically a wrapper class to hold both the branch predictor
- * and the BTB.  Right now I'm unsure of the implementation; it would
- * be nicer to have something closer to the CPUPolicy or the Impl where
- * this is just typedefs, but it forces the upper level stages to be
- * aware of the constructors of the BP and the BTB.  The nicer thing
- * to do is have this templated on the Impl, accept the usual Params
- * object, and be able to call the constructors on the BP and BTB.
+ * and the BTB.
  */
 template<class Impl>
 class TwobitBPredUnit

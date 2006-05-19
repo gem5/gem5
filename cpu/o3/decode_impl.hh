@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,6 @@ DefaultDecode<Impl>::DefaultDecode(Params *params)
       decodeWidth(params->decodeWidth),
       numThreads(params->numberOfThreads)
 {
-    DPRINTF(Decode, "decodeWidth=%i.\n", decodeWidth);
     _status = Inactive;
 
     for (int i = 0; i < numThreads; ++i) {
@@ -249,8 +248,6 @@ template<class Impl>
 bool
 DefaultDecode<Impl>::unblock(unsigned tid)
 {
-    DPRINTF(Decode, "[tid:%u]: Trying to unblock.\n", tid);
-
     // Decode is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
         DPRINTF(Decode, "[tid:%u]: Done unblocking.\n", tid);
@@ -260,6 +257,8 @@ DefaultDecode<Impl>::unblock(unsigned tid)
         decodeStatus[tid] = Running;
         return true;
     }
+
+    DPRINTF(Decode, "[tid:%u]: Currently unblocking.\n", tid);
 
     return false;
 }
@@ -318,6 +317,7 @@ DefaultDecode<Impl>::squash(unsigned tid)
         // In syscall emulation, we can have both a block and a squash due
         // to a syscall in the same cycle.  This would cause both signals to
         // be high.  This shouldn't happen in full system.
+        // @todo: Determine if this still happens.
         if (toFetch->decodeBlock[tid]) {
             toFetch->decodeBlock[tid] = 0;
         } else {
@@ -372,7 +372,7 @@ DefaultDecode<Impl>::skidInsert(unsigned tid)
         skidBuffer[tid].push(inst);
     }
 
-    // Eventually need to enforce this by not letting a thread
+    // @todo: Eventually need to enforce this by not letting a thread
     // fetch past its skidbuffer
     assert(skidBuffer[tid].size() <= skidBufferMax);
 }
@@ -436,10 +436,10 @@ void
 DefaultDecode<Impl>::sortInsts()
 {
     int insts_from_fetch = fromFetch->size;
-
+#ifdef DEBUG
     for (int i=0; i < numThreads; i++)
         assert(insts[i].empty());
-
+#endif
     for (int i = 0; i < insts_from_fetch; ++i) {
         insts[fromFetch->insts[i]->threadNumber].push(fromFetch->insts[i]);
     }

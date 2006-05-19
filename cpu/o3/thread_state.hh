@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef __CPU_O3_THREAD_STATE_HH__
 #define __CPU_O3_THREAD_STATE_HH__
@@ -15,27 +42,17 @@ class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
 #else
-class Process;
 class FunctionalMemory;
+class Process;
 #endif
 
-// In the new CPU case this may be quite small...It depends on what I define
-// ThreadState to be.  Currently it's only the state that exists within
-// ExecContext basically.  Leaves the interface and manipulation up to the
-// CPU.  Not sure this is useful/flexible...probably can be if I can avoid
-// including state here that parts of the pipeline can't modify directly,
-// or at least don't let them.  The only problem is for state that's needed
-// per thread, per structure.  I.e. rename table, memreqs.
-// On the other hand, it might be nice to not have to pay the extra pointer
-// lookup to get frequently used state such as a memreq (that isn't used much
-// elsewhere)...
-
-// Maybe this ozone thread state should only really have committed state?
-// I need to think about why I'm using this and what it's useful for.  Clearly
-// has benefits for SMT; basically serves same use as CPUExecContext.
-// Makes the ExecContext proxy easier.  Gives organization/central access point
-// to state of a thread that can be accessed normally (i.e. not in-flight
-// stuff within a OoO processor).  Does this need an XC proxy within it?
+/**
+ * Class that has various thread state, such as the status, the
+ * current instruction being processed, whether or not the thread has
+ * a trap pending or is being externally updated, the ExecContext
+ * proxy pointer, etc.  It also handles anything related to a specific
+ * thread's process, such as syscalls and checking valid addresses.
+ */
 template <class Impl>
 struct O3ThreadState : public ThreadState {
     typedef ExecContext::Status Status;
@@ -43,7 +60,7 @@ struct O3ThreadState : public ThreadState {
 
     Status _status;
 
-    // Current instruction?
+    // Current instruction
     TheISA::MachInst inst;
   private:
     FullCPU *cpu;
@@ -80,51 +97,11 @@ struct O3ThreadState : public ThreadState {
     void setStatus(Status new_status) { _status = new_status; }
 
 #if !FULL_SYSTEM
-
-    Fault dummyTranslation(MemReqPtr &req)
-    {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return NoFault;
-    }
-    Fault translateInstReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
-    }
-    Fault translateDataReadReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
-    }
-    Fault translateDataWriteReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
-    }
-
     bool validInstAddr(Addr addr)
     { return process->validInstAddr(addr); }
 
     bool validDataAddr(Addr addr)
     { return process->validDataAddr(addr); }
-#else
-    Fault translateInstReq(MemReqPtr &req)
-    {
-        return cpu->itb->translate(req);
-    }
-
-    Fault translateDataReadReq(MemReqPtr &req)
-    {
-        return cpu->dtb->translate(req, false);
-    }
-
-    Fault translateDataWriteReq(MemReqPtr &req)
-    {
-        return cpu->dtb->translate(req, true);
-    }
 #endif
 
     bool misspeculating() { return false; }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -168,10 +168,6 @@ struct TimeBufStruct {
         //(necessary for multiple ROBs?)
         bool commitInsts;
         InstSeqNum squashSeqNum;
-
-        // Extra bit of information so that the LDSTQ only updates when it
-        // needs to.
-        bool commitIsLoad;
 
         // Communication specifically to the IQ to tell the IQ that it can
         // schedule a non-speculative instruction.

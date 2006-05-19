@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -209,17 +209,13 @@ template <class Impl>
 void
 DefaultRename<Impl>::initStage()
 {
+    // Grab the number of free entries directly from the stages.
     for (int tid=0; tid < numThreads; tid++) {
         freeEntries[tid].iqEntries = iew_ptr->instQueue.numFreeEntries(tid);
         freeEntries[tid].lsqEntries = iew_ptr->ldstQueue.numFreeEntries(tid);
         freeEntries[tid].robEntries = commit_ptr->numROBFreeEntries(tid);
         emptyROB[tid] = true;
     }
-
-    // Clear these pointers so they are not accidentally used in
-    // non-initialization code.
-//    iew_ptr = NULL;
-//    commit_ptr = NULL;
 }
 
 template<class Impl>
@@ -299,6 +295,7 @@ DefaultRename<Impl>::takeOverFrom()
     _status = Inactive;
     initStage();
 
+    // Reset all state prior to taking over from the other CPU.
     for (int i=0; i< numThreads; i++) {
         renameStatus[i] = Idle;
 
@@ -326,7 +323,7 @@ DefaultRename<Impl>::squash(unsigned tid)
     if (renameStatus[tid] == Blocked ||
         renameStatus[tid] == Unblocking ||
         renameStatus[tid] == SerializeStall) {
-#if !FULL_SYSTEM
+#if 0
         // In syscall emulation, we can have both a block and a squash due
         // to a syscall in the same cycle.  This would cause both signals to
         // be high.  This shouldn't happen in full system.
@@ -344,7 +341,7 @@ DefaultRename<Impl>::squash(unsigned tid)
     // Set the status to Squashing.
     renameStatus[tid] = Squashing;
 
-    // Clear the skid buffer in case it has any data in it.
+    // Squash any instructions from decode.
     unsigned squashCount = 0;
 
     for (int i=0; i<fromDecode->size; i++) {
@@ -367,9 +364,6 @@ template <class Impl>
 void
 DefaultRename<Impl>::tick()
 {
-    // Rename will need to try to rename as many instructions as it
-    // has bandwidth, unless it is blocked.
-
     wroteToTimeBuffer = false;
 
     blockThisCycle = false;
@@ -453,8 +447,6 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
         renameInsts(tid);
     } else if (renameStatus[tid] == Unblocking) {
         renameInsts(tid);
-
-//        ++renameUnblockCycles;
 
         if (validInsts()) {
             // Add the current inputs to the skid buffer so they can be
@@ -575,7 +567,6 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
 
         insts_to_rename.pop_front();
 
-        //Use skidBuffer with oldest instructions
         if (renameStatus[tid] == Unblocking) {
             DPRINTF(Rename,"[tid:%u]: Removing [sn:%lli] PC:%#x from rename "
                     "skidBuffer\n",
@@ -711,10 +702,10 @@ void
 DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
-
+#ifdef DEBUG
     for (int i=0; i < numThreads; i++)
         assert(insts[i].empty());
-
+#endif
     for (int i = 0; i < insts_from_decode; ++i) {
         DynInstPtr inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
@@ -794,8 +785,8 @@ DefaultRename<Impl>::block(unsigned tid)
             wroteToTimeBuffer = true;
         }
 
-        // Rename can not go from SerializeStall to Blocked, otherwise it would
-        // not know to complete the serialize stall.
+        // Rename can not go from SerializeStall to Blocked, otherwise
+        // it would not know to complete the serialize stall.
         if (renameStatus[tid] != SerializeStall) {
             // Set status to Blocked.
             renameStatus[tid] = Blocked;
@@ -835,15 +826,11 @@ DefaultRename<Impl>::doSquash(unsigned tid)
 
     InstSeqNum squashed_seq_num = fromCommit->commitInfo[tid].doneSeqNum;
 
-//#if FULL_SYSTEM
-//    assert(!historyBuffer[tid].empty());
-//#else
     // After a syscall squashes everything, the history buffer may be empty
     // but the ROB may still be squashing instructions.
     if (historyBuffer[tid].empty()) {
         return;
     }
-//#endif // FULL_SYSTEM
 
     // Go through the most recent instructions, undoing the mappings
     // they did and freeing up the registers.
@@ -896,8 +883,8 @@ DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, unsigned tid)
            hb_it != historyBuffer[tid].end() &&
            (*hb_it).instSeqNum <= inst_seq_num) {
 
-        DPRINTF(Rename, "[tid:%u]: Freeing up older rename of reg %i, sequence"
-                " number %i.\n",
+        DPRINTF(Rename, "[tid:%u]: Freeing up older rename of reg %i, "
+                "[sn:%lli].\n",
                 tid, (*hb_it).prevPhysReg, (*hb_it).instSeqNum);
 
         freeList->addReg((*hb_it).prevPhysReg);
