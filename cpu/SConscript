@@ -125,7 +125,6 @@ if 'AlphaFullCPU' in env['CPU_MODELS']:
         o3/rename.cc
         o3/rename_map.cc
         o3/rob.cc
-        o3/sat_counter.cc
         o3/scoreboard.cc
         o3/store_set.cc
         o3/tournament_pred.cc

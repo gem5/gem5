@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,25 +44,37 @@ class SatCounter
     /**
      * Constructor for the counter.
      */
-    SatCounter();
+    SatCounter()
+        : initialVal(0), counter(0)
+    { }
 
     /**
      * Constructor for the counter.
      * @param bits How many bits the counter will have.
      */
-    SatCounter(unsigned bits);
+    SatCounter(unsigned bits)
+        : initialVal(0), maxVal((1 << bits) - 1), counter(0)
+    { }
 
     /**
      * Constructor for the counter.
      * @param bits How many bits the counter will have.
      * @param initial_val Starting value for each counter.
      */
-    SatCounter(unsigned bits, uint8_t initial_val);
+    SatCounter(unsigned bits, uint8_t initial_val)
+        : initialVal(initialVal), maxVal((1 << bits) - 1), counter(initial_val)
+    {
+        // Check to make sure initial value doesn't exceed the max
+        // counter value.
+        if (initial_val > maxVal) {
+            fatal("BP: Initial counter value exceeds max size.");
+        }
+    }
 
     /**
      * Sets the number of bits.
      */
-    void setBits(unsigned bits);
+    void setBits(unsigned bits) { maxVal = (1 << bits) - 1; }
 
     void reset() { counter = initialVal; }
 
