@@ -48,6 +48,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
     Param<int> clock;
     Param<int> numThreads;
+Param<int> activity;
 
 #if FULL_SYSTEM
 SimObjectParam<System *> system;
@@ -156,6 +157,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 
     INIT_PARAM(clock, "clock speed"),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
+    INIT_PARAM_DFLT(activity, "Initial activity count", 0),
 
 #if FULL_SYSTEM
     INIT_PARAM(system, "System object"),
@@ -301,6 +303,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
 
     params->name = getInstanceName();
     params->numberOfThreads = actual_num_threads;
+    params->activity = activity;
 
 #if FULL_SYSTEM
     params->system = system;

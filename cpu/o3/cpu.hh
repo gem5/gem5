@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_FULL_CPU_HH__
-#define __CPU_O3_FULL_CPU_HH__
+#ifndef __CPU_O3_CPU_HH__
+#define __CPU_O3_CPU_HH__
 
 #include <iostream>
 #include <list>
@@ -38,6 +38,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
+#include "cpu/activity.hh"
 #include "cpu/base.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/o3/comm.hh"
@@ -70,7 +71,7 @@ template <class Impl>
 class FullO3CPU : public BaseFullCPU
 {
   public:
-    //Put typedefs from the Impl here.
+    // Typedefs from the Impl here.
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -191,20 +192,18 @@ class FullO3CPU : public BaseFullCPU
      *  Note: this is a virtual function. CPU-Specific
      *  functionality defined in derived classes
      */
-    virtual void syscall(int tid) {}
+    virtual void syscall(int tid) { panic("Unimplemented!"); }
 
     /** Check if there are any system calls pending. */
     void checkSyscalls();
 
     /** Switches out this CPU.
-     *  @todo: Implement this.
      */
     void switchOut(Sampler *sampler);
 
     void signalSwitched();
 
     /** Takes over from another CPU.
-     *  @todo: Implement this.
      */
     void takeOverFrom(BaseCPU *oldCPU);
 
@@ -299,12 +298,8 @@ class FullO3CPU : public BaseFullCPU
     /** Add Instructions to the CPU Remove List*/
     void addToRemoveList(DynInstPtr &inst);
 
-    /** Remove an instruction from the front of the list.  It is expected
-     *  that there are no instructions in front of it (that is, none are older
-     *  than the instruction being removed).  Used when retiring instructions.
-     *  @todo: Remove the argument to this function, and just have it remove
-     *  last instruction once it's verified that commit has the same ordering
-     *  as the instruction list.
+    /** Remove an instruction from the front end of the list.  There's
+     *  no restriction on location of the instruction.
      */
     void removeFrontInst(DynInstPtr &inst);
 
@@ -319,15 +314,15 @@ class FullO3CPU : public BaseFullCPU
     void cleanUpRemovedInsts();
 
     /** Remove all instructions from the list. */
-    void removeAllInsts();
+//    void removeAllInsts();
 
     void dumpInsts();
 
     /** Basically a wrapper function so that instructions executed at
-     *  commit can tell the instruction queue that they have completed.
-     *  Eventually this hack should be removed.
+     *  commit can tell the instruction queue that they have
+     *  completed.  Eventually this hack should be removed.
      */
-    void wakeDependents(DynInstPtr &inst);
+//    void wakeDependents(DynInstPtr &inst);
 
   public:
     /** List of all the instructions in flight. */
@@ -338,12 +333,12 @@ class FullO3CPU : public BaseFullCPU
      */
     std::queue<ListIt> removeList;
 
-//#ifdef DEBUG
+#ifdef DEBUG
     std::set<InstSeqNum> snList;
-//#endif
+#endif
 
-    /** Records if instructions need to be removed this cycle due to being
-     *  retired or squashed.
+    /** Records if instructions need to be removed this cycle due to
+     *  being retired or squashed.
      */
     bool removeInstsThisCycle;
 
@@ -425,46 +420,19 @@ class FullO3CPU : public BaseFullCPU
     /** The IEW stage's instruction queue. */
     TimeBuffer<IEWStruct> iewQueue;
 
-  private:
-    /** Time buffer that tracks if any cycles has active communication in them.
-     *  It should be as long as the longest communication latency in the system.
-     *  Each time any time buffer is written, the activity buffer should also
-     *  be written to. The activityBuffer is advanced along with all the other
-     *  time buffers, so it should always have a 1 somewhere in it only if there
-     *  is active communication in a time buffer.
-     */
-    TimeBuffer<bool> activityBuffer;
-
-    /** Tracks how many stages and cycles of time buffer have activity. Stages
-     *  increment this count when they switch to active, and decrement it when
-     *  they switch to inactive. Whenever a cycle that previously had no
-     *  information is written in the time buffer, this is incremented. When
-     *  a cycle that had information exits the time buffer due to age, this
-     *  count is decremented. When the count is 0, there is no activity in the
-     *  CPU, and it can be descheduled.
-     */
-    int activityCount;
-
-    /** Records if there has been activity this cycle. */
-    bool activity;
-
-    /** Records which stages are active/inactive. */
-    bool stageActive[NumStages];
-
   public:
+    ActivityRecorder activityRec;
+
+    void activityThisCycle() { activityRec.activity(); }
+
+    void activateStage(const StageIdx idx)
+    { activityRec.activateStage(idx); }
+
+    void deactivateStage(const StageIdx idx)
+    { activityRec.deactivateStage(idx); }
+
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
-    /** Records that there is activity this cycle. */
-    void activityThisCycle();
-    /** Advances the activity buffer, decrementing the activityCount if active
-     *  communication just left the time buffer, and descheduling the CPU if
-     *  there is no activity.
-     */
-    void advanceActivityBuffer();
-    /** Marks a stage as active. */
-    void activateStage(const StageIdx idx);
-    /** Deactivates a stage. */
-    void deactivateStage(const StageIdx idx);
 
     /** Gets a free thread id. Use if thread ids change across system. */
     int getFreeTid();
@@ -550,4 +518,4 @@ class FullO3CPU : public BaseFullCPU
     Stats::Formula totalIpc;
 };
 
-#endif
+#endif // __CPU_O3_CPU_HH__

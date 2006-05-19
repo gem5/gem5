@@ -80,6 +80,7 @@ base_sources = Split('''
 	base/stats/visit.cc
 	base/stats/text.cc
 
+        cpu/activity.cc
 	cpu/base.cc
         cpu/base_dyn_inst.cc
 	cpu/cpu_exec_context.cc

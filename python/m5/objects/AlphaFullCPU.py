@@ -3,7 +3,7 @@ from BaseCPU import BaseCPU
 
 class DerivAlphaFullCPU(BaseCPU):
     type = 'DerivAlphaFullCPU'
-
+    activity = Param.Unsigned("Initial count")
     numThreads = Param.Unsigned("number of HW thread contexts")
 
     if not build_env['FULL_SYSTEM']:

@@ -64,6 +64,8 @@ class AlphaSimpleParams : public BaseFullCPU::Params
 
     BaseCPU *checker;
 
+    unsigned activity;
+
     //
     // Caches
     //

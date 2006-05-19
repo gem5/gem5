@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
 #else
 #include "sim/process.hh"
 #endif
-#include "sim/root.hh"
 
+#include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/exec_context.hh"
@@ -42,6 +42,7 @@
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/cpu.hh"
 
+#include "sim/root.hh"
 #include "sim/stat_control.hh"
 
 using namespace std;
@@ -104,16 +105,15 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
                  TheISA::NumMiscRegs * number_of_threads,
                  TheISA::ZeroReg),
 
-      // What to pass to these time buffers?
       // For now just have these time buffers be pretty big.
-      // @todo: Make these time buffer sizes parameters.
+      // @todo: Make these time buffer sizes parameters or derived
+      // from latencies
       timeBuffer(5, 5),
       fetchQueue(5, 5),
       decodeQueue(5, 5),
       renameQueue(5, 5),
       iewQueue(5, 5),
-      activityBuffer(5, 0),
-      activityCount(0),
+      activityRec(NumStages, 10, params->activity),
 
       globalSeqNum(1),
 
@@ -150,9 +150,9 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     tids.resize(number_of_threads);
 #endif
 
-    // The stages also need their CPU pointer setup.  However this must be
-    // done at the upper level CPU because they have pointers to the upper
-    // level CPU, and not this FullO3CPU.
+    // The stages also need their CPU pointer setup.  However this
+    // must be done at the upper level CPU because they have pointers
+    // to the upper level CPU, and not this FullO3CPU.
 
     // Set up Pointers to the activeThreads list for each stage
     fetch.setActiveThreads(&activeThreads);
@@ -207,11 +207,11 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
         commitRenameMap[tid].init(TheISA::NumIntRegs,
                                   params->numPhysIntRegs,
-                                  lreg_idx,                   //Index for Logical. Regs
+                                  lreg_idx,            //Index for Logical. Regs
 
                                   TheISA::NumFloatRegs,
                                   params->numPhysFloatRegs,
-                                  freg_idx,                   //Index for Float Regs
+                                  freg_idx,            //Index for Float Regs
 
                                   TheISA::NumMiscRegs,
 
@@ -223,11 +223,11 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
         renameMap[tid].init(TheISA::NumIntRegs,
                             params->numPhysIntRegs,
-                            lreg_idx,                   //Index for Logical. Regs
+                            lreg_idx,                  //Index for Logical. Regs
 
                             TheISA::NumFloatRegs,
                             params->numPhysFloatRegs,
-                            freg_idx,                   //Index for Float Regs
+                            freg_idx,                  //Index for Float Regs
 
                             TheISA::NumMiscRegs,
 
@@ -257,10 +257,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     commit.setROB(&rob);
 
     lastRunningCycle = curTick;
-
-    for (int i = 0; i < NumStages; ++i) {
-        stageActive[i] = false;
-    }
 
     contextSwitch = false;
 }
@@ -336,7 +332,7 @@ FullO3CPU<Impl>::tick()
 
     ++numCycles;
 
-    activity = false;
+//    activity = false;
 
     //Tick each of the stages
     fetch.tick();
@@ -361,14 +357,22 @@ FullO3CPU<Impl>::tick()
     renameQueue.advance();
     iewQueue.advance();
 
-    advanceActivityBuffer();
+    activityRec.advance();
 
     if (removeInstsThisCycle) {
         cleanUpRemovedInsts();
     }
 
-    if (_status != SwitchedOut && activityCount && !tickEvent.scheduled()) {
-        tickEvent.schedule(curTick + cycles(1));
+    if (!tickEvent.scheduled()) {
+        if (_status == SwitchedOut) {
+            // increment stat
+            lastRunningCycle = curTick;
+        } else if (!activityRec.active()) {
+            lastRunningCycle = curTick;
+            timesIdled++;
+        } else {
+            tickEvent.schedule(curTick + cycles(1));
+        }
     }
 
 #if !FULL_SYSTEM
@@ -592,7 +596,7 @@ FullO3CPU<Impl>::activateContext(int tid, int delay)
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
-    activityThisCycle();
+    activityRec.activity();
     fetch.wakeFromQuiesce();
 
     _status = Running;
@@ -669,13 +673,18 @@ FullO3CPU<Impl>::switchOut(Sampler *_sampler)
     rename.switchOut();
     iew.switchOut();
     commit.switchOut();
+
+    // Wake the CPU and record activity so everything can drain out if
+    // the CPU is currently idle.
+    wakeCPU();
+    activityRec.activity();
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::signalSwitched()
 {
-    if (++switchCount == 5) {
+    if (++switchCount == NumStages) {
         fetch.doSwitchOut();
         rename.doSwitchOut();
         commit.doSwitchOut();
@@ -699,18 +708,16 @@ template <class Impl>
 void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
-    // Flush out any old data from the activity buffers.
-    for (int i = 0; i < 6; ++i) {
+    // Flush out any old data from the time buffers.
+    for (int i = 0; i < 10; ++i) {
         timeBuffer.advance();
         fetchQueue.advance();
         decodeQueue.advance();
         renameQueue.advance();
         iewQueue.advance();
-        activityBuffer.advance();
     }
 
-    activityCount = 0;
-    bzero(&stageActive, sizeof(stageActive));
+    activityRec.reset();
 
     BaseCPU::takeOverFrom(oldCPU);
 
@@ -722,23 +729,23 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     assert(!tickEvent.scheduled());
 
-    // @todo: Figure out how to properly select the tid to put onto the active threads list.
+    // @todo: Figure out how to properly select the tid to put onto
+    // the active threads list.
     int tid = 0;
 
     list<unsigned>::iterator isActive = find(
         activeThreads.begin(), activeThreads.end(), tid);
 
     if (isActive == activeThreads.end()) {
-        //May Need to Re-code this if the delay variable is the
-        //delay needed for thread to activate
+        //May Need to Re-code this if the delay variable is the delay
+        //needed for thread to activate
         DPRINTF(FullCPU, "Adding Thread %i to active threads list\n",
                 tid);
 
         activeThreads.push_back(tid);
     }
 
-    // Set all status's to active, schedule the
-    // CPU's tick event.
+    // Set all statuses to active, schedule the CPU's tick event.
     // @todo: Fix up statuses so this is handled properly
     for (int i = 0; i < execContexts.size(); ++i) {
         ExecContext *xc = execContexts[i];
@@ -850,10 +857,6 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchIntReg(int reg_idx, uint64_t val, unsigned tid)
 {
-    if (reg_idx == TheISA::ZeroReg) {
-        warn("Setting r31 through ArchIntReg in CPU, cycle %i\n", curTick);
-    }
-
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
 
     regFile.setIntReg(phys_reg, val);
@@ -1049,8 +1052,8 @@ FullO3CPU<Impl>::squashInstIt(const ListIt &instIt, const unsigned &tid)
         // Mark it as squashed.
         (*instIt)->setSquashed();
 
-        //@todo: Formulate a consistent method for deleting
-        //instructions from the instruction list
+        // @todo: Formulate a consistent method for deleting
+        // instructions from the instruction list
         // Remove the instruction from the list.
         removeList.push(instIt);
     }
@@ -1074,14 +1077,14 @@ FullO3CPU<Impl>::cleanUpRemovedInsts()
 
     removeInstsThisCycle = false;
 }
-
+/*
 template <class Impl>
 void
 FullO3CPU<Impl>::removeAllInsts()
 {
     instList.clear();
 }
-
+*/
 template <class Impl>
 void
 FullO3CPU<Impl>::dumpInsts()
@@ -1102,96 +1105,28 @@ FullO3CPU<Impl>::dumpInsts()
         ++num;
     }
 }
-
+/*
 template <class Impl>
 void
 FullO3CPU<Impl>::wakeDependents(DynInstPtr &inst)
 {
     iew.wakeDependents(inst);
 }
-
+*/
 template <class Impl>
 void
 FullO3CPU<Impl>::wakeCPU()
 {
-    if (activityCount || tickEvent.scheduled()) {
+    if (activityRec.active() || tickEvent.scheduled()) {
+        DPRINTF(Activity, "CPU already running.\n");
         return;
     }
 
-    idleCycles += curTick - lastRunningCycle;
+    DPRINTF(Activity, "Waking up CPU\n");
+
+    idleCycles += (curTick - 1) - lastRunningCycle;
 
     tickEvent.schedule(curTick);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::activityThisCycle()
-{
-    if (activityBuffer[0]) {
-        return;
-    }
-
-    activityBuffer[0] = true;
-    activity = true;
-    ++activityCount;
-
-    DPRINTF(Activity, "Activity: %i\n", activityCount);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::advanceActivityBuffer()
-{
-    if (activityBuffer[-5]) {
-        --activityCount;
-
-        assert(activityCount >= 0);
-
-        DPRINTF(Activity, "Activity: %i\n", activityCount);
-
-        if (activityCount == 0) {
-            DPRINTF(FullCPU, "No activity left, going to idle!\n");
-            lastRunningCycle = curTick;
-            timesIdled++;
-        }
-    }
-
-    activityBuffer.advance();
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::activateStage(const StageIdx idx)
-{
-    if (!stageActive[idx]) {
-        ++activityCount;
-
-        stageActive[idx] = true;
-
-        DPRINTF(Activity, "Activity: %i\n", activityCount);
-    } else {
-        DPRINTF(Activity, "Stage %i already active.\n", idx);
-    }
-
-    // @todo: Number is hardcoded for now.  Replace with parameter.
-    assert(activityCount < 15);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::deactivateStage(const StageIdx idx)
-{
-    if (stageActive[idx]) {
-        --activityCount;
-
-        stageActive[idx] = false;
-
-        DPRINTF(Activity, "Activity: %i\n", activityCount);
-    } else {
-        DPRINTF(Activity, "Stage %i already inactive.\n", idx);
-    }
-
-    assert(activityCount >= 0);
 }
 
 template <class Impl>
