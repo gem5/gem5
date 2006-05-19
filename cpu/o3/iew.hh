@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,20 +41,23 @@
 class FUPool;
 
 /**
- * DefaultIEW handles both single threaded and SMT IEW(issue/execute/writeback).
- * It handles the dispatching of instructions to the LSQ/IQ as part of the issue
- * stage, and has the IQ try to issue instructions each cycle. The execute
- * latency is actually tied into the issue latency to allow the IQ to be able to
+ * DefaultIEW handles both single threaded and SMT IEW
+ * (issue/execute/writeback).  It handles the dispatching of
+ * instructions to the LSQ/IQ as part of the issue stage, and has the
+ * IQ try to issue instructions each cycle. The execute latency is
+ * actually tied into the issue latency to allow the IQ to be able to
  * do back-to-back scheduling without having to speculatively schedule
- * instructions. This happens by having the IQ have access to the functional
- * units, and the IQ gets the execution latencies from the FUs when it issues
- * instructions. Instructions reach the execute stage on the last cycle of
- * their execution, which is when the IQ knows to wake up any dependent
- * instructions, allowing back to back scheduling. The execute portion of IEW
- * separates memory instructions from non-memory instructions, either telling
- * the LSQ to execute the instruction, or executing the instruction directly.
- * The writeback portion of IEW completes the instructions by waking up any
- * dependents, and marking the register ready on the scoreboard.
+ * instructions. This happens by having the IQ have access to the
+ * functional units, and the IQ gets the execution latencies from the
+ * FUs when it issues instructions. Instructions reach the execute
+ * stage on the last cycle of their execution, which is when the IQ
+ * knows to wake up any dependent instructions, allowing back to back
+ * scheduling. The execute portion of IEW separates memory
+ * instructions from non-memory instructions, either telling the LSQ
+ * to execute the instruction, or executing the instruction directly.
+ * The writeback portion of IEW completes the instructions by waking
+ * up any dependents, and marking the register ready on the
+ * scoreboard.
  */
 template<class Impl>
 class DefaultIEW
@@ -214,10 +217,8 @@ class DefaultIEW
     /** Tells CPU that the IEW stage is inactive and idle. */
     inline void deactivateStage();
 
-//#if !FULL_SYSTEM
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
-//#endif
 
   private:
     /** Sends commit proper information for a squash due to a branch
@@ -469,10 +470,10 @@ class DefaultIEW
     /** Stat for total number of mispredicted branches detected at execute. */
     Stats::Formula branchMispredicts;
 
-    Stats::Vector<> exe_swp;
-    Stats::Vector<> exe_nop;
-    Stats::Vector<> exe_refs;
-    Stats::Vector<> exe_branches;
+    Stats::Vector<> exeSwp;
+    Stats::Vector<> exeNop;
+    Stats::Vector<> exeRefs;
+    Stats::Vector<> exeBranches;
 
 //    Stats::Vector<> issued_ops;
 /*
@@ -481,20 +482,20 @@ class DefaultIEW
     Stats::Vector<> dist_unissued;
     Stats::Vector2d<> stat_issued_inst_type;
 */
-    Stats::Formula issue_rate;
+    Stats::Formula issueRate;
     Stats::Formula iewExecStoreInsts;
 //    Stats::Formula issue_op_rate;
 //    Stats::Formula fu_busy_rate;
 
     Stats::Vector<> iewInstsToCommit;
-    Stats::Vector<> writeback_count;
-    Stats::Vector<> producer_inst;
-    Stats::Vector<> consumer_inst;
-    Stats::Vector<> wb_penalized;
+    Stats::Vector<> writebackCount;
+    Stats::Vector<> producerInst;
+    Stats::Vector<> consumerInst;
+    Stats::Vector<> wbPenalized;
 
-    Stats::Formula wb_rate;
-    Stats::Formula wb_fanout;
-    Stats::Formula wb_penalized_rate;
+    Stats::Formula wbRate;
+    Stats::Formula wbFanout;
+    Stats::Formula wbPenalizedRate;
 };
 
 #endif // __CPU_O3_IEW_HH__

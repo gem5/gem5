@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Todo:
-// Current ordering allows for 0 cycle added-to-scheduled.  Could maybe fake
-// it; either do in reverse order, or have added instructions put into a
-// different ready queue that, in scheduleRreadyInsts(), gets put onto the
-// normal ready queue.  This would however give only a one cycle delay,
-// but probably is more flexible to actually add in a delay parameter than
-// just running it backwards.
-
 #include <limits>
 #include <vector>
 
@@ -49,7 +41,7 @@ InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
                                                    int fu_idx,
                                                    InstructionQueue<Impl> *iq_ptr)
     : Event(&mainEventQueue, Stat_Event_Pri),
-      inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr)
+      inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr), freeFU(false)
 {
     this->setFlags(Event::AutoDelete);
 }
@@ -58,7 +50,7 @@ template <class Impl>
 void
 InstructionQueue<Impl>::FUCompletion::process()
 {
-    iqPtr->processFUCompletion(inst, fuIdx);
+    iqPtr->processFUCompletion(inst, freeFU ? fuIdx : -1);
     inst = NULL;
 }
 
@@ -93,14 +85,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
 
     //Create an entry for each physical register within the
     //dependency graph.
-    dependGraph = new DependencyEntry[numPhysRegs];
-
-    // Initialize all the head pointers to point to NULL, and all the
-    // entries as unready.
-    for (int i = 0; i < numPhysRegs; ++i) {
-        dependGraph[i].next = NULL;
-        dependGraph[i].inst = NULL;
-    }
+    dependGraph.resize(numPhysRegs);
 
     // Resize the register scoreboard.
     regScoreboard.resize(numPhysRegs);
@@ -165,10 +150,9 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
 template <class Impl>
 InstructionQueue<Impl>::~InstructionQueue()
 {
-    resetDependencyGraph();
-    assert(DependencyEntry::mem_alloc_counter == 0);
-
-    delete [] dependGraph;
+    dependGraph.reset();
+    cprintf("Nodes traversed: %i, removed: %i\n",
+            dependGraph.nodesTraversed, dependGraph.nodesRemoved);
 }
 
 template <class Impl>
@@ -193,8 +177,6 @@ InstructionQueue<Impl>::regStats()
         .desc("Number of non-speculative instructions added to the IQ")
         .prereq(iqNonSpecInstsAdded);
 
-//    iqIntInstsAdded;
-
     iqInstsIssued
         .name(name() + ".iqInstsIssued")
         .desc("Number of instructions issued")
@@ -205,28 +187,20 @@ InstructionQueue<Impl>::regStats()
         .desc("Number of integer instructions issued")
         .prereq(iqIntInstsIssued);
 
-//    iqFloatInstsAdded;
-
     iqFloatInstsIssued
         .name(name() + ".iqFloatInstsIssued")
         .desc("Number of float instructions issued")
         .prereq(iqFloatInstsIssued);
-
-//    iqBranchInstsAdded;
 
     iqBranchInstsIssued
         .name(name() + ".iqBranchInstsIssued")
         .desc("Number of branch instructions issued")
         .prereq(iqBranchInstsIssued);
 
-//    iqMemInstsAdded;
-
     iqMemInstsIssued
         .name(name() + ".iqMemInstsIssued")
         .desc("Number of memory instructions issued")
         .prereq(iqMemInstsIssued);
-
-//    iqMiscInstsAdded;
 
     iqMiscInstsIssued
         .name(name() + ".iqMiscInstsIssued")
@@ -255,16 +229,16 @@ InstructionQueue<Impl>::regStats()
         .desc("Number of squashed non-spec instructions that were removed")
         .prereq(iqSquashedNonSpecRemoved);
 
-    queue_res_dist
+    queueResDist
         .init(Num_OpClasses, 0, 99, 2)
         .name(name() + ".IQ:residence:")
         .desc("cycles from dispatch to issue")
         .flags(total | pdf | cdf )
         ;
     for (int i = 0; i < Num_OpClasses; ++i) {
-        queue_res_dist.subname(i, opClassStrings[i]);
+        queueResDist.subname(i, opClassStrings[i]);
     }
-    n_issued_dist
+    numIssuedDist
         .init(0,totalWidth,1)
         .name(name() + ".ISSUE:issued_per_cycle")
         .desc("Number of insts issued each cycle")
@@ -281,19 +255,19 @@ InstructionQueue<Impl>::regStats()
         dist_unissued.subname(i, unissued_names[i]);
     }
 */
-    stat_issued_inst_type
+    statIssuedInstType
         .init(numThreads,Num_OpClasses)
         .name(name() + ".ISSUE:FU_type")
         .desc("Type of FU issued")
         .flags(total | pdf | dist)
         ;
-    stat_issued_inst_type.ysubnames(opClassStrings);
+    statIssuedInstType.ysubnames(opClassStrings);
 
     //
     //  How long did instructions for a particular FU type wait prior to issue
     //
 
-    issue_delay_dist
+    issueDelayDist
         .init(Num_OpClasses,0,99,2)
         .name(name() + ".ISSUE:")
         .desc("cycles from operands ready to issue")
@@ -303,15 +277,15 @@ InstructionQueue<Impl>::regStats()
     for (int i=0; i<Num_OpClasses; ++i) {
         stringstream subname;
         subname << opClassStrings[i] << "_delay";
-        issue_delay_dist.subname(i, subname.str());
+        issueDelayDist.subname(i, subname.str());
     }
 
-    issue_rate
+    issueRate
         .name(name() + ".ISSUE:rate")
         .desc("Inst issue rate")
         .flags(total)
         ;
-    issue_rate = iqInstsIssued / cpu->numCycles;
+    issueRate = iqInstsIssued / cpu->numCycles;
 /*
     issue_stores
         .name(name() + ".ISSUE:stores")
@@ -328,29 +302,29 @@ InstructionQueue<Impl>::regStats()
         ;
     issue_op_rate = issued_ops / numCycles;
 */
-    stat_fu_busy
+    statFuBusy
         .init(Num_OpClasses)
         .name(name() + ".ISSUE:fu_full")
         .desc("attempts to use FU when none available")
         .flags(pdf | dist)
         ;
     for (int i=0; i < Num_OpClasses; ++i) {
-        stat_fu_busy.subname(i, opClassStrings[i]);
+        statFuBusy.subname(i, opClassStrings[i]);
     }
 
-    fu_busy
+    fuBusy
         .init(numThreads)
         .name(name() + ".ISSUE:fu_busy_cnt")
         .desc("FU busy when requested")
         .flags(total)
         ;
 
-    fu_busy_rate
+    fuBusyRate
         .name(name() + ".ISSUE:fu_busy_rate")
         .desc("FU busy rate (busy events/executed inst)")
         .flags(total)
         ;
-    fu_busy_rate = fu_busy / iqInstsIssued;
+    fuBusyRate = fuBusy / iqInstsIssued;
 
     for ( int i=0; i < numThreads; i++) {
         // Tell mem dependence unit to reg stats as well.
@@ -396,35 +370,6 @@ InstructionQueue<Impl>::resetState()
 
 template <class Impl>
 void
-InstructionQueue<Impl>::resetDependencyGraph()
-{
-    // Clear the dependency graph
-    DependencyEntry *curr;
-    DependencyEntry *prev;
-
-    for (int i = 0; i < numPhysRegs; ++i) {
-        curr = dependGraph[i].next;
-
-        while (curr) {
-            DependencyEntry::mem_alloc_counter--;
-
-            prev = curr;
-            curr = prev->next;
-            prev->inst = NULL;
-
-            delete prev;
-        }
-
-        if (dependGraph[i].inst) {
-            dependGraph[i].inst = NULL;
-        }
-
-        dependGraph[i].next = NULL;
-    }
-}
-
-template <class Impl>
-void
 InstructionQueue<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 {
     DPRINTF(IQ, "Setting active threads list pointer.\n");
@@ -454,7 +399,7 @@ void
 InstructionQueue<Impl>::switchOut()
 {
     resetState();
-    resetDependencyGraph();
+    dependGraph.reset();
     switchedOut = true;
     for (int i = 0; i < numThreads; ++i) {
         memDepUnit[i].switchOut();
@@ -562,20 +507,15 @@ InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
     // Make sure the instruction is valid
     assert(new_inst);
 
-    DPRINTF(IQ, "Adding instruction PC %#x to the IQ.\n",
-            new_inst->readPC());
+    DPRINTF(IQ, "Adding instruction [sn:%lli] PC %#x to the IQ.\n",
+            new_inst->seqNum, new_inst->readPC());
 
-    // Check if there are any free entries.  Panic if there are none.
-    // Might want to have this return a fault in the future instead of
-    // panicing.
     assert(freeEntries != 0);
 
     instList[new_inst->threadNumber].push_back(new_inst);
 
-    // Decrease the number of free entries.
     --freeEntries;
 
-    //Mark Instruction as in IQ
     new_inst->setInIQ();
 
     // Look through its source registers (physical regs), and mark any
@@ -584,21 +524,16 @@ InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
 
     // Have this instruction set itself as the producer of its destination
     // register(s).
-    createDependency(new_inst);
+    addToProducers(new_inst);
 
-    // If it's a memory instruction, add it to the memory dependency
-    // unit.
     if (new_inst->isMemRef()) {
         memDepUnit[new_inst->threadNumber].insert(new_inst);
     } else {
-        // If the instruction is ready then add it to the ready list.
         addIfReady(new_inst);
     }
 
     ++iqInstsAdded;
 
-
-    //Update Thread IQ Count
     count[new_inst->threadNumber]++;
 
     assert(freeEntries == (numEntries - countInsts()));
@@ -611,30 +546,25 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
     // @todo: Clean up this code; can do it by setting inst as unable
     // to issue, then calling normal insert on the inst.
 
-    // Make sure the instruction is valid
     assert(new_inst);
 
     nonSpecInsts[new_inst->seqNum] = new_inst;
 
-    DPRINTF(IQ, "Adding instruction PC %#x to the IQ.\n",
-            new_inst->readPC());
+    DPRINTF(IQ, "Adding non-speculative instruction [sn:%lli] PC %#x "
+            "to the IQ.\n",
+            new_inst->seqNum, new_inst->readPC());
 
-    // Check if there are any free entries.  Panic if there are none.
-    // Might want to have this return a fault in the future instead of
-    // panicing.
     assert(freeEntries != 0);
 
     instList[new_inst->threadNumber].push_back(new_inst);
 
-    // Decrease the number of free entries.
     --freeEntries;
 
-    //Mark Instruction as in IQ
     new_inst->setInIQ();
 
     // Have this instruction set itself as the producer of its destination
     // register(s).
-    createDependency(new_inst);
+    addToProducers(new_inst);
 
     // If it's a memory instruction, add it to the memory dependency
     // unit.
@@ -644,7 +574,6 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
 
     ++iqNonSpecInstsAdded;
 
-    //Update Thread IQ Count
     count[new_inst->threadNumber]++;
 
     assert(freeEntries == (numEntries - countInsts()));
@@ -657,15 +586,6 @@ InstructionQueue<Impl>::insertBarrier(DynInstPtr &barr_inst)
     memDepUnit[barr_inst->threadNumber].insertBarrier(barr_inst);
 
     insertNonSpec(barr_inst);
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::advanceTail(DynInstPtr &inst)
-{
-    // Have this instruction set itself as the producer of its destination
-    // register(s).
-    createDependency(inst);
 }
 
 template <class Impl>
@@ -733,8 +653,15 @@ InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
 
     iewStage->wakeCPU();
 
-    fuPool->freeUnit(fu_idx);
+    if (fu_idx > -1)
+        fuPool->freeUnitNextCycle(fu_idx);
 
+    // @todo: Ensure that these FU Completions happen at the beginning
+    // of a cycle, otherwise they could add too many instructions to
+    // the queue.
+    // @todo: This could break if there's multiple multi-cycle ops
+    // finishing on this cycle.  Maybe implement something like
+    // instToCommit in iew_impl.hh.
     int &size = issueToExecuteQueue->access(0)->size;
 
     issueToExecuteQueue->access(0)->insts[size++] = inst;
@@ -752,20 +679,6 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
     IssueStruct *i2e_info = issueToExecuteQueue->access(0);
 
-    // Will need to reorder the list if either a queue is not on the list,
-    // or it has an older instruction than last time.
-    for (int i = 0; i < Num_OpClasses; ++i) {
-        if (!readyInsts[i].empty()) {
-            if (!queueOnList[i]) {
-                addToOrderList(OpClass(i));
-            } else if (readyInsts[i].top()->seqNum  <
-                       (*readyIt[i]).oldestInst) {
-                listOrder.erase(readyIt[i]);
-                addToOrderList(OpClass(i));
-            }
-        }
-    }
-
     // Have iterator to head of the list
     // While I haven't exceeded bandwidth or reached the end of the list,
     // Try to get a FU that can do what this op needs.
@@ -779,7 +692,8 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     int total_issued = 0;
     int exec_queue_slot = i2e_info->size;
 
-    while (exec_queue_slot < totalWidth && order_it != order_end_it) {
+    while (exec_queue_slot < totalWidth && total_issued < totalWidth &&
+           order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
 
         assert(!readyInsts[op_class].empty());
@@ -805,70 +719,47 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             continue;
         }
 
-        int idx = fuPool->getUnit(op_class);
-
+        int idx = -2;
+        int op_latency = 1;
         int tid = issuing_inst->threadNumber;
 
-        if (idx == -2) {
-            assert(op_class == No_OpClass);
+        if (op_class != No_OpClass) {
+            idx = fuPool->getUnit(op_class);
 
-            i2e_info->insts[exec_queue_slot++] = issuing_inst;
-            i2e_info->size++;
-
-            DPRINTF(IQ, "Thread %i: Issuing instruction PC that needs no FU"
-                    " %#x [sn:%lli]\n",
-                    tid, issuing_inst->readPC(),
-                    issuing_inst->seqNum);
-
-            readyInsts[op_class].pop();
-
-            if (!readyInsts[op_class].empty()) {
-                moveToYoungerInst(order_it);
-            } else {
-                readyIt[op_class] = listOrder.end();
-                queueOnList[op_class] = false;
+            if (idx > -1) {
+                op_latency = fuPool->getOpLatency(op_class);
             }
+        }
 
-            issuing_inst->setIssued();
-            ++total_issued;
-
-            if (!issuing_inst->isMemRef()) {
-                // Memory instructions can not be freed from the IQ until they
-                // complete.
-                ++freeEntries;
-                count[tid]--;
-                issuing_inst->removeInIQ();
-            } else {
-                memDepUnit[tid].issue(issuing_inst);
-            }
-
-            listOrder.erase(order_it++);
-
-            stat_issued_inst_type[tid][op_class]++;
-        } else if (idx != -1) {
-            int op_latency = fuPool->getOpLatency(op_class);
-
+        if (idx == -2 || idx != -1) {
             if (op_latency == 1) {
                 i2e_info->insts[exec_queue_slot++] = issuing_inst;
                 i2e_info->size++;
 
-                // Add the FU onto the list of FU's to be freed next cycle.
-                fuPool->freeUnit(idx);
+                // Add the FU onto the list of FU's to be freed next
+                // cycle if we used one.
+                if (idx >= 0)
+                    fuPool->freeUnitNextCycle(idx);
             } else {
                 int issue_latency = fuPool->getIssueLatency(op_class);
+                // Generate completion event for the FU
+                FUCompletion *execution = new FUCompletion(issuing_inst,
+                                                           idx, this);
 
+                execution->schedule(curTick + cpu->cycles(issue_latency - 1));
+
+                // @todo: Enforce that issue_latency == 1 or op_latency
                 if (issue_latency > 1) {
-                    // Generate completion event for the FU
-                    FUCompletion *execution = new FUCompletion(issuing_inst,
-                                                               idx, this);
-
-                    execution->schedule(curTick + cpu->cycles(issue_latency - 1));
+                    execution->setFreeFU();
                 } else {
-                    i2e_info->insts[exec_queue_slot++] = issuing_inst;
-                    i2e_info->size++;
+                    // @todo: Not sure I'm accounting for the
+                    // multi-cycle op in a pipelined FU properly, or
+                    // the number of instructions issued in one cycle.
+//                    i2e_info->insts[exec_queue_slot++] = issuing_inst;
+//                    i2e_info->size++;
 
                     // Add the FU onto the list of FU's to be freed next cycle.
-                    fuPool->freeUnit(idx);
+                    fuPool->freeUnitNextCycle(idx);
                 }
             }
 
@@ -900,15 +791,16 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             }
 
             listOrder.erase(order_it++);
-            stat_issued_inst_type[tid][op_class]++;
+            statIssuedInstType[tid][op_class]++;
         } else {
-            stat_fu_busy[op_class]++;
-            fu_busy[tid]++;
+            statFuBusy[op_class]++;
+            fuBusy[tid]++;
             ++order_it;
         }
     }
 
-    n_issued_dist.sample(total_issued);
+    numIssuedDist.sample(total_issued);
+    iqInstsIssued+= total_issued;
 
     if (total_issued) {
         cpu->activityThisCycle();
@@ -930,10 +822,8 @@ InstructionQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
 
     unsigned tid = (*inst_it).second->threadNumber;
 
-    // Mark this instruction as ready to issue.
     (*inst_it).second->setCanIssue();
 
-    // Now schedule the instruction.
     if (!(*inst_it).second->isMemRef()) {
         addIfReady((*inst_it).second);
     } else {
@@ -949,7 +839,6 @@ template <class Impl>
 void
 InstructionQueue<Impl>::commit(const InstSeqNum &inst, unsigned tid)
 {
-    /*Need to go through each thread??*/
     DPRINTF(IQ, "[tid:%i]: Committing instructions older than [sn:%i]\n",
             tid,inst);
 
@@ -973,18 +862,13 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
     DPRINTF(IQ, "Waking dependents of completed instruction.\n");
 
     assert(!completed_inst->isSquashed());
-    // Look at the physical destination register of the DynInst
-    // and look it up on the dependency graph.  Then mark as ready
-    // any instructions within the instruction queue.
-    DependencyEntry *curr;
-    DependencyEntry *prev;
 
     // Tell the memory dependence unit to wake any dependents on this
     // instruction if it is a memory instruction.  Also complete the memory
-    // instruction at this point since we know it executed fine.
-    // @todo: Might want to rename "completeMemInst" to
-    // something that indicates that it won't need to be replayed, and call
-    // this earlier.  Might not be a big deal.
+    // instruction at this point since we know it executed without issues.
+    // @todo: Might want to rename "completeMemInst" to something that
+    // indicates that it won't need to be replayed, and call this
+    // earlier.  Might not be a big deal.
     if (completed_inst->isMemRef()) {
         memDepUnit[completed_inst->threadNumber].wakeDependents(completed_inst);
         completeMemInst(completed_inst);
@@ -1010,39 +894,31 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
         DPRINTF(IQ, "Waking any dependents on register %i.\n",
                 (int) dest_reg);
 
-        //Maybe abstract this part into a function.
-        //Go through the dependency chain, marking the registers as ready
-        //within the waiting instructions.
+        //Go through the dependency chain, marking the registers as
+        //ready within the waiting instructions.
+        DynInstPtr dep_inst = dependGraph.pop(dest_reg);
 
-        curr = dependGraph[dest_reg].next;
-
-        while (curr) {
+        while (dep_inst) {
             DPRINTF(IQ, "Waking up a dependent instruction, PC%#x.\n",
-                    curr->inst->readPC());
+                    dep_inst->readPC());
 
             // Might want to give more information to the instruction
-            // so that it knows which of its source registers is ready.
-            // However that would mean that the dependency graph entries
-            // would need to hold the src_reg_idx.
-            curr->inst->markSrcRegReady();
+            // so that it knows which of its source registers is
+            // ready.  However that would mean that the dependency
+            // graph entries would need to hold the src_reg_idx.
+            dep_inst->markSrcRegReady();
 
-            addIfReady(curr->inst);
+            addIfReady(dep_inst);
 
-            DependencyEntry::mem_alloc_counter--;
-
-            prev = curr;
-            curr = prev->next;
-            prev->inst = NULL;
+            dep_inst = dependGraph.pop(dest_reg);
 
             ++dependents;
-
-            delete prev;
         }
 
-        // Reset the head node now that all of its dependents have been woken
-        // up.
-        dependGraph[dest_reg].next = NULL;
-        dependGraph[dest_reg].inst = NULL;
+        // Reset the head node now that all of its dependents have
+        // been woken up.
+        assert(dependGraph.empty(dest_reg));
+        dependGraph.clearInst(dest_reg);
 
         // Mark the scoreboard as having that register ready.
         regScoreboard[dest_reg] = true;
@@ -1057,6 +933,16 @@ InstructionQueue<Impl>::addReadyMemInst(DynInstPtr &ready_inst)
     OpClass op_class = ready_inst->opClass();
 
     readyInsts[op_class].push(ready_inst);
+
+    // Will need to reorder the list if either a queue is not on the list,
+    // or it has an older instruction than last time.
+    if (!queueOnList[op_class]) {
+        addToOrderList(op_class);
+    } else if (readyInsts[op_class].top()->seqNum  <
+               (*readyIt[op_class]).oldestInst) {
+        listOrder.erase(readyIt[op_class]);
+        addToOrderList(op_class);
+    }
 
     DPRINTF(IQ, "Instruction is ready to issue, putting it onto "
             "the ready list, PC %#x opclass:%i [sn:%lli].\n",
@@ -1114,10 +1000,6 @@ InstructionQueue<Impl>::squash(unsigned tid)
     // time buffer.
     squashedSeqNum[tid] = fromCommit->commitInfo[tid].doneSeqNum;
 
-    // Setup the squash iterator to point to the tail.
-    squashIt[tid] = instList[tid].end();
-    --squashIt[tid];
-
     // Call doSquash if there are insts in the IQ
     if (count[tid] > 0) {
         doSquash(tid);
@@ -1131,24 +1013,25 @@ template <class Impl>
 void
 InstructionQueue<Impl>::doSquash(unsigned tid)
 {
-    // Make sure the squashed sequence number is valid.
-//    assert(squashedSeqNum[tid] != 0);
+    // Start at the tail.
+    ListIt squash_it = instList[tid].end();
+    --squash_it;
 
     DPRINTF(IQ, "[tid:%i]: Squashing until sequence number %i!\n",
             tid, squashedSeqNum[tid]);
 
     // Squash any instructions younger than the squashed sequence number
     // given.
-    while (squashIt[tid] != instList[tid].end() &&
-           (*squashIt[tid])->seqNum > squashedSeqNum[tid]) {
+    while (squash_it != instList[tid].end() &&
+           (*squash_it)->seqNum > squashedSeqNum[tid]) {
 
-        DynInstPtr squashed_inst = (*squashIt[tid]);
+        DynInstPtr squashed_inst = (*squash_it);
 
         // Only handle the instruction if it actually is in the IQ and
         // hasn't already been squashed in the IQ.
         if (squashed_inst->threadNumber != tid ||
             squashed_inst->isSquashedInIQ()) {
-            --squashIt[tid];
+            --squash_it;
             continue;
         }
 
@@ -1168,27 +1051,23 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
                     PhysRegIndex src_reg =
                         squashed_inst->renamedSrcRegIdx(src_reg_idx);
 
-                    // Only remove it from the dependency graph if it was
-                    // placed there in the first place.
-                    // HACK: This assumes that instructions woken up from the
-                    // dependency chain aren't informed that a specific src
-                    // register has become ready.  This may not always be true
-                    // in the future.
-                    // Instead of doing a linked list traversal, we can just
-                    // remove these squashed instructions either at issue time,
-                    // or when the register is overwritten.  The only downside
-                    // to this is it leaves more room for error.
+                    // Only remove it from the dependency graph if it
+                    // was placed there in the first place.
+
+                    // Instead of doing a linked list traversal, we
+                    // can just remove these squashed instructions
+                    // either at issue time, or when the register is
+                    // overwritten.  The only downside to this is it
+                    // leaves more room for error.
 
                     if (!squashed_inst->isReadySrcRegIdx(src_reg_idx) &&
                         src_reg < numPhysRegs) {
-                        dependGraph[src_reg].remove(squashed_inst);
+                        dependGraph.remove(src_reg, squashed_inst);
                     }
 
 
                     ++iqSquashedOperandsExamined;
                 }
-
-                // Might want to remove producers as well.
             } else {
                 NonSpecMapIt ns_inst_it =
                     nonSpecInsts.find(squashed_inst->seqNum);
@@ -1217,72 +1096,14 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
 
             ++freeEntries;
 
-            if (numThreads > 1) {
-                DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %#x "
-                        "squashed.\n",
-                        tid, squashed_inst->seqNum, squashed_inst->readPC());
-            } else {
-                DPRINTF(IQ, "Instruction [sn:%lli] PC %#x squashed.\n",
-                        squashed_inst->seqNum, squashed_inst->readPC());
-            }
+            DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %#x "
+                    "squashed.\n",
+                    tid, squashed_inst->seqNum, squashed_inst->readPC());
         }
 
-        instList[tid].erase(squashIt[tid]--);
+        instList[tid].erase(squash_it--);
         ++iqSquashedInstsExamined;
     }
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::DependencyEntry::insert(DynInstPtr &new_inst)
-{
-    //Add this new, dependent instruction at the head of the dependency
-    //chain.
-
-    // First create the entry that will be added to the head of the
-    // dependency chain.
-    DependencyEntry *new_entry = new DependencyEntry;
-    new_entry->next = this->next;
-    new_entry->inst = new_inst;
-
-    // Then actually add it to the chain.
-    this->next = new_entry;
-
-    ++mem_alloc_counter;
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::DependencyEntry::remove(DynInstPtr &inst_to_remove)
-{
-    DependencyEntry *prev = this;
-    DependencyEntry *curr = this->next;
-
-    // Make sure curr isn't NULL.  Because this instruction is being
-    // removed from a dependency list, it must have been placed there at
-    // an earlier time.  The dependency chain should not be empty,
-    // unless the instruction dependent upon it is already ready.
-    if (curr == NULL) {
-        return;
-    }
-
-    // Find the instruction to remove within the dependency linked list.
-    while (curr->inst != inst_to_remove) {
-        prev = curr;
-        curr = curr->next;
-
-        assert(curr != NULL);
-    }
-
-    // Now remove this instruction from the list.
-    prev->next = curr->next;
-
-    --mem_alloc_counter;
-
-    // Could push this off to the destructor of DependencyEntry
-    curr->inst = NULL;
-
-    delete curr;
 }
 
 template <class Impl>
@@ -1313,7 +1134,7 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
                         "is being added to the dependency chain.\n",
                         new_inst->readPC(), src_reg);
 
-                dependGraph[src_reg].insert(new_inst);
+                dependGraph.insert(src_reg, new_inst);
 
                 // Change the return value to indicate that something
                 // was added to the dependency graph.
@@ -1323,7 +1144,7 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
                         "became ready before it reached the IQ.\n",
                         new_inst->readPC(), src_reg);
                 // Mark a register ready within the instruction.
-                new_inst->markSrcRegReady();
+                new_inst->markSrcRegReady(src_reg_idx);
             }
         }
     }
@@ -1333,12 +1154,12 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::createDependency(DynInstPtr &new_inst)
+InstructionQueue<Impl>::addToProducers(DynInstPtr &new_inst)
 {
-    //Actually nothing really needs to be marked when an
-    //instruction becomes the producer of a register's value,
-    //but for convenience a ptr to the producing instruction will
-    //be placed in the head node of the dependency links.
+    // Nothing really needs to be marked when an instruction becomes
+    // the producer of a register's value, but for convenience a ptr
+    // to the producing instruction will be placed in the head node of
+    // the dependency links.
     int8_t total_dest_regs = new_inst->numDestRegs();
 
     for (int dest_reg_idx = 0;
@@ -1355,12 +1176,12 @@ InstructionQueue<Impl>::createDependency(DynInstPtr &new_inst)
             continue;
         }
 
-        if (dependGraph[dest_reg].next) {
-            dumpDependGraph();
+        if (!dependGraph.empty(dest_reg)) {
+            dependGraph.dump();
             panic("Dependency graph %i not empty!", dest_reg);
         }
 
-        dependGraph[dest_reg].inst = new_inst;
+        dependGraph.setInst(dest_reg, new_inst);
 
         // Mark the scoreboard to say it's not yet ready.
         regScoreboard[dest_reg] = false;
@@ -1371,7 +1192,7 @@ template <class Impl>
 void
 InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
 {
-    //If the instruction now has all of its source registers
+    // If the instruction now has all of its source registers
     // available, then add it to the list of ready instructions.
     if (inst->readyToIssue()) {
 
@@ -1382,7 +1203,6 @@ InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
 
             // Message to the mem dependence unit that this instruction has
             // its registers ready.
-
             memDepUnit[inst->threadNumber].regsReady(inst);
 
             return;
@@ -1395,6 +1215,16 @@ InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
                 inst->readPC(), op_class, inst->seqNum);
 
         readyInsts[op_class].push(inst);
+
+        // Will need to reorder the list if either a queue is not on the list,
+        // or it has an older instruction than last time.
+        if (!queueOnList[op_class]) {
+            addToOrderList(op_class);
+        } else if (readyInsts[op_class].top()->seqNum  <
+                   (*readyIt[op_class]).oldestInst) {
+            listOrder.erase(readyIt[op_class]);
+            addToOrderList(op_class);
+        }
     }
 }
 
@@ -1432,34 +1262,6 @@ InstructionQueue<Impl>::countInsts()
 #else
     return numEntries - freeEntries;
 #endif
-}
-
-template <class Impl>
-void
-InstructionQueue<Impl>::dumpDependGraph()
-{
-    DependencyEntry *curr;
-
-    for (int i = 0; i < numPhysRegs; ++i)
-    {
-        curr = &dependGraph[i];
-
-        if (curr->inst) {
-            cprintf("dependGraph[%i]: producer: %#x [sn:%lli] consumer: ",
-                    i, curr->inst->readPC(), curr->inst->seqNum);
-        } else {
-            cprintf("dependGraph[%i]: No producer. consumer: ", i);
-        }
-
-        while (curr->next != NULL) {
-            curr = curr->next;
-
-            cprintf("%#x [sn:%lli] ",
-                    curr->inst->readPC(), curr->inst->seqNum);
-        }
-
-        cprintf("\n");
-    }
 }
 
 template <class Impl>
@@ -1524,8 +1326,8 @@ InstructionQueue<Impl>::dumpInsts()
                     cprintf("Count:%i\n", valid_num);
                 } else if ((*inst_list_it)->isMemRef() &&
                            !(*inst_list_it)->memOpDone) {
-                    // Loads that have not been marked as executed still count
-                    // towards the total instructions.
+                    // Loads that have not been marked as executed
+                    // still count towards the total instructions.
                     ++valid_num;
                     cprintf("Count:%i\n", valid_num);
                 }

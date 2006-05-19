@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/dep_graph.hh"
 #include "encumbered/cpu/full/op_class.hh"
 #include "sim/host.hh"
 
@@ -91,6 +92,8 @@ class InstructionQueue
         /** Pointer back to the instruction queue. */
         InstructionQueue<Impl> *iqPtr;
 
+        bool freeFU;
+
       public:
         /** Construct a FU completion event. */
         FUCompletion(DynInstPtr &_inst, int fu_idx,
@@ -98,6 +101,7 @@ class InstructionQueue
 
         virtual void process();
         virtual const char *description();
+        void setFreeFU() { freeFU = true; }
     };
 
     /** Constructs an IQ. */
@@ -113,8 +117,6 @@ class InstructionQueue
     void regStats();
 
     void resetState();
-
-    void resetDependencyGraph();
 
     /** Sets CPU pointer. */
     void setCPU(FullCPU *_cpu) { cpu = _cpu; }
@@ -170,11 +172,11 @@ class InstructionQueue
     void insertBarrier(DynInstPtr &barr_inst);
 
     /**
-     * Advances the tail of the IQ, used if an instruction is not added to the
-     * IQ for scheduling.
-     * @todo: Rename this function.
+     * Records the instruction as the producer of a register without
+     * adding it to the rest of the IQ.
      */
-    void advanceTail(DynInstPtr &inst);
+    void recordProducer(DynInstPtr &inst)
+    { addToProducers(inst); }
 
     /** Process FU completion event. */
     void processFUCompletion(DynInstPtr &inst, int fu_idx);
@@ -223,9 +225,6 @@ class InstructionQueue
 
     /** Returns the number of used entries for a thread. */
     unsigned getCount(unsigned tid) { return count[tid]; };
-
-    /** Updates the number of free entries. */
-    void updateFreeEntries(int num) { freeEntries += num; }
 
     /** Debug function to print all instructions. */
     void printInsts();
@@ -286,15 +285,6 @@ class InstructionQueue
         }
     };
 
-    /**
-     * Struct for an IQ entry. It includes the instruction and an iterator
-     * to the instruction's spot in the IQ.
-     */
-    struct IQEntry {
-        DynInstPtr inst;
-        ListIt iqIt;
-    };
-
     typedef std::priority_queue<DynInstPtr, std::vector<DynInstPtr>, pqCompare>
     ReadyInstQueue;
 
@@ -309,7 +299,6 @@ class InstructionQueue
      *  inside of DynInst), when these instructions are woken up only
      *  the sequence number will be available.  Thus it is most efficient to be
      *  able to search by the sequence number alone.
-     *  @todo: Maybe change this to a priority queue per thread.
      */
     std::map<InstSeqNum, DynInstPtr> nonSpecInsts;
 
@@ -324,6 +313,9 @@ class InstructionQueue
     /** List that contains the age order of the oldest instruction of each
      *  ready queue.  Used to select the oldest instruction available
      *  among op classes.
+     *  @todo: Might be better to just move these entries around instead
+     *  of creating new ones every time the position changes due to an
+     *  instruction issuing.  Not sure std::list supports this.
      */
     std::list<ListOrderEntry> listOrder;
 
@@ -345,6 +337,8 @@ class InstructionQueue
      * this places that ready queue into the proper spot in the age order list.
      */
     void moveToYoungerInst(ListOrderIt age_order_it);
+
+    DependencyGraph<DynInstPtr> dependGraph;
 
     //////////////////////////////////////
     // Various parameters
@@ -397,56 +391,8 @@ class InstructionQueue
 
     bool switchedOut;
 
-    //////////////////////////////////
-    // Variables needed for squashing
-    //////////////////////////////////
-
     /** The sequence number of the squashed instruction. */
     InstSeqNum squashedSeqNum[Impl::MaxThreads];
-
-    /** Iterator that points to the last instruction that has been squashed.
-     *  This will not be valid unless the IQ is in the process of squashing.
-     */
-    ListIt squashIt[Impl::MaxThreads];
-
-    ///////////////////////////////////
-    // Dependency graph stuff
-    ///////////////////////////////////
-
-    class DependencyEntry
-    {
-      public:
-        DependencyEntry()
-            : inst(NULL), next(NULL)
-        { }
-
-        DynInstPtr inst;
-        //Might want to include data about what arch. register the
-        //dependence is waiting on.
-        DependencyEntry *next;
-
-        //This function, and perhaps this whole class, stand out a little
-        //bit as they don't fit a classification well.  I want access
-        //to the underlying structure of the linked list, yet at
-        //the same time it feels like this should be something abstracted
-        //away.  So for now it will sit here, within the IQ, until
-        //a better implementation is decided upon.
-        // This function probably shouldn't be within the entry...
-        void insert(DynInstPtr &new_inst);
-
-        void remove(DynInstPtr &inst_to_remove);
-
-        // Debug variable, remove when done testing.
-        static unsigned mem_alloc_counter;
-    };
-
-    /** Array of linked lists.  Each linked list is a list of all the
-     *  instructions that depend upon a given register.  The actual
-     *  register's index is used to index into the graph; ie all
-     *  instructions in flight that are dependent upon r34 will be
-     *  in the linked list of dependGraph[34].
-     */
-    DependencyEntry *dependGraph;
 
     /** A cache of the recently woken registers.  It is 1 if the register
      *  has been woken up recently, and 0 if the register has been added
@@ -456,11 +402,11 @@ class InstructionQueue
      */
     std::vector<bool> regScoreboard;
 
-    /** Adds an instruction to the dependency graph, as a producer. */
+    /** Adds an instruction to the dependency graph, as a consumer. */
     bool addToDependents(DynInstPtr &new_inst);
 
-    /** Adds an instruction to the dependency graph, as a consumer. */
-    void createDependency(DynInstPtr &new_inst);
+    /** Adds an instruction to the dependency graph, as a producer. */
+    void addToProducers(DynInstPtr &new_inst);
 
     /** Moves an instruction to the ready queue if it is ready. */
     void addIfReady(DynInstPtr &inst);
@@ -470,10 +416,6 @@ class InstructionQueue
      *  during normal execution.
      */
     int countInsts();
-
-    /** Debugging function to dump out the dependency graph.
-     */
-    void dumpDependGraph();
 
     /** Debugging function to dump all the list sizes, as well as print
      *  out the list of nonspeculative instructions.  Should not be used
@@ -490,20 +432,16 @@ class InstructionQueue
     Stats::Scalar<> iqInstsAdded;
     /** Stat for number of non-speculative instructions added. */
     Stats::Scalar<> iqNonSpecInstsAdded;
-//    Stats::Scalar<> iqIntInstsAdded;
+
     Stats::Scalar<> iqInstsIssued;
     /** Stat for number of integer instructions issued. */
     Stats::Scalar<> iqIntInstsIssued;
-//    Stats::Scalar<> iqFloatInstsAdded;
     /** Stat for number of floating point instructions issued. */
     Stats::Scalar<> iqFloatInstsIssued;
-//    Stats::Scalar<> iqBranchInstsAdded;
     /** Stat for number of branch instructions issued. */
     Stats::Scalar<> iqBranchInstsIssued;
-//    Stats::Scalar<> iqMemInstsAdded;
     /** Stat for number of memory instructions issued. */
     Stats::Scalar<> iqMemInstsIssued;
-//    Stats::Scalar<> iqMiscInstsAdded;
     /** Stat for number of miscellaneous instructions issued. */
     Stats::Scalar<> iqMiscInstsIssued;
     /** Stat for number of squashed instructions that were ready to issue. */
@@ -518,20 +456,20 @@ class InstructionQueue
      */
     Stats::Scalar<> iqSquashedNonSpecRemoved;
 
-    Stats::VectorDistribution<> queue_res_dist;
-    Stats::Distribution<> n_issued_dist;
-    Stats::VectorDistribution<> issue_delay_dist;
+    Stats::VectorDistribution<> queueResDist;
+    Stats::Distribution<> numIssuedDist;
+    Stats::VectorDistribution<> issueDelayDist;
 
-    Stats::Vector<> stat_fu_busy;
+    Stats::Vector<> statFuBusy;
 //    Stats::Vector<> dist_unissued;
-    Stats::Vector2d<> stat_issued_inst_type;
+    Stats::Vector2d<> statIssuedInstType;
 
-    Stats::Formula issue_rate;
+    Stats::Formula issueRate;
 //    Stats::Formula issue_stores;
 //    Stats::Formula issue_op_rate;
-    Stats::Vector<> fu_busy;  //cumulative fu busy
+    Stats::Vector<> fuBusy;  //cumulative fu busy
 
-    Stats::Formula fu_busy_rate;
+    Stats::Formula fuBusyRate;
 };
 
 #endif //__CPU_O3_INST_QUEUE_HH__

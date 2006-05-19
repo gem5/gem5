@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,7 +69,7 @@ DefaultIEW<Impl>::LdWritebackEvent::process()
     if (!inst->isExecuted()) {
         inst->setExecuted();
 
-        // Execute again to copy data to proper place.
+        // Complete access to copy data to proper place.
         if (inst->isStore()) {
             inst->completeAcc();
         }
@@ -78,7 +78,6 @@ DefaultIEW<Impl>::LdWritebackEvent::process()
     // Need to insert instruction into queue to commit
     iewStage->instToCommit(inst);
 
-    //wroteToTimeBuffer = true;
     iewStage->activityThisCycle();
 
     inst = NULL;
@@ -93,8 +92,7 @@ DefaultIEW<Impl>::LdWritebackEvent::description()
 
 template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(Params *params)
-    : // Just make this time buffer really big for now
-    // @todo: Make this into a parameter.
+    : // @todo: Make this into a parameter.
       issueToExecQueue(5, 5),
       instQueue(params),
       ldstQueue(params),
@@ -108,7 +106,6 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
       numThreads(params->numberOfThreads),
       switchedOut(false)
 {
-    DPRINTF(IEW, "executeIntWidth: %i.\n", params->executeIntWidth);
     _status = Active;
     exeStatus = Running;
     wbStatus = Idle;
@@ -130,7 +127,6 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
 
     updateLSQNextCycle = false;
 
-    // @todo: Make into a parameter
     skidBufferMax = (3 * (renameToIEWDelay * params->renameWidth)) + issueWidth;
 }
 
@@ -149,8 +145,6 @@ DefaultIEW<Impl>::regStats()
 
     instQueue.regStats();
 
-    //ldstQueue.regStats();
-
     iewIdleCycles
         .name(name() + ".iewIdleCycles")
         .desc("Number of cycles IEW is idle");
@@ -166,8 +160,6 @@ DefaultIEW<Impl>::regStats()
     iewUnblockCycles
         .name(name() + ".iewUnblockCycles")
         .desc("Number of cycles IEW is unblocking");
-
-//    iewWBInsts;
 
     iewDispatchedInsts
         .name(name() + ".iewDispatchedInsts")
@@ -206,11 +198,7 @@ DefaultIEW<Impl>::regStats()
         .name(name() + ".iewExecLoadInsts")
         .desc("Number of load instructions executed")
         .flags(total);
-/*
-    iewExecStoreInsts
-        .name(name() + ".iewExecStoreInsts")
-        .desc("Number of store instructions executed");
-*/
+
     iewExecSquashedInsts
         .name(name() + ".iewExecSquashedInsts")
         .desc("Number of squashed instructions skipped in execute");
@@ -233,47 +221,47 @@ DefaultIEW<Impl>::regStats()
 
     branchMispredicts = predictedTakenIncorrect + predictedNotTakenIncorrect;
 
-    exe_swp
+    exeSwp
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:swp")
         .desc("number of swp insts executed")
         .flags(total)
         ;
 
-    exe_nop
+    exeNop
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:nop")
         .desc("number of nop insts executed")
         .flags(total)
         ;
 
-    exe_refs
+    exeRefs
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:refs")
         .desc("number of memory reference insts executed")
         .flags(total)
         ;
 
-    exe_branches
+    exeBranches
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:branches")
         .desc("Number of branches executed")
         .flags(total)
         ;
 
-    issue_rate
+    issueRate
         .name(name() + ".EXEC:rate")
         .desc("Inst execution rate")
         .flags(total)
         ;
-    issue_rate = iewExecutedInsts / cpu->numCycles;
+    issueRate = iewExecutedInsts / cpu->numCycles;
 
     iewExecStoreInsts
         .name(name() + ".EXEC:stores")
         .desc("Number of stores executed")
         .flags(total)
         ;
-    iewExecStoreInsts = exe_refs - iewExecLoadInsts;
+    iewExecStoreInsts = exeRefs - iewExecLoadInsts;
 /*
     for (int i=0; i<Num_OpClasses; ++i) {
         stringstream subname;
@@ -292,56 +280,56 @@ DefaultIEW<Impl>::regStats()
         .flags(total)
         ;
 
-    writeback_count
+    writebackCount
         .init(cpu->number_of_threads)
         .name(name() + ".WB:count")
         .desc("cumulative count of insts written-back")
         .flags(total)
         ;
 
-    producer_inst
+    producerInst
         .init(cpu->number_of_threads)
         .name(name() + ".WB:producers")
         .desc("num instructions producing a value")
         .flags(total)
         ;
 
-    consumer_inst
+    consumerInst
         .init(cpu->number_of_threads)
         .name(name() + ".WB:consumers")
         .desc("num instructions consuming a value")
         .flags(total)
         ;
 
-    wb_penalized
+    wbPenalized
         .init(cpu->number_of_threads)
         .name(name() + ".WB:penalized")
         .desc("number of instrctions required to write to 'other' IQ")
         .flags(total)
         ;
 
-    wb_penalized_rate
+    wbPenalizedRate
         .name(name() + ".WB:penalized_rate")
         .desc ("fraction of instructions written-back that wrote to 'other' IQ")
         .flags(total)
         ;
 
-    wb_penalized_rate = wb_penalized / writeback_count;
+    wbPenalizedRate = wbPenalized / writebackCount;
 
-    wb_fanout
+    wbFanout
         .name(name() + ".WB:fanout")
         .desc("average fanout of values written-back")
         .flags(total)
         ;
 
-    wb_fanout = producer_inst / consumer_inst;
+    wbFanout = producerInst / consumerInst;
 
-    wb_rate
+    wbRate
         .name(name() + ".WB:rate")
         .desc("insts written-back per cycle")
         .flags(total)
         ;
-    wb_rate = writeback_count / cpu->numCycles;
+    wbRate = writebackCount / cpu->numCycles;
 }
 
 template<class Impl>
@@ -507,7 +495,7 @@ DefaultIEW<Impl>::squash(unsigned tid)
     instQueue.squash(tid);
 
     // Tell the LDSTQ to start squashing.
-    ldstQueue.squash(fromCommit->commitInfo[tid].doneSeqNum,tid);
+    ldstQueue.squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
 
     updatedQueues = true;
 
@@ -543,18 +531,15 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %#x "
             "[sn:%i].\n", tid, inst->readPC(), inst->seqNum);
 
-    // Tell rename to squash through the time buffer.
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->mispredPC[tid] = inst->readPC();
     toCommit->nextPC[tid] = inst->readNextPC();
     toCommit->branchMispredict[tid] = true;
-    // Prediction was incorrect, so send back inverse.
     toCommit->branchTaken[tid] = inst->readNextPC() !=
         (inst->readPC() + sizeof(TheISA::MachInst));
 
     toCommit->includeSquashInst[tid] = false;
-    //toCommit->iewSquashNum[tid] = inst->seqNum;
 
     wroteToTimeBuffer = true;
 }
@@ -566,13 +551,11 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, "
             "PC: %#x [sn:%i].\n", tid, inst->readPC(), inst->seqNum);
 
-    // Tell rename to squash through the time buffer.
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readNextPC();
 
     toCommit->includeSquashInst[tid] = false;
-    //toCommit->iewSquashNum[tid] = inst->seqNum;
 
     wroteToTimeBuffer = true;
 }
@@ -611,7 +594,6 @@ DefaultIEW<Impl>::block(unsigned tid)
     // reprocessed when this stage unblocks.
     skidInsert(tid);
 
-    // Set the status to Blocked.
     dispatchStatus[tid] = Blocked;
 }
 
@@ -661,10 +643,7 @@ DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
     // to.  If there are free write ports at the time, then go ahead
     // and write the instruction to that time.  If there are not,
     // keep looking back to see where's the first time there's a
-    // free slot.  What happens if you run out of free spaces?
-    // For now naively assume that all instructions take one cycle.
-    // Otherwise would have to look into the time buffer based on the
-    // latency of the instruction.
+    // free slot.
     while ((*iewQueue)[wbCycle].insts[wbNumInst]) {
         ++wbNumInst;
         if (wbNumInst == issueWidth) {
@@ -918,10 +897,10 @@ void
 DefaultIEW<Impl>::sortInsts()
 {
     int insts_from_rename = fromRename->size;
-
+#ifdef DEBUG
     for (int i = 0; i < numThreads; i++)
         assert(insts[i].empty());
-
+#endif
     for (int i = 0; i < insts_from_rename; ++i) {
         insts[fromRename->insts[i]->threadNumber].push(fromRename->insts[i]);
     }
@@ -1047,9 +1026,6 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
         // Be sure to mark these instructions as ready so that the
         // commit stage can go ahead and execute them, and mark
         // them as issued so the IQ doesn't reprocess them.
-        // -------------
-        // @TODO: What happens if the ldstqueue is full?
-        //        Do we process the other instructions?
 
         // Check for squashed instructions.
         if (inst->isSquashed()) {
@@ -1125,6 +1101,9 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             ++iewDispStoreInsts;
 
             if (inst->isNonSpeculative()) {
+                // Non-speculative stores (namely store conditionals)
+                // need to be set as "canCommit()" so that commit can
+                // process them when they reach the head of commit.
                 inst->setCanCommit();
                 instQueue.insertNonSpec(inst);
                 add_to_iq = false;
@@ -1137,6 +1116,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             toRename->iewInfo[tid].dispatchedToLSQ++;
 #if FULL_SYSTEM
         } else if (inst->isMemBarrier() || inst->isWriteBarrier()) {
+            // Same as non-speculative stores.
             inst->setCanCommit();
             instQueue.insertBarrier(inst);
             add_to_iq = false;
@@ -1145,7 +1125,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
                     "encountered, skipping.\n", tid);
 
-            // Same hack as with stores.
+            // Same as non-speculative stores.
             inst->setCanCommit();
 
             // Specifically insert it as nonspeculative.
@@ -1162,9 +1142,9 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             inst->setExecuted();
             inst->setCanCommit();
 
-            instQueue.advanceTail(inst);
+            instQueue.recordProducer(inst);
 
-            exe_nop[tid]++;
+            exeNop[tid]++;
 
             add_to_iq = false;
         } else if (inst->isExecuted()) {
@@ -1175,7 +1155,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             inst->setIssued();
             inst->setCanCommit();
 
-            instQueue.advanceTail(inst);
+            instQueue.recordProducer(inst);
 
             add_to_iq = false;
         } else {
@@ -1237,7 +1217,6 @@ template <class Impl>
 void
 DefaultIEW<Impl>::executeInsts()
 {
-    //bool fetch_redirect[(*activeThreads).size()];
     wbNumInst = 0;
     wbCycle = 0;
 
@@ -1254,20 +1233,17 @@ DefaultIEW<Impl>::executeInsts()
 
     // Execute/writeback any instructions that are available.
     int inst_num = 0;
-    for ( ; inst_num < issueWidth &&  /* Haven't exceeded issue bandwidth */
-              fromIssue->insts[inst_num];
-         ++inst_num) {
+    for ( ; inst_num < issueWidth && fromIssue->insts[inst_num];
+          ++inst_num) {
 
         DPRINTF(IEW, "Execute: Executing instructions from IQ.\n");
 
-        // Get instruction from issue's queue.
         DynInstPtr inst = fromIssue->insts[inst_num];
 
         DPRINTF(IEW, "Execute: Processing PC %#x, [tid:%i] [sn:%i].\n",
                 inst->readPC(), inst->threadNumber,inst->seqNum);
 
         // Check if the instruction is squashed; if so then skip it
-        // and don't count it towards the FU usage.
         if (inst->isSquashed()) {
             DPRINTF(IEW, "Execute: Instruction was squashed.\n");
 
@@ -1299,12 +1275,8 @@ DefaultIEW<Impl>::executeInsts()
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
-
-//                ++iewExecLoadInsts;
             } else if (inst->isStore()) {
                 ldstQueue.executeStore(inst);
-
-//                ++iewExecStoreInsts;
 
                 // If the store had a fault then it may not have a mem req
                 if (inst->req && !(inst->req->flags & LOCKED)) {
@@ -1312,9 +1284,10 @@ DefaultIEW<Impl>::executeInsts()
 
                     instToCommit(inst);
                 }
-                // Store conditionals will mark themselves as executed, and
-                // their writeback event will add the instruction to the queue
-                // to commit.
+
+                // Store conditionals will mark themselves as
+                // executed, and their writeback event will add the
+                // instruction to the queue to commit.
             } else {
                 panic("Unexpected memory type!\n");
             }
@@ -1329,10 +1302,9 @@ DefaultIEW<Impl>::executeInsts()
 
         updateExeInstStats(inst);
 
-        // Check if branch was correct.  This check happens after the
-        // instruction is added to the queue because even if the branch
-        // is mispredicted, the branch instruction itself is still valid.
-        // Only handle this if there hasn't already been something that
+        // Check if branch prediction was correct, if not then we need
+        // to tell commit to squash in flight instructions.  Only
+        // handle this if there hasn't already been something that
         // redirects fetch in this group of instructions.
 
         // This probably needs to prioritize the redirects if a different
@@ -1360,7 +1332,8 @@ DefaultIEW<Impl>::executeInsts()
             } else if (ldstQueue.violation(tid)) {
                 fetchRedirect[tid] = true;
 
-                // Get the DynInst that caused the violation.  Note that this
+                // If there was an ordering violation, then get the
+                // DynInst that caused the violation.  Note that this
                 // clears the violation signal.
                 DynInstPtr violator;
                 violator = ldstQueue.getMemDepViolator(tid);
@@ -1409,13 +1382,11 @@ template <class Impl>
 void
 DefaultIEW<Impl>::writebackInsts()
 {
-    // Loop through the head of the time buffer and wake any dependents.
-    // These instructions are about to write back.  In the simple model
-    // this loop can really happen within the previous loop, but when
-    // instructions have actual latencies, this loop must be separate.
-    // Also mark scoreboard that this instruction is finally complete.
-    // Either have IEW have direct access to rename map, or have this as
-    // part of backwards communication.
+    // Loop through the head of the time buffer and wake any
+    // dependents.  These instructions are about to write back.  Also
+    // mark scoreboard that this instruction is finally complete.
+    // Either have IEW have direct access to scoreboard, or have this
+    // as part of backwards communication.
     for (int inst_num = 0; inst_num < issueWidth &&
              toCommit->insts[inst_num]; inst_num++) {
         DynInstPtr inst = toCommit->insts[inst_num];
@@ -1441,9 +1412,9 @@ DefaultIEW<Impl>::writebackInsts()
                 scoreboard->setReg(inst->renamedDestRegIdx(i));
             }
 
-            producer_inst[tid]++;
-            consumer_inst[tid]+= dependents;
-            writeback_count[tid]++;
+            producerInst[tid]++;
+            consumerInst[tid]+= dependents;
+            writebackCount[tid]++;
         }
     }
 }
@@ -1452,8 +1423,6 @@ template<class Impl>
 void
 DefaultIEW<Impl>::tick()
 {
-    // Try to fill up issue queue with as many instructions as bandwidth
-    // allows.
     wbNumInst = 0;
     wbCycle = 0;
 
@@ -1462,9 +1431,12 @@ DefaultIEW<Impl>::tick()
 
     sortInsts();
 
+    // Free function units marked as being freed this cycle.
+    fuPool->processFreeUnits();
+
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
-    // Check stall and squash signals.
+    // Check stall and squash signals, dispatch any instructions.
     while (threads != (*activeThreads).end()) {
            unsigned tid = *threads++;
 
@@ -1472,7 +1444,6 @@ DefaultIEW<Impl>::tick()
 
         checkSignalsAndUpdate(tid);
         dispatch(tid);
-
     }
 
     if (exeStatus != Squashing) {
@@ -1501,9 +1472,6 @@ DefaultIEW<Impl>::tick()
 
     // Writeback any stores using any leftover bandwidth.
     ldstQueue.writebackStores();
-
-    // Free function units marked as being freed this cycle.
-    fuPool->processFreeUnits();
 
     // Check the committed load/store signals to see if there's a load
     // or store to commit.  Also check if it's being told to execute a
@@ -1557,8 +1525,6 @@ DefaultIEW<Impl>::tick()
 
         DPRINTF(IEW, "[tid:%i], Dispatch dispatched %i instructions.\n",
                 tid, toRename->iewInfo[tid].dispatched);
-
-        //thread_queue.pop();
     }
 
     DPRINTF(IEW, "IQ has %i free entries (Can schedule: %i).  "
@@ -1585,7 +1551,7 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch())
-        exe_swp[thread_number]++;
+        exeSwp[thread_number]++;
     else
         iewExecutedInsts++;
 #else
@@ -1596,13 +1562,13 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     //  Control operations
     //
     if (inst->isControl())
-        exe_branches[thread_number]++;
+        exeBranches[thread_number]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        exe_refs[thread_number]++;
+        exeRefs[thread_number]++;
 
         if (inst->isLoad()) {
             iewExecLoadInsts[thread_number]++;
