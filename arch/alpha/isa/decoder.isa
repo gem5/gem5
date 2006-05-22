@@ -73,9 +73,7 @@ decode OPCODE default Unknown::unknown() {
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED, inst_flags = [IsNonSpeculative,
-                                                          IsSerializing,
-                                                          IsSerializeAfter]);
+                    }}, mem_flags = LOCKED);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
@@ -87,9 +85,7 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED, inst_flags = [IsNonSpeculative,
-                                                          IsSerializing,
-                                                          IsSerializeAfter]);
+                    }}, mem_flags = LOCKED);
     }
 
     format IntegerOperate {
@@ -595,8 +591,8 @@ decode OPCODE default Unknown::unknown() {
             0x02e: fcmovle({{ Fc = (Fa <= 0) ? Fb : Fc; }});
             0x02f: fcmovgt({{ Fc = (Fa >  0) ? Fb : Fc; }});
 
-            0x024: mt_fpcr({{ FPCR = Fa.uq; }}, IsSerializing, IsSerializeBefore);
-            0x025: mf_fpcr({{ Fa.uq = FPCR; }}, IsSerializing, IsSerializeBefore);
+            0x024: mt_fpcr({{ FPCR = Fa.uq; }});
+            0x025: mf_fpcr({{ Fa.uq = FPCR; }});
         }
     }
 
@@ -698,11 +694,11 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall();
-            }}, IsNonSpeculative, IsSerializeAfter);
+            }}, IsNonSpeculative);
             // Read uniq reg into ABI return value register (r0)
-            0x9e: rduniq({{ R0 = Runiq; }}, IsSerializing, IsSerializeBefore);
+            0x9e: rduniq({{ R0 = Runiq; }});
             // Write uniq reg with value from ABI arg register (r16)
-            0x9f: wruniq({{ Runiq = R16; }}, IsSerializing, IsSerializeBefore);
+            0x9f: wruniq({{ Runiq = R16; }});
         }
     }
 #endif
@@ -739,7 +735,7 @@ decode OPCODE default Unknown::unknown() {
         format HwMoveIPR {
             1: hw_mfpr({{
                 Ra = xc->readMiscRegWithEffect(ipr_index, fault);
-            }}, IsSerializing, IsSerializeBefore);
+            }});
         }
     }
 
@@ -749,7 +745,7 @@ decode OPCODE default Unknown::unknown() {
             1: hw_mtpr({{
                 xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
-            }}, IsSerializing, IsSerializeBefore);
+            }});
         }
     }
 
