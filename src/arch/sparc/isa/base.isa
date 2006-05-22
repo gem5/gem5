@@ -1,0 +1,252 @@
+// Copyright (c) 2006 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Ali Saidi
+//          Gabe Black
+//          Steve Reinhardt
+
+////////////////////////////////////////////////////////////////////
+//
+// Base class for sparc instructions, and some support functions
+//
+
+output header {{
+
+        union CondCodes
+        {
+            struct
+            {
+                uint8_t c:1;
+                uint8_t v:1;
+                uint8_t z:1;
+                uint8_t n:1;
+            };
+            uint32_t bits;
+        };
+
+        enum CondTest
+        {
+            Always=0x8,
+            Never=0x0,
+            NotEqual=0x9,
+            Equal=0x1,
+            Greater=0xA,
+            LessOrEqual=0x2,
+            GreaterOrEqual=0xB,
+            Less=0x3,
+            GreaterUnsigned=0xC,
+            LessOrEqualUnsigned=0x4,
+            CarryClear=0xD,
+            CarrySet=0x5,
+            Positive=0xE,
+            Negative=0x6,
+            OverflowClear=0xF,
+            OverflowSet=0x7
+        };
+
+        extern char * CondTestAbbrev[];
+
+        /**
+         * Base class for all SPARC static instructions.
+         */
+        class SparcStaticInst : public StaticInst
+        {
+          protected:
+            // Constructor.
+            SparcStaticInst(const char *mnem,
+                 MachInst _machInst, OpClass __opClass)
+                    : StaticInst(mnem, _machInst, __opClass)
+                {
+                }
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+
+            void printReg(std::ostream &os, int reg) const;
+        };
+
+        bool passesCondition(uint32_t codes, uint32_t condition);
+
+        inline int64_t sign_ext(uint64_t data, int origWidth)
+        {
+            int shiftAmount = 64 - origWidth;
+            return (((int64_t)data) << shiftAmount) >> shiftAmount;
+        }
+}};
+
+output decoder {{
+
+        char * CondTestAbbrev[] =
+        {
+            "nev", //Never
+            "e", //Equal
+            "le", //Less or Equal
+            "l", //Less
+            "leu", //Less or Equal Unsigned
+            "c", //Carry set
+            "n", //Negative
+            "o", //Overflow set
+            "a", //Always
+            "ne", //Not Equal
+            "g", //Greater
+            "ge", //Greater or Equal
+            "gu", //Greater Unsigned
+            "cc", //Carry clear
+            "p", //Positive
+            "oc" //Overflow Clear
+        };
+}};
+
+def template ROrImmDecode {{
+    {
+        return (I ? (SparcStaticInst *)(new %(class_name)sImm(machInst))
+                  : (SparcStaticInst *)(new %(class_name)s(machInst)));
+    }
+}};
+
+let {{
+    def splitOutImm(code):
+        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)(?P<typeQual>\.\w+)?')
+        rOrImmMatch = matcher.search(code)
+        if (rOrImmMatch == None):
+            return (False, code, '', '', '')
+        rString = rOrImmMatch.group("rNum")
+        if (rOrImmMatch.group("typeQual") != None):
+            rString += rOrImmMatch.group("typeQual")
+        iString = rOrImmMatch.group("iNum")
+        orig_code = code
+        code = matcher.sub('Rs' + rString, orig_code)
+        imm_code = matcher.sub('imm', orig_code)
+        return (True, code, imm_code, rString, iString)
+}};
+
+output decoder {{
+
+        inline void printMnemonic(std::ostream &os, const char * mnemonic)
+        {
+            ccprintf(os, "\t%s   ", mnemonic);
+        }
+
+        void
+        SparcStaticInst::printReg(std::ostream &os, int reg) const
+        {
+            const int MaxGlobal = 8;
+            const int MaxOutput = 16;
+            const int MaxLocal = 24;
+            const int MaxInput = 32;
+            if (reg == FramePointerReg)
+                ccprintf(os, "%%fp");
+            else if (reg == StackPointerReg)
+                ccprintf(os, "%%sp");
+            else if(reg < MaxGlobal)
+                ccprintf(os, "%%g%d", reg);
+            else if(reg < MaxOutput)
+                ccprintf(os, "%%o%d", reg - MaxGlobal);
+            else if(reg < MaxLocal)
+                ccprintf(os, "%%l%d", reg - MaxOutput);
+            else if(reg < MaxInput)
+                ccprintf(os, "%%i%d", reg - MaxLocal);
+            else {
+                ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
+            }
+        }
+
+        std::string SparcStaticInst::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            printMnemonic(ss, mnemonic);
+
+            // just print the first two source regs... if there's
+            // a third one, it's a read-modify-write dest (Rc),
+            // e.g. for CMOVxx
+            if(_numSrcRegs > 0)
+            {
+                printReg(ss, _srcRegIdx[0]);
+            }
+            if(_numSrcRegs > 1)
+            {
+                ss << ",";
+                printReg(ss, _srcRegIdx[1]);
+            }
+
+            // just print the first dest... if there's a second one,
+            // it's generally implicit
+            if(_numDestRegs > 0)
+            {
+                if(_numSrcRegs > 0)
+                    ss << ",";
+                    printReg(ss, _destRegIdx[0]);
+            }
+
+            return ss.str();
+        }
+
+        bool passesCondition(uint32_t codes, uint32_t condition)
+        {
+            CondCodes condCodes;
+            condCodes.bits = codes;
+            switch(condition)
+            {
+              case Always:
+                return true;
+              case Never:
+                return false;
+              case NotEqual:
+                return !condCodes.z;
+              case Equal:
+                return condCodes.z;
+              case Greater:
+                return !(condCodes.z | (condCodes.n ^ condCodes.v));
+              case LessOrEqual:
+                return condCodes.z | (condCodes.n ^ condCodes.v);
+              case GreaterOrEqual:
+                return !(condCodes.n ^ condCodes.v);
+              case Less:
+                return (condCodes.n ^ condCodes.v);
+              case GreaterUnsigned:
+                return !(condCodes.c | condCodes.z);
+              case LessOrEqualUnsigned:
+                return (condCodes.c | condCodes.z);
+              case CarryClear:
+                return !condCodes.c;
+              case CarrySet:
+                return condCodes.c;
+              case Positive:
+                return !condCodes.n;
+              case Negative:
+                return condCodes.n;
+              case OverflowClear:
+                return !condCodes.v;
+              case OverflowSet:
+                return condCodes.v;
+            }
+            panic("Tried testing condition nonexistant "
+                    "condition code %d", condition);
+        }
+}};
+

@@ -1,0 +1,2 @@
+./lex_dup3.py:17: Rule t_NUMBER redefined. Previously defined on line 15
+SyntaxError: lex: Unable to build lexer.

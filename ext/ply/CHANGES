@@ -1,0 +1,158 @@
+Version 1.3
+------------------------------
+12/10/02: jmdyck
+          Various minor adjustments to the code that Dave checked in today.
+          Updated test/yacc_{inf,unused}.exp to reflect today's changes.
+
+12/10/02: beazley
+          Incorporated a variety of minor bug fixes to empty production
+          handling and infinite recursion checking.  Contributed by
+          Michael Dyck.
+
+12/10/02: beazley
+          Removed bogus recover() method call in yacc.restart()
+
+Version 1.2
+------------------------------
+11/27/02: beazley
+          Lexer and parser objects are now available as an attribute
+          of tokens and slices respectively. For example:
+ 
+             def t_NUMBER(t):
+                 r'\d+'
+                 print t.lexer
+
+             def p_expr_plus(t):
+                 'expr: expr PLUS expr'
+                 print t.lexer
+                 print t.parser
+
+          This can be used for state management (if needed).
+ 
+10/31/02: beazley
+          Modified yacc.py to work with Python optimize mode.  To make
+          this work, you need to use
+
+              yacc.yacc(optimize=1)
+
+          Furthermore, you need to first run Python in normal mode
+          to generate the necessary parsetab.py files.  After that,
+          you can use python -O or python -OO.  
+
+          Note: optimized mode turns off a lot of error checking.
+          Only use when you are sure that your grammar is working.
+          Make sure parsetab.py is up to date!
+
+10/30/02: beazley
+          Added cloning of Lexer objects.   For example:
+
+              import copy
+              l = lex.lex()
+              lc = copy.copy(l)
+
+              l.input("Some text")
+              lc.input("Some other text")
+              ...
+
+          This might be useful if the same "lexer" is meant to
+          be used in different contexts---or if multiple lexers
+          are running concurrently.
+                
+10/30/02: beazley
+          Fixed subtle bug with first set computation and empty productions.
+          Patch submitted by Michael Dyck.
+
+10/30/02: beazley
+          Fixed error messages to use "filename:line: message" instead
+          of "filename:line. message".  This makes error reporting more
+          friendly to emacs. Patch submitted by François Pinard.
+
+10/30/02: beazley
+          Improvements to parser.out file.  Terminals and nonterminals
+          are sorted instead of being printed in random order.
+          Patch submitted by François Pinard.
+
+10/30/02: beazley
+          Improvements to parser.out file output.  Rules are now printed
+          in a way that's easier to understand.  Contributed by Russ Cox.
+
+10/30/02: beazley
+          Added 'nonassoc' associativity support.    This can be used
+          to disable the chaining of operators like a < b < c.
+          To use, simply specify 'nonassoc' in the precedence table
+
+          precedence = (
+            ('nonassoc', 'LESSTHAN', 'GREATERTHAN'),  # Nonassociative operators
+            ('left', 'PLUS', 'MINUS'),
+            ('left', 'TIMES', 'DIVIDE'),
+            ('right', 'UMINUS'),            # Unary minus operator
+          )
+
+          Patch contributed by Russ Cox.
+
+10/30/02: beazley
+          Modified the lexer to provide optional support for Python -O and -OO
+          modes.  To make this work, Python *first* needs to be run in
+          unoptimized mode.  This reads the lexing information and creates a
+          file "lextab.py".  Then, run lex like this:
+
+                   # module foo.py
+                   ...
+                   ...
+                   lex.lex(optimize=1)
+
+          Once the lextab file has been created, subsequent calls to
+          lex.lex() will read data from the lextab file instead of using 
+          introspection.   In optimized mode (-O, -OO) everything should
+          work normally despite the loss of doc strings.
+
+          To change the name of the file 'lextab.py' use the following:
+
+                  lex.lex(lextab="footab")
+
+          (this creates a file footab.py)
+         
+
+Version 1.1   October 25, 2001
+------------------------------
+
+10/25/01: beazley
+          Modified the table generator to produce much more compact data.
+          This should greatly reduce the size of the parsetab.py[c] file.
+          Caveat: the tables still need to be constructed so a little more
+          work is done in parsetab on import. 
+
+10/25/01: beazley
+          There may be a possible bug in the cycle detector that reports errors
+          about infinite recursion.   I'm having a little trouble tracking it
+          down, but if you get this problem, you can disable the cycle
+          detector as follows:
+
+                 yacc.yacc(check_recursion = 0)
+
+10/25/01: beazley
+          Fixed a bug in lex.py that sometimes caused illegal characters to be
+          reported incorrectly.  Reported by Sverre Jørgensen.
+
+7/8/01  : beazley
+          Added a reference to the underlying lexer object when tokens are handled by
+          functions.   The lexer is available as the 'lexer' attribute.   This
+          was added to provide better lexing support for languages such as Fortran
+          where certain types of tokens can't be conveniently expressed as regular 
+          expressions (and where the tokenizing function may want to perform a 
+          little backtracking).  Suggested by Pearu Peterson.
+
+6/20/01 : beazley
+          Modified yacc() function so that an optional starting symbol can be specified.
+          For example:
+            
+                 yacc.yacc(start="statement")
+
+          Normally yacc always treats the first production rule as the starting symbol.
+          However, if you are debugging your grammar it may be useful to specify
+          an alternative starting symbol.  Idea suggested by Rich Salz.
+                      
+Version 1.0  June 18, 2001
+--------------------------
+Initial public offering
+

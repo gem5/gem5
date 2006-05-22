@@ -1,0 +1,169 @@
+// Copyright (c) 2006 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Ali Saidi
+//          Gabe Black
+//          Steve Reinhardt
+
+////////////////////////////////////////////////////////////////////
+//
+// Privilege mode instructions
+//
+
+output header {{
+        /**
+         * Base class for privelege mode operations.
+         */
+        class Priv : public SparcStaticInst
+        {
+          protected:
+            // Constructor
+            Priv(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+
+        /**
+         * Base class for user mode "tick" access.
+         */
+        class PrivTick : public SparcStaticInst
+        {
+          protected:
+            // Constructor
+            PrivTick(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+
+        /**
+         * Base class for privelege mode operations with immediates.
+         */
+        class PrivImm : public Priv
+        {
+          protected:
+            // Constructor
+            PrivImm(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                Priv(mnem, _machInst, __opClass), imm(SIMM13)
+            {
+            }
+
+            int32_t imm;
+        };
+
+        /**
+         * Base class for user mode "tick" access with immediates.
+         */
+        class PrivTickImm : public PrivTick
+        {
+          protected:
+            // Constructor
+            PrivTickImm(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass) :
+                PrivTick(mnem, _machInst, __opClass), imm(SIMM13)
+            {
+            }
+
+            int32_t imm;
+        };
+}};
+
+output decoder {{
+        std::string Priv::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+                return "Privileged Instruction";
+        }
+
+        std::string PrivTick::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+                return "Regular access to Tick";
+        }
+}};
+
+def template PrivExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        %(op_decl)s;
+        %(op_rd)s;
+
+        //If the processor isn't in privileged mode, fault out right away
+        if(%(check)s)
+            return new PrivilegedAction;
+
+        %(code)s;
+        %(op_wb)s;
+        return NoFault;
+    }
+}};
+
+let {{
+    def doPrivFormat(code, checkCode, name, Name, opt_flags):
+        (usesImm, code, immCode,
+         rString, iString) = splitOutImm(code)
+        iop = InstObjParams(name, Name, 'Priv', code,
+                opt_flags, ("check", checkCode))
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        exec_output = PrivExecute.subst(iop)
+        if usesImm:
+            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivImm',
+                    immCode, opt_flags, ("check", checkCode))
+            header_output += BasicDeclare.subst(imm_iop)
+            decoder_output += BasicConstructor.subst(imm_iop)
+            exec_output += PrivExecute.subst(imm_iop)
+            decode_block = ROrImmDecode.subst(iop)
+        else:
+            decode_block = BasicDecode.subst(iop)
+        return (header_output, decoder_output, exec_output, decode_block)
+}};
+
+// Primary format for integer operate instructions:
+def format Priv(code, *opt_flags) {{
+        checkCode = "(!PstatePriv)"
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
+}};
+
+// Primary format for integer operate instructions:
+def format PrivTick(code, *opt_flags) {{
+        checkCode = "(!PstatePriv && TickNpt)"
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
+}};

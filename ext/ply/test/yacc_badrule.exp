@@ -1,0 +1,5 @@
+./yacc_badrule.py:22: Syntax error. Expected ':'
+./yacc_badrule.py:26: Syntax error in rule 'statement'
+./yacc_badrule.py:31: Syntax error. Expected ':'
+./yacc_badrule.py:40: Syntax error. Expected ':'
+yacc.YaccError: Unable to construct parser.
