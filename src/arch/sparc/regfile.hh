@@ -42,7 +42,10 @@ namespace SparcISA
     typedef uint8_t  RegIndex;
 
     // MAXTL - maximum trap level
-    const int MaxTL = 4;
+    const int MaxPTL = 6;
+    const int MaxTL  = 6;
+    const int MaxGL  = 3;
+    const int MaxPGL = 2;
 
     // NWINDOWS - number of register windows, can be 3 to 32
     const int NWindows = 32;
@@ -63,8 +66,7 @@ namespace SparcISA
                 (unsigned int)(-1) :
                 (1 << FrameOffsetBits) - 1;
 
-        IntReg regGlobals[RegsPerFrame];
-        IntReg altGlobals[RegsPerFrame];
+        IntReg regGlobals[MaxGL][RegsPerFrame];
         IntReg regSegments[2 * NWindows][RegsPerFrame];
 
         enum regFrame {Globals, Outputs, Locals, Inputs, NumFrames};
@@ -72,8 +74,7 @@ namespace SparcISA
         IntReg * regView[NumFrames];
 
         static const int RegGlobalOffset = 0;
-        static const int AltGlobalOffset = 8;
-        static const int FrameOffset = 16;
+        static const int FrameOffset = MaxGL * RegsPerFrame;
         int offset[NumFrames];
 
       public:
@@ -88,8 +89,9 @@ namespace SparcISA
 
         void clear()
         {
-            bzero(regGlobals, sizeof(regGlobals));
-            bzero(altGlobals, sizeof(altGlobals));
+            int x;
+            for (x = 0; x < MaxGL; x++)
+                memset(regGlobals[x], 0, sizeof(regGlobals[x]));
             for(int x = 0; x < 2 * NWindows; x++)
                 bzero(regSegments[x], sizeof(regSegments[x]));
         }
@@ -97,7 +99,7 @@ namespace SparcISA
         IntRegFile()
         {
             offset[Globals] = 0;
-            regView[Globals] = regGlobals;
+            regView[Globals] = regGlobals[0];
             setCWP(0);
             clear();
         }
@@ -135,21 +137,13 @@ namespace SparcISA
             DPRINTF(Sparc, "Changed the CWP value to %d\n", cwp);
         }
 
-        void setAltGlobals(bool useAlt)
+        void setGlobals(int gl)
         {
-            DPRINTF(Sparc, "Now using %s globals",
-                    useAlt ? "alternate" : "regular");
-            regView[Globals] = useAlt ? altGlobals : regGlobals;
 
-            // You have not included an out-of-class definition of your static
-            // members. See [9.4.2]/4 and about a billion gcc bug reports. If
-            // statements get around the problem through some magic, and than
-            // seems nicer that putting a definition of them in a c file
-            // somewhere.
-            if (useAlt)
-                offset[Globals] = AltGlobalOffset;
-            else
-                offset[Globals] = RegGlobalOffset;
+            DPRINTF(Sparc, "Now using %d globals", gl);
+
+            regView[Globals] = regGlobals[gl];
+            offset[Globals] = RegGlobalOffset + gl * RegsPerFrame;
         }
 
         void serialize(std::ostream &os);
@@ -587,6 +581,7 @@ namespace SparcISA
             pstateFields.ag = 1; //Globals are replaced with alternate globals
             pstateFields.tle = 0; //Big Endian mode for traps
             pstateFields.cle = 0; //Big Endian mode for non-traps
+            tickFields.counter = 0; //The TICK register is unreadable by
             tickFields.npt = 1; //The TICK register is unreadable by
                                 //non-priveleged software
 #else
@@ -687,7 +682,7 @@ namespace SparcISA
             floatRegFile.clear();
         }
 
-        int flattenIntIndex(int reg)
+        int FlattenIntIndex(int reg)
         {
             return intRegFile.flattenIndex(reg);
         }
@@ -784,7 +779,7 @@ namespace SparcISA
         union ContextVal
         {
             MiscReg reg;
-            bool altGlobals;
+            int globalLevel;
         };
 
         void changeContext(ContextParam param, ContextVal val)
@@ -795,7 +790,7 @@ namespace SparcISA
                 intRegFile.setCWP(val.reg);
                 break;
               case CONTEXT_GLOBALS:
-                intRegFile.setAltGlobals(val.altGlobals);
+                intRegFile.setGlobals(val.globalLevel);
                 break;
               default:
                 panic("Tried to set illegal context parameter in the SPARC regfile.\n");
