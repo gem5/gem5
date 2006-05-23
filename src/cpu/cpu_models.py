@@ -62,9 +62,6 @@ CpuModel('AtomicSimpleCPU', 'atomic_simple_cpu_exec.cc',
 CpuModel('TimingSimpleCPU', 'timing_simple_cpu_exec.cc',
          '#include "cpu/simple/timing.hh"',
          { 'CPU_exec_context': 'TimingSimpleCPU' })
-CpuModel('FastCPU', 'fast_cpu_exec.cc',
-         '#include "cpu/fast/cpu.hh"',
-         { 'CPU_exec_context': 'FastCPU' })
 CpuModel('FullCPU', 'full_cpu_exec.cc',
          '#include "encumbered/cpu/full/dyn_inst.hh"',
          { 'CPU_exec_context': 'DynInst' })
