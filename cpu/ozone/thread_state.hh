@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef __CPU_OZONE_THREAD_STATE_HH__
 #define __CPU_OZONE_THREAD_STATE_HH__
@@ -62,19 +89,14 @@ struct OzoneThreadState : public ThreadState {
 
     void setStatus(Status new_status) { _status = new_status; }
 
-    RenameTable<Impl> renameTable; // Should I include backend and frontend
-    // tables here?  For the ozone CPU, maybe, for the new full CPU, probably
-    // not...you wouldn't want threads just accessing the backend/frontend
-    // rename tables.
-    Addr PC; // What should these be set to?  Probably the committed ones.
+    RenameTable<Impl> renameTable;
+    Addr PC;
     Addr nextPC;
 
-    // Current instruction?
+    // Current instruction
     TheISA::MachInst inst;
 
     TheISA::RegFile regs;
-    // Front end?  Back end?
-//    MemReqPtr memReq;
 
     typename Impl::FullCPU *cpu;
 

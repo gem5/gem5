@@ -1,7 +1,34 @@
+/*
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#include "encumbered/cpu/full/op_class.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/ozone/lw_back_end.hh"
+#include "encumbered/cpu/full/op_class.hh"
 
 template <class Impl>
 void
@@ -194,15 +221,12 @@ LWBackEnd<Impl>::LWBackEnd(Params *params)
     switchedOut = false;
     switchPending = false;
 
-//    IQ.setBE(this);
     LSQ.setBE(this);
 
     // Setup IQ and LSQ with their parameters here.
     instsToDispatch = d2i.getWire(-1);
 
     instsToExecute = i2e.getWire(-1);
-
-//    IQ.setIssueExecQueue(&i2e);
 
     dispatchWidth = params->dispatchWidth ? params->dispatchWidth : width;
     issueWidth = params->issueWidth ? params->issueWidth : width;
@@ -538,8 +562,6 @@ LWBackEnd<Impl>::regStats()
         .desc("ROB Occupancy per cycle")
         .flags(total | cdf)
         ;
-
-//    IQ.regStats();
 }
 
 template <class Impl>
@@ -652,17 +674,7 @@ LWBackEnd<Impl>::tick()
         squashFromTrap();
     } else if (xcSquash) {
         squashFromXC();
-    } /*else if (fetchHasFault && robEmpty() && frontEnd->isEmpty() && !LSQ.hasStoresToWB()) {
-        DPRINTF(BE, "ROB and front end empty, handling fetch fault\n");
-        Fault fetch_fault = frontEnd->getFault();
-        if (fetch_fault == NoFault) {
-            DPRINTF(BE, "Fetch no longer has a fault, cancelling out.\n");
-            fetchHasFault = false;
-        } else {
-            handleFault(fetch_fault);
-            fetchHasFault = false;
-        }
-        }*/
+    }
 #endif
 
     if (dispatchStatus != Blocked) {
@@ -773,7 +785,8 @@ LWBackEnd<Impl>::dispatchInsts()
                     inst->iqItValid = true;
                     waitingInsts++;
                 } else {
-                    DPRINTF(BE, "Instruction [sn:%lli] ready, addding to exeList.\n",
+                    DPRINTF(BE, "Instruction [sn:%lli] ready, addding to "
+                            "exeList.\n",
                             inst->seqNum);
                     exeList.push(inst);
                 }
@@ -784,7 +797,8 @@ LWBackEnd<Impl>::dispatchInsts()
                 inst->setExecuted();
                 inst->setCanCommit();
             } else {
-                DPRINTF(BE, "Instruction [sn:%lli] ready, addding to exeList.\n",
+                DPRINTF(BE, "Instruction [sn:%lli] ready, addding to "
+                        "exeList.\n",
                         inst->seqNum);
                 exeList.push(inst);
             }
@@ -993,7 +1007,7 @@ LWBackEnd<Impl>::instToCommit(DynInstPtr &inst)
 
     writeback_count[0]++;
 }
-
+#if 0
 template <class Impl>
 void
 LWBackEnd<Impl>::writebackInsts()
@@ -1040,7 +1054,7 @@ LWBackEnd<Impl>::writebackInsts()
     consumer_inst[0]+= consumer_insts;
     writeback_count[0]+= inst_num;
 }
-
+#endif
 template <class Impl>
 bool
 LWBackEnd<Impl>::commitInst(int inst_num)
@@ -1219,15 +1233,15 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
     --numInsts;
     ++thread->funcExeInst;
-    // Maybe move this to where the fault is handled; if the fault is handled,
-    // don't try to set this myself as the fault will set it.  If not, then
-    // I set thread->PC = thread->nextPC and thread->nextPC = thread->nextPC + 4.
+    // Maybe move this to where the fault is handled; if the fault is
+    // handled, don't try to set this myself as the fault will set it.
+    // If not, then I set thread->PC = thread->nextPC and
+    // thread->nextPC = thread->nextPC + 4.
     thread->setPC(thread->readNextPC());
     thread->setNextPC(thread->readNextPC() + sizeof(TheISA::MachInst));
     updateComInstStats(inst);
 
     // Write the done sequence number here.
-//    LSQ.commitLoads(inst->seqNum);
     toIEW->doneSeqNum = inst->seqNum;
     lastCommitCycle = curTick;
 
@@ -1357,7 +1371,8 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
     }
 
     while (memBarrier && memBarrier->seqNum > sn) {
-        DPRINTF(BE, "[sn:%lli] Memory barrier squashed (or previously squashed)\n", memBarrier->seqNum);
+        DPRINTF(BE, "[sn:%lli] Memory barrier squashed (or previously "
+                "squashed)\n", memBarrier->seqNum);
         memBarrier->clearMemDependents();
         if (memBarrier->memDepReady()) {
             DPRINTF(BE, "No previous barrier\n");

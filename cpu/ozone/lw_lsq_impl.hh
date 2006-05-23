@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,12 +104,6 @@ OzoneLWLSQ<Impl>::init(Params *params, unsigned maxLQEntries,
         SQIndices.push(i);
     }
 
-    // May want to initialize these entries to NULL
-
-//    loadHead = loadTail = 0;
-
-//    storeHead = storeWBIdx = storeTail = 0;
-
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
@@ -197,8 +191,6 @@ OzoneLWLSQ<Impl>::insert(DynInstPtr &inst)
     } else {
         insertStore(inst);
     }
-
-//    inst->setInLSQ();
 }
 
 template <class Impl>
@@ -569,12 +561,9 @@ OzoneLWLSQ<Impl>::writebackStores()
             }
 
             if (result != MA_HIT && dcacheInterface->doEvents()) {
-//                Event *wb = NULL;
                 store_event->miss = true;
                 typename BackEnd::LdWritebackEvent *wb = NULL;
                 if (req->flags & LOCKED) {
-                    // Stx_C does not generate a system port transaction.
-//                    req->result=1;
                     wb = new typename BackEnd::LdWritebackEvent(inst,
                                                             be);
                     store_event->wbEvent = wb;
@@ -585,8 +574,6 @@ OzoneLWLSQ<Impl>::writebackStores()
 //                DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
 //                        inst->seqNum);
 
-                // Will stores need their own kind of writeback events?
-                // Do stores even need writeback events?
                 be->addDcacheMiss(inst);
 
                 lastDcacheStall = curTick;
@@ -604,20 +591,16 @@ OzoneLWLSQ<Impl>::writebackStores()
 //                        inst->seqNum);
 
                 if (req->flags & LOCKED) {
-                    // Stx_C does not generate a system port transaction.
-/*                    if (req->flags & UNCACHEABLE) {
-                        req->result = 2;
-                    } else {
-                        req->result = 1;
-                    }
-*/
+                    // Stx_C does not generate a system port
+                    // transaction in the 21264, but that might be
+                    // hard to accomplish in this model.
+
                     typename BackEnd::LdWritebackEvent *wb =
                         new typename BackEnd::LdWritebackEvent(inst,
                                                                be);
                     store_event->wbEvent = wb;
                 }
                 sq_it--;
-//                completeStore(inst->sqIdx);
             }
         } else {
             panic("Must HAVE DCACHE!!!!!\n");
@@ -780,7 +763,7 @@ OzoneLWLSQ<Impl>::completeStore(int store_idx)
     SQIndices.push(inst->sqIdx);
     storeQueue.erase(sq_it);
     --stores;
-//    assert(!inst->isCompleted());
+
     inst->setCompleted();
     if (cpu->checker) {
         cpu->checker->tick(inst);
@@ -791,7 +774,6 @@ template <class Impl>
 void
 OzoneLWLSQ<Impl>::switchOut()
 {
-//    assert(loads == 0);
     assert(storesToWB == 0);
     switchedOut = true;
     SQIt sq_it = --(storeQueue.end());
@@ -804,8 +786,6 @@ OzoneLWLSQ<Impl>::switchOut()
 
         if ((*sq_it).size == 0 && !(*sq_it).completed) {
             sq_it--;
-//            completeStore(inst->sqIdx);
-
             continue;
         }
 
@@ -817,7 +797,8 @@ OzoneLWLSQ<Impl>::switchOut()
             continue;
         } else if ((*sq_it).req->flags & LOCKED) {
             sq_it--;
-            assert(!(*sq_it).canWB || ((*sq_it).canWB && (*sq_it).req->flags & LOCKED));
+            assert(!(*sq_it).canWB ||
+                   ((*sq_it).canWB && (*sq_it).req->flags & LOCKED));
             continue;
         }
 
@@ -885,12 +866,6 @@ OzoneLWLSQ<Impl>::takeOverFrom(ExecContext *old_xc)
         LQIndices.push(i);
         SQIndices.push(i);
     }
-
-    // May want to initialize these entries to NULL
-
-//    loadHead = loadTail = 0;
-
-//    storeHead = storeWBIdx = storeTail = 0;
 
     usedPorts = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,6 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
     // Typedef for DynInstPtr.  This is really just a RefCountingPtr<OoODynInst>.
     typedef typename Impl::DynInstPtr DynInstPtr;
-
-//    typedef typename Impl::BranchPred::BPredInfo BPredInfo;
 
     typedef TheISA::ExtMachInst ExtMachInst;
     typedef TheISA::MachInst MachInst;
@@ -107,12 +105,6 @@ class OzoneDynInst : public BaseDynInst<Impl>
     // up.  In the future, you only really need a counter.
     bool memDepReady() { return srcMemInsts.empty(); }
 
-//    void setBPredInfo(const BPredInfo &bp_info) { bpInfo = bp_info; }
-
-//    BPredInfo &getBPredInfo() { return bpInfo; }
-
-//    OzoneXC *thread;
-
   private:
     void initInstPtrs();
 
@@ -133,20 +125,12 @@ class OzoneDynInst : public BaseDynInst<Impl>
      */
     DynInstPtr prevDestInst[MaxInstSrcRegs];
 
-//    BPredInfo bpInfo;
-
   public:
 
     Fault initiateAcc();
 
     Fault completeAcc();
-/*
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
 
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
-*/
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
     // register index, to simplify the implementation of register
@@ -244,38 +228,4 @@ class OzoneDynInst : public BaseDynInst<Impl>
     bool iqItValid;
 };
 
-/*
-template<class Impl>
-template<class T>
-inline Fault
-OzoneDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
-{
-    Fault fault = this->cpu->read(addr, data, flags, this);
-
-    if (this->traceData) {
-        this->traceData->setAddr(addr);
-        this->traceData->setData(data);
-    }
-
-    return fault;
-}
-
-template<class Impl>
-template<class T>
-inline Fault
-OzoneDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
-{
-    Fault fault = this->cpu->write(data, addr, flags, res, this);
-
-    this->storeSize = sizeof(T);
-    this->storeData = data;
-
-    if (this->traceData) {
-        this->traceData->setAddr(addr);
-        this->traceData->setData(data);
-    }
-
-    return fault;
-}
-*/
 #endif // __CPU_OZONE_DYN_INST_HH__
