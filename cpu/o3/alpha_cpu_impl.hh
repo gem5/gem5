@@ -31,7 +31,6 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/checker/exec_context.hh"
-#include "cpu/quiesce_event.hh"
 #include "mem/mem_interface.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
@@ -44,6 +43,8 @@
 #if FULL_SYSTEM
 #include "arch/alpha/osfpal.hh"
 #include "arch/isa_traits.hh"
+#include "cpu/quiesce_event.hh"
+#include "kern/kernel_stats.hh"
 #endif
 
 using namespace TheISA;
@@ -101,11 +102,12 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         alpha_xc_proxy->cpu = this;
         alpha_xc_proxy->thread = this->thread[i];
 
-        alpha_xc_proxy->quiesceEvent =
+#if FULL_SYSTEM
+        this->thread[i]->quiesceEvent =
             new EndQuiesceEvent(xc_proxy);
-        alpha_xc_proxy->lastActivate = 0;
-        alpha_xc_proxy->lastSuspend = 0;
-
+        this->thread[i]->lastActivate = 0;
+        this->thread[i]->lastSuspend = 0;
+#endif
         this->thread[i]->xcProxy = xc_proxy;
 
         this->execContexts.push_back(xc_proxy);
@@ -181,6 +183,9 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
     if (thread->quiesceEvent) {
         thread->quiesceEvent->xc = this;
     }
+
+    // Transfer kernel stats from one CPU to the other.
+    thread->kernelStats = old_context->getKernelStats();
 //    storeCondFailures = 0;
     cpu->lockFlag = false;
 #endif
@@ -200,7 +205,9 @@ AlphaFullCPU<Impl>::AlphaXC::activate(int delay)
     if (thread->status() == ExecContext::Active)
         return;
 
-    lastActivate = curTick;
+#if FULL_SYSTEM
+    thread->lastActivate = curTick;
+#endif
 
     if (thread->status() == ExecContext::Unallocated) {
         cpu->activateWhenReady(thread->tid);
@@ -222,8 +229,10 @@ AlphaFullCPU<Impl>::AlphaXC::suspend()
     if (thread->status() == ExecContext::Suspended)
         return;
 
-    lastActivate = curTick;
-    lastSuspend = curTick;
+#if FULL_SYSTEM
+    thread->lastActivate = curTick;
+    thread->lastSuspend = curTick;
+#endif
 /*
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
@@ -266,38 +275,55 @@ AlphaFullCPU<Impl>::AlphaXC::halt()
 template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::regStats(const std::string &name)
-{}
+{
+#if FULL_SYSTEM
+    thread->kernelStats = new Kernel::Statistics(cpu->system);
+    thread->kernelStats->regStats(name + ".kern");
+#endif
+}
 
 template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::serialize(std::ostream &os)
-{}
+{
+#if FULL_SYSTEM
+    if (thread->kernelStats)
+        thread->kernelStats->serialize(os);
+#endif
+
+}
 
 template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::unserialize(Checkpoint *cp, const std::string &section)
-{}
+{
+#if FULL_SYSTEM
+    if (thread->kernelStats)
+        thread->kernelStats->unserialize(cp, section);
+#endif
+
+}
 
 #if FULL_SYSTEM
 template <class Impl>
 EndQuiesceEvent *
 AlphaFullCPU<Impl>::AlphaXC::getQuiesceEvent()
 {
-    return quiesceEvent;
+    return thread->quiesceEvent;
 }
 
 template <class Impl>
 Tick
 AlphaFullCPU<Impl>::AlphaXC::readLastActivate()
 {
-    return lastActivate;
+    return thread->lastActivate;
 }
 
 template <class Impl>
 Tick
 AlphaFullCPU<Impl>::AlphaXC::readLastSuspend()
 {
-    return lastSuspend;
+    return thread->lastSuspend;
 }
 
 template <class Impl>
@@ -595,7 +621,7 @@ AlphaFullCPU<Impl>::hwrei(unsigned tid)
     // Need to clear the lock flag upon returning from an interrupt.
     this->lockFlag = false;
 
-    this->kernelStats->hwrei();
+    this->thread[tid]->kernelStats->hwrei();
 
     this->checkInterrupts = true;
 
@@ -607,9 +633,9 @@ template <class Impl>
 bool
 AlphaFullCPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 {
-    if (this->kernelStats)
-        this->kernelStats->callpal(palFunc,
-                                   this->execContexts[tid]);
+    if (this->thread[tid]->kernelStats)
+        this->thread[tid]->kernelStats->callpal(palFunc,
+                                                this->execContexts[tid]);
 
     switch (palFunc) {
       case PAL::halt:

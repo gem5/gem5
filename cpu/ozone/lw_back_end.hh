@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef __CPU_OZONE_LW_BACK_END_HH__
 #define __CPU_OZONE_LW_BACK_END_HH__
@@ -238,10 +265,6 @@ class LWBackEnd
     Counter funcExeInst;
 
   private:
-//    typedef typename Impl::InstQueue InstQueue;
-
-//    InstQueue IQ;
-
     typedef typename Impl::LdstQueue LdstQueue;
 
     LdstQueue LSQ;
@@ -342,8 +365,6 @@ class LWBackEnd
 
     bool exactFullStall;
 
-//    bool fetchRedirect[Impl::MaxThreads];
-
     // number of cycles stalled for D-cache misses
 /*    Stats::Scalar<> dcacheStallCycles;
       Counter lastDcacheStall;
@@ -438,43 +459,6 @@ template <class T>
 Fault
 LWBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 {
-/*    memReq->reset(addr, sizeof(T), flags);
-
-    // translate to physical address
-    Fault fault = cpu->translateDataReadReq(memReq);
-
-    // if we have a cache, do cache access too
-    if (fault == NoFault && dcacheInterface) {
-        memReq->cmd = Read;
-        memReq->completionEvent = NULL;
-        memReq->time = curTick;
-        memReq->flags &= ~INST_READ;
-        MemAccessResult result = dcacheInterface->access(memReq);
-
-        // Ugly hack to get an event scheduled *only* if the access is
-        // a miss.  We really should add first-class support for this
-        // at some point.
-        if (result != MA_HIT && dcacheInterface->doEvents()) {
-            // Fix this hack for keeping funcExeInst correct with loads that
-            // are executed twice.
-            --funcExeInst;
-
-            memReq->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
-//	    status = DcacheMissStall;
-            DPRINTF(OzoneCPU, "Dcache miss stall!\n");
-        } else {
-            // do functional access
-            fault = thread->mem->read(memReq, data);
-
-        }
-    }
-*/
-/*
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
-        recordEvent("Uncached Read");
-*/
     return LSQ.read(req, data, load_idx);
 }
 
@@ -483,39 +467,6 @@ template <class T>
 Fault
 LWBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
 {
-/*
-    memReq->reset(addr, sizeof(T), flags);
-
-    // translate to physical address
-    Fault fault = cpu->translateDataWriteReq(memReq);
-
-    if (fault == NoFault && dcacheInterface) {
-        memReq->cmd = Write;
-        memcpy(memReq->data,(uint8_t *)&data,memReq->size);
-        memReq->completionEvent = NULL;
-        memReq->time = curTick;
-        memReq->flags &= ~INST_READ;
-        MemAccessResult result = dcacheInterface->access(memReq);
-
-        // Ugly hack to get an event scheduled *only* if the access is
-        // a miss.  We really should add first-class support for this
-        // at some point.
-        if (result != MA_HIT && dcacheInterface->doEvents()) {
-            memReq->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
-//	    status = DcacheMissStall;
-            DPRINTF(OzoneCPU, "Dcache miss stall!\n");
-        }
-    }
-
-    if (res && (fault == NoFault))
-        *res = memReq->result;
-        */
-/*
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
-        recordEvent("Uncached Write");
-*/
     return LSQ.write(req, data, store_idx);
 }
 

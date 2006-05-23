@@ -57,6 +57,10 @@ class Sampler;
 class RemoteGDB;
 class GDBListener;
 
+namespace Kernel {
+    class Statistics;
+};
+
 #else
 
 class Process;
@@ -116,6 +120,8 @@ class OzoneCPU : public BaseCPU
         AlphaITB *getITBPtr() { return cpu->itb; }
 
         AlphaDTB * getDTBPtr() { return cpu->dtb; }
+
+        Kernel::Statistics *getKernelStats() { return thread->kernelStats; }
 #else
         Process *getProcessPtr() { return thread->process; }
 #endif
@@ -238,14 +244,7 @@ class OzoneCPU : public BaseCPU
 
   private:
     OzoneThreadState<Impl> thread;
-/*
-    // Squash event for when the XC needs to squash all inflight instructions.
-    struct XCSquashEvent : public Event
-    {
-        void process();
-        const char *description();
-    };
-*/
+
   public:
     // main simulation loop (one cycle)
     void tick();
@@ -288,7 +287,6 @@ class OzoneCPU : public BaseCPU
     void trace_data(T data);
 
   public:
-    //
     enum Status {
         Running,
         Idle,
@@ -324,8 +322,6 @@ class OzoneCPU : public BaseCPU
     void setCpuId(int id) { cpuId = id; }
 
     int readCpuId() { return cpuId; }
-
-//    FunctionalMemory *getMemPtr() { return mem; }
 
     int cpuId;
 
@@ -369,8 +365,6 @@ class OzoneCPU : public BaseCPU
     Status status() const { return _status; }
     void setStatus(Status new_status) { _status = new_status; }
 
-    // Not sure what an activate() call on the CPU's proxy XC would mean...
-
     virtual void activateContext(int thread_num, int delay);
     virtual void suspendContext(int thread_num);
     virtual void deallocateContext(int thread_num);
@@ -384,7 +378,6 @@ class OzoneCPU : public BaseCPU
   public:
     Counter numInst;
     Counter startNumInst;
-//    Stats::Scalar<> numInsts;
 
     virtual Counter totalInstructions() const
     {
@@ -392,9 +385,6 @@ class OzoneCPU : public BaseCPU
     }
 
   private:
-    // number of simulated memory references
-//    Stats::Scalar<> numMemRefs;
-
     // number of simulated loads
     Counter numLoad;
     Counter startNumLoad;
@@ -472,7 +462,6 @@ class OzoneCPU : public BaseCPU
     template <class T>
     Fault read(MemReqPtr &req, T &data)
     {
-//	panic("CPU READ NOT IMPLEMENTED W/NEW MEMORY\n");
 #if 0
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
         if (req->flags & LOCKED) {
@@ -483,7 +472,6 @@ class OzoneCPU : public BaseCPU
 #endif
         Fault error;
         if (req->flags & LOCKED) {
-//            lockAddr = req->paddr;
             lockAddrList.insert(req->paddr);
             lockFlag = true;
         }
@@ -558,7 +546,7 @@ class OzoneCPU : public BaseCPU
             if (req->flags & UNCACHEABLE) {
                 req->result = 2;
             } else {
-                if (this->lockFlag/* && this->lockAddr == req->paddr*/) {
+                if (this->lockFlag) {
                     if (lockAddrList.find(req->paddr) !=
                         lockAddrList.end()) {
                         req->result = 1;

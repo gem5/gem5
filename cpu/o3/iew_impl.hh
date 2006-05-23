@@ -1232,13 +1232,14 @@ DefaultIEW<Impl>::executeInsts()
 #endif
 
     // Execute/writeback any instructions that are available.
+    int insts_to_execute = fromIssue->size;
     int inst_num = 0;
-    for ( ; inst_num < issueWidth && fromIssue->insts[inst_num];
+    for (; inst_num < insts_to_execute;
           ++inst_num) {
 
         DPRINTF(IEW, "Execute: Executing instructions from IQ.\n");
 
-        DynInstPtr inst = fromIssue->insts[inst_num];
+        DynInstPtr inst = instQueue.getInstToExecute();
 
         DPRINTF(IEW, "Execute: Processing PC %#x, [tid:%i] [sn:%i].\n",
                 inst->readPC(), inst->threadNumber,inst->seqNum);

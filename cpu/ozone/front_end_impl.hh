@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
@@ -26,14 +53,6 @@ FrontEnd<Impl>::FrontEnd(Params *params)
 
     status = Idle;
 
-    // Setup branch predictor.
-
-    // Setup Memory Request
-/*
-    memReq = new MemReq();
-    memReq->asid = 0;
-    memReq->data = new uint8_t[64];
-*/
     memReq = NULL;
     // Size of cache block.
     cacheBlkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
@@ -77,7 +96,6 @@ void
 FrontEnd<Impl>::setXC(ExecContext *xc_ptr)
 {
     xc = xc_ptr;
-//    memReq->xc = xc;
 }
 
 template <class Impl>
@@ -321,7 +339,6 @@ FrontEnd<Impl>::tick()
             break;
         }
 
-        // if (generalizeFetch) {
         processInst(inst);
 
         if (status == SerializeBlocked) {
@@ -333,11 +350,6 @@ FrontEnd<Impl>::tick()
         instBuffer.push_back(inst);
         ++instBufferSize;
         ++num_inst;
-        // } else {
-        // fetch(num_inst);
-        // decode(num_inst);
-        // rename(num_inst);
-        // }
 
 #if FULL_SYSTEM
         if (inst->isQuiesce()) {
@@ -402,10 +414,6 @@ FrontEnd<Impl>::fetchCacheLine()
     // Translate the instruction request.
     fault = cpu->translateInstReq(memReq);
 
-    // In the case of faults, the fetch stage may need to stall and wait
-    // on what caused the fetch (ITB or Icache miss).
-//    assert(fault == NoFault);
-
     // Now do the timing access to see whether or not the instruction
     // exists within the cache.
     if (icacheInterface && fault == NoFault) {
@@ -466,7 +474,6 @@ FrontEnd<Impl>::processInst(DynInstPtr &inst)
 
     Addr inst_PC = inst->readPC();
 
-//    BPredInfo bp_info = branchPred.lookup(inst_PC);
     if (!inst->isControl()) {
         inst->setPredTarg(inst->readNextPC());
     } else {
@@ -482,7 +489,6 @@ FrontEnd<Impl>::processInst(DynInstPtr &inst)
             "%#x\n", inst->seqNum, inst_PC, next_PC);
 
 //    inst->setNextPC(next_PC);
-//    inst->setBPredInfo(bp_info);
 
     // Not sure where I should set this
     PC = next_PC;
@@ -535,7 +541,7 @@ void
 FrontEnd<Impl>::handleFault(Fault &fault)
 {
     DPRINTF(FE, "Fault at fetch, telling commit\n");
-//    backEnd->fetchFault(fault);
+
     // We're blocked on the back end until it handles this fault.
     status = TrapPending;
 
@@ -586,9 +592,6 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
         instBuffer.pop_back();
         --instBufferSize;
 
-        // Fix up branch predictor if necessary.
-//        branchPred.undo(inst->getBPredInfo());
-
         freeRegs+= inst->numDestRegs();
     }
 
@@ -607,7 +610,6 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
     // Clear the icache miss if it's outstanding.
     if (status == IcacheMissStall && icacheInterface) {
         DPRINTF(FE, "Squashing outstanding Icache miss.\n");
-//        icacheInterface->squash(0);
         memReq = NULL;
     }
 
@@ -693,17 +695,9 @@ template <class Impl>
 bool
 FrontEnd<Impl>::updateStatus()
 {
-//    bool rename_block = freeRegs <= 0;
     bool serialize_block = !backEnd->robEmpty() || instBufferSize;
     bool be_block = cpu->decoupledFrontEnd ? false : backEnd->isBlocked();
     bool ret_val = false;
-/*
-  // Should already be handled through addFreeRegs function
-    if (status == RenameBlocked && !rename_block) {
-        status = Running;
-        ret_val = true;
-    }
-*/
 
     if (status == SerializeBlocked && !serialize_block) {
         status = SerializeComplete;
@@ -753,10 +747,6 @@ FrontEnd<Impl>::getInstFromCacheline()
 
     // PC of inst is not in this cache block
     if (PC >= (cacheBlkPC + cacheBlkSize) || PC < cacheBlkPC || !cacheBlkValid) {
-//        DPRINTF(OoOCPU, "OoOCPU: PC is not in this cache block\n");
-//        DPRINTF(OoOCPU, "OoOCPU: PC: %#x, cacheBlkPC: %#x, cacheBlkValid: %i",
-//                PC, cacheBlkPC, cacheBlkValid);
-//        panic("Instruction not in cache line or cache line invalid!");
         return NULL;
     }
 

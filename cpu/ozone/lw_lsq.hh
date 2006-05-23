@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,6 @@ class OzoneLWLSQ {
     /** Executes a load instruction. */
     Fault executeLoad(DynInstPtr &inst);
 
-//    Fault executeLoad(int lq_idx);
     /** Executes a store instruction. */
     Fault executeStore(DynInstPtr &inst);
 
@@ -304,10 +303,8 @@ class OzoneLWLSQ {
     Status _status;
 
     /** The store queue. */
-//    std::vector<SQEntry> storeQueue;
     std::list<SQEntry> storeQueue;
     /** The load queue. */
-//    std::vector<DynInstPtr> loadQueue;
     std::list<DynInstPtr> loadQueue;
 
     typedef typename std::list<SQEntry>::iterator SQIt;
@@ -365,7 +362,6 @@ class OzoneLWLSQ {
      */
     InstSeqNum stallingStoreIsn;
     /** The index of the above store. */
-//    int stallingLoadIdx;
     LQIt stallingLoad;
 
     /** Whether or not a load is blocked due to the memory system.  It is
@@ -398,8 +394,6 @@ class OzoneLWLSQ {
     template <class T>
     Fault write(MemReqPtr &req, T &data, int store_idx);
 
-    /** Returns the index of the head load instruction. */
-//    int getLoadHead() { return loadHead; }
     /** Returns the sequence number of the head load instruction. */
     InstSeqNum getLoadHeadSeqNum()
     {
@@ -411,8 +405,6 @@ class OzoneLWLSQ {
 
     }
 
-    /** Returns the index of the head store instruction. */
-//    int getStoreHead() { return storeHead; }
     /** Returns the sequence number of the head store instruction. */
     InstSeqNum getStoreHeadSeqNum()
     {
@@ -604,12 +596,7 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         DPRINTF(OzoneLSQ, "D-cache: PC:%#x reading from paddr:%#x "
                 "vaddr:%#x flags:%i\n",
                 inst->readPC(), req->paddr, req->vaddr, req->flags);
-/*
-        Addr debug_addr = ULL(0xfffffc0000be81a8);
-        if (req->vaddr == debug_addr) {
-            debug_break();
-        }
-*/
+
         assert(!req->completionEvent);
         req->completionEvent =
             new typename BackEnd::LdWritebackEvent(inst, be);
@@ -631,9 +618,6 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             _status = DcacheMissStall;
 
         } else {
-//            DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
-//                    inst->seqNum);
-
             DPRINTF(OzoneLSQ, "D-cache hit!\n");
         }
     } else {
@@ -664,12 +648,7 @@ OzoneLWLSQ<Impl>::write(MemReqPtr &req, T &data, int store_idx)
     assert(!req->data);
     req->data = new uint8_t[64];
     memcpy(req->data, (uint8_t *)&(*sq_it).data, req->size);
-/*
-    Addr debug_addr = ULL(0xfffffc0000be81a8);
-    if (req->vaddr == debug_addr) {
-        debug_break();
-    }
-*/
+
     // This function only writes the data to the store queue, so no fault
     // can happen here.
     return NoFault;

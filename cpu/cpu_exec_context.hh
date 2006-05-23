@@ -53,6 +53,10 @@ class FunctionProfile;
 class ProfileNode;
 class MemoryController;
 
+namespace Kernel {
+    class Statistics;
+};
+
 #else // !FULL_SYSTEM
 
 #include "sim/process.hh"
@@ -147,6 +151,9 @@ class CPUExecContext
 
     void profileSample();
 
+    Kernel::Statistics *getKernelStats() { return kernelStats; }
+
+    Kernel::Statistics *kernelStats;
 #else
     Process *process;
 

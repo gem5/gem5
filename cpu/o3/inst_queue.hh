@@ -171,6 +171,8 @@ class InstructionQueue
      */
     void insertBarrier(DynInstPtr &barr_inst);
 
+    DynInstPtr getInstToExecute();
+
     /**
      * Records the instruction as the producer of a register without
      * adding it to the rest of the IQ.
@@ -271,6 +273,8 @@ class InstructionQueue
 
     /** List of all the instructions in the IQ (some of which may be issued). */
     std::list<DynInstPtr> instList[Impl::MaxThreads];
+
+    std::list<DynInstPtr> instsToExecute;
 
     /**
      * Struct for comparing entries to be added to the priority queue.  This

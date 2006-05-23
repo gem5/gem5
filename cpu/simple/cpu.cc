@@ -782,7 +782,7 @@ SimpleCPU::tick()
 
 #if FULL_SYSTEM
         if (system->kernelBinning->fnbin) {
-            assert(kernelStats);
+            assert(cpuXC->getKernelStats());
             system->kernelBinning->execute(xcProxy, inst);
         }
 

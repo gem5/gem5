@@ -589,6 +589,16 @@ InstructionQueue<Impl>::insertBarrier(DynInstPtr &barr_inst)
 }
 
 template <class Impl>
+typename Impl::DynInstPtr
+InstructionQueue<Impl>::getInstToExecute()
+{
+    assert(!instsToExecute.empty());
+    DynInstPtr inst = instsToExecute.front();
+    instsToExecute.pop_front();
+    return inst;
+}
+
+template <class Impl>
 void
 InstructionQueue<Impl>::addToOrderList(OpClass op_class)
 {
@@ -662,9 +672,11 @@ InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
     // @todo: This could break if there's multiple multi-cycle ops
     // finishing on this cycle.  Maybe implement something like
     // instToCommit in iew_impl.hh.
-    int &size = issueToExecuteQueue->access(0)->size;
+    issueToExecuteQueue->access(0)->size++;
+    instsToExecute.push_back(inst);
+//    int &size = issueToExecuteQueue->access(0)->size;
 
-    issueToExecuteQueue->access(0)->insts[size++] = inst;
+//    issueToExecuteQueue->access(0)->insts[size++] = inst;
 }
 
 // @todo: Figure out a better way to remove the squashed items from the
@@ -690,9 +702,8 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     ListOrderIt order_it = listOrder.begin();
     ListOrderIt order_end_it = listOrder.end();
     int total_issued = 0;
-    int exec_queue_slot = i2e_info->size;
 
-    while (exec_queue_slot < totalWidth && total_issued < totalWidth &&
+    while (total_issued < totalWidth &&
            order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
 
@@ -733,8 +744,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         if (idx == -2 || idx != -1) {
             if (op_latency == 1) {
-                i2e_info->insts[exec_queue_slot++] = issuing_inst;
+//                i2e_info->insts[exec_queue_slot++] = issuing_inst;
                 i2e_info->size++;
+                instsToExecute.push_back(issuing_inst);
 
                 // Add the FU onto the list of FU's to be freed next
                 // cycle if we used one.

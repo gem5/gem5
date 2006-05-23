@@ -450,13 +450,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
         instResult.integer = val;
     }
 
-    //Push to .cc file.
     /** Records that one of the source registers is ready. */
     void markSrcRegReady();
 
-    /** Marks a specific register as ready.
-     *  @todo: Move this to .cc file.
-     */
+    /** Marks a specific register as ready. */
     void markSrcRegReady(RegIndex src_idx);
 
     /** Returns if a source register is ready. */

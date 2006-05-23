@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,6 @@
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/pc_event.hh"
-#include "cpu/sampler/sampler.hh"
 #include "cpu/static_inst.hh"
 #include "sim/eventq.hh"
 
@@ -63,6 +62,7 @@ class BaseDynInst;
 class ExecContext;
 class MemInterface;
 class Checkpoint;
+class Sampler;
 
 class CheckerCPU : public BaseCPU
 {
@@ -86,8 +86,6 @@ class CheckerCPU : public BaseCPU
     };
 
   public:
-    void post_interrupt(int int_num, int index);
-
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 
@@ -111,8 +109,6 @@ class CheckerCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
-
-    bool interval_stats;
 #endif
 
     union Result {
@@ -128,11 +124,6 @@ class CheckerCPU : public BaseCPU
 
     // Refcounted pointer to the one memory request.
     MemReqPtr memReq;
-
-    // Pointer to the sampler that is telling us to switchover.
-    // Used to signal the completion of the pipe drain and schedule
-    // the next switchover
-    Sampler *sampler;
 
     StaticInstPtr curStaticInst;
 
@@ -284,6 +275,7 @@ class CheckerCPU : public BaseCPU
     bool simPalCheck(int palFunc) { return cpuXC->simPalCheck(palFunc); }
 #else
     // Assume that the normal CPU's call to syscall was successful.
+    // The checker's state would have already been updated by the syscall.
     void syscall() { }
 #endif
 
@@ -307,8 +299,6 @@ class CheckerCPU : public BaseCPU
     bool exitOnError;
 
     InstSeqNum youngestSN;
-//    std::map<Addr, uint64_t> storeBuff;
-//    typedef std::map<Addr, uint64_t>::iterator map_it;
 };
 
 template <class DynInstPtr>

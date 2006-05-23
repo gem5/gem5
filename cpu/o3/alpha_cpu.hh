@@ -35,6 +35,9 @@
 #include "sim/byteswap.hh"
 
 class EndQuiesceEvent;
+namespace Kernel {
+    class Statistics;
+};
 
 template <class Impl>
 class AlphaFullCPU : public FullO3CPU<Impl>
@@ -60,11 +63,6 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         O3ThreadState<Impl> *thread;
 
-        Tick lastActivate;
-        Tick lastSuspend;
-
-        EndQuiesceEvent *quiesceEvent;
-
         virtual BaseCPU *getCpuPtr() { return cpu; }
 
         virtual void setCpuId(int id) { cpu->cpu_id = id; }
@@ -81,6 +79,9 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual AlphaITB *getITBPtr() { return cpu->itb; }
 
         virtual AlphaDTB * getDTBPtr() { return cpu->dtb; }
+
+        virtual Kernel::Statistics *getKernelStats()
+        { return thread->kernelStats; }
 #else
         virtual Process *getProcessPtr() { return thread->process; }
 #endif
