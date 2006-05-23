@@ -54,7 +54,8 @@ Bus::recvTiming(Packet *pkt)
     if (pkt->dest == Packet::Broadcast) {
         port = findPort(pkt->addr, pkt->src);
     } else {
-        assert(pkt->dest > 0 && pkt->dest < interfaces.size());
+        assert(pkt->dest >= 0 && pkt->dest < interfaces.size());
+        assert(pkt->dest != pkt->src); // catch infinite loops
         port = interfaces[pkt->dest];
     }
     return port->sendTiming(pkt);

@@ -78,6 +78,8 @@ bool
 PioPort::recvTiming(Packet *pkt)
 {
     device->recvAtomic(pkt);
+    // turn packet around to go back to requester
+    pkt->dest = pkt->src;
     sendTiming(pkt, pkt->time - pkt->req->getTime());
     return Success;
 }
