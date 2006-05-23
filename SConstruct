@@ -108,7 +108,7 @@ def rfind(l, elt, offs = -1):
 # Generate a list of the unique build roots and configs that the
 # collected targets reference.
 build_paths = []
-build_roots = []
+build_root = None
 for t in abs_targets:
     path_dirs = t.split('/')
     try:
@@ -116,9 +116,14 @@ for t in abs_targets:
     except:
         print "Error: no non-leaf 'build' dir found on target path", t
         Exit(1)
-    build_root = os.path.join('/',*path_dirs[:build_top+1])
-    if build_root not in build_roots:
-        build_roots.append(build_root)
+    this_build_root = os.path.join('/',*path_dirs[:build_top+1])
+    if not build_root:
+        build_root = this_build_root
+    else:
+        if this_build_root != build_root:
+            print "Error: build targets not under same build root\n"\
+                  "  %s\n  %s" % (build_root, this_build_root)
+            Exit(1)
     build_path = os.path.join('/',*path_dirs[:build_top+2])
     if build_path not in build_paths:
         build_paths.append(build_path)
@@ -157,8 +162,11 @@ env.Append(CPPPATH=[Dir('ext/dnet')])
 # Default libraries
 env.Append(LIBS=['z'])
 
-# Platform-specific configuration
-conf = Configure(env)
+# Platform-specific configuration.  Note again that we assume that all
+# builds under a given build root run on the same host platform.
+conf = Configure(env,
+                 conf_dir = os.path.join(build_root, '.scons_config'),
+                 log_file = os.path.join(build_root, 'scons_config.log'))
 
 # Check for <fenv.h> (C99 FP environment control)
 have_fenv = conf.CheckHeader('fenv.h', '<>')
@@ -298,6 +306,11 @@ Usage: scons [scons options] [build options] [target(s)]
 
 '''
 
+# libelf build is shared across all configs in the build root.
+env.SConscript('ext/libelf/SConscript',
+               build_dir = os.path.join(build_root, 'libelf'),
+               exports = 'env')
+
 ###################################################
 #
 # Define build environments for selected configurations.
@@ -307,24 +320,13 @@ Usage: scons [scons options] [build options] [target(s)]
 # rename base env
 base_env = env
 
-# Spme things (just libelf currently) are shared across all configs in
-# a "build root".  Need to define how to build these just once for
-# each referenced root.
-build_root_env = {}
-for build_root in build_roots:
-    env = base_env.Copy()
-    env.SConscript('ext/libelf/SConscript',
-                   build_dir = os.path.join(build_root, 'libelf'),
-                   exports = 'env')
-    build_root_env[build_root] = env
-
 for build_path in build_paths:
     print "Building in", build_path
     # build_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'ALPHA_SE')
     (build_root, build_dir) = os.path.split(build_path)
     # Make a copy of the build-root environment to use for this config.
-    env = build_root_env[build_root].Copy()
+    env = base_env.Copy()
 
     # Set env options according to the build directory config.
     sticky_opts.files = []
