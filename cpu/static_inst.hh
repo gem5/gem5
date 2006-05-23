@@ -103,6 +103,7 @@ class StaticInstBase : public RefCounted
         IsMemRef,	///< References memory (load, store, or prefetch).
         IsLoad,		///< Reads from memory (load or prefetch).
         IsStore,	///< Writes to memory.
+        IsStoreConditional,    ///< Store conditional instruction.
         IsInstPrefetch,	///< Instruction-cache prefetch.
         IsDataPrefetch,	///< Data-cache prefetch.
         IsCopy,         ///< Fast Cache block copy
@@ -127,9 +128,10 @@ class StaticInstBase : public RefCounted
         IsWriteBarrier,	///< Is a write barrier
 
         IsNonSpeculative, ///< Should not be executed speculatively
-        IsQuiesce,
+        IsQuiesce,      ///< Is a quiesce instruction
 
-        IsUnverifiable,
+        IsIprAccess,    ///< Accesses IPRs
+        IsUnverifiable, ///< Can't be verified by a checker
 
         NumFlags
     };
@@ -193,6 +195,7 @@ class StaticInstBase : public RefCounted
     bool isMemRef()    	  const { return flags[IsMemRef]; }
     bool isLoad()	  const { return flags[IsLoad]; }
     bool isStore()	  const { return flags[IsStore]; }
+    bool isStoreConditional()	  const { return flags[IsStoreConditional]; }
     bool isInstPrefetch() const { return flags[IsInstPrefetch]; }
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
     bool isCopy()         const { return flags[IsCopy];}
@@ -218,6 +221,7 @@ class StaticInstBase : public RefCounted
     bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }
     bool isQuiesce() const { return flags[IsQuiesce]; }
+    bool isIprAccess() const { return flags[IsIprAccess]; }
     bool isUnverifiable() const { return flags[IsUnverifiable]; }
     //@}
 

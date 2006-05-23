@@ -424,10 +424,9 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
 
     assert(store_fault == NoFault);
 
-    if (store_inst->isNonSpeculative()) {
-        // Nonspeculative accesses (namely store conditionals)
-        // need to set themselves as able to writeback if we
-        // haven't had a fault by here.
+    if (store_inst->isStoreConditional()) {
+        // Store conditionals need to set themselves as able to
+        // writeback if we haven't had a fault by here.
         storeQueue[store_idx].canWB = true;
 
         ++storesToWB;

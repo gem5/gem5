@@ -594,7 +594,14 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
         // serializeAfter marks the next instruction as serializeBefore.
         // serializeBefore makes the instruction wait in rename until the ROB
         // is empty.
-        if (inst->isSerializeBefore() && !inst->isSerializeHandled()) {
+
+        // In this model, IPR accesses are serialize before
+        // instructions, and store conditionals are serialize after
+        // instructions.  This is mainly due to lack of support for
+        // out-of-order operations of either of those classes of
+        // instructions.
+        if ((inst->isIprAccess() || inst->isSerializeBefore()) &&
+            !inst->isSerializeHandled()) {
             DPRINTF(Rename, "Serialize before instruction encountered.\n");
 
             if (!inst->isTempSerializeBefore()) {
@@ -613,7 +620,8 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
             blockThisCycle = true;
 
             break;
-        } else if (inst->isSerializeAfter() && !inst->isSerializeHandled()) {
+        } else if ((inst->isStoreConditional() || inst->isSerializeAfter()) &&
+                   !inst->isSerializeHandled()) {
             DPRINTF(Rename, "Serialize after instruction encountered.\n");
 
             renamedSerializing++;

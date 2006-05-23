@@ -1100,10 +1100,10 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
 
             ++iewDispStoreInsts;
 
-            if (inst->isNonSpeculative()) {
-                // Non-speculative stores (namely store conditionals)
-                // need to be set as "canCommit()" so that commit can
-                // process them when they reach the head of commit.
+            if (inst->isStoreConditional()) {
+                // Store conditionals need to be set as "canCommit()"
+                // so that commit can process them when they reach the
+                // head of commit.
                 inst->setCanCommit();
                 instQueue.insertNonSpec(inst);
                 add_to_iq = false;

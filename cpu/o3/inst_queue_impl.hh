@@ -1041,6 +1041,7 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
 
             // Remove the instruction from the dependency list.
             if (!squashed_inst->isNonSpeculative() &&
+                !squashed_inst->isStoreConditional() &&
                 !squashed_inst->isMemBarrier() &&
                 !squashed_inst->isWriteBarrier()) {
 

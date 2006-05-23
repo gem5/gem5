@@ -73,7 +73,7 @@ decode OPCODE default Unknown::unknown() {
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED);
+                    }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
@@ -85,7 +85,7 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED);
+                    }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
     }
 
     format IntegerOperate {
@@ -591,8 +591,8 @@ decode OPCODE default Unknown::unknown() {
             0x02e: fcmovle({{ Fc = (Fa <= 0) ? Fb : Fc; }});
             0x02f: fcmovgt({{ Fc = (Fa >  0) ? Fb : Fc; }});
 
-            0x024: mt_fpcr({{ FPCR = Fa.uq; }});
-            0x025: mf_fpcr({{ Fa.uq = FPCR; }});
+            0x024: mt_fpcr({{ FPCR = Fa.uq; }}, IsIprAccess);
+            0x025: mf_fpcr({{ Fa.uq = FPCR; }}, IsIprAccess);
         }
     }
 
@@ -696,9 +696,9 @@ decode OPCODE default Unknown::unknown() {
                 xc->syscall();
             }}, IsNonSpeculative);
             // Read uniq reg into ABI return value register (r0)
-            0x9e: rduniq({{ R0 = Runiq; }});
+            0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);
             // Write uniq reg with value from ABI arg register (r16)
-            0x9f: wruniq({{ Runiq = R16; }});
+            0x9f: wruniq({{ Runiq = R16; }}, IsIprAccess);
         }
     }
 #endif
@@ -735,7 +735,7 @@ decode OPCODE default Unknown::unknown() {
         format HwMoveIPR {
             1: hw_mfpr({{
                 Ra = xc->readMiscRegWithEffect(ipr_index, fault);
-            }});
+            }}, IsIprAccess);
         }
     }
 
@@ -745,7 +745,7 @@ decode OPCODE default Unknown::unknown() {
             1: hw_mtpr({{
                 xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
-            }});
+            }}, IsIprAccess);
         }
     }
 

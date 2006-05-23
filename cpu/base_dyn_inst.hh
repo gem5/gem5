@@ -334,6 +334,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isMemRef()    	  const { return staticInst->isMemRef(); }
     bool isLoad()	  const { return staticInst->isLoad(); }
     bool isStore()	  const { return staticInst->isStore(); }
+    bool isStoreConditional() const
+    { return staticInst->isStoreConditional(); }
     bool isInstPrefetch() const { return staticInst->isInstPrefetch(); }
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
     bool isCopy()         const { return staticInst->isCopy(); }
@@ -356,6 +358,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }
     bool isQuiesce() const { return staticInst->isQuiesce(); }
+    bool isIprAccess() const { return staticInst->isIprAccess(); }
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
