@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <cstdio>
-#include <cstdlib>
+//#include <cstdio>
+//#include <cstdlib>
 
 #include "arch/isa_traits.hh" // For MachInst
 #include "base/trace.hh"
@@ -39,7 +39,7 @@
 #include "cpu/ozone/cpu.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/static_inst.hh"
-#include "mem/base_mem.hh"
+//#include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
@@ -50,7 +50,7 @@
 #include "arch/alpha/tlb.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
-#include "base/remote_gdb.hh"
+//#include "base/remote_gdb.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
 #include "mem/functional/memory_control.hh"
@@ -94,80 +94,26 @@ OzoneCPU<Impl>::TickEvent::description()
 {
     return "OzoneCPU tick event";
 }
-/*
-template <class Impl>
-OzoneCPU<Impl>::ICacheCompletionEvent::ICacheCompletionEvent(OzoneCPU *_cpu)
-    : Event(&mainEventQueue),
-      cpu(_cpu)
-{
-}
 
-template <class Impl>
-void
-OzoneCPU<Impl>::ICacheCompletionEvent::process()
-{
-    cpu->processICacheCompletion();
-}
-
-template <class Impl>
-const char *
-OzoneCPU<Impl>::ICacheCompletionEvent::description()
-{
-    return "OzoneCPU I-cache completion event";
-}
-
-template <class Impl>
-OzoneCPU<Impl>::DCacheCompletionEvent::
-DCacheCompletionEvent(OzoneCPU *_cpu,
-                      DynInstPtr &_inst,
-                      DCacheCompEventIt &_dcceIt)
-    : Event(&mainEventQueue),
-      cpu(_cpu),
-      inst(_inst),
-      dcceIt(_dcceIt)
-{
-    this->setFlags(Event::AutoDelete);
-}
-
-template <class Impl>
-void
-OzoneCPU<Impl>::DCacheCompletionEvent::process()
-{
-    inst->setCompleted();
-
-    // Maybe remove the EA from the list of addrs?
-    cpu->eaList.clearAddr(inst->seqNum, inst->getEA());
-    cpu->dCacheCompList.erase(this->dcceIt);
-}
-
-template <class Impl>
-const char *
-OzoneCPU<Impl>::DCacheCompletionEvent::description()
-{
-    return "OzoneCPU D-cache completion event";
-}
-*/
 template <class Impl>
 OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
-    : BaseCPU(p), thread(this, 0, p->mem), tickEvent(this, p->width), mem(p->mem),
+    : BaseCPU(p), thread(this, 0, p->mem), tickEvent(this, p->width),
+      mem(p->mem),
 #else
     : BaseCPU(p), thread(this, 0, p->workload[0], 0), tickEvent(this, p->width),
       mem(p->workload[0]->getMemory()),
 #endif
       comm(5, 5)
 {
-    if (p->checker) {
-        BaseCPU *temp_checker = p->checker;
-        checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
-    } else {
-        checker = NULL;
-    }
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
 
     _status = Idle;
-    if (checker) {
+
+    if (p->checker) {
+        BaseCPU *temp_checker = p->checker;
+        checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
         checker->setMemory(mem);
 #if FULL_SYSTEM
         checker->setSystem(p->system);
@@ -176,19 +122,18 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
         thread.xcProxy = checkerXC;
         xcProxy = checkerXC;
     } else {
+        checker = NULL;
         thread.xcProxy = &ozoneXC;
         xcProxy = &ozoneXC;
     }
 
-    thread.inSyscall = false;
-
     ozoneXC.cpu = this;
     ozoneXC.thread = &thread;
 
+    thread.inSyscall = false;
+
     thread.setStatus(ExecContext::Suspended);
 #if FULL_SYSTEM
-//    xc = new ExecContext(this, 0, p->system, p->itb, p->dtb, p->mem);
-
     /***** All thread state stuff *****/
     thread.cpu = this;
     thread.tid = 0;
@@ -217,31 +162,15 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     thread.profileNode = &dummyNode;
     thread.profilePC = 3;
 #else
-//    xc = new ExecContext(this, /* thread_num */ 0, p->workload[0], /* asid */ 0);
     thread.cpu = this;
     thread.tid = 0;
     thread.process = p->workload[0];
-//    thread.mem = thread.process->getMemory();
     thread.asid = 0;
 #endif // !FULL_SYSTEM
-/*
-    icacheInterface = p->icache_interface;
-    dcacheInterface = p->dcache_interface;
 
-    cacheMemReq = new MemReq();
-    cacheMemReq->xc = xc;
-    cacheMemReq->asid = 0;
-    cacheMemReq->data = new uint8_t[64];
-*/
     numInst = 0;
     startNumInst = 0;
-/*    numLoad = 0;
-    startNumLoad = 0;
-    lastIcacheStall = 0;
-    lastDcacheStall = 0;
 
-    issueWidth = p->issueWidth;
-*/
     execContexts.push_back(xcProxy);
 
     frontEnd->setCPU(this);
@@ -286,47 +215,7 @@ template <class Impl>
 OzoneCPU<Impl>::~OzoneCPU()
 {
 }
-/*
-template <class Impl>
-void
-OzoneCPU<Impl>::copyFromXC()
-{
-    for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
-        if (i < TheISA::NumIntRegs) {
-            renameTable[i]->setIntResult(xc->readIntReg(i));
-        } else if (i < TheISA::NumFloatRegs) {
-            renameTable[i]->setDoubleResult(xc->readFloatRegDouble(i));
-        }
-    }
 
-    DPRINTF(OzoneCPU, "Func Exe inst is: %i\n", xc->func_exe_inst);
-    backEnd->funcExeInst = xc->func_exe_inst;
-//    PC = xc->readPC();
-//    nextPC = xc->regs.npc;
-}
-
-template <class Impl>
-void
-OzoneCPU<Impl>::copyToXC()
-{
-    for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
-        if (i < TheISA::NumIntRegs) {
-            xc->setIntReg(i, renameTable[i]->readIntResult());
-        } else if (i < TheISA::NumFloatRegs) {
-            xc->setFloatRegDouble(i, renameTable[i]->readDoubleResult());
-        }
-    }
-
-    this->xc->regs.miscRegs.fpcr = this->regFile.miscRegs[tid].fpcr;
-    this->xc->regs.miscRegs.uniq = this->regFile.miscRegs[tid].uniq;
-    this->xc->regs.miscRegs.lock_flag = this->regFile.miscRegs[tid].lock_flag;
-    this->xc->regs.miscRegs.lock_addr = this->regFile.miscRegs[tid].lock_addr;
-
-    xc->func_exe_inst = backEnd->funcExeInst;
-    xc->regs.pc = PC;
-    xc->regs.npc = nextPC;
-}
-*/
 template <class Impl>
 void
 OzoneCPU<Impl>::switchOut(Sampler *_sampler)
@@ -394,7 +283,6 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
 {
     // Eventually change this in SMT.
     assert(thread_num == 0);
-//    assert(xcProxy);
 
     assert(_status == Idle);
     notIdleFraction++;
@@ -410,8 +298,8 @@ OzoneCPU<Impl>::suspendContext(int thread_num)
 {
     // Eventually change this in SMT.
     assert(thread_num == 0);
-//    assert(xcProxy);
-    // @todo: Figure out how to initially set the status properly so this is running.
+    // @todo: Figure out how to initially set the status properly so
+    // this is running.
 //    assert(_status == Running);
     notIdleFraction--;
     unscheduleTickEvent();
@@ -486,14 +374,7 @@ void
 OzoneCPU<Impl>::init()
 {
     BaseCPU::init();
-/*
-    copyFromXC();
 
-    // ALso copy over PC/nextPC.  This isn't normally copied in "copyFromXC()"
-    // so that the XC doesn't mess up the PC when returning from a syscall.
-    PC = xc->readPC();
-    nextPC = xc->regs.npc;
-*/
     // Mark this as in syscall so it won't need to squash
     thread.inSyscall = true;
 #if FULL_SYSTEM
@@ -514,8 +395,6 @@ template <class Impl>
 void
 OzoneCPU<Impl>::serialize(std::ostream &os)
 {
-    // At this point, all DCacheCompEvents should be processed.
-
     BaseCPU::serialize(os);
     SERIALIZE_ENUM(_status);
     nameOut(os, csprintf("%s.xc", name()));
@@ -631,31 +510,7 @@ OzoneCPU<Impl>::dbg_vtophys(Addr addr)
     return vtophys(xcProxy, addr);
 }
 #endif // FULL_SYSTEM
-/*
-template <class Impl>
-void
-OzoneCPU<Impl>::processICacheCompletion()
-{
-    switch (status()) {
-      case IcacheMiss:
-        DPRINTF(OzoneCPU, "OzoneCPU: Finished Icache miss.\n");
 
-        icacheStallCycles += curTick - lastIcacheStall;
-        _status = IcacheMissComplete;
-        cacheBlkValid = true;
-//	scheduleTickEvent(1);
-        break;
-      case SwitchedOut:
-        // If this CPU has been switched out due to sampling/warm-up,
-        // ignore any further status changes (e.g., due to cache
-        // misses outstanding at the time of the switch).
-        return;
-      default:
-        panic("OzoneCPU::processICacheCompletion: bad state");
-        break;
-    }
-}
-*/
 #if FULL_SYSTEM
 template <class Impl>
 void
@@ -663,7 +518,6 @@ OzoneCPU<Impl>::post_interrupt(int int_num, int index)
 {
     BaseCPU::post_interrupt(int_num, index);
 
-//    if (thread._status == ExecContext::Suspended) {
     if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
 //	thread.activate();
@@ -689,9 +543,6 @@ OzoneCPU<Impl>::tick()
     comm.advance();
     frontEnd->tick();
     backEnd->tick();
-
-    // Do this here?  For now the front end will control the PC.
-//    PC = nextPC;
 
     // check for instruction-count-based events
     comInstEventQueue[0]->serviceEvents(numInst);
@@ -742,11 +593,13 @@ OzoneCPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
     if (return_value.successful()) {
         // no error
         thread.renameTable[SyscallSuccessReg]->setIntResult(0);
-        thread.renameTable[ReturnValueReg]->setIntResult(return_value.value());
+        thread.renameTable[ReturnValueReg]->setIntResult(
+            return_value.value());
     } else {
         // got an error, return details
         thread.renameTable[SyscallSuccessReg]->setIntResult((IntReg) -1);
-        thread.renameTable[ReturnValueReg]->setIntResult(-return_value.value());
+        thread.renameTable[ReturnValueReg]->setIntResult(
+            -return_value.value());
     }
 }
 #else
@@ -756,15 +609,10 @@ OzoneCPU<Impl>::hwrei()
 {
     // Need to move this to ISA code
     // May also need to make this per thread
-/*
-    if (!inPalMode())
-        return new UnimplementedOpcodeFault;
 
-    thread.setNextPC(thread.readMiscReg(AlphaISA::IPR_EXC_ADDR));
-*/
     lockFlag = false;
     lockAddrList.clear();
-    kernelStats->hwrei();
+    thread.kernelStats->hwrei();
 
     checkInterrupts = true;
 
@@ -835,7 +683,7 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 {
     // Need to move this to ISA code
     // May also need to make this per thread
-    this->kernelStats->callpal(palFunc, xcProxy);
+    thread.kernelStats->callpal(palFunc, xcProxy);
 
     switch (palFunc) {
       case PAL::halt:
@@ -874,7 +722,6 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::setStatus(Status new_status)
 {
-//    cpu->_status = new_status;
     thread->_status = new_status;
 }
 
@@ -932,6 +779,7 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
     setStatus(old_context->status());
     copyArchRegs(old_context);
     setCpuId(old_context->readCpuId());
+
 #if !FULL_SYSTEM
     setFuncExeInst(old_context->readFuncExeInst());
 #else
@@ -944,6 +792,8 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
     if (thread->quiesceEvent) {
         thread->quiesceEvent->xc = this;
     }
+
+    thread->kernelStats = old_context->getKernelStats();
 //    storeCondFailures = 0;
     cpu->lockFlag = false;
 #endif
@@ -954,7 +804,12 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::regStats(const std::string &name)
-{ }
+{
+#if FULL_SYSTEM
+    thread->kernelStats = new Kernel::Statistics(cpu->system);
+    thread->kernelStats->regStats(name + ".kern");
+#endif
+}
 
 template <class Impl>
 void

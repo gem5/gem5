@@ -67,15 +67,17 @@ FnEvent::process(ExecContext *xc)
 void
 IdleStartEvent::process(ExecContext *xc)
 {
-    xc->getCpuPtr()->kernelStats->setIdleProcess(
-        xc->readMiscReg(AlphaISA::IPR_PALtemp23), xc);
+    if (xc->getKernelStats())
+        xc->getKernelStats()->setIdleProcess(
+            xc->readMiscReg(AlphaISA::IPR_PALtemp23), xc);
     remove();
 }
 
 void
 InterruptStartEvent::process(ExecContext *xc)
 {
-    xc->getCpuPtr()->kernelStats->mode(Kernel::interrupt, xc);
+    if (xc->getKernelStats())
+        xc->getKernelStats()->mode(Kernel::interrupt, xc);
 }
 
 void
@@ -83,5 +85,6 @@ InterruptEndEvent::process(ExecContext *xc)
 {
     // We go back to kernel, if we are user, inside the rti
     // pal code we will get switched to user because of the ICM write
-    xc->getCpuPtr()->kernelStats->mode(Kernel::kernel, xc);
+    if (xc->getKernelStats())
+        xc->getKernelStats()->mode(Kernel::kernel, xc);
 }

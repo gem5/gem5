@@ -65,7 +65,8 @@ namespace AlphaPseudo
     void
     arm(ExecContext *xc)
     {
-        xc->getCpuPtr()->kernelStats->arm();
+        if (xc->getKernelStats())
+            xc->getKernelStats()->arm();
     }
 
     void
@@ -75,7 +76,8 @@ namespace AlphaPseudo
             return;
 
         xc->suspend();
-        xc->getCpuPtr()->kernelStats->quiesce();
+        if (xc->getKernelStats())
+            xc->getKernelStats()->arm();
     }
 
     void
@@ -92,7 +94,8 @@ namespace AlphaPseudo
             quiesceEvent->schedule(curTick + Clock::Int::ns * ns);
 
         xc->suspend();
-        xc->getCpuPtr()->kernelStats->quiesce();
+        if (xc->getKernelStats())
+            xc->getKernelStats()->quiesce();
     }
 
     void
@@ -111,7 +114,8 @@ namespace AlphaPseudo
                                    xc->getCpuPtr()->cycles(cycles));
 
         xc->suspend();
-        xc->getCpuPtr()->kernelStats->quiesce();
+        if (xc->getKernelStats())
+            xc->getKernelStats()->quiesce();
     }
 
     uint64_t
@@ -123,7 +127,8 @@ namespace AlphaPseudo
     void
     ivlb(ExecContext *xc)
     {
-        xc->getCpuPtr()->kernelStats->ivlb();
+        if (xc->getKernelStats())
+            xc->getKernelStats()->ivlb();
     }
 
     void

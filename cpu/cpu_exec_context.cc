@@ -188,7 +188,8 @@ CPUExecContext::serialize(ostream &os)
     if (quiesceEvent->scheduled())
         quiesceEndTick = quiesceEvent->when();
     SERIALIZE_SCALAR(quiesceEndTick);
-
+    if (kernelStats)
+        kernelStats->serialize(os);
 #endif
 }
 
@@ -207,6 +208,8 @@ CPUExecContext::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(quiesceEndTick);
     if (quiesceEndTick)
         quiesceEvent->schedule(quiesceEndTick);
+    if (kernelStats)
+        kernelStats->unserialize(cp, section);
 #endif
 }
 
@@ -275,6 +278,10 @@ CPUExecContext::halt()
 void
 CPUExecContext::regStats(const string &name)
 {
+#if FULL_SYSTEM
+    kernelStats = new Kernel::Statistics(system);
+    kernelStats->regStats(name + ".kern");
+#endif
 }
 
 void

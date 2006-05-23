@@ -48,6 +48,9 @@ class FunctionalMemory;
 class PhysicalMemory;
 class Process;
 class System;
+namespace Kernel {
+    class Statistics;
+};
 
 class ExecContext
 {
@@ -98,6 +101,8 @@ class ExecContext
     virtual AlphaITB *getITBPtr() = 0;
 
     virtual AlphaDTB * getDTBPtr() = 0;
+
+    virtual Kernel::Statistics *getKernelStats() = 0;
 #else
     virtual Process *getProcessPtr() = 0;
 #endif
@@ -243,6 +248,8 @@ class ProxyExecContext : public ExecContext
     AlphaITB *getITBPtr() { return actualXC->getITBPtr(); }
 
     AlphaDTB *getDTBPtr() { return actualXC->getDTBPtr(); }
+
+    Kernel::Statistics *getKernelStats() { return actualXC->getKernelStats(); }
 #else
     Process *getProcessPtr() { return actualXC->getProcessPtr(); }
 #endif

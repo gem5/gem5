@@ -146,7 +146,7 @@ CPUExecContext::hwrei()
     setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));
 
     if (!misspeculating()) {
-        cpu->kernelStats->hwrei();
+        kernelStats->hwrei();
 
         cpu->checkInterrupts = true;
     }
@@ -336,7 +336,8 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
-        xc->getCpuPtr()->kernelStats->context(old, val, xc);
+        if (xc->getKernelStats())
+            xc->getKernelStats()->context(old, val, xc);
         break;
 
       case AlphaISA::IPR_DTB_PTE:
@@ -363,14 +364,19 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
 
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-        xc->getCpuPtr()->kernelStats->swpipl(ipr[idx]);
+        if (xc->getKernelStats())
+            xc->getKernelStats()->swpipl(ipr[idx]);
         break;
 
       case AlphaISA::IPR_DTB_CM:
-        if (val & 0x18)
-            xc->getCpuPtr()->kernelStats->mode(Kernel::user, xc);
-        else
-            xc->getCpuPtr()->kernelStats->mode(Kernel::kernel, xc);
+        if (val & 0x18) {
+            if (xc->getKernelStats())
+                xc->getKernelStats()->mode(Kernel::user, xc);
+            else {
+                if (xc->getKernelStats())
+                    xc->getKernelStats()->mode(Kernel::kernel, xc);
+            }
+        }
 
       case AlphaISA::IPR_ICM:
         // only write two mode bits - processor mode
@@ -556,7 +562,7 @@ AlphaISA::MiscRegFile::copyIprs(ExecContext *xc)
 bool
 CPUExecContext::simPalCheck(int palFunc)
 {
-    cpu->kernelStats->callpal(palFunc, proxy);
+    kernelStats->callpal(palFunc, proxy);
 
     switch (palFunc) {
       case PAL::halt:
