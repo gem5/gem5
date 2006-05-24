@@ -503,11 +503,14 @@ FrontEnd<Impl>::processBarriers(DynInstPtr &inst)
     if (serializeNext) {
         inst->setSerializeBefore();
         serializeNext = false;
-    } else if (!inst->isSerializing()) {
+    } else if (!inst->isSerializing() &&
+               !inst->isIprAccess() &&
+               !inst->isStoreConditional()) {
         return false;
     }
 
-    if (inst->isSerializeBefore() && !inst->isSerializeHandled()) {
+    if ((inst->isIprAccess() || inst->isSerializeBefore()) &&
+        !inst->isSerializeHandled()) {
         DPRINTF(FE, "Serialize before instruction encountered.\n");
 
         if (!inst->isTempSerializeBefore()) {
@@ -523,7 +526,8 @@ FrontEnd<Impl>::processBarriers(DynInstPtr &inst)
 
         barrierInst = inst;
         return true;
-    } else if (inst->isSerializeAfter() && !inst->isSerializeHandled()) {
+    } else if ((inst->isStoreConditional() || inst->isSerializeAfter())
+               && !inst->isSerializeHandled()) {
         DPRINTF(FE, "Serialize after instruction encountered.\n");
 
         inst->setSerializeHandled();

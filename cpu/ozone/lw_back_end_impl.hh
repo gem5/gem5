@@ -66,8 +66,9 @@ LWBackEnd<Impl>::wakeDependents(DynInstPtr &inst, bool memory_deps)
         DPRINTF(BE, "Marking source reg ready [sn:%lli] in IQ\n", dep_inst->seqNum);
 
         if (dep_inst->readyToIssue() && dep_inst->isInROB() &&
-            !dep_inst->isNonSpeculative() &&
-            dep_inst->memDepReady() && !dep_inst->isMemBarrier() && !dep_inst->isWriteBarrier()) {
+            !dep_inst->isNonSpeculative() && !dep_inst->isStoreConditional() &&
+            dep_inst->memDepReady() && !dep_inst->isMemBarrier() &&
+            !dep_inst->isWriteBarrier()) {
             DPRINTF(BE, "Adding instruction to exeList [sn:%lli]\n",
                     dep_inst->seqNum);
             exeList.push(dep_inst);
@@ -768,7 +769,9 @@ LWBackEnd<Impl>::dispatchInsts()
             }
             memBarrier = inst;
             inst->setCanCommit();
-        } else if (inst->readyToIssue() && !inst->isNonSpeculative()) {
+        } else if (inst->readyToIssue() &&
+                   !inst->isNonSpeculative() &&
+                   !inst->isStoreConditional()) {
             if (inst->isMemRef()) {
 
                 LSQ.insert(inst);
@@ -803,7 +806,7 @@ LWBackEnd<Impl>::dispatchInsts()
                 exeList.push(inst);
             }
         } else {
-            if (inst->isNonSpeculative()) {
+            if (inst->isNonSpeculative() || inst->isStoreConditional()) {
                 inst->setCanCommit();
                 DPRINTF(BE, "Adding non speculative instruction\n");
             }
@@ -1079,6 +1082,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     // or store inst.  Signal backwards that it should be executed.
     if (!inst->isExecuted()) {
         if (inst->isNonSpeculative() ||
+            inst->isStoreConditional() ||
             inst->isMemBarrier() ||
             inst->isWriteBarrier()) {
 #if !FULL_SYSTEM

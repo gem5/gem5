@@ -364,10 +364,9 @@ OzoneLWLSQ<Impl>::executeStore(DynInstPtr &store_inst)
         if (store_fault != NoFault) {
             panic("Fault in a store instruction!");
             storeFaultInst = store_inst;
-        } else if (store_inst->isNonSpeculative()) {
-            // Nonspeculative accesses (namely store conditionals)
-            // need to set themselves as able to writeback if we
-            // haven't had a fault by here.
+        } else if (store_inst->isStoreConditional()) {
+            // Store conditionals need to set themselves as able to
+            // writeback if we haven't had a fault by here.
             (*sq_it).canWB = true;
 
             ++storesToWB;
