@@ -77,7 +77,7 @@ namespace AlphaPseudo
 
         xc->suspend();
         if (xc->getKernelStats())
-            xc->getKernelStats()->arm();
+            xc->getKernelStats()->quiesce();
     }
 
     void
