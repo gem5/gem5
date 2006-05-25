@@ -127,6 +127,7 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     //
     // Branch predictor (BP & BTB)
     //
+    std::string predType;
     unsigned localPredictorSize;
     unsigned localCtrBits;
     unsigned localHistoryTableSize;

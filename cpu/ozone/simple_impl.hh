@@ -51,7 +51,7 @@ struct SimpleImpl {
 
     // Would like to put these into their own area.
 //    typedef NullPredictor BranchPred;
-    typedef TwobitBPredUnit<SimpleImpl> BranchPred;
+    typedef BPredUnit<SimpleImpl> BranchPred;
     typedef FrontEnd<SimpleImpl> FrontEnd;
     // Will need IQ, LSQ eventually
     typedef InorderBackEnd<SimpleImpl> BackEnd;

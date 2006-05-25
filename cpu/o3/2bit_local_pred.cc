@@ -30,9 +30,9 @@
 #include "base/trace.hh"
 #include "cpu/o3/2bit_local_pred.hh"
 
-DefaultBP::DefaultBP(unsigned _localPredictorSize,
-                     unsigned _localCtrBits,
-                     unsigned _instShiftAmt)
+LocalBP::LocalBP(unsigned _localPredictorSize,
+                 unsigned _localCtrBits,
+                 unsigned _instShiftAmt)
     : localPredictorSize(_localPredictorSize),
       localCtrBits(_localCtrBits),
       instShiftAmt(_instShiftAmt)
@@ -68,7 +68,7 @@ DefaultBP::DefaultBP(unsigned _localPredictorSize,
 }
 
 void
-DefaultBP::reset()
+LocalBP::reset()
 {
     for (int i = 0; i < localPredictorSets; ++i) {
         localCtrs[i].reset();
@@ -76,21 +76,21 @@ DefaultBP::reset()
 }
 
 bool
-DefaultBP::lookup(Addr &branch_addr)
+LocalBP::lookup(Addr &branch_addr, void * &bp_history)
 {
     bool taken;
-    uint8_t local_prediction;
+    uint8_t counter_val;
     unsigned local_predictor_idx = getLocalIndex(branch_addr);
 
     DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
             local_predictor_idx);
 
-    local_prediction = localCtrs[local_predictor_idx].read();
+    counter_val = localCtrs[local_predictor_idx].read();
 
     DPRINTF(Fetch, "Branch predictor: prediction is %i.\n",
-            (int)local_prediction);
+            (int)counter_val);
 
-    taken = getPrediction(local_prediction);
+    taken = getPrediction(counter_val);
 
 #if 0
     // Speculative update.
@@ -107,8 +107,9 @@ DefaultBP::lookup(Addr &branch_addr)
 }
 
 void
-DefaultBP::update(Addr &branch_addr, bool taken)
+LocalBP::update(Addr &branch_addr, bool taken, void *bp_history)
 {
+    assert(bp_history == NULL);
     unsigned local_predictor_idx;
 
     // Update the local predictor.
@@ -128,7 +129,7 @@ DefaultBP::update(Addr &branch_addr, bool taken)
 
 inline
 bool
-DefaultBP::getPrediction(uint8_t &count)
+LocalBP::getPrediction(uint8_t &count)
 {
     // Get the MSB of the count
     return (count >> (localCtrBits - 1));
@@ -136,7 +137,7 @@ DefaultBP::getPrediction(uint8_t &count)
 
 inline
 unsigned
-DefaultBP::getLocalIndex(Addr &branch_addr)
+LocalBP::getLocalIndex(Addr &branch_addr)
 {
     return (branch_addr >> instShiftAmt) & indexMask;
 }

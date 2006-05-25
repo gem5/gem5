@@ -32,6 +32,6 @@
 #include "cpu/ozone/ozone_impl.hh"
 #include "cpu/ozone/simple_impl.hh"
 
-template class TwobitBPredUnit<AlphaSimpleImpl>;
-template class TwobitBPredUnit<OzoneImpl>;
-template class TwobitBPredUnit<SimpleImpl>;
+template class BPredUnit<AlphaSimpleImpl>;
+template class BPredUnit<OzoneImpl>;
+template class BPredUnit<SimpleImpl>;

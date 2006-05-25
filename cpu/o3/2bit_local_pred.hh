@@ -35,7 +35,14 @@
 
 #include <vector>
 
-class DefaultBP
+/**
+ * Implements a local predictor that uses the PC to index into a table of
+ * counters.  Note that any time a pointer to the bp_history is given, it
+ * should be NULL using this predictor because it does not have any branch
+ * predictor state that needs to be recorded or updated; the update can be
+ * determined solely by the branch being taken or not taken.
+ */
+class LocalBP
 {
   public:
     /**
@@ -44,28 +51,31 @@ class DefaultBP
      * @param localCtrBits Number of bits per counter.
      * @param instShiftAmt Offset amount for instructions to ignore alignment.
      */
-    DefaultBP(unsigned localPredictorSize, unsigned localCtrBits,
-              unsigned instShiftAmt);
+    LocalBP(unsigned localPredictorSize, unsigned localCtrBits,
+            unsigned instShiftAmt);
 
     /**
      * Looks up the given address in the branch predictor and returns
      * a true/false value as to whether it is taken.
      * @param branch_addr The address of the branch to look up.
+     * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    bool lookup(Addr &branch_addr);
+    bool lookup(Addr &branch_addr, void * &bp_history);
 
     /**
      * Updates the branch predictor with the actual result of a branch.
      * @param branch_addr The address of the branch to update.
      * @param taken Whether or not the branch was taken.
      */
-    void update(Addr &branch_addr, bool taken);
+    void update(Addr &branch_addr, bool taken, void *bp_history);
+
+    void squash(void *bp_history)
+    { assert(bp_history == NULL); }
 
     void reset();
 
   private:
-
     /**
      *  Returns the taken/not taken prediction given the value of the
      *  counter.

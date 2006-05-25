@@ -46,16 +46,25 @@
  * and the BTB.
  */
 template<class Impl>
-class TwobitBPredUnit
+class BPredUnit
 {
-  public:
+  private:
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
+
+    enum PredType {
+        Local,
+        Tournament
+    };
+
+    PredType predictor;
+
+  public:
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    TwobitBPredUnit(Params *params);
+    BPredUnit(Params *params);
 
     /**
      * Registers statistics.
@@ -75,6 +84,9 @@ class TwobitBPredUnit
      * @return Returns if the branch is taken or not.
      */
     bool predict(DynInstPtr &inst, Addr &PC, unsigned tid);
+
+    // @todo: Rename this function.
+    void BPUncond(void * &bp_history);
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -105,12 +117,19 @@ class TwobitBPredUnit
                 bool actually_taken, unsigned tid);
 
     /**
+     * @param bp_history Pointer to the history object.  The predictor
+     * will need to update any state and delete the object.
+     */
+    void BPSquash(void *bp_history);
+
+    /**
      * Looks up a given PC in the BP to see if it is taken or not taken.
      * @param inst_PC The PC to look up.
+     * @param bp_history Pointer that will be set to an object that
+     * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    bool BPLookup(Addr &inst_PC)
-    { return BP.lookup(inst_PC); }
+    bool BPLookup(Addr &inst_PC, void * &bp_history);
 
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
@@ -132,10 +151,11 @@ class TwobitBPredUnit
      * Updates the BP with taken/not taken information.
      * @param inst_PC The branch's PC that will be updated.
      * @param taken Whether the branch was taken or not taken.
+     * @param bp_history Pointer to the branch predictor state that is
+     * associated with the branch lookup that is being updated.
      * @todo Make this update flexible enough to handle a global predictor.
      */
-    void BPUpdate(Addr &inst_PC, bool taken)
-    { BP.update(inst_PC, taken); }
+    void BPUpdate(Addr &inst_PC, bool taken, void *bp_history);
 
     /**
      * Updates the BTB with the target of a branch.
@@ -145,18 +165,20 @@ class TwobitBPredUnit
     void BTBUpdate(Addr &inst_PC, Addr &target_PC)
     { BTB.update(inst_PC, target_PC,0); }
 
+    void dump();
+
   private:
     struct PredictorHistory {
         /**
-         * Makes a predictor history struct that contains a sequence number,
-         * the PC of its instruction, and whether or not it was predicted
-         * taken.
+         * Makes a predictor history struct that contains any
+         * information needed to update the predictor, BTB, and RAS.
          */
         PredictorHistory(const InstSeqNum &seq_num, const Addr &inst_PC,
-                         const bool pred_taken, const unsigned _tid)
-            : seqNum(seq_num), PC(inst_PC), RASTarget(0), globalHistory(0),
+                         const bool pred_taken, void *bp_history,
+                         const unsigned _tid)
+            : seqNum(seq_num), PC(inst_PC), RASTarget(0),
               RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0),
-              wasCall(0)
+              wasCall(0), bpHistory(bp_history)
         { }
 
         /** The sequence number for the predictor history entry. */
@@ -167,9 +189,6 @@ class TwobitBPredUnit
 
         /** The RAS target (only valid if a return). */
         Addr RASTarget;
-
-        /** The global history at the time this entry was created. */
-        unsigned globalHistory;
 
         /** The RAS index of the instruction (only valid if a call). */
         unsigned RASIndex;
@@ -185,6 +204,12 @@ class TwobitBPredUnit
 
         /** Whether or not the instruction was a call. */
         bool wasCall;
+
+        /** Pointer to the history object passed back from the branch
+         * predictor.  It is used to update or restore state of the
+         * branch predictor.
+         */
+        void *bpHistory;
     };
 
     typedef std::list<PredictorHistory> History;
@@ -196,8 +221,11 @@ class TwobitBPredUnit
      */
     History predHist[Impl::MaxThreads];
 
-    /** The branch predictor. */
-    DefaultBP BP;
+    /** The local branch predictor. */
+    LocalBP *localBP;
+
+    /** The tournament branch predictor. */
+    TournamentBP *tournamentBP;
 
     /** The BTB. */
     DefaultBTB BTB;

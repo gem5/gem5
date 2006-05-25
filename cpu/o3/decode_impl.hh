@@ -721,6 +721,7 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
                 // Might want to set some sort of boolean and just do
                 // a check at the end
                 squash(inst, inst->threadNumber);
+                inst->setPredTarg(inst->branchTarget());
 
                 break;
             }

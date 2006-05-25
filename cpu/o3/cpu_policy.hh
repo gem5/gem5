@@ -51,7 +51,7 @@
 template<class Impl>
 struct SimpleCPUPolicy
 {
-    typedef TwobitBPredUnit<Impl> BPredUnit;
+    typedef BPredUnit<Impl> BPredUnit;
     typedef PhysRegFile<Impl> RegFile;
     typedef SimpleFreeList FreeList;
     typedef SimpleRenameMap RenameMap;

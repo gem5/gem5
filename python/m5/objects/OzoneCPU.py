@@ -57,6 +57,7 @@ class DerivOzoneCPU(BaseCPU):
     commitWidth = Param.Unsigned("Commit width")
     squashWidth = Param.Unsigned("Squash width")
 
+    predType = Param.String("Type of branch predictor ('local', 'tournament')")
     localPredictorSize = Param.Unsigned("Size of local predictor")
     localCtrBits = Param.Unsigned("Bits per counter")
     localHistoryTableSize = Param.Unsigned("Size of local history table")
