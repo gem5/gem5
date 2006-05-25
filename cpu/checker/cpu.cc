@@ -103,7 +103,7 @@ CheckerCPU::setMemory(FunctionalMemory *mem)
     execContexts.push_back(xcProxy);
 #else
     if (systemPtr) {
-        cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr);
+        cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr, false);
 
         cpuXC->setStatus(ExecContext::Suspended);
         xcProxy = cpuXC->getProxy();
@@ -122,7 +122,7 @@ CheckerCPU::setSystem(System *system)
     systemPtr = system;
 
     if (memPtr) {
-        cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr);
+        cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr, false);
 
         cpuXC->setStatus(ExecContext::Suspended);
         xcProxy = cpuXC->getProxy();

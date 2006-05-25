@@ -53,8 +53,9 @@ using namespace std;
 // constructor
 #if FULL_SYSTEM
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
-                         AlphaITB *_itb, AlphaDTB *_dtb,
-                         FunctionalMemory *_mem)
+                               AlphaITB *_itb, AlphaDTB *_dtb,
+                               FunctionalMemory *_mem,
+                               bool use_kernel_stats)
     : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), lastActivate(0), lastSuspend(0), mem(_mem), itb(_itb),
       dtb(_dtb), system(_sys), memctrl(_sys->memctrl), physmem(_sys->physmem),
@@ -79,6 +80,12 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     static ProfileNode dummyNode;
     profileNode = &dummyNode;
     profilePC = 3;
+
+    if (use_kernel_stats) {
+        kernelStats = new Kernel::Statistics(system);
+    } else {
+        kernelStats = NULL;
+    }
 }
 #else
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
@@ -279,8 +286,8 @@ void
 CPUExecContext::regStats(const string &name)
 {
 #if FULL_SYSTEM
-    kernelStats = new Kernel::Statistics(system);
-    kernelStats->regStats(name + ".kern");
+    if (kernelStats)
+        kernelStats->regStats(name + ".kern");
 #endif
 }
 

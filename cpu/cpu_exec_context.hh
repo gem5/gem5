@@ -193,7 +193,8 @@ class CPUExecContext
     // constructor: initialize context from given process structure
 #if FULL_SYSTEM
     CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                   AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_dem);
+                   AlphaITB *_itb, AlphaDTB *_dtb, FunctionalMemory *_mem,
+                   bool use_kernel_stats = true);
 #else
     CPUExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
     CPUExecContext(BaseCPU *_cpu, int _thread_num, FunctionalMemory *_mem,

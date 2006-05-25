@@ -146,7 +146,8 @@ CPUExecContext::hwrei()
     setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));
 
     if (!misspeculating()) {
-        kernelStats->hwrei();
+        if (kernelStats)
+            kernelStats->hwrei();
 
         cpu->checkInterrupts = true;
     }
@@ -372,10 +373,9 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ExecContext *xc)
         if (val & 0x18) {
             if (xc->getKernelStats())
                 xc->getKernelStats()->mode(Kernel::user, xc);
-            else {
-                if (xc->getKernelStats())
-                    xc->getKernelStats()->mode(Kernel::kernel, xc);
-            }
+        } else {
+            if (xc->getKernelStats())
+                xc->getKernelStats()->mode(Kernel::kernel, xc);
         }
 
       case AlphaISA::IPR_ICM:
@@ -562,7 +562,8 @@ AlphaISA::MiscRegFile::copyIprs(ExecContext *xc)
 bool
 CPUExecContext::simPalCheck(int palFunc)
 {
-    kernelStats->callpal(palFunc, proxy);
+    if (kernelStats)
+        kernelStats->callpal(palFunc, proxy);
 
     switch (palFunc) {
       case PAL::halt:
