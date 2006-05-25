@@ -51,12 +51,18 @@ LSQUnit<Impl>::StoreCompletionEvent::process()
 
     //lsqPtr->removeMSHR(lsqPtr->storeQueue[storeIdx].inst->seqNum);
 
-    if (lsqPtr->isSwitchedOut())
+    if (lsqPtr->isSwitchedOut()) {
+        if (wbEvent)
+            delete wbEvent;
+
         return;
+    }
 
     lsqPtr->cpu->wakeCPU();
-    if (wbEvent)
+    if (wbEvent) {
         wbEvent->process();
+        delete wbEvent;
+    }
     lsqPtr->completeStore(storeIdx);
 }
 
