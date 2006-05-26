@@ -112,9 +112,9 @@ class Port
     /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
     */
-    void setPeer(Port *port) { peer = port; }
+    void setPeer(Port *port);
 
-        /** Function to set the pointer for the peer port.
+    /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
     */
     Port *getPeer() { return peer; }

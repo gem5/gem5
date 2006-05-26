@@ -31,8 +31,16 @@
  */
 
 #include "base/chunk_generator.hh"
+#include "base/trace.hh"
 #include "mem/packet_impl.hh"
 #include "mem/port.hh"
+
+void
+Port::setPeer(Port *port)
+{
+    DPRINTF(Config, "setting peer to %s\n", port->name());
+    peer = port;
+}
 
 void
 Port::blobHelper(Addr addr, uint8_t *p, int size, Packet::Command cmd)

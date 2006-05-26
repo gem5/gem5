@@ -130,7 +130,7 @@ Bus::recvStatusChange(Port::Status status, int id)
     assert(status == Port::RangeChange &&
            "The other statuses need to be implemented.");
 
-    DPRINTF(Bus, "received RangeChange from device id %d\n", id);
+    DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
     assert(id < interfaces.size() && id >= 0);
     int x;
@@ -157,7 +157,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         dm.portId = id;
         dm.range = *iter;
 
-        DPRINTF(Bus, "Adding range %llx - %llx for id %d\n",
+        DPRINTF(BusAddrRanges, "Adding range %llx - %llx for id %d\n",
                 dm.range.start, dm.range.end, id);
         portList.push_back(dm);
     }
@@ -178,11 +178,11 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     resp.clear();
     snoop.clear();
 
-    DPRINTF(Bus, "received address range request, returning:\n");
+    DPRINTF(BusAddrRanges, "received address range request, returning:\n");
     for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
         if (portIter->portId != id) {
             resp.push_back(portIter->range);
-            DPRINTF(Bus, "  -- %#llX : %#llX\n",
+            DPRINTF(BusAddrRanges, "  -- %#llX : %#llX\n",
                     portIter->range.start, portIter->range.end);
         }
     }
