@@ -51,23 +51,6 @@ output header {{
         };
 
         /**
-         * Base class for user mode "tick" access.
-         */
-        class PrivTick : public SparcStaticInst
-        {
-          protected:
-            // Constructor
-            PrivTick(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass) :
-                SparcStaticInst(mnem, _machInst, __opClass)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-        };
-
-        /**
          * Base class for privelege mode operations with immediates.
          */
         class PrivImm : public Priv
@@ -83,21 +66,6 @@ output header {{
             int32_t imm;
         };
 
-        /**
-         * Base class for user mode "tick" access with immediates.
-         */
-        class PrivTickImm : public PrivTick
-        {
-          protected:
-            // Constructor
-            PrivTickImm(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass) :
-                PrivTick(mnem, _machInst, __opClass), imm(SIMM13)
-            {
-            }
-
-            int32_t imm;
-        };
 }};
 
 output decoder {{
@@ -105,12 +73,6 @@ output decoder {{
                 const SymbolTable *symtab) const
         {
                 return "Privileged Instruction";
-        }
-
-        std::string PrivTick::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-                return "Regular access to Tick";
         }
 }};
 
@@ -154,16 +116,10 @@ let {{
 
 // Primary format for integer operate instructions:
 def format Priv(code, *opt_flags) {{
-        checkCode = "(!PstatePriv)"
+        checkCode = "((xc->readMiscReg(PrStart + MISCREG_PSTATE))<2:2>)"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
              checkCode, name, Name, opt_flags)
 }};
 
-// Primary format for integer operate instructions:
-def format PrivTick(code, *opt_flags) {{
-        checkCode = "(!PstatePriv && TickNpt)"
-        (header_output, decoder_output,
-         exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
-}};
+

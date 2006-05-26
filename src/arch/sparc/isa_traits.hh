@@ -172,12 +172,12 @@ namespace SparcISA
         // indicate success/failure in reg the carry bit of the ccr
         // and put the return value itself in the standard return value reg ().
         if (return_value.successful()) {
-            // no error
-            regs->setMiscReg(MISCREG_CCR_XCC_C, 0);
+            // no error, clear XCC.C
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEF);
             regs->setIntReg(ReturnValueReg, return_value.value());
         } else {
-            // got an error, return details
-            regs->setMiscReg(MISCREG_CCR_XCC_C, 1);
+            // got an error, set XCC.C
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x10);
             regs->setIntReg(ReturnValueReg, return_value.value());
         }
     }

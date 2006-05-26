@@ -110,22 +110,13 @@ SparcLiveProcess::startup()
     //From the SPARC ABI
 
     //The process runs in user mode
-    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE_PRIV, 0);
-    //Interrupts are enabled
-    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE_IE, 1);
-    //Round to nearest
-    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_RD, 0);
-    //Floating point traps are not enabled
-    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_TEM, 0);
-    //Turn non standard mode off
-    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_NS, 0);
-    //The floating point queue is empty
-    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_QNE, 0);
-    //There are no accrued eexecContext[0]eptions
-    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_AEXC, 0);
-    //There are no current eexecContext[0]eptions
-    execContexts[0]->setMiscRegWithEffect(MISCREG_FSR_CEXC, 0);
+    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
 
+    //Setup default FP state
+    execContexts[0]->setMiscReg(MISCREG_FSR, 0);
+
+    execContexts[0]->setMiscReg(MISCREG_TICK, 0);
+    //
     /*
      * Register window management registers
      */
