@@ -158,9 +158,10 @@ TimingSimpleCPU::suspendContext(int thread_num)
     assert(thread_num == 0);
     assert(cpuXC);
 
-    panic("TimingSimpleCPU::suspendContext not implemented");
-
     assert(_status == Running);
+
+    // just change status to Idle... if status != Running,
+    // completeInst() will not initiate fetch of next instruction.
 
     notIdleFraction--;
     _status = Idle;
@@ -357,20 +358,15 @@ TimingSimpleCPU::fetch()
             ifetch_pkt = NULL;
         }
     } else {
-        panic("TimingSimpleCPU fetch fault handling not implemented");
+        // fetch fault: advance directly to next instruction (fault handler)
+        advanceInst(fault);
     }
 }
 
 
 void
-TimingSimpleCPU::completeInst(Fault fault)
+TimingSimpleCPU::advanceInst(Fault fault)
 {
-    postExecute();
-
-    if (traceData) {
-        traceData->finalize();
-    }
-
     advancePC(fault);
 
     if (_status == Running) {
@@ -383,23 +379,35 @@ TimingSimpleCPU::completeInst(Fault fault)
 
 
 void
-TimingSimpleCPU::completeIfetch()
+TimingSimpleCPU::completeIfetch(Packet *pkt)
 {
     // received a response from the icache: execute the received
     // instruction
+    assert(pkt->result == Packet::Success);
     assert(_status == IcacheWaitResponse);
     _status = Running;
+
+    delete pkt->req;
+    delete pkt;
+
     preExecute();
-    if (curStaticInst->isMemRef()) {
+    if (curStaticInst->isMemRef() && !curStaticInst->isDataPrefetch()) {
         // load or store: just send to dcache
         Fault fault = curStaticInst->initiateAcc(this, traceData);
-        assert(fault == NoFault);
-        assert(_status == DcacheWaitResponse);
-        // instruction will complete in dcache response callback
+        if (fault == NoFault) {
+            // successfully initiated access: instruction will
+            // complete in dcache response callback
+            assert(_status == DcacheWaitResponse);
+        } else {
+            // fault: complete now to invoke fault handler
+            postExecute();
+            advanceInst(fault);
+        }
     } else {
         // non-memory instruction: execute completely now
         Fault fault = curStaticInst->execute(this, traceData);
-        completeInst(fault);
+        postExecute();
+        advanceInst(fault);
     }
 }
 
@@ -407,7 +415,7 @@ TimingSimpleCPU::completeIfetch()
 bool
 TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
-    cpu->completeIfetch();
+    cpu->completeIfetch(pkt);
     return true;
 }
 
@@ -435,7 +443,11 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
-    completeInst(fault);
+    delete pkt->req;
+    delete pkt;
+
+    postExecute();
+    advanceInst(fault);
 }
 
 

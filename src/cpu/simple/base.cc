@@ -442,6 +442,10 @@ BaseSimpleCPU::postExecute()
     }
 
     traceFunctions(cpuXC->readPC());
+
+    if (traceData) {
+        traceData->finalize();
+    }
 }
 
 

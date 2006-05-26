@@ -142,9 +142,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
-    void completeInst(Fault fault);
-    void completeIfetch();
+    void completeIfetch(Packet *);
     void completeDataAccess(Packet *);
+    void advanceInst(Fault fault);
 };
 
 #endif // __CPU_SIMPLE_TIMING_HH__

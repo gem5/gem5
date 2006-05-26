@@ -425,10 +425,6 @@ AtomicSimpleCPU::tick()
             fault = curStaticInst->execute(this, traceData);
             postExecute();
 
-            if (traceData) {
-                traceData->finalize();
-            }
-
             if (simulate_stalls) {
                 // This calculation assumes that the icache and dcache
                 // access latencies are always a multiple of the CPU's
