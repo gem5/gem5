@@ -432,19 +432,19 @@ IdeController::read(Packet *pkt)
 
     pkt->time += pioDelay;
     pkt->allocate();
-    if (pkt->size != 1 && pkt->size != 2 && pkt->size !=4)
-         panic("Bad IDE read size: %d\n", pkt->size);
+    if (pkt->getSize() != 1 && pkt->getSize() != 2 && pkt->getSize() !=4)
+         panic("Bad IDE read size: %d\n", pkt->getSize());
 
-    parseAddr(pkt->addr, offset, channel, reg_type);
+    parseAddr(pkt->getAddr(), offset, channel, reg_type);
 
     if (!io_enabled) {
-        pkt->result = Success;
+        pkt->result = Packet::Success;
         return pioDelay;
     }
 
     switch (reg_type) {
       case BMI_BLOCK:
-        switch (pkt->size) {
+        switch (pkt->getSize()) {
           case sizeof(uint8_t):
             pkt->set(bmi_regs.data[offset]);
             break;
@@ -455,7 +455,7 @@ IdeController::read(Packet *pkt)
             pkt->set(*(uint32_t*)&bmi_regs.data[offset]);
             break;
           default:
-            panic("IDE read of BMI reg invalid size: %#x\n", pkt->size);
+            panic("IDE read of BMI reg invalid size: %#x\n", pkt->getSize());
         }
         break;
 
@@ -470,7 +470,7 @@ IdeController::read(Packet *pkt)
 
         switch (offset) {
           case DATA_OFFSET:
-            switch (pkt->size) {
+            switch (pkt->getSize()) {
               case sizeof(uint16_t):
                 disks[disk]->read(offset, reg_type, pkt->getPtr<uint8_t>());
                 break;
@@ -482,30 +482,30 @@ IdeController::read(Packet *pkt)
                 break;
 
               default:
-                panic("IDE read of data reg invalid size: %#x\n", pkt->size);
+                panic("IDE read of data reg invalid size: %#x\n", pkt->getSize());
             }
             break;
           default:
-            if (pkt->size == sizeof(uint8_t)) {
+            if (pkt->getSize() == sizeof(uint8_t)) {
                 disks[disk]->read(offset, reg_type, pkt->getPtr<uint8_t>());
             } else
-                panic("IDE read of command reg of invalid size: %#x\n", pkt->size);
+                panic("IDE read of command reg of invalid size: %#x\n", pkt->getSize());
         }
         break;
       default:
         panic("IDE controller read of unknown register block type!\n");
     }
-    if (pkt->size == 1)
+    if (pkt->getSize() == 1)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, pkt->size, (uint32_t)pkt->get<uint8_t>());
-    else if (pkt->size == 2)
+            offset, pkt->getSize(), (uint32_t)pkt->get<uint8_t>());
+    else if (pkt->getSize() == 2)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, pkt->size, pkt->get<uint16_t>());
+            offset, pkt->getSize(), pkt->get<uint16_t>());
     else
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
-            offset, pkt->size, pkt->get<uint32_t>());
+            offset, pkt->getSize(), pkt->get<uint32_t>());
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -520,10 +520,10 @@ IdeController::write(Packet *pkt)
 
     pkt->time += pioDelay;
 
-    parseAddr(pkt->addr, offset, channel, reg_type);
+    parseAddr(pkt->getAddr(), offset, channel, reg_type);
 
     if (!io_enabled) {
-        pkt->result = Success;
+        pkt->result = Packet::Success;
         DPRINTF(IdeCtrl, "io not enabled\n");
         return pioDelay;
     }
@@ -531,7 +531,7 @@ IdeController::write(Packet *pkt)
     switch (reg_type) {
       case BMI_BLOCK:
         if (!bm_enabled) {
-            pkt->result = Success;
+            pkt->result = Packet::Success;
             return pioDelay;
         }
 
@@ -539,8 +539,8 @@ IdeController::write(Packet *pkt)
             // Bus master IDE command register
           case BMIC1:
           case BMIC0:
-            if (pkt->size != sizeof(uint8_t))
-                panic("Invalid BMIC write size: %x\n", pkt->size);
+            if (pkt->getSize() != sizeof(uint8_t))
+                panic("Invalid BMIC write size: %x\n", pkt->getSize());
 
             // select the current disk based on DEV bit
             disk = getDisk(channel);
@@ -595,8 +595,8 @@ IdeController::write(Packet *pkt)
             // Bus master IDE status register
           case BMIS0:
           case BMIS1:
-            if (pkt->size != sizeof(uint8_t))
-                panic("Invalid BMIS write size: %x\n", pkt->size);
+            if (pkt->getSize() != sizeof(uint8_t))
+                panic("Invalid BMIS write size: %x\n", pkt->getSize());
 
             oldVal = bmi_regs.chan[channel].bmis;
             newVal = pkt->get<uint8_t>();
@@ -622,22 +622,22 @@ IdeController::write(Packet *pkt)
           case BMIDTP0:
           case BMIDTP1:
             {
-                if (pkt->size != sizeof(uint32_t))
-                    panic("Invalid BMIDTP write size: %x\n", pkt->size);
+                if (pkt->getSize() != sizeof(uint32_t))
+                    panic("Invalid BMIDTP write size: %x\n", pkt->getSize());
 
                 bmi_regs.chan[channel].bmidtp = htole(pkt->get<uint32_t>() & ~0x3);
             }
             break;
 
           default:
-            if (pkt->size != sizeof(uint8_t) &&
-                pkt->size != sizeof(uint16_t) &&
-                pkt->size != sizeof(uint32_t))
+            if (pkt->getSize() != sizeof(uint8_t) &&
+                pkt->getSize() != sizeof(uint16_t) &&
+                pkt->getSize() != sizeof(uint32_t))
                 panic("IDE controller write of invalid write size: %x\n",
-                      pkt->size);
+                      pkt->getSize());
 
             // do a default copy of data into the registers
-            memcpy(&bmi_regs.data[offset], pkt->getPtr<uint8_t>(), pkt->size);
+            memcpy(&bmi_regs.data[offset], pkt->getPtr<uint8_t>(), pkt->getSize());
         }
         break;
       case COMMAND_BLOCK:
@@ -654,7 +654,7 @@ IdeController::write(Packet *pkt)
 
         switch (offset) {
           case DATA_OFFSET:
-            switch (pkt->size) {
+            switch (pkt->getSize()) {
               case sizeof(uint16_t):
                 disks[disk]->write(offset, reg_type, pkt->getPtr<uint8_t>());
                 break;
@@ -665,32 +665,32 @@ IdeController::write(Packet *pkt)
                         sizeof(uint16_t));
                 break;
               default:
-                panic("IDE write of data reg invalid size: %#x\n", pkt->size);
+                panic("IDE write of data reg invalid size: %#x\n", pkt->getSize());
             }
             break;
           default:
-            if (pkt->size == sizeof(uint8_t)) {
+            if (pkt->getSize() == sizeof(uint8_t)) {
                 disks[disk]->write(offset, reg_type, pkt->getPtr<uint8_t>());
             } else
-                panic("IDE write of command reg of invalid size: %#x\n", pkt->size);
+                panic("IDE write of command reg of invalid size: %#x\n", pkt->getSize());
         }
         break;
       default:
         panic("IDE controller write of unknown register block type!\n");
     }
 
-    if (pkt->size == 1)
+    if (pkt->getSize() == 1)
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, pkt->size, (uint32_t)pkt->get<uint8_t>());
-    else if (pkt->size == 2)
+            offset, pkt->getSize(), (uint32_t)pkt->get<uint8_t>());
+    else if (pkt->getSize() == 2)
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, pkt->size, pkt->get<uint16_t>());
+            offset, pkt->getSize(), pkt->get<uint16_t>());
     else
     DPRINTF(IdeCtrl, "write to offset: %#x size: %#x data: %#x\n",
-            offset, pkt->size, pkt->get<uint32_t>());
+            offset, pkt->getSize(), pkt->get<uint32_t>());
 
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 

@@ -154,7 +154,7 @@ Process::startup()
 
     Port *mem_port;
     mem_port = system->physmem->getPort("functional");
-    initVirtMem = new TranslatingPort(pTable, true);
+    initVirtMem = new TranslatingPort("process init port", pTable, true);
     mem_port->setPeer(initVirtMem);
     initVirtMem->setPeer(mem_port);
 }

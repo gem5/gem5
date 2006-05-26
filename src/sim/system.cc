@@ -25,6 +25,8 @@ System::System(Params *p)
     : SimObject(p->name), physmem(p->physmem), numcpus(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
+      functionalPort(p->name + "-fport"),
+      virtPort(p->name + "-vport"),
 #else
       page_ptr(0),
 #endif

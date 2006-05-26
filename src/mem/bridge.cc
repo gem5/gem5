@@ -31,209 +31,209 @@
  * @file Definition of a simple bus bridge without buffering.
  */
 
+#include <algorithm>
 
 #include "base/trace.hh"
 #include "mem/bridge.hh"
 #include "sim/builder.hh"
 
+Bridge::BridgePort::BridgePort(const std::string &_name,
+                               Bridge *_bridge, BridgePort *_otherPort,
+                               int _delay, int _queueLimit)
+    : Port(_name), bridge(_bridge), otherPort(_otherPort),
+      delay(_delay), outstandingResponses(0),
+      queueLimit(_queueLimit), sendEvent(this)
+{
+}
+
+Bridge::Bridge(const std::string &n, int qsa, int qsb,
+               Tick _delay, int write_ack)
+    : MemObject(n),
+      portA(n + "-portA", this, &portB, _delay, qsa),
+      portB(n + "-portB", this, &portA, _delay, qsa),
+      ackWrites(write_ack)
+{
+}
+
+Port *
+Bridge::getPort(const std::string &if_name)
+{
+    BridgePort *port;
+
+    if (if_name == "side_a")
+        port = &portA;
+    else if (if_name == "side_b")
+        port = &portB;
+    else
+        return NULL;
+
+    if (port->getPeer() != NULL)
+        panic("bridge side %s already connected to.", if_name);
+    return port;
+}
+
+
 void
 Bridge::init()
 {
     // Make sure that both sides are connected to.
-    if (sideA == NULL || sideB == NULL)
+    if (portA.getPeer() == NULL || portB.getPeer() == NULL)
         panic("Both ports of bus bridge are not connected to a bus.\n");
 }
 
 
-/** Function called by the port when the bus is recieving a Timing
+/** Function called by the port when the bus is receiving a Timing
  * transaction.*/
 bool
-Bridge::recvTiming(Packet *pkt, Side id)
+Bridge::BridgePort::recvTiming(Packet *pkt)
 {
-    if (blockedA && id == SideA)
-        return false;
-    if (blockedB && id == SideB)
+    DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr());
+
+    if (pkt->isResponse()) {
+        // This is a response for a request we forwarded earlier.  The
+        // corresponding PacketBuffer should be stored in the packet's
+        // senderState field.
+        PacketBuffer *buf = dynamic_cast<PacketBuffer*>(pkt->senderState);
+        assert(buf != NULL);
+        // set up new packet dest & senderState based on values saved
+        // from original request
+        buf->fixResponse(pkt);
+        DPRINTF(BusBridge, "  is response, new dest %d\n", pkt->getDest());
+        delete buf;
+    }
+
+    return otherPort->queueForSendTiming(pkt);
+}
+
+
+bool
+Bridge::BridgePort::queueForSendTiming(Packet *pkt)
+{
+    if (queueFull())
         return false;
 
-    if (delay) {
-        if (!sendEvent.scheduled())
-            sendEvent.schedule(curTick + delay);
-        if (id == SideA) {
-            inboundA.push_back(std::make_pair<Packet*, Tick>(pkt, curTick));
-            blockCheck(SideA);
-        } else {
-            inboundB.push_back(std::make_pair<Packet*, Tick>(pkt, curTick));
-            blockCheck(SideB);
-        }
-    } else {
-        if (id == SideB) {
-            sideA->sendPkt(pkt);
-            blockCheck(SideB);
-        } else {
-            sideB->sendPkt(pkt);
-            blockCheck(SideA);
-        }
+    Tick readyTime = curTick + delay;
+    PacketBuffer *buf = new PacketBuffer(pkt, readyTime);
+
+    // If we're about to put this packet at the head of the queue, we
+    // need to schedule an event to do the transmit.  Otherwise there
+    // should already be an event scheduled for sending the head
+    // packet.
+    if (sendQueue.empty()) {
+        sendEvent.schedule(readyTime);
     }
+
+    sendQueue.push_back(buf);
+
+    // Did we just become blocked?  If yes, let other side know.
+    if (queueFull())
+        otherPort->sendStatusChange(Port::Blocked);
+
     return true;
-
 }
 
+
 void
-Bridge::blockCheck(Side id)
+Bridge::BridgePort::finishSend(PacketBuffer *buf)
 {
-    /* Check that we still have buffer space available. */
-    if (id == SideB) {
-        if (sideA->numQueued() + inboundB.size() >= queueSizeA && !blockedB) {
-            sideB->sendStatusChange(Port::Blocked);
-            blockedB = true;
-        } else if (sideA->numQueued() + inboundB.size() < queueSizeA && blockedB) {
-            sideB->sendStatusChange(Port::Unblocked);
-            blockedB = false;
-        }
+    if (buf->expectResponse) {
+        // Must wait for response.  We just need to count outstanding
+        // responses (in case we want to cap them); PacketBuffer
+        // pointer will be recovered on response.
+        ++outstandingResponses;
+        DPRINTF(BusBridge, "  successful: awaiting response (%d)\n",
+                outstandingResponses);
     } else {
-        if (sideB->numQueued() + inboundA.size() >= queueSizeB && !blockedA) {
-            sideA->sendStatusChange(Port::Blocked);
-            blockedA = true;
-        } else if (sideB->numQueued() + inboundA.size() < queueSizeB && blockedA) {
-            sideA->sendStatusChange(Port::Unblocked);
-            blockedA = false;
-        }
+        // no response expected... deallocate packet buffer now.
+        DPRINTF(BusBridge, "  successful: no response expected\n");
+        delete buf;
+    }
+
+    // If there are more packets to send, schedule event to try again.
+    if (!sendQueue.empty()) {
+        buf = sendQueue.front();
+        sendEvent.schedule(std::max(buf->ready, curTick + 1));
     }
 }
 
-void Bridge::timerEvent()
-{
-    Tick t = 0;
 
-    assert(inboundA.size() || inboundB.size());
-    if (inboundA.size()) {
-        while (inboundA.front().second <= curTick + delay){
-            sideB->sendPkt(inboundA.front());
-            inboundA.pop_front();
-        }
-        if (inboundA.size())
-            t = inboundA.front().second + delay;
-    }
-    if (inboundB.size()) {
-        while (inboundB.front().second <= curTick + delay){
-            sideB->sendPkt(inboundA.front());
-            inboundB.pop_front();
-        }
-        if (inboundB.size())
-            if (t == 0)
-               t = inboundB.front().second + delay;
-            else
-               t = std::min(t,inboundB.front().second + delay);
+void
+Bridge::BridgePort::trySend()
+{
+    assert(!sendQueue.empty());
+
+    PacketBuffer *buf = sendQueue.front();
+
+    assert(buf->ready <= curTick);
+
+    Packet *pkt = buf->pkt;
+
+    DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
+            buf->origSrc, pkt->getDest(), pkt->getAddr());
+
+    if (sendTiming(pkt)) {
+        // send successful
+        sendQueue.pop_front();
+        buf->pkt = NULL; // we no longer own packet, so it's not safe to look at it
+        finishSend(buf);
     } else {
-        panic("timerEvent() called but nothing to do?");
+        DPRINTF(BusBridge, "  unsuccessful\n");
     }
-
-    if (t != 0)
-        sendEvent.schedule(t);
-}
-
-
-void
-Bridge::BridgePort::sendPkt(Packet *pkt)
-{
-    if (!sendTiming(pkt))
-        outbound.push_back(std::make_pair<Packet*,Tick>(pkt, curTick));
-}
-
-void
-Bridge::BridgePort::sendPkt(std::pair<Packet*, Tick> p)
-{
-    if (!sendTiming(p.first))
-        outbound.push_back(p);
 }
 
 
 Packet *
 Bridge::BridgePort::recvRetry()
 {
-    Packet *pkt;
-    assert(outbound.size() > 0);
-    assert(outbound.front().second >= curTick + bridge->delay);
-    pkt = outbound.front().first;
-    outbound.pop_front();
-    bridge->blockCheck(side);
+    PacketBuffer *buf = sendQueue.front();
+    Packet *pkt = buf->pkt;
+    finishSend(buf);
     return pkt;
 }
 
-/** Function called by the port when the bus is recieving a Atomic
+/** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
 Tick
-Bridge::recvAtomic(Packet *pkt, Side id)
+Bridge::BridgePort::recvAtomic(Packet *pkt)
 {
-    pkt->time += delay;
-
-    if (id == SideA)
-        return sideB->sendAtomic(pkt);
-    else
-        return sideA->sendAtomic(pkt);
+    return otherPort->sendAtomic(pkt) + delay;
 }
 
-/** Function called by the port when the bus is recieving a Functional
+/** Function called by the port when the bus is receiving a Functional
  * transaction.*/
 void
-Bridge::recvFunctional(Packet *pkt, Side id)
+Bridge::BridgePort::recvFunctional(Packet *pkt)
 {
-    pkt->time += delay;
-    std::list<std::pair<Packet*, Tick> >::iterator i;
+    std::list<PacketBuffer*>::iterator i;
     bool pktContinue = true;
 
-    for(i = inboundA.begin();  i != inboundA.end(); ++i) {
-        if (pkt->intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, i->first);
-        }
-    }
-
-    for(i = inboundB.begin();  i != inboundB.end(); ++i) {
-        if (pkt->intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, i->first);
-        }
-    }
-
-    for(i = sideA->outbound.begin();  i != sideA->outbound.end(); ++i) {
-        if (pkt->intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, i->first);
-        }
-    }
-
-    for(i = sideB->outbound.begin();  i != sideB->outbound.end(); ++i) {
-        if (pkt->intersect(i->first)) {
-            pktContinue &= fixPacket(pkt, i->first);
+    for (i = sendQueue.begin();  i != sendQueue.end(); ++i) {
+        if (pkt->intersect((*i)->pkt)) {
+            pktContinue &= fixPacket(pkt, (*i)->pkt);
         }
     }
 
     if (pktContinue) {
-        if (id == SideA)
-            sideB->sendFunctional(pkt);
-        else
-            sideA->sendFunctional(pkt);
+        otherPort->sendFunctional(pkt);
     }
 }
 
-/** Function called by the port when the bus is recieving a status change.*/
+/** Function called by the port when the bus is receiving a status change.*/
 void
-Bridge::recvStatusChange(Port::Status status, Side id)
+Bridge::BridgePort::recvStatusChange(Port::Status status)
 {
     if (status == Port::Blocked || status == Port::Unblocked)
-        return ;
+        return;
 
-    if (id == SideA)
-        sideB->sendStatusChange(status);
-    else
-        sideA->sendStatusChange(status);
+    otherPort->sendStatusChange(status);
 }
 
 void
-Bridge::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, Side id)
+Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
+                                           AddrRangeList &snoop)
 {
-    if (id == SideA)
-        sideB->getPeerAddressRanges(resp, snoop);
-    else
-        sideA->getPeerAddressRanges(resp, snoop);
+    otherPort->getPeerAddressRanges(resp, snoop);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bridge)

@@ -127,7 +127,8 @@ PhysicalMemory::doTimingAccess (Packet *pkt, MemoryPort* memoryPort)
 {
     doFunctionalAccess(pkt);
 
-    pkt->dest = pkt->src;
+    // turn packet around to go back to requester
+    pkt->makeTimingResponse();
     MemResponseEvent* response = new MemResponseEvent(pkt, memoryPort);
     response->schedule(curTick + lat);
 
@@ -145,16 +146,18 @@ PhysicalMemory::doAtomicAccess(Packet *pkt)
 void
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
-    assert(pkt->addr + pkt->size < pmem_size);
+    assert(pkt->getAddr() + pkt->getSize() < pmem_size);
 
     switch (pkt->cmd) {
-      case Read:
-        memcpy(pkt->getPtr<uint8_t>(), pmem_addr + pkt->addr - base_addr,
-                pkt->size);
+      case Packet::ReadReq:
+        memcpy(pkt->getPtr<uint8_t>(),
+               pmem_addr + pkt->getAddr() - base_addr,
+               pkt->getSize());
         break;
-      case Write:
-        memcpy(pmem_addr + pkt->addr - base_addr, pkt->getPtr<uint8_t>(),
-                pkt->size);
+      case Packet::WriteReq:
+        memcpy(pmem_addr + pkt->getAddr() - base_addr,
+               pkt->getPtr<uint8_t>(),
+               pkt->getSize());
         // temporary hack: will need to add real LL/SC implementation
         // for cacheless systems later.
         if (pkt->req->getFlags() & LOCKED) {
@@ -165,7 +168,7 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
         panic("unimplemented");
     }
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
 }
 
 Port *
@@ -174,11 +177,11 @@ PhysicalMemory::getPort(const std::string &if_name)
     if (if_name == "") {
         if (port != NULL)
            panic("PhysicalMemory::getPort: additional port requested to memory!");
-        port = new MemoryPort(this);
+        port = new MemoryPort(name() + "-port", this);
         return port;
     } else if (if_name == "functional") {
         /* special port for functional writes at startup. */
-        return new MemoryPort(this);
+        return new MemoryPort(name() + "-funcport", this);
     } else {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
@@ -189,8 +192,9 @@ PhysicalMemory::recvStatusChange(Port::Status status)
 {
 }
 
-PhysicalMemory::MemoryPort::MemoryPort(PhysicalMemory *_memory)
-    : memory(_memory)
+PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
+                                       PhysicalMemory *_memory)
+    : Port(_name), memory(_memory)
 { }
 
 void

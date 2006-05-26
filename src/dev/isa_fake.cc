@@ -51,14 +51,14 @@ IsaFake::IsaFake(Params *p)
 Tick
 IsaFake::read(Packet *pkt)
 {
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     pkt->time += pioDelay;
 
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->addr, pkt->size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
-    switch (pkt->size) {
+    switch (pkt->getSize()) {
          pkt->set(0xFFFFFFFFFFFFFFFFULL);
          break;
       case sizeof(uint32_t):
@@ -73,7 +73,7 @@ IsaFake::read(Packet *pkt)
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -81,8 +81,8 @@ Tick
 IsaFake::write(Packet *pkt)
 {
     pkt->time += pioDelay;
-    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->addr, pkt->size);
-    pkt->result = Success;
+    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->getAddr(), pkt->getSize());
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 

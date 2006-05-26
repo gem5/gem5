@@ -35,6 +35,16 @@
 #include "mem/bus.hh"
 #include "sim/builder.hh"
 
+Port *
+Bus::getPort(const std::string &if_name)
+{
+    // if_name ignored?  forced to be empty?
+    int id = interfaces.size();
+    BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
+    interfaces.push_back(bp);
+    return bp;
+}
+
 /** Get the ranges of anyone that we are connected to. */
 void
 Bus::init()
@@ -45,17 +55,22 @@ Bus::init()
 }
 
 
-/** Function called by the port when the bus is recieving a Timing
+/** Function called by the port when the bus is receiving a Timing
  * transaction.*/
 bool
 Bus::recvTiming(Packet *pkt)
 {
     Port *port;
-    if (pkt->dest == Packet::Broadcast) {
-        port = findPort(pkt->addr, pkt->src);
+    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+
+    short dest = pkt->getDest();
+    if (dest == Packet::Broadcast) {
+        port = findPort(pkt->getAddr(), pkt->getSrc());
     } else {
-        assert(pkt->dest > 0 && pkt->dest < interfaces.size());
-        port = interfaces[pkt->dest];
+        assert(dest >= 0 && dest < interfaces.size());
+        assert(dest != pkt->getSrc()); // catch infinite loops
+        port = interfaces[dest];
     }
     return port->sendTiming(pkt);
 }
@@ -73,7 +88,7 @@ Bus::findPort(Addr addr, int id)
         if (portList[i].range == addr) {
             dest_id = portList[i].portId;
             found = true;
-            DPRINTF(Bus, "Found Addr: %llx on device %d\n", addr, dest_id);
+            DPRINTF(Bus, "  found addr 0x%llx on device %d\n", addr, dest_id);
         }
         i++;
     }
@@ -86,32 +101,36 @@ Bus::findPort(Addr addr, int id)
     return interfaces[dest_id];
 }
 
-/** Function called by the port when the bus is recieving a Atomic
+/** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
 Tick
 Bus::recvAtomic(Packet *pkt)
 {
-    assert(pkt->dest == Packet::Broadcast);
-    return findPort(pkt->addr, pkt->src)->sendAtomic(pkt);
+    DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+    assert(pkt->getDest() == Packet::Broadcast);
+    return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
 }
 
-/** Function called by the port when the bus is recieving a Functional
+/** Function called by the port when the bus is receiving a Functional
  * transaction.*/
 void
 Bus::recvFunctional(Packet *pkt)
 {
-    assert(pkt->dest == Packet::Broadcast);
-    findPort(pkt->addr, pkt->src)->sendFunctional(pkt);
+    DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+    assert(pkt->getDest() == Packet::Broadcast);
+    findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
 }
 
-/** Function called by the port when the bus is recieving a status change.*/
+/** Function called by the port when the bus is receiving a status change.*/
 void
 Bus::recvStatusChange(Port::Status status, int id)
 {
-    DPRINTF(Bus, "Bus %d recieved status change from device id %d\n",
-            busId, id);
     assert(status == Port::RangeChange &&
            "The other statuses need to be implemented.");
+
+    DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
     assert(id < interfaces.size() && id >= 0);
     int x;
@@ -138,8 +157,8 @@ Bus::recvStatusChange(Port::Status status, int id)
         dm.portId = id;
         dm.range = *iter;
 
-        DPRINTF(MMU, "Adding range %llx - %llx for id %d\n", dm.range.start,
-                dm.range.end, id);
+        DPRINTF(BusAddrRanges, "Adding range %llx - %llx for id %d\n",
+                dm.range.start, dm.range.end, id);
         portList.push_back(dm);
     }
     DPRINTF(MMU, "port list has %d entries\n", portList.size());
@@ -159,13 +178,12 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     resp.clear();
     snoop.clear();
 
-    DPRINTF(Bus, "Bus id %d recieved address range request returning\n",
-            busId);
+    DPRINTF(BusAddrRanges, "received address range request, returning:\n");
     for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
         if (portIter->portId != id) {
             resp.push_back(portIter->range);
-            DPRINTF(Bus, "-- %#llX : %#llX\n", portIter->range.start,
-                    portIter->range.end);
+            DPRINTF(BusAddrRanges, "  -- %#llX : %#llX\n",
+                    portIter->range.start, portIter->range.end);
         }
     }
 }

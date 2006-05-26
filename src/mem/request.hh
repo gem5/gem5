@@ -195,6 +195,7 @@ class Request
     /** Accesor function for pc.*/
     void setPC(Addr _pc);
 
+    friend class Packet;
 };
 
 #endif // __MEM_REQUEST_HH__

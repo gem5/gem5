@@ -46,132 +46,127 @@
 
 class Bridge : public MemObject
 {
-  public:
-    enum Side
-    {
-        SideA,
-        SideB
-    };
-
   protected:
-    /** Function called by the port when the bus is recieving a Timing
-        transaction.*/
-    bool recvTiming(Packet *pkt, Side id);
-
-    /** Function called by the port when the bus is recieving a Atomic
-        transaction.*/
-    Tick recvAtomic(Packet *pkt, Side id);
-
-    /** Function called by the port when the bus is recieving a Functional
-        transaction.*/
-    void recvFunctional(Packet *pkt, Side id);
-
-    /** Function called by the port when the bus is recieving a status change.*/
-    void recvStatusChange(Port::Status status, Side id);
-
-    /** Process address range request.
-     * @param resp addresses that we can respond to
-     * @param snoop addresses that we would like to snoop
-     * @param id ide of the busport that made the request.
-     */
-    void addressRanges(AddrRangeList &resp, AddrRangeList &snoop, Side id);
-
-
-    /** Event that the SendEvent calls when it fires. This code must reschedule
-     * the send event as required. */
-    void timerEvent();
-
     /** Decleration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
     class BridgePort : public Port
     {
-        /** A pointer to the bus to which this port belongs. */
+        /** A pointer to the bridge to which this port belongs. */
         Bridge *bridge;
 
-        /** A id to keep track of the intercafe ID this port is connected to. */
-        Bridge::Side side;
+        /**
+         * Pointer to the port on the other side of the bridge
+         * (connected to the other bus).
+         */
+        BridgePort *otherPort;
+
+        /** Minimum delay though this bridge. */
+        Tick delay;
+
+        class PacketBuffer : public Packet::SenderState {
+
+          public:
+            Tick ready;
+            Packet *pkt;
+            Packet::SenderState *origSenderState;
+            short origSrc;
+            bool expectResponse;
+
+            PacketBuffer(Packet *_pkt, Tick t)
+                : ready(t), pkt(_pkt),
+                  origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
+                  expectResponse(_pkt->needsResponse())
+            {
+                pkt->senderState = this;
+            }
+
+            void fixResponse(Packet *pkt)
+            {
+                assert(pkt->senderState == this);
+                pkt->setDest(origSrc);
+                pkt->senderState = origSenderState;
+            }
+        };
+
+        /**
+         * Outbound packet queue.  Packets are held in this queue for a
+         * specified delay to model the processing delay of the
+         * bridge.
+         */
+        std::list<PacketBuffer*> sendQueue;
+
+        int outstandingResponses;
+
+        /** Max queue size for outbound packets */
+        int queueLimit;
+
+        /**
+         * Is this side blocked from accepting outbound packets?
+         */
+        bool queueFull() { return (sendQueue.size() == queueLimit); }
+
+        bool queueForSendTiming(Packet *pkt);
+
+        void finishSend(PacketBuffer *buf);
+
+        /**
+         * Handle send event, scheduled when the packet at the head of
+         * the outbound queue is ready to transmit (for timing
+         * accesses only).
+         */
+        void trySend();
+
+        class SendEvent : public Event
+        {
+            BridgePort *port;
+
+          public:
+            SendEvent(BridgePort *p)
+                : Event(&mainEventQueue), port(p) {}
+
+            virtual void process() { port->trySend(); }
+
+            virtual const char *description() { return "bridge send event"; }
+        };
+
+        SendEvent sendEvent;
 
       public:
 
         /** Constructor for the BusPort.*/
-        BridgePort(Bridge *_bridge, Side _side)
-            : bridge(_bridge), side(_side)
-        { }
-
-        int numQueued() { return outbound.size(); }
+        BridgePort(const std::string &_name,
+                   Bridge *_bridge, BridgePort *_otherPort,
+                   int _delay, int _queueLimit);
 
       protected:
-        /** Data this is waiting to be transmitted. */
-        std::list<std::pair<Packet*, Tick> > outbound;
 
-        void sendPkt(Packet *pkt);
-        void sendPkt(std::pair<Packet*, Tick> p);
-
-        /** When reciving a timing request from the peer port,
+        /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTiming(Packet *pkt)
-        { return bridge->recvTiming(pkt, side); }
+        virtual bool recvTiming(Packet *pkt);
 
-        /** When reciving a retry request from the peer port,
+        /** When receiving a retry request from the peer port,
             pass it to the bridge. */
         virtual Packet* recvRetry();
 
-        /** When reciving a Atomic requestfrom the peer port,
+        /** When receiving a Atomic requestfrom the peer port,
             pass it to the bridge. */
-        virtual Tick recvAtomic(Packet *pkt)
-        { return bridge->recvAtomic(pkt, side); }
+        virtual Tick recvAtomic(Packet *pkt);
 
-        /** When reciving a Functional request from the peer port,
+        /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
-        virtual void recvFunctional(Packet *pkt)
-        { bridge->recvFunctional(pkt, side); }
+        virtual void recvFunctional(Packet *pkt);
 
-        /** When reciving a status changefrom the peer port,
+        /** When receiving a status changefrom the peer port,
             pass it to the bridge. */
-        virtual void recvStatusChange(Status status)
-        { bridge->recvStatusChange(status, side); }
+        virtual void recvStatusChange(Status status);
 
-        /** When reciving a address range request the peer port,
+        /** When receiving a address range request the peer port,
             pass it to the bridge. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
-        { bridge->addressRanges(resp, snoop, side); }
-
-        friend class Bridge;
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop);
     };
 
-    class SendEvent : public Event
-    {
-        Bridge *bridge;
-
-        SendEvent(Bridge *b)
-            : Event(&mainEventQueue), bridge(b) {}
-
-        virtual void process() { bridge->timerEvent(); }
-
-        virtual const char *description() { return "bridge delay event"; }
-        friend class Bridge;
-    };
-
-    SendEvent sendEvent;
-
-    /** Sides of the bus bridges. */
-    BridgePort* sideA;
-    BridgePort* sideB;
-
-    /** inbound queues on both sides. */
-    std::list<std::pair<Packet*, Tick> > inboundA;
-    std::list<std::pair<Packet*, Tick> > inboundB;
-
-    /** The size of the queue for data coming into side a */
-    int queueSizeA;
-    int queueSizeB;
-
-    /* if the side is blocked or not. */
-    bool blockedA;
-    bool blockedB;
-
-    /** Miminum delay though this bridge. */
-    Tick delay;
+    BridgePort portA, portB;
 
     /** If this bridge should acknowledge writes. */
     bool ackWrites;
@@ -179,36 +174,11 @@ class Bridge : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name)
-    {
-        if (if_name == "side_a") {
-            if (sideA != NULL)
-                panic("bridge side a already connected to.");
-            sideA = new BridgePort(this, SideA);
-            return sideA;
-        } else if (if_name == "side_b") {
-            if (sideB != NULL)
-                panic("bridge side b already connected to.");
-            sideB = new BridgePort(this, SideB);
-            return sideB;
-        } else
-            return NULL;
-    }
+    virtual Port *getPort(const std::string &if_name);
 
     virtual void init();
 
-    Bridge(const std::string &n, int qsa, int qsb, Tick _delay, int write_ack)
-        : MemObject(n), sendEvent(this), sideA(NULL), sideB(NULL),
-          queueSizeA(qsa), queueSizeB(qsb), blockedA(false), blockedB(false),
-          delay(_delay), ackWrites(write_ack)
-          {}
-
-    /** Check if the port should block/unblock after recieving/sending a packet.
-     * */
-    void blockCheck(Side id);
-
-    friend class Bridge::SendEvent;
-
+    Bridge(const std::string &n, int qsa, int qsb, Tick _delay, int write_ack);
 };
 
 #endif //__MEM_BUS_HH__

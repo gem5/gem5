@@ -496,9 +496,9 @@ NSGigE::read(Packet *pkt)
     pkt->allocate();
 
     //The mask is to give you only the offset into the device register file
-    Addr daddr = pkt->addr & 0xfff;
+    Addr daddr = pkt->getAddr() & 0xfff;
     DPRINTF(EthernetPIO, "read  da=%#x pa=%#x size=%d\n",
-            daddr, pkt->addr, pkt->size);
+            daddr, pkt->getAddr(), pkt->getSize());
 
 
     // there are some reserved registers, you can see ns_gige_reg.h and
@@ -506,25 +506,25 @@ NSGigE::read(Packet *pkt)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        if (pkt->size == sizeof(uint8_t))
+        if (pkt->getSize() == sizeof(uint8_t))
             readConfig(daddr & 0xff, pkt->getPtr<uint8_t>());
-        if (pkt->size == sizeof(uint16_t))
+        if (pkt->getSize() == sizeof(uint16_t))
             readConfig(daddr & 0xff, pkt->getPtr<uint16_t>());
-        if (pkt->size == sizeof(uint32_t))
+        if (pkt->getSize() == sizeof(uint32_t))
             readConfig(daddr & 0xff, pkt->getPtr<uint32_t>());
-        pkt->result = Success;
+        pkt->result = Packet::Success;
         return pioDelay;
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
         // MIB are just hardware stats keepers
         pkt->set<uint32_t>(0);
-        pkt->result = Success;
+        pkt->result = Packet::Success;
         return pioDelay;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
-    assert(pkt->size == sizeof(uint32_t));
+    assert(pkt->getSize() == sizeof(uint32_t));
         uint32_t &reg = *pkt->getPtr<uint32_t>();
         uint16_t rfaddr;
 
@@ -715,7 +715,7 @@ NSGigE::read(Packet *pkt)
         DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n",
                 daddr, reg, reg);
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -724,27 +724,27 @@ NSGigE::write(Packet *pkt)
 {
     assert(ioEnable);
 
-    Addr daddr = pkt->addr & 0xfff;
+    Addr daddr = pkt->getAddr() & 0xfff;
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x size=%d\n",
-            daddr, pkt->addr, pkt->size);
+            daddr, pkt->getAddr(), pkt->getSize());
 
     pkt->time += pioDelay;
 
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        if (pkt->size == sizeof(uint8_t))
+        if (pkt->getSize() == sizeof(uint8_t))
             writeConfig(daddr & 0xff, pkt->get<uint8_t>());
-        if (pkt->size == sizeof(uint16_t))
+        if (pkt->getSize() == sizeof(uint16_t))
             writeConfig(daddr & 0xff, pkt->get<uint16_t>());
-        if (pkt->size == sizeof(uint32_t))
+        if (pkt->getSize() == sizeof(uint32_t))
             writeConfig(daddr & 0xff, pkt->get<uint32_t>());
-        pkt->result = Success;
+        pkt->result = Packet::Success;
         return pioDelay;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
-    if (pkt->size == sizeof(uint32_t)) {
+    if (pkt->getSize() == sizeof(uint32_t)) {
         uint32_t reg = pkt->get<uint32_t>();
         uint16_t rfaddr;
 
@@ -1131,7 +1131,7 @@ NSGigE::write(Packet *pkt)
     } else {
         panic("Invalid Request Size");
     }
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 

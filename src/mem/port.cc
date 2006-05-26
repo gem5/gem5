@@ -31,22 +31,28 @@
  */
 
 #include "base/chunk_generator.hh"
+#include "base/trace.hh"
 #include "mem/packet_impl.hh"
 #include "mem/port.hh"
 
 void
-Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
+Port::setPeer(Port *port)
+{
+    DPRINTF(Config, "setting peer to %s\n", port->name());
+    peer = port;
+}
+
+void
+Port::blobHelper(Addr addr, uint8_t *p, int size, Packet::Command cmd)
 {
     Request req(false);
-    Packet pkt;
-    pkt.req = &req;
-    pkt.cmd = cmd;
-    pkt.dest = Packet::Broadcast;
+    Packet pkt(&req, cmd, Packet::Broadcast);
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-        req.setPaddr(pkt.addr = gen.addr());
-        req.setSize(pkt.size = gen.size());
+        req.setPaddr(gen.addr());
+        req.setSize(gen.size());
+        pkt.reinitFromRequest();
         pkt.dataStatic(p);
         sendFunctional(&pkt);
         p += gen.size();
@@ -56,13 +62,13 @@ Port::blobHelper(Addr addr, uint8_t *p, int size, Command cmd)
 void
 Port::writeBlob(Addr addr, uint8_t *p, int size)
 {
-    blobHelper(addr, p, size, Write);
+    blobHelper(addr, p, size, Packet::WriteReq);
 }
 
 void
 Port::readBlob(Addr addr, uint8_t *p, int size)
 {
-    blobHelper(addr, p, size, Read);
+    blobHelper(addr, p, size, Packet::ReadReq);
 }
 
 void
@@ -72,7 +78,7 @@ Port::memsetBlob(Addr addr, uint8_t val, int size)
     uint8_t *buf = new uint8_t[size];
 
     memset(buf, val, size);
-    blobHelper(addr, buf, size, Write);
+    blobHelper(addr, buf, size, Packet::WriteReq);
 
     delete [] buf;
 }
