@@ -31,7 +31,7 @@
 
 
 PioPort::PioPort(PioDevice *dev, Platform *p)
-        : device(dev), platform(p)
+    : Port(dev->name() + "-pioport"), device(dev), platform(p)
 { }
 
 
@@ -108,7 +108,7 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 
 
 DmaPort::DmaPort(DmaDevice *dev, Platform *p)
-        : device(dev), platform(p), pendingCount(0)
+    : Port(dev->name() + "-dmaport"), device(dev), platform(p), pendingCount(0)
 { }
 
 bool

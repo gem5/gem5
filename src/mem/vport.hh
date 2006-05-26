@@ -53,8 +53,8 @@ class VirtualPort  : public FunctionalPort
     ExecContext *xc;
 
   public:
-    VirtualPort(ExecContext *_xc = NULL)
-        : xc(_xc)
+    VirtualPort(const std::string &_name, ExecContext *_xc = NULL)
+        : FunctionalPort(_name), xc(_xc)
     {}
 
     /** Return true if we have an exec context. This is used to prevent someone

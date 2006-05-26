@@ -117,7 +117,7 @@ AtomicSimpleCPU::CpuPort::recvRetry()
 AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     : BaseSimpleCPU(p), tickEvent(this),
       width(p->width), simulate_stalls(p->simulate_stalls),
-      icachePort(this), dcachePort(this)
+      icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this)
 {
     _status = Idle;
 

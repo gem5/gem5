@@ -51,7 +51,7 @@ class PhysicalMemory : public MemObject
 
       public:
 
-        MemoryPort(PhysicalMemory *_memory);
+        MemoryPort(const std::string &_name, PhysicalMemory *_memory);
 
       protected:
 

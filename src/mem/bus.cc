@@ -35,6 +35,16 @@
 #include "mem/bus.hh"
 #include "sim/builder.hh"
 
+Port *
+Bus::getPort(const std::string &if_name)
+{
+    // if_name ignored?  forced to be empty?
+    int id = interfaces.size();
+    BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
+    interfaces.push_back(bp);
+    return bp;
+}
+
 /** Get the ranges of anyone that we are connected to. */
 void
 Bus::init()

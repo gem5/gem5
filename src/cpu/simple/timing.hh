@@ -71,8 +71,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       public:
 
-        CpuPort(TimingSimpleCPU *_cpu)
-            : cpu(_cpu)
+        CpuPort(const std::string &_name, TimingSimpleCPU *_cpu)
+            : Port(_name), cpu(_cpu)
         { }
 
       protected:
@@ -93,7 +93,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         IcachePort(TimingSimpleCPU *_cpu)
-            : CpuPort(_cpu)
+            : CpuPort(_cpu->name() + "-iport", _cpu)
         { }
 
       protected:
@@ -108,7 +108,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         DcachePort(TimingSimpleCPU *_cpu)
-            : CpuPort(_cpu)
+            : CpuPort(_cpu->name() + "-dport", _cpu)
         { }
 
       protected:

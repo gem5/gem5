@@ -39,14 +39,11 @@ class TranslatingPort : public FunctionalPort
     PageTable *pTable;
     bool allocating;
 
-    TranslatingPort(const TranslatingPort &specmem);
-    const TranslatingPort &operator=(const TranslatingPort &specmem);
-
   public:
-    TranslatingPort(PageTable *p_table, bool alloc = false);
+    TranslatingPort(const std::string &_name,
+                    PageTable *p_table, bool alloc = false);
     virtual ~TranslatingPort();
 
-  public:
     bool tryReadBlob(Addr addr, uint8_t *p, int size);
     bool tryWriteBlob(Addr addr, uint8_t *p, int size);
     bool tryMemsetBlob(Addr addr, uint8_t val, int size);
@@ -56,9 +53,9 @@ class TranslatingPort : public FunctionalPort
     virtual void readBlob(Addr addr, uint8_t *p, int size);
     virtual void writeBlob(Addr addr, uint8_t *p, int size);
     virtual void memsetBlob(Addr addr, uint8_t val, int size);
+
     void writeString(Addr addr, const char *str);
     void readString(std::string &str, Addr addr);
-
 };
 
 #endif

@@ -95,7 +95,7 @@ class Bridge : public MemObject
 
         /** Constructor for the BusPort.*/
         BridgePort(Bridge *_bridge, Side _side)
-            : bridge(_bridge), side(_side)
+            : Port(""), bridge(_bridge), side(_side)
         { }
 
         int numQueued() { return outbound.size(); }

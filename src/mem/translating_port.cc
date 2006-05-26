@@ -34,8 +34,9 @@
 
 using namespace TheISA;
 
-TranslatingPort::TranslatingPort(PageTable *p_table, bool alloc)
-    : pTable(p_table), allocating(alloc)
+TranslatingPort::TranslatingPort(const std::string &_name,
+                                 PageTable *p_table, bool alloc)
+    : FunctionalPort(_name), pTable(p_table), allocating(alloc)
 { }
 
 TranslatingPort::~TranslatingPort()

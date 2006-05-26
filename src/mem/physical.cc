@@ -175,11 +175,11 @@ PhysicalMemory::getPort(const std::string &if_name)
     if (if_name == "") {
         if (port != NULL)
            panic("PhysicalMemory::getPort: additional port requested to memory!");
-        port = new MemoryPort(this);
+        port = new MemoryPort(name() + "-port", this);
         return port;
     } else if (if_name == "functional") {
         /* special port for functional writes at startup. */
-        return new MemoryPort(this);
+        return new MemoryPort(name() + "-funcport", this);
     } else {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
@@ -190,8 +190,9 @@ PhysicalMemory::recvStatusChange(Port::Status status)
 {
 }
 
-PhysicalMemory::MemoryPort::MemoryPort(PhysicalMemory *_memory)
-    : memory(_memory)
+PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
+                                       PhysicalMemory *_memory)
+    : Port(_name), memory(_memory)
 { }
 
 void

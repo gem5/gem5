@@ -100,8 +100,8 @@ class Bus : public MemObject
       public:
 
         /** Constructor for the BusPort.*/
-        BusPort(Bus *_bus, int _id)
-            : bus(_bus), id(_id)
+        BusPort(const std::string &_name, Bus *_bus, int _id)
+            : Port(_name), bus(_bus), id(_id)
         { }
 
       protected:
@@ -146,13 +146,7 @@ class Bus : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name)
-    {
-        // if_name ignored?  forced to be empty?
-        int id = interfaces.size();
-        interfaces.push_back(new BusPort(this, id));
-        return interfaces.back();
-    }
+    virtual Port *getPort(const std::string &if_name);
 
     virtual void init();
 
