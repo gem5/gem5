@@ -438,18 +438,18 @@ TsunamiIO::frequency() const
 Tick
 TsunamiIO::read(Packet *pkt)
 {
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     pkt->time += pioDelay;
-    Addr daddr = pkt->addr - pioAddr;
+    Addr daddr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n", pkt->addr,
-            pkt->size, daddr);
+    DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n", pkt->getAddr(),
+            pkt->getSize(), daddr);
 
     pkt->allocate();
 
-    if (pkt->size == sizeof(uint8_t)) {
+    if (pkt->getSize() == sizeof(uint8_t)) {
         switch(daddr) {
           // PIC1 mask read
           case TSDEV_PIC1_MASK:
@@ -487,18 +487,18 @@ TsunamiIO::read(Packet *pkt)
                 pkt->set(0x00);
             break;
           default:
-            panic("I/O Read - va%#x size %d\n", pkt->addr, pkt->size);
+            panic("I/O Read - va%#x size %d\n", pkt->getAddr(), pkt->getSize());
         }
-    } else if (pkt->size == sizeof(uint64_t)) {
+    } else if (pkt->getSize() == sizeof(uint64_t)) {
         if (daddr == TSDEV_PIC1_ISR)
             pkt->set<uint64_t>(picr);
         else
            panic("I/O Read - invalid addr - va %#x size %d\n",
-                   pkt->addr, pkt->size);
+                   pkt->getAddr(), pkt->getSize());
     } else {
-       panic("I/O Read - invalid size - va %#x size %d\n", pkt->addr, pkt->size);
+       panic("I/O Read - invalid size - va %#x size %d\n", pkt->getAddr(), pkt->getSize());
     }
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -507,14 +507,14 @@ TsunamiIO::write(Packet *pkt)
 {
     pkt->time += pioDelay;
 
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
-    Addr daddr = pkt->addr - pioAddr;
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(Tsunami, "io write - va=%#x size=%d IOPort=%#x Data=%#x\n",
-            pkt->addr, pkt->size, pkt->addr & 0xfff, (uint32_t)pkt->get<uint8_t>());
+            pkt->getAddr(), pkt->getSize(), pkt->getAddr() & 0xfff, (uint32_t)pkt->get<uint8_t>());
 
-    assert(pkt->size == sizeof(uint8_t));
+    assert(pkt->getSize() == sizeof(uint8_t));
 
     switch(daddr) {
       case TSDEV_PIC1_MASK:
@@ -577,10 +577,10 @@ TsunamiIO::write(Packet *pkt)
       case TSDEV_CTRL_PORTB:
         break;
       default:
-        panic("I/O Write - va%#x size %d data %#x\n", pkt->addr, pkt->size, pkt->get<uint8_t>());
+        panic("I/O Write - va%#x size %d data %#x\n", pkt->getAddr(), pkt->getSize(), pkt->get<uint8_t>());
     }
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 

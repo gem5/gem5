@@ -109,17 +109,17 @@ class Bus : public MemObject
         /** When reciving a timing request from the peer port (at id),
             pass it to the bus. */
         virtual bool recvTiming(Packet *pkt)
-        { pkt->src = id; return bus->recvTiming(pkt); }
+        { pkt->setSrc(id); return bus->recvTiming(pkt); }
 
         /** When reciving a Atomic requestfrom the peer port (at id),
             pass it to the bus. */
         virtual Tick recvAtomic(Packet *pkt)
-        { pkt->src = id; return bus->recvAtomic(pkt); }
+        { pkt->setSrc(id); return bus->recvAtomic(pkt); }
 
         /** When reciving a Functional requestfrom the peer port (at id),
             pass it to the bus. */
         virtual void recvFunctional(Packet *pkt)
-        { pkt->src = id; bus->recvFunctional(pkt); }
+        { pkt->setSrc(id); bus->recvFunctional(pkt); }
 
         /** When reciving a status changefrom the peer port (at id),
             pass it to the bus. */

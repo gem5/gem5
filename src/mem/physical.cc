@@ -128,7 +128,7 @@ PhysicalMemory::doTimingAccess (Packet *pkt, MemoryPort* memoryPort)
     doFunctionalAccess(pkt);
 
     // turn packet around to go back to requester
-    pkt->dest = pkt->src;
+    pkt->makeTimingResponse();
     MemResponseEvent* response = new MemResponseEvent(pkt, memoryPort);
     response->schedule(curTick + lat);
 
@@ -146,16 +146,18 @@ PhysicalMemory::doAtomicAccess(Packet *pkt)
 void
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
-    assert(pkt->addr + pkt->size < pmem_size);
+    assert(pkt->getAddr() + pkt->getSize() < pmem_size);
 
     switch (pkt->cmd) {
-      case Read:
-        memcpy(pkt->getPtr<uint8_t>(), pmem_addr + pkt->addr - base_addr,
-                pkt->size);
+      case Packet::ReadReq:
+        memcpy(pkt->getPtr<uint8_t>(),
+               pmem_addr + pkt->getAddr() - base_addr,
+               pkt->getSize());
         break;
-      case Write:
-        memcpy(pmem_addr + pkt->addr - base_addr, pkt->getPtr<uint8_t>(),
-                pkt->size);
+      case Packet::WriteReq:
+        memcpy(pmem_addr + pkt->getAddr() - base_addr,
+               pkt->getPtr<uint8_t>(),
+               pkt->getSize());
         // temporary hack: will need to add real LL/SC implementation
         // for cacheless systems later.
         if (pkt->req->getFlags() & LOCKED) {
@@ -166,7 +168,7 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
         panic("unimplemented");
     }
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
 }
 
 Port *

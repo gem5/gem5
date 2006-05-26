@@ -71,17 +71,17 @@ TsunamiCChip::TsunamiCChip(Params *p)
 Tick
 TsunamiCChip::read(Packet *pkt)
 {
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->addr, pkt->size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     pkt->time += pioDelay;
-    Addr regnum = (pkt->addr - pioAddr) >> 6;
-    Addr daddr = (pkt->addr - pioAddr);
+    Addr regnum = (pkt->getAddr() - pioAddr) >> 6;
+    Addr daddr = (pkt->getAddr() - pioAddr);
 
     pkt->allocate();
-    switch (pkt->size) {
+    switch (pkt->getSize()) {
 
       case sizeof(uint64_t):
           if (daddr & TSDEV_CC_BDIMS)
@@ -173,9 +173,9 @@ TsunamiCChip::read(Packet *pkt)
         panic("invalid access size(?) for tsunami register!\n");
     }
     DPRINTF(Tsunami, "Tsunami CChip: read  regnum=%#x size=%d data=%lld\n",
-            regnum, pkt->size, pkt->get<uint64_t>());
+            regnum, pkt->getSize(), pkt->get<uint64_t>());
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -185,14 +185,14 @@ TsunamiCChip::write(Packet *pkt)
     pkt->time += pioDelay;
 
 
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
-    Addr daddr = pkt->addr - pioAddr;
-    Addr regnum = (pkt->addr - pioAddr) >> 6 ;
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    Addr daddr = pkt->getAddr() - pioAddr;
+    Addr regnum = (pkt->getAddr() - pioAddr) >> 6 ;
 
 
-    assert(pkt->size == sizeof(uint64_t));
+    assert(pkt->getSize() == sizeof(uint64_t));
 
-    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", pkt->addr, pkt->get<uint64_t>());
+    DPRINTF(Tsunami, "write - addr=%#x value=%#x\n", pkt->getAddr(), pkt->get<uint64_t>());
 
     bool supportedWrite = false;
 
@@ -362,7 +362,7 @@ TsunamiCChip::write(Packet *pkt)
               panic("default in cchip read reached, accessing 0x%x\n");
         }  // swtich(regnum)
     } // not BIG_TSUNAMI write
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 

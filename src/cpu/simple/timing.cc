@@ -187,13 +187,9 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     // Now do the access.
     if (fault == NoFault) {
-        Packet *data_read_pkt = new Packet;
-        data_read_pkt->cmd = Read;
-        data_read_pkt->req = data_read_req;
+        Packet *data_read_pkt =
+            new Packet(data_read_req, Packet::ReadReq, Packet::Broadcast);
         data_read_pkt->dataDynamic<T>(new T);
-        data_read_pkt->addr = data_read_req->getPaddr();
-        data_read_pkt->size = sizeof(T);
-        data_read_pkt->dest = Packet::Broadcast;
 
         if (!dcachePort.sendTiming(data_read_pkt)) {
             _status = DcacheRetry;
@@ -268,14 +264,10 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     Fault fault = cpuXC->translateDataWriteReq(data_write_req);
     // Now do the access.
     if (fault == NoFault) {
-        Packet *data_write_pkt = new Packet;
-        data_write_pkt->cmd = Write;
-        data_write_pkt->req = data_write_req;
+        Packet *data_write_pkt =
+            new Packet(data_write_req, Packet::WriteReq, Packet::Broadcast);
         data_write_pkt->allocate();
-        data_write_pkt->size = sizeof(T);
         data_write_pkt->set(data);
-        data_write_pkt->addr = data_write_req->getPaddr();
-        data_write_pkt->dest = Packet::Broadcast;
 
         if (!dcachePort.sendTiming(data_write_pkt)) {
             _status = DcacheRetry;
@@ -350,12 +342,8 @@ TimingSimpleCPU::fetch()
     Request *ifetch_req = new Request(true);
     ifetch_req->setSize(sizeof(MachInst));
 
-    ifetch_pkt = new Packet;
-    ifetch_pkt->cmd = Read;
+    ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
-    ifetch_pkt->req = ifetch_req;
-    ifetch_pkt->size = sizeof(MachInst);
-    ifetch_pkt->dest = Packet::Broadcast;
 
     Fault fault = setupFetchPacket(ifetch_pkt);
     if (fault == NoFault) {
@@ -441,7 +429,7 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 {
     // received a response from the dcache: complete the load or store
     // instruction
-    assert(pkt->result == Success);
+    assert(pkt->result == Packet::Success);
     assert(_status == DcacheWaitResponse);
     _status = Running;
 

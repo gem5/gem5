@@ -372,7 +372,7 @@ BaseSimpleCPU::setupFetchPacket(Packet *ifetch_pkt)
     Fault fault = cpuXC->translateInstReq(ifetch_req);
 
     if (fault == NoFault) {
-        ifetch_pkt->addr = ifetch_req->getPaddr();
+        ifetch_pkt->reinitFromRequest();
     }
 
     return fault;

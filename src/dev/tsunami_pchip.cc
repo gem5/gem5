@@ -67,17 +67,17 @@ TsunamiPChip::TsunamiPChip(Params *p)
 Tick
 TsunamiPChip::read(Packet *pkt)
 {
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
 
     pkt->time += pioDelay;
     pkt->allocate();
-    Addr daddr = (pkt->addr - pioAddr) >> 6;;
-    assert(pkt->size == sizeof(uint64_t));
+    Addr daddr = (pkt->getAddr() - pioAddr) >> 6;;
+    assert(pkt->getSize() == sizeof(uint64_t));
 
 
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->addr, pkt->size);
+    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
     switch(daddr) {
       case TSDEV_PC_WSBA0:
@@ -143,7 +143,7 @@ TsunamiPChip::read(Packet *pkt)
       default:
           panic("Default in PChip Read reached reading 0x%x\n", daddr);
     }
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 
 }
@@ -153,13 +153,13 @@ TsunamiPChip::write(Packet *pkt)
 {
     pkt->time += pioDelay;
 
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
-    Addr daddr = (pkt->addr - pioAddr) >> 6;
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    Addr daddr = (pkt->getAddr() - pioAddr) >> 6;
 
-    assert(pkt->size == sizeof(uint64_t));
+    assert(pkt->getSize() == sizeof(uint64_t));
 
-    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->addr, pkt->size);
+    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->getAddr(), pkt->getSize());
 
     switch(daddr) {
         case TSDEV_PC_WSBA0:
@@ -224,7 +224,7 @@ TsunamiPChip::write(Packet *pkt)
 
     } // uint64_t
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
