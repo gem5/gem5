@@ -105,9 +105,10 @@ def rfind(l, elt, offs = -1):
 # recognize that ALPHA_SE specifies the configuration because it
 # follow 'build' in the bulid path.
 
-# Generate a list of the unique configs that the collected targets
-# reference.
+# Generate a list of the unique build roots and configs that the
+# collected targets reference.
 build_paths = []
+build_root = None
 for t in abs_targets:
     path_dirs = t.split('/')
     try:
@@ -115,9 +116,17 @@ for t in abs_targets:
     except:
         print "Error: no non-leaf 'build' dir found on target path", t
         Exit(1)
-    config_dir = os.path.join('/',*path_dirs[:build_top+2])
-    if config_dir not in build_paths:
-        build_paths.append(config_dir)
+    this_build_root = os.path.join('/',*path_dirs[:build_top+1])
+    if not build_root:
+        build_root = this_build_root
+    else:
+        if this_build_root != build_root:
+            print "Error: build targets not under same build root\n"\
+                  "  %s\n  %s" % (build_root, this_build_root)
+            Exit(1)
+    build_path = os.path.join('/',*path_dirs[:build_top+2])
+    if build_path not in build_paths:
+        build_paths.append(build_path)
 
 ###################################################
 #
@@ -153,8 +162,11 @@ env.Append(CPPPATH=[Dir('ext/dnet')])
 # Default libraries
 env.Append(LIBS=['z'])
 
-# Platform-specific configuration
-conf = Configure(env)
+# Platform-specific configuration.  Note again that we assume that all
+# builds under a given build root run on the same host platform.
+conf = Configure(env,
+                 conf_dir = os.path.join(build_root, '.scons_config'),
+                 log_file = os.path.join(build_root, 'scons_config.log'))
 
 # Check for <fenv.h> (C99 FP environment control)
 have_fenv = conf.CheckHeader('fenv.h', '<>')
@@ -195,7 +207,7 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 
 # Define the universe of supported CPU models
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
-                       'FastCPU', 'FullCPU', 'AlphaFullCPU']
+                       'FullCPU', 'AlphaFullCPU']
 
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
@@ -208,7 +220,8 @@ sticky_opts.AddOptions(
     # values (more than one value) not to be able to be restored from
     # a saved option file.  If this causes trouble then upgrade to
     # scons 0.96.90 or later.
-    ListOption('CPU_MODELS', 'CPU models', 'all', env['ALL_CPU_LIST']),
+    ListOption('CPU_MODELS', 'CPU models', 'AtomicSimpleCPU,TimingSimpleCPU',
+               env['ALL_CPU_LIST']),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),
     BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
@@ -245,11 +258,6 @@ def no_action(target, source, env):
     return 0
 
 env.NoAction = Action(no_action, None)
-
-# libelf build is described in its own SConscript file.
-# SConscript-global is the build in build/libelf shared among all
-# configs.
-env.SConscript('src/libelf/SConscript-global', exports = 'env')
 
 ###################################################
 #
@@ -292,6 +300,17 @@ config_builder = Builder(emitter = config_emitter, action = config_action)
 
 env.Append(BUILDERS = { 'ConfigFile' : config_builder })
 
+# base help text
+help_text = '''
+Usage: scons [scons options] [build options] [target(s)]
+
+'''
+
+# libelf build is shared across all configs in the build root.
+env.SConscript('ext/libelf/SConscript',
+               build_dir = os.path.join(build_root, 'libelf'),
+               exports = 'env')
+
 ###################################################
 #
 # Define build environments for selected configurations.
@@ -301,17 +320,12 @@ env.Append(BUILDERS = { 'ConfigFile' : config_builder })
 # rename base env
 base_env = env
 
-help_text = '''
-Usage: scons [scons options] [build options] [target(s)]
-
-'''
-
 for build_path in build_paths:
     print "Building in", build_path
     # build_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'ALPHA_SE')
     (build_root, build_dir) = os.path.split(build_path)
-    # Make a copy of the default environment to use for this config.
+    # Make a copy of the build-root environment to use for this config.
     env = base_env.Copy()
 
     # Set env options according to the build directory config.

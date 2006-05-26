@@ -117,7 +117,7 @@ AtomicSimpleCPU::CpuPort::recvRetry()
 AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     : BaseSimpleCPU(p), tickEvent(this),
       width(p->width), simulate_stalls(p->simulate_stalls),
-      icachePort(this), dcachePort(this)
+      icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this)
 {
     _status = Idle;
 
@@ -126,31 +126,23 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     // @todo fix me and get the real cpu iD!!!
     ifetch_req->setCpuNum(0);
     ifetch_req->setSize(sizeof(MachInst));
-    ifetch_pkt = new Packet;
-    ifetch_pkt->cmd = Read;
+    ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
-    ifetch_pkt->req = ifetch_req;
-    ifetch_pkt->size = sizeof(MachInst);
-    ifetch_pkt->dest = Packet::Broadcast;
 
     data_read_req = new Request(true);
     // @todo fix me and get the real cpu iD!!!
     data_read_req->setCpuNum(0);
     data_read_req->setAsid(0);
-    data_read_pkt = new Packet;
-    data_read_pkt->cmd = Read;
+    data_read_pkt = new Packet(data_read_req, Packet::ReadReq,
+                               Packet::Broadcast);
     data_read_pkt->dataStatic(&dataReg);
-    data_read_pkt->req = data_read_req;
-    data_read_pkt->dest = Packet::Broadcast;
 
     data_write_req = new Request(true);
     // @todo fix me and get the real cpu iD!!!
     data_write_req->setCpuNum(0);
     data_write_req->setAsid(0);
-    data_write_pkt = new Packet;
-    data_write_pkt->cmd = Write;
-    data_write_pkt->req = data_write_req;
-    data_write_pkt->dest = Packet::Broadcast;
+    data_write_pkt = new Packet(data_write_req, Packet::WriteReq,
+                                Packet::Broadcast);
 }
 
 
@@ -260,13 +252,12 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
     // Now do the access.
     if (fault == NoFault) {
         data_read_pkt->reset();
-        data_read_pkt->addr = data_read_req->getPaddr();
-        data_read_pkt->size = sizeof(T);
+        data_read_pkt->reinitFromRequest();
 
         dcache_complete = dcachePort.sendAtomic(data_read_pkt);
         dcache_access = true;
 
-        assert(data_read_pkt->result == Success);
+        assert(data_read_pkt->result == Packet::Success);
         data = data_read_pkt->get<T>();
 
     }
@@ -342,13 +333,12 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         data_write_pkt->reset();
         data = htog(data);
         data_write_pkt->dataStatic(&data);
-        data_write_pkt->addr = data_write_req->getPaddr();
-        data_write_pkt->size = sizeof(T);
+        data_write_pkt->reinitFromRequest();
 
         dcache_complete = dcachePort.sendAtomic(data_write_pkt);
         dcache_access = true;
 
-        assert(data_write_pkt->result == Success);
+        assert(data_write_pkt->result == Packet::Success);
 
         if (res && data_write_req->getFlags() & LOCKED) {
             *res = data_write_req->getScResult();
@@ -434,10 +424,6 @@ AtomicSimpleCPU::tick()
             preExecute();
             fault = curStaticInst->execute(this, traceData);
             postExecute();
-
-            if (traceData) {
-                traceData->finalize();
-            }
 
             if (simulate_stalls) {
                 // This calculation assumes that the icache and dcache

@@ -132,7 +132,7 @@ def isa_desc_emitter(target, source, env):
     return (isa_desc_gen_files, [isa_parser, cpu_models_file] + source)
 
 # Pieces are in place, so create the builder.
-isa_desc_builder = Builder(action='python $SOURCES $TARGET.dir $CPU_MODELS',
+isa_desc_builder = Builder(action='python2.4 $SOURCES $TARGET.dir $CPU_MODELS',
                            emitter = isa_desc_emitter)
 
 env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })

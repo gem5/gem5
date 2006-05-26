@@ -80,12 +80,14 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 
     Port *mem_port;
-    physPort = new FunctionalPort();
+    physPort = new FunctionalPort(csprintf("%s-%d-funcport",
+                                           cpu->name(), thread_num));
     mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(physPort);
     physPort->setPeer(mem_port);
 
-    virtPort = new VirtualPort();
+    virtPort = new VirtualPort(csprintf("%s-%d-vport",
+                                        cpu->name(), thread_num));
     mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(virtPort);
     virtPort->setPeer(mem_port);
@@ -100,7 +102,9 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
 {
     /* Use this port to for syscall emulation writes to memory. */
     Port *mem_port;
-    port = new TranslatingPort(process->pTable, false);
+    port = new TranslatingPort(csprintf("%s-%d-funcport",
+                                        cpu->name(), thread_num),
+                               process->pTable, false);
     mem_port = memobj->getPort("functional");
     mem_port->setPeer(port);
     port->setPeer(mem_port);
@@ -300,7 +304,7 @@ CPUExecContext::getVirtPort(ExecContext *xc)
     VirtualPort *vp;
     Port *mem_port;
 
-    vp = new VirtualPort(xc);
+    vp = new VirtualPort("xc-vport", xc);
     mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(vp);
     vp->setPeer(mem_port);

@@ -95,15 +95,15 @@ AlphaConsole::read(Packet *pkt)
      * machine dependent address swizzle is required?
      */
 
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     pkt->time += pioDelay;
-    Addr daddr = pkt->addr - pioAddr;
+    Addr daddr = pkt->getAddr() - pioAddr;
 
     pkt->allocate();
 
-    switch (pkt->size)
+    switch (pkt->getSize())
     {
         case sizeof(uint32_t):
             switch (daddr)
@@ -124,7 +124,7 @@ AlphaConsole::read(Packet *pkt)
                     /* Old console code read in everyting as a 32bit int
                      * we now break that for better error checking.
                      */
-                    pkt->result = BadAddress;
+                  pkt->result = Packet::BadAddress;
             }
             DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
                     pkt->get<uint32_t>());
@@ -181,9 +181,10 @@ AlphaConsole::read(Packet *pkt)
                     pkt->get<uint64_t>());
             break;
         default:
-            pkt->result = BadAddress;
+          pkt->result = Packet::BadAddress;
     }
-    if (pkt->result == Unknown) pkt->result = Success;
+    if (pkt->result == Packet::Unknown)
+        pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -192,12 +193,12 @@ AlphaConsole::write(Packet *pkt)
 {
     pkt->time += pioDelay;
 
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
-    Addr daddr = pkt->addr - pioAddr;
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    Addr daddr = pkt->getAddr() - pioAddr;
 
     uint64_t val = pkt->get<uint64_t>();
-    assert(pkt->size == sizeof(uint64_t));
+    assert(pkt->getSize() == sizeof(uint64_t));
 
     switch (daddr) {
       case offsetof(AlphaAccess, diskUnit):
@@ -240,7 +241,7 @@ AlphaConsole::write(Packet *pkt)
             panic("Unknown 64bit access, %#x\n", daddr);
     }
 
-    pkt->result = Success;
+    pkt->result = Packet::Success;
 
     return pioDelay;
 }

@@ -31,7 +31,7 @@
 
 
 PioPort::PioPort(PioDevice *dev, Platform *p)
-        : device(dev), platform(p)
+    : Port(dev->name() + "-pioport"), device(dev), platform(p)
 { }
 
 
@@ -67,7 +67,7 @@ PioPort::recvRetry()
 void
 PioPort::SendEvent::process()
 {
-    if (port->Port::sendTiming(packet) == Success)
+    if (port->Port::sendTiming(packet))
         return;
 
     port->transmitList.push_back(packet);
@@ -78,8 +78,10 @@ bool
 PioPort::recvTiming(Packet *pkt)
 {
     device->recvAtomic(pkt);
+    // turn packet around to go back to requester
+    pkt->makeTimingResponse();
     sendTiming(pkt, pkt->time - pkt->req->getTime());
-    return Success;
+    return true;
 }
 
 PioDevice::~PioDevice()
@@ -106,7 +108,7 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 
 
 DmaPort::DmaPort(DmaDevice *dev, Platform *p)
-        : device(dev), platform(p), pendingCount(0)
+    : Port(dev->name() + "-dmaport"), device(dev), platform(p), pendingCount(0)
 { }
 
 bool
@@ -114,7 +116,7 @@ DmaPort::recvTiming(Packet *pkt)
 {
     if (pkt->senderState) {
         DmaReqState *state;
-        state = (DmaReqState*)pkt->senderState;
+        state = dynamic_cast<DmaReqState*>(pkt->senderState);
         state->completionEvent->schedule(pkt->time - pkt->req->getTime());
         delete pkt->req;
         delete pkt;
@@ -123,7 +125,7 @@ DmaPort::recvTiming(Packet *pkt)
         delete pkt;
     }
 
-    return Success;
+    return Packet::Success;
 }
 
 DmaDevice::DmaDevice(Params *p)
@@ -133,7 +135,7 @@ DmaDevice::DmaDevice(Params *p)
 void
 DmaPort::SendEvent::process()
 {
-    if (port->Port::sendTiming(packet) == Success)
+    if (port->Port::sendTiming(packet))
         return;
 
     port->transmitList.push_back(packet);
@@ -146,54 +148,39 @@ DmaPort::recvRetry()
     transmitList.pop_front();
     return pkt;
 }
-void
-DmaPort::dmaAction(Command cmd, Addr addr, int size, Event *event,
-        uint8_t *data)
-{
 
+
+void
+DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+                   uint8_t *data)
+{
     assert(event);
 
     int prevSize = 0;
-    Packet basePkt;
-    Request baseReq(false);
-
-    basePkt.flags = 0;
-    basePkt.coherence = NULL;
-    basePkt.senderState = NULL;
-    basePkt.dest = Packet::Broadcast;
-    basePkt.cmd = cmd;
-    basePkt.result = Unknown;
-    basePkt.req = NULL;
-//    baseReq.nicReq = true;
-    baseReq.setTime(curTick);
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-            Packet *pkt = new Packet(basePkt);
-            Request *req = new Request(baseReq);
-            pkt->addr = gen.addr();
-            pkt->size = gen.size();
-            pkt->req = req;
-            pkt->req->setPaddr(pkt->addr);
-            pkt->req->setSize(pkt->size);
+            Request *req = new Request(false);
+            req->setPaddr(gen.addr());
+            req->setSize(gen.size());
+            req->setTime(curTick);
+            Packet *pkt = new Packet(req, cmd, Packet::Broadcast);
+
             // Increment the data pointer on a write
             if (data)
                 pkt->dataStatic(data + prevSize) ;
-            prevSize += pkt->size;
+
+            prevSize += gen.size();
+
             // Set the last bit of the dma as the final packet for this dma
             // and set it's completion event.
             if (prevSize == size) {
-                DmaReqState *state = new DmaReqState(event, true);
-
-                pkt->senderState = (void*)state;
+                pkt->senderState = new DmaReqState(event, true);
             }
             assert(pendingCount >= 0);
             pendingCount++;
             sendDma(pkt);
     }
-    // since this isn't getting used and we want a check to make sure that all
-    // packets had data in them at some point.
-    basePkt.dataStatic((uint8_t*)NULL);
 }
 
 
@@ -206,12 +193,12 @@ DmaPort::sendDma(Packet *pkt)
   /* MemState state = device->platform->system->memState;
 
    if (state == Timing) {
-       if (sendTiming(pkt) == Failure)
+       if (!sendTiming(pkt))
            transmitList.push_back(&packet);
     } else if (state == Atomic) {*/
        sendAtomic(pkt);
        if (pkt->senderState) {
-           DmaReqState *state = (DmaReqState*)pkt->senderState;
+           DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
            state->completionEvent->schedule(curTick + (pkt->time - pkt->req->getTime()) +1);
        }
        pendingCount--;

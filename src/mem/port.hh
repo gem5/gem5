@@ -69,9 +69,28 @@ typedef std::list<Range<Addr> >::iterator AddrRangeIter;
  */
 class Port
 {
+  private:
+
+    /** Descriptive name (for DPRINTF output) */
+    const std::string portName;
+
   public:
 
+    /**
+     * Constructor.
+     *
+     * @param _name Port name for DPRINTF output.  Should include name
+     * of memory system object to which the port belongs.
+     */
+    Port(const std::string &_name)
+        : portName(_name)
+    { }
+
+    /** Return port name (for DPRINTF). */
+    const std::string &name() const { return portName; }
+
     virtual ~Port() {};
+
     // mey be better to use subclasses & RTTI?
     /** Holds the ports status.  Keeps track if it is blocked, or has
         calculated a range change. */
@@ -93,9 +112,9 @@ class Port
     /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
     */
-    void setPeer(Port *port) { peer = port; }
+    void setPeer(Port *port);
 
-        /** Function to set the pointer for the peer port.
+    /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
     */
     Port *getPeer() { return peer; }
@@ -213,7 +232,7 @@ class Port
 
     /** Internal helper function for read/writeBlob().
      */
-    void blobHelper(Addr addr, uint8_t *p, int size, Command cmd);
+    void blobHelper(Addr addr, uint8_t *p, int size, Packet::Command cmd);
 };
 
 /** A simple functional port that is only meant for one way communication to
@@ -224,6 +243,10 @@ class Port
 class FunctionalPort : public Port
 {
   public:
+    FunctionalPort(const std::string &_name)
+        : Port(_name)
+    {}
+
     virtual bool recvTiming(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual Tick recvAtomic(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvFunctional(Packet *pkt) { panic("FuncPort is UniDir"); }

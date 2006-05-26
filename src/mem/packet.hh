@@ -43,24 +43,6 @@ struct Packet;
 typedef Packet* PacketPtr;
 typedef uint8_t* PacketDataPtr;
 
-/** List of all commands associated with a packet. */
-enum Command
-{
-    Read,
-    Write
-};
-
-/** The result of a particular pakets request. */
-enum PacketResult
-{
-    Success,
-    BadAddress,
-    Unknown
-};
-
-class SenderState{};
-class Coherence{};
-
 /**
  * A Packet is the structure to handle requests between two levels
  * of the memory system.  The Request is a global object that trancends
@@ -74,7 +56,7 @@ class Coherence{};
  * Packets are assumed to be returned in the case of a single response.  If
  * the transaction has no response, then the consumer will delete the packet.
  */
-struct Packet
+class Packet
 {
   private:
    /** A pointer to the data being transfered.  It can be differnt sizes
@@ -95,25 +77,9 @@ struct Packet
     bool arrayData;
 
 
-  public:
     /** The address of the request, could be virtual or physical (depending on
         cache configurations). */
     Addr addr;
-
-    /** Flag structure to hold flags for this particular packet */
-    uint64_t flags;
-
-    /** A pointer to the overall request. */
-    RequestPtr req;
-
-    /** A virtual base opaque structure used to hold
-        coherence status messages. */
-    Coherence *coherence;  // virtual base opaque,
-                           // assert(dynamic_cast<Foo>) etc.
-
-    /** A virtual base opaque structure used to hold the senders state. */
-    void *senderState; // virtual base opaque,
-                           // assert(dynamic_cast<Foo>) etc.
 
      /** Indicates the size of the request. */
     int size;
@@ -121,31 +87,122 @@ struct Packet
     /** A index of the source of the transaction. */
     short src;
 
-    static const short Broadcast = -1;
-
     /** A index to the destination of the transaction. */
     short dest;
+
+    bool addrValid;
+    bool sizeValid;
+    bool srcValid;
+
+  public:
+
+    static const short Broadcast = -1;
+
+    /** A pointer to the overall request. */
+    RequestPtr req;
+
+    class CoherenceState {
+      public:
+        virtual ~CoherenceState() {}
+    };
+
+    /** A virtual base opaque structure used to hold
+        coherence status messages. */
+    CoherenceState *coherence;  // virtual base opaque,
+                           // assert(dynamic_cast<Foo>) etc.
+
+    class SenderState {
+      public:
+        virtual ~SenderState() {}
+    };
+
+    /** A virtual base opaque structure used to hold the senders state. */
+    SenderState *senderState; // virtual base opaque,
+    // assert(dynamic_cast<Foo>) etc.
+
+  private:
+    /** List of command attributes. */
+    enum CommandAttribute
+    {
+        IsRead		= 1 << 0,
+        IsWrite		= 1 << 1,
+        IsPrefetch	= 1 << 2,
+        IsInvalidate	= 1 << 3,
+        IsRequest	= 1 << 4,
+        IsResponse 	= 1 << 5,
+        NeedsResponse	= 1 << 6,
+    };
+
+  public:
+    /** List of all commands associated with a packet. */
+    enum Command
+    {
+        ReadReq		= IsRead  | IsRequest | NeedsResponse,
+        WriteReq	= IsWrite | IsRequest | NeedsResponse,
+        WriteReqNoAck	= IsWrite | IsRequest,
+        ReadResp	= IsRead  | IsResponse,
+        WriteResp	= IsWrite | IsResponse
+    };
+
+    const std::string &cmdString() const;
 
     /** The command of the transaction. */
     Command cmd;
 
+    bool isRead() 	 { return (cmd & IsRead)  != 0; }
+    bool isRequest()	 { return (cmd & IsRequest)  != 0; }
+    bool isResponse()	 { return (cmd & IsResponse) != 0; }
+    bool needsResponse() { return (cmd & NeedsResponse) != 0; }
+
+    void makeTimingResponse() {
+        assert(needsResponse());
+        int icmd = (int)cmd;
+        icmd &= ~(IsRequest | NeedsResponse);
+        icmd |= IsResponse;
+        cmd = (Command)icmd;
+        dest = src;
+        srcValid = false;
+    }
+
     /** The time this request was responded to. Used to calculate latencies. */
     Tick time;
 
+    /** The result of a particular packets request. */
+    enum Result
+    {
+        Success,
+        BadAddress,
+        Unknown
+    };
+
     /** The result of the packet transaction. */
-    PacketResult result;
+    Result result;
 
     /** Accessor function that returns the source index of the packet. */
-    short getSrc() const { return src; }
+    short getSrc() const { assert(srcValid); return src; }
+    void setSrc(short _src) { src = _src; srcValid = true; }
 
     /** Accessor function that returns the destination index of
         the packet. */
     short getDest() const { return dest; }
+    void setDest(short _dest) { dest = _dest; }
 
-    Packet()
+    Addr getAddr() const { assert(addrValid); return addr; }
+    void setAddr(Addr _addr) { addr = _addr; addrValid = true; }
+
+    int getSize() const { assert(sizeValid); return size; }
+    void setSize(int _size) { size = _size; sizeValid = true; }
+
+
+    Packet(Request *_req, Command _cmd, short _dest)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           addr(_req->paddr), size(_req->size), dest(_dest),
+           addrValid(_req->validPaddr), sizeValid(_req->validSize),
+           srcValid(false),
+           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            time(curTick), result(Unknown)
-        {}
+    {
+    }
 
     ~Packet()
     { deleteData(); }
@@ -153,6 +210,11 @@ struct Packet
 
     /** Minimally reset a packet so something like simple cpu can reuse it. */
     void reset();
+
+    void reinitFromRequest() {
+        if (req->validPaddr) setAddr(req->paddr);
+        if (req->validSize)  setSize(req->size);
+    }
 
     /** Set the data pointer to the following value that should not be freed. */
     template <typename T>

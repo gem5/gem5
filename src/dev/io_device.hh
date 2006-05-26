@@ -115,7 +115,7 @@ class PioPort : public Port
 };
 
 
-struct DmaReqState
+struct DmaReqState : public Packet::SenderState
 {
     Event *completionEvent;
     bool final;
@@ -173,8 +173,8 @@ class DmaPort : public Port
   public:
     DmaPort(DmaDevice *dev, Platform *p);
 
-    void dmaAction(Command cmd, Addr addr, int size, Event *event,
-            uint8_t *data = NULL);
+    void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+                   uint8_t *data = NULL);
 
     bool dmaPending() { return pendingCount > 0; }
 
@@ -207,7 +207,7 @@ class PioDevice : public MemObject
     /** As far as the devices are concerned they only accept atomic transactions
      * which are converted to either a write or a read. */
     Tick recvAtomic(Packet *pkt)
-    { return pkt->cmd == Read ? this->read(pkt) : this->write(pkt); }
+    { return pkt->isRead() ? this->read(pkt) : this->write(pkt); }
 
     /** Pure virtual function that the device must implement. Called when a read
      * command is recieved by the port.
@@ -305,10 +305,10 @@ class DmaDevice : public PioDevice
     virtual ~DmaDevice();
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data)
-    { dmaPort->dmaAction(Write, addr, size, event, data) ; }
+    { dmaPort->dmaAction(Packet::WriteReq, addr, size, event, data) ; }
 
     void dmaRead(Addr addr, int size, Event *event, uint8_t *data = NULL)
-    { dmaPort->dmaAction(Read, addr, size, event, data); }
+    { dmaPort->dmaAction(Packet::ReadReq, addr, size, event, data); }
 
     bool dmaPending() { return dmaPort->dmaPending(); }
 

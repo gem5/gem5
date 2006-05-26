@@ -100,8 +100,8 @@ class Bus : public MemObject
       public:
 
         /** Constructor for the BusPort.*/
-        BusPort(Bus *_bus, int _id)
-            : bus(_bus), id(_id)
+        BusPort(const std::string &_name, Bus *_bus, int _id)
+            : Port(_name), bus(_bus), id(_id)
         { }
 
       protected:
@@ -109,17 +109,17 @@ class Bus : public MemObject
         /** When reciving a timing request from the peer port (at id),
             pass it to the bus. */
         virtual bool recvTiming(Packet *pkt)
-        { pkt->src = id; return bus->recvTiming(pkt); }
+        { pkt->setSrc(id); return bus->recvTiming(pkt); }
 
         /** When reciving a Atomic requestfrom the peer port (at id),
             pass it to the bus. */
         virtual Tick recvAtomic(Packet *pkt)
-        { pkt->src = id; return bus->recvAtomic(pkt); }
+        { pkt->setSrc(id); return bus->recvAtomic(pkt); }
 
         /** When reciving a Functional requestfrom the peer port (at id),
             pass it to the bus. */
         virtual void recvFunctional(Packet *pkt)
-        { pkt->src = id; bus->recvFunctional(pkt); }
+        { pkt->setSrc(id); bus->recvFunctional(pkt); }
 
         /** When reciving a status changefrom the peer port (at id),
             pass it to the bus. */
@@ -146,13 +146,7 @@ class Bus : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name)
-    {
-        // if_name ignored?  forced to be empty?
-        int id = interfaces.size();
-        interfaces.push_back(new BusPort(this, id));
-        return interfaces.back();
-    }
+    virtual Port *getPort(const std::string &if_name);
 
     virtual void init();
 

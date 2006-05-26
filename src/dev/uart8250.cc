@@ -110,12 +110,12 @@ Uart8250::Uart8250(Params *p)
 Tick
 Uart8250::read(Packet *pkt)
 {
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
-    assert(pkt->size == 1);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    assert(pkt->getSize() == 1);
 
     pkt->time += pioDelay;
-    Addr daddr = pkt->addr - pioAddr;
+    Addr daddr = pkt->getAddr() - pioAddr;
     pkt->allocate();
 
     DPRINTF(Uart, " read register %#x\n", daddr);
@@ -186,7 +186,7 @@ Uart8250::read(Packet *pkt)
 /*    uint32_t d32 = *data;
     DPRINTF(Uart, "Register read to register %#x returned %#x\n", daddr, d32);
 */
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 
@@ -194,12 +194,12 @@ Tick
 Uart8250::write(Packet *pkt)
 {
 
-    assert(pkt->result == Unknown);
-    assert(pkt->addr >= pioAddr && pkt->addr < pioAddr + pioSize);
-    assert(pkt->size == 1);
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    assert(pkt->getSize() == 1);
 
     pkt->time += pioDelay;
-    Addr daddr = pkt->addr - pioAddr;
+    Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(Uart, " write register %#x value %#x\n", daddr, pkt->get<uint8_t>());
 
@@ -264,7 +264,7 @@ Uart8250::write(Packet *pkt)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-    pkt->result = Success;
+    pkt->result = Packet::Success;
     return pioDelay;
 }
 

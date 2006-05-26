@@ -34,11 +34,31 @@
 #include "base/misc.hh"
 #include "mem/packet.hh"
 
+static const std::string ReadReqString("ReadReq");
+static const std::string WriteReqString("WriteReq");
+static const std::string WriteReqNoAckString("WriteReqNoAck");
+static const std::string ReadRespString("ReadResp");
+static const std::string WriteRespString("WriteResp");
+static const std::string OtherCmdString("<other>");
+
+const std::string &
+Packet::cmdString() const
+{
+    switch (cmd) {
+      case ReadReq:         return ReadReqString;
+      case WriteReq:        return WriteReqString;
+      case WriteReqNoAck:   return WriteReqNoAckString;
+      case ReadResp:        return ReadRespString;
+      case WriteResp:       return WriteRespString;
+      default:              return OtherCmdString;
+    }
+}
 
 /** delete the data pointed to in the data pointer. Ok to call to matter how
  * data was allocted. */
 void
-Packet::deleteData() {
+Packet::deleteData()
+{
     assert(staticData || dynamicData);
     if (staticData)
         return;
@@ -51,22 +71,24 @@ Packet::deleteData() {
 
 /** If there isn't data in the packet, allocate some. */
 void
-Packet::allocate() {
+Packet::allocate()
+{
     if (data)
         return;
     assert(!staticData);
     dynamicData = true;
     arrayData = true;
-    data = new uint8_t[size];
+    data = new uint8_t[getSize()];
 }
 
 /** Do the packet modify the same addresses. */
 bool
-Packet::intersect(Packet *p) {
-    Addr s1 = addr;
-    Addr e1 = addr + size;
-    Addr s2 = p->addr;
-    Addr e2 = p->addr + p->size;
+Packet::intersect(Packet *p)
+{
+    Addr s1 = getAddr();
+    Addr e1 = getAddr() + getSize();
+    Addr s2 = p->getAddr();
+    Addr e2 = p->getAddr() + p->getSize();
 
     if (s1 >= s2 && s1 < e2)
         return true;
@@ -77,7 +99,8 @@ Packet::intersect(Packet *p) {
 
 /** Minimally reset a packet so something like simple cpu can reuse it. */
 void
-Packet::reset() {
+Packet::reset()
+{
     result = Unknown;
     if (dynamicData) {
        deleteData();
@@ -88,7 +111,8 @@ Packet::reset() {
 }
 
 
-
-
-bool fixPacket(Packet *func, Packet *timing)
-{ panic("Need to implement!"); }
+bool
+fixPacket(Packet *func, Packet *timing)
+{
+    panic("Need to implement!");
+}
