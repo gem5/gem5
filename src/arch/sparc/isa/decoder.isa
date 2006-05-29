@@ -325,12 +325,12 @@ decode OP default Unknown::unknown()
             0x28: rdasr({{
                 Rd = xc->readMiscRegWithEffect(RS1 + AsrStart, fault);
             }});
-            0x29: rdhpr({{
+            0x29: HPriv::rdhpr({{
                 // XXX Need to protect with format that traps non-priv/priv
                 // access
                 Rd = xc->readMiscRegWithEffect(RS1 + HprStart, fault);
             }});
-            0x2A: rdpr({{
+            0x2A: Priv::rdpr({{
                 // XXX Need to protect with format that traps non-priv
                 // access
                 Rd = xc->readMiscRegWithEffect(RS1 + PrStart, fault);
@@ -397,15 +397,15 @@ decode OP default Unknown::unknown()
                 0x0: BasicOperate::saved({{/*Boogy Boogy*/}});
                 0x1: BasicOperate::restored({{/*Boogy Boogy*/}});
             }
-            0x32: wrpr({{
+            0x32: Priv::wrpr({{
                 // XXX Need to protect with format that traps non-priv
                 // access
-                xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
+                fault = xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
             }});
-            0x33: wrhpr({{
+            0x33: HPriv::wrhpr({{
                 // XXX Need to protect with format that traps non-priv/priv
                 // access
-                xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
+                fault = xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
             }});
             0x34: Trap::fpop1({{fault = new FpDisabled;}});
             0x35: Trap::fpop2({{fault = new FpDisabled;}});
@@ -549,7 +549,7 @@ decode OP default Unknown::unknown()
                     NNPC = Tnpc + 4;
                     Tl = Tl - 1;
                 }});
-                0x1: BasicOperate::retry({{
+                0x1: Priv::retry({{
                     if(Tl == 0)
                         return new IllegalInstruction;
                     Cwp = Tstate<4:0>;

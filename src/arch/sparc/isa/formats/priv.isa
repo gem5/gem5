@@ -87,9 +87,10 @@ def template PrivExecute {{
         if(%(check)s)
             return new PrivilegedAction;
 
+        Fault fault = NoFault;
         %(code)s;
         %(op_wb)s;
-        return NoFault;
+        return fault;
     }
 }};
 
@@ -116,10 +117,17 @@ let {{
 
 // Primary format for integer operate instructions:
 def format Priv(code, *opt_flags) {{
-        checkCode = "((xc->readMiscReg(PrStart + MISCREG_PSTATE))<2:2>)"
+        checkCode = '''((xc->readMiscReg(PrStart + MISCREG_PSTATE))<2:2>) ||
+                        ((xc->readMiscReg(HprStart + MISCREG_HPSTATE))<2:2>)'''
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
              checkCode, name, Name, opt_flags)
 }};
 
+def format HPriv(code, *opt_flags) {{
+        checkCode = "((xc->readMiscReg(HprStart + MISCREG_HPSTATE))<2:2>)"
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
+}};
 
