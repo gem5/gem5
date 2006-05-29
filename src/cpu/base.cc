@@ -35,6 +35,7 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "cpu/base.hh"
+#include "cpu/cpuevent.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
@@ -259,6 +260,9 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         ExecContext *oldXC = oldCPU->execContexts[i];
 
         newXC->takeOverFrom(oldXC);
+
+        CpuEvent::replaceExecContext(oldXC, newXC);
+
         assert(newXC->readCpuId() == oldXC->readCpuId());
 #if FULL_SYSTEM
         system->replaceExecContext(newXC, newXC->readCpuId());

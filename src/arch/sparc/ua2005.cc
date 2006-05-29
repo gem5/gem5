@@ -56,6 +56,8 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         case MISCREG_TICK_CMPR:
           if (isNonPriv())
               return new PrivilegedOpcode;
+          if (tickCompare == NULL)
+              tickCompare = new TickCompareEvent(this, xc);
           setReg(miscReg, val);
           if (tick_cmprFields.int_dis && tickCompare.scheduled())
                   tickCompare.deschedule();
@@ -78,6 +80,8 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         case MISCREG_STICK_CMPR:
           if (isNonPriv())
               return new PrivilegedOpcode;
+          if (sTickCompare == NULL)
+              sTickCompare = new STickCompareEvent(this, xc);
           sys = dynamic_cast<SparcSystem*>(xc->getSystemPtr());
           assert(sys != NULL);
           setReg(miscReg, val);
@@ -120,6 +124,8 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         case MISCREG_HSTICK_CMPR:
           if (isNonPriv())
               return new PrivilegedOpcode;
+          if (hSTickCompare == NULL)
+              hSTickCompare = new HSTickCompareEvent(this, xc);
           sys = dynamic_cast<SparcSystem*>(xc->getSystemPtr());
           assert(sys != NULL);
           setReg(miscReg, val);
@@ -195,5 +201,22 @@ MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ExecContext * xc)
     }
 }
 
+void
+MiscRegFile::processTickCompare(ExecContext *xc)
+{
+    panic("tick compare not implemented\n");
+}
+
+void
+MiscRegFile::processSTickCompare(ExecContext *xc)
+{
+    panic("tick compare not implemented\n");
+}
+
+void
+MiscRegFile::processHSTickCompare(ExecContext *xc)
+{
+    panic("tick compare not implemented\n");
+}
 
 }; // namespace SparcISA

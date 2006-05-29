@@ -33,7 +33,7 @@
 #include "arch/sparc/faults.hh"
 #include "base/trace.hh"
 #include "sim/byteswap.hh"
-#include "sim/eventq.hh"
+#include "cpu/cpuevent.hh"
 #include "sim/host.hh"
 
 class Checkpoint;
@@ -557,28 +557,31 @@ namespace SparcISA
 
         // These need to check the int_dis field and if 0 then
         // set appropriate bit in softint and checkinterrutps on the cpu
-        void processTickCompare() { panic("tick compare not implemented\n"); }
-        void processSTickCompare(){ panic("tick compare not implemented\n"); }
-        void processHSTickCompare(){ panic("tick compare not implemented\n"); }
+#if FULL_SYSTEM
+        /** Process a tick compare event and generate an interrupt on the cpu if
+         * appropriate. */
+        void processTickCompare(ExecContext *xc);
+        void processSTickCompare(ExecContext *xc);
+        void processHSTickCompare(ExecContext *xc);
 
-        typedef EventWrapper<MiscRegFile,
+        typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processTickCompare> TickCompareEvent;
-        TickCompareEvent tickCompare;
+        TickCompareEvent *tickCompare;
 
-        typedef EventWrapper<MiscRegFile,
+        typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processSTickCompare> STickCompareEvent;
-        STickCompareEvent sTickCompare;
+        STickCompareEvent *sTickCompare;
 
-        typedef EventWrapper<MiscRegFile,
+        typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processHSTickCompare> HSTickCompareEvent;
-        HSTickCompareEvent hSTickCompare;
+        HSTickCompareEvent *hSTickCompare;
 
         /** Fullsystem only register version of ReadRegWithEffect() */
         MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
         /** Fullsystem only register version of SetRegWithEffect() */
         Fault setFSRegWithEffect(int miscReg, const MiscReg &val,
                 ExecContext * xc);
-
+#endif
       public:
 
         void reset()
@@ -636,7 +639,6 @@ namespace SparcISA
         }
 
         MiscRegFile()
-            : tickCompare(this), sTickCompare(this), hSTickCompare(this)
         {
             reset();
         }
