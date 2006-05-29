@@ -51,14 +51,10 @@ namespace SparcISA
     // NWINDOWS - number of register windows, can be 3 to 32
     const int NWindows = 32;
 
-
     const int AsrStart = 0;
     const int PrStart = 32;
     const int HprStart = 64;
     const int MiscStart = 96;
-
-
-    const uint64_t Bit64 = 0x8000000000000000;
 
     class IntRegFile
     {
@@ -603,8 +599,6 @@ namespace SparcISA
             hpstateFields.red = 1;
             hpstateFields.hpriv = 1;
             hpstateFields.tlz = 0; // this is a guess
-
-
 #else
 /*	    //This sets up the initial state of the processor for usermode processes
             pstateFields.priv = 0; //Process runs in user mode
