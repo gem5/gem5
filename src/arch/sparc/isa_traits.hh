@@ -80,6 +80,9 @@ class SyscallReturn
 
 #endif
 
+#if FULL_SYSTEM
+#include "arch/sparc/isa_fullsys_traits.hh"
+#endif
 
 namespace SparcISA
 {

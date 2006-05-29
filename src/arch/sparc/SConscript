@@ -47,12 +47,7 @@ base_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	tlb.cc
-	arguments.cc
-	ev5.cc
-	osfpal.cc
-	stacktrace.cc
-	vtophys.cc
+	ua2005.cc
 	''')
 
 # Syscall emulation (non-full-system) sources

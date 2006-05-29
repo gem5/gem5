@@ -40,7 +40,8 @@
 using namespace BigEndianGuest;
 
 SparcSystem::SparcSystem(Params *p)
-    : System(p)
+    : System(p), sysTick(0)
+
 {
     resetSymtab = new SymbolTable;
     hypervisorSymtab = new SymbolTable;

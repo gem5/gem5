@@ -32,7 +32,7 @@
 #include <iosfwd>
 #include <map>
 
-#include "arch/isa_traits.hh"	// for Addr
+#include "sim/host.hh"	// for Addr
 
 class Checkpoint;
 class SymbolTable

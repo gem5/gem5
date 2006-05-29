@@ -53,7 +53,7 @@ class SparcSystem : public System
 
     SparcSystem(Params *p);
 
-    ~SparcaSystem();
+    ~SparcSystem();
 
     virtual bool breakpoint();
 
@@ -81,6 +81,9 @@ class SparcSystem : public System
 
     /** Object pointer for the openboot code */
     ObjectFile *openboot;
+
+    /** System Tick for syncronized tick across all cpus. */
+    Tick sysTick;
 
   protected:
     const Params *params() const { return (const Params *)_params; }

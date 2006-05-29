@@ -29,6 +29,7 @@
 #ifndef __ARCH_SPARC_REGFILE_HH__
 #define __ARCH_SPARC_REGFILE_HH__
 
+#include "arch/sparc/exceptions.hh"
 #include "arch/sparc/faults.hh"
 #include "base/trace.hh"
 #include "sim/byteswap.hh"
@@ -406,7 +407,7 @@ namespace SparcISA
         union {
             uint64_t stick;		// Hardware clock-tick counter
             struct {
-                int64_t counter:63;	// Clock-tick count
+                int64_t :63;	// Not used, storage in SparcSystem
                 uint64_t npt:1;		// Non-priveleged trap
             } stickFields;
         };
@@ -572,6 +573,12 @@ namespace SparcISA
                 &MiscRegFile::processHSTickCompare> HSTickCompareEvent;
         HSTickCompareEvent hSTickCompare;
 
+        /** Fullsystem only register version of ReadRegWithEffect() */
+        MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
+        /** Fullsystem only register version of SetRegWithEffect() */
+        Fault setFSRegWithEffect(int miscReg, const MiscReg &val,
+                ExecContext * xc);
+
       public:
 
         void reset()
@@ -584,26 +591,30 @@ namespace SparcISA
             //Bits that aren't set aren't defined on startup.
             tl = MaxTL;
             gl = MaxGL;
-            tt[tl] = PowerOnReset.trapType();
-            pstateFields.mm = 0; //Total Store Order
-            pstateFields.red = 1; //Enter RED_State
-            pstateFields.am = 0; //Address Masking is turned off
-            pstateFields.priv = 1; //Processor enters privileged mode
-            pstateFields.ie = 0; //Interrupts are disabled
-            pstateFields.ag = 1; //Globals are replaced with alternate globals
-            pstateFields.tle = 0; //Big Endian mode for traps
-            pstateFields.cle = 0; //Big Endian mode for non-traps
+
             tickFields.counter = 0; //The TICK register is unreadable bya
             tickFields.npt = 1; //The TICK register is unreadable by by !priv
-            tick_cmpr.int_dis = 1; // disable timer compare interrupts
-            stickFields.counter = 0; //The TICK register is unreadable by
+
+            softint = 0; // Clear all the soft interrupt bits
+            tick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
             stickFields.npt = 1; //The TICK register is unreadable by by !priv
-            hpstateFields.id = 1;
-            hpstateFields.ibe = 0;
+            stick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+
+
+            tt[tl] = power_on_reset;
+            pstate = 0; // fields 0 but pef
+            pstateFields.pef = 1;
+
+            hpstate = 0;
             hpstateFields.red = 1;
             hpstateFields.hpriv = 1;
             hpstateFields.tlz = 0; // this is a guess
 
+            hintp = 0; // no interrupts pending
+            hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
 
 #else
 /*	    //This sets up the initial state of the processor for usermode processes
@@ -630,12 +641,30 @@ namespace SparcISA
             reset();
         }
 
+        /** read a value out of an either an SE or FS IPR. No checking is done
+         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
+         * register are copied that are necessary for FS. However this prevents
+         * a bunch of ifdefs and is rarely called so is not performance
+         * criticial. */
         MiscReg readReg(int miscReg);
 
+        /** Read a value from an IPR. Only the SE iprs are here and the rest
+         * are are readFSRegWithEffect (which is called by readRegWithEffect()).
+         * Checking is done for permission based on state bits in the miscreg
+         * file. */
         MiscReg readRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
 
+        /** write a value into an either an SE or FS IPR. No checking is done
+         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
+         * register are copied that are necessary for FS. However this prevents
+         * a bunch of ifdefs and is rarely called so is not performance
+         * criticial.*/
         Fault setReg(int miscReg, const MiscReg &val);
 
+        /** Write a value into an IPR. Only the SE iprs are here and the rest
+         * are are setFSRegWithEffect (which is called by setRegWithEffect()).
+         * Checking is done for permission based on state bits in the miscreg
+         * file. */
         Fault setRegWithEffect(int miscReg,
                 const MiscReg &val, ExecContext * xc);
 
