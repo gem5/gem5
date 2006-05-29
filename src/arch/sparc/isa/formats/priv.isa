@@ -121,13 +121,13 @@ def format Priv(code, *opt_flags) {{
                         ((xc->readMiscReg(HprStart + MISCREG_HPSTATE))<2:2>)'''
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
+             checkCode, name, Name, opt_flags + ('IprAccessOp',))
 }};
 
 def format HPriv(code, *opt_flags) {{
         checkCode = "((xc->readMiscReg(HprStart + MISCREG_HPSTATE))<2:2>)"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
+             checkCode, name, Name, opt_flags + ('IprAccessOp',))
 }};
 
