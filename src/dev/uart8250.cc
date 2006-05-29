@@ -124,7 +124,7 @@ Uart8250::read(Packet *pkt)
         case 0x0:
             if (!(LCR & 0x80)) { // read byte
                 if (cons->dataAvailable())
-                    cons->in(*pkt->getPtr<uint8_t>());
+                    pkt->set(cons->in());
                 else {
                     pkt->set((uint8_t)0);
                     // A limited amount of these are ok.

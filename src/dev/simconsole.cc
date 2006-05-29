@@ -202,32 +202,31 @@ SimConsole::write(const uint8_t *buf, size_t len)
 #define RECEIVE_NONE (ULL(2) << 62)
 #define RECEIVE_ERROR (ULL(3) << 62)
 
-bool
-SimConsole::in(uint8_t &c)
+uint8_t
+SimConsole::in()
 {
-    bool empty, ret;
+    bool empty;
+    uint8_t c;
 
     empty = rxbuf.empty();
-    ret = !empty;
-    if (!empty) {
-        rxbuf.read((char *)&c, 1);
-        empty = rxbuf.empty();
-    }
+    assert(!empty);
+    rxbuf.read((char *)&c, 1);
+    empty = rxbuf.empty();
 
-    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x more: %d, return: %d\n",
-            isprint(c) ? c : ' ', c, !empty, ret);
 
-    return ret;
+    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x more: %d\n",
+            isprint(c) ? c : ' ', c, !empty);
+
+    return c;
 }
 
 uint64_t
 SimConsole::console_in()
 {
-    uint8_t c;
     uint64_t value;
 
-    if (in(c)) {
-        value = RECEIVE_SUCCESS | c;
+    if (dataAvailable()) {
+        value = RECEIVE_SUCCESS | in();
         if (!rxbuf.empty())
             value  |= MORE_PENDING;
     } else {

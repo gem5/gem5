@@ -118,25 +118,27 @@ TsunamiIO::RTC::writeData(const uint8_t data)
     }
 }
 
-void
-TsunamiIO::RTC::readData(uint8_t *data)
+uint8_t
+TsunamiIO::RTC::readData()
 {
     if (addr < RTC_STAT_REGA)
-        *data = clock_data[addr];
+        return clock_data[addr];
     else {
         switch (addr) {
           case RTC_STAT_REGA:
             // toggle UIP bit for linux
             stat_regA ^= RTCA_UIP;
-            *data = stat_regA;
+            return stat_regA;
             break;
           case RTC_STAT_REGB:
-            *data = stat_regB;
+            return stat_regB;
             break;
           case RTC_STAT_REGC:
           case RTC_STAT_REGD:
-            *data = 0x00;
+            return 0x00;
             break;
+          default:
+            panic("Shouldn't be here");
         }
     }
 }
@@ -263,31 +265,35 @@ TsunamiIO::PITimer::Counter::latchCount()
     }
 }
 
-void
-TsunamiIO::PITimer::Counter::read(uint8_t *data)
+uint8_t
+TsunamiIO::PITimer::Counter::read()
 {
     if (latch_on) {
         switch (read_byte) {
           case LSB:
             read_byte = MSB;
-            *data = (uint8_t)latched_count;
+            return (uint8_t)latched_count;
             break;
           case MSB:
             read_byte = LSB;
             latch_on = false;
-            *data = latched_count >> 8;
+            return latched_count >> 8;
             break;
+          default:
+            panic("Shouldn't be here");
         }
     } else {
         switch (read_byte) {
           case LSB:
             read_byte = MSB;
-            *data = (uint8_t)count;
+            return (uint8_t)count;
             break;
           case MSB:
             read_byte = LSB;
-            *data = count >> 8;
+            return count >> 8;
             break;
+          default:
+            panic("Shouldn't be here");
         }
     }
 }
@@ -469,16 +475,16 @@ TsunamiIO::read(Packet *pkt)
               pkt->set(0x00);
               break;
           case TSDEV_TMR0_DATA:
-            pitimer.counter0.read(pkt->getPtr<uint8_t>());
+            pkt->set(pitimer.counter0.read());
             break;
           case TSDEV_TMR1_DATA:
-            pitimer.counter1.read(pkt->getPtr<uint8_t>());
+            pkt->set(pitimer.counter1.read());
             break;
           case TSDEV_TMR2_DATA:
-            pitimer.counter2.read(pkt->getPtr<uint8_t>());
+            pkt->set(pitimer.counter2.read());
             break;
           case TSDEV_RTC_DATA:
-            rtc.readData(pkt->getPtr<uint8_t>());
+            pkt->set(rtc.readData());
             break;
           case TSDEV_CTRL_PORTB:
             if (pitimer.counter2.outputHigh())

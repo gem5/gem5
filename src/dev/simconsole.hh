@@ -102,7 +102,7 @@ class SimConsole : public SimObject
     // OS interface
 
     // Get a character from the console.
-    bool in(uint8_t &value);
+    uint8_t  in();
 
     // get a character from the console in the console specific format
     // corresponds to GETC:

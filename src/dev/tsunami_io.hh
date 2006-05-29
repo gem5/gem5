@@ -118,7 +118,7 @@ class TsunamiIO : public BasicPioDevice
         void writeData(const uint8_t data);
 
         /** RTC read data */
-        void readData(uint8_t *data);
+        uint8_t readData();
 
         /**
           * Serialize this object to the given output stream.
@@ -207,7 +207,7 @@ class TsunamiIO : public BasicPioDevice
             void setBCD(int bcd_val);
 
             /** Read a count byte */
-            void read(uint8_t *data);
+            uint8_t read();
 
             /** Write a count byte */
             void write(const uint8_t data);
