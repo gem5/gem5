@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/trace.hh"
 #include "dev/io_device.hh"
 #include "sim/builder.hh"
 
@@ -55,12 +56,13 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 }
 
 
-Packet *
+void
 PioPort::recvRetry()
 {
     Packet* pkt = transmitList.front();
-    transmitList.pop_front();
-    return pkt;
+    if (Port::sendTiming(pkt)) {
+        transmitList.pop_front();
+    }
 }
 
 
@@ -72,6 +74,7 @@ PioPort::SendEvent::process()
 
     port->transmitList.push_back(packet);
 }
+
 
 
 bool
@@ -116,16 +119,20 @@ DmaPort::recvTiming(Packet *pkt)
 {
     if (pkt->senderState) {
         DmaReqState *state;
+        DPRINTF(DMA, "Received response Packet %#x with senderState: %#x\n",
+               pkt, pkt->senderState);
         state = dynamic_cast<DmaReqState*>(pkt->senderState);
-        state->completionEvent->schedule(pkt->time - pkt->req->getTime());
+        assert(state);
+        state->completionEvent->process();
         delete pkt->req;
         delete pkt;
     }  else {
+        DPRINTF(DMA, "Received response Packet %#x with no senderState\n", pkt);
         delete pkt->req;
         delete pkt;
     }
 
-    return Packet::Success;
+    return true;
 }
 
 DmaDevice::DmaDevice(Params *p)
@@ -133,20 +140,19 @@ DmaDevice::DmaDevice(Params *p)
 { }
 
 void
-DmaPort::SendEvent::process()
-{
-    if (port->Port::sendTiming(packet))
-        return;
-
-    port->transmitList.push_back(packet);
-}
-
-Packet *
 DmaPort::recvRetry()
 {
     Packet* pkt = transmitList.front();
-    transmitList.pop_front();
-    return pkt;
+    DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
+               pkt, pkt->senderState);
+    if (sendTiming(pkt)) {
+        DPRINTF(DMA, "-- Done\n");
+        transmitList.pop_front();
+        pendingCount--;
+        assert(pendingCount >= 0);
+    } else {
+        DPRINTF(DMA, "-- Failed, queued\n");
+    }
 }
 
 
@@ -192,13 +198,22 @@ DmaPort::sendDma(Packet *pkt)
    // switching actually work
   /* MemState state = device->platform->system->memState;
 
-   if (state == Timing) {
-       if (!sendTiming(pkt))
-           transmitList.push_back(&packet);
-    } else if (state == Atomic) {*/
+   if (state == Timing) {  */
+       DPRINTF(DMA, "Attempting to send Packet %#x with senderState: %#x\n",
+               pkt, pkt->senderState);
+       if (!sendTiming(pkt)) {
+           transmitList.push_back(pkt);
+           DPRINTF(DMA, "-- Failed: queued\n");
+       } else {
+           DPRINTF(DMA, "-- Done\n");
+           pendingCount--;
+           assert(pendingCount >= 0);
+       }
+  /*  } else if (state == Atomic) {
        sendAtomic(pkt);
        if (pkt->senderState) {
            DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
+           assert(state);
            state->completionEvent->schedule(curTick + (pkt->time - pkt->req->getTime()) +1);
        }
        pendingCount--;
@@ -206,7 +221,7 @@ DmaPort::sendDma(Packet *pkt)
        delete pkt->req;
        delete pkt;
 
-/*   } else if (state == Functional) {
+   } else if (state == Functional) {
        sendFunctional(pkt);
        // Is this correct???
        completionEvent->schedule(pkt->req->responseTime - pkt->req->requestTime);

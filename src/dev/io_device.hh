@@ -105,8 +105,9 @@ class PioPort : public Port
     void sendTiming(Packet *pkt, Tick time)
     { new PioPort::SendEvent(this, pkt, time); }
 
-    /** This function pops the last element off the transmit list and sends it.*/
-    virtual Packet *recvRetry();
+    /** This function is notification that the device should attempt to send a
+     * packet again. */
+    virtual void recvRetry();
 
   public:
     PioPort(PioDevice *dev, Platform *p);
@@ -146,27 +147,10 @@ class DmaPort : public Port
     virtual void recvStatusChange(Status status)
     { ; }
 
-    virtual Packet *recvRetry() ;
+    virtual void recvRetry() ;
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
     { resp.clear(); snoop.clear(); }
-
-    class SendEvent : public Event
-    {
-        DmaPort *port;
-        Packet *packet;
-
-        SendEvent(PioPort *p, Packet *pkt, Tick t)
-            : Event(&mainEventQueue), packet(pkt)
-        { schedule(curTick + t); }
-
-        virtual void process();
-
-        virtual const char *description()
-        { return "Future scheduled sendTiming event"; }
-
-        friend class DmaPort;
-    };
 
     void sendDma(Packet *pkt);
 
@@ -177,8 +161,6 @@ class DmaPort : public Port
                    uint8_t *data = NULL);
 
     bool dmaPending() { return pendingCount > 0; }
-
-  friend class DmaPort::SendEvent;
 
 };
 

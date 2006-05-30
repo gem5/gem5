@@ -98,7 +98,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
         virtual void recvStatusChange(Status status);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
             AddrRangeList &snoop)
