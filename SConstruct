@@ -169,7 +169,13 @@ if sys.platform == 'cygwin':
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
 env.Append(CPPPATH=[Dir('ext/dnet')])
 
-# Default libraries
+# Environment args for linking in Python interpreter.
+# Should really have an option for setting the version instead of
+# having 2.4 hardwired in here...
+env.Append(CPPPATH='/usr/include/python2.4')
+env.Append(LIBS='python2.4')
+
+# Other default libraries
 env.Append(LIBS=['z'])
 
 # Platform-specific configuration.  Note again that we assume that all
@@ -309,6 +315,32 @@ def config_emitter(target, source, env):
 config_builder = Builder(emitter = config_emitter, action = config_action)
 
 env.Append(BUILDERS = { 'ConfigFile' : config_builder })
+
+###################################################
+#
+# Define a SCons builder for copying files.  This is used by the
+# Python zipfile code in src/python/SConscript, but is placed up here
+# since it's potentially more generally applicable.
+#
+###################################################
+
+copy_builder = Builder(action = Copy("$TARGET", "$SOURCE"))
+
+env.Append(BUILDERS = { 'CopyFile' : copy_builder })
+
+###################################################
+#
+# Define a simple SCons builder to concatenate files.
+#
+# Used to append the Python zip archive to the executable.
+#
+###################################################
+
+concat_builder = Builder(action = Action(['cat $SOURCES > $TARGET',
+                                          'chmod +x $TARGET']))
+
+env.Append(BUILDERS = { 'Concat' : concat_builder })
+
 
 # base help text
 help_text = '''

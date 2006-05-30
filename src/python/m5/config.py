@@ -794,7 +794,7 @@ class ParamFactory(object):
 
     # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        caller_frame = inspect.stack()[1][0]
+        caller_frame = inspect.currentframe().f_back
         ptype = None
         try:
             ptype = eval(self.ptype_str,

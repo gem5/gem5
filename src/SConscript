@@ -46,9 +46,7 @@ Import('env')
 
 base_sources = Split('''
 	base/circlebuf.cc
-	base/copyright.cc
 	base/cprintf.cc
-        base/embedfile.cc
 	base/fast_alloc.cc
 	base/fifo_buffer.cc
 	base/hostinfo.cc
@@ -98,9 +96,6 @@ base_sources = Split('''
         mem/physical.cc
         mem/port.cc
         mem/request.cc
-
-        python/pyconfig.cc
-        python/embedded_py.cc
 
 	sim/builder.cc
 	sim/configfile.cc
@@ -356,43 +351,45 @@ def make_objs(sources, env):
 # files.
 env.Append(CPPPATH='.')
 
+# List of constructed environments to pass back to SConstruct
+envList = []
+
+# Function to create a new build environment as clone of current
+# environment 'env' with modified object suffix and optional stripped
+# binary.  Additional keyword arguments are appended to corresponding
+# build environment vars.
+def makeEnv(label, objsfx, strip = False, **kwargs):
+    newEnv = env.Copy(OBJSUFFIX=objsfx)
+    newEnv.Label = label
+    newEnv.Append(**kwargs)
+    exe = 'm5.' + label  # final executable
+    bin = exe + '.bin'   # executable w/o appended Python zip archive
+    newEnv.Program(bin, make_objs(sources, newEnv))
+    if strip:
+        stripped_bin = bin + '.stripped'
+        newEnv.Command(stripped_bin, bin, 'strip $SOURCE -o $TARGET')
+        bin = stripped_bin
+    targets = newEnv.Concat(exe, [bin, 'python/m5py.zip'])
+    newEnv.M5Binary = targets[0]
+    envList.append(newEnv)
+
 # Debug binary
-debugEnv = env.Copy(OBJSUFFIX='.do')
-debugEnv.Label = 'debug'
-debugEnv.Append(CCFLAGS=Split('-g3 -gdwarf-2 -O0'))
-debugEnv.Append(CPPDEFINES='DEBUG')
-tlist = debugEnv.Program(target = 'm5.debug',
-                         source = make_objs(sources, debugEnv))
-debugEnv.M5Binary = tlist[0]
+makeEnv('debug', '.do',
+        CCFLAGS = Split('-g3 -gdwarf-2 -O0'),
+        CPPDEFINES = 'DEBUG')
 
 # Optimized binary
-optEnv = env.Copy()
-optEnv.Label = 'opt'
-optEnv.Append(CCFLAGS=Split('-g -O3'))
-tlist = optEnv.Program(target = 'm5.opt',
-                       source = make_objs(sources, optEnv))
-optEnv.M5Binary = tlist[0]
+makeEnv('opt', '.o',
+        CCFLAGS = Split('-g -O3'))
 
 # "Fast" binary
-fastEnv = env.Copy(OBJSUFFIX='.fo')
-fastEnv.Label = 'fast'
-fastEnv.Append(CCFLAGS=Split('-O3'))
-fastEnv.Append(CPPDEFINES='NDEBUG')
-fastEnv.Program(target = 'm5.fast.unstripped',
-                source = make_objs(sources, fastEnv))
-tlist = fastEnv.Command(target = 'm5.fast',
-                        source = 'm5.fast.unstripped',
-                        action = 'strip $SOURCE -o $TARGET')
-fastEnv.M5Binary = tlist[0]
+makeEnv('fast', '.fo', strip = True,
+        CCFLAGS = Split('-O3'),
+        CPPDEFINES = 'NDEBUG')
 
 # Profiled binary
-profEnv = env.Copy(OBJSUFFIX='.po')
-profEnv.Label = 'prof'
-profEnv.Append(CCFLAGS=Split('-O3 -g -pg'), LINKFLAGS='-pg')
-tlist = profEnv.Program(target = 'm5.prof',
-                        source = make_objs(sources, profEnv))
-profEnv.M5Binary = tlist[0]
-
-envList = [debugEnv, optEnv, fastEnv, profEnv]
+makeEnv('prof', '.po',
+        CCFLAGS = Split('-O3 -g -pg'),
+        LINKFLAGS = '-pg')
 
 Return('envList')
