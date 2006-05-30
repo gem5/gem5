@@ -64,7 +64,17 @@ import os
 
 # Check for recent-enough Python and SCons versions
 EnsurePythonVersion(2,3)
-EnsureSConsVersion(0,96,91)
+
+# Ironically, SCons 0.96 dies if you give EnsureSconsVersion a
+# 3-element version number.
+min_scons_version = (0,96,91)
+try:
+    EnsureSConsVersion(*min_scons_version)
+except:
+    print "Error checking current SCons version."
+    print "SCons", ".".join(map(str,min_scons_version)), "or greater required."
+    Exit(2)
+    
 
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
