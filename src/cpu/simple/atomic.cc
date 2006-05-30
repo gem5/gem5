@@ -106,11 +106,10 @@ AtomicSimpleCPU::CpuPort::recvStatusChange(Status status)
     panic("AtomicSimpleCPU doesn't expect recvStatusChange callback!");
 }
 
-Packet *
+void
 AtomicSimpleCPU::CpuPort::recvRetry()
 {
     panic("AtomicSimpleCPU doesn't expect recvRetry callback!");
-    return NULL;
 }
 
 

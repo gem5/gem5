@@ -92,11 +92,9 @@ class Port
     virtual ~Port() {};
 
     // mey be better to use subclasses & RTTI?
-    /** Holds the ports status.  Keeps track if it is blocked, or has
-        calculated a range change. */
+    /** Holds the ports status.  Currently just that a range recomputation needs
+     * to be done. */
     enum Status {
-        Blocked,
-        Unblocked,
         RangeChange
     };
 
@@ -140,7 +138,7 @@ class Port
         wait.  This shouldn't be valid for response paths (IO Devices).
         so it is set to panic if it isn't already defined.
     */
-    virtual Packet *recvRetry() { panic("??"); }
+    virtual void recvRetry() { panic("??"); }
 
     /** Called by a peer port in order to determine the block size of the
         device connected to this port.  It sometimes doesn't make sense for
@@ -165,7 +163,7 @@ class Port
         port receive function.
         @return This function returns if the send was succesful in it's
         recieve. If it was a failure, then the port will wait for a recvRetry
-        at which point it can issue a successful sendTiming.  This is used in
+        at which point it can possibly issue a successful sendTiming.  This is used in
         case a cache has a higher priority request come in while waiting for
         the bus to arbitrate.
     */
@@ -194,7 +192,7 @@ class Port
     /** When a timing access doesn't return a success, some time later the
         Retry will be sent.
     */
-    Packet *sendRetry() { return peer->recvRetry(); }
+    void sendRetry() { return peer->recvRetry(); }
 
     /** Called by the associated device if it wishes to find out the blocksize
         of the device on attached to the peer port.

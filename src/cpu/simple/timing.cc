@@ -419,17 +419,18 @@ TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
     return true;
 }
 
-Packet *
+void
 TimingSimpleCPU::IcachePort::recvRetry()
 {
     // we shouldn't get a retry unless we have a packet that we're
     // waiting to transmit
     assert(cpu->ifetch_pkt != NULL);
     assert(cpu->_status == IcacheRetry);
-    cpu->_status = IcacheWaitResponse;
     Packet *tmp = cpu->ifetch_pkt;
-    cpu->ifetch_pkt = NULL;
-    return tmp;
+    if (sendTiming(tmp)) {
+        cpu->_status = IcacheWaitResponse;
+        cpu->ifetch_pkt = NULL;
+    }
 }
 
 void
@@ -459,17 +460,18 @@ TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
     return true;
 }
 
-Packet *
+void
 TimingSimpleCPU::DcachePort::recvRetry()
 {
     // we shouldn't get a retry unless we have a packet that we're
     // waiting to transmit
     assert(cpu->dcache_pkt != NULL);
     assert(cpu->_status == DcacheRetry);
-    cpu->_status = DcacheWaitResponse;
     Packet *tmp = cpu->dcache_pkt;
-    cpu->dcache_pkt = NULL;
-    return tmp;
+    if (sendTiming(tmp)) {
+        cpu->_status = DcacheWaitResponse;
+        cpu->dcache_pkt = NULL;
+    }
 }
 
 
