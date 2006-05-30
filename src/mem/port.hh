@@ -74,6 +74,11 @@ class Port
     /** Descriptive name (for DPRINTF output) */
     const std::string portName;
 
+    /** A pointer to the peer port.  Ports always come in pairs, that way they
+        can use a standardized interface to communicate between different
+        memory objects. */
+    Port *peer;
+
   public:
 
     /**
@@ -83,7 +88,7 @@ class Port
      * of memory system object to which the port belongs.
      */
     Port(const std::string &_name)
-        : portName(_name)
+        : portName(_name), peer(NULL)
     { }
 
     /** Return port name (for DPRINTF). */
@@ -97,15 +102,6 @@ class Port
     enum Status {
         RangeChange
     };
-
-  private:
-
-    /** A pointer to the peer port.  Ports always come in pairs, that way they
-        can use a standardized interface to communicate between different
-        memory objects. */
-    Port *peer;
-
-  public:
 
     /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
