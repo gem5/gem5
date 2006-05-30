@@ -100,7 +100,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTiming(Packet *pkt);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
     };
 
     class DcachePort : public CpuPort
@@ -115,7 +115,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTiming(Packet *pkt);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
     };
 
     IcachePort icachePort;
