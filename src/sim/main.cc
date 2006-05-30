@@ -146,8 +146,6 @@ echoCommandLine(int argc, char **argv, ostream &out)
     out << endl << endl;
 }
 
-#include "config/python_build_env.hh"
-
 int
 main(int argc, char **argv)
 {
@@ -171,20 +169,25 @@ main(int argc, char **argv)
 
     // Set Python module path to include current file to find embedded
     // zip archive
-    PyRun_SimpleString("import sys");
+    if (PyRun_SimpleString("import sys") != 0)
+        panic("Python error importing 'sys' module\n");
     string pathCmd = csprintf("sys.path[1:1] = ['%s']", fileName);
-    PyRun_SimpleString(pathCmd.c_str());
+    if (PyRun_SimpleString(pathCmd.c_str()) != 0)
+        panic("Python error setting sys.path\n");
 
     // Pass compile timestamp string to Python
     extern const char *compileDate;	// from date.cc
     string setCompileDate = csprintf("compileDate = '%s'", compileDate);
-    PyRun_SimpleString(setCompileDate.c_str());
+    if (PyRun_SimpleString(setCompileDate.c_str()) != 0)
+        panic("Python error setting compileDate\n");
 
     // PyRun_InteractiveLoop(stdin, "stdin");
     // m5/__init__.py currently contains main argv parsing loop etc.,
     // and will write out config.ini file before returning.
-    PyImport_ImportModule("defines");
-    PyImport_ImportModule("m5");
+    if (PyImport_ImportModule("defines") == NULL)
+        panic("Python error importing 'defines.py'\n");
+    if (PyImport_ImportModule("m5") == NULL)
+        panic("Python error importing 'm5' module\n");
     Py_Finalize();
 
     configStream = simout.find("config.out");

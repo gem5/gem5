@@ -62,8 +62,13 @@
 import sys
 import os
 
-# Check for recent-enough Python and SCons versions
-EnsurePythonVersion(2,3)
+# Check for recent-enough Python and SCons versions.  If your system's
+# default installation of Python is not recent enough, you can use a
+# non-default installation of the Python interpreter by either (1)
+# rearranging your PATH so that scons finds the non-default 'python'
+# first or (2) explicitly invoking an alternative interpreter on the
+# scons script, e.g., "/usr/local/bin/python2.4 `which scons` [args]".
+EnsurePythonVersion(2,4)
 
 # Ironically, SCons 0.96 dies if you give EnsureSconsVersion a
 # 3-element version number.
@@ -169,11 +174,22 @@ if sys.platform == 'cygwin':
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
 env.Append(CPPPATH=[Dir('ext/dnet')])
 
-# Environment args for linking in Python interpreter.
-# Should really have an option for setting the version instead of
-# having 2.4 hardwired in here...
-env.Append(CPPPATH='/usr/include/python2.4')
-env.Append(LIBS='python2.4')
+# Find Python include and library directories for embedding the
+# interpreter.  For consistency, we will use the same Python
+# installation used to run scons (and thus this script).  If you want
+# to link in an alternate version, see above for instructions on how
+# to invoke scons with a different copy of the Python interpreter.
+
+# Get brief Python version name (e.g., "python2.4") for locating
+# include & library files
+py_version_name = 'python' + sys.version[:3]
+
+# include path, e.g. /usr/local/include/python2.4
+env.Append(CPPPATH = os.path.join(sys.exec_prefix, 'include', py_version_name))
+env.Append(LIBS = py_version_name)
+# add library path too if it's not in the default place
+if sys.exec_prefix != '/usr':
+    env.Append(LIBPATH = os.path.join(sys.exec_prefix, 'lib'))
 
 # Other default libraries
 env.Append(LIBS=['z'])
