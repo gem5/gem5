@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_2BIT_LOCAL_PRED_HH__
-#define __CPU_O3_CPU_2BIT_LOCAL_PRED_HH__
+#ifndef __CPU_O3_2BIT_LOCAL_PRED_HH__
+#define __CPU_O3_2BIT_LOCAL_PRED_HH__
 
 // For Addr type.
 #include "arch/isa_traits.hh"
 #include "cpu/o3/sat_counter.hh"
+
+#include <vector>
 
 class DefaultBP
 {
   public:
     /**
      * Default branch predictor constructor.
+     * @param localPredictorSize Size of the local predictor.
+     * @param localCtrBits Number of bits per counter.
+     * @param instShiftAmt Offset amount for instructions to ignore alignment.
      */
     DefaultBP(unsigned localPredictorSize, unsigned localCtrBits,
               unsigned instShiftAmt);
@@ -57,10 +62,15 @@ class DefaultBP
      */
     void update(Addr &branch_addr, bool taken);
 
+    void reset();
+
   private:
 
-    /** Returns the taken/not taken prediction given the value of the
+    /**
+     *  Returns the taken/not taken prediction given the value of the
      *  counter.
+     *  @param count The value of the counter.
+     *  @return The prediction based on the counter value.
      */
     inline bool getPrediction(uint8_t &count);
 
@@ -68,10 +78,13 @@ class DefaultBP
     inline unsigned getLocalIndex(Addr &PC);
 
     /** Array of counters that make up the local predictor. */
-    SatCounter *localCtrs;
+    std::vector<SatCounter> localCtrs;
 
     /** Size of the local predictor. */
     unsigned localPredictorSize;
+
+    /** Number of sets. */
+    unsigned localPredictorSets;
 
     /** Number of bits of the local predictor's counters. */
     unsigned localCtrBits;
@@ -83,4 +96,4 @@ class DefaultBP
     unsigned indexMask;
 };
 
-#endif // __CPU_O3_CPU_2BIT_LOCAL_PRED_HH__
+#endif // __CPU_O3_2BIT_LOCAL_PRED_HH__

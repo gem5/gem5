@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_COMM_HH__
-#define __CPU_O3_CPU_COMM_HH__
+#ifndef __CPU_O3_COMM_HH__
+#define __CPU_O3_COMM_HH__
 
 #include <vector>
 
+#include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 #include "sim/host.hh"
 
-// Find better place to put this typedef.
-// The impl might be the best place for this.
+// Typedef for physical register index type. Although the Impl would be the
+// most likely location for this, there are a few classes that need this
+// typedef yet are not templated on the Impl. For now it will be defined here.
 typedef short int PhysRegIndex;
 
 template<class Impl>
-struct SimpleFetchSimpleDecode {
+struct DefaultFetchDefaultDecode {
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    int size;
+
+    DynInstPtr insts[Impl::MaxWidth];
+    Fault fetchFault;
+    InstSeqNum fetchFaultSN;
+    bool clearFetchFault;
+};
+
+template<class Impl>
+struct DefaultDecodeDefaultRename {
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -49,7 +63,7 @@ struct SimpleFetchSimpleDecode {
 };
 
 template<class Impl>
-struct SimpleDecodeSimpleRename {
+struct DefaultRenameDefaultIEW {
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
@@ -58,28 +72,21 @@ struct SimpleDecodeSimpleRename {
 };
 
 template<class Impl>
-struct SimpleRenameSimpleIEW {
-    typedef typename Impl::DynInstPtr DynInstPtr;
-
-    int size;
-
-    DynInstPtr insts[Impl::MaxWidth];
-};
-
-template<class Impl>
-struct SimpleIEWSimpleCommit {
+struct DefaultIEWDefaultCommit {
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     int size;
 
     DynInstPtr insts[Impl::MaxWidth];
 
-    bool squash;
-    bool branchMispredict;
-    bool branchTaken;
-    uint64_t mispredPC;
-    uint64_t nextPC;
-    InstSeqNum squashedSeqNum;
+    bool squash[Impl::MaxThreads];
+    bool branchMispredict[Impl::MaxThreads];
+    bool branchTaken[Impl::MaxThreads];
+    uint64_t mispredPC[Impl::MaxThreads];
+    uint64_t nextPC[Impl::MaxThreads];
+    InstSeqNum squashedSeqNum[Impl::MaxThreads];
+
+    bool includeSquashInst[Impl::MaxThreads];
 };
 
 template<class Impl>
@@ -91,73 +98,100 @@ struct IssueStruct {
     DynInstPtr insts[Impl::MaxWidth];
 };
 
+template<class Impl>
 struct TimeBufStruct {
     struct decodeComm {
         bool squash;
-        bool stall;
         bool predIncorrect;
         uint64_t branchAddr;
 
         InstSeqNum doneSeqNum;
 
-        // Might want to package this kind of branch stuff into a single
+        // @todo: Might want to package this kind of branch stuff into a single
         // struct as it is used pretty frequently.
         bool branchMispredict;
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
+
+        unsigned branchCount;
     };
 
-    decodeComm decodeInfo;
+    decodeComm decodeInfo[Impl::MaxThreads];
 
     // Rename can't actually tell anything to squash or send a new PC back
     // because it doesn't do anything along those lines.  But maybe leave
     // these fields in here to keep the stages mostly orthagonal.
     struct renameComm {
         bool squash;
-        bool stall;
 
         uint64_t nextPC;
     };
 
-    renameComm renameInfo;
+    renameComm renameInfo[Impl::MaxThreads];
 
     struct iewComm {
-        bool stall;
-
         // Also eventually include skid buffer space.
+        bool usedIQ;
         unsigned freeIQEntries;
+        bool usedLSQ;
+        unsigned freeLSQEntries;
+
+        unsigned iqCount;
+        unsigned ldstqCount;
+
+        unsigned dispatched;
+        unsigned dispatchedToLSQ;
     };
 
-    iewComm iewInfo;
+    iewComm iewInfo[Impl::MaxThreads];
 
     struct commitComm {
-        bool squash;
-        bool stall;
+        bool usedROB;
         unsigned freeROBEntries;
+        bool emptyROB;
+
+        bool squash;
+        bool robSquashing;
 
         bool branchMispredict;
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
 
-        bool robSquashing;
-
         // Represents the instruction that has either been retired or
         // squashed.  Similar to having a single bus that broadcasts the
         // retired or squashed sequence number.
         InstSeqNum doneSeqNum;
 
-        // Extra bit of information so that the LDSTQ only updates when it
-        // needs to.
-        bool commitIsLoad;
+        //Just in case we want to do a commit/squash on a cycle
+        //(necessary for multiple ROBs?)
+        bool commitInsts;
+        InstSeqNum squashSeqNum;
 
         // Communication specifically to the IQ to tell the IQ that it can
         // schedule a non-speculative instruction.
         InstSeqNum nonSpecSeqNum;
+
+        // Hack for now to send back an uncached access to the IEW stage.
+        typedef typename Impl::DynInstPtr DynInstPtr;
+        bool uncached;
+        DynInstPtr uncachedLoad;
+
+        bool interruptPending;
+        bool clearInterrupt;
     };
 
-    commitComm commitInfo;
+    commitComm commitInfo[Impl::MaxThreads];
+
+    bool decodeBlock[Impl::MaxThreads];
+    bool decodeUnblock[Impl::MaxThreads];
+    bool renameBlock[Impl::MaxThreads];
+    bool renameUnblock[Impl::MaxThreads];
+    bool iewBlock[Impl::MaxThreads];
+    bool iewUnblock[Impl::MaxThreads];
+    bool commitBlock[Impl::MaxThreads];
+    bool commitUnblock[Impl::MaxThreads];
 };
 
-#endif //__CPU_O3_CPU_COMM_HH__
+#endif //__CPU_O3_COMM_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,56 @@
 
 #include <map>
 
+#include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 
 template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::MemDepUnit(Params &params)
-    : depPred(params.SSITSize, params.LFSTSize)
+MemDepUnit<MemDepPred, Impl>::MemDepUnit(Params *params)
+    : depPred(params->SSITSize, params->LFSTSize), loadBarrier(false),
+      loadBarrierSN(0), storeBarrier(false), storeBarrierSN(0), iqPtr(NULL)
 {
-    DPRINTF(MemDepUnit, "MemDepUnit: Creating MemDepUnit object.\n");
+    DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
+}
+
+template <class MemDepPred, class Impl>
+MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
+{
+    for (int tid=0; tid < Impl::MaxThreads; tid++) {
+
+        ListIt inst_list_it = instList[tid].begin();
+
+        MemDepHashIt hash_it;
+
+        while (!instList[tid].empty()) {
+            hash_it = memDepHash.find((*inst_list_it)->seqNum);
+
+            assert(hash_it != memDepHash.end());
+
+            memDepHash.erase(hash_it);
+
+            instList[tid].erase(inst_list_it++);
+        }
+    }
+
+    assert(MemDepEntry::memdep_count == 0);
+}
+
+template <class MemDepPred, class Impl>
+std::string
+MemDepUnit<MemDepPred, Impl>::name() const
+{
+    return "memdepunit";
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::init(Params *params, int tid)
+{
+    DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
+
+    id = tid;
+
+    depPred.init(params->SSITSize, params->LFSTSize);
 }
 
 template <class MemDepPred, class Impl>
@@ -60,56 +103,95 @@ MemDepUnit<MemDepPred, Impl>::regStats()
 
 template <class MemDepPred, class Impl>
 void
+MemDepUnit<MemDepPred, Impl>::switchOut()
+{
+    for (int i = 0; i < Impl::MaxThreads; ++i) {
+        instList[i].clear();
+    }
+    instsToReplay.clear();
+    memDepHash.clear();
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::takeOverFrom()
+{
+    loadBarrier = storeBarrier = false;
+    loadBarrierSN = storeBarrierSN = 0;
+    depPred.clear();
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::setIQ(InstructionQueue<Impl> *iq_ptr)
+{
+    iqPtr = iq_ptr;
+}
+
+template <class MemDepPred, class Impl>
+void
 MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 {
-    InstSeqNum inst_seq_num = inst->seqNum;
+    unsigned tid = inst->threadNumber;
 
-    Dependency unresolved_dependencies(inst_seq_num);
+    MemDepEntryPtr inst_entry = new MemDepEntry(inst);
 
-    InstSeqNum producing_store = depPred.checkInst(inst->readPC());
+    // Add the MemDepEntry to the hash.
+    memDepHash.insert(
+        std::pair<InstSeqNum, MemDepEntryPtr>(inst->seqNum, inst_entry));
+    MemDepEntry::memdep_insert++;
 
-    if (producing_store == 0 ||
-        storeDependents.find(producing_store) == storeDependents.end()) {
+    instList[tid].push_back(inst);
 
-        DPRINTF(MemDepUnit, "MemDepUnit: No dependency for inst PC "
-                "%#x.\n", inst->readPC());
+    inst_entry->listIt = --(instList[tid].end());
 
-        unresolved_dependencies.storeDep = storeDependents.end();
+    // Check any barriers and the dependence predictor for any
+    // producing stores.
+    InstSeqNum producing_store;
+    if (inst->isLoad() && loadBarrier) {
+        producing_store = loadBarrierSN;
+    } else if (inst->isStore() && storeBarrier) {
+        producing_store = storeBarrierSN;
+    } else {
+        producing_store = depPred.checkInst(inst->readPC());
+    }
+
+    MemDepEntryPtr store_entry = NULL;
+
+    // If there is a producing store, try to find the entry.
+    if (producing_store != 0) {
+        MemDepHashIt hash_it = memDepHash.find(producing_store);
+
+        if (hash_it != memDepHash.end()) {
+            store_entry = (*hash_it).second;
+        }
+    }
+
+    // If no store entry, then instruction can issue as soon as the registers
+    // are ready.
+    if (!store_entry) {
+        DPRINTF(MemDepUnit, "No dependency for inst PC "
+                "%#x [sn:%lli].\n", inst->readPC(), inst->seqNum);
+
+        inst_entry->memDepReady = true;
 
         if (inst->readyToIssue()) {
-            readyInsts.insert(inst_seq_num);
-        } else {
-            unresolved_dependencies.memDepReady = true;
+            inst_entry->regsReady = true;
 
-            waitingInsts.insert(unresolved_dependencies);
+            moveToReady(inst_entry);
         }
     } else {
-        DPRINTF(MemDepUnit, "MemDepUnit: Adding to dependency list; "
-                "inst PC %#x is dependent on seq num %i.\n",
+        // Otherwise make the instruction dependent on the store/barrier.
+        DPRINTF(MemDepUnit, "Adding to dependency list; "
+                "inst PC %#x is dependent on [sn:%lli].\n",
                 inst->readPC(), producing_store);
 
         if (inst->readyToIssue()) {
-            unresolved_dependencies.regsReady = true;
+            inst_entry->regsReady = true;
         }
 
-        // Find the store that this instruction is dependent on.
-        sd_it_t store_loc = storeDependents.find(producing_store);
-
-        assert(store_loc != storeDependents.end());
-
-        // Record the location of the store that this instruction is
-        // dependent on.
-        unresolved_dependencies.storeDep = store_loc;
-
-        // If it's not already ready, then add it to the renamed
-        // list and the dependencies.
-        dep_it_t inst_loc =
-            (waitingInsts.insert(unresolved_dependencies)).first;
-
         // Add this instruction to the list of dependents.
-        (*store_loc).second.push_back(inst_loc);
-
-        assert(!(*store_loc).second.empty());
+        store_entry->dependInsts.push_back(inst_entry);
 
         if (inst->isLoad()) {
             ++conflictingLoads;
@@ -119,127 +201,105 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     }
 
     if (inst->isStore()) {
-        DPRINTF(MemDepUnit, "MemDepUnit: Inserting store PC %#x.\n",
-                inst->readPC());
+        DPRINTF(MemDepUnit, "Inserting store PC %#x [sn:%lli].\n",
+                inst->readPC(), inst->seqNum);
 
-        depPred.insertStore(inst->readPC(), inst_seq_num);
-
-        // Make sure this store isn't already in this list.
-        assert(storeDependents.find(inst_seq_num) == storeDependents.end());
-
-        // Put a dependency entry in at the store's sequence number.
-        // Uh, not sure how this works...I want to create an entry but
-        // I don't have anything to put into the value yet.
-        storeDependents[inst_seq_num];
-
-        assert(storeDependents.size() != 0);
+        depPred.insertStore(inst->readPC(), inst->seqNum, inst->threadNumber);
 
         ++insertedStores;
-
     } else if (inst->isLoad()) {
         ++insertedLoads;
     } else {
-        panic("MemDepUnit: Unknown type! (most likely a barrier).");
+        panic("Unknown type! (most likely a barrier).");
     }
-
-    memInsts[inst_seq_num] = inst;
 }
 
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
 {
-    InstSeqNum inst_seq_num = inst->seqNum;
+    unsigned tid = inst->threadNumber;
 
-    Dependency non_spec_inst(inst_seq_num);
+    MemDepEntryPtr inst_entry = new MemDepEntry(inst);
 
-    non_spec_inst.storeDep = storeDependents.end();
+    // Insert the MemDepEntry into the hash.
+    memDepHash.insert(
+        std::pair<InstSeqNum, MemDepEntryPtr>(inst->seqNum, inst_entry));
+    MemDepEntry::memdep_insert++;
 
-    waitingInsts.insert(non_spec_inst);
+    // Add the instruction to the list.
+    instList[tid].push_back(inst);
+
+    inst_entry->listIt = --(instList[tid].end());
 
     // Might want to turn this part into an inline function or something.
     // It's shared between both insert functions.
     if (inst->isStore()) {
-        DPRINTF(MemDepUnit, "MemDepUnit: Inserting store PC %#x.\n",
-                inst->readPC());
+        DPRINTF(MemDepUnit, "Inserting store PC %#x [sn:%lli].\n",
+                inst->readPC(), inst->seqNum);
 
-        depPred.insertStore(inst->readPC(), inst_seq_num);
-
-        // Make sure this store isn't already in this list.
-        assert(storeDependents.find(inst_seq_num) == storeDependents.end());
-
-        // Put a dependency entry in at the store's sequence number.
-        // Uh, not sure how this works...I want to create an entry but
-        // I don't have anything to put into the value yet.
-        storeDependents[inst_seq_num];
-
-        assert(storeDependents.size() != 0);
+        depPred.insertStore(inst->readPC(), inst->seqNum, inst->threadNumber);
 
         ++insertedStores;
-
     } else if (inst->isLoad()) {
         ++insertedLoads;
     } else {
-        panic("MemDepUnit: Unknown type! (most likely a barrier).");
+        panic("Unknown type! (most likely a barrier).");
     }
-
-    memInsts[inst_seq_num] = inst;
-}
-
-template <class MemDepPred, class Impl>
-typename Impl::DynInstPtr &
-MemDepUnit<MemDepPred, Impl>::top()
-{
-    topInst = memInsts.find( (*readyInsts.begin()) );
-
-    DPRINTF(MemDepUnit, "MemDepUnit: Top instruction is PC %#x.\n",
-            (*topInst).second->readPC());
-
-    return (*topInst).second;
 }
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::pop()
+MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
 {
-    DPRINTF(MemDepUnit, "MemDepUnit: Removing instruction PC %#x.\n",
-            (*topInst).second->readPC());
+    InstSeqNum barr_sn = barr_inst->seqNum;
+    if (barr_inst->isMemBarrier()) {
+        loadBarrier = true;
+        loadBarrierSN = barr_sn;
+        storeBarrier = true;
+        storeBarrierSN = barr_sn;
+        DPRINTF(MemDepUnit, "Inserted a memory barrier\n");
+    } else if (barr_inst->isWriteBarrier()) {
+        storeBarrier = true;
+        storeBarrierSN = barr_sn;
+        DPRINTF(MemDepUnit, "Inserted a write barrier\n");
+    }
 
-    wakeDependents((*topInst).second);
+    unsigned tid = barr_inst->threadNumber;
 
-    issue((*topInst).second);
+    MemDepEntryPtr inst_entry = new MemDepEntry(barr_inst);
 
-    memInsts.erase(topInst);
+    // Add the MemDepEntry to the hash.
+    memDepHash.insert(
+        std::pair<InstSeqNum, MemDepEntryPtr>(barr_sn, inst_entry));
+    MemDepEntry::memdep_insert++;
 
-    topInst = memInsts.end();
+    // Add the instruction to the instruction list.
+    instList[tid].push_back(barr_inst);
+
+    inst_entry->listIt = --(instList[tid].end());
 }
 
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::regsReady(DynInstPtr &inst)
 {
-    DPRINTF(MemDepUnit, "MemDepUnit: Marking registers as ready for "
-            "instruction PC %#x.\n",
-            inst->readPC());
+    DPRINTF(MemDepUnit, "Marking registers as ready for "
+            "instruction PC %#x [sn:%lli].\n",
+            inst->readPC(), inst->seqNum);
 
-    InstSeqNum inst_seq_num = inst->seqNum;
+    MemDepEntryPtr inst_entry = findInHash(inst);
 
-    Dependency inst_to_find(inst_seq_num);
+    inst_entry->regsReady = true;
 
-    dep_it_t waiting_inst = waitingInsts.find(inst_to_find);
-
-    assert(waiting_inst != waitingInsts.end());
-
-    if ((*waiting_inst).memDepReady) {
-        DPRINTF(MemDepUnit, "MemDepUnit: Instruction has its memory "
+    if (inst_entry->memDepReady) {
+        DPRINTF(MemDepUnit, "Instruction has its memory "
                 "dependencies resolved, adding it to the ready list.\n");
 
-        moveToReady(waiting_inst);
+        moveToReady(inst_entry);
     } else {
-        DPRINTF(MemDepUnit, "MemDepUnit: Instruction still waiting on "
+        DPRINTF(MemDepUnit, "Instruction still waiting on "
                 "memory dependency.\n");
-
-        (*waiting_inst).regsReady = true;
     }
 }
 
@@ -247,149 +307,172 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(DynInstPtr &inst)
 {
-    DPRINTF(MemDepUnit, "MemDepUnit: Marking non speculative "
-            "instruction PC %#x as ready.\n",
-            inst->readPC());
+    DPRINTF(MemDepUnit, "Marking non speculative "
+            "instruction PC %#x as ready [sn:%lli].\n",
+            inst->readPC(), inst->seqNum);
 
-    InstSeqNum inst_seq_num = inst->seqNum;
+    MemDepEntryPtr inst_entry = findInHash(inst);
 
-    Dependency inst_to_find(inst_seq_num);
-
-    dep_it_t waiting_inst = waitingInsts.find(inst_to_find);
-
-    assert(waiting_inst != waitingInsts.end());
-
-    moveToReady(waiting_inst);
+    moveToReady(inst_entry);
 }
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::issue(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::reschedule(DynInstPtr &inst)
 {
-    assert(readyInsts.find(inst->seqNum) != readyInsts.end());
+    instsToReplay.push_back(inst);
+}
 
-    DPRINTF(MemDepUnit, "MemDepUnit: Issuing instruction PC %#x.\n",
-            inst->readPC());
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::replay(DynInstPtr &inst)
+{
+    DynInstPtr temp_inst;
+    bool found_inst = false;
 
-    // Remove the instruction from the ready list.
-    readyInsts.erase(inst->seqNum);
+    while (!instsToReplay.empty()) {
+        temp_inst = instsToReplay.front();
 
-    depPred.issued(inst->readPC(), inst->seqNum, inst->isStore());
+        MemDepEntryPtr inst_entry = findInHash(temp_inst);
+
+        DPRINTF(MemDepUnit, "Replaying mem instruction PC %#x "
+                "[sn:%lli].\n",
+                temp_inst->readPC(), temp_inst->seqNum);
+
+        moveToReady(inst_entry);
+
+        if (temp_inst == inst) {
+            found_inst = true;
+        }
+
+        instsToReplay.pop_front();
+    }
+
+    assert(found_inst);
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
+{
+    DPRINTF(MemDepUnit, "Completed mem instruction PC %#x "
+            "[sn:%lli].\n",
+            inst->readPC(), inst->seqNum);
+
+    unsigned tid = inst->threadNumber;
+
+    // Remove the instruction from the hash and the list.
+    MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
+
+    assert(hash_it != memDepHash.end());
+
+    instList[tid].erase((*hash_it).second->listIt);
+
+    (*hash_it).second = NULL;
+
+    memDepHash.erase(hash_it);
+    MemDepEntry::memdep_erase++;
+}
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::completeBarrier(DynInstPtr &inst)
+{
+    wakeDependents(inst);
+    completed(inst);
+
+    InstSeqNum barr_sn = inst->seqNum;
+
+    if (inst->isMemBarrier()) {
+        assert(loadBarrier && storeBarrier);
+        if (loadBarrierSN == barr_sn)
+            loadBarrier = false;
+        if (storeBarrierSN == barr_sn)
+            storeBarrier = false;
+    } else if (inst->isWriteBarrier()) {
+        assert(storeBarrier);
+        if (storeBarrierSN == barr_sn)
+            storeBarrier = false;
+    }
 }
 
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::wakeDependents(DynInstPtr &inst)
 {
-    // Only stores have dependents.
-    if (!inst->isStore()) {
+    // Only stores and barriers have dependents.
+    if (!inst->isStore() && !inst->isMemBarrier() && !inst->isWriteBarrier()) {
         return;
     }
 
-    // Wake any dependencies.
-    sd_it_t sd_it = storeDependents.find(inst->seqNum);
+    MemDepEntryPtr inst_entry = findInHash(inst);
 
-    // If there's no entry, then return.  Really there should only be
-    // no entry if the instruction is a load.
-    if (sd_it == storeDependents.end()) {
-        DPRINTF(MemDepUnit, "MemDepUnit: Instruction PC %#x, sequence "
-                "number %i has no dependents.\n",
-                inst->readPC(), inst->seqNum);
+    for (int i = 0; i < inst_entry->dependInsts.size(); ++i ) {
+        MemDepEntryPtr woken_inst = inst_entry->dependInsts[i];
 
-        return;
-    }
-
-    for (int i = 0; i < (*sd_it).second.size(); ++i ) {
-        dep_it_t woken_inst = (*sd_it).second[i];
-
-        DPRINTF(MemDepUnit, "MemDepUnit: Waking up a dependent inst, "
-                "sequence number %i.\n",
-                (*woken_inst).seqNum);
-#if 0
-        // Should we have reached instructions that are actually squashed,
-        // there will be no more useful instructions in this dependency
-        // list.  Break out early.
-        if (waitingInsts.find(woken_inst) == waitingInsts.end()) {
-            DPRINTF(MemDepUnit, "MemDepUnit: Dependents on inst PC %#x "
-                    "are squashed, starting at SN %i.  Breaking early.\n",
-                    inst->readPC(), woken_inst);
-            break;
+        if (!woken_inst->inst) {
+            // Potentially removed mem dep entries could be on this list
+            continue;
         }
-#endif
 
-        if ((*woken_inst).regsReady) {
+        DPRINTF(MemDepUnit, "Waking up a dependent inst, "
+                "[sn:%lli].\n",
+                woken_inst->inst->seqNum);
+
+        if (woken_inst->regsReady && !woken_inst->squashed) {
             moveToReady(woken_inst);
         } else {
-            (*woken_inst).memDepReady = true;
+            woken_inst->memDepReady = true;
         }
     }
 
-    storeDependents.erase(sd_it);
+    inst_entry->dependInsts.clear();
 }
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num)
+MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
+                                     unsigned tid)
 {
-
-    if (!waitingInsts.empty()) {
-        dep_it_t waiting_it = waitingInsts.end();
-
-        --waiting_it;
-
-        // Remove entries from the renamed list as long as we haven't reached
-        // the end and the entries continue to be younger than the squashed.
-        while (!waitingInsts.empty() &&
-               (*waiting_it).seqNum > squashed_num)
-        {
-            if (!(*waiting_it).memDepReady &&
-                (*waiting_it).storeDep != storeDependents.end()) {
-                sd_it_t sd_it = (*waiting_it).storeDep;
-
-                // Make sure the iterator that the store has pointing
-                // back is actually to this instruction.
-                assert((*sd_it).second.back() == waiting_it);
-
-                // Now remove this from the store's list of dependent
-                // instructions.
-                (*sd_it).second.pop_back();
+    if (!instsToReplay.empty()) {
+        ListIt replay_it = instsToReplay.begin();
+        while (replay_it != instsToReplay.end()) {
+            if ((*replay_it)->threadNumber == tid &&
+                (*replay_it)->seqNum > squashed_num) {
+                instsToReplay.erase(replay_it++);
+            } else {
+                ++replay_it;
             }
-
-            waitingInsts.erase(waiting_it--);
         }
     }
 
-    if (!readyInsts.empty()) {
-        sn_it_t ready_it = readyInsts.end();
+    ListIt squash_it = instList[tid].end();
+    --squash_it;
 
-        --ready_it;
+    MemDepHashIt hash_it;
 
-        // Same for the ready list.
-        while (!readyInsts.empty() &&
-               (*ready_it) > squashed_num)
-        {
-            readyInsts.erase(ready_it--);
-        }
-    }
+    while (!instList[tid].empty() &&
+           (*squash_it)->seqNum > squashed_num) {
 
-    if (!storeDependents.empty()) {
-        sd_it_t dep_it = storeDependents.end();
+        DPRINTF(MemDepUnit, "Squashing inst [sn:%lli]\n",
+                (*squash_it)->seqNum);
 
-        --dep_it;
+        hash_it = memDepHash.find((*squash_it)->seqNum);
 
-        // Same for the dependencies list.
-        while (!storeDependents.empty() &&
-               (*dep_it).first > squashed_num)
-        {
-            // This store's list of dependent instructions should be empty.
-            assert((*dep_it).second.empty());
+        assert(hash_it != memDepHash.end());
 
-            storeDependents.erase(dep_it--);
-        }
+        (*hash_it).second->squashed = true;
+
+        (*hash_it).second = NULL;
+
+        memDepHash.erase(hash_it);
+        MemDepEntry::memdep_erase++;
+
+        instList[tid].erase(squash_it--);
     }
 
     // Tell the dependency predictor to squash as well.
-    depPred.squash(squashed_num);
+    depPred.squash(squashed_num, tid);
 }
 
 template <class MemDepPred, class Impl>
@@ -397,7 +480,7 @@ void
 MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
                                         DynInstPtr &violating_load)
 {
-    DPRINTF(MemDepUnit, "MemDepUnit: Passing violating PCs to store sets,"
+    DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
             " load: %#x, store: %#x\n", violating_load->readPC(),
             store_inst->readPC());
     // Tell the memory dependence unit of the violation.
@@ -405,15 +488,64 @@ MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
 }
 
 template <class MemDepPred, class Impl>
-inline void
-MemDepUnit<MemDepPred, Impl>::moveToReady(dep_it_t &woken_inst)
+void
+MemDepUnit<MemDepPred, Impl>::issue(DynInstPtr &inst)
 {
-    DPRINTF(MemDepUnit, "MemDepUnit: Adding instruction sequence number %i "
-            "to the ready list.\n", (*woken_inst).seqNum);
+    DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
+            inst->readPC(), inst->seqNum);
 
-    // Add it to the ready list.
-    readyInsts.insert((*woken_inst).seqNum);
+    depPred.issued(inst->readPC(), inst->seqNum, inst->isStore());
+}
 
-    // Remove it from the waiting instructions.
-    waitingInsts.erase(woken_inst);
+template <class MemDepPred, class Impl>
+inline typename MemDepUnit<MemDepPred,Impl>::MemDepEntryPtr &
+MemDepUnit<MemDepPred, Impl>::findInHash(const DynInstPtr &inst)
+{
+    MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
+
+    assert(hash_it != memDepHash.end());
+
+    return (*hash_it).second;
+}
+
+template <class MemDepPred, class Impl>
+inline void
+MemDepUnit<MemDepPred, Impl>::moveToReady(MemDepEntryPtr &woken_inst_entry)
+{
+    DPRINTF(MemDepUnit, "Adding instruction [sn:%lli] "
+            "to the ready list.\n", woken_inst_entry->inst->seqNum);
+
+    assert(!woken_inst_entry->squashed);
+
+    iqPtr->addReadyMemInst(woken_inst_entry->inst);
+}
+
+
+template <class MemDepPred, class Impl>
+void
+MemDepUnit<MemDepPred, Impl>::dumpLists()
+{
+    for (unsigned tid=0; tid < Impl::MaxThreads; tid++) {
+        cprintf("Instruction list %i size: %i\n",
+                tid, instList[tid].size());
+
+        ListIt inst_list_it = instList[tid].begin();
+        int num = 0;
+
+        while (inst_list_it != instList[tid].end()) {
+            cprintf("Instruction:%i\nPC:%#x\n[sn:%i]\n[tid:%i]\nIssued:%i\n"
+                    "Squashed:%i\n\n",
+                    num, (*inst_list_it)->readPC(),
+                    (*inst_list_it)->seqNum,
+                    (*inst_list_it)->threadNumber,
+                    (*inst_list_it)->isIssued(),
+                    (*inst_list_it)->isSquashed());
+            inst_list_it++;
+            ++num;
+        }
+    }
+
+    cprintf("Memory dependence hash size: %i\n", memDepHash.size());
+
+    cprintf("Memory dependence entries: %i\n", MemDepEntry::memdep_count);
 }

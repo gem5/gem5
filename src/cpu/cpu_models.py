@@ -68,4 +68,13 @@ CpuModel('FullCPU', 'full_cpu_exec.cc',
 CpuModel('AlphaFullCPU', 'alpha_o3_exec.cc',
          '#include "cpu/o3/alpha_dyn_inst.hh"',
          { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
+CpuModel('OzoneSimpleCPU', 'ozone_simple_exec.cc',
+         '#include "cpu/ozone/dyn_inst.hh"',
+         { 'CPU_exec_context': 'OzoneDynInst<SimpleImpl>' })
+CpuModel('OzoneCPU', 'ozone_exec.cc',
+         '#include "cpu/ozone/dyn_inst.hh"',
+         { 'CPU_exec_context': 'OzoneDynInst<OzoneImpl>' })
+CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
+         '#include "cpu/checker/cpu.hh"',
+         { 'CPU_exec_context': 'CheckerCPU' })
 

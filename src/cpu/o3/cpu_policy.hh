@@ -26,13 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_CPU_POLICY_HH__
-#define __CPU_O3_CPU_CPU_POLICY_HH__
+#ifndef __CPU_O3_CPU_POLICY_HH__
+#define __CPU_O3_CPU_POLICY_HH__
 
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/inst_queue.hh"
-#include "cpu/o3/ldstq.hh"
+#include "cpu/o3/lsq.hh"
+#include "cpu/o3/lsq_unit.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/regfile.hh"
 #include "cpu/o3/rename_map.hh"
@@ -57,32 +58,34 @@ struct SimpleCPUPolicy
     typedef ROB<Impl> ROB;
     typedef InstructionQueue<Impl> IQ;
     typedef MemDepUnit<StoreSet, Impl> MemDepUnit;
-    typedef LDSTQ<Impl> LDSTQ;
+    typedef LSQ<Impl> LSQ;
+    typedef LSQUnit<Impl> LSQUnit;
 
-    typedef SimpleFetch<Impl> Fetch;
-    typedef SimpleDecode<Impl> Decode;
-    typedef SimpleRename<Impl> Rename;
-    typedef SimpleIEW<Impl> IEW;
-    typedef SimpleCommit<Impl> Commit;
+
+    typedef DefaultFetch<Impl> Fetch;
+    typedef DefaultDecode<Impl> Decode;
+    typedef DefaultRename<Impl> Rename;
+    typedef DefaultIEW<Impl> IEW;
+    typedef DefaultCommit<Impl> Commit;
 
     /** The struct for communication between fetch and decode. */
-    typedef SimpleFetchSimpleDecode<Impl> FetchStruct;
+    typedef DefaultFetchDefaultDecode<Impl> FetchStruct;
 
     /** The struct for communication between decode and rename. */
-    typedef SimpleDecodeSimpleRename<Impl> DecodeStruct;
+    typedef DefaultDecodeDefaultRename<Impl> DecodeStruct;
 
     /** The struct for communication between rename and IEW. */
-    typedef SimpleRenameSimpleIEW<Impl> RenameStruct;
+    typedef DefaultRenameDefaultIEW<Impl> RenameStruct;
 
     /** The struct for communication between IEW and commit. */
-    typedef SimpleIEWSimpleCommit<Impl> IEWStruct;
+    typedef DefaultIEWDefaultCommit<Impl> IEWStruct;
 
     /** The struct for communication within the IEW stage. */
     typedef IssueStruct<Impl> IssueStruct;
 
     /** The struct for all backwards communication. */
-    typedef TimeBufStruct TimeStruct;
+    typedef TimeBufStruct<Impl> TimeStruct;
 
 };
 
-#endif //__CPU_O3_CPU_CPU_POLICY_HH__
+#endif //__CPU_O3_CPU_POLICY_HH__

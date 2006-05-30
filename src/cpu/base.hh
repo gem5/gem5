@@ -38,10 +38,10 @@
 #include "sim/sim_object.hh"
 #include "arch/isa_traits.hh"
 
-class System;
-namespace Kernel { class Statistics; }
 class BranchPred;
+class CheckerCPU;
 class ExecContext;
+class System;
 
 class BaseCPU : public SimObject
 {
@@ -125,6 +125,7 @@ class BaseCPU : public SimObject
         int cpu_id;
         Tick profile;
 #endif
+        BaseCPU *checker;
 
         Params();
     };
@@ -232,10 +233,6 @@ class BaseCPU : public SimObject
   public:
     // Number of CPU cycles simulated
     Stats::Scalar<> numCycles;
-
-#if FULL_SYSTEM
-    Kernel::Statistics *kernelStats;
-#endif
 };
 
 #endif // __CPU_BASE_HH__

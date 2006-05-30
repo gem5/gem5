@@ -26,31 +26,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//Todo: Add in a lot of the functions that are ISA specific.  Also define
-//the functions that currently exist within the base cpu class.  Define
-//everything for the simobject stuff so it can be serialized and
-//instantiated, add in debugging statements everywhere.  Have CPU schedule
-//itself properly.  Threads!
-// Avoid running stages and advancing queues if idle/stalled.
-
-#ifndef __CPU_O3_CPU_FULL_CPU_HH__
-#define __CPU_O3_CPU_FULL_CPU_HH__
+#ifndef __CPU_O3_CPU_HH__
+#define __CPU_O3_CPU_HH__
 
 #include <iostream>
 #include <list>
+#include <queue>
+#include <set>
 #include <vector>
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
+#include "cpu/activity.hh"
 #include "cpu/base.hh"
 #include "cpu/cpu_exec_context.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
+#include "cpu/o3/scoreboard.hh"
+#include "cpu/o3/thread_state.hh"
 #include "sim/process.hh"
 
+template <class>
+class Checker;
 class ExecContext;
-class FunctionalMemory;
+class MemInterface;
 class Process;
 
 class BaseFullCPU : public BaseCPU
@@ -59,11 +59,9 @@ class BaseFullCPU : public BaseCPU
   public:
     typedef BaseCPU::Params Params;
 
-#if FULL_SYSTEM
-    BaseFullCPU(Params &params);
-#else
-    BaseFullCPU(Params &params);
-#endif // FULL_SYSTEM
+    BaseFullCPU(Params *params);
+
+    void regStats();
 
   protected:
     int cpu_id;
@@ -73,45 +71,57 @@ template <class Impl>
 class FullO3CPU : public BaseFullCPU
 {
   public:
-    //Put typedefs from the Impl here.
+    // Typedefs from the Impl here.
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
+
+    typedef O3ThreadState<Impl> Thread;
+
+    typedef typename std::list<DynInstPtr>::iterator ListIt;
 
   public:
     enum Status {
         Running,
         Idle,
         Halted,
-        Blocked // ?
+        Blocked,
+        SwitchedOut
     };
 
+    /** Overall CPU status. */
     Status _status;
 
   private:
     class TickEvent : public Event
     {
       private:
+        /** Pointer to the CPU. */
         FullO3CPU<Impl> *cpu;
 
       public:
+        /** Constructs a tick event. */
         TickEvent(FullO3CPU<Impl> *c);
+
+        /** Processes a tick event, calling tick() on the CPU. */
         void process();
+        /** Returns the description of the tick event. */
         const char *description();
     };
 
+    /** The tick event used for scheduling CPU ticks. */
     TickEvent tickEvent;
 
-    /// Schedule tick event, regardless of its current state.
+    /** Schedule tick event, regardless of its current state. */
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + delay);
+            tickEvent.reschedule(curTick + cycles(delay));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + delay);
+            tickEvent.schedule(curTick + cycles(delay));
     }
 
-    /// Unschedule tick event, regardless of its current state.
+    /** Unschedule tick event, regardless of its current state. */
     void unscheduleTickEvent()
     {
         if (tickEvent.scheduled())
@@ -119,25 +129,87 @@ class FullO3CPU : public BaseFullCPU
     }
 
   public:
-    FullO3CPU(Params &params);
+    /** Constructs a CPU with the given parameters. */
+    FullO3CPU(Params *params);
+    /** Destructor. */
     ~FullO3CPU();
 
+    /** Registers statistics. */
     void fullCPURegStats();
 
+    /** Ticks CPU, calling tick() on each stage, and checking the overall
+     *  activity to see if the CPU should deschedule itself.
+     */
     void tick();
 
+    /** Initialize the CPU */
     void init();
 
-    void activateContext(int thread_num, int delay);
-    void suspendContext(int thread_num);
-    void deallocateContext(int thread_num);
-    void haltContext(int thread_num);
+    /** Setup CPU to insert a thread's context */
+    void insertThread(unsigned tid);
 
-    void switchOut();
+    /** Remove all of a thread's context from CPU */
+    void removeThread(unsigned tid);
+
+    /** Count the Total Instructions Committed in the CPU. */
+    virtual Counter totalInstructions() const
+    {
+        Counter total(0);
+
+        for (int i=0; i < thread.size(); i++)
+            total += thread[i]->numInst;
+
+        return total;
+    }
+
+    /** Add Thread to Active Threads List. */
+    void activateContext(int tid, int delay);
+
+    /** Remove Thread from Active Threads List */
+    void suspendContext(int tid);
+
+    /** Remove Thread from Active Threads List &&
+     *  Remove Thread Context from CPU.
+     */
+    void deallocateContext(int tid);
+
+    /** Remove Thread from Active Threads List &&
+     *  Remove Thread Context from CPU.
+     */
+    void haltContext(int tid);
+
+    /** Activate a Thread When CPU Resources are Available. */
+    void activateWhenReady(int tid);
+
+    /** Add or Remove a Thread Context in the CPU. */
+    void doContextSwitch();
+
+    /** Update The Order In Which We Process Threads. */
+    void updateThreadPriority();
+
+    /** Executes a syscall on this cycle.
+     *  ---------------------------------------
+     *  Note: this is a virtual function. CPU-Specific
+     *  functionality defined in derived classes
+     */
+    virtual void syscall(int tid) { panic("Unimplemented!"); }
+
+    /** Check if there are any system calls pending. */
+    void checkSyscalls();
+
+    /** Switches out this CPU.
+     */
+    void switchOut(Sampler *sampler);
+
+    void signalSwitched();
+
+    /** Takes over from another CPU.
+     */
     void takeOverFrom(BaseCPU *oldCPU);
 
     /** Get the current instruction sequence number, and increment it. */
-    InstSeqNum getAndIncrementInstSeq();
+    InstSeqNum getAndIncrementInstSeq()
+    { return globalSeqNum++; }
 
 #if FULL_SYSTEM
     /** Check if this address is a valid instruction address. */
@@ -147,21 +219,28 @@ class FullO3CPU : public BaseFullCPU
     bool validDataAddr(Addr addr) { return true; }
 
     /** Get instruction asid. */
-    int getInstAsid()
-    { return regFile.miscRegs.getInstAsid(); }
+    int getInstAsid(unsigned tid)
+    { return regFile.miscRegs[tid].getInstAsid(); }
 
     /** Get data asid. */
-    int getDataAsid()
-    { return regFile.miscRegs.getDataAsid(); }
+    int getDataAsid(unsigned tid)
+    { return regFile.miscRegs[tid].getDataAsid(); }
 #else
-    bool validInstAddr(Addr addr)
-    { return thread[0]->validInstAddr(addr); }
+    /** Check if this address is a valid instruction address. */
+    bool validInstAddr(Addr addr,unsigned tid)
+    { return thread[tid]->validInstAddr(addr); }
 
-    bool validDataAddr(Addr addr)
-    { return thread[0]->validDataAddr(addr); }
+    /** Check if this address is a valid data address. */
+    bool validDataAddr(Addr addr,unsigned tid)
+    { return thread[tid]->validDataAddr(addr); }
 
-    int getInstAsid() { return thread[0]->getInstAsid(); }
-    int getDataAsid() { return thread[0]->getDataAsid(); }
+    /** Get instruction asid. */
+    int getInstAsid(unsigned tid)
+    { return thread[tid]->asid; }
+
+    /** Get data asid. */
+    int getDataAsid(unsigned tid)
+    { return thread[tid]->asid; }
 
 #endif
 
@@ -188,95 +267,101 @@ class FullO3CPU : public BaseFullCPU
 
     void setFloatRegBits(int reg_idx, FloatRegBits val);
 
-    uint64_t readPC();
+    uint64_t readArchIntReg(int reg_idx, unsigned tid);
 
-    void setNextPC(uint64_t val);
+    float readArchFloatRegSingle(int reg_idx, unsigned tid);
 
-    void setPC(Addr new_PC);
+    double readArchFloatRegDouble(int reg_idx, unsigned tid);
+
+    uint64_t readArchFloatRegInt(int reg_idx, unsigned tid);
+
+    void setArchIntReg(int reg_idx, uint64_t val, unsigned tid);
+
+    void setArchFloatRegSingle(int reg_idx, float val, unsigned tid);
+
+    void setArchFloatRegDouble(int reg_idx, double val, unsigned tid);
+
+    void setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid);
+
+    uint64_t readPC(unsigned tid);
+
+    void setPC(Addr new_PC,unsigned tid);
+
+    uint64_t readNextPC(unsigned tid);
+
+    void setNextPC(uint64_t val,unsigned tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
-    void addInst(DynInstPtr &inst);
+    ListIt addInst(DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone();
+    void instDone(unsigned tid);
 
-    /** Remove all instructions in back of the given instruction, but leave
-     *  that instruction in the list.  This is useful in a squash, when there
-     *  are instructions in this list that don't exist in structures such as
-     *  the ROB.  The instruction doesn't have to be the last instruction in
-     *  the list, but will be once this function completes.
-     *  @todo: Remove only up until that inst?  Squashed inst is most likely
-     *  valid.
-     */
-    void removeBackInst(DynInstPtr &inst);
+    /** Add Instructions to the CPU Remove List*/
+    void addToRemoveList(DynInstPtr &inst);
 
-    /** Remove an instruction from the front of the list.  It is expected
-     *  that there are no instructions in front of it (that is, none are older
-     *  than the instruction being removed).  Used when retiring instructions.
-     *  @todo: Remove the argument to this function, and just have it remove
-     *  last instruction once it's verified that commit has the same ordering
-     *  as the instruction list.
+    /** Remove an instruction from the front end of the list.  There's
+     *  no restriction on location of the instruction.
      */
     void removeFrontInst(DynInstPtr &inst);
 
     /** Remove all instructions that are not currently in the ROB. */
-    void removeInstsNotInROB();
+    void removeInstsNotInROB(unsigned tid);
 
     /** Remove all instructions younger than the given sequence number. */
-    void removeInstsUntil(const InstSeqNum &seq_num);
+    void removeInstsUntil(const InstSeqNum &seq_num,unsigned tid);
+
+    inline void squashInstIt(const ListIt &instIt, const unsigned &tid);
+
+    void cleanUpRemovedInsts();
 
     /** Remove all instructions from the list. */
-    void removeAllInsts();
+//    void removeAllInsts();
 
     void dumpInsts();
 
     /** Basically a wrapper function so that instructions executed at
-     *  commit can tell the instruction queue that they have completed.
-     *  Eventually this hack should be removed.
+     *  commit can tell the instruction queue that they have
+     *  completed.  Eventually this hack should be removed.
      */
-    void wakeDependents(DynInstPtr &inst);
+//    void wakeDependents(DynInstPtr &inst);
 
   public:
     /** List of all the instructions in flight. */
-    list<DynInstPtr> instList;
+    std::list<DynInstPtr> instList;
 
-    //not sure these should be private.
+    /** List of all the instructions that will be removed at the end of this
+     *  cycle.
+     */
+    std::queue<ListIt> removeList;
+
+#ifdef DEBUG
+    std::set<InstSeqNum> snList;
+#endif
+
+    /** Records if instructions need to be removed this cycle due to
+     *  being retired or squashed.
+     */
+    bool removeInstsThisCycle;
+
   protected:
     /** The fetch stage. */
     typename CPUPolicy::Fetch fetch;
 
-    /** The fetch stage's status. */
-    typename CPUPolicy::Fetch::Status fetchStatus;
-
     /** The decode stage. */
     typename CPUPolicy::Decode decode;
-
-    /** The decode stage's status. */
-    typename CPUPolicy::Decode::Status decodeStatus;
 
     /** The dispatch stage. */
     typename CPUPolicy::Rename rename;
 
-    /** The dispatch stage's status. */
-    typename CPUPolicy::Rename::Status renameStatus;
-
     /** The issue/execute/writeback stages. */
     typename CPUPolicy::IEW iew;
-
-    /** The issue/execute/writeback stage's status. */
-    typename CPUPolicy::IEW::Status iewStatus;
 
     /** The commit stage. */
     typename CPUPolicy::Commit commit;
 
-    /** The fetch stage's status. */
-    typename CPUPolicy::Commit::Status commitStatus;
-
-    //Might want to just pass these objects in to the constructors of the
-    //appropriate stage.  regFile is in iew, freeList in dispatch, renameMap
-    //in dispatch, and the rob in commit.
     /** The register file. */
     typename CPUPolicy::RegFile regFile;
 
@@ -284,12 +369,33 @@ class FullO3CPU : public BaseFullCPU
     typename CPUPolicy::FreeList freeList;
 
     /** The rename map. */
-    typename CPUPolicy::RenameMap renameMap;
+    typename CPUPolicy::RenameMap renameMap[Impl::MaxThreads];
+
+    /** The commit rename map. */
+    typename CPUPolicy::RenameMap commitRenameMap[Impl::MaxThreads];
 
     /** The re-order buffer. */
     typename CPUPolicy::ROB rob;
 
+    /** Active Threads List */
+    std::list<unsigned> activeThreads;
+
+    /** Integer Register Scoreboard */
+    Scoreboard scoreboard;
+
   public:
+    /** Enum to give each stage a specific index, so when calling
+     *  activateStage() or deactivateStage(), they can specify which stage
+     *  is being activated/deactivated.
+     */
+    enum StageIdx {
+        FetchIdx,
+        DecodeIdx,
+        RenameIdx,
+        IEWIdx,
+        CommitIdx,
+        NumStages };
+
     /** Typedefs from the Impl to get the structs that each of the
      *  time buffers should use.
      */
@@ -319,45 +425,101 @@ class FullO3CPU : public BaseFullCPU
     TimeBuffer<IEWStruct> iewQueue;
 
   public:
-    /** The temporary exec context to support older accessors. */
-    CPUExecContext *cpuXC;
+    ActivityRecorder activityRec;
 
+    void activityThisCycle() { activityRec.activity(); }
+
+    void activateStage(const StageIdx idx)
+    { activityRec.activateStage(idx); }
+
+    void deactivateStage(const StageIdx idx)
+    { activityRec.deactivateStage(idx); }
+
+    /** Wakes the CPU, rescheduling the CPU if it's not already active. */
+    void wakeCPU();
+
+    /** Gets a free thread id. Use if thread ids change across system. */
+    int getFreeTid();
+
+  public:
     /** Temporary function to get pointer to exec context. */
-    ExecContext *xcBase()
+    ExecContext *xcBase(unsigned tid)
     {
-        return thread[0]->getProxy();
+        return thread[tid]->getXCProxy();
     }
 
-    CPUExecContext *cpuXCBase()
-    {
-        return thread[0];
-    }
-
+    /** The global sequence number counter. */
     InstSeqNum globalSeqNum;
 
+    Checker<DynInstPtr> *checker;
+
 #if FULL_SYSTEM
+    /** Pointer to the system. */
     System *system;
 
+    /** Pointer to the memory controller. */
     MemoryController *memCtrl;
+    /** Pointer to physical memory. */
     PhysicalMemory *physmem;
-
-    AlphaITB *itb;
-    AlphaDTB *dtb;
-
-//    SWContext *swCtx;
 #endif
-    std::vector<CPUExecContext *> thread;
 
+    /** Pointer to memory. */
     FunctionalMemory *mem;
 
+    Sampler *sampler;
+
+    int switchCount;
+
+    // List of all ExecContexts.
+    std::vector<Thread *> thread;
+
+#if 0
+    /** Page table pointer. */
+    PageTable *pTable;
+#endif
+
+    /** Pointer to the icache interface. */
     MemInterface *icacheInterface;
+    /** Pointer to the dcache interface. */
     MemInterface *dcacheInterface;
 
+    /** Whether or not the CPU should defer its registration. */
     bool deferRegistration;
 
-    Counter numInsts;
+    /** Is there a context switch pending? */
+    bool contextSwitch;
 
-    Counter funcExeInst;
+    /** Threads Scheduled to Enter CPU */
+    std::list<int> cpuWaitList;
+
+    /** The cycle that the CPU was last running, used for statistics. */
+    Tick lastRunningCycle;
+
+    /** Number of Threads CPU can process */
+    unsigned numThreads;
+
+    /** Mapping for system thread id to cpu id */
+    std::map<unsigned,unsigned> threadMap;
+
+    /** Available thread ids in the cpu*/
+    std::vector<unsigned> tids;
+
+    /** Stat for total number of times the CPU is descheduled. */
+    Stats::Scalar<> timesIdled;
+    /** Stat for total number of cycles the CPU spends descheduled. */
+    Stats::Scalar<> idleCycles;
+    /** Stat for the number of committed instructions per thread. */
+    Stats::Vector<> committedInsts;
+    /** Stat for the total number of committed instructions. */
+    Stats::Scalar<> totalCommittedInsts;
+    /** Stat for the CPI per thread. */
+    Stats::Formula cpi;
+    /** Stat for the total CPI. */
+    Stats::Formula totalCpi;
+    /** Stat for the IPC per thread. */
+    Stats::Formula ipc;
+    /** Stat for the total IPC. */
+    Stats::Formula totalIpc;
 };
 
-#endif
+#endif // __CPU_O3_CPU_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
 #include "base/trace.hh"
 #include "cpu/o3/2bit_local_pred.hh"
 
@@ -36,17 +37,25 @@ DefaultBP::DefaultBP(unsigned _localPredictorSize,
       localCtrBits(_localCtrBits),
       instShiftAmt(_instShiftAmt)
 {
-    // Should do checks here to make sure sizes are correct (powers of 2).
+    if (!isPowerOf2(localPredictorSize)) {
+        fatal("Invalid local predictor size!\n");
+    }
+
+    localPredictorSets = localPredictorSize / localCtrBits;
+
+    if (!isPowerOf2(localPredictorSets)) {
+        fatal("Invalid number of local predictor sets! Check localCtrBits.\n");
+    }
 
     // Setup the index mask.
-    indexMask = localPredictorSize - 1;
+    indexMask = localPredictorSets - 1;
 
     DPRINTF(Fetch, "Branch predictor: index mask: %#x\n", indexMask);
 
     // Setup the array of counters for the local predictor.
-    localCtrs = new SatCounter[localPredictorSize];
+    localCtrs.resize(localPredictorSets);
 
-    for (int i = 0; i < localPredictorSize; ++i)
+    for (int i = 0; i < localPredictorSets; ++i)
         localCtrs[i].setBits(_localCtrBits);
 
     DPRINTF(Fetch, "Branch predictor: local predictor size: %i\n",
@@ -58,6 +67,14 @@ DefaultBP::DefaultBP(unsigned _localPredictorSize,
             instShiftAmt);
 }
 
+void
+DefaultBP::reset()
+{
+    for (int i = 0; i < localPredictorSets; ++i) {
+        localCtrs[i].reset();
+    }
+}
+
 bool
 DefaultBP::lookup(Addr &branch_addr)
 {
@@ -67,8 +84,6 @@ DefaultBP::lookup(Addr &branch_addr)
 
     DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
             local_predictor_idx);
-
-    assert(local_predictor_idx < localPredictorSize);
 
     local_prediction = localCtrs[local_predictor_idx].read();
 
@@ -101,8 +116,6 @@ DefaultBP::update(Addr &branch_addr, bool taken)
 
     DPRINTF(Fetch, "Branch predictor: Looking up index %#x\n",
             local_predictor_idx);
-
-    assert(local_predictor_idx < localPredictorSize);
 
     if (taken) {
         DPRINTF(Fetch, "Branch predictor: Branch updated as taken.\n");
