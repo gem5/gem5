@@ -143,15 +143,19 @@ void
 DmaPort::recvRetry()
 {
     Packet* pkt = transmitList.front();
-    DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
-               pkt, pkt->senderState);
-    if (sendTiming(pkt)) {
-        DPRINTF(DMA, "-- Done\n");
-        transmitList.pop_front();
-        pendingCount--;
-        assert(pendingCount >= 0);
-    } else {
-        DPRINTF(DMA, "-- Failed, queued\n");
+    bool result = true;
+    while (result && transmitList.size()) {
+        DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
+                   pkt, pkt->senderState);
+        result = sendTiming(pkt);
+        if (result) {
+            DPRINTF(DMA, "-- Done\n");
+            transmitList.pop_front();
+            pendingCount--;
+            assert(pendingCount >= 0);
+        } else {
+            DPRINTF(DMA, "-- Failed, queued\n");
+        }
     }
 }
 
@@ -198,7 +202,7 @@ DmaPort::sendDma(Packet *pkt)
    if (state == Timing) {  */
        DPRINTF(DMA, "Attempting to send Packet %#x with senderState: %#x\n",
                pkt, pkt->senderState);
-       if (!sendTiming(pkt)) {
+       if (transmitList.size() || !sendTiming(pkt)) {
            transmitList.push_back(pkt);
            DPRINTF(DMA, "-- Failed: queued\n");
        } else {
