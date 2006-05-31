@@ -691,7 +691,7 @@ DefaultCommit<Impl>::commit()
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
-
+/*
         if (fromFetch->fetchFault && commitStatus[0] != TrapPending) {
             // Record the fault.  Wait until it's empty in the ROB.
             // Then handle the trap.  Ignore it if there's already a
@@ -713,7 +713,7 @@ DefaultCommit<Impl>::commit()
                 commitStatus[0] = Running;
             }
         }
-
+*/
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid] == true) {
@@ -925,7 +925,7 @@ DefaultCommit<Impl>::commitInsts()
     numCommittedDist.sample(num_committed);
 
     if (num_committed == commitWidth) {
-        commitEligible[0]++;
+        commitEligibleSamples[0]++;
     }
 }
 
@@ -947,6 +947,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         head_inst->reachedCommit = true;
 
         if (head_inst->isNonSpeculative() ||
+            head_inst->isStoreConditional() ||
             head_inst->isMemBarrier() ||
             head_inst->isWriteBarrier()) {
 

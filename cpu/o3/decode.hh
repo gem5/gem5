@@ -107,9 +107,12 @@ class DefaultDecode
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
 
+    /** Switches out the decode stage. */
     void switchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
+
     /** Ticks decode, processing all input signals and decoding as many
      * instructions as possible.
      */

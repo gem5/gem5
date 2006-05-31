@@ -41,6 +41,7 @@ DefaultDecode<Impl>::DefaultDecode(Params *params)
 {
     _status = Inactive;
 
+    // Setup status, make sure stall signals are clear.
     for (int i = 0; i < numThreads; ++i) {
         decodeStatus[i] = Idle;
 
@@ -165,6 +166,7 @@ template <class Impl>
 void
 DefaultDecode<Impl>::switchOut()
 {
+    // Decode can immediately switch out.
     cpu->signalSwitched();
 }
 
@@ -174,6 +176,7 @@ DefaultDecode<Impl>::takeOverFrom()
 {
     _status = Inactive;
 
+    // Be sure to reset state and clear out any old instructions.
     for (int i = 0; i < numThreads; ++i) {
         decodeStatus[i] = Idle;
 
@@ -222,22 +225,22 @@ DefaultDecode<Impl>::block(unsigned tid)
 {
     DPRINTF(Decode, "[tid:%u]: Blocking.\n", tid);
 
-    // If the decode status is blocked or unblocking then decode has not yet
-    // signalled fetch to unblock. In that case, there is no need to tell
-    // fetch to block.
-    if (decodeStatus[tid] != Blocked &&
-        decodeStatus[tid] != Unblocking) {
-        toFetch->decodeBlock[tid] = true;
-        wroteToTimeBuffer = true;
-    }
-
     // Add the current inputs to the skid buffer so they can be
     // reprocessed when this stage unblocks.
     skidInsert(tid);
 
+    // If the decode status is blocked or unblocking then decode has not yet
+    // signalled fetch to unblock. In that case, there is no need to tell
+    // fetch to block.
     if (decodeStatus[tid] != Blocked) {
         // Set the status to Blocked.
         decodeStatus[tid] = Blocked;
+
+        if (decodeStatus[tid] != Unblocking) {
+            toFetch->decodeBlock[tid] = true;
+            wroteToTimeBuffer = true;
+        }
+
         return true;
     }
 
@@ -270,13 +273,16 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     DPRINTF(Decode, "[tid:%i]: Squashing due to incorrect branch prediction "
             "detected at decode.\n", tid);
 
+    // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].predIncorrect = true;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].nextPC = inst->readNextPC();
-    toFetch->decodeInfo[tid].branchTaken = true;
+    toFetch->decodeInfo[tid].branchTaken =
+        inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
 
+    // Might have to tell fetch to unblock.
     if (decodeStatus[tid] == Blocked ||
         decodeStatus[tid] == Unblocking) {
         toFetch->decodeUnblock[tid] = 1;
@@ -292,11 +298,12 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
         }
     }
 
+    // Clear the instruction list and skid buffer in case they have any
+    // insts in them.
     while (!insts[tid].empty()) {
         insts[tid].pop();
     }
 
-    // Clear the skid buffer in case it has any data in it.
     while (!skidBuffer[tid].empty()) {
         skidBuffer[tid].pop();
     }
@@ -341,11 +348,12 @@ DefaultDecode<Impl>::squash(unsigned tid)
         }
     }
 
+    // Clear the instruction list and skid buffer in case they have any
+    // insts in them.
     while (!insts[tid].empty()) {
         insts[tid].pop();
     }
 
-    // Clear the skid buffer in case it has any data in it.
     while (!skidBuffer[tid].empty()) {
         skidBuffer[tid].pop();
     }

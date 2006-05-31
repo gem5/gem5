@@ -105,6 +105,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::switchOut()
 {
+    // Clear any state.
     for (int i = 0; i < Impl::MaxThreads; ++i) {
         instList[i].clear();
     }
@@ -116,6 +117,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::takeOverFrom()
 {
+    // Be sure to reset all state.
     loadBarrier = storeBarrier = false;
     loadBarrierSN = storeBarrierSN = 0;
     depPred.clear();
@@ -146,7 +148,7 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     inst_entry->listIt = --(instList[tid].end());
 
     // Check any barriers and the dependence predictor for any
-    // producing stores.
+    // producing memrefs/stores.
     InstSeqNum producing_store;
     if (inst->isLoad() && loadBarrier) {
         producing_store = loadBarrierSN;
@@ -253,6 +255,7 @@ void
 MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
+    // Memory barriers block loads and stores, write barriers only stores.
     if (barr_inst->isMemBarrier()) {
         loadBarrier = true;
         loadBarrierSN = barr_sn;
@@ -330,6 +333,7 @@ MemDepUnit<MemDepPred, Impl>::replay(DynInstPtr &inst)
     DynInstPtr temp_inst;
     bool found_inst = false;
 
+    // For now this replay function replays all waiting memory ops.
     while (!instsToReplay.empty()) {
         temp_inst = instsToReplay.front();
 

@@ -166,6 +166,8 @@ BaseDynInst<Impl>::~BaseDynInst()
         delete traceData;
     }
 
+    fault = NoFault;
+
     --instcount;
 
     DPRINTF(DynInst, "DynInst: [sn:%lli] Instruction destroyed. Instcount=%i\n",
@@ -289,7 +291,7 @@ BaseDynInst<Impl>::copy(Addr dest)
 {
     uint8_t data[64];
     FunctionalMemory *mem = thread->mem;
-    assert(thread->copySrcPhysAddr || thread->misspeculating());
+    assert(thread->copySrcPhysAddr);
     MemReqPtr req = new MemReq(dest, thread->getXCProxy(), 64);
     req->asid = asid;
 

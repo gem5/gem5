@@ -258,6 +258,7 @@ template <class Impl>
 void
 DefaultRename<Impl>::switchOut()
 {
+    // Rename is ready to switch out at any time.
     cpu->signalSwitched();
 }
 
@@ -265,6 +266,7 @@ template <class Impl>
 void
 DefaultRename<Impl>::doSwitchOut()
 {
+    // Clear any state, fix up the rename map.
     for (int i = 0; i < numThreads; i++) {
         typename list<RenameHistory>::iterator hb_it = historyBuffer[i].begin();
 

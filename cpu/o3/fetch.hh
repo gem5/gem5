@@ -42,7 +42,7 @@ class Sampler;
  * width is specified by the parameters; each cycle it tries to fetch
  * that many instructions. It supports using a branch predictor to
  * predict direction and targets.
- * It supports the idling functionalitiy of the CPU by indicating to
+ * It supports the idling functionality of the CPU by indicating to
  * the CPU when it is active and inactive.
  */
 template <class Impl>
@@ -163,14 +163,19 @@ class DefaultFetch
     /** Processes cache completion event. */
     void processCacheCompletion(MemReqPtr &req);
 
+    /** Begins the switch out of the fetch stage. */
     void switchOut();
 
+    /** Completes the switch out of the fetch stage. */
     void doSwitchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
+    /** Checks if the fetch stage is switched out. */
     bool isSwitchedOut() { return switchedOut; }
 
+    /** Tells fetch to wake up from a quiesce instruction. */
     void wakeFromQuiesce();
 
   private:
@@ -301,8 +306,10 @@ class DefaultFetch
     /** BPredUnit. */
     BPredUnit branchPred;
 
+    /** Per-thread fetch PC. */
     Addr PC[Impl::MaxThreads];
 
+    /** Per-thread next PC. */
     Addr nextPC[Impl::MaxThreads];
 
     /** Memory request used to access cache. */
@@ -369,8 +376,12 @@ class DefaultFetch
     /** Thread ID being fetched. */
     int threadFetched;
 
+    /** Checks if there is an interrupt pending.  If there is, fetch
+     * must stop once it is not fetching PAL instructions.
+     */
     bool interruptPending;
 
+    /** Records if fetch is switched out. */
     bool switchedOut;
 
 #if !FULL_SYSTEM
@@ -394,17 +405,23 @@ class DefaultFetch
      * the pipeline.
      */
     Stats::Scalar<> fetchIdleCycles;
+    /** Total number of cycles spent blocked. */
     Stats::Scalar<> fetchBlockedCycles;
-
+    /** Total number of cycles spent in any other state. */
     Stats::Scalar<> fetchMiscStallCycles;
     /** Stat for total number of fetched cache lines. */
     Stats::Scalar<> fetchedCacheLines;
-
+    /** Total number of outstanding icache accesses that were dropped
+     * due to a squash.
+     */
     Stats::Scalar<> fetchIcacheSquashes;
     /** Distribution of number of instructions fetched each cycle. */
     Stats::Distribution<> fetchNisnDist;
+    /** Rate of how often fetch was idle. */
     Stats::Formula idleRate;
+    /** Number of branch fetches per cycle. */
     Stats::Formula branchRate;
+    /** Number of instruction fetched per cycle. */
     Stats::Formula fetchRate;
 };
 

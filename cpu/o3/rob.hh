@@ -95,8 +95,10 @@ class ROB
      */
     void setActiveThreads(std::list<unsigned>* at_ptr);
 
+    /** Switches out the ROB. */
     void switchOut();
 
+    /** Takes over another CPU's thread. */
     void takeOverFrom();
 
     /** Function to insert an instruction into the ROB. Note that whatever
@@ -298,6 +300,7 @@ class ROB
     /** Number of instructions in the ROB. */
     int numInstsInROB;
 
+    /** Dummy instruction returned if there are no insts left. */
     DynInstPtr dummyInst;
 
   private:

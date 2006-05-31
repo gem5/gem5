@@ -161,59 +161,59 @@ void
 DefaultFetch<Impl>::regStats()
 {
     icacheStallCycles
-        .name(name() + ".FETCH:icacheStallCycles")
+        .name(name() + ".icacheStallCycles")
         .desc("Number of cycles fetch is stalled on an Icache miss")
         .prereq(icacheStallCycles);
 
     fetchedInsts
-        .name(name() + ".FETCH:Insts")
+        .name(name() + ".Insts")
         .desc("Number of instructions fetch has processed")
         .prereq(fetchedInsts);
 
     fetchedBranches
-        .name(name() + ".FETCH:Branches")
+        .name(name() + ".Branches")
         .desc("Number of branches that fetch encountered")
         .prereq(fetchedBranches);
 
     predictedBranches
-        .name(name() + ".FETCH:predictedBranches")
+        .name(name() + ".predictedBranches")
         .desc("Number of branches that fetch has predicted taken")
         .prereq(predictedBranches);
 
     fetchCycles
-        .name(name() + ".FETCH:Cycles")
+        .name(name() + ".Cycles")
         .desc("Number of cycles fetch has run and was not squashing or"
               " blocked")
         .prereq(fetchCycles);
 
     fetchSquashCycles
-        .name(name() + ".FETCH:SquashCycles")
+        .name(name() + ".SquashCycles")
         .desc("Number of cycles fetch has spent squashing")
         .prereq(fetchSquashCycles);
 
     fetchIdleCycles
-        .name(name() + ".FETCH:IdleCycles")
+        .name(name() + ".IdleCycles")
         .desc("Number of cycles fetch was idle")
         .prereq(fetchIdleCycles);
 
     fetchBlockedCycles
-        .name(name() + ".FETCH:BlockedCycles")
+        .name(name() + ".BlockedCycles")
         .desc("Number of cycles fetch has spent blocked")
         .prereq(fetchBlockedCycles);
 
     fetchedCacheLines
-        .name(name() + ".FETCH:CacheLines")
+        .name(name() + ".CacheLines")
         .desc("Number of cache lines fetched")
         .prereq(fetchedCacheLines);
 
     fetchMiscStallCycles
-        .name(name() + ".FETCH:MiscStallCycles")
+        .name(name() + ".MiscStallCycles")
         .desc("Number of cycles fetch has spent waiting on interrupts, or "
               "bad addresses, or out of MSHRs")
         .prereq(fetchMiscStallCycles);
 
     fetchIcacheSquashes
-        .name(name() + ".FETCH:IcacheSquashes")
+        .name(name() + ".IcacheSquashes")
         .desc("Number of outstanding Icache misses that were squashed")
         .prereq(fetchIcacheSquashes);
 
@@ -221,24 +221,24 @@ DefaultFetch<Impl>::regStats()
         .init(/* base value */ 0,
               /* last value */ fetchWidth,
               /* bucket size */ 1)
-        .name(name() + ".FETCH:rateDist")
+        .name(name() + ".rateDist")
         .desc("Number of instructions fetched each cycle (Total)")
         .flags(Stats::pdf);
 
     idleRate
-        .name(name() + ".FETCH:idleRate")
+        .name(name() + ".idleRate")
         .desc("Percent of cycles fetch was idle")
         .prereq(idleRate);
     idleRate = fetchIdleCycles * 100 / cpu->numCycles;
 
     branchRate
-        .name(name() + ".FETCH:branchRate")
+        .name(name() + ".branchRate")
         .desc("Number of branch fetches per cycle")
         .flags(Stats::total);
-    branchRate = predictedBranches / cpu->numCycles;
+    branchRate = fetchedBranches / cpu->numCycles;
 
     fetchRate
-        .name(name() + ".FETCH:rate")
+        .name(name() + ".rate")
         .desc("Number of inst fetches per cycle")
         .flags(Stats::total);
     fetchRate = fetchedInsts / cpu->numCycles;
@@ -307,6 +307,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::initStage()
 {
+    // Setup PC and nextPC with initial state.
     for (int tid = 0; tid < numThreads; tid++) {
         PC[tid] = cpu->readPC(tid);
         nextPC[tid] = cpu->readNextPC(tid);
@@ -323,8 +324,6 @@ DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
 
     // Only change the status if it's still waiting on the icache access
     // to return.
-    // Can keep track of how many cache accesses go unused due to
-    // misspeculation here.
     if (fetchStatus[tid] != IcacheMissStall ||
         req != memReq[tid] ||
         isSwitchedOut()) {
@@ -358,6 +357,7 @@ template <class Impl>
 void
 DefaultFetch<Impl>::switchOut()
 {
+    // Fetch is ready to switch out at any time.
     switchedOut = true;
     cpu->signalSwitched();
 }
@@ -366,6 +366,7 @@ template <class Impl>
 void
 DefaultFetch<Impl>::doSwitchOut()
 {
+    // Branch predictor needs to have its state cleared.
     branchPred.switchOut();
 }
 
@@ -396,6 +397,7 @@ DefaultFetch<Impl>::wakeFromQuiesce()
 {
     DPRINTF(Fetch, "Waking up from quiesce\n");
     // Hopefully this is safe
+    // @todo: Allow other threads to wake from quiesce.
     fetchStatus[0] = Running;
 }
 
@@ -831,7 +833,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
         }
     }
 
-    if (checkStall(tid) && fetchStatus[tid] != IcacheMissStall) {
+    if (fetchStatus[tid] != IcacheMissStall && checkStall(tid)) {
         DPRINTF(Fetch, "[tid:%i]: Setting to blocked\n",tid);
 
         fetchStatus[tid] = Blocked;
@@ -1199,7 +1201,7 @@ DefaultFetch<Impl>::lsqCount()
 
         if (fetchStatus[high_pri] == Running ||
             fetchStatus[high_pri] == IcacheMissComplete ||
-           fetchStatus[high_pri] == Idle)
+            fetchStatus[high_pri] == Idle)
             return high_pri;
         else
             PQ.pop();

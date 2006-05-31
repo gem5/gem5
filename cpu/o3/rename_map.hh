@@ -62,12 +62,13 @@ class SimpleRenameMap
     typedef std::pair<PhysRegIndex, PhysRegIndex> RenameInfo;
 
   public:
-    //Constructor
-     SimpleRenameMap() {};
+    /** Default constructor.  init() must be called prior to use. */
+    SimpleRenameMap() {};
 
     /** Destructor. */
     ~SimpleRenameMap();
 
+    /** Initializes rename map with given parameters. */
     void init(unsigned _numLogicalIntRegs,
               unsigned _numPhysicalIntRegs,
               PhysRegIndex &_int_reg_start,
@@ -84,6 +85,7 @@ class SimpleRenameMap
               int id,
               bool bindRegs);
 
+    /** Sets the free list used with this rename map. */
     void setFreeList(SimpleFreeList *fl_ptr);
 
     //Tell rename map to get a free physical register for a given
@@ -149,7 +151,6 @@ class SimpleRenameMap
         { }
     };
 
-    //Change this to private
   private:
     /** Integer rename map. */
     std::vector<RenameEntry> intRenameMap;

@@ -155,10 +155,13 @@ class DefaultRename
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
 
+    /** Switches out the rename stage. */
     void switchOut();
 
+    /** Completes the switch out. */
     void doSwitchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
     /** Squashes all instructions in a thread. */
@@ -243,8 +246,10 @@ class DefaultRename
     /** Checks if any stages are telling rename to block. */
     bool checkStall(unsigned tid);
 
+    /** Gets the number of free entries for a specific thread. */
     void readFreeEntries(unsigned tid);
 
+    /** Checks the signals and updates the status. */
     bool checkSignalsAndUpdate(unsigned tid);
 
     /** Either serializes on the next instruction available in the InstQueue,
@@ -454,8 +459,11 @@ class DefaultRename
     Stats::Scalar<> renameCommittedMaps;
     /** Stat for total number of mappings that were undone due to a squash. */
     Stats::Scalar<> renameUndoneMaps;
+    /** Number of serialize instructions handled. */
     Stats::Scalar<> renamedSerializing;
+    /** Number of instructions marked as temporarily serializing. */
     Stats::Scalar<> renamedTempSerializing;
+    /** Number of instructions inserted into skid buffers. */
     Stats::Scalar<> renameSkidInsts;
 };
 

@@ -477,7 +477,6 @@ LSQUnit<Impl>::commitLoad()
     DPRINTF(LSQUnit, "Committing head load instruction, PC %#x\n",
             loadQueue[loadHead]->readPC());
 
-
     loadQueue[loadHead] = NULL;
 
     incrLdIdx(loadHead);

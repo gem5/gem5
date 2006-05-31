@@ -49,6 +49,7 @@ class LSQ {
     typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::LSQUnit LSQUnit;
 
+    /** SMT policy. */
     enum LSQPolicy {
         Dynamic,
         Partitioned,
@@ -69,8 +70,9 @@ class LSQ {
     void setIEW(IEW *iew_ptr);
     /** Sets the page table pointer. */
 //    void setPageTable(PageTable *pt_ptr);
-
+    /** Switches out the LSQ. */
     void switchOut();
+    /** Takes over execution from another CPU's thread. */
     void takeOverFrom();
 
     /** Number of entries needed for the given amount of threads.*/
@@ -94,9 +96,6 @@ class LSQ {
 
     /** Executes a load. */
     Fault executeLoad(DynInstPtr &inst);
-
-    Fault executeLoad(int lq_idx, unsigned tid)
-    { return thread[tid].executeLoad(lq_idx); }
 
     /** Executes a store. */
     Fault executeStore(DynInstPtr &inst);

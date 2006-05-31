@@ -84,8 +84,10 @@ class MemDepUnit {
     /** Registers statistics. */
     void regStats();
 
+    /** Switches out the memory dependence predictor. */
     void switchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
     /** Sets the pointer to the IQ. */
@@ -155,10 +157,12 @@ class MemDepUnit {
             : inst(new_inst), regsReady(false), memDepReady(false),
               completed(false), squashed(false)
         {
+#ifdef DEBUG
             ++memdep_count;
 
             DPRINTF(MemDepUnit, "Memory dependency entry created.  "
                     "memdep_count=%i\n", memdep_count);
+#endif
         }
 
         /** Frees any pointers. */
@@ -167,11 +171,12 @@ class MemDepUnit {
             for (int i = 0; i < dependInsts.size(); ++i) {
                 dependInsts[i] = NULL;
             }
-
+#ifdef DEBUG
             --memdep_count;
 
             DPRINTF(MemDepUnit, "Memory dependency entry deleted.  "
                     "memdep_count=%i\n", memdep_count);
+#endif
         }
 
         /** Returns the name of the memory dependence entry. */
@@ -196,9 +201,11 @@ class MemDepUnit {
         bool squashed;
 
         /** For debugging. */
+#ifdef DEBUG
         static int memdep_count;
         static int memdep_insert;
         static int memdep_erase;
+#endif
     };
 
     /** Finds the memory dependence entry in the hash map. */
@@ -227,9 +234,13 @@ class MemDepUnit {
      */
     MemDepPred depPred;
 
+    /** Is there an outstanding load barrier that loads must wait on. */
     bool loadBarrier;
+    /** The sequence number of the load barrier. */
     InstSeqNum loadBarrierSN;
+    /** Is there an outstanding store barrier that loads must wait on. */
     bool storeBarrier;
+    /** The sequence number of the store barrier. */
     InstSeqNum storeBarrierSN;
 
     /** Pointer to the IQ. */

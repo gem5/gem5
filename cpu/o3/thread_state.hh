@@ -58,16 +58,26 @@ struct O3ThreadState : public ThreadState {
     typedef ExecContext::Status Status;
     typedef typename Impl::FullCPU FullCPU;
 
+    /** Current status of the thread. */
     Status _status;
 
-    // Current instruction
+    /** Current instruction the thread is committing.  Only set and
+     * used for DTB faults currently.
+     */
     TheISA::MachInst inst;
+
   private:
+    /** Pointer to the CPU. */
     FullCPU *cpu;
   public:
-
+    /** Whether or not the thread is currently in syscall mode, and
+     * thus able to be externally updated without squashing.
+     */
     bool inSyscall;
 
+    /** Whether or not the thread is currently waiting on a trap, and
+     * thus able to be externally updated without squashing.
+     */
     bool trapPending;
 
 #if FULL_SYSTEM
@@ -88,31 +98,44 @@ struct O3ThreadState : public ThreadState {
     { }
 #endif
 
+    /** Pointer to the ExecContext of this thread.  @todo: Don't call
+     this a proxy.*/
     ExecContext *xcProxy;
 
+    /** Returns a pointer to the XC of this thread. */
     ExecContext *getXCProxy() { return xcProxy; }
 
+    /** Returns the status of this thread. */
     Status status() const { return _status; }
 
+    /** Sets the status of this thread. */
     void setStatus(Status new_status) { _status = new_status; }
 
 #if !FULL_SYSTEM
+    /** Returns if this address is a valid instruction address. */
     bool validInstAddr(Addr addr)
     { return process->validInstAddr(addr); }
 
+    /** Returns if this address is a valid data address. */
     bool validDataAddr(Addr addr)
     { return process->validDataAddr(addr); }
 #endif
 
-    bool misspeculating() { return false; }
-
+    /** Sets the current instruction being committed. */
     void setInst(TheISA::MachInst _inst) { inst = _inst; }
 
+    /** Reads the number of instructions functionally executed and
+     * committed.
+     */
     Counter readFuncExeInst() { return funcExeInst; }
 
+    /** Sets the total number of instructions functionally executed
+     * and committed.
+     */
     void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
 
 #if !FULL_SYSTEM
+    /** Handles the syscall. */
     void syscall() { process->syscall(xcProxy); }
 #endif
 };

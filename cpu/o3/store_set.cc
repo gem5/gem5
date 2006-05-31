@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
 #include "base/trace.hh"
 #include "cpu/o3/store_set.hh"
 
@@ -36,12 +37,20 @@ StoreSet::StoreSet(int _SSIT_size, int _LFST_size)
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
             SSITSize, LFSTSize);
 
+    if (!isPowerOf2(SSITSize)) {
+        fatal("Invalid SSIT size!\n");
+    }
+
     SSIT.resize(SSITSize);
 
     validSSIT.resize(SSITSize);
 
     for (int i = 0; i < SSITSize; ++i)
         validSSIT[i] = false;
+
+    if (!isPowerOf2(LFSTSize)) {
+        fatal("Invalid LFST size!\n");
+    }
 
     LFST.resize(LFSTSize);
 
@@ -317,4 +326,20 @@ StoreSet::clear()
     }
 
     storeList.clear();
+}
+
+void
+StoreSet::dump()
+{
+    cprintf("storeList.size(): %i\n", storeList.size());
+    SeqNumMapIt store_list_it = storeList.begin();
+
+    int num = 0;
+
+    while (store_list_it != storeList.end()) {
+        cprintf("%i: [sn:%lli] SSID:%i\n",
+                num, (*store_list_it).first, (*store_list_it).second);
+        num++;
+        store_list_it++;
+    }
 }

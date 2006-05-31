@@ -433,6 +433,7 @@ template <class Impl>
 void
 DefaultIEW<Impl>::switchOut()
 {
+    // IEW is ready to switch out at any time.
     cpu->signalSwitched();
 }
 
@@ -440,6 +441,7 @@ template <class Impl>
 void
 DefaultIEW<Impl>::doSwitchOut()
 {
+    // Clear any state.
     switchedOut = true;
 
     instQueue.switchOut();
@@ -458,6 +460,7 @@ template <class Impl>
 void
 DefaultIEW<Impl>::takeOverFrom()
 {
+    // Reset all state.
     _status = Active;
     exeStatus = Running;
     wbStatus = Idle;
@@ -571,6 +574,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readPC();
 
+    // Must include the broadcasted SN in the squash.
     toCommit->includeSquashInst[tid] = true;
 
     ldstQueue.setLoadBlockedHandled(tid);
@@ -1104,6 +1108,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
                 // Store conditionals need to be set as "canCommit()"
                 // so that commit can process them when they reach the
                 // head of commit.
+                // @todo: This is somewhat specific to Alpha.
                 inst->setCanCommit();
                 instQueue.insertNonSpec(inst);
                 add_to_iq = false;
@@ -1363,6 +1368,7 @@ DefaultIEW<Impl>::executeInsts()
         }
     }
 
+    // Update and record activity if we processed any instructions.
     if (inst_num) {
         if (exeStatus == Idle) {
             exeStatus = Running;
@@ -1413,8 +1419,10 @@ DefaultIEW<Impl>::writebackInsts()
                 scoreboard->setReg(inst->renamedDestRegIdx(i));
             }
 
-            producerInst[tid]++;
-            consumerInst[tid]+= dependents;
+            if (dependents) {
+                producerInst[tid]++;
+                consumerInst[tid]+= dependents;
+            }
             writebackCount[tid]++;
         }
     }
@@ -1485,6 +1493,7 @@ DefaultIEW<Impl>::tick()
 
         DPRINTF(IEW,"Processing [tid:%i]\n",tid);
 
+        // Update structures based on instructions committed.
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&
             !fromCommit->commitInfo[tid].squash &&
             !fromCommit->commitInfo[tid].robSquashing) {
