@@ -45,13 +45,12 @@ Port::setPeer(Port *port)
 void
 Port::blobHelper(Addr addr, uint8_t *p, int size, Packet::Command cmd)
 {
-    Request req(false);
+    Request req;
     Packet pkt(&req, cmd, Packet::Broadcast);
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-        req.setPaddr(gen.addr());
-        req.setSize(gen.size());
+        req.setPhys(gen.addr(), gen.size(), 0);
         pkt.reinitFromRequest();
         pkt.dataStatic(p);
         sendFunctional(&pkt);

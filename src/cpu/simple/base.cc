@@ -357,13 +357,9 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
     DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
             cpuXC->readNextPC(),cpuXC->readNextNPC());
 
-    req->setVaddr(cpuXC->readPC() & ~3);
-    req->setTime(curTick);
-#if FULL_SYSTEM
-    req->setFlags((cpuXC->readPC() & 1) ? PHYSICAL : 0);
-#else
-    req->setFlags(0);
-#endif
+    req->setVirt(0, cpuXC->readPC() & ~3, sizeof(MachInst),
+                 (FULL_SYSTEM && (cpuXC->readPC() & 1)) ? PHYSICAL : 0,
+                 cpuXC->readPC());
 
     Fault fault = cpuXC->translateInstReq(req);
 

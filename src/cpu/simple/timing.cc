@@ -172,12 +172,10 @@ template <class T>
 Fault
 TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    Request *data_read_req = new Request(true);
+    // need to fill in CPU & thread IDs here
+    Request *data_read_req = new Request();
 
-    data_read_req->setVaddr(addr);
-    data_read_req->setSize(sizeof(T));
-    data_read_req->setFlags(flags);
-    data_read_req->setTime(curTick);
+    data_read_req->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
 
     if (traceData) {
         traceData->setAddr(data_read_req->getVaddr());
@@ -255,11 +253,9 @@ template <class T>
 Fault
 TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    Request *data_write_req = new Request(true);
-    data_write_req->setVaddr(addr);
-    data_write_req->setTime(curTick);
-    data_write_req->setSize(sizeof(T));
-    data_write_req->setFlags(flags);
+    // need to fill in CPU & thread IDs here
+    Request *data_write_req = new Request();
+    data_write_req->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
 
     // translate to physical address
     Fault fault = cpuXC->translateDataWriteReq(data_write_req);
@@ -340,8 +336,8 @@ TimingSimpleCPU::fetch()
 {
     checkForInterrupts();
 
-    Request *ifetch_req = new Request(true);
-    ifetch_req->setSize(sizeof(MachInst));
+    // need to fill in CPU & thread IDs here
+    Request *ifetch_req = new Request();
     Fault fault = setupFetchRequest(ifetch_req);
 
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);

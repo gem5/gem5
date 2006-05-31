@@ -95,7 +95,6 @@ base_sources = Split('''
         mem/packet.cc
         mem/physical.cc
         mem/port.cc
-        mem/request.cc
 
 	sim/builder.cc
 	sim/configfile.cc

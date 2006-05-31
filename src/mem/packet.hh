@@ -91,10 +91,8 @@ class Packet
      *   (unlike * addr, size, and src). */
     short dest;
 
-    /** Is the 'addr' field valid? */
-    bool addrValid;
-    /** Is the 'size' field valid? */
-    bool sizeValid;
+    /** Are the 'addr' and 'size' fields valid? */
+    bool addrSizeValid;
     /** Is the 'src' field valid? */
     bool srcValid;
 
@@ -192,11 +190,8 @@ class Packet
     short getDest() const { return dest; }
     void setDest(short _dest) { dest = _dest; }
 
-    Addr getAddr() const { assert(addrValid); return addr; }
-    void setAddr(Addr _addr) { addr = _addr; addrValid = true; }
-
-    int getSize() const { assert(sizeValid); return size; }
-    void setSize(int _size) { size = _size; sizeValid = true; }
+    Addr getAddr() const { assert(addrSizeValid); return addr; }
+    int getSize() const { assert(addrSizeValid); return size; }
 
     /** Constructor.  Note that a Request object must be constructed
      *   first, but the Requests's physical address and size fields
@@ -205,7 +200,7 @@ class Packet
     Packet(Request *_req, Command _cmd, short _dest)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
-           addrValid(_req->validPaddr), sizeValid(_req->validSize),
+           addrSizeValid(_req->validPaddr),
            srcValid(false),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
@@ -223,9 +218,9 @@ class Packet
      *   multiple transactions. */
     void reinitFromRequest() {
         assert(req->validPaddr);
-        setAddr(req->paddr);
-        assert(req->validSize);
-        setSize(req->size);
+        addr = req->paddr;
+        size = req->size;
+        addrSizeValid = true;
         result = Unknown;
         if (dynamicData) {
             deleteData();
