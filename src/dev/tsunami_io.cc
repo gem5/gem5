@@ -447,7 +447,6 @@ TsunamiIO::read(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-    pkt->time += pioDelay;
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(Tsunami, "io read  va=%#x size=%d IOPorrt=%#x\n", pkt->getAddr(),
@@ -511,8 +510,6 @@ TsunamiIO::read(Packet *pkt)
 Tick
 TsunamiIO::write(Packet *pkt)
 {
-    pkt->time += pioDelay;
-
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;

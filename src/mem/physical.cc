@@ -139,8 +139,7 @@ Tick
 PhysicalMemory::doAtomicAccess(Packet *pkt)
 {
     doFunctionalAccess(pkt);
-    pkt->time = curTick + lat;
-    return curTick + lat;
+    return lat;
 }
 
 void

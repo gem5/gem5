@@ -70,8 +70,6 @@ TsunamiPChip::read(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-
-    pkt->time += pioDelay;
     pkt->allocate();
     Addr daddr = (pkt->getAddr() - pioAddr) >> 6;;
     assert(pkt->getSize() == sizeof(uint64_t));
@@ -151,8 +149,6 @@ TsunamiPChip::read(Packet *pkt)
 Tick
 TsunamiPChip::write(Packet *pkt)
 {
-    pkt->time += pioDelay;
-
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = (pkt->getAddr() - pioAddr) >> 6;

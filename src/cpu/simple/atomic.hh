@@ -116,7 +116,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     Packet  *data_write_pkt;
 
     bool dcache_access;
-    Tick dcache_complete;
+    Tick dcache_latency;
 
   public:
 

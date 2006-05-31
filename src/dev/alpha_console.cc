@@ -98,7 +98,6 @@ AlphaConsole::read(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-    pkt->time += pioDelay;
     Addr daddr = pkt->getAddr() - pioAddr;
 
     pkt->allocate();
@@ -191,8 +190,6 @@ AlphaConsole::read(Packet *pkt)
 Tick
 AlphaConsole::write(Packet *pkt)
 {
-    pkt->time += pioDelay;
-
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;

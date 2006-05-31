@@ -80,10 +80,10 @@ PioPort::SendEvent::process()
 bool
 PioPort::recvTiming(Packet *pkt)
 {
-    device->recvAtomic(pkt);
+    Tick latency = device->recvAtomic(pkt);
     // turn packet around to go back to requester
     pkt->makeTimingResponse();
-    sendTiming(pkt, pkt->time - pkt->req->getTime());
+    sendTiming(pkt, latency);
     return true;
 }
 

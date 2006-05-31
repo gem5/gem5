@@ -351,29 +351,21 @@ BaseSimpleCPU::checkForInterrupts()
 
 
 Fault
-BaseSimpleCPU::setupFetchPacket(Packet *ifetch_pkt)
+BaseSimpleCPU::setupFetchRequest(Request *req)
 {
-    // Try to fetch an instruction
-
     // set up memory request for instruction fetch
-
     DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
             cpuXC->readNextPC(),cpuXC->readNextNPC());
 
-    Request *ifetch_req = ifetch_pkt->req;
-    ifetch_req->setVaddr(cpuXC->readPC() & ~3);
-    ifetch_req->setTime(curTick);
+    req->setVaddr(cpuXC->readPC() & ~3);
+    req->setTime(curTick);
 #if FULL_SYSTEM
-    ifetch_req->setFlags((cpuXC->readPC() & 1) ? PHYSICAL : 0);
+    req->setFlags((cpuXC->readPC() & 1) ? PHYSICAL : 0);
 #else
-    ifetch_req->setFlags(0);
+    req->setFlags(0);
 #endif
 
-    Fault fault = cpuXC->translateInstReq(ifetch_req);
-
-    if (fault == NoFault) {
-        ifetch_pkt->reinitFromRequest();
-    }
+    Fault fault = cpuXC->translateInstReq(req);
 
     return fault;
 }

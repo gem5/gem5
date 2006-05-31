@@ -97,20 +97,6 @@ Packet::intersect(Packet *p)
     return false;
 }
 
-/** Minimally reset a packet so something like simple cpu can reuse it. */
-void
-Packet::reset()
-{
-    result = Unknown;
-    if (dynamicData) {
-       deleteData();
-       dynamicData = false;
-       arrayData = false;
-       time = curTick;
-    }
-}
-
-
 bool
 fixPacket(Packet *func, Packet *timing)
 {

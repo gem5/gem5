@@ -165,10 +165,11 @@ class Port
     */
     bool sendTiming(Packet *pkt) { return peer->recvTiming(pkt); }
 
-    /** Function called by the associated device to send an atomic access,
-        an access in which the data is moved and the state is updated in one
-        cycle, without interleaving with other memory accesses.
-    */
+    /** Function called by the associated device to send an atomic
+     *   access, an access in which the data is moved and the state is
+     *   updated in one cycle, without interleaving with other memory
+     *   accesses.  Returns estimated latency of access.
+     */
     Tick sendAtomic(Packet *pkt)
         { return peer->recvAtomic(pkt); }
 

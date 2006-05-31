@@ -250,10 +250,9 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     // Now do the access.
     if (fault == NoFault) {
-        data_read_pkt->reset();
         data_read_pkt->reinitFromRequest();
 
-        dcache_complete = dcachePort.sendAtomic(data_read_pkt);
+        dcache_latency = dcachePort.sendAtomic(data_read_pkt);
         dcache_access = true;
 
         assert(data_read_pkt->result == Packet::Success);
@@ -329,12 +328,11 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Now do the access.
     if (fault == NoFault) {
-        data_write_pkt->reset();
         data = htog(data);
-        data_write_pkt->dataStatic(&data);
         data_write_pkt->reinitFromRequest();
+        data_write_pkt->dataStatic(&data);
 
-        dcache_complete = dcachePort.sendAtomic(data_write_pkt);
+        dcache_latency = dcachePort.sendAtomic(data_write_pkt);
         dcache_access = true;
 
         assert(data_write_pkt->result == Packet::Success);
@@ -411,11 +409,12 @@ AtomicSimpleCPU::tick()
         checkForInterrupts();
 
         ifetch_req->resetMin();
-        ifetch_pkt->reset();
-        Fault fault = setupFetchPacket(ifetch_pkt);
+        Fault fault = setupFetchRequest(ifetch_req);
 
         if (fault == NoFault) {
-            Tick icache_complete = icachePort.sendAtomic(ifetch_pkt);
+            ifetch_pkt->reinitFromRequest();
+
+            Tick icache_latency = icachePort.sendAtomic(ifetch_pkt);
             // ifetch_req is initialized to read the instruction directly
             // into the CPU object's inst field.
 
@@ -430,9 +429,9 @@ AtomicSimpleCPU::tick()
                 // cycle time.  If not, the next tick event may get
                 // scheduled at a non-integer multiple of the CPU
                 // cycle time.
-                Tick icache_stall = icache_complete - curTick - cycles(1);
+                Tick icache_stall = icache_latency - cycles(1);
                 Tick dcache_stall =
-                    dcache_access ? dcache_complete - curTick - cycles(1) : 0;
+                    dcache_access ? dcache_latency - cycles(1) : 0;
                 latency += icache_stall + dcache_stall;
             }
 

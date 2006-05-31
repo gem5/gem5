@@ -129,7 +129,7 @@ class BaseSimpleCPU : public BaseCPU
     StaticInstPtr curStaticInst;
 
     void checkForInterrupts();
-    Fault setupFetchPacket(Packet *ifetch_pkt);
+    Fault setupFetchRequest(Request *req);
     void preExecute();
     void postExecute();
     void advancePC(Fault fault);

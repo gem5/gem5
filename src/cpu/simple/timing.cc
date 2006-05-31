@@ -342,11 +342,11 @@ TimingSimpleCPU::fetch()
 
     Request *ifetch_req = new Request(true);
     ifetch_req->setSize(sizeof(MachInst));
+    Fault fault = setupFetchRequest(ifetch_req);
 
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
-    Fault fault = setupFetchPacket(ifetch_pkt);
     if (fault == NoFault) {
         if (!icachePort.sendTiming(ifetch_pkt)) {
             // Need to wait for retry
