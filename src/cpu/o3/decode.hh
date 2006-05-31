@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_O3_CPU_SIMPLE_DECODE_HH__
-#define __CPU_O3_CPU_SIMPLE_DECODE_HH__
+#ifndef __CPU_O3_DECODE_HH__
+#define __CPU_O3_DECODE_HH__
 
 #include <queue>
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 
+/**
+ * DefaultDecode class handles both single threaded and SMT
+ * decode. Its width is specified by the parameters; each cycles it
+ * tries to decode that many instructions. Because instructions are
+ * actually decoded when the StaticInst is created, this stage does
+ * not do much other than check any PC-relative branches.
+ */
 template<class Impl>
-class SimpleDecode
+class DefaultDecode
 {
   private:
     // Typedefs from the Impl.
@@ -50,49 +57,129 @@ class SimpleDecode
     typedef typename CPUPol::TimeStruct TimeStruct;
 
   public:
-    // The only time decode will become blocked is if dispatch becomes
-    // blocked, which means IQ or ROB is probably full.
-    enum Status {
+    /** Overall decode stage status. Used to determine if the CPU can
+     * deschedule itself due to a lack of activity.
+     */
+    enum DecodeStatus {
+        Active,
+        Inactive
+    };
+
+    /** Individual thread status. */
+    enum ThreadStatus {
         Running,
         Idle,
+        StartSquash,
         Squashing,
         Blocked,
         Unblocking
     };
 
   private:
-    // May eventually need statuses on a per thread basis.
-    Status _status;
+    /** Decode status. */
+    DecodeStatus _status;
+
+    /** Per-thread status. */
+    ThreadStatus decodeStatus[Impl::MaxThreads];
 
   public:
-    SimpleDecode(Params &params);
+    /** DefaultDecode constructor. */
+    DefaultDecode(Params *params);
 
+    /** Returns the name of decode. */
+    std::string name() const;
+
+    /** Registers statistics. */
     void regStats();
 
+    /** Sets CPU pointer. */
     void setCPU(FullCPU *cpu_ptr);
 
+    /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
+    /** Sets pointer to time buffer used to communicate to the next stage. */
     void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
 
+    /** Sets pointer to time buffer coming from fetch. */
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
+    /** Sets pointer to list of active threads. */
+    void setActiveThreads(std::list<unsigned> *at_ptr);
+
+    void switchOut();
+
+    void takeOverFrom();
+    /** Ticks decode, processing all input signals and decoding as many
+     * instructions as possible.
+     */
     void tick();
 
-    void decode();
+    /** Determines what to do based on decode's current status.
+     * @param status_change decode() sets this variable if there was a status
+     * change (ie switching from from blocking to unblocking).
+     * @param tid Thread id to decode instructions from.
+     */
+    void decode(bool &status_change, unsigned tid);
+
+    /** Processes instructions from fetch and passes them on to rename.
+     * Decoding of instructions actually happens when they are created in
+     * fetch, so this function mostly checks if PC-relative branches are
+     * correct.
+     */
+    void decodeInsts(unsigned tid);
 
   private:
+    /** Inserts a thread's instructions into the skid buffer, to be decoded
+     * once decode unblocks.
+     */
+    void skidInsert(unsigned tid);
+
+    /** Returns if all of the skid buffers are empty. */
+    bool skidsEmpty();
+
+    /** Updates overall decode status based on all of the threads' statuses. */
+    void updateStatus();
+
+    /** Separates instructions from fetch into individual lists of instructions
+     * sorted by thread.
+     */
+    void sortInsts();
+
+    /** Reads all stall signals from the backwards communication timebuffer. */
+    void readStallSignals(unsigned tid);
+
+    /** Checks all input signals and updates decode's status appropriately. */
+    bool checkSignalsAndUpdate(unsigned tid);
+
+    /** Checks all stall signals, and returns if any are true. */
+    bool checkStall(unsigned tid) const;
+
+    /** Returns if there any instructions from fetch on this cycle. */
     inline bool fetchInstsValid();
 
-    void block();
+    /** Switches decode to blocking, and signals back that decode has
+     * become blocked.
+     * @return Returns true if there is a status change.
+     */
+    bool block(unsigned tid);
 
-    inline void unblock();
+    /** Switches decode to unblocking if the skid buffer is empty, and
+     * signals back that decode has unblocked.
+     * @return Returns true if there is a status change.
+     */
+    bool unblock(unsigned tid);
 
-    void squash(DynInstPtr &inst);
+    /** Squashes if there is a PC-relative branch that was predicted
+     * incorrectly. Sends squash information back to fetch.
+     */
+    void squash(DynInstPtr &inst, unsigned tid);
 
   public:
-    // Might want to make squash a friend function.
-    void squash();
+    /** Squashes due to commit signalling a squash. Changes status to
+     * squashing and clears block/unblock signals as needed.
+     */
+    unsigned squash(unsigned tid);
 
   private:
     // Interfaces to objects outside of decode.
@@ -127,10 +214,27 @@ class SimpleDecode
     /** Wire to get fetch's output from fetch queue. */
     typename TimeBuffer<FetchStruct>::wire fromFetch;
 
-    /** Skid buffer between fetch and decode. */
-    std::queue<FetchStruct> skidBuffer;
+    /** Queue of all instructions coming from fetch this cycle. */
+    std::queue<DynInstPtr> insts[Impl::MaxThreads];
 
-    //Consider making these unsigned to avoid any confusion.
+    /** Skid buffer between fetch and decode. */
+    std::queue<DynInstPtr> skidBuffer[Impl::MaxThreads];
+
+    /** Variable that tracks if decode has written to the time buffer this
+     * cycle. Used to tell CPU if there is activity this cycle.
+     */
+    bool wroteToTimeBuffer;
+
+    /** Source of possible stalls. */
+    struct Stalls {
+        bool rename;
+        bool iew;
+        bool commit;
+    };
+
+    /** Tracks which stages are telling decode to stall. */
+    Stalls stalls[Impl::MaxThreads];
+
     /** Rename to decode delay, in ticks. */
     unsigned renameToDecodeDelay;
 
@@ -146,20 +250,43 @@ class SimpleDecode
     /** The width of decode, in instructions. */
     unsigned decodeWidth;
 
-    /** The instruction that decode is currently on.  It needs to have
-     *  persistent state so that when a stall occurs in the middle of a
-     *  group of instructions, it can restart at the proper instruction.
-     */
-    unsigned numInst;
+    /** Index of instructions being sent to rename. */
+    unsigned toRenameIndex;
 
+    /** number of Active Threads*/
+    unsigned numThreads;
+
+    /** List of active thread ids */
+    std::list<unsigned> *activeThreads;
+
+    /** Number of branches in flight. */
+    unsigned branchCount[Impl::MaxThreads];
+
+    /** Maximum size of the skid buffer. */
+    unsigned skidBufferMax;
+
+    /** Stat for total number of idle cycles. */
     Stats::Scalar<> decodeIdleCycles;
+    /** Stat for total number of blocked cycles. */
     Stats::Scalar<> decodeBlockedCycles;
+    /** Stat for total number of normal running cycles. */
+    Stats::Scalar<> decodeRunCycles;
+    /** Stat for total number of unblocking cycles. */
     Stats::Scalar<> decodeUnblockCycles;
+    /** Stat for total number of squashing cycles. */
     Stats::Scalar<> decodeSquashCycles;
+    /** Stat for number of times a branch is resolved at decode. */
+    Stats::Scalar<> decodeBranchResolved;
+    /** Stat for number of times a branch mispredict is detected. */
     Stats::Scalar<> decodeBranchMispred;
+    /** Stat for number of times decode detected a non-control instruction
+     * incorrectly predicted as a branch.
+     */
     Stats::Scalar<> decodeControlMispred;
+    /** Stat for total number of decoded instructions. */
     Stats::Scalar<> decodeDecodedInsts;
+    /** Stat for total number of squashed instructions. */
     Stats::Scalar<> decodeSquashedInsts;
 };
 
-#endif // __CPU_O3_CPU_SIMPLE_DECODE_HH__
+#endif // __CPU_O3_DECODE_HH__

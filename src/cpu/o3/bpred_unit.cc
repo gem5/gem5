@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,5 +29,9 @@
 #include "cpu/o3/bpred_unit_impl.hh"
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
+#include "cpu/ozone/ozone_impl.hh"
+#include "cpu/ozone/simple_impl.hh"
 
 template class TwobitBPredUnit<AlphaSimpleImpl>;
+template class TwobitBPredUnit<OzoneImpl>;
+template class TwobitBPredUnit<SimpleImpl>;

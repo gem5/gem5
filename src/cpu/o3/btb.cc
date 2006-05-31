@@ -39,14 +39,15 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
       tagBits(_tagBits),
       instShiftAmt(_instShiftAmt)
 {
-    // @todo Check to make sure num_entries is valid (a power of 2)
-
     DPRINTF(Fetch, "BTB: Creating BTB object.\n");
 
-    btb = new BTBEntry[numEntries];
+    if (!isPowerOf2(numEntries)) {
+        fatal("BTB entries is not a power of 2!");
+    }
 
-    for (int i = 0; i < numEntries; ++i)
-    {
+    btb.resize(numEntries);
+
+    for (int i = 0; i < numEntries; ++i) {
         btb[i].valid = false;
     }
 
@@ -55,6 +56,14 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
     tagMask = (1 << tagBits) - 1;
 
     tagShiftAmt = instShiftAmt + floorLog2(numEntries);
+}
+
+void
+DefaultBTB::reset()
+{
+    for (int i = 0; i < numEntries; ++i) {
+        btb[i].valid = false;
+    }
 }
 
 inline
@@ -73,7 +82,7 @@ DefaultBTB::getTag(const Addr &inst_PC)
 }
 
 bool
-DefaultBTB::valid(const Addr &inst_PC)
+DefaultBTB::valid(const Addr &inst_PC, unsigned tid)
 {
     unsigned btb_idx = getIndex(inst_PC);
 
@@ -81,7 +90,9 @@ DefaultBTB::valid(const Addr &inst_PC)
 
     assert(btb_idx < numEntries);
 
-    if (btb[btb_idx].valid && inst_tag == btb[btb_idx].tag) {
+    if (btb[btb_idx].valid
+        && inst_tag == btb[btb_idx].tag
+        && btb[btb_idx].tid == tid) {
         return true;
     } else {
         return false;
@@ -92,7 +103,7 @@ DefaultBTB::valid(const Addr &inst_PC)
 // address is valid, and also the address.  For now will just use addr = 0 to
 // represent invalid entry.
 Addr
-DefaultBTB::lookup(const Addr &inst_PC)
+DefaultBTB::lookup(const Addr &inst_PC, unsigned tid)
 {
     unsigned btb_idx = getIndex(inst_PC);
 
@@ -100,7 +111,9 @@ DefaultBTB::lookup(const Addr &inst_PC)
 
     assert(btb_idx < numEntries);
 
-    if (btb[btb_idx].valid && inst_tag == btb[btb_idx].tag) {
+    if (btb[btb_idx].valid
+        && inst_tag == btb[btb_idx].tag
+        && btb[btb_idx].tid == tid) {
         return btb[btb_idx].target;
     } else {
         return 0;
@@ -108,12 +121,13 @@ DefaultBTB::lookup(const Addr &inst_PC)
 }
 
 void
-DefaultBTB::update(const Addr &inst_PC, const Addr &target)
+DefaultBTB::update(const Addr &inst_PC, const Addr &target, unsigned tid)
 {
     unsigned btb_idx = getIndex(inst_PC);
 
     assert(btb_idx < numEntries);
 
+    btb[btb_idx].tid = tid;
     btb[btb_idx].valid = true;
     btb[btb_idx].target = target;
     btb[btb_idx].tag = getTag(inst_PC);

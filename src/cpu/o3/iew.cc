@@ -31,4 +31,4 @@
 #include "cpu/o3/iew_impl.hh"
 #include "cpu/o3/inst_queue.hh"
 
-template class SimpleIEW<AlphaSimpleImpl>;
+template class DefaultIEW<AlphaSimpleImpl>;

@@ -30,4 +30,4 @@
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/commit_impl.hh"
 
-template class SimpleCommit<AlphaSimpleImpl>;
+template class DefaultCommit<AlphaSimpleImpl>;

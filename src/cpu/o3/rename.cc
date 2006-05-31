@@ -30,4 +30,4 @@
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/rename_impl.hh"
 
-template class SimpleRename<AlphaSimpleImpl>;
+template class DefaultRename<AlphaSimpleImpl>;

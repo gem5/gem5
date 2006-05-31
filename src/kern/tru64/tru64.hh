@@ -922,7 +922,7 @@ class Tru64 {
             for (int i = 0; i < process->numCpus(); ++i) {
                 ExecContext *xc = process->execContexts[i];
 
-                if (xc->status() == ExecContext::Unallocated) {
+                if (xc->status() == ExecContext::Suspended) {
                     // inactive context... grab it
                     init_exec_context(xc, attrp, uniq_val);
 

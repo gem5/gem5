@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Todo: Find all the stuff in ExecContext and ev5 that needs to be
-// specifically designed for this CPU.
+#ifndef __CPU_O3_ALPHA_FULL_CPU_HH__
+#define __CPU_O3_ALPHA_FULL_CPU_HH__
 
-#ifndef __CPU_O3_CPU_ALPHA_FULL_CPU_HH__
-#define __CPU_O3_CPU_ALPHA_FULL_CPU_HH__
-
-#include "cpu/o3/cpu.hh"
 #include "arch/isa_traits.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
+
+class EndQuiesceEvent;
+namespace Kernel {
+    class Statistics;
+};
 
 template <class Impl>
 class AlphaFullCPU : public FullO3CPU<Impl>
@@ -46,37 +49,180 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     typedef TheISA::MiscRegFile MiscRegFile;
 
   public:
+    typedef O3ThreadState<Impl> ImplState;
+    typedef O3ThreadState<Impl> Thread;
     typedef typename Impl::Params Params;
 
-  public:
-    AlphaFullCPU(Params &params);
+    /** Constructs an AlphaFullCPU with the given parameters. */
+    AlphaFullCPU(Params *params);
+
+    class AlphaXC : public ExecContext
+    {
+      public:
+        AlphaFullCPU<Impl> *cpu;
+
+        O3ThreadState<Impl> *thread;
+
+        virtual BaseCPU *getCpuPtr() { return cpu; }
+
+        virtual void setCpuId(int id) { cpu->cpu_id = id; }
+
+        virtual int readCpuId() { return cpu->cpu_id; }
+
+        virtual FunctionalMemory *getMemPtr() { return thread->mem; }
 
 #if FULL_SYSTEM
+        virtual System *getSystemPtr() { return cpu->system; }
+
+        virtual PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
+
+        virtual AlphaITB *getITBPtr() { return cpu->itb; }
+
+        virtual AlphaDTB * getDTBPtr() { return cpu->dtb; }
+
+        virtual Kernel::Statistics *getKernelStats()
+        { return thread->kernelStats; }
+#else
+        virtual Process *getProcessPtr() { return thread->process; }
+#endif
+
+        virtual Status status() const { return thread->status(); }
+
+        virtual void setStatus(Status new_status)
+        { thread->setStatus(new_status); }
+
+        /// Set the status to Active.  Optional delay indicates number of
+        /// cycles to wait before beginning execution.
+        virtual void activate(int delay = 1);
+
+        /// Set the status to Suspended.
+        virtual void suspend();
+
+        /// Set the status to Unallocated.
+        virtual void deallocate();
+
+        /// Set the status to Halted.
+        virtual void halt();
+
+#if FULL_SYSTEM
+        virtual void dumpFuncProfile();
+#endif
+
+        virtual void takeOverFrom(ExecContext *old_context);
+
+        virtual void regStats(const std::string &name);
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+#if FULL_SYSTEM
+        virtual EndQuiesceEvent *getQuiesceEvent();
+
+        virtual Tick readLastActivate();
+        virtual Tick readLastSuspend();
+
+        virtual void profileClear();
+        virtual void profileSample();
+#endif
+
+        virtual int getThreadNum() { return thread->tid; }
+
+        virtual TheISA::MachInst getInst();
+
+        virtual void copyArchRegs(ExecContext *xc);
+
+        virtual void clearArchRegs();
+
+        virtual uint64_t readIntReg(int reg_idx);
+
+        virtual float readFloatRegSingle(int reg_idx);
+
+        virtual double readFloatRegDouble(int reg_idx);
+
+        virtual uint64_t readFloatRegInt(int reg_idx);
+
+        virtual void setIntReg(int reg_idx, uint64_t val);
+
+        virtual void setFloatRegSingle(int reg_idx, float val);
+
+        virtual void setFloatRegDouble(int reg_idx, double val);
+
+        virtual void setFloatRegInt(int reg_idx, uint64_t val);
+
+        virtual uint64_t readPC()
+        { return cpu->readPC(thread->tid); }
+
+        virtual void setPC(uint64_t val);
+
+        virtual uint64_t readNextPC()
+        { return cpu->readNextPC(thread->tid); }
+
+        virtual void setNextPC(uint64_t val);
+
+        virtual MiscReg readMiscReg(int misc_reg)
+        { return cpu->readMiscReg(misc_reg, thread->tid); }
+
+        virtual MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+        { return cpu->readMiscRegWithEffect(misc_reg, fault, thread->tid); }
+
+        virtual Fault setMiscReg(int misc_reg, const MiscReg &val);
+
+        virtual Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val);
+
+        // @todo: Figure out where these store cond failures should go.
+        virtual unsigned readStCondFailures()
+        { return thread->storeCondFailures; }
+
+        virtual void setStCondFailures(unsigned sc_failures)
+        { thread->storeCondFailures = sc_failures; }
+
+#if FULL_SYSTEM
+        virtual bool inPalMode()
+        { return TheISA::PcPAL(cpu->readPC(thread->tid)); }
+#endif
+
+        // Only really makes sense for old CPU model.  Lots of code
+        // outside the CPU still checks this function, so it will
+        // always return false to keep everything working.
+        virtual bool misspeculating() { return false; }
+
+#if !FULL_SYSTEM
+        virtual IntReg getSyscallArg(int i);
+
+        virtual void setSyscallArg(int i, IntReg val);
+
+        virtual void setSyscallReturn(SyscallReturn return_value);
+
+        virtual void syscall() { return cpu->syscall(thread->tid); }
+
+        virtual Counter readFuncExeInst() { return thread->funcExeInst; }
+#endif
+    };
+
+#if FULL_SYSTEM
+    /** ITB pointer. */
     AlphaITB *itb;
+    /** DTB pointer. */
     AlphaDTB *dtb;
 #endif
 
-  public:
+    /** Registers statistics. */
     void regStats();
 
 #if FULL_SYSTEM
-    //Note that the interrupt stuff from the base CPU might be somewhat
-    //ISA specific (ie NumInterruptLevels).  These functions might not
-    //be needed in FullCPU though.
-//    void post_interrupt(int int_num, int index);
-//    void clear_interrupt(int int_num, int index);
-//    void clear_interrupts();
-
+    /** Translates instruction requestion. */
     Fault translateInstReq(MemReqPtr &req)
     {
         return itb->translate(req);
     }
 
+    /** Translates data read request. */
     Fault translateDataReadReq(MemReqPtr &req)
     {
         return dtb->translate(req, false);
     }
 
+    /** Translates data write request. */
     Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dtb->translate(req, true);
@@ -95,141 +241,113 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         return NoFault;
     }
 
+    /** Translates instruction requestion in syscall emulation mode. */
     Fault translateInstReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
 
+    /** Translates data read request in syscall emulation mode. */
     Fault translateDataReadReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
 
+    /** Translates data write request in syscall emulation mode. */
     Fault translateDataWriteReq(MemReqPtr &req)
     {
         return dummyTranslation(req);
     }
 
 #endif
+    MiscReg readMiscReg(int misc_reg, unsigned tid);
 
-    // Later on may want to remove this misc stuff from the regfile and
-    // have it handled at this level.  Might prove to be an issue when
-    // trying to rename source/destination registers...
-    MiscReg readMiscReg(int misc_reg)
-    {
-        // Dummy function for now.
-        // @todo: Fix this once reg file gets fixed.
-        return 0;
-    }
+    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault, unsigned tid);
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
-    {
-        // Dummy function for now.
-        // @todo: Fix this once reg file gets fixed.
-        return NoFault;
-    }
+    Fault setMiscReg(int misc_reg, const MiscReg &val, unsigned tid);
 
-    // Most of the full system code and syscall emulation is not yet
-    // implemented.  These functions do show what the final interface will
-    // look like.
+    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val, unsigned tid);
+
+    void squashFromXC(unsigned tid);
+
 #if FULL_SYSTEM
+    void post_interrupt(int int_num, int index);
+
     int readIntrFlag();
+    /** Sets the interrupt flags. */
     void setIntrFlag(int val);
-    Fault hwrei();
-    bool inPalMode() { return AlphaISA::PcPAL(this->regFile.readPC()); }
+    /** HW return from error interrupt. */
+    Fault hwrei(unsigned tid);
+    /** Returns if a specific PC is a PAL mode PC. */
     bool inPalMode(uint64_t PC)
     { return AlphaISA::PcPAL(PC); }
 
-    void trap(Fault fault);
-    bool simPalCheck(int palFunc);
+    /** Traps to handle given fault. */
+    void trap(Fault fault, unsigned tid);
+    bool simPalCheck(int palFunc, unsigned tid);
 
+    /** Processes any interrupts. */
     void processInterrupts();
-#endif
 
-
-#if !FULL_SYSTEM
-    // Need to change these into regfile calls that directly set a certain
-    // register.  Actually, these functions should handle most of this
-    // functionality by themselves; should look up the rename and then
-    // set the register.
-    IntReg getSyscallArg(int i)
-    {
-        return this->cpuXC->readIntReg(AlphaISA::ArgumentReg0 + i);
-    }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, IntReg val)
-    {
-        this->cpuXC->setIntReg(AlphaISA::ArgumentReg0 + i, val);
-    }
-
-    void setSyscallReturn(int64_t return_value)
-    {
-        // check for error condition.  Alpha syscall convention is to
-        // indicate success/failure in reg a3 (r19) and put the
-        // return value itself in the standard return value reg (v0).
-        const int RegA3 = 19;	// only place this is used
-        if (return_value >= 0) {
-            // no error
-            this->cpuXC->setIntReg(RegA3, 0);
-            this->cpuXC->setIntReg(AlphaISA::ReturnValueReg, return_value);
-        } else {
-            // got an error, return details
-            this->cpuXC->setIntReg(RegA3, (IntReg) -1);
-            this->cpuXC->setIntReg(AlphaISA::ReturnValueReg, -return_value);
-        }
-    }
-
-    void syscall(short thread_num);
-    void squashStages();
-
-#endif
-
-    void copyToXC();
-    void copyFromXC();
-
-  public:
-#if FULL_SYSTEM
-    bool palShadowEnabled;
-
-    // Not sure this is used anywhere.
-    void intr_post(RegFile *regs, Fault fault, Addr pc);
-    // Actually used within exec files.  Implement properly.
-    void swapPALShadow(bool use_shadow);
-    // Called by CPU constructor.  Can implement as I please.
-    void initCPU(RegFile *regs);
-    // Called by initCPU.  Implement as I please.
-    void initIPRs(RegFile *regs);
-
+    /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }
 #endif
 
 
+#if !FULL_SYSTEM
+    /** Executes a syscall.
+     * @todo: Determine if this needs to be virtual.
+     */
+    void syscall(int thread_num);
+    /** Gets a syscall argument. */
+    IntReg getSyscallArg(int i, int tid);
+
+    /** Used to shift args for indirect syscall. */
+    void setSyscallArg(int i, IntReg val, int tid);
+
+    /** Sets the return value of a syscall. */
+    void setSyscallReturn(SyscallReturn return_value, int tid);
+#endif
+
+    /** Read from memory function. */
     template <class T>
     Fault read(MemReqPtr &req, T &data)
     {
+#if 0
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         if (req->flags & LOCKED) {
             req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
             req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
         }
 #endif
-
+#endif
         Fault error;
+
+#if FULL_SYSTEM
+        // @todo: Fix this LL/SC hack.
+        if (req->flags & LOCKED) {
+            lockAddr = req->paddr;
+            lockFlag = true;
+        }
+#endif
+
         error = this->mem->read(req, data);
         data = gtoh(data);
         return error;
     }
 
+    /** CPU read function, forwards read to LSQ. */
     template <class T>
     Fault read(MemReqPtr &req, T &data, int load_idx)
     {
         return this->iew.ldstQueue.read(req, data, load_idx);
     }
 
+    /** Write to memory function. */
     template <class T>
     Fault write(MemReqPtr &req, T &data)
     {
+#if 0
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
         ExecContext *xc;
 
@@ -276,16 +394,37 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         }
 
 #endif
+#endif
+
+#if FULL_SYSTEM
+        // @todo: Fix this LL/SC hack.
+        if (req->flags & LOCKED) {
+            if (req->flags & UNCACHEABLE) {
+                req->result = 2;
+            } else {
+                if (this->lockFlag) {
+                    req->result = 1;
+                } else {
+                    req->result = 0;
+                    return NoFault;
+                }
+            }
+        }
+#endif
 
         return this->mem->write(req, (T)htog(data));
     }
 
+    /** CPU write function, forwards write to LSQ. */
     template <class T>
     Fault write(MemReqPtr &req, T &data, int store_idx)
     {
         return this->iew.ldstQueue.write(req, data, store_idx);
     }
 
+    Addr lockAddr;
+
+    bool lockFlag;
 };
 
-#endif // __CPU_O3_CPU_ALPHA_FULL_CPU_HH__
+#endif // __CPU_O3_ALPHA_FULL_CPU_HH__
