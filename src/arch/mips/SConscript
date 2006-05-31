@@ -51,11 +51,7 @@ base_sources = Split('''
 # Full-system sources
 full_system_sources = Split('''
 	memory.cc
-	arguments.cc
 	mips34k.cc
-	osfpal.cc
-	stacktrace.cc
-	vtophys.cc
 	''')
 
 # Syscall emulation (non-full-system) sources
