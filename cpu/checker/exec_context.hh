@@ -38,6 +38,13 @@ namespace Kernel {
     class Statistics;
 };
 
+/**
+ * Derived ExecContext class for use with the Checker.  The template
+ * parameter is the ExecContext class used by the specific CPU being
+ * verified.  This CheckerExecContext is then used by the main CPU in
+ * place of its usual ExecContext class.  It handles updating the
+ * checker's state any time state is updated through the ExecContext.
+ */
 template <class XC>
 class CheckerExecContext : public ExecContext
 {

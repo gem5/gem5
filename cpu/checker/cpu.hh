@@ -64,13 +64,28 @@ class MemInterface;
 class Checkpoint;
 class Sampler;
 
+/**
+ * CheckerCPU class.  Dynamically verifies instructions as they are
+ * completed by making sure that the instruction and its results match
+ * the independent execution of the benchmark inside the checker.  The
+ * checker verifies instructions in order, regardless of the order in
+ * which instructions complete.  There are certain results that can
+ * not be verified, specifically the result of a store conditional or
+ * the values of uncached accesses.  In these cases, and with
+ * instructions marked as "IsUnverifiable", the checker assumes that
+ * the value from the main CPU's execution is correct and simply
+ * copies that value.  It provides a CheckerExecContext (see
+ * checker/exec_context.hh) that provides hooks for updating the
+ * Checker's state through any ExecContext accesses.  This allows the
+ * checker to be able to correctly verify instructions, even with
+ * external accesses to the ExecContext that change state.
+ */
 class CheckerCPU : public BaseCPU
 {
   protected:
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscReg MiscReg;
   public:
-    // main simulation loop (one cycle)
     virtual void init();
 
     struct Params : public BaseCPU::Params
@@ -301,6 +316,12 @@ class CheckerCPU : public BaseCPU
     InstSeqNum youngestSN;
 };
 
+/**
+ * Templated Checker class.  This Checker class is templated on the
+ * DynInstPtr of the instruction type that will be verified.  Proper
+ * template instantiations of the Checker must be placed at the bottom
+ * of checker/cpu.cc.
+ */
 template <class DynInstPtr>
 class Checker : public CheckerCPU
 {
