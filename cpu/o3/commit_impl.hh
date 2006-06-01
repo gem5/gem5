@@ -925,7 +925,7 @@ DefaultCommit<Impl>::commitInsts()
     numCommittedDist.sample(num_committed);
 
     if (num_committed == commitWidth) {
-        commitEligibleSamples[0]++;
+        commitEligibleSamples++;
     }
 }
 
