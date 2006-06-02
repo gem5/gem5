@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Nathan Binkert
  */
 
 #include "base/trace.hh"
@@ -143,15 +146,19 @@ void
 DmaPort::recvRetry()
 {
     Packet* pkt = transmitList.front();
-    DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
-               pkt, pkt->senderState);
-    if (sendTiming(pkt)) {
-        DPRINTF(DMA, "-- Done\n");
-        transmitList.pop_front();
-        pendingCount--;
-        assert(pendingCount >= 0);
-    } else {
-        DPRINTF(DMA, "-- Failed, queued\n");
+    bool result = true;
+    while (result && transmitList.size()) {
+        DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
+                   pkt, pkt->senderState);
+        result = sendTiming(pkt);
+        if (result) {
+            DPRINTF(DMA, "-- Done\n");
+            transmitList.pop_front();
+            pendingCount--;
+            assert(pendingCount >= 0);
+        } else {
+            DPRINTF(DMA, "-- Failed, queued\n");
+        }
     }
 }
 
@@ -198,7 +205,7 @@ DmaPort::sendDma(Packet *pkt)
    if (state == Timing) {  */
        DPRINTF(DMA, "Attempting to send Packet %#x with senderState: %#x\n",
                pkt, pkt->senderState);
-       if (!sendTiming(pkt)) {
+       if (transmitList.size() || !sendTiming(pkt)) {
            transmitList.push_back(pkt);
            DPRINTF(DMA, "-- Failed: queued\n");
        } else {
