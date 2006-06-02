@@ -59,6 +59,6 @@ enum OpClass {
 /**
  * Array mapping OpClass enum values to strings.  Defined in op_class.cc.
  */
-extern const char *opClassStrings[];
+extern const char *opClassStrings[Num_OpClasses];
 
 #endif // __CPU__OP_CLASS_HH__

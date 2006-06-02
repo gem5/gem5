@@ -31,6 +31,7 @@
 
 // For Addr type.
 #include "arch/isa_traits.hh"
+#include "base/misc.hh"
 
 class DefaultBTB
 {

@@ -35,6 +35,7 @@
 #include <set>
 #include <vector>
 
+#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
@@ -50,7 +51,7 @@
 template <class>
 class Checker;
 class ExecContext;
-class MemInterface;
+class MemObject;
 class Process;
 
 class BaseFullCPU : public BaseCPU
@@ -63,6 +64,8 @@ class BaseFullCPU : public BaseCPU
 
     void regStats();
 
+    int readCpuId() { return cpu_id; }
+
   protected:
     int cpu_id;
 };
@@ -71,6 +74,9 @@ template <class Impl>
 class FullO3CPU : public BaseFullCPU
 {
   public:
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
+
     // Typedefs from the Impl here.
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
@@ -226,14 +232,6 @@ class FullO3CPU : public BaseFullCPU
     int getDataAsid(unsigned tid)
     { return regFile.miscRegs[tid].getDataAsid(); }
 #else
-    /** Check if this address is a valid instruction address. */
-    bool validInstAddr(Addr addr,unsigned tid)
-    { return thread[tid]->validInstAddr(addr); }
-
-    /** Check if this address is a valid data address. */
-    bool validDataAddr(Addr addr,unsigned tid)
-    { return thread[tid]->validDataAddr(addr); }
-
     /** Get instruction asid. */
     int getInstAsid(unsigned tid)
     { return thread[tid]->asid; }
@@ -259,13 +257,13 @@ class FullO3CPU : public BaseFullCPU
 
     void setIntReg(int reg_idx, uint64_t val);
 
-    void setFloatReg(int reg_idx, FloatReg val, int width);
+    void setFloatReg(int reg_idx, FloatReg val);
 
     void setFloatReg(int reg_idx, FloatReg val, int width);
 
     void setFloatRegBits(int reg_idx, FloatRegBits val);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val);
+    void setFloatRegBits(int reg_idx, FloatRegBits val, int width);
 
     uint64_t readArchIntReg(int reg_idx, unsigned tid);
 
@@ -464,7 +462,7 @@ class FullO3CPU : public BaseFullCPU
 #endif
 
     /** Pointer to memory. */
-    FunctionalMemory *mem;
+    MemObject *mem;
 
     Sampler *sampler;
 

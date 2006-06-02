@@ -229,7 +229,6 @@ BaseCPU::registerExecContexts()
 #else
         xc->setCpuId(xc->getProcessPtr()->registerExecContext(xc));
 #endif
-        }
     }
 }
 

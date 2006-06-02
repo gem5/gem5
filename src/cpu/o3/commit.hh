@@ -34,7 +34,6 @@
 #include "base/timebuf.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
-#include "mem/memory_interface.hh"
 
 template <class>
 class O3ThreadState;
@@ -300,9 +299,6 @@ class DefaultCommit
   private:
     /** Pointer to FullCPU. */
     FullCPU *cpu;
-
-    /** Memory interface.  Used for d-cache accesses. */
-    MemInterface *dcacheInterface;
 
     std::vector<Thread *> thread;
 

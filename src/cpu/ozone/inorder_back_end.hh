@@ -10,8 +10,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"
-#include "mem/mem_interface.hh"
-#include "mem/mem_req.hh"
+#include "mem/request.hh"
 #include "sim/eventq.hh"
 
 template <class Impl>
@@ -85,13 +84,13 @@ class InorderBackEnd
     Fault read(Addr addr, T &data, unsigned flags);
 
     template <class T>
-    Fault read(MemReqPtr &req, T &data, int load_idx);
+    Fault read(RequestPtr req, T &data, int load_idx);
 
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     template <class T>
-    Fault write(MemReqPtr &req, T &data, int store_idx);
+    Fault write(RequestPtr req, T &data, int store_idx);
 
     Addr readCommitPC() { return commitPC; }
 
@@ -142,9 +141,9 @@ class InorderBackEnd
 
     DCacheCompletionEvent cacheCompletionEvent;
 
-    MemInterface *dcacheInterface;
+//    MemInterface *dcacheInterface;
 
-    MemReqPtr memReq;
+    RequestPtr memReq;
 
   private:
     typedef typename std::list<DynInstPtr>::iterator InstListIt;

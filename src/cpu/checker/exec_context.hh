@@ -65,7 +65,7 @@ class CheckerExecContext : public ExecContext
 
     int readCpuId() { return actualXC->readCpuId(); }
 
-    FunctionalMemory *getMemPtr() { return actualXC->getMemPtr(); }
+    TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
 
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualXC->getSystemPtr(); }
@@ -152,14 +152,17 @@ class CheckerExecContext : public ExecContext
     uint64_t readIntReg(int reg_idx)
     { return actualXC->readIntReg(reg_idx); }
 
-    float readFloatRegSingle(int reg_idx)
-    { return actualXC->readFloatRegSingle(reg_idx); }
+    FloatReg readFloatReg(int reg_idx, int width)
+    { return actualXC->readFloatReg(reg_idx, width); }
 
-    double readFloatRegDouble(int reg_idx)
-    { return actualXC->readFloatRegDouble(reg_idx); }
+    FloatReg readFloatReg(int reg_idx)
+    { return actualXC->readFloatReg(reg_idx); }
 
-    uint64_t readFloatRegInt(int reg_idx)
-    { return actualXC->readFloatRegInt(reg_idx); }
+    FloatRegBits readFloatRegBits(int reg_idx, int width)
+    { return actualXC->readFloatRegBits(reg_idx, width); }
+
+    FloatRegBits readFloatRegBits(int reg_idx)
+    { return actualXC->readFloatRegBits(reg_idx); }
 
     void setIntReg(int reg_idx, uint64_t val)
     {
@@ -167,22 +170,28 @@ class CheckerExecContext : public ExecContext
         checkerXC->setIntReg(reg_idx, val);
     }
 
-    void setFloatRegSingle(int reg_idx, float val)
+    void setFloatReg(int reg_idx, FloatReg val, int width)
     {
-        actualXC->setFloatRegSingle(reg_idx, val);
-        checkerXC->setFloatRegSingle(reg_idx, val);
+        actualXC->setFloatReg(reg_idx, val, width);
+        checkerXC->setFloatReg(reg_idx, val, width);
     }
 
-    void setFloatRegDouble(int reg_idx, double val)
+    void setFloatReg(int reg_idx, FloatReg val)
     {
-        actualXC->setFloatRegDouble(reg_idx, val);
-        checkerXC->setFloatRegSingle(reg_idx, val);
+        actualXC->setFloatReg(reg_idx, val);
+        checkerXC->setFloatReg(reg_idx, val);
     }
 
-    void setFloatRegInt(int reg_idx, uint64_t val)
+    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
     {
-        actualXC->setFloatRegInt(reg_idx, val);
-        checkerXC->setFloatRegInt(reg_idx, val);
+        actualXC->setFloatRegBits(reg_idx, val, width);
+        checkerXC->setFloatRegBits(reg_idx, val, width);
+    }
+
+    void setFloatRegBits(int reg_idx, FloatRegBits val)
+    {
+        actualXC->setFloatRegBits(reg_idx, val);
+        checkerXC->setFloatRegBits(reg_idx, val);
     }
 
     uint64_t readPC() { return actualXC->readPC(); }
@@ -200,6 +209,15 @@ class CheckerExecContext : public ExecContext
     {
         actualXC->setNextPC(val);
         checkerXC->setNextPC(val);
+        checkerCPU->recordNextPCChange(val);
+    }
+
+    uint64_t readNextNPC() { return actualXC->readNextNPC(); }
+
+    void setNextNPC(uint64_t val)
+    {
+        actualXC->setNextNPC(val);
+        checkerXC->setNextNPC(val);
         checkerCPU->recordNextPCChange(val);
     }
 
@@ -254,6 +272,12 @@ class CheckerExecContext : public ExecContext
 
     Counter readFuncExeInst() { return actualXC->readFuncExeInst(); }
 #endif
+    void changeRegFileContext(RegFile::ContextParam param,
+            RegFile::ContextVal val)
+    {
+        actualXC->changeRegFileContext(param, val);
+        checkerXC->changeRegFileContext(param, val);
+    }
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

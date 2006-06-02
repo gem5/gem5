@@ -41,7 +41,6 @@
 #include "cpu/ozone/thread_state.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
-#include "mem/mem_interface.hh"
 #include "sim/eventq.hh"
 
 // forward declarations
@@ -69,7 +68,7 @@ class Process;
 
 class Checkpoint;
 class EndQuiesceEvent;
-class MemInterface;
+class Request;
 
 namespace Trace {
     class InstRecord;
@@ -95,6 +94,8 @@ class OzoneCPU : public BaseCPU
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
 
   public:
@@ -110,7 +111,7 @@ class OzoneCPU : public BaseCPU
 
         int readCpuId() { return thread->cpuId; }
 
-        FunctionalMemory *getMemPtr() { return thread->mem; }
+        TranslatingPort *getMemPort() { return /*thread->port*/NULL; }
 
 #if FULL_SYSTEM
         System *getSystemPtr() { return cpu->system; }
@@ -175,25 +176,38 @@ class OzoneCPU : public BaseCPU
 
         uint64_t readIntReg(int reg_idx);
 
-        float readFloatRegSingle(int reg_idx);
+        FloatReg readFloatReg(int reg_idx, int width);
 
-        double readFloatRegDouble(int reg_idx);
+        FloatReg readFloatReg(int reg_idx);
 
-        uint64_t readFloatRegInt(int reg_idx);
+        FloatRegBits readFloatRegBits(int reg_idx, int width);
+
+        FloatRegBits readFloatRegBits(int reg_idx);
 
         void setIntReg(int reg_idx, uint64_t val);
 
-        void setFloatRegSingle(int reg_idx, float val);
+        void setFloatReg(int reg_idx, FloatReg val, int width);
 
-        void setFloatRegDouble(int reg_idx, double val);
+        void setFloatReg(int reg_idx, FloatReg val);
 
-        void setFloatRegInt(int reg_idx, uint64_t val);
+        void setFloatRegBits(int reg_idx, FloatRegBits val, int width);
+
+        void setFloatRegBits(int reg_idx, FloatRegBits val);
 
         uint64_t readPC() { return thread->PC; }
         void setPC(Addr val);
 
         uint64_t readNextPC() { return thread->nextPC; }
         void setNextPC(Addr val);
+
+        uint64_t readNextNPC()
+        {
+            panic("Alpha has no NextNPC!");
+            return 0;
+        }
+
+        void setNextNPC(uint64_t val)
+        { panic("Alpha has no NextNPC!"); }
 
       public:
         // ISA stuff:
@@ -233,6 +247,9 @@ class OzoneCPU : public BaseCPU
         void setFuncExeInst(Counter new_val)
         { thread->funcExeInst = new_val; }
 #endif
+        void changeRegFileContext(TheISA::RegFile::ContextParam param,
+                                          TheISA::RegFile::ContextVal val)
+        { panic("Not supported on Alpha!"); }
     };
 
     // execution context proxy
@@ -350,10 +367,10 @@ class OzoneCPU : public BaseCPU
 #endif
 
     // L1 instruction cache
-    MemInterface *icacheInterface;
+//    MemInterface *icacheInterface;
 
     // L1 data cache
-    MemInterface *dcacheInterface;
+//    MemInterface *dcacheInterface;
 
     /** Pointer to memory. */
     FunctionalMemory *mem;
@@ -427,40 +444,28 @@ class OzoneCPU : public BaseCPU
     int getInstAsid() { return thread.asid; }
     int getDataAsid() { return thread.asid; }
 
-    Fault dummyTranslation(MemReqPtr &req)
-    {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return NoFault;
-    }
-
     /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(Request *req)
     {
-        return dummyTranslation(req);
+        return thread.translateInstReq(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(Request *req)
     {
-        return dummyTranslation(req);
+        return thread.translateDataReadReq(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(Request *req)
     {
-        return dummyTranslation(req);
+        return thread.translateDataWriteReq(req);
     }
 #endif
 
     /** Old CPU read from memory function. No longer used. */
     template <class T>
-    Fault read(MemReqPtr &req, T &data)
+    Fault read(Request *req, T &data)
     {
 #if 0
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
@@ -469,12 +474,12 @@ class OzoneCPU : public BaseCPU
             req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
         }
 #endif
-#endif
-        Fault error;
         if (req->flags & LOCKED) {
             lockAddrList.insert(req->paddr);
             lockFlag = true;
         }
+#endif
+        Fault error;
 
         error = this->mem->read(req, data);
         data = gtoh(data);
@@ -484,14 +489,14 @@ class OzoneCPU : public BaseCPU
 
     /** CPU read function, forwards read to LSQ. */
     template <class T>
-    Fault read(MemReqPtr &req, T &data, int load_idx)
+    Fault read(Request *req, T &data, int load_idx)
     {
         return backEnd->read(req, data, load_idx);
     }
 
     /** Old CPU write to memory function. No longer used. */
     template <class T>
-    Fault write(MemReqPtr &req, T &data)
+    Fault write(Request *req, T &data)
     {
 #if 0
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
@@ -540,7 +545,6 @@ class OzoneCPU : public BaseCPU
         }
 
 #endif
-#endif
 
         if (req->flags & LOCKED) {
             if (req->flags & UNCACHEABLE) {
@@ -560,13 +564,14 @@ class OzoneCPU : public BaseCPU
                 }
             }
         }
+#endif
 
         return this->mem->write(req, (T)htog(data));
     }
 
     /** CPU write function, forwards write to LSQ. */
     template <class T>
-    Fault write(MemReqPtr &req, T &data, int store_idx)
+    Fault write(Request *req, T &data, int store_idx)
     {
         return backEnd->write(req, data, store_idx);
     }

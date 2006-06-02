@@ -31,7 +31,6 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/checker/exec_context.hh"
-#include "mem/mem_interface.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
 
@@ -68,11 +67,9 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         this->thread[i]->setStatus(ExecContext::Suspended);
 #else
         if (i < params->workload.size()) {
-            DPRINTF(FullCPU, "FullCPU: Workload[%i]'s starting PC is %#x, "
-                    "process is %#x",
-                    i, params->workload[i]->prog_entry, this->thread[i]);
+            DPRINTF(FullCPU, "FullCPU: Workload[%i] process is %#x",
+                    i, this->thread[i]);
             this->thread[i] = new Thread(this, i, params->workload[i], i);
-            assert(params->workload[i]->getMemory() != NULL);
 
             this->thread[i]->setStatus(ExecContext::Suspended);
             //usedTids[i] = true;
@@ -160,7 +157,7 @@ void
 AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
 {
     // some things should already be set up
-    assert(getMemPtr() == old_context->getMemPtr());
+    assert(getMemPort() == old_context->getMemPort());
 #if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
 #else
@@ -366,15 +363,14 @@ AlphaFullCPU<Impl>::AlphaXC::copyArchRegs(ExecContext *xc)
     }
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < AlphaISA::NumFloatRegs; ++i)
-    {
-        renamed_reg = this->renameMap.lookup(i + AlphaISA::FP_Base_DepTag);
-        this->cpuXC->setFloatRegBits(i,
-            this->regFile.readFloatRegBits(renamed_reg));
+    for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
+        renamed_reg = cpu->renameMap[tid].lookup(i + AlphaISA::FP_Base_DepTag);
+        cpu->setFloatRegBits(renamed_reg,
+                             xc->readFloatRegBits(i));
     }
 
     // Copy the misc regs.
-    cpu->regFile.miscRegs[tid].copyMiscRegs(xc);
+    copyMiscRegs(xc, this);
 
     // Then finally set the PC and the next PC.
     cpu->setPC(xc->readPC(), tid);
@@ -398,24 +394,40 @@ AlphaFullCPU<Impl>::AlphaXC::readIntReg(int reg_idx)
 }
 
 template <class Impl>
-float
-AlphaFullCPU<Impl>::AlphaXC::readFloatRegSingle(int reg_idx)
+FloatReg
+AlphaFullCPU<Impl>::AlphaXC::readFloatReg(int reg_idx, int width)
+{
+    DPRINTF(Fault, "Reading float register through the XC!\n");
+    switch(width) {
+      case 32:
+        return cpu->readArchFloatRegSingle(reg_idx, thread->tid);
+      case 64:
+        return cpu->readArchFloatRegDouble(reg_idx, thread->tid);
+      default:
+        panic("Unsupported width!");
+        return 0;
+    }
+}
+
+template <class Impl>
+FloatReg
+AlphaFullCPU<Impl>::AlphaXC::readFloatReg(int reg_idx)
 {
     DPRINTF(Fault, "Reading float register through the XC!\n");
     return cpu->readArchFloatRegSingle(reg_idx, thread->tid);
 }
 
 template <class Impl>
-double
-AlphaFullCPU<Impl>::AlphaXC::readFloatRegDouble(int reg_idx)
+FloatRegBits
+AlphaFullCPU<Impl>::AlphaXC::readFloatRegBits(int reg_idx, int width)
 {
-    DPRINTF(Fault, "Reading float register through the XC!\n");
-    return cpu->readArchFloatRegDouble(reg_idx, thread->tid);
+    DPRINTF(Fault, "Reading floatint register through the XC!\n");
+    return cpu->readArchFloatRegInt(reg_idx, thread->tid);
 }
 
 template <class Impl>
-uint64_t
-AlphaFullCPU<Impl>::AlphaXC::readFloatRegInt(int reg_idx)
+FloatRegBits
+AlphaFullCPU<Impl>::AlphaXC::readFloatRegBits(int reg_idx)
 {
     DPRINTF(Fault, "Reading floatint register through the XC!\n");
     return cpu->readArchFloatRegInt(reg_idx, thread->tid);
@@ -435,7 +447,26 @@ AlphaFullCPU<Impl>::AlphaXC::setIntReg(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatRegSingle(int reg_idx, float val)
+AlphaFullCPU<Impl>::AlphaXC::setFloatReg(int reg_idx, FloatReg val, int width)
+{
+    DPRINTF(Fault, "Setting float register through the XC!\n");
+    switch(width) {
+      case 32:
+        cpu->setArchFloatRegSingle(reg_idx, val, thread->tid);
+        break;
+      case 64:
+        cpu->setArchFloatRegDouble(reg_idx, val, thread->tid);
+        break;
+    }
+
+    if (!thread->trapPending && !thread->inSyscall) {
+        cpu->squashFromXC(thread->tid);
+    }
+}
+
+template <class Impl>
+void
+AlphaFullCPU<Impl>::AlphaXC::setFloatReg(int reg_idx, FloatReg val)
 {
     DPRINTF(Fault, "Setting float register through the XC!\n");
     cpu->setArchFloatRegSingle(reg_idx, val, thread->tid);
@@ -447,10 +478,11 @@ AlphaFullCPU<Impl>::AlphaXC::setFloatRegSingle(int reg_idx, float val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatRegDouble(int reg_idx, double val)
+AlphaFullCPU<Impl>::AlphaXC::setFloatRegBits(int reg_idx, FloatRegBits val,
+                                             int width)
 {
-    DPRINTF(Fault, "Setting float register through the XC!\n");
-    cpu->setArchFloatRegDouble(reg_idx, val, thread->tid);
+    DPRINTF(Fault, "Setting floatint register through the XC!\n");
+    cpu->setArchFloatRegInt(reg_idx, val, thread->tid);
 
     if (!thread->trapPending && !thread->inSyscall) {
         cpu->squashFromXC(thread->tid);
@@ -459,7 +491,7 @@ AlphaFullCPU<Impl>::AlphaXC::setFloatRegDouble(int reg_idx, double val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatRegInt(int reg_idx, uint64_t val)
+AlphaFullCPU<Impl>::AlphaXC::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     DPRINTF(Fault, "Setting floatint register through the XC!\n");
     cpu->setArchFloatRegInt(reg_idx, val, thread->tid);
@@ -723,7 +755,7 @@ AlphaFullCPU<Impl>::processInterrupts()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::syscall(int tid)
+AlphaFullCPU<Impl>::syscall(int64_t callnum, int tid)
 {
     DPRINTF(FullCPU, "AlphaFullCPU: [tid:%i] Executing syscall().\n\n", tid);
 
@@ -734,7 +766,7 @@ AlphaFullCPU<Impl>::syscall(int tid)
     ++(this->thread[tid]->funcExeInst);
 
     // Execute the actual syscall.
-    this->thread[tid]->syscall();
+    this->thread[tid]->syscall(callnum);
 
     // Decrease funcExeInst by one as the normal commit will handle
     // incrementing it.

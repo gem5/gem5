@@ -34,7 +34,7 @@
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/ozone/cpu.hh"   // MUST include this
 #include "cpu/inst_seq.hh"
-#include "cpu/ozone/simple_impl.hh" // Would be nice to not have to include this
+//#include "cpu/ozone/simple_impl.hh" // Would be nice to not have to include this
 #include "cpu/ozone/ozone_impl.hh"
 
 #include <list>

@@ -38,7 +38,7 @@
 #include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
-#include "encumbered/cpu/full/op_class.hh"
+#include "cpu/op_class.hh"
 #include "sim/host.hh"
 
 class FUPool;

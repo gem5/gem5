@@ -96,15 +96,13 @@ AlphaDynInst<Impl>::initiateAcc()
 
 template <class Impl>
 Fault
-AlphaDynInst<Impl>::completeAcc()
+AlphaDynInst<Impl>::completeAcc(Packet *pkt)
 {
     if (this->isLoad()) {
-        this->fault = this->staticInst->completeAcc(this->req->data,
-                                                    this,
+        this->fault = this->staticInst->completeAcc(pkt, this,
                                                     this->traceData);
     } else if (this->isStore()) {
-        this->fault = this->staticInst->completeAcc((uint8_t*)&this->req->result,
-                                                    this,
+        this->fault = this->staticInst->completeAcc(pkt, this,
                                                     this->traceData);
     } else {
         panic("Unknown type!");
@@ -168,9 +166,9 @@ AlphaDynInst<Impl>::simPalCheck(int palFunc)
 #else
 template <class Impl>
 void
-AlphaDynInst<Impl>::syscall()
+AlphaDynInst<Impl>::syscall(int64_t callnum)
 {
-    this->cpu->syscall(this->threadNumber);
+    this->cpu->syscall(callnum, this->threadNumber);
 }
 #endif
 

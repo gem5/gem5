@@ -89,7 +89,9 @@ base_sources = Split('''
         cpu/quiesce_event.cc
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
-    
+
+        encumbered/cpu/full/fu_pool.cc
+        
         mem/bridge.cc
         mem/bus.cc
         mem/connector.cc

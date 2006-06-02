@@ -30,8 +30,8 @@
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
 #include "cpu/ozone/ozone_impl.hh"
-#include "cpu/ozone/simple_impl.hh"
+//#include "cpu/ozone/simple_impl.hh"
 
 template class TwobitBPredUnit<AlphaSimpleImpl>;
 template class TwobitBPredUnit<OzoneImpl>;
-template class TwobitBPredUnit<SimpleImpl>;
+//template class TwobitBPredUnit<SimpleImpl>;

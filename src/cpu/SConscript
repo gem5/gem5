@@ -116,6 +116,7 @@ if 'FastCPU' in env['CPU_MODELS']:
 
 if 'AlphaFullCPU' in env['CPU_MODELS']:
     sources += Split('''
+        base_dyn_inst.cc
         o3/2bit_local_pred.cc
         o3/alpha_dyn_inst.cc
         o3/alpha_cpu.cc
@@ -155,7 +156,6 @@ if 'OzoneSimpleCPU' in env['CPU_MODELS']:
 
 if 'OzoneCPU' in env['CPU_MODELS']:
     sources += Split('''
-        ozone/back_end.cc
         ozone/lsq_unit.cc
         ozone/lw_back_end.cc
         ozone/lw_lsq.cc
@@ -164,7 +164,6 @@ if 'OzoneCPU' in env['CPU_MODELS']:
 if 'CheckerCPU' in env['CPU_MODELS']:
     sources += Split('''
         checker/cpu.cc
-        checker/cpu_builder.cc
         checker/o3_cpu_builder.cc
         ''')
 

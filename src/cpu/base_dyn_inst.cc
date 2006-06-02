@@ -36,13 +36,13 @@
 
 #include "arch/faults.hh"
 #include "cpu/exetrace.hh"
-#include "mem/mem_req.hh"
+#include "mem/request.hh"
 
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/alpha_cpu.hh"
-#include "cpu/ozone/simple_impl.hh"
-#include "cpu/ozone/ozone_impl.hh"
+//#include "cpu/ozone/simple_impl.hh"
+//#include "cpu/ozone/ozone_impl.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -94,8 +94,8 @@ void
 BaseDynInst<Impl>::initVars()
 {
     req = NULL;
-    effAddr = MemReq::inval_addr;
-    physEffAddr = MemReq::inval_addr;
+    effAddr = 0;
+    physEffAddr = 0;
     storeSize = 0;
 
     readyRegs = 0;
@@ -198,7 +198,7 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     // This is the "functional" implementation of prefetch.  Not much
     // happens here since prefetches don't affect the architectural
     // state.
-
+/*
     // Generate a MemReq so we can translate the effective address.
     MemReqPtr req = new MemReq(addr, thread->getXCProxy(), 1, flags);
     req->asid = asid;
@@ -226,6 +226,7 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     if (traceData) {
         traceData->setAddr(addr);
     }
+*/
 }
 
 template <class Impl>
@@ -236,6 +237,7 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
     // will casue a TLB miss trap if necessary... not sure whether
     // that's the best thing to do or not.  We don't really need the
     // MemReq otherwise, since wh64 has no functional effect.
+/*
     MemReqPtr req = new MemReq(addr, thread->getXCProxy(), size, flags);
     req->asid = asid;
 
@@ -255,6 +257,7 @@ BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
 
     storeSize = size;
     storeData = 0;
+*/
 }
 
 /**
@@ -264,6 +267,7 @@ template <class Impl>
 Fault
 BaseDynInst<Impl>::copySrcTranslate(Addr src)
 {
+/*
     MemReqPtr req = new MemReq(src, thread->getXCProxy(), 64);
     req->asid = asid;
 
@@ -278,6 +282,8 @@ BaseDynInst<Impl>::copySrcTranslate(Addr src)
         thread->copySrcPhysAddr = 0;
     }
     return fault;
+*/
+    return NoFault;
 }
 
 /**
@@ -287,6 +293,7 @@ template <class Impl>
 Fault
 BaseDynInst<Impl>::copy(Addr dest)
 {
+/*
     uint8_t data[64];
     FunctionalMemory *mem = thread->mem;
     assert(thread->copySrcPhysAddr || thread->misspeculating());
@@ -305,6 +312,8 @@ BaseDynInst<Impl>::copy(Addr dest)
         mem->write(req, data);
     }
     return fault;
+*/
+    return NoFault;
 }
 
 template <class Impl>
@@ -432,7 +441,7 @@ template class BaseDynInst<AlphaSimpleImpl>;
 template <>
 int
 BaseDynInst<AlphaSimpleImpl>::instcount = 0;
-
+/*
 // Forward declaration
 template class BaseDynInst<SimpleImpl>;
 
@@ -446,3 +455,4 @@ template class BaseDynInst<OzoneImpl>;
 template <>
 int
 BaseDynInst<OzoneImpl>::instcount = 0;
+*/

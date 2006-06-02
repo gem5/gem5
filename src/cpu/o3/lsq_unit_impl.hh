@@ -29,23 +29,50 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
+#include "mem/request.hh"
 
-template <class Impl>
-LSQUnit<Impl>::StoreCompletionEvent::StoreCompletionEvent(int store_idx,
-                                                          Event *wb_event,
-                                                          LSQUnit<Impl> *lsq_ptr)
-    : Event(&mainEventQueue),
-      wbEvent(wb_event),
-      storeIdx(store_idx),
-      lsqPtr(lsq_ptr)
+template<class Impl>
+void
+LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 {
-    this->setFlags(Event::AutoDelete);
+/*
+    DPRINTF(IEW, "Load writeback event [sn:%lli]\n", inst->seqNum);
+    DPRINTF(Activity, "Activity: Ld Writeback event [sn:%lli]\n", inst->seqNum);
+
+    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
+
+    if (iewStage->isSwitchedOut()) {
+        inst = NULL;
+        return;
+    } else if (inst->isSquashed()) {
+        iewStage->wakeCPU();
+        inst = NULL;
+        return;
+    }
+
+    iewStage->wakeCPU();
+
+    if (!inst->isExecuted()) {
+        inst->setExecuted();
+
+        // Complete access to copy data to proper place.
+        inst->completeAcc();
+    }
+
+    // Need to insert instruction into queue to commit
+    iewStage->instToCommit(inst);
+
+    iewStage->activityThisCycle();
+
+    inst = NULL;
+*/
 }
 
-template <class Impl>
+template<class Impl>
 void
-LSQUnit<Impl>::StoreCompletionEvent::process()
+LSQUnit<Impl>::completeStoreDataAccess(DynInstPtr &inst)
 {
+/*
     DPRINTF(LSQ, "Cache miss complete for store idx:%i\n", storeIdx);
     DPRINTF(Activity, "Activity: st writeback event idx:%i\n", storeIdx);
 
@@ -55,16 +82,62 @@ LSQUnit<Impl>::StoreCompletionEvent::process()
         return;
 
     lsqPtr->cpu->wakeCPU();
-    if (wbEvent)
-        wbEvent->process();
+
+    if (wb)
+        lsqPtr->completeDataAccess(storeIdx);
     lsqPtr->completeStore(storeIdx);
+*/
 }
 
 template <class Impl>
-const char *
-LSQUnit<Impl>::StoreCompletionEvent::description()
+Tick
+LSQUnit<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
 {
-    return "LSQ store completion event";
+    panic("O3CPU model does not work with atomic mode!");
+    return curTick;
+}
+
+template <class Impl>
+void
+LSQUnit<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
+{
+    panic("O3CPU doesn't expect recvFunctional callback!");
+}
+
+template <class Impl>
+void
+LSQUnit<Impl>::DcachePort::recvStatusChange(Status status)
+{
+    if (status == RangeChange)
+        return;
+
+    panic("O3CPU doesn't expect recvStatusChange callback!");
+}
+
+template <class Impl>
+bool
+LSQUnit<Impl>::DcachePort::recvTiming(PacketPtr pkt)
+{
+    lsq->completeDataAccess(pkt);
+    return true;
+}
+
+template <class Impl>
+void
+LSQUnit<Impl>::DcachePort::recvRetry()
+{
+    panic("Retry unsupported for now!");
+    // we shouldn't get a retry unless we have a packet that we're
+    // waiting to transmit
+/*
+    assert(cpu->dcache_pkt != NULL);
+    assert(cpu->_status == DcacheRetry);
+    PacketPtr tmp = cpu->dcache_pkt;
+    if (sendTiming(tmp)) {
+        cpu->_status = DcacheWaitResponse;
+        cpu->dcache_pkt = NULL;
+    }
+*/
 }
 
 template <class Impl>
@@ -78,7 +151,6 @@ template<class Impl>
 void
 LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
                     unsigned maxSQEntries, unsigned id)
-
 {
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
@@ -100,11 +172,21 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
-    dcacheInterface = params->dcacheInterface;
+    Port *mem_dport = params->mem->getPort("");
+    dcachePort->setPeer(mem_dport);
+    mem_dport->setPeer(dcachePort);
 
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
+}
+
+template<class Impl>
+void
+LSQUnit<Impl>::setCPU(FullCPU *cpu_ptr)
+{
+    cpu = cpu_ptr;
+    dcachePort = new DcachePort(cpu, this);
 }
 
 template<class Impl>
@@ -151,58 +233,6 @@ LSQUnit<Impl>::switchOut()
         loadQueue[i] = NULL;
 
     assert(storesToWB == 0);
-
-    while (storesToWB > 0 &&
-           storeWBIdx != storeTail &&
-           storeQueue[storeWBIdx].inst &&
-           storeQueue[storeWBIdx].canWB) {
-
-        if (storeQueue[storeWBIdx].size == 0 ||
-            storeQueue[storeWBIdx].inst->isDataPrefetch() ||
-            storeQueue[storeWBIdx].committed ||
-            storeQueue[storeWBIdx].req->flags & LOCKED) {
-            incrStIdx(storeWBIdx);
-
-            continue;
-        }
-
-        assert(storeQueue[storeWBIdx].req);
-        assert(!storeQueue[storeWBIdx].committed);
-
-        MemReqPtr req = storeQueue[storeWBIdx].req;
-        storeQueue[storeWBIdx].committed = true;
-
-        req->cmd = Write;
-        req->completionEvent = NULL;
-        req->time = curTick;
-        assert(!req->data);
-        req->data = new uint8_t[64];
-        memcpy(req->data, (uint8_t *)&storeQueue[storeWBIdx].data, req->size);
-
-        DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
-                "to Addr:%#x, data:%#x [sn:%lli]\n",
-                storeWBIdx,storeQueue[storeWBIdx].inst->readPC(),
-                req->paddr, *(req->data),
-                storeQueue[storeWBIdx].inst->seqNum);
-
-        switch(storeQueue[storeWBIdx].size) {
-          case 1:
-            cpu->write(req, (uint8_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 2:
-            cpu->write(req, (uint16_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 4:
-            cpu->write(req, (uint32_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 8:
-            cpu->write(req, (uint64_t &)storeQueue[storeWBIdx].data);
-            break;
-          default:
-            panic("Unexpected store size!\n");
-        }
-        incrStIdx(storeWBIdx);
-    }
 }
 
 template<class Impl>
@@ -380,8 +410,7 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     DPRINTF(LSQUnit, "Executing load PC %#x, [sn:%lli]\n",
             inst->readPC(),inst->seqNum);
 
-//    load_fault = inst->initiateAcc();
-    load_fault = inst->execute();
+    load_fault = inst->initiateAcc();
 
     // If the instruction faulted, then we need to send it along to commit
     // without the instruction completing.
@@ -539,13 +568,13 @@ LSQUnit<Impl>::writebackStores()
 
             continue;
         }
-
+/*
         if (dcacheInterface && dcacheInterface->isBlocked()) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
                     " is blocked!\n");
             break;
         }
-
+*/
         ++usedPorts;
 
         if (storeQueue[storeWBIdx].inst->isDataPrefetch()) {
@@ -557,59 +586,31 @@ LSQUnit<Impl>::writebackStores()
         assert(storeQueue[storeWBIdx].req);
         assert(!storeQueue[storeWBIdx].committed);
 
-        MemReqPtr req = storeQueue[storeWBIdx].req;
+        DynInstPtr inst = storeQueue[storeWBIdx].inst;
+
+        Request *req = storeQueue[storeWBIdx].req;
         storeQueue[storeWBIdx].committed = true;
 
-        req->cmd = Write;
-        req->completionEvent = NULL;
-        req->time = curTick;
-        assert(!req->data);
-        req->data = new uint8_t[64];
-        memcpy(req->data, (uint8_t *)&storeQueue[storeWBIdx].data, req->size);
+        assert(!inst->memData);
+        inst->memData = new uint8_t[64];
+        memcpy(inst->memData, (uint8_t *)&storeQueue[storeWBIdx].data, req->getSize());
+
+        PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        data_pkt->dataStatic(inst->memData);
 
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
-                storeWBIdx,storeQueue[storeWBIdx].inst->readPC(),
-                req->paddr, *(req->data),
+                storeWBIdx, storeQueue[storeWBIdx].inst->readPC(),
+                req->getPaddr(), *(inst->memData),
                 storeQueue[storeWBIdx].inst->seqNum);
 
-        switch(storeQueue[storeWBIdx].size) {
-          case 1:
-            cpu->write(req, (uint8_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 2:
-            cpu->write(req, (uint16_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 4:
-            cpu->write(req, (uint32_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 8:
-            cpu->write(req, (uint64_t &)storeQueue[storeWBIdx].data);
-            break;
-          default:
-            panic("Unexpected store size!\n");
-        }
-
-        // Stores other than store conditionals are completed at this
-        // time.  Mark them as completed and, if we have a checker,
-        // tell it that the instruction is completed.
-        // @todo: Figure out what time I can say stores are complete in
-        // the timing memory.
-        if (!(req->flags & LOCKED)) {
-            storeQueue[storeWBIdx].inst->setCompleted();
-            if (cpu->checker) {
-                cpu->checker->tick(storeQueue[storeWBIdx].inst);
-            }
-        }
-
-        if (dcacheInterface) {
-            assert(!req->completionEvent);
+        if (!dcachePort->sendTiming(data_pkt)) {
+            // Need to handle becoming blocked on a store.
+        } else {
+            /*
             StoreCompletionEvent *store_event = new
                 StoreCompletionEvent(storeWBIdx, NULL, this);
-            req->completionEvent = store_event;
-
-            MemAccessResult result = dcacheInterface->access(req);
-
+            */
             if (isStalled() &&
                 storeQueue[storeWBIdx].inst->seqNum == stallingStoreIsn) {
                 DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
@@ -619,19 +620,19 @@ LSQUnit<Impl>::writebackStores()
                 stallingStoreIsn = 0;
                 iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
             }
-
-            typename IEW::LdWritebackEvent *wb = NULL;
+/*
+            typename LdWritebackEvent *wb = NULL;
             if (req->flags & LOCKED) {
                 // Stx_C should not generate a system port transaction
                 // if it misses in the cache, but that might be hard
                 // to accomplish without explicit cache support.
                 wb = new typename
-                    IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
-                                              iewStage);
+                    LdWritebackEvent(storeQueue[storeWBIdx].inst,
+                                     iewStage);
                 store_event->wbEvent = wb;
             }
-
-            if (result != MA_HIT && dcacheInterface->doEvents()) {
+*/
+            if (data_pkt->result != Packet::Success) {
                 DPRINTF(LSQUnit,"D-Cache Write Miss on idx:%i!\n",
                         storeWBIdx);
 
@@ -652,8 +653,6 @@ LSQUnit<Impl>::writebackStores()
             }
 
             incrStIdx(storeWBIdx);
-        } else {
-            panic("Must HAVE DCACHE!!!!!\n");
         }
     }
 
@@ -746,12 +745,6 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         storeQueue[store_idx].inst->squashed = true;
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
-
-        if (storeQueue[store_idx].req) {
-            // There should not be a completion event if the store has
-            // not yet committed.
-            assert(!storeQueue[store_idx].req->completionEvent);
-        }
 
         storeQueue[store_idx].req = NULL;
         --stores;

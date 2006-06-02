@@ -32,14 +32,15 @@
 #include <list>
 #include <string>
 
+#include "arch/faults.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
-#include "encumbered/cpu/full/op_class.hh"
-#include "mem/functional/memory_control.hh"
+#include "mem/packet.hh"
 #include "sim/system.hh"
 /*
 #include "encumbered/cpu/full/bpred_update.hh"
@@ -197,7 +198,11 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Fault fault;
 
     /** The memory request. */
-    MemReqPtr req;
+//    MemReqPtr req;
+    Request *req;
+//    Packet pkt;
+
+    uint8_t *memData;
 
     /** The effective virtual address (lds & stores only). */
     Addr effAddr;
@@ -287,12 +292,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
      *  @param p Memory accessed.
      *  @param nbytes Access size.
      */
-    void
-    trace_mem(Fault fault,
-              MemCmd cmd,
-              Addr addr,
-              void *p,
-              int nbytes);
+//    void
+//    trace_mem(Fault fault,
+//	      MemCmd cmd,
+//	      Addr addr,
+//	      void *p,
+//	      int nbytes);
 
     /** Dumps out contents of this BaseDynInst. */
     void dump();
@@ -601,7 +606,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
 
     /** Returns the effective address. */
-    const Addr &getEA() const { return req->vaddr; }
+    const Addr &getEA() const { return instEffAddr; }
 
     /** Returns whether or not the eff. addr. calculation has been completed. */
     bool doneEACalc() { return eaCalcDone; }
@@ -637,25 +642,25 @@ inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
     if (executed) {
+        panic("Not supposed to re-execute with split mem ops!");
         fault = cpu->read(req, data, lqIdx);
         return fault;
     }
 
-    req = new MemReq(addr, thread->getXCProxy(), sizeof(T), flags);
-    req->asid = asid;
-    req->thread_num = threadNumber;
-    req->pc = this->PC;
+    req = new Request();
+    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
+    req->setThreadContext(thread->cpuId, threadNumber);
 
-    if ((req->vaddr & (TheISA::VMPageSize - 1)) + req->size >
+    if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {
         return TheISA::genAlignmentFault();
     }
 
     fault = cpu->translateDataReadReq(req);
 
-    effAddr = req->vaddr;
-    physEffAddr = req->paddr;
-    memReqFlags = req->flags;
+    effAddr = req->getVaddr();
+    physEffAddr = req->getPaddr();
+    memReqFlags = req->getFlags();
 
     if (fault == NoFault) {
 #if FULL_SYSTEM
@@ -697,22 +702,20 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
 
-    req = new MemReq(addr, thread->getXCProxy(), sizeof(T), flags);
+    req = new Request();
+    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
+    req->setThreadContext(thread->cpuId, threadNumber);
 
-    req->asid = asid;
-    req->thread_num = threadNumber;
-    req->pc = this->PC;
-
-    if ((req->vaddr & (TheISA::VMPageSize - 1)) + req->size >
+    if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {
         return TheISA::genAlignmentFault();
     }
 
     fault = cpu->translateDataWriteReq(req);
 
-    effAddr = req->vaddr;
-    physEffAddr = req->paddr;
-    memReqFlags = req->flags;
+    effAddr = req->getVaddr();
+    physEffAddr = req->getPaddr();
+    memReqFlags = req->getFlags();
 
     if (fault == NoFault) {
 #if FULL_SYSTEM
@@ -729,7 +732,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     if (res) {
         // always return some result to keep misspeculated paths
         // (which will ignore faults) deterministic
-        *res = (fault == NoFault) ? req->result : 0;
+        *res = (fault == NoFault) ? req->getScResult() : 0;
     }
 
     return fault;

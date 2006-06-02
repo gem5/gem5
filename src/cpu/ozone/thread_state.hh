@@ -68,7 +68,7 @@ struct OzoneThreadState : public ThreadState {
     }
 #else
     OzoneThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(-1, _thread_num, _process->getMemory(), _process, _asid),
+        : ThreadState(-1, _thread_num, NULL, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
         memset(&regs, 0, sizeof(TheISA::RegFile));
@@ -109,42 +109,30 @@ struct OzoneThreadState : public ThreadState {
     ExecContext *getXCProxy() { return xcProxy; }
 
 #if !FULL_SYSTEM
-
-    Fault dummyTranslation(MemReqPtr &req)
+    Fault translateInstReq(Request *req)
     {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return NoFault;
+        return process->pTable->translate(req);
     }
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateDataReadReq(Request *req)
     {
-        return dummyTranslation(req);
+        return process->pTable->translate(req);
     }
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataWriteReq(Request *req)
     {
-        return dummyTranslation(req);
-    }
-    Fault translateDataWriteReq(MemReqPtr &req)
-    {
-        return dummyTranslation(req);
+        return process->pTable->translate(req);
     }
 #else
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(Request *req)
     {
         return cpu->itb->translate(req);
     }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(Request *req)
     {
         return cpu->dtb->translate(req, false);
     }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(Request *req)
     {
         return cpu->dtb->translate(req, true);
     }
@@ -152,22 +140,22 @@ struct OzoneThreadState : public ThreadState {
 
     MiscReg readMiscReg(int misc_reg)
     {
-        return regs.miscRegs.readReg(misc_reg);
+        return regs.readMiscReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return regs.miscRegs.readRegWithEffect(misc_reg, fault, xcProxy);
+        return regs.readMiscRegWithEffect(misc_reg, fault, xcProxy);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return regs.miscRegs.setReg(misc_reg, val);
+        return regs.setMiscReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return regs.miscRegs.setRegWithEffect(misc_reg, val, xcProxy);
+        return regs.setMiscRegWithEffect(misc_reg, val, xcProxy);
     }
 
     uint64_t readPC()

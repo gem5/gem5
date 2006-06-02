@@ -29,6 +29,7 @@
 #ifndef __CPU_O3_SAT_COUNTER_HH__
 #define __CPU_O3_SAT_COUNTER_HH__
 
+#include "base/misc.hh"
 #include "sim/host.hh"
 
 /**

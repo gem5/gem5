@@ -39,11 +39,15 @@ namespace Kernel {
     class Statistics;
 };
 
+class TranslatingPort;
+
 template <class Impl>
 class AlphaFullCPU : public FullO3CPU<Impl>
 {
   protected:
     typedef TheISA::IntReg IntReg;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::RegFile RegFile;
     typedef TheISA::MiscRegFile MiscRegFile;
@@ -69,7 +73,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         virtual int readCpuId() { return cpu->cpu_id; }
 
-        virtual FunctionalMemory *getMemPtr() { return thread->mem; }
+        virtual TranslatingPort *getMemPort() { return /*thread->port*/ NULL; }
 
 #if FULL_SYSTEM
         virtual System *getSystemPtr() { return cpu->system; }
@@ -135,19 +139,23 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         virtual uint64_t readIntReg(int reg_idx);
 
-        virtual float readFloatRegSingle(int reg_idx);
+        virtual FloatReg readFloatReg(int reg_idx, int width);
 
-        virtual double readFloatRegDouble(int reg_idx);
+        virtual FloatReg readFloatReg(int reg_idx);
 
-        virtual uint64_t readFloatRegInt(int reg_idx);
+        virtual FloatRegBits readFloatRegBits(int reg_idx, int width);
+
+        virtual FloatRegBits readFloatRegBits(int reg_idx);
 
         virtual void setIntReg(int reg_idx, uint64_t val);
 
-        virtual void setFloatRegSingle(int reg_idx, float val);
+        virtual void setFloatReg(int reg_idx, FloatReg val, int width);
 
-        virtual void setFloatRegDouble(int reg_idx, double val);
+        virtual void setFloatReg(int reg_idx, FloatReg val);
 
-        virtual void setFloatRegInt(int reg_idx, uint64_t val);
+        virtual void setFloatRegBits(int reg_idx, FloatRegBits val, int width);
+
+        virtual void setFloatRegBits(int reg_idx, FloatRegBits val);
 
         virtual uint64_t readPC()
         { return cpu->readPC(thread->tid); }
@@ -158,6 +166,15 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         { return cpu->readNextPC(thread->tid); }
 
         virtual void setNextPC(uint64_t val);
+
+        virtual uint64_t readNextNPC()
+        {
+            panic("Alpha has no NextNPC!");
+            return 0;
+        }
+
+        virtual void setNextNPC(uint64_t val)
+        { panic("Alpha has no NextNPC!"); }
 
         virtual MiscReg readMiscReg(int misc_reg)
         { return cpu->readMiscReg(misc_reg, thread->tid); }
@@ -193,10 +210,14 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         virtual void setSyscallReturn(SyscallReturn return_value);
 
-        virtual void syscall() { return cpu->syscall(thread->tid); }
+        virtual void syscall(int64_t callnum)
+        { return cpu->syscall(callnum, thread->tid); }
 
         virtual Counter readFuncExeInst() { return thread->funcExeInst; }
 #endif
+        virtual void changeRegFileContext(TheISA::RegFile::ContextParam param,
+                                          TheISA::RegFile::ContextVal val)
+        { panic("Not supported on Alpha!"); }
     };
 
 #if FULL_SYSTEM
@@ -211,52 +232,43 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
 #if FULL_SYSTEM
     /** Translates instruction requestion. */
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(RequestPtr &req)
     {
         return itb->translate(req);
     }
 
     /** Translates data read request. */
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(RequestPtr &req)
     {
         return dtb->translate(req, false);
     }
 
     /** Translates data write request. */
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req)
     {
         return dtb->translate(req, true);
     }
 
 #else
-    Fault dummyTranslation(MemReqPtr &req)
-    {
-#if 0
-        assert((req->vaddr >> 48 & 0xffff) == 0);
-#endif
-
-        // put the asid in the upper 16 bits of the paddr
-        req->paddr = req->vaddr & ~((Addr)0xffff << sizeof(Addr) * 8 - 16);
-        req->paddr = req->paddr | (Addr)req->asid << sizeof(Addr) * 8 - 16;
-        return NoFault;
-    }
-
     /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(RequestPtr &req)
     {
-        return dummyTranslation(req);
+        int tid = req->getThreadNum();
+        return this->thread[tid]->process->pTable->translate(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(RequestPtr &req)
     {
-        return dummyTranslation(req);
+        int tid = req->getThreadNum();
+        return this->thread[tid]->process->pTable->translate(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req)
     {
-        return dummyTranslation(req);
+        int tid = req->getThreadNum();
+        return this->thread[tid]->process->pTable->translate(req);
     }
 
 #endif
@@ -298,7 +310,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     /** Executes a syscall.
      * @todo: Determine if this needs to be virtual.
      */
-    void syscall(int thread_num);
+    void syscall(int64_t callnum, int thread_num);
     /** Gets a syscall argument. */
     IntReg getSyscallArg(int i, int tid);
 
@@ -311,7 +323,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
     /** Read from memory function. */
     template <class T>
-    Fault read(MemReqPtr &req, T &data)
+    Fault read(RequestPtr &req, T &data)
     {
 #if 0
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
@@ -338,14 +350,14 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
     /** CPU read function, forwards read to LSQ. */
     template <class T>
-    Fault read(MemReqPtr &req, T &data, int load_idx)
+    Fault read(RequestPtr &req, T &data, int load_idx)
     {
         return this->iew.ldstQueue.read(req, data, load_idx);
     }
 
     /** Write to memory function. */
     template <class T>
-    Fault write(MemReqPtr &req, T &data)
+    Fault write(RequestPtr &req, T &data)
     {
 #if 0
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
@@ -417,7 +429,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
     /** CPU write function, forwards write to LSQ. */
     template <class T>
-    Fault write(MemReqPtr &req, T &data, int store_idx)
+    Fault write(RequestPtr &req, T &data, int store_idx)
     {
         return this->iew.ldstQueue.write(req, data, store_idx);
     }

@@ -27,12 +27,13 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/fetch.hh"
-#include "mem/base_mem.hh"
-#include "mem/mem_interface.hh"
-#include "mem/mem_req.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 #include "sim/byteswap.hh"
+#include "sim/host.hh"
 #include "sim/root.hh"
 
 #if FULL_SYSTEM
@@ -42,42 +43,67 @@
 #include "mem/functional/memory_control.hh"
 #include "mem/functional/physical.hh"
 #include "sim/system.hh"
-#else // !FULL_SYSTEM
-#include "mem/functional/functional.hh"
 #endif // FULL_SYSTEM
 
 #include <algorithm>
 
 using namespace std;
+using namespace TheISA;
 
 template<class Impl>
-DefaultFetch<Impl>::CacheCompletionEvent::CacheCompletionEvent(MemReqPtr &_req,
-                                                               DefaultFetch *_fetch)
-    : Event(&mainEventQueue, Delayed_Writeback_Pri),
-      req(_req),
-      fetch(_fetch)
+Tick
+DefaultFetch<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
 {
-    this->setFlags(Event::AutoDelete);
+    panic("DefaultFetch doesn't expect recvAtomic callback!");
+    return curTick;
 }
 
 template<class Impl>
 void
-DefaultFetch<Impl>::CacheCompletionEvent::process()
+DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    fetch->processCacheCompletion(req);
+    panic("DefaultFetch doesn't expect recvFunctional callback!");
 }
 
 template<class Impl>
-const char *
-DefaultFetch<Impl>::CacheCompletionEvent::description()
+void
+DefaultFetch<Impl>::IcachePort::recvStatusChange(Status status)
 {
-    return "DefaultFetch cache completion event";
+    if (status == RangeChange)
+        return;
+
+    panic("DefaultFetch doesn't expect recvStatusChange callback!");
+}
+
+template<class Impl>
+bool
+DefaultFetch<Impl>::IcachePort::recvTiming(Packet *pkt)
+{
+    fetch->processCacheCompletion(pkt);
+    return true;
+}
+
+template<class Impl>
+void
+DefaultFetch<Impl>::IcachePort::recvRetry()
+{
+    panic("DefaultFetch doesn't support retry yet.");
+    // we shouldn't get a retry unless we have a packet that we're
+    // waiting to transmit
+/*
+    assert(cpu->dcache_pkt != NULL);
+    assert(cpu->_status == DcacheRetry);
+    Packet *tmp = cpu->dcache_pkt;
+    if (sendTiming(tmp)) {
+        cpu->_status = DcacheWaitResponse;
+        cpu->dcache_pkt = NULL;
+    }
+*/
 }
 
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(Params *params)
-    : icacheInterface(params->icacheInterface),
-      branchPred(params),
+    : branchPred(params),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -122,7 +148,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
     }
 
     // Size of cache block.
-    cacheBlkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
+    cacheBlkSize = 64;
 
     // Create mask to get rid of offset bits.
     cacheBlkMask = (cacheBlkSize - 1);
@@ -133,8 +159,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         priorityList.push_back(tid);
 
-        // Create a new memory request.
-        memReq[tid] = NULL;
+        memPkt[tid] = NULL;
 
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
@@ -253,6 +278,9 @@ DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
     DPRINTF(Fetch, "Setting the CPU pointer.\n");
     cpu = cpu_ptr;
 
+    // Name is finally available, so create the port.
+    icachePort = new IcachePort(this);
+
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
     switchToActive();
@@ -315,9 +343,9 @@ DefaultFetch<Impl>::initStage()
 
 template<class Impl>
 void
-DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
+DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 {
-    unsigned tid = req->thread_num;
+    unsigned tid = pkt->req->getThreadNum();
 
     DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n",tid);
 
@@ -325,10 +353,11 @@ DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
     // to return.
     // Can keep track of how many cache accesses go unused due to
     // misspeculation here.
-    if (fetchStatus[tid] != IcacheMissStall ||
-        req != memReq[tid] ||
+    if (fetchStatus[tid] != IcacheWaitResponse ||
+        pkt != memPkt[tid] ||
         isSwitchedOut()) {
         ++fetchIcacheSquashes;
+        delete pkt;
         return;
     }
 
@@ -341,17 +370,19 @@ DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
 
     switchToActive();
 
-    // Only switch to IcacheMissComplete if we're not stalled as well.
+    // Only switch to IcacheAccessComplete if we're not stalled as well.
     if (checkStall(tid)) {
         fetchStatus[tid] = Blocked;
     } else {
-        fetchStatus[tid] = IcacheMissComplete;
+        fetchStatus[tid] = IcacheAccessComplete;
     }
 
 //    memcpy(cacheData[tid], memReq[tid]->data, memReq[tid]->size);
 
     // Reset the mem req to NULL.
-    memReq[tid] = NULL;
+    delete pkt->req;
+    delete pkt;
+    memPkt[tid] = NULL;
 }
 
 template <class Impl>
@@ -475,18 +506,15 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
-    memReq[tid] = new MemReq();
+    // Build request here.
+    RequestPtr mem_req = new Request(tid, fetch_PC, cacheBlkSize, flags,
+                                     fetch_PC, cpu->readCpuId(), tid);
 
-    memReq[tid]->asid = tid;
-    memReq[tid]->thread_num = tid;
-    memReq[tid]->data = new uint8_t[64];
-    memReq[tid]->xc = cpu->xcBase(tid);
-    memReq[tid]->cmd = Read;
-    memReq[tid]->reset(fetch_PC, cacheBlkSize, flags);
+    memPkt[tid] = NULL;
 
     // Translate the instruction request.
 //#if FULL_SYSTEM
-    fault = cpu->translateInstReq(memReq[tid]);
+    fault = cpu->translateInstReq(mem_req);
 //#else
 //    fault = pTable->translate(memReq[tid]);
 //#endif
@@ -508,48 +536,31 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         }
 #endif
 
+        // Build packet here.
+        PacketPtr data_pkt = new Packet(mem_req,
+                                        Packet::ReadReq, Packet::Broadcast);
+        data_pkt->dataStatic(cacheData[tid]);
+
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
-        fault = cpu->mem->read(memReq[tid], cacheData[tid]);
-        // This read may change when the mem interface changes.
+
+        fetchedCacheLines++;
 
         // Now do the timing access to see whether or not the instruction
         // exists within the cache.
-        if (icacheInterface && !icacheInterface->isBlocked()) {
-            DPRINTF(Fetch, "Doing cache access.\n");
-
-            memReq[tid]->completionEvent = NULL;
-
-            memReq[tid]->time = curTick;
-
-            MemAccessResult result = icacheInterface->access(memReq[tid]);
-
-            fetchedCacheLines++;
-
-            // If the cache missed, then schedule an event to wake
-            // up this stage once the cache miss completes.
-            // @todo: Possibly allow for longer than 1 cycle cache hits.
-            if (result != MA_HIT && icacheInterface->doEvents()) {
-
-                memReq[tid]->completionEvent =
-                    new CacheCompletionEvent(memReq[tid], this);
-
-                lastIcacheStall[tid] = curTick;
-
-                DPRINTF(Activity, "[tid:%i]: Activity: Stalling due to I-cache "
-                        "miss.\n", tid);
-
-                fetchStatus[tid] = IcacheMissStall;
-            } else {
-                DPRINTF(Fetch, "[tid:%i]: I-Cache hit. Doing Instruction "
-                        "read.\n", tid);
-
-//                memcpy(cacheData[tid], memReq[tid]->data, memReq[tid]->size);
-            }
-        } else {
+        if (!icachePort->sendTiming(data_pkt)) {
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
             ret_fault = NoFault;
             return false;
         }
+
+        DPRINTF(Fetch, "Doing cache access.\n");
+
+        lastIcacheStall[tid] = curTick;
+
+        DPRINTF(Activity, "[tid:%i]: Activity: Waiting on I-cache "
+                "response.\n", tid);
+
+        fetchStatus[tid] = IcacheWaitResponse;
     }
 
     ret_fault = fault;
@@ -567,10 +578,11 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
     nextPC[tid] = new_PC + instSize;
 
     // Clear the icache miss if it's outstanding.
-    if (fetchStatus[tid] == IcacheMissStall && icacheInterface) {
+    if (fetchStatus[tid] == IcacheWaitResponse) {
         DPRINTF(Fetch, "[tid:%i]: Squashing outstanding Icache miss.\n",
                 tid);
-        memReq[tid] = NULL;
+        delete memPkt[tid];
+        memPkt[tid] = NULL;
     }
 
     fetchStatus[tid] = Squashing;
@@ -632,12 +644,12 @@ DefaultFetch<Impl>::updateFetchStatus()
 
         if (fetchStatus[tid] == Running ||
             fetchStatus[tid] == Squashing ||
-            fetchStatus[tid] == IcacheMissComplete) {
+            fetchStatus[tid] == IcacheAccessComplete) {
 
             if (_status == Inactive) {
                 DPRINTF(Activity, "[tid:%i]: Activating stage.\n",tid);
 
-                if (fetchStatus[tid] == IcacheMissComplete) {
+                if (fetchStatus[tid] == IcacheAccessComplete) {
                     DPRINTF(Activity, "[tid:%i]: Activating fetch due to cache"
                             "completion\n",tid);
                 }
@@ -831,7 +843,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
         }
     }
 
-    if (checkStall(tid) && fetchStatus[tid] != IcacheMissStall) {
+    if (checkStall(tid) && fetchStatus[tid] != IcacheWaitResponse) {
         DPRINTF(Fetch, "[tid:%i]: Setting to blocked\n",tid);
 
         fetchStatus[tid] = Blocked;
@@ -882,7 +894,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // If returning from the delay of a cache miss, then update the status
     // to running, otherwise do the cache access.  Possibly move this up
     // to tick() function.
-    if (fetchStatus[tid] == IcacheMissComplete) {
+    if (fetchStatus[tid] == IcacheAccessComplete) {
         DPRINTF(Fetch, "[tid:%i]: Icache miss is complete.\n",
                 tid);
 
@@ -905,11 +917,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             ++fetchBlockedCycles;
         } else if (fetchStatus[tid] == Squashing) {
             ++fetchSquashCycles;
-        } else if (fetchStatus[tid] == IcacheMissStall) {
+        } else if (fetchStatus[tid] == IcacheWaitResponse) {
             ++icacheStallCycles;
         }
 
-        // Status is Idle, Squashing, Blocked, or IcacheMissStall, so
+        // Status is Idle, Squashing, Blocked, or IcacheWaitResponse, so
         // fetch should do nothing.
         return;
     }
@@ -917,7 +929,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     ++fetchCycles;
 
     // If we had a stall due to an icache miss, then return.
-    if (fetchStatus[tid] == IcacheMissStall) {
+    if (fetchStatus[tid] == IcacheWaitResponse) {
         ++icacheStallCycles;
         status_change = true;
         return;
@@ -1026,7 +1038,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     } else {
         // We shouldn't be in an icache miss and also have a fault (an ITB
         // miss)
-        if (fetchStatus[tid] == IcacheMissStall) {
+        if (fetchStatus[tid] == IcacheWaitResponse) {
             panic("Fetch should have exited prior to this!");
         }
 
@@ -1107,7 +1119,7 @@ DefaultFetch<Impl>::getFetchingThread(FetchPriority &fetch_priority)
         int tid = *((*activeThreads).begin());
 
         if (fetchStatus[tid] == Running ||
-            fetchStatus[tid] == IcacheMissComplete ||
+            fetchStatus[tid] == IcacheAccessComplete ||
             fetchStatus[tid] == Idle) {
             return tid;
         } else {
@@ -1133,7 +1145,7 @@ DefaultFetch<Impl>::roundRobin()
         assert(high_pri <= numThreads);
 
         if (fetchStatus[high_pri] == Running ||
-            fetchStatus[high_pri] == IcacheMissComplete ||
+            fetchStatus[high_pri] == IcacheAccessComplete ||
             fetchStatus[high_pri] == Idle) {
 
             priorityList.erase(pri_iter);
@@ -1167,7 +1179,7 @@ DefaultFetch<Impl>::iqCount()
         unsigned high_pri = PQ.top();
 
         if (fetchStatus[high_pri] == Running ||
-            fetchStatus[high_pri] == IcacheMissComplete ||
+            fetchStatus[high_pri] == IcacheAccessComplete ||
             fetchStatus[high_pri] == Idle)
             return high_pri;
         else
@@ -1198,7 +1210,7 @@ DefaultFetch<Impl>::lsqCount()
         unsigned high_pri = PQ.top();
 
         if (fetchStatus[high_pri] == Running ||
-            fetchStatus[high_pri] == IcacheMissComplete ||
+            fetchStatus[high_pri] == IcacheAccessComplete ||
            fetchStatus[high_pri] == Idle)
             return high_pri;
         else

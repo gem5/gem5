@@ -33,7 +33,6 @@
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/alpha_params.hh"
 #include "cpu/o3/fu_pool.hh"
-#include "mem/cache/base_cache.hh"
 #include "sim/builder.hh"
 
 class DerivAlphaFullCPU : public AlphaFullCPU<AlphaSimpleImpl>
@@ -60,7 +59,7 @@ SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
 
-SimObjectParam<FunctionalMemory *> mem;
+SimObjectParam<MemObject *> mem;
 
 SimObjectParam<BaseCPU *> checker;
 
@@ -68,9 +67,6 @@ Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
 Param<Counter> max_loads_all_threads;
-
-SimObjectParam<BaseCache *> icache;
-SimObjectParam<BaseCache *> dcache;
 
 Param<unsigned> cachePorts;
 
@@ -169,7 +165,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
 //    INIT_PARAM(page_table, "Page table"),
 #endif // FULL_SYSTEM
 
-    INIT_PARAM_DFLT(mem, "Memory", NULL),
+    INIT_PARAM(mem, "Memory"),
 
     INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
 
@@ -187,9 +183,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
                     "Terminate when all threads have reached this load"
                     "count",
                     0),
-
-    INIT_PARAM_DFLT(icache, "L1 instruction cache", NULL),
-    INIT_PARAM_DFLT(dcache, "L1 data cache", NULL),
 
     INIT_PARAM_DFLT(cachePorts, "Cache Ports", 200),
 
@@ -327,8 +320,6 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     //
     // Caches
     //
-    params->icacheInterface = icache ? icache->getInterface() : NULL;
-    params->dcacheInterface = dcache ? dcache->getInterface() : NULL;
     params->cachePorts = cachePorts;
 
     params->decodeToFetchDelay = decodeToFetchDelay;

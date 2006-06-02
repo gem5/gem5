@@ -36,7 +36,7 @@
 #include "cpu/inst_seq.hh"
 //#include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/lsq_unit.hh"
-#include "mem/mem_interface.hh"
+#include "mem/port.hh"
 //#include "mem/page_table.hh"
 #include "sim/sim_object.hh"
 
@@ -259,13 +259,13 @@ class LSQ {
 
     /** Executes a read operation, using the load specified at the load index. */
     template <class T>
-    Fault read(MemReqPtr &req, T &data, int load_idx);
+    Fault read(RequestPtr req, T &data, int load_idx);
 
     /** Executes a store operation, using the store specified at the store
      *   index.
      */
     template <class T>
-    Fault write(MemReqPtr &req, T &data, int store_idx);
+    Fault write(RequestPtr req, T &data, int store_idx);
 
   private:
     /** The LSQ policy for SMT mode. */
@@ -304,9 +304,9 @@ class LSQ {
 template <class Impl>
 template <class T>
 Fault
-LSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
+LSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
 {
-    unsigned tid = req->thread_num;
+    unsigned tid = req->getThreadNum();
 
     return thread[tid].read(req, data, load_idx);
 }
@@ -314,9 +314,9 @@ LSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 template <class Impl>
 template <class T>
 Fault
-LSQ<Impl>::write(MemReqPtr &req, T &data, int store_idx)
+LSQ<Impl>::write(RequestPtr req, T &data, int store_idx)
 {
-    unsigned tid = req->thread_num;
+    unsigned tid = req->getThreadNum();
 
     return thread[tid].write(req, data, store_idx);
 }

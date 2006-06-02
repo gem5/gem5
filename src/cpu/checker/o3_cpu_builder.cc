@@ -5,10 +5,11 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
 #include "cpu/o3/alpha_impl.hh"
-#include "mem/base_mem.hh"
 #include "sim/builder.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"
+
+class MemObject;
 
 class O3Checker : public Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >
 {
@@ -32,7 +33,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    SimObjectParam<FunctionalMemory *> mem;
+    SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
@@ -40,8 +41,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
     Param<int> clock;
-    SimObjectParam<BaseMem *> icache;
-    SimObjectParam<BaseMem *> dcache;
 
     Param<bool> defer_registration;
     Param<bool> exitOnError;
@@ -73,8 +72,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
 #endif // FULL_SYSTEM
 
     INIT_PARAM(clock, "clock speed"),
-    INIT_PARAM(icache, "L1 instruction cache object"),
-    INIT_PARAM(dcache, "L1 data cache object"),
 
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(exitOnError, "exit on error"),
@@ -105,8 +102,6 @@ CREATE_SIM_OBJECT(O3Checker)
     temp = max_insts_all_threads;
     temp = max_loads_any_thread;
     temp = max_loads_all_threads;
-    BaseMem *cache = icache;
-    cache = dcache;
 
 #if FULL_SYSTEM
     params->itb = itb;

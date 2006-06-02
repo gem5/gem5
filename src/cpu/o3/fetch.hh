@@ -29,10 +29,12 @@
 #ifndef __CPU_O3_FETCH_HH__
 #define __CPU_O3_FETCH_HH__
 
+#include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/pc_event.hh"
-#include "mem/mem_interface.hh"
+#include "mem/packet.hh"
+#include "mem/port.hh"
 #include "sim/eventq.hh"
 
 class Sampler;
@@ -65,6 +67,32 @@ class DefaultFetch
     typedef TheISA::MachInst MachInst;
     typedef TheISA::ExtMachInst ExtMachInst;
 
+    class IcachePort : public Port
+    {
+      protected:
+        DefaultFetch<Impl> *fetch;
+
+      public:
+        IcachePort(DefaultFetch<Impl> *_fetch)
+            : Port(_fetch->name() + "-iport"), fetch(_fetch)
+        { }
+
+      protected:
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        virtual void recvFunctional(PacketPtr pkt);
+
+        virtual void recvStatusChange(Status status);
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); }
+
+        virtual bool recvTiming(PacketPtr pkt);
+
+        virtual void recvRetry();
+    };
+
   public:
     /** Overall fetch status. Used to determine if the CPU can
      * deschedule itsef due to a lack of activity.
@@ -84,8 +112,9 @@ class DefaultFetch
         TrapPending,
         QuiescePending,
         SwitchOut,
-        IcacheMissStall,
-        IcacheMissComplete
+        IcacheWaitResponse,
+        IcacheRetry,
+        IcacheAccessComplete
     };
 
     /** Fetching Policy, Add new policies here.*/
@@ -109,28 +138,6 @@ class DefaultFetch
 
     /** List that has the threads organized by priority. */
     std::list<unsigned> priorityList;
-
-  public:
-    class CacheCompletionEvent : public Event
-    {
-      private:
-        MemReqPtr req;
-        /** Pointer to fetch. */
-        DefaultFetch *fetch;
-        /** Thread id. */
-//        unsigned threadId;
-
-      public:
-        /** Constructs a cache completion event, which tells fetch when the
-         * cache miss is complete.
-         */
-        CacheCompletionEvent(MemReqPtr &_req, DefaultFetch *_fetch);
-
-        /** Processes cache completion event. */
-        virtual void process();
-        /** Returns the description of the cache completion event. */
-        virtual const char *description();
-    };
 
   public:
     /** DefaultFetch constructor. */
@@ -161,7 +168,7 @@ class DefaultFetch
     void initStage();
 
     /** Processes cache completion event. */
-    void processCacheCompletion(MemReqPtr &req);
+    void processCacheCompletion(PacketPtr pkt);
 
     void switchOut();
 
@@ -295,8 +302,10 @@ class DefaultFetch
     /** Wire used to write any information heading to decode. */
     typename TimeBuffer<FetchStruct>::wire toDecode;
 
+    MemObject *mem;
+
     /** Icache interface. */
-    MemInterface *icacheInterface;
+    IcachePort *icachePort;
 
     /** BPredUnit. */
     BPredUnit branchPred;
@@ -305,8 +314,8 @@ class DefaultFetch
 
     Addr nextPC[Impl::MaxThreads];
 
-    /** Memory request used to access cache. */
-    MemReqPtr memReq[Impl::MaxThreads];
+    /** Memory packet used to access cache. */
+    PacketPtr memPkt[Impl::MaxThreads];
 
     /** Variable that tracks if fetch has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.

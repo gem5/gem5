@@ -43,9 +43,9 @@
 #include "cpu/o3/alpha_dyn_inst.hh"
 #include "cpu/o3/alpha_impl.hh"
 
-#include "cpu/ozone/dyn_inst.hh"
-#include "cpu/ozone/ozone_impl.hh"
-#include "cpu/ozone/simple_impl.hh"
+//#include "cpu/ozone/dyn_inst.hh"
+//#include "cpu/ozone/ozone_impl.hh"
+//#include "cpu/ozone/simple_impl.hh"
 
 #if FULL_SYSTEM
 #include "sim/system.hh"
@@ -64,10 +64,8 @@ CheckerCPU::init()
 CheckerCPU::CheckerCPU(Params *p)
     : BaseCPU(p), cpuXC(NULL), xcProxy(NULL)
 {
-    memReq = new MemReq();
-    memReq->xc = xcProxy;
-    memReq->asid = 0;
-    memReq->data = new uint8_t[64];
+    memReq = new Request();
+//    memReq->data = new uint8_t[64];
 
     numInst = 0;
     startNumInst = 0;
@@ -91,12 +89,12 @@ CheckerCPU::~CheckerCPU()
 }
 
 void
-CheckerCPU::setMemory(FunctionalMemory *mem)
+CheckerCPU::setMemory(MemObject *mem)
 {
     memPtr = mem;
 #if !FULL_SYSTEM
-    cpuXC = new CPUExecContext(this, /* thread_num */ 0, mem,
-                               /* asid */ 0);
+    cpuXC = new CPUExecContext(this, /* thread_num */ 0, NULL,
+                               /* asid */ 0, mem);
 
     cpuXC->setStatus(ExecContext::Suspended);
     xcProxy = cpuXC->getProxy();
@@ -172,6 +170,7 @@ template <class T>
 Fault
 CheckerCPU::read(Addr addr, T &data, unsigned flags)
 {
+/*
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
@@ -189,7 +188,7 @@ CheckerCPU::read(Addr addr, T &data, unsigned flags)
         // Assume the data is correct if it's an uncached access
         memcpy(&data, &unverifiedResult.integer, sizeof(T));
     }
-
+*/
     return NoFault;
 }
 
@@ -238,6 +237,7 @@ template <class T>
 Fault
 CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
+/*
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
@@ -280,7 +280,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // value.
     if (res)
         *res = unverifiedReq->result;
-
+        */
     return NoFault;
 }
 
@@ -335,7 +335,7 @@ CheckerCPU::dbg_vtophys(Addr addr)
 #endif // FULL_SYSTEM
 
 bool
-CheckerCPU::translateInstReq(MemReqPtr &req)
+CheckerCPU::translateInstReq(Request *req)
 {
 #if FULL_SYSTEM
     return (cpuXC->translateInstReq(req) == NoFault);
@@ -346,53 +346,53 @@ CheckerCPU::translateInstReq(MemReqPtr &req)
 }
 
 void
-CheckerCPU::translateDataReadReq(MemReqPtr &req)
+CheckerCPU::translateDataReadReq(Request *req)
 {
     cpuXC->translateDataReadReq(req);
 
-    if (req->vaddr != unverifiedReq->vaddr) {
+    if (req->getVaddr() != unverifiedReq->getVaddr()) {
         warn("%lli: Request virtual addresses do not match! Inst: %#x, "
              "checker: %#x",
-             curTick, unverifiedReq->vaddr, req->vaddr);
+             curTick, unverifiedReq->getVaddr(), req->getVaddr());
         handleError();
     }
-    req->paddr = unverifiedReq->paddr;
+    req->setPaddr(unverifiedReq->getPaddr());
 
     if (checkFlags(req)) {
         warn("%lli: Request flags do not match! Inst: %#x, checker: %#x",
-             curTick, unverifiedReq->flags, req->flags);
+             curTick, unverifiedReq->getFlags(), req->getFlags());
         handleError();
     }
 }
 
 void
-CheckerCPU::translateDataWriteReq(MemReqPtr &req)
+CheckerCPU::translateDataWriteReq(Request *req)
 {
     cpuXC->translateDataWriteReq(req);
 
-    if (req->vaddr != unverifiedReq->vaddr) {
+    if (req->getVaddr() != unverifiedReq->getVaddr()) {
         warn("%lli: Request virtual addresses do not match! Inst: %#x, "
              "checker: %#x",
-             curTick, unverifiedReq->vaddr, req->vaddr);
+             curTick, unverifiedReq->getVaddr(), req->getVaddr());
         handleError();
     }
-    req->paddr = unverifiedReq->paddr;
+    req->setPaddr(unverifiedReq->getPaddr());
 
     if (checkFlags(req)) {
         warn("%lli: Request flags do not match! Inst: %#x, checker: %#x",
-             curTick, unverifiedReq->flags, req->flags);
+             curTick, unverifiedReq->getFlags(), req->getFlags());
         handleError();
     }
 }
 
 bool
-CheckerCPU::checkFlags(MemReqPtr &req)
+CheckerCPU::checkFlags(Request *req)
 {
     // Remove any dynamic flags that don't have to do with the request itself.
-    unsigned flags = unverifiedReq->flags;
+    unsigned flags = unverifiedReq->getFlags();
     unsigned mask = LOCKED | PHYSICAL | VPTE | ALTMODE | UNCACHEABLE | NO_FAULT;
     flags = flags & (mask);
-    if (flags == req->flags) {
+    if (flags == req->getFlags()) {
         return false;
     } else {
         return true;
@@ -495,9 +495,9 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 #endif
 
         // set up memory request for instruction fetch
-        memReq->cmd = Read;
-        memReq->reset(cpuXC->readPC() & ~3, sizeof(uint32_t),
-                      IFETCH_FLAGS(cpuXC->readPC()));
+//        memReq->cmd = Read;
+//        memReq->reset(cpuXC->readPC() & ~3, sizeof(uint32_t),
+//                      IFETCH_FLAGS(cpuXC->readPC()));
 
         bool succeeded = translateInstReq(memReq);
 
@@ -526,7 +526,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         }
 
         if (fault == NoFault) {
-            cpuXC->mem->read(memReq, machInst);
+//            cpuXC->read(memReq, machInst);
 
             // keep an instruction count
             numInst++;
@@ -674,7 +674,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
             if (idx < TheISA::FP_Base_DepTag) {
                 cpuXC->setIntReg(idx, inst->readIntResult());
             } else if (idx < TheISA::Fpcr_DepTag) {
-                cpuXC->setFloatRegInt(idx, inst->readIntResult());
+                cpuXC->setFloatRegBits(idx, inst->readIntResult());
             } else {
                 cpuXC->setMiscReg(idx, inst->readIntResult());
             }
@@ -750,8 +750,8 @@ Checker<DynInstPtr>::dumpInsts()
 
 }
 
-template
-class Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >;
+//template
+//class Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >;
 
 template
 class Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >;

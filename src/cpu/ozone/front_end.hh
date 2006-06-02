@@ -34,7 +34,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/rename_table.hh"
-#include "mem/mem_req.hh"
+#include "mem/request.hh"
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
 
@@ -85,7 +85,7 @@ class FrontEnd
                 const bool is_branch = false, const bool branch_taken = false);
     DynInstPtr getInst();
 
-    void processCacheCompletion(MemReqPtr &req);
+    void processCacheCompletion(Packet *pkt);
 
     void addFreeRegs(int num_freed);
 
@@ -159,26 +159,39 @@ class FrontEnd
 
     BranchPred branchPred;
 
-    class ICacheCompletionEvent : public Event
+    class IcachePort : public Port
     {
-      private:
-        MemReqPtr req;
-        FrontEnd *frontEnd;
+      protected:
+        FrontEnd *fe;
 
       public:
-        ICacheCompletionEvent(MemReqPtr &_req, FrontEnd *_fe);
+        IcachePort(const std::string &_name, FrontEnd *_fe)
+            : Port(_name), fe(_fe)
+        { }
 
-        virtual void process();
-        virtual const char *description();
+      protected:
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        virtual void recvFunctional(PacketPtr pkt);
+
+        virtual void recvStatusChange(Status status);
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); }
+
+        virtual bool recvTiming(PacketPtr pkt);
+
+        virtual void recvRetry();
     };
 
-    MemInterface *icacheInterface;
+    IcachePort icachePort;
 
 #if !FULL_SYSTEM
     PageTable *pTable;
 #endif
 
-    MemReqPtr memReq;
+    RequestPtr memReq;
 
     /** Mask to get a cache block's address. */
     Addr cacheBlkMask;

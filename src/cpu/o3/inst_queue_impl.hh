@@ -64,8 +64,7 @@ InstructionQueue<Impl>::FUCompletion::description()
 
 template <class Impl>
 InstructionQueue<Impl>::InstructionQueue(Params *params)
-    : dcacheInterface(params->dcacheInterface),
-      fuPool(params->fuPool),
+    : fuPool(params->fuPool),
       numEntries(params->numIQEntries),
       totalWidth(params->issueWidth),
       numPhysIntRegs(params->numPhysIntRegs),

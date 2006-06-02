@@ -35,7 +35,7 @@
 #include <vector>
 
 #include "base/sched_list.hh"
-#include "encumbered/cpu/full/op_class.hh"
+#include "cpu/op_class.hh"
 #include "sim/sim_object.hh"
 
 class FUDesc;

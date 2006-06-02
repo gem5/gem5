@@ -29,10 +29,13 @@
 #ifndef __CPU_O3_ALPHA_DYN_INST_HH__
 #define __CPU_O3_ALPHA_DYN_INST_HH__
 
+#include "arch/isa_traits.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/alpha_cpu.hh"
 #include "cpu/o3/alpha_impl.hh"
+
+class Packet;
 
 /**
  * Mostly implementation & ISA specific AlphaDynInst. As with most
@@ -56,6 +59,8 @@ class AlphaDynInst : public BaseDynInst<Impl>
     typedef TheISA::RegIndex RegIndex;
     /** Integer register index type. */
     typedef TheISA::IntReg   IntReg;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     /** Misc register index type. */
     typedef TheISA::MiscReg  MiscReg;
 
@@ -79,7 +84,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     Fault initiateAcc();
 
     /** Completes the access.  Only valid for memory operations. */
-    Fault completeAcc();
+    Fault completeAcc(Packet *pkt);
 
   private:
     /** Initializes variables. */
@@ -123,7 +128,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     bool simPalCheck(int palFunc);
 #else
     /** Calls a syscall. */
-    void syscall();
+    void syscall(int64_t callnum);
 #endif
 
   private:

@@ -31,6 +31,7 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/faults.hh"
+#include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
@@ -44,9 +45,8 @@
 
 /**
  * Simple physical register file class.
- * This really only depends on the ISA, and not the Impl. Things that are
- * in the ifdef FULL_SYSTEM are pretty dependent on the ISA, and probably
- * should go in the AlphaFullCPU.
+ * Right now this is specific to Alpha until we decide if/how to make things
+ * generic enough to support other ISAs.
  */
 template <class Impl>
 class PhysRegFile
@@ -54,8 +54,15 @@ class PhysRegFile
   protected:
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
+
+    typedef union {
+        FloatReg d;
+        FloatRegBits q;
+    } PhysFloatReg;
+
     // Note that most of the definitions of the IntReg, FloatReg, etc. exist
     // within the Impl/ISA class and not within this PhysRegFile class.
 
@@ -97,7 +104,7 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        FloatReg floatReg = floatRegFile.readReg(reg_idx, width);
+        FloatReg floatReg = floatRegFile[reg_idx].d;
 
         DPRINTF(IEW, "RegFile: Access to %d byte float register %i, has "
                 "data %8.8d\n", int(reg_idx), (double)floatReg);
@@ -113,7 +120,7 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        FloatReg floatReg = floatRegFile.readReg(reg_idx);
+        FloatReg floatReg = floatRegFile[reg_idx].d;
 
         DPRINTF(IEW, "RegFile: Access to float register %i, has "
                 "data %8.8d\n", int(reg_idx), (double)floatReg);
@@ -129,7 +136,7 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        FloatRegBits floatRegBits = floatRegFile.readRegBits(reg_idx, width);
+        FloatRegBits floatRegBits = floatRegFile[reg_idx].q;
 
         DPRINTF(IEW, "RegFile: Access to %d byte float register %i as int, "
                 "has data %lli\n", int(reg_idx), (uint64_t)floatRegBits);
@@ -144,7 +151,7 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        FloatRegBits floatRegBits = floatRegFile.readRegBits(reg_idx);
+        FloatRegBits floatRegBits = floatRegFile[reg_idx].q;
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
                 "has data %lli\n", int(reg_idx), (uint64_t)floatRegBits);
@@ -176,7 +183,7 @@ class PhysRegFile
                 int(reg_idx), (double)val);
 
         if (reg_idx != TheISA::ZeroReg)
-            floatRegFile.setReg(reg_idx, val, width);
+            floatRegFile[reg_idx].d = width;
     }
 
     /** Sets a double precision floating point register to the given value. */
@@ -191,7 +198,7 @@ class PhysRegFile
                 int(reg_idx), (double)val);
 
         if (reg_idx != TheISA::ZeroReg)
-            floatRegFile.setReg(reg_idx, val);
+            floatRegFile[reg_idx].d = val;
     }
 
     /** Sets a floating point register to the given integer value. */
@@ -205,7 +212,7 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
                 int(reg_idx), (uint64_t)val);
 
-        floatRegFile.setRegBits(reg_idx, val, width);
+        floatRegFile[reg_idx].q = val;
     }
 
     void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val)
@@ -217,6 +224,13 @@ class PhysRegFile
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
                 int(reg_idx), (uint64_t)val);
+
+        floatRegFile[reg_idx].q = val;
+    }
+
+    MiscReg readMiscReg(int misc_reg, unsigned thread_id)
+    {
+        return miscRegs[thread_id].readReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault,
@@ -249,7 +263,7 @@ class PhysRegFile
     std::vector<IntReg> intRegFile;
 
     /** Floating point register file. */
-    std::vector<FloatReg> floatRegFile;
+    std::vector<PhysFloatReg> floatRegFile;
 
     /** Miscellaneous register file. */
     MiscRegFile miscRegs[Impl::MaxThreads];

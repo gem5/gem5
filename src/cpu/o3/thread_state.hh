@@ -77,7 +77,7 @@ struct O3ThreadState : public ThreadState {
     { }
 #else
     O3ThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(-1, _thread_num, _process->getMemory(), _process, _asid),
+        : ThreadState(-1, _thread_num, NULL, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
 
@@ -96,14 +96,6 @@ struct O3ThreadState : public ThreadState {
 
     void setStatus(Status new_status) { _status = new_status; }
 
-#if !FULL_SYSTEM
-    bool validInstAddr(Addr addr)
-    { return process->validInstAddr(addr); }
-
-    bool validDataAddr(Addr addr)
-    { return process->validDataAddr(addr); }
-#endif
-
     bool misspeculating() { return false; }
 
     void setInst(TheISA::MachInst _inst) { inst = _inst; }
@@ -113,7 +105,7 @@ struct O3ThreadState : public ThreadState {
     void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
 
 #if !FULL_SYSTEM
-    void syscall() { process->syscall(xcProxy); }
+    void syscall(int64_t callnum) { process->syscall(callnum, xcProxy); }
 #endif
 };
 

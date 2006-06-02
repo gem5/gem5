@@ -33,6 +33,7 @@
 #include <queue>
 #include <map>
 
+#include "arch/types.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
@@ -62,12 +63,15 @@ class BaseDynInst;
 class ExecContext;
 class MemInterface;
 class Checkpoint;
+class Request;
 class Sampler;
 
 class CheckerCPU : public BaseCPU
 {
   protected:
     typedef TheISA::MachInst MachInst;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
   public:
     // main simulation loop (one cycle)
@@ -89,9 +93,9 @@ class CheckerCPU : public BaseCPU
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 
-    void setMemory(FunctionalMemory *mem);
+    void setMemory(MemObject *mem);
 
-    FunctionalMemory *memPtr;
+    MemObject *memPtr;
 
 #if FULL_SYSTEM
     void setSystem(System *system);
@@ -123,7 +127,7 @@ class CheckerCPU : public BaseCPU
     MachInst machInst;
 
     // Refcounted pointer to the one memory request.
-    MemReqPtr memReq;
+    Request *memReq;
 
     StaticInstPtr curStaticInst;
 
@@ -186,22 +190,28 @@ class CheckerCPU : public BaseCPU
         return cpuXC->readIntReg(si->srcRegIdx(idx));
     }
 
-    float readFloatRegSingle(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegSingle(reg_idx);
+        return cpuXC->readFloatReg(reg_idx, width);
     }
 
-    double readFloatRegDouble(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegDouble(reg_idx);
+        return cpuXC->readFloatReg(reg_idx);
     }
 
-    uint64_t readFloatRegInt(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegInt(reg_idx);
+        return cpuXC->readFloatRegBits(reg_idx, width);
+    }
+
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
+    {
+        int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
+        return cpuXC->readFloatRegBits(reg_idx);
     }
 
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
@@ -210,28 +220,46 @@ class CheckerCPU : public BaseCPU
         result.integer = val;
     }
 
-    void setFloatRegSingle(const StaticInst *si, int idx, float val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegSingle(reg_idx, val);
+        cpuXC->setFloatReg(reg_idx, val, width);
+        switch(width) {
+          case 32:
+            result.fp = val;
+            break;
+          case 64:
+            result.dbl = val;
+            break;
+        };
+    }
+
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
+    {
+        int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
+        cpuXC->setFloatReg(reg_idx, val);
         result.fp = val;
     }
 
-    void setFloatRegDouble(const StaticInst *si, int idx, double val)
+    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val,
+                         int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegDouble(reg_idx, val);
-        result.dbl = val;
+        cpuXC->setFloatRegBits(reg_idx, val, width);
+        result.integer = val;
     }
 
-    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
+    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegInt(reg_idx, val);
+        cpuXC->setFloatRegBits(reg_idx, val);
         result.integer = val;
     }
 
     uint64_t readPC() { return cpuXC->readPC(); }
+
+    uint64_t readNextPC() { return cpuXC->readNextPC(); }
+
     void setNextPC(uint64_t val) {
         cpuXC->setNextPC(val);
     }
@@ -262,9 +290,9 @@ class CheckerCPU : public BaseCPU
     void recordPCChange(uint64_t val) { changedPC = true; }
     void recordNextPCChange(uint64_t val) { changedNextPC = true; }
 
-    bool translateInstReq(MemReqPtr &req);
-    void translateDataWriteReq(MemReqPtr &req);
-    void translateDataReadReq(MemReqPtr &req);
+    bool translateInstReq(Request *req);
+    void translateDataWriteReq(Request *req);
+    void translateDataReadReq(Request *req);
 
 #if FULL_SYSTEM
     Fault hwrei() { return cpuXC->hwrei(); }
@@ -276,7 +304,7 @@ class CheckerCPU : public BaseCPU
 #else
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
-    void syscall() { }
+    void syscall(uint64_t callnum) { }
 #endif
 
     void handleError()
@@ -284,13 +312,13 @@ class CheckerCPU : public BaseCPU
         if (exitOnError)
             panic("Checker found error!");
     }
-    bool checkFlags(MemReqPtr &req);
+    bool checkFlags(Request *req);
 
     ExecContext *xcBase() { return xcProxy; }
     CPUExecContext *cpuXCBase() { return cpuXC; }
 
     Result unverifiedResult;
-    MemReqPtr unverifiedReq;
+    Request *unverifiedReq;
 
     bool changedPC;
     bool willChangePC;

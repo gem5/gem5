@@ -64,8 +64,7 @@ DefaultCommit<Impl>::TrapEvent::description()
 
 template <class Impl>
 DefaultCommit<Impl>::DefaultCommit(Params *params)
-    : dcacheInterface(params->dcacheInterface),
-      squashCounter(0),
+    : squashCounter(0),
       iewToCommitDelay(params->iewToCommitDelay),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToROBDelay(params->renameToROBDelay),

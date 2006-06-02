@@ -39,58 +39,6 @@
 using namespace std;
 
 template<class Impl>
-DefaultIEW<Impl>::LdWritebackEvent::LdWritebackEvent(DynInstPtr &_inst,
-                                                     DefaultIEW<Impl> *_iew)
-    : Event(&mainEventQueue), inst(_inst), iewStage(_iew)
-{
-    this->setFlags(Event::AutoDelete);
-}
-
-template<class Impl>
-void
-DefaultIEW<Impl>::LdWritebackEvent::process()
-{
-    DPRINTF(IEW, "Load writeback event [sn:%lli]\n", inst->seqNum);
-    DPRINTF(Activity, "Activity: Ld Writeback event [sn:%lli]\n", inst->seqNum);
-
-    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
-
-    if (iewStage->isSwitchedOut()) {
-        inst = NULL;
-        return;
-    } else if (inst->isSquashed()) {
-        iewStage->wakeCPU();
-        inst = NULL;
-        return;
-    }
-
-    iewStage->wakeCPU();
-
-    if (!inst->isExecuted()) {
-        inst->setExecuted();
-
-        // Complete access to copy data to proper place.
-        if (inst->isStore()) {
-            inst->completeAcc();
-        }
-    }
-
-    // Need to insert instruction into queue to commit
-    iewStage->instToCommit(inst);
-
-    iewStage->activityThisCycle();
-
-    inst = NULL;
-}
-
-template<class Impl>
-const char *
-DefaultIEW<Impl>::LdWritebackEvent::description()
-{
-    return "Load writeback event";
-}
-
-template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(Params *params)
     : // @todo: Make this into a parameter.
       issueToExecQueue(5, 5),
@@ -1280,7 +1228,7 @@ DefaultIEW<Impl>::executeInsts()
                 ldstQueue.executeStore(inst);
 
                 // If the store had a fault then it may not have a mem req
-                if (inst->req && !(inst->req->flags & LOCKED)) {
+                if (inst->req && !(inst->req->getFlags() & LOCKED)) {
                     inst->setExecuted();
 
                     instToCommit(inst);
@@ -1556,7 +1504,7 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     else
         iewExecutedInsts++;
 #else
-    iewExecutedInsts[thread_number]++;
+    iewExecutedInsts++;
 #endif
 
     //

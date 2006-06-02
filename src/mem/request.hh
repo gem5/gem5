@@ -124,6 +124,13 @@ class Request
         : validCpuAndThreadNums(false)
     { setPhys(_paddr, _size, _flags); }
 
+    Request(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc,
+            int _cpuNum, int _threadNum)
+    {
+        setThreadContext(_cpuNum, _threadNum);
+        setVirt(_asid, _vaddr, _size, _flags, _pc);
+    }
+
     /**
      * Set up CPU and thread numbers. */
     void setThreadContext(int _cpuNum, int _threadNum)

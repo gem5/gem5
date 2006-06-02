@@ -111,25 +111,6 @@ class DefaultIEW
     StageStatus wbStatus;
 
   public:
-    /** LdWriteback event for a load completion. */
-    class LdWritebackEvent : public Event {
-      private:
-        /** Instruction that is writing back data to the register file. */
-        DynInstPtr inst;
-        /** Pointer to IEW stage. */
-        DefaultIEW<Impl> *iewStage;
-
-      public:
-        /** Constructs a load writeback event. */
-        LdWritebackEvent(DynInstPtr &_inst, DefaultIEW<Impl> *_iew);
-
-        /** Processes writeback event. */
-        virtual void process();
-        /** Returns the description of the writeback event. */
-        virtual const char *description();
-    };
-
-  public:
     /** Constructs a DefaultIEW with the given parameters. */
     DefaultIEW(Params *params);
 
