@@ -87,10 +87,13 @@ class LSQUnit {
     /** Sets the page table pointer. */
 //    void setPageTable(PageTable *pt_ptr);
 
+    /** Switches out LSQ unit. */
     void switchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
+    /** Returns if the LSQ is switched out. */
     bool isSwitchedOut() { return switchedOut; }
 
     /** Ticks the LSQ unit, which in this case only resets the number of
@@ -159,12 +162,15 @@ class LSQUnit {
     bool loadBlocked()
     { return isLoadBlocked; }
 
+    /** Clears the signal that a load became blocked. */
     void clearLoadBlocked()
     { isLoadBlocked = false; }
 
+    /** Returns if the blocked load was handled. */
     bool isLoadBlockedHandled()
     { return loadBlockedHandled; }
 
+    /** Records the blocked load as being handled. */
     void setLoadBlockedHandled()
     { loadBlockedHandled = true; }
 
@@ -339,6 +345,7 @@ class LSQUnit {
     /** The number of used cache ports in this cycle. */
     int usedPorts;
 
+    /** Is the LSQ switched out. */
     bool switchedOut;
 
     //list<InstSeqNum> mshrSeqNums;
@@ -358,8 +365,10 @@ class LSQUnit {
     /** Whether or not a load is blocked due to the memory system. */
     bool isLoadBlocked;
 
+    /** Has the blocked load been handled. */
     bool loadBlockedHandled;
 
+    /** The sequence number of the blocked load. */
     InstSeqNum blockedLoadSeqNum;
 
     /** The oldest load that caused a memory ordering violation. */

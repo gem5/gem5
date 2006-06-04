@@ -143,12 +143,16 @@ class DefaultIEW
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
 
+    /** Starts switch out of IEW stage. */
     void switchOut();
 
+    /** Completes switch out of IEW stage. */
     void doSwitchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
+    /** Returns if IEW is switched out. */
     bool isSwitchedOut() { return switchedOut; }
 
     /** Sets page table pointer within LSQ. */
@@ -270,6 +274,7 @@ class DefaultIEW
     void tick();
 
   private:
+    /** Updates execution stats based on the instruction. */
     void updateExeInstStats(DynInstPtr &inst);
 
     /** Pointer to main time buffer used for backwards communication. */
@@ -412,6 +417,7 @@ class DefaultIEW
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;
 
+    /** Is this stage switched out. */
     bool switchedOut;
 
     /** Stat for total number of idle cycles. */
@@ -453,9 +459,13 @@ class DefaultIEW
     /** Stat for total number of mispredicted branches detected at execute. */
     Stats::Formula branchMispredicts;
 
+    /** Number of executed software prefetches. */
     Stats::Vector<> exeSwp;
+    /** Number of executed nops. */
     Stats::Vector<> exeNop;
+    /** Number of executed meomory references. */
     Stats::Vector<> exeRefs;
+    /** Number of executed branches. */
     Stats::Vector<> exeBranches;
 
 //    Stats::Vector<> issued_ops;
@@ -465,19 +475,30 @@ class DefaultIEW
     Stats::Vector<> dist_unissued;
     Stats::Vector2d<> stat_issued_inst_type;
 */
+    /** Number of instructions issued per cycle. */
     Stats::Formula issueRate;
+    /** Number of executed store instructions. */
     Stats::Formula iewExecStoreInsts;
 //    Stats::Formula issue_op_rate;
 //    Stats::Formula fu_busy_rate;
-
+    /** Number of instructions sent to commit. */
     Stats::Vector<> iewInstsToCommit;
+    /** Number of instructions that writeback. */
     Stats::Vector<> writebackCount;
+    /** Number of instructions that wake consumers. */
     Stats::Vector<> producerInst;
+    /** Number of instructions that wake up from producers. */
     Stats::Vector<> consumerInst;
+    /** Number of instructions that were delayed in writing back due
+     * to resource contention.
+     */
     Stats::Vector<> wbPenalized;
 
+    /** Number of instructions per cycle written back. */
     Stats::Formula wbRate;
+    /** Average number of woken instructions per writeback. */
     Stats::Formula wbFanout;
+    /** Number of instructions per cycle delayed in writing back . */
     Stats::Formula wbPenalizedRate;
 };
 

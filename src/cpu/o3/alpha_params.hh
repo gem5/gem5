@@ -126,8 +126,9 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     Tick fetchTrapLatency;
 
     //
-    // Branch predictor (BP & BTB)
+    // Branch predictor (BP, BTB, RAS)
     //
+    std::string predType;
     unsigned localPredictorSize;
     unsigned localCtrBits;
     unsigned localHistoryTableSize;

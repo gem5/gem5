@@ -72,6 +72,11 @@ class BaseFullCPU : public BaseCPU
     int cpu_id;
 };
 
+/**
+ * FullO3CPU class, has each of the stages (fetch through commit)
+ * within it, as well as all of the time buffers between stages.  The
+ * tick() function for the CPU is defined here.
+ */
 template <class Impl>
 class FullO3CPU : public BaseFullCPU
 {
@@ -202,17 +207,13 @@ class FullO3CPU : public BaseFullCPU
      */
     virtual void syscall(int tid) { panic("Unimplemented!"); }
 
-    /** Check if there are any system calls pending. */
-    void checkSyscalls();
-
-    /** Switches out this CPU.
-     */
+    /** Switches out this CPU. */
     void switchOut(Sampler *sampler);
 
+    /** Signals to this CPU that a stage has completed switching out. */
     void signalSwitched();
 
-    /** Takes over from another CPU.
-     */
+    /** Takes over from another CPU. */
     void takeOverFrom(BaseCPU *oldCPU);
 
     /** Get the current instruction sequence number, and increment it. */
@@ -244,9 +245,7 @@ class FullO3CPU : public BaseFullCPU
 
 #endif
 
-    //
-    // New accessors for new decoder.
-    //
+    /** Register accessors.  Index refers to the physical register index. */
     uint64_t readIntReg(int reg_idx);
 
     FloatReg readFloatReg(int reg_idx);
@@ -275,6 +274,11 @@ class FullO3CPU : public BaseFullCPU
 
     uint64_t readArchFloatRegInt(int reg_idx, unsigned tid);
 
+    /** Architectural register accessors.  Looks up in the commit
+     * rename table to obtain the true physical index of the
+     * architected register first, then accesses that physical
+     * register.
+     */
     void setArchIntReg(int reg_idx, uint64_t val, unsigned tid);
 
     void setArchFloatRegSingle(int reg_idx, float val, unsigned tid);
@@ -283,13 +287,17 @@ class FullO3CPU : public BaseFullCPU
 
     void setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid);
 
+    /** Reads the commit PC of a specific thread. */
     uint64_t readPC(unsigned tid);
 
-    void setPC(Addr new_PC,unsigned tid);
+    /** Sets the commit PC of a specific thread. */
+    void setPC(Addr new_PC, unsigned tid);
 
+    /** Reads the next PC of a specific thread. */
     uint64_t readNextPC(unsigned tid);
 
-    void setNextPC(uint64_t val,unsigned tid);
+    /** Sets the next PC of a specific thread. */
+    void setNextPC(uint64_t val, unsigned tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
@@ -313,20 +321,14 @@ class FullO3CPU : public BaseFullCPU
     /** Remove all instructions younger than the given sequence number. */
     void removeInstsUntil(const InstSeqNum &seq_num,unsigned tid);
 
+    /** Removes the instruction pointed to by the iterator. */
     inline void squashInstIt(const ListIt &instIt, const unsigned &tid);
 
+    /** Cleans up all instructions on the remove list. */
     void cleanUpRemovedInsts();
 
-    /** Remove all instructions from the list. */
-//    void removeAllInsts();
-
+    /** Debug function to print all instructions on the list. */
     void dumpInsts();
-
-    /** Basically a wrapper function so that instructions executed at
-     *  commit can tell the instruction queue that they have
-     *  completed.  Eventually this hack should be removed.
-     */
-//    void wakeDependents(DynInstPtr &inst);
 
   public:
     /** List of all the instructions in flight. */
@@ -338,6 +340,9 @@ class FullO3CPU : public BaseFullCPU
     std::queue<ListIt> removeList;
 
 #ifdef DEBUG
+    /** Debug structure to keep track of the sequence numbers still in
+     * flight.
+     */
     std::set<InstSeqNum> snList;
 #endif
 
@@ -424,14 +429,22 @@ class FullO3CPU : public BaseFullCPU
     /** The IEW stage's instruction queue. */
     TimeBuffer<IEWStruct> iewQueue;
 
-  public:
+  private:
+    /** The activity recorder; used to tell if the CPU has any
+     * activity remaining or if it can go to idle and deschedule
+     * itself.
+     */
     ActivityRecorder activityRec;
 
+  public:
+    /** Records that there was time buffer activity this cycle. */
     void activityThisCycle() { activityRec.activity(); }
 
+    /** Changes a stage's status to active within the activity recorder. */
     void activateStage(const StageIdx idx)
     { activityRec.activateStage(idx); }
 
+    /** Changes a stage's status to inactive within the activity recorder. */
     void deactivateStage(const StageIdx idx)
     { activityRec.deactivateStage(idx); }
 
@@ -442,7 +455,7 @@ class FullO3CPU : public BaseFullCPU
     int getFreeTid();
 
   public:
-    /** Temporary function to get pointer to exec context. */
+    /** Returns a pointer to a thread's exec context. */
     ExecContext *xcBase(unsigned tid)
     {
         return thread[tid]->getXCProxy();
@@ -451,6 +464,10 @@ class FullO3CPU : public BaseFullCPU
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum;
 
+    /** Pointer to the checker, which can dynamically verify
+     * instruction results at run time.  This can be set to NULL if it
+     * is not being used.
+     */
     Checker<DynInstPtr> *checker;
 
 #if FULL_SYSTEM
@@ -466,11 +483,13 @@ class FullO3CPU : public BaseFullCPU
     /** Pointer to memory. */
     MemObject *mem;
 
+    /** Pointer to the sampler */
     Sampler *sampler;
 
+    /** Counter of how many stages have completed switching out. */
     int switchCount;
 
-    // List of all ExecContexts.
+    /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
 
 #if 0

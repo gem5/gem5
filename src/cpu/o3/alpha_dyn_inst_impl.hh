@@ -66,9 +66,10 @@ template <class Impl>
 Fault
 AlphaDynInst<Impl>::execute()
 {
-    // @todo: Pretty convoluted way to avoid squashing from happening when using
-    // the XC during an instruction's execution (specifically for instructions
-    // that have sideeffects that use the XC).  Fix this.
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the XC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the XC).  Fix this.
     bool in_syscall = this->thread->inSyscall;
     this->thread->inSyscall = true;
 
@@ -83,9 +84,10 @@ template <class Impl>
 Fault
 AlphaDynInst<Impl>::initiateAcc()
 {
-    // @todo: Pretty convoluted way to avoid squashing from happening when using
-    // the XC during an instruction's execution (specifically for instructions
-    // that have sideeffects that use the XC).  Fix this.
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the XC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the XC).  Fix this.
     bool in_syscall = this->thread->inSyscall;
     this->thread->inSyscall = true;
 
@@ -118,9 +120,11 @@ template <class Impl>
 Fault
 AlphaDynInst<Impl>::hwrei()
 {
+    // Can only do a hwrei when in pal mode.
     if (!this->cpu->inPalMode(this->readPC()))
         return new AlphaISA::UnimplementedOpcodeFault;
 
+    // Set the next PC based on the value of the EXC_ADDR IPR.
     this->setNextPC(this->cpu->readMiscReg(AlphaISA::IPR_EXC_ADDR,
                                            this->threadNumber));
 

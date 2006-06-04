@@ -155,7 +155,10 @@ class FUPool : public SimObject
         return maxIssueLatencies[capability];
     }
 
+    /** Switches out functional unit pool. */
     void switchOut();
+
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 };
 

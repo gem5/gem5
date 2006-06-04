@@ -152,8 +152,10 @@ template <class Impl>
 InstructionQueue<Impl>::~InstructionQueue()
 {
     dependGraph.reset();
+#ifdef DEBUG
     cprintf("Nodes traversed: %i, removed: %i\n",
             dependGraph.nodesTraversed, dependGraph.nodesRemoved);
+#endif
 }
 
 template <class Impl>
@@ -670,14 +672,8 @@ InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
     // @todo: Ensure that these FU Completions happen at the beginning
     // of a cycle, otherwise they could add too many instructions to
     // the queue.
-    // @todo: This could break if there's multiple multi-cycle ops
-    // finishing on this cycle.  Maybe implement something like
-    // instToCommit in iew_impl.hh.
     issueToExecuteQueue->access(0)->size++;
     instsToExecute.push_back(inst);
-//    int &size = issueToExecuteQueue->access(0)->size;
-
-//    issueToExecuteQueue->access(0)->insts[size++] = inst;
 }
 
 // @todo: Figure out a better way to remove the squashed items from the
@@ -743,9 +739,10 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             }
         }
 
+        // If we have an instruction that doesn't require a FU, or a
+        // valid FU, then schedule for execution.
         if (idx == -2 || idx != -1) {
             if (op_latency == 1) {
-//                i2e_info->insts[exec_queue_slot++] = issuing_inst;
                 i2e_info->size++;
                 instsToExecute.push_back(issuing_inst);
 
@@ -763,14 +760,10 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
                 // @todo: Enforce that issue_latency == 1 or op_latency
                 if (issue_latency > 1) {
+                    // If FU isn't pipelined, then it must be freed
+                    // upon the execution completing.
                     execution->setFreeFU();
                 } else {
-                    // @todo: Not sure I'm accounting for the
-                    // multi-cycle op in a pipelined FU properly, or
-                    // the number of instructions issued in one cycle.
-//                    i2e_info->insts[exec_queue_slot++] = issuing_inst;
-//                    i2e_info->size++;
-
                     // Add the FU onto the list of FU's to be freed next cycle.
                     fuPool->freeUnitNextCycle(idx);
                 }
@@ -815,6 +808,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     numIssuedDist.sample(total_issued);
     iqInstsIssued+= total_issued;
 
+    // If we issued any instructions, tell the CPU we had activity.
     if (total_issued) {
         cpu->activityThisCycle();
     } else {
@@ -1364,5 +1358,46 @@ InstructionQueue<Impl>::dumpInsts()
             inst_list_it++;
             ++num;
         }
+    }
+
+    cprintf("Insts to Execute list:\n");
+
+    int num = 0;
+    int valid_num = 0;
+    ListIt inst_list_it = instsToExecute.begin();
+
+    while (inst_list_it != instsToExecute.end())
+    {
+        cprintf("Instruction:%i\n",
+                num);
+        if (!(*inst_list_it)->isSquashed()) {
+            if (!(*inst_list_it)->isIssued()) {
+                ++valid_num;
+                cprintf("Count:%i\n", valid_num);
+            } else if ((*inst_list_it)->isMemRef() &&
+                       !(*inst_list_it)->memOpDone) {
+                // Loads that have not been marked as executed
+                // still count towards the total instructions.
+                ++valid_num;
+                cprintf("Count:%i\n", valid_num);
+            }
+        }
+
+        cprintf("PC:%#x\n[sn:%lli]\n[tid:%i]\n"
+                "Issued:%i\nSquashed:%i\n",
+                (*inst_list_it)->readPC(),
+                (*inst_list_it)->seqNum,
+                (*inst_list_it)->threadNumber,
+                (*inst_list_it)->isIssued(),
+                (*inst_list_it)->isSquashed());
+
+        if ((*inst_list_it)->isMemRef()) {
+            cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone);
+        }
+
+        cprintf("\n");
+
+        inst_list_it++;
+        ++num;
     }
 }

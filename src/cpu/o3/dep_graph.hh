@@ -4,6 +4,7 @@
 
 #include "cpu/o3/comm.hh"
 
+/** Node in a linked list. */
 template <class DynInstPtr>
 class DependencyEntry
 {
@@ -18,32 +19,50 @@ class DependencyEntry
     DependencyEntry<DynInstPtr> *next;
 };
 
+/** Array of linked list that maintains the dependencies between
+ * producing instructions and consuming instructions.  Each linked
+ * list represents a single physical register, having the future
+ * producer of the register's value, and all consumers waiting on that
+ * value on the list.  The head node of each linked list represents
+ * the producing instruction of that register.  Instructions are put
+ * on the list upon reaching the IQ, and are removed from the list
+ * either when the producer completes, or the instruction is squashed.
+*/
 template <class DynInstPtr>
 class DependencyGraph
 {
   public:
     typedef DependencyEntry<DynInstPtr> DepEntry;
 
+    /** Default construction.  Must call resize() prior to use. */
     DependencyGraph()
         : numEntries(0), memAllocCounter(0), nodesTraversed(0), nodesRemoved(0)
     { }
 
+    /** Resize the dependency graph to have num_entries registers. */
     void resize(int num_entries);
 
+    /** Clears all of the linked lists. */
     void reset();
 
+    /** Inserts an instruction to be dependent on the given index. */
     void insert(PhysRegIndex idx, DynInstPtr &new_inst);
 
+    /** Sets the producing instruction of a given register. */
     void setInst(PhysRegIndex idx, DynInstPtr &new_inst)
     { dependGraph[idx].inst = new_inst; }
 
+    /** Clears the producing instruction. */
     void clearInst(PhysRegIndex idx)
     { dependGraph[idx].inst = NULL; }
 
+    /** Removes an instruction from a single linked list. */
     void remove(PhysRegIndex idx, DynInstPtr &inst_to_remove);
 
+    /** Removes and returns the newest dependent of a specific register. */
     DynInstPtr pop(PhysRegIndex idx);
 
+    /** Checks if there are any dependents on a specific register. */
     bool empty(PhysRegIndex idx) { return !dependGraph[idx].next; }
 
     /** Debugging function to dump out the dependency graph.
@@ -59,13 +78,16 @@ class DependencyGraph
      */
     DepEntry *dependGraph;
 
+    /** Number of linked lists; identical to the number of registers. */
     int numEntries;
 
     // Debug variable, remove when done testing.
     unsigned memAllocCounter;
 
   public:
+    // Debug variable, remove when done testing.
     uint64_t nodesTraversed;
+    // Debug variable, remove when done testing.
     uint64_t nodesRemoved;
 };
 

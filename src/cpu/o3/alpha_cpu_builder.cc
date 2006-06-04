@@ -107,6 +107,7 @@ Param<unsigned> squashWidth;
 Param<Tick> trapLatency;
 Param<Tick> fetchTrapLatency;
 
+Param<std::string> predType;
 Param<unsigned> localPredictorSize;
 Param<unsigned> localCtrBits;
 Param<unsigned> localHistoryTableSize;
@@ -229,6 +230,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM_DFLT(trapLatency, "Number of cycles before the trap is handled", 6),
     INIT_PARAM_DFLT(fetchTrapLatency, "Number of cycles before the fetch trap is handled", 12),
 
+    INIT_PARAM(predType, "Type of branch predictor ('local', 'tournament')"),
     INIT_PARAM(localPredictorSize, "Size of local predictor"),
     INIT_PARAM(localCtrBits, "Bits per counter"),
     INIT_PARAM(localHistoryTableSize, "Size of local history table"),
@@ -359,6 +361,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->trapLatency = trapLatency;
     params->fetchTrapLatency = fetchTrapLatency;
 
+    params->predType = predType;
     params->localPredictorSize = localPredictorSize;
     params->localCtrBits = localCtrBits;
     params->localHistoryTableSize = localHistoryTableSize;

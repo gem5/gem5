@@ -43,6 +43,7 @@
 // typedef yet are not templated on the Impl. For now it will be defined here.
 typedef short int PhysRegIndex;
 
+/** Struct that defines the information passed from fetch to decode. */
 template<class Impl>
 struct DefaultFetchDefaultDecode {
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -55,6 +56,7 @@ struct DefaultFetchDefaultDecode {
     bool clearFetchFault;
 };
 
+/** Struct that defines the information passed from decode to rename. */
 template<class Impl>
 struct DefaultDecodeDefaultRename {
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -64,6 +66,7 @@ struct DefaultDecodeDefaultRename {
     DynInstPtr insts[Impl::MaxWidth];
 };
 
+/** Struct that defines the information passed from rename to IEW. */
 template<class Impl>
 struct DefaultRenameDefaultIEW {
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -73,6 +76,7 @@ struct DefaultRenameDefaultIEW {
     DynInstPtr insts[Impl::MaxWidth];
 };
 
+/** Struct that defines the information passed from IEW to commit. */
 template<class Impl>
 struct DefaultIEWDefaultCommit {
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -100,6 +104,7 @@ struct IssueStruct {
     DynInstPtr insts[Impl::MaxWidth];
 };
 
+/** Struct that defines all backwards communication. */
 template<class Impl>
 struct TimeBufStruct {
     struct decodeComm {
@@ -121,13 +126,7 @@ struct TimeBufStruct {
 
     decodeComm decodeInfo[Impl::MaxThreads];
 
-    // Rename can't actually tell anything to squash or send a new PC back
-    // because it doesn't do anything along those lines.  But maybe leave
-    // these fields in here to keep the stages mostly orthagonal.
     struct renameComm {
-        bool squash;
-
-        uint64_t nextPC;
     };
 
     renameComm renameInfo[Impl::MaxThreads];

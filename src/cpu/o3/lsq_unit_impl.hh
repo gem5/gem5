@@ -78,8 +78,12 @@ LSQUnit<Impl>::completeStoreDataAccess(DynInstPtr &inst)
 
     //lsqPtr->removeMSHR(lsqPtr->storeQueue[storeIdx].inst->seqNum);
 
-    if (lsqPtr->isSwitchedOut())
+    if (lsqPtr->isSwitchedOut()) {
+        if (wbEvent)
+            delete wbEvent;
+
         return;
+    }
 
     lsqPtr->cpu->wakeCPU();
 
@@ -499,7 +503,6 @@ LSQUnit<Impl>::commitLoad()
 
     DPRINTF(LSQUnit, "Committing head load instruction, PC %#x\n",
             loadQueue[loadHead]->readPC());
-
 
     loadQueue[loadHead] = NULL;
 

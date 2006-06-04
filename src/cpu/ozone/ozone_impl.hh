@@ -52,7 +52,7 @@ struct OzoneImpl {
 
     // Would like to put these into their own area.
 //    typedef NullPredictor BranchPred;
-    typedef TwobitBPredUnit<OzoneImpl> BranchPred;
+    typedef BPredUnit<OzoneImpl> BranchPred;
     typedef FrontEnd<OzoneImpl> FrontEnd;
     // Will need IQ, LSQ eventually
     typedef LWBackEnd<OzoneImpl> BackEnd;

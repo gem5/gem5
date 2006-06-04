@@ -55,6 +55,7 @@ class DerivAlphaFullCPU(BaseCPU):
     trapLatency = Param.Tick("Trap latency")
     fetchTrapLatency = Param.Tick("Fetch trap latency")
 
+    predType = Param.String("Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned("Size of local predictor")
     localCtrBits = Param.Unsigned("Bits per counter")
     localHistoryTableSize = Param.Unsigned("Size of local history table")

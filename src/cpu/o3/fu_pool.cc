@@ -183,6 +183,8 @@ FUPool::getUnit(OpClass capability)
         }
     }
 
+    assert(fu_idx < numFU);
+
     unitBusy[fu_idx] = true;
 
     return fu_idx;

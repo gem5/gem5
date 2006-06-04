@@ -94,6 +94,9 @@ class InstructionQueue
         /** Pointer back to the instruction queue. */
         InstructionQueue<Impl> *iqPtr;
 
+        /** Should the FU be added to the list to be freed upon
+         * completing this event.
+         */
         bool freeFU;
 
       public:
@@ -118,6 +121,7 @@ class InstructionQueue
     /** Registers statistics. */
     void regStats();
 
+    /** Resets all instruction queue state. */
     void resetState();
 
     /** Sets CPU pointer. */
@@ -135,10 +139,13 @@ class InstructionQueue
     /** Sets the global time buffer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
+    /** Switches out the instruction queue. */
     void switchOut();
 
+    /** Takes over execution from another CPU's thread. */
     void takeOverFrom();
 
+    /** Returns if the IQ is switched out. */
     bool isSwitchedOut() { return switchedOut; }
 
     /** Number of entries needed for given amount of threads. */
@@ -173,6 +180,9 @@ class InstructionQueue
      */
     void insertBarrier(DynInstPtr &barr_inst);
 
+    /** Returns the oldest scheduled instruction, and removes it from
+     * the list of instructions waiting to execute.
+     */
     DynInstPtr getInstToExecute();
 
     /**
@@ -276,13 +286,15 @@ class InstructionQueue
     /** List of all the instructions in the IQ (some of which may be issued). */
     std::list<DynInstPtr> instList[Impl::MaxThreads];
 
+    /** List of instructions that are ready to be executed. */
     std::list<DynInstPtr> instsToExecute;
 
     /**
-     * Struct for comparing entries to be added to the priority queue.  This
-     * gives reverse ordering to the instructions in terms of sequence
-     * numbers: the instructions with smaller sequence numbers (and hence
-     * are older) will be at the top of the priority queue.
+     * Struct for comparing entries to be added to the priority queue.
+     * This gives reverse ordering to the instructions in terms of
+     * sequence numbers: the instructions with smaller sequence
+     * numbers (and hence are older) will be at the top of the
+     * priority queue.
      */
     struct pqCompare {
         bool operator() (const DynInstPtr &lhs, const DynInstPtr &rhs) const
@@ -395,6 +407,7 @@ class InstructionQueue
      */
     unsigned commitToIEWDelay;
 
+    /** Is the IQ switched out. */
     bool switchedOut;
 
     /** The sequence number of the squashed instruction. */
@@ -462,19 +475,28 @@ class InstructionQueue
      */
     Stats::Scalar<> iqSquashedNonSpecRemoved;
 
+    /** Distribution of number of instructions in the queue. */
     Stats::VectorDistribution<> queueResDist;
+    /** Distribution of the number of instructions issued. */
     Stats::Distribution<> numIssuedDist;
+    /** Distribution of the cycles it takes to issue an instruction. */
     Stats::VectorDistribution<> issueDelayDist;
 
+    /** Number of times an instruction could not be issued because a
+     * FU was busy.
+     */
     Stats::Vector<> statFuBusy;
 //    Stats::Vector<> dist_unissued;
+    /** Stat for total number issued for each instruction type. */
     Stats::Vector2d<> statIssuedInstType;
 
+    /** Number of instructions issued per cycle. */
     Stats::Formula issueRate;
 //    Stats::Formula issue_stores;
 //    Stats::Formula issue_op_rate;
-    Stats::Vector<> fuBusy;  //cumulative fu busy
-
+    /** Number of times the FU was busy. */
+    Stats::Vector<> fuBusy;
+    /** Number of times the FU was busy per instruction issued. */
     Stats::Formula fuBusyRate;
 };
 

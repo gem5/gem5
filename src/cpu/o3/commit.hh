@@ -85,6 +85,9 @@ class DefaultCommit
 
     typedef O3ThreadState<Impl> Thread;
 
+    /** Event class used to schedule a squash due to a trap (fault or
+     * interrupt) to happen on a specific cycle.
+     */
     class TrapEvent : public Event {
       private:
         DefaultCommit<Impl> *commit;
@@ -162,7 +165,7 @@ class DefaultCommit
 
     Fetch *fetchStage;
 
-    /** Sets the poitner to the IEW stage. */
+    /** Sets the pointer to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
 
     /** The pointer to the IEW stage. Used solely to ensure that
@@ -183,10 +186,13 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void initStage();
 
+    /** Initializes the switching out of commit. */
     void switchOut();
 
+    /** Completes the switch out of commit. */
     void doSwitchOut();
 
+    /** Takes over from another CPU's thread. */
     void takeOverFrom();
 
     /** Ticks the commit stage, which tries to commit instructions. */
@@ -200,11 +206,18 @@ class DefaultCommit
     /** Returns the number of free ROB entries for a specific thread. */
     unsigned numROBFreeEntries(unsigned tid);
 
+    /** Generates an event to schedule a squash due to a trap. */
+    void generateTrapEvent(unsigned tid);
+
+    /** Records that commit needs to initiate a squash due to an
+     * external state update through the XC.
+     */
     void generateXCEvent(unsigned tid);
 
   private:
     /** Updates the overall status of commit with the nextStatus, and
-     * tell the CPU if commit is active/inactive. */
+     * tell the CPU if commit is active/inactive.
+     */
     void updateStatus();
 
     /** Sets the next status based on threads' statuses, which becomes the
@@ -223,10 +236,13 @@ class DefaultCommit
      */
     bool changedROBEntries();
 
+    /** Squashes all in flight instructions. */
     void squashAll(unsigned tid);
 
+    /** Handles squashing due to a trap. */
     void squashFromTrap(unsigned tid);
 
+    /** Handles squashing due to an XC write. */
     void squashFromXC(unsigned tid);
 
     /** Commits as many instructions as possible. */
@@ -236,8 +252,6 @@ class DefaultCommit
      * @param head_inst The instruction to be committed.
      */
     bool commitHead(DynInstPtr &head_inst, unsigned inst_num);
-
-    void generateTrapEvent(unsigned tid);
 
     /** Gets instructions from rename and inserts them into the ROB. */
     void getInsts();
@@ -260,12 +274,16 @@ class DefaultCommit
      */
     uint64_t readPC() { return PC[0]; }
 
+    /** Returns the PC of a specific thread. */
     uint64_t readPC(unsigned tid) { return PC[tid]; }
 
+    /** Sets the PC of a specific thread. */
     void setPC(uint64_t val, unsigned tid) { PC[tid] = val; }
 
+    /** Reads the PC of a specific thread. */
     uint64_t readNextPC(unsigned tid) { return nextPC[tid]; }
 
+    /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid) { nextPC[tid] = val; }
 
   private:
@@ -302,6 +320,7 @@ class DefaultCommit
     /** Pointer to FullCPU. */
     FullCPU *cpu;
 
+    /** Vector of all of the threads. */
     std::vector<Thread *> thread;
 
     Fault fetchFault;
@@ -360,17 +379,27 @@ class DefaultCommit
     /** Number of Active Threads */
     unsigned numThreads;
 
+    /** Is a switch out pending. */
     bool switchPending;
+
+    /** Is commit switched out. */
     bool switchedOut;
 
+    /** The latency to handle a trap.  Used when scheduling trap
+     * squash event.
+     */
     Tick trapLatency;
 
     Tick fetchTrapLatency;
 
     Tick fetchFaultTick;
 
+    /** The commit PC of each thread.  Refers to the instruction that
+     * is currently being processed/committed.
+     */
     Addr PC[Impl::MaxThreads];
 
+    /** The next PC of each thread. */
     Addr nextPC[Impl::MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
@@ -382,6 +411,7 @@ class DefaultCommit
     /** Rename map interface. */
     RenameMap *renameMap[Impl::MaxThreads];
 
+    /** Updates commit stats based on this instruction. */
     void updateComInstStats(DynInstPtr &inst);
 
     /** Stat for the total number of committed instructions. */
@@ -415,7 +445,9 @@ class DefaultCommit
     /** Total number of committed branches. */
     Stats::Vector<> statComBranches;
 
+    /** Number of cycles where the commit bandwidth limit is reached. */
     Stats::Scalar<> commitEligibleSamples;
+    /** Number of instructions not committed due to bandwidth limits. */
     Stats::Vector<> commitEligible;
 };
 
