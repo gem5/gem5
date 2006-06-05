@@ -132,10 +132,11 @@ while args_left:
         # of the format --<python var>=<string value>
         try:
             (var, val) = arg.split('=', 1)
+            var = var[2:]
         except ValueError:
             panic("Could not parse configuration argument '%s'\n"
                   "Expecting --<variable>=<value>\n" % arg);
-        eval("%s = %s" % (var, repr(val)))
+        exec "%s = %s" % (var, repr(val))
     elif arg.startswith('-'):
         # if the arg starts with '-', it should be a simulator option
         # with a format similar to getopt.
