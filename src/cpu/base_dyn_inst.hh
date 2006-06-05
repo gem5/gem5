@@ -660,11 +660,11 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 
     fault = cpu->translateDataReadReq(req);
 
-    effAddr = req->getVaddr();
-    physEffAddr = req->getPaddr();
-    memReqFlags = req->getFlags();
-
     if (fault == NoFault) {
+        effAddr = req->getVaddr();
+        physEffAddr = req->getPaddr();
+        memReqFlags = req->getFlags();
+
 #if FULL_SYSTEM
         if (cpu->system->memctrl->badaddr(physEffAddr)) {
             fault = TheISA::genMachineCheckFault();
@@ -715,11 +715,10 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     fault = cpu->translateDataWriteReq(req);
 
-    effAddr = req->getVaddr();
-    physEffAddr = req->getPaddr();
-    memReqFlags = req->getFlags();
-
     if (fault == NoFault) {
+        effAddr = req->getVaddr();
+        physEffAddr = req->getPaddr();
+        memReqFlags = req->getFlags();
 #if FULL_SYSTEM
         if (cpu->system->memctrl->badaddr(physEffAddr)) {
             fault = TheISA::genMachineCheckFault();

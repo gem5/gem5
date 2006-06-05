@@ -86,14 +86,9 @@ struct O3ThreadState : public ThreadState {
           inSyscall(0), trapPending(0)
     { }
 #else
-    O3ThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(-1, _thread_num, NULL, _process, _asid),
-          cpu(_cpu), inSyscall(0), trapPending(0)
-    { }
-
-    O3ThreadState(FullCPU *_cpu, int _thread_num, FunctionalMemory *_mem,
-                  int _asid)
-        : ThreadState(-1, _thread_num, _mem, NULL, _asid),
+    O3ThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid,
+                  MemObject *mem)
+        : ThreadState(-1, _thread_num, mem, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
 #endif

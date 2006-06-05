@@ -75,6 +75,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       iewWidth(params->executeWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numberOfThreads),
+      switchPending(false),
       switchedOut(false),
       trapLatency(params->trapLatency),
       fetchTrapLatency(params->fetchTrapLatency)
@@ -115,6 +116,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         changedROBNumEntries[i] = false;
         trapSquash[i] = false;
         xcSquash[i] = false;
+        PC[i] = nextPC[i] = 0;
     }
 
     fetchFaultTick = 0;

@@ -96,7 +96,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         /** Reads this CPU's ID. */
         virtual int readCpuId() { return cpu->cpu_id; }
 
-        virtual TranslatingPort *getMemPort() { return /*thread->port*/ NULL; }
+        virtual TranslatingPort *getMemPort() { return thread->port; }
 
 #if FULL_SYSTEM
         /** Returns a pointer to the system. */
@@ -226,7 +226,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         }
 
         virtual void setNextNPC(uint64_t val)
-        { panic("Alpha has no NextNPC!"); }
+        { }
 
         /** Reads a miscellaneous register. */
         virtual MiscReg readMiscReg(int misc_reg)

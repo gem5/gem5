@@ -31,6 +31,10 @@
 
 #include "cpu/exec_context.hh"
 
+#if !FULL_SYSTEM
+#include "mem/translating_port.hh"
+#endif
+
 #if FULL_SYSTEM
 class EndQuiesceEvent;
 class FunctionProfile;
@@ -51,17 +55,27 @@ class Process;
  */
 struct ThreadState {
 #if FULL_SYSTEM
-    ThreadState(int _cpuId, int _tid, FunctionalMemory *_mem)
-        : cpuId(_cpuId), tid(_tid), mem(_mem), lastActivate(0), lastSuspend(0),
+    ThreadState(int _cpuId, int _tid)
+        : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
           profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL)
 #else
-    ThreadState(int _cpuId, int _tid, FunctionalMemory *_mem,
+    ThreadState(int _cpuId, int _tid, MemObject *mem,
                 Process *_process, short _asid)
-        : cpuId(_cpuId), tid(_tid), mem(_mem), process(_process), asid(_asid)
+        : cpuId(_cpuId), tid(_tid), process(_process), asid(_asid)
 #endif
     {
         funcExeInst = 0;
         storeCondFailures = 0;
+#if !FULL_SYSTEM
+        /* Use this port to for syscall emulation writes to memory. */
+        Port *mem_port;
+        port = new TranslatingPort(csprintf("%d-funcport",
+                                            tid),
+                                   process->pTable, false);
+        mem_port = mem->getPort("functional");
+        mem_port->setPeer(port);
+        port->setPeer(mem_port);
+#endif
     }
 
     ExecContext::Status status;
@@ -79,8 +93,6 @@ struct ThreadState {
     Counter numLoad;
     Counter startNumLoad;
 
-    FunctionalMemory *mem;	// functional storage for process address space
-
 #if FULL_SYSTEM
     Tick lastActivate;
     Tick lastSuspend;
@@ -93,6 +105,8 @@ struct ThreadState {
 
     Kernel::Statistics *kernelStats;
 #else
+    TranslatingPort *port;
+
     Process *process;
 
     // Address space ID.  Note that this is used for TIMING cache

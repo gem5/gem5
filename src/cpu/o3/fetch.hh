@@ -323,8 +323,8 @@ class DefaultFetch
     /** Per-thread next PC. */
     Addr nextPC[Impl::MaxThreads];
 
-    /** Memory packet used to access cache. */
-    PacketPtr memPkt[Impl::MaxThreads];
+    /** Memory request used to access cache. */
+    RequestPtr memReq[Impl::MaxThreads];
 
     /** Variable that tracks if fetch has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.

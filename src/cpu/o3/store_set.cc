@@ -29,6 +29,7 @@
  */
 
 #include "base/intmath.hh"
+#include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/o3/store_set.hh"
 

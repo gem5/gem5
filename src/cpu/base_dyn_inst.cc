@@ -96,12 +96,14 @@ void
 BaseDynInst<Impl>::initVars()
 {
     req = NULL;
+    memData = NULL;
     effAddr = 0;
     physEffAddr = 0;
     storeSize = 0;
 
     readyRegs = 0;
 
+    // May want to turn this into a bit vector or something.
     completed = false;
     resultReady = false;
     canIssue = false;
@@ -161,7 +163,11 @@ template <class Impl>
 BaseDynInst<Impl>::~BaseDynInst()
 {
     if (req) {
-        req = NULL;
+        delete req;
+    }
+
+    if (memData) {
+        delete [] memData;
     }
 
     if (traceData) {

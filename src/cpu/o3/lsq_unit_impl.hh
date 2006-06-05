@@ -32,65 +32,57 @@
 #include "mem/request.hh"
 
 template<class Impl>
-void
-LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
+LSQUnit<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,
+                                              LSQUnit *lsq_ptr)
+    : Event(&mainEventQueue), inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
 {
-/*
-    DPRINTF(IEW, "Load writeback event [sn:%lli]\n", inst->seqNum);
-    DPRINTF(Activity, "Activity: Ld Writeback event [sn:%lli]\n", inst->seqNum);
-
-    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
-
-    if (iewStage->isSwitchedOut()) {
-        inst = NULL;
-        return;
-    } else if (inst->isSquashed()) {
-        iewStage->wakeCPU();
-        inst = NULL;
-        return;
-    }
-
-    iewStage->wakeCPU();
-
-    if (!inst->isExecuted()) {
-        inst->setExecuted();
-
-        // Complete access to copy data to proper place.
-        inst->completeAcc();
-    }
-
-    // Need to insert instruction into queue to commit
-    iewStage->instToCommit(inst);
-
-    iewStage->activityThisCycle();
-
-    inst = NULL;
-*/
+    this->setFlags(Event::AutoDelete);
 }
 
 template<class Impl>
 void
-LSQUnit<Impl>::completeStoreDataAccess(DynInstPtr &inst)
+LSQUnit<Impl>::WritebackEvent::process()
 {
-/*
-    DPRINTF(LSQ, "Cache miss complete for store idx:%i\n", storeIdx);
-    DPRINTF(Activity, "Activity: st writeback event idx:%i\n", storeIdx);
+    if (!lsqPtr->isSwitchedOut()) {
+        lsqPtr->writeback(inst, pkt);
+    }
+    delete pkt;
+}
 
-    //lsqPtr->removeMSHR(lsqPtr->storeQueue[storeIdx].inst->seqNum);
+template<class Impl>
+const char *
+LSQUnit<Impl>::WritebackEvent::description()
+{
+    return "Store writeback event";
+}
 
-    if (lsqPtr->isSwitchedOut()) {
-        if (wbEvent)
-            delete wbEvent;
+template<class Impl>
+void
+LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
+{
+    LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
+    DynInstPtr inst = state->inst;
+    DPRINTF(IEW, "Writeback event [sn:%lli]\n", inst->seqNum);
+//    DPRINTF(Activity, "Activity: Ld Writeback event [sn:%lli]\n", inst->seqNum);
 
+    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
+
+    if (isSwitchedOut() || inst->isSquashed()) {
+        delete state;
+        delete pkt;
         return;
+    } else {
+        if (!state->noWB) {
+            writeback(inst, pkt);
+        }
+
+        if (inst->isStore()) {
+            completeStore(state->idx);
+        }
     }
 
-    lsqPtr->cpu->wakeCPU();
-
-    if (wb)
-        lsqPtr->completeDataAccess(storeIdx);
-    lsqPtr->completeStore(storeIdx);
-*/
+    delete state;
+    delete pkt;
 }
 
 template <class Impl>
@@ -146,7 +138,8 @@ LSQUnit<Impl>::DcachePort::recvRetry()
 
 template <class Impl>
 LSQUnit<Impl>::LSQUnit()
-    : loads(0), stores(0), storesToWB(0), stalled(false), isLoadBlocked(false),
+    : loads(0), stores(0), storesToWB(0), stalled(false),
+      isStoreBlocked(false), isLoadBlocked(false),
       loadBlockedHandled(false)
 {
 }
@@ -176,9 +169,7 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
-    Port *mem_dport = params->mem->getPort("");
-    dcachePort->setPeer(mem_dport);
-    mem_dport->setPeer(dcachePort);
+    mem = params->mem;
 
     memDepViolator = NULL;
 
@@ -191,6 +182,10 @@ LSQUnit<Impl>::setCPU(FullCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
     dcachePort = new DcachePort(cpu, this);
+
+    Port *mem_dport = mem->getPort("");
+    dcachePort->setPeer(mem_dport);
+    mem_dport->setPeer(dcachePort);
 }
 
 template<class Impl>
@@ -446,7 +441,6 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
     int load_idx = store_inst->lqIdx;
 
     Fault store_fault = store_inst->initiateAcc();
-//    Fault store_fault = store_inst->execute();
 
     if (storeQueue[store_idx].size == 0) {
         DPRINTF(LSQUnit,"Fault on Store PC %#x, [sn:%lli],Size = 0\n",
@@ -562,6 +556,12 @@ LSQUnit<Impl>::writebackStores()
            storeQueue[storeWBIdx].canWB &&
            usedPorts < cachePorts) {
 
+        if (isStoreBlocked) {
+            DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
+                    " is blocked!\n");
+            break;
+        }
+
         // Store didn't write any data so no need to write it back to
         // memory.
         if (storeQueue[storeWBIdx].size == 0) {
@@ -571,13 +571,7 @@ LSQUnit<Impl>::writebackStores()
 
             continue;
         }
-/*
-        if (dcacheInterface && dcacheInterface->isBlocked()) {
-            DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
-                    " is blocked!\n");
-            break;
-        }
-*/
+
         ++usedPorts;
 
         if (storeQueue[storeWBIdx].inst->isDataPrefetch()) {
@@ -596,10 +590,17 @@ LSQUnit<Impl>::writebackStores()
 
         assert(!inst->memData);
         inst->memData = new uint8_t[64];
-        memcpy(inst->memData, (uint8_t *)&storeQueue[storeWBIdx].data, req->getSize());
+        memcpy(inst->memData, (uint8_t *)&storeQueue[storeWBIdx].data,
+               req->getSize());
 
         PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
+
+        LSQSenderState *state = new LSQSenderState;
+        state->isLoad = false;
+        state->idx = storeWBIdx;
+        state->inst = inst;
+        data_pkt->senderState = state;
 
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
@@ -609,11 +610,8 @@ LSQUnit<Impl>::writebackStores()
 
         if (!dcachePort->sendTiming(data_pkt)) {
             // Need to handle becoming blocked on a store.
+            isStoreBlocked = true;
         } else {
-            /*
-            StoreCompletionEvent *store_event = new
-                StoreCompletionEvent(storeWBIdx, NULL, this);
-            */
             if (isStalled() &&
                 storeQueue[storeWBIdx].inst->seqNum == stallingStoreIsn) {
                 DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
@@ -623,18 +621,13 @@ LSQUnit<Impl>::writebackStores()
                 stallingStoreIsn = 0;
                 iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
             }
-/*
-            typename LdWritebackEvent *wb = NULL;
-            if (req->flags & LOCKED) {
-                // Stx_C should not generate a system port transaction
-                // if it misses in the cache, but that might be hard
-                // to accomplish without explicit cache support.
-                wb = new typename
-                    LdWritebackEvent(storeQueue[storeWBIdx].inst,
-                                     iewStage);
-                store_event->wbEvent = wb;
+
+            if (!(req->getFlags() & LOCKED)) {
+                assert(!storeQueue[storeWBIdx].inst->isStoreConditional());
+                // Non-store conditionals do not need a writeback.
+                state->noWB = true;
             }
-*/
+
             if (data_pkt->result != Packet::Success) {
                 DPRINTF(LSQUnit,"D-Cache Write Miss on idx:%i!\n",
                         storeWBIdx);
@@ -757,6 +750,31 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
 
         decrStIdx(store_idx);
     }
+}
+
+template <class Impl>
+void
+LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
+{
+    iewStage->wakeCPU();
+
+    // Squashed instructions do not need to complete their access.
+    if (inst->isSquashed()) {
+        assert(!inst->isStore());
+        return;
+    }
+
+    if (!inst->isExecuted()) {
+        inst->setExecuted();
+
+        // Complete access to copy data to proper place.
+        inst->completeAcc(pkt);
+    }
+
+    // Need to insert instruction into queue to commit
+    iewStage->instToCommit(inst);
+
+    iewStage->activityThisCycle();
 }
 
 template <class Impl>

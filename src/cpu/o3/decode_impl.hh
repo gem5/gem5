@@ -280,7 +280,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].predIncorrect = true;
     toFetch->decodeInfo[tid].squash = true;
-    toFetch->decodeInfo[tid].nextPC = inst->readNextPC();
+    toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
     toFetch->decodeInfo[tid].branchTaken =
         inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
 
@@ -723,9 +723,8 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
         // Go ahead and compute any PC-relative branches.
         if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
             ++decodeBranchResolved;
-            inst->setNextPC(inst->branchTarget());
 
-            if (inst->mispredicted()) {
+            if (inst->branchTarget() != inst->readPredTarg()) {
                 ++decodeBranchMispred;
 
                 // Might want to set some sort of boolean and just do

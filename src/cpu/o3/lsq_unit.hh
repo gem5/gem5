@@ -130,8 +130,6 @@ class LSQUnit {
 
     void completeDataAccess(PacketPtr pkt);
 
-    void completeStoreDataAccess(DynInstPtr &inst);
-
     // @todo: Include stats in the LSQ unit.
     //void regStats();
 
@@ -206,10 +204,12 @@ class LSQUnit {
 
     /** Returns if the LSQ unit will writeback on this cycle. */
     bool willWB() { return storeQueue[storeWBIdx].canWB &&
-                        !storeQueue[storeWBIdx].completed/* &&
-                                                            !dcacheInterface->isBlocked()*/; }
+                        !storeQueue[storeWBIdx].completed &&
+                        !isStoreBlocked; }
 
   private:
+    void writeback(DynInstPtr &inst, PacketPtr pkt);
+
     /** Completes the store at the specified index. */
     void completeStore(int store_idx);
 
@@ -265,8 +265,42 @@ class LSQUnit {
     /** Pointer to the D-cache. */
     DcachePort *dcachePort;
 
+    class LSQSenderState : public Packet::SenderState
+    {
+      public:
+        LSQSenderState()
+            : noWB(false)
+        { }
+
+//      protected:
+        DynInstPtr inst;
+        bool isLoad;
+        int idx;
+        bool noWB;
+    };
+
     /** Pointer to the page table. */
 //    PageTable *pTable;
+
+    class WritebackEvent : public Event {
+      public:
+        /** Constructs a writeback event. */
+        WritebackEvent(DynInstPtr &_inst, PacketPtr pkt, LSQUnit *lsq_ptr);
+
+        /** Processes the writeback event. */
+        void process();
+
+        /** Returns the description of this event. */
+        const char *description();
+
+      private:
+        DynInstPtr inst;
+
+        PacketPtr pkt;
+
+        /** The pointer to the LSQ unit that issued the store. */
+        LSQUnit<Impl> *lsqPtr;
+    };
 
   public:
     struct SQEntry {
@@ -361,6 +395,8 @@ class LSQUnit {
     InstSeqNum stallingStoreIsn;
     /** The index of the above store. */
     int stallingLoadIdx;
+
+    bool isStoreBlocked;
 
     /** Whether or not a load is blocked due to the memory system. */
     bool isLoadBlocked;
@@ -521,16 +557,17 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             DPRINTF(LSQUnit, "Forwarding from store idx %i to load to "
                     "addr %#x, data %#x\n",
                     store_idx, req->getVaddr(), *(load_inst->memData));
-/*
-            typename LdWritebackEvent *wb =
-                new typename LdWritebackEvent(load_inst,
-                                              iewStage);
+
+            PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+            data_pkt->dataStatic(load_inst->memData);
+
+            WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt, this);
 
             // We'll say this has a 1 cycle load-store forwarding latency
             // for now.
             // @todo: Need to make this a parameter.
             wb->schedule(curTick);
-*/
+
             // Should keep track of stat for forwarded data
             return NoFault;
         } else if ((store_has_lower_limit && lower_load_has_store_part) ||
@@ -584,6 +621,12 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
 
     PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
     data_pkt->dataStatic(load_inst->memData);
+
+    LSQSenderState *state = new LSQSenderState;
+    state->isLoad = true;
+    state->idx = load_idx;
+    state->inst = load_inst;
+    data_pkt->senderState = state;
 
     // if we have a cache, do cache access too
     if (!dcachePort->sendTiming(data_pkt)) {

@@ -61,7 +61,9 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
         }
     }
 
+#ifdef DEBUG
     assert(MemDepEntry::memdep_count == 0);
+#endif
 }
 
 template <class MemDepPred, class Impl>
@@ -143,7 +145,9 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     // Add the MemDepEntry to the hash.
     memDepHash.insert(
         std::pair<InstSeqNum, MemDepEntryPtr>(inst->seqNum, inst_entry));
+#ifdef DEBUG
     MemDepEntry::memdep_insert++;
+#endif
 
     instList[tid].push_back(inst);
 
@@ -229,7 +233,9 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
     // Insert the MemDepEntry into the hash.
     memDepHash.insert(
         std::pair<InstSeqNum, MemDepEntryPtr>(inst->seqNum, inst_entry));
+#ifdef DEBUG
     MemDepEntry::memdep_insert++;
+#endif
 
     // Add the instruction to the list.
     instList[tid].push_back(inst);
@@ -277,7 +283,9 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
     // Add the MemDepEntry to the hash.
     memDepHash.insert(
         std::pair<InstSeqNum, MemDepEntryPtr>(barr_sn, inst_entry));
+#ifdef DEBUG
     MemDepEntry::memdep_insert++;
+#endif
 
     // Add the instruction to the instruction list.
     instList[tid].push_back(barr_inst);
@@ -377,7 +385,9 @@ MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
     (*hash_it).second = NULL;
 
     memDepHash.erase(hash_it);
+#ifdef DEBUG
     MemDepEntry::memdep_erase++;
+#endif
 }
 
 template <class MemDepPred, class Impl>
@@ -472,7 +482,9 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
         (*hash_it).second = NULL;
 
         memDepHash.erase(hash_it);
+#ifdef DEBUG
         MemDepEntry::memdep_erase++;
+#endif
 
         instList[tid].erase(squash_it--);
     }
@@ -553,5 +565,7 @@ MemDepUnit<MemDepPred, Impl>::dumpLists()
 
     cprintf("Memory dependence hash size: %i\n", memDepHash.size());
 
+#ifdef DEBUG
     cprintf("Memory dependence entries: %i\n", MemDepEntry::memdep_count);
+#endif
 }

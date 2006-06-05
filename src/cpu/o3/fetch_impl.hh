@@ -105,7 +105,8 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(Params *params)
-    : branchPred(params),
+    : mem(params->mem),
+      branchPred(params),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -113,7 +114,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
       fetchWidth(params->fetchWidth),
       numThreads(params->numberOfThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
-      interruptPending(false)
+      interruptPending(false),
+      switchedOut(false)
 {
     if (numThreads > Impl::MaxThreads)
         fatal("numThreads is not a valid value\n");
@@ -161,7 +163,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         priorityList.push_back(tid);
 
-        memPkt[tid] = NULL;
+        memReq[tid] = NULL;
 
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
@@ -283,6 +285,10 @@ DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
 
+    Port *mem_dport = mem->getPort("");
+    icachePort->setPeer(mem_dport);
+    mem_dport->setPeer(icachePort);
+
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
     switchToActive();
@@ -355,10 +361,12 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     // Only change the status if it's still waiting on the icache access
     // to return.
     if (fetchStatus[tid] != IcacheWaitResponse ||
-        pkt != memPkt[tid] ||
+        pkt->req != memReq[tid] ||
         isSwitchedOut()) {
         ++fetchIcacheSquashes;
+        delete pkt->req;
         delete pkt;
+        memReq[tid] = NULL;
         return;
     }
 
@@ -383,7 +391,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     // Reset the mem req to NULL.
     delete pkt->req;
     delete pkt;
-    memPkt[tid] = NULL;
+    memReq[tid] = NULL;
 }
 
 template <class Impl>
@@ -514,7 +522,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     RequestPtr mem_req = new Request(tid, fetch_PC, cacheBlkSize, flags,
                                      fetch_PC, cpu->readCpuId(), tid);
 
-    memPkt[tid] = NULL;
+    memReq[tid] = mem_req;
 
     // Translate the instruction request.
 //#if FULL_SYSTEM
@@ -565,6 +573,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
                 "response.\n", tid);
 
         fetchStatus[tid] = IcacheWaitResponse;
+    } else {
+        delete mem_req;
+        memReq[tid] = NULL;
     }
 
     ret_fault = fault;
@@ -585,8 +596,9 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
     if (fetchStatus[tid] == IcacheWaitResponse) {
         DPRINTF(Fetch, "[tid:%i]: Squashing outstanding Icache miss.\n",
                 tid);
-        delete memPkt[tid];
-        memPkt[tid] = NULL;
+        // Should I delete this here or when it comes back from the cache?
+//        delete memReq[tid];
+        memReq[tid] = NULL;
     }
 
     fetchStatus[tid] = Squashing;
@@ -1083,7 +1095,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #else // !FULL_SYSTEM
-        fatal("fault (%d) detected @ PC %08p", fault, PC[tid]);
+        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #endif // FULL_SYSTEM
     }
 }

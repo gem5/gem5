@@ -73,7 +73,8 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         if (i < params->workload.size()) {
             DPRINTF(FullCPU, "FullCPU: Workload[%i] process is %#x",
                     i, this->thread[i]);
-            this->thread[i] = new Thread(this, i, params->workload[i], i);
+            this->thread[i] = new Thread(this, i, params->workload[i],
+                                         i, params->mem);
 
             this->thread[i]->setStatus(ExecContext::Suspended);
             //usedTids[i] = true;
@@ -83,7 +84,7 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
             //when scheduling threads to CPU
             Process* dummy_proc = NULL;
 
-            this->thread[i] = new Thread(this, i, dummy_proc, i);
+            this->thread[i] = new Thread(this, i, dummy_proc, i, params->mem);
             //usedTids[i] = false;
         }
 #endif // !FULL_SYSTEM
