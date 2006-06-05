@@ -79,6 +79,8 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
             /* asid */ 0, mem);
 #endif // !FULL_SYSTEM
 
+    cpuXC->setStatus(ExecContext::Suspended);
+
     xcProxy = cpuXC->getProxy();
 
     numInst = 0;
