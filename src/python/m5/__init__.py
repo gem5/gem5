@@ -160,7 +160,7 @@ while args_left:
         elif optchar == 'I':
             AddToPath(args_left.pop(0))
         elif optchar == 'P':
-            eval(args_left.pop(0))
+            exec args_left.pop(0)
         else:
             showBriefHelp(sys.stderr)
             panic("invalid argument '%s'\n" % arg_str)
