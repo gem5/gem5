@@ -186,6 +186,10 @@ LSQUnit<Impl>::setCPU(FullCPU *cpu_ptr)
     Port *mem_dport = mem->getPort("");
     dcachePort->setPeer(mem_dport);
     mem_dport->setPeer(dcachePort);
+
+    if (cpu->checker) {
+        cpu->checker->setDcachePort(dcachePort);
+    }
 }
 
 template<class Impl>

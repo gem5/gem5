@@ -108,6 +108,8 @@ class CheckerCPU : public BaseCPU
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 
+    Process *process;
+
     void setMemory(MemObject *mem);
 
     MemObject *memPtr;
@@ -117,6 +119,15 @@ class CheckerCPU : public BaseCPU
 
     System *systemPtr;
 #endif
+
+    void setIcachePort(Port *icache_port);
+
+    Port *icachePort;
+
+    void setDcachePort(Port *dcache_port);
+
+    Port *dcachePort;
+
   public:
     // execution context
     CPUExecContext *cpuXC;
@@ -141,8 +152,8 @@ class CheckerCPU : public BaseCPU
     // current instruction
     MachInst machInst;
 
-    // Refcounted pointer to the one memory request.
-    Request *memReq;
+    // Pointer to the one memory request.
+    RequestPtr memReq;
 
     StaticInstPtr curStaticInst;
 
@@ -334,6 +345,7 @@ class CheckerCPU : public BaseCPU
 
     Result unverifiedResult;
     Request *unverifiedReq;
+    uint8_t *unverifiedMemData;
 
     bool changedPC;
     bool willChangePC;

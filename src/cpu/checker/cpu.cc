@@ -64,8 +64,7 @@ CheckerCPU::init()
 CheckerCPU::CheckerCPU(Params *p)
     : BaseCPU(p), cpuXC(NULL), xcProxy(NULL)
 {
-    memReq = new Request();
-//    memReq->data = new uint8_t[64];
+    memReq = NULL;
 
     numInst = 0;
     startNumInst = 0;
@@ -81,6 +80,8 @@ CheckerCPU::CheckerCPU(Params *p)
     dtb = p->dtb;
     systemPtr = NULL;
     memPtr = NULL;
+#else
+    process = p->process;
 #endif
 }
 
@@ -93,7 +94,7 @@ CheckerCPU::setMemory(MemObject *mem)
 {
     memPtr = mem;
 #if !FULL_SYSTEM
-    cpuXC = new CPUExecContext(this, /* thread_num */ 0, NULL,
+    cpuXC = new CPUExecContext(this, /* thread_num */ 0, process,
                                /* asid */ 0, mem);
 
     cpuXC->setStatus(ExecContext::Suspended);
@@ -133,6 +134,18 @@ CheckerCPU::setSystem(System *system)
 #endif
 
 void
+CheckerCPU::setIcachePort(Port *icache_port)
+{
+    icachePort = icache_port;
+}
+
+void
+CheckerCPU::setDcachePort(Port *dcache_port)
+{
+    dcachePort = dcache_port;
+}
+
+void
 CheckerCPU::serialize(ostream &os)
 {
 /*
@@ -170,25 +183,28 @@ template <class T>
 Fault
 CheckerCPU::read(Addr addr, T &data, unsigned flags)
 {
-/*
-    memReq->reset(addr, sizeof(T), flags);
+    // need to fill in CPU & thread IDs here
+    memReq = new Request();
+
+    memReq->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
 
     // translate to physical address
     translateDataReadReq(memReq);
 
-    memReq->cmd = Read;
-    memReq->completionEvent = NULL;
-    memReq->time = curTick;
-    memReq->flags &= ~INST_READ;
+    Packet *pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
 
-    if (!(memReq->flags & UNCACHEABLE)) {
+    pkt->dataStatic(&data);
+
+    if (!(memReq->getFlags() & UNCACHEABLE)) {
         // Access memory to see if we have the same data
-        cpuXC->read(memReq, data);
+        dcachePort->sendFunctional(pkt);
     } else {
         // Assume the data is correct if it's an uncached access
         memcpy(&data, &unverifiedResult.integer, sizeof(T));
     }
-*/
+
+    delete pkt;
+
     return NoFault;
 }
 
@@ -237,8 +253,10 @@ template <class T>
 Fault
 CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-/*
-    memReq->reset(addr, sizeof(T), flags);
+    // need to fill in CPU & thread IDs here
+    memReq = new Request();
+
+    memReq->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
 
     // translate to physical address
     cpuXC->translateDataWriteReq(memReq);
@@ -253,19 +271,21 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // This is because the LSQ would have to be snooped in the CPU to
     // verify this data.
     if (unverifiedReq &&
-        !(unverifiedReq->flags & UNCACHEABLE) &&
-        (!(unverifiedReq->flags & LOCKED) ||
-         ((unverifiedReq->flags & LOCKED) &&
-          unverifiedReq->result == 1))) {
-#if 0
-        memReq->cmd = Read;
-        memReq->completionEvent = NULL;
-        memReq->time = curTick;
-        memReq->flags &= ~INST_READ;
-        cpuXC->read(memReq, inst_data);
-#endif
+        !(unverifiedReq->getFlags() & UNCACHEABLE) &&
+        (!(unverifiedReq->getFlags() & LOCKED) ||
+         ((unverifiedReq->getFlags() & LOCKED) &&
+          unverifiedReq->getScResult() == 1))) {
         T inst_data;
-        memcpy(&inst_data, unverifiedReq->data, sizeof(T));
+/*
+        // This code would work if the LSQ allowed for snooping.
+        Packet *pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
+        pkt.dataStatic(&inst_data);
+
+        dcachePort->sendFunctional(pkt);
+
+        delete pkt;
+*/
+        memcpy(&inst_data, unverifiedMemData, sizeof(T));
 
         if (data != inst_data) {
             warn("%lli: Store value does not match value in memory! "
@@ -278,9 +298,9 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // Assume the result was the same as the one passed in.  This checker
     // doesn't check if the SC should succeed or fail, it just checks the
     // value.
-    if (res)
-        *res = unverifiedReq->result;
-        */
+    if (res && unverifiedReq->scResultValid())
+        *res = unverifiedReq->getScResult();
+
     return NoFault;
 }
 
@@ -451,6 +471,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                 inst->seqNum, inst->readPC());
         unverifiedResult.integer = inst->readIntResult();
         unverifiedReq = inst->req;
+        unverifiedMemData = inst->memData;
         numCycles++;
 
         Fault fault = NoFault;
@@ -494,10 +515,13 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 #define IFETCH_FLAGS(pc)	0
 #endif
 
+        uint64_t fetch_PC = cpuXC->readPC() & ~3;
+
         // set up memory request for instruction fetch
-//        memReq->cmd = Read;
-//        memReq->reset(cpuXC->readPC() & ~3, sizeof(uint32_t),
-//                      IFETCH_FLAGS(cpuXC->readPC()));
+        memReq = new Request(inst->threadNumber, fetch_PC,
+                             sizeof(uint32_t),
+                             IFETCH_FLAGS(cpuXC->readPC()),
+                             fetch_PC, cpuXC->readCpuId(), inst->threadNumber);
 
         bool succeeded = translateInstReq(memReq);
 
@@ -526,7 +550,14 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         }
 
         if (fault == NoFault) {
-//            cpuXC->read(memReq, machInst);
+            Packet *pkt = new Packet(memReq, Packet::ReadReq,
+                                     Packet::Broadcast);
+
+            pkt->dataStatic(&machInst);
+
+            icachePort->sendFunctional(pkt);
+
+            delete pkt;
 
             // keep an instruction count
             numInst++;
@@ -546,6 +577,10 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 
             fault = inst->getFault();
         }
+
+        // Discard fetch's memReq.
+        delete memReq;
+        memReq = NULL;
 
         // Either the instruction was a fault and we should process the fault,
         // or we should just go ahead execute the instruction.  This assumes
@@ -608,6 +643,11 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         // @todo:  Optionally can check all registers. (Or just those
         // that have been modified).
         validateState();
+
+        if (memReq) {
+            delete memReq;
+            memReq = NULL;
+        }
 
         // Continue verifying instructions if there's another completed
         // instruction waiting to be verified.
@@ -679,7 +719,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
                 cpuXC->setMiscReg(idx, inst->readIntResult());
             }
         } else if (result.integer != inst->readIntResult()) {
-            warn("%lli: Instruction results do not match! (Results may not "
+            warn("%lli: Instruction results do not match! (Values may not "
                  "actually be integers) Inst: %#x, checker: %#x",
                  curTick, inst->readIntResult(), result.integer);
             handleError();

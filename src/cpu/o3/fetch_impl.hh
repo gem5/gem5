@@ -30,6 +30,7 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/fetch.hh"
 #include "mem/packet.hh"
@@ -288,6 +289,10 @@ DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
     Port *mem_dport = mem->getPort("");
     icachePort->setPeer(mem_dport);
     mem_dport->setPeer(icachePort);
+
+    if (cpu->checker) {
+        cpu->checker->setIcachePort(icachePort);
+    }
 
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.

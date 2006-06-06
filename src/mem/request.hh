@@ -208,6 +208,8 @@ class Request
     /** Accessor function for asid.*/
     int getAsid() { assert(validAsidVaddr); return asid; }
 
+    /** Accessor function to check if sc result is valid. */
+    bool scResultValid() { return validScResult; }
     /** Accessor function for store conditional return value.*/
     uint64_t getScResult() { assert(validScResult); return scResult; }
     /** Accessor function for store conditional return value.*/
