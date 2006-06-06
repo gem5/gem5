@@ -46,7 +46,7 @@ class SparcFault : public FaultBase
 {
   public:
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
@@ -585,7 +585,7 @@ class TrapInstruction : public EnumeratedFault
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
 #if !FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
 

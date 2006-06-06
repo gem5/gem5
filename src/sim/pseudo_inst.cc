@@ -38,7 +38,7 @@
 #include "arch/vtophys.hh"
 #include "cpu/base.hh"
 #include "cpu/sampler/sampler.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/param.hh"
@@ -64,94 +64,94 @@ namespace AlphaPseudo
     bool doQuiesce;
 
     void
-    arm(ExecContext *xc)
+    arm(ThreadContext *tc)
     {
-        if (xc->getKernelStats())
-            xc->getKernelStats()->arm();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->arm();
     }
 
     void
-    quiesce(ExecContext *xc)
+    quiesce(ThreadContext *tc)
     {
         if (!doQuiesce)
             return;
 
-        xc->suspend();
-        if (xc->getKernelStats())
-            xc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
     }
 
     void
-    quiesceNs(ExecContext *xc, uint64_t ns)
+    quiesceNs(ThreadContext *tc, uint64_t ns)
     {
         if (!doQuiesce || ns == 0)
             return;
 
-        EndQuiesceEvent *quiesceEvent = xc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
         if (quiesceEvent->scheduled())
             quiesceEvent->reschedule(curTick + Clock::Int::ns * ns);
         else
             quiesceEvent->schedule(curTick + Clock::Int::ns * ns);
 
-        xc->suspend();
-        if (xc->getKernelStats())
-            xc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
     }
 
     void
-    quiesceCycles(ExecContext *xc, uint64_t cycles)
+    quiesceCycles(ThreadContext *tc, uint64_t cycles)
     {
         if (!doQuiesce || cycles == 0)
             return;
 
-        EndQuiesceEvent *quiesceEvent = xc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
         if (quiesceEvent->scheduled())
             quiesceEvent->reschedule(curTick +
-                                     xc->getCpuPtr()->cycles(cycles));
+                                     tc->getCpuPtr()->cycles(cycles));
         else
             quiesceEvent->schedule(curTick +
-                                   xc->getCpuPtr()->cycles(cycles));
+                                   tc->getCpuPtr()->cycles(cycles));
 
-        xc->suspend();
-        if (xc->getKernelStats())
-            xc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
     }
 
     uint64_t
-    quiesceTime(ExecContext *xc)
+    quiesceTime(ThreadContext *tc)
     {
-        return (xc->readLastActivate() - xc->readLastSuspend()) / Clock::Int::ns;
+        return (tc->readLastActivate() - tc->readLastSuspend()) / Clock::Int::ns;
     }
 
     void
-    ivlb(ExecContext *xc)
+    ivlb(ThreadContext *tc)
     {
-        if (xc->getKernelStats())
-            xc->getKernelStats()->ivlb();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->ivlb();
     }
 
     void
-    ivle(ExecContext *xc)
+    ivle(ThreadContext *tc)
     {
     }
 
     void
-    m5exit_old(ExecContext *xc)
+    m5exit_old(ThreadContext *tc)
     {
         SimExit(curTick, "m5_exit_old instruction encountered");
     }
 
     void
-    m5exit(ExecContext *xc, Tick delay)
+    m5exit(ThreadContext *tc, Tick delay)
     {
         Tick when = curTick + delay * Clock::Int::ns;
         SimExit(when, "m5_exit instruction encountered");
     }
 
     void
-    resetstats(ExecContext *xc, Tick delay, Tick period)
+    resetstats(ThreadContext *tc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)
             return;
@@ -165,7 +165,7 @@ namespace AlphaPseudo
     }
 
     void
-    dumpstats(ExecContext *xc, Tick delay, Tick period)
+    dumpstats(ThreadContext *tc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)
             return;
@@ -179,19 +179,19 @@ namespace AlphaPseudo
     }
 
     void
-    addsymbol(ExecContext *xc, Addr addr, Addr symbolAddr)
+    addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
     {
         char symb[100];
-        CopyStringOut(xc, symb, symbolAddr, 100);
+        CopyStringOut(tc, symb, symbolAddr, 100);
         std::string symbol(symb);
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
-        xc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
+        tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
     }
 
     void
-    dumpresetstats(ExecContext *xc, Tick delay, Tick period)
+    dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)
             return;
@@ -205,7 +205,7 @@ namespace AlphaPseudo
     }
 
     void
-    m5checkpoint(ExecContext *xc, Tick delay, Tick period)
+    m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     {
         if (!doCheckpointInsts)
             return;
@@ -218,9 +218,9 @@ namespace AlphaPseudo
     }
 
     uint64_t
-    readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset)
+    readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     {
-        const string &file = xc->getCpuPtr()->system->params()->readfile;
+        const string &file = tc->getCpuPtr()->system->params()->readfile;
         if (file.empty()) {
             return ULL(0);
         }
@@ -247,7 +247,7 @@ namespace AlphaPseudo
         }
 
         close(fd);
-        CopyIn(xc, vaddr, buf, result);
+        CopyIn(tc, vaddr, buf, result);
         delete [] buf;
         return result;
     }
@@ -279,12 +279,12 @@ namespace AlphaPseudo
         doCheckpointInsts = __checkpoint;
     }
 
-    void debugbreak(ExecContext *xc)
+    void debugbreak(ThreadContext *tc)
     {
         debug_break();
     }
 
-    void switchcpu(ExecContext *xc)
+    void switchcpu(ThreadContext *tc)
     {
         if (SampCPU)
             SampCPU->switchCPUs();

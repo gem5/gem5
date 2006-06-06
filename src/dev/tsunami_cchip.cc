@@ -43,7 +43,7 @@
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
 #include "mem/port.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
@@ -368,7 +368,7 @@ TsunamiCChip::write(Packet *pkt)
 void
 TsunamiCChip::clearIPI(uint64_t ipintr)
 {
-    int numcpus = tsunami->intrctrl->cpu->system->execContexts.size();
+    int numcpus = tsunami->intrctrl->cpu->system->threadContexts.size();
     assert(numcpus <= Tsunami::Max_CPUs);
 
     if (ipintr) {
@@ -394,7 +394,7 @@ TsunamiCChip::clearIPI(uint64_t ipintr)
 void
 TsunamiCChip::clearITI(uint64_t itintr)
 {
-    int numcpus = tsunami->intrctrl->cpu->system->execContexts.size();
+    int numcpus = tsunami->intrctrl->cpu->system->threadContexts.size();
     assert(numcpus <= Tsunami::Max_CPUs);
 
     if (itintr) {
@@ -414,7 +414,7 @@ TsunamiCChip::clearITI(uint64_t itintr)
 void
 TsunamiCChip::reqIPI(uint64_t ipreq)
 {
-    int numcpus = tsunami->intrctrl->cpu->system->execContexts.size();
+    int numcpus = tsunami->intrctrl->cpu->system->threadContexts.size();
     assert(numcpus <= Tsunami::Max_CPUs);
 
     if (ipreq) {
@@ -441,7 +441,7 @@ TsunamiCChip::reqIPI(uint64_t ipreq)
 void
 TsunamiCChip::postRTC()
 {
-    int size = tsunami->intrctrl->cpu->system->execContexts.size();
+    int size = tsunami->intrctrl->cpu->system->threadContexts.size();
     assert(size <= Tsunami::Max_CPUs);
 
     for (int i = 0; i < size; i++) {
@@ -459,7 +459,7 @@ void
 TsunamiCChip::postDRIR(uint32_t interrupt)
 {
     uint64_t bitvector = ULL(1) << interrupt;
-    uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
+    uint64_t size = tsunami->intrctrl->cpu->system->threadContexts.size();
     assert(size <= Tsunami::Max_CPUs);
     drir |= bitvector;
 
@@ -477,7 +477,7 @@ void
 TsunamiCChip::clearDRIR(uint32_t interrupt)
 {
     uint64_t bitvector = ULL(1) << interrupt;
-    uint64_t size = tsunami->intrctrl->cpu->system->execContexts.size();
+    uint64_t size = tsunami->intrctrl->cpu->system->threadContexts.size();
     assert(size <= Tsunami::Max_CPUs);
 
     if (drir & bitvector)

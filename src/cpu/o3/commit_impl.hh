@@ -115,7 +115,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         commitStatus[i] = Idle;
         changedROBNumEntries[i] = false;
         trapSquash[i] = false;
-        xcSquash[i] = false;
+        tcSquash[i] = false;
         PC[i] = nextPC[i] = 0;
     }
 
@@ -384,7 +384,7 @@ DefaultCommit<Impl>::takeOverFrom()
         commitStatus[i] = Idle;
         changedROBNumEntries[i] = false;
         trapSquash[i] = false;
-        xcSquash[i] = false;
+        tcSquash[i] = false;
     }
     squashCounter = 0;
     rob->takeOverFrom();
@@ -482,11 +482,11 @@ DefaultCommit<Impl>::generateTrapEvent(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::generateXCEvent(unsigned tid)
+DefaultCommit<Impl>::generateTCEvent(unsigned tid)
 {
-    DPRINTF(Commit, "Generating XC squash event for [tid:%i]\n", tid);
+    DPRINTF(Commit, "Generating TC squash event for [tid:%i]\n", tid);
 
-    xcSquash[tid] = true;
+    tcSquash[tid] = true;
 }
 
 template <class Impl>
@@ -545,11 +545,11 @@ DefaultCommit<Impl>::squashFromTrap(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashFromXC(unsigned tid)
+DefaultCommit<Impl>::squashFromTC(unsigned tid)
 {
     squashAll(tid);
 
-    DPRINTF(Commit, "Squashing from XC, restarting at PC %#x\n", PC[tid]);
+    DPRINTF(Commit, "Squashing from TC, restarting at PC %#x\n", PC[tid]);
 
     thread[tid]->inSyscall = false;
     assert(!thread[tid]->trapPending);
@@ -557,7 +557,7 @@ DefaultCommit<Impl>::squashFromXC(unsigned tid)
     commitStatus[tid] = ROBSquashing;
     cpu->activityThisCycle();
 
-    xcSquash[tid] = false;
+    tcSquash[tid] = false;
 
     ++squashCounter;
 }
@@ -651,7 +651,7 @@ DefaultCommit<Impl>::commit()
         cpu->check_interrupts() &&
         !cpu->inPalMode(readPC()) &&
         !trapSquash[0] &&
-        !xcSquash[0]) {
+        !tcSquash[0]) {
         // Tell fetch that there is an interrupt pending.  This will
         // make fetch wait until it sees a non PAL-mode PC, at which
         // point it stops fetching instructions.
@@ -720,10 +720,10 @@ DefaultCommit<Impl>::commit()
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid] == true) {
-            assert(!xcSquash[tid]);
+            assert(!tcSquash[tid]);
             squashFromTrap(tid);
-        } else if (xcSquash[tid] == true) {
-            squashFromXC(tid);
+        } else if (tcSquash[tid] == true) {
+            squashFromTC(tid);
         }
 
         // Squashed sequence number must be older than youngest valid

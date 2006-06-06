@@ -60,7 +60,7 @@ StaticInst::dumpDecodeCacheStats()
 }
 
 bool
-StaticInst::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
+StaticInst::hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const
 {
     if (isDirectCtrl()) {
         tgt = branchTarget(pc);
@@ -68,7 +68,7 @@ StaticInst::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
     }
 
     if (isIndirectCtrl()) {
-        tgt = branchTarget(xc);
+        tgt = branchTarget(tc);
         return true;
     }
 

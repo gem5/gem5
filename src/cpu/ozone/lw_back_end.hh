@@ -44,7 +44,7 @@
 
 template <class>
 class Checker;
-class ExecContext;
+class ThreadContext;
 
 template <class Impl>
 class OzoneThreadState;
@@ -126,8 +126,8 @@ class LWBackEnd
     void setFrontEnd(FrontEnd *front_end_ptr)
     { frontEnd = front_end_ptr; }
 
-    void setXC(ExecContext *xc_ptr)
-    { xc = xc_ptr; }
+    void setTC(ThreadContext *tc_ptr)
+    { tc = tc_ptr; }
 
     void setThreadState(Thread *thread_ptr)
     { thread = thread_ptr; }
@@ -136,12 +136,12 @@ class LWBackEnd
 
     void tick();
     void squash();
-    void generateXCEvent() { xcSquash = true; }
-    void squashFromXC();
+    void generateTCEvent() { tcSquash = true; }
+    void squashFromTC();
     void squashFromTrap();
     void checkInterrupts();
     bool trapSquash;
-    bool xcSquash;
+    bool tcSquash;
 
     template <class T>
     Fault read(RequestPtr req, T &data, int load_idx);
@@ -213,7 +213,7 @@ class LWBackEnd
 
     void switchOut();
     void doSwitchOut();
-    void takeOverFrom(ExecContext *old_xc = NULL);
+    void takeOverFrom(ThreadContext *old_tc = NULL);
 
     bool isSwitchedOut() { return switchedOut; }
 
@@ -241,7 +241,7 @@ class LWBackEnd
 
     FrontEnd *frontEnd;
 
-    ExecContext *xc;
+    ThreadContext *tc;
 
     Thread *thread;
 

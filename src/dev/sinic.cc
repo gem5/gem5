@@ -33,7 +33,7 @@
 #include <string>
 
 #include "base/inet.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"

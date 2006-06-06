@@ -30,7 +30,7 @@
 
 #include "cpu/cpuevent.hh"
 
-/** Static list of all CpuEvent objects so we can modify their execution
+/** Static list of all CpuEvent objects so we can modify their thread
  * contexts as needed. */
 CpuEvent::CpuEventList CpuEvent::cpuEventList;
 
@@ -48,14 +48,14 @@ CpuEvent::~CpuEvent()
 }
 
 void
-CpuEvent::replaceExecContext(ExecContext *oldXc, ExecContext *newXc)
+CpuEvent::replaceThreadContext(ThreadContext *oldTc, ThreadContext *newTc)
 {
     CpuEventList::iterator i;
 
-    // Update any events that have the old execution context with the new exec
+    // Update any events that have the old thread context with the new thread
     // context
     for (i = cpuEventList.begin(); i != cpuEventList.end(); i++) {
-        if ((*i)->xc == oldXc)
-            (*i)->xc = newXc;
+        if ((*i)->tc == oldTc)
+            (*i)->tc = newTc;
     }
 }

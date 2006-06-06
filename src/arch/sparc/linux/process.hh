@@ -61,7 +61,7 @@ class SparcLinuxProcess : public SparcLiveProcess
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
-                                 Process *p, ExecContext *xc);
+                                 Process *p, ThreadContext *tc);
 
 } // namespace SparcISA
 #endif // __ALPHA_LINUX_PROCESS_HH__

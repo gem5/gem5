@@ -846,7 +846,7 @@ OzoneLWLSQ<Impl>::switchOut()
 
 template <class Impl>
 void
-OzoneLWLSQ<Impl>::takeOverFrom(ExecContext *old_xc)
+OzoneLWLSQ<Impl>::takeOverFrom(ThreadContext *old_tc)
 {
     // Clear out any old state. May be redundant if this is the first time
     // the CPU is being used.

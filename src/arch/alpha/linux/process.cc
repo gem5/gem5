@@ -34,7 +34,7 @@
 #include "arch/alpha/isa_traits.hh"
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 
 #include "sim/process.hh"
@@ -48,9 +48,9 @@ using namespace AlphaISA;
 /// Target uname() handler.
 static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ExecContext *xc)
+          ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -58,7 +58,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(xc->getMemPort());
+    name.copyOut(tc->getMemPort());
     return 0;
 }
 
@@ -67,18 +67,18 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
 osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
+                   ThreadContext *tc)
 {
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
+    unsigned op = tc->getSyscallArg(0);
+    // unsigned nbytes = tc->getSyscallArg(2);
 
     switch (op) {
 
       case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
-          fpcr.copyOut(xc->getMemPort());
+          fpcr.copyOut(tc->getMemPort());
           return 0;
       }
 
@@ -94,17 +94,17 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target osf_setsysinfo() handler.
 static SyscallReturn
 osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
+                   ThreadContext *tc)
 {
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
+    unsigned op = tc->getSyscallArg(0);
+    // unsigned nbytes = tc->getSyscallArg(2);
 
     switch (op) {
 
       case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->getMemPort());
+          fpcr.copyIn(tc->getMemPort());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
           return 0;

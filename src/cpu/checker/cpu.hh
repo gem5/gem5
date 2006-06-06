@@ -60,7 +60,7 @@ class Process;
 #endif // FULL_SYSTEM
 template <class>
 class BaseDynInst;
-class ExecContext;
+class ThreadContext;
 class MemInterface;
 class Checkpoint;
 class Request;
@@ -76,11 +76,11 @@ class Sampler;
  * the values of uncached accesses.  In these cases, and with
  * instructions marked as "IsUnverifiable", the checker assumes that
  * the value from the main CPU's execution is correct and simply
- * copies that value.  It provides a CheckerExecContext (see
+ * copies that value.  It provides a CheckerThreadContext (see
  * checker/exec_context.hh) that provides hooks for updating the
- * Checker's state through any ExecContext accesses.  This allows the
+ * Checker's state through any ThreadContext accesses.  This allows the
  * checker to be able to correctly verify instructions, even with
- * external accesses to the ExecContext that change state.
+ * external accesses to the ThreadContext that change state.
  */
 class CheckerCPU : public BaseCPU
 {
@@ -132,7 +132,7 @@ class CheckerCPU : public BaseCPU
     // execution context
     CPUExecContext *cpuXC;
 
-    ExecContext *xcProxy;
+    ThreadContext *tc;
 
     AlphaITB *itb;
     AlphaDTB *dtb;
@@ -340,7 +340,7 @@ class CheckerCPU : public BaseCPU
     }
     bool checkFlags(Request *req);
 
-    ExecContext *xcBase() { return xcProxy; }
+    ThreadContext *tcBase() { return tc; }
     CPUExecContext *cpuXCBase() { return cpuXC; }
 
     Result unverifiedResult;

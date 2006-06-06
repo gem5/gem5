@@ -38,7 +38,7 @@
 #include "arch/alpha/system.hh"
 #include "arch/alpha/freebsd/system.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "arch/isa_traits.hh"
@@ -72,13 +72,13 @@ FreebsdAlphaSystem::~FreebsdAlphaSystem()
 
 
 void
-FreebsdAlphaSystem::doCalibrateClocks(ExecContext *xc)
+FreebsdAlphaSystem::doCalibrateClocks(ThreadContext *tc)
 {
     Addr ppc_vaddr = 0;
     Addr timer_vaddr = 0;
 
-    ppc_vaddr = (Addr)xc->readIntReg(ArgumentReg1);
-    timer_vaddr = (Addr)xc->readIntReg(ArgumentReg2);
+    ppc_vaddr = (Addr)tc->readIntReg(ArgumentReg1);
+    timer_vaddr = (Addr)tc->readIntReg(ArgumentReg2);
 
     virtPort.write(ppc_vaddr, (uint32_t)Clock::Frequency);
     virtPort.write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
@@ -86,10 +86,10 @@ FreebsdAlphaSystem::doCalibrateClocks(ExecContext *xc)
 
 
 void
-FreebsdAlphaSystem::SkipCalibrateClocksEvent::process(ExecContext *xc)
+FreebsdAlphaSystem::SkipCalibrateClocksEvent::process(ThreadContext *tc)
 {
-    SkipFuncEvent::process(xc);
-    ((FreebsdAlphaSystem *)xc->getSystemPtr())->doCalibrateClocks(xc);
+    SkipFuncEvent::process(tc);
+    ((FreebsdAlphaSystem *)tc->getSystemPtr())->doCalibrateClocks(tc);
 }
 
 

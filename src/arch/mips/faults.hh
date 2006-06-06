@@ -47,7 +47,7 @@ class MipsFault : public FaultBase
     virtual bool setRestartAddress() {return true;}
   public:
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
@@ -114,7 +114,7 @@ class ArithmeticFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
 

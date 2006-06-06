@@ -39,7 +39,7 @@
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/cpu_exec_context.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
 #include "cpu/o3/alpha_impl.hh"
 #include "cpu/o3/cpu.hh"
@@ -384,7 +384,7 @@ void
 FullO3CPU<Impl>::init()
 {
     if (!deferRegistration) {
-        registerExecContexts();
+        registerThreadContexts();
     }
 
     // Set inSyscall so that the CPU doesn't squash when initially
@@ -394,17 +394,17 @@ FullO3CPU<Impl>::init()
 
     for (int tid=0; tid < number_of_threads; tid++) {
 #if FULL_SYSTEM
-        ExecContext *src_xc = execContexts[tid];
+        ThreadContext *src_tc = threadContexts[tid];
 #else
-        ExecContext *src_xc = thread[tid]->getXCProxy();
+        ThreadContext *src_tc = thread[tid]->getTC();
 #endif
         // Threads start in the Suspended State
-        if (src_xc->status() != ExecContext::Suspended) {
+        if (src_tc->status() != ThreadContext::Suspended) {
             continue;
         }
 
 #if FULL_SYSTEM
-        TheISA::initCPU(src_xc, src_xc->readCpuId());
+        TheISA::initCPU(src_tc, src_tc->readCpuId());
 #endif
     }
 
@@ -430,9 +430,9 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
     // and not in the CPUExecContext.
 #if 0
 #if FULL_SYSTEM
-    ExecContext *src_xc = system->execContexts[tid];
+    ThreadContext *src_tc = system->threadContexts[tid];
 #else
-    CPUExecContext *src_xc = thread[tid];
+    CPUExecContext *src_tc = thread[tid];
 #endif
 
     //Bind Int Regs to Rename Map
@@ -452,13 +452,13 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
     }
 
     //Copy Thread Data Into RegFile
-    this->copyFromXC(tid);
+    this->copyFromTC(tid);
 
     //Set PC/NPC
-    regFile.pc[tid]  = src_xc->readPC();
-    regFile.npc[tid] = src_xc->readNextPC();
+    regFile.pc[tid]  = src_tc->readPC();
+    regFile.npc[tid] = src_tc->readNextPC();
 
-    src_xc->setStatus(ExecContext::Active);
+    src_tc->setStatus(ThreadContext::Active);
 
     activateContext(tid,1);
 
@@ -496,7 +496,7 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
      * in the sense that it's finished (exiting)? If the thread is just
      * being suspended we might...
      */
-//    this->copyToXC(tid);
+//    this->copyToTC(tid);
 
     //Squash Throughout Pipeline
     fetch.squash(0,tid);
@@ -745,9 +745,9 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     // Set all statuses to active, schedule the CPU's tick event.
     // @todo: Fix up statuses so this is handled properly
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
-        if (xc->status() == ExecContext::Active && _status != Running) {
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
+        if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
             tickEvent.schedule(curTick);
         }

@@ -44,7 +44,7 @@
 
 
 /** A class that translates a virtual address to a physical address and then
- * calls the above read/write functions. If an execution context is provided the
+ * calls the above read/write functions. If a thread context is provided the
  * address can alway be translated, If not it can only be translated if it is a
  * simple address masking operation (such as alpha super page accesses).
  */
@@ -52,18 +52,19 @@
 class VirtualPort  : public FunctionalPort
 {
   private:
-    ExecContext *xc;
+    ThreadContext *tc;
 
   public:
-    VirtualPort(const std::string &_name, ExecContext *_xc = NULL)
-        : FunctionalPort(_name), xc(_xc)
+    VirtualPort(const std::string &_name, ThreadContext *_tc = NULL)
+        : FunctionalPort(_name), tc(_tc)
     {}
 
-    /** Return true if we have an exec context. This is used to prevent someone
-     * from accidently deleting the cpus statically allocated vport.
-     * @return true if an execution context isn't valid
+    /** Return true if we have an thread context. This is used to
+     * prevent someone from accidently deleting the cpus statically
+     * allocated vport.
+     * @return true if a thread context isn't valid
      */
-    bool nullExecContext() { return xc != NULL; }
+    bool nullThreadContext() { return tc != NULL; }
 
     /** Version of readblob that translates virt->phys and deals
       * with page boundries. */

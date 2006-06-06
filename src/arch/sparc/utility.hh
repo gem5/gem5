@@ -81,10 +81,10 @@ namespace SparcISA
 
     /**
      * Function to insure ISA semantics about 0 registers.
-     * @param xc The execution context.
+     * @param tc The thread context.
      */
-    template <class XC>
-    void zeroRegisters(XC *xc);
+    template <class TC>
+    void zeroRegisters(TC *tc);
 
 } // namespace SparcISA
 

@@ -38,7 +38,7 @@
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
 
-class ExecContext;
+class ThreadContext;
 class MemInterface;
 template <class>
 class OzoneThreadState;
@@ -56,7 +56,7 @@ class FrontEnd
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::BackEnd BackEnd;
 
-    typedef typename Impl::FullCPU::OzoneXC OzoneXC;
+    typedef typename Impl::FullCPU::OzoneTC OzoneTC;
     typedef typename Impl::FullCPU::CommStruct CommStruct;
 
     FrontEnd(Params *params);
@@ -71,7 +71,7 @@ class FrontEnd
 
     void setCommBuffer(TimeBuffer<CommStruct> *_comm);
 
-    void setXC(ExecContext *xc_ptr);
+    void setTC(ThreadContext *tc_ptr);
 
     void setThreadState(OzoneThreadState<Impl> *thread_ptr)
     { thread = thread_ptr; }
@@ -95,7 +95,7 @@ class FrontEnd
 
     void doSwitchOut();
 
-    void takeOverFrom(ExecContext *old_xc = NULL);
+    void takeOverFrom(ThreadContext *old_tc = NULL);
 
     bool isSwitchedOut() { return switchedOut; }
 
@@ -132,7 +132,7 @@ class FrontEnd
 
     BackEnd *backEnd;
 
-    ExecContext *xc;
+    ThreadContext *tc;
 
     OzoneThreadState<Impl> *thread;
 

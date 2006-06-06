@@ -34,7 +34,7 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/tru64/mbuf.hh"
 #include "sim/host.hh"
 #include "sim/system.hh"
@@ -49,11 +49,11 @@ namespace tru64 {
 void
 DumpMbuf(AlphaArguments args)
 {
-    ExecContext *xc = args.getExecContext();
+    ThreadContext *tc = args.getThreadContext();
     Addr addr = (Addr)args;
     struct mbuf m;
 
-    CopyOut(xc, &m, addr, sizeof(m));
+    CopyOut(tc, &m, addr, sizeof(m));
 
     int count = m.m_pkthdr.len;
 
@@ -64,8 +64,8 @@ DumpMbuf(AlphaArguments args)
         ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
                  addr, m.m_data, m.m_len);
         char *buffer = new char[m.m_len];
-        CopyOut(xc, buffer, m.m_data, m.m_len);
-        Trace::dataDump(curTick, xc->getSystemPtr()->name(), (uint8_t *)buffer,
+        CopyOut(tc, buffer, m.m_data, m.m_len);
+        Trace::dataDump(curTick, tc->getSystemPtr()->name(), (uint8_t *)buffer,
                         m.m_len);
         delete [] buffer;
 
@@ -73,7 +73,7 @@ DumpMbuf(AlphaArguments args)
         if (!m.m_next)
             break;
 
-        CopyOut(xc, &m, m.m_next, sizeof(m));
+        CopyOut(tc, &m, m.m_next, sizeof(m));
     }
 }
 

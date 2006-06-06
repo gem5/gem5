@@ -52,7 +52,7 @@
 
 template <class>
 class Checker;
-class ExecContext;
+class ThreadContext;
 class MemObject;
 class Process;
 
@@ -455,10 +455,10 @@ class FullO3CPU : public BaseFullCPU
     int getFreeTid();
 
   public:
-    /** Returns a pointer to a thread's exec context. */
-    ExecContext *xcBase(unsigned tid)
+    /** Returns a pointer to a thread context. */
+    ThreadContext *tcBase(unsigned tid)
     {
-        return thread[tid]->getXCProxy();
+        return thread[tid]->getTC();
     }
 
     /** The global sequence number counter. */

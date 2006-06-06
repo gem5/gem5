@@ -43,7 +43,7 @@
 
 class BranchPred;
 class CheckerCPU;
-class ExecContext;
+class ThreadContext;
 class System;
 
 class BaseCPU : public SimObject
@@ -92,7 +92,7 @@ class BaseCPU : public SimObject
 #endif
 
   protected:
-    std::vector<ExecContext *> execContexts;
+    std::vector<ThreadContext *> threadContexts;
 
   public:
 
@@ -144,7 +144,7 @@ class BaseCPU : public SimObject
 
     virtual void activateWhenReady(int tid) {};
 
-    void registerExecContexts();
+    void registerThreadContexts();
 
     /// Prepare for another CPU to take over execution.  When it is
     /// is ready (drained pipe) it signals the sampler.

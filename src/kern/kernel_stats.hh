@@ -40,7 +40,7 @@
 #include "cpu/static_inst.hh"
 
 class BaseCPU;
-class ExecContext;
+class ThreadContext;
 class FnEvent;
 // What does kernel stats expect is included?
 class System;
@@ -107,9 +107,9 @@ class Binning
     const bool fnbin;
 
     cpu_mode themode;
-    void palSwapContext(ExecContext *xc);
-    void execute(ExecContext *xc, StaticInstPtr inst);
-    void call(ExecContext *xc, Stats::MainBin *myBin);
+    void palSwapContext(ThreadContext *tc);
+    void execute(ThreadContext *tc, StaticInstPtr inst);
+    void call(ThreadContext *tc, Stats::MainBin *myBin);
     void changeMode(cpu_mode mode);
 
   public:
@@ -137,7 +137,7 @@ class Statistics : public Serializable
     Tick lastModeTick;
     bool bin_int;
 
-    void changeMode(cpu_mode newmode, ExecContext *xc);
+    void changeMode(cpu_mode newmode, ThreadContext *tc);
 
   private:
     Stats::Scalar<> _arm;
@@ -179,11 +179,11 @@ class Statistics : public Serializable
     void ivle() { _ivle++; }
     void hwrei() { _hwrei++; }
     void swpipl(int ipl);
-    void mode(cpu_mode newmode, ExecContext *xc);
-    void context(Addr oldpcbb, Addr newpcbb, ExecContext *xc);
-    void callpal(int code, ExecContext *xc);
+    void mode(cpu_mode newmode, ThreadContext *tc);
+    void context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc);
+    void callpal(int code, ThreadContext *tc);
 
-    void setIdleProcess(Addr idle, ExecContext *xc);
+    void setIdleProcess(Addr idle, ThreadContext *tc);
 
   public:
     virtual void serialize(std::ostream &os);

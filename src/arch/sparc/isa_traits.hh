@@ -36,7 +36,7 @@
 #include "config/full_system.hh"
 #include "sim/host.hh"
 
-class ExecContext;
+class ThreadContext;
 class FastCPU;
 //class FullCPU;
 class Checkpoint;

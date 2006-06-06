@@ -36,7 +36,7 @@
 #include "arch/isa_traits.hh"
 #include "sim/system.hh"
 
-class ExecContext;
+class ThreadContext;
 
 class BreakPCEvent;
 class BadAddrEvent;

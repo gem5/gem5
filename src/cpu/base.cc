@@ -39,7 +39,7 @@
 #include "base/output.hh"
 #include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
@@ -179,7 +179,7 @@ void
 BaseCPU::init()
 {
     if (!params->deferRegistration)
-        registerExecContexts();
+        registerThreadContexts();
 }
 
 void
@@ -202,15 +202,15 @@ BaseCPU::regStats()
         .desc("number of cpu cycles simulated")
         ;
 
-    int size = execContexts.size();
+    int size = threadContexts.size();
     if (size > 1) {
         for (int i = 0; i < size; ++i) {
             stringstream namestr;
             ccprintf(namestr, "%s.ctx%d", name(), i);
-            execContexts[i]->regStats(namestr.str());
+            threadContexts[i]->regStats(namestr.str());
         }
     } else if (size == 1)
-        execContexts[0]->regStats(name());
+        threadContexts[0]->regStats(name());
 
 #if FULL_SYSTEM
 #endif
@@ -218,19 +218,19 @@ BaseCPU::regStats()
 
 
 void
-BaseCPU::registerExecContexts()
+BaseCPU::registerThreadContexts()
 {
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
 
 #if FULL_SYSTEM
         int id = params->cpu_id;
         if (id != -1)
             id += i;
 
-        xc->setCpuId(system->registerExecContext(xc, id));
+        tc->setCpuId(system->registerThreadContext(tc, id));
 #else
-        xc->setCpuId(xc->getProcessPtr()->registerExecContext(xc));
+        tc->setCpuId(tc->getProcessPtr()->registerThreadContext(tc));
 #endif
     }
 }
@@ -245,22 +245,22 @@ BaseCPU::switchOut(Sampler *sampler)
 void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    assert(execContexts.size() == oldCPU->execContexts.size());
+    assert(threadContexts.size() == oldCPU->threadContexts.size());
 
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *newXC = execContexts[i];
-        ExecContext *oldXC = oldCPU->execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *newTC = threadContexts[i];
+        ThreadContext *oldTC = oldCPU->threadContexts[i];
 
-        newXC->takeOverFrom(oldXC);
+        newTC->takeOverFrom(oldTC);
 
-        CpuEvent::replaceExecContext(oldXC, newXC);
+        CpuEvent::replaceThreadContext(oldTC, newTC);
 
-        assert(newXC->readCpuId() == oldXC->readCpuId());
+        assert(newTC->readCpuId() == oldTC->readCpuId());
 #if FULL_SYSTEM
-        system->replaceExecContext(newXC, newXC->readCpuId());
+        system->replaceThreadContext(newTC, newTC->readCpuId());
 #else
-        assert(newXC->getProcessPtr() == oldXC->getProcessPtr());
-        newXC->getProcessPtr()->replaceExecContext(newXC, newXC->readCpuId());
+        assert(newTC->getProcessPtr() == oldTC->getProcessPtr());
+        newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->readCpuId());
 #endif
     }
 
@@ -269,8 +269,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
 
-    for (int i = 0; i < execContexts.size(); ++i)
-        execContexts[i]->profileClear();
+    for (int i = 0; i < threadContexts.size(); ++i)
+        threadContexts[i]->profileClear();
 
     if (profileEvent)
         profileEvent->schedule(curTick);
@@ -286,9 +286,9 @@ BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
 void
 BaseCPU::ProfileEvent::process()
 {
-    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
-        ExecContext *xc = cpu->execContexts[i];
-        xc->profileSample();
+    for (int i = 0, size = cpu->threadContexts.size(); i < size; ++i) {
+        ThreadContext *tc = cpu->threadContexts[i];
+        tc->profileSample();
     }
 
     schedule(curTick + interval);

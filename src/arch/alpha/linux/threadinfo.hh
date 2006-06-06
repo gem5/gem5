@@ -33,7 +33,7 @@
 #define __ARCH_ALPHA_LINUX_LINUX_TREADNIFO_HH__
 
 #include "arch/alpha/linux/thread_info.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/sched.hh"
 #include "sim/vptr.hh"
 
@@ -42,10 +42,10 @@ namespace Linux {
 class ThreadInfo
 {
   private:
-    ExecContext *xc;
+    ThreadContext *tc;
 
   public:
-    ThreadInfo(ExecContext *exec) : xc(exec) {}
+    ThreadInfo(ThreadContext *_tc) : tc(_tc) {}
     ~ThreadInfo() {}
 
     inline VPtr<thread_info>
@@ -57,15 +57,15 @@ class ThreadInfo
          * thread_info struct. So we can get the address by masking off
          * the lower 14 bits.
          */
-        current = xc->readIntReg(TheISA::StackPointerReg) & ~0x3fff;
-        return VPtr<thread_info>(xc, current);
+        current = tc->readIntReg(TheISA::StackPointerReg) & ~0x3fff;
+        return VPtr<thread_info>(tc, current);
     }
 
     inline VPtr<task_struct>
     curTaskInfo()
     {
         Addr task = curThreadInfo()->task;
-        return VPtr<task_struct>(xc, task);
+        return VPtr<task_struct>(tc, task);
     }
 
     std::string

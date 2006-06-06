@@ -193,7 +193,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Pointer to the FullCPU object. */
     FullCPU *cpu;
 
-    /** Pointer to the exec context. */
+    /** Pointer to the thread state. */
     ImplState *thread;
 
     /** The kind of fault this instruction has generated. */
@@ -587,10 +587,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     void setState(ImplState *state) { thread = state; }
 
-    /** Returns the exec context.
-     *  @todo: Remove this once the ExecContext is no longer used.
+    /** Returns the thread context.
      */
-    ExecContext *xcBase() { return thread->getXCProxy(); }
+    ThreadContext *tcBase() { return thread->getTC(); }
 
   private:
     /** Instruction effective address.

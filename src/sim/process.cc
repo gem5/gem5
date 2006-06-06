@@ -40,7 +40,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/translating_port.hh"
@@ -134,11 +134,11 @@ Process::openOutputFile(const string &filename)
 
 
 int
-Process::registerExecContext(ExecContext *xc)
+Process::registerThreadContext(ThreadContext *tc)
 {
     // add to list
-    int myIndex = execContexts.size();
-    execContexts.push_back(xc);
+    int myIndex = threadContexts.size();
+    threadContexts.push_back(tc);
 
     // return CPU number to caller
     return myIndex;
@@ -147,14 +147,14 @@ Process::registerExecContext(ExecContext *xc)
 void
 Process::startup()
 {
-    if (execContexts.empty())
+    if (threadContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    // first exec context for this process... initialize & enable
-    ExecContext *xc = execContexts[0];
+    // first thread context for this process... initialize & enable
+    ThreadContext *tc = threadContexts[0];
 
     // mark this context as active so it will start ticking.
-    xc->activate(0);
+    tc->activate(0);
 
     Port *mem_port;
     mem_port = system->physmem->getPort("functional");
@@ -164,14 +164,14 @@ Process::startup()
 }
 
 void
-Process::replaceExecContext(ExecContext *xc, int xcIndex)
+Process::replaceThreadContext(ThreadContext *tc, int tcIndex)
 {
-    if (xcIndex >= execContexts.size()) {
-        panic("replaceExecContext: bad xcIndex, %d >= %d\n",
-              xcIndex, execContexts.size());
+    if (tcIndex >= threadContexts.size()) {
+        panic("replaceThreadContext: bad tcIndex, %d >= %d\n",
+              tcIndex, threadContexts.size());
     }
 
-    execContexts[xcIndex] = xc;
+    threadContexts[tcIndex] = tc;
 }
 
 // map simulator fd sim_fd to target fd tgt_fd
@@ -338,20 +338,20 @@ LiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
-    execContexts[0]->setIntReg(ArgumentReg0, argc);
-    execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
-    execContexts[0]->setIntReg(StackPointerReg, stack_min);
+    threadContexts[0]->setIntReg(ArgumentReg0, argc);
+    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
-    execContexts[0]->setPC(prog_entry);
-    execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
-    execContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    threadContexts[0]->setPC(prog_entry);
+    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 
     num_processes++;
 }
 
 void
-LiveProcess::syscall(int64_t callnum, ExecContext *xc)
+LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
 {
     num_syscalls++;
 
@@ -359,7 +359,7 @@ LiveProcess::syscall(int64_t callnum, ExecContext *xc)
     if (desc == NULL)
         fatal("Syscall %d out of range", callnum);
 
-    desc->doSyscall(callnum, this, xc);
+    desc->doSyscall(callnum, this, tc);
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("LiveProcess", LiveProcess);

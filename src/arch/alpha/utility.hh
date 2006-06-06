@@ -109,10 +109,10 @@ namespace AlphaISA
 
     /**
      * Function to insure ISA semantics about 0 registers.
-     * @param xc The execution context.
+     * @param tc The thread context.
      */
-    template <class XC>
-    void zeroRegisters(XC *xc);
+    template <class TC>
+    void zeroRegisters(TC *tc);
 
 #if FULL_SYSTEM
     // Alpha IPR register accessors
@@ -143,15 +143,15 @@ namespace AlphaISA
     RoundPage(Addr addr)
     { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
-    void initCPU(ExecContext *xc, int cpuId);
-    void initIPRs(ExecContext *xc, int cpuId);
+    void initCPU(ThreadContext *tc, int cpuId);
+    void initIPRs(ThreadContext *tc, int cpuId);
 
     /**
      * Function to check for and process any interrupts.
-     * @param xc The execution context.
+     * @param tc The thread context.
      */
-    template <class XC>
-    void processInterrupts(XC *xc);
+    template <class TC>
+    void processInterrupts(TC *tc);
 #endif
 
 } // namespace AlphaISA

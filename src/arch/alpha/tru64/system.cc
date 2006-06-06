@@ -35,7 +35,7 @@
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/system_events.hh"
 #include "mem/physical.hh"

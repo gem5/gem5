@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#ifndef __CPU_EXEC_CONTEXT_HH__
-#define __CPU_EXEC_CONTEXT_HH__
+#ifndef __CPU_THREAD_CONTEXT_HH__
+#define __CPU_THREAD_CONTEXT_HH__
 
 #include "config/full_system.hh"
 #include "mem/request.hh"
@@ -54,7 +54,23 @@ namespace Kernel {
     class Statistics;
 };
 
-class ExecContext
+/**
+ * ThreadContext is the external interface to all thread state for
+ * anything outside of the CPU. It provides all accessor methods to
+ * state that might be needed by external objects, ranging from
+ * register values to things such as kernel stats. It is an abstract
+ * base class; the CPU can create its own ThreadContext by either
+ * deriving from it, or using the templated ProxyThreadContext.
+ *
+ * The ThreadContext is slightly different than the ExecContext.  The
+ * ThreadContext provides access to an individual thread's state; an
+ * ExecContext provides ISA access to the CPU (meaning it is
+ * implicitly multithreaded on MT systems).  Additionally the
+ * ThreadState is an abstract class that exactly defines the
+ * interface; the ExecContext is a more implicit interface that must
+ * be implemented so that the ISA can access whatever state it needs.
+ */
+class ThreadContext
 {
   protected:
     typedef TheISA::RegFile RegFile;
@@ -87,7 +103,7 @@ class ExecContext
         Halted
     };
 
-    virtual ~ExecContext() { };
+    virtual ~ThreadContext() { };
 
     virtual BaseCPU *getCpuPtr() = 0;
 
@@ -106,7 +122,7 @@ class ExecContext
 
     virtual FunctionalPort *getPhysPort() = 0;
 
-    virtual VirtualPort *getVirtPort(ExecContext *xc = NULL) = 0;
+    virtual VirtualPort *getVirtPort(ThreadContext *tc = NULL) = 0;
 
     virtual void delVirtPort(VirtualPort *vp) = 0;
 #else
@@ -136,7 +152,7 @@ class ExecContext
     virtual void dumpFuncProfile() = 0;
 #endif
 
-    virtual void takeOverFrom(ExecContext *old_context) = 0;
+    virtual void takeOverFrom(ThreadContext *old_context) = 0;
 
     virtual void regStats(const std::string &name) = 0;
 
@@ -161,7 +177,7 @@ class ExecContext
     // However, may be quite useful in SPARC.
     virtual TheISA::MachInst getInst() = 0;
 
-    virtual void copyArchRegs(ExecContext *xc) = 0;
+    virtual void copyArchRegs(ThreadContext *tc) = 0;
 
     virtual void clearArchRegs() = 0;
 
@@ -238,181 +254,181 @@ class ExecContext
             RegFile::ContextVal val) = 0;
 };
 
-template <class XC>
-class ProxyExecContext : public ExecContext
+template <class TC>
+class ProxyThreadContext : public ThreadContext
 {
   public:
-    ProxyExecContext(XC *actual_xc)
-    { actualXC = actual_xc; }
+    ProxyThreadContext(TC *actual_tc)
+    { actualTC = actual_tc; }
 
   private:
-    XC *actualXC;
+    TC *actualTC;
 
   public:
 
-    BaseCPU *getCpuPtr() { return actualXC->getCpuPtr(); }
+    BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
-    void setCpuId(int id) { actualXC->setCpuId(id); }
+    void setCpuId(int id) { actualTC->setCpuId(id); }
 
-    int readCpuId() { return actualXC->readCpuId(); }
+    int readCpuId() { return actualTC->readCpuId(); }
 
 #if FULL_SYSTEM
-    System *getSystemPtr() { return actualXC->getSystemPtr(); }
+    System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
-    AlphaITB *getITBPtr() { return actualXC->getITBPtr(); }
+    AlphaITB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    AlphaDTB *getDTBPtr() { return actualXC->getDTBPtr(); }
+    AlphaDTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    Kernel::Statistics *getKernelStats() { return actualXC->getKernelStats(); }
+    Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
 
-    FunctionalPort *getPhysPort() { return actualXC->getPhysPort(); }
+    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
-    VirtualPort *getVirtPort(ExecContext *xc = NULL) { return actualXC->getVirtPort(xc); }
+    VirtualPort *getVirtPort(ThreadContext *tc = NULL) { return actualTC->getVirtPort(tc); }
 
-    void delVirtPort(VirtualPort *vp) { return actualXC->delVirtPort(vp); }
+    void delVirtPort(VirtualPort *vp) { return actualTC->delVirtPort(vp); }
 #else
-    TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
+    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 
-    Process *getProcessPtr() { return actualXC->getProcessPtr(); }
+    Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
 
-    Status status() const { return actualXC->status(); }
+    Status status() const { return actualTC->status(); }
 
-    void setStatus(Status new_status) { actualXC->setStatus(new_status); }
+    void setStatus(Status new_status) { actualTC->setStatus(new_status); }
 
     /// Set the status to Active.  Optional delay indicates number of
     /// cycles to wait before beginning execution.
-    void activate(int delay = 1) { actualXC->activate(delay); }
+    void activate(int delay = 1) { actualTC->activate(delay); }
 
     /// Set the status to Suspended.
-    void suspend() { actualXC->suspend(); }
+    void suspend() { actualTC->suspend(); }
 
     /// Set the status to Unallocated.
-    void deallocate() { actualXC->deallocate(); }
+    void deallocate() { actualTC->deallocate(); }
 
     /// Set the status to Halted.
-    void halt() { actualXC->halt(); }
+    void halt() { actualTC->halt(); }
 
 #if FULL_SYSTEM
-    void dumpFuncProfile() { actualXC->dumpFuncProfile(); }
+    void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 #endif
 
-    void takeOverFrom(ExecContext *oldContext)
-    { actualXC->takeOverFrom(oldContext); }
+    void takeOverFrom(ThreadContext *oldContext)
+    { actualTC->takeOverFrom(oldContext); }
 
-    void regStats(const std::string &name) { actualXC->regStats(name); }
+    void regStats(const std::string &name) { actualTC->regStats(name); }
 
-    void serialize(std::ostream &os) { actualXC->serialize(os); }
+    void serialize(std::ostream &os) { actualTC->serialize(os); }
     void unserialize(Checkpoint *cp, const std::string &section)
-    { actualXC->unserialize(cp, section); }
+    { actualTC->unserialize(cp, section); }
 
 #if FULL_SYSTEM
-    EndQuiesceEvent *getQuiesceEvent() { return actualXC->getQuiesceEvent(); }
+    EndQuiesceEvent *getQuiesceEvent() { return actualTC->getQuiesceEvent(); }
 
-    Tick readLastActivate() { return actualXC->readLastActivate(); }
-    Tick readLastSuspend() { return actualXC->readLastSuspend(); }
+    Tick readLastActivate() { return actualTC->readLastActivate(); }
+    Tick readLastSuspend() { return actualTC->readLastSuspend(); }
 
-    void profileClear() { return actualXC->profileClear(); }
-    void profileSample() { return actualXC->profileSample(); }
+    void profileClear() { return actualTC->profileClear(); }
+    void profileSample() { return actualTC->profileSample(); }
 #endif
 
-    int getThreadNum() { return actualXC->getThreadNum(); }
+    int getThreadNum() { return actualTC->getThreadNum(); }
 
     // @todo: Do I need this?
-    MachInst getInst() { return actualXC->getInst(); }
+    MachInst getInst() { return actualTC->getInst(); }
 
     // @todo: Do I need this?
-    void copyArchRegs(ExecContext *xc) { actualXC->copyArchRegs(xc); }
+    void copyArchRegs(ThreadContext *tc) { actualTC->copyArchRegs(tc); }
 
-    void clearArchRegs() { actualXC->clearArchRegs(); }
+    void clearArchRegs() { actualTC->clearArchRegs(); }
 
     //
     // New accessors for new decoder.
     //
     uint64_t readIntReg(int reg_idx)
-    { return actualXC->readIntReg(reg_idx); }
+    { return actualTC->readIntReg(reg_idx); }
 
     FloatReg readFloatReg(int reg_idx, int width)
-    { return actualXC->readFloatReg(reg_idx, width); }
+    { return actualTC->readFloatReg(reg_idx, width); }
 
     FloatReg readFloatReg(int reg_idx)
-    { return actualXC->readFloatReg(reg_idx); }
+    { return actualTC->readFloatReg(reg_idx); }
 
     FloatRegBits readFloatRegBits(int reg_idx, int width)
-    { return actualXC->readFloatRegBits(reg_idx, width); }
+    { return actualTC->readFloatRegBits(reg_idx, width); }
 
     FloatRegBits readFloatRegBits(int reg_idx)
-    { return actualXC->readFloatRegBits(reg_idx); }
+    { return actualTC->readFloatRegBits(reg_idx); }
 
     void setIntReg(int reg_idx, uint64_t val)
-    { actualXC->setIntReg(reg_idx, val); }
+    { actualTC->setIntReg(reg_idx, val); }
 
     void setFloatReg(int reg_idx, FloatReg val, int width)
-    { actualXC->setFloatReg(reg_idx, val, width); }
+    { actualTC->setFloatReg(reg_idx, val, width); }
 
     void setFloatReg(int reg_idx, FloatReg val)
-    { actualXC->setFloatReg(reg_idx, val); }
+    { actualTC->setFloatReg(reg_idx, val); }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
-    { actualXC->setFloatRegBits(reg_idx, val, width); }
+    { actualTC->setFloatRegBits(reg_idx, val, width); }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
-    { actualXC->setFloatRegBits(reg_idx, val); }
+    { actualTC->setFloatRegBits(reg_idx, val); }
 
-    uint64_t readPC() { return actualXC->readPC(); }
+    uint64_t readPC() { return actualTC->readPC(); }
 
-    void setPC(uint64_t val) { actualXC->setPC(val); }
+    void setPC(uint64_t val) { actualTC->setPC(val); }
 
-    uint64_t readNextPC() { return actualXC->readNextPC(); }
+    uint64_t readNextPC() { return actualTC->readNextPC(); }
 
-    void setNextPC(uint64_t val) { actualXC->setNextPC(val); }
+    void setNextPC(uint64_t val) { actualTC->setNextPC(val); }
 
-    uint64_t readNextNPC() { return actualXC->readNextNPC(); }
+    uint64_t readNextNPC() { return actualTC->readNextNPC(); }
 
-    void setNextNPC(uint64_t val) { actualXC->setNextNPC(val); }
+    void setNextNPC(uint64_t val) { actualTC->setNextNPC(val); }
 
     MiscReg readMiscReg(int misc_reg)
-    { return actualXC->readMiscReg(misc_reg); }
+    { return actualTC->readMiscReg(misc_reg); }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
-    { return actualXC->readMiscRegWithEffect(misc_reg, fault); }
+    { return actualTC->readMiscRegWithEffect(misc_reg, fault); }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
-    { return actualXC->setMiscReg(misc_reg, val); }
+    { return actualTC->setMiscReg(misc_reg, val); }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
-    { return actualXC->setMiscRegWithEffect(misc_reg, val); }
+    { return actualTC->setMiscRegWithEffect(misc_reg, val); }
 
     unsigned readStCondFailures()
-    { return actualXC->readStCondFailures(); }
+    { return actualTC->readStCondFailures(); }
 
     void setStCondFailures(unsigned sc_failures)
-    { actualXC->setStCondFailures(sc_failures); }
+    { actualTC->setStCondFailures(sc_failures); }
 #if FULL_SYSTEM
-    bool inPalMode() { return actualXC->inPalMode(); }
+    bool inPalMode() { return actualTC->inPalMode(); }
 #endif
 
     // @todo: Fix this!
-    bool misspeculating() { return actualXC->misspeculating(); }
+    bool misspeculating() { return actualTC->misspeculating(); }
 
 #if !FULL_SYSTEM
-    IntReg getSyscallArg(int i) { return actualXC->getSyscallArg(i); }
+    IntReg getSyscallArg(int i) { return actualTC->getSyscallArg(i); }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, IntReg val)
-    { actualXC->setSyscallArg(i, val); }
+    { actualTC->setSyscallArg(i, val); }
 
     void setSyscallReturn(SyscallReturn return_value)
-    { actualXC->setSyscallReturn(return_value); }
+    { actualTC->setSyscallReturn(return_value); }
 
 
-    Counter readFuncExeInst() { return actualXC->readFuncExeInst(); }
+    Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
 
     void changeRegFileContext(RegFile::ContextParam param,
             RegFile::ContextVal val)
     {
-        actualXC->changeRegFileContext(param, val);
+        actualTC->changeRegFileContext(param, val);
     }
 };
 

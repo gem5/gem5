@@ -31,7 +31,7 @@
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 
 class Event;
@@ -49,13 +49,13 @@ class Process;
 /**
  * Class that has various thread state, such as the status, the
  * current instruction being processed, whether or not the thread has
- * a trap pending or is being externally updated, the ExecContext
- * proxy pointer, etc.  It also handles anything related to a specific
+ * a trap pending or is being externally updated, the ThreadContext
+ * pointer, etc.  It also handles anything related to a specific
  * thread's process, such as syscalls and checking valid addresses.
  */
 template <class Impl>
 struct O3ThreadState : public ThreadState {
-    typedef ExecContext::Status Status;
+    typedef ThreadContext::Status Status;
     typedef typename Impl::FullCPU FullCPU;
 
     /** Current status of the thread. */
@@ -93,12 +93,11 @@ struct O3ThreadState : public ThreadState {
     { }
 #endif
 
-    /** Pointer to the ExecContext of this thread.  @todo: Don't call
-     this a proxy.*/
-    ExecContext *xcProxy;
+    /** Pointer to the ThreadContext of this thread. */
+    ThreadContext *tc;
 
-    /** Returns a pointer to the XC of this thread. */
-    ExecContext *getXCProxy() { return xcProxy; }
+    /** Returns a pointer to the TC of this thread. */
+    ThreadContext *getTC() { return tc; }
 
     /** Returns the status of this thread. */
     Status status() const { return _status; }
@@ -121,7 +120,7 @@ struct O3ThreadState : public ThreadState {
 
 #if !FULL_SYSTEM
     /** Handles the syscall. */
-    void syscall(int64_t callnum) { process->syscall(callnum, xcProxy); }
+    void syscall(int64_t callnum) { process->syscall(callnum, tc); }
 #endif
 };
 

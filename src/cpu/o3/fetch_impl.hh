@@ -1011,7 +1011,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     tid, instruction->staticInst->disassemble(fetch_PC));
 
             instruction->traceData =
-                Trace::getInstRecord(curTick, cpu->xcBase(tid), cpu,
+                Trace::getInstRecord(curTick, cpu->tcBase(tid), cpu,
                                      instruction->staticInst,
                                      instruction->readPC(),tid);
 

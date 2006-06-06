@@ -42,7 +42,7 @@ class FreebsdAlphaSystem : public AlphaSystem
         SkipCalibrateClocksEvent(PCEventQueue *q, const std::string &desc,
                                  Addr addr)
             : SkipFuncEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
 
     SkipFuncEvent *skipDelayEvent;
@@ -51,7 +51,7 @@ class FreebsdAlphaSystem : public AlphaSystem
   public:
     FreebsdAlphaSystem(Params *p);
     ~FreebsdAlphaSystem();
-    void doCalibrateClocks(ExecContext *xc);
+    void doCalibrateClocks(ThreadContext *tc);
 
 };
 

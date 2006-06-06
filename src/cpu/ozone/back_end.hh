@@ -14,7 +14,7 @@
 #include "mem/request.hh"
 #include "sim/eventq.hh"
 
-class ExecContext;
+class ThreadContext;
 
 template <class Impl>
 class OzoneThreadState;
@@ -172,8 +172,8 @@ class BackEnd
     void setFrontEnd(FrontEnd *front_end_ptr)
     { frontEnd = front_end_ptr; }
 
-    void setXC(ExecContext *xc_ptr)
-    { xc = xc_ptr; }
+    void setTC(ThreadContext *tc_ptr)
+    { tc = tc_ptr; }
 
     void setThreadState(Thread *thread_ptr)
     { thread = thread_ptr; }
@@ -182,8 +182,8 @@ class BackEnd
 
     void tick();
     void squash();
-    void squashFromXC();
-    bool xcSquash;
+    void squashFromTC();
+    bool tcSquash;
 
     template <class T>
     Fault read(RequestPtr req, T &data, int load_idx);
@@ -240,7 +240,7 @@ class BackEnd
 
     FrontEnd *frontEnd;
 
-    ExecContext *xc;
+    ThreadContext *tc;
 
     Thread *thread;
 

@@ -31,7 +31,7 @@
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "sim/process.hh"
 
@@ -52,10 +52,10 @@ class FunctionalMemory;
 // has benefits for SMT; basically serves same use as CPUExecContext.
 // Makes the ExecContext proxy easier.  Gives organization/central access point
 // to state of a thread that can be accessed normally (i.e. not in-flight
-// stuff within a OoO processor).  Does this need an XC proxy within it?
+// stuff within a OoO processor).  Does this need an TC proxy within it?
 template <class Impl>
 struct OzoneThreadState : public ThreadState {
-    typedef typename ExecContext::Status Status;
+    typedef typename ThreadContext::Status Status;
     typedef typename Impl::FullCPU FullCPU;
     typedef TheISA::MiscReg MiscReg;
 
@@ -104,9 +104,9 @@ struct OzoneThreadState : public ThreadState {
 
     bool trapPending;
 
-    ExecContext *xcProxy;
+    ThreadContext *tc;
 
-    ExecContext *getXCProxy() { return xcProxy; }
+    ThreadContext *getTC() { return tc; }
 
 #if !FULL_SYSTEM
     Fault translateInstReq(Request *req)
@@ -145,7 +145,7 @@ struct OzoneThreadState : public ThreadState {
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return regs.readMiscRegWithEffect(misc_reg, fault, xcProxy);
+        return regs.readMiscRegWithEffect(misc_reg, fault, tc);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
@@ -155,7 +155,7 @@ struct OzoneThreadState : public ThreadState {
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return regs.setMiscRegWithEffect(misc_reg, val, xcProxy);
+        return regs.setMiscRegWithEffect(misc_reg, val, tc);
     }
 
     uint64_t readPC()

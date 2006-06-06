@@ -34,7 +34,7 @@
 
 #include "arch/isa_traits.hh"
 #include "config/full_system.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -84,7 +84,7 @@ class CPUExecContext
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
   public:
-    typedef ExecContext::Status Status;
+    typedef ThreadContext::Status Status;
 
   private:
     Status _status;
@@ -114,7 +114,7 @@ class CPUExecContext
     // pointer to CPU associated with this context
     BaseCPU *cpu;
 
-    ProxyExecContext<CPUExecContext> *proxy;
+    ProxyThreadContext<CPUExecContext> *tc;
 
     // Current instruction
     MachInst inst;
@@ -215,7 +215,7 @@ class CPUExecContext
 #endif
     virtual ~CPUExecContext();
 
-    virtual void takeOverFrom(ExecContext *oldContext);
+    virtual void takeOverFrom(ThreadContext *oldContext);
 
     void regStats(const std::string &name);
 
@@ -224,7 +224,7 @@ class CPUExecContext
 
     BaseCPU *getCpuPtr() { return cpu; }
 
-    ExecContext *getProxy() { return proxy; }
+    ThreadContext *getTC() { return tc; }
 
     int getThreadNum() { return thread_num; }
 
@@ -240,25 +240,25 @@ class CPUExecContext
 
     Fault translateInstReq(RequestPtr &req)
     {
-        return itb->translate(req, proxy);
+        return itb->translate(req, tc);
     }
 
     Fault translateDataReadReq(RequestPtr &req)
     {
-        return dtb->translate(req, proxy, false);
+        return dtb->translate(req, tc, false);
     }
 
     Fault translateDataWriteReq(RequestPtr &req)
     {
-        return dtb->translate(req, proxy, true);
+        return dtb->translate(req, tc, true);
     }
 
     FunctionalPort *getPhysPort() { return physPort; }
 
-    /** Return a virtual port. If no exec context is specified then a static
+    /** Return a virtual port. If no thread context is specified then a static
      * port is returned. Otherwise a port is created and returned. It must be
      * deleted by deleteVirtPort(). */
-    VirtualPort *getVirtPort(ExecContext *xc);
+    VirtualPort *getVirtPort(ThreadContext *tc);
 
     void delVirtPort(VirtualPort *vp);
 
@@ -377,7 +377,7 @@ class CPUExecContext
 
     int readCpuId() { return cpu_id; }
 
-    void copyArchRegs(ExecContext *xc);
+    void copyArchRegs(ThreadContext *tc);
 
     //
     // New accessors for new decoder.
@@ -470,7 +470,7 @@ class CPUExecContext
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return regs.readMiscRegWithEffect(misc_reg, fault, proxy);
+        return regs.readMiscRegWithEffect(misc_reg, fault, tc);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
@@ -480,7 +480,7 @@ class CPUExecContext
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return regs.setMiscRegWithEffect(misc_reg, val, proxy);
+        return regs.setMiscRegWithEffect(misc_reg, val, tc);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }
@@ -517,7 +517,7 @@ class CPUExecContext
 
     void syscall(int64_t callnum)
     {
-        process->syscall(callnum, proxy);
+        process->syscall(callnum, tc);
     }
 
     Counter readFuncExeInst() { return func_exe_inst; }

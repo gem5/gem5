@@ -35,7 +35,7 @@
 #include "arch/alpha/tru64/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -107,7 +107,7 @@ AlphaLiveProcess::startup()
 {
     argsInit(MachineBytes, VMPageSize);
 
-    execContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
+    threadContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
 }
 
 

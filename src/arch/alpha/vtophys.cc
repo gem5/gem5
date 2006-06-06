@@ -36,7 +36,7 @@
 #include "arch/alpha/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/vport.hh"
 
 using namespace std;
@@ -85,10 +85,10 @@ AlphaISA::vtophys(Addr vaddr)
 }
 
 Addr
-AlphaISA::vtophys(ExecContext *xc, Addr addr)
+AlphaISA::vtophys(ThreadContext *tc, Addr addr)
 {
     AlphaISA::VAddr vaddr = addr;
-    Addr ptbr = xc->readMiscReg(AlphaISA::IPR_PALtemp20);
+    Addr ptbr = tc->readMiscReg(AlphaISA::IPR_PALtemp20);
     Addr paddr = 0;
     //@todo Andrew couldn't remember why he commented some of this code
     //so I put it back in. Perhaps something to do with gdb debugging?
@@ -101,7 +101,7 @@ AlphaISA::vtophys(ExecContext *xc, Addr addr)
             paddr = vaddr;
         } else {
             AlphaISA::PageTableEntry pte =
-                kernel_pte_lookup(xc->getPhysPort(), ptbr, vaddr);
+                kernel_pte_lookup(tc->getPhysPort(), ptbr, vaddr);
             if (pte.valid())
                 paddr = pte.paddr() | vaddr.offset();
         }
@@ -115,52 +115,52 @@ AlphaISA::vtophys(ExecContext *xc, Addr addr)
 
 
 void
-AlphaISA::CopyOut(ExecContext *xc, void *dest, Addr src, size_t cplen)
+AlphaISA::CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
 {
     uint8_t *dst = (uint8_t *)dest;
-    VirtualPort *vp = xc->getVirtPort(xc);
+    VirtualPort *vp = tc->getVirtPort(tc);
 
     vp->readBlob(src, dst, cplen);
 
-    xc->delVirtPort(vp);
+    tc->delVirtPort(vp);
 
 }
 
 void
-AlphaISA::CopyIn(ExecContext *xc, Addr dest, void *source, size_t cplen)
+AlphaISA::CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
 {
     uint8_t *src = (uint8_t *)source;
-    VirtualPort *vp = xc->getVirtPort(xc);
+    VirtualPort *vp = tc->getVirtPort(tc);
 
     vp->writeBlob(dest, src, cplen);
 
-    xc->delVirtPort(vp);
+    tc->delVirtPort(vp);
 }
 
 void
-AlphaISA::CopyStringOut(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen)
+AlphaISA::CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 {
     int len = 0;
-    VirtualPort *vp = xc->getVirtPort(xc);
+    VirtualPort *vp = tc->getVirtPort(tc);
 
     do {
         vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
         len++;
     } while (len < maxlen && dst[len] != 0 );
 
-    xc->delVirtPort(vp);
+    tc->delVirtPort(vp);
     dst[len] = 0;
 }
 
 void
-AlphaISA::CopyStringIn(ExecContext *xc, char *src, Addr vaddr)
+AlphaISA::CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
 {
-    VirtualPort *vp = xc->getVirtPort(xc);
+    VirtualPort *vp = tc->getVirtPort(tc);
     for (ChunkGenerator gen(vaddr, strlen(src), AlphaISA::PageBytes); !gen.done();
             gen.next())
     {
         vp->writeBlob(gen.addr(), (uint8_t*)src, gen.size());
         src += gen.size();
     }
-    xc->delVirtPort(vp);
+    tc->delVirtPort(vp);
 }

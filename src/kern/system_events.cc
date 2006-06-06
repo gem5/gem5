@@ -38,19 +38,19 @@
 using namespace TheISA;
 
 void
-SkipFuncEvent::process(ExecContext *xc)
+SkipFuncEvent::process(ThreadContext *tc)
 {
-    Addr newpc = xc->readIntReg(ReturnAddressReg);
+    Addr newpc = tc->readIntReg(ReturnAddressReg);
 
     DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            xc->readPC(), newpc);
+            tc->readPC(), newpc);
 
-    xc->setPC(newpc);
-    xc->setNextPC(xc->readPC() + sizeof(TheISA::MachInst));
+    tc->setPC(newpc);
+    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
 /*
-    BranchPred *bp = xc->getCpuPtr()->getBranchPred();
+    BranchPred *bp = tc->getCpuPtr()->getBranchPred();
     if (bp != NULL) {
-        bp->popRAS(xc->getThreadNum());
+        bp->popRAS(tc->getThreadNum());
     }
 */
 }
@@ -63,35 +63,35 @@ FnEvent::FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
 }
 
 void
-FnEvent::process(ExecContext *xc)
+FnEvent::process(ThreadContext *tc)
 {
-    if (xc->misspeculating())
+    if (tc->misspeculating())
         return;
 
-    xc->getSystemPtr()->kernelBinning->call(xc, mybin);
+    tc->getSystemPtr()->kernelBinning->call(tc, mybin);
 }
 
 void
-IdleStartEvent::process(ExecContext *xc)
+IdleStartEvent::process(ThreadContext *tc)
 {
-    if (xc->getKernelStats())
-        xc->getKernelStats()->setIdleProcess(
-            xc->readMiscReg(AlphaISA::IPR_PALtemp23), xc);
+    if (tc->getKernelStats())
+        tc->getKernelStats()->setIdleProcess(
+            tc->readMiscReg(AlphaISA::IPR_PALtemp23), tc);
     remove();
 }
 
 void
-InterruptStartEvent::process(ExecContext *xc)
+InterruptStartEvent::process(ThreadContext *tc)
 {
-    if (xc->getKernelStats())
-        xc->getKernelStats()->mode(Kernel::interrupt, xc);
+    if (tc->getKernelStats())
+        tc->getKernelStats()->mode(Kernel::interrupt, tc);
 }
 
 void
-InterruptEndEvent::process(ExecContext *xc)
+InterruptEndEvent::process(ThreadContext *tc)
 {
     // We go back to kernel, if we are user, inside the rti
     // pal code we will get switched to user because of the ICM write
-    if (xc->getKernelStats())
-        xc->getKernelStats()->mode(Kernel::kernel, xc);
+    if (tc->getKernelStats())
+        tc->getKernelStats()->mode(Kernel::kernel, tc);
 }

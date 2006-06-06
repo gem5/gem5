@@ -29,7 +29,7 @@
 #ifndef __CPU_THREAD_STATE_HH__
 #define __CPU_THREAD_STATE_HH__
 
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 
 #if !FULL_SYSTEM
 #include "mem/translating_port.hh"
@@ -78,7 +78,7 @@ struct ThreadState {
 #endif
     }
 
-    ExecContext::Status status;
+    ThreadContext::Status status;
 
     int cpuId;
 

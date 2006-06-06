@@ -35,7 +35,7 @@
 #include "arch/sparc/solaris/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/translating_port.hh"
 #include "sim/builder.hh"
@@ -113,27 +113,27 @@ SparcLiveProcess::startup()
     //From the SPARC ABI
 
     //The process runs in user mode
-    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
 
     //Setup default FP state
-    execContexts[0]->setMiscReg(MISCREG_FSR, 0);
+    threadContexts[0]->setMiscReg(MISCREG_FSR, 0);
 
-    execContexts[0]->setMiscReg(MISCREG_TICK, 0);
+    threadContexts[0]->setMiscReg(MISCREG_TICK, 0);
     //
     /*
      * Register window management registers
      */
 
     //No windows contain info from other programs
-    execContexts[0]->setMiscRegWithEffect(MISCREG_OTHERWIN, 0);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_OTHERWIN, 0);
     //There are no windows to pop
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CANRESTORE, 0);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CANRESTORE, 0);
     //All windows are available to save into
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CANSAVE, NWindows - 2);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CANSAVE, NWindows - 2);
     //All windows are "clean"
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CLEANWIN, NWindows);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CLEANWIN, NWindows);
     //Start with register window 0
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
 }
 
 m5_auxv_t buildAuxVect(int64_t type, int64_t val)
@@ -311,14 +311,14 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
-    execContexts[0]->setIntReg(ArgumentReg0, argc);
-    execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
-    execContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
+    threadContexts[0]->setIntReg(ArgumentReg0, argc);
+    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    threadContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
 
     Addr prog_entry = objFile->entryPoint();
-    execContexts[0]->setPC(prog_entry);
-    execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
-    execContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    threadContexts[0]->setPC(prog_entry);
+    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 
 //    num_processes++;
 }

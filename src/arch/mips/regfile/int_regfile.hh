@@ -37,7 +37,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 class Regfile;
 
 namespace MipsISA

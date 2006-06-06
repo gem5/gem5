@@ -36,7 +36,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 
 namespace AlphaISA
 {
@@ -90,7 +90,7 @@ namespace AlphaISA
         MiscReg readReg(int misc_reg);
 
         MiscReg readRegWithEffect(int misc_reg, Fault &fault,
-                ExecContext *xc);
+                ThreadContext *tc);
 
         //These functions should be removed once the simplescalar cpu model
         //has been replaced.
@@ -100,7 +100,7 @@ namespace AlphaISA
         Fault setReg(int misc_reg, const MiscReg &val);
 
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
-                ExecContext *xc);
+                ThreadContext *tc);
 
 #if FULL_SYSTEM
       protected:
@@ -109,9 +109,9 @@ namespace AlphaISA
         InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
 
       private:
-        InternalProcReg readIpr(int idx, Fault &fault, ExecContext *xc);
+        InternalProcReg readIpr(int idx, Fault &fault, ThreadContext *tc);
 
-        Fault setIpr(int idx, InternalProcReg val, ExecContext *xc);
+        Fault setIpr(int idx, InternalProcReg val, ThreadContext *tc);
 #endif
         friend class RegFile;
     };
@@ -182,10 +182,10 @@ namespace AlphaISA
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ExecContext *xc)
+                Fault &fault, ThreadContext *tc)
         {
             fault = NoFault;
-            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
         }
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
@@ -194,9 +194,9 @@ namespace AlphaISA
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc)
+                ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+            return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
         FloatReg readFloatReg(int floatReg)
@@ -268,12 +268,12 @@ namespace AlphaISA
         }
     };
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 #if FULL_SYSTEM
-    void copyIprs(ExecContext *src, ExecContext *dest);
+    void copyIprs(ThreadContext *src, ThreadContext *dest);
 #endif
 } // namespace AlphaISA
 

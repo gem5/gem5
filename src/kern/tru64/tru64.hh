@@ -579,23 +579,23 @@ class Tru64 {
     /// Target getdirentries() handler.
     static SyscallReturn
     getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
-                      ExecContext *xc)
+                      ThreadContext *tc)
     {
         using namespace TheISA;
 
 #ifdef __CYGWIN__
         panic("getdirent not implemented on cygwin!");
 #else
-        int fd = process->sim_fd(xc->getSyscallArg(0));
-        Addr tgt_buf = xc->getSyscallArg(1);
-        int tgt_nbytes = xc->getSyscallArg(2);
-        Addr tgt_basep = xc->getSyscallArg(3);
+        int fd = process->sim_fd(tc->getSyscallArg(0));
+        Addr tgt_buf = tc->getSyscallArg(1);
+        int tgt_nbytes = tc->getSyscallArg(2);
+        Addr tgt_basep = tc->getSyscallArg(3);
 
         char * const host_buf = new char[tgt_nbytes];
 
         // just pass basep through uninterpreted.
         TypedBufferArg<int64_t> basep(tgt_basep);
-        basep.copyIn(xc->getMemPort());
+        basep.copyIn(tc->getMemPort());
         long host_basep = (off_t)htog((int64_t)*basep);
         int host_result = getdirentries(fd, host_buf, tgt_nbytes, &host_basep);
 
@@ -622,7 +622,7 @@ class Tru64 {
             tgt_dp->d_reclen = tgt_bufsize;
             tgt_dp->d_namlen = namelen;
             strcpy(tgt_dp->d_name, host_dp->d_name);
-            tgt_dp.copyOut(xc->getMemPort());
+            tgt_dp.copyOut(tc->getMemPort());
 
             tgt_buf_ptr += tgt_bufsize;
             host_buf_ptr += host_dp->d_reclen;
@@ -631,7 +631,7 @@ class Tru64 {
         delete [] host_buf;
 
         *basep = htog((int64_t)host_basep);
-        basep.copyOut(xc->getMemPort());
+        basep.copyOut(tc->getMemPort());
 
         return tgt_buf_ptr - tgt_buf;
 #endif
@@ -640,27 +640,27 @@ class Tru64 {
     /// Target sigreturn() handler.
     static SyscallReturn
     sigreturnFunc(SyscallDesc *desc, int callnum, Process *process,
-                  ExecContext *xc)
+                  ThreadContext *tc)
     {
         using namespace TheISA;
 
         using TheISA::RegFile;
-        TypedBufferArg<Tru64::sigcontext> sc(xc->getSyscallArg(0));
+        TypedBufferArg<Tru64::sigcontext> sc(tc->getSyscallArg(0));
 
-        sc.copyIn(xc->getMemPort());
+        sc.copyIn(tc->getMemPort());
 
         // Restore state from sigcontext structure.
         // Note that we'll advance PC <- NPC before the end of the cycle,
         // so we need to restore the desired PC into NPC.
         // The current regs->pc will get clobbered.
-        xc->setNextPC(htog(sc->sc_pc));
+        tc->setNextPC(htog(sc->sc_pc));
 
         for (int i = 0; i < 31; ++i) {
-            xc->setIntReg(i, htog(sc->sc_regs[i]));
-            xc->setFloatRegBits(i, htog(sc->sc_fpregs[i]));
+            tc->setIntReg(i, htog(sc->sc_regs[i]));
+            tc->setFloatRegBits(i, htog(sc->sc_fpregs[i]));
         }
 
-        xc->setMiscReg(TheISA::Fpcr_DepTag, htog(sc->sc_fpcr));
+        tc->setMiscReg(TheISA::Fpcr_DepTag, htog(sc->sc_fpcr));
 
         return 0;
     }
@@ -673,13 +673,13 @@ class Tru64 {
     /// Create a stack region for a thread.
     static SyscallReturn
     stack_createFunc(SyscallDesc *desc, int callnum, Process *process,
-                     ExecContext *xc)
+                     ThreadContext *tc)
     {
         using namespace TheISA;
 
-        TypedBufferArg<Tru64::vm_stack> argp(xc->getSyscallArg(0));
+        TypedBufferArg<Tru64::vm_stack> argp(tc->getSyscallArg(0));
 
-        argp.copyIn(xc->getMemPort());
+        argp.copyIn(tc->getMemPort());
 
         // if the user chose an address, just let them have it.  Otherwise
         // pick one for them.
@@ -688,7 +688,7 @@ class Tru64 {
             int stack_size = (htog(argp->rsize) + htog(argp->ysize) +
                     htog(argp->gsize));
             process->next_thread_stack_base -= stack_size;
-            argp.copyOut(xc->getMemPort());
+            argp.copyOut(tc->getMemPort());
         }
 
         return 0;
@@ -703,15 +703,15 @@ class Tru64 {
     /// region has several structs, some global, some per-RAD, some per-VP.
     static SyscallReturn
     nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
-                      ExecContext *xc)
+                      ThreadContext *tc)
     {
         using namespace std;
         using namespace TheISA;
 
-        TypedBufferArg<Tru64::nxm_task_attr> attrp(xc->getSyscallArg(0));
-        TypedBufferArg<Addr> configptr_ptr(xc->getSyscallArg(1));
+        TypedBufferArg<Tru64::nxm_task_attr> attrp(tc->getSyscallArg(0));
+        TypedBufferArg<Addr> configptr_ptr(tc->getSyscallArg(1));
 
-        attrp.copyIn(xc->getMemPort());
+        attrp.copyIn(tc->getMemPort());
 
         if (gtoh(attrp->nxm_version) != NXM_LIB_VERSION) {
             cerr << "nxm_task_init: thread library version mismatch! "
@@ -752,7 +752,7 @@ class Tru64 {
         config->nxm_slot_state = htog(slot_state_addr);
         config->nxm_rad[0] = htog(rad_state_addr);
 
-        config.copyOut(xc->getMemPort());
+        config.copyOut(tc->getMemPort());
 
         // initialize the slot_state array and copy it out
         TypedBufferArg<Tru64::nxm_slot_state_t> slot_state(slot_state_addr,
@@ -765,7 +765,7 @@ class Tru64 {
                 (i == 0) ? Tru64::NXM_SLOT_BOUND : Tru64::NXM_SLOT_AVAIL;
         }
 
-        slot_state.copyOut(xc->getMemPort());
+        slot_state.copyOut(tc->getMemPort());
 
         // same for the per-RAD "shared" struct.  Note that we need to
         // allocate extra bytes for the per-VP array which is embedded at
@@ -789,7 +789,7 @@ class Tru64 {
             ssp->nxm_sysevent = htog(0);
 
             if (i == 0) {
-                uint64_t uniq = xc->readMiscReg(TheISA::Uniq_DepTag);
+                uint64_t uniq = tc->readMiscReg(TheISA::Uniq_DepTag);
                 ssp->nxm_u.pth_id = htog(uniq + gtoh(attrp->nxm_uniq_offset));
                 ssp->nxm_u.nxm_active = htog(uniq | 1);
             }
@@ -799,13 +799,13 @@ class Tru64 {
             }
         }
 
-        rad_state.copyOut(xc->getMemPort());
+        rad_state.copyOut(tc->getMemPort());
 
         //
         // copy pointer to shared config area out to user
         //
         *configptr_ptr = htog(config_addr);
-        configptr_ptr.copyOut(xc->getMemPort());
+        configptr_ptr.copyOut(tc->getMemPort());
 
         // Register this as a valid address range with the process
         process->nxm_start = base_addr;
@@ -814,40 +814,40 @@ class Tru64 {
         return 0;
     }
 
-    /// Initialize execution context.
+    /// Initialize thread context.
     static void
-    init_exec_context(ExecContext *ec,
+    init_thread_context(ThreadContext *tc,
                       Tru64::nxm_thread_attr *attrp, uint64_t uniq_val)
     {
         using namespace TheISA;
 
-        ec->clearArchRegs();
+        tc->clearArchRegs();
 
-        ec->setIntReg(TheISA::ArgumentReg0, gtoh(attrp->registers.a0));
-        ec->setIntReg(27/*t12*/, gtoh(attrp->registers.pc));
-        ec->setIntReg(TheISA::StackPointerReg, gtoh(attrp->registers.sp));
-        ec->setMiscReg(TheISA::Uniq_DepTag, uniq_val);
+        tc->setIntReg(TheISA::ArgumentReg0, gtoh(attrp->registers.a0));
+        tc->setIntReg(27/*t12*/, gtoh(attrp->registers.pc));
+        tc->setIntReg(TheISA::StackPointerReg, gtoh(attrp->registers.sp));
+        tc->setMiscReg(TheISA::Uniq_DepTag, uniq_val);
 
-        ec->setPC(gtoh(attrp->registers.pc));
-        ec->setNextPC(gtoh(attrp->registers.pc) + sizeof(TheISA::MachInst));
+        tc->setPC(gtoh(attrp->registers.pc));
+        tc->setNextPC(gtoh(attrp->registers.pc) + sizeof(TheISA::MachInst));
 
-        ec->activate();
+        tc->activate();
     }
 
     /// Create thread.
     static SyscallReturn
     nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
-                          ExecContext *xc)
+                          ThreadContext *tc)
     {
         using namespace std;
         using namespace TheISA;
 
-        TypedBufferArg<Tru64::nxm_thread_attr> attrp(xc->getSyscallArg(0));
-        TypedBufferArg<uint64_t> kidp(xc->getSyscallArg(1));
-        int thread_index = xc->getSyscallArg(2);
+        TypedBufferArg<Tru64::nxm_thread_attr> attrp(tc->getSyscallArg(0));
+        TypedBufferArg<uint64_t> kidp(tc->getSyscallArg(1));
+        int thread_index = tc->getSyscallArg(2);
 
         // get attribute args
-        attrp.copyIn(xc->getMemPort());
+        attrp.copyIn(tc->getMemPort());
 
         if (gtoh(attrp->version) != NXM_LIB_VERSION) {
             cerr << "nxm_thread_create: thread library version mismatch! "
@@ -872,7 +872,7 @@ class Tru64 {
 
         TypedBufferArg<Tru64::nxm_shared> rad_state(0x14000,
                                                     rad_state_size);
-        rad_state.copyIn(xc->getMemPort());
+        rad_state.copyIn(tc->getMemPort());
 
         uint64_t uniq_val = gtoh(attrp->pthid) - gtoh(rad_state->nxm_uniq_offset);
 
@@ -883,7 +883,7 @@ class Tru64 {
 
             // This is supposed to be a port number.  Make something up.
             *kidp = htog(99);
-            kidp.copyOut(xc->getMemPort());
+            kidp.copyOut(tc->getMemPort());
 
             return 0;
         } else if (gtoh(attrp->type) == Tru64::NXM_TYPE_VP) {
@@ -897,7 +897,7 @@ class Tru64 {
             ssp->nxm_u.pth_id = attrp->pthid;
             ssp->nxm_u.nxm_active = htog(uniq_val | 1);
 
-            rad_state.copyOut(xc->getMemPort());
+            rad_state.copyOut(tc->getMemPort());
 
             Addr slot_state_addr = 0x12000 + sizeof(Tru64::nxm_config_info);
             int slot_state_size =
@@ -907,7 +907,7 @@ class Tru64 {
                 slot_state(slot_state_addr,
                            slot_state_size);
 
-            slot_state.copyIn(xc->getMemPort());
+            slot_state.copyIn(tc->getMemPort());
 
             if (slot_state[thread_index] != Tru64::NXM_SLOT_AVAIL) {
                 cerr << "nxm_thread_createFunc: requested VP slot "
@@ -919,21 +919,21 @@ class Tru64 {
             // doesn't work anyway
             slot_state[thread_index] = Tru64::NXM_SLOT_BOUND;
 
-            slot_state.copyOut(xc->getMemPort());
+            slot_state.copyOut(tc->getMemPort());
 
-            // Find a free simulator execution context.
+            // Find a free simulator thread context.
             for (int i = 0; i < process->numCpus(); ++i) {
-                ExecContext *xc = process->execContexts[i];
+                ThreadContext *tc = process->threadContexts[i];
 
-                if (xc->status() == ExecContext::Suspended) {
+                if (tc->status() == ThreadContext::Suspended) {
                     // inactive context... grab it
-                    init_exec_context(xc, attrp, uniq_val);
+                    init_thread_context(tc, attrp, uniq_val);
 
                     // This is supposed to be a port number, but we'll try
                     // and get away with just sticking the thread index
                     // here.
                     *kidp = htog(thread_index);
-                    kidp.copyOut(xc->getMemPort());
+                    kidp.copyOut(tc->getMemPort());
 
                     return 0;
                 }
@@ -954,7 +954,7 @@ class Tru64 {
     /// Thread idle call (like yield()).
     static SyscallReturn
     nxm_idleFunc(SyscallDesc *desc, int callnum, Process *process,
-                 ExecContext *xc)
+                 ThreadContext *tc)
     {
         return 0;
     }
@@ -962,17 +962,17 @@ class Tru64 {
     /// Block thread.
     static SyscallReturn
     nxm_thread_blockFunc(SyscallDesc *desc, int callnum, Process *process,
-                         ExecContext *xc)
+                         ThreadContext *tc)
     {
         using namespace std;
 
-        uint64_t tid = xc->getSyscallArg(0);
-        uint64_t secs = xc->getSyscallArg(1);
-        uint64_t flags = xc->getSyscallArg(2);
-        uint64_t action = xc->getSyscallArg(3);
-        uint64_t usecs = xc->getSyscallArg(4);
+        uint64_t tid = tc->getSyscallArg(0);
+        uint64_t secs = tc->getSyscallArg(1);
+        uint64_t flags = tc->getSyscallArg(2);
+        uint64_t action = tc->getSyscallArg(3);
+        uint64_t usecs = tc->getSyscallArg(4);
 
-        cout << xc->getCpuPtr()->name() << ": nxm_thread_block " << tid << " "
+        cout << tc->getCpuPtr()->name() << ": nxm_thread_block " << tid << " "
              << secs << " " << flags << " " << action << " " << usecs << endl;
 
         return 0;
@@ -981,17 +981,17 @@ class Tru64 {
     /// block.
     static SyscallReturn
     nxm_blockFunc(SyscallDesc *desc, int callnum, Process *process,
-                  ExecContext *xc)
+                  ThreadContext *tc)
     {
         using namespace std;
 
-        Addr uaddr = xc->getSyscallArg(0);
-        uint64_t val = xc->getSyscallArg(1);
-        uint64_t secs = xc->getSyscallArg(2);
-        uint64_t usecs = xc->getSyscallArg(3);
-        uint64_t flags = xc->getSyscallArg(4);
+        Addr uaddr = tc->getSyscallArg(0);
+        uint64_t val = tc->getSyscallArg(1);
+        uint64_t secs = tc->getSyscallArg(2);
+        uint64_t usecs = tc->getSyscallArg(3);
+        uint64_t flags = tc->getSyscallArg(4);
 
-        BaseCPU *cpu = xc->getCpuPtr();
+        BaseCPU *cpu = tc->getCpuPtr();
 
         cout << cpu->name() << ": nxm_block "
              << hex << uaddr << dec << " " << val
@@ -1004,13 +1004,13 @@ class Tru64 {
     /// Unblock thread.
     static SyscallReturn
     nxm_unblockFunc(SyscallDesc *desc, int callnum, Process *process,
-                    ExecContext *xc)
+                    ThreadContext *tc)
     {
         using namespace std;
 
-        Addr uaddr = xc->getSyscallArg(0);
+        Addr uaddr = tc->getSyscallArg(0);
 
-        cout << xc->getCpuPtr()->name() << ": nxm_unblock "
+        cout << tc->getCpuPtr()->name() << ": nxm_unblock "
              << hex << uaddr << dec << endl;
 
         return 0;
@@ -1019,7 +1019,7 @@ class Tru64 {
     /// Switch thread priority.
     static SyscallReturn
     swtch_priFunc(SyscallDesc *desc, int callnum, Process *process,
-                  ExecContext *xc)
+                  ThreadContext *tc)
     {
         // Attempts to switch to another runnable thread (if there is
         // one).  Returns false if there are no other threads to run
@@ -1032,7 +1032,7 @@ class Tru64 {
     }
 
 
-    /// Activate exec context waiting on a channel.  Just activate one
+    /// Activate thread context waiting on a channel.  Just activate one
     /// by default.
     static int
     activate_waiting_context(Addr uaddr, Process *process,
@@ -1048,8 +1048,8 @@ class Tru64 {
         while (i != end && (num_activated == 0 || activate_all)) {
             if (i->waitChan == uaddr) {
                 // found waiting process: make it active
-                ExecContext *newCtx = i->waitingContext;
-                assert(newCtx->status() == ExecContext::Suspended);
+                ThreadContext *newCtx = i->waitingContext;
+                assert(newCtx->status() == ThreadContext::Suspended);
                 newCtx->activate();
 
                 // get rid of this record
@@ -1066,32 +1066,32 @@ class Tru64 {
 
     /// M5 hacked-up lock acquire.
     static void
-    m5_lock_mutex(Addr uaddr, Process *process, ExecContext *xc)
+    m5_lock_mutex(Addr uaddr, Process *process, ThreadContext *tc)
     {
         using namespace TheISA;
 
         TypedBufferArg<uint64_t> lockp(uaddr);
 
-        lockp.copyIn(xc->getMemPort());
+        lockp.copyIn(tc->getMemPort());
 
         if (gtoh(*lockp) == 0) {
             // lock is free: grab it
             *lockp = htog(1);
-            lockp.copyOut(xc->getMemPort());
+            lockp.copyOut(tc->getMemPort());
         } else {
             // lock is busy: disable until free
-            process->waitList.push_back(Process::WaitRec(uaddr, xc));
-            xc->suspend();
+            process->waitList.push_back(Process::WaitRec(uaddr, tc));
+            tc->suspend();
         }
     }
 
     /// M5 unlock call.
     static void
-    m5_unlock_mutex(Addr uaddr, Process *process, ExecContext *xc)
+    m5_unlock_mutex(Addr uaddr, Process *process, ThreadContext *tc)
     {
         TypedBufferArg<uint64_t> lockp(uaddr);
 
-        lockp.copyIn(xc->getMemPort());
+        lockp.copyIn(tc->getMemPort());
         assert(*lockp != 0);
 
         // Check for a process waiting on the lock.
@@ -1100,18 +1100,18 @@ class Tru64 {
         // clear lock field if no waiting context is taking over the lock
         if (num_waiting == 0) {
             *lockp = 0;
-            lockp.copyOut(xc->getMemPort());
+            lockp.copyOut(tc->getMemPort());
         }
     }
 
     /// Lock acquire syscall handler.
     static SyscallReturn
     m5_mutex_lockFunc(SyscallDesc *desc, int callnum, Process *process,
-                      ExecContext *xc)
+                      ThreadContext *tc)
     {
-        Addr uaddr = xc->getSyscallArg(0);
+        Addr uaddr = tc->getSyscallArg(0);
 
-        m5_lock_mutex(uaddr, process, xc);
+        m5_lock_mutex(uaddr, process, tc);
 
         // Return 0 since we will always return to the user with the lock
         // acquired.  We will just keep the context inactive until that is
@@ -1122,19 +1122,19 @@ class Tru64 {
     /// Try lock (non-blocking).
     static SyscallReturn
     m5_mutex_trylockFunc(SyscallDesc *desc, int callnum, Process *process,
-                         ExecContext *xc)
+                         ThreadContext *tc)
     {
         using namespace TheISA;
 
-        Addr uaddr = xc->getSyscallArg(0);
+        Addr uaddr = tc->getSyscallArg(0);
         TypedBufferArg<uint64_t> lockp(uaddr);
 
-        lockp.copyIn(xc->getMemPort());
+        lockp.copyIn(tc->getMemPort());
 
         if (gtoh(*lockp) == 0) {
             // lock is free: grab it
             *lockp = htog(1);
-            lockp.copyOut(xc->getMemPort());
+            lockp.copyOut(tc->getMemPort());
             return 0;
         } else {
             return 1;
@@ -1144,11 +1144,11 @@ class Tru64 {
     /// Unlock syscall handler.
     static SyscallReturn
     m5_mutex_unlockFunc(SyscallDesc *desc, int callnum, Process *process,
-                        ExecContext *xc)
+                        ThreadContext *tc)
     {
-        Addr uaddr = xc->getSyscallArg(0);
+        Addr uaddr = tc->getSyscallArg(0);
 
-        m5_unlock_mutex(uaddr, process, xc);
+        m5_unlock_mutex(uaddr, process, tc);
 
         return 0;
     }
@@ -1156,9 +1156,9 @@ class Tru64 {
     /// Signal ocndition.
     static SyscallReturn
     m5_cond_signalFunc(SyscallDesc *desc, int callnum, Process *process,
-                       ExecContext *xc)
+                       ThreadContext *tc)
     {
-        Addr cond_addr = xc->getSyscallArg(0);
+        Addr cond_addr = tc->getSyscallArg(0);
 
         // Wake up one process waiting on the condition variable.
         activate_waiting_context(cond_addr, process);
@@ -1169,9 +1169,9 @@ class Tru64 {
     /// Wake up all processes waiting on the condition variable.
     static SyscallReturn
     m5_cond_broadcastFunc(SyscallDesc *desc, int callnum, Process *process,
-                          ExecContext *xc)
+                          ThreadContext *tc)
     {
-        Addr cond_addr = xc->getSyscallArg(0);
+        Addr cond_addr = tc->getSyscallArg(0);
 
         activate_waiting_context(cond_addr, process, true);
 
@@ -1181,23 +1181,23 @@ class Tru64 {
     /// Wait on a condition.
     static SyscallReturn
     m5_cond_waitFunc(SyscallDesc *desc, int callnum, Process *process,
-                     ExecContext *xc)
+                     ThreadContext *tc)
     {
         using namespace TheISA;
 
-        Addr cond_addr = xc->getSyscallArg(0);
-        Addr lock_addr = xc->getSyscallArg(1);
+        Addr cond_addr = tc->getSyscallArg(0);
+        Addr lock_addr = tc->getSyscallArg(1);
         TypedBufferArg<uint64_t> condp(cond_addr);
         TypedBufferArg<uint64_t> lockp(lock_addr);
 
         // user is supposed to acquire lock before entering
-        lockp.copyIn(xc->getMemPort());
+        lockp.copyIn(tc->getMemPort());
         assert(gtoh(*lockp) != 0);
 
-        m5_unlock_mutex(lock_addr, process, xc);
+        m5_unlock_mutex(lock_addr, process, tc);
 
-        process->waitList.push_back(Process::WaitRec(cond_addr, xc));
-        xc->suspend();
+        process->waitList.push_back(Process::WaitRec(cond_addr, tc));
+        tc->suspend();
 
         return 0;
     }
@@ -1205,10 +1205,10 @@ class Tru64 {
     /// Thread exit.
     static SyscallReturn
     m5_thread_exitFunc(SyscallDesc *desc, int callnum, Process *process,
-                       ExecContext *xc)
+                       ThreadContext *tc)
     {
-        assert(xc->status() == ExecContext::Active);
-        xc->deallocate();
+        assert(tc->status() == ThreadContext::Active);
+        tc->deallocate();
 
         return 0;
     }
@@ -1216,21 +1216,21 @@ class Tru64 {
     /// Indirect syscall invocation (call #0).
     static SyscallReturn
     indirectSyscallFunc(SyscallDesc *desc, int callnum, Process *process,
-                        ExecContext *xc)
+                        ThreadContext *tc)
     {
-        int new_callnum = xc->getSyscallArg(0);
+        int new_callnum = tc->getSyscallArg(0);
         LiveProcess *lp = dynamic_cast<LiveProcess*>(process);
         assert(lp);
 
         for (int i = 0; i < 5; ++i)
-            xc->setSyscallArg(i, xc->getSyscallArg(i+1));
+            tc->setSyscallArg(i, tc->getSyscallArg(i+1));
 
 
         SyscallDesc *new_desc = lp->getDesc(new_callnum);
         if (desc == NULL)
             fatal("Syscall %d out of range", callnum);
 
-        new_desc->doSyscall(new_callnum, process, xc);
+        new_desc->doSyscall(new_callnum, process, tc);
 
         return 0;
     }

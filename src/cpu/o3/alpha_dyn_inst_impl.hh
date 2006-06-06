@@ -67,9 +67,9 @@ Fault
 AlphaDynInst<Impl>::execute()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
-    // when using the XC during an instruction's execution
+    // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
-    // the XC).  Fix this.
+    // the TC).  Fix this.
     bool in_syscall = this->thread->inSyscall;
     this->thread->inSyscall = true;
 
@@ -85,9 +85,9 @@ Fault
 AlphaDynInst<Impl>::initiateAcc()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
-    // when using the XC during an instruction's execution
+    // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
-    // the XC).  Fix this.
+    // the TC).  Fix this.
     bool in_syscall = this->thread->inSyscall;
     this->thread->inSyscall = true;
 

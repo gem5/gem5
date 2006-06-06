@@ -42,8 +42,8 @@ VirtualPort::readBlob(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
             gen.next())
     {
-        if (xc)
-            paddr = TheISA::vtophys(xc,gen.addr());
+        if (tc)
+            paddr = TheISA::vtophys(tc,gen.addr());
         else
             paddr = TheISA::vtophys(gen.addr());
 
@@ -59,8 +59,8 @@ VirtualPort::writeBlob(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
             gen.next())
     {
-        if (xc)
-            paddr = TheISA::vtophys(xc,gen.addr());
+        if (tc)
+            paddr = TheISA::vtophys(tc,gen.addr());
         else
             paddr = TheISA::vtophys(gen.addr());
 

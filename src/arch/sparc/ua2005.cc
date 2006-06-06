@@ -32,7 +32,7 @@
 
 Fault
 SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
-        ExecContext *xc)
+        ThreadContext *tc)
 {
     int64_t time;
     SparcSystem *sys;
@@ -47,25 +47,25 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           setReg(miscReg, val);
           if (newLevel > oldLevel)
               ; // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
-              //xc->getCpuPtr()->checkInterrupts = true;
+              //tc->getCpuPtr()->checkInterrupts = true;
           return NoFault;
 
         case MISCREG_SOFTINT_CLR:
-          return setRegWithEffect(miscReg, ~val & softint, xc);
+          return setRegWithEffect(miscReg, ~val & softint, tc);
         case MISCREG_SOFTINT_SET:
-          return setRegWithEffect(miscReg, val | softint, xc);
+          return setRegWithEffect(miscReg, val | softint, tc);
 
         case MISCREG_TICK_CMPR:
           if (isNonPriv())
               return new PrivilegedOpcode;
           if (tickCompare == NULL)
-              tickCompare = new TickCompareEvent(this, xc);
+              tickCompare = new TickCompareEvent(this, tc);
           setReg(miscReg, val);
           if (tick_cmprFields.int_dis && tickCompare.scheduled())
                   tickCompare.deschedule();
           time = tick_cmprFields.tick_cmpr - tickFields.counter;
           if (!tick_cmprFields.int_dis && time > 0)
-              tickCompare.schedule(time * xc->getCpuPtr()->cycles(1));
+              tickCompare.schedule(time * tc->getCpuPtr()->cycles(1));
           return NoFault;
 
         case MISCREG_STICK:
@@ -73,7 +73,7 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
               return new PrivilegedOpcode;
           if (isPriv())
               return new PrivilegedAction;
-          sys = dynamic_cast<SparcSystem*>(xc->getSystemPtr());
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
           assert(sys != NULL);
           sys->sysTick = curTick/Clock::Int::ns - val & ~Bit64;
           stickFields.npt = val & Bit64 ? 1 : 0;
@@ -83,8 +83,8 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           if (isNonPriv())
               return new PrivilegedOpcode;
           if (sTickCompare == NULL)
-              sTickCompare = new STickCompareEvent(this, xc);
-          sys = dynamic_cast<SparcSystem*>(xc->getSystemPtr());
+              sTickCompare = new STickCompareEvent(this, tc);
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
           assert(sys != NULL);
           setReg(miscReg, val);
           if (stick_cmprFields.int_dis && sTickCompare.scheduled())
@@ -98,7 +98,7 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         case MISCREG_PIL:
           if (FULL_SYSTEM) {
               setReg(miscReg, val);
-              //xc->getCpuPtr()->checkInterrupts;
+              //tc->getCpuPtr()->checkInterrupts;
                // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
               return NoFault;
           } else
@@ -127,8 +127,8 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           if (isNonPriv())
               return new PrivilegedOpcode;
           if (hSTickCompare == NULL)
-              hSTickCompare = new HSTickCompareEvent(this, xc);
-          sys = dynamic_cast<SparcSystem*>(xc->getSystemPtr());
+              hSTickCompare = new HSTickCompareEvent(this, tc);
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
           assert(sys != NULL);
           setReg(miscReg, val);
           if (hstick_cmprFields.int_dis && hSTickCompare.scheduled())
@@ -143,7 +143,7 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 }
 
 MiscReg
-MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ExecContext * xc)
+MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext * tc)
 {
     switch (miscReg) {
 
@@ -166,7 +166,7 @@ MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ExecContext * xc)
               fault = new PrivilegedAction;
               return 0;
           }
-          sys = dynamic_cast<SparcSystem*>(xc->getSystemPtr());
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
           assert(sys != NULL);
           return curTick/Clock::Int::ns - sys->sysTick | stickFields.npt << 63;
         case MISCREG_STICK_CMPR:
@@ -204,19 +204,19 @@ MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ExecContext * xc)
 }
 
 void
-MiscRegFile::processTickCompare(ExecContext *xc)
+MiscRegFile::processTickCompare(ThreadContext *tc)
 {
     panic("tick compare not implemented\n");
 }
 
 void
-MiscRegFile::processSTickCompare(ExecContext *xc)
+MiscRegFile::processSTickCompare(ThreadContext *tc)
 {
     panic("tick compare not implemented\n");
 }
 
 void
-MiscRegFile::processHSTickCompare(ExecContext *xc)
+MiscRegFile::processHSTickCompare(ThreadContext *tc)
 {
     panic("tick compare not implemented\n");
 }

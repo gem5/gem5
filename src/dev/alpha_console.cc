@@ -43,7 +43,7 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "dev/alpha_console.hh"
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"

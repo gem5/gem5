@@ -48,7 +48,7 @@
 #endif
 
 class BaseCPU;
-class ExecContext;
+class ThreadContext;
 class ObjectFile;
 class PhysicalMemory;
 
@@ -65,12 +65,12 @@ class System : public SimObject
     PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
 
-    std::vector<ExecContext *> execContexts;
+    std::vector<ThreadContext *> threadContexts;
     int numcpus;
 
     int getNumCPUs()
     {
-        if (numcpus != execContexts.size())
+        if (numcpus != threadContexts.size())
             panic("cpu array not fully populated!");
 
         return numcpus;
@@ -208,8 +208,8 @@ class System : public SimObject
 
 #endif // FULL_SYSTEM
 
-    int registerExecContext(ExecContext *xc, int xcIndex);
-    void replaceExecContext(ExecContext *xc, int xcIndex);
+    int registerThreadContext(ThreadContext *tc, int tcIndex);
+    void replaceThreadContext(ThreadContext *tc, int tcIndex);
 
     void regStats();
     void serialize(std::ostream &os);

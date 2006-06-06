@@ -61,7 +61,7 @@ class Process;
 
 #endif // FULL_SYSTEM
 
-class ExecContext;
+class ThreadContext;
 class Checkpoint;
 
 namespace Trace {
@@ -111,7 +111,7 @@ class BaseSimpleCPU : public BaseCPU
     // execution context
     CPUExecContext *cpuXC;
 
-    ExecContext *xcProxy;
+    ThreadContext *tc;
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
@@ -307,14 +307,14 @@ class BaseSimpleCPU : public BaseCPU
     int readIntrFlag() { return cpuXC->readIntrFlag(); }
     void setIntrFlag(int val) { cpuXC->setIntrFlag(val); }
     bool inPalMode() { return cpuXC->inPalMode(); }
-    void ev5_trap(Fault fault) { fault->invoke(xcProxy); }
+    void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return cpuXC->simPalCheck(palFunc); }
 #else
     void syscall(int64_t callnum) { cpuXC->syscall(callnum); }
 #endif
 
     bool misspeculating() { return cpuXC->misspeculating(); }
-    ExecContext *xcBase() { return xcProxy; }
+    ThreadContext *tcBase() { return tc; }
 };
 
 #endif // __CPU_SIMPLE_BASE_HH__

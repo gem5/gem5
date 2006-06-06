@@ -56,7 +56,7 @@ output decoder {{
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"
 #include "config/ss_compatible_fp.hh"
-#include "cpu/exec_context.hh"  // for Jump::branchTarget()
+#include "cpu/thread_context.hh"  // for Jump::branchTarget()
 
 #include <math.h>
 

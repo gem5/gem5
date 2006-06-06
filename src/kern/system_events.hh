@@ -42,7 +42,7 @@ class SkipFuncEvent : public PCEvent
     SkipFuncEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 class FnEvent : public PCEvent
@@ -50,7 +50,7 @@ class FnEvent : public PCEvent
   public:
     FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
             Stats::MainBin *bin);
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
     std::string myname() const { return _name; }
 
   private:
@@ -64,7 +64,7 @@ class IdleStartEvent : public PCEvent
     IdleStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 class InterruptStartEvent : public PCEvent
@@ -73,7 +73,7 @@ class InterruptStartEvent : public PCEvent
     InterruptStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 class InterruptEndEvent : public PCEvent
@@ -82,7 +82,7 @@ class InterruptEndEvent : public PCEvent
     InterruptEndEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 

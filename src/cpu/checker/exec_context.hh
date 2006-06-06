@@ -31,7 +31,7 @@
 
 #include "cpu/checker/cpu.hh"
 #include "cpu/cpu_exec_context.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 
 class EndQuiesceEvent;
 namespace Kernel {
@@ -39,251 +39,251 @@ namespace Kernel {
 };
 
 /**
- * Derived ExecContext class for use with the Checker.  The template
- * parameter is the ExecContext class used by the specific CPU being
- * verified.  This CheckerExecContext is then used by the main CPU in
- * place of its usual ExecContext class.  It handles updating the
- * checker's state any time state is updated through the ExecContext.
+ * Derived ThreadContext class for use with the Checker.  The template
+ * parameter is the ThreadContext class used by the specific CPU being
+ * verified.  This CheckerThreadContext is then used by the main CPU in
+ * place of its usual ThreadContext class.  It handles updating the
+ * checker's state any time state is updated through the ThreadContext.
  */
-template <class XC>
-class CheckerExecContext : public ExecContext
+template <class TC>
+class CheckerThreadContext : public ThreadContext
 {
   public:
-    CheckerExecContext(XC *actual_xc,
+    CheckerThreadContext(TC *actual_tc,
                        CheckerCPU *checker_cpu)
-        : actualXC(actual_xc), checkerXC(checker_cpu->cpuXC),
+        : actualTC(actual_tc), checkerTC(checker_cpu->cpuXC),
           checkerCPU(checker_cpu)
     { }
 
   private:
-    XC *actualXC;
-    CPUExecContext *checkerXC;
+    TC *actualTC;
+    CPUExecContext *checkerTC;
     CheckerCPU *checkerCPU;
 
   public:
 
-    BaseCPU *getCpuPtr() { return actualXC->getCpuPtr(); }
+    BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
     void setCpuId(int id)
     {
-        actualXC->setCpuId(id);
-        checkerXC->setCpuId(id);
+        actualTC->setCpuId(id);
+        checkerTC->setCpuId(id);
     }
 
-    int readCpuId() { return actualXC->readCpuId(); }
+    int readCpuId() { return actualTC->readCpuId(); }
 
-    TranslatingPort *getMemPort() { return actualXC->getMemPort(); }
+    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 
 #if FULL_SYSTEM
-    System *getSystemPtr() { return actualXC->getSystemPtr(); }
+    System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
-    PhysicalMemory *getPhysMemPtr() { return actualXC->getPhysMemPtr(); }
+    PhysicalMemory *getPhysMemPtr() { return actualTC->getPhysMemPtr(); }
 
-    AlphaITB *getITBPtr() { return actualXC->getITBPtr(); }
+    AlphaITB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    AlphaDTB *getDTBPtr() { return actualXC->getDTBPtr(); }
+    AlphaDTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    Kernel::Statistics *getKernelStats() { return actualXC->getKernelStats(); }
+    Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
 #else
-    Process *getProcessPtr() { return actualXC->getProcessPtr(); }
+    Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
 
-    Status status() const { return actualXC->status(); }
+    Status status() const { return actualTC->status(); }
 
     void setStatus(Status new_status)
     {
-        actualXC->setStatus(new_status);
-        checkerXC->setStatus(new_status);
+        actualTC->setStatus(new_status);
+        checkerTC->setStatus(new_status);
     }
 
     /// Set the status to Active.  Optional delay indicates number of
     /// cycles to wait before beginning execution.
-    void activate(int delay = 1) { actualXC->activate(delay); }
+    void activate(int delay = 1) { actualTC->activate(delay); }
 
     /// Set the status to Suspended.
-    void suspend() { actualXC->suspend(); }
+    void suspend() { actualTC->suspend(); }
 
     /// Set the status to Unallocated.
-    void deallocate() { actualXC->deallocate(); }
+    void deallocate() { actualTC->deallocate(); }
 
     /// Set the status to Halted.
-    void halt() { actualXC->halt(); }
+    void halt() { actualTC->halt(); }
 
 #if FULL_SYSTEM
-    void dumpFuncProfile() { actualXC->dumpFuncProfile(); }
+    void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 #endif
 
-    void takeOverFrom(ExecContext *oldContext)
+    void takeOverFrom(ThreadContext *oldContext)
     {
-        actualXC->takeOverFrom(oldContext);
-        checkerXC->takeOverFrom(oldContext);
+        actualTC->takeOverFrom(oldContext);
+        checkerTC->takeOverFrom(oldContext);
     }
 
-    void regStats(const std::string &name) { actualXC->regStats(name); }
+    void regStats(const std::string &name) { actualTC->regStats(name); }
 
-    void serialize(std::ostream &os) { actualXC->serialize(os); }
+    void serialize(std::ostream &os) { actualTC->serialize(os); }
     void unserialize(Checkpoint *cp, const std::string &section)
-    { actualXC->unserialize(cp, section); }
+    { actualTC->unserialize(cp, section); }
 
 #if FULL_SYSTEM
-    EndQuiesceEvent *getQuiesceEvent() { return actualXC->getQuiesceEvent(); }
+    EndQuiesceEvent *getQuiesceEvent() { return actualTC->getQuiesceEvent(); }
 
-    Tick readLastActivate() { return actualXC->readLastActivate(); }
-    Tick readLastSuspend() { return actualXC->readLastSuspend(); }
+    Tick readLastActivate() { return actualTC->readLastActivate(); }
+    Tick readLastSuspend() { return actualTC->readLastSuspend(); }
 
-    void profileClear() { return actualXC->profileClear(); }
-    void profileSample() { return actualXC->profileSample(); }
+    void profileClear() { return actualTC->profileClear(); }
+    void profileSample() { return actualTC->profileSample(); }
 #endif
 
-    int getThreadNum() { return actualXC->getThreadNum(); }
+    int getThreadNum() { return actualTC->getThreadNum(); }
 
     // @todo: Do I need this?
-    MachInst getInst() { return actualXC->getInst(); }
+    MachInst getInst() { return actualTC->getInst(); }
 
     // @todo: Do I need this?
-    void copyArchRegs(ExecContext *xc)
+    void copyArchRegs(ThreadContext *tc)
     {
-        actualXC->copyArchRegs(xc);
-        checkerXC->copyArchRegs(xc);
+        actualTC->copyArchRegs(tc);
+        checkerTC->copyArchRegs(tc);
     }
 
     void clearArchRegs()
     {
-        actualXC->clearArchRegs();
-        checkerXC->clearArchRegs();
+        actualTC->clearArchRegs();
+        checkerTC->clearArchRegs();
     }
 
     //
     // New accessors for new decoder.
     //
     uint64_t readIntReg(int reg_idx)
-    { return actualXC->readIntReg(reg_idx); }
+    { return actualTC->readIntReg(reg_idx); }
 
     FloatReg readFloatReg(int reg_idx, int width)
-    { return actualXC->readFloatReg(reg_idx, width); }
+    { return actualTC->readFloatReg(reg_idx, width); }
 
     FloatReg readFloatReg(int reg_idx)
-    { return actualXC->readFloatReg(reg_idx); }
+    { return actualTC->readFloatReg(reg_idx); }
 
     FloatRegBits readFloatRegBits(int reg_idx, int width)
-    { return actualXC->readFloatRegBits(reg_idx, width); }
+    { return actualTC->readFloatRegBits(reg_idx, width); }
 
     FloatRegBits readFloatRegBits(int reg_idx)
-    { return actualXC->readFloatRegBits(reg_idx); }
+    { return actualTC->readFloatRegBits(reg_idx); }
 
     void setIntReg(int reg_idx, uint64_t val)
     {
-        actualXC->setIntReg(reg_idx, val);
-        checkerXC->setIntReg(reg_idx, val);
+        actualTC->setIntReg(reg_idx, val);
+        checkerTC->setIntReg(reg_idx, val);
     }
 
     void setFloatReg(int reg_idx, FloatReg val, int width)
     {
-        actualXC->setFloatReg(reg_idx, val, width);
-        checkerXC->setFloatReg(reg_idx, val, width);
+        actualTC->setFloatReg(reg_idx, val, width);
+        checkerTC->setFloatReg(reg_idx, val, width);
     }
 
     void setFloatReg(int reg_idx, FloatReg val)
     {
-        actualXC->setFloatReg(reg_idx, val);
-        checkerXC->setFloatReg(reg_idx, val);
+        actualTC->setFloatReg(reg_idx, val);
+        checkerTC->setFloatReg(reg_idx, val);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
     {
-        actualXC->setFloatRegBits(reg_idx, val, width);
-        checkerXC->setFloatRegBits(reg_idx, val, width);
+        actualTC->setFloatRegBits(reg_idx, val, width);
+        checkerTC->setFloatRegBits(reg_idx, val, width);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     {
-        actualXC->setFloatRegBits(reg_idx, val);
-        checkerXC->setFloatRegBits(reg_idx, val);
+        actualTC->setFloatRegBits(reg_idx, val);
+        checkerTC->setFloatRegBits(reg_idx, val);
     }
 
-    uint64_t readPC() { return actualXC->readPC(); }
+    uint64_t readPC() { return actualTC->readPC(); }
 
     void setPC(uint64_t val)
     {
-        actualXC->setPC(val);
-        checkerXC->setPC(val);
+        actualTC->setPC(val);
+        checkerTC->setPC(val);
         checkerCPU->recordPCChange(val);
     }
 
-    uint64_t readNextPC() { return actualXC->readNextPC(); }
+    uint64_t readNextPC() { return actualTC->readNextPC(); }
 
     void setNextPC(uint64_t val)
     {
-        actualXC->setNextPC(val);
-        checkerXC->setNextPC(val);
+        actualTC->setNextPC(val);
+        checkerTC->setNextPC(val);
         checkerCPU->recordNextPCChange(val);
     }
 
-    uint64_t readNextNPC() { return actualXC->readNextNPC(); }
+    uint64_t readNextNPC() { return actualTC->readNextNPC(); }
 
     void setNextNPC(uint64_t val)
     {
-        actualXC->setNextNPC(val);
-        checkerXC->setNextNPC(val);
+        actualTC->setNextNPC(val);
+        checkerTC->setNextNPC(val);
         checkerCPU->recordNextPCChange(val);
     }
 
     MiscReg readMiscReg(int misc_reg)
-    { return actualXC->readMiscReg(misc_reg); }
+    { return actualTC->readMiscReg(misc_reg); }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
-    { return actualXC->readMiscRegWithEffect(misc_reg, fault); }
+    { return actualTC->readMiscRegWithEffect(misc_reg, fault); }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        checkerXC->setMiscReg(misc_reg, val);
-        return actualXC->setMiscReg(misc_reg, val);
+        checkerTC->setMiscReg(misc_reg, val);
+        return actualTC->setMiscReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        checkerXC->setMiscRegWithEffect(misc_reg, val);
-        return actualXC->setMiscRegWithEffect(misc_reg, val);
+        checkerTC->setMiscRegWithEffect(misc_reg, val);
+        return actualTC->setMiscRegWithEffect(misc_reg, val);
     }
 
     unsigned readStCondFailures()
-    { return actualXC->readStCondFailures(); }
+    { return actualTC->readStCondFailures(); }
 
     void setStCondFailures(unsigned sc_failures)
     {
-        checkerXC->setStCondFailures(sc_failures);
-        actualXC->setStCondFailures(sc_failures);
+        checkerTC->setStCondFailures(sc_failures);
+        actualTC->setStCondFailures(sc_failures);
     }
 #if FULL_SYSTEM
-    bool inPalMode() { return actualXC->inPalMode(); }
+    bool inPalMode() { return actualTC->inPalMode(); }
 #endif
 
     // @todo: Fix this!
-    bool misspeculating() { return actualXC->misspeculating(); }
+    bool misspeculating() { return actualTC->misspeculating(); }
 
 #if !FULL_SYSTEM
-    IntReg getSyscallArg(int i) { return actualXC->getSyscallArg(i); }
+    IntReg getSyscallArg(int i) { return actualTC->getSyscallArg(i); }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, IntReg val)
     {
-        checkerXC->setSyscallArg(i, val);
-        actualXC->setSyscallArg(i, val);
+        checkerTC->setSyscallArg(i, val);
+        actualTC->setSyscallArg(i, val);
     }
 
     void setSyscallReturn(SyscallReturn return_value)
     {
-        checkerXC->setSyscallReturn(return_value);
-        actualXC->setSyscallReturn(return_value);
+        checkerTC->setSyscallReturn(return_value);
+        actualTC->setSyscallReturn(return_value);
     }
 
-    Counter readFuncExeInst() { return actualXC->readFuncExeInst(); }
+    Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
     void changeRegFileContext(RegFile::ContextParam param,
             RegFile::ContextVal val)
     {
-        actualXC->changeRegFileContext(param, val);
-        checkerXC->changeRegFileContext(param, val);
+        actualTC->changeRegFileContext(param, val);
+        checkerTC->changeRegFileContext(param, val);
     }
 };
 

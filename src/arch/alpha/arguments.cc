@@ -30,7 +30,7 @@
 
 #include "arch/alpha/arguments.hh"
 #include "arch/alpha/vtophys.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/vport.hh"
 
 using namespace AlphaISA;
@@ -56,14 +56,14 @@ AlphaArguments::getArg(bool fp)
 {
     if (number < 6) {
         if (fp)
-            return xc->readFloatRegBits(16 + number);
+            return tc->readFloatRegBits(16 + number);
         else
-            return xc->readIntReg(16 + number);
+            return tc->readIntReg(16 + number);
     } else {
-        Addr sp = xc->readIntReg(30);
-        VirtualPort *vp = xc->getVirtPort(xc);
+        Addr sp = tc->readIntReg(30);
+        VirtualPort *vp = tc->getVirtPort(tc);
         uint64_t arg = vp->read<uint64_t>(sp + (number-6) * sizeof(uint64_t));
-        xc->delVirtPort(vp);
+        tc->delVirtPort(vp);
         return arg;
     }
 }

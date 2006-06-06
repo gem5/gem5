@@ -37,7 +37,7 @@
 
 #include "arch/alpha/ev5.hh"
 #include "base/inet.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"

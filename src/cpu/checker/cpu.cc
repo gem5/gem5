@@ -34,7 +34,7 @@
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/cpu_exec_context.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 #include "sim/byteswap.hh"
 #include "sim/sim_object.hh"
@@ -62,7 +62,7 @@ CheckerCPU::init()
 }
 
 CheckerCPU::CheckerCPU(Params *p)
-    : BaseCPU(p), cpuXC(NULL), xcProxy(NULL)
+    : BaseCPU(p), cpuXC(NULL), tc(NULL)
 {
     memReq = NULL;
 
@@ -97,17 +97,16 @@ CheckerCPU::setMemory(MemObject *mem)
     cpuXC = new CPUExecContext(this, /* thread_num */ 0, process,
                                /* asid */ 0, mem);
 
-    cpuXC->setStatus(ExecContext::Suspended);
-    xcProxy = cpuXC->getProxy();
-    execContexts.push_back(xcProxy);
+    cpuXC->setStatus(ThreadContext::Suspended);
+    tc = cpuXC->getTC();
+    threadContexts.push_back(tc);
 #else
     if (systemPtr) {
         cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr, false);
 
-        cpuXC->setStatus(ExecContext::Suspended);
-        xcProxy = cpuXC->getProxy();
-        execContexts.push_back(xcProxy);
-        memReq->xc = xcProxy;
+        cpuXC->setStatus(ThreadContext::Suspended);
+        tc = cpuXC->getTC();
+        threadContexts.push_back(tc);
         delete cpuXC->kernelStats;
         cpuXC->kernelStats = NULL;
     }
@@ -123,10 +122,9 @@ CheckerCPU::setSystem(System *system)
     if (memPtr) {
         cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr, false);
 
-        cpuXC->setStatus(ExecContext::Suspended);
-        xcProxy = cpuXC->getProxy();
-        execContexts.push_back(xcProxy);
-        memReq->xc = xcProxy;
+        cpuXC->setStatus(ThreadContext::Suspended);
+        tc = cpuXC->getTC();
+        threadContexts.push_back(tc);
         delete cpuXC->kernelStats;
         cpuXC->kernelStats = NULL;
     }
@@ -742,12 +740,12 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
         int misc_reg_idx = miscRegIdxs.front();
         miscRegIdxs.pop();
 
-        if (inst->xcBase()->readMiscReg(misc_reg_idx) !=
+        if (inst->tcBase()->readMiscReg(misc_reg_idx) !=
             cpuXC->readMiscReg(misc_reg_idx)) {
             warn("%lli: Misc reg idx %i (side effect) does not match! "
                  "Inst: %#x, checker: %#x",
                  curTick, misc_reg_idx,
-                 inst->xcBase()->readMiscReg(misc_reg_idx),
+                 inst->tcBase()->readMiscReg(misc_reg_idx),
                  cpuXC->readMiscReg(misc_reg_idx));
             handleError();
         }

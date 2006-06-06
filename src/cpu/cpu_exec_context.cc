@@ -36,7 +36,7 @@
 #include "arch/isa_traits.hh"
 #include "cpu/base.hh"
 #include "cpu/cpu_exec_context.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
 #include "base/callback.hh"
@@ -62,14 +62,14 @@ using namespace std;
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
                                AlphaITB *_itb, AlphaDTB *_dtb,
                                bool use_kernel_stats)
-    : _status(ExecContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
+    : _status(ThreadContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
       cpu_id(-1), lastActivate(0), lastSuspend(0), system(_sys), itb(_itb),
       dtb(_dtb), profile(NULL), func_exe_inst(0), storeCondFailures(0)
 
 {
-    proxy = new ProxyExecContext<CPUExecContext>(this);
+    tc = new ProxyThreadContext<CPUExecContext>(this);
 
-    quiesceEvent = new EndQuiesceEvent(proxy);
+    quiesceEvent = new EndQuiesceEvent(tc);
 
     regs.clear();
 
@@ -109,7 +109,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
 #else
 CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid, MemObject* memobj)
-    : _status(ExecContext::Unallocated),
+    : _status(ThreadContext::Unallocated),
       cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
       lastSuspend(0), process(_process), asid(_asid),
       func_exe_inst(0), storeCondFailures(0)
@@ -124,7 +124,7 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
     port->setPeer(mem_port);
 
     regs.clear();
-    proxy = new ProxyExecContext<CPUExecContext>(this);
+    tc = new ProxyThreadContext<CPUExecContext>(this);
 }
 
 CPUExecContext::CPUExecContext(RegFile *regFile)
@@ -132,14 +132,14 @@ CPUExecContext::CPUExecContext(RegFile *regFile)
       func_exe_inst(0), storeCondFailures(0)
 {
     regs = *regFile;
-    proxy = new ProxyExecContext<CPUExecContext>(this);
+    tc = new ProxyThreadContext<CPUExecContext>(this);
 }
 
 #endif
 
 CPUExecContext::~CPUExecContext()
 {
-    delete proxy;
+    delete tc;
 }
 
 #if FULL_SYSTEM
@@ -147,7 +147,7 @@ void
 CPUExecContext::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
-    profile->dump(proxy, *os);
+    profile->dump(tc, *os);
 }
 
 void
@@ -167,7 +167,7 @@ CPUExecContext::profileSample()
 #endif
 
 void
-CPUExecContext::takeOverFrom(ExecContext *oldContext)
+CPUExecContext::takeOverFrom(ThreadContext *oldContext)
 {
     // some things should already be set up
 #if FULL_SYSTEM
@@ -185,18 +185,18 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
 #else
     EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
     if (quiesce) {
-        // Point the quiesce event's XC at this XC so that it wakes up
+        // Point the quiesce event's TC at this TC so that it wakes up
         // the proper CPU.
-        quiesce->xc = proxy;
+        quiesce->tc = tc;
     }
     if (quiesceEvent) {
-        quiesceEvent->xc = proxy;
+        quiesceEvent->tc = tc;
     }
 #endif
 
     storeCondFailures = 0;
 
-    oldContext->setStatus(ExecContext::Unallocated);
+    oldContext->setStatus(ThreadContext::Unallocated);
 }
 
 void
@@ -242,17 +242,17 @@ CPUExecContext::unserialize(Checkpoint *cp, const std::string &section)
 void
 CPUExecContext::activate(int delay)
 {
-    if (status() == ExecContext::Active)
+    if (status() == ThreadContext::Active)
         return;
 
     lastActivate = curTick;
 
-    if (status() == ExecContext::Unallocated) {
+    if (status() == ThreadContext::Unallocated) {
         cpu->activateWhenReady(thread_num);
         return;
     }
 
-    _status = ExecContext::Active;
+    _status = ThreadContext::Active;
 
     // status() == Suspended
     cpu->activateContext(thread_num, delay);
@@ -261,7 +261,7 @@ CPUExecContext::activate(int delay)
 void
 CPUExecContext::suspend()
 {
-    if (status() == ExecContext::Suspended)
+    if (status() == ThreadContext::Suspended)
         return;
 
     lastActivate = curTick;
@@ -270,32 +270,32 @@ CPUExecContext::suspend()
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
     if (cpu->check_interrupts()) {
-        assert(status() == ExecContext::Active);
+        assert(status() == ThreadContext::Active);
         return;
     }
 #endif
 */
-    _status = ExecContext::Suspended;
+    _status = ThreadContext::Suspended;
     cpu->suspendContext(thread_num);
 }
 
 void
 CPUExecContext::deallocate()
 {
-    if (status() == ExecContext::Unallocated)
+    if (status() == ThreadContext::Unallocated)
         return;
 
-    _status = ExecContext::Unallocated;
+    _status = ThreadContext::Unallocated;
     cpu->deallocateContext(thread_num);
 }
 
 void
 CPUExecContext::halt()
 {
-    if (status() == ExecContext::Halted)
+    if (status() == ThreadContext::Halted)
         return;
 
-    _status = ExecContext::Halted;
+    _status = ThreadContext::Halted;
     cpu->haltContext(thread_num);
 }
 
@@ -310,22 +310,22 @@ CPUExecContext::regStats(const string &name)
 }
 
 void
-CPUExecContext::copyArchRegs(ExecContext *xc)
+CPUExecContext::copyArchRegs(ThreadContext *src_tc)
 {
-    TheISA::copyRegs(xc, proxy);
+    TheISA::copyRegs(src_tc, tc);
 }
 
 #if FULL_SYSTEM
 VirtualPort*
-CPUExecContext::getVirtPort(ExecContext *xc)
+CPUExecContext::getVirtPort(ThreadContext *src_tc)
 {
-    if (!xc)
+    if (!src_tc)
         return virtPort;
 
     VirtualPort *vp;
     Port *mem_port;
 
-    vp = new VirtualPort("xc-vport", xc);
+    vp = new VirtualPort("tc-vport", src_tc);
     mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(vp);
     vp->setPeer(mem_port);
@@ -335,7 +335,7 @@ CPUExecContext::getVirtPort(ExecContext *xc)
 void
 CPUExecContext::delVirtPort(VirtualPort *vp)
 {
-//    assert(!vp->nullExecContext());
+//    assert(!vp->nullThreadContext());
     delete vp->getPeer();
     delete vp;
 }

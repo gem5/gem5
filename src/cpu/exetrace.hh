@@ -38,7 +38,7 @@
 #include "sim/host.hh"
 #include "cpu/inst_seq.hh"	// for InstSeqNum
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 
 class BaseCPU;
@@ -173,14 +173,14 @@ InstRecord::setRegs(const IntRegFile &regs)
 
 inline
 InstRecord *
-getInstRecord(Tick cycle, ExecContext *xc, BaseCPU *cpu,
+getInstRecord(Tick cycle, ThreadContext *tc, BaseCPU *cpu,
               const StaticInstPtr staticInst,
               Addr pc, int thread = 0)
 {
     if (DTRACE(InstExec) &&
-        (InstRecord::traceMisspec() || !xc->misspeculating())) {
+        (InstRecord::traceMisspec() || !tc->misspeculating())) {
         return new InstRecord(cycle, cpu, staticInst, pc,
-                              xc->misspeculating(), thread);
+                              tc->misspeculating(), thread);
     }
 
     return NULL;

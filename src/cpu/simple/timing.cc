@@ -52,11 +52,11 @@ TimingSimpleCPU::init()
 
     BaseCPU::init();
 #if FULL_SYSTEM
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(xc, xc->readCpuId());
+        TheISA::initCPU(tc, tc->readCpuId());
     }
 #endif
 }
@@ -125,11 +125,11 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
-    // if any of this CPU's ExecContexts are active, mark the CPU as
+    // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
-        if (xc->status() == ExecContext::Active && _status != Running) {
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
+        if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
             break;
         }

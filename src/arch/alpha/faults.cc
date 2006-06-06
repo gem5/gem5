@@ -30,7 +30,7 @@
  */
 
 #include "arch/alpha/faults.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
 #if FULL_SYSTEM
@@ -110,67 +110,67 @@ FaultStat IntegerOverflowFault::_count;
 
 #if FULL_SYSTEM
 
-void AlphaFault::invoke(ExecContext * xc)
+void AlphaFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     countStat()++;
 
     // exception restart address
-    if (setRestartAddress() || !xc->inPalMode())
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->readPC());
+    if (setRestartAddress() || !tc->inPalMode())
+        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->readPC());
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
-                   xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
+                   tc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
     }
 
-    xc->setPC(xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect());
-    xc->setNextPC(xc->readPC() + sizeof(MachInst));
+    tc->setPC(tc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect());
+    tc->setNextPC(tc->readPC() + sizeof(MachInst));
 }
 
-void ArithmeticFault::invoke(ExecContext * xc)
+void ArithmeticFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     panic("Arithmetic traps are unimplemented!");
 }
 
-void DtbFault::invoke(ExecContext * xc)
+void DtbFault::invoke(ThreadContext * tc)
 {
     // Set fault address and flags.  Even though we're modeling an
     // EV5, we use the EV6 technique of not latching fault registers
     // on VPTE loads (instead of locking the registers until IPR_VA is
     // read, like the EV5).  The EV6 approach is cleaner and seems to
     // work with EV5 PAL code, but not the other way around.
-    if (!xc->misspeculating()
+    if (!tc->misspeculating()
         && !(reqFlags & VPTE) && !(reqFlags & NO_FAULT)) {
         // set VA register with faulting address
-        xc->setMiscReg(AlphaISA::IPR_VA, vaddr);
+        tc->setMiscReg(AlphaISA::IPR_VA, vaddr);
 
         // set MM_STAT register flags
-        xc->setMiscReg(AlphaISA::IPR_MM_STAT,
-            (((EV5::Opcode(xc->getInst()) & 0x3f) << 11)
-             | ((EV5::Ra(xc->getInst()) & 0x1f) << 6)
+        tc->setMiscReg(AlphaISA::IPR_MM_STAT,
+            (((EV5::Opcode(tc->getInst()) & 0x3f) << 11)
+             | ((EV5::Ra(tc->getInst()) & 0x1f) << 6)
              | (flags & 0x3f)));
 
         // set VA_FORM register with faulting formatted address
-        xc->setMiscReg(AlphaISA::IPR_VA_FORM,
-            xc->readMiscReg(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
+        tc->setMiscReg(AlphaISA::IPR_VA_FORM,
+            tc->readMiscReg(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
     }
 
-    AlphaFault::invoke(xc);
+    AlphaFault::invoke(tc);
 }
 
-void ItbFault::invoke(ExecContext * xc)
+void ItbFault::invoke(ThreadContext * tc)
 {
-    if (!xc->misspeculating()) {
-        xc->setMiscReg(AlphaISA::IPR_ITB_TAG, pc);
-        xc->setMiscReg(AlphaISA::IPR_IFAULT_VA_FORM,
-                       xc->readMiscReg(AlphaISA::IPR_IVPTBR) |
+    if (!tc->misspeculating()) {
+        tc->setMiscReg(AlphaISA::IPR_ITB_TAG, pc);
+        tc->setMiscReg(AlphaISA::IPR_IFAULT_VA_FORM,
+                       tc->readMiscReg(AlphaISA::IPR_IVPTBR) |
                        (AlphaISA::VAddr(pc).vpn() << 3));
     }
 
-    AlphaFault::invoke(xc);
+    AlphaFault::invoke(tc);
 }
 
 #endif

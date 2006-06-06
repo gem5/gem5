@@ -34,11 +34,11 @@
 #include <vector>
 #include "sim/eventq.hh"
 
-class ExecContext;
+class ThreadContext;
 
 /** This class creates a global list of events than need a pointer to an
- * execution context. When a switchover takes place the events can be migrated
- * to the new execution context, otherwise you could have a wake timer interrupt
+ * thread context. When a switchover takes place the events can be migrated
+ * to the new thread context, otherwise you could have a wake timer interrupt
  * go off on a switched out cpu or other unfortunate events. This object MUST be
  * dynamically allocated to avoid it being deleted after a cpu switch happens.
  * */
@@ -52,36 +52,37 @@ class CpuEvent : public Event
      * happens. */
     static CpuEventList cpuEventList;
 
-    /** The execution context that is switched to the new cpus. */
-    ExecContext *xc;
+    /** The thread context that is switched to the new cpus. */
+    ThreadContext *tc;
 
   public:
-    CpuEvent(EventQueue *q, ExecContext *_xc, Priority p = Default_Pri)
-        : Event(q, p), xc(_xc)
+    CpuEvent(EventQueue *q, ThreadContext *_tc, Priority p = Default_Pri)
+        : Event(q, p), tc(_tc)
     { cpuEventList.push_back(this); }
 
     /** delete the cpu event from the global list. */
     ~CpuEvent();
 
-    /** Update all events switching old xc to new xc.
-     * @param oldXc the old exeuction context we are switching from
-     * @param newXc the new execution context we are switching to.
+    /** Update all events switching old tc to new tc.
+     * @param oldTc the old thread context we are switching from
+     * @param newTc the new thread context we are switching to.
      */
-    static void replaceExecContext(ExecContext *oldXc, ExecContext *newXc);
+    static void replaceThreadContext(ThreadContext *oldTc,
+                                     ThreadContext *newTc);
 };
 
-template <class T, void (T::* F)(ExecContext *xc)>
+template <class T, void (T::* F)(ThreadContext *tc)>
 class CpuEventWrapper : public CpuEvent
 {
   private:
     T *object;
 
   public:
-    CpuEventWrapper(T *obj, ExecContext *_xc, EventQueue *q = &mainEventQueue,
+    CpuEventWrapper(T *obj, ThreadContext *_tc, EventQueue *q = &mainEventQueue,
             Priority p = Default_Pri)
-        : CpuEvent(q, _xc, p), object(obj)
+        : CpuEvent(q, _tc, p), object(obj)
     { }
-    void process() { (object->*F)(xc); }
+    void process() { (object->*F)(tc); }
 };
 
 #endif // __CPU_CPUEVENT_HH__

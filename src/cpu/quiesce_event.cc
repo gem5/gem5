@@ -1,16 +1,16 @@
 
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 
-EndQuiesceEvent::EndQuiesceEvent(ExecContext *_xc)
-    : Event(&mainEventQueue), xc(_xc)
+EndQuiesceEvent::EndQuiesceEvent(ThreadContext *_tc)
+    : Event(&mainEventQueue), tc(_tc)
 {
 }
 
 void
 EndQuiesceEvent::process()
 {
-    xc->activate();
+    tc->activate();
 }
 
 const char*

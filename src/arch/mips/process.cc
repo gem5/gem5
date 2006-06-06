@@ -34,7 +34,7 @@
 #include "arch/mips/linux/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 

@@ -106,7 +106,7 @@ output header {{
         {
         }
 
-        Addr branchTarget(ExecContext *xc) const;
+        Addr branchTarget(ThreadContext *tc) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -121,10 +121,10 @@ output decoder {{
     }
 
     Addr
-    Jump::branchTarget(ExecContext *xc) const
+    Jump::branchTarget(ThreadContext *tc) const
     {
-        Addr NPC = xc->readPC() + 4;
-        uint64_t Rb = xc->readIntReg(_srcRegIdx[0]);
+        Addr NPC = tc->readPC() + 4;
+        uint64_t Rb = tc->readIntReg(_srcRegIdx[0]);
         return (Rb & ~3) | (NPC & 1);
     }
 

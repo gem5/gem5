@@ -3,15 +3,15 @@
 
 #include "sim/eventq.hh"
 
-class ExecContext;
+class ThreadContext;
 
 /** Event for timing out quiesce instruction */
 struct EndQuiesceEvent : public Event
 {
-    /** A pointer to the execution context that is quiesced */
-    ExecContext *xc;
+    /** A pointer to the thread context that is quiesced */
+    ThreadContext *tc;
 
-    EndQuiesceEvent(ExecContext *_xc);
+    EndQuiesceEvent(ThreadContext *_tc);
 
     /** Event process to occur at interrupt*/
     virtual void process();

@@ -39,7 +39,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/cpu_exec_context.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
@@ -79,9 +79,9 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
             /* asid */ 0, mem);
 #endif // !FULL_SYSTEM
 
-    cpuXC->setStatus(ExecContext::Suspended);
+    cpuXC->setStatus(ThreadContext::Suspended);
 
-    xcProxy = cpuXC->getProxy();
+    tc = cpuXC->getTC();
 
     numInst = 0;
     startNumInst = 0;
@@ -90,7 +90,7 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
     lastIcacheStall = 0;
     lastDcacheStall = 0;
 
-    execContexts.push_back(xcProxy);
+    threadContexts.push_back(tc);
 }
 
 BaseSimpleCPU::~BaseSimpleCPU()
@@ -290,7 +290,7 @@ BaseSimpleCPU::copy(Addr dest)
 Addr
 BaseSimpleCPU::dbg_vtophys(Addr addr)
 {
-    return vtophys(xcProxy, addr);
+    return vtophys(tc, addr);
 }
 #endif // FULL_SYSTEM
 
@@ -300,7 +300,7 @@ BaseSimpleCPU::post_interrupt(int int_num, int index)
 {
     BaseCPU::post_interrupt(int_num, index);
 
-    if (cpuXC->status() == ExecContext::Suspended) {
+    if (cpuXC->status() == ThreadContext::Suspended) {
                 DPRINTF(IPI,"Suspended Processor awoke\n");
         cpuXC->activate();
     }
@@ -344,7 +344,7 @@ BaseSimpleCPU::checkForInterrupts()
             cpuXC->setMiscReg(IPR_ISR, summary);
             cpuXC->setMiscReg(IPR_INTID, ipl);
 
-            Fault(new InterruptFault)->invoke(xcProxy);
+            Fault(new InterruptFault)->invoke(tc);
 
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                     cpuXC->readMiscReg(IPR_IPLR), ipl, summary);
@@ -393,7 +393,7 @@ BaseSimpleCPU::preExecute()
     inst = gtoh(inst);
     curStaticInst = StaticInst::decode(makeExtMI(inst, cpuXC->readPC()));
 
-    traceData = Trace::getInstRecord(curTick, xcProxy, this, curStaticInst,
+    traceData = Trace::getInstRecord(curTick, tc, this, curStaticInst,
                                      cpuXC->readPC());
 
     DPRINTF(Decode,"Decode: Decoded %s instruction (opcode: 0x%x): 0x%x\n",
@@ -411,14 +411,14 @@ BaseSimpleCPU::postExecute()
 #if FULL_SYSTEM
     if (system->kernelBinning->fnbin) {
         assert(cpuXC->getKernelStats());
-        system->kernelBinning->execute(xcProxy, inst);
+        system->kernelBinning->execute(tc, inst);
     }
 
     if (cpuXC->profile) {
         bool usermode =
             (cpuXC->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
         cpuXC->profilePC = usermode ? 1 : cpuXC->readPC();
-        ProfileNode *node = cpuXC->profile->consume(xcProxy, inst);
+        ProfileNode *node = cpuXC->profile->consume(tc, inst);
         if (node)
             cpuXC->profileNode = node;
     }
@@ -446,7 +446,7 @@ BaseSimpleCPU::advancePC(Fault fault)
 {
     if (fault != NoFault) {
 #if FULL_SYSTEM
-        fault->invoke(xcProxy);
+        fault->invoke(tc);
 #else // !FULL_SYSTEM
         fatal("fault (%s) detected @ PC %08p", fault->name(), cpuXC->readPC());
 #endif // FULL_SYSTEM
@@ -467,7 +467,7 @@ BaseSimpleCPU::advancePC(Fault fault)
     Addr oldpc;
     do {
         oldpc = cpuXC->readPC();
-        system->pcEventQueue.service(xcProxy);
+        system->pcEventQueue.service(tc);
     } while (oldpc != cpuXC->readPC());
 #endif
 }

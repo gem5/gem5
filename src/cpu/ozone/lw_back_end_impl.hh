@@ -209,7 +209,7 @@ LWBackEnd<Impl>::DCacheCompletionEvent::description()
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
     : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
-      trapSquash(false), xcSquash(false), cacheCompletionEvent(this),
+      trapSquash(false), tcSquash(false), cacheCompletionEvent(this),
       dcacheInterface(params->dcacheInterface), width(params->backEndWidth),
       exactFullStall(true)
 {
@@ -592,7 +592,7 @@ LWBackEnd<Impl>::checkInterrupts()
         cpu->check_interrupts() &&
         !cpu->inPalMode(thread->readPC()) &&
         !trapSquash &&
-        !xcSquash) {
+        !tcSquash) {
         frontEnd->interruptPending = true;
         if (robEmpty() && !LSQ.hasStoresToWB()) {
             // Will need to squash all instructions currently in flight and have
@@ -637,7 +637,7 @@ LWBackEnd<Impl>::handleFault(Fault &fault, Tick latency)
 
     // Consider holding onto the trap and waiting until the trap event
     // happens for this to be executed.
-    fault->invoke(thread->getXCProxy());
+    fault->invoke(thread->getTCProxy());
 
     // Exit state update mode to avoid accidental updating.
     thread->inSyscall = false;
@@ -671,10 +671,10 @@ LWBackEnd<Impl>::tick()
     checkInterrupts();
 
     if (trapSquash) {
-        assert(!xcSquash);
+        assert(!tcSquash);
         squashFromTrap();
-    } else if (xcSquash) {
-        squashFromXC();
+    } else if (tcSquash) {
+        squashFromTC();
     }
 #endif
 
@@ -1257,12 +1257,12 @@ LWBackEnd<Impl>::commitInst(int inst_num)
             assert(!thread->inSyscall && !thread->trapPending);
         oldpc = thread->readPC();
         cpu->system->pcEventQueue.service(
-            thread->getXCProxy());
+            thread->getTCProxy());
         count++;
     } while (oldpc != thread->readPC());
     if (count > 1) {
         DPRINTF(BE, "PC skip function event, stopping commit\n");
-        xcSquash = true;
+        tcSquash = true;
         return false;
     }
 #endif
@@ -1396,7 +1396,7 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
 
 template <class Impl>
 void
-LWBackEnd<Impl>::squashFromXC()
+LWBackEnd<Impl>::squashFromTC()
 {
     InstSeqNum squashed_inst = robEmpty() ? 0 : instList.back()->seqNum - 1;
     squash(squashed_inst);
@@ -1406,7 +1406,7 @@ LWBackEnd<Impl>::squashFromXC()
 
     thread->trapPending = false;
     thread->inSyscall = false;
-    xcSquash = false;
+    tcSquash = false;
     commitStatus = Running;
 }
 
@@ -1483,7 +1483,7 @@ LWBackEnd<Impl>::doSwitchOut()
     switchedOut = true;
     switchPending = false;
     // Need to get rid of all committed, non-speculative state and write it
-    // to memory/XC.  In this case this is stores that have committed and not
+    // to memory/TC.  In this case this is stores that have committed and not
     // yet written back.
     assert(robEmpty());
     assert(!LSQ.hasStoresToWB());
@@ -1495,7 +1495,7 @@ LWBackEnd<Impl>::doSwitchOut()
 
 template <class Impl>
 void
-LWBackEnd<Impl>::takeOverFrom(ExecContext *old_xc)
+LWBackEnd<Impl>::takeOverFrom(ThreadContext *old_xc)
 {
     switchedOut = false;
     xcSquash = false;

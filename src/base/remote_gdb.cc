@@ -128,7 +128,7 @@
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
@@ -252,7 +252,7 @@ RemoteGDB::Event::process(int revent)
         gdb->detach();
 }
 
-RemoteGDB::RemoteGDB(System *_system, ExecContext *c)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
     : event(NULL), listener(NULL), number(-1), fd(-1),
       active(false), attached(false),
       system(_system), pmem(_system->physmem), context(c)
@@ -704,11 +704,11 @@ RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
 }
 
 void
-RemoteGDB::HardBreakpoint::process(ExecContext *xc)
+RemoteGDB::HardBreakpoint::process(ThreadContext *tc)
 {
     DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
-    if (xc == gdb->context)
+    if (tc == gdb->context)
         gdb->trap(ALPHA_KENTRY_INT);
 }
 

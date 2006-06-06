@@ -210,9 +210,9 @@ class DefaultCommit
     void generateTrapEvent(unsigned tid);
 
     /** Records that commit needs to initiate a squash due to an
-     * external state update through the XC.
+     * external state update through the TC.
      */
-    void generateXCEvent(unsigned tid);
+    void generateTCEvent(unsigned tid);
 
   private:
     /** Updates the overall status of commit with the nextStatus, and
@@ -242,8 +242,8 @@ class DefaultCommit
     /** Handles squashing due to a trap. */
     void squashFromTrap(unsigned tid);
 
-    /** Handles squashing due to an XC write. */
-    void squashFromXC(unsigned tid);
+    /** Handles squashing due to an TC write. */
+    void squashFromTC(unsigned tid);
 
     /** Commits as many instructions as possible. */
     void commitInsts();
@@ -344,7 +344,7 @@ class DefaultCommit
     bool trapSquash[Impl::MaxThreads];
 
     /** Records if a thread has to squash this cycle due to an XC write. */
-    bool xcSquash[Impl::MaxThreads];
+    bool tcSquash[Impl::MaxThreads];
 
     /** Priority List used for Commit Policy */
     std::list<unsigned> priority_list;

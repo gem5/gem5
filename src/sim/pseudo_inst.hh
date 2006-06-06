@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-class ExecContext;
+class ThreadContext;
 
 //We need the "Tick" data type from here
 #include "sim/host.hh"
@@ -44,21 +44,21 @@ namespace AlphaPseudo
     extern bool doCheckpointInsts;
     extern bool doQuiesce;
 
-    void arm(ExecContext *xc);
-    void quiesce(ExecContext *xc);
-    void quiesceNs(ExecContext *xc, uint64_t ns);
-    void quiesceCycles(ExecContext *xc, uint64_t cycles);
-    uint64_t quiesceTime(ExecContext *xc);
-    void ivlb(ExecContext *xc);
-    void ivle(ExecContext *xc);
-    void m5exit(ExecContext *xc, Tick delay);
-    void m5exit_old(ExecContext *xc);
-    void resetstats(ExecContext *xc, Tick delay, Tick period);
-    void dumpstats(ExecContext *xc, Tick delay, Tick period);
-    void dumpresetstats(ExecContext *xc, Tick delay, Tick period);
-    void m5checkpoint(ExecContext *xc, Tick delay, Tick period);
-    uint64_t readfile(ExecContext *xc, Addr vaddr, uint64_t len, uint64_t offset);
-    void debugbreak(ExecContext *xc);
-    void switchcpu(ExecContext *xc);
-    void addsymbol(ExecContext *xc, Addr addr, Addr symbolAddr);
+    void arm(ThreadContext *tc);
+    void quiesce(ThreadContext *tc);
+    void quiesceNs(ThreadContext *tc, uint64_t ns);
+    void quiesceCycles(ThreadContext *tc, uint64_t cycles);
+    uint64_t quiesceTime(ThreadContext *tc);
+    void ivlb(ThreadContext *tc);
+    void ivle(ThreadContext *tc);
+    void m5exit(ThreadContext *tc, Tick delay);
+    void m5exit_old(ThreadContext *tc);
+    void resetstats(ThreadContext *tc, Tick delay, Tick period);
+    void dumpstats(ThreadContext *tc, Tick delay, Tick period);
+    void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
+    void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
+    uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset);
+    void debugbreak(ThreadContext *tc);
+    void switchcpu(ThreadContext *tc);
+    void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
 }

@@ -41,7 +41,7 @@
 #include "mem/request.hh"
 #include "sim/sim_object.hh"
 
-class ExecContext;
+class ThreadContext;
 
 class AlphaTLB : public SimObject
 {
@@ -95,7 +95,7 @@ class AlphaITB : public AlphaTLB
     AlphaITB(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(RequestPtr &req, ExecContext *xc) const;
+    Fault translate(RequestPtr &req, ThreadContext *tc) const;
 };
 
 class AlphaDTB : public AlphaTLB
@@ -118,7 +118,7 @@ class AlphaDTB : public AlphaTLB
     AlphaDTB(const std::string &name, int size);
     virtual void regStats();
 
-    Fault translate(RequestPtr &req, ExecContext *xc, bool write) const;
+    Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const;
 };
 
 #endif // __ALPHA_MEMORY_HH__

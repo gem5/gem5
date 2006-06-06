@@ -240,7 +240,7 @@ class PhysRegFile
                                   unsigned thread_id)
     {
         return miscRegs[thread_id].readRegWithEffect(misc_reg, fault,
-                                                     cpu->xcBase(thread_id));
+                                                     cpu->tcBase(thread_id));
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val, unsigned thread_id)
@@ -252,7 +252,7 @@ class PhysRegFile
                                unsigned thread_id)
     {
         return miscRegs[thread_id].setRegWithEffect(misc_reg, val,
-                                                    cpu->xcBase(thread_id));
+                                                    cpu->tcBase(thread_id));
     }
 
 #if FULL_SYSTEM

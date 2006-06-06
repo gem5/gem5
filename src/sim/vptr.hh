@@ -34,7 +34,7 @@
 #include "arch/vtophys.hh"
 #include "arch/isa_traits.hh"
 
-class ExecContext;
+class ThreadContext;
 
 template <class T>
 class VPtr
@@ -43,17 +43,17 @@ class VPtr
     typedef T Type;
 
   private:
-    ExecContext *xc;
+    ThreadContext *tc;
     Addr ptr;
 
   public:
-    ExecContext *GetXC() const { return xc; }
+    ThreadContext *GetTC() const { return tc; }
     Addr GetPointer() const { return ptr; }
 
   public:
-    explicit VPtr(ExecContext *_xc, Addr p = 0) : xc(_xc), ptr(p) { }
+    explicit VPtr(ThreadContext *_tc, Addr p = 0) : tc(_tc), ptr(p) { }
     template <class U>
-    VPtr(const VPtr<U> &vp) : xc(vp.GetXC()), ptr(vp.GetPointer()) {}
+    VPtr(const VPtr<U> &vp) : tc(vp.GetTC()), ptr(vp.GetPointer()) {}
     ~VPtr() {}
 
     bool operator!() const
@@ -90,7 +90,7 @@ class VPtr
     template <class U>
     const VPtr<T> &operator=(const VPtr<U> &vp)
     {
-        xc = vp.GetXC();
+        tc = vp.GetTC();
         ptr = vp.GetPointer();
 
         return *this;
@@ -99,7 +99,7 @@ class VPtr
     operator T *()
     {
         panic("Needs to be rewritten\n");
-/*	void *addr = vtomem(xc, ptr, sizeof(T));
+/*	void *addr = vtomem(tc, ptr, sizeof(T));
         return (T *)addr;
         */
     }
@@ -107,7 +107,7 @@ class VPtr
     T *operator->()
     {
         panic("Needs to be rewritten\n");
-/*	void *addr = vtomem(xc, ptr, sizeof(T));
+/*	void *addr = vtomem(tc, ptr, sizeof(T));
         return (T *)addr;
         */
     }
@@ -115,7 +115,7 @@ class VPtr
     T &operator*()
     {
         panic("Needs to be rewritten\n");
-/*	void *addr = vtomem(xc, ptr, sizeof(T));
+/*	void *addr = vtomem(tc, ptr, sizeof(T));
         return *(T *)addr;
         */
     }

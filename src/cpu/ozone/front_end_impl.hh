@@ -29,7 +29,7 @@
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "base/statistics.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/front_end.hh"
 #include "mem/mem_interface.hh"
@@ -93,9 +93,9 @@ FrontEnd<Impl>::setCommBuffer(TimeBuffer<CommStruct> *_comm)
 
 template <class Impl>
 void
-FrontEnd<Impl>::setXC(ExecContext *xc_ptr)
+FrontEnd<Impl>::setTC(ThreadContext *tc_ptr)
 {
-    xc = xc_ptr;
+    tc = tc_ptr;
 }
 
 template <class Impl>
@@ -407,7 +407,7 @@ FrontEnd<Impl>::fetchCacheLine()
     memReq->asid = 0;
     memReq->thread_num = 0;
     memReq->data = new uint8_t[64];
-    memReq->xc = xc;
+    memReq->tc = tc;
     memReq->cmd = Read;
     memReq->reset(fetch_PC, cacheBlkSize, flags);
 
@@ -780,7 +780,7 @@ FrontEnd<Impl>::getInstFromCacheline()
             instruction->staticInst->disassemble(PC));
 
     instruction->traceData =
-        Trace::getInstRecord(curTick, xc, cpu,
+        Trace::getInstRecord(curTick, tc, cpu,
                              instruction->staticInst,
                              instruction->readPC(), 0);
 
@@ -862,7 +862,7 @@ FrontEnd<Impl>::doSwitchOut()
 
 template <class Impl>
 void
-FrontEnd<Impl>::takeOverFrom(ExecContext *old_xc)
+FrontEnd<Impl>::takeOverFrom(ThreadContext *old_tc)
 {
     assert(freeRegs == numPhysRegs);
     fetchCacheLineNextCycle = true;

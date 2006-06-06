@@ -37,7 +37,7 @@
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"
@@ -101,7 +101,7 @@ class OzoneCPU : public BaseCPU
     typedef TheISA::MiscReg MiscReg;
 
   public:
-    class OzoneXC : public ExecContext {
+    class OzoneTC : public ThreadContext {
       public:
         OzoneCPU<Impl> *cpu;
 
@@ -150,7 +150,7 @@ class OzoneCPU : public BaseCPU
         void dumpFuncProfile();
 #endif
 
-        void takeOverFrom(ExecContext *old_context);
+        void takeOverFrom(ThreadContext *old_context);
 
         void regStats(const std::string &name);
 
@@ -172,7 +172,7 @@ class OzoneCPU : public BaseCPU
         // Also somewhat obnoxious.  Really only used for the TLB fault.
         TheISA::MachInst getInst();
 
-        void copyArchRegs(ExecContext *xc);
+        void copyArchRegs(ThreadContext *tc);
 
         void clearArchRegs();
 
@@ -254,10 +254,13 @@ class OzoneCPU : public BaseCPU
         { panic("Not supported on Alpha!"); }
     };
 
-    // execution context proxy
-    OzoneXC ozoneXC;
-    ExecContext *xcProxy;
-    ExecContext *checkerXC;
+    // Ozone specific thread context
+    OzoneTC ozoneTC;
+    // Thread context to be used
+    ThreadContext *tc;
+    // Checker thread context; will wrap the OzoneTC if a checker is
+    // being used.
+    ThreadContext *checkerTC;
 
     typedef OzoneThreadState<Impl> ImplState;
 
@@ -538,8 +541,8 @@ class OzoneCPU : public BaseCPU
         // and all other stores (WH64?).  Unsuccessful Store
         // Conditionals would have returned above, and wouldn't fall
         // through.
-        for (int i = 0; i < this->system->execContexts.size(); i++){
-            xc = this->system->execContexts[i];
+        for (int i = 0; i < this->system->threadContexts.size(); i++){
+            xc = this->system->threadContexts[i];
             if ((xc->readMiscReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
                 (req->paddr & ~0xf)) {
                 xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
@@ -595,7 +598,7 @@ class OzoneCPU : public BaseCPU
     InstSeqNum globalSeqNum;
 
   public:
-    void squashFromXC();
+    void squashFromTC();
 
     // @todo: This can be a useful debug function.  Implement it.
     void dumpInsts() { frontEnd->dumpInsts(); }
@@ -613,7 +616,7 @@ class OzoneCPU : public BaseCPU
     void setSyscallReturn(SyscallReturn return_value, int tid);
 #endif
 
-    ExecContext *xcBase() { return xcProxy; }
+    ThreadContext *tcBase() { return tc; }
 
     bool decoupledFrontEnd;
     struct CommStruct {

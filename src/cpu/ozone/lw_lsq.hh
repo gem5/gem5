@@ -234,7 +234,7 @@ class OzoneLWLSQ {
 
     void switchOut();
 
-    void takeOverFrom(ExecContext *old_xc = NULL);
+    void takeOverFrom(ThreadContext *old_tc = NULL);
 
     bool isSwitchedOut() { return switchedOut; }
 

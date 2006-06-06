@@ -44,7 +44,7 @@ class DebugPrintkEvent : public SkipFuncEvent
     DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr,
                      bool r = false)
         : SkipFuncEvent(q, desc, addr), raw(r) {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *xc);
 };
 
 }

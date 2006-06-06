@@ -40,7 +40,7 @@ using namespace std;
 
 
 void
-MipsISA::copyRegs(ExecContext *src, ExecContext *dest)
+MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
     uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
@@ -53,7 +53,7 @@ MipsISA::copyRegs(ExecContext *src, ExecContext *dest)
 }
 
 void
-MipsISA::MiscRegFile::copyMiscRegs(ExecContext *xc)
+MipsISA::MiscRegFile::copyMiscRegs(ThreadContext *tc)
 {
     /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
     uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);

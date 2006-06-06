@@ -2,7 +2,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "sim/builder.hh"
@@ -115,26 +115,26 @@ int rgdb_wait = -1;
 #endif // FULL_SYSTEM
 
 int
-System::registerExecContext(ExecContext *xc, int id)
+System::registerThreadContext(ThreadContext *tc, int id)
 {
     if (id == -1) {
-        for (id = 0; id < execContexts.size(); id++) {
-            if (!execContexts[id])
+        for (id = 0; id < threadContexts.size(); id++) {
+            if (!threadContexts[id])
                 break;
         }
     }
 
-    if (execContexts.size() <= id)
-        execContexts.resize(id + 1);
+    if (threadContexts.size() <= id)
+        threadContexts.resize(id + 1);
 
-    if (execContexts[id])
+    if (threadContexts[id])
         panic("Cannot have two CPUs with the same id (%d)\n", id);
 
-    execContexts[id] = xc;
+    threadContexts[id] = tc;
     numcpus++;
 
 #if FULL_SYSTEM
-    RemoteGDB *rgdb = new RemoteGDB(this, xc);
+    RemoteGDB *rgdb = new RemoteGDB(this, tc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
     gdbl->listen();
     /**
@@ -158,21 +158,21 @@ void
 System::startup()
 {
     int i;
-    for (i = 0; i < execContexts.size(); i++)
-        execContexts[i]->activate(0);
+    for (i = 0; i < threadContexts.size(); i++)
+        threadContexts[i]->activate(0);
 }
 
 void
-System::replaceExecContext(ExecContext *xc, int id)
+System::replaceThreadContext(ThreadContext *tc, int id)
 {
-    if (id >= execContexts.size()) {
-        panic("replaceExecContext: bad id, %d >= %d\n",
-              id, execContexts.size());
+    if (id >= threadContexts.size()) {
+        panic("replaceThreadContext: bad id, %d >= %d\n",
+              id, threadContexts.size());
     }
 
-    execContexts[id] = xc;
+    threadContexts[id] = tc;
 #if FULL_SYSTEM
-    remoteGDB[id]->replaceExecContext(xc);
+    remoteGDB[id]->replaceThreadContext(tc);
 #endif // FULL_SYSTEM
 }
 

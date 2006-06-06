@@ -563,9 +563,9 @@ namespace SparcISA
 #if FULL_SYSTEM
         /** Process a tick compare event and generate an interrupt on the cpu if
          * appropriate. */
-        void processTickCompare(ExecContext *xc);
-        void processSTickCompare(ExecContext *xc);
-        void processHSTickCompare(ExecContext *xc);
+        void processTickCompare(ThreadContext *tc);
+        void processSTickCompare(ThreadContext *tc);
+        void processHSTickCompare(ThreadContext *tc);
 
         typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processTickCompare> TickCompareEvent;
@@ -580,10 +580,10 @@ namespace SparcISA
         HSTickCompareEvent *hSTickCompare;
 
         /** Fullsystem only register version of ReadRegWithEffect() */
-        MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
+        MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
         /** Fullsystem only register version of SetRegWithEffect() */
         Fault setFSRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc);
+                ThreadContext * tc);
 #endif
       public:
 
@@ -657,7 +657,7 @@ namespace SparcISA
          * are are readFSRegWithEffect (which is called by readRegWithEffect()).
          * Checking is done for permission based on state bits in the miscreg
          * file. */
-        MiscReg readRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
+        MiscReg readRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
 
         /** write a value into an either an SE or FS IPR. No checking is done
          * about SE vs. FS as this is mostly used to copy the regfile. Thus more
@@ -671,13 +671,13 @@ namespace SparcISA
          * Checking is done for permission based on state bits in the miscreg
          * file. */
         Fault setRegWithEffect(int miscReg,
-                const MiscReg &val, ExecContext * xc);
+                const MiscReg &val, ThreadContext * tc);
 
         void serialize(std::ostream & os);
 
         void unserialize(Checkpoint * cp, const std::string & section);
 
-        void copyMiscRegs(ExecContext * xc);
+        void copyMiscRegs(ThreadContext * tc);
 
         bool isHyperPriv() { return hpstateFields.hpriv; }
         bool isPriv() { return hpstateFields.hpriv || pstateFields.priv; }
@@ -753,9 +753,9 @@ namespace SparcISA
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ExecContext *xc)
+                Fault &fault, ThreadContext *tc)
         {
-            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
         }
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
@@ -764,9 +764,9 @@ namespace SparcISA
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc)
+                ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+            return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
         FloatReg readFloatReg(int floatReg, int width)
@@ -853,9 +853,9 @@ namespace SparcISA
         }
     };
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
     int InterruptLevel(uint64_t softint);
 

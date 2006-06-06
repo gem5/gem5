@@ -33,7 +33,7 @@
 #ifndef __ARCH_ALPHA_LINUX_SYSTEM_HH__
 #define __ARCH_ALPHA_LINUX_SYSTEM_HH__
 
-class ExecContext;
+class ThreadContext;
 
 class BreakPCEvent;
 class IdleStartEvent;
@@ -57,7 +57,7 @@ class LinuxAlphaSystem : public AlphaSystem
       public:
         SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
             : SkipFuncEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
 
     class PrintThreadInfo : public PCEvent
@@ -65,7 +65,7 @@ class LinuxAlphaSystem : public AlphaSystem
       public:
         PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
             : PCEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
 
 
@@ -143,7 +143,7 @@ class LinuxAlphaSystem : public AlphaSystem
     LinuxAlphaSystem(Params *p);
     ~LinuxAlphaSystem();
 
-    void setDelayLoop(ExecContext *xc);
+    void setDelayLoop(ThreadContext *tc);
 };
 
 #endif // __ARCH_ALPHA_LINUX_SYSTEM_HH__

@@ -6,7 +6,7 @@
 
 #include "arch/faults.hh"
 #include "base/timebuf.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"
@@ -22,7 +22,7 @@ class InorderBackEnd
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::FrontEnd FrontEnd;
 
-    typedef typename FullCPU::OzoneXC OzoneXC;
+    typedef typename FullCPU::OzoneTC OzoneTC;
     typedef typename Impl::FullCPU::CommStruct CommStruct;
 
     InorderBackEnd(Params *params);
@@ -38,7 +38,7 @@ class InorderBackEnd
     void setCommBuffer(TimeBuffer<CommStruct> *_comm)
     { comm = _comm; }
 
-    void setXC(ExecContext *xc_ptr);
+    void setTC(ThreadContext *tc_ptr);
 
     void setThreadState(OzoneThreadState<Impl> *thread_ptr);
 
@@ -69,7 +69,7 @@ class InorderBackEnd
   private:
     void handleFault();
 
-    void setSquashInfoFromXC();
+    void setSquashInfoFromTC();
 
     bool squashPending;
     InstSeqNum squashSeqNum;
@@ -98,14 +98,14 @@ class InorderBackEnd
 
     void switchOut() { panic("Not implemented!"); }
     void doSwitchOut() { panic("Not implemented!"); }
-    void takeOverFrom(ExecContext *old_xc = NULL) { panic("Not implemented!"); }
+    void takeOverFrom(ThreadContext *old_tc = NULL) { panic("Not implemented!"); }
 
   public:
     FullCPU *cpu;
 
     FrontEnd *frontEnd;
 
-    ExecContext *xc;
+    ThreadContext *tc;
 
     OzoneThreadState<Impl> *thread;
 

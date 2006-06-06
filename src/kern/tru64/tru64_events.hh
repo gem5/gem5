@@ -37,14 +37,14 @@
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
 
-class ExecContext;
+class ThreadContext;
 
 class BadAddrEvent : public SkipFuncEvent
 {
   public:
     BadAddrEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : SkipFuncEvent(q, desc, addr) {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 class PrintfEvent : public PCEvent
@@ -52,7 +52,7 @@ class PrintfEvent : public PCEvent
   public:
     PrintfEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr) {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 class DebugPrintfEvent : public PCEvent
@@ -64,7 +64,7 @@ class DebugPrintfEvent : public PCEvent
     DebugPrintfEvent(PCEventQueue *q, const std::string &desc, Addr addr,
                      bool r = false)
         : PCEvent(q, desc, addr), raw(r) {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 class DebugPrintfrEvent : public DebugPrintfEvent
@@ -80,7 +80,7 @@ class DumpMbufEvent : public PCEvent
   public:
     DumpMbufEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr) {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 #endif // __TRU64_EVENTS_HH__

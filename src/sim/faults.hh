@@ -36,7 +36,7 @@
 #include "sim/stats.hh"
 #include "config/full_system.hh"
 
-class ExecContext;
+class ThreadContext;
 class FaultBase;
 typedef RefCountingPtr<FaultBase> Fault;
 
@@ -55,9 +55,9 @@ class FaultBase : public RefCounted
   public:
     virtual FaultName name() = 0;
 #if FULL_SYSTEM
-    virtual void invoke(ExecContext * xc);
+    virtual void invoke(ThreadContext * tc);
 #else
-    virtual void invoke(ExecContext * xc);
+    virtual void invoke(ThreadContext * tc);
 #endif
 //    template<typename T>
 //    bool isA() {return dynamic_cast<T *>(this);}
@@ -77,7 +77,7 @@ class UnimpFault : public FaultBase
     { }
 
     FaultName name() {return "Unimplemented simulator feature";}
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 };
 
 #endif // __FAULTS_HH__

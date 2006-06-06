@@ -765,56 +765,56 @@ decode OPCODE default Unknown::unknown() {
         // M5 special opcodes use the reserved 0x01 opcode space
         0x01: decode M5FUNC {
             0x00: arm({{
-                AlphaPseudo::arm(xc->xcBase());
+                AlphaPseudo::arm(xc->tcBase());
             }}, IsNonSpeculative);
             0x01: quiesce({{
-                AlphaPseudo::quiesce(xc->xcBase());
+                AlphaPseudo::quiesce(xc->tcBase());
             }}, IsNonSpeculative, IsQuiesce);
             0x02: quiesceNs({{
-                AlphaPseudo::quiesceNs(xc->xcBase(), R16);
+                AlphaPseudo::quiesceNs(xc->tcBase(), R16);
             }}, IsNonSpeculative, IsQuiesce);
             0x03: quiesceCycles({{
-                AlphaPseudo::quiesceCycles(xc->xcBase(), R16);
+                AlphaPseudo::quiesceCycles(xc->tcBase(), R16);
             }}, IsNonSpeculative, IsQuiesce);
             0x04: quiesceTime({{
-                R0 = AlphaPseudo::quiesceTime(xc->xcBase());
+                R0 = AlphaPseudo::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative);
             0x10: ivlb({{
-                AlphaPseudo::ivlb(xc->xcBase());
+                AlphaPseudo::ivlb(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x11: ivle({{
-                AlphaPseudo::ivle(xc->xcBase());
+                AlphaPseudo::ivle(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x20: m5exit_old({{
-                AlphaPseudo::m5exit_old(xc->xcBase());
+                AlphaPseudo::m5exit_old(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x21: m5exit({{
-                AlphaPseudo::m5exit(xc->xcBase(), R16);
+                AlphaPseudo::m5exit(xc->tcBase(), R16);
             }}, No_OpClass, IsNonSpeculative);
-            0x30: initparam({{ Ra = xc->xcBase()->getCpuPtr()->system->init_param; }});
+            0x30: initparam({{ Ra = xc->tcBase()->getCpuPtr()->system->init_param; }});
             0x40: resetstats({{
-                AlphaPseudo::resetstats(xc->xcBase(), R16, R17);
+                AlphaPseudo::resetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x41: dumpstats({{
-                AlphaPseudo::dumpstats(xc->xcBase(), R16, R17);
+                AlphaPseudo::dumpstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x42: dumpresetstats({{
-                AlphaPseudo::dumpresetstats(xc->xcBase(), R16, R17);
+                AlphaPseudo::dumpresetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x43: m5checkpoint({{
-                AlphaPseudo::m5checkpoint(xc->xcBase(), R16, R17);
+                AlphaPseudo::m5checkpoint(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x50: m5readfile({{
-                R0 = AlphaPseudo::readfile(xc->xcBase(), R16, R17, R18);
+                R0 = AlphaPseudo::readfile(xc->tcBase(), R16, R17, R18);
             }}, IsNonSpeculative);
             0x51: m5break({{
-                AlphaPseudo::debugbreak(xc->xcBase());
+                AlphaPseudo::debugbreak(xc->tcBase());
             }}, IsNonSpeculative);
             0x52: m5switchcpu({{
-                AlphaPseudo::switchcpu(xc->xcBase());
+                AlphaPseudo::switchcpu(xc->tcBase());
             }}, IsNonSpeculative);
             0x53: m5addsymbol({{
-                AlphaPseudo::addsymbol(xc->xcBase(), R16, R17);
+                AlphaPseudo::addsymbol(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());

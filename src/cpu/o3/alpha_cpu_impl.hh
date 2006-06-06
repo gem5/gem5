@@ -68,7 +68,7 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         // SMT is not supported in FS mode yet.
         assert(this->numThreads == 1);
         this->thread[i] = new Thread(this, 0, params->mem);
-        this->thread[i]->setStatus(ExecContext::Suspended);
+        this->thread[i]->setStatus(ThreadContext::Suspended);
 #else
         if (i < params->workload.size()) {
             DPRINTF(FullCPU, "FullCPU: Workload[%i] process is %#x",
@@ -76,11 +76,11 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
             this->thread[i] = new Thread(this, i, params->workload[i],
                                          i, params->mem);
 
-            this->thread[i]->setStatus(ExecContext::Suspended);
+            this->thread[i]->setStatus(ThreadContext::Suspended);
             //usedTids[i] = true;
             //threadMap[i] = i;
         } else {
-            //Allocate Empty execution context so M5 can use later
+            //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU
             Process* dummy_proc = NULL;
 
@@ -89,35 +89,35 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         }
 #endif // !FULL_SYSTEM
 
-        ExecContext *xc_proxy;
+        ThreadContext *tc;
 
-        // Setup the XC that will serve as the interface to the threads/CPU.
-        AlphaXC *alpha_xc = new AlphaXC;
+        // Setup the TC that will serve as the interface to the threads/CPU.
+        AlphaTC *alpha_tc = new AlphaTC;
 
-        // If we're using a checker, then the XC should be the
-        // CheckerExecContext.
+        // If we're using a checker, then the TC should be the
+        // CheckerThreadContext.
         if (params->checker) {
-            xc_proxy = new CheckerExecContext<AlphaXC>(
-                alpha_xc, this->checker);
+            tc = new CheckerThreadContext<AlphaTC>(
+                alpha_tc, this->checker);
         } else {
-            xc_proxy = alpha_xc;
+            tc = alpha_tc;
         }
 
-        alpha_xc->cpu = this;
-        alpha_xc->thread = this->thread[i];
+        alpha_tc->cpu = this;
+        alpha_tc->thread = this->thread[i];
 
 #if FULL_SYSTEM
         // Setup quiesce event.
         this->thread[i]->quiesceEvent =
-            new EndQuiesceEvent(xc_proxy);
+            new EndQuiesceEvent(tc);
         this->thread[i]->lastActivate = 0;
         this->thread[i]->lastSuspend = 0;
 #endif
-        // Give the thread the XC.
-        this->thread[i]->xcProxy = xc_proxy;
+        // Give the thread the TC.
+        this->thread[i]->tc = tc;
 
-        // Add the XC to the CPU's list of XC's.
-        this->execContexts.push_back(xc_proxy);
+        // Add the TC to the CPU's list of TC's.
+        this->threadContexts.push_back(tc);
     }
 
 
@@ -156,7 +156,7 @@ AlphaFullCPU<Impl>::regStats()
 #if FULL_SYSTEM
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::dumpFuncProfile()
+AlphaFullCPU<Impl>::AlphaTC::dumpFuncProfile()
 {
     // Currently not supported
 }
@@ -164,7 +164,7 @@ AlphaFullCPU<Impl>::AlphaXC::dumpFuncProfile()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
+AlphaFullCPU<Impl>::AlphaTC::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
     assert(getMemPort() == old_context->getMemPort());
@@ -184,12 +184,12 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
 #else
     EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
     if (other_quiesce) {
-        // Point the quiesce event's XC at this XC so that it wakes up
+        // Point the quiesce event's TC at this TC so that it wakes up
         // the proper CPU.
-        other_quiesce->xc = this;
+        other_quiesce->tc = this;
     }
     if (thread->quiesceEvent) {
-        thread->quiesceEvent->xc = this;
+        thread->quiesceEvent->tc = this;
     }
 
     // Transfer kernel stats from one CPU to the other.
@@ -198,7 +198,7 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
     cpu->lockFlag = false;
 #endif
 
-    old_context->setStatus(ExecContext::Unallocated);
+    old_context->setStatus(ThreadContext::Unallocated);
 
     thread->inSyscall = false;
     thread->trapPending = false;
@@ -206,23 +206,23 @@ AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::activate(int delay)
+AlphaFullCPU<Impl>::AlphaTC::activate(int delay)
 {
-    DPRINTF(FullCPU, "Calling activate on AlphaXC\n");
+    DPRINTF(FullCPU, "Calling activate on AlphaTC\n");
 
-    if (thread->status() == ExecContext::Active)
+    if (thread->status() == ThreadContext::Active)
         return;
 
 #if FULL_SYSTEM
     thread->lastActivate = curTick;
 #endif
 
-    if (thread->status() == ExecContext::Unallocated) {
+    if (thread->status() == ThreadContext::Unallocated) {
         cpu->activateWhenReady(thread->tid);
         return;
     }
 
-    thread->setStatus(ExecContext::Active);
+    thread->setStatus(ThreadContext::Active);
 
     // status() == Suspended
     cpu->activateContext(thread->tid, delay);
@@ -230,11 +230,11 @@ AlphaFullCPU<Impl>::AlphaXC::activate(int delay)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::suspend()
+AlphaFullCPU<Impl>::AlphaTC::suspend()
 {
-    DPRINTF(FullCPU, "Calling suspend on AlphaXC\n");
+    DPRINTF(FullCPU, "Calling suspend on AlphaTC\n");
 
-    if (thread->status() == ExecContext::Suspended)
+    if (thread->status() == ThreadContext::Suspended)
         return;
 
 #if FULL_SYSTEM
@@ -245,44 +245,44 @@ AlphaFullCPU<Impl>::AlphaXC::suspend()
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
     if (cpu->check_interrupts()) {
-        assert(status() == ExecContext::Active);
+        assert(status() == ThreadContext::Active);
         return;
     }
 #endif
 */
-    thread->setStatus(ExecContext::Suspended);
+    thread->setStatus(ThreadContext::Suspended);
     cpu->suspendContext(thread->tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::deallocate()
+AlphaFullCPU<Impl>::AlphaTC::deallocate()
 {
-    DPRINTF(FullCPU, "Calling deallocate on AlphaXC\n");
+    DPRINTF(FullCPU, "Calling deallocate on AlphaTC\n");
 
-    if (thread->status() == ExecContext::Unallocated)
+    if (thread->status() == ThreadContext::Unallocated)
         return;
 
-    thread->setStatus(ExecContext::Unallocated);
+    thread->setStatus(ThreadContext::Unallocated);
     cpu->deallocateContext(thread->tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::halt()
+AlphaFullCPU<Impl>::AlphaTC::halt()
 {
-    DPRINTF(FullCPU, "Calling halt on AlphaXC\n");
+    DPRINTF(FullCPU, "Calling halt on AlphaTC\n");
 
-    if (thread->status() == ExecContext::Halted)
+    if (thread->status() == ThreadContext::Halted)
         return;
 
-    thread->setStatus(ExecContext::Halted);
+    thread->setStatus(ThreadContext::Halted);
     cpu->haltContext(thread->tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::regStats(const std::string &name)
+AlphaFullCPU<Impl>::AlphaTC::regStats(const std::string &name)
 {
 #if FULL_SYSTEM
     thread->kernelStats = new Kernel::Statistics(cpu->system);
@@ -292,7 +292,7 @@ AlphaFullCPU<Impl>::AlphaXC::regStats(const std::string &name)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::serialize(std::ostream &os)
+AlphaFullCPU<Impl>::AlphaTC::serialize(std::ostream &os)
 {
 #if FULL_SYSTEM
     if (thread->kernelStats)
@@ -303,7 +303,7 @@ AlphaFullCPU<Impl>::AlphaXC::serialize(std::ostream &os)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::unserialize(Checkpoint *cp, const std::string &section)
+AlphaFullCPU<Impl>::AlphaTC::unserialize(Checkpoint *cp, const std::string &section)
 {
 #if FULL_SYSTEM
     if (thread->kernelStats)
@@ -315,46 +315,46 @@ AlphaFullCPU<Impl>::AlphaXC::unserialize(Checkpoint *cp, const std::string &sect
 #if FULL_SYSTEM
 template <class Impl>
 EndQuiesceEvent *
-AlphaFullCPU<Impl>::AlphaXC::getQuiesceEvent()
+AlphaFullCPU<Impl>::AlphaTC::getQuiesceEvent()
 {
     return thread->quiesceEvent;
 }
 
 template <class Impl>
 Tick
-AlphaFullCPU<Impl>::AlphaXC::readLastActivate()
+AlphaFullCPU<Impl>::AlphaTC::readLastActivate()
 {
     return thread->lastActivate;
 }
 
 template <class Impl>
 Tick
-AlphaFullCPU<Impl>::AlphaXC::readLastSuspend()
+AlphaFullCPU<Impl>::AlphaTC::readLastSuspend()
 {
     return thread->lastSuspend;
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::profileClear()
+AlphaFullCPU<Impl>::AlphaTC::profileClear()
 {}
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::profileSample()
+AlphaFullCPU<Impl>::AlphaTC::profileSample()
 {}
 #endif
 
 template <class Impl>
 TheISA::MachInst
-AlphaFullCPU<Impl>::AlphaXC:: getInst()
+AlphaFullCPU<Impl>::AlphaTC:: getInst()
 {
     return thread->inst;
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::copyArchRegs(ExecContext *xc)
+AlphaFullCPU<Impl>::AlphaTC::copyArchRegs(ThreadContext *tc)
 {
     // This function will mess things up unless the ROB is empty and
     // there are no instructions in the pipeline.
@@ -368,44 +368,44 @@ AlphaFullCPU<Impl>::AlphaXC::copyArchRegs(ExecContext *xc)
         DPRINTF(FullCPU, "FullCPU: Copying over register %i, had data %lli, "
                 "now has data %lli.\n",
                 renamed_reg, cpu->readIntReg(renamed_reg),
-                xc->readIntReg(i));
+                tc->readIntReg(i));
 
-        cpu->setIntReg(renamed_reg, xc->readIntReg(i));
+        cpu->setIntReg(renamed_reg, tc->readIntReg(i));
     }
 
     // Then loop through the floating point registers.
     for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
         renamed_reg = cpu->renameMap[tid].lookup(i + AlphaISA::FP_Base_DepTag);
         cpu->setFloatRegBits(renamed_reg,
-                             xc->readFloatRegBits(i));
+                             tc->readFloatRegBits(i));
     }
 
     // Copy the misc regs.
-    copyMiscRegs(xc, this);
+    copyMiscRegs(tc, this);
 
     // Then finally set the PC and the next PC.
-    cpu->setPC(xc->readPC(), tid);
-    cpu->setNextPC(xc->readNextPC(), tid);
+    cpu->setPC(tc->readPC(), tid);
+    cpu->setNextPC(tc->readNextPC(), tid);
 #if !FULL_SYSTEM
-    this->thread->funcExeInst = xc->readFuncExeInst();
+    this->thread->funcExeInst = tc->readFuncExeInst();
 #endif
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::clearArchRegs()
+AlphaFullCPU<Impl>::AlphaTC::clearArchRegs()
 {}
 
 template <class Impl>
 uint64_t
-AlphaFullCPU<Impl>::AlphaXC::readIntReg(int reg_idx)
+AlphaFullCPU<Impl>::AlphaTC::readIntReg(int reg_idx)
 {
     return cpu->readArchIntReg(reg_idx, thread->tid);
 }
 
 template <class Impl>
 FloatReg
-AlphaFullCPU<Impl>::AlphaXC::readFloatReg(int reg_idx, int width)
+AlphaFullCPU<Impl>::AlphaTC::readFloatReg(int reg_idx, int width)
 {
     switch(width) {
       case 32:
@@ -420,41 +420,41 @@ AlphaFullCPU<Impl>::AlphaXC::readFloatReg(int reg_idx, int width)
 
 template <class Impl>
 FloatReg
-AlphaFullCPU<Impl>::AlphaXC::readFloatReg(int reg_idx)
+AlphaFullCPU<Impl>::AlphaTC::readFloatReg(int reg_idx)
 {
     return cpu->readArchFloatRegSingle(reg_idx, thread->tid);
 }
 
 template <class Impl>
 FloatRegBits
-AlphaFullCPU<Impl>::AlphaXC::readFloatRegBits(int reg_idx, int width)
+AlphaFullCPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx, int width)
 {
-    DPRINTF(Fault, "Reading floatint register through the XC!\n");
+    DPRINTF(Fault, "Reading floatint register through the TC!\n");
     return cpu->readArchFloatRegInt(reg_idx, thread->tid);
 }
 
 template <class Impl>
 FloatRegBits
-AlphaFullCPU<Impl>::AlphaXC::readFloatRegBits(int reg_idx)
+AlphaFullCPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx)
 {
     return cpu->readArchFloatRegInt(reg_idx, thread->tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setIntReg(int reg_idx, uint64_t val)
+AlphaFullCPU<Impl>::AlphaTC::setIntReg(int reg_idx, uint64_t val)
 {
     cpu->setArchIntReg(reg_idx, val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatReg(int reg_idx, FloatReg val, int width)
+AlphaFullCPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val, int width)
 {
     switch(width) {
       case 32:
@@ -467,80 +467,80 @@ AlphaFullCPU<Impl>::AlphaXC::setFloatReg(int reg_idx, FloatReg val, int width)
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatReg(int reg_idx, FloatReg val)
+AlphaFullCPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val)
 {
     cpu->setArchFloatRegSingle(reg_idx, val, thread->tid);
 
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatRegBits(int reg_idx, FloatRegBits val,
+AlphaFullCPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val,
                                              int width)
 {
-    DPRINTF(Fault, "Setting floatint register through the XC!\n");
+    DPRINTF(Fault, "Setting floatint register through the TC!\n");
     cpu->setArchFloatRegInt(reg_idx, val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setFloatRegBits(int reg_idx, FloatRegBits val)
+AlphaFullCPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     cpu->setArchFloatRegInt(reg_idx, val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setPC(uint64_t val)
+AlphaFullCPU<Impl>::AlphaTC::setPC(uint64_t val)
 {
     cpu->setPC(val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setNextPC(uint64_t val)
+AlphaFullCPU<Impl>::AlphaTC::setNextPC(uint64_t val)
 {
     cpu->setNextPC(val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 }
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::AlphaXC::setMiscReg(int misc_reg, const MiscReg &val)
+AlphaFullCPU<Impl>::AlphaTC::setMiscReg(int misc_reg, const MiscReg &val)
 {
     Fault ret_fault = cpu->setMiscReg(misc_reg, val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 
     return ret_fault;
@@ -548,14 +548,14 @@ AlphaFullCPU<Impl>::AlphaXC::setMiscReg(int misc_reg, const MiscReg &val)
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::AlphaXC::setMiscRegWithEffect(int misc_reg,
+AlphaFullCPU<Impl>::AlphaTC::setMiscRegWithEffect(int misc_reg,
                                                   const MiscReg &val)
 {
     Fault ret_fault = cpu->setMiscRegWithEffect(misc_reg, val, thread->tid);
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromXC(thread->tid);
+        cpu->squashFromTC(thread->tid);
     }
 
     return ret_fault;
@@ -565,21 +565,21 @@ AlphaFullCPU<Impl>::AlphaXC::setMiscRegWithEffect(int misc_reg,
 
 template <class Impl>
 TheISA::IntReg
-AlphaFullCPU<Impl>::AlphaXC::getSyscallArg(int i)
+AlphaFullCPU<Impl>::AlphaTC::getSyscallArg(int i)
 {
     return cpu->getSyscallArg(i, thread->tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setSyscallArg(int i, IntReg val)
+AlphaFullCPU<Impl>::AlphaTC::setSyscallArg(int i, IntReg val)
 {
     cpu->setSyscallArg(i, val, thread->tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaXC::setSyscallReturn(SyscallReturn return_value)
+AlphaFullCPU<Impl>::AlphaTC::setSyscallReturn(SyscallReturn return_value)
 {
     cpu->setSyscallReturn(return_value, thread->tid);
 }
@@ -618,10 +618,10 @@ AlphaFullCPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::squashFromXC(unsigned tid)
+AlphaFullCPU<Impl>::squashFromTC(unsigned tid)
 {
     this->thread[tid]->inSyscall = true;
-    this->commit.generateXCEvent(tid);
+    this->commit.generateTCEvent(tid);
 }
 
 #if FULL_SYSTEM
@@ -632,9 +632,9 @@ AlphaFullCPU<Impl>::post_interrupt(int int_num, int index)
 {
     BaseCPU::post_interrupt(int_num, index);
 
-    if (this->thread[0]->status() == ExecContext::Suspended) {
+    if (this->thread[0]->status() == ThreadContext::Suspended) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
-        this->execContexts[0]->activate();
+        this->threadContexts[0]->activate();
     }
 }
 
@@ -673,7 +673,7 @@ AlphaFullCPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 {
     if (this->thread[tid]->kernelStats)
         this->thread[tid]->kernelStats->callpal(palFunc,
-                                                this->execContexts[tid]);
+                                                this->threadContexts[tid]);
 
     switch (palFunc) {
       case PAL::halt:
@@ -696,8 +696,8 @@ template <class Impl>
 void
 AlphaFullCPU<Impl>::trap(Fault fault, unsigned tid)
 {
-    // Pass the thread's XC into the invoke method.
-    fault->invoke(this->execContexts[tid]);
+    // Pass the thread's TC into the invoke method.
+    fault->invoke(this->threadContexts[tid]);
 }
 
 template <class Impl>

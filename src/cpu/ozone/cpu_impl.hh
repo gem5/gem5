@@ -37,7 +37,7 @@
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/exec_context.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/cpu.hh"
 #include "cpu/quiesce_event.hh"
@@ -121,28 +121,28 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
         checker->setSystem(p->system);
 #endif
-        checkerXC = new CheckerExecContext<OzoneXC>(&ozoneXC, checker);
-        thread.xcProxy = checkerXC;
-        xcProxy = checkerXC;
+        checkerTC = new CheckerThreadContext<OzoneTC>(&ozoneTC, checker);
+        thread.tc = checkerTC;
+        tc = checkerXC;
     } else {
         checker = NULL;
-        thread.xcProxy = &ozoneXC;
-        xcProxy = &ozoneXC;
+        thread.tc = &ozoneTC;
+        tc = &ozoneTC;
     }
 
-    ozoneXC.cpu = this;
-    ozoneXC.thread = &thread;
+    ozoneTC.cpu = this;
+    ozoneTC.thread = &thread;
 
     thread.inSyscall = false;
 
-    thread.setStatus(ExecContext::Suspended);
+    thread.setStatus(ThreadContext::Suspended);
 #if FULL_SYSTEM
     /***** All thread state stuff *****/
     thread.cpu = this;
     thread.tid = 0;
     thread.mem = p->mem;
 
-    thread.quiesceEvent = new EndQuiesceEvent(xcProxy);
+    thread.quiesceEvent = new EndQuiesceEvent(tc);
 
     system = p->system;
     itb = p->itb;
@@ -152,10 +152,10 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     if (p->profile) {
         thread.profile = new FunctionProfile(p->system->kernelSymtab);
-        // @todo: This might be better as an ExecContext instead of OzoneXC
+        // @todo: This might be better as an ThreadContext instead of OzoneTC
         Callback *cb =
-            new MakeCallback<OzoneXC,
-            &OzoneXC::dumpFuncProfile>(&ozoneXC);
+            new MakeCallback<OzoneTC,
+            &OzoneTC::dumpFuncProfile>(&ozoneTC);
         registerExitCallback(cb);
     }
 
@@ -174,13 +174,13 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     numInst = 0;
     startNumInst = 0;
 
-    execContexts.push_back(xcProxy);
+    threadContexts.push_back(tc);
 
     frontEnd->setCPU(this);
     backEnd->setCPU(this);
 
-    frontEnd->setXC(xcProxy);
-    backEnd->setXC(xcProxy);
+    frontEnd->setTC(tc);
+    backEnd->setTC(tc);
 
     frontEnd->setThreadState(&thread);
     backEnd->setThreadState(&thread);
@@ -263,11 +263,11 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         comm.advance();
     }
 
-    // if any of this CPU's ExecContexts are active, mark the CPU as
+    // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
-        if (xc->status() == ExecContext::Active &&
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
+        if (tc->status() == ThreadContext::Active &&
             _status != Running) {
             _status = Running;
             tickEvent.schedule(curTick);
@@ -291,7 +291,7 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     notIdleFraction++;
     scheduleTickEvent(delay);
     _status = Running;
-    thread._status = ExecContext::Active;
+    thread._status = ThreadContext::Active;
     frontEnd->wakeFromQuiesce();
 }
 
@@ -381,11 +381,11 @@ OzoneCPU<Impl>::init()
     // Mark this as in syscall so it won't need to squash
     thread.inSyscall = true;
 #if FULL_SYSTEM
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(xc, xc->readCpuId());
+        TheISA::initCPU(tc, tc->readCpuId());
     }
 #endif
     frontEnd->renameTable.copyFrom(thread.renameTable);
@@ -400,8 +400,8 @@ OzoneCPU<Impl>::serialize(std::ostream &os)
 {
     BaseCPU::serialize(os);
     SERIALIZE_ENUM(_status);
-    nameOut(os, csprintf("%s.xc", name()));
-    ozoneXC.serialize(os);
+    nameOut(os, csprintf("%s.tc", name()));
+    ozoneTC.serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
 }
@@ -412,7 +412,7 @@ OzoneCPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 {
     BaseCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
-    ozoneXC.unserialize(cp, csprintf("%s.xc", section));
+    ozoneTC.unserialize(cp, csprintf("%s.tc", section));
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
 
@@ -440,16 +440,16 @@ OzoneCPU<Impl>::copySrcTranslate(Addr src)
     memReq->reset(src & ~(blk_size - 1), blk_size);
 
     // translate to physical address
-    Fault fault = xc->translateDataReadReq(memReq);
+    Fault fault = tc->translateDataReadReq(memReq);
 
     assert(fault != Alignment_Fault);
 
     if (fault == NoFault) {
-        xc->copySrcAddr = src;
-        xc->copySrcPhysAddr = memReq->paddr + offset;
+        tc->copySrcAddr = src;
+        tc->copySrcPhysAddr = memReq->paddr + offset;
     } else {
-        xc->copySrcAddr = 0;
-        xc->copySrcPhysAddr = 0;
+        tc->copySrcAddr = 0;
+        tc->copySrcPhysAddr = 0;
     }
     return fault;
 #endif
@@ -467,7 +467,7 @@ OzoneCPU<Impl>::copy(Addr dest)
     // Only support block sizes of 64 atm.
     assert(blk_size == 64);
     uint8_t data[blk_size];
-    //assert(xc->copySrcAddr);
+    //assert(tc->copySrcAddr);
     int offset = dest & (blk_size - 1);
 
     // Make sure block doesn't span page
@@ -480,21 +480,21 @@ OzoneCPU<Impl>::copy(Addr dest)
 
     memReq->reset(dest & ~(blk_size -1), blk_size);
     // translate to physical address
-    Fault fault = xc->translateDataWriteReq(memReq);
+    Fault fault = tc->translateDataWriteReq(memReq);
 
     assert(fault != Alignment_Fault);
 
     if (fault == NoFault) {
         Addr dest_addr = memReq->paddr + offset;
         // Need to read straight from memory since we have more than 8 bytes.
-        memReq->paddr = xc->copySrcPhysAddr;
-        xc->mem->read(memReq, data);
+        memReq->paddr = tc->copySrcPhysAddr;
+        tc->mem->read(memReq, data);
         memReq->paddr = dest_addr;
-        xc->mem->write(memReq, data);
+        tc->mem->write(memReq, data);
         if (dcacheInterface) {
             memReq->cmd = Copy;
             memReq->completionEvent = NULL;
-            memReq->paddr = xc->copySrcPhysAddr;
+            memReq->paddr = tc->copySrcPhysAddr;
             memReq->dest = dest_addr;
             memReq->size = 64;
             memReq->time = curTick;
@@ -510,7 +510,7 @@ template <class Impl>
 Addr
 OzoneCPU<Impl>::dbg_vtophys(Addr addr)
 {
-    return vtophys(xcProxy, addr);
+    return vtophys(tcProxy, addr);
 }
 #endif // FULL_SYSTEM
 
@@ -524,7 +524,7 @@ OzoneCPU<Impl>::post_interrupt(int int_num, int index)
     if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
 //	thread.activate();
-        // Hack for now.  Otherwise might have to go through the xcProxy, or
+        // Hack for now.  Otherwise might have to go through the tc, or
         // I need to figure out what's the right thing to call.
         activateContext(thread.tid, 1);
     }
@@ -556,10 +556,10 @@ OzoneCPU<Impl>::tick()
 
 template <class Impl>
 void
-OzoneCPU<Impl>::squashFromXC()
+OzoneCPU<Impl>::squashFromTC()
 {
     thread.inSyscall = true;
-    backEnd->generateXCEvent();
+    backEnd->generateTCEvent();
 }
 
 #if !FULL_SYSTEM
@@ -567,7 +567,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::syscall()
 {
-    // Not sure this copy is needed, depending on how the XC proxy is made.
+    // Not sure this copy is needed, depending on how the TC proxy is made.
     thread.renameTable.copyFrom(backEnd->renameTable);
 
     thread.inSyscall = true;
@@ -576,7 +576,7 @@ OzoneCPU<Impl>::syscall()
 
     DPRINTF(OzoneCPU, "FuncExeInst: %i\n", thread.funcExeInst);
 
-    thread.process->syscall(xcProxy);
+    thread.process->syscall(yc);
 
     thread.funcExeInst--;
 
@@ -674,7 +674,7 @@ OzoneCPU<Impl>::processInterrupts()
             checker->cpuXCBase()->setMiscReg(IPR_INTID, ipl);
         }
         Fault fault = new InterruptFault;
-        fault->invoke(thread.getXCProxy());
+        fault->invoke(thread.getTC());
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                 thread.readMiscReg(IPR_IPLR), ipl, summary);
     }
@@ -686,7 +686,7 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 {
     // Need to move this to ISA code
     // May also need to make this per thread
-    thread.kernelStats->callpal(palFunc, xcProxy);
+    thread.kernelStats->callpal(palFunc, tc);
 
     switch (palFunc) {
       case PAL::halt:
@@ -708,14 +708,14 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 
 template <class Impl>
 BaseCPU *
-OzoneCPU<Impl>::OzoneXC::getCpuPtr()
+OzoneCPU<Impl>::OzoneTC::getCpuPtr()
 {
     return cpu;
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setCpuId(int id)
+OzoneCPU<Impl>::OzoneTC::setCpuId(int id)
 {
     cpu->cpuId = id;
     thread->cpuId = id;
@@ -723,14 +723,14 @@ OzoneCPU<Impl>::OzoneXC::setCpuId(int id)
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setStatus(Status new_status)
+OzoneCPU<Impl>::OzoneTC::setStatus(Status new_status)
 {
     thread->_status = new_status;
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::activate(int delay)
+OzoneCPU<Impl>::OzoneTC::activate(int delay)
 {
     cpu->activateContext(thread->tid, delay);
 }
@@ -738,7 +738,7 @@ OzoneCPU<Impl>::OzoneXC::activate(int delay)
 /// Set the status to Suspended.
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::suspend()
+OzoneCPU<Impl>::OzoneTC::suspend()
 {
     cpu->suspendContext(thread->tid);
 }
@@ -746,7 +746,7 @@ OzoneCPU<Impl>::OzoneXC::suspend()
 /// Set the status to Unallocated.
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::deallocate()
+OzoneCPU<Impl>::OzoneTC::deallocate()
 {
     cpu->deallocateContext(thread->tid);
 }
@@ -754,7 +754,7 @@ OzoneCPU<Impl>::OzoneXC::deallocate()
 /// Set the status to Halted.
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::halt()
+OzoneCPU<Impl>::OzoneTC::halt()
 {
     cpu->haltContext(thread->tid);
 }
@@ -762,13 +762,13 @@ OzoneCPU<Impl>::OzoneXC::halt()
 #if FULL_SYSTEM
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::dumpFuncProfile()
+OzoneCPU<Impl>::OzoneTC::dumpFuncProfile()
 { }
 #endif
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
+OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
     assert(getMemPtr() == old_context->getMemPtr());
@@ -788,12 +788,12 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
 #else
     EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
     if (other_quiesce) {
-        // Point the quiesce event's XC at this XC so that it wakes up
+        // Point the quiesce event's TC at this TC so that it wakes up
         // the proper CPU.
-        other_quiesce->xc = this;
+        other_quiesce->tc = this;
     }
     if (thread->quiesceEvent) {
-        thread->quiesceEvent->xc = this;
+        thread->quiesceEvent->tc = this;
     }
 
     thread->kernelStats = old_context->getKernelStats();
@@ -801,12 +801,12 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
     cpu->lockFlag = false;
 #endif
 
-    old_context->setStatus(ExecContext::Unallocated);
+    old_context->setStatus(ThreadContext::Unallocated);
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::regStats(const std::string &name)
+OzoneCPU<Impl>::OzoneTC::regStats(const std::string &name)
 {
 #if FULL_SYSTEM
     thread->kernelStats = new Kernel::Statistics(cpu->system);
@@ -816,39 +816,39 @@ OzoneCPU<Impl>::OzoneXC::regStats(const std::string &name)
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::serialize(std::ostream &os)
+OzoneCPU<Impl>::OzoneTC::serialize(std::ostream &os)
 { }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::unserialize(Checkpoint *cp, const std::string &section)
+OzoneCPU<Impl>::OzoneTC::unserialize(Checkpoint *cp, const std::string &section)
 { }
 
 #if FULL_SYSTEM
 template <class Impl>
 EndQuiesceEvent *
-OzoneCPU<Impl>::OzoneXC::getQuiesceEvent()
+OzoneCPU<Impl>::OzoneTC::getQuiesceEvent()
 {
     return thread->quiesceEvent;
 }
 
 template <class Impl>
 Tick
-OzoneCPU<Impl>::OzoneXC::readLastActivate()
+OzoneCPU<Impl>::OzoneTC::readLastActivate()
 {
     return thread->lastActivate;
 }
 
 template <class Impl>
 Tick
-OzoneCPU<Impl>::OzoneXC::readLastSuspend()
+OzoneCPU<Impl>::OzoneTC::readLastSuspend()
 {
     return thread->lastSuspend;
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::profileClear()
+OzoneCPU<Impl>::OzoneTC::profileClear()
 {
     if (thread->profile)
         thread->profile->clear();
@@ -856,7 +856,7 @@ OzoneCPU<Impl>::OzoneXC::profileClear()
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::profileSample()
+OzoneCPU<Impl>::OzoneTC::profileSample()
 {
     if (thread->profile)
         thread->profile->sample(thread->profileNode, thread->profilePC);
@@ -865,7 +865,7 @@ OzoneCPU<Impl>::OzoneXC::profileSample()
 
 template <class Impl>
 int
-OzoneCPU<Impl>::OzoneXC::getThreadNum()
+OzoneCPU<Impl>::OzoneTC::getThreadNum()
 {
     return thread->tid;
 }
@@ -873,57 +873,57 @@ OzoneCPU<Impl>::OzoneXC::getThreadNum()
 // Also somewhat obnoxious.  Really only used for the TLB fault.
 template <class Impl>
 TheISA::MachInst
-OzoneCPU<Impl>::OzoneXC::getInst()
+OzoneCPU<Impl>::OzoneTC::getInst()
 {
     return thread->inst;
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::copyArchRegs(ExecContext *xc)
+OzoneCPU<Impl>::OzoneTC::copyArchRegs(ThreadContext *tc)
 {
-    thread->PC = xc->readPC();
-    thread->nextPC = xc->readNextPC();
+    thread->PC = tc->readPC();
+    thread->nextPC = tc->readNextPC();
 
     cpu->frontEnd->setPC(thread->PC);
     cpu->frontEnd->setNextPC(thread->nextPC);
 
     for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
         if (i < TheISA::FP_Base_DepTag) {
-            thread->renameTable[i]->setIntResult(xc->readIntReg(i));
+            thread->renameTable[i]->setIntResult(tc->readIntReg(i));
         } else if (i < (TheISA::FP_Base_DepTag + TheISA::NumFloatRegs)) {
             int fp_idx = i - TheISA::FP_Base_DepTag;
             thread->renameTable[i]->setDoubleResult(
-                xc->readFloatRegDouble(fp_idx));
+                tc->readFloatRegDouble(fp_idx));
         }
     }
 
 #if !FULL_SYSTEM
-    thread->funcExeInst = xc->readFuncExeInst();
+    thread->funcExeInst = tc->readFuncExeInst();
 #endif
 
-    // Need to copy the XC values into the current rename table,
+    // Need to copy the TC values into the current rename table,
     // copy the misc regs.
-    thread->regs.miscRegs.copyMiscRegs(xc);
+    thread->regs.miscRegs.copyMiscRegs(tc);
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::clearArchRegs()
+OzoneCPU<Impl>::OzoneTC::clearArchRegs()
 {
     panic("Unimplemented!");
 }
 
 template <class Impl>
 uint64_t
-OzoneCPU<Impl>::OzoneXC::readIntReg(int reg_idx)
+OzoneCPU<Impl>::OzoneTC::readIntReg(int reg_idx)
 {
     return thread->renameTable[reg_idx]->readIntResult();
 }
 
 template <class Impl>
 float
-OzoneCPU<Impl>::OzoneXC::readFloatReg(int reg_idx, int width)
+OzoneCPU<Impl>::OzoneTC::readFloatReg(int reg_idx, int width)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
     switch(width) {
@@ -939,7 +939,7 @@ OzoneCPU<Impl>::OzoneXC::readFloatReg(int reg_idx, int width)
 
 template <class Impl>
 double
-OzoneCPU<Impl>::OzoneXC::readFloatReg(int reg_idx)
+OzoneCPU<Impl>::OzoneTC::readFloatReg(int reg_idx)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
     return thread->renameTable[idx]->readFloatResult();
@@ -947,7 +947,7 @@ OzoneCPU<Impl>::OzoneXC::readFloatReg(int reg_idx)
 
 template <class Impl>
 uint64_t
-OzoneCPU<Impl>::OzoneXC::readFloatRegBits(int reg_idx, int width)
+OzoneCPU<Impl>::OzoneTC::readFloatRegBits(int reg_idx, int width)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
     return thread->renameTable[idx]->readIntResult();
@@ -955,7 +955,7 @@ OzoneCPU<Impl>::OzoneXC::readFloatRegBits(int reg_idx, int width)
 
 template <class Impl>
 uint64_t
-OzoneCPU<Impl>::OzoneXC::readFloatRegBits(int reg_idx)
+OzoneCPU<Impl>::OzoneTC::readFloatRegBits(int reg_idx)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
     return thread->renameTable[idx]->readIntResult();
@@ -963,18 +963,18 @@ OzoneCPU<Impl>::OzoneXC::readFloatRegBits(int reg_idx)
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setIntReg(int reg_idx, uint64_t val)
+OzoneCPU<Impl>::OzoneTC::setIntReg(int reg_idx, uint64_t val)
 {
     thread->renameTable[reg_idx]->setIntResult(val);
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setFloatReg(int reg_idx, FloatReg val, int width)
+OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val, int width)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
     switch(width) {
@@ -989,26 +989,26 @@ OzoneCPU<Impl>::OzoneXC::setFloatReg(int reg_idx, FloatReg val, int width)
     }
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setFloatReg(int reg_idx, FloatReg val)
+OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
 
     thread->renameTable[idx]->setDoubleResult(val);
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setFloatRegBits(int reg_idx, FloatRegBits val,
+OzoneCPU<Impl>::OzoneTC::setFloatRegBits(int reg_idx, FloatRegBits val,
                                          int width)
 {
     panic("Unimplemented!");
@@ -1016,45 +1016,45 @@ OzoneCPU<Impl>::OzoneXC::setFloatRegBits(int reg_idx, FloatRegBits val,
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setFloatRegBits(int reg_idx, FloatRegBits val)
+OzoneCPU<Impl>::OzoneTC::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     panic("Unimplemented!");
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setPC(Addr val)
+OzoneCPU<Impl>::OzoneTC::setPC(Addr val)
 {
     thread->PC = val;
     cpu->frontEnd->setPC(val);
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 }
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneXC::setNextPC(Addr val)
+OzoneCPU<Impl>::OzoneTC::setNextPC(Addr val)
 {
     thread->nextPC = val;
     cpu->frontEnd->setNextPC(val);
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 }
 
 template <class Impl>
 TheISA::MiscReg
-OzoneCPU<Impl>::OzoneXC::readMiscReg(int misc_reg)
+OzoneCPU<Impl>::OzoneTC::readMiscReg(int misc_reg)
 {
     return thread->regs.miscRegs.readReg(misc_reg);
 }
 
 template <class Impl>
 TheISA::MiscReg
-OzoneCPU<Impl>::OzoneXC::readMiscRegWithEffect(int misc_reg, Fault &fault)
+OzoneCPU<Impl>::OzoneTC::readMiscRegWithEffect(int misc_reg, Fault &fault)
 {
     return thread->regs.miscRegs.readRegWithEffect(misc_reg,
                                                    fault, this);
@@ -1062,13 +1062,13 @@ OzoneCPU<Impl>::OzoneXC::readMiscRegWithEffect(int misc_reg, Fault &fault)
 
 template <class Impl>
 Fault
-OzoneCPU<Impl>::OzoneXC::setMiscReg(int misc_reg, const MiscReg &val)
+OzoneCPU<Impl>::OzoneTC::setMiscReg(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
     Fault ret_fault = thread->regs.miscRegs.setReg(misc_reg, val);
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 
     return ret_fault;
@@ -1076,14 +1076,14 @@ OzoneCPU<Impl>::OzoneXC::setMiscReg(int misc_reg, const MiscReg &val)
 
 template <class Impl>
 Fault
-OzoneCPU<Impl>::OzoneXC::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+OzoneCPU<Impl>::OzoneTC::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
     Fault ret_fault = thread->regs.miscRegs.setRegWithEffect(misc_reg, val,
                                                              this);
 
     if (!thread->inSyscall) {
-        cpu->squashFromXC();
+        cpu->squashFromTC();
     }
 
     return ret_fault;

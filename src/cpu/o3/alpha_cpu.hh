@@ -32,7 +32,7 @@
 #define __CPU_O3_ALPHA_FULL_CPU_HH__
 
 #include "arch/isa_traits.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
 
@@ -71,20 +71,20 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     AlphaFullCPU(Params *params);
 
     /**
-     * Derived ExecContext class for use with the AlphaFullCPU.  It
+     * Derived ThreadContext class for use with the AlphaFullCPU.  It
      * provides the interface for any external objects to access a
      * single thread's state and some general CPU state.  Any time
      * external objects try to update state through this interface,
      * the CPU will create an event to squash all in-flight
      * instructions in order to ensure state is maintained correctly.
      */
-    class AlphaXC : public ExecContext
+    class AlphaTC : public ThreadContext
     {
       public:
         /** Pointer to the CPU. */
         AlphaFullCPU<Impl> *cpu;
 
-        /** Pointer to the thread state that this XC corrseponds to. */
+        /** Pointer to the thread state that this TC corrseponds to. */
         O3ThreadState<Impl> *thread;
 
         /** Returns a pointer to this CPU. */
@@ -145,9 +145,9 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual void dumpFuncProfile();
 #endif
         /** Takes over execution of a thread from another CPU. */
-        virtual void takeOverFrom(ExecContext *old_context);
+        virtual void takeOverFrom(ThreadContext *old_context);
 
-        /** Registers statistics associated with this XC. */
+        /** Registers statistics associated with this TC. */
         virtual void regStats(const std::string &name);
 
         /** Serializes state. */
@@ -177,8 +177,8 @@ class AlphaFullCPU : public FullO3CPU<Impl>
          */
         virtual TheISA::MachInst getInst();
 
-        /** Copies the architectural registers from another XC into this XC. */
-        virtual void copyArchRegs(ExecContext *xc);
+        /** Copies the architectural registers from another TC into this TC. */
+        virtual void copyArchRegs(ThreadContext *tc);
 
         /** Resets all architectural registers to 0. */
         virtual void clearArchRegs();
@@ -359,9 +359,9 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of
-     * state through the XC.
+     * state through the TC.
      */
-    void squashFromXC(unsigned tid);
+    void squashFromTC(unsigned tid);
 
 #if FULL_SYSTEM
     /** Posts an interrupt. */

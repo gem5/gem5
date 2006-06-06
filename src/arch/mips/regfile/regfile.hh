@@ -39,7 +39,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 
 namespace MipsISA
 {
@@ -64,10 +64,10 @@ namespace MipsISA
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ExecContext *xc)
+                Fault &fault, ThreadContext *tc)
         {
             fault = NoFault;
-            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
         }
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
@@ -76,9 +76,9 @@ namespace MipsISA
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc)
+                ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+            return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
         FloatReg readFloatReg(int floatReg)
@@ -189,12 +189,12 @@ namespace MipsISA
         }
     };
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 #if FULL_SYSTEM
-    void copyIprs(ExecContext *src, ExecContext *dest);
+    void copyIprs(ThreadContext *src, ThreadContext *dest);
 #endif
 } // namespace MipsISA
 
