@@ -299,6 +299,10 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
     intRegFile.resize(numPhysicalIntRegs);
     floatRegFile.resize(numPhysicalFloatRegs);
 
+    for (int i = 0; i < Impl::MaxThreads; ++i) {
+        miscRegs[i].clear();
+    }
+
     //memset(intRegFile, 0, sizeof(*intRegFile));
     //memset(floatRegFile, 0, sizeof(*floatRegFile));
 }

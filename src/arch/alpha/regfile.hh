@@ -62,6 +62,8 @@ namespace AlphaISA
 
         void unserialize(Checkpoint *cp, const std::string &section);
 
+        void clear()
+        { bzero(regs, sizeof(regs)); }
     };
 
     class FloatRegFile
@@ -77,6 +79,8 @@ namespace AlphaISA
 
         void unserialize(Checkpoint *cp, const std::string &section);
 
+        void clear()
+        { bzero(d, sizeof(d)); }
     };
 
     class MiscRegFile {
@@ -102,6 +106,12 @@ namespace AlphaISA
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
                 ThreadContext *tc);
 
+        void clear()
+        {
+            fpcr = uniq = 0;
+            lock_flag = 0;
+            lock_addr = 0;
+        }
 #if FULL_SYSTEM
       protected:
         typedef uint64_t InternalProcReg;
@@ -171,9 +181,9 @@ namespace AlphaISA
 
         void clear()
         {
-            bzero(&intRegFile, sizeof(intRegFile));
-            bzero(&floatRegFile, sizeof(floatRegFile));
-            bzero(&miscRegFile, sizeof(miscRegFile));
+            intRegFile.clear();
+            floatRegFile.clear();
+            miscRegFile.clear();
         }
 
         MiscReg readMiscReg(int miscReg)
