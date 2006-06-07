@@ -65,7 +65,7 @@ namespace Kernel {
  * The ThreadContext is slightly different than the ExecContext.  The
  * ThreadContext provides access to an individual thread's state; an
  * ExecContext provides ISA access to the CPU (meaning it is
- * implicitly multithreaded on MT systems).  Additionally the
+ * implicitly multithreaded on SMT systems).  Additionally the
  * ThreadState is an abstract class that exactly defines the
  * interface; the ExecContext is a more implicit interface that must
  * be implemented so that the ISA can access whatever state it needs.
@@ -254,6 +254,16 @@ class ThreadContext
             RegFile::ContextVal val) = 0;
 };
 
+/**
+ * ProxyThreadContext class that provides a way to implement a
+ * ThreadContext without having to derive from it. ThreadContext is an
+ * abstract class, so anything that derives from it and uses its
+ * interface will pay the overhead of virtual function calls.  This
+ * class is created to enable a user-defined Thread object to be used
+ * wherever ThreadContexts are used, without paying the overhead of
+ * virtual function calls when it is used by itself.  See
+ * simple_thread.hh for an example of this.
+ */
 template <class TC>
 class ProxyThreadContext : public ThreadContext
 {
