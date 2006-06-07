@@ -86,7 +86,7 @@ class MemTest : public SimObject
     MemInterface *cacheInterface;
     FunctionalMemory *mainMem;
     FunctionalMemory *checkMem;
-    CPUExecContext *cpuXC;
+    SimpleThread *thread;
 
     unsigned size;		// size of testing memory region
 

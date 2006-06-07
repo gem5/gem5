@@ -38,7 +38,7 @@
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/base_dyn_inst.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
 #include "sim/eventq.hh"
@@ -77,7 +77,7 @@ class Sampler;
  * instructions marked as "IsUnverifiable", the checker assumes that
  * the value from the main CPU's execution is correct and simply
  * copies that value.  It provides a CheckerThreadContext (see
- * checker/exec_context.hh) that provides hooks for updating the
+ * checker/thread_context.hh) that provides hooks for updating the
  * Checker's state through any ThreadContext accesses.  This allows the
  * checker to be able to correctly verify instructions, even with
  * external accesses to the ThreadContext that change state.
@@ -129,8 +129,8 @@ class CheckerCPU : public BaseCPU
     Port *dcachePort;
 
   public:
-    // execution context
-    CPUExecContext *cpuXC;
+    // Primary thread being run.
+    SimpleThread *thread;
 
     ThreadContext *tc;
 
@@ -213,43 +213,43 @@ class CheckerCPU : public BaseCPU
 
     uint64_t readIntReg(const StaticInst *si, int idx)
     {
-        return cpuXC->readIntReg(si->srcRegIdx(idx));
+        return thread->readIntReg(si->srcRegIdx(idx));
     }
 
     FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatReg(reg_idx, width);
+        return thread->readFloatReg(reg_idx, width);
     }
 
     FloatReg readFloatReg(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatReg(reg_idx);
+        return thread->readFloatReg(reg_idx);
     }
 
     FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegBits(reg_idx, width);
+        return thread->readFloatRegBits(reg_idx, width);
     }
 
     FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegBits(reg_idx);
+        return thread->readFloatRegBits(reg_idx);
     }
 
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
-        cpuXC->setIntReg(si->destRegIdx(idx), val);
+        thread->setIntReg(si->destRegIdx(idx), val);
         result.integer = val;
     }
 
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatReg(reg_idx, val, width);
+        thread->setFloatReg(reg_idx, val, width);
         switch(width) {
           case 32:
             result.fp = val;
@@ -263,7 +263,7 @@ class CheckerCPU : public BaseCPU
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatReg(reg_idx, val);
+        thread->setFloatReg(reg_idx, val);
         result.fp = val;
     }
 
@@ -271,46 +271,46 @@ class CheckerCPU : public BaseCPU
                          int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegBits(reg_idx, val, width);
+        thread->setFloatRegBits(reg_idx, val, width);
         result.integer = val;
     }
 
     void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegBits(reg_idx, val);
+        thread->setFloatRegBits(reg_idx, val);
         result.integer = val;
     }
 
-    uint64_t readPC() { return cpuXC->readPC(); }
+    uint64_t readPC() { return thread->readPC(); }
 
-    uint64_t readNextPC() { return cpuXC->readNextPC(); }
+    uint64_t readNextPC() { return thread->readNextPC(); }
 
     void setNextPC(uint64_t val) {
-        cpuXC->setNextPC(val);
+        thread->setNextPC(val);
     }
 
     MiscReg readMiscReg(int misc_reg)
     {
-        return cpuXC->readMiscReg(misc_reg);
+        return thread->readMiscReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return cpuXC->readMiscRegWithEffect(misc_reg, fault);
+        return thread->readMiscRegWithEffect(misc_reg, fault);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
         result.integer = val;
         miscRegIdxs.push(misc_reg);
-        return cpuXC->setMiscReg(misc_reg, val);
+        return thread->setMiscReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         miscRegIdxs.push(misc_reg);
-        return cpuXC->setMiscRegWithEffect(misc_reg, val);
+        return thread->setMiscRegWithEffect(misc_reg, val);
     }
 
     void recordPCChange(uint64_t val) { changedPC = true; }
@@ -321,12 +321,12 @@ class CheckerCPU : public BaseCPU
     void translateDataReadReq(Request *req);
 
 #if FULL_SYSTEM
-    Fault hwrei() { return cpuXC->hwrei(); }
-    int readIntrFlag() { return cpuXC->readIntrFlag(); }
-    void setIntrFlag(int val) { cpuXC->setIntrFlag(val); }
-    bool inPalMode() { return cpuXC->inPalMode(); }
+    Fault hwrei() { return thread->hwrei(); }
+    int readIntrFlag() { return thread->readIntrFlag(); }
+    void setIntrFlag(int val) { thread->setIntrFlag(val); }
+    bool inPalMode() { return thread->inPalMode(); }
     void ev5_trap(Fault fault) { fault->invoke(xcProxy); }
-    bool simPalCheck(int palFunc) { return cpuXC->simPalCheck(palFunc); }
+    bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
@@ -341,7 +341,7 @@ class CheckerCPU : public BaseCPU
     bool checkFlags(Request *req);
 
     ThreadContext *tcBase() { return tc; }
-    CPUExecContext *cpuXCBase() { return cpuXC; }
+    SimpleThread *threadBase() { return thread; }
 
     Result unverifiedResult;
     Request *unverifiedReq;

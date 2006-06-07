@@ -650,7 +650,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 
     req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->cpuId, threadNumber);
+    req->setThreadContext(thread->readCpuId(), threadNumber);
 
     if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {
@@ -705,7 +705,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->cpuId, threadNumber);
+    req->setThreadContext(thread->readCpuId(), threadNumber);
 
     if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {

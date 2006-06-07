@@ -43,7 +43,7 @@
 #include "config/full_system.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/scoreboard.hh"
@@ -237,11 +237,11 @@ class FullO3CPU : public BaseFullCPU
 #else
     /** Get instruction asid. */
     int getInstAsid(unsigned tid)
-    { return thread[tid]->asid; }
+    { return thread[tid]->getInstAsid(); }
 
     /** Get data asid. */
     int getDataAsid(unsigned tid)
-    { return thread[tid]->asid; }
+    { return thread[tid]->getDataAsid(); }
 
 #endif
 

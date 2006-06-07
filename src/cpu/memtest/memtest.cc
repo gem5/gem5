@@ -38,7 +38,7 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/memtest/memtest.hh"
 #include "mem/cache/base_cache.hh"
 #include "sim/builder.hh"
@@ -81,7 +81,7 @@ MemTest::MemTest(const string &name,
     vector<string> cmd;
     cmd.push_back("/bin/ls");
     vector<string> null_vec;
-    cpuXC = new CPUExecContext(NULL, 0, mainMem, 0);
+    thread = new SimpleThread(NULL, 0, mainMem, 0);
 
     blockSize = cacheInterface->getBlockSize();
     blockAddrMask = blockSize - 1;
@@ -271,7 +271,7 @@ MemTest::tick()
     req->data = new uint8_t[req->size];
     req->paddr &= ~(req->size - 1);
     req->time = curTick;
-    req->xc = cpuXC->getProxy();
+    req->xc = thread->getProxy();
 
     if (cmd < percentReads) {
         // read

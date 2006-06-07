@@ -83,7 +83,6 @@ base_sources = Split('''
 
         cpu/activity.cc
 	cpu/base.cc
-	cpu/cpu_exec_context.cc
 	cpu/cpuevent.cc
 	cpu/exetrace.cc
         cpu/op_class.cc
@@ -91,6 +90,8 @@ base_sources = Split('''
         cpu/quiesce_event.cc
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
+        cpu/simple_thread.cc
+        cpu/thread_state.cc
 
         encumbered/cpu/full/fu_pool.cc
         

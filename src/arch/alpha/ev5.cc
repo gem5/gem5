@@ -37,7 +37,7 @@
 #include "base/stats/events.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/debug.hh"
@@ -135,12 +135,12 @@ AlphaISA::zeroRegisters(CPU *cpu)
     // Insure ISA semantics
     // (no longer very clean due to the change in setIntReg() in the
     // cpu model.  Consider changing later.)
-    cpu->cpuXC->setIntReg(ZeroReg, 0);
-    cpu->cpuXC->setFloatReg(ZeroReg, 0.0);
+    cpu->thread->setIntReg(ZeroReg, 0);
+    cpu->thread->setFloatReg(ZeroReg, 0.0);
 }
 
 Fault
-CPUExecContext::hwrei()
+SimpleThread::hwrei()
 {
     if (!inPalMode())
         return new UnimplementedOpcodeFault;
@@ -562,7 +562,7 @@ AlphaISA::copyIprs(ThreadContext *src, ThreadContext *dest)
  * If return value is false, actual PAL call will be suppressed.
  */
 bool
-CPUExecContext::simPalCheck(int palFunc)
+SimpleThread::simPalCheck(int palFunc)
 {
     if (kernelStats)
         kernelStats->callpal(palFunc, tc);

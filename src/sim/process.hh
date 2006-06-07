@@ -46,7 +46,6 @@
 #include "base/statistics.hh"
 #include "sim/sim_object.hh"
 
-class CPUExecContext;
 class ThreadContext;
 class SyscallDesc;
 class PageTable;

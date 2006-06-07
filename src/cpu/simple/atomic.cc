@@ -196,7 +196,7 @@ void
 AtomicSimpleCPU::activateContext(int thread_num, int delay)
 {
     assert(thread_num == 0);
-    assert(cpuXC);
+    assert(thread);
 
     assert(_status == Idle);
     assert(!tickEvent.scheduled());
@@ -211,7 +211,7 @@ void
 AtomicSimpleCPU::suspendContext(int thread_num)
 {
     assert(thread_num == 0);
-    assert(cpuXC);
+    assert(thread);
 
     assert(_status == Running);
 
@@ -229,14 +229,14 @@ template <class T>
 Fault
 AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    data_read_req->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
+    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
     // translate to physical address
-    Fault fault = cpuXC->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(data_read_req);
 
     // Now do the access.
     if (fault == NoFault) {
@@ -304,14 +304,14 @@ template <class T>
 Fault
 AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    data_write_req->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
+    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
     // translate to physical address
-    Fault fault = cpuXC->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(data_write_req);
 
     // Now do the access.
     if (fault == NoFault) {

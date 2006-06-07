@@ -29,10 +29,13 @@
 #ifndef __CPU_THREAD_STATE_HH__
 #define __CPU_THREAD_STATE_HH__
 
+#include "arch/isa_traits.hh"
 #include "cpu/thread_context.hh"
 
 #if !FULL_SYSTEM
+#include "mem/mem_object.hh"
 #include "mem/translating_port.hh"
+#include "sim/process.hh"
 #endif
 
 #if FULL_SYSTEM
@@ -42,9 +45,6 @@ class ProfileNode;
 namespace Kernel {
     class Statistics;
 };
-#else
-class FunctionalMemory;
-class Process;
 #endif
 
 /**
@@ -54,56 +54,121 @@ class Process;
  *  to hold more thread-specific stats within it.
  */
 struct ThreadState {
+    typedef ThreadContext::Status Status;
+
 #if FULL_SYSTEM
-    ThreadState(int _cpuId, int _tid)
-        : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
-          profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL)
+    ThreadState(int _cpuId, int _tid);
 #else
     ThreadState(int _cpuId, int _tid, MemObject *mem,
-                Process *_process, short _asid)
-        : cpuId(_cpuId), tid(_tid), process(_process), asid(_asid)
+                Process *_process, short _asid);
 #endif
-    {
-        funcExeInst = 0;
-        storeCondFailures = 0;
-#if !FULL_SYSTEM
-        /* Use this port to for syscall emulation writes to memory. */
-        Port *mem_port;
-        port = new TranslatingPort(csprintf("%d-funcport",
-                                            tid),
-                                   process->pTable, false);
-        mem_port = mem->getPort("functional");
-        mem_port->setPeer(port);
-        port->setPeer(mem_port);
+
+    void setCpuId(int id) { cpuId = id; }
+
+    int readCpuId() { return cpuId; }
+
+    void setTid(int id) { tid = id; }
+
+    int readTid() { return tid; }
+
+    Tick readLastActivate() { return lastActivate; }
+
+    Tick readLastSuspend() { return lastSuspend; }
+
+#if FULL_SYSTEM
+    void dumpFuncProfile();
+
+    EndQuiesceEvent *getQuiesceEvent() { return quiesceEvent; }
+
+    void profileClear();
+
+    void profileSample();
+
+    Kernel::Statistics *getKernelStats() { return kernelStats; }
+
+    void setPhysPort(FunctionalPort *port) { physPort = port; }
+
+    void setVirtPort(VirtualPort *port) { virtPort = port; }
+#else
+    Process *getProcessPtr() { return process; }
+
+    TranslatingPort *getMemPort() { return port; }
+
+    void setMemPort(TranslatingPort *_port) { port = _port; }
+
+    int getInstAsid() { return asid; }
+    int getDataAsid() { return asid; }
 #endif
-    }
 
-    ThreadContext::Status status;
+    /** Sets the current instruction being committed. */
+    void setInst(TheISA::MachInst _inst) { inst = _inst; }
 
+    /** Returns the current instruction being committed. */
+    TheISA::MachInst getInst() { return inst; }
+
+    /** Reads the number of instructions functionally executed and
+     * committed.
+     */
+    Counter readFuncExeInst() { return funcExeInst; }
+
+    /** Sets the total number of instructions functionally executed
+     * and committed.
+     */
+    void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
+
+    /** Returns the status of this thread. */
+    Status status() const { return _status; }
+
+    /** Sets the status of this thread. */
+    void setStatus(Status new_status) { _status = new_status; }
+
+    /** Number of instructions committed. */
+    Counter numInst;
+    /** Stat for number instructions committed. */
+    Stats::Scalar<> numInsts;
+    /** Stat for number of memory references. */
+    Stats::Scalar<> numMemRefs;
+
+    /** Number of simulated loads, used for tracking events based on
+     * the number of loads committed.
+     */
+    Counter numLoad;
+
+    /** The number of simulated loads committed prior to this run. */
+    Counter startNumLoad;
+
+  protected:
+    ThreadContext::Status _status;
+
+    // ID of this context w.r.t. the System or Process object to which
+    // it belongs.  For full-system mode, this is the system CPU ID.
     int cpuId;
 
     // Index of hardware thread context on the CPU that this represents.
     int tid;
 
-    Counter numInst;
-    Stats::Scalar<> numInsts;
-    Stats::Scalar<> numMemRefs;
-
-    // number of simulated loads
-    Counter numLoad;
-    Counter startNumLoad;
-
-#if FULL_SYSTEM
+    /** Last time activate was called on this thread. */
     Tick lastActivate;
+
+    /** Last time suspend was called on this thread. */
     Tick lastSuspend;
 
+#if FULL_SYSTEM
+  public:
     FunctionProfile *profile;
     ProfileNode *profileNode;
     Addr profilePC;
-
     EndQuiesceEvent *quiesceEvent;
 
     Kernel::Statistics *kernelStats;
+  protected:
+    /** A functional port outgoing only for functional accesses to physical
+     * addresses.*/
+    FunctionalPort *physPort;
+
+    /** A functional port, outgoing only, for functional accesse to virtual
+     * addresses. That doen't require execution context information */
+    VirtualPort *virtPort;
 #else
     TranslatingPort *port;
 
@@ -113,8 +178,12 @@ struct ThreadState {
     // simulation only; all functional memory accesses should use
     // one of the FunctionalMemory pointers above.
     short asid;
-
 #endif
+
+    /** Current instruction the thread is committing.  Only set and
+     * used for DTB faults currently.
+     */
+    TheISA::MachInst inst;
 
     /**
      * Temporary storage to pass the source address from copy_load to
@@ -128,6 +197,7 @@ struct ThreadState {
      */
     Addr copySrcPhysAddr;
 
+  public:
     /*
      * number of executed instructions, for matching with syscall trace
      * points in EIO files.

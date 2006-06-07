@@ -26,11 +26,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_CHECKER_EXEC_CONTEXT_HH__
-#define __CPU_CHECKER_EXEC_CONTEXT_HH__
+#ifndef __CPU_CHECKER_THREAD_CONTEXT_HH__
+#define __CPU_CHECKER_THREAD_CONTEXT_HH__
 
 #include "cpu/checker/cpu.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 
 class EndQuiesceEvent;
@@ -41,23 +41,30 @@ namespace Kernel {
 /**
  * Derived ThreadContext class for use with the Checker.  The template
  * parameter is the ThreadContext class used by the specific CPU being
- * verified.  This CheckerThreadContext is then used by the main CPU in
- * place of its usual ThreadContext class.  It handles updating the
- * checker's state any time state is updated through the ThreadContext.
+ * verified.  This CheckerThreadContext is then used by the main CPU
+ * in place of its usual ThreadContext class.  It handles updating the
+ * checker's state any time state is updated externally through the
+ * ThreadContext.
  */
 template <class TC>
 class CheckerThreadContext : public ThreadContext
 {
   public:
     CheckerThreadContext(TC *actual_tc,
-                       CheckerCPU *checker_cpu)
-        : actualTC(actual_tc), checkerTC(checker_cpu->cpuXC),
+                         CheckerCPU *checker_cpu)
+        : actualTC(actual_tc), checkerTC(checker_cpu->thread),
           checkerCPU(checker_cpu)
     { }
 
   private:
+    /** The main CPU's ThreadContext, or class that implements the
+     * ThreadContext interface. */
     TC *actualTC;
-    CPUExecContext *checkerTC;
+    /** The checker's own SimpleThread. Will be updated any time
+     * anything uses this ThreadContext to externally update a
+     * thread's state. */
+    SimpleThread *checkerTC;
+    /** Pointer to the checker CPU. */
     CheckerCPU *checkerCPU;
 
   public:

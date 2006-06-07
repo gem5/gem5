@@ -141,7 +141,7 @@ void
 TimingSimpleCPU::activateContext(int thread_num, int delay)
 {
     assert(thread_num == 0);
-    assert(cpuXC);
+    assert(thread);
 
     assert(_status == Idle);
 
@@ -158,7 +158,7 @@ void
 TimingSimpleCPU::suspendContext(int thread_num)
 {
     assert(thread_num == 0);
-    assert(cpuXC);
+    assert(thread);
 
     assert(_status == Running);
 
@@ -177,14 +177,14 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     // need to fill in CPU & thread IDs here
     Request *data_read_req = new Request();
 
-    data_read_req->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
+    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(data_read_req->getVaddr());
     }
 
    // translate to physical address
-    Fault fault = cpuXC->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(data_read_req);
 
     // Now do the access.
     if (fault == NoFault) {
@@ -257,10 +257,10 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     // need to fill in CPU & thread IDs here
     Request *data_write_req = new Request();
-    data_write_req->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
+    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    Fault fault = cpuXC->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(data_write_req);
     // Now do the access.
     if (fault == NoFault) {
         Packet *data_write_pkt =

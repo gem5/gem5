@@ -96,7 +96,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         /** Reads this CPU's ID. */
         virtual int readCpuId() { return cpu->cpu_id; }
 
-        virtual TranslatingPort *getMemPort() { return thread->port; }
+        virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
 #if FULL_SYSTEM
         /** Returns a pointer to the system. */
@@ -116,7 +116,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         { return thread->kernelStats; }
 #else
         /** Returns a pointer to this thread's process. */
-        virtual Process *getProcessPtr() { return thread->process; }
+        virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
         /** Returns this thread's status. */
         virtual Status status() const { return thread->status(); }
@@ -170,7 +170,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         virtual void profileSample();
 #endif
         /** Returns this thread's ID number. */
-        virtual int getThreadNum() { return thread->tid; }
+        virtual int getThreadNum() { return thread->readTid(); }
 
         /** Returns the instruction this thread is currently committing.
          *  Only used when an instruction faults.
@@ -207,14 +207,14 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         /** Reads this thread's PC. */
         virtual uint64_t readPC()
-        { return cpu->readPC(thread->tid); }
+        { return cpu->readPC(thread->readTid()); }
 
         /** Sets this thread's PC. */
         virtual void setPC(uint64_t val);
 
         /** Reads this thread's next PC. */
         virtual uint64_t readNextPC()
-        { return cpu->readNextPC(thread->tid); }
+        { return cpu->readNextPC(thread->readTid()); }
 
         /** Sets this thread's next PC. */
         virtual void setNextPC(uint64_t val);
@@ -230,12 +230,12 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         /** Reads a miscellaneous register. */
         virtual MiscReg readMiscReg(int misc_reg)
-        { return cpu->readMiscReg(misc_reg, thread->tid); }
+        { return cpu->readMiscReg(misc_reg, thread->readTid()); }
 
         /** Reads a misc. register, including any side-effects the
          * read might have as defined by the architecture. */
         virtual MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
-        { return cpu->readMiscRegWithEffect(misc_reg, fault, thread->tid); }
+        { return cpu->readMiscRegWithEffect(misc_reg, fault, thread->readTid()); }
 
         /** Sets a misc. register. */
         virtual Fault setMiscReg(int misc_reg, const MiscReg &val);
@@ -257,7 +257,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         /** Returns if the thread is currently in PAL mode, based on
          * the PC's value. */
         virtual bool inPalMode()
-        { return TheISA::PcPAL(cpu->readPC(thread->tid)); }
+        { return TheISA::PcPAL(cpu->readPC(thread->readTid())); }
 #endif
         // Only really makes sense for old CPU model.  Lots of code
         // outside the CPU still checks this function, so it will
@@ -279,7 +279,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
         /** Executes a syscall in SE mode. */
         virtual void syscall(int64_t callnum)
-        { return cpu->syscall(callnum, thread->tid); }
+        { return cpu->syscall(callnum, thread->readTid()); }
 
         /** Reads the funcExeInst counter. */
         virtual Counter readFuncExeInst() { return thread->funcExeInst; }
@@ -323,21 +323,21 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     Fault translateInstReq(RequestPtr &req)
     {
         int tid = req->getThreadNum();
-        return this->thread[tid]->process->pTable->translate(req);
+        return this->thread[tid]->getProcessPtr()->pTable->translate(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
     Fault translateDataReadReq(RequestPtr &req)
     {
         int tid = req->getThreadNum();
-        return this->thread[tid]->process->pTable->translate(req);
+        return this->thread[tid]->getProcessPtr()->pTable->translate(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
     Fault translateDataWriteReq(RequestPtr &req)
     {
         int tid = req->getThreadNum();
-        return this->thread[tid]->process->pTable->translate(req);
+        return this->thread[tid]->getProcessPtr()->pTable->translate(req);
     }
 
 #endif
@@ -492,14 +492,14 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
 #if FULL_SYSTEM
         // @todo: Fix this LL/SC hack.
-        if (req->flags & LOCKED) {
-            if (req->flags & UNCACHEABLE) {
-                req->result = 2;
+        if (req->getFlags() & LOCKED) {
+            if (req->getFlags() & UNCACHEABLE) {
+                req->setScResult(2);
             } else {
                 if (this->lockFlag) {
-                    req->result = 1;
+                    req->setScResult(1);
                 } else {
-                    req->result = 0;
+                    req->setScResult(0);
                     return NoFault;
                 }
             }

@@ -58,14 +58,6 @@ struct O3ThreadState : public ThreadState {
     typedef ThreadContext::Status Status;
     typedef typename Impl::FullCPU FullCPU;
 
-    /** Current status of the thread. */
-    Status _status;
-
-    /** Current instruction the thread is committing.  Only set and
-     * used for DTB faults currently.
-     */
-    TheISA::MachInst inst;
-
   private:
     /** Pointer to the CPU. */
     FullCPU *cpu;
@@ -81,8 +73,8 @@ struct O3ThreadState : public ThreadState {
     bool trapPending;
 
 #if FULL_SYSTEM
-    O3ThreadState(FullCPU *_cpu, int _thread_num, FunctionalMemory *_mem)
-        : ThreadState(-1, _thread_num, _mem),
+    O3ThreadState(FullCPU *_cpu, int _thread_num, )
+        : ThreadState(-1, _thread_num),
           inSyscall(0), trapPending(0)
     { }
 #else
@@ -98,25 +90,6 @@ struct O3ThreadState : public ThreadState {
 
     /** Returns a pointer to the TC of this thread. */
     ThreadContext *getTC() { return tc; }
-
-    /** Returns the status of this thread. */
-    Status status() const { return _status; }
-
-    /** Sets the status of this thread. */
-    void setStatus(Status new_status) { _status = new_status; }
-
-    /** Sets the current instruction being committed. */
-    void setInst(TheISA::MachInst _inst) { inst = _inst; }
-
-    /** Reads the number of instructions functionally executed and
-     * committed.
-     */
-    Counter readFuncExeInst() { return funcExeInst; }
-
-    /** Sets the total number of instructions functionally executed
-     * and committed.
-     */
-    void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
 
 #if !FULL_SYSTEM
     /** Handles the syscall. */

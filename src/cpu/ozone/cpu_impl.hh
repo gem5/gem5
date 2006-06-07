@@ -36,7 +36,7 @@
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/checker/exec_context.hh"
+#include "cpu/checker/thread_context.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/cpu.hh"
@@ -670,8 +670,8 @@ OzoneCPU<Impl>::processInterrupts()
         thread.setMiscReg(IPR_INTID, ipl);
         // @todo: Make this more transparent
         if (checker) {
-            checker->cpuXCBase()->setMiscReg(IPR_ISR, summary);
-            checker->cpuXCBase()->setMiscReg(IPR_INTID, ipl);
+            checker->threadBase()->setMiscReg(IPR_ISR, summary);
+            checker->threadBase()->setMiscReg(IPR_INTID, ipl);
         }
         Fault fault = new InterruptFault;
         fault->invoke(thread.getTC());

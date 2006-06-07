@@ -49,7 +49,7 @@ class FunctionalMemory;
 
 // Maybe this ozone thread state should only really have committed state?
 // I need to think about why I'm using this and what it's useful for.  Clearly
-// has benefits for SMT; basically serves same use as CPUExecContext.
+// has benefits for SMT; basically serves same use as SimpleThread.
 // Makes the ExecContext proxy easier.  Gives organization/central access point
 // to state of a thread that can be accessed normally (i.e. not in-flight
 // stuff within a OoO processor).  Does this need an TC proxy within it?
@@ -83,18 +83,11 @@ struct OzoneThreadState : public ThreadState {
     }
 #endif
 
-    Status _status;
-
-    Status status() const { return _status; }
-
-    void setStatus(Status new_status) { _status = new_status; }
-
     RenameTable<Impl> renameTable;
-    Addr PC;
-    Addr nextPC;
 
-    // Current instruction
-    TheISA::MachInst inst;
+    Addr PC;
+
+    Addr nextPC;
 
     TheISA::RegFile regs;
 
@@ -169,14 +162,6 @@ struct OzoneThreadState : public ThreadState {
 
     void setNextPC(uint64_t val)
     { nextPC = val; }
-
-    bool misspeculating() { return false; }
-
-    void setInst(TheISA::MachInst _inst) { inst = _inst; }
-
-    Counter readFuncExeInst() { return funcExeInst; }
-
-    void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
 };
 
 #endif // __CPU_OZONE_THREAD_STATE_HH__

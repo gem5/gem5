@@ -30,7 +30,7 @@
  */
 
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
 #include "kern/system_events.hh"
 #include "sim/system.hh"

@@ -35,7 +35,7 @@
 
 #include "arch/isa_traits.hh"
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
@@ -59,15 +59,14 @@ using namespace std;
 
 // constructor
 #if FULL_SYSTEM
-CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
-                               AlphaITB *_itb, AlphaDTB *_dtb,
-                               bool use_kernel_stats)
-    : _status(ThreadContext::Unallocated), cpu(_cpu), thread_num(_thread_num),
-      cpu_id(-1), lastActivate(0), lastSuspend(0), system(_sys), itb(_itb),
-      dtb(_dtb), profile(NULL), func_exe_inst(0), storeCondFailures(0)
+SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
+                           AlphaITB *_itb, AlphaDTB *_dtb,
+                           bool use_kernel_stats)
+    : ThreadState(-1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
+      dtb(_dtb)
 
 {
-    tc = new ProxyThreadContext<CPUExecContext>(this);
+    tc = new ProxyThreadContext<SimpleThread>(this);
 
     quiesceEvent = new EndQuiesceEvent(tc);
 
@@ -76,8 +75,8 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     if (cpu->params->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
         Callback *cb =
-            new MakeCallback<CPUExecContext,
-            &CPUExecContext::dumpFuncProfile>(this);
+            new MakeCallback<SimpleThread,
+            &SimpleThread::dumpFuncProfile>(this);
         registerExitCallback(cb);
     }
 
@@ -87,7 +86,6 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     profileNode = &dummyNode;
     profilePC = 3;
 
-
     if (use_kernel_stats) {
         kernelStats = new Kernel::Statistics(system);
     } else {
@@ -95,79 +93,52 @@ CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_sys,
     }
     Port *mem_port;
     physPort = new FunctionalPort(csprintf("%s-%d-funcport",
-                                           cpu->name(), thread_num));
+                                           cpu->name(), tid));
     mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(physPort);
     physPort->setPeer(mem_port);
 
     virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        cpu->name(), thread_num));
+                                        cpu->name(), tid));
     mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(virtPort);
     virtPort->setPeer(mem_port);
 }
 #else
-CPUExecContext::CPUExecContext(BaseCPU *_cpu, int _thread_num,
+SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid, MemObject* memobj)
-    : _status(ThreadContext::Unallocated),
-      cpu(_cpu), thread_num(_thread_num), cpu_id(-1), lastActivate(0),
-      lastSuspend(0), process(_process), asid(_asid),
-      func_exe_inst(0), storeCondFailures(0)
+    : ThreadState(-1, _thread_num, memobj, _process, _asid),
+      cpu(_cpu)
 {
     /* Use this port to for syscall emulation writes to memory. */
     Port *mem_port;
     port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                        cpu->name(), thread_num),
+                                        cpu->name(), tid),
                                process->pTable, false);
     mem_port = memobj->getPort("functional");
     mem_port->setPeer(port);
     port->setPeer(mem_port);
 
     regs.clear();
-    tc = new ProxyThreadContext<CPUExecContext>(this);
+    tc = new ProxyThreadContext<SimpleThread>(this);
 }
 
-CPUExecContext::CPUExecContext(RegFile *regFile)
-    : cpu(NULL), thread_num(-1), process(NULL), asid(-1),
-      func_exe_inst(0), storeCondFailures(0)
+SimpleThread::SimpleThread(RegFile *regFile)
+    : ThreadState(-1, -1, NULL, NULL, -1), cpu(NULL)
 {
     regs = *regFile;
-    tc = new ProxyThreadContext<CPUExecContext>(this);
+    tc = new ProxyThreadContext<SimpleThread>(this);
 }
 
 #endif
 
-CPUExecContext::~CPUExecContext()
+SimpleThread::~SimpleThread()
 {
     delete tc;
 }
 
-#if FULL_SYSTEM
 void
-CPUExecContext::dumpFuncProfile()
-{
-    std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
-    profile->dump(tc, *os);
-}
-
-void
-CPUExecContext::profileClear()
-{
-    if (profile)
-        profile->clear();
-}
-
-void
-CPUExecContext::profileSample()
-{
-    if (profile)
-        profile->sample(profileNode, profilePC);
-}
-
-#endif
-
-void
-CPUExecContext::takeOverFrom(ThreadContext *oldContext)
+SimpleThread::takeOverFrom(ThreadContext *oldContext)
 {
     // some things should already be set up
 #if FULL_SYSTEM
@@ -179,9 +150,9 @@ CPUExecContext::takeOverFrom(ThreadContext *oldContext)
     // copy over functional state
     _status = oldContext->status();
     copyArchRegs(oldContext);
-    cpu_id = oldContext->readCpuId();
+    cpuId = oldContext->readCpuId();
 #if !FULL_SYSTEM
-    func_exe_inst = oldContext->readFuncExeInst();
+    funcExeInst = oldContext->readFuncExeInst();
 #else
     EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
     if (quiesce) {
@@ -200,12 +171,12 @@ CPUExecContext::takeOverFrom(ThreadContext *oldContext)
 }
 
 void
-CPUExecContext::serialize(ostream &os)
+SimpleThread::serialize(ostream &os)
 {
     SERIALIZE_ENUM(_status);
     regs.serialize(os);
     // thread_num and cpu_id are deterministic from the config
-    SERIALIZE_SCALAR(func_exe_inst);
+    SERIALIZE_SCALAR(funcExeInst);
     SERIALIZE_SCALAR(inst);
 
 #if FULL_SYSTEM
@@ -220,12 +191,12 @@ CPUExecContext::serialize(ostream &os)
 
 
 void
-CPUExecContext::unserialize(Checkpoint *cp, const std::string &section)
+SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ENUM(_status);
     regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
-    UNSERIALIZE_SCALAR(func_exe_inst);
+    UNSERIALIZE_SCALAR(funcExeInst);
     UNSERIALIZE_SCALAR(inst);
 
 #if FULL_SYSTEM
@@ -238,9 +209,17 @@ CPUExecContext::unserialize(Checkpoint *cp, const std::string &section)
 #endif
 }
 
+#if FULL_SYSTEM
+void
+SimpleThread::dumpFuncProfile()
+{
+    std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+    profile->dump(tc, *os);
+}
+#endif
 
 void
-CPUExecContext::activate(int delay)
+SimpleThread::activate(int delay)
 {
     if (status() == ThreadContext::Active)
         return;
@@ -248,18 +227,18 @@ CPUExecContext::activate(int delay)
     lastActivate = curTick;
 
     if (status() == ThreadContext::Unallocated) {
-        cpu->activateWhenReady(thread_num);
+        cpu->activateWhenReady(tid);
         return;
     }
 
     _status = ThreadContext::Active;
 
     // status() == Suspended
-    cpu->activateContext(thread_num, delay);
+    cpu->activateContext(tid, delay);
 }
 
 void
-CPUExecContext::suspend()
+SimpleThread::suspend()
 {
     if (status() == ThreadContext::Suspended)
         return;
@@ -276,32 +255,32 @@ CPUExecContext::suspend()
 #endif
 */
     _status = ThreadContext::Suspended;
-    cpu->suspendContext(thread_num);
+    cpu->suspendContext(tid);
 }
 
 void
-CPUExecContext::deallocate()
+SimpleThread::deallocate()
 {
     if (status() == ThreadContext::Unallocated)
         return;
 
     _status = ThreadContext::Unallocated;
-    cpu->deallocateContext(thread_num);
+    cpu->deallocateContext(tid);
 }
 
 void
-CPUExecContext::halt()
+SimpleThread::halt()
 {
     if (status() == ThreadContext::Halted)
         return;
 
     _status = ThreadContext::Halted;
-    cpu->haltContext(thread_num);
+    cpu->haltContext(tid);
 }
 
 
 void
-CPUExecContext::regStats(const string &name)
+SimpleThread::regStats(const string &name)
 {
 #if FULL_SYSTEM
     if (kernelStats)
@@ -310,14 +289,14 @@ CPUExecContext::regStats(const string &name)
 }
 
 void
-CPUExecContext::copyArchRegs(ThreadContext *src_tc)
+SimpleThread::copyArchRegs(ThreadContext *src_tc)
 {
     TheISA::copyRegs(src_tc, tc);
 }
 
 #if FULL_SYSTEM
 VirtualPort*
-CPUExecContext::getVirtPort(ThreadContext *src_tc)
+SimpleThread::getVirtPort(ThreadContext *src_tc)
 {
     if (!src_tc)
         return virtPort;
@@ -333,7 +312,7 @@ CPUExecContext::getVirtPort(ThreadContext *src_tc)
 }
 
 void
-CPUExecContext::delVirtPort(VirtualPort *vp)
+SimpleThread::delVirtPort(VirtualPort *vp)
 {
 //    assert(!vp->nullThreadContext());
     delete vp->getPeer();

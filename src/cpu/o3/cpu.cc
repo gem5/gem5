@@ -38,7 +38,7 @@
 
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
 #include "cpu/o3/alpha_impl.hh"
@@ -245,12 +245,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     }
     rename.setFreeList(&freeList);
 
-    // Setup the page table for whichever stages need it.
-#if !FULL_SYSTEM
-//    fetch.setPageTable(pTable);
-//    iew.setPageTable(pTable);
-#endif
-
     // Setup the ROB for whichever stages need it.
     commit.setROB(&rob);
 
@@ -427,12 +421,12 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
 {
     DPRINTF(FullCPU,"[tid:%i] Initializing thread data");
     // Will change now that the PC and thread state is internal to the CPU
-    // and not in the CPUExecContext.
+    // and not in the ThreadContext.
 #if 0
 #if FULL_SYSTEM
     ThreadContext *src_tc = system->threadContexts[tid];
 #else
-    CPUExecContext *src_tc = thread[tid];
+    ThreadContext *src_tc = thread[tid];
 #endif
 
     //Bind Int Regs to Rename Map

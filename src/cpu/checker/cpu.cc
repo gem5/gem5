@@ -33,7 +33,7 @@
 #include "cpu/base.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 #include "sim/byteswap.hh"
@@ -62,7 +62,7 @@ CheckerCPU::init()
 }
 
 CheckerCPU::CheckerCPU(Params *p)
-    : BaseCPU(p), cpuXC(NULL), tc(NULL)
+    : BaseCPU(p), thread(NULL), tc(NULL)
 {
     memReq = NULL;
 
@@ -94,21 +94,21 @@ CheckerCPU::setMemory(MemObject *mem)
 {
     memPtr = mem;
 #if !FULL_SYSTEM
-    cpuXC = new CPUExecContext(this, /* thread_num */ 0, process,
-                               /* asid */ 0, mem);
+    thread = new SimpleThread(this, /* thread_num */ 0, process,
+                              /* asid */ 0, mem);
 
-    cpuXC->setStatus(ThreadContext::Suspended);
-    tc = cpuXC->getTC();
+    thread->setStatus(ThreadContext::Suspended);
+    tc = thread->getTC();
     threadContexts.push_back(tc);
 #else
     if (systemPtr) {
-        cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr, false);
+        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, memPtr, false);
 
-        cpuXC->setStatus(ThreadContext::Suspended);
-        tc = cpuXC->getTC();
+        thread->setStatus(ThreadContext::Suspended);
+        tc = thread->getTC();
         threadContexts.push_back(tc);
-        delete cpuXC->kernelStats;
-        cpuXC->kernelStats = NULL;
+        delete thread->kernelStats;
+        thread->kernelStats = NULL;
     }
 #endif
 }
@@ -120,13 +120,13 @@ CheckerCPU::setSystem(System *system)
     systemPtr = system;
 
     if (memPtr) {
-        cpuXC = new CPUExecContext(this, 0, systemPtr, itb, dtb, memPtr, false);
+        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, memPtr, false);
 
-        cpuXC->setStatus(ThreadContext::Suspended);
-        tc = cpuXC->getTC();
+        thread->setStatus(ThreadContext::Suspended);
+        tc = thread->getTC();
         threadContexts.push_back(tc);
-        delete cpuXC->kernelStats;
-        cpuXC->kernelStats = NULL;
+        delete thread->kernelStats;
+        thread->kernelStats = NULL;
     }
 }
 #endif
@@ -150,7 +150,7 @@ CheckerCPU::serialize(ostream &os)
     BaseCPU::serialize(os);
     SERIALIZE_SCALAR(inst);
     nameOut(os, csprintf("%s.xc", name()));
-    cpuXC->serialize(os);
+    thread->serialize(os);
     cacheCompletionEvent.serialize(os);
 */
 }
@@ -161,7 +161,7 @@ CheckerCPU::unserialize(Checkpoint *cp, const string &section)
 /*
     BaseCPU::unserialize(cp, section);
     UNSERIALIZE_SCALAR(inst);
-    cpuXC->unserialize(cp, csprintf("%s.xc", section));
+    thread->unserialize(cp, csprintf("%s.xc", section));
 */
 }
 
@@ -184,7 +184,7 @@ CheckerCPU::read(Addr addr, T &data, unsigned flags)
     // need to fill in CPU & thread IDs here
     memReq = new Request();
 
-    memReq->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
+    memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
     translateDataReadReq(memReq);
@@ -254,10 +254,10 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // need to fill in CPU & thread IDs here
     memReq = new Request();
 
-    memReq->setVirt(0, addr, sizeof(T), flags, cpuXC->readPC());
+    memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    cpuXC->translateDataWriteReq(memReq);
+    thread->translateDataWriteReq(memReq);
 
     // Can compare the write data and result only if it's cacheable,
     // not a store conditional, or is a store conditional that
@@ -356,9 +356,9 @@ bool
 CheckerCPU::translateInstReq(Request *req)
 {
 #if FULL_SYSTEM
-    return (cpuXC->translateInstReq(req) == NoFault);
+    return (thread->translateInstReq(req) == NoFault);
 #else
-    cpuXC->translateInstReq(req);
+    thread->translateInstReq(req);
     return true;
 #endif
 }
@@ -366,7 +366,7 @@ CheckerCPU::translateInstReq(Request *req)
 void
 CheckerCPU::translateDataReadReq(Request *req)
 {
-    cpuXC->translateDataReadReq(req);
+    thread->translateDataReadReq(req);
 
     if (req->getVaddr() != unverifiedReq->getVaddr()) {
         warn("%lli: Request virtual addresses do not match! Inst: %#x, "
@@ -386,7 +386,7 @@ CheckerCPU::translateDataReadReq(Request *req)
 void
 CheckerCPU::translateDataWriteReq(Request *req)
 {
-    cpuXC->translateDataWriteReq(req);
+    thread->translateDataWriteReq(req);
 
     if (req->getVaddr() != unverifiedReq->getVaddr()) {
         warn("%lli: Request virtual addresses do not match! Inst: %#x, "
@@ -475,9 +475,9 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         Fault fault = NoFault;
 
         // maintain $r0 semantics
-        cpuXC->setIntReg(ZeroReg, 0);
+        thread->setIntReg(ZeroReg, 0);
 #ifdef TARGET_ALPHA
-        cpuXC->setFloatRegDouble(ZeroReg, 0.0);
+        thread->setFloatRegDouble(ZeroReg, 0.0);
 #endif // TARGET_ALPHA
 
         // Check if any recent PC changes match up with anything we
@@ -485,14 +485,14 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         // PC-based events have occurred in both the checker and CPU.
         if (changedPC) {
             DPRINTF(Checker, "Changed PC recently to %#x\n",
-                    cpuXC->readPC());
+                    thread->readPC());
             if (willChangePC) {
-                if (newPC == cpuXC->readPC()) {
+                if (newPC == thread->readPC()) {
                     DPRINTF(Checker, "Changed PC matches expected PC\n");
                 } else {
                     warn("%lli: Changed PC does not match expected PC, "
                          "changed: %#x, expected: %#x",
-                         curTick, cpuXC->readPC(), newPC);
+                         curTick, thread->readPC(), newPC);
                     handleError();
                 }
                 willChangePC = false;
@@ -501,7 +501,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         }
         if (changedNextPC) {
             DPRINTF(Checker, "Changed NextPC recently to %#x\n",
-                    cpuXC->readNextPC());
+                    thread->readNextPC());
             changedNextPC = false;
         }
 
@@ -513,13 +513,13 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 #define IFETCH_FLAGS(pc)	0
 #endif
 
-        uint64_t fetch_PC = cpuXC->readPC() & ~3;
+        uint64_t fetch_PC = thread->readPC() & ~3;
 
         // set up memory request for instruction fetch
         memReq = new Request(inst->threadNumber, fetch_PC,
                              sizeof(uint32_t),
-                             IFETCH_FLAGS(cpuXC->readPC()),
-                             fetch_PC, cpuXC->readCpuId(), inst->threadNumber);
+                             IFETCH_FLAGS(thread->readPC()),
+                             fetch_PC, thread->readCpuId(), inst->threadNumber);
 
         bool succeeded = translateInstReq(memReq);
 
@@ -531,12 +531,12 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                 // translate this instruction; in the SMT case it's
                 // possible that its ITB entry was kicked out.
                 warn("%lli: Instruction PC %#x was not found in the ITB!",
-                     curTick, cpuXC->readPC());
+                     curTick, thread->readPC());
                 handleError();
 
                 // go to the next instruction
-                cpuXC->setPC(cpuXC->readNextPC());
-                cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
+                thread->setPC(thread->readNextPC());
+                thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 
                 return;
             } else {
@@ -567,10 +567,10 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
             validateInst(inst);
 
             curStaticInst = StaticInst::decode(makeExtMI(machInst,
-                                                         cpuXC->readPC()));
+                                                         thread->readPC()));
 
 #if FULL_SYSTEM
-            cpuXC->setInst(machInst);
+            thread->setInst(machInst);
 #endif // FULL_SYSTEM
 
             fault = inst->getFault();
@@ -585,7 +585,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         // that the instruction is properly marked as a fault.
         if (fault == NoFault) {
 
-            cpuXC->func_exe_inst++;
+            thread->funcExeInst++;
 
             fault = curStaticInst->execute(this, NULL);
 
@@ -601,21 +601,21 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 #if FULL_SYSTEM
             fault->invoke(xcProxy);
             willChangePC = true;
-            newPC = cpuXC->readPC();
+            newPC = thread->readPC();
             DPRINTF(Checker, "Fault, PC is now %#x\n", newPC);
 #else // !FULL_SYSTEM
-            fatal("fault (%d) detected @ PC 0x%08p", fault, cpuXC->readPC());
+            fatal("fault (%d) detected @ PC 0x%08p", fault, thread->readPC());
 #endif // FULL_SYSTEM
         } else {
 #if THE_ISA != MIPS_ISA
             // go to the next instruction
-            cpuXC->setPC(cpuXC->readNextPC());
-            cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
+            thread->setPC(thread->readNextPC());
+            thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 #else
             // go to the next instruction
-            cpuXC->setPC(cpuXC->readNextPC());
-            cpuXC->setNextPC(cpuXC->readNextNPC());
-            cpuXC->setNextNPC(cpuXC->readNextNPC() + sizeof(MachInst));
+            thread->setPC(thread->readNextPC());
+            thread->setNextPC(thread->readNextNPC());
+            thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
 #endif
 
         }
@@ -627,13 +627,13 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         Addr oldpc;
         int count = 0;
         do {
-            oldpc = cpuXC->readPC();
+            oldpc = thread->readPC();
             system->pcEventQueue.service(xcProxy);
             count++;
-        } while (oldpc != cpuXC->readPC());
+        } while (oldpc != thread->readPC());
         if (count > 1) {
             willChangePC = true;
-            newPC = cpuXC->readPC();
+            newPC = thread->readPC();
             DPRINTF(Checker, "PC Event, PC is now %#x\n", newPC);
         }
 #endif
@@ -677,9 +677,9 @@ template <class DynInstPtr>
 void
 Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
 {
-    if (inst->readPC() != cpuXC->readPC()) {
+    if (inst->readPC() != thread->readPC()) {
         warn("%lli: PCs do not match! Inst: %#x, checker: %#x",
-             curTick, inst->readPC(), cpuXC->readPC());
+             curTick, inst->readPC(), thread->readPC());
         if (changedPC) {
             warn("%lli: Changed PCs recently, may not be an error",
                  curTick);
@@ -710,11 +710,11 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
             // instruction and write it to the register.
             RegIndex idx = inst->destRegIdx(0);
             if (idx < TheISA::FP_Base_DepTag) {
-                cpuXC->setIntReg(idx, inst->readIntResult());
+                thread->setIntReg(idx, inst->readIntResult());
             } else if (idx < TheISA::Fpcr_DepTag) {
-                cpuXC->setFloatRegBits(idx, inst->readIntResult());
+                thread->setFloatRegBits(idx, inst->readIntResult());
             } else {
-                cpuXC->setMiscReg(idx, inst->readIntResult());
+                thread->setMiscReg(idx, inst->readIntResult());
             }
         } else if (result.integer != inst->readIntResult()) {
             warn("%lli: Instruction results do not match! (Values may not "
@@ -724,10 +724,10 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
         }
     }
 
-    if (inst->readNextPC() != cpuXC->readNextPC()) {
+    if (inst->readNextPC() != thread->readNextPC()) {
         warn("%lli: Instruction next PCs do not match! Inst: %#x, "
              "checker: %#x",
-             curTick, inst->readNextPC(), cpuXC->readNextPC());
+             curTick, inst->readNextPC(), thread->readNextPC());
         handleError();
     }
 
@@ -741,12 +741,12 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
         miscRegIdxs.pop();
 
         if (inst->tcBase()->readMiscReg(misc_reg_idx) !=
-            cpuXC->readMiscReg(misc_reg_idx)) {
+            thread->readMiscReg(misc_reg_idx)) {
             warn("%lli: Misc reg idx %i (side effect) does not match! "
                  "Inst: %#x, checker: %#x",
                  curTick, misc_reg_idx,
                  inst->tcBase()->readMiscReg(misc_reg_idx),
-                 cpuXC->readMiscReg(misc_reg_idx));
+                 thread->readMiscReg(misc_reg_idx));
             handleError();
         }
     }
