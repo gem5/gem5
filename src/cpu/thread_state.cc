@@ -45,16 +45,6 @@ ThreadState::ThreadState(int _cpuId, int _tid, MemObject *mem,
       funcExeInst(0), storeCondFailures(0)
 #endif
 {
-#if !FULL_SYSTEM
-        /* Use this port to for syscall emulation writes to memory. */
-        Port *mem_port;
-        port = new TranslatingPort(csprintf("%d-funcport",
-                                            tid),
-                                   process->pTable, false);
-        mem_port = mem->getPort("functional");
-        mem_port->setPeer(port);
-        port->setPeer(mem_port);
-#endif
 }
 
 #if FULL_SYSTEM
