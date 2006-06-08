@@ -314,9 +314,10 @@ SimpleThread::getVirtPort(ThreadContext *src_tc)
 void
 SimpleThread::delVirtPort(VirtualPort *vp)
 {
-//    assert(!vp->nullThreadContext());
-    delete vp->getPeer();
-    delete vp;
+    if (vp != virtPort) {
+        delete vp->getPeer();
+        delete vp;
+    }
 }
 
 

@@ -249,6 +249,14 @@ class FunctionalPort : public Port
     virtual void recvFunctional(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvStatusChange(Status status) {}
 
+    /** a write function that also does an endian conversion. */
+    template <typename T>
+    inline void writeHtoG(Addr addr, T d);
+
+    /** a read function that also does an endian conversion. */
+    template <typename T>
+    inline T readGtoH(Addr addr);
+
     template <typename T>
     inline void write(Addr addr, T d)
     {

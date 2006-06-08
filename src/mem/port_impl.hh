@@ -28,52 +28,26 @@
  * Authors: Ali Saidi
  */
 
-/**
- * @file
- * Virtual Port Object Decleration. These ports incorporate some translation
- * into their access methods. Thus you can use one to read and write data
- * to/from virtual addresses.
- */
+#include "arch/isa_specific.hh"
+#include "arch/isa_traits.hh"
+#include "mem/port.hh"
+#include "sim/byteswap.hh"
 
-#ifndef __MEM_VPORT_HH__
-#define __MEM_VPORT_HH__
-
-#include "mem/port_impl.hh"
-#include "config/full_system.hh"
-#include "arch/vtophys.hh"
-
-
-/** A class that translates a virtual address to a physical address and then
- * calls the above read/write functions. If a thread context is provided the
- * address can alway be translated, If not it can only be translated if it is a
- * simple address masking operation (such as alpha super page accesses).
- */
-
-class VirtualPort  : public FunctionalPort
+template <typename T>
+void
+FunctionalPort::writeHtoG(Addr addr, T d)
 {
-  private:
-    ThreadContext *tc;
+    d = TheISA::htog(d);
+    writeBlob(addr, (uint8_t*)&d, sizeof(T));
+}
 
-  public:
-    VirtualPort(const std::string &_name, ThreadContext *_tc = NULL)
-        : FunctionalPort(_name), tc(_tc)
-    {}
 
-    /** Return true if we have an thread context. This is used to
-     * prevent someone from accidently deleting the cpus statically
-     * allocated vport.
-     * @return true if a thread context isn't valid
-     */
-    bool nullThreadContext() { return tc != NULL; }
-
-    /** Version of readblob that translates virt->phys and deals
-      * with page boundries. */
-    virtual void readBlob(Addr addr, uint8_t *p, int size);
-
-    /** Version of writeBlob that translates virt->phys and deals
-      * with page boundries. */
-    virtual void writeBlob(Addr addr, uint8_t *p, int size);
-};
-
-#endif //__MEM_VPORT_HH__
+template <typename T>
+T
+FunctionalPort::readGtoH(Addr addr)
+{
+    T d;
+    readBlob(addr, (uint8_t*)&d, sizeof(T));
+    return TheISA::gtoh(d);
+}
 
