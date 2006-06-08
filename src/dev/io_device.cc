@@ -120,19 +120,32 @@ DmaPort::DmaPort(DmaDevice *dev, Platform *p)
 bool
 DmaPort::recvTiming(Packet *pkt)
 {
-    if (pkt->senderState) {
+
+
+    if (pkt->result == Packet::Nacked) {
+        DPRINTF(DMA, "Received nacked Pkt %#x with State: %#x Addr: %#x\n",
+               pkt, pkt->senderState, pkt->getAddr());
+        pkt->reinitNacked();
+        sendDma(pkt, true);
+    } else if (pkt->senderState) {
         DmaReqState *state;
-        DPRINTF(DMA, "Received response Packet %#x with senderState: %#x\n",
-               pkt, pkt->senderState);
+        DPRINTF(DMA, "Received response Pkt %#x with State: %#x Addr: %#x\n",
+               pkt, pkt->senderState, pkt->getAddr());
         state = dynamic_cast<DmaReqState*>(pkt->senderState);
+        pendingCount--;
+
+        assert(pendingCount >= 0);
         assert(state);
-        state->completionEvent->process();
+
+        state->numBytes += pkt->req->getSize();
+        if (state->totBytes == state->numBytes) {
+            state->completionEvent->process();
+            delete state;
+        }
         delete pkt->req;
         delete pkt;
     }  else {
-        DPRINTF(DMA, "Received response Packet %#x with no senderState\n", pkt);
-        delete pkt->req;
-        delete pkt;
+        panic("Got packet without sender state... huh?\n");
     }
 
     return true;
@@ -154,8 +167,6 @@ DmaPort::recvRetry()
         if (result) {
             DPRINTF(DMA, "-- Done\n");
             transmitList.pop_front();
-            pendingCount--;
-            assert(pendingCount >= 0);
         } else {
             DPRINTF(DMA, "-- Failed, queued\n");
         }
@@ -169,7 +180,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 {
     assert(event);
 
-    int prevSize = 0;
+    DmaReqState *reqState = new DmaReqState(event, this, size);
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
@@ -178,15 +189,10 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
             // Increment the data pointer on a write
             if (data)
-                pkt->dataStatic(data + prevSize);
+                pkt->dataStatic(data + gen.complete());
 
-            prevSize += gen.size();
+            pkt->senderState = reqState;
 
-            // Set the last bit of the dma as the final packet for this dma
-            // and set it's completion event.
-            if (prevSize == size) {
-                pkt->senderState = new DmaReqState(event, true);
-            }
             assert(pendingCount >= 0);
             pendingCount++;
             sendDma(pkt);
@@ -195,7 +201,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
 
 void
-DmaPort::sendDma(Packet *pkt)
+DmaPort::sendDma(Packet *pkt, bool front)
 {
    // some kind of selction between access methods
    // more work is going to have to be done to make
@@ -203,22 +209,25 @@ DmaPort::sendDma(Packet *pkt)
   /* MemState state = device->platform->system->memState;
 
    if (state == Timing) {  */
-       DPRINTF(DMA, "Attempting to send Packet %#x with senderState: %#x\n",
-               pkt, pkt->senderState);
+       DPRINTF(DMA, "Attempting to send Packet %#x with addr: %#x\n",
+               pkt, pkt->getAddr());
        if (transmitList.size() || !sendTiming(pkt)) {
-           transmitList.push_back(pkt);
+           if (front)
+               transmitList.push_front(pkt);
+           else
+               transmitList.push_back(pkt);
            DPRINTF(DMA, "-- Failed: queued\n");
        } else {
            DPRINTF(DMA, "-- Done\n");
-           pendingCount--;
-           assert(pendingCount >= 0);
        }
   /*  } else if (state == Atomic) {
        sendAtomic(pkt);
        if (pkt->senderState) {
            DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
            assert(state);
-           state->completionEvent->schedule(curTick + (pkt->time - pkt->req->getTime()) +1);
+           state->completionEvent->schedule(curTick + (pkt->time -
+           pkt->req->getTime()) +1);
+           delete state;
        }
        pendingCount--;
        assert(pendingCount >= 0);
