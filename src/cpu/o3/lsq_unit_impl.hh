@@ -633,6 +633,14 @@ LSQUnit<Impl>::writebackStores()
                 assert(!storeQueue[storeWBIdx].inst->isStoreConditional());
                 // Non-store conditionals do not need a writeback.
                 state->noWB = true;
+
+                // The store is basically completed at this time. This
+                // only works so long as the checker doesn't try to
+                // verify the value in memory for stores.
+                storeQueue[storeWBIdx].inst->setCompleted();
+                if (cpu->checker) {
+                    cpu->checker->tick(storeQueue[storeWBIdx].inst);
+                }
             }
 
             if (data_pkt->result != Packet::Success) {
