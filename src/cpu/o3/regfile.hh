@@ -96,7 +96,7 @@ class PhysRegFile
         assert(reg_idx < numPhysicalIntRegs);
 
         DPRINTF(IEW, "RegFile: Access to int register %i, has data "
-                "%i\n", int(reg_idx), intRegFile[reg_idx]);
+                "%#x\n", int(reg_idx), intRegFile[reg_idx]);
         return intRegFile[reg_idx];
     }
 
@@ -110,7 +110,7 @@ class PhysRegFile
         FloatReg floatReg = floatRegFile[reg_idx].d;
 
         DPRINTF(IEW, "RegFile: Access to %d byte float register %i, has "
-                "data %8.8d\n", int(reg_idx), (double)floatReg);
+                "data %#x\n", int(reg_idx), floatRegFile[reg_idx].q);
 
         return floatReg;
     }
@@ -126,7 +126,7 @@ class PhysRegFile
         FloatReg floatReg = floatRegFile[reg_idx].d;
 
         DPRINTF(IEW, "RegFile: Access to float register %i, has "
-                "data %8.8d\n", int(reg_idx), (double)floatReg);
+                "data %#x\n", int(reg_idx), floatRegFile[reg_idx].q);
 
         return floatReg;
     }
@@ -141,8 +141,8 @@ class PhysRegFile
 
         FloatRegBits floatRegBits = floatRegFile[reg_idx].q;
 
-        DPRINTF(IEW, "RegFile: Access to %d byte float register %i as int, "
-                "has data %lli\n", int(reg_idx), (uint64_t)floatRegBits);
+        DPRINTF(IEW, "RegFile: Access to float register %i as int, "
+                "has data %#x\n", int(reg_idx), (uint64_t)floatRegBits);
 
         return floatRegBits;
     }
@@ -157,7 +157,7 @@ class PhysRegFile
         FloatRegBits floatRegBits = floatRegFile[reg_idx].q;
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
-                "has data %lli\n", int(reg_idx), (uint64_t)floatRegBits);
+                "has data %#x\n", int(reg_idx), (uint64_t)floatRegBits);
 
         return floatRegBits;
     }
@@ -167,7 +167,7 @@ class PhysRegFile
     {
         assert(reg_idx < numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting int register %i to %lli\n",
+        DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
                 int(reg_idx), val);
 
         if (reg_idx != TheISA::ZeroReg)
@@ -182,11 +182,11 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8d\n",
-                int(reg_idx), (double)val);
+        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
+                int(reg_idx), (uint64_t)val);
 
         if (reg_idx != TheISA::ZeroReg)
-            floatRegFile[reg_idx].d = width;
+            floatRegFile[reg_idx].d = val;
     }
 
     /** Sets a double precision floating point register to the given value. */
@@ -197,8 +197,8 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %8.8d\n",
-                int(reg_idx), (double)val);
+        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
+                int(reg_idx), (uint64_t)val);
 
         if (reg_idx != TheISA::ZeroReg)
             floatRegFile[reg_idx].d = val;
@@ -212,7 +212,7 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
+        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
 
         floatRegFile[reg_idx].q = val;
@@ -225,7 +225,7 @@ class PhysRegFile
 
         assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
 
-        DPRINTF(IEW, "RegFile: Setting float register %i to %lli\n",
+        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
 
         floatRegFile[reg_idx].q = val;
@@ -263,10 +263,10 @@ class PhysRegFile
 
   public:
     /** (signed) integer register file. */
-    std::vector<IntReg> intRegFile;
+    IntReg *intRegFile;
 
     /** Floating point register file. */
-    std::vector<PhysFloatReg> floatRegFile;
+    PhysFloatReg *floatRegFile;
 
     /** Miscellaneous register file. */
     MiscRegFile miscRegs[Impl::MaxThreads];
@@ -296,15 +296,15 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
     : numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs)
 {
-    intRegFile.resize(numPhysicalIntRegs);
-    floatRegFile.resize(numPhysicalFloatRegs);
+    intRegFile = new IntReg[numPhysicalIntRegs];
+    floatRegFile = new PhysFloatReg[numPhysicalFloatRegs];
 
     for (int i = 0; i < Impl::MaxThreads; ++i) {
         miscRegs[i].clear();
     }
 
-    //memset(intRegFile, 0, sizeof(*intRegFile));
-    //memset(floatRegFile, 0, sizeof(*floatRegFile));
+    memset(intRegFile, 0, sizeof(IntReg) * numPhysicalIntRegs);
+    memset(floatRegFile, 0, sizeof(PhysFloatReg) * numPhysicalFloatRegs);
 }
 
 #endif

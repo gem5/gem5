@@ -75,7 +75,7 @@ struct O3ThreadState : public ThreadState {
     bool trapPending;
 
 #if FULL_SYSTEM
-    O3ThreadState(FullCPU *_cpu, int _thread_num, )
+    O3ThreadState(FullCPU *_cpu, int _thread_num)
         : ThreadState(-1, _thread_num),
           inSyscall(0), trapPending(0)
     { }

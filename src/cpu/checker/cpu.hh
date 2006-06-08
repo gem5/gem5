@@ -99,7 +99,6 @@ class CheckerCPU : public BaseCPU
 #if FULL_SYSTEM
         AlphaITB *itb;
         AlphaDTB *dtb;
-        FunctionalMemory *mem;
 #else
         Process *process;
 #endif
@@ -116,11 +115,9 @@ class CheckerCPU : public BaseCPU
 
     MemObject *memPtr;
 
-#if FULL_SYSTEM
     void setSystem(System *system);
 
     System *systemPtr;
-#endif
 
     void setIcachePort(Port *icache_port);
 
@@ -327,7 +324,7 @@ class CheckerCPU : public BaseCPU
     int readIntrFlag() { return thread->readIntrFlag(); }
     void setIntrFlag(int val) { thread->setIntrFlag(val); }
     bool inPalMode() { return thread->inPalMode(); }
-    void ev5_trap(Fault fault) { fault->invoke(xcProxy); }
+    void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else
     // Assume that the normal CPU's call to syscall was successful.

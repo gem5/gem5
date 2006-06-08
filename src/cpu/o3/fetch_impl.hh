@@ -43,8 +43,6 @@
 #include "arch/tlb.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
 
@@ -531,7 +529,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
     // Translate the instruction request.
 //#if FULL_SYSTEM
-    fault = cpu->translateInstReq(mem_req);
+    fault = cpu->translateInstReq(mem_req, cpu->thread[tid]);
 //#else
 //    fault = pTable->translate(memReq[tid]);
 //#endif
@@ -542,7 +540,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // If translation was successful, attempt to read the first
     // instruction.
     if (fault == NoFault) {
-#if FULL_SYSTEM
+#if 0
         if (cpu->system->memctrl->badaddr(memReq[tid]->paddr) ||
             memReq[tid]->flags & UNCACHEABLE) {
             DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "

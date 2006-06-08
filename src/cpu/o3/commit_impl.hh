@@ -907,7 +907,7 @@ DefaultCommit<Impl>::commitInsts()
                                !thread[tid]->trapPending);
                     oldpc = PC[tid];
                     cpu->system->pcEventQueue.service(
-                        thread[tid]->getXCProxy());
+                        thread[tid]->getTC());
                     count++;
                 } while (oldpc != PC[tid]);
                 if (count > 1) {

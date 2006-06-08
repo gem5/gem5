@@ -46,6 +46,7 @@
 #include "arch/isa_traits.hh"
 #include "cpu/quiesce_event.hh"
 #include "kern/kernel_stats.hh"
+#include "sim/system.hh"
 #endif
 
 using namespace TheISA;
@@ -67,7 +68,7 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
 #if FULL_SYSTEM
         // SMT is not supported in FS mode yet.
         assert(this->numThreads == 1);
-        this->thread[i] = new Thread(this, 0, params->mem);
+        this->thread[i] = new Thread(this, 0);
         this->thread[i]->setStatus(ThreadContext::Suspended);
 #else
         if (i < params->workload.size()) {
@@ -128,14 +129,14 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         FunctionalPort *phys_port;
         VirtualPort *virt_port;
         phys_port = new FunctionalPort(csprintf("%s-%d-funcport",
-                                               cpu->name(), tid));
-        mem_port = system->physmem->getPort("functional");
+                                                name(), i));
+        mem_port = this->system->physmem->getPort("functional");
         mem_port->setPeer(phys_port);
         phys_port->setPeer(mem_port);
 
         virt_port = new VirtualPort(csprintf("%s-%d-vport",
-                                            cpu->name(), tid));
-        mem_port = system->physmem->getPort("functional");
+                                             name(), i));
+        mem_port = this->system->physmem->getPort("functional");
         mem_port->setPeer(virt_port);
         virt_port->setPeer(mem_port);
 
@@ -183,6 +184,23 @@ AlphaFullCPU<Impl>::regStats()
 
 #if FULL_SYSTEM
 template <class Impl>
+VirtualPort *
+AlphaFullCPU<Impl>::AlphaTC::getVirtPort(ThreadContext *src_tc)
+{
+    if (!src_tc)
+        return thread->getVirtPort();
+
+    VirtualPort *vp;
+    Port *mem_port;
+
+    vp = new VirtualPort("tc-vport", src_tc);
+    mem_port = cpu->system->physmem->getPort("functional");
+    mem_port->setPeer(vp);
+    vp->setPeer(mem_port);
+    return vp;
+}
+
+template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaTC::dumpFuncProfile()
 {
@@ -195,7 +213,6 @@ void
 AlphaFullCPU<Impl>::AlphaTC::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
-    assert(getMemPort() == old_context->getMemPort());
 #if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
 #else
@@ -231,6 +248,16 @@ AlphaFullCPU<Impl>::AlphaTC::takeOverFrom(ThreadContext *old_context)
     thread->inSyscall = false;
     thread->trapPending = false;
 }
+
+#if FULL_SYSTEM
+template <class Impl>
+void
+AlphaFullCPU<Impl>::AlphaTC::delVirtPort(VirtualPort *vp)
+{
+    delete vp->getPeer();
+    delete vp;
+}
+#endif
 
 template <class Impl>
 void

@@ -207,26 +207,26 @@ class AlphaDynInst : public BaseDynInst<Impl>
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         this->cpu->setFloatReg(_destRegIdx[idx], val, width);
-        BaseDynInst<Impl>::setFloatRegSingle(si, idx, val);
+        BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
     }
 
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
         this->cpu->setFloatReg(_destRegIdx[idx], val);
-        BaseDynInst<Impl>::setFloatRegDouble(si, idx, val);
+        BaseDynInst<Impl>::setFloatReg(si, idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx,
             FloatRegBits val, int width)
     {
         this->cpu->setFloatRegBits(_destRegIdx[idx], val, width);
-        this->instResult.integer = val;
+        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         this->cpu->setFloatRegBits(_destRegIdx[idx], val);
-        BaseDynInst<Impl>::setFloatRegInt(si, idx, val);
+        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
     /** Returns the physical register index of the i'th destination

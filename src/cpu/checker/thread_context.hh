@@ -81,8 +81,6 @@ class CheckerThreadContext : public ThreadContext
 
     int readCpuId() { return actualTC->readCpuId(); }
 
-    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
-
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
@@ -93,7 +91,16 @@ class CheckerThreadContext : public ThreadContext
     AlphaDTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
     Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
+
+    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
+
+    VirtualPort *getVirtPort(ThreadContext *tc = NULL)
+    { return actualTC->getVirtPort(); }
+
+    void delVirtPort(VirtualPort *vp) { actualTC->delVirtPort(vp); }
 #else
+    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
+
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
 

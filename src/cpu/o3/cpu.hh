@@ -474,8 +474,6 @@ class FullO3CPU : public BaseFullCPU
     /** Pointer to the system. */
     System *system;
 
-    /** Pointer to the memory controller. */
-    MemoryController *memCtrl;
     /** Pointer to physical memory. */
     PhysicalMemory *physmem;
 #endif

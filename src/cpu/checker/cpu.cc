@@ -81,7 +81,6 @@ CheckerCPU::CheckerCPU(Params *p)
     itb = p->itb;
     dtb = p->dtb;
     systemPtr = NULL;
-    memPtr = NULL;
 #else
     process = p->process;
 #endif
@@ -94,44 +93,32 @@ CheckerCPU::~CheckerCPU()
 void
 CheckerCPU::setMemory(MemObject *mem)
 {
-    memPtr = mem;
 #if !FULL_SYSTEM
+    memPtr = mem;
     thread = new SimpleThread(this, /* thread_num */ 0, process,
                               /* asid */ 0, mem);
 
     thread->setStatus(ThreadContext::Suspended);
     tc = thread->getTC();
     threadContexts.push_back(tc);
-#else
-    if (systemPtr) {
-        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, memPtr, false);
-
-        thread->setStatus(ThreadContext::Suspended);
-        tc = thread->getTC();
-        threadContexts.push_back(tc);
-        delete thread->kernelStats;
-        thread->kernelStats = NULL;
-    }
 #endif
 }
 
-#if FULL_SYSTEM
 void
 CheckerCPU::setSystem(System *system)
 {
+#if FULL_SYSTEM
     systemPtr = system;
 
-    if (memPtr) {
-        thread = new SimpleThread(this, 0, systemPtr, itb, dtb, memPtr, false);
+    thread = new SimpleThread(this, 0, systemPtr, itb, dtb, false);
 
-        thread->setStatus(ThreadContext::Suspended);
-        tc = thread->getTC();
-        threadContexts.push_back(tc);
-        delete thread->kernelStats;
-        thread->kernelStats = NULL;
-    }
-}
+    thread->setStatus(ThreadContext::Suspended);
+    tc = thread->getTC();
+    threadContexts.push_back(tc);
+    delete thread->kernelStats;
+    thread->kernelStats = NULL;
 #endif
+}
 
 void
 CheckerCPU::setIcachePort(Port *icache_port)
@@ -350,7 +337,7 @@ CheckerCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 Addr
 CheckerCPU::dbg_vtophys(Addr addr)
 {
-    return vtophys(xcProxy, addr);
+    return vtophys(tc, addr);
 }
 #endif // FULL_SYSTEM
 
@@ -601,7 +588,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 
         if (fault != NoFault) {
 #if FULL_SYSTEM
-            fault->invoke(xcProxy);
+            fault->invoke(tc);
             willChangePC = true;
             newPC = thread->readPC();
             DPRINTF(Checker, "Fault, PC is now %#x\n", newPC);
@@ -630,7 +617,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
         int count = 0;
         do {
             oldpc = thread->readPC();
-            system->pcEventQueue.service(xcProxy);
+            system->pcEventQueue.service(tc);
             count++;
         } while (oldpc != thread->readPC());
         if (count > 1) {

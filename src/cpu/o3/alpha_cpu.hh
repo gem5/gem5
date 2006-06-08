@@ -77,6 +77,11 @@ class AlphaFullCPU : public FullO3CPU<Impl>
      * external objects try to update state through this interface,
      * the CPU will create an event to squash all in-flight
      * instructions in order to ensure state is maintained correctly.
+     * It must be defined specifically for the AlphaFullCPU because
+     * not all architectural state is located within the O3ThreadState
+     * (such as the commit PC, and registers), and specific actions
+     * must be taken when using this interface (such as squashing all
+     * in-flight instructions when doing a write to this interface).
      */
     class AlphaTC : public ThreadContext
     {
@@ -96,8 +101,6 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         /** Reads this CPU's ID. */
         virtual int readCpuId() { return cpu->cpu_id; }
 
-        virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
-
 #if FULL_SYSTEM
         /** Returns a pointer to the system. */
         virtual System *getSystemPtr() { return cpu->system; }
@@ -114,7 +117,15 @@ class AlphaFullCPU : public FullO3CPU<Impl>
         /** Returns a pointer to this thread's kernel statistics. */
         virtual Kernel::Statistics *getKernelStats()
         { return thread->kernelStats; }
+
+        virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+
+        virtual VirtualPort *getVirtPort(ThreadContext *src_tc = NULL);
+
+        void delVirtPort(VirtualPort *vp);
 #else
+        virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
+
         /** Returns a pointer to this thread's process. */
         virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
@@ -301,43 +312,40 @@ class AlphaFullCPU : public FullO3CPU<Impl>
 
 #if FULL_SYSTEM
     /** Translates instruction requestion. */
-    Fault translateInstReq(RequestPtr &req)
+    Fault translateInstReq(RequestPtr &req, Thread *thread)
     {
-        return itb->translate(req);
+        return itb->translate(req, thread->getTC());
     }
 
     /** Translates data read request. */
-    Fault translateDataReadReq(RequestPtr &req)
+    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
     {
-        return dtb->translate(req, false);
+        return dtb->translate(req, thread->getTC(), false);
     }
 
     /** Translates data write request. */
-    Fault translateDataWriteReq(RequestPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
     {
-        return dtb->translate(req, true);
+        return dtb->translate(req, thread->getTC(), true);
     }
 
 #else
     /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req)
+    Fault translateInstReq(RequestPtr &req, Thread *thread)
     {
-        int tid = req->getThreadNum();
-        return this->thread[tid]->getProcessPtr()->pTable->translate(req);
+        return thread->getProcessPtr()->pTable->translate(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req)
+    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
     {
-        int tid = req->getThreadNum();
-        return this->thread[tid]->getProcessPtr()->pTable->translate(req);
+        return thread->getProcessPtr()->pTable->translate(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req)
+    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
     {
-        int tid = req->getThreadNum();
-        return this->thread[tid]->getProcessPtr()->pTable->translate(req);
+        return thread->getProcessPtr()->pTable->translate(req);
     }
 
 #endif

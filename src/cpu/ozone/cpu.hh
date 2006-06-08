@@ -113,8 +113,6 @@ class OzoneCPU : public BaseCPU
 
         int readCpuId() { return thread->cpuId; }
 
-        TranslatingPort *getMemPort() { return /*thread->port*/NULL; }
-
 #if FULL_SYSTEM
         System *getSystemPtr() { return cpu->system; }
 
@@ -125,7 +123,17 @@ class OzoneCPU : public BaseCPU
         AlphaDTB * getDTBPtr() { return cpu->dtb; }
 
         Kernel::Statistics *getKernelStats() { return thread->kernelStats; }
+
+        FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+
+        VirtualPort *getVirtPort(ThreadContext *tc = NULL)
+        { return thread->getVirtPort(tc); }
+
+        void delVirtPort(VirtualPort *vp)
+        { thread->delVirtPort(vp); }
 #else
+        TranslatingPort *getMemPort() { return thread->port; }
+
         Process *getProcessPtr() { return thread->process; }
 #endif
 
@@ -363,22 +371,8 @@ class OzoneCPU : public BaseCPU
     AlphaITB *itb;
     AlphaDTB *dtb;
     System *system;
-
-    // the following two fields are redundant, since we can always
-    // look them up through the system pointer, but we'll leave them
-    // here for now for convenience
-    MemoryController *memctrl;
     PhysicalMemory *physmem;
 #endif
-
-    // L1 instruction cache
-//    MemInterface *icacheInterface;
-
-    // L1 data cache
-//    MemInterface *dcacheInterface;
-
-    /** Pointer to memory. */
-    FunctionalMemory *mem;
 
     FrontEnd *frontEnd;
 
@@ -424,19 +418,19 @@ class OzoneCPU : public BaseCPU
     bool validInstAddr(Addr addr) { return true; }
     bool validDataAddr(Addr addr) { return true; }
 
-    Fault translateInstReq(MemReqPtr &req)
+    Fault translateInstReq(Request *req)
     {
-        return itb->translate(req);
+        return itb->translate(req, tc);
     }
 
-    Fault translateDataReadReq(MemReqPtr &req)
+    Fault translateDataReadReq(Request *req)
     {
-        return dtb->translate(req, false);
+        return dtb->translate(req, tc, false);
     }
 
-    Fault translateDataWriteReq(MemReqPtr &req)
+    Fault translateDataWriteReq(Request *req)
     {
-        return dtb->translate(req, true);
+        return dtb->translate(req, tc, true);
     }
 
 #else

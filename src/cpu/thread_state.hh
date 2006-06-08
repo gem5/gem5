@@ -88,7 +88,11 @@ struct ThreadState {
 
     Kernel::Statistics *getKernelStats() { return kernelStats; }
 
+    FunctionalPort *getPhysPort() { return physPort; }
+
     void setPhysPort(FunctionalPort *port) { physPort = port; }
+
+    VirtualPort *getVirtPort(ThreadContext *tc = NULL) { return virtPort; }
 
     void setVirtPort(VirtualPort *port) { virtPort = port; }
 #else
@@ -149,6 +153,7 @@ struct ThreadState {
     // Index of hardware thread context on the CPU that this represents.
     int tid;
 
+  public:
     /** Last time activate was called on this thread. */
     Tick lastActivate;
 
@@ -187,6 +192,7 @@ struct ThreadState {
      */
     TheISA::MachInst inst;
 
+  public:
     /**
      * Temporary storage to pass the source address from copy_load to
      * copy_store.
@@ -199,7 +205,6 @@ struct ThreadState {
      */
     Addr copySrcPhysAddr;
 
-  public:
     /*
      * number of executed instructions, for matching with syscall trace
      * points in EIO files.

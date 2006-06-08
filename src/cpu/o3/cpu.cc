@@ -122,7 +122,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
 #if FULL_SYSTEM
       system(params->system),
-      memCtrl(system->memctrl),
       physmem(system->physmem),
 #endif // FULL_SYSTEM
       mem(params->mem),
