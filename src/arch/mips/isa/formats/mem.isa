@@ -31,7 +31,7 @@
 
 ////////////////////////////////////////////////////////////////////
 //
-// Memory-format instructions: LoadAddress, Load, Store
+// Memory-format instructions
 //
 
 output header {{
