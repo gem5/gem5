@@ -1240,11 +1240,11 @@ template <class Impl>
 int
 InstructionQueue<Impl>::countInsts()
 {
+#if 0
     //ksewell:This works but definitely could use a cleaner write
     //with a more intuitive way of counting. Right now it's
     //just brute force ....
-
-#if 0
+    // Change the #if if you want to use this method.
     int total_insts = 0;
 
     for (int i = 0; i < numThreads; ++i) {

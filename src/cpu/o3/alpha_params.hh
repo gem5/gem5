@@ -58,9 +58,6 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     Process *process;
 #endif // FULL_SYSTEM
 
-    //Page Table
-//    PageTable *pTable;
-
     MemObject *mem;
 
     BaseCPU *checker;

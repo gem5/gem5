@@ -66,7 +66,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
     DynInstPtr inst = state->inst;
     DPRINTF(IEW, "Writeback event [sn:%lli]\n", inst->seqNum);
-//    DPRINTF(Activity, "Activity: Ld Writeback event [sn:%lli]\n", inst->seqNum);
+    DPRINTF(Activity, "Activity: Writeback event [sn:%lli]\n", inst->seqNum);
 
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
@@ -208,16 +208,6 @@ LSQUnit<Impl>::clearSQ()
 {
     storeQueue.clear();
 }
-
-#if 0
-template<class Impl>
-void
-LSQUnit<Impl>::setPageTable(PageTable *pt_ptr)
-{
-    DPRINTF(LSQUnit, "Setting the page table pointer.\n");
-    pTable = pt_ptr;
-}
-#endif
 
 template<class Impl>
 void
@@ -628,8 +618,8 @@ LSQUnit<Impl>::writebackStores()
             // Need to handle becoming blocked on a store.
             isStoreBlocked = true;
 
-            assert(sendingPkt == NULL);
-            sendingPkt = data_pkt;
+            assert(retryPkt == NULL);
+            retryPkt = data_pkt;
         } else {
             storePostSend(data_pkt);
         }
@@ -858,11 +848,11 @@ template <class Impl>
 void
 LSQUnit<Impl>::recvRetry()
 {
-    assert(sendingPkt != NULL);
-
     if (isStoreBlocked) {
-        if (dcachePort->sendTiming(sendingPkt)) {
-            storePostSend(sendingPkt);
+        assert(retryPkt != NULL);
+
+        if (dcachePort->sendTiming(retryPkt)) {
+            storePostSend(retryPkt);
             sendingPkt = NULL;
             isStoreBlocked = false;
         } else {

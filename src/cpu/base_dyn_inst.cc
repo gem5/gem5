@@ -137,8 +137,7 @@ BaseDynInst<Impl>::initVars()
     // Also make this a parameter, or perhaps get it from xc or cpu.
     asid = 0;
 
-    // Initialize the fault to be unimplemented opcode.
-//    fault = new UnimplementedOpcodeFault;
+    // Initialize the fault to be NoFault.
     fault = NoFault;
 
     ++instcount;
@@ -345,67 +344,6 @@ BaseDynInst<Impl>::dump(std::string &outstring)
 
     outstring = s.str();
 }
-
-#if 0
-template <class Impl>
-Fault
-BaseDynInst<Impl>::mem_access(mem_cmd cmd, Addr addr, void *p, int nbytes)
-{
-    Fault fault;
-
-    // check alignments, even speculative this test should always pass
-    if ((nbytes & nbytes - 1) != 0 || (addr & nbytes - 1) != 0) {
-        for (int i = 0; i < nbytes; i++)
-            ((char *) p)[i] = 0;
-
-        // I added the following because according to the comment above,
-        // we should never get here.  The comment lies
-#if 0
-        panic("unaligned access. Cycle = %n", curTick);
-#endif
-        return NoFault;
-    }
-
-    MemReqPtr req = new MemReq(addr, thread, nbytes);
-    switch(cmd) {
-      case Read:
-        fault = spec_mem->read(req, (uint8_t *)p);
-        break;
-
-      case Write:
-        fault = spec_mem->write(req, (uint8_t *)p);
-        if (fault != NoFault)
-            break;
-
-        specMemWrite = true;
-        storeSize = nbytes;
-        switch(nbytes) {
-          case sizeof(uint8_t):
-            *(uint8_t)&storeData = (uint8_t *)p;
-            break;
-          case sizeof(uint16_t):
-            *(uint16_t)&storeData = (uint16_t *)p;
-            break;
-          case sizeof(uint32_t):
-            *(uint32_t)&storeData = (uint32_t *)p;
-            break;
-          case sizeof(uint64_t):
-            *(uint64_t)&storeData = (uint64_t *)p;
-            break;
-        }
-        break;
-
-      default:
-        fault = genMachineCheckFault();
-        break;
-    }
-
-    trace_mem(fault, cmd, addr, p, nbytes);
-
-    return fault;
-}
-
-#endif
 
 template <class Impl>
 void

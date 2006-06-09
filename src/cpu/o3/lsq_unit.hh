@@ -42,9 +42,6 @@
 #include "cpu/inst_seq.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
-//#include "mem/page_table.hh"
-//#include "sim/debug.hh"
-//#include "sim/sim_object.hh"
 
 /**
  * Class that implements the actual LQ and SQ for each specific
@@ -86,9 +83,6 @@ class LSQUnit {
     /** Sets the IEW stage pointer. */
     void setIEW(IEW *iew_ptr)
     { iewStage = iew_ptr; }
-
-    /** Sets the page table pointer. */
-//    void setPageTable(PageTable *pt_ptr);
 
     /** Switches out LSQ unit. */
     void switchOut();
@@ -211,8 +205,10 @@ class LSQUnit {
                         !isStoreBlocked; }
 
   private:
+    /** Writes back the instruction, sending it to IEW. */
     void writeback(DynInstPtr &inst, PacketPtr pkt);
 
+    /** Handles completing the send of a store to memory. */
     void storePostSend(Packet *pkt);
 
     /** Completes the store at the specified index. */
@@ -241,55 +237,75 @@ class LSQUnit {
     /** Pointer to the IEW stage. */
     IEW *iewStage;
 
+    /** Pointer to memory object. */
     MemObject *mem;
 
+    /** DcachePort class for this LSQ Unit.  Handles doing the
+     * communication with the cache/memory.
+     * @todo: Needs to be moved to the LSQ level and have some sort
+     * of arbitration.
+     */
     class DcachePort : public Port
     {
       protected:
+        /** Pointer to CPU. */
         FullCPU *cpu;
+        /** Pointer to LSQ. */
         LSQUnit *lsq;
 
       public:
+        /** Default constructor. */
         DcachePort(FullCPU *_cpu, LSQUnit *_lsq)
             : Port(_lsq->name() + "-dport"), cpu(_cpu), lsq(_lsq)
         { }
 
       protected:
+        /** Atomic version of receive.  Panics. */
         virtual Tick recvAtomic(PacketPtr pkt);
 
+        /** Functional version of receive.  Panics. */
         virtual void recvFunctional(PacketPtr pkt);
 
+        /** Receives status change.  Other than range changing, panics. */
         virtual void recvStatusChange(Status status);
 
+        /** Returns the address ranges of this device. */
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop)
         { resp.clear(); snoop.clear(); }
 
+        /** Timing version of receive.  Handles writing back and
+         * completing the load or store that has returned from
+         * memory. */
         virtual bool recvTiming(PacketPtr pkt);
 
+        /** Handles doing a retry of the previous send. */
         virtual void recvRetry();
     };
 
     /** Pointer to the D-cache. */
     DcachePort *dcachePort;
 
+    /** Derived class to hold any sender state the LSQ needs. */
     class LSQSenderState : public Packet::SenderState
     {
       public:
+        /** Default constructor. */
         LSQSenderState()
             : noWB(false)
         { }
 
-//      protected:
+        /** Instruction who initiated the access to memory. */
         DynInstPtr inst;
+        /** Whether or not it is a load. */
         bool isLoad;
+        /** The LQ/SQ index of the instruction. */
         int idx;
+        /** Whether or not the instruction will need to writeback. */
         bool noWB;
     };
 
-    /** Pointer to the page table. */
-//    PageTable *pTable;
-
+    /** Writeback event, specifically for when stores forward data to loads. */
     class WritebackEvent : public Event {
       public:
         /** Constructs a writeback event. */
@@ -302,8 +318,10 @@ class LSQUnit {
         const char *description();
 
       private:
+        /** Instruction whose results are being written back. */
         DynInstPtr inst;
 
+        /** The packet that would have been sent to memory. */
         PacketPtr pkt;
 
         /** The pointer to the LSQ unit that issued the store. */
@@ -404,8 +422,10 @@ class LSQUnit {
     /** The index of the above store. */
     int stallingLoadIdx;
 
-    PacketPtr sendingPkt;
+    /** The packet that needs to be retried. */
+    PacketPtr retryPkt;
 
+    /** Whehter or not a store is blocked due to the memory system. */
     bool isStoreBlocked;
 
     /** Whether or not a load is blocked due to the memory system. */

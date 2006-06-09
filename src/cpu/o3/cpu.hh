@@ -490,11 +490,6 @@ class FullO3CPU : public BaseFullCPU
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
 
-#if 0
-    /** Page table pointer. */
-    PageTable *pTable;
-#endif
-
     /** Pointer to the icache interface. */
     MemInterface *icacheInterface;
     /** Pointer to the dcache interface. */

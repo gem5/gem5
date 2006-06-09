@@ -322,18 +322,6 @@ DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
     toDecode = fetchQueue->getWire(0);
 }
 
-#if 0
-template<class Impl>
-void
-DefaultFetch<Impl>::setPageTable(PageTable *pt_ptr)
-{
-    DPRINTF(Fetch, "Setting the page table pointer.\n");
-#if !FULL_SYSTEM
-    pTable = pt_ptr;
-#endif
-}
-#endif
-
 template<class Impl>
 void
 DefaultFetch<Impl>::initStage()
@@ -380,8 +368,6 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     } else {
         fetchStatus[tid] = IcacheAccessComplete;
     }
-
-//    memcpy(cacheData[tid], memReq[tid]->data, memReq[tid]->size);
 
     // Reset the mem req to NULL.
     delete pkt->req;
@@ -594,8 +580,6 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
     if (fetchStatus[tid] == IcacheWaitResponse) {
         DPRINTF(Fetch, "[tid:%i]: Squashing outstanding Icache miss.\n",
                 tid);
-        // Should I delete this here or when it comes back from the cache?
-//        delete memReq[tid];
         memReq[tid] = NULL;
     }
 

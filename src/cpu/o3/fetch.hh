@@ -69,29 +69,41 @@ class DefaultFetch
     typedef TheISA::MachInst MachInst;
     typedef TheISA::ExtMachInst ExtMachInst;
 
+    /** IcachePort class for DefaultFetch.  Handles doing the
+     * communication with the cache/memory.
+     */
     class IcachePort : public Port
     {
       protected:
+        /** Pointer to fetch. */
         DefaultFetch<Impl> *fetch;
 
       public:
+        /** Default constructor. */
         IcachePort(DefaultFetch<Impl> *_fetch)
             : Port(_fetch->name() + "-iport"), fetch(_fetch)
         { }
 
       protected:
+        /** Atomic version of receive.  Panics. */
         virtual Tick recvAtomic(PacketPtr pkt);
 
+        /** Functional version of receive.  Panics. */
         virtual void recvFunctional(PacketPtr pkt);
 
+        /** Receives status change.  Other than range changing, panics. */
         virtual void recvStatusChange(Status status);
 
+        /** Returns the address ranges of this device. */
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop)
         { resp.clear(); snoop.clear(); }
 
+        /** Timing version of receive.  Handles setting fetch to the
+         * proper status to start fetching. */
         virtual bool recvTiming(PacketPtr pkt);
 
+        /** Handles doing a retry of a failed fetch. */
         virtual void recvRetry();
     };
 
@@ -162,9 +174,6 @@ class DefaultFetch
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
-
-    /** Sets pointer to page table. */
-//    void setPageTable(PageTable *pt_ptr);
 
     /** Initialize stage. */
     void initStage();
@@ -268,6 +277,7 @@ class DefaultFetch
     }
 
   private:
+    /** Handles retrying the fetch access. */
     void recvRetry();
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
@@ -405,11 +415,6 @@ class DefaultFetch
 
     /** Records if fetch is switched out. */
     bool switchedOut;
-
-#if !FULL_SYSTEM
-    /** Page table pointer. */
-//    PageTable *pTable;
-#endif
 
     // @todo: Consider making these vectors and tracking on a per thread basis.
     /** Stat for total number of cycles stalled due to an icache miss. */

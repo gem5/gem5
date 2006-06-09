@@ -370,15 +370,6 @@ DefaultIEW<Impl>::setScoreboard(Scoreboard *sb_ptr)
     scoreboard = sb_ptr;
 }
 
-#if 0
-template<class Impl>
-void
-DefaultIEW<Impl>::setPageTable(PageTable *pt_ptr)
-{
-    ldstQueue.setPageTable(pt_ptr);
-}
-#endif
-
 template <class Impl>
 void
 DefaultIEW<Impl>::switchOut()
@@ -1182,9 +1173,8 @@ DefaultIEW<Impl>::executeInsts()
         fetchRedirect[tid] = false;
     }
 
-#if 0
-    printAvailableInsts();
-#endif
+    // Uncomment this if you want to see all available instructions.
+//    printAvailableInsts();
 
     // Execute/writeback any instructions that are available.
     int insts_to_execute = fromIssue->size;
@@ -1349,8 +1339,8 @@ DefaultIEW<Impl>::writebackInsts()
         DynInstPtr inst = toCommit->insts[inst_num];
         int tid = inst->threadNumber;
 
-        DPRINTF(IEW, "Sending instructions to commit, PC %#x.\n",
-                inst->readPC());
+        DPRINTF(IEW, "Sending instructions to commit, [sn:%lli] PC %#x.\n",
+                inst->seqNum, inst->readPC());
 
         iewInstsToCommit[tid]++;
 

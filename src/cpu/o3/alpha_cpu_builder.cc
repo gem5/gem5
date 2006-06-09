@@ -58,7 +58,6 @@ SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
 #else
 SimObjectVectorParam<Process *> workload;
-//SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
 
 SimObjectParam<MemObject *> mem;
@@ -165,7 +164,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(dtb, "Data translation buffer"),
 #else
     INIT_PARAM(workload, "Processes to run"),
-//    INIT_PARAM(page_table, "Page table"),
 #endif // FULL_SYSTEM
 
     INIT_PARAM(mem, "Memory"),
@@ -309,7 +307,6 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->dtb = dtb;
 #else
     params->workload = workload;
-//    params->pTable = page_table;
 #endif // FULL_SYSTEM
 
     params->mem = mem;

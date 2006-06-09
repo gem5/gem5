@@ -125,14 +125,6 @@ OzoneLSQ<Impl>::clearSQ()
 
 template<class Impl>
 void
-OzoneLSQ<Impl>::setPageTable(PageTable *pt_ptr)
-{
-    DPRINTF(OzoneLSQ, "Setting the page table pointer.\n");
-    pTable = pt_ptr;
-}
-
-template<class Impl>
-void
 OzoneLSQ<Impl>::resizeLQ(unsigned size)
 {
     assert( size >= LQEntries);

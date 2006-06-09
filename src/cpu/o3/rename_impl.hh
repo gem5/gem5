@@ -327,18 +327,9 @@ DefaultRename<Impl>::squash(unsigned tid)
     if (renameStatus[tid] == Blocked ||
         renameStatus[tid] == Unblocking ||
         renameStatus[tid] == SerializeStall) {
-#if 0
-        // In syscall emulation, we can have both a block and a squash due
-        // to a syscall in the same cycle.  This would cause both signals to
-        // be high.  This shouldn't happen in full system.
-        if (toDecode->renameBlock[tid]) {
-            toDecode->renameBlock[tid] = 0;
-        } else {
-            toDecode->renameUnblock[tid] = 1;
-        }
-#else
+
         toDecode->renameUnblock[tid] = 1;
-#endif
+
         serializeInst[tid] = NULL;
     }
 

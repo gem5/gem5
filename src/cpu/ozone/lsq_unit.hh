@@ -114,9 +114,6 @@ class OzoneLSQ {
     void setBE(BackEnd *be_ptr)
     { be = be_ptr; }
 
-    /** Sets the page table pointer. */
-    void setPageTable(PageTable *pt_ptr);
-
     /** Ticks the LSQ unit, which in this case only resets the number of
      * used cache ports.
      * @todo: Move the number of used ports up to the LSQ level so it can

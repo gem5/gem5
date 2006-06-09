@@ -36,10 +36,8 @@
 
 #include "config/full_system.hh"
 #include "cpu/inst_seq.hh"
-//#include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "mem/port.hh"
-//#include "mem/page_table.hh"
 #include "sim/sim_object.hh"
 
 template <class Impl>
@@ -70,8 +68,6 @@ class LSQ {
     void setCPU(FullCPU *cpu_ptr);
     /** Sets the IEW stage pointer. */
     void setIEW(IEW *iew_ptr);
-    /** Sets the page table pointer. */
-//    void setPageTable(PageTable *pt_ptr);
     /** Switches out the LSQ. */
     void switchOut();
     /** Takes over execution from another CPU's thread. */
@@ -280,9 +276,6 @@ class LSQ {
 
     /** The IEW stage pointer. */
     IEW *iewStage;
-
-    /** The pointer to the page table. */
-//    PageTable *pTable;
 
     /** List of Active Threads in System. */
     std::list<unsigned> *activeThreads;

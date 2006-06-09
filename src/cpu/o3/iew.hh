@@ -155,9 +155,6 @@ class DefaultIEW
     /** Returns if IEW is switched out. */
     bool isSwitchedOut() { return switchedOut; }
 
-    /** Sets page table pointer within LSQ. */
-//    void setPageTable(PageTable *pt_ptr);
-
     /** Squashes instructions in IEW for a specific thread. */
     void squash(unsigned tid);
 

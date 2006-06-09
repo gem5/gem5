@@ -136,17 +136,6 @@ LSQ<Impl>::setIEW(IEW *iew_ptr)
     }
 }
 
-#if 0
-template<class Impl>
-void
-LSQ<Impl>::setPageTable(PageTable *pt_ptr)
-{
-    for (int tid=0; tid < numThreads; tid++) {
-        thread[tid].setPageTable(pt_ptr);
-    }
-}
-#endif
-
 template <class Impl>
 void
 LSQ<Impl>::switchOut()
