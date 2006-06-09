@@ -115,7 +115,7 @@ class DefaultFetch
         QuiescePending,
         SwitchOut,
         IcacheWaitResponse,
-        IcacheRetry,
+        IcacheWaitRetry,
         IcacheAccessComplete
     };
 
@@ -268,6 +268,8 @@ class DefaultFetch
     }
 
   private:
+    void recvRetry();
+
     /** Returns the appropriate thread to fetch, given the fetch policy. */
     int getFetchingThread(FetchPriority &fetch_priority);
 
@@ -359,6 +361,15 @@ class DefaultFetch
 
     /** The width of fetch in instructions. */
     unsigned fetchWidth;
+
+    /** Is the cache blocked?  If so no threads can access it. */
+    bool cacheBlocked;
+
+    /** The packet that is waiting to be retried. */
+    PacketPtr retryPkt;
+
+    /** The thread that is waiting on the cache to tell fetch to retry. */
+    int retryTid;
 
     /** Cache block size. */
     int cacheBlkSize;

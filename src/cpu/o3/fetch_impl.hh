@@ -88,18 +88,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::recvRetry()
 {
-    panic("DefaultFetch doesn't support retry yet.");
-    // we shouldn't get a retry unless we have a packet that we're
-    // waiting to transmit
-/*
-    assert(cpu->dcache_pkt != NULL);
-    assert(cpu->_status == DcacheRetry);
-    Packet *tmp = cpu->dcache_pkt;
-    if (sendTiming(tmp)) {
-        cpu->_status = DcacheWaitResponse;
-        cpu->dcache_pkt = NULL;
-    }
-*/
+    fetch->recvRetry();
 }
 
 template<class Impl>
@@ -111,6 +100,9 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
       iewToFetchDelay(params->iewToFetchDelay),
       commitToFetchDelay(params->commitToFetchDelay),
       fetchWidth(params->fetchWidth),
+      cacheBlocked(false),
+      retryPkt(NULL),
+      retryTid(-1),
       numThreads(params->numberOfThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
@@ -510,9 +502,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (interruptPending && flags == 0 || switchedOut) {
-        // Hold off fetch from getting new instructions while an interrupt
-        // is pending.
+    if (cacheBlocked || (interruptPending && flags == 0) || switchedOut) {
+        // Hold off fetch from getting new instructions when:
+        // Cache is blocked, or
+        // while an interrupt is pending and we're not in PAL mode, or
+        // fetch is switched out.
         return false;
     }
 
@@ -528,11 +522,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     memReq[tid] = mem_req;
 
     // Translate the instruction request.
-//#if FULL_SYSTEM
     fault = cpu->translateInstReq(mem_req, cpu->thread[tid]);
-//#else
-//    fault = pTable->translate(memReq[tid]);
-//#endif
 
     // In the case of faults, the fetch stage may need to stall and wait
     // for the ITB miss to be handled.
@@ -563,8 +553,13 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Now do the timing access to see whether or not the instruction
         // exists within the cache.
         if (!icachePort->sendTiming(data_pkt)) {
+            assert(retryPkt == NULL);
+            assert(retryTid == -1);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
-            ret_fault = NoFault;
+            fetchStatus[tid] = IcacheWaitRetry;
+            retryPkt = data_pkt;
+            retryTid = tid;
+            cacheBlocked = true;
             return false;
         }
 
@@ -602,6 +597,16 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
         // Should I delete this here or when it comes back from the cache?
 //        delete memReq[tid];
         memReq[tid] = NULL;
+    }
+
+    // Get rid of the retrying packet if it was from this thread.
+    if (retryTid == tid) {
+        assert(cacheBlocked);
+        cacheBlocked = false;
+        retryTid = -1;
+        retryPkt = NULL;
+        delete retryPkt->req;
+        delete retryPkt;
     }
 
     fetchStatus[tid] = Squashing;
@@ -1103,6 +1108,28 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     }
 }
 
+template<class Impl>
+void
+DefaultFetch<Impl>::recvRetry()
+{
+    assert(cacheBlocked);
+    if (retryPkt != NULL) {
+        assert(retryTid != -1);
+        assert(fetchStatus[retryTid] == IcacheWaitRetry);
+
+        if (icachePort->sendTiming(retryPkt)) {
+            fetchStatus[retryTid] = IcacheWaitResponse;
+            retryPkt = NULL;
+            retryTid = -1;
+            cacheBlocked = false;
+        }
+    } else {
+        assert(retryTid == -1);
+        // Access has been squashed since it was sent out.  Just clear
+        // the cache being blocked.
+        cacheBlocked = false;
+    }
+}
 
 ///////////////////////////////////////
 //                                   //
