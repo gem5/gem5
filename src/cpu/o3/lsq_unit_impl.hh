@@ -853,7 +853,7 @@ LSQUnit<Impl>::recvRetry()
 
         if (dcachePort->sendTiming(retryPkt)) {
             storePostSend(retryPkt);
-            sendingPkt = NULL;
+            retryPkt = NULL;
             isStoreBlocked = false;
         } else {
             // Still blocked!

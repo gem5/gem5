@@ -45,6 +45,8 @@ ThreadState::ThreadState(int _cpuId, int _tid, MemObject *mem,
       funcExeInst(0), storeCondFailures(0)
 #endif
 {
+    numInst = 0;
+    numLoad = 0;
 }
 
 #if FULL_SYSTEM
