@@ -411,110 +411,11 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     void setSyscallReturn(SyscallReturn return_value, int tid);
 #endif
 
-    /** Read from memory function. */
-    template <class T>
-    Fault read(RequestPtr &req, T &data)
-    {
-#if 0
-#if FULL_SYSTEM && THE_ISA == ALPHA_ISA
-        if (req->flags & LOCKED) {
-            req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
-            req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
-        }
-#endif
-#endif
-        Fault error;
-
-#if FULL_SYSTEM
-        // @todo: Fix this LL/SC hack.
-        if (req->flags & LOCKED) {
-            lockAddr = req->paddr;
-            lockFlag = true;
-        }
-#endif
-
-        error = this->mem->read(req, data);
-        data = gtoh(data);
-        return error;
-    }
-
     /** CPU read function, forwards read to LSQ. */
     template <class T>
     Fault read(RequestPtr &req, T &data, int load_idx)
     {
         return this->iew.ldstQueue.read(req, data, load_idx);
-    }
-
-    /** Write to memory function. */
-    template <class T>
-    Fault write(RequestPtr &req, T &data)
-    {
-#if 0
-#if FULL_SYSTEM && THE_ISA == ALPHA_ISA
-        ExecContext *xc;
-
-        // If this is a store conditional, act appropriately
-        if (req->flags & LOCKED) {
-            xc = req->xc;
-
-            if (req->flags & UNCACHEABLE) {
-                // Don't update result register (see stq_c in isa_desc)
-                req->result = 2;
-                xc->setStCondFailures(0);//Needed? [RGD]
-            } else {
-                bool lock_flag = xc->readMiscReg(TheISA::Lock_Flag_DepTag);
-                Addr lock_addr = xc->readMiscReg(TheISA::Lock_Addr_DepTag);
-                req->result = lock_flag;
-                if (!lock_flag ||
-                    ((lock_addr & ~0xf) != (req->paddr & ~0xf))) {
-                    xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
-                    xc->setStCondFailures(xc->readStCondFailures() + 1);
-                    if (((xc->readStCondFailures()) % 100000) == 0) {
-                        std::cerr << "Warning: "
-                                  << xc->readStCondFailures()
-                                  << " consecutive store conditional failures "
-                                  << "on cpu " << req->xc->readCpuId()
-                                  << std::endl;
-                    }
-                    return NoFault;
-                }
-                else xc->setStCondFailures(0);
-            }
-        }
-
-        // Need to clear any locked flags on other proccessors for
-        // this address.  Only do this for succsful Store Conditionals
-        // and all other stores (WH64?).  Unsuccessful Store
-        // Conditionals would have returned above, and wouldn't fall
-        // through.
-        for (int i = 0; i < this->system->execContexts.size(); i++){
-            xc = this->system->execContexts[i];
-            if ((xc->readMiscReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
-                (req->paddr & ~0xf)) {
-                xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
-            }
-        }
-
-#endif
-#endif
-
-#if FULL_SYSTEM
-        // @todo: Fix this LL/SC hack.
-        if (req->getFlags() & LOCKED) {
-            if (req->getFlags() & UNCACHEABLE) {
-                req->setScResult(2);
-            } else {
-                if (this->lockFlag) {
-                    req->setScResult(1);
-                } else {
-                    req->setScResult(0);
-                    return NoFault;
-                }
-            }
-        }
-#endif
-
-        return this->mem->write(req, (T)htog(data));
     }
 
     /** CPU write function, forwards write to LSQ. */
