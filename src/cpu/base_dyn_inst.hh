@@ -654,15 +654,15 @@ template<class T>
 inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
-    if (executed) {
-        panic("Not supposed to re-execute with split mem ops!");
-        fault = cpu->read(req, data, lqIdx);
-        return fault;
+    // Sometimes reads will get retried, so they may come through here
+    // twice.
+    if (!req) {
+        req = new Request();
+        req->setVirt(asid, addr, sizeof(T), flags, this->PC);
+        req->setThreadContext(thread->readCpuId(), threadNumber);
+    } else {
+        assert(addr == req->getVaddr());
     }
-
-    req = new Request();
-    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->readCpuId(), threadNumber);
 
     if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {
@@ -714,6 +714,8 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setAddr(addr);
         traceData->setData(data);
     }
+
+    assert(req == NULL);
 
     req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
