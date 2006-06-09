@@ -42,6 +42,7 @@ using namespace std;
 void
 MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
+    panic("Copy Regs Not Implemented Yet\n");
     /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
     uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
     lock_flag = xc->readMiscReg(MipsISA::Lock_Flag_DepTag);
@@ -55,83 +56,13 @@ MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 void
 MipsISA::MiscRegFile::copyMiscRegs(ThreadContext *tc)
 {
+    panic("Copy Misc. Regs Not Implemented Yet\n");
     /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
     uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
     lock_flag = xc->readMiscReg(MipsISA::Lock_Flag_DepTag);
     lock_addr = xc->readMiscReg(MipsISA::Lock_Addr_DepTag);
 
     #endif*/
-}
-
-uint64_t
-MipsISA::fpConvert(double fp_val, ConvertType cvt_type)
-{
-
-    switch (cvt_type)
-    {
-      case SINGLE_TO_DOUBLE:
-        double sdouble_val = fp_val;
-        void  *sdouble_ptr = &sdouble_val;
-        uint64_t sdp_bits  = *(uint64_t *) sdouble_ptr;
-        return sdp_bits;
-
-      case SINGLE_TO_WORD:
-        int32_t sword_val  = (int32_t) fp_val;
-        void  *sword_ptr   = &sword_val;
-        uint64_t sword_bits= *(uint32_t *) sword_ptr;
-        return sword_bits;
-
-      case WORD_TO_SINGLE:
-        float wfloat_val   = fp_val;
-        void  *wfloat_ptr  = &wfloat_val;
-        uint64_t wfloat_bits = *(uint32_t *) wfloat_ptr;
-        return wfloat_bits;
-
-      case WORD_TO_DOUBLE:
-        double wdouble_val = fp_val;
-        void  *wdouble_ptr = &wdouble_val;
-        uint64_t wdp_bits  = *(uint64_t *) wdouble_ptr;
-        return wdp_bits;
-
-      default:
-        panic("Invalid Floating Point Conversion Type (%d). See \"types.hh\" for List of Conversions\n",cvt_type);
-        return 0;
-    }
-}
-
-double
-MipsISA::roundFP(double val, int digits)
-{
-    double digit_offset = pow(10.0,digits);
-    val = val * digit_offset;
-    val = val + 0.5;
-    val = floor(val);
-    val = val / digit_offset;
-    return val;
-}
-
-double
-MipsISA::truncFP(double val)
-{
-    int trunc_val = (int) val;
-    return (double) trunc_val;
-}
-
-bool
-MipsISA::getFPConditionCode(uint32_t fcsr_reg, int cc)
-{
-    //uint32_t cc_bits = xc->readFloatReg(35);
-    return false;//regFile.floatRegfile.getConditionCode(cc);
-}
-
-uint32_t
-MipsISA::makeCCVector(uint32_t fcsr, int num, bool val)
-{
-    int shift = (num == 0) ? 22 : num + 23;
-
-    fcsr = fcsr | (val << shift);
-
-    return fcsr;
 }
 
 #if FULL_SYSTEM

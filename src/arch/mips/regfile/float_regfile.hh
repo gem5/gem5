@@ -62,13 +62,17 @@ namespace MipsISA
             switch(width)
             {
               case SingleWidth:
-                void *float_ptr = &regs[floatReg];
-                return *(float *) float_ptr;
+                {
+                    void *float_ptr = &regs[floatReg];
+                    return *(float *) float_ptr;
+                }
 
               case DoubleWidth:
-                uint64_t double_val = (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
-                void *double_ptr = &double_val;
-                return *(double *) double_ptr;
+                {
+                    uint64_t double_val = (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
+                    void *double_ptr = &double_val;
+                    return *(double *) double_ptr;
+                }
 
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
@@ -99,21 +103,24 @@ namespace MipsISA
 
         Fault setReg(int floatReg, const FloatReg &val, int width)
         {
-
             switch(width)
             {
               case SingleWidth:
-                float temp = val;
-                void *float_ptr = &temp;
-                regs[floatReg] = *(FloatReg32 *) float_ptr;
-                break;
+                {
+                    float temp = val;
+                    void *float_ptr = &temp;
+                    regs[floatReg] = *(FloatReg32 *) float_ptr;
+                    break;
+                }
 
               case DoubleWidth:
-                const void *double_ptr = &val;
-                FloatReg64 temp_double = *(FloatReg64 *) double_ptr;
-                regs[floatReg + 1] = temp_double >> 32;
-                regs[floatReg] = temp_double;
-                break;
+                {
+                    const void *double_ptr = &val;
+                    FloatReg64 temp_double = *(FloatReg64 *) double_ptr;
+                    regs[floatReg + 1] = temp_double >> 32;
+                    regs[floatReg] = 0x0000FFFF & temp_double;
+                    break;
+                }
 
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
@@ -146,14 +153,6 @@ namespace MipsISA
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
-    };
-
-    enum MiscFloatRegNums {
-       FIR = NumFloatArchRegs,
-       FCCR,
-       FEXR,
-       FENR,
-       FCSR
     };
 
 } // namespace MipsISA

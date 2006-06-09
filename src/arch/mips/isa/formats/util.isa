@@ -90,7 +90,31 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             + completeAccTemplate.subst(completeacc_iop))
 }};
 
+output header {{
+        std::string inst2string(MachInst machInst);
+}};
 
+output decoder {{
+
+std::string inst2string(MachInst machInst)
+{
+    string str = "";
+    uint32_t mask = 0x80000000;
+
+    for(int i=0; i < 32; i++) {
+        if ((machInst & mask) == 0) {
+            str += "0";
+        } else {
+            str += "1";
+        }
+
+        mask = mask >> 1;
+    }
+
+    return str;
+}
+
+}};
 output exec {{
 
     using namespace MipsISA;
@@ -122,6 +146,7 @@ output exec {{
         return NoFault;
     }
 #endif
+
 
 
 }};

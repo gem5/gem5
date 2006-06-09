@@ -249,6 +249,10 @@ SyscallReturn fchownFunc(SyscallDesc *desc, int num,
 SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
                         Process *process, ThreadContext *tc);
 
+/// Target fcntl64() handler.
+SyscallReturn fcntl64Func(SyscallDesc *desc, int num,
+                        Process *process, ThreadContext *tc);
+
 /// Target setuid() handler.
 SyscallReturn setuidFunc(SyscallDesc *desc, int num,
                                Process *p, ThreadContext *tc);

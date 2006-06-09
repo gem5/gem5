@@ -28,6 +28,7 @@
 #
 # Authors: Gabe Black
 #          Steve Reinhardt
+#          Korey Sewell
 
 import os
 import sys
@@ -46,6 +47,7 @@ Import('env')
 base_sources = Split('''
 	faults.cc
 	isa_traits.cc
+        utility.cc
 	''')
 
 # Full-system sources

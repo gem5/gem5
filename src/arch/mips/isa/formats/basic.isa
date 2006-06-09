@@ -12,11 +12,11 @@ def template BasicDeclare {{
          */
         class %(class_name)s : public %(base_class)s
         {
-        public:
+          public:
                 /// Constructor.
                 %(class_name)s(MachInst machInst);
                 %(BasicExecDeclare)s
-    };
+        };
 }};
 
 // Basic instruction class constructor template.
@@ -26,6 +26,7 @@ def template BasicConstructor {{
                 %(constructor)s;
         }
 }};
+
 
 // Basic instruction class execute method template.
 def template BasicExecute {{

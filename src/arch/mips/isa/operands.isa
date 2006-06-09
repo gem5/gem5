@@ -1,3 +1,5 @@
+// -*- mode:c++ -*-
+
 def operand_types {{
     'sb' : ('signed int', 8),
     'ub' : ('unsigned int', 8),

@@ -36,11 +36,7 @@ output decoder {{
     std::string Nop::generateDisassembly(Addr pc,
                                          const SymbolTable *symtab) const
     {
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        return originalDisassembly;
-#else
-        return csprintf("%-10s (%s)", "nop", originalDisassembly);
-#endif
+        return csprintf("%-10s %s", "nop", originalDisassembly);
     }
 
     /// Helper function for decoding nops.  Substitute Nop object
@@ -89,6 +85,6 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
 }};
 
 def format Nop() {{
-        decode_block = 'return new Nop(\"sll r0,r0,0\",machInst);\n'
+        decode_block = 'return new Nop(\"\",machInst);\n'
 }};
 

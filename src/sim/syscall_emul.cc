@@ -341,6 +341,35 @@ fcntlFunc(SyscallDesc *desc, int num, Process *process,
 }
 
 SyscallReturn
+fcntl64Func(SyscallDesc *desc, int num, Process *process,
+            ThreadContext *tc)
+{
+    int fd = tc->getSyscallArg(0);
+
+    if (fd < 0 || process->sim_fd(fd) < 0)
+        return -EBADF;
+
+    int cmd = tc->getSyscallArg(1);
+    switch (cmd) {
+      case 33: //F_GETLK64
+        warn("fcntl64(%d, F_GETLK64) not supported, error returned\n", fd);
+        return -EMFILE;
+
+      case 34: // F_SETLK64
+      case 35: // F_SETLKW64
+        warn("fcntl64(%d, F_SETLK(W)64) not supported, error returned\n", fd);
+        return -EMFILE;
+
+      default:
+        // not sure if this is totally valid, but we'll pass it through
+        // to the underlying OS
+        warn("fcntl64(%d, %d) passed through to host\n", fd, cmd);
+        return fcntl(process->sim_fd(fd), cmd);
+        // return 0;
+    }
+}
+
+SyscallReturn
 pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
          ThreadContext *tc)
 {
