@@ -125,18 +125,7 @@ template <class Impl>
 void
 LSQUnit<Impl>::DcachePort::recvRetry()
 {
-    panic("Retry unsupported for now!");
-    // we shouldn't get a retry unless we have a packet that we're
-    // waiting to transmit
-/*
-    assert(cpu->dcache_pkt != NULL);
-    assert(cpu->_status == DcacheRetry);
-    PacketPtr tmp = cpu->dcache_pkt;
-    if (sendTiming(tmp)) {
-        cpu->_status = DcacheWaitResponse;
-        cpu->dcache_pkt = NULL;
-    }
-*/
+    lsq->recvRetry();
 }
 
 template <class Impl>
@@ -615,55 +604,34 @@ LSQUnit<Impl>::writebackStores()
                 req->getPaddr(), *(inst->memData),
                 storeQueue[storeWBIdx].inst->seqNum);
 
+        // @todo: Remove this SC hack once the memory system handles it.
+        if (req->getFlags() & LOCKED) {
+            if (req->getFlags() & UNCACHEABLE) {
+                req->setScResult(2);
+            } else {
+                if (cpu->lockFlag) {
+                    req->setScResult(1);
+                } else {
+                    req->setScResult(0);
+                    // Hack: Instantly complete this store.
+                    completeDataAccess(data_pkt);
+                    incrStIdx(storeWBIdx);
+                    continue;
+                }
+            }
+        } else {
+            // Non-store conditionals do not need a writeback.
+            state->noWB = true;
+        }
+
         if (!dcachePort->sendTiming(data_pkt)) {
             // Need to handle becoming blocked on a store.
             isStoreBlocked = true;
+
+            assert(sendingPkt == NULL);
+            sendingPkt = data_pkt;
         } else {
-            if (isStalled() &&
-                storeQueue[storeWBIdx].inst->seqNum == stallingStoreIsn) {
-                DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
-                        "load idx:%i\n",
-                        stallingStoreIsn, stallingLoadIdx);
-                stalled = false;
-                stallingStoreIsn = 0;
-                iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
-            }
-
-            if (!(req->getFlags() & LOCKED)) {
-                assert(!storeQueue[storeWBIdx].inst->isStoreConditional());
-                // Non-store conditionals do not need a writeback.
-                state->noWB = true;
-
-                // The store is basically completed at this time. This
-                // only works so long as the checker doesn't try to
-                // verify the value in memory for stores.
-                storeQueue[storeWBIdx].inst->setCompleted();
-                if (cpu->checker) {
-                    cpu->checker->tick(storeQueue[storeWBIdx].inst);
-                }
-            }
-
-            if (data_pkt->result != Packet::Success) {
-                DPRINTF(LSQUnit,"D-Cache Write Miss on idx:%i!\n",
-                        storeWBIdx);
-
-                DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
-                        storeQueue[storeWBIdx].inst->seqNum);
-
-                //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
-
-                //DPRINTF(LSQUnit, "Added MSHR. count = %i\n",mshrSeqNums.size());
-
-                // @todo: Increment stat here.
-            } else {
-                DPRINTF(LSQUnit,"D-Cache: Write Hit on idx:%i !\n",
-                        storeWBIdx);
-
-                DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
-                        storeQueue[storeWBIdx].inst->seqNum);
-            }
-
-            incrStIdx(storeWBIdx);
+            storePostSend(data_pkt);
         }
     }
 
@@ -769,6 +737,53 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
 
 template <class Impl>
 void
+LSQUnit<Impl>::storePostSend(Packet *pkt)
+{
+    if (isStalled() &&
+        storeQueue[storeWBIdx].inst->seqNum == stallingStoreIsn) {
+        DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
+                "load idx:%i\n",
+                stallingStoreIsn, stallingLoadIdx);
+        stalled = false;
+        stallingStoreIsn = 0;
+        iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
+    }
+
+    if (!storeQueue[storeWBIdx].inst->isStoreConditional()) {
+        // The store is basically completed at this time. This
+        // only works so long as the checker doesn't try to
+        // verify the value in memory for stores.
+        storeQueue[storeWBIdx].inst->setCompleted();
+        if (cpu->checker) {
+            cpu->checker->tick(storeQueue[storeWBIdx].inst);
+        }
+    }
+
+    if (pkt->result != Packet::Success) {
+        DPRINTF(LSQUnit,"D-Cache Write Miss on idx:%i!\n",
+                storeWBIdx);
+
+        DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
+                storeQueue[storeWBIdx].inst->seqNum);
+
+        //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
+
+        //DPRINTF(LSQUnit, "Added MSHR. count = %i\n",mshrSeqNums.size());
+
+        // @todo: Increment stat here.
+    } else {
+        DPRINTF(LSQUnit,"D-Cache: Write Hit on idx:%i !\n",
+                storeWBIdx);
+
+        DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
+                storeQueue[storeWBIdx].inst->seqNum);
+    }
+
+    incrStIdx(storeWBIdx);
+}
+
+template <class Impl>
+void
 LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
 {
     iewStage->wakeCPU();
@@ -836,6 +851,28 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // handle that case.
     if (cpu->checker) {
         cpu->checker->tick(storeQueue[store_idx].inst);
+    }
+}
+
+template <class Impl>
+void
+LSQUnit<Impl>::recvRetry()
+{
+    assert(sendingPkt != NULL);
+
+    if (isStoreBlocked) {
+        if (dcachePort->sendTiming(sendingPkt)) {
+            storePostSend(sendingPkt);
+            sendingPkt = NULL;
+            isStoreBlocked = false;
+        } else {
+            // Still blocked!
+        }
+    } else if (isLoadBlocked) {
+        DPRINTF(LSQUnit, "Loads squash themselves and all younger insts, "
+                "no need to resend packet.\n");
+    } else {
+        DPRINTF(LSQUnit, "Retry received but LSQ is no longer blocked.\n");
     }
 }
 
