@@ -90,15 +90,6 @@ output decoder {{
 
 }};
 
-def format LoadAddress(code) {{
-    iop = InstObjParams(name, Name, 'MemoryDisp32', CodeBlock(code))
-    header_output = BasicDeclare.subst(iop)
-    decoder_output = BasicConstructor.subst(iop)
-    decode_block = BasicDecode.subst(iop)
-    exec_output = BasicExecute.subst(iop)
-}};
-
-
 def template LoadStoreDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -426,8 +417,70 @@ def template StoreCompleteAcc {{
     }
 }};
 
+
+def template MiscMemAccExecute {{
+    Fault %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
+                                          Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        EA = xc->getEA();
+
+        if (fault == NoFault) {
+            %(code)s;
+        }
+
+        return NoFault;
+    }
+}};
+
+def template MiscExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        return NoFault;
+    }
+}};
+
+def template MiscInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        panic("Misc instruction does not support split access method!");
+        return NoFault;
+    }
+}};
+
+
+def template MiscCompleteAcc {{
+    Fault %(class_name)s::completeAcc(uint8_t *data,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        panic("Misc instruction does not support split access method!");
+
+        return NoFault;
+    }
+}};
+
 // load instructions use Rt as dest, so check for
-// Rt == 31 to detect nops
+// Rt == 0 to detect nops
 def template LoadNopCheckDecode {{
  {
      MipsStaticInst *i = new %(class_name)s(machInst);
@@ -446,7 +499,6 @@ def format LoadMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                       exec_template_base = 'Load')
 }};
 
-
 def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
@@ -454,26 +506,70 @@ def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                       exec_template_base = 'Store')
 }};
 
-//FP loads are offloaded to these formats for now ...
-def format LoadFloatMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
+def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = BasicDecode,
+                      decode_template = LoadNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
-
-def format StoreFloatMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
+def format StoreIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       exec_template_base = 'Store')
 }};
 
+def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; }},
+                     mem_flags = [], inst_flags = []) {{
+    decl_code = 'uint32_t mem_word = Mem.uw;\n'
+    decl_code += 'uint32_t unalign_addr = Rs + disp;\n'
+    decl_code += 'uint32_t byte_offset = unalign_addr & 3;\n'
+    decl_code += '#if BYTE_ORDER == BIG_ENDIAN\n'
+    decl_code += '\tbyte_offset ^= 3;\n'
+    decl_code += '#endif\n'
 
-def format UnalignedStore(memacc_code, postacc_code,
-                     ea_code = {{ EA = Rb + disp; }},
+    memacc_code = decl_code + memacc_code
+
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = LoadNopCheckDecode,
+                      exec_template_base = 'Load')
+}};
+
+def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; }},
+                     mem_flags = [], inst_flags = []) {{
+    decl_code = 'uint32_t mem_word = 0;\n'
+    decl_code += 'uint32_t unaligned_addr = Rs + disp;\n'
+    decl_code += 'uint32_t byte_offset = unaligned_addr & 3;\n'
+    decl_code += '#if BYTE_ORDER == BIG_ENDIAN\n'
+    decl_code += '\tbyte_offset ^= 3;\n'
+    decl_code += '#endif\n'
+    decl_code += 'fault = xc->read(EA, (uint32_t&)mem_word, memAccessFlags);\n'
+    memacc_code = decl_code + memacc_code + '\nMem = mem_word;\n'
+
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = LoadNopCheckDecode,
+                      exec_template_base = 'Store')
+}};
+
+def format Prefetch(ea_code = {{ EA = Rs + disp; }},
+                          mem_flags = [], pf_flags = [], inst_flags = []) {{
+    pf_mem_flags = mem_flags + pf_flags + ['NO_FAULT']
+    pf_inst_flags = inst_flags + ['IsMemRef', 'IsLoad',
+                                  'IsDataPrefetch', 'MemReadOp']
+
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code,
+                      'xc->prefetch(EA, memAccessFlags);',
+                      pf_mem_flags, pf_inst_flags, exec_template_base = 'Misc')
+
+}};
+
+def format StoreCond(memacc_code, postacc_code,
+                     ea_code = {{ EA = Rs + disp; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,

@@ -17,20 +17,19 @@ def bitfield FUNCTION      < 5: 0>;
 def bitfield FUNCTION_HI   < 5: 3>;
 def bitfield FUNCTION_LO   < 2: 0>;
 
-// Integer operate format
-def bitfield RT	      <20:16>;
-def bitfield RT_HI    <20:19>;
-def bitfield RT_LO    <18:16>;
-
 def bitfield RS	      <25:21>;
 def bitfield RS_MSB   <25:25>;
 def bitfield RS_HI    <25:24>;
 def bitfield RS_LO    <23:21>;
-def bitfield RS_SRL    <25:22>;
-
+def bitfield RS_SRL   <25:22>;
+def bitfield RS_RT    <25:16>;
+def bitfield RT	      <20:16>;
+def bitfield RT_HI    <20:19>;
+def bitfield RT_LO    <18:16>;
+def bitfield RT_RD    <20:11>;
 def bitfield RD	      <15:11>;
 
-def bitfield INTIMM	<15: 0>; // integer immediate (literal)
+def bitfield INTIMM	  <15: 0>;
 
 // Floating-point operate format
 def bitfield FMT      <25:21>;
@@ -66,6 +65,10 @@ def bitfield HINT	<10: 6>;
 
 def bitfield SYSCALLCODE <25: 6>;
 def bitfield TRAPCODE    <15:13>;
+
+// EXT/INS instructions
+def bitfield MSB	<15:11>;
+def bitfield LSB	<10: 6>;
 
 // M5 instructions
 def bitfield M5FUNC <7:0>;

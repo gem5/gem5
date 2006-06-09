@@ -39,6 +39,19 @@
 
 namespace MipsISA {
 
+    //Floating Point Utility Functions
+    uint64_t fpConvert(ConvertType cvt_type, double fp_val);
+    double roundFP(double val, int digits);
+    double truncFP(double val);
+
+    bool getCondCode(uint32_t fcsr, int cc);
+    uint32_t genCCVector(uint32_t fcsr, int num, uint32_t cc_val);
+    uint32_t genInvalidVector(uint32_t fcsr);
+
+    bool isNan(void *val_ptr, int size);
+    bool isQnan(void *val_ptr, int size);
+    bool isSnan(void *val_ptr, int size);
 };
+
 
 #endif

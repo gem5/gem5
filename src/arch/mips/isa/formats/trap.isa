@@ -1,3 +1,5 @@
+// -*- mode:c++ -*-
+
 ////////////////////////////////////////////////////////////////////
 //
 // Trap instructions
@@ -23,27 +25,26 @@ output header {{
 output decoder {{
         std::string Trap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+                return "Disassembly of trap instruction\n";
         }
 }};
 
 def template TrapExecute {{
+        //Edit This Template When Traps Are Implemented
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
-                //Call into the trap handler with the appropriate fault
-                return No_Fault;
-        }
-
                 //Write the resulting state to the execution context
                 %(op_wb)s;
 
+                //Call into the trap handler with the appropriate fault
                 return No_Fault;
         }
 }};
 
-// Primary format for integer operate instructions:
 def format Trap(code, *flags) {{
-        code = 'bool cond;\n' + code;
+        code = 'panic(\"'
+        code += 'Trap Exception Handler Is Currently Not Implemented.'
+        code += '\");'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)

@@ -27,6 +27,7 @@
  *
  * Authors: Gabe Black
  *          Ali Saidi
+ *          Korey Sewell
  */
 
 #include "arch/mips/isa_traits.hh"
@@ -56,7 +57,8 @@ MipsLiveProcess::create(const std::string &nm, System *system, int stdin_fd,
 
 
     if (objFile->getArch() != ObjectFile::Mips)
-        fatal("Object file does not match architecture.");
+        fatal("Object file does not match MIPS architecture.");
+
     switch (objFile->getOpSys()) {
       case ObjectFile::Linux:
         process = new MipsLinuxProcess(nm, objFile, system,
@@ -79,22 +81,19 @@ MipsLiveProcess::MipsLiveProcess(const std::string &nm, ObjectFile *objFile,
     : LiveProcess(nm, objFile, _system, stdin_fd, stdout_fd, stderr_fd,
         argv, envp)
 {
-
-    // XXX all the below need to be updated for SPARC - Ali
-    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
-
-    // Set up stack.  On Alpha, stack goes below text section.  This
-    // code should get moved to some architecture-specific spot.
-    stack_base = objFile->textBase() - (409600+4096);
-
-    // Set up region for mmaps.  Tru64 seems to start just above 0 and
-    // grow up from there.
-    mmap_start = mmap_end = 0x10000;
+    // Set up stack. On MIPS, stack starts at the top of kuseg
+    // user address space. MIPS stack grows down from here
+    stack_base = 0x7FFFFFFF;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
+    // Set up break point (Top of Heap)
+    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
+    brk_point = roundUp(brk_point, VMPageSize);
+
+    // Set up region for mmaps. For now, start at bottom of kuseg space.
+    mmap_start = mmap_end = 0x10000;
 }
 
 void

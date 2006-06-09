@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Steve Reinhardt
+#          Korey Sewell
 
 import os
 import sys
@@ -1181,6 +1182,11 @@ class IntRegOperand(Operand):
         if (self.size == self.dflt_size):
             return '%s = xc->readIntReg(this, %d);\n' % \
                    (self.base_name, self.src_reg_idx)
+        elif (self.size > self.dflt_size):
+            int_reg_val = 'xc->readIntReg(this, %d)' % (self.src_reg_idx)
+            if (self.is_signed):
+                int_reg_val = 'sext<%d>(%s)' % (self.dflt_size, int_reg_val)
+            return '%s = %s;\n' % (self.base_name, int_reg_val)
         else:
             return '%s = bits(xc->readIntReg(this, %d), %d, 0);\n' % \
                    (self.base_name, self.src_reg_idx, self.size-1)

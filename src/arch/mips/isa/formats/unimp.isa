@@ -25,13 +25,6 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Authors: Korey Sewell
-
-////////////////////////////////////////////////////////////////////
-//
-// Unimplemented instructions
-//
 
 output header {{
     /**
@@ -103,11 +96,7 @@ output decoder {{
     WarnUnimplemented::generateDisassembly(Addr pc,
                                            const SymbolTable *symtab) const
     {
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        return csprintf("%-10s", mnemonic);
-#else
         return csprintf("%-10s (unimplemented)", mnemonic);
-#endif
     }
 }};
 
@@ -127,7 +116,7 @@ output exec {{
                                Trace::InstRecord *traceData) const
     {
         if (!warned) {
-            warn("instruction '%s' unimplemented\n", mnemonic);
+            warn("\tinstruction '%s' unimplemented\n", mnemonic);
             warned = true;
         }
 
@@ -144,30 +133,5 @@ def format FailUnimpl() {{
 def format WarnUnimpl() {{
     iop = InstObjParams(name, 'WarnUnimplemented')
     decode_block = BasicDecodeWithMnemonic.subst(iop)
-}};
-
-output header {{
-    /**
-     * Static instruction class for unknown (illegal) instructions.
-     * These cause simulator termination if they are executed in a
-     * non-speculative mode.  This is a leaf class.
-     */
-    class Unknown : public MipsStaticInst
-    {
-      public:
-        /// Constructor
-        Unknown(MachInst _machInst)
-            : MipsStaticInst("unknown", _machInst, No_OpClass)
-        {
-            // don't call execute() (which panics) if we're on a
-            // speculative path
-            flags[IsNonSpeculative] = true;
-        }
-
-        %(BasicExecDeclare)s
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
 }};
 

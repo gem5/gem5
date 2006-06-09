@@ -1,3 +1,5 @@
+// -*- mode:c++ -*-
+
 ////////////////////////////////////////////////////////////////////
 //
 // Output include file directives.
@@ -19,6 +21,7 @@ output decoder {{
 #include "cpu/exec_context.hh"  // for Jump::branchTarget()
 #include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/utility.hh"
 
 #include <math.h>
 #if defined(linux)
@@ -31,6 +34,8 @@ using namespace MipsISA;
 output exec {{
 #include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/utility.hh"
+
 #include <math.h>
 #if defined(linux)
 #include <fenv.h>

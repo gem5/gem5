@@ -10,8 +10,8 @@
 //Include utility functions
 ##include "util.isa"
 
-//Include the cop0 formats
-##include "cop0.isa"
+//Include the control/cp0/cp1 formats
+##include "control.isa"
 
 //Include the integer formats
 ##include "int.isa"
@@ -21,6 +21,9 @@
 
 //Include the mem format
 ##include "mem.isa"
+
+//Include the mem format
+##include "mt.isa"
 
 //Include the trap format
 ##include "trap.isa"

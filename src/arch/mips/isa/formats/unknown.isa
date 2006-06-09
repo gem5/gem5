@@ -34,28 +34,31 @@
 //
 
 output header {{
-        std::string inst2string(MachInst machInst);
-}};
-output decoder {{
-
-std::string inst2string(MachInst machInst)
-{
-    string str = "";
-    uint32_t mask = 0x80000000;
-
-    for(int i=0; i < 32; i++) {
-        if ((machInst & mask) == 0) {
-            str += "0";
-        } else {
-            str += "1";
+    /**
+     * Static instruction class for unknown (illegal) instructions.
+     * These cause simulator termination if they are executed in a
+     * non-speculative mode.  This is a leaf class.
+     */
+    class Unknown : public MipsStaticInst
+    {
+      public:
+        /// Constructor
+        Unknown(MachInst _machInst)
+            : MipsStaticInst("unknown", _machInst, No_OpClass)
+        {
+            // don't call execute() (which panics) if we're on a
+            // speculative path
+            flags[IsNonSpeculative] = true;
         }
 
-        mask = mask >> 1;
-    }
+        %(BasicExecDeclare)s
 
-    return str;
-}
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+}};
 
+output decoder {{
     std::string
     Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {

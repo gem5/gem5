@@ -18,49 +18,264 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+            //std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+                //needs function to check for fpEnable or not
+        };
+
+        class FPCompareOp : public FPOp
+        {
+          protected:
+            FPCompareOp(const char *mnem, MachInst _machInst, OpClass __opClass) : FPOp(mnem, _machInst, __opClass)
+                {
+                }
+
+            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
         };
 }};
 
 output decoder {{
-        std::string FPOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string FPCompareOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
-                return "Disassembly of integer instruction\n";
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            ccprintf(ss,"%d",CC);
+
+            if(_numSrcRegs > 0) {
+                ss << ", ";
+                printReg(ss, _srcRegIdx[0]);
+            }
+
+            if(_numSrcRegs > 1) {
+                ss << ", ";
+                printReg(ss, _srcRegIdx[1]);
+            }
+
+            return ss.str();
         }
 }};
 
+output exec {{
 
-// Primary format for float operate instructions:
+        //If any operand is Nan return the appropriate QNaN
+        template <class T>
+        bool
+        fpNanOperands(FPOp *inst, %(CPU_exec_context)s *xc, const T &src_type,
+                      Trace::InstRecord *traceData)
+        {
+            uint64_t mips_nan = 0;
+            T src_op = 0;
+            int size = sizeof(src_op) * 8;
+
+            for (int i = 0; i < inst->numSrcRegs(); i++) {
+                uint64_t src_bits = xc->readFloatRegBits(inst, 0, size);
+
+                if (isNan(&src_bits, size) ) {
+                    if (isSnan(&src_bits, size)) {
+                        switch (size)
+                        {
+                          case 32: mips_nan = MIPS32_QNAN; break;
+                          case 64: mips_nan = MIPS64_QNAN; break;
+                          default: panic("Unsupported Floating Point Size (%d)", size);
+                        }
+                    } else {
+                        mips_nan = src_bits;
+                    }
+
+                    xc->setFloatRegBits(inst, 0, mips_nan, size);
+                    if (traceData) { traceData->setData(mips_nan); }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        template <class T>
+        bool
+        fpInvalidOp(FPOp *inst, %(CPU_exec_context)s *xc, const T dest_val,
+                    Trace::InstRecord *traceData)
+        {
+            uint64_t mips_nan = 0;
+            T src_op = dest_val;
+            int size = sizeof(src_op) * 8;
+
+            if (isNan(&src_op, size)) {
+                switch (size)
+                {
+                  case 32: mips_nan = MIPS32_QNAN; break;
+                  case 64: mips_nan = MIPS64_QNAN; break;
+                  default: panic("Unsupported Floating Point Size (%d)", size);
+                }
+
+                //Set value to QNAN
+                xc->setFloatRegBits(inst, 0, mips_nan, size);
+
+                //Read FCSR from FloatRegFile
+                uint32_t fcsr_bits = xc->cpuXC->readFloatRegBits(FCSR);
+
+                //Write FCSR from FloatRegFile
+                xc->cpuXC->setFloatRegBits(FCSR, genInvalidVector(fcsr_bits));
+
+                if (traceData) { traceData->setData(mips_nan); }
+                return true;
+            }
+
+            return false;
+        }
+
+        void
+        fpResetCauseBits(%(CPU_exec_context)s *xc)
+        {
+            //Read FCSR from FloatRegFile
+            uint32_t fcsr = xc->cpuXC->readFloatRegBits(FCSR);
+
+            fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
+
+            //Write FCSR from FloatRegFile
+            xc->cpuXC->setFloatRegBits(FCSR, fcsr);
+        }
+}};
+
+def template FloatingPointExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+
+                %(fp_enable_check)s;
+
+                //When is the right time to reset cause bits?
+                //start of every instruction or every cycle?
+                fpResetCauseBits(xc);
+
+                %(op_decl)s;
+                %(op_rd)s;
+
+                //Check if any FP operand is a NaN value
+                if (!fpNanOperands((FPOp*)this, xc, Fd, traceData)) {
+                    %(code)s;
+
+                    //Change this code for Full-System/Sycall Emulation
+                    //separation
+                    //----
+                    //Should Full System-Mode throw a fault here?
+                    //----
+                    //Check for IEEE 754 FP Exceptions
+                    //fault = fpNanOperands((FPOp*)this, xc, Fd, traceData);
+                    if (!fpInvalidOp((FPOp*)this, xc, Fd, traceData) &&
+                        fault == NoFault)
+                    {
+                        %(op_wb)s;
+                    }
+                }
+
+                return fault;
+        }
+}};
+
+// Primary format for float point operate instructions:
 def format FloatOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'FPOp', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+        exec_output = FloatingPointExecute.subst(iop)
 }};
 
-def format FloatCompareOp(code, *flags) {{
-        code = 'bool cond;\n' + code
-        code += 'FCSR = makeCCVector(FCSR, CC,cond);\n'
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
-}};
+def format FloatCompareOp(cond_code, *flags) {{
+    import sys
 
-def format FloatCompareWithXcptOp(code, *flags) {{
-        code = 'bool cond;\n' + code
-        code += 'FCSR = makeCCVector(FCSR, CC,cond);\n'
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    code = 'bool cond;\n'
+    if '.sf' in cond_code or 'SinglePrecision' in flags:
+        if 'QnanException' in flags:
+            code += 'if (isQnan(&Fs.sf, 32) || isQnan(&Ft.sf, 32)) {\n'
+            code += '\tFCSR = genInvalidVector(FCSR);\n'
+            code += '\treturn NoFault;'
+            code += '}\n else '
+        code += 'if (isNan(&Fs.sf, 32) || isNan(&Ft.sf, 32)) {\n'
+    elif '.df' in cond_code or 'DoublePrecision' in flags:
+        if 'QnanException' in flags:
+            code += 'if (isQnan(&Fs.df, 64) || isQnan(&Ft.df, 64)) {\n'
+            code += '\tFCSR = genInvalidVector(FCSR);\n'
+            code += '\treturn NoFault;'
+            code += '}\n else '
+        code += 'if (isNan(&Fs.df, 64) || isNan(&Ft.df, 64)) {\n'
+    else:
+       sys.exit('Decoder Failed: Can\'t Determine Operand Type\n')
+
+    if 'UnorderedTrue' in flags:
+       code += 'cond = 1;\n'
+    elif 'UnorderedFalse' in flags:
+       code += 'cond = 0;\n'
+    else:
+       sys.exit('Decoder Failed: Float Compare Instruction Needs A Unordered Flag\n')
+
+    code += '} else {\n'
+    code +=  cond_code + '}'
+    code += 'FCSR = genCCVector(FCSR, CC, cond);\n'
+
+    iop = InstObjParams(name, Name, 'FPCompareOp', CodeBlock(code))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 def format FloatConvertOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+    import sys
+
+    #Determine Source Type
+    convert = 'fpConvert('
+    if '.sf' in code:
+        code = 'float ' + code + '\n'
+        convert += 'SINGLE_TO_'
+    elif '.df' in code:
+        code = 'double ' + code + '\n'
+        convert += 'DOUBLE_TO_'
+    elif '.uw' in code:
+        code = 'uint32_t ' + code + '\n'
+        convert += 'WORD_TO_'
+    elif '.ud' in code:
+        code = 'uint64_t ' + code + '\n'
+        convert += 'LONG_TO_'
+    else:
+        sys.exit("Error Determining Source Type for Conversion")
+
+    #Determine Destination Type
+    if 'ToSingle' in flags:
+        code += 'Fd.uw = ' + convert + 'SINGLE, '
+    elif 'ToDouble' in flags:
+        code += 'Fd.ud = ' + convert + 'DOUBLE, '
+    elif 'ToWord' in flags:
+        code += 'Fd.uw = ' + convert + 'WORD, '
+    elif 'ToLong' in flags:
+        code += 'Fd.ud = ' + convert + 'LONG, '
+    else:
+        sys.exit("Error Determining Destination Type for Conversion")
+
+    #Figure out how to round value
+    if 'Ceil' in flags:
+        code += 'ceil(val)); '
+    elif 'Floor' in flags:
+        code += 'floor(val)); '
+    elif 'Round' in flags:
+        code += 'roundFP(val, 0)); '
+    elif 'Trunc' in flags:
+        code += 'truncFP(val));'
+    else:
+        code += 'val); '
+
+    iop = InstObjParams(name, Name, 'FPOp', CodeBlock(code))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format FloatAccOp(code, *flags) {{
+        iop = InstObjParams(name, Name, 'FPOp', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
@@ -76,34 +291,51 @@ def format Float64Op(code, *flags) {{
         exec_output = BasicExecute.subst(iop)
 }};
 
-def format Float64ConvertOp(code, *flags) {{
-        code = 'bool cond;\n' + code
-        code += 'FCSR = makeCCVector(FCSR, CC,cond);\n'
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{
+    import sys
+
+    code = 'bool cond1, cond2;\n'
+    code += 'bool code_block1, code_block2;\n'
+    code += 'code_block1 = code_block2 = true;\n'
+
+    if 'QnanException' in flags:
+        code += 'if (isQnan(&Fs1.sf, 32) || isQnan(&Ft1.sf, 32)) {\n'
+        code += '\tFCSR = genInvalidVector(FCSR);\n'
+        code += 'code_block1 = false;'
+        code += '}\n'
+        code += 'if (isQnan(&Fs2.sf, 32) || isQnan(&Ft2.sf, 32)) {\n'
+        code += '\tFCSR = genInvalidVector(FCSR);\n'
+        code += 'code_block2 = false;'
+        code += '}\n'
+
+    code += 'if (code_block1) {'
+    code += '\tif (isNan(&Fs1.sf, 32) || isNan(&Ft1.sf, 32)) {\n'
+    if 'UnorderedTrue' in flags:
+       code += 'cond1 = 1;\n'
+    elif 'UnorderedFalse' in flags:
+       code += 'cond1 = 0;\n'
+    else:
+       sys.exit('Decoder Failed: Float Compare Instruction Needs A Unordered Flag\n')
+    code += '} else {\n'
+    code +=  cond_code1
+    code += 'FCSR = genCCVector(FCSR, CC, cond1);}\n}\n'
+
+    code += 'if (code_block2) {'
+    code += '\tif (isNan(&Fs2.sf, 32) || isNan(&Ft2.sf, 32)) {\n'
+    if 'UnorderedTrue' in flags:
+       code += 'cond2 = 1;\n'
+    elif 'UnorderedFalse' in flags:
+       code += 'cond2 = 0;\n'
+    else:
+       sys.exit('Decoder Failed: Float Compare Instruction Needs A Unordered Flag\n')
+    code += '} else {\n'
+    code +=  cond_code2
+    code += 'FCSR = genCCVector(FCSR, CC, cond2);}\n}'
+
+    iop = InstObjParams(name, Name, 'FPCompareOp', CodeBlock(code))
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
-def format FloatPSCompareOp(code, *flags) {{
-        code = 'bool cond1;\nbool cond2;\n' + code
-        code += 'FCSR = makeCCVector(FCSR, CC+1, cond1);\n'
-        code += 'FCSR = makeCCVector(FCSR, CC, cond2);\n'
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
-}};
-
-def format FloatPSCompareWithXcptOp(code, *flags) {{
-        code = 'bool cond1;\nbool cond2;\n' + code
-        code += 'FCSR = makeCCVector(FCSR, CC+1, cond1);\n'
-        code += 'FCSR = makeCCVector(FCSR, CC, cond2);\n'
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
-}};

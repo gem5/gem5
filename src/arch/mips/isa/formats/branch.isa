@@ -68,29 +68,6 @@ output header {{
     };
 
     /**
-     * Base class for branch likely branches (PC-relative control transfers),
-     */
-    class BranchLikely : public PCDependentDisassembly
-    {
-      protected:
-        /// target address (signed) Displacement .
-        int32_t disp;
-
-        /// Constructor.
-        BranchLikely(const char *mnem, MachInst _machInst, OpClass __opClass)
-            : PCDependentDisassembly(mnem, _machInst, __opClass),
-              disp(OFFSET << 2)
-        {
-
-        }
-
-        Addr branchTarget(Addr branchPC) const;
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
-
-    /**
      * Base class for jumps (register-indirect control transfers).  In
      * the Mips ISA, these are always unconditional.
      */
@@ -121,12 +98,6 @@ output header {{
 output decoder {{
     Addr
     Branch::branchTarget(Addr branchPC) const
-    {
-        return branchPC + 4 + disp;
-    }
-
-    Addr
-    BranchLikely::branchTarget(Addr branchPC) const
     {
         return branchPC + 4 + disp;
     }
@@ -171,49 +142,12 @@ output decoder {{
         // unconditional branches)
         if (_numSrcRegs == 1) {
             printReg(ss, _srcRegIdx[0]);
-            ss << ",";
+            ss << ", ";
         } else if(_numSrcRegs == 2) {
             printReg(ss, _srcRegIdx[0]);
-            ss << ",";
+            ss << ", ";
             printReg(ss, _srcRegIdx[1]);
-            ss << ",";
-        }
-
-        Addr target = pc + 4 + disp;
-
-        std::string str;
-        if (symtab && symtab->findSymbol(target, str))
-            ss << str;
-        else
-            ccprintf(ss, "0x%x", target);
-
-        string inst_name = mnemonic;
-
-        if (inst_name.substr(inst_name.length()-2,inst_name.length()) == "al"){
-            ccprintf(ss, " (r31=0x%x)",pc+8);
-        }
-
-        return ss.str();
-    }
-
-    std::string
-    BranchLikely::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        std::stringstream ss;
-
-        ccprintf(ss, "%-10s ", mnemonic);
-
-        // There's only one register arg (RA), but it could be
-        // either a source (the condition for conditional
-        // branches) or a destination (the link reg for
-        // unconditional branches)
-        if (_numSrcRegs > 0) {
-            printReg(ss, _srcRegIdx[0]);
-            ss << ",";
-        }
-        else if (_numDestRegs > 0) {
-            printReg(ss, _destRegIdx[0]);
-            ss << ",";
+            ss << ", ";
         }
 
         Addr target = pc + 4 + disp;
@@ -247,72 +181,64 @@ output decoder {{
              printReg(ss, _srcRegIdx[0]);
         } else if(_numSrcRegs == 2) {
             printReg(ss, _srcRegIdx[0]);
-            ss << ",";
+            ss << ", ";
             printReg(ss, _srcRegIdx[1]);
-        } else {
-            panic(">= 3 Source Registers!!!");
         }
 
         return ss.str();
     }
 }};
 
-def format Branch(code,*flags) {{
-    #Add Link Code if Link instruction
-    strlen = len(name)
-    if name[strlen-2:] == 'al':
-        code += 'R31 = NNPC;\n'
+def format Branch(code,*opt_flags) {{
+    not_taken_code = '  NNPC = NNPC;\n'
+    not_taken_code += '} \n'
+
+    #Build Instruction Flags
+    #Use Link & Likely Flags to Add Link/Condition Code
+    inst_flags = ('IsDirectControl', )
+    for x in opt_flags:
+        if x == 'Link':
+            code += 'R31 = NNPC;\n'
+        elif x == 'Likely':
+            not_taken_code = '  NPC = NNPC;\n'
+            not_taken_code += '  NNPC = NNPC + 4;\n'
+            not_taken_code += '} \n'
+            inst_flags = ('IsCondDelaySlot', )
+        else:
+            inst_flags += (x, )
+
+    if 'cond == 1' in code:
+         inst_flags += ('IsCondControl', )
+    else:
+         inst_flags += ('IsUncondControl', )
 
     #Condition code
     code = 'bool cond;\n' + code
     code += 'if (cond) {\n'
     code += '  NNPC = NPC + disp;\n'
     code += '} else {\n'
-    code += '  NNPC = NNPC;\n'
-    code += '} \n'
+    code += not_taken_code
 
-    iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
-                        ('IsDirectControl', 'IsCondControl'))
-
+    iop = InstObjParams(name, Name, 'Branch', CodeBlock(code), inst_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = BasicExecute.subst(iop)
 }};
 
-
-def format BranchLikely(code,*flags) {{
-    #Add Link Code if Link instruction
-    strlen = len(name)
-    if name[strlen-3:] == 'all':
-        code += 'R31 = NNPC;\n'
-
-    #Condition code
-    code = 'bool cond;\n' + code
-    code += 'if (cond) {'
-    code += 'NNPC = NPC + disp;\n'
-    code += '} \n'
-
-
-    iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
-                        ('IsDirectControl', 'IsCondControl','IsCondDelaySlot'))
-
-    header_output = BasicDeclare.subst(iop)
-    decoder_output = BasicConstructor.subst(iop)
-    decode_block = BasicDecode.subst(iop)
-    exec_output = BasicExecute.subst(iop)
-}};
-
-def format Jump(code,*flags) {{
-    #Add Link Code if Link instruction
-    strlen = len(name)
-    if strlen > 1 and name[1:] == 'al':
+def format Jump(code, *opt_flags) {{
+    #Build Instruction Flags
+    #Use Link Flag to Add Link Code
+    inst_flags = ('IsIndirectControl', 'IsUncondControl')
+    for x in opt_flags:
+        if x == 'Link':
             code = 'R31 = NNPC;\n' + code
+        elif x == 'ClearHazards':
+            code += '/* Code Needed to Clear Execute & Inst Hazards */\n'
+        else:
+            inst_flags += (x, )
 
-
-    iop = InstObjParams(name, Name, 'Jump', CodeBlock(code),\
-                        ('IsIndirectControl', 'IsUncondControl'))
-
+    iop = InstObjParams(name, Name, 'Jump', CodeBlock(code), inst_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
