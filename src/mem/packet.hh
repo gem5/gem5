@@ -179,6 +179,7 @@ class Packet
     {
         Success,
         BadAddress,
+        Nacked,
         Unknown
     };
 
@@ -248,6 +249,16 @@ class Packet
         dest = src;
         srcValid = false;
     }
+
+    /** Take a request packet that has been returned as NACKED and modify it so
+     * that it can be sent out again. Only packets that need a response can be
+     * NACKED, so verify that that is true. */
+    void reinitNacked() {
+        assert(needsResponse() && result == Nacked);
+        dest =  Broadcast;
+        result = Unknown;
+    }
+
 
     /** Set the data pointer to the following value that should not be freed. */
     template <typename T>

@@ -121,10 +121,22 @@ class PioPort : public Port
 
 struct DmaReqState : public Packet::SenderState
 {
+    /** Event to call on the device when this transaction (all packets)
+     * complete. */
     Event *completionEvent;
+
+    /** Where we came from for some sanity checking. */
+    Port *outPort;
+
+    /** Total number of bytes that this transaction involves. */
+    Addr totBytes;
+
+    /** Number of bytes that have been acked for this transaction. */
+    Addr numBytes;
+
     bool final;
-    DmaReqState(Event *ce, bool f)
-        : completionEvent(ce), final(f)
+    DmaReqState(Event *ce, Port *p, Addr tb)
+        : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0)
     {}
 };
 
@@ -155,7 +167,7 @@ class DmaPort : public Port
     virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
     { resp.clear(); snoop.clear(); }
 
-    void sendDma(Packet *pkt);
+    void sendDma(Packet *pkt, bool front = false);
 
   public:
     DmaPort(DmaDevice *dev, Platform *p);

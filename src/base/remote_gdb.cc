@@ -642,7 +642,9 @@ RemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    context->getVirtPort(context)->readBlob(vaddr, (uint8_t*)data, size);
+    VirtualPort *vp = context->getVirtPort(context);
+    vp->readBlob(vaddr, (uint8_t*)data, size);
+    context->delVirtPort(vp);
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -679,8 +681,9 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-
-    context->getVirtPort(context)->writeBlob(vaddr, (uint8_t*)data, size);
+    VirtualPort *vp = context->getVirtPort(context);
+    vp->writeBlob(vaddr, (uint8_t*)data, size);
+    context->delVirtPort(vp);
 
 #ifdef IMB
     alpha_pal_imb();

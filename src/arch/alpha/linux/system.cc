@@ -181,8 +181,11 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         Tick intrFreq = platform->intrFrequency();
-        tc->getVirtPort(tc)->write(addr,
-                (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        VirtualPort *vp;
+
+        vp = tc->getVirtPort();
+        vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        tc->delVirtPort(vp);
     }
 }
 
