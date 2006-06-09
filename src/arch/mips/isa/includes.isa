@@ -18,7 +18,7 @@ output decoder {{
 #include "arch/mips/isa_traits.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/exec_context.hh"  // for Jump::branchTarget()
+#include "cpu/thread_context.hh"
 #include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/utility.hh"

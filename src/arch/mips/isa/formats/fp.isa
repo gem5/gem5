@@ -95,7 +95,7 @@ output exec {{
 
         template <class T>
         bool
-        fpInvalidOp(FPOp *inst, %(CPU_exec_context)s *xc, const T dest_val,
+        fpInvalidOp(FPOp *inst, %(CPU_exec_context)s *cpu, const T dest_val,
                     Trace::InstRecord *traceData)
         {
             uint64_t mips_nan = 0;
@@ -111,13 +111,13 @@ output exec {{
                 }
 
                 //Set value to QNAN
-                xc->setFloatRegBits(inst, 0, mips_nan, size);
+                cpu->setFloatRegBits(inst, 0, mips_nan, size);
 
                 //Read FCSR from FloatRegFile
-                uint32_t fcsr_bits = xc->cpuXC->readFloatRegBits(FCSR);
+                uint32_t fcsr_bits = cpu->tc->readFloatRegBits(FCSR);
 
                 //Write FCSR from FloatRegFile
-                xc->cpuXC->setFloatRegBits(FCSR, genInvalidVector(fcsr_bits));
+                cpu->tc->setFloatRegBits(FCSR, genInvalidVector(fcsr_bits));
 
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
@@ -127,15 +127,15 @@ output exec {{
         }
 
         void
-        fpResetCauseBits(%(CPU_exec_context)s *xc)
+        fpResetCauseBits(%(CPU_exec_context)s *cpu)
         {
             //Read FCSR from FloatRegFile
-            uint32_t fcsr = xc->cpuXC->readFloatRegBits(FCSR);
+            uint32_t fcsr = cpu->tc->readFloatRegBits(FCSR);
 
             fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
 
             //Write FCSR from FloatRegFile
-            xc->cpuXC->setFloatRegBits(FCSR, fcsr);
+            cpu->tc->setFloatRegBits(FCSR, fcsr);
         }
 }};
 
