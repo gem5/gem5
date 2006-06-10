@@ -37,7 +37,6 @@ Usage: %s [-E] [-F] [ -G <get> ] [-d <db> ] [-g <graphdir> ] [-h <host>] [-p]
 
        commands    extra parameters   description
        ----------- ------------------ ---------------------------------------
-       bins        [regex]            List bins (only matching regex)
        formula     <formula>          Evaluated formula specified
        formulas    [regex]            List formulas (only matching regex)
        runs        none               List all runs in database
@@ -135,16 +134,6 @@ def commands(options, command, args):
             source.listStats()
         elif len(args) == 1:
             source.listStats(args[0])
-        else:
-            raise CommandException
-
-        return
-
-    if command == 'bins':
-        if len(args) == 0:
-            source.listBins()
-        elif len(args) == 1:
-            source.listBins(args[0])
         else:
             raise CommandException
 
@@ -279,7 +268,7 @@ def commands(options, command, args):
             if options.graph:
                 output.graph(stat.name, options.graphdir)
             else:
-                output.display(stat.name, options.binned, options.printmode)
+                output.display(stat.name, options.printmode)
 
         return
 
@@ -299,22 +288,10 @@ def commands(options, command, args):
         if options.graph:
             output.graph(command, options.graphdir, proxy)
         else:
-            output.display(command, options.binned, options.printmode)
-
-    if command == 'usertime':
-        import copy
-        user = copy.copy(system.run0.numCycles)
-        user.bins = 'user'
-
-        output.stat = user / system.run0.numCycles
-        output.ylabel = 'User Fraction'
-
-        display()
-        return
+            output.display(command, options.printmode)
 
     if command == 'ticks':
         output.stat = system.run0.numCycles
-        output.binstats = [ system.run0.numCycles ]
 
         display()
         return
@@ -401,7 +378,6 @@ def commands(options, command, args):
 
     if command == 'mpkb':
         output.stat = misses / (bytes / 1024)
-        output.binstats = [ misses ]
         output.ylabel = 'Misses / KB'
         display()
         return
@@ -409,7 +385,6 @@ def commands(options, command, args):
     if command == 'ipkb':
         interrupts = system.run0.kern.faults[4]
         output.stat = interrupts / kbytes
-        output.binstats = [ interrupts ]
         output.ylabel = 'Interrupts / KB'
         display()
         return
@@ -446,7 +421,6 @@ if __name__ == '__main__':
     options.runs = None
     options.system = 'client'
     options.method = None
-    options.binned = False
     options.graph = False
     options.ticks = False
     options.printmode = 'G'
@@ -454,10 +428,8 @@ if __name__ == '__main__':
     options.jobfile = None
     options.all = False
 
-    opts, args = getopts(sys.argv[1:], '-BEFJad:g:h:j:m:pr:s:u:T:')
+    opts, args = getopts(sys.argv[1:], '-EFJad:g:h:j:m:pr:s:u:T:')
     for o,a in opts:
-        if o == '-B':
-            options.binned = True
         if o == '-E':
             options.printmode = 'E'
         if o == '-F':

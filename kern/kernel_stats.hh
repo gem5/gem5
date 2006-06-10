@@ -44,95 +44,17 @@ class System;
 
 namespace Kernel {
 
-enum cpu_mode { kernel, user, idle, interrupt, cpu_mode_num };
+enum cpu_mode { kernel, user, idle, cpu_mode_num };
 extern const char *modestr[];
-
-class Binning
-{
-  private:
-    std::string myname;
-    System *system;
-
-  private:
-    // lisa's binning stuff
-    struct fnCall
-    {
-        Stats::MainBin *myBin;
-        std::string name;
-    };
-
-    struct SWContext
-    {
-        Counter calls;
-        std::stack<fnCall *> callStack;
-    };
-
-    std::map<const std::string, Stats::MainBin *> fnBins;
-    std::map<const Addr, SWContext *> swCtxMap;
-
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
-
-    std::vector<FnEvent *> fnEvents;
-
-    Stats::Scalar<> fnCalls;
-
-    Stats::MainBin *getBin(const std::string &name);
-    bool findCaller(std::string, std::string) const;
-
-    SWContext *findContext(Addr pcb);
-    bool addContext(Addr pcb, SWContext *ctx)
-    {
-        return (swCtxMap.insert(std::make_pair(pcb, ctx))).second;
-    }
-
-    void remContext(Addr pcb)
-    {
-        swCtxMap.erase(pcb);
-    }
-
-    void dumpState() const;
-
-    SWContext *swctx;
-    std::vector<std::string> binned_fns;
-
-  private:
-    Stats::MainBin *modeBin[cpu_mode_num];
-
-  public:
-    const bool bin;
-    const bool fnbin;
-
-    cpu_mode themode;
-    void palSwapContext(ExecContext *xc);
-    void execute(ExecContext *xc, StaticInstPtr inst);
-    void call(ExecContext *xc, Stats::MainBin *myBin);
-    void changeMode(cpu_mode mode);
-
-  public:
-    Binning(System *sys);
-    virtual ~Binning();
-
-    const std::string name() const { return myname; }
-    void regStats(const std::string &name);
-
-  public:
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-};
 
 class Statistics : public Serializable
 {
-  private:
-    friend class Binning;
-
   private:
     std::string myname;
 
     Addr idleProcess;
     cpu_mode themode;
     Tick lastModeTick;
-    bool bin_int;
 
     void changeMode(cpu_mode newmode, ExecContext *xc);
 

@@ -781,11 +781,6 @@ SimpleCPU::tick()
         fault = curStaticInst->execute(this, traceData);
 
 #if FULL_SYSTEM
-        if (system->kernelBinning->fnbin) {
-            assert(cpuXC->getKernelStats());
-            system->kernelBinning->execute(xcProxy, inst);
-        }
-
         if (cpuXC->profile) {
             bool usermode =
                 (cpuXC->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;

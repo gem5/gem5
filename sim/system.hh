@@ -46,7 +46,6 @@ class ObjectFile;
 class PhysicalMemory;
 class Platform;
 class RemoteGDB;
-namespace Kernel { class Binning; }
 
 class System : public SimObject
 {
@@ -82,8 +81,6 @@ class System : public SimObject
 
     /** Entry point in the kernel to start at */
     Addr kernelEntry;
-
-    Kernel::Binning *kernelBinning;
 
   protected:
 
@@ -131,9 +128,6 @@ class System : public SimObject
         MemoryController *memctrl;
         PhysicalMemory *physmem;
         uint64_t init_param;
-        bool bin;
-        std::vector<std::string> binned_fns;
-        bool bin_int;
 
         std::string kernel_path;
         std::string readfile;
@@ -172,7 +166,6 @@ class System : public SimObject
     int registerExecContext(ExecContext *xc, int xcIndex);
     void replaceExecContext(ExecContext *xc, int xcIndex);
 
-    void regStats();
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 

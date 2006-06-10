@@ -7,8 +7,6 @@ class System(SimObject):
     memctrl = Param.MemoryController(Parent.any, "memory controller")
     physmem = Param.PhysicalMemory(Parent.any, "phsyical memory")
     init_param = Param.UInt64(0, "numerical value to pass into simulator")
-    bin = Param.Bool(False, "is this system binned")
-    binned_fns = VectorParam.String([], "functions broken down and binned")
     kernel = Param.String("file that contains the kernel code")
     readfile = Param.String("", "file to read startup script from")
 

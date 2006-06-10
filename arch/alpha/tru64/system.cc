@@ -110,9 +110,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
     Param<uint64_t> system_type;
     Param<uint64_t> system_rev;
 
-    Param<bool> bin;
-    VectorParam<string> binned_fns;
-
 END_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
@@ -128,9 +125,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
     INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
     INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
     INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 12),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 2<<1),
-    INIT_PARAM_DFLT(bin, "is this system to be binned", false),
-    INIT_PARAM(binned_fns, "functions to be broken down and binned")
+    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 2<<1)
 
 END_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
@@ -149,9 +144,6 @@ CREATE_SIM_OBJECT(Tru64AlphaSystem)
     p->readfile = readfile;
     p->system_type = system_type;
     p->system_rev = system_rev;
-    p->bin = bin;
-    p->binned_fns = binned_fns;
-    p->bin_int = false;
 
     return new Tru64AlphaSystem(p);
 }

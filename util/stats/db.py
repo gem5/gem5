@@ -135,10 +135,6 @@ class Database(object):
         self.allRunIds = {}
         self.allRunNames = {}
 
-        self.allBins = []
-        self.allBinIds = {}
-        self.allBinNames = {}
-
         self.allFormulas = {}
 
         self.stattop = {}
@@ -147,7 +143,6 @@ class Database(object):
 
         self.mode = 'sum';
         self.runs = None
-        self.bins = None
         self.ticks = None
         self.method = 'sum'
         self._method = type(self).sum
@@ -218,11 +213,6 @@ class Database(object):
             self.allRunIds[run.run] = run
             self.allRunNames[run.name] = run
 
-        self.query('select * from bins')
-        for id,name in self.cursor.fetchall():
-            self.allBinIds[int(id)] = name
-            self.allBinNames[name] = int(id)
-
         self.query('select sd_stat,sd_x,sd_y,sd_name,sd_descr from subdata')
         for result in self.cursor.fetchall():
             subdata = SubData(result)
@@ -244,18 +234,6 @@ class Database(object):
             self.allStats.append(stat)
             self.allStatIds[stat.stat] = stat
             self.allStatNames[stat.name] = stat
-
-    # Name: listbins
-    # Desc: Prints all bins matching regex argument, if no argument
-    #       is given all bins are returned
-    def listBins(self, regex='.*'):
-        print '%-50s %-10s' % ('bin name', 'id')
-        print '-' * 61
-        names = self.allBinNames.keys()
-        names.sort()
-        for name in names:
-            id = self.allBinNames[name]
-            print '%-50s %-10d' % (name, id)
 
     # Name: listruns
     # Desc: Prints all runs matching a given user, if no argument
@@ -360,39 +338,10 @@ class Database(object):
                         ret.append(stat)
         return ret
 
-    def getBin(self, bins):
-        if type(bins) is not list:
-            bins = [ bins ]
-
-        ret = []
-        for bin in bins:
-            if type(bin) is int:
-                ret.append(bin)
-            elif type(bin) is str:
-                ret.append(self.allBinNames[bin])
-            else:
-                for name,id in self.allBinNames.items():
-                    if bin.match(name):
-                        ret.append(id)
-
-        return ret
-
-    def getNotBin(self, bin):
-        map = {}
-        for bin in getBin(bin):
-            map[bin] = 1
-
-        ret = []
-        for bin in self.allBinIds.keys():
-            if not map.has_key(bin):
-                ret.append(bin)
-
-        return ret
-
     #########################################
     # get the data
     #
-    def inner(self, op, stat, bins, ticks, group=False):
+    def query(self, op, stat, ticks, group=False):
         sql = 'select '
         sql += 'dt_stat as stat, '
         sql += 'dt_run as run, '
@@ -414,10 +363,6 @@ class Database(object):
             val = ' or '.join([ 'dt_run=%d' % r for r in self.runs ])
             sql += ' and (%s)' % val
 
-        if bins != None and len(bins):
-            val = ' or '.join([ 'dt_bin=%d' % b for b in bins ])
-            sql += ' and (%s)' % val
-
         if ticks != None and len(ticks):
             val = ' or '.join([ 'dt_tick=%d' % s for s in ticks ])
             sql += ' and (%s)' % val
@@ -427,35 +372,21 @@ class Database(object):
             sql += ',dt_tick'
         return sql
 
-    def outer(self, op_out, op_in, stat, bins, ticks):
-        sql = self.inner(op_in, stat, bins, ticks, True)
-        sql = 'select stat,run,x,y,%s(data) from (%s) as tb ' % (op_out, sql)
-        sql += 'group by stat,run,x,y'
-        return sql
-
     # Name: sum
-    # Desc: given a run, a stat and an array of samples and bins,
-    #        sum all the bins and then get the standard deviation of the
-    #        samples for non-binned runs. This will just return the average
-    #        of samples, however a bin array still must be passed
-    def sum(self, stat, bins, ticks):
-        return self.inner('sum', stat, bins, ticks)
+    # Desc: given a run, a stat and an array of samples, total the samples
+    def sum(self, *args, **kwargs):
+        return self.query('sum', *args, **kwargs)
 
     # Name: avg
-    # Desc: given a run, a stat and an array of samples and bins,
-    #        sum all the bins and then average the samples for non-binned
-    #        runs this will just return the average of samples, however
-    #        a bin array still must be passed
-    def avg(self, stat, bins, ticks):
-        return self.outer('avg', 'sum', stat, bins, ticks)
+    # Desc: given a run, a stat and an array of samples, average the samples
+    def avg(self, stat, ticks):
+        return self.query('avg', *args, **kwargs)
 
     # Name: stdev
-    # Desc: given a run, a stat and an array of samples and bins,
-    #        sum all the bins and then get the standard deviation of the
-    #        samples for non-binned runs. This will just return the average
-    #        of samples, however a bin array still must be passed
-    def stdev(self, stat, bins, ticks):
-        return self.outer('stddev', 'sum', stat, bins, ticks)
+    # Desc: given a run, a stat and an array of samples, get the standard
+    #       deviation
+    def stdev(self, stat, ticks):
+        return self.query('stddev', *args, **kwargs)
 
     def __setattr__(self, attr, value):
         super(Database, self).__setattr__(attr, value)
@@ -471,12 +402,10 @@ class Database(object):
         else:
             raise AttributeError, "can only set get to: sum | avg | stdev"
 
-    def data(self, stat, bins=None, ticks=None):
-        if bins is None:
-            bins = self.bins
+    def data(self, stat, ticks=None):
         if ticks is None:
             ticks = self.ticks
-        sql = self._method(self, stat, bins, ticks)
+        sql = self._method(self, stat, ticks)
         self.query(sql)
 
         runs = {}

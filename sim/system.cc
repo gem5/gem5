@@ -65,16 +65,12 @@ System::System(Params *p)
 
     // increment the number of running systms
     numSystemsRunning++;
-
-    kernelBinning = new Kernel::Binning(this);
 }
 
 System::~System()
 {
     delete kernelSymtab;
     delete kernel;
-
-    delete kernelBinning;
 }
 
 
@@ -141,16 +137,8 @@ System::replaceExecContext(ExecContext *xc, int id)
 }
 
 void
-System::regStats()
-{
-    kernelBinning->regStats(name() + ".kern");
-}
-
-void
 System::serialize(ostream &os)
 {
-    kernelBinning->serialize(os);
-
     kernelSymtab->serialize("kernel_symtab", os);
 }
 
@@ -158,8 +146,6 @@ System::serialize(ostream &os)
 void
 System::unserialize(Checkpoint *cp, const string &section)
 {
-    kernelBinning->unserialize(cp, section);
-
     kernelSymtab->unserialize("kernel_symtab", cp, section);
 }
 

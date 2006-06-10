@@ -38,31 +38,25 @@ class Python;
 
 namespace Stats {
 
-class MainBin;
 class StatData;
 
 namespace Database {
 
 typedef std::map<void *, StatData *> stat_map_t;
 typedef std::list<StatData *> stat_list_t;
-typedef std::list<MainBin *> bin_list_t;
 
 // We wrap the database in a struct to make sure it is built in time.
 struct TheDatabase
 {
     stat_map_t map;
     stat_list_t stats;
-    bin_list_t bins;
-
 };
 
 TheDatabase &db();
 inline stat_map_t &map() { return db().map; }
 inline stat_list_t &stats() { return db().stats; }
-inline bin_list_t &bins() { return db().bins; }
 
 StatData *find(void *stat);
-void regBin(MainBin *bin, const std::string &name);
 void regStat(void *stat, StatData *data);
 void regPrint(void *stat);
 
