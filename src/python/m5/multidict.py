@@ -31,7 +31,7 @@ __all__ = [ 'multidict' ]
 class multidict(object):
     __nodefault = object()
     def __init__(self, parent = {}, **kwargs):
-        self.dict = dict(**kwargs)
+        self.local = dict(**kwargs)
         self.parent = parent
         self.deleted = {}
 
@@ -42,11 +42,11 @@ class multidict(object):
         return `dict(self.items())`
 
     def __contains__(self, key):
-        return self.dict.has_key(key) or self.parent.has_key(key)
+        return self.local.has_key(key) or self.parent.has_key(key)
 
     def __delitem__(self, key):
         try:
-            del self.dict[key]
+            del self.local[key]
         except KeyError, e:
             if key in self.parent:
                 self.deleted[key] = True
@@ -55,11 +55,11 @@ class multidict(object):
 
     def __setitem__(self, key, value):
         self.deleted.pop(key, False)
-        self.dict[key] = value
+        self.local[key] = value
 
     def __getitem__(self, key):
         try:
-            return self.dict[key]
+            return self.local[key]
         except KeyError, e:
             if not self.deleted.get(key, False) and key in self.parent:
                 return self.parent[key]
@@ -67,15 +67,15 @@ class multidict(object):
                 raise KeyError, e
 
     def __len__(self):
-        return len(self.dict) + len(self.parent)
+        return len(self.local) + len(self.parent)
 
     def next(self):
-        for key,value in self.dict.items():
+        for key,value in self.local.items():
             yield key,value
 
         if self.parent:
             for key,value in self.parent.next():
-                if key not in self.dict and key not in self.deleted:
+                if key not in self.local and key not in self.deleted:
                     yield key,value
 
     def has_key(self, key):
@@ -116,22 +116,22 @@ class multidict(object):
             return self[key]
         except KeyError:
             self.deleted.pop(key, False)
-            self.dict[key] = default
+            self.local[key] = default
             return default
 
     def _dump(self):
         print 'multidict dump'
         node = self
         while isinstance(node, multidict):
-            print '    ', node.dict
+            print '    ', node.local
             node = node.parent
 
     def _dumpkey(self, key):
         values = []
         node = self
         while isinstance(node, multidict):
-            if key in node.dict:
-                values.append(node.dict[key])
+            if key in node.local:
+                values.append(node.local[key])
             node = node.parent
         print key, values
 
