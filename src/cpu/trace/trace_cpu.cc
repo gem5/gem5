@@ -108,7 +108,7 @@ TraceCPU::tick()
     if (!nextReq) {
         // No more requests to send. Finish trailing events and exit.
         if (mainEventQueue.empty()) {
-            new SimExitEvent("Finshed Memory Trace");
+            exitSimLoop("end of memory trace reached");
         } else {
             tickEvent.schedule(mainEventQueue.nextEventTime() + cycles(1));
         }

@@ -728,7 +728,7 @@ class ParamDesc(object):
     def __getattr__(self, attr):
         if attr == 'ptype':
             try:
-                ptype = eval(self.ptype_str, m5.__dict__)
+                ptype = eval(self.ptype_str, m5.objects.__dict__)
                 if not isinstance(ptype, type):
                     panic("Param qualifier is not a type: %s" % self.ptype)
                 self.ptype = ptype
@@ -1290,23 +1290,6 @@ AllMemory = AddrRange(0, MaxAddr)
 
 #####################################################################
 
-# The final hook to generate .ini files.  Called from configuration
-# script once config is built.
-def instantiate(root):
-    global ticks_per_sec
-    ticks_per_sec = float(root.clock.frequency)
-    root.print_ini()
-    noDot = True # temporary until we fix dot
-    if not noDot:
-       dot = pydot.Dot()
-       instance.outputDot(dot)
-       dot.orientation = "portrait"
-       dot.size = "8.5,11"
-       dot.ranksep="equally"
-       dot.rank="samerank"
-       dot.write("config.dot")
-       dot.write_ps("config.ps")
-
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
@@ -1322,5 +1305,5 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',
-           'NextEthernetAddr', 'instantiate']
+           'NextEthernetAddr']
 

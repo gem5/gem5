@@ -176,7 +176,7 @@ OptCPU::tick()
     fprintf(stderr,"sys.cpu.misses %d #opt cache misses\n",misses);
     fprintf(stderr,"sys.cpu.hits %d #opt cache hits\n", hits);
     fprintf(stderr,"sys.cpu.accesses %d #opt cache acceses\n", references);
-    new SimExitEvent("Finshed Memory Trace");
+    exitSimLoop("end of memory trace reached");
 }
 
 void

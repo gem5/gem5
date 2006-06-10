@@ -41,11 +41,13 @@
 #include <libgen.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <list>
 #include <string>
 #include <vector>
 
+#include "base/callback.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -111,50 +113,39 @@ abortHandler(int sigtype)
 #endif
 }
 
-/// Simulator executable name
-char *myProgName = "";
 
-///
-/// Echo the command line for posterity in such a way that it can be
-/// used to rerun the same simulation (given the same .ini files).
-///
+const char *briefCopyright =
+"Copyright (c) 2001-2006\n"
+"The Regents of The University of Michigan\n"
+"All Rights Reserved\n";
+
+/// Print welcome message.
 void
-echoCommandLine(int argc, char **argv, ostream &out)
+sayHello(ostream &out)
 {
-    out << "command line: " << argv[0];
-    for (int i = 1; i < argc; i++) {
-        string arg(argv[i]);
+    extern const char *compileDate;     // from date.cc
 
-        out << ' ';
+    ccprintf(out, "M5 Simulator System\n");
+    // display copyright
+    ccprintf(out, "%s\n", briefCopyright);
+    ccprintf(out, "M5 compiled %d\n", compileDate);
+    ccprintf(out, "M5 started %s\n", Time::start);
 
-        // If the arg contains spaces, we need to quote it.
-        // The rest of this is overkill to make it look purty.
+    char *host = getenv("HOSTNAME");
+    if (!host)
+        host = getenv("HOST");
 
-        // print dashes first outside quotes
-        int non_dash_pos = arg.find_first_not_of("-");
-        out << arg.substr(0, non_dash_pos);	// print dashes
-        string body = arg.substr(non_dash_pos);	// the rest
-
-        // if it's an assignment, handle the lhs & rhs separately
-        int eq_pos = body.find("=");
-        if (eq_pos == string::npos) {
-            out << quote(body);
-        }
-        else {
-            string lhs(body.substr(0, eq_pos));
-            string rhs(body.substr(eq_pos + 1));
-
-            out << quote(lhs) << "=" << quote(rhs);
-        }
-    }
-    out << endl << endl;
+    if (host)
+        ccprintf(out, "M5 executing on %s\n", host);
 }
+
+
+extern "C" { void init_main(); }
 
 int
 main(int argc, char **argv)
 {
-    // Save off program name
-    myProgName = argv[0];
+    sayHello(cerr);
 
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
     signal(SIGTRAP, SIG_IGN);
@@ -163,37 +154,108 @@ main(int argc, char **argv)
     signal(SIGINT, exitNowHandler);		// dump final stats and exit
     signal(SIGABRT, abortHandler);
 
-    // Python embedded interpreter invocation
     Py_SetProgramName(argv[0]);
-    const char *fileName = Py_GetProgramFullPath();
+
+    // default path to m5 python code is the currently executing
+    // file... Python ZipImporter will find embedded zip archive
+    char *pythonpath = argv[0];
+
+    bool interactive = false;
+    bool getopt_done = false;
+    do {
+        switch (getopt(argc, argv, "+p:i")) {
+            // -p <path> prepends <path> to PYTHONPATH instead of
+            // using built-in zip archive.  Useful when
+            // developing/debugging changes to built-in Python
+            // libraries, as the new Python can be tested without
+            // building a new m5 binary.
+          case 'p':
+            pythonpath = optarg;
+            break;
+
+            // -i forces entry into interactive mode after the
+            // supplied script is executed (just like the -i option to
+            // the Python interpreter).
+          case 'i':
+            interactive = true;
+            break;
+
+          case -1:
+            getopt_done = true;
+            break;
+
+          default:
+            fatal("Unrecognized option %c\n", optopt);
+        }
+    } while (!getopt_done);
+
+    // Fix up argc & argv to hide arguments we just processed.
+    // getopt() sets optind to the index of the first non-processed
+    // argv element.
+    argc -= optind;
+    argv += optind;
+
+    // Set up PYTHONPATH to make sure the m5 module is found
+    string newpath(pythonpath);
+
+    char *oldpath = getenv("PYTHONPATH");
+    if (oldpath != NULL) {
+        newpath += ":";
+        newpath += oldpath;
+    }
+
+    if (setenv("PYTHONPATH", newpath.c_str(), true) == -1)
+        fatal("setenv: %s\n", strerror(errno));
+
+    // initialize embedded Python interpreter
     Py_Initialize();
     PySys_SetArgv(argc, argv);
 
-    // loadSwigModules();
+    // initialize SWIG 'main' module
+    init_main();
 
-    // Set Python module path to include current file to find embedded
-    // zip archive
-    if (PyRun_SimpleString("import sys") != 0)
-        panic("Python error importing 'sys' module\n");
-    string pathCmd = csprintf("sys.path[1:1] = ['%s']", fileName);
-    if (PyRun_SimpleString(pathCmd.c_str()) != 0)
-        panic("Python error setting sys.path\n");
+    if (argc > 0) {
+        // extra arg(s): first is script file, remaining ones are args
+        // to script file
+        char *filename = argv[0];
+        FILE *fp = fopen(filename, "r");
+        if (!fp) {
+            fatal("cannot open file '%s'\n", filename);
+        }
 
-    // Pass compile timestamp string to Python
-    extern const char *compileDate;	// from date.cc
-    string setCompileDate = csprintf("compileDate = '%s'", compileDate);
-    if (PyRun_SimpleString(setCompileDate.c_str()) != 0)
-        panic("Python error setting compileDate\n");
+        PyRun_AnyFile(fp, filename);
+    } else {
+        // no script file argument... force interactive prompt
+        interactive = true;
+    }
 
-    // PyRun_InteractiveLoop(stdin, "stdin");
-    // m5/__init__.py currently contains main argv parsing loop etc.,
-    // and will write out config.ini file before returning.
-    if (PyImport_ImportModule("defines") == NULL)
-        panic("Python error importing 'defines.py'\n");
-    if (PyImport_ImportModule("m5") == NULL)
-        panic("Python error importing 'm5' module\n");
+    if (interactive) {
+        // The following code to import readline was copied from Python
+        // 2.4.3's Modules/main.c.
+        // Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006
+        // Python Software Foundation; All Rights Reserved
+        // We should only enable this if we're actually using an
+        // interactive prompt.
+        PyObject *v;
+        v = PyImport_ImportModule("readline");
+        if (v == NULL)
+            PyErr_Clear();
+        else
+            Py_DECREF(v);
+
+        PyRun_InteractiveLoop(stdin, "stdin");
+    }
+
+    // clean up Python intepreter.
     Py_Finalize();
+}
 
+
+/// Initialize C++ configuration.  Exported to Python via SWIG; invoked
+/// from m5.instantiate().
+void
+initialize()
+{
     configStream = simout.find("config.out");
 
     // The configuration database is now complete; start processing it.
@@ -212,8 +274,7 @@ main(int argc, char **argv)
     ParamContext::parseAllContexts(inifile);
     ParamContext::checkAllContexts();
 
-    // Echo command line and all parameter settings to stats file as well.
-    echoCommandLine(argc, argv, *outputStream);
+    // Echo all parameter settings to stats file as well.
     ParamContext::showAllContexts(*configStream);
 
     // Any objects that can't connect themselves until after construction should
@@ -244,16 +305,61 @@ main(int argc, char **argv)
     // Reset to put the stats in a consistent state.
     Stats::reset();
 
-    warn("Entering event queue.  Starting simulation...\n");
     SimStartup();
-    while (!mainEventQueue.empty()) {
+}
+
+
+/** Simulate for num_cycles additional cycles.  If num_cycles is -1
+ * (the default), do not limit simulation; some other event must
+ * terminate the loop.  Exported to Python via SWIG.
+ * @return The SimLoopExitEvent that caused the loop to exit.
+ */
+SimLoopExitEvent *
+simulate(Tick num_cycles = -1)
+{
+    warn("Entering event queue @ %d.  Starting simulation...\n", curTick);
+
+    // Fix up num_cycles.  Special default value -1 means simulate
+    // "forever"... schedule event at MaxTick just to be safe.
+    // Otherwise it's a delta for additional cycles to simulate past
+    // curTick, and thus must be non-negative.
+    if (num_cycles == -1)
+        num_cycles = MaxTick;
+    else if (num_cycles < 0)
+        fatal("simulate: num_cycles must be >= 0 (was %d)\n", num_cycles);
+    else
+        num_cycles = curTick + num_cycles;
+
+    Event *limit_event = new SimLoopExitEvent(num_cycles,
+                                              "simulate() limit reached");
+
+    while (1) {
+        // there should always be at least one event (the SimLoopExitEvent
+        // we just scheduled) in the queue
+        assert(!mainEventQueue.empty());
         assert(curTick <= mainEventQueue.nextTick() &&
                "event scheduled in the past");
 
         // forward current cycle to the time of the first event on the
         // queue
         curTick = mainEventQueue.nextTick();
-        mainEventQueue.serviceOne();
+        Event *exit_event = mainEventQueue.serviceOne();
+        if (exit_event != NULL) {
+            // hit some kind of exit event; return to Python
+            // event must be subclass of SimLoopExitEvent...
+            SimLoopExitEvent *se_event = dynamic_cast<SimLoopExitEvent *>(exit_event);
+            if (se_event == NULL)
+                panic("Bogus exit event class!");
+
+            // if we didn't hit limit_event, delete it
+            if (se_event != limit_event) {
+                assert(limit_event->scheduled());
+                limit_event->deschedule();
+                delete limit_event;
+            }
+
+            return se_event;
+        }
 
         if (async_event) {
             async_event = false;
@@ -273,7 +379,7 @@ main(int argc, char **argv)
 
             if (async_exit) {
                 async_exit = false;
-                new SimExitEvent("User requested STOP");
+                exitSimLoop("user interrupt received");
             }
 
             if (async_io || async_alarm) {
@@ -284,11 +390,37 @@ main(int argc, char **argv)
         }
     }
 
-    // This should never happen... every conceivable way for the
-    // simulation to terminate (hit max cycles/insts, signal,
-    // simulated system halts/exits) generates an exit event, so we
-    // should never run out of events on the queue.
-    exitNow("no events on event loop!  All CPUs must be idle.", 1);
+    // not reached... only exit is return on SimLoopExitEvent
+}
 
-    return 0;
+/**
+ * Queue of C++ callbacks to invoke on simulator exit.
+ */
+CallbackQueue exitCallbacks;
+
+/**
+ * Register an exit callback.
+ */
+void
+registerExitCallback(Callback *callback)
+{
+    exitCallbacks.add(callback);
+}
+
+/**
+ * Do C++ simulator exit processing.  Exported to SWIG to be invoked
+ * when simulator terminates via Python's atexit mechanism.
+ */
+void
+doExitCleanup()
+{
+    exitCallbacks.process();
+    exitCallbacks.clear();
+
+    cout.flush();
+
+    ParamContext::cleanupAllContexts();
+
+    // print simulation stats
+    Stats::DumpNow();
 }

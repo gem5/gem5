@@ -1,4 +1,4 @@
-from m5 import *
+from m5.config import *
 class DiskImage(SimObject):
     type = 'DiskImage'
     abstract = True

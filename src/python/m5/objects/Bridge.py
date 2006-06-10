@@ -1,4 +1,4 @@
-from m5 import *
+from m5.config import *
 from MemObject import MemObject
 
 class Bridge(MemObject):

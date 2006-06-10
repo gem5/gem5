@@ -146,7 +146,6 @@ env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
 isa = env['TARGET_ISA'] # someday this may be a list of ISAs
 
 # Let the target architecture define what additional sources it needs
-sources += SConscript(os.path.join(isa, 'SConscript'),
-                      exports = 'env', duplicate = False)
+sources += SConscript(os.path.join(isa, 'SConscript'), exports = 'env')
 
 Return('sources')

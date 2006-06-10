@@ -248,7 +248,7 @@ Serializable::serializeAll()
     assert(Serializable::ckptPrevCount + 1 == Serializable::ckptCount);
     Serializable::ckptPrevCount++;
     if (ckptMaxCount && ++ckptCount >= ckptMaxCount)
-        SimExit(curTick + 1, "Maximum number of checkpoints dropped");
+        exitSimLoop(curTick + 1, "Maximum number of checkpoints dropped");
 
 }
 

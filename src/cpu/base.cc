@@ -93,8 +93,8 @@ BaseCPU::BaseCPU(Params *p)
     //
     if (p->max_insts_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comInstEventQueue[i], p->max_insts_any_thread,
-                "a thread reached the max instruction count");
+            new SimLoopExitEvent(comInstEventQueue[i], p->max_insts_any_thread,
+                                 "a thread reached the max instruction count");
 
     if (p->max_insts_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will
@@ -118,8 +118,8 @@ BaseCPU::BaseCPU(Params *p)
     //
     if (p->max_loads_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comLoadEventQueue[i], p->max_loads_any_thread,
-                "a thread reached the max load count");
+            new SimLoopExitEvent(comLoadEventQueue[i], p->max_loads_any_thread,
+                                 "a thread reached the max load count");
 
     if (p->max_loads_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will

@@ -134,14 +134,14 @@ namespace AlphaPseudo
     void
     m5exit_old(ExecContext *xc)
     {
-        SimExit(curTick, "m5_exit_old instruction encountered");
+        exitSimLoop(curTick, "m5_exit_old instruction encountered");
     }
 
     void
     m5exit(ExecContext *xc, Tick delay)
     {
         Tick when = curTick + delay * Clock::Int::ns;
-        SimExit(when, "m5_exit instruction encountered");
+        exitSimLoop(when, "m5_exit instruction encountered");
     }
 
     void
