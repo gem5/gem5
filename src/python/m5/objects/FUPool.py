@@ -1,7 +1,4 @@
-from m5 import *
-from FullCPU import OpType
-from FullCPU import OpDesc
-from FullCPU import FUDesc
+from m5.config import *
 
 class FUPool(SimObject):
     type = 'FUPool'
