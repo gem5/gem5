@@ -41,7 +41,7 @@
 #include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/debug.hh"
-#include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 
 #if FULL_SYSTEM
 

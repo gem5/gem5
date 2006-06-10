@@ -1,6 +1,17 @@
-from m5 import *
+import m5
+from m5.objects import *
 import os
 from SysPaths import *
+
+parser = optparse.OptionParser(option_list=m5.standardOptions)
+
+parser.add_option("-t", "--timing", action="store_true")
+
+(options, args) = parser.parse_args()
+
+if args:
+    print "Error: script doesn't take any positional arguments"
+    sys.exit(1)
 
 # Base for tests is directory containing this file.
 test_base = os.path.dirname(__file__)
@@ -181,7 +192,11 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
                              read_only=True)
     simple_disk = SimpleDisk(disk=Parent.raw_image)
     intrctrl = IntrControl()
-    cpu = AtomicSimpleCPU(mem=Parent.magicbus2)
+    if options.timing:
+        cpu = TimingSimpleCPU()
+    else:
+        cpu = AtomicSimpleCPU()
+    cpu.mem = Parent.magicbus2
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
     kernel = binary('vmlinux')
     pal = binary('ts_osfpal')
@@ -213,3 +228,8 @@ def DualRoot(ClientSystem, ServerSystem):
 root = DualRoot(ClientSystem = LinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
                 ServerSystem = LinuxAlphaSystem(readfile=script('netperf-server.rcS')))
 
+m5.instantiate(root)
+
+exit_event = m5.simulate()
+
+print 'Exiting @', m5.curTick(), 'because', exit_event.getCause()

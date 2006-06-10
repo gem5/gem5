@@ -61,8 +61,7 @@ namespace SparcISA
     const int HprStart = 64;
     const int MiscStart = 96;
 
-
-    const uint64_t Bit64 = 0x8000000000000000;
+    const uint64_t Bit64 = (1ULL << 63);
 
     class IntRegFile
     {
