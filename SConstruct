@@ -158,6 +158,12 @@ env = Environment(ENV = os.environ,  # inherit user's environment vars
 
 env.SConsignFile("sconsign")
 
+# Default duplicate option is to use hard links, but this messes up
+# when you use emacs to edit a file in the target dir, as emacs moves
+# file to file~ then copies to file, breaking the link.  Symbolic
+# (soft) links work better.
+env.SetOption('duplicate', 'soft-copy')
+
 # I waffle on this setting... it does avoid a few painful but
 # unnecessary builds, but it also seems to make trivial builds take
 # noticeably longer.
@@ -192,6 +198,19 @@ env.Append(LIBS = py_version_name)
 # add library path too if it's not in the default place
 if sys.exec_prefix != '/usr':
     env.Append(LIBPATH = os.path.join(sys.exec_prefix, 'lib'))
+
+# Set up SWIG flags & scanner
+
+env.Append(SWIGFLAGS=Split('-c++ -python -modern $_CPPINCFLAGS'))
+
+import SCons.Scanner
+
+swig_inc_re = '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+
+swig_scanner = SCons.Scanner.ClassicCPP("SwigScan", ".i", "CPPPATH",
+                                        swig_inc_re)
+
+env.Append(SCANNERS = swig_scanner)
 
 # Other default libraries
 env.Append(LIBS=['z'])
@@ -469,7 +488,7 @@ for build_path in build_paths:
     # to the configured options.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
     envList = SConscript('src/SConscript', build_dir = build_path,
-                         exports = 'env', duplicate = False)
+                         exports = 'env')
 
     # Set up the regression tests for each build.
 #    for e in envList:

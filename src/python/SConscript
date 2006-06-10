@@ -38,11 +38,8 @@ def join(*args):
 
 Import('env')
 
-# This SConscript is in charge of collecting .py files and generating a zip archive that is appended to the m5 binary.
-
-# Copy .py source files here (relative to src/python in the build
-# directory).
-pyzip_root = 'zip'
+# This SConscript is in charge of collecting .py files and generating
+# a zip archive that is appended to the m5 binary.
 
 # List of files & directories to include in the zip file.  To include
 # a package, list only the root directory of the package, not any
@@ -58,7 +55,7 @@ pyzip_dep_files = []
 # Add the specified package to the zip archive.  Adds the directory to
 # pyzip_files and all included .py files to pyzip_dep_files.
 def addPkg(pkgdir):
-    pyzip_files.append(join(pyzip_root, pkgdir))
+    pyzip_files.append(pkgdir)
     origdir = os.getcwd()
     srcdir = join(Dir('.').srcnode().abspath, pkgdir)
     os.chdir(srcdir)
@@ -70,10 +67,7 @@ def addPkg(pkgdir):
 
         for f in files:
             if f.endswith('.py'):
-                source = join(pkgdir, path, f)
-                target = join(pyzip_root, source)
-                pyzip_dep_files.append(target)
-                env.CopyFile(target, source)
+                pyzip_dep_files.append(join(pkgdir, path, f))
 
     os.chdir(origdir)
 
@@ -81,18 +75,24 @@ def addPkg(pkgdir):
 # build_env flags.
 def MakeDefinesPyFile(target, source, env):
     f = file(str(target[0]), 'w')
-    print >>f, "import __main__"
-    print >>f, "__main__.m5_build_env = ",
+    print >>f, "m5_build_env = ",
     print >>f, source[0]
     f.close()
 
 optionDict = dict([(opt, env[opt]) for opt in env.ExportOptions])
-env.Command('defines.py', Value(optionDict), MakeDefinesPyFile)
+env.Command('m5/defines.py', Value(optionDict), MakeDefinesPyFile)
 
 # Now specify the packages & files for the zip archive.
 addPkg('m5')
-pyzip_files.append('defines.py')
+pyzip_files.append('m5/defines.py')
 pyzip_files.append(join(env['ROOT'], 'util/pbs/jobfile.py'))
+
+env.Command(['swig/main_wrap.cc', 'm5/main.py'],
+            'swig/main.i',
+            '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
+            '-o ${TARGETS[0]} $SOURCES')
+
+pyzip_dep_files.append('m5/main.py')
 
 # Action function to build the zip archive.  Uses the PyZipFile module
 # included in the standard Python library.

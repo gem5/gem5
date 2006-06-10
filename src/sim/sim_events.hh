@@ -36,7 +36,7 @@
 //
 // Event to terminate simulation at a particular cycle/instruction
 //
-class SimExitEvent : public Event
+class SimLoopExitEvent : public Event
 {
   private:
     // string explaining why we're terminating
@@ -44,24 +44,18 @@ class SimExitEvent : public Event
     int code;
 
   public:
-    SimExitEvent(const std::string &_cause, int c = 0)
+    SimLoopExitEvent(Tick _when, const std::string &_cause, int c = 0)
         : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
           code(c)
-        { schedule(curTick); }
+    { setFlags(IsExitEvent); schedule(_when); }
 
-    SimExitEvent(Tick _when, const std::string &_cause, int c = 0)
-        : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
-          code(c)
-        { schedule(_when); }
-
-    SimExitEvent(EventQueue *q, const std::string &_cause, int c = 0)
+    SimLoopExitEvent(EventQueue *q,
+                     Tick _when, const std::string &_cause, int c = 0)
         : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
-        { schedule(curTick); }
+    { setFlags(IsExitEvent); schedule(_when); }
 
-    SimExitEvent(EventQueue *q, Tick _when, const std::string &_cause,
-                 int c = 0)
-        : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
-        { schedule(_when); }
+    std::string getCause() { return cause; }
+    int getCode() { return code; }
 
     void process();	// process event
 

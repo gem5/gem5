@@ -1,4 +1,4 @@
-from m5 import *
+from m5.config import *
 from Serialize import Serialize
 from Statistics import Statistics
 from Trace import Trace

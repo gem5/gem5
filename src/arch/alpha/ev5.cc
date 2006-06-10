@@ -571,7 +571,7 @@ SimpleThread::simPalCheck(int palFunc)
       case PAL::halt:
         halt();
         if (--System::numSystemsRunning == 0)
-            new SimExitEvent("all cpus halted");
+            exitSimLoop("all cpus halted");
         break;
 
       case PAL::bpt:

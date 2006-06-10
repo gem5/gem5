@@ -44,7 +44,7 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
-#include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -92,7 +92,7 @@ SyscallReturn
 exitFunc(SyscallDesc *desc, int callnum, Process *process,
          ThreadContext *tc)
 {
-    new SimExitEvent("target called exit()", tc->getSyscallArg(0) & 0xff);
+    exitSimLoop("target called exit()", tc->getSyscallArg(0) & 0xff);
 
     return 1;
 }

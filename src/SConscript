@@ -109,12 +109,12 @@ base_sources = Split('''
 	sim/eventq.cc
 	sim/faults.cc
 	sim/main.cc
+        python/swig/main_wrap.cc
 	sim/param.cc
 	sim/profile.cc
 	sim/root.cc
 	sim/serialize.cc
 	sim/sim_events.cc
-	sim/sim_exit.cc
 	sim/sim_object.cc
 	sim/startup.cc
 	sim/stat_context.cc
@@ -286,14 +286,18 @@ memtest_sources = Split('''
 	cpu/memtest/memtest.cc
         ''')
 
+# Include file paths are rooted in this directory.  SCons will
+# automatically expand '.' to refer to both the source directory and
+# the corresponding build directory to pick up generated include
+# files.
+env.Append(CPPPATH=Dir('.'))
+
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
-arch_sources = SConscript('arch/SConscript',
-                          exports = 'env', duplicate = False)
+arch_sources = SConscript('arch/SConscript', exports = 'env')
 
-cpu_sources = SConscript('cpu/SConscript',
-                         exports = 'env', duplicate = False)
+cpu_sources = SConscript('cpu/SConscript', exports = 'env')
 
 # This is outside of cpu/SConscript since the source directory isn't
 # underneath 'cpu'.
@@ -328,7 +332,7 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
             'base/traceflags.py',
             'python $SOURCE $TARGET.base')
 
-SConscript('python/SConscript', exports = ['env'], duplicate=0)
+SConscript('python/SConscript', exports = ['env'])
 
 # This function adds the specified sources to the given build
 # environment, and returns a list of all the corresponding SCons
@@ -350,12 +354,6 @@ def make_objs(sources, env):
 # a slightly different build environment.
 #
 ###################################################
-
-# Include file paths are rooted in this directory.  SCons will
-# automatically expand '.' to refer to both the source directory and
-# the corresponding build directory to pick up generated include
-# files.
-env.Append(CPPPATH='.')
 
 # List of constructed environments to pass back to SConstruct
 envList = []

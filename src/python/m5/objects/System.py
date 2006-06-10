@@ -1,4 +1,5 @@
-from m5 import *
+from m5 import build_env
+from m5.config import *
 
 class System(SimObject):
     type = 'System'
