@@ -244,17 +244,22 @@ namespace SparcISA
             //In each of these cases, we have to copy the value into a temporary
             //variable. This is because we may otherwise try to access an
             //unaligned portion of memory.
+
+            uint32_t result32;
+            uint64_t result64;
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32 = gtoh((uint32_t)val);
+                result32 = gtoh((uint32_t)val);
                 memcpy(regSpace + 4 * floatReg, &result32, width);
+                break;
               case DoubleWidth:
-                uint64_t result64 = gtoh((uint64_t)val);
+                result64 = gtoh((uint64_t)val);
                 memcpy(regSpace + 4 * floatReg, &result64, width);
+                break;
               case QuadWidth:
-                uint64_t result128 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result128, width);
+                panic("Quad width FP not implemented.");
+                break;
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
@@ -266,17 +271,21 @@ namespace SparcISA
             //In each of these cases, we have to copy the value into a temporary
             //variable. This is because we may otherwise try to access an
             //unaligned portion of memory.
+            uint32_t result32;
+            uint64_t result64;
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32 = gtoh((uint32_t)val);
+                result32 = gtoh((uint32_t)val);
                 memcpy(regSpace + 4 * floatReg, &result32, width);
+                break;
               case DoubleWidth:
-                uint64_t result64 = gtoh((uint64_t)val);
+                result64 = gtoh((uint64_t)val);
                 memcpy(regSpace + 4 * floatReg, &result64, width);
+                break;
               case QuadWidth:
-                uint64_t result128 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result128, width);
+                panic("Quad width FP not implemented.");
+                break;
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
