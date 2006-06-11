@@ -211,6 +211,7 @@ class MetaSimObject(type):
         # initialize required attributes
         cls._params = multidict()
         cls._values = multidict()
+        cls._instantiated = False # really instantiated or subclassed
         cls._anon_subclass_counter = 0
 
         # We don't support multiple inheritance.  If you want to, you
@@ -225,6 +226,7 @@ class MetaSimObject(type):
         if isinstance(base, MetaSimObject):
             cls._params.parent = base._params
             cls._values.parent = base._values
+            base._instantiated = True
 
         # now process the _init_dict items
         for key,val in cls._init_dict.items():
@@ -299,6 +301,12 @@ class MetaSimObject(type):
         param = cls._params.get(attr, None)
         if param:
             # It's ok: set attribute by delegating to 'object' class.
+            if (isSimObject(value) or isSimObjSequence(value)) \
+                   and cls._instantiated:
+                raise AttributeError, \
+                  "Cannot set SimObject parameter '%s' after\n" \
+                  "    class %s has been instantiated or subclassed" \
+                  % (attr, cls.__name__)
             try:
                 cls._values[attr] = param.convert(value)
             except Exception, e:
@@ -385,6 +393,8 @@ class SimObject(object):
             # this objcet, but prepare to memoize any recursively
             # instantiated objects.
             _memo = {}
+
+        self.__class__._instantiated = True
 
         self._children = {}
         # Inherit parameter values from class using multidict so

@@ -197,6 +197,8 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
     else:
         cpu = AtomicSimpleCPU()
     cpu.mem = Parent.magicbus2
+    cpu.itb = AlphaITB()
+    cpu.dtb = AlphaDTB()
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
     kernel = binary('vmlinux')
     pal = binary('ts_osfpal')
@@ -205,18 +207,15 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
 #    readfile = os.path.join(test_base, 'halt.sh')
 
 
-BaseCPU.itb = AlphaITB()
-BaseCPU.dtb = AlphaDTB()
-BaseCPU.system = Parent.any
 
 class TsunamiRoot(System):
     pass
 
 
-def DualRoot(ClientSystem, ServerSystem):
+def DualRoot(clientSystem, serverSystem):
     self = Root()
-    self.client = ClientSystem()
-    self.server = ServerSystem()
+    self.client = clientSystem
+    self.server = serverSystem
 
     self.etherdump = EtherDump(file='ethertrace')
     self.etherlink = EtherLink(int1 = Parent.client.tsunami.etherint[0],
@@ -225,8 +224,8 @@ def DualRoot(ClientSystem, ServerSystem):
     self.clock = '5GHz'
     return self
 
-root = DualRoot(ClientSystem = LinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
-                ServerSystem = LinuxAlphaSystem(readfile=script('netperf-server.rcS')))
+root = DualRoot(LinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
+                LinuxAlphaSystem(readfile=script('netperf-server.rcS')))
 
 m5.instantiate(root)
 
