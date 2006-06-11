@@ -52,8 +52,7 @@ base_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	memory.cc
-	mips34k.cc
+	#Insert Full-System Files Here
 	''')
 
 # Syscall emulation (non-full-system) sources

@@ -28,8 +28,8 @@
  * Authors: Korey Sewell
  */
 
-#ifndef __ARCH_ALPHA_STACKTRACE_HH__
-#define __ARCH_ALPHA_STACKTRACE_HH__
+#ifndef __ARCH_MIPS_STACKTRACE_HH__
+#define __ARCH_MIPS_STACKTRACE_HH__
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
@@ -118,4 +118,4 @@ StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
     return true;
 }
 
-#endif // __ARCH_ALPHA_STACKTRACE_HH__
+#endif // __ARCH_MIPS_STACKTRACE_HH__
