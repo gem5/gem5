@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Steve Reinhardt
+ *          Korey Sewell
  */
 
 #include "arch/utility.hh"
@@ -358,8 +359,13 @@ Fault
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
     // set up memory request for instruction fetch
+#if THE_ISA == ALPHA_ISA
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",thread->readPC(),
+            thread->readNextPC());
+#else
     DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",thread->readPC(),
             thread->readNextPC(),thread->readNextNPC());
+#endif
 
     req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst),
                  (FULL_SYSTEM && (thread->readPC() & 1)) ? PHYSICAL : 0,
