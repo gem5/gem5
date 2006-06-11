@@ -58,14 +58,8 @@ output header {{
                StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : MipsStaticInst(mnem, _machInst, __opClass),
               memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
-              disp(OFFSET)
+              disp(sext<16>(OFFSET))
         {
-            //If Bit 15 is 1 then Sign Extend
-            int32_t temp = disp & 0x00008000;
-
-            if (temp > 0) {
-                disp |= 0xFFFF0000;
-            }
         }
 
         std::string
@@ -77,6 +71,24 @@ output header {{
         const StaticInstPtr &memAccInst() const { return memAccPtr; }
     };
 
+     /**
+     * Base class for a few miscellaneous memory-format insts
+     * that don't interpret the disp field
+     */
+    class MemoryNoDisp : public Memory
+    {
+      protected:
+        /// Constructor
+        MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
+            : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
+        {
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
 }};
 
 
@@ -84,10 +96,18 @@ output decoder {{
     std::string
     Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
-        return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
+        return csprintf("%-10s %c%d, %d(r%d)", mnemonic,
                         flags[IsFloating] ? 'f' : 'r', RT, disp, RS);
     }
 
+    std::string
+    MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s %c%d, r%d(r%d)", mnemonic,
+                        flags[IsFloating] ? 'f' : 'r',
+                        flags[IsFloating] ? FD : RD,
+                        RS, RT);
+    }
 }};
 
 def template LoadStoreDeclare {{

@@ -158,14 +158,16 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
 
                 format HiLoMiscOp {
-                    0x2: div({{
-                        HI = Rs.sd % Rt.sd;
-                        LO = Rs.sd / Rt.sd;
-                    }});
-                    0x3: divu({{
-                        HI = Rs.ud % Rt.ud;
-                        LO = Rs.ud / Rt.ud;
-                    }});
+                    0x2: div({{ if (Rt.sd != 0) {
+                                    HI = Rs.sd % Rt.sd;
+                                    LO = Rs.sd / Rt.sd;
+                                }
+                             }});
+                    0x3: divu({{ if (Rt.ud != 0) {
+                                     HI = Rs.ud % Rt.ud;
+                                     LO = Rs.ud / Rt.ud;
+                                 }
+                              }});
                 }
             }
 
@@ -333,7 +335,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode RS_HI {
                 0x0: decode RS_LO {
                     format CP1Control {
-                        0x0: mfc1 ({{ Rt.uw = Fs.uw<31:0>; }});
+                        0x0: mfc1 ({{ Rt.uw = Fs.uw; }});
 
                         0x2: cfc1({{
                             switch (FS)
@@ -438,9 +440,10 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x3: div_s({{ Fd.sf = Fs.sf / Ft.sf;}});
                                 0x4: sqrt_s({{ Fd.sf = sqrt(Fs.sf);}});
                                 0x5: abs_s({{ Fd.sf = fabs(Fs.sf);}});
-                                0x6: mov_s({{ Fd.sf = Fs.sf;}});
                                 0x7: neg_s({{ Fd.sf = -Fs.sf;}});
                             }
+
+                            0x6: BasicOp::mov_s({{ Fd.sf = Fs.sf;}});
                         }
 
                         0x1: decode FUNCTION_LO {
@@ -549,9 +552,10 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x3: div_d({{ Fd.df = Fs.df / Ft.df; }});
                                 0x4: sqrt_d({{ Fd.df = sqrt(Fs.df);  }});
                                 0x5: abs_d({{ Fd.df = fabs(Fs.df);   }});
-                                0x6: mov_d({{ Fd.df = Fs.df;         }});
                                 0x7: neg_d({{ Fd.df = -1 * Fs.df;    }});
                             }
+
+                            0x6: BasicOp::mov_d({{ Fd.df = Fs.df;    }});
                         }
 
                         0x1: decode FUNCTION_LO {
@@ -853,17 +857,19 @@ decode OPCODE_HI default Unknown::unknown() {
         0x3: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
                 format LoadIndexedMemory {
-                    0x0: lwxc1({{ Ft.uw = Mem.uw;}});
-                    0x1: ldxc1({{ Ft.ud = Mem.ud;}});
-                    0x5: luxc1({{ Ft.uw = Mem.ud;}});
+                    0x0: lwxc1({{ Fd.uw = Mem.uw;}});
+                    0x1: ldxc1({{ Fd.ud = Mem.ud;}});
+                    0x5: luxc1({{ Fd.uw = Mem.ud;}},
+                               {{ EA = (Rs + Rt) & ~7; }});
                 }
             }
 
             0x1: decode FUNCTION_LO {
                 format StoreIndexedMemory {
-                    0x0: swxc1({{ Mem.uw = Ft.uw;}});
-                    0x1: sdxc1({{ Mem.ud = Ft.ud;}});
-                    0x5: suxc1({{ Mem.ud = Ft.ud;}});
+                    0x0: swxc1({{ Mem.uw = Fs.uw;}});
+                    0x1: sdxc1({{ Mem.ud = Fs.ud;}});
+                    0x5: suxc1({{ Mem.ud = Fs.ud;}},
+                               {{ EA = (Rs + Rt) & ~7; }});
                 }
 
                 0x7: Prefetch::prefx({{ EA = Rs + Rt; }});
@@ -991,7 +997,7 @@ decode OPCODE_HI default Unknown::unknown() {
         0x7: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
                 format BasicOp {
-                    0x1: ext({{ Rt.uw = bits(Rs.uw, MSB+LSB, LSB); }});
+                    0x0: ext({{ Rt.uw = bits(Rs.uw, MSB+LSB, LSB); }});
                     0x4: ins({{ Rt.uw = bits(Rt.uw, 31, MSB+1) << (MSB+1) |
                                         bits(Rs.uw, MSB-LSB, 0) << LSB |
                                         bits(Rt.uw, LSB-1, 0);
@@ -1014,8 +1020,8 @@ decode OPCODE_HI default Unknown::unknown() {
                                           Rt.uw<7:0>   << 8  |
                                           Rt.uw<15:8>;
                     }});
-                    0x10: seb({{ Rd.sw = Rt.sw<7:0>}});
-                    0x18: seh({{ Rd.sw = Rt.sw<15:0>}});
+                    0x10: seb({{ Rd.sw = Rt.sb; }});
+                    0x18: seh({{ Rd.sw = Rt.sh; }});
                 }
             }
 
