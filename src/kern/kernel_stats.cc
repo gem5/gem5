@@ -45,13 +45,12 @@ using namespace Stats;
 
 namespace Kernel {
 
-const char *modestr[] = { "kernel", "user", "idle", "interrupt" };
+const char *modestr[] = { "kernel", "user", "idle" };
 
 Statistics::Statistics(System *system)
     : idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
       iplLast(0), iplLastTick(0)
 {
-    bin_int = system->params()->bin_int;
 }
 
 void
@@ -186,7 +185,7 @@ Statistics::regStats(const string &_name)
 void
 Statistics::setIdleProcess(Addr idlepcbb, ThreadContext *tc)
 {
-    assert(themode == kernel || themode == interrupt);
+    assert(themode == kernel);
     idleProcess = idlepcbb;
     themode = idle;
     changeMode(themode, tc);
@@ -205,8 +204,6 @@ Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
 
     _modeGood[newmode]++;
     _modeTicks[themode] += curTick - lastModeTick;
-
-    tc->getSystemPtr()->kernelBinning->changeMode(newmode);
 
     lastModeTick = curTick;
     themode = newmode;
@@ -233,12 +230,8 @@ Statistics::mode(cpu_mode newmode, ThreadContext *tc)
 {
     Addr pcbb = tc->readMiscReg(AlphaISA::IPR_PALtemp23);
 
-    if ((newmode == kernel || newmode == interrupt) &&
-            pcbb == idleProcess)
+    if (newmode == kernel && pcbb == idleProcess)
         newmode = idle;
-
-    if (bin_int == false && newmode == interrupt)
-        newmode = kernel;
 
     changeMode(newmode, tc);
 }
@@ -268,11 +261,6 @@ Statistics::callpal(int code, ThreadContext *tc)
               _syscall[cvtnum]++;
           }
       } break;
-
-      case PAL::swpctx:
-        if (tc->getSystemPtr()->kernelBinning)
-            tc->getSystemPtr()->kernelBinning->palSwapContext(tc);
-        break;
     }
 }
 

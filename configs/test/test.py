@@ -11,7 +11,6 @@ from m5.objects import *
 parser = optparse.OptionParser(option_list=m5.standardOptions)
 
 parser.add_option("-c", "--cmd", default="hello")
-parser.add_option("-a", "--arch", choices=["Alpha", "Mips"], default="Alpha")
 parser.add_option("-t", "--timing", action="store_true")
 
 (options, args) = parser.parse_args()
@@ -23,10 +22,7 @@ if args:
 # build configuration
 this_dir = os.path.dirname(__file__)
 
-print "arch =", options.arch
-process_class = eval(options.arch + "LiveProcess")
-
-process = process_class()
+process = LiveProcess()
 process.executable = os.path.join(this_dir, options.cmd)
 process.cmd = options.cmd
 

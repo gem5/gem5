@@ -143,8 +143,8 @@ def isSimObjectClass(value):
         # happens if value is not a class at all
         return False
 
-def isSimObjSequence(value):
-    if not isinstance(value, (list, tuple)):
+def isSimObjectSequence(value):
+    if not isinstance(value, (list, tuple)) or len(value) == 0:
         return False
 
     for val in value:
@@ -153,8 +153,8 @@ def isSimObjSequence(value):
 
     return True
 
-def isSimObjClassSequence(value):
-    if not isinstance(value, (list, tuple)):
+def isSimObjectClassSequence(value):
+    if not isinstance(value, (list, tuple)) or len(value) == 0:
         return False
 
     for val in value:
@@ -163,8 +163,30 @@ def isSimObjClassSequence(value):
 
     return True
 
+def isSimObjectOrSequence(value):
+    return isSimObject(value) or isSimObjectSequence(value)
+
+def isSimObjectClassOrSequence(value):
+    return isSimObjectClass(value) or isSimObjectClassSequence(value)
+
 def isNullPointer(value):
     return isinstance(value, NullSimObject)
+
+# Apply method to object.
+# applyMethod(obj, 'meth', <args>) is equivalent to obj.meth(<args>)
+def applyMethod(obj, meth, *args, **kwargs):
+    return getattr(obj, meth)(*args, **kwargs)
+
+# If the first argument is an (non-sequence) object, apply the named
+# method with the given arguments.  If the first argument is a
+# sequence, apply the method to each element of the sequence (a la
+# 'map').
+def applyOrMap(objOrSeq, meth, *args, **kwargs):
+    if not isinstance(objOrSeq, (list, tuple)):
+        return applyMethod(objOrSeq, meth, *args, **kwargs)
+    else:
+        return [applyMethod(o, meth, *args, **kwargs) for o in objOrSeq]
+
 
 # The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
@@ -255,21 +277,15 @@ class MetaSimObject(type):
             # Existing classes should not have any instance values, so
             # these can only occur at the lowest level dict (the
             # parameters just being set in this class definition).
-            if isSimObject(val):
+            if isSimObjectOrSequence(val):
                 assert(val == cls._values.local[key])
-                cls._values[key] = val.makeClass(memo)
-            elif isSimObjSequence(val) and len(val):
-                assert(val == cls._values.local[key])
-                cls._values[key] = [ v.makeClass(memo) for v in val ]
+                cls._values[key] = applyOrMap(val, 'makeClass', memo)
             # SimObject classes need to be subclassed so that
             # parameters that get set at this level only affect this
             # level and derivatives.
-            elif isSimObjectClass(val):
+            elif isSimObjectClassOrSequence(val):
                 assert(not cls._values.local.has_key(key))
-                cls._values[key] = val.makeSubclass({}, memo)
-            elif isSimObjClassSequence(val) and len(val):
-                assert(not cls._values.local.has_key(key))
-                cls._values[key] = [ v.makeSubclass({}, memo) for v in val ]
+                cls._values[key] = applyOrMap(val, 'makeSubclass', {}, memo)
 
 
     def _set_keyword(cls, keyword, val, kwtype):
@@ -301,8 +317,7 @@ class MetaSimObject(type):
         param = cls._params.get(attr, None)
         if param:
             # It's ok: set attribute by delegating to 'object' class.
-            if (isSimObject(value) or isSimObjSequence(value)) \
-                   and cls._instantiated:
+            if isSimObjectOrSequence(value) and cls._instantiated:
                 raise AttributeError, \
                   "Cannot set SimObject parameter '%s' after\n" \
                   "    class %s has been instantiated or subclassed" \
@@ -315,7 +330,7 @@ class MetaSimObject(type):
                 e.args = (msg, )
                 raise
         # I would love to get rid of this
-        elif isSimObject(value) or isSimObjSequence(value):
+        elif isSimObjectOrSequence(value):
            cls._values[attr] = value
         else:
             raise AttributeError, \
@@ -407,7 +422,7 @@ class SimObject(object):
         for key,val in self.__class__._values.iteritems():
             if isSimObjectClass(val):
                 setattr(self, key, val(_memo))
-            elif isSimObjClassSequence(val) and len(val):
+            elif isSimObjectClassSequence(val) and len(val):
                 setattr(self, key, [ v(_memo) for v in val ])
         # apply attribute assignments from keyword args, if any
         for key,val in kwargs.iteritems():
@@ -454,7 +469,7 @@ class SimObject(object):
                 e.args = (msg, )
                 raise
         # I would love to get rid of this
-        elif isSimObject(value) or isSimObjSequence(value):
+        elif isSimObjectOrSequence(value):
             pass
         else:
             raise AttributeError, "Class %s has no parameter %s" \
@@ -465,7 +480,7 @@ class SimObject(object):
 
         if isSimObject(value):
             value.set_path(self, attr)
-        elif isSimObjSequence(value):
+        elif isSimObjectSequence(value):
             value = SimObjVector(value)
             [v.set_path(self, "%s%d" % (attr, i)) for i,v in enumerate(value)]
 
@@ -888,7 +903,7 @@ class VectorParamDesc(ParamDesc):
         if isinstance(value, (list, tuple)):
             # list: coerce each element into new list
             tmp_list = [ ParamDesc.convert(self, v) for v in value ]
-            if isSimObjSequence(tmp_list):
+            if isSimObjectSequence(tmp_list):
                 return SimObjVector(tmp_list)
             else:
                 return VectorParamValue(tmp_list)

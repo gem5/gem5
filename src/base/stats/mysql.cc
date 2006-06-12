@@ -158,14 +158,6 @@ MySqlRun::cleanup()
     if (mysql.commit())
         panic("could not commit transaction\n%s\n", mysql.error);
 
-    mysql.query("DELETE bins "
-                "FROM bins "
-                "LEFT JOIN data ON bn_id=dt_bin "
-                "WHERE dt_bin IS NULL");
-
-    if (mysql.commit())
-        panic("could not commit transaction\n%s\n", mysql.error);
-
     mysql.query("DELETE events"
                 "FROM events"
                 "LEFT JOIN runs ON ev_run=rn_id"
@@ -309,52 +301,6 @@ SetupStat::setup()
     return statid;
 }
 
-unsigned
-SetupBin(const string &bin)
-{
-    static map<string, int> binmap;
-
-    using namespace MySQL;
-    map<string,int>::const_iterator i = binmap.find(bin);
-    if (i != binmap.end())
-        return (*i).second;
-
-    Connection &mysql = MySqlDB.conn();
-    assert(mysql.connected());
-
-    uint16_t bin_id;
-
-    stringstream select;
-    stringstream insert;
-    ccprintf(select, "SELECT bn_id FROM bins WHERE bn_name=\"%s\"", bin);
-
-    mysql.query(select);
-    MySQL::Result result = mysql.store_result();
-    if (result) {
-        assert(result.num_fields() == 1);
-        MySQL::Row row = result.fetch_row();
-        if (row) {
-            to_number(row[0], bin_id);
-            goto exit;
-        }
-    }
-
-    ccprintf(insert, "INSERT INTO bins(bn_name) values(\"%s\")", bin);
-
-    mysql.query(insert);
-    if (mysql.error)
-        panic("could not get a bin\n%s\n", mysql.error);
-
-    bin_id = mysql.insert_id();
-    if (mysql.commit())
-        panic("could not commit transaction\n%s\n", mysql.error);
-
-    binmap.insert(make_pair(bin, bin_id));
-
-  exit:
-    return bin_id;
-}
-
 InsertData::InsertData()
 {
     query = new char[maxsize + 1];
@@ -384,7 +330,7 @@ InsertData::flush()
     size = 0;
     first = true;
     strcpy(query, "INSERT INTO "
-           "data(dt_stat,dt_x,dt_y,dt_run,dt_tick,dt_bin,dt_data) "
+           "data(dt_stat,dt_x,dt_y,dt_run,dt_tick,dt_data) "
            "values");
     size = strlen(query);
 }
@@ -402,9 +348,9 @@ InsertData::insert()
 
     first = false;
 
-    size += sprintf(query + size, "(%u,%d,%d,%u,%llu,%u,\"%f\")",
+    size += sprintf(query + size, "(%u,%d,%d,%u,%llu,\"%f\")",
                     stat, x, y, MySqlDB.run(), (unsigned long long)tick,
-                    bin, data);
+                    data);
 }
 
 struct InsertSubData
@@ -656,29 +602,6 @@ MySql::configure(const FormulaData &data)
     InsertFormula(find(data.id), data.str());
 }
 
-void
-MySql::output(MainBin *bin)
-{
-    MySQL::Connection &mysql = MySqlDB.conn();
-
-    if (bin) {
-        bin->activate();
-        newdata.bin = SetupBin(bin->name());
-    } else {
-        newdata.bin = 0;
-    }
-
-    Database::stat_list_t::const_iterator i, end = Database::stats().end();
-    for (i = Database::stats().begin(); i != end; ++i) {
-        StatData *stat = *i;
-        if (bin && stat->binned() || !bin && !stat->binned()) {
-            stat->visit(*this);
-            if (mysql.commit())
-                panic("could not commit transaction\n%s\n", mysql.error);
-        }
-    }
-}
-
 bool
 MySql::valid() const
 {
@@ -697,11 +620,14 @@ MySql::output()
     // store sample #
     newdata.tick = curTick;
 
-    output(NULL);
-    if (!bins().empty()) {
-        bin_list_t::iterator i, end = bins().end();
-        for (i = bins().begin(); i != end; ++i)
-            output(*i);
+    MySQL::Connection &mysql = MySqlDB.conn();
+
+    Database::stat_list_t::const_iterator i, end = Database::stats().end();
+    for (i = Database::stats().begin(); i != end; ++i) {
+        StatData *stat = *i;
+        stat->visit(*this);
+        if (mysql.commit())
+            panic("could not commit transaction\n%s\n", mysql.error);
     }
 
     newdata.flush();

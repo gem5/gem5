@@ -56,7 +56,6 @@ class PhysicalMemory;
 class Platform;
 class GDBListener;
 class RemoteGDB;
-namespace Kernel { class Binning; }
 #endif
 
 class System : public SimObject
@@ -99,8 +98,6 @@ class System : public SimObject
 
     /** Entry point in the kernel to start at */
     Addr kernelEntry;
-
-    Kernel::Binning *kernelBinning;
 
 #else
 
@@ -161,9 +158,6 @@ class System : public SimObject
         Tick boot_cpu_frequency;
         std::string boot_osflags;
         uint64_t init_param;
-        bool bin;
-        std::vector<std::string> binned_fns;
-        bool bin_int;
 
         std::string kernel_path;
         std::string readfile;
@@ -211,7 +205,6 @@ class System : public SimObject
     int registerThreadContext(ThreadContext *tc, int tcIndex);
     void replaceThreadContext(ThreadContext *tc, int tcIndex);
 
-    void regStats();
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 

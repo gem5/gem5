@@ -232,10 +232,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaSystem)
     Param<uint64_t> system_type;
     Param<uint64_t> system_rev;
 
-    Param<bool> bin;
-    VectorParam<std::string> binned_fns;
-    Param<bool> bin_int;
-
 END_DECLARE_SIM_OBJECT_PARAMS(AlphaSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaSystem)
@@ -250,10 +246,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaSystem)
     INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
     INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
     INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10),
-    INIT_PARAM_DFLT(bin, "is this system to be binned", false),
-    INIT_PARAM(binned_fns, "functions to be broken down and binned"),
-    INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
+    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10)
 
 END_INIT_SIM_OBJECT_PARAMS(AlphaSystem)
 
@@ -271,9 +264,6 @@ CREATE_SIM_OBJECT(AlphaSystem)
     p->readfile = readfile;
     p->system_type = system_type;
     p->system_rev = system_rev;
-    p->bin = bin;
-    p->binned_fns = binned_fns;
-    p->bin_int = bin_int;
     return new AlphaSystem(p);
 }
 

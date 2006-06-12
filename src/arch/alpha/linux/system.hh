@@ -45,7 +45,7 @@ using namespace AlphaISA;
 using namespace Linux;
 
 /**
- * This class contains linux specific system code (Loading, Events, Binning).
+ * This class contains linux specific system code (Loading, Events).
  * It points to objects that are the system binaries to load and patches them
  * appropriately to work in simulator.
  */
@@ -123,18 +123,6 @@ class LinuxAlphaSystem : public AlphaSystem
      * Thread is set
      */
     PrintThreadInfo *printThreadEvent;
-
-    /**
-     * Event to bin Interrupts seperately from kernel code
-     */
-    InterruptStartEvent *intStartEvent;
-
-    /**
-     * Event to bin Interrupts seperately from kernel code
-     */
-    InterruptEndEvent *intEndEvent;
-    InterruptEndEvent *intEndEvent2;
-    InterruptEndEvent *intEndEvent3;
 
     /** Grab the PCBB of the idle process when it starts */
     IdleStartEvent *idleStartEvent;

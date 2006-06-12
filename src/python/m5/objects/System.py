@@ -8,8 +8,6 @@ class System(SimObject):
         boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
                                              "boot processor frequency")
         init_param = Param.UInt64(0, "numerical value to pass into simulator")
-        bin = Param.Bool(False, "is this system binned")
-        binned_fns = VectorParam.String([], "functions broken down and binned")
         boot_osflags = Param.String("a", "boot flags to pass to the kernel")
         kernel = Param.String("file that contains the kernel code")
         readfile = Param.String("", "file to read startup script from")

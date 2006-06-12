@@ -129,23 +129,9 @@ Text::output()
     using namespace Database;
 
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
-    if (bins().empty() || bins().size() == 1) {
-        stat_list_t::const_iterator i, end = stats().end();
-        for (i = stats().begin(); i != end; ++i)
-            (*i)->visit(*this);
-    } else {
-        ccprintf(*stream, "PRINTING BINNED STATS\n");
-        bin_list_t::iterator i, end = bins().end();
-        for (i = bins().begin(); i != end; ++i) {
-            MainBin *bin = *i;
-            bin->activate();
-            ccprintf(*stream,"---%s Bin------------\n", bin->name());
-            stat_list_t::const_iterator i, end = stats().end();
-            for (i = stats().begin(); i != end; ++i)
-                (*i)->visit(*this);
-            ccprintf(*stream, "---------------------------------\n");
-        }
-    }
+    stat_list_t::const_iterator i, end = stats().end();
+    for (i = stats().begin(); i != end; ++i)
+        (*i)->visit(*this);
     ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();
 }
