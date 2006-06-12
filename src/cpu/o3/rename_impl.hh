@@ -1206,7 +1206,7 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
         }
 
         DPRINTF(Rename, "[tid:%u]: Instruction must be processed by rename."
-                " Adding to front of list.", tid);
+                " Adding to front of list.\n", tid);
 
         serializeInst[tid] = NULL;
 
