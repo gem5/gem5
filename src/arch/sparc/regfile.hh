@@ -639,6 +639,8 @@ namespace SparcISA
 
         void copyMiscRegs(ExecContext * xc);
 
+      protected:
+
         bool isHyperPriv() { return hpstateFields.hpriv; }
         bool isPriv() { return hpstateFields.hpriv || pstateFields.priv; }
         bool isNonPriv() { return !isPriv(); }
