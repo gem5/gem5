@@ -119,8 +119,6 @@ System::System(Params *p)
     DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
     DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
     DPRINTF(Loader, "Kernel loaded...\n");
-
-    kernelBinning = new Kernel::Binning(this);
 #endif // FULL_SYSTEM
 
     // increment the number of running systms

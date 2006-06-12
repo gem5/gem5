@@ -249,7 +249,7 @@ void SparcFault::invoke(ThreadContext * tc)
 
 void TrapInstruction::invoke(ThreadContext * tc)
 {
-    tc->syscall(syscall_num);
+    // Should be handled in ISA.
 }
 
 #endif

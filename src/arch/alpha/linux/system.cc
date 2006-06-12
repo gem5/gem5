@@ -150,9 +150,6 @@ LinuxAlphaSystem::~LinuxAlphaSystem()
     delete debugPrintkEvent;
     delete idleStartEvent;
     delete printThreadEvent;
-    delete intStartEvent;
-    delete intEndEvent;
-    delete intEndEvent2;
 }
 
 
