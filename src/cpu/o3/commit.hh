@@ -365,11 +365,6 @@ class DefaultCommit
      */
     unsigned renameWidth;
 
-    /** IEW width, in instructions.  Used so ROB knows how many
-     *  instructions to get from the IEW instruction queue.
-     */
-    unsigned iewWidth;
-
     /** Commit width, in instructions. */
     unsigned commitWidth;
 

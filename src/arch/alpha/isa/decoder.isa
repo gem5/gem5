@@ -659,11 +659,11 @@ decode OPCODE default Unknown::unknown() {
             0xe000: rc({{
                 Ra = xc->readIntrFlag();
                 xc->setIntrFlag(0);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
             0xf000: rs({{
                 Ra = xc->readIntrFlag();
                 xc->setIntrFlag(1);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
         }
 #else
         format FailUnimpl {

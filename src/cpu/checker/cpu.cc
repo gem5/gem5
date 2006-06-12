@@ -84,6 +84,8 @@ CheckerCPU::CheckerCPU(Params *p)
 #else
     process = p->process;
 #endif
+
+    result.integer = 0;
 }
 
 CheckerCPU::~CheckerCPU()

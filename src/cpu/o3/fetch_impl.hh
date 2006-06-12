@@ -817,7 +817,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 
     // Check ROB squash signals from commit.
     if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(Fetch, "[tid:%u]: ROB is still squashing Thread %u.\n", tid);
+        DPRINTF(Fetch, "[tid:%u]: ROB is still squashing.\n", tid);
 
         // Continue to squash.
         fetchStatus[tid] = Squashing;
@@ -984,11 +984,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,
                                                  next_PC,
                                                  inst_seq, cpu);
-            instruction->setThread(tid);
+            instruction->setTid(tid);
 
             instruction->setASID(tid);
 
-            instruction->setState(cpu->thread[tid]);
+            instruction->setThreadState(cpu->thread[tid]);
 
             DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x created "
                     "[sn:%lli]\n",
@@ -1065,11 +1065,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                              next_PC,
                                              inst_seq, cpu);
         instruction->setPredTarg(next_PC + instSize);
-        instruction->setThread(tid);
+        instruction->setTid(tid);
 
         instruction->setASID(tid);
 
-        instruction->setState(cpu->thread[tid]);
+        instruction->setThreadState(cpu->thread[tid]);
 
         instruction->traceData = NULL;
 

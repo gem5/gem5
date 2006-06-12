@@ -261,6 +261,9 @@ class DefaultIEW
     /** Processes inputs and changes state accordingly. */
     void checkSignalsAndUpdate(unsigned tid);
 
+    /** Removes instructions from rename from a thread's instruction list. */
+    void emptyRenameInsts(unsigned tid);
+
     /** Sorts instructions coming from rename into lists separated by thread. */
     void sortInsts();
 
@@ -389,11 +392,6 @@ class DefaultIEW
 
     /** Width of issue, in instructions. */
     unsigned issueWidth;
-
-    /** Width of execute, in instructions.  Might make more sense to break
-     *  down into FP vs int.
-     */
-    unsigned executeWidth;
 
     /** Index into queue of instructions being written back. */
     unsigned wbNumInst;

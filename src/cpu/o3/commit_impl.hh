@@ -72,7 +72,6 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       renameToROBDelay(params->renameToROBDelay),
       fetchToCommitDelay(params->commitToFetchDelay),
       renameWidth(params->renameWidth),
-      iewWidth(params->executeWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numberOfThreads),
       switchPending(false),
@@ -434,7 +433,7 @@ DefaultCommit<Impl>::setNextStatus()
         }
     }
 
-    assert(squashes == squashCounter);
+    squashCounter = squashes;
 
     // If commit is currently squashing, then it will have activity for the
     // next cycle. Set its next status as active.
@@ -539,8 +538,6 @@ DefaultCommit<Impl>::squashFromTrap(unsigned tid)
 
     commitStatus[tid] = ROBSquashing;
     cpu->activityThisCycle();
-
-    ++squashCounter;
 }
 
 template <class Impl>
@@ -558,8 +555,6 @@ DefaultCommit<Impl>::squashFromTC(unsigned tid)
     cpu->activityThisCycle();
 
     tcSquash[tid] = false;
-
-    ++squashCounter;
 }
 
 template <class Impl>
@@ -585,10 +580,12 @@ DefaultCommit<Impl>::tick()
 
             if (rob->isDoneSquashing(tid)) {
                 commitStatus[tid] = Running;
-                --squashCounter;
             } else {
                 DPRINTF(Commit,"[tid:%u]: Still Squashing, cannot commit any"
                         "insts this cycle.\n", tid);
+                rob->doSquash(tid);
+                toIEW->commitInfo[tid].robSquashing = true;
+                wroteToTimeBuffer = true;
             }
         }
     }
@@ -694,29 +691,7 @@ DefaultCommit<Impl>::commit()
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
-/*
-        if (fromFetch->fetchFault && commitStatus[0] != TrapPending) {
-            // Record the fault.  Wait until it's empty in the ROB.
-            // Then handle the trap.  Ignore it if there's already a
-            // trap pending as fetch will be redirected.
-            fetchFault = fromFetch->fetchFault;
-            fetchFaultTick = curTick + fetchTrapLatency;
-            commitStatus[0] = FetchTrapPending;
-            DPRINTF(Commit, "Fault from fetch recorded.  Will trap if the "
-                    "ROB empties without squashing the fault.\n");
-            fetchTrapWait = 0;
-        }
 
-        // Fetch may tell commit to clear the trap if it's been squashed.
-        if (fromFetch->clearFetchFault) {
-            DPRINTF(Commit, "Received clear fetch fault signal\n");
-            fetchTrapWait = 0;
-            if (commitStatus[0] == FetchTrapPending) {
-                DPRINTF(Commit, "Clearing fault from fetch\n");
-                commitStatus[0] = Running;
-            }
-        }
-*/
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid] == true) {
@@ -743,8 +718,6 @@ DefaultCommit<Impl>::commit()
                     fromIEW->nextPC[tid]);
 
             commitStatus[tid] = ROBSquashing;
-
-            ++squashCounter;
 
             // If we want to include the squashing instruction in the squash,
             // then use one older sequence number.

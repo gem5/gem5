@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -102,6 +102,8 @@ BaseDynInst<Impl>::initVars()
     storeSize = 0;
 
     readyRegs = 0;
+
+    instResult.integer = 0;
 
     // May want to turn this into a bit vector or something.
     completed = false;
@@ -242,31 +244,7 @@ template <class Impl>
 void
 BaseDynInst<Impl>::writeHint(Addr addr, int size, unsigned flags)
 {
-    // Need to create a MemReq here so we can do a translation.  This
-    // will casue a TLB miss trap if necessary... not sure whether
-    // that's the best thing to do or not.  We don't really need the
-    // MemReq otherwise, since wh64 has no functional effect.
-/*
-    MemReqPtr req = new MemReq(addr, thread->getXCProxy(), size, flags);
-    req->asid = asid;
-
-    fault = cpu->translateDataWriteReq(req);
-
-    if (fault == NoFault && !(req->flags & UNCACHEABLE)) {
-        // Record key MemReq parameters so we can generate another one
-        // just like it for the timing access without calling translate()
-        // again (which might mess up the TLB).
-        effAddr = req->vaddr;
-        physEffAddr = req->paddr;
-        memReqFlags = req->flags;
-    } else {
-        // ignore faults & accesses to uncacheable space... treat as no-op
-        effAddr = physEffAddr = MemReq::inval_addr;
-    }
-
-    storeSize = size;
-    storeData = 0;
-*/
+    // Not currently supported.
 }
 
 /**
@@ -276,22 +254,7 @@ template <class Impl>
 Fault
 BaseDynInst<Impl>::copySrcTranslate(Addr src)
 {
-/*
-    MemReqPtr req = new MemReq(src, thread->getXCProxy(), 64);
-    req->asid = asid;
-
-    // translate to physical address
-    Fault fault = cpu->translateDataReadReq(req);
-
-    if (fault == NoFault) {
-        thread->copySrcAddr = src;
-        thread->copySrcPhysAddr = req->paddr;
-    } else {
-        thread->copySrcAddr = 0;
-        thread->copySrcPhysAddr = 0;
-    }
-    return fault;
-*/
+    // Not currently supported.
     return NoFault;
 }
 
@@ -302,26 +265,7 @@ template <class Impl>
 Fault
 BaseDynInst<Impl>::copy(Addr dest)
 {
-/*
-    uint8_t data[64];
-    FunctionalMemory *mem = thread->mem;
-    assert(thread->copySrcPhysAddr);
-    MemReqPtr req = new MemReq(dest, thread->getXCProxy(), 64);
-    req->asid = asid;
-
-    // translate to physical address
-    Fault fault = cpu->translateDataWriteReq(req);
-
-    if (fault == NoFault) {
-        Addr dest_addr = req->paddr;
-        // Need to read straight from memory since we have more than 8 bytes.
-        req->paddr = thread->copySrcPhysAddr;
-        mem->read(req, data);
-        req->paddr = dest_addr;
-        mem->write(req, data);
-    }
-    return fault;
-*/
+    // Not currently supported.
     return NoFault;
 }
 

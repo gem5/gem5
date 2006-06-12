@@ -105,11 +105,6 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned renameToIEWDelay;
     unsigned issueToExecuteDelay;
     unsigned issueWidth;
-    unsigned executeWidth;
-    unsigned executeIntWidth;
-    unsigned executeFloatWidth;
-    unsigned executeBranchWidth;
-    unsigned executeMemoryWidth;
     FUPool *fuPool;
 
     //

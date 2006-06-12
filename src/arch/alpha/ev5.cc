@@ -59,8 +59,12 @@ AlphaISA::initCPU(ThreadContext *tc, int cpuId)
     tc->setIntReg(16, cpuId);
     tc->setIntReg(0, cpuId);
 
-    tc->setPC(tc->readMiscReg(IPR_PAL_BASE) + (new ResetFault)->vect());
+    AlphaFault *reset = new ResetFault;
+
+    tc->setPC(tc->readMiscReg(IPR_PAL_BASE) + reset->vect());
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
+
+    delete reset;
 }
 
 ////////////////////////////////////////////////////////////////////////
