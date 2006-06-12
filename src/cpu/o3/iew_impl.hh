@@ -52,7 +52,6 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
       issueToExecuteDelay(params->issueToExecuteDelay),
       issueReadWidth(params->issueWidth),
       issueWidth(params->issueWidth),
-      executeWidth(params->executeWidth),
       numThreads(params->numberOfThreads),
       switchedOut(false)
 {
@@ -456,16 +455,7 @@ DefaultIEW<Impl>::squash(unsigned tid)
         skidBuffer[tid].pop();
     }
 
-    while (!insts[tid].empty()) {
-        if (insts[tid].front()->isLoad() ||
-            insts[tid].front()->isStore() ) {
-            toRename->iewInfo[tid].dispatchedToLSQ++;
-        }
-
-        toRename->iewInfo[tid].dispatched++;
-
-        insts[tid].pop();
-    }
+    emptyRenameInsts(tid);
 }
 
 template<class Impl>
@@ -799,10 +789,12 @@ DefaultIEW<Impl>::checkSignalsAndUpdate(unsigned tid)
     }
 
     if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(IEW, "[tid:%i]: ROB is still squashing.\n");
+        DPRINTF(IEW, "[tid:%i]: ROB is still squashing.\n", tid);
 
         dispatchStatus[tid] = Squashing;
 
+        emptyRenameInsts(tid);
+        wroteToTimeBuffer = true;
         return;
     }
 
@@ -848,6 +840,22 @@ DefaultIEW<Impl>::sortInsts()
 #endif
     for (int i = 0; i < insts_from_rename; ++i) {
         insts[fromRename->insts[i]->threadNumber].push(fromRename->insts[i]);
+    }
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
+{
+    while (!insts[tid].empty()) {
+        if (insts[tid].front()->isLoad() ||
+            insts[tid].front()->isStore() ) {
+            toRename->iewInfo[tid].dispatchedToLSQ++;
+        }
+
+        toRename->iewInfo[tid].dispatched++;
+
+        insts[tid].pop();
     }
 }
 
