@@ -24,10 +24,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Kevin Lim
  */
 
 #include "arch/sparc/faults.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
 
@@ -217,36 +220,36 @@ FaultStat     TrapInstruction::_count;
 
 #if FULL_SYSTEM
 
-void SparcFault::invoke(ExecContext * xc)
+void SparcFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     countStat()++;
 
     //Use the SPARC trap state machine
     /*// exception restart address
-    if (setRestartAddress() || !xc->inPalMode())
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->regs.pc);
+    if (setRestartAddress() || !tc->inPalMode())
+        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->regs.pc);
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
-                   xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
+                   tc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
     }
 
-    if (!xc->inPalMode())
-        AlphaISA::swap_palshadow(&(xc->regs), true);
+    if (!tc->inPalMode())
+        AlphaISA::swap_palshadow(&(tc->regs), true);
 
-    xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);*/
+    tc->regs.pc = tc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
+    tc->regs.npc = tc->regs.pc + sizeof(MachInst);*/
 }
 
 #endif
 
 #if !FULL_SYSTEM
 
-void TrapInstruction::invoke(ExecContext * xc)
+void TrapInstruction::invoke(ThreadContext * tc)
 {
-    xc->syscall(syscall_num);
+    tc->syscall(syscall_num);
 }
 
 #endif

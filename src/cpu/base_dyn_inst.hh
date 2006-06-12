@@ -24,26 +24,32 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
 #ifndef __CPU_BASE_DYN_INST_HH__
 #define __CPU_BASE_DYN_INST_HH__
 
+#include <list>
 #include <string>
-#include <vector>
 
+#include "arch/faults.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/comm.hh"
+#include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
+#include "mem/packet.hh"
+#include "sim/system.hh"
+/*
 #include "encumbered/cpu/full/bpred_update.hh"
-#include "encumbered/cpu/full/op_class.hh"
 #include "encumbered/cpu/full/spec_memory.hh"
 #include "encumbered/cpu/full/spec_state.hh"
 #include "encumbered/mem/functional/main.hh"
+*/
 
 /**
  * @file
@@ -59,20 +65,31 @@ class BaseDynInst : public FastAlloc, public RefCounted
   public:
     // Typedef for the CPU.
     typedef typename Impl::FullCPU FullCPU;
+    typedef typename FullCPU::ImplState ImplState;
 
-    /// Binary machine instruction type.
+    // Binary machine instruction type.
     typedef TheISA::MachInst MachInst;
-    /// Logical register index type.
+    // Extended machine instruction type
+    typedef TheISA::ExtMachInst ExtMachInst;
+    // Logical register index type.
     typedef TheISA::RegIndex RegIndex;
-    /// Integer register index type.
+    // Integer register type.
     typedef TheISA::IntReg IntReg;
+    // Floating point register type.
+    typedef TheISA::FloatReg FloatReg;
+
+    // The DynInstPtr type.
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
+    // The list of instructions iterator type.
+    typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	/// Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,	/// Max dest regs
     };
 
-    /** The static inst used by this dyn inst. */
+    /** The StaticInst used by this BaseDynInst. */
     StaticInstPtr staticInst;
 
     ////////////////////////////////////////////
@@ -80,11 +97,27 @@ class BaseDynInst : public FastAlloc, public RefCounted
     // INSTRUCTION EXECUTION
     //
     ////////////////////////////////////////////
+    /** InstRecord that tracks this instructions. */
     Trace::InstRecord *traceData;
 
+    /**
+     * Does a read to a given address.
+     * @param addr The address to read.
+     * @param data The read's data is written into this parameter.
+     * @param flags The request's flags.
+     * @return Returns any fault due to the read.
+     */
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
+    /**
+     * Does a write to a given address.
+     * @param data The data to be written.
+     * @param addr The address to write to.
+     * @param flags The request's flags.
+     * @param res The result of the write (for load locked/store conditionals).
+     * @return Returns any fault due to the write.
+     */
     template <class T>
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
@@ -96,17 +129,23 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** @todo: Consider making this private. */
   public:
-    /** Is this instruction valid. */
-    bool valid;
-
     /** The sequence number of the instruction. */
     InstSeqNum seqNum;
 
-    /** How many source registers are ready. */
-    unsigned readyRegs;
+    /** Is the instruction in the IQ */
+    bool iqEntry;
+
+    /** Is the instruction in the ROB */
+    bool robEntry;
+
+    /** Is the instruction in the LSQ */
+    bool lsqEntry;
 
     /** Is the instruction completed. */
     bool completed;
+
+    /** Is the instruction's result ready. */
+    bool resultReady;
 
     /** Can this instruction issue. */
     bool canIssue;
@@ -120,11 +159,20 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Can this instruction commit. */
     bool canCommit;
 
+    /** Is this instruction committed. */
+    bool committed;
+
     /** Is this instruction squashed. */
     bool squashed;
 
     /** Is this instruction squashed in the instruction queue. */
     bool squashedInIQ;
+
+    /** Is this instruction squashed in the instruction queue. */
+    bool squashedInLSQ;
+
+    /** Is this instruction squashed in the instruction queue. */
+    bool squashedInROB;
 
     /** Is this a recover instruction. */
     bool recoverInst;
@@ -141,14 +189,24 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** data address space ID, for loads & stores. */
     short asid;
 
+    /** How many source registers are ready. */
+    unsigned readyRegs;
+
     /** Pointer to the FullCPU object. */
     FullCPU *cpu;
 
-    /** Pointer to the exec context.  Will not exist in the final version. */
-    CPUExecContext *cpuXC;
+    /** Pointer to the thread state. */
+    ImplState *thread;
 
     /** The kind of fault this instruction has generated. */
     Fault fault;
+
+    /** The memory request. */
+//    MemReqPtr req;
+    Request *req;
+//    Packet pkt;
+
+    uint8_t *memData;
 
     /** The effective virtual address (lds & stores only). */
     Addr effAddr;
@@ -197,17 +255,29 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
-    /** Whether or not the source register is ready.  Not sure this should be
-     *  here vs. the derived class.
+#ifdef DEBUG
+    void dumpSNList();
+#endif
+
+    /** Whether or not the source register is ready.
+     *  @todo: Not sure this should be here vs the derived class.
      */
     bool _readySrcRegIdx[MaxInstSrcRegs];
 
   public:
-    /** BaseDynInst constructor given a binary instruction. */
-    BaseDynInst(MachInst inst, Addr PC, Addr Pred_PC, InstSeqNum seq_num,
+    /** BaseDynInst constructor given a binary instruction.
+     *  @param inst The binary instruction.
+     *  @param PC The PC of the instruction.
+     *  @param pred_PC The predicted next PC.
+     *  @param seq_num The sequence number of the instruction.
+     *  @param cpu Pointer to the instruction's CPU.
+     */
+    BaseDynInst(ExtMachInst inst, Addr PC, Addr pred_PC, InstSeqNum seq_num,
                 FullCPU *cpu);
 
-    /** BaseDynInst constructor given a static inst pointer. */
+    /** BaseDynInst constructor given a StaticInst pointer.
+     *  @param _staticInst The StaticInst for this BaseDynInst.
+     */
     BaseDynInst(StaticInstPtr &_staticInst);
 
     /** BaseDynInst destructor. */
@@ -218,12 +288,20 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void initVars();
 
   public:
-    void
-    trace_mem(Fault fault,      // last fault
-              MemCmd cmd,       // last command
-              Addr addr,        // virtual address of access
-              void *p,          // memory accessed
-              int nbytes);      // access size
+    /**
+     *  @todo: Make this function work; currently it is a dummy function.
+     *  @param fault Last fault.
+     *  @param cmd Last command.
+     *  @param addr Virtual address of access.
+     *  @param p Memory accessed.
+     *  @param nbytes Access size.
+     */
+//    void
+//    trace_mem(Fault fault,
+//	      MemCmd cmd,
+//	      Addr addr,
+//	      void *p,
+//	      int nbytes);
 
     /** Dumps out contents of this BaseDynInst. */
     void dump();
@@ -237,6 +315,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Checks whether or not this instruction has had its branch target
      *  calculated yet.  For now it is not utilized and is hacked to be
      *  always false.
+     *  @todo: Actually use this instruction.
      */
     bool doneTargCalc() { return false; }
 
@@ -252,12 +331,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Addr readPredTarg() { return predPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool predTaken() {
-        return( predPC != (PC + sizeof(MachInst) ) );
-    }
+    bool predTaken() { return predPC != (PC + sizeof(MachInst)); }
 
     /** Returns whether the instruction mispredicted. */
-    bool mispredicted() { return (predPC != nextPC); }
+    bool mispredicted() { return predPC != nextPC; }
 
     //
     //  Instruction types.  Forward checks to StaticInst object.
@@ -266,6 +343,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isMemRef()    	  const { return staticInst->isMemRef(); }
     bool isLoad()	  const { return staticInst->isLoad(); }
     bool isStore()	  const { return staticInst->isStore(); }
+    bool isStoreConditional() const
+    { return staticInst->isStoreConditional(); }
     bool isInstPrefetch() const { return staticInst->isInstPrefetch(); }
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
     bool isCopy()         const { return staticInst->isCopy(); }
@@ -280,9 +359,53 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isUncondCtrl()	  const { return staticInst->isUncondCtrl(); }
     bool isThreadSync()   const { return staticInst->isThreadSync(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
+    bool isSerializeBefore() const
+    { return staticInst->isSerializeBefore() || serializeBefore; }
+    bool isSerializeAfter() const
+    { return staticInst->isSerializeAfter() || serializeAfter; }
     bool isMemBarrier()   const { return staticInst->isMemBarrier(); }
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }
+    bool isQuiesce() const { return staticInst->isQuiesce(); }
+    bool isIprAccess() const { return staticInst->isIprAccess(); }
+    bool isUnverifiable() const { return staticInst->isUnverifiable(); }
+
+    /** Temporarily sets this instruction as a serialize before instruction. */
+    void setSerializeBefore() { serializeBefore = true; }
+
+    /** Clears the serializeBefore part of this instruction. */
+    void clearSerializeBefore() { serializeBefore = false; }
+
+    /** Checks if this serializeBefore is only temporarily set. */
+    bool isTempSerializeBefore() { return serializeBefore; }
+
+    /** Tracks if instruction has been externally set as serializeBefore. */
+    bool serializeBefore;
+
+    /** Temporarily sets this instruction as a serialize after instruction. */
+    void setSerializeAfter() { serializeAfter = true; }
+
+    /** Clears the serializeAfter part of this instruction.*/
+    void clearSerializeAfter() { serializeAfter = false; }
+
+    /** Checks if this serializeAfter is only temporarily set. */
+    bool isTempSerializeAfter() { return serializeAfter; }
+
+    /** Tracks if instruction has been externally set as serializeAfter. */
+    bool serializeAfter;
+
+    /** Checks if the serialization part of this instruction has been
+     *  handled.  This does not apply to the temporary serializing
+     *  state; it only applies to this instruction's own permanent
+     *  serializing state.
+     */
+    bool isSerializeHandled() { return serializeHandled; }
+
+    /** Sets the serialization part of this instruction as handled. */
+    void setSerializeHandled() { serializeHandled = true; }
+
+    /** Whether or not the serialization of this instruction has been handled. */
+    bool serializeHandled;
 
     /** Returns the opclass of this instruction. */
     OpClass opClass() const { return staticInst->opClass(); }
@@ -290,10 +413,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the branch target address. */
     Addr branchTarget() const { return staticInst->branchTarget(PC); }
 
-    /** Number of source registers. */
-    int8_t numSrcRegs()	 const { return staticInst->numSrcRegs(); }
+    /** Returns the number of source registers. */
+    int8_t numSrcRegs()	const { return staticInst->numSrcRegs(); }
 
-    /** Number of destination registers. */
+    /** Returns the number of destination registers. */
     int8_t numDestRegs() const { return staticInst->numDestRegs(); }
 
     // the following are used to track physical register usage
@@ -302,16 +425,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     int8_t numIntDestRegs() const { return staticInst->numIntDestRegs(); }
 
     /** Returns the logical register index of the i'th destination register. */
-    RegIndex destRegIdx(int i) const
-    {
-        return staticInst->destRegIdx(i);
-    }
+    RegIndex destRegIdx(int i) const { return staticInst->destRegIdx(i); }
 
     /** Returns the logical register index of the i'th source register. */
-    RegIndex srcRegIdx(int i) const
-    {
-        return staticInst->srcRegIdx(i);
-    }
+    RegIndex srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
 
     /** Returns the result of an integer instruction. */
     uint64_t readIntResult() { return instResult.integer; }
@@ -322,29 +439,41 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the result of a floating point (double) instruction. */
     double readDoubleResult() { return instResult.dbl; }
 
-    //Push to .cc file.
+    void setIntReg(const StaticInst *si, int idx, uint64_t val)
+    {
+        instResult.integer = val;
+    }
+
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
+    {
+        if (width == 32)
+            instResult.fp = val;
+        else if (width == 64)
+            instResult.dbl = val;
+        else
+            panic("Unsupported width!");
+    }
+
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
+    {
+        instResult.fp = val;
+    }
+
+    void setFloatRegBits(const StaticInst *si, int idx, uint64_t val, int width)
+    {
+        instResult.integer = val;
+    }
+
+    void setFloatRegBits(const StaticInst *si, int idx, uint64_t val)
+    {
+        instResult.integer = val;
+    }
+
     /** Records that one of the source registers is ready. */
-    void markSrcRegReady()
-    {
-        ++readyRegs;
-        if(readyRegs == numSrcRegs()) {
-            canIssue = true;
-        }
-    }
+    void markSrcRegReady();
 
-    /** Marks a specific register as ready.
-     *  @todo: Move this to .cc file.
-     */
-    void markSrcRegReady(RegIndex src_idx)
-    {
-        ++readyRegs;
-
-        _readySrcRegIdx[src_idx] = 1;
-
-        if(readyRegs == numSrcRegs()) {
-            canIssue = true;
-        }
-    }
+    /** Marks a specific register as ready. */
+    void markSrcRegReady(RegIndex src_idx);
 
     /** Returns if a source register is ready. */
     bool isReadySrcRegIdx(int idx) const
@@ -355,8 +484,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Sets this instruction as completed. */
     void setCompleted() { completed = true; }
 
-    /** Returns whethe or not this instruction is completed. */
+    /** Returns whether or not this instruction is completed. */
     bool isCompleted() const { return completed; }
+
+    void setResultReady() { resultReady = true; }
+
+    bool isResultReady() const { return resultReady; }
 
     /** Sets this instruction as ready to issue. */
     void setCanIssue() { canIssue = true; }
@@ -385,34 +518,97 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns whether or not this instruction is ready to commit. */
     bool readyToCommit() const { return canCommit; }
 
+    /** Sets this instruction as committed. */
+    void setCommitted() { committed = true; }
+
+    /** Returns whether or not this instruction is committed. */
+    bool isCommitted() const { return committed; }
+
     /** Sets this instruction as squashed. */
     void setSquashed() { squashed = true; }
 
     /** Returns whether or not this instruction is squashed. */
     bool isSquashed() const { return squashed; }
 
+    //Instruction Queue Entry
+    //-----------------------
+    /** Sets this instruction as a entry the IQ. */
+    void setInIQ() { iqEntry = true; }
+
+    /** Sets this instruction as a entry the IQ. */
+    void removeInIQ() { iqEntry = false; }
+
     /** Sets this instruction as squashed in the IQ. */
-    void setSquashedInIQ() { squashedInIQ = true; }
+    void setSquashedInIQ() { squashedInIQ = true; squashed = true;}
 
     /** Returns whether or not this instruction is squashed in the IQ. */
     bool isSquashedInIQ() const { return squashedInIQ; }
+
+    /** Returns whether or not this instruction has issued. */
+    bool isInIQ() const { return iqEntry; }
+
+
+    //Load / Store Queue Functions
+    //-----------------------
+    /** Sets this instruction as a entry the LSQ. */
+    void setInLSQ() { lsqEntry = true; }
+
+    /** Sets this instruction as a entry the LSQ. */
+    void removeInLSQ() { lsqEntry = false; }
+
+    /** Sets this instruction as squashed in the LSQ. */
+    void setSquashedInLSQ() { squashedInLSQ = true;}
+
+    /** Returns whether or not this instruction is squashed in the LSQ. */
+    bool isSquashedInLSQ() const { return squashedInLSQ; }
+
+    /** Returns whether or not this instruction is in the LSQ. */
+    bool isInLSQ() const { return lsqEntry; }
+
+
+    //Reorder Buffer Functions
+    //-----------------------
+    /** Sets this instruction as a entry the ROB. */
+    void setInROB() { robEntry = true; }
+
+    /** Sets this instruction as a entry the ROB. */
+    void removeInROB() { robEntry = false; }
+
+    /** Sets this instruction as squashed in the ROB. */
+    void setSquashedInROB() { squashedInROB = true; }
+
+    /** Returns whether or not this instruction is squashed in the ROB. */
+    bool isSquashedInROB() const { return squashedInROB; }
+
+    /** Returns whether or not this instruction is in the ROB. */
+    bool isInROB() const { return robEntry; }
 
     /** Read the PC of this instruction. */
     const Addr readPC() const { return PC; }
 
     /** Set the next PC of this instruction (its actual target). */
-    void setNextPC(uint64_t val) { nextPC = val; }
+    void setNextPC(uint64_t val)
+    {
+        nextPC = val;
+//        instResult.integer = val;
+    }
 
-    /** Returns the exec context.
-     *  @todo: Remove this once the ExecContext is no longer used.
+    void setASID(short addr_space_id) { asid = addr_space_id; }
+
+    void setThread(unsigned tid) { threadNumber = tid; }
+
+    void setState(ImplState *state) { thread = state; }
+
+    /** Returns the thread context.
      */
-    ExecContext *xcBase() { return cpuXC->getProxy(); }
+    ThreadContext *tcBase() { return thread->getTC(); }
 
   private:
     /** Instruction effective address.
      *  @todo: Consider if this is necessary or not.
      */
     Addr instEffAddr;
+
     /** Whether or not the effective address calculation is completed.
      *  @todo: Consider if this is necessary or not.
      */
@@ -431,12 +627,26 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns whether or not the eff. addr. source registers are ready. */
     bool eaSrcsReady();
 
+    /** Whether or not the memory operation is done. */
+    bool memOpDone;
+
   public:
     /** Load queue index. */
     int16_t lqIdx;
 
     /** Store queue index. */
     int16_t sqIdx;
+
+    bool reachedCommit;
+
+    /** Iterator pointing to this BaseDynInst in the list of all insts. */
+    ListIt instListIt;
+
+    /** Returns iterator to this instruction in the list of all insts. */
+    ListIt &getInstListIt() { return instListIt; }
+
+    /** Sets iterator for this instruction in the list of all insts. */
+    void setInstListIt(ListIt _instListIt) { instListIt = _instListIt; }
 };
 
 template<class Impl>
@@ -444,34 +654,47 @@ template<class T>
 inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
-    MemReqPtr req = new MemReq(addr, cpuXC->getProxy(), sizeof(T), flags);
-    req->asid = asid;
+    // Sometimes reads will get retried, so they may come through here
+    // twice.
+    if (!req) {
+        req = new Request();
+        req->setVirt(asid, addr, sizeof(T), flags, this->PC);
+        req->setThreadContext(thread->readCpuId(), threadNumber);
+    } else {
+        assert(addr == req->getVaddr());
+    }
 
-    fault = cpu->translateDataReadReq(req);
+    if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
+        TheISA::VMPageSize) {
+        return TheISA::genAlignmentFault();
+    }
 
-    // Record key MemReq parameters so we can generate another one
-    // just like it for the timing access without calling translate()
-    // again (which might mess up the TLB).
-    // Do I ever really need this? -KTL 3/05
-    effAddr = req->vaddr;
-    physEffAddr = req->paddr;
-    memReqFlags = req->flags;
-
-    /**
-     * @todo
-     * Replace the disjoint functional memory with a unified one and remove
-     * this hack.
-     */
-#if !FULL_SYSTEM
-    req->paddr = req->vaddr;
-#endif
+    fault = cpu->translateDataReadReq(req, thread);
 
     if (fault == NoFault) {
+        effAddr = req->getVaddr();
+        physEffAddr = req->getPaddr();
+        memReqFlags = req->getFlags();
+
+#if 0
+        if (cpu->system->memctrl->badaddr(physEffAddr)) {
+            fault = TheISA::genMachineCheckFault();
+            data = (T)-1;
+            this->setExecuted();
+        } else {
+            fault = cpu->read(req, data, lqIdx);
+        }
+#else
         fault = cpu->read(req, data, lqIdx);
+#endif
     } else {
         // Return a fixed value to keep simulation deterministic even
         // along misspeculated paths.
         data = (T)-1;
+
+        // Commit will have to clean up whatever happened.  Set this
+        // instruction as executed.
+        this->setExecuted();
     }
 
     if (traceData) {
@@ -492,36 +715,38 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
 
-    MemReqPtr req = new MemReq(addr, cpuXC->getProxy(), sizeof(T), flags);
+    assert(req == NULL);
 
-    req->asid = asid;
+    req = new Request();
+    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
+    req->setThreadContext(thread->readCpuId(), threadNumber);
 
-    fault = cpu->translateDataWriteReq(req);
+    if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
+        TheISA::VMPageSize) {
+        return TheISA::genAlignmentFault();
+    }
 
-    // Record key MemReq parameters so we can generate another one
-    // just like it for the timing access without calling translate()
-    // again (which might mess up the TLB).
-    effAddr = req->vaddr;
-    physEffAddr = req->paddr;
-    memReqFlags = req->flags;
-
-    /**
-     * @todo
-     * Replace the disjoint functional memory with a unified one and remove
-     * this hack.
-     */
-#if !FULL_SYSTEM
-    req->paddr = req->vaddr;
-#endif
+    fault = cpu->translateDataWriteReq(req, thread);
 
     if (fault == NoFault) {
+        effAddr = req->getVaddr();
+        physEffAddr = req->getPaddr();
+        memReqFlags = req->getFlags();
+#if 0
+        if (cpu->system->memctrl->badaddr(physEffAddr)) {
+            fault = TheISA::genMachineCheckFault();
+        } else {
+            fault = cpu->write(req, data, sqIdx);
+        }
+#else
         fault = cpu->write(req, data, sqIdx);
+#endif
     }
 
     if (res) {
         // always return some result to keep misspeculated paths
         // (which will ignore faults) deterministic
-        *res = (fault == NoFault) ? req->result : 0;
+        *res = (fault == NoFault) ? req->getScResult() : 0;
     }
 
     return fault;

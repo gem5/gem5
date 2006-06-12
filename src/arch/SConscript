@@ -25,6 +25,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
 
 import os.path
 
@@ -144,7 +146,6 @@ env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
 isa = env['TARGET_ISA'] # someday this may be a list of ISAs
 
 # Let the target architecture define what additional sources it needs
-sources += SConscript(os.path.join(isa, 'SConscript'),
-                      exports = 'env', duplicate = False)
+sources += SConscript(os.path.join(isa, 'SConscript'), exports = 'env')
 
 Return('sources')

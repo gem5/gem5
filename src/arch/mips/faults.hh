@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #ifndef __MIPS_FAULTS_HH__
@@ -45,7 +47,7 @@ class MipsFault : public FaultBase
     virtual bool setRestartAddress() {return true;}
   public:
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
@@ -112,7 +114,7 @@ class ArithmeticFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
 

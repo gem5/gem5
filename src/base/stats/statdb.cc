@@ -24,12 +24,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/statistics.hh"
-#include "base/stats/bin.hh"
 #include "base/stats/statdb.hh"
 
 using namespace std;
@@ -46,17 +47,6 @@ find(void *stat)
         return NULL;
 
     return (*i).second;
-}
-
-void
-regBin(MainBin *bin, const std::string &_name)
-{
-    bin_list_t::iterator i, end = bins().end();
-    for (i = bins().begin(); i != end; ++i)
-        if ((*i)->name() == _name)
-            panic("re-registering bin %s", _name);
-    bins().push_back(bin);
-    DPRINTF(Stats, "registering %s\n", _name);
 }
 
 void

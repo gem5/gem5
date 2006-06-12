@@ -24,8 +24,12 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Nathan Binkert
  */
 
+#include "base/trace.hh"
 #include "dev/io_device.hh"
 #include "sim/builder.hh"
 
@@ -55,12 +59,13 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 }
 
 
-Packet *
+void
 PioPort::recvRetry()
 {
     Packet* pkt = transmitList.front();
-    transmitList.pop_front();
-    return pkt;
+    if (Port::sendTiming(pkt)) {
+        transmitList.pop_front();
+    }
 }
 
 
@@ -74,13 +79,14 @@ PioPort::SendEvent::process()
 }
 
 
+
 bool
 PioPort::recvTiming(Packet *pkt)
 {
-    device->recvAtomic(pkt);
+    Tick latency = device->recvAtomic(pkt);
     // turn packet around to go back to requester
     pkt->makeTimingResponse();
-    sendTiming(pkt, pkt->time - pkt->req->getTime());
+    sendTiming(pkt, latency);
     return true;
 }
 
@@ -114,18 +120,35 @@ DmaPort::DmaPort(DmaDevice *dev, Platform *p)
 bool
 DmaPort::recvTiming(Packet *pkt)
 {
-    if (pkt->senderState) {
+
+
+    if (pkt->result == Packet::Nacked) {
+        DPRINTF(DMA, "Received nacked Pkt %#x with State: %#x Addr: %#x\n",
+               pkt, pkt->senderState, pkt->getAddr());
+        pkt->reinitNacked();
+        sendDma(pkt, true);
+    } else if (pkt->senderState) {
         DmaReqState *state;
+        DPRINTF(DMA, "Received response Pkt %#x with State: %#x Addr: %#x\n",
+               pkt, pkt->senderState, pkt->getAddr());
         state = dynamic_cast<DmaReqState*>(pkt->senderState);
-        state->completionEvent->schedule(pkt->time - pkt->req->getTime());
+        pendingCount--;
+
+        assert(pendingCount >= 0);
+        assert(state);
+
+        state->numBytes += pkt->req->getSize();
+        if (state->totBytes == state->numBytes) {
+            state->completionEvent->process();
+            delete state;
+        }
         delete pkt->req;
         delete pkt;
     }  else {
-        delete pkt->req;
-        delete pkt;
+        panic("Got packet without sender state... huh?\n");
     }
 
-    return Packet::Success;
+    return true;
 }
 
 DmaDevice::DmaDevice(Params *p)
@@ -133,20 +156,21 @@ DmaDevice::DmaDevice(Params *p)
 { }
 
 void
-DmaPort::SendEvent::process()
-{
-    if (port->Port::sendTiming(packet))
-        return;
-
-    port->transmitList.push_back(packet);
-}
-
-Packet *
 DmaPort::recvRetry()
 {
     Packet* pkt = transmitList.front();
-    transmitList.pop_front();
-    return pkt;
+    bool result = true;
+    while (result && transmitList.size()) {
+        DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
+                   pkt, pkt->senderState);
+        result = sendTiming(pkt);
+        if (result) {
+            DPRINTF(DMA, "-- Done\n");
+            transmitList.pop_front();
+        } else {
+            DPRINTF(DMA, "-- Failed, queued\n");
+        }
+    }
 }
 
 
@@ -156,27 +180,19 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 {
     assert(event);
 
-    int prevSize = 0;
+    DmaReqState *reqState = new DmaReqState(event, this, size);
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-            Request *req = new Request(false);
-            req->setPaddr(gen.addr());
-            req->setSize(gen.size());
-            req->setTime(curTick);
+            Request *req = new Request(gen.addr(), gen.size(), 0);
             Packet *pkt = new Packet(req, cmd, Packet::Broadcast);
 
             // Increment the data pointer on a write
             if (data)
-                pkt->dataStatic(data + prevSize) ;
+                pkt->dataStatic(data + gen.complete());
 
-            prevSize += gen.size();
+            pkt->senderState = reqState;
 
-            // Set the last bit of the dma as the final packet for this dma
-            // and set it's completion event.
-            if (prevSize == size) {
-                pkt->senderState = new DmaReqState(event, true);
-            }
             assert(pendingCount >= 0);
             pendingCount++;
             sendDma(pkt);
@@ -185,28 +201,40 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
 
 void
-DmaPort::sendDma(Packet *pkt)
+DmaPort::sendDma(Packet *pkt, bool front)
 {
    // some kind of selction between access methods
    // more work is going to have to be done to make
    // switching actually work
   /* MemState state = device->platform->system->memState;
 
-   if (state == Timing) {
-       if (!sendTiming(pkt))
-           transmitList.push_back(&packet);
-    } else if (state == Atomic) {*/
+   if (state == Timing) {  */
+       DPRINTF(DMA, "Attempting to send Packet %#x with addr: %#x\n",
+               pkt, pkt->getAddr());
+       if (transmitList.size() || !sendTiming(pkt)) {
+           if (front)
+               transmitList.push_front(pkt);
+           else
+               transmitList.push_back(pkt);
+           DPRINTF(DMA, "-- Failed: queued\n");
+       } else {
+           DPRINTF(DMA, "-- Done\n");
+       }
+  /*  } else if (state == Atomic) {
        sendAtomic(pkt);
        if (pkt->senderState) {
            DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
-           state->completionEvent->schedule(curTick + (pkt->time - pkt->req->getTime()) +1);
+           assert(state);
+           state->completionEvent->schedule(curTick + (pkt->time -
+           pkt->req->getTime()) +1);
+           delete state;
        }
        pendingCount--;
        assert(pendingCount >= 0);
        delete pkt->req;
        delete pkt;
 
-/*   } else if (state == Functional) {
+   } else if (state == Functional) {
        sendFunctional(pkt);
        // Is this correct???
        completionEvent->schedule(pkt->req->responseTime - pkt->req->requestTime);

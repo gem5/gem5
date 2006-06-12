@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ben Nash
  */
 
 #ifndef __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
@@ -40,7 +42,7 @@ class FreebsdAlphaSystem : public AlphaSystem
         SkipCalibrateClocksEvent(PCEventQueue *q, const std::string &desc,
                                  Addr addr)
             : SkipFuncEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
 
     SkipFuncEvent *skipDelayEvent;
@@ -49,7 +51,7 @@ class FreebsdAlphaSystem : public AlphaSystem
   public:
     FreebsdAlphaSystem(Params *p);
     ~FreebsdAlphaSystem();
-    void doCalibrateClocks(ExecContext *xc);
+    void doCalibrateClocks(ThreadContext *tc);
 
 };
 

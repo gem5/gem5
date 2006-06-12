@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Nathan Binkert
  */
 
 #ifndef __DEV_IO_DEVICE_HH__
@@ -105,8 +108,9 @@ class PioPort : public Port
     void sendTiming(Packet *pkt, Tick time)
     { new PioPort::SendEvent(this, pkt, time); }
 
-    /** This function pops the last element off the transmit list and sends it.*/
-    virtual Packet *recvRetry();
+    /** This function is notification that the device should attempt to send a
+     * packet again. */
+    virtual void recvRetry();
 
   public:
     PioPort(PioDevice *dev, Platform *p);
@@ -117,10 +121,22 @@ class PioPort : public Port
 
 struct DmaReqState : public Packet::SenderState
 {
+    /** Event to call on the device when this transaction (all packets)
+     * complete. */
     Event *completionEvent;
+
+    /** Where we came from for some sanity checking. */
+    Port *outPort;
+
+    /** Total number of bytes that this transaction involves. */
+    Addr totBytes;
+
+    /** Number of bytes that have been acked for this transaction. */
+    Addr numBytes;
+
     bool final;
-    DmaReqState(Event *ce, bool f)
-        : completionEvent(ce), final(f)
+    DmaReqState(Event *ce, Port *p, Addr tb)
+        : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0)
     {}
 };
 
@@ -146,29 +162,12 @@ class DmaPort : public Port
     virtual void recvStatusChange(Status status)
     { ; }
 
-    virtual Packet *recvRetry() ;
+    virtual void recvRetry() ;
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
     { resp.clear(); snoop.clear(); }
 
-    class SendEvent : public Event
-    {
-        DmaPort *port;
-        Packet *packet;
-
-        SendEvent(PioPort *p, Packet *pkt, Tick t)
-            : Event(&mainEventQueue), packet(pkt)
-        { schedule(curTick + t); }
-
-        virtual void process();
-
-        virtual const char *description()
-        { return "Future scheduled sendTiming event"; }
-
-        friend class DmaPort;
-    };
-
-    void sendDma(Packet *pkt);
+    void sendDma(Packet *pkt, bool front = false);
 
   public:
     DmaPort(DmaDevice *dev, Platform *p);
@@ -177,8 +176,6 @@ class DmaPort : public Port
                    uint8_t *data = NULL);
 
     bool dmaPending() { return pendingCount > 0; }
-
-  friend class DmaPort::SendEvent;
 
 };
 

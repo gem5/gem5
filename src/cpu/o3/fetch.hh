@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,28 +24,33 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-// Todo: SMT fetch,
-// Add a way to get a stage's current status.
+#ifndef __CPU_O3_FETCH_HH__
+#define __CPU_O3_FETCH_HH__
 
-#ifndef __CPU_O3_CPU_SIMPLE_FETCH_HH__
-#define __CPU_O3_CPU_SIMPLE_FETCH_HH__
-
+#include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/pc_event.hh"
-#include "mem/mem_interface.hh"
+#include "mem/packet.hh"
+#include "mem/port.hh"
 #include "sim/eventq.hh"
 
-/**
- * SimpleFetch class to fetch a single instruction each cycle.  SimpleFetch
- * will stall if there's an Icache miss, but otherwise assumes a one cycle
- * Icache hit.
- */
+class Sampler;
 
+/**
+ * DefaultFetch class handles both single threaded and SMT fetch. Its
+ * width is specified by the parameters; each cycle it tries to fetch
+ * that many instructions. It supports using a branch predictor to
+ * predict direction and targets.
+ * It supports the idling functionality of the CPU by indicating to
+ * the CPU when it is active and inactive.
+ */
 template <class Impl>
-class SimpleFetch
+class DefaultFetch
 {
   public:
     /** Typedefs from Impl. */
@@ -55,56 +60,153 @@ class SimpleFetch
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::Params Params;
 
+    /** Typedefs from the CPU policy. */
     typedef typename CPUPol::BPredUnit BPredUnit;
     typedef typename CPUPol::FetchStruct FetchStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
 
     /** Typedefs from ISA. */
     typedef TheISA::MachInst MachInst;
+    typedef TheISA::ExtMachInst ExtMachInst;
+
+    /** IcachePort class for DefaultFetch.  Handles doing the
+     * communication with the cache/memory.
+     */
+    class IcachePort : public Port
+    {
+      protected:
+        /** Pointer to fetch. */
+        DefaultFetch<Impl> *fetch;
+
+      public:
+        /** Default constructor. */
+        IcachePort(DefaultFetch<Impl> *_fetch)
+            : Port(_fetch->name() + "-iport"), fetch(_fetch)
+        { }
+
+      protected:
+        /** Atomic version of receive.  Panics. */
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        /** Functional version of receive.  Panics. */
+        virtual void recvFunctional(PacketPtr pkt);
+
+        /** Receives status change.  Other than range changing, panics. */
+        virtual void recvStatusChange(Status status);
+
+        /** Returns the address ranges of this device. */
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); }
+
+        /** Timing version of receive.  Handles setting fetch to the
+         * proper status to start fetching. */
+        virtual bool recvTiming(PacketPtr pkt);
+
+        /** Handles doing a retry of a failed fetch. */
+        virtual void recvRetry();
+    };
 
   public:
-    enum Status {
+    /** Overall fetch status. Used to determine if the CPU can
+     * deschedule itsef due to a lack of activity.
+     */
+    enum FetchStatus {
+        Active,
+        Inactive
+    };
+
+    /** Individual thread status. */
+    enum ThreadStatus {
         Running,
         Idle,
         Squashing,
         Blocked,
-        IcacheMissStall,
-        IcacheMissComplete
+        Fetching,
+        TrapPending,
+        QuiescePending,
+        SwitchOut,
+        IcacheWaitResponse,
+        IcacheWaitRetry,
+        IcacheAccessComplete
     };
 
-    // May eventually need statuses on a per thread basis.
-    Status _status;
-
-    bool stalled;
-
-  public:
-    class CacheCompletionEvent : public Event
-    {
-      private:
-        SimpleFetch *fetch;
-
-      public:
-        CacheCompletionEvent(SimpleFetch *_fetch);
-
-        virtual void process();
-        virtual const char *description();
+    /** Fetching Policy, Add new policies here.*/
+    enum FetchPriority {
+        SingleThread,
+        RoundRobin,
+        Branch,
+        IQ,
+        LSQ
     };
-
-  public:
-    /** SimpleFetch constructor. */
-    SimpleFetch(Params &params);
-
-    void regStats();
-
-    void setCPU(FullCPU *cpu_ptr);
-
-    void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
-
-    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
-
-    void processCacheCompletion();
 
   private:
+    /** Fetch status. */
+    FetchStatus _status;
+
+    /** Per-thread status. */
+    ThreadStatus fetchStatus[Impl::MaxThreads];
+
+    /** Fetch policy. */
+    FetchPriority fetchPolicy;
+
+    /** List that has the threads organized by priority. */
+    std::list<unsigned> priorityList;
+
+  public:
+    /** DefaultFetch constructor. */
+    DefaultFetch(Params *params);
+
+    /** Returns the name of fetch. */
+    std::string name() const;
+
+    /** Registers statistics. */
+    void regStats();
+
+    /** Sets CPU pointer. */
+    void setCPU(FullCPU *cpu_ptr);
+
+    /** Sets the main backwards communication time buffer pointer. */
+    void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
+
+    /** Sets pointer to list of active threads. */
+    void setActiveThreads(std::list<unsigned> *at_ptr);
+
+    /** Sets pointer to time buffer used to communicate to the next stage. */
+    void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
+
+    /** Initialize stage. */
+    void initStage();
+
+    /** Processes cache completion event. */
+    void processCacheCompletion(PacketPtr pkt);
+
+    /** Begins the switch out of the fetch stage. */
+    void switchOut();
+
+    /** Completes the switch out of the fetch stage. */
+    void doSwitchOut();
+
+    /** Takes over from another CPU's thread. */
+    void takeOverFrom();
+
+    /** Checks if the fetch stage is switched out. */
+    bool isSwitchedOut() { return switchedOut; }
+
+    /** Tells fetch to wake up from a quiesce instruction. */
+    void wakeFromQuiesce();
+
+  private:
+    /** Changes the status of this stage to active, and indicates this
+     * to the CPU.
+     */
+    inline void switchToActive();
+
+    /** Changes the status of this stage to inactive, and indicates
+     * this to the CPU.
+     */
+    inline void switchToInactive();
+
     /**
      * Looks up in the branch predictor to see if the next PC should be
      * either next PC+=MachInst or a branch target.
@@ -120,29 +222,78 @@ class SimpleFetch
      * fault that happened.  Puts the data into the class variable
      * cacheData.
      * @param fetch_PC The PC address that is being fetched from.
+     * @param ret_fault The fault reference that will be set to the result of
+     * the icache access.
+     * @param tid Thread id.
      * @return Any fault that occured.
      */
-    Fault fetchCacheLine(Addr fetch_PC);
+    bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid);
 
-    inline void doSquash(const Addr &new_PC);
+    /** Squashes a specific thread and resets the PC. */
+    inline void doSquash(const Addr &new_PC, unsigned tid);
 
-    void squashFromDecode(const Addr &new_PC, const InstSeqNum &seq_num);
+    /** Squashes a specific thread and resets the PC. Also tells the CPU to
+     * remove any instructions between fetch and decode that should be sqaushed.
+     */
+    void squashFromDecode(const Addr &new_PC, const InstSeqNum &seq_num,
+                          unsigned tid);
+
+    /** Checks if a thread is stalled. */
+    bool checkStall(unsigned tid) const;
+
+    /** Updates overall fetch stage status; to be called at the end of each
+     * cycle. */
+    FetchStatus updateFetchStatus();
 
   public:
-    // Figure out PC vs next PC and how it should be updated
-    void squash(const Addr &new_PC);
+    /** Squashes a specific thread and resets the PC. Also tells the CPU to
+     * remove any instructions that are not in the ROB. The source of this
+     * squash should be the commit stage.
+     */
+    void squash(const Addr &new_PC, unsigned tid);
 
+    /** Ticks the fetch stage, processing all inputs signals and fetching
+     * as many instructions as possible.
+     */
     void tick();
 
-    void fetch();
+    /** Checks all input signals and updates the status as necessary.
+     *  @return: Returns if the status has changed due to input signals.
+     */
+    bool checkSignalsAndUpdate(unsigned tid);
 
-    // Align an address (typically a PC) to the start of an I-cache block.
-    // We fold in the PISA 64- to 32-bit conversion here as well.
+    /** Does the actual fetching of instructions and passing them on to the
+     * next stage.
+     * @param status_change fetch() sets this variable if there was a status
+     * change (ie switching to IcacheMissStall).
+     */
+    void fetch(bool &status_change);
+
+    /** Align a PC to the start of an I-cache block. */
     Addr icacheBlockAlignPC(Addr addr)
     {
         addr = TheISA::realPCToFetchPC(addr);
         return (addr & ~(cacheBlkMask));
     }
+
+  private:
+    /** Handles retrying the fetch access. */
+    void recvRetry();
+
+    /** Returns the appropriate thread to fetch, given the fetch policy. */
+    int getFetchingThread(FetchPriority &fetch_priority);
+
+    /** Returns the appropriate thread to fetch using a round robin policy. */
+    int roundRobin();
+
+    /** Returns the appropriate thread to fetch using the IQ count policy. */
+    int iqCount();
+
+    /** Returns the appropriate thread to fetch using the LSQ count policy. */
+    int lsqCount();
+
+    /** Returns the appropriate thread to fetch using the branch count policy. */
+    int branchCount();
 
   private:
     /** Pointer to the FullCPU. */
@@ -170,14 +321,41 @@ class SimpleFetch
     /** Wire used to write any information heading to decode. */
     typename TimeBuffer<FetchStruct>::wire toDecode;
 
+    MemObject *mem;
+
     /** Icache interface. */
-    MemInterface *icacheInterface;
+    IcachePort *icachePort;
 
     /** BPredUnit. */
     BPredUnit branchPred;
 
+    /** Per-thread fetch PC. */
+    Addr PC[Impl::MaxThreads];
+
+    /** Per-thread next PC. */
+    Addr nextPC[Impl::MaxThreads];
+
     /** Memory request used to access cache. */
-    MemReqPtr memReq;
+    RequestPtr memReq[Impl::MaxThreads];
+
+    /** Variable that tracks if fetch has written to the time buffer this
+     * cycle. Used to tell CPU if there is activity this cycle.
+     */
+    bool wroteToTimeBuffer;
+
+    /** Tracks how many instructions has been fetched this cycle. */
+    int numInst;
+
+    /** Source of possible stalls. */
+    struct Stalls {
+        bool decode;
+        bool rename;
+        bool iew;
+        bool commit;
+    };
+
+    /** Tracks which stages are telling fetch to stall. */
+    Stalls stalls[Impl::MaxThreads];
 
     /** Decode to fetch delay, in ticks. */
     unsigned decodeToFetchDelay;
@@ -194,6 +372,15 @@ class SimpleFetch
     /** The width of fetch in instructions. */
     unsigned fetchWidth;
 
+    /** Is the cache blocked?  If so no threads can access it. */
+    bool cacheBlocked;
+
+    /** The packet that is waiting to be retried. */
+    PacketPtr retryPkt;
+
+    /** The thread that is waiting on the cache to tell fetch to retry. */
+    int retryTid;
+
     /** Cache block size. */
     int cacheBlkSize;
 
@@ -201,23 +388,68 @@ class SimpleFetch
     Addr cacheBlkMask;
 
     /** The cache line being fetched. */
-    uint8_t *cacheData;
+    uint8_t *cacheData[Impl::MaxThreads];
 
     /** Size of instructions. */
     int instSize;
 
     /** Icache stall statistics. */
-    Counter lastIcacheStall;
+    Counter lastIcacheStall[Impl::MaxThreads];
 
+    /** List of Active Threads */
+    std::list<unsigned> *activeThreads;
+
+    /** Number of threads. */
+    unsigned numThreads;
+
+    /** Number of threads that are actively fetching. */
+    unsigned numFetchingThreads;
+
+    /** Thread ID being fetched. */
+    int threadFetched;
+
+    /** Checks if there is an interrupt pending.  If there is, fetch
+     * must stop once it is not fetching PAL instructions.
+     */
+    bool interruptPending;
+
+    /** Records if fetch is switched out. */
+    bool switchedOut;
+
+    // @todo: Consider making these vectors and tracking on a per thread basis.
+    /** Stat for total number of cycles stalled due to an icache miss. */
     Stats::Scalar<> icacheStallCycles;
+    /** Stat for total number of fetched instructions. */
     Stats::Scalar<> fetchedInsts;
+    Stats::Scalar<> fetchedBranches;
+    /** Stat for total number of predicted branches. */
     Stats::Scalar<> predictedBranches;
+    /** Stat for total number of cycles spent fetching. */
     Stats::Scalar<> fetchCycles;
+    /** Stat for total number of cycles spent squashing. */
     Stats::Scalar<> fetchSquashCycles;
+    /** Stat for total number of cycles spent blocked due to other stages in
+     * the pipeline.
+     */
+    Stats::Scalar<> fetchIdleCycles;
+    /** Total number of cycles spent blocked. */
     Stats::Scalar<> fetchBlockedCycles;
+    /** Total number of cycles spent in any other state. */
+    Stats::Scalar<> fetchMiscStallCycles;
+    /** Stat for total number of fetched cache lines. */
     Stats::Scalar<> fetchedCacheLines;
-
-    Stats::Distribution<> fetch_nisn_dist;
+    /** Total number of outstanding icache accesses that were dropped
+     * due to a squash.
+     */
+    Stats::Scalar<> fetchIcacheSquashes;
+    /** Distribution of number of instructions fetched each cycle. */
+    Stats::Distribution<> fetchNisnDist;
+    /** Rate of how often fetch was idle. */
+    Stats::Formula idleRate;
+    /** Number of branch fetches per cycle. */
+    Stats::Formula branchRate;
+    /** Number of instruction fetched per cycle. */
+    Stats::Formula fetchRate;
 };
 
-#endif //__CPU_O3_CPU_SIMPLE_FETCH_HH__
+#endif //__CPU_O3_FETCH_HH__

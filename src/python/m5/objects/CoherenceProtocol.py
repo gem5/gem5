@@ -1,4 +1,4 @@
-from m5 import *
+from m5.config import *
 class Coherence(Enum): vals = ['uni', 'msi', 'mesi', 'mosi', 'moesi']
 
 class CoherenceProtocol(SimObject):

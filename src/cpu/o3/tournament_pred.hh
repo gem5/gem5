@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,61 +24,138 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_TOURNAMENT_PRED_HH__
-#define __CPU_O3_CPU_TOURNAMENT_PRED_HH__
+#ifndef __CPU_O3_TOURNAMENT_PRED_HH__
+#define __CPU_O3_TOURNAMENT_PRED_HH__
 
 // For Addr type.
 #include "arch/isa_traits.hh"
 #include "cpu/o3/sat_counter.hh"
+#include <vector>
 
+/**
+ * Implements a tournament branch predictor, hopefully identical to the one
+ * used in the 21264.  It has a local predictor, which uses a local history
+ * table to index into a table of counters, and a global predictor, which
+ * uses a global history to index into a table of counters.  A choice
+ * predictor chooses between the two.  Only the global history register
+ * is speculatively updated, the rest are updated upon branches committing
+ * or misspeculating.
+ */
 class TournamentBP
 {
   public:
     /**
      * Default branch predictor constructor.
      */
-    TournamentBP(unsigned local_predictor_size,
-                 unsigned local_ctr_bits,
-                 unsigned local_history_table_size,
-                 unsigned local_history_bits,
-                 unsigned global_predictor_size,
-                 unsigned global_history_bits,
-                 unsigned global_ctr_bits,
-                 unsigned choice_predictor_size,
-                 unsigned choice_ctr_bits,
+    TournamentBP(unsigned localPredictorSize,
+                 unsigned localCtrBits,
+                 unsigned localHistoryTableSize,
+                 unsigned localHistoryBits,
+                 unsigned globalPredictorSize,
+                 unsigned globalHistoryBits,
+                 unsigned globalCtrBits,
+                 unsigned choicePredictorSize,
+                 unsigned choiceCtrBits,
                  unsigned instShiftAmt);
 
     /**
      * Looks up the given address in the branch predictor and returns
-     * a true/false value as to whether it is taken.
+     * a true/false value as to whether it is taken.  Also creates a
+     * BPHistory object to store any state it will need on squash/update.
      * @param branch_addr The address of the branch to look up.
+     * @param bp_history Pointer that will be set to the BPHistory object.
      * @return Whether or not the branch is taken.
      */
-    bool lookup(Addr &branch_addr);
+    bool lookup(Addr &branch_addr, void * &bp_history);
+
+    /**
+     * Records that there was an unconditional branch, and modifies
+     * the bp history to point to an object that has the previous
+     * global history stored in it.
+     * @param bp_history Pointer that will be set to the BPHistory object.
+     */
+    void uncondBr(void * &bp_history);
 
     /**
      * Updates the branch predictor with the actual result of a branch.
      * @param branch_addr The address of the branch to update.
      * @param taken Whether or not the branch was taken.
+     * @param bp_history Pointer to the BPHistory object that was created
+     * when the branch was predicted.
      */
-    void update(Addr &branch_addr, unsigned global_history, bool taken);
+    void update(Addr &branch_addr, bool taken, void *bp_history);
 
+    /**
+     * Restores the global branch history on a squash.
+     * @param bp_history Pointer to the BPHistory object that has the
+     * previous global branch history in it.
+     */
+    void squash(void *bp_history);
+
+    /** Returns the global history. */
     inline unsigned readGlobalHist() { return globalHistory; }
 
   private:
-
+    /**
+     * Returns if the branch should be taken or not, given a counter
+     * value.
+     * @param count The counter value.
+     */
     inline bool getPrediction(uint8_t &count);
 
+    /**
+     * Returns the local history index, given a branch address.
+     * @param branch_addr The branch's PC address.
+     */
     inline unsigned calcLocHistIdx(Addr &branch_addr);
 
-    inline void updateHistoriesTaken(unsigned local_history_idx);
+    /** Updates global history as taken. */
+    inline void updateGlobalHistTaken();
 
-    inline void updateHistoriesNotTaken(unsigned local_history_idx);
+    /** Updates global history as not taken. */
+    inline void updateGlobalHistNotTaken();
+
+    /**
+     * Updates local histories as taken.
+     * @param local_history_idx The local history table entry that
+     * will be updated.
+     */
+    inline void updateLocalHistTaken(unsigned local_history_idx);
+
+    /**
+     * Updates local histories as not taken.
+     * @param local_history_idx The local history table entry that
+     * will be updated.
+     */
+    inline void updateLocalHistNotTaken(unsigned local_history_idx);
+
+    /**
+     * The branch history information that is created upon predicting
+     * a branch.  It will be passed back upon updating and squashing,
+     * when the BP can use this information to update/restore its
+     * state properly.
+     */
+    struct BPHistory {
+#ifdef DEBUG
+        BPHistory()
+        { newCount++; }
+        ~BPHistory()
+        { newCount--; }
+
+        static int newCount;
+#endif
+        unsigned globalHistory;
+        bool localPredTaken;
+        bool globalPredTaken;
+        bool globalUsed;
+    };
 
     /** Local counters. */
-    SatCounter *localCtrs;
+    std::vector<SatCounter> localCtrs;
 
     /** Size of the local predictor. */
     unsigned localPredictorSize;
@@ -87,7 +164,7 @@ class TournamentBP
     unsigned localCtrBits;
 
     /** Array of local history table entries. */
-    unsigned *localHistoryTable;
+    std::vector<unsigned> localHistoryTable;
 
     /** Size of the local history table. */
     unsigned localHistoryTableSize;
@@ -100,9 +177,8 @@ class TournamentBP
     /** Mask to get the proper local history. */
     unsigned localHistoryMask;
 
-
     /** Array of counters that make up the global predictor. */
-    SatCounter *globalCtrs;
+    std::vector<SatCounter> globalCtrs;
 
     /** Size of the global predictor. */
     unsigned globalPredictorSize;
@@ -119,9 +195,8 @@ class TournamentBP
     /** Mask to get the proper global history. */
     unsigned globalHistoryMask;
 
-
     /** Array of counters that make up the choice predictor. */
-    SatCounter *choiceCtrs;
+    std::vector<SatCounter> choiceCtrs;
 
     /** Size of the choice predictor (identical to the global predictor). */
     unsigned choicePredictorSize;
@@ -140,4 +215,4 @@ class TournamentBP
     unsigned threshold;
 };
 
-#endif // __CPU_O3_CPU_TOURNAMENT_PRED_HH__
+#endif // __CPU_O3_TOURNAMENT_PRED_HH__

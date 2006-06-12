@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
 #ifndef __ARCH_ALPHA_VTOPHYS_H__
@@ -31,7 +34,7 @@
 
 #include "arch/alpha/isa_traits.hh"
 
-class ExecContext;
+class ThreadContext;
 class FunctionalPort;
 
 namespace AlphaISA {
@@ -40,12 +43,12 @@ PageTableEntry
 kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, AlphaISA::VAddr vaddr);
 
 Addr vtophys(Addr vaddr);
-Addr vtophys(ExecContext *xc, Addr vaddr);
+Addr vtophys(ThreadContext *tc, Addr vaddr);
 
-void CopyOut(ExecContext *xc, void *dst, Addr src, size_t len);
-void CopyIn(ExecContext *xc, Addr dst, void *src, size_t len);
-void CopyStringOut(ExecContext *xc, char *dst, Addr vaddr, size_t maxlen);
-void CopyStringIn(ExecContext *xc, char *src, Addr vaddr);
+void CopyOut(ThreadContext *tc, void *dst, Addr src, size_t len);
+void CopyIn(ThreadContext *tc, Addr dst, void *src, size_t len);
+void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
+void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
 
 };
 #endif // __ARCH_ALPHA_VTOPHYS_H__

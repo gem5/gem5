@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ron Dreslinski
  */
 
 /**
@@ -66,6 +68,10 @@ class Bus : public MemObject
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
     void recvFunctional(Packet *pkt);
+
+    /** Timing function called by port when it is once again able to process
+     * requests. */
+    void recvRetry(int id);
 
     /** Function called by the port when the bus is recieving a status change.*/
     void recvStatusChange(Port::Status status, int id);
@@ -126,6 +132,11 @@ class Bus : public MemObject
         virtual void recvStatusChange(Status status)
         { bus->recvStatusChange(status, id); }
 
+        /** When reciving a retry from the peer port (at id),
+            pass it to the bus. */
+        virtual void recvRetry()
+        { bus->recvRetry(id); }
+
         // This should return all the 'owned' addresses that are
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
@@ -142,6 +153,10 @@ class Bus : public MemObject
     /** An array of pointers to the peer port interfaces
         connected to this bus.*/
     std::vector<Port*> interfaces;
+
+    /** An array of pointers to ports that retry should be called on because the
+     * original send failed for whatever reason.*/
+    std::list<Port*> retryList;
 
   public:
 

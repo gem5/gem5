@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 #ifndef __CPU_SIMPLE_TIMING_HH__
@@ -100,7 +102,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTiming(Packet *pkt);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
     };
 
     class DcachePort : public CpuPort
@@ -115,7 +117,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTiming(Packet *pkt);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
     };
 
     IcachePort icachePort;

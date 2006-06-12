@@ -24,45 +24,74 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_RAS_HH__
-#define __CPU_O3_CPU_RAS_HH__
+#ifndef __CPU_O3_RAS_HH__
+#define __CPU_O3_RAS_HH__
 
 // For Addr type.
 #include "arch/isa_traits.hh"
+#include <vector>
 
+/** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
 {
   public:
-    ReturnAddrStack(unsigned numEntries);
+    /** Creates a return address stack, but init() must be called prior to
+     *  use.
+     */
+    ReturnAddrStack() {}
 
+    /** Initializes RAS with a specified number of entries.
+     *  @param numEntries Number of entries in the RAS.
+     */
+    void init(unsigned numEntries);
+
+    void reset();
+
+    /** Returns the top address on the RAS. */
     Addr top()
     { return addrStack[tos]; }
 
+    /** Returns the index of the top of the RAS. */
     unsigned topIdx()
     { return tos; }
 
+    /** Pushes an address onto the RAS. */
     void push(const Addr &return_addr);
 
+    /** Pops the top address from the RAS. */
     void pop();
 
+    /** Changes index to the top of the RAS, and replaces the top address with
+     *  a new target.
+     *  @param top_entry_idx The index of the RAS that will now be the top.
+     *  @param restored_target The new target address of the new top of the RAS.
+     */
     void restore(unsigned top_entry_idx, const Addr &restored_target);
 
   private:
+    /** Increments the top of stack index. */
     inline void incrTos()
     { if (++tos == numEntries) tos = 0; }
 
+    /** Decrements the top of stack index. */
     inline void decrTos()
     { tos = (tos == 0 ? numEntries - 1 : tos - 1); }
 
-    Addr *addrStack;
+    /** The RAS itself. */
+    std::vector<Addr> addrStack;
 
+    /** The number of entries in the RAS. */
     unsigned numEntries;
 
+    /** The number of used entries in the RAS. */
     unsigned usedEntries;
 
+    /** The top of stack index. */
     unsigned tos;
 };
 
-#endif // __CPU_O3_CPU_RAS_HH__
+#endif // __CPU_O3_RAS_HH__

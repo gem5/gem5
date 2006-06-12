@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #ifndef __ARCH_ALPHA_ARGUMENTS_HH__
@@ -35,14 +37,14 @@
 #include "base/refcnt.hh"
 #include "sim/host.hh"
 
-class ExecContext;
+class ThreadContext;
 
 namespace AlphaISA {
 
 class AlphaArguments
 {
   protected:
-    ExecContext *xc;
+    ThreadContext *tc;
     int number;
     uint64_t getArg(bool fp = false);
 
@@ -63,17 +65,17 @@ class AlphaArguments
     RefCountingPtr<Data> data;
 
   public:
-    AlphaArguments(ExecContext *ctx, int n = 0)
-        : xc(ctx), number(n), data(NULL)
+    AlphaArguments(ThreadContext *ctx, int n = 0)
+        : tc(ctx), number(n), data(NULL)
         { assert(number >= 0); data = new Data;}
     AlphaArguments(const AlphaArguments &args)
-        : xc(args.xc), number(args.number), data(args.data) {}
+        : tc(args.tc), number(args.number), data(args.data) {}
     ~AlphaArguments() {}
 
-    ExecContext *getExecContext() const { return xc; }
+    ThreadContext *getThreadContext() const { return tc; }
 
     const AlphaArguments &operator=(const AlphaArguments &args) {
-        xc = args.xc;
+        tc = args.tc;
         number = args.number;
         data = args.data;
         return *this;
@@ -118,7 +120,7 @@ class AlphaArguments
     }
 
     AlphaArguments operator[](int index) {
-        return AlphaArguments(xc, index);
+        return AlphaArguments(tc, index);
     }
 
     template <class T>
@@ -131,13 +133,13 @@ class AlphaArguments
     template <class T>
     operator T *() {
         T *buf = (T *)data->alloc(sizeof(T));
-        CopyData(xc, buf, getArg(), sizeof(T));
+        CopyData(tc, buf, getArg(), sizeof(T));
         return buf;
     }
 
     operator char *() {
         char *buf = data->alloc(2048);
-        CopyStringOut(xc, buf, getArg(), 2048);
+        CopyStringOut(tc, buf, getArg(), 2048);
         return buf;
     }
 };

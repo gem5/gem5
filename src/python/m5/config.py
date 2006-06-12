@@ -23,12 +23,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
+#          Nathan Binkert
 
-from __future__ import generators
 import os, re, sys, types, inspect
 
 import m5
-panic = m5.panic
+from m5 import panic
 from convert import *
 from multidict import multidict
 
@@ -134,8 +136,15 @@ class Singleton(type):
 def isSimObject(value):
     return isinstance(value, SimObject)
 
-def isSimObjSequence(value):
-    if not isinstance(value, (list, tuple)):
+def isSimObjectClass(value):
+    try:
+        return issubclass(value, SimObject)
+    except TypeError:
+        # happens if value is not a class at all
+        return False
+
+def isSimObjectSequence(value):
+    if not isinstance(value, (list, tuple)) or len(value) == 0:
         return False
 
     for val in value:
@@ -144,8 +153,40 @@ def isSimObjSequence(value):
 
     return True
 
+def isSimObjectClassSequence(value):
+    if not isinstance(value, (list, tuple)) or len(value) == 0:
+        return False
+
+    for val in value:
+        if not isNullPointer(val) and not isSimObjectClass(val):
+            return False
+
+    return True
+
+def isSimObjectOrSequence(value):
+    return isSimObject(value) or isSimObjectSequence(value)
+
+def isSimObjectClassOrSequence(value):
+    return isSimObjectClass(value) or isSimObjectClassSequence(value)
+
 def isNullPointer(value):
     return isinstance(value, NullSimObject)
+
+# Apply method to object.
+# applyMethod(obj, 'meth', <args>) is equivalent to obj.meth(<args>)
+def applyMethod(obj, meth, *args, **kwargs):
+    return getattr(obj, meth)(*args, **kwargs)
+
+# If the first argument is an (non-sequence) object, apply the named
+# method with the given arguments.  If the first argument is a
+# sequence, apply the method to each element of the sequence (a la
+# 'map').
+def applyOrMap(objOrSeq, meth, *args, **kwargs):
+    if not isinstance(objOrSeq, (list, tuple)):
+        return applyMethod(objOrSeq, meth, *args, **kwargs)
+    else:
+        return [applyMethod(o, meth, *args, **kwargs) for o in objOrSeq]
+
 
 # The metaclass for ConfigNode (and thus for everything that derives
 # from ConfigNode, including SimObject).  This class controls how new
@@ -167,24 +208,32 @@ class MetaSimObject(type):
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
-        # Copy "private" attributes (including special methods such as __new__)
-        # to the official dict.  Everything else goes in _init_dict to be
-        # filtered in __init__.
-        cls_dict = {}
-        for key,val in dict.items():
-            if key.startswith('_'):
-                cls_dict[key] = val
-                del dict[key]
-        cls_dict['_init_dict'] = dict
+        if dict.has_key('_init_dict'):
+            # must have been called from makeSubclass() rather than
+            # via Python class declaration; bypass filtering process.
+            cls_dict = dict
+        else:
+            # Copy "private" attributes (including special methods
+            # such as __new__) to the official dict.  Everything else
+            # goes in _init_dict to be filtered in __init__.
+            cls_dict = {}
+            for key,val in dict.items():
+                if key.startswith('_'):
+                    cls_dict[key] = val
+                    del dict[key]
+            cls_dict['_init_dict'] = dict
         return super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
 
-    # initialization
+    # subclass initialization
     def __init__(cls, name, bases, dict):
+        # calls type.__init__()... I think that's a no-op, but leave
+        # it here just in case it's not.
         super(MetaSimObject, cls).__init__(name, bases, dict)
 
         # initialize required attributes
         cls._params = multidict()
         cls._values = multidict()
+        cls._instantiated = False # really instantiated or subclassed
         cls._anon_subclass_counter = 0
 
         # We don't support multiple inheritance.  If you want to, you
@@ -194,27 +243,14 @@ class MetaSimObject(type):
 
         base = bases[0]
 
+        # the only time the following is not true is when we define
+        # the SimObject class itself
         if isinstance(base, MetaSimObject):
             cls._params.parent = base._params
             cls._values.parent = base._values
+            base._instantiated = True
 
-            # If your parent has a value in it that's a config node, clone
-            # it.  Do this now so if we update any of the values'
-            # attributes we are updating the clone and not the original.
-            for key,val in base._values.iteritems():
-
-                # don't clone if (1) we're about to overwrite it with
-                # a local setting or (2) we've already cloned a copy
-                # from an earlier (more derived) base
-                if cls._init_dict.has_key(key) or cls._values.has_key(key):
-                    continue
-
-                if isSimObject(val):
-                    cls._values[key] = val()
-                elif isSimObjSequence(val) and len(val):
-                    cls._values[key] = [ v() for v in val ]
-
-        # now process remaining _init_dict items
+        # now process the _init_dict items
         for key,val in cls._init_dict.items():
             if isinstance(val, (types.FunctionType, types.TypeType)):
                 type.__setattr__(cls, key, val)
@@ -230,6 +266,27 @@ class MetaSimObject(type):
             # default: use normal path (ends up in __setattr__)
             else:
                 setattr(cls, key, val)
+
+        # Pull the deep-copy memoization dict out of the class dict if
+        # it's there...
+        memo = cls.__dict__.get('_memo', {})
+
+        # Handle SimObject values
+        for key,val in cls._values.iteritems():
+            # SimObject instances need to be promoted to classes.
+            # Existing classes should not have any instance values, so
+            # these can only occur at the lowest level dict (the
+            # parameters just being set in this class definition).
+            if isSimObjectOrSequence(val):
+                assert(val == cls._values.local[key])
+                cls._values[key] = applyOrMap(val, 'makeClass', memo)
+            # SimObject classes need to be subclassed so that
+            # parameters that get set at this level only affect this
+            # level and derivatives.
+            elif isSimObjectClassOrSequence(val):
+                assert(not cls._values.local.has_key(key))
+                cls._values[key] = applyOrMap(val, 'makeSubclass', {}, memo)
+
 
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
@@ -260,6 +317,11 @@ class MetaSimObject(type):
         param = cls._params.get(attr, None)
         if param:
             # It's ok: set attribute by delegating to 'object' class.
+            if isSimObjectOrSequence(value) and cls._instantiated:
+                raise AttributeError, \
+                  "Cannot set SimObject parameter '%s' after\n" \
+                  "    class %s has been instantiated or subclassed" \
+                  % (attr, cls.__name__)
             try:
                 cls._values[attr] = param.convert(value)
             except Exception, e:
@@ -268,7 +330,7 @@ class MetaSimObject(type):
                 e.args = (msg, )
                 raise
         # I would love to get rid of this
-        elif isSimObject(value) or isSimObjSequence(value):
+        elif isSimObjectOrSequence(value):
            cls._values[attr] = value
         else:
             raise AttributeError, \
@@ -281,6 +343,22 @@ class MetaSimObject(type):
         raise AttributeError, \
               "object '%s' has no attribute '%s'" % (cls.__name__, attr)
 
+    # Create a subclass of this class.  Basically a function interface
+    # to the standard Python class definition mechanism, primarily for
+    # internal use.  'memo' dict param supports "deep copy" (really
+    # "deep subclass") operations... within a given operation,
+    # multiple references to a class should result in a single
+    # subclass object with multiple references to it (as opposed to
+    # mutiple unique subclasses).
+    def makeSubclass(cls, init_dict, memo = {}):
+        subcls = memo.get(cls)
+        if not subcls:
+            name = cls.__name__ + '_' + str(cls._anon_subclass_counter)
+            cls._anon_subclass_counter += 1
+            subcls = MetaSimObject(name, (cls,),
+                                   { '_init_dict': init_dict, '_memo': memo })
+        return subcls
+
 # The ConfigNode class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
@@ -289,27 +367,80 @@ class SimObject(object):
     # get this metaclass.
     __metaclass__ = MetaSimObject
 
-    def __init__(self, _value_parent = None, **kwargs):
+    # __new__ operator allocates new instances of the class.  We
+    # override it here just to support "deep instantiation" operation
+    # via the _memo dict.  When recursively instantiating an object
+    # hierarchy we want to make sure that each class is instantiated
+    # only once, and that if there are multiple references to the same
+    # original class, we end up with the corresponding instantiated
+    # references all pointing to the same instance.
+    def __new__(cls, _memo = None, **kwargs):
+        if _memo is not None and _memo.has_key(cls):
+            # return previously instantiated object
+            assert(len(kwargs) == 0)
+            return _memo[cls]
+        else:
+            # Need a new one... if it needs to be memoized, this will
+            # happen in __init__.  We defer the insertion until then
+            # so __init__ can use the memo dict to tell whether or not
+            # to perform the initialization.
+            return super(SimObject, cls).__new__(cls, **kwargs)
+
+    # Initialize new instance previously allocated by __new__.  For
+    # objects with SimObject-valued params, we need to recursively
+    # instantiate the classes represented by those param values as
+    # well (in a consistent "deep copy"-style fashion; see comment
+    # above).
+    def __init__(self, _memo = None, **kwargs):
+        if _memo is not None:
+            # We're inside a "deep instantiation"
+            assert(isinstance(_memo, dict))
+            assert(len(kwargs) == 0)
+            if _memo.has_key(self.__class__):
+                # __new__ returned an existing, already initialized
+                # instance, so there's nothing to do here
+                assert(_memo[self.__class__] == self)
+                return
+            # no pre-existing object, so remember this one here
+            _memo[self.__class__] = self
+        else:
+            # This is a new top-level instantiation... don't memoize
+            # this objcet, but prepare to memoize any recursively
+            # instantiated objects.
+            _memo = {}
+
+        self.__class__._instantiated = True
+
         self._children = {}
-        if _value_parent and type(_value_parent) != type(self):
-            # this was called as a type conversion rather than a clone
-            raise TypeError, "Cannot convert %s to %s" % \
-                  (_value_parent.__class__.__name__, self.__class__.__name__)
-        if not _value_parent:
-            _value_parent = self.__class__
-        # clone values
-        self._values = multidict(_value_parent._values)
-        for key,val in _value_parent._values.iteritems():
-            if isSimObject(val):
-                setattr(self, key, val())
-            elif isSimObjSequence(val) and len(val):
-                setattr(self, key, [ v() for v in val ])
+        # Inherit parameter values from class using multidict so
+        # individual value settings can be overridden.
+        self._values = multidict(self.__class__._values)
+        # For SimObject-valued parameters, the class should have
+        # classes (not instances) for the values.  We need to
+        # instantiate these classes rather than just inheriting the
+        # class object.
+        for key,val in self.__class__._values.iteritems():
+            if isSimObjectClass(val):
+                setattr(self, key, val(_memo))
+            elif isSimObjectClassSequence(val) and len(val):
+                setattr(self, key, [ v(_memo) for v in val ])
         # apply attribute assignments from keyword args, if any
         for key,val in kwargs.iteritems():
             setattr(self, key, val)
 
+    # Use this instance as a template to create a new class.
+    def makeClass(self, memo = {}):
+        cls = memo.get(self)
+        if not cls:
+            cls =  self.__class__.makeSubclass(self._values.local)
+            memo[self] = cls
+        return cls
+
+    # Direct instantiation of instances (cloning) is no longer
+    # allowed; must generate class from instance first.
     def __call__(self, **kwargs):
-        return self.__class__(_value_parent = self, **kwargs)
+        raise TypeError, "cannot instantiate SimObject; "\
+              "use makeClass() to make class first"
 
     def __getattr__(self, attr):
         if self._values.has_key(attr):
@@ -338,7 +469,7 @@ class SimObject(object):
                 e.args = (msg, )
                 raise
         # I would love to get rid of this
-        elif isSimObject(value) or isSimObjSequence(value):
+        elif isSimObjectOrSequence(value):
             pass
         else:
             raise AttributeError, "Class %s has no parameter %s" \
@@ -349,7 +480,7 @@ class SimObject(object):
 
         if isSimObject(value):
             value.set_path(self, attr)
-        elif isSimObjSequence(value):
+        elif isSimObjectSequence(value):
             value = SimObjVector(value)
             [v.set_path(self, "%s%d" % (attr, i)) for i,v in enumerate(value)]
 
@@ -725,7 +856,7 @@ class ParamDesc(object):
     def __getattr__(self, attr):
         if attr == 'ptype':
             try:
-                ptype = eval(self.ptype_str, m5.__dict__)
+                ptype = eval(self.ptype_str, m5.objects.__dict__)
                 if not isinstance(ptype, type):
                     panic("Param qualifier is not a type: %s" % self.ptype)
                 self.ptype = ptype
@@ -772,7 +903,7 @@ class VectorParamDesc(ParamDesc):
         if isinstance(value, (list, tuple)):
             # list: coerce each element into new list
             tmp_list = [ ParamDesc.convert(self, v) for v in value ]
-            if isSimObjSequence(tmp_list):
+            if isSimObjectSequence(tmp_list):
                 return SimObjVector(tmp_list)
             else:
                 return VectorParamValue(tmp_list)
@@ -794,7 +925,7 @@ class ParamFactory(object):
 
     # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        caller_frame = inspect.stack()[1][0]
+        caller_frame = inspect.currentframe().f_back
         ptype = None
         try:
             ptype = eval(self.ptype_str,
@@ -1066,7 +1197,10 @@ class EthernetAddr(ParamValue):
 
     def __str__(self):
         if self.value == NextEthernetAddr:
-            return self.addr
+            if hasattr(self, 'addr'):
+                return self.addr
+            else:
+                return "NextEthernetAddr (unresolved)"
         else:
             return self.value
 
@@ -1287,23 +1421,6 @@ AllMemory = AddrRange(0, MaxAddr)
 
 #####################################################################
 
-# The final hook to generate .ini files.  Called from configuration
-# script once config is built.
-def instantiate(root):
-    global ticks_per_sec
-    ticks_per_sec = float(root.clock.frequency)
-    root.print_ini()
-    noDot = True # temporary until we fix dot
-    if not noDot:
-       dot = pydot.Dot()
-       instance.outputDot(dot)
-       dot.orientation = "portrait"
-       dot.size = "8.5,11"
-       dot.ranksep="equally"
-       dot.rank="samerank"
-       dot.write("config.dot")
-       dot.write_ps("config.ps")
-
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
@@ -1319,5 +1436,5 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',
-           'NextEthernetAddr', 'instantiate']
+           'NextEthernetAddr']
 

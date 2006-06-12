@@ -48,7 +48,7 @@ output header {{
 output decoder {{
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/exec_context.hh"  // for Jump::branchTarget()
+#include "cpu/thread_context.hh"  // for Jump::branchTarget()
 
 #include <math.h>
 #if defined(linux)

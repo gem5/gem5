@@ -1,4 +1,6 @@
-from m5 import *
+from m5 import build_env
+from m5.config import *
+
 class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True

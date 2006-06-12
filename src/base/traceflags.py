@@ -25,6 +25,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+#          Steve Reinhardt
 
 #
 # This file generates the header and source files for the flags
@@ -53,6 +56,7 @@ baseFlags = [
     'BusBridge',
     'Cache',
     'Chains',
+    'Checker',
     'Clock',
     'Commit',
     'CommitRate',
@@ -103,14 +107,19 @@ baseFlags = [
     'IdeDisk',
     'InstExec',
     'Interrupt',
-    'LDSTQ',
+    'LSQ',
+    'LSQUnit',
     'Loader',
     'MC146818',
     'MMU',
     'MSHR',
     'Mbox',
     'MemDepUnit',
-    'OoOCPU',
+    'OzoneCPU',
+    'FE',
+    'IBE',
+    'BE',
+    'OzoneLSQ',
     'PCEvent',
     'PCIA',
     'PCIDEV',
@@ -146,6 +155,9 @@ baseFlags = [
     'Uart',
     'VtoPhys',
     'WriteBarrier',
+    'Activity',
+    'Scoreboard',
+    'Writeback',
     ]
 
 #
@@ -163,7 +175,8 @@ compoundFlagMap = {
     'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'EthernetNoData' : [ 'Ethernet', 'EthernetPIO', 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
-    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LDSTQ', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU']
+    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU', 'Activity','Scoreboard','Writeback'],
+    'OzoneCPUAll' : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU']
 }
 
 #############################################################

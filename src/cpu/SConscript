@@ -25,6 +25,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
 
 import os
 import os.path
@@ -56,6 +58,14 @@ virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const
 virtual Fault completeAcc(Packet *pkt, %s *xc,
                           Trace::InstRecord *traceData) const
 { panic("completeAcc not defined!"); };
+'''
+
+mem_ini_sig_template = '''
+virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); };
+'''
+
+mem_comp_sig_template = '''
+virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); return NoFault; };
 '''
 
 # Generate header.  
@@ -108,6 +118,7 @@ if 'FastCPU' in env['CPU_MODELS']:
 
 if 'AlphaFullCPU' in env['CPU_MODELS']:
     sources += Split('''
+        base_dyn_inst.cc
         o3/2bit_local_pred.cc
         o3/alpha_dyn_inst.cc
         o3/alpha_cpu.cc
@@ -118,18 +129,44 @@ if 'AlphaFullCPU' in env['CPU_MODELS']:
         o3/decode.cc
         o3/fetch.cc
         o3/free_list.cc
+        o3/fu_pool.cc
         o3/cpu.cc
         o3/iew.cc
         o3/inst_queue.cc
-        o3/ldstq.cc
+        o3/lsq_unit.cc
+        o3/lsq.cc
         o3/mem_dep_unit.cc
         o3/ras.cc
         o3/rename.cc
         o3/rename_map.cc
         o3/rob.cc
-        o3/sat_counter.cc
+        o3/scoreboard.cc
         o3/store_set.cc
         o3/tournament_pred.cc
+        ''')
+
+if 'OzoneSimpleCPU' in env['CPU_MODELS']:
+    sources += Split('''
+        ozone/cpu.cc
+        ozone/cpu_builder.cc
+        ozone/dyn_inst.cc
+        ozone/front_end.cc
+        ozone/inorder_back_end.cc
+        ozone/inst_queue.cc
+        ozone/rename_table.cc
+        ''')
+
+if 'OzoneCPU' in env['CPU_MODELS']:
+    sources += Split('''
+        ozone/lsq_unit.cc
+        ozone/lw_back_end.cc
+        ozone/lw_lsq.cc
+        ''')
+
+if 'CheckerCPU' in env['CPU_MODELS']:
+    sources += Split('''
+        checker/cpu.cc
+        checker/o3_cpu_builder.cc
         ''')
 
 # FullCPU sources are included from m5/SConscript since they're not

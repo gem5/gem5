@@ -24,11 +24,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 #include "arch/arguments.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
@@ -38,17 +40,17 @@
 namespace Linux {
 
 void
-DebugPrintkEvent::process(ExecContext *xc)
+DebugPrintkEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
         if (!raw) {
-            StringWrap name(xc->getSystemPtr()->name() + ".dprintk");
+            StringWrap name(tc->getSystemPtr()->name() + ".dprintk");
             DPRINTFN("");
         }
 
-        AlphaISA::AlphaArguments args(xc);
+        AlphaISA::AlphaArguments args(tc);
         Printk(args);
-        SkipFuncEvent::process(xc);
+        SkipFuncEvent::process(tc);
     }
 }
 

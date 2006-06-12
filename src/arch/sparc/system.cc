@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 #include "arch/sparc/system.hh"
@@ -40,7 +42,8 @@
 using namespace BigEndianGuest;
 
 SparcSystem::SparcSystem(Params *p)
-    : System(p)
+    : System(p), sysTick(0)
+
 {
     resetSymtab = new SymbolTable;
     hypervisorSymtab = new SymbolTable;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,11 +24,14 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_SAT_COUNTER_HH__
-#define __CPU_O3_CPU_SAT_COUNTER_HH__
+#ifndef __CPU_O3_SAT_COUNTER_HH__
+#define __CPU_O3_SAT_COUNTER_HH__
 
+#include "base/misc.hh"
 #include "sim/host.hh"
 
 /**
@@ -44,47 +47,70 @@ class SatCounter
     /**
      * Constructor for the counter.
      */
-    SatCounter();
+    SatCounter()
+        : initialVal(0), counter(0)
+    { }
 
     /**
      * Constructor for the counter.
      * @param bits How many bits the counter will have.
      */
-    SatCounter(unsigned bits);
+    SatCounter(unsigned bits)
+        : initialVal(0), maxVal((1 << bits) - 1), counter(0)
+    { }
 
     /**
      * Constructor for the counter.
      * @param bits How many bits the counter will have.
      * @param initial_val Starting value for each counter.
      */
-    SatCounter(unsigned bits, unsigned initial_val);
+    SatCounter(unsigned bits, uint8_t initial_val)
+        : initialVal(initialVal), maxVal((1 << bits) - 1), counter(initial_val)
+    {
+        // Check to make sure initial value doesn't exceed the max
+        // counter value.
+        if (initial_val > maxVal) {
+            fatal("BP: Initial counter value exceeds max size.");
+        }
+    }
 
     /**
      * Sets the number of bits.
      */
-    void setBits(unsigned bits);
+    void setBits(unsigned bits) { maxVal = (1 << bits) - 1; }
+
+    void reset() { counter = initialVal; }
 
     /**
      * Increments the counter's current value.
      */
-    void increment();
+    void increment()
+    {
+        if (counter < maxVal) {
+            ++counter;
+        }
+    }
 
     /**
      * Decrements the counter's current value.
      */
-    void decrement();
+    void decrement()
+    {
+        if (counter > 0) {
+            --counter;
+        }
+    }
 
     /**
      * Read the counter's value.
      */
     const uint8_t read() const
-    {
-        return counter;
-    }
+    { return counter; }
 
   private:
+    uint8_t initialVal;
     uint8_t maxVal;
     uint8_t counter;
 };
 
-#endif // __CPU_O3_CPU_SAT_COUNTER_HH__
+#endif // __CPU_O3_SAT_COUNTER_HH__

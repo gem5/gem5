@@ -24,58 +24,21 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #include "arch/alpha/constants.hh"
 #include "arch/alpha/process.hh"
-#include "arch/alpha/linux/process.hh"
-#include "arch/alpha/tru64/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
-#include "cpu/exec_context.hh"
-#include "sim/builder.hh"
+#include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
 
 using namespace AlphaISA;
 using namespace std;
-
-AlphaLiveProcess *
-AlphaLiveProcess::create(const std::string &nm, System *system, int stdin_fd,
-        int stdout_fd, int stderr_fd, std::string executable,
-        std::vector<std::string> &argv, std::vector<std::string> &envp)
-{
-    AlphaLiveProcess *process = NULL;
-
-    ObjectFile *objFile = createObjectFile(executable);
-    if (objFile == NULL) {
-        fatal("Can't load object file %s", executable);
-    }
-
-
-    if (objFile->getArch() != ObjectFile::Alpha)
-        fatal("Object file does not match architecture.");
-    switch (objFile->getOpSys()) {
-      case ObjectFile::Tru64:
-        process = new AlphaTru64Process(nm, objFile, system,
-                                        stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
-        break;
-
-      case ObjectFile::Linux:
-        process = new AlphaLinuxProcess(nm, objFile, system,
-                                        stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
-        break;
-
-      default:
-        fatal("Unknown/unsupported operating system.");
-    }
-
-    if (process == NULL)
-        fatal("Unknown error creating process object.");
-    return process;
-}
 
 AlphaLiveProcess::AlphaLiveProcess(const std::string &nm, ObjectFile *objFile,
         System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
@@ -104,64 +67,7 @@ AlphaLiveProcess::startup()
 {
     argsInit(MachineBytes, VMPageSize);
 
-    execContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
+    threadContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
 }
 
-
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaLiveProcess)
-
-    VectorParam<string> cmd;
-    Param<string> executable;
-    Param<string> input;
-    Param<string> output;
-    VectorParam<string> env;
-    SimObjectParam<System *> system;
-
-END_DECLARE_SIM_OBJECT_PARAMS(AlphaLiveProcess)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaLiveProcess)
-
-    INIT_PARAM(cmd, "command line (executable plus arguments)"),
-    INIT_PARAM(executable, "executable (overrides cmd[0] if set)"),
-    INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
-    INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
-    INIT_PARAM(env, "environment settings"),
-    INIT_PARAM(system, "system")
-
-END_INIT_SIM_OBJECT_PARAMS(AlphaLiveProcess)
-
-
-CREATE_SIM_OBJECT(AlphaLiveProcess)
-{
-    string in = input;
-    string out = output;
-
-    // initialize file descriptors to default: same as simulator
-    int stdin_fd, stdout_fd, stderr_fd;
-
-    if (in == "stdin" || in == "cin")
-        stdin_fd = STDIN_FILENO;
-    else
-        stdin_fd = Process::openInputFile(input);
-
-    if (out == "stdout" || out == "cout")
-        stdout_fd = STDOUT_FILENO;
-    else if (out == "stderr" || out == "cerr")
-        stdout_fd = STDERR_FILENO;
-    else
-        stdout_fd = Process::openOutputFile(out);
-
-    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
-
-    return AlphaLiveProcess::create(getInstanceName(), system,
-                               stdin_fd, stdout_fd, stderr_fd,
-                               (string)executable == "" ? cmd[0] : executable,
-                               cmd, env);
-}
-
-
-REGISTER_SIM_OBJECT("AlphaLiveProcess", AlphaLiveProcess)
 

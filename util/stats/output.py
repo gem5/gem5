@@ -29,23 +29,15 @@
 from chart import ChartOptions
 
 class StatOutput(ChartOptions):
-    def __init__(self, jobfile, info, stat=None, binstats=None):
+    def __init__(self, jobfile, info, stat=None):
         super(StatOutput, self).__init__()
         self.jobfile = jobfile
         self.stat = stat
-        self.binstats = None
         self.invert = False
         self.info = info
 
-    def printdata(self, name, bin = None, printmode = 'G'):
+    def display(self, name, printmode = 'G'):
         import info
-
-        if bin:
-            print '%s %s stats' % (name, bin)
-
-        if self.binstats:
-            for stat in self.binstats:
-                stat.bins = bin
 
         if printmode == 'G':
             valformat = '%g'
@@ -69,16 +61,6 @@ class StatOutput(ChartOptions):
 
             valstring = ', '.join([ valformat % val for val in value ])
             print '%-50s    %s' % (job.name + ':', valstring)
-
-    def display(self, name, binned = False, printmode = 'G'):
-        if binned and self.binstats:
-            self.printdata(name, 'kernel', printmode)
-            self.printdata(name, 'idle', printmode)
-            self.printdata(name, 'user', printmode)
-            self.printdata(name, 'interrupt', printmode)
-
-            print '%s total stats' % name
-        self.printdata(name, printmode=printmode)
 
     def graph(self, name, graphdir, proxy=None):
         from os.path import expanduser, isdir, join as joinpath

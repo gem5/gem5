@@ -24,60 +24,23 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
-#include "arch/sparc/linux/process.hh"
-#include "arch/sparc/solaris/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/translating_port.hh"
-#include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace SparcISA;
 
-SparcLiveProcess *
-SparcLiveProcess::create(const std::string &nm, System *system, int stdin_fd,
-        int stdout_fd, int stderr_fd, std::string executable,
-        std::vector<std::string> &argv, std::vector<std::string> &envp)
-{
-    SparcLiveProcess *process = NULL;
-
-    ObjectFile *objFile = createObjectFile(executable);
-    if (objFile == NULL) {
-        fatal("Can't load object file %s", executable);
-    }
-
-
-    if (objFile->getArch() != ObjectFile::SPARC)
-        fatal("Object file with arch %x does not match architecture %x.",
-                objFile->getArch(), ObjectFile::SPARC);
-    switch (objFile->getOpSys()) {
-      case ObjectFile::Linux:
-        process = new SparcLinuxProcess(nm, objFile, system,
-                                        stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
-        break;
-
-
-      case ObjectFile::Solaris:
-        process = new SparcSolarisProcess(nm, objFile, system,
-                                        stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
-        break;
-      default:
-        fatal("Unknown/unsupported operating system.");
-    }
-
-    if (process == NULL)
-        fatal("Unknown error creating process object.");
-    return process;
-}
 
 SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
         System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
@@ -110,27 +73,27 @@ SparcLiveProcess::startup()
     //From the SPARC ABI
 
     //The process runs in user mode
-    execContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
 
     //Setup default FP state
-    execContexts[0]->setMiscReg(MISCREG_FSR, 0);
+    threadContexts[0]->setMiscReg(MISCREG_FSR, 0);
 
-    execContexts[0]->setMiscReg(MISCREG_TICK, 0);
+    threadContexts[0]->setMiscReg(MISCREG_TICK, 0);
     //
     /*
      * Register window management registers
      */
 
     //No windows contain info from other programs
-    execContexts[0]->setMiscRegWithEffect(MISCREG_OTHERWIN, 0);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_OTHERWIN, 0);
     //There are no windows to pop
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CANRESTORE, 0);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CANRESTORE, 0);
     //All windows are available to save into
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CANSAVE, NWindows - 2);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CANSAVE, NWindows - 2);
     //All windows are "clean"
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CLEANWIN, NWindows);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CLEANWIN, NWindows);
     //Start with register window 0
-    execContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
+    threadContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
 }
 
 m5_auxv_t buildAuxVect(int64_t type, int64_t val)
@@ -308,72 +271,14 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
-    execContexts[0]->setIntReg(ArgumentReg0, argc);
-    execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
-    execContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
+    threadContexts[0]->setIntReg(ArgumentReg0, argc);
+    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    threadContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
 
     Addr prog_entry = objFile->entryPoint();
-    execContexts[0]->setPC(prog_entry);
-    execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
-    execContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    threadContexts[0]->setPC(prog_entry);
+    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 
 //    num_processes++;
 }
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcLiveProcess)
-
-    VectorParam<string> cmd;
-    Param<string> executable;
-    Param<string> input;
-    Param<string> output;
-    VectorParam<string> env;
-    SimObjectParam<System *> system;
-
-END_DECLARE_SIM_OBJECT_PARAMS(SparcLiveProcess)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(SparcLiveProcess)
-
-    INIT_PARAM(cmd, "command line (executable plus arguments)"),
-    INIT_PARAM(executable, "executable (overrides cmd[0] if set)"),
-    INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
-    INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
-    INIT_PARAM(env, "environment settings"),
-    INIT_PARAM(system, "system")
-
-END_INIT_SIM_OBJECT_PARAMS(SparcLiveProcess)
-
-
-CREATE_SIM_OBJECT(SparcLiveProcess)
-{
-    string in = input;
-    string out = output;
-
-    // initialize file descriptors to default: same as simulator
-    int stdin_fd, stdout_fd, stderr_fd;
-
-    if (in == "stdin" || in == "cin")
-        stdin_fd = STDIN_FILENO;
-    else
-        stdin_fd = Process::openInputFile(input);
-
-    if (out == "stdout" || out == "cout")
-        stdout_fd = STDOUT_FILENO;
-    else if (out == "stderr" || out == "cerr")
-        stdout_fd = STDERR_FILENO;
-    else
-        stdout_fd = Process::openOutputFile(out);
-
-    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
-
-    return SparcLiveProcess::create(getInstanceName(), system,
-                               stdin_fd, stdout_fd, stderr_fd,
-                               (string)executable == "" ? cmd[0] : executable,
-                               cmd, env);
-}
-
-
-REGISTER_SIM_OBJECT("SparcLiveProcess", SparcLiveProcess)
-
-

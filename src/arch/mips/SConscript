@@ -25,6 +25,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Gabe Black
+#          Steve Reinhardt
+#          Korey Sewell
 
 import os
 import sys
@@ -43,16 +47,13 @@ Import('env')
 base_sources = Split('''
 	faults.cc
 	isa_traits.cc
+        utility.cc
 	''')
 
 # Full-system sources
 full_system_sources = Split('''
 	memory.cc
-	arguments.cc
 	mips34k.cc
-	osfpal.cc
-	stacktrace.cc
-	vtophys.cc
 	''')
 
 # Syscall emulation (non-full-system) sources

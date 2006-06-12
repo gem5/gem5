@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #ifndef __BASE_STATS_MYSQL_HH__
@@ -37,7 +39,6 @@
 namespace MySQL { class Connection; }
 namespace Stats {
 
-class MainBin;
 class DistDataData;
 class MySqlRun;
 bool MySqlConnected();
@@ -80,7 +81,6 @@ class InsertData
     uint64_t tick;
     double data;
     uint16_t stat;
-    uint16_t bin;
     int16_t x;
     int16_t y;
 
@@ -131,7 +131,6 @@ class MySql : public Output
 
   protected:
     // Output helper
-    void output(MainBin *bin);
     void output(const DistDataData &data);
     void output(const ScalarData &data);
     void output(const VectorData &data);

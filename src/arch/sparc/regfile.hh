@@ -24,15 +24,19 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #ifndef __ARCH_SPARC_REGFILE_HH__
 #define __ARCH_SPARC_REGFILE_HH__
 
+#include "arch/sparc/exceptions.hh"
 #include "arch/sparc/faults.hh"
 #include "base/trace.hh"
 #include "sim/byteswap.hh"
-#include "sim/eventq.hh"
+#include "cpu/cpuevent.hh"
 #include "sim/host.hh"
 
 class Checkpoint;
@@ -56,6 +60,7 @@ namespace SparcISA
     const int HprStart = 64;
     const int MiscStart = 96;
 
+    const uint64_t Bit64 = (1ULL << 63);
     class IntRegFile
     {
       protected:
@@ -237,17 +242,22 @@ namespace SparcISA
             //In each of these cases, we have to copy the value into a temporary
             //variable. This is because we may otherwise try to access an
             //unaligned portion of memory.
+
+            uint32_t result32;
+            uint64_t result64;
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32 = gtoh((uint32_t)val);
+                result32 = gtoh((uint32_t)val);
                 memcpy(regSpace + 4 * floatReg, &result32, width);
+                break;
               case DoubleWidth:
-                uint64_t result64 = gtoh((uint64_t)val);
+                result64 = gtoh((uint64_t)val);
                 memcpy(regSpace + 4 * floatReg, &result64, width);
+                break;
               case QuadWidth:
-                uint64_t result128 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result128, width);
+                panic("Quad width FP not implemented.");
+                break;
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
@@ -259,17 +269,21 @@ namespace SparcISA
             //In each of these cases, we have to copy the value into a temporary
             //variable. This is because we may otherwise try to access an
             //unaligned portion of memory.
+            uint32_t result32;
+            uint64_t result64;
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32 = gtoh((uint32_t)val);
+                result32 = gtoh((uint32_t)val);
                 memcpy(regSpace + 4 * floatReg, &result32, width);
+                break;
               case DoubleWidth:
-                uint64_t result64 = gtoh((uint64_t)val);
+                result64 = gtoh((uint64_t)val);
                 memcpy(regSpace + 4 * floatReg, &result64, width);
+                break;
               case QuadWidth:
-                uint64_t result128 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result128, width);
+                panic("Quad width FP not implemented.");
+                break;
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
@@ -402,7 +416,7 @@ namespace SparcISA
         union {
             uint64_t stick;		// Hardware clock-tick counter
             struct {
-                int64_t counter:63;	// Clock-tick count
+                int64_t :63;	// Not used, storage in SparcSystem
                 uint64_t npt:1;		// Non-priveleged trap
             } stickFields;
         };
@@ -552,22 +566,31 @@ namespace SparcISA
 
         // These need to check the int_dis field and if 0 then
         // set appropriate bit in softint and checkinterrutps on the cpu
-        void processTickCompare() { panic("tick compare not implemented\n"); }
-        void processSTickCompare(){ panic("tick compare not implemented\n"); }
-        void processHSTickCompare(){ panic("tick compare not implemented\n"); }
+#if FULL_SYSTEM
+        /** Process a tick compare event and generate an interrupt on the cpu if
+         * appropriate. */
+        void processTickCompare(ThreadContext *tc);
+        void processSTickCompare(ThreadContext *tc);
+        void processHSTickCompare(ThreadContext *tc);
 
-        typedef EventWrapper<MiscRegFile,
+        typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processTickCompare> TickCompareEvent;
-        TickCompareEvent tickCompare;
+        TickCompareEvent *tickCompare;
 
-        typedef EventWrapper<MiscRegFile,
+        typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processSTickCompare> STickCompareEvent;
-        STickCompareEvent sTickCompare;
+        STickCompareEvent *sTickCompare;
 
-        typedef EventWrapper<MiscRegFile,
+        typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processHSTickCompare> HSTickCompareEvent;
-        HSTickCompareEvent hSTickCompare;
+        HSTickCompareEvent *hSTickCompare;
 
+        /** Fullsystem only register version of ReadRegWithEffect() */
+        MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
+        /** Fullsystem only register version of SetRegWithEffect() */
+        Fault setFSRegWithEffect(int miscReg, const MiscReg &val,
+                ThreadContext * tc);
+#endif
       public:
 
         void reset()
@@ -580,25 +603,29 @@ namespace SparcISA
             //Bits that aren't set aren't defined on startup.
             tl = MaxTL;
             gl = MaxGL;
-            tt[tl] = PowerOnReset.trapType();
-            pstateFields.mm = 0; //Total Store Order
-            pstateFields.red = 1; //Enter RED_State
-            pstateFields.am = 0; //Address Masking is turned off
-            pstateFields.priv = 1; //Processor enters privileged mode
-            pstateFields.ie = 0; //Interrupts are disabled
-            pstateFields.ag = 1; //Globals are replaced with alternate globals
-            pstateFields.tle = 0; //Big Endian mode for traps
-            pstateFields.cle = 0; //Big Endian mode for non-traps
+
             tickFields.counter = 0; //The TICK register is unreadable bya
             tickFields.npt = 1; //The TICK register is unreadable by by !priv
-            tick_cmpr.int_dis = 1; // disable timer compare interrupts
-            stickFields.counter = 0; //The TICK register is unreadable by
+
+            softint = 0; // Clear all the soft interrupt bits
+            tick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
             stickFields.npt = 1; //The TICK register is unreadable by by !priv
-            hpstateFields.id = 1;
-            hpstateFields.ibe = 0;
+            stick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+
+
+            tt[tl] = power_on_reset;
+            pstate = 0; // fields 0 but pef
+            pstateFields.pef = 1;
+
+            hpstate = 0;
             hpstateFields.red = 1;
             hpstateFields.hpriv = 1;
             hpstateFields.tlz = 0; // this is a guess
+            hintp = 0; // no interrupts pending
+            hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
 #else
 /*	    //This sets up the initial state of the processor for usermode processes
             pstateFields.priv = 0; //Process runs in user mode
@@ -619,25 +646,42 @@ namespace SparcISA
         }
 
         MiscRegFile()
-            : tickCompare(this), sTickCompare(this), hSTickCompare(this)
         {
             reset();
         }
 
+        /** read a value out of an either an SE or FS IPR. No checking is done
+         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
+         * register are copied that are necessary for FS. However this prevents
+         * a bunch of ifdefs and is rarely called so is not performance
+         * criticial. */
         MiscReg readReg(int miscReg);
 
-        MiscReg readRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
+        /** Read a value from an IPR. Only the SE iprs are here and the rest
+         * are are readFSRegWithEffect (which is called by readRegWithEffect()).
+         * Checking is done for permission based on state bits in the miscreg
+         * file. */
+        MiscReg readRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
 
+        /** write a value into an either an SE or FS IPR. No checking is done
+         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
+         * register are copied that are necessary for FS. However this prevents
+         * a bunch of ifdefs and is rarely called so is not performance
+         * criticial.*/
         Fault setReg(int miscReg, const MiscReg &val);
 
+        /** Write a value into an IPR. Only the SE iprs are here and the rest
+         * are are setFSRegWithEffect (which is called by setRegWithEffect()).
+         * Checking is done for permission based on state bits in the miscreg
+         * file. */
         Fault setRegWithEffect(int miscReg,
-                const MiscReg &val, ExecContext * xc);
+                const MiscReg &val, ThreadContext * tc);
 
         void serialize(std::ostream & os);
 
         void unserialize(Checkpoint * cp, const std::string & section);
 
-        void copyMiscRegs(ExecContext * xc);
+        void copyMiscRegs(ThreadContext * tc);
 
       protected:
 
@@ -715,9 +759,9 @@ namespace SparcISA
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ExecContext *xc)
+                Fault &fault, ThreadContext *tc)
         {
-            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
         }
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
@@ -726,9 +770,9 @@ namespace SparcISA
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc)
+                ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+            return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
         FloatReg readFloatReg(int floatReg, int width)
@@ -815,9 +859,9 @@ namespace SparcISA
         }
     };
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
     int InterruptLevel(uint64_t softint);
 

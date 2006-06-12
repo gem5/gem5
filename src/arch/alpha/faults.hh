@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Kevin Lim
  */
 
 #ifndef __ALPHA_FAULTS_HH__
@@ -46,7 +49,7 @@ class AlphaFault : public FaultBase
     virtual bool setRestartAddress() {return true;}
   public:
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
@@ -113,7 +116,7 @@ class ArithmeticFault : public AlphaFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
 
@@ -147,7 +150,7 @@ class DtbFault : public AlphaFault
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
 
@@ -248,7 +251,7 @@ class ItbFault : public AlphaFault
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
 

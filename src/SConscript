@@ -25,6 +25,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
 
 import os
 import sys
@@ -46,9 +48,7 @@ Import('env')
 
 base_sources = Split('''
 	base/circlebuf.cc
-	base/copyright.cc
 	base/cprintf.cc
-        base/embedfile.cc
 	base/fast_alloc.cc
 	base/fifo_buffer.cc
 	base/hostinfo.cc
@@ -81,14 +81,20 @@ base_sources = Split('''
 	base/stats/visit.cc
 	base/stats/text.cc
 
+        cpu/activity.cc
 	cpu/base.cc
-	cpu/cpu_exec_context.cc
+	cpu/cpuevent.cc
 	cpu/exetrace.cc
         cpu/op_class.cc
 	cpu/pc_event.cc
+        cpu/quiesce_event.cc
 	cpu/static_inst.cc
         cpu/sampler/sampler.cc
-    
+        cpu/simple_thread.cc
+        cpu/thread_state.cc
+
+        encumbered/cpu/full/fu_pool.cc
+        
         mem/bridge.cc
         mem/bus.cc
         mem/connector.cc
@@ -96,10 +102,6 @@ base_sources = Split('''
         mem/packet.cc
         mem/physical.cc
         mem/port.cc
-        mem/request.cc
-
-        python/pyconfig.cc
-        python/embedded_py.cc
 
 	sim/builder.cc
 	sim/configfile.cc
@@ -107,12 +109,12 @@ base_sources = Split('''
 	sim/eventq.cc
 	sim/faults.cc
 	sim/main.cc
+        python/swig/main_wrap.cc
 	sim/param.cc
 	sim/profile.cc
 	sim/root.cc
 	sim/serialize.cc
 	sim/sim_events.cc
-	sim/sim_exit.cc
 	sim/sim_object.cc
 	sim/startup.cc
 	sim/stat_context.cc
@@ -217,7 +219,6 @@ full_system_sources = Split('''
 	dev/uart.cc
 	dev/uart8250.cc
 
-	kern/kernel_binning.cc
 	kern/kernel_stats.cc
 	kern/system_events.cc
 	kern/linux/events.cc
@@ -284,14 +285,18 @@ memtest_sources = Split('''
 	cpu/memtest/memtest.cc
         ''')
 
+# Include file paths are rooted in this directory.  SCons will
+# automatically expand '.' to refer to both the source directory and
+# the corresponding build directory to pick up generated include
+# files.
+env.Append(CPPPATH=Dir('.'))
+
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
-arch_sources = SConscript('arch/SConscript',
-                          exports = 'env', duplicate = False)
+arch_sources = SConscript('arch/SConscript', exports = 'env')
 
-cpu_sources = SConscript('cpu/SConscript',
-                         exports = 'env', duplicate = False)
+cpu_sources = SConscript('cpu/SConscript', exports = 'env')
 
 # This is outside of cpu/SConscript since the source directory isn't
 # underneath 'cpu'.
@@ -326,7 +331,7 @@ env.Command(Split('base/traceflags.hh base/traceflags.cc'),
             'base/traceflags.py',
             'python $SOURCE $TARGET.base')
 
-SConscript('python/SConscript', exports = ['env'], duplicate=0)
+SConscript('python/SConscript', exports = ['env'])
 
 # This function adds the specified sources to the given build
 # environment, and returns a list of all the corresponding SCons
@@ -349,49 +354,45 @@ def make_objs(sources, env):
 #
 ###################################################
 
-# Include file paths are rooted in this directory.  SCons will
-# automatically expand '.' to refer to both the source directory and
-# the corresponding build directory to pick up generated include
-# files.
-env.Append(CPPPATH='.')
+# List of constructed environments to pass back to SConstruct
+envList = []
+
+# Function to create a new build environment as clone of current
+# environment 'env' with modified object suffix and optional stripped
+# binary.  Additional keyword arguments are appended to corresponding
+# build environment vars.
+def makeEnv(label, objsfx, strip = False, **kwargs):
+    newEnv = env.Copy(OBJSUFFIX=objsfx)
+    newEnv.Label = label
+    newEnv.Append(**kwargs)
+    exe = 'm5.' + label  # final executable
+    bin = exe + '.bin'   # executable w/o appended Python zip archive
+    newEnv.Program(bin, make_objs(sources, newEnv))
+    if strip:
+        stripped_bin = bin + '.stripped'
+        newEnv.Command(stripped_bin, bin, 'strip $SOURCE -o $TARGET')
+        bin = stripped_bin
+    targets = newEnv.Concat(exe, [bin, 'python/m5py.zip'])
+    newEnv.M5Binary = targets[0]
+    envList.append(newEnv)
 
 # Debug binary
-debugEnv = env.Copy(OBJSUFFIX='.do')
-debugEnv.Label = 'debug'
-debugEnv.Append(CCFLAGS=Split('-g3 -gdwarf-2 -O0'))
-debugEnv.Append(CPPDEFINES='DEBUG')
-tlist = debugEnv.Program(target = 'm5.debug',
-                         source = make_objs(sources, debugEnv))
-debugEnv.M5Binary = tlist[0]
+makeEnv('debug', '.do',
+        CCFLAGS = Split('-g3 -gdwarf-2 -O0'),
+        CPPDEFINES = 'DEBUG')
 
 # Optimized binary
-optEnv = env.Copy()
-optEnv.Label = 'opt'
-optEnv.Append(CCFLAGS=Split('-g -O3'))
-tlist = optEnv.Program(target = 'm5.opt',
-                       source = make_objs(sources, optEnv))
-optEnv.M5Binary = tlist[0]
+makeEnv('opt', '.o',
+        CCFLAGS = Split('-g -O3'))
 
 # "Fast" binary
-fastEnv = env.Copy(OBJSUFFIX='.fo')
-fastEnv.Label = 'fast'
-fastEnv.Append(CCFLAGS=Split('-O3'))
-fastEnv.Append(CPPDEFINES='NDEBUG')
-fastEnv.Program(target = 'm5.fast.unstripped',
-                source = make_objs(sources, fastEnv))
-tlist = fastEnv.Command(target = 'm5.fast',
-                        source = 'm5.fast.unstripped',
-                        action = 'strip $SOURCE -o $TARGET')
-fastEnv.M5Binary = tlist[0]
+makeEnv('fast', '.fo', strip = True,
+        CCFLAGS = Split('-O3'),
+        CPPDEFINES = 'NDEBUG')
 
 # Profiled binary
-profEnv = env.Copy(OBJSUFFIX='.po')
-profEnv.Label = 'prof'
-profEnv.Append(CCFLAGS=Split('-O3 -g -pg'), LINKFLAGS='-pg')
-tlist = profEnv.Program(target = 'm5.prof',
-                        source = make_objs(sources, profEnv))
-profEnv.M5Binary = tlist[0]
-
-envList = [debugEnv, optEnv, fastEnv, profEnv]
+makeEnv('prof', '.po',
+        CCFLAGS = Split('-O3 -g -pg'),
+        LINKFLAGS = '-pg')
 
 Return('envList')

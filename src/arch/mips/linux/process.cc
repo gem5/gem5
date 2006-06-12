@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #include "arch/mips/linux/linux.hh"
@@ -31,7 +33,7 @@
 #include "arch/mips/isa_traits.hh"
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 
 #include "sim/process.hh"
@@ -43,9 +45,9 @@ using namespace MipsISA;
 /// Target uname() handler.
 static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ExecContext *xc)
+          ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -53,7 +55,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "mips");
 
-    name.copyOut(xc->getMemPort());
+    name.copyOut(tc->getMemPort());
     return 0;
 }
 
@@ -62,18 +64,18 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
 sys_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
+                   ThreadContext *tc)
 {
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
+    unsigned op = tc->getSyscallArg(0);
+    // unsigned nbytes = tc->getSyscallArg(2);
 
     switch (op) {
 
       case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
-          fpcr.copyOut(xc->getMemPort());
+          fpcr.copyOut(tc->getMemPort());
           return 0;
       }
 
@@ -89,17 +91,17 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target sys_setsysinfo() handler.
 static SyscallReturn
 sys_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ExecContext *xc)
+                   ThreadContext *tc)
 {
-    unsigned op = xc->getSyscallArg(0);
-    // unsigned nbytes = xc->getSyscallArg(2);
+    unsigned op = tc->getSyscallArg(0);
+    // unsigned nbytes = tc->getSyscallArg(2);
 
     switch (op) {
 
       case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(xc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
           // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(xc->getMemPort());
+          fpcr.copyIn(tc->getMemPort());
           DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
           return 0;
@@ -133,7 +135,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<MipsLinux>),
     /* 16 */ SyscallDesc("lchown", chownFunc),
-    /* 17 */ SyscallDesc("break", obreakFunc), /*obreak*/
+    /* 17 */ SyscallDesc("break", obreakFunc),
     /* 18 */ SyscallDesc("unused#18", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),
@@ -161,7 +163,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 42 */ SyscallDesc("pipe", unimplementedFunc),
     /* 43 */ SyscallDesc("times", unimplementedFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
-    /* 45 */ SyscallDesc("brk", obreakFunc),/*openFunc<MipsLinux>*/
+    /* 45 */ SyscallDesc("brk", obreakFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
     /* 47 */ SyscallDesc("getgid", getgidFunc),
     /* 48 */ SyscallDesc("signal", ignoreFunc),
@@ -171,7 +173,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 52 */ SyscallDesc("umount2", unimplementedFunc),
     /* 53 */ SyscallDesc("lock", unimplementedFunc),
     /* 54 */ SyscallDesc("ioctl", ioctlFunc<MipsLinux>),
-    /* 55 */ SyscallDesc("fcntl", unimplementedFunc),
+    /* 55 */ SyscallDesc("fcntl", fcntlFunc),
     /* 56 */ SyscallDesc("mpx", unimplementedFunc),
     /* 57 */ SyscallDesc("setpgid", unimplementedFunc),
     /* 58 */ SyscallDesc("ulimit", unimplementedFunc),
@@ -208,8 +210,8 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 89 */ SyscallDesc("readdir", unimplementedFunc),
     /* 90 */ SyscallDesc("mmap", mmapFunc<MipsLinux>),
     /* 91 */ SyscallDesc("munmap",munmapFunc),
-    /* 92 */ SyscallDesc("truncate", fcntlFunc),
-    /* 93 */ SyscallDesc("ftruncate", unimplementedFunc),
+    /* 92 */ SyscallDesc("truncate", truncateFunc),
+    /* 93 */ SyscallDesc("ftruncate", ftruncateFunc),
     /* 94 */ SyscallDesc("fchmod", unimplementedFunc),
     /* 95 */ SyscallDesc("fchown", unimplementedFunc),
     /* 96 */ SyscallDesc("getpriority", unimplementedFunc),
@@ -260,7 +262,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 141 */ SyscallDesc("getdents", unimplementedFunc),
     /* 142 */ SyscallDesc("newselect", unimplementedFunc),
     /* 143 */ SyscallDesc("flock", unimplementedFunc),
-    /* 144 */ SyscallDesc("msync", unimplementedFunc),/*getrlimitFunc<MipsLinux>*/
+    /* 144 */ SyscallDesc("msync", unimplementedFunc),
     /* 145 */ SyscallDesc("readv", unimplementedFunc),
     /* 146 */ SyscallDesc("writev", writevFunc<MipsLinux>),
     /* 147 */ SyscallDesc("cacheflush", unimplementedFunc),
@@ -336,7 +338,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 217 */ SyscallDesc("mincore", unimplementedFunc),
     /* 218 */ SyscallDesc("madvise", unimplementedFunc),
     /* 219 */ SyscallDesc("getdents64", unimplementedFunc),
-    /* 220 */ SyscallDesc("fcntl64", fcntlFunc),
+    /* 220 */ SyscallDesc("fcntl64", fcntl64Func),
     /* 221 */ SyscallDesc("reserved#221", unimplementedFunc),
     /* 222 */ SyscallDesc("gettid", unimplementedFunc),
     /* 223 */ SyscallDesc("readahead", unimplementedFunc),
@@ -412,9 +414,7 @@ MipsLinuxProcess::MipsLinuxProcess(const std::string &name,
     : MipsLiveProcess(name, objFile, system, stdin_fd, stdout_fd, stderr_fd,
                       argv, envp),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
-{
-    //init_regs->intRegFile[0] = 0;
-}
+{ }
 
 SyscallDesc*
 MipsLinuxProcess::getDesc(int callnum)

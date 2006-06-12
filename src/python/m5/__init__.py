@@ -23,24 +23,30 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+#          Steve Reinhardt
 
-import sys, os
+import sys, os, time, atexit, optparse
+
+# import the SWIG-wrapped main C++ functions
+import main
+# import a few SWIG-wrapped items (those that are likely to be used
+# directly by user scripts) completely into this module for
+# convenience
+from main import simulate, SimLoopExitEvent
+
+# import the m5 compile options
+import defines
 
 # define this here so we can use it right away if necessary
 def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
-def m5execfile(f, global_dict):
-    # copy current sys.path
-    oldpath = sys.path[:]
-    # push file's directory onto front of path
-    sys.path.insert(0, os.path.abspath(os.path.dirname(f)))
-    execfile(f, global_dict)
-    # restore original path
-    sys.path = oldpath
-
-# Prepend given directory to system module search path.
+# Prepend given directory to system module search path.  We may not
+# need this anymore if we can structure our config library more like a
+# Python package.
 def AddToPath(path):
     # if it's a relative path and we know what directory the current
     # python script is in, make the path relative to that directory.
@@ -51,24 +57,58 @@ def AddToPath(path):
     # so place the new dir right after that.
     sys.path.insert(1, path)
 
-# find the m5 compile options: must be specified as a dict in
-# __main__.m5_build_env.
-import __main__
-if not hasattr(__main__, 'm5_build_env'):
-    panic("__main__ must define m5_build_env")
+
+# Callback to set trace flags.  Not necessarily the best way to do
+# things in the long run (particularly if we change how these global
+# options are handled).
+def setTraceFlags(option, opt_str, value, parser):
+    objects.Trace.flags = value
+
+# Standard optparse options.  Need to be explicitly included by the
+# user script when it calls optparse.OptionParser().
+standardOptions = [
+    optparse.make_option("--traceflags", type="string", action="callback",
+                         callback=setTraceFlags)
+    ]
 
 # make a SmartDict out of the build options for our local use
 import smartdict
 build_env = smartdict.SmartDict()
-build_env.update(__main__.m5_build_env)
+build_env.update(defines.m5_build_env)
 
 # make a SmartDict out of the OS environment too
 env = smartdict.SmartDict()
 env.update(os.environ)
 
-# import the main m5 config code
-from config import *
+# The final hook to generate .ini files.  Called from the user script
+# once the config is built.
+def instantiate(root):
+    config.ticks_per_sec = float(root.clock.frequency)
+    # ugly temporary hack to get output to config.ini
+    sys.stdout = file('config.ini', 'w')
+    root.print_ini()
+    sys.stdout.close() # close config.ini
+    sys.stdout = sys.__stdout__ # restore to original
+    main.initialize()  # load config.ini into C++ and process it
+    noDot = True # temporary until we fix dot
+    if not noDot:
+       dot = pydot.Dot()
+       instance.outputDot(dot)
+       dot.orientation = "portrait"
+       dot.size = "8.5,11"
+       dot.ranksep="equally"
+       dot.rank="samerank"
+       dot.write("config.dot")
+       dot.write_ps("config.ps")
 
-# import the built-in object definitions
-from objects import *
+# Export curTick to user script.
+def curTick():
+    return main.cvar.curTick
 
+# register our C++ exit callback function with Python
+atexit.register(main.doExitCleanup)
+
+# This import allows user scripts to reference 'm5.objects.Foo' after
+# just doing an 'import m5' (without an 'import m5.objects').  May not
+# matter since most scripts will probably 'from m5.objects import *'.
+import objects

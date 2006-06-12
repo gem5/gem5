@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
 #ifndef __PC_EVENT_HH__
@@ -33,7 +36,7 @@
 
 #include "base/misc.hh"
 
-class ExecContext;
+class ThreadContext;
 class PCEventQueue;
 
 class PCEvent
@@ -55,7 +58,7 @@ class PCEvent
     Addr pc() const { return evpc; }
 
     bool remove();
-    virtual void process(ExecContext *xc) = 0;
+    virtual void process(ThreadContext *tc) = 0;
 };
 
 class PCEventQueue
@@ -87,7 +90,7 @@ class PCEventQueue
   protected:
     map_t pc_map;
 
-    bool doService(ExecContext *xc);
+    bool doService(ThreadContext *tc);
 
   public:
     PCEventQueue();
@@ -95,12 +98,12 @@ class PCEventQueue
 
     bool remove(PCEvent *event);
     bool schedule(PCEvent *event);
-    bool service(ExecContext *xc)
+    bool service(ThreadContext *tc)
     {
         if (pc_map.empty())
             return false;
 
-        return doService(xc);
+        return doService(tc);
     }
 
     range_t equal_range(Addr pc);
@@ -134,7 +137,7 @@ class BreakPCEvent : public PCEvent
   public:
     BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
                  bool del = false);
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
 
 #endif // __PC_EVENT_HH__

@@ -1,8 +1,41 @@
+/*
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Lisa Hsu
+ *          Nathan Binkert
+ *          Ali Saidi
+ */
+
 #include "arch/isa_traits.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "sim/builder.hh"
@@ -99,8 +132,6 @@ System::~System()
 #if FULL_SYSTEM
     delete kernelSymtab;
     delete kernel;
-
-    delete kernelBinning;
 #else
     panic("System::fixFuncEventAddr needs to be rewritten "
           "to work with syscall emulation");
@@ -115,26 +146,26 @@ int rgdb_wait = -1;
 #endif // FULL_SYSTEM
 
 int
-System::registerExecContext(ExecContext *xc, int id)
+System::registerThreadContext(ThreadContext *tc, int id)
 {
     if (id == -1) {
-        for (id = 0; id < execContexts.size(); id++) {
-            if (!execContexts[id])
+        for (id = 0; id < threadContexts.size(); id++) {
+            if (!threadContexts[id])
                 break;
         }
     }
 
-    if (execContexts.size() <= id)
-        execContexts.resize(id + 1);
+    if (threadContexts.size() <= id)
+        threadContexts.resize(id + 1);
 
-    if (execContexts[id])
+    if (threadContexts[id])
         panic("Cannot have two CPUs with the same id (%d)\n", id);
 
-    execContexts[id] = xc;
+    threadContexts[id] = tc;
     numcpus++;
 
 #if FULL_SYSTEM
-    RemoteGDB *rgdb = new RemoteGDB(this, xc);
+    RemoteGDB *rgdb = new RemoteGDB(this, tc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
     gdbl->listen();
     /**
@@ -158,21 +189,21 @@ void
 System::startup()
 {
     int i;
-    for (i = 0; i < execContexts.size(); i++)
-        execContexts[i]->activate(0);
+    for (i = 0; i < threadContexts.size(); i++)
+        threadContexts[i]->activate(0);
 }
 
 void
-System::replaceExecContext(ExecContext *xc, int id)
+System::replaceThreadContext(ThreadContext *tc, int id)
 {
-    if (id >= execContexts.size()) {
-        panic("replaceExecContext: bad id, %d >= %d\n",
-              id, execContexts.size());
+    if (id >= threadContexts.size()) {
+        panic("replaceThreadContext: bad id, %d >= %d\n",
+              id, threadContexts.size());
     }
 
-    execContexts[id] = xc;
+    threadContexts[id] = tc;
 #if FULL_SYSTEM
-    remoteGDB[id]->replaceExecContext(xc);
+    remoteGDB[id]->replaceThreadContext(tc);
 #endif // FULL_SYSTEM
 }
 
@@ -187,19 +218,9 @@ System::new_page()
 #endif
 
 void
-System::regStats()
-{
-#if FULL_SYSTEM
-    kernelBinning->regStats(name() + ".kern");
-#endif // FULL_SYSTEM
-}
-
-void
 System::serialize(ostream &os)
 {
 #if FULL_SYSTEM
-    kernelBinning->serialize(os);
-
     kernelSymtab->serialize("kernel_symtab", os);
 #endif // FULL_SYSTEM
 }
@@ -209,8 +230,6 @@ void
 System::unserialize(Checkpoint *cp, const string &section)
 {
 #if FULL_SYSTEM
-    kernelBinning->unserialize(cp, section);
-
     kernelSymtab->unserialize("kernel_symtab", cp, section);
 #endif // FULL_SYSTEM
 }

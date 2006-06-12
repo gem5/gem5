@@ -24,14 +24,18 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
-#ifndef __CPU_CPU_EXEC_CONTEXT_HH__
-#define __CPU_CPU_EXEC_CONTEXT_HH__
+#ifndef __CPU_SIMPLE_THREAD_HH__
+#define __CPU_SIMPLE_THREAD_HH__
 
 #include "arch/isa_traits.hh"
 #include "config/full_system.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
+#include "cpu/thread_state.hh"
 #include "mem/physical.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -51,6 +55,9 @@ class ProfileNode;
 class FunctionalPort;
 class PhysicalPort;
 
+namespace Kernel {
+    class Statistics;
+};
 
 #else // !FULL_SYSTEM
 
@@ -58,16 +65,25 @@ class PhysicalPort;
 #include "mem/page_table.hh"
 class TranslatingPort;
 
-
 #endif // FULL_SYSTEM
 
-//
-// The CPUExecContext object represents a functional context for
-// instruction execution.  It incorporates everything required for
-// architecture-level functional simulation of a single thread.
-//
+/**
+ * The SimpleThread object provides a combination of the ThreadState
+ * object and the ThreadContext interface. It implements the
+ * ThreadContext interface so that a ProxyThreadContext class can be
+ * made using SimpleThread as the template parameter (see
+ * thread_context.hh). It adds to the ThreadState object by adding all
+ * the objects needed for simple functional execution, including a
+ * simple architectural register file, and pointers to the ITB and DTB
+ * in full system mode. For CPU models that do not need more advanced
+ * ways to hold state (i.e. a separate physical register file, or
+ * separate fetch and commit PC's), this SimpleThread class provides
+ * all the necessary state for full architecture-level functional
+ * simulation.  See the AtomicSimpleCPU or TimingSimpleCPU for
+ * examples.
+ */
 
-class CPUExecContext
+class SimpleThread : public ThreadState
 {
   protected:
     typedef TheISA::RegFile RegFile;
@@ -77,12 +93,124 @@ class CPUExecContext
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
   public:
-    typedef ExecContext::Status Status;
+    typedef ThreadContext::Status Status;
 
-  private:
-    Status _status;
+  protected:
+    RegFile regs;	// correct-path register context
 
   public:
+    // pointer to CPU associated with this SimpleThread
+    BaseCPU *cpu;
+
+    ProxyThreadContext<SimpleThread> *tc;
+
+    System *system;
+
+#if FULL_SYSTEM
+    AlphaITB *itb;
+    AlphaDTB *dtb;
+#endif
+
+    // constructor: initialize SimpleThread from given process structure
+#if FULL_SYSTEM
+    SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
+                 AlphaITB *_itb, AlphaDTB *_dtb,
+                 bool use_kernel_stats = true);
+#else
+    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
+                 MemObject *memobj);
+    // Constructor to use SimpleThread to pass reg file around.  Not
+    // used for anything else.
+    SimpleThread(RegFile *regFile);
+#endif
+    virtual ~SimpleThread();
+
+    virtual void takeOverFrom(ThreadContext *oldContext);
+
+    void regStats(const std::string &name);
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+
+    /***************************************************************
+     *  SimpleThread functions to provide CPU with access to various
+     *  state, and to provide address translation methods.
+     **************************************************************/
+
+    /** Returns the pointer to this SimpleThread's ThreadContext. Used
+     *  when a ThreadContext must be passed to objects outside of the
+     *  CPU.
+     */
+    ThreadContext *getTC() { return tc; }
+
+#if FULL_SYSTEM
+    int getInstAsid() { return regs.instAsid(); }
+    int getDataAsid() { return regs.dataAsid(); }
+
+    Fault translateInstReq(RequestPtr &req)
+    {
+        return itb->translate(req, tc);
+    }
+
+    Fault translateDataReadReq(RequestPtr &req)
+    {
+        return dtb->translate(req, tc, false);
+    }
+
+    Fault translateDataWriteReq(RequestPtr &req)
+    {
+        return dtb->translate(req, tc, true);
+    }
+
+    void dumpFuncProfile();
+
+    int readIntrFlag() { return regs.intrflag; }
+    void setIntrFlag(int val) { regs.intrflag = val; }
+    Fault hwrei();
+
+    bool simPalCheck(int palFunc);
+#else
+    Fault translateInstReq(RequestPtr &req)
+    {
+        return process->pTable->translate(req);
+    }
+
+    Fault translateDataReadReq(RequestPtr &req)
+    {
+        return process->pTable->translate(req);
+    }
+
+    Fault translateDataWriteReq(RequestPtr &req)
+    {
+        return process->pTable->translate(req);
+    }
+#endif
+
+    /*******************************************
+     * ThreadContext interface functions.
+     ******************************************/
+
+    BaseCPU *getCpuPtr() { return cpu; }
+
+    int getThreadNum() { return tid; }
+
+#if FULL_SYSTEM
+    System *getSystemPtr() { return system; }
+
+    AlphaITB *getITBPtr() { return itb; }
+
+    AlphaDTB *getDTBPtr() { return dtb; }
+
+    FunctionalPort *getPhysPort() { return physPort; }
+
+    /** Return a virtual port. If no thread context is specified then a static
+     * port is returned. Otherwise a port is created and returned. It must be
+     * deleted by deleteVirtPort(). */
+    VirtualPort *getVirtPort(ThreadContext *tc);
+
+    void delVirtPort(VirtualPort *vp);
+#endif
+
     Status status() const { return _status; }
 
     void setStatus(Status newStatus) { _status = newStatus; }
@@ -99,196 +227,6 @@ class CPUExecContext
 
     /// Set the status to Halted.
     void halt();
-
-  protected:
-    RegFile regs;	// correct-path register context
-
-  public:
-    // pointer to CPU associated with this context
-    BaseCPU *cpu;
-
-    ProxyExecContext<CPUExecContext> *proxy;
-
-    // Current instruction
-    MachInst inst;
-
-    // Index of hardware thread context on the CPU that this represents.
-    int thread_num;
-
-    // ID of this context w.r.t. the System or Process object to which
-    // it belongs.  For full-system mode, this is the system CPU ID.
-    int cpu_id;
-
-    Tick lastActivate;
-    Tick lastSuspend;
-
-    System *system;
-
-
-#if FULL_SYSTEM
-    AlphaITB *itb;
-    AlphaDTB *dtb;
-
-    /** A functional port outgoing only for functional accesses to physical
-     * addresses.*/
-    FunctionalPort *physPort;
-
-    /** A functional port, outgoing only, for functional accesse to virtual
-     * addresses. That doen't require execution context information */
-    VirtualPort *virtPort;
-
-    FunctionProfile *profile;
-    ProfileNode *profileNode;
-    Addr profilePC;
-    void dumpFuncProfile();
-
-    /** Event for timing out quiesce instruction */
-    struct EndQuiesceEvent : public Event
-    {
-        /** A pointer to the execution context that is quiesced */
-        CPUExecContext *cpuXC;
-
-        EndQuiesceEvent(CPUExecContext *_cpuXC);
-
-        /** Event process to occur at interrupt*/
-        virtual void process();
-
-        /** Event description */
-        virtual const char *description();
-    };
-    EndQuiesceEvent quiesceEvent;
-
-    Event *getQuiesceEvent() { return &quiesceEvent; }
-
-    Tick readLastActivate() { return lastActivate; }
-
-    Tick readLastSuspend() { return lastSuspend; }
-
-    void profileClear();
-
-    void profileSample();
-
-#else
-    /// Port that syscalls can use to access memory (provides translation step).
-    TranslatingPort *port;
-
-    Process *process;
-
-    // Address space ID.  Note that this is used for TIMING cache
-    // simulation only; all functional memory accesses should use
-    // one of the FunctionalMemory pointers above.
-    short asid;
-
-#endif
-
-    /**
-     * Temporary storage to pass the source address from copy_load to
-     * copy_store.
-     * @todo Remove this temporary when we have a better way to do it.
-     */
-    Addr copySrcAddr;
-    /**
-     * Temp storage for the physical source address of a copy.
-     * @todo Remove this temporary when we have a better way to do it.
-     */
-    Addr copySrcPhysAddr;
-
-
-    /*
-     * number of executed instructions, for matching with syscall trace
-     * points in EIO files.
-     */
-    Counter func_exe_inst;
-
-    //
-    // Count failed store conditionals so we can warn of apparent
-    // application deadlock situations.
-    unsigned storeCondFailures;
-
-    // constructor: initialize context from given process structure
-#if FULL_SYSTEM
-    CPUExecContext(BaseCPU *_cpu, int _thread_num, System *_system,
-                   AlphaITB *_itb, AlphaDTB *_dtb);
-#else
-    CPUExecContext(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
-            MemObject *memobj);
-    // Constructor to use XC to pass reg file around.  Not used for anything
-    // else.
-    CPUExecContext(RegFile *regFile);
-#endif
-    virtual ~CPUExecContext();
-
-    virtual void takeOverFrom(ExecContext *oldContext);
-
-    void regStats(const std::string &name);
-
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-
-    BaseCPU *getCpuPtr() { return cpu; }
-
-    ExecContext *getProxy() { return proxy; }
-
-    int getThreadNum() { return thread_num; }
-
-#if FULL_SYSTEM
-    System *getSystemPtr() { return system; }
-
-    AlphaITB *getITBPtr() { return itb; }
-
-    AlphaDTB *getDTBPtr() { return dtb; }
-
-    int getInstAsid() { return regs.instAsid(); }
-    int getDataAsid() { return regs.dataAsid(); }
-
-    Fault translateInstReq(RequestPtr &req)
-    {
-        return itb->translate(req, proxy);
-    }
-
-    Fault translateDataReadReq(RequestPtr &req)
-    {
-        return dtb->translate(req, proxy, false);
-    }
-
-    Fault translateDataWriteReq(RequestPtr &req)
-    {
-        return dtb->translate(req, proxy, true);
-    }
-
-    FunctionalPort *getPhysPort() { return physPort; }
-
-    /** Return a virtual port. If no exec context is specified then a static
-     * port is returned. Otherwise a port is created and returned. It must be
-     * deleted by deleteVirtPort(). */
-    VirtualPort *getVirtPort(ExecContext *xc);
-
-    void delVirtPort(VirtualPort *vp);
-
-#else
-    TranslatingPort *getMemPort() { return port; }
-
-    Process *getProcessPtr() { return process; }
-
-    int getInstAsid() { return asid; }
-    int getDataAsid() { return asid; }
-
-    Fault translateInstReq(RequestPtr &req)
-    {
-        return process->pTable->translate(req);
-    }
-
-    Fault translateDataReadReq(RequestPtr &req)
-    {
-        return process->pTable->translate(req);
-    }
-
-    Fault translateDataWriteReq(RequestPtr &req)
-    {
-        return process->pTable->translate(req);
-    }
-
-#endif
 
 /*
     template <class T>
@@ -361,14 +299,6 @@ class CPUExecContext
 */
     virtual bool misspeculating();
 
-
-    MachInst getInst() { return inst; }
-
-    void setInst(MachInst new_inst)
-    {
-        inst = new_inst;
-    }
-
     Fault instRead(RequestPtr &req)
     {
         panic("instRead not implemented");
@@ -376,11 +306,9 @@ class CPUExecContext
         return NoFault;
     }
 
-    void setCpuId(int id) { cpu_id = id; }
+    void copyArchRegs(ThreadContext *tc);
 
-    int readCpuId() { return cpu_id; }
-
-    void copyArchRegs(ExecContext *xc);
+    void clearArchRegs() { regs.clear(); }
 
     //
     // New accessors for new decoder.
@@ -465,7 +393,6 @@ class CPUExecContext
         regs.setNextNPC(val);
     }
 
-
     MiscReg readMiscReg(int misc_reg)
     {
         return regs.readMiscReg(misc_reg);
@@ -473,7 +400,7 @@ class CPUExecContext
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return regs.readMiscRegWithEffect(misc_reg, fault, proxy);
+        return regs.readMiscRegWithEffect(misc_reg, fault, tc);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
@@ -483,7 +410,7 @@ class CPUExecContext
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return regs.setMiscRegWithEffect(misc_reg, val, proxy);
+        return regs.setMiscRegWithEffect(misc_reg, val, tc);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }
@@ -491,14 +418,8 @@ class CPUExecContext
     void setStCondFailures(unsigned sc_failures)
     { storeCondFailures = sc_failures; }
 
-    void clearArchRegs() { regs.clear(); }
-
 #if FULL_SYSTEM
-    int readIntrFlag() { return regs.intrflag; }
-    void setIntrFlag(int val) { regs.intrflag = val; }
-    Fault hwrei();
     bool inPalMode() { return AlphaISA::PcPAL(regs.readPC()); }
-    bool simPalCheck(int palFunc);
 #endif
 
 #if !FULL_SYSTEM
@@ -520,12 +441,8 @@ class CPUExecContext
 
     void syscall(int64_t callnum)
     {
-        process->syscall(callnum, proxy);
+        process->syscall(callnum, tc);
     }
-
-    Counter readFuncExeInst() { return func_exe_inst; }
-
-    void setFuncExeInst(Counter new_val) { func_exe_inst = new_val; }
 #endif
 
     void changeRegFileContext(RegFile::ContextParam param,
@@ -538,7 +455,7 @@ class CPUExecContext
 
 // for non-speculative execution context, spec_mode is always false
 inline bool
-CPUExecContext::misspeculating()
+SimpleThread::misspeculating()
 {
     return false;
 }

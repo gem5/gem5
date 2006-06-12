@@ -24,12 +24,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Lisa Hsu
+ *          Nathan Binkert
  */
 
 #ifndef __ARCH_ALPHA_LINUX_SYSTEM_HH__
 #define __ARCH_ALPHA_LINUX_SYSTEM_HH__
 
-class ExecContext;
+class ThreadContext;
 
 class BreakPCEvent;
 class IdleStartEvent;
@@ -41,7 +45,7 @@ using namespace AlphaISA;
 using namespace Linux;
 
 /**
- * This class contains linux specific system code (Loading, Events, Binning).
+ * This class contains linux specific system code (Loading, Events).
  * It points to objects that are the system binaries to load and patches them
  * appropriately to work in simulator.
  */
@@ -53,7 +57,7 @@ class LinuxAlphaSystem : public AlphaSystem
       public:
         SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
             : SkipFuncEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
 
     class PrintThreadInfo : public PCEvent
@@ -61,7 +65,7 @@ class LinuxAlphaSystem : public AlphaSystem
       public:
         PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
             : PCEvent(q, desc, addr) {}
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
 
 
@@ -120,18 +124,6 @@ class LinuxAlphaSystem : public AlphaSystem
      */
     PrintThreadInfo *printThreadEvent;
 
-    /**
-     * Event to bin Interrupts seperately from kernel code
-     */
-    InterruptStartEvent *intStartEvent;
-
-    /**
-     * Event to bin Interrupts seperately from kernel code
-     */
-    InterruptEndEvent *intEndEvent;
-    InterruptEndEvent *intEndEvent2;
-    InterruptEndEvent *intEndEvent3;
-
     /** Grab the PCBB of the idle process when it starts */
     IdleStartEvent *idleStartEvent;
 
@@ -139,7 +131,7 @@ class LinuxAlphaSystem : public AlphaSystem
     LinuxAlphaSystem(Params *p);
     ~LinuxAlphaSystem();
 
-    void setDelayLoop(ExecContext *xc);
+    void setDelayLoop(ThreadContext *tc);
 };
 
 #endif // __ARCH_ALPHA_LINUX_SYSTEM_HH__

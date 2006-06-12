@@ -24,16 +24,30 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
 #include "cpu/o3/ras.hh"
 
-ReturnAddrStack::ReturnAddrStack(unsigned _numEntries)
-    : numEntries(_numEntries), usedEntries(0),
-      tos(0)
+void
+ReturnAddrStack::init(unsigned _numEntries)
 {
-    addrStack = new Addr[numEntries];
+     numEntries  = _numEntries;
+     usedEntries = 0;
+     tos = 0;
 
+     addrStack.resize(numEntries);
+
+     for (int i = 0; i < numEntries; ++i)
+         addrStack[i] = 0;
+}
+
+void
+ReturnAddrStack::reset()
+{
+    usedEntries = 0;
+    tos = 0;
     for (int i = 0; i < numEntries; ++i)
         addrStack[i] = 0;
 }
@@ -53,9 +67,6 @@ ReturnAddrStack::push(const Addr &return_addr)
 void
 ReturnAddrStack::pop()
 {
-    // Not sure it's possible to really track usedEntries properly.
-//    assert(usedEntries > 0);
-
     if (usedEntries > 0) {
         --usedEntries;
     }

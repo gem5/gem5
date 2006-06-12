@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ron Dreslinski
  */
 
 /**
@@ -74,6 +76,11 @@ class Port
     /** Descriptive name (for DPRINTF output) */
     const std::string portName;
 
+    /** A pointer to the peer port.  Ports always come in pairs, that way they
+        can use a standardized interface to communicate between different
+        memory objects. */
+    Port *peer;
+
   public:
 
     /**
@@ -83,7 +90,7 @@ class Port
      * of memory system object to which the port belongs.
      */
     Port(const std::string &_name)
-        : portName(_name)
+        : portName(_name), peer(NULL)
     { }
 
     /** Return port name (for DPRINTF). */
@@ -92,22 +99,11 @@ class Port
     virtual ~Port() {};
 
     // mey be better to use subclasses & RTTI?
-    /** Holds the ports status.  Keeps track if it is blocked, or has
-        calculated a range change. */
+    /** Holds the ports status.  Currently just that a range recomputation needs
+     * to be done. */
     enum Status {
-        Blocked,
-        Unblocked,
         RangeChange
     };
-
-  private:
-
-    /** A pointer to the peer port.  Ports always come in pairs, that way they
-        can use a standardized interface to communicate between different
-        memory objects. */
-    Port *peer;
-
-  public:
 
     /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).
@@ -140,7 +136,7 @@ class Port
         wait.  This shouldn't be valid for response paths (IO Devices).
         so it is set to panic if it isn't already defined.
     */
-    virtual Packet *recvRetry() { panic("??"); }
+    virtual void recvRetry() { panic("??"); }
 
     /** Called by a peer port in order to determine the block size of the
         device connected to this port.  It sometimes doesn't make sense for
@@ -165,16 +161,17 @@ class Port
         port receive function.
         @return This function returns if the send was succesful in it's
         recieve. If it was a failure, then the port will wait for a recvRetry
-        at which point it can issue a successful sendTiming.  This is used in
+        at which point it can possibly issue a successful sendTiming.  This is used in
         case a cache has a higher priority request come in while waiting for
         the bus to arbitrate.
     */
     bool sendTiming(Packet *pkt) { return peer->recvTiming(pkt); }
 
-    /** Function called by the associated device to send an atomic access,
-        an access in which the data is moved and the state is updated in one
-        cycle, without interleaving with other memory accesses.
-    */
+    /** Function called by the associated device to send an atomic
+     *   access, an access in which the data is moved and the state is
+     *   updated in one cycle, without interleaving with other memory
+     *   accesses.  Returns estimated latency of access.
+     */
     Tick sendAtomic(Packet *pkt)
         { return peer->recvAtomic(pkt); }
 
@@ -194,7 +191,7 @@ class Port
     /** When a timing access doesn't return a success, some time later the
         Retry will be sent.
     */
-    Packet *sendRetry() { return peer->recvRetry(); }
+    void sendRetry() { return peer->recvRetry(); }
 
     /** Called by the associated device if it wishes to find out the blocksize
         of the device on attached to the peer port.
@@ -251,6 +248,14 @@ class FunctionalPort : public Port
     virtual Tick recvAtomic(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvFunctional(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvStatusChange(Status status) {}
+
+    /** a write function that also does an endian conversion. */
+    template <typename T>
+    inline void writeHtoG(Addr addr, T d);
+
+    /** a read function that also does an endian conversion. */
+    template <typename T>
+    inline T readGtoH(Addr addr);
 
     template <typename T>
     inline void write(Addr addr, T d)

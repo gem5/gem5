@@ -24,63 +24,124 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_STORE_SET_HH__
-#define __CPU_O3_CPU_STORE_SET_HH__
+#ifndef __CPU_O3_STORE_SET_HH__
+#define __CPU_O3_STORE_SET_HH__
 
+#include <list>
+#include <map>
+#include <utility>
 #include <vector>
 
 #include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
 
+struct ltseqnum {
+    bool operator()(const InstSeqNum &lhs, const InstSeqNum &rhs) const
+    {
+        return lhs > rhs;
+    }
+};
+
+/**
+ * Implements a store set predictor for determining if memory
+ * instructions are dependent upon each other.  See paper "Memory
+ * Dependence Prediction using Store Sets" by Chrysos and Emer.  SSID
+ * stands for Store Set ID, SSIT stands for Store Set ID Table, and
+ * LFST is Last Fetched Store Table.
+ */
 class StoreSet
 {
   public:
     typedef unsigned SSID;
 
   public:
+    /** Default constructor.  init() must be called prior to use. */
+    StoreSet() { };
+
+    /** Creates store set predictor with given table sizes. */
     StoreSet(int SSIT_size, int LFST_size);
 
+    /** Default destructor. */
+    ~StoreSet();
+
+    /** Initializes the store set predictor with the given table sizes. */
+    void init(int SSIT_size, int LFST_size);
+
+    /** Records a memory ordering violation between the younger load
+     * and the older store. */
     void violation(Addr store_PC, Addr load_PC);
 
+    /** Inserts a load into the store set predictor.  This does nothing but
+     * is included in case other predictors require a similar function.
+     */
     void insertLoad(Addr load_PC, InstSeqNum load_seq_num);
 
-    void insertStore(Addr store_PC, InstSeqNum store_seq_num);
+    /** Inserts a store into the store set predictor.  Updates the
+     * LFST if the store has a valid SSID. */
+    void insertStore(Addr store_PC, InstSeqNum store_seq_num,
+                     unsigned tid);
 
+    /** Checks if the instruction with the given PC is dependent upon
+     * any store.  @return Returns the sequence number of the store
+     * instruction this PC is dependent upon.  Returns 0 if none.
+     */
     InstSeqNum checkInst(Addr PC);
 
+    /** Records this PC/sequence number as issued. */
     void issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store);
 
-    void squash(InstSeqNum squashed_num);
+    /** Squashes for a specific thread until the given sequence number. */
+    void squash(InstSeqNum squashed_num, unsigned tid);
 
+    /** Resets all tables. */
     void clear();
 
+    /** Debug function to dump the contents of the store list. */
+    void dump();
+
   private:
+    /** Calculates the index into the SSIT based on the PC. */
     inline int calcIndex(Addr PC)
-    { return (PC >> offset_bits) & index_mask; }
+    { return (PC >> offsetBits) & indexMask; }
 
+    /** Calculates a Store Set ID based on the PC. */
     inline SSID calcSSID(Addr PC)
-    { return ((PC ^ (PC >> 10)) % LFST_size); }
+    { return ((PC ^ (PC >> 10)) % LFSTSize); }
 
-    SSID *SSIT;
+    /** The Store Set ID Table. */
+    std::vector<SSID> SSIT;
 
+    /** Bit vector to tell if the SSIT has a valid entry. */
     std::vector<bool> validSSIT;
 
-    InstSeqNum *LFST;
+    /** Last Fetched Store Table. */
+    std::vector<InstSeqNum> LFST;
 
+    /** Bit vector to tell if the LFST has a valid entry. */
     std::vector<bool> validLFST;
 
-    int *SSCounters;
+    /** Map of stores that have been inserted into the store set, but
+     * not yet issued or squashed.
+     */
+    std::map<InstSeqNum, int, ltseqnum> storeList;
 
-    int SSIT_size;
+    typedef std::map<InstSeqNum, int, ltseqnum>::iterator SeqNumMapIt;
 
-    int LFST_size;
+    /** Store Set ID Table size, in entries. */
+    int SSITSize;
 
-    int index_mask;
+    /** Last Fetched Store Table size, in entries. */
+    int LFSTSize;
+
+    /** Mask to obtain the index. */
+    int indexMask;
 
     // HACK: Hardcoded for now.
-    int offset_bits;
+    int offsetBits;
 };
 
-#endif // __CPU_O3_CPU_STORE_SET_HH__
+#endif // __CPU_O3_STORE_SET_HH__

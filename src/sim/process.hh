@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
 #ifndef __PROCESS_HH__
@@ -43,8 +46,7 @@
 #include "base/statistics.hh"
 #include "sim/sim_object.hh"
 
-class CPUExecContext;
-class ExecContext;
+class ThreadContext;
 class SyscallDesc;
 class PageTable;
 class TranslatingPort;
@@ -62,24 +64,24 @@ class Process : public SimObject
     /// running on.
     System *system;
 
-    // have we initialized an execution context from this process?  If
+    // have we initialized a thread context from this process?  If
     // yes, subsequent contexts are assumed to be for dynamically
     // created threads and are not initialized.
     bool initialContextLoaded;
 
-    // execution contexts associated with this process
-    std::vector<ExecContext *> execContexts;
+    // thread contexts associated with this process
+    std::vector<ThreadContext *> threadContexts;
 
     // number of CPUs (esxec contexts, really) assigned to this process.
-    unsigned int numCpus() { return execContexts.size(); }
+    unsigned int numCpus() { return threadContexts.size(); }
 
     // record of blocked context
     struct WaitRec
     {
         Addr waitChan;
-        ExecContext *waitingContext;
+        ThreadContext *waitingContext;
 
-        WaitRec(Addr chan, ExecContext *ctx)
+        WaitRec(Addr chan, ThreadContext *ctx)
             : waitChan(chan), waitingContext(ctx)
         {	}
     };
@@ -140,12 +142,12 @@ class Process : public SimObject
     // override of virtual SimObject method: register statistics
     virtual void regStats();
 
-    // register an execution context for this process.
-    // returns xc's cpu number (index into execContexts[])
-    int registerExecContext(ExecContext *xc);
+    // register a thread context for this process.
+    // returns tc's cpu number (index into threadContexts[])
+    int registerThreadContext(ThreadContext *tc);
 
 
-    void replaceExecContext(ExecContext *xc, int xcIndex);
+    void replaceThreadContext(ThreadContext *tc, int tcIndex);
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);
@@ -159,7 +161,7 @@ class Process : public SimObject
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);
 
-    virtual void syscall(int64_t callnum, ExecContext *xc) = 0;
+    virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
 };
 
 //
@@ -181,9 +183,19 @@ class LiveProcess : public Process
     virtual void argsInit(int intSize, int pageSize);
 
   public:
-    virtual void syscall(int64_t callnum, ExecContext *xc);
+    virtual void syscall(int64_t callnum, ThreadContext *tc);
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
+
+    // this function is used to create the LiveProcess object, since
+    // we can't tell which subclass of LiveProcess to use until we
+    // open and look at the object file.
+    static LiveProcess *create(const std::string &nm,
+                               System *_system,
+                               int stdin_fd, int stdout_fd, int stderr_fd,
+                               std::string executable,
+                               std::vector<std::string> &argv,
+                               std::vector<std::string> &envp);
 };
 
 

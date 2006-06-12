@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Andrew Schultz
+ *          Ali Saidi
+ *          Miguel Serrano
  */
 
 #include <cstddef>
@@ -430,7 +434,6 @@ IdeController::read(Packet *pkt)
     IdeRegType reg_type;
     int disk;
 
-    pkt->time += pioDelay;
     pkt->allocate();
     if (pkt->getSize() != 1 && pkt->getSize() != 2 && pkt->getSize() !=4)
          panic("Bad IDE read size: %d\n", pkt->getSize());
@@ -517,8 +520,6 @@ IdeController::write(Packet *pkt)
     IdeRegType reg_type;
     int disk;
     uint8_t oldVal, newVal;
-
-    pkt->time += pioDelay;
 
     parseAddr(pkt->getAddr(), offset, channel, reg_type);
 

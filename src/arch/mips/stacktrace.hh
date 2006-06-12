@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #ifndef __ARCH_ALPHA_STACKTRACE_HH__
@@ -32,13 +34,13 @@
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 
-class ExecContext;
+class ThreadContext;
 class StackTrace;
 
 class ProcessInfo
 {
   private:
-    ExecContext *xc;
+    ThreadContext *tc;
 
     int thread_info_size;
     int task_struct_size;
@@ -47,7 +49,7 @@ class ProcessInfo
     int name_off;
 
   public:
-    ProcessInfo(ExecContext *_xc);
+    ProcessInfo(ThreadContext *_tc);
 
     Addr task(Addr ksp) const;
     int pid(Addr ksp) const;
@@ -59,7 +61,7 @@ class StackTrace
   protected:
     typedef TheISA::MachInst MachInst;
   private:
-    ExecContext *xc;
+    ThreadContext *tc;
     std::vector<Addr> stack;
 
   private:
@@ -68,21 +70,21 @@ class StackTrace
     bool decodeSave(MachInst inst, int &reg, int &disp);
     bool decodeStack(MachInst inst, int &disp);
 
-    void trace(ExecContext *xc, bool is_call);
+    void trace(ThreadContext *tc, bool is_call);
 
   public:
     StackTrace();
-    StackTrace(ExecContext *xc, StaticInstPtr inst);
+    StackTrace(ThreadContext *tc, StaticInstPtr inst);
     ~StackTrace();
 
     void clear()
     {
-        xc = 0;
+        tc = 0;
         stack.clear();
     }
 
-    bool valid() const { return xc != NULL; }
-    bool trace(ExecContext *xc, StaticInstPtr inst);
+    bool valid() const { return tc != NULL; }
+    bool trace(ThreadContext *tc, StaticInstPtr inst);
 
   public:
     const std::vector<Addr> &getstack() const { return stack; }
@@ -104,7 +106,7 @@ class StackTrace
 };
 
 inline bool
-StackTrace::trace(ExecContext *xc, StaticInstPtr inst)
+StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
 {
     if (!inst->isCall() && !inst->isReturn())
         return false;
@@ -112,7 +114,7 @@ StackTrace::trace(ExecContext *xc, StaticInstPtr inst)
     if (valid())
         clear();
 
-    trace(xc, !inst->isReturn());
+    trace(tc, !inst->isReturn());
     return true;
 }
 

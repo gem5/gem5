@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Gabe Black
+ *          Ali Saidi
  */
 
 #include "arch/sparc/isa_traits.hh"
@@ -31,7 +35,7 @@
 #include "arch/sparc/regfile.hh"
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
 
 #include "sim/process.hh"
@@ -44,9 +48,9 @@ using namespace SparcISA;
 /// Target uname() handler.
 static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ExecContext *xc)
+          ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(xc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -54,40 +58,40 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "sparc");
 
-    name.copyOut(xc->getMemPort());
+    name.copyOut(tc->getMemPort());
 
     return 0;
 }
 
 
 SyscallReturn SparcISA::getresuidFunc(SyscallDesc *desc, int num,
-                                         Process *p, ExecContext *xc)
+                                         Process *p, ThreadContext *tc)
 {
     const IntReg id = htog(100);
-    Addr ruid = xc->getSyscallArg(0);
-    Addr euid = xc->getSyscallArg(1);
-    Addr suid = xc->getSyscallArg(2);
+    Addr ruid = tc->getSyscallArg(0);
+    Addr euid = tc->getSyscallArg(1);
+    Addr suid = tc->getSyscallArg(2);
     //Handle the EFAULT case
     //Set the ruid
     if(ruid)
     {
         BufferArg ruidBuff(ruid, sizeof(IntReg));
         memcpy(ruidBuff.bufferPtr(), &id, sizeof(IntReg));
-        ruidBuff.copyOut(xc->getMemPort());
+        ruidBuff.copyOut(tc->getMemPort());
     }
     //Set the euid
     if(euid)
     {
         BufferArg euidBuff(euid, sizeof(IntReg));
         memcpy(euidBuff.bufferPtr(), &id, sizeof(IntReg));
-        euidBuff.copyOut(xc->getMemPort());
+        euidBuff.copyOut(tc->getMemPort());
     }
     //Set the suid
     if(suid)
     {
         BufferArg suidBuff(suid, sizeof(IntReg));
         memcpy(suidBuff.bufferPtr(), &id, sizeof(IntReg));
-        suidBuff.copyOut(xc->getMemPort());
+        suidBuff.copyOut(tc->getMemPort());
     }
     return 0;
 }

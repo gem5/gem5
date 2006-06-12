@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,32 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-// Todo:
-// Fix up trap and barrier handling.
-// May want to have different statuses to differentiate the different stall
-// conditions.
-
-#ifndef __CPU_O3_CPU_SIMPLE_RENAME_HH__
-#define __CPU_O3_CPU_SIMPLE_RENAME_HH__
+#ifndef __CPU_O3_RENAME_HH__
+#define __CPU_O3_RENAME_HH__
 
 #include <list>
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 
-// Will need rename maps for both the int reg file and fp reg file.
-// Or change rename map class to handle both. (RegFile handles both.)
+/**
+ * DefaultRename handles both single threaded and SMT rename. Its
+ * width is specified by the parameters; each cycle it tries to rename
+ * that many instructions. It holds onto the rename history of all
+ * instructions with destination registers, storing the
+ * arch. register, the new physical register, and the old physical
+ * register, to allow for undoing of mappings if squashing happens, or
+ * freeing up registers upon commit. Rename handles blocking if the
+ * ROB, IQ, or LSQ is going to be full. Rename also handles barriers,
+ * and does so by stalling on the instruction until the ROB is empty
+ * and there are no instructions in flight to the ROB.
+ */
 template<class Impl>
-class SimpleRename
+class DefaultRename
 {
   public:
     // Typedefs from the Impl.
@@ -51,112 +58,242 @@ class SimpleRename
     typedef typename Impl::FullCPU FullCPU;
     typedef typename Impl::Params Params;
 
-    typedef typename CPUPol::FetchStruct FetchStruct;
+    // Typedefs from the CPUPol
     typedef typename CPUPol::DecodeStruct DecodeStruct;
     typedef typename CPUPol::RenameStruct RenameStruct;
     typedef typename CPUPol::TimeStruct TimeStruct;
-
-    // Typedefs from the CPUPol
     typedef typename CPUPol::FreeList FreeList;
     typedef typename CPUPol::RenameMap RenameMap;
+    // These are used only for initialization.
+    typedef typename CPUPol::IEW IEW;
+    typedef typename CPUPol::Commit Commit;
 
     // Typedefs from the ISA.
     typedef TheISA::RegIndex RegIndex;
 
+    // A list is used to queue the instructions.  Barrier insts must
+    // be added to the front of the list, which is the only reason for
+    // using a list instead of a queue. (Most other stages use a
+    // queue)
+    typedef std::list<DynInstPtr> InstQueue;
+
   public:
-    // Rename will block if ROB becomes full or issue queue becomes full,
-    // or there are no free registers to rename to.
-    // Only case where rename squashes is if IEW squashes.
-    enum Status {
+    /** Overall rename status. Used to determine if the CPU can
+     * deschedule itself due to a lack of activity.
+     */
+    enum RenameStatus {
+        Active,
+        Inactive
+    };
+
+    /** Individual thread status. */
+    enum ThreadStatus {
         Running,
         Idle,
+        StartSquash,
         Squashing,
         Blocked,
         Unblocking,
-        BarrierStall
+        SerializeStall
     };
 
   private:
-    Status _status;
+    /** Rename status. */
+    RenameStatus _status;
+
+    /** Per-thread status. */
+    ThreadStatus renameStatus[Impl::MaxThreads];
 
   public:
-    SimpleRename(Params &params);
+    /** DefaultRename constructor. */
+    DefaultRename(Params *params);
 
+    /** Returns the name of rename. */
+    std::string name() const;
+
+    /** Registers statistics. */
     void regStats();
 
+    /** Sets CPU pointer. */
     void setCPU(FullCPU *cpu_ptr);
 
+    /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
+    /** Sets pointer to time buffer used to communicate to the next stage. */
     void setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr);
 
+    /** Sets pointer to time buffer coming from decode. */
     void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
 
-    void setRenameMap(RenameMap *rm_ptr);
+    /** Sets pointer to IEW stage. Used only for initialization. */
+    void setIEWStage(IEW *iew_stage)
+    { iew_ptr = iew_stage; }
 
-    void setFreeList(FreeList *fl_ptr);
-
-    void dumpHistory();
-
-    void tick();
-
-    void rename();
-
-    void squash();
+    /** Sets pointer to commit stage. Used only for initialization. */
+    void setCommitStage(Commit *commit_stage)
+    { commit_ptr = commit_stage; }
 
   private:
-    void block();
+    /** Pointer to IEW stage. Used only for initialization. */
+    IEW *iew_ptr;
 
-    inline void unblock();
+    /** Pointer to commit stage. Used only for initialization. */
+    Commit *commit_ptr;
 
-    void doSquash();
+  public:
+    /** Initializes variables for the stage. */
+    void initStage();
 
-    void removeFromHistory(InstSeqNum inst_seq_num);
+    /** Sets pointer to list of active threads. */
+    void setActiveThreads(std::list<unsigned> *at_ptr);
 
-    inline void renameSrcRegs(DynInstPtr &inst);
+    /** Sets pointer to rename maps (per-thread structures). */
+    void setRenameMap(RenameMap rm_ptr[Impl::MaxThreads]);
 
-    inline void renameDestRegs(DynInstPtr &inst);
+    /** Sets pointer to the free list. */
+    void setFreeList(FreeList *fl_ptr);
 
-    inline int calcFreeROBEntries();
+    /** Sets pointer to the scoreboard. */
+    void setScoreboard(Scoreboard *_scoreboard);
 
-    inline int calcFreeIQEntries();
+    /** Switches out the rename stage. */
+    void switchOut();
 
-    /** Holds the previous information for each rename.
-     *  Note that often times the inst may have been deleted, so only access
-     *  the pointer for the address and do not dereference it.
+    /** Completes the switch out. */
+    void doSwitchOut();
+
+    /** Takes over from another CPU's thread. */
+    void takeOverFrom();
+
+    /** Squashes all instructions in a thread. */
+    void squash(unsigned tid);
+
+    /** Ticks rename, which processes all input signals and attempts to rename
+     * as many instructions as possible.
+     */
+    void tick();
+
+    /** Debugging function used to dump history buffer of renamings. */
+    void dumpHistory();
+
+  private:
+    /** Determines what to do based on rename's current status.
+     * @param status_change rename() sets this variable if there was a status
+     * change (ie switching from blocking to unblocking).
+     * @param tid Thread id to rename instructions from.
+     */
+    void rename(bool &status_change, unsigned tid);
+
+    /** Renames instructions for the given thread. Also handles serializing
+     * instructions.
+     */
+    void renameInsts(unsigned tid);
+
+    /** Inserts unused instructions from a given thread into the skid buffer,
+     * to be renamed once rename unblocks.
+     */
+    void skidInsert(unsigned tid);
+
+    /** Separates instructions from decode into individual lists of instructions
+     * sorted by thread.
+     */
+    void sortInsts();
+
+    /** Returns if all of the skid buffers are empty. */
+    bool skidsEmpty();
+
+    /** Updates overall rename status based on all of the threads' statuses. */
+    void updateStatus();
+
+    /** Switches rename to blocking, and signals back that rename has become
+     * blocked.
+     * @return Returns true if there is a status change.
+     */
+    bool block(unsigned tid);
+
+    /** Switches rename to unblocking if the skid buffer is empty, and signals
+     * back that rename has unblocked.
+     * @return Returns true if there is a status change.
+     */
+    bool unblock(unsigned tid);
+
+    /** Executes actual squash, removing squashed instructions. */
+    void doSquash(unsigned tid);
+
+    /** Removes a committed instruction's rename history. */
+    void removeFromHistory(InstSeqNum inst_seq_num, unsigned tid);
+
+    /** Renames the source registers of an instruction. */
+    inline void renameSrcRegs(DynInstPtr &inst, unsigned tid);
+
+    /** Renames the destination registers of an instruction. */
+    inline void renameDestRegs(DynInstPtr &inst, unsigned tid);
+
+    /** Calculates the number of free ROB entries for a specific thread. */
+    inline int calcFreeROBEntries(unsigned tid);
+
+    /** Calculates the number of free IQ entries for a specific thread. */
+    inline int calcFreeIQEntries(unsigned tid);
+
+    /** Calculates the number of free LSQ entries for a specific thread. */
+    inline int calcFreeLSQEntries(unsigned tid);
+
+    /** Returns the number of valid instructions coming from decode. */
+    unsigned validInsts();
+
+    /** Reads signals telling rename to block/unblock. */
+    void readStallSignals(unsigned tid);
+
+    /** Checks if any stages are telling rename to block. */
+    bool checkStall(unsigned tid);
+
+    /** Gets the number of free entries for a specific thread. */
+    void readFreeEntries(unsigned tid);
+
+    /** Checks the signals and updates the status. */
+    bool checkSignalsAndUpdate(unsigned tid);
+
+    /** Either serializes on the next instruction available in the InstQueue,
+     * or records that it must serialize on the next instruction to enter
+     * rename.
+     * @param inst_list The list of younger, unprocessed instructions for the
+     * thread that has the serializeAfter instruction.
+     * @param tid The thread id.
+     */
+    void serializeAfter(InstQueue &inst_list, unsigned tid);
+
+    /** Holds the information for each destination register rename. It holds
+     * the instruction's sequence number, the arch register, the old physical
+     * register for that arch. register, and the new physical register.
      */
     struct RenameHistory {
         RenameHistory(InstSeqNum _instSeqNum, RegIndex _archReg,
                       PhysRegIndex _newPhysReg, PhysRegIndex _prevPhysReg)
             : instSeqNum(_instSeqNum), archReg(_archReg),
-              newPhysReg(_newPhysReg), prevPhysReg(_prevPhysReg),
-              placeHolder(false)
+              newPhysReg(_newPhysReg), prevPhysReg(_prevPhysReg)
         {
         }
 
-        /** Constructor used specifically for cases where a place holder
-         *  rename history entry is being made.
-         */
-        RenameHistory(InstSeqNum _instSeqNum)
-            : instSeqNum(_instSeqNum), archReg(0), newPhysReg(0),
-              prevPhysReg(0), placeHolder(true)
-        {
-        }
-
+        /** The sequence number of the instruction that renamed. */
         InstSeqNum instSeqNum;
+        /** The architectural register index that was renamed. */
         RegIndex archReg;
+        /** The new physical register that the arch. register is renamed to. */
         PhysRegIndex newPhysReg;
+        /** The old physical register that the arch. register was renamed to. */
         PhysRegIndex prevPhysReg;
-        bool placeHolder;
     };
 
-    std::list<RenameHistory> historyBuffer;
+    /** A per-thread list of all destination register renames, used to either
+     * undo rename mappings or free old physical registers.
+     */
+    std::list<RenameHistory> historyBuffer[Impl::MaxThreads];
 
-    /** CPU interface. */
+    /** Pointer to CPU. */
     FullCPU *cpu;
 
-    // Interfaces to objects outside of rename.
-    /** Time buffer interface. */
+    /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;
 
     /** Wire to get IEW's output from backwards time buffer. */
@@ -166,7 +303,6 @@ class SimpleRename
     typename TimeBuffer<TimeStruct>::wire fromCommit;
 
     /** Wire to write infromation heading to previous stages. */
-    // Might not be the best name as not only decode will read it.
     typename TimeBuffer<TimeStruct>::wire toDecode;
 
     /** Rename instruction queue. */
@@ -181,14 +317,70 @@ class SimpleRename
     /** Wire to get decode's output from decode queue. */
     typename TimeBuffer<DecodeStruct>::wire fromDecode;
 
+    /** Queue of all instructions coming from decode this cycle. */
+    InstQueue insts[Impl::MaxThreads];
+
     /** Skid buffer between rename and decode. */
-    std::queue<DecodeStruct> skidBuffer;
+    InstQueue skidBuffer[Impl::MaxThreads];
 
     /** Rename map interface. */
-    SimpleRenameMap *renameMap;
+    RenameMap *renameMap[Impl::MaxThreads];
 
     /** Free list interface. */
     FreeList *freeList;
+
+    /** Pointer to the list of active threads. */
+    std::list<unsigned> *activeThreads;
+
+    /** Pointer to the scoreboard. */
+    Scoreboard *scoreboard;
+
+    /** Count of instructions in progress that have been sent off to the IQ
+     * and ROB, but are not yet included in their occupancy counts.
+     */
+    int instsInProgress[Impl::MaxThreads];
+
+    /** Variable that tracks if decode has written to the time buffer this
+     * cycle. Used to tell CPU if there is activity this cycle.
+     */
+    bool wroteToTimeBuffer;
+
+    /** Structures whose free entries impact the amount of instructions that
+     * can be renamed.
+     */
+    struct FreeEntries {
+        unsigned iqEntries;
+        unsigned lsqEntries;
+        unsigned robEntries;
+    };
+
+    /** Per-thread tracking of the number of free entries of back-end
+     * structures.
+     */
+    FreeEntries freeEntries[Impl::MaxThreads];
+
+    /** Records if the ROB is empty. In SMT mode the ROB may be dynamically
+     * partitioned between threads, so the ROB must tell rename when it is
+     * empty.
+     */
+    bool emptyROB[Impl::MaxThreads];
+
+    /** Source of possible stalls. */
+    struct Stalls {
+        bool iew;
+        bool commit;
+    };
+
+    /** Tracks which stages are telling decode to stall. */
+    Stalls stalls[Impl::MaxThreads];
+
+    /** The serialize instruction that rename has stalled on. */
+    DynInstPtr serializeInst[Impl::MaxThreads];
+
+    /** Records if rename needs to serialize on the next instruction for any
+     * thread.
+     */
+    bool serializeOnNextInst[Impl::MaxThreads];
 
     /** Delay between iew and rename, in ticks. */
     int iewToRenameDelay;
@@ -207,27 +399,74 @@ class SimpleRename
      */
     unsigned commitWidth;
 
-    /** The instruction that rename is currently on.  It needs to have
-     *  persistent state so that when a stall occurs in the middle of a
-     *  group of instructions, it can restart at the proper instruction.
+    /** The index of the instruction in the time buffer to IEW that rename is
+     * currently using.
      */
-    unsigned numInst;
+    unsigned toIEWIndex;
 
+    /** Whether or not rename needs to block this cycle. */
+    bool blockThisCycle;
+
+    /** The number of threads active in rename. */
+    unsigned numThreads;
+
+    /** The maximum skid buffer size. */
+    unsigned skidBufferMax;
+
+    /** Enum to record the source of a structure full stall.  Can come from
+     * either ROB, IQ, LSQ, and it is priortized in that order.
+     */
+    enum FullSource {
+        ROB,
+        IQ,
+        LSQ,
+        NONE
+    };
+
+    /** Function used to increment the stat that corresponds to the source of
+     * the stall.
+     */
+    inline void incrFullStat(const FullSource &source);
+
+    /** Stat for total number of cycles spent squashing. */
     Stats::Scalar<> renameSquashCycles;
+    /** Stat for total number of cycles spent idle. */
     Stats::Scalar<> renameIdleCycles;
+    /** Stat for total number of cycles spent blocking. */
     Stats::Scalar<> renameBlockCycles;
+    /** Stat for total number of cycles spent stalling for a serializing inst. */
+    Stats::Scalar<> renameSerializeStallCycles;
+    /** Stat for total number of cycles spent running normally. */
+    Stats::Scalar<> renameRunCycles;
+    /** Stat for total number of cycles spent unblocking. */
     Stats::Scalar<> renameUnblockCycles;
+    /** Stat for total number of renamed instructions. */
     Stats::Scalar<> renameRenamedInsts;
+    /** Stat for total number of squashed instructions that rename discards. */
     Stats::Scalar<> renameSquashedInsts;
+    /** Stat for total number of times that the ROB starts a stall in rename. */
     Stats::Scalar<> renameROBFullEvents;
+    /** Stat for total number of times that the IQ starts a stall in rename. */
     Stats::Scalar<> renameIQFullEvents;
+    /** Stat for total number of times that the LSQ starts a stall in rename. */
+    Stats::Scalar<> renameLSQFullEvents;
+    /** Stat for total number of times that rename runs out of free registers
+     * to use to rename. */
     Stats::Scalar<> renameFullRegistersEvents;
+    /** Stat for total number of renamed destination registers. */
     Stats::Scalar<> renameRenamedOperands;
+    /** Stat for total number of source register rename lookups. */
     Stats::Scalar<> renameRenameLookups;
-    Stats::Scalar<> renameHBPlaceHolders;
+    /** Stat for total number of committed renaming mappings. */
     Stats::Scalar<> renameCommittedMaps;
+    /** Stat for total number of mappings that were undone due to a squash. */
     Stats::Scalar<> renameUndoneMaps;
-    Stats::Scalar<> renameValidUndoneMaps;
+    /** Number of serialize instructions handled. */
+    Stats::Scalar<> renamedSerializing;
+    /** Number of instructions marked as temporarily serializing. */
+    Stats::Scalar<> renamedTempSerializing;
+    /** Number of instructions inserted into skid buffers. */
+    Stats::Scalar<> renameSkidInsts;
 };
 
-#endif // __CPU_O3_CPU_SIMPLE_RENAME_HH__
+#endif // __CPU_O3_RENAME_HH__

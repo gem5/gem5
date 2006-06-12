@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Gabe Black
  */
 
 #ifndef __FAULTS_HH__
@@ -33,7 +36,7 @@
 #include "sim/stats.hh"
 #include "config/full_system.hh"
 
-class ExecContext;
+class ThreadContext;
 class FaultBase;
 typedef RefCountingPtr<FaultBase> Fault;
 
@@ -52,9 +55,9 @@ class FaultBase : public RefCounted
   public:
     virtual FaultName name() = 0;
 #if FULL_SYSTEM
-    virtual void invoke(ExecContext * xc);
+    virtual void invoke(ThreadContext * tc);
 #else
-    virtual void invoke(ExecContext * xc);
+    virtual void invoke(ThreadContext * tc);
 #endif
 //    template<typename T>
 //    bool isA() {return dynamic_cast<T *>(this);}
@@ -74,7 +77,7 @@ class UnimpFault : public FaultBase
     { }
 
     FaultName name() {return "Unimplemented simulator feature";}
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 };
 
 #endif // __FAULTS_HH__

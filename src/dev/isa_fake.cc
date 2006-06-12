@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Miguel Serrano
+ *          Ali Saidi
  */
 
 /** @file
@@ -54,8 +57,6 @@ IsaFake::read(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-    pkt->time += pioDelay;
-
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
     switch (pkt->getSize()) {
@@ -80,7 +81,6 @@ IsaFake::read(Packet *pkt)
 Tick
 IsaFake::write(Packet *pkt)
 {
-    pkt->time += pioDelay;
     DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->getAddr(), pkt->getSize());
     pkt->result = Packet::Success;
     return pioDelay;

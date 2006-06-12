@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 #include "arch/utility.hh"
@@ -50,11 +52,11 @@ TimingSimpleCPU::init()
 
     BaseCPU::init();
 #if FULL_SYSTEM
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(xc, xc->readCpuId());
+        TheISA::initCPU(tc, tc->readCpuId());
     }
 #endif
 }
@@ -123,11 +125,11 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
-    // if any of this CPU's ExecContexts are active, mark the CPU as
+    // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
-        if (xc->status() == ExecContext::Active && _status != Running) {
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
+        if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
             break;
         }
@@ -139,7 +141,7 @@ void
 TimingSimpleCPU::activateContext(int thread_num, int delay)
 {
     assert(thread_num == 0);
-    assert(cpuXC);
+    assert(thread);
 
     assert(_status == Idle);
 
@@ -156,7 +158,7 @@ void
 TimingSimpleCPU::suspendContext(int thread_num)
 {
     assert(thread_num == 0);
-    assert(cpuXC);
+    assert(thread);
 
     assert(_status == Running);
 
@@ -172,19 +174,17 @@ template <class T>
 Fault
 TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    Request *data_read_req = new Request(true);
+    // need to fill in CPU & thread IDs here
+    Request *data_read_req = new Request();
 
-    data_read_req->setVaddr(addr);
-    data_read_req->setSize(sizeof(T));
-    data_read_req->setFlags(flags);
-    data_read_req->setTime(curTick);
+    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(data_read_req->getVaddr());
     }
 
    // translate to physical address
-    Fault fault = cpuXC->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(data_read_req);
 
     // Now do the access.
     if (fault == NoFault) {
@@ -255,14 +255,12 @@ template <class T>
 Fault
 TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    Request *data_write_req = new Request(true);
-    data_write_req->setVaddr(addr);
-    data_write_req->setTime(curTick);
-    data_write_req->setSize(sizeof(T));
-    data_write_req->setFlags(flags);
+    // need to fill in CPU & thread IDs here
+    Request *data_write_req = new Request();
+    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    Fault fault = cpuXC->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(data_write_req);
     // Now do the access.
     if (fault == NoFault) {
         Packet *data_write_pkt =
@@ -340,13 +338,13 @@ TimingSimpleCPU::fetch()
 {
     checkForInterrupts();
 
-    Request *ifetch_req = new Request(true);
-    ifetch_req->setSize(sizeof(MachInst));
+    // need to fill in CPU & thread IDs here
+    Request *ifetch_req = new Request();
+    Fault fault = setupFetchRequest(ifetch_req);
 
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
-    Fault fault = setupFetchPacket(ifetch_pkt);
     if (fault == NoFault) {
         if (!icachePort.sendTiming(ifetch_pkt)) {
             // Need to wait for retry
@@ -419,17 +417,18 @@ TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
     return true;
 }
 
-Packet *
+void
 TimingSimpleCPU::IcachePort::recvRetry()
 {
     // we shouldn't get a retry unless we have a packet that we're
     // waiting to transmit
     assert(cpu->ifetch_pkt != NULL);
     assert(cpu->_status == IcacheRetry);
-    cpu->_status = IcacheWaitResponse;
     Packet *tmp = cpu->ifetch_pkt;
-    cpu->ifetch_pkt = NULL;
-    return tmp;
+    if (sendTiming(tmp)) {
+        cpu->_status = IcacheWaitResponse;
+        cpu->ifetch_pkt = NULL;
+    }
 }
 
 void
@@ -459,17 +458,18 @@ TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
     return true;
 }
 
-Packet *
+void
 TimingSimpleCPU::DcachePort::recvRetry()
 {
     // we shouldn't get a retry unless we have a packet that we're
     // waiting to transmit
     assert(cpu->dcache_pkt != NULL);
     assert(cpu->_status == DcacheRetry);
-    cpu->_status = DcacheWaitResponse;
     Packet *tmp = cpu->dcache_pkt;
-    cpu->dcache_pkt = NULL;
-    return tmp;
+    if (sendTiming(tmp)) {
+        cpu->_status = DcacheWaitResponse;
+        cpu->dcache_pkt = NULL;
+    }
 }
 
 

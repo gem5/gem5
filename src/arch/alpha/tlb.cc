@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
+ *          Andrew Schultz
  */
 
 #include <string>
@@ -34,7 +38,7 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "config/alpha_tlaser.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "sim/builder.hh"
 
 using namespace std;
@@ -282,7 +286,7 @@ AlphaITB::regStats()
 
 
 Fault
-AlphaITB::translate(RequestPtr &req, ExecContext *xc) const
+AlphaITB::translate(RequestPtr &req, ThreadContext *tc) const
 {
     if (AlphaISA::PcPAL(req->getVaddr())) {
         // strip off PAL PC marker (lsb is 1)
@@ -304,13 +308,13 @@ AlphaITB::translate(RequestPtr &req, ExecContext *xc) const
         // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13> for EV5
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
 #if ALPHA_TLASER
-        if ((MCSR_SP(xc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
+        if ((MCSR_SP(tc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
             VAddrSpaceEV5(req->getVaddr()) == 2) {
 #else
         if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
 #endif
             // only valid in kernel mode
-            if (ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM)) !=
+            if (ICM_CM(tc->readMiscReg(AlphaISA::IPR_ICM)) !=
                 AlphaISA::mode_kernel) {
                 acv++;
                 return new ItbAcvFault(req->getVaddr());
@@ -328,7 +332,7 @@ AlphaITB::translate(RequestPtr &req, ExecContext *xc) const
 
         } else {
             // not a physical address: need to look up pte
-            int asn = DTB_ASN_ASN(xc->readMiscReg(AlphaISA::IPR_DTB_ASN));
+            int asn = DTB_ASN_ASN(tc->readMiscReg(AlphaISA::IPR_DTB_ASN));
             AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->getVaddr()).vpn(),
                                         asn);
 
@@ -343,7 +347,7 @@ AlphaITB::translate(RequestPtr &req, ExecContext *xc) const
 
             // check permissions for this access
             if (!(pte->xre &
-                  (1 << ICM_CM(xc->readMiscReg(AlphaISA::IPR_ICM))))) {
+                  (1 << ICM_CM(tc->readMiscReg(AlphaISA::IPR_ICM))))) {
                 // instruction access fault
                 acv++;
                 return new ItbAcvFault(req->getVaddr());
@@ -439,12 +443,12 @@ AlphaDTB::regStats()
 }
 
 Fault
-AlphaDTB::translate(RequestPtr &req, ExecContext *xc, bool write) const
+AlphaDTB::translate(RequestPtr &req, ThreadContext *tc, bool write) const
 {
-    Addr pc = xc->readPC();
+    Addr pc = tc->readPC();
 
     AlphaISA::mode_type mode =
-        (AlphaISA::mode_type)DTB_CM_CM(xc->readMiscReg(AlphaISA::IPR_DTB_CM));
+        (AlphaISA::mode_type)DTB_CM_CM(tc->readMiscReg(AlphaISA::IPR_DTB_CM));
 
 
     /**
@@ -460,7 +464,7 @@ AlphaDTB::translate(RequestPtr &req, ExecContext *xc, bool write) const
     if (pc & 0x1) {
         mode = (req->getFlags() & ALTMODE) ?
             (AlphaISA::mode_type)ALT_MODE_AM(
-                xc->readMiscReg(AlphaISA::IPR_ALT_MODE))
+                tc->readMiscReg(AlphaISA::IPR_ALT_MODE))
             : AlphaISA::mode_kernel;
     }
 
@@ -478,14 +482,14 @@ AlphaDTB::translate(RequestPtr &req, ExecContext *xc, bool write) const
 
         // Check for "superpage" mapping
 #if ALPHA_TLASER
-        if ((MCSR_SP(xc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
+        if ((MCSR_SP(tc->readMiscReg(AlphaISA::IPR_MCSR)) & 2) &&
             VAddrSpaceEV5(req->getVaddr()) == 2) {
 #else
         if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
 #endif
 
             // only valid in kernel mode
-            if (DTB_CM_CM(xc->readMiscReg(AlphaISA::IPR_DTB_CM)) !=
+            if (DTB_CM_CM(tc->readMiscReg(AlphaISA::IPR_DTB_CM)) !=
                 AlphaISA::mode_kernel) {
                 if (write) { write_acv++; } else { read_acv++; }
                 uint64_t flags = ((write ? MM_STAT_WR_MASK : 0) |
@@ -509,7 +513,7 @@ AlphaDTB::translate(RequestPtr &req, ExecContext *xc, bool write) const
             else
                 read_accesses++;
 
-            int asn = DTB_ASN_ASN(xc->readMiscReg(AlphaISA::IPR_DTB_ASN));
+            int asn = DTB_ASN_ASN(tc->readMiscReg(AlphaISA::IPR_DTB_ASN));
 
             // not a physical address: need to look up pte
             AlphaISA::PTE *pte = lookup(AlphaISA::VAddr(req->getVaddr()).vpn(),

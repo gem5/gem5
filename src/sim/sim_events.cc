@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #include <string>
@@ -43,26 +45,37 @@ using namespace std;
 // handle termination event
 //
 void
-SimExitEvent::process()
+SimLoopExitEvent::process()
 {
-    // This event does not autodelete because exitNow may be called,
-    // and the function will never be allowed to finish.
-    if (theQueue() == &mainEventQueue) {
-        string _cause = cause;
-        int _code = code;
-        delete this;
-        exitNow(_cause, _code);
-    } else {
-        new SimExitEvent(cause, code);
+    // if this got scheduled on a different queue (e.g. the committed
+    // instruction queue) then make a corresponding event on the main
+    // queue.
+    if (theQueue() != &mainEventQueue) {
+        exitSimLoop(cause, code);
         delete this;
     }
+
+    // otherwise do nothing... the IsExitEvent flag takes care of
+    // exiting the simulation loop and returning this object to Python
 }
 
 
 const char *
-SimExitEvent::description()
+SimLoopExitEvent::description()
 {
-    return "simulation termination";
+    return "simulation loop exit";
+}
+
+void
+exitSimLoop(Tick when, const std::string &message, int exit_code)
+{
+    new SimLoopExitEvent(when, message, exit_code);
+}
+
+void
+exitSimLoop(const std::string &message, int exit_code)
+{
+    exitSimLoop(curTick, message, exit_code);
 }
 
 //
@@ -88,7 +101,7 @@ void
 CountedExitEvent::process()
 {
     if (--downCounter == 0) {
-        new SimExitEvent(cause, 0);
+        exitSimLoop(cause, 0);
     }
 }
 
@@ -117,7 +130,7 @@ CheckSwapEvent::process()
 
     if (swap < 100) {
         cerr << "\a\aAborting Simulation! Inadequate swap space!\n\n";
-        new SimExitEvent("Lack of swap space");
+        exitSimLoop("Lack of swap space");
     }
 
     schedule(curTick + interval);

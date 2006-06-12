@@ -24,6 +24,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Ali Saidi
+ *          Steve Reinhardt
+ *          Erik Hallnor
  */
 
 /** @file
@@ -38,7 +43,7 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "dev/alpha_console.hh"
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
@@ -98,7 +103,6 @@ AlphaConsole::read(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-    pkt->time += pioDelay;
     Addr daddr = pkt->getAddr() - pioAddr;
 
     pkt->allocate();
@@ -191,8 +195,6 @@ AlphaConsole::read(Packet *pkt)
 Tick
 AlphaConsole::write(Packet *pkt)
 {
-    pkt->time += pioDelay;
-
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;

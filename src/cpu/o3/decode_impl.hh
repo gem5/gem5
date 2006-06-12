@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,75 +24,105 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
 #include "cpu/o3/decode.hh"
 
+using namespace std;
+
 template<class Impl>
-SimpleDecode<Impl>::SimpleDecode(Params &params)
-    : renameToDecodeDelay(params.renameToDecodeDelay),
-      iewToDecodeDelay(params.iewToDecodeDelay),
-      commitToDecodeDelay(params.commitToDecodeDelay),
-      fetchToDecodeDelay(params.fetchToDecodeDelay),
-      decodeWidth(params.decodeWidth),
-      numInst(0)
+DefaultDecode<Impl>::DefaultDecode(Params *params)
+    : renameToDecodeDelay(params->renameToDecodeDelay),
+      iewToDecodeDelay(params->iewToDecodeDelay),
+      commitToDecodeDelay(params->commitToDecodeDelay),
+      fetchToDecodeDelay(params->fetchToDecodeDelay),
+      decodeWidth(params->decodeWidth),
+      numThreads(params->numberOfThreads)
 {
-    DPRINTF(Decode, "Decode: decodeWidth=%i.\n", decodeWidth);
-    _status = Idle;
+    _status = Inactive;
+
+    // Setup status, make sure stall signals are clear.
+    for (int i = 0; i < numThreads; ++i) {
+        decodeStatus[i] = Idle;
+
+        stalls[i].rename = false;
+        stalls[i].iew = false;
+        stalls[i].commit = false;
+    }
+
+    // @todo: Make into a parameter
+    skidBufferMax = (fetchToDecodeDelay * params->fetchWidth) + decodeWidth;
+}
+
+template <class Impl>
+std::string
+DefaultDecode<Impl>::name() const
+{
+    return cpu->name() + ".decode";
 }
 
 template <class Impl>
 void
-SimpleDecode<Impl>::regStats()
+DefaultDecode<Impl>::regStats()
 {
     decodeIdleCycles
-        .name(name() + ".decodeIdleCycles")
+        .name(name() + ".DECODE:IdleCycles")
         .desc("Number of cycles decode is idle")
         .prereq(decodeIdleCycles);
     decodeBlockedCycles
-        .name(name() + ".decodeBlockedCycles")
+        .name(name() + ".DECODE:BlockedCycles")
         .desc("Number of cycles decode is blocked")
         .prereq(decodeBlockedCycles);
+    decodeRunCycles
+        .name(name() + ".DECODE:RunCycles")
+        .desc("Number of cycles decode is running")
+        .prereq(decodeRunCycles);
     decodeUnblockCycles
-        .name(name() + ".decodeUnblockCycles")
+        .name(name() + ".DECODE:UnblockCycles")
         .desc("Number of cycles decode is unblocking")
         .prereq(decodeUnblockCycles);
     decodeSquashCycles
-        .name(name() + ".decodeSquashCycles")
+        .name(name() + ".DECODE:SquashCycles")
         .desc("Number of cycles decode is squashing")
         .prereq(decodeSquashCycles);
+    decodeBranchResolved
+        .name(name() + ".DECODE:BranchResolved")
+        .desc("Number of times decode resolved a branch")
+        .prereq(decodeBranchResolved);
     decodeBranchMispred
-        .name(name() + ".decodeBranchMispred")
+        .name(name() + ".DECODE:BranchMispred")
         .desc("Number of times decode detected a branch misprediction")
         .prereq(decodeBranchMispred);
     decodeControlMispred
-        .name(name() + ".decodeControlMispred")
+        .name(name() + ".DECODE:ControlMispred")
         .desc("Number of times decode detected an instruction incorrectly"
               " predicted as a control")
         .prereq(decodeControlMispred);
     decodeDecodedInsts
-        .name(name() + ".decodeDecodedInsts")
+        .name(name() + ".DECODE:DecodedInsts")
         .desc("Number of instructions handled by decode")
         .prereq(decodeDecodedInsts);
     decodeSquashedInsts
-        .name(name() + ".decodeSquashedInsts")
+        .name(name() + ".DECODE:SquashedInsts")
         .desc("Number of squashed instructions handled by decode")
         .prereq(decodeSquashedInsts);
 }
 
 template<class Impl>
 void
-SimpleDecode<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultDecode<Impl>::setCPU(FullCPU *cpu_ptr)
 {
-    DPRINTF(Decode, "Decode: Setting CPU pointer.\n");
+    DPRINTF(Decode, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
 }
 
 template<class Impl>
 void
-SimpleDecode<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
+DefaultDecode<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
-    DPRINTF(Decode, "Decode: Setting time buffer pointer.\n");
+    DPRINTF(Decode, "Setting time buffer pointer.\n");
     timeBuffer = tb_ptr;
 
     // Setup wire to write information back to fetch.
@@ -106,9 +136,9 @@ SimpleDecode<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template<class Impl>
 void
-SimpleDecode<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
+DefaultDecode<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 {
-    DPRINTF(Decode, "Decode: Setting decode queue pointer.\n");
+    DPRINTF(Decode, "Setting decode queue pointer.\n");
     decodeQueue = dq_ptr;
 
     // Setup wire to write information to proper place in decode queue.
@@ -117,9 +147,9 @@ SimpleDecode<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 
 template<class Impl>
 void
-SimpleDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
+DefaultDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 {
-    DPRINTF(Decode, "Decode: Setting fetch queue pointer.\n");
+    DPRINTF(Decode, "Setting fetch queue pointer.\n");
     fetchQueue = fq_ptr;
 
     // Setup wire to read information from fetch queue.
@@ -127,250 +157,541 @@ SimpleDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 }
 
 template<class Impl>
+void
+DefaultDecode<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+{
+    DPRINTF(Decode, "Setting active threads list pointer.\n");
+    activeThreads = at_ptr;
+}
+
+template <class Impl>
+void
+DefaultDecode<Impl>::switchOut()
+{
+    // Decode can immediately switch out.
+    cpu->signalSwitched();
+}
+
+template <class Impl>
+void
+DefaultDecode<Impl>::takeOverFrom()
+{
+    _status = Inactive;
+
+    // Be sure to reset state and clear out any old instructions.
+    for (int i = 0; i < numThreads; ++i) {
+        decodeStatus[i] = Idle;
+
+        stalls[i].rename = false;
+        stalls[i].iew = false;
+        stalls[i].commit = false;
+        while (!insts[i].empty())
+            insts[i].pop();
+        while (!skidBuffer[i].empty())
+            skidBuffer[i].pop();
+        branchCount[i] = 0;
+    }
+    wroteToTimeBuffer = false;
+}
+
+template<class Impl>
+bool
+DefaultDecode<Impl>::checkStall(unsigned tid) const
+{
+    bool ret_val = false;
+
+    if (stalls[tid].rename) {
+        DPRINTF(Decode,"[tid:%i]: Stall fom Rename stage detected.\n", tid);
+        ret_val = true;
+    } else if (stalls[tid].iew) {
+        DPRINTF(Decode,"[tid:%i]: Stall fom IEW stage detected.\n", tid);
+        ret_val = true;
+    } else if (stalls[tid].commit) {
+        DPRINTF(Decode,"[tid:%i]: Stall fom Commit stage detected.\n", tid);
+        ret_val = true;
+    }
+
+    return ret_val;
+}
+
+template<class Impl>
 inline bool
-SimpleDecode<Impl>::fetchInstsValid()
+DefaultDecode<Impl>::fetchInstsValid()
 {
     return fromFetch->size > 0;
 }
 
 template<class Impl>
-void
-SimpleDecode<Impl>::block()
+bool
+DefaultDecode<Impl>::block(unsigned tid)
 {
-    DPRINTF(Decode, "Decode: Blocking.\n");
-
-    // Set the status to Blocked.
-    _status = Blocked;
+    DPRINTF(Decode, "[tid:%u]: Blocking.\n", tid);
 
     // Add the current inputs to the skid buffer so they can be
     // reprocessed when this stage unblocks.
-    skidBuffer.push(*fromFetch);
+    skidInsert(tid);
 
-    // Note that this stage only signals previous stages to stall when
-    // it is the cause of the stall originates at this stage.  Otherwise
-    // the previous stages are expected to check all possible stall signals.
+    // If the decode status is blocked or unblocking then decode has not yet
+    // signalled fetch to unblock. In that case, there is no need to tell
+    // fetch to block.
+    if (decodeStatus[tid] != Blocked) {
+        // Set the status to Blocked.
+        decodeStatus[tid] = Blocked;
+
+        if (decodeStatus[tid] != Unblocking) {
+            toFetch->decodeBlock[tid] = true;
+            wroteToTimeBuffer = true;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 template<class Impl>
-inline void
-SimpleDecode<Impl>::unblock()
+bool
+DefaultDecode<Impl>::unblock(unsigned tid)
 {
-    DPRINTF(Decode, "Decode: Unblocking, going to remove "
-            "instructions from skid buffer.\n");
-    // Remove the now processed instructions from the skid buffer.
-    skidBuffer.pop();
+    // Decode is done unblocking only if the skid buffer is empty.
+    if (skidBuffer[tid].empty()) {
+        DPRINTF(Decode, "[tid:%u]: Done unblocking.\n", tid);
+        toFetch->decodeUnblock[tid] = true;
+        wroteToTimeBuffer = true;
 
-    // If there's still information in the skid buffer, then
-    // continue to tell previous stages to stall.  They will be
-    // able to restart once the skid buffer is empty.
-    if (!skidBuffer.empty()) {
-        toFetch->decodeInfo.stall = true;
-    } else {
-        DPRINTF(Decode, "Decode: Finished unblocking.\n");
-        _status = Running;
+        decodeStatus[tid] = Running;
+        return true;
     }
+
+    DPRINTF(Decode, "[tid:%u]: Currently unblocking.\n", tid);
+
+    return false;
 }
 
-// This squash is specifically for when Decode detects a PC-relative branch
-// was predicted incorrectly.
 template<class Impl>
 void
-SimpleDecode<Impl>::squash(DynInstPtr &inst)
+DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
 {
-    DPRINTF(Decode, "Decode: Squashing due to incorrect branch prediction "
-                    "detected at decode.\n");
-    Addr new_PC = inst->readNextPC();
+    DPRINTF(Decode, "[tid:%i]: Squashing due to incorrect branch prediction "
+            "detected at decode.\n", tid);
 
-    toFetch->decodeInfo.branchMispredict = true;
-    toFetch->decodeInfo.doneSeqNum = inst->seqNum;
-    toFetch->decodeInfo.predIncorrect = true;
-    toFetch->decodeInfo.squash = true;
-    toFetch->decodeInfo.nextPC = new_PC;
-    toFetch->decodeInfo.branchTaken = true;
+    // Send back mispredict information.
+    toFetch->decodeInfo[tid].branchMispredict = true;
+    toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
+    toFetch->decodeInfo[tid].predIncorrect = true;
+    toFetch->decodeInfo[tid].squash = true;
+    toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
+    toFetch->decodeInfo[tid].branchTaken =
+        inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
+
+    // Might have to tell fetch to unblock.
+    if (decodeStatus[tid] == Blocked ||
+        decodeStatus[tid] == Unblocking) {
+        toFetch->decodeUnblock[tid] = 1;
+    }
 
     // Set status to squashing.
-    _status = Squashing;
+    decodeStatus[tid] = Squashing;
 
-    // Clear the skid buffer in case it has any data in it.
-    while (!skidBuffer.empty()) {
-        skidBuffer.pop();
+    for (int i=0; i<fromFetch->size; i++) {
+        if (fromFetch->insts[i]->threadNumber == tid &&
+            fromFetch->insts[i]->seqNum > inst->seqNum) {
+            fromFetch->insts[i]->squashed = true;
+        }
+    }
+
+    // Clear the instruction list and skid buffer in case they have any
+    // insts in them.
+    while (!insts[tid].empty()) {
+        insts[tid].pop();
+    }
+
+    while (!skidBuffer[tid].empty()) {
+        skidBuffer[tid].pop();
     }
 
     // Squash instructions up until this one
-    // Slightly unrealistic!
-    cpu->removeInstsUntil(inst->seqNum);
+    cpu->removeInstsUntil(inst->seqNum, tid);
+}
+
+template<class Impl>
+unsigned
+DefaultDecode<Impl>::squash(unsigned tid)
+{
+    DPRINTF(Decode, "[tid:%i]: Squashing.\n",tid);
+
+    if (decodeStatus[tid] == Blocked ||
+        decodeStatus[tid] == Unblocking) {
+#if !FULL_SYSTEM
+        // In syscall emulation, we can have both a block and a squash due
+        // to a syscall in the same cycle.  This would cause both signals to
+        // be high.  This shouldn't happen in full system.
+        // @todo: Determine if this still happens.
+        if (toFetch->decodeBlock[tid]) {
+            toFetch->decodeBlock[tid] = 0;
+        } else {
+            toFetch->decodeUnblock[tid] = 1;
+        }
+#else
+        toFetch->decodeUnblock[tid] = 1;
+#endif
+    }
+
+    // Set status to squashing.
+    decodeStatus[tid] = Squashing;
+
+    // Go through incoming instructions from fetch and squash them.
+    unsigned squash_count = 0;
+
+    for (int i=0; i<fromFetch->size; i++) {
+        if (fromFetch->insts[i]->threadNumber == tid) {
+            fromFetch->insts[i]->squashed = true;
+            squash_count++;
+        }
+    }
+
+    // Clear the instruction list and skid buffer in case they have any
+    // insts in them.
+    while (!insts[tid].empty()) {
+        insts[tid].pop();
+    }
+
+    while (!skidBuffer[tid].empty()) {
+        skidBuffer[tid].pop();
+    }
+
+    return squash_count;
 }
 
 template<class Impl>
 void
-SimpleDecode<Impl>::squash()
+DefaultDecode<Impl>::skidInsert(unsigned tid)
 {
-    DPRINTF(Decode, "Decode: Squashing.\n");
-    // Set status to squashing.
-    _status = Squashing;
+    DynInstPtr inst = NULL;
 
-    // Maybe advance the time buffer?  Not sure what to do in the normal
-    // case.
+    while (!insts[tid].empty()) {
+        inst = insts[tid].front();
 
-    // Clear the skid buffer in case it has any data in it.
-    while (!skidBuffer.empty())
-    {
-        skidBuffer.pop();
+        insts[tid].pop();
+
+        assert(tid == inst->threadNumber);
+
+        DPRINTF(Decode,"Inserting [sn:%lli] PC:%#x into decode skidBuffer %i\n",
+                inst->seqNum, inst->readPC(), inst->threadNumber);
+
+        skidBuffer[tid].push(inst);
+    }
+
+    // @todo: Eventually need to enforce this by not letting a thread
+    // fetch past its skidbuffer
+    assert(skidBuffer[tid].size() <= skidBufferMax);
+}
+
+template<class Impl>
+bool
+DefaultDecode<Impl>::skidsEmpty()
+{
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+
+    while (threads != (*activeThreads).end()) {
+        if (!skidBuffer[*threads++].empty())
+            return false;
+    }
+
+    return true;
+}
+
+template<class Impl>
+void
+DefaultDecode<Impl>::updateStatus()
+{
+    bool any_unblocking = false;
+
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+
+    threads = (*activeThreads).begin();
+
+    while (threads != (*activeThreads).end()) {
+        unsigned tid = *threads++;
+
+        if (decodeStatus[tid] == Unblocking) {
+            any_unblocking = true;
+            break;
+        }
+    }
+
+    // Decode will have activity if it's unblocking.
+    if (any_unblocking) {
+        if (_status == Inactive) {
+            _status = Active;
+
+            DPRINTF(Activity, "Activating stage.\n");
+
+            cpu->activateStage(FullCPU::DecodeIdx);
+        }
+    } else {
+        // If it's not unblocking, then decode will not have any internal
+        // activity.  Switch it to inactive.
+        if (_status == Active) {
+            _status = Inactive;
+            DPRINTF(Activity, "Deactivating stage.\n");
+
+            cpu->deactivateStage(FullCPU::DecodeIdx);
+        }
+    }
+}
+
+template <class Impl>
+void
+DefaultDecode<Impl>::sortInsts()
+{
+    int insts_from_fetch = fromFetch->size;
+#ifdef DEBUG
+    for (int i=0; i < numThreads; i++)
+        assert(insts[i].empty());
+#endif
+    for (int i = 0; i < insts_from_fetch; ++i) {
+        insts[fromFetch->insts[i]->threadNumber].push(fromFetch->insts[i]);
     }
 }
 
 template<class Impl>
 void
-SimpleDecode<Impl>::tick()
+DefaultDecode<Impl>::readStallSignals(unsigned tid)
 {
-    // Decode should try to execute as many instructions as its bandwidth
+    if (fromRename->renameBlock[tid]) {
+        stalls[tid].rename = true;
+    }
+
+    if (fromRename->renameUnblock[tid]) {
+        assert(stalls[tid].rename);
+        stalls[tid].rename = false;
+    }
+
+    if (fromIEW->iewBlock[tid]) {
+        stalls[tid].iew = true;
+    }
+
+    if (fromIEW->iewUnblock[tid]) {
+        assert(stalls[tid].iew);
+        stalls[tid].iew = false;
+    }
+
+    if (fromCommit->commitBlock[tid]) {
+        stalls[tid].commit = true;
+    }
+
+    if (fromCommit->commitUnblock[tid]) {
+        assert(stalls[tid].commit);
+        stalls[tid].commit = false;
+    }
+}
+
+template <class Impl>
+bool
+DefaultDecode<Impl>::checkSignalsAndUpdate(unsigned tid)
+{
+    // Check if there's a squash signal, squash if there is.
+    // Check stall signals, block if necessary.
+    // If status was blocked
+    //     Check if stall conditions have passed
+    //         if so then go to unblocking
+    // If status was Squashing
+    //     check if squashing is not high.  Switch to running this cycle.
+
+    // Update the per thread stall statuses.
+    readStallSignals(tid);
+
+    // Check squash signals from commit.
+    if (fromCommit->commitInfo[tid].squash) {
+
+        DPRINTF(Decode, "[tid:%u]: Squashing instructions due to squash "
+                "from commit.\n", tid);
+
+        squash(tid);
+
+        return true;
+    }
+
+    // Check ROB squash signals from commit.
+    if (fromCommit->commitInfo[tid].robSquashing) {
+        DPRINTF(Decode, "[tid:%]: ROB is still squashing.\n",tid);
+
+        // Continue to squash.
+        decodeStatus[tid] = Squashing;
+
+        return true;
+    }
+
+    if (checkStall(tid)) {
+        return block(tid);
+    }
+
+    if (decodeStatus[tid] == Blocked) {
+        DPRINTF(Decode, "[tid:%u]: Done blocking, switching to unblocking.\n",
+                tid);
+
+        decodeStatus[tid] = Unblocking;
+
+        unblock(tid);
+
+        return true;
+    }
+
+    if (decodeStatus[tid] == Squashing) {
+        // Switch status to running if decode isn't being told to block or
+        // squash this cycle.
+        DPRINTF(Decode, "[tid:%u]: Done squashing, switching to running.\n",
+                tid);
+
+        decodeStatus[tid] = Running;
+
+        return false;
+    }
+
+    // If we've reached this point, we have not gotten any signals that
+    // cause decode to change its status.  Decode remains the same as before.
+    return false;
+}
+
+template<class Impl>
+void
+DefaultDecode<Impl>::tick()
+{
+    wroteToTimeBuffer = false;
+
+    bool status_change = false;
+
+    toRenameIndex = 0;
+
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+
+    sortInsts();
+
+    //Check stall and squash signals.
+    while (threads != (*activeThreads).end()) {
+    unsigned tid = *threads++;
+
+        DPRINTF(Decode,"Processing [tid:%i]\n",tid);
+        status_change =  checkSignalsAndUpdate(tid) || status_change;
+
+        decode(status_change, tid);
+    }
+
+    if (status_change) {
+        updateStatus();
+    }
+
+    if (wroteToTimeBuffer) {
+        DPRINTF(Activity, "Activity this cycle.\n");
+
+        cpu->activityThisCycle();
+    }
+}
+
+template<class Impl>
+void
+DefaultDecode<Impl>::decode(bool &status_change, unsigned tid)
+{
+    // If status is Running or idle,
+    //     call decodeInsts()
+    // If status is Unblocking,
+    //     buffer any instructions coming from fetch
+    //     continue trying to empty skid buffer
+    //     check if stall conditions have passed
+
+    if (decodeStatus[tid] == Blocked) {
+        ++decodeBlockedCycles;
+    } else if (decodeStatus[tid] == Squashing) {
+        ++decodeSquashCycles;
+    }
+
+    // Decode should try to decode as many instructions as its bandwidth
     // will allow, as long as it is not currently blocked.
-    if (_status != Blocked && _status != Squashing) {
-        DPRINTF(Decode, "Decode: Not blocked, so attempting to run "
-                        "stage.\n");
+    if (decodeStatus[tid] == Running ||
+        decodeStatus[tid] == Idle) {
+        DPRINTF(Decode, "[tid:%u] Not blocked, so attempting to run "
+                "stage.\n",tid);
+
+        decodeInsts(tid);
+    } else if (decodeStatus[tid] == Unblocking) {
         // Make sure that the skid buffer has something in it if the
         // status is unblocking.
-        assert(_status == Unblocking ? !skidBuffer.empty() : 1);
-
-        decode();
+        assert(!skidsEmpty());
 
         // If the status was unblocking, then instructions from the skid
         // buffer were used.  Remove those instructions and handle
         // the rest of unblocking.
-        if (_status == Unblocking) {
-            ++decodeUnblockCycles;
-
-            if (fetchInstsValid()) {
-                // Add the current inputs to the skid buffer so they can be
-                // reprocessed when this stage unblocks.
-                skidBuffer.push(*fromFetch);
-            }
-
-            unblock();
-        }
-    } else if (_status == Blocked) {
-        ++decodeBlockedCycles;
+        decodeInsts(tid);
 
         if (fetchInstsValid()) {
-            block();
+            // Add the current inputs to the skid buffer so they can be
+            // reprocessed when this stage unblocks.
+            skidInsert(tid);
         }
 
-        if (!fromRename->renameInfo.stall &&
-            !fromIEW->iewInfo.stall &&
-            !fromCommit->commitInfo.stall) {
-            DPRINTF(Decode, "Decode: Stall signals cleared, going to "
-                    "unblock.\n");
-            _status = Unblocking;
-
-            // Continue to tell previous stage to block until this
-            // stage is done unblocking.
-            toFetch->decodeInfo.stall = true;
-        } else {
-            DPRINTF(Decode, "Decode: Still blocked.\n");
-            toFetch->decodeInfo.stall = true;
-        }
-
-        if (fromCommit->commitInfo.squash ||
-            fromCommit->commitInfo.robSquashing) {
-            squash();
-        }
-    } else if (_status == Squashing) {
-        if (!fromCommit->commitInfo.squash &&
-            !fromCommit->commitInfo.robSquashing) {
-            _status = Running;
-        } else if (fromCommit->commitInfo.squash) {
-            ++decodeSquashCycles;
-
-            squash();
-        }
+        status_change = unblock(tid) || status_change;
     }
 }
 
-template<class Impl>
+template <class Impl>
 void
-SimpleDecode<Impl>::decode()
+DefaultDecode<Impl>::decodeInsts(unsigned tid)
 {
-    // Check time buffer if being told to squash.
-    if (fromCommit->commitInfo.squash) {
-        squash();
-        return;
-    }
+    // Instructions can come either from the skid buffer or the list of
+    // instructions coming from fetch, depending on decode's status.
+    int insts_available = decodeStatus[tid] == Unblocking ?
+        skidBuffer[tid].size() : insts[tid].size();
 
-    // Check time buffer if being told to stall.
-    if (fromRename->renameInfo.stall ||
-        fromIEW->iewInfo.stall ||
-        fromCommit->commitInfo.stall) {
-        block();
-        return;
-    }
-
-    // Check fetch queue to see if instructions are available.
-    // If no available instructions, do nothing, unless this stage is
-    // currently unblocking.
-    if (!fetchInstsValid() && _status != Unblocking) {
-        DPRINTF(Decode, "Decode: Nothing to do, breaking out early.\n");
+    if (insts_available == 0) {
+        DPRINTF(Decode, "[tid:%u] Nothing to do, breaking out"
+                " early.\n",tid);
         // Should I change the status to idle?
         ++decodeIdleCycles;
         return;
+    } else if (decodeStatus[tid] == Unblocking) {
+        DPRINTF(Decode, "[tid:%u] Unblocking, removing insts from skid "
+                "buffer.\n",tid);
+        ++decodeUnblockCycles;
+    } else if (decodeStatus[tid] == Running) {
+        ++decodeRunCycles;
     }
 
-    // Might be better to use a base DynInst * instead?
     DynInstPtr inst;
 
-    unsigned to_rename_index = 0;
+    std::queue<DynInstPtr>
+        &insts_to_decode = decodeStatus[tid] == Unblocking ?
+        skidBuffer[tid] : insts[tid];
 
-    int insts_available = _status == Unblocking ?
-        skidBuffer.front().size - numInst :
-        fromFetch->size;
+    DPRINTF(Decode, "[tid:%u]: Sending instruction to rename.\n",tid);
 
-    // Debug block...
-#if 0
-    if (insts_available) {
-        DPRINTF(Decode, "Decode: Instructions available.\n");
-    } else {
-        if (_status == Unblocking && skidBuffer.empty()) {
-            DPRINTF(Decode, "Decode: No instructions available, skid buffer "
-                    "empty.\n");
-        } else if (_status != Unblocking &&
-                   !fromFetch->insts[0]) {
-            DPRINTF(Decode, "Decode: No instructions available, fetch queue "
-                    "empty.\n");
-        } else {
-            panic("Decode: No instructions available, unexpected condition!"
-                  "\n");
-        }
-    }
-#endif
+    while (insts_available > 0 && toRenameIndex < decodeWidth) {
+        assert(!insts_to_decode.empty());
 
-    while (insts_available > 0)
-    {
-        DPRINTF(Decode, "Decode: Sending instruction to rename.\n");
+        inst = insts_to_decode.front();
 
-        inst = _status == Unblocking ? skidBuffer.front().insts[numInst] :
-               fromFetch->insts[numInst];
+        insts_to_decode.pop();
 
-        DPRINTF(Decode, "Decode: Processing instruction %i with PC %#x\n",
-                inst->seqNum, inst->readPC());
+        DPRINTF(Decode, "[tid:%u]: Processing instruction [sn:%lli] with "
+                "PC %#x\n",
+                tid, inst->seqNum, inst->readPC());
 
         if (inst->isSquashed()) {
-            DPRINTF(Decode, "Decode: Instruction %i with PC %#x is "
+            DPRINTF(Decode, "[tid:%u]: Instruction %i with PC %#x is "
                     "squashed, skipping.\n",
-                    inst->seqNum, inst->readPC());
+                    tid, inst->seqNum, inst->readPC());
 
             ++decodeSquashedInsts;
 
-            ++numInst;
             --insts_available;
 
             continue;
         }
 
-
         // Also check if instructions have no source registers.  Mark
         // them as ready to issue at any time.  Not sure if this check
         // should exist here or at a later stage; however it doesn't matter
         // too much for function correctness.
-        // Isn't this handled by the inst queue?
         if (inst->numSrcRegs() == 0) {
             inst->setCanIssue();
         }
@@ -378,9 +699,12 @@ SimpleDecode<Impl>::decode()
         // This current instruction is valid, so add it into the decode
         // queue.  The next instruction may not be valid, so check to
         // see if branches were predicted correctly.
-        toRename->insts[to_rename_index] = inst;
+        toRename->insts[toRenameIndex] = inst;
 
         ++(toRename->size);
+        ++toRenameIndex;
+        ++decodeDecodedInsts;
+        --insts_available;
 
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
@@ -388,38 +712,40 @@ SimpleDecode<Impl>::decode()
             panic("Instruction predicted as a branch!");
 
             ++decodeControlMispred;
+
             // Might want to set some sort of boolean and just do
             // a check at the end
-            squash(inst);
+            squash(inst, inst->threadNumber);
+
             break;
         }
 
         // Go ahead and compute any PC-relative branches.
-
         if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
+            ++decodeBranchResolved;
 
-            inst->setNextPC(inst->branchTarget());
-
-            if (inst->mispredicted()) {
+            if (inst->branchTarget() != inst->readPredTarg()) {
                 ++decodeBranchMispred;
+
                 // Might want to set some sort of boolean and just do
                 // a check at the end
-                squash(inst);
+                squash(inst, inst->threadNumber);
+                inst->setPredTarg(inst->branchTarget());
+
                 break;
             }
         }
-
-        // Normally can check if a direct branch has the right target
-        // addr (either the immediate, or the branch PC + 4) and redirect
-        // fetch if it's incorrect.
-
-        // Increment which instruction we're looking at.
-        ++numInst;
-        ++to_rename_index;
-        ++decodeDecodedInsts;
-
-        --insts_available;
     }
 
-     numInst = 0;
+    // If we didn't process all instructions, then we will need to block
+    // and put all those instructions into the skid buffer.
+    if (!insts_to_decode.empty()) {
+        block(tid);
+    }
+
+    // Record that decode has written to the time buffer for activity
+    // tracking.
+    if (toRenameIndex) {
+        wroteToTimeBuffer = true;
+    }
 }

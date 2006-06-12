@@ -24,10 +24,12 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #include "arch/mips/faults.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
 
@@ -100,28 +102,28 @@ FaultStat IntegerOverflowFault::_count;
 
 #if FULL_SYSTEM
 
-void MipsFault::invoke(ExecContext * xc)
+void MipsFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     countStat()++;
 
     // exception restart address
-    if (setRestartAddress() || !xc->inPalMode())
-        xc->setMiscReg(MipsISA::IPR_EXC_ADDR, xc->readPC());
+    if (setRestartAddress() || !tc->inPalMode())
+        tc->setMiscReg(MipsISA::IPR_EXC_ADDR, tc->readPC());
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
-        xc->setMiscReg(MipsISA::IPR_EXC_ADDR,
-                   xc->readMiscReg(MipsISA::IPR_EXC_ADDR) + 4);
+        tc->setMiscReg(MipsISA::IPR_EXC_ADDR,
+                   tc->readMiscReg(MipsISA::IPR_EXC_ADDR) + 4);
     }
 
-    xc->setPC(xc->readMiscReg(MipsISA::IPR_PAL_BASE) + vect());
-    xc->setNextPC(xc->readPC() + sizeof(MachInst));
+    tc->setPC(tc->readMiscReg(MipsISA::IPR_PAL_BASE) + vect());
+    tc->setNextPC(tc->readPC() + sizeof(MachInst));
 }
 
-void ArithmeticFault::invoke(ExecContext * xc)
+void ArithmeticFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     panic("Arithmetic traps are unimplemented!");
 }
 

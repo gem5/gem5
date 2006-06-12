@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Lisa Hsu
+ *          Nathan Binkert
  */
 
 #include <map>
@@ -32,7 +35,7 @@
 
 #include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
 #include "kern/tru64/tru64_syscalls.hh"
 #include "sim/system.hh"
@@ -42,13 +45,12 @@ using namespace Stats;
 
 namespace Kernel {
 
-const char *modestr[] = { "kernel", "user", "idle", "interrupt" };
+const char *modestr[] = { "kernel", "user", "idle" };
 
 Statistics::Statistics(System *system)
     : idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
       iplLast(0), iplLastTick(0)
 {
-    bin_int = system->params()->bin_int;
 }
 
 void
@@ -181,16 +183,16 @@ Statistics::regStats(const string &_name)
 }
 
 void
-Statistics::setIdleProcess(Addr idlepcbb, ExecContext *xc)
+Statistics::setIdleProcess(Addr idlepcbb, ThreadContext *tc)
 {
-    assert(themode == kernel || themode == interrupt);
+    assert(themode == kernel);
     idleProcess = idlepcbb;
     themode = idle;
-    changeMode(themode, xc);
+    changeMode(themode, tc);
 }
 
 void
-Statistics::changeMode(cpu_mode newmode, ExecContext *xc)
+Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
 {
     _mode[newmode]++;
 
@@ -202,8 +204,6 @@ Statistics::changeMode(cpu_mode newmode, ExecContext *xc)
 
     _modeGood[newmode]++;
     _modeTicks[themode] += curTick - lastModeTick;
-
-    xc->getSystemPtr()->kernelBinning->changeMode(newmode);
 
     lastModeTick = curTick;
     themode = newmode;
@@ -226,31 +226,27 @@ Statistics::swpipl(int ipl)
 }
 
 void
-Statistics::mode(cpu_mode newmode, ExecContext *xc)
+Statistics::mode(cpu_mode newmode, ThreadContext *tc)
 {
-    Addr pcbb = xc->readMiscReg(AlphaISA::IPR_PALtemp23);
+    Addr pcbb = tc->readMiscReg(AlphaISA::IPR_PALtemp23);
 
-    if ((newmode == kernel || newmode == interrupt) &&
-            pcbb == idleProcess)
+    if (newmode == kernel && pcbb == idleProcess)
         newmode = idle;
 
-    if (bin_int == false && newmode == interrupt)
-        newmode = kernel;
-
-    changeMode(newmode, xc);
+    changeMode(newmode, tc);
 }
 
 void
-Statistics::context(Addr oldpcbb, Addr newpcbb, ExecContext *xc)
+Statistics::context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc)
 {
     assert(themode != user);
 
     _swap_context++;
-    changeMode(newpcbb == idleProcess ? idle : kernel, xc);
+    changeMode(newpcbb == idleProcess ? idle : kernel, tc);
 }
 
 void
-Statistics::callpal(int code, ExecContext *xc)
+Statistics::callpal(int code, ThreadContext *tc)
 {
     if (!PAL::name(code))
         return;
@@ -259,17 +255,12 @@ Statistics::callpal(int code, ExecContext *xc)
 
     switch (code) {
       case PAL::callsys: {
-          int number = xc->readIntReg(0);
+          int number = tc->readIntReg(0);
           if (SystemCalls<Tru64>::validSyscallNumber(number)) {
               int cvtnum = SystemCalls<Tru64>::convert(number);
               _syscall[cvtnum]++;
           }
       } break;
-
-      case PAL::swpctx:
-        if (xc->getSystemPtr()->kernelBinning)
-            xc->getSystemPtr()->kernelBinning->palSwapContext(xc);
-        break;
     }
 }
 

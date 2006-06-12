@@ -24,10 +24,15 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Raasch
+ *          Nathan Binkert
  */
 
 #ifndef __STD_TYPES_HH__
 #define __STD_TYPES_HH__
+
+#include <stdint.h>
 
 // inst sequence type, used to order instructions in the ready list,
 // if this rolls over the ready list order temporarily will get messed

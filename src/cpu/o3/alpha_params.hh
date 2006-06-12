@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,20 +24,22 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_ALPHA_SIMPLE_PARAMS_HH__
-#define __CPU_O3_CPU_ALPHA_SIMPLE_PARAMS_HH__
+#ifndef __CPU_O3_ALPHA_PARAMS_HH__
+#define __CPU_O3_ALPHA_PARAMS_HH__
 
 #include "cpu/o3/cpu.hh"
 
 //Forward declarations
-class System;
-class AlphaITB;
 class AlphaDTB;
-class FunctionalMemory;
+class AlphaITB;
+class FUPool;
+class MemObject;
 class Process;
-class MemInterface;
+class System;
 
 /**
  * This file defines the parameters that will be used for the AlphaFullCPU.
@@ -56,13 +58,19 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     Process *process;
 #endif // FULL_SYSTEM
 
-    FunctionalMemory *mem;
+    MemObject *mem;
+
+    BaseCPU *checker;
+
+    unsigned activity;
 
     //
     // Caches
     //
-    MemInterface *icacheInterface;
-    MemInterface *dcacheInterface;
+//    MemInterface *icacheInterface;
+//    MemInterface *dcacheInterface;
+
+    unsigned cachePorts;
 
     //
     // Fetch
@@ -102,6 +110,7 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned executeFloatWidth;
     unsigned executeBranchWidth;
     unsigned executeMemoryWidth;
+    FUPool *fuPool;
 
     //
     // Commit
@@ -110,24 +119,22 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned renameToROBDelay;
     unsigned commitWidth;
     unsigned squashWidth;
+    Tick trapLatency;
+    Tick fetchTrapLatency;
 
     //
-    // Branch predictor (BP & BTB)
+    // Branch predictor (BP, BTB, RAS)
     //
-/*
+    std::string predType;
     unsigned localPredictorSize;
-    unsigned localPredictorCtrBits;
-*/
-
-    unsigned local_predictor_size;
-    unsigned local_ctr_bits;
-    unsigned local_history_table_size;
-    unsigned local_history_bits;
-    unsigned global_predictor_size;
-    unsigned global_ctr_bits;
-    unsigned global_history_bits;
-    unsigned choice_predictor_size;
-    unsigned choice_ctr_bits;
+    unsigned localCtrBits;
+    unsigned localHistoryTableSize;
+    unsigned localHistoryBits;
+    unsigned globalPredictorSize;
+    unsigned globalCtrBits;
+    unsigned globalHistoryBits;
+    unsigned choicePredictorSize;
+    unsigned choiceCtrBits;
 
     unsigned BTBEntries;
     unsigned BTBTagSize;
@@ -154,10 +161,24 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned numIQEntries;
     unsigned numROBEntries;
 
+    //SMT Parameters
+    unsigned smtNumFetchingThreads;
+
+    std::string   smtFetchPolicy;
+
+    std::string   smtIQPolicy;
+    unsigned smtIQThreshold;
+
+    std::string   smtLSQPolicy;
+    unsigned smtLSQThreshold;
+
+    std::string   smtCommitPolicy;
+
+    std::string   smtROBPolicy;
+    unsigned smtROBThreshold;
+
     // Probably can get this from somewhere.
     unsigned instShiftAmt;
-
-    bool defReg;
 };
 
-#endif // __CPU_O3_CPU_ALPHA_PARAMS_HH__
+#endif // __CPU_O3_ALPHA_PARAMS_HH__

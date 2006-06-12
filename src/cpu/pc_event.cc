@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
 #include <algorithm>
@@ -34,7 +37,7 @@
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/pc_event.hh"
 #include "sim/debug.hh"
 #include "sim/root.hh"
@@ -78,9 +81,9 @@ PCEventQueue::schedule(PCEvent *event)
 }
 
 bool
-PCEventQueue::doService(ExecContext *xc)
+PCEventQueue::doService(ThreadContext *tc)
 {
-    Addr pc = xc->readPC() & ~0x3;
+    Addr pc = tc->readPC() & ~0x3;
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {
@@ -88,13 +91,13 @@ PCEventQueue::doService(ExecContext *xc)
         // another event.  This for example, prevents two invocations
         // of the SkipFuncEvent.  Maybe we should have separate PC
         // event queues for each processor?
-        if (pc != (xc->readPC() & ~0x3))
+        if (pc != (tc->readPC() & ~0x3))
             continue;
 
         DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n",
                 (*i)->pc(), (*i)->descr());
 
-        (*i)->process(xc);
+        (*i)->process(tc);
         ++serviced;
     }
 
@@ -125,9 +128,9 @@ BreakPCEvent::BreakPCEvent(PCEventQueue *q, const std::string &desc, Addr addr,
 }
 
 void
-BreakPCEvent::process(ExecContext *xc)
+BreakPCEvent::process(ThreadContext *tc)
 {
-    StringWrap name(xc->getCpuPtr()->name() + ".break_event");
+    StringWrap name(tc->getCpuPtr()->name() + ".break_event");
     DPRINTFN("break event %s triggered\n", descr());
     debug_break();
     if (remove)

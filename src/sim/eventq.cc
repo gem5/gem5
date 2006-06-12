@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
+ *          Steve Raasch
  */
 
 #include <assert.h>
@@ -98,7 +102,7 @@ EventQueue::remove(Event *event)
         prev->next = curr->next;
 }
 
-void
+Event *
 EventQueue::serviceOne()
 {
     Event *event = head;
@@ -106,13 +110,20 @@ EventQueue::serviceOne()
     head = event->next;
 
     // handle action
-    if (!event->squashed())
+    if (!event->squashed()) {
         event->process();
-    else
+        if (event->isExitEvent()) {
+            assert(!event->getFlags(Event::AutoDelete)); // would be silly
+            return event;
+        }
+    } else {
         event->clearFlags(Event::Squashed);
+    }
 
     if (event->getFlags(Event::AutoDelete) && !event->scheduled())
         delete event;
+
+    return NULL;
 }
 
 

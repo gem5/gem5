@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #include <deque>
@@ -31,7 +33,7 @@
 #include <string>
 
 #include "base/inet.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"
@@ -322,7 +324,6 @@ Device::read(Packet *pkt)
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
 
-    pkt->time += pioDelay;
     pkt->allocate();
 
     if (!regValid(raddr))
@@ -409,8 +410,6 @@ Device::write(Packet *pkt)
     Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
-
-    pkt->time += pioDelay;
 
     if (!regValid(raddr))
         panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d",

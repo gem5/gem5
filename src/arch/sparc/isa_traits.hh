@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
+ *          Gabe Black
  */
 
 #ifndef __ARCH_SPARC_ISA_TRAITS_HH__
@@ -33,7 +36,7 @@
 #include "config/full_system.hh"
 #include "sim/host.hh"
 
-class ExecContext;
+class ThreadContext;
 class FastCPU;
 //class FullCPU;
 class Checkpoint;
@@ -80,6 +83,9 @@ class SyscallReturn
 
 #endif
 
+#if FULL_SYSTEM
+#include "arch/sparc/isa_fullsys_traits.hh"
+#endif
 
 namespace SparcISA
 {

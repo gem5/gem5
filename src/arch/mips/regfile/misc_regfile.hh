@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_MISC_REGFILE_HH__
@@ -34,7 +36,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 class Regfile;
 
 namespace MipsISA
@@ -55,14 +57,14 @@ namespace MipsISA
         int getInstAsid();
         int getDataAsid();
 
-        void copyMiscRegs(ExecContext *xc);
+        void copyMiscRegs(ThreadContext *tc);
 
         MiscReg readReg(int misc_reg)
         {
             return miscRegFile[misc_reg];
         }
 
-        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc)
+        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ThreadContext *tc)
         {
             return miscRegFile[misc_reg];
         }
@@ -73,7 +75,7 @@ namespace MipsISA
         }
 
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
-                               ExecContext *xc)
+                               ThreadContext *tc)
         {
             miscRegFile[misc_reg] = val; return NoFault;
         }
@@ -85,9 +87,9 @@ namespace MipsISA
         InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
 
       private:
-        MiscReg readIpr(int idx, Fault &fault, ExecContext *xc) { }
+        MiscReg readIpr(int idx, Fault &fault, ThreadContext *tc) { }
 
-        Fault setIpr(int idx, uint64_t val, ExecContext *xc) { }
+        Fault setIpr(int idx, uint64_t val, ThreadContext *tc) { }
 #endif
         friend class RegFile;
     };

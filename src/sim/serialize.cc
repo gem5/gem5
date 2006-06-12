@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Erik Hallnor
+ *          Steve Reinhardt
  */
 
 #include <sys/time.h>
@@ -245,7 +248,7 @@ Serializable::serializeAll()
     assert(Serializable::ckptPrevCount + 1 == Serializable::ckptCount);
     Serializable::ckptPrevCount++;
     if (ckptMaxCount && ++ckptCount >= ckptMaxCount)
-        SimExit(curTick + 1, "Maximum number of checkpoints dropped");
+        exitSimLoop(curTick + 1, "Maximum number of checkpoints dropped");
 
 }
 

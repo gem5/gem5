@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
+ *          Ali Saidi
  */
 
 #include <unistd.h>
@@ -36,7 +40,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/translating_port.hh"
@@ -45,6 +49,20 @@
 #include "sim/stats.hh"
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
+
+#include "arch/isa_specific.hh"
+#if THE_ISA == ALPHA_ISA
+#include "arch/alpha/linux/process.hh"
+#include "arch/alpha/tru64/process.hh"
+#elif THE_ISA == SPARC_ISA
+#include "arch/sparc/linux/process.hh"
+#include "arch/sparc/solaris/process.hh"
+#elif THE_ISA == MIPS_ISA
+#include "arch/mips/linux/process.hh"
+#else
+#error "THE_ISA not set"
+#endif
+
 
 using namespace std;
 using namespace TheISA;
@@ -130,11 +148,11 @@ Process::openOutputFile(const string &filename)
 
 
 int
-Process::registerExecContext(ExecContext *xc)
+Process::registerThreadContext(ThreadContext *tc)
 {
     // add to list
-    int myIndex = execContexts.size();
-    execContexts.push_back(xc);
+    int myIndex = threadContexts.size();
+    threadContexts.push_back(tc);
 
     // return CPU number to caller
     return myIndex;
@@ -143,14 +161,14 @@ Process::registerExecContext(ExecContext *xc)
 void
 Process::startup()
 {
-    if (execContexts.empty())
+    if (threadContexts.empty())
         fatal("Process %s is not associated with any CPUs!\n", name());
 
-    // first exec context for this process... initialize & enable
-    ExecContext *xc = execContexts[0];
+    // first thread context for this process... initialize & enable
+    ThreadContext *tc = threadContexts[0];
 
     // mark this context as active so it will start ticking.
-    xc->activate(0);
+    tc->activate(0);
 
     Port *mem_port;
     mem_port = system->physmem->getPort("functional");
@@ -160,14 +178,14 @@ Process::startup()
 }
 
 void
-Process::replaceExecContext(ExecContext *xc, int xcIndex)
+Process::replaceThreadContext(ThreadContext *tc, int tcIndex)
 {
-    if (xcIndex >= execContexts.size()) {
-        panic("replaceExecContext: bad xcIndex, %d >= %d\n",
-              xcIndex, execContexts.size());
+    if (tcIndex >= threadContexts.size()) {
+        panic("replaceThreadContext: bad tcIndex, %d >= %d\n",
+              tcIndex, threadContexts.size());
     }
 
-    execContexts[xcIndex] = xc;
+    threadContexts[tcIndex] = tc;
 }
 
 // map simulator fd sim_fd to target fd tgt_fd
@@ -334,20 +352,20 @@ LiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
-    execContexts[0]->setIntReg(ArgumentReg0, argc);
-    execContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
-    execContexts[0]->setIntReg(StackPointerReg, stack_min);
+    threadContexts[0]->setIntReg(ArgumentReg0, argc);
+    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
-    execContexts[0]->setPC(prog_entry);
-    execContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
-    execContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    threadContexts[0]->setPC(prog_entry);
+    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 
     num_processes++;
 }
 
 void
-LiveProcess::syscall(int64_t callnum, ExecContext *xc)
+LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
 {
     num_syscalls++;
 
@@ -355,7 +373,135 @@ LiveProcess::syscall(int64_t callnum, ExecContext *xc)
     if (desc == NULL)
         fatal("Syscall %d out of range", callnum);
 
-    desc->doSyscall(callnum, this, xc);
+    desc->doSyscall(callnum, this, tc);
 }
 
-DEFINE_SIM_OBJECT_CLASS_NAME("LiveProcess", LiveProcess);
+LiveProcess *
+LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
+                    int stdout_fd, int stderr_fd, std::string executable,
+                    std::vector<std::string> &argv,
+                    std::vector<std::string> &envp)
+{
+    LiveProcess *process = NULL;
+
+    ObjectFile *objFile = createObjectFile(executable);
+    if (objFile == NULL) {
+        fatal("Can't load object file %s", executable);
+    }
+
+#if THE_ISA == ALPHA_ISA
+    if (objFile->getArch() != ObjectFile::Alpha)
+        fatal("Object file architecture does not match compiled ISA (Alpha).");
+    switch (objFile->getOpSys()) {
+      case ObjectFile::Tru64:
+        process = new AlphaTru64Process(nm, objFile, system,
+                                        stdin_fd, stdout_fd, stderr_fd,
+                                        argv, envp);
+        break;
+
+      case ObjectFile::Linux:
+        process = new AlphaLinuxProcess(nm, objFile, system,
+                                        stdin_fd, stdout_fd, stderr_fd,
+                                        argv, envp);
+        break;
+
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#elif THE_ISA == SPARC_ISA
+    if (objFile->getArch() != ObjectFile::SPARC)
+        fatal("Object file architecture does not match compiled ISA (SPARC).");
+    switch (objFile->getOpSys()) {
+      case ObjectFile::Linux:
+        process = new SparcLinuxProcess(nm, objFile, system,
+                                        stdin_fd, stdout_fd, stderr_fd,
+                                        argv, envp);
+        break;
+
+
+      case ObjectFile::Solaris:
+        process = new SparcSolarisProcess(nm, objFile, system,
+                                        stdin_fd, stdout_fd, stderr_fd,
+                                        argv, envp);
+        break;
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#elif THE_ISA == MIPS_ISA
+    if (objFile->getArch() != ObjectFile::Mips)
+        fatal("Object file architecture does not match compiled ISA (MIPS).");
+    switch (objFile->getOpSys()) {
+      case ObjectFile::Linux:
+        process = new MipsLinuxProcess(nm, objFile, system,
+                                        stdin_fd, stdout_fd, stderr_fd,
+                                        argv, envp);
+        break;
+
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#else
+#error "THE_ISA not set"
+#endif
+
+
+    if (process == NULL)
+        fatal("Unknown error creating process object.");
+    return process;
+}
+
+
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
+
+    VectorParam<string> cmd;
+    Param<string> executable;
+    Param<string> input;
+    Param<string> output;
+    VectorParam<string> env;
+    SimObjectParam<System *> system;
+
+END_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
+
+
+BEGIN_INIT_SIM_OBJECT_PARAMS(LiveProcess)
+
+    INIT_PARAM(cmd, "command line (executable plus arguments)"),
+    INIT_PARAM(executable, "executable (overrides cmd[0] if set)"),
+    INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
+    INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
+    INIT_PARAM(env, "environment settings"),
+    INIT_PARAM(system, "system")
+
+END_INIT_SIM_OBJECT_PARAMS(LiveProcess)
+
+
+CREATE_SIM_OBJECT(LiveProcess)
+{
+    string in = input;
+    string out = output;
+
+    // initialize file descriptors to default: same as simulator
+    int stdin_fd, stdout_fd, stderr_fd;
+
+    if (in == "stdin" || in == "cin")
+        stdin_fd = STDIN_FILENO;
+    else
+        stdin_fd = Process::openInputFile(input);
+
+    if (out == "stdout" || out == "cout")
+        stdout_fd = STDOUT_FILENO;
+    else if (out == "stderr" || out == "cerr")
+        stdout_fd = STDERR_FILENO;
+    else
+        stdout_fd = Process::openOutputFile(out);
+
+    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
+
+    return LiveProcess::create(getInstanceName(), system,
+                               stdin_fd, stdout_fd, stderr_fd,
+                               (string)executable == "" ? cmd[0] : executable,
+                               cmd, env);
+}
+
+
+REGISTER_SIM_OBJECT("LiveProcess", LiveProcess)

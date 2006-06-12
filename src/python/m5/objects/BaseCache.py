@@ -1,4 +1,4 @@
-from m5 import *
+from m5.config import *
 from BaseMem import BaseMem
 
 class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']

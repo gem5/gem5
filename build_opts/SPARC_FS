@@ -1,0 +1,2 @@
+TARGET_ISA = 'sparc'
+FULL_SYSTEM = 1

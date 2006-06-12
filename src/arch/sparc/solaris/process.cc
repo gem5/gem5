@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 #include "arch/sparc/isa_traits.hh"
@@ -31,7 +33,7 @@
 #include "arch/sparc/regfile.hh"
 
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/solaris/solaris.hh"
 
 #include "sim/process.hh"
@@ -44,9 +46,9 @@ using namespace SparcISA;
 /// Target uname() handler.
 static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ExecContext *xc)
+          ThreadContext *tc)
 {
-    TypedBufferArg<Solaris::utsname> name(xc->getSyscallArg(0));
+    TypedBufferArg<Solaris::utsname> name(tc->getSyscallArg(0));
 
     strcpy(name->sysname, "SunOS");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -54,7 +56,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
     strcpy(name->version, "Generic_118558-21");
     strcpy(name->machine, "sun4u");
 
-    name.copyOut(xc->getMemPort());
+    name.copyOut(tc->getMemPort());
 
     return 0;
 }

@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Erik Hallnor
+ *          Steve Reinhardt
  */
 
 #ifndef __CPU_MEMTEST_MEMTEST_HH__
@@ -39,7 +42,7 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-class ExecContext;
+class ThreadContext;
 class MemTest : public SimObject
 {
   public:
@@ -83,7 +86,7 @@ class MemTest : public SimObject
     MemInterface *cacheInterface;
     FunctionalMemory *mainMem;
     FunctionalMemory *checkMem;
-    CPUExecContext *cpuXC;
+    SimpleThread *thread;
 
     unsigned size;		// size of testing memory region
 

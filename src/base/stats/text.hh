@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #ifndef __BASE_STATS_TEXT_HH__
@@ -44,7 +46,6 @@ class Text : public Output
 
   protected:
     bool noOutput(const StatData &data);
-    void binout();
 
   public:
     bool compat;

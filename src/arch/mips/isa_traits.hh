@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
@@ -45,7 +48,7 @@
 class FastCPU;
 class FullCPU;
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 
 namespace LittleEndianGuest {};
 
@@ -128,14 +131,14 @@ namespace MipsISA
 
     /**
      * Function to insure ISA semantics about 0 registers.
-     * @param xc The execution context.
+     * @param tc The thread context.
      */
-    template <class XC>
-    void zeroRegisters(XC *xc);
+    template <class TC>
+    void zeroRegisters(TC *tc);
 
     const Addr MaxAddr = (Addr)-1;
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     uint64_t fpConvert(double fp_val, ConvertType cvt_type);
     double roundFP(double val, int digits);

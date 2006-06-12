@@ -24,13 +24,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Ron Dreslinski
  */
 
 #include <string>
 #include <vector>
 
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
@@ -48,32 +51,32 @@ IntrControl::IntrControl(const string &name, BaseCPU *c)
 void
 IntrControl::post(int int_num, int index)
 {
-    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[0]->getCpuPtr();
+    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    BaseCPU *temp = tcvec[0]->getCpuPtr();
     temp->post_interrupt(int_num, index);
 }
 
 void
 IntrControl::post(int cpu_id, int int_num, int index)
 {
-    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[cpu_id]->getCpuPtr();
+    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    BaseCPU *temp = tcvec[cpu_id]->getCpuPtr();
     temp->post_interrupt(int_num, index);
 }
 
 void
 IntrControl::clear(int int_num, int index)
 {
-    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[0]->getCpuPtr();
+    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    BaseCPU *temp = tcvec[0]->getCpuPtr();
     temp->clear_interrupt(int_num, index);
 }
 
 void
 IntrControl::clear(int cpu_id, int int_num, int index)
 {
-    std::vector<ExecContext *> &xcvec = cpu->system->execContexts;
-    BaseCPU *temp = xcvec[cpu_id]->getCpuPtr();
+    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    BaseCPU *temp = tcvec[cpu_id]->getCpuPtr();
     temp->clear_interrupt(int_num, index);
 }
 
