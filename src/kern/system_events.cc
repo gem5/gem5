@@ -55,22 +55,6 @@ SkipFuncEvent::process(ThreadContext *tc)
 */
 }
 
-
-FnEvent::FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
-                 Stats::MainBin *bin)
-    : PCEvent(q, desc, addr), _name(desc), mybin(bin)
-{
-}
-
-void
-FnEvent::process(ThreadContext *tc)
-{
-    if (tc->misspeculating())
-        return;
-
-    tc->getSystemPtr()->kernelBinning->call(tc, mybin);
-}
-
 void
 IdleStartEvent::process(ThreadContext *tc)
 {
@@ -78,20 +62,4 @@ IdleStartEvent::process(ThreadContext *tc)
         tc->getKernelStats()->setIdleProcess(
             tc->readMiscReg(AlphaISA::IPR_PALtemp23), tc);
     remove();
-}
-
-void
-InterruptStartEvent::process(ThreadContext *tc)
-{
-    if (tc->getKernelStats())
-        tc->getKernelStats()->mode(Kernel::interrupt, tc);
-}
-
-void
-InterruptEndEvent::process(ThreadContext *tc)
-{
-    // We go back to kernel, if we are user, inside the rti
-    // pal code we will get switched to user because of the ICM write
-    if (tc->getKernelStats())
-        tc->getKernelStats()->mode(Kernel::kernel, tc);
 }

@@ -45,19 +45,6 @@ class SkipFuncEvent : public PCEvent
     virtual void process(ThreadContext *tc);
 };
 
-class FnEvent : public PCEvent
-{
-  public:
-    FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
-            Stats::MainBin *bin);
-    virtual void process(ThreadContext *tc);
-    std::string myname() const { return _name; }
-
-  private:
-    std::string _name;
-    Stats::MainBin *mybin;
-};
-
 class IdleStartEvent : public PCEvent
 {
   public:
@@ -66,24 +53,5 @@ class IdleStartEvent : public PCEvent
     {}
     virtual void process(ThreadContext *tc);
 };
-
-class InterruptStartEvent : public PCEvent
-{
-  public:
-    InterruptStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-    virtual void process(ThreadContext *tc);
-};
-
-class InterruptEndEvent : public PCEvent
-{
-  public:
-    InterruptEndEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-    virtual void process(ThreadContext *tc);
-};
-
 
 #endif // __SYSTEM_EVENTS_HH__

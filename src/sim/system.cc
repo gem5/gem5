@@ -132,8 +132,6 @@ System::~System()
 #if FULL_SYSTEM
     delete kernelSymtab;
     delete kernel;
-
-    delete kernelBinning;
 #else
     panic("System::fixFuncEventAddr needs to be rewritten "
           "to work with syscall emulation");
@@ -220,19 +218,9 @@ System::new_page()
 #endif
 
 void
-System::regStats()
-{
-#if FULL_SYSTEM
-    kernelBinning->regStats(name() + ".kern");
-#endif // FULL_SYSTEM
-}
-
-void
 System::serialize(ostream &os)
 {
 #if FULL_SYSTEM
-    kernelBinning->serialize(os);
-
     kernelSymtab->serialize("kernel_symtab", os);
 #endif // FULL_SYSTEM
 }
@@ -242,8 +230,6 @@ void
 System::unserialize(Checkpoint *cp, const string &section)
 {
 #if FULL_SYSTEM
-    kernelBinning->unserialize(cp, section);
-
     kernelSymtab->unserialize("kernel_symtab", cp, section);
 #endif // FULL_SYSTEM
 }

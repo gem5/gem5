@@ -46,7 +46,6 @@ class Text : public Output
 
   protected:
     bool noOutput(const StatData &data);
-    void binout();
 
   public:
     bool compat;
