@@ -409,11 +409,6 @@ void
 BaseSimpleCPU::postExecute()
 {
 #if FULL_SYSTEM
-    if (system->kernelBinning->fnbin) {
-        assert(thread->getKernelStats());
-        system->kernelBinning->execute(tc, inst);
-    }
-
     if (thread->profile) {
         bool usermode =
             (thread->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;

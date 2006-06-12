@@ -43,7 +43,6 @@
 #include "base/time.hh"
 #include "base/trace.hh"
 #include "base/stats/statdb.hh"
-#include "config/stats_binning.hh"
 
 using namespace std;
 
@@ -174,12 +173,6 @@ FormulaBase::size() const
         return root->size();
 }
 
-bool
-FormulaBase::binned() const
-{
-    return root && root->binned();
-}
-
 void
 FormulaBase::reset()
 {
@@ -238,33 +231,6 @@ Formula::operator+=(Temp r)
     return *this;
 }
 
-MainBin::MainBin(const string &name)
-    : _name(name), mem(NULL), memsize(-1)
-{
-    Database::regBin(this, name);
-}
-
-MainBin::~MainBin()
-{
-    if (mem)
-        delete [] mem;
-}
-
-char *
-MainBin::memory(off_t off)
-{
-    if (memsize == -1)
-        memsize = ceilPow2((size_t) offset());
-
-    if (!mem) {
-        mem = new char[memsize];
-        memset(mem, 0, memsize);
-    }
-
-    assert(offset() <= size());
-    return mem + off;
-}
-
 void
 check()
 {
@@ -287,13 +253,6 @@ check()
 
     Database::stats().sort(StatData::less);
 
-#if STATS_BINNING
-    if (MainBin::curBin() == NULL) {
-        static MainBin mainBin("main bin");
-        mainBin.activate();
-    }
-#endif
-
     if (i == end)
         return;
 
@@ -313,38 +272,13 @@ CallbackQueue resetQueue;
 void
 reset()
 {
-    // reset non-binned stats
     Database::stat_list_t::iterator i = Database::stats().begin();
     Database::stat_list_t::iterator end = Database::stats().end();
     while (i != end) {
         StatData *data = *i;
-        if (!data->binned())
-            data->reset();
+        data->reset();
         ++i;
     }
-
-    // save the bin so we can go back to where we were
-    MainBin *orig = MainBin::curBin();
-
-    // reset binned stats
-    Database::bin_list_t::iterator bi = Database::bins().begin();
-    Database::bin_list_t::iterator be = Database::bins().end();
-    while (bi != be) {
-        MainBin *bin = *bi;
-        bin->activate();
-
-        i = Database::stats().begin();
-        while (i != end) {
-            StatData *data = *i;
-            if (data->binned())
-                data->reset();
-            ++i;
-        }
-        ++bi;
-    }
-
-    // restore bin
-    MainBin::curBin() = orig;
 
     resetQueue.process();
 }

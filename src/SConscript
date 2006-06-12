@@ -219,7 +219,6 @@ full_system_sources = Split('''
 	dev/uart.cc
 	dev/uart8250.cc
 
-	kern/kernel_binning.cc
 	kern/kernel_stats.cc
 	kern/system_events.cc
 	kern/linux/events.cc
