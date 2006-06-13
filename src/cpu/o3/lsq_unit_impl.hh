@@ -32,6 +32,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
+#include "mem/packet.hh"
 #include "mem/request.hh"
 
 template<class Impl>
