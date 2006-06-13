@@ -6,12 +6,14 @@
 import os, optparse, sys
 import m5
 from m5.objects import *
+from FullO3Config import *
 
 # parse command-line arguments
 parser = optparse.OptionParser(option_list=m5.standardOptions)
 
 parser.add_option("-c", "--cmd", default="hello")
 parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-f", "--full", action="store_true")
 
 (options, args) = parser.parse_args()
 
@@ -31,6 +33,8 @@ mem = PhysicalMemory()
 
 if options.timing:
     cpu = TimingSimpleCPU()
+elif options.full:
+    cpu = DetailedCPU()
 else:
     cpu = AtomicSimpleCPU()
 cpu.workload = process
