@@ -39,8 +39,6 @@
 #include "base/range.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "sim/config_node.hh"
-#include "sim/configfile.hh"
 #include "sim/param.hh"
 #include "sim/sim_object.hh"
 
@@ -521,7 +519,9 @@ parseSimObjectParam(ParamContext *context, const string &s, SimObject *&value)
         obj = NULL;
     }
     else {
-        obj = context->resolveSimObject(s);
+        // defined in main.cc
+        extern SimObject *resolveSimObject(const string &);
+        obj = resolveSimObject(s);
 
         if (obj == NULL)
             return false;
@@ -694,22 +694,6 @@ ParamContext::printErrorProlog(ostream &os)
 {
     os << "Parameter error in section [" << iniSection << "]: " << endl;
 }
-
-//
-// Resolve an object name to a SimObject pointer.  The object will be
-// created as a side-effect if necessary.  If the name contains a
-// colon (e.g., "iq:IQ"), then the object is local (invisible to
-// outside this context).  If there is no colon, the name needs to be
-// resolved through the configuration hierarchy (only possible for
-// SimObjectBuilder objects, which return non-NULL for configNode()).
-//
-SimObject *
-ParamContext::resolveSimObject(const string &name)
-{
-    ConfigNode *n = getConfigNode();
-    return n ? n->resolveSimObject(name) : NULL;
-}
-
 
 //
 // static method: call parseParams() on all registered contexts

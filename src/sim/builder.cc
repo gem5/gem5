@@ -33,17 +33,14 @@
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "sim/builder.hh"
-#include "sim/configfile.hh"
-#include "sim/config_node.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
 
 using namespace std;
 
-SimObjectBuilder::SimObjectBuilder(ConfigNode *_configNode)
-    : ParamContext(_configNode->getPath(), NoAutoInit),
-      configNode(_configNode)
+SimObjectBuilder::SimObjectBuilder(const std::string &_iniSection)
+    : ParamContext(_iniSection, NoAutoInit)
 {
 }
 
@@ -78,8 +75,7 @@ SimObjectBuilder::parseParams(IniFile &iniFile)
 void
 SimObjectBuilder::printErrorProlog(ostream &os)
 {
-    ccprintf(os, "Error creating object '%s' of type '%s':\n",
-             iniSection, configNode->getType());
+    ccprintf(os, "Error creating object '%s':\n", iniSection);
 }
 
 
@@ -112,9 +108,13 @@ SimObjectClass::SimObjectClass(const string &className, CreateFunc createFunc)
 //
 //
 SimObject *
-SimObjectClass::createObject(IniFile &configDB, ConfigNode *configNode)
+SimObjectClass::createObject(IniFile &configDB, const std::string &iniSection)
 {
-    const string &type = configNode->getType();
+    string type;
+    if (!configDB.find(iniSection, "type", type)) {
+        // no C++ type associated with this object
+        return NULL;
+    }
 
     // look up className to get appropriate createFunc
     if (classMap->find(type) == classMap->end())
@@ -125,7 +125,7 @@ SimObjectClass::createObject(IniFile &configDB, ConfigNode *configNode)
 
     // call createFunc with config hierarchy node to get object
     // builder instance (context with parameters for object creation)
-    SimObjectBuilder *objectBuilder = (*createFunc)(configNode);
+    SimObjectBuilder *objectBuilder = (*createFunc)(iniSection);
 
     assert(objectBuilder != NULL);
 
@@ -166,7 +166,7 @@ SimObjectClass::describeAllClasses(ostream &os)
         os << "[" << className << "]\n";
 
         // create dummy object builder just to instantiate parameters
-        SimObjectBuilder *objectBuilder = (*createFunc)(NULL);
+        SimObjectBuilder *objectBuilder = (*createFunc)("");
 
         // now get the object builder to describe ite params
         objectBuilder->describeParams(os);

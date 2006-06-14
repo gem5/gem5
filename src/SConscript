@@ -97,14 +97,12 @@ base_sources = Split('''
         
         mem/bridge.cc
         mem/bus.cc
-        mem/connector.cc
         mem/mem_object.cc
         mem/packet.cc
         mem/physical.cc
         mem/port.cc
 
 	sim/builder.cc
-	sim/configfile.cc
 	sim/debug.cc
 	sim/eventq.cc
 	sim/faults.cc
