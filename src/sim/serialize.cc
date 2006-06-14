@@ -44,7 +44,6 @@
 #include "base/output.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "sim/config_node.hh"
 #include "sim/eventq.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
@@ -442,9 +441,8 @@ Serializable::create(Checkpoint *cp, const std::string &section)
 }
 
 
-Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path,
-                       const ConfigNode *_configNode)
-    : db(new IniFile), basePath(path), configNode(_configNode), cptDir(cpt_dir)
+Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path)
+    : db(new IniFile), basePath(path), cptDir(cpt_dir)
 {
     string filename = cpt_dir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {
@@ -469,9 +467,6 @@ Checkpoint::findObj(const std::string &section, const std::string &entry,
 
     if (!db->find(section, entry, path))
         return false;
-
-    if ((value = configNode->resolveSimObject(path)) != NULL)
-        return true;
 
     if ((value = objMap[path]) != NULL)
         return true;

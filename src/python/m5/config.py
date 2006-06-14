@@ -133,6 +133,10 @@ class Singleton(type):
 #
 #####################################################################
 
+
+# dict to look up SimObjects based on path
+instanceDict = {}
+
 def isSimObject(value):
     return isinstance(value, SimObject)
 
@@ -200,7 +204,8 @@ class MetaSimObject(type):
                       'type' : types.StringType }
     # Attributes that can be set any time
     keywords = { 'check' : types.FunctionType,
-                 'children' : types.ListType }
+                 'children' : types.ListType,
+                 'ccObject' : types.ObjectType }
 
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
@@ -233,6 +238,7 @@ class MetaSimObject(type):
         # initialize required attributes
         cls._params = multidict()
         cls._values = multidict()
+        cls._ports = multidict()
         cls._instantiated = False # really instantiated or subclassed
         cls._anon_subclass_counter = 0
 
@@ -248,6 +254,7 @@ class MetaSimObject(type):
         if isinstance(base, MetaSimObject):
             cls._params.parent = base._params
             cls._values.parent = base._values
+            cls._ports.parent = base._ports
             base._instantiated = True
 
         # now process the _init_dict items
@@ -258,6 +265,10 @@ class MetaSimObject(type):
             # param descriptions
             elif isinstance(val, ParamDesc):
                 cls._new_param(key, val)
+
+            # port objects
+            elif isinstance(val, Port):
+                cls._ports[key] = val
 
             # init-time-only keywords
             elif cls.init_keywords.has_key(key):
@@ -311,6 +322,10 @@ class MetaSimObject(type):
 
         if cls.keywords.has_key(attr):
             cls._set_keyword(attr, value, cls.keywords[attr])
+            return
+
+        if cls._ports.has_key(attr):
+            self._ports[attr].connect(self, attr, value)
             return
 
         # must be SimObject param
@@ -428,6 +443,9 @@ class SimObject(object):
         for key,val in kwargs.iteritems():
             setattr(self, key, val)
 
+        self._ccObject = None  # pointer to C++ object
+        self._port_map = {}    # map of port connections
+
     # Use this instance as a template to create a new class.
     def makeClass(self, memo = {}):
         cls = memo.get(self)
@@ -443,6 +461,11 @@ class SimObject(object):
               "use makeClass() to make class first"
 
     def __getattr__(self, attr):
+        if self._ports.has_key(attr):
+            # return reference that can be assigned to another port
+            # via __setattr__
+            return self._ports[attr].makeRef(self, attr)
+
         if self._values.has_key(attr):
             return self._values[attr]
 
@@ -455,6 +478,11 @@ class SimObject(object):
         # normal processing for private attributes
         if attr.startswith('_'):
             object.__setattr__(self, attr, value)
+            return
+
+        if self._ports.has_key(attr):
+            # set up port connection
+            self._ports[attr].connect(self, attr, value)
             return
 
         # must be SimObject param
@@ -554,6 +582,8 @@ class SimObject(object):
     def print_ini(self):
         print '[' + self.path() + ']'	# .ini section header
 
+        instanceDict[self.path()] = self
+
         if hasattr(self, 'type') and not isinstance(self, ParamContext):
             print 'type=%s' % self.type
 
@@ -584,6 +614,24 @@ class SimObject(object):
 
         for child in child_names:
             self._children[child].print_ini()
+
+    # Call C++ to create C++ object corresponding to this object and
+    # (recursively) all its children
+    def createCCObject(self):
+        if self._ccObject:
+            return
+        self._ccObject = -1
+        self._ccObject = m5.main.createSimObject(self.path())
+        for child in self._children.itervalues():
+            child.createCCObject()
+
+    # Create C++ port connections corresponding to the connections in
+    # _port_map (& recursively for all children)
+    def connectPorts(self):
+        for portRef in self._port_map.itervalues():
+            applyOrMap(portRef, 'ccConnect')
+        for child in self._children.itervalues():
+            child.connectPorts()
 
     # generate output file for 'dot' to display as a pretty graph.
     # this code is currently broken.
@@ -1419,6 +1467,78 @@ MaxAddr = Addr.max
 MaxTick = Tick.max
 AllMemory = AddrRange(0, MaxAddr)
 
+
+#####################################################################
+#
+# Port objects
+#
+# Ports are used to interconnect objects in the memory system.
+#
+#####################################################################
+
+# Port reference: encapsulates a reference to a particular port on a
+# particular SimObject.
+class PortRef(object):
+    def __init__(self, simobj, name, isVec):
+        self.simobj = simobj
+        self.name = name
+        self.index = -1
+        self.isVec = isVec # is this a vector port?
+        self.peer = None   # not associated with another port yet
+        self.ccConnected = False # C++ port connection done?
+
+    # Set peer port reference.  Called via __setattr__ as a result of
+    # a port assignment, e.g., "obj1.port1 = obj2.port2".
+    def setPeer(self, other):
+        if self.isVec:
+            curMap = self.simobj._port_map.get(self.name, [])
+            self.index = len(curMap)
+            curMap.append(other)
+        else:
+            curMap = self.simobj._port_map.get(self.name)
+            if curMap and not self.isVec:
+                print "warning: overwriting port", self.simobj, self.name
+            curMap = other
+        self.simobj._port_map[self.name] = curMap
+        self.peer = other
+
+    # Call C++ to create corresponding port connection between C++ objects
+    def ccConnect(self):
+        if self.ccConnected: # already done this
+            return
+        peer = self.peer
+        m5.main.connectPorts(self.simobj._ccObject, self.name, self.index,
+                             peer.simobj._ccObject, peer.name, peer.index)
+        self.ccConnected = True
+        peer.ccConnected = True
+
+# Port description object.  Like a ParamDesc object, this represents a
+# logical port in the SimObject class, not a particular port on a
+# SimObject instance.  The latter are represented by PortRef objects.
+class Port(object):
+    def __init__(self, desc):
+        self.desc = desc
+        self.isVec = False
+
+    # Generate a PortRef for this port on the given SimObject with the
+    # given name
+    def makeRef(self, simobj, name):
+        return PortRef(simobj, name, self.isVec)
+
+    # Connect an instance of this port (on the given SimObject with
+    # the given name) with the port described by the supplied PortRef
+    def connect(self, simobj, name, ref):
+        myRef = self.makeRef(simobj, name)
+        myRef.setPeer(ref)
+        ref.setPeer(myRef)
+
+# VectorPort description object.  Like Port, but represents a vector
+# of connections (e.g., as on a Bus).
+class VectorPort(Port):
+    def __init__(self, desc):
+        Port.__init__(self, desc)
+        self.isVec = True
+
 #####################################################################
 
 # __all__ defines the list of symbols that get exported when
@@ -1436,5 +1556,6 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',
-           'NextEthernetAddr']
+           'NextEthernetAddr',
+           'Port', 'VectorPort']
 

@@ -50,7 +50,7 @@ class MemObject : public SimObject
 
   public:
     /** Additional function to return the Port of a memory object. */
-    virtual Port *getPort(const std::string &if_name) = 0;
+    virtual Port *getPort(const std::string &if_name, int idx = -1) = 0;
 };
 
 #endif //__MEM_MEM_OBJECT_HH__

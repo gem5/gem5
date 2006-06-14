@@ -173,9 +173,9 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
 }
 
 Port *
-PhysicalMemory::getPort(const std::string &if_name)
+PhysicalMemory::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "") {
+    if (if_name == "port" && idx == -1) {
         if (port != NULL)
            panic("PhysicalMemory::getPort: additional port requested to memory!");
         port = new MemoryPort(name() + "-port", this);

@@ -38,7 +38,6 @@
 #include "base/trace.hh"
 #include "base/stats/events.hh"
 #include "base/serializer.hh"
-#include "sim/configfile.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
