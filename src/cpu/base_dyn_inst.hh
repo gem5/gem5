@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,12 +44,6 @@
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
-/*
-#include "encumbered/cpu/full/bpred_update.hh"
-#include "encumbered/cpu/full/spec_memory.hh"
-#include "encumbered/cpu/full/spec_state.hh"
-#include "encumbered/mem/functional/main.hh"
-*/
 
 /**
  * @file
@@ -202,10 +196,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Fault fault;
 
     /** The memory request. */
-//    MemReqPtr req;
     Request *req;
-//    Packet pkt;
 
+    /** Pointer to the data for the memory access. */
     uint8_t *memData;
 
     /** The effective virtual address (lds & stores only). */
@@ -288,21 +281,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void initVars();
 
   public:
-    /**
-     *  @todo: Make this function work; currently it is a dummy function.
-     *  @param fault Last fault.
-     *  @param cmd Last command.
-     *  @param addr Virtual address of access.
-     *  @param p Memory accessed.
-     *  @param nbytes Access size.
-     */
-//    void
-//    trace_mem(Fault fault,
-//	      MemCmd cmd,
-//	      Addr addr,
-//	      void *p,
-//	      int nbytes);
-
     /** Dumps out contents of this BaseDynInst. */
     void dump();
 
@@ -439,11 +417,13 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the result of a floating point (double) instruction. */
     double readDoubleResult() { return instResult.dbl; }
 
+    /** Records an integer register being set to a value. */
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
         instResult.integer = val;
     }
 
+    /** Records an fp register being set to a value. */
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         if (width == 32)
@@ -454,16 +434,19 @@ class BaseDynInst : public FastAlloc, public RefCounted
             panic("Unsupported width!");
     }
 
+    /** Records an fp register being set to a value. */
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
         instResult.fp = val;
     }
 
+    /** Records an fp register being set to an integer value. */
     void setFloatRegBits(const StaticInst *si, int idx, uint64_t val, int width)
     {
         instResult.integer = val;
     }
 
+    /** Records an fp register being set to an integer value. */
     void setFloatRegBits(const StaticInst *si, int idx, uint64_t val)
     {
         instResult.integer = val;
@@ -590,14 +573,15 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setNextPC(uint64_t val)
     {
         nextPC = val;
-//        instResult.integer = val;
     }
 
+    /** Sets the ASID. */
     void setASID(short addr_space_id) { asid = addr_space_id; }
 
-    void setThread(unsigned tid) { threadNumber = tid; }
+    /** Sets the thread id. */
+    void setTid(unsigned tid) { threadNumber = tid; }
 
-    void setState(ImplState *state) { thread = state; }
+    void setThreadState(ImplState *state) { thread = state; }
 
     /** Returns the thread context.
      */

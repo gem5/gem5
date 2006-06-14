@@ -421,6 +421,7 @@ class DefaultFetch
     Stats::Scalar<> icacheStallCycles;
     /** Stat for total number of fetched instructions. */
     Stats::Scalar<> fetchedInsts;
+    /** Total number of fetched branches. */
     Stats::Scalar<> fetchedBranches;
     /** Stat for total number of predicted branches. */
     Stats::Scalar<> predictedBranches;

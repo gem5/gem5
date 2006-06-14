@@ -92,11 +92,6 @@ Param<unsigned> commitToIEWDelay;
 Param<unsigned> renameToIEWDelay;
 Param<unsigned> issueToExecuteDelay;
 Param<unsigned> issueWidth;
-Param<unsigned> executeWidth;
-Param<unsigned> executeIntWidth;
-Param<unsigned> executeFloatWidth;
-Param<unsigned> executeBranchWidth;
-Param<unsigned> executeMemoryWidth;
 SimObjectParam<FUPool *> fuPool;
 
 Param<unsigned> iewToCommitDelay;
@@ -213,11 +208,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(issueToExecuteDelay, "Issue to execute delay (internal"
                "to the IEW stage)"),
     INIT_PARAM(issueWidth, "Issue width"),
-    INIT_PARAM(executeWidth, "Execute width"),
-    INIT_PARAM(executeIntWidth, "Integer execute width"),
-    INIT_PARAM(executeFloatWidth, "Floating point execute width"),
-    INIT_PARAM(executeBranchWidth, "Branch execute width"),
-    INIT_PARAM(executeMemoryWidth, "Memory execute width"),
     INIT_PARAM_DFLT(fuPool, "Functional unit pool", NULL),
 
     INIT_PARAM(iewToCommitDelay, "Issue/Execute/Writeback to commit "
@@ -344,11 +334,6 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->renameToIEWDelay = renameToIEWDelay;
     params->issueToExecuteDelay = issueToExecuteDelay;
     params->issueWidth = issueWidth;
-    params->executeWidth = executeWidth;
-    params->executeIntWidth = executeIntWidth;
-    params->executeFloatWidth = executeFloatWidth;
-    params->executeBranchWidth = executeBranchWidth;
-    params->executeMemoryWidth = executeMemoryWidth;
     params->fuPool = fuPool;
 
     params->iewToCommitDelay = iewToCommitDelay;

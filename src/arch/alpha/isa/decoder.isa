@@ -659,11 +659,11 @@ decode OPCODE default Unknown::unknown() {
             0xe000: rc({{
                 Ra = xc->readIntrFlag();
                 xc->setIntrFlag(0);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
             0xf000: rs({{
                 Ra = xc->readIntrFlag();
                 xc->setIntrFlag(1);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
         }
 #else
         format FailUnimpl {
@@ -701,7 +701,7 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall(R0);
-            }}, IsNonSpeculative);
+            }}, IsSerializeAfter, IsNonSpeculative);
             // Read uniq reg into ABI return value register (r0)
             0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);
             // Write uniq reg with value from ABI arg register (r16)

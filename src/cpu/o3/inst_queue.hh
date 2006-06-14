@@ -474,12 +474,17 @@ class InstructionQueue
     /** Stat for number of non-speculative instructions removed due to a squash.
      */
     Stats::Scalar<> iqSquashedNonSpecRemoved;
+    // Also include number of instructions rescheduled and replayed.
 
-    /** Distribution of number of instructions in the queue. */
+    /** Distribution of number of instructions in the queue.
+     * @todo: Need to create struct to track the entry time for each
+     * instruction. */
     Stats::VectorDistribution<> queueResDist;
     /** Distribution of the number of instructions issued. */
     Stats::Distribution<> numIssuedDist;
-    /** Distribution of the cycles it takes to issue an instruction. */
+    /** Distribution of the cycles it takes to issue an instruction.
+     * @todo: Need to create struct to track the ready time for each
+     * instruction. */
     Stats::VectorDistribution<> issueDelayDist;
 
     /** Number of times an instruction could not be issued because a
@@ -492,8 +497,7 @@ class InstructionQueue
 
     /** Number of instructions issued per cycle. */
     Stats::Formula issueRate;
-//    Stats::Formula issue_stores;
-//    Stats::Formula issue_op_rate;
+
     /** Number of times the FU was busy. */
     Stats::Vector<> fuBusy;
     /** Number of times the FU was busy per instruction issued. */

@@ -41,7 +41,7 @@
 #include <libgen.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <unistd.h>
+#include <getopt.h>
 
 #include <list>
 #include <string>
@@ -113,6 +113,31 @@ abortHandler(int sigtype)
 #endif
 }
 
+/// Simulator executable name
+char *myProgName = "";
+
+/// Show brief help message.
+void
+showBriefHelp(ostream &out)
+{
+    char *prog = basename(myProgName);
+
+    ccprintf(out, "Usage:\n");
+    ccprintf(out,
+"%s [-p <path>] [-i ] [-h] <config file>\n"
+"\n"
+" -p, --path <path>  prepends <path> to PYTHONPATH instead of using\n"
+"                    built-in zip archive.  Useful when developing/debugging\n"
+"                    changes to built-in Python libraries, as the new Python\n"
+"                    can be tested without building a new m5 binary.\n\n"
+" -i, --interactive  forces entry into interactive mode after the supplied\n"
+"                    script is executed (just like the -i option to  the\n"
+"                    Python interpreter).\n\n"
+" -h                 Prints this help\n\n"
+" <configfile>       config file name (ends in .py)\n\n",
+             prog);
+
+}
 
 const char *briefCopyright =
 "Copyright (c) 2001-2006\n"
@@ -145,6 +170,9 @@ extern "C" { void init_main(); }
 int
 main(int argc, char **argv)
 {
+    // Saze off program name
+    myProgName = argv[0];
+
     sayHello(cerr);
 
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
@@ -161,9 +189,19 @@ main(int argc, char **argv)
     char *pythonpath = argv[0];
 
     bool interactive = false;
+    bool show_help = false;
     bool getopt_done = false;
+    int opt_index = 0;
+
+    static struct option long_options[] = {
+        {"python", 1, 0, 'p'},
+        {"interactive", 0, 0, 'i'},
+        {"help", 0, 0, 'h'},
+        {0,0,0,0}
+    };
+
     do {
-        switch (getopt(argc, argv, "+p:i")) {
+        switch (getopt_long(argc, argv, "+p:ih", long_options, &opt_index)) {
             // -p <path> prepends <path> to PYTHONPATH instead of
             // using built-in zip archive.  Useful when
             // developing/debugging changes to built-in Python
@@ -180,6 +218,9 @@ main(int argc, char **argv)
             interactive = true;
             break;
 
+          case 'h':
+            show_help = true;
+            break;
           case -1:
             getopt_done = true;
             break;
@@ -188,6 +229,11 @@ main(int argc, char **argv)
             fatal("Unrecognized option %c\n", optopt);
         }
     } while (!getopt_done);
+
+    if (show_help) {
+        showBriefHelp(cerr);
+        exit(1);
+    }
 
     // Fix up argc & argv to hide arguments we just processed.
     // getopt() sets optind to the index of the first non-processed

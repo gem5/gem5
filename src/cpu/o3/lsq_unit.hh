@@ -77,6 +77,9 @@ class LSQUnit {
     /** Returns the name of the LSQ unit. */
     std::string name() const;
 
+    /** Registers statistics. */
+    void regStats();
+
     /** Sets the CPU pointer. */
     void setCPU(FullCPU *cpu_ptr);
 
@@ -126,9 +129,6 @@ class LSQUnit {
     void writebackStores();
 
     void completeDataAccess(PacketPtr pkt);
-
-    // @todo: Include stats in the LSQ unit.
-    //void regStats();
 
     /** Clears all the entries in the LQ. */
     void clearLQ();
@@ -443,25 +443,35 @@ class LSQUnit {
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
-/*
-    // total number of loads forwaded from LSQ stores
-    Stats::Vector<> lsq_forw_loads;
 
-    // total number of loads ignored due to invalid addresses
-    Stats::Vector<> inv_addr_loads;
+    /** Total number of loads forwaded from LSQ stores. */
+    Stats::Scalar<> lsqForwLoads;
 
-    // total number of software prefetches ignored due to invalid addresses
-    Stats::Vector<> inv_addr_swpfs;
+    /** Total number of loads ignored due to invalid addresses. */
+    Stats::Scalar<> invAddrLoads;
 
-    // total non-speculative bogus addresses seen (debug var)
-    Counter sim_invalid_addrs;
-    Stats::Vector<> fu_busy;  //cumulative fu busy
+    /** Total number of squashed loads. */
+    Stats::Scalar<> lsqSquashedLoads;
 
-    // ready loads blocked due to memory disambiguation
-    Stats::Vector<> lsq_blocked_loads;
+    /** Total number of responses from the memory system that are
+     * ignored due to the instruction already being squashed. */
+    Stats::Scalar<> lsqIgnoredResponses;
 
-    Stats::Scalar<> lsqInversion;
-*/
+    /** Total number of squashed stores. */
+    Stats::Scalar<> lsqSquashedStores;
+
+    /** Total number of software prefetches ignored due to invalid addresses. */
+    Stats::Scalar<> invAddrSwpfs;
+
+    /** Ready loads blocked due to partial store-forwarding. */
+    Stats::Scalar<> lsqBlockedLoads;
+
+    /** Number of loads that were rescheduled. */
+    Stats::Scalar<> lsqRescheduledLoads;
+
+    /** Number of times the LSQ is blocked due to the cache. */
+    Stats::Scalar<> lsqCacheBlocked;
+
   public:
     /** Executes the load at the given index. */
     template <class T>
@@ -519,6 +529,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     if (req->getFlags() & UNCACHEABLE &&
         (load_idx != loadHead || !load_inst->reachedCommit)) {
         iewStage->rescheduleMemInst(load_inst);
+        ++lsqRescheduledLoads;
         return TheISA::genMachineCheckFault();
     }
 
@@ -598,7 +609,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // @todo: Need to make this a parameter.
             wb->schedule(curTick);
 
-            // Should keep track of stat for forwarded data
+            ++lsqForwLoads;
             return NoFault;
         } else if ((store_has_lower_limit && lower_load_has_store_part) ||
                    (store_has_upper_limit && upper_load_has_store_part) ||
@@ -626,6 +637,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // Tell IQ/mem dep unit that this instruction will need to be
             // rescheduled eventually
             iewStage->rescheduleMemInst(load_inst);
+            ++lsqRescheduledLoads;
 
             // Do not generate a writeback event as this instruction is not
             // complete.
@@ -633,6 +645,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
                     "Store idx %i to load addr %#x\n",
                     store_idx, req->getVaddr());
 
+            ++lsqBlockedLoads;
             return NoFault;
         }
     }
@@ -660,6 +673,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
 
     // if we have a cache, do cache access too
     if (!dcachePort->sendTiming(data_pkt)) {
+        ++lsqCacheBlocked;
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < load_inst->seqNum)
             return NoFault;

@@ -515,7 +515,7 @@ DefaultDecode<Impl>::checkSignalsAndUpdate(unsigned tid)
 
     // Check ROB squash signals from commit.
     if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(Decode, "[tid:%]: ROB is still squashing.\n",tid);
+        DPRINTF(Decode, "[tid:%u]: ROB is still squashing.\n", tid);
 
         // Continue to squash.
         decodeStatus[tid] = Squashing;

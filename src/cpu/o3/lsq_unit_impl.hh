@@ -198,6 +198,47 @@ LSQUnit<Impl>::name() const
 
 template<class Impl>
 void
+LSQUnit<Impl>::regStats()
+{
+    lsqForwLoads
+        .name(name() + ".forwLoads")
+        .desc("Number of loads that had data forwarded from stores");
+
+    invAddrLoads
+        .name(name() + ".invAddrLoads")
+        .desc("Number of loads ignored due to an invalid address");
+
+    lsqSquashedLoads
+        .name(name() + ".squashedLoads")
+        .desc("Number of loads squashed");
+
+    lsqIgnoredResponses
+        .name(name() + ".ignoredResponses")
+        .desc("Number of memory responses ignored because the instruction is squashed");
+
+    lsqSquashedStores
+        .name(name() + ".squashedStores")
+        .desc("Number of stores squashed");
+
+    invAddrSwpfs
+        .name(name() + ".invAddrSwpfs")
+        .desc("Number of software prefetches ignored due to an invalid address");
+
+    lsqBlockedLoads
+        .name(name() + ".blockedLoads")
+        .desc("Number of blocked loads due to partial load-store forwarding");
+
+    lsqRescheduledLoads
+        .name(name() + ".rescheduledLoads")
+        .desc("Number of loads that were rescheduled");
+
+    lsqCacheBlocked
+        .name(name() + ".cacheBlocked")
+        .desc("Number of times an access to memory failed due to the cache being blocked");
+}
+
+template<class Impl>
+void
 LSQUnit<Impl>::clearLQ()
 {
     loadQueue.clear();
@@ -618,7 +659,7 @@ LSQUnit<Impl>::writebackStores()
         if (!dcachePort->sendTiming(data_pkt)) {
             // Need to handle becoming blocked on a store.
             isStoreBlocked = true;
-
+            ++lsqCacheBlocked;
             assert(retryPkt == NULL);
             retryPkt = data_pkt;
         } else {
@@ -677,6 +718,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         loadTail = load_idx;
 
         decrLdIdx(load_idx);
+        ++lsqSquashedLoads;
     }
 
     if (isLoadBlocked) {
@@ -723,6 +765,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         storeTail = store_idx;
 
         decrStIdx(store_idx);
+        ++lsqSquashedStores;
     }
 }
 
@@ -782,6 +825,7 @@ LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
     // Squashed instructions do not need to complete their access.
     if (inst->isSquashed()) {
         assert(!inst->isStore());
+        ++lsqIgnoredResponses;
         return;
     }
 
@@ -858,6 +902,7 @@ LSQUnit<Impl>::recvRetry()
             isStoreBlocked = false;
         } else {
             // Still blocked!
+            ++lsqCacheBlocked;
         }
     } else if (isLoadBlocked) {
         DPRINTF(LSQUnit, "Loads squash themselves and all younger insts, "

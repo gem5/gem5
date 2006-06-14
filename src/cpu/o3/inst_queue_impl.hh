@@ -289,22 +289,7 @@ InstructionQueue<Impl>::regStats()
         .flags(total)
         ;
     issueRate = iqInstsIssued / cpu->numCycles;
-/*
-    issue_stores
-        .name(name() + ".ISSUE:stores")
-        .desc("Number of stores issued")
-        .flags(total)
-        ;
-    issue_stores = exe_refs - exe_loads;
-*/
-/*
-    issue_op_rate
-        .name(name() + ".ISSUE:op_rate")
-        .desc("Operation issue rate")
-        .flags(total)
-        ;
-    issue_op_rate = issued_ops / numCycles;
-*/
+
     statFuBusy
         .init(Num_OpClasses)
         .name(name() + ".ISSUE:fu_full")
