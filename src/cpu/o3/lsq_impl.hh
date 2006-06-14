@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,6 +104,16 @@ std::string
 LSQ<Impl>::name() const
 {
     return iewStage->name() + ".lsq";
+}
+
+template<class Impl>
+void
+LSQ<Impl>::regStats()
+{
+    //Initialize LSQs
+    for (int tid=0; tid < numThreads; tid++) {
+        thread[tid].regStats();
+    }
 }
 
 template<class Impl>

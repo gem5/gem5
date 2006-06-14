@@ -204,19 +204,6 @@ DefaultCommit<Impl>::regStats()
         .flags(total)
         ;
 
-    //
-    //  Commit-Eligible instructions...
-    //
-    //  -> The number of instructions eligible to commit in those
-    //  cycles where we reached our commit BW limit (less the number
-    //  actually committed)
-    //
-    //  -> The average value is computed over ALL CYCLES... not just
-    //  the BW limited cycles
-    //
-    //  -> The standard deviation is computed only over cycles where
-    //  we reached the BW limit
-    //
     commitEligible
         .init(cpu->number_of_threads)
         .name(name() + ".COM:bw_limited")
