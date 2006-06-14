@@ -915,7 +915,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         bool fetch_success = fetchCacheLine(fetch_PC, fault, tid);
         if (!fetch_success) {
-            ++fetchMiscStallCycles;
+            if (cacheBlocked) {
+                ++icacheStallCycles;
+            } else {
+                ++fetchMiscStallCycles;
+            }
             return;
         }
     } else {
